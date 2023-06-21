@@ -1,0 +1,147 @@
+#!/bin/bash
+
+DOTFILES="$HOME/do75"
+
+main() {
+  sourceFiles
+  updateOS
+  installPacmanPackages
+  mksrc
+  installYayPackages
+  installtpm
+  installRust
+  buildNeovim
+  addProgramsNeoVimInterfacesWith
+  deleteSymLinks
+  createSymLinks
+  zshshell
+}
+
+sourceFiles() {
+  missingFile=0
+
+  files=(packages)
+  for f in ${files[@]}
+  do
+    source $f
+  done
+
+  [[ $missingFile == 1 ]] && echo 'Missing file(s) program exiting.' && exit
+
+}
+
+updateOS() {
+  echo 'Updating System' &&
+  sudo pacman -Syyuu --noconfirm
+}
+
+installPacmanPackages() {
+  echo 'Installing pacman packages.' &&
+  sudo pacman -Syyuu --noconfirm ${pacman_packages[@]}
+}
+
+installYayPackages() {
+   echo 'Installing yay packages.' &&
+   yay -Syu --noconfirm ${yay_packages[@]}
+}
+
+installRust() {
+  echo 'Installing rustup.' &&
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+}
+
+deleteSymLinks() {
+     echo "Deleting symlinks."
+     rm -rfv "$HOME/.config/alacritty"
+     rm -rfv "$HOME/.config/awesome"
+     rm -rfv "$HOME/.config/bat"
+     rm -rfv "$HOME/.config/btop"
+     rm -rfv "$HOME/.config/foot"
+     rm -rfv "$HOME/.config/gtk-2.0"
+     rm -rfv "$HOME/.config/gtk-3.0"
+     rm -rfv "$HOME/.config/htop"
+     rm -rfv "$HOME/.config/hypr"
+     rm -rfv "$HOME/.config/icons"
+     rm -rfv "$HOME/.config/kitty"
+     rm -rfv "$HOME/.config/lazygit"
+     rm -rfv "$HOME/.config/mako"
+     rm -rfv "$HOME/.config/neofetch"
+     rm -rfv "$HOME/.config/nvim"
+     rm -rfv "$HOME/.config/nwg-bar"
+     rm -rfv "$HOME/.config/oguri"
+     rm -rfv "$HOME/.config/qt5ct"
+     rm -rfv "$HOME/.config/ranger"
+     rm -rfv "$HOME/.config/starship"
+     rm -rfv "$HOME/.config/sway"
+     rm -rfv "$HOME/.config/swayr"
+     rm -rfv "$HOME/.config/systemd"
+     rm -rfv "$HOME/.config/Thunar"
+     rm -rfv "$HOME/.config/wallpapers"
+     rm -rfv "$HOME/.config/waybar"
+     rm -rfv "$HOME/.config/wezterm"
+     rm -rfv "$HOME/.config/workstyle"
+     rm -rfv "$HOME/.config/xfce4"
+     rm -rfv "$HOME/.config/zsh"
+     rm -rfv "$HOME/.config/picom.conf"
+     rm -rfv "$HOME/.config/user-dirs.dirs"
+     rm -rfv "$HOME/.bash_aliases"
+     rm -rfv "$HOME/.bashrc"
+     rm -rfv "$HOME/.gitconfig"
+     rm -rfv "$HOME/.nanorc"
+     rm -rfv "$HOME/.vimrc"
+     rm -rfv "$HOME/.xinitrc"
+     rm -rfv "$HOME/.xresources"
+     rm -rfv "$HOME/.zprofile"
+     rm -rfv "$HOME/.zshrc"
+ }
+
+createSymLinks() {
+    echo "Creating symlinks."
+     ln -fsv "$DOTFILES/alacritty" "$HOME/.config/alacritty"
+     ln -fsv "$DOTFILES/aweome" "$HOME/.config/awesome"
+     ln -fsv "$DOTFILES/bat" "$HOME/.config/bat"
+     ln -fsv "$DOTFILES/btop" "$HOME/.config/btop"
+     ln -fsv "$DOTFILES/foot" "$HOME/.config/foot"
+     ln -fsv "$DOTFILES/gtk-2.0" "$HOME/.config/gtk-2.0"
+     ln -fsv "$DOTFILES/gtk-3.0" "$HOME/.config/gtk-3.0"
+     ln -fsv "$DOTFILES/htop" "$HOME/.config/htop"
+     ln -fsv "$DOTFILES/hypr" "$HOME/.config/hypr"
+     ln -fsv "$DOTFILES/icons" "$HOME/.config/icons"
+     ln -fsv "$DOTFILES/kitty" "$HOME/.config/kitty"
+     ln -fsv "$DOTFILES/lazygit" "$HOME/.config/lazygit"
+     ln -fsv "$DOTFILES/mako" "$HOME/.config/mako"
+     ln -fsv "$DOTFILES/neofetch" "$HOME/.config/neofetch"
+     ln -fsv "$DOTFILES/nvim" "$HOME/.config/nvim"
+     ln -fsv "$DOTFILES/nwg-bar" "$HOME/.config/nwg-bar"
+     ln -fsv "$DOTFILES/oguri" "$HOME/.config/oguri"
+     ln -fsv "$DOTFILES/qt5ct" "$HOME/.config/qt5ct"
+     ln -fsv "$DOTFILES/ranger" "$HOME/.config/ranger"
+     ln -fsv "$DOTFILES/starship" "$HOME/.config/starship"
+     ln -fsv "$DOTFILES/sway" "$HOME/.config/sway"
+     ln -fsv "$DOTFILES/swayr" "$HOME/.config/swayr"
+     ln -fsv "$DOTFILES/systemd" "$HOME/.config/systemd"
+     ln -fsv "$DOTFILES/Thunar" "$HOME/.config/Thunar"
+     ln -fsv "$DOTFILES/wallpapers" "$HOME/.config/wallpapers"
+     ln -fsv "$DOTFILES/waybar" "$HOME/.config/waybar"
+     ln -fsv "$DOTFILES/wezterm" "$HOME/.config/wezterm"
+     ln -fsv "$DOTFILES/workstyle" "$HOME/.config/workstyle"
+     ln -fsv "$DOTFILES/xfxe4" "$HOME/.config/xfce4"
+     ln -fsv "$DOTFILES/zsh" "$HOME/.config/zsh"
+     ln -fsv "$DOTFILES/picom.conf" "$HOME/.config/picom.conf"
+     ln -fsv "$DOTFILES/user-dirs.dirs" "$HOME/.config/user-dirs.dirs"
+     ln -fsv "$DOTFILES/bash_aliases" "$HOME/.bash_aliases"
+     ln -fsv "$DOTFILES/bashrc" "$HOME/.bashrc"
+     ln -fsv "$DOTFILES/gitconfig" "$HOME/.gitconfig"
+     ln -fsv "$DOTFILES/nanorc" "$HOME/.nanorc"
+     ln -fsv "$DOTFILES/vimrc" "$HOME/.vimrc"
+     ln -fsv "$DOTFILES/xinitrc" "$HOME/.xinitrc"
+     ln -fsv "$DOTFILES/xresources" "$HOME/.xresources"
+     ln -fsv "$DOTFILES/zprofile" "$HOME/.zprofile"
+     ln -fsv "$DOTFILES/zshrc" "$HOME/.zshrc"
+}
+
+zshshell() {
+  sudo chsh -s /bin/zsh "$USER"
+}
+
+main "$@"

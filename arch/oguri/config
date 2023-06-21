@@ -1,0 +1,5 @@
+[output *]
+image=~/.config/wallpapers/5.jpg
+filter=nearest
+scaling-mode=fill
+anchor=center

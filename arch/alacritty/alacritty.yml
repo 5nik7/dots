@@ -1,0 +1,45 @@
+#  ╔═╗╦  ╔═╗╔═╗╦═╗╦╔╦╗╔╦╗╦ ╦  ╔═╗╔═╗╔╗╔╔═╗╦╔═╗
+#  ╠═╣║  ╠═╣║  ╠╦╝║ ║  ║ ╚╦╝  ║  ║ ║║║║╠╣ ║║ ╦	- Config by z0mbi3
+#  ╩ ╩╩═╝╩ ╩╚═╝╩╚═╩ ╩  ╩  ╩   ╚═╝╚═╝╝╚╝╚  ╩╚═╝	- https://github.com/gh0stzk/dotfiles
+#  General configuration
+
+import:
+  # uncomment the flavour you want below:
+  - ~/.config/alacritty/catppuccin/catppuccin-mocha.yml
+  #  - ~/.config/alacritty/catppuccin/catppuccin-macchiato.yml
+  #  - ~/.config/alacritty/catppuccin/catppuccin-frappe.yml
+  #  - ~/.config/alacritty/catppuccin/catppuccin-latte.yml
+  - ~/.config/alacritty/fonts.yml
+
+window:
+  padding:
+    x: 10
+    y: 10
+
+  decorations: none
+
+  opacity: 0.90
+  dynamic_title: true
+draw_bold_text_with_bright_colors: true
+
+selection:
+  semantic_escape_chars: ',│`|:"'' ()[]{}<>'
+
+  save_to_clipboard: true
+
+cursor:
+  style:
+    shape: Block
+    blinking: On
+
+  blink_interval: 550
+
+live_config_reload: true
+
+key_bindings:
+  - { key: V, mods: Control, action: Paste }
+  - { key: C, mods: Control, action: Copy }
+  - { key: Return, mods: Control|Shift, action: SpawnNewInstance }
+
+shell:
+  program: /bin/zsh
