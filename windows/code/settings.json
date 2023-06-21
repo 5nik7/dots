@@ -1,0 +1,97 @@
+{
+    "editor.fontFamily": "JetBrainsMono NF",
+    "editor.cursorStyle": "line-thin",
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.fontWeight": "400",
+    "editor.fontSize": 16,
+    "editor.fontLigatures": true,
+    "editor.letterSpacing": 0,
+    "editor.lineHeight": 24,
+    "editor.minimap.enabled": false,
+    "explorer.decorations.badges": false,
+    "window.autoDetectHighContrast": false,
+    "files.autoSave": "off",
+    "files.trimTrailingWhitespace": true,
+    "workbench.cloudChanges.autoResume": "off",
+    "workbench.cloudChanges.continueOn": "off",
+    "workbench.list.smoothScrolling": true,
+    "workbench.colorTheme": "Catppuccin Mocha",
+    "workbench.tips.enabled": false,
+    "workbench.iconTheme": "material-icon-theme",
+    "window.zoomLevel": -1.6,
+    "material-icon-theme.hidesExplorerArrows": true,
+    "material-icon-theme.folders.theme": "classic",
+    "material-icon-theme.saturation": 0.5,
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "Lua.diagnostics.globals": [
+        "vim"
+    ],
+    "[lua]": {
+        "editor.defaultFormatter": "sumneko.lua",
+        "editor.formatOnPaste": true,
+        "editor.formatOnSave": true
+    },
+    "editor.multiCursorModifier": "ctrlCmd",
+    "colorize.languages": [
+        "css",
+        "sass",
+        "scss",
+        "less",
+        "postcss",
+        "sss",
+        "stylus",
+        "xml",
+        "svg",
+        "lua",
+        "rainmeter",
+        "json",
+        "plaintext",
+        "shellscript"
+    ],
+    "colorize.colorized_colors": [
+        "HEXA",
+        "RGB",
+        "ARGB",
+        "HSL"
+    ],
+    "colorize.decoration_type": "background",
+    "editor.inlineSuggest.enabled": true,
+    "glassit.alpha": 253,
+    "trailing-spaces.trimOnSave": true,
+    "window.menuBarVisibility": "compact",
+    "audioCues.volume": 0,
+    "files.associations": {
+        "*.txt": "plaintext"
+    },
+    "terminal.integrated.commandsToSkipShell": [
+        "language-julia.interrupt"
+    ],
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell",
+            "args": ["-NoLogo"] // <---- this is the addition
+        },
+
+        // other profiles here
+    },
+    "julia.symbolCacheDownload": true,
+    "errorLens.exclude": [
+        "Additional properties are not allowed \\('vicmd_symbol' was unexpected\\)"
+    ],
+    "material-icon-theme.folders.color": "#363646",
+    "material-icon-theme.files.color": "#54546D",
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": false,
+        "scminput": false
+    },
+    "security.allowedUNCHosts": [
+        "wsl.localhost"
+    ],
+    "git.openRepositoryInParentFolders": "always",
+    "window.newWindowDimensions": "inherit"
+}
