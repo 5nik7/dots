@@ -51,11 +51,11 @@ function kill($psid) {
     Stop-Process -Name "$psid" -Force
 }
 
-function ll { exa -alH --git --color=always --icons --group-directories-first }
+function ll { exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons }
 
-function ls { exa -alH --git --color=always --icons --group-directories-first }
+function ls { exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons }
 
-function l { exa -alH --git --color=always --icons --group-directories-first }
+function l { exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons }
 
 function .. {
     Set-Location ..
@@ -81,14 +81,17 @@ function path {
     $env:Path -split ';'
 }
 
-function ln($filepath, $targetpath) {
-     New-Item -ItemType SymbolicLink -Path "$filepath" -Target "$targetpath"
+function ln($file1, $file2) {
+    if (Test-Path $file1 ) {
+        Remove-Item -Recurse -Force $file1 | New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
+    }
+    else {
+        New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
+    }
 }
-
 function lnk($file, $path1, $path2) {
      New-Item -ItemType SymbolicLink -Path "$path1\$file" -Target "$path2\$file"
 }
-
 
 function rlp {
     & $profile
