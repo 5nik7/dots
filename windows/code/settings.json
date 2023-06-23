@@ -26,5 +26,12 @@
     "window.zoomLevel": -0.8,
     "markdown.preview.fontSize": 16,
     "editor.lineHeight": 24,
-    "editor.letterSpacing": 0.1
+    "editor.letterSpacing": 0.1,
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell",
+            "args": ["-NoLogo"]
+        },
+    },
 }

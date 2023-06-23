@@ -15,7 +15,8 @@
 
 function ln($file1, $file2) {
     if (Test-Path $file1) {
-        Remove-Item -Recurse -Force $file1 | New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
+        Remove-Item -Recurse -Force $file1
+        New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
     } else {
         New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
     }

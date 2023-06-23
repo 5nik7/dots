@@ -43,10 +43,36 @@ Set-Alias -Name alias -Value Search-Alias
 
 Set-Alias -Name c -Value Clear-Host
 
+function ln($file1, $file2) {
+    if (Test-Path $file1 = true) {
+        Remove-Item -Recurse -Force $file1
+        New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
+    } else {
+        New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
+    }
+}
+
+function dots {
+    Set-Location "x:\hub\repos\dots\"
+    Clear-Host
+    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
+}
+function hub {
+    Set-Location "x:\hub\"
+    Clear-Host
+    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
+}
+function repos {
+    Set-Location "x:\hub\repos\"
+    Clear-Host
+    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
+}
+function q {
+    Exit
+}
 function ps {
     Get-Process
 }
-
 function kill($psid) {
     Stop-Process -Name "$psid" -Force
 }
@@ -59,10 +85,14 @@ function l { exa -xHighmnSlFuU --git --octal-permissions --group-directories-fir
 
 function .. {
     Set-Location ..
+    Clear-Host
+    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
 }
 
 function ... {
     Set-Location ..\..
+    Clear-Host
+    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
 }
 
 Function Search-Alias {
@@ -82,8 +112,9 @@ function path {
 }
 
 function ln($file1, $file2) {
-    if (Test-Path $file1 ) {
-        Remove-Item -Recurse -Force $file1 | New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
+    if (Test-Path $file1 = true) {
+        Remove-Item -Recurse -Force $file1
+        New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
     }
     else {
         New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
