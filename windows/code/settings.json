@@ -35,4 +35,7 @@
         },
     },
     "git.autofetch": true,
+    "catppuccin.bracketMode": "neovim",
+    "catppuccin.extraBordersEnabled": true,
+    "catppuccin.workbenchMode": "flat",
 }
