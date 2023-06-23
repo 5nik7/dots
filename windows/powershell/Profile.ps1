@@ -55,17 +55,17 @@ function ln($file1, $file2) {
 function dots {
     Set-Location "x:\hub\repos\dots\"
     Clear-Host
-    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
+    exa -F --all --long --no-filesize --no-user --no-time --git --group-directories-first --icons --no-permissions
 }
 function hub {
     Set-Location "x:\hub\"
     Clear-Host
-    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
+    exa -F --all --long --no-filesize --no-user --no-time --git --group-directories-first --icons --no-permissions
 }
 function repos {
     Set-Location "x:\hub\repos\"
     Clear-Host
-    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
+    exa -F --all --long --no-filesize --no-user --no-time --git --group-directories-first --icons --no-permissions
 }
 function q {
     Exit
@@ -77,22 +77,22 @@ function kill($psid) {
     Stop-Process -Name "$psid" -Force
 }
 
-function ll { exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons }
+function ll { exa -xHighmnSlFuU --all --git --octal-permissions --group-directories-first --icons }
 
-function ls { exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons }
+function ls { exa -F --all --long --no-filesize --no-user --no-time --git --group-directories-first --icons --no-permissions }
 
-function l { exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons }
+function l { exa -F --all --long --no-filesize --no-user --no-time --git --group-directories-first --icons --no-permissions }
 
 function .. {
     Set-Location ..
     Clear-Host
-    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
+    exa -F --all --long --no-filesize --no-user --no-time --git --group-directories-first --icons --no-permissions
 }
 
 function ... {
     Set-Location ..\..
     Clear-Host
-    exa -xHighmnSlFuU --git --octal-permissions --group-directories-first --icons
+    exa -F --all --long --no-filesize --no-user --no-time --git --group-directories-first --icons --no-permissions
 }
 
 Function Search-Alias {
