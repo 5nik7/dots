@@ -17,18 +17,23 @@ function ln($file1, $file2) {
     if (Test-Path $file1) {
         Remove-Item -Recurse -Force $file1
         New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
-    } else {
+    }
+    else {
         New-Item -ItemType SymbolicLink -Path $file1 -Target $file2
     }
 }
 
-ln "C:\Users\nickf\Documents\PowerShell\Profile.ps1" "X:\hub\repos\dots\windows\powershell\Profile.ps1"
-ln "C:\Users\nickf\Documents\PowerShell\Microsoft.PowerShell_profile.ps1" "X:\hub\repos\dots\windows\powershell\Profile.ps1"
-ln "C:\Users\nickf\Documents\PowerShell\Microsoft.VSCode_profile.ps1" "X:\hub\repos\dots\windows\powershell\Profile.ps1"
+# ln "$env:LOCALAPPDATA\nvim" "X:\hub\repos\do75\nvim"
 
-ln "C:\Users\nickf\Documents\WindowsPowerShell\Profile.ps1" "X:\hub\repos\dots\windows\powershell\Profile.ps1"
-ln "C:\Users\nickf\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" "X:\hub\repos\dots\windows\powershell\Profile.ps1"
-ln "C:\Users\nickf\Documents\WindowsPowerShell\Microsoft.VSCode_profile.ps1" "X:\hub\repos\dots\windows\powershell\Profile.ps1"
+# ln "C:\Users\nickf\.config\starship.toml" "X:\hub\repos\do75\starship\starship.toml"
+
+ln "C:\Users\nickf\Documents\PowerShell\Profile.ps1" "X:\hub\repos\do75\windows\powershell\Profile.ps1"
+ln "C:\Users\nickf\Documents\PowerShell\Microsoft.PowerShell_profile.ps1" "X:\hub\repos\do75\windows\powershell\Microsoft.PowerShell_profile.ps1"
+ln "C:\Users\nickf\Documents\PowerShell\Microsoft.VSCode_profile.ps1" "X:\hub\repos\do75\windows\powershell\Microsoft.VSCode_profile.ps1"
+
+ln "C:\Users\nickf\Documents\WindowsPowerShell\Profile.ps1" "X:\hub\repos\do75\windows\powershell\Profile.ps1"
+ln "C:\Users\nickf\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" "X:\hub\repos\do75\windows\powershell\Microsoft.PowerShell_profile.ps1"
+ln "C:\Users\nickf\Documents\WindowsPowerShell\Microsoft.VSCode_profile.ps1" "X:\hub\repos\do75\windows\powershell\Microsoft.VSCode_profile.ps1"
 
 # Fetch submodules
 # git submodule update --init --recursive
