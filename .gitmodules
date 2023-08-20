@@ -1,3 +1,9 @@
 [submodule "windots"]
 	path = windots
 	url = https://github.com/5nik7/windots.git
+[submodule "universal/nvim"]
+	path = universal/nvim
+	url = https://github.com/5nik7/nvim.git
+[submodule "archdots"]
+	path = archdots
+	url = https://github.com/5nik7/archdots.git
