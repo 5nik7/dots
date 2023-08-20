@@ -1,0 +1,3 @@
+[submodule "windots"]
+	path = windots
+	url = https://github.com/5nik7/windots.git
