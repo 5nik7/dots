@@ -30,8 +30,8 @@ stashed = ""
 
 #  󰥭     󰅂              󰀦 󰛄 󰝨 󰁥 ❌ 󰅖
 [character]
-success_symbol = "[](green)"
-error_symbol = "[](red)"
+success_symbol = "[](green)"
+error_symbol = "[](red)"
 vimcmd_symbol = "[](overlay0)"
 
 [palettes.catppuccin_mocha]
