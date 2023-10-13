@@ -6,8 +6,7 @@
 palette = "catppuccin_mocha"
 
 format="$directory$git_branch$git_status$character"
-add_newline = false
-
+add_newline = true
 
 [directory]
 format = "[$path](blue) "
@@ -16,23 +15,36 @@ truncate_to_repo = false
 use_os_path_sep = false
 use_logical_path = true
 
-
 [git_branch]
 format = "[ $branch](bold mauve) "
 
 [git_status]
-style = "bold yellow"
-format = "([ $all_status$ahead_behind]($style) )"
-ignore_submodules = true
-renamed = ""
-deleted = ""
-stashed = ""
+# disabled = true
+style = "yellow"
+staged = " ${count} " # nf-fa-check
+modified = " ${count} " # nf-fa-edit
+# modified = "  ${count}" # nf-fa-pencil
+renamed = "󰗧 ${count} " # nf-md-cursor_text
+untracked = " ${count} " # nf-fa-question
+deleted = "[ ${count} ](red)" # nf-fa-remove
+conflicted = " ${count} " # nf-fa-flag
+stashed = " ${count} " # nf-fa-bank
+# stashed = "  ${count}" # nf-fa-inbox
+up_to_date = ""
+ahead = "󰞙 ${count} " # nf-md-arrow_expand_up
+behind = "󰞖 ${count} " # nf-md-arrow_expand_down
+diverged = "󰡏 ${ahead_count} ${behind_count} " # nf-md-arrow_expand_vertical
+# diverged = "󰯎 ${ahead_count} ${behind_count}" # nf-md-swap_vertical_bold
+# ignore_submodules = true
+format = "[($staged$modified$renamed$untracked$deleted$conflicted$stashed$ahead_behind)]($style)"
 
-#  󰥭     󰅂              󰀦 󰛄 󰝨 󰁥 ❌ 󰅖
 [character]
-success_symbol = "[](green)"
-error_symbol = "[](red)"
-vimcmd_symbol = "[](overlay0)"
+success_symbol = "[](green)"
+error_symbol = "[](red)"
+vimcmd_symbol = "[](blue)"
+vimcmd_visual_symbol = "[](mauve)"
+vimcmd_replace_symbol = "[](peach"
+format = "$symbol "
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
