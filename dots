@@ -112,7 +112,7 @@ installnala() {
 }
 
 installpkgs() {
-	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential wget vim neofetch ranger bat fzf ripgrep fd-find htop btop)
+	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential wget vim neofetch ranger bat fzf ripgrep fd-find htop btop pipx)
 	for pkgs in ${deps[@]}; do
 		if ! is_installed "$pkgs"; then
 			sudo nala install "$pkgs" -y
