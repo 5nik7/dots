@@ -5,8 +5,12 @@
 
 palette = "catppuccin_mocha"
 
-format="$directory$git_branch$git_status$character"
-add_newline = false
+format="$cmd_duration$os$directory$git_branch$git_status$character"
+add_newline = true
+
+[cmd_duration]
+format = "[$duration](teal) "
+disabled = false
 
 [directory]
 format = "[$path](blue) "
@@ -39,12 +43,37 @@ diverged = "󰡏 ${ahead_count} ${behind_count} " # nf-md-arrow_expand_vertical
 format = "[($staged$modified$renamed$untracked$deleted$conflicted$stashed$ahead_behind)]($style)"
 
 [character]
-success_symbol = "[](green)"
-error_symbol = "[](red)"
-vimcmd_symbol = "[](blue)"
-vimcmd_visual_symbol = "[](mauve)"
-vimcmd_replace_symbol = "[](peach"
+success_symbol = "[](green)"
+error_symbol = "[](red)"
+vimcmd_symbol = "[](blue)"
+vimcmd_visual_symbol = "[](mauve)"
+vimcmd_replace_symbol = "[](peach"
 format = "$symbol "
+
+[os]
+style = "lavender"
+format = "[$symbol]($style) "
+disabled = false
+
+[os.symbols]
+Alpine = ""
+Arch = ""
+CentOS = ""
+Debian = ""
+Fedora = ""
+FreeBSD = ""
+Gentoo = ""
+Linux = ""
+Macos = ""
+Mint = ""
+NixOS = ""
+openSUSE = ""
+Raspbian = ""
+Redhat = ""
+RedHatEnterprise = ""
+Ubuntu = ""
+Unknown = ""
+Windows = "󰕰"
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
