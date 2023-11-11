@@ -115,13 +115,13 @@ installthorium() {
 	if ! is_installed "thorium-browser"; then
 		wget https://dl.thorium.rocks/debian/dists/stable/thorium.list
 		sudo mv thorium.list /etc/apt/sources.list.d/
-		sudo apt update
-		sudo apt install thorium-browser
+		sudo apt update -y
+		sudo apt install thorium-browser -y
 	fi
 }
 
 installpkgs() {
-	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential wget vim neofetch ranger bat fzf ripgrep fd-find htop btop pipx kitty)
+	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-devwget libreadline-dev vim neofetch ranger bat fzf ripgrep fd-find htop btop pipx kitty)
 	for pkgs in ${deps[@]}; do
 		if ! is_installed "$pkgs"; then
 			sudo nala install "$pkgs" -y
@@ -150,6 +150,12 @@ installbob() {
 }
 
 installnvm() {
+	if [ ! -d "$HOME/.pyenv" ]; then
+		curl https://pyenv.run | bash
+	fi
+}
+
+installpyenv() {
 	if [ ! -d "$HOME/.nvm" ]; then
 		curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 	fi
