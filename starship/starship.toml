@@ -9,18 +9,18 @@ format="$cmd_duration$os$directory$git_branch$git_status$character"
 add_newline = true
 
 [cmd_duration]
-format = "[$duration](teal) "
+format = "[$duration](flamingo) "
 disabled = false
 
 [directory]
-format = "[$path](blue) "
+format = "[$path](bold blue) "
 truncation_length = 10
 truncate_to_repo = false
 use_os_path_sep = false
 use_logical_path = true
 
 [git_branch]
-format = "[ $branch](bold mauve) "
+format = "[ $branch](bold mauve) "
 
 [git_status]
 # disabled = true
@@ -43,15 +43,15 @@ diverged = "󰡏 ${ahead_count} ${behind_count} " # nf-md-arrow_expand_vertical
 format = "[($staged$modified$renamed$untracked$deleted$conflicted$stashed$ahead_behind)]($style)"
 
 [character]
-success_symbol = "[](green)"
-error_symbol = "[](red)"
-vimcmd_symbol = "[](blue)"
-vimcmd_visual_symbol = "[](mauve)"
-vimcmd_replace_symbol = "[](peach"
+success_symbol = "[](green)"
+error_symbol = "[](red)"
+vimcmd_symbol = "[󰅂](text)"
+vimcmd_visual_symbol = "[󰅂](mauve)"
+vimcmd_replace_symbol = "[󰅂](peach"
 format = "$symbol "
 
 [os]
-style = "lavender"
+style = "teal"
 format = "[$symbol]($style) "
 disabled = false
 
