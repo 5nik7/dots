@@ -172,4 +172,6 @@ zinit light-mode for \
     hlissner/zsh-autopair \
     tj/git-extras
 
+fast-theme XDG:catppuccin-mocha
+
 eval $(starship init zsh)

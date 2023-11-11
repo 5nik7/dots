@@ -147,11 +147,10 @@ setup_link() {
 	my_git_repo "starship"
 	symlink "$DOTFILES/dots" "$HOME/.local/bin/dots"
 	chmod +x "$HOME/.local/bin/dots"
-	if [[ $SHELL = "/usr/bin/zsh" ]]; then
-		symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
-	fi
+	symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
 	symlink "$REPOS/starship/starship.toml" "$HOME/.config/starship.toml"
 	symlink "$DOTFILES/bat" "$HOME/.config/bat"
+	symlink "$DOTFILES/fsh" "$HOME/.config/fsh"
 	createdir "$HOME/.config/ranger"
 	symlink "$DOTFILES/ranger/rc.conf" "$HOME/.config/ranger/rc.conf"
 	symlink "$DOTFILES/ranger/rifle.conf" "$HOME/.config/ranger/rifle.conf"
