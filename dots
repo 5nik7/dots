@@ -134,6 +134,12 @@ installstarship() {
 	fi
 }
 
+installbob() {
+	if [ ! -f "$HOME/.cargo/bin/bob" ]; then
+		cargo install --git https://github.com/MordechaiHadad/bob.git
+	fi
+}
+
 setshell() {
 	if [[ $SHELL != "/usr/bin/zsh" ]]; then
   		info "Changing shell to zsh."
@@ -168,6 +174,7 @@ setup_start() {
 	installpkgs
 	installrustup
 	installstarship
+	installbob
 	link_bin batcat bat
 	link_bin fdfind fd
 	createdir "$HOME/.local/bin"
