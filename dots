@@ -68,9 +68,12 @@ createdir() {
 }
 
 installpkgs() {
-	deps=(git ninja-build gettext cmake unzip curl build-essential wget vim neofetch ranger)
+	deps=(git ninja-build gettext cmake unzip curl build-essential wget vim neofetch ranger bat)
 	for pkgs in ${deps[@]}; do
 		sudo apt install "$pkgs" -y
+		if [ ! -e "$HOME/.local/bin/bat" ]; then
+			ln -s /usr/bin/batcat ~/.local/bin/bat
+		fi
 	done
 }
 
