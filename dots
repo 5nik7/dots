@@ -176,6 +176,8 @@ setup_link() {
 	symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
 	symlink "$REPOS/starship/starship.toml" "$HOME/.config/starship.toml"
 	symlink "$DOTFILES/bat" "$HOME/.config/bat"
+	symlink "$DOTFILES/kitty" "$HOME/.config/kitty"
+	symlink "$DOTFILES/btop" "$HOME/.config/btop"
 	symlink "$DOTFILES/bottom" "$HOME/.config/bottom"
 	symlink "$DOTFILES/fsh" "$HOME/.config/fsh"
 	symlink "$DOTFILES/git/.gitconfig" "$HOME/.gitconfig"
