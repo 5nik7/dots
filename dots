@@ -121,7 +121,7 @@ installthorium() {
 }
 
 installpkgs() {
-	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential wget vim neofetch ranger bat fzf ripgrep fd-find htop btop pipx)
+	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential wget vim neofetch ranger bat fzf ripgrep fd-find htop btop pipx kitty)
 	for pkgs in ${deps[@]}; do
 		if ! is_installed "$pkgs"; then
 			sudo nala install "$pkgs" -y
@@ -162,6 +162,11 @@ setshell() {
 	fi
 }
 
+installfonts() {
+	cp -rv "$DOTFILES/local/fonts" "$HOME/.local/share/"
+	fc-cache -r
+}
+
 setup_link() {
 	title "Creating symlinks.."
 	my_git_repo "dots"
@@ -173,6 +178,7 @@ setup_link() {
 	symlink "$DOTFILES/bat" "$HOME/.config/bat"
 	symlink "$DOTFILES/bottom" "$HOME/.config/bottom"
 	symlink "$DOTFILES/fsh" "$HOME/.config/fsh"
+	symlink "$DOTFILES/git/.gitconfig" "$HOME/.gitconfig"
 	createdir "$HOME/.config/ranger"
 	symlink "$DOTFILES/ranger/rc.conf" "$HOME/.config/ranger/rc.conf"
 	symlink "$DOTFILES/ranger/rifle.conf" "$HOME/.config/ranger/rifle.conf"
@@ -195,9 +201,11 @@ setup_start() {
 	installthorium
 	link_bin batcat bat
 	link_bin fdfind fd
+	xdg-user-dirs-update
 	createdir "$HOME/.local/bin"
 	createdir "$REPOS"
 	createdir "$HOME/.config"
+	installfonts
 	echo -e "\n"
 }
 
