@@ -122,6 +122,18 @@ installpkgs() {
 	done
 }
 
+installrustup() {
+	if [ ! -d "$HOME/.rustup" ]; then
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	fi
+}
+
+installstarship() {
+	if ! command -v starship >/dev/null 2>&1; then
+		curl -sS https://starship.rs/install.sh | sh
+	fi
+}
+
 setshell() {
 	if [[ $SHELL != "/usr/bin/zsh" ]]; then
   		info "Changing shell to zsh."
@@ -133,6 +145,8 @@ setup_link() {
 	title "Creating symlinks.."
 	my_git_repo "dots"
 	my_git_repo "starship"
+	symlink "$DOTFILES/dots" "$HOME/.local/bin/dots"
+	chmod +x "$HOME/.local/bin/dots"
 	if [[ $SHELL = "/usr/bin/zsh" ]]; then
 		symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
 	fi
@@ -151,6 +165,8 @@ setup_start() {
 	title "Installing needed packages.."
 	installnala
 	installpkgs
+	installrustup
+	installstarship
 	link_bin batcat bat
 	link_bin fdfind fd
 	createdir "$HOME/.local/bin"
