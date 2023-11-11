@@ -164,6 +164,14 @@ zinit light charmbracelet/glow
 zinit ice lucid wait"0" as"program" from"gh-r"
 zinit light solidiquis/erdtree
 
+# TREE-SITTER
+zinit ice as="program" from="gh-r" mv="tree* -> tree-sitter" pick="tree-sitter"
+zinit light tree-sitter/tree-sitter
+
+# PRETTYPING
+zinit ice lucid wait="" as="program" pick="prettyping" atload="alias ping=prettyping"
+zinit load denilsonsa/prettyping
+
 zinit light-mode for \
     zdharma-continuum/fast-syntax-highlighting \
     zsh-users/zsh-autosuggestions \
