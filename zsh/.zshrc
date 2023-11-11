@@ -120,14 +120,56 @@ fi
 
 source "${ZINIT_HOME}/zinit.git/zinit.zsh"
 
-zinit ice blockf atpull'zinit creinstall -q .'
-zinit light zsh-users/zsh-completions
-
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
+zinit ice blockf atpull'zinit creinstall -q .'
+zinit light zsh-users/zsh-completions
+
+# EZA
+zinit ice wait="2" lucid from="gh-r" as="program"
+zinit light eza-community/eza
+zinit ice wait blockf atpull'zinit creinstall -q .'
+
+# DELTA
+zinit ice lucid wait="0" as="program" from="gh-r" bpick="*amd64.deb" pick="usr/bin/delta"
+zinit light dandavison/delta
+
+# BOTTOM
+zinit ice wait="2" lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
+zinit light ClementTsang/bottom
+
+# BAT
+zinit ice from="gh-r" as="program" pick="usr/bin/bat" bpick="*amd64.deb" atload="alias cat=bat"
+zinit light sharkdp/bat
+
+# BAT-EXTRAS
+zinit ice lucid wait="1" as="program" pick="src/batgrep.sh"
+zinit ice lucid wait="1" as="program" pick="src/batdiff.sh"
+zinit light eth-p/bat-extras
+
+# GH-CLI
+zinit ice lucid as="command" from="gh-r" bpick="*linux_amd64.deb" atclone="./gh completion -s zsh > _gh" atpull="%atclone" mv="**/bin/gh* -> gh" pick="usr/bin/gh"
+zinit light cli/cli
+
+# LAZYGIT
+zinit ice lucid wait="0" as="program" from="gh-r" bpick="*Linux_x86_64*" pick="lazygit" atload="alias lg='lazygit'"
+zinit light jesseduffield/lazygit
+
+# GLOW
+zinit ice lucid wait"0" as"program" from"gh-r" bpick='*_amd64.deb' pick"usr/bin/glow"
+zinit light charmbracelet/glow
+
+# ERDTREE
+zinit ice lucid wait"0" as"program" from"gh-r"
+zinit light solidiquis/erdtree
+
 zinit light-mode for \
     zdharma-continuum/fast-syntax-highlighting \
-    zsh-users/zsh-autosuggestions
+    zsh-users/zsh-autosuggestions \
+    Aloxaf/fzf-tab \
+    ael-code/zsh-colored-man-pages \
+    hlissner/zsh-autopair \
+    tj/git-extras
 
 eval $(starship init zsh)

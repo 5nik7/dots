@@ -107,12 +107,12 @@ is_installed() {
 
 installnala() {
 	if ! is_installed "nala"; then
-		sudo nala install "$pkgs" -y
+		sudo apt install nala -y
 	fi
 }
 
 installpkgs() {
-	deps=(git ninja-build gettext cmake unzip curl build-essential wget vim neofetch ranger bat fzf ripgrep fd-find htop btop)
+	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential wget vim neofetch ranger bat fzf ripgrep fd-find htop btop)
 	for pkgs in ${deps[@]}; do
 		if ! is_installed "$pkgs"; then
 			sudo nala install "$pkgs" -y
@@ -163,6 +163,8 @@ setup_link() {
 
 setup_start() {
 	title "Installing needed packages.."
+	sudo apt update -y
+	sudo apt upgrade -y	
 	installnala
 	installpkgs
 	installrustup
