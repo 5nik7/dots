@@ -1,0 +1,113 @@
+#!/bin/bash
+
+DOTFILES="$HOME/dotfiles"
+COLOR_GRAY="\033[1;38;5;243m"
+COLOR_BLUE="\033[1;34m"
+COLOR_GREEN="\033[1;32m"
+COLOR_RED="\033[1;31m"
+COLOR_PURPLE="\033[1;35m"
+COLOR_YELLOW="\033[1;33m"
+COLOR_NONE="\033[0m"
+
+logo() {
+
+	echo -e "${COLOR_BLUE}
+  ░░░░░░   ░░░░░░  ░░░░░░░ ░░░░░░░
+  ▒▒   ▒▒ ▒▒    ▒▒      ▒▒ ▒▒
+  ▒▒   ▒▒ ▒▒    ▒▒    ▒▒   ▒▒▒▒▒▒▒
+  ▓▓   ▓▓ ▓▓    ▓▓   ▓▓         ▓▓
+  ██████   ██████    ██    ███████\n${COLOR_NONE}"
+}
+
+menu() {
+
+	echo -e "  ${COLOR_GRAY}OPTIONS${COLOR_NONE}"
+	echo -e "    ${COLOR_GREEN}setup${COLOR_NONE}"
+	echo -e "    ${COLOR_GREEN}help${COLOR_NONE}\n"
+}
+
+title() {
+	echo -e "\n  ${COLOR_PURPLE}$1${COLOR_NONE}"
+	echo -e "  ${COLOR_GRAY}==============================${COLOR_NONE}\n"
+}
+
+error() {
+	echo -e "    ${COLOR_RED}Error: ${COLOR_NONE}$1"
+	exit 1
+}
+
+warning() {
+	echo -e "    ${COLOR_YELLOW}Warning: ${COLOR_NONE}$1"
+}
+
+info() {
+	echo -e "    ${COLOR_BLUE}Info: ${COLOR_NONE}$1"
+}
+
+success() {
+	echo -e "    ${COLOR_GREEN}$1${COLOR_NONE}"
+}
+
+ask(){
+	while true; do
+		read -rp " Start the setup? [Y/n]: " yn
+			case $yn in
+				[Yy]* ) break;;
+				[Nn]* ) exit;;
+				* ) break;;
+			esac
+  		done
+	clear
+}
+
+createdir() {
+	if [ ! -d "$1" ]; then
+		info "Creating $1"
+		mkdir -p "$1"
+	fi
+}
+
+installpkgs() {
+	deps=(git ninja-build gettext cmake unzip curl build-essential wget vim neofetch ranger)
+	for pkgs in ${deps[@]}; do
+		sudo apt install "$pkgs" -y
+	done
+}
+
+setshell() {
+	if [[ $SHELL != "/usr/bin/zsh" ]]; then
+  		info "Changing shell to zsh."
+  		chsh -s /usr/bin/zsh
+	fi
+}
+
+setup_start() {
+	ask
+	logo "Installing needed packages.."
+	installpkgs
+	createdir "$HOME/.local/bin"
+	createdir "$HOME/.config"
+}
+
+case "$1" in
+setup)
+	clear
+	logo
+	setup_start
+	;;
+help)
+	clear
+	logo
+	menu
+	exit 1
+	;;
+*)
+	clear
+	logo
+	menu
+	exit 1
+	;;
+esac
+
+echo -e
+success "Done.\n"
