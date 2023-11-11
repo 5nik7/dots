@@ -140,6 +140,12 @@ installbob() {
 	fi
 }
 
+installnvm() {
+	if [ ! -d "$HOME/.nvm" ]; then
+		curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+	fi
+}
+
 setshell() {
 	if [[ $SHELL != "/usr/bin/zsh" ]]; then
   		info "Changing shell to zsh."
@@ -175,6 +181,7 @@ setup_start() {
 	installrustup
 	installstarship
 	installbob
+	installnvm
 	link_bin batcat bat
 	link_bin fdfind fd
 	createdir "$HOME/.local/bin"
