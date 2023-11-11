@@ -1,6 +1,7 @@
 #!/bin/bash
 
-DOTFILES="$HOME/dotfiles"
+REPOS="$HOME/repos"
+DOTFILES="$REPOS/dots"
 COLOR_GRAY="\033[1;38;5;243m"
 COLOR_BLUE="\033[1;34m"
 COLOR_GREEN="\033[1;32m"
@@ -23,29 +24,31 @@ menu() {
 
 	echo -e "  ${COLOR_GRAY}OPTIONS${COLOR_NONE}"
 	echo -e "    ${COLOR_GREEN}setup${COLOR_NONE}"
-	echo -e "    ${COLOR_GREEN}help${COLOR_NONE}\n"
+	echo -e "    ${COLOR_GREEN}link${COLOR_NONE}"
+	echo -e "    ${COLOR_GREEN}zsh${COLOR_NONE}"
+	echo -e ""
 }
 
 title() {
 	echo -e "\n  ${COLOR_PURPLE}$1${COLOR_NONE}"
-	echo -e "  ${COLOR_GRAY}==============================${COLOR_NONE}\n"
+	echo -e "  ${COLOR_GRAY}󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴󰍴${COLOR_NONE}\n"
 }
 
 error() {
-	echo -e "    ${COLOR_RED}Error: ${COLOR_NONE}$1"
+	echo -e "    ${COLOR_RED} ${COLOR_NONE}$1"
 	exit 1
 }
 
 warning() {
-	echo -e "    ${COLOR_YELLOW}Warning: ${COLOR_NONE}$1"
+	echo -e "    ${COLOR_YELLOW} ${COLOR_NONE}$1"
 }
 
 info() {
-	echo -e "    ${COLOR_BLUE}Info: ${COLOR_NONE}$1"
+	echo -e "    ${COLOR_BLUE} ${COLOR_NONE}$1"
 }
 
 success() {
-	echo -e "    ${COLOR_GREEN}$1${COLOR_NONE}"
+	echo -e "  ${COLOR_GREEN}$1${COLOR_NONE}"
 }
 
 ask(){
@@ -67,12 +70,54 @@ createdir() {
 	fi
 }
 
+my_git_repo() {
+	srcrepo="https://github.com/5nik7/$1.git"
+	localrepo="$REPOS/$1"
+	if [ ! -d "$localrepo" ]; then
+		info "Cloning $srcrepo to $localrepo"
+		git clone "$srcrepo" "$localrepo"
+	fi
+}
+
+git_repo() {
+	if [ ! -d "$2" ]; then
+		info "Cloning github.com/$1 to $2"
+		git clone "https://github.com/$1" "$2"
+	fi
+}
+
+link_bin() {
+	if [ ! -e "$HOME/.local/bin/$2" ]; then
+			ln -s $(which $1) $HOME/.local/bin/$2
+	fi
+}
+
+symlink() {
+	if [ -e "$2" ]; then
+		rm -f "$2"
+	fi
+	ln -s "$1" "$2"
+	printf '    %s 󰜴 %s\n' "$1" "$2"
+}
+
+installnala() {
+	if ! command -v nala >/dev/null 2>&1; then
+		sudo apt install nala -y
+	fi
+}
+
+is_installed() {
+	dpkg -s "$1" &>/dev/null
+	return $?
+}
+
 installpkgs() {
-	deps=(git ninja-build gettext cmake unzip curl build-essential wget vim neofetch ranger bat)
+	deps=(git ninja-build gettext cmake unzip curl build-essential wget vim neofetch ranger bat fzf ripgrep fd-find htop btop)
 	for pkgs in ${deps[@]}; do
-		sudo apt install "$pkgs" -y
-		if [ ! -e "$HOME/.local/bin/bat" ]; then
-			ln -s /usr/bin/batcat ~/.local/bin/bat
+		if ! is_installed "$pkgs"; then
+			sudo nala install "$pkgs" -y
+		else
+			printf '    %s is already installed.\n' "$pkgs"
 		fi
 	done
 }
@@ -84,12 +129,48 @@ setshell() {
 	fi
 }
 
+setup_link() {
+	title "Creating symlinks.."
+	my_git_repo "dots"
+	my_git_repo "starship"
+	if [[ $SHELL = "/usr/bin/zsh" ]]; then
+		symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
+	fi
+	symlink "$REPOS/starship/starship.toml" "$HOME/.config/starship.toml"
+	symlink "$DOTFILES/bat" "$HOME/.config/bat"
+	createdir "$HOME/.config/ranger"
+	symlink "$DOTFILES/ranger/rc.conf" "$HOME/.config/ranger/rc.conf"
+	symlink "$DOTFILES/ranger/rifle.conf" "$HOME/.config/ranger/rifle.conf"
+	symlink "$DOTFILES/ranger/commands.py" "$HOME/.config/ranger/commands.py"
+	symlink "$DOTFILES/ranger/scope.sh" "$HOME/.config/ranger/scope.sh"
+	git_repo "cdump/ranger-devicons2" "$HOME/.config/ranger/plugins/devicons2"
+	echo -e "\n"
+}
+
 setup_start() {
-	ask
-	logo "Installing needed packages.."
+	title "Installing needed packages.."
+	installnala
 	installpkgs
+	link_bin batcat bat
+	link_bin fdfind fd
 	createdir "$HOME/.local/bin"
+	createdir "$REPOS"
 	createdir "$HOME/.config"
+	echo -e "\n"
+}
+
+setup_zsh() {
+	title "Setting up zsh.."
+	if [[ $SHELL = "/usr/bin/zsh" ]]; then
+		symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
+		warning "Default shell is already zsh."
+		echo -e "\n"
+	else
+		installnala
+		sudo nala install zsh -y
+		symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
+		setshell
+	fi
 }
 
 case "$1" in
@@ -97,20 +178,28 @@ setup)
 	clear
 	logo
 	setup_start
+	setup_link
+	success "Done.\n"
+	exit
 	;;
-help)
+link)
 	clear
 	logo
-	menu
-	exit 1
+	setup_link
+	success "Done.\n"
+	exit
+	;;
+zsh)
+	clear
+	logo
+	setup_zsh
+	success "Done.\n"
+	exit
 	;;
 *)
 	clear
 	logo
 	menu
-	exit 1
+	exit
 	;;
 esac
-
-echo -e
-success "Done.\n"
