@@ -94,7 +94,7 @@ link_bin() {
 
 symlink() {
 	if [ -e "$2" ]; then
-		rm -f "$2"
+		rm -fr "$2"
 	fi
 	ln -s "$1" "$2"
 	printf '    %s 󰜴 %s\n' "$1" "$2"
@@ -108,6 +108,15 @@ is_installed() {
 installnala() {
 	if ! is_installed "nala"; then
 		sudo apt install nala -y
+	fi
+}
+
+installthorium() {
+	if ! is_installed "thorium-browser"; then
+		wget https://dl.thorium.rocks/debian/dists/stable/thorium.list
+		sudo mv thorium.list /etc/apt/sources.list.d/
+		sudo apt update
+		sudo apt install thorium-browser
 	fi
 }
 
@@ -162,6 +171,7 @@ setup_link() {
 	symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
 	symlink "$REPOS/starship/starship.toml" "$HOME/.config/starship.toml"
 	symlink "$DOTFILES/bat" "$HOME/.config/bat"
+	symlink "$DOTFILES/bottom" "$HOME/.config/bottom"
 	symlink "$DOTFILES/fsh" "$HOME/.config/fsh"
 	createdir "$HOME/.config/ranger"
 	symlink "$DOTFILES/ranger/rc.conf" "$HOME/.config/ranger/rc.conf"
@@ -182,6 +192,7 @@ setup_start() {
 	installstarship
 	installbob
 	installnvm
+	installthorium
 	link_bin batcat bat
 	link_bin fdfind fd
 	createdir "$HOME/.local/bin"
@@ -209,6 +220,7 @@ setup)
 	clear
 	logo
 	setup_start
+	setup_zsh
 	setup_link
 	success "Done.\n"
 	exit
