@@ -100,15 +100,15 @@ symlink() {
 	printf '    %s 󰜴 %s\n' "$1" "$2"
 }
 
-installnala() {
-	if ! command -v nala >/dev/null 2>&1; then
-		sudo apt install nala -y
-	fi
-}
-
 is_installed() {
 	dpkg -s "$1" &>/dev/null
 	return $?
+}
+
+installnala() {
+	if ! is_installed "nala"; then
+		sudo nala install "$pkgs" -y
+	fi
 }
 
 installpkgs() {
