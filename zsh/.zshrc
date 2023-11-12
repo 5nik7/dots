@@ -150,6 +150,7 @@ alias less='less -R -M -X'
 alias npmup='npm install -g npm@latest'
 alias v='nvim'
 alias dot='cd $DOTFILES'
+alias repos='cd $REPOS'
 
 export REPOS="$HOME/repos"
 export DOTFILES="$REPOS/dots"
