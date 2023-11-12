@@ -147,6 +147,9 @@ alias ..="cd .."
 alias path='echo $PATH | tr ":" "\n"'
 alias d='ranger'
 alias less='less -R -M -X'
+alias npmup='npm install -g npm@latest'
+alias v='nvim'
+aluas dot='cd $DOTFILES'
 
 export REPOS="$HOME/repos"
 export DOTFILES="$REPOS/dots"
