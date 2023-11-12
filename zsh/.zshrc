@@ -234,13 +234,6 @@ zinit ice wait blockf atpull'zinit creinstall -q .'
 # BAT
 zinit ice from="gh-r" as="program" pick="usr/bin/bat" bpick="*amd64.deb" atload="alias cat=bat"
 zinit light sharkdp/bat
-# BAT-EXTRAS
-zinit ice lucid wait="1" as="program" pick="src/batgrep.sh"
-zinit ice lucid wait="1" as="program" pick="src/batdiff.sh"
-zinit light eth-p/bat-extras
-alias rg=batgrep.sh
-alias bd=batdiff.sh
-alias man=batman.sh
 
 export FZF_DEFAULT_OPTS="
 --ansi
@@ -263,7 +256,7 @@ export FZF_DEFAULT_OPTS="
 --prompt ' >  '
 --pointer='|>'
 --marker='✓'"
-export FZF_DEFAULT_COMMAND='fd -c always'
+export FZF_DEFAULT_COMMAND='rg'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 # fast-theme -q XDG:catppuccin-mocha
