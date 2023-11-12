@@ -161,7 +161,6 @@ installnodenv() {
 		createdir "$(nodenv root)"/plugins
 		git_repo "nodenv/node-build" "$(nodenv root)"/plugins/node-build
 		nodenv update-version-defs
-		npm install -g npm@latest
 	fi
 }
 
