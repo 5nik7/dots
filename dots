@@ -82,7 +82,7 @@ my_git_repo() {
 git_repo() {
 	if [ ! -d "$2" ]; then
 		info "Cloning github.com/$1 to $2"
-		git clone "https://github.com/$1" "$2"
+		git clone "https://github.com/$1.git" "$2"
 	fi
 }
 
@@ -149,15 +149,19 @@ installbob() {
 	fi
 }
 
-installnvm() {
+installpyenv() {
 	if [ ! -d "$HOME/.pyenv" ]; then
 		curl https://pyenv.run | bash
 	fi
 }
 
-installpyenv() {
-	if [ ! -d "$HOME/.nvm" ]; then
-		curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+installnodenv() {
+	if [ ! -d "$HOME/.nodenv" ]; then
+		git clone https://github.com/nodenv/nodenv.git ~/.nodenv
+		createdir "$(nodenv root)"/plugins
+		git_repo "nodenv/node-build" "$(nodenv root)"/plugins/node-build
+		nodenv update-version-defs
+		npm install -g npm@latest
 	fi
 }
 
@@ -207,7 +211,7 @@ setup_start() {
 	installrustup
 	installstarship
 	installbob
-	installnvm
+	installnodenv
 	installpyenv
 	installthorium
 	link_bin batcat bat

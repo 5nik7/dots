@@ -69,6 +69,7 @@ function source_path() {
 }
 
 extend_path "$HOME/.local/bin"
+extend_path "$HOME/.nodenv/bin"
 extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
 
@@ -175,16 +176,75 @@ source "${ZINIT_HOME}/zinit.git/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
-zinit light zsh-users/zsh-completions
+zinit light chrissicool/zsh-256color
+zinit light mafredri/zsh-async
+zinit ice depth"1"
 
-# FZF
-zinit ice from="gh-r" as="command" bpick="*linux_amd64*"
+zinit ice wait="0" lucid from="gh-r" as="program" pick="zoxide-*/zoxide -> zoxide" cp="zoxide-*/completions/_zoxide -> _zoxide" atclone="./zoxide init zsh > init.zsh" atpull="%atclone" src="init.zsh"
+zinit light ajeetdsouza/zoxide
+
+zinit ice wait"0a" atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay" atload"_zsh_highlight" lucid
+zinit light zdharma-continuum/fast-syntax-highlighting
+zinit ice wait"0a" compile'{src/*.zsh,src/strategies/*}' atinit"ZSH_AUTOSUGGEST_USE_ASYNC=1" atload"_zsh_autosuggest_start" lucid
+zinit light zsh-users/zsh-autosuggestions
+zinit ice wait"0b" lucid
+zinit light hlissner/zsh-autopair
+zinit ice wait"0b" blockf lucid
+zinit light zsh-users/zsh-completions
+zinit ice wait"0c" from"gh-r" as"command" lucid
 zinit light junegunn/fzf
-# BIND MULTIPLE WIDGETS USING FZF
-zinit ice lucid wait="1" multisrc"shell/{completion,key-bindings}.zsh" id-as="junegunn/fzf_completions" pick="/dev/null"
-zinit light junegunn/fzf
+zinit ice wait"0c" as"completion" blockf lucid
+zinit snippet https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.zsh
+zinit ice wait"0c" lucid
+zinit snippet https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.zsh
+zinit ice wait"0c" as"command" from"gh-r" mv"ripgrep* -> rg" pick"rg/rg" lucid
+zinit light BurntSushi/ripgrep
+
 # FZF-TAB
+zinit ice wait="1" lucid
 zinit light Aloxaf/fzf-tab
+
+zinit ice lucid as"program" from"gh-r" bpick"starship-x86_64-*.tar.gz" \
+  atload'export STARSHIP_CONFIG=~/.config/starship.toml'
+zinit light starship/starship
+
+zinit ice wait'3' lucid as"program" from"gh-r" \
+  mv"gh*/bin/gh -> gh"
+zinit light "cli/cli"
+
+# DELTA
+zinit ice lucid wait'3' as="program" from="gh-r" bpick="*amd64.deb" pick="usr/bin/delta"
+zinit light dandavison/delta
+
+# BOTTOM
+zinit ice wait'3' lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
+zinit light ClementTsang/bottom
+
+
+zinit ice wait'3' lucid blockf nocompletions \
+	from"gh-r" as'program' cp"fd-*/autocomplete/_fd -> _fd" pick'fd*/fd' \
+	atclone'chown -R $(id -nu):$(id -ng) .; zinit creinstall -q sharkdp/fd' \
+	atpull'%atclone'
+zinit light sharkdp/fd
+
+# LAZYGIT
+zinit ice lucid wait'3' as="program" from="gh-r" bpick="*Linux_x86_64*" pick="lazygit" atload="alias lg='lazygit'"
+zinit light jesseduffield/lazygit
+
+zinit ice wait="2" lucid from="gh-r" as="program"
+zinit light eza-community/eza
+zinit ice wait blockf atpull'zinit creinstall -q .'
+
+# BAT
+zinit ice from="gh-r" as="program" pick="usr/bin/bat" bpick="*amd64.deb" atload="alias cat=bat"
+zinit light sharkdp/bat
+# BAT-EXTRAS
+zinit ice lucid wait="1" as="program" pick="src/batgrep.sh"
+zinit ice lucid wait="1" as="program" pick="src/batdiff.sh"
+zinit light eth-p/bat-extras
+alias rg=batgrep.sh
+alias bd=batdiff.sh
+alias man=batman.sh
 
 export FZF_DEFAULT_OPTS="
 --ansi
@@ -210,103 +270,24 @@ export FZF_DEFAULT_OPTS="
 export FZF_DEFAULT_COMMAND='fd -c always'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
-# EZA
-zinit wait="1" lucid \
-	from"gh-r" as"program" pick"eza" \
-	light-mode for @eza-community/eza
-
-# DELTA
-zinit ice lucid wait="1" as="program" from="gh-r" bpick="*amd64.deb" pick="usr/bin/delta"
-zinit light dandavison/delta
-
-# BOTTOM
-zinit ice wait="1" lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
-zinit light ClementTsang/bottom
-
-# BAT
-
-zinit wait'1' lucid \
-	from"gh-r" as"program" cp"bat/autocomplete/bat.zsh -> _bat" pick"bat*/bat" \
-	atload"export BAT_THEME='base16'; alias cat=bat" \
-	light-mode for @sharkdp/bat
-
-# BAT-EXTRAS
-zinit ice lucid wait="1" as="program" pick="src/batgrep.sh"
-zinit ice lucid wait="1" as="program" pick="src/batdiff.sh"
-zinit light eth-p/bat-extras
-alias rg=batgrep.sh
-alias bd=batdiff.sh
-alias man=batman.sh
-
-# RIPGREP
-zinit wait="1" lucid blockf nocompletions \
-	from"gh-r" as'program' pick'ripgrep*/rg' \
-	cp"ripgrep-*/complete/_rg -> _rg" \
-	atclone'chown -R $(id -nu):$(id -ng) .; zinit creinstall -q BurntSushi/ripgrep' \
-	atpull'%atclone' \
-	light-mode for @BurntSushi/ripgrep
-
-zinit wait="1" lucid blockf nocompletions \
-	from"gh-r" as'program' cp"fd-*/autocomplete/_fd -> _fd" pick'fd*/fd' \
-	atclone'chown -R $(id -nu):$(id -ng) .; zinit creinstall -q sharkdp/fd' \
-	atpull'%atclone' \
-	light-mode for @sharkdp/fd
-
-# GH-CLI
-zinit ice lucid as="command" from="gh-r" bpick="*linux_amd64.deb" atclone="./gh completion -s zsh > _gh" atpull="%atclone" mv="**/bin/gh* -> gh" pick="usr/bin/gh"
-zinit light cli/cli
-
-# LAZYGIT
-zinit ice lucid wait="1" as="program" from="gh-r" bpick="*Linux_x86_64*" pick="lazygit" atload="alias lg='lazygit'"
-zinit light jesseduffield/lazygit
-
-# GLOW
-zinit ice lucid wait="1" as"program" from"gh-r" bpick='*_amd64.deb' pick"usr/bin/glow"
-zinit light charmbracelet/glow
-
-# ERDTREE
-zinit ice lucid wait="1" as"program" from"gh-r"
-zinit light solidiquis/erdtree
-
-# TREE-SITTER
-zinit ice as="program" from="gh-r" mv="tree* -> tree-sitter" pick="tree-sitter"
-zinit light tree-sitter/tree-sitter
-
-# PRETTYPING
-zinit ice lucid wait="1" as="program" pick="prettyping" atload="alias ping=prettyping"
-zinit load denilsonsa/prettyping
-
-
-zinit wait="1" lucid \
-	from"gh-r" as"program" \
-	atload"alias rm='trash put'" \
-	light-mode for @oberblastmeister/trashy
-
-zinit wait="1" lucid \
-	from"gh-r" as"program" mv'tealdeer* -> tldr' \
-	light-mode for @dbrgn/tealdeer
-zinit ice wait="1" lucid as"completion" mv'zsh_tealdeer -> _tldr'
-zinit snippet https://github.com/dbrgn/tealdeer/blob/main/completion/zsh_tealdeer
-
-zinit light-mode for \
-    zdharma-continuum/fast-syntax-highlighting \
-    zsh-users/zsh-autosuggestions \
-    hlissner/zsh-autopair
-
-fast-theme -q XDG:catppuccin-mocha
+# fast-theme -q XDG:catppuccin-mocha
 
 autoload colors && colors
 
 source_path "$HOME/.cargo/env"
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# export NVM_DIR="$HOME/.nvm"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
+eval "$(pyenv virtualenv-init -)"
+
 eval "$(rbenv init -)"
+
+eval "$(nodenv init - zsh)"
 
 eval $(starship init zsh)
