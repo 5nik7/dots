@@ -204,10 +204,6 @@ zinit light BurntSushi/ripgrep
 zinit ice wait="1" lucid
 zinit light Aloxaf/fzf-tab
 
-zinit ice lucid as"program" from"gh-r" bpick"starship-x86_64-*.tar.gz" \
-  atload'export STARSHIP_CONFIG=~/.config/starship.toml'
-zinit light starship/starship
-
 zinit ice wait'3' lucid as"program" from"gh-r" \
   mv"gh*/bin/gh -> gh"
 zinit light "cli/cli"
@@ -275,10 +271,6 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 autoload colors && colors
 
 source_path "$HOME/.cargo/env"
-
-# export NVM_DIR="$HOME/.nvm"
-# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
