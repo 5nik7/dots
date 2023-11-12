@@ -121,7 +121,7 @@ installthorium() {
 }
 
 installpkgs() {
-	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev wget libreadline-dev gnupg2 vim neofetch ranger bat fzf ripgrep fd-find htop btop pipx kitty)
+	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev wget libreadline-dev gnupg2 vim neofetch ranger bat fzf ripgrep fd-find htop btop pipx kitty rbenv)
 	for pkgs in ${deps[@]}; do
 		if ! is_installed "$pkgs"; then
 			sudo nala install "$pkgs" -y
@@ -161,12 +161,6 @@ installpyenv() {
 	fi
 }
 
-installrvm() {
-	if [ ! -d "$HOME/.rvm" ]; then
-		gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-		curl -sSL https://get.rvm.io | bash -s stable
-	fi
-}
 
 setshell() {
 	if [[ $SHELL != "/usr/bin/zsh" ]]; then
@@ -214,7 +208,6 @@ setup_start() {
 	installbob
 	installnvm
 	installpyenv
-	installrvm
 	installthorium
 	link_bin batcat bat
 	link_bin fdfind fd
