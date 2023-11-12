@@ -182,6 +182,7 @@ setup_link() {
 	chmod +x "$HOME/.local/bin/dots"
 	symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
 	symlink "$REPOS/starship/starship.toml" "$HOME/.config/starship.toml"
+	symlink "$REPOS/neoviim" "$HOME/.config/nvim"
 	symlink "$DOTFILES/bat" "$HOME/.config/bat"
 	symlink "$DOTFILES/kitty" "$HOME/.config/kitty"
 	symlink "$DOTFILES/btop" "$HOME/.config/btop"

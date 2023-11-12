@@ -13,55 +13,29 @@ setopt hist_expand           # automatically expand history on completion
 
 setopt share_history
 
-setopt list_packed           # Compactly display completion list
-setopt auto_remove_slash     # Automatically remove trailing / in completions
-setopt auto_param_slash      # Automatically append trailing / in directory name completion to prepare for next completion
-setopt mark_dirs             # Append trailing / to filename expansions when they match a directory
-setopt list_types            # Display file type identifier in list of possible completions (ls -F)
-unsetopt menu_complete       # When completing, instead of displaying a list of possible completions and beeping. Don't insert the first match suddenly.
-setopt auto_list             # Display a list of possible completions with ^I (when there are multiple candidates for completion, display a list)
-setopt auto_menu             # Automatic completion of completion candidates in order by hitting completion key repeatedly
-setopt auto_param_keys       # Automatically completes bracket correspondence, etc.
-setopt auto_resume           # Resume when executing the same command name as a suspended process
-
-
 setopt auto_cd               # Move by directory only
 setopt no_beep               # Don't beep on command input error
 
-setopt complete_in_word
 setopt equals                # Expand =COMMAND to COMMAND pathname
 setopt nonomatch             # Enable glob expansion to avoid nomatch
 setopt glob
 setopt extended_glob         # Enable expanded globs
-setopt hash_cmds             # Put path in hash when each command is executed
-setopt no_hup                # Don't kill background jobs on logout
-setopt ignore_eof            # Don't logout with C-d
+setopt hash_cmds             # Put path in hash when each command is executed         # Don't logout with C-d
 
 setopt long_list_jobs        # Make internal command jobs output jobs -L by default
 setopt magic_equal_subst     # command line arguments can be completed after =, e.g. --PREFIX=/USR
 setopt multios               # TEE and CAT features are used as needed, such as multiple redirects and pipes
-setopt numeric_glob_sort     # Sort by interpreting numbers as numerical values
-setopt path_dirs             # Find subdirectories in PATH when / is included in command name
-
-setopt auto_pushd            # Put the directory in the directory stack even when cd'ing normally.
-setopt pushd_ignore_dups     # Delete old duplicates in the directory stack.
-setopt pushd_to_home         # no pushd argument == pushd $HOME
-setopt pushd_silent          # Don't show contents of directory stack on every pushd,popd
 
 setopt notify                # Notify as soon as background job finishes (don't wait for prompt)
 
-unsetopt no_clobber
 setopt interactive_comments  # Allow comments while typing commands
-setopt chase_links           # Symbolic links are converted to linked paths before execution
-setopt noflowcontrol
 
-setopt nolistambiguous # Show menu
 
 SAVEHIST=100000
 HISTSIZE=100000
 HISTFILE=~/.zsh_history
 
-WORDCHARS='*?_-[]~&;!#$%^(){}<>|'
+WORDCHARS=''
 
 base00="#11111b"
 base01="#181825"
@@ -100,6 +74,15 @@ extend_path "/mnt/c/vscode/bin"
 
 function cd() {
 	builtin cd "$@" && eza -la --icons --hyperlink --git-repos --git --group-directories-first --no-filesize --no-user --no-time
+}
+
+function ssh-key-set {
+   ssh-add -D
+   ssh-add "$HOME/.ssh/${1:-id_rsa}"
+}
+
+function ssh-key-info {
+   ssh-keygen -l -f "$HOME/.ssh/${1:-id_rsa}"
 }
 
 function history-all() {
@@ -143,6 +126,16 @@ function 256color() {
 		fi
 	done
 }
+bindkey -v
+
+function prepend-sudo {
+  if [[ $BUFFER != "sudo "* ]]; then
+    BUFFER="sudo $BUFFER"; CURSOR+=5
+  fi
+}
+zle -N prepend-sudo
+
+bindkey -M vicmd s prepend-sudo
 
 alias ll="eza -la --icons --hyperlink --git-repos --git --group-directories-first"
 alias l="eza -la --icons --hyperlink --git-repos --git --group-directories-first --no-filesize --no-user --no-time"
@@ -152,6 +145,7 @@ alias q="exit"
 alias ..="cd .."
 alias path='echo $PATH | tr ":" "\n"'
 alias d='ranger'
+alias less='less -R -M -X'
 
 export REPOS="$HOME/repos"
 export DOTFILES="$REPOS/dots"
@@ -163,7 +157,6 @@ export PAGER='bat'
 export BAT_CONFIG_PATH="$HOME/.config/bat/bat.conf"
 export BAT_THEME="Catppuccin-mocha"
 
-source_path "$HOME/.cargo/env"
 
 # Configure and load plugins using Zinit's
 ZINIT_HOME="${ZINIT_HOME:-${XDG_DATA_HOME:-${HOME}/.local/share}/zinit}"
@@ -193,11 +186,8 @@ zinit light junegunn/fzf
 # FZF-TAB
 zinit light Aloxaf/fzf-tab
 
-
 export FZF_DEFAULT_OPTS="
 --ansi
---layout=default
---info=inline
 --color preview-bg:$base00
 --color border:$base00
 --color gutter:$base01
@@ -214,13 +204,10 @@ export FZF_DEFAULT_OPTS="
 --color marker:$base08
 --color header:$base06
 --height=50%
---multi
 --prompt ' >  '
 --pointer='|>'
---marker='✓'
---bind 'ctrl-e:execute(nvim {} < /dev/tty > /dev/tty 2>&1)' > selected
---bind 'ctrl-v:execute(code {+})'"
-export FZF_DEFAULT_COMMAND='rg --files --no-ignore --hidden --follow -g "!{.git,node_modules}/*" 2> /dev/null'
+--marker='✓'"
+export FZF_DEFAULT_COMMAND='fd -c always'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 # EZA
@@ -301,21 +288,16 @@ zinit wait="1" lucid \
 zinit ice wait="1" lucid as"completion" mv'zsh_tealdeer -> _tldr'
 zinit snippet https://github.com/dbrgn/tealdeer/blob/main/completion/zsh_tealdeer
 
-# translation #
-zinit wait="1" lucid \
-	ver"stable" pullopts"--rebase" \
-	light-mode for @soimort/translate-shell
-
 zinit light-mode for \
     zdharma-continuum/fast-syntax-highlighting \
     zsh-users/zsh-autosuggestions \
-    ael-code/zsh-colored-man-pages \
-    hlissner/zsh-autopair \
-    tj/git-extras
+    hlissner/zsh-autopair
 
 fast-theme -q XDG:catppuccin-mocha
 
 autoload colors && colors
+
+source_path "$HOME/.cargo/env"
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
