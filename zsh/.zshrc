@@ -149,7 +149,7 @@ alias d='ranger'
 alias less='less -R -M -X'
 alias npmup='npm install -g npm@latest'
 alias v='nvim'
-aluas dot='cd $DOTFILES'
+alias dot='cd $DOTFILES'
 
 export REPOS="$HOME/repos"
 export DOTFILES="$REPOS/dots"
