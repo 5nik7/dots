@@ -174,7 +174,7 @@ setshell() {
 }
 
 installfonts() {
-	cp -rv "$DOTFILES/local/fonts" "$HOME/.local/share/"
+	cp -rv "$DOTFILES/local/fonts/*" "$HOME/.local/share/"
 	fc-cache -r
 }
 
@@ -182,6 +182,7 @@ setup_link() {
 	title "Creating symlinks.."
 	my_git_repo "dots"
 	my_git_repo "starship"
+ my_git_repo "neoviim"
 	symlink "$DOTFILES/dots" "$HOME/.local/bin/dots"
 	chmod +x "$HOME/.local/bin/dots"
 	symlink "$DOTFILES/zsh/.zshrc" "$HOME/.zshrc"
