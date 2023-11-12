@@ -182,25 +182,16 @@ source "${ZINIT_HOME}/zinit.git/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
-zinit ice wait="0b" lucid blockf
 zinit light zsh-users/zsh-completions
 
 # FZF
 zinit ice from="gh-r" as="command" bpick="*linux_amd64*"
 zinit light junegunn/fzf
 # BIND MULTIPLE WIDGETS USING FZF
-zinit ice lucid wait'0c' multisrc"shell/{completion,key-bindings}.zsh" id-as="junegunn/fzf_completions" pick="/dev/null"
+zinit ice lucid wait="1" multisrc"shell/{completion,key-bindings}.zsh" id-as="junegunn/fzf_completions" pick="/dev/null"
 zinit light junegunn/fzf
 # FZF-TAB
-zinit ice wait="1" lucid
 zinit light Aloxaf/fzf-tab
-
-zinit wait'1' lucid \
-	pick"fzf-extras.zsh" \
-	light-mode for @atweiden/fzf-extras # fzf
-
-zinit wait'1c' lucid \
-	light-mode for @chitoku-k/fzf-zsh-completions
 
 
 export FZF_DEFAULT_OPTS="
@@ -232,20 +223,17 @@ export FZF_DEFAULT_OPTS="
 export FZF_DEFAULT_COMMAND='rg --files --no-ignore --hidden --follow -g "!{.git,node_modules}/*" 2> /dev/null'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
-zinit wait'0' lucid \
-	light-mode for @mafredri/zsh-async
-
 # EZA
-zinit wait'1' lucid \
+zinit wait="1" lucid \
 	from"gh-r" as"program" pick"eza" \
 	light-mode for @eza-community/eza
 
 # DELTA
-zinit ice lucid wait="0" as="program" from="gh-r" bpick="*amd64.deb" pick="usr/bin/delta"
+zinit ice lucid wait="1" as="program" from="gh-r" bpick="*amd64.deb" pick="usr/bin/delta"
 zinit light dandavison/delta
 
 # BOTTOM
-zinit ice wait="2" lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
+zinit ice wait="1" lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
 zinit light ClementTsang/bottom
 
 # BAT
@@ -264,14 +252,14 @@ alias bd=batdiff.sh
 alias man=batman.sh
 
 # RIPGREP
-zinit wait'1' lucid blockf nocompletions \
+zinit wait="1" lucid blockf nocompletions \
 	from"gh-r" as'program' pick'ripgrep*/rg' \
 	cp"ripgrep-*/complete/_rg -> _rg" \
 	atclone'chown -R $(id -nu):$(id -ng) .; zinit creinstall -q BurntSushi/ripgrep' \
 	atpull'%atclone' \
 	light-mode for @BurntSushi/ripgrep
 
-zinit wait'1' lucid blockf nocompletions \
+zinit wait="1" lucid blockf nocompletions \
 	from"gh-r" as'program' cp"fd-*/autocomplete/_fd -> _fd" pick'fd*/fd' \
 	atclone'chown -R $(id -nu):$(id -ng) .; zinit creinstall -q sharkdp/fd' \
 	atpull'%atclone' \
@@ -282,15 +270,15 @@ zinit ice lucid as="command" from="gh-r" bpick="*linux_amd64.deb" atclone="./gh 
 zinit light cli/cli
 
 # LAZYGIT
-zinit ice lucid wait="0" as="program" from="gh-r" bpick="*Linux_x86_64*" pick="lazygit" atload="alias lg='lazygit'"
+zinit ice lucid wait="1" as="program" from="gh-r" bpick="*Linux_x86_64*" pick="lazygit" atload="alias lg='lazygit'"
 zinit light jesseduffield/lazygit
 
 # GLOW
-zinit ice lucid wait"0" as"program" from"gh-r" bpick='*_amd64.deb' pick"usr/bin/glow"
+zinit ice lucid wait="1" as"program" from"gh-r" bpick='*_amd64.deb' pick"usr/bin/glow"
 zinit light charmbracelet/glow
 
 # ERDTREE
-zinit ice lucid wait"0" as"program" from"gh-r"
+zinit ice lucid wait="1" as"program" from"gh-r"
 zinit light solidiquis/erdtree
 
 # TREE-SITTER
@@ -298,27 +286,23 @@ zinit ice as="program" from="gh-r" mv="tree* -> tree-sitter" pick="tree-sitter"
 zinit light tree-sitter/tree-sitter
 
 # PRETTYPING
-zinit ice lucid wait="" as="program" pick="prettyping" atload="alias ping=prettyping"
+zinit ice lucid wait="1" as="program" pick="prettyping" atload="alias ping=prettyping"
 zinit load denilsonsa/prettyping
 
 
-zinit wait'1' lucid \
+zinit wait="1" lucid \
 	from"gh-r" as"program" \
 	atload"alias rm='trash put'" \
 	light-mode for @oberblastmeister/trashy
 
-zinit wait'1' lucid \
+zinit wait="1" lucid \
 	from"gh-r" as"program" mv'tealdeer* -> tldr' \
 	light-mode for @dbrgn/tealdeer
-zinit ice wait'1' lucid as"completion" mv'zsh_tealdeer -> _tldr'
+zinit ice wait="1" lucid as"completion" mv'zsh_tealdeer -> _tldr'
 zinit snippet https://github.com/dbrgn/tealdeer/blob/main/completion/zsh_tealdeer
 
-zinit wait'2' lucid \
-	light-mode for @caarlos0/zsh-git-sync
-
-
 # translation #
-zinit wait'1' lucid \
+zinit wait="1" lucid \
 	ver"stable" pullopts"--rebase" \
 	light-mode for @soimort/translate-shell
 
@@ -332,21 +316,6 @@ zinit light-mode for \
 fast-theme -q XDG:catppuccin-mocha
 
 autoload colors && colors
-
-function plugupdate() {
-	print_info "Update zinit plugins"
-	zinit update --all
-	print_info "Finish zinit plugins"
-
-	# print_info "Update $EDITOR plugins"
-	# $EDITOR --headless -c 'Lazy! sync' -c 'qall'
-
-	# print_info "Update $EDITOR mason"
-	# $EDITOR --headless -c 'lua require("mason-registry").refresh(); require("mason-registry").update()' -c 'qall'
-
-	# print_info "Finish Neovim plugins"
-}
-
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
