@@ -173,7 +173,7 @@ setshell() {
 }
 
 installfonts() {
-	cp -rv "$DOTFILES/local/fonts/*" "$HOME/.local/share/"
+	cp -rv "$DOTFILES/local/fonts" "$HOME/.local/share/"
 	fc-cache -r
 }
 
@@ -220,7 +220,7 @@ setup_start() {
 	createdir "$HOME/.local/bin"
 	createdir "$REPOS"
 	createdir "$HOME/.config"
-	installfonts
+	# installfonts
 	echo -e "\n"
 }
 
