@@ -1,3 +1,5 @@
+export REPOS="$HOME/repos"
+export DOTFILES="$REPOS/dots"
 
 unsetopt promptcr            # Prevent overwriting non-newline output at the prompt
 setopt extended_history      # Record start time and elapsed time in history file
@@ -68,6 +70,7 @@ function source_path() {
 	fi
 }
 
+extend_path "$DOTFILES"
 extend_path "$HOME/.local/bin"
 extend_path "$HOME/.nodenv/bin"
 extend_path "$HOME/.local/share/bob/nvim-bin"
@@ -152,8 +155,6 @@ alias v='nvim'
 alias dot='cd $DOTFILES'
 alias repos='cd $REPOS'
 
-export REPOS="$HOME/repos"
-export DOTFILES="$REPOS/dots"
 export SUDO_PROMPT="passwd: "
 export EDITOR='nvim'
 export VISUAL=$EDITOR
