@@ -80,6 +80,13 @@ function cd() {
 	builtin cd "$@" && eza -la --icons --hyperlink --git-repos --git --group-directories-first --no-filesize --no-user --no-time
 }
 
+function cleanvim() {
+	rm -rf ~/.config/nvim
+	rm -rf ~/.local/share/nvim
+	rm -rf ~/.local/state/nvim
+	rm -rf ~/.cache/nvim
+}
+
 function ssh-key-set {
    ssh-add -D
    ssh-add "$HOME/.ssh/${1:-id_rsa}"
@@ -181,10 +188,6 @@ source "${ZINIT_HOME}/zinit.git/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
-zinit light chrissicool/zsh-256color
-zinit light mafredri/zsh-async
-zinit ice depth"1"
-
 zinit ice wait="0" lucid from="gh-r" as="program" pick="zoxide-*/zoxide -> zoxide" cp="zoxide-*/completions/_zoxide -> _zoxide" atclone="./zoxide init zsh > init.zsh" atpull="%atclone" src="init.zsh"
 zinit light ajeetdsouza/zoxide
 
@@ -196,14 +199,18 @@ zinit ice wait"0b" lucid
 zinit light hlissner/zsh-autopair
 zinit ice wait"0b" blockf lucid
 zinit light zsh-users/zsh-completions
-zinit ice wait"0c" from"gh-r" as"command" lucid
-zinit light junegunn/fzf
-zinit ice wait"0c" as"completion" blockf lucid
-zinit snippet https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.zsh
-zinit ice wait"0c" lucid
-zinit snippet https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.zsh
-zinit ice wait"0c" as"command" from"gh-r" mv"ripgrep* -> rg" pick"rg/rg" lucid
-zinit light BurntSushi/ripgrep
+# zinit ice wait"0c" from"gh-r" as"command" lucid
+# zinit light junegunn/fzf
+# zinit ice wait"0c" as"completion" blockf lucid
+# zinit snippet https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.zsh
+# zinit ice wait"0c" lucid
+# zinit snippet https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.zsh
+# zinit ice wait"0c" as"command" from"gh-r" mv"ripgrep* -> rg" pick"rg/rg" lucid
+# zinit light BurntSushi/ripgrep
+
+zinit light chrissicool/zsh-256color
+zinit light mafredri/zsh-async
+zinit ice depth"1"
 
 # FZF-TAB
 zinit ice wait="1" lucid
@@ -222,11 +229,11 @@ zinit ice wait'3' lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm
 zinit light ClementTsang/bottom
 
 
-zinit ice wait'3' lucid blockf nocompletions \
-	from"gh-r" as'program' cp"fd-*/autocomplete/_fd -> _fd" pick'fd*/fd' \
-	atclone'chown -R $(id -nu):$(id -ng) .; zinit creinstall -q sharkdp/fd' \
-	atpull'%atclone'
-zinit light sharkdp/fd
+# zinit ice wait'3' lucid blockf nocompletions \
+# 	from"gh-r" as'program' cp"fd-*/autocomplete/_fd -> _fd" pick'fd*/fd' \
+# 	atclone'chown -R $(id -nu):$(id -ng) .; zinit creinstall -q sharkdp/fd' \
+# 	atpull'%atclone'
+# zinit light sharkdp/fd
 
 # LAZYGIT
 zinit ice lucid wait'3' as="program" from="gh-r" bpick="*Linux_x86_64*" pick="lazygit" atload="alias lg='lazygit'"
@@ -236,9 +243,8 @@ zinit ice wait="2" lucid from="gh-r" as="program"
 zinit light eza-community/eza
 zinit ice wait blockf atpull'zinit creinstall -q .'
 
-# BAT
-zinit ice from="gh-r" as="program" pick="usr/bin/bat" bpick="*amd64.deb" atload="alias cat=bat"
-zinit light sharkdp/bat
+# zinit ice from="gh-r" as="program" pick="usr/bin/bat" bpick="*amd64.deb" atload="alias cat=bat"
+# zinit light sharkdp/bat
 
 export FZF_DEFAULT_OPTS="
 --ansi
@@ -261,8 +267,6 @@ export FZF_DEFAULT_OPTS="
 --prompt ' >  '
 --pointer='|>'
 --marker='✓'"
-export FZF_DEFAULT_COMMAND='rg'
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 # fast-theme -q XDG:catppuccin-mocha
 
