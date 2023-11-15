@@ -73,6 +73,8 @@ eval "$(luarocks path --bin)"
 
 source_path "$HOME/.cargo/env"
 
+source_path "$HOME/venv/bin/activate"
+
 eval "$(rbenv init -)"
 
 eval $(starship init zsh)
