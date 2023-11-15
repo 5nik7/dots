@@ -77,7 +77,7 @@ extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
 
 function cd() {
-	builtin cd "$@" && eza -la --icons --hyperlink --git-repos --git --group-directories-first --no-filesize --no-user --no-time
+	builtin cd "$@" && eza -lA --icons --git-repos --git --group-directories-first --no-filesize --no-user --no-time
 }
 
 function cleanvim() {
@@ -148,8 +148,8 @@ zle -N prepend-sudo
 
 bindkey -M vicmd s prepend-sudo
 
-alias ll="eza -la --icons --hyperlink --git-repos --git --group-directories-first"
-alias l="eza -la --icons --hyperlink --git-repos --git --group-directories-first --no-filesize --no-user --no-time"
+alias ll="eza -lA --icons --git-repos --git --group-directories-first"
+alias l="eza -lA --icons --git-repos --git --group-directories-first --no-filesize --no-user --no-time"
 
 alias c="clear"
 alias q="exit"
