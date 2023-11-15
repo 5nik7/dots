@@ -73,11 +73,9 @@ function 256color() {
 		fi
 	done
 }
-bindkey -v
 
 function prepend-sudo {
   if [[ $BUFFER != "sudo "* ]]; then
     BUFFER="sudo $BUFFER"; CURSOR+=5
   fi
 }
-zle -N prepend-sudo

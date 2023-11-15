@@ -1,14 +1,31 @@
 export WINREPOS="/mnt/c/Users/nickf/Documents/GitHub/"
-export REPOS="$HOME/repos"
-export DOTFILES="$REPOS/dots"
-export ZSH="$DOTFILES/zsh"
-export SUDO_PROMPT="passwd: "
+export REPOS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
+export DOTFILES="$(dirname "$(dirname "$(readlink "${(%):-%N}")")")"
+export ZSH="$(dirname "$(readlink "${(%):-%N}")")"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_STATE_HOME="$HOME/.local/state"
+export XDG_CONFIG_DIRS="/etc/xdg"
+
+export SUDO_PROMPT=" passwd: "
 export EDITOR='nvim'
 export VISUAL=$EDITOR
 export GIT_EDITOR=$EDITOR
+export BROWSER="thorium-browser"
 export PAGER='bat'
 export BAT_CONFIG_PATH="$HOME/.config/bat/bat.conf"
-export BAT_THEME="Catppuccin-mocha"
+export GOPATH=$HOME/go
+export GOBIN=$HOME/go/bin
+export zfunc="$XDG_DATA_HOME/zsh/functions"
+
+fpath=(
+    $ZSH/functions.zsh
+    $zfunc
+    $fpath
+)
+
+# PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/wsl/lib"
 
 function zmodule() {
 	if [ -f "$ZSH/$1.zsh" ]; then
@@ -23,8 +40,9 @@ zmodule "aliases"
 zmodule "plugins"
 
 extend_path "$DOTFILES"
+extend_path "$XDG_DATA_HOME/zsh/functions"
 extend_path "$HOME/.local/bin"
-extend_path "$HOME/.nodenv/bin"
+extend_path "$GOBIN"
 extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
 
@@ -48,16 +66,17 @@ export FZF_DEFAULT_OPTS="
 
 # fast-theme -q XDG:catppuccin-mocha
 
+autoload -U bashcompinit
+bashcompinit
+
+eval "$(luarocks path --bin)"
+
 source_path "$HOME/.cargo/env"
-
-export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
-eval "$(pyenv virtualenv-init -)"
 
 eval "$(rbenv init -)"
 
-eval "$(nodenv init - zsh)"
-
 eval $(starship init zsh)
+
+export NVM_DIR="$HOME/.config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion

@@ -47,10 +47,6 @@ zinit light dandavison/delta
 zinit ice wait'3' lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
 zinit light ClementTsang/bottom
 
-# LAZYGIT
-zinit ice lucid wait'3' as="program" from="gh-r" bpick="*Linux_x86_64*" pick="lazygit" atload="alias lg='lazygit'"
-zinit light jesseduffield/lazygit
-
 zinit ice wait="2" lucid from="gh-r" as="program"
 zinit light eza-community/eza
 zinit ice wait blockf atpull'zinit creinstall -q .'
