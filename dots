@@ -94,7 +94,7 @@ link_bin() {
 
 symlink() {
 	if [ -e "$2" ]; then
-		rm -fr "$2"
+		mv -fr "$2.bak"
 	fi
 	ln -s "$1" "$2"
 	printf '    %s 󰜴 %s\n' "$1" "$2"
@@ -157,7 +157,8 @@ setshell() {
 }
 
 installfonts() {
-	cp -rv "$DOTFILES/local/fonts" "$HOME/.local/share/"
+ createdir "$HOME/.local/share"
+	symlink "$DOTFILES/local/fonts" "$HOME/.local/share/"
 	fc-cache -r
 }
 
@@ -198,9 +199,10 @@ setup_start() {
 	link_bin fdfind fd
 	xdg-user-dirs-update
 	createdir "$HOME/.local/bin"
+ createdir "$HOME/bin"
 	createdir "$REPOS"
 	createdir "$HOME/.config"
-	# installfonts
+ installfonts
 	echo -e "\n"
 }
 
