@@ -161,6 +161,7 @@ alias npmup='npm install -g npm@latest'
 alias v='nvim'
 alias dot='cd $DOTFILES'
 alias repos='cd $REPOS'
+alias cat='bat'
 
 export SUDO_PROMPT="passwd: "
 export EDITOR='nvim'
@@ -199,14 +200,6 @@ zinit ice wait"0b" lucid
 zinit light hlissner/zsh-autopair
 zinit ice wait"0b" blockf lucid
 zinit light zsh-users/zsh-completions
-# zinit ice wait"0c" from"gh-r" as"command" lucid
-# zinit light junegunn/fzf
-# zinit ice wait"0c" as"completion" blockf lucid
-# zinit snippet https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.zsh
-# zinit ice wait"0c" lucid
-# zinit snippet https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.zsh
-# zinit ice wait"0c" as"command" from"gh-r" mv"ripgrep* -> rg" pick"rg/rg" lucid
-# zinit light BurntSushi/ripgrep
 
 zinit light chrissicool/zsh-256color
 zinit light mafredri/zsh-async
@@ -228,13 +221,6 @@ zinit light dandavison/delta
 zinit ice wait'3' lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
 zinit light ClementTsang/bottom
 
-
-# zinit ice wait'3' lucid blockf nocompletions \
-# 	from"gh-r" as'program' cp"fd-*/autocomplete/_fd -> _fd" pick'fd*/fd' \
-# 	atclone'chown -R $(id -nu):$(id -ng) .; zinit creinstall -q sharkdp/fd' \
-# 	atpull'%atclone'
-# zinit light sharkdp/fd
-
 # LAZYGIT
 zinit ice lucid wait'3' as="program" from="gh-r" bpick="*Linux_x86_64*" pick="lazygit" atload="alias lg='lazygit'"
 zinit light jesseduffield/lazygit
@@ -243,8 +229,6 @@ zinit ice wait="2" lucid from="gh-r" as="program"
 zinit light eza-community/eza
 zinit ice wait blockf atpull'zinit creinstall -q .'
 
-# zinit ice from="gh-r" as="program" pick="usr/bin/bat" bpick="*amd64.deb" atload="alias cat=bat"
-# zinit light sharkdp/bat
 
 export FZF_DEFAULT_OPTS="
 --ansi
