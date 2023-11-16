@@ -1,5 +1,5 @@
-alias ll="eza -lA --icons --git-repos --git --group-directories-first"
-alias l="eza -lA --icons --git-repos --git --group-directories-first --no-filesize --no-user --no-time"
+alias ll="ll_eza"
+alias l="ls_eza"
 
 alias c="clear"
 alias q="exit"

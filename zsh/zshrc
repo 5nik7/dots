@@ -1,6 +1,7 @@
 export WINREPOS="/mnt/c/GitHub/"
-export REPOS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
-export DOTFILES="$(dirname "$(dirname "$(readlink "${(%):-%N}")")")"
+export REPOS="$HOME/repos"
+export DOTS="$REPOS/dots"
+export DOTFILES="$HOME/.dots"
 export ZSH="$(dirname "$(readlink "${(%):-%N}")")"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CONFIG_HOME="$HOME/.config"
@@ -8,7 +9,7 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_STATE_HOME="$HOME/.local/state"
 export XDG_CONFIG_DIRS="/etc/xdg"
 
-export SUDO_PROMPT=" passwd: "
+export SUDO_PROMPT="passwd: "
 export EDITOR='nvim'
 export VISUAL=$EDITOR
 export GIT_EDITOR=$EDITOR
@@ -39,7 +40,7 @@ zmodule "theme"
 zmodule "aliases"
 zmodule "plugins"
 
-extend_path "$DOTFILES"
+extend_path "$DOTS"
 extend_path "$XDG_DATA_HOME/zsh/functions"
 extend_path "$HOME/.local/bin"
 extend_path "$HOME/bin"
