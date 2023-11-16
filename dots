@@ -86,6 +86,7 @@ link_bin() {
 symlink() {
 	if [ -e "$2" ]; then
 		mv -fv "$2" "$2.bak"
+		printf '    Creating backup for %s' "$2"
 	fi
 	ln -s "$1" "$2"
 	printf '    %s 󰜴 %s\n' "$1" "$2"

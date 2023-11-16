@@ -1,4 +1,4 @@
-export WINREPOS="/mnt/c/Users/nickf/Documents/GitHub/"
+export WINREPOS="/mnt/c/GitHub/"
 export REPOS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
 export DOTFILES="$(dirname "$(dirname "$(readlink "${(%):-%N}")")")"
 export ZSH="$(dirname "$(readlink "${(%):-%N}")")"

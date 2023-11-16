@@ -36,9 +36,10 @@ function link_bin() {
 	fi
 }
 
-function symlink() {
+symlink() {
 	if [ -e "$2" ]; then
 		mv -fv "$2" "$2.bak"
+		printf '    Creating backup for %s' "$2"
 	fi
 	ln -s "$1" "$2"
 	printf '    %s 󰜴 %s\n' "$1" "$2"
@@ -47,6 +48,14 @@ function symlink() {
 function is_installed() {
 	dpkg -s "$1" &>/dev/null
 	return $?
+}
+
+function installpkg() {
+  if ! is_installed "$1"; then
+			sudo nala install "$1" -y
+		else
+			printf '    %s is already installed.\n' "$1"
+		fi
 }
 
 function cleanvim() {
