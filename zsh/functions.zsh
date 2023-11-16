@@ -38,7 +38,7 @@ function link_bin() {
 
 function symlink() {
 	if [ -e "$2" ]; then
-		mv -frv "$2" "$2.bak"
+		mv -fv "$2" "$2.bak"
 	fi
 	ln -s "$1" "$2"
 	printf '    %s 󰜴 %s\n' "$1" "$2"
