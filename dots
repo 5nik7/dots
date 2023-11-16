@@ -96,6 +96,14 @@ is_installed() {
 	return $?
 }
 
+installpkg() {
+  if ! is_installed "$1"; then
+			sudo nala install "$1" -y
+		else
+			printf '    %s is already installed.\n' "$1"
+		fi
+}
+
 installnala() {
 	if ! is_installed "nala"; then
 		sudo apt install nala -y
