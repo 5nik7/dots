@@ -16,6 +16,39 @@ function source_path() {
 	fi
 }
 
+function createdir() {
+	if [ ! -d "$1" ]; then
+		info "Creating $1"
+		mkdir -p "$1"
+	fi
+}
+
+function take() {
+	if [ ! -d "$2" ]; then
+		info "Cloning github.com/$1 to $2"
+		git clone "https://github.com/$1.git" "$2"
+	fi
+}
+
+function link_bin() {
+	if [ ! -e "$HOME/.local/bin/$2" ]; then
+			ln -s $(which $1) $HOME/.local/bin/$2
+	fi
+}
+
+function symlink() {
+	if [ -e "$2" ]; then
+		mv -frv "$2" "$2.bak"
+	fi
+	ln -s "$1" "$2"
+	printf '    %s 󰜴 %s\n' "$1" "$2"
+}
+
+function is_installed() {
+	dpkg -s "$1" &>/dev/null
+	return $?
+}
+
 function cleanvim() {
 	rm -rf ~/.config/nvim
 	rm -rf ~/.local/share/nvim

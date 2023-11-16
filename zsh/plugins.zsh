@@ -20,10 +20,13 @@ zinit light ajeetdsouza/zoxide
 
 zinit ice wait"0a" atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay" atload"_zsh_highlight" lucid
 zinit light zdharma-continuum/fast-syntax-highlighting
+
 zinit ice wait"0a" compile'{src/*.zsh,src/strategies/*}' atinit"ZSH_AUTOSUGGEST_USE_ASYNC=1" atload"_zsh_autosuggest_start" lucid
 zinit light zsh-users/zsh-autosuggestions
+
 zinit ice wait"0b" lucid
 zinit light hlissner/zsh-autopair
+
 zinit ice wait"0b" blockf lucid
 zinit light zsh-users/zsh-completions
 
@@ -31,22 +34,8 @@ zinit light chrissicool/zsh-256color
 zinit light mafredri/zsh-async
 zinit ice depth"1"
 
-# FZF-TAB
 zinit ice wait="1" lucid
 zinit light Aloxaf/fzf-tab
 
-zinit ice wait'3' lucid as"program" from"gh-r" \
-  mv"gh*/bin/gh -> gh"
-zinit light "cli/cli"
-
-# DELTA
-zinit ice lucid wait'3' as="program" from="gh-r" bpick="*amd64.deb" pick="usr/bin/delta"
-zinit light dandavison/delta
-
-# BOTTOM
 zinit ice wait'3' lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
 zinit light ClementTsang/bottom
-
-zinit ice wait="2" lucid from="gh-r" as="program"
-zinit light eza-community/eza
-zinit ice wait blockf atpull'zinit creinstall -q .'
