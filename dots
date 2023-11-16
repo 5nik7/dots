@@ -122,11 +122,7 @@ installthorium() {
 installpkgs() {
 	deps=(git ninja-build bsdmainutils gettext cmake unzip curl build-essential libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev wget libreadline-dev gnupg2 zsh gh vim neofetch ranger bat fzf ripgrep fd-find htop btop delta pipx kitty rbenv vim-gtk3 luarocks golang-go shellcheck)
 	for pkgs in ${deps[@]}; do
-		if ! is_installed "$pkgs"; then
-			sudo nala install "$pkgs" -y
-		else
-			printf '    %s is already installed.\n' "$pkgs"
-		fi
+			installpkg "$pkgs"
 	done
 }
 
