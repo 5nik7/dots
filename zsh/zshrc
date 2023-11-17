@@ -3,7 +3,7 @@
 export WINREPOS="/mnt/c/GitHub/"
 export REPOS="$HOME/repos"
 export DOTS="$REPOS/dots"
-export DOTFILES="$HOME/.dots"
+export DOTFILES=${DOTFILES:="$HOME/.dots"}
 export ZSH="$(dirname "$(readlink "${(%):-%N}")")"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CONFIG_HOME="$HOME/.config"
@@ -11,7 +11,11 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_STATE_HOME="$HOME/.local/state"
 export XDG_CONFIG_DIRS="/etc/xdg"
 
-export SUDO_PROMPT="passwd: "
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+
+export SUDO_PROMPT="│ passwd: "
 export EDITOR='nvim'
 export VISUAL=$EDITOR
 export GIT_EDITOR=$EDITOR
@@ -49,6 +53,8 @@ extend_path "$HOME/bin"
 extend_path "$GOBIN"
 extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
+
+export RG_DEFAULT_COMMAND="rg -i -l -p -L --hidden"
 
 export FZF_DEFAULT_OPTS="
 --color preview-bg:$base00
@@ -93,3 +99,5 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 eval $(starship init zsh)
+
+# vim:ft=zsh
