@@ -19,6 +19,13 @@ YELLOWB="\033[1;33m"
 CYANB="\033[1;36m"
 PINKB="\033[1;35m"
 
+NC="\033[0m"
+
+HEADER="${GREENB}"
+LINECOLOR="${GRAYB}"
+PANELBG="\033[48;5;233m"
+solsymble="┊" 
+
 function cecho(){
     printf "${(P)1}${2} ${NC}\n"
 }
