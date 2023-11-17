@@ -1,3 +1,5 @@
+#!/usr/bin/zsh
+
 alias ll="ll_eza"
 alias l="ls_eza"
 

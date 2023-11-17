@@ -1,3 +1,5 @@
+#!/usr/bin/zsh
+
 setopt extended_history      # Record start time and elapsed time in history file
 setopt append_history        # Add history (instead of creating .zhistory every time)
 setopt hist_ignore_all_dups  # Delete older command lines if they overlap
@@ -26,10 +28,3 @@ HISTSIZE=100000
 HISTFILE=~/.zsh_history
 
 WORDCHARS=''
-
-bindkey -v
-
-zle -N prepend-sudo
-bindkey -M vicmd s prepend-sudo
-
-autoload colors && colors
