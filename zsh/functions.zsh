@@ -267,4 +267,15 @@ function _smooth_fzf() {
   cd "$current_dir"
 }
 
+function fold1() {
+    echo $(basename "$1")
+}
+
+function fold2() {
+    echo $(basename "$(dirname "$1")")/$(basename "$1")
+}
+
+function fold3() {
+    echo $(basename "$(dirname "$(dirname "$1")")")/$(basename "$(dirname "$1")")/$(basename "$1")
+}
 # vim:ft=zsh:nowrap

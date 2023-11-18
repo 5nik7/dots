@@ -235,6 +235,18 @@ ask(){
 	clear
 }
 
+fold1() {
+    cecho "BLUE" $(basename "$1")
+}
+
+fold2() {
+    echo -e $(basename "$(dirname "$1")")/$(basename "$1")
+}
+
+fold3() {
+    echo -e $(basename "$(dirname "$(dirname "$1")")")/$(basename "$(dirname "$1")")/$(basename "$1")
+}
+
 createdir() {
 	if [ ! -d "$1" ]; then
 		mkdir -p "$1"
@@ -256,7 +268,6 @@ link_bin() {
 }
 
 symlink() {
-	root=$(echo "$1" | cut -d "/" -f 1)
 	if [ ! -e "$2" ]; then
 		ln -s "$1" "$2"
 		echo -e "${LINECOLOR}${solsymble}${NC}  ${BLUE}$1${NC} ${GRAY}->${NC} ${CYANB}$2${NC}"
@@ -335,9 +346,9 @@ setshell() {
 	fi
 }
 
-installfonts() {
+install_fonts() {
  createdir "$HOME/.local/share"
-	symlink "$DOTFILES/local/fonts" "$HOME/.local/share/"
+	symlink "$REPOS/dots/local/fonts" "$HOME/.local/share/fonts"
 	fc-cache -r
 }
 
@@ -363,6 +374,14 @@ update)
 	logo
 	title "Updating System.                     "
 	sudo apt -qq update -y && sudo apt -qq upgrade -y
+	exit
+	;;
+fonts)
+	clear
+	logo
+	title "Installing Fonts.                     "
+	install_fonts
+	success "Done."
 	exit
 	;;
 *)
