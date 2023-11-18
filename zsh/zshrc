@@ -20,6 +20,7 @@ export EDITOR='nvim'
 export VISUAL=$EDITOR
 export GIT_EDITOR=$EDITOR
 export BROWSER="thorium-browser"
+export MANPAGER='nvim +Man!'
 export PAGER='bat'
 export BAT_CONFIG_PATH="$HOME/.config/bat/bat.conf"
 export GOPATH=$HOME/go
@@ -105,4 +106,7 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
+if [ -e /home/snikt/.nix-profile/etc/profile.d/nix.sh ]; then . /home/snikt/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+
 eval $(starship init zsh)
+
