@@ -198,12 +198,6 @@ function take() {
 	fi
 }
 
-function link_bin() {
-	if [ ! -e "$HOME/.local/bin/$2" ]; then
-			ln -s $(which $1) $HOME/.local/bin/$2
-	fi
-}
-
 function symlink() {
 	root=$(echo "$1" | cut -d "/" -f 1)
 	if [ ! -e "$2" ]; then
@@ -234,8 +228,9 @@ function installpkg() {
 			echo -e "${LINECOLOR}${solsymble}${NC}   ${CYANB}$1${NC} ${BREENB}installed${NC}"
 		else
 			echo -e "${LINECOLOR}${solsymble}${NC}   ${GRAYB}$1${NC} ${GRAY}already installed${NC}"
-    fi
+		fi
 }
+alias pkg="installpkg"
 
 function cleanvim() {
 	rm -rf ~/.config/nvim
@@ -262,3 +257,14 @@ function prepend-sudo {
     BUFFER="sudo $BUFFER"; CURSOR+=5
   fi
 }
+
+function _smooth_fzf() {
+  local fname
+  local current_dir="$PWD"
+  cd "${XDG_CONFIG_HOME:-~/.config}"
+  fname="$(fzf)" || return
+  $EDITOR "$fname"
+  cd "$current_dir"
+}
+
+# vim:ft=zsh:nowrap

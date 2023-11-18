@@ -1,7 +1,7 @@
 #!/usr/bin/zsh
 
-base00="#11111b"
-base01="#181825"
+base00="#181825"
+base01="#1E1E2E"
 base02="#313244"
 base03="#45475a"
 base04="#6c7086"

@@ -32,7 +32,8 @@ NC="\033[0m"
 HEADER="${GREENB}"
 LINECOLOR="${GRAYB}"
 PANELBG="\033[48;5;233m"
-solsymble="┊" 
+menu_symbol="󰅂"
+solsymble="" 
 
 cecho(){
     printf "${(P)1}${2} ${NC}\n"
@@ -40,7 +41,7 @@ cecho(){
 
 logo() {
 	topdoubleline
-	echo -e "${LINECOLOR}\033[48;5;234m║                                        ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}\033[48;5;234m║${HEADER}                                        ${LINECOLOR}║${NC}"
 	echo -e "${LINECOLOR}\033[48;5;233m║${HEADER}    ░░░░░░   ░░░░░░  ░░░░░░░ ░░░░░░░    ${LINECOLOR}║${NC}"
 	echo -e "${LINECOLOR}\033[48;5;233m║${HEADER}    ▒▒   ▒▒ ▒▒    ▒▒      ▒▒ ▒▒         ${LINECOLOR}║${NC}"
 	echo -e "${LINECOLOR}\033[48;5;232m║${HEADER}    ▒▒   ▒▒ ▒▒    ▒▒    ▒▒   ▒▒▒▒▒▒▒    ${LINECOLOR}║${NC}"
@@ -51,10 +52,11 @@ logo() {
 }
 
 menu() {
-	menutitle "OPTIONS                              "
-	menuopt "setup                              "
-	menuopt "link                               "
-	menuopt "update                             "
+	menutitle		"OPTIONS                              "
+	linelinebreak
+	menuopt			"setup                              "
+	menuopt			"link                               "
+	menuopt			"update                             "
 	linelinebreak
 	bottomline
 }
@@ -81,7 +83,7 @@ setup_start() {
 	createdir "$XDG_CACHE_HOME"
 	createdir "$XDG_DATA_HOME"
 	createdir "$XDG_STATE_HOME"
-	success "Done."
+	linebreak
 }
 
 setup_link() {
@@ -112,12 +114,12 @@ setup_link() {
 	symlink "$DOTS/ranger" "$XDG_CONFIG_HOME/ranger"
 	symlink "$REPOS/starship/starship.toml" "$XDG_CONFIG_HOME/starship.toml"
 	symlink "$REPOS/neoviim" "$XDG_CONFIG_HOME/nvim"
-	success "Done."
+	linebreak
 }
 
 setup_zsh() {
-	if [[ $SHELL = "/usr/bin/zsh" ]]; then
-		title "Setting up ZSH.                    "
+	if [[ ! $SHELL = "/usr/bin/zsh" ]]; then
+		title "Setting up ZSH.                      "
 		sudo apt -qq install zsh -y
 		setshell
 	fi
@@ -135,7 +137,7 @@ title() {
 }
 
 menuopt() {
-	echo -e "${LINECOLOR}${PANELBG}║  ${GRAY}${PANELBG}┃ ${PINKB}$1 ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}${PANELBG}║  ${GRAY}${PANELBG}${menu_symbol} ${PINKB}$1 ${LINECOLOR}║${NC}"
 }
 
 topline() {
@@ -153,6 +155,10 @@ bottomline() {
 
 topdoubleline() {
 	echo -e "${LINECOLOR}\033[48;5;234m╔════════════════════════════════════════╗${NC}"
+}
+
+middledoubleline() {
+	echo -e "${LINECOLOR}${PANELBG}╠════════════════════════════════════════╣${NC}"
 }
 
 bottomdoubleline() {
@@ -253,18 +259,18 @@ symlink() {
 	root=$(echo "$1" | cut -d "/" -f 1)
 	if [ ! -e "$2" ]; then
 		ln -s "$1" "$2"
-		echo -e "${LINECOLOR}${solsymble}${NC}   ${BLUE}$1${NC} ${GRAY}->${NC} ${CYANB}$2${NC}"
+		echo -e "${LINECOLOR}${solsymble}${NC}  ${BLUE}$1${NC} ${GRAY}->${NC} ${CYANB}$2${NC}"
 	else
-		echo -e "${LINECOLOR}${solsymble}${NC}   ${GRAYB}$2${NC} ${GRAY}already exists${NC}"
+		echo -e "${LINECOLOR}${solsymble}${NC}  ${GRAYB}$2${NC} ${GRAY}already exists${NC}"
 	fi
 }
 
 backup() {
 	if [ -f "$1" ]; then
 		mv -f "$1" "${1}.bak"
-		echo -e "${LINECOLOR}${solsymble}${NC}   ${ORANGE}$1${NC} ${GRAY}->${NC} ${YELLOWB}$1.bak${NC}"
+		echo -e "${LINECOLOR}${solsymble}${NC}  ${ORANGE}$1${NC} ${GRAY}->${NC} ${YELLOWB}$1.bak${NC}"
 	else
-		echo -e "${LINECOLOR}${solsymble}${NC}   ${PINKB}$1${NC} ${PINK}does not exist${NC}"
+		echo -e "${LINECOLOR}${solsymble}${NC}  ${PINKB}$1${NC} ${PINK}does not exist${NC}"
 	fi
 }
 
@@ -276,9 +282,9 @@ is_installed() {
 installpkg() {
   if ! is_installed "$1"; then
 			sudo apt -qq install "$1" -y
-			echo -e "${LINECOLOR}${solsymble}${NC}   ${CYANB}$1${NC} ${BREENB}installed${NC}"
+			echo -e "${LINECOLOR}${solsymble}${NC}  ${CYANB}$1${NC} ${BREENB}installed${NC}"
 		else
-			echo -e "${LINECOLOR}${solsymble}${NC}   ${GRAYB}$1${NC} ${GRAY}already installed${NC}"
+			echo -e "${LINECOLOR}${solsymble}${NC}  ${GRAYB}$1${NC} ${GRAY}already installed${NC}"
 		fi
 }
 
@@ -366,3 +372,5 @@ update)
 	exit
 	;;
 esac
+
+# vim:ft=sh:nowrap

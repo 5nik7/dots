@@ -53,15 +53,17 @@ extend_path "$HOME/bin"
 extend_path "$GOBIN"
 extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
+extend_path "$HOME/.local/share/nvim/mason/bin"
+
 
 export RG_DEFAULT_COMMAND="rg -i -l -p -L --hidden"
 
 export FZF_DEFAULT_OPTS="
---color preview-bg:$base00
---color border:$base00
+--color preview-bg:$base01
+--color border:$base02
 --color gutter:$base01
 --color bg:$base01
---color bg+:$base02
+--color bg+:$base00
 --color fg:$base04
 --color hl:$base07
 --color fg+:$base09
@@ -72,7 +74,12 @@ export FZF_DEFAULT_OPTS="
 --color pointer:$base0C
 --color marker:$base08
 --color header:$base06
---pointer='|>'"
+--pointer='|>'
+--ansi
+--no-scrollbar
+--info=inline
+--border=sharp
+--preview-window='border-sharp'"
 
 # fast-theme -q XDG:catppuccin-mocha
 
@@ -99,5 +106,3 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 eval $(starship init zsh)
-
-# vim:ft=zsh
