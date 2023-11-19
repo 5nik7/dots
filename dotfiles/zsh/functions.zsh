@@ -24,7 +24,7 @@ NC="\033[0m"
 HEADER="${GREENB}"
 LINECOLOR="${GRAYB}"
 PANELBG="\033[48;5;233m"
-solsymble="┊" 
+solsymble="┊"
 
 function cecho(){
     printf "${(P)1}${2} ${NC}\n"
@@ -225,9 +225,6 @@ function is_installed() {
 function installpkg() {
   if ! is_installed "$1"; then
 			sudo apt -qq install "$1" -y
-			echo -e "${LINECOLOR}${solsymble}${NC}   ${CYANB}$1${NC} ${BREENB}installed${NC}"
-		else
-			echo -e "${LINECOLOR}${solsymble}${NC}   ${GRAYB}$1${NC} ${GRAY}already installed${NC}"
 		fi
 }
 alias pkg="installpkg"

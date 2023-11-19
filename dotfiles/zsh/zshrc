@@ -3,7 +3,7 @@
 export WINREPOS="/mnt/c/GitHub/"
 export REPOS="$HOME/repos"
 export DOTS="$REPOS/dots"
-export DOTFILES=${DOTFILES:="$HOME/.dots"}
+export DOTFILES=${DOTFILES:="$HOME/.dotfiles"}
 export ZSH="$(dirname "$(readlink "${(%):-%N}")")"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CONFIG_HOME="$HOME/.config"
@@ -15,7 +15,7 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 
-export SUDO_PROMPT="│ passwd: "
+export SUDO_PROMPT="passwd: "
 export EDITOR='nvim'
 export VISUAL=$EDITOR
 export GIT_EDITOR=$EDITOR
@@ -47,7 +47,7 @@ zmodule "theme"
 zmodule "aliases"
 zmodule "plugins"
 
-extend_path "$DOTS"
+extend_path "$DOTS/bin"
 extend_path "$XDG_DATA_HOME/zsh/functions"
 extend_path "$HOME/.local/bin"
 extend_path "$HOME/bin"
