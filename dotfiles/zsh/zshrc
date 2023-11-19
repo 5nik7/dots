@@ -23,6 +23,7 @@ export BROWSER="thorium-browser"
 export MANPAGER='nvim +Man!'
 export PAGER='bat'
 export BAT_CONFIG_PATH="$HOME/.config/bat/bat.conf"
+export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/rg"
 export GOPATH=$HOME/go
 export GOBIN=$HOME/go/bin
 export zfunc="$XDG_DATA_HOME/zsh/functions"

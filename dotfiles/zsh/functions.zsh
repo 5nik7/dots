@@ -21,41 +21,9 @@ PINKB="\033[1;35m"
 
 NC="\033[0m"
 
-HEADER="${GREENB}"
-LINECOLOR="${GRAYB}"
-PANELBG="\033[48;5;233m"
-solsymble="┊"
 
 function cecho(){
     printf "${(P)1}${2} ${NC}\n"
-}
-
-function print_default() {
-	echo -e "$*"
-}
-
-function print_info() {
-	echo -e "\e[1;36m$*\e[m" # cyan
-}
-
-function print_notice() {
-	echo -e "\e[1;35m$*\e[m" # magenta
-}
-
-function print_success() {
-	echo -e "\e[1;32m$*\e[m" # green
-}
-
-function print_warning() {
-	echo -e "\e[1;33m$*\e[m" # yellow
-}
-
-function print_error() {
-	echo -e "\e[1;31m$*\e[m" # red
-}
-
-function print_debug() {
-	echo -e "\e[1;34m$*\e[m" # blue
 }
 
 function showcolors256() {
@@ -224,9 +192,10 @@ function is_installed() {
 
 function installpkg() {
   if ! is_installed "$1"; then
-			sudo apt -qq install "$1" -y
+			sudo apt install "$1" -y
 		fi
 }
+
 alias pkg="installpkg"
 
 function cleanvim() {
@@ -263,6 +232,11 @@ function _smooth_fzf() {
   $EDITOR "$fname"
   cd "$current_dir"
 }
+
+function rel_path() {
+    echo "$1" | sed "s|^$HOME/|~/|"
+}
+
 
 function fold1() {
     echo $(basename "$1")
