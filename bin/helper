@@ -1,0 +1,312 @@
+#!/bin/bash
+
+export REPOS="$HOME/repos"
+export DOTS="$REPOS/dots"
+export DOTFILES=${DOTFILES:="$HOME/.dotfiles"}
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_STATE_HOME="$HOME/.local/state"
+
+ORANGE="\033[38;5;216m"
+PURPLE="\033[38;5;140m"
+GRAY="\033[0;30m"
+WHITE="\033[0;37m"
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+BLUE="\033[0;34m"
+YELLOW="\033[0;33m"
+CYAN="\033[0;36m"
+PINK="\033[0;35m"
+GRAYB="\033[1;30m"
+WHITEB="\033[1;37m"
+REDB="\033[1;31m"
+BLUEB="\033[1;34m"
+GREENB="\033[1;32m"
+YELLOWB="\033[1;33m"
+CYANB="\033[1;36m"
+PINKB="\033[1;35m"
+
+NC="\033[0m"
+
+HEADER="${GREENB}"
+LINECOLOR="${GRAYB}"
+PANELBG="\033[48;5;233m"
+menu_symbol=" "
+solsymble="  "
+
+cecho(){
+    printf "${(P)1}${2} ${NC}\n"
+}
+
+logo() {
+	topdoubleline
+	echo -e "${LINECOLOR}\033[48;5;234m║${HEADER}                                        ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}\033[48;5;233m║${HEADER}    ░░░░░░   ░░░░░░  ░░░░░░░ ░░░░░░░    ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}\033[48;5;233m║${HEADER}    ▒▒   ▒▒ ▒▒    ▒▒      ▒▒ ▒▒         ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}\033[48;5;232m║${HEADER}    ▒▒   ▒▒ ▒▒    ▒▒    ▒▒   ▒▒▒▒▒▒▒    ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}\033[48;5;232m║${HEADER}    ▓▓   ▓▓ ▓▓    ▓▓   ▓▓         ▓▓    ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}\033[48;5;016m║${HEADER}    ██████   ██████    ██    ███████    ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}\033[48;5;016m║${HEADER}                                        ${LINECOLOR}║${NC}"
+   bottomdoubleline
+}
+
+menu() {
+	menutitle		"OPTIONS                              "
+	linelinebreak
+	menuopt			"setup                              "
+	menuopt			"link                               "
+	menuopt			"update                             "
+	linelinebreak
+	bottomline
+}
+
+menutitle() {
+	topline
+	echo -e "${LINECOLOR}${PANELBG}║  ${BLUEB}$1 ${LINECOLOR}║${NC}"
+	middleline
+}
+
+title() {
+	topline
+	echo -e "${LINECOLOR}${PANELBG}║  ${BLUEB}$1 ${LINECOLOR}║${NC}"
+	bottomline
+}
+
+menuopt() {
+	echo -e "${LINECOLOR}${PANELBG}║  ${GRAY}${PANELBG}${menu_symbol} ${PINKB}$1 ${LINECOLOR}║${NC}"
+}
+
+topline() {
+	echo -e "${LINECOLOR}${PANELBG}╔════════════════════════════════════════╗${NC}"
+}
+
+
+middleline() {
+	echo -e "${LINECOLOR}${PANELBG}╠════════════════════════════════════════╣${NC}"
+}
+
+bottomline() {
+	echo -e "${LINECOLOR}${PANELBG}╚════════════════════════════════════════╝${NC}"
+}
+
+topdoubleline() {
+	echo -e "${LINECOLOR}\033[48;5;234m╔════════════════════════════════════════╗${NC}"
+}
+
+middledoubleline() {
+	echo -e "${LINECOLOR}${PANELBG}╠════════════════════════════════════════╣${NC}"
+}
+
+bottomdoubleline() {
+	echo -e "${LINECOLOR}\033[48;5;016m╚════════════════════════════════════════╝${NC}"
+}
+
+linebreak() {
+	echo -e ""
+}
+
+linelinebreak() {
+	echo -e "${LINECOLOR}${PANELBG}║                                        ║${NC}"
+}
+
+success() {
+	topline
+	echo -e "${LINECOLOR}${PANELBG}║   ${GREENB}$1                                ${LINECOLOR}║${NC}"
+	bottomline
+}
+
+cmd_exists() {
+    command -v "$1" &> /dev/null
+}
+
+print_in_color() {
+    printf "%b" \
+        "$(tput setaf "$2" 2> /dev/null)" \
+        "$1" \
+        "$(tput sgr0 2> /dev/null)"
+}
+
+print_in_green() {
+    print_in_color "$1" 2
+}
+
+print_in_purple() {
+    print_in_color "$1" 5
+}
+
+print_in_red() {
+    print_in_color "$1" 1
+}
+
+print_in_yellow() {
+    print_in_color "$1" 3
+}
+
+print_question() {
+    print_in_yellow "   [?] $1"
+}
+
+print_error() {
+    print_in_red "   [✖] $1 $2\n"
+}
+
+print_success() {
+    print_in_green "   [] $1\n"
+}
+
+print_warning() {
+    print_in_yellow "   [!] $1\n"
+}
+
+echo_relative_path() {
+    echo "$1" | sed "s|^$HOME/||"
+}
+
+rel_path() {
+    echo "$1" | sed "s|^$HOME/|~/|"
+}
+
+fold1() {
+    cecho "BLUE" $(basename "$1")
+}
+
+fold2() {
+    echo -e $(basename "$(dirname "$1")")/$(basename "$1")
+}
+
+fold3() {
+    echo -e $(basename "$(dirname "$(dirname "$1")")")/$(basename "$(dirname "$1")")/$(basename "$1")
+}
+
+setup_zsh() {
+	if [[ ! $SHELL = "/usr/bin/zsh" ]]; then
+		title "Setting up ZSH.                      "
+		sudo apt -qq install zsh -y
+		setshell
+	fi
+}
+
+ask(){
+	while true; do
+		read -rp " Start the setup? [Y/n]: " yn
+			case $yn in
+				[Yy]* ) break;;
+				[Nn]* ) exit;;
+				* ) break;;
+			esac
+  		done
+	clear
+}
+
+mkd() {
+    if [ -n "$1" ]; then
+        if [ -e "$1" ]; then
+            if [ ! -d "$1" ]; then
+                print_error "$1 - a file with the same name already exists!"
+			fi
+        else
+            mkdir -p $1
+			print_success "$1"
+        fi
+    fi
+}
+
+take() {
+	if [ ! -d "$2" ]; then
+		git clone "https://github.com/$1.git" "$2"
+		print_success "$1"
+	fi
+}
+
+link_bin() {
+	if [ ! -e "$HOME/.local/bin/$2" ]; then
+			ln -s $(which $1) $HOME/.local/bin/$2
+	fi
+}
+
+symlink() {
+	if [ ! -e "$2" ]; then
+		ln -s "$1" "$2"
+		echo -e "${LINECOLOR}${solsymble}${NC}  ${BLUE}$1${NC} ${GRAY}->${NC} ${CYANB}$2${NC}"
+	else
+	relfile=$(rel_path $2)
+		print_success "$relfile"
+	fi
+}
+
+backup() {
+	if [ -f "$1" ]; then
+		mv -f "$1" "${1}.bak"
+		echo -e "${LINECOLOR}${solsymble}${NC}  ${ORANGE}$1${NC} ${GRAY}->${NC} ${YELLOWB}$1.bak${NC}"
+	else
+		echo -e "${LINECOLOR}${solsymble}${NC}  ${PINKB}$1${NC} ${PINK}does not exist${NC}"
+	fi
+}
+
+is_installed() {
+	dpkg -s "$1" &>/dev/null
+	return $?
+}
+
+installpkg() {
+  if ! is_installed "$1"; then
+			sudo apt -qq install "$1" -y
+			echo -e "${LINECOLOR}${solsymble}${NC}  ${CYANB}$1${NC} ${BREENB}installed${NC}"
+		else
+			echo -e "${LINECOLOR}${solsymble}${NC}  ${GRAYB}$1${NC} ${GRAY}already installed${NC}"
+		fi
+}
+
+installnala() {
+	if ! is_installed "nala"; then
+		sudo apt -qq install nala -y
+	fi
+}
+
+installthorium() {
+	if ! is_installed "thorium-browser"; then
+		wget https://dl.thorium.rocks/debian/dists/stable/thorium.list
+		sudo mv thorium.list /etc/apt/sources.list.d/
+		sudo apt update -y
+		sudo apt install thorium-browser -y
+	fi
+}
+
+installpkgs() {
+  for pkgs in ${deps[@]}; do
+		installpkg "$pkgs"
+	done
+}
+
+installrustup() {
+	if [ ! -d "$HOME/.rustup" ]; then
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	fi
+}
+
+installstarship() {
+	if ! command -v starship >/dev/null 2>&1; then
+		curl -sS https://starship.rs/install.sh | sh
+	fi
+}
+
+installbob() {
+	if [ ! -f "$HOME/.cargo/bin/bob" ]; then
+		cargo install --git https://github.com/MordechaiHadad/bob.git
+	fi
+}
+
+setshell() {
+	if [[ $SHELL != "/usr/bin/zsh" ]]; then
+  		info "Changing shell to zsh."
+  		chsh -s /usr/bin/zsh
+	fi
+}
+
+install_fonts() {
+ createdir "$HOME/.local/share"
+	symlink "$REPOS/dots/dotfiles/fonts" "$HOME/.local/share/fonts"
+	fc-cache -r
+}
+

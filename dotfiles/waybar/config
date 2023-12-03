@@ -1,0 +1,80 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 24,
+    "modules-left": [
+        "custom/launcher",
+        "sway/workspaces"
+    ],
+    "modules-center": [
+        "sway/window"
+    ],
+    "modules-right": [
+        "memory",
+        "custom/separator",
+        "cpu",
+        "custom/separator",
+        "clock",
+        "custom/separator",
+        "tray"
+    ],
+    "fixed-center": false,
+
+    "custom/launcher": {
+    "format": " 󰚌 ",
+    "on-click": "~/.config/rofi/launcher.sh",
+    "tooltip": false
+    },
+
+    "clock": {
+        "interval": 1,
+        "format": " {:%a %Y.%m.%d %H:%M}",
+        "tooltip": false
+    },
+
+    "sway/workspaces": {
+        "all-outputs": true,
+        "disable-scroll": true,
+        "format": "{icon}",
+        "format-icons": {
+            "1.terminals": "",
+            "2.www": "",
+            "3.chat": "󰒱 󰙯",
+            "4.notes": "",
+            "5.chromium/code": " 󰨞",
+            "6.news": "󰎕",
+            "7.videos": "󰿎",
+            "8.steam": "󰓓",
+            "9.spotify": "",
+            "10.mail": ""
+        }
+    },
+
+     "memory": {
+        "interval": 10,
+        "format": " {}%",
+        "states": {
+            "warning": 70,
+            "critical": 90
+        }
+    },
+
+     "cpu": {
+        "interval": 10,
+        "format": " {usage}%",
+        "states": {
+          "warning": 70,
+          "critical": 90
+        }
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 5
+    },
+
+    "custom/separator": {
+        "format": "|",
+        "tooltip": false
+    }
+}

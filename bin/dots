@@ -1,0 +1,106 @@
+#!/bin/bash
+
+source $(dirname "$0")/helper
+source $(dirname "$0")/pkgs
+
+setup_start() {
+	title "Installing packages.                 "
+	linebreak
+	sudo apt update -y && sudo apt upgrade -y
+	installnala
+	installpkgs
+	installrustup
+	installstarship
+	installbob
+	installthorium
+	link_bin batcat bat
+	link_bin fdfind fd
+	mkd "$REPOS"
+	mkd "$DOTFILES"
+	mkd "$HOME/.local/bin"
+	mkd "$HOME/bin"
+	mkd "$XDG_CONFIG_HOME"
+	mkd "$XDG_CACHE_HOME"
+	mkd "$XDG_DATA_HOME"
+	mkd "$XDG_STATE_HOME"
+	linebreak
+}
+
+setup_link() {
+	title "SYMLINKS                             "
+	linebreak
+	take "5nik7/starship" "$REPOS/starship"
+	take "5nik7/neoviim" "$REPOS/neoviim"
+	symlink "$DOTS/dotfiles/zsh" "$DOTFILES/zsh"
+	symlink "$DOTS/dotfiles/sway" "$DOTFILES/sway"
+	symlink "$DOTS/dotfiles/waybar" "$DOTFILES/waybar"
+	symlink "$DOTS/dotfiles/git" "$DOTFILES/git"
+	symlink "$DOTS/dotfiles/kitty" "$DOTFILES/kitty"
+	symlink "$DOTS/dotfiles/ranger" "$DOTFILES/ranger"
+	symlink "$DOTS/dotfiles/btop" "$DOTFILES/btop"
+	symlink "$DOTS/dotfiles/bottom" "$DOTFILES/bottom"
+	symlink "$DOTS/dotfiles/bat" "$DOTFILES/bat"
+	symlink "$DOTS/dotfiles/ripgrep" "$DOTFILES/ripgrep"
+	symlink "$DOTS/dotfiles/fsh" "$DOTFILES/fsh"
+	symlink "$DOTS/dotfiles/lsd" "$DOTFILES/lsd"
+	symlink "$DOTS/dotfiles/zathura" "$DOTFILES/zathura"
+	symlink "$REPOS/starship" "$DOTFILES/starship"
+	symlink "$REPOS/neoviim" "$DOTFILES/nvim"
+	symlink "$DOTS/dotfiles/git/gitconfig" "$HOME/.gitconfig"
+	symlink "$DOTS/dotfiles/zsh/zshrc" "$HOME/.zshrc"
+	symlink "$DOTS/dotfiles/sway" "$XDG_CONFIG_HOME/sway"
+	symlink "$DOTS/dotfiles/waybar" "$XDG_CONFIG_HOME/waybar"
+	symlink "$DOTS/dotfiles/bat" "$XDG_CONFIG_HOME/bat"
+	symlink "$DOTS/dotfiles/ripgrep" "$XDG_CONFIG_HOME/ripgrep"
+	symlink "$DOTS/dotfiles/kitty" "$XDG_CONFIG_HOME/kitty"
+	symlink "$DOTS/dotfiles/btop" "$XDG_CONFIG_HOME/btop"
+	symlink "$DOTS/dotfiles/bottom" "$XDG_CONFIG_HOME/bottom"
+	symlink "$DOTS/dotfiles/fsh" "$XDG_CONFIG_HOME/fsh"
+	symlink "$DOTS/dotfiles/ranger" "$XDG_CONFIG_HOME/ranger"
+	symlink "$DOTS/dotfiles/zathura" "$XDG_CONFIG_HOME/zathura"
+	symlink "$REPOS/starship/starship.toml" "$XDG_CONFIG_HOME/starship.toml"
+	symlink "$REPOS/neoviim" "$XDG_CONFIG_HOME/nvim"
+	linebreak
+}
+
+case "$1" in
+setup)
+	clear
+	logo
+	setup_start
+	setup_link
+	setup_zsh
+	success "Done."
+	exit
+	;;
+link)
+	clear
+	logo
+	setup_link
+	success "Done."
+	exit
+	;;
+update)
+	clear
+	logo
+	title "Updating System.                     "
+	sudo apt -qq update -y && sudo apt -qq upgrade -y
+	exit
+	;;
+fonts)
+	clear
+	logo
+	title "Installing Fonts.                    "
+	install_fonts
+	success "Done."
+	exit
+	;;
+*)
+	clear
+	logo
+	menu
+	exit
+	;;
+esac
+
+# vim:ft=sh:nowrap
