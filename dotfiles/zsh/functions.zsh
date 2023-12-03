@@ -121,7 +121,7 @@ function 256color() {
 
 function ls_eza() {
 	echo -e ""
-	eza -lA --icons --git-repos --git --group-directories-first --no-filesize --no-user --no-time
+	eza -lA --icons --git-repos --git --group-directories-first --no-filesize --no-user --no-time --no-permissions
 }
 
 function ll_eza() {
