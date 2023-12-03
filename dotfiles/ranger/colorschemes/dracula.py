@@ -35,7 +35,7 @@ class Dracula(ColorScheme):
             bg = 1
             fg = 0
         if context.border:
-            fg = default
+            fg = 0
         if context.document:
             attr |= normal
             fg = 13
