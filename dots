@@ -65,7 +65,7 @@ setup_start() {
 	title "Installing packages.                 "
 	linebreak
 	sudo apt -qq update -y
-	sudo apt -qq upgrade -y	
+	sudo apt -qq upgrade -y
 	installnala
 	installpkgs
 	installrustup
