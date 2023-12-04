@@ -22,6 +22,7 @@ setopt magic_equal_subst     # command line arguments can be completed after =, 
 setopt multios               # TEE and CAT features are used as needed, such as multiple redirects and pipes
 setopt notify                # Notify as soon as background job finishes (don't wait for prompt)
 setopt interactive_comments  # Allow comments while typing commands
+setopt rmstarsilent
 
 SAVEHIST=100000
 HISTSIZE=100000

@@ -133,14 +133,6 @@ function cd() {
 	builtin cd "$@" && ls_eza
 }
 
-function extend_path() {
-    [[ -d "$1" ]] || return
-
-    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-	    export PATH="$1:$PATH"
-    fi
-}
-
 function source_path() {
 	if [ -f "$1" ]; then
 		source "$1"
@@ -266,17 +258,18 @@ function takeurl() {
 }
 
 function takegit() {
-          git clone "$1"
-          cd "$(basename ''${1%%.git})"
+    git clone "$1"
+    cd "$(basename ''${1%%.git})"
 }
 
 function take() {
-          if [[ $1 =~ ^(https?|ftp).*\.(tar\.(gz|bz2|xz)|tgz)$ ]]; then
-            takeurl "$1"
-          elif [[ $1 =~ ^([A-Za-z0-9]\+@|https?|git|ssh|ftps?|rsync).*\.git/?$ ]]; then
-            takegit "$1"
-          else
-            takedir "$@"
-          fi
+    if [[ $1 =~ ^(https?|ftp).*\.(tar\.(gz|bz2|xz)|tgz)$ ]]; then
+        takeurl "$1"
+    elif [[ $1 =~ ^([A-Za-z0-9]\+@|https?|git|ssh|ftps?|rsync).*\.git/?$ ]]; then
+        takegit "$1"
+    else
+        takedir "$@"
+    fi
 }
+
 # vim:ft=zsh:nowrap

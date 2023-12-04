@@ -1,6 +1,5 @@
 #!/usr/bin/zsh
 
-export WINREPOS="/mnt/c/GitHub/"
 export REPOS="$HOME/repos"
 export DOTS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
 export DOTFILES="$(dirname "$(dirname "$(readlink "${(%):-%N}")")")"
@@ -47,6 +46,14 @@ zmodule "options"
 zmodule "theme"
 zmodule "aliases"
 zmodule "plugins"
+
+function extend_path() {
+    [[ -d "$1" ]] || return
+
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+	    export PATH="$1:$PATH"
+    fi
+}
 
 extend_path "$DOTS/bin"
 extend_path "$XDG_DATA_HOME/zsh/functions"
@@ -98,13 +105,19 @@ autoload colors && colors
 autoload -U bashcompinit
 bashcompinit
 
-eval "$(luarocks path --bin)"
+function source_path() {
+	if [ -f "$1" ]; then
+		source "$1"
+	fi
+}
 
 source_path "$HOME/.cargo/env"
 
 source_path "$HOME/venv/bin/activate"
 
 eval "$(rbenv init -)"
+
+eval "$(luarocks path --bin)"
 
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"

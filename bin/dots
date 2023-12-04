@@ -9,8 +9,14 @@ XDG_CACHE_HOME="$HOME/.cache"
 XDG_DATA_HOME="$HOME/.local/share"
 XDG_STATE_HOME="$HOME/.local/state"
 
-source "$DOTSBIN/helper"
-source "$DOTSBIN/pkgs"
+function source_path() {
+	if [ -f "$1" ]; then
+		source "$1"
+	fi
+}
+
+source_path "$DOTSBIN/helper"
+source_path "$DOTSBIN/pkgs"
 
 setup_start() {
 	title "Installing packages.                 "
