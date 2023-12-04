@@ -1,7 +1,16 @@
 #!/bin/bash
 
-source $(dirname "$0")/helper
-source $(dirname "$0")/pkgs
+REPOS="$HOME/repos"
+DOTS="$REPOS/dots"
+DOTSBIN="$DOTS/bin"
+DOTFILES="$DOTS/dotfiles"
+XDG_CONFIG_HOME="$HOME/.config"
+XDG_CACHE_HOME="$HOME/.cache"
+XDG_DATA_HOME="$HOME/.local/share"
+XDG_STATE_HOME="$HOME/.local/state"
+
+source "$DOTSBIN/helper"
+source "$DOTSBIN/pkgs"
 
 setup_start() {
 	title "Installing packages.                 "
@@ -15,8 +24,6 @@ setup_start() {
 	installthorium
 	link_bin batcat bat
 	link_bin fdfind fd
-	mkd "$REPOS"
-	mkd "$DOTFILES"
 	mkd "$HOME/.local/bin"
 	mkd "$HOME/bin"
 	mkd "$XDG_CONFIG_HOME"
@@ -31,33 +38,18 @@ setup_link() {
 	linebreak
 	take "5nik7/starship" "$REPOS/starship"
 	take "5nik7/neoviim" "$REPOS/neoviim"
-	symlink "$DOTS/dotfiles/zsh" "$DOTFILES/zsh"
-	symlink "$DOTS/dotfiles/sway" "$DOTFILES/sway"
-	symlink "$DOTS/dotfiles/waybar" "$DOTFILES/waybar"
-	symlink "$DOTS/dotfiles/git" "$DOTFILES/git"
-	symlink "$DOTS/dotfiles/kitty" "$DOTFILES/kitty"
-	symlink "$DOTS/dotfiles/ranger" "$DOTFILES/ranger"
-	symlink "$DOTS/dotfiles/btop" "$DOTFILES/btop"
-	symlink "$DOTS/dotfiles/bottom" "$DOTFILES/bottom"
-	symlink "$DOTS/dotfiles/bat" "$DOTFILES/bat"
-	symlink "$DOTS/dotfiles/ripgrep" "$DOTFILES/ripgrep"
-	symlink "$DOTS/dotfiles/fsh" "$DOTFILES/fsh"
-	symlink "$DOTS/dotfiles/lsd" "$DOTFILES/lsd"
-	symlink "$DOTS/dotfiles/zathura" "$DOTFILES/zathura"
-	symlink "$REPOS/starship" "$DOTFILES/starship"
-	symlink "$REPOS/neoviim" "$DOTFILES/nvim"
-	symlink "$DOTS/dotfiles/git/gitconfig" "$HOME/.gitconfig"
-	symlink "$DOTS/dotfiles/zsh/zshrc" "$HOME/.zshrc"
-	symlink "$DOTS/dotfiles/sway" "$XDG_CONFIG_HOME/sway"
-	symlink "$DOTS/dotfiles/waybar" "$XDG_CONFIG_HOME/waybar"
-	symlink "$DOTS/dotfiles/bat" "$XDG_CONFIG_HOME/bat"
-	symlink "$DOTS/dotfiles/ripgrep" "$XDG_CONFIG_HOME/ripgrep"
-	symlink "$DOTS/dotfiles/kitty" "$XDG_CONFIG_HOME/kitty"
-	symlink "$DOTS/dotfiles/btop" "$XDG_CONFIG_HOME/btop"
-	symlink "$DOTS/dotfiles/bottom" "$XDG_CONFIG_HOME/bottom"
-	symlink "$DOTS/dotfiles/fsh" "$XDG_CONFIG_HOME/fsh"
-	symlink "$DOTS/dotfiles/ranger" "$XDG_CONFIG_HOME/ranger"
-	symlink "$DOTS/dotfiles/zathura" "$XDG_CONFIG_HOME/zathura"
+	symlink "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
+	symlink "$DOTFILES/zsh/zshrc" "$HOME/.zshrc"
+	symlink "$DOTFILES/sway" "$XDG_CONFIG_HOME/sway"
+	symlink "$DOTFILES/waybar" "$XDG_CONFIG_HOME/waybar"
+	symlink "$DOTFILES/bat" "$XDG_CONFIG_HOME/bat"
+	symlink "$DOTFILES/ripgrep" "$XDG_CONFIG_HOME/ripgrep"
+	symlink "$DOTFILES/kitty" "$XDG_CONFIG_HOME/kitty"
+	symlink "$DOTFILES/btop" "$XDG_CONFIG_HOME/btop"
+	symlink "$DOTFILES/bottom" "$XDG_CONFIG_HOME/bottom"
+	symlink "$DOTFILES/fsh" "$XDG_CONFIG_HOME/fsh"
+	symlink "$DOTFILES/ranger" "$XDG_CONFIG_HOME/ranger"
+	symlink "$DOTFILES/zathura" "$XDG_CONFIG_HOME/zathura"
 	symlink "$REPOS/starship/starship.toml" "$XDG_CONFIG_HOME/starship.toml"
 	symlink "$REPOS/neoviim" "$XDG_CONFIG_HOME/nvim"
 	linebreak

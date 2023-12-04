@@ -1,13 +1,5 @@
 #!/bin/bash
 
-export REPOS="$HOME/repos"
-export DOTS="$REPOS/dots"
-export DOTFILES=${DOTFILES:="$HOME/.dotfiles"}
-export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_CACHE_HOME="$HOME/.cache"
-export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_STATE_HOME="$HOME/.local/state"
-
 ORANGE="\033[38;5;216m"
 PURPLE="\033[38;5;140m"
 GRAY="\033[0;30m"
