@@ -55,4 +55,6 @@ deps=(
     "texlive-fonts-extra"
     "texlive-fonts-recommended"
     "texlive-latex-extra"
+    "sqlite3"
+    "libsqlite3-dev"
 )
