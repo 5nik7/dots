@@ -57,6 +57,7 @@ function extend_path() {
 
 extend_path "$DOTS/bin"
 extend_path "$XDG_DATA_HOME/zsh/functions"
+extend_path "$DOTFILES/bin"
 extend_path "$HOME/.local/bin"
 extend_path "$HOME/bin"
 extend_path "$HOME/.local/share/gem/ruby/3.0.0/bin"

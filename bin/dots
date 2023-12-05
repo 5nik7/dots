@@ -57,6 +57,7 @@ setup_link() {
 	symlink "$DOTFILES/fsh" "$XDG_CONFIG_HOME/fsh"
 	symlink "$DOTFILES/ranger" "$XDG_CONFIG_HOME/ranger"
 	symlink "$DOTFILES/zathura" "$XDG_CONFIG_HOME/zathura"
+	symlink "$DOTFILES/paru" "$XDG_CONFIG_HOME/paru"
 	symlink "$REPOS/starship/starship.toml" "$XDG_CONFIG_HOME/starship.toml"
 	symlink "$REPOS/neoviim" "$XDG_CONFIG_HOME/nvim"
 }
