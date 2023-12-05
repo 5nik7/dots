@@ -298,7 +298,7 @@ setshell() {
 
 install_fonts() {
  createdir "$HOME/.local/share"
-	symlink "$REPOS/dots/dotfiles/fonts" "$HOME/.local/share/fonts"
+	symlink "$DOTFILES/fonts" "$HOME/.local/share/fonts"
 	fc-cache -r
 }
 

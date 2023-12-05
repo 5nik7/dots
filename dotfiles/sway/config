@@ -16,7 +16,7 @@ set $right l
 set $term kitty
 
 output * {
-  bg $REPOS/dots/dotfiles/walls/1.jpg fill
+  bg $DOTFILES/walls/1.jpg fill
   mode 2560x1410@170Hz scale 1
   pos 0 0
 }
