@@ -13,30 +13,36 @@ XDG_STATE_HOME="$HOME/.local/state"
 source "$DOTSBIN/helper"
 source "$DOTSBIN/pkgs"
 
-setup_start() {
-	title "Installing packages.                 "
+arch_setup_start() {
+	title "Setting up Arch..."
 	linebreak
-	sudo apt update -y && sudo apt upgrade -y
-	installnala
-	installpkgs
-	installrustup
-	installstarship
-	installbob
-	installthorium
-	link_bin batcat bat
-	link_bin fdfind fd
+	sudo pacman -Syyu
+	installparu
+	archinstallpkgs
 	mkd "$HOME/.local/bin"
-	mkd "$HOME/bin"
 	mkd "$XDG_CONFIG_HOME"
 	mkd "$XDG_CACHE_HOME"
 	mkd "$XDG_DATA_HOME"
 	mkd "$XDG_STATE_HOME"
+
+}
+
+deb_setup_start() {
+	title "Setting up Debian..."
 	linebreak
+	sudo apt update -y && sudo apt upgrade -y
+	installnala
+	debinstallpkgs
+	link_bin batcat bat
+	link_bin fdfind fd
+	mkd "$HOME/.local/bin"
+	mkd "$XDG_CONFIG_HOME"
+	mkd "$XDG_CACHE_HOME"
+	mkd "$XDG_DATA_HOME"
+	mkd "$XDG_STATE_HOME"
 }
 
 setup_link() {
-	title "SYMLINKS                             "
-	linebreak
 	take "5nik7/starship" "$REPOS/starship"
 	take "5nik7/neoviim" "$REPOS/neoviim"
 	symlink "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
@@ -53,39 +59,43 @@ setup_link() {
 	symlink "$DOTFILES/zathura" "$XDG_CONFIG_HOME/zathura"
 	symlink "$REPOS/starship/starship.toml" "$XDG_CONFIG_HOME/starship.toml"
 	symlink "$REPOS/neoviim" "$XDG_CONFIG_HOME/nvim"
-	linebreak
 }
 
 case "$1" in
 setup)
 	clear
 	logo
-	setup_start
+	. /etc/os-release
+	case "$NAME" in
+  		"Arch Linux")
+			arch_setup_start
+    		;;
+  		"Debian GNU/Linux")
+			arch_setup_start
+    		;;
+  		*)
+    	echo -e "No setup found for this distro..."
+    ;;
+	esac
 	setup_link
 	setup_zsh
-	success "Done."
+	success
 	exit
 	;;
 link)
 	clear
 	logo
+	title "Creating symlinks..."
 	setup_link
-	success "Done."
-	exit
-	;;
-update)
-	clear
-	logo
-	title "Updating System.                     "
-	sudo apt -qq update -y && sudo apt -qq upgrade -y
+	success
 	exit
 	;;
 fonts)
 	clear
 	logo
-	title "Installing Fonts.                    "
+	title "Setting up fonts..."
 	install_fonts
-	success "Done."
+	success
 	exit
 	;;
 *)

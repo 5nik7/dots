@@ -1,31 +1,5 @@
 #!/usr/bin/zsh
 
-ORANGE="\033[38;5;216m"
-PURPLE="\033[38;5;140m"
-GRAY="\033[0;30m"
-WHITE="\033[0;37m"
-RED="\033[0;31m"
-GREEN="\033[0;32m"
-BLUE="\033[0;34m"
-YELLOW="\033[0;33m"
-CYAN="\033[0;36m"
-PINK="\033[0;35m"
-GRAYB="\033[1;30m"
-WHITEB="\033[1;37m"
-REDB="\033[1;31m"
-BLUEB="\033[1;34m"
-GREENB="\033[1;32m"
-YELLOWB="\033[1;33m"
-CYANB="\033[1;36m"
-PINKB="\033[1;35m"
-
-NC="\033[0m"
-
-
-function cecho(){
-    printf "${(P)1}${2} ${NC}\n"
-}
-
 function showcolors256() {
     local row col blockrow blockcol red green blue
     local showcolor=_showcolor256_${1:-bg}
@@ -133,62 +107,9 @@ function cd() {
 	builtin cd "$@" && ls_eza
 }
 
-function source_path() {
-	if [ -f "$1" ]; then
-		source "$1"
-	fi
-}
-
 function fixpath() {
 	PATH=$(echo $(sed 's/:/\n/g' <<<$PATH | sort | uniq) | sed -e 's/\s/':'/g')
 }
-
-
-function createdir() {
-	if [ ! -d "$1" ]; then
-		mkdir -p "$1"
-		echo -e "${LINECOLOR}${solsymble}${NC} ${BLUE}Created${NC} ${CYANB}$1${NC}"
-	fi
-}
-
-function take() {
-	if [ ! -d "$2" ]; then
-		git clone "https://github.com/$1.git" "$2"
-		echo -e "${LINECOLOR}${solsymble}${NC} ${PURPLE}Github.com/${NC}${PINKB}$1 ${GRAY}->${NC} ${CYANB}$2${NC}"
-	fi
-}
-
-function symlink() {
-	root=$(echo "$1" | cut -d "/" -f 1)
-	if [ ! -e "$2" ]; then
-		ln -s "$1" "$2"
-		echo -e "${LINECOLOR}${solsymble}${NC}   ${BLUE}$1${NC} ${GRAY}->${NC} ${CYANB}$2${NC}"
-	else
-		echo -e "${LINECOLOR}${solsymble}${NC}   ${GRAYB}$2${NC} ${GRAY}already exists${NC}"
-	fi
-}
-
-function backup() {
-	if [ -f "$1" ]; then
-		mv -f "$1" "${1}.bak"
-		echo -e "${LINECOLOR}${solsymble}${NC}   ${ORANGE}$1${NC} ${GRAY}->${NC} ${YELLOWB}$1.bak${NC}"
-	else
-		echo -e "${LINECOLOR}${solsymble}${NC}   ${PINKB}$1${NC} ${PINK}does not exist${NC}"
-	fi
-}
-
-function is_installed() {
-	dpkg -s "$1" &>/dev/null
-	return $?
-}
-
-function installpkg() {
-  if ! is_installed "$1"; then
-			sudo apt install "$1" -y
-		fi
-}
-
-alias pkg="installpkg"
 
 function cleanvim() {
 	rm -rf ~/.config/nvim
@@ -228,7 +149,6 @@ function _smooth_fzf() {
 function rel_path() {
     echo "$1" | sed "s|^$HOME/|~/|"
 }
-
 
 function fold1() {
     echo $(basename "$1")

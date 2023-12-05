@@ -22,90 +22,82 @@ PINKB="\033[1;35m"
 NC="\033[0m"
 
 HEADER="${GREENB}"
-LINECOLOR="${GRAYB}"
+LINECOLOR="${GRAY}"
 PANELBG="\033[48;5;233m"
 menu_symbol=" "
 solsymble="  "
+osline=""
 
 cecho(){
     printf "${(P)1}${2} ${NC}\n"
 }
 
 logo() {
-	topdoubleline
-	echo -e "${LINECOLOR}\033[48;5;234m║${HEADER}                                        ${LINECOLOR}║${NC}"
-	echo -e "${LINECOLOR}\033[48;5;233m║${HEADER}    ░░░░░░   ░░░░░░  ░░░░░░░ ░░░░░░░    ${LINECOLOR}║${NC}"
-	echo -e "${LINECOLOR}\033[48;5;233m║${HEADER}    ▒▒   ▒▒ ▒▒    ▒▒      ▒▒ ▒▒         ${LINECOLOR}║${NC}"
-	echo -e "${LINECOLOR}\033[48;5;232m║${HEADER}    ▒▒   ▒▒ ▒▒    ▒▒    ▒▒   ▒▒▒▒▒▒▒    ${LINECOLOR}║${NC}"
-	echo -e "${LINECOLOR}\033[48;5;232m║${HEADER}    ▓▓   ▓▓ ▓▓    ▓▓   ▓▓         ▓▓    ${LINECOLOR}║${NC}"
-	echo -e "${LINECOLOR}\033[48;5;016m║${HEADER}    ██████   ██████    ██    ███████    ${LINECOLOR}║${NC}"
-	echo -e "${LINECOLOR}\033[48;5;016m║${HEADER}                                        ${LINECOLOR}║${NC}"
-   bottomdoubleline
+	topline
+	echo -e "${LINECOLOR}║${HEADER}                                        ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}║${HEADER}    ░░░░░░   ░░░░░░  ░░░░░░░ ░░░░░░░    ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}║${HEADER}    ▒▒   ▒▒ ▒▒    ▒▒      ▒▒ ▒▒         ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}║${HEADER}    ▒▒   ▒▒ ▒▒    ▒▒    ▒▒   ▒▒▒▒▒▒▒    ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}║${HEADER}    ▓▓   ▓▓ ▓▓    ▓▓   ▓▓         ▓▓    ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}║${HEADER}    ██████   ██████    ██    ███████    ${LINECOLOR}║${NC}"
+	echo -e "${LINECOLOR}║${HEADER}                                        ${LINECOLOR}║${NC}"
+   bottomline
+   osicon
+}
+
+osicon() {
+	. /etc/os-release
+   case "$NAME" in
+  		"Arch Linux")
+			print_in_black "$osline"
+			print_in_cyan "  "
+			print_in_black "$osline\n"
+    		;;
+  		"Debian GNU/Linux")
+			print_in_black "$osline"
+			print_in_cyan " 󰣚 "
+			print_in_black "$osline\n"
+    		;;
+  		*)
+    		;;
+	esac
 }
 
 menu() {
-	menutitle		"OPTIONS                              "
-	linelinebreak
-	menuopt			"setup                              "
-	menuopt			"link                               "
-	menuopt			"update                             "
-	linelinebreak
-	bottomline
-}
-
-menutitle() {
-	topline
-	echo -e "${LINECOLOR}${PANELBG}║  ${BLUEB}$1 ${LINECOLOR}║${NC}"
-	middleline
+	title "OPTIONS"
+	linebreak
+	menuopt "setup"
+	menuopt	"link"
 }
 
 title() {
-	topline
-	echo -e "${LINECOLOR}${PANELBG}║  ${BLUEB}$1 ${LINECOLOR}║${NC}"
-	bottomline
+	print_in_yellow "$1\n"
 }
 
 menuopt() {
-	echo -e "${LINECOLOR}${PANELBG}║  ${GRAY}${PANELBG}${menu_symbol} ${PINKB}$1 ${LINECOLOR}║${NC}"
+	echo -e "${GRAY}${menu_symbol} ${PINKB}$1"
 }
 
 topline() {
-	echo -e "${LINECOLOR}${PANELBG}╔════════════════════════════════════════╗${NC}"
+	echo -e "${LINECOLOR}╔════════════════════════════════════════╗${NC}"
 }
 
 
 middleline() {
-	echo -e "${LINECOLOR}${PANELBG}╠════════════════════════════════════════╣${NC}"
+	echo -e "${LINECOLOR}╠════════════════════════════════════════╣${NC}"
 }
 
 bottomline() {
-	echo -e "${LINECOLOR}${PANELBG}╚════════════════════════════════════════╝${NC}"
-}
-
-topdoubleline() {
-	echo -e "${LINECOLOR}\033[48;5;234m╔════════════════════════════════════════╗${NC}"
-}
-
-middledoubleline() {
-	echo -e "${LINECOLOR}${PANELBG}╠════════════════════════════════════════╣${NC}"
-}
-
-bottomdoubleline() {
-	echo -e "${LINECOLOR}\033[48;5;016m╚════════════════════════════════════════╝${NC}"
+	echo -e "${LINECOLOR}╚════════════════════════════════════════╝${NC}"
 }
 
 linebreak() {
 	echo -e ""
 }
 
-linelinebreak() {
-	echo -e "${LINECOLOR}${PANELBG}║                                        ║${NC}"
-}
-
 success() {
-	topline
-	echo -e "${LINECOLOR}${PANELBG}║   ${GREENB}$1                                ${LINECOLOR}║${NC}"
-	bottomline
+	linebreak
+	echo -e "${GREENB}Done."
 }
 
 cmd_exists() {
@@ -135,20 +127,45 @@ print_in_yellow() {
     print_in_color "$1" 3
 }
 
+print_in_cyan() {
+    print_in_color "$1" 6
+}
+
+print_in_blue() {
+    print_in_color "$1" 4
+}
+
+print_in_white() {
+    print_in_color "$1" 7
+}
+
+print_in_black() {
+    print_in_color "$1" 8
+}
+
 print_question() {
-    print_in_yellow "   [?] $1"
+    print_in_yellow "\n [?] $1\n"
 }
 
 print_error() {
-    print_in_red "   [✖] $1 $2\n"
+    print_in_red "\n [✖] $1 $2\n"
 }
 
 print_success() {
-    print_in_green "   [] $1\n"
+    print_in_green "\n [] $1\n"
 }
 
 print_warning() {
-    print_in_yellow "   [!] $1\n"
+    print_in_yellow "\n [!] $1\n"
+}
+
+print_link() {
+	rel1=$(rel_path $1)
+	rel2=$(rel_path $2)
+    print_in_green "\n [] "
+	print_in_blue "$rel1"
+	print_in_black " -> "
+	print_in_cyan "$rel2\n"
 }
 
 echo_relative_path() {
@@ -173,9 +190,10 @@ fold3() {
 
 setup_zsh() {
 	if [[ ! $SHELL = "/usr/bin/zsh" ]]; then
-		title "Setting up ZSH.                      "
-		sudo apt -qq install zsh -y
+		title "ZSH"
+		linebreak
 		setshell
+		success
 	fi
 }
 
@@ -220,39 +238,75 @@ link_bin() {
 symlink() {
 	if [ ! -e "$2" ]; then
 		ln -s "$1" "$2"
-		echo -e "${LINECOLOR}${solsymble}${NC}  ${BLUE}$1${NC} ${GRAY}->${NC} ${CYANB}$2${NC}"
-	else
-	relfile=$(rel_path $2)
-		print_success "$relfile"
+		print_link "$1" "$2"
 	fi
 }
 
 backup() {
+	relfile=$(rel_path $1)
 	if [ -f "$1" ]; then
 		mv -f "$1" "${1}.bak"
-		echo -e "${LINECOLOR}${solsymble}${NC}  ${ORANGE}$1${NC} ${GRAY}->${NC} ${YELLOWB}$1.bak${NC}"
-	else
-		echo -e "${LINECOLOR}${solsymble}${NC}  ${PINKB}$1${NC} ${PINK}does not exist${NC}"
+		print_success "${relfile}.bak"
 	fi
 }
 
-is_installed() {
+arch_is_installed() {
+	pacman -Qi "$1" &>/dev/null
+	return $?
+}
+
+deb_is_installed() {
 	dpkg -s "$1" &>/dev/null
 	return $?
 }
 
-installpkg() {
-  if ! is_installed "$1"; then
-			sudo apt -qq install "$1" -y
-			echo -e "${LINECOLOR}${solsymble}${NC}  ${CYANB}$1${NC} ${BREENB}installed${NC}"
-		else
-			echo -e "${LINECOLOR}${solsymble}${NC}  ${GRAYB}$1${NC} ${GRAY}already installed${NC}"
+archinstallpkgs() {
+	for pkgs in "${archdeps[@]}"
+	do
+  		if ! arch_is_installed "$pkgs"; then
+			paru -Syu "$pkgs"
+			print_success "$pkgs installed"
 		fi
+	done
+}
+
+debinstallpkgs() {
+	for pkgs in "${debdeps[@]}"
+	do
+  		if ! deb_is_installed "$pkgs"; then
+			sudo apt -qq install "$pkgs" -y
+			print_success "$pkgs installed"
+		fi
+	done
+}
+
+installparu() {
+	ISparu=/sbin/paru
+	if [ ! -f "$ISparu" ]; then
+		print_warning "Paru not found, Installing..."
+		sudo pacman -S --needed base-devel
+		git clone https://aur.archlinux.org/paru.git
+		cd paru
+		makepkg -si
+	fi
+}
+
+setshell() {
+	if [[ $SHELL != "/usr/bin/zsh" ]]; then
+  		info "Changing shell to zsh."
+  		chsh -s /usr/bin/zsh
+	fi
+}
+
+install_fonts() {
+ mkd "$HOME/.local/share"
+	symlink "$DOTFILES/fonts" "$HOME/.local/share/fonts"
+	fc-cache -r
 }
 
 installnala() {
-	if ! is_installed "nala"; then
-		sudo apt -qq install nala -y
+	if ! deb_is_installed "nala"; then
+		sudo apt install nala -y
 	fi
 }
 
@@ -263,12 +317,6 @@ installthorium() {
 		sudo apt update -y
 		sudo apt install thorium-browser -y
 	fi
-}
-
-installpkgs() {
-  for pkgs in ${deps[@]}; do
-		installpkg "$pkgs"
-	done
 }
 
 installrustup() {
@@ -287,18 +335,5 @@ installbob() {
 	if [ ! -f "$HOME/.cargo/bin/bob" ]; then
 		cargo install --git https://github.com/MordechaiHadad/bob.git
 	fi
-}
-
-setshell() {
-	if [[ $SHELL != "/usr/bin/zsh" ]]; then
-  		info "Changing shell to zsh."
-  		chsh -s /usr/bin/zsh
-	fi
-}
-
-install_fonts() {
- createdir "$HOME/.local/share"
-	symlink "$DOTFILES/fonts" "$HOME/.local/share/fonts"
-	fc-cache -r
 }
 
