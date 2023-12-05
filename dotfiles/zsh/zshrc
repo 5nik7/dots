@@ -59,6 +59,7 @@ extend_path "$DOTS/bin"
 extend_path "$XDG_DATA_HOME/zsh/functions"
 extend_path "$HOME/.local/bin"
 extend_path "$HOME/bin"
+extend_path "$HOME/.local/share/gem/ruby/3.0.0/bin"
 extend_path "$GOBIN"
 extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
@@ -113,11 +114,9 @@ function source_path() {
 
 source_path "$HOME/.cargo/env"
 
-source_path "$HOME/venv/bin/activate"
+# eval "$(rbenv init -)"
 
-eval "$(rbenv init -)"
-
-eval "$(luarocks path --bin)"
+# eval "$(luarocks path --bin)"
 
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"

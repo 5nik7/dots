@@ -19,6 +19,7 @@ archdeps=(
     "git-delta"
     "python-pipx"
     "python-pip"
+    "python-pynvim"
     "starship"
     "kitty"
     "rbenv"
