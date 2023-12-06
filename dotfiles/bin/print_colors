@@ -1,6 +1,7 @@
 #!/bin/bash
 
 for cmd in sgr0 bold; do
+
 	tput ${cmd}
 	for i in $(seq 0 7); do
 		for j in $(seq 0 7); do
