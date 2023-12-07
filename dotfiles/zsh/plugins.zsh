@@ -40,6 +40,9 @@ zinit light Aloxaf/fzf-tab
 zinit ice wait'3' lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
 zinit light ClementTsang/bottom
 
+zinit ice wait="1" lucid
+zinit light ael-code/zsh-colored-man-pages
+
 # Completion
 # disable sort when completing `git checkout`
 zstyle ':completion:*:git-checkout:*' sort false
