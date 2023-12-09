@@ -1,7 +1,7 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 24,
+    "height": 30,
     "modules-left": [
         "custom/launcher",
         "sway/workspaces"
@@ -10,17 +10,13 @@
         "sway/window"
     ],
     "modules-right": [
-        "custom/weather",
-        "custom/separator",
         "memory",
         "custom/separator",
         "cpu",
         "custom/separator",
-        "clock",
-        "custom/separator",
-        "tray"
+        "clock"
     ],
-    "fixed-center": false,
+    "fixed-center": true,
 
     "custom/launcher": {
     "format": " 󰚌 ",
@@ -35,30 +31,9 @@
     },
 
     "sway/workspaces": {
-        "all-outputs": true,
         "disable-scroll": true,
-        "format": "{icon}",
-        "format-icons": {
-            "1.terminals": "",
-            "2.www": "",
-            "3.chat": "󰒱 󰙯",
-            "4.notes": "",
-            "5.chromium/code": " 󰨞",
-            "6.news": "󰎕",
-            "7.videos": "󰿎",
-            "8.steam": "󰓓",
-            "9.spotify": "",
-            "10.mail": ""
-        }
+        "format": "{icon}"
     },
-
-    "custom/weather": {
-        "tooltip": true,
-        "format": "{}",
-        "interval": 30,
-        "exec": "~/.config/waybar/scripts/weather.py",
-        "return-type": "json"
-      },
 
      "memory": {
         "interval": 10,

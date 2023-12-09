@@ -4,6 +4,7 @@ exec ~/.config/sway/scripts/xdpk.sh
 
 set $mod Mod1
 
+exec_always --no-startup-id workstyle &> /tmp/workstyle.log
 exec_always --no-startup-id ~/.config/waybar/scripts/launch_waybar.sh
 bindsym $mod+o exec killall -SIGUSR1 waybar
 
@@ -33,7 +34,7 @@ font pango:$font $font_size
 
 default_border pixel 1
 default_floating_border pixel 1
-gaps inner 5
+gaps inner 0
 gaps outer 0
 
 hide_edge_borders smart
@@ -45,9 +46,9 @@ popup_during_fullscreen smart
 ## Style
 
 # target                 title     bg    text   indicator  border
-client.focused           $mauve    $base $text  $mantle    $mantle
-client.focused_inactive  $mantle   $base $text  $mantle    $mantle
-client.unfocused         $mantle   $base $text  $mantle    $mantle
+client.focused           $mauve    $base $text  $mantle    $base
+client.focused_inactive  $mantle   $base $text  $mantle    $base
+client.unfocused         $mantle   $base $text  $mantle    $base
 client.urgent            $peach    $base $peach $overlay0  $peach
 client.placeholder       $base     $base $text  $overlay0  $mantle
 client.background        $base

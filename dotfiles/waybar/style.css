@@ -10,7 +10,11 @@
   border-radius: 0;
   min-height: 0;
   margin: 0;
-  padding: 0;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-weight: bold;
+  transition-property: background-color;
+  transition-duration: 0.5s;
 }
 
 /* The whole bar */
@@ -18,7 +22,7 @@
   background: @base;
   color: @text;
   font-family: JetBrainsMono Nerd Font;
-  font-size: 14px;
+  font-size: 12px;
   border-bottom: 1px solid @surface0;
 }
 
@@ -26,20 +30,10 @@
  * Module styles
  * -------------------------------------------------------------------------- */
 
-#battery {
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-}
-
-#battery.warning {
-  color: @peach;
-  font-weight: bold;
-}
-
-#battery.critical {
-  color: @maroon;
-  font-weight: bold;
+#custom-launcher {
+  padding-left: 0px;
+  padding-right: 5px;
+  color: @text;
 }
 
 #clock {
@@ -70,46 +64,11 @@
   font-weight: bold;
 }
 
-#mode {
-  background: @lavender;
-  padding-left: 4px;
-  padding-right: 4px;
-  color: @mantle;
-  border: 1px solid @peach;
-}
-
-#network,
-#bluetooth,
-#language,
-#custom-weather,
-#custom-profile {
-  font-size: 14px;
-}
-
-#idle_inhibitor,
-#backlight {
-  padding-left: 0px;
-  padding-right: 5px;
-}
-
-#network.disconnected {
-  color: @peach;
-}
-
 #custom-separator {
   padding-left: 2px;
   padding-right: 2px;
   color: @sapphire;
   background: transparent;
-}
-
-#tray {
-  padding-left: 2px;
-  padding-right: 2px;
-}
-
-#idle_inhibitor {
-  padding-top: 2px;
 }
 
 #workspaces button:hover {
