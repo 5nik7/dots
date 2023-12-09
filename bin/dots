@@ -55,6 +55,7 @@ setup_link() {
 	symlink "$DOTFILES/btop" "$XDG_CONFIG_HOME/btop"
 	symlink "$DOTFILES/bottom" "$XDG_CONFIG_HOME/bottom"
 	symlink "$DOTFILES/fsh" "$XDG_CONFIG_HOME/fsh"
+	symlink "$DOTFILES/rofi" "$XDG_CONFIG_HOME/rofi"
 	symlink "$DOTFILES/ranger" "$XDG_CONFIG_HOME/ranger"
 	symlink "$DOTFILES/zathura" "$XDG_CONFIG_HOME/zathura"
 	symlink "$DOTFILES/paru" "$XDG_CONFIG_HOME/paru"
