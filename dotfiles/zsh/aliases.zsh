@@ -20,6 +20,8 @@ alias mkdir='mkdir -p'
 alias g='git'
 alias lg='lazygit'
 
+alias update='sudo pacman -Syyu'
+
 # alias py='python3'
 # alias python='python3'
 # alias pip='pip3'

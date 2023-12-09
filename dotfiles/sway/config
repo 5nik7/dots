@@ -2,6 +2,8 @@
 
 xwayland enable
 
+exec nwg-look -a
+
 include catppuccin-mocha
 
 set $font "JetBrainsMono Nerd Font"
@@ -16,18 +18,26 @@ set $up k
 set $right l
 
 set $term kitty
-set $browser thorium-browser
+set $term-float kitty
+set $browser firefox
+set $filemanager thunar
 
 output * {
   bg $DOTFILES/walls/1.jpg fill
   mode 2560x1410@170Hz scale 1
   pos 0 0
 }
+
 font pango:$font $font_size
 
 default_border pixel 1
 default_floating_border pixel 1
+gaps inner 5
+gaps outer 0
+
 hide_edge_borders smart
+smart_borders on
+
 popup_during_fullscreen smart
 
 
@@ -67,8 +77,11 @@ bar {
      # Start a terminal
     bindsym $mod+Return exec $term
 
-    # Start a terminal
-    bindsym $mod+w exec $browser
+    # Start a file manager
+    bindsym $mod+e exec $filemanager
+
+    # Start a browser
+    bindsym $mod+w exec --no-startup-id firefox
 
     # Kill focused window
     bindsym $mod+q kill
