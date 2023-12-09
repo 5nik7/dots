@@ -1,5 +1,7 @@
 # 5way
 
+xwayland enable
+
 include catppuccin-mocha
 
 set $font "JetBrainsMono Nerd Font"
@@ -14,6 +16,7 @@ set $up k
 set $right l
 
 set $term kitty
+set $browser thorium-browser
 
 output * {
   bg $DOTFILES/walls/1.jpg fill
@@ -47,28 +50,28 @@ bar {
   modifier Mod4
 }
 
-### GTK themes
-set $gnome-schema org.gnome.desktop.interface
-
-exec_always {
-  gsettings set $gnome-schema gtk-theme 'Materia'
-  gsettings set $gnome-schema icon-theme 'Materia'
-  gsettings set $gnome-schema cursor-theme 'Adwaita'
-  gsettings set $gnome-schema cursor-size $cursor_size
-}
+# ### GTK themes
+# set $gnome-schema org.gnome.desktop.interface
+#
+# exec_always {
+#   gsettings set $gnome-schema gtk-theme 'Materia'
+#   gsettings set $gnome-schema icon-theme 'Materia'
+#   gsettings set $gnome-schema cursor-theme 'Adwaita'
+#   gsettings set $gnome-schema cursor-size $cursor_size
+# }
 
 ### Key bindings
 #
 # Basics:
 #
-    # Start a terminal
+     # Start a terminal
     bindsym $mod+Return exec $term
+
+    # Start a terminal
+    bindsym $mod+w exec $browser
 
     # Kill focused window
     bindsym $mod+q kill
-
-    bindsym $mod+d exec bemenu-run -p launcher
-    bindsym $mod+m exec bemenu-meta
 
 
     # Drag floating windows by holding down $mod and left mouse button.
@@ -79,7 +82,7 @@ exec_always {
     floating_modifier $mod normal
 
     # Reload the configuration file
-    bindsym $mod+Shift+c reload
+    bindsym $mod+Shift+r reload
 
     # Exit sway (logs you out of your Wayland session)
     bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
@@ -143,11 +146,6 @@ exec_always {
     bindsym $mod+b splith
     bindsym $mod+v splitv
 
-    # Switch the current container between different layout styles
-    bindsym $mod+s layout stacking
-    bindsym $mod+w layout tabbed
-    bindsym $mod+e layout toggle split
-
     # Make the current focus fullscreen
     bindsym $mod+f fullscreen
 
@@ -201,6 +199,6 @@ bindsym $mod+r mode "resize"
 #
 # Read `man 5 sway-bar` for more information about this section.
 
-exec --no-startup-id usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1
+exec --no-startup-id autotiling-rs
 
 include /etc/sway/config.d/*
