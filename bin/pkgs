@@ -39,6 +39,7 @@ archdeps=(
     "catppuccin-gtk-theme-mocha"
     "catppuccin-gtk-theme-macchiato"
     "rofi"
+    "gtk-engine-murrine"
 )
 
 debdeps=(
