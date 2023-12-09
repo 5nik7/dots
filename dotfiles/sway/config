@@ -12,7 +12,7 @@ exec nwg-look -a
 
 include catppuccin-mocha
 
-set $font "JetBrainsMono Nerd Font"
+set $font "JetBrainsMono Nerd Font Propo"
 set $font_size 0
 set $cursor_size 16
 

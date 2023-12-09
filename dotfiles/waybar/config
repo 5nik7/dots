@@ -1,28 +1,16 @@
 {
     "layer": "top",
-    "position": "top",
-    "height": 30,
+    "position": "bottom",
+    "height": 25,
     "modules-left": [
-        "custom/launcher",
         "sway/workspaces"
     ],
     "modules-center": [
         "sway/window"
     ],
     "modules-right": [
-        "memory",
-        "custom/separator",
-        "cpu",
-        "custom/separator",
-        "clock"
     ],
     "fixed-center": true,
-
-    "custom/launcher": {
-    "format": " 󰚌 ",
-    "on-click": "~/.config/rofi/launcher.sh",
-    "tooltip": false
-    },
 
     "clock": {
         "interval": 1,
