@@ -1,6 +1,11 @@
 # 5way
-
 xwayland enable
+exec ~/.config/sway/scripts/xdpk.sh
+
+set $mod Mod1
+
+exec_always --no-startup-id ~/.config/waybar/scripts/launch_waybar.sh
+bindsym $mod+o exec killall -SIGUSR1 waybar
 
 exec nwg-look -a
 
@@ -9,8 +14,6 @@ include catppuccin-mocha
 set $font "JetBrainsMono Nerd Font"
 set $font_size 0
 set $cursor_size 16
-
-set $mod Mod1
 
 set $left h
 set $down j
@@ -22,11 +25,9 @@ set $term-float kitty
 set $browser firefox
 set $filemanager thunar
 
-output * {
-  bg $DOTFILES/walls/1.jpg fill
-  mode 2560x1410@170Hz scale 1
-  pos 0 0
-}
+output * mode 2560x1410@170Hz scale 1 pos 0 0
+
+exec ~/.config/sway/scripts/wallpaper.sh
 
 font pango:$font $font_size
 
@@ -44,21 +45,22 @@ popup_during_fullscreen smart
 ## Style
 
 # target                 title     bg    text   indicator  border
-client.focused           $flamingo $base $text  $rosewater $flamingo
-client.focused_inactive  $base     $base $text  $rosewater $base
-client.unfocused         $base     $base $text  $rosewater $base
+client.focused           $mauve    $base $text  $mantle    $mantle
+client.focused_inactive  $mantle   $base $text  $mantle    $mantle
+client.unfocused         $mantle   $base $text  $mantle    $mantle
 client.urgent            $peach    $base $peach $overlay0  $peach
-client.placeholder       $overlay0 $base $text  $overlay0  $overlay0
+client.placeholder       $base     $base $text  $overlay0  $mantle
 client.background        $base
 
+
 ### Status Bar
-bar {
-  swaybar_command waybar
-  position top
-  hidden_state hide
-  mode hide
-  modifier Mod4
-}
+# bar {
+#   swaybar_command waybar
+#   position top
+#   hidden_state hide
+#   mode hide
+#   modifier Mod4
+# }
 
 # ### GTK themes
 # set $gnome-schema org.gnome.desktop.interface
@@ -82,6 +84,8 @@ bar {
 
     # Start a browser
     bindsym $mod+w exec --no-startup-id firefox
+
+    bindsym $mod+d exec ~/.config/rofi/launcher.sh
 
     # Kill focused window
     bindsym $mod+q kill

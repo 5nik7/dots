@@ -47,6 +47,7 @@ setup_link() {
 	take "5nik7/neoviim" "$REPOS/neoviim"
 	symlink "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
 	symlink "$DOTFILES/zsh/zshrc" "$HOME/.zshrc"
+	symlink "$DOTFILES/walls" "$HOME/.walls"
 	symlink "$DOTFILES/sway" "$XDG_CONFIG_HOME/sway"
 	symlink "$DOTFILES/waybar" "$XDG_CONFIG_HOME/waybar"
 	symlink "$DOTFILES/bat" "$XDG_CONFIG_HOME/bat"

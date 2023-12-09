@@ -10,6 +10,8 @@
         "sway/window"
     ],
     "modules-right": [
+        "custom/weather",
+        "custom/separator",
         "memory",
         "custom/separator",
         "cpu",
@@ -49,6 +51,14 @@
             "10.mail": ""
         }
     },
+
+    "custom/weather": {
+        "tooltip": true,
+        "format": "{}",
+        "interval": 30,
+        "exec": "~/.config/waybar/scripts/weather.py",
+        "return-type": "json"
+      },
 
      "memory": {
         "interval": 10,
