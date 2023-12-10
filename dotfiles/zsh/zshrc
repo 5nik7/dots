@@ -111,7 +111,7 @@ source_path "$HOME/.cargo/env"
 
 # eval "$(luarocks path --bin)"
 
-eval "$(register-python-argcomplete pipx)"
+# eval "$(register-python-argcomplete pipx)"
 
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"

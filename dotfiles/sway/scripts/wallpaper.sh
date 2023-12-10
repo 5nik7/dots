@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/zsh
 
-swww init &&
-	swww img ~/.walls/1.jpg
+function walbg() {
+    wal -n -i "$@"
+    swaybg -i "$(< "${HOME}/.cache/wal/wal")"
+}

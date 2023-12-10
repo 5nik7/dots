@@ -1,6 +1,8 @@
 # 5way
 xwayland enable
-exec ~/.config/sway/scripts/xdpk.sh
+exec_always --no-startup-idc ~/.config/sway/scripts/xdpk.sh
+
+include "$HOME/.cache/wal/colors-sway"
 
 set $mod Mod1
 
@@ -9,8 +11,6 @@ exec_always --no-startup-id ~/.config/waybar/scripts/launch_waybar.sh
 bindsym $mod+o exec killall -SIGUSR1 waybar
 
 exec nwg-look -a
-
-include ~/.cache/wal/colors-sway
 
 set $font "JetBrainsMono Nerd Font Propo"
 set $font_size 0
@@ -26,9 +26,8 @@ set $term-float kitty
 set $browser firefox
 set $filemanager thunar
 
-output * mode 2560x1410@170Hz scale 1 pos 0 0
-
-exec ~/.config/sway/scripts/wallpaper.sh
+output "*" background $wallpaper fill
+output "*" resolution 2560x1410@170Hz scale 1 pos 0 0
 
 font pango:$font $font_size
 

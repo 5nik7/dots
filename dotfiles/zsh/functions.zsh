@@ -1,5 +1,10 @@
 #!/usr/bin/zsh
 
+function walbg() {
+    wal -n -i "$@"
+    swaybg -i "$(< "${HOME}/.cache/wal/wal")"
+}
+
 function showcolors256() {
     local row col blockrow blockcol red green blue
     local showcolor=_showcolor256_${1:-bg}

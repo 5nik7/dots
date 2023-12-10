@@ -14,7 +14,7 @@ alias v="$EDITOR"
 alias vi="$EDITOR"
 alias dot='cd $DOTS'
 alias repos='cd $REPOS'
-alias cat='bat'
+# alias cat='bat'
 alias mkdir='mkdir -p'
 
 alias g='git'
