@@ -9,7 +9,6 @@ XDG_CACHE_HOME="$HOME/.cache"
 XDG_DATA_HOME="$HOME/.local/share"
 XDG_STATE_HOME="$HOME/.local/state"
 
-
 source "$DOTSBIN/helper"
 source "$DOTSBIN/pkgs"
 
@@ -60,6 +59,7 @@ setup_link() {
 	symlink "$DOTFILES/ranger" "$XDG_CONFIG_HOME/ranger"
 	symlink "$DOTFILES/zathura" "$XDG_CONFIG_HOME/zathura"
 	symlink "$DOTFILES/paru" "$XDG_CONFIG_HOME/paru"
+	symlink "$DOTFILES/nano/nanorc" "$HOME/.nanorc"
 	symlink "$REPOS/starship/starship.toml" "$XDG_CONFIG_HOME/starship.toml"
 	symlink "$REPOS/neoviim" "$XDG_CONFIG_HOME/nvim"
 }
@@ -70,15 +70,15 @@ setup)
 	logo
 	. /etc/os-release
 	case "$NAME" in
-  		"Arch Linux")
-			arch_setup_start
-    		;;
-  		"Debian GNU/Linux")
-			arch_setup_start
-    		;;
-  		*)
-    	echo -e "No setup found for this distro..."
-    ;;
+	"Arch Linux")
+		arch_setup_start
+		;;
+	"Debian GNU/Linux")
+		arch_setup_start
+		;;
+	*)
+		echo -e "No setup found for this distro..."
+		;;
 	esac
 	setup_link
 	setup_zsh
