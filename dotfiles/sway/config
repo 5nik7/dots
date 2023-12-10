@@ -10,7 +10,7 @@ bindsym $mod+o exec killall -SIGUSR1 waybar
 
 exec nwg-look -a
 
-include catppuccin-mocha
+include ~/.cache/wal/colors-sway
 
 set $font "JetBrainsMono Nerd Font Propo"
 set $font_size 0
@@ -41,17 +41,6 @@ hide_edge_borders smart
 smart_borders on
 
 popup_during_fullscreen smart
-
-
-## Style
-
-# target                 title     bg    text   indicator  border
-client.focused           $mauve    $base $text  $mantle    $base
-client.focused_inactive  $mantle   $base $text  $mantle    $base
-client.unfocused         $mantle   $base $text  $mantle    $base
-client.urgent            $peach    $base $peach $overlay0  $peach
-client.placeholder       $base     $base $text  $overlay0  $mantle
-client.background        $base
 
 
 ### Status Bar
