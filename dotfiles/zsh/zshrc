@@ -39,7 +39,6 @@ export MANPAGER='nvim +Man!'
 export PAGER='bat'
 export BAT_CONFIG_PATH="$HOME/.config/bat/bat.conf"
 export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/rg"
-export GOPATH=$HOME/go
 export GOBIN=$HOME/go/bin
 export RUSTFLAGS="--remap-path-prefix $HOME=~"
 
@@ -63,7 +62,6 @@ function zmodule() {
 
 zmodule "functions"
 zmodule "options"
-# zmodule "theme"
 zmodule "aliases"
 zmodule "plugins"
 zmodule "fzf"
