@@ -15,6 +15,7 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_STATE_HOME="$HOME/.local/state"
 export XDG_CONFIG_DIRS="/etc/xdg"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+export DISPLAY=":0"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -62,11 +63,19 @@ function zmodule() {
 
 zmodule "functions"
 zmodule "options"
-zmodule "theme"
+# zmodule "theme"
 zmodule "aliases"
 zmodule "plugins"
 zmodule "fzf"
 zmodule "font"
+
+function source_path() {
+	if [ -f "$1" ]; then
+		source "$1"
+	fi
+}
+
+source_path "$HOME/.cache/wal/colors.sh"
 
 function extend_path() {
     [[ -d "$1" ]] || return
@@ -87,8 +96,6 @@ extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
 extend_path "$HOME/.local/share/nvim/mason/bin"
 
-# fast-theme -q XDG:catppuccin-mocha
-
 bindkey -v
 
 zle -N prepend-sudo
@@ -98,12 +105,6 @@ autoload colors && colors
 
 autoload -U bashcompinit
 bashcompinit
-
-function source_path() {
-	if [ -f "$1" ]; then
-		source "$1"
-	fi
-}
 
 source_path "$HOME/.cargo/env"
 

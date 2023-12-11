@@ -10,4 +10,4 @@ fi
 SDIR="$HOME/.config/waybar"
 
 waybar -c "$SDIR"/config -s "$SDIR"/style.css &
-#waybar -c "$SDIR"/config2 -s "$SDIR"/style2.css &
+# waybar -c "$SDIR"/config2 -s "$SDIR"/style.css &
