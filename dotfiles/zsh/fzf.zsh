@@ -18,7 +18,7 @@ fi
 # --color info:8,prompt:8,spinner:5,pointer:10,marker:13
 # --pointer='|>'
 # --ansi
-$ --no-scrollbar
+# --no-scrollbar
 # --info=inline
 # --border=sharp
 # --preview-window='border-sharp'"
