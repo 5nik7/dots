@@ -5,8 +5,37 @@ function walbg() {
     swaybg -i "$(< "${HOME}/.cache/wal/wal")"
 }
 
-# print weather forecast for current location to prompt
-function weather { curl "wttr.in/$1" }
+function weather {
+    if [[ "$1" == "help" ]]; then
+        curl "wttr.in/:help"
+    else
+        curl "wttr.in/Yakima?uFQ$1"
+    fi
+}
+
+function femoji() {
+    emojis=$(curl -sSL 'https://git.io/JXXO7')
+    selected_emoji=$(echo $emojis | fzf)
+    echo $selected_emoji
+}
+
+
+function in() {
+    yay -Slq | fzf -q "$1" -m --preview 'yay -Si {1}'| xargs -ro yay -S
+}
+
+function re() {
+    yay -Qq | fzf -q "$1" -m --preview 'yay -Qi {1}' | xargs -ro yay -Rns
+}
+
+# function man {
+#   LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
+#   LESS_TERMCAP_us=$(printf "${fg[cyan]}") \
+#   LESS_TERMCAP_ue=$(printf "$reset_color") \
+#   PAGER="${commands[less]:-$PAGER}" \
+#   _NROFF_U=1 \
+#      command man "$@"
+# }
 
 function showcolors256() {
     local row col blockrow blockcol red green blue
@@ -124,6 +153,12 @@ function cleanvim() {
 	rm -rvf ~/.local/share/nvim
 	rm -rvf ~/.local/state/nvim
 	rm -rvf ~/.cache/nvim
+}
+
+function ssl-download-certificate {
+  local host=$1
+  local port=${2:-443}
+  openssl s_client -showcerts -connect "${host}:${port}" </dev/null 2>/dev/null | openssl 'x509' -outform 'PEM' > "${host}:${port}.pem"
 }
 
 function ssh-key-set {

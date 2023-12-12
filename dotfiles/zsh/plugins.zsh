@@ -38,11 +38,9 @@ zinit light chrissicool/zsh-256color
 
 zinit light ael-code/zsh-colored-man-pages
 
-# Completion
-# disable sort when completing `git checkout`
-zstyle ':completion:*:git-checkout:*' sort false
-# preview directory's content with exa when completing cd
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -lA --icons --git-repos --git --group-directories-first --no-filesize --no-user --no-time --no-permissions $realpath'
+zinit light NullSense/fuzzy-sys
+
+zinit light reegnz/jq-zsh-plugin
 
 # Autosuggestion
 ZSH_AUTOSUGGEST_USE_ASYNC="true"
