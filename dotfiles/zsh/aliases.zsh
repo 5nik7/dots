@@ -1,7 +1,13 @@
 #!/usr/bin/zsh
 
-alias ll="ll_eza"
-alias l="ls_eza"
+if [ $commands[exa] ]
+then
+  alias ll="ll_eza"
+  alias l="ls_eza"
+fi
+
+alias grep='grep --color=auto' # colorize matching parts
+alias less='less -R -M -X' # -R : enable colors; -M : shows more detailed prompt, including file position; -N : shows line number; -X : supresses the terminal clearing at exit;
 
 alias c="clear"
 alias q="exit"
