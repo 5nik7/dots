@@ -76,7 +76,6 @@ zmodule "options"
 zmodule "aliases"
 zmodule "plugins"
 zmodule "fzf"
-zmodule "font"
 
 
 function extend_path() {

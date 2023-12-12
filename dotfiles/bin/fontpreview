@@ -9,10 +9,10 @@ VERSION=1.0.7
 # Default values
 SEARCH_PROMPT="❯ "
 SIZE=532x365
-POSITION="+0+0"
+POSITION="+2560+0"
 FONT_SIZE=38
-BG_COLOR="#ffffff"
-FG_COLOR="#000000"
+BG_COLOR="$background"
+FG_COLOR="$foreground"
 PREVIEW_TEXT="ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\nabcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@$\%(){}[]"
 
 show_help() {
