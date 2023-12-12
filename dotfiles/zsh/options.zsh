@@ -28,4 +28,4 @@ SAVEHIST=100000
 HISTSIZE=100000
 HISTFILE=~/.zsh_history
 
-WORDCHARS=''
+WORDCHARS='*?[]~=&;!#$%^(){}<>'
