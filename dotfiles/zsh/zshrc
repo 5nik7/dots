@@ -60,22 +60,20 @@ export RG_DEFAULT_COMMAND="rg -i -l -p -L --hidden"
 export GOBIN=$HOME/go/bin
 export RUSTFLAGS="--remap-path-prefix $HOME=~"
 
-export zfunc="$XDG_DATA_HOME/zsh/functions"
-
 fpath=(
     $ZSH/functions.zsh
-    $zfunc
+    /usr/local/share/zsh/site-functions
     $fpath
 )
 
-if [[ -d $DOTFILES/zsh/functions ]]; then
-    for func in $DOTFILES/zsh/functions/*(:t); autoload -U $func
+if [[ -d $ZSH/functions ]]; then
+    for func in $ZSH/functions/*(:t); autoload -U $func
 fi
 
 function zmodule() {
-	if [ -f "$ZSH/$1.zsh" ]; then
-		source "$ZSH/$1.zsh"
-	fi
+    if [ -f "$ZSH/$1.zsh" ]; then
+        source "$ZSH/$1.zsh"
+    fi
 }
 
 zmodule "functions"
@@ -85,7 +83,6 @@ zmodule "plugins"
 zmodule "fzf"
 zmodule "font"
 zmodule "completion"
-
 
 function extend_path() {
     [[ -d "$1" ]] || return
@@ -110,8 +107,6 @@ bindkey -v
 
 zle -N prepend-sudo
 bindkey -M vicmd s prepend-sudo
-
-autoload colors && colors
 
 autoload -U bashcompinit
 bashcompinit
