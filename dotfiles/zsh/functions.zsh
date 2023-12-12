@@ -5,6 +5,9 @@ function walbg() {
     swaybg -i "$(< "${HOME}/.cache/wal/wal")"
 }
 
+# print weather forecast for current location to prompt
+function weather { curl "wttr.in/$1" }
+
 function showcolors256() {
     local row col blockrow blockcol red green blue
     local showcolor=_showcolor256_${1:-bg}
