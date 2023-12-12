@@ -1,6 +1,6 @@
 #!/usr/bin/zsh
 
-if [ $commands[exa] ]
+if [ $commands[eza] ]
 then
   alias ll="ll_eza"
   alias l="ls_eza"
