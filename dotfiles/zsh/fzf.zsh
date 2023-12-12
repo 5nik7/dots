@@ -7,6 +7,7 @@ then
     --preview-window='border-sharp'
     --pointer="|>"
     --no-scrollbar
+    --info=inline
     --preview-window='right,50%,border-left,+{2}+3/3,~3'
     --exact
     --ansi'
@@ -20,4 +21,4 @@ fi
     # --color info:8,prompt:8,spinner:5,pointer:10,marker:13
     # --border=sharp
     # --info=inline
-        # --preview-window='border-sharp'
+    # --preview-window='border-sharp'
