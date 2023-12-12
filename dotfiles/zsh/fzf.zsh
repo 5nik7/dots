@@ -4,6 +4,7 @@ then
   export FZF_DEFAULT_OPTS='
     --color fg:-1,bg:-1,hl:5,fg+:3,bg+:-1,hl+:5
     --color info:42,prompt:-1,spinner:42,pointer:51,marker:33
+    --pointer='|>'
     --exact
     --ansi'
   if [ $commands[fd] ]
