@@ -15,32 +15,27 @@ source "${ZINIT_HOME}/zinit.git/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
-zinit ice wait="0" lucid from="gh-r" as="program" pick="zoxide-*/zoxide -> zoxide" cp="zoxide-*/completions/_zoxide -> _zoxide" atclone="./zoxide init zsh > init.zsh" atpull="%atclone" src="init.zsh"
-zinit light ajeetdsouza/zoxide
+zinit ice wait="0" lucid
+zinit light mafredri/zsh-async
 
-zinit ice wait"0a" atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay" atload"_zsh_highlight" lucid
+zinit ice wait="0" lucid
+zinit light Aloxaf/fzf-tab
+
+zinit ice wait"0" atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay" atload"_zsh_highlight" lucid
 zinit light zdharma-continuum/fast-syntax-highlighting
 
-zinit ice wait"0a" compile'{src/*.zsh,src/strategies/*}' atinit"ZSH_AUTOSUGGEST_USE_ASYNC=1" atload"_zsh_autosuggest_start" lucid
+zinit ice wait"0" compile'{src/*.zsh,src/strategies/*}' atinit"ZSH_AUTOSUGGEST_USE_ASYNC=1" atload"_zsh_autosuggest_start" lucid
 zinit light zsh-users/zsh-autosuggestions
 
-zinit ice wait"0b" lucid
+zinit ice wait="0a" lucid from="gh-r" as="program" pick="zoxide-*/zoxide -> zoxide" cp="zoxide-*/completions/_zoxide -> _zoxide" atclone="./zoxide init zsh > init.zsh" atpull="%atclone" src="init.zsh"
+zinit light ajeetdsouza/zoxide
+
 zinit light hlissner/zsh-autopair
 
-zinit ice wait"0b" blockf lucid
 zinit light zsh-users/zsh-completions
 
 zinit light chrissicool/zsh-256color
-zinit light mafredri/zsh-async
-zinit ice depth"1"
 
-zinit ice wait="1" lucid
-zinit light Aloxaf/fzf-tab
-
-zinit ice wait'3' lucid from="gh-r" as="program" bpick='*.deb' pick="usr/bin/btm"
-zinit light ClementTsang/bottom
-
-zinit ice wait="1" lucid
 zinit light ael-code/zsh-colored-man-pages
 
 # Completion
