@@ -111,19 +111,19 @@ function ll_eza() {
 	eza -lA --icons --git-repos --git --group-directories-first
 }
 
-function cd() {
-	builtin cd "$@" && ls_eza
-}
+# function cd() {
+# 	builtin cd "$@" && ls_eza
+# }
 
 function fixpath() {
 	PATH=$(echo $(sed 's/:/\n/g' <<<$PATH | sort | uniq) | sed -e 's/\s/':'/g')
 }
 
 function cleanvim() {
-	rm -rf ~/.config/nvim
-	rm -rf ~/.local/share/nvim
-	rm -rf ~/.local/state/nvim
-	rm -rf ~/.cache/nvim
+	rm -rvf ~/.config/nvim
+	rm -rvf ~/.local/share/nvim
+	rm -rvf ~/.local/state/nvim
+	rm -rvf ~/.cache/nvim
 }
 
 function ssh-key-set {
