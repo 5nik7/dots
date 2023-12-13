@@ -12,22 +12,14 @@
     "modules-right": [
         "cpu",
         "custom/separator",
-        "memory",
-        "custom/separator",
-        "clock"
+        "memory"
     ],
     "fixed-center": true,
-
 
     "sway/workspaces": {
         "disable-scroll": true,
         "all-outputs": true,
         "format": "{icon}"
-    },
-
-    "sway/mode": {
-        "format": "<span style=\"normal\">{}</span>",
-        "on-click": "swaymsg 'mode \"resize\"'"
     },
 
     "clock": {

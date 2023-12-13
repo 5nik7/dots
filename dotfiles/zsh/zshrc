@@ -13,7 +13,6 @@ function source_path() {
     fi
 }
 
-source_path "$HOME/.cache/wal/colors.sh"
 
 export REPOS="$HOME/repos"
 export DOTS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
@@ -27,6 +26,7 @@ export XDG_CONFIG_DIRS="/etc/xdg"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 export XDG_CURRENT_DESKTOP="Wayland"
 export DISPLAY=":0"
+export SWAYSOCK="/run/user/$(id -u)/sway-ipc.$(id -u).$(pgrep -x sway).sock"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -46,8 +46,9 @@ export EDITOR='nvim'
 export VISUAL=$EDITOR
 export GIT_EDITOR=$EDITOR
 export BROWSER="firefox"
-export MANPAGER='nvim +Man!'
-export PAGER='bat'
+# export MANPAGER='nvim +Man!'
+export MANPAGER='less'
+export PAGER='less'
 export BAT_CONFIG_PATH="$HOME/.config/bat/bat.conf"
 
 export LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
@@ -61,14 +62,9 @@ export GOBIN="$HOME/go/bin"
 export RUSTFLAGS="--remap-path-prefix $HOME=~"
 
 fpath=(
-    $ZSH/functions.zsh
-    /usr/local/share/zsh/site-functions
+    $ZSH/functions
     $fpath
 )
-
-if [[ -d $ZSH/functions ]]; then
-    for func in $ZSH/functions/*(:t); autoload -U $func
-fi
 
 function zmodule() {
     if [ -e "$ZSH/$1.zsh" ]; then
@@ -78,11 +74,12 @@ function zmodule() {
 
 zmodule "functions"
 zmodule "options"
+zmodule "theme"
 zmodule "aliases"
+zmodule "completion"
 zmodule "plugins"
 zmodule "fzf"
 zmodule "font"
-zmodule "completion"
 
 function extend_path() {
     [[ -d "$1" ]] || return
@@ -112,11 +109,6 @@ zle_highlight=('paste:none')
 
 source_path "$HOME/.cargo/env"
 
-# eval "$(rbenv init -)"
-
-# eval "$(luarocks path --bin)"
-
-# eval "$(register-python-argcomplete pipx)"
 
 export NVM_DIR="$HOME/.config/nvm"
 source_path "$NVM_DIR/nvm.sh"
@@ -124,16 +116,8 @@ source_path "$NVM_DIR/bash_completion"
 
 source_path "$HOME/.nix-profile/etc/profile.d/nix.sh"
 
-#extend_path "$HOME/perl5/bin"
-#export PERL5LIB="$HOME/perl5/lib/perl"
-#export PERL_LOCAL_LIB_ROOT="$HOME/perl5"
-#PERL_MB_OPT="--install_base \"$HOME/perl5\""; export PERL_MB_OPT;
-#PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"; export PERL_MM_OPT;PERL_LOCAL_LIB_ROOT="/home/snikt/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT
-
-# # Base16 Shell
-# BASE16_SHELL="$HOME/.config/base16-shell/"
-# [ -n "$PS1" ] && \
-#     [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-#         source "$BASE16_SHELL/profile_helper.sh"
+extend_path "$HOME/perl5/bin"
+export PERL5LIB="$HOME/perl5/lib/perl5"
+export PERL_LOCAL_LIB_ROOT="$HOME/perl5"
 
 eval $(starship init zsh)

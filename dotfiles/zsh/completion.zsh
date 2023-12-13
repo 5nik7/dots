@@ -31,13 +31,13 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -lA --color=always --icons --gi
 
 # zstyle ':completion:*:descriptions' format '[%d]'
 
-# zstyle ':completion:*'                 list-separator '--'
+zstyle ':completion:*'                 list-separator '--'
 
-# zstyle ':completion:*:*:-command-:*:*' file-patterns '*(#q-*):executables:executable\ file *(-/):directories:directory'
+zstyle ':completion:*:*:-command-:*:*' file-patterns '*(#q-*):executables:executable\ file *(-/):directories:directory'
 
-# zstyle ':completion:*'                 ignored-patterns '_*'
+zstyle ':completion:*'                 ignored-patterns '_*'
 
-# zstyle ':completion:*:options'         description 'yes'
+zstyle ':completion:*:options'         description 'yes'
 
 # zstyle ':completion:*:options'         auto-description 'specify: %d'
 # zstyle ':completion:*:descriptions'    format '%F{yellow}❬%B%d%b%F{yellow}❭%f' # enable and format completion groups
@@ -45,26 +45,26 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -lA --color=always --icons --gi
 # zstyle ':completion:*:messages'        format '%F{purple}%d%f'
 # # zstyle ':completion:*:corrections'     format '%U%F{green}%d (errors: %e)%f%u'
 
-# zstyle ':completion:*'                 special-dirs true
-# zstyle ':completion:*'                 ignore-parents parent pwd # cd will never select the parent directory (e.g.: cd ../<TAB>)
-# zstyle ':completion:*'                 list-dirs-first yes # list folders first on completion
-# zstyle ':completion:*'                 list-colors ${(s.:.)LS_COLORS} # colorize file system completion
+zstyle ':completion:*'                 special-dirs true
+zstyle ':completion:*'                 ignore-parents parent pwd # cd will never select the parent directory (e.g.: cd ../<TAB>)
+zstyle ':completion:*'                 list-dirs-first yes # list folders first on completion
+zstyle ':completion:*'                 list-colors ${(s.:.)LS_COLORS} # colorize file system completion
 
 ### Menu behaviour
-# zstyle ':completion:*'                 menu select # interactive # always show completions
-# zstyle ':completion:*:default'         menu yes=0 select=0
-# zstyle ':completion:*:default'         menu select
+zstyle ':completion:*'                 menu select # interactive # always show completions
+zstyle ':completion:*:default'         menu yes=0 select=0
+zstyle ':completion:*:default'         menu select
 # zstyle ':completion:*:manuals'         separate-sections true
 # zstyle ':completion:*'                 auto-description true
 # zstyle ':completion:*:auto-describe'   format 'specify: %d'
 
 ### Listing behaviour
-# zstyle ':completion:*'                 list-prompt '%SAt %p: Hit TAB for more, or the character to insert%s' # Make the list prompt friendly
-# zstyle ':completion:*'                 last-prompt yes
-# zstyle ':completion:*'                 list-grouped yes
-# zstyle ':completion:*'                 list-packed yes
-# zstyle ':completion:*'                 file-list always
-# zstyle ':completion:*'                 strip-comments false
+zstyle ':completion:*'                 list-prompt '%SAt %p: Hit TAB for more, or the character to insert%s' # Make the list prompt friendly
+zstyle ':completion:*'                 last-prompt yes
+zstyle ':completion:*'                 list-grouped yes
+zstyle ':completion:*'                 list-packed yes
+zstyle ':completion:*'                 file-list always
+zstyle ':completion:*'                 strip-comments false
 
 # zstyle ':completion:*:*:*:*:processes'       command 'ps -u ${USER} -o pid,user,command'
 # zstyle ':completion:*:*:*:*:processes'       list-colors '=(#b) #([0-9]#) ([0-9a-z-_]#)*=0=01;34=02=0'
