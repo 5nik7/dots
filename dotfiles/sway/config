@@ -62,7 +62,7 @@ popup_during_fullscreen smart
     bindsym $mod+e exec $filemanager
 
     # Start a browser
-    bindsym $mod+w exec --no-startup-id firefox
+    bindsym $mod+w exec $browser
 
     bindsym $mod+d exec ~/.config/rofi/launcher.sh
 
