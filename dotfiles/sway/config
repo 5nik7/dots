@@ -1,4 +1,7 @@
 # 5way
+
+exec --no-startup-id autotiling-rs
+
 xwayland enable
 exec_always --no-startup-idc ~/.config/sway/scripts/xdpk.sh
 
@@ -13,7 +16,7 @@ bindsym $mod+o exec killall -SIGUSR1 waybar
 
 exec nwg-look -a
 
-set $font "JetBrainsMono Nerd Font Propo"
+set $font "JetBrainsMono Nerd Font"
 set $font_size 0
 set $cursor_size 16
 
@@ -32,10 +35,16 @@ output "*" resolution 2560x1410@170Hz scale 1 pos 0 0
 
 font pango:$font $font_size
 
-default_border pixel 1
-default_floating_border pixel 1
-gaps inner 12
-gaps outer 0
+default_border pixel 3
+default_floating_border pixel 3
+gaps inner 10
+gaps outer 10
+gaps horizontal 10 
+gaps vertical 10
+gaps top 10
+gaps right 10
+gaps bottom 10
+gaps left 10
 
 hide_edge_borders smart
 smart_borders on
@@ -182,11 +191,6 @@ mode "resize" {
 
 bindsym $mod+r mode "resize"
 
-#
-# Status Bar:
-#
-# Read `man 5 sway-bar` for more information about this section.
-
-exec --no-startup-id autotiling-rs
+seat * hide_cursor when-typing enable
 
 include /etc/sway/config.d/*
