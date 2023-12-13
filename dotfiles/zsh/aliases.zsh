@@ -7,6 +7,17 @@ fi
 alias grep='grep --color=auto' # colorize matching parts
 alias less='less -R -M -X' # -R : enable colors; -M : shows more detailed prompt, including file position; -N : shows line number; -X : supresses the terminal clearing at exit;
 
+# get top process eating memory
+alias psmem='ps auxf | sort -nr -k 4 | head -5'
+
+# get top process eating cpu ##
+alias pscpu='ps auxf | sort -nr -k 3 | head -5'
+
+alias archlinx-fix-keys="sudo pacman-key --init && sudo pacman-key --populate archlinux && sudo pacman-key --refresh-keys"
+
+# systemd
+alias mach_list_systemctl="systemctl list-unit-files --state=enabled"
+
 alias c="clear"
 alias q="exit"
 alias ..="cd .."
