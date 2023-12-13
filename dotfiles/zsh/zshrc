@@ -8,9 +8,9 @@ autoload -U colors && colors
 autoload -U keeper
 
 function source_path() {
-	if [ -f "$1" ]; then
-		source "$1"
-	fi
+    if [ -e "$1" ]; then
+        source "$1"
+    fi
 }
 
 source_path "$HOME/.cache/wal/colors.sh"
@@ -70,7 +70,7 @@ if [[ -d $ZSH/functions ]]; then
 fi
 
 function zmodule() {
-    if [ -f "$ZSH/$1.zsh" ]; then
+    if [ -e "$ZSH/$1.zsh" ]; then
         source "$ZSH/$1.zsh"
     fi
 }
@@ -124,7 +124,7 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-if [ -e /home/snikt/.nix-profile/etc/profile.d/nix.sh ]; then . /home/snikt/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then . /home/snikt/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
 PATH="/home/snikt/perl5/bin${PATH:+:${PATH}}"; export PATH;
 PERL5LIB="/home/snikt/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
