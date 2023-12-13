@@ -235,4 +235,17 @@ function take() {
     fi
 }
 
+function gitclo() {
+    git clone "$@"
+    local param
+    local last_arg
+    for param; do
+        if [[ $param != -* ]]; then
+            last_arg="$param"
+        fi
+    done
+    clone_dir=$(basename $last_arg .git)
+    cd $clone_dir;
+}
+
 # vim:ft=zsh:nowrap
