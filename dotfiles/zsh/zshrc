@@ -60,12 +60,6 @@ export RG_DEFAULT_COMMAND="rg -i -l -p -L --hidden"
 export GOBIN="$HOME/go/bin"
 export RUSTFLAGS="--remap-path-prefix $HOME=~"
 
-export PERL5LIB="$HOME/perl5/lib/perl"
-PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
-PERL_MB_OPT="--install_base \"$HOME/perl5\""; export PERL_MB_OPT;
-PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"; export PERL_MM_OPT;PERL_LOCAL_LIB_ROOT="/home/snikt/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT
-
-
 fpath=(
     $ZSH/functions.zsh
     /usr/local/share/zsh/site-functions
@@ -131,6 +125,10 @@ source_path "$NVM_DIR/bash_completion"
 
 source_path "$HOME/.nix-profile/etc/profile.d/nix.sh"
 
+#export PERL5LIB="$HOME/perl5/lib/perl"
+#export PERL_LOCAL_LIB_ROOT="$HOME/perl5"
+#PERL_MB_OPT="--install_base \"$HOME/perl5\""; export PERL_MB_OPT;
+#PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"; export PERL_MM_OPT;PERL_LOCAL_LIB_ROOT="/home/snikt/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT
 
 # # Base16 Shell
 # BASE16_SHELL="$HOME/.config/base16-shell/"
