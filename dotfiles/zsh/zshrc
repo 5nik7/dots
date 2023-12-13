@@ -99,7 +99,6 @@ extend_path "$HOME/.local/share/gem/ruby/3.0.0/bin"
 extend_path "$GOBIN"
 extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
-extend_path "$HOME/perl5/bin"
 
 bindkey -v
 
@@ -125,6 +124,7 @@ source_path "$NVM_DIR/bash_completion"
 
 source_path "$HOME/.nix-profile/etc/profile.d/nix.sh"
 
+#extend_path "$HOME/perl5/bin"
 #export PERL5LIB="$HOME/perl5/lib/perl"
 #export PERL_LOCAL_LIB_ROOT="$HOME/perl5"
 #PERL_MB_OPT="--install_base \"$HOME/perl5\""; export PERL_MB_OPT;
