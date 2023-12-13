@@ -18,11 +18,15 @@ alias vi="$EDITOR"
 alias dot='cd $DOTS'
 alias repos='cd $REPOS'
 alias cat='bat'
-alias mkdir='mkdir -pv'
+#alias mkdir='mkdir -v"
 
 alias lg='lazygit'
 
 alias update='sudo pacman -Syyu'
+alias pacin="pacman -Slq | fzf -m --preview 'cat <(pacman -Si {1}) <(pacman -Fl {1} | awk \"{print \$2}\")' | xargs -ro sudo pacman -S"
+alias pacrem="pacman -Qq | fzf --multi --preview 'pacman -Qi {1}' | xargs -ro sudo pacman -Rns"
+alias pac="pacman -Q | fzf"
+alias installed="grep -i installed /var/log/pacman
 
 alias py3='python3'
 alias py='python'
