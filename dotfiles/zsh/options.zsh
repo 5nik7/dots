@@ -1,5 +1,3 @@
-#!/usr/bin/zsh
-
 setopt extended_history
 setopt append_history
 setopt hist_ignore_all_dups
