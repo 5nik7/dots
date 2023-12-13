@@ -53,7 +53,7 @@ export LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
 export LESS_TERMCAP_us=$(printf "${fg[cyan]}") \
 export LESS_TERMCAP_ue=$(printf "$reset_color")
 
-export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/rg"
+# export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/rg"
 export RG_DEFAULT_COMMAND="rg -i -l -p -L --hidden"
 
 export GOBIN=$HOME/go/bin
@@ -124,7 +124,7 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then . /home/snikt/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+source_path "$HOME/.nix-profile/etc/profile.d/nix.sh"
 
 PATH="/home/snikt/perl5/bin${PATH:+:${PATH}}"; export PATH;
 PERL5LIB="/home/snikt/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
