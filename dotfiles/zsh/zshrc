@@ -57,8 +57,14 @@ export LESS_TERMCAP_ue=$(printf "$reset_color")
 # export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/rg"
 export RG_DEFAULT_COMMAND="rg -i -l -p -L --hidden"
 
-export GOBIN=$HOME/go/bin
+export GOBIN="$HOME/go/bin"
 export RUSTFLAGS="--remap-path-prefix $HOME=~"
+
+export PERL5LIB="$HOME/perl5/lib/perl"
+PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"$HOME/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"; export PERL_MM_OPT;PERL_LOCAL_LIB_ROOT="/home/snikt/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT
+
 
 fpath=(
     $ZSH/functions.zsh
@@ -93,15 +99,13 @@ function extend_path() {
 }
 
 extend_path "$DOTS/bin"
-extend_path "$XDG_DATA_HOME/zsh/functions"
 extend_path "$DOTFILES/bin"
 extend_path "$HOME/.local/bin"
-extend_path "$HOME/bin"
 extend_path "$HOME/.local/share/gem/ruby/3.0.0/bin"
 extend_path "$GOBIN"
 extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
-extend_path "$HOME/.local/share/nvim/mason/bin"
+extend_path "$HOME/perl5/bin"
 
 bindkey -v
 
@@ -122,16 +126,11 @@ source_path "$HOME/.cargo/env"
 # eval "$(register-python-argcomplete pipx)"
 
 export NVM_DIR="$HOME/.config/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+source_path "$NVM_DIR/nvm.sh"
+source_path "$NVM_DIR/bash_completion"
 
 source_path "$HOME/.nix-profile/etc/profile.d/nix.sh"
 
-PATH="/home/snikt/perl5/bin${PATH:+:${PATH}}"; export PATH;
-PERL5LIB="/home/snikt/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
-PERL_LOCAL_LIB_ROOT="/home/snikt/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
-PERL_MB_OPT="--install_base \"/home/snikt/perl5\""; export PERL_MB_OPT;
-PERL_MM_OPT="INSTALL_BASE=/home/snikt/perl5"; export PERL_MM_OPT;
 
 # # Base16 Shell
 # BASE16_SHELL="$HOME/.config/base16-shell/"
