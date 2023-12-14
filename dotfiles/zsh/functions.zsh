@@ -177,6 +177,8 @@ function prepend-sudo {
     BUFFER="sudo $BUFFER"; CURSOR+=5
   fi
 }
+zle -N prepend-sudo
+bindkey -M vicmd s prepend-sudo
 
 function _smooth_fzf() {
   local fname
@@ -233,7 +235,11 @@ function take() {
     fi
 }
 
+<<<<<<< HEAD
 function clo() {
+=======
+function clo() {
+>>>>>>> 31e1caf51927e5ffb99df6e4e32291fff549490f
     git clone "$@"
     local param
     local last_arg
