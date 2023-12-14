@@ -1,4 +1,4 @@
-source_path "$HOME/.cache/wal/colors.sh"
+# source_path "$HOME/.cache/wal/colors.sh"
 
 BASE16_SHELL="$HOME/.config/base16-shell/"
 [ -n "$PS1" ] && \

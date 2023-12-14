@@ -13,7 +13,6 @@ function source_path() {
     fi
 }
 
-
 export REPOS="$HOME/repos"
 export DOTS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
 export DOTFILES="$(dirname "$(dirname "$(readlink "${(%):-%N}")")")"
