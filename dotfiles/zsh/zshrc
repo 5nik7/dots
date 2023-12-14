@@ -5,7 +5,6 @@
 #  (_)____/____/_/ /_/_/ |_|\____/
 
 autoload -U colors && colors
-autoload -U keeper
 
 function source_path() {
     if [ -e "$1" ]; then
@@ -73,6 +72,7 @@ function zmodule() {
 
 zmodule "functions"
 zmodule "options"
+zmodule "keybinds"
 zmodule "theme"
 zmodule "aliases"
 zmodule "completion"
@@ -98,8 +98,7 @@ extend_path "/mnt/c/vscode/bin"
 
 bindkey -v
 
-zle -N prepend-sudo
-bindkey -M vicmd s prepend-sudo
+
 
 autoload -U bashcompinit
 bashcompinit
@@ -107,7 +106,6 @@ bashcompinit
 zle_highlight=('paste:none')
 
 source_path "$HOME/.cargo/env"
-
 
 export NVM_DIR="$HOME/.config/nvm"
 source_path "$NVM_DIR/nvm.sh"
