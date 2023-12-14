@@ -28,7 +28,8 @@ set $browser firefox
 set $filemanager thunar
 
 output "*" background $wallpaper fill
-output "*" resolution 2560x1410@170Hz scale 1 pos 0 0
+# output "*" resolution 2560x1410@170Hz scale 1 pos 0 0
+output "*" resolution 2560x1410@170Hz pos 0 0
 
 font pango:$font $font_size
 
@@ -187,6 +188,16 @@ mode "resize" {
 }
 
 bindsym $mod+r mode "resize"
+
+for_window [title="(?:Open|Save) (?:File|Folder|As)"] floating enable;
+for_window [title="(?:Open|Save) (?:File|Folder|As)"] resize set 800 600
+for_window [window_role="pop-up"] floating enable
+for_window [window_role="popup"] floating enable
+for_window [window_role="bubble"] floating enable
+for_window [window_role="task_dialog"] floating enable
+for_window [window_role="Preferences"] floating enable
+for_window [window_type="dialog"] floating enable
+for_window [window_type="menu"] floating enable
 
 seat * hide_cursor when-typing enable
 
