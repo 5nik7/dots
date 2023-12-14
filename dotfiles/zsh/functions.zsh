@@ -168,9 +168,10 @@ function ssh-key-info {
    ssh-keygen -l -f "$HOME/.ssh/${1:-id_rsa}"
 }
 
-function history-all() {
-	history -E 1
+function fzf-history() {
+  RBUFFER="$(history -n 0 | fzf)"
 }
+zle -N fzf-history fzf-history 
 
 function prepend-sudo {
   if [[ $BUFFER != "sudo "* ]]; then
@@ -235,11 +236,7 @@ function take() {
     fi
 }
 
-<<<<<<< HEAD
 function clo() {
-=======
-function clo() {
->>>>>>> 31e1caf51927e5ffb99df6e4e32291fff549490f
     git clone "$@"
     local param
     local last_arg
@@ -251,25 +248,5 @@ function clo() {
     clone_dir=$(basename $last_arg .git)
     cd $clone_dir;
 }
-
-function do-nothing() {}
-zle -N do-nothing do-nothing
-
-# Disable default keybinds
-function clear-keybinds() {
-  local key keys=(
-    "^A"   "^B"   "^D"   "^E"   "^F"   "^N"   "^O"   "^P"   "^Q"   "^S"   "^T"   "^W"   "^F"   "^K"
-    "^X*"  "^X="  "^X?"  "^XC"  "^XG"  "^Xa"  "^Xc"  "^Xd"  "^Xe"  "^Xg"  "^Xh"  "^Xm"  "^Xn"
-    "^Xr"  "^Xs"  "^Xt"  "^Xu"  "^X~"  "^[ "  "^[!"  "^['"  "^[,"  "^[-"  "^[."  "^[0"  "^[1"
-    "^[2"  "^[3"  "^[4"  "^[5"  "^[6"  "^[7"  "^[8"  "^[9"  "^[<"  "^[>"  "^[?"  "^[A"  "^[B"
-    "^[C"  "^[D"  "^[F"  "^[G"  "^[L"  "^[M"  "^[N"  "^[P"  "^[Q"  "^[S"  "^[T"  "^[U"  "^[W"
-    "^[_"  "^[a"  "^[b"  "^[c"  "^[d"  "^[f"  "^[g"  "^[l"  "^[n"  "^[p"  "^[q"  "^[s"  "^[t"
-    "^[u"  "^[w"  "^[y"  "^[z"  "^[|"  "^[~"  "^[^I" "^[^J" "^[^_" "^[\"" "^[\$" "^X^B"
-    "^X^F" "^X^J" "^X^K" "^X^N" "^X^O" "^X^R" "^X^U" "^X^X" "^[^D" "^[^G")
-  for key in $keys; do
-    bindkey -r $key 
-  done
-}
-zle -N clear-keybinds clear-keybinds
 
 # vim:ft=zsh:nowrap

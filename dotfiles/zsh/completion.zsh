@@ -14,16 +14,6 @@ fi
 # zstyle ':completion::complete:*' cache-path "${ZDOTDIR:-$HOME}/.zcompcache"
 # zstyle ':completion::complete:paket:add:*' use-cache off
 
-setopt AUTO_LIST
-setopt AUTO_MENU
-setopt complete_in_word
-setopt NO_MENU_COMPLETE
-setopt ALWAYS_TO_END
-setopt null_glob
-setopt numeric_glob_sort
-setopt no_case_glob
-setopt AUTO_PARAM_SLASH
-
 LISTMAX=0
 ZLE_SPACE_SUFFIX_CHARS=$'&|'
 

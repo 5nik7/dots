@@ -4,13 +4,35 @@
 #   _ / /_____/ / __  / _, _/ /___
 #  (_)____/____/_/ /_/_/ |_|\____/
 
-autoload -U colors && colors
+function zmodule() {
+    if [ -e "$ZSH/$1.zsh" ]; then
+        source "$ZSH/$1.zsh"
+    fi
+}
 
 function source_path() {
     if [ -e "$1" ]; then
         source "$1"
     fi
 }
+
+zmodule "utils"
+
+clear-keybinds
+
+autoload -U compinit
+zmodload zsh/complist
+zstyle ':completion:*' menu select
+# Include hidden files.
+_comp_options+=(globdots)
+# Autocomplete from the middle of the word
+zstyle ':completion:*' matcher-list 'r:|=*' 'l:|=* r:|=*'
+
+compinit
+
+autoload -U colors && colors
+autoload -U bashcompinit
+bashcompinit
 
 export REPOS="$HOME/repos"
 export DOTS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
@@ -30,14 +52,31 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 
-export QT_QPA_PLATFORMTHEME=gtk2
-export MOZ_ENABLE_WAYLAND=1
+export QT_QPA_PLATFORMTHEME="qt5ct"
+# export QT_QPA_PLATFORMTHEME=gtk2
+# export XDG_CURRENT_DESKTOP="Wayland"
+export XDG_CURRENT_DESKTOP=sway
+export MOZ_ENABLE_WAYLAND
+# export MOZ_ENABLE_WAYLAND=1
+
 export GTK_IM_MODULE=gtk3
 export QT_IM_MODULE=gtk3
 export SDL_VIDEODRIVER="Wayland"
 export _JAVA_AWT_WM_NONREPARENTING=1
 export QT_QPA_PLATFORM="Wayland"
 export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+
+export LESS_TERMCAP_mb=$'\e[1;32m'
+export LESS_TERMCAP_md=$'\e[1;32m'
+export LESS_TERMCAP_me=$'\e[0m'
+export LESS_TERMCAP_se=$'\e[0m'
+export LESS_TERMCAP_so=$'\e[01;33m'
+export LESS_TERMCAP_ue=$'\e[0m'
+export LESS_TERMCAP_us=$'\e[1;4;31m'
+
+# export LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
+# export LESS_TERMCAP_us=$(printf "${fg[cyan]}") \
+# export LESS_TERMCAP_ue=$(printf "$reset_color")
 
 export SUDO_PROMPT="passwd: "
 export EDITOR='nvim'
@@ -47,11 +86,11 @@ export BROWSER="firefox"
 # export MANPAGER='nvim +Man!'
 export MANPAGER='less'
 export PAGER='less'
-export BAT_CONFIG_PATH="$HOME/.config/bat/bat.conf"
 
-export LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
-export LESS_TERMCAP_us=$(printf "${fg[cyan]}") \
-export LESS_TERMCAP_ue=$(printf "$reset_color")
+export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat/bat.conf"
+export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc-2.0"
+export NPM_CONFIG_USERCONFIG=$XDG_CONFIG_HOME/npm/npmrc
+export XINITRC="$XDG_CONFIG_HOME"/x11/xinitrc
 
 # export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/rg"
 export RG_DEFAULT_COMMAND="rg -i -l -p -L --hidden"
@@ -63,26 +102,6 @@ fpath=(
     $ZSH/functions
     $fpath
 )
-
-function zmodule() {
-    if [ -e "$ZSH/$1.zsh" ]; then
-        source "$ZSH/$1.zsh"
-    fi
-}
-
-# Clear default keybinds
-clear-keybinds
-
-# Basic auto/tab complete:
-autoload -U compinit
-zmodload zsh/complist
-zstyle ':completion:*' menu select
-# Include hidden files.
-_comp_options+=(globdots)
-# Autocomplete from the middle of the word
-zstyle ':completion:*' matcher-list 'r:|=*' 'l:|=* r:|=*'
-
-compinit
 
 zmodule "functions"
 zmodule "options"
@@ -110,14 +129,16 @@ extend_path "$GOBIN"
 extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
 
-bindkey -v
-
-
-
-autoload -U bashcompinit
-bashcompinit
-
 zle_highlight=('paste:none')
+
+bindkey -M viins '^[[A' history-substring-search-up    # Arrow up
+bindkey -M viins '^[[B' history-substring-search-down  # Arrow down
+bindkey -M vicmd '^K'   history-substring-search-up
+bindkey -M viins '^K'   history-substring-search-up
+bindkey -M vicmd 'k'   history-substring-search-up
+bindkey -M vicmd '^J'   history-substring-search-down
+bindkey -M vicmd 'j'   history-substring-search-down
+bindkey -M viins '^J'   history-substring-search-down
 
 source_path "$HOME/.cargo/env"
 
