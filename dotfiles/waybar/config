@@ -3,8 +3,7 @@
     "position": "top",
     "height": 30,
     "modules-left": [
-        "sway/workspaces",
-        "way/mode"
+        "sway/workspaces"
     ],
     "modules-center": [
         "sway/window"
