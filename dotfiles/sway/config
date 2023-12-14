@@ -1,13 +1,4 @@
 # 5way
-xwayland enable
-exec_always --no-startup-idc ~/.config/sway/scripts/xdpk.sh
-
-exec --no-startup-id mako
-exec --no-startup-id autotiling-rs
-exec nwg-look -a
-exec_always --no-startup-id workstyle &> /tmp/workstyle.log
-exec_always --no-startup-id ~/.config/waybar/scripts/launch_waybar.sh
-
 include "$HOME/.cache/wal/colors-sway"
 
 set $mod Mod1
@@ -199,6 +190,19 @@ for_window [window_role="Preferences"] floating enable
 for_window [window_type="dialog"] floating enable
 for_window [window_type="menu"] floating enable
 
-seat * hide_cursor when-typing enable
+# seat * hide_cursor when-typing enable
+
+xwayland enable
+exec_always --no-startup-idc ~/.config/sway/scripts/xdpk.sh
+
+exec --no-startup-id autotiling-rs
+exec nwg-look -a
+exec_always --no-startup-id workstyle &> /tmp/workstyle.log
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+exec_always --no-startup-id flashfocus
+exec mako
+
+# exec eww open-many bar0 bar1 bar2
+exec_always --no-startup-id ~/.config/waybar/scripts/launch_waybar.sh
 
 include /etc/sway/config.d/*

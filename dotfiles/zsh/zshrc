@@ -71,6 +71,20 @@ function zmodule() {
     fi
 }
 
+# Clear default keybinds
+clear-keybinds
+
+# Basic auto/tab complete:
+autoload -U compinit
+zmodload zsh/complist
+zstyle ':completion:*' menu select
+# Include hidden files.
+_comp_options+=(globdots)
+# Autocomplete from the middle of the word
+zstyle ':completion:*' matcher-list 'r:|=*' 'l:|=* r:|=*'
+
+compinit
+
 zmodule "functions"
 zmodule "options"
 zmodule "theme"
