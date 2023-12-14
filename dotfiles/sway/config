@@ -3,10 +3,10 @@ include "$HOME/.cache/wal/colors-sway"
 
 set $mod Mod1
 
-set $font "JetBrainsMono Nerd Font Propo"
+set $font "JetBrainsMono Nerd Font"
 set $font_size 14
 set $cursor_size 16
-set $wallpaper ~/.walls/jolly.png
+set $wallpaper "~/.walls/dream.jpg"
 
 set $left h
 set $down j

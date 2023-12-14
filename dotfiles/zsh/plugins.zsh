@@ -30,6 +30,8 @@ zinit light zsh-users/zsh-autosuggestions
 zinit ice wait="0a" lucid from="gh-r" as="program" pick="zoxide-*/zoxide -> zoxide" cp="zoxide-*/completions/_zoxide -> _zoxide" atclone="./zoxide init zsh > init.zsh" atpull="%atclone" src="init.zsh"
 zinit light ajeetdsouza/zoxide
 
+zinit light zsh-users/zsh-history-substring-search
+
 zinit light hlissner/zsh-autopair
 
 zinit light zsh-users/zsh-completions

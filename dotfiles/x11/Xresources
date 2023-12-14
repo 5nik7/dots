@@ -1,3 +1,5 @@
+! XResources: sourced by xinitrc
+
 *background:  #151b30
 *cursorColor:  #04a5e5
 *foreground:  #d6e4ff
@@ -17,3 +19,16 @@
 *color13:  #a28fff
 *color14:  #40e2ff
 *color15:  #b4befe
+
+! -------------------- XCURSOR ------------------
+Xcursor.theme: cursor-theme
+Xcursor.size:  32
+
+! -------------------- XFT ----------------------
+Xft.dpi:       96
+Xft.antialias: true
+Xft.hinting:   true
+Xft.rgba:      rgb
+Xft.autohint:  false
+Xft.hintstyle: hintslight
+Xft.lcdfilter: lcddefault
