@@ -1,0 +1,33 @@
+! Base16 Dream City
+! Author: njen
+
+! base00: #10172d
+! base01: #1D252C
+! base02: #28323A
+! base03: #526270
+! base04: #B7C5D3
+! base05: #D8E2EC
+! base06: #F6F6F8
+! base07: #FBFBFD
+! base08: #F7768E
+! base09: #FF9E64
+! base0A: #B7C5D3
+! base0B: #9ECE6A
+! base0C: #89DDFF
+! base0D: #7AA2F7
+! base0E: #BB9AF7
+! base0F: #BB9AF7
+
+! Enable the extended coloring options
+rofi.color-enabled: true
+
+! Property Name     BG       Border   Separator
+rofi.color-window:  #1D252C, #1D252C, #10172d
+
+! Property Name     BG       FG       BG-alt   Head-BG  Head-FG
+rofi.color-normal:  #1D252C, #D8E2EC, #1D252C, #1D252C, #FBFBFD
+rofi.color-active:  #1D252C, #7AA2F7, #1D252C, #1D252C, #7AA2F7
+rofi.color-urgent:  #1D252C, #F7768E, #1D252C, #1D252C, #F7768E
+
+! Set the desired separator style
+rofi.separator-style: solid
