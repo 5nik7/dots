@@ -44,7 +44,6 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_STATE_HOME="$HOME/.local/state"
 export XDG_CONFIG_DIRS="/etc/xdg"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-export XDG_CURRENT_DESKTOP="Wayland"
 export DISPLAY=":0"
 export SWAYSOCK="/run/user/$(id -u)/sway-ipc.$(id -u).$(pgrep -x sway).sock"
 
@@ -52,10 +51,10 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 
-export QT_QPA_PLATFORMTHEME="qt5ct"
-# export QT_QPA_PLATFORMTHEME=gtk2
-# export XDG_CURRENT_DESKTOP="Wayland"
-export XDG_CURRENT_DESKTOP=sway
+# export QT_QPA_PLATFORMTHEME="qt5ct"
+export QT_QPA_PLATFORMTHEME="gtk2"
+export XDG_CURRENT_DESKTOP="Wayland"
+# export XDG_CURRENT_DESKTOP=sway
 export MOZ_ENABLE_WAYLAND
 # export MOZ_ENABLE_WAYLAND=1
 
@@ -66,13 +65,13 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 export QT_QPA_PLATFORM="Wayland"
 export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
 
-export LESS_TERMCAP_mb=$'\e[1;32m'
-export LESS_TERMCAP_md=$'\e[1;32m'
-export LESS_TERMCAP_me=$'\e[0m'
-export LESS_TERMCAP_se=$'\e[0m'
-export LESS_TERMCAP_so=$'\e[01;33m'
-export LESS_TERMCAP_ue=$'\e[0m'
-export LESS_TERMCAP_us=$'\e[1;4;31m'
+
+# export LESS_TERMCAP_md=$'\e[1;32m'
+# export LESS_TERMCAP_me=$'\e[0m'
+# export LESS_TERMCAP_se=$'\e[0m'
+# export LESS_TERMCAP_so=$'\e[01;33m'
+# export LESS_TERMCAP_ue=$'\e[0m'
+# export LESS_TERMCAP_us=$'\e[1;4;31m'
 
 # export LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
 # export LESS_TERMCAP_us=$(printf "${fg[cyan]}") \
@@ -84,8 +83,8 @@ export VISUAL=$EDITOR
 export GIT_EDITOR=$EDITOR
 export BROWSER="firefox"
 # export MANPAGER='nvim +Man!'
-export MANPAGER='less'
-export PAGER='less'
+export MANPAGER='bat'
+export PAGER='bat'
 
 export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat/bat.conf"
 export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc-2.0"
@@ -153,3 +152,5 @@ export PERL5LIB="$HOME/perl5/lib/perl5"
 export PERL_LOCAL_LIB_ROOT="$HOME/perl5"
 
 eval $(starship init zsh)
+
+# vim:ft=zsh:nowrap

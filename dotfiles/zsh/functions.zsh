@@ -171,7 +171,7 @@ function ssh-key-info {
 function fzf-history() {
   RBUFFER="$(history -n 0 | fzf)"
 }
-zle -N fzf-history fzf-history 
+zle -N fzf-history fzf-history
 
 function prepend-sudo {
   if [[ $BUFFER != "sudo "* ]]; then

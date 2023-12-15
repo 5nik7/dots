@@ -29,3 +29,5 @@ setopt rmstarsilent
 SAVEHIST=100000
 HISTSIZE=100000
 HISTFILE=~/.zsh_history
+
+# vim:ft=zsh:nowrap

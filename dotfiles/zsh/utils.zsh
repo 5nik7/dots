@@ -17,3 +17,5 @@ function clear-keybinds() {
   done
 }
 zle -N clear-keybinds clear-keybinds
+
+# vim:ft=zsh:nowrap

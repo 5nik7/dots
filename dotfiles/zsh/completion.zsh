@@ -67,3 +67,5 @@ zstyle ':completion:*'                 strip-comments false
 
 # zstyle ':completion:*'                       sort true
 # zstyle ':completion:*:git-checkout:*'        sort false
+
+# vim:ft=zsh:nowrap

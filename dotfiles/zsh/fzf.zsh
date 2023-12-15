@@ -16,3 +16,5 @@ then
     export FZF_DEFAULT_COMMAND="fd -c always"
   fi
 fi
+
+# vim:ft=zsh:nowrap

@@ -2,13 +2,6 @@
 theme="launcher_theme"
 dir="$HOME/.config/rofi"
 
-# catppuccin
-ALPHA="#00000000"
-BG="#1E1E2Edd"
-FG="#BF616A"
-SELECT="#24273A"
-ACCENT="#1E1E2Edd"
-
 # nord
 #ALPHA="#00000000"
 #BG="#3B4253"
@@ -17,7 +10,7 @@ ACCENT="#1E1E2Edd"
 #ACCENT="#3B4252"
 
 # overwrite colors file
-cat >$dir/colors.rasi <<-EOF
+cat >"$dir"/colors.rasi <<-EOF
 	/* colors */
 
 	* {
@@ -29,4 +22,4 @@ cat >$dir/colors.rasi <<-EOF
 	}
 EOF
 
-rofi -no-lazy-grab -show drun -modi drun -theme $dir/"$theme"
+rofi -no-lazy-grab -show drun -modi drun -theme "$dir"/"$theme"

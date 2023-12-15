@@ -114,7 +114,7 @@ font:
     #   - (Linux/BSD) monospace
     #   - (Windows) Consolas
      family: "JetBrainsMono Nerd Font Mono"
-    # family: "DejaVuSansMono Nerd Font Mono" 
+    # family: "DejaVuSansMono Nerd Font Mono"
     # family: "Codelia Nerd Font"
     # family: "Iosevka Custom"
     # family: "TerminessTTF Nerd Font"
@@ -180,17 +180,17 @@ font:
 # If `true`, bold text is drawn using the bright color variants.
 #draw_bold_text_with_bright_colors: false
 
-# Colors 
+# Colors
 colors:
 #  cursor:
 #    text: '#2C2E43'
 #    cursor: '#bfbfcb'
 #
 #  # Default colors
-  primary:
-    background: '#1e1e2e'
-      #foreground: '#7E7F9A'
-    #foreground: '#bfbfcb'
+  # primary:
+  #   background: '#1e1e2e'
+  #     #foreground: '#7E7F9A'
+  #   #foreground: '#bfbfcb'
 #
 #  # Normal colors
 #  normal:
@@ -446,7 +446,7 @@ mouse:
   # If this is `true`, the cursor is temporarily hidden when typing.
   hide_when_typing: true
 
-  
+
 # Regex hints
 #
 # Terminal hints can be used to find text in the visible part of the terminal

@@ -35,7 +35,7 @@ bindkey -M menuselect '^K' vi-up-line-or-history
 bindkey -M menuselect '^H' vi-backward-char
 bindkey -M menuselect '^L' vi-forward-char
 
-# Keybindings 
+# Keybindings
 bindkey "^[[1;5C" forward-word            # C-ArrowRight
 bindkey "^[[1;5D" backward-word           # C-ArrowLeft
 bindkey "^H"      backward-kill-word      # C-Backspace
@@ -62,4 +62,4 @@ WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
 
 setopt NO_FLOW_CONTROL  # Disable Ctrl+S and Ctrl+Q
 
-# vim:foldmarker=foldstart,foldend
+# vim:ft=zsh:nowrap
