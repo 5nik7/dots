@@ -26,14 +26,14 @@ function re() {
     yay -Qq | fzf -q "$1" -m --preview 'yay -Qi {1}' | xargs -ro yay -Rns
 }
 
-function man {
-  LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
-  LESS_TERMCAP_us=$(printf "${fg[cyan]}") \
-  LESS_TERMCAP_ue=$(printf "$reset_color") \
-  PAGER="${commands[less]:-$PAGER}" \
-  _NROFF_U=1 \
-     command man "$@"
-}
+# function man {
+#   LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
+#   LESS_TERMCAP_us=$(printf "${fg[cyan]}") \
+#   LESS_TERMCAP_ue=$(printf "$reset_color") \
+#   PAGER="${commands[less]:-$PAGER}" \
+#   _NROFF_U=1 \
+#      command man "$@"
+# }
 
 function showcolors256() {
     local row col blockrow blockcol red green blue

@@ -55,7 +55,7 @@ alias update='sudo pacman -Syu --noconfirm'
 alias pacin="pacman -Slq | fzf -m --preview 'cat <(pacman -Si {1}) <(pacman -Fl {1} | awk \"{print \$2}\")' | xargs -ro sudo pacman -S"
 alias pacrem="pacman -Qq | fzf --multi --preview 'pacman -Qi {1}' | xargs -ro sudo pacman -Rns"
 alias pac="pacman -Q | fzf"
-alias installed="cat ~/.pacman.list"
+alias installed="rm ~/.pacman.list && pac-ages"
 
 alias py3='python3'
 alias py='python'

@@ -27,13 +27,6 @@ bindkey -M viins '^X,' _history-complete-newer \
 # Don't use vi mode in backward delete word/char because it cannot delete
 # characters on the left of position you were in insert mode.
 bindkey "^?" backward-delete-char
-# foldend
-
-# Use C + hjkl in completion menu.
-bindkey -M menuselect '^J' vi-down-line-or-history
-bindkey -M menuselect '^K' vi-up-line-or-history
-bindkey -M menuselect '^H' vi-backward-char
-bindkey -M menuselect '^L' vi-forward-char
 
 # Keybindings
 bindkey "^[[1;5C" forward-word            # C-ArrowRight
