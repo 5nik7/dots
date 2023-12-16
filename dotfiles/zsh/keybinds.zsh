@@ -62,4 +62,13 @@ WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
 
 setopt NO_FLOW_CONTROL  # Disable Ctrl+S and Ctrl+Q
 
+bindkey -M viins '^[[A' history-substring-search-up    # Arrow up
+bindkey -M viins '^[[B' history-substring-search-down  # Arrow down
+bindkey -M vicmd '^K'   history-substring-search-up
+bindkey -M viins '^K'   history-substring-search-up
+bindkey -M vicmd 'k'   history-substring-search-up
+bindkey -M vicmd '^J'   history-substring-search-down
+bindkey -M vicmd 'j'   history-substring-search-down
+bindkey -M viins '^J'   history-substring-search-down
+
 # vim:ft=zsh:nowrap
