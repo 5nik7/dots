@@ -20,15 +20,15 @@ zmodule "utils"
 
 # clear-keybinds
 
-autoload -U compinit
-zmodload zsh/complist
-zstyle ':completion:*' menu select
+# autoload -U compinit
+#zmodload zsh/complist
+#zstyle ':completion:*' menu select
 # Include hidden files.
 _comp_options+=(globdots)
 # Autocomplete from the middle of the word
-zstyle ':completion:*' matcher-list 'r:|=*' 'l:|=* r:|=*'
+# zstyle ':completion:*' matcher-list 'r:|=*' 'l:|=* r:|=*'
 
-compinit
+# compinit
 
 autoload -U colors && colors
 autoload -U bashcompinit
@@ -53,8 +53,8 @@ export LANGUAGE=en_US.UTF-8
 
 # export QT_QPA_PLATFORMTHEME="qt5ct"
 export QT_QPA_PLATFORMTHEME="gtk2"
-export XDG_CURRENT_DESKTOP="Wayland"
-# export XDG_CURRENT_DESKTOP=sway
+# export XDG_CURRENT_DESKTOP="Wayland"
+export XDG_CURRENT_DESKTOP=sway
 export MOZ_ENABLE_WAYLAND
 # export MOZ_ENABLE_WAYLAND=1
 
@@ -64,18 +64,6 @@ export SDL_VIDEODRIVER="Wayland"
 export _JAVA_AWT_WM_NONREPARENTING=1
 export QT_QPA_PLATFORM="Wayland"
 export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
-
-
-# export LESS_TERMCAP_md=$'\e[1;32m'
-# export LESS_TERMCAP_me=$'\e[0m'
-# export LESS_TERMCAP_se=$'\e[0m'
-# export LESS_TERMCAP_so=$'\e[01;33m'
-# export LESS_TERMCAP_ue=$'\e[0m'
-# export LESS_TERMCAP_us=$'\e[1;4;31m'
-
-# export LESS_TERMCAP_md=$(printf "${fg_bold[green]}") \
-# export LESS_TERMCAP_us=$(printf "${fg[cyan]}") \
-# export LESS_TERMCAP_ue=$(printf "$reset_color")
 
 export SUDO_PROMPT="passwd: "
 export EDITOR='nvim'
@@ -129,15 +117,6 @@ extend_path "$HOME/.local/share/bob/nvim-bin"
 extend_path "/mnt/c/vscode/bin"
 
 zle_highlight=('paste:none')
-
-bindkey -M viins '^[[A' history-substring-search-up    # Arrow up
-bindkey -M viins '^[[B' history-substring-search-down  # Arrow down
-bindkey -M vicmd '^K'   history-substring-search-up
-bindkey -M viins '^K'   history-substring-search-up
-bindkey -M vicmd 'k'   history-substring-search-up
-bindkey -M vicmd '^J'   history-substring-search-down
-bindkey -M vicmd 'j'   history-substring-search-down
-bindkey -M viins '^J'   history-substring-search-down
 
 source_path "$HOME/.cargo/env"
 
