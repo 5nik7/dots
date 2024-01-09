@@ -1,0 +1,21 @@
+set $wallpaper /home/snikt/.walls/dream.jpg
+
+set $background #151B30
+set $foreground #D6E4FF
+
+set $color0 #151B30
+set $color1 #FD5A96
+set $color2 #4FFFCD
+set $color3 #FFE1A6
+set $color4 #7DA6FF
+set $color5 #D69AFF
+set $color6 #4DEAFF
+set $color7 #D6E4FF
+set $color8 #434E73
+set $color9 #151B30
+set $color10 #4FFFCD
+set $color11 #FFE1A6
+set $color12 #7DA6FF
+set $color13 #D69AFF
+set $color14 #4DEAFF
+set $color15 #A1ADE6

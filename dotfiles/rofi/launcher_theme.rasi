@@ -1,5 +1,5 @@
 configuration {
-  font:                       "JetBrains Nerd Font 11";
+  font:                       "JetBrainsMono Nerd Font Mono 12";
   show-icons:                 true;
   icon-theme:                 "Tokyo Night-SE";
   display-drun:               "";
@@ -7,7 +7,7 @@ configuration {
   disable-history:            false;
   sidebar-mode:               false;
 }
-@import "~/.cache/wal/colors-rofi-dark"
+@import "~/.theme/drip.rasi"
 
 // @import "colors.rasi"
 
@@ -77,8 +77,8 @@ window {
 // }
 
 // element {
-//   background-color:           @al;
-//   text-color:                 #ffffff;
+//   background-color:           inherit;
+//   text-color:                 inherit;
 //   orientation:                horizontal;
 //   border-radius:              0%;
 //   padding:                    1% 0.5% 1% 0.5%;

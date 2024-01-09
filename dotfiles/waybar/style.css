@@ -1,11 +1,11 @@
-@import url("/home/snikt/.cache/wal/colors-waybar.css");
+@import url("/home/snikt/.theme/drip.css");
 
 * {
     border: none;
     border-radius: 0;
-    font-family: "JetBrainsMono Nerd Font";
+    font-family: "JetBrainsMono Nerd Font Mono";
     font-weight: bold;
-    font-size: 13pt;
+    font-size: 12pt;
     min-height: 0;
 }
 
@@ -29,10 +29,10 @@ window > box {
     padding-right: 5px;
     color: @colo6;
     background: @transparent;
-    border-bottom: .1rem solid @color8;
+    border-bottom: .1rem solid @color2;
 }
 #workspaces button.active {
-    color: @color0;
+    color: @color1;
 }
 /* Removes Strange Hover effect */
 #workspaces button:hover {
@@ -43,9 +43,9 @@ window > box {
 #workspaces button.focused,
 #mode
 {
-    background-color: @color2;
-    color: @background;
-    border-bottom: .1rem solid @foreground;
+    background-color: @color7;
+    color: @color0;
+    border-bottom: .1rem solid @color12;
 }
 #custom-separator {
   color: @color8;
@@ -54,9 +54,19 @@ window > box {
 
 }
 
-#mode, #clock, #memory, #temperature,#cpu,#mpd, #idle_inhibitor, #temperature, #backlight, #pulseaudio, #network, #battery, #custom-powermenu, #custom-cava-internal {
+#window {
 
   color: @color7;
-  padding-left: 4px;
-  padding-right: 4px;
+  background-color: @transparent;
+  padding-left: 15px;
+  padding-right: 15px;
+
+}
+
+#mode, #clock, #memory, #cpu, #custom-powermenu {
+
+  color: @color7;
+  background-color: @color0;
+  padding-left: 5px;
+  padding-right: 5px;
 }

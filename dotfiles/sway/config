@@ -1,6 +1,6 @@
 # 5way
 
-# exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
 xwayland enable
 exec_always --no-startup-idc ~/.config/sway/scripts/xdpk.sh
 
@@ -8,17 +8,17 @@ exec --no-startup-id autotiling-rs
 exec nwg-look -a
 exec_always --no-startup-id workstyle &> /tmp/workstyle.log
 exec_always --no-startup-id flashfocus
-exec mako
+exec swaync
 
 # exec eww open-many bar0 bar1 bar2
 exec_always --no-startup-id ~/.config/waybar/scripts/launch_waybar.sh
 
-include "$HOME/.cache/wal/colors-sway"
+include "$HOME/.theme/drip-sway"
 
 set $mod Mod1
 
-set $font "JetBrainsMono Nerd Font"
-set $font_size 14
+set $font "JetBrainsMono Nerd Font Mono"
+set $font_size 12
 set $cursor_size 16
 # set $wallpaper "~/.walls/dream.jpg"
 
@@ -40,14 +40,14 @@ font pango:$font $font_size
 
 default_border pixel 1
 default_floating_border normal
-gaps inner 5
-gaps outer 10
-# gaps horizontal 5
-# gaps vertical 5
-# gaps top 5
-# gaps right 5
-# gaps bottom 5
-# gaps left 5
+gaps inner 10
+# gaps outer 8
+# gaps horizontal 10
+# gaps vertical 10
+# gaps top 10
+# gaps right 10
+# gaps bottom 10
+# gaps left 10
 
 hide_edge_borders smart
 smart_borders on
@@ -68,6 +68,8 @@ popup_during_fullscreen smart
     bindsym $mod+w exec $browser
 
     bindsym $mod+d exec ~/.config/rofi/launcher.sh
+
+    bindsym $mod+Shift+n exec swaync-client -t -sw
 
     # Kill focused window
     bindsym $mod+q kill

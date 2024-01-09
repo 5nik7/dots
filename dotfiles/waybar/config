@@ -3,11 +3,10 @@
     "position": "top",
     "height": 30,
     "modules-left": [
-        "sway/workspaces"
-    ],
-    "modules-center": [
+        "sway/workspaces",
         "sway/window"
     ],
+    "modules-center": [],
     "modules-right": [
         "cpu",
         "custom/separator",
@@ -25,7 +24,7 @@
         "format-alt": "{:%Y-%m-%d}"
     },
     "cpu": {
-        "format": "{usage}% "
+        "format": "{usage}% cpu"
     },
     "memory": {
         "format": "{}% mem"

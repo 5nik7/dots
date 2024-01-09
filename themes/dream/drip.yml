@@ -1,0 +1,34 @@
+# Base16 Dream - alacritty color config
+# 5nik7
+colors:
+  # Default colors
+  primary:
+    background: '0x151B30'
+    foreground: '0xD6E4FF'
+
+  # Colors the cursor will use if `custom_cursor_colors` is true
+  cursor:
+    text: '0x151B30'
+    cursor: '0x7206FF'
+
+  # Normal colors
+  normal:
+    black:   '0x151B30'
+    red:     '0xFD5A96'
+    green:   '0x4FFFCD'
+    yellow:  '0xFFE1A6'
+    blue:    '0x7DA6FF'
+    magenta: '0xD69AFF'
+    cyan:    '0x4DEAFF'
+    white:   '0xD6E4FF'
+
+  # Bright colors
+  bright:
+    black:   '0x434E73'
+    red:     '0xFD5A96'
+    green:   '0x4FFFCD'
+    yellow:  '0xFFB894'
+    blue:    '0x7DA6FF'
+    magenta: '0xD69AFF'
+    cyan:    '0x4DEAFF'
+    white:   '0xD6E4FF'

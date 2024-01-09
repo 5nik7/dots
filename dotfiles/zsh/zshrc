@@ -4,6 +4,11 @@
 #   _ / /_____/ / __  / _, _/ /___
 #  (_)____/____/_/ /_/_/ |_|\____/
 
+export REPOS="$HOME/repos"
+export DOTS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
+export DOTFILES="$(dirname "$(dirname "$(readlink "${(%):-%N}")")")"
+export ZSH="$(dirname "$(readlink "${(%):-%N}")")"
+
 function zmodule() {
     if [ -e "$ZSH/$1.zsh" ]; then
         source "$ZSH/$1.zsh"
@@ -17,6 +22,7 @@ function source_path() {
 }
 
 zmodule "utils"
+zmodule "drip"
 
 # clear-keybinds
 
@@ -34,10 +40,6 @@ autoload -U colors && colors
 autoload -U bashcompinit
 bashcompinit
 
-export REPOS="$HOME/repos"
-export DOTS="$(dirname "$(dirname "$(dirname "$(readlink "${(%):-%N}")")")")"
-export DOTFILES="$(dirname "$(dirname "$(readlink "${(%):-%N}")")")"
-export ZSH="$(dirname "$(readlink "${(%):-%N}")")"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_CACHE_HOME="$HOME/.cache"
