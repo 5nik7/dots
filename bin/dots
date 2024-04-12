@@ -1,0 +1,60 @@
+#!/bin/bash
+
+DOTFILES="$HOME/.dots"
+DOTCONF="$DOTFILES/configs"
+CONFDIR="$HOME/.config"
+BACKUPDIR="$HOME/.backups"
+YRDIR="$(date -u +%Y)"
+MODIR="$(date -u +%m-%d)"
+DATEDIR="$BACKUPDIR/$YRDIR/$MODIR"
+
+if [ -f "$DOTCONF/zsh/util.zsh" ]; then
+	source "$DOTCONF/zsh/util.zsh"
+else
+	exit 1
+fi
+
+function dotlink() {
+	orig_file="$DOTCONF/$1"
+
+	if [ -n "$2" ]; then
+		dest_file="$HOME/$2"
+	else
+		dest_file="$CONFDIR/$1"
+	fi
+
+	if [ -e "$dest_file" ]; then
+		FILENAME="$(basename "$dest_file")"
+		TIMESTAMP="$(date -u +%H%M%S)"
+		BAKFILE="$DATEDIR/$FILENAME.$TIMESTAMP.bak"
+
+		if [ ! -d "$DATEDIR" ]; then
+			mkdir -p "$DATEDIR"
+		fi
+
+		rel1="$(rel_path "$orig_file")"
+		rel2="$(rel_path "$dest_file")"
+		rel3="$(rel_path "$BAKFILE")"
+
+		mv "$dest_file" "$BAKFILE"
+		print_in_bright_black "\n  Backing up $rel2 to"
+		print_in_red " $rel3\n"
+	fi
+
+	ln -s "$orig_file" "$dest_file"
+	print_in_blue "\n  $rel1"
+	print_in_bright_black " -> "
+	print_in_cyan "$rel2\n"
+}
+
+configs=(Thunar Vifm alacritty btop fish flashfocus gtk-3.0 htop kitty lsd nwg-look qt5ct qt6ct ranger rofi stylua sway sworkstyle wal waybar xfce4 xsettingsd yazi zsh)
+
+for files in "${configs[@]}"; do
+	dotlink "$files"
+done
+
+dotlink "bash/.bashrc" ".bashrc"
+dotlink "bash/.bash_profile" ".bash_profile"
+dotlink "git/.gitconfig" ".gitconfig"
+dotlink "starship/starship.toml" ".config/starship.toml"
+dotlink "zsh/.zshrc" ".zshrc"
