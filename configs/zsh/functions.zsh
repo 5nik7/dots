@@ -40,19 +40,12 @@ function femoji() {
 }
 
 function lnk() {
-    orig_file="$DOTFILES/$1"
-    if [ -n "$2" ]; then
-        dest_file="$HOME/$2"
-    else
-        if [[ $1 == config/* ]]; then
-            dest_file="$HOME/.${1}"
-        else
-            dest_file="$HOME/$1"
-        fi
+    orig_file="$1"
+    dest_file="$2"
+    
+    if [ ! -d "$(dirname "$dest_file")" ]; then
+        mkdir -p "$(dirname "$dest_file")"
     fi
-
-    mkdir -p "$(dirname "$orig_file")"
-    mkdir -p "$(dirname "$dest_file")"
 
     rel1=$(rel_path $orig_file)
 	  rel2=$(rel_path $dest_file)
@@ -69,6 +62,37 @@ function lnk() {
     print_in_bright_black " -> "
     print_in_cyan "$rel2\n"
 }
+
+# function lnk() {
+#     orig_file="$DOTFILES/$1"
+#     if [ -n "$2" ]; then
+#         dest_file="$HOME/$2"
+#     else
+#         if [[ $1 == config/* ]]; then
+#             dest_file="$HOME/.${1}"
+#         else
+#             dest_file="$HOME/$1"
+#         fi
+#     fi
+#
+#     mkdir -p "$(dirname "$orig_file")"
+#     mkdir -p "$(dirname "$dest_file")"
+#
+#     rel1=$(rel_path $orig_file)
+# 	  rel2=$(rel_path $dest_file)
+#
+#
+#     if [ -e "$dest_file" ]; then
+#         mv "$dest_file" "$dest_file.bak"
+#         print_in_bright_black "\n  Backing up $rel2 to"
+#         print_in_red " $rel2.bak\n"
+#     fi
+#
+#     ln -s "$orig_file" "$dest_file"
+#     print_in_blue "\n  $rel1"
+#     print_in_bright_black " -> "
+#     print_in_cyan "$rel2\n"
+# }
 
 function 256color() {
 	for code in {000..255}; do

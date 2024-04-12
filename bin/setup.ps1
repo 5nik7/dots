@@ -11,8 +11,8 @@
 # Install-Module -Name PSFzf -Scope AllUsers -Force -AllowClobber
 
 # Update-Module
-
-
+$DOTFILES = "C:\repos\dots"
+$DOTCONF = "$DOTFILES\configs"
 
 function ln {
         param(
@@ -43,15 +43,14 @@ function ln {
         }
 }
 
-# ln "$env:DOTFILES\vifm" "C:\Users\nickf\AppData\Roaming\vifm"
+ln "$DOTCONF\vifm" "C:\Users\nickf\AppData\Roaming\vifm"
 
-# ln "$env:DOTFILES\lsd" "C:\Users\nickf\AppData\Roaming\lsd"
+ln "$DOTCONF\lsd" "C:\Users\nickf\AppData\Roaming\lsd"
 
-# ln "$env:REPOS\power5hell\Profile.ps1" "C:\Users\nickf\Documents\PowerShell\Microsoft.VSCode_profile.ps1"
 
-# ln "$env:REPOS\power5hell\Profile.ps1" "C:\Users\nickf\Documents\PowerShell\Profile.ps1"
+# ln "$DOTCONF\powershell\Profile.ps1" "C:\Users\nickf\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
 
-# ln "$env:REPOS\power5hell\Profile.ps1" "C:\Users\nickf\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
+# ln "$DOTCONF\powershell\.env" "C:\Users\nickf\Documents\WindowsPowerShell\.env"
 
 # ln "$env:DOTFILES\wt\settings.json" "C:\ProgramData\scoop\apps\windows-terminal-preview\1.20.10303.0\settings\settings.json"
 
