@@ -13,6 +13,8 @@
 # Update-Module
 $DOTFILES = "C:\repos\dots"
 $DOTCONF = "$DOTFILES\configs"
+$CONFDIR = "$HOME\.config"
+$APPDATA = "$HOME\AppData\Roaming"
 
 function ln {
         param(
@@ -43,10 +45,19 @@ function ln {
         }
 }
 
-ln "$DOTCONF\vifm" "C:\Users\nickf\AppData\Roaming\vifm"
+# ln "$DOTCONF\yazi" "$CONFDIR\yazi"
 
-ln "$DOTCONF\lsd" "C:\Users\nickf\AppData\Roaming\lsd"
+ln "$DOTCONF\code\settings.json" "$CONFDIR\settings.json"
 
+# ln "$DOTCONF\starship\starship.toml" "$CONFDIR\starship.toml"
+
+# ln "$DOTCONF\wal" "$CONFDIR\wal"
+
+# ln "$DOTCONF\vifm" "$APPDATA\vifm"
+
+# ln "$DOTCONF\lsd" "$APPDATA\lsd"
+
+# ln "$DOTCONF\alacritty" "$APPDATA\alacritty"
 
 # ln "$DOTCONF\powershell\Profile.ps1" "C:\Users\nickf\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
 
@@ -62,7 +73,7 @@ ln "$DOTCONF\lsd" "C:\Users\nickf\AppData\Roaming\lsd"
 
 # ln "$env:REPOS\starship\starship.toml" "$env:CONFIG\starship.toml"
 
-# ln "C:\repos\windots\bat" "C:\Users\nickf\.config\bat"
+# ln "$DOTCONF\bat" "$CONFDIR\bat"
 
 # ln "$env:DOTFILES\bat" "C:\Users\nickf\AppData\Roaming\bat"
 
