@@ -11,7 +11,7 @@ export WIN='/mnt/c'
 export REPOS="$WIN/repos"
 
 export SUDO_PROMPT="passwd: "
-export DOTFILES="$REPOS/dots"
+export DOTFILES="$HOME/.dots"
 export ZSH="$DOTFILES/configs/zsh"
 export SHELL='/usr/bin/zsh'
 
@@ -23,7 +23,7 @@ export VISUAL="$EDITOR"
 export EDITOR_TERM="$TERMINAL -e $EDITOR"
 export MANPAGER="nvim +Man!"
 export PAGER="nvim +Man!"
-export BAT_CONFIG_PATH="$HOME/.config/bat/bat.conf"
+export BAT_CONFIG_PATH="$DOTFILES/configs/bat/bat.conf"
 
 export GOBIN="$HOME/go/bin"
 export PYENV_ROOT="$HOME/.pyenv"
