@@ -35,9 +35,7 @@ flash-fullscreen: true
 #      if another window was just closed.
 #   'on_switch':
 #      Lone windows will be flashed only upon switching desktops.
-flash-lone-windows: 'always'
-
-
+flash-lone-windows: "always"
 # Defining window-specific flash rules
 #
 # X11-based window managers (e.g i3, bspwm)
