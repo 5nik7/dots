@@ -1,0 +1,96 @@
+{
+  "name": "Dream",
+  "version": "1.0",
+  "manifest_version": 2,
+  "theme": {
+    "colors": {
+      "frame": [
+        21,
+        30,
+        60
+      ],
+      "toolbar": [
+        30,
+        41,
+        72
+      ],
+      "tab_text": [
+        205,
+        232,
+        250
+      ],
+      "tab_background_text": [
+        83,
+        104,
+        145
+      ],
+      "tab_background_text_inactive": [
+        83,
+        104,
+        145
+      ],
+      "tab_background_text_incognito": [
+        83,
+        104,
+        145
+      ],
+      "tab_background_text_incognito_inactive": [
+        83,
+        104,
+        145
+      ],
+      "bookmark_text": [
+        205,
+        232,
+        250
+      ],
+      "ntp_background": [
+        30,
+        41,
+        72
+      ],
+      "ntp_text": [
+        145,
+        187,
+        225
+      ],
+      "ntp_link": [
+        6,
+        55,
+        116
+      ],
+      "omnibox_text": [
+        162,
+        203,
+        231
+      ],
+      "omnibox_background": [
+        20,
+        27,
+        52
+      ]
+    },
+    "tints": {
+      "buttons": [
+        0.610144927536232,
+        0.68,
+        0.5
+      ],
+      "frame_inactive": [
+        -1,
+        -1,
+        -1
+      ],
+      "frame_incognito": [
+        0.7270833333333333,
+        1,
+        0.55
+      ],
+      "frame_incognito_inactive": [
+        0.7270833333333333,
+        1,
+        0.55
+      ]
+    }
+  }
+}

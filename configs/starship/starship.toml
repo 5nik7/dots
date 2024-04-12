@@ -1,0 +1,248 @@
+#             ╱    ╲               󰪍 󰇁          󰁥       󰅂 >      󰥭 󱘹   󰍴   󰇜            󰎍     󰧞     󰬫 󰬩 󰬧 󰬊 󰯲 󰫰 󰨆      󰂸 ⭘     󱪼 󰤃 󰿊 ⏽   ┆ ┊   ┈     󰯆 󰚌 ╵╷─ ▷ ◦ 󰊭 ◻ ♥ ⚝  -->:   󰆧  󰏗 󰲩 󰲭 
+
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+
+continuation_prompt = '[  ](black) '
+
+format ="""$line_break\
+[ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$fill$cmd_duration$time$line_break\
+[  ](black)$character\
+"""
+
+# format ="""$line_break\
+# [┌󰍴](black)$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$fill$cmd_duration$time$line_break\
+# [└󰍴](black)$character\
+# """
+
+# format ="""$line_break\
+# [┌](black)$fill $cmd_duration$time$line_break\
+# [└ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$all$line_break\
+# $character\
+# """
+
+[fill]
+# symbol = ''
+# symbol = '─'
+symbol = ' '
+# symbol = '╌'
+# symbol = '━'
+# symbol = '󰖰'
+# symbol = '─'
+# symbol = ''
+# symbol = '󱋰'
+# symbol = ''
+# symbol = '󰵼'
+# symbol = '󰔌'
+style = 'black'
+
+
+# [shell]
+# format = '[](bg:blue fg:cyan)[$indicator]($style)'
+# fish_indicator = ' 󰈺 '
+# # powershell_indicator = ' _ '
+# # powershell_indicator = '  '
+# powershell_indicator = '  '
+# powershell_indicator = '  '
+# powershell_indicator = '  '
+# bash_indicator = ' 󱆃 '
+# zsh_indicator = ' z '
+# cmd_indicator = '  '
+# unknown_indicator = ' mystery shell '
+# style = 'bg:cyan fg:black'
+# disabled = true
+
+[os]
+format = '[$symbol]($style)'
+style = 'bright-cyan'
+disabled = false
+
+[os.symbols]
+Alpine = ' '
+Arch = '󰣇 '
+CentOS = ' '
+Debian = '󰣚 '
+Fedora = ' '
+FreeBSD = ' '
+Gentoo = ' '
+Linux = ' '
+Macos = ' '
+Mint = ' '
+# NixOS = '  '
+NixOS = '󱄅 '
+openSUSE = ' '
+Raspbian = ' '
+Redhat = ' '
+RedHatEnterprise = ' '
+Ubuntu = ' '
+# Ubuntu = ' '
+Unknown = ' '
+# Windows = ' '
+# Windows = '󰕰 '
+Windows = '󰚌 '
+# Windows = '  '
+# Windows = '󰖳  '
+# Windows = '󰨑 '
+# Windows = '󱓝 '
+# Windows = '󰍲 '
+
+
+[username]
+style_user = 'bright-purple'
+style_root = 'bright-purple'
+format = '[njen]($style)'
+disabled = true
+show_always = true
+
+[hostname]
+ssh_only = false
+format = '[@](bright-purple)[$hostname]($style) '
+style = 'bright-purple'
+# trim_at = '.'
+disabled = true
+
+[localip]
+ssh_only = false
+format = '[\($localipv4\)](bright-black) '
+disabled = true
+
+
+[directory.substitutions]
+# '/Documents/' = '  '
+# 'Downloads' = ' '
+# 'Music' = ' '
+# 'Pictures' = ' '
+# 'C:/' = 'c:/'
+# 'C:/' = '/c/'
+# 'C:/' = ' '
+# 'C:/' = ''
+# 'C:/' = '/'
+# 'C:/' = '󰗦 '
+# 'C:/' = '󰯳 '
+# 'C:/' = ' '
+# 'C:/' = '󰯲 '
+# 'C:/' = '󰬊 '
+# 'C:/' = ' '
+# 'C:/' = '󰫰'
+# 'C:/' = '
+'C:/' = '/c/'
+'/mnt/c' = '/c'
+# '///' = '/'
+# 'c' = '/c'
+# '/' = ''
+# '/' = ''
+# '~' = '󰜥'
+# 'repos' = ' repos'
+
+
+
+[directory]
+format = '[$path]($style)[$read_only]($read_only_style)  '
+# repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path](bright-blue)[$read_only]($read_only_style) '
+style = 'bright-blue'
+before_repo_root_style = 'bright-blue'
+repo_root_style = 'bright-blue'
+truncation_length = 0
+# truncation_symbol = ' '
+# home_symbol = ' '
+truncate_to_repo = false
+use_os_path_sep = false
+use_logical_path = false
+read_only = ' '
+
+[time]
+disabled = true
+time_format = '%I:%M %p'
+# style = 'bg:blue fg:black'
+# format = '[](bg:bright-black fg:blue)[ $time ]($style)'
+style = 'blue'
+format = '[  $time ]($style)'
+
+[cmd_duration]
+min_time = 1
+show_milliseconds = true
+# format = "[](bg:none fg:bright-black)[ ](bg:bright-black fg:green)[$duration ]($style)"
+# style = "bg:bright-black fg:bright-green bold"
+format = "[](blue) [$duration]($style) "
+style = "bright-blue"
+disabled = true
+
+[line_break]
+disabled = false
+
+[git_branch]
+symbol = ""
+# symbol = ""
+# symbol = ""
+format = '[$symbol $branch]($style)'
+style = "yellow"
+
+[git_status]
+disabled = false
+format = ' $all_status$ahead_behind$diverged'
+# staged     = '[󰄴 ${count} ](bold green)'
+staged     = '[󱇬 ${count} ](green)'
+modified   = '[ ${count} ](bright-yellow)'
+renamed    = ''
+# deleted    = '[ ${count} ](bold red)'
+deleted    = '[󱎘 ${count} ](red)'
+stashed    = ''
+untracked  = ''
+conflicted = '[󰈅 ${count} ](red)'
+up_to_date = ''
+ahead = '[⇡${count}](green) '
+behind = '[⇣${count}](red) '
+diverged = '[ ](red)([⇡${ahead_count} ](green)[⇣${behind_count}](red)) '
+
+[package]
+format = '[$symbol$version]($style) '
+symbol = ' '
+style = 'purple'
+
+[nodejs]
+detect_files = ['package.json']
+detect_folders = []
+symbol = ' '
+style = 'green'
+format = '[$symbol($version)]($style) '
+disabled = false
+
+[ruby]
+symbol = ' '
+style = 'bright-red'
+format = ' [$symbol($version)]($style)'
+
+[python]
+format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+style = "green"
+symbol = ' '
+pyenv_version_name = true
+
+[rust]
+format = '[$symbol$version]($style) '
+style = 'red'
+symbol = ' '
+
+[lua]
+format = '[$symbol$version]($style) '
+style = 'bright-yellow'
+symbol = '🌙 '
+detect_folders = []
+detect_files = ['.lua-version']
+
+[character]
+# success_symbol = '[ ](bright-green)'
+# error_symbol = '[ ](bright-red)'
+#success_symbol = '[ 󰇁](bright-green)'
+#error_symbol = '[ 󰇁](bright-red)'
+# success_symbol = '[ 󰅂](bright-green)'
+# error_symbol= '[ 󰅂](bright-red)'
+success_symbol = '[](bright-cyan)'
+error_symbol= '[](bright-red)'
+# success_symbol = '[ ](bright-green)'
+# error_symbol= '[ ](bright-red)'
+# success_symbol = '[ ](bright-green)'
+# error_symbol= '[ ](bright-red)'
+vimcmd_symbol = '[](bright-yellow)'
+format = '$symbol '

@@ -1,0 +1,152 @@
+{
+  "files.eol": "\n",
+  "editor.inlineSuggest.enabled": true,
+  "editor.minimap.enabled": false,
+  "window.titleBarStyle": "custom",
+  "editor.fontFamily": "JetBrainsMono Nerd Font, Hack Nerd Font, Gintronic Nerd Font mono, Consolas",
+  "editor.fontSize": 16,
+  "editor.fontLigatures": true,
+  "editor.wordWrap": "on",
+  "breadcrumbs.enabled": true,
+  "security.workspace.trust.enabled": false,
+  "editor.fontWeight": "500",
+  "terminal.integrated.fontWeight": "500",
+  "terminal.integrated.fontWeightBold": "500",
+  "editor.minimap.renderCharacters": false,
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.fontSize": 16,
+  "terminal.integrated.letterSpacing": 0,
+  "markdown.preview.fontSize": 16,
+  "editor.lineHeight": 25,
+  "editor.letterSpacing": 0,
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell",
+      "args": [
+        "-NoLogo"
+      ]
+    },
+    "Command Prompt": {
+      "path": [
+        "${env:windir}\\Sysnative\\cmd.exe",
+        "${env:windir}\\System32\\cmd.exe"
+      ],
+      "args": [],
+      "icon": "terminal-cmd"
+    },
+    "Git Bash": {
+      "source": "Git Bash"
+    },
+    "Windows PowerShell": {
+      "path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    }
+  },
+  "git.autofetch": true,
+  "git.openRepositoryInParentFolders": "always",
+  "window.menuBarVisibility": "compact",
+  "security.allowedUNCHosts": [
+    "wsl.localhost"
+  ],
+  "go.toolsManagement.autoUpdate": true,
+  "terminal.integrated.commandsToSkipShell": [
+    "language-julia.interrupt"
+  ],
+  "[lua]": {
+    "editor.defaultFormatter": "JohnnyMorganz.stylua",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": true,
+      "strings": true
+    },
+    "editor.semanticHighlighting.enabled": true,
+    "editor.tabCompletion": "on"
+  },
+  "[luau]": {
+    "editor.defaultFormatter": "JohnnyMorganz.stylua"
+  },
+  "editor.semanticHighlighting.enabled": true,
+  "terminal.integrated.minimumContrastRatio": 1,
+  "Lua.semantic.keyword": true,
+  "color-highlight.markRuler": false,
+  "explorer.confirmDelete": false,
+  "git.confirmSync": false,
+  "editor.unicodeHighlight.ambiguousCharacters": false,
+  "Lua.codeLens.enable": true,
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "workbench.startupEditor": "none",
+  "workbench.welcomePage.walkthroughs.openOnInstall": false,
+  "git.enableSmartCommit": true,
+  "github.copilot.chat.welcomeMessage": "never",
+  "editor.accessibilitySupport": "off",
+  "go.showWelcome": false,
+  "evenBetterToml.formatter.alignEntries": true,
+  "evenBetterToml.formatter.indentEntries": true,
+  "evenBetterToml.schema.links": true,
+  "evenBetterToml.semanticTokens": true,
+  "files.associations": {
+    "*.toml": "toml"
+  },
+  "evenBetterToml.schema.catalogs": [
+    "https://www.schemastore.org/api/json/catalog.json",
+    "https://starship.rs/config-schema.json"
+  ],
+  "evenBetterToml.taplo.configFile.enabled": false,
+  "evenBetterToml.taplo.bundled": false,
+  "JSON-zain.json.autorefresh": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "prettier.bracketSameLine": true,
+  "prettier.enableDebugLogs": true,
+  "prettier.htmlWhitespaceSensitivity": "ignore",
+  "prettier.singleQuote": true,
+  "prettier.useTabs": false,
+  "prettier.tabWidth": 2,
+  "indentRainbow.indicatorStyle": "light",
+  "editor.tabSize": 2,
+  "color-highlight.matchRgbWithNoFunction": true,
+  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+  "editor.defaultColorDecorators": true,
+  "window.zoomLevel": -1.0,
+  "terminal.integrated.tabs.defaultIcon": "terminal",
+  "workbench.iconTheme": "material-icon-theme",
+  "editor.renderWhitespace": "none",
+  "editor.experimentalWhitespaceRendering": "off",
+  "editor.smartSelect.selectLeadingAndTrailingWhitespace": false,
+  "editor.trimAutoWhitespace": false,
+  "workbench.colorTheme": "Wal Bordered",
+  "[rainmeter]": {
+    "editor.formatOnSave": false
+  },
+  "color-highlight.languages": [
+    "*"
+  ],
+  "editor.renderControlCharacters": true,
+  "files.trimTrailingWhitespace": true,
+  "files.encoding": "utf8bom",
+  "files.autoGuessEncoding": true,
+  "[powershell]": {
+    "editor.formatOnSave": true
+  },
+  "prettier.withNodeModules": true,
+  "powershell.debugging.createTemporaryIntegratedConsole": true,
+  "Lua.completion.callSnippet": "Both",
+  "Lua.diagnostics.globals": [
+    "vim"
+  ],
+  "vscode_custom_css.imports": [
+    "file:///c:/Users/nickf/.vscode/extensions/brandonkirbyson.vscode-animations-2.0.2/dist/updateHandler.js"
+  ],
+    "animations.Enabled": true,
+    "animations.Auto-Install": true,
+    "animations.CursorAnimation": true,
+    "animations.CursorAnimationOptions": {
+        "Color": "#ff4f9e",
+        "TrailLength": 5
+    },
+    "animations.Focus-Dimming-Mode": "Everything But Editor and Terminal",
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+}

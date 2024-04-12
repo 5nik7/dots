@@ -1,0 +1,327 @@
+general:
+  # Whether to automatically focus windows underneath the cursor.
+  focus_follows_cursor: false
+
+  # Whether to jump the cursor between windows focused by the WM.
+  cursor_follows_focus: false
+
+  # Whether to switch back and forth between the previously focused workspace
+  # when focusing the current workspace.
+  toggle_workspace_on_refocus: true
+
+  # Whether to show floating windows as always on top.
+  show_floating_on_top: false
+
+  # Amount to move floating windows by (eg. when using `alt+<hjkl>` on a floating window)
+  floating_window_move_amount: '5%'
+
+  # Whether to center new floating windows.
+  center_new_floating_windows: true
+
+  # *Strongly* recommended to set to 'false'. Whether to globally enable/disable
+  # window transition animations (on minimize, close, etc). Set to 'unchanged'
+  # to make no setting changes.
+  window_animations: 'unchanged'
+
+gaps:
+  # Gap between adjacent windows.
+  inner_gap: '15px'
+
+  # Gap between windows and the screen edge.
+  outer_gap: '15px'
+
+# Highlight active/inactive windows with a colored border.
+# ** Exclusive to Windows 11 due to API limitations.
+focus_borders:
+  active:
+    enabled: true
+    color: '#132d81'
+
+  inactive:
+    enabled: true
+    color: '#161E39'
+
+bar:
+  height: '30px'
+  position: 'top'
+  opacity: 1.0
+  background: '#161E39'
+  foreground: '#D1EAFF'
+  font_family: 'JetBrainsMono Nerd Font Mono'
+  font_size: '12px'
+  font_weight: '400'
+  padding: '2px 2px'
+  offset_x: '0'
+  offset_y: '0'
+  border_radius: '0'
+  components_left:
+    - type: 'workspaces'
+      focused_workspace_background: 'transparent'
+      # focused_workspace_background: '#313b76'
+      focused_workspace_foreground: '#aac5fc '
+      displayed_workspace_background: 'transparent'
+      default_workspace_background: 'transparent'
+      default_workspace_foreground: '#455f97'
+  components_center:
+    - type: 'window title'
+      foreground: '#8aaef8'
+  components_right:
+    - type: 'cpu'
+      label: " <attr ff='Cousine Nerd Font Propo' fw='450' fs='15'>{percent_usage}%</attr>"
+      refresh_interval_ms: 1000
+      margin: '0 3px'
+      padding: '4px 8px'
+      background: 'transparent'
+      # background: '#33337d'
+      foreground: '#6188FF'
+    - type: 'memory'
+      label: ' {percent_usage}%'
+      refresh_interval_ms: 1000
+      margin: '0 3px'
+      padding: '4px 8px'
+      background: 'transparent'
+      # background: '#33337d'
+      foreground: '#6188FF'
+    - type: 'gpu'
+      label: '󰘚 {percent_usage}%'
+      refresh_interval_ms: 1000
+      margin: '0 3px'
+      padding: '4px 8px'
+      background: 'transparent'
+      # background: '#33337d'
+      foreground: '#6188FF'
+    # - type: 'network'
+    #   label_no_internet: 'NC'
+    #   label_ethernet: 'Eth'
+    #   label_wifi_strength_0: 'WiFi: 0%'
+    #   label_wifi_strength_25: 'WiFi: 25%'
+    #   label_wifi_strength_50: 'WiFi: 50%'
+    #   label_wifi_strength_75: 'WiFi: 75%'
+    #   label_wifi_strength_100: 'WiFi: 100%'
+    - type: 'weather'
+      margin: '0 2px'
+      padding: '4px 8px'
+      background: 'transparent'
+      foreground: '#aac5fc'
+      latitude: 46.6021
+      longitude: -120.5059
+      label: '{temperature_fahrenheit}°F'
+      label_sun: '☀️ {temperature_fahrenheit}°F'
+      label_moon: '🌙 {temperature_fahrenheit}°F'
+      label_cloud_moon: '🌙☁️ {temperature_fahrenheit}°F'
+      label_cloud_sun: '⛅ {temperature_fahrenheit}°F'
+      label_cloud_moon_rain: '🌙🌧️ {temperature_fahrenheit}°F'
+      label_cloud_sun_rain: '🌦️ {temperature_fahrenheit}°F'
+      label_cloud_rain: '🌧️ {temperature_fahrenheit}°F'
+      label_snow_flake: '❄️ {temperature_fahrenheit}°F'
+      label_thunderstorm: '⚡ {temperature_fahrenheit}°F'
+      label_cloud: '☁️ {temperature_fahrenheit}°F'
+    - type: 'tiling direction'
+      label_horizontal: "<attr ff='JetBrainsMono Nerd Font Propo' fg='#5EE7FF' fw='400' fs='18'>󰝡</attr>"
+      label_vertical: "<attr ff='JetBrainsMono Nerd Font Propo' fg='#5EE7FF' fw='400' fs='18'>󰕏</attr>"
+      # label_horizontal: "<attr ff='JetBrainsMono Nerd Font Propo' fg='#5EE7FF' fw='400' fs='16'></attr>"
+      # label_vertical: "<attr ff='JetBrainsMono Nerd Font Propo' fg='#5EE7FF' fw='400' fs='16'></attr>"
+      # label_horizontal: "<attr ff='JetBrainsMono Nerd Font Propo' fg='#5EE7FF' fw='100' fs='20'>󱋱</attr>"
+      # label_vertical: "<attr ff='JetBrainsMono Nerd Font Propo' fg='#5EE7FF' fw='100' fs='20'>󱋰</attr>"
+      background: 'transparent'
+      margin: '0 3px'
+      padding: '4px 8px'
+    - type: 'binding mode'
+      # label: "<attr fs='20'>󰼬</attr>"
+      label: "<attr fs='20'>󰁌</attr>"
+      # label: "<attr fs='20'></attr>"
+      # label: "<attr ff='Hundred Ligatture' fg='#0f152d' fw='200' fs='13'>{binding_mode}</attr>"
+      # label: "<attr ff='Fuschia' fg='#0f152d' fw='200' fs='14'>{binding_mode}</attr>"
+      # label: "<attr ff='Galderglynn Titling' fg='#0f152d' fw='500' fs='13'>{binding_mode}</attr>"
+      background: 'transparent'
+      foreground: '#FF4F9E'
+      margin: '0 3px'
+      padding: '4px 8px'
+    # - type: 'clock'
+    # Documentation on formatting date/time string:
+    # https://learn.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings
+    # time_formatting: 'hh:mm tt  ddd MMM dd'
+    # time_formatting: 'ddd MMM dd'
+    # margin: '0 4px 0 0'
+
+workspaces:
+  - name: '1'
+  - name: '2'
+  - name: '3'
+  - name: '4'
+  - name: '5'
+  - name: '6'
+  - name: '7'
+  - name: '8'
+  - name: '9'
+
+window_rules:
+  # Task Manager requires admin privileges to manage and should be ignored unless running
+  # the WM as admin.
+  - command: 'ignore'
+    match_process_name: '/Taskmgr|ScreenClippingHost/'
+
+  - command: 'set floating'
+    match_process_name: 'msrdc'
+
+  - command: 'set floating'
+    match_process_name: 'fontview'
+
+  #  - command: 'ignore'
+  #    match_process_name: 'StartAllBackCfg'
+
+  # Launches system dialogs as floating by default (eg. File Explorer save/open dialog).
+  - command: 'set floating'
+    match_class_name: '#32770'
+
+  # Do not manage picture-in-picture windows for browsers. Note that the default is for
+  # English; change `match_title` to the window's title if you use another language.
+  - command: 'ignore'
+    match_title: '[Pp]icture.in.[Pp]icture'
+    match_class_name: 'Chrome_WidgetWin_1|MozillaDialogClass'
+
+  # Some applications (eg. Steam) have borders that extend past the normal border size.
+  - command: 'resize borders 0px -7px -7px -7px'
+    match_process_name: 'steam'
+
+  - command: 'set floating'
+    match_process_name: 'StartAllBackCfg'
+
+binding_modes:
+  - name: 'resize'
+    keybindings:
+      # Resize focused window by a percentage or pixel amount.
+      - command: 'resize width -2%'
+        bindings: ['H', 'Left']
+      - command: 'resize width +2%'
+        bindings: ['L', 'Right']
+      - command: 'resize height +2%'
+        bindings: ['K', 'Up']
+      - command: 'resize height -2%'
+        bindings: ['J', 'Down']
+      # Press enter/escape to return to default keybindings.
+      - command: 'binding mode none'
+        bindings: ['Escape', 'Enter']
+
+keybindings:
+  # Shift focus in a given direction.
+  - command: 'focus left'
+    bindings: ['Alt+H', 'Alt+Left']
+  - command: 'focus right'
+    bindings: ['Alt+L', 'Alt+Right']
+  - command: 'focus up'
+    bindings: ['Alt+K', 'Alt+Up']
+  - command: 'focus down'
+    bindings: ['Alt+J', 'Alt+Down']
+
+  # Move focused window in a given direction.
+  - command: 'move left'
+    bindings: ['Alt+Shift+H', 'Alt+Shift+Left']
+  - command: 'move right'
+    bindings: ['Alt+Shift+L', 'Alt+Shift+Right']
+  - command: 'move up'
+    bindings: ['Alt+Shift+K', 'Alt+Shift+Up']
+  - command: 'move down'
+    bindings: ['Alt+Shift+J', 'Alt+Shift+Down']
+
+  # Resize focused window by a percentage or pixel amount.
+  - command: 'resize width -2%'
+    binding: 'Alt+U'
+  - command: 'resize width +2%'
+    binding: 'Alt+P'
+  - command: 'resize height +2%'
+    binding: 'Alt+O'
+  - command: 'resize height -2%'
+    binding: 'Alt+I'
+
+  # As an alternative to the resize keybindings above, resize mode enables resizing via
+  # HJKL or arrow keys. The binding mode is defined above with the name "resize".
+  - command: 'binding mode resize'
+    binding: 'Alt+R'
+
+  # Change tiling direction. This determines where new tiling windows will be inserted.
+  - command: 'tiling direction toggle'
+    binding: 'Alt+V'
+
+  # Change focus between floating / tiling windows.
+  - command: 'focus mode toggle'
+    binding: 'Alt+F'
+
+  # Change the focused window to be floating / tiling.
+  - command: 'toggle floating'
+    binding: 'Alt+Shift+F'
+
+  # Change the focused window to be maximized / unmaximized.
+  - command: 'toggle maximized'
+    binding: 'Alt+X'
+
+  # Minimize focused window.
+  - command: 'set minimized'
+    binding: 'Alt+M'
+
+  # Close focused window.
+  - command: 'close'
+    binding: 'Alt+Q'
+
+  # Kill GlazeWM process safely.
+  - command: 'exit wm'
+    binding: 'Alt+Shift+Q'
+
+  # Re-evaluate configuration file.
+  - command: 'reload config'
+    binding: 'Alt+Shift+R'
+
+  # Launch CMD terminal (alternatively `exec wt` or `exec %ProgramFiles%/Git/git-bash.exe`
+  # to start Windows Terminal and Git Bash respectively.
+  - command: 'exec wtp'
+    binding: 'Alt+Enter'
+
+  # Focus the workspace that last had focus.
+  - command: 'focus workspace recent'
+    binding: 'Alt+Y'
+
+  # Focus the next/previous workspace defined in `workspaces` config.
+  - command: 'focus workspace next'
+    binding: 'Alt+T'
+  - command: 'focus workspace prev'
+    binding: 'Alt+Shift+T'
+
+  # Change focus to a workspace defined in `workspaces` config.
+  - command: 'focus workspace 1'
+    binding: 'Alt+1'
+  - command: 'focus workspace 2'
+    binding: 'Alt+2'
+  - command: 'focus workspace 3'
+    binding: 'Alt+3'
+  - command: 'focus workspace 4'
+    binding: 'Alt+4'
+  - command: 'focus workspace 5'
+    binding: 'Alt+5'
+  - command: 'focus workspace 6'
+    binding: 'Alt+6'
+  - command: 'focus workspace 7'
+    binding: 'Alt+7'
+  - command: 'focus workspace 8'
+    binding: 'Alt+8'
+  - command: 'focus workspace 9'
+    binding: 'Alt+9'
+
+  # Move focused window to a workspace defined in `workspaces` config.
+  - commands: ['move to workspace 1', 'focus workspace 1']
+    binding: 'Alt+Shift+1'
+  - commands: ['move to workspace 2', 'focus workspace 2']
+    binding: 'Alt+Shift+2'
+  - commands: ['move to workspace 3', 'focus workspace 3']
+    binding: 'Alt+Shift+3'
+  - commands: ['move to workspace 4', 'focus workspace 4']
+    binding: 'Alt+Shift+4'
+  - commands: ['move to workspace 5', 'focus workspace 5']
+    binding: 'Alt+Shift+5'
+  - commands: ['move to workspace 6', 'focus workspace 6']
+    binding: 'Alt+Shift+6'
+  - commands: ['move to workspace 7', 'focus workspace 7']
+    binding: 'Alt+Shift+7'
+  - commands: ['move to workspace 8', 'focus workspace 8']
+    binding: 'Alt+Shift+8'
+  - commands: ['move to workspace 9', 'focus workspace 9']
+    bindings: ['Alt+Shift+9']
