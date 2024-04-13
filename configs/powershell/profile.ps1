@@ -31,7 +31,7 @@ function Fresh {
   Write-Host ''
   Highlight ' Profile reloaded. '
 }
-Set-Alias -Name reload -Value Fresh
+Set-Alias -Name rlp -Value Fresh
 
 Set-Alias -Name c -Value Clear-Host
 
@@ -197,7 +197,7 @@ function dot {
   Set-Location $env:DOTS
 }
 
-function c/ {
+function c: {
   param(
     [string]$path = $null
   )
@@ -402,5 +402,5 @@ Set-PSReadLineKeyHandler -Chord '"', "'" `
 
 #34de4b3d-13a8-4540-b76d-b9e8d3851756 PowerToys CommandNotFound module
 
-Import-Module "C:\Program Files\PowerToys\WinUI3Apps\..\WinGetCommandNotFound.psd1"
+# Import-Module "C:\Program Files\PowerToys\WinUI3Apps\..\WinGetCommandNotFound.psd1"
 #34de4b3d-13a8-4540-b76d-b9e8d3851756
