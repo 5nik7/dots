@@ -193,7 +193,21 @@ function q {
 function repos {
   Set-Location $env:REPOS
 }
+function dot {
+  Set-Location $env:DOTS
+}
 
+function c/ {
+  param(
+    [string]$path = $null
+  )
+  if ($path) {
+    Set-Location -Path (Join-Path -Path $HOMEDRIVE\ -ChildPath $path)
+  }
+  else {
+    Set-Location -Path $HOMEDRIVE\
+  }
+}
 function path {
   $env:Path -split ';'
 }
@@ -204,6 +218,34 @@ function .. {
 
 function lg {
   lazygit
+}
+function ln {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$base,
+
+    [Parameter(Mandatory = $true)]
+    [string]$target
+  )
+
+  try {
+    if ((Test-Path -Path $target) -and (Get-Item -Path $target).Target -eq $base) {
+      Write-Output "Already a symlink"
+    }
+    elseif (Test-Path -Path $target) {
+      Rename-Item -Path $target -NewName "$target.bak" -ErrorAction Stop
+      Write-Output "Creating a backup file: $target.bak"
+      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop
+      Write-Output "$base -> $target"
+    }
+    else {
+      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop
+      Write-Output "$base -> $target"
+    }
+  }
+  catch {
+    Write-Output "Failed to create symbolic link: $_"
+  }
 }
 
 $OnViModeChange = [scriptblock] {
@@ -357,3 +399,8 @@ Set-PSReadLineKeyHandler -Chord '"', "'" `
     [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($cursor - 1)
   }
 }
+
+#34de4b3d-13a8-4540-b76d-b9e8d3851756 PowerToys CommandNotFound module
+
+Import-Module "C:\Program Files\PowerToys\WinUI3Apps\..\WinGetCommandNotFound.psd1"
+#34de4b3d-13a8-4540-b76d-b9e8d3851756

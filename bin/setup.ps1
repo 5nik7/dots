@@ -11,9 +11,10 @@
 # Install-Module -Name PSFzf -Scope AllUsers -Force -AllowClobber
 
 # Update-Module
-$DOTFILES = "C:\repos\dots"
-$DOTCONF = "$DOTFILES\configs"
-$CONFDIR = "$HOME\.config"
+$REPOS = "C:\repos"
+$DOTS = "C:\repos\dots"
+$DOTSFILES = "$DOTFILES\configs"
+$WINCONFIG = "$HOME\.config"
 $APPDATA = "$HOME\AppData\Roaming"
 
 function ln {
@@ -47,7 +48,7 @@ function ln {
 
 # ln "$DOTCONF\yazi" "$CONFDIR\yazi"
 
-ln "$DOTCONF\code\settings.json" "$CONFDIR\settings.json"
+# ln "$DOTCONF\code\settings.json" "$CONFDIR\settings.json"
 
 # ln "$DOTCONF\starship\starship.toml" "$CONFDIR\starship.toml"
 
@@ -59,9 +60,11 @@ ln "$DOTCONF\code\settings.json" "$CONFDIR\settings.json"
 
 # ln "$DOTCONF\alacritty" "$APPDATA\alacritty"
 
-# ln "$DOTCONF\powershell\Profile.ps1" "C:\Users\nickf\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
+# C:\repos\dots\configs\powershell\profile.ps1
 
-# ln "$DOTCONF\powershell\.env" "C:\Users\nickf\Documents\WindowsPowerShell\.env"
+ln "$DOTFILES\powershell\Profile.ps1" "C:\Program Files (x86)\PowerShell\7\profile.ps1"
+
+# ln "$DOTCONF\powershell\.env" "$HOME\Documents\PowerShell\.env"
 
 # ln "$env:DOTFILES\wt\settings.json" "C:\ProgramData\scoop\apps\windows-terminal-preview\1.20.10303.0\settings\settings.json"
 
