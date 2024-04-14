@@ -1,7 +1,6 @@
 ﻿using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
-Set-PSDebug -strict
 
 Import-Module Get-ChildItemColor
 Import-Module PSFzf
@@ -88,21 +87,27 @@ function Remove-DuplicatePSReadlineHistory {
 
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 
+$TERMINAL = "wt"
+$EDITOR = "nvim"
 
 $ENV:RG_DEFAULT_COMMAND = "rg -p -l -L --hidden"
 
-$ENV:FZF_DEFAULT_COMMAND = "fd --type f"
+$ENV:FZF_DEFAULT_COMMAND = "fd --hidden --follow --exclude=.git --exclude=node_modulesf"
 
 $ENV:FZF_DEFAULT_OPTS = "
---color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,border:8
---color info:42,prompt:-1,spinner:42,pointer:51,marker:33
+--layout=reverse --info=inline --height=80% --multi --cycle --margin=1 --border=sharp
+--preview '([[ -f {} ]] && (bat --style=numbers --color=always --line-range=:500 {} || cat {})) || ([[ -d {} ]] \
+&& (exa -TFl --group-directories-first --icons -L 2 --no-user {} | less)) || echo {} 2> /dev/null | head -200'
+--prompt=' ' --pointer=' ' --marker=' '
+--color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0
+--color info:2,prompt:-1,spinner:2,pointer:6,marker:4
 --preview-window='border-sharp'
---pointer='|>'
 --no-scrollbar
---info=inline
---preview-window='right,50%,border-left,+{2}+3/3,~3'
---exact
---ansi"
+--preview-window='right,65%,border-left,+{2}+3/3,~3'
+--bind '?:toggle-preview'
+--bind 'ctrl-a:select-all'
+--bind 'ctrl-y:execute-silent(echo {+} | win32yank.exe -i)'
+--bind 'ctrl-e:execute($TERMINAL $EDITOR {+})+reload(fzf)'"
 
 function ln {
   param(
@@ -197,7 +202,7 @@ function dot {
   Set-Location $env:DOTS
 }
 
-function c: {
+function cdc {
   param(
     [string]$path = $null
   )
@@ -208,6 +213,7 @@ function c: {
     Set-Location -Path $HOMEDRIVE\
   }
 }
+Set-Alias -Name c/ -Value cdc
 function path {
   $env:Path -split ';'
 }
@@ -218,34 +224,6 @@ function .. {
 
 function lg {
   lazygit
-}
-function ln {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$base,
-
-    [Parameter(Mandatory = $true)]
-    [string]$target
-  )
-
-  try {
-    if ((Test-Path -Path $target) -and (Get-Item -Path $target).Target -eq $base) {
-      Write-Output "Already a symlink"
-    }
-    elseif (Test-Path -Path $target) {
-      Rename-Item -Path $target -NewName "$target.bak" -ErrorAction Stop
-      Write-Output "Creating a backup file: $target.bak"
-      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop
-      Write-Output "$base -> $target"
-    }
-    else {
-      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop
-      Write-Output "$base -> $target"
-    }
-  }
-  catch {
-    Write-Output "Failed to create symbolic link: $_"
-  }
 }
 
 $OnViModeChange = [scriptblock] {
@@ -399,8 +377,3 @@ Set-PSReadLineKeyHandler -Chord '"', "'" `
     [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($cursor - 1)
   }
 }
-
-#34de4b3d-13a8-4540-b76d-b9e8d3851756 PowerToys CommandNotFound module
-
-# Import-Module "C:\Program Files\PowerToys\WinUI3Apps\..\WinGetCommandNotFound.psd1"
-#34de4b3d-13a8-4540-b76d-b9e8d3851756
