@@ -7,7 +7,7 @@ add_newline = false
 continuation_prompt = '[  ](black) '
 
 format ="""$line_break\
-[ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$fill$cmd_duration$time$line_break\
+[ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$cmd_duration$time$line_break\
 [  ](black)$character\
 """
 
