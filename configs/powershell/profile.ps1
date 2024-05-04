@@ -96,8 +96,6 @@ $ENV:FZF_DEFAULT_COMMAND = "fd --hidden --follow --exclude=.git --exclude=node_m
 
 $ENV:FZF_DEFAULT_OPTS = "
 --layout=reverse --info=inline --height=80% --multi --cycle --margin=1 --border=sharp
---preview '([[ -f {} ]] && (bat --style=numbers --color=always --line-range=:500 {} || cat {})) || ([[ -d {} ]] \
-&& (exa -TFl --group-directories-first --icons -L 2 --no-user {} | less)) || echo {} 2> /dev/null | head -200'
 --prompt=' ' --pointer=' ' --marker=' '
 --color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0
 --color info:2,prompt:-1,spinner:2,pointer:6,marker:4
@@ -196,35 +194,50 @@ function q {
 }
 
 function repos {
-  Set-Location $env:REPOS
+  cd "$env:REPOS"
 }
 function dot {
-  Set-Location $env:DOTS
+  cd "$env:DOTS"
 }
 
-function cdc {
-  param(
-    [string]$path = $null
-  )
-  if ($path) {
-    Set-Location -Path (Join-Path -Path $HOMEDRIVE\ -ChildPath $path)
-  }
-  else {
-    Set-Location -Path $HOMEDRIVE\
-  }
-}
-Set-Alias -Name c/ -Value cdc
+# function cdc {
+#   param(
+#     [string]$path = $null
+#   )
+#   if ($path) {
+#     Set-Location -Path (Join-Path -Path $HOMEDRIVE\ -ChildPath $path)
+#   }
+#   else {
+#     Set-Location -Path $HOMEDRIVE\
+#   }
+# }
+# Set-Alias -Name c/ -Value cdc
 function path {
   $env:Path -split ';'
 }
 
 function .. {
-  Set-Location ..
+  cd ".."
 }
 
 function lg {
   lazygit
 }
+
+function cdeza {
+  param(
+    [string]$Path = $HOME
+  )
+  if (-not (Test-Path $Path)) {
+    Write-Host -ForegroundColor 'DarkRed' "  "
+    Write-Host -ForegroundColor 'DarkGray' "  '$Path' is not a directory."
+    return
+  }
+  Set-Location -Path $Path
+  Write-Host " "
+  eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time
+}
+Set-Alias -Name cd -Value cdeza -force -option 'AllScope'
 
 $OnViModeChange = [scriptblock] {
   if ($args[0] -eq 'Command') {
