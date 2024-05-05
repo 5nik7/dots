@@ -126,8 +126,8 @@ disabled = true
 # 'C:/' = ' '
 # 'C:/' = '󰫰'
 # 'C:/' = '
-'C:/' = '/c/'
-'/mnt/c' = '/c'
+# 'C:/' = '/c/'
+# '/mnt/c' = '/c'
 # '///' = '/'
 # 'c' = '/c'
 # '/' = ''
@@ -147,9 +147,10 @@ truncation_length = 0
 # truncation_symbol = ' '
 # home_symbol = ' '
 truncate_to_repo = false
-use_os_path_sep = false
+use_os_path_sep = true
 use_logical_path = false
 read_only = ' '
+read_only_style = 'bright-yellow'
 
 [time]
 disabled = true

@@ -38,7 +38,7 @@ Set-Alias -Name v -Value $env:EDITOR
 
 Set-Alias -Name open -Value explorer.exe
 
-Set-Alias -Name code -Value "C:\Users\nickf\AppData\Local\Programs\Microsoft VS Code Insiders\Code - Insiders.exe"
+Set-Alias -Name code -Value code-insiders.cmd
 
 Set-Alias -Name npmup -Value "npm install -g npm@latest"
 
@@ -86,6 +86,7 @@ function Remove-DuplicatePSReadlineHistory {
 }
 
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
+
 
 $TERMINAL = "wt"
 $EDITOR = "nvim"
@@ -174,6 +175,9 @@ function export($name, $value) {
   set-item -force -path "env:$name" -value $value;
 }
 
+export HOME $HOME
+export GOPATH $HOME\go
+export GOBIN $env:GOPATH\bin
 function rm([string]$path) {
   Remove-Item -Recurse -Force $path
 }
