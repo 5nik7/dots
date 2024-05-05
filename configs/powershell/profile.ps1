@@ -34,7 +34,7 @@ Set-Alias -Name rlp -Value Fresh
 
 Set-Alias -Name c -Value Clear-Host
 
-Set-Alias -Name v -Value nvim
+Set-Alias -Name v -Value $env:EDITOR
 
 Set-Alias -Name open -Value explorer.exe
 
@@ -92,7 +92,8 @@ $EDITOR = "nvim"
 
 $ENV:RG_DEFAULT_COMMAND = "rg -p -l -L --hidden"
 
-$ENV:FZF_DEFAULT_COMMAND = "fd --hidden --follow --exclude=.git --exclude=node_modulesf"
+$ENV:FZF_DEFAULT_COMMAND = "fd --hidden --follow --exclude=.git --exclude=node_modules"
+$ENV:FZF_CTRL_T_COMMAND = $ENV:FZF_DEFAULT_COMMAND
 
 $ENV:FZF_DEFAULT_OPTS = "
 --layout=reverse --info=inline --height=80% --multi --cycle --margin=1 --border=sharp
@@ -229,7 +230,7 @@ function cdeza {
     [string]$Path = $HOME
   )
   if (-not (Test-Path $Path)) {
-    Write-Host -ForegroundColor 'DarkRed' "  "
+    Write-Host -ForegroundColor 'DarkRed' "  "
     Write-Host -ForegroundColor 'DarkGray' "  '$Path' is not a directory."
     return
   }
