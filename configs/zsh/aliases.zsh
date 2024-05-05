@@ -14,6 +14,7 @@ alias yank='win32yank.exe -i --crlf'
 alias paste='win32yank.exe -o --lf'
 
 alias explorer='/mnt/c/Windows/explorer.exe'
+alias code='code-insiders'
 
 alias so='source'
 

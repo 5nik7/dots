@@ -3,6 +3,17 @@
 #   _ / /__\ \/ _  / , _/ /__
 #  (_)___/___/_//_/_/|_|\___/
 
+export COLORTERM=truecolor
+
+case $TERM in
+  iterm            |\
+  linux-truecolor  |\
+  screen-truecolor |\
+  tmux-truecolor   |\
+  xterm-truecolor  )    export COLORTERM=truecolor ;;
+  vte*)
+esac
+
 export LC_ALL='en_US.UTF-8'
 export LANG='en_US.UTF-8'
 export LANGUAGE='en_US.UTF-8'
