@@ -2,12 +2,11 @@
 
 "$schema" = 'https://starship.rs/config-schema.json'
 
-add_newline = false
+add_newline = true
 
 continuation_prompt = '[  ](black) '
 
-format ="""$line_break\
-[ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$cmd_duration$time$line_break\
+format ="""[ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$conda$python$ruby$cmd_duration$time$line_break\
 [  ](black)$character\
 """
 
@@ -138,11 +137,11 @@ disabled = true
 
 
 [directory]
-format = '[$path]($style)[$read_only]($read_only_style)  '
-# repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path](bright-blue)[$read_only]($read_only_style) '
-style = 'bright-blue'
-before_repo_root_style = 'bright-blue'
-repo_root_style = 'bright-blue'
+format = '[$path]($style)[$read_only]($read_only_style) '
+repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+style = 'blue'
+before_repo_root_style = 'blue'
+repo_root_style = 'bold bright-blue'
 truncation_length = 0
 # truncation_symbol = ' '
 # home_symbol = ' '
@@ -177,7 +176,7 @@ symbol = ""
 # symbol = ""
 # symbol = ""
 format = '[$symbol $branch]($style)'
-style = "yellow"
+style = "bright-black"
 
 [git_status]
 disabled = false
@@ -212,7 +211,12 @@ disabled = false
 [ruby]
 symbol = ' '
 style = 'bright-red'
-format = ' [$symbol($version)]($style)'
+format = '[$symbol($version)]($style) '
+
+[conda]
+symbol = '🅒 '
+ignore_base = true
+format = '[$symbol$environment](dimmed green) '
 
 [python]
 format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'

@@ -1,6 +1,19 @@
 ﻿using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
+#region conda initialize
+# !! Contents within this block are managed by 'conda init' !!
+If (Test-Path "C:\ProgramData\miniconda3\Scripts\conda.exe") {
+    (& "C:\ProgramData\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
+}
+#endregion
+
+$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+if (Test-Path($ChocolateyProfile)) {
+  Import-Module "$ChocolateyProfile"
+}
+
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 Import-Module Get-ChildItemColor
 Import-Module PSFzf
@@ -26,7 +39,7 @@ function Highlight {
 }
 
 function Fresh {
-  & $PROFILE.AllUsersAllHosts
+  & $PROFILE
   Write-Host ''
   Highlight ' Profile reloaded. '
 }
@@ -40,7 +53,12 @@ Set-Alias -Name open -Value explorer.exe
 
 Set-Alias -Name code -Value code-insiders.cmd
 
+Set-Alias -Name py -Value python
+Set-Alias -Name py3 -Value python
+Set-Alias -Name pytonr3 -Value python
+
 Set-Alias -Name npmup -Value "npm install -g npm@latest"
+
 
 function ya {
   $tmp = [System.IO.Path]::GetTempFileName()
@@ -88,9 +106,6 @@ function Remove-DuplicatePSReadlineHistory {
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 
 
-$TERMINAL = "wt"
-$EDITOR = "nvim"
-
 $ENV:RG_DEFAULT_COMMAND = "rg -p -l -L --hidden"
 
 $ENV:FZF_DEFAULT_COMMAND = "fd --hidden --follow --exclude=.git --exclude=node_modules"
@@ -123,9 +138,10 @@ function ln {
       Write-Output "Already a symlink"
     }
     elseif (Test-Path -Path $target) {
-      Rename-Item -Path $target -NewName "$target.bak" -ErrorAction Stop
-      Write-Output "Creating a backup file: $target.bak"
-      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop
+      $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
+      Rename-Item -Path $target -NewName "$target.$bakDate.bak" -ErrorAction Stop | Out-Null
+      Write-Output "Creating a backup file: $target.$bakDate.bak"
+      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
       Write-Output "$base -> $target"
     }
     else {
@@ -138,6 +154,34 @@ function ln {
   }
 }
 
+function bak {
+  param(
+    [Parameter(Mandatory = $false)]
+    [string]$Path = (Get-Location).Path,
+    [switch]$s
+  )
+
+  $bakFiles = Get-ChildItem -Path $Path -Filter "*.bak" -Recurse -Force -ErrorAction SilentlyContinue
+  $backupPath = Join-Path -Path $env:USERPROFILE -ChildPath "backups"
+  if (-not (Test-Path $backupPath)) {
+    New-Item -ItemType Directory -Path $backupPath | Out-Null
+  }
+
+  foreach ($file in $bakFiles) {
+    if ($s -and $file.FullName -notlike "$backupPath\*") {
+      $destination = Join-Path -Path $backupPath -ChildPath $file.Name
+      Move-Item -Path $file.FullName -Destination $destination -Force | Out-Null
+      Write-Host "Moved $file.FullName to $destination"
+    }
+    else {
+      Write-Host $file.FullName
+    }
+  }
+}
+function fbak {
+  $command = "fd --hidden --follow -e bak"
+  Invoke-Expression $command
+}
 
 function colors {
   $colors = [enum]::GetValues([System.ConsoleColor])
@@ -171,13 +215,17 @@ function which($name) {
   Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
-function export($name, $value) {
-  set-item -force -path "env:$name" -value $value;
+function Export-EnvironmentVariable {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Name,
+    [Parameter(Mandatory = $true)]
+    [string]$Value
+  )
+  Set-Item -Force -Path "env:$Name" -Value $Value
 }
+Set-Alias -Name export -Value Export-EnvironmentVariable
 
-export HOME $HOME
-export GOPATH $HOME\go
-export GOBIN $env:GOPATH\bin
 function rm([string]$path) {
   Remove-Item -Recurse -Force $path
 }
@@ -196,13 +244,6 @@ Function Search-Alias {
 
 function q {
   Exit
-}
-
-function repos {
-  cd "$env:REPOS"
-}
-function dot {
-  cd "$env:DOTS"
 }
 
 # function cdc {
@@ -229,20 +270,20 @@ function lg {
   lazygit
 }
 
-function cdeza {
-  param(
-    [string]$Path = $HOME
-  )
-  if (-not (Test-Path $Path)) {
-    Write-Host -ForegroundColor 'DarkRed' "  "
-    Write-Host -ForegroundColor 'DarkGray' "  '$Path' is not a directory."
-    return
-  }
-  Set-Location -Path $Path
-  Write-Host " "
-  eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time
-}
-Set-Alias -Name cd -Value cdeza -force -option 'AllScope'
+Set-Alias -Name cd -Value z -force -option 'AllScope'
+
+# function Invoke-Starship-PreCommand {
+#   $WarningPreference = "SilentlyContinue"
+#   $ErrorActionPreference = "SilentlyContinue"
+# }
+
+# function Invoke-Starship-TransientFunction {
+#   &starship module character
+# }
+
+Invoke-Expression (&starship init powershell)
+
+# Enable-TransientPrompt
 
 $OnViModeChange = [scriptblock] {
   if ($args[0] -eq 'Command') {
@@ -290,76 +331,15 @@ Set-PSReadLineOption -AddToHistoryHandler {
 }
 
 function edit-history {
-  code (Get-PSReadLineOption).HistorySavePath
+  & $env:EDITOR (Get-PSReadLineOption).HistorySavePath
 }
+Set-Alias -Name ehist -Value edit-history
 
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 Set-PSReadlineOption -HistorySearchCursorMovesToEnd
 
-$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-if (Test-Path($ChocolateyProfile)) {
-  Import-Module "$ChocolateyProfile"
-}
-
-$Global:__LastHistoryId = -1
-
-function Global:__Terminal-Get-LastExitCode {
-  if ($? -eq $True) {
-    return 0
-  }
-  $LastHistoryEntry = $(Get-History -Count 1)
-  $IsPowerShellError = $Error[0].InvocationInfo.HistoryId -eq $LastHistoryEntry.Id
-  if ($IsPowerShellError) {
-    return -1
-  }
-  return $LastExitCode
-}
-
-function prompt {
-
-  # First, emit a mark for the _end_ of the previous command.
-
-  $gle = $(__Terminal-Get-LastExitCode);
-  $LastHistoryEntry = $(Get-History -Count 1)
-  # Skip finishing the command if the first command has not yet started
-  if ($Global:__LastHistoryId -ne -1) {
-    if ($LastHistoryEntry.Id -eq $Global:__LastHistoryId) {
-      # Don't provide a command line or exit code if there was no history entry (eg. ctrl+c, enter on no command)
-      $out += "`e]133;D`a"
-    }
-    else {
-      $out += "`e]133;D;$gle`a"
-    }
-  }
-
-
-  $loc = $($executionContext.SessionState.Path.CurrentLocation);
-
-  # Prompt started
-  $out += "`e]133;A$([char]07)";
-
-  # CWD
-  $out += "`e]9;9;`"$loc`"$([char]07)";
-
-  # (your prompt here)
-  $out += "PWSH $loc$('>' * ($nestedPromptLevel + 1)) ";
-
-  # Prompt ended, Command started
-  $out += "`e]133;B$([char]07)";
-
-  $Global:__LastHistoryId = $LastHistoryEntry.Id
-
-  return $out
-}
-
-function Invoke-Starship-PreCommand {
-  $WarningPreference = "SilentlyContinue"
-  $ErrorActionPreference = "SilentlyContinue"
-}
-
-Invoke-Expression (&starship init powershell)
 
 $OnViModeChange = [scriptblock] {
   if ($args[0] -eq 'Command') {

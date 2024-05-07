@@ -11,12 +11,11 @@
 # Install-Module -Name PSFzf -Scope AllUsers -Force -AllowClobber
 
 # Update-Module
-$REPOS = "C:\repos"
-$DOTS = "C:\repos\dots"
-$DOTSFILES = "$DOTFILES\configs"
-$WINCONFIG = "$HOME\.config"
-$APPDATA = "$HOME\AppData\Roaming"
-
+# $REPOS = "C:\repos"
+# $DOTS = "C:\repos\dots"
+# $DOTSFILES = "$DOTFILES\configs"
+# $WINCONFIG = "$HOME\.config"
+# $APPDATA = "$HOME\AppData"
 function ln {
         param(
                 [Parameter(Mandatory = $true)]
@@ -31,9 +30,10 @@ function ln {
                         Write-Output "Already a symlink"
                 }
                 elseif (Test-Path -Path $target) {
-                        Rename-Item -Path $target -NewName "$target.bak" -ErrorAction Stop
-                        Write-Output "Creating a backup file: $target.bak"
-                        New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop
+                        $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
+                        Rename-Item -Path $target -NewName "$target.$bakDate.bak" -ErrorAction Stop | Out-Null
+                        Write-Output "Creating a backup file: $target.$bakDate.bak"
+                        New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
                         Write-Output "$base -> $target"
                 }
                 else {
