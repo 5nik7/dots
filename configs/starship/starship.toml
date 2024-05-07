@@ -195,6 +195,7 @@ up_to_date = ''
 ahead = '[⇡${count}](green) '
 behind = '[⇣${count}](red) '
 diverged = '[ ](red)([⇡${ahead_count} ](green)[⇣${behind_count}](red)) '
+windows_starship = '/mnt/c/ProgramData/scoop/shims/starship.exe'
 
 [package]
 format = '[$symbol$version]($style) '

@@ -7,6 +7,7 @@ $ENV:DOTFILES = "$ENV:DOTS\configs"
 $ENV:NVM_HOME = "$HOME\.nvm"
 $ENV:NVM_SYMLINK = "C:\nodejs"
 $ENV:STARSHIP_CONFIG = "$ENV:DOTFILES\starship\starship.toml"
+$ENV:STARSHIP_CACHE = "$HOME\AppData\Local\Temp"
 $ENV:PSHELL = "$ENV:DOTFILES\powershell"
 $ENV:GOPATH = "$HOME\go"
 $ENV:GOBIN = "$HOME\go\bin"
@@ -156,8 +157,13 @@ function ln {
     }
     elseif (Test-Path -Path $target) {
       $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
-      Rename-Item -Path $target -NewName "$target.$bakDate.bak" -ErrorAction Stop | Out-Null
-      Write-Output "Creating a backup file: $target.$bakDate.bak"
+      $backupPath = Join-Path -Path $env:USERPROFILE -ChildPath "backups"
+      if (-not (Test-Path $backupPath)) {
+        New-Item -ItemType Directory -Path $backupPath | Out-Null
+      }
+      $backupFile = Join-Path -Path $backupPath -ChildPath "$target.$bakDate.bak"
+      Rename-Item -Path $target -NewName $backupFile -ErrorAction Stop | Out-Null
+      Write-Output "Creating a backup file: $backupFile"
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
       Write-Output "$base -> $target"
     }
