@@ -1,0 +1,154 @@
+{
+    "files.eol": "auto",
+    "editor.inlineSuggest.enabled": true,
+    "editor.minimap.enabled": false,
+    "window.titleBarStyle": "custom",
+    "editor.fontFamily": "JetBrainsMono Nerd Font, Hack Nerd Font, Gintronic Nerd Font mono, Consolas",
+    "editor.fontSize": 16,
+    "editor.fontLigatures": true,
+    "editor.wordWrap": "on",
+    "breadcrumbs.enabled": true,
+    "security.workspace.trust.enabled": false,
+    "editor.fontWeight": "500",
+    "terminal.integrated.fontWeight": "500",
+    "terminal.integrated.fontWeightBold": "500",
+    "editor.minimap.renderCharacters": false,
+    "terminal.integrated.copyOnSelection": true,
+    "terminal.integrated.cursorStyle": "line",
+    "terminal.integrated.fontSize": 16,
+    "markdown.preview.fontSize": 16,
+    "editor.lineHeight": 25,
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell",
+            "args": [
+                "-NoLogo"
+            ]
+        },
+        "Command Prompt": {
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ],
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "Git Bash": {
+            "source": "Git Bash"
+        },
+        "Windows PowerShell": {
+            "path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+        }
+    },
+    "git.autofetch": true,
+    "git.openRepositoryInParentFolders": "always",
+    "terminal.integrated.commandsToSkipShell": [
+        "language-julia.interrupt"
+    ],
+    "editor.semanticHighlighting.enabled": true,
+    "terminal.integrated.minimumContrastRatio": 1,
+    "Lua.semantic.keyword": true,
+    "color-highlight.markRuler": false,
+    "explorer.confirmDelete": false,
+    "git.confirmSync": false,
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "Lua.codeLens.enable": true,
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "workbench.startupEditor": "none",
+    "git.enableSmartCommit": true,
+    "github.copilot.chat.welcomeMessage": "never",
+    "editor.accessibilitySupport": "off",
+    "files.associations": {
+        "*.toml": "toml"
+    },
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.tabSize": 2,
+    "color-highlight.matchRgbWithNoFunction": true,
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.defaultColorDecorators": true,
+    "window.zoomLevel": -1.0,
+    "terminal.integrated.tabs.defaultIcon": "terminal",
+    "workbench.iconTheme": "material-icon-theme",
+    "editor.renderWhitespace": "none",
+    "editor.experimentalWhitespaceRendering": "off",
+    "editor.smartSelect.selectLeadingAndTrailingWhitespace": false,
+    "editor.trimAutoWhitespace": false,
+    "workbench.colorTheme": "Wal Bordered",
+    "[rainmeter]": {
+        "editor.formatOnSave": false
+    },
+    "color-highlight.languages": [
+        "*"
+    ],
+    "editor.renderControlCharacters": true,
+    "files.trimTrailingWhitespace": true,
+    "files.encoding": "utf8bom",
+    "files.autoGuessEncoding": true,
+    "[powershell]": {
+        "editor.formatOnSave": true
+    },
+    "powershell.debugging.createTemporaryIntegratedConsole": true,
+    "[lua]": {
+        "editor.quickSuggestions": {
+            "comments": "inline",
+            "other": "on",
+            "strings": "on"
+        },
+        "editor.semanticHighlighting.enabled": true,
+        "editor.defaultFormatter": "JohnnyMorganz.stylua",
+        "editor.formatOnSave": true
+    },
+    "Lua.completion.callSnippet": "Both",
+    "Lua.diagnostics.globals": [
+        "vim"
+    ],
+    "todohighlight.isEnable": true,
+    "todohighlight.enableDiagnostics": true,
+    "todohighlight.keywords": [
+        {
+            "text": "TODO:",
+            "color": "#fff",
+            "backgroundColor": "#ffbd2a",
+            "overviewRulerColor": "rgba(255,189,42,0.8)"
+        },
+        {
+            "text": "NOTE:",
+            "color": "#fff",
+            "backgroundColor": "#f06292",
+            "overviewRulerColor": "rgba(240,98,146,0.8)"
+        }
+    ],
+    "todohighlight.exclude": [
+        "**/node_modules/**",
+        "**/bower_components/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/.github/**",
+        "**/_output/**",
+        "**/*.min.*",
+        "**/*.map",
+        "**/.next/**"
+    ],
+    "vscode_custom_css.imports": [
+        "file:///c:/Users/nickf/.vscode-insiders/extensions/brandonkirbyson.vscode-animations-2.0.2/dist/updateHandler.js"
+    ],
+    "animations.Enabled": true,
+    "animations.Auto-Install": true,
+    "animations.CursorAnimation": true,
+    "animations.Smooth-Mode": true,
+    "animations.CursorAnimationOptions": {
+        "Color": "#ff4f9e",
+        "TrailLength": 2
+    },
+    "animations.Focus-Dimming-Mode": "Everything But Editor and Terminal",
+    "workbench.sideBar.location": "right",
+    "workbench.activityBar.location": "top",
+    "redhat.telemetry.enabled": false,
+    "window.menuBarVisibility": "compact",
+    "vs-kubernetes": {
+        "vscode-kubernetes.helm-path-windows": "C:\\Users\\nickf\\.vs-kubernetes\\tools\\helm\\windows-amd64\\helm.exe",
+        "vscode-kubernetes.minikube-path-windows": "C:\\Users\\nickf\\.vs-kubernetes\\tools\\minikube\\windows-amd64\\minikube.exe"
+    }
+}

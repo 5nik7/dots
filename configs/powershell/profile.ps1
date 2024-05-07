@@ -1,6 +1,23 @@
 ﻿using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
+$ENV:REPOS = "C:\repos"
+$ENV:DOTS = "$ENV:REPOS\dots"
+$ENV:DOTFILES = "$ENV:DOTS\configs"
+$ENV:NVM_HOME = "$HOME\.nvm"
+$ENV:NVM_SYMLINK = "C:\nodejs"
+$ENV:STARSHIP_CONFIG = "$ENV:DOTFILES\starship\starship.toml"
+$ENV:PSHELL = "$ENV:DOTFILES\powershell"
+$ENV:GOPATH = "$HOME\go"
+$ENV:GOBIN = "$HOME\go\bin"
+$ENV:EDITOR = "nvim"
+$ENV:TERMINAL = "wt"
+$ENV:VISUAL = "nvim"
+$ENV:WINCONFIG = "$HOME\.config"
+$ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
+$ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
+$ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
+
 #region conda initialize
 # !! Contents within this block are managed by 'conda init' !!
 If (Test-Path "C:\ProgramData\miniconda3\Scripts\conda.exe") {
