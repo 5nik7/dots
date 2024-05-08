@@ -27,18 +27,30 @@ function ln {
 
         try {
                 if ((Test-Path -Path $target) -and (Get-Item -Path $target).Target -eq $base) {
-                        Write-Output "Already a symlink"
+                        Write-Host ''
+                        Write-Host -ForegroundColor Yellow "Already a symlink."
+                        Write-Host ''
                 }
                 elseif (Test-Path -Path $target) {
                         $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
                         Rename-Item -Path $target -NewName "$target.$bakDate.bak" -ErrorAction Stop | Out-Null
-                        Write-Output "Creating a backup file: $target.$bakDate.bak"
+                        Write-Host ''
+                        Write-Host -ForegroundColor White "Creating a backup file: " -NoNewline
+                        Write-Host -ForegroundColor Green "$target.$bakDate.bak"
                         New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
-                        Write-Output "$base -> $target"
+                        Write-Host ''
+                        Write-Host -ForegroundColor Blue "$base " -NoNewline
+                        Write-Host -ForegroundColor Yellow "->" -NoNewline
+                        Write-Host -ForegroundColor Cyan " $target"
+                        Write-Host ''
                 }
                 else {
-                        New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop
-                        Write-Output "$base -> $target"
+                        New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
+                        Write-Host ''
+                        Write-Host -ForegroundColor Blue "$base " -NoNewline
+                        Write-Host -ForegroundColor Yellow "->" -NoNewline
+                        Write-Host -ForegroundColor Cyan " $target"
+                        Write-Host ''
                 }
         }
         catch {
@@ -62,7 +74,7 @@ function ln {
 
 # C:\repos\dots\configs\powershell\profile.ps1
 
-ln "$DOTFILES\powershell\Profile.ps1" "C:\Program Files (x86)\PowerShell\7\profile.ps1"
+# ln "$DOTFILES\powershell\Profile.ps1" "C:\Program Files (x86)\PowerShell\7\profile.ps1"
 
 # ln "$DOTCONF\powershell\.env" "$HOME\Documents\PowerShell\.env"
 

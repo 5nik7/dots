@@ -153,23 +153,31 @@ function ln {
 
   try {
     if ((Test-Path -Path $target) -and (Get-Item -Path $target).Target -eq $base) {
-      Write-Output "Already a symlink"
+      Write-Host ''
+      Write-Host -ForegroundColor Yellow "Already a symlink."
+      Write-Host ''
     }
     elseif (Test-Path -Path $target) {
       $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
-      $backupPath = Join-Path -Path $env:USERPROFILE -ChildPath "backups"
-      if (-not (Test-Path $backupPath)) {
-        New-Item -ItemType Directory -Path $backupPath | Out-Null
-      }
-      $backupFile = Join-Path -Path $backupPath -ChildPath "$target.$bakDate.bak"
-      Rename-Item -Path $target -NewName $backupFile -ErrorAction Stop | Out-Null
-      Write-Output "Creating a backup file: $backupFile"
+      Rename-Item -Path $target -NewName "$target.$bakDate.bak" -ErrorAction Stop | Out-Null
+      Write-Host ''
+      Write-Host -ForegroundColor Blue "Creating a backup file: " -NoNewline
+      Write-Host -ForegroundColor Green "$target.$bakDate.bak"
+      Write-Host ''
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
-      Write-Output "$base -> $target"
+      Write-Host ''
+      Write-Host -ForegroundColor Blue "$base " -NoNewline
+      Write-Host -ForegroundColor DarkGray "->" -NoNewline
+      Write-Host -ForegroundColor Cyan " $target"
+      Write-Host ''
     }
     else {
-      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop
-      Write-Output "$base -> $target"
+      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
+      Write-Host ''
+      Write-Host -ForegroundColor Blue "$base " -NoNewline
+      Write-Host -ForegroundColor DarkGray "->" -NoNewline
+      Write-Host -ForegroundColor Cyan " $target"
+      Write-Host ''
     }
   }
   catch {
