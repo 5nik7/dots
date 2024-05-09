@@ -22,7 +22,7 @@ $ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
 #region conda initialize
 # !! Contents within this block are managed by 'conda init' !!
 If (Test-Path "C:\ProgramData\miniconda3\Scripts\conda.exe") {
-    (& "C:\ProgramData\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
+    (& "C:\ProgramData\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Where-Object { $_ } | Invoke-Expression
 }
 #endregion
 
@@ -68,8 +68,6 @@ Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name v -Value $env:EDITOR
 
 Set-Alias -Name open -Value explorer.exe
-
-Set-Alias -Name code -Value code-insiders.cmd
 
 Set-Alias -Name py -Value python
 Set-Alias -Name py3 -Value python
@@ -161,22 +159,21 @@ function ln {
       $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
       Rename-Item -Path $target -NewName "$target.$bakDate.bak" -ErrorAction Stop | Out-Null
       Write-Host ''
-      Write-Host -ForegroundColor Blue "Creating a backup file: " -NoNewline
+      Write-Host -ForegroundColor White "Creating a backup file: " -NoNewline
       Write-Host -ForegroundColor Green "$target.$bakDate.bak"
       Write-Host ''
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
-      Write-Host ''
-      Write-Host -ForegroundColor Blue "$base " -NoNewline
-      Write-Host -ForegroundColor DarkGray "->" -NoNewline
-      Write-Host -ForegroundColor Cyan " $target"
+      Write-Host -ForegroundColor Blue "$base" -NoNewline
+      Write-Host -ForegroundColor DarkGray " --> " -NoNewline
+      Write-Host -ForegroundColor Cyan "$target"
       Write-Host ''
     }
     else {
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
       Write-Host ''
-      Write-Host -ForegroundColor Blue "$base " -NoNewline
-      Write-Host -ForegroundColor DarkGray "->" -NoNewline
-      Write-Host -ForegroundColor Cyan " $target"
+      Write-Host -ForegroundColor Blue "$base" -NoNewline
+      Write-Host -ForegroundColor Yellow " --> " -NoNewline
+      Write-Host -ForegroundColor Cyan "$target"
       Write-Host ''
     }
   }
@@ -194,13 +191,10 @@ function bak {
 
   $bakFiles = Get-ChildItem -Path $Path -Filter "*.bak" -Recurse -Force -ErrorAction SilentlyContinue
   $backupPath = Join-Path -Path $env:USERPROFILE -ChildPath "backups"
-  if (-not (Test-Path $backupPath)) {
-    New-Item -ItemType Directory -Path $backupPath | Out-Null
-  }
 
   foreach ($file in $bakFiles) {
     if ($s -and $file.FullName -notlike "$backupPath\*") {
-      $destination = Join-Path -Path $backupPath -ChildPath $file.Name
+      $destination = Join-Path -Path $backupPath -ChildPath $file.
       Move-Item -Path $file.FullName -Destination $destination -Force | Out-Null
       Write-Host "Moved $file.FullName to $destination"
     }
@@ -294,7 +288,7 @@ function path {
 }
 
 function .. {
-  cd ".."
+  Set-Location ".."
 }
 
 function lg {

@@ -1,0 +1,9 @@
+[wsl2]
+guiApplications=true
+localhostForwarding=true
+nestedVirtualization=true
+debugConsole=false
+
+[experimental]
+autoMemoryReclaim=dropcache
+sparseVhd=true

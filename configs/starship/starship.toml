@@ -1,4 +1,4 @@
-#             ╱    ╲               󰪍 󰇁          󰁥       󰅂 >      󰥭 󱘹   󰍴   󰇜            󰎍     󰧞     󰬫 󰬩 󰬧 󰬊 󰯲 󰫰 󰨆      󰂸 ⭘     󱪼 󰤃 󰿊 ⏽   ┆ ┊   ┈     󰯆 󰚌 ╵╷─ ▷ ◦ 󰊭 ◻ ♥ ⚝  -->:   󰆧  󰏗 󰲩 󰲭 
+#             ╱    ╲               󰪍 󰇁          󰁥       󰅂 >      󰥭 󱘹   󰍴   󰇜            󰎍     󰧞     󰬫 󰬩 󰬧 󰬊 󰯲 󰫰 󰨆      󰂸 ⭘     󱪼 󰤃 󰿊 ⏽   ┆ ┊   ┈     󰯆 󰚌 ╵╷─ ▷ ◦ 󰊭 ◻ ♥ ⚝  -->:   󰆧  󰏗 󰲩 󰲭       󰑃 󰧂 󰳠  󱦰 󰜴 󱦰
 
 "$schema" = 'https://starship.rs/config-schema.json'
 
@@ -7,7 +7,7 @@ add_newline = true
 continuation_prompt = '[  ](black) '
 
 format ="""\
-[ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$conda$python$ruby$cmd_duration$time$fill$line_break\
+[ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$conda$python$ruby$cmd_duration$time$line_break\
 [  ](black)$character\
 """
 
@@ -245,11 +245,11 @@ detect_files = ['.lua-version']
 #error_symbol = '[ 󰇁](bright-red)'
 # success_symbol = '[ 󰅂](bright-green)'
 # error_symbol= '[ 󰅂](bright-red)'
-success_symbol = '[](bright-green)'
-error_symbol= '[](bright-green)'
+success_symbol = '[](bright-green)'
+error_symbol= '[](bright-green)'
 # success_symbol = '[ ](bright-green)'
 # error_symbol= '[ ](bright-red)'
 # success_symbol = '[ ](bright-green)'
 # error_symbol= '[ ](bright-red)'
-vimcmd_symbol = '[](bright-yellow)'
+vimcmd_symbol = '[](bright-yellow)'
 format = '$symbol '
