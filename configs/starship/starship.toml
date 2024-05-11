@@ -2,13 +2,13 @@
 
 "$schema" = 'https://starship.rs/config-schema.json'
 
-add_newline = true
+add_newline = false
 
-continuation_prompt = '[  ](black) '
+continuation_prompt = '[>>](black) '
 
-format ="""\
-[ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$conda$python$ruby$cmd_duration$time$line_break\
-[  ](black)$character\
+format ="""$line_break\
+$os$username$hostname$directory$git_branch$git_status$package$nodejs$conda$python$ruby$cmd_duration$time$line_break\
+$shell$character\
 """
 
 # format ="""$line_break\
@@ -23,8 +23,8 @@ format ="""\
 # """
 
 [fill]
-# symbol = ''
-symbol = '─'
+symbol = ''
+# symbol = '─'
 # symbol = ' '
 # symbol = '╌'
 # symbol = '━'
@@ -35,23 +35,28 @@ symbol = '─'
 # symbol = '󰧞'
 # symbol = '󰵼'
 # symbol = '󰔌'
-style = 'black'
+style = '#182f58'
 
-
-# [shell]
-# format = '[](bg:blue fg:cyan)[$indicator]($style)'
-# fish_indicator = ' 󰈺 '
-# # powershell_indicator = ' _ '
-# # powershell_indicator = '  '
-# powershell_indicator = '  '
-# powershell_indicator = '  '
-# powershell_indicator = '  '
-# bash_indicator = ' 󱆃 '
-# zsh_indicator = ' z '
-# cmd_indicator = '  '
-# unknown_indicator = ' mystery shell '
-# style = 'bg:cyan fg:black'
-# disabled = true
+[shell]
+format = '[$indicator]($style) '
+fish_indicator = '󰈺'
+# powershell_indicator = 'pwsh'
+powershell_indicator = 'PS'
+# powershell_indicator = '_'
+# powershell_indicator = ''
+# powershell_indicator = '_'
+# powershell_indicator = ''
+# powershell_indicator = ''
+# powershell_indicator = '󰨊'
+# powershell_indicator = ''
+# powershell_indicator = ''
+bash_indicator = '󱆃'
+# bash_indicator = ''
+# zsh_indicator = ''
+# cmd_indicator = ''
+unknown_indicator = ''
+style = 'fg:#3f9da3 italic'
+disabled = false
 
 [os]
 format = '[$symbol]($style)'
@@ -81,8 +86,8 @@ Unknown = ' '
 # Windows = ' '
 # Windows = '󰕰 '
 Windows = '󰚌 '
-# Windows = '  '
-# Windows = '󰖳  '
+# Windows = ' '
+# Windows = '󰖳 '
 # Windows = '󰨑 '
 # Windows = '󱓝 '
 # Windows = '󰍲 '
@@ -117,7 +122,7 @@ disabled = true
 # 'C:/' = '/c/'
 # 'C:/' = ' '
 # 'C:/' = ''
-# 'C:/' = '/'
+'C:/' = '/'
 # 'C:/' = '󰗦 '
 # 'C:/' = '󰯳 '
 # 'C:/' = ' '
@@ -127,7 +132,7 @@ disabled = true
 # 'C:/' = '󰫰'
 # 'C:/' = '
 # 'C:/' = '/c/'
-# '/mnt/c' = '/c'
+'/mnt/c' = ''
 # '///' = '/'
 # 'c' = '/c'
 # '/' = ''
@@ -239,17 +244,13 @@ detect_folders = []
 detect_files = ['.lua-version']
 
 [character]
-# success_symbol = '[ ](bright-green)'
-# error_symbol = '[ ](bright-red)'
-#success_symbol = '[ 󰇁](bright-green)'
-#error_symbol = '[ 󰇁](bright-red)'
-# success_symbol = '[ 󰅂](bright-green)'
-# error_symbol= '[ 󰅂](bright-red)'
-success_symbol = '[](bright-green)'
-error_symbol= '[](bright-green)'
-# success_symbol = '[ ](bright-green)'
-# error_symbol= '[ ](bright-red)'
-# success_symbol = '[ ](bright-green)'
-# error_symbol= '[ ](bright-red)'
-vimcmd_symbol = '[](bright-yellow)'
+# success_symbol = '[](cyan)'
+# error_symbol= '[](cyan)'
+# vimcmd_symbol = '[](bright-yellow)'
+success_symbol = '[](cyan)'
+error_symbol= '[](cyan)'
+vimcmd_symbol = '[](bright-yellow)'
+# success_symbol = '[](cyan)'
+# error_symbol= '[](cyan)'
+# vimcmd_symbol = '[](bright-yellow)'
 format = '$symbol '

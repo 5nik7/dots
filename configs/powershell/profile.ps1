@@ -1,7 +1,4 @@
-﻿using namespace System.Management.Automation
-using namespace System.Management.Automation.Language
-
-$ENV:REPOS = "C:\repos"
+﻿$ENV:REPOS = "C:\repos"
 $ENV:DOTS = "$ENV:REPOS\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
 $ENV:NVM_HOME = "$HOME\.nvm"
@@ -19,6 +16,9 @@ $ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
 $ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
 
+Import-Module Get-ChildItemColor
+Import-Module PSFzf
+
 #region conda initialize
 # !! Contents within this block are managed by 'conda init' !!
 If (Test-Path "C:\ProgramData\miniconda3\Scripts\conda.exe") {
@@ -32,9 +32,6 @@ if (Test-Path($ChocolateyProfile)) {
 }
 
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
-
-Import-Module Get-ChildItemColor
-Import-Module PSFzf
 
 $profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
 $envFilePath = Join-Path -Path $profileDirectory -ChildPath ".env"
@@ -122,10 +119,10 @@ function Remove-DuplicatePSReadlineHistory {
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 
 
-$ENV:RG_DEFAULT_COMMAND = "rg -p -l -L --hidden"
+# $ENV:RG_DEFAULT_COMMAND = "rg -p -l -L --hidden"
 
-$ENV:FZF_DEFAULT_COMMAND = "fd --hidden --follow --exclude=.git --exclude=node_modules"
-$ENV:FZF_CTRL_T_COMMAND = $ENV:FZF_DEFAULT_COMMAND
+# $ENV:FZF_DEFAULT_COMMAND = "fd --hidden --follow --exclude=.git --exclude=node_modules"
+# $ENV:FZF_CTRL_T_COMMAND = $ENV:FZF_DEFAULT_COMMAND
 
 $ENV:FZF_DEFAULT_OPTS = "
 --layout=reverse --info=inline --height=80% --multi --cycle --margin=1 --border=sharp
@@ -133,12 +130,20 @@ $ENV:FZF_DEFAULT_OPTS = "
 --color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0
 --color info:2,prompt:-1,spinner:2,pointer:6,marker:4
 --preview-window='border-sharp'
---no-scrollbar
---preview-window='right,65%,border-left,+{2}+3/3,~3'
---bind '?:toggle-preview'
---bind 'ctrl-a:select-all'
---bind 'ctrl-y:execute-silent(echo {+} | win32yank.exe -i)'
---bind 'ctrl-e:execute($TERMINAL $EDITOR {+})+reload(fzf)'"
+--no-scrollbar"
+
+# $ENV:FZF_DEFAULT_OPTS = "
+# --layout=reverse --info=inline --height=80% --multi --cycle --margin=1 --border=sharp
+# --prompt=' ' --pointer=' ' --marker=' '
+# --color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0
+# --color info:2,prompt:-1,spinner:2,pointer:6,marker:4
+# --preview-window='border-sharp'
+# --no-scrollbar
+# --preview-window='right,65%,border-left,+{2}+3/3,~3'
+# --bind '?:toggle-preview'
+# --bind 'ctrl-a:select-all'
+# --bind 'ctrl-y:execute-silent(echo {+} | win32yank.exe -i)'
+# --bind 'ctrl-e:execute($TERMINAL $EDITOR {+})+reload(fzf)'"
 
 function ln {
   param(
@@ -164,7 +169,7 @@ function ln {
       Write-Host ''
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
       Write-Host -ForegroundColor Blue "$base" -NoNewline
-      Write-Host -ForegroundColor DarkGray " --> " -NoNewline
+      Write-Host -ForegroundColor DarkGray "  " -NoNewline
       Write-Host -ForegroundColor Cyan "$target"
       Write-Host ''
     }
@@ -172,7 +177,7 @@ function ln {
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
       Write-Host ''
       Write-Host -ForegroundColor Blue "$base" -NoNewline
-      Write-Host -ForegroundColor Yellow " --> " -NoNewline
+      Write-Host -ForegroundColor Yellow "  " -NoNewline
       Write-Host -ForegroundColor Cyan "$target"
       Write-Host ''
     }
@@ -336,13 +341,13 @@ if ($host.Name -eq 'ConsoleHost') {
     Colors                        = @{
       InlinePrediction   = 'DarkGray'
       Comment            = 'DarkGray'
-      Command            = 'Green'
+      Command            = 'Magenta'
       Number             = 'Yellow'
       Member             = 'Red'
       Operator           = 'DarkYellow'
       Type               = 'Cyan'
       Variable           = 'Blue'
-      Parameter          = 'White'
+      Parameter          = 'Yellow'
       ContinuationPrompt = 'Black'
       Default            = 'White'
     }
@@ -360,11 +365,13 @@ function edit-history {
 }
 Set-Alias -Name ehist -Value edit-history
 
-Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
+# Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 Set-PSReadlineOption -HistorySearchCursorMovesToEnd
 
+Set-PSFzfOption -TabExpansion -EnableAliasFuzzyEdit -EnableAliasFuzzyHistory -EnableAliasFuzzyKillProcess -EnableAliasFuzzyScoop -EnableAliasFuzzyGitStatus
 
 $OnViModeChange = [scriptblock] {
   if ($args[0] -eq 'Command') {
