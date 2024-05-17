@@ -38,7 +38,7 @@ symbol = ''
 style = '#182f58'
 
 [shell]
-format = '[$indicator]($style) '
+format = ' [$indicator]($style) '
 fish_indicator = '󰈺'
 # powershell_indicator = 'pwsh'
 powershell_indicator = 'PS'
