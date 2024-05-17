@@ -8,13 +8,12 @@ $ENV:STARSHIP_CACHE = "$HOME\AppData\Local\Temp"
 $ENV:PSHELL = "$ENV:DOTFILES\powershell"
 $ENV:GOPATH = "$HOME\go"
 $ENV:GOBIN = "$HOME\go\bin"
-$ENV:EDITOR = "nvim"
-$ENV:TERMINAL = "wt"
-$ENV:VISUAL = "nvim"
 $ENV:WINCONFIG = "$HOME\.config"
 $ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
 $ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
+Set-Variable -Name Editor -Value code
+Set-Variable -Name TERMINAL -Value wt
 
 Import-Module Get-ChildItemColor
 Import-Module PSFzf
@@ -370,6 +369,13 @@ Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 Set-PSReadlineOption -HistorySearchCursorMovesToEnd
+
+Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+
+# example command - use $Location with a different command:
+$commandOverride = [ScriptBlock] { param($Location) Write-Host $Location }
+# pass your override to PSFzf:
+Set-PsFzfOption -AltCCommand $commandOverride
 
 Set-PSFzfOption -TabExpansion -EnableAliasFuzzyEdit -EnableAliasFuzzyHistory -EnableAliasFuzzyKillProcess -EnableAliasFuzzyScoop -EnableAliasFuzzyGitStatus
 

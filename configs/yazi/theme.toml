@@ -38,7 +38,7 @@ border_style = {fg = "black"}
 border_symbol = "│"
 
 # Highlighting
-syntect_theme = "~/.config/bat/themes/Dream.tmTheme"
+syntect_theme = "C:/repos/bat/themes/wal.tmTheme"
 
 # : }}}
 
