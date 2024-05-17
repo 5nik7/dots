@@ -61,7 +61,7 @@ Set-Alias -Name rlp -Value Fresh
 
 Set-Alias -Name c -Value Clear-Host
 
-Set-Alias -Name v -Value $env:EDITOR
+Set-Alias -Name v -Value nvim
 
 Set-Alias -Name open -Value explorer.exe
 
