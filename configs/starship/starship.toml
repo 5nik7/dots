@@ -38,10 +38,10 @@ symbol = ''
 style = '#182f58'
 
 [shell]
-format = ' [$indicator]($style) '
-fish_indicator = '󰈺'
+format = ' [$indicator]($style)'
+fish_indicator = '󰈺 '
 # powershell_indicator = 'pwsh'
-powershell_indicator = 'PS'
+powershell_indicator = 'PS '
 # powershell_indicator = '_'
 # powershell_indicator = ''
 # powershell_indicator = '_'
@@ -50,12 +50,13 @@ powershell_indicator = 'PS'
 # powershell_indicator = '󰨊'
 # powershell_indicator = ''
 # powershell_indicator = ''
-bash_indicator = '󱆃'
+bash_indicator = '󱆃 '
 # bash_indicator = ''
 # zsh_indicator = ''
-# cmd_indicator = ''
-unknown_indicator = ''
-style = 'fg:cyan dimmed italic'
+cmd_indicator = 'cmd '
+unknown_indicator = ' '
+style = 'fg:bright-black italic'
+# style = 'fg:cyan dimmed italic'
 # style = 'fg:#3f9da3 italic'
 disabled = false
 
@@ -95,17 +96,17 @@ Windows = '󰚌 '
 
 
 [username]
-style_user = 'cyan dimmed'
-style_root = 'cyan'
+style_user = 'cyan italic'
+style_root = 'bright-cyan italic'
 format = '[$user]($style)'
 disabled = false
 show_always = true
-aliases = { "Administrator" = "njen", "nickf" = "njen" }
+aliases = { "Administrator" = "#", "nickf" = "@" }
 
 [hostname]
 ssh_only = false
-format = '[@](cyan dimmed)[$hostname]($style) '
-style = 'cyan dimmed'
+format = '[$hostname]($style) '
+style = 'cyan italic'
 # trim_at = '.'
 disabled = false
 
@@ -183,7 +184,7 @@ disabled = false
 symbol = ""
 # symbol = ""
 # symbol = ""
-format = '[$symbol $branch]($style)'
+format = '[$symbol$branch]($style)'
 style = "bright-black"
 
 [git_status]
