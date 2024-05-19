@@ -1,4 +1,7 @@
-﻿$ENV:REPOS = "C:\repos"
+﻿using namespace System.Management.Automation
+using namespace System.Management.Automation.Language
+
+$ENV:REPOS = "C:\repos"
 $ENV:DOTS = "$ENV:REPOS\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
 $ENV:NVM_HOME = "$HOME\.nvm"
@@ -12,10 +15,10 @@ $ENV:WINCONFIG = "$HOME\.config"
 $ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
 $ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
+
 Set-Variable -Name Editor -Value code
 Set-Variable -Name TERMINAL -Value wt
 
-Import-Module Get-ChildItemColor
 Import-Module PSFzf
 
 #region conda initialize
@@ -30,7 +33,7 @@ if (Test-Path($ChocolateyProfile)) {
   Import-Module "$ChocolateyProfile"
 }
 
-Invoke-Expression (& { (zoxide init powershell | Out-String) })
+# Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 $profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
 $envFilePath = Join-Path -Path $profileDirectory -ChildPath ".env"
@@ -62,6 +65,7 @@ Set-Alias -Name rlp -Value Fresh
 Set-Alias -Name c -Value Clear-Host
 
 Set-Alias -Name v -Value nvim
+Set-Alias -Name vim -Value nvim
 
 Set-Alias -Name open -Value explorer.exe
 
@@ -114,35 +118,14 @@ function Remove-DuplicatePSReadlineHistory {
 
   $uniqueHistory | Out-File -Append $historyPath
 }
-
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 
-
-# $ENV:RG_DEFAULT_COMMAND = "rg -p -l -L --hidden"
-
-# $ENV:FZF_DEFAULT_COMMAND = "fd --hidden --follow --exclude=.git --exclude=node_modules"
-# $ENV:FZF_CTRL_T_COMMAND = $ENV:FZF_DEFAULT_COMMAND
-
 $ENV:FZF_DEFAULT_OPTS = "
---layout=reverse --info=inline --height=80% --multi --cycle --margin=1 --border=sharp
---prompt=' ' --pointer=' ' --marker=' '
---color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0
---color info:2,prompt:-1,spinner:2,pointer:6,marker:4
---preview-window='border-sharp'
+--ansi --layout reverse --info inline --height 50% --cycle --border sharp
+--prompt ' ' --pointer ' ' --marker ' '
+--color 'fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0'
+--color 'info:2,prompt:5,spinner:2,pointer:6,marker:4'
 --no-scrollbar"
-
-# $ENV:FZF_DEFAULT_OPTS = "
-# --layout=reverse --info=inline --height=80% --multi --cycle --margin=1 --border=sharp
-# --prompt=' ' --pointer=' ' --marker=' '
-# --color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0
-# --color info:2,prompt:-1,spinner:2,pointer:6,marker:4
-# --preview-window='border-sharp'
-# --no-scrollbar
-# --preview-window='right,65%,border-left,+{2}+3/3,~3'
-# --bind '?:toggle-preview'
-# --bind 'ctrl-a:select-all'
-# --bind 'ctrl-y:execute-silent(echo {+} | win32yank.exe -i)'
-# --bind 'ctrl-e:execute($TERMINAL $EDITOR {+})+reload(fzf)'"
 
 function ln {
   param(
@@ -275,18 +258,6 @@ function q {
   Exit
 }
 
-# function cdc {
-#   param(
-#     [string]$path = $null
-#   )
-#   if ($path) {
-#     Set-Location -Path (Join-Path -Path $HOMEDRIVE\ -ChildPath $path)
-#   }
-#   else {
-#     Set-Location -Path $HOMEDRIVE\
-#   }
-# }
-# Set-Alias -Name c/ -Value cdc
 function path {
   $env:Path -split ';'
 }
@@ -299,31 +270,7 @@ function lg {
   lazygit
 }
 
-Set-Alias -Name cd -Value z -force -option 'AllScope'
-
-# function Invoke-Starship-PreCommand {
-#   $WarningPreference = "SilentlyContinue"
-#   $ErrorActionPreference = "SilentlyContinue"
-# }
-
-# function Invoke-Starship-TransientFunction {
-#   &starship module character
-# }
-
-Invoke-Expression (&starship init powershell)
-
-# Enable-TransientPrompt
-
-$OnViModeChange = [scriptblock] {
-  if ($args[0] -eq 'Command') {
-    # Set the cursor to a blinking block.
-    Write-Host -NoNewLine "`e[1 q"
-  }
-  else {
-    # Set the cursor to a blinking line.
-    Write-Host -NoNewLine "`e[5 q"
-  }
-}
+# Set-Alias -Name cd -Value z -force -option 'AllScope'
 
 if ($host.Name -eq 'ConsoleHost') {
   Import-Module PSReadLine
@@ -336,6 +283,7 @@ if ($host.Name -eq 'ConsoleHost') {
     ContinuationPrompt            = ">>"
     BellStyle                     = "None"
     PredictionSource              = "History"
+    EditMode                      = "Vi"
     PredictionViewStyle           = "InlineView"
     Colors                        = @{
       InlinePrediction   = 'DarkGray'
@@ -364,33 +312,6 @@ function edit-history {
 }
 Set-Alias -Name ehist -Value edit-history
 
-Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
-# Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
-Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
-Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
-Set-PSReadlineOption -HistorySearchCursorMovesToEnd
-
-Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
-
-# example command - use $Location with a different command:
-$commandOverride = [ScriptBlock] { param($Location) Write-Host $Location }
-# pass your override to PSFzf:
-Set-PsFzfOption -AltCCommand $commandOverride
-
-Set-PSFzfOption -TabExpansion -EnableAliasFuzzyEdit -EnableAliasFuzzyHistory -EnableAliasFuzzyKillProcess -EnableAliasFuzzyScoop -EnableAliasFuzzyGitStatus
-
-$OnViModeChange = [scriptblock] {
-  if ($args[0] -eq 'Command') {
-    # Set the cursor to a blinking block.
-    Write-Host -NoNewLine "`e[1 q"
-  }
-  else {
-    # Set the cursor to a blinking line.
-    Write-Host -NoNewLine "`e[5 q"
-  }
-}
-Set-PsReadLineOption -EditMode Vi
-Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $OnViModeChange
 
 Set-PSReadLineKeyHandler -Chord '"', "'" `
   -BriefDescription SmartInsertQuote `
@@ -413,3 +334,23 @@ Set-PSReadLineKeyHandler -Chord '"', "'" `
     [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($cursor - 1)
   }
 }
+
+
+# $profileDir = $PSScriptRoot;
+
+# foreach ( $includeFile in ("") ) {
+#   Unblock-File $profileDir\$includeFile.ps1
+#   . "$profileDir\$includeFile.ps1"
+# }
+
+# Set-PSReadlineKeyHandler -Key Escape -Function ViCommandMode
+# Set-PSReadlineKeyHandler -Key i -Function ViInsertMode
+
+Set-PsFzfOption -TabExpansion -EnableFd
+# Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
+
+Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+
+Invoke-Expression (&starship init powershell)

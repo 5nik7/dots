@@ -1,15 +1,24 @@
 #             ╱    ╲               󰪍 󰇁          󰁥       󰅂 >      󰥭 󱘹   󰍴   󰇜            󰎍     󰧞     󰬫 󰬩 󰬧 󰬊 󰯲 󰫰 󰨆      󰂸 ⭘     󱪼 󰤃 󰿊 ⏽   ┆ ┊   ┈     󰯆 󰚌 ╵╷─ ▷ ◦ 󰊭 ◻ ♥ ⚝  -->:   󰆧  󰏗 󰲩 󰲭       󰑃 󰧂 󰳠  󱦰 󰜴 󱦰
 
-"$schema" = 'https://starship.rs/config-schema.json'
+
 command_timeout = 500
+
+format = """
+$line_break\
+$os\
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$package\
+$nodejs\
+$conda\
+$python\
+$ruby\
+$line_break$character"""
+
 add_newline = false
-
-continuation_prompt = '[>>](black) '
-
-format ="""$line_break\
-$os$username$hostname$directory$git_branch$git_status$package$nodejs$conda$python$ruby$cmd_duration$time$line_break\
-$shell$character\
-"""
 
 # format ="""$line_break\
 # [┌󰍴](black)$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$fill$cmd_duration$time$line_break\
@@ -23,46 +32,37 @@ $shell$character\
 # """
 
 [fill]
-symbol = ''
-# symbol = '─'
-# symbol = ' '
-# symbol = '╌'
-# symbol = '━'
-# symbol = '󰖰'
-# symbol = '─'
-# symbol = ''
-# symbol = ''
-# symbol = '󰧞'
-# symbol = '󰵼'
-# symbol = '󰔌'
-style = '#182f58'
+symbol = '󱘹'
+style = "fg:black bg:none"
 
-[shell]
-format = ' [$indicator]($style)'
-fish_indicator = '󰈺 '
-# powershell_indicator = 'pwsh'
-powershell_indicator = 'PS '
-# powershell_indicator = '_'
-# powershell_indicator = ''
-# powershell_indicator = '_'
-# powershell_indicator = ''
-# powershell_indicator = ''
-# powershell_indicator = '󰨊'
-# powershell_indicator = ''
-# powershell_indicator = ''
-bash_indicator = '󱆃 '
-# bash_indicator = ''
-# zsh_indicator = ''
-cmd_indicator = 'cmd '
-unknown_indicator = ' '
-style = 'fg:bright-black italic'
-# style = 'fg:cyan dimmed italic'
-# style = 'fg:#3f9da3 italic'
-disabled = false
+
+
+# [shell]
+# format = ' [$indicator]($style)'
+# fish_indicator = '󰈺 '
+# # powershell_indicator = 'pwsh'
+# powershell_indicator = 'PS '
+# # powershell_indicator = '_'
+# # powershell_indicator = ''
+# # powershell_indicator = '_'
+# # powershell_indicator = ''
+# # powershell_indicator = ''
+# # powershell_indicator = '󰨊'
+# # powershell_indicator = ''
+# # powershell_indicator = ''
+# bash_indicator = '󱆃 '
+# # bash_indicator = ''
+# # zsh_indicator = ''
+# cmd_indicator = 'cmd '
+# unknown_indicator = ' '
+# style = 'fg:bright-black italic'
+# # style = 'fg:cyan dimmed italic'
+# # style = 'fg:#3f9da3 italic'
+# disabled = true
 
 [os]
 format = '[$symbol]($style)'
-style = 'bright-cyan'
+style = 'white'
 disabled = false
 
 [os.symbols]
@@ -96,17 +96,18 @@ Windows = '󰚌 '
 
 
 [username]
-style_user = 'cyan italic'
-style_root = 'bright-cyan italic'
+style_user = 'purple'
+style_root = 'bright-purple'
 format = '[$user]($style)'
 disabled = false
 show_always = true
-aliases = { "Administrator" = "#", "nickf" = "@" }
+aliases = { "Administrator" = "njen", "nickf" = "njen" }
 
 [hostname]
 ssh_only = false
-format = '[$hostname]($style) '
-style = 'cyan italic'
+format = '[@$hostname$ssh_symbol]($style)[:](cyan dimmed)'
+style = 'purple'
+ssh_symbol = ''
 # trim_at = '.'
 disabled = false
 
@@ -125,7 +126,7 @@ disabled = true
 # 'C:/' = '/c/'
 # 'C:/' = ' '
 # 'C:/' = ''
-'C:/' = '/'
+'C:' = ''
 # 'C:/' = '󰗦 '
 # 'C:/' = '󰯳 '
 # 'C:/' = ' '
@@ -138,44 +139,50 @@ disabled = true
 '/mnt/c' = ''
 # '///' = '/'
 # 'c' = '/c'
-# '/' = ''
+# '/' = '󰿟'
 # '/' = ''
 # '~' = '󰜥'
-# 'repos' = ' repos'
+# '/repos/' = ' '
+# '/repos' = '/repos '
 
 
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
 repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
-style = 'blue'
-before_repo_root_style = 'blue'
-repo_root_style = 'bold bright-blue'
+# style = 'blue'
+# before_repo_root_style = 'blue'
+# repo_root_style = 'bold bright-blue'
+style = 'cyan'
+before_repo_root_style = 'cyan'
+repo_root_style = 'cyan bold'
 truncation_length = 0
 # truncation_symbol = ' '
 # home_symbol = ' '
 truncate_to_repo = false
 use_os_path_sep = false
-use_logical_path = true
+use_logical_path = false
 read_only = ' '
 read_only_style = 'bright-yellow'
 
 [time]
-disabled = true
-time_format = '%I:%M %p'
+disabled = false
+# time_format = '%I:%M:%S'
+time_format = "%T" # Monday Hour:Minute Format
 # style = 'bg:blue fg:black'
 # format = '[](bg:bright-black fg:blue)[ $time ]($style)'
-style = 'blue'
-format = '[  $time ]($style)'
+style = 'cyan dimmed'
+format = '[  $time ]($style)'
+# format = '[  $time ]($style)'
 
 [cmd_duration]
 min_time = 1
 show_milliseconds = true
 # format = "[](bg:none fg:bright-black)[ ](bg:bright-black fg:green)[$duration ]($style)"
 # style = "bg:bright-black fg:bright-green bold"
-format = "[](blue) [$duration]($style) "
+format = "[](blue) [$duration]($style)"
 style = "bright-blue"
-disabled = true
+disabled = false
 
 [line_break]
 disabled = false
@@ -184,12 +191,13 @@ disabled = false
 symbol = ""
 # symbol = ""
 # symbol = ""
-format = '[$symbol$branch]($style)'
-style = "bright-black"
+format = '[$symbol](bright-cyan dimmed)[$branch]($style) '
+style = "cyan dimmed italic"
 
 [git_status]
 disabled = false
-format = ' $all_status$ahead_behind$diverged'
+# style = "bg:black"
+format = '$all_status$ahead_behind$diverged'
 # staged     = '[󰄴 ${count} ](bold green)'
 staged     = '[󱇬 ${count} ](green)'
 modified   = '[ ${count} ](bright-yellow)'
@@ -246,13 +254,27 @@ symbol = '🌙 '
 detect_folders = []
 detect_files = ['.lua-version']
 
+[status]
+style = 'fg:red bg:black'
+symbol = ''
+success_symbol = ''
+not_executable_symbol = '!'
+not_found_symbol = '?'
+sigint_symbol = ''
+format = '[$symbol [($common_meaning$signal_name$maybe_int)](fg:bright-cyan dimmed bg:black)]($style) '
+map_symbol = true
+disabled = false
+
 [character]
 # success_symbol = '[](cyan)'
 # error_symbol= '[](cyan)'
 # vimcmd_symbol = '[](bright-yellow)'
+# success_symbol = '[](bright-green)'
+# error_symbol= '[](red)'
+# vimcmd_symbol = '[](bright-black)'
 success_symbol = '[](bright-green)'
 error_symbol= '[](red)'
-vimcmd_symbol = '[](bright-yellow)'
+vimcmd_symbol = '[](bright-black)'
 # success_symbol = '[](cyan)'
 # error_symbol= '[](cyan)'
 # vimcmd_symbol = '[](bright-yellow)'
