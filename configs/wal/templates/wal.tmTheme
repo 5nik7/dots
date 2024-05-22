@@ -276,7 +276,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color14}</string>
+          <string>{color13}</string>
           <key>fontStyle</key>
           <string></string>
         </dict>
@@ -289,7 +289,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color14}</string>
+          <string>{color13}</string>
           <key>fontStyle</key>
           <string>italic</string>
         </dict>
@@ -302,7 +302,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color14}</string>
+          <string>{color13}</string>
           <key>fontStyle</key>
           <string></string>
         </dict>
@@ -354,7 +354,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color14}</string>
+          <string>{color13}</string>
           <key>fontStyle</key>
           <string>italic</string>
         </dict>
@@ -380,7 +380,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color13}</string>
+          <string>{color3}</string>
           <key>fontStyle</key>
           <string>italic</string>
         </dict>
@@ -406,7 +406,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color14}</string>
+          <string>{color13}</string>
           <key>fontStyle</key>
           <string></string>
         </dict>
@@ -419,7 +419,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color14}</string>
+          <string>{color13}</string>
           <key>fontStyle</key>
           <string></string>
         </dict>
@@ -703,7 +703,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color13}</string>
+          <string>{color3}</string>
           <key>fontStyle</key>
           <string></string>
         </dict>
@@ -716,7 +716,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>{color13}</string>
+          <string>{color3}</string>
           <key>fontStyle</key>
           <string></string>
         </dict>
