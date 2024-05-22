@@ -1,6 +1,22 @@
 ﻿using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
+function Add-PathPrefix {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  $env:Path = "$Path;" + $env:Path
+}
+
+function Add-Path {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  $env:Path += ";$Path"
+}
+
 $ENV:REPOS = "C:\repos"
 $ENV:DOTS = "$ENV:REPOS\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
@@ -16,17 +32,30 @@ $ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
 $ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
 
+
+
 Set-Variable -Name Editor -Value code
 Set-Variable -Name TERMINAL -Value wt
 
 Import-Module PSFzf
 
-#region conda initialize
-# !! Contents within this block are managed by 'conda init' !!
-If (Test-Path "C:\ProgramData\miniconda3\Scripts\conda.exe") {
-    (& "C:\ProgramData\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Where-Object { $_ } | Invoke-Expression
-}
-#endregion
+# If (Test-Path "C:\ProgramData\miniconda3\Scripts\conda.exe") {
+#     (& "C:\ProgramData\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | Where-Object { $_ } | Invoke-Expression
+# }
+
+# function pyenver {
+#   $output = (& "pyenv" "which" "python") | Out-String | Where-Object { $_ } | ForEach-Object { $_.Trim() }
+#   if (-not [string]::IsNullOrWhiteSpace($output)) {
+#     $directory = Split-Path -Path $output -Parent
+#     Write-Output $directory
+#   }
+# }
+# $ENV:PYGLOBAL = pyenver
+# $ENV:PYGLOBAL_SCRIPTS = "$ENV:PYGLOBAL\Scripts"
+
+# Add-PathPrefix -Path $GLOBALPYENV
+# Add-PathPrefix -Path $GLOBALPYENVSCRIPTS
+
 
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
@@ -68,10 +97,6 @@ Set-Alias -Name v -Value nvim
 Set-Alias -Name vim -Value nvim
 
 Set-Alias -Name open -Value explorer.exe
-
-Set-Alias -Name py -Value python
-Set-Alias -Name py3 -Value python
-Set-Alias -Name pytonr3 -Value python
 
 Set-Alias -Name npmup -Value "npm install -g npm@latest"
 
@@ -218,7 +243,7 @@ function l {
 function envl {
   Get-ChildItem Env:
 }
-
+Set-Alias -Name env -Value envl
 function touch($file) {
   "" | Out-File $file -Encoding ASCII
 }
@@ -237,10 +262,6 @@ function Export-EnvironmentVariable {
   Set-Item -Force -Path "env:$Name" -Value $Value
 }
 Set-Alias -Name export -Value Export-EnvironmentVariable
-
-function rm([string]$path) {
-  Remove-Item -Recurse -Force $path
-}
 
 Function Search-Alias {
   param (
@@ -268,6 +289,10 @@ function .. {
 
 function lg {
   lazygit
+}
+
+function rm($target) {
+  Remove-Item $target -Recurse -Force
 }
 
 # Set-Alias -Name cd -Value z -force -option 'AllScope'
