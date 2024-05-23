@@ -58,6 +58,7 @@ $EDITOR = if (Test-CommandExists nvim) { 'nvim' }
           elseif (Test-CommandExists vi) { 'vi' }
           else { 'notepad' }
 Set-Alias -Name vim -Value $EDITOR
+Set-Alias -Name v -Value $EDITOR
 
 function Edit-Profile {
     vim $PROFILE.CurrentUserAllHosts
@@ -89,11 +90,10 @@ if (Test-Path $envFilePath) {
 
 Set-Alias -Name c -Value Clear-Host
 
-$NVIMEXE = Get-Command nvim | Select-Object -ExpandProperty Definition
-if (Test-Path ($NVIMEXE)) {
-  Set-Alias -Name v -Value nvim
-  Set-Alias -Name vim -Value nvim
-}
+# $NVIMEXE = Get-Command nvim | Select-Object -ExpandProperty Definition
+# if (Test-Path ($NVIMEXE)) {
+#   Set-Alias -Name vim -Value nvim
+# }
 
 Set-Alias -Name path -Value Get-Path
 
