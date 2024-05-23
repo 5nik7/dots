@@ -1,7 +1,4 @@
-#             ╱    ╲               󰪍 󰇁          󰁥       󰅂 >      󰥭 󱘹   󰍴   󰇜            󰎍     󰧞     󰬫 󰬩 󰬧 󰬊 󰯲 󰫰 󰨆      󰂸 ⭘     󱪼 󰤃 󰿊 ⏽   ┆ ┊   ┈     󰯆 󰚌 ╵╷─ ▷ ◦ 󰊭 ◻ ♥ ⚝  -->:   󰆧  󰏗 󰲩 󰲭       󰑃 󰧂 󰳠  󱦰 󰜴 󱦰
-
-
-command_timeout = 500
+command_timeout = 1000
 
 format = """
 $line_break\
@@ -16,7 +13,10 @@ $nodejs\
 $conda\
 $python\
 $ruby\
-$line_break$character"""
+$line_break\
+$shell\
+$character\
+"""
 
 add_newline = false
 
@@ -37,28 +37,31 @@ style = "fg:black bg:none"
 
 
 
-# [shell]
-# format = ' [$indicator]($style)'
-# fish_indicator = '󰈺 '
-# # powershell_indicator = 'pwsh'
-# powershell_indicator = 'PS '
-# # powershell_indicator = '_'
-# # powershell_indicator = ''
-# # powershell_indicator = '_'
-# # powershell_indicator = ''
-# # powershell_indicator = ''
-# # powershell_indicator = '󰨊'
-# # powershell_indicator = ''
-# # powershell_indicator = ''
+[shell]
+format = ' [$indicator]($style) '
+fish_indicator = '󰈺 '
+# powershell_indicator = ' '
+powershell_indicator = 'PS'
+# powershell_indicator = 'pwsh'
+# powershell_indicator = '_'
+# powershell_indicator = ''
+# powershell_indicator = '_'
+# powershell_indicator = ''
+# powershell_indicator = ''
+# powershell_indicator = '󰨊'
+# powershell_indicator = ''
+# powershell_indicator = ''
 # bash_indicator = '󱆃 '
-# # bash_indicator = ''
-# # zsh_indicator = ''
-# cmd_indicator = 'cmd '
-# unknown_indicator = ' '
-# style = 'fg:bright-black italic'
-# # style = 'fg:cyan dimmed italic'
-# # style = 'fg:#3f9da3 italic'
-# disabled = true
+bash_indicator = ''
+# bash_indicator = ''
+zsh_indicator = '%'
+cmd_indicator = 'cmd'
+unknown_indicator = ' '
+style = 'bg:none fg:bright-blue italic'
+# style = 'bg:none fg:#696e8a italic'
+# style = 'fg:cyan dimmed italic'
+# style = 'fg:#3f9da3 italic'
+disabled = false
 
 [os]
 format = '[$symbol]($style)'
@@ -67,8 +70,8 @@ disabled = false
 
 [os.symbols]
 Alpine = ' '
-# Arch = ' '
-Arch = '󰣇 '
+Arch = '⧍ '
+# Arch = '󰣇 '
 # Arch = '󰁥 '
 CentOS = ' '
 Debian = '󰣚 '
@@ -99,7 +102,7 @@ Windows = '󰚌 '
 
 [username]
 style_user = 'purple'
-style_root = 'bright-purple'
+style_root = 'purple'
 format = '[$user]($style)'
 disabled = false
 show_always = true
@@ -107,7 +110,7 @@ aliases = { "Administrator" = "njen", "nickf" = "njen" }
 
 [hostname]
 ssh_only = false
-format = '[@$hostname$ssh_symbol]($style)[:](cyan dimmed)'
+format = '[@$hostname$ssh_symbol]($style)'
 style = 'purple'
 ssh_symbol = ''
 # trim_at = '.'
@@ -150,8 +153,8 @@ disabled = true
 
 
 [directory]
-format = '[$path]($style)[$read_only]($read_only_style) '
-repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+format = '[:](bright-black)[$path]($style)[$read_only]($read_only_style) '
+repo_root_format = '[:](bright-black)[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
 # style = 'blue'
 # before_repo_root_style = 'blue'
 # repo_root_style = 'bold bright-blue'
@@ -193,7 +196,7 @@ disabled = false
 symbol = ""
 # symbol = ""
 # symbol = ""
-format = '[$symbol](bright-cyan dimmed)[$branch]($style) '
+format = '[$symbol](cyan dimmed)[$branch]($style) '
 style = "cyan dimmed italic"
 
 [git_status]
@@ -268,16 +271,22 @@ map_symbol = true
 disabled = false
 
 [character]
-# success_symbol = '[](cyan)'
-# error_symbol= '[](cyan)'
-# vimcmd_symbol = '[](bright-yellow)'
-# success_symbol = '[](bright-green)'
-# error_symbol= '[](red)'
-# vimcmd_symbol = '[](bright-black)'
-success_symbol = '[](bright-green)'
-error_symbol= '[](red)'
-vimcmd_symbol = '[](bright-black)'
-# success_symbol = '[](cyan)'
-# error_symbol= '[](cyan)'
-# vimcmd_symbol = '[](bright-yellow)'
+# success_symbol = '[󰅂](bright-green)'
+# error_symbol= '[󰅂](red)'
+# vimcmd_symbol = '[󰅂](bright-black)'
+success_symbol = '[](bright-green)'
+error_symbol= '[](red)'
+vimcmd_symbol = '[](bright-black)'
+# success_symbol = '[](bright-green)'
+# error_symbol= '[](red)'
+# vimcmd_symbol = '[](bright-black)'
+# success_symbol = '[](cyan)'
+# error_symbol= '[](red)'
+# vimcmd_symbol = '[](bright-black)'
+# success_symbol = '[](bright-green)'
+# error_symbol= '[](red)'
+# vimcmd_symbol = '[](bright-black)'
+# success_symbol = '[](bright-green)'
+# error_symbol= '[](red)'
+# vimcmd_symbol = '[](bright-black)'
 format = '$symbol '

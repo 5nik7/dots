@@ -50,22 +50,26 @@ function projects {
 
 # Utility Functions
 function Test-CommandExists {
-    param($command)
-    $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
-    return $exists
+  param($command)
+  $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
+  return $exists
 }
 
 # Editor Configuration
 $EDITOR = if (Test-CommandExists nvim) { 'nvim' }
-          elseif (Test-CommandExists code) { 'code' }
-          elseif (Test-CommandExists vim) { 'vim' }
-          elseif (Test-CommandExists vi) { 'vi' }
-          else { 'notepad' }
+elseif (Test-CommandExists code) { 'code' }
+elseif (Test-CommandExists vim) { 'vim' }
+elseif (Test-CommandExists vi) { 'vi' }
+else { 'notepad' }
+
+$ENV:EDITOR = $EDITOR
+
 Set-Alias -Name vim -Value $EDITOR
 Set-Alias -Name v -Value $EDITOR
 
+
 function Edit-Profile {
-    vim $PROFILE.CurrentUserAllHosts
+  vim $PROFILE
 }
 
 # Set-Variable -Name TERMINAL -Value wt
@@ -138,12 +142,14 @@ function Remove-DuplicatePSReadlineHistory {
 }
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 
-$ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) { "--ansi --layout reverse --info inline --height 80% --cycle --border sharp
+$ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
+  "--ansi --layout reverse --info inline --height 80% --cycle --border sharp
 --prompt ' ' --pointer ' ' --marker ' '
 --color 'fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0'
 --color 'info:2,prompt:5,spinner:2,pointer:6,marker:4'
---no-scrollbar" }
-          
+--no-scrollbar"
+}
+
 
 $FZFEXE = Get-Command fzf | Select-Object -ExpandProperty Definition
 
@@ -231,15 +237,15 @@ Add-Path -Path "$profileDir\Scripts"
 
 Invoke-Expression (&starship init powershell)
 
-function OnViModeChange {
-  if ($args[0] -eq 'Command') {
+# function OnViModeChange {
+#   if ($args[0] -eq 'Command') {
 
-    # Set the cursor to a solid block.
-    Write-Host -NoNewLine "`e[2 q"
-  }
-  else {
-    # Set the cursor to a blinking line.
-    Write-Host -NoNewLine "`e[5 q"
-  }
-}
-Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
+#     # Set the cursor to a solid block.
+#     Write-Host -NoNewLine "`e[2 q"
+#   }
+#   else {
+#     # Set the cursor to a blinking line.
+#     Write-Host -NoNewLine "`e[5 q"
+#   }
+# }
+# Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
