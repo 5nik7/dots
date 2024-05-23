@@ -231,7 +231,7 @@ Invoke-Expression (&starship init powershell)
 function OnViModeChange {
   if ($args[0] -eq 'Command') {
 
-    # Set the cursor to a blinking block.
+    # Set the cursor to a solid block.
     Write-Host -NoNewLine "`e[2 q"
   }
   else {
