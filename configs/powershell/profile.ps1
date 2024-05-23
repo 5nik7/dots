@@ -18,6 +18,7 @@ function Add-Path {
 $ENV:REPOS = "C:\repos"
 $ENV:DOTS = "$ENV:REPOS\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
+$ENV:PROJECTS = "C:\projects"
 $ENV:NVM_HOME = "$HOME\.nvm"
 $ENV:NVM_SYMLINK = "C:\nodejs"
 $ENV:STARSHIP_CONFIG = "$ENV:DOTFILES\starship\starship.toml"
@@ -30,6 +31,18 @@ $ENV:WINCONFIG = "$HOME\.config"
 $ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
 $ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
+
+function dots {
+  Set-Location "$ENV:DOTS"
+}
+
+function dotfiles {
+  Set-Location "$ENV:DOTFILES"
+}
+
+function projects {
+  Set-Location "$ENV:PROJECTS"
+}
 
 Set-Variable -Name Editor -Value nvim
 Set-Variable -Name TERMINAL -Value wt
