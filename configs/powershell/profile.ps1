@@ -44,8 +44,26 @@ function projects {
   Set-Location "$ENV:PROJECTS"
 }
 
-Set-Variable -Name Editor -Value nvim
-Set-Variable -Name TERMINAL -Value wt
+# Utility Functions
+function Test-CommandExists {
+    param($command)
+    $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
+    return $exists
+}
+
+# Editor Configuration
+$EDITOR = if (Test-CommandExists nvim) { 'nvim' }
+          elseif (Test-CommandExists code) { 'code' }
+          elseif (Test-CommandExists vim) { 'vim' }
+          elseif (Test-CommandExists vi) { 'vi' }
+          else { 'notepad' }
+Set-Alias -Name vim -Value $EDITOR
+
+function Edit-Profile {
+    vim $PROFILE.CurrentUserAllHosts
+}
+
+# Set-Variable -Name TERMINAL -Value wt
 
 Import-Module PSFzf
 
