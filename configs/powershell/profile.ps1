@@ -33,7 +33,7 @@ $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
 $ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
 
 function repos {
-  Set-Location "$ENV:REPOS
+  Set-Location "$ENV:REPOS"
 }
 
 function dots {
