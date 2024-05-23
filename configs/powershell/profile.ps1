@@ -138,15 +138,14 @@ function Remove-DuplicatePSReadlineHistory {
 }
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 
-$FZFEXE = Get-Command fzf | Select-Object -ExpandProperty Definition
-if (Test-Path ($FZFEXE)) {
-  $ENV:FZF_DEFAULT_OPTS = "
---ansi --layout reverse --info inline --height 80% --cycle --border sharp
+$ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) { "--ansi --layout reverse --info inline --height 80% --cycle --border sharp
 --prompt ' ' --pointer ' ' --marker ' '
 --color 'fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0'
 --color 'info:2,prompt:5,spinner:2,pointer:6,marker:4'
---no-scrollbar"
-}
+--no-scrollbar" }
+          
+
+$FZFEXE = Get-Command fzf | Select-Object -ExpandProperty Definition
 
 # Set-Alias -Name cd -Value z -force -option 'AllScope'
 
