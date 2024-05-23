@@ -68,7 +68,7 @@ disabled = false
 [os.symbols]
 Alpine = ' '
 # Arch = ' '
-Arch = ' '
+Arch = '󰣇 '
 # Arch = '󰁥 '
 CentOS = ' '
 Debian = '󰣚 '
