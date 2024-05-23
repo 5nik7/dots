@@ -32,6 +32,10 @@ $ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
 $ENV:BOXES = "$ENV:DOTFILES\boxes\boxes-config"
 
+function repos {
+  Set-Location "$ENV:REPOS
+}
+
 function dots {
   Set-Location "$ENV:DOTS"
 }
