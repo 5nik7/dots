@@ -10,7 +10,7 @@ exec_always ~/.config/waybar/scripts/launch_waybar.sh
 
 exec waypaper --restore
 
-exec_always wl-paste --watch cliphist store
+# exec_always wl-paste --watch cliphist store
 # bar {
 #   swaybar_command waybar
 # }
