@@ -151,7 +151,7 @@ $ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
 }
 
 
-$FZFEXE = Get-Command fzf | Select-Object -ExpandProperty Definition
+# $FZFEXE = Get-Command fzf | Select-Object -ExpandProperty Definition
 
 # Set-Alias -Name cd -Value z -force -option 'AllScope'
 
