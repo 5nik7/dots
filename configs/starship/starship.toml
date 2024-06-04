@@ -58,7 +58,7 @@ bash_indicator = 'bash'
 zsh_indicator = 'zsh'
 cmd_indicator = 'cmd'
 unknown_indicator = ' '
-style = 'bg:none fg:bright-blue italic'
+style = 'bg:none fg:bright-black italic'
 # style = 'bg:none fg:#696e8a italic'
 # style = 'fg:cyan dimmed italic'
 # style = 'fg:#3f9da3 italic'
@@ -112,7 +112,7 @@ show_always = true
 aliases = { "Administrator" = "njen", "nickf" = "njen" }
 
 [hostname]
-ssh_only = false
+ssh_only = true
 format = '[@$hostname$ssh_symbol]($style)'
 style = 'purple'
 ssh_symbol = ''
