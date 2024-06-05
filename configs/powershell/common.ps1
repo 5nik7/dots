@@ -56,6 +56,26 @@ function which($name) {
   Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
+function Add-PathPrefix {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+    $env:Path = "$Path;" + $env:Path
+  }
+}
+
+function Add-Path {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+    $env:Path += ";$Path"
+  }
+}
+
 function Export-EnvironmentVariable {
   param(
     [Parameter(Mandatory = $true)]

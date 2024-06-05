@@ -13,8 +13,6 @@ alias clip="/mnt/c/Windows/System32/clip.exe"
 alias yank='win32yank.exe -i --crlf'
 alias paste='win32yank.exe -o --lf'
 
-alias explorer='/mnt/c/Windows/explorer.exe'
-alias code='code-insiders'
 
 alias so='source'
 
@@ -24,9 +22,6 @@ alias pkgr='sudo nala remove'
 
 alias v='$EDITOR'
 alias sv="sudo $EDITOR"
-alias vdot="$EDITOR $DOTFILES"
-alias bashrc="$EDITOR $BASHRC"
-alias aliases="$EDITOR $ALIASES"
 
 alias grep='grep --color=auto'
 
