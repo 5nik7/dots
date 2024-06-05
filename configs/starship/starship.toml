@@ -104,8 +104,8 @@ Windows = '󰚌 '
 
 
 [username]
-style_user = 'purple'
-style_root = 'purple'
+style_user = 'blue'
+style_root = 'blue'
 format = '[$user]($style)'
 disabled = false
 show_always = true
@@ -114,7 +114,7 @@ aliases = { "Administrator" = "njen", "nickf" = "njen" }
 [hostname]
 ssh_only = true
 format = '[@$hostname$ssh_symbol]($style)'
-style = 'purple'
+style = 'blue'
 ssh_symbol = ''
 # trim_at = '.'
 disabled = false
@@ -144,7 +144,7 @@ disabled = true
 # 'C:/' = '󰫰'
 # 'C:/' = '
 # 'C:/' = '/c/'
-'/mnt/c' = ''
+# '/mnt/c' = ''
 # '///' = '/'
 # 'c' = '/c'
 # '/' = '󰿟'
@@ -170,7 +170,7 @@ truncation_length = 0
 truncate_to_repo = false
 use_os_path_sep = false
 use_logical_path = false
-read_only = ' '
+read_only = ' 󰍁'
 read_only_style = 'bright-yellow'
 
 [time]

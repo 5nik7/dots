@@ -4,7 +4,9 @@ function Add-PathPrefix {
     [Parameter(Mandatory = $true)]
     [string]$Path
   )
-  $env:Path = "$Path;" + $env:Path
+  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+    $env:Path = "$Path;" + $env:Path
+  }
 }
 
 function Add-Path {
@@ -12,7 +14,9 @@ function Add-Path {
     [Parameter(Mandatory = $true)]
     [string]$Path
   )
-  $env:Path += ";$Path"
+  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+    $env:Path += ";$Path"
+  }
 }
 
 $ENV:REPOS = "C:\repos"
@@ -97,17 +101,22 @@ if (Test-Path $envFilePath) {
 }
 
 Set-Alias -Name c -Value Clear-Host
-
-# $NVIMEXE = Get-Command nvim | Select-Object -ExpandProperty Definition
-# if (Test-Path ($NVIMEXE)) {
-#   Set-Alias -Name vim -Value nvim
-# }
-
 Set-Alias -Name path -Value Get-Path
 
-Set-Alias -Name open -Value explorer.exe
+function open {
+  param (
+    [string]$Path = $PWD
+  )
 
-Set-Alias -Name npmup -Value "npm install -g npm@latest"
+  if ($Path) {
+    explorer.exe $Path
+  }
+  else {
+    explorer.exe
+  }
+}
+
+# Set-Alias -Name npmup -Value "npm install -g npm@latest"
 
 function Remove-DuplicatePSReadlineHistory {
   $historyPath = (Get-PSReadLineOption).HistorySavePath
@@ -171,13 +180,13 @@ if ($host.Name -eq 'ConsoleHost') {
     Colors                        = @{
       InlinePrediction   = 'DarkGray'
       Comment            = 'DarkGray'
-      Command            = 'Magenta'
-      Number             = 'Yellow'
+      Command            = 'DarkMagenta'
+      Number             = 'Magenta'
       Member             = 'Red'
       Operator           = 'DarkYellow'
       Type               = 'Cyan'
-      Variable           = 'Blue'
-      Parameter          = 'Yellow'
+      Variable           = 'DarkCyan'
+      Parameter          = '#7faadb'
       ContinuationPrompt = 'Black'
       Default            = 'White'
     }
@@ -233,7 +242,10 @@ foreach ( $includeFile in ("common") ) {
   . "$profileDir\$includeFile.ps1"
 }
 
-Add-Path -Path "$profileDir\Scripts"
+$scriptsPath = "$profileDir\Scripts"
+if (-not ($env:Path -split ';' | Select-String -SimpleMatch $scriptsPath)) {
+  Add-Path -Path $scriptsPath
+}
 
 Invoke-Expression (&starship init powershell)
 

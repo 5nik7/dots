@@ -6,11 +6,11 @@
 function Fresh {
   & $PROFILE
   Write-Host ''
-  Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
-  Write-Host -ForegroundColor DarkGray '│' -NoNewline
-  Write-Host -ForegroundColor Yellow ' Profile reloaded. ' -NoNewline
-  Write-Host -ForegroundColor DarkGray '│'
-  Write-Host -ForegroundColor DarkGray '└───────────────────┘'
+  Write-Host -ForegroundColor Black '┌───────────────────┐'
+  Write-Host -ForegroundColor Black '│' -NoNewline
+  Write-Host -ForegroundColor DarkCyan ' Profile reloaded. ' -NoNewline
+  Write-Host -ForegroundColor Black '│'
+  Write-Host -ForegroundColor Black '└───────────────────┘'
 }
 Set-Alias -Name rlp -Value Fresh
 
