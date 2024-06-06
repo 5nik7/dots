@@ -35,8 +35,6 @@ add_newline = false
 symbol = '󱘹'
 style = "fg:black bg:none"
 
-
-
 [shell]
 format = ' [$indicator]($style) '
 fish_indicator = '󰈺 '
@@ -59,22 +57,19 @@ zsh_indicator = 'zsh'
 cmd_indicator = 'cmd'
 unknown_indicator = ' '
 style = 'bg:none fg:bright-black italic'
-# style = 'bg:none fg:#696e8a italic'
-# style = 'fg:cyan dimmed italic'
-# style = 'fg:#3f9da3 italic'
-disabled = false
+disabled = true
 
 [os]
 format = '[$symbol]($style)'
 style = 'white'
-disabled = false
+disabled = true
 
 [os.symbols]
 Alpine = ' '
 # Arch = '󰔷 '
 # Arch = ' '
 # Arch = '󰣇 '
-Arch = ' '
+Arch = '󰚌 '
 # Arch = '󰁥 '
 CentOS = ' '
 Debian = '󰣚 '
@@ -107,7 +102,7 @@ Windows = '󰚌 '
 style_user = 'blue'
 style_root = 'blue'
 format = '[$user]($style)'
-disabled = false
+disabled = true
 show_always = true
 aliases = { "Administrator" = "njen", "nickf" = "njen" }
 
@@ -117,7 +112,7 @@ format = '[@$hostname$ssh_symbol]($style)'
 style = 'blue'
 ssh_symbol = ''
 # trim_at = '.'
-disabled = false
+disabled = true
 
 [localip]
 ssh_only = false
@@ -134,7 +129,11 @@ disabled = true
 # 'C:/' = '/c/'
 # 'C:/' = ' '
 # 'C:/' = ''
-'C:' = ''
+'C:' = '/'
+'C:/' = '/'
+'c/' = '/'
+# 'C:\' = '\'
+'//' = '/'
 # 'C:/' = '󰗦 '
 # 'C:/' = '󰯳 '
 # 'C:/' = ' '
@@ -156,20 +155,20 @@ disabled = true
 
 
 [directory]
-format = '[:](bright-black)[$path]($style)[$read_only]($read_only_style) '
-repo_root_format = '[:](bright-black)[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+format = '[$path]($style)[$read_only]($read_only_style) '
+repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
 # style = 'blue'
 # before_repo_root_style = 'blue'
 # repo_root_style = 'bold bright-blue'
 style = 'cyan'
 before_repo_root_style = 'cyan'
-repo_root_style = 'cyan bold'
+repo_root_style = 'bright-cyan bold'
 truncation_length = 0
 # truncation_symbol = ' '
 # home_symbol = ' '
 truncate_to_repo = false
 use_os_path_sep = false
-use_logical_path = false
+use_logical_path = true
 read_only = ' 󰍁'
 read_only_style = 'bright-yellow'
 
