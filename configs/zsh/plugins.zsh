@@ -16,11 +16,8 @@ autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
 zinit light-mode for \
-    hlissner/zsh-autopair \
     zdharma-continuum/fast-syntax-highlighting \
+    zsh-users/zsh-completions \
     zsh-users/zsh-autosuggestions \
     Aloxaf/fzf-tab \
-    zsh-users/zsh-completions \
-    zsh-users/zsh-history-substring-search \
-    marlonrichert/zsh-autocomplete \
-    jeffreytse/zsh-vi-mode
+    marlonrichert/zsh-autocomplete

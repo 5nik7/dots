@@ -18,8 +18,16 @@ function ya() {
 }
 alias d='ya'
 
-alias ll='echo -e "" && exa -la --icons --group-directories-first --git'
-alias l='echo -e "" && exa -la --icons --group-directories-first --git --no-permissions --no-filesize --no-user --no-time'
+function open {
+	if [ -z "$1" ]; then
+		explorer.exe .
+	else
+		explorer.exe "$1"
+	fi
+}
+
+alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes'
+alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time'
 
 function cd() {
     builtin cd "$@" && l
@@ -42,7 +50,7 @@ function femoji() {
 function lnk() {
     orig_file="$1"
     dest_file="$2"
-    
+
     if [ ! -d "$(dirname "$dest_file")" ]; then
         mkdir -p "$(dirname "$dest_file")"
     fi

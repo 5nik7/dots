@@ -1,4 +1,25 @@
-﻿$ENV:REPOS = "C:\repos"
+﻿
+function Add-PathPrefix {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+    $env:Path = "$Path;" + $env:Path
+  }
+}
+
+function Add-Path {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+    $env:Path += ";$Path"
+  }
+}
+
+$ENV:REPOS = "C:\repos"
 $ENV:DOTS = "$ENV:REPOS\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
 $ENV:PROJECTS = "C:\projects"
@@ -7,6 +28,9 @@ $ENV:NVM_SYMLINK = "C:\nodejs"
 $ENV:STARSHIP_CONFIG = "$ENV:DOTFILES\starship\starship.toml"
 $ENV:STARSHIP_CACHE = "$HOME\AppData\Local\Temp"
 $ENV:PSHELL = "$ENV:DOTFILES\powershell"
+$ENV:GOPATH = "$HOME\go"
+$ENV:GOBIN = "$HOME\go\bin"
+$ENV:GOEXE = "C:\Program Files\Go\bin\go.exe"
 $ENV:WINCONFIG = "$HOME\.config"
 $ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
@@ -36,8 +60,8 @@ function Test-CommandExists {
 }
 
 # Editor Configuration
-$EDITOR = if (Test-CommandExists code) { 'code' }
-elseif (Test-CommandExists nvim) { 'nvim' }
+$EDITOR = if (Test-CommandExists nvim) { 'nvim' }
+elseif (Test-CommandExists code) { 'code' }
 elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
@@ -47,8 +71,9 @@ $ENV:EDITOR = $EDITOR
 Set-Alias -Name vim -Value $EDITOR
 Set-Alias -Name v -Value $EDITOR
 
+
 function Edit-Profile {
-  vim ([IO.Path]::GetDirectoryName($profile))
+  vim $PROFILE
 }
 Set-Alias -Name vpro -Value Edit-Profile
 
