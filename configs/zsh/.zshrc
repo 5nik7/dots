@@ -70,6 +70,9 @@ source_file "$ZSH/aliases.zsh"
 source_file "$ZSH/plugins.zsh"
 source_file "$ZSH/completions.zsh"
 
+autoload -Uz compinit
+compinit
+
 source_file "$HOME/.cargo/env"
 source_file "$NVM_DIR/nvm.sh"
 source_file "$NVM_DIR/bash_completion"
