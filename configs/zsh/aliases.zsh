@@ -17,7 +17,7 @@ alias so='source'
 
 alias v='$EDITOR'
 alias sv="sudo $EDITOR"
-alias vzsh="$EDITOR ${ZSH}/.zshrc'
+alias vzsh="$EDITOR ${ZSH}/.zshrc"
 
 alias grep='grep --color=auto'
 
