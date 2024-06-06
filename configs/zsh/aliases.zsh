@@ -1,5 +1,6 @@
 alias rlz='source ${HOME}/.zshrc'
 
+alias ls='ls --color=auto --group-directories-first'
 alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes'
 alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time'
 
@@ -18,13 +19,9 @@ alias so='source'
 
 alias v='$EDITOR'
 alias sv="sudo $EDITOR"
-alias vdot="$EDITOR $DOTFILES"
-alias bashrc="$EDITOR $BASHRC"
-alias aliases="$EDITOR $ALIASES"
+alias vzsh="$EDITOR ${ZSH}/.zshrc'
 
 alias grep='grep --color=auto'
-
-alias npmup='npm install -g npm@latest'
 
 alias ".."="cd .."
 alias "..."="cd ../.."
