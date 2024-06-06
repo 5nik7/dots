@@ -1,0 +1,128 @@
+colors:
+  # Original "dream" theme by njen
+  background_color: '142444'
+  white: 'BAC8E0'
+  red: 'FF427B'
+  green: '1FFFBF'
+  yellow: 'FFB88D'
+  blue: '2D82F8'
+  pink: 'A799FF'
+  cyan: '00F6FF'
+
+  rose: 'FF427B'
+
+  light_red: 'F15E7F'
+  light_green: '3BFFC4'
+  light_yellow: 'FFC98E'
+  light_blue: '4690F9'
+  light_pink: 'AFA3FF'
+  light_cyan: '00F6FF'
+
+  black: '18294D'
+  gray: 'A7D8E8'
+  darkgray: '3A5E96'
+  darkergray: '18294D'
+
+core:
+  normal_text: {}
+  regular_file: {}
+  reset_to_normal: {}
+
+  directory:
+    foreground: blue
+
+  symlink:
+    foreground: pink
+
+  multi_hard_link: {}
+
+  fifo:
+    foreground: black
+    background: blue
+
+  socket:
+    foreground: black
+    background: pink
+
+  door:
+    foreground: black
+    background: pink
+
+  block_device:
+    foreground: cyan
+    background: darkergray
+
+  character_device:
+    foreground: pink
+    background: darkergray
+
+  broken_symlink:
+    foreground: black
+    background: red
+
+  missing_symlink_target:
+    foreground: black
+    background: red
+
+  setuid: {}
+
+  setgid: {}
+
+  file_with_capability: {}
+
+  sticky_other_writable: {}
+
+  other_writable: {}
+
+  sticky: {}
+
+  executable_file:
+    foreground: red
+    font-style: bold
+
+text:
+  special:
+    foreground: background_color
+    background: yellow
+
+  todo:
+    font-style: bold
+
+  licenses:
+    foreground: gray
+
+  configuration:
+    foreground: yellow
+
+  other:
+    foreground: yellow
+
+markup:
+  foreground: yellow
+
+programming:
+  source:
+    foreground: green
+
+  tooling:
+    foreground: light_green
+
+    continuous-integration:
+      foreground: green
+
+media:
+  foreground: light_pink
+
+office:
+  foreground: red
+
+archives:
+  foreground: cyan
+  font-style: underline
+
+executable:
+  foreground: red
+  font-style: bold
+
+unimportant:
+  foreground: darkgray
