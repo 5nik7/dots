@@ -26,8 +26,6 @@ export ZSH="$DOTFILES/zsh"
 
 export SUDO_PROMPT="passwd: "
 
-export NVM_DIR="$HOME/.nvm"
-
 export TERMINAL='kitty'
 export BROWSER='firefox'
 export EDITOR="nvim"
