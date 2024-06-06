@@ -1,14 +1,14 @@
 # sway config
 
-exec_always autotiling-rs
-exec nwg-look -a
-exec sworkstyle &> /tmp/sworkstyle.log
-exec_always flashfocus
+# exec_always autotiling-rs
+# exec nwg-look -a
+# exec sworkstyle &> /tmp/sworkstyle.log
+# exec_always flashfocus
 # exec eww open-many bar0 bar1 bar2
 exec_always ~/.config/waybar/scripts/launch_waybar.sh
 # exec_always --no-startup-id ~/.config/sway/scripts/wallpaper.sh
 
-exec waypaper --restore
+# exec waypaper --restore
 
 # exec_always wl-paste --watch cliphist store
 # bar {
