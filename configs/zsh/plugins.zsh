@@ -13,7 +13,7 @@ fi
 source "${ZINIT_HOME}/zinit.git/zinit.zsh"
 
 autoload -Uz _zinit
-(( ${+_comps} )) && _comps[zinit]=_zinit
+# (( ${+_comps} )) && _comps[zinit]=_zinit
 
 zinit light-mode for \
     zdharma-continuum/fast-syntax-highlighting \
