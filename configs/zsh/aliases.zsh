@@ -1,4 +1,4 @@
-alias refresh='source ${HOME}/.zshrc'
+alias rlz='source ${HOME}/.zshrc'
 
 alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes'
 alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time'
