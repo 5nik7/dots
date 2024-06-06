@@ -32,9 +32,15 @@ export EDITOR="nvim"
 export SYSTEMD_EDITOR=$EDITOR
 export VISUAL="$EDITOR"
 export EDITOR_TERM="$TERMINAL -e $EDITOR"
-export MANPAGER="nvim +Man!"
-export PAGER="nvim +Man!"
+export MANPAGER="less"
+export PAGER="less"
 export BAT_CONFIG_PATH="$DOTFILES/bat/bat.conf"
+
+# ssh
+export SSH_KEY_PATH="$HOME/.ssh/rsa_id"
+
+# XDG
+export XDG_CONFIG_HOME="$HOME/.config"
 
 export GOBIN="$HOME/go/bin"
 export PYENV_ROOT="$HOME/.pyenv"
@@ -72,6 +78,8 @@ source_file "$ZSH/completions.zsh"
 
 autoload -Uz compinit
 compinit
+
+(($+commands[vivid] )) && export LS_COLORS="$(vivid generate dream)"
 
 source_file "$HOME/.cargo/env"
 source_file "$NVM_DIR/nvm.sh"
@@ -140,6 +148,9 @@ WORDCHARS='*?[]~=&;!#$%^(){}<>'
 
 # export FZF_DEFAULT_COMMAND='fd --hidden --follow --exclude=.git --exclude=node_modules'
 
+# export CLICOLOR=1
+# autoload -U colors && colors
+
 extend_path "$WIN/Windows"
 extend_path "$WIN/Windows/System32"
 extend_path "$WIN/bin"
@@ -147,7 +158,7 @@ extend_path "$WIN/ProgramData/scoop/shims"
 extend_path "$WIN/vscode/bin"
 extend_path "$HOME/.local/bin"
 prepend_path "$HOME/.local/share/bob/nvim-bin"
-prepend_path "$GOBIN"
+prepend_path "$HOME/go/bin"
 prepend_path "$BUN_INSTALL/bin"
 prepend_path "$PYENV_ROOT/bin"
 prepend_path "$DOTFILES/bin"
@@ -167,13 +178,17 @@ bindkey -v
 # bindkey ";5C" forward-word
 # bindkey ";5D" backward-word
 
-BASE16_SHELL="$HOME/.config/base16-shell/"
-[ -n "$PS1" ] && \
-    [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-        source "$BASE16_SHELL/profile_helper.sh"
+# source_file "${HOME}/.config/base16-shell/base16-shell.plugin.zsh"
 
+# BASE16_SHELL="$HOME/.config/base16-shell/"
+# [ -n "$PS1" ] && \
+#     [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
+#         source "$BASE16_SHELL/profile_helper.sh"
+#
 
-# eval "$(pyenv init -)"
+eval "$(pyenv init -)"
+
+eval "$(pyenv virtualenv-init -)"
 
 # eval "$(rbenv init -)"
 
