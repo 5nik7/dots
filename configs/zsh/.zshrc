@@ -89,7 +89,7 @@ setopt long_list_jobs
 setopt interactivecomments
 setopt multios
 setopt prompt_subst
-
+zle_highlight=('paste:none')
 
 # History command configuration
 setopt extended_history       # record timestamp of command in HISTFILE
@@ -149,6 +149,8 @@ prepend_path "$BUN_INSTALL/bin"
 prepend_path "$PYENV_ROOT/bin"
 prepend_path "$DOTFILES/bin"
 
+bindkey -v
+
 # autoload -U up-line-or-beginning-search
 # autoload -U down-line-or-beginning-search
 # zle -N up-line-or-beginning-search
@@ -167,7 +169,6 @@ BASE16_SHELL="$HOME/.config/base16-shell/"
     [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
         source "$BASE16_SHELL/profile_helper.sh"
 
-zle_highlight=('paste:none')
 
 # eval "$(pyenv init -)"
 
