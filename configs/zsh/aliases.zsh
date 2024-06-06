@@ -1,8 +1,6 @@
 alias rlz='source ${HOME}/.zshrc'
 
 alias ls='ls --color=auto --group-directories-first'
-alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes'
-alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time'
 
 alias c='clear'
 alias q='exit'
