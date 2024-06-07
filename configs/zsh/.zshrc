@@ -29,22 +29,6 @@ export SUDO_PROMPT="passwd: "
 export TERMINAL='kitty'
 export BROWSER='firefox'
 
-if which nvim >/dev/null; then
-    EDITOR='nvim'
-elif which code >/dev/null; then
-    EDITOR='code'
-elif which vim >/dev/null; then
-    EDITOR='vim'
-elif which vi >/dev/null; then
-    EDITOR='vi'
-else
-    EDITOR='nano'
-fi
-export EDITOR
-
-export SYSTEMD_EDITOR=$EDITOR
-export VISUAL="$EDITOR"
-export EDITOR_TERM="$TERMINAL -e $EDITOR"
 export MANPAGER="bat"
 export PAGER="bat"
 export BAT_CONFIG_PATH="$DOTFILES/bat/bat.conf"
@@ -89,7 +73,6 @@ source_file "$ZSH/aliases.zsh"
 source_file "$ZSH/plugins.zsh"
 source_file "$ZSH/completions.zsh"
 
-(($ + commands[vivid])) && export LS_COLORS="$(vivid generate dream)"
 
 source_file "$HOME/.cargo/env"
 source_file "$NVM_DIR/nvm.sh"
@@ -131,6 +114,8 @@ export FZF_DEFAULT_COMMAND="fd --follow --hidden --color=always" #--ignore-file=
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_DEFAULT_OPTS="$(echo \
     "--ansi \
+    --color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0 \
+    --color info:2,prompt:-1,spinner:2,pointer:6,marker:4
 --no-height \
 --preview '[[ \$(file --mime {}) =~ directory ]] && tree -C {} || { [[ \$(file --mime {}) =~ image ]] && catimg {}; } || { [[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file; } || bat --color=always --style=numbers,changes,snip {}' \
 --preview-window wrap:hidden \
@@ -204,6 +189,24 @@ eval "$(fzf --zsh)"
 
 eval "$(starship init zsh)"
 
+if which nvim >/dev/null; then
+    EDITOR='nvim'
+elif which code >/dev/null; then
+    EDITOR='code'
+elif which vim >/dev/null; then
+    EDITOR='vim'
+elif which vi >/dev/null; then
+    EDITOR='vi'
+else
+    EDITOR='nano'
+fi
+export EDITOR
+export SYSTEMD_EDITOR=$EDITOR
+export VISUAL="$EDITOR"
+export EDITOR_TERM="$TERMINAL -e $EDITOR"
+
+(( $+commands[vivid] )) && export LS_COLORS="$(vivid generate dream)"
+ 
 # Remove duplicates from PATH (Unique)
 typeset -U path
 
