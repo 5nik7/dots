@@ -1,0 +1,185 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Microsoft.PowerShell.Commands.PSRepositoryItemInfo</T>
+      <T>System.Management.Automation.PSCustomObject</T>
+      <T>System.Object</T>
+    </TN>
+    <MS>
+      <S N="Name">BurntToast</S>
+      <Version N="Version">0.8.5</Version>
+      <S N="Type">Module</S>
+      <S N="Description">Module for creating and displaying Toast Notifications on Microsoft Windows 10.</S>
+      <S N="Author">Joshua (Windos) King</S>
+      <S N="CompanyName">Windos</S>
+      <S N="Copyright">(c) 2015 Joshua (Windos) King. All rights reserved.</S>
+      <DT N="PublishedDate">2020-12-30T21:00:59-08:00</DT>
+      <Obj N="InstalledDate" RefId="1">
+        <DT>2024-05-08T01:35:46.6981151-07:00</DT>
+        <MS>
+          <Obj N="DisplayHint" RefId="2">
+            <TN RefId="1">
+              <T>Microsoft.PowerShell.Commands.DisplayHintType</T>
+              <T>System.Enum</T>
+              <T>System.ValueType</T>
+              <T>System.Object</T>
+            </TN>
+            <ToString>DateTime</ToString>
+            <I32>2</I32>
+          </Obj>
+        </MS>
+      </Obj>
+      <Nil N="UpdatedDate" />
+      <URI N="LicenseUri">https://github.com/Windos/BurntToast/blob/main/LICENSE</URI>
+      <URI N="ProjectUri">https://github.com/Windos/BurntToast</URI>
+      <URI N="IconUri">https://raw.githubusercontent.com/Windos/BurntToast/main/Media/BurntToast-Logo.png</URI>
+      <Obj N="Tags" RefId="3">
+        <TN RefId="2">
+          <T>System.Object[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>Notifications</S>
+          <S>Utilities</S>
+          <S>Windows10</S>
+          <S>Toast</S>
+          <S>PSModule</S>
+        </LST>
+      </Obj>
+      <Obj N="Includes" RefId="4">
+        <TN RefId="3">
+          <T>System.Collections.Hashtable</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">Command</S>
+            <Obj N="Value" RefId="5">
+              <TNRef RefId="2" />
+              <LST>
+                <S>Get-BTHistory</S>
+                <S>New-BTAction</S>
+                <S>New-BTAppId</S>
+                <S>New-BTAudio</S>
+                <S>New-BTBinding</S>
+                <S>New-BTButton</S>
+                <S>New-BTColumn</S>
+                <S>New-BTContent</S>
+                <S>New-BTContextMenuItem</S>
+                <S>New-BTHeader</S>
+                <S>New-BTImage</S>
+                <S>New-BTInput</S>
+                <S>New-BTProgressBar</S>
+                <S>New-BTSelectionBoxItem</S>
+                <S>New-BTShoulderTapBinding</S>
+                <S>New-BTShoulderTapImage</S>
+                <S>New-BTShoulderTapPeople</S>
+                <S>New-BTText</S>
+                <S>New-BTVisual</S>
+                <S>New-BurntToastShoulderTap</S>
+                <S>New-BurntToastNotification</S>
+                <S>Remove-BTNotification</S>
+                <S>Submit-BTNotification</S>
+                <S>Update-BTNotification</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">RoleCapability</S>
+            <Obj N="Value" RefId="6">
+              <TNRef RefId="2" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Function</S>
+            <Obj N="Value" RefId="7">
+              <TNRef RefId="2" />
+              <LST>
+                <S>Get-BTHistory</S>
+                <S>New-BTAction</S>
+                <S>New-BTAppId</S>
+                <S>New-BTAudio</S>
+                <S>New-BTBinding</S>
+                <S>New-BTButton</S>
+                <S>New-BTColumn</S>
+                <S>New-BTContent</S>
+                <S>New-BTContextMenuItem</S>
+                <S>New-BTHeader</S>
+                <S>New-BTImage</S>
+                <S>New-BTInput</S>
+                <S>New-BTProgressBar</S>
+                <S>New-BTSelectionBoxItem</S>
+                <S>New-BTShoulderTapBinding</S>
+                <S>New-BTShoulderTapImage</S>
+                <S>New-BTShoulderTapPeople</S>
+                <S>New-BTText</S>
+                <S>New-BTVisual</S>
+                <S>New-BurntToastShoulderTap</S>
+                <S>New-BurntToastNotification</S>
+                <S>Remove-BTNotification</S>
+                <S>Submit-BTNotification</S>
+                <S>Update-BTNotification</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">DscResource</S>
+            <Ref N="Value" RefId="6" />
+          </En>
+          <En>
+            <S N="Key">Cmdlet</S>
+            <Ref N="Value" RefId="6" />
+          </En>
+          <En>
+            <S N="Key">Workflow</S>
+            <Ref N="Value" RefId="6" />
+          </En>
+        </DCT>
+      </Obj>
+      <Nil N="PowerShellGetFormatVersion" />
+      <S N="ReleaseNotes"># 0.8.5_x000D__x000A__x000D__x000A_* Actually implement the ability to use a UniqueIdentifier with the Remove-BTNotification function (which was half implemented in 0.8.4)_x000D__x000A__x000D__x000A_# 0.8.4_x000D__x000A__x000D__x000A_* Enhancement: Header ID on New-BTHeader is now optional. An ID will be auto generated if not specified (#125)_x000D__x000A_  * Thanks [@glennsarti](https://github.com/glennsarti)_x000D__x000A_* Enhancement: Hero images can now be specified using the New-BurntToastNotification function using the -HeroImage parameter (#80)_x000D__x000A_  * Thanks [@UniverseCitiz3n](https://github.com/UniverseCitiz3n)_x000D__x000A_* Enhancement: AppIDs can now be specified using the New-BurntToastNotification function using the -AppId parameter._x000D__x000A_  * Thanks [@cedarbaum](https://github.com/cedarbaum)_x000D__x000A_* Enhancement: You can now specify a UniqueIdentifier when using the Remove-BTNotification function rather than component Tag and Group strings._x000D__x000A_* Fix: Weird edge cases when taking text from Twitch/IRC and using them in a toast is now sorted._x000D__x000A_  * Thanks [@potatoqualitee](https://github.com/potatoqualitee) and [@vexx32](https://github.com/vexx32)_x000D__x000A__x000D__x000A_# 0.8.3_x000D__x000A__x000D__x000A_* Fix: Error when running Update-BTNotification on PowerShell 6.0+ (#120)_x000D__x000A_* Fix: Error when using actionable toast parameters on any version (#122)_x000D__x000A_* Fix: Multiple warnings about events not being supported when specifying multiple event types._x000D__x000A__x000D__x000A_# 0.8.2_x000D__x000A__x000D__x000A_* Add: AdaptiveGroups are now usable via New-BTColumn_x000D__x000A__x000D__x000A_# 0.8.1_x000D__x000A__x000D__x000A_* Fix: Toast alias removed in 0.8.0 has been restored_x000D__x000A_* Deprecation: Signalling removal of Shoulder Tap cmdlets in future version, v0.9.0_x000D__x000A_* Deprecation: Signalling removal of Path parameter from New-BTAudio in future version, v0.9.0. https://github.com/MicrosoftDocs/windows-uwp/issues/1593_x000D__x000A__x000D__x000A_# 0.8.0_x000D__x000A__x000D__x000A_* Fix: Images from UNC path failing (#111)_x000D__x000A_* Add: Ability to force a refresh of cached images via IgnoreCache switch on New-BTImage_x000D__x000A_* Add: ACTIONABLE NOTIFICATIONS! Exposed via ActivatedAction and DismissedAction parameters on Submit-BTNotification and New-BurntToastNotification</S>
+      <Obj N="Dependencies" RefId="8">
+        <TNRef RefId="2" />
+        <LST />
+      </Obj>
+      <S N="RepositorySourceLocation">https://www.powershellgallery.com/api/v2</S>
+      <S N="Repository">PSGallery</S>
+      <S N="PackageManagementProvider">NuGet</S>
+      <Obj N="AdditionalMetadata" RefId="9">
+        <TN RefId="4">
+          <T>System.Management.Automation.PSCustomObject</T>
+          <T>System.Object</T>
+        </TN>
+        <MS>
+          <S N="copyright">(c) 2015 Joshua (Windos) King. All rights reserved.</S>
+          <S N="description">Module for creating and displaying Toast Notifications on Microsoft Windows 10.</S>
+          <S N="requireLicenseAcceptance">False</S>
+          <S N="releaseNotes"># 0.8.5_x000D__x000A__x000D__x000A_* Actually implement the ability to use a UniqueIdentifier with the Remove-BTNotification function (which was half implemented in 0.8.4)_x000D__x000A__x000D__x000A_# 0.8.4_x000D__x000A__x000D__x000A_* Enhancement: Header ID on New-BTHeader is now optional. An ID will be auto generated if not specified (#125)_x000D__x000A_  * Thanks [@glennsarti](https://github.com/glennsarti)_x000D__x000A_* Enhancement: Hero images can now be specified using the New-BurntToastNotification function using the -HeroImage parameter (#80)_x000D__x000A_  * Thanks [@UniverseCitiz3n](https://github.com/UniverseCitiz3n)_x000D__x000A_* Enhancement: AppIDs can now be specified using the New-BurntToastNotification function using the -AppId parameter._x000D__x000A_  * Thanks [@cedarbaum](https://github.com/cedarbaum)_x000D__x000A_* Enhancement: You can now specify a UniqueIdentifier when using the Remove-BTNotification function rather than component Tag and Group strings._x000D__x000A_* Fix: Weird edge cases when taking text from Twitch/IRC and using them in a toast is now sorted._x000D__x000A_  * Thanks [@potatoqualitee](https://github.com/potatoqualitee) and [@vexx32](https://github.com/vexx32)_x000D__x000A__x000D__x000A_# 0.8.3_x000D__x000A__x000D__x000A_* Fix: Error when running Update-BTNotification on PowerShell 6.0+ (#120)_x000D__x000A_* Fix: Error when using actionable toast parameters on any version (#122)_x000D__x000A_* Fix: Multiple warnings about events not being supported when specifying multiple event types._x000D__x000A__x000D__x000A_# 0.8.2_x000D__x000A__x000D__x000A_* Add: AdaptiveGroups are now usable via New-BTColumn_x000D__x000A__x000D__x000A_# 0.8.1_x000D__x000A__x000D__x000A_* Fix: Toast alias removed in 0.8.0 has been restored_x000D__x000A_* Deprecation: Signalling removal of Shoulder Tap cmdlets in future version, v0.9.0_x000D__x000A_* Deprecation: Signalling removal of Path parameter from New-BTAudio in future version, v0.9.0. https://github.com/MicrosoftDocs/windows-uwp/issues/1593_x000D__x000A__x000D__x000A_# 0.8.0_x000D__x000A__x000D__x000A_* Fix: Images from UNC path failing (#111)_x000D__x000A_* Add: Ability to force a refresh of cached images via IgnoreCache switch on New-BTImage_x000D__x000A_* Add: ACTIONABLE NOTIFICATIONS! Exposed via ActivatedAction and DismissedAction parameters on Submit-BTNotification and New-BurntToastNotification</S>
+          <S N="isLatestVersion">True</S>
+          <S N="isAbsoluteLatestVersion">False</S>
+          <S N="versionDownloadCount">16506985</S>
+          <S N="downloadCount">17090319</S>
+          <S N="packageSize">6628713</S>
+          <S N="published">12/30/2020 9:00:59 PM -08:00</S>
+          <S N="created">12/30/2020 9:00:59 PM -08:00</S>
+          <S N="lastUpdated">5/8/2024 8:33:27 AM -07:00</S>
+          <S N="tags">Notifications Utilities Windows10 Toast PSModule</S>
+          <S N="developmentDependency">False</S>
+          <S N="updated">2024-05-08T08:33:27Z</S>
+          <S N="NormalizedVersion">0.8.5</S>
+          <S N="Authors">Joshua (Windos) King</S>
+          <S N="IsPrerelease">false</S>
+          <S N="ItemType">Module</S>
+          <S N="FileList">BurntToast.nuspec|BurntToast.psd1|BurntToast.psm1|config.json|README.md|en-us\about_BurntToast.help.txt|Images\BurntToast-Logo.png|Images\BurntToast.png|lib\Microsoft.Toolkit.Uwp.Notifications\Microsoft.Toolkit.Uwp.Notifications.dll|lib\Microsoft.Toolkit.Uwp.Notifications\README.md|lib\Microsoft.Windows.SDK.NET\Microsoft.Windows.SDK.NET.dll|lib\Microsoft.Windows.SDK.NET\README.md|lib\Microsoft.Windows.SDK.NET\WinRT.Runtime.dll</S>
+          <S N="Functions">Get-BTHistory New-BTAction New-BTAppId New-BTAudio New-BTBinding New-BTButton New-BTColumn New-BTContent New-BTContextMenuItem New-BTHeader New-BTImage New-BTInput New-BTProgressBar New-BTSelectionBoxItem New-BTShoulderTapBinding New-BTShoulderTapImage New-BTShoulderTapPeople New-BTText New-BTVisual New-BurntToastShoulderTap New-BurntToastNotification Remove-BTNotification Submit-BTNotification Update-BTNotification</S>
+          <S N="GUID">751a2aeb-a68f-422e-a2ea-376bdd81612a</S>
+          <S N="PowerShellVersion">5.0</S>
+          <S N="CompanyName">king.geek.nz</S>
+        </MS>
+      </Obj>
+      <S N="InstalledLocation">C:\Users\nickf\Documents\PowerShell\Modules\BurntToast\0.8.5</S>
+    </MS>
+  </Obj>
+</Objs>
