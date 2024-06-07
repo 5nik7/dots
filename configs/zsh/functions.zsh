@@ -2,7 +2,7 @@ function rngr() {
     local tmp="$(mktemp -t "ranger-cwd.XXXXX")"
     ranger --choosedir="$tmp"
     if cwd="$(cat "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-	cd "$cwd"
+        cd "$cwd"
     fi
     rm -f "$tmp"
 }
@@ -12,18 +12,18 @@ function ya() {
     local tmp="$(mktemp -t "yazi-cwd.XXXXX")"
     yazi "$@" --cwd-file="$tmp"
     if cwd="$(cat "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-	cd "$cwd"
+        cd "$cwd"
     fi
     rm -f "$tmp"
 }
 alias d='ya'
 
 function dd {
-	if [ -z "$1" ]; then
-		explorer.exe .
-	else
-		explorer.exe "$1"
-	fi
+    if [ -z "$1" ]; then
+        explorer.exe .
+    else
+        explorer.exe "$1"
+    fi
 }
 
 alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes'
@@ -31,6 +31,10 @@ alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-fir
 
 function cd() {
     builtin cd "$@" && l
+}
+
+function google {
+    open "https://www.google.com/search?q=$*"
 }
 
 function weather {
@@ -56,8 +60,7 @@ function lnk() {
     fi
 
     rel1=$(rel_path $orig_file)
-	  rel2=$(rel_path $dest_file)
-
+    rel2=$(rel_path $dest_file)
 
     if [ -e "$dest_file" ]; then
         mv "$dest_file" "$dest_file.bak"
@@ -102,13 +105,29 @@ function lnk() {
 #     print_in_cyan "$rel2\n"
 # }
 
+function truecolors {
+    awk 'BEGIN{
+        s="/\\/\\/\\/\\/\\"; s=s s s s s s s s s s s s s s s s s s s s s s s;
+        for (colnum = 0; colnum<256; colnum++) {
+            r = 255-(colnum*255/255);
+            g = (colnum*510/255);
+            b = (colnum*255/255);
+            if (g>255) g = 510-g;
+            printf "\033[48;2;%d;%d;%dm", r,g,b;
+            printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b;
+            printf "%s\033[0m", substr(s,colnum+1,1);
+        }
+        printf "\n";
+    }'
+}
+
 function 256color() {
-	for code in {000..255}; do
-		print -nP -- "%F{$code}$code %f";
-		if [ $((${code} % 16)) -eq 15 ]; then
-			echo ""
-		fi
-	done
+    for code in {000..255}; do
+        print -nP -- "%F{$code}$code %f"
+        if [ $((${code} % 16)) -eq 15 ]; then
+            echo ""
+        fi
+    done
 }
 
 function showcolors256() {
@@ -125,7 +144,7 @@ function showcolors256() {
     echo 16 standard color codes:
     for row in {0..1}; do
         for col in {0..7}; do
-            $showcolor $(( row*8 + col )) $row
+            $showcolor $((row * 8 + col)) $row
         done
         echo
     done
@@ -135,9 +154,9 @@ function showcolors256() {
     for blockrow in {0..2}; do
         for red in {0..5}; do
             for blockcol in {0..1}; do
-                green=$(( blockrow*2 + blockcol ))
+                green=$((blockrow * 2 + blockcol))
                 for blue in {0..5}; do
-                    $showcolor $(( red*36 + green*6 + blue + 16 )) $green
+                    $showcolor $((red * 36 + green * 6 + blue + 16)) $green
                 done
                 echo -n "  "
             done
@@ -149,7 +168,7 @@ function showcolors256() {
     echo 24 grayscale color codes:
     for row in {0..1}; do
         for col in {0..11}; do
-            $showcolor $(( row*12 + col + 232 )) $row
+            $showcolor $((row * 12 + col + 232)) $row
         done
         echo
     done
@@ -157,19 +176,19 @@ function showcolors256() {
 }
 
 function _showcolor256_fg() {
-    local code=$( printf %03d $1 )
+    local code=$(printf %03d $1)
     echo -ne "\033[38;5;${code}m"
     echo -nE " $code "
     echo -ne "\033[0m"
 }
 
 function _showcolor256_bg() {
-    if (( $2 % 2 == 0 )); then
+    if (($2 % 2 == 0)); then
         echo -ne "\033[1;37m"
     else
         echo -ne "\033[0;30m"
     fi
-    local code=$( printf %03d $1 )
+    local code=$(printf %03d $1)
     echo -ne "\033[48;5;${code}m"
     echo -nE " $code "
     echo -ne "\033[0m"

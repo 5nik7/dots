@@ -6,12 +6,12 @@
 export COLORTERM=truecolor
 
 case $TERM in
-  iterm            |\
-  linux-truecolor  |\
-  screen-truecolor |\
-  tmux-truecolor   |\
-  xterm-truecolor  )    export COLORTERM=truecolor ;;
-  vte*)
+iterm | \
+    linux-truecolor | \
+    screen-truecolor | \
+    tmux-truecolor | \
+    xterm-truecolor) export COLORTERM=truecolor ;;
+vte*) ;;
 esac
 
 export LC_ALL='en_US.UTF-8'
@@ -49,10 +49,8 @@ export MANPAGER="bat"
 export PAGER="bat"
 export BAT_CONFIG_PATH="$DOTFILES/bat/bat.conf"
 
-# ssh
 export SSH_KEY_PATH="$HOME/.ssh/rsa_id"
 
-# XDG
 export XDG_CONFIG_HOME="$HOME/.config"
 
 export GOBIN="$HOME/go/bin"
@@ -60,26 +58,28 @@ export PYENV_ROOT="$HOME/.pyenv"
 export BUN_INSTALL="$HOME/.bun"
 export NVM_DIR="$HOME/.nvm"
 
+fpath=($ZSH/functions $ZSH/completions $fpath)
+
 function source_file() {
-	if [ -e "$1" ]; then
-		source "$1"
-	fi
+    if [ -e "$1" ]; then
+        source "$1"
+    fi
 }
 
 function extend_path() {
-	[[ -d "$1" ]] || return
+    [[ -d "$1" ]] || return
 
-	if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-		export PATH="$PATH:$1"
-	fi
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+        export PATH="$PATH:$1"
+    fi
 }
 
 function prepend_path() {
-	[[ -d "$1" ]] || return
+    [[ -d "$1" ]] || return
 
-	if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-		export PATH="$1:$PATH"
-	fi
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+        export PATH="$1:$PATH"
+    fi
 }
 
 source_file "$ZSH/fzf.zsh"
@@ -89,10 +89,7 @@ source_file "$ZSH/aliases.zsh"
 source_file "$ZSH/plugins.zsh"
 source_file "$ZSH/completions.zsh"
 
-autoload -Uz compinit
-compinit
-
-(($+commands[vivid] )) && export LS_COLORS="$(vivid generate dream)"
+(($ + commands[vivid])) && export LS_COLORS="$(vivid generate dream)"
 
 source_file "$HOME/.cargo/env"
 source_file "$NVM_DIR/nvm.sh"
@@ -100,42 +97,48 @@ source_file "$NVM_DIR/bash_completion"
 source_file "$HOME/.bun/_bun"
 source_file "$HOME/.nix-profile/etc/profile.d/nix.sh"
 
-# Options
-# completions
-unsetopt menu_complete   # do not autoselect the first completion entry
+unsetopt menu_complete
 unsetopt flowcontrol
-setopt auto_menu         # show completion menu on successive tab press
+setopt auto_menu
 setopt complete_in_word
 setopt always_to_end
-
-# misc
 setopt long_list_jobs
 setopt interactivecomments
 setopt multios
 setopt prompt_subst
 zle_highlight=('paste:none')
 
-# History command configuration
-setopt extended_history       # record timestamp of command in HISTFILE
-setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
-setopt hist_ignore_dups       # ignore duplicated commands history list
-setopt hist_ignore_space      # ignore commands that start with space
-setopt hist_verify            # show command with history expansion to user before running it
-setopt inc_append_history     # add commands to HISTFILE in order of execution
-setopt share_history          # share command history data
-
+setopt extended_history
+setopt hist_expire_dups_first
+setopt hist_ignore_dups
+setopt hist_ignore_space
+setopt hist_verify
+setopt inc_append_history
+setopt share_history
 setopt auto_cd
-
-# setopt no_bg_nice
 unsetopt beep
 setopt no_list_beep
-
 
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=$HISTSIZE
 
-WORDCHARS='*?[]~=&;!#$%^(){}<>'
+# WORDCHARS='*?[]~=&;!#$%^(){}<>'
+
+export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window down:3:wrap"
+export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
+export FZF_DEFAULT_COMMAND="fd --follow --hidden --color=always" #--ignore-file=$HOME/.gitignore"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_DEFAULT_OPTS="$(echo \
+    "--ansi \
+--no-height \
+--preview '[[ \$(file --mime {}) =~ directory ]] && tree -C {} || { [[ \$(file --mime {}) =~ image ]] && catimg {}; } || { [[ \$(file --mime {}) =~ binary ]] && echo {} is a binary file; } || bat --color=always --style=numbers,changes,snip {}' \
+--preview-window wrap:hidden \
+--border --margin=0,2 \
+--bind 'ctrl-o:toggle-preview' \
+--bind 'tab:down' \
+--bind 'btab:up' \
+--bind 'ctrl-z:toggle' ")"
 
 # export FZF_DEFAULT_OPTS="
 # --layout=reverse --info=inline --height=80% --multi --cycle --margin=1 --border=sharp
@@ -153,9 +156,6 @@ WORDCHARS='*?[]~=&;!#$%^(){}<>'
 # --bind 'ctrl-e:execute($TERMINAL $EDITOR {+})+reload(fzf)'"
 
 # export FZF_DEFAULT_COMMAND='fd --hidden --follow --exclude=.git --exclude=node_modules'
-
-# export CLICOLOR=1
-# autoload -U colors && colors
 
 extend_path "$WIN/Windows"
 extend_path "$WIN/Windows/System32"
@@ -203,3 +203,9 @@ eval "$(pyenv virtualenv-init -)"
 eval "$(fzf --zsh)"
 
 eval "$(starship init zsh)"
+
+# Remove duplicates from PATH (Unique)
+typeset -U path
+
+# MANPATH Guard
+unset MANPATH

@@ -50,15 +50,3 @@ print_in_bright_black() {
 rel_path() {
     echo "$1" | sed "s|^$HOME/|~/|"
 }
-
-print_link() {
-	rel1=$(rel_path $1)
-	rel2=$(rel_path $2)
-  print_in_green "\n [] "
-	print_in_blue "$rel1"
-	print_in_black " -> "
-	print_in_cyan "$rel2\n"
-}
-
-
-

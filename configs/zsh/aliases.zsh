@@ -33,3 +33,4 @@ alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
 alias lg='lazygit'
+alias clock='tty-clock -c -f %d-%m-%Y'
