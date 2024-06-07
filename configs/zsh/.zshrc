@@ -21,8 +21,11 @@ export LANGUAGE='en_US.UTF-8'
 export WIN='/mnt/c'
 export REPOS="$WIN/repos"
 export DOTS="$HOME/.dots"
-export DOTFILES="$DOTS/configs"
-export ZSH="$DOTFILES/zsh"
+export DOTSHELL="$DOTS/shells"
+export DOTCONF="$DOTS/configs"
+export DOTFILES=$DOTCONF
+export ZSHELL="$DOTSHELL/zsh"
+export ZSH=$ZSHELL
 
 export SUDO_PROMPT="passwd: "
 
@@ -72,7 +75,6 @@ source_file "$ZSH/util.zsh"
 source_file "$ZSH/aliases.zsh"
 source_file "$ZSH/plugins.zsh"
 source_file "$ZSH/completions.zsh"
-
 
 source_file "$HOME/.cargo/env"
 source_file "$NVM_DIR/nvm.sh"
@@ -205,8 +207,8 @@ export SYSTEMD_EDITOR=$EDITOR
 export VISUAL="$EDITOR"
 export EDITOR_TERM="$TERMINAL -e $EDITOR"
 
-(( $+commands[vivid] )) && export LS_COLORS="$(vivid generate dream)"
- 
+(($ + commands[vivid])) && export LS_COLORS="$(vivid generate dream)"
+
 # Remove duplicates from PATH (Unique)
 typeset -U path
 
