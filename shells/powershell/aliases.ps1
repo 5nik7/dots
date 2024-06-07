@@ -10,3 +10,5 @@ Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name lm -Value Set-Link
 Set-Alias -Name path -Value Get-Path
 Set-Alias -Name env -Value Get-Env
+
+Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory

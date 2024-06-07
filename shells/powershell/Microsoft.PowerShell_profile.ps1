@@ -51,9 +51,6 @@ if (Test-Path($ChocolateyProfile)) {
 }
 
 
-
-Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
-
 $ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
   "--ansi --layout reverse --info inline --height 80% --cycle --border sharp
 --prompt ' ' --pointer ' ' --marker ' '
@@ -102,7 +99,6 @@ function edit-history {
   & $env:EDITOR (Get-PSReadLineOption).HistorySavePath
 }
 Set-Alias -Name ehist -Value edit-history
-
 
 Set-PsFzfOption -TabExpansion -EnableFd
 
