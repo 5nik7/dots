@@ -16,13 +16,7 @@ alias pp='win32yank.exe -o --lf'
 alias cat='bat'
 alias so='source'
 
-alias edit='$EDITOR'
-alias v='$EDITOR'
-alias sv="sudo $EDITOR"
-alias vsh="$EDITOR ${ZSH}/.zshrc"
-
 alias grep='grep --color=auto'
-alias cat='bat'
 
 alias ".."="cd .."
 alias "..."="cd ../.."

@@ -207,6 +207,13 @@ export SYSTEMD_EDITOR=$EDITOR
 export VISUAL="$EDITOR"
 export EDITOR_TERM="$TERMINAL -e $EDITOR"
 
+alias edit='$EDITOR'
+alias v='$EDITOR'
+alias vi='$EDITOR'
+alias vi='$EDITOR'
+alias sv="sudo $EDITOR"
+alias vpro="edit $ZSH/.zshrc"
+
 (($ + commands[vivid])) && export LS_COLORS="$(vivid generate dream)"
 
 # Remove duplicates from PATH (Unique)
@@ -214,8 +221,6 @@ typeset -U path
 
 # MANPATH Guard
 unset MANPATH
-
-this works in my .zshrc:
 
 function zle-keymap-select() {
     case $KEYMAP in
