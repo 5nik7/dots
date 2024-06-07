@@ -28,12 +28,25 @@ export SUDO_PROMPT="passwd: "
 
 export TERMINAL='kitty'
 export BROWSER='firefox'
-export EDITOR="nvim"
+
+if which nvim >/dev/null; then
+    EDITOR='nvim'
+elif which code >/dev/null; then
+    EDITOR='code'
+elif which vim >/dev/null; then
+    EDITOR='vim'
+elif which vi >/dev/null; then
+    EDITOR='vi'
+else
+    EDITOR='nano'
+fi
+export EDITOR
+
 export SYSTEMD_EDITOR=$EDITOR
 export VISUAL="$EDITOR"
 export EDITOR_TERM="$TERMINAL -e $EDITOR"
-export MANPAGER="less"
-export PAGER="less"
+export MANPAGER="bat"
+export PAGER="bat"
 export BAT_CONFIG_PATH="$DOTFILES/bat/bat.conf"
 
 # ssh

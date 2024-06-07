@@ -65,21 +65,16 @@ elseif (Test-CommandExists code) { 'code' }
 elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
-
 $ENV:EDITOR = $EDITOR
-
+Set-Alias -Name edit -Value $EDITOR
 Set-Alias -Name vim -Value $EDITOR
-Set-Alias -Name v -Value $EDITOR
-
-
+Set-Alias -Name vi -Value $EDITOR
 function Edit-Profile {
   vim $PROFILE
 }
-Set-Alias -Name vpro -Value Edit-Profile
+Set-Alias -Name vps -Value Edit-Profile
 
-# Set-Variable -Name TERMINAL -Value wt
-
-Import-Module PSFzf
+# Import-Module PSFzf
 
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
@@ -103,8 +98,9 @@ if (Test-Path $envFilePath) {
 
 Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name path -Value Get-Path
+Set-Alias -Name env -Value Get-Env
 
-function open {
+function dd {
   param (
     [string]$Path = $PWD
   )
@@ -116,8 +112,6 @@ function open {
     explorer.exe
   }
 }
-
-# Set-Alias -Name npmup -Value "npm install -g npm@latest"
 
 function Remove-DuplicatePSReadlineHistory {
   $historyPath = (Get-PSReadLineOption).HistorySavePath
@@ -160,7 +154,6 @@ $ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
 --no-scrollbar"
 }
 
-# Set-Alias -Name cd -Value z -force -option 'AllScope'
 
 if ($host.Name -eq 'ConsoleHost') {
   Import-Module PSReadLine
@@ -202,28 +195,6 @@ function edit-history {
 }
 Set-Alias -Name ehist -Value edit-history
 
-
-# Set-PSReadLineKeyHandler -Chord '"', "'" `
-#   -BriefDescription SmartInsertQuote `
-#   -LongDescription "Insert paired quotes if not already on a quote" `
-#   -ScriptBlock {
-#   param($key, $arg)
-
-#   $line = $null
-#   $cursor = $null
-#   [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
-
-#   if ($line.Length -gt $cursor -and $line[$cursor] -eq $key.KeyChar) {
-#     # Just move the cursor
-#     [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($cursor + 1)
-#   }
-#   else {
-#     # Insert matching quotes, move cursor to be in between the quotes
-#     [Microsoft.PowerShell.PSConsoleReadLine]::Insert("$($key.KeyChar)" * 2)
-#     [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
-#     [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($cursor - 1)
-#   }
-# }
 
 Set-PsFzfOption -TabExpansion -EnableFd
 

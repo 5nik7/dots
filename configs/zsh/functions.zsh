@@ -6,7 +6,7 @@ function rngr() {
     fi
     rm -f "$tmp"
 }
-alias dd='rngr'
+alias dr='rngr'
 
 function ya() {
     local tmp="$(mktemp -t "yazi-cwd.XXXXX")"
@@ -18,7 +18,7 @@ function ya() {
 }
 alias d='ya'
 
-function open {
+function dd {
 	if [ -z "$1" ]; then
 		explorer.exe .
 	else

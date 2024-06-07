@@ -1,9 +1,4 @@
-﻿function Highlight {
-  param($text = '', $color = 'DarkYellow')
-  $text | Write-Host -ForegroundColor $color
-}
-
-function Fresh {
+﻿function Fresh {
   & $PROFILE
   Write-Host ''
   Write-Host -ForegroundColor Black '┌───────────────────┐'
@@ -30,7 +25,6 @@ function fbak {
   Invoke-Expression $command
 }
 
-
 function ll {
   Write-Host " "
   eza -lA --git --git-repos --icons --group-directories-first --no-quotes
@@ -45,8 +39,6 @@ function envl {
   Write-Host " "
   Get-ChildItem Env:
 }
-
-Set-Alias -Name env -Value Get-Env
 
 function touch($file) {
   "" | Out-File $file -Encoding ASCII
@@ -95,8 +87,8 @@ function lg {
   lazygit
 }
 
-function rm($path) {
-  Remove-Item -Path $path -Recurse -Force
+function rmf($file) {
+  Remove-Item $file -Recurse -Force -Verbose -confirm:$false
 }
 
 function colors {
@@ -128,7 +120,7 @@ function ln {
       $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
       Rename-Item -Path $target -NewName "$target.$bakDate.bak" -ErrorAction Stop | Out-Null
       Write-Host ''
-      Write-Host -ForegroundColor DarkGray "────────────────────"
+      Write-Host -ForegroundColor Black "────────────────────────────────────────────────────────────"
       Write-Host ''
       Write-Host -ForegroundColor Yellow "Creating a backup file: " -NoNewline
       Write-Host -ForegroundColor White "$target.$bakDate.bak"
@@ -138,19 +130,19 @@ function ln {
       Write-Host -ForegroundColor DarkGray " 󱦰 " -NoNewline
       Write-Host -ForegroundColor DarkBlue "$target"
       Write-Host ''
-      Write-Host -ForegroundColor DarkGray "────────────────────"
+      Write-Host -ForegroundColor Black "────────────────────────────────────────────────────────────"
       Write-Host ''
     }
     else {
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
       Write-Host ''
-      Write-Host -ForegroundColor DarkGray "────────────────────"
+      Write-Host -ForegroundColor Black "────────────────────────────────────────────────────────────"
       Write-Host ''
       Write-Host -ForegroundColor DarkCyan "$base" -NoNewline
       Write-Host -ForegroundColor DarkGray " 󱦰 " -NoNewline
       Write-Host -ForegroundColor DarkBlue "$target"
       Write-Host ''
-      Write-Host -ForegroundColor DarkGray "────────────────────"
+      Write-Host -ForegroundColor Black "────────────────────────────────────────────────────────────"
       Write-Host ''
     }
   }
