@@ -2,6 +2,7 @@ command_timeout=3000
 scan_timeout = 15
 
 format = """
+$shell\
 $directory\
 $git_branch\
 $git_status\
@@ -9,7 +10,6 @@ $nodejs\
 $conda\
 $python\
 $line_break\
-$shell\
 $character\
 """
 
@@ -106,5 +106,5 @@ symbol = ' '
 [character]
 success_symbol = '[](bright-cyan)'
 error_symbol= '[](red)'
-vimcmd_symbol = '[](bright-black)'
+vimcmd_symbol = '[󰢀](fg:blue)'
 format = '$symbol '

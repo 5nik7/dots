@@ -71,18 +71,18 @@ if ($host.Name -eq 'ConsoleHost') {
     TerminateOrphanedConsoleApps   = $true
     PredictionViewStyle           = "InlineView"
     Colors                        = @{
-      Comment            = 'DarkGray'
-      Command            = 'Green'
-      Number             = 'Magenta'
-      Member             = 'Red'
-      Operator           = 'DarkYellow'
-      Type               = 'Cyan'
-      Variable           = 'DarkCyan'
-      Parameter          = 'Yellow'
-      ContinuationPrompt = 'Black'
-      Default            = 'White'
-      InlinePrediction   = 'DarkGray'
-      ListPrediction     = 'DarkGray'
+      Comment                = 'DarkGray'
+      Command                = 'Green'
+      Number                 = 'Magenta'
+      Member                 = 'Red'
+      Operator               = 'DarkYellow'
+      Type                   = 'Cyan'
+      Variable               = 'DarkCyan'
+      Parameter              = 'Yellow'
+      ContinuationPrompt     = 'Black'
+      Default                = 'White'
+      InlinePrediction       = 'DarkGray'
+      ListPrediction         = 'DarkGray'
       ListPredictionSelected = 'DarkGray'
     }
   }
@@ -94,20 +94,18 @@ Set-PSReadLineOption -AddToHistoryHandler {
 }
 Set-PsFzfOption -TabExpansion -EnableFd
 
+# function OnViModeChange {
+#   if ($args[0] -eq 'Command') {
 
-
-function OnViModeChange {
-  if ($args[0] -eq 'Command') {
-
-    # Set the cursor to a solid block.
-    Write-Host -NoNewLine "`e[2 q"
-  }
-  else {
-    # Set the cursor to a blinking line.
-    Write-Host -NoNewLine "`e[5 q"
-  }
-}
-Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
+#     # Set the cursor to a solid block.
+#     Write-Host -NoNewLine "`e[2 q"
+#   }
+#   else {
+#     # Set the cursor to a blinking line.
+#     Write-Host -NoNewLine "`e[5 q"
+#   }
+# }
+# Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
 
 function Invoke-Starship-TransientFunction {
   &starship module character
