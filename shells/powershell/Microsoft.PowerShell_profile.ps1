@@ -49,21 +49,28 @@ $ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
 --no-scrollbar"
 }
 
+Set-PSReadLineKeyHandler -Chord 'Ctrl+Tab' -ScriptBlock { Invoke-FzfTabCompletion }
+Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+Set-PSReadLineKeyHandler -Chord Enter -Function ValidateAndAcceptLine
+
 if ($host.Name -eq 'ConsoleHost') {
   Import-Module PSReadLine
 
   $PSReadLineOptions = @{
     HistoryNoDuplicates           = $true
     HistorySearchCursorMovesToEnd = $true
+    HistorySearchCaseSensitive    = $false
     MaximumHistoryCount           = "10000"
     ShowToolTips                  = $true
     ContinuationPrompt            = " "
     BellStyle                     = "None"
-    PredictionSource              = "HistoryandPlugin"
+    PredictionSource              = "History"
     EditMode                      = "Vi"
+    TerminateOrphanedConsoleApps   = $true
     PredictionViewStyle           = "InlineView"
     Colors                        = @{
-      InlinePrediction   = 'DarkGray'
       Comment            = 'DarkGray'
       Command            = 'Green'
       Number             = 'Magenta'
@@ -71,9 +78,12 @@ if ($host.Name -eq 'ConsoleHost') {
       Operator           = 'DarkYellow'
       Type               = 'Cyan'
       Variable           = 'DarkCyan'
-      Parameter          = 'Gray'
+      Parameter          = 'Yellow'
       ContinuationPrompt = 'Black'
       Default            = 'White'
+      InlinePrediction   = 'DarkGray'
+      ListPrediction     = 'DarkGray'
+      ListPredictionSelected = 'DarkGray'
     }
   }
   Set-PSReadLineOption @PSReadLineOptions
@@ -82,21 +92,9 @@ Set-PSReadLineOption -AddToHistoryHandler {
   param($line)
   $line -notmatch '(^\s+|^rm|^Remove-Item|fl$)'
 }
-
 Set-PsFzfOption -TabExpansion -EnableFd
 
-# Set-PSReadLineKeyHandler -Chord 'Ctrl+D2' -Function MenuComplete
-Set-PSReadLineKeyHandler -Key F7 -ScriptBlock { Invoke-FzfTabCompletion }
 
-Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
-Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
-Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
-
-function Invoke-Starship-TransientFunction {
-  &starship module character
-}
-Invoke-Expression (&starship init powershell)
-Enable-TransientPrompt
 
 function OnViModeChange {
   if ($args[0] -eq 'Command') {
@@ -110,3 +108,9 @@ function OnViModeChange {
   }
 }
 Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
+
+function Invoke-Starship-TransientFunction {
+  &starship module character
+}
+Invoke-Expression (&starship init powershell)
+Enable-TransientPrompt

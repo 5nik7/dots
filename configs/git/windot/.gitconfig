@@ -1,36 +1,54 @@
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+clean = git-lfs clean -- %f
+smudge = git-lfs smudge -- %f
+process = git-lfs filter-process
+required = true
+
 [user]
-	name = Nick Jensen
-	email = nickflip86@gmail.com
-	username = 5nik7
-	signingkey = 89C80154581AC132
-[credential "https://github.com"]
-	helper = 
-	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
-[credential "https://gist.github.com"]
-	helper = 
-	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+name = Nick Jensen
+email = nickflip86@gmail.com
+
+[color]
+ui = true
+
+[alias]
+st = status -sb
+co = checkout
+c = commit --short
+ci = commit --short
+p = push
+l = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --decorate --date=short
+
 [core]
-	editor = C:\\vscode\\Code.exe
-	protectNTFS = false
+pager = delta
+
+[interactive]
+diffFilter = delta --color-only
+
 [credential]
-	helper = store
+helper = store
+
 [gpg]
-	program = C:\\Git\\usr\\bin\\gpg.exe
+program = C:\\Git\\usr\\bin\\gpg.exe
+
 [safe]
-	directory = C:/repos/dots
-	directory = C:/repos/dotfiles
-	directory = C:/repos/nvim
-[push]
-	default = current
-	autoSetupRemote = true
+directory = C:/repos/dots
+directory = C:/repos/dotfiles
+directory = C:/repos/nvim
+
 [pull]
-	rebase = true
+rebase = true
+[github]
+user = 5nik7
 [init]
-	defaultBranch = main
+defaultBranch = main
 [commit]
-	gpgsign = true
+gpgsign = true
+[rebase]
+autoStash = true
+[credential "https://github.com"]
+helper =
+helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+[credential "https://gist.github.com"]
+helper =
+helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
