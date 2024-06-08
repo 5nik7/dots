@@ -109,6 +109,11 @@ Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 
+# $CondaHook = "C:\miniconda3\shell\condabin\conda-hook.ps1"
+# if (Test-Path($CondaHook)) {
+#   . $CondaHook
+# }
+
 Invoke-Expression (&starship init powershell)
 
 function OnViModeChange {
