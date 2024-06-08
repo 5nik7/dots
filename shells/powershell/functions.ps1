@@ -3,7 +3,7 @@
   Write-Host ''
   Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
   Write-Host -ForegroundColor DarkGray '│' -NoNewline
-  Write-Host -ForegroundColor DarkGray ' Profile reloaded. ' -NoNewline
+  Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
   Write-Host -ForegroundColor DarkGray '│'
   Write-Host -ForegroundColor DarkGray '└───────────────────┘'
 }
@@ -91,6 +91,10 @@ function Remove-DuplicatePSReadlineHistory {
   Clear-Content $historyPath
 
   $uniqueHistory | Out-File -Append $historyPath
+}
+
+function edit-history {
+  & $env:EDITOR (Get-PSReadLineOption).HistorySavePath
 }
 
 function fbak {
@@ -190,7 +194,7 @@ function colors {
   }
 }
 
-function linker {
+function Set-Link {
   param(
     [Parameter(Mandatory = $true)]
     [string]$base,

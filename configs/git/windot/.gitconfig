@@ -1,0 +1,36 @@
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[user]
+	name = Nick Jensen
+	email = nickflip86@gmail.com
+	username = 5nik7
+	signingkey = 89C80154581AC132
+[credential "https://github.com"]
+	helper = 
+	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+[core]
+	editor = C:\\vscode\\Code.exe
+	protectNTFS = false
+[credential]
+	helper = store
+[gpg]
+	program = C:\\Git\\usr\\bin\\gpg.exe
+[safe]
+	directory = C:/repos/dots
+	directory = C:/repos/dotfiles
+	directory = C:/repos/nvim
+[push]
+	default = current
+	autoSetupRemote = true
+[pull]
+	rebase = true
+[init]
+	defaultBranch = main
+[commit]
+	gpgsign = true

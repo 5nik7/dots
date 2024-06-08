@@ -89,16 +89,10 @@ if ($host.Name -eq 'ConsoleHost') {
   }
   Set-PSReadLineOption @PSReadLineOptions
 }
-
 Set-PSReadLineOption -AddToHistoryHandler {
   param($line)
   $line -notmatch '(^\s+|^rm|^Remove-Item|fl$)'
 }
-
-function edit-history {
-  & $env:EDITOR (Get-PSReadLineOption).HistorySavePath
-}
-Set-Alias -Name ehist -Value edit-history
 
 Set-PsFzfOption -TabExpansion -EnableFd
 
