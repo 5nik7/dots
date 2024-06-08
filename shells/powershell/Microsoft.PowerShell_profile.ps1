@@ -24,9 +24,11 @@ If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
 }
 
 $profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
-foreach ( $includeFile in ("functions", "aliases") ) {
-  Unblock-File $profileDirectory\$includeFile.ps1
-  . "$profileDirectory\$includeFile.ps1"
+foreach ( $includeFile in ("functions", "aliases", "secrets") ) {
+  if (Test-Path $profileDirectory\$includeFile.ps1) {
+    Unblock-File $profileDirectory\$includeFile.ps1
+    . "$profileDirectory\$includeFile.ps1"
+  }
 }
 
 $scriptsPath = "$profileDirectory\Scripts"
