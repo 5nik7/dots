@@ -57,9 +57,9 @@ if ($host.Name -eq 'ConsoleHost') {
     HistorySearchCursorMovesToEnd = $true
     MaximumHistoryCount           = "10000"
     ShowToolTips                  = $true
-    ContinuationPrompt            = ">>"
+    ContinuationPrompt            = " "
     BellStyle                     = "None"
-    PredictionSource              = "History"
+    PredictionSource              = "HistoryandPlugin"
     EditMode                      = "Vi"
     PredictionViewStyle           = "InlineView"
     Colors                        = @{
@@ -71,7 +71,7 @@ if ($host.Name -eq 'ConsoleHost') {
       Operator           = 'DarkYellow'
       Type               = 'Cyan'
       Variable           = 'DarkCyan'
-      Parameter          = '#7faadb'
+      Parameter          = 'Gray'
       ContinuationPrompt = 'Black'
       Default            = 'White'
     }
@@ -91,6 +91,7 @@ Set-PSReadLineKeyHandler -Key F7 -ScriptBlock { Invoke-FzfTabCompletion }
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+
 function Invoke-Starship-TransientFunction {
   &starship module character
 }
