@@ -1,19 +1,4 @@
-﻿$profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
-$envFilePath = Join-Path -Path $profileDirectory -ChildPath ".env"
-
-if (Test-Path $envFilePath) {
-  Get-Content $envFilePath | ForEach-Object {
-    $name, $value = $_.split('=')
-
-    if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
-      continue
-    }
-
-    Set-Item -force -Path "env:$name" -Value $value
-  }
-}
-
-$ENV:REPOS = "C:\repos"
+﻿$ENV:REPOS = "C:\repos"
 $ENV:DOTS = "$ENV:REPOS\dots"
 $ENV:DOTSHELL = "$ENV:DOTS\shells"
 $ENV:PSHELL = "$ENV:DOTSHELL\powershell"
@@ -34,6 +19,10 @@ $ENV:BAT_CONFIG_PATH = "$ENV:DOTCONF\bat\bat.conf"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTCONF\yazi"
 $ENV:BOXES = "$ENV:DOTCONF\boxes\boxes-config"
 
+If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
+    (& "C:\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
+}
+
 $profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
 foreach ( $includeFile in ("functions", "aliases") ) {
   Unblock-File $profileDirectory\$includeFile.ps1
@@ -50,7 +39,6 @@ if (Test-Path($ChocolateyProfile)) {
   Import-Module "$ChocolateyProfile"
 }
 
-
 $ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
   "--ansi --layout reverse --info inline --height 80% --cycle --border sharp
 --prompt ' ' --pointer ' ' --marker ' '
@@ -58,7 +46,6 @@ $ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
 --color 'info:2,prompt:5,spinner:2,pointer:6,marker:4'
 --no-scrollbar"
 }
-
 
 if ($host.Name -eq 'ConsoleHost') {
   Import-Module PSReadLine
@@ -103,12 +90,9 @@ Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 
-# $CondaHook = "C:\miniconda3\shell\condabin\conda-hook.ps1"
-# if (Test-Path($CondaHook)) {
-#   . $CondaHook
-# }
-
 Invoke-Expression (&starship init powershell)
+
+# oh-my-posh init pwsh | Invoke-Expression
 
 function OnViModeChange {
   if ($args[0] -eq 'Command') {

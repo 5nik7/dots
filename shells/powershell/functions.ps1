@@ -11,6 +11,10 @@ function Edit-Profile {
   & $ENV:EDITOR $PROFILE
 }
 
+function Get-Functions {
+  Get-ChildItem function:\
+}
+
 function Test-CommandExists {
   param($command)
   $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
@@ -134,7 +138,6 @@ function Export-EnvironmentVariable {
   )
   Set-Item -Force -Path "env:$Name" -Value $Value
 }
-Set-Alias -Name export -Value Export-EnvironmentVariable
 
 Function Search-Alias {
   param (
@@ -244,29 +247,6 @@ function Set-Link {
   }
 }
 
-function bak {
-  param(
-    [Parameter(Mandatory = $false)]
-    [string]$Path = (Get-Location).Path,
-    [switch]$s
-  )
-
-  $bakFiles = Get-ChildItem -Path $Path -Filter "*.bak" -Recurse -Force -ErrorAction SilentlyContinue
-  $backupPath = Join-Path -Path $env:USERPROFILE -ChildPath "backups"
-
-  foreach ($file in $bakFiles) {
-    if ($s -and $file.FullName -notlike "$backupPath\*") {
-      $destination = Join-Path -Path $backupPath -ChildPath $file.
-      Move-Item -Path $file.FullName -Destination $destination -Force | Out-Null
-      Write-Host "Moved $file.FullName to $destination"
-    }
-    else {
-      Write-Host $file.FullName
-    }
-  }
-}
-
-
 function Add-PathPrefix {
   param (
     [Parameter(Mandatory = $true)]
@@ -286,3 +266,18 @@ function Add-Path {
     $env:Path += ";$Path"
   }
 }
+
+# $profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
+# $envFilePath = Join-Path -Path $profileDirectory -ChildPath ".env"
+
+# if (Test-Path $envFilePath) {
+#   Get-Content $envFilePath | ForEach-Object {
+#     $name, $value = $_.split('=')
+
+#     if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
+#       continue
+#     }
+
+#     Set-Item -force -Path "env:$name" -Value $value
+#   }
+# }
