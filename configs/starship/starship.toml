@@ -1,17 +1,13 @@
-command_timeout = 1000
+command_timeout=3000
+scan_timeout = 15
 
 format = """
-$os\
-$username\
-$hostname\
 $directory\
 $git_branch\
 $git_status\
-$package\
 $nodejs\
 $conda\
 $python\
-$ruby\
 $line_break\
 $shell\
 $character\
@@ -19,38 +15,21 @@ $character\
 
 add_newline = true
 
-# format ="""$line_break\
-# [┌󰍴](black)$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$fill$cmd_duration$time$line_break\
-# [└󰍴](black)$character\
-# """
-
-# format ="""$line_break\
-# [┌](black)$fill $cmd_duration$time$line_break\
-# [└ ](black)$os$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$all$line_break\
-# $character\
-# """
-
 [fill]
 symbol = '󱘹'
 style = "fg:black bg:none"
 
+[memory_usage]
+symbol = ''
+format = "$symbol[${ram_pct}]($style) "
+threshold = -1
+style = "white"
+disabled = true
+
 [shell]
 format = ' [$indicator]($style) '
-fish_indicator = '󰈺 '
-# powershell_indicator = ' '
-powershell_indicator = 'PS'
-# powershell_indicator = 'pwsh'
-# powershell_indicator = '_'
-# powershell_indicator = ''
-# powershell_indicator = '_'
-# powershell_indicator = ''
-# powershell_indicator = ''
-# powershell_indicator = '󰨊'
-# powershell_indicator = ''
-# powershell_indicator = ''
-# bash_indicator = '󱆃 '
-# bash_indicator = '󱆃'
-# bash_indicator = 'BASH '
+fish_indicator = 'fish'
+powershell_indicator = 'pwsh'
 bash_indicator = 'bash'
 zsh_indicator = 'zsh'
 cmd_indicator = 'cmd'
@@ -58,112 +37,17 @@ unknown_indicator = ' '
 style = 'bg:none fg:bright-black italic'
 disabled = true
 
-[os]
-format = '[$symbol]($style)'
-style = 'white'
-disabled = true
-
-[os.symbols]
-Alpine = ' '
-# Arch = '󰔷 '
-# Arch = ' '
-# Arch = '󰣇 '
-Arch = '󰚌 '
-# Arch = '󰁥 '
-CentOS = ' '
-Debian = '󰣚 '
-Fedora = ' '
-FreeBSD = ' '
-Gentoo = ' '
-Linux = ' '
-Macos = ' '
-Mint = ' '
-# NixOS = '  '
-NixOS = '󱄅 '
-openSUSE = ' '
-Raspbian = ' '
-Redhat = ' '
-RedHatEnterprise = ' '
-Ubuntu = ' '
-# Ubuntu = ' '
-Unknown = ' '
-# Windows = ' '
-# Windows = '󰕰 '
-Windows = '󰚌 '
-# Windows = ' '
-# Windows = '󰖳 '
-# Windows = '󰨑 '
-# Windows = '󱓝 '
-# Windows = '󰍲 '
-
-
-[username]
-style_user = 'blue'
-style_root = 'blue'
-format = '[$user]($style)'
-disabled = true
-show_always = true
-aliases = { "Administrator" = "njen", "nickf" = "njen" }
-
-[hostname]
-ssh_only = true
-format = '[@$hostname$ssh_symbol]($style)'
-style = 'blue'
-ssh_symbol = ''
-# trim_at = '.'
-disabled = true
-
-[localip]
-ssh_only = false
-format = '[\($localipv4\)](bright-black) '
-disabled = true
-
-
 [directory.substitutions]
-# '/Documents/' = '  '
-# 'Downloads' = ' '
-# 'Music' = ' '
-# 'Pictures' = ' '
-# 'C:/' = 'c:/'
-# 'C:/' = '/c/'
-# 'C:/' = ' '
-# 'C:/' = ''
-# 'C:' = '/'
-# 'C:/' = '/'
-# 'c/' = '/'
-# 'C:\' = '\'
-# '//' = '/'
-# 'C:/' = '󰗦 '
-# 'C:/' = '󰯳 '
-# 'C:/' = ' '
-# 'C:/' = '󰯲 '
-# 'C:/' = '󰬊 '
-# 'C:/' = ' '
-# 'C:/' = '󰫰'
-# 'C:/' = '
-# 'C:/' = '/c/'
-# '/mnt/c' = ''
-# '///' = '/'
-# 'c' = '/c'
-# '/' = '󰿟'
-# '/' = ''
-# '~' = '󰜥'
-# '/repos/' = ' '
-# '/repos' = '/repos '
-
-
+'/Documents/' = '  '
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
 repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
-# style = 'blue'
-# before_repo_root_style = 'blue'
-# repo_root_style = 'bold bright-blue'
-style = 'cyan'
-before_repo_root_style = 'cyan'
-repo_root_style = 'bright-cyan bold'
+style = 'bright-blue'
+before_repo_root_style = 'bright-blue'
+repo_root_style = 'bright-blue bold'
 truncation_length = 0
-# truncation_symbol = ' '
+# truncation_symbol = "…/"
 # home_symbol = ' '
 truncate_to_repo = false
 use_os_path_sep = true
@@ -171,58 +55,24 @@ use_logical_path = true
 read_only = ' 󰍁'
 read_only_style = 'bright-yellow'
 
-[time]
-disabled = false
-# time_format = '%I:%M:%S'
-time_format = "%T" # Monday Hour:Minute Format
-# style = 'bg:blue fg:black'
-# format = '[](bg:bright-black fg:blue)[ $time ]($style)'
-style = 'cyan dimmed'
-format = '[  $time ]($style)'
-# format = '[  $time ]($style)'
-
-[cmd_duration]
-min_time = 1
-show_milliseconds = true
-# format = "[](bg:none fg:bright-black)[ ](bg:bright-black fg:green)[$duration ]($style)"
-# style = "bg:bright-black fg:bright-green bold"
-format = "[](blue) [$duration]($style)"
-style = "bright-blue"
-disabled = false
-
 [line_break]
 disabled = false
 
 [git_branch]
 symbol = ""
-# symbol = ""
-# symbol = ""
-format = '[$symbol](cyan dimmed)[$branch]($style) '
-style = "cyan dimmed italic"
+format = '[$symbol$branch]($style) '
+style = "bright-black italic"
 
 [git_status]
-disabled = false
-# style = "bg:black"
-format = '$all_status$ahead_behind$diverged'
-# staged     = '[󰄴 ${count} ](bold green)'
-staged     = '[󱇬 ${count} ](green)'
-modified   = '[ ${count} ](bright-yellow)'
-renamed    = ''
-# deleted    = '[ ${count} ](bold red)'
-deleted    = '[󱎘 ${count} ](red)'
-stashed    = ''
-untracked  = ''
-conflicted = '[󰈅 ${count} ](red)'
-up_to_date = ''
-ahead = '[⇡${count}](green) '
-behind = '[⇣${count}](red) '
-diverged = '[ ](red)([⇡${ahead_count} ](green)[⇣${behind_count}](red)) '
-windows_starship = '/mnt/c/ProgramData/scoop/shims/starship.exe'
-
-[package]
-format = '[$symbol$version]($style) '
-symbol = ' '
-style = 'purple'
+format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](purple) ($ahead_behind$stashed)]($style)"
+style = "cyan"
+conflicted = "​"
+untracked = "​"
+modified = "​"
+staged = "​"
+renamed = "​"
+deleted = "​"
+stashed = "≡"
 
 [nodejs]
 detect_files = ['package.json']
@@ -240,7 +90,7 @@ format = '[$symbol($version)]($style) '
 [conda]
 symbol = '🅒 '
 ignore_base = true
-format = '[$symbol$environment](dimmed green) '
+format = '[$symbol$environment](green) '
 
 [python]
 format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
@@ -253,41 +103,8 @@ format = '[$symbol$version]($style) '
 style = 'red'
 symbol = ' '
 
-[lua]
-format = '[$symbol$version]($style) '
-style = 'bright-yellow'
-symbol = '🌙 '
-detect_folders = []
-detect_files = ['.lua-version']
-
-[status]
-style = 'fg:red bg:black'
-symbol = ''
-success_symbol = ''
-not_executable_symbol = '!'
-not_found_symbol = '?'
-sigint_symbol = ''
-format = '[$symbol [($common_meaning$signal_name$maybe_int)](fg:bright-cyan dimmed bg:black)]($style) '
-map_symbol = true
-disabled = false
-
 [character]
-# success_symbol = '[󰅂](bright-green)'
-# error_symbol= '[󰅂](red)'
-# vimcmd_symbol = '[󰅂](bright-black)'
-success_symbol = '[](bright-green)'
+success_symbol = '[](bright-cyan)'
 error_symbol= '[](red)'
 vimcmd_symbol = '[](bright-black)'
-# success_symbol = '[](bright-green)'
-# error_symbol= '[](red)'
-# vimcmd_symbol = '[](bright-black)'
-# success_symbol = '[](cyan)'
-# error_symbol= '[](red)'
-# vimcmd_symbol = '[](bright-black)'
-# success_symbol = '[](bright-green)'
-# error_symbol= '[](red)'
-# vimcmd_symbol = '[](bright-black)'
-# success_symbol = '[](bright-green)'
-# error_symbol= '[](red)'
-# vimcmd_symbol = '[](bright-black)'
 format = '$symbol '

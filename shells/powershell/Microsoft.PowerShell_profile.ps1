@@ -65,7 +65,7 @@ if ($host.Name -eq 'ConsoleHost') {
     Colors                        = @{
       InlinePrediction   = 'DarkGray'
       Comment            = 'DarkGray'
-      Command            = 'DarkMagenta'
+      Command            = 'Green'
       Number             = 'Magenta'
       Member             = 'Red'
       Operator           = 'DarkYellow'
