@@ -1,0 +1,167 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Microsoft.PowerShell.Commands.PSRepositoryItemInfo</T>
+      <T>System.Management.Automation.PSCustomObject</T>
+      <T>System.Object</T>
+    </TN>
+    <MS>
+      <S N="Name">AnyPackage.Chocolatey</S>
+      <Version N="Version">0.1.3</Version>
+      <S N="Type">Module</S>
+      <S N="Description">AnyPackage provider that facilitates installing Chocolatey packages from any NuGet repository.</S>
+      <S N="Author">Ethan Bergstrom</S>
+      <S N="CompanyName">ethanbergstrom</S>
+      <S N="Copyright">(c) 2023 Ethan Bergstrom. All rights reserved.</S>
+      <DT N="PublishedDate">2023-04-06T05:13:07-07:00</DT>
+      <Obj N="InstalledDate" RefId="1">
+        <DT>2024-06-08T04:08:27.5079563-07:00</DT>
+        <MS>
+          <Obj N="DisplayHint" RefId="2">
+            <TN RefId="1">
+              <T>Microsoft.PowerShell.Commands.DisplayHintType</T>
+              <T>System.Enum</T>
+              <T>System.ValueType</T>
+              <T>System.Object</T>
+            </TN>
+            <ToString>DateTime</ToString>
+            <I32>2</I32>
+          </Obj>
+        </MS>
+      </Obj>
+      <Nil N="UpdatedDate" />
+      <URI N="LicenseUri">https://github.com/AnyPackage/AnyPackage.Chocolatey/blob/main/LICENSE</URI>
+      <URI N="ProjectUri">https://github.com/AnyPackage/AnyPackage.Chocolatey</URI>
+      <Nil N="IconUri" />
+      <Obj N="Tags" RefId="3">
+        <TN RefId="2">
+          <T>System.Object[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>AnyPackage</S>
+          <S>Provider</S>
+          <S>Chocolatey</S>
+          <S>Windows</S>
+          <S>PSModule</S>
+          <S>PSEdition_Desktop</S>
+          <S>PSEdition_Core</S>
+        </LST>
+      </Obj>
+      <Obj N="Includes" RefId="4">
+        <TN RefId="3">
+          <T>System.Collections.Hashtable</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">Function</S>
+            <Obj N="Value" RefId="5">
+              <TNRef RefId="2" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Command</S>
+            <Ref N="Value" RefId="5" />
+          </En>
+          <En>
+            <S N="Key">Workflow</S>
+            <Ref N="Value" RefId="5" />
+          </En>
+          <En>
+            <S N="Key">Cmdlet</S>
+            <Ref N="Value" RefId="5" />
+          </En>
+          <En>
+            <S N="Key">RoleCapability</S>
+            <Ref N="Value" RefId="5" />
+          </En>
+          <En>
+            <S N="Key">DscResource</S>
+            <Ref N="Value" RefId="5" />
+          </En>
+        </DCT>
+      </Obj>
+      <Nil N="PowerShellGetFormatVersion" />
+      <S N="ReleaseNotes">This is a PowerShell AnyPackage provider. It is a wrapper on top of Choco._x000A__x0009__x0009__x0009_It discovers Chocolatey packages from https://www.chocolatey.org and other NuGet repos.</S>
+      <Obj N="Dependencies" RefId="6">
+        <TNRef RefId="2" />
+        <LST>
+          <Obj RefId="7">
+            <TN RefId="4">
+              <T>System.Collections.Specialized.OrderedDictionary</T>
+              <T>System.Object</T>
+            </TN>
+            <DCT>
+              <En>
+                <S N="Key">Name</S>
+                <S N="Value">AnyPackage</S>
+              </En>
+              <En>
+                <S N="Key">MinimumVersion</S>
+                <S N="Value">0.5.1</S>
+              </En>
+              <En>
+                <S N="Key">CanonicalId</S>
+                <S N="Value">nuget:AnyPackage/0.5.1</S>
+              </En>
+            </DCT>
+          </Obj>
+          <Obj RefId="8">
+            <TNRef RefId="4" />
+            <DCT>
+              <En>
+                <S N="Key">Name</S>
+                <S N="Value">Foil</S>
+              </En>
+              <En>
+                <S N="Key">MinimumVersion</S>
+                <S N="Value">0.3.0</S>
+              </En>
+              <En>
+                <S N="Key">CanonicalId</S>
+                <S N="Value">nuget:Foil/0.3.0</S>
+              </En>
+            </DCT>
+          </Obj>
+        </LST>
+      </Obj>
+      <S N="RepositorySourceLocation">https://www.powershellgallery.com/api/v2</S>
+      <S N="Repository">PSGallery</S>
+      <S N="PackageManagementProvider">NuGet</S>
+      <Obj N="AdditionalMetadata" RefId="9">
+        <TN RefId="5">
+          <T>System.Management.Automation.PSCustomObject</T>
+          <T>System.Object</T>
+        </TN>
+        <MS>
+          <S N="copyright">(c) 2023 Ethan Bergstrom. All rights reserved.</S>
+          <S N="description">AnyPackage provider that facilitates installing Chocolatey packages from any NuGet repository.</S>
+          <S N="requireLicenseAcceptance">False</S>
+          <S N="releaseNotes">This is a PowerShell AnyPackage provider. It is a wrapper on top of Choco._x000A__x0009__x0009__x0009_It discovers Chocolatey packages from https://www.chocolatey.org and other NuGet repos.</S>
+          <S N="isLatestVersion">True</S>
+          <S N="isAbsoluteLatestVersion">True</S>
+          <S N="versionDownloadCount">590</S>
+          <S N="downloadCount">669</S>
+          <S N="packageSize">58394</S>
+          <S N="published">4/6/2023 5:13:07 AM -07:00</S>
+          <S N="created">4/6/2023 5:13:07 AM -07:00</S>
+          <S N="lastUpdated">6/7/2024 3:42:17 AM -07:00</S>
+          <S N="tags">AnyPackage Provider Chocolatey Windows PSModule PSEdition_Desktop PSEdition_Core</S>
+          <S N="developmentDependency">False</S>
+          <S N="updated">2024-06-07T03:42:17Z</S>
+          <S N="NormalizedVersion">0.1.3</S>
+          <S N="Authors">Ethan Bergstrom</S>
+          <S N="IsPrerelease">false</S>
+          <S N="ItemType">Module</S>
+          <S N="FileList">AnyPackage.Chocolatey.nuspec|AnyPackage.Chocolatey.cat|private\Get-ChocoPackage.ps1|private\Write-Package.ps1|AnyPackage.Chocolatey.psm1|private\Find-ChocoPackage.ps1|AnyPackage.Chocolatey.psd1</S>
+          <S N="GUID">070f2b8f-c7db-4566-9296-2f7cc9146bf0</S>
+          <S N="PowerShellVersion">5.1</S>
+        </MS>
+      </Obj>
+      <S N="InstalledLocation">C:\Users\nickf\Documents\PowerShell\Modules\AnyPackage.Chocolatey\0.1.3</S>
+    </MS>
+  </Obj>
+</Objs>

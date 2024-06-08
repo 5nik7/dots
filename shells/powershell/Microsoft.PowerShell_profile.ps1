@@ -91,10 +91,11 @@ Set-PSReadLineKeyHandler -Key F7 -ScriptBlock { Invoke-FzfTabCompletion }
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
-
+function Invoke-Starship-TransientFunction {
+  &starship module character
+}
 Invoke-Expression (&starship init powershell)
-
-# oh-my-posh init pwsh | Invoke-Expression
+Enable-TransientPrompt
 
 function OnViModeChange {
   if ($args[0] -eq 'Command') {

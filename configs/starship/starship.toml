@@ -1,7 +1,6 @@
 command_timeout = 1000
 
 format = """
-$line_break\
 $os\
 $username\
 $hostname\
@@ -18,7 +17,7 @@ $shell\
 $character\
 """
 
-add_newline = false
+add_newline = true
 
 # format ="""$line_break\
 # [┌󰍴](black)$username$hostname$directory$git_branch$git_status$package$nodejs$python$ruby$fill$cmd_duration$time$line_break\
