@@ -68,7 +68,7 @@ if ($host.Name -eq 'ConsoleHost') {
     BellStyle                     = "None"
     PredictionSource              = "History"
     EditMode                      = "Vi"
-    TerminateOrphanedConsoleApps   = $true
+    TerminateOrphanedConsoleApps  = $true
     PredictionViewStyle           = "InlineView"
     Colors                        = @{
       Comment                = 'DarkGray'
