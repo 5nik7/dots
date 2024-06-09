@@ -80,8 +80,8 @@ prepend_path "$PYENV_ROOT/bin"
 
 source_file "$HOME/.bash_aliases"
 
-LS_COLORS="$(vivid generate snazzy)"
-export LS_COLORS
+# LS_COLORS="$(vivid generate snazzy)"
+# export LS_COLORS
 
 # PS1='\[\033[01;32m\][\u@\h\[\033[01;37m\] \W\[\033[01;32m\]]$\[\033[00m\] '
 
