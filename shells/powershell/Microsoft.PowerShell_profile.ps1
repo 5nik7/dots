@@ -6,32 +6,32 @@
 # $XDG_RUNTIME_DIR = %TEMP%
 
 if ($IsWindows) {
-  $ENV:XDG_CONFIG_HOME = "$LEnv:LOCALAPPDATA"
+  $env:XDG_CONFIG_HOME = "$Lenv:LOCALAPPDATA"
 }
 
 if ($IsLinux) {
-  $ENV:XDG_CONFIG_HOME = "$Env:USERPROFILE/.config"
+  $env:XDG_CONFIG_HOME = "$env:USERPROFILE/.config"
 }
 
-$ENV:REPOS = "C:\repos"
-$ENV:DOTS = "$ENV:REPOS\dots"
-$ENV:DOTSHELL = "$ENV:DOTS\shells"
-$ENV:PSHELL = "$ENV:DOTSHELL\powershell"
-$ENV:ZSHELL = "$ENV:DOTSHELL\zsh"
-$ENV:BASHELL = "$ENV:DOTSHELL\bash"
-$ENV:DOTCONF = "$ENV:DOTS\configs"
-$ENV:PROJECTS = "$ENV:USERPROFILE\projects"
+$env:PROJECTS = "$env:USERPROFILE\projects"
+$env:REPOS = $env:PROJECTS
+$env:DOTS = "$env:USERPROFILE\.dots"
+$env:DOTSHELL = "$env:DOTS\shells"
+$env:PSHELL = "$env:DOTSHELL\powershell"
+$env:ZSHELL = "$env:DOTSHELL\zsh"
+$env:BASHELL = "$env:DOTSHELL\bash"
+$env:DOTCONF = "$env:DOTS\configs"
 
-$ENV:NVM_HOME = "$ENV:USERPROFILE\.nvm"
-$ENV:NVM_SYMLINK = "C:\nodejs"
-$ENV:GOPATH = "$ENV:USERPROFILE\go"
-$ENV:GOBIN = "$ENV:USERPROFILE\go\bin"
+$env:NVM_HOME = "$env:USERPROFILE\.nvm"
+$env:NVM_SYMLINK = "$env:HOMEDRIVE\nodejs"
+$env:GOPATH = "$env:USERPROFILE\go"
+$env:GOBIN = "$env:USERPROFILE\go\bin"
 
-$ENV:STARSHIP_CONFIG = "$ENV:DOTCONF\starship\starship.toml"
-$ENV:STARSHIP_CACHE = "$ENV:USERPROFILE\AppData\Local\Temp"
-$ENV:BAT_CONFIG_PATH = "$ENV:DOTCONF\bat\bat.conf"
-$ENV:YAZI_CONFIG_HOME = "$ENV:DOTCONF\yazi"
-$ENV:BOXES = "$ENV:DOTCONF\boxes\boxes-config"
+$env:STARSHIP_CONFIG = "$env:DOTCONF\starship\starship.toml"
+$env:STARSHIP_CACHE = "$env:USERPROFILE\AppData\Local\Temp"
+$env:BAT_CONFIG_PATH = "$env:DOTCONF\bat\bat.conf"
+$env:YAZI_CONFIG_HOME = "$env:DOTCONF\yazi"
+$env:BOXES = "$env:DOTCONF\boxes\boxes-config"
 
 If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
     (& "C:\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
@@ -55,7 +55,7 @@ if (Test-Path($ChocolateyProfile)) {
   Import-Module "$ChocolateyProfile"
 }
 
-$ENV:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
+$env:FZF_DEFAULT_OPTS = if (Test-CommandExists fzf) {
   "--ansi --layout reverse --info inline --height 80% --cycle --border sharp
 --prompt ' ' --pointer ' ' --marker ' '
 --color 'fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0'
