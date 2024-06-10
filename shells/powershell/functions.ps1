@@ -3,7 +3,7 @@
     [string]$arg
   )
 
-  if ($arg -eq 0) {
+  if ($arg -eq $null) {
     git
   }
   elseif ($arg -eq "a") {
