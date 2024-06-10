@@ -1,5 +1,5 @@
 ﻿function Edit-Profile {
-  & $ENV:EDITOR $PROFILE
+  & $env:EDITOR $PROFILE
 }
 
 function Get-Functions {
@@ -18,17 +18,17 @@ elseif (Test-CommandExists nvim) { 'nvim' }
 elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
-$ENV:EDITOR = $EDITOR
+$env:EDITOR = $EDITOR
 function edit-item {
   param (
     [string]$Path = $PWD
   )
 
   if ($Path) {
-    & $ENV:EDITOR $Path
+    & $env:EDITOR $Path
   }
   else {
-    & $ENV:EDITOR
+    & $env:EDITOR
   }
 }
 
@@ -133,19 +133,19 @@ Function Search-Alias {
 }
 
 function repos {
-  Set-Location "$ENV:REPOS"
+  Set-Location "$env:REPOS"
 }
 
 function dots {
-  Set-Location "$ENV:DOTS"
+  Set-Location "$env:PROJECTS\dots"
 }
 
 function dotfiles {
-  Set-Location "$ENV:DOTFILES"
+  Set-Location "$env:DOTFILES"
 }
 
 function projects {
-  Set-Location "$ENV:PROJECTS"
+  Set-Location "$env:PROJECTS"
 }
 
 function q {

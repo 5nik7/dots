@@ -2,6 +2,9 @@
     (& "C:\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
 }
 
+Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
+Import-Module npm-completion
+
 $profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
 foreach ( $includeFile in ("environment", "functions", "aliases", "secrets") ) {
   if (Test-Path $profileDirectory\$includeFile.ps1) {
