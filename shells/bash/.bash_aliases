@@ -15,8 +15,8 @@ alias pp='win32yank.exe -o --lf'
 alias so='source'
 
 alias v='$EDITOR'
-alias sv="sudo $EDITOR"
-alias vsh="$EDITOR $DOTFILES/bash/.bashrc"
+alias sv='sudo $EDITOR'
+alias vsh='$EDITOR $DOTFILES/bash/.bashrc'
 
 alias grep='grep --color=auto'
 alias cat='bat'
@@ -31,22 +31,22 @@ alias "........"="cd ../../../../../../.."
 
 alias lg='lazygit'
 
-function ya() {
-    local tmp
+function yy() {
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
     yazi "$@" --cwd-file="$tmp"
-    if cwd="$(cat "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-    cd "$cwd"
+    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+        cd -- "$cwd"
     fi
-    rm -f "$tmp"
+    rm -f -- "$tmp"
 }
-alias d='ya'
+alias d='yy'
 
 function dd {
-	if [ -z "$1" ]; then
-		explorer.exe .
-	else
-		explorer.exe "$1"
-	fi
+    if [ -z "$1" ]; then
+        explorer .
+    else
+        explorer "$1"
+    fi
 }
 
 alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes'
@@ -62,4 +62,16 @@ function weather {
     else
         curl "wttr.in/Yakima?uFQ$1"
     fi
+}
+
+bat() {
+    local index
+    local args=("$@")
+    for index in $(seq 0 ${#args[@]}); do
+        case "${args[index]}" in
+        -*) continue ;;
+        *) [ -e "${args[index]}" ] && args[index]="$(cygpath --windows "${args[index]}")" ;;
+        esac
+    done
+    command bat "${args[@]}"
 }

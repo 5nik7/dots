@@ -14,3 +14,11 @@ Set-Alias -Name export -Value Export-EnvironmentVariable
 
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 Set-Alias -Name vhist -Value edit-history
+
+# [alias]
+# st = status -sb
+# co = checkout
+# c = commit --short
+# ci = commit --short
+# p = push
+# l = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --decorate --date=short

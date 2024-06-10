@@ -1,13 +1,4 @@
-﻿function Fresh {
-  & $PROFILE
-  Write-Host ''
-  Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
-  Write-Host -ForegroundColor DarkGray '│' -NoNewline
-  Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
-  Write-Host -ForegroundColor DarkGray '│'
-  Write-Host -ForegroundColor DarkGray '└───────────────────┘'
-}
-function Edit-Profile {
+﻿function Edit-Profile {
   & $ENV:EDITOR $PROFILE
 }
 
@@ -58,10 +49,10 @@ function dd {
   )
 
   if ($Path) {
-    explorer.exe $Path
+    explorer $Path
   }
   else {
-    explorer.exe
+    explorer
   }
 }
 
@@ -127,16 +118,6 @@ function touch($file) {
 
 function which($name) {
   Get-Command $name | Select-Object -ExpandProperty Definition
-}
-
-function Export-EnvironmentVariable {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Name,
-    [Parameter(Mandatory = $true)]
-    [string]$Value
-  )
-  Set-Item -Force -Path "env:$Name" -Value $Value
 }
 
 Function Search-Alias {
@@ -214,31 +195,24 @@ function Set-Link {
     }
     elseif (Test-Path -Path $target) {
       $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
-      Rename-Item -Path $target -NewName "$target.$bakDate.bak" -ErrorAction Stop | Out-Null
-      Write-Host ''
-      Write-Host -ForegroundColor Black "────────────────────────────────────────────────────────────"
+      $backupFileName = "$target.$bakDate.bak"
+      Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
       Write-Host ''
       Write-Host -ForegroundColor Yellow "Creating a backup file: " -NoNewline
-      Write-Host -ForegroundColor White "$target.$bakDate.bak"
+      Write-Host -ForegroundColor White $backupFileName
       Write-Host ''
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
       Write-Host -ForegroundColor DarkCyan "$base" -NoNewline
       Write-Host -ForegroundColor DarkGray " 󱦰 " -NoNewline
       Write-Host -ForegroundColor DarkBlue "$target"
-      Write-Host ''
-      Write-Host -ForegroundColor Black "────────────────────────────────────────────────────────────"
       Write-Host ''
     }
     else {
       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
       Write-Host ''
-      Write-Host -ForegroundColor Black "────────────────────────────────────────────────────────────"
-      Write-Host ''
       Write-Host -ForegroundColor DarkCyan "$base" -NoNewline
       Write-Host -ForegroundColor DarkGray " 󱦰 " -NoNewline
       Write-Host -ForegroundColor DarkBlue "$target"
-      Write-Host ''
-      Write-Host -ForegroundColor Black "────────────────────────────────────────────────────────────"
       Write-Host ''
     }
   }
@@ -283,59 +257,68 @@ function Add-Path {
 # }
 
 function Find-RegistryUninstallKey {
-    param($SearchFor, [switch]$Wow6432Node)
-    $results = @()
-    $keys = Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall |
+  param($SearchFor, [switch]$Wow6432Node)
+  $results = @()
+  $keys = Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall |
+  ForEach-Object {
+    class x64 {
+      [string]$GUID
+      [string]$Publisher
+      [string]$DisplayName
+      [string]$DisplayVersion
+      [string]$InstallLocation
+      [string]$InstallDate
+      [string]$UninstallString
+      [string]$Wow6432Node
+      [string]$RegistryKeyPath
+    }
+    $x64 = [x64]::new()
+    $x64.GUID = $_.pschildname
+    $x64.Publisher = $_.GetValue('Publisher')
+    $x64.DisplayName = $_.GetValue('DisplayName')
+    $x64.DisplayVersion = $_.GetValue('DisplayVersion')
+    $x64.InstallLocation = $_.GetValue('InstallLocation')
+    $x64.InstallDate = $_.GetValue('InstallDate')
+    $x64.UninstallString = $_.GetValue('UninstallString')
+    $x64.RegistryKeyPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$($_.pschildname)"
+    if ($Wow6432Node) { $x64.Wow6432Node = 'No' }
+    $results += $x64
+  }
+  if ($Wow6432Node) {
+    $keys = Get-ChildItem HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall |
     ForEach-Object {
-        class x64 {
-            [string]$GUID
-            [string]$Publisher
-            [string]$DisplayName
-            [string]$DisplayVersion
-            [string]$InstallLocation
-            [string]$InstallDate
-            [string]$UninstallString
-            [string]$Wow6432Node
-            [string]$RegistryKeyPath
-        }
-        $x64 = [x64]::new()
-        $x64.GUID = $_.pschildname
-        $x64.Publisher = $_.GetValue('Publisher')
-        $x64.DisplayName = $_.GetValue('DisplayName')
-        $x64.DisplayVersion = $_.GetValue('DisplayVersion')
-        $x64.InstallLocation = $_.GetValue('InstallLocation')
-        $x64.InstallDate = $_.GetValue('InstallDate')
-        $x64.UninstallString = $_.GetValue('UninstallString')
-        $x64.RegistryKeyPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$($_.pschildname)"
-        if ($Wow6432Node) { $x64.Wow6432Node = 'No' }
-        $results += $x64
+      class x86 {
+        [string]$GUID
+        [string]$Publisher
+        [string]$DisplayName
+        [string]$DisplayVersion
+        [string]$InstallLocation
+        [string]$InstallDate
+        [string]$UninstallString
+        [string]$Wow6432Node
+        [string]$RegistryKeyPath
+      }
+      $x86 = [x86]::new()
+      $x86.GUID = $_.pschildname
+      $x86.Publisher = $_.GetValue('Publisher')
+      $x86.DisplayName = $_.GetValue('DisplayName')
+      $x86.DisplayVersion = $_.GetValue('DisplayVersion')
+      $x86.InstallLocation = $_.GetValue('InstallLocation')
+      $x86.InstallDate = $_.GetValue('InstallDate')
+      $x86.UninstallString = $_.GetValue('UninstallString')
+      $x86.Wow6432Node = 'Yes'
+      $x86.RegistryKeyPath = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\$($_.pschildname)"
+      $results += $x86
     }
-    if ($Wow6432Node) {
-        $keys = Get-ChildItem HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall |
-        ForEach-Object {
-            class x86 {
-                [string]$GUID
-                [string]$Publisher
-                [string]$DisplayName
-                [string]$DisplayVersion
-                [string]$InstallLocation
-                [string]$InstallDate
-                [string]$UninstallString
-                [string]$Wow6432Node
-                [string]$RegistryKeyPath
-            }
-            $x86 = [x86]::new()
-            $x86.GUID = $_.pschildname
-            $x86.Publisher = $_.GetValue('Publisher')
-            $x86.DisplayName = $_.GetValue('DisplayName')
-            $x86.DisplayVersion = $_.GetValue('DisplayVersion')
-            $x86.InstallLocation = $_.GetValue('InstallLocation')
-            $x86.InstallDate = $_.GetValue('InstallDate')
-            $x86.UninstallString = $_.GetValue('UninstallString')
-            $x86.Wow6432Node = 'Yes'
-            $x86.RegistryKeyPath = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\$($_.pschildname)"
-            $results += $x86
-        }
-    }
-    $results | Sort-Object DisplayName | Where-Object { $_.DisplayName -match $SearchFor }
+  }
+  $results | Sort-Object DisplayName | Where-Object { $_.DisplayName -match $SearchFor }
+}
+
+function Fresh {
+  & $PROFILE
+  Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
+  Write-Host -ForegroundColor DarkGray '│' -NoNewline
+  Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
+  Write-Host -ForegroundColor DarkGray '│'
+  Write-Host -ForegroundColor DarkGray '└───────────────────┘'
 }
