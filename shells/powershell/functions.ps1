@@ -1,5 +1,24 @@
-﻿function Edit-Profile {
-  & $env:EDITOR $PROFILE
+﻿function g {
+  param(
+    [string]$arg
+  )
+
+  if ($arg -eq 0) {
+    git
+  }
+  elseif ($arg -eq "a") {
+    git add .
+  }
+  elseif ($arg -match ".git$") {
+    git clone $arg
+  }
+  else {
+    Write-Output "Invalid argument. Please provide a valid .git URL or 'a' for git add ."
+  }
+}
+
+function Edit-Profile {
+  (& $env:EDITOR ([IO.Path]::GetDirectoryName($profile)))
 }
 
 function Get-Functions {
