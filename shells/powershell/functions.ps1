@@ -13,7 +13,7 @@
     git add .
   }
   elseif ($arg -eq "c") {
-    $commitDate = Get-Date -Format "yyyy MM/dd HH:mm"
+    $commitDate = Get-Date -Format "yyyy-MM-dd HH:mm"
     git commit -m "Update @ $commitDate"
   }
   elseif ($arg -eq "s") {
@@ -21,7 +21,7 @@
   }
   elseif ($arg -eq "u") {
     git add .
-    $commitDate = Get-Date -Format "yyyy MM/dd HH:mm"
+    $commitDate = Get-Date -Format "yyyy-MM-dd HH:mm"
     git commit -m "Update @ $commitDate"
     git push
   }
