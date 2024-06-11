@@ -1,0 +1,3 @@
+Utilize Where-Object to search for the ReparsePoint file attribute.
+
+Get-ChildItem | Where-Object { $_.Attributes -match "ReparsePoint" }
