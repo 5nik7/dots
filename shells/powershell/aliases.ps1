@@ -16,12 +16,3 @@ Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 Set-Alias -Name vhist -Value edit-history
 
 Set-Alias -Name weather -Value Get-Weather
-
-
-# [alias]
-# st = status -sb
-# co = checkout
-# c = commit --short
-# ci = commit --short
-# p = push
-# l = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --decorate --date=short
