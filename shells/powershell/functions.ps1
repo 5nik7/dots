@@ -6,14 +6,30 @@
   if ($arg -eq $null) {
     git
   }
+  elseif ($arg -eq "p") {
+    git pull
+  }
   elseif ($arg -eq "a") {
     git add .
+  }
+  elseif ($arg -eq "c") {
+    $commitDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
+    git commit -m "Update @ $commitDate"
+  }
+  elseif ($arg -eq "s") {
+    git push
+  }
+  elseif ($arg -eq "u") {
+    git add .
+    $commitDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
+    git commit -m "Update @ $commitDate"
+    git push
   }
   elseif ($arg -match ".git$") {
     git clone $arg
   }
   else {
-    Write-Output "Invalid argument. Please provide a valid .git URL or 'a' for git add ."
+    git
   }
 }
 
