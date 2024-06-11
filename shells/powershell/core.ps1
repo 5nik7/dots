@@ -89,21 +89,20 @@ Set-PSReadLineKeyHandler -Chord Enter -Function ValidateAndAcceptLine
 
 Set-PsFzfOption -TabExpansion
 
+# function OnViModeChange {
+#   if ($args[0] -eq 'Command') {
+
+#     # Set the cursor to a solid block.
+#     Write-Host -NoNewLine "`e[2 q"
+#   }
+#   else {
+#     # Set the cursor to a blinking line.
+#     Write-Host -NoNewLine "`e[5 q"
+#   }
+# }
+# Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
 function Invoke-Starship-TransientFunction {
   &starship module character
 }
 Invoke-Expression (&starship init powershell)
 Enable-TransientPrompt
-
-function OnViModeChange {
-  if ($args[0] -eq 'Command') {
-
-    # Set the cursor to a solid block.
-    Write-Host -NoNewLine "`e[2 q"
-  }
-  else {
-    # Set the cursor to a blinking line.
-    Write-Host -NoNewLine "`e[5 q"
-  }
-}
-Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
