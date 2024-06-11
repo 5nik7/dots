@@ -1,4 +1,13 @@
-﻿If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
+﻿function Fresh {
+  & $PROFILE
+  Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
+  Write-Host -ForegroundColor DarkGray '│' -NoNewline
+  Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
+  Write-Host -ForegroundColor DarkGray '│'
+  Write-Host -ForegroundColor DarkGray '└───────────────────┘'
+}
+
+If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
     (& "C:\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
 }
 

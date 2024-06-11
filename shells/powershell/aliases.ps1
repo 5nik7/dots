@@ -15,6 +15,9 @@ Set-Alias -Name export -Value Export-EnvironmentVariable
 Set-Alias -Name clhist -Value Remove-DuplicatePSReadlineHistory
 Set-Alias -Name vhist -Value edit-history
 
+Set-Alias -Name weather -Value Get-Weather
+
+
 # [alias]
 # st = status -sb
 # co = checkout

@@ -33,6 +33,23 @@
   }
 }
 
+function Get-Weather($arg) {
+  if ($arg -eq "help") {
+    curl -s "wttr.in/:help" | boxes -d ansi
+  }
+  elseif ($arg -eq "1") {
+    curl -s "wttr.in/Yakima?1uFq" | boxes -d ansi
+  }
+  elseif ($arg -eq "2") {
+    curl -s "wttr.in/Yakima?2uFq" | boxes -d ansi
+  }
+  elseif ($arg -eq "all") {
+    curl -s "wttr.in/Yakima?uFq" | boxes -d ansi
+  }
+  else {
+    curl -s "wttr.in/Yakima?0uFq" | boxes -d ansi
+  }
+}
 function Edit-Profile {
   (& $env:EDITOR ([IO.Path]::GetDirectoryName($profile)))
 }
@@ -349,11 +366,3 @@ function Find-RegistryUninstallKey {
   $results | Sort-Object DisplayName | Where-Object { $_.DisplayName -match $SearchFor }
 }
 
-function Fresh {
-  & $PROFILE
-  Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
-  Write-Host -ForegroundColor DarkGray '│' -NoNewline
-  Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
-  Write-Host -ForegroundColor DarkGray '│'
-  Write-Host -ForegroundColor DarkGray '└───────────────────┘'
-}
