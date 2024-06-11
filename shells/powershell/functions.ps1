@@ -35,19 +35,22 @@
 
 function Get-Weather($arg) {
   if ($arg -eq "help") {
-    curl -s "wttr.in/:help" | boxes -d ansi
+    curl -s "wttr.in/:help"
+  }
+  elseif ($arg -eq "0") {
+    curl -s "wttr.in/Yakima?0uFq"
   }
   elseif ($arg -eq "1") {
-    curl -s "wttr.in/Yakima?1uFq" | boxes -d ansi
+    curl -s "wttr.in/Yakima?1uFq"
   }
   elseif ($arg -eq "2") {
-    curl -s "wttr.in/Yakima?2uFq" | boxes -d ansi
+    curl -s "wttr.in/Yakima?2uFq"
   }
   elseif ($arg -eq "all") {
-    curl -s "wttr.in/Yakima?uFq" | boxes -d ansi
+    curl -s "wttr.in/Yakima?uFq"
   }
   else {
-    curl -s "wttr.in/Yakima?0uFq" | boxes -d ansi
+    curl -s "wttr.in/Yakima?0uFq" | grep --only-matching --color=always ..................°F
   }
 }
 function Edit-Profile {
