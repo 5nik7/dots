@@ -1,7 +1,7 @@
 command_timeout=3000
 scan_timeout = 15
 
-format = '''$line_break$shell$directory$git_branch$git_status$nodejs$conda$python$line_break$character'''
+format = '''$line_break$shell$directory$git_branch$git_status$nodejs$conda$python$character'''
 
 add_newline = false
 
