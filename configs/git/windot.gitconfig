@@ -42,3 +42,4 @@ helper =
 helper = !'C:\\Users\\nickf\\scoop\\apps\\gh\\current\\bin\\gh.exe' auth git-credential
 [safe]
 directory = C:/Users/nickf/projects/dots
+	directory = C:/Users/nickf/projects/dots/configs/yazi/flavors/dream.yazi
