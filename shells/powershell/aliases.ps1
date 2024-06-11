@@ -1,6 +1,7 @@
 ﻿Set-Alias -Name rlp -Value Fresh
 
 Set-Alias -Name edit -Value edit-item
+Set-Alias -Name e -Value edit-item
 Set-Alias -Name vim -Value nvim
 Set-Alias -Name vi -Value nvim
 Set-Alias -Name v -Value nvim

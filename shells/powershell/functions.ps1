@@ -199,6 +199,10 @@ function .f {
   Set-Location "$env:DOTFILES"
 }
 
+function .e {
+  (& $env:EDITOR "$env:PROJECTS\dots")
+}
+
 function projects {
   Set-Location "$env:PROJECTS"
 }
@@ -233,48 +237,48 @@ function colors {
   }
 }
 
-function Set-Link {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$base,
+# function Set-Link {
+#   param(
+#     [Parameter(Mandatory = $true)]
+#     [string]$base,
 
-    [Parameter(Mandatory = $true)]
-    [string]$target
-  )
+#     [Parameter(Mandatory = $true)]
+#     [string]$target
+#   )
 
-  try {
-    if ((Test-Path -Path $target) -and (Get-Item -Path $target).Target -eq $base) {
-      Write-Host ''
-      Write-Host -ForegroundColor Yellow "Already a symlink."
-      Write-Host ''
-    }
-    elseif (Test-Path -Path $target) {
-      $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
-      $backupFileName = "$target.$bakDate.bak"
-      Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
-      Write-Host ''
-      Write-Host -ForegroundColor Yellow "Creating a backup file: " -NoNewline
-      Write-Host -ForegroundColor White $backupFileName
-      Write-Host ''
-      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
-      Write-Host -ForegroundColor DarkCyan "$base" -NoNewline
-      Write-Host -ForegroundColor DarkGray " 󱦰 " -NoNewline
-      Write-Host -ForegroundColor DarkBlue "$target"
-      Write-Host ''
-    }
-    else {
-      New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
-      Write-Host ''
-      Write-Host -ForegroundColor DarkCyan "$base" -NoNewline
-      Write-Host -ForegroundColor DarkGray " 󱦰 " -NoNewline
-      Write-Host -ForegroundColor DarkBlue "$target"
-      Write-Host ''
-    }
-  }
-  catch {
-    Write-Output "Failed to create symbolic link: $_"
-  }
-}
+#   try {
+#     if ((Test-Path -Path $target) -and (Get-Item -Path $target).Target -eq $base) {
+#       Write-Host ''
+#       Write-Host -ForegroundColor Yellow "Already a symlink."
+#       Write-Host ''
+#     }
+#     elseif (Test-Path -Path $target) {
+#       $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
+#       $backupFileName = "$target.$bakDate.bak"
+#       Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
+#       Write-Host ''
+#       Write-Host -ForegroundColor Yellow "Creating a backup file: " -NoNewline
+#       Write-Host -ForegroundColor White $backupFileName
+#       Write-Host ''
+#       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
+#       Write-Host -ForegroundColor DarkCyan "$base" -NoNewline
+#       Write-Host -ForegroundColor DarkGray " 󱦰 " -NoNewline
+#       Write-Host -ForegroundColor DarkBlue "$target"
+#       Write-Host ''
+#     }
+#     else {
+#       New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
+#       Write-Host ''
+#       Write-Host -ForegroundColor DarkCyan "$base" -NoNewline
+#       Write-Host -ForegroundColor DarkGray " 󱦰 " -NoNewline
+#       Write-Host -ForegroundColor DarkBlue "$target"
+#       Write-Host ''
+#     }
+#   }
+#   catch {
+#     Write-Output "Failed to create symbolic link: $_"
+#   }
+# }
 
 function Add-PathPrefix {
   param (

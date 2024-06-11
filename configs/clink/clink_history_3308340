@@ -1,0 +1,68 @@
+|	time=1718136348
+env
+|	time=1718136362
+cd "C:\Program Files (x86)\clink\"
+|	time=1718136362
+|
+|	time=1718136364
+|s
+|	time=1718136368
+bat clink.bat
+|	time=1718136397
+clink
+|	time=1718136399
+|link info
+|	time=1718136402
+|link set
+|	time=1718136436
+bat "C:\Program Files (x86)\clink\default_inputrc"
+|	time=1718136457
+|d C:\Users\nickf\AppData\Local\clink
+|	time=1718136459
+|s
+|	time=1718136460
+|s -la
+|	time=1718136474
+cd :\Users\nickf\.config\clinkcomp
+|	time=1718136481
+cd  C:\Users\nickf\.config\clinkcomp
+|	time=1718136486
+cd  C:\Users\nickf\.config
+|	time=1718136490
+|s
+|	time=1718136492
+ls- la
+|	time=1718136505
+mkdir C:\Users\nickf\.config\clinkcomp
+|	time=1718136521
+cd C:\Users\nickf\AppData\Local\clink
+|	time=1718136523
+|s
+|	time=1718136525
+|s -la
+|	time=1718136637
+cd "C:\Program Files (x86)\clink"
+|	time=1718136638
+l
+|	time=1718136639
+ls
+|	time=1718136641
+ls -la
+|	time=1718136657
+bat clink.lua
+|	time=1718136668
+bat _default_inputrc
+|	time=1718136684
+bat _default_settings
+|	time=1718137005
+set
+|	time=1718137010
+clink set
+|	time=1718137037
+|xplorer .
+|	time=1718137049
+explorer .
+|	time=1718137053
+which explorer
+|	time=1718137299
+clink info
