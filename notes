@@ -1,3 +1,11 @@
 Utilize Where-Object to search for the ReparsePoint file attribute.
 
 Get-ChildItem | Where-Object { $_.Attributes -match "ReparsePoint" }
+
+
+
+For those that want to check if a resource is a hardlink or symlink:
+
+(Get-Item ".\some_resource").LinkType -eq "HardLink"
+
+(Get-Item ".\some_resource").LinkType -eq "SymbolicLink"
