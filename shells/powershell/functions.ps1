@@ -171,11 +171,11 @@ function repos {
   Set-Location "$env:REPOS"
 }
 
-function dots {
+function .d {
   Set-Location "$env:PROJECTS\dots"
 }
 
-function dotfiles {
+function .f {
   Set-Location "$env:DOTFILES"
 }
 
