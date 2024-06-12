@@ -14,3 +14,12 @@ For those that want to check if a resource is a hardlink or symlink:
 Function Test-Symlink($Path){
     ((Get-Item $Path).Attributes.ToString() -match "ReparsePoint")
 }
+
+Get-ChildItem -path C:\Windows\system -file -recurse -force | 
+    foreach-object {
+        if ((fsutil hardlink list $_.fullname).count -ge 2) {
+            $_.PSChildname + ":Hardlinked:" + $_.Length
+        } else {
+            $_.PSChildname + ":RegularFile:" + $_.Length
+        }
+    } > c:\hardlinks.txt
