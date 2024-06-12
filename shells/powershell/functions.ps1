@@ -26,7 +26,13 @@
     git push
   }
   elseif ($arg -match ".git$") {
-    git clone $arg
+    $destination = $args[1]
+    if ($destination) {
+      git clone $arg $PWD\$destination
+    }
+    else {
+      git clone $arg
+    }
   }
   else {
     git
