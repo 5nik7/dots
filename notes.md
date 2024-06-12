@@ -2,7 +2,9 @@
 
 Utilize Where-Object to search for the ReparsePoint file attribute.
 
+```
 Get-ChildItem | Where-Object { $_.Attributes -match "ReparsePoint" }
+```
 
 
 
@@ -49,3 +51,4 @@ Get-ChildItem -path C:\Windows\system -file -recurse -force |
 Get-ChildItem -Path "C:\Windows\","c:\","$env:USERPROFILE" -Force |
     Where-Object { $_.LinkType -ne $null -or $_.Attributes -match "ReparsePoint" } |
     ft FullName,Length,Attributes,Linktype,Target
+
