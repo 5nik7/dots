@@ -10,14 +10,19 @@ Get-ChildItem | Where-Object { $_.Attributes -match "ReparsePoint" }
 
 For those that want to check if a resource is a hardlink or symlink:
 
+
+```
 (Get-Item ".\some_resource").LinkType -eq "HardLink"
 
 (Get-Item ".\some_resource").LinkType -eq "SymbolicLink"
 
+```
 
+```
 Function Test-Symlink($Path){
     ((Get-Item $Path).Attributes.ToString() -match "ReparsePoint")
 }
+```
 
 Get-ChildItem -path C:\Windows\system -file -recurse -force | 
     foreach-object {
