@@ -914,7 +914,7 @@ pwsh set
 |	time=1692645053
 |nv
 |	time=1692645096
-set
+|et
 |	time=1692645113
 lua54.exe
 |	time=1692645141
@@ -2932,7 +2932,7 @@ clink autorun set -a
 |	time=1718103241
 |
 |	time=1718103243
-clear
+|lear
 |	time=1718103248
 |
 |	time=1718103292
@@ -2968,13 +2968,13 @@ cd Local\
 |	time=1718103530
 |
 |	time=1718103531
-ls
+|s
 |	time=1718103532
 |s -la
 |	time=1718103539
 cd nvim-data\
 |	time=1718103541
-l
+|
 |	time=1718103543
 |s -la
 |	time=1718103567
@@ -2994,7 +2994,7 @@ clink set lua.path C:\Users\nickf\scoop\shims\lua.exe
 |	time=1718103675
 which lua
 |	time=1718103681
-clink set
+|link set
 |	time=1718103759
 clink set files.hidden false
 |	time=1718103804
@@ -3026,7 +3026,7 @@ cd C:\
 |	time=1718103933
 clink update
 |	time=1718103964
-c
+|
 |	time=1718103966
 |ls
 |	time=1718103968
@@ -3092,9 +3092,9 @@ cd %USERPROFILE%
 |	time=1718135968
 |s -la
 |	time=1718135974
-clink
+|link
 |	time=1718135977
-clink info
+|link info
 |	time=1718136006
 bat C:\Users\nickf\.inputrc
 |	time=1718136022
@@ -3102,18 +3102,108 @@ bat C:\Program Files (x86)\clink\default_inputrc
 |	time=1718136037
 bat "C:\Program Files (x86)\clink\default_inputrcc"
 |	time=1718136041
-bat "C:\Program Files (x86)\clink\default_inputrc"
+|at "C:\Program Files (x86)\clink\default_inputrc"
 |	time=1718136085
 cd "C:\Program Files (x86)\clink\default_settings"
 |	time=1718136088
-cd "C:\Program Files (x86)\clink\"
+|d "C:\Program Files (x86)\clink\"
 |	time=1718136091
-ls -la
+|s -la
 |	time=1718136098
-bat clink.bat
+|at clink.bat
 |	time=1718136109
 which bat
 |	time=1718136111
 |nv
 |	time=1718136337
+|nv
+|	time=1718136348
 env
+|	time=1718136362
+cd "C:\Program Files (x86)\clink\"
+|	time=1718136362
+|
+|	time=1718136364
+|s
+|	time=1718136368
+bat clink.bat
+|	time=1718136397
+clink
+|	time=1718136399
+|link info
+|	time=1718136402
+|link set
+|	time=1718136436
+bat "C:\Program Files (x86)\clink\default_inputrc"
+|	time=1718136457
+|d C:\Users\nickf\AppData\Local\clink
+|	time=1718136459
+|s
+|	time=1718136460
+|s -la
+|	time=1718136474
+cd :\Users\nickf\.config\clinkcomp
+|	time=1718136481
+cd  C:\Users\nickf\.config\clinkcomp
+|	time=1718136486
+cd  C:\Users\nickf\.config
+|	time=1718136490
+|s
+|	time=1718136492
+ls- la
+|	time=1718136505
+mkdir C:\Users\nickf\.config\clinkcomp
+|	time=1718136521
+cd C:\Users\nickf\AppData\Local\clink
+|	time=1718136523
+|s
+|	time=1718136525
+|s -la
+|	time=1718136637
+cd "C:\Program Files (x86)\clink"
+|	time=1718136638
+l
+|	time=1718136639
+ls
+|	time=1718136641
+ls -la
+|	time=1718136657
+bat clink.lua
+|	time=1718136668
+bat _default_inputrc
+|	time=1718136684
+bat _default_settings
+|	time=1718137005
+set
+|	time=1718137010
+clink set
+|	time=1718137037
+|xplorer .
+|	time=1718137049
+explorer .
+|	time=1718137053
+which explorer
+|	time=1718137299
+clink info
+|	time=1718220892
+sfc /scannow
+|	time=1718221044
+DISM /Online /Cleanup-Image /RestoreHealt
+|	time=1718221072
+DISM /Online /Cleanup-Image /RestoreHealth
+|	time=1718221164
+wsreset.exe
+|	time=1718221187
+for %i in (%windir%\\system32\\*.dll) do regsvr32.exe /s %i
+|	time=1718221271
+|hkdsk C: /f
+|	time=1718221328
+|
+|	time=1718221331
+c
+|	time=1718221332
+|lear
+|	time=1718221335
+chkdsk C: /f
+|	time=1718221343
+clear
