@@ -35,25 +35,6 @@ Get-ChildItem -path C:\Windows\system -file -recurse -force |
     } > c:\hardlinks.txt
 ```
 
-```
-### ReparsePoint + Directory + Junction = mklink /j 
-### ReparsePoint + Directory + SymbolicLink = mklink /d 
-### ReparsePoint + SymbolicLink = mklink 
-
-"cd $( $pwd.Path )"; Get-ChildItem | ? { $_.Attributes -match 'ReparsePoint' -and $_.Target -ne $null } | % {
-    $linktype = $_.LinkType
-    $target = Resolve-Path -Path $_.Target
-    if ($_.Attributes -match 'Directory') {
-        if ($linktype -eq "Junction") {
-            "mklink /j `"$($_.Name)`" `"$target`""
-        } else {
-            "mklink /d `"$($_.Name)`" `"$target`""
-        }
-    } else {
-        "mklink `"$($_.Name)`" `"$target`""
-    }
-}
-```
 
 ```
 Get-ChildItem -Path "C:\Windows\","c:\","$env:USERPROFILE" -Force |
