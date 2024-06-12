@@ -65,7 +65,7 @@ function Get-Weather($arg) {
     curl -s "wttr.in/Yakima?uFq"
   }
   else {
-    curl -s "wttr.in/Yakima?0uFq" | grep --only-matching --color=always ..................°F
+    curl -s "wttr.in/Yakima?0uFq"
   }
 }
 function Edit-Profile {
