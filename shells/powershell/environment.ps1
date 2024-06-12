@@ -1,4 +1,9 @@
-﻿$env:PROJECTS = "$env:USERPROFILE\projects"
+﻿$env:DOCS = "$env:USERPROFILE\Documents"
+$env:DOWNLOADS = "$env:USERPROFILE\Downloads"
+$env:RMSKINS = "$env:DOCS\Rainmeter\Skins"
+$env:WINCONFIG = "$env:USERPROFILE\.config"
+
+$env:PROJECTS = "$env:USERPROFILE\projects"
 $env:REPOS = $env:PROJECTS
 $env:DOTS = "$env:USERPROFILE\.dots"
 $env:DOTSHELL = "$env:DOTS\shells"

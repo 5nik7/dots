@@ -4,3 +4,5 @@ if (Test-Path $PSCore) {
   Unblock-File $PSCore
   . $PSCore
 }
+
+Set-Location $env:PROJECTS

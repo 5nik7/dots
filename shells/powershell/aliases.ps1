@@ -1,4 +1,5 @@
 ﻿Set-Alias -Name rlp -Value Fresh
+Set-Alias -Name g -Value git
 
 Set-Alias -Name edit -Value edit-item
 Set-Alias -Name e -Value edit-item

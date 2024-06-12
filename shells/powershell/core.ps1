@@ -1,11 +1,4 @@
-﻿function Fresh {
-  & $PROFILE
-  Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
-  Write-Host -ForegroundColor DarkGray '│' -NoNewline
-  Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
-  Write-Host -ForegroundColor DarkGray '│'
-  Write-Host -ForegroundColor DarkGray '└───────────────────┘'
-}
+﻿
 
 If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
     (& "C:\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
@@ -25,6 +18,11 @@ foreach ( $includeFile in ("environment", "functions", "aliases", "secrets") ) {
 $scriptsPath = "$profileDirectory\Scripts"
 if (-not ($env:Path -split ';' | Select-String -SimpleMatch $scriptsPath)) {
   Add-Path -Path $scriptsPath
+}
+
+$dotbin = "$env:DOTS\bin"
+if (-not ($env:Path -split ';' | Select-String -SimpleMatch $dotbin)) {
+  Add-Path -Path $dotbin
 }
 
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"

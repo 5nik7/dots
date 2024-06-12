@@ -1,7 +1,7 @@
 command_timeout=3000
 scan_timeout = 15
 
-format = """$line_break$shell$directory$git_branch$git_status$nodejs$conda$python$character"""
+format = """$line_break$shell$directory$git_branch$git_status$nodejs$conda$python$line_break$character"""
 
 add_newline = false
 
@@ -28,7 +28,7 @@ style = 'bg:none fg:bright-black italic'
 disabled = true
 
 [directory.substitutions]
-'/Documents/' = '  '
+# '/Documents/' = '  '
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
@@ -40,7 +40,7 @@ truncation_length = 0
 # truncation_symbol = "…/"
 # home_symbol = ' '
 truncate_to_repo = false
-use_os_path_sep = true
+use_os_path_sep = false
 use_logical_path = true
 read_only = ' 󰍁'
 read_only_style = 'bright-yellow'
