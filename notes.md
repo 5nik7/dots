@@ -24,6 +24,7 @@ Function Test-Symlink($Path){
 }
 ```
 
+```
 Get-ChildItem -path C:\Windows\system -file -recurse -force | 
     foreach-object {
         if ((fsutil hardlink list $_.fullname).count -ge 2) {
@@ -32,8 +33,9 @@ Get-ChildItem -path C:\Windows\system -file -recurse -force |
             $_.PSChildname + ":RegularFile:" + $_.Length
         }
     } > c:\hardlinks.txt
+```
 
-
+```
 ### ReparsePoint + Directory + Junction = mklink /j 
 ### ReparsePoint + Directory + SymbolicLink = mklink /d 
 ### ReparsePoint + SymbolicLink = mklink 
@@ -51,9 +53,11 @@ Get-ChildItem -path C:\Windows\system -file -recurse -force |
         "mklink `"$($_.Name)`" `"$target`""
     }
 }
+```
 
-
+```
 Get-ChildItem -Path "C:\Windows\","c:\","$env:USERPROFILE" -Force |
     Where-Object { $_.LinkType -ne $null -or $_.Attributes -match "ReparsePoint" } |
     ft FullName,Length,Attributes,Linktype,Target
+```
 
