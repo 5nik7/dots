@@ -2,7 +2,7 @@
 
 Utilize Where-Object to search for the ReparsePoint file attribute.
 
-```
+```powershell
 Get-ChildItem | Where-Object { $_.Attributes -match "ReparsePoint" }
 ```
 
