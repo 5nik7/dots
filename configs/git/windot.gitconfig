@@ -43,3 +43,4 @@ helper = !'C:\\Users\\nickf\\scoop\\apps\\gh\\current\\bin\\gh.exe' auth git-cre
 [safe]
 directory = C:/Users/nickf/projects/dots
 	directory = C:/Users/nickf/projects/dots/configs/yazi/flavors/dream.yazi
+	directory = C:/repos/nvim
