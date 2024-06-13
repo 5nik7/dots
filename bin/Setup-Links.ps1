@@ -1,5 +1,5 @@
 ﻿Set-Link "$env:PROJECTS\nvim" "$env:LOCALAPPDATA\nvim"
-i
+
 Set-Link "$env:DOTFILES\wal" "$env:WINCONFIG\wal"
 Set-Link "$env:DOTFILES\clink" "$env:LOCALAPPDATA\clink"
 Set-Link "$env:DOTFILES\alacritty" "$env:LOCALAPPDATA\alacritty"
