@@ -14,7 +14,7 @@ cd clink
 |	time=1678903290
 |ir
 |	time=1678903316
-explorer.exe
+|xplorer.exe
 |	time=1678905749
 |lear
 |	time=1678905756
@@ -2662,7 +2662,7 @@ bash
 |	time=1716366693
 |hich clink
 |	time=1716374279
-which clink
+|hich clink
 |	time=1716374287
 |link
 |	time=1716374291
@@ -2936,7 +2936,7 @@ clink autorun set -a
 |	time=1718103248
 |
 |	time=1718103292
-path
+|ath
 |	time=1718103344
 split
 |	time=1718103352
@@ -2952,7 +2952,7 @@ PATH
 |	time=1718103439
 PATH | tr ":" "\n
 |	time=1718103481
-PATH | tr ";" "\n
+|ATH | tr ";" "\n
 |	time=1718103504
 conda
 |	time=1718103516
@@ -3024,7 +3024,7 @@ cd C:\
 |	time=1718103928
 |link
 |	time=1718103933
-clink update
+|link update
 |	time=1718103964
 |
 |	time=1718103966
@@ -3068,7 +3068,7 @@ q
 |	time=1718104179
 |nv
 |	time=1718135860
-cls
+|ls
 |	time=1718135863
 |d
 |	time=1718135869
@@ -3118,7 +3118,7 @@ which bat
 |	time=1718136337
 |nv
 |	time=1718136348
-env
+|nv
 |	time=1718136362
 cd "C:\Program Files (x86)\clink\"
 |	time=1718136362
@@ -3128,7 +3128,7 @@ cd "C:\Program Files (x86)\clink\"
 |	time=1718136368
 bat clink.bat
 |	time=1718136397
-clink
+|link
 |	time=1718136399
 |link info
 |	time=1718136402
@@ -3174,9 +3174,9 @@ bat _default_inputrc
 |	time=1718136684
 bat _default_settings
 |	time=1718137005
-set
+|et
 |	time=1718137010
-clink set
+|link set
 |	time=1718137037
 |xplorer .
 |	time=1718137049
@@ -3184,7 +3184,7 @@ explorer .
 |	time=1718137053
 which explorer
 |	time=1718137299
-clink info
+|link info
 |	time=1718220892
 sfc /scannow
 |	time=1718221044
@@ -3200,10 +3200,60 @@ for %i in (%windir%\\system32\\*.dll) do regsvr32.exe /s %i
 |	time=1718221328
 |
 |	time=1718221331
-c
+|
 |	time=1718221332
 |lear
 |	time=1718221335
 chkdsk C: /f
 |	time=1718221343
+|lear
+|	time=1718221385
+taskkill /f /im explorer.exe
+|	time=1718221387
+|xplorer.exe
+|	time=1718221439
+explorer.exe
+|	time=1719520121
+|nv
+|	time=1719520125
+set
+|	time=1719520130
+|ath
+|	time=1719520133
+PATH | tr ";" "\n
+|	time=1719520147
+|ATH | tr ";" "\n"
+|	time=1719520272
+|link
+|	time=1719520275
+clink update
+|	time=1719520288
+c
+|	time=1719520290
 clear
+|	time=1719520291
+|ls
+|	time=1719520293
+cls
+|	time=1719520295
+|nv
+|	time=1719520297
+path
+|	time=1719520301
+|ATH | tr ";" "\n"
+|	time=1719520315
+clink
+|	time=1719520319
+clink info
+|	time=1719520338
+clink set
+|	time=1719520368
+which clink
+|	time=1719520371
+which clink.exe
+|	time=1719520702
+|nv
+|	time=1719520708
+PATH | tr ";" "\n"
+|	time=1719520723
+env
