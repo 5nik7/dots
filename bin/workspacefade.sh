@@ -12,7 +12,7 @@ oldworkspacenumber=${oldworkspace%%:*}
 [ $name = $oldworkspace ] && exit
 
 # Face out all windows in the current workspace
-for i in `seq 20`; do
+for i in $(seq 20); do
     swaymsg "[workspace=__focused__]" opacity minus 0.05
     sleep 0.0001
 done
@@ -26,7 +26,7 @@ swaymsg workspace "$name"
 swaymsg "[workspace=$oldworkspacenumber]" opacity 1
 
 # Now fade in all the new windows
-for i in `seq 20`; do
+for i in $(seq 20); do
     swaymsg "[workspace=__focused__]" opacity plus 0.05
     sleep 0.0001
 done
