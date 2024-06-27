@@ -5,4 +5,4 @@ if (Test-Path $PSCore) {
   . $PSCore
 }
 
-Set-Location $env:PROJECTS
+# Set-Location $env:PROJECTS
