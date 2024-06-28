@@ -1,0 +1,12 @@
+|	time=1719607303
+c
+|	time=1719607304
+cls
+|	time=1719607308
+clear
+|	time=1719607322
+clink
+|	time=1719607331
+which clink
+|	time=1719607337
+PATH | tr ";" "\n"

@@ -33,9 +33,9 @@ disabled = true
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
 repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
-style = 'cyan'
-before_repo_root_style = 'cyan'
-repo_root_style = 'cyan bold'
+style = 'blue'
+before_repo_root_style = 'blue'
+repo_root_style = 'blue bold'
 truncation_length = 0
 # truncation_symbol = "…/"
 # home_symbol = ' '
@@ -94,7 +94,7 @@ style = 'red'
 symbol = ' '
 
 [character]
-success_symbol = '[](green)'
+success_symbol = '[](cyan)'
 error_symbol= '[](red)'
 vimcmd_symbol = '[](fg:blue)'
 format = '$symbol '
