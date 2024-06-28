@@ -1,6 +1,4 @@
-﻿
-
-If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
+﻿If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
     (& "C:\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
 }
 
@@ -87,20 +85,20 @@ Set-PSReadLineKeyHandler -Chord Enter -Function ValidateAndAcceptLine
 
 Set-PsFzfOption -TabExpansion
 
-# function OnViModeChange {
-#   if ($args[0] -eq 'Command') {
-
-#     # Set the cursor to a solid block.
-#     Write-Host -NoNewLine "`e[2 q"
-#   }
-#   else {
-#     # Set the cursor to a blinking line.
-#     Write-Host -NoNewLine "`e[5 q"
-#   }
-# }
-# Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
 function Invoke-Starship-TransientFunction {
   &starship module character
 }
 Invoke-Expression (&starship init powershell)
 Enable-TransientPrompt
+
+Set-PSReadLineOption -ViModeIndicator script -ViModeChangeHandler {
+  [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+  if ($args[0] -eq 'Command') {
+    # Set the cursor to a solid block.
+    Write-Host -NoNewLine "`e[2 q"
+  }
+  else {
+    # Set the cursor to a blinking line.
+    Write-Host -NoNewLine "`e[5 q"
+  }
+}
