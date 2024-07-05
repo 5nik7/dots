@@ -9,7 +9,7 @@ $env:RMSKINS = "$env:DOCS\Rainmeter\Skins"
 $env:WINCONFIG = "$env:USERPROFILE\.config"
 
 $env:PROJECTS = "$env:USERPROFILE\projects"
-$env:REPOS = $env:PROJECTS
+$env:REPOS = "$env:PROJECTS"
 $env:DOTS = "$env:USERPROFILE\.dots"
 $env:DRIP = "$env:DOTS\drip"
 $env:WALLS = "$env:DOTS\walls"

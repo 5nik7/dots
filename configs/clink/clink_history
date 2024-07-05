@@ -3216,7 +3216,7 @@ explorer.exe
 |	time=1719520121
 |nv
 |	time=1719520125
-set
+|et
 |	time=1719520130
 |ath
 |	time=1719520133
@@ -3269,3 +3269,9 @@ clink
 which clink
 |	time=1719607337
 PATH | tr ";" "\n"
+|	time=1720129317
+|et
+|	time=1720129365
+set
+|	time=1720129378
+set
