@@ -3228,13 +3228,13 @@ PATH | tr ";" "\n
 |	time=1719520275
 clink update
 |	time=1719520288
-c
+|
 |	time=1719520290
-clear
+|lear
 |	time=1719520291
 |ls
 |	time=1719520293
-cls
+|ls
 |	time=1719520295
 |nv
 |	time=1719520297
@@ -3242,18 +3242,30 @@ path
 |	time=1719520301
 |ATH | tr ";" "\n"
 |	time=1719520315
-clink
+|link
 |	time=1719520319
 clink info
 |	time=1719520338
 clink set
 |	time=1719520368
-which clink
+|hich clink
 |	time=1719520371
 which clink.exe
 |	time=1719520702
 |nv
 |	time=1719520708
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1719520723
 env
+|	time=1719607303
+c
+|	time=1719607304
+cls
+|	time=1719607308
+clear
+|	time=1719607322
+clink
+|	time=1719607331
+which clink
+|	time=1719607337
+PATH | tr ";" "\n"

@@ -1,0 +1,179 @@
+﻿{
+  "window.zoomLevel": -0.8,
+  "editor.fontFamily": "JetBrainsMono NFM",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 14,
+  "terminal.integrated.fontSize": 14,
+  "markdown.preview.fontSize": 14,
+  "chat.editor.fontSize": 14,
+  "editor.fontWeight": "normal",
+  "chat.editor.fontWeight": "normal",
+  "terminal.integrated.fontWeight": "normal",
+  "terminal.integrated.fontWeightBold": "bold",
+  "editor.lineHeight": 22,
+  "terminal.integrated.lineHeight": 1.2,
+  "editor.letterSpacing": 0,
+  "terminal.integrated.letterSpacing": 0,
+  "editor.minimap.renderCharacters": false,
+  "editor.wordWrap": "on",
+  "files.eol": "auto",
+  "editor.inlineSuggest.enabled": true,
+  "editor.minimap.enabled": false,
+  "window.titleBarStyle": "custom",
+  "breadcrumbs.enabled": true,
+  "security.workspace.trust.enabled": false,
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell"
+    },
+    "Command Prompt": {
+      "path": [
+        "${env:windir}\\Sysnative\\cmd.exe",
+        "${env:windir}\\System32\\cmd.exe"
+      ],
+      "args": [],
+      "icon": "terminal-cmd"
+    },
+    "Git Bash": {
+      "source": "Git Bash"
+    },
+    "PowerShell (x64)": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell",
+      "args": [
+        "-NoLogo"
+      ]
+    },
+    "Windows PowerShell": {
+      "path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    },
+    "pwsh": {
+      "path": "C:\\pwsh\\7-preview\\pwsh.exe",
+      "icon": "terminal-powershell",
+      "args": [
+        "-NoLogo"
+      ]
+    }
+  },
+  "git.autofetch": true,
+  "git.openRepositoryInParentFolders": "always",
+  "editor.semanticHighlighting.enabled": true,
+  "terminal.integrated.minimumContrastRatio": 1,
+  "Lua.semantic.keyword": true,
+  "explorer.confirmDelete": false,
+  "git.confirmSync": false,
+  "Lua.codeLens.enable": true,
+  "workbench.startupEditor": "terminal",
+  "git.enableSmartCommit": true,
+  "github.copilot.chat.welcomeMessage": "never",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.tabSize": 2,
+  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+  "editor.experimentalWhitespaceRendering": "off",
+  "editor.smartSelect.selectLeadingAndTrailingWhitespace": false,
+  "[rainmeter]": {
+    "editor.formatOnSave": true
+  },
+  "color-highlight.languages": [
+    "*"
+  ],
+  "workbench.sideBar.location": "left",
+  "workbench.activityBar.location": "top",
+  "window.menuBarVisibility": "compact",
+  "workbench.welcomePage.walkthroughs.openOnInstall": false,
+  "debug.openDebug": "openOnDebugBreak",
+  "editor.tabCompletion": "off",
+  "powershell.integratedConsole.focusConsoleOnExecute": true,
+  "files.defaultLanguage": "",
+  "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?",
+  "powershell.buttons.showPanelMovementButtons": false,
+  "powershell.codeFolding.showLastLine": true,
+  "powershell.sideBar.CommandExplorerVisibility": false,
+  "editor.renderWhitespace": "all",
+  "editor.renderControlCharacters": true,
+  "files.trimTrailingWhitespace": true,
+  "files.encoding": "utf8bom",
+  "files.autoGuessEncoding": true,
+  "color-manager.fullWidth": true,
+  "color-manager.autoStartIntellisense": true,
+  "color-manager.paletteLimit": 100000,
+  "workbench.chat.experimental.showWelcomeView": false,
+  "shellcheck.enable": true,
+  "shellcheck.run": "onType",
+  "shellcheck.exclude": [
+    "2148",
+    "1091",
+    "2296",
+    "2154"
+  ],
+  "shellcheck.customArgs": [],
+  "shellcheck.ignorePatterns": {
+    "**/*.csh": true,
+    "**/*.cshrc": true,
+    "**/*.fish": true,
+    "**/*.login": true,
+    "**/*.logout": true,
+    "**/*.tcsh": true,
+    "**/*.tcshrc": true,
+    "**/*.xonshrc": true,
+    "**/*.xsh": true,
+    "**/*.zsh": true,
+    "**/*.zshrc": true,
+    "**/zshrc": true,
+    "**/*.zprofile": true,
+    "**/zprofile": true,
+    "**/*.zlogin": true,
+    "**/zlogin": true,
+    "**/*.zlogout": true,
+    "**/zlogout": true,
+    "**/*.zshenv": true,
+    "**/zshenv": true,
+    "**/*.zsh-theme": true
+  },
+  "shellcheck.ignoreFileSchemes": [
+    "git",
+    "gitfs",
+    "output"
+  ],
+  "[powershell]": {
+    "editor.formatOnSave": true,
+    "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?",
+    "editor.semanticHighlighting.enabled": true
+  },
+  "powershell.powerShellAdditionalExePaths": {
+    "pwsh": "C:/pwsh/7-preview/pwsh.exe"
+  },
+  "powershell.powerShellDefaultVersion": "pwsh",
+  "editor.overviewRulerBorder": false,
+  "editor.tokenColorCustomizations": {},
+  "workbench.colorCustomizations": {
+    "editorCursor.foreground": "#FAF8FF"
+  },
+  "editor.bracketPairColorization.enabled": true,
+  "editor.autoClosingBrackets": "always",
+  "editor.language.colorizedBracketPairs": null,
+  "Lua.diagnostics.globals": [
+    "vim",
+    "SKIN"
+  ],
+  "editor.accessibilitySupport": "off",
+  "scm.showIncomingChanges": "always",
+  "scm.showOutgoingChanges": "always",
+  "github.copilot.editor.enableAutoCompletions": true,
+  "workbench.iconTheme": "helium-icon-theme",
+  "workbench.colorTheme": "Wal Bordered",
+  "editor.stickyScroll.enabled": false,
+  "zenMode.centerLayout": true,
+  "zenMode.hideLineNumbers": true,
+  "zenMode.showTabs": "none",
+  "shellcheck.enableQuickFix": false,
+  "[shellscript]": {
+    "files.eol": "\n"
+  },
+  "editor.unicodeHighlight.invisibleCharacters": false,
+  "terminal.integrated.defaultProfile.windows": "pwsh"
+}

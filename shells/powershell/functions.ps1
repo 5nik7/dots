@@ -1,4 +1,26 @@
-﻿function gc {
+﻿function winwal {
+  param(
+    [switch]$t,
+    [switch]$i,
+    [Parameter][string]$Sat,
+    [Parameter][string]$be
+  )
+  if ($env:WALBACKEND) {
+    $colorpicker = $env:WALBACKEND
+  }
+  else {
+    $colorpicker = "wal"
+  }
+  if ($Sat) {
+    wal -n -i $i --backend $colorpicker --saturate $Sat
+  }
+  else {
+    wal -i $i -n --backend $colorpicker
+  }
+  Set-Wall $i -Style Fill
+}
+
+function gc {
   param(
     [Parameter(Mandatory = $true)]
     [string]$url,

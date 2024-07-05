@@ -1,4 +1,9 @@
-﻿$env:DOCS = "$env:USERPROFILE\Documents"
+﻿$TIC = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' TranscodedImageCache -ErrorAction Stop).TranscodedImageCache
+$wallout = [System.Text.Encoding]::Unicode.GetString($TIC) -replace '(.+)([A-Z]:[0-9a-zA-Z\\])+', '$2'
+
+$env:WALLPAPER = $wallout
+
+$env:DOCS = "$env:USERPROFILE\Documents"
 $env:DOWNLOADS = "$env:USERPROFILE\Downloads"
 $env:RMSKINS = "$env:DOCS\Rainmeter\Skins"
 $env:WINCONFIG = "$env:USERPROFILE\.config"
@@ -6,6 +11,8 @@ $env:WINCONFIG = "$env:USERPROFILE\.config"
 $env:PROJECTS = "$env:USERPROFILE\projects"
 $env:REPOS = $env:PROJECTS
 $env:DOTS = "$env:USERPROFILE\.dots"
+$env:DRIP = "$env:DOTS\drip"
+$env:WALLS = "$env:DOTS\walls"
 $env:DOTSHELL = "$env:DOTS\shells"
 $env:PSHELL = "$env:DOTSHELL\powershell"
 $env:ZSHELL = "$env:DOTSHELL\zsh"

@@ -1,9 +1,9 @@
 command_timeout=3000
 scan_timeout = 15
 
-format = """$line_break$shell$directory$git_branch$git_status$nodejs$conda$python$line_break$character"""
+format = """$directory$git_branch$git_status$nodejs$conda$python$line_break$character$shell"""
 
-add_newline = false
+add_newline = true
 
 [fill]
 symbol = '󱘹'
@@ -17,14 +17,14 @@ style = "white"
 disabled = true
 
 [shell]
-format = ' [$indicator]($style) '
-fish_indicator = 'fish'
-powershell_indicator = 'pwsh'
+format = '[$indicator]($style) '
+fish_indicator = ''
+powershell_indicator = ''
 bash_indicator = 'bash'
 zsh_indicator = 'zsh'
-cmd_indicator = 'cmd'
-unknown_indicator = ' '
-style = 'bg:none fg:bright-black italic'
+cmd_indicator = ''
+unknown_indicator = ''
+style = 'bg:none fg:bright-cyan'
 disabled = true
 
 [directory.substitutions]
@@ -84,9 +84,9 @@ format = '[$symbol$environment](green) '
 
 [python]
 format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
-style = "green italic"
+style = "green"
 symbol = ' '
-pyenv_version_name = true
+pyenv_version_name = false
 
 [rust]
 format = '[$symbol$version]($style) '
