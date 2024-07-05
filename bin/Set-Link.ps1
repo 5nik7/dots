@@ -17,7 +17,7 @@ param(
   [string]$target
 )
 
-$backupDir = "$env:USERPROFILE\Backups"
+$backupDir = "$env:USERPROFILE\backups"
 $arrow = "  -->  "
 $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
 $basedir = [System.IO.Path]::GetDirectoryName($base)
@@ -29,12 +29,9 @@ $targetdircolor = "DarkBlue"
 $targetleaf = Split-Path -Path $target -Leaf
 $backupFileName = "$targetleaf.$bakDate.bak"
 
-if ($basedir -eq $env:DOTFILES -or $parentDir -eq $env:DOTFILES) {
+if ($basedir -eq $env:DOTS -or $parentDir -eq $env:DOTFILES) {
   $basedircolor = "Magenta"
   $basedir = "  "
-}
-if ($targetdir -eq $env:USERPROFILE) {
-  $targetdir = "~\"
 }
 
 try {
