@@ -2498,7 +2498,7 @@ sh
 |	time=1715245239
 |wd
 |	time=1715245251
-which pwsh
+|hich pwsh
 |	time=1715245256
 |wsh
 |	time=1715245275
@@ -2516,7 +2516,7 @@ cd /
 |	time=1715245303
 cd .
 |	time=1715245304
-cd ..
+|d ..
 |	time=1715245306
 |d
 |	time=1715245311
@@ -2558,7 +2558,7 @@ bat conda.bat
 |	time=1715245659
 |nv
 |	time=1715245685
-pwsh
+|wsh
 |	time=1715245952
 |nv
 |	time=1715246234
@@ -2916,7 +2916,7 @@ fastfetch
 |	time=1717919158
 lll
 |	time=1717919160
-ll
+|l
 |	time=1717919161
 |
 |	time=1717919166
@@ -3164,7 +3164,7 @@ cd "C:\Program Files (x86)\clink"
 |	time=1718136638
 l
 |	time=1718136639
-ls
+|s
 |	time=1718136641
 ls -la
 |	time=1718136657
@@ -3256,7 +3256,7 @@ which clink.exe
 |	time=1719520708
 |ATH | tr ";" "\n"
 |	time=1719520723
-env
+|nv
 |	time=1719607303
 c
 |	time=1719607304
@@ -3268,10 +3268,38 @@ clink
 |	time=1719607331
 which clink
 |	time=1719607337
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1720129317
 |et
 |	time=1720129365
 set
 |	time=1720129378
 set
+|	time=1720205926
+env
+|	time=1720205948
+cd $TEMP
+|	time=1720206001
+pwsh
+|	time=1720206007
+which pwsh
+|	time=1720206009
+which pwsh.exe
+|	time=1720206014
+PATH | tr ";" "\n"
+|	time=1720206023
+cd C:\pwsh\7-preview\preview
+|	time=1720206024
+|l
+|	time=1720206025
+|s
+|	time=1720206036
+cd ..
+|	time=1720206037
+ll
+|	time=1720206040
+ls
+|	time=1720206054
+d
+|	time=1720206057
+yazi
