@@ -16,9 +16,9 @@
           <key>caret</key>
           <string>#E0F9FF</string>
           <key>invisibles</key>
-          <string>#294481</string>
+          <string>#22467a</string>
           <key>gutterForeground</key>
-          <string>#294481</string>
+          <string>#22467a</string>
           <key>gutterForegroundHighlight</key>
           <string>#3BFFC4</string>
           <key>lineHighlight</key>
@@ -30,13 +30,13 @@
           <key>activeGuide</key>
           <string>#FFBAA2</string>
           <key>findHighlightForeground</key>
-          <string>#294481</string>
+          <string>#22467a</string>
           <key>findHighlight</key>
           <string>#FFBAA2</string>
           <key>bracketsForeground</key>
-          <string>#294481</string>
+          <string>#22467a</string>
           <key>bracketContentsForeground</key>
-          <string>#294481</string>
+          <string>#22467a</string>
         </dict>
       </dict>
       <dict>
@@ -47,7 +47,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#294481</string>
+          <string>#22467a</string>
           <key>fontStyle</key>
           <string>italic</string>
         </dict>
@@ -250,7 +250,7 @@
         <key>settings</key>
         <dict>
           <key>foreground</key>
-          <string>#294481</string>
+          <string>#22467a</string>
           <key>fontStyle</key>
           <string></string>
         </dict>
