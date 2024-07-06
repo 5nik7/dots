@@ -31,10 +31,3 @@ $env:YAZI_CONFIG_HOME = "$env:DOTFILES\yazi"
 $env:YAZI_CONFIG_HOME = "$env:DOTFILES\yazi"
 $env:YAZI_FILE_ONE = 'C:\Users\nickf\scoop\apps\git\current\usr\bin\file.exe'
 $env:BOXES = "$env:DOTFILES\boxes\boxes-config"
-
-# $XDG_DATA_HOME = %LOCALAPPDATA%
-# $XDG_DATA_DIRS = %APPDATA%
-# $XDG_CONFIG_HOME = %LOCALAPPDATA%
-# $XDG_CONFIG_DIRS = %APPDATA%
-# $XDG_CACHE_HOME = %TEMP%
-# $XDG_RUNTIME_DIR = %TEMP%

@@ -170,10 +170,6 @@ Function Search-Alias {
   }
 }
 
-function repos {
-  Set-Location "$env:REPOS"
-}
-
 function .d {
   Set-Location "$env:PROJECTS\dots"
 }
