@@ -10,7 +10,7 @@
 |	time=1678903270
 |ir
 |	time=1678903287
-cd clink
+|d clink
 |	time=1678903290
 |ir
 |	time=1678903316
@@ -1080,7 +1080,7 @@ notepad %userprofile%\.inputrc
 |	time=1694912660
 cd C:\Users\nickf\AppData\Local\clink\clink_settings
 |	time=1694912667
-cd C:\Users\nickf\AppData\Local\clink\
+|d C:\Users\nickf\AppData\Local\clink\
 |	time=1694912668
 ;
 |	time=1694912669
@@ -1418,7 +1418,7 @@ clink --version
 |	time=1702558976
 |link --profile 
 |	time=1702558992
-clink installscripts
+|link installscripts
 |	time=1702558998
 ps
 |	time=1702559019
@@ -1732,7 +1732,7 @@ exa --icons
 |	time=1707271754
 lsd -lA
 |	time=1707271783
-lsd --help
+|sd --help
 |	time=1707271792
 |sd -lAg
 |	time=1707271797
@@ -1742,7 +1742,7 @@ repos
 |	time=1707271809
 cd c:/repos
 |	time=1707271811
-lsd
+|sd
 |	time=1707271815
 lsd -lAg
 |	time=1707271822
@@ -2338,9 +2338,9 @@ ColorTool.exe -l
 |	time=1715204199
 |link set
 |	time=1715204261
-ls --color
+|s --color
 |	time=1715204272
-printf "\033[0;31mhello\33[0m, \33[0;32mworld\33[0m"
+|rintf "\033[0;31mhello\33[0m, \33[0;32mworld\33[0m"
 |	time=1715204447
 ColorTool -b Dream.ini
 |	time=1715204501
@@ -2406,7 +2406,7 @@ ColorTool.exe -b dream.ini
 |	time=1715205966
 exa
 |	time=1715205972
-exa -lA --icons --group-directories-first
+|xa -lA --icons --group-directories-first
 |	time=1715206176
 ColorTool.exe 
 |	time=1715206178
@@ -2506,7 +2506,7 @@ sh
 |	time=1715245278
 |s -la
 |	time=1715245290
-cd /
+|d /
 |	time=1715245292
 |s
 |	time=1715245294
@@ -2610,7 +2610,7 @@ cd vscode\
 |	time=1715246978
 |s -la
 |	time=1715246986
-cd bin
+|d bin
 |	time=1715246988
 |s -la
 |	time=1715246995
@@ -2872,7 +2872,7 @@ clink autorun install
 |	time=1717917956
 |s -la
 |	time=1717917962
-eza
+|za
 |	time=1717917965
 bat
 |	time=1717917985
@@ -2926,7 +2926,7 @@ lll
 |	time=1717919184
 fastfetch
 |	time=1718103220
-clink autorun show
+|link autorun show
 |	time=1718103226
 clink autorun set -a
 |	time=1718103241
@@ -3038,7 +3038,7 @@ cd home
 |	time=1718103995
 cd users\nickf\
 |	time=1718103999
-pwd
+|wd
 |	time=1718104015
 which bash
 |	time=1718104029
@@ -3048,15 +3048,15 @@ which git
 |	time=1718103087
 |link
 |	time=1718103093
-clink autorun
+|link autorun
 |	time=1718103096
-clink autorun --help
+|link autorun --help
 |	time=1718103100
 |link autorun show
 |	time=1718103144
 clink uninstall
 |	time=1718103148
-clink autorun show
+|link autorun show
 |	time=1718103180
 clink autorun set -a 
 |	time=1718103192
@@ -3088,7 +3088,7 @@ which z
 |	time=1718135934
 |nv
 |	time=1718135962
-cd %USERPROFILE%
+|d %USERPROFILE%
 |	time=1718135968
 |s -la
 |	time=1718135974
@@ -3154,7 +3154,7 @@ ls- la
 |	time=1718136505
 mkdir C:\Users\nickf\.config\clinkcomp
 |	time=1718136521
-cd C:\Users\nickf\AppData\Local\clink
+|d C:\Users\nickf\AppData\Local\clink
 |	time=1718136523
 |s
 |	time=1718136525
@@ -3162,7 +3162,7 @@ cd C:\Users\nickf\AppData\Local\clink
 |	time=1718136637
 cd "C:\Program Files (x86)\clink"
 |	time=1718136638
-l
+|
 |	time=1718136639
 |s
 |	time=1718136641
@@ -3226,7 +3226,7 @@ PATH | tr ";" "\n
 |	time=1719520272
 |link
 |	time=1719520275
-clink update
+|link update
 |	time=1719520288
 |
 |	time=1719520290
@@ -3244,9 +3244,9 @@ clink update
 |	time=1719520315
 |link
 |	time=1719520319
-clink info
+|link info
 |	time=1719520338
-clink set
+|link set
 |	time=1719520368
 |hich clink
 |	time=1719520371
@@ -3258,13 +3258,13 @@ which clink.exe
 |	time=1719520723
 |nv
 |	time=1719607303
-c
+|
 |	time=1719607304
 |ls
 |	time=1719607308
 clear
 |	time=1719607322
-clink
+|link
 |	time=1719607331
 which clink
 |	time=1719607337
@@ -3312,9 +3312,9 @@ pwsh
 |	time=1720244571
 |nv
 |	time=1720244572
-cd
+|d
 |	time=1720244578
-cd $HOME
+|d $HOME
 |	time=1720244582
 |nv
 |	time=1720244594
@@ -3326,21 +3326,21 @@ cd C:\
 |	time=1720244599
 |s -lA
 |	time=1720244608
-env
+|nv
 |	time=1720244610
 path
 |	time=1720244612
 PATH | tr ";" "\n"
 |	time=1720244643
-cls
+|ls
 |	time=1720244646
-cd -
+|d -
 |	time=1720244649
 lls
 |	time=1720244650
-ls
+|s
 |	time=1720244654
-ls -la
+|s -la
 |	time=1720244656
 |s -lA
 |	time=1720244661
@@ -3348,7 +3348,7 @@ ls -la
 |	time=1720244667
 yazi
 |	time=1720244883
-ll
+|l
 |	time=1720244888
 ls -lA
 |	time=1720244894
@@ -3361,3 +3361,221 @@ eza --help
 eza -lAU
 |	time=1720244953
 eza -lAUm
+|	time=1720263510
+npx
+|	time=1720294714
+|link
+|	time=1720294719
+clink autorun
+|	time=1720294722
+clink autorun --help
+|	time=1720294725
+clink autorun shpw
+|	time=1720294728
+clink autorun show
+|	time=1720294736
+env
+|	time=1720294755
+|link
+|	time=1720294765
+clink update
+|	time=1720294858
+clink installscripts
+|	time=1720294873
+|link info
+|	time=1720294892
+cd C:\Users\nickf\AppData\Local\clink
+|	time=1720294894
+ll
+|	time=1720294898
+|s
+|	time=1720294901
+|za
+|	time=1720294904
+eza -a
+|	time=1720294914
+cd C:\Users\nickf\.config\clinkcomp
+|	time=1720294916
+|s
+|	time=1720294937
+cd C:\Users\nickf\AppData\Local\clink\
+|	time=1720294939
+|s
+|	time=1720294957
+bat clink_settings 
+|	time=1720294979
+clink
+|	time=1720294994
+|link set
+|	time=1720295363
+|d
+|	time=1720295374
+|link set
+|	time=1720295402
+clink set color.cmd cyan
+|	time=1720295422
+|link set
+|	time=1720295483
+clink set color.executable cyan
+|	time=1720295549
+color
+|	time=1720295667
+ls --color
+|	time=1720295679
+|rintf "\033[0;31mhello\33[0m, \33[0;32mworld\33[0m"
+|	time=1720295828
+cd %USERPROFILE%\AppData\Local\clink\
+|	time=1720295833
+cd %USERPROFILE%\AppData\Local\
+|	time=1720295834
+|s
+|	time=1720295837
+cd clink
+|	time=1720295838
+|s
+|	time=1720295840
+|s -la
+|	time=1720295913
+clink set
+|	time=1720295948
+printf "\033[0;31mhello\33[0m, \38;5;172mworld\33[0m"
+|	time=1720295985
+printf "\033[0;31mhello\33[0m, \33[5;32mworld\33[0m"
+|	time=1720296029
+printf "\033[0;31mhello\33[0m, \38[5;172mworld\33[0m"
+|	time=1720296056
+printf "\033[0;31mhello\33[0m, \33[0;32mworld\33[0m"
+|	time=1720296080
+clink set color.unrecognized red
+|	time=1720296184
+sgr 38;5;239
+|	time=1720296358
+clink set color.argmatcher cyan
+|	time=1720296432
+|link set color.suggestion grey
+|	time=1720296461
+clink set color.suggestion gray
+|	time=1720296479
+clink set color.suggestion 8
+|	time=1720296544
+clink set color.suggestion '8'
+|	time=1720296551
+|link set color.suggestion black
+|	time=1720296591
+clink set color.suggestion 'light black'
+|	time=1720296603
+clink set color.suggestion grey
+|	time=1720296616
+clink set color.suggestion darkgrey
+|	time=1720296626
+clink set color.suggestion =8
+|	time=1720296648
+clink set color.suggestion black
+|	time=1720296663
+clink info
+|	time=1720296666
+|wd
+|	time=1720296698
+|
+|	time=1720296700
+|ls
+|	time=1720296702
+pwd
+|	time=1720296705
+cd
+|	time=1720296712
+cd /
+|	time=1720296715
+|d -
+|	time=1720296754
+|d -
+|	time=1720296757
+cd -
+|	time=1720296759
+l
+|	time=1720296761
+|s
+|	time=1720296778
+code clink_settings
+|	time=1720296908
+|
+|	time=1720296909
+|ls
+|	time=1720296954
+|
+|	time=1720296956
+|ls
+|	time=1720296961
+|ls
+|	time=1720296970
+|s -la
+|	time=1720296972
+eza
+|	time=1720297004
+cd $HOME
+|	time=1720297015
+cd %USERPROFILE%
+|	time=1720297020
+cd .dots
+|	time=1720297025
+cd bin
+|	time=1720297030
+|s
+|	time=1720297054
+touch ansi_colors
+|	time=1720297068
+code ansi_colors 
+|	time=1720297090
+ls
+|	time=1720297092
+ls -la
+|	time=1720297094
+|sd
+|	time=1720297112
+.\ansi_colors
+|	time=1720297127
+lsd
+|	time=1720297133
+lsd --help
+|	time=1720297160
+exa -lA --icons --group-directories-first
+|	time=1720297222
+python --help
+|	time=1720297230
+python
+|	time=1720297245
+for i in range(30, 37 + 1):
+|	time=1720297247
+print("\033[39m\\033[49m                 - Reset color")
+|	time=1720297248
+print("\\033[2K                          - Clear Line")
+|	time=1720297249
+print("\\033[<L>;<C>H or \\033[<L>;<C>f  - Put the cursor at line L and column C.")
+|	time=1720297249
+print("\\033[<N>A                        - Move the cursor up N lines")
+|	time=1720297250
+print("\\033[<N>B                        - Move the cursor down N lines")
+|	time=1720297251
+print("\\033[<N>C                        - Move the cursor forward N columns")
+|	time=1720297252
+print("\\033[<N>D                        - Move the cursor backward N columns\n")
+|	time=1720297252
+print("\\033[2J                          - Clear the screen, move to (0,0)")
+|	time=1720297253
+print("\\033[K                           - Erase to end of line")
+|	time=1720297254
+print("\\033[s                           - Save cursor position")
+|	time=1720297255
+print("\\033[u                           - Restore cursor position\n")
+|	time=1720297256
+print("\\033[4m                          - Underline on")
+|	time=1720297257
+print("\\033[24m                         - Underline off\n")
+|	time=1720297257
+print("\\033[1m                          - Bold on")
+|	time=1720297260
+c
+|	time=1720297262
+cls
+|	time=1720297567
+@echo off

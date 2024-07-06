@@ -1,6 +1,6 @@
-﻿If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
-    (& "C:\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
-}
+﻿# If (Test-Path "C:\miniconda3\Scripts\conda.exe") {
+#     (& "C:\miniconda3\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ? { $_ } | Invoke-Expression
+# }
 
 Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
 Import-Module npm-completion
@@ -54,19 +54,22 @@ if ($host.Name -eq 'ConsoleHost') {
     TerminateOrphanedConsoleApps  = $true
     PredictionViewStyle           = "InlineView"
     Colors                        = @{
-      Comment                = 'DarkGray'
-      Command                = 'Magenta'
-      Number                 = 'Magenta'
-      Member                 = 'Red'
-      Operator               = 'DarkYellow'
-      Type                   = 'Cyan'
-      Variable               = 'DarkCyan'
-      Parameter              = '#BBC1FB'
-      ContinuationPrompt     = 'Black'
-      Default                = 'White'
-      InlinePrediction       = 'DarkGray'
-      ListPrediction         = 'DarkGray'
-      ListPredictionSelected = 'DarkGray'
+      Comment                    = 'DarkGray'
+      Command                    = 'Magenta'
+      Emphasis                   = 'Cyan'
+      Number                     = 'Yellow'
+      Member                     = 'Blue'
+      Operator                   = 'Blue'
+      Type                       = 'Yellow'
+      String                     = 'Green'
+      Variable                   = 'Cyan'
+      Parameter                  = 'Blue'
+      ContinuationPrompt         = 'Black'
+      Default                    = 'White'
+      InlinePrediction           = 'DarkGray'
+      ListPrediction             = 'DarkGray'
+      ListPredictionSelected     = 'DarkGray'
+      ListPredictionTooltip      = 'DarkGray'
     }
   }
   Set-PSReadLineOption @PSReadLineOptions
