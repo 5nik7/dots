@@ -1,5 +1,3 @@
-#!/bin/bash
-
 alias rlp='source $HOME/.bashrc'
 
 alias ls='ls --color=auto --group-directories-first'
@@ -32,10 +30,11 @@ alias "........"="cd ../../../../../../.."
 alias lg='lazygit'
 
 function yy() {
-    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+    local tmp
+    tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
     yazi "$@" --cwd-file="$tmp"
     if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-        cd -- "$cwd"
+        cd -- "$cwd" || exit
     fi
     rm -f -- "$tmp"
 }

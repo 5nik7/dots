@@ -1,27 +1,26 @@
 {
-  "wallpaper": "C:\\walls\\Dream.jpg",
   "alpha": "100",
   "special": {
     "background": "#142444",
-    "foreground": "#E0F9FF",
+    "foreground": "#F5FCFF",
     "cursor": "#A9DFF7"
   },
   "colors": {
-    "color0": "#172A52",
+    "color0": "#233250",
     "color1": "#FF5674",
-    "color2": "#3BFFC4",
-    "color3": "#FFBAA2",
-    "color4": "#4A91FF",
-    "color5": "#8C76FF",
-    "color6": "#00F6FF",
+    "color2": "#00FFCC",
+    "color3": "#F5C387",
+    "color4": "#4785FF",
+    "color5": "#9B99FF",
+    "color6": "#0DFFFF",
     "color7": "#C3DEE5",
-    "color8": "#22467a",
+    "color8": "#445278",
     "color9": "#FF5674",
-    "color10": "#3BFFC4",
-    "color11": "#FFBAA2",
-    "color12": "#4A91FF",
-    "color13": "#8C76FF",
-    "color14": "#00F6FF",
-    "color15": "#E0F9FF"
+    "color10": "#00FFCC",
+    "color11": "#F5C387",
+    "color12": "#4785FF",
+    "color13": "#9B99FF",
+    "color14": "#0DFFFF",
+    "color15": "#F5FCFF"
   }
 }

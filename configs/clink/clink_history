@@ -3276,13 +3276,13 @@ set
 |	time=1720129378
 set
 |	time=1720205926
-env
+|nv
 |	time=1720205948
 cd $TEMP
 |	time=1720206001
-pwsh
+|wsh
 |	time=1720206007
-which pwsh
+|hich pwsh
 |	time=1720206009
 which pwsh.exe
 |	time=1720206014
@@ -3303,3 +3303,9 @@ ls
 d
 |	time=1720206057
 yazi
+|	time=1720208543
+env
+|	time=1720208552
+which pwsh
+|	time=1720208556
+pwsh
