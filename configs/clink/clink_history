@@ -1702,7 +1702,7 @@ glazewm.exe
 |	time=1707271639
 |s -la
 |	time=1707271641
-ls -lA
+|s -lA
 |	time=1707271648
 ls -lA --color=always
 |	time=1707271661
@@ -1760,7 +1760,7 @@ lsd -lAg
 |	time=1707271843
 |d
 |	time=1707271844
-cd -
+|d -
 |	time=1707271848
 pws
 |	time=1707271850
@@ -2578,7 +2578,7 @@ cd %DOTS%
 |	time=1715246286
 |za
 |	time=1715246291
-eza -lA
+|za -lA
 |	time=1715246315
 |at .bashrc
 |	time=1715246331
@@ -3016,7 +3016,7 @@ cd ~\
 |	time=1718103912
 cd C
 |	time=1718103915
-cd C:\
+|d C:\
 |	time=1718103916
 |
 |	time=1718103918
@@ -3076,7 +3076,7 @@ cd c
 |	time=1718135871
 cd \
 |	time=1718135873
-cd
+|d
 |	time=1718135880
 which cd
 |	time=1718135898
@@ -3084,7 +3084,7 @@ which which
 |	time=1718135908
 which z
 |	time=1718135932
-cd $HOME
+|d $HOME
 |	time=1718135934
 |nv
 |	time=1718135962
@@ -3166,7 +3166,7 @@ l
 |	time=1718136639
 |s
 |	time=1718136641
-ls -la
+|s -la
 |	time=1718136657
 bat clink.lua
 |	time=1718136668
@@ -3238,7 +3238,7 @@ clink update
 |	time=1719520295
 |nv
 |	time=1719520297
-path
+|ath
 |	time=1719520301
 |ATH | tr ";" "\n"
 |	time=1719520315
@@ -3260,7 +3260,7 @@ which clink.exe
 |	time=1719607303
 c
 |	time=1719607304
-cls
+|ls
 |	time=1719607308
 clear
 |	time=1719607322
@@ -3286,7 +3286,7 @@ cd $TEMP
 |	time=1720206009
 which pwsh.exe
 |	time=1720206014
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1720206023
 cd C:\pwsh\7-preview\preview
 |	time=1720206024
@@ -3296,16 +3296,68 @@ cd C:\pwsh\7-preview\preview
 |	time=1720206036
 cd ..
 |	time=1720206037
-ll
+|l
 |	time=1720206040
-ls
+|s
 |	time=1720206054
 d
 |	time=1720206057
-yazi
+|azi
 |	time=1720208543
-env
+|nv
 |	time=1720208552
 which pwsh
 |	time=1720208556
 pwsh
+|	time=1720244571
+|nv
+|	time=1720244572
+cd
+|	time=1720244578
+cd $HOME
+|	time=1720244582
+|nv
+|	time=1720244594
+cd C:\
+|	time=1720244596
+|l
+|	time=1720244597
+|s
+|	time=1720244599
+|s -lA
+|	time=1720244608
+env
+|	time=1720244610
+path
+|	time=1720244612
+PATH | tr ";" "\n"
+|	time=1720244643
+cls
+|	time=1720244646
+cd -
+|	time=1720244649
+lls
+|	time=1720244650
+ls
+|	time=1720244654
+ls -la
+|	time=1720244656
+|s -lA
+|	time=1720244661
+|za -lA
+|	time=1720244667
+yazi
+|	time=1720244883
+ll
+|	time=1720244888
+ls -lA
+|	time=1720244894
+eza -lA
+|	time=1720244903
+eza -h
+|	time=1720244906
+eza --help
+|	time=1720244919
+eza -lAU
+|	time=1720244953
+eza -lAUm
