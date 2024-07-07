@@ -137,12 +137,12 @@ function fbak {
 
 function ll {
   Write-Host " "
-  eza --icons --group-directories-first  --no-permissions --no-filesize --git-repos --git -xAlm --time-style=relative  --hyperlink
+  eza --icons --group-directories-first  --no-permissions --no-filesize --git-repos --git -Alm --time-style=relative  --hyperlink
 }
 
 function l {
   Write-Host " "
-  eza --icons --group-directories-first  --no-permissions --no-filesize --no-time  --git-repos --git  -Gl --hyperlink
+  eza --icons --group-directories-first  --no-permissions --no-filesize --no-time --git-repos --git  -l --time-style=relative  --hyperlink
 }
 
 function envl {
