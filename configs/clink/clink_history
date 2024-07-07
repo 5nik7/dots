@@ -3328,9 +3328,9 @@ cd C:\
 |	time=1720244608
 |nv
 |	time=1720244610
-path
+|ath
 |	time=1720244612
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1720244643
 |ls
 |	time=1720244646
@@ -3350,7 +3350,7 @@ yazi
 |	time=1720244883
 |l
 |	time=1720244888
-ls -lA
+|s -lA
 |	time=1720244894
 eza -lA
 |	time=1720244903
@@ -3386,7 +3386,7 @@ clink installscripts
 |	time=1720294892
 cd C:\Users\nickf\AppData\Local\clink
 |	time=1720294894
-ll
+|l
 |	time=1720294898
 |s
 |	time=1720294901
@@ -3514,7 +3514,7 @@ eza
 |	time=1720297004
 cd $HOME
 |	time=1720297015
-cd %USERPROFILE%
+|d %USERPROFILE%
 |	time=1720297020
 cd .dots
 |	time=1720297025
@@ -3580,7 +3580,7 @@ print("\\033[1m                          - Bold on")
 |	time=1720297567
 @echo off
 |	time=1720306984
-c
+|
 |	time=1720306985
 |ls
 |	time=1720307074
@@ -3588,7 +3588,7 @@ c
 |	time=1720307085
 cd
 |	time=1720307291
-cls
+|ls
 |	time=1720307327
 |nv
 |	time=1720307332
@@ -3604,7 +3604,7 @@ cd
 |	time=1720307449
 cd C:\Users\nickf\AppData\Local\clink\
 |	time=1720307451
-ls
+|s
 |	time=1720307471
 cat clink_settings 
 |	time=1720307489
@@ -3622,7 +3622,7 @@ clink info
 |	time=1720307637
 |link set
 |	time=1720307684
-cls
+|ls
 |	time=1720307709
 |link set
 |	time=1720307741
@@ -3654,8 +3654,36 @@ clink set color.input Blue
 |	time=1720308215
 cd \
 |	time=1720308220
-env
+|nv
 |	time=1720308242
 clink set color.input green
 |	time=1720308317
 q
+|	time=1720319968
+path
+|	time=1720319973
+PATH | tr ";" "\n"
+|	time=1720319981
+pyenv
+|	time=1720319987
+wal
+|	time=1720320015
+c
+|	time=1720320016
+cls
+|	time=1720320018
+|nv
+|	time=1720320283
+env
+|	time=1720320303
+cd %USERPROFILE^&
+|	time=1720320310
+cd %USERPROFILE%
+|	time=1720320326
+cd C:\Users\nickf\projects\
+|	time=1720320328
+ll
+|	time=1720320329
+ls
+|	time=1720320334
+ls -lA
