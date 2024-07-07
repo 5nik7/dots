@@ -3064,7 +3064,7 @@ sudo clink autorun
 |	time=1718104160
 clink set debug.log_terminal off
 |	time=1718104165
-q
+|
 |	time=1718104179
 |nv
 |	time=1718135860
@@ -3074,7 +3074,7 @@ q
 |	time=1718135869
 cd c
 |	time=1718135871
-cd \
+|d \
 |	time=1718135873
 |d
 |	time=1718135880
@@ -3374,7 +3374,7 @@ clink autorun shpw
 |	time=1720294728
 clink autorun show
 |	time=1720294736
-env
+|nv
 |	time=1720294755
 |link
 |	time=1720294765
@@ -3398,7 +3398,7 @@ cd C:\Users\nickf\.config\clinkcomp
 |	time=1720294916
 |s
 |	time=1720294937
-cd C:\Users\nickf\AppData\Local\clink\
+|d C:\Users\nickf\AppData\Local\clink\
 |	time=1720294939
 |s
 |	time=1720294957
@@ -3436,7 +3436,7 @@ cd clink
 |	time=1720295840
 |s -la
 |	time=1720295913
-clink set
+|link set
 |	time=1720295948
 printf "\033[0;31mhello\33[0m, \38;5;172mworld\33[0m"
 |	time=1720295985
@@ -3446,7 +3446,7 @@ printf "\033[0;31mhello\33[0m, \38[5;172mworld\33[0m"
 |	time=1720296056
 printf "\033[0;31mhello\33[0m, \33[0;32mworld\33[0m"
 |	time=1720296080
-clink set color.unrecognized red
+|link set color.unrecognized red
 |	time=1720296184
 sgr 38;5;239
 |	time=1720296358
@@ -3472,7 +3472,7 @@ clink set color.suggestion =8
 |	time=1720296648
 clink set color.suggestion black
 |	time=1720296663
-clink info
+|link info
 |	time=1720296666
 |wd
 |	time=1720296698
@@ -3480,9 +3480,9 @@ clink info
 |	time=1720296700
 |ls
 |	time=1720296702
-pwd
+|wd
 |	time=1720296705
-cd
+|d
 |	time=1720296712
 cd /
 |	time=1720296715
@@ -3526,7 +3526,7 @@ touch ansi_colors
 |	time=1720297068
 code ansi_colors 
 |	time=1720297090
-ls
+|s
 |	time=1720297092
 ls -la
 |	time=1720297094
@@ -3574,8 +3574,88 @@ print("\\033[24m                         - Underline off\n")
 |	time=1720297257
 print("\\033[1m                          - Bold on")
 |	time=1720297260
-c
+|
 |	time=1720297262
-cls
+|ls
 |	time=1720297567
 @echo off
+|	time=1720306984
+c
+|	time=1720306985
+|ls
+|	time=1720307074
+|ls
+|	time=1720307085
+cd
+|	time=1720307291
+cls
+|	time=1720307327
+|nv
+|	time=1720307332
+|wd
+|	time=1720307389
+|ls
+|	time=1720307396
+cd
+|	time=1720307415
+|link set
+|	time=1720307439
+|link info
+|	time=1720307449
+cd C:\Users\nickf\AppData\Local\clink\
+|	time=1720307451
+ls
+|	time=1720307471
+cat clink_settings 
+|	time=1720307489
+cpde clink_settings 
+|	time=1720307495
+|ode clink_settings 
+|	time=1720307527
+code clink_settings 
+|	time=1720307546
+clink info
+|	time=1720307549
+|link set
+|	time=1720307626
+|ls
+|	time=1720307637
+|link set
+|	time=1720307684
+cls
+|	time=1720307709
+|link set
+|	time=1720307741
+clink set color.arginfo purple
+|	time=1720307750
+clink set color.arginfo magenta 
+|	time=1720307801
+clink set color.flag blue
+|	time=1720307830
+clink set color.unrecognized red
+|	time=1720307899
+|link set
+|	time=1720307925
+clink set color.doskey yelloq
+|	time=1720307931
+clink set color.doskey yellow
+|	time=1720308008
+clink set color.cmd magenta
+|	time=1720308041
+clink set color.executable magenta
+|	time=1720308076
+|nv
+|	time=1720308107
+pwd
+|	time=1720308125
+clink set
+|	time=1720308194
+clink set color.input Blue
+|	time=1720308215
+cd \
+|	time=1720308220
+env
+|	time=1720308242
+clink set color.input green
+|	time=1720308317
+q

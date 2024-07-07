@@ -9,7 +9,6 @@ $env:RMSKINS = "$env:DOCS\Rainmeter\Skins"
 $env:WINCONFIG = "$env:USERPROFILE\.config"
 
 $env:PROJECTS = "$env:USERPROFILE\projects"
-$env:REPOS = "$env:PROJECTS"
 $env:DOTS = "$env:USERPROFILE\.dots"
 $env:DRIP = "$env:DOTS\drip"
 $env:WALLS = "$env:DOTS\walls"
@@ -31,3 +30,10 @@ $env:YAZI_CONFIG_HOME = "$env:DOTFILES\yazi"
 $env:YAZI_CONFIG_HOME = "$env:DOTFILES\yazi"
 $env:YAZI_FILE_ONE = 'C:\Users\nickf\scoop\apps\git\current\usr\bin\file.exe'
 $env:BOXES = "$env:DOTFILES\boxes\boxes-config"
+
+$BAT_THEME = if ($env:THEME) { $env:THEME }
+else { 'base16' }
+$env:BAT_THEME = $BAT_THEME
+
+$env:EZA_ICON_SPACING = "1"
+$env:EZA_COLORS = "da=90:lp=94;;3;;2:ln=96;;1"

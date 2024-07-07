@@ -83,8 +83,8 @@ function Test-CommandExists {
 }
 
 # Editor Configuration
-$EDITOR = if (Test-CommandExists code) { 'code' }
-elseif (Test-CommandExists nvim) { 'nvim' }
+$EDITOR = if (Test-CommandExists nvim) { 'nvim' }
+elseif (Test-CommandExists code) { 'code' }
 elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
@@ -115,14 +115,14 @@ Set-Alias -Name d -Value ya
 
 function dd {
   param (
-    [string]$Path = $PWD
+    [string]$Path
   )
 
   if ($Path) {
     explorer $Path
   }
   else {
-    explorer
+    explorer $PWD
   }
 }
 
@@ -137,12 +137,12 @@ function fbak {
 
 function ll {
   Write-Host " "
-  eza -lA --git --git-repos --icons --group-directories-first --no-quotes
+  eza --icons --group-directories-first  --no-permissions --no-filesize --git-repos --git -xAlm --time-style=relative  --hyperlink
 }
 
 function l {
   Write-Host " "
-  eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time
+  eza --icons --group-directories-first  --no-permissions --no-filesize --no-time  --git-repos --git  -Gl --hyperlink
 }
 
 function envl {
@@ -216,26 +216,16 @@ function colors {
   }
 }
 
-function Add-PathPrefix {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-    $env:Path = "$Path;" + $env:Path
-  }
-}
 
 function Add-Path {
   param (
     [Parameter(Mandatory = $true)]
     [string]$Path
   )
-  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-    $env:Path += ";$Path"
-  }
+    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+      $env:Path += ";$Path"
+    }
 }
-
 function Fresh {
   & $PROFILE
   Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
