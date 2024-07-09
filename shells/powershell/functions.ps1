@@ -203,12 +203,3 @@ function colors {
     Write-Host " on $bgcolor"
   }
 }
-
-function Fresh {
-  & $PROFILE
-  Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
-  Write-Host -ForegroundColor DarkGray '│' -NoNewline
-  Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
-  Write-Host -ForegroundColor DarkGray '│'
-  Write-Host -ForegroundColor DarkGray '└───────────────────┘'
-}

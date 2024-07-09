@@ -33,35 +33,47 @@ if ($basedir -eq $env:DOTS -or $parentDir -eq $env:DOTFILES) {
   $basedircolor = "Magenta"
   $basedir = "   "
 }
+else {
+  $basedir = " $basedir\"
+}
+
+$targetdir = " $targetdir\"
+function CreateBackup {
+  if (Test-Path -Path $backupDir) {
+    return
+  }
+  else {
+    Write-Host -ForegroundColor Yellow "Creating backup directory: " -NoNewline
+    New-Item -ItemType Directory -Path $backupDir -ErrorAction Stop | Out-Null
+    Write-Host -ForegroundColor White "$backupDir"
+  }
+  Write-Host ''
+  Write-Host -ForegroundColor Yellow "Creating a backup file: " -NoNewline
+  Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
+  Move-Item -Path $backupFileName -Destination $backupDir -ErrorAction Stop | Out-Null
+  Write-Host -ForegroundColor White "$backupDir\$backupFileName"
+}
+function CreateLink {
+  New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
+  Write-Host ''
+  Write-Host -ForegroundColor $basedircolor "$basedir" -NoNewline
+  Write-Host -ForegroundColor Cyan "$baseleaf" -NoNewline
+  Write-Host -ForegroundColor DarkGray "$arrow" -NoNewline
+  Write-Host -ForegroundColor $targetdircolor "$targetdir" -NoNewline
+  Write-Host -ForegroundColor Cyan "$targetleaf"
+  Write-Host ''
+}
 
 try {
   if ((Test-Path -Path $target) -and (Get-Item -Path $target).Target -eq $base) {
     Write-Host -ForegroundColor DarkGray "Already linked."
   }
   elseif (Test-Path -Path $target) {
-    Write-Host ''
-    Write-Host -ForegroundColor Yellow "Creating a backup file: " -NoNewline
-    Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
-    Move-Item -Path $backupFileName -Destination $backupDir -ErrorAction Stop | Out-Null
-    Write-Host -ForegroundColor White "$backupDir\$backupFileName"
-    Write-Host ''
-    New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
-    Write-Host -ForegroundColor $basedircolor "$basedir\" -NoNewline
-    Write-Host -ForegroundColor Cyan "$baseleaf" -NoNewline
-    Write-Host -ForegroundColor DarkGray "$arrow" -NoNewline
-    Write-Host -ForegroundColor $targetdircolor "$targetdir\" -NoNewline
-    Write-Host -ForegroundColor Cyan "$targetleaf"
-    Write-Host ''
+    CreateBackup
+    CreateLink
   }
   else {
-    New-Item -ItemType SymbolicLink -Path $target -Target $base -ErrorAction Stop | Out-Null
-    Write-Host ''
-    Write-Host -ForegroundColor $basedircolor "$basedir\" -NoNewline
-    Write-Host -ForegroundColor Cyan "$baseleaf" -NoNewline
-    Write-Host -ForegroundColor DarkGray "$arrow" -NoNewline
-    Write-Host -ForegroundColor $targetdircolor "$targetdir\" -NoNewline
-    Write-Host -ForegroundColor Cyan "$targetleaf"
-    Write-Host ''
+    CreateLink
   }
 }
 catch {
