@@ -17,6 +17,33 @@ param(
   [string]$target
 )
 
+# Check and resolve the base path
+if (Test-Path $base) {
+  $base = Resolve-Path $base -ErrorAction Stop | Select-Object -ExpandProperty Path
+}
+else {
+  Write-Error "Base path '$base' does not exist."
+  exit
+}
+
+# Check if the target path exists before resolving
+if (Test-Path $target) {
+  $userChoice = Read-Host "The target '$target' already exists. Overwrite? [Y/N]"
+  if ($userChoice -eq 'Y') {
+    CreateBackup
+    # Proceed to create the symbolic link here
+  }
+  else {
+    Write-Host "Operation cancelled by the user."
+    exit
+  }
+}
+else {
+  # If the target doesn't exist, construct the absolute path manually
+  $target = Join-Path (Get-Location) $target
+  # Proceed to create the symbolic link here
+}
+
 $backupDir = "$env:USERPROFILE\backups"
 $arrow = "  -->  "
 $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
