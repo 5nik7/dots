@@ -8,6 +8,10 @@
   }
 }
 
+function wtb {
+  Invoke-RestMethod "https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1" | Invoke-Expression
+}
+
 function .. {
   Set-Location ".."
 }
