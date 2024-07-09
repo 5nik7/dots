@@ -1,23 +1,90 @@
-﻿function gc {
-  param(
+﻿function Add-Path {
+  param (
     [Parameter(Mandatory = $true)]
-    [string]$url,
-    [Parameter(Mandatory = $false)]
-    [string]$dir
+    [string]$Path
   )
-
-  if ($url -match '.git$') {
-    if ($dir) {
-      git clone $url $dir
-    }
-    else {
-      git clone $url
-    }
-  }
-  else {
-    Write-Error "The provided URL does not end with .git"
+  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+    $env:Path += ";$Path"
   }
 }
+
+function .. {
+  Set-Location ".."
+}
+
+function ya {
+  $tmp = [System.IO.Path]::GetTempFileName()
+  yazi $args --cwd-file="$tmp"
+  $cwd = Get-Content -Path $tmp
+  if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
+    Set-Location -Path $cwd
+  }
+  Remove-Item -Path $tmp
+}
+
+function Get-ChildItemPretty {
+  <#
+    .SYNOPSIS
+        Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
+        Alias: ls, ll, la, l
+    #>
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $false, Position = 0)]
+    [string]$Path = $PWD
+  )
+
+  Write-Host ""
+  eza -a -l --group-directories-first --git-repos --git --icons --time-style relative $Path
+  Write-Host ""
+}
+
+function Get-ChildItemPrettyTree {
+  <#
+    .SYNOPSIS
+        Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
+        Alias: ls, ll, la, l
+    #>
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $false, Position = 0)]
+    [string]$Path = $PWD
+  )
+
+  Write-Host ""
+  eza --icons --git-repos --git  -ln --time-style=relative --tree $Path
+  Write-Host ""
+}
+
+function New-File {
+  <#
+    .SYNOPSIS
+        Creates a new file with the specified name and extension. Alias: touch
+    #>
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true, Position = 0)]
+    [string]$Name
+  )
+
+  Write-Verbose "Creating new file '$Name'"
+  New-Item -ItemType File -Name $Name -Path $PWD | Out-Null
+}
+
+function Show-Command {
+  <#
+    .SYNOPSIS
+        Displays the definition of a command. Alias: which
+    #>
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true, Position = 0)]
+    [string]$Name
+  )
+  Write-Verbose "Showing definition of '$Name'"
+  Get-Command $Name | Select-Object -ExpandProperty Definition
+}
+
 function gup {
   if (Test-Path .git) {
     $commitDate = Get-Date -Format "yyyy-MM-dd HH:mm"
@@ -28,23 +95,6 @@ function gup {
   else {
     Write-Error "This directory does not contain a .git directory"
   }
-}
-
-function ga {
-  git add .
-}
-
-function gp {
-  git pull
-}
-
-function gcm {
-  $commitDate = Get-Date -Format "yyyy-MM-dd HH:mm"
-  git commit -m "Update @ $commitDate"
-}
-
-function gps {
-  git push
 }
 
 
@@ -83,8 +133,8 @@ function Test-CommandExists {
 }
 
 # Editor Configuration
-$EDITOR = if (Test-CommandExists nvim) { 'nvim' }
-elseif (Test-CommandExists code) { 'code' }
+$EDITOR = if (Test-CommandExists code) { 'code' }
+elseif (Test-CommandExists nvim) { 'nvim' }
 elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
@@ -102,17 +152,6 @@ function edit-item {
   }
 }
 
-function ya {
-  $tmp = [System.IO.Path]::GetTempFileName()
-  yazi $args --cwd-file="$tmp"
-  $cwd = Get-Content -Path $tmp
-  if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
-    Set-Location -Path $cwd
-  }
-  Remove-Item -Path $tmp
-}
-Set-Alias -Name d -Value ya
-
 function dd {
   param (
     [string]$Path
@@ -124,43 +163,6 @@ function dd {
   else {
     explorer $PWD
   }
-}
-
-function edit-history {
-  & $env:EDITOR (Get-PSReadLineOption).HistorySavePath
-}
-
-function fbak {
-  $command = "fd --hidden --follow -e bak"
-  Invoke-Expression $command
-}
-
-function ll {
-  Write-Host " "
-  eza --icons --group-directories-first  --no-permissions --no-filesize --git-repos --git -Alm --time-style=relative
-}
-
-function l {
-  Write-Host " "
-  eza --icons --group-directories-first  --no-permissions --no-filesize --no-time --git-repos --git  -l --time-style=relative
-}
-
-function lt {
-  Write-Host " "
-  eza --icons --no-permissions --no-filesize  --git-repos --git  -ln --time-style=relative --tree
-}
-
-function envl {
-  Write-Host " "
-  Get-ChildItem Env:
-}
-
-function touch($file) {
-  "" | Out-File $file -Encoding ASCII
-}
-
-function which($name) {
-  Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
 Function Search-Alias {
@@ -179,13 +181,6 @@ function .d {
   Set-Location "$env:PROJECTS\dots"
 }
 
-function .f {
-  Set-Location "$env:DOTFILES"
-}
-
-function .e {
-  (& $env:EDITOR "$env:PROJECTS\dots")
-}
 
 function pro {
   Set-Location "$env:PROJECTS"
@@ -193,22 +188,6 @@ function pro {
 
 function q {
   Exit
-}
-
-function pathl {
-  $env:Path -split ';'
-}
-
-function .. {
-  Set-Location ".."
-}
-
-function lg {
-  lazygit
-}
-
-function rmf($file) {
-  Remove-Item $file -Recurse -Force -Verbose -confirm:$false
 }
 
 function colors {
@@ -221,16 +200,6 @@ function colors {
   }
 }
 
-
-function Add-Path {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-      $env:Path += ";$Path"
-    }
-}
 function Fresh {
   & $PROFILE
   Write-Host -ForegroundColor DarkGray '┌───────────────────┐'

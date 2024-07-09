@@ -31,7 +31,7 @@ $backupFileName = "$targetleaf.$bakDate.bak"
 
 if ($basedir -eq $env:DOTS -or $parentDir -eq $env:DOTFILES) {
   $basedircolor = "Magenta"
-  $basedir = "  "
+  $basedir = "   "
 }
 
 try {
