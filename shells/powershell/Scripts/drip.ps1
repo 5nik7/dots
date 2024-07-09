@@ -19,20 +19,21 @@ param(
   [string]$Sat,
   [string]$be
 )
-
+$ENV:DRIP = "$ENV:DOTS\drip"
+$ENV:WALLS = "$ENV:DOTS\walls"
 if ($t) {
-  $wall = $(Get-Content "$env:DRIP\$t\wall")
-  $wp = "$env:WALLS\$wall"
+  $wall = $(Get-Content "$ENV:DRIP\$t\wall")
+  $wp = "$ENV:WALLS\$wall"
   wal --theme "$t" -n
   Set-Wall -PicturePath "$wp" -Style Fill
-  $env:THEME = $t
+  $ENV:THEME = $t
 }
 if ($i) {
   if ($be) {
     $colorpicker = $be
   }
-  elseif ($env:WALBACKEND) {
-    $colorpicker = $env:WALBACKEND
+  elseif ($ENV:WALBACKEND) {
+    $colorpicker = $ENV:WALBACKEND
   }
   else {
     $colorpicker = "wal"
