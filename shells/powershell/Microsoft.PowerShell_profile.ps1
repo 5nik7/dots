@@ -1,4 +1,26 @@
 ﻿$profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
+
+$ENV:PROJECTS = "C:\projects"
+$PROJECTS = $ENV:PROJECTS
+
+$ENV:DOTS = $ENV:PROJECTS + "\dots"
+$DOTS = $ENV:DOTS
+
+$ENV:DOTFILES = $ENV:DOTS + "\configs"
+$DOTFILES = $ENV:DOTFILES
+
+$ENV:DOTSHELL = $DOTS + "\shells"
+$DOTSHELL = $ENV:DOTSHELL
+
+$ENV:PSDOT = $DOTSHELL + "\powershell"
+$PSDOT = $ENV:PSDOT
+
+$ENV:BASHDOT = $DOTSHELL + "\bash"
+$BASHDOT = $ENV:BASHDOT
+
+$ENV:ZSHDOT = $DOTSHELL + "\zsh"
+$ZSHDOT = $ENV:ZSHDOT
+
 foreach ( $includeFile in ("environment", "functions", "aliases", "lab") ) {
   Unblock-File $profileDirectory\$includeFile.ps1
   . "$profileDirectory\$includeFile.ps1"

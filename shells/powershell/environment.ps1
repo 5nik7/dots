@@ -1,8 +1,4 @@
-﻿$ENV:PROJECTS = "$ENV:HOMEDRIVE\projects"
-
-$ENV:DOTS = "$ENV:PROJECTS\dots"
-$ENV:DOTFILES = "$ENV:DOTS\configs"
-$ENV:DRIP = "$ENV:DOTS\drip"
+﻿$ENV:DRIP = "$ENV:DOTS\drip"
 $ENV:WALLS = "$ENV:DOTS\walls"
 
 $ENV:NVM_HOME = "$ENV:APPDATA\nvm"
