@@ -13,32 +13,28 @@ $sysparams = @(
 )
 
 $aliases = @{}
-
 Get-Alias | ForEach-Object { if ($aliases[$_.Definition] -eq $null) { $aliases.Add($_.Definition, $_.Name) } }
-
-$scriptsPath = $ENV:scriptsPath
 
 Get-Command -CommandType ExternalScript | ForEach-Object `
 {
 	$name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
-	if ($_.Source -like "$scriptsPath\*") {
-		Write-Host "$name " -NoNewline
+	Write-Host "$name " -NoNewline
 
-		$parameters = $_.Parameters
-		if ($parameters -ne $null) {
-			$parameters.Keys | Where-Object { $sysparams -notcontains $_ } | ForEach-Object `
-			{
-				$p = $parameters[$_]
-				$c = if ($p.ParameterType -like 'Switch') { 'DarkGray' } else { 'DarkCyan' }
-				Write-Host "-$_ " -NoNewline -ForegroundColor $c
-			}
+	$parameters = $_.Parameters
+	if ($parameters -ne $null) {
+		$parameters.Keys | Where-Object { $sysparams -notcontains $_ } | ForEach-Object `
+		{
+			$p = $parameters[$_]
+			$c = if ($p.ParameterType -like 'Switch') { 'DarkGray' } else { 'DarkCyan' }
+			Write-Host "-$_ " -NoNewline -ForegroundColor $c
 		}
-
-		$alias = $aliases[$name]
-		if ($alias) {
-			Write-Host " ($alias)" -ForegroundColor DarkGreen -NoNewline
-		}
-
-		Write-Host
 	}
+
+	$alias = $aliases[$name]
+	if ($alias) {
+		Write-Host " ($alias)" -ForegroundColor DarkGreen -NoNewline
+	}
+
+	Write-Host
 }
+

@@ -1,6 +1,4 @@
-﻿$profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
-
-$ENV:PROJECTS = "C:\projects"
+﻿$ENV:PROJECTS = "C:\projects"
 $PROJECTS = $ENV:PROJECTS
 
 $ENV:DOTS = $ENV:PROJECTS + "\dots"
@@ -22,10 +20,12 @@ $ENV:ZSHDOT = $DOTSHELL + "\zsh"
 $ZSHDOT = $ENV:ZSHDOT
 
 foreach ( $includeFile in ("environment", "functions", "aliases", "lab") ) {
-  Unblock-File $profileDirectory\$includeFile.ps1
-  . "$profileDirectory\$includeFile.ps1"
+  Unblock-File $PSDOT\$includeFile.ps1
+  . "$PSDOT\$includeFile.ps1"
 }
-$scriptsPath = "$profileDirectory\Scripts"
+
+$ENV:scriptsPath = "$PSDOT\Scripts"
+$scriptsPath = $ENV:scriptsPath
 if (Test-Path($scriptsPath)) {
   Add-Path -Path $scriptsPath
 }

@@ -1,7 +1,11 @@
-﻿$env:Lab = "$env:USERPROFILE\lab"
-$LabPath = $env:Lab
+﻿$ENV:LAB = "$ENV:PROJECTS\lab"
+$LAB = $ENV:LAB
 
-$PSLab = "$LabPath\PowerShell\1"
-if (Test-Path($PSLab)) {
-  Add-Path -Path $PSLab
+$ENV:PSLAB = "$LAB\powershell"
+$PSLAB = $ENV:PSLAB
+
+foreach ( $SUBLAB in ("1", "2") ) {
+  if (Test-Path("$PSLAB\$SUBLAB")) {
+    Add-Path -Path "$PSLAB\$SUBLAB"
+  }
 }
