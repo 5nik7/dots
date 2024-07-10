@@ -1,5 +1,5 @@
 ﻿$profileDirectory = [System.IO.Path]::GetDirectoryName($PROFILE)
-foreach ( $includeFile in ("environment", "functions", "aliases") ) {
+foreach ( $includeFile in ("environment", "functions", "aliases", "lab") ) {
   Unblock-File $profileDirectory\$includeFile.ps1
   . "$profileDirectory\$includeFile.ps1"
 }
