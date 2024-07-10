@@ -91,7 +91,7 @@ function Show-Command {
 
 function gup {
   if (Test-Path .git) {
-    $commitDate = Get-Date -Format "yyyy-MM-dd HH:mm"
+    $commitDate = Get-Date -Format "MM-dd-yyyy HH:mm"
     git add .
     git commit -m "Update @ $commitDate"
     git push
