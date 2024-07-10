@@ -10,51 +10,31 @@ Target directory for the symbolic link.
 #>
 
 param(
-  [Parameter(Mandatory = $true)]
-  [string]$base,
-
-  [Parameter(Mandatory = $true)]
-  [string]$target
+  $base = (Resolve-Path $baseinput).Path,
+  $target = (Resolve-Path $targetinput).Path
 )
 
 # Check and resolve the base path
-if (Test-Path $base) {
-  $base = Resolve-Path $base -ErrorAction Stop | Select-Object -ExpandProperty Path
-}
-else {
-  Write-Error "Base path '$base' does not exist."
-  exit
-}
-
-# Check if the target path exists before resolving
-if (Test-Path $target) {
-  $userChoice = Read-Host "The target '$target' already exists. Overwrite? [Y/N]"
-  if ($userChoice -eq 'Y') {
-    CreateBackup
-    # Proceed to create the symbolic link here
-  }
-  else {
-    Write-Host "Operation cancelled by the user."
-    exit
-  }
-}
-else {
-  # If the target doesn't exist, construct the absolute path manually
-  $target = Join-Path (Get-Location) $target
-  # Proceed to create the symbolic link here
-}
+# if (Test-Path $base) {
+#   return
+# }
+# else {
+#   Write-Error "Base path '$base' does not exist."
+#   exit
+# }
 
 $backupDir = "$env:USERPROFILE\backups"
 $arrow = "  -->  "
 $bakDate = Get-Date -Format "yyyy-MM-dd_HH-mm"
-$basedir = [System.IO.Path]::GetDirectoryName($base)
+# $basedir = [System.IO.Path]::GetDirectoryName($base)
+$basedir = Split-Path $base -Parent
 $parentDir = Split-Path $basedir -Parent
-$basedircolor = "DarkBlue"
 $baseleaf = Split-Path -Path $base -Leaf
-$targetdir = [System.IO.Path]::GetDirectoryName($target)
-$targetdircolor = "DarkBlue"
+$basedircolor = "DarkBlue"
+$targetdir = Split-Path $target -Parent
 $targetleaf = Split-Path -Path $target -Leaf
 $backupFileName = "$targetleaf.$bakDate.bak"
+$targetdircolor = "DarkBlue"
 
 if ($basedir -eq $env:DOTS -or $parentDir -eq $env:DOTFILES) {
   $basedircolor = "Magenta"
@@ -96,8 +76,15 @@ try {
     Write-Host -ForegroundColor DarkGray "Already linked."
   }
   elseif (Test-Path -Path $target) {
-    CreateBackup
-    CreateLink
+    $userChoice = Read-Host "The target '$target' already exists. Overwrite? [Y/N]"
+    if ($userChoice -eq 'Y') {
+      CreateBackup
+      CreateLink
+    }
+    else {
+      Write-Host "Operation cancelled by the user."
+      exit
+    }
   }
   else {
     CreateLink
