@@ -60,7 +60,7 @@ function CreateLink {
     $basedir = " $basedir\"
   }
 
-  $targetdir = " $targetdir\"
+  $targetdir = "$targetdir\"
   Write-Host ''
   Write-Host -ForegroundColor $basedircolor "$basedir" -NoNewline
   Write-Host -ForegroundColor Cyan "$baseleaf" -NoNewline

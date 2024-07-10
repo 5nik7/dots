@@ -1,7 +1,7 @@
 
 import = [
-"~/.config/alacritty/dream.toml",
-"~/.config/alacritty/fonts.toml",
+"C:\\projects\\dots\\configs\\alacritty\\dream.toml",
+"C:\\projects\\dots\\configs\\alacritty\\fonts.toml",
 ]
 
 live_config_reload = true
