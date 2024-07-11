@@ -41,7 +41,7 @@ function ReloadProfile {
 
 if ($host.Name -eq 'ConsoleHost') {
   Import-Module PSReadLine
-  
+
   $PSReadLineOptions = @{
     HistoryNoDuplicates           = $true
     HistorySearchCursorMovesToEnd = $true
@@ -52,7 +52,6 @@ if ($host.Name -eq 'ConsoleHost') {
     BellStyle                     = "None"
     PredictionSource              = "History"
     EditMode                      = "Vi"
-    TerminateOrphanedConsoleApps  = $true
     PredictionViewStyle           = "InlineView"
     Colors                        = @{
       Comment                = 'DarkGray'
@@ -87,7 +86,6 @@ Enable-TransientPrompt
 function Invoke-Starship-TransientFunction {
   &starship module character
 }
-Invoke-Expression (&starship init powershell)
 
 Set-PSReadLineOption -ViModeIndicator script -ViModeChangeHandler {
   [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()

@@ -1,8 +1,8 @@
-﻿Set-Alias -Name cat -Value bat
+﻿Set-Alias -Name cat -Value bat -Option AllScope
 Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name path -Value Get-Path
 Set-Alias -Name env -Value Get-Env
-Set-Alias -Name ls -Value Get-ChildItemPretty
+Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
 Set-Alias -Name ll -Value Get-ChildItemPretty
 Set-Alias -Name la -Value Get-ChildItemPretty
 Set-Alias -Name l -Value Get-ChildItemPretty
