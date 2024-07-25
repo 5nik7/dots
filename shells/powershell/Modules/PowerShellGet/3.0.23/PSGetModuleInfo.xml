@@ -1,0 +1,188 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Microsoft.PowerShell.Commands.PSRepositoryItemInfo</T>
+      <T>System.Management.Automation.PSCustomObject</T>
+      <T>System.Object</T>
+    </TN>
+    <MS>
+      <S N="Name">PowerShellGet</S>
+      <S N="Version">3.0.23-beta23</S>
+      <S N="Type">Module</S>
+      <S N="Description">PowerShellGet is a compatibility module that allows use of PowerShellGet 2.x (and below) cmdlet syntax with PSResourceGet functionality by making a best effort mapping between the cmdlet interfaces of both versions of the module.</S>
+      <S N="Author">Microsoft Corporation</S>
+      <Obj N="CompanyName" RefId="1">
+        <TN RefId="1">
+          <T>System.Object[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>PowerShellTeam</S>
+          <S>alerickson</S>
+          <S>anamnavi</S>
+        </LST>
+      </Obj>
+      <S N="Copyright">(c) Microsoft Corporation. All rights reserved.</S>
+      <DT N="PublishedDate">2023-10-27T00:02:23-07:00</DT>
+      <Obj N="InstalledDate" RefId="2">
+        <DT>2024-07-11T04:13:39.02521-07:00</DT>
+        <MS>
+          <Obj N="DisplayHint" RefId="3">
+            <TN RefId="2">
+              <T>Microsoft.PowerShell.Commands.DisplayHintType</T>
+              <T>System.Enum</T>
+              <T>System.ValueType</T>
+              <T>System.Object</T>
+            </TN>
+            <ToString>DateTime</ToString>
+            <I32>2</I32>
+          </Obj>
+        </MS>
+      </Obj>
+      <Nil N="UpdatedDate" />
+      <URI N="LicenseUri">https://github.com/PowerShell/PowerShellGet/blob/master/LICENSE</URI>
+      <URI N="ProjectUri">https://github.com/PowerShell/PowerShellGet</URI>
+      <Nil N="IconUri" />
+      <Obj N="Tags" RefId="4">
+        <TNRef RefId="1" />
+        <LST>
+          <S>PackageManagement</S>
+          <S>PSEdition_Desktop</S>
+          <S>PSEdition_Core</S>
+          <S>Linux</S>
+          <S>Mac</S>
+          <S>Windows</S>
+          <S>PSModule</S>
+        </LST>
+      </Obj>
+      <Obj N="Includes" RefId="5">
+        <TN RefId="3">
+          <T>System.Collections.Hashtable</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">Workflow</S>
+            <Obj N="Value" RefId="6">
+              <TNRef RefId="1" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">RoleCapability</S>
+            <Ref N="Value" RefId="6" />
+          </En>
+          <En>
+            <S N="Key">DscResource</S>
+            <Ref N="Value" RefId="6" />
+          </En>
+          <En>
+            <S N="Key">Function</S>
+            <Obj N="Value" RefId="7">
+              <TNRef RefId="1" />
+              <LST>
+                <S>Find-Command</S>
+                <S>Find-DscResource</S>
+                <S>Find-Module</S>
+                <S>Find-RoleCapability</S>
+                <S>Find-Script</S>
+                <S>Get-InstalledModule</S>
+                <S>Get-InstalledScript</S>
+                <S>Get-PSRepository</S>
+                <S>Install-Module</S>
+                <S>Install-Script</S>
+                <S>Publish-Module</S>
+                <S>Publish-Script</S>
+                <S>Register-PSRepository</S>
+                <S>Save-Module</S>
+                <S>Save-Script</S>
+                <S>Set-PSRepository</S>
+                <S>Uninstall-Module</S>
+                <S>Uninstall-Script</S>
+                <S>Unregister-PSRepository</S>
+                <S>Update-Module</S>
+                <S>Update-Script</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Command</S>
+            <Obj N="Value" RefId="8">
+              <TNRef RefId="1" />
+              <LST>
+                <S>Find-Command</S>
+                <S>Find-DscResource</S>
+                <S>Find-Module</S>
+                <S>Find-RoleCapability</S>
+                <S>Find-Script</S>
+                <S>Get-InstalledModule</S>
+                <S>Get-InstalledScript</S>
+                <S>Get-PSRepository</S>
+                <S>Install-Module</S>
+                <S>Install-Script</S>
+                <S>Publish-Module</S>
+                <S>Publish-Script</S>
+                <S>Register-PSRepository</S>
+                <S>Save-Module</S>
+                <S>Save-Script</S>
+                <S>Set-PSRepository</S>
+                <S>Uninstall-Module</S>
+                <S>Uninstall-Script</S>
+                <S>Unregister-PSRepository</S>
+                <S>Update-Module</S>
+                <S>Update-Script</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Cmdlet</S>
+            <Ref N="Value" RefId="6" />
+          </En>
+        </DCT>
+      </Obj>
+      <Nil N="PowerShellGetFormatVersion" />
+      <S N="ReleaseNotes">### 3.0.23-beta23_x000D__x000A_* Changes_x000D__x000A_- Add internal hook for PSResourceGet telemetry_x000D__x000A__x000D__x000A_### 3.0.22-beta22_x000D__x000A_* Changes_x000D__x000A_- This module was renamed from 'CompatPowerShellGet' to 'PowerShellGet'_x000D__x000A__x000D__x000A_## For full history of release notes see changelog:_x000D__x000A_https://github.com/PowerShell/PowerShellGet/blob/master/CHANGELOG.md</S>
+      <Obj N="Dependencies" RefId="9">
+        <TNRef RefId="1" />
+        <LST />
+      </Obj>
+      <S N="RepositorySourceLocation">https://www.powershellgallery.com/api/v2</S>
+      <S N="Repository">PSGallery</S>
+      <S N="PackageManagementProvider">NuGet</S>
+      <Obj N="AdditionalMetadata" RefId="10">
+        <TN RefId="4">
+          <T>System.Management.Automation.PSCustomObject</T>
+          <T>System.Object</T>
+        </TN>
+        <MS>
+          <S N="copyright">(c) Microsoft Corporation. All rights reserved.</S>
+          <S N="description">PowerShellGet is a compatibility module that allows use of PowerShellGet 2.x (and below) cmdlet syntax with PSResourceGet functionality by making a best effort mapping between the cmdlet interfaces of both versions of the module.</S>
+          <S N="requireLicenseAcceptance">False</S>
+          <S N="releaseNotes">### 3.0.23-beta23_x000D__x000A_* Changes_x000D__x000A_- Add internal hook for PSResourceGet telemetry_x000D__x000A__x000D__x000A_### 3.0.22-beta22_x000D__x000A_* Changes_x000D__x000A_- This module was renamed from 'CompatPowerShellGet' to 'PowerShellGet'_x000D__x000A__x000D__x000A_## For full history of release notes see changelog:_x000D__x000A_https://github.com/PowerShell/PowerShellGet/blob/master/CHANGELOG.md</S>
+          <S N="isLatestVersion">False</S>
+          <S N="isAbsoluteLatestVersion">True</S>
+          <S N="versionDownloadCount">59489</S>
+          <S N="downloadCount">267999982</S>
+          <S N="packageSize">28433</S>
+          <S N="published">10/27/2023 12:02:23 AM -07:00</S>
+          <S N="created">10/27/2023 12:02:23 AM -07:00</S>
+          <S N="lastUpdated">7/11/2024 11:05:00 AM -07:00</S>
+          <S N="tags">PackageManagement PSEdition_Desktop PSEdition_Core Linux Mac Windows PSModule</S>
+          <S N="developmentDependency">False</S>
+          <S N="updated">2024-07-11T11:05:00Z</S>
+          <S N="NormalizedVersion">3.0.23-beta23</S>
+          <S N="Authors">Microsoft Corporation</S>
+          <S N="IsPrerelease">true</S>
+          <S N="ItemType">Module</S>
+          <S N="FileList">PowerShellGet.nuspec|PowerShellGet.psd1|PowerShellGet.psm1</S>
+          <S N="Functions">Find-Command Find-DscResource Find-Module Find-RoleCapability Find-Script Get-InstalledModule Get-InstalledScript Get-PSRepository Install-Module Install-Script Publish-Module Publish-Script Register-PSRepository Save-Module Save-Script Set-PSRepository Uninstall-Module Uninstall-Script Unregister-PSRepository Update-Module Update-Script</S>
+          <S N="GUID">68ec3ec1-55bf-42f8-9add-d224e5c76548</S>
+          <S N="PowerShellVersion">3.0</S>
+          <S N="CompanyName">Microsoft Corporation</S>
+        </MS>
+      </Obj>
+      <S N="InstalledLocation">C:\Users\njen\Documents\PowerShell\Modules\PowerShellGet\3.0.23</S>
+    </MS>
+  </Obj>
+</Objs>
