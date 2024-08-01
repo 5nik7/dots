@@ -48,8 +48,8 @@ function dd {
     fi
 }
 
-alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes'
-alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time'
+alias ll='echo -e "" && eza -la --git --git-repos --icons --group-directories-first --no-quotes && echo -e ""'
+alias l='echo -e "" && eza -la --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time && echo -e ""'
 
 # function cd() {
 #     builtin cd "$@" && l
