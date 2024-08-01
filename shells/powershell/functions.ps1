@@ -92,9 +92,11 @@ function Show-Command {
 function gup {
   if (Test-Path .git) {
     $commitDate = Get-Date -Format "MM-dd-yyyy HH:mm"
+    Write-Host ""
     git add .
     git commit -m "Update @ $commitDate"
     git push
+    Write-Host ""
   }
   else {
     Write-Error "This directory does not contain a .git directory"
@@ -104,22 +106,22 @@ function gup {
 
 function Get-Weather($arg) {
   if ($arg -eq "help") {
-    curl -s "wttr.in/:help"
+    Invoke-WebRequest -s "wttr.in/:help"
   }
   elseif ($arg -eq "0") {
-    curl -s "wttr.in/Yakima?0uFq"
+    Invoke-WebRequest -s "wttr.in/Yakima?0uFq"
   }
   elseif ($arg -eq "1") {
-    curl -s "wttr.in/Yakima?1uFq"
+    Invoke-WebRequest -s "wttr.in/Yakima?1uFq"
   }
   elseif ($arg -eq "2") {
-    curl -s "wttr.in/Yakima?2uFq"
+    Invoke-WebRequest -s "wttr.in/Yakima?2uFq"
   }
   elseif ($arg -eq "all") {
-    curl -s "wttr.in/Yakima?uFq"
+    Invoke-WebRequest -s "wttr.in/Yakima?uFq"
   }
   else {
-    curl -s "wttr.in/Yakima?0uFq"
+    Invoke-WebRequest -s "wttr.in/Yakima?0uFq"
   }
 }
 function Edit-Profile {
