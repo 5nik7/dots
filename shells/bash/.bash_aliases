@@ -1,3 +1,14 @@
+function yy() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+
+alias d='yy'
+
 alias rlp='source $HOME/.bashrc'
 
 alias ls='ls --color=auto --group-directories-first'
@@ -6,9 +17,6 @@ alias c='clear'
 alias q='exit'
 
 alias path='echo $PATH | tr ":" "\n"'
-
-alias yy='win32yank.exe -i --crlf'
-alias pp='win32yank.exe -o --lf'
 
 alias so='source'
 
@@ -29,27 +37,16 @@ alias "........"="cd ../../../../../../.."
 
 alias lg='lazygit'
 
-function yy() {
-    local tmp
-    tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-    yazi "$@" --cwd-file="$tmp"
-    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-        cd -- "$cwd" || exit
-    fi
-    rm -f -- "$tmp"
-}
-alias d='yy'
-
 function dd {
     if [ -z "$1" ]; then
-        explorer .
+        explorer.exe .
     else
-        explorer "$1"
+        explorer.exe "$1"
     fi
 }
 
-alias ll='echo -e "" && eza -la --git --git-repos --icons --group-directories-first --no-quotes && echo -e ""'
-alias l='echo -e "" && eza -la --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time && echo -e ""'
+alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes && echo -e ""'
+alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time && echo -e ""'
 
 # function cd() {
 #     builtin cd "$@" && l
@@ -63,14 +60,14 @@ function weather {
     fi
 }
 
-bat() {
-    local index
-    local args=("$@")
-    for index in $(seq 0 ${#args[@]}); do
-        case "${args[index]}" in
-        -*) continue ;;
-        *) [ -e "${args[index]}" ] && args[index]="$(cygpath --windows "${args[index]}")" ;;
-        esac
-    done
-    command bat "${args[@]}"
-}
+# bat() {
+#     local index
+#     local args=("$@")
+#     for index in $(seq 0 ${#args[@]}); do
+#         case "${args[index]}" in
+#         -*) continue ;;
+#         *) [ -e "${args[index]}" ] && args[index]="$(cygpath --windows "${args[index]}")" ;;
+#         esac
+#     done
+#     command bat "${args[@]}"
+# }
