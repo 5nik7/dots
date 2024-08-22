@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-doc-name, undefined-field
 -- Pull in the wezterm API
 ---@type Wezterm
 local wezterm = require("wezterm")
@@ -8,16 +9,15 @@ local cf = wezterm.config_builder()
 
 -- This is where you actually apply your config choices
 local config = {
-	color_scheme = "Catppuccin Mocha",
-	font = wezterm.font_with_fallback({ "JetBrainsMono NF", "Hack Nerd Font" }),
+	automatically_reload_config = true,
+	color_scheme = 'tokyonight',
+	font = wezterm.font_with_fallback({ "JetBrainsMono NFP", "Hack Nerd Font" }),
 	font_size = 10,
-	line_height = 1.1,
-	window_background_opacity = 0.85,
+	window_background_opacity = 0.9,
 	win32_system_backdrop = "Acrylic",
 	window_padding = {
-		left = "20px",
+		left = "5px",
 	},
-	keys = mappings,
 	disable_default_key_bindings = true,
 	-- default_domain = "WSL:Ubuntu",
 	window_decorations = "INTEGRATED_BUTTONS|RESIZE",
