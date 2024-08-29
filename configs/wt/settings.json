@@ -33,6 +33,7 @@
             "keys": "alt+shift+d"
         }
     ],
+    "alwaysShowNotificationIcon": false,
     "centerOnLaunch": true,
     "confirmCloseAllTabs": false,
     "copyFormatting": "none",
@@ -41,6 +42,7 @@
     "focusFollowMouse": true,
     "initialCols": 280,
     "initialRows": 70,
+    "minimizeToNotificationArea": false,
     "newTabMenu": 
     [
         {
@@ -60,8 +62,8 @@
                 "size": 9
             },
             "intenseTextStyle": "all",
-            "opacity": 85,
-            "padding": "10",
+            "opacity": 86,
+            "padding": "15",
             "scrollbarState": "hidden",
             "snapOnInput": true,
             "unfocusedAppearance": 
@@ -115,24 +117,28 @@
             {
                 "guid": "{2c4de342-38b7-51cf-b940-2309a097f518}",
                 "hidden": true,
+                "icon": "C:\\wsl\\logos\\Ubuntu3.png",
                 "name": "Ubuntu",
                 "source": "Windows.Terminal.Wsl"
             },
             {
                 "guid": "{c397f356-5e7b-55bc-956b-8cb4b9762c26}",
                 "hidden": false,
+                "icon": "C:\\wsl\\logos\\nixos.png",
                 "name": "NixOS",
                 "source": "Windows.Terminal.Wsl"
             },
             {
                 "guid": "{58ad8b0c-3ef8-5f4d-bc6f-13e4c00f2530}",
                 "hidden": false,
+                "icon": "C:\\wsl\\logos\\Debian.png",
                 "name": "Debian",
                 "source": "Windows.Terminal.Wsl"
             },
             {
                 "guid": "{a5a97cb8-8961-5535-816d-772efe0c6a3f}",
                 "hidden": false,
+                "icon": "C:\\wsl\\logos\\Arch.png",
                 "name": "Arch",
                 "source": "Windows.Terminal.Wsl"
             },
@@ -183,12 +189,6 @@
                 "hidden": false,
                 "name": "Git Bash",
                 "source": "Git"
-            },
-            {
-                "guid": "{51855cb2-8cce-5362-8f54-464b92b32386}",
-                "hidden": false,
-                "name": "Ubuntu",
-                "source": "CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc"
             }
         ]
     },
@@ -196,9 +196,9 @@
     [
         {
             "background": "#142444",
-            "black": "#233250",
+            "black": "#334775",
             "blue": "#4785FF",
-            "brightBlack": "#445278",
+            "brightBlack": "#49608D",
             "brightBlue": "#4785FF",
             "brightCyan": "#0DFFFF",
             "brightGreen": "#00FFCC",
