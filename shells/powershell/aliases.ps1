@@ -9,7 +9,7 @@ Set-Alias -Name l -Value Get-ChildItemPretty
 Set-Alias -Name lt -Value Get-ChildItemPrettyTree
 Set-Alias -Name which -Value Show-Command
 Set-Alias -Name touch -Value New-File
-Set-Alias -Name d -Value ya
+Set-Alias -Name d -Value yy
 
 Set-Alias -Name rlp -Value ReloadProfile
 Set-Alias -Name g -Value git
