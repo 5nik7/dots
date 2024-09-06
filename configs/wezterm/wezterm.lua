@@ -1,40 +1,52 @@
----@diagnostic disable: undefined-doc-name, undefined-field
--- Pull in the wezterm API
----@type Wezterm
 local wezterm = require("wezterm")
--- local mappings = require("wz-mappings")
----@type Config
-local cf = wezterm.config_builder()
--- This will hold the configuration.
+local config = wezterm.config_builder()
+wezterm.log_info("reloading")
 
--- This is where you actually apply your config choices
-local config = {
-	automatically_reload_config = true,
-	color_scheme = 'tokyonight',
-	font = wezterm.font_with_fallback({ "JetBrainsMono NFP", "Hack Nerd Font" }),
-	font_size = 10,
-	window_background_opacity = 0.9,
-	win32_system_backdrop = "Acrylic",
-	window_padding = {
-		left = "5px",
-	},
-	disable_default_key_bindings = true,
-	-- default_domain = "WSL:Ubuntu",
-	window_decorations = "INTEGRATED_BUTTONS|RESIZE",
-	use_fancy_tab_bar = false,
-	hide_tab_bar_if_only_one_tab = false,
-	launch_menu = {},
-	min_scroll_bar_height = "0.5cell",
-	scrollback_lines = 50000,
-	-- enable_tab_bar = false,
-	-- enable_scroll_bar = true,
-}
--- For example, changing the color scheme:
-for k, v in pairs(config) do
-	cf[k] = v
+require("tabs").setup(config)
+require("mouse").setup(config)
+require("links").setup(config)
+require("keys").setup(config)
+
+config.enable_wayland = true
+config.webgpu_power_preference = "HighPerformance"
+-- config.animation_fps = 1
+config.cursor_blink_ease_in = "Constant"
+config.cursor_blink_ease_out = "Constant"
+
+config.color_scheme = "dream"
+
+config.underline_thickness = 3
+config.cursor_thickness = 0.5
+config.underline_position = -6
+
+if wezterm.target_triple:find("windows") then
+	config.default_prog = { "pwsh", "-NoLogo" }
+	config.window_decorations = "TITLE | RESIZE"
+	config.window_background_opacity = 0.9
+	config.win32_system_backdrop = 'Acrylic'
+	wezterm.on("gui-startup", function(cmd)
+		local screen = wezterm.gui.screens().active
+		local tab, pane, window = wezterm.mux.spawn_window(cmd or {})
+		local gui = window:gui_window()
+		local width = 0.7 * screen.width
+		local height = 0.7 * screen.height
+		gui:set_inner_size(width, height)
+		gui:set_position((screen.width - width) / 2, (screen.height - height) / 2)
+	end)
+else
+	config.term = "wezterm"
+	config.window_decorations = "NONE"
 end
 
-config.default_prog = { 'pwsh', '-NoLogo' }
+config.automatically_reload_config = true
 
--- and finally, return the configuration to wezterm
+config.font_size = 9
+config.font = wezterm.font({ family = "JetBrainsMono NFP" })
+
+config.default_cursor_style = "BlinkingBar"
+config.force_reverse_video_cursor = true
+config.window_padding = { left = 10, right = 10, top = 10, bottom = 10 }
+
+config.scrollback_lines = 10000
+
 return config
