@@ -21,9 +21,10 @@ config.underline_position = -6
 
 if wezterm.target_triple:find("windows") then
 	config.default_prog = { "pwsh", "-NoLogo" }
-	config.window_decorations = "TITLE | RESIZE"
-	config.window_background_opacity = 0.9
-	config.win32_system_backdrop = 'Acrylic'
+	config.window_decorations = "RESIZE"
+	-- config.window_decorations = "TITLE | RESIZE"
+	-- config.window_background_opacity = 0.9
+	-- config.win32_system_backdrop = 'Acrylic'
 	wezterm.on("gui-startup", function(cmd)
 		local screen = wezterm.gui.screens().active
 		local tab, pane, window = wezterm.mux.spawn_window(cmd or {})
@@ -40,8 +41,8 @@ end
 
 config.automatically_reload_config = true
 
-config.font_size = 9
-config.font = wezterm.font({ family = "JetBrainsMono NFP" })
+config.font_size = 10
+config.font = wezterm.font({ family = "JetBrainsMono NF" })
 
 config.default_cursor_style = "BlinkingBar"
 config.force_reverse_video_cursor = true

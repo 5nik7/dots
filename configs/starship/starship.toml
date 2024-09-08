@@ -6,8 +6,8 @@ format = """ $username$hostname$directory$git_branch$git_status$nodejs$conda$pyt
 add_newline = true
 
 [username]
-style_user = 'yellow'
-style_root = 'yellow'
+style_user = '#ffc0b7'
+style_root = '#ffc0b7 bold'
 format = '[$user]($style)'
 disabled = false
 show_always = true
@@ -111,9 +111,5 @@ symbol = ' '
 [character]
 success_symbol = '[  ](cyan)'
 error_symbol = '[  ](cyan)'
-vimcmd_symbol = '[Ⅵ ](#8283ff)[:](#918db0)'
+vimcmd_symbol = '[vi](#6e8dd0)[:](#a5c2ff)'
 format = ' $symbol'
-
-# ▒ ▒ ░ ǋ Ǌ  ǌ Ɲ
-# ⎹ⅵ  ⅴ ⅰ ⅶ ⅹ ⅿ ⅾ ⅽ ⅼ 
-# Ⅵ  Ⅴ Ⅰ Ⅹ Ⅶ Ⅿ Ⅾ Ⅽ Ⅼ
