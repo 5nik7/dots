@@ -1,9 +1,24 @@
 command_timeout = 3000
 scan_timeout = 15
 
-format = """$directory$git_branch$git_status$nodejs$conda$python$line_break$character$shell"""
+format = """ $username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$character$shell"""
 
 add_newline = true
+
+[username]
+style_user = 'yellow'
+style_root = 'yellow'
+format = '[$user]($style)'
+disabled = false
+show_always = true
+aliases = { "Administrator" = "admin" }
+
+
+[hostname]
+ssh_only = false
+format = '[@](#ffc0b7)[$hostname](#ffc0b7) [$ssh_symbol](bold blue) '
+trim_at = '.companyname.com'
+disabled = false
 
 [fill]
 symbol = '󱘹'
@@ -17,14 +32,14 @@ style = "white"
 disabled = true
 
 [shell]
-format = '[$indicator]($style) '
+format = '[$indicator]($style)'
 fish_indicator = ''
 powershell_indicator = ''
-bash_indicator = 'bash'
-zsh_indicator = 'zsh'
+bash_indicator = ''
+zsh_indicator = ''
 cmd_indicator = ''
 unknown_indicator = ''
-style = 'bg:none fg:bright-cyan'
+style = 'bg:none fg:cyan'
 disabled = true
 
 [directory.substitutions]
@@ -94,7 +109,11 @@ style = 'red'
 symbol = ' '
 
 [character]
-success_symbol = '[](cyan)'
-error_symbol = '[](red)'
-vimcmd_symbol = '[󰅂](fg:bright-black)'
-format = '$symbol '
+success_symbol = '[  ](cyan)'
+error_symbol = '[  ](cyan)'
+vimcmd_symbol = '[Ⅵ ](#8283ff)[:](#918db0)'
+format = ' $symbol'
+
+# ▒ ▒ ░ ǋ Ǌ  ǌ Ɲ
+# ⎹ⅵ  ⅴ ⅰ ⅶ ⅹ ⅿ ⅾ ⅽ ⅼ 
+# Ⅵ  Ⅴ Ⅰ Ⅹ Ⅶ Ⅿ Ⅾ Ⅽ Ⅼ
