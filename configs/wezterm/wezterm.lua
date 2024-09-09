@@ -41,7 +41,7 @@ end
 
 config.automatically_reload_config = true
 
-config.font_size = 10
+config.font_size = 9
 config.font = wezterm.font({ family = "JetBrainsMono NF" })
 
 config.default_cursor_style = "BlinkingBar"
