@@ -29,8 +29,8 @@ if wezterm.target_triple:find("windows") then
 		local screen = wezterm.gui.screens().active
 		local tab, pane, window = wezterm.mux.spawn_window(cmd or {})
 		local gui = window:gui_window()
-		local width = 0.7 * screen.width
-		local height = 0.7 * screen.height
+		local width = 0.8 * screen.width
+		local height = 0.8 * screen.height
 		gui:set_inner_size(width, height)
 		gui:set_position((screen.width - width) / 2, (screen.height - height) / 2)
 	end)
@@ -41,12 +41,20 @@ end
 
 config.automatically_reload_config = true
 
-config.font_size = 9
-config.font = wezterm.font({ family = "JetBrainsMono NF" })
+config.font_size = 9.5
+config.font = wezterm.font_with_fallback({
+	{ family = "JetBrainsMono NFP", weight = "Medium" },
+	{ family = "MesloLGMDZ NFP", weight = "Medium" },
+	"Noto Color Emoji",
+})
+
+config.bold_brightens_ansi_colors = true
+config.freetype_load_target = "Normal"
+config.line_height = 1.0
 
 config.default_cursor_style = "BlinkingBar"
 config.force_reverse_video_cursor = true
-config.window_padding = { left = 10, right = 10, top = 10, bottom = 10 }
+config.window_padding = { left = 8, right = 8, top = 8, bottom = 8 }
 
 config.scrollback_lines = 10000
 
