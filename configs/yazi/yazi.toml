@@ -9,7 +9,7 @@ sort_sensitive = false
 sort_reverse = false
 sort_dir_first = true
 linemode = "none"
-show_hidden = false
+show_hidden = true
 show_symlink = true
 scrolloff = 5
 
@@ -109,9 +109,7 @@ image_bound = [0, 0]
 suppress_preload = false
 
 [plugin]
-prepend_previewers = [
-  { name = "*.md", run = "glow" },
-]
+prepend_previewers = [{ name = "*.md", run = "glow" }]
 
 [[plugin.prepend_fetchers]]
 id = "git"
