@@ -16,7 +16,7 @@ aliases = { "Administrator" = "admin" }
 
 [hostname]
 ssh_only = false
-format = '[@](#ffc0b7)[$hostname](#ffc0b7) [$ssh_symbol](bold blue) '
+format = '[@](#ffc0b7)[$hostname](#ffc0b7)([ $ssh_symbol](bold blue)) '
 trim_at = '.companyname.com'
 disabled = false
 
