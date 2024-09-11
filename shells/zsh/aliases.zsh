@@ -7,6 +7,8 @@ function y() {
 	rm -f -- "$tmp"
 }
 alias d='y'
+alias pbcopy="/mnt/c/Windows/System32/clip.exe"
+alias pbpaste="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -command 'Get-Clipboard'"
 
 alias python="python3"
 alias py="python3"
