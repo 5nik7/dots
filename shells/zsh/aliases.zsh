@@ -1,22 +1,26 @@
-alias rlp='source ${HOME}/.zshrc'
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+alias d='y'
 
-alias ls='ls --color=auto --group-directories-first'
+alias python="python3"
+alias py="python3"
 
 alias c='clear'
 alias q='exit'
 
 alias path='echo $PATH | tr ":" "\n"'
-alias gc='nix-collect-garbage --delete-old'
 
-alias clip="/mnt/c/Windows/System32/clip.exe"
-
-alias yy='win32yank.exe -i --crlf'
-alias pp='win32yank.exe -o --lf'
-
-alias cat='bat'
 alias so='source'
 
 alias grep='grep --color=auto'
+
+alias cat='bat'
 
 alias ".."="cd .."
 alias "..."="cd ../.."
@@ -27,4 +31,26 @@ alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
 alias lg='lazygit'
-alias clock='tty-clock -c -f %d-%m-%Y'
+
+function dd {
+    if [ -z "$1" ]; then
+        explorer.exe .
+    else
+        explorer.exe "$1"
+    fi
+}
+
+alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes && echo -e ""'
+alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time && echo -e ""'
+
+# function cd() {
+#     builtin cd "$@" && l
+# }
+
+function weather {
+    if [[ "$1" == "help" ]]; then
+        curl "wttr.in/:help"
+    else
+        curl "wttr.in/Yakima?uFQ$1"
+    fi
+}
