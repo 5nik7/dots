@@ -1,4 +1,17 @@
-﻿function Add-Path {
+﻿function Get-Repo {
+  <#
+    .SYNOPSIS
+        Clones a git repository into the current directory. Alias: git-clone
+    #>
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true, Position = 0)]
+    [string]$Url
+  )
+  git clone $Url
+}
+
+function Add-Path {
   param (
     [Parameter(Mandatory = $true)]
     [string]$Path
@@ -24,6 +37,23 @@ function yy {
     Set-Location -LiteralPath $cwd
   }
   Remove-Item -Path $tmp
+}
+
+function Get-ContentPretty {
+  <#
+    .SYNOPSIS
+        Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
+        Alias: ls, ll, la, l
+    #>
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true, Position = 1)]
+    [string]$file
+  )
+
+  Write-Host ""
+  bat $file
+  Write-Host ""
 }
 
 function Get-ChildItemPretty {
