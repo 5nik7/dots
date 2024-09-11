@@ -35,8 +35,9 @@ function CreateBackup {
   }
   Write-Host ''
   Write-Host -ForegroundColor Yellow " Backup: " -NoNewline
+  $backupFilePath = Join-Path -Path (Split-Path -Path $target -Parent) -ChildPath $backupFileName
   Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
-  Move-Item -Path $backupFileName -Destination $backupDir -ErrorAction Stop | Out-Null
+  Move-Item -Path $backupFilePath -Destination $backupDir -ErrorAction Stop | Out-Null
   Write-Host -ForegroundColor White "$backupDir\$backupFileName"
 }
 function CreateLink {
