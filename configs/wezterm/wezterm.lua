@@ -43,8 +43,8 @@ config.automatically_reload_config = true
 
 config.font_size = 9.5
 config.font = wezterm.font_with_fallback({
-	{ family = "JetBrainsMono NFP", weight = "Medium" },
-	{ family = "MesloLGMDZ NFP", weight = "Medium" },
+	{ family = "PitagonSansM Nerd Font Propo", weight = "Regular" },
+	{ family = "JetBrainsMono NFP",            weight = "Medium" },
 	"Noto Color Emoji",
 })
 
@@ -54,7 +54,7 @@ config.line_height = 1.0
 
 config.default_cursor_style = "BlinkingBar"
 config.force_reverse_video_cursor = true
-config.window_padding = { left = 8, right = 8, top = 8, bottom = 8 }
+config.window_padding = { left = 12, right = 12, top = 12, bottom = 12 }
 
 config.scrollback_lines = 10000
 
