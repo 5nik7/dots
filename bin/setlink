@@ -81,7 +81,7 @@ fi
       echo -e "\e[35m $(realpath "$target") \e[0m\c"
       echo -e "\e[37malready exists. \e[0m"
       echo -e "\e[36m Create backup file and symlink? \e[0m\c"
-      read -pr "[Y/n] " user_choice
+      read -p "[Y/n] " user_choice
       if [ "$user_choice" == "Y" ] || [ "$user_choice" == "y" ] || [ -z "$user_choice" ]; then
         create_backup
         create_link
