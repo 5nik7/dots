@@ -1,0 +1,109 @@
+@import url("/home/njen/.cache/wal/colors-waybar.css");
+
+* {
+  border: none;
+  border-radius: 0;
+  font-family: "JetBrainsMono Nerd Font";
+  font-weight: 400;
+  font-size: 10pt;
+  min-height: 0;
+}
+
+window#waybar {
+  /* background: @background; */
+  background: @transparent;
+}
+
+window>box {
+  /* margin-left: 2px; */
+  /* margin-right: 2px; */
+  /* margin-top: 2px; */
+  /* margin-bottom: 2px; */
+  /* background: @transparent; */
+  /* background: @background; */
+  background: @background;
+}
+
+#workspaces {
+  padding-left: 0px;
+  padding-right: 0px;
+  color: @color6;
+  background-color: @background;
+}
+
+#workspaces button {
+  padding-left: 5px;
+  padding-right: 5px;
+  color: @color8;
+  background: @transparent;
+  /* border-bottom: .1rem solid @background; */
+}
+
+#workspaces button.active {
+  color: @color1;
+}
+
+/* Removes Strange Hover effect */
+#workspaces button:hover {
+  box-shadow: inherit;
+  text-shadow: inherit;
+}
+
+#workspaces button.focused,
+#mode {
+
+  background-color: @color3;
+  color: @background;
+  /* border-bottom: .1rem solid @color4; */
+  border-bottom: .1rem solid @background;
+}
+
+#custom-launcher {
+  color: @color2;
+  /* background-color: @transparent; */
+  background-color: @background;
+  font-size: 12pt;
+  padding-left: 10px;
+  padding-right: 15px;
+}
+
+
+#custom-separator {
+  color: @color8;
+  background-color: @background;
+  padding-left: 2px;
+  padding-right: 2px;
+
+}
+
+#window {
+
+  color: @foreground;
+  /* background-color: @background; */
+  background-color: @background;
+  padding-left: 15px;
+  padding-right: 15px;
+
+}
+
+#custom-weather {
+
+  color: @foreground;
+  /* color: @color1; */
+  background-color: @background;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#mode,
+#clock,
+#memory,
+#cpu,
+#custom-powermenu {
+
+  color: @foreground;
+  /* color: @color1; */
+  background-color: @background;
+  padding-left: 5px;
+  padding-right: 5px;
+}

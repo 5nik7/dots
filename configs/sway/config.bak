@@ -1,44 +1,44 @@
-# Default config for sway
-#
-# Copy this to ~/.config/sway/config and edit it to your liking.
-#
-# Read `man 5 sway` for a complete reference.
+# sway config
 
-### Autostart
-exec_always autotiling -w 1 3 5 7 9
+# exec_always autotiling-rs
+# exec nwg-look -a
+# exec sworkstyle &> /tmp/sworkstyle.log
+# exec_always flashfocus
+# exec eww open-many bar0 bar1 bar2
+exec_always ~/.config/waybar/scripts/launch_waybar.sh
+# exec_always --no-startup-id ~/.config/sway/scripts/wallpaper.sh
 
-### Variables
-#
-# Logo key. Use Mod1 for Alt.
+# exec waypaper --restore
+
+# exec_always wl-paste --watch cliphist store
+# bar {
+#   swaybar_command waybar
+# }
+
+include "$HOME/.cache/wal/colors-sway"
+
+# target                 title          bg                text          indicator      border
+client.focused           $color4        $background       $foreground   $color4        $color4
+client.focused_inactive  $color8        $background       $foreground   $background    $background
+client.unfocused         $color8        $background       $foreground   $background    $background
+client.urgent            $color1        $background       $color1       $color1        $color1
+client.placeholder       $background    $background       $foreground   $background    $background
+client.background        $background
+
 set $mod Mod1
-# Home row direction keys, like vim
+
+set $font "JetBrainsMono Nerd Font"
+set $font_size 10
+set $cursor_size 16
+
 set $left h
 set $down j
 set $up k
 set $right l
-# Your preferred terminal emulator
+
 set $term kitty
 set $browser firefox
 set $filemanager thunar
-# Your preferred application launcher
-# Note: pass the final command to swaymsg so that the resulting window can be opened
-# on the original workspace that the command was run on.
-set $menu dmenu_path | dmenu | xargs swaymsg exec --
-
-include /etc/sway/config-vars.d/*
-
-### Output configuration
-#
-# Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg /home/njen/dots/walls/Dream.jpg fill
-#
-# Example configuration:
-#
-output * resolution 2560x1410@170Hz position 0,0
-
-set $font "PitagonSansM NFP"
-set $font_size 10
-set $cursor_size 16
 
 # output "*" background ~/.dotfiles/wallpapers/dream.jpg fill
 # output "*" resolution 2560x1410@170Hz scale 1 pos 0 0
@@ -50,56 +50,39 @@ default_border pixel 1
 default_floating_border normal
 gaps inner 2
 gaps outer 1
+# gaps horizontal 10
+# gaps vertical 10
+# gaps top 10
+# gaps right 10
+# gaps bottom 10
+# gaps left 10
 
 hide_edge_borders smart
 smart_borders on
 
 popup_during_fullscreen smart
-#
-# You can get the names of your outputs by running: swaymsg -t get_outputs
-
-### Idle configuration
-#
-# Example configuration:
-#
-# exec swayidle -w \
-#          timeout 300 'swaylock -f -c 000000' \
-#          timeout 600 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' \
-#          before-sleep 'swaylock -f -c 000000'
-#
-# This will lock your screen after 300 seconds of inactivity, then turn off
-# your displays after another 300 seconds, and turn your screens back on when
-# resumed. It will also lock your screen before your computer goes to sleep.
-
-### Input configuration
-#
-# Example configuration:
-#
-#   input "2:14:SynPS/2_Synaptics_TouchPad" {
-#       dwt enabled
-#       tap enabled
-#       natural_scroll enabled
-#       middle_emulation enabled
-#   }
-#
-# You can get the names of your inputs by running: swaymsg -t get_inputs
-# Read `man 5 sway-input` for more information about this section.
 
 ### Key bindings
 #
 # Basics:
 #
-    # Start a terminal
+     # Start a terminal
     bindsym $mod+Return exec $term
+
+    # Start a file manager
     bindsym $mod+e exec $filemanager
+
+    # Start a browser
     bindsym $mod+w exec $browser
+
+    bindsym $mod+d exec ~/.config/rofi/launcher.sh
+
+    # bindsym $mod+Shift+n exec swaync-client -t -sw
 
     # Kill focused window
     bindsym $mod+q kill
 
-    # Start your launcher
-    bindsym $mod+d exec $menu
-
+    bindsym $mod+o exec killall -SIGUSR1 waybar
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
     # Despite the name, also works for non-floating windows.
@@ -139,6 +122,16 @@ popup_during_fullscreen smart
 #
 # Workspaces:
 #
+    # bindsym $mod+1 exec workspacefade.sh 1
+    # bindsym $mod+2 exec workspacefade.sh 2
+    # bindsym $mod+3 exec workspacefade.sh 3
+    # bindsym $mod+4 exec workspacefade.sh 4
+    # bindsym $mod+5 exec workspacefade.sh 5
+    # bindsym $mod+6 exec workspacefade.sh 6
+    # bindsym $mod+7 exec workspacefade.sh 7
+    # bindsym $mod+8 exec workspacefade.sh 8
+    # bindsym $mod+9 exec workspacefade.sh 9
+    # bindsym $mod+0 exec workspacefade.sh 10
     # Switch to workspace
     bindsym $mod+1 workspace number 1
     bindsym $mod+2 workspace number 2
@@ -147,9 +140,9 @@ popup_during_fullscreen smart
     bindsym $mod+5 workspace number 5
     bindsym $mod+6 workspace number 6
     bindsym $mod+7 workspace number 7
-    bindsym $mod+8 workspace number 8
-    bindsym $mod+9 workspace number 9
-    bindsym $mod+0 workspace number 10
+    # bindsym $mod+8 workspace number 8
+    # bindsym $mod+9 workspace number 9
+    # bindsym $mod+0 workspace number 10
     # Move focused container to workspace
     bindsym $mod+Shift+1 move container to workspace number 1
     bindsym $mod+Shift+2 move container to workspace number 2
@@ -172,14 +165,14 @@ popup_during_fullscreen smart
     bindsym $mod+b splith
     bindsym $mod+v splitv
 
-    # Switch the current container between different layout styles
-    bindsym $mod+s layout stacking
-    # bindsym $mod+w layout tabbed
-    # bindsym $mod+e layout toggle split
-
     # Make the current focus fullscreen
     bindsym $mod+Shift+f fullscreen
+
+    # Toggle the current focus between tiling and floating mode
     bindsym $mod+f floating toggle
+
+    # Swap focus between the tiling area and the floating area
+    bindsym $mod+space focus mode_toggle
 
     # Move focus to the parent container
     bindsym $mod+a focus parent
@@ -218,6 +211,7 @@ mode "resize" {
     bindsym Return mode "default"
     bindsym Escape mode "default"
 }
+
 bindsym $mod+r mode "resize"
 
 for_window [title="(?:Open|Save) (?:File|Folder|As)"] floating enable;
@@ -229,27 +223,5 @@ for_window [window_role="task_dialog"] floating enable
 for_window [window_role="Preferences"] floating enable
 for_window [window_type="dialog"] floating enable
 for_window [window_type="menu"] floating enable
-
-#
-# Status Bar:
-#
-# Read `man 5 sway-bar` for more information about this section.
-# bar {
-#     position top
-#
-#     # When the status_command prints a new line to stdout, swaybar updates.
-#     # The default just shows the current date and time.
-#     status_command while date +'%Y-%m-%d %I:%M:%S %p'; do sleep 1; done
-#
-#     colors {
-#         statusline #ffffff
-#         background #323232
-#         inactive_workspace #32323200 #32323200 #5c5c5c
-#     }
-# }
-
-bar {
-    swaybar_command waybar
-}
 
 include /etc/sway/config.d/*
