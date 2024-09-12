@@ -1,14 +1,14 @@
 // -*- mode: jsonc -*-
 {
   // "layer": "top", // Waybar at top layer
-  // "position": "bottom", // Waybar position (top|bottom|left|right)
+  "position": "top", // Waybar position (top|bottom|left|right)
   "height": 30, // Waybar height (to be removed for auto height)
   // "width": 1280, // Waybar width
   "spacing": 4, // Gaps between modules (4px)
   // Choose the order of the modules
   "modules-left": ["sway/workspaces", "sway/mode"],
   "modules-center": ["sway/window"],
-  "modules-right": ["cpu", "memory", "clock"],
+  "modules-right": ["cpu", "memory"],
   // Modules configuration
   // "sway/workspaces": {
   //     "disable-scroll": true,
@@ -29,11 +29,11 @@
   "sway/mode": {
     "format": "<span style=\"italic\">{}</span>",
   },
-  "clock": {
-    // "timezone": "America/New_York",
-    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-    "format-alt": "{:%Y-%m-%d}",
-  },
+  // "clock": {
+  //   // "timezone": "America/New_York",
+  //   "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+  //   "format-alt": "{:%Y-%m-%d}",
+  // },
   "cpu": {
     "format": "{usage}% ",
     "tooltip": false,
