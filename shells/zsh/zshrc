@@ -44,6 +44,10 @@ export BAT_THEME="base16"
 export BAT_STYLE="plain"
 export BAT_PAGING="never"
 
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.zsh_history
+
 function extend_path() {
 	[[ -d "$1" ]] || return
 
@@ -66,14 +70,34 @@ function source_file() {
 	fi
 }
 
-setopt extended_history
-setopt hist_expire_dups_first
-setopt hist_ignore_dups
-setopt hist_ignore_space
-setopt hist_verify
-setopt inc_append_history
-setopt share_history
-setopt auto_cd
+
+setopt_if_exists() {
+  if [[ "${options[$1]+1}" ]]; then
+    setopt "$1"
+  fi
+}
+
+setopt_if_exists no_auto_cd
+setopt_if_exists cd_silent
+setopt_if_exists no_case_glob
+setopt_if_exists extended_glob
+
+setopt_if_exists hist_ignore_all_dups
+setopt_if_exists hist_find_no_dups
+setopt_if_exists hist_reduce_blanks
+setopt_if_exists hist_ignore_space
+setopt_if_exists hist_verify
+setopt_if_exists no_inc_append_history
+setopt_if_exists no_inc_append_history_time
+setopt_if_exists share_history
+
+setopt_if_exists no_clobber
+setopt_if_exists correct # commands
+setopt_if_exists correct_all # all arguments
+setopt_if_exists interactive_comments
+
+unset setopt_if_exists
+
 unsetopt beep
 setopt no_list_beep
 
@@ -99,40 +123,7 @@ alias vi='$EDITOR'
 alias vim='$EDITOR'
 alias sv="sudo $EDITOR"
 
-# Keep 1000 lines of history within the shell and save it to ~/.zsh_history:
-HISTSIZE=10000
-SAVEHIST=10000
-HISTFILE=~/.zsh_history
-
-# Use modern completion system
-autoload -Uz compinit
-compinit
-
 zle_highlight=('paste:none')
-
-zstyle ':completion:*' auto-description 'specify: %d'
-zstyle ':completion:*' completer _expand _complete _correct _approximate
-zstyle ':completion:*' format 'Completing %d'
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*' menu select=2
-eval "$(dircolors -b)"
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*' list-colors ''
-zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
-zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
-zstyle ':completion:*' menu select=long
-zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
-zstyle ':completion:*' use-compctl false
-zstyle ':completion:*' verbose true
-
-zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
-zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd' Created by newuser for 5.8.1
-
-
-# FZF colors
-export FZF_DEFAULT_OPTS="--color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:underline,gutter:-1,border:0 \
---color info:2,prompt:-1,spinner:2,pointer:6,marker:4 \
---border --margin=0,2"
 
 extend_path "$WIN/Windows"
 extend_path "$WIN/Windows/System32"
@@ -146,7 +137,15 @@ prepend_path "$HOME/.local/share/bob/nvim-bin"
 prepend_path "$DOTS/bin"
 
 source_file "$ZSH/aliases.zsh"
+source_file "$ZSH/completions.zsh"
 source_file "$ZSH/functions.zsh"
+source_file "$ZSH/keys.zsh"
+source_file "$ZSH/plugins/zsh-shift-select.plugin.zsh"
+
+if [ $(command -v "fzf") ]; then
+  source_file "$ZSH/fzf.zsh"
+fi
+
 
 alias rlp='source $HOME/.zshrc && echo "\n ZSH reloaded."'
 

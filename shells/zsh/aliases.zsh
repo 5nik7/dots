@@ -1,3 +1,7 @@
+command_exists() {
+  command -v "$@" &> /dev/null
+}
+
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
 	yazi "$@" --cwd-file="$tmp"
@@ -21,6 +25,8 @@ alias path='echo $PATH | tr ":" "\n"'
 alias so='source'
 
 alias grep='grep --color=auto'
+
+command_exists fzf && command_exists bat && alias preview="fzf --preview 'bat --color \"always\" {}'"
 
 alias cat='bat'
 

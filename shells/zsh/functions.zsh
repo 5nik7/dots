@@ -19,6 +19,10 @@ function dd {
     fi
 }
 
+# function cd() {
+#   builtin cd "$@" && eza -xa --icons --group-directories-first
+# }
+#
 function google {
     open "https://www.google.com/search?q=$*"
 }
