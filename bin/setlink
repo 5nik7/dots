@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Synopsis: Symbolic link a file or directory to another file or directory.
 
