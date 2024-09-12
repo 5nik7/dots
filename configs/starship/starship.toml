@@ -109,7 +109,7 @@ style = 'red'
 symbol = ' '
 
 [character]
-success_symbol = '[  ](cyan)'
-error_symbol = '[  ](cyan)'
+success_symbol = '[  ](cyan)'
+error_symbol = '[  ](cyan)'
 vimcmd_symbol = '[v](#6e8dd0)[:](#a5c2ff) '
 format = ' $symbol'
