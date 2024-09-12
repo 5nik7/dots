@@ -1,0 +1,58 @@
+2024-08-08 23:35:31 INFO log.py:21: Yasb
+2024-08-08 23:35:31 DEBUG proactor_events.py:634: Using proactor: _IocpProactor
+2024-08-08 23:35:32 DEBUG win32.py:58: Looking up time zone info from registry
+2024-08-08 23:35:35 INFO weather.py:156: Fetched new weather data at 2024-08-08 23:35:35.254319
+2024-08-08 23:35:36 DEBUG __init__.py:143: CoInitializeEx(None, 2)
+2024-08-08 23:35:39 INFO bar_manager.py:74: Starting SystemEventListener...
+2024-08-08 23:35:39 INFO bar_manager.py:74: Starting KomorebiEventListener...
+2024-08-08 23:35:39 INFO event_listener.py:52: Created named pipe yasb-97aa7f8c-5619-11ef-a7e7-48e7daa79ece
+2024-08-08 23:35:39 INFO event_listener.py:106: Waiting for Komorebi to subscribe to named pipe yasb-97aa7f8c-5619-11ef-a7e7-48e7daa79ece
+2024-08-08 23:35:39 INFO watcher.py:39: Created file watcher for path C:\Users\njen\.config\yasb
+2024-08-08 23:35:39 DEBUG _windows.py:213: Starting (proactor: <_IocpProactor overlapped#=0 result#=0>)...
+2024-08-08 23:35:39 DEBUG _windows.py:192: Thread started
+2024-08-08 23:35:40 WARNING event_listener.py:111: Komorebi failed to subscribe named pipe. Waiting for subscription...
+2024-08-08 23:35:57 ERROR main.py:58: Unhandled exception
+Traceback (most recent call last):
+  File "C:\Users\njen\.pyenv\pyenv-win\versions\3.12.4\Lib\site-packages\psutil\_common.py", line 502, in wrapper
+    ret = self._cache[fun]
+          ^^^^^^^^^^^
+AttributeError: 'Process' object has no attribute '_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\njen\source\repos\amnweb\yasb\src\core\widgets\yasb\active_window.py", line 124, in _on_focus_change_event
+    win_info = get_hwnd_info(hwnd)
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\njen\source\repos\amnweb\yasb\src\core\utils\win32\utilities.py", line 96, in get_hwnd_info
+    'process': get_process_info(hwnd),
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\njen\source\repos\amnweb\yasb\src\core\utils\win32\utilities.py", line 45, in get_process_info
+    'ppid': process.ppid(),
+            ^^^^^^^^^^^^^^
+  File "C:\Users\njen\.pyenv\pyenv-win\versions\3.12.4\Lib\site-packages\psutil\_common.py", line 506, in wrapper
+    return fun(self)
+           ^^^^^^^^^
+  File "C:\Users\njen\.pyenv\pyenv-win\versions\3.12.4\Lib\site-packages\psutil\__init__.py", line 646, in ppid
+    self._ppid = self._ppid or self._proc.ppid()
+                               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\njen\.pyenv\pyenv-win\versions\3.12.4\Lib\site-packages\psutil\_pswindows.py", line 854, in ppid
+    return ppid_map()[self.pid]
+           ^^^^^^^^^^
+KeyboardInterrupt
+2024-08-08 23:35:57 ERROR __init__.py:736: Task was destroyed but it is pending!
+task: <Task pending name='Task-16' coro=<MediaWidget._update_label() done, defined at C:\Users\njen\source\repos\amnweb\yasb\src\core\widgets\yasb\media.py:119> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[asyncSlot.<locals>._error_handler() at C:\Users\njen\.pyenv\pyenv-win\versions\3.12.4\Lib\site-packages\qasync\__init__.py:778]>
+2024-08-08 23:52:42 INFO log.py:21: Yasb
+2024-08-08 23:52:42 DEBUG proactor_events.py:634: Using proactor: _IocpProactor
+2024-08-08 23:52:42 DEBUG win32.py:58: Looking up time zone info from registry
+2024-08-08 23:52:43 INFO weather.py:156: Fetched new weather data at 2024-08-08 23:52:43.030565
+2024-08-08 23:52:43 DEBUG __init__.py:143: CoInitializeEx(None, 2)
+2024-08-08 23:52:45 INFO bar_manager.py:74: Starting SystemEventListener...
+2024-08-08 23:52:45 INFO bar_manager.py:74: Starting KomorebiEventListener...
+2024-08-08 23:52:45 INFO event_listener.py:52: Created named pipe yasb-fb39da3a-561b-11ef-a99e-48e7daa79ece
+2024-08-08 23:52:45 INFO event_listener.py:106: Waiting for Komorebi to subscribe to named pipe yasb-fb39da3a-561b-11ef-a99e-48e7daa79ece
+2024-08-08 23:52:45 INFO watcher.py:39: Created file watcher for path C:\Users\njen\.config\yasb
+2024-08-08 23:52:45 DEBUG _windows.py:213: Starting (proactor: <_IocpProactor overlapped#=0 result#=0>)...
+2024-08-08 23:52:45 DEBUG _windows.py:192: Thread started
+2024-08-08 23:52:46 INFO event_listener.py:118: Komorebi connected to named pipe: yasb-fb39da3a-561b-11ef-a99e-48e7daa79ece
+2024-08-08 23:53:09 ERROR wallpapers.py:127: Error changing wallpaper: [WinError 3] The system cannot find the path specified: 'C:\\Users\\xxx\\Images'

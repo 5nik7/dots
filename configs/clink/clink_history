@@ -3486,8 +3486,7 @@ clink set color.suggestion black
 |	time=1720296712
 cd /
 |	time=1720296715
-|d -
-|	time=1720296754
+|d -||	time=1720296754
 |d -
 |	time=1720296757
 cd -
@@ -3687,3 +3686,9 @@ ll
 ls
 |	time=1720320334
 ls -lA
+|	time=1720346130
+choco install networkmanager
+|	time=1720346207
+|
+|	time=1720346208
+c

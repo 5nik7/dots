@@ -7,6 +7,7 @@ Write-Host ''
 Set-Link "$ENV:DOTFILES\git\gitconfig" "$ENV:USERPROFILE\.gitconfig" -v:$v -i:$i
 Set-Link "$ENV:DOTFILES\wsl\wslconfig" "$ENV:USERPROFILE\.wslconfig" -v:$v -i:$i
 Set-Link "$ENV:DOTFILES\wal" "$ENV:USERPROFILE\.config\wal" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\yasb" "$ENV:USERPROFILE\.config\yasb" -v:$v -i:$i
 Set-Link "$ENV:DOTFILES\clink" "$ENV:LOCALAPPDATA\clink" -v:$v -i:$i
 Set-Link "$ENV:DOTFILES\alacritty" "$ENV:LOCALAPPDATA\alacritty" -v:$v -i:$i
 Set-Link "$ENV:DOTFILES\alacritty" "$ENV:APPDATA\alacritty" -v:$v -i:$i
