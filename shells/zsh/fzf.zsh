@@ -24,18 +24,19 @@ export FZF_COMPLETION_TRIGGER='**'
 export FZF_COMPLETION_OPTS='--border --info=inline'
 
 FZF_COLORS="bg:-1,\
-bg+:-1,\
-fg:-1,\
-fg+:#ad9c8b,\
-hl:#d8a851,\
-hl+:#ceb250,\
-header:#ad9c8b,\
-border:#6B503C,\
-info:#6b503c,\
-prompt:#6b503c,\
-pointer:#6b503c,\
-marker:#7f61b3,\
-spinner:#6b503c"
+bg+:0,\
+gutter:-1,\
+fg:7,\
+fg+:15,\
+hl:6,\
+hl+:2,\
+header:12,\
+border:0,\
+info:8,\
+prompt:4,\
+pointer:6,\
+marker:10,\
+spinner:5"
 
 # https://vitormv.github.io/fzf-themes/
 export FZF_DEFAULT_OPTS="--height 60% \
