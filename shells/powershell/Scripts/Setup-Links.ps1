@@ -1,15 +1,22 @@
-﻿
-Set-Link "$ENV:DOTFILES\git\gitconfig" "$env:USERPROFILE\.gitconfig" 
-Set-Link "$ENV:DOTFILES\wsl\wslconfig" "$env:USERPROFILE\.wslconfig" 
-Set-Link "$env:DOTFILES\wal" "$env:WINCONFIG\wal"
-Set-Link "$env:DOTFILES\clink" "$env:LOCALAPPDATA\clink"
-Set-Link "$env:DOTFILES\alacritty" "$env:LOCALAPPDATA\alacritty"
-Set-Link "$env:DOTFILES\alacritty" "$env:APPDATA\alacritty"
-Set-Link "$env:DOTFILES\yazi" "$env:APPDATA\yazi\config"
-Set-Link "$env:DOTFILES\lsd" "$env:APPDATA\lsd"
-Set-Link "$env:DOTFILES\vifm" "$env:APPDATA\vifm"
-Set-Link "$env:DOTFILES\bat" "$env:APPDATA\bat"
-Set-Link "$env:DOTFILES\glaze-wm" "$env:USERPROFILE\.glaze-wm"
+﻿param(
+    [switch] $v,
+    [switch] $i
+)
 
-Set-Link "$env:PROJECTS\nvim" "$env:LOCALAPPDATA\nvim"
-Set-Link "$env:PROJECTS\5ui7e" "$env:RMSKINS\5ui7e"
+Write-Host ''
+Set-Link "$ENV:DOTFILES\git\gitconfig" "$ENV:USERPROFILE\.gitconfig" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\wsl\wslconfig" "$ENV:USERPROFILE\.wslconfig" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\wal" "$ENV:USERPROFILE\.config\wal" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\clink" "$ENV:LOCALAPPDATA\clink" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\alacritty" "$ENV:LOCALAPPDATA\alacritty" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\alacritty" "$ENV:APPDATA\alacritty" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\yazi" "$ENV:APPDATA\yazi\config" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\lsd" "$ENV:APPDATA\lsd" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\vifm" "$ENV:APPDATA\vifm" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\bat" "$ENV:APPDATA\bat" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\glaze-wm" "$ENV:USERPROFILE\.glaze-wm" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\komorebi\komorebi.json" "$ENV:USERPROFILE\komorebi.json" -v:$v -i:$i
+Set-Link "$ENV:DOTFILES\komorebi\whkdrc" "$ENV:USERPROFILE\.config\whkdrc" -v:$v -i:$i
+Set-Link "$ENV:PROJECTS\nvim" "$ENV:LOCALAPPDATA\nvim" -v:$v -i:$i
+Set-Link "$ENV:PROJECTS\5ui7e" "$ENV:DOCUMENTS\Rainmeter\Skins\5ui7e" -v:$v -i:$i
+Write-Host ''

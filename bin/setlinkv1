@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# Function to display usage
+usage() {
+  echo "Usage: $0 -b <base> -t <target> [-v] [-i]"
+  echo "  -b <base>    Base directory for the symbolic link."
+  echo "  -t <target>  Target directory for the symbolic link."
+  echo "  -i           Interactive mode. Prompt the user to overwrite the target if it already exists."
+  exit 1
+}
+
+# Parse parameters
+while getopts "b:t:vi" opt; do
+  case $opt in
+    b) base="$OPTARG" ;;
+    t) target="$OPTARG" ;;
+    i) interactive=true ;;
+    *) usage ;;
+  esac
+done
+
+# Check mandatory parameters
+if [ -z "$base" ] || [ -z "$target" ]; then
+  usage
+fi
+
+# Resolve full paths
+base=$(realpath "$base")
+target=$(realpath "$target")
+
+# Define colors
+basedircolor="\033[34m"  # Blue
+baseleafcolor="\033[32m"  # DarkGreen
+targetdircolor="\033[34m"  # Blue
+targetleafcolor="\033[36m"  # DarkCyan
+arrowcolor="\033[90m"  # DarkGray
+arrow="  -->  "
+# dotcolor="\033[32m"  # Green
+devcolor="\033[35m"  # Magenta
+# homecolor="\033[34m"  # Blue
+resetcolor="\033[0m"
+
+# Define backup directory and file name
+backupDir="$HOME/backups"
+bakDate=$(date +"%m-%d-%Y-%H.%M.%S")
+backupFileName="$(basename "$target").$bakDate.bak"
+backupFilePath="$(dirname "$target")/$backupFileName"
+
+
+# Check if base path exists
+if [ ! -e "$base" ]; then
+  echo -e "${resetcolor}"
+  echo -e " $base does not exist." >&2
+  echo -e "${resetcolor}"
+  exit 1
+fi
+
+# Function to create backup
+create_backup() {
+  if [ ! -d "$backupDir" ]; then
+    echo -e "${resetcolor}"
+    echo -e "${devcolor}  Creating backup directory: ${resetcolor}$backupDir"
+    mkdir -p "$backupDir"
+  fi
+  mv "$target" "$backupFilePath"
+  mv "$backupFilePath" "$backupDir"
+  echo -e "${resetcolor}"
+  echo -e "${arrowcolor} Backup: ${resetcolor}$backupDir/$backupFileName"
+  echo -e "${resetcolor}"
+}
+
+# Function to create symbolic link
+create_link() {
+  ln -s "$base" "$target"
+  echo -e "${basedircolor} $(dirname "$base")${baseleafcolor}$(basename "$base")${arrowcolor}$arrow${targetdircolor}$(dirname "$target")/${targetleafcolor}$(basename "$target")${resetcolor}"
+  echo -e "${resetcolor}"
+}
+
+# Check if target path exists
+if [ ! -e "$target" ]; then
+  echo -e "${resetcolor}"
+  create_link
+  exit 0
+fi
+
+# Handle interactive mode and create link
+if [ -e "$target" ]; then
+  if [ "$(readlink "$target")" = "$base" ]; then
+    echo -e "${arrowcolor} $(dirname "$base")$(basename "$base") = $(dirname "$target")/$(basename "$target")${resetcolor}"
+    exit 0
+  else
+    if [ "$interactive" = true ]; then
+      echo -e "${resetcolor}"
+      echo -e "${devcolor} $(readlink -f "$target") ${resetcolor}already exists."
+      echo -e "${arrowcolor} Overwrite? ${resetcolor}[Y/n]"
+      read -r userChoice
+      if [ "$userChoice" = "Y" ] || [ "$userChoice" = "y" ] || [ -z "$userChoice" ]; then
+        create_backup
+        create_link
+      else
+        echo -e "${resetcolor}"
+        echo -e " Operation cancelled." >&2
+        echo -e "${resetcolor}"
+        exit 1
+      fi
+    else
+      create_backup
+      create_link
+    fi
+  fi
+fi
