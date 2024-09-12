@@ -19,6 +19,21 @@ zinit load zsh-users/zsh-history-substring-search
 # Use emacs keybindings even if our EDITOR is set to vi
 bindkey -v
 
+typeset -gA keys=(
+  Up              '^[[A'
+  Down            '^[[B'
+  Home            '^[[H'
+  End             '^[[F'
+  Delete          '^[[3~'
+  Escape          '^['
+
+  Ctrl+Delete     '^[[3;5~'
+  Ctrl+K          '^K'
+)
+
+bindkey -- "${keys[Delete]}" delete-char
+bindkey -- "${keys[Ctrl+Delete]}" delete-char
+
 case $TERM in
 iterm | \
     linux-truecolor | \
@@ -95,11 +110,11 @@ setopt_if_exists no_clobber
 setopt_if_exists correct # commands
 setopt_if_exists correct_all # all arguments
 setopt_if_exists interactive_comments
+setopt_if_exists no_list_beep
 
 unset setopt_if_exists
 
 unsetopt beep
-setopt no_list_beep
 
 if which nvim >/dev/null; then
     EDITOR='nvim'
@@ -139,8 +154,6 @@ prepend_path "$DOTS/bin"
 source_file "$ZSH/aliases.zsh"
 source_file "$ZSH/completions.zsh"
 source_file "$ZSH/functions.zsh"
-source_file "$ZSH/keys.zsh"
-source_file "$ZSH/plugins/zsh-shift-select.plugin.zsh"
 
 if [ $(command -v "fzf") ]; then
   source_file "$ZSH/fzf.zsh"

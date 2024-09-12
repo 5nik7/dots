@@ -10,10 +10,6 @@
 # General
 #
 
-# Load extra completions
-if [[ -d "$ZSH/completions" ]]; then
-  fpath=($ZSH/completions $fpath)
-fi
 
 # Enable the native Zsh completion system
 autoload -Uz compinit
@@ -62,7 +58,7 @@ zstyle ':completion:*' completer _expand _extensions _complete _ignored _approxi
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z-_}={A-Za-z_-}' 'r:|=*' 'l:|=* r:|=*'
 
 # Pasting with tabs doesn't perform completion
-zstyle ':completion:*' insert-tab pending
+# zstyle ':completion:*' insert-tab pending
 
 # Partial completion suggestions
 zstyle ':completion:*' list-suffixes
@@ -92,23 +88,3 @@ zstyle ':completion:*:*:-command-:*:*' group-order aliases builtins functions co
 zstyle ':completion:*:*:cd:*' tag-order local-directories directory-stack path-directories
 
 zstyle ':completion:*' keep-prefix true
-
-# Custom completion functions for Git
-
-__git_command_successful() {
-  if (( ${#pipestatus:#0} > 0 )); then
-    _message 'not a git repository'
-    return 1
-  fi
-  return 0
-}
-
-__git_branch_names() {
-  local expl
-  declare -a branch_names
-  branch_names=(${${(f)"$(_call_program branchrefs git for-each-ref --format='"%(refname)"' refs/heads 2>/dev/null)"}#refs/heads/})
-  __git_command_successful || return
-  _wanted branch-names expl branch-name compadd $* - $branch_names
-}
-
-compdef __git_branch_names branch br
