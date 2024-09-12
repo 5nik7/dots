@@ -41,10 +41,10 @@ end
 
 config.automatically_reload_config = true
 
-config.font_size = 9.5
+config.font_size = 9.0
 config.font = wezterm.font_with_fallback({
-	{ family = "PitagonSansM Nerd Font Propo", weight = "Regular" },
-	{ family = "JetBrainsMono NFP",            weight = "Medium" },
+	{ family = "PitagonSansM Nerd Font Propo", weight = "Medium" },
+	{ family = "JetBrainsMono NFP", weight = "Medium" },
 	"Noto Color Emoji",
 })
 
