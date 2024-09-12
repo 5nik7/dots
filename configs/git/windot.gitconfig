@@ -5,6 +5,135 @@ email = nickflip86@gmail.com
 [color]
 ui = true
 
+[fetch]
+  # Automatically prune deleted branches and tags from your local copy
+  # when you fetch (or pull)
+  prune = true
+  pruneTags = true
+
+[pull]
+  # Rebase branches on top of the fetched branch, instead of merging
+  # the default branch from the default remote
+  rebase = true
+
+[push]
+  # When pushing code, always push only your current branch to a branch
+  # of the same name on the receiving end
+  # http://stackoverflow.com/a/23918418/89484
+  default = current
+  # Automatically set up upstream tracking
+  # when no upstream tracking exists for the current branch
+  autoSetupRemote = true
+  # Make `git push` automatically push relevant annotated tags when pushing branches out
+  followTags = true
+  # Make `push --force-with-lease` even safer by ensuring the tip of the remote
+  # was actually pulled into your local branch at some point
+  useForceIfIncludes = true
+
+[rebase]
+  # Automatically include the `--autosquash` option when doing a `git rebase --interactive`
+  # See more: https://thoughtbot.com/blog/autosquashing-git-commits
+  autoSquash = true
+
+# aliases
+
+[alias]
+  #
+  # Shortcuts
+  #
+
+  # Open .gitconfig in default editor
+  ecf          = config --global -e
+
+  # Add (stage) files
+  a            = add
+  aa           = add --all
+
+  # Commit
+  c            = commit
+  # ... by adding all unstaged changes
+  ca           = commit -a
+  cm           = commit -m
+  empty        = commit --allow-empty -m
+  # Add new staged files to the latest commit by preserving its commit message
+  amend        = commit --amend --no-edit
+  # Add all modified files to the latest commit
+  append       = commit -a --amend --no-edit
+
+  # Checkout
+  co           = checkout
+  cob          = checkout -b
+  # Discard all unstaged changes in the working tree and revert them to their state in the HEAD commit
+  discard      = checkout .
+
+  # Branching
+  br           = branch
+  bra          = branch -a
+  # Jump back to to your last branch
+  prev         = checkout -
+
+  # Status
+  s            = status
+  ss           = status -sb
+
+  # Put all uncommitted changes in a temporary storage
+  st           = stash
+  # Retrieve the last stored changes again
+  stp          = stash pop
+
+  d            = diff
+  cp           = cherry-pick
+  fp           = fetch --prune --all
+
+  # Push
+  pu           = push
+  puf          = push --force-with-lease
+  put          = push --tags
+
+  # Pull in remote changes for the current repository and all its submodules
+  p            = pull --recurse-submodules
+
+  # Worktree
+  wta          = worktree add
+  wtl          = worktree list
+  wtr          = worktree remove
+
+  # Rebase: skip a rebase step
+  skip         = rebase --skip
+  # Rebase: abort
+  abort        = rebase --abort
+  # Rebase: add changes and continue
+  cont         = !git add . && git rebase --continue
+
+  # Compact and readable log
+  l            = log --graph --pretty=format:'%C(magenta)%h%Creset%C(auto)%d%Creset %s %C(blue bold)— %cr ~ %an%Creset'
+  # Log with list of changed files per each commit
+  ls           = log --stat --abbrev-commit
+
+  #
+  # First-aid
+  #
+
+  # Undo a `git push`
+  undopush     = push -f origin HEAD^:master
+  # Unstage all staged changes but leave them in the working tree (mixed reset)
+  unstage      = reset HEAD
+  # Undo last commit but don't throw away the changes (affects HEAD only)
+  undo         = reset --soft HEAD~1
+  # Remove last commit (from HEAD, Index and Working Dir)
+  reset        = reset --hard HEAD~1
+
+  #
+  # Helpers
+  #
+
+  # Show the user email for the current repository
+  whoami       = config user.email
+
+  # List available aliases
+  aliases      = config --get-regexp 'alias.*'
+
+
 [core]
 pager = delta
 
@@ -12,8 +141,6 @@ pager = delta
 user = 5nik7
 [init]
 defaultBranch = main
-[rebase]
-autoStash = true
 [credential "https://github.com"]
 	helper = 
 	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
