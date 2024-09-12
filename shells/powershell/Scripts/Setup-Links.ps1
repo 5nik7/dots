@@ -1,5 +1,6 @@
-﻿Set-Link "$env:PROJECTS\nvim" "$env:LOCALAPPDATA\nvim"
-
+﻿
+Set-Link "$ENV:DOTFILES\git\gitconfig" "$env:USERPROFILE\.gitconfig" 
+Set-Link "$ENV:DOTFILES\wsl\wslconfig" "$env:USERPROFILE\.wslconfig" 
 Set-Link "$env:DOTFILES\wal" "$env:WINCONFIG\wal"
 Set-Link "$env:DOTFILES\clink" "$env:LOCALAPPDATA\clink"
 Set-Link "$env:DOTFILES\alacritty" "$env:LOCALAPPDATA\alacritty"
@@ -8,8 +9,7 @@ Set-Link "$env:DOTFILES\yazi" "$env:APPDATA\yazi\config"
 Set-Link "$env:DOTFILES\lsd" "$env:APPDATA\lsd"
 Set-Link "$env:DOTFILES\vifm" "$env:APPDATA\vifm"
 Set-Link "$env:DOTFILES\bat" "$env:APPDATA\bat"
-Set-Link "$env:DOTFILES\conda\.condarc" "$env:USERPROFILE\.condarc"
 Set-Link "$env:DOTFILES\glaze-wm" "$env:USERPROFILE\.glaze-wm"
 
-Set-Link "$env:PROJECTS\njen" "$env:RMSKINS\njen"
+Set-Link "$env:PROJECTS\nvim" "$env:LOCALAPPDATA\nvim"
 Set-Link "$env:PROJECTS\5ui7e" "$env:RMSKINS\5ui7e"
