@@ -1,4 +1,4 @@
-﻿$ENV:DOTS = "$HOME\dots"
+﻿$ENV:DOTS = "$HOME\dev\dots"
 $DOTS = $ENV:DOTS
 
 $ENV:DOTFILES = "$ENV:DOTS\configs"
