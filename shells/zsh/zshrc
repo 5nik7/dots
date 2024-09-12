@@ -134,7 +134,6 @@ export FZF_DEFAULT_OPTS="--color fg:-1,bg:-1,hl:5:underline,fg+:3,bg+:-1,hl+:5:u
 --color info:2,prompt:-1,spinner:2,pointer:6,marker:4 \
 --border --margin=0,2"
 
-f
 extend_path "$WIN/Windows"
 extend_path "$WIN/Windows/System32"
 prepend_path "$HOME/source/julia-1.10.5/bin"
