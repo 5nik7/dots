@@ -27,9 +27,9 @@ if (Test-Path($scriptsPath)) {
   Add-Path -Path $scriptsPath
 }
 
-$dotbin = "$ENV:DOTS\bin"
-if (Test-Path($dotbin)) {
-  Add-Path -Path $dotbin
+$DOTBIN = "$ENV:DOTS\bin"
+if (Test-Path($DOTBIN)) {
+  Add-Path -Path $DOTBIN
 }
 
 function ReloadProfile {
