@@ -1,4 +1,4 @@
-﻿$dotbin = "$env:DOTS\bin"
+﻿$dotbin = "$ENV:DOTS\bin"
 if (Test-Path($dotbin)) {
   Add-Path -Path $dotbin
 }

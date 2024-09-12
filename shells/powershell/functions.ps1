@@ -214,7 +214,7 @@ Function Search-Alias {
 }
 
 function .d {
-  Set-Location "$env:PROJECTS\dots"
+  Set-Location "$env:DOTS"
 }
 
 

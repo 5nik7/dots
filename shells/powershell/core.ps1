@@ -27,6 +27,11 @@ if (Test-Path($scriptsPath)) {
   Add-Path -Path $scriptsPath
 }
 
+$dotbin = "$ENV:DOTS\bin"
+if (Test-Path($dotbin)) {
+  Add-Path -Path $dotbin
+}
+
 function ReloadProfile {
   & $PROFILE
   Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
