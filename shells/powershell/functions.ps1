@@ -39,6 +39,12 @@ function yy {
   Remove-Item -Path $tmp
 }
 
+function Get-Fetch {
+  Write-Host ""
+  fastfetch
+  Write-Host ""
+}
+
 function Get-ContentPretty {
   <#
     .SYNOPSIS

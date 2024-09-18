@@ -26,4 +26,6 @@ Set-Alias -Name ln -Value Set-Link
 
 Set-Alias -Name weather -Value Get-Weather
 
+Set-Alias -Name fetch -Value Get-Fetch
+
 Set-Alias -Name lg -Value lazygit.exe
