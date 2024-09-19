@@ -3404,7 +3404,7 @@ cd C:\Users\nickf\.config\clinkcomp
 |	time=1720294957
 bat clink_settings 
 |	time=1720294979
-clink
+|link
 |	time=1720294994
 |link set
 |	time=1720295363
@@ -3430,7 +3430,7 @@ cd %USERPROFILE%\AppData\Local\
 |	time=1720295834
 |s
 |	time=1720295837
-cd clink
+|d clink
 |	time=1720295838
 |s
 |	time=1720295840
@@ -3509,7 +3509,7 @@ code clink_settings
 |	time=1720296970
 |s -la
 |	time=1720296972
-eza
+|za
 |	time=1720297004
 cd $HOME
 |	time=1720297015
@@ -3527,7 +3527,7 @@ code ansi_colors
 |	time=1720297090
 |s
 |	time=1720297092
-ls -la
+|s -la
 |	time=1720297094
 |sd
 |	time=1720297112
@@ -3613,7 +3613,7 @@ cpde clink_settings
 |	time=1720307527
 code clink_settings 
 |	time=1720307546
-clink info
+|link info
 |	time=1720307549
 |link set
 |	time=1720307626
@@ -3647,7 +3647,7 @@ clink set color.executable magenta
 |	time=1720308107
 pwd
 |	time=1720308125
-clink set
+|link set
 |	time=1720308194
 clink set color.input Blue
 |	time=1720308215
@@ -3667,13 +3667,13 @@ pyenv
 |	time=1720319987
 wal
 |	time=1720320015
-c
+|
 |	time=1720320016
-cls
+|ls
 |	time=1720320018
 |nv
 |	time=1720320283
-env
+|nv
 |	time=1720320303
 cd %USERPROFILE^&
 |	time=1720320310
@@ -3683,7 +3683,7 @@ cd C:\Users\nickf\projects\
 |	time=1720320328
 ll
 |	time=1720320329
-ls
+|s
 |	time=1720320334
 ls -lA
 |	time=1720346130
@@ -3691,4 +3691,44 @@ choco install networkmanager
 |	time=1720346207
 |
 |	time=1720346208
+|
+|	time=1726203043
+clink set
+|	time=1726203046
+clink
+|	time=1726203051
+clink info
+|	time=1726202643
+|s
+|	time=1726202647
+env
+|	time=1726202726
+cd %LocalAppData%\clink\starship.lua
+|	time=1726202732
+cd %LocalAppData%\
+|	time=1726202734
+|s
+|	time=1726202736
+eza
+|	time=1726202740
+|za -la
+|	time=1726202747
+cd clink
+|	time=1726202750
+|s -la
+|	time=1726202787
+touch starship.lua
+|	time=1726202789
+ls
+|	time=1726202804
+nvim starship.lua 
+|	time=1726202826
+ls -la
+|	time=1726202831
+eza -la
+|	time=1726202843
+code starship.lua 
+|	time=1726203013
 c
+|	time=1726203015
+cls
