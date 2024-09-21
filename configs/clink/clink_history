@@ -3732,3 +3732,9 @@ code starship.lua
 c
 |	time=1726203015
 cls
+|	time=1726730494
+cd source\
+|	time=1726730496
+cd nerd-fonts\
+|	time=1726730525
+g p
