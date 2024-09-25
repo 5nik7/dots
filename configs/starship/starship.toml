@@ -90,7 +90,7 @@ disabled = false
 [git_branch]
 symbol = ""
 format = '[$symbol$branch]($style) '
-style = "bright-black italic"
+style = "bright-black"
 
 [git_status]
 format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](purple)( $ahead_behind$stashed)]($style)"
