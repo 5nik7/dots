@@ -45,7 +45,8 @@ Redhat = " "
 Ubuntu = " "
 Unknown = "❓ "
 Void = "  "
-Windows = " "
+Windows = "󰚌 "
+# Windows = " "
 
 [memory_usage]
 symbol = ''
