@@ -1,7 +1,7 @@
 command_timeout = 3000
 scan_timeout = 15
 
-format = """ $username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$character$shell"""
+format = """ $os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$character$shell"""
 
 add_newline = true
 
@@ -9,7 +9,7 @@ add_newline = true
 style_user = '#ffc0b7'
 style_root = '#ffc0b7 bold'
 format = '[$user]($style)'
-disabled = false
+disabled = true
 show_always = true
 aliases = { "Administrator" = "admin" }
 
@@ -18,11 +18,34 @@ aliases = { "Administrator" = "admin" }
 ssh_only = false
 format = '[@](#ffc0b7)[$hostname](#ffc0b7)([ $ssh_symbol](bold blue)) '
 trim_at = '.companyname.com'
-disabled = false
+disabled = true
 
 [fill]
 symbol = '󱘹'
 style = "fg:black bg:none"
+
+[os]
+format = "[$symbol]($style)"
+style = "blue"
+disabled = false
+
+[os.symbols]
+AlmaLinux = " "
+Android = " "
+Arch = "󰣇 "
+Debian = " "
+Fedora = " "
+Kali = " "
+Macos = " "
+Manjaro = " "
+Mint = "󰣭 "
+NixOS = " "
+openSUSE = " "
+Redhat = " "
+Ubuntu = " "
+Unknown = "❓ "
+Void = "  "
+Windows = " "
 
 [memory_usage]
 symbol = ''
