@@ -31,7 +31,8 @@ disabled = false
 
 [os.symbols]
 AlmaLinux = " "
-Android = " "
+Android = "󰚌 "
+# Android = " "
 Arch = "󰣇 "
 Debian = " "
 Fedora = " "
