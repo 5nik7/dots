@@ -24,7 +24,7 @@ Set-Alias -Name ep -Value Edit-Profile
 
 Set-Alias -Name ln -Value Set-Link
 
-Set-Alias -Name weather -Value Get-Weather
+Set-Alias -Name weather -Value weather.ps1
 
 Set-Alias -Name fetch -Value Get-Fetch
 

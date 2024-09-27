@@ -139,27 +139,6 @@ function gup {
   }
 }
 
-
-function Get-Weather($arg) {
-  if ($arg -eq "help") {
-    Invoke-WebRequest -s "wttr.in/:help"
-  }
-  elseif ($arg -eq "0") {
-    Invoke-WebRequest -s "wttr.in/Yakima?0uFq"
-  }
-  elseif ($arg -eq "1") {
-    Invoke-WebRequest -s "wttr.in/Yakima?1uFq"
-  }
-  elseif ($arg -eq "2") {
-    Invoke-WebRequest -s "wttr.in/Yakima?2uFq"
-  }
-  elseif ($arg -eq "all") {
-    Invoke-WebRequest -s "wttr.in/Yakima?uFq"
-  }
-  else {
-    Invoke-WebRequest -s "wttr.in/Yakima?0uFq"
-  }
-}
 function Edit-Profile {
   (& $env:EDITOR ([IO.Path]::GetDirectoryName($profile)))
 }
