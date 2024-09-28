@@ -6,9 +6,8 @@ alt + shift + o         : komorebic reload-configuration
 # App shortcuts - these require shell to be pwsh / powershell
 # The apps will be focused if open, or launched if not open
 alt + w                 : start chrome
-alt + c                 : start "C:\Users\amn\AppData\Local\Programs\Microsoft VS Code\Code.exe"
+alt + c                 : start "C:\vscode\Code.exe"
 alt + t					: start wt
-alt + a					: start arc
 alt + q                 : komorebic close
 # Focus windows
 ctrl + left             : komorebic focus left
