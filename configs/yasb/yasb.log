@@ -56,3 +56,21 @@ task: <Task pending name='Task-16' coro=<MediaWidget._update_label() done, defin
 2024-08-08 23:52:45 DEBUG _windows.py:192: Thread started
 2024-08-08 23:52:46 INFO event_listener.py:118: Komorebi connected to named pipe: yasb-fb39da3a-561b-11ef-a99e-48e7daa79ece
 2024-08-08 23:53:09 ERROR wallpapers.py:127: Error changing wallpaper: [WinError 3] The system cannot find the path specified: 'C:\\Users\\xxx\\Images'
+2024-09-27 23:42:05 INFO log.py:21: Yasb
+2024-09-27 23:42:05 ERROR config.py:84: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-09-27 23:42:05 ERROR config.py:135: User config file could not be loaded. Exiting Application.
+2024-09-27 23:42:27 INFO log.py:21: Yasb
+2024-09-27 23:42:27 ERROR config.py:84: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-09-27 23:42:27 ERROR config.py:135: User config file could not be loaded. Exiting Application.
