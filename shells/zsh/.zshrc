@@ -38,7 +38,7 @@ export SUDO_PROMPT="passwd: "
 export STARSHIP_CONFIG="$WIN/Users/njen/dev/dots/configs/starship/starship.toml"
 export EDITOR="nvim"
 export GOBIN="$HOME/go/bin"
-export GOROOT="/usr/local/go"
+export GOROOT="/usr/lib/go"
 
 export BAT_THEME="base16"
 export BAT_STYLE="plain"
@@ -148,5 +148,11 @@ alias rlp='source $HOME/.zshrc && echo "\n ZSH reloaded."'
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+eval "$(pyenv virtualenv-init -)"
 
 eval "$(starship init zsh)"
