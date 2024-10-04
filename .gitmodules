@@ -2,3 +2,6 @@
 [submodule "configs/nvim"]
 	path = configs/nvim
 	url = https://github.com/5nik7/nvim.git
+[submodule "configs/yazi/flavors/dream.yazi"]
+	path = configs/yazi/flavors/dream.yazi
+	url = https://github.com/5nik7/dream.yazi.git
