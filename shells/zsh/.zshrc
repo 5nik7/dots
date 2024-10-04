@@ -19,6 +19,9 @@ zinit load zsh-users/zsh-history-substring-search
 # Use emacs keybindings even if our EDITOR is set to vi
 bindkey -v
 
+# export LANG=en_US.UTF-8
+# export LC_ALL=en_US.UTF-8
+
 case $TERM in
 iterm | \
     linux-truecolor | \
@@ -103,26 +106,6 @@ unset setopt_if_exists
 
 unsetopt beep
 
-if which nvim >/dev/null; then
-    EDITOR='nvim'
-elif which code >/dev/null; then
-    EDITOR='code'
-elif which vim >/dev/null; then
-    EDITOR='vim'
-elif which vi >/dev/null; then
-    EDITOR='vi'
-else
-    EDITOR='nano'
-fi
-export EDITOR
-export SYSTEMD_EDITOR=$EDITOR
-export VISUAL="$EDITOR"
-export EDITOR_TERM="$TERMINAL -e $EDITOR"
-
-alias edit='$EDITOR'
-alias v='$EDITOR'
-alias sv="sudo $EDITOR"
-
 extend_path "$WIN/Windows"
 extend_path "$WIN/Windows/System32"
 prepend_path "$HOME/source/julia-1.10.5/bin"
@@ -143,6 +126,26 @@ fi
 
 alias rlp='source $HOME/.zshrc && echo "\n ZSH reloaded."'
 
+if which nvim >/dev/null; then
+    EDITOR='nvim'
+elif which code >/dev/null; then
+    EDITOR='code'
+elif which vim >/dev/null; then
+    EDITOR='vim'
+elif which vi >/dev/null; then
+    EDITOR='vi'
+else
+    EDITOR='nano'
+fi
+export EDITOR
+export SYSTEMD_EDITOR=$EDITOR
+export VISUAL="$EDITOR"
+export EDITOR_TERM="$TERMINAL -e $EDITOR"
+
+alias edit='$EDITOR'
+alias v='$EDITOR'
+alias sv="sudo $EDITOR"
+
 . "$HOME/.cargo/env"
 
 export NVM_DIR="$HOME/.nvm"
@@ -156,3 +159,5 @@ eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
 eval "$(starship init zsh)"
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
