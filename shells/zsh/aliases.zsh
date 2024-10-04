@@ -20,6 +20,8 @@ alias pbpaste="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -co
 alias c='clear'
 alias q='exit'
 
+alias g='git'
+
 alias path='echo $PATH | tr ":" "\n"'
 
 alias so='source'
