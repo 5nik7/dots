@@ -3491,7 +3491,7 @@ cd /
 |	time=1720296757
 cd -
 |	time=1720296759
-l
+|
 |	time=1720296761
 |s
 |	time=1720296778
@@ -3681,7 +3681,7 @@ cd %USERPROFILE%
 |	time=1720320326
 cd C:\Users\nickf\projects\
 |	time=1720320328
-ll
+|l
 |	time=1720320329
 |s
 |	time=1720320334
@@ -3719,11 +3719,11 @@ cd clink
 |	time=1726202787
 touch starship.lua
 |	time=1726202789
-ls
+|s
 |	time=1726202804
 nvim starship.lua 
 |	time=1726202826
-ls -la
+|s -la
 |	time=1726202831
 eza -la
 |	time=1726202843
@@ -3738,3 +3738,17 @@ cd source\
 cd nerd-fonts\
 |	time=1726730525
 g p
+|	time=1727505909
+ll
+|	time=1727505910
+l
+|	time=1727505912
+ls
+|	time=1727505914
+ls -la
+|	time=1727505919
+eza -1A
+|	time=1727505936
+bat komorebi.shim
+|	time=1727505950
+sudo komorebi
