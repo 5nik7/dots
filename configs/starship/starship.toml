@@ -26,16 +26,18 @@ style = "fg:black bg:none"
 
 [os]
 format = "[$symbol]($style)"
-style = "blue"
+style = "bright-blue"
 disabled = false
 
 [os.symbols]
 AlmaLinux = " "
-Android = "󰚌 "
-# Android = " "
+# Android = "󰚌 "
+Android = " "
 Arch = "󰣇 "
-# Arch = " "
+# Arch = " "
+# Arch = " "
 Debian = " "
+# Debian = " "
 Fedora = " "
 Kali = " "
 Macos = " "
@@ -45,10 +47,17 @@ NixOS = " "
 openSUSE = " "
 Redhat = " "
 Ubuntu = " "
-Unknown = "❓ "
+# Ubuntu = " "
+# Ubuntu = " "
+# Ubuntu = "󰕈 "
+# Ubuntu = " "
+Unknown = " "
 Void = "  "
-Windows = "󰚌 "
+# Windows = "󰚌 "
 # Windows = " "
+Windows = "󰖳 "
+# Windows = " "
+# Windows = " "
 
 [memory_usage]
 symbol = ''
