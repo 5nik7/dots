@@ -108,7 +108,7 @@ unsetopt beep
 
 extend_path "$WIN/Windows"
 extend_path "$WIN/Windows/System32"
-prepend_path "$HOME/source/julia-1.10.5/bin"
+# prepend_path "$HOME/source/julia-1.10.5/bin"
 prepend_path "$WIN/Users/njen/scoop/apps/win32yank/0.1.1"
 prepend_path "$WIN/vscode/bin"
 prepend_path "$HOME/.local/bin"
@@ -118,6 +118,7 @@ prepend_path "$HOME/.local/share/bob/nvim-bin"
 prepend_path "$DOTS/bin"
 
 source_file "$ZSH/aliases.zsh"
+source_file "$ZSH/completions.zsh"
 source_file "$ZSH/functions.zsh"
 
 if [ $(command -v "fzf") ]; then
