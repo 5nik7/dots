@@ -1,4 +1,4 @@
-#     ____  ______ _____  ____0
+#     ____  ______ _____  _____
 #    /_  / / __/ // / _ \/ ___/
 #   _ / /__\ \/ _  / , _/ /__
 #  (_)___/___/_//_/_/|_|\___/
@@ -19,6 +19,16 @@ zinit load zsh-users/zsh-history-substring-search
 # Use emacs keybindings even if our EDITOR is set to vi
 bindkey -v
 
+case $TERM in
+iterm | \
+    linux-truecolor | \
+    screen-truecolor | \
+    tmux-truecolor | \
+    xterm-truecolor) export COLORTERM=truecolor ;;
+vte*) ;;
+esac
+export COLORTERM=truecolor
+
 export WIN='/mnt/c'
 export DOTS="$HOME/dots"
 export DOTFILES="$DOTS/configs"
@@ -29,6 +39,10 @@ export STARSHIP_CONFIG="$WIN/Users/njen/dev/dots/configs/starship/starship.toml"
 export EDITOR="nvim"
 export GOBIN="$HOME/go/bin"
 export GOROOT="/usr/local/go"
+
+export BAT_THEME="base16"
+export BAT_STYLE="plain"
+export BAT_PAGING="never"
 
 HISTSIZE=10000
 SAVEHIST=10000
@@ -127,9 +141,12 @@ if [ $(command -v "fzf") ]; then
   source_file "$ZSH/fzf.zsh"
 fi
 
-
 alias rlp='source $HOME/.zshrc && echo "\n ZSH reloaded."'
 
 . "$HOME/.cargo/env"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 eval "$(starship init zsh)"
