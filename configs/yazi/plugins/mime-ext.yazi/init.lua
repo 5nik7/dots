@@ -110,6 +110,7 @@ local EXTS = {
 	cdxml = "application/vnd.chemdraw+xml",
 	cdy = "application/vnd.cinderella",
 	cer = "application/pkix-cert",
+	cfg = "text/plain",
 	cfs = "application/x-cfs-compressed",
 	cgm = "image/cgm",
 	chat = "application/x-chat",
@@ -203,9 +204,11 @@ local EXTS = {
 	dxf = "image/vnd.dxf",
 	dxp = "application/vnd.spotfire.dxp",
 	dxr = "application/x-director",
+	ebuild = "application/vnd.gentoo.ebuild",
 	ecelp4800 = "audio/vnd.nuera.ecelp4800",
 	ecelp7470 = "audio/vnd.nuera.ecelp7470",
 	ecelp9600 = "audio/vnd.nuera.ecelp9600",
+	eclass = "application/vnd.gentoo.eclass",
 	ecma = "application/ecmascript",
 	edm = "application/vnd.novadigm.edm",
 	edx = "application/vnd.novadigm.edx",
@@ -216,6 +219,7 @@ local EXTS = {
 	eml = "message/rfc822",
 	emma = "application/emma+xml",
 	emz = "application/x-msmetafile",
+	env = "text/plain",
 	eol = "audio/vnd.digital-winds",
 	eot = "application/vnd.ms-fontobject",
 	eps = "application/postscript",
@@ -317,6 +321,7 @@ local EXTS = {
 	hlp = "application/winhlp",
 	hpgl = "application/vnd.hp-hpgl",
 	hpid = "application/vnd.hp-hpid",
+	hpp = "text/c",
 	hps = "application/vnd.hp-hps",
 	hqx = "application/mac-binhex40",
 	htke = "application/vnd.kenameaapp",
@@ -342,6 +347,7 @@ local EXTS = {
 	iif = "application/vnd.shana.informed.interchange",
 	imp = "application/vnd.accpac.simply.imp",
 	ims = "application/vnd.ms-ims",
+	ini = "text/plain",
 	ink = "application/inkml+xml",
 	inkml = "application/inkml+xml",
 	install = "application/x-install-instructions",
@@ -369,8 +375,12 @@ local EXTS = {
 	jpgv = "video/jpeg",
 	jpm = "video/jpm",
 	js = "text/javascript",
+	js = "text/javascript",
 	json = "application/json",
+	jsonc = "application/json",
 	jsonml = "application/jsonml+json",
+	jsx = "text/jsx",
+	jxl = "image/jxl",
 	kar = "audio/midi",
 	karbon = "application/vnd.kde.karbon",
 	kfo = "application/vnd.kde.kformula",
@@ -647,6 +657,7 @@ local EXTS = {
 	qam = "application/vnd.epson.quickanime",
 	qbo = "application/vnd.intu.qbo",
 	qfx = "application/vnd.intu.qfx",
+	qml = "text/x-qml",
 	qps = "application/vnd.publishare-delta-tree",
 	qt = "video/quicktime",
 	qwd = "application/vnd.quark.quarkxpress",
@@ -682,6 +693,7 @@ local EXTS = {
 	roa = "application/rpki-roa",
 	roff = "text/troff",
 	rp9 = "application/vnd.cloanto.rp9",
+	rpm = "application/x-rpm",
 	rpss = "application/vnd.nokia.radio-presets",
 	rpst = "application/vnd.nokia.radio-preset",
 	rq = "application/sparql-query",
@@ -699,6 +711,7 @@ local EXTS = {
 	scm = "application/vnd.lotus-screencam",
 	scq = "application/scvp-cv-request",
 	scs = "application/scvp-cv-response",
+	scss = "text/x-scss",
 	scurl = "text/vnd.curl.scurl",
 	sda = "application/vnd.stardivision.draw",
 	sdc = "application/vnd.stardivision.calc",
@@ -822,6 +835,7 @@ local EXTS = {
 	ts = "text/typescript",
 	tsd = "application/timestamped-data",
 	tsv = "text/tab-separated-values",
+	tsx = "text/tsx",
 	ttc = "font/collection",
 	ttf = "font/ttf",
 	ttl = "text/turtle",
@@ -974,6 +988,7 @@ local EXTS = {
 	xml = "application/xml",
 	xo = "application/vnd.olpc-sugar",
 	xop = "application/xop+xml",
+	xpak = "application/vnd.gentoo.xpak",
 	xpi = "application/x-xpinstall",
 	xpl = "application/xproc+xml",
 	xpm = "image/x-xpixmap",
@@ -1011,18 +1026,45 @@ local EXTS = {
 	zsh = "text/shellscript",
 }
 
-local function fetch(self)
-	local updates = {}
+local options = ya.sync(
+	function(st)
+		return {
+			with_files = st.with_files,
+			with_exts = st.with_exts,
+			fallback_file1 = st.fallback_file1,
+		}
+	end
+)
+
+local M = {}
+
+function M:setup(opts)
+	opts = opts or {}
+
+	self.with_files = opts.with_files
+	self.with_exts = opts.with_exts
+	self.fallback_file1 = opts.fallback_file1
+end
+
+function M:fetch()
+	local opts = options()
+	local merged_files = ya.dict_merge(FILES, opts.with_files or {})
+	local merged_exts = ya.dict_merge(EXTS, opts.with_exts or {})
+
+	local updates, unknown = {}, {}
 	for _, file in ipairs(self.files) do
 		local mime
 		if file.cha.len == 0 then
 			mime = "inode/x-empty"
 		else
-			mime = FILES[(file.url:name() or ""):lower()]
-			mime = mime or EXTS[(file.url:ext() or ""):lower()]
+			mime = merged_files[(file.url:name() or ""):lower()]
+			mime = mime or merged_exts[(file.url:ext() or ""):lower()]
 		end
+
 		if mime then
 			updates[tostring(file.url)] = mime
+		elseif opts.fallback_file1 then
+			unknown[#unknown + 1] = file
 		end
 	end
 
@@ -1030,7 +1072,12 @@ local function fetch(self)
 		ya.manager_emit("update_mimetype", { updates = updates })
 	end
 
+	if #unknown > 0 then
+		self.files = unknown
+		return require("mime").fetch(self)
+	end
+
 	return 1
 end
 
-return { fetch = fetch }
+return M
