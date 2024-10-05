@@ -1,7 +1,7 @@
 command_timeout = 3000
 scan_timeout = 15
 
-format = """$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$shell$os$character"""
+format = """$os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$shell$character"""
 
 add_newline = true
 
@@ -25,8 +25,8 @@ symbol = '󱘹'
 style = "fg:black bg:none"
 
 [os]
-format = ' [$symbol]($style)'
-style = "bright-cyan dimmed italic"
+format = '[$symbol]($style)'
+style = "bright-blue"
 disabled = false
 
 [os.symbols]
@@ -75,6 +75,7 @@ Ubuntu = " "
 Unknown = " "
 Void = " "
 Windows = ""
+# Windows = " "
 
 # [os.symbols]
 # AlmaLinux = " "
@@ -193,7 +194,7 @@ style = 'red'
 symbol = ' '
 
 [character]
-success_symbol = '[ ](cyan)'
-error_symbol = '[ ](cyan)'
-vimcmd_symbol = '[ ](bright-black)'
+success_symbol = '[  ](cyan)'
+error_symbol = '[  ](cyan)'
+vimcmd_symbol = '[  ](bright-black)'
 format = '$symbol'
