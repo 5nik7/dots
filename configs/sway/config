@@ -7,6 +7,7 @@
 ### Autostart
 exec_always autotiling -w 1 3 5 7 9
 # exec wl-paste --watch cliphist store
+xwayland enable
 
 ### Variables
 #
@@ -24,7 +25,7 @@ set $filemanager thunar
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
-set $menu rofi
+set $menu "rofi -combi-modi window,drun,ssh,run -show combi -show-icons"
 
 include /etc/sway/config-vars.d/*
 
