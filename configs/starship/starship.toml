@@ -1,7 +1,7 @@
 command_timeout = 3000
 scan_timeout = 15
 
-format = """$username$hostname$os$directory$git_branch$git_status$nodejs$conda$python$line_break$character$shell"""
+format = """$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$shell$os$character"""
 
 add_newline = true
 
@@ -9,7 +9,7 @@ add_newline = true
 style_user = 'bright-yellow'
 style_root = 'bright-yellow bold'
 format = '[$user]($style)'
-disabled = false
+disabled = true
 show_always = true
 aliases = { "Administrator" = "admin" }
 
@@ -18,57 +18,97 @@ aliases = { "Administrator" = "admin" }
 ssh_only = false
 format = '[@](yellow)[$hostname](yellow)([ $ssh_symbol](bold blue)) '
 trim_at = '.companyname.com'
-disabled = false
+disabled = true
 
 [fill]
 symbol = '󱘹'
 style = "fg:black bg:none"
 
 [os]
-format = "[$symbol]($style)"
-style = "bright-blue"
+format = ' [$symbol]($style)'
+style = "bright-cyan dimmed italic"
 disabled = false
 
 [os.symbols]
+Alpaquita = " "
+Alpine = " "
 AlmaLinux = " "
-# Android = "󰚌 "
-Android = " "
-Arch = "󰣇 "
-# Arch = " "
-# Arch = " "
-Debian = " "
-# Debian = " "
-Fedora = " "
+Amazon = " "
+Android = " "
+Arch = " "
+Artix = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "󰛓 "
+Gentoo = " "
+HardenedBSD = "󰞌 "
+Illumos = "󰈸 "
 Kali = " "
-Macos = " "
+Linux = " "
+Mabox = " "
+Macos = " "
 Manjaro = " "
-Mint = "󰣭 "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
 NixOS = " "
+OpenBSD = "󰈺 "
 openSUSE = " "
-Redhat = " "
+OracleLinux = "󰌷 "
+Pop = " "
+Raspbian = " "
+Redhat = " "
+RedHatEnterprise = " "
+RockyLinux = " "
+Redox = "󰀘 "
+Solus = "󰠳 "
+SUSE = " "
+# Ubuntu = "ubuntu"
 Ubuntu = " "
-# Ubuntu = " "
-# Ubuntu = " "
-# Ubuntu = "󰕈 "
-Unknown = " "
-Void = "  "
-# Windows = "󰚌 "
-# Windows = " "
-Windows = "󰖳 "
-# Windows = " "
-# Windows = " "
+# Ubuntu = " "
+Unknown = " "
+Void = " "
+Windows = ""
 
-[memory_usage]
-symbol = ''
-format = "$symbol[${ram_pct}]($style) "
-threshold = -1
-style = "white"
-disabled = true
+# [os.symbols]
+# AlmaLinux = " "
+# # Android = "󰚌 "
+# Android = " "
+# Arch = "󰣇 "
+# # Arch = " "
+# # Arch = " "
+# Debian = " "
+# # Debian = " "
+# Fedora = " "
+# Kali = " "
+# Macos = " "
+# Manjaro = " "
+# Mint = "󰣭 "
+# NixOS = " "
+# openSUSE = " "
+# Redhat = " "
+# Ubuntu = " "
+# # Ubuntu = " "
+# # Ubuntu = " "
+# # Ubuntu = "󰕈 "
+# Unknown = " "
+# Void = "  "
+# # Windows = "󰚌 "
+# # Windows = " "
+# Windows = "󰖳 "
+# # Windows = " "
+# # Windows = " "
 
 [shell]
 format = '[$indicator]($style)'
 fish_indicator = ''
-powershell_indicator = ''
+powershell_indicator = 'PS'
 bash_indicator = ''
 zsh_indicator = ''
 cmd_indicator = ''
@@ -89,10 +129,10 @@ truncation_length = 0
 # truncation_symbol = "…/"
 # home_symbol = ' '
 truncate_to_repo = false
-use_os_path_sep = false
+use_os_path_sep = true
 use_logical_path = true
-read_only = ' 󰍁'
-read_only_style = 'bright-yellow'
+read_only = " ◈"
+read_only_style = 'bright-red'
 
 [line_break]
 disabled = false
@@ -103,9 +143,25 @@ format = '[$symbol$branch]($style) '
 style = "bright-black"
 
 [git_status]
-format = "[(*$conflicted$untracked$modified$staged$renamed$deleted$ahead_behind$stashed)](style)"
-style = "purple"
-# conflicted = "​"
+format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](purple) ($ahead_behind$stashed)]($style)"
+style = "bright-purple"
+conflicted = "​"
+untracked = "​"
+modified = "​"
+staged = "​"
+renamed = "​"
+deleted = "​"
+stashed = "≡"
+# [git_status]
+# format = "[(*$conflicted$untracked$modified$staged$renamed$deleted$ahead_behind$stashed)](style)"
+# style = "purple"
+# # conflicted = "​"
+# untracked = "​"
+# modified = "​"
+# staged = "​"
+# renamed = "​"
+# deleted = "​"
+# stashed = "≡"
 
 [nodejs]
 detect_files = ['package.json']
@@ -137,7 +193,7 @@ style = 'red'
 symbol = ' '
 
 [character]
-success_symbol = '[  ](cyan)'
-error_symbol = '[  ](cyan)'
-vimcmd_symbol = '[  ](bright-black)'
+success_symbol = '[ ](cyan)'
+error_symbol = '[ ](cyan)'
+vimcmd_symbol = '[ ](bright-black)'
 format = '$symbol'
