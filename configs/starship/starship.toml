@@ -26,7 +26,7 @@ style = "fg:black bg:none"
 
 [os]
 format = '[$symbol]($style)'
-style = "bright-blue"
+style = "blue"
 disabled = false
 
 [os.symbols]
@@ -75,6 +75,8 @@ Ubuntu = " "
 Unknown = " "
 Void = " "
 Windows = ""
+# Windows = "○ "
+# Windows = ""
 # Windows = " "
 
 # [os.symbols]
@@ -106,16 +108,32 @@ Windows = ""
 # # Windows = " "
 # # Windows = " "
 
-[shell]
-format = '[$indicator]($style)'
-fish_indicator = ''
-powershell_indicator = 'PS'
-bash_indicator = ''
-zsh_indicator = ''
-cmd_indicator = ''
-unknown_indicator = ''
-style = 'bg:none fg:cyan'
-disabled = true
+# [shell]
+# format = "[◎ $indicator]($style)"
+# bash_indicator = "bsh"
+# fish_indicator = "fsh"
+# zsh_indicator = "zsh"
+# powershell_indicator = "psh"
+# ion_indicator = "ion"
+# elvish_indicator = "esh"
+# tcsh_indicator = "tsh"
+# nu_indicator = "nu"
+# xonsh_indicator = "xsh"
+# cmd_indicator = "cmd"
+# unknown_indicator = ""
+# style = "bright-cyan italic"
+# disabled = false
+
+# [shell]
+# format = '[$indicator]($style)'
+# fish_indicator = ''
+# powershell_indicator = 'PS'
+# bash_indicator = ''
+# zsh_indicator = ''
+# cmd_indicator = ''
+# unknown_indicator = ''
+# style = 'bg:none fg:cyan'
+# disabled = true
 
 [directory.substitutions]
 # '/Documents/' = '  '
@@ -153,16 +171,6 @@ staged = "​"
 renamed = "​"
 deleted = "​"
 stashed = "≡"
-# [git_status]
-# format = "[(*$conflicted$untracked$modified$staged$renamed$deleted$ahead_behind$stashed)](style)"
-# style = "purple"
-# # conflicted = "​"
-# untracked = "​"
-# modified = "​"
-# staged = "​"
-# renamed = "​"
-# deleted = "​"
-# stashed = "≡"
 
 [nodejs]
 detect_files = ['package.json']
@@ -195,6 +203,6 @@ symbol = ' '
 
 [character]
 success_symbol = '[  ](cyan)'
-error_symbol = '[  ](cyan)'
+error_symbol = '[  ](red)'
 vimcmd_symbol = '[  ](bright-black)'
 format = '$symbol'
