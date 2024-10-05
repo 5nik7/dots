@@ -30,7 +30,7 @@ color.arginfo = magenta
 
 # name: Argmatcher color
 # type: color
-color.argmatcher = cyan
+color.argmatcher = green
 
 # name: Shell command completions
 # type: color

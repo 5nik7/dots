@@ -1,49 +1,109 @@
-88b8 app_context::start_logger  483 ---- 2024/10/04 23:18:31.367 -------------------------------------------------
-88b8 app_context::start_logger  486 Host process is 'cmd.exe' (pid 35000)
-88b8 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
-88b8 app_context::start_logger  505 Windows version 10.0.26100 (x64)
-88b8 app_context::start_logger  507 Clink version 1.6.21.f97375 (x64)
-88b8 hook_setter::hook_setter  159 >>> Started hook transaction.
-88b8 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF79EA10000.
-88b8 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-88b8 find_iat                  124 Found import at 00007FF79EA4AE50 (value is 00007FFA1811CE60).
-88b8 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF79EA10000.
-88b8 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-88b8 find_iat                  124 Found import at 00007FF79EA4AE48 (value is 00007FFA1812EE50).
-88b8 hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF79EA10000.
-88b8 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-88b8 find_iat                  124 Found import at 00007FF79EA4AAB0 (value is 00007FFA181171A0).
-88b8 hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF79EA10000.
-88b8 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-88b8 find_iat                  124 Found import at 00007FF79EA4AE68 (value is 00007FFA180F4CA0).
-88b8 hook_setter::commit       207 <<< Hook transaction committed.
-88b8 hook_setter::hook_setter  159 >>> Started hook transaction.
-88b8 hook_setter::detach_iat   359 Attempting to unhook 00007FF97BEB47D0 from GetEnvironmentVariableW in IAT for module 00007FF79EA10000.
-88b8 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-88b8 find_iat                  124 Found import at 00007FF79EA4AE68 (value is 00007FF97BEB47D0).
-88b8 hook_setter::commit       207 <<< Hook transaction committed.
-88b8 hook_setter::hook_setter  159 >>> Started hook transaction.
-88b8 hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF79EA10000.
-88b8 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-88b8 find_iat                  124 Found import at 00007FF79EA4AA90 (value is 00007FFA18132F00).
-88b8 hook_setter::commit       207 <<< Hook transaction committed.
-88b8 hook_setter::hook_setter  159 >>> Started hook transaction.
-88b8 hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF79EA10000.
-88b8 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
-88b8 find_iat                  124 Found import at 00007FF79EA4AB10 (value is 00007FFA18107000).
-88b8 hook_setter::commit       207 <<< Hook transaction committed.
-88b8 win_screen_buffer::begin  384 Using native terminal support (auto mode found 'WindowsTerminal.exe').
-88b8 reset_handle              144 resetting mismatched stdout handle
-88b8 reset_handle              144 resetting mismatched stderr handle
-88b8 host_lua::load_scripts    192 Loaded 4 Lua scripts in 92 ms
-88b8 @~clink~/app/update.lua   372 Clink updater: too soon to check for updates (1728109077 vs 1728109111).
-88b8 history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
-88b8 history_db::compact      1606 History:  717 active, 1163 deleted
-88b8 reset_handle              144 resetting mismatched stdout handle
-88b8 reset_handle              144 resetting mismatched stderr handle
-88b8 history_db::compact      1606 History:  716 active, 1164 deleted
-88b8 reset_handle              144 resetting mismatched stdin handle
-88b8 reset_handle              144 resetting mismatched stdout handle
-88b8 reset_handle              144 resetting mismatched stdout handle
-88b8 reset_handle              144 resetting mismatched stderr handle
-88b8 history_db::compact      1606 History:  715 active, 1165 deleted
+8670 app_context::start_logger  483 ---- 2024/10/05 11:59:44.586 -------------------------------------------------
+8670 app_context::start_logger  486 Host process is 'cmd.exe' (pid 34416)
+8670 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
+8670 app_context::start_logger  505 Windows version 10.0.26100 (x64)
+8670 app_context::start_logger  507 Clink version 1.6.21.f97375 (x64)
+8670 hook_setter::hook_setter  159 >>> Started hook transaction.
+8670 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF79EA10000.
+8670 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+8670 find_iat                  124 Found import at 00007FF79EA4AE50 (value is 00007FFA1811CE60).
+8670 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF79EA10000.
+8670 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+8670 find_iat                  124 Found import at 00007FF79EA4AE48 (value is 00007FFA1812EE50).
+8670 hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF79EA10000.
+8670 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
+8670 find_iat                  124 Found import at 00007FF79EA4AAB0 (value is 00007FFA181171A0).
+8670 hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF79EA10000.
+8670 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+8670 find_iat                  124 Found import at 00007FF79EA4AE68 (value is 00007FFA180F4CA0).
+8670 hook_setter::commit       207 <<< Hook transaction committed.
+8670 hook_setter::hook_setter  159 >>> Started hook transaction.
+8670 hook_setter::detach_iat   359 Attempting to unhook 00007FF97B9147D0 from GetEnvironmentVariableW in IAT for module 00007FF79EA10000.
+8670 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+8670 find_iat                  124 Found import at 00007FF79EA4AE68 (value is 00007FF97B9147D0).
+8670 hook_setter::commit       207 <<< Hook transaction committed.
+8670 hook_setter::hook_setter  159 >>> Started hook transaction.
+8670 hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF79EA10000.
+8670 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
+8670 find_iat                  124 Found import at 00007FF79EA4AA90 (value is 00007FFA18132F00).
+8670 hook_setter::commit       207 <<< Hook transaction committed.
+8670 hook_setter::hook_setter  159 >>> Started hook transaction.
+8670 hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF79EA10000.
+8670 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
+8670 find_iat                  124 Found import at 00007FF79EA4AB10 (value is 00007FFA18107000).
+8670 hook_setter::commit       207 <<< Hook transaction committed.
+8670 win_screen_buffer::begin  384 Using native terminal support (auto mode found 'WindowsTerminal.exe').
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 host_lua::load_scripts    192 Loaded 4 Lua scripts in 112 ms
+8670 @~clink~/app/update.lua   372 Clink updater: too soon to check for updates (1728152078 vs 1728154784).
+8670 history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
+8670 history_db::compact      1606 History:  722 active, 1196 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  721 active, 1197 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  721 active, 1197 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  721 active, 1197 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  720 active, 1198 deleted
+8670 reset_handle              144 resetting mismatched stdin handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  720 active, 1198 deleted
+8670 reset_handle              144 resetting mismatched stdin handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  720 active, 1198 deleted
+8670 reset_handle              144 resetting mismatched stdin handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  720 active, 1198 deleted
+8670 reset_handle              144 resetting mismatched stdin handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  720 active, 1198 deleted
+8670 reset_handle              144 resetting mismatched stdin handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  720 active, 1198 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  720 active, 1198 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  720 active, 1198 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  719 active, 1199 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  718 active, 1200 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  717 active, 1201 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  715 active, 1203 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  714 active, 1204 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  713 active, 1205 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  712 active, 1206 deleted
+8670 reset_handle              144 resetting mismatched stdout handle
+8670 reset_handle              144 resetting mismatched stderr handle
+8670 history_db::compact      1606 History:  711 active, 1207 deleted

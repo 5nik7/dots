@@ -744,7 +744,7 @@ wmic context
 |	time=1692519495
 |xplorer.exe .
 |	time=1692531622
-ecit
+|cit
 |	time=1692532111
 |env
 |	time=1692532127
@@ -1086,7 +1086,7 @@ cd C:\Users\nickf\AppData\Local\clink\clink_settings
 |	time=1694912669
 |l
 |	time=1694912716
-clink echo
+|link echo
 |	time=1694912762
 |link --profile
 |	time=1694912776
@@ -2912,7 +2912,7 @@ colors
 |	time=1717918989
 |astfetch
 |	time=1717919071
-fastfetch
+|astfetch
 |	time=1717919158
 lll
 |	time=1717919160
@@ -2924,7 +2924,7 @@ lll
 |	time=1717919178
 |
 |	time=1717919184
-fastfetch
+|astfetch
 |	time=1718103220
 |link autorun show
 |	time=1718103226
@@ -3308,7 +3308,7 @@ d
 |	time=1720208552
 which pwsh
 |	time=1720208556
-pwsh
+|wsh
 |	time=1720244571
 |nv
 |	time=1720244572
@@ -3378,7 +3378,7 @@ clink autorun show
 |	time=1720294755
 |link
 |	time=1720294765
-clink update
+|link update
 |	time=1720294858
 clink installscripts
 |	time=1720294873
@@ -3657,11 +3657,11 @@ cd \
 |	time=1720308242
 clink set color.input green
 |	time=1720308317
-q
+|
 |	time=1720319968
 path
 |	time=1720319973
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1720319981
 pyenv
 |	time=1720319987
@@ -3693,11 +3693,11 @@ choco install networkmanager
 |	time=1720346208
 |
 |	time=1726203043
-clink set
+|link set
 |	time=1726203046
-clink
+|link
 |	time=1726203051
-clink info
+|link info
 |	time=1726202643
 |s
 |	time=1726202647
@@ -3729,9 +3729,9 @@ eza -la
 |	time=1726202843
 code starship.lua 
 |	time=1726203013
-c
+|
 |	time=1726203015
-cls
+|ls
 |	time=1726730494
 cd source\
 |	time=1726730496
@@ -3739,15 +3739,15 @@ cd nerd-fonts\
 |	time=1726730525
 g p
 |	time=1727505909
-ll
+|l
 |	time=1727505910
 l
 |	time=1727505912
-ls
+|s
 |	time=1727505914
 ls -la
 |	time=1727505919
-eza -1A
+|za -1A
 |	time=1727505936
 bat komorebi.shim
 |	time=1727505950
@@ -3755,4 +3755,80 @@ sudo komorebi
 |	time=1728062514
 cd
 |	time=1728062517
+|nv
+|	time=1728109050
+|ls
+|	time=1728109064
+|nv
+|	time=1728109068
+|link
+|	time=1728109074
+|link update
+|	time=1728109083
+clink info
+|	time=1728109090
+|
+|	time=1728109092
+|ls
+|	time=1728109092
+ll
+|	time=1728109094
+ls
+|	time=1728109096
+eza -1A
+|	time=1728109107
+|
+|	time=1728109118
+ls
+|	time=1728109121
+PATH | tr ";" "\n"
+|	time=1728151814
+|link
+|	time=1728151820
+clink echo
+|	time=1728152046
+|
+|	time=1728152047
+|
+|	time=1728152047
+|ls
+|	time=1728152061
+fastfetch
+|	time=1728152073
+clink
+|	time=1728152076
+clink update
+|	time=1728152081
+clink set
+|	time=1728152162
+clink set color.argmatcher green
+|	time=1728152575
+q]
+|	time=1728152577
+ecit
+|	time=1728153397
+|nv
+|	time=1728153407
+|ls
+|	time=1728153410
 env
+|	time=1728153436
+env | fzf
+|	time=1728153460
+pwsh
+|	time=1728153475
+|
+|	time=1728153476
+|
+|	time=1728153478
+q
+|	time=1728153633
+c
+|	time=1728153635
+cls
+|	time=1728153638
+|lavours
+|	time=1728153646
+flavours info
+|	time=1728153691
+flavours

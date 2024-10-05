@@ -1,24 +1,24 @@
 command_timeout = 3000
 scan_timeout = 15
 
-format = """ $os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$character$shell"""
+format = """$username$hostname$os$directory$git_branch$git_status$nodejs$conda$python$line_break$character$shell"""
 
 add_newline = true
 
 [username]
-style_user = '#ffc0b7'
-style_root = '#ffc0b7 bold'
+style_user = 'bright-yellow'
+style_root = 'bright-yellow bold'
 format = '[$user]($style)'
-disabled = true
+disabled = false
 show_always = true
 aliases = { "Administrator" = "admin" }
 
 
 [hostname]
 ssh_only = false
-format = '[@](#ffc0b7)[$hostname](#ffc0b7)([ $ssh_symbol](bold blue)) '
+format = '[@](yellow)[$hostname](yellow)([ $ssh_symbol](bold blue)) '
 trim_at = '.companyname.com'
-disabled = true
+disabled = false
 
 [fill]
 symbol = '󱘹'
@@ -50,7 +50,6 @@ Ubuntu = " "
 # Ubuntu = " "
 # Ubuntu = " "
 # Ubuntu = "󰕈 "
-# Ubuntu = " "
 Unknown = " "
 Void = "  "
 # Windows = "󰚌 "
@@ -104,15 +103,9 @@ format = '[$symbol$branch]($style) '
 style = "bright-black"
 
 [git_status]
-format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](purple)( $ahead_behind$stashed)]($style)"
-style = "cyan"
-conflicted = "​"
-untracked = "​"
-modified = "​"
-staged = "​"
-renamed = "​"
-deleted = "​"
-stashed = "≡"
+format = "[(*$conflicted$untracked$modified$staged$renamed$deleted$ahead_behind$stashed)](style)"
+style = "purple"
+# conflicted = "​"
 
 [nodejs]
 detect_files = ['package.json']
@@ -146,5 +139,5 @@ symbol = ' '
 [character]
 success_symbol = '[  ](cyan)'
 error_symbol = '[  ](cyan)'
-vimcmd_symbol = '[  ](bright-black)'
-format = ' $symbol'
+vimcmd_symbol = '[  ](bright-black)'
+format = '$symbol'

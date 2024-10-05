@@ -1,0 +1,38 @@
+|	time=1728154791
+flavours
+|	time=1728154830
+flavours generate "C:\wallpapers\old\girl.jpg" 
+|	time=1728154886
+flavours generate -s thegirl -n thegirl -a njen dark C:\wallpapers\old\girl.jpg
+|	time=1728154891
+|
+|	time=1728154975
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | nvim
+|	time=1728154986
+|lavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | code
+|	time=1728154994
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | code
+|	time=1728155019
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | code {}
+|	time=1728155041
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | code ${@}
+|	time=1728155077
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" >> base24-girl.json 
+|	time=1728155098
+d
+|	time=1728155099
+c
+|	time=1728155100
+cls
+|	time=1728155102
+cd /
+|	time=1728155103
+ls
+|	time=1728155104
+ls -la
+|	time=1728155113
+cd
+|	time=1728155115
+eza -lA
+|	time=1728155125
+q
