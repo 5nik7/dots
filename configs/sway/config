@@ -6,7 +6,17 @@
 
 ### Autostart
 exec_always autotiling -w 1 3 5 7 9
+# exec_always --no-startup-id flashfocus
 # exec wl-paste --watch cliphist store
+exec nwg-look -a
+# exec sworkstyle &> /tmp/sworkstyle.log
+# exec_always flashfocus
+# exec eww open-many bar0 bar1 bar2
+# exec_always ~/.config/waybar/scripts/launch_waybar.sh
+# exec_always --no-startup-id ~/.config/sway/scripts/wallpaper.sh
+
+# exec waypaper --restore
+
 xwayland enable
 
 ### Variables
@@ -101,6 +111,8 @@ popup_during_fullscreen smart
 
     # Start your launcher
     bindsym $mod+d exec $menu
+    
+    bindsym $mod+n exec --no-startup-id flash_window
 
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
@@ -236,22 +248,22 @@ for_window [window_type="menu"] floating enable
 # Status Bar:
 #
 # Read `man 5 sway-bar` for more information about this section.
-# bar {
-#     position top
-#
-#     # When the status_command prints a new line to stdout, swaybar updates.
-#     # The default just shows the current date and time.
-#     status_command while date +'%Y-%m-%d %I:%M:%S %p'; do sleep 1; done
-#
-#     colors {
-#         statusline #ffffff
-#         background #323232
-#         inactive_workspace #32323200 #32323200 #5c5c5c
-#     }
-# }
-
 bar {
-    swaybar_command waybar
+    position top
+
+    # When the status_command prints a new line to stdout, swaybar updates.
+    # The default just shows the current date and time.
+    status_command while date +'%Y-%m-%d %I:%M:%S %p'; do sleep 1; done
+
+    colors {
+        statusline #ffffff
+        background #323232
+        inactive_workspace #32323200 #32323200 #5c5c5c
+    }
 }
+
+# bar {
+#     swaybar_command waybar
+# }
 
 include /etc/sway/config.d/*
