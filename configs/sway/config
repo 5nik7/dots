@@ -6,7 +6,7 @@
 
 ### Autostart
 exec_always autotiling -w 1 3 5 7 9
-exec wl-paste --watch cliphist store
+# exec wl-paste --watch cliphist store
 
 ### Variables
 #
@@ -24,7 +24,7 @@ set $filemanager thunar
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
-set $menu dmenu_path | dmenu | xargs swaymsg exec --
+set $menu rofi
 
 include /etc/sway/config-vars.d/*
 
@@ -37,7 +37,7 @@ output * bg /home/njen/dots/walls/Dream.jpg fill
 #
 output * resolution 2560x1410@170Hz position 0,0
 
-set $font "PitagonSansM NFP"
+set $font "JetBrainsMono NF"
 set $font_size 10
 set $cursor_size 16
 
