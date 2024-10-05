@@ -3585,7 +3585,7 @@ print("\\033[1m                          - Bold on")
 |	time=1720307074
 |ls
 |	time=1720307085
-cd
+|d
 |	time=1720307291
 |ls
 |	time=1720307327
@@ -3595,7 +3595,7 @@ cd
 |	time=1720307389
 |ls
 |	time=1720307396
-cd
+|d
 |	time=1720307415
 |link set
 |	time=1720307439
@@ -3701,7 +3701,7 @@ clink info
 |	time=1726202643
 |s
 |	time=1726202647
-env
+|nv
 |	time=1726202726
 cd %LocalAppData%\clink\starship.lua
 |	time=1726202732
@@ -3752,3 +3752,7 @@ eza -1A
 bat komorebi.shim
 |	time=1727505950
 sudo komorebi
+|	time=1728062514
+cd
+|	time=1728062517
+env
