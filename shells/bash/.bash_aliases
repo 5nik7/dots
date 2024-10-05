@@ -1,30 +1,35 @@
-function yy() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		builtin cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
+command_exists() {
+  command -v "$@" &>/dev/null
 }
 
-alias d='yy'
+function y() {
+  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd"
+  fi
+  rm -f -- "$tmp"
+}
+alias d='y'
+alias pbcopy="/mnt/c/Windows/System32/clip.exe"
+alias pbpaste="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -command 'Get-Clipboard'"
 
-alias rlp='source $HOME/.bashrc'
-
-alias ls='ls --color=auto --group-directories-first'
+# alias python="python3"
+# alias py="python3"
 
 alias c='clear'
 alias q='exit'
+
+alias g='git'
 
 alias path='echo $PATH | tr ":" "\n"'
 
 alias so='source'
 
-alias v='$EDITOR'
-alias sv='sudo $EDITOR'
-alias vsh='$EDITOR $DOTFILES/bash/.bashrc'
-
 alias grep='grep --color=auto'
+
+command_exists fzf && command_exists bat && alias preview="fzf --preview 'bat --color \"always\" {}'"
+
 alias cat='bat'
 
 alias ".."="cd .."
@@ -38,11 +43,11 @@ alias "........"="cd ../../../../../../.."
 alias lg='lazygit'
 
 function dd {
-    if [ -z "$1" ]; then
-        explorer.exe .
-    else
-        explorer.exe "$1"
-    fi
+  if [ -z "$1" ]; then
+    explorer.exe .
+  else
+    explorer.exe "$1"
+  fi
 }
 
 alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes && echo -e ""'
@@ -53,21 +58,9 @@ alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-fir
 # }
 
 function weather {
-    if [[ "$1" == "help" ]]; then
-        curl "wttr.in/:help"
-    else
-        curl "wttr.in/Yakima?uFQ$1"
-    fi
+  if [[ "$1" == "help" ]]; then
+    curl "wttr.in/:help"
+  else
+    curl "wttr.in/Yakima?uFQ$1"
+  fi
 }
-
-# bat() {
-#     local index
-#     local args=("$@")
-#     for index in $(seq 0 ${#args[@]}); do
-#         case "${args[index]}" in
-#         -*) continue ;;
-#         *) [ -e "${args[index]}" ] && args[index]="$(cygpath --windows "${args[index]}")" ;;
-#         esac
-#     done
-#     command bat "${args[@]}"
-# }

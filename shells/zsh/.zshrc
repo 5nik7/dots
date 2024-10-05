@@ -41,7 +41,7 @@ export SUDO_PROMPT="passwd: "
 export STARSHIP_CONFIG="$WIN/Users/njen/dev/dots/configs/starship/starship.toml"
 export EDITOR="nvim"
 export GOBIN="$HOME/go/bin"
-export GOROOT="/usr/lib/go"
+export GOROOT="/usr/local/go"
 
 export BAT_THEME="base16"
 export BAT_STYLE="plain"
@@ -108,9 +108,9 @@ unsetopt beep
 
 extend_path "$WIN/Windows"
 extend_path "$WIN/Windows/System32"
-# prepend_path "$HOME/source/julia-1.10.5/bin"
 prepend_path "$WIN/Users/njen/scoop/apps/win32yank/0.1.1"
 prepend_path "$WIN/vscode/bin"
+prepend_path "$HOME/source/wttrbar/target/release"
 prepend_path "$HOME/.local/bin"
 prepend_path "$GOBIN"
 prepend_path "$GOROOT/bin"
@@ -124,6 +124,8 @@ source_file "$ZSH/functions.zsh"
 if [ $(command -v "fzf") ]; then
   source_file "$ZSH/fzf.zsh"
 fi
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 alias rlp='source $HOME/.zshrc && echo "\n ZSH reloaded."'
 
@@ -153,12 +155,15 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
-eval "$(pyenv virtualenv-init -)"
+# export PYENV_ROOT="$HOME/.pyenv"
+# [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+# eval "$(pyenv init -)"
+#
+# eval "$(pyenv virtualenv-init -)"
 
 eval "$(starship init zsh)"
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+autoload -Uz compinit
+zstyle ':completion:*' menu select
+fpath+=~/.zfunc

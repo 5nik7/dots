@@ -6,9 +6,16 @@
   // "width": 1280, // Waybar width
   "spacing": 4, // Gaps between modules (4px)
   // Choose the order of the modules
-  "modules-left": ["sway/workspaces", "sway/mode"],
+  "modules-left": [
+    "sway/workspaces",
+    "cpu",
+    "memory",
+    "custom/weather",
+    "clock",
+  ],
   "modules-center": ["sway/window"],
-  "modules-right": ["cpu", "memory"],
+  // "modules-center": ["sway/window"],
+  // "modules-right": ["cpu", "memory"],
   // Modules configuration
   // "sway/workspaces": {
   //     "disable-scroll": true,
@@ -29,11 +36,18 @@
   "sway/mode": {
     "format": "<span style=\"italic\">{}</span>",
   },
-  // "clock": {
-  //   // "timezone": "America/New_York",
-  //   "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-  //   "format-alt": "{:%Y-%m-%d}",
-  // },
+  "custom/weather": {
+    "format": "{}",
+    "exec": "curl 'wttr.in/yakima?u&format=%c%t'",
+    "interval": 1800,
+    "on-click": "firefox 'https://www.meteoblue.com/en/weather/week/ljubljana_slovenia_3196359'",
+  },
+
+  "clock": {
+    "timezone": "America/Los_Angeles",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+    "format-alt": "{:%Y-%m-%d}",
+  },
   "cpu": {
     "format": "{usage}% ",
     "tooltip": false,

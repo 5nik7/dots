@@ -35,14 +35,14 @@ set $filemanager thunar
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
-set $menu "rofi -combi-modi window,drun,ssh,run -show combi -show-icons"
+# set $menu "rofi -combi-modi window,drun,ssh,run -show combi -show-icons"
 
 include /etc/sway/config-vars.d/*
 
 ### Output configuration
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg /home/njen/dots/walls/Dream.jpg fill
+# output * bg /home/njen/dots/walls/Dream.jpg fill
 #
 # Example configuration:
 #
@@ -54,7 +54,7 @@ set $cursor_size 16
 
 # output "*" background ~/.dotfiles/wallpapers/dream.jpg fill
 # output "*" resolution 2560x1410@170Hz scale 1 pos 0 0
-output "*" resolution 2560x1410@170Hz pos 0 0
+# output "*" resolution 2560x1410@170Hz pos 0 0
 
 font pango:$font $font_size
 
@@ -112,7 +112,7 @@ popup_during_fullscreen smart
     # Start your launcher
     bindsym $mod+d exec $menu
     
-    bindsym $mod+n exec --no-startup-id flash_window
+    # bindsym $mod+n exec --no-startup-id flash_window
 
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
@@ -248,22 +248,22 @@ for_window [window_type="menu"] floating enable
 # Status Bar:
 #
 # Read `man 5 sway-bar` for more information about this section.
-bar {
-    position top
-
-    # When the status_command prints a new line to stdout, swaybar updates.
-    # The default just shows the current date and time.
-    status_command while date +'%Y-%m-%d %I:%M:%S %p'; do sleep 1; done
-
-    colors {
-        statusline #ffffff
-        background #323232
-        inactive_workspace #32323200 #32323200 #5c5c5c
-    }
-}
-
 # bar {
-#     swaybar_command waybar
+#     position top
+#
+#     # When the status_command prints a new line to stdout, swaybar updates.
+#     # The default just shows the current date and time.
+#     status_command while date +'%Y-%m-%d %I:%M:%S %p'; do sleep 1; done
+#
+#     colors {
+#         statusline #ffffff
+#         background #323232
+#         inactive_workspace #32323200 #32323200 #5c5c5c
+#     }
 # }
+
+bar {
+    swaybar_command waybar
+}
 
 include /etc/sway/config.d/*
