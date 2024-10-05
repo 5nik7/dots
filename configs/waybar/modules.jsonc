@@ -1,0 +1,45 @@
+// -*- mode: jsonc -*-
+{
+  // Modules configuration
+  "sway/workspaces": {
+    "disable-scroll": true,
+    "format": "{icon}",
+    "format-icons": {
+      "1": "",
+      "2": "",
+      "3": "",
+      "4": "",
+      "5": "",
+      "6": "",
+      "7": "",
+      "urgent": "",
+      "focused": "",
+      "default": "",
+    },
+  },
+
+  "sway/mode": {
+    "format": "<span style=\"italic\">{}</span>",
+  },
+  "custom/weather": {
+    "format": "{}",
+    "exec": "curl 'wttr.in/yakima?u&format=%c%t'",
+    "interval": 1800,
+    "on-click": "firefox 'https://www.meteoblue.com/en/weather/week/ljubljana_slovenia_3196359'",
+  },
+
+  "clock": {
+    "timezone": "America/Los_Angeles",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+    "format-alt": "󰸗 {:%Y-%m-%d}",
+  },
+  "cpu": {
+    // "format": "{usage}% ",
+    "format": "{usage}% CPU",
+    "tooltip": false,
+  },
+  "memory": {
+    // "format": "{}% ",
+    "format": "{}% RAM",
+  },
+}
