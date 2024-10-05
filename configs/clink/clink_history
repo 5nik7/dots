@@ -3300,7 +3300,7 @@ cd ..
 |	time=1720206040
 |s
 |	time=1720206054
-d
+|
 |	time=1720206057
 |azi
 |	time=1720208543
@@ -3352,7 +3352,7 @@ yazi
 |	time=1720244888
 |s -lA
 |	time=1720244894
-eza -lA
+|za -lA
 |	time=1720244903
 eza -h
 |	time=1720244906
@@ -3484,7 +3484,7 @@ clink set color.suggestion black
 |	time=1720296705
 |d
 |	time=1720296712
-cd /
+|d /
 |	time=1720296715
 |d -||	time=1720296754
 |d -
@@ -3745,7 +3745,7 @@ l
 |	time=1727505912
 |s
 |	time=1727505914
-ls -la
+|s -la
 |	time=1727505919
 |za -1A
 |	time=1727505936
@@ -3753,7 +3753,7 @@ bat komorebi.shim
 |	time=1727505950
 sudo komorebi
 |	time=1728062514
-cd
+|d
 |	time=1728062517
 |nv
 |	time=1728109050
@@ -3773,13 +3773,13 @@ clink info
 |	time=1728109092
 ll
 |	time=1728109094
-ls
+|s
 |	time=1728109096
 eza -1A
 |	time=1728109107
 |
 |	time=1728109118
-ls
+|s
 |	time=1728109121
 PATH | tr ";" "\n"
 |	time=1728151814
@@ -3821,14 +3821,56 @@ pwsh
 |	time=1728153476
 |
 |	time=1728153478
-q
+|
 |	time=1728153633
-c
+|
 |	time=1728153635
-cls
+|ls
 |	time=1728153638
 |lavours
 |	time=1728153646
 flavours info
 |	time=1728153691
+|lavours
+|	time=1728154791
 flavours
+|	time=1728154830
+flavours generate "C:\wallpapers\old\girl.jpg" 
+|	time=1728154886
+flavours generate -s thegirl -n thegirl -a njen dark C:\wallpapers\old\girl.jpg
+|	time=1728154891
+|
+|	time=1728154975
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | nvim
+|	time=1728154986
+|lavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | code
+|	time=1728154994
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | code
+|	time=1728155019
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | code {}
+|	time=1728155041
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" | code ${@}
+|	time=1728155077
+flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" >> base24-girl.json 
+|	time=1728155098
+d
+|	time=1728155099
+c
+|	time=1728155100
+cls
+|	time=1728155102
+cd /
+|	time=1728155103
+ls
+|	time=1728155104
+ls -la
+|	time=1728155113
+cd
+|	time=1728155115
+eza -lA
+|	time=1728155125
+|
+|	time=1728162846
+|
+|	time=1728162848
+q
