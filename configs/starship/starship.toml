@@ -1,7 +1,7 @@
 command_timeout = 3000
 scan_timeout = 15
 
-format = """ $os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$shell$character"""
+format = """$os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$shell$character"""
 
 add_newline = true
 
@@ -26,7 +26,7 @@ style = "fg:black bg:none"
 
 [os]
 format = '[$symbol]($style)'
-style = "bright-blue"
+style = "blue"
 disabled = false
 
 [os.symbols]
@@ -70,10 +70,10 @@ RockyLinux = " "
 Redox = "󰀘 "
 Solus = "󰠳 "
 SUSE = " "
-# Ubuntu = "ubuntu"
-Ubuntu = "◎ "
+# Ubuntu = 'Ubuntu:'
+# Ubuntu = "◎ "
 # Ubuntu = " "
-# Ubuntu = " "
+Ubuntu = " "
 Unknown = " "
 Void = " "
 Windows = ""
