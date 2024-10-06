@@ -22,7 +22,7 @@ param(
 $ENV:DRIP = "$ENV:DOTS\drip"
 $ENV:WALLS = "$ENV:DOTS\walls"
 if ($t) {
-  $wall = $(Get-Content "$ENV:DRIP\themes\$t\wall")
+  $wall = $(Get-Content "$ENV:DRIP\colorschemes\dark\$t.wall")
   $wp = "$ENV:WALLS\$wall"
   wal --theme "$t" -n
   Set-Wall -PicturePath "$wp" -Style Fill
