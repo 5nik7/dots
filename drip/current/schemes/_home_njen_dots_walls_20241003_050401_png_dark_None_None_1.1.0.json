@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/njen/dots/walls/20241003_050401.png",
+    "alpha": "100",
+    "special": {
+        "background": "#040D14",
+        "foreground": "#a7cec8",
+        "cursor": "#a7cec8"
+    },
+    "colors": {
+        "color0": "#040D14",
+        "color1": "#024757",
+        "color2": "#065D6E",
+        "color3": "#CC334E",
+        "color4": "#93847D",
+        "color5": "#167486",
+        "color6": "#099B9A",
+        "color7": "#a7cec8",
+        "color8": "#74908c",
+        "color9": "#024757",
+        "color10": "#065D6E",
+        "color11": "#CC334E",
+        "color12": "#93847D",
+        "color13": "#167486",
+        "color14": "#099B9A",
+        "color15": "#a7cec8"
+    }
+}
