@@ -123,6 +123,7 @@ prepend_path "$GOBIN"
 prepend_path "$GOROOT/bin"
 prepend_path "$HOME/.local/share/bob/nvim-bin"
 prepend_path "$DOTS/bin"
+prepend_path "$HOME/.local/kitty.app/bin"
 
 source_file "$ZSH/aliases.zsh"
 source_file "$ZSH/completions.zsh"
