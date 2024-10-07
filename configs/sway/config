@@ -9,37 +9,38 @@ exec nwg-look -a
 exec sworkstyle &> /tmp/sworkstyle.log
 exec_always --no-startup-id flashfocus
 exec waypaper --restore
-exec_always ironbar
+# exec ironbar
 
 xwayland enable
 
 ### Appearance ###
 ## Colors ##
 # Start flavours
-## Base16 girl
+## Base16 Dream
 # Author: njen
 
-set $base00 #18282f
-set $base01 #3b4a51
-set $base02 #5e6b72
-set $base03 #818c94
-set $base04 #a3aeb5
-set $base05 #c6cfd7
-set $base06 #cfd6dd
-set $base07 #d7dde3
-set $base08 #8c94a4
-set $base09 #8bacc4
-set $base0A #88708d
-set $base0B #727695
-set $base0C #577c99
-set $base0D #7d758a
-set $base0E #537ca2
-set $base0F #8c7177
+set $base00 #1c273d
+set $base01 #384557
+set $base02 #546372
+set $base03 #70818c
+set $base04 #8da0a7
+set $base05 #a9bec2
+set $base06 #b6c7cb
+set $base07 #c3d1d4
+set $base08 #ab655d
+set $base09 #4590b6
+set $base0A #6d6dcf
+set $base0B #43bbca
+set $base0C #537ba8
+set $base0D #6977a3
+set $base0E #5978b6
+set $base0F #5b77b8
 # End flavours
-client.focused           $base02 $base00 $base05 $base00 $base00
-client.unfocused         $base02 $base00 $base04 $base00 $base00
-client.focused_inactive  $base02 $base00 $base04 $base00 $base00
-client.urgent            $base02 $base00 $base04 $base00 $base00
+# target                 title       bg           text        indicator   border
+client.focused           $base02     $base00      $base05     $base00     $base01
+client.unfocused         $base02     $base00      $base04     $base00     $base00
+client.focused_inactive  $base02     $base00      $base04     $base00     $base00
+client.urgent            $base02     $base00      $base04     $base00     $base00
 
 ### Variables
 #
@@ -83,7 +84,7 @@ font pango:$font $font_size
 default_border pixel 1
 default_floating_border normal
 gaps inner 2
-gaps outer 1
+gaps outer 3
 
 hide_edge_borders smart
 smart_borders on
