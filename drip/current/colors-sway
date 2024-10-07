@@ -1,21 +1,21 @@
-set $wallpaper /home/njen/.config/wpg/wallpapers/Dream.jpg
+set $wallpaper None
 
 set $background #142444
-set $foreground #e4f0ff
+set $foreground #E4F0FF
 
 set $color0 #142444
-set $color1 #907277
-set $color2 #4C5370
-set $color3 #A5897F
-set $color4 #375785
-set $color5 #635E70
-set $color6 #5B6789
-set $color7 #d3eefa
+set $color1 #FF5673
+set $color2 #00FFCC
+set $color3 #FFAA82
+set $color4 #3D81FF
+set $color5 #A798F0
+set $color6 #00E5FF
+set $color7 #D3EEFA
 set $color8 #334775
-set $color9 #cb838f
-set $color10 #56649d
-set $color11 #e9a992
-set $color12 #3b6eb9
-set $color13 #7a6c9e
-set $color14 #677ec0
-set $color15 #e4f0ff
+set $color9 #FF859B
+set $color10 #8FF8B5
+set $color11 #FFC990
+set $color12 #508FF8
+set $color13 #ABAFFF
+set $color14 #30F1EA
+set $color15 #E4F0FF
