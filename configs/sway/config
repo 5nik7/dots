@@ -9,6 +9,7 @@ exec nwg-look -a
 exec sworkstyle &> /tmp/sworkstyle.log
 exec_always --no-startup-id flashfocus
 exec waypaper --restore
+exec_always ironbar
 
 xwayland enable
 
@@ -28,7 +29,7 @@ set $filemanager thunar
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
-# set $menu "rofi -combi-modi window,drun,ssh,run -show combi -show-icons"
+set $menu "wofi --show run"
 
 include /etc/sway/config-vars.d/*
 

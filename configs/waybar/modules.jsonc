@@ -27,7 +27,9 @@
     "interval": 1800,
     "on-click": "firefox 'https://www.meteoblue.com/en/weather/week/ljubljana_slovenia_3196359'",
   },
-
+  "custom/spacer": {
+    "format": "|",
+  },
   "clock": {
     "timezone": "America/Los_Angeles",
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://f.jstanger.dev/github/ironbar/schema.json",
+  "position": "bottom",
+  "anchor_to_edges": true,
+  "icon_theme": "Papirus-Dark",
+  "height": 20,
+  "margin.top": 5,
+  "start": [
+    {
+      "type": "workspaces",
+      "all_monitors": false
+    }
+  ],
+  "end": [
+    {
+      "type": "label",
+      "label": "󰃚",
+      "class": "seperator"
+    },
+    {
+      "type": "sys_info",
+      "interval": {
+        "memory": 30,
+        "cpu": 1
+      },
+      "format": [
+        " {cpu_percent}%",
+        " {memory_used} / {memory_total} GB ({memory_percent}%)"
+      ]
+    },
+    {
+      "type": "custom",
+      "class": "clock",
+      "bar": [
+        {
+          "type": "image",
+          "src": "/home/njen/.config/ironbar/images/clock-12.svg",
+          "size": 20,
+          "class": "logo"
+        },
+        {
+          "type": "label",
+          "label": " {{poll:60000:date +'%H:%M'}}"
+        }
+      ]
+    }
+  ]
+}
