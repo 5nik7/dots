@@ -1,21 +1,21 @@
 set $wallpaper /home/njen/.config/wpg/wallpapers/girl.jpg
 
 set $background #181e21
-set $foreground #c5c6c7
+set $foreground #fdffff
 
 set $color0 #181e21
-set $color1 #7b99aa
-set $color2 #497baa
-set $color3 #5f85aa
-set $color4 #8983aa
-set $color5 #a39ea2
-set $color6 #aa8486
+set $color1 #a39ea2
+set $color2 #7999aa
+set $color3 #aa8586
+set $color4 #497baa
+set $color5 #8a86a9
+set $color6 #5f84aa
 set $color7 #c5c6c7
-set $color8 #515658
-set $color9 #7b99aa
-set $color10 #497baa
-set $color11 #5f85aa
-set $color12 #8983aa
-set $color13 #a39ea2
-set $color14 #aa8486
-set $color15 #c5c6c7
+set $color8 #2c383e
+set $color9 #e8b8df
+set $color10 #8accef
+set $color11 #f0999b
+set $color12 #4fa0ec
+set $color13 #a49aef
+set $color14 #6aabee
+set $color15 #fdffff

@@ -1,7 +1,0 @@
-# target                 title          bg                text          indicator      border
-client.focused           $color4        $background       $foreground   $color4        $color4
-client.focused_inactive  $color8        $background       $foreground   $background    $background
-client.unfocused         $color8        $background       $foreground   $background    $background
-client.urgent            $color1        $background       $color1       $color1        $color1
-client.placeholder       $background    $background       $foreground   $background    $background
-client.background        $background

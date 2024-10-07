@@ -10,13 +10,9 @@
 
     "modules-left": [
       "sway/workspaces",
-      "custom/spacer",
       "cpu",
-      "custom/spacer",
       "memory",
-      "custom/spacer",
       "custom/weather",
-      "custom/spacer",
       "clock",
     ],
     "modules-center": ["sway/window"],

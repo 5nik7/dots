@@ -174,8 +174,6 @@ alias edit='$EDITOR'
 alias v='$EDITOR'
 alias sv="sudo $EDITOR"
 
-. "$HOME/.cargo/env"
-
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
 export NVM_DIR="$HOME/.nvm"
@@ -186,6 +184,8 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
-eval "$(pyenv virtualenv-init -)"
+# eval "$(pyenv virtualenv-init -)"
+
+. "$HOME/.cargo/env"
 
 eval "$(starship init bash)"

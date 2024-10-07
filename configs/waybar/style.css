@@ -1,4 +1,8 @@
 @import url("file:///home/njen/.cache/wal/colors-waybar.css");
+@import url("file:///home/njen/.config/waybar/colors.css");
+
+@define-color bg1 @base00;
+@define-color bg2 @base01;
 
 * {
   border: none;
@@ -10,11 +14,11 @@
 }
 
 window#waybar {
-  background-color: @background;
+  background-color: @color0;
   color: @color7;
   transition-property: background-color;
   transition-duration: 0.2s;
-  box-shadow: inset 0 -2px @color0;
+  /* box-shadow: inset 0 -3px @color8; */
 }
 
 window#waybar.hidden {
@@ -23,12 +27,12 @@ window#waybar.hidden {
 
 window#waybar.empty {
   background-color: @transparent;
-  box-shadow: inset 0 -2px @transparent;
+  box-shadow: inset 0 -3px @transparent;
 }
 
 window#waybar.solo {
-  background-color: @background;
-  box-shadow: inset 0 -2px @background;
+  background-color: @color0;
+  /* box-shadow: inset 0 -3px @color8; */
 }
 
 /* #workspaces button:first-child { */
@@ -40,42 +44,45 @@ window#waybar.solo {
 /*   border-bottom-right-radius: 20px; */
 /* } */
 
-#workspaces button {
-  /* background: rgba(255, 255, 255, 0.05); */
-  /* background: @color0; */
-  /* box-shadow: inset 0 -2px @color0; */
-  padding: 0 0.5rem;
-  /* color: @color7; */
-  /* border-radius: 20px; */
-}
-
 #window {
 }
 
 #workspaces {
   /* background: @color0; */
-  background: @color0;
+  background-color: @color0;
+  margin: 1px;
   border-radius: 0px;
   box-shadow: inset 0 -2px @color0;
 }
 
+#workspaces button {
+  /* background: rgba(255, 255, 255, 0.05); */
+  background-color: @bg1;
+  /* box-shadow: inset 0 -2px @color0; */
+  padding: 0 12px;
+  /* margin: 1px; */
+  box-shadow: inset 0 -2px @color0;
+  /* color: @color7; */
+  /* border-radius: 20px; */
+}
+
 #workspaces button.active {
   /* background: shade(@color1, 1.5); */
-  background: @color0;
+  background-color: @bg2;
   color: @color1;
-  box-shadow: inset 0 -2px @color0;
+  box-shadow: inset 0 -1px @color0;
 }
 
 #workspaces button.focused {
   /* background: @color0; */
-  background: rgba(255, 255, 255, 0.2);
+  background-color: @color1;
   color: @color7;
-  box-shadow: inset 0 -2px @color1;
+  box-shadow: inset 0 -1px @color1;
 }
 
 #workspaces button.urgent {
   background-color: @color0;
-  box-shadow: inset 0 -2px @color0;
+  box-shadow: inset 0 -1px @color0;
 }
 
 #mode {
@@ -101,36 +108,31 @@ window#waybar.solo {
 #idle_inhibitor,
 #custom-weather,
 #mpd {
-  background-color: @color0;
-  padding: 0 0.5rem;
-  margin: 0px 0px;
+  background-color: @bg1;
+  padding: 0 10px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  margin-right: 1px;
+  margin-left: 1px;
   color: @color7;
   box-shadow: inset 0 -2px @color0;
+  border-radius: 0px 0px 0px 0px;
   /* margin: 0 0.5rem; */
 }
 
-#custom-spacer {
-  background-color: @transparent;
-  padding: 0 0px;
-  color: rgba(255, 255, 255, 0);
+.modules-left {
+  background-color: @color0;
 }
 
-/* If workspaces is the leftmost module, omit left margin */
-.modules-left > widget:first-child > #workspaces {
-  margin-left: 0px;
-}
-
-/* If workspaces is the rightmost module, omit right margin */
-.modules-right > widget:last-child > #workspaces {
-  margin-right: 0px;
-}
-
-#clock {
-  color: @color7;
-  /* border-radius: 0px 20px 20px 0px; */
-  border-radius: 0px 0px 0px 0px;
-  margin-right: 0px;
-}
+/* #cpu { */
+/*   background-color: @color3; */
+/*   color: @color7; */
+/* } */
+/**/
+/* #clock { */
+/*   background-color: @color2; */
+/*   color: @color7; */
+/* } */
 
 @keyframes blink {
   to {

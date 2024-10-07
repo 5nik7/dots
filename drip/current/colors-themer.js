@@ -1,20 +1,20 @@
 module.exports.colors = {
   dark: {
     accent0: "#181e21",
-    accent1: "#7b99aa",
-    accent2: "#497baa",
-    accent3: "#5f85aa",
-    accent4: "#8983aa",
-    accent5: "#a39ea2",
-    accent6: "#c5c6c7",
+    accent1: "#a39ea2",
+    accent2: "#7999aa",
+    accent3: "#aa8586",
+    accent4: "#497baa",
+    accent5: "#8a86a9",
+    accent6: "#fdffff",
     accent7: "#c5c6c7",
     shade0:  "#181e21",
-    shade1:  "#7b99aa",
-    shade2:  "#497baa",
-    shade3:  "#5f85aa",
-    shade4:  "#8983aa",
-    shade5:  "#a39ea2",
-    shade6:  "#aa8486",
-    shade7:  "#c5c6c7"
+    shade1:  "#e8b8df",
+    shade2:  "#8accef",
+    shade3:  "#f0999b",
+    shade4:  "#4fa0ec",
+    shade5:  "#a49aef",
+    shade6:  "#6aabee",
+    shade7:  "#fdffff"
   },
 };
