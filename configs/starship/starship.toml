@@ -121,7 +121,8 @@ truncation_length = 0
 # truncation_symbol = "…/"
 # home_symbol = ' '
 truncate_to_repo = false
-use_os_path_sep = true
+use_os_path_sep = false
+# use_os_path_sep = true
 use_logical_path = true
 read_only = " ◈"
 read_only_style = 'bright-red'
@@ -175,7 +176,9 @@ style = 'red'
 symbol = ' '
 
 [character]
-success_symbol = '[  ](cyan)'
-error_symbol = '[  ](red)'
-vimcmd_symbol = '[  ](bright-black)'
-format = '$symbol'
+success_symbol = '[](cyan)'
+error_symbol = '[](red)'
+vimcmd_symbol = '[](black)'
+# vimcmd_symbol = '[▎](black)'
+# vimcmd_symbol = '[▎](blue)'
+format = '$symbol '
