@@ -1,0 +1,20 @@
+|	time=1730637317
+c
+|	time=1730637319
+ckear
+|	time=1730637320
+cls
+|	time=1730637328
+clear
+|	time=1730637334
+clink
+|	time=1730637338
+clink info
+|	time=1730637348
+clink set
+|	time=1730637360
+path
+|	time=1730637368
+PATH | tr ";" "\n"
+|	time=1730637380
+env

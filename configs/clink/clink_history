@@ -3741,7 +3741,7 @@ g p
 |	time=1727505909
 |l
 |	time=1727505910
-l
+|
 |	time=1727505912
 |s
 |	time=1727505914
@@ -3771,7 +3771,7 @@ clink info
 |	time=1728109092
 |ls
 |	time=1728109092
-ll
+|l
 |	time=1728109094
 |s
 |	time=1728109096
@@ -3861,9 +3861,9 @@ cls
 |	time=1728155102
 cd /
 |	time=1728155103
-ls
+|s
 |	time=1728155104
-ls -la
+|s -la
 |	time=1728155113
 cd
 |	time=1728155115
@@ -3873,4 +3873,22 @@ eza -lA
 |	time=1728162846
 |
 |	time=1728162848
+|
+|	time=1728162866
+|
+|	time=1730527087
+l
+|	time=1730527088
+ll
+|	time=1730527089
+ls
+|	time=1730527091
+ls -la
+|	time=1730527135
+.\ArmouryCrate.exe
+|	time=1730527141
+sudo .\ArmouryCrate.exe
+|	time=1730527291
+|
+|	time=1730527292
 q
