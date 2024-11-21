@@ -2482,7 +2482,7 @@ cd
 |	time=1715245126
 |;s
 |	time=1715245127
-c;s
+|;s
 |	time=1715245132
 |ls
 |	time=1715245134
@@ -2490,11 +2490,11 @@ c;s
 |	time=1715245154
 |hich bash
 |	time=1715245168
-which sh
+|hich sh
 |	time=1715245173
 sh -i
 |	time=1715245194
-sh
+|h
 |	time=1715245239
 |wd
 |	time=1715245251
@@ -2542,7 +2542,7 @@ cd ~/
 |	time=1715245440
 |onda
 |	time=1715245450
-which python
+|hich python
 |	time=1715245474
 conda init --help
 |	time=1715245491
@@ -3040,7 +3040,7 @@ cd users\nickf\
 |	time=1718103999
 |wd
 |	time=1718104015
-which bash
+|hich bash
 |	time=1718104029
 which git
 |	time=1718104040
@@ -3262,7 +3262,7 @@ which clink.exe
 |	time=1719607304
 |ls
 |	time=1719607308
-clear
+|lear
 |	time=1719607322
 |link
 |	time=1719607331
@@ -3346,7 +3346,7 @@ lls
 |	time=1720244661
 |za -lA
 |	time=1720244667
-yazi
+|azi
 |	time=1720244883
 |l
 |	time=1720244888
@@ -3659,7 +3659,7 @@ clink set color.input green
 |	time=1720308317
 |
 |	time=1720319968
-path
+|ath
 |	time=1720319973
 |ATH | tr ";" "\n"
 |	time=1720319981
@@ -3765,7 +3765,7 @@ sudo komorebi
 |	time=1728109074
 |link update
 |	time=1728109083
-clink info
+|link info
 |	time=1728109090
 |
 |	time=1728109092
@@ -3781,7 +3781,7 @@ eza -1A
 |	time=1728109118
 |s
 |	time=1728109121
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1728151814
 |link
 |	time=1728151820
@@ -3795,11 +3795,11 @@ clink echo
 |	time=1728152061
 fastfetch
 |	time=1728152073
-clink
+|link
 |	time=1728152076
 clink update
 |	time=1728152081
-clink set
+|link set
 |	time=1728152162
 clink set color.argmatcher green
 |	time=1728152575
@@ -3811,7 +3811,7 @@ ecit
 |	time=1728153407
 |ls
 |	time=1728153410
-env
+|nv
 |	time=1728153436
 env | fzf
 |	time=1728153460
@@ -3853,13 +3853,13 @@ flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\
 |	time=1728155077
 flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\thegirl.yaml" "C:\Users\njen\AppData\Roaming\flavours\base16\templates\vscode\templates\base24.mustache" >> base24-girl.json 
 |	time=1728155098
-d
+|
 |	time=1728155099
-c
+|
 |	time=1728155100
-cls
+|ls
 |	time=1728155102
-cd /
+|d /
 |	time=1728155103
 |s
 |	time=1728155104
@@ -3892,3 +3892,63 @@ sudo .\ArmouryCrate.exe
 |
 |	time=1730527292
 q
+|	time=1730637317
+|
+|	time=1730637319
+ckear
+|	time=1730637320
+|ls
+|	time=1730637328
+clear
+|	time=1730637334
+clink
+|	time=1730637338
+clink info
+|	time=1730637348
+clink set
+|	time=1730637360
+|ath
+|	time=1730637368
+|ATH | tr ";" "\n"
+|	time=1730637380
+env
+|	time=1732186775
+|
+|	time=1732186776
+|ls
+|	time=1732186778
+path
+|	time=1732186781
+PATH | tr ";" "\n"
+|	time=1732186787
+which python
+|	time=1732186788
+which python3
+|	time=1732186811
+d
+|	time=1732186816
+ya
+|	time=1732186821
+yazi
+|	time=1732186834
+|hich sh
+|	time=1732186839
+cd /
+|	time=1732186845
+cd /usr
+|	time=1732186846
+cd /usr/
+|	time=1732186852
+cd /usr/bin/sh
+|	time=1732186866
+c
+|	time=1732186868
+c;s
+|	time=1732186870
+cls
+|	time=1732186872
+which sh
+|	time=1732186877
+sh
+|	time=1732186958
+which bash
