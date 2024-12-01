@@ -1,54 +1,7 @@
-d870 app_context::start_logger  483 ---- 2024/11/30 19:59:39.157 -------------------------------------------------
-d870 app_context::start_logger  486 Host process is 'cmd.exe' (pid 55408)
-d870 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
-d870 app_context::start_logger  493 DLL base is 00007FF9E80F0000
-d870 app_context::start_logger  508 Windows version 10.0.26100 (x64)
-d870 app_context::start_logger  510 Clink version 1.7.5.aee4f7 (x64)
-d870 hook_setter::hook_setter  159 >>> Started hook transaction.
-d870 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF77A960000.
-d870 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-d870 find_iat                  124 Found import at 00007FF77A99AE50 (value is 00007FFA97F5CDE0).
-d870 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF77A960000.
-d870 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-d870 find_iat                  124 Found import at 00007FF77A99AE48 (value is 00007FFA97F6EDD0).
-d870 hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF77A960000.
-d870 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-d870 find_iat                  124 Found import at 00007FF77A99AAB0 (value is 00007FFA97F57120).
-d870 hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF77A960000.
-d870 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-d870 find_iat                  124 Found import at 00007FF77A99AE68 (value is 00007FFA97F34C20).
-d870 hook_setter::commit       207 <<< Hook transaction committed.
-d870 hook_setter::hook_setter  159 >>> Started hook transaction.
-d870 hook_setter::detach_iat   359 Attempting to unhook 00007FF9E8116260 from GetEnvironmentVariableW in IAT for module 00007FF77A960000.
-d870 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-d870 find_iat                  124 Found import at 00007FF77A99AE68 (value is 00007FF9E8116260).
-d870 hook_setter::commit       207 <<< Hook transaction committed.
-d870 hook_setter::hook_setter  159 >>> Started hook transaction.
-d870 hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF77A960000.
-d870 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-d870 find_iat                  124 Found import at 00007FF77A99AA90 (value is 00007FFA97F72E80).
-d870 hook_setter::commit       207 <<< Hook transaction committed.
-d870 hook_setter::hook_setter  159 >>> Started hook transaction.
-d870 hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF77A960000.
-d870 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
-d870 find_iat                  124 Found import at 00007FF77A99AB10 (value is 00007FFA97F46F80).
-d870 hook_setter::commit       207 <<< Hook transaction committed.
-d870 win_screen_buffer::begin  397 Using native terminal support (auto mode found 'WindowsTerminal.exe').
-d870 reset_handle              144 resetting mismatched stdout handle
-d870 reset_handle              144 resetting mismatched stderr handle
-d870 host_lua::load_scripts    199 Loaded 4 Lua scripts in 104 ms
-d870 @~clink~/app/update.lua   423 Clink updater: too soon to check for updates (1732993731 vs 1733025579).
-d870 history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
-d870 history_db::compact      1606 History:  754 active, 1283 deleted
-d870 reset_handle              144 resetting mismatched stdout handle
-d870 reset_handle              144 resetting mismatched stderr handle
-d870 history_db::compact      1606 History:  753 active, 1284 deleted
-d870 reset_handle              144 resetting mismatched stdout handle
-d870 reset_handle              144 resetting mismatched stderr handle
-d870 history_db::compact      1606 History:  753 active, 1284 deleted
-d870 reset_handle              144 resetting mismatched stdout handle
-d870 reset_handle              144 resetting mismatched stderr handle
-d870 history_db::compact      1606 History:  753 active, 1284 deleted
-d870 reset_handle              144 resetting mismatched stdout handle
-d870 reset_handle              144 resetting mismatched stderr handle
-d870 history_db::compact      1606 History:  752 active, 1285 deleted
+bd80 app_context::start_logger  483 ---- 2024/11/30 22:17:16.617 -------------------------------------------------
+bd80 app_context::start_logger  486 Host process is 'cmd.exe' (pid 48512)
+bd80 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
+bd80 app_context::start_logger  493 DLL base is 00007FF9E6390000
+bd80 app_context::start_logger  508 Windows version 10.0.26100 (x64)
+bd80 app_context::start_logger  510 Clink version 1.7.5.aee4f7 (x64)
+bd80 host_cmd::validate        305 Host is not interactive; cancelling inject.
