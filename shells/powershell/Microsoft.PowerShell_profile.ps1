@@ -1,22 +1,35 @@
-﻿$ENV:DOTS = "$HOME\dev\dots"
-# $DOTS = $ENV:DOTS
-
+﻿$ENV:DOTS = "$ENV:USERPROFILE\dev\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
-# $DOTFILES = $ENV:DOTFILES
-
 $ENV:PSDOT = "$ENV:DOTS\shells\powershell"
-# $PSDOT = $ENV:PSDOT
-
 $ENV:BASHDOT = "$ENV:DOTS\shells\bash"
-# $BASHDOT = $ENV:BASHDOT
-
 $ENV:ZSHDOT = "$ENV:DOTS\shells\zsh"
-# $ZSHDOT = $ENV:ZSHDOT
+$ENV:PROJECTS = "$ENV:USERPROFILE\dev"
 
-$ENV:PROJECTS = "$HOME\dev"
-# $PROJECTS = $ENV:PROJECTS
+$ENV:DRIP = "$ENV:DOTS\drip"
+$ENV:WALLS = "$ENV:DOTS\walls"
 
-foreach ( $includeFile in ("environment", "functions", "aliases", "lab") ) {
+$ENV:NVM_HOME = "$ENV:APPDATA\nvm"
+$ENV:NVM_SYMLINK = "$ENV:HOMEDRIVE\node"
+$ENV:GOPATH = "$ENV:USERPROFILE\go"
+$ENV:GOBIN = "$ENV:USERPROFILE\go\bin"
+
+$ENV:DOCUMENTS = [Environment]::GetFolderPath("mydocuments")
+$ENV:DOWNLOADS = "$ENV:USERPROFILE\Downloads"
+
+$ENV:STARSHIP_CACHE = "$ENV:LOCALAPPDATA\Temp"
+$ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
+$ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
+$GITBIN = "C:\Git\usr\bin"
+$ENV:YAZI_FILE_ONE = "$GITBIN\file.exe"
+$BAT_THEME = if ($ENV:THEME) { $ENV:THEME }
+else { 'base16' }
+$ENV:BAT_THEME = $BAT_THEME
+
+$TIC = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' TranscodedImageCache -ErrorAction Stop).TranscodedImageCache
+$wallout = [System.Text.Encoding]::Unicode.GetString($TIC) -replace '(.+)([A-Z]:[0-9a-zA-Z\\])+', '$2'
+$ENV:WALLPAPER = $wallout
+
+foreach ( $includeFile in ("functions", "aliases", "lab") ) {
   Unblock-File "$ENV:PSDOT\$includeFile.ps1"
   . "$ENV:PSDOT\$includeFile.ps1"
 }
@@ -31,17 +44,6 @@ if (Test-Path($ENV:DOTBIN)) {
   Add-Path -Path $ENV:DOTBIN
 }
 
-# pyenv-venv init
-
-function ReloadProfile {
-  & $PROFILE
-  Write-Host -ForegroundColor DarkGray '┌───────────────────┐'
-  Write-Host -ForegroundColor DarkGray '│' -NoNewline
-  Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
-  Write-Host -ForegroundColor DarkGray '│'
-  Write-Host -ForegroundColor DarkGray '└───────────────────┘'
-}
-
 if ($host.Name -eq 'ConsoleHost') {
   Import-Module PSReadLine
 
@@ -49,9 +51,9 @@ if ($host.Name -eq 'ConsoleHost') {
     HistoryNoDuplicates           = $true
     HistorySearchCursorMovesToEnd = $true
     HistorySearchCaseSensitive    = $false
-    MaximumHistoryCount           = "10000"
+    MaximumHistoryCount           = "50000"
     ShowToolTips                  = $true
-    ContinuationPrompt            = " "
+    ContinuationPrompt            = " "
     BellStyle                     = "None"
     PredictionSource              = "History"
     EditMode                      = "Vi"

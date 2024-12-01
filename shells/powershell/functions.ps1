@@ -220,3 +220,13 @@ function colors {
     Write-Host " on $bgcolor"
   }
 }
+
+function ReloadProfile {
+  & $PROFILE
+  Write-Host ' '
+  Write-Host -ForegroundColor Black '  ┌───────────────────┐'
+  Write-Host -ForegroundColor Black '  │' -NoNewline
+  Write-Host -ForegroundColor Magenta ' Profile reloaded. ' -NoNewline
+  Write-Host -ForegroundColor Black '│'
+  Write-Host -ForegroundColor Black '  └───────────────────┘'
+}

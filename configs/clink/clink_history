@@ -4037,7 +4037,7 @@ set PYENV_VERSION
 |	time=1732996313
 set PYENV_VERSION=pyzoo
 |	time=1732996314
-set
+|et
 |	time=1732996498
 cd
 |	time=1732996501
@@ -4066,3 +4066,7 @@ pyenv-venv activate venv3.12.7
 ls
 |	time=1732997276
 env
+|	time=1733025470
+set
+|	time=1733025484
+set STARSHIP_CONFIG
