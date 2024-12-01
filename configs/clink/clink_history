@@ -4027,7 +4027,7 @@ clink set
 |	time=1732994704
 pwsh
 |	time=1732994835
-q
+|
 |	time=1732996297
 set PYENV_VERSION pyzoo
 |	time=1732996302
@@ -4065,8 +4065,16 @@ pyenv-venv activate venv3.12.7
 |	time=1732997225
 ls
 |	time=1732997276
-env
+|nv
 |	time=1733025470
 set
 |	time=1733025484
 set STARSHIP_CONFIG
+|	time=1733025580
+env
+|	time=1733025609
+setx STARSHIP_CONFIG
+|	time=1733025622
+setx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
+|	time=1733025629
+q

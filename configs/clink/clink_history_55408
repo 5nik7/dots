@@ -1,8 +1,0 @@
-|	time=1733025580
-env
-|	time=1733025609
-setx STARSHIP_CONFIG
-|	time=1733025622
-setx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
-|	time=1733025629
-q

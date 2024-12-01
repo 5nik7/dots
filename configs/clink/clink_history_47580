@@ -1,0 +1,30 @@
+|	time=1733034169
+clink
+|	time=1733034174
+clink info
+|	time=1733034247
+cd C:\Users\njen\AppData\Local
+|	time=1733034251
+cd clink
+|	time=1733034252
+|
+|	time=1733034253
+|s
+|	time=1733034255
+ls -la
+|	time=1733034266
+bat clink_settings 
+|	time=1733034277
+clink set
+|	time=1733034377
+clink set | nvim
+|	time=1733034442
+..
+|	time=1733034442
+l
+|	time=1733034443
+ls
+|	time=1733034445
+eza
+|	time=1733034448
+exa
