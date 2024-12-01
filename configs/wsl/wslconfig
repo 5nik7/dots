@@ -7,3 +7,5 @@ debugConsole=false
 [experimental]
 autoMemoryReclaim=dropcache
 sparseVhd=true
+networkingMode=virtioproxy
+hostAddressLoopback=true

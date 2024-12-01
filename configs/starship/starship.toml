@@ -24,7 +24,7 @@ disabled = true
 
 [fill]
 symbol = ''
-style = '#1f2e59'
+style = 'bright-black dimmed'
 
 [os]
 format = '[$symbol]($style)'
@@ -155,13 +155,13 @@ detect_folders = []
 symbol = ' 󰎙 '
 style = 'bright-yellow'
 version_format = '${raw}'
-format = '([ ](#1f2e59)[$symbol($version) ]($style))'
+format = '([ ](bright-black dimmed)[$symbol($version) ]($style))'
 disabled = false
 
 # [ruby]
 # symbol = '  '
 # style = 'bright-red'
-# format = '([  ](#1f2e59))[$symbol($version)]($style))'
+# format = '([  ](bright-black dimmed))[$symbol($version)]($style))'
 
 # [conda]
 # symbol = '🅒 '
@@ -169,7 +169,7 @@ disabled = false
 # format = '[$symbol$environment](green) '
 
 [python]
-format = '([ ](#1f2e59)[${symbol}(${version})( [\($virtualenv\)](green italic)) ]($style))'
+format = '([ ](bright-black dimmed)[${symbol}(${version})( [\($virtualenv\)](green italic)) ]($style))'
 style = 'bright-green'
 symbol = ' 󰌠 '
 pyenv_version_name = true
