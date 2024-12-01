@@ -1,7 +1,7 @@
 command_timeout = 5000
 scan_timeout = 15
 
-format = """$os$username$hostname$directory$git_branch$git_status$nodejs$python$fill$line_break$character"""
+format = """$os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$fill$line_break$character"""
 
 add_newline = true
 
@@ -163,10 +163,11 @@ disabled = false
 # style = 'bright-red'
 # format = '([  ](black))[$symbol($version)]($style))'
 
-# [conda]
-# symbol = '🅒 '
-# ignore_base = true
-# format = '[$symbol$environment](green) '
+[conda]
+symbol = ' 🅒 '
+style = 'bright-green'
+ignore_base = true
+format = '([ ](black)[$symbol$environment ]($style))'
 
 [python]
 format = '([ ](black)[${symbol}(${version})( [\($virtualenv\)](green italic)) ]($style))'

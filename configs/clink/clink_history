@@ -2404,7 +2404,7 @@ ColorTool.exe -b dream.ini
 |	time=1715205961
 |s
 |	time=1715205966
-exa
+|xa
 |	time=1715205972
 |xa -lA --icons --group-directories-first
 |	time=1715206176
@@ -2512,7 +2512,7 @@ sh -i
 |	time=1715245294
 |s -la
 |	time=1715245299
-..
+|.
 |	time=1715245303
 cd .
 |	time=1715245304
@@ -2954,7 +2954,7 @@ PATH | tr ":" "\n
 |	time=1718103481
 |ATH | tr ";" "\n
 |	time=1718103504
-conda
+|onda
 |	time=1718103516
 |s -la
 |	time=1718103522
@@ -3402,7 +3402,7 @@ cd C:\Users\nickf\.config\clinkcomp
 |	time=1720294939
 |s
 |	time=1720294957
-bat clink_settings 
+|at clink_settings 
 |	time=1720294979
 |link
 |	time=1720294994
@@ -3709,11 +3709,11 @@ cd %LocalAppData%\
 |	time=1726202734
 |s
 |	time=1726202736
-eza
+|za
 |	time=1726202740
 |za -la
 |	time=1726202747
-cd clink
+|d clink
 |	time=1726202750
 |s -la
 |	time=1726202787
@@ -3883,7 +3883,7 @@ ll
 |	time=1730527089
 |s
 |	time=1730527091
-ls -la
+|s -la
 |	time=1730527135
 .\ArmouryCrate.exe
 |	time=1730527141
@@ -3903,7 +3903,7 @@ clear
 |	time=1730637334
 |link
 |	time=1730637338
-clink info
+|link info
 |	time=1730637348
 |link set
 |	time=1730637360
@@ -3985,7 +3985,7 @@ pyenv-venv local gfactor
 |	time=1732993761
 pyenv-venv local gfactory
 |	time=1732993767
-l
+|
 |	time=1732993769
 |s
 |	time=1732994375
@@ -4019,9 +4019,9 @@ path
 |	time=1732994640
 PATH | tr ";" "\n"
 |	time=1732994649
-clink
+|link
 |	time=1732994651
-clink set
+|link set
 |	time=1732994685
 |
 |	time=1732994704
@@ -4063,7 +4063,7 @@ pyenv-venv deactivate
 |	time=1732997223
 pyenv-venv activate venv3.12.7
 |	time=1732997225
-ls
+|s
 |	time=1732997276
 |nv
 |	time=1733025470
@@ -4078,3 +4078,35 @@ setx STARSHIP_CONFIG
 setx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
 |	time=1733025629
 q
+|	time=1733034169
+clink
+|	time=1733034174
+clink info
+|	time=1733034247
+cd C:\Users\njen\AppData\Local
+|	time=1733034251
+cd clink
+|	time=1733034252
+|
+|	time=1733034253
+|s
+|	time=1733034255
+ls -la
+|	time=1733034266
+bat clink_settings 
+|	time=1733034277
+clink set
+|	time=1733034377
+clink set | nvim
+|	time=1733034442
+..
+|	time=1733034442
+l
+|	time=1733034443
+ls
+|	time=1733034445
+eza
+|	time=1733034448
+exa
+|	time=1733039687
+conda
