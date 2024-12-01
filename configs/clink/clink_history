@@ -2136,9 +2136,9 @@ bat C:\Windows\Logs\CBS\CBS.log
 |	time=1712347025
 |
 |	time=1712347030
-which zsh
+|hich zsh
 |	time=1712347032
-zsh
+|sh
 |	time=1712347048
 |
 |	time=1712347050
@@ -3272,9 +3272,9 @@ which clink
 |	time=1720129317
 |et
 |	time=1720129365
-set
+|et
 |	time=1720129378
-set
+|et
 |	time=1720205926
 |nv
 |	time=1720205948
@@ -3663,7 +3663,7 @@ clink set color.input green
 |	time=1720319973
 |ATH | tr ";" "\n"
 |	time=1720319981
-pyenv
+|yenv
 |	time=1720319987
 wal
 |	time=1720320015
@@ -3815,7 +3815,7 @@ ecit
 |	time=1728153436
 env | fzf
 |	time=1728153460
-pwsh
+|wsh
 |	time=1728153475
 |
 |	time=1728153476
@@ -3865,7 +3865,7 @@ flavours build "C:\Users\njen\AppData\Roaming\flavours\base16\schemes\generated\
 |	time=1728155104
 |s -la
 |	time=1728155113
-cd
+|d
 |	time=1728155115
 eza -lA
 |	time=1728155125
@@ -3877,11 +3877,11 @@ eza -lA
 |	time=1728162866
 |
 |	time=1730527087
-l
+|
 |	time=1730527088
 ll
 |	time=1730527089
-ls
+|s
 |	time=1730527091
 ls -la
 |	time=1730527135
@@ -3891,7 +3891,7 @@ sudo .\ArmouryCrate.exe
 |	time=1730527291
 |
 |	time=1730527292
-q
+|
 |	time=1730637317
 |
 |	time=1730637319
@@ -3901,31 +3901,31 @@ ckear
 |	time=1730637328
 clear
 |	time=1730637334
-clink
+|link
 |	time=1730637338
 clink info
 |	time=1730637348
-clink set
+|link set
 |	time=1730637360
 |ath
 |	time=1730637368
 |ATH | tr ";" "\n"
 |	time=1730637380
-env
+|nv
 |	time=1732186775
 |
 |	time=1732186776
 |ls
 |	time=1732186778
-path
+|ath
 |	time=1732186781
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1732186787
 which python
 |	time=1732186788
 which python3
 |	time=1732186811
-d
+|
 |	time=1732186816
 ya
 |	time=1732186821
@@ -3941,14 +3941,128 @@ cd /usr/
 |	time=1732186852
 cd /usr/bin/sh
 |	time=1732186866
-c
+|
 |	time=1732186868
 c;s
 |	time=1732186870
-cls
+|ls
 |	time=1732186872
-which sh
+|hich sh
 |	time=1732186877
-sh
+|h
 |	time=1732186958
+|hich bash
+|	time=1732187196
+which sh
+|	time=1732187201
 which bash
+|	time=1732187212
+which zsh
+|	time=1732187215
+zsh
+|	time=1732187358
+|ATH | tr ";" "\n"
+|	time=1732187406
+|nv
+|	time=1732187410
+|et
+|	time=1732187423
+|yenv
+|	time=1732187432
+|ip
+|	time=1732187437
+|ip list
+|	time=1732187466
+sh
+|	time=1732993728
+|
+|	time=1732993731
+pip
+|	time=1732993733
+|ip list
+|	time=1732993759
+pyenv-venv local gfactor
+|	time=1732993761
+pyenv-venv local gfactory
+|	time=1732993767
+l
+|	time=1732993769
+|s
+|	time=1732994375
+pip install -r .\gruvbox-factory\requirements.txt
+|	time=1732994398
+python.exe -m pip install --upgrade pip
+|	time=1732994408
+d
+|	time=1732994410
+|
+|	time=1732994541
+pip lis
+|	time=1732994543
+pip list
+|	time=1732994548
+|nv
+|	time=1732994552
+|ath
+|	time=1732994557
+|ATH | tr ";" "\n"
+|	time=1732994567
+|nv
+|	time=1732994601
+c
+|	time=1732994603
+cls
+|	time=1732994627
+|nv
+|	time=1732994638
+path
+|	time=1732994640
+PATH | tr ";" "\n"
+|	time=1732994649
+clink
+|	time=1732994651
+clink set
+|	time=1732994685
+|
+|	time=1732994704
+pwsh
+|	time=1732994835
+q
+|	time=1732996297
+set PYENV_VERSION pyzoo
+|	time=1732996302
+|et
+|	time=1732996309
+set PYENV_VERSION
+|	time=1732996313
+set PYENV_VERSION=pyzoo
+|	time=1732996314
+set
+|	time=1732996498
+cd
+|	time=1732996501
+|nv
+|	time=1732996511
+pyenv
+|	time=1732996515
+pyenv versions
+|	time=1732996534
+pyenv-venv
+|	time=1732996537
+pyenv-venv list
+|	time=1732996541
+pyenv-venv list python
+|	time=1732996545
+pyenv-venv list env
+|	time=1732996552
+pyenv-venv list envs
+|	time=1732997187
+|s
+|	time=1732997207
+pyenv-venv deactivate
+|	time=1732997223
+pyenv-venv activate venv3.12.7
+|	time=1732997225
+ls
+|	time=1732997276
+env

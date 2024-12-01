@@ -16,7 +16,7 @@ $aliases = @{}
 
 Get-Alias | ForEach-Object { if ($aliases[$_.Definition] -eq $null) { $aliases.Add($_.Definition, $_.Name) } }
 
-$scriptsPath = $ENV:scriptsPath
+$scriptsPath = $ENV:dotscripts
 
 Get-Command -CommandType ExternalScript | ForEach-Object `
 {

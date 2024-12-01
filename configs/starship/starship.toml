@@ -1,7 +1,7 @@
 command_timeout = 5000
 scan_timeout = 15
 
-format = """$os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$shell$character"""
+format = """$os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$fill$line_break$shell$character"""
 
 add_newline = true
 
@@ -21,8 +21,8 @@ trim_at = '.companyname.com'
 disabled = true
 
 [fill]
-symbol = '󱘹'
-style = "fg:black bg:none"
+symbol = ''
+style = "fg:#1f2e59 bg:none"
 
 [os]
 format = '[$symbol]($style)'
@@ -132,11 +132,11 @@ disabled = false
 
 [git_branch]
 symbol = ""
-format = '[$symbol$branch]($style) '
-style = "bright-black"
+format = ' [$symbol$branch]($style) '
+style = "bright-purple dimmed"
 
 [git_status]
-format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](purple) ($ahead_behind$stashed)]($style)"
+format = "[($modified)]($style)"
 style = "bright-purple"
 conflicted = "​"
 untracked = "​"
@@ -144,20 +144,21 @@ modified = "​"
 staged = "​"
 renamed = "​"
 deleted = "​"
-stashed = "≡"
+stashed = ""
 
 [nodejs]
 detect_files = ['package.json']
 detect_folders = []
-symbol = ' '
-style = 'green'
-format = '[$symbol($version)]($style) '
+symbol = ' 󰎙 '
+style = 'bright-yellow'
+version_format = '${raw}'
+format = '([  ](#1f2e59)[$symbol($version) ]($style))'
 disabled = false
 
 [ruby]
-symbol = ' '
+symbol = '  '
 style = 'bright-red'
-format = '[$symbol($version)]($style) '
+format = '([  ](#1f2e59))[$symbol($version) ]($style))'
 
 [conda]
 symbol = '🅒 '
@@ -165,10 +166,10 @@ ignore_base = true
 format = '[$symbol$environment](green) '
 
 [python]
-format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
-style = "green"
-symbol = ' '
-pyenv_version_name = false
+format = '([  ](#1f2e59)[${symbol}(${version}) ([\($virtualenv\)](green italic))]($style))'
+style = 'bright-green'
+symbol = ' 󰌠 '
+pyenv_version_name = true
 
 [rust]
 format = '[$symbol$version]($style) '
