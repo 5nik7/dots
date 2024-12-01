@@ -58,7 +58,7 @@ if ($host.Name -eq 'ConsoleHost') {
     PredictionViewStyle           = "InlineView"
     Colors                        = @{
       Comment                = 'DarkGray'
-      Command                = 'Green'
+      Command                = 'DarkGreen'
       Emphasis               = 'Cyan'
       Number                 = 'Yellow'
       Member                 = 'Blue'

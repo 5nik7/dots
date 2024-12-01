@@ -1,7 +1,7 @@
 command_timeout = 5000
 scan_timeout = 15
 
-format = """$os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$fill$line_break$shell$character"""
+format = """$os$username$hostname$directory$git_branch$git_status$nodejs$python$fill$line_break$character"""
 
 add_newline = true
 
@@ -22,7 +22,7 @@ disabled = true
 
 [fill]
 symbol = ''
-style = "fg:#1f2e59 bg:none"
+style = '#1f2e59'
 
 [os]
 format = '[$symbol]($style)'
@@ -131,20 +131,24 @@ read_only_style = 'bright-red'
 disabled = false
 
 [git_branch]
-symbol = ""
-format = ' [$symbol$branch]($style) '
-style = "bright-purple dimmed"
+symbol = ''
+format = ' [$symbol$branch ]($style)'
+style = 'bright-purple dimmed'
 
 [git_status]
-format = "[($modified)]($style)"
-style = "bright-purple"
-conflicted = "​"
-untracked = "​"
-modified = "​"
-staged = "​"
-renamed = "​"
-deleted = "​"
-stashed = ""
+format = '([$all_status$ahead_behind]($style) )'
+ignore_submodules = true
+style = 'bright-purple'
+# conflicted = ''
+# untracked = ''
+ahead = '⇡${count}'
+diverged = '⇕⇡${ahead_count}⇣${behind_count}'
+behind = '⇣${count}'
+modified = ''
+# staged = ''
+# renamed = ''
+# deleted = ''
+# stashed = ''
 
 [nodejs]
 detect_files = ['package.json']
@@ -152,29 +156,29 @@ detect_folders = []
 symbol = ' 󰎙 '
 style = 'bright-yellow'
 version_format = '${raw}'
-format = '([  ](#1f2e59)[$symbol($version) ]($style))'
+format = '([ ](#1f2e59)[$symbol($version) ]($style))'
 disabled = false
 
-[ruby]
-symbol = '  '
-style = 'bright-red'
-format = '([  ](#1f2e59))[$symbol($version) ]($style))'
+# [ruby]
+# symbol = '  '
+# style = 'bright-red'
+# format = '([  ](#1f2e59))[$symbol($version)]($style))'
 
-[conda]
-symbol = '🅒 '
-ignore_base = true
-format = '[$symbol$environment](green) '
+# [conda]
+# symbol = '🅒 '
+# ignore_base = true
+# format = '[$symbol$environment](green) '
 
 [python]
-format = '([  ](#1f2e59)[${symbol}(${version}) ([\($virtualenv\)](green italic))]($style))'
+format = '([ ](#1f2e59)[${symbol}(${version})( [\($virtualenv\)](green italic)) ]($style))'
 style = 'bright-green'
 symbol = ' 󰌠 '
 pyenv_version_name = true
 
-[rust]
-format = '[$symbol$version]($style) '
-style = 'red'
-symbol = ' '
+# [rust]
+# format = '[$symbol$version]($style) '
+# style = 'red'
+# symbol = ' '
 
 [character]
 success_symbol = '[](cyan)'
