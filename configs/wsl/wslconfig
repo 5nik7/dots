@@ -1,11 +1,8 @@
 [wsl2]
 guiApplications=true
-localhostForwarding=true
-nestedVirtualization=true
+nestedVirtualization=false
 debugConsole=false
 
 [experimental]
-autoMemoryReclaim=dropcache
+autoMemoryReclaim=gradual
 sparseVhd=true
-networkingMode=virtioproxy
-hostAddressLoopback=true

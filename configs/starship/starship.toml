@@ -170,7 +170,7 @@ ignore_base = true
 format = '([](black)[$symbol$environment ]($style))'
 
 [python]
-format = '([](black)[${symbol}(${version})( [\($virtualenv\)](green italic)) ]($style))'
+format = '([](black)[${symbol}( [$virtualenv](green italic)) ]($style))'
 style = 'bright-green'
 symbol = '󰌠 '
 pyenv_version_name = true
