@@ -28,7 +28,7 @@ style = 'black'
 
 [os]
 format = '[$symbol]($style)'
-style = "red"
+style = "cyan dimmed"
 disabled = false
 
 [os.symbols]

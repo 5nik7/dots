@@ -100,7 +100,7 @@ if ! shopt -oq posix; then
 fi
 
 export WIN='/mnt/c'
-export WINHOME='/mnt/c'
+
 export DOTS="$HOME/dots"
 export DOTFILES="$DOTS/configs"
 export ZSH="$HOME/.config/zsh"
