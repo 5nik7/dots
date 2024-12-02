@@ -100,6 +100,7 @@ if ! shopt -oq posix; then
 fi
 
 export WIN='/mnt/c'
+export WINHOME='/mnt/c'
 export DOTS="$HOME/dots"
 export DOTFILES="$DOTS/configs"
 export ZSH="$HOME/.config/zsh"
@@ -133,6 +134,7 @@ function prepend_path() {
 
 function source_file() {
   if [ -f "$1" ]; then
+    # shellcheck source=/dev/null
     source "$1"
   fi
 }

@@ -28,7 +28,7 @@ style = 'black'
 
 [os]
 format = '[$symbol]($style)'
-style = "blue"
+style = "red"
 disabled = false
 
 [os.symbols]
@@ -41,7 +41,7 @@ Android = " "
 Arch = " "
 Artix = " "
 CentOS = " "
-Debian = " "
+Debian = " "
 DragonFly = " "
 Emscripten = " "
 EndeavourOS = " "
@@ -152,10 +152,10 @@ stashed = ''
 [nodejs]
 detect_files = ['package.json']
 detect_folders = []
-symbol = ' 󰎙 '
+symbol = '󰎙 '
 style = 'bright-yellow'
 version_format = '${raw}'
-format = '([ ](black)[$symbol($version) ]($style))'
+format = '([](black)[$symbol($version) ]($style))'
 disabled = false
 
 # [ruby]
@@ -164,15 +164,15 @@ disabled = false
 # format = '([  ](black))[$symbol($version)]($style))'
 
 [conda]
-symbol = ' 🅒 '
+symbol = '🅒 '
 style = 'bright-green'
 ignore_base = true
-format = '([ ](black)[$symbol$environment ]($style))'
+format = '([](black)[$symbol$environment ]($style))'
 
 [python]
-format = '([ ](black)[${symbol}(${version})( [\($virtualenv\)](green italic)) ]($style))'
+format = '([](black)[${symbol}(${version})( [\($virtualenv\)](green italic)) ]($style))'
 style = 'bright-green'
-symbol = ' 󰌠 '
+symbol = '󰌠 '
 pyenv_version_name = true
 
 # [rust]
