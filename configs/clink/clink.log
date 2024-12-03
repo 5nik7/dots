@@ -1,7 +1,7 @@
-0c94 app_context::start_logger  483 ---- 2024/12/03 14:15:31.225 -------------------------------------------------
-0c94 app_context::start_logger  486 Host process is 'cmd.exe' (pid 3220)
-0c94 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
-0c94 app_context::start_logger  493 DLL base is 00007FFCF2040000
-0c94 app_context::start_logger  508 Windows version 10.0.26100 (x64)
-0c94 app_context::start_logger  510 Clink version 1.7.5.aee4f7 (x64)
-0c94 host_cmd::validate        305 Host is not interactive; cancelling inject.
+684c app_context::start_logger  483 ---- 2024/12/03 15:24:22.884 -------------------------------------------------
+684c app_context::start_logger  486 Host process is 'cmd.exe' (pid 26700)
+684c app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
+684c app_context::start_logger  493 DLL base is 00007FFCF2230000
+684c app_context::start_logger  508 Windows version 10.0.26100 (x64)
+684c app_context::start_logger  510 Clink version 1.7.5.aee4f7 (x64)
+684c host_cmd::validate        305 Host is not interactive; cancelling inject.
