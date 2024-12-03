@@ -1,57 +1,7 @@
-6a58 app_context::start_logger  483 ---- 2024/12/03 11:01:04.323 -------------------------------------------------
-6a58 app_context::start_logger  486 Host process is 'cmd.exe' (pid 27224)
-6a58 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
-6a58 app_context::start_logger  493 DLL base is 00007FFD03410000
-6a58 app_context::start_logger  508 Windows version 10.0.26100 (x64)
-6a58 app_context::start_logger  510 Clink version 1.7.5.aee4f7 (x64)
-6a58 hook_setter::hook_setter  159 >>> Started hook transaction.
-6a58 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF656350000.
-6a58 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-6a58 find_iat                  124 Found import at 00007FF65638AE50 (value is 00007FFD8039CDE0).
-6a58 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF656350000.
-6a58 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-6a58 find_iat                  124 Found import at 00007FF65638AE48 (value is 00007FFD803AEDD0).
-6a58 hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF656350000.
-6a58 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-6a58 find_iat                  124 Found import at 00007FF65638AAB0 (value is 00007FFD80397120).
-6a58 hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF656350000.
-6a58 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-6a58 find_iat                  124 Found import at 00007FF65638AE68 (value is 00007FFD80374C20).
-6a58 hook_setter::commit       207 <<< Hook transaction committed.
-6a58 hook_setter::hook_setter  159 >>> Started hook transaction.
-6a58 hook_setter::detach_iat   359 Attempting to unhook 00007FFD03436260 from GetEnvironmentVariableW in IAT for module 00007FF656350000.
-6a58 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-6a58 find_iat                  124 Found import at 00007FF65638AE68 (value is 00007FFD03436260).
-6a58 hook_setter::commit       207 <<< Hook transaction committed.
-6a58 hook_setter::hook_setter  159 >>> Started hook transaction.
-6a58 hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF656350000.
-6a58 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-6a58 find_iat                  124 Found import at 00007FF65638AA90 (value is 00007FFD803B2E80).
-6a58 hook_setter::commit       207 <<< Hook transaction committed.
-6a58 hook_setter::hook_setter  159 >>> Started hook transaction.
-6a58 hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF656350000.
-6a58 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
-6a58 find_iat                  124 Found import at 00007FF65638AB10 (value is 00007FFD80386F80).
-6a58 hook_setter::commit       207 <<< Hook transaction committed.
-6a58 win_screen_buffer::begin  397 Using native terminal support (auto mode found 'Windows build >= 15063, console V2').
-6a58 reset_handle              144 resetting mismatched stdout handle
-6a58 reset_handle              144 resetting mismatched stderr handle
-6a58 host_lua::load_scripts    199 Loaded 4 Lua scripts in 124 ms
-6a58 @~clink~/app/update.lua   404 Clink updater: updating because there is no record of having updated before.
-6a58 history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
-6a58 history_db::compact      1606 History:  758 active, 1300 deleted
-6a58 @~clink~/app/update.lua   487 Clink updater: latest release is v1.7.5; install type is zip.
-6a58 @~clink~/app/update.lua   515 Clink updater: downloading https://github.com/chrisant996/clink/releases/download/v1.7.5/clink.1.7.5.aee4f7.zip to C:\Users\njen\AppData\Local\Temp\clink\updater\v1.7.5.zip.
-6a58 @~clink~/app/update.lua   638 Clink updater: no update available; local version v1.7.5 is not older than latest release v1.7.5.
-6a58 reset_handle              144 resetting mismatched stdout handle
-6a58 reset_handle              144 resetting mismatched stderr handle
-6a58 history_db::compact      1606 History:  757 active, 1301 deleted
-6a58 reset_handle              144 resetting mismatched stdout handle
-6a58 reset_handle              144 resetting mismatched stderr handle
-6a58 history_db::compact      1606 History:  756 active, 1302 deleted
-6a58 reset_handle              144 resetting mismatched stdout handle
-6a58 reset_handle              144 resetting mismatched stderr handle
-6a58 history_db::compact      1606 History:  755 active, 1303 deleted
-6a58 reset_handle              144 resetting mismatched stdout handle
-6a58 reset_handle              144 resetting mismatched stderr handle
-6a58 history_db::compact      1606 History:  755 active, 1303 deleted
+0c94 app_context::start_logger  483 ---- 2024/12/03 14:15:31.225 -------------------------------------------------
+0c94 app_context::start_logger  486 Host process is 'cmd.exe' (pid 3220)
+0c94 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
+0c94 app_context::start_logger  493 DLL base is 00007FFCF2040000
+0c94 app_context::start_logger  508 Windows version 10.0.26100 (x64)
+0c94 app_context::start_logger  510 Clink version 1.7.5.aee4f7 (x64)
+0c94 host_cmd::validate        305 Host is not interactive; cancelling inject.

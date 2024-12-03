@@ -6,13 +6,13 @@
     "cursor": "#D3EEFA"
   },
   "colors": {
-    "color0": "#334775",
+    "color0": "#1C2F5A",
     "color1": "#FF5673",
-    "color2": "#00FFCC",
+    "color2": "#23FFBF",
     "color3": "#FFAA82",
     "color4": "#3D81FF",
     "color5": "#A798F0",
-    "color6": "#00E5FF",
+    "color6": "#00FFFB",
     "color7": "#D3EEFA",
     "color8": "#49608D",
     "color9": "#FF859B",
@@ -20,7 +20,7 @@
     "color11": "#FFC990",
     "color12": "#508FF8",
     "color13": "#ABAFFF",
-    "color14": "#30F1EA",
+    "color14": "#00FFFB",
     "color15": "#E4F0FF"
   }
 }
