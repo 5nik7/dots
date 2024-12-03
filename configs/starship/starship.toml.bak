@@ -80,8 +80,7 @@ Void = " "
 # Windows = ""
 
 Windows = "󰚌 "
-# Windows = " "
-# Windows = "󰍲 "
+
 
 # [shell]
 # format = "[◎ $indicator]($style)"
@@ -139,6 +138,18 @@ style = 'bright-purple dimmed'
 
 # [git_status]
 # format = '([$all_status$ahead_behind]($style) )'
+# ignore_submodules = true
+# style = 'bright-purple'
+# conflicted = ''
+# untracked = ''
+# modified = ''
+# staged = ''
+# renamed = ''
+# deleted = ''
+# stashed = ''
+
+# [git_status]
+# format = '([$all_status$ahead_behind]($style) )'
 # style = "purple bold"
 # stashed = '\$'
 # ahead = "⇡"
@@ -155,57 +166,14 @@ style = 'bright-purple dimmed'
 # ignore_submodules = false
 # disabled = false
 
-# [git_status]
-# format = "[( $conflicted$untracked$modified$staged$renamed$deleted$ahead_behind$stashed)]($style)"
-# style = "cyan"
-# conflicted = "​"
-# untracked = "​"
-# modified = "​"
-# staged = "​"
-# renamed = "​"
-# deleted = "​"
-# stashed = "≡"
-
-[git_status]
-style = "bold bright-purple"
-format = "([$ahead_behind$staged$modified$untracked$renamed$deleted$conflicted$stashed]($style))"
-conflicted = "[◪ ](bright-purple)"
-ahead = "[▴ [${count} ](bold white)](green)"
-behind = "[▿ [${count }](bold white)](red)"
-diverged = "[◇ ▴ [${ahead_count} ](regular white) ▿[ ${behind_count} ](regular white)](italic bright-magenta)"
-untracked = "[](bright-black bold)"
-# untracked = "[ ](bright-black bold)"
-# untracked = "[ ](bright-purple)"
-# untracked = "[ ](bright-black bold)"
-# untracked = "[ ](bright-purple)"
-# untracked = "[󰫉 ](bright-black bold)"
-# untracked = "[ ](purple)"
-# untracked = "[ ](bright-black bold)"
-stashed = "[◈ ](italic white)"
-# modified = "[ ](purple bold)"
-modified = "[ ](purple bold)"
-# modified = "[ ](purple bold)"
-staged = "[󱇬 [$count ](bold white)](bright-cyan)"
-# staged = "[󰿶 [$count ](bold white)](bright-cyan)"
-# staged = "[ [$count ](bold white)](bright-cyan)"
-renamed = "[◎ ](bright-blue bold)"
-# deleted = "[󰖭 ](red bold)"
-# deleted = "[󱎘 ](red bold)"
-# deleted = "[ ](red bold)"
-# deleted = "[ ](bright-red)"
-# deleted = "[ ](bright-red)"
-# deleted = "[ ](bright-red)"
-deleted = "[✕ ](bright-red)"
-
 [nodejs]
 detect_files = ['package.json']
 detect_folders = []
-symbol = '󰎙 '
-style = 'yellow'
+symbol = ' 󰎙 '
+style = 'bright-yellow'
 version_format = '${raw}'
 # format = '([](black)[$symbol($version) ]($style))'
-format = '([${symbol}([$version](bright-yellow)) ]($style))'
-# format = '([$symbol($version) ]($style))'
+format = '([$symbol($version) ]($style))'
 disabled = false
 
 # [ruby]
@@ -214,17 +182,17 @@ disabled = false
 # format = '([  ](black))[$symbol($version)]($style))'
 
 [conda]
-symbol = '🅒 '
+symbol = ' 🅒 '
 style = 'bright-green'
 ignore_base = true
 format = '([$symbol$environment ]($style))'
 # format = '([](black)[$symbol$environment ]($style))'
 
 [python]
-format = '([${symbol}([$version](green)) ]($style))'
+format = '([${symbol}( [$virtualenv](green italic)) ]($style))'
 # format = '([](black)[${symbol}( [$virtualenv](green italic)) ]($style))'
 style = 'bright-green'
-symbol = '󰌠 '
+symbol = ' 󰌠 '
 pyenv_version_name = true
 
 # [rust]
@@ -233,19 +201,9 @@ pyenv_version_name = true
 # symbol = ' '
 
 [character]
-# success_symbol = '[󰅂](cyan bold)'
-# success_symbol = '[](cyan bold)'
-# success_symbol = '[](cyan)'
-# success_symbol = '[](cyan bold)'
-# success_symbol = '[](cyan bold)'
-success_symbol = '[](cyan bold)'
+success_symbol = '[](cyan)'
 error_symbol = '[](red)'
-# vimcmd_symbol = '[](cyan bold dimmed)'
-# vimcmd_symbol = '[󰅁](black)'
-# vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[󰅁](black)'
-# vimcmd_symbol = '[](black)'
-vimcmd_symbol = '[󰅂](cyan dimmed bold)'
+vimcmd_symbol = '[](black)'
 # vimcmd_symbol = '[▎](black)'
 # vimcmd_symbol = '[▎](blue)'
 format = '$symbol '
