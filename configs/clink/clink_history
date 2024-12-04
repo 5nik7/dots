@@ -3921,9 +3921,9 @@ clear
 |	time=1732186781
 |ATH | tr ";" "\n"
 |	time=1732186787
-which python
+|hich python
 |	time=1732186788
-which python3
+|hich python3
 |	time=1732186811
 |
 |	time=1732186816
@@ -4015,7 +4015,7 @@ cls
 |	time=1732994627
 |nv
 |	time=1732994638
-path
+|ath
 |	time=1732994640
 PATH | tr ";" "\n"
 |	time=1732994649
@@ -4112,3 +4112,11 @@ exa
 |onda
 |	time=1733041826
 conda
+|	time=1733252477
+path
+|	time=1733252484
+which python3
+|	time=1733252486
+which python
+|	time=1733252490
+which Ansi
