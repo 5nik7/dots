@@ -1,7 +1,15 @@
 command_timeout = 5000
 scan_timeout = 15
 
-format = """$os$username$hostname$directory$git_branch$git_status$nodejs$conda$python$line_break$character"""
+format = """
+$os\
+$username\
+$hostname\
+$directory\
+$git_branch$git_status\
+([| ](bright-black)$nodejs$conda$python$rust)\
+$line_break\
+$character"""
 
 add_newline = true
 

@@ -30,3 +30,4 @@ Set-Alias -Name fetch -Value Get-Fetch
 
 Set-Alias -Name lg -Value lazygit.exe
 Set-Alias -Name NerdFonts -Value Invoke-NerdFontInstaller
+Set-Alias -Name dev -Value cdprojects

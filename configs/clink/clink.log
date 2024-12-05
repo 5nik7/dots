@@ -1,42 +1,7 @@
-8ed4 app_context::start_logger  483 ---- 2024/12/03 23:54:40.422 -------------------------------------------------
-8ed4 app_context::start_logger  486 Host process is 'cmd.exe' (pid 36564)
-8ed4 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
-8ed4 app_context::start_logger  493 DLL base is 00007FFCF2550000
-8ed4 app_context::start_logger  508 Windows version 10.0.26100 (x64)
-8ed4 app_context::start_logger  510 Clink version 1.7.5.aee4f7 (x64)
-8ed4 hook_setter::hook_setter  159 >>> Started hook transaction.
-8ed4 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF656350000.
-8ed4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-8ed4 find_iat                  124 Found import at 00007FF65638AE50 (value is 00007FFD8039CDE0).
-8ed4 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF656350000.
-8ed4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-8ed4 find_iat                  124 Found import at 00007FF65638AE48 (value is 00007FFD803AEDD0).
-8ed4 hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF656350000.
-8ed4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-8ed4 find_iat                  124 Found import at 00007FF65638AAB0 (value is 00007FFD80397120).
-8ed4 hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF656350000.
-8ed4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-8ed4 find_iat                  124 Found import at 00007FF65638AE68 (value is 00007FFD80374C20).
-8ed4 hook_setter::commit       207 <<< Hook transaction committed.
-8ed4 hook_setter::hook_setter  159 >>> Started hook transaction.
-8ed4 hook_setter::detach_iat   359 Attempting to unhook 00007FFCF2576260 from GetEnvironmentVariableW in IAT for module 00007FF656350000.
-8ed4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-8ed4 find_iat                  124 Found import at 00007FF65638AE68 (value is 00007FFCF2576260).
-8ed4 hook_setter::commit       207 <<< Hook transaction committed.
-8ed4 hook_setter::hook_setter  159 >>> Started hook transaction.
-8ed4 hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF656350000.
-8ed4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-8ed4 find_iat                  124 Found import at 00007FF65638AA90 (value is 00007FFD803B2E80).
-8ed4 hook_setter::commit       207 <<< Hook transaction committed.
-8ed4 hook_setter::hook_setter  159 >>> Started hook transaction.
-8ed4 hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF656350000.
-8ed4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
-8ed4 find_iat                  124 Found import at 00007FF65638AB10 (value is 00007FFD80386F80).
-8ed4 hook_setter::commit       207 <<< Hook transaction committed.
-8ed4 win_screen_buffer::begin  397 Using native terminal support (auto mode found 'OpenConsoleProxy.dll').
-8ed4 reset_handle              144 resetting mismatched stdout handle
-8ed4 reset_handle              144 resetting mismatched stderr handle
-8ed4 host_lua::load_scripts    199 Loaded 4 Lua scripts in 337 ms
-8ed4 @~clink~/app/update.lua   423 Clink updater: too soon to check for updates (1733252468 vs 1733298880).
-8ed4 history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
-8ed4 history_db::compact      1606 History:  759 active, 1303 deleted
+6c80 app_context::start_logger  483 ---- 2024/12/04 12:54:16.091 -------------------------------------------------
+6c80 app_context::start_logger  486 Host process is 'cmd.exe' (pid 27776)
+6c80 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
+6c80 app_context::start_logger  493 DLL base is 00007FFCEB990000
+6c80 app_context::start_logger  508 Windows version 10.0.26100 (x64)
+6c80 app_context::start_logger  510 Clink version 1.7.5.aee4f7 (x64)
+6c80 host_cmd::validate        305 Host is not interactive; cancelling inject.

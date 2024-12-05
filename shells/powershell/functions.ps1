@@ -203,7 +203,7 @@ function .d {
 }
 
 
-function pro {
+function cdprojects {
   Set-Location "$env:PROJECTS"
 }
 
