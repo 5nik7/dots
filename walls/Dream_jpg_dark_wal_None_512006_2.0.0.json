@@ -1,10 +1,11 @@
 {
-    "wallpaper": "/home/njen/dots/walls/Dream.jpg",
+    "checksum": "34f79896328b6772bbbf4e24651fe18d",
+    "wallpaper": "C:/Users/njen/dev/dots/walls/Dream.jpg",
     "alpha": "100",
     "special": {
         "background": "#0d1321",
-        "foreground": "#beb3bb",
-        "cursor": "#beb3bb"
+        "foreground": "#c2c4c7",
+        "cursor": "#c2c4c7"
     },
     "colors": {
         "color0": "#0d1321",
@@ -14,14 +15,14 @@
         "color4": "#A5897F",
         "color5": "#375785",
         "color6": "#5B6789",
-        "color7": "#beb3bb",
-        "color8": "#857d82",
+        "color7": "#c2c4c7",
+        "color8": "#5d6371",
         "color9": "#4C5370",
         "color10": "#635E70",
         "color11": "#907277",
         "color12": "#A5897F",
         "color13": "#375785",
         "color14": "#5B6789",
-        "color15": "#beb3bb"
+        "color15": "#c2c4c7"
     }
 }

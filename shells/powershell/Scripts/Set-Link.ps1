@@ -77,7 +77,7 @@ if ($v) {
   $targetdir = "$targetdir\"
 }
 elseif ($targetdir -eq $ENV:USERPROFILE) {
-  $targetdircolor  = $homecolor
+  $targetdircolor = $homecolor
   $targetdir = $homeicon
 }
 elseif ($targetdir -eq $env:PROJECTS) {

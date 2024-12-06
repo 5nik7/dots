@@ -2,7 +2,7 @@
 Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name path -Value Get-Path
 Set-Alias -Name env -Value Get-Env
-Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
+# Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
 Set-Alias -Name ll -Value Get-ChildItemPretty
 Set-Alias -Name la -Value Get-ChildItemPretty
 Set-Alias -Name l -Value Get-ChildItemPretty
@@ -31,3 +31,5 @@ Set-Alias -Name fetch -Value Get-Fetch
 Set-Alias -Name lg -Value lazygit.exe
 Set-Alias -Name NerdFonts -Value Invoke-NerdFontInstaller
 Set-Alias -Name dev -Value cdprojects
+
+Set-Alias -Name concol -Value list-console-colors

@@ -4,8 +4,12 @@ $ENV:PSDOT = "$ENV:DOTS\shells\powershell"
 $ENV:BASHDOT = "$ENV:DOTS\shells\bash"
 $ENV:ZSHDOT = "$ENV:DOTS\shells\zsh"
 $ENV:PROJECTS = "$ENV:USERPROFILE\dev"
+$ENV:DEV = "$ENV:USERPROFILE\dev"
+$ENV:WWINDOTCONF = "$ENV:USERPROFILE\.config"
 
 $ENV:DRIP = "$ENV:DOTS\drip"
+$ENV:DRIP_COLS = "$ENV:DRIP\colorschemes"
+$ENV:DRIP_TEMPS = "$ENV:DRIP\tenplates"
 $ENV:WALLS = "$ENV:DOTS\walls"
 
 $ENV:NVM_HOME = "$ENV:APPDATA\nvm"
