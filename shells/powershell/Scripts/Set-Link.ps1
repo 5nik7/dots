@@ -65,7 +65,7 @@ elseif ($basedir -eq $env:USERPROFILE) {
   $basedircolor = $homecolor
   $basedir = $homeicon
 }
-elseif ($basedir -eq $env:PROJECTS) {
+elseif ($basedir -eq $env:DEV) {
   $basedircolor = $devcolor
   $basedir = $devicon
 }
@@ -80,7 +80,7 @@ elseif ($targetdir -eq $ENV:USERPROFILE) {
   $targetdircolor = $homecolor
   $targetdir = $homeicon
 }
-elseif ($targetdir -eq $env:PROJECTS) {
+elseif ($targetdir -eq $env:DEV) {
   $targetdircolor = $devcolor
   $targetdir = $devicon
 }

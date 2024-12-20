@@ -108,8 +108,11 @@ image_alloc = 536870912  # 512MB
 image_bound = [0, 0]
 suppress_preload = false
 
-[plugin]
-prepend_previewers = [{ name = "*.md", run = "glow" }]
+# [plugin]
+# prepend_previewers = [
+# 	{ name = "*/", run = "eza-preview" },
+# 	{ name = "text/*", run = "bat" },
+# ]
 
 [[plugin.prepend_fetchers]]
 id = "git"

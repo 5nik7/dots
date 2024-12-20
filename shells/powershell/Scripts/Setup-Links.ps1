@@ -6,11 +6,8 @@
 Write-Host ''
 Write-Host ' Setting up links...' -ForegroundColor Cyan
 
-Set-link "$env:DRIP_COLS\dark\Dream.json" "$ENV:WINDOTCONF\wal\colorschemes\dark\Drean,json" 
-Set-link "$env:DRIP_TEMPS\Dream.tmTheme" "$ENV:WINDOTCONF\wal\templates\Dream.tmTheme" 
-Set-link "$env:DRIP_TEMPS\colors.rasi" "$ENV:WINDOTCONF\wal\templates\colors.rasi" 
-Set-link "$env:DRIP_TEMPS\colors.inc" "$ENV:WINDOTCONF\wal\templates\colors.inc"
-Set-link "$env:DRIP_TEMPS\colors-wt.json" "$ENV:WINDOTCONF\wal\templates\colors-wt.json"
+Set-link "$env:DRIP_COLS" "$ENV:WINDOTCONF\wal\colorschemes" 
+Set-link "$env:DRIP_TEMPS" "$ENV:WINDOTCONF\wal\templates"
 
 Set-Link "$ENV:DOTFILES\xonsh" "$env:WINDOTCONF\xonsh" -v:$v -i:$i
 Set-Link "$ENV:DOTFILES\yasb" "$ENV:WINDOTCONF\yasb" -v:$v -i:$i
