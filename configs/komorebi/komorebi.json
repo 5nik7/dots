@@ -21,7 +21,7 @@
     "enabled": true,
     "duration": 400,
     "style": "EaseOutBack",
-    "fps": 60
+    "fps": 120
   },
   "stackbar": {
     "height": 40,
