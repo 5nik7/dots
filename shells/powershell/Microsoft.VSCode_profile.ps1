@@ -22,7 +22,7 @@ $ENV:DOCUMENTS = [Environment]::GetFolderPath("mydocuments")
 $ENV:DOWNLOADS = "$ENV:USERPROFILE\Downloads"
 
 $ENV:STARSHIP_CACHE = "$ENV:LOCALAPPDATA\Temp"
-$ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\bat.conf"
+$ENV:BAT_CONFIG_PATH = "$ENV:DOTFILES\bat\config"
 $ENV:YAZI_CONFIG_HOME = "$ENV:DOTFILES\yazi"
 $GITBIN = "C:\Git\usr\bin"
 $ENV:YAZI_FILE_ONE = "$GITBIN\file.exe"
