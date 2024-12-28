@@ -89,7 +89,6 @@ Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 Set-PSReadLineKeyHandler -Chord Enter -Function ValidateAndAcceptLine
 
-
 Invoke-Expression (&starship init powershell)
 Enable-TransientPrompt
 function Invoke-Starship-TransientFunction {
