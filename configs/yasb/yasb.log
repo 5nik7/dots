@@ -74,3 +74,174 @@ bars:
       - unknown field
 
 2024-09-27 23:42:27 ERROR config.py:135: User config file could not be loaded. Exiting Application.
+2024-12-28 13:05:14 INFO log.py:21: Yasb
+2024-12-28 13:05:14 ERROR config.py:89: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:05:14 ERROR config.py:140: User config file could not be loaded. Exiting Application.
+2024-12-28 13:08:15 INFO log.py:21: Yasb
+2024-12-28 13:08:15 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:08:15 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:08:29 INFO log.py:21: Yasb
+2024-12-28 13:08:29 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:08:29 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:08:32 INFO log.py:21: Yasb
+2024-12-28 13:08:32 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:08:32 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:08:36 INFO log.py:21: Yasb
+2024-12-28 13:08:36 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:08:36 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:09:42 INFO log.py:21: Yasb
+2024-12-28 13:09:42 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:09:42 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:09:48 INFO log.py:21: Yasb
+2024-12-28 13:09:48 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:09:48 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:10:09 INFO log.py:21: Yasb
+2024-12-28 13:10:09 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:10:09 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:10:12 INFO log.py:21: Yasb
+2024-12-28 13:10:13 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:10:13 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:11:00 INFO log.py:21: Yasb
+2024-12-28 13:11:00 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:11:00 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:11:22 INFO log.py:21: Yasb
+2024-12-28 13:11:22 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:11:22 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:11:41 INFO log.py:21: Yasb
+2024-12-28 13:11:41 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:11:41 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:12:11 INFO log.py:21: Yasb
+2024-12-28 13:12:11 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:12:11 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:12:19 INFO log.py:21: Yasb
+2024-12-28 13:12:19 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:12:19 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:13:47 INFO log.py:21: Yasb
+2024-12-28 13:13:47 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:13:47 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:14:03 INFO log.py:21: Yasb
+2024-12-28 13:14:03 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:14:04 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:14:13 INFO log.py:21: Yasb
+2024-12-28 13:14:13 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:14:13 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:14:17 INFO log.py:21: Yasb
+2024-12-28 13:14:17 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:14:17 ERROR config.py:145: User config file could not be loaded. Exiting Application.
+2024-12-28 13:17:54 INFO log.py:21: Yasb
+2024-12-28 13:17:54 ERROR config.py:90: The config file 'C:\Users\njen\.config\yasb\config.yaml' contains validation errors. Please fix:
+bars:
+- status-bar:
+  - blur_effect:
+    - dark:
+      - unknown field
+
+2024-12-28 13:17:54 ERROR config.py:145: User config file could not be loaded. Exiting Application.
