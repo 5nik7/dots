@@ -1,0 +1,32 @@
+|	time=1735361780
+env
+|	time=1735361782
+path
+|	time=1735361784
+PATH | tr ";" "\n"
+|	time=1735361794
+which python
+|	time=1735361795
+which python3
+|	time=1735361798
+pyenv
+|	time=1735361807
+pyenv version
+|	time=1735361821
+npm doctor
+|	time=1735361832
+c
+|	time=1735361834
+cls
+|	time=1735361838
+clink
+|	time=1735361841
+clink infp
+|	time=1735361842
+clink info
+|	time=1735361847
+clink set
+|	time=1735361885
+which fzf
+|	time=1735361966
+q

@@ -1,6 +1,7 @@
-﻿$ENV:DOTS = "$ENV:USERPROFILE\dev\dots"
+$ENV:DOTS = "$ENV:USERPROFILE\dev\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
 $ENV:PSDOT = "$ENV:DOTS\shells\powershell"
+$ENV:PSCOMPS = "$ENV:PSDOT\completions"
 $ENV:BASHDOT = "$ENV:DOTS\shells\bash"
 $ENV:ZSHDOT = "$ENV:DOTS\shells\zsh"
 $ENV:PROJECTS = "$ENV:USERPROFILE\dev"
@@ -37,6 +38,13 @@ foreach ( $includeFile in ("functions", "aliases", "lab") ) {
   Unblock-File "$ENV:PSDOT\$includeFile.ps1"
   . "$ENV:PSDOT\$includeFile.ps1"
 }
+
+foreach ($compFile in Get-ChildItem -Path "$env:PSCOMPS" -Filter "*.ps1") {
+  Unblock-File -Path $compFile.FullName
+  . $compFile.FullName
+}
+
+Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
 
 $ENV:dotscripts = "$ENV:PSDOT\Scripts"
 if (Test-Path($ENV:dotscripts)) {
