@@ -764,7 +764,7 @@ help variable
 |	time=1692532219
 npm 
 |	time=1692532225
-npm doctor
+|pm doctor
 |	time=1692532285
 npm vscode-langservers-extracted
 |	time=1692532292
@@ -2562,7 +2562,7 @@ bat conda.bat
 |	time=1715245952
 |nv
 |	time=1715246234
-ebv
+|bv
 |	time=1715246236
 |nv
 |	time=1715246263
@@ -2982,7 +2982,7 @@ cd nvim-data\
 |	time=1718103569
 |link set
 |	time=1718103592
-which fzf
+|hich fzf
 |	time=1718103600
 |hich lua
 |	time=1718103635
@@ -4009,15 +4009,15 @@ pip list
 |	time=1732994567
 |nv
 |	time=1732994601
-c
+|
 |	time=1732994603
-cls
+|ls
 |	time=1732994627
 |nv
 |	time=1732994638
 |ath
 |	time=1732994640
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1732994649
 |link
 |	time=1732994651
@@ -4043,7 +4043,7 @@ cd
 |	time=1732996501
 |nv
 |	time=1732996511
-pyenv
+|yenv
 |	time=1732996515
 pyenv versions
 |	time=1732996534
@@ -4067,21 +4067,21 @@ pyenv-venv activate venv3.12.7
 |	time=1732997276
 |nv
 |	time=1733025470
-set
+|et
 |	time=1733025484
 set STARSHIP_CONFIG
 |	time=1733025580
-env
+|nv
 |	time=1733025609
 setx STARSHIP_CONFIG
 |	time=1733025622
-setx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
+|etx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
 |	time=1733025629
-q
+|
 |	time=1733034169
-clink
+|link
 |	time=1733034174
-clink info
+|link info
 |	time=1733034247
 cd C:\Users\njen\AppData\Local
 |	time=1733034251
@@ -4095,7 +4095,7 @@ ls -la
 |	time=1733034266
 bat clink_settings 
 |	time=1733034277
-clink set
+|link set
 |	time=1733034377
 clink set | nvim
 |	time=1733034442
@@ -4113,10 +4113,54 @@ exa
 |	time=1733041826
 conda
 |	time=1733252477
-path
+|ath
 |	time=1733252484
-which python3
+|hich python3
 |	time=1733252486
-which python
+|hich python
 |	time=1733252490
 which Ansi
+|	time=1735361780
+|nv
+|	time=1735361782
+path
+|	time=1735361784
+PATH | tr ";" "\n"
+|	time=1735361794
+which python
+|	time=1735361795
+which python3
+|	time=1735361798
+pyenv
+|	time=1735361807
+pyenv version
+|	time=1735361821
+npm doctor
+|	time=1735361832
+c
+|	time=1735361834
+cls
+|	time=1735361838
+clink
+|	time=1735361841
+clink infp
+|	time=1735361842
+clink info
+|	time=1735361847
+clink set
+|	time=1735361885
+which fzf
+|	time=1735361966
+q
+|	time=1735397899
+|etx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
+|	time=1735397901
+|nv
+|	time=1735397919
+setx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
+|	time=1735397927
+set
+|	time=1735397961
+ebv
+|	time=1735397963
+env

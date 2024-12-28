@@ -7,7 +7,7 @@ $username\
 $hostname\
 $directory\
 $git_branch$git_status\
-([| ](bright-black)$nodejs$conda$python$rust)\
+([󰧞](black) $nodejs$conda$python$rust)\
 $line_break\
 $character"""
 
@@ -125,7 +125,7 @@ format = '[$path]($style)[$read_only]($read_only_style) '
 repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
 style = 'blue'
 before_repo_root_style = 'blue'
-repo_root_style = 'blue bold'
+repo_root_style = 'bright-blue bold'
 truncation_length = 0
 # truncation_symbol = "…/"
 # home_symbol = ' '
@@ -134,7 +134,7 @@ truncate_to_repo = true
 use_os_path_sep = true
 use_logical_path = true
 read_only = " ◈"
-read_only_style = 'bright-red'
+read_only_style = 'bright-blue dimmed'
 
 [line_break]
 disabled = false
@@ -142,7 +142,7 @@ disabled = false
 [git_branch]
 symbol = ''
 format = '[$symbol$branch ]($style)'
-style = 'bright-purple dimmed'
+style = 'bright-black'
 
 # [git_status]
 # format = '([$all_status$ahead_behind]($style) )'
@@ -173,36 +173,48 @@ style = 'bright-purple dimmed'
 # deleted = "​"
 # stashed = "≡"
 
+
 [git_status]
-style = "bold bright-purple"
-format = "([$ahead_behind$staged$modified$untracked$renamed$deleted$conflicted$stashed]($style))"
-conflicted = "[◪ ](bright-purple)"
-ahead = "[▴ [${count} ](bold white)](green)"
-behind = "[▿ [${count }](bold white)](red)"
-diverged = "[◇ ▴ [${ahead_count} ](regular white) ▿[ ${behind_count} ](regular white)](italic bright-magenta)"
-untracked = "[](bright-black bold)"
-# untracked = "[ ](bright-black bold)"
-# untracked = "[ ](bright-purple)"
-# untracked = "[ ](bright-black bold)"
-# untracked = "[ ](bright-purple)"
-# untracked = "[󰫉 ](bright-black bold)"
-# untracked = "[ ](purple)"
-# untracked = "[ ](bright-black bold)"
-stashed = "[◈ ](italic white)"
-# modified = "[ ](purple bold)"
-modified = "[ ](purple bold)"
-# modified = "[ ](purple bold)"
-staged = "[󱇬 [$count ](bold white)](bright-cyan)"
-# staged = "[󰿶 [$count ](bold white)](bright-cyan)"
-# staged = "[ [$count ](bold white)](bright-cyan)"
-renamed = "[◎ ](bright-blue bold)"
-# deleted = "[󰖭 ](red bold)"
-# deleted = "[󱎘 ](red bold)"
-# deleted = "[ ](red bold)"
-# deleted = "[ ](bright-red)"
-# deleted = "[ ](bright-red)"
-# deleted = "[ ](bright-red)"
-deleted = "[✕ ](bright-red)"
+format = "([($conflicted$untracked$modified$staged$renamed$deleted$stashed )](purple)[($ahead_behind )]($style))"
+style = "bright-purple"
+conflicted = "​"
+untracked = "​"
+modified = "​"
+staged = "​"
+renamed = "​"
+deleted = "​"
+stashed = "≡"
+
+# [git_status]
+# style = "bold bright-purple"
+# format = "([$ahead_behind$staged$modified$untracked$renamed$deleted$conflicted$stashed]($style))"
+# conflicted = "[◪ ](bright-purple)"
+# ahead = "[⇡ [${count} ](bright-black)](green)"
+# # behind = "[▿[${count }](bright-black)](red)"
+# diverged = "[◇ ▴ [${ahead_count} ](regular white) ▿[ ${behind_count} ](regular white)](italic bright-magenta)"
+# untracked = "[](bright-black bold)"
+# # untracked = "[ ](bright-black bold)"
+# # untracked = "[ ](bright-purple)"
+# # untracked = "[ ](bright-black bold)"
+# # untracked = "[ ](bright-purple)"
+# # untracked = "[󰫉 ](bright-black bold)"
+# # untracked = "[ ](purple)"
+# # untracked = "[ ](bright-black bold)"
+# stashed = "[◈ ](italic white)"
+# # modified = "[ ](purple bold)"
+# modified = "[ ](purple bold)"
+# # modified = "[ ](purple bold)"
+# staged = "[󱇬 [$count ](bold white)](bright-cyan)"
+# # staged = "[󰿶 [$count ](bold white)](bright-cyan)"
+# # staged = "[ [$count ](bold white)](bright-cyan)"
+# renamed = "[◎ ](bright-blue bold)"
+# # deleted = "[󰖭 ](red bold)"
+# # deleted = "[󱎘 ](red bold)"
+# # deleted = "[ ](red bold)"
+# # deleted = "[ ](bright-red)"
+# # deleted = "[ ](bright-red)"
+# # deleted = "[ ](bright-red)"
+# deleted = "[✕ ](bright-red)"
 
 [nodejs]
 detect_files = ['package.json']

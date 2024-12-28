@@ -21,7 +21,7 @@ function Add-Path {
   }
 }
 
-function wtb {
+function winutil {
   Invoke-RestMethod "https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1" | Invoke-Expression
 }
 
@@ -174,16 +174,8 @@ function edit-item {
 }
 
 function dd {
-  param (
-    [string]$Path
-  )
-
-  if ($Path) {
-    explorer $Path
-  }
-  else {
-    explorer $PWD
-  }
+  $currentDirectory = Resolve-Path "$PWD"
+  start-process explorer.exe "$currentDirectory"
 }
 
 Function Search-Alias {
@@ -212,7 +204,7 @@ function q {
 }
 
 function ReloadProfile {
-  & $PROFILE
+  & $profile
   Write-Host ' '
   Write-Host -ForegroundColor Black '  ┌───────────────────┐'
   Write-Host -ForegroundColor Black '  │' -NoNewline
