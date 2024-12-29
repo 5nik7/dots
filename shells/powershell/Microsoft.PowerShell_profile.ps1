@@ -50,6 +50,7 @@ foreach ($compFile in Get-ChildItem -Path "$env:PSCOMPS" -Filter "*.ps1") {
   . $compFile.FullName
 }
 
+Import-Module -Name Microsoft.WinGet.CommandNotFound
 Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
 
 $ENV:dotscripts = "$ENV:PSDOT\Scripts"
@@ -113,6 +114,7 @@ Set-PSReadLineOption -ViModeIndicator script -ViModeChangeHandler {
   [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
   if ($args[0] -eq 'Command') {
     # Set the cursor to a solid block.
+    [Microsoft.PowerShell.PSConsoleReadLine]::ForwardChar()
     Write-Host -NoNewLine "`e[2 q"
   }
   else {
