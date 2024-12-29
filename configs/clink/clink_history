@@ -1490,7 +1490,7 @@ cd %APPDATA%
 |	time=1704529593
 |s -la
 |	time=1704529603
-explorer.exe .
+|xplorer.exe .
 |	time=1704530482
 |ath
 |	time=1704533363
@@ -3294,7 +3294,7 @@ cd C:\pwsh\7-preview\preview
 |	time=1720206025
 |s
 |	time=1720206036
-cd ..
+|d ..
 |	time=1720206037
 |l
 |	time=1720206040
@@ -3306,7 +3306,7 @@ cd ..
 |	time=1720208543
 |nv
 |	time=1720208552
-which pwsh
+|hich pwsh
 |	time=1720208556
 |wsh
 |	time=1720244571
@@ -3537,7 +3537,7 @@ lsd
 |	time=1720297133
 lsd --help
 |	time=1720297160
-exa -lA --icons --group-directories-first
+|xa -lA --icons --group-directories-first
 |	time=1720297222
 python --help
 |	time=1720297230
@@ -3651,7 +3651,7 @@ pwd
 |	time=1720308194
 clink set color.input Blue
 |	time=1720308215
-cd \
+|d \
 |	time=1720308220
 |nv
 |	time=1720308242
@@ -3879,7 +3879,7 @@ eza -lA
 |	time=1730527087
 |
 |	time=1730527088
-ll
+|l
 |	time=1730527089
 |s
 |	time=1730527091
@@ -3993,7 +3993,7 @@ pip install -r .\gruvbox-factory\requirements.txt
 |	time=1732994398
 python.exe -m pip install --upgrade pip
 |	time=1732994408
-d
+|
 |	time=1732994410
 |
 |	time=1732994541
@@ -4091,7 +4091,7 @@ cd clink
 |	time=1733034253
 |s
 |	time=1733034255
-ls -la
+|s -la
 |	time=1733034266
 bat clink_settings 
 |	time=1733034277
@@ -4103,7 +4103,7 @@ clink set | nvim
 |	time=1733034442
 l
 |	time=1733034443
-ls
+|s
 |	time=1733034445
 eza
 |	time=1733034448
@@ -4123,9 +4123,9 @@ which Ansi
 |	time=1735361780
 |nv
 |	time=1735361782
-path
+|ath
 |	time=1735361784
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1735361794
 which python
 |	time=1735361795
@@ -4151,16 +4151,66 @@ clink set
 |	time=1735361885
 which fzf
 |	time=1735361966
-q
+|
 |	time=1735397899
 |etx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
 |	time=1735397901
 |nv
 |	time=1735397919
-setx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
+|etx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
 |	time=1735397927
 set
 |	time=1735397961
 ebv
 |	time=1735397963
+|nv
+|	time=1735398116
+|nv
+|	time=1735398407
+|nv
+|	time=1735398751
+cd code
+|	time=1735398752
+cd \
+|	time=1735398753
+|
+|	time=1735398754
+d
+|	time=1735398756
+q
+|	time=1735444995
+setx STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
+|	time=1735445000
+set STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
+|	time=1735445002
 env
+|	time=1735448024
+|ath
+|	time=1735448036
+|ATH | tr ";" "\n"
+|	time=1735448098
+|ath
+|	time=1735449252
+path
+|	time=1735449254
+PATH | tr ";" "\n"
+|	time=1735449377
+cd "C:\Program Files\Microsoft Visual Studio\2022\Preview"
+|	time=1735449378
+ll
+|	time=1735449379
+ls
+|	time=1735449381
+ls -la
+|	time=1735449385
+dd
+|	time=1735449398
+explorer.exe .
+|	time=1735449418
+which pwsh
+|	time=1735449472
+|xa -lA --icons --group-directories-first
+|	time=1735449478
+cd ..
+|	time=1735449480
+exa -lA --icons --group-directories-first

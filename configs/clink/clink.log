@@ -1,63 +1,48 @@
-f20c app_context::start_logger  483 ---- 2024/12/28 07:01:51.150 -------------------------------------------------
-f20c app_context::start_logger  486 Host process is 'cmd.exe' (pid 61964)
-f20c app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
-f20c app_context::start_logger  493 DLL base is 00007FFAB1FA0000
-f20c app_context::start_logger  508 Windows version 10.0.26100 (x64)
-f20c app_context::start_logger  510 Clink version 1.7.7.521fa7 (x64)
-f20c hook_setter::hook_setter  159 >>> Started hook transaction.
-f20c hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF76DD90000.
-f20c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-f20c find_iat                  124 Found import at 00007FF76DDCAE50 (value is 00007FFB300FCDE0).
-f20c hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF76DD90000.
-f20c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-f20c find_iat                  124 Found import at 00007FF76DDCAE48 (value is 00007FFB3010EDD0).
-f20c hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF76DD90000.
-f20c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-f20c find_iat                  124 Found import at 00007FF76DDCAAB0 (value is 00007FFB300F7120).
-f20c hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF76DD90000.
-f20c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-f20c find_iat                  124 Found import at 00007FF76DDCAE68 (value is 00007FFB300D4C20).
-f20c hook_setter::commit       207 <<< Hook transaction committed.
-f20c hook_setter::hook_setter  159 >>> Started hook transaction.
-f20c hook_setter::detach_iat   359 Attempting to unhook 00007FFAB1FC6260 from GetEnvironmentVariableW in IAT for module 00007FF76DD90000.
-f20c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-f20c find_iat                  124 Found import at 00007FF76DDCAE68 (value is 00007FFAB1FC6260).
-f20c hook_setter::commit       207 <<< Hook transaction committed.
-f20c hook_setter::hook_setter  159 >>> Started hook transaction.
-f20c hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF76DD90000.
-f20c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-f20c find_iat                  124 Found import at 00007FF76DDCAA90 (value is 00007FFB30112E80).
-f20c hook_setter::commit       207 <<< Hook transaction committed.
-f20c hook_setter::hook_setter  159 >>> Started hook transaction.
-f20c hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF76DD90000.
-f20c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
-f20c find_iat                  124 Found import at 00007FF76DDCAB10 (value is 00007FFB300E6F80).
-f20c hook_setter::commit       207 <<< Hook transaction committed.
-f20c win_screen_buffer::begin  397 Using native terminal support (auto mode found 'Windows build >= 15063, console V2').
-f20c reset_handle              144 resetting mismatched stdout handle
-f20c reset_handle              144 resetting mismatched stderr handle
-f20c host_lua::load_scripts    199 Loaded 4 Lua scripts in 82 ms
-f20c @~clink~/app/update.lua   423 Clink updater: too soon to check for updates (1735397898 vs 1735398111).
-f20c history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
-f20c history_db::compact      1606 History:  761 active, 1323 deleted
-f20c reset_handle              144 resetting mismatched stdout handle
-f20c reset_handle              144 resetting mismatched stderr handle
-f20c history_db::compact      1606 History:  760 active, 1324 deleted
-f20c reset_handle              144 resetting mismatched stdout handle
-f20c reset_handle              144 resetting mismatched stderr handle
-f20c history_db::compact      1606 History:  760 active, 1324 deleted
-f20c reset_handle              144 resetting mismatched stdout handle
-f20c reset_handle              144 resetting mismatched stderr handle
-f20c history_db::compact      1606 History:  760 active, 1324 deleted
-f20c reset_handle              144 resetting mismatched stdout handle
-f20c reset_handle              144 resetting mismatched stderr handle
-f20c history_db::compact      1606 History:  759 active, 1325 deleted
-f20c reset_handle              144 resetting mismatched stdout handle
-f20c reset_handle              144 resetting mismatched stderr handle
-f20c history_db::compact      1606 History:  758 active, 1326 deleted
-f20c reset_handle              144 resetting mismatched stdout handle
-f20c reset_handle              144 resetting mismatched stderr handle
-f20c history_db::compact      1606 History:  758 active, 1326 deleted
-f20c reset_handle              144 resetting mismatched stdout handle
-f20c reset_handle              144 resetting mismatched stderr handle
-f20c history_db::compact      1606 History:  757 active, 1327 deleted
+836c app_context::start_logger  483 ---- 2024/12/29 00:26:27.689 -------------------------------------------------
+836c app_context::start_logger  486 Host process is 'cmd.exe' (pid 33644)
+836c app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
+836c app_context::start_logger  493 DLL base is 00007FFAAF890000
+836c app_context::start_logger  508 Windows version 10.0.26100 (x64)
+836c app_context::start_logger  510 Clink version 1.7.7.521fa7 (x64)
+836c hook_setter::hook_setter  159 >>> Started hook transaction.
+836c hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF6448D0000.
+836c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+836c find_iat                  124 Found import at 00007FF64490AE50 (value is 00007FFB300FCDE0).
+836c hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF6448D0000.
+836c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+836c find_iat                  124 Found import at 00007FF64490AE48 (value is 00007FFB3010EDD0).
+836c hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF6448D0000.
+836c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
+836c find_iat                  124 Found import at 00007FF64490AAB0 (value is 00007FFB300F7120).
+836c hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF6448D0000.
+836c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+836c find_iat                  124 Found import at 00007FF64490AE68 (value is 00007FFB300D4C20).
+836c hook_setter::commit       207 <<< Hook transaction committed.
+836c hook_setter::hook_setter  159 >>> Started hook transaction.
+836c hook_setter::detach_iat   359 Attempting to unhook 00007FFAAF8B6260 from GetEnvironmentVariableW in IAT for module 00007FF6448D0000.
+836c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+836c find_iat                  124 Found import at 00007FF64490AE68 (value is 00007FFAAF8B6260).
+836c hook_setter::commit       207 <<< Hook transaction committed.
+836c hook_setter::hook_setter  159 >>> Started hook transaction.
+836c hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF6448D0000.
+836c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
+836c find_iat                  124 Found import at 00007FF64490AA90 (value is 00007FFB30112E80).
+836c hook_setter::commit       207 <<< Hook transaction committed.
+836c hook_setter::hook_setter  159 >>> Started hook transaction.
+836c hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF6448D0000.
+836c pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
+836c find_iat                  124 Found import at 00007FF64490AB10 (value is 00007FFB300E6F80).
+836c hook_setter::commit       207 <<< Hook transaction committed.
+836c win_screen_buffer::begin  397 Using native terminal support (auto mode found 'WindowsTerminal.exe').
+836c reset_handle              144 resetting mismatched stdout handle
+836c reset_handle              144 resetting mismatched stderr handle
+836c host_lua::load_scripts    199 Loaded 4 Lua scripts in 210 ms
+836c @~clink~/app/update.lua   423 Clink updater: too soon to check for updates (1735397898 vs 1735460787).
+836c history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
+836c history_db::compact      1606 History:  765 active, 1344 deleted
+836c reset_handle              144 resetting mismatched stdout handle
+836c reset_handle              144 resetting mismatched stderr handle
+836c history_db::compact      1606 History:  764 active, 1345 deleted
+836c reset_handle              144 resetting mismatched stdout handle
+836c reset_handle              144 resetting mismatched stderr handle
+836c history_db::compact      1606 History:  764 active, 1345 deleted
