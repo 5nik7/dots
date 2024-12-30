@@ -2,6 +2,7 @@ $ENV:DOTS = "$ENV:USERPROFILE\dev\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
 $ENV:PSDOT = "$ENV:DOTS\shells\powershell"
 $ENV:PSCOMPS = "$ENV:PSDOT\completions"
+$ENV:PSMODS = "$ENV:PSDOT\Modules"
 $ENV:BASHDOT = "$ENV:DOTS\shells\bash"
 $ENV:ZSHDOT = "$ENV:DOTS\shells\zsh"
 $ENV:PROJECTS = "$ENV:USERPROFILE\dev"
@@ -50,6 +51,9 @@ foreach ($compFile in Get-ChildItem -Path "$env:PSCOMPS" -Filter "*.ps1") {
   . $compFile.FullName
 }
 
+Import-Module "$ENV:PSMODS\winwal\winwal.psm1"
+Import-Module "$ENV:PSMODS\winwal\winwal.psm1"
+Import-Module -Name Terminal-Icons
 Import-Module -Name Microsoft.WinGet.CommandNotFound
 Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
 

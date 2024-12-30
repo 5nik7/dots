@@ -16,12 +16,12 @@
     "bar_accent": "Base0D"
   },
   "transparency": true,
-  "transparency_alpha": 200,
+  "transparency_alpha": 210,
   "animation": {
     "enabled": true,
     "duration": 400,
     "style": "EaseOutBack",
-    "fps": 120
+    "fps": 60
   },
   "stackbar": {
     "height": 40,

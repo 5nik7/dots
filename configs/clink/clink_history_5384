@@ -1,0 +1,62 @@
+|	time=1735547943
+|ywalfox
+|	time=1735547950
+pywalfox -g uninstall
+|	time=1735547955
+|ywalfox install
+|	time=1735547977
+cat C:/Users/njen/.pywalfox/pywalfox.json
+|	time=1735548000
+pywalfox start
+|	time=1735548094
+cat C:/Users/njen/.pyenv/pyenv-win/versions/3.12.7/Lib/site-packages/pywalfox/bin/win.bat
+|	time=1735548103
+pip list
+|	time=1735548136
+python -m
+|	time=1735548146
+python -m list
+|	time=1735548160
+python -m pywalfox
+|	time=1735548166
+python -m pywalfox -p
+|	time=1735548183
+python -m pywalfox -n
+|	time=1735548198
+python -m pywalfox -n --verbose
+|	time=1735548205
+python -m pywalfox -p --verbose
+|	time=1735548210
+python -m pywalfox -p --verbose update
+|	time=1735548217
+python -m pywalfox -p --verbose install
+|	time=1735548228
+|ython -m pywalfox -p --verbose start
+|	time=1735548405
+python manage.py runserver 127.0.0.1:7000
+|	time=1735548433
+net stop winnat
+|	time=1735548440
+net start winnat
+|	time=1735548446
+python -m pywalfox -p --verbose start
+|	time=1735548493
+pywalfox
+|	time=1735548506
+pywalfox uninstall
+|	time=1735548511
+pywalfox install
+|	time=1735548531
+pywalfox -p --verbose uninstall
+|	time=1735548536
+pywalfox -p --verbose install
+|	time=1735548543
+pywalfox -p --verbose start
+|	time=1735548802
+|
+|	time=1735548803
+|
+|	time=1735548805
+clear
+|	time=1735548807
+c
