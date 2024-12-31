@@ -1,0 +1,8 @@
+|	time=1735601579
+Get-InactiveUserProfiles.ps1
+|	time=1735601596
+pwsh -e Get-InactiveUserProfiles.ps1
+|	time=1735601602
+pwsh -h
+|	time=1735601631
+pwsh -c Get-InactiveUserProfiles.ps1

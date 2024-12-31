@@ -1,8 +1,10 @@
 $ENV:DOTS = "$ENV:USERPROFILE\dev\dots"
 $ENV:DOTFILES = "$ENV:DOTS\configs"
+
 $ENV:PSDOT = "$ENV:DOTS\shells\powershell"
 $ENV:PSCOMPS = "$ENV:PSDOT\completions"
 $ENV:PSMODS = "$ENV:PSDOT\Modules"
+
 $ENV:BASHDOT = "$ENV:DOTS\shells\bash"
 $ENV:ZSHDOT = "$ENV:DOTS\shells\zsh"
 $ENV:PROJECTS = "$ENV:USERPROFILE\dev"
@@ -52,19 +54,23 @@ foreach ($compFile in Get-ChildItem -Path "$env:PSCOMPS" -Filter "*.ps1") {
 }
 
 Import-Module "$ENV:PSMODS\winwal\winwal.psm1"
-Import-Module "$ENV:PSMODS\winwal\winwal.psm1"
 Import-Module -Name Terminal-Icons
 Import-Module -Name Microsoft.WinGet.CommandNotFound
 Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
 
-$ENV:dotscripts = "$ENV:PSDOT\Scripts"
-if (Test-Path($ENV:dotscripts)) {
-  Add-Path -Path $ENV:dotscripts
+$ENV:PSCRIPTS = "$ENV:PSDOT\Scripts"
+if (Test-Path($ENV:PSCRIPTS)) {
+  Add-Path -Path $ENV:PSCRIPTS
 }
 
 $ENV:DOTBIN = "$ENV:DOTS\bin"
 if (Test-Path($ENV:DOTBIN)) {
   Add-Path -Path $ENV:DOTBIN
+}
+
+$localbin = "$ENV:USERPROFILE\.local\bin"
+if (Test-Path($localbin)) {
+  Add-Path -Path $localbin
 }
 
 if ($host.Name -eq 'ConsoleHost') {
