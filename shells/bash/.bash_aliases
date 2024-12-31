@@ -3,64 +3,65 @@ command_exists() {
 }
 
 function y() {
-  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-  yazi "$@" --cwd-file="$tmp"
-  if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-    builtin cd -- "$cwd"
-  fi
-  rm -f -- "$tmp"
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
 }
 alias d='y'
-alias pbcopy="/mnt/c/Windows/System32/clip.exe"
-alias pbpaste="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -command 'Get-Clipboard'"
 
-# alias python="python3"
-# alias py="python3"
+  alias pbcopy="/mnt/c/Windows/System32/clip.exe"
+  alias pbpaste="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -command 'Get-Clipboard'"
 
-alias c='clear'
-alias q='exit'
+  # alias python="python3"
+  # alias py="python3"
 
-alias g='git'
+  alias c='clear'
+  alias q='exit'
 
-alias path='echo $PATH | tr ":" "\n"'
+  alias g='git'
 
-alias so='source'
+  alias path='echo $PATH | tr ":" "\n"'
 
-alias grep='grep --color=auto'
+  alias so='source'
 
-command_exists fzf && command_exists bat && alias preview="fzf --preview 'bat --color \"always\" {}'"
+  alias grep='grep --color=auto'
 
-alias cat='bat'
+  command_exists fzf && command_exists bat && alias preview="fzf --preview 'bat --color \"always\" {}'"
 
-alias ".."="cd .."
-alias "..."="cd ../.."
-alias "...."="cd ../../.."
-alias "....."="cd ../../../.."
-alias "......"="cd ../../../../.."
-alias "......."="cd ../../../../../.."
-alias "........"="cd ../../../../../../.."
+  alias cat='bat'
 
-alias lg='lazygit'
+  alias ".."="cd .."
+  alias "..."="cd ../.."
+  alias "...."="cd ../../.."
+  alias "....."="cd ../../../.."
+  alias "......"="cd ../../../../.."
+  alias "......."="cd ../../../../../.."
+  alias "........"="cd ../../../../../../.."
 
-function dd {
-  if [ -z "$1" ]; then
-    explorer.exe .
-  else
-    explorer.exe "$1"
-  fi
-}
+  alias lg='lazygit'
 
-alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes && echo -e ""'
-alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time && echo -e ""'
+  function dd {
+    if [ -z "$1" ]; then
+      explorer.exe .
+    else
+      explorer.exe "$1"
+    fi
+  }
 
-# function cd() {
-#     builtin cd "$@" && l
-# }
+  alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes && echo -e ""'
+  alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time && echo -e ""'
 
-function weather {
-  if [[ "$1" == "help" ]]; then
-    curl "wttr.in/:help"
-  else
-    curl "wttr.in/Yakima?uFQ$1"
-  fi
-}
+  # function cd() {
+  #     builtin cd "$@" && l
+  # }
+
+  function weather {
+    if [[ "$1" == "help" ]]; then
+      curl "wttr.in/:help"
+    else
+      curl "wttr.in/Yakima?uFQ$1"
+    fi
+  }
