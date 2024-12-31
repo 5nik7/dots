@@ -3,11 +3,11 @@
   "logo": {
     "type": "raw",
     "source": "C:\\Users\\njen\\.config\\fastfetch\\bliss.sixel",
-    "width": 34,
+    "width": 36,
     "padding": {
-      "top": 0,
+      "top": 1,
       "right": 3,
-      "left": 2
+      "left": 4
     }
   },
   "display": {
@@ -27,6 +27,7 @@
     ]
   },
   "modules": [
+    "break",
     "break",
     {
       "format": " {#96}{#1}{user-name}{#0}{#37}@{#96}{#1}{host-name}{#0}",

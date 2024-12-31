@@ -9,14 +9,14 @@
   "border_style": "Square",
   "border_width": 2,
   "border_offset": -1,
-  "theme": {
-    "palette": "Base16",
-    "name": "TokyoNightStorm",
-    "unfocused_border": "Base00",
-    "bar_accent": "Base0D"
+  "border_colours": {
+    "single": "#00FFFB",
+    "unfocused": "#34415E",
+    "floating": "#8FF8B5",
+    "monocle": "#4785FF"
   },
   "transparency": true,
-  "transparency_alpha": 210,
+  "transparency_alpha": 224,
   "animation": {
     "enabled": true,
     "duration": 400,
