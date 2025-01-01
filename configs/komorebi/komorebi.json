@@ -11,12 +11,12 @@
   "border_offset": -1,
   "border_colours": {
     "single": "#00FFFB",
-    "unfocused": "#34415E",
+    "unfocused": "#0e1327",
     "floating": "#8FF8B5",
     "monocle": "#4785FF"
   },
   "transparency": true,
-  "transparency_alpha": 224,
+  "transparency_alpha": 240,
   "animation": {
     "enabled": true,
     "duration": 400,

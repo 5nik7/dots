@@ -4191,7 +4191,7 @@ set STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
 |	time=1735448098
 |ath
 |	time=1735449252
-path
+|ath
 |	time=1735449254
 |ATH | tr ";" "\n"
 |	time=1735449377
@@ -4259,11 +4259,11 @@ set STARSHIP_CONFIG %DEV%\dots\configs\starship\starship.toml
 |	time=1735472526
 |nv
 |	time=1735505207
-env
+|nv
 |	time=1735505209
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1735505227
-q
+|
 |	time=1735519614
 |s
 |	time=1735519828
@@ -4340,3 +4340,19 @@ pywalfox -p --verbose start
 clear
 |	time=1735548807
 c
+|	time=1735601579
+Get-InactiveUserProfiles.ps1
+|	time=1735601596
+pwsh -e Get-InactiveUserProfiles.ps1
+|	time=1735601602
+pwsh -h
+|	time=1735601631
+pwsh -c Get-InactiveUserProfiles.ps1
+|	time=1735694464
+env
+|	time=1735694467
+path
+|	time=1735694470
+PATH | tr ";" "\n"
+|	time=1735694878
+q
