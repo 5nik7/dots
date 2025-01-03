@@ -19,8 +19,8 @@ continuation_prompt = '[│](black)'
 
 [cmd_duration]
 format = "[$duration]($style) "
+style = "bright-yellow"
 
-style = "yellow"
 [username]
 style_user = 'bright-yellow'
 style_root = 'bright-yellow bold'
