@@ -37,6 +37,8 @@ $arrowcolor = "DarkGray"
 $arrow = "  -->  "
 $dotcolor = "Green"
 $doticon = "󰑊 "
+$psdotcolor = "Cyan"
+$psdoticon = " "
 $devcolor = "Magenta"
 $devicon = "󰵮 "
 $homecolor = "Blue"
@@ -60,6 +62,10 @@ if ($v) {
 elseif ($basedir -eq $env:DOTFILES -or $parentDir -eq $env:DOTFILES) {
   $basedircolor = $dotcolor
   $basedir = $doticon
+}
+elseif ($basedir -eq $env:PSDOT) {
+  $basedircolor = $psdotcolor
+  $basedir = $psdoticon
 }
 elseif ($basedir -eq $env:USERPROFILE) {
   $basedircolor = $homecolor

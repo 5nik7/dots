@@ -1,10 +1,10 @@
 {
-  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.31/schema.json",
+  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.32/schema.json",
   "app_specific_configuration_path": "$Env:USERPROFILE/applications.json",
   "window_hiding_behaviour": "Cloak",
   "cross_monitor_move_behaviour": "Insert",
-  "default_workspace_padding": 8,
-  "default_container_padding": 8,
+  "default_workspace_padding": 7,
+  "default_container_padding": 7,
   "border": true,
   "border_style": "Square",
   "border_width": 2,
@@ -16,7 +16,7 @@
     "monocle": "#4785FF"
   },
   "transparency": true,
-  "transparency_alpha": 240,
+  "transparency_alpha": 245,
   "animation": {
     "enabled": true,
     "duration": 400,
@@ -30,35 +30,49 @@
       "width": 300
     }
   },
+  "ignore_rules": [
+    {
+      "kind": "Exe",
+      "id": "PowerToys.Settings.exe",
+      "matching_strategy": "Equals"
+    }
+  ],
+  "floating_applications": [
+    {
+      "kind": "Exe",
+      "id": "PowerToys.Settings.exe",
+      "matching_strategy": "Equals"
+    }
+  ],
   "monitors": [
     {
       "workspaces": [
         {
-          "name": "1",
+          "name": " 1 ",
           "layout": "BSP"
         },
         {
-          "name": "2",
-          "layout": "VerticalStack"
+          "name": " 2 ",
+          "layout": "BSP"
         },
         {
-          "name": "3",
+          "name": " 3 ",
           "layout": "HorizontalStack"
         },
         {
-          "name": "4",
+          "name": " 4 ",
           "layout": "UltrawideVerticalStack"
         },
         {
-          "name": "5",
+          "name": " 5 ",
           "layout": "Rows"
         },
         {
-          "name": "6",
+          "name": " 6 ",
           "layout": "Grid"
         },
         {
-          "name": "7",
+          "name": " 7 ",
           "layout": "RightMainVerticalStack"
         }
       ]

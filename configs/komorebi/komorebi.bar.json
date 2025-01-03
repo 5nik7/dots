@@ -1,22 +1,48 @@
 {
-  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.31/schema.bar.json",
+  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.32/schema.bar.json",
   "monitor": {
     "index": 0,
     "work_area_offset": {
       "left": 0,
-      "top": 50,
+      "top": 40,
       "right": 0,
-      "bottom": 50
+      "bottom": 40
     }
   },
+  "position": {
+    "start": {
+      "x": 7,
+      "y": 0
+    }
+  },
+  "frame": {
+    "inner_margin": {
+      "x": 2,
+      "y": 2
+    }
+  },
+  "widget_spacing": 8,
   "font_family": "JetBrainsMono NFP",
   "font_size": 12,
+  "icon_scale": 1.2,
+  "theme": {
+    "palette": "Base16",
+    "name": "TokyoNightStorm",
+    "accent": "Base0F"
+  },
+  "transparency_alpha": 0,
+  "grouping": {
+    "kind": "Widget",
+    "transparency_alpha": 255,
+    "rounding": 0,
+    "style": "DefaultWithShadowB0O1S3"
+  },
   "left_widgets": [
     {
       "Komorebi": {
         "workspaces": {
           "enable": true,
-          "hide_empty_workspaces": true
+          "hide_empty_workspaces": false
         },
         "layout": {
           "enable": true
@@ -31,37 +57,47 @@
   "right_widgets": [
     {
       "Media": {
-        "enable": true
+        "enable": false
       }
     },
     {
       "Storage": {
+        "enable": false,
+        "label_prefix": "IconAndText"
+      }
+    },
+    {
+      "Cpu": {
         "enable": false
       }
     },
     {
       "Memory": {
-        "enable": true
+        "enable": false
       }
     },
     {
       "Network": {
         "enable": false,
-        "show_total_data_transmitted": true,
-        "network_activity_fill_characters": 0,
-        "show_network_activity": true
+        "show_default_interface": true,
+        "label_prefix": "Icon",
+        "show_total_data_transmitted": false,
+        "show_network_activity": false
       }
     },
     {
       "Date": {
         "enable": false,
-        "format": "DayDateMonthYear"
+        "format": "MonthDateYear",
+        "label_prefix": "Icon"
       }
     },
     {
       "Time": {
         "enable": false,
-        "format": "TwentyFourHour"
+        "format": {
+          "Custom": "%l:%M %p "
+        }
       }
     },
     {

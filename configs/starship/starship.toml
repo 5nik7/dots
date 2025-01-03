@@ -144,36 +144,6 @@ symbol = ''
 format = '[$symbol$branch ]($style)'
 style = 'bright-black'
 
-# [git_status]
-# format = '([$all_status$ahead_behind]($style) )'
-# style = "purple bold"
-# stashed = '\$'
-# ahead = "⇡"
-# behind = "⇣"
-# up_to_date = ""
-# diverged = "⇕"
-# conflicted = "="
-# deleted = "✘"
-# renamed = "»"
-# modified = ""
-# staged = "+"
-# untracked = "?"
-# typechanged = ""
-# ignore_submodules = false
-# disabled = false
-
-# [git_status]
-# format = "[( $conflicted$untracked$modified$staged$renamed$deleted$ahead_behind$stashed)]($style)"
-# style = "cyan"
-# conflicted = "​"
-# untracked = "​"
-# modified = "​"
-# staged = "​"
-# renamed = "​"
-# deleted = "​"
-# stashed = "≡"
-
-
 [git_status]
 format = "([($conflicted$untracked$modified$staged$renamed$deleted$stashed )](purple)[($ahead_behind )]($style))"
 style = "bright-purple"
@@ -246,10 +216,10 @@ style = 'bright-green'
 symbol = '󰌠 '
 pyenv_version_name = true
 
-# [rust]
-# format = '[$symbol$version]($style) '
-# style = 'red'
-# symbol = ' '
+[rust]
+format = '[$symbol$version]($style) '
+style = 'red'
+symbol = ' '
 
 [character]
 # success_symbol = '[󰅂](cyan bold)'
