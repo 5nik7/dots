@@ -131,7 +131,7 @@ truncation_length = 0
 # home_symbol = ' '
 truncate_to_repo = true
 # use_os_path_sep = false
-use_os_path_sep = true
+use_os_path_sep = false
 use_logical_path = true
 read_only = " ◈"
 read_only_style = 'bright-blue dimmed'
@@ -141,7 +141,7 @@ disabled = false
 
 [git_branch]
 symbol = ''
-format = '[$symbol$branch ]($style)'
+format = '[($symbol$branch )]($style)'
 style = 'bright-black'
 
 [git_status]

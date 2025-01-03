@@ -12,8 +12,9 @@
   "border_colours": {
     "single": "#00FFFB",
     "unfocused": "#0e1327",
-    "floating": "#8FF8B5",
-    "monocle": "#4785FF"
+    "floating": "#4785FF",
+    "monocle": "#00FFCC",
+    "stack": "#BB9AF7"
   },
   "transparency": true,
   "transparency_alpha": 245,
