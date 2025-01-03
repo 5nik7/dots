@@ -6,8 +6,10 @@ $os\
 $username\
 $hostname\
 $directory\
-$git_branch$git_status\
+$git_branch\
+$git_status\
 ([󰧞](black) $nodejs$conda$python$rust)\
+$cmd_duration\
 $line_break\
 $character"""
 
@@ -15,6 +17,10 @@ add_newline = true
 
 continuation_prompt = '[│](black)'
 
+[cmd_duration]
+format = "[$duration]($style) "
+
+style = "yellow"
 [username]
 style_user = 'bright-yellow'
 style_root = 'bright-yellow bold'
