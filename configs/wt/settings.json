@@ -57,14 +57,16 @@
     }
   ],
   "alwaysShowNotificationIcon": false,
-  "centerOnLaunch": true,
+  "centerOnLaunch": false,
   "confirmCloseAllTabs": false,
   "copyFormatting": "none",
   "copyOnSelect": true,
   "defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
   "focusFollowMouse": true,
   "initialCols": 260,
+  "initialPosition": ",",
   "initialRows": 60,
+  "launchMode": "focus",
   "keybindings": [
     {
       "id": "Terminal.PasteFromClipboard",
@@ -100,6 +102,7 @@
     }
   ],
   "minimizeToNotificationArea": false,
+
   "newTabMenu": [
     {
       "type": "remainingProfiles"
@@ -110,8 +113,9 @@
       "adjustIndistinguishableColors": "never",
       "antialiasingMode": "cleartype",
       "bellStyle": "none",
-      "closeOnExit": "graceful",
-      "colorScheme": "Dream",
+      "closeOnExit": "always",
+      "colorScheme": "wal",
+      "cursorColor": "#D2EBFF",
       "font": {
         "face": "JetBrainsMono Nerd Font Propo",
         "size": 9,
@@ -140,6 +144,7 @@
       },
       {
         "commandline": "%SystemRoot%\\System32\\cmd.exe",
+        "elevate": false,
         "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
         "hidden": false,
         "icon": "C:\\wsl\\logos\\icons\\cmd.png",
@@ -147,7 +152,7 @@
       },
       {
         "commandline": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -NoLogo",
-        "elevate": true,
+        "elevate": false,
         "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
         "hidden": false,
         "icon": "C:\\wsl\\logos\\icons\\powershell_white.png",
@@ -342,6 +347,29 @@
       "selectionBackground": "#283457",
       "white": "#A9B1D6",
       "yellow": "#E0AF68"
+    },
+    {
+      "background": "#1A2440",
+      "black": "#34415E",
+      "blue": "#4785FF",
+      "brightBlack": "#5A6B8C",
+      "brightBlue": "#5797FF",
+      "brightCyan": "#30F1EA",
+      "brightGreen": "#8FF8B5",
+      "brightPurple": "#C4A7E7",
+      "brightRed": "#EB6F92",
+      "brightWhite": "#D2EBFF",
+      "brightYellow": "#F2C996",
+      "cursorColor": "#FFFFFF",
+      "cyan": "#00FFFB",
+      "foreground": "#D2EBFF",
+      "green": "#00FFCC",
+      "name": "wal",
+      "purple": "#BB9AF7",
+      "red": "#EB6F92",
+      "selectionBackground": "#FFFFFF",
+      "white": "#D2EBFF",
+      "yellow": "#F1A97E"
     }
   ],
   "theme": "Dream",
@@ -351,7 +379,7 @@
       "tab": {
         "background": "#00000000",
         "iconStyle": "default",
-        "showCloseButton": "hover",
+        "showCloseButton": "always",
         "unfocusedBackground": "terminalBackground"
       },
       "tabRow": {
@@ -359,10 +387,10 @@
         "unfocusedBackground": "terminalBackground"
       },
       "window": {
-        "applicationTheme": "system",
+        "applicationTheme": "dark",
         "experimental.rainbowFrame": false,
         "frame": null,
-        "unfocusedFrame": "terminalBackground",
+        "unfocusedFrame": null,
         "useMica": false
       }
     }
