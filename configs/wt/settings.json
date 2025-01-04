@@ -17,6 +17,10 @@
       "id": "User.splitPane.D5151347"
     },
     {
+      "command": "toggleFocusMode",
+      "id": "User.toggleFocusMode"
+    },
+    {
       "command": {
         "action": "splitPane",
         "split": "auto",
@@ -66,7 +70,6 @@
   "initialCols": 260,
   "initialPosition": ",",
   "initialRows": 60,
-  "launchMode": "focus",
   "keybindings": [
     {
       "id": "Terminal.PasteFromClipboard",
@@ -99,10 +102,18 @@
     {
       "id": "User.splitPane.D5151347",
       "keys": "shift+down"
+    },
+    {
+      "id": "Terminal.ClosePane",
+      "keys": "ctrl+shift+f"
+    },
+    {
+      "id": "User.toggleFocusMode",
+      "keys": "shift+esc"
     }
   ],
+  "launchMode": "focus",
   "minimizeToNotificationArea": false,
-
   "newTabMenu": [
     {
       "type": "remainingProfiles"
@@ -122,7 +133,7 @@
         "weight": "normal"
       },
       "intenseTextStyle": "all",
-      "opacity": 86,
+      "opacity": 90,
       "padding": "12",
       "scrollbarState": "hidden",
       "snapOnInput": true,
@@ -390,7 +401,7 @@
         "applicationTheme": "dark",
         "experimental.rainbowFrame": false,
         "frame": null,
-        "unfocusedFrame": null,
+        "unfocusedFrame": "terminalBackground",
         "useMica": false
       }
     }
