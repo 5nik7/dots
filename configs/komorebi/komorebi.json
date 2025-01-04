@@ -10,10 +10,10 @@
   "border_width": 2,
   "border_offset": -1,
   "border_colours": {
-    "single": "#00FFFB",
-    "unfocused": "#0e1327",
-    "floating": "#4785FF",
-    "monocle": "#00FFCC",
+    "single": "#4785FF",
+    "unfocused": "#1A2440",
+    "floating": "#1A2440",
+    "monocle": "#00FFFB",
     "stack": "#BB9AF7"
   },
   "transparency": true,
