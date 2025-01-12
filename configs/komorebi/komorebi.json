@@ -36,12 +36,27 @@
       "kind": "Exe",
       "id": "PowerToys.Settings.exe",
       "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "ImageGlass.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "fontview.exe",
+      "matching_strategy": "Equals"
     }
   ],
   "floating_applications": [
     {
       "kind": "Exe",
       "id": "PowerToys.Settings.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "fontview.exe",
       "matching_strategy": "Equals"
     }
   ],

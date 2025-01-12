@@ -1,0 +1,24 @@
+|	time=1736054563
+cd C:\Windows\System32\WindowsPowerShell\v1.0\Modules
+|	time=1736054565
+;s
+|	time=1736054566
+|s
+|	time=1736054585
+rm -fr .\*
+|	time=1736054586
+d
+|	time=1736054588
+|s
+|	time=1736054594
+cd ..
+|	time=1736054599
+rm -fr Modules\
+|	time=1736054605
+ls
+|	time=1736054615
+eza -la
+|	time=1736054621
+mkdir Modules
+|	time=1736054667
+explorer.exe .

@@ -33,8 +33,7 @@ $Env:BAT_CONFIG_PATH = "$Env:DOTFILES\bat\config"
 $Env:YAZI_CONFIG_HOME = "$Env:DOTFILES\yazi"
 $GITBIN = "C:\Git\usr\bin"
 $Env:YAZI_FILE_ONE = "$GITBIN\file.exe"
-$BAT_THEME = if ($Env:THEME) { $Env:THEME }
-else { 'base16' }
+$BAT_THEME = 'wal'
 $Env:BAT_THEME = $BAT_THEME
 $Env:KOMOREBI_CONFIG_HOME = "$Env:WINDOTCONF\komorebi"
 
@@ -82,8 +81,11 @@ if (-not (Get-Module Terminal-Icons -ListAvailable)) {
 Import-Module "$Env:PSMODS\winwal\winwal.psm1"
 Import-Module "$Env:PSMODS\psdots\psdots.psm1"
 Import-Module -Name Terminal-Icons
-Import-Module -Name Microsoft.WinGet.CommandNotFound
 Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
+
+if ($PSEdition -eq 'Core') {
+    Import-Module -Name Microsoft.WinGet.CommandNotFound
+}
 
 $Env:PSCRIPTS = "$Env:PSDOT\Scripts"
 if (Test-Path($Env:PSCRIPTS)) {

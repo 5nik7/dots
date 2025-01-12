@@ -194,7 +194,7 @@ Arch86.exe run passwd
 |	time=1682661040
 |l
 |	time=1682661052
-powershell.exe
+|owershell.exe
 |	time=1682661089
 |wsh
 |	time=1682661168
@@ -1676,7 +1676,7 @@ C:\Users\nickf\miniconda3\Scripts\activate.bat C:\Users\nickf\miniconda3
 |	time=1706859383
 exitr
 |	time=1706859377
-cmd
+|md
 |	time=1706859402
 |link
 |	time=1706859411
@@ -2052,11 +2052,11 @@ wt
 |	time=1707684630
 |ath
 |	time=1707684651
-winget
+|inget
 |	time=1707684657
-winget list
+|inget list
 |	time=1707684752
-winget search Microsoft.PowerShell
+|inget search Microsoft.PowerShell
 |	time=1707684780
 winget install --id Microsoft.Powershell --source winget
 |	time=1707684836
@@ -2202,7 +2202,7 @@ winfetch
 |	time=1714814514
 |ls
 |	time=1714814518
-sudo
+|udo
 |	time=1714814522
 scoop list
 |	time=1714814537
@@ -3032,7 +3032,7 @@ cd C
 |	time=1718103968
 |d
 |	time=1718103976
-cd ~
+|d ~
 |	time=1718103985
 cd home
 |	time=1718103995
@@ -3511,7 +3511,7 @@ code clink_settings
 |	time=1720296972
 |za
 |	time=1720297004
-cd $HOME
+|d $HOME
 |	time=1720297015
 |d %USERPROFILE%
 |	time=1720297020
@@ -3933,7 +3933,7 @@ yazi
 |	time=1732186834
 |hich sh
 |	time=1732186839
-cd /
+|d /
 |	time=1732186845
 cd /usr
 |	time=1732186846
@@ -4025,7 +4025,7 @@ pip lis
 |	time=1732994685
 |
 |	time=1732994704
-pwsh
+|wsh
 |	time=1732994835
 |
 |	time=1732996297
@@ -4101,7 +4101,7 @@ clink set | nvim
 |	time=1733034442
 ..
 |	time=1733034442
-l
+|
 |	time=1733034443
 |s
 |	time=1733034445
@@ -4139,7 +4139,7 @@ npm doctor
 |	time=1735361832
 |
 |	time=1735361834
-cls
+|ls
 |	time=1735361838
 clink
 |	time=1735361841
@@ -4201,13 +4201,13 @@ ll
 |	time=1735449379
 |s
 |	time=1735449381
-ls -la
+|s -la
 |	time=1735449385
 dd
 |	time=1735449398
 explorer.exe .
 |	time=1735449418
-which pwsh
+|hich pwsh
 |	time=1735449472
 |xa -lA --icons --group-directories-first
 |	time=1735449478
@@ -4239,7 +4239,7 @@ setx DOTFILES %DOTS%\configs
 |	time=1735470969
 setx STARSHIP_CONFIG %DOTFILES%\starship\starship.tomlion
 |	time=1735471509
-set
+|et
 |	time=1735471535
 setx
 |	time=1735471539
@@ -4271,7 +4271,7 @@ fastfetch
 |	time=1735523137
 env.exe 
 |	time=1735523142
-ls
+|s
 |	time=1735523146
 |xi
 |	time=1735545004
@@ -4339,7 +4339,7 @@ pywalfox -p --verbose start
 |	time=1735548805
 clear
 |	time=1735548807
-c
+|
 |	time=1735601579
 Get-InactiveUserProfiles.ps1
 |	time=1735601596
@@ -4349,10 +4349,150 @@ pwsh -h
 |	time=1735601631
 pwsh -c Get-InactiveUserProfiles.ps1
 |	time=1735694464
-env
+|nv
 |	time=1735694467
-path
+|ath
 |	time=1735694470
 PATH | tr ";" "\n"
 |	time=1735694878
+|
+|	time=1735695165
+sudo
+|	time=1735695175
+netstat -ano | find ":5000"
+|	time=1735695278
+netstat -ano | findstr portNo
+|	time=1735695285
+|etstat -ano | find ":80"
+|	time=1735695368
+netstat -ano | find ":80"
+|	time=1735695761
+|
+|	time=1736016305
+|s
+|	time=1736016308
+|nv
+|	time=1736016366
+powershell.exe
+|	time=1736016388
+set
+|	time=1736016411
+%PSModulePath%
+|	time=1736016422
+set PSModulePath
+|	time=1736016832
+path
+|	time=1736016842
+|hich pwsh
+|	time=1736016846
+|hich powershell
+|	time=1736016851
+|
+|	time=1736016872
+|hich powershell
+|	time=1736016877
+|hich pwsh
+|	time=1736016879
+|inget
+|	time=1736016881
+|inget list
+|	time=1736016900
+cmd
+|	time=1736016924
+winget
+|	time=1736016937
+winget search Microsoft.PowerShell
+|	time=1736016955
+winget install --Id "Microsoft.PowerShell"
+|	time=1736017012
+|inget list
+|	time=1736017026
+|
+|	time=1736017033
+winget list
+|	time=1736017042
+which pwsh
+|	time=1736017049
+|
+|	time=1736023846
+vite
+|	time=1736023874
+vite peeview
+|	time=1736023997
+start dev
+|	time=1736024023
+npm start dev
+|	time=1736043770
+cd "C:\Program Files\WindowsPowerShell\Modules
+|	time=1736043771
+|s
+|	time=1736043774
+l
+|	time=1736043775
+ls -la
+|	time=1736043780
+rm Pester\
+|	time=1736043785
+|m -fr Pester\
+|	time=1736043787
+|s
+|	time=1736043802
+|m -fr Microsoft.PowerShell.Operation.Validation\
+|	time=1736043803
+|s
+|	time=1736043840
+|d "C:\Program Files (x86)\WindowsPowerShell\Modules"
+|	time=1736043841
+|s
+|	time=1736043844
+rm -fr Pester\
+|	time=1736043846
+cd "C:\Program Files (x86)\WindowsPowerShell\Modules"
+|	time=1736043850
+rm -fr Microsoft.PowerShell.Operation.Validation\
+|	time=1736043926
+|owershell
+|	time=1736044123
+|
+|	time=1736044124
+|ls
+|	time=1736044127
+cd ~
+|	time=1736044132
+cd $HOME
+|	time=1736044135
+cd /
+|	time=1736044136
+|
+|	time=1736044138
+cls
+|	time=1736044142
+choco
+|	time=1736044155
+|hoco uninstall powershell
+|	time=1736044176
+choco uninstall powershell
+|	time=1736044185
+which eSupport\
+|	time=1736044189
+which powershell
+|	time=1736044197
+powershell
+|	time=1736044219
+choco uninstall -?
+|	time=1736044248
+choco uninstall -f powershell
+|	time=1736044743
+choco install powershell -force
+|	time=1736044761
+choco list
+|	time=1736044769
+c
+|	time=1736044775
+pwsh
+|	time=1736044879
 q
+|	time=1736044914
+ls
+|	time=1736044916
+env

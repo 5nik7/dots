@@ -79,7 +79,6 @@ function Update-WalExplorer {
     $EBMDir = "$scriptDir/EBM"
     $releaseDir = "$EBMDir/Release"
     $EBMDLL = "$releaseDir/ExplorerBlurMica.dll"
-    $regcmd = "$releaseDir/register.cmd"
     $explorerConf = "$releaseDir/config.ini"
     $rgbfile = "$HOME\.cache\wal\color0-rgb"
     $rgb_value = Get-Content -Path $rgbfile -Raw
@@ -176,6 +175,7 @@ function Update-WalTheme {
     param(
         # Path to image to set as background, if not set current wallpaper is used
         [string]$Image,
+        [string]$Theme,
         [string]$Backend = 'wal'
     )
 

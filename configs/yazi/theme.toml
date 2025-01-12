@@ -32,7 +32,7 @@ border_symbol = "│"
 border_style = { fg = "black" }
 
 # Highlighting
-syntect_theme = ""
+syntect_theme = "~/.cache/wal/wal.tmTheme"
 
 # : }}}
 
@@ -41,15 +41,15 @@ syntect_theme = ""
 
 [mode]
 
-normal_main = { bg = "blue", bold = true }
+normal_main = { fg = "black", bg = "blue", bold = true }
 normal_alt = { fg = "blue", bg = "black" }
 
 # Select mode
-select_main = { bg = "red", bold = true }
+select_main = { fg = "black", bg = "red", bold = true }
 select_alt = { fg = "red", bg = "black" }
 
 # Unset mode
-unset_main = { bg = "red", bold = true }
+unset_main = { fg = "black", qbg = "red", bold = true }
 unset_alt = { fg = "red", bg = "black" }
 
 # : }}}
@@ -67,7 +67,7 @@ progress_normal = { fg = "blue", bg = "black" }
 progress_error = { fg = "red", bg = "black" }
 
 # Permissions
-perm_sep = { fg = "darkgray" }
+perm_sep = { fg = "black" }
 perm_type = { fg = "green" }
 perm_read = { fg = "yellow" }
 perm_write = { fg = "red" }

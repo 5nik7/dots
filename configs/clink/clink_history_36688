@@ -1,0 +1,16 @@
+|	time=1736054634
+cd \
+|	time=1736054640
+cd "Program Files\
+|	time=1736054642
+d
+|	time=1736054653
+cd WindowsPowerShell\
+|	time=1736054655
+|s
+|	time=1736054658
+cd Modules\
+|	time=1736054659
+ls
+|	time=1736054675
+explorer.exe .
