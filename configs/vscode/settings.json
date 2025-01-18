@@ -1,179 +1,201 @@
 ﻿{
-  "window.zoomLevel": -0.8,
-  "editor.fontFamily": "JetBrainsMono NFM",
-  "editor.fontLigatures": true,
-  "editor.fontSize": 14,
-  "terminal.integrated.fontSize": 14,
-  "markdown.preview.fontSize": 14,
-  "chat.editor.fontSize": 14,
-  "editor.fontWeight": "normal",
-  "chat.editor.fontWeight": "normal",
-  "terminal.integrated.fontWeight": "normal",
-  "terminal.integrated.fontWeightBold": "bold",
-  "editor.lineHeight": 22,
-  "terminal.integrated.lineHeight": 1.2,
-  "editor.letterSpacing": 0,
-  "terminal.integrated.letterSpacing": 0,
-  "editor.minimap.renderCharacters": false,
-  "editor.wordWrap": "on",
-  "files.eol": "auto",
-  "editor.inlineSuggest.enabled": true,
-  "editor.minimap.enabled": false,
-  "window.titleBarStyle": "custom",
-  "breadcrumbs.enabled": true,
   "security.workspace.trust.enabled": false,
-  "terminal.integrated.copyOnSelection": true,
-  "terminal.integrated.cursorStyle": "line",
-  "terminal.integrated.profiles.windows": {
-    "PowerShell": {
-      "source": "PowerShell",
-      "icon": "terminal-powershell"
-    },
-    "Command Prompt": {
-      "path": [
-        "${env:windir}\\Sysnative\\cmd.exe",
-        "${env:windir}\\System32\\cmd.exe"
-      ],
-      "args": [],
-      "icon": "terminal-cmd"
-    },
-    "Git Bash": {
-      "source": "Git Bash"
-    },
-    "PowerShell (x64)": {
-      "source": "PowerShell",
-      "icon": "terminal-powershell",
-      "args": [
-        "-NoLogo"
-      ]
-    },
-    "Windows PowerShell": {
-      "path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-    },
-    "pwsh": {
-      "path": "C:\\pwsh\\7-preview\\pwsh.exe",
-      "icon": "terminal-powershell",
-      "args": [
-        "-NoLogo"
-      ]
-    }
-  },
-  "git.autofetch": true,
-  "git.openRepositoryInParentFolders": "always",
-  "editor.semanticHighlighting.enabled": true,
-  "terminal.integrated.minimumContrastRatio": 1,
-  "Lua.semantic.keyword": true,
-  "explorer.confirmDelete": false,
-  "git.confirmSync": false,
-  "Lua.codeLens.enable": true,
-  "workbench.startupEditor": "terminal",
-  "git.enableSmartCommit": true,
-  "github.copilot.chat.welcomeMessage": "never",
-  "editor.formatOnSave": true,
+  "security.workspace.trust.emptyWindow": false,
+  "security.workspace.trust.banner": "never",
+  "security.workspace.trust.startupPrompt": "never",
   "editor.formatOnPaste": true,
-  "editor.tabSize": 2,
-  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
-  "editor.experimentalWhitespaceRendering": "off",
-  "editor.smartSelect.selectLeadingAndTrailingWhitespace": false,
-  "[rainmeter]": {
-    "editor.formatOnSave": true
-  },
-  "color-highlight.languages": [
-    "*"
-  ],
-  "workbench.sideBar.location": "left",
-  "workbench.activityBar.location": "top",
-  "window.menuBarVisibility": "compact",
-  "workbench.welcomePage.walkthroughs.openOnInstall": false,
-  "debug.openDebug": "openOnDebugBreak",
-  "editor.tabCompletion": "off",
-  "powershell.integratedConsole.focusConsoleOnExecute": true,
-  "files.defaultLanguage": "",
-  "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?",
-  "powershell.buttons.showPanelMovementButtons": false,
-  "powershell.codeFolding.showLastLine": true,
-  "powershell.sideBar.CommandExplorerVisibility": false,
-  "editor.renderWhitespace": "all",
-  "editor.renderControlCharacters": true,
-  "files.trimTrailingWhitespace": true,
-  "files.encoding": "utf8bom",
-  "files.autoGuessEncoding": true,
-  "color-manager.fullWidth": true,
-  "color-manager.autoStartIntellisense": true,
-  "color-manager.paletteLimit": 100000,
-  "workbench.chat.experimental.showWelcomeView": false,
-  "shellcheck.enable": true,
-  "shellcheck.run": "onType",
-  "shellcheck.exclude": [
-    "2148",
-    "1091",
-    "2296",
-    "2154"
-  ],
-  "shellcheck.customArgs": [],
-  "shellcheck.ignorePatterns": {
-    "**/*.csh": true,
-    "**/*.cshrc": true,
-    "**/*.fish": true,
-    "**/*.login": true,
-    "**/*.logout": true,
-    "**/*.tcsh": true,
-    "**/*.tcshrc": true,
-    "**/*.xonshrc": true,
-    "**/*.xsh": true,
-    "**/*.zsh": true,
-    "**/*.zshrc": true,
-    "**/zshrc": true,
-    "**/*.zprofile": true,
-    "**/zprofile": true,
-    "**/*.zlogin": true,
-    "**/zlogin": true,
-    "**/*.zlogout": true,
-    "**/zlogout": true,
-    "**/*.zshenv": true,
-    "**/zshenv": true,
-    "**/*.zsh-theme": true
-  },
-  "shellcheck.ignoreFileSchemes": [
-    "git",
-    "gitfs",
-    "output"
-  ],
+  "editor.formatOnSave": true,
+  "window.zoomPerWindow": true,
+  "window.zoomLevel": -1.0,
+  "workbench.activityBar.iconClickBehavior": "toggle",
+  "terminal.integrated.fontFamily": "JetBrainsMono NFP, monospace",
+  "editor.fontFamily": "JetBrainsMono NFP, monospace",
+  "editor.codeLensFontFamily": "JetBrainsMono NFP, monospace",
+  "editor.inlayHints.fontFamily": "JetBrainsMono NFP, monospace",
+  "debug.console.fontFamily": "JetBrainsMono NFP, monospace",
+  "editor.fontSize": 14,
+  "debug.console.fontSize": 14,
+  "terminal.integrated.fontSize": 14,
+  "editor.fontWeight": "normal",
+  "editor.letterSpacing": 0.3,
+  "terminal.integrated.letterSpacing": 0,
+  "editor.lineHeight": 25,
+  "editor.fontLigatures": true,
+  "editor.minimap.showMarkSectionHeaders": false,
+  "editor.minimap.showRegionSectionHeaders": false,
+  "editor.minimap.renderCharacters": false,
+  "scm.diffDecorations": "none",
   "[powershell]": {
     "editor.formatOnSave": true,
-    "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?",
-    "editor.semanticHighlighting.enabled": true
+    "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
+    "editor.semanticHighlighting.enabled": true,
+    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
   },
-  "powershell.powerShellAdditionalExePaths": {
-    "pwsh": "C:/pwsh/7-preview/pwsh.exe"
+  "files.associations": {
+    "*.ps1": "powershell",
+    "*.psm1": "powershell",
+    "*.psd1": "powershell",
+    "*.sh": "shaderlab",
+    "*.json": "jsonc"
   },
-  "powershell.powerShellDefaultVersion": "pwsh",
-  "editor.overviewRulerBorder": false,
-  "editor.tokenColorCustomizations": {},
-  "workbench.colorCustomizations": {
-    "editorCursor.foreground": "#FAF8FF"
+  "powershell.codeFormatting.autoCorrectAliases": true,
+  "powershell.developer.setExecutionPolicy": true,
+  "powershell.buttons.showRunButtons": true,
+  "powershell.buttons.showPanelMovementButtons": false,
+  "powershell.enableReferencesCodeLens": true,
+  "powershell.analyzeOpenDocumentsOnly": false,
+  "powershell.debugging.createTemporaryIntegratedConsole": true,
+  "powershell.trace.server": "messages",
+  "powershell.helpCompletion": "BlockComment",
+  "powershell.pester.codeLens": false,
+  "powershell.scriptAnalysis.enable": true,
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "workbench.colorTheme": "Wal Bordered",
+  "explorer.confirmDelete": false,
+  "diffEditor.codeLens": true,
+  "javascript.referencesCodeLens.enabled": true,
+  "javascript.referencesCodeLens.showOnAllFunctions": true,
+  "typescript.implementationsCodeLens.enabled": true,
+  "typescript.implementationsCodeLens.showOnInterfaceMethods": true,
+  "typescript.referencesCodeLens.enabled": true,
+  "typescript.referencesCodeLens.showOnAllFunctions": true,
+  "editor.padding.top": 20,
+  "editor.padding.bottom": 20,
+  "editor.smoothScrolling": true,
+  "editor.lineNumbers": "on",
+  "editor.tabCompletion": "on",
+  "editor.glyphMargin": true,
+  "editor.renderControlCharacters": false,
+  "editor.fontVariations": true,
+  "editor.cursorSurroundingLinesStyle": "all",
+  "editor.codeLensFontSize": 0,
+  "editor.scrollbar.verticalScrollbarSize": 8,
+  "editor.scrollbar.horizontalScrollbarSize": 8,
+  "editor.hover.above": true,
+  "editor.codeLens": false,
+  "breadcrumbs.enabled": false,
+  "editor.autoIndent": "advanced",
+  "workbench.iconTheme": "material-icon-theme",
+  "debug.inlineValues": "on",
+  "redhat.telemetry.enabled": true,
+  "liveServer.settings.donotShowInfoMsg": true,
+  "color-highlight.markRuler": false,
+  "Lua.codeLens.enable": true,
+  "Lua.hint.enable": true,
+  "workbench.colorCustomizations": {},
+  "[shellscript]": {
+    "files.eol": "\n",
+    "editor.formatOnSave": true
   },
   "editor.bracketPairColorization.enabled": true,
+  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
   "editor.autoClosingBrackets": "always",
-  "editor.language.colorizedBracketPairs": null,
-  "Lua.diagnostics.globals": [
-    "vim",
-    "SKIN"
-  ],
-  "editor.accessibilitySupport": "off",
-  "scm.showIncomingChanges": "always",
-  "scm.showOutgoingChanges": "always",
+  "editor.overviewRulerBorder": false,
   "github.copilot.editor.enableAutoCompletions": true,
-  "workbench.iconTheme": "helium-icon-theme",
-  "workbench.colorTheme": "Wal Bordered",
-  "editor.stickyScroll.enabled": false,
-  "zenMode.centerLayout": true,
-  "zenMode.hideLineNumbers": true,
-  "zenMode.showTabs": "none",
-  "shellcheck.enableQuickFix": false,
-  "[shellscript]": {
-    "files.eol": "\n"
+  "accessibility.signalOptions.volume": 0,
+  "editor.minimap.enabled": false,
+  "editor.defaultFormatter": "ms-vscode.powershell",
+  "workbench.settings.applyToAllProfiles": [
+    "Lua.diagnostics.globals",
+    "files.eol"
+  ],
+  "Lua.diagnostics.globals": ["vim", "Wezterm", "LazyVim", "settings"],
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
   },
-  "editor.unicodeHighlight.invisibleCharacters": false,
-  "terminal.integrated.defaultProfile.windows": "pwsh"
+  "editor.minimap.sectionHeaderFontSize": 12,
+  "chat.editor.fontSize": 14,
+  "errorLens.fontStyleItalic": true,
+  "markdown.preview.fontSize": 14,
+  "errorLens.fontSize": "JetBrainsMono NFP, monospace",
+  "errorLens.fontFamily": "JetBrainsMono NFP, monospace",
+  "files.eol": "\n",
+  "[plaintext]": {
+    "editor.formatOnSave": false,
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false
+  },
+  // "material-icon-theme.files.color": "#49608D",
+  // "material-icon-theme.folders.color": "#49608D",
+  "material-icon-theme.saturation": 0.75,
+  "workbench.tree.enableStickyScroll": false,
+  "errorLens.statusBarColorsEnabled": true,
+  "workbench.activityBar.location": "top",
+  "notebook.globalToolbarShowLabel": "dynamic",
+  "errorLens.statusBarIconsEnabled": true,
+  "workbench.editor.editorActionsLocation": "default",
+  "[rainmeter]": {
+    "editor.formatOnSave": false
+  },
+  "path-intellisense.autoSlashAfterDirectory": true,
+  "path-intellisense.autoTriggerNextSuggestion": true,
+  "path-intellisense.showHiddenFiles": true,
+  "Lua.diagnostics.globalsRegex": ["vim"],
+  "catppuccin-noctis-icons.hidesExplorerArrows": false,
+  "powershell.integratedConsole.startInBackground": true,
+  "powershell.integratedConsole.suppressStartupBanner": true,
+  "powershell.startAsLoginShell.osx": false,
+  "powershell.developer.editorServicesWaitForDebugger": true,
+  "powershell.pester.useLegacyCodeLens": false,
+  "powershell.powerShellDefaultVersion": "PowerShell (x64)",
+  "workbench.preferredDarkColorTheme": "Wal Bordered",
+  "pester.runTestsInNewProcess": true,
+  "workbench.preferredHighContrastColorTheme": "Wal Bordered",
+  "workbench.preferredHighContrastLightColorTheme": "Wal Bordered",
+  "workbench.preferredLightColorTheme": "Wal Bordered",
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "jdk.jdkhome": "c:\\Users\\njen\\jdk\\OpenJDK-23",
+  "figma.autocompleteBlocks": true,
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[lua]": {
+    "editor.defaultFormatter": "sumneko.lua"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "chat.editing.alwaysSaveWithGeneratedChanges": true,
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[python]": {
+    "editor.formatOnType": true
+  },
+  "explorer.confirmDragAndDrop": false,
+  "window.autoDetectHighContrast": false,
+  "code-runner.clearPreviousOutput": true,
+  "editor.linkedEditing": true,
+  "liveServer.settings.donotVerifyTags": true,
+  "git.ignoreMissingGitWarning": true,
+  "workbench.startupEditor": "none",
+  "git.openRepositoryInParentFolders": "never",
+  "files.autoSave": "afterDelay",
+  "workbench.layoutControl.enabled": false,
+  "explorer.decorations.colors": false,
+  "explorer.compactFolders": false,
+  "window.title": " ",
+  "workbench.statusBar.visible": false,
+  "window.menuBarVisibility": "compact",
+  "window.commandCenter": false,
+  "apc.electron": {
+    "frame": false,
+    "titleBarStyle": "hidden"
+  },
+  // "window.titleBarStyle": "native",
+  "window.customTitleBarVisibility": "never",
+  "apc.monospace.font.family": "JetBrainsMono NFP, monospace",
+  "update.mode": "none",
+  "editor.cursorBlinking": "smooth",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "security.allowedUNCHosts": ["wsl.localhost", "wsl$"],
+  "workbench.editor.empty.hint": "hidden",
+  "glassit.alpha": 254,
+  "errorLens.gutterIconsEnabled": true
 }
