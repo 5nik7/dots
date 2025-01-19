@@ -1040,7 +1040,7 @@ cat C:\Users\nickf\AppData\Local\clink\.inputrc
 |	time=1694912043
 cd C:\Users\nickf\AppData\Local\
 |	time=1694912044
-;s
+|s
 |	time=1694912047
 |s
 |	time=1694912053
@@ -3725,7 +3725,7 @@ nvim starship.lua
 |	time=1726202826
 |s -la
 |	time=1726202831
-eza -la
+|za -la
 |	time=1726202843
 code starship.lua 
 |	time=1726203013
@@ -4171,11 +4171,11 @@ ebv
 |	time=1735398751
 cd code
 |	time=1735398752
-cd \
+|d \
 |	time=1735398753
 |
 |	time=1735398754
-d
+|
 |	time=1735398756
 |
 |	time=1735444995
@@ -4205,13 +4205,13 @@ ll
 |	time=1735449385
 dd
 |	time=1735449398
-explorer.exe .
+|xplorer.exe .
 |	time=1735449418
 |hich pwsh
 |	time=1735449472
 |xa -lA --icons --group-directories-first
 |	time=1735449478
-cd ..
+|d ..
 |	time=1735449480
 exa -lA --icons --group-directories-first
 |	time=1735460790
@@ -4491,8 +4491,50 @@ c
 |	time=1736044775
 pwsh
 |	time=1736044879
-q
+|
 |	time=1736044914
-ls
+|s
 |	time=1736044916
 env
+|	time=1736054563
+cd C:\Windows\System32\WindowsPowerShell\v1.0\Modules
+|	time=1736054565
+;s
+|	time=1736054566
+|s
+|	time=1736054585
+rm -fr .\*
+|	time=1736054586
+d
+|	time=1736054588
+|s
+|	time=1736054594
+cd ..
+|	time=1736054599
+rm -fr Modules\
+|	time=1736054605
+ls
+|	time=1736054615
+eza -la
+|	time=1736054621
+mkdir Modules
+|	time=1736054667
+explorer.exe .
+|	time=1736054634
+cd \
+|	time=1736054640
+cd "Program Files\
+|	time=1736054642
+d
+|	time=1736054653
+cd WindowsPowerShell\
+|	time=1736054655
+|s
+|	time=1736054658
+cd Modules\
+|	time=1736054659
+ls
+|	time=1736054675
+explorer.exe .
+|	time=1737239005
+q
