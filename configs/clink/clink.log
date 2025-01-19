@@ -48,3 +48,16 @@
 7e84 reset_handle              144 resetting mismatched stdout handle
 7e84 reset_handle              144 resetting mismatched stderr handle
 7e84 history_db::compact      1606 History:  838 active, 1433 deleted
+34a8 inject                    606 ---- 2025/01/18 19:21:47.664 -------------------------------------------------
+34a8 inject                    607 Injecting Clink...
+34a8 is_clink_present          370 *** ERROR ***
+34a8 is_clink_present          370 Failed to snapshot module state.
+34a8 is_clink_present          370 (last error = 299)
+34a8 inject_dll                274 Version: 1.7.7.521fa7
+34a8 inject_dll                275 Arch: x64
+34a8 inject_dll                276 DLL: C:\Users\njen\AppData\Local\Temp\clink\dll_cache\1.7.7.521fa7_99c250e2\clink_dll_x64.dll
+34a8 inject_dll                278 Parent pid: 14732
+34a8 check_dll_version         168 DLL version: 00010007 00070000
+34a8 inject_dll                294 *** ERROR ***
+34a8 inject_dll                294 Unable to get host name.
+34a8 inject_dll                294 (last error = 31)
