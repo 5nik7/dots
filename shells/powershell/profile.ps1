@@ -31,7 +31,9 @@ $Env:STARSHIP_CACHE = "$Env:LOCALAPPDATA\Temp"
 $Env:STARSHIP_CONFIG = "$Env:DOTFILES\starship\starship.toml"
 $Env:BAT_CONFIG_PATH = "$Env:DOTFILES\bat\config"
 $Env:YAZI_CONFIG_HOME = "$Env:DOTFILES\yazi"
+
 $GITBIN = "C:\Git\usr\bin"
+
 $Env:YAZI_FILE_ONE = "$GITBIN\file.exe"
 $BAT_THEME = 'wal'
 $Env:BAT_THEME = $BAT_THEME
@@ -101,6 +103,10 @@ $localbin = "$Env:USERPROFILE\.local\bin"
 if (Test-Path($localbin)) {
     Add-Path -Path $localbin
 }
+
+$Env:PYENV_VERSION = (&pyenv global)
+Add-Path-Prepend -Path "$Env:PYENV_HOME\versions\$Env:PYENV_VERSION\Scripts"
+Add-Path-Prepend -Path "$Env:PYENV_HOME\versions\$Env:PYENV_VERSION\"
 
 if ($host.Name -eq 'ConsoleHost') {
     Import-Module PSReadLine

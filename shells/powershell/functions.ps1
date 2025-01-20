@@ -69,6 +69,16 @@ function Add-Path {
   }
 }
 
+function Add-Path-Prepend {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+    $env:Path = "$Path;$env:Path"
+  }
+}
+
 function winutil {
   Invoke-RestMethod "https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1" | Invoke-Expression
 }
