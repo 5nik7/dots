@@ -104,9 +104,13 @@ if (Test-Path($localbin)) {
     Add-Path -Path $localbin
 }
 
-$Env:PYENV_VERSION = (&pyenv global)
-Add-Path-Prepend -Path "$Env:PYENV_HOME\versions\$Env:PYENV_VERSION\Scripts"
-Add-Path-Prepend -Path "$Env:PYENV_HOME\versions\$Env:PYENV_VERSION\"
+$PYENV_VERSION = (&pyenv version-name) -replace '\s', ''
+$Env:PYENV_VERSION = $PYENV_VERSION
+$PYEXEDIR = "$Env:PYENV_HOME" + "versions\$PYENV_VERSION"
+$PYSCRIPTS = "$PYEXEDIR\Scripts"
+
+Add-Path-Prepend -Path "$PYEXEDIR"
+Add-Path-Prepend -Path "$PYSCRIPTS"
 
 if ($host.Name -eq 'ConsoleHost') {
     Import-Module PSReadLine
