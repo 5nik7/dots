@@ -53,10 +53,11 @@ foreach ( $includeFile in ("functions", "aliases", "lab") ) {
     . "$Env:PSDOT\$includeFile.ps1"
 }
 
-foreach ($compFile in Get-ChildItem -Path "$Env:PSCOMPS" -Filter "*.ps1") {
-    Unblock-File -Path $compFile.FullName
-    . $compFile.FullName
-}
+(& gh completion -s powershell) | Out-String | Invoke-Expression
+(& starship completions powershell) | Out-String | Invoke-Expression
+(& tree-sitter complete --shell powershell) | Out-String | Invoke-Expression
+(& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
+(& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
 
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
@@ -68,21 +69,13 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     }
 }
 
-# PowerShell parameter completion shim for the dotnet CLI
-Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
-    param($commandName, $wordToComplete, $cursorPosition)
-    dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object {
-        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-    }
-}
-
 if (-not (Get-Module Terminal-Icons -ListAvailable)) {
     Install-Module Terminal-Icons -Scope CurrentUser -Force
 }
+Import-Module -Name Terminal-Icons
 
 Import-Module "$Env:PSMODS\winwal\winwal.psm1"
 Import-Module "$Env:PSMODS\psdots\psdots.psm1"
-Import-Module -Name Terminal-Icons
 Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
 
 if ($PSEdition -eq 'Core') {
@@ -109,8 +102,8 @@ $Env:PYENV_VERSION = $PYENV_VERSION
 $PYEXEDIR = "$Env:PYENV_HOME" + "versions\$PYENV_VERSION"
 $PYSCRIPTS = "$PYEXEDIR\Scripts"
 
-Add-Path-Prepend -Path "$PYEXEDIR"
-Add-Path-Prepend -Path "$PYSCRIPTS"
+Add-Path -Path "$PYEXEDIR"
+Add-Path -Path "$PYSCRIPTS"
 
 if ($host.Name -eq 'ConsoleHost') {
     Import-Module PSReadLine
@@ -347,3 +340,5 @@ Set-PSReadLineOption -ViModeIndicator script -ViModeChangeHandler {
         Write-Host -NoNewLine "`e[5 q"
     }
 }
+
+
