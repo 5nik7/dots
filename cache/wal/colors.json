@@ -1,0 +1,29 @@
+{
+    "checksum": "34f79896328b6772bbbf4e24651fe18d",
+    "wallpaper": "C:/Users/njen/dev/dots/walls/Dream.jpg",
+    "alpha": "100",
+
+    "special": {
+        "background": "#151D38",
+        "foreground": "#d6e9ff",
+        "cursor": "#5500FF"
+    },
+    "colors": {
+        "color0": "#2E3C5B",
+        "color1": "#EB6F92",
+        "color2": "#00FFCC",
+        "color3": "#FFB78D",
+        "color4": "#477EFF",
+        "color5": "#9896FF",
+        "color6": "#00FFFB",
+        "color7": "#d6e9ff",
+        "color8": "#374B72",
+        "color9": "#EB6F92",
+        "color10": "#8FF8B5",
+        "color11": "#F2C996",
+        "color12": "#5792FF",
+        "color13": "#A7A6FF",
+        "color14": "#30F1EA",
+        "color15": "#d6e9ff"
+    }
+}

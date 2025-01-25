@@ -1,0 +1,21 @@
+{
+    "name": "wal",
+    "black": "#2E3C5B",
+    "red": "#EB6F92",
+    "green": "#00FFCC",
+    "yellow": "#FFB78D",
+    "blue": "#477EFF",
+    "purple": "#9896FF",
+    "cyan": "#00FFFB",
+    "white": "#d6e9ff",
+    "brightBlack": "#374B72",
+    "brightRed": "#EB6F92",
+    "brightGreen": "#8FF8B5",
+    "brightYellow": "#F2C996",
+    "brightBlue": "#5792FF",
+    "brightPurple": "#A7A6FF",
+    "brightCyan": "#30F1EA",
+    "brightWhite": "#d6e9ff",
+    "background": "#151D38",
+    "foreground": "#d6e9ff"
+}
