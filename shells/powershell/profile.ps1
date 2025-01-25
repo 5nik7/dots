@@ -3,6 +3,7 @@ using namespace System.Management.Automation.Language
 
 $Env:DOTS = "$Env:USERPROFILE\dots"
 $Env:DOTFILES = "$Env:DOTS\configs"
+$Env:DOTCACHE = "$Env:DOTS\cache"
 
 $Env:PSDOT = "$Env:DOTS\shells\powershell"
 $Env:PSCOMPS = "$Env:PSDOT\completions"
@@ -39,10 +40,24 @@ $BAT_THEME = 'wal'
 $Env:BAT_THEME = $BAT_THEME
 $Env:KOMOREBI_CONFIG_HOME = "$Env:WINDOTCONF\komorebi"
 
+. "$Env:DOTCACHE\wal\wal.ps1"
+
 # FZF Options
 $Env:FZF_DEFAULT_COMMAND = "fd --type f --strip-cwd-prefix --hidden --exclude .git"
-# $Env:FZF_DEFAULT_OPTS = "--preview=`"bat --style=numbers --color=always {}`" --preview-window=border-rounded --preview-label=`" PREVIEW `" --border=rounded --border-label=`" FILES `" --tabstop=2 --color=16 --bind=ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up"
-# $Env:FZF_DIRECTORY_OPTS = "--preview=`"pwsh -NoProfile -Command Get-ChildItem -Force -LiteralPath '{}'`" --preview-window=border-rounded --preview-label=`" PREVIEW `" --border=rounded --border-label=`" DIRECTORIES `" --tabstop=2 --color=16 --bind=ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up"
+$Env:FZF_DEFAULT_OPTS = @"
+--color=bg+:$color0,bg:-1,spinner:4,hl:12
+--color=fg:8,header:3,info:8,pointer:$color1
+--color=marker:14,fg+:13,prompt:$color8,hl+:10
+--color=gutter:$bg,selected-bg:0,separator:$color0,preview-border:$color8
+--color=border:$color8,preview-bg:$bg,preview-label:0,label:7,query:5,input-border:4
+--info=right
+--layout=reverse
+--border=sharp
+--prompt='  '
+--pointer='┃'
+--separator='──'
+--preview=`"bat --style=numbers --color=always {}`" --preview-window=border-sharp --tabstop=2 --bind=ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up
+"@
 
 $TIC = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' TranscodedImageCache -ErrorAction Stop).TranscodedImageCache
 $wallout = [System.Text.Encoding]::Unicode.GetString($TIC) -replace '(.+)([A-Z]:[0-9a-zA-Z\\])+', '$2'
@@ -115,22 +130,22 @@ if ($host.Name -eq 'ConsoleHost') {
         HistorySearchCaseSensitive    = $false
         MaximumHistoryCount           = "50000"
         ShowToolTips                  = $true
-        ContinuationPrompt            = " "
+        ContinuationPrompt            = "│"
         BellStyle                     = "None"
         PredictionSource              = "History"
         EditMode                      = "Vi"
         PredictionViewStyle           = "InlineView"
         Colors                        = @{
             Comment                = 'DarkGray'
-            Command                = 'DarkGreen'
-            Emphasis               = 'Cyan'
-            Number                 = 'Yellow'
-            Member                 = 'Blue'
-            Operator               = 'Blue'
-            Type                   = 'Yellow'
+            Command                = 'DarkMagenta'
+            Emphasis               = 'Red'
+            Number                 = 'DarkYellow'
+            Member                 = 'White'
+            Operator               = 'Yellow'
+            Type                   = 'Cyan'
             String                 = 'Green'
-            Variable               = 'Cyan'
-            Parameter              = 'Blue'
+            Variable               = 'DarkYellow'
+            Parameter              = 'Yellow'
             ContinuationPrompt     = 'Black'
             Default                = 'White'
             InlinePrediction       = 'DarkGray'
