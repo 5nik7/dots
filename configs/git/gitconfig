@@ -133,6 +133,8 @@ ui = true
   # List available aliases
   aliases      = config --get-regexp 'alias.*'
 
+  # List available aliases
+  cl           = clone
 
 [core]
 pager = delta
