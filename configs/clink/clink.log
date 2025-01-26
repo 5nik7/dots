@@ -100,3 +100,16 @@
 69ec inject_dll                294 *** ERROR ***
 69ec inject_dll                294 Unable to get host name.
 69ec inject_dll                294 (last error = 31)
+8bbc inject                    606 ---- 2025/01/26 00:29:14.218 -------------------------------------------------
+8bbc inject                    607 Injecting Clink...
+8bbc is_clink_present          370 *** ERROR ***
+8bbc is_clink_present          370 Failed to snapshot module state.
+8bbc is_clink_present          370 (last error = 299)
+8bbc inject_dll                274 Version: 1.7.7.521fa7
+8bbc inject_dll                275 Arch: x64
+8bbc inject_dll                276 DLL: C:\Users\njen\AppData\Local\Temp\clink\dll_cache\1.7.7.521fa7_99c250e2\clink_dll_x64.dll
+8bbc inject_dll                278 Parent pid: 27232
+8bbc check_dll_version         168 DLL version: 00010007 00070000
+8bbc inject_dll                294 *** ERROR ***
+8bbc inject_dll                294 Unable to get host name.
+8bbc inject_dll                294 (last error = 31)
