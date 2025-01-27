@@ -10,8 +10,8 @@ $hostname\
 $directory\
 $git_branch\
 $git_status\
-([󰧞](black) $nodejs$conda$python$rust)\
-([󰧞](black) $cmd_duration)\
+$nodejs$conda$python$rust\
+$cmd_duration\
 $line_break\
 $character"""
 
@@ -19,8 +19,26 @@ add_newline = true
 
 continuation_prompt = '[│](black)'
 
+[character]
+# success_symbol = '[󰅂](green)'
+# error_symbol = '[󰅂](red)'
+# success_symbol = '[](green)'
+# error_symbol = '[](red)'
+success_symbol = '[](green)'
+error_symbol = '[](red)'
+# success_symbol = '[](green)'
+# error_symbol = '[](red)'
+# success_symbol = '[](green)'
+# error_symbol = '[](red)'
+# vimcmd_symbol = '[:](black)'
+# vimcmd_symbol = '[×](black)'
+vimcmd_symbol = '[](black)'
+# vimcmd_symbol = '[ɴ](black)'
+# vimcmd_symbol = '[▎](black)'
+format = '$symbol '
+
 [cmd_duration]
-format = "[$duration]($style)"
+format = "([](black) [󰔛 ](yellow)[$duration]($style))"
 style = "bright-yellow"
 
 [username]
@@ -31,12 +49,12 @@ disabled = true
 show_always = true
 aliases = { "Administrator" = "admin" }
 
-
 [hostname]
 ssh_only = false
 format = '[@](yellow)[$hostname](yellow)([ $ssh_symbol](bold blue)) '
 trim_at = '.companyname.com'
 disabled = true
+ssh_symbol = " "
 
 [fill]
 symbol = ''
@@ -52,7 +70,8 @@ Alpaquita = " "
 Alpine = " "
 AlmaLinux = " "
 Amazon = " "
-Android = " "
+# Android = " "
+Android = ""
 Arch = " "
 Artix = " "
 CentOS = " "
@@ -87,9 +106,6 @@ RockyLinux = " "
 Redox = "󰀘 "
 Solus = "󰠳 "
 SUSE = " "
-# Ubuntu = 'Ubuntu:'
-# Ubuntu = "◎ "
-# Ubuntu = " "
 Ubuntu = " "
 Unknown = " "
 Void = " "
@@ -98,21 +114,6 @@ Windows = ""
 # Windows = " "
 # Windows = "󰍲 "
 
-# [shell]
-# format = "[◎ $indicator]($style)"
-# bash_indicator = "bsh"
-# fish_indicator = "fsh"
-# zsh_indicator = "zsh"
-# powershell_indicator = "psh"
-# ion_indicator = "ion"
-# elvish_indicator = "esh"
-# tcsh_indicator = "tsh"
-# nu_indicator = "nu"
-# xonsh_indicator = "xsh"
-# cmd_indicator = "cmd"
-# unknown_indicator = ""
-# style = "bright-cyan italic"
-# disabled = false
 
 # [shell]
 # format = '[$indicator]($style)'
@@ -125,8 +126,8 @@ Windows = ""
 # style = 'bg:none fg:cyan'
 # disabled = true
 
-[directory.substitutions]
-# '/Documents/' = '  '
+# [directory.substitutions]
+# '~/Documents/' = ' '
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
@@ -136,7 +137,7 @@ before_repo_root_style = 'blue'
 repo_root_style = 'bright-blue bold'
 truncation_length = 0
 # truncation_symbol = "…/"
-# home_symbol = ' '
+# home_symbol = '~'
 truncate_to_repo = true
 # use_os_path_sep = false
 use_os_path_sep = false
@@ -161,88 +162,135 @@ modified = "​"
 staged = "​"
 renamed = "​"
 deleted = "​"
-stashed = "≡"
-
-# [git_status]
-# style = "bold bright-purple"
-# format = "([$ahead_behind$staged$modified$untracked$renamed$deleted$conflicted$stashed]($style))"
-# conflicted = "[◪ ](bright-purple)"
-# ahead = "[⇡ [${count} ](bright-black)](green)"
-# # behind = "[▿[${count }](bright-black)](red)"
-# diverged = "[◇ ▴ [${ahead_count} ](regular white) ▿[ ${behind_count} ](regular white)](italic bright-magenta)"
-# untracked = "[](bright-black bold)"
-# # untracked = "[ ](bright-black bold)"
-# # untracked = "[ ](bright-purple)"
-# # untracked = "[ ](bright-black bold)"
-# # untracked = "[ ](bright-purple)"
-# # untracked = "[󰫉 ](bright-black bold)"
-# # untracked = "[ ](purple)"
-# # untracked = "[ ](bright-black bold)"
-# stashed = "[◈ ](italic white)"
-# # modified = "[ ](purple bold)"
-# modified = "[ ](purple bold)"
-# # modified = "[ ](purple bold)"
-# staged = "[󱇬 [$count ](bold white)](bright-cyan)"
-# # staged = "[󰿶 [$count ](bold white)](bright-cyan)"
-# # staged = "[ [$count ](bold white)](bright-cyan)"
-# renamed = "[◎ ](bright-blue bold)"
-# # deleted = "[󰖭 ](red bold)"
-# # deleted = "[󱎘 ](red bold)"
-# # deleted = "[ ](red bold)"
-# # deleted = "[ ](bright-red)"
-# # deleted = "[ ](bright-red)"
-# # deleted = "[ ](bright-red)"
-# deleted = "[✕ ](bright-red)"
+stashed = "◈"
 
 [nodejs]
 detect_files = ['package.json']
 detect_folders = []
 symbol = '󰎙 '
-style = 'yellow'
+style = 'green'
 version_format = '${raw}'
-# format = '([](black)[$symbol($version) ]($style))'
-format = '([${symbol}([$version](bright-yellow)) ]($style))'
-# format = '([$symbol($version) ]($style))'
+format = '([](black) [${symbol}([$version](bright-green)) ]($style))'
 disabled = false
-
-# [ruby]
-# symbol = '  '
-# style = 'bright-red'
-# format = '([  ](black))[$symbol($version)]($style))'
 
 [conda]
 symbol = '🅒 '
 style = 'bright-green'
 ignore_base = true
-format = '([$symbol$environment ]($style))'
-# format = '([](black)[$symbol$environment ]($style))'
+format = '([](black) [$symbol$environment ]($style))'
 
 [python]
-format = '([${symbol}([$version](green)) ]($style))'
-# format = '([](black)[${symbol}( [$virtualenv](green italic)) ]($style))'
+format = '([](black) [${symbol}([$version](green)) ]($style))'
 style = 'bright-green'
 symbol = '󰌠 '
 pyenv_version_name = true
 
 [rust]
-format = '[$symbol$version]($style) '
-style = 'red'
+format = '([](black) [${symbol}([$version](red)) ]($style))'
+style = 'bright-red'
 symbol = ' '
 
-[character]
-# success_symbol = '[󰅂](cyan bold)'
-# success_symbol = '[](cyan bold)'
-# success_symbol = '[](cyan)'
-# success_symbol = '[](cyan bold)'
-# success_symbol = '[](cyan bold)'
-success_symbol = '[](green)'
-error_symbol = '[](red)'
-# vimcmd_symbol = '[](cyan bold dimmed)'
-# vimcmd_symbol = '[󰅁](black)'
-# vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[󰅁](black)'
-# vimcmd_symbol = '[](black)'
-vimcmd_symbol = '[:](black)'
-# vimcmd_symbol = '[▎](black)'
-# vimcmd_symbol = '[▎](blue)'
-format = '$symbol '
+[package]
+symbol = "󰏗 "
+
+[perl]
+symbol = " "
+
+[php]
+symbol = " "
+
+[pijul_channel]
+symbol = " "
+
+[rlang]
+symbol = "󰟔 "
+
+[ruby]
+symbol = " "
+
+[scala]
+symbol = " "
+
+[swift]
+symbol = " "
+
+[zig]
+symbol = " "
+
+[gradle]
+symbol = " "
+
+[aws]
+symbol = "  "
+
+[buf]
+symbol = " "
+
+[c]
+symbol = " "
+
+[crystal]
+symbol = " "
+
+[dart]
+symbol = " "
+
+[docker_context]
+symbol = " "
+
+[elixir]
+symbol = " "
+
+[elm]
+symbol = " "
+
+[fennel]
+symbol = " "
+
+[fossil_branch]
+symbol = " "
+
+[git_commit]
+tag_symbol = '  '
+
+[golang]
+symbol = " "
+
+[guix_shell]
+symbol = " "
+
+[haskell]
+symbol = " "
+
+[haxe]
+symbol = " "
+
+[hg_branch]
+symbol = " "
+
+[java]
+symbol = " "
+
+[julia]
+symbol = " "
+
+[kotlin]
+symbol = " "
+
+[lua]
+symbol = " "
+
+[memory_usage]
+symbol = "󰍛 "
+
+[meson]
+symbol = "󰔷 "
+
+[nim]
+symbol = "󰆥 "
+
+[nix_shell]
+symbol = " "
+
+[ocaml]
+symbol = " "

@@ -34,30 +34,10 @@ $Env:BAT_CONFIG_PATH = "$Env:DOTFILES\bat\config"
 $Env:YAZI_CONFIG_HOME = "$Env:DOTFILES\yazi"
 
 $GITBIN = "C:\Git\usr\bin"
-
 $Env:YAZI_FILE_ONE = "$GITBIN\file.exe"
 $BAT_THEME = 'wal'
 $Env:BAT_THEME = $BAT_THEME
 $Env:KOMOREBI_CONFIG_HOME = "$Env:WINDOTCONF\komorebi"
-
-. "$Env:DOTCACHE\wal\wal.ps1"
-
-# FZF Options
-$Env:FZF_DEFAULT_COMMAND = "fd --type f --strip-cwd-prefix --hidden --exclude .git"
-$Env:FZF_DEFAULT_OPTS = @"
---color=bg+:$color0,bg:-1,spinner:4,hl:12
---color=fg:8,header:3,info:8,pointer:$color1
---color=marker:14,fg+:13,prompt:$color8,hl+:10
---color=gutter:$bg,selected-bg:0,separator:$color0,preview-border:$color8
---color=border:$color8,preview-bg:$bg,preview-label:0,label:7,query:5,input-border:4
---info=right
---layout=reverse
---border=sharp
---prompt='  '
---pointer='┃'
---separator='──'
---preview=`"bat --style=numbers --color=always {}`" --preview-window=border-sharp --tabstop=2 --bind=ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up
-"@
 
 $TIC = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' TranscodedImageCache -ErrorAction Stop).TranscodedImageCache
 $wallout = [System.Text.Encoding]::Unicode.GetString($TIC) -replace '(.+)([A-Z]:[0-9a-zA-Z\\])+', '$2'
@@ -84,6 +64,32 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
+
+. "$Env:DOTCACHE\wal\wal.ps1"
+
+# FZF Options
+# Editor Configuration
+$FZF_DEFAULT_COMMAND = if (Test-CommandExists fd) { 'fd --type f --strip-cwd-prefix --hidden --exclude .git' }
+$env:FZF_DEFAULT_COMMAND = $FZF_DEFAULT_COMMAND
+
+$Env:FZF_DEFAULT_OPTS = @"
+--height=60%
+--color=bg+:$color0,bg:-1,spinner:4,hl:12
+--color=fg:8,header:3,info:8,pointer:$color1
+--color=marker:14,fg+:13,prompt:$color8,hl+:10
+--color=gutter:$bg,selected-bg:0,separator:$color0,preview-border:$color8
+--color=border:$color8,preview-bg:$bg,preview-label:0,label:7,query:5,input-border:4
+--info=right
+--layout=reverse
+--border=sharp
+--prompt=' '
+--pointer='┃'
+--separator='──'
+--marker='│'
+--scrollbar='│'
+--preview-window='right:65%'
+--preview=`"bat --style=numbers --color=always {}`" --preview-window=border-sharp --tabstop=2 --bind=ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up
+"@
 
 if (-not (Get-Module Terminal-Icons -ListAvailable)) {
     Install-Module Terminal-Icons -Scope CurrentUser -Force
