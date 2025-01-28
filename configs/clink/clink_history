@@ -4197,7 +4197,7 @@ set STARSHIP_CONFIG C:\Users\njen\dev\dots\configs\starship\starship.toml
 |	time=1735449377
 cd "C:\Program Files\Microsoft Visual Studio\2022\Preview"
 |	time=1735449378
-ll
+|l
 |	time=1735449379
 |s
 |	time=1735449381
@@ -4241,9 +4241,9 @@ setx STARSHIP_CONFIG %DOTFILES%\starship\starship.tomlion
 |	time=1735471509
 |et
 |	time=1735471535
-setx
+|etx
 |	time=1735471539
-setx /?
+|etx /?
 |	time=1735471633
 setx DEV %USERPROFILE%\dev /M
 |	time=1735471641
@@ -4375,7 +4375,7 @@ netstat -ano | find ":80"
 |	time=1736016366
 powershell.exe
 |	time=1736016388
-set
+|et
 |	time=1736016411
 %PSModulePath%
 |	time=1736016422
@@ -4495,7 +4495,7 @@ pwsh
 |	time=1736044914
 |s
 |	time=1736044916
-env
+|nv
 |	time=1736054563
 cd C:\Windows\System32\WindowsPowerShell\v1.0\Modules
 |	time=1736054565
@@ -4537,4 +4537,132 @@ ls
 |	time=1736054675
 explorer.exe .
 |	time=1737239005
+|
+|	time=1737243807
+ll
+|	time=1737243827
+|
+|	time=1738033045
+|et
+|	time=1738033077
+set _FZF_DEFAULT_OPTS=''
+|	time=1738033079
+|et
+|	time=1738033086
+set FZF_DEFAULT_OPTS=''
+|	time=1738033093
+setx FZF_DEFAULT_OPTS=''
+|	time=1738033096
+setx FZF_DEFAULT_OPTS ''
+|	time=1738033105
+setx _FZF_DEFAULT_OPTS ''
+|	time=1738033107
+|nv
+|	time=1738033114
+rlp
+|	time=1738033225
+|etx _FZF_DEFAULT_OPTS
+|	time=1738033233
+setx _FZF_DEFAULT_OPTS=
+|	time=1738033242
+|etx
+|	time=1738033244
+setx />
+|	time=1738033245
+|etx /?
+|	time=1738033291
+|et FZF_DEFAULT_OPTS
+|	time=1738033296
+set FZF_DEFAULT_OPTS=
+|	time=1738033298
+set FZF_DEFAULT_OPTS
+|	time=1738033309
+set _FZF_DEFAULT_OPTS=
+|	time=1738033312
+env
+|	time=1738033321
 q
+|	time=1738036200
+|et
+|	time=1738036204
+|et _FZF_DEFAULT_OPTS
+|	time=1738036446
+fzf --help
+|	time=1738036451
+fzf -h
+|	time=1738036614
+|et _FZF_DEFAULT_OPTS
+|	time=1738036628
+set _FZF_DEFAULT_OPTS="--preview-window="right:50%""
+|	time=1738036629
+|et _FZF_DEFAULT_OPTS
+|	time=1738036636
+|et
+|	time=1738036650
+set _FZF_DEFAULT_OPTS='--preview-window="right:50%"'
+|	time=1738036652
+|et _FZF_DEFAULT_OPTS
+|	time=1738036671
+|et _FZF_DEFAULT_OPTS=--preview-window='right:50%'
+|	time=1738036672
+|et _FZF_DEFAULT_OPTS
+|	time=1738036699
+|etx _FZF_DEFAULT_OPTS
+|	time=1738036702
+|etx _FZF_DEFAULT_OPTS
+|	time=1738036716
+setx _FZF_DEFAULT_OPTS --preview-window='right:50%'
+|	time=1738036721
+|et
+|	time=1738036746
+setx _FZF_DEFAULT_OPTS '--preview-window="right:50%"'
+|	time=1738036748
+|et
+|	time=1738036756
+setx _FZF_DEFAULT_OPTS --preview-window=right:50%
+|	time=1738036758
+|et
+|	time=1738036768
+setx _FZF_DEFAULT_OPTS "--preview-window=right:50%"
+|	time=1738036770
+|et
+|	time=1738036773
+|etx
+|	time=1738036777
+setx _FZF_DEFAULT_OPTS
+|	time=1738036782
+setx _FZF_DEFAULT_OPTS /?
+|	time=1738036786
+setx /?
+|	time=1738036850
+SETX /U _FZF_DEFAULT_OPTS --preview-window=right:50%
+|	time=1738036862
+SETX /U _FZF_DEFAULT_OPTS = --preview-window=right:50%
+|	time=1738036866
+SETX /U _FZF_DEFAULT_OPTS=--preview-window=right:50%
+|	time=1738036878
+SETX /S _FZF_DEFAULT_OPTS=--preview-window=right:50%
+|	time=1738036882
+SETX /S _FZF_DEFAULT_OPTS = --preview-window=right:50%
+|	time=1738036892
+SETX _FZF_DEFAULT_OPTS --preview-window=right:50%
+|	time=1738036897
+setx
+|	time=1738036898
+|et
+|	time=1738036905
+set _FZF_DEFAULT_OPTS
+|	time=1738036915
+set -h
+|	time=1738036918
+set --help
+|	time=1738036927
+|elp set
+|	time=1738036937
+|elp set
+|	time=1738036947
+set _FZF_DEFAULT_OPTS=--preview-window='right:50%'
+|	time=1738036948
+help set
+|	time=1738036951
+set

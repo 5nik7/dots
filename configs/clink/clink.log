@@ -1,115 +1,82 @@
-7e84 app_context::start_logger  483 ---- 2025/01/18 15:43:21.760 -------------------------------------------------
-7e84 app_context::start_logger  486 Host process is 'cmd.exe' (pid 32388)
-7e84 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
-7e84 app_context::start_logger  493 DLL base is 00007FFC6FEB0000
-7e84 app_context::start_logger  508 Windows version 10.0.26100 (x64)
-7e84 app_context::start_logger  510 Clink version 1.7.7.521fa7 (x64)
-7e84 hook_setter::hook_setter  159 >>> Started hook transaction.
-7e84 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF6DD9F0000.
-7e84 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-7e84 find_iat                  124 Found import at 00007FF6DDA2AE50 (value is 00007FFD03A8CDE0).
-7e84 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF6DD9F0000.
-7e84 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-7e84 find_iat                  124 Found import at 00007FF6DDA2AE48 (value is 00007FFD03A9EDD0).
-7e84 hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF6DD9F0000.
-7e84 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-7e84 find_iat                  124 Found import at 00007FF6DDA2AAB0 (value is 00007FFD03A87120).
-7e84 hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF6DD9F0000.
-7e84 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-7e84 find_iat                  124 Found import at 00007FF6DDA2AE68 (value is 00007FFD03A64C20).
-7e84 hook_setter::commit       207 <<< Hook transaction committed.
-7e84 hook_setter::hook_setter  159 >>> Started hook transaction.
-7e84 hook_setter::detach_iat   359 Attempting to unhook 00007FFC6FED6260 from GetEnvironmentVariableW in IAT for module 00007FF6DD9F0000.
-7e84 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
-7e84 find_iat                  124 Found import at 00007FF6DDA2AE68 (value is 00007FFC6FED6260).
-7e84 hook_setter::commit       207 <<< Hook transaction committed.
-7e84 hook_setter::hook_setter  159 >>> Started hook transaction.
-7e84 hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF6DD9F0000.
-7e84 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
-7e84 find_iat                  124 Found import at 00007FF6DDA2AA90 (value is 00007FFD03AA2E80).
-7e84 hook_setter::commit       207 <<< Hook transaction committed.
-7e84 hook_setter::hook_setter  159 >>> Started hook transaction.
-7e84 hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF6DD9F0000.
-7e84 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
-7e84 find_iat                  124 Found import at 00007FF6DDA2AB10 (value is 00007FFD03A76F80).
-7e84 hook_setter::commit       207 <<< Hook transaction committed.
-7e84 win_screen_buffer::begin  397 Using native terminal support (auto mode found 'Windows build >= 15063, console V2').
-7e84 reset_handle              144 resetting mismatched stdout handle
-7e84 reset_handle              144 resetting mismatched stderr handle
-7e84 host_lua::load_scripts    199 Loaded 4 Lua scripts in 149 ms
-7e84 @~clink~/app/update.lua   404 Clink updater: updating because there is no record of having updated before.
-7e84 history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
-7e84 history_db::compact      1606 History:  840 active, 1431 deleted
-7e84 @~clink~/app/update.lua   487 Clink updater: latest release is v1.7.7; install type is zip.
-7e84 @~clink~/app/update.lua   638 Clink updater: no update available; local version v1.7.7 is not older than latest release v1.7.7.
-7e84 reset_handle              144 resetting mismatched stdout handle
-7e84 reset_handle              144 resetting mismatched stderr handle
-7e84 history_db::compact      1606 History:  839 active, 1432 deleted
-7e84 reset_handle              144 resetting mismatched stdout handle
-7e84 reset_handle              144 resetting mismatched stderr handle
-7e84 history_db::compact      1606 History:  838 active, 1433 deleted
-34a8 inject                    606 ---- 2025/01/18 19:21:47.664 -------------------------------------------------
-34a8 inject                    607 Injecting Clink...
-34a8 is_clink_present          370 *** ERROR ***
-34a8 is_clink_present          370 Failed to snapshot module state.
-34a8 is_clink_present          370 (last error = 299)
-34a8 inject_dll                274 Version: 1.7.7.521fa7
-34a8 inject_dll                275 Arch: x64
-34a8 inject_dll                276 DLL: C:\Users\njen\AppData\Local\Temp\clink\dll_cache\1.7.7.521fa7_99c250e2\clink_dll_x64.dll
-34a8 inject_dll                278 Parent pid: 14732
-34a8 check_dll_version         168 DLL version: 00010007 00070000
-34a8 inject_dll                294 *** ERROR ***
-34a8 inject_dll                294 Unable to get host name.
-34a8 inject_dll                294 (last error = 31)
-6fe8 inject                    606 ---- 2025/01/25 00:41:57.846 -------------------------------------------------
-6fe8 inject                    607 Injecting Clink...
-6fe8 is_clink_present          370 *** ERROR ***
-6fe8 is_clink_present          370 Failed to snapshot module state.
-6fe8 is_clink_present          370 (last error = 299)
-6fe8 inject_dll                274 Version: 1.7.7.521fa7
-6fe8 inject_dll                275 Arch: x64
-6fe8 inject_dll                276 DLL: C:\Users\njen\AppData\Local\Temp\clink\dll_cache\1.7.7.521fa7_99c250e2\clink_dll_x64.dll
-6fe8 inject_dll                278 Parent pid: 25140
-6fe8 check_dll_version         168 DLL version: 00010007 00070000
-6fe8 inject_dll                294 *** ERROR ***
-6fe8 inject_dll                294 Unable to get host name.
-6fe8 inject_dll                294 (last error = 31)
-6070 inject                    606 ---- 2025/01/25 07:33:23.994 -------------------------------------------------
-6070 inject                    607 Injecting Clink...
-6070 is_clink_present          370 *** ERROR ***
-6070 is_clink_present          370 Failed to snapshot module state.
-6070 is_clink_present          370 (last error = 299)
-6070 inject_dll                274 Version: 1.7.7.521fa7
-6070 inject_dll                275 Arch: x64
-6070 inject_dll                276 DLL: C:\Users\njen\AppData\Local\Temp\clink\dll_cache\1.7.7.521fa7_99c250e2\clink_dll_x64.dll
-6070 inject_dll                278 Parent pid: 10380
-6070 check_dll_version         168 DLL version: 00010007 00070000
-6070 inject_dll                294 *** ERROR ***
-6070 inject_dll                294 Unable to get host name.
-6070 inject_dll                294 (last error = 31)
-69ec inject                    606 ---- 2025/01/25 12:29:59.398 -------------------------------------------------
-69ec inject                    607 Injecting Clink...
-69ec is_clink_present          370 *** ERROR ***
-69ec is_clink_present          370 Failed to snapshot module state.
-69ec is_clink_present          370 (last error = 299)
-69ec inject_dll                274 Version: 1.7.7.521fa7
-69ec inject_dll                275 Arch: x64
-69ec inject_dll                276 DLL: C:\Users\njen\AppData\Local\Temp\clink\dll_cache\1.7.7.521fa7_99c250e2\clink_dll_x64.dll
-69ec inject_dll                278 Parent pid: 796
-69ec check_dll_version         168 DLL version: 00010007 00070000
-69ec inject_dll                294 *** ERROR ***
-69ec inject_dll                294 Unable to get host name.
-69ec inject_dll                294 (last error = 31)
-8bbc inject                    606 ---- 2025/01/26 00:29:14.218 -------------------------------------------------
-8bbc inject                    607 Injecting Clink...
-8bbc is_clink_present          370 *** ERROR ***
-8bbc is_clink_present          370 Failed to snapshot module state.
-8bbc is_clink_present          370 (last error = 299)
-8bbc inject_dll                274 Version: 1.7.7.521fa7
-8bbc inject_dll                275 Arch: x64
-8bbc inject_dll                276 DLL: C:\Users\njen\AppData\Local\Temp\clink\dll_cache\1.7.7.521fa7_99c250e2\clink_dll_x64.dll
-8bbc inject_dll                278 Parent pid: 27232
-8bbc check_dll_version         168 DLL version: 00010007 00070000
-8bbc inject_dll                294 *** ERROR ***
-8bbc inject_dll                294 Unable to get host name.
-8bbc inject_dll                294 (last error = 31)
+36f4 app_context::start_logger  483 ---- 2025/01/27 20:05:45.111 -------------------------------------------------
+36f4 app_context::start_logger  486 Host process is 'cmd.exe' (pid 14068)
+36f4 app_context::start_logger  490 DLL path is 'C:\Program Files (x86)\clink'
+36f4 app_context::start_logger  493 DLL base is 00007FFA24050000
+36f4 app_context::start_logger  508 Windows version 10.0.26100 (x64)
+36f4 app_context::start_logger  510 Clink version 1.7.7.521fa7 (x64)
+36f4 hook_setter::hook_setter  159 >>> Started hook transaction.
+36f4 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentVariableW in IAT for module 00007FF64C780000.
+36f4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+36f4 find_iat                  124 Found import at 00007FF64C7BAE30 (value is 00007FFAC549C030).
+36f4 hook_setter::attach_iat   316 Attempting to hook SetEnvironmentStringsW in IAT for module 00007FF64C780000.
+36f4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+36f4 find_iat                  124 Found import at 00007FF64C7BAE28 (value is 00007FFAC54AD370).
+36f4 hook_setter::attach_iat   316 Attempting to hook WriteConsoleW in IAT for module 00007FF64C780000.
+36f4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
+36f4 find_iat                  124 Found import at 00007FF64C7BAA90 (value is 00007FFAC5496510).
+36f4 hook_setter::attach_iat   316 Attempting to hook GetEnvironmentVariableW in IAT for module 00007FF64C780000.
+36f4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+36f4 find_iat                  124 Found import at 00007FF64C7BAE48 (value is 00007FFAC5476D60).
+36f4 hook_setter::commit       207 <<< Hook transaction committed.
+36f4 hook_setter::hook_setter  159 >>> Started hook transaction.
+36f4 hook_setter::detach_iat   359 Attempting to unhook 00007FFA24076260 from GetEnvironmentVariableW in IAT for module 00007FF64C780000.
+36f4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-processenvironment-l1-1-0.dll'
+36f4 find_iat                  124 Found import at 00007FF64C7BAE48 (value is 00007FFA24076260).
+36f4 hook_setter::commit       207 <<< Hook transaction committed.
+36f4 hook_setter::hook_setter  159 >>> Started hook transaction.
+36f4 hook_setter::attach_iat   316 Attempting to hook ReadConsoleW in IAT for module 00007FF64C780000.
+36f4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l1-1-0.dll'
+36f4 find_iat                  124 Found import at 00007FF64C7BAA70 (value is 00007FFAC54B0840).
+36f4 hook_setter::commit       207 <<< Hook transaction committed.
+36f4 hook_setter::hook_setter  159 >>> Started hook transaction.
+36f4 hook_setter::attach_iat   316 Attempting to hook SetConsoleTitleW in IAT for module 00007FF64C780000.
+36f4 pe_info::iterate_imports  195 Found import in 'api-ms-win-core-console-l2-2-0.dll'
+36f4 find_iat                  124 Found import at 00007FF64C7BAAF0 (value is 00007FFAC54865A0).
+36f4 hook_setter::commit       207 <<< Hook transaction committed.
+36f4 win_screen_buffer::begin  397 Using native terminal support (auto mode found 'Windows build >= 15063, console V2').
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 host_lua::load_scripts    199 Loaded 4 Lua scripts in 169 ms
+36f4 @~clink~/app/update.lua   423 Clink updater: too soon to check for updates (1738033053 vs 1738037145).
+36f4 history_db::initialise   1328 master bank ctag: |CTAG_1678897022_435177546_25908_0
+36f4 history_db::compact      1606 History:  872 active, 1463 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+36f4 reset_handle              144 resetting mismatched stdout handle
+36f4 reset_handle              144 resetting mismatched stderr handle
+36f4 history_db::compact      1606 History:  871 active, 1464 deleted
+8f50 inject                    606 ---- 2025/01/28 02:38:08.198 -------------------------------------------------
+8f50 inject                    607 Injecting Clink...
+8f50 is_clink_present          370 *** ERROR ***
+8f50 is_clink_present          370 Failed to snapshot module state.
+8f50 is_clink_present          370 (last error = 299)
+8f50 inject_dll                274 Version: 1.7.7.521fa7
+8f50 inject_dll                275 Arch: x64
+8f50 inject_dll                276 DLL: C:\Users\njen\AppData\Local\Temp\clink\dll_cache\1.7.7.521fa7_99c250e2\clink_dll_x64.dll
+8f50 inject_dll                278 Parent pid: 21096
+8f50 check_dll_version         168 DLL version: 00010007 00070000
+8f50 inject_dll                294 *** ERROR ***
+8f50 inject_dll                294 Unable to get host name.
+8f50 inject_dll                294 (last error = 31)

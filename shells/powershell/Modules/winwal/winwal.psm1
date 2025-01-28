@@ -212,6 +212,11 @@ function Update-WalTheme {
         return
     }
 
+        # Set the wallpaper
+    if ($Theme) {
+        wal -n --theme $Theme
+    }
+
     # Set the wallpaper
     if ($Image) {
         Set-Wallpaper -Image $Image
