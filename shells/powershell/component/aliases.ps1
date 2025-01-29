@@ -17,9 +17,9 @@ Set-Alias -Name clo -Value Get-Repo
 
 Set-Alias -Name edit -Value edit-item
 Set-Alias -Name e -Value edit-item
-Set-Alias -Name vim -Value nvim
-Set-Alias -Name vi -Value nvim
-Set-Alias -Name v -Value nvim
+Set-Alias -Name vim -Value neovim-fix
+Set-Alias -Name vi -Value neovim-fix
+Set-Alias -Name v -Value neovim-fix
 Set-Alias -Name ep -Value Edit-Profile
 
 Set-Alias -Name ln -Value Set-Link

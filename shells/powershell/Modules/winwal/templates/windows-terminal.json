@@ -17,5 +17,6 @@
     "brightCyan": "{color14}",
     "brightWhite": "{color15}",
     "background": "{background}",
-    "foreground": "{foreground}"
+    "foreground": "{foreground}",
+    "cursorColor": "{cursor}"
 }}

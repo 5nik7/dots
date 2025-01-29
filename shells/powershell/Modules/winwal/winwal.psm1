@@ -160,7 +160,11 @@ function Update-WalTerminal {
         $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name colorScheme -Value 'wal' -Force
 
         # Set cursor to foreground color
-        $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.foreground -Force
+        if ($walTheme.cursorColor) {
+            $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.cursorColor -Force
+        } else {
+            $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.foreground -Force
+        }
 
         # Write config to disk
         $configData | ConvertTo-Json -Depth 32 | Set-Content -Path $terminalProfile

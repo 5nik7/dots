@@ -1,0 +1,3 @@
+function neovim-fix {
+
+}
