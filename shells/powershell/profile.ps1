@@ -15,3 +15,15 @@ if ($fzFile) {
     Unblock-File "$Env:PSCOMPONENT\$FzFile.ps1"
     . "$Env:PSCOMPONENT\$FzFile.ps1"
 }
+
+$pyenvFile = if (Test-CommandExists pyenv) { 'pyenv-win' }
+if ($pyenvFile) {
+    Unblock-File "$Env:PSCOMPONENT\$pyenvFile.ps1"
+    . "$Env:PSCOMPONENT\$pyenvFile.ps1"
+}
+
+$neovimFile = if (Test-CommandExists nvim) { 'neovim' }
+if ($neovimFile) {
+    Unblock-File "$Env:PSCOMPONENT\$neovimFile.ps1"
+    . "$Env:PSCOMPONENT\$neovimFile.ps1"
+}

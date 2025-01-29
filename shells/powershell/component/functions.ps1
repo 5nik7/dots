@@ -1,6 +1,4 @@
-﻿# Check internet access
-# Use wmi as there is no timeout in pwsh  5.0 and generally slow.
-$timeout = 1000 
+﻿$timeout = 1000 
 $pingResult = Get-CimInstance -ClassName Win32_PingStatus -Filter "Address = 'github.com' AND Timeout = $timeout" -Property StatusCode 2>$null
 if ($pingResult.StatusCode -eq 0) {
   $canConnectToGitHub = $true
@@ -79,6 +77,15 @@ function Add-PrependPath {
   }
 }
 
+function Remove-Path {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
+    $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
+  }
+}
 function winutil {
   Invoke-RestMethod "https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1" | Invoke-Expression
 }
