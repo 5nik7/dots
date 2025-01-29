@@ -12,3 +12,9 @@ $localbin = "$Env:USERPROFILE\.local\bin"
 if (Test-Path($localbin)) {
     Add-Path -Path $localbin
 }
+
+$python3exePath = Split-Path -Parent (& { (pyenv which python3 | Out-String) }).Trim()
+Add-PrependPath -Path $python3exePath
+
+$pipexePath = Split-Path -Parent (& { (pyenv which pip | Out-String) }).Trim()
+Add-PrependPath -Path $pipexePath

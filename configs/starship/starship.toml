@@ -39,8 +39,8 @@ format = '$symbol '
 
 [cmd_duration]
 # format = "([](black) [󱦟 ](yellow)[$duration]($style))"
-format = "([](black)[ $duration]($style))"
-style = "bright-yellow"
+format = "([](bright-black)[ $duration]($style))"
+style = "bright-white dimmed"
 
 [username]
 style_user = 'bright-yellow'
@@ -171,23 +171,23 @@ detect_folders = []
 symbol = '󰎙 '
 style = 'green'
 version_format = '${raw}'
-format = '([](black) [${symbol}([$version](bright-green)) ]($style))'
+format = '([](bright-black) [${symbol}([$version](bright-green)) ]($style))'
 disabled = false
 
 [conda]
 symbol = '🅒 '
 style = 'bright-green'
 ignore_base = true
-format = '([](black) [$symbol$environment ]($style))'
+format = '([](bright-black) [$symbol$environment ]($style))'
 
 [python]
-format = '([](black) [${symbol}([$version](green)) ]($style))'
+format = '([](bright-black) [${symbol}([$version](green)) ]($style))'
 style = 'bright-green'
 symbol = '󰌠 '
 pyenv_version_name = true
 
 [rust]
-format = '([](black) [${symbol}([$version](red)) ]($style))'
+format = '([](bright-black) [${symbol}([$version](red)) ]($style))'
 style = 'bright-red'
 symbol = ' '
 

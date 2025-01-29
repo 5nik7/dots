@@ -69,7 +69,7 @@ function Add-Path {
   }
 }
 
-function Add-Path-Prepend {
+function Add-PrependPath {
   param (
     [Parameter(Mandatory = $true)]
     [string]$Path
