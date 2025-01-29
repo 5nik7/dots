@@ -38,7 +38,8 @@ vimcmd_symbol = '[](black)'
 format = '$symbol '
 
 [cmd_duration]
-format = "([](black) [󰔛 ](yellow)[$duration]($style))"
+# format = "([](black) [󱦟 ](yellow)[$duration]($style))"
+format = "([](black)[ $duration]($style))"
 style = "bright-yellow"
 
 [username]

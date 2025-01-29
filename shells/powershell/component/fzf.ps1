@@ -6,30 +6,87 @@
 
 . "$Env:DOTCACHE\wal\wal.ps1"
 
-$FZF_DEFAULT_COMMAND = if (Test-CommandExists fd) { 'fd --type f --strip-cwd-prefix --hidden --exclude .git' }
+$script:RunningInWindowsTerminal = [bool]($env:WT_Session) -or [bool]($env:ConEmuANSI)
+if ($script:RunningInWindowsTerminal -and (Test-CommandExists fd)) {
+    $script:DefaultFileSystemFdCmd = "fd.exe --color always --type f --fixed-strings --strip-cwd-prefix --hidden --exclude .git"
+} else {
+    $script:DefaultFileSystemFdCmd = "fd.exe --type f --fixed-strings --strip-cwd-prefix --hidden --exclude .git"
+}
+$script:DefaultFileSystemFdCmd = $FZF_DEFAULT_COMMAND
 $env:FZF_DEFAULT_COMMAND = $FZF_DEFAULT_COMMAND
 
+class FzfOpts {
+    [string]$Value
+    FzfOpts([string]$value) {
+        $this.Value = $value
+    }
+}
 
- $fzf_opts = @{
-            Style                  = 'full'
-            Ansi                   = $true
-            Layout                 = "reverse"
-            Multi                  = $true
-            Height                 = '50%'
-            MinHeight              = 20
-            Border                 = $true
-            BorderStyle            = 'sharp'
-            Info                   = 'inline'
-            Color                  = 'bg+:0,bg:-1,spinner:4,fg:8,header:3,info:8,pointer:13,hl:-1:underline,hl+:-1:underline:reverse,marker:14,fg+:13,prompt:8,gutter:-1,selected-bg:0,separator:$bg,preview-bg:$bg,preview-label:0,label:7,query:5,border:0,list-border:0,preview-border:0,input-border:0'
-            PreviewWindow          = 'right:50%,border-sharp'
-            Prompt                 = ' '
-            Pointer                = '┃'
-            separator              = '──'
-            marker                 = '│'
-            NoHScroll              = $true
-        }
+$FzfPreview = "bat --style=numbers --color=always {}"
+$previewString = "--preview='$FzfPreview'"
 
-$_FZF_DEFAULT_OPTS = ($fzf_opts.GetEnumerator() | foreach-object { "--{0}=""{1}""" -f $_.Key, $_.Value }) -join ' '
-$env:_FZF_DEFAULT_OPTS = $_FZF_DEFAULT_OPTS
+$fzfOptions = @{
+    style = "full"
+    padding = 0
+    margin = 0
+    ansi = $true
+    layout = "reverse"
+    multi = $true
+    height = "50%"
+    minheight = 20
+    border = "sharp"
+    listborder = "sharp"
+    inputborder = "sharp"
+    info = "inline"
+    previewwindow = "right:50%,border-sharp"
+    prompt = @{ symbol = " " }
+    pointer = @{ symbol = "┃" }
+    marker = @{ symbol = "│" }
+    separator = @{ symbol = "──" }
+    scrollbar = @{ symbol = "│" }
+}
 
-$env:FZF_DEFAULT_OPTS = "--style=full --ansi --height=65% --multi --color=bg+:0,bg:-1,spinner:4 --color=fg:8,header:3,info:8,pointer:13 --color=hl:7:underline,hl+:5:reverse --color=marker:14,fg+:13,prompt:8 --color=gutter:-1,selected-bg:0,separator:0g --color=preview-bg:-1,preview-label:0,label:7,query:5 --color=border:0,list-border:0,preview-border:0,input-border:0 --info=inline --layout=reverse --prompt=' ' --pointer='┃' --separator='──' --marker='│' --scrollbar='│' --border=sharp  --preview-window=right:50%,border-sharp --preview='bat --style=numbers --color=always {}'"    
+$colorOptions = @{
+    'label' = '7'
+    'selected-bg' = '0'
+    'header' = '3'
+    'gutter' = '-1'
+    'marker' = '14'
+    'fg+' = '13'
+    'spinner' = '4'
+    'query' = '5'
+    'border' = '0'
+    'pointer' = '13'
+    'info' = '8'
+    'preview-bg' = '-1'
+    'list-border' = '0'
+    'bg+' = '0'
+    'preview-border' = '0'
+    'bg' = '-1'
+    'hl' = '-1:underline'
+    'prompt' = '8'
+    'fg' = '8'
+    'preview-label' = '0'
+    'hl+' = '-1:underline:reverse'
+    'input-border' = '0'
+    'separator' = '0'
+}
+
+$colorString = ($colorOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
+$colorArg = "--color=$colorString"
+
+$key_mapping = @{
+    minheight = "min-height"
+    listborder = "list-border"
+    inputborder = "input-border"
+    previewwindow = "preview-window"
+}
+
+$fzfString = (($fzfOptions.GetEnumerator() | ForEach-Object {
+    $key = if ($key_mapping.ContainsKey($_.Key)) { $key_mapping[$_.Key] } else { $_.Key }
+    if ($_.Value -is [bool]) { "--{0}" -f $key }
+    elseif ($_.Value.symbol) { "--{0}='{1}'" -f $key, $_.Value.symbol }
+    else { "--{0}={1}" -f $key, $_.Value }
+}) -join ' ')
+
+$env:FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
