@@ -15,13 +15,6 @@ if ($script:RunningInWindowsTerminal -and (Test-CommandExists fd)) {
 $script:DefaultFileSystemFdCmd = $FZF_DEFAULT_COMMAND
 $env:FZF_DEFAULT_COMMAND = $FZF_DEFAULT_COMMAND
 
-class FzfOpts {
-    [string]$Value
-    FzfOpts([string]$value) {
-        $this.Value = $value
-    }
-}
-
 $FzfPreview = "bat --style=numbers --color=always {}"
 $previewString = "--preview='$FzfPreview'"
 
@@ -32,44 +25,53 @@ $fzfOptions = @{
     ansi = $true
     layout = "reverse"
     multi = $true
-    height = "50%"
+    height = "80%"
     minheight = 20
+    tabstop = 2
     border = "sharp"
     listborder = "sharp"
     inputborder = "sharp"
     info = "inline"
-    previewwindow = "right:50%,border-sharp"
-    prompt = @{ symbol = " " }
+    previewwindow = "right:60%,border-sharp"
+    delimiter = ":"
+    prompt = @{ symbol = "> " }
     pointer = @{ symbol = "┃" }
     marker = @{ symbol = "│" }
-    separator = @{ symbol = "──" }
-    scrollbar = @{ symbol = "│" }
-}
+    separator = [FzfSymbolOpts]@{ 
+        enabled = $false
+        symbol = "-"
+        }
+    scrollbar = [FzfSymbolOpts]@{ 
+        enabled = $false
+        symbol = '│'
+        }
+ }
+
 
 $colorOptions = @{
     'label' = '7'
     'selected-bg' = '0'
-    'header' = '3'
+    'header' = '8'
     'gutter' = '-1'
     'marker' = '14'
-    'fg+' = '13'
-    'spinner' = '4'
+    'fg+' = '6'
+    'spinner' = '8'
     'query' = '5'
     'border' = '0'
-    'pointer' = '13'
+    'pointer' = '14'
     'info' = '8'
-    'preview-bg' = '-1'
+    'preview-bg' = "$bg"
     'list-border' = '0'
-    'bg+' = '0'
+    'bg+' = '-1'
     'preview-border' = '0'
     'bg' = '-1'
-    'hl' = '-1:underline'
+    'hl' = '8:underline'
     'prompt' = '8'
-    'fg' = '8'
+    'fg' = '0'
     'preview-label' = '0'
-    'hl+' = '-1:underline:reverse'
+    'hl+' = '2:underline'
     'input-border' = '0'
-    'separator' = '0'
+    'separator' = "$bg"
 }
 
 $colorString = ($colorOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
@@ -82,11 +84,13 @@ $key_mapping = @{
     previewwindow = "preview-window"
 }
 
-$fzfString = (($fzfOptions.GetEnumerator() | ForEach-Object {
+$fzfString = ($fzfOptions.GetEnumerator() | ForEach-Object {
     $key = if ($key_mapping.ContainsKey($_.Key)) { $key_mapping[$_.Key] } else { $_.Key }
     if ($_.Value -is [bool]) { "--{0}" -f $key }
+    elseif ($_.Value -is [FzfSymbolOpts] -and $_.Value.enabled -eq $false) { "--no-{0}" -f $key }
     elseif ($_.Value.symbol) { "--{0}='{1}'" -f $key, $_.Value.symbol }
     else { "--{0}={1}" -f $key, $_.Value }
-}) -join ' ')
+}) -join ' '
+
 
 $env:FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString

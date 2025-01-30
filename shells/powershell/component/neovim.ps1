@@ -1,8 +1,9 @@
-﻿function neovim-fix {
+﻿function Invoke-Nvim {
     param (
-        [string] $args
+        [Parameter(Mandatory=$false, ValueFromRemainingArguments=$true)]
+        [string[]]$args
     )
-    nvim.exe @args
+    nvim  $args
     Write-Host -NoNewLine "`e[5 q"
 }
 
