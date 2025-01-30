@@ -1,201 +1,391 @@
 ﻿{
-  "security.workspace.trust.enabled": false,
-  "security.workspace.trust.emptyWindow": false,
-  "security.workspace.trust.banner": "never",
-  "security.workspace.trust.startupPrompt": "never",
-  "editor.formatOnPaste": true,
-  "editor.formatOnSave": true,
-  "window.zoomPerWindow": true,
-  "window.zoomLevel": -1.0,
-  "workbench.activityBar.iconClickBehavior": "toggle",
-  "terminal.integrated.fontFamily": "JetBrainsMono NFP, monospace",
-  "editor.fontFamily": "JetBrainsMono NFP, monospace",
-  "editor.codeLensFontFamily": "JetBrainsMono NFP, monospace",
-  "editor.inlayHints.fontFamily": "JetBrainsMono NFP, monospace",
-  "debug.console.fontFamily": "JetBrainsMono NFP, monospace",
-  "editor.fontSize": 14,
-  "debug.console.fontSize": 14,
-  "terminal.integrated.fontSize": 14,
-  "editor.fontWeight": "normal",
-  "editor.letterSpacing": 0.3,
-  "terminal.integrated.letterSpacing": 0,
-  "editor.lineHeight": 25,
-  "editor.fontLigatures": true,
-  "editor.minimap.showMarkSectionHeaders": false,
-  "editor.minimap.showRegionSectionHeaders": false,
-  "editor.minimap.renderCharacters": false,
-  "scm.diffDecorations": "none",
-  "[powershell]": {
-    "editor.formatOnSave": true,
-    "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
-    "editor.semanticHighlighting.enabled": true,
-    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
-  },
-  "files.associations": {
-    "*.ps1": "powershell",
-    "*.psm1": "powershell",
-    "*.psd1": "powershell",
-    "*.sh": "shaderlab",
-    "*.json": "jsonc"
-  },
-  "powershell.codeFormatting.autoCorrectAliases": true,
-  "powershell.developer.setExecutionPolicy": true,
-  "powershell.buttons.showRunButtons": true,
-  "powershell.buttons.showPanelMovementButtons": false,
-  "powershell.enableReferencesCodeLens": true,
-  "powershell.analyzeOpenDocumentsOnly": false,
-  "powershell.debugging.createTemporaryIntegratedConsole": true,
-  "powershell.trace.server": "messages",
-  "powershell.helpCompletion": "BlockComment",
-  "powershell.pester.codeLens": false,
-  "powershell.scriptAnalysis.enable": true,
-  "git.autofetch": true,
-  "git.confirmSync": false,
-  "workbench.colorTheme": "Wal Bordered",
-  "explorer.confirmDelete": false,
-  "diffEditor.codeLens": true,
-  "javascript.referencesCodeLens.enabled": true,
-  "javascript.referencesCodeLens.showOnAllFunctions": true,
-  "typescript.implementationsCodeLens.enabled": true,
-  "typescript.implementationsCodeLens.showOnInterfaceMethods": true,
-  "typescript.referencesCodeLens.enabled": true,
-  "typescript.referencesCodeLens.showOnAllFunctions": true,
-  "editor.padding.top": 20,
-  "editor.padding.bottom": 20,
-  "editor.smoothScrolling": true,
-  "editor.lineNumbers": "on",
-  "editor.tabCompletion": "on",
-  "editor.glyphMargin": true,
-  "editor.renderControlCharacters": false,
-  "editor.fontVariations": true,
-  "editor.cursorSurroundingLinesStyle": "all",
-  "editor.codeLensFontSize": 0,
-  "editor.scrollbar.verticalScrollbarSize": 8,
-  "editor.scrollbar.horizontalScrollbarSize": 8,
-  "editor.hover.above": true,
-  "editor.codeLens": false,
-  "breadcrumbs.enabled": false,
-  "editor.autoIndent": "advanced",
-  "workbench.iconTheme": "material-icon-theme",
-  "debug.inlineValues": "on",
-  "redhat.telemetry.enabled": true,
-  "liveServer.settings.donotShowInfoMsg": true,
-  "color-highlight.markRuler": false,
-  "Lua.codeLens.enable": true,
-  "Lua.hint.enable": true,
-  "workbench.colorCustomizations": {},
-  "[shellscript]": {
-    "files.eol": "\n",
-    "editor.formatOnSave": true
-  },
-  "editor.bracketPairColorization.enabled": true,
-  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
-  "editor.autoClosingBrackets": "always",
-  "editor.overviewRulerBorder": false,
-  "github.copilot.editor.enableAutoCompletions": true,
-  "accessibility.signalOptions.volume": 0,
-  "editor.minimap.enabled": false,
-  "editor.defaultFormatter": "ms-vscode.powershell",
-  "workbench.settings.applyToAllProfiles": [
-    "Lua.diagnostics.globals",
-    "files.eol"
-  ],
-  "Lua.diagnostics.globals": ["vim", "Wezterm", "LazyVim", "settings"],
-  "[toml]": {
-    "editor.defaultFormatter": "tamasfe.even-better-toml"
-  },
-  "editor.minimap.sectionHeaderFontSize": 12,
-  "chat.editor.fontSize": 14,
-  "errorLens.fontStyleItalic": true,
-  "markdown.preview.fontSize": 14,
-  "errorLens.fontSize": "JetBrainsMono NFP, monospace",
-  "errorLens.fontFamily": "JetBrainsMono NFP, monospace",
-  "files.eol": "\n",
-  "[plaintext]": {
+    "window.newWindowDimensions": "inherit",
+    "security.workspace.trust.enabled": false,
+    "security.workspace.trust.emptyWindow": false,
+    "security.workspace.trust.banner": "never",
+    "security.workspace.trust.startupPrompt": "never",
+    "terminal.integrated.shellIntegration.enabled": true,
+    "powershell.pester.codeLens": false,
+    "editor.formatOnPaste": true,
     "editor.formatOnSave": false,
-    "editor.unicodeHighlight.ambiguousCharacters": false,
-    "editor.unicodeHighlight.invisibleCharacters": false
-  },
-  // "material-icon-theme.files.color": "#49608D",
-  // "material-icon-theme.folders.color": "#49608D",
-  "material-icon-theme.saturation": 0.75,
-  "workbench.tree.enableStickyScroll": false,
-  "errorLens.statusBarColorsEnabled": true,
-  "workbench.activityBar.location": "top",
-  "notebook.globalToolbarShowLabel": "dynamic",
-  "errorLens.statusBarIconsEnabled": true,
-  "workbench.editor.editorActionsLocation": "default",
-  "[rainmeter]": {
-    "editor.formatOnSave": false
-  },
-  "path-intellisense.autoSlashAfterDirectory": true,
-  "path-intellisense.autoTriggerNextSuggestion": true,
-  "path-intellisense.showHiddenFiles": true,
-  "Lua.diagnostics.globalsRegex": ["vim"],
-  "catppuccin-noctis-icons.hidesExplorerArrows": false,
-  "powershell.integratedConsole.startInBackground": true,
-  "powershell.integratedConsole.suppressStartupBanner": true,
-  "powershell.startAsLoginShell.osx": false,
-  "powershell.developer.editorServicesWaitForDebugger": true,
-  "powershell.pester.useLegacyCodeLens": false,
-  "powershell.powerShellDefaultVersion": "PowerShell (x64)",
-  "workbench.preferredDarkColorTheme": "Wal Bordered",
-  "pester.runTestsInNewProcess": true,
-  "workbench.preferredHighContrastColorTheme": "Wal Bordered",
-  "workbench.preferredHighContrastLightColorTheme": "Wal Bordered",
-  "workbench.preferredLightColorTheme": "Wal Bordered",
-  "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "jdk.jdkhome": "c:\\Users\\njen\\jdk\\OpenJDK-23",
-  "figma.autocompleteBlocks": true,
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[lua]": {
-    "editor.defaultFormatter": "sumneko.lua"
-  },
-  "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "chat.editing.alwaysSaveWithGeneratedChanges": true,
-  "[scss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[python]": {
-    "editor.formatOnType": true
-  },
-  "explorer.confirmDragAndDrop": false,
-  "window.autoDetectHighContrast": false,
-  "code-runner.clearPreviousOutput": true,
-  "editor.linkedEditing": true,
-  "liveServer.settings.donotVerifyTags": true,
-  "git.ignoreMissingGitWarning": true,
-  "workbench.startupEditor": "none",
-  "git.openRepositoryInParentFolders": "never",
-  "files.autoSave": "afterDelay",
-  "workbench.layoutControl.enabled": false,
-  "explorer.decorations.colors": false,
-  "explorer.compactFolders": false,
-  "window.title": " ",
-  "workbench.statusBar.visible": false,
-  "window.menuBarVisibility": "compact",
-  "window.commandCenter": false,
-  "apc.electron": {
-    "frame": false,
-    "titleBarStyle": "hidden"
-  },
-  // "window.titleBarStyle": "native",
-  "window.customTitleBarVisibility": "never",
-  "apc.monospace.font.family": "JetBrainsMono NFP, monospace",
-  "update.mode": "none",
-  "editor.cursorBlinking": "smooth",
-  "editor.cursorSmoothCaretAnimation": "on",
-  "security.allowedUNCHosts": ["wsl.localhost", "wsl$"],
-  "workbench.editor.empty.hint": "hidden",
-  "glassit.alpha": 254,
-  "errorLens.gutterIconsEnabled": true
+    "window.zoomPerWindow": true,
+    "window.zoomLevel": -0.7,
+    "workbench.activityBar.iconClickBehavior": "toggle",
+    "terminal.integrated.fontFamily": "JetBrainsMono NFP, monospace",
+    "editor.fontFamily": "JetBrainsMono NFP, monospace",
+    "editor.codeLensFontFamily": "JetBrainsMono NFP, monospace",
+    "editor.inlayHints.fontFamily": "JetBrainsMono NFP, monospace",
+    "debug.console.fontFamily": "JetBrainsMono NFP, monospace",
+    "editor.fontSize": 15,
+    "debug.console.fontSize": 15,
+    "terminal.integrated.fontSize": 15,
+    "editor.fontWeight": "normal",
+    "editor.letterSpacing": 0.3,
+    "terminal.integrated.letterSpacing": 0,
+    "editor.lineHeight": 30,
+    "editor.fontLigatures": true,
+    "editor.minimap.showMarkSectionHeaders": false,
+    "editor.minimap.showRegionSectionHeaders": false,
+    "editor.minimap.renderCharacters": false,
+    "scm.diffDecorations": "none",
+    "powershell.developer.editorServicesLogLevel": "Trace",
+    "powershell.trace.server": "verbose",
+    "[powershell]": {
+        "files.encoding": "utf8bom",
+        "files.autoGuessEncoding": true,
+        "editor.formatOnSave": true,
+        "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
+        "editor.semanticHighlighting.enabled": true,
+        "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+    },
+    "files.associations": {
+        "*.ps1": "powershell",
+        "*.psm1": "powershell",
+        "*.psd1": "powershell",
+        "*.sh": "shellscript",
+        "*.json": "jsonc",
+        ".php_cs": "php",
+        ".php_cs.dist": "php"
+    },
+    "editor.wordSeparators": "`~!@#%^&*()=+[{]}\\|;:'\",.<>/?",
+    "emmet.includeLanguages": {
+        "blade": "html",
+        "vue-html": "html",
+        "vue": "html",
+        "react": "html",
+        "javascript": "html"
+    },
+    "powershell.codeFormatting.autoCorrectAliases": true,
+    "powershell.developer.setExecutionPolicy": true,
+    "powershell.buttons.showRunButtons": true,
+    "powershell.buttons.showPanelMovementButtons": false,
+    "powershell.enableReferencesCodeLens": true,
+    "powershell.analyzeOpenDocumentsOnly": false,
+    "powershell.debugging.createTemporaryIntegratedConsole": true,
+    "powershell.helpCompletion": "BlockComment",
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "workbench.colorTheme": "Wal Bordered",
+    "explorer.confirmDelete": false,
+    "diffEditor.codeLens": true,
+    "javascript.referencesCodeLens.enabled": true,
+    "javascript.referencesCodeLens.showOnAllFunctions": true,
+    "typescript.implementationsCodeLens.enabled": true,
+    "typescript.implementationsCodeLens.showOnInterfaceMethods": true,
+    "typescript.referencesCodeLens.enabled": true,
+    "typescript.referencesCodeLens.showOnAllFunctions": true,
+    "editor.padding.top": 16,
+    "editor.padding.bottom": 16,
+    "editor.smoothScrolling": true,
+    "editor.lineNumbers": "on",
+    "editor.tabCompletion": "on",
+    "editor.glyphMargin": true,
+    "editor.renderControlCharacters": false,
+    "editor.fontVariations": true,
+    "editor.cursorSurroundingLinesStyle": "all",
+    "editor.codeLensFontSize": 0,
+    "editor.scrollbar.verticalScrollbarSize": 8,
+    "editor.scrollbar.horizontalScrollbarSize": 8,
+    "editor.hover.above": true,
+    "editor.codeLens": false,
+    "breadcrumbs.enabled": false,
+    "editor.autoIndent": "advanced",
+    "debug.inlineValues": "on",
+    "redhat.telemetry.enabled": true,
+    "liveServer.settings.donotShowInfoMsg": true,
+    "color-highlight.markRuler": false,
+    "Lua.codeLens.enable": true,
+    "Lua.hint.enable": true,
+    "workbench.colorCustomizations": {},
+    "[shellscript]": {
+        "files.eol": "\n",
+        "editor.formatOnSave": true
+    },
+    "editor.bracketPairColorization.enabled": true,
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.autoClosingBrackets": "always",
+    "editor.overviewRulerBorder": false,
+    "github.copilot.editor.enableAutoCompletions": true,
+    "accessibility.signalOptions.volume": 0,
+    "editor.minimap.enabled": false,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "workbench.settings.applyToAllProfiles": [
+        "Lua.diagnostics.globals",
+        "files.eol"
+    ],
+    "Lua.diagnostics.globals": ["vim", "Wezterm", "LazyVim", "settings"],
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
+    },
+    "editor.minimap.sectionHeaderFontSize": 12,
+    "chat.editor.fontSize": 15,
+    "errorLens.fontStyleItalic": true,
+    "markdown.preview.fontSize": 15,
+    "errorLens.fontSize": "JetBrainsMono NFP, monospace",
+    "errorLens.fontFamily": "JetBrainsMono NFP, monospace",
+    "files.eol": "\n",
+    "[plaintext]": {
+        "editor.formatOnSave": false,
+        "editor.unicodeHighlight.ambiguousCharacters": false,
+        "editor.unicodeHighlight.invisibleCharacters": false
+    },
+    "material-icon-theme.saturation": 0.9,
+    "workbench.tree.enableStickyScroll": false,
+    "errorLens.statusBarColorsEnabled": true,
+    "workbench.activityBar.location": "top",
+    "notebook.globalToolbarShowLabel": "dynamic",
+    "errorLens.statusBarIconsEnabled": true,
+    "workbench.editor.editorActionsLocation": "default",
+    "[rainmeter]": {
+        "editor.formatOnSave": false
+    },
+    "path-intellisense.autoSlashAfterDirectory": true,
+    "path-intellisense.autoTriggerNextSuggestion": true,
+    "path-intellisense.showHiddenFiles": true,
+    "Lua.diagnostics.globalsRegex": ["vim"],
+    "catppuccin-noctis-icons.hidesExplorerArrows": false,
+    "powershell.integratedConsole.startInBackground": true,
+    "powershell.integratedConsole.suppressStartupBanner": true,
+    "powershell.startAsLoginShell.osx": false,
+    "powershell.developer.editorServicesWaitForDebugger": true,
+    "powershell.pester.useLegacyCodeLens": false,
+    "powershell.enableProfileLoading": true,
+    "powershell.scriptAnalysis.enable": true,
+    "powershell.scriptAnalysis.settingsPath": "",
+    "powershell.powerShellAdditionalExePaths": {
+        "powershell": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    },
+    "powershell.powerShellDefaultVersion": "powershell",
+    "terminal.integrated.profiles.windows": {
+        "Windows PowerShell": {
+            "path": "powershell.exe",
+            "args": ["-NoLogo"]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "Windows PowerShell",
+    "workbench.preferredDarkColorTheme": "Wal Bordered",
+    "pester.runTestsInNewProcess": true,
+    "workbench.preferredHighContrastColorTheme": "Wal Bordered",
+    "workbench.preferredHighContrastLightColorTheme": "Wal Bordered",
+    "workbench.preferredLightColorTheme": "Wal Bordered",
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "jdk.jdkhome": "c:\\Users\\njen\\jdk\\OpenJDK-23",
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[lua]": {
+        "editor.defaultFormatter": "sumneko.lua",
+        "editor.formatOnSave": true
+    },
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "chat.editing.alwaysSaveWithGeneratedChanges": true,
+    "[scss]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[tailwindcss]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "explorer.confirmDragAndDrop": false,
+    "window.autoDetectHighContrast": false,
+    "code-runner.clearPreviousOutput": true,
+    "editor.linkedEditing": true,
+    "liveServer.settings.donotVerifyTags": true,
+    "git.ignoreMissingGitWarning": true,
+    "workbench.startupEditor": "none",
+    "git.openRepositoryInParentFolders": "never",
+    "files.autoSave": "off",
+    "workbench.layoutControl.enabled": false,
+    "explorer.compactFolders": false,
+    "window.title": " ",
+    "window.menuBarVisibility": "compact",
+    "window.commandCenter": false,
+    "apc.electron": {
+        "frame": false,
+        "titleBarStyle": "hidden"
+    },
+    "apc.monospace.font.family": "JetBrainsMono NFP, monospace",
+    "update.mode": "none",
+    "editor.cursorBlinking": "smooth",
+    "editor.cursorSmoothCaretAnimation": "on",
+    "security.allowedUNCHosts": ["wsl.localhost", "wsl$"],
+    "workbench.editor.empty.hint": "hidden",
+    "glassit.alpha": 254,
+    "errorLens.gutterIconsEnabled": true,
+    "material-icon-theme.files.color": "#374b72",
+    "material-icon-theme.folders.color": "#374b72",
+    "workbench.iconTheme": "material-icon-theme",
+    "material-icon-theme.rootFolders.color": "#374b72",
+    "material-icon-theme.opacity": 0.9,
+    "ruff.nativeServer": "on",
+    "ruff.trace.server": "messages",
+    "ShortcutMenuBar.undo": true,
+    "ShortcutMenuBar.toggleWordWrap": true,
+    "ShortcutMenuBar.toggleRenderWhitespace": true,
+    "ShortcutMenuBar.toggleActivityBar": true,
+    "ShortcutMenuBar.startDebugging": true,
+    "ShortcutMenuBar.showCommands": true,
+    "ShortcutMenuBar.saveAll": true,
+    "ShortcutMenuBar.save": true,
+    "ShortcutMenuBar.redo": true,
+    "ShortcutMenuBar.quickOpen": true,
+    "ShortcutMenuBar.powershellRestartSession": true,
+    "ShortcutMenuBar.paste": true,
+    "ShortcutMenuBar.openSettings": true,
+    "ShortcutMenuBar.newFile": true,
+    "ShortcutMenuBar.indentLines": true,
+    "ShortcutMenuBar.goToDefinition": true,
+    "ShortcutMenuBar.formatWith": true,
+    "ShortcutMenuBar.findReplace": true,
+    "ShortcutMenuBar.commentLine": true,
+    "ShortcutMenuBar.changeEncoding": true,
+    "ShortcutMenuBar.openFile": true,
+    "editor.suggest.showStatusBar": true,
+    "workbench.editor.autoLockGroups": {
+        "imagePreview.previewEditor": true,
+        "font.detail.preview": true
+    },
+    "shebang.associations": [
+        {
+            "pattern": "^#!/bin/bash$",
+            "language": "shellscript"
+        },
+        {
+            "pattern": "#!/usr/bin/env bash$",
+            "language": "shellscript"
+        }
+    ],
+    "xml.fileAssociations": [
+        {
+            "systemId": "https://raw.githubusercontent.com/PowerShell/PowerShell/master/src/Schemas/Format.xsd",
+            "pattern": "**/*.Format.ps1xml"
+        },
+        {
+            "systemId": "https://raw.githubusercontent.com/PowerShell/PowerShell/master/src/Schemas/Types.xsd",
+            "pattern": "**/*.Types.ps1xml"
+        }
+    ],
+    "pester.autoDebugOnSave": true,
+    "powershell.pester.outputVerbosity": "Diagnostic",
+    "powershell.developer.traceDap": true,
+    "github.copilot.chat.terminalChatLocation": "terminal",
+    "code-runner.runInTerminal": true,
+    "csharp.debug.console": "integratedTerminal",
+    "elixirLS.enableTestLenses": true,
+    "powershell.sideBar.CommandExplorerVisibility": true,
+    "files.trimTrailingWhitespace": true,
+    "diffEditor.renderSideBySide": false,
+    "editor.snippetSuggestions": "top",
+    "editor.detectIndentation": false,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "editor.hover.delay": 1500,
+    "editor.hover.enabled": true,
+    "editor.matchBrackets": "never",
+    "editor.lightbulb.enabled": "off",
+    "editor.renderLineHighlight": "none",
+    "editor.occurrencesHighlight": "off",
+    "problems.decorations.enabled": false,
+    "editor.hideCursorInOverviewRuler": true,
+    "editor.gotoLocation.multipleReferences": "goto",
+    "editor.gotoLocation.multipleDefinitions": "goto",
+    "editor.gotoLocation.multipleDeclarations": "goto",
+    "workbench.editor.enablePreviewFromQuickOpen": false,
+    "editor.gotoLocation.multipleImplementations": "goto",
+    "editor.gotoLocation.multipleTypeDefinitions": "goto",
+    "search.useIgnoreFiles": false,
+    "search.exclude": {
+        // Hide everything in /vendor, except the "laravel" and "livewire" folder.
+        "**/vendor/{[^l],?[^ai]}*": true,
+        // Hide everything in /public, except "index.php"
+        "**/public/{[^i],?[^n]}*": true,
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/_ide_helper.php": true,
+        "**/composer.lock": true,
+        "**/package-lock.json": true,
+        "storage": true,
+        ".phpunit.result.cache": true
+    },
+    "explorer.sortOrder": "type",
+    "prettier.tabWidth": 4,
+    "workbench.tree.indent": 15,
+    "editor.quickSuggestions": {
+        "strings": true
+    },
+    "security.workspace.trust.untrustedFiles": "open",
+    // "editor.fontLigatures": false,
+    "diffEditor.wordWrap": "on",
+    "notebook.output.wordWrap": true,
+    "editor.minimap.maxColumn": 250,
+    "editor.accessibilitySupport": "off",
+    "chat.editor.wordWrap": "on",
+    "editor.wordWrap": "wordWrapColumn",
+    "[php]": {
+        "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+    },
+    "tailwindCSS.includeLanguages": {
+        "plaintext": "html"
+    },
+    "tailwindCSS.experimental.configFile": null,
+    "workbench.statusBar.visible": false,
+    "editor.inlineSuggest.suppressSuggestions": true,
+    "editor.stickyScroll.enabled": false,
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": [
+                    "comment",
+                    "keyword",
+                    "variable.language",
+                    "entity.other.attribute-name.html",
+                    "entity.other.attribute-name",
+                    "keyword.control",
+                    "storage.type",
+                    "comment",
+                    "comment.block",
+                    "comment.line"
+                ],
+                "settings": {
+                    "fontStyle": ""
+                }
+            }
+        ]
+    },
+    "material-icon-theme.enableLogging": true
 }

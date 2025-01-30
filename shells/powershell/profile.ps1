@@ -5,7 +5,7 @@ $Env:DOTS = "$Env:USERPROFILE\dots"
 $Env:PSDOT = "$Env:DOTS\shells\powershell"
 $Env:PSCOMPONENT = "$Env:PSDOT\component"
 
-foreach ( $includeFile in ("env", "functions", "path", "aliases", "modules", "readline", "completions", "prompt", "lab") ) {
+foreach ( $includeFile in ("env", "functions", "path", "aliases", "modules", "readline", "completions", "prompt", "lab", "util") ) {
     Unblock-File "$Env:PSCOMPONENT\$includeFile.ps1"
     . "$Env:PSCOMPONENT\$includeFile.ps1"
 }
