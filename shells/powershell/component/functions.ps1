@@ -1,4 +1,4 @@
-﻿$timeout = 1000 
+﻿$timeout = 1000
 $pingResult = Get-CimInstance -ClassName Win32_PingStatus -Filter "Address = 'github.com' AND Timeout = $timeout" -Property StatusCode 2>$null
 if ($pingResult.StatusCode -eq 0) {
   $canConnectToGitHub = $true
@@ -49,8 +49,13 @@ function Add-Path {
     [Parameter(Mandatory = $true)]
     [string]$Path
   )
-  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-    $env:Path += ";$Path"
+  if (Test-Path $Path) {
+    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+      $env:Path += ";$Path"
+    }
+  }
+  else {
+    Write-Error "Path '$Path' does not exist"
   }
 }
 
@@ -59,8 +64,13 @@ function Add-PrependPath {
     [Parameter(Mandatory = $true)]
     [string]$Path
   )
-  if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-    $env:Path = "$Path;$env:Path"
+  if (Test-Path $Path) {
+    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+      $env:Path = "$Path;$env:Path"
+    }
+  }
+  else {
+    Write-Error "Path '$Path' does not exist"
   }
 }
 
@@ -69,8 +79,13 @@ function Remove-Path {
     [Parameter(Mandatory = $true)]
     [string]$Path
   )
-  if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
-    $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
+  if (Test-Path $Path) {
+    if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
+      $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
+    }
+  }
+  else {
+    Write-Error "Path '$Path' does not exist"
   }
 }
 
