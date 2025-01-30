@@ -9,7 +9,7 @@ $username\
 $hostname\
 $directory\
 $git_branch\
-$git_status\
+([ $git_status](purple))\
 $nodejs$conda$python$rust\
 $cmd_duration\
 $line_break\
@@ -155,15 +155,8 @@ format = '[($symbol$branch )]($style)'
 style = 'bright-black'
 
 [git_status]
-format = "([($conflicted$untracked$modified$staged$renamed$deleted$stashed )](purple)[($ahead_behind )]($style))"
+format = "[$all_status$ahead_behind]($style)"
 style = "bright-purple"
-conflicted = "​"
-untracked = "​"
-modified = "​"
-staged = "​"
-renamed = "​"
-deleted = "​"
-stashed = "◈"
 
 [nodejs]
 detect_files = ['package.json']

@@ -15,6 +15,11 @@ if ($script:RunningInWindowsTerminal -and (Test-CommandExists fd)) {
 $script:DefaultFileSystemFdCmd = $FZF_DEFAULT_COMMAND
 $env:FZF_DEFAULT_COMMAND = $FZF_DEFAULT_COMMAND
 
+class FzfSymbolOpts {
+    [bool]$enabled
+    [string]$symbol
+}
+
 $FzfPreview = "bat --style=numbers --color=always {}"
 $previewString = "--preview='$FzfPreview'"
 

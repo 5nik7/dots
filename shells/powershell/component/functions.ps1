@@ -44,57 +44,6 @@ function Update-PowerShell {
   }
 }
 
-
-function Print-Colors {
-    Write-Host ""
-    Write-Host -ForegroundColor Black -NoNewLine "  "
-    Write-Host -ForegroundColor White "  0  Black"
-    Write-Host -ForegroundColor DarkRed -NoNewLine "  "
-    Write-Host -ForegroundColor White "  1  DarkRed" 
-    Write-Host -ForegroundColor DarkGreen -NoNewLine "  "
-    Write-Host -ForegroundColor White "  2  DarkGreen"         
-    Write-Host -ForegroundColor DarkYellow -NoNewLine "  "
-    Write-Host -ForegroundColor White "  3  DarkYellow"          
-    Write-Host -ForegroundColor DarkBlue -NoNewLine "  "
-    Write-Host -ForegroundColor White "  4  DarkBlue"       
-    Write-Host -ForegroundColor DarkMagenta -NoNewLine "  "
-    Write-Host -ForegroundColor White "  5  DarkMagenta"        
-    Write-Host -ForegroundColor DarkCyan -NoNewLine "  "
-    Write-Host -ForegroundColor White "  6  DarkCyan"          
-    Write-Host -ForegroundColor Gray -NoNewLine "  "
-    Write-Host -ForegroundColor White "  7  Gray"      
-    Write-Host -ForegroundColor DarkGray -NoNewLine "  "
-    Write-Host -ForegroundColor White "  8  DarkGray"          
-    Write-Host -ForegroundColor Red -NoNewLine "  "
-    Write-Host -ForegroundColor White "  9  Red"
-    Write-Host -ForegroundColor Green -NoNewLine "  "
-    Write-Host -ForegroundColor White "  10  Green"  
-    Write-Host -ForegroundColor Yellow -NoNewLine "  "
-    Write-Host -ForegroundColor White "  11  Yellow"   
-    Write-Host -ForegroundColor Blue -NoNewLine "  "
-    Write-Host -ForegroundColor White "  12  Blue"    
-    Write-Host -ForegroundColor Magenta -NoNewLine "  "
-    Write-Host -ForegroundColor White "  13  Magenta"
-    Write-Host -ForegroundColor Cyan -NoNewLine "  "
-    Write-Host -ForegroundColor White "  14  Cyan" 
-    Write-Host -ForegroundColor White -NoNewLine "  "
-    Write-Host -ForegroundColor White "  15  White"    
-    Write-Host ""      
-}
-
-function Get-Repo {
-  <#
-    .SYNOPSIS
-        Clones a git repository into the current directory. Alias: git-clone
-    #>
-  [CmdletBinding()]
-  param (
-    [Parameter(Mandatory = $true, Position = 0)]
-    [string]$Url
-  )
-  git clone $Url
-}
-
 function Add-Path {
   param (
     [Parameter(Mandatory = $true)]
@@ -124,12 +73,19 @@ function Remove-Path {
     $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
   }
 }
+
 function winutil {
   Invoke-RestMethod "https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1" | Invoke-Expression
 }
 
 function .. {
   Set-Location ".."
+}
+function ... {
+  Set-Location "..."
+}
+function .... {
+  Set-Location "...."
 }
 
 function yy {
@@ -258,7 +214,7 @@ function Test-CommandExists {
 
 # Editor Configuration
 $EDITOR = if (Test-CommandExists code) { 'code' }
-elseif (Test-CommandExists nvim) { 'nvim' }
+elseif (Test-CommandExists code) { 'nvim' }
 elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
