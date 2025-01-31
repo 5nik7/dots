@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 
 public class PInvoke
 {
-    [DllImport("User32.dll",CharSet=CharSet.Unicode)] 
+    [DllImport("User32.dll",CharSet=CharSet.Unicode)]
     public static extern int SystemParametersInfo(UInt32 action, UInt32 iParam, String sParam, UInt32 winIniFlags);
 }
 "@
@@ -65,7 +65,7 @@ function Update-WalCommandPrompt {
         Expand-Archive -Path $colorToolZip -DestinationPath $colorToolDir
         Remove-Item -Path $colorToolZip
     }
-    
+
     # Make sure it was created
     $walprompt = "$HOME/.cache/wal/wal-prompt.ini"
     if (Test-Path -Path $walprompt) {
@@ -98,7 +98,7 @@ r=$r
 g=$g
 b=$b
 a=230
-"@ 
+"@
 
     if (!(Test-Path -Path $EBMDLL)) {
         $EBMZip = "$scriptDir/EBM.zip"
@@ -122,7 +122,7 @@ function Update-WalTerminal {
 
     @(
         # Stable
-        "$HOME/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState", 
+        "$HOME/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState",
 
         # Preview
         "$HOME/AppData/Local/Packages/Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe/LocalState",
@@ -162,7 +162,8 @@ function Update-WalTerminal {
         # Set cursor to foreground color
         if ($walTheme.cursorColor) {
             $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.cursorColor -Force
-        } else {
+        }
+        else {
             $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.foreground -Force
         }
 
@@ -170,6 +171,35 @@ function Update-WalTerminal {
         $configData | ConvertTo-Json -Depth 32 | Set-Content -Path $terminalProfile
     }
 }
+
+# function Update-Discord {
+#     if (!(Test-Path -Path "$APPDATA/.cache/wal/windows-terminal.json")) {
+#         return
+#     }
+
+#     @(
+#         # Stable
+#         "$APPDATA/Vencord/themes"
+
+#     ) | ForEach-Object {
+#         $discordDir = "$_"
+#         cacheeDir = "$HOME/.cache/wal"
+#         $discordFile = "pywal.theme.css"
+#         $discordTheme = "$discordDir/$discordFile"
+#         $discordWalFile = "$cacheeDir/$discordFile"
+
+#         # This version of windows terminal isn't installed
+#         if (!(Test-Path -Path "$discordTheme")) {
+#             return
+#         }
+#         if (Test-Path -Path "$discordWalFile") {
+#             Copy-Item -Path $discordTheme -Destination "$HOME/.config/wal/templates"
+#         }
+#     }
+#     Copy-Item -Path $discordTheme -Destination "$discordDir/pywal.theme.css
+#     }
+# }
+
 
 <#
 .DESCRIPTION
@@ -216,7 +246,7 @@ function Update-WalTheme {
         return
     }
 
-        # Set the wallpaper
+    # Set the wallpaper
     if ($Theme) {
         wal -n --theme $Theme
     }
@@ -234,7 +264,7 @@ function Update-WalTheme {
 
     # Update prompt defaults
     Update-WalExplorer
-    
+
     # New oh-my-posh
     if ((Get-Command oh-my-posh -ErrorAction SilentlyContinue) -and (Test-Path -Path "$HOME/.cache/wal/posh-wal-agnoster.omp.json")) {
         oh-my-posh init pwsh --config "$HOME/.cache/wal/posh-wal-agnoster.omp.json" | Invoke-Expression
