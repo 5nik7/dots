@@ -5,6 +5,7 @@ add_newline = true
 
 format = """
 $os\
+${env_var.AdminSymbol}\
 $username\
 $hostname\
 $directory\
@@ -18,21 +19,9 @@ $character"""
 continuation_prompt = '[│](black)'
 
 [character]
-# success_symbol = '[󰅂](green)'
-# error_symbol = '[󰅂](red)'
-# success_symbol = '[](green)'
-# error_symbol = '[](red)'
 success_symbol = '[](green)'
 error_symbol = '[](red)'
-# success_symbol = '[](green)'
-# error_symbol = '[](red)'
-# success_symbol = '[](green)'
-# error_symbol = '[](red)'
-# vimcmd_symbol = '[:](black)'
-# vimcmd_symbol = '[×](black)'
 vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[ɴ](black)'
-# vimcmd_symbol = '[▎](black)'
 format = '$symbol '
 
 [cmd_duration]
@@ -41,19 +30,24 @@ format = "([](bright-black)[ $duration]($style))"
 style = "bright-yellow"
 
 [username]
-style_user = 'bright-yellow'
-style_root = 'bright-yellow bold'
+style_user = 'bright-purple'
+style_root = 'bright-purple'
 format = '[$user]($style)'
 disabled = true
 show_always = true
-aliases = { "Administrator" = "admin" }
+aliases = { "Administrator" = "njen" }
 
 [hostname]
 ssh_only = false
-format = '[@](yellow)[$hostname](yellow)([ $ssh_symbol](bold blue)) '
+format = '[@](bright-purple)[$hostname](bright-purple)([ $ssh_symbol](blue)) '
 trim_at = '.companyname.com'
 disabled = true
 ssh_symbol = " "
+
+[env_var.AdminSymbol]
+variable = 'AdminSymbol'
+format = "[$env_value]($style)"
+style = "red"
 
 [fill]
 symbol = ''

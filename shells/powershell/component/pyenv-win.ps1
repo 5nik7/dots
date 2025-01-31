@@ -1,5 +1,5 @@
-$PYENV_VERSION = (&pyenv version-name) -replace '\s', ''
-$Env:PYENV_VERSION = $PYENV_VERSION
+$Env:PYENV_VERSION = (&pyenv version-name) -replace '\s', ''
+$Global:PYENV_VERSION = $Env:PYENV_VERSION
 $PYEXEDIR = ($Env:PYENV_HOME + "versions\$PYENV_VERSION")
 $PYSCRIPTS = "$PYEXEDIR\Scripts"
 $PYENVBIN = ($env:PYENV + "bin")
@@ -32,7 +32,6 @@ Add-PrependPath -Path "$PYENVBIN"
 Add-PrependPath -Path "$PYENVSHIMS"
 Add-PrependPath -Path "$PYEXEDIR"
 Add-PrependPath -Path "$PYSCRIPTS"
-
 }
 
 function pyenvBottom {

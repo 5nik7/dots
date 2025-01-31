@@ -1,18 +1,35 @@
+if ($isAdmin) {
+    $env:AdminSymbol = "# "
+}
+else {
+    $env:AdminSymbol = ""
+}
+
 Invoke-Expression (&starship init powershell)
 Enable-TransientPrompt
 function Invoke-Starship-TransientFunction {
     &starship module character
 }
 
-Set-PSReadLineOption -ViModeIndicator script -ViModeChangeHandler {
+function OnViModeChangeCore {
     [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
     if ($args[0] -eq 'Command') {
-        # Set the cursor to a solid block.
         [Microsoft.PowerShell.PSConsoleReadLine]::ForwardChar()
         Write-Host -NoNewLine "`e[2 q"
     }
     else {
-        # Set the cursor to a blinking line.
         Write-Host -NoNewLine "`e[5 q"
     }
+}
+
+function OnViModeChangeDesktop {
+    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+}
+
+if ($PSEdition -eq "Core") {
+    Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore
+}
+
+if ($PSEdition -eq "Desktop") {
+    Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeDesktop
 }

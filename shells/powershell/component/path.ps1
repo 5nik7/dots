@@ -1,10 +1,9 @@
-$Env:PSCRIPTS = "$Env:PSDOT\Scripts"
-Add-Path -Path $Env:PSCRIPTS
+$env:PSCRIPTS = "$env:PSDOT\Scripts"
+$Global:PSCRIPTS = $env:PSCRIPTS
+Add-Path -Path $env:PSCRIPTS
 
-$Env:DOTBIN = "$Env:DOTS\bin"
-Add-Path -Path $Env:DOTBIN
+$env:DOTBIN = "$env:DOTS\bin"
+Add-Path -Path $env:DOTBIN
 
-$localbin = "$Env:USERPROFILE\.local\bin"
-Add-Path -Path $localbin
-
-Add-Path -Path "$Env:PSMODS\winwal\colortool"
+$env:LOCALBIN = "$HOME\.local\bin"
+Add-Path -Path $env:LOCALBIN

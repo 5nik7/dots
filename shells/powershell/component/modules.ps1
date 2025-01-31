@@ -1,9 +1,25 @@
-function Get-PowerMod {
+function Import-PSMod {
     [CmdletBinding()]
     param (
         [Parameter()]
-        $Name
+        $Name,
+        [switch]$Core,
+        [switch]$Desktop,
+        [switch]$Local
     )
+    if ($Core -and $PSEdition -ne 'Core') {
+        return
+    }
+    if ($Desktop -and $PSEdition -ne 'Desktop') {
+        return
+    }
+    if ($Local) {
+        $localModulePath = "$env:PSMODS\$Name\$Name.psm1"
+        if (Test-Path $localModulePath) {
+            Import-Module -Name $localModulePath
+            return
+        }
+    }
     if (Get-Module $Name -ListAvailable) {
         Import-Module -Name $Name
     } else {
@@ -11,16 +27,16 @@ function Get-PowerMod {
     }
 }
 
-Get-PowerMod -Name PowerShellGet
-Get-PowerMod -Name Terminal-Icons
-Get-PowerMod -Name PSScriptAnalyzer
-Get-PowerMod -Name Pester
-Get-PowerMod -Name Plaster
-Get-PowerMod -Name Microsoft.WinGet.CommandNotFound
+Import-PSMod -Name PowerShellGet
+Import-PSMod -Name Terminal-Icons
+Import-PSMod -Name PSScriptAnalyzer
+Import-PSMod -Name Pester
+Import-PSMod -Name Plaster
+Import-PSMod -Core -Name Microsoft.WinGet.CommandNotFound
 
+Import-PSMod -Local -Name psdots
 
-Import-Module "$Env:PSMODS\winwal\winwal.psm1"
-Add-Path -Path "$Env:PSMODS\winwal\colortool"
-
-Import-Module "$Env:PSMODS\psdots\psdots.psm1"
-Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
+Import-PSMod -Local -Name winwal
+if ((Get-Module winwal -ListAvailable) -and (Test-Path "$env:PSMODS\winwal\colortool")) {
+    Add-Path -Path "$env:PSMODS\winwal\colortool"
+}

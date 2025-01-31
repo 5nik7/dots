@@ -21,12 +21,10 @@ Set-Alias -Name v -Value Invoke-Nvim
 
 Set-Alias -Name ln -Value Set-Link
 
-Set-Alias -Name weather -Value weather.ps1
-
 Set-Alias -Name fetch -Value Get-Fetch
 
 Set-Alias -Name lg -Value lazygit.exe
-Set-Alias -Name NerdFonts -Value Invoke-NerdFontInstaller
-Set-Alias -Name dev -Value cdprojects
+Set-Alias -Name nerdfonts -Value Invoke-NerdFontInstaller
+Set-Alias -Name dev -Value cdev
 
 Set-Alias -Name concol -Value list-console-colors

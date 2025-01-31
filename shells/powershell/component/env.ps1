@@ -1,39 +1,61 @@
-$Env:DOTFILES = "$Env:DOTS\configs"
-$Env:DOTCACHE = "$Env:DOTS\cache"
+$Global:USERPROFILE = $env:USERPROFILE
 
-$Env:PSCOMPS = "$Env:PSDOT\completions"
-$Env:PSMODS = "$Env:PSDOT\Modules"
+$env:DOTFILES = "$DOTS\configs"
+$Global:DOTFILES = $env:DOTFILES
 
-$Env:BASHDOT = "$Env:DOTS\shells\bash"
-$Env:ZSHDOT = "$Env:DOTS\shells\zsh"
-$Env:PROJECTS = "$Env:USERPROFILE\dev"
-$Env:DEV = "$Env:USERPROFILE\dev"
-$Env:WINDOTCONF = "$Env:USERPROFILE\.config"
+$env:DOTCACHE = "$DOTS\cache"
+$Global:DOTCACHE = $env:DOTCACHE
 
-$Env:DRIP = "$Env:DOTS\drip"
-$Env:DRIP_COLS = "$Env:DRIP\colorschemes"
-$Env:DRIP_TEMPS = "$Env:DRIP\tenplates"
-$Env:WALLS = "$Env:DOTS\walls"
+$env:PSCOMPS = "$env:PSDOT\completions"
+$Global:PSCOMPS = $env:PSCOMPS
 
-$Env:NVM_HOME = "$Env:APPDATA\nvm"
-$Env:NVM_SYMLINK = "$Env:HOMEDRIVE\node"
-$Env:GOPATH = "$Env:USERPROFILE\go"
-$Env:GOBIN = "$Env:USERPROFILE\go\bin"
+$env:PSMODS = "$env:PSDOT\Modules"
+$Global:PSMODS = $env:PSMODS
 
-$Env:DOCUMENTS = [Environment]::GetFolderPath("mydocuments")
-$Env:DOWNLOADS = "$Env:USERPROFILE\Downloads"
+$env:BASHDOT = "$SHELLS\bash"
+$Global:BASHDOT = $env:BASHDOT
 
-$Env:STARSHIP_CACHE = "$Env:LOCALAPPDATA\Temp"
-$Env:STARSHIP_CONFIG = "$Env:DOTFILES\starship\starship.toml"
-$Env:BAT_CONFIG_PATH = "$Env:DOTFILES\bat\config"
-$Env:YAZI_CONFIG_HOME = "$Env:DOTFILES\yazi"
+$env:ZSHDOT = "$SHELLS\zsh"
+$Global:ZSHDOT = $env:ZSHDOT
+
+$env:PROJECTS = "$USERPROFILE\dev"
+$env:DEV = "$USERPROFILE\dev"
+$Global:DEV = $env:DEV
+
+$env:CONF = "$USERPROFILE\.config"
+$Global:CONF = $env:CONF
+
+$env:DRIP = "$DOTS\drip"
+$env:DRIP_COLS = "$env:DRIP\colorschemes"
+$env:DRIP_TEMPS = "$env:DRIP\tenplates"
+
+$env:WALLS = "$DOTS\walls"
+
+$env:NVM_HOME = "$env:APPDATA\nvm"
+$env:NVM_SYMLINK = "$env:HOMEDRIVE\node"
+$env:GOPATH = "$USERPROFILE\go"
+$env:GOBIN = "$USERPROFILE\go\bin"
+
+$env:DOCUMENTS = [environment]::GetFolderPath("MyDocuments")
+$Global:DOCS = $env:DOCUMENTS
+
+$env:DOWNLOADS = "$USERPROFILE\Downloads"
+$Global:DOWNLOADS = $env:DOWNLOADS
+
+$Global:APPDATA = [environment]::GetFolderPath("ApplicationData")
+$Global:LOCALAPPDATA = [environment]::GetFolderPath("LocalApplicationData")
+
+$env:STARSHIP_CACHE = "$LOCALAPPDATA\Temp"
+$env:STARSHIP_CONFIG = "$DOTFILES\starship\starship.toml"
+$env:BAT_CONFIG_PATH = "$DOTFILES\bat\config"
+$env:YAZI_CONFIG_HOME = "$DOTFILES\yazi"
 
 $GITBIN = "C:\Git\usr\bin"
-$Env:YAZI_FILE_ONE = "$GITBIN\file.exe"
+$env:YAZI_FILE_ONE = "$GITBIN\file.exe"
 $BAT_THEME = 'wal'
-$Env:BAT_THEME = $BAT_THEME
-$Env:KOMOREBI_CONFIG_HOME = "$Env:WINDOTCONF\komorebi"
+$env:BAT_THEME = $BAT_THEME
+$env:KOMOREBI_CONFIG_HOME = "$CONF\komorebi"
 
 $TIC = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' TranscodedImageCache -ErrorAction Stop).TranscodedImageCache
 $wallout = [System.Text.Encoding]::Unicode.GetString($TIC) -replace '(.+)([A-Z]:[0-9a-zA-Z\\])+', '$2'
-$Env:WALLPAPER = $wallout
+$env:WALLPAPER = $wallout

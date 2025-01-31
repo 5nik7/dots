@@ -1,0 +1,151 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>System.Management.Automation.PSCustomObject</T>
+      <T>System.Object</T>
+    </TN>
+    <MS>
+      <S N="Name">Invoke-NerdFontInstaller</S>
+      <S N="Version">1.3.5</S>
+      <Obj N="Type" RefId="1">
+        <TN RefId="1">
+          <T>Microsoft.PowerShell.PSResourceGet.UtilClasses.ResourceType</T>
+          <T>System.Enum</T>
+          <T>System.ValueType</T>
+          <T>System.Object</T>
+        </TN>
+        <ToString>Script</ToString>
+        <I32>2</I32>
+      </Obj>
+      <S N="Description">An interactive installer for Nerd Fonts and Cascadia Code on Windows, macOS, or Linux._x000A__x000A_The script downloads the font archive from the GitHub release pages and extracts the font files to_x000A_the user's font directory, or the system font directory when using the AllUsers scope with_x000A_elevated permissions._x000A__x000A_Besides installing the script locally, you may also run this script directly from the web_x000A_using the following command:_x000A__x000A_```powershell_x000A_&amp; ([scriptblock]::Create((iwr 'https://to.loredo.me/Install-NerdFont.ps1')))_x000A_```_x000A__x000A_Or alternatively without the shortened URL:_x000A__x000A_```powershell_x000A_&amp; ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/jpawlowski/nerd-fonts-installer-PS/main/Invoke-NerdFontInstaller.ps1')))_x000A_```_x000A__x000A_&gt; **IMPORTANT**: A code signature cannot be verified when running the script directly from the web._x000A_&gt; SSL transport layer encryption is used to protect the script during download from GitHub and during_x000A_&gt; redirection from the URL shortener._x000A__x000A_Parameters may be passed just like any other PowerShell script. For example:_x000A__x000A_```powershell_x000A_&amp; ([scriptblock]::Create((iwr 'https://to.loredo.me/Install-NerdFont.ps1'))) -Name cascadia-code, cascadia-mono_x000A_```_x000A__x000A_To get a list of available Nerd Fonts, use the following command:_x000A__x000A_```powershell_x000A_&amp; ([scriptblock]::Create((iwr 'https://to.loredo.me/Install-NerdFont.ps1'))) -List All_x000A_```_x000A__x000A_</S>
+      <S N="Author">Julian Pawlowski</S>
+      <S N="CompanyName"></S>
+      <S N="Copyright">© 2024 Julian Pawlowski.</S>
+      <DT N="PublishedDate">2024-09-30T08:56:18.9</DT>
+      <DT N="InstalledDate">2025-01-31T00:02:50.7979823-08:00</DT>
+      <B N="IsPrerelease">false</B>
+      <Nil N="UpdatedDate" />
+      <URI N="LicenseUri">https://github.com/jpawlowski/nerd-fonts-installer-PS/blob/main/LICENSE.txt</URI>
+      <URI N="ProjectUri">https://github.com/jpawlowski/nerd-fonts-installer-PS</URI>
+      <URI N="IconUri">https://raw.githubusercontent.com/jpawlowski/nerd-fonts-installer-PS/main/images/nerd-fonts-logo.png</URI>
+      <Obj N="Tags" RefId="2">
+        <TN RefId="2">
+          <T>System.String[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>fonts</S>
+          <S>nerdfonts</S>
+          <S>cascadia-code</S>
+          <S>cascadia-code-nerd-font</S>
+          <S>cascadia-code-powerline-font</S>
+          <S>cascadia-mono</S>
+          <S>cascadia-mono-nerd-font</S>
+          <S>cascadia-mono-powerline-font</S>
+          <S>powershell</S>
+          <S>powershell-script</S>
+          <S>Windows</S>
+          <S>MacOS</S>
+          <S>Linux</S>
+          <S>PSEdition_Core</S>
+          <S>PSEdition_Desktop</S>
+          <S>PSScript</S>
+          <S>PSFunction_Get-FontsListFromWeb</S>
+          <S>PSCommand_Get-FontsListFromWeb</S>
+          <S>PSFunction_Get-FontsListFromCache</S>
+          <S>PSCommand_Get-FontsListFromCache</S>
+          <S>PSFunction_Save-FontsListToCache</S>
+          <S>PSCommand_Save-FontsListToCache</S>
+          <S>PSFunction_Add-CustomEntries</S>
+          <S>PSCommand_Add-CustomEntries</S>
+          <S>PSFunction_Show-Menu</S>
+          <S>PSCommand_Show-Menu</S>
+          <S>PSFunction_Show-MenuOptions</S>
+          <S>PSCommand_Show-MenuOptions</S>
+          <S>PSFunction_Invoke-GitHubApiRequest</S>
+          <S>PSCommand_Invoke-GitHubApiRequest</S>
+          <S>PSFunction_Invoke-GitHubApiPaginatedRequest</S>
+          <S>PSCommand_Invoke-GitHubApiPaginatedRequest</S>
+          <S>PSFunction_Test-TarSupportsFormat</S>
+          <S>PSCommand_Test-TarSupportsFormat</S>
+          <S>PSFunction_Expand-FromArchiveType</S>
+          <S>PSCommand_Expand-FromArchiveType</S>
+          <S>PSIncludes_Function</S>
+        </LST>
+      </Obj>
+      <Obj N="Includes" RefId="3">
+        <TN RefId="3">
+          <T>System.Collections.Hashtable</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">Cmdlet</S>
+            <Obj N="Value" RefId="4">
+              <TNRef RefId="2" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Function</S>
+            <Nil N="Value" />
+          </En>
+          <En>
+            <S N="Key">Command</S>
+            <Obj N="Value" RefId="5">
+              <TNRef RefId="2" />
+              <LST>
+                <S>Get-FontsListFromWeb</S>
+                <S>Get-FontsListFromCache</S>
+                <S>Save-FontsListToCache</S>
+                <S>Add-CustomEntries</S>
+                <S>Show-Menu</S>
+                <S>Show-MenuOptions</S>
+                <S>Invoke-GitHubApiRequest</S>
+                <S>Invoke-GitHubApiPaginatedRequest</S>
+                <S>Test-TarSupportsFormat</S>
+                <S>Expand-FromArchiveType</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Workflow</S>
+            <Nil N="Value" />
+          </En>
+          <En>
+            <S N="Key">DscResource</S>
+            <Obj N="Value" RefId="6">
+              <TNRef RefId="2" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">RoleCapability</S>
+            <Nil N="Value" />
+          </En>
+        </DCT>
+      </Obj>
+      <S N="PowerShellGetFormatVersion"></S>
+      <S N="ReleaseNotes">Version 1.3.5 (2024-09-27)_x000A_- Fix font location for macOS</S>
+      <Obj N="Dependencies" RefId="7">
+        <TN RefId="4">
+          <T>Microsoft.PowerShell.PSResourceGet.UtilClasses.Dependency[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST />
+      </Obj>
+      <S N="RepositorySourceLocation">https://www.powershellgallery.com/api/v2</S>
+      <S N="Repository">PSGallery</S>
+      <Obj N="AdditionalMetadata" RefId="8">
+        <TNRef RefId="0" />
+        <MS>
+          <S N="NormalizedVersion">1.3.5</S>
+          <S N="IsPrerelease">False</S>
+        </MS>
+      </Obj>
+      <S N="InstalledLocation">C:\Users\njen\Documents\PowerShell\Scripts</S>
+    </MS>
+  </Obj>
+</Objs>

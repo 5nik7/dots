@@ -2,22 +2,22 @@
 .DESCRIPTION
     Provides functions to update the PowerShell profile
 #>
+$env:PSDOTPROFILE = "$env:PSDOT\profile.ps1"
+$Global:PSDOTPROFILE = $env:PSDOTPROFILE
+$ProfileTargets = ("Microsoft.PowerShell_profile.ps1", "Microsoft.VSCode_profile.ps1")
+$ProfileDocVersions = ("PowerShell", "WindowsPowerShell")
+
 function Join-Profile {
     param(
         [switch] $v,
         [switch] $i
     )
-
     Write-Host ''
     Write-Host ' Setting up PoowerShell Profile links...' -ForegroundColor Cyan
-
-    Set-link "$ENV:PSDOT\profile.ps1" "$ENV:DOCUMENTS\PowerShell\profile.ps1" -v:$v -i:$i
-    Set-link "$ENV:PSDOT\profile.ps1" "$ENV:DOCUMENTS\PowerShell\Microsoft.PowerShell_profile.ps1" -v:$v -i:$i
-    Set-link "$ENV:PSDOT\profile.ps1" "$ENV:DOCUMENTS\PowerShell\Microsoft.VSCode_profile.ps1" -v:$v -i:$i
-
-    Set-link "$ENV:PSDOT\profile.ps1" "$ENV:DOCUMENTS\WindowsPowerShell\pprofile.ps1" -v:$v -i:$i
-    Set-link "$ENV:PSDOT\profile.ps1" "$ENV:DOCUMENTS\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" -v:$v -i:$i
-    Set-link "$ENV:PSDOT\profile.ps1" "$ENV:DOCUMENTS\WindowsPowerShell\Microsoft.VSCode_profile.ps1" -v:$v -i:$i
-
+    foreach ( $ProfileDocVersions in $ProfileDocVersions) {
+        foreach ( $ProfileTarget in $ProfileTargets ) {
+            Set-link $PSDOTPROFILE "$env:DOCUMENTS\$ProfileDocVersions\$ProfileTargets" -v:$v -i:$i
+        }
+    }
     Write-Host ''
 }
