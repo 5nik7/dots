@@ -79,14 +79,9 @@ function Remove-Path {
     [Parameter(Mandatory = $true)]
     [string]$Path
   )
-  if (Test-Path $Path) {
     if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
       $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
     }
-  }
-  else {
-    Write-Error "Path '$Path' does not exist"
-  }
 }
 
 function winutil {
