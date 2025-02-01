@@ -18,26 +18,40 @@
         "White"       = 15
     }
     symbols = @{
-        success     = @{
+        success                       = @{
             text  = "SUCCESS:"
             icon  = ""
             color = "Green"
         }
-        warn        = @{
+        warn                          = @{
             text  = "WARNING:"
-            icon  = ""
+            icon  = ""
             color = "Yellow"
         }
-        err         = @{
+        err                           = @{
             text  = "ERROR:"
             icon  = "󰱥"
             color = "Red"
         }
-        smallprompt = @{ icon = "󰅂󱪼" }
-        smline      = @{ icon = "󱪼" }
-        ine         = @{ icon = "│" }
-        readhost    = @{ icon = "󱪼" }
-        diameter    = @{ icon = "" }
+        smallprompt                   = @{ icon = "󰅂󱪼" }
+        smline                        = @{ icon = "󱪼" }
+        ine                           = @{ icon = "│" }
+        readhost                      = @{ icon = "󱪼" }
+        diameter                      = @{ icon = "" }
+        block                         = @{ icon = "" }
+        Google                        = @{ icon = "" }
+        Apps                          = @{ icon = "" }
+        "nf-seti-css"                 = @{ icon = "" }
+        "nf-seti-search"              = @{icon = "" }
+        "nf-weather-fahrenheit"       = @{ icon = "" }
+        "nf-cod-chrome_close"         = @{ icon = "" }
+        "nf-fae-thin_close"           = @{ icon = "" }
+        "nf-iec-power_off"            = @{ icon = "⭘" }
+        "nf-md-check_bold"            = @{ icon = "󰸞" }
+        "nf-md-checkbox_blank"        = @{ icon = "󰄮" }
+        "nf-md-checkbox_intermediate" = @{ icon = "󰡖" }
+        "nf-md-circle_small"          = @{ icon = "󰧟" }
+        "nf-md-circle_medium"         = @{ icon = "󰧞" }
     }
 }
 
@@ -68,7 +82,8 @@ function Write-Color {
     if ($table) {
         foreach ($colorName in $util.colors.Keys | Sort-Object { $util.colors[$_] }) {
             $colorValue = $util.colors[$colorName]
-            Write-Home -foregroundColor $colorName "$colorValue - $colorName"
+            Write-Host -foregroundColor $colorName "$colorValue - $colorName"
+            Write-Host -foregroundColor $colorName "$colorValue - $colorName"
         }
         return
     }

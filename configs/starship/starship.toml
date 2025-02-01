@@ -22,6 +22,7 @@ continuation_prompt = '[│](black)'
 success_symbol = '[](green)'
 error_symbol = '[](red)'
 vimcmd_symbol = '[](black)'
+# vimcmd_symbol = '[](black)'
 format = '$symbol '
 
 [cmd_duration]
@@ -160,6 +161,8 @@ conflicted = "="
 renamed = "»"
 modified = "!"
 staged = "+"
+# staged = ""
+# staged = ""
 untracked = "?"
 typechanged = ""
 ignore_submodules = false
