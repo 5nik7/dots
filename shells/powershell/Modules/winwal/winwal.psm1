@@ -6,6 +6,7 @@ function Set-Wallpaper {
     param(
         # Path to image to set as background, if not set current wallpaper is used
         [Parameter(Mandatory = $true)][string]$Image
+        [switch]$dbug
     )
 
     # Trigger update of wallpaper
@@ -172,33 +173,38 @@ function Update-WalTerminal {
     }
 }
 
-# function Update-Discord {
-#     if (!(Test-Path -Path "$APPDATA/.cache/wal/windows-terminal.json")) {
-#         return
-#     }
+ function Update-DiscordTheme {
+  $cacheeDir = "$HOME/.cache/wal"
+  $discordFilename = "$cacheeDir/pywal.theme.css"
+  $discorwsCaschefile = "$cacheeDir/$discordFilename"
+     if (!(Test-Path -Path "$%$discordFile")) {
+       if ($dbug) {
+         Write-Host "$cacheeDir/$discordFile"
+        }
+         return
+     }
 
-#     @(
-#         # Stable
-#         "$APPDATA/Vencord/themes"
+     @(
+         # Stable
+         "$env:APPDATA/Vencord/themes"
 
-#     ) | ForEach-Object {
-#         $discordDir = "$_"
-#         cacheeDir = "$HOME/.cache/wal"
-#         $discordFile = "pywal.theme.css"
-#         $discordTheme = "$discordDir/$discordFile"
-#         $discordWalFile = "$cacheeDir/$discordFile"
+     ) | ForEach-Object {
+         $discordDir = "$_"
+         $discordTheme = "$discordDir/$discordFilename"
 
-#         # This version of windows terminal isn't installed
-#         if (!(Test-Path -Path "$discordTheme")) {
-#             return
-#         }
-#         if (Test-Path -Path "$discordWalFile") {
-#             Copy-Item -Path $discordTheme -Destination "$HOME/.config/wal/templates"
-#         }
-#     }
-#     Copy-Item -Path $discordTheme -Destination "$discordDir/pywal.theme.css
-#     }
-# }
+         # This version of windows terminal isn't installed
+         if (!(Test-Path -Path "$discordTheme")) {
+             return
+         }
+         Copy-Item -Path $discorwsCaschefile -Destination "$discordTheme"
+     
+     }
+     backuo "$discordTheme.bak"
+
+
+  
+     }
+ }
 
 
 <#
