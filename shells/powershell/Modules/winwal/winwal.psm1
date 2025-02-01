@@ -251,6 +251,9 @@ function Update-WalTheme {
         Set-Wallpaper -Image $Image
     }
 
+    # Updaye Discord
+    Update-DiscordTheme
+
     # Update Windows Terminal
     Update-WalTerminal
 
