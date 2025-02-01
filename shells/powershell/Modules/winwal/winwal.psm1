@@ -177,7 +177,7 @@ function Update-WalTerminal {
   $cacheeDir = "$HOME/.cache/wal"
   $discordFilename = "$cacheeDir/pywal.theme.css"
   $discorwsCaschefile = "$cacheeDir/$discordFilename"
-     if (!(Test-Path -Path "$%$discordFile")) {
+     if (!(Test-Path -Path "$discordFile")) {
        if ($dbug) {
          Write-Host "$cacheeDir/$discordFile"
         }
@@ -195,15 +195,9 @@ function Update-WalTerminal {
          # This version of windows terminal isn't installed
          if (!(Test-Path -Path "$discordTheme")) {
              return
-         }
-         Copy-Item -Path $discorwsCaschefile -Destination "$discordTheme"
-     
-     }
-     backuo "$discordTheme.bak"
-
-
+         } 
+      }
   
-     }
  }
 
 
