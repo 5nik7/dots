@@ -13,7 +13,7 @@ $Global:PSDOT = $env:PSDOT
 $env:PSCOMPONENT = "$env:PSDOT\component"
 $Global:PSCOMPONENT = $env:PSCOMPONENT
 
-foreach ( $includeFile in ("env", "functions", "path", "aliases", "modules", "readline", "completions", "prompt", "lab", "util") ) {
+foreach ( $includeFile in ("util", "env", "functions", "path", "aliases", "modules", "readline", "completions", "prompt") ) {
     Unblock-File "$env:PSCOMPONENT\$includeFile.ps1"
     . "$env:PSCOMPONENT\$includeFile.ps1"
 }

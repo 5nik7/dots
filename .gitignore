@@ -21,4 +21,6 @@ rad.json
 #Test results file
 TestResults.xml
 #shhh
-secrets.ps1
+secret/*
+#clinky
+configs\clink\clink_errorlevel.*

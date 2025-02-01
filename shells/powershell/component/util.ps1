@@ -1,38 +1,131 @@
-﻿Invoke-Expression (& { (zoxide init powershell | Out-String) })
+﻿$util = @{
+    colors  = @{
+        "Black"       = 0
+        "DarkRed"     = 1
+        "DarkGreen"   = 2
+        "DarkYellow"  = 3
+        "DarkBlue"    = 4
+        "DarkMagenta" = 5
+        "DarkCyan"    = 6
+        "Gray"        = 7
+        "DarkGray"    = 8
+        "Red"         = 9
+        "Green"       = 10
+        "Yellow"      = 11
+        "Blue"        = 12
+        "Magenta"     = 13
+        "Cyan"        = 14
+        "White"       = 15
+    }
+    symbols = @{
+        success     = @{
+            text  = "SUCCESS:"
+            icon  = ""
+            color = "Green"
+        }
+        warn        = @{
+            text  = "WARNING:"
+            icon  = ""
+            color = "Yellow"
+        }
+        err         = @{
+            text  = "ERROR:"
+            icon  = "󰱥"
+            color = "Red"
+        }
+        smallprompt = @{ icon = "󰅂󱪼" }
+        smline      = @{ icon = "󱪼" }
+        ine         = @{ icon = "│" }
+        readhost    = @{ icon = "󱪼" }
+        diameter    = @{ icon = "" }
+    }
+}
 
-function Write-Colors {
-    Write-Host ""
-    Write-Host -ForegroundColor Black -NoNewLine "  "
-    Write-Host -ForegroundColor White "  0  Black"
-    Write-Host -ForegroundColor DarkRed -NoNewLine "  "
-    Write-Host -ForegroundColor White "  1  DarkRed"
-    Write-Host -ForegroundColor DarkGreen -NoNewLine "  "
-    Write-Host -ForegroundColor White "  2  DarkGreen"
-    Write-Host -ForegroundColor DarkYellow -NoNewLine "  "
-    Write-Host -ForegroundColor White "  3  DarkYellow"
-    Write-Host -ForegroundColor DarkBlue -NoNewLine "  "
-    Write-Host -ForegroundColor White "  4  DarkBlue"
-    Write-Host -ForegroundColor DarkMagenta -NoNewLine "  "
-    Write-Host -ForegroundColor White "  5  DarkMagenta"
-    Write-Host -ForegroundColor DarkCyan -NoNewLine "  "
-    Write-Host -ForegroundColor White "  6  DarkCyan"
-    Write-Host -ForegroundColor Gray -NoNewLine "  "
-    Write-Host -ForegroundColor White "  7  Gray"
-    Write-Host -ForegroundColor DarkGray -NoNewLine "  "
-    Write-Host -ForegroundColor White "  8  DarkGray"
-    Write-Host -ForegroundColor Red -NoNewLine "  "
-    Write-Host -ForegroundColor White "  9  Red"
-    Write-Host -ForegroundColor Green -NoNewLine "  "
-    Write-Host -ForegroundColor White "  10  Green"
-    Write-Host -ForegroundColor Yellow -NoNewLine "  "
-    Write-Host -ForegroundColor White "  11  Yellow"
-    Write-Host -ForegroundColor Blue -NoNewLine "  "
-    Write-Host -ForegroundColor White "  12  Blue"
-    Write-Host -ForegroundColor Magenta -NoNewLine "  "
-    Write-Host -ForegroundColor White "  13  Magenta"
-    Write-Host -ForegroundColor Cyan -NoNewLine "  "
-    Write-Host -ForegroundColor White "  14  Cyan"
-    Write-Host -ForegroundColor White -NoNewLine "  "
-    Write-Host -ForegroundColor White "  15  White"
-    Write-Host ""
+# Create a reverse mapping of colors
+$c = @{}
+foreach ($color in $util.colors.GetEnumerator()) {
+    $c[$color.Value] = $color.Key
+}
+
+function linebreak {
+    param (
+        [int]$count = 1
+    )
+    for ($i = 0; $i -lt $count; $i++) {
+        Write-Host ''
+    }
+}
+
+function Write-Color {
+    [CmdletBinding()]
+    param (
+        [string]$color = "",
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$text,
+        [switch]$inline,
+        [switch]$table
+    )
+    if ($table) {
+        foreach ($colorName in $util.colors.Keys | Sort-Object { $util.colors[$_] }) {
+            $colorValue = $util.colors[$colorName]
+            Write-Home -foregroundColor $colorName "$colorValue - $colorName"
+        }
+        return
+    }
+
+    if ($color -eq "") { $color = Read-Host "Color" }
+    if (-not $text) { $text = Read-Host "Text" }
+
+    $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_ -eq $color }
+    if (-not $colorEnum) {
+        Write-Err "Invalid color: $color"
+        return
+    }
+
+    $outputText = $text -join " "
+
+    if ($inline) {
+        Write-Host -foregroundColor $color "$outputText" -NoNewline
+        return
+    }
+    Write-Host -foregroundColor $color "$outputText"
+}
+
+function Write-Success {
+    param([string]$text = "")
+    if ($text -eq "" ) {
+        linebreak 1
+        Write-Color "$($util.symbols.success.color)" " $($util.symbols.success.icon) $($util.symbols.success.text) " -inline
+        return
+    }
+    linebreak 1
+    Write-Color "$($util.symbols.success.color)" " $($util.symbols.success.icon) $($util.symbols.success.text) " -inline
+    Write-Color White $text
+    linebreak
+}
+
+function Write-Warn {
+    param([string]$text = "")
+    if ($text -eq "" ) {
+        linebreak 1
+        Write-Color "$($util.symbols.warn.color)" " $($util.symbols.warn.icon) $($util.symbols.warn.text) " -inline
+        return
+    }
+    linebreak 1
+    Write-Color "$($util.symbols.warn.color)" " $($util.symbols.warn.icon) $($util.symbols.warn.text) " -inline
+    Write-Color White $text
+    linebreak
+}
+
+function Write-Err {
+    param([string]$text = "")
+    if ($text -eq "" ) {
+        linebreak 1
+        Write-Color "$($util.symbols.err.color)" " $($util.symbols.err.icon) $($util.symbols.err.text) " -inline
+        return
+    }
+    linebreak 1
+    Write-Color "$($util.symbols.err.color)" " $($util.symbols.err.icon) $($util.symbols.err.text) " -inline
+    Write-Color White $text
+    linebreak
 }

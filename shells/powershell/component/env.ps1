@@ -1,9 +1,12 @@
 $Global:USERPROFILE = $env:USERPROFILE
 
-$env:DOTFILES = "$DOTS\configs"
+$env:BACKUPS = "$env:USERPROFILE\backups"
+$Global:BACKUPS = $env:BACKUPS
+
+$env:DOTFILES = "$env:DOTS\configs"
 $Global:DOTFILES = $env:DOTFILES
 
-$env:DOTCACHE = "$DOTS\cache"
+$env:DOTCACHE = "$env:DOTS\cache"
 $Global:DOTCACHE = $env:DOTCACHE
 
 $env:PSCOMPS = "$env:PSDOT\completions"
@@ -12,34 +15,34 @@ $Global:PSCOMPS = $env:PSCOMPS
 $env:PSMODS = "$env:PSDOT\Modules"
 $Global:PSMODS = $env:PSMODS
 
-$env:BASHDOT = "$SHELLS\bash"
+$env:BASHDOT = "$env:SHELLS\bash"
 $Global:BASHDOT = $env:BASHDOT
 
-$env:ZSHDOT = "$SHELLS\zsh"
+$env:ZSHDOT = "$env:SHELLS\zsh"
 $Global:ZSHDOT = $env:ZSHDOT
 
-$env:PROJECTS = "$USERPROFILE\dev"
-$env:DEV = "$USERPROFILE\dev"
+$env:PROJECTS = "$env:USERPROFILE\dev"
+$env:DEV = "$env:USERPROFILE\dev"
 $Global:DEV = $env:DEV
 
-$env:CONF = "$USERPROFILE\.config"
+$env:CONF = "$env:USERPROFILE\.config"
 $Global:CONF = $env:CONF
 
-$env:DRIP = "$DOTS\drip"
+$env:DRIP = "$env:DOTS\drip"
 $env:DRIP_COLS = "$env:DRIP\colorschemes"
 $env:DRIP_TEMPS = "$env:DRIP\tenplates"
 
-$env:WALLS = "$DOTS\walls"
+$env:WALLS = "$env:DOTS\walls"
 
 $env:NVM_HOME = "$env:APPDATA\nvm"
 $env:NVM_SYMLINK = "$env:HOMEDRIVE\node"
-$env:GOPATH = "$USERPROFILE\go"
-$env:GOBIN = "$USERPROFILE\go\bin"
+$env:GOPATH = "$env:USERPROFILE\go"
+$env:GOBIN = "$env:USERPROFILE\go\bin"
 
 $env:DOCUMENTS = [environment]::GetFolderPath("MyDocuments")
 $Global:DOCS = $env:DOCUMENTS
 
-$env:DOWNLOADS = "$USERPROFILE\Downloads"
+$env:DOWNLOADS = "$env:USERPROFILE\Downloads"
 $Global:DOWNLOADS = $env:DOWNLOADS
 
 $Global:APPDATA = [environment]::GetFolderPath("ApplicationData")
@@ -59,3 +62,5 @@ $env:KOMOREBI_CONFIG_HOME = "$CONF\komorebi"
 $TIC = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' TranscodedImageCache -ErrorAction Stop).TranscodedImageCache
 $wallout = [System.Text.Encoding]::Unicode.GetString($TIC) -replace '(.+)([A-Z]:[0-9a-zA-Z\\])+', '$2'
 $env:WALLPAPER = $wallout
+
+Invoke-Expression (& { (zoxide init powershell | Out-String) })

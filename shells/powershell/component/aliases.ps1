@@ -27,4 +27,9 @@ Set-Alias -Name lg -Value lazygit.exe
 Set-Alias -Name nerdfonts -Value Invoke-NerdFontInstaller
 Set-Alias -Name dev -Value cdev
 
+Set-Alias -Name clr -Value Write-Color
+Set-Alias -Name err -Value Write-Err
+Set-Alias -Name warn -Value Write-Warn
+Set-Alias -Name scs -Value Write-Success
+
 Set-Alias -Name concol -Value list-console-colors

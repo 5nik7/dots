@@ -13,30 +13,36 @@ function Import-PSMod {
     if ($Desktop -and $PSEdition -ne 'Desktop') {
         return
     }
-    if ($Local) {
-        $localModulePath = "$env:PSMODS\$Name\$Name.psm1"
-        if (Test-Path $localModulePath) {
-            Import-Module -Name $localModulePath
-            return
+    if (!($Local)) {
+        if (Get-Module $Name -ListAvailable) {
+            Import-Module -Name $Name
         }
+        else {
+            Install-Module $Name -Scope CurrentUser -Force
+        }
+        return
     }
-    if (Get-Module $Name -ListAvailable) {
-        Import-Module -Name $Name
-    } else {
-        Install-Module $Name -Scope CurrentUser -Force
+    if ($Local) {
+        $LocalModulesDir = "$env:PSDOT/Modules"
+        $LocalModuleParentDir = "$LocalModulesDir/$Name"
+        $LocalModulePath = "$LocalModuleParentDir/$Name.psm1"
+        if (Test-Path $LocalModulePath) {
+            Import-Module $LocalModulePath
+        }
     }
 }
 
-Import-PSMod -Name PowerShellGet
-Import-PSMod -Name Terminal-Icons
-Import-PSMod -Name PSScriptAnalyzer
-Import-PSMod -Name Pester
-Import-PSMod -Name Plaster
-Import-PSMod -Core -Name Microsoft.WinGet.CommandNotFound
+Import-PSMod -Name "PowerShellGet"
+Import-PSMod -Name "Terminal-Icons"
+Import-PSMod -Name "PSScriptAnalyzer"
+Import-PSMod -Name "Pester"
+Import-PSMod -Name "Plaster"
+Import-PSMod -Core -Name "Microsoft.WinGet.CommandNotFound"
 
-Import-PSMod -Local -Name psdots
+Import-PSMod -Local -Name "psdots"
+Import-PSMod -Local -Name "winwal"
+Import-PSMod -Local -Name "lab"
 
-Import-PSMod -Local -Name winwal
 if ((Get-Module winwal -ListAvailable) -and (Test-Path "$env:PSMODS\winwal\colortool")) {
     Add-Path -Path "$env:PSMODS\winwal\colortool"
 }

@@ -21,7 +21,7 @@ continuation_prompt = '[│](black)'
 [character]
 success_symbol = '[](green)'
 error_symbol = '[](red)'
-vimcmd_symbol = '[](black)'
+vimcmd_symbol = '[](black)'
 format = '$symbol '
 
 [cmd_duration]
@@ -39,7 +39,7 @@ aliases = { "Administrator" = "njen" }
 
 [hostname]
 ssh_only = false
-format = '[@](bright-purple)[$hostname](bright-purple)([ $ssh_symbol](blue)) '
+format = '[󰁥](bright-purple)[$hostname](bright-purple)([ $ssh_symbol](blue)) '
 trim_at = '.companyname.com'
 disabled = true
 ssh_symbol = " "
@@ -119,8 +119,9 @@ Windows = ""
 # style = 'bg:none fg:cyan'
 # disabled = true
 
-# [directory.substitutions]
+[directory.substitutions]
 # '~/Documents/' = ' '
+"C:/" = "/"
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
@@ -147,8 +148,22 @@ format = '[($symbol$branch )]($style)'
 style = 'bright-black'
 
 [git_status]
-format = "[$all_status]($style)"
-style = "bright-purple"
+format = "([\\[](purple)[$all_status]($style)[\\]](purple))"
+style = "purple"
+deleted = ""
+stashed = '󰇁'
+ahead = "⇡"
+behind = "⇣"
+up_to_date = ""
+diverged = "⇕"
+conflicted = "="
+renamed = "»"
+modified = "!"
+staged = "+"
+untracked = "?"
+typechanged = ""
+ignore_submodules = false
+disabled = false
 
 [nodejs]
 detect_files = ['package.json']
