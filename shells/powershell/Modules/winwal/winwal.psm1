@@ -176,30 +176,25 @@ function Update-WalTerminal {
  function Update-DiscordTheme {
   $cacheeDir = "$HOME/.cache/wal"
   $discordFilename = "$cacheeDir/pywal.theme.css"
-  $discorwsCaschefile = "$cacheeDir/$discordFilename"
-     if (!(Test-Path -Path "$discordFile")) {
+  $discordCaschefile = "$cacheeDir/$discordFilename"
+     if (!(Test-Path -Path $discordCaschefile)) {
        if ($dbug) {
-         Write-Host "$cacheeDir/$discordFile"
+         Write-Host "$discordCaschefile does not exist."
         }
          return
      }
-
-     @(
-         # Stable
-         "$env:APPDATA/Vencord/themes"
-
-     ) | ForEach-Object {
-         $discordDir = "$_"
+         $discordDir = "$env:APPDATA/Vencord/themes"
          $discordTheme = "$discordDir/$discordFilename"
 
          # This version of windows terminal isn't installed
-         if (!(Test-Path -Path "$discordTheme")) {
+         if (!(Test-Path -Path $discordTheme)) {
              return
          } 
-      }
-  
- }
+         Copy-Item -Path $discordTheme -Destination "$discordTheme.bak"
 
+        $(Get-Content -Path $discordCaschefile | Set-Content -Path $discordTheme
+    }
+}
 
 <#
 .DESCRIPTION
