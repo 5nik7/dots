@@ -48,6 +48,9 @@ $Global:DOWNLOADS = $env:DOWNLOADS
 $Global:APPDATA = [environment]::GetFolderPath("ApplicationData")
 $Global:LOCALAPPDATA = [environment]::GetFolderPath("LocalApplicationData")
 
+$env:SCOOPDATA = "$env:USERPROFILE\scoop\persist"
+$Global:SCOOPDATA = $env:SCOOPDATA
+
 $env:STARSHIP_CACHE = "$LOCALAPPDATA\Temp"
 $env:STARSHIP_CONFIG = "$DOTFILES\starship\starship.toml"
 $env:BAT_CONFIG_PATH = "$DOTFILES\bat\config"

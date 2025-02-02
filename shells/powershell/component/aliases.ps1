@@ -31,5 +31,6 @@ Set-Alias -Name clr -Value Write-Color
 Set-Alias -Name err -Value Write-Err
 Set-Alias -Name warn -Value Write-Warn
 Set-Alias -Name scs -Value Write-Success
+Set-Alias -Name nfo -Value Write-Info
 
 Set-Alias -Name concol -Value list-console-colors

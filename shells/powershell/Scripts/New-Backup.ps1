@@ -17,7 +17,7 @@ param(
 )
 
 if (-not $target) {
-    Write-Host "Usage: New-Backup -target <path_to_target_file>"
+    Write-Error "Usage: New-Backup -target <path_to_target_file>"
     return
 }
 
@@ -41,19 +41,19 @@ $backupFileName = "$targetleaf.$bakDate.bak"
 $backupFilePath = Join-Path -Path (Split-Path -Path $target -Parent) -ChildPath $backupFileName
 
 if (!(Test-Path -Path $backupDir)) {
-    Write-Host ''
-    Write-Host -ForegroundColor Green " Creating backup directory: " -NoNewline
+    linebreak
+    Write-Color Green " Creating backup directory: " -inline
     New-Item -Path $backupDir -ItemType Directory -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Path $backupDir -ErrorAction Stop | Out-Null
-    Write-Host -ForegroundColor DarkBlue " $backupParent\" -NoNewline
-    Write-Host -ForegroundColor Blue "$backupFolder"
-    Write-Host ''
+    Write-Color DarkBlue " $backupParent\" -inline
+    Write-Color Blue "$backupFolder"
+    linebreak
 }
 Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
 Move-Item -Path $backupFilePath -Destination $backupDir -ErrorAction Stop | Out-Null
-Write-Host ''
-Write-Host -ForegroundColor DarkBlue "  $backupParent\" -NoNewline
-Write-Host -ForegroundColor Blue "$backupFolder\" -NoNewline
-Write-Host -ForegroundColor White "$targetleaf" -NoNewline
-Write-Host -ForegroundColor DarkGray ".$bakDate.bak"
-Write-Host ''
+linebreak
+Write-Color DarkBlue "  $backupParent\" -inline
+Write-Color Blue "$backupFolder\" -inline
+Write-Color White "$targetleaf" -inline
+Write-Color DarkGray ".$bakDate.bak"
+linebreak

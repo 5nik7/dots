@@ -40,6 +40,20 @@ function Remove-Path {
     }
 }
 
+function Remove-DuplicatePaths {
+    $paths = $env:Path -split ';'
+    $uniquePaths = [System.Collections.Generic.HashSet[string]]::new()
+    $newPath = @()
+
+    foreach ($path in $paths) {
+        if ($uniquePaths.Add($path)) {
+            $newPath += $path
+        }
+    }
+
+    $env:Path = $newPath -join ';'
+}
+
 function winutil {
     Invoke-RestMethod "https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1" | Invoke-Expression
 }
@@ -228,12 +242,11 @@ function q {
     Exit
 }
 
-function ReloadProfile {
-    & $profile
-    Write-Host ' '
-    Write-Host -ForegroundColor Black '  ┌───────────────────┐'
-    Write-Host -ForegroundColor Black '  │' -NoNewline
-    Write-Host -ForegroundColor Cyan ' Profile reloaded. ' -NoNewline
-    Write-Host -ForegroundColor Black '│'
-    Write-Host -ForegroundColor Black '  └───────────────────┘'
+# when "reload" is typed in the terminal, the profile is reloaded
+# use sendkeys to send the enter key to the terminal
+function reload {
+    Add-Type -AssemblyName System.Windows.Forms
+    [System.Windows.Forms.SendKeys]::SendWait(". $")
+    [System.Windows.Forms.SendKeys]::SendWait("PROFILE")
+    [System.Windows.Forms.SendKeys]::SendWait("{ENTER}")
 }

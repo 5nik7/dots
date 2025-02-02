@@ -5,7 +5,7 @@
 function Set-Wallpaper {
     param(
         # Path to image to set as background, if not set current wallpaper is used
-        [Parameter(Mandatory = $true)][string]$Image
+        [Parameter(Mandatory = $true)][string]$image
 
     )
 
@@ -23,7 +23,7 @@ public class PInvoke
 "@
 
     # Setting the wallpaper requires an absolute path, so pass image into resolve-path
-    [PInvoke]::SystemParametersInfo(0x0014, 0, $($Image | Resolve-Path), 0x0003) -eq 1
+    [PInvoke]::SystemParametersInfo(0x0014, 0, $($image | Resolve-Path), 0x0003) -eq 1
 }
 
 <#
@@ -110,8 +110,8 @@ a=230
 
     if (Test-Path -Path $rgbfile) {
         Set-Content -Path $explorerConf -Value $ini_content
-        taskkill /F /IM explorer.exe >nul
-        Start-Process explorer.exe
+        # taskkill /F /IM explorer.exe >nul
+        # Start-Process explorer.exe
     }
 }
 
@@ -192,63 +192,8 @@ function Update-DiscordTheme {
     $(Get-Content -Path $discordCaschefile) | Set-Content -Path $discordTheme
 }
 
-
-<#
-.DESCRIPTION
-    Updates wal templates and themes using a new image or the existing desktop image
-#>
-function Update-WalTheme {
-    param(
-        # Path to image to set as background, if not set current wallpaper is used
-        [string]$Image,
-        [string]$Theme,
-        [string]$Backend = 'wal'
-    )
-
-    $img = (Get-ItemProperty -Path 'HKCU:/Control Panel/Desktop' -Name Wallpaper).Wallpaper
-    if ($Image) {
-        $img = $Image
-    }
-
-    # Add our templates to wal configuration
-    Add-WalTemplates
-
-    $tempImg = "$env:TEMP/$(Split-Path $img -leaf)"
-
-    # Use temp location, default backgrounds are in a write protected directory
-    Copy-Item -Path $img -Destination $tempImg
-
-    if (Get-Command 'wal' -ErrorAction SilentlyContinue) {
-        # Invoke wal and don't set the wallpaper (wal will fail)
-        $light = $(Get-ItemProperty -Path 'HKCU:/SOFTWARE/Microsoft/Windows/CurrentVersion/Themes/Personalize' -Name AppsUseLightTheme).AppsUseLightTheme
-        if ($light -gt 0) {
-            wal -n -e -l -s -t -i $tempImg --backend $Backend
-        }
-        else {
-            wal -n -e -s -t -i $tempImg --backend $Backend
-        }
-    }
-    else {
-        Write-Error "Pywal not found, please install python and pywal and add it to your PATH`n`twinget install Python.Python.3.11`n`tpip install pywal"
-        return
-    }
-
-    # Return if wal failed
-    if ($LastExitCode -ne 0) {
-        return
-    }
-
-    # Set the wallpaper
-    if ($Theme) {
-        wal -n --theme $Theme
-    }
-
-    # Set the wallpaper
-    if ($Image) {
-        Set-Wallpaper -Image $Image
-    }
-
-    # Updaye Discord
+function ChangeTheColors {
+    # Update Discord
     Update-DiscordTheme
 
     # Update Windows Terminal
@@ -275,4 +220,160 @@ function Update-WalTheme {
         Add-TerminalIconsColorTheme -Path "$HOME/.cache/wal/wal-icons.psd1"
         Set-TerminalIconsTheme -ColorTheme wal
     }
+
+    if ((Get-Command 'bat' -ErrorAction SilentlyContinue) -and (Test-Path -Path "$HOME/.cache/wal/wal.tmTheme")) {
+        bat cache --build
+    }
 }
+
+<#
+.DESCRIPTION
+    Updates wal templates and themes using a new image or the existing desktop image
+#>
+function winwal {
+    param(
+        [Parameter(ParameterSetName = 'Theme', Mandatory = $true)]
+        [switch]$theme,
+        [Parameter(ParameterSetName = 'Theme', Position = 0)]
+        [string]$themename,
+        [Parameter(ParameterSetName = 'Image', Mandatory = $true)]
+        [string]$image,
+        [Parameter(ParameterSetName = 'Default')]
+        [string]$backend = 'wal',
+        [Parameter(ParameterSetName = 'Default')]
+        [string]$alpha,
+        [Parameter(ParameterSetName = 'Default')]
+        [string]$background,
+        [Parameter(ParameterSetName = 'Default')]
+        [string]$foreground,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$iterative,
+        [Parameter(ParameterSetName = 'Default')]
+        [string]$cols16,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$recursive,
+        [Parameter(ParameterSetName = 'Default')]
+        [float]$saturate,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$preview,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$vte,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$clearCache,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$light,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$noWallpaper,
+        [Parameter(ParameterSetName = 'Default')]
+        [string]$externalScript,
+        [Parameter(ParameterSetName = 'Default')]
+        [string]$saveTheme,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$quiet,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$restore,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$skipTerminals,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$skipTTY,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$version,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$useLastWallpaper,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$skipReload,
+        [Parameter(ParameterSetName = 'Default')]
+        [float]$contrast,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$help
+    )
+
+    Add-WalTemplates
+
+    if ($help -or $PSCmdlet.MyInvocation.BoundParameters.Count -eq 0) {
+        Write-Host "Usage: winwal [-theme <theme_name>] [-image <image_path>] [-backend <backend>] [-help] [-alpha <alpha>] [-background <background>] [--fg <foreground>] [--iterative] [--cols16 <method>] [--recursive] [--saturate <0.0-1.0>] [--preview] [--vte] [-c] [-l] [-n] [-o <script_name>] [-p <theme_name>] [-q] [-R] [-s] [-t] [-v] [-w] [-e] [--contrast <1.0-21.0>]"
+        Write-Host "  -theme <theme_name>  : Set the theme to use"
+        Write-Host "  -image <image_path>  : Set the image to use"
+        Write-Host "  -backend <backend>   : Set the backend to use"
+        Write-Host "  -help                : Show this help"
+        Write-Host "  -alpha <alpha>       : Set terminal background transparency"
+        Write-Host "  -background <background> : Custom background color to use"
+        Write-Host "  --fg <foreground>    : Custom foreground color to use"
+        Write-Host "  --iterative          : Go through images in order instead of shuffled"
+        Write-Host "  --cols16 <method>    : Use 16 color output 'darken' or 'lighten'"
+        Write-Host "  --recursive          : Search for images recursively in subdirectories"
+        Write-Host "  --saturate <0.0-1.0> : Set the color saturation"
+        Write-Host "  --preview            : Print the current color palette"
+        Write-Host "  --vte                : Fix text-artifacts printed in VTE terminals"
+        Write-Host "  -c                   : Delete all cached colorschemes"
+        Write-Host "  -l                   : Generate a light colorscheme"
+        Write-Host "  -n                   : Skip setting the wallpaper"
+        Write-Host "  -o <script_name>     : External script to run after 'wal'"
+        Write-Host "  -p <theme_name>      : Permanently save theme with the specified name"
+        Write-Host "  -q                   : Quiet mode, don't print anything"
+        Write-Host "  -R                   : Restore previous colorscheme"
+        Write-Host "  -s                   : Skip changing colors in terminals"
+        Write-Host "  -t                   : Skip changing colors in tty"
+        Write-Host "  -v                   : Print 'wal' version"
+        Write-Host "  -w                   : Use last used wallpaper for color generation"
+        Write-Host "  -e                   : Skip reloading gtk/xrdb/i3/sway/polybar"
+        Write-Host "  --contrast <1.0-21.0>: Specify a minimum contrast ratio between palette colors and the source image"
+        return
+    }
+
+    if (Get-Command 'wal' -ErrorAction SilentlyContinue) {
+        if ($PSCmdlet.ParameterSetName -eq 'Theme') {
+            $walCommand = "wal --theme"
+            if ($themename) {
+                $walCommand += " $themename"
+            }
+            Invoke-Expression $walCommand
+            if ($themename) {
+                ChangeTheColors
+            }
+            return
+        }
+
+        $walCommand = "wal -n -e -s -t -i $image --backend $backend"
+        if ($alpha) { $walCommand += " -a $alpha" }
+        if ($background) { $walCommand += " -b $background" }
+        if ($foreground) { $walCommand += " --fg $foreground" }
+        if ($iterative) { $walCommand += " --iterative" }
+        if ($cols16) { $walCommand += " --cols16 $cols16" }
+        if ($recursive) { $walCommand += " --recursive" }
+        if ($saturate) { $walCommand += " --saturate $saturate" }
+        if ($preview) { $walCommand += " --preview" }
+        if ($vte) { $walCommand += " --vte" }
+        if ($clearCache) { $walCommand += " -c" }
+        if ($light) { $walCommand += " -l" }
+        if ($noWallpaper) { $walCommand += " -n" }
+        if ($externalScript) { $walCommand += " -o $externalScript" }
+        if ($saveTheme) { $walCommand += " -p $saveTheme" }
+        if ($quiet) { $walCommand += " -q" }
+        if ($restore) { $walCommand += " -R" }
+        if ($skipTerminals) { $walCommand += " -s" }
+        if ($skipTTY) { $walCommand += " -t" }
+        if ($version) { $walCommand += " -v" }
+        if ($useLastWallpaper) { $walCommand += " -w" }
+        if ($skipReload) { $walCommand += " -e" }
+        if ($contrast) { $walCommand += " --contrast $contrast" }
+
+        # Invoke wal with the constructed command
+        Invoke-Expression $walCommand
+
+        if ($image) {
+            Set-Wallpaper -Image $image
+        }
+
+        ChangeTheColors
+
+        if ($LastExitCode -ne 0) {
+            return
+        }
+    }
+    else {
+        Write-Error "Pywal not found, please install python and pywal and add it to your PATH`n`twinget install Python.Python.3.11`n`tpip install pywal"
+        return
+    }
+}
+# Return if wal failed

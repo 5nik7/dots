@@ -35,3 +35,27 @@ if ($neovimFile) {
     Unblock-File "$env:PSCOMPONENT\$neovimFile.ps1"
     . "$env:PSCOMPONENT\$neovimFile.ps1"
 }
+
+if ($env:isReloading) {
+    Clear-Host
+    linebreak 1
+    Write-Color DarkGray "  ┌───────────────────┐"
+    Write-Color DarkGray '  │' -inline
+    Write-Color Green ' Profile reloaded. ' -inline
+    Write-Color DarkGray '│'
+    Write-Color DarkGray '  └───────────────────┘'
+    linebreak 1
+    $env:isReloading = $false
+}
+
+function rl {
+    [CmdletBinding()]
+    param ()
+    [bool]$env:isReloading = "$true"
+
+    $env:isReloading = $true
+    Clear-Host
+    linebreak 1; Write-Color Cyan "     $($util.symbols.'nf-cod-debug_restart'.icon)" -inline; Write-Color Blue " Restarting PowerShell..."; linebreak 1
+    & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
+    exit
+}

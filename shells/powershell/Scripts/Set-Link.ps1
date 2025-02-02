@@ -95,9 +95,11 @@ else {
 }
 
 if (-not (Test-Path -Path $base)) {
-    Write-Host ''
-    Write-Host " $base does not exist." -ForegroundColor Red
-    Write-Host ''
+    Write-Warn "$base does not exist."
+    exit
+}
+if ($base -eq $target) {
+    Write-Warn "You can't SymLink a file to itself."
     exit
 }
 
@@ -109,16 +111,16 @@ function CreateBackup {
 }
 function CreateLink {
     New-Item -ItemType SymbolicLink -Path $target -Target ((Get-Item $base).FullName) -ErrorAction Stop | Out-Null
-    Write-Host -ForegroundColor $basedircolor " $basedir" -NoNewline
-    Write-Host -ForegroundColor $baseleafcolor "$baseleaf" -NoNewline
-    Write-Host -ForegroundColor $arrowcolor "$arrow" -NoNewline
-    Write-Host -ForegroundColor $targetdircolor "$targetdir" -NoNewline
-    Write-Host -ForegroundColor $targetleafcolor "$targetleaf"
-    Write-Host ''
+    Write-Color $basedircolor " $basedir" -inline
+    Write-Color $baseleafcolor "$baseleaf" -inline
+    Write-Color $arrowcolor "$arrow" -inline
+    Write-Color $targetdircolor "$targetdir" -inline
+    Write-Color $targetleafcolor "$targetleaf"
+    linebreak
 }
 
 if (!(Test-Path -Path $target)) {
-    Write-Host ''
+    linebreak
     CreateLink
     exit
 }
@@ -126,24 +128,22 @@ if (!(Test-Path -Path $target)) {
 try {
     if (Test-Path -Path $target) {
         if ((Get-Item -Path $target).Target -eq ((Get-Item $base).FullName)) {
-            Write-Host -ForegroundColor DarkGray " $basedir$baseleaf = $targetdir$targetleaf"
+            Write-Color DarkGray " $basedir$baseleaf = $targetdir$targetleaf"
             exit
         }
         else {
             if ($i) {
-                Write-Host ''
-                Write-Host " $((Get-Item $target).FullName) " -ForegroundColor Magenta -NoNewline
-                Write-Host "already exists. " -ForegroundColor Gray
-                Write-Host " Overwrite? " -ForegroundColor Cyan -NoNewline
+                linebreak
+                Write-Color Magenta " $((Get-Item $target).FullName) " -inline
+                Write-Color Gray "already exists. "
+                Write-Color Cyan " Overwrite? " -inline
                 $userChoice = Read-Host "[Y/n]"
                 if (($userChoice -eq 'Y') -or ($userChoice -eq 'y') -or ($userChoice -eq '')) {
                     CreateBackup
                     CreateLink
                 }
                 else {
-                    Write-Host ''
-                    Write-Host " Operation cancelled." -ForegroundColor Red
-                    Write-Host ''
+                    Write-Info " Operation cancelled."
                     exit
                 }
             }
@@ -155,5 +155,5 @@ try {
     }
 }
 catch {
-    Write-Output " Failed to create symbolic link: $_"
+    Write-Err " Failed to create symbolic link: $_"
 }
