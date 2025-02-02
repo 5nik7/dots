@@ -122,7 +122,7 @@ Windows = ""
 
 [directory.substitutions]
 # '~/Documents/' = ' '
-"C:/" = "/"
+# "C:/" = "/"
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '

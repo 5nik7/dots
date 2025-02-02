@@ -16,6 +16,9 @@ if (Test-Path($PSLAB)) {
     Add-Path -Path $PSLAB
 }
 
+# PowerShellIcon = ($($util.symbols.'nf-cod-terminal_powershell'.icon))
+# PSLabIcon = ($($util.symbols.'nf-md-flask_outline'.icon))
+
 <#
 .SYNOPSIS
 List all external scripts and their parameter names. These are all of the
@@ -71,17 +74,36 @@ function lab {
     param (
         [switch]$tested,
         [string]$filename,
-        [switch]$list
+        [switch]$list,
+        [switch]$help
     )
+
+    if ($help -or -not $tested -and -not $filename -and -not $list) {
+        Write-Output @"
+Usage: lab [-tested] [-filename <string>] [-list] [-help]
+
+Parameters:
+    -tested    : Indicates if the script has been tested.
+    -filename  : The name of the file to be moved.
+    -list      : Lists all lab scripts.
+    -help      : Displays this help message.
+"@
+        return
+    }
 
     if ($tested) {
         $filePath = "$PSLAB\$filename.ps1"
         if (Test-Path $filePath) {
             $destination = "$env:PSCRIPTS\$filename.ps1"
-            Move-Item -Path $filePath -Destination $destination
-            Write-Success "Moved $filename.ps1 to $destination"
-            Write-Host "$filePath moved to $destination"
-            Write-Host ''
+            Move-Item -Path $filePath -Destination $destination -ErrorAction Stop | Out-Null
+            linebreak
+            Write-Color White "Moved " -inline
+            Write-Color Cyan  ($($util.symbols.'nf-md-flask_outline'.icon)) -inline
+            Write-Color White " $filename.ps1" -inline
+            Write-Color White " to " -inline
+            Write-Color Blue ($($util.symbols.'nf-cod-terminal_powershell'.icon)) -inline
+            Write-Color Green " $filename.ps1"
+            linebreak
         }
         else {
             Write-Err "File $filename.ps1 not found in $PSLAB."

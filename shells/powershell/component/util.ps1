@@ -114,6 +114,7 @@
         "nf-md-asterisk"              = @{ icon = "󰛄" }
         "nf-fa-trash_can"             = @{ icon = "" }
         "nf-fa-trash_o"               = @{ icon = "" }
+        "nf-md-flask_outline"         = @{ icon = "󰂖" }
     }
 }
 
