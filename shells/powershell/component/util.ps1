@@ -28,7 +28,7 @@
             icon  = ""
             color = "Green"
         }
-        wrn                           = @{
+        warn                          = @{
             text  = "WARNING:"
             icon  = ""
             color = "Yellow"
