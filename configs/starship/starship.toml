@@ -10,7 +10,7 @@ $username\
 $hostname\
 $directory\
 $git_branch\
-([ $git_status](purple))\
+([ $git_status ](purple))\
 $nodejs$conda$python$rust\
 $cmd_duration\
 $line_break\
