@@ -35,7 +35,7 @@ $env:DRIP_TEMPS = "$env:DRIP\tenplates"
 $env:WALLS = "$env:DOTS\walls"
 
 $env:NVM_HOME = "$env:APPDATA\nvm"
-$env:NVM_SYMLINK = "$env:HOMEDRIVE\node"
+$env:NVM_SYMLINK = "$env:HOMEDRIVE\nodejs"
 $env:GOPATH = "$env:USERPROFILE\go"
 $env:GOBIN = "$env:USERPROFILE\go\bin"
 

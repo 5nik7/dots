@@ -4666,3 +4666,21 @@ set _FZF_DEFAULT_OPTS=--preview-window='right:50%'
 help set
 |	time=1738036951
 set
+|	time=1738037147
+|et
+|	time=1738037181
+set _FZF_DEFAULT_OPTS="--preview-window right:50%"
+|	time=1738037183
+|et
+|	time=1738037194
+set _FZF_DEFAULT_OPTS=--preview-window right:50%
+|	time=1738037196
+|et
+|	time=1738037210
+set _FZF_DEFAULT_OPTS=--preview-window=right:50%
+|	time=1738037211
+|et
+|	time=1738037265
+set _FZF_DEFAULT_OPTS=--preview-window=right:50% --height=80%
+|	time=1738037272
+set
