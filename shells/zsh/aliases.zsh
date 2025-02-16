@@ -1,36 +1,26 @@
-command_exists() {
-  command -v "$@" &> /dev/null
+function rlp() {
+    local current_shell=$(basename "$SHELL")
+    if [ "$current_shell" = "zsh" ]; then
+        zource ~/.zshrc
+        print_in_yellow "\n ZShell reloaded.\n"
+    elif [ "$current_shell" = "bash" ]; then
+        zource ~/.bashrc
+        print_in_yellow "\n Bash reloaded.\n"
+    else
+        print_in_red "\n Shell not supported.\n"
+    fi
 }
-
-function y() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		builtin cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
-}
-alias d='y'
-alias pbcopy="/mnt/c/Windows/System32/clip.exe"
-alias pbpaste="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -command 'Get-Clipboard'"
-
-# alias python="python3"
-# alias py="python3"
+alias rl='rlp'
 
 alias c='clear'
 alias q='exit'
+alias v='nvim'
 
 alias g='git'
 
+alias upd='pkg update && pkg upgrade -y'
+
 alias path='echo $PATH | tr ":" "\n"'
-
-alias so='source'
-
-alias grep='grep --color=auto'
-
-command_exists fzf && command_exists bat && alias preview="fzf --preview 'bat --color \"always\" {}'"
-
-alias cat='bat'
 
 alias ".."="cd .."
 alias "..."="cd ../.."
@@ -40,27 +30,63 @@ alias "......"="cd ../../../../.."
 alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
-alias lg='lazygit'
+alias ".d"="cd $DOTS"
 
-function dd {
-    if [ -z "$1" ]; then
-        explorer.exe .
-    else
-        explorer.exe "$1"
-    fi
-}
+if cmd_exists eza; then
+    function ll() {
+        linebreak
+        eza -lA --git --git-repos --icons --group-directories-first --no-quotes 
+        linebreak
+    }
+    function l() {
+        linebreak
+        eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time
+        linebreak
+    }
+fi
 
-alias ll='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes && echo -e ""'
-alias l='echo -e "" && eza -lA --git --git-repos --icons --group-directories-first --no-quotes --no-permissions --no-filesize --no-user --no-time && echo -e ""'
+if cmd_exists yazi; then
+    function y() {
+      local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+      yazi "$@" --cwd-file="$tmp"
+      if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+        builtin cd -- "$cwd"
+      fi
+      rm -f -- "$tmp"
+    }
+    alias d='y'
+fi
 
-# function cd() {
-#     builtin cd "$@" && l
-# }
+if cmd_exists nvim; then
+    EDITOR='nvim'
+elif cmd_exists vim; then
+    EDITOR='vim'
+elif cmd_exists vi; then
+    EDITOR='vi'
+elif cmd_exists code; then
+    EDITOR='code'
+else
+    EDITOR='nano'
+fi
 
-function weather {
-    if [[ "$1" == "help" ]]; then
-        curl "wttr.in/:help"
-    else
-        curl "wttr.in/Yakima?uFQ$1"
-    fi
-}
+export EDITOR
+export SYSTEMD_EDITOR=$EDITOR
+export VISUAL="$EDITOR"
+export EDITOR_TERM="$TERMINAL -e $EDITOR"
+
+alias edit='$EDITOR'
+alias e='$EDITOR'
+alias v='$EDITOR'
+alias vi='$EDITOR'
+alias vim='$EDITOR'
+alias sv="sudo $EDITOR"
+
+if [[ -d "$HOME/dev" ]]; then
+  export DEV="$HOME/dev"
+  alias dev="cd $DEV"
+fi
+
+if cmd_exists lazygit; then
+  alias lg='lazygit'
+fi
+

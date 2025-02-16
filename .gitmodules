@@ -2,3 +2,6 @@
 [submodule "configs/nvim"]
 	path = configs/nvim
 	url = https://github.com/5nik7/nvim.git
+[submodule "androidots"]
+	path = androidots
+	url = https://github.com/5nik7/androidots.git

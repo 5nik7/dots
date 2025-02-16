@@ -1,83 +1,57 @@
-# Use fzf to search through the fd-results via fd (https://github.com/sharkdp/fd) to include hidden files (but exclude .git folders) and respect .gitignore
-export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+if cmd_exists fd; then
+  export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
+fi
 
-# CTRL-T − Paste the selected files onto the command-line.
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-# Preview file content using bat (https://github.com/sharkdp/bat)
-export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always {}'"
+if cmd_exists bat; then
+   CAT_PREVIEWER='bat --style=numbers --color=always --pager=never'
+else
+   CAT_PREVIEWER='cat'
+fi
 
-# ALT-C − cd into the selected directory.
-# Print tree structure in the preview window
-export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {}'"
-
-# CTRL-R − Paste the selected command from history onto the command-line.
-# CTRL-/ to toggle small preview window to see the full command
-# CTRL-Y to copy the command into clipboard using pbcopy
-export FZF_CTRL_R_OPTS="
-  --preview 'echo {}' --preview-window down:3:hidden:wrap
-  --bind 'ctrl-/:toggle-preview'
-  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
-  --color header:italic
-  --header 'Press CTRL-Y to copy command into clipboard'"
-
-export FZF_COMPLETION_TRIGGER='**'
-export FZF_COMPLETION_OPTS='--border --info=inline'
-
-FZF_COLORS="bg:-1,\
-bg+:0,\
-gutter:-1,\
-fg:7,\
-fg+:15,\
-hl:6,\
-hl+:2,\
-header:12,\
-border:0,\
+FZF_COLORS="bg+:0,\
+bg:-1,\
+spinner:4,\
+hl:12,\
+fg:8,\
+header:3,\
 info:8,\
-prompt:4,\
-pointer:6,\
-marker:10,\
-spinner:5"
+pointer:13,\
+marker:14,\
+fg+:13,\
+prompt:2,\
+hl+:10,\
+gutter:-1,\
+selected-bg:0,\
+separator:0,\
+preview-border:8,\
+border:8,\
+preview-bg:-1,\
+preview-label:0,\
+label:7,\
+query:13,\
+input-border:4"
 
-# https://vitormv.github.io/fzf-themes/
 export FZF_DEFAULT_OPTS="--height 60% \
 --border sharp \
 --layout reverse \
+--info right \
 --color '$FZF_COLORS' \
---prompt '∷ ' \
---pointer ▶ \
---marker '✔ ' \
---bind='ctrl-o:execute(code {})+abort' \
---bind 'ctrl-/:change-preview-window(hidden|)' \
+--prompt ' ' \
+--pointer '┃' \
+--marker '│' \
+--separator '──' \
+--scrollbar '│' \
 --preview-window='border-sharp' \
---info right"
+--preview-window='right:65%' \
+--preview '$CAT_PREVIEWER {}'"
 
-# Use fd to respect .gitignore, include hidden files and exclude `.git` folders
-# - The first argument to the function ($1) is the base path to start traversal
-_fzf_compgen_path() {
-  fd --hidden --exclude ".git" . "$1"
+function finst() {
+ local fzpkgs="$(pkg list-all | tr '/' ' '  | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
+ if [ -z "$fzpkgs" ]; then
+   echo "No package selected."
+ else
+   pkg install -y "$fzpkgs"
+ fi
 }
 
-# Use fd to generate the list for directory completion
-_fzf_compgen_dir() {
-  fd --type d --hidden --exclude ".git" . "$1"
-}
-
-# Advanced customization of fzf options via _fzf_comprun function
-# - The first argument to the function is the name of the command.
-# - Make sure to pass the rest of the arguments to fzf.
-_fzf_comprun() {
-  local command=$1
-  shift
-
-  case "$command" in
-    # cd **<TAB>
-    cd)      fzf --preview 'eza --tree --color=always {} | head -200'                        "$@" ;;
-    # llt **<TAB>
-    llt)     fd --type d --hidden | fzf --preview 'eza --tree --color=always {} | head -200' "$@" ;;
-    # any_other_command **<TAB>
-    *)       fzf --preview 'bat -n --color=always {}'                                        "$@" ;;
-  esac
-}
-
-# Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
