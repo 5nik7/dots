@@ -23,4 +23,5 @@ TestResults.xml
 #shhh
 secret/*
 #clinky
-configs/clink/clink_error*
+configs/clink/clink_errorlevel_*
+configs/clink/clink_history_*

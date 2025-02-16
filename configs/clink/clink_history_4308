@@ -1,8 +1,0 @@
-|	time=1739658957
-set NVM_SYMLINK=C:\nodejs
-|	time=1739658976
-setx NVM_SYMLINK C:\nodejs
-|	time=1739658979
-env
-|	time=1739658980
-q
