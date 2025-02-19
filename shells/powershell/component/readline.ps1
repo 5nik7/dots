@@ -1,6 +1,12 @@
 if ($host.Name -eq 'ConsoleHost') {
     Import-Module PSReadLine
 
+    if ($PSEdition -ne 'Core') {
+        $VersionPredictionSource = "History"
+    }
+    else {
+        $VersionPredictionSource = "HistoryAndPlugin"
+    }
     $PSReadLineOptions = @{
         HistoryNoDuplicates           = $true
         HistorySearchCursorMovesToEnd = $true
@@ -9,7 +15,7 @@ if ($host.Name -eq 'ConsoleHost') {
         ShowToolTips                  = $true
         ContinuationPrompt            = "│"
         BellStyle                     = "None"
-        PredictionSource              = "HistoryAndPlugin"
+        PredictionSource              = $VersionPredictionSource
         EditMode                      = "Vi"
         PredictionViewStyle           = "InlineView" # or "ListView"
         Colors                        = @{

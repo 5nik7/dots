@@ -1182,7 +1182,7 @@ SET PATG
 |	time=1694913551
 SET PATH
 |	time=1694913564
-set /?
+|et /?
 |	time=1694913589
 |ET
 |	time=1694913663
@@ -1264,7 +1264,7 @@ exut
 |	time=1699141986
 |link set
 |	time=1699223194
-dir
+|ir
 |	time=1699235791
 ssh
 |	time=1699245962
@@ -4039,7 +4039,7 @@ set PYENV_VERSION=pyzoo
 |	time=1732996314
 |et
 |	time=1732996498
-cd
+|d
 |	time=1732996501
 |nv
 |	time=1732996511
@@ -4105,7 +4105,7 @@ clink set | nvim
 |	time=1733034443
 |s
 |	time=1733034445
-eza
+|za
 |	time=1733034448
 exa
 |	time=1733039687
@@ -4337,7 +4337,7 @@ pywalfox -p --verbose start
 |	time=1735548803
 |
 |	time=1735548805
-clear
+|lear
 |	time=1735548807
 |
 |	time=1735601579
@@ -4353,7 +4353,7 @@ pwsh -c Get-InactiveUserProfiles.ps1
 |	time=1735694467
 |ath
 |	time=1735694470
-PATH | tr ";" "\n"
+|ATH | tr ";" "\n"
 |	time=1735694878
 |
 |	time=1735695165
@@ -4381,7 +4381,7 @@ powershell.exe
 |	time=1736016422
 set PSModulePath
 |	time=1736016832
-path
+|ath
 |	time=1736016842
 |hich pwsh
 |	time=1736016846
@@ -4427,7 +4427,7 @@ cd "C:\Program Files\WindowsPowerShell\Modules
 |	time=1736043771
 |s
 |	time=1736043774
-l
+|
 |	time=1736043775
 ls -la
 |	time=1736043780
@@ -4489,7 +4489,7 @@ choco list
 |	time=1736044769
 c
 |	time=1736044775
-pwsh
+|wsh
 |	time=1736044879
 |
 |	time=1736044914
@@ -4513,7 +4513,7 @@ cd ..
 |	time=1736054599
 rm -fr Modules\
 |	time=1736054605
-ls
+|s
 |	time=1736054615
 eza -la
 |	time=1736054621
@@ -4533,7 +4533,7 @@ cd WindowsPowerShell\
 |	time=1736054658
 cd Modules\
 |	time=1736054659
-ls
+|s
 |	time=1736054675
 explorer.exe .
 |	time=1737239005
@@ -4579,7 +4579,7 @@ set FZF_DEFAULT_OPTS
 |	time=1738033309
 set _FZF_DEFAULT_OPTS=
 |	time=1738033312
-env
+|nv
 |	time=1738033321
 q
 |	time=1738036200
@@ -4684,3 +4684,37 @@ set _FZF_DEFAULT_OPTS=--preview-window=right:50%
 set _FZF_DEFAULT_OPTS=--preview-window=right:50% --height=80%
 |	time=1738037272
 set
+|	time=1739672826
+%APPDATA%
+|	time=1739672915
+SETX /S NVM_HOME=%APPDATA%\nvm
+|	time=1739672930
+SETX /?
+|	time=1739672966
+SETX /S NVM_HOME
+|	time=1739673007
+set /?
+|	time=1739673029
+cd
+|	time=1739999570
+ls
+|	time=1739999572
+l
+|	time=1739999584
+env
+|	time=1739999597
+path
+|	time=1739999600
+PATH | tr ";" "\n"
+|	time=1739999621
+dir
+|	time=1739999629
+eza
+|	time=1739999638
+%USERNAME%
+|	time=1739999643
+echo %USERNAME%
+|	time=1739999682
+pwsh
+|	time=1739999716
+clear
