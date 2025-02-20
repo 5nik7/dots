@@ -48,7 +48,7 @@ ssh_symbol = " "
 [env_var.AdminSymbol]
 variable = 'AdminSymbol'
 format = "[$env_value]($style)"
-style = "red"
+style = "blue"
 
 [fill]
 symbol = ''

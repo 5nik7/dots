@@ -25,7 +25,6 @@ param(
     [Parameter(Mandatory = $true, Position = 1)]
     [string] $target = (Resolve-Path $target).Path,
 
-    [switch] $v,
     [switch] $i
 )
 
@@ -56,8 +55,8 @@ $targetleaf = Split-Path -Path $targetpath -Leaf
 # $backupFileName = "$targetleaf.$bakDate.bak"
 # $backupFilePath = Join-Path -Path (Split-Path -Path $target -Parent) -ChildPath $backupFileName
 
-if ($v) {
-    $basedir = "$basedir\"
+if ($basedir -eq "C:\") {
+    $basedir = "$basedir"
 }
 elseif ($basedir -eq $env:DOTFILES -or $parentDir -eq $env:DOTFILES) {
     $basedircolor = $dotcolor
@@ -79,10 +78,18 @@ else {
     $basedir = "$basedir\"
 }
 
-if ($v) {
-    $targetdir = "$targetdir\"
+if ($basedir -eq "C:\") {
+    $basedir = "$basedir"
 }
-elseif ($targetdir -eq $ENV:USERPROFILE) {
+elseif ($targetdir -eq $env:DOTFILES -or $parentDir -eq $env:DOTFILES) {
+    $targetdircolor = $dotcolor
+    $targetdir = $doticon
+}
+elseif ($targetdir -eq $env:PSDOT) {
+    $targetdircolor = $psdotcolor
+    $targetdir = $psdoticon
+}
+elseif ($targetdir -eq $env:USERPROFILE) {
     $targetdircolor = $homecolor
     $targetdir = $homeicon
 }

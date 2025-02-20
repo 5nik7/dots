@@ -4697,7 +4697,7 @@ set /?
 |	time=1739673029
 cd
 |	time=1739999570
-ls
+|s
 |	time=1739999572
 l
 |	time=1739999584
@@ -4715,6 +4715,12 @@ eza
 |	time=1739999643
 echo %USERNAME%
 |	time=1739999682
-pwsh
+|wsh
 |	time=1739999716
 clear
+|	time=1740000114
+ipconfig
+|	time=1740084033
+ls
+|	time=1740084040
+pwsh
