@@ -28,7 +28,7 @@ format = '$symbol '
 [cmd_duration]
 # format = "([](black) [󱦟 ](yellow)[$duration]($style))"
 format = "([](bright-black)[ $duration]($style))"
-style = "bright-yellow"
+style = "bright-black"
 
 [username]
 style_user = 'bright-purple'
