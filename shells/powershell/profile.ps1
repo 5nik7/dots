@@ -38,13 +38,7 @@ if ($neovimFile) {
 
 if ($env:isReloading) {
     Clear-Host
-    linebreak 1
-    Write-Color DarkGray "  ┌───────────────────┐"
-    Write-Color DarkGray '  │' -inline
-    Write-Color Green ' Profile reloaded. ' -inline
-    Write-Color DarkGray '│'
-    Write-Color DarkGray '  └───────────────────┘'
-    linebreak 1
+    Write-Box "Profile reloaded."
     $env:isReloading = $false
 }
 

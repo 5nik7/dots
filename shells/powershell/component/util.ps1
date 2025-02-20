@@ -220,3 +220,38 @@ function Write-Err {
     Write-Color White $text
     linebreak
 }
+
+function Write-Box {
+    param (
+        [string]$message
+    )
+
+    $boxPadddingOut = 2
+    $boxPadddingIn = 1
+
+    $boxPadddingOutSpaces = " " * $boxPadddingOut
+    $boxPadddingInSpaces = " " * $boxPadddingIn
+
+    $boxSymbolTopLeft = "┌"
+    $boxSymbolTopRight = "┐"
+    $boxSymbolBottomLeft = "└"
+    $boxSymbolBottomRight = "┘"
+    $boxSymbolHorizontal = "─"
+    $boxSymbolVertical = "│"
+
+    $paddingLength = $boxPadddingIn * 2
+    $length = $message.Length + $paddingLength
+
+    $boxTop = $boxPadddingOutSpaces + $boxSymbolTopLeft + ($boxSymbolHorizontal * $length) + $boxSymbolTopRight
+    $boxMiddleLeft = $boxPadddingOutSpaces + $boxSymbolVertical + $boxPadddingInSpaces
+    $boxMiddleRight = $boxPadddingInSpaces + $boxSymbolVertical
+    $boxTopBottom = $boxPadddingOutSpaces + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $length) + $boxSymbolBottomRight
+
+    linebreak
+    Write-Color DarkGray $boxTop
+    Write-Color DarkGray $boxMiddleLeft -inline
+    Write-Color Green $message -inline
+    Write-Color DarkGray $boxMiddleRight
+    Write-Color DarkGray $boxTopBottom
+    linebreak
+}

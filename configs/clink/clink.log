@@ -46,3 +46,6 @@
 5a9c reset_handle              144 resetting mismatched stdout handle
 5a9c reset_handle              144 resetting mismatched stderr handle
 5a9c history_db::compact      1606 History:  881 active, 1483 deleted
+5a9c reset_handle              144 resetting mismatched stdout handle
+5a9c reset_handle              144 resetting mismatched stderr handle
+5a9c history_db::compact      1606 History:  880 active, 1484 deleted
