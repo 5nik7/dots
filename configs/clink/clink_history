@@ -4581,7 +4581,7 @@ set _FZF_DEFAULT_OPTS=
 |	time=1738033312
 |nv
 |	time=1738033321
-q
+|
 |	time=1738036200
 |et
 |	time=1738036204
@@ -4701,7 +4701,7 @@ cd
 |	time=1739999572
 l
 |	time=1739999584
-env
+|nv
 |	time=1739999597
 path
 |	time=1739999600
@@ -4719,8 +4719,10 @@ echo %USERNAME%
 |	time=1739999716
 clear
 |	time=1740000114
-ipconfig
+|pconfig
 |	time=1740084033
-ls
+|s
 |	time=1740084040
-pwsh
+|wsh
+|	time=1740083922
+ipconfig
