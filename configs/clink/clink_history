@@ -226,11 +226,11 @@ bat C:\Users\nickf/.ssh/id_ed25519_55H.pub
 |	time=1682758639
 openssh
 |	time=1682758709
-gh
+|h
 |	time=1682758711
 gh auth
 |	time=1682758715
-gh auth status
+|h auth status
 |	time=1682762116
 |it
 |	time=1682763515
@@ -2478,7 +2478,7 @@ which /bin/ls
 |	time=1715245119
 |d
 |	time=1715245122
-cd 
+|d 
 |	time=1715245126
 |;s
 |	time=1715245127
@@ -2514,7 +2514,7 @@ sh -i
 |	time=1715245299
 |.
 |	time=1715245303
-cd .
+|d .
 |	time=1715245304
 |d ..
 |	time=1715245306
@@ -4477,7 +4477,7 @@ which eSupport\
 |	time=1736044189
 which powershell
 |	time=1736044197
-powershell
+|owershell
 |	time=1736044219
 choco uninstall -?
 |	time=1736044248
@@ -4509,7 +4509,7 @@ d
 |	time=1736054588
 |s
 |	time=1736054594
-cd ..
+|d ..
 |	time=1736054599
 rm -fr Modules\
 |	time=1736054605
@@ -4695,7 +4695,7 @@ SETX /S NVM_HOME
 |	time=1739673007
 set /?
 |	time=1739673029
-cd
+|d
 |	time=1739999570
 |s
 |	time=1739999572
@@ -4726,3 +4726,49 @@ clear
 |wsh
 |	time=1740083922
 ipconfig
+|	time=1740084143
+|s
+|	time=1740084147
+|nv
+|	time=1740084157
+|wsh
+|	time=1740089278
+|wsh
+|	time=1740089335
+q
+|	time=1740096279
+|wsh
+|	time=1740096372
+|s
+|	time=1740096376
+.d
+|	time=1740096380
+cd dots
+|	time=1740096385
+gg
+|	time=1740096387
+gh
+|	time=1740096390
+gh auth status
+|	time=1740096411
+cd
+|	time=1740096418
+cd .
+|	time=1740096421
+cd 
+|	time=1740096424
+cd ..
+|	time=1740096428
+|s
+|	time=1740096437
+powershell
+|	time=1740096495
+|wsh
+|	time=1740110461
+|wsh
+|	time=1740110576
+pwsh
+|	time=1740110742
+ls
+|	time=1740110745
+env
