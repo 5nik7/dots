@@ -38,7 +38,7 @@ if ($neovimFile) {
 
 if ($env:isReloading) {
     Clear-Host
-    Write-Box "Profile reloaded."
+    Write-Box -textColor "DarkGreen" "Profile reloaded."
     $env:isReloading = $false
 }
 

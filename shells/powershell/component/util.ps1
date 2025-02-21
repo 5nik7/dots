@@ -223,7 +223,9 @@ function Write-Err {
 
 function Write-Box {
     param (
-        [string]$message
+        [string]$message,
+        [string]$borderColor = "DarkGray",
+        [string]$textColor = "White"
     )
 
     $boxPadddingOut = 2
@@ -248,10 +250,10 @@ function Write-Box {
     $boxTopBottom = $boxPadddingOutSpaces + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $length) + $boxSymbolBottomRight
 
     linebreak
-    Write-Color DarkGray $boxTop
-    Write-Color DarkGray $boxMiddleLeft -inline
-    Write-Color Green $message -inline
-    Write-Color DarkGray $boxMiddleRight
-    Write-Color DarkGray $boxTopBottom
+    Write-Color $borderColor $boxTop
+    Write-Color $borderColor $boxMiddleLeft -inline
+    Write-Color $textColor $message -inline
+    Write-Color $borderColor $boxMiddleRight
+    Write-Color $borderColor $boxTopBottom
     linebreak
 }
