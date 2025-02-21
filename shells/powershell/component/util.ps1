@@ -146,7 +146,9 @@ function Write-Color {
         foreach ($colorName in $util.colors.Keys | Sort-Object { $util.colors[$_] }) {
             $colorValue = $util.colors[$colorName]
             Write-Host -foregroundColor $colorName "$($util.symbols.'nf-md-solid'.icon)" -NoNewline
-            Write-Host -foregroundColor $colorName " $colorValue - $colorName"
+            Write-Host -foregroundColor White " $colorValue" -NoNewline
+            Write-Host -foregroundColor $colorName " = " -NoNewline
+            Write-Host -foregroundColor White "$colorName"
         }
         return
     }
