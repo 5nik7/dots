@@ -154,6 +154,11 @@ function Write-Color {
     if ($color -eq "") { $color = Read-Host "Color" }
     if (-not $text) { $text = Read-Host "Text" }
 
+    # Check if the color is a numeric value and map it to the corresponding color name
+    if ($color -match '^\d+$') {
+        $color = $util.colors.GetEnumerator() | Where-Object { $_.Value -eq [int]$color } | Select-Object -ExpandProperty Key
+    }
+
     $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_ -eq $color }
     if ($null -eq $colorEnum) {
         Write-Err "Invalid color: $color"
