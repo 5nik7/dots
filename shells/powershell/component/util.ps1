@@ -133,6 +133,39 @@ function linebreak {
     }
 }
 
+<#
+.SYNOPSIS
+    Writes colored text to the console.
+
+.DESCRIPTION
+    The Write-Color function writes colored text to the console. It supports inline text, color tables, and help information.
+
+.PARAMETER inline
+    If specified, writes the text inline without a newline at the end.
+
+.PARAMETER color
+    The color of the text. Default is an empty string, which prompts the user to input a color.
+
+.PARAMETER text
+    The text to be displayed. If not specified, prompts the user to input the text.
+
+.PARAMETER table
+    If specified, displays a color table with available colors.
+
+.PARAMETER help
+    If specified, displays help information on how to use the function.
+
+.EXAMPLE
+    Write-Color -color "Red" -text "Hello, World!"
+    Writes "Hello, World!" in red color to the console.
+
+.EXAMPLE
+    Write-Color -table
+    Displays a color table with available colors.
+
+.NOTES
+    Author: njen
+#>
 function Write-Color {
     [CmdletBinding()]
     param (
@@ -140,17 +173,31 @@ function Write-Color {
         [string]$color = "",
         [Parameter(ValueFromRemainingArguments = $true)]
         [string]$text,
-        [switch]$table
+        [switch]$table,
+        [switch]$help
     )
 
+    if ($help) {
+        Get-Help -Name Write-Color -Full
+        return
+    }
+
     if ($table) {
+        $borderColor = "DarkGray"
+        Write-Box -text "Color Table" -border $borderColor -color $borderColor
         foreach ($colorName in $util.colors.Keys | Sort-Object { $util.colors[$_] }) {
+            $colorSpacer = 4
+            $colorSpacerOut = " " * $colorSpacer
+            $colorDivider = "│"
             $colorValue = $util.colors[$colorName]
-            Write-Host -foregroundColor $colorName "$($util.symbols.'nf-md-solid'.icon)" -NoNewline
-            Write-Host -foregroundColor White " $colorValue" -NoNewline
-            Write-Host -foregroundColor $colorName " = " -NoNewline
+            if ($colorValue -lt 10) { $colorValue = "$colorValue " }
+            Write-Host -foregroundColor $colorName "$colorSpacerOut $($util.symbols.'nf-md-solid'.icon)" -NoNewline
+            Write-Host -foregroundColor $borderColor "  $colorDivider " -NoNewline
+            Write-Host -foregroundColor White "$colorValue" -NoNewline
+            Write-Host -foregroundColor $borderColor " $colorDivider " -NoNewline
             Write-Host -foregroundColor White "$colorName"
         }
+        linebreak 2
         return
     }
 
@@ -268,7 +315,7 @@ function Write-Box {
         [string]$text
     )
 
-    if ($help) {
+    if ($help -or -not $text) {
         Get-Help -Name Write-Box -Full
         return
     }

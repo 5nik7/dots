@@ -28,11 +28,8 @@ $Global:DEV = $env:DEV
 $env:CONF = "$env:USERPROFILE\.config"
 $Global:CONF = $env:CONF
 
-$env:DRIP = "$env:DOTS\drip"
-$env:DRIP_COLS = "$env:DRIP\colorschemes"
-$env:DRIP_TEMPS = "$env:DRIP\tenplates"
-
 $env:WALLS = "$env:DOTS\walls"
+$Global:WALLS = $env:WALLS
 
 $env:NVM_HOME = "$env:APPDATA\nvm"
 $env:NVM_SYMLINK = "$env:HOMEDRIVE\nodejs"
@@ -63,7 +60,7 @@ $env:BAT_THEME = $BAT_THEME
 $env:KOMOREBI_CONFIG_HOME = "$CONF\komorebi"
 
 $TIC = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' TranscodedImageCache -ErrorAction Stop).TranscodedImageCache
-$wallout = [System.Text.Encoding]::Unicode.GetString($TIC) -replace '(.+)([A-Z]:[0-9a-zA-Z\\])+', '$2'
-$env:WALLPAPER = $wallout
+$env:wallout = [System.Text.Encoding]::Unicode.GetString($TIC) -replace '(.+)([A-Z]:[0-9a-zA-Z\\])+', '$2'
+$env:WALLPAPER = (Get-ItemProperty 'HKCU:\Control Panel\Desktop').WallPaper
 
 Invoke-Expression (& { (zoxide init powershell | Out-String) })

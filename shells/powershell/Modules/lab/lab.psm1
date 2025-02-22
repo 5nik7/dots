@@ -68,7 +68,7 @@ function Get-LabScripts {
 
 <#
 .DESCRIPTION
-    Updates the desktop wallpaper.
+    Powershell script testing.
 #>
 function lab {
     param (
