@@ -273,7 +273,7 @@ function Write-Box {
         return
     }
 
-    $boxPadddingOut = 2
+    $boxPadddingOut = 4
     $boxPadddingIn = 1
 
     $boxPadddingOutSpaces = " " * $boxPadddingOut

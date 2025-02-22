@@ -49,7 +49,7 @@ function rl {
 
     $env:isReloading = $true
     Clear-Host
-    Write-Box -border "DarkGray" -color "White" -text "Restarting PowerShell.."
+    Write-Box -border "Black" -color "White" -text "Restarting PowerShell.."
     # linebreak 1; Write-Color Cyan "     $($util.symbols.'nf-cod-debug_restart'.icon)" -inline; Write-Color Blue " Restarting PowerShell..."; linebreak 1
     & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
     exit
