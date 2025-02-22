@@ -38,8 +38,8 @@ if ($neovimFile) {
 
 if ($env:isReloading) {
     Clear-Host
-    Write-Box -textColor "DarkGreen" "Profile reloaded."
-    $env:isReloading = $false
+    Write-Box -border "DarkGreen" -color "Green" -text "Profile reloaded."
+    $env:isReloading = $falseW
 }
 
 function rl {
@@ -49,7 +49,8 @@ function rl {
 
     $env:isReloading = $true
     Clear-Host
-    linebreak 1; Write-Color Cyan "     $($util.symbols.'nf-cod-debug_restart'.icon)" -inline; Write-Color Blue " Restarting PowerShell..."; linebreak 1
+    Write-Box -border "DarkGray" -color "White" -text "Restarting PowerShell.."
+    # linebreak 1; Write-Color Cyan "     $($util.symbols.'nf-cod-debug_restart'.icon)" -inline; Write-Color Blue " Restarting PowerShell..."; linebreak 1
     & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
     exit
 }

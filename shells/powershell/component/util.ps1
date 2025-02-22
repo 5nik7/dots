@@ -136,12 +136,13 @@ function linebreak {
 function Write-Color {
     [CmdletBinding()]
     param (
+        [switch]$inline,
         [string]$color = "",
         [Parameter(ValueFromRemainingArguments = $true)]
         [string]$text,
-        [switch]$inline,
         [switch]$table
     )
+
     if ($table) {
         foreach ($colorName in $util.colors.Keys | Sort-Object { $util.colors[$_] }) {
             $colorValue = $util.colors[$colorName]
@@ -228,12 +229,49 @@ function Write-Err {
     linebreak
 }
 
+<#
+.SYNOPSIS
+    Draws a text box with specified border and text colors.
+
+.DESCRIPTION
+    The Write-Box function creates a text box with customizable border and text colors.
+    The box is padded with spaces for better readability.
+
+.PARAMETER border
+    The color of the border. Default is "DarkGray".
+
+.PARAMETER color
+    The color of the text. Default is "White".
+
+.PARAMETER text
+    The text to be displayed inside the box.
+
+.PARAMETER help
+    If specified, displays help information on how to use the function.
+
+.EXAMPLE
+    Write-Box -text "Hello, World!"
+    Draws a box with the text "Hello, World!" inside it.
+
+.EXAMPLE
+    Write-Box -border "Red" -color "Yellow" -text "Warning!"
+    Draws a box with a red border and yellow text saying "Warning!".
+
+.NOTES
+    Author: njen
+#>
 function Write-Box {
     param (
-        [string]$message,
-        [string]$borderColor = "DarkGray",
-        [string]$textColor = "White"
+        [switch]$help,
+        [string]$border = "DarkGray",
+        [string]$color = "White",
+        [string]$text
     )
+
+    if ($help) {
+        Get-Help -Name Write-Box -Full
+        return
+    }
 
     $boxPadddingOut = 2
     $boxPadddingIn = 1
@@ -249,7 +287,7 @@ function Write-Box {
     $boxSymbolVertical = "│"
 
     $paddingLength = $boxPadddingIn * 2
-    $length = $message.Length + $paddingLength
+    $length = $text.Length + $paddingLength
 
     $boxTop = $boxPadddingOutSpaces + $boxSymbolTopLeft + ($boxSymbolHorizontal * $length) + $boxSymbolTopRight
     $boxMiddleLeft = $boxPadddingOutSpaces + $boxSymbolVertical + $boxPadddingInSpaces
@@ -257,10 +295,10 @@ function Write-Box {
     $boxTopBottom = $boxPadddingOutSpaces + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $length) + $boxSymbolBottomRight
 
     linebreak
-    Write-Color $borderColor $boxTop
-    Write-Color $borderColor $boxMiddleLeft -inline
-    Write-Color $textColor $message -inline
-    Write-Color $borderColor $boxMiddleRight
-    Write-Color $borderColor $boxTopBottom
+    Write-Color $border $boxTop
+    Write-Color -inline $border $boxMiddleLeft
+    Write-Color -inline $color $text
+    Write-Color $border $boxMiddleRight
+    Write-Color $border $boxTopBottom
     linebreak
 }
