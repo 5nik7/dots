@@ -1,5 +1,7 @@
 ﻿$Global:isAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
+$erroricon = "$($util.symbols.err.icon)"
+
 function Add-Path {
     param (
         [Parameter(Mandatory = $true)]
@@ -150,6 +152,12 @@ function New-File {
     New-Item -ItemType File -Name $Name -Path $PWD | Out-Null
 }
 
+function Test-CommandExists {
+    param($command)
+    $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
+    return $exists
+}
+
 function Show-Command {
     <#
     .SYNOPSIS
@@ -160,6 +168,12 @@ function Show-Command {
         [Parameter(Mandatory = $true, Position = 0)]
         [string]$Name
     )
+    if (-not (Test-CommandExists $Name)) {
+        linebreak
+        Write-Color -color Red -text "  $erroricon $Name"
+        linebreak
+        return
+    }
     Write-Verbose "Showing definition of '$Name'"
     Get-Command $Name | Select-Object -ExpandProperty Definition
 }
@@ -186,11 +200,6 @@ function Get-Functions {
     Get-ChildItem function:\
 }
 
-function Test-CommandExists {
-    param($command)
-    $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
-    return $exists
-}
 
 # Editor Configuration
 $EDITOR = if (Test-CommandExists code) { 'code' }
