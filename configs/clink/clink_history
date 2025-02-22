@@ -4767,8 +4767,16 @@ powershell
 |	time=1740110461
 |wsh
 |	time=1740110576
-pwsh
+|wsh
 |	time=1740110742
-ls
+|s
 |	time=1740110745
 env
+|	time=1740110826
+pwsh
+|	time=1740111602
+ls
+|	time=1740111610
+xonsh
+|	time=1740111624
+nu
