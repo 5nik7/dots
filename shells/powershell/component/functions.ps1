@@ -60,6 +60,14 @@ function winutil {
     Invoke-RestMethod "https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1" | Invoke-Expression
 }
 
+function nerdfonts {
+    param (
+        [Parameter(ValueFromRemainingArguments = $true)]
+        $OptionalParameters
+    )
+    & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
+}
+
 function .. {
     Set-Location ".."
 }

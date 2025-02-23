@@ -3645,7 +3645,7 @@ clink set color.executable magenta
 |	time=1720308076
 |nv
 |	time=1720308107
-pwd
+|wd
 |	time=1720308125
 |link set
 |	time=1720308194
@@ -4699,7 +4699,7 @@ set /?
 |	time=1739999570
 |s
 |	time=1739999572
-l
+|
 |	time=1739999584
 |nv
 |	time=1739999597
@@ -4735,7 +4735,7 @@ ipconfig
 |	time=1740089278
 |wsh
 |	time=1740089335
-q
+|
 |	time=1740096279
 |wsh
 |	time=1740096372
@@ -4775,8 +4775,26 @@ env
 |	time=1740110826
 pwsh
 |	time=1740111602
-ls
+|s
 |	time=1740111610
 xonsh
 |	time=1740111624
 nu
+|	time=1740230277
+|
+|	time=1740230282
+|
+|	time=1740230283
+q
+|	time=1740266791
+cd "%WINDIR%\system32\config\"
+|	time=1740266806
+sudo wt
+|	time=1740266825
+cd "%WINDIR%\system32\config"
+|	time=1740266829
+l
+|	time=1740266830
+ls
+|	time=1740266837
+pwd
