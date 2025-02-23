@@ -1,5 +1,5 @@
 if ($isAdmin) {
-    $env:AdminSymbol = "# "
+    $env:AdminSymbol = "#"
 }
 else {
     $env:AdminSymbol = ""
