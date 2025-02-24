@@ -46,6 +46,11 @@
             "kind": "Exe",
             "id": "fontview.exe",
             "matching_strategy": "Equals"
+        },
+        {
+            "kind": "Exe",
+            "id": "ApplicationFrameHost.exe",
+            "matching_strategy": "Equals"
         }
     ],
     "floating_applications": [

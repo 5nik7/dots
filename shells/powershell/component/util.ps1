@@ -19,22 +19,22 @@ $util = @{
     }
     symbols = @{
         info                              = @{
-            text  = "INFO:"
+            text  = ""
             icon  = ""
             color = "Green"
         }
         success                           = @{
-            text  = "SUCCESS:"
+            text  = ""
             icon  = ""
             color = "Green"
         }
         warn                              = @{
-            text  = "WARNING:"
+            text  = ""
             icon  = ""
             color = "Yellow"
         }
         err                               = @{
-            text  = "ERROR:"
+            text  = ""
             icon  = "󰱥"
             color = "Red"
         }
@@ -205,9 +205,9 @@ function Write-Color {
             if ($colorValue -lt 10) { $colorValue = "$colorValue " }
             Write-Host -foregroundColor $colorName "$colorSpacerOut $($util.symbols.'nf-md-solid'.icon)" -NoNewline
             Write-Host -foregroundColor $borderColor "  $colorDivider " -NoNewline
-            Write-Host -foregroundColor White "$colorValue" -NoNewline
+            Write-Host -foregroundColor $colorName "$colorValue" -NoNewline
             Write-Host -foregroundColor $borderColor " $colorDivider " -NoNewline
-            Write-Host -foregroundColor White "$colorName"
+            Write-Host -foregroundColor $colorName "$colorName"
         }
         linebreak 2
         return

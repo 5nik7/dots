@@ -9,7 +9,7 @@
     "editor.formatOnPaste": true,
     "editor.formatOnSave": false,
     "window.zoomPerWindow": true,
-    "window.zoomLevel": -0.7,
+    "window.zoomLevel": -0.8,
     "workbench.activityBar.iconClickBehavior": "toggle",
     "terminal.integrated.fontFamily": "JetBrainsMono NFP, monospace",
     "editor.fontFamily": "JetBrainsMono NFP, monospace",
@@ -36,7 +36,8 @@
         "editor.formatOnSave": true,
         "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
         "editor.semanticHighlighting.enabled": true,
-        "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+        "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?",
+        "editor.defaultFormatter": "ms-vscode.powershell"
     },
     "files.associations": {
         "*.ps1": "powershell",
@@ -152,17 +153,21 @@
     "powershell.enableProfileLoading": true,
     "powershell.scriptAnalysis.enable": true,
     "powershell.scriptAnalysis.settingsPath": "",
+    "powershell.powerShellDefaultVersion": "pwsh",
     "powershell.powerShellAdditionalExePaths": {
-        "powershell": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+        "pwsh": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"
     },
-    "powershell.powerShellDefaultVersion": "powershell",
     "terminal.integrated.profiles.windows": {
         "Windows PowerShell": {
-            "path": "powershell.exe",
+            "path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "args": ["-NoLogo"]
+        },
+        "PowerShell": {
+            "path": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
             "args": ["-NoLogo"]
         }
     },
-    "terminal.integrated.defaultProfile.windows": "Windows PowerShell",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
     "workbench.preferredDarkColorTheme": "Wal Bordered",
     "pester.runTestsInNewProcess": true,
     "workbench.preferredHighContrastColorTheme": "Wal Bordered",
@@ -342,7 +347,6 @@
         "storage": true,
         ".phpunit.result.cache": true
     },
-    "explorer.sortOrder": "type",
     "prettier.tabWidth": 4,
     "workbench.tree.indent": 15,
     "editor.quickSuggestions": {
@@ -355,7 +359,7 @@
     "editor.minimap.maxColumn": 250,
     "editor.accessibilitySupport": "off",
     "chat.editor.wordWrap": "on",
-    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrap": "off",
     "[php]": {
         "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
     },
@@ -387,5 +391,21 @@
             }
         ]
     },
-    "material-icon-theme.enableLogging": true
+    "material-icon-theme.enableLogging": true,
+    "roo-cline.allowedCommands": [
+        "npm test",
+        "npm install",
+        "tsc",
+        "git log",
+        "git diff",
+        "git show"
+    ],
+    "github.copilot.selectedCompletionModel": "GPT-4o",
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "github.copilot.chat.completionContext.typescript.mode": "on",
+    "github.copilot.chat.editor.temporalContext.enabled": true,
+    "github.copilot.chat.edits.temporalContext.enabled": true,
+    "github.copilot.chat.generateTests.codeLens": true,
+    "github.copilot.chat.languageContext.typescript.enabled": true,
+    "github.copilot.chat.search.semanticTextResults": true
 }
