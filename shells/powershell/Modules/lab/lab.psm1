@@ -22,7 +22,8 @@ $pscriptscolor = 'Blue'
 
 function SetupLab {
     param (
-        [string]$labPath
+        [string]$labPath,
+        [switch]$quiet
     )
     if (-not $Env:LAB) {
         if ($labPath) {
@@ -36,24 +37,34 @@ function SetupLab {
                 $env:LAB = "$Env:USERPROFILE\lab"
             }
         }
-        Write-Info "Setting up lab environment in $Env:LAB"
+        if (-not $quiet) {
+            Write-Info "Setting up lab environment in $Env:LAB"
+        }
     }
     if ($labPath) {
         if (Test-Path $labPath) {
             if ($labPath -ne $Env:LAB) {
                 $oldLab = "$Env:LAB\PowerShell"
                 Remove-Path -Path $oldLab
-                Write-Info "Removed $oldLab from the PATH"
+                if (-not $quiet) {
+                    Write-Info "Removed $oldLab from the PATH"
+                }
                 $Env:LAB = $labPath
-                Write-Info "Setting up lab environment in $Env:LAB"
+                if (-not $quiet) {
+                    Write-Info "Setting up lab environment in $Env:LAB"
+                }
             }
             else {
-                Write-Warn "Lab environment already set up in $Env:LAB"
+                if (-not $quiet) {
+                    Write-Warn "Lab environment already set up in $Env:LAB"
+                }
                 return
             }
         }
         else {
-            Write-Err "Path $labPath does not exist."
+            if (-not $quiet) {
+                Write-Err "Path $labPath does not exist."
+            }
             return
         }
     }
@@ -62,19 +73,31 @@ function SetupLab {
 
     if (!(Test-Path($env:LAB))) {
         New-Item -ItemType Directory -Path $env:LAB -ErrorAction Stop | Out-Null
-        Write-Success "Created lab directory: $env:LAB"
+        if (-not $quiet) {
+            Write-Success "Created lab directory: $env:LAB"
+        }
     }
     $env:PSLAB = "$env:LAB\PowerShell"
     $Global:PSLAB = $env:PSLAB
     if (!(Test-Path($env:PSLAB))) {
         New-Item -ItemType Directory -Path $env:PSLAB -ErrorAction Stop | Out-Null
-        Write-Success "Created PowerShell lab directory: $env:PSLAB"
+        if (-not $quiet) {
+            Write-Success "Created PowerShell lab directory: $env:PSLAB"
+        }
     }
     if ($env:PATH -notlike "*$env:PSLAB*") {
         Add-Path -Path $env:PSLAB
-        Write-Success "Added $env:PSLAB to the PATH"
+        if (-not $quiet) {
+            Write-Success "Added $env:PSLAB to the PATH"
+        }
+
     }
-    Write-Success "Lab environment set up in $env:LAB"
+    if (-not $quiet) {
+        Write-Success "Lab environment set up in $env:LAB"
+    }
+}
+if (!($env:LAB)) {
+    SetupLab -quiet
 }
 
 if ($env:PSCRIPTS) {
@@ -102,18 +125,20 @@ function Get-LabUsage {
     }
     linebreak
     Write-Output @"
- Usage: lab [-new] [-edit] [-tested] [-delete] [-filename <string>] [-list] [-help] [-dot] [-cat] [-setup]
+ Usage: lab [-new] [-edit] [-tested] [-delete] [-filename <string>] [-list] [-help] [-dot] [-cat] [-setup] [-labPath <string>] [-quiet]
 
     -new       : Creates a new script in the lab.
     -edit      : Edit lab script.
     -tested    : Indicates if the script has been tested.
     -delete    : Removes the script from the lab.
-    -filename  : The name orlf the file to be moved.
+    -filename  : The name of the file to be created, moved, edited, or deleted.
     -list      : Lists all lab scripts.
     -help      : Displays this help message.
     -dot       : Indicates that the script should be moved to the scripts directory.
     -cat       : Displays the content of the script file.
     -setup     : Sets up the lab environment.
+    -labPath   : Specifies the path to the lab directory.
+    -quiet     : Suppresses output messages.
 "@
     linebreak
     return
@@ -208,6 +233,10 @@ function lab {
         Displays the content of the script file.
     .PARAMETER setup
         Sets up the lab environment.
+    .PARAMETER labPath
+        Specifies the path to the lab directory.
+    .PARAMETER quiet
+        Suppresses output messages.
     .EXAMPLE
         lab -new -filename "NewScript"
         # This will create a new script "NewScript.ps1" in the lab.
@@ -244,7 +273,8 @@ function lab {
         [switch]$list,
         [switch]$cat,
         [switch]$setup,
-        [string]$labPath
+        [string]$labPath,
+        [switch]$quiet = $false
     )
     $PadddingOutSpaces = 4
     $PadddingOut = " " * $PadddingOutSpaces
@@ -256,10 +286,10 @@ function lab {
 
     if ($setup) {
         if ($labPath) {
-            SetupLab -labPath $labPath
+            SetupLab -labPath $labPath -quiet:$quiet
             return
         }
-        SetupLab
+        SetupLab -quiet:$quiet
         return
     }
 
