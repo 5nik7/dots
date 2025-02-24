@@ -57,7 +57,7 @@ function SetupLab {
             return
         }
     }
-    $Env:LAB = $Env:LAB
+    $labPath = $Env:LAB
     $Global:LAB = $env:LAB
 
     if (!(Test-Path($env:LAB))) {
