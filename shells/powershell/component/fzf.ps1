@@ -6,23 +6,23 @@
 
 . "$Env:DOTCACHE\wal\wal.ps1"
 
-$script:RunningInWindowsTerminal = [bool]($env:WT_Session) -or [bool]($env:ConEmuANSI)
-if ($script:RunningInWindowsTerminal -and (Test-CommandExists fd)) {
-    $script:DefaultFileSystemFdCmd = "fd.exe --color always --type f --fixed-strings --strip-cwd-prefix --hidden --exclude .git"
-}
-else {
-    $script:DefaultFileSystemFdCmd = "fd.exe --type f --fixed-strings --strip-cwd-prefix --hidden --exclude .git"
-}
-$script:DefaultFileSystemFdCmd = $FZF_DEFAULT_COMMAND
-$env:FZF_DEFAULT_COMMAND = $FZF_DEFAULT_COMMAND
+# $script:RunningInWindowsTerminal = [bool]($env:WT_Session) -or [bool]($env:ConEmuANSI)
+# if ($script:RunningInWindowsTerminal -and (Test-CommandExists fd)) {
+#     $script:DefaultFileSystemFdCmd = "fd.exe --color always --type f --fixed-strings --strip-cwd-prefix --hidden --exclude .git"
+# }
+# else {
+#     $script:DefaultFileSystemFdCmd = "fd.exe --type f --fixed-strings --strip-cwd-prefix --hidden --exclude .git"
+# }
+# $script:DefaultFileSystemFdCmd = $FZF_DEFAULT_COMMAND
+# $env:FZF_DEFAULT_COMMAND = $FZF_DEFAULT_COMMAND
+
+# $FzfPreview = "bat --style=numbers --color=always {}"
+# $previewString = "--preview='$FzfPreview'"
 
 class FzfSymbolOpts {
     [bool]$enabled
     [string]$symbol
 }
-
-$FzfPreview = "bat --style=numbers --color=always {}"
-$previewString = "--preview='$FzfPreview'"
 
 $fzfOptions = @{
     style         = "full"

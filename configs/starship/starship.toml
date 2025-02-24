@@ -31,24 +31,26 @@ format = "([](bright-black)[ $duration]($style))"
 style = "bright-black"
 
 [username]
-style_user = 'bright-purple'
-style_root = 'bright-purple'
+style_user = 'white'
+style_root = 'white bold'
 format = '[$user]($style)'
-disabled = true
+disabled = false
 show_always = true
-aliases = { "Administrator" = "njen" }
+aliases = { "Administrator" = "admin" }
 
 [hostname]
 ssh_only = false
-format = '[󰁥](bright-purple)[$hostname](bright-purple)([ $ssh_symbol](blue)) '
+format = '(([$ssh_symbol ](white dimmed))[@](white)[$hostname:](white bold))(style)'
+style = "white"
 trim_at = '.companyname.com'
-disabled = true
+disabled = false
 ssh_symbol = " "
 
 [env_var.AdminSymbol]
 variable = 'AdminSymbol'
-format = "[$env_value]($style)"
-style = "blue"
+# format = "[$env_value]($style)"
+format = "[]($style)"
+style = "white dimmed"
 
 [fill]
 symbol = ''
@@ -57,7 +59,7 @@ style = 'black'
 [os]
 format = '[$symbol]($style)'
 style = "blue"
-disabled = false
+disabled = true
 
 [os.symbols]
 Alpaquita = " "
@@ -122,7 +124,7 @@ Windows = ""
 
 [directory.substitutions]
 # '~/Documents/' = ' '
-# "C:/" = "/"
+"C:/" = "/"
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
@@ -134,8 +136,8 @@ truncation_length = 0
 # truncation_symbol = "…/"
 # home_symbol = '~'
 truncate_to_repo = true
-use_os_path_sep = true
-# use_os_path_sep = false
+# use_os_path_sep = true
+use_os_path_sep = false
 use_logical_path = true
 read_only = " ◈"
 read_only_style = 'bright-blue dimmed'
