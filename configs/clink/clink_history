@@ -4798,3 +4798,5 @@ l
 ls
 |	time=1740266837
 pwd
+|	time=1740272463
+echo %HOMEPATH%

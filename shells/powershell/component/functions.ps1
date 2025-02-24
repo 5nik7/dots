@@ -1,6 +1,6 @@
 ﻿$Global:isAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-$erroricon = "$($util.symbols.err.icon)"
+$erricon = $($util.alerts.err.icon)
 
 function Add-Path {
     param (
@@ -178,7 +178,7 @@ function Show-Command {
     )
     if (-not (Test-CommandExists $Name)) {
         linebreak
-        Write-Color -color Red -text "  $erroricon $Name"
+        Write-Color -color Red -text "  $erricon $Name"
         linebreak
         return
     }
