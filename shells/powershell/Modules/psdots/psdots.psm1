@@ -1,3 +1,6 @@
+$PadddingOutSpaces = 4
+$PadddingOut = " " * $PadddingOutSpaces
+
 function linebreak {
     param (
         [int]$count = 1
@@ -36,7 +39,7 @@ function Join-Profile {
     Write-Host ' Setting up PowerShell Profile links...' -ForegroundColor Cyan
     foreach ( $ProfileDocVersions in $ProfileDocVersions) {
         foreach ( $ProfileTarget in $ProfileTargets ) {
-            Set-Link $PSDOTPROFILE "$env:DOCUMENTS\$ProfileDocVersions\$ProfileTargets" -i:$i
+            Set-Link $PSDOTPROFILE "$env:DOCUMENTS\$ProfileDocVersions\$ProfileTargets"
         }
     }
     linebreak
@@ -59,6 +62,12 @@ function New-Backup {
         Author: njen
         Version: 1.0.0
     #>
+    param(
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string] $target,
+
+        [switch] $copy
+    )
 
     if (!(Test-Path $target)) {
         Write-Err | Write-Color White "$target does not exist,"
@@ -76,37 +85,36 @@ function New-Backup {
     $backupParent = Split-Path -Path $backupDir -Parent
     $backupFolder = Split-Path -Path $backupDir -Leaf
     $bakDate = Get-Date -Format "MM-dd-yyyy-HH.mm.ss"
+    $copyFileName = "$target.$bakDate.bak"
     $backupFileName = "$targetleaf.$bakDate.bak"
     $backupFilePath = Join-Path -Path (Split-Path -Path $target -Parent) -ChildPath $backupFileName
 
     if (!(Test-Path -Path $backupDir)) {
         linebreak
         Write-Color Green " Creating backup directory: " -inline
-        New-Item -Path $backupDir -ItemType Directory -ErrorAction SilentlyContinue
         New-Item -ItemType Directory -Path $backupDir -ErrorAction Stop | Out-Null
         Write-Color DarkBlue " $backupParent\" -inline
         Write-Color Blue "$backupFolder"
         linebreak
     }
-    else {
-        return
-    }
 
     if ($copy) {
-        Copy-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
+        Copy-Item -Path $target -Destination $copyFileName -ErrorAction Stop | Out-Null
+        Move-Item -Path $copyFileName -Destination $backupDir -ErrorAction Stop | Out-Null
+
     }
     else {
         Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
+        Move-Item -Path $backupFilePath -Destination $backupDir -ErrorAction Stop | Out-Null
     }
-
-    Move-Item -Path $backupFilePath -Destination $backupDir -ErrorAction Stop | Out-Null
     linebreak
-    Write-Color DarkBlue "  $backupParent\" -inline
+    Write-Color DarkBlue "$PadddingOut  $backupParent\" -inline
     Write-Color Blue "$backupFolder\" -inline
+    Write-Color DarkYellow "  " -inline
     Write-Color White "$targetleaf" -inline
     Write-Color DarkGray ".$bakDate.bak"
     linebreak
-
+    return
 }
 
 function Set-Link {
@@ -134,8 +142,15 @@ function Set-Link {
 
         [switch] $i
     )
-    $base = (Resolve-Path $base).Path
-    $target = (Resolve-Path $target).Path
+
+    if (-not (Test-Path -Path $base)) {
+        Write-Warn "$base does not exist."
+        return
+    }
+    if ($base -eq $target) {
+        Write-Warn "You can't SymLink a file to itself."
+        return
+    }
 
     $basedircolor = "Blue"
     $baseleafcolor = "DarkGreen"
@@ -205,76 +220,52 @@ function Set-Link {
         $targetdir = "$targetdir\"
     }
 
-    if (-not (Test-Path -Path $base)) {
-        Write-Warn "$base does not exist."
-        exit
-    }
-    if ($base -eq $target) {
-        Write-Warn "You can't SymLink a file to itself."
-        exit
-    }
-
-    function CreateBackup {
-        param (
-            [string]$target = $target
-        )
-        New-Backup -target $target
-    }
-    function CreateLink {
+    $symlinker = {
         New-Item -ItemType SymbolicLink -Path $target -Target ((Get-Item $base).FullName) -ErrorAction Stop | Out-Null
-        Write-Color $basedircolor " $basedir" -inline
+        Write-Color $basedircolor "$PadddingOut $basedir" -inline
         Write-Color $baseleafcolor "$baseleaf" -inline
         Write-Color $arrowcolor "$arrow" -inline
         Write-Color $targetdircolor "$targetdir" -inline
         Write-Color $targetleafcolor "$targetleaf"
-        linebreak
     }
 
-    if (!(Test-Path -Path $target)) {
-        linebreak
-        CreateLink
-        exit
-    }
-
-    try {
-        if (Test-Path -Path $target) {
-            if ((Get-Item -Path $target).Target -eq ((Get-Item $base).FullName)) {
-                Write-Color DarkGray " $basedir$baseleaf = $targetdir$targetleaf"
-                exit
-            }
-            else {
-                if ($i) {
-                    linebreak
-                    Write-Color Magenta " $((Get-Item $target).FullName) " -inline
-                    Write-Color Gray "already exists. "
-                    Write-Color Cyan " Overwrite? " -inline
-                    $userChoice = Read-Host "[Y/n]"
-                    if (($userChoice -eq 'Y') -or ($userChoice -eq 'y') -or ($userChoice -eq '')) {
-                        CreateBackup
-                        CreateLink
-                    }
-                    else {
-                        Write-Info " Operation cancelled."
-                        exit
-                    }
-                }
-                else {
-                    CreateBackup
-                    CreateLink
-                }
+    if (Test-Path -Path $target) {
+        if ((Get-Item -Path $target).Target -eq ((Get-Item $base).FullName)) {
+            Write-Info "$basedir$baseleaf = $targetdir$targetleaf"
+            return
+        }
+        if ($i -and (Test-Path $target)) {
+            linebreak
+            Write-Color Magenta "$PadddingOut $((Get-Item $target).FullName) " -inline
+            Write-Color Gray "already exists. "
+            Write-Color Cyan "$PadddingOut Create backup? " -inline
+            $userChoice = Read-Host "[Y/n]"
+            if ($userChoice -eq "n") {
+                Write-Warn "Operation cancelled."
+                return
             }
         }
+        New-Backup -target $target
     }
-    catch {
-        Write-Err " Failed to create symbolic link: $_"
+    if ($i) {
+        linebreak
+        Write-Color Cyan "$PadddingOut Create SymLink? " -inline
+        $userChoice = Read-Host "[Y/n]"
+        if ($userChoice -eq "n") {
+            Write-Warn "Operation cancelled."
+            return
+        }
     }
-
+    linebreak
+    &$symlinker
+    linebreak
 }
+
 
 function Show-DotsUsage {
     <#
     .SYNOPSIS
-        Displays usage information for the Dots module.
+        Sets up symbolic links for specified files or directories.
     .DESCRIPTION
         This function displays a help message with usage information for the Dots module.
     .NOTES

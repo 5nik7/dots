@@ -21,7 +21,9 @@ rad.json
 #Test results file
 TestResults.xml
 #shhh
-secret/*
+secret/
+#shhh
+lab/
 #clinky
 configs/clink/clink_errorlevel_*
 configs/clink/clink_history_*

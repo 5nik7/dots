@@ -106,9 +106,9 @@ function Get-ContentPretty {
         [string]$file
     )
 
-    Write-Host ""
+    linebreak
     bat $file
-    Write-Host ""
+    linebreak
 }
 
 function Get-ChildItemPretty {

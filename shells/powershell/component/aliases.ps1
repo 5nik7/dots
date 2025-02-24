@@ -1,4 +1,8 @@
-﻿Set-Alias -Name c -Value Clear-Host
+﻿function q {
+    Exit
+}
+
+Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name path -Value Get-Path
 Set-Alias -Name env -Value Get-Env
 Set-Alias -Name which -Value Show-Command
