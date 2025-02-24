@@ -332,11 +332,11 @@ function Write-Box {
         return
     }
 
-    $boxPadddingOut = 4
-    $boxPadddingIn = 1
+    $PadddingOutSpaces = 4
+    $PadddingInSpaces = 1
 
-    $boxPadddingOutSpaces = " " * $boxPadddingOut
-    $boxPadddingInSpaces = " " * $boxPadddingIn
+    $PadddingOut = " " * $PadddingOutSpaces
+    $PadddingIn = " " * $PadddingInSpaces
 
     $boxSymbolTopLeft = "┌"
     $boxSymbolTopRight = "┐"
@@ -345,13 +345,13 @@ function Write-Box {
     $boxSymbolHorizontal = "─"
     $boxSymbolVertical = "│"
 
-    $paddingLength = $boxPadddingIn * 2
+    $paddingLength = $PadddingInSpaces * 2
     $length = $text.Length + $paddingLength
 
-    $boxTop = $boxPadddingOutSpaces + $boxSymbolTopLeft + ($boxSymbolHorizontal * $length) + $boxSymbolTopRight
-    $boxMiddleLeft = $boxPadddingOutSpaces + $boxSymbolVertical + $boxPadddingInSpaces
-    $boxMiddleRight = $boxPadddingInSpaces + $boxSymbolVertical
-    $boxTopBottom = $boxPadddingOutSpaces + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $length) + $boxSymbolBottomRight
+    $boxTop = $PadddingOut + $boxSymbolTopLeft + ($boxSymbolHorizontal * $length) + $boxSymbolTopRight
+    $boxMiddleLeft = $PadddingOut + $boxSymbolVertical + $PadddingIn
+    $boxMiddleRight = $PadddingIn + $boxSymbolVertical
+    $boxTopBottom = $PadddingOut + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $length) + $boxSymbolBottomRight
 
     linebreak
     Write-Color $border $boxTop

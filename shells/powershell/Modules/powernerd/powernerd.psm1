@@ -1,35 +1,63 @@
+function linebreak {
+    param (
+        [int]$count = 1
+    )
+    for ($i = 0; $i -lt $count; $i++) {
+        Write-Host ''
+    }
+}
+
 $modulePath = $PSScriptRoot
 
-
 function Show-PowerNerdUsage {
+    <#
+    .SYNOPSIS
+        Displays usage information for the PowerNerd module.
+    .DESCRIPTION
+        This function displays a help message with usage information for the PowerNerd module.
+    .NOTES
+        Author: njen
+        Version: 1.0.0
+    #>
     $bannerPath = Join-Path -Path $modulePath -ChildPath "banner"
     if (Test-Path -Path $bannerPath) {
-        Write-Host " "
+        linebreak 2
         Get-Content -Path $bannerPath | Write-Host
     }
     else {
-        Write-Host " "
-        Write-Host -foregroundColor Yellow "PowerNerd"
+        linebreak 2
+        Write-Host -foregroundColor Yellow " PowerNerd"
     }
-    Write-Host " "
-    Write-Host -foregroundColor DarkGray " NerdFont utility for PowerShell."
-    Write-Host " "
-    Write-Host " powernerd -glyphName <name> [-code] [-list] [-help]"
-    Write-Host " "
+    linebreak
+    Write-Host -foregroundColor DarkMagenta " NerdFont utility for PowerShell."
+    linebreak
+    Write-Host " Usage: powernerd -glyphName <name> [-code] [-list] [-install] [-help]"
+    linebreak
     Write-Host -foregroundColor Yellow "`t-glyphName: " -NoNewline
     Write-Host "The name of the glyph to retrieve."
     Write-Host -foregroundColor Yellow "`t-code: " -NoNewline
     Write-Host "Retrieve the glyph code instead of the character."
     Write-Host -foregroundColor Yellow "`t-list: " -NoNewline
     Write-Host "List all available glyphs."
+    Write-Host -foregroundColor Yellow "`t-install: " -NoNewline
+    Write-Host "Install NerdFonts."
     Write-Host -foregroundColor Yellow "`t-help: " -NoNewline
     Write-Host "Display this help message."
-    Write-Host " "
+    linebreak 2
 
 }
 
 # Function to fetch and parse the glyph names JSON
 function Get-NerdFontGlyphs {
+    <#
+    .SYNOPSIS
+        Fetches and parses the NerdFont glyph names JSON.
+    .DESCRIPTION
+        This function fetches the NerdFont glyph names JSON from the specified URL and parses it.
+    .NOTES
+        Author: njen
+        Version: 1.0.0
+    #>
     $url = "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/refs/heads/master/glyphnames.json"
     $localPath = Join-Path -Path $modulePath -ChildPath "glyphnames.json"
 
@@ -57,6 +85,20 @@ function Get-NerdFontGlyphs {
 $nf = Get-NerdFontGlyphs
 
 function Get-GlyphCharacter {
+    <#
+    .SYNOPSIS
+        Retrieves the character of a specified glyph.
+    .DESCRIPTION
+        This function retrieves the character representation of a specified glyph from the NerdFont glyphs.
+    .PARAMETER glyphName
+        The name of the glyph to retrieve the character for.
+    .EXAMPLE
+        Get-GlyphCharacter -glyphName 'nf-fa-github'
+        # This will return the character for the 'nf-fa-github' glyph.
+    .NOTES
+        Author: njen
+        Version: 1.0.0
+    #>
     param (
         [string]$glyphName
     )
@@ -70,6 +112,20 @@ function Get-GlyphCharacter {
 }
 
 function Get-GlyphCode {
+    <#
+    .SYNOPSIS
+        Retrieves the code of a specified glyph.
+    .DESCRIPTION
+        This function retrieves the code representation of a specified glyph from the NerdFont glyphs.
+    .PARAMETER glyphName
+        The name of the glyph to retrieve the code for.
+    .EXAMPLE
+        Get-GlyphCode -glyphName 'nf-fa-github'
+        # This will return the code for the 'nf-fa-github' glyph.
+    .NOTES
+        Author: njen
+        Version: 1.0.0
+    #>
     param (
         [string]$glyphName
     )
@@ -82,17 +138,77 @@ function Get-GlyphCode {
     }
 }
 
+function Install-NerdFonts {
+    <#
+    .SYNOPSIS
+        Installs NerdFonts.
+    .DESCRIPTION
+        This function installs NerdFonts by downloading and executing the installation script from the specified URL.
+    .PARAMETER OptionalParameters
+        Additional parameters to pass to the installation script.
+    .EXAMPLE
+        Install-NerdFonts
+        # This will install NerdFonts using the default installation script.
+    .EXAMPLE
+        Install-NerdFonts -OptionalParameters @('-Font', 'FiraCode')
+        # This will install the FiraCode NerdFont.
+    .NOTES
+        Author: njen
+        Version: 1.0.0
+    #>
+    param (
+        [Parameter(ValueFromRemainingArguments = $true)]
+        $OptionalParameters
+    )
+    & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
+}
+
 function Invoke-PowerNerd {
+    <#
+    .SYNOPSIS
+        Main function to interact with NerdFonts.
+    .DESCRIPTION
+        This function provides various utilities to interact with NerdFonts, including retrieving glyph characters or codes, listing all available glyphs, and installing NerdFonts.
+    .PARAMETER glyphName
+        The name of the glyph to retrieve.
+    .PARAMETER code
+        Retrieve the glyph code instead of the character.
+    .PARAMETER list
+        List all available glyphs.
+    .PARAMETER help
+        Display the help message.
+    .PARAMETER install
+        Install NerdFonts.
+    .EXAMPLE
+        Invoke-PowerNerd -glyphName 'nf-fa-github'
+        # This will return the character for the 'nf-fa-github' glyph.
+    .EXAMPLE
+        Invoke-PowerNerd -list
+        # This will list all available glyphs.
+    .EXAMPLE
+        Invoke-PowerNerd -install
+        # This will install NerdFonts.
+    .NOTES
+        Author: njen
+        Version: 1.0.0
+    #>
     param (
         [string]$glyphName,
         [switch]$code,
         [switch]$list,
-        [switch]$help
+        [switch]$help,
+        [switch]$install
     )
     $format = '{0,-7} {1,-5} {2}'
 
-    if ($help) {
+    if ($install) {
+        Install-NerdFonts
+        return
+    }
+
+    if ($help -or (-not $glyphName -and -not $code -and -not $list -and -not $install)) {
         Show-PowerNerdUsage
+        return
     }
 
     if ($list) {
@@ -111,25 +227,12 @@ function Invoke-PowerNerd {
             return Get-GlyphCharacter -glyphName $glyphName
         }
     }
-    else {
-        Show-PowerNerdUsage
-    }
 }
 
-function nf ($glyphName) {
-    if ($nf.PSObject.Properties[$glyphName]) {
-        return $nf.$glyphName.char
-    }
-    else {
-        throw "Glyph '$glyphName' not found."
-    }
-}
-
-
+Export-ModuleMember -Variable nf
 Export-ModuleMember -Function Get-GlyphCharacter
 Export-ModuleMember -Function Get-GlyphCode
 Export-ModuleMember -Function Show-PowerNerdUsage
 Export-ModuleMember -Function Invoke-PowerNerd
-Export-ModuleMember -Function ng
 New-Alias -Name powernerd -Scope Global -Value Invoke-PowerNerd -ErrorAction Ignore
-Export-ModuleMember -Variable nf
+New-Alias -Name nf -Scope Global -Value Invoke-PowerNerd -ErrorAction Ignore

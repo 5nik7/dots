@@ -216,7 +216,7 @@ elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
 $env:EDITOR = $EDITOR
-function edit-item {
+function Edit-Item {
     param (
         [string]$Path = $PWD
     )
