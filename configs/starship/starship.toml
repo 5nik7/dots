@@ -29,6 +29,7 @@ format = '$symbol '
 # format = "([](black) [󱦟 ](yellow)[$duration]($style))"
 format = "([](bright-black)[ $duration]($style))"
 style = "bright-black"
+disabled = true
 
 [username]
 style_user = 'white'
@@ -48,9 +49,9 @@ ssh_symbol = " "
 
 [env_var.AdminSymbol]
 variable = 'AdminSymbol'
-# format = "[$env_value]($style)"
-format = "[]($style)"
+format = "[$env_value]($style)"
 style = "white dimmed"
+disabled = true
 
 [fill]
 symbol = ''
