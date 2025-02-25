@@ -4809,11 +4809,11 @@ echo %HOMEPATH%
 |	time=1740441723
 |wsh
 |	time=1740441737
-q
+|
 |	time=1740441741
 wxit
 |	time=1740448228
-pwsh
+|wsh
 |	time=1740448779
 sudo pwsh
 |	time=1740448806
@@ -4938,3 +4938,7 @@ rm omp.json
 clink config prompt show oh-my-posh
 |	time=1740449826
 cd
+|	time=1740450180
+pwsh
+|	time=1740450330
+q
