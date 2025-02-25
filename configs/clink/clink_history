@@ -2016,7 +2016,7 @@ winget  uninstall Microsoft.PowerShell.Preview
 |	time=1707684409
 |hich pwsh
 |	time=1707684451
-scoop
+|coop
 |	time=1707684455
 |coop list
 |	time=1707684480
@@ -2204,7 +2204,7 @@ winfetch
 |	time=1714814518
 |udo
 |	time=1714814522
-scoop list
+|coop list
 |	time=1714814537
 |
 |	time=1714814588
@@ -2842,7 +2842,7 @@ which oh-my-posh
 |	time=1717841215
 |h-my-posh
 |	time=1717841248
-oh-my-posh
+|h-my-posh
 |	time=1717879795
 |link
 |	time=1717879800
@@ -3380,7 +3380,7 @@ clink autorun show
 |	time=1720294765
 |link update
 |	time=1720294858
-clink installscripts
+|link installscripts
 |	time=1720294873
 |link info
 |	time=1720294892
@@ -3785,7 +3785,7 @@ eza -1A
 |	time=1728151814
 |link
 |	time=1728151820
-clink echo
+|link echo
 |	time=1728152046
 |
 |	time=1728152047
@@ -3797,7 +3797,7 @@ clink echo
 |	time=1728152073
 |link
 |	time=1728152076
-clink update
+|link update
 |	time=1728152081
 |link set
 |	time=1728152162
@@ -4141,11 +4141,11 @@ npm doctor
 |	time=1735361834
 |ls
 |	time=1735361838
-clink
+|link
 |	time=1735361841
 clink infp
 |	time=1735361842
-clink info
+|link info
 |	time=1735361847
 clink set
 |	time=1735361885
@@ -4399,7 +4399,7 @@ set PSModulePath
 |	time=1736016900
 cmd
 |	time=1736016924
-winget
+|inget
 |	time=1736016937
 winget search Microsoft.PowerShell
 |	time=1736016955
@@ -4751,7 +4751,7 @@ gh
 |	time=1740096390
 gh auth status
 |	time=1740096411
-cd
+|d
 |	time=1740096418
 cd .
 |	time=1740096421
@@ -4761,7 +4761,7 @@ cd ..
 |	time=1740096428
 |s
 |	time=1740096437
-powershell
+|owershell
 |	time=1740096495
 |wsh
 |	time=1740110461
@@ -4795,20 +4795,146 @@ cd "%WINDIR%\system32\config"
 |	time=1740266829
 l
 |	time=1740266830
-ls
+|s
 |	time=1740266837
-pwd
+|wd
 |	time=1740272463
 echo %HOMEPATH%
 |	time=1740428315
-env
+|nv
 |	time=1740428320
 |wsh
 |	time=1740428970
 |
 |	time=1740441723
-pwsh
+|wsh
 |	time=1740441737
 q
 |	time=1740441741
 wxit
+|	time=1740448228
+pwsh
+|	time=1740448779
+sudo pwsh
+|	time=1740448806
+|nv
+|	time=1740448810
+powershell
+|	time=1740448877
+winget
+|	time=1740448888
+scoop
+|	time=1740448905
+scoop update *
+|	time=1740448924
+env
+|	time=1740448941
+clink
+|	time=1740448951
+clink ech8
+|	time=1740448954
+clink echo
+|	time=1740448990
+clink installscripts
+|	time=1740448996
+clink installsc
+|	time=1740449004
+clink info
+|	time=1740449011
+clink i
+|	time=1740449020
+clink update
+|	time=1740449037
+|link config
+|	time=1740449049
+clink config theme
+|	time=1740449053
+clink config theme list
+|	time=1740449066
+clink config theme print
+|	time=1740449091
+clink config theme print plain
+|	time=1740449109
+clink config theme print Dracula
+|	time=1740449132
+clink config theme show
+|	time=1740449163
+clink config theme print "Enhanced Defaults"
+|	time=1740449176
+clink config
+|	time=1740449182
+clink config prompt
+|	time=1740449189
+|link config prompt list
+|	time=1740449205
+clink config prompt show pure
+|	time=1740449225
+clink config prompt show -all
+|	time=1740449230
+clink config prompt show all
+|	time=1740449236
+clink config prompt show *
+|	time=1740449247
+clink config prompt show agnoster
+|	time=1740449262
+clink config prompt show Antares
+|	time=1740449277
+clink config prompt show bureau
+|	time=1740449287
+clink config prompt list
+|	time=1740449305
+clink config prompt show darkblood
+|	time=1740449322
+clink config prompt show Headline
+|	time=1740449345
+clink config prompt show jonathan
+|	time=1740449359
+clink config prompt show j
+|	time=1740449364
+|link config prompt show oh-my-posh
+|	time=1740449400
+which "oh-my-posh.exe"
+|	time=1740449425
+scoop list
+|	time=1740449443
+scoop search "oh-my-posh.exe"
+|	time=1740449501
+scoop search "oh-my-posh"
+|	time=1740449535
+scoop install "oh-my-posh"
+|	time=1740449550
+|link config prompt show oh-my-posh
+|	time=1740449581
+oh-my-posh
+|	time=1740449597
+oh-my-posh print
+|	time=1740449627
+oh-my-posh config
+|	time=1740449638
+oh-my-posh config edit
+|	time=1740449651
+|h-my-posh config -h
+|	time=1740449668
+oh-my-posh config -c
+|	time=1740449679
+oh-my-posh config -h
+|	time=1740449698
+oh-my-posh config -export -h
+|	time=1740449718
+oh-my-posh config -export --help
+|	time=1740449728
+oh-my-posh config export --help
+|	time=1740449782
+oh-my-posh config export --output omp.json
+|	time=1740449783
+ls
+|	time=1740449790
+pwd
+|	time=1740449797
+cat omp.json 
+|	time=1740449810
+rm omp.json 
+|	time=1740449819
+clink config prompt show oh-my-posh
+|	time=1740449826
+cd
