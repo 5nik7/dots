@@ -35,7 +35,7 @@ disabled = true
 style_user = 'white'
 style_root = 'white bold'
 format = '[$user]($style)'
-disabled = false
+disabled = true
 show_always = true
 aliases = { "Administrator" = "admin" }
 
