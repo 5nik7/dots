@@ -41,11 +41,11 @@ aliases = { "Administrator" = "admin" }
 
 [hostname]
 ssh_only = false
-format = '(([$ssh_symbol ](white dimmed))[@](white)[$hostname:](white bold))(style)'
+format = '([@](white)[$hostname:](white bold))([$ssh_symbol ](white))(style)'
 style = "white"
 trim_at = '.companyname.com'
 disabled = false
-ssh_symbol = " "
+ssh_symbol = "  "
 
 [env_var.AdminSymbol]
 variable = 'AdminSymbol'
