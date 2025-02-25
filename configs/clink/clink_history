@@ -4771,9 +4771,9 @@ powershell
 |	time=1740110742
 |s
 |	time=1740110745
-env
+|nv
 |	time=1740110826
-pwsh
+|wsh
 |	time=1740111602
 |s
 |	time=1740111610
@@ -4785,7 +4785,7 @@ nu
 |	time=1740230282
 |
 |	time=1740230283
-q
+|
 |	time=1740266791
 cd "%WINDIR%\system32\config\"
 |	time=1740266806
@@ -4800,3 +4800,9 @@ ls
 pwd
 |	time=1740272463
 echo %HOMEPATH%
+|	time=1740428315
+env
+|	time=1740428320
+|wsh
+|	time=1740428970
+|
