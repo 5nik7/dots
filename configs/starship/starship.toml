@@ -40,10 +40,10 @@ show_always = true
 aliases = { "Administrator" = "admin" }
 
 [hostname]
-ssh_only = false
+ssh_only = true
 format = '([@](white)[$hostname:](white bold))([$ssh_symbol ](white))(style)'
 style = "white"
-trim_at = '.companyname.com'
+# trim_at = '.companyname.com'
 disabled = false
 ssh_symbol = "  "
 
