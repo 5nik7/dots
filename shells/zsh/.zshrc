@@ -7,6 +7,15 @@
 export ZSHDOT="${HOME}/.config/zsh"
 export ZFUNC="${ZSHDOT}/zfunc"
 export DOTS="${HOME}/dots"
+export DOTSBIN="${DOTS}/bin"
+
+function zource() {
+	if [ -f "$1" ]; then
+		source "$1"
+	fi
+}
+
+zource "${DOTSBIN}/utils"
 
 function zieces() {
   local zfile="${ZSHDOT}/$1.zsh"
@@ -15,7 +24,7 @@ function zieces() {
   fi
 }
 
-zieces "zutil"
+# zieces "zutil"
 zieces "functions"
 zieces "options"
 zieces "plugins"
@@ -32,7 +41,7 @@ fpath=( $ZFUNC "${fpath[@]}" )
 addir "${HOME}/.local/bin"
 extend_path "${HOME}/.local/bin"
 
-prepend_path "${DOTS}/bin"
+prepend_path "${DOTSBIN}"
 
 if is_installed zoxide; then
   eval "$(zoxide init zsh)"
