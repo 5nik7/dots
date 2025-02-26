@@ -4947,8 +4947,12 @@ l
 |	time=1740450543
 ls
 |	time=1740450544
-env
+|nv
 |	time=1740450555
 pwsh
 |	time=1740450930
 q
+|	time=1740466583
+setx OPENAI_API_KEY "sk-ndpRWSijLaMwIjYxBitff5tf-4zlQsAojWtSsF0aAcT3BlbkFJ12oefyMqUoQkccMm3HnWeRjRHwTrWfCnQ_77Y-MIQA"
+|	time=1740466587
+env

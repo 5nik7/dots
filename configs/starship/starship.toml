@@ -1,5 +1,7 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
+# 󰄰  󱪼 󱓼 󰨔 󰑤 󱂎 󱜽 󱁾 󱁺 󱉅 󱉃 󱏷 󱈺 󱏴 󱉋   󰂖    ⚡      󰜥 󱙧 󰓎  󰂓               
+#                
 command_timeout = 10000
 add_newline = true
 
@@ -21,8 +23,16 @@ continuation_prompt = '[│](black)'
 [character]
 success_symbol = '[](green)'
 error_symbol = '[](red)'
-vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[](black)'
+vimcmd_symbol = '[:](black)'
+# vimcmd_symbol = '[](black)'
+# vimcmd_symbol = '[󱓜](black)'
+# vimcmd_symbol = '[󱂍](black)'
+# vimcmd_symbol = '[](black)'
+# vimcmd_symbol = '[](black)'
+# vimcmd_symbol = '[](black)'
+# vimcmd_symbol = '[](black)'
+# vimcmd_symbol = '[󰽪](black)'
+# vimcmd_symbol = '[ ](black)'
 format = '$symbol '
 
 [cmd_duration]
@@ -37,7 +47,8 @@ style_root = 'white bold'
 format = '[$user]($style)'
 disabled = true
 show_always = true
-aliases = { "Administrator" = "admin" }
+aliases = { "Administrator" = "󱔏" }
+# aliases = { "Administrator" = "admin" }
 
 [hostname]
 ssh_only = true
@@ -49,7 +60,8 @@ ssh_symbol = "  "
 
 [env_var.AdminSymbol]
 variable = 'AdminSymbol'
-format = "[$env_value]($style)"
+# format = "[$env_value󱐌]($style)"
+format = "[󱐌]($style)"
 style = "white dimmed"
 disabled = true
 
@@ -109,8 +121,9 @@ Void = " "
 Windows = ""
 # Windows = "󰚌 "
 # Windows = " "
+# Windows = "󰖳 "
 # Windows = "󰍲 "
-
+# Windows = " "
 
 # [shell]
 # format = '[$indicator]($style)'
@@ -125,7 +138,28 @@ Windows = ""
 
 [directory.substitutions]
 # '~/Documents/' = ' '
-"C:/" = "/"
+# '/' = ''
+# '/' = ''
+# "/" = ""
+"C:/" = "/mnt/c/"
+# "~" = " "
+# "~/" = "󰮧 "
+# "~" = "󰮧 "
+"/mnt/c/" = "󰖳 "
+"~/Documents" = " "
+"~/Downloads" = "󰮏 Downloads"
+"~/dev" = " dev "
+"dots" = "󰓎 dots"
+# "dots" = "󱁾 dots"
+"~/Desktop" = " "
+"~/Videos" = " "
+# "~/Projects/" = " "
+"~/Projects" = " "
+"~/Pictures" = " "
+"~/Music" = " "
+"~/dots/lab" = "󰂖 "
+# "~/dots" = "󰫎 "
+
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
@@ -154,19 +188,26 @@ style = 'bright-black'
 [git_status]
 format = "([\\[](purple)[$all_status]($style)[\\]](purple))"
 style = "purple"
+# deleted = ""
+# deleted = "󰅖"
+# deleted = "󰖭"
 deleted = ""
+# deleted = "󰽪"
 stashed = '󰇁'
 ahead = "⇡"
 behind = "⇣"
 up_to_date = ""
 diverged = "⇕"
+# conflicted = "󰦒"
 conflicted = "="
 renamed = "»"
 modified = "!"
 staged = "+"
+# staged = "󰐕"
 # staged = ""
 # staged = ""
-untracked = "?"
+untracked = "󰘥"
+# untracked = "?"
 typechanged = ""
 ignore_submodules = false
 disabled = false

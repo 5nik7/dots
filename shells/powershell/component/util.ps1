@@ -27,7 +27,7 @@ $util = @{
     alerts = @{
         info    = @{
             text  = "Info:"
-            icon  = ""
+            icon  = "󰋽"
             color = "Magenta"
         }
         success = @{

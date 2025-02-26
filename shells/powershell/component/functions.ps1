@@ -128,10 +128,10 @@ function Get-ChildItemPretty {
     }
     linebreak
     if ($All) {
-        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative $Path --all
+        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative $Path
     }
     else {
-        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --no-group $Path
+        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
     }
     linebreak
 }
