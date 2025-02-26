@@ -3,16 +3,16 @@
     "app_specific_configuration_path": "$Env:USERPROFILE/applications.json",
     "window_hiding_behaviour": "Cloak",
     "cross_monitor_move_behaviour": "Insert",
-    "default_workspace_padding": 7,
-    "default_container_padding": 7,
+    "default_workspace_padding": 8,
+    "default_container_padding": 8,
     "border": true,
     "border_style": "Square",
     "border_width": 2,
     "border_offset": -1,
     "border_colours": {
         "single": "#4785FF",
-        "unfocused": "#1A2440",
-        "floating": "#1A2440",
+        "unfocused": "#2E3C5B",
+        "floating": "#374B72",
         "monocle": "#00FFFB",
         "stack": "#BB9AF7"
     },
@@ -20,8 +20,8 @@
     "transparency_alpha": 245,
     "animation": {
         "enabled": true,
-        "duration": 400,
-        "style": "EaseOutBack",
+        "duration": 250,
+        "style": "EaseInOutBack",
         "fps": 60
     },
     "stackbar": {
@@ -53,6 +53,9 @@
             "matching_strategy": "Equals"
         }
     ],
+    "floating.window": {
+        "aspect_ratio": [16, 9]
+    },
     "floating_applications": [
         {
             "kind": "Exe",
@@ -100,15 +103,15 @@
                 },
                 {
                     "name": " 3 ",
-                    "layout": "HorizontalStack"
+                    "layout": "BSP"
                 },
                 {
                     "name": " 4 ",
-                    "layout": "UltrawideVerticalStack"
+                    "layout": "BSP"
                 },
                 {
                     "name": " 5 ",
-                    "layout": "Rows"
+                    "layout": "BSP"
                 },
                 {
                     "name": " 6 ",
