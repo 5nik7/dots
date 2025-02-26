@@ -111,7 +111,7 @@ function Get-ContentPretty {
     linebreak
 }
 
-function Get-ChildItemPretty {
+function Get-PrettyChildrem {
     <#
     .SYNOPSIS
         Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
@@ -119,22 +119,24 @@ function Get-ChildItemPretty {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $false, Position = 0)]
-        [string]$Path = $PWD,
-        [switch]$All
+        [string[]]$OptionalParameters,
+        [strong]$Path
     )
     if (-not $Path) {
         $Path = $PWD
     }
-    linebreak
-    if ($All) {
-        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative $Path
+    if ($OptionalParameters) {
+        linebreak
+            (eza -Path $OptionalParameters)
+        linebreak
     }
     else {
-        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
+        linebreak
+        Get-ChildItemPretty
+        linebreak
     }
-    linebreak
 }
+
 
 function Get-ChildItemPrettyTree {
     <#
@@ -152,7 +154,7 @@ function Get-ChildItemPrettyTree {
         $Path = $PWD
     }
     linebreak
-    eza --icons --git-repos --git -n -L $level --time-style=relative --tree $Path
+    eza --icons --git-repos --git -n -L $level --time-style=relative --hyperlink --follow-symlinks --no-quotes --tree $Path
     linebreak
 }
 

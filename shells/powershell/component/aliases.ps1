@@ -25,9 +25,53 @@ if (Test-CommandExists bat) {
     Set-Alias -Name cat -Value Get-ContentPretty -Option AllScope
 }
 if (Test-CommandExists eza) {
+
+    # eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
+    # eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
+
+    Function Get-ChildItemPretty {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory = $false, Position = 0)]
+            [string]$Path,
+            [switch]$l
+        )
+        if (-not $Path) {
+            $Path = $PWD
+        }
+        if (-not $l) {
+            Write-Host ' '
+            eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
+            Write-Host ' '
+        }
+        else {
+            Write-Host ' '
+            eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified --flags -h --time-style '+  󰨲%m.%d.%y 󰅐 %H:%M ' $Path
+            Write-Host ' '
+        }
+    }
+    function Get-ChildItemPrettyTree {
+        <#
+    .SYNOPSIS
+        Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
+        Alias: ls, ll, la, l
+    #>
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory = $false, Position = 0)]
+            [string]$Path,
+            [int]$level = 1
+        )
+        if (-not $Path) {
+            $Path = $PWD
+        }
+        linebreak
+        eza --icons --git-repos --git -n -L $level --time-style=relative --hyperlink --follow-symlinks --no-quotes --tree $Path
+        linebreak
+    }
+    Set-Alias -Name l -Value Get-ChildItemPretty -Option AllScope
+    Set-Alias -Name ls -Value Get-ChildItemPretty
     Set-Alias -Name ll -Value Get-ChildItemPretty
-    Set-Alias -Name la -Value Get-ChildItemPretty
-    Set-Alias -Name l -Value Get-ChildItemPretty
     Set-Alias -Name lt -Value Get-ChildItemPrettyTree
 }
 if (Test-CommandExists yazi) {
