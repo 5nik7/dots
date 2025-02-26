@@ -1,3 +1,4 @@
+$padding = 4
 $PadddingOutSpaces = 4
 $PadddingInSpaces = 1
 
@@ -25,22 +26,22 @@ $util = @{
     }
     alerts = @{
         info    = @{
-            text  = ""
+            text  = "Info:"
             icon  = ""
             color = "Magenta"
         }
         success = @{
-            text  = ""
+            text  = "Success:"
             icon  = ""
             color = "Green"
         }
         warn    = @{
-            text  = ""
+            text  = "Warning:"
             icon  = ""
             color = "Yellow"
         }
         err     = @{
-            text  = ""
+            text  = "Error:"
             icon  = "󰱥"
             color = "Red"
         }
@@ -251,60 +252,86 @@ function Write-Color {
     Write-Host -foregroundColor $color "$outputText"
 }
 
-function Write-Info {
-    param([string]$text = "")
-    $textcolor = $infocolor
-    if ($text -eq "" ) {
-        linebreak 1
-        Write-Color $infocolor ($PadddingOut + $infoicon + " " + $infotext) -inline
+function wh {
+    param(
+        [string]$t,
+        [string]$c = 'White',
+        [bool]$nonew = $true,
+        [switch]$new,
+        [int]$sp = 1,
+        [int]$bb = 0,
+        [int]$ba = 0,
+        [int]$pad = 0
+    )
+    if ($c -match '^\d+$') {
+        $c = $util.colors.GetEnumerator() | Where-Object { $_.Value -eq [int]$c } | Select-Object -ExpandProperty Key
+    }
+
+    $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_ -eq $c }
+    if ($null -eq $colorEnum) {
+        Write-Err "Invalid color: $c"
         return
     }
-    linebreak 1
-    Write-Color $infocolor ($PadddingOut + $infoicon + " " + $infotext) -inline
-    Write-Color $textcolor $text
-    linebreak
+    if ($new) { $nonew = $false }
+    $PadddingOut = " " * $pad
+    $SpaceOut = " " * $sp
+    $OutText = $PadddingOut + $t + $SpaceOut
+    linebreak $bb
+    Write-Host "$OutText" -ForegroundColor $c -NoNewline:$nonew
+    linebreak $ba
+}
+
+function Write-Info {
+    param(
+        [string]$t = "",
+        [string]$tc = $infocolor,
+        [string]$ii = $infoicon,
+        [string]$ic = $infocolor,
+        [string]$it = $infotext
+    )
+    $iconout = wh -t "$ii $it" -c $ic -bb 1 -pad $padding
+    $txtout = wh -t "$t" -c $tc -ba 1
+    $iconout + $txtout
 }
 
 function Write-Success {
-    param([string]$text = "")
-    $textcolor = $successcolor
-    if ($text -eq "" ) {
-        linebreak 1
-        Write-Color $successcolor ($PadddingOut + $successicon + " " + $successtext) -inline
-        return
-    }
-    linebreak 1
-    Write-Color $successcolor ($PadddingOut + $successicon + " " + $successtext) -inline
-    Write-Color $textcolor $text
-    linebreak
+    param(
+        [string]$t = "",
+        [string]$tc = $successcolor,
+        [string]$si = $successicon,
+        [string]$sc = $successcolor,
+        [string]$st = $successtext
+    )
+    $iconout = wh -t "$si $st" -c $sc -bb 1 -pad $padding
+    $txtout = wh -t "$t" -c $tc -ba 1
+    $iconout + $txtout
 }
 
 function Write-Warn {
-    param([string]$text = "")
-    $textcolor = $warncolor
-    if ($text -eq "" ) {
-        linebreak 1
-        Write-Color $warncolor ($PadddingOut + $warnicon + " " + $warntext) -inline
-        return
-    }
-    linebreak 1
-    Write-Color $warncolor ($PadddingOut + $warnicon + " " + $warntext) -inline
-    Write-Color $textcolor $text
-    linebreak
+    param(
+        [string]$t = "",
+        [string]$tc = $warncolor,
+        [string]$wi = $warnicon,
+        [string]$wc = $warncolor,
+        [string]$wt = $warntext
+    )
+    $iconout = wh -t "$wi $wt" -c $wc -bb 1 -pad $padding
+    $txtout = wh -t "$t" -c $tc -ba 1
+    $iconout + $txtout
 }
 
 function Write-Err {
-    param([string]$text = "")
-    $textcolor = $errcolor
-    if ($text -eq "" ) {
-        linebreak 1
-        Write-Color $errcolor ($PadddingOut + $erricon + " " + $errtext) -inline
-        return
-    }
-    linebreak 1
-    Write-Color $errcolor ($PadddingOut + $erricon + " " + $errtext) -inline
-    Write-Color $textcolor $text
-    linebreak
+    param(
+        [string]$t = "",
+        [string]$tc = $errcolor,
+        [string]$ei = $erricon,
+        [string]$ec = $errcolor,
+        [string]$et = $errtext
+    )
+    $iconout = wh -t "$ei $et" -c $ec -bb 1 -pad $padding
+    $txtout = wh -t "$t" -c $tc -ba 1
+    $iconout + $txtout
+
 }
 
 <#

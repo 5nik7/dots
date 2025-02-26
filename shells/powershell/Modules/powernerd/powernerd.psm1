@@ -1,10 +1,10 @@
-function linebreak {
-    param (
-        [int]$count = 1
-    )
-    for ($i = 0; $i -lt $count; $i++) {
-        Write-Host ''
-    }
+$timeout = 1000
+$pingResult = Get-CimInstance -ClassName Win32_PingStatus -Filter "Address = 'github.com' AND Timeout = $timeout" -Property StatusCode 2>$null
+if ($pingResult.StatusCode -eq 0) {
+    $canConnectToGitHub = $true
+}
+else {
+    $canConnectToGitHub = $false
 }
 
 $modulePath = $PSScriptRoot
@@ -58,16 +58,30 @@ function Get-NerdFontGlyphs {
         Author: njen
         Version: 1.0.0
     #>
+
+
     $url = "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/refs/heads/master/glyphnames.json"
     $localPath = Join-Path -Path $modulePath -ChildPath "glyphnames.json"
 
-    if (Test-Path -Path $localPath) {
+    if (-not $global:canConnectToGitHub) {
+        if ($debug) { Write-Host "󱎘 POWERNERD: GitHub.com not responding within 1 second." -ForegroundColor Yellow }
+        if (Test-Path -Path $localPath) {
+            if ($debug) { Write-Host "󱎘 POWERNERD: $localPath found." -ForegroundColor Green }
+            $localContent = Get-Content -Path $localPath -Raw
+            $json = $localContent | ConvertFrom-Json
+            return $json
+        }
+        else {
+            if ($debug) { Write-Host "󱎘 POWERNERD: $localPath not found." -ForegroundColor Yellow }
+            return
+        }
+    }
+    try {
         $localContent = Get-Content -Path $localPath -Raw
         $remoteContent = Invoke-RestMethod -Uri $url
-
         if ($localContent -eq $remoteContent) {
-            $localjson = $localContent | ConvertFrom-Json
-            return $localjson
+            $json = $localContent | ConvertFrom-Json
+            return $json
         }
         else {
             Invoke-WebRequest -Uri $url -OutFile $localPath
@@ -75,10 +89,8 @@ function Get-NerdFontGlyphs {
             return $json
         }
     }
-    else {
-        Invoke-WebRequest -Uri $url -OutFile $localPath
-        $json = Invoke-RestMethod -Uri $url
-        return $json
+    catch {
+        Write-Err "$_"
     }
 }
 
@@ -194,6 +206,7 @@ function Invoke-PowerNerd {
     #>
     param (
         [string]$glyphName,
+        [switch]$fzf,
         [switch]$code,
         [switch]$list,
         [switch]$help,
@@ -206,9 +219,14 @@ function Invoke-PowerNerd {
         return
     }
 
-    if ($help -or (-not $glyphName -and -not $code -and -not $list -and -not $install)) {
+    if ($help) {
         Show-PowerNerdUsage
         return
+    }
+
+    if ($fzf) {
+        $GlyphsNamess = $nf.PSObject.Properties.Name
+        &(fzf ($GlyphsNamess | Sort-Object Name))
     }
 
     if ($list) {

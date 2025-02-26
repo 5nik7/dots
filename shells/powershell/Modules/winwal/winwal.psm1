@@ -34,6 +34,12 @@ function Get-ScriptDirectory {
     Split-Path $script:MyInvocation.MyCommand.Path
 }
 
+function Test-CommandExists {
+    param($command)
+    $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
+    return $exists
+}
+
 <#
 .DESCRIPTION
     Copies the contents of ./templates to ~/.config/wal/templates, will clobber templates with matching names
@@ -47,6 +53,27 @@ function Add-WalTemplates {
     Get-ChildItem -Path $sourceDir | ForEach-Object {
         if (!(Test-Path -Path "$HOME/.config/wal/templates/$($_.Name)")) {
             Copy-Item -Path $_.FullName -Destination "$HOME/.config/wal/templates"
+        }
+    }
+}
+
+function Add-WalColorsSchemes {
+    $sourceDir = "$(Get-ScriptDirectory)/colorschemes"
+
+    if (!(Test-Path -Path "$HOME/.config/wal/colorschemes")) {
+        New-Item -Path "$HOME/.config/wal/colorschemes" -ItemType Directory -ErrorAction SilentlyContinue
+    }
+
+    @("dark", "light") | ForEach-Object {
+        $schemeDir = "$sourceDir/$_"
+        $configDir = "$HOME/.config/wal/colorschemes/$_"
+        if (!(Test-Path -Path $schemeDir)) {
+            New-Item -Path $schemeDir -ItemType Directory -ErrorAction SilentlyContinue
+        }
+        Get-ChildItem -Path $schemeDir | ForEach-Object {
+            if (!(Test-Path -Path "$configDir/$($_.Name)")) {
+                Copy-Item -Path $_.FullName -Destination "$configDir"
+            }
         }
     }
 }
@@ -206,12 +233,14 @@ function ChangeTheColors {
     Update-WalExplorer
 
     # New oh-my-posh
-    if ((Get-Command oh-my-posh -ErrorAction SilentlyContinue) -and (Test-Path -Path "$HOME/.cache/wal/posh-wal-agnoster.omp.json")) {
-        oh-my-posh init pwsh --config "$HOME/.cache/wal/posh-wal-agnoster.omp.json" | Invoke-Expression
+    if ((Test-CommandExists oh-my-posh) -and (Test-Path -Path "$HOME/.cache/wal/posh-wal-agnoster.omp.json")) {
+        if ($omp) {
+            oh-my-posh init pwsh --config "$HOME/.cache/wal/posh-wal-agnoster.omp.json" | Invoke-Expression
+        }
     }
 
     # Check if pywal fox needs to update
-    if (Get-Command pywalfox -ErrorAction SilentlyContinue) {
+    if (Test-CommandExists pywalfox) {
         pywalfox update
     }
 
@@ -221,7 +250,7 @@ function ChangeTheColors {
         Set-TerminalIconsTheme -ColorTheme wal
     }
 
-    if ((Get-Command 'bat' -ErrorAction SilentlyContinue) -and (Test-Path -Path "$HOME/.cache/wal/wal.tmTheme")) {
+    if ((Test-CommandExists bat) -and (Test-Path -Path "$HOME/.cache/wal/wal.tmTheme")) {
         bat cache --build
     }
 }
@@ -285,10 +314,13 @@ function winwal {
         [Parameter(ParameterSetName = 'Default')]
         [float]$contrast,
         [Parameter(ParameterSetName = 'Default')]
-        [switch]$help
+        [switch]$help,
+        [Parameter(ParameterSetName = 'Default')]
+        [switch]$omp
     )
 
     Add-WalTemplates
+    Add-WalColorsSchemes
 
     if ($help -or $PSCmdlet.MyInvocation.BoundParameters.Count -eq 0) {
         Write-Host "Usage: winwal [-theme <theme_name>] [-image <image_path>] [-backend <backend>] [-help] [-alpha <alpha>] [-background <background>] [--fg <foreground>] [--iterative] [--cols16 <method>] [--recursive] [--saturate <0.0-1.0>] [--preview] [--vte] [-c] [-l] [-n] [-o <script_name>] [-p <theme_name>] [-q] [-R] [-s] [-t] [-v] [-w] [-e] [--contrast <1.0-21.0>]"

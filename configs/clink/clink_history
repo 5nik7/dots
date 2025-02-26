@@ -4793,7 +4793,7 @@ sudo wt
 |	time=1740266825
 cd "%WINDIR%\system32\config"
 |	time=1740266829
-l
+|
 |	time=1740266830
 |s
 |	time=1740266837
@@ -4827,7 +4827,7 @@ scoop
 |	time=1740448905
 scoop update *
 |	time=1740448924
-env
+|nv
 |	time=1740448941
 clink
 |	time=1740448951
@@ -4927,7 +4927,7 @@ oh-my-posh config export --help
 |	time=1740449782
 oh-my-posh config export --output omp.json
 |	time=1740449783
-ls
+|s
 |	time=1740449790
 pwd
 |	time=1740449797
@@ -4939,6 +4939,16 @@ clink config prompt show oh-my-posh
 |	time=1740449826
 cd
 |	time=1740450180
-pwsh
+|wsh
 |	time=1740450330
+|
+|	time=1740450542
+l
+|	time=1740450543
+ls
+|	time=1740450544
+env
+|	time=1740450555
+pwsh
+|	time=1740450930
 q

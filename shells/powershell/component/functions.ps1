@@ -120,12 +120,20 @@ function Get-ChildItemPretty {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $false, Position = 0)]
-        [string]$Path = $PWD
+        [string]$Path = $PWD,
+        [switch]$All
     )
-
-    Write-Host ""
-    eza -a -l --group-directories-first --git-repos --git --icons --time-style relative $Path
-    Write-Host ""
+    if (-not $Path) {
+        $Path = $PWD
+    }
+    linebreak
+    if ($All) {
+        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative $Path --all
+    }
+    else {
+        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --no-group $Path
+    }
+    linebreak
 }
 
 function Get-ChildItemPrettyTree {
@@ -137,12 +145,15 @@ function Get-ChildItemPrettyTree {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $false, Position = 0)]
-        [string]$Path = $PWD
+        [string]$Path,
+        [int]$level = 1
     )
-
-    Write-Host ""
-    eza --icons --git-repos --git  -ln --time-style=relative --tree $Path
-    Write-Host ""
+    if (-not $Path) {
+        $Path = $PWD
+    }
+    linebreak
+    eza --icons --git-repos --git -n -L $level --time-style=relative --tree $Path
+    linebreak
 }
 
 function New-File {

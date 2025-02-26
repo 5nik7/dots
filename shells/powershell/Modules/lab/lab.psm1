@@ -326,10 +326,17 @@ function lab {
     }
 
     if ($edit) {
-        $filePath = "$TargetScriptDir\$filename.ps1"
-        if (Test-Path $filePath) {
+        if ($edit -eq '') {
+            $Path = "$TargetScriptDir"
+            $patherror = "$TargetScriptDir not found."
+        }
+        else {
+            $Path = "$TargetScriptDir\$filename.ps1"
+            $patherror = "File $filename.ps1 not found in $TargetScriptDir."
+        }
+        if (Test-Path $Path) {
             if ($env:EDITOR) {
-                & $env:EDITOR $filePath
+                & $env:EDITOR $Path
                 return
             }
             else {
@@ -338,7 +345,7 @@ function lab {
             }
         }
         else {
-            Write-Err "File $filename.ps1 not found in $TargetScriptDir."
+            Write-Err "$patherror"
             return
         }
     }

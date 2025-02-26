@@ -24,12 +24,6 @@ if ($fzFile) {
     . "$env:PSCOMPONENT\$FzFile.ps1"
 }
 
-$pyenvFile = if (Test-CommandExists pyenv) { 'pyenv-win' }
-if ($pyenvFile) {
-    Unblock-File "$env:PSCOMPONENT\$pyenvFile.ps1"
-    . "$env:PSCOMPONENT\$pyenvFile.ps1"
-}
-
 $neovimFile = if (Test-CommandExists nvim) { 'neovim' }
 if ($neovimFile) {
     Unblock-File "$env:PSCOMPONENT\$neovimFile.ps1"
@@ -39,7 +33,7 @@ if ($neovimFile) {
 if ($env:isReloading) {
     Clear-Host
     Write-Box -border "DarkGray" -color "Green" -text "Profile reloaded."
-    $env:isReloading = $falseW
+    $env:isReloading = $false
 }
 
 function rl {
