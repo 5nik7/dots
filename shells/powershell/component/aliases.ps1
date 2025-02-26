@@ -33,20 +33,36 @@ if (Test-CommandExists eza) {
         [CmdletBinding()]
         param (
             [Parameter(Mandatory = $false, Position = 0)]
-            [string]$Path,
-            [switch]$l
+            [string]$Path = $PWD,
+            [switch]$minimal = $false,
+            [switch]$more = $false,
+            [switch]$tree = $false,
+            [switch]$1 = $false,
+            [int]$level = 1
+
         )
         if (-not $Path) {
             $Path = $PWD
         }
-        if (-not $l) {
+        if ($more) {
+            Write-Host ' '
+            eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified --flags -h --time-style '+  󰨲%m.%d.%y 󰅐 %H:%M ' $Path
+            Write-Host ' '
+        }
+        elseif ($tree) {
+            Write-Host ' '
+            eza --icons --git-repos --git -n -L $level --time-style=relative --hyperlink --follow-symlinks --no-quotes --tree $Path
+            Write-Host ' '
+
+        }
+        elseif ($minimal) {
             Write-Host ' '
             eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
             Write-Host ' '
         }
         else {
             Write-Host ' '
-            eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified --flags -h --time-style '+  󰨲%m.%d.%y 󰅐 %H:%M ' $Path
+            eza $Path
             Write-Host ' '
         }
     }
@@ -65,14 +81,25 @@ if (Test-CommandExists eza) {
         if (-not $Path) {
             $Path = $PWD
         }
-        linebreak
         eza --icons --git-repos --git -n -L $level --time-style=relative --hyperlink --follow-symlinks --no-quotes --tree $Path
         linebreak
     }
-    Set-Alias -Name l -Value Get-ChildItemPretty -Option AllScope
-    Set-Alias -Name ls -Value Get-ChildItemPretty
-    Set-Alias -Name ll -Value Get-ChildItemPretty
-    Set-Alias -Name lt -Value Get-ChildItemPrettyTree
+    function ll {
+        Get-ChildItemPretty -more
+    }
+
+    function lt {
+        Get-ChildItemPretty -tree
+    }
+
+    function l {
+        Get-ChildItemPretty -minimal
+    }
+
+    Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
+    Set-Alias -Name lspr -Value Get-ChildItemPretty -Option AllScope
+
+
 }
 if (Test-CommandExists yazi) {
     Set-Alias -Name d -Value yy
