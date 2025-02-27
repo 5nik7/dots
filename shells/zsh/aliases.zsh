@@ -35,7 +35,7 @@ alias ".d"="cd $DOTS"
 if cmd_exists eza; then
     function ll() {
         linebreak
-        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified --flags -h --time-style '+  󰨲%m.%d.%y 󰅐 %H:%M '
+        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style '+󰨲%m/%d/%y 󰅐 %H:%M'
         linebreak
     }
     function l() {
