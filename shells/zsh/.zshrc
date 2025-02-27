@@ -1,8 +1,8 @@
 #    _____  _____ __  ______  ______
 #   /__  / / ___// / / / __ \/ ____/
-#     / /  \__ \/ /_/ / /_/ / /     
-#  _ / /_____/ / __  / _, _/ /___   
-# (_)____/____/_/ /_/_/ |_|\____/   
+#     / /  \__ \/ /_/ / /_/ / /
+#  _ / /_____/ / __  / _, _/ /___
+# (_)____/____/_/ /_/_/ |_|\____/
 
 export ZSHDOT="${HOME}/.config/zsh"
 export ZFUNC="${ZSHDOT}/zfunc"
@@ -19,8 +19,8 @@ zource "${DOTSBIN}/utils"
 
 function zieces() {
   local zfile="${ZSHDOT}/$1.zsh"
-  if [ -f "$zfile" ]; then 
-    source "$zfile" 
+  if [ -f "$zfile" ]; then
+    source "$zfile"
   fi
 }
 
@@ -28,9 +28,9 @@ function zieces() {
 zieces "functions"
 zieces "options"
 zieces "plugins"
-zieces "aliases"
 zieces "completions"
-zieces "zbug"
+zieces "aliases"
+# zieces "zbug"
 
 if is_installed fzf; then
   zieces "fzf"

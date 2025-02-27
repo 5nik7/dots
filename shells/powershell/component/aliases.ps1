@@ -26,47 +26,7 @@ if (Test-CommandExists bat) {
 }
 if (Test-CommandExists eza) {
 
-    # eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
-    # eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
-
     Function Get-ChildItemPretty {
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory = $false, Position = 0)]
-            [string]$Path = $PWD,
-            [switch]$minimal = $false,
-            [switch]$more = $false,
-            [switch]$tree = $false,
-            [switch]$1 = $false,
-            [int]$level = 1
-
-        )
-        if (-not $Path) {
-            $Path = $PWD
-        }
-        if ($more) {
-            Write-Host ' '
-            eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified --flags -h --time-style '+  󰨲%m.%d.%y 󰅐 %H:%M ' $Path
-            Write-Host ' '
-        }
-        elseif ($tree) {
-            Write-Host ' '
-            eza --icons --git-repos --git -n -L $level --time-style=relative --hyperlink --follow-symlinks --no-quotes --tree $Path
-            Write-Host ' '
-
-        }
-        elseif ($minimal) {
-            Write-Host ' '
-            eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes $Path
-            Write-Host ' '
-        }
-        else {
-            Write-Host ' '
-            eza $Path
-            Write-Host ' '
-        }
-    }
-    function Get-ChildItemPrettyTree {
         <#
     .SYNOPSIS
         Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
@@ -74,33 +34,61 @@ if (Test-CommandExists eza) {
     #>
         [CmdletBinding()]
         param (
-            [Parameter(Mandatory = $false, Position = 0)]
-            [string]$Path,
-            [int]$level = 1
+            [switch]$a,
+            [switch]$l,
+            [switch]$time,
+            [Parameter(ValueFromRemainingArguments = $true)]
+            [string[]]$Arguments
         )
-        if (-not $Path) {
-            $Path = $PWD
-        }
-        eza --icons --git-repos --git -n -L $level --time-style=relative --hyperlink --follow-symlinks --no-quotes --tree $Path
-        linebreak
-    }
-    function ll {
-        Get-ChildItemPretty -more
-    }
+        $timestyle = '+󰨲 %m/%d/%y 󰅐 %H:%M'
+        if ($a) { $Arguments += '-a' }
+        if ($l) { $Arguments += '-l' }
+        if ($time) { $Arguments += '--time-style', $timestyle }
 
-    function lt {
-        Get-ChildItemPretty -tree
+        $Arguments += ( '--group-directories-first', '--git-repos', '--git', '--hyperlink', '--follow-symlinks', '--no-quotes', '--icons' )
+        Write-Host ' '
+        eza @Arguments
+        Write-Host ' '
     }
 
     function l {
-        Get-ChildItemPretty -minimal
+        [CmdletBinding()]
+        param (
+            [Parameter(ValueFromRemainingArguments = $true)]
+            [string[]]$Arguments
+        )
+        $Arguments += ( '-a', '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' )
+        Get-ChildItemPretty @Arguments
     }
 
-    Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
-    Set-Alias -Name lspr -Value Get-ChildItemPretty -Option AllScope
+    function lt {
+        [CmdletBinding()]
+        param (
+            [Parameter(Position = 0)]
+            [int]$L = 1,
+            [Parameter(ValueFromRemainingArguments = $true)]
+            [string[]]$Arguments
+        )
+        $Arguments += ( '-n', '--tree', '-L', $L )
+        Get-ChildItemPretty @Arguments
+    }
 
+    function ll {
+        [CmdletBinding()]
+        param (
+            [Parameter(ValueFromRemainingArguments = $true)]
+            [string[]]$Arguments
+        )
+        $Arguments += ( '-a', '-l', '--flags', '-h' )
+        Get-ChildItemPretty -time @Arguments
+    }
 
+    Set-Alias -Name ls -Value Get-ChildItemPretty
 }
+
+
+
+
 if (Test-CommandExists yazi) {
     Set-Alias -Name d -Value yy
 }

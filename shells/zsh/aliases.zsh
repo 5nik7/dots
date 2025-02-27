@@ -35,12 +35,12 @@ alias ".d"="cd $DOTS"
 if cmd_exists eza; then
     function ll() {
         linebreak
-        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style '+󰨲%m/%d/%y 󰅐 %H:%M'
+        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style '+󰨲 %m/%d/%y 󰅐 %H:%M'
         linebreak
     }
     function l() {
         linebreak
-            eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
         linebreak
     }
 fi
@@ -89,4 +89,3 @@ fi
 if cmd_exists lazygit; then
   alias lg='lazygit'
 fi
-
