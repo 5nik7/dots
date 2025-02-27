@@ -34,15 +34,15 @@ if (Test-CommandExists eza) {
     #>
         [CmdletBinding()]
         param (
-            [switch]$a,
-            [switch]$l,
-            [switch]$time,
             [Parameter(ValueFromRemainingArguments = $true)]
-            [string[]]$Arguments
+            [string[]]$Arguments,
+            [switch]$a = $all,
+            [switch]$l = $long,
+            [switch]$time
         )
         $timestyle = '+󰨲 %m/%d/%y 󰅐 %H:%M'
-        if ($a) { $Arguments += '-a' }
-        if ($l) { $Arguments += '-l' }
+        if ($all) { $Arguments += '--all' }
+        if ($long) { $Arguments += '--long' }
         if ($time) { $Arguments += '--time-style', $timestyle }
 
         $Arguments += ( '--group-directories-first', '--git-repos', '--git', '--hyperlink', '--follow-symlinks', '--no-quotes', '--icons' )
@@ -53,10 +53,6 @@ if (Test-CommandExists eza) {
 
     function l {
         [CmdletBinding()]
-        param (
-            [Parameter(ValueFromRemainingArguments = $true)]
-            [string[]]$Arguments
-        )
         $Arguments += ( '-a', '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' )
         Get-ChildItemPretty @Arguments
     }
@@ -64,26 +60,21 @@ if (Test-CommandExists eza) {
     function lt {
         [CmdletBinding()]
         param (
-            [Parameter(Position = 0)]
-            [int]$L = 1,
             [Parameter(ValueFromRemainingArguments = $true)]
-            [string[]]$Arguments
+            [int]$L = 1
         )
-        $Arguments += ( '-n', '--tree', '-L', $L )
+        $Level = $L
+        $Arguments += ( '-n', '--tree', '-L', $Level )
         Get-ChildItemPretty @Arguments
     }
 
     function ll {
         [CmdletBinding()]
-        param (
-            [Parameter(ValueFromRemainingArguments = $true)]
-            [string[]]$Arguments
-        )
         $Arguments += ( '-a', '-l', '--flags', '-h' )
         Get-ChildItemPretty -time @Arguments
     }
 
-    Set-Alias -Name ls -Value Get-ChildItemPretty
+    Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
 }
 
 
