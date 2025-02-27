@@ -1420,7 +1420,7 @@ clink --version
 |	time=1702558992
 |link installscripts
 |	time=1702558998
-ps
+|s
 |	time=1702559019
 ps 
 |	time=1702588758
@@ -4487,7 +4487,7 @@ choco install powershell -force
 |	time=1736044761
 choco list
 |	time=1736044769
-c
+|
 |	time=1736044775
 |wsh
 |	time=1736044879
@@ -4825,15 +4825,15 @@ winget
 |	time=1740448888
 scoop
 |	time=1740448905
-scoop update *
+|coop update *
 |	time=1740448924
 |nv
 |	time=1740448941
-clink
+|link
 |	time=1740448951
 clink ech8
 |	time=1740448954
-clink echo
+|link echo
 |	time=1740448990
 clink installscripts
 |	time=1740448996
@@ -4937,7 +4937,7 @@ rm omp.json
 |	time=1740449819
 clink config prompt show oh-my-posh
 |	time=1740449826
-cd
+|d
 |	time=1740450180
 |wsh
 |	time=1740450330
@@ -4956,3 +4956,17 @@ q
 setx OPENAI_API_KEY "sk-ndpRWSijLaMwIjYxBitff5tf-4zlQsAojWtSsF0aAcT3BlbkFJ12oefyMqUoQkccMm3HnWeRjRHwTrWfCnQ_77Y-MIQA"
 |	time=1740466587
 env
+|	time=1740559361
+clink
+|	time=1740559365
+clink echo
+|	time=1740560259
+ps
+|	time=1740560263
+cd
+|	time=1740560269
+btop
+|	time=1740561537
+scoop update *
+|	time=1740561593
+c

@@ -32,46 +32,46 @@ if (Test-CommandExists eza) {
         Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
         Alias: ls, ll, la, l
     #>
+
+
         [CmdletBinding()]
         param (
             [Parameter(ValueFromRemainingArguments = $true)]
-            [string[]]$Arguments,
-            [switch]$a = $all,
-            [switch]$l = $long,
-            [switch]$time
+            [string[]]$Arguments
         )
-        $timestyle = '+󰨲 %m/%d/%y 󰅐 %H:%M'
-        if ($all) { $Arguments += '--all' }
-        if ($long) { $Arguments += '--long' }
-        if ($time) { $Arguments += '--time-style', $timestyle }
+        if ($a -or $all) { $Arguments += '--all' }
+        if ($l -or $long) { $Arguments += '--long' }
 
         $Arguments += ( '--group-directories-first', '--git-repos', '--git', '--hyperlink', '--follow-symlinks', '--no-quotes', '--icons' )
         Write-Host ' '
         eza @Arguments
         Write-Host ' '
+        return
     }
 
     function l {
         [CmdletBinding()]
         $Arguments += ( '-a', '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' )
         Get-ChildItemPretty @Arguments
+        return
     }
 
     function lt {
         [CmdletBinding()]
         param (
-            [Parameter(ValueFromRemainingArguments = $true)]
             [int]$L = 1
         )
-        $Level = $L
-        $Arguments += ( '-n', '--tree', '-L', $Level )
+        $Arguments += ( '-n', '--tree', '-L', $L )
         Get-ChildItemPretty @Arguments
+        return
     }
 
     function ll {
+        $timestyle = '+󰨲 %m/%d/%y 󰅐 %H:%M'
         [CmdletBinding()]
-        $Arguments += ( '-a', '-l', '--flags', '-h' )
-        Get-ChildItemPretty -time @Arguments
+        $Arguments += ( '-a', '-l', '--flags', '-h', '--time-style', $timestyle )
+        Get-ChildItemPretty @Arguments
+
     }
 
     Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
