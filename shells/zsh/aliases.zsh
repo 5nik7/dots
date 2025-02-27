@@ -53,7 +53,7 @@ if cmd_exists eza; then
         eza --group-directories-first --git-repos --git --icons -n --tree -L "$level"
         linebreak
     }
-    alias ls="$(eza --icons "$@")"
+    alias ls='eza'
 fi
 
 if cmd_exists yazi; then
