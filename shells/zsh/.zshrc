@@ -40,6 +40,7 @@ fpath=( $ZFUNC "${fpath[@]}" )
 
 addir "${HOME}/.local/bin"
 extend_path "${HOME}/.local/bin"
+extend_path "${HOME}/src/nerd-fonts/bin/scripts"
 
 prepend_path "${DOTSBIN}"
 
