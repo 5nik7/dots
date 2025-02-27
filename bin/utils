@@ -124,15 +124,15 @@ function print_in_black() {
 }
 
 function print_error() {
-  print_in_red "\n [✖] $1\n"
+  print_in_red "\n [✖] $1"
 }
 
 function print_success() {
-  print_in_green "\n [] $1\n"
+  print_in_green "\n [] $1"
 }
 
 function print_warning() {
-  print_in_yellow "\n [!] $1\n"
+  print_in_yellow "\n [!] $1"
 }
 
 function success() {
