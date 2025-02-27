@@ -33,14 +33,24 @@ alias "........"="cd ../../../../../../.."
 alias ".d"="cd $DOTS"
 
 if cmd_exists eza; then
-    function ll() {
-        linebreak
-        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style '+󰨲 %m/%d/%y 󰅐 %H:%M'
-        linebreak
-    }
+    timestyle = '+󰨲 %m/%d/%y 󰅐 %H:%M'
     function l() {
         linebreak
         eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+        linebreak
+    }
+      function ll() {
+        linebreak
+        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style $timestyle
+        linebreak
+    }
+      function lt() {
+        local level="$1"
+        if [ "$1" = "" ]; then
+            level=1
+        fi
+        linebreak
+        eza --group-directories-first --git-repos --git --icons -n --tree -L "$level"
         linebreak
     }
 fi
