@@ -5,7 +5,8 @@ function Import-PSMod {
         $Name,
         [switch]$Core,
         [switch]$Desktop,
-        [switch]$Local
+        [switch]$Local,
+        [string]$Version
     )
     if ($Core -and $PSEdition -ne 'Core') {
         return
@@ -24,8 +25,13 @@ function Import-PSMod {
     }
     if ($Local) {
         $LocalModulesDir = "$env:PSDOT/Modules"
-        $LocalModuleParentDir = "$LocalModulesDir/$Name"
-        $LocalModulePath = "$LocalModuleParentDir/$Name.psm1"
+        if ($Version) {
+            $LocalModuleRootDir = "$LocalModulesDir/$Name/$Version"
+        }
+        else {
+            $LocalModuleRootDir = "$LocalModulesDir/$Name"
+        }
+        $LocalModulePath = "$LocalModuleRootDir/$Name.psm1"
         if (Test-Path $LocalModulePath) {
             Import-Module $LocalModulePath
         }
@@ -42,7 +48,7 @@ Import-PSMod -Core -Name "Microsoft.WinGet.CommandNotFound"
 Import-PSMod -Local -Name "powernerd"
 Import-PSMod -Local -Name "winwal"
 Import-PSMod -Local -Name "lab"
-Import-PSMod -Local -Name "psdots"
+Import-PSMod -Local -Name "PSDots" -Version "0.0.1"
 
 if ((Get-Module winwal -ListAvailable) -and (Test-Path "$env:PSMODS\winwal\colortool")) {
     Add-Path -Path "$env:PSMODS\winwal\colortool"
