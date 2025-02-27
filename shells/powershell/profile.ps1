@@ -18,6 +18,17 @@ foreach ( $includeFile in ("util", "env", "functions", "path", "aliases", "modul
     . "$env:PSCOMPONENT\$includeFile.ps1"
 }
 
+$powersecrets = "$Env:DOTS\secrets\secrets.ps1"
+if (Test-Path "$powersecrets") {
+    Unblock-File "$powersecrets"
+    . "$powersecrets"
+}
+
+if ($fzFile) {
+    Unblock-File "$env:PSCOMPONENT\$FzFile.ps1"
+    . "$env:PSCOMPONENT\$FzFile.ps1"
+}
+
 $fzFile = if (Test-CommandExists fzf) { 'fzf' }
 if ($fzFile) {
     Unblock-File "$env:PSCOMPONENT\$FzFile.ps1"

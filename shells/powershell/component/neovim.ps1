@@ -1,11 +1,11 @@
-﻿function Invoke-Nvim {
-    param (
-        [Parameter(Mandatory=$false, ValueFromRemainingArguments=$true)]
-        [string[]]$args
-    )
-    nvim  $args
-    Write-Host -NoNewLine "`e[5 q"
-}
+﻿# function Invoke-Nvim {
+#     param (
+#         [Parameter(Mandatory=$false, ValueFromRemainingArguments=$true)]
+#         [string[]]$args
+#     )
+#     nvim  $args
+#     Write-Host -NoNewLine "`e[5 q"
+# }
 
 $env:NEOVIMCONFIG = $env:LOCALAPPDATA + "\nvim"
 $env:NEOVIMDATA = $env:LOCALAPPDATA + "\nvim-data"
