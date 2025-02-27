@@ -39,8 +39,9 @@ if cmd_exists eza; then
         linebreak
     }
       function ll() {
+        local timestyle="'+󰨲 %m/%d/%y 󰅐 %H:%M'"
         linebreak
-        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style '+󰨲 %m/%d/%y 󰅐 %H:%M'
+        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style $timestyle
         linebreak
     }
       function lt() {
