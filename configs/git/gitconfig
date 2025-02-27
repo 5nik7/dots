@@ -1,7 +1,3 @@
-[user]
-    name = njen
-    email = contact@njen.io
-
 [color]
     ui = true
 
@@ -136,17 +132,23 @@
 
 [core]
     pager = delta
-	editor = code
-	symlinks = true
-	autocrlf = false
-	longpaths = true
+    editor = code
+    symlinks = true
+    autocrlf = false
+    longpaths = true
+
+#  --- Personal settings ---
+
+[user]
+    name = njen
+    email = contact@njen.io
 [github]
     user = 5nik7
 [init]
-	defaultBranch = main
+    defaultBranch = main
 [credential "https://github.com"]
-	helper =
-	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+    helper =
+    helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
 [credential "https://gist.github.com"]
-	helper =
-	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+    helper =
+    helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
