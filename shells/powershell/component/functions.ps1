@@ -223,7 +223,7 @@ function Get-Functions {
 
 
 # Editor Configuration
-$EDITOR = if (Test-CommandExists code) { 'code' }
+$EDITOR = if (Test-CommandExists code) { 'nvim' }
 elseif (Test-CommandExists code) { 'nvim' }
 elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }

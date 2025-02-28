@@ -35,12 +35,6 @@ if ($fzFile) {
     . "$env:PSCOMPONENT\$FzFile.ps1"
 }
 
-$neovimFile = if (Test-CommandExists nvim) { 'neovim' }
-if ($neovimFile) {
-    Unblock-File "$env:PSCOMPONENT\$neovimFile.ps1"
-    . "$env:PSCOMPONENT\$neovimFile.ps1"
-}
-
 if ($env:isReloading) {
     Clear-Host
     Write-Box -border "DarkGray" -color "Green" -text "Profile reloaded."
