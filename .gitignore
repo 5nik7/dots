@@ -20,8 +20,6 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
-#shhh
-# secret*
 #pslab
 lab/
 #clinky
