@@ -2,7 +2,7 @@
 
 # 󰄰  󱪼 󱓼 󰨔 󰑤 󱂎 󱜽 󱁾 󱁺 󱉅 󱉃 󱏷 󱈺 󱏴 󱉋   󰂖    ⚡      󰜥 󱙧 󰓎  󰂓         
 #                        󰇙
-#       󰽪
+#    󰽪   
 
 command_timeout = 10000
 add_newline = true
@@ -71,20 +71,21 @@ style = 'black'
 "~/Music" = " Music"
 "~/Documents" = " Documents"
 "~/Downloads" = "󰇚 Downloads"
-"~/dots" = "󱁾 dots"
+"~/dots" = "󱙧 "
+# "dots" = "    dots"
 "~/dev" = " dev"
-"C:/" = "/c/"
+"C:/" = "/"
 # "/mnt/c/" = "󰖳 "
 
 [directory]
-# format = '[$path]($style) '
+format = '[$path]($style) '
 repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
 style = 'blue'
 before_repo_root_style = 'blue'
 repo_root_style = 'bright-blue bold'
 truncation_length = 10
 # truncation_symbol = "…/"
-# truncate_to_repo = false
+truncate_to_repo = false
 # truncate_to_repo = true
 # use_os_path_sep = true
 use_os_path_sep = false
