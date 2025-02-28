@@ -45,8 +45,8 @@ show_always = true
 
 [hostname]
 ssh_only = false
-format = '([@](bright-cyan)[$hostname](bright-cyan))[:](bright-black)([$ssh_symbol ](style))'
-style = "bright-cyan"
+format = '([@](white)[$hostname](white))[:](white dimmed)([$ssh_symbol ](style))'
+style = "white"
 # trim_at = '.companyname.com'
 trim_at = "-"
 disabled = false
