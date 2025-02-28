@@ -1212,7 +1212,7 @@ help
 |	time=1697263200
 |
 |	time=1697263202
-exir
+|xir
 |	time=1697263214
 |d
 |	time=1697263240
@@ -4949,7 +4949,7 @@ ls
 |	time=1740450544
 |nv
 |	time=1740450555
-pwsh
+|wsh
 |	time=1740450930
 q
 |	time=1740466583
@@ -4970,3 +4970,7 @@ btop
 scoop update *
 |	time=1740561593
 c
+|	time=1740667170
+pwsh
+|	time=1740667398
+exir
