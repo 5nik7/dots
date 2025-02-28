@@ -4,17 +4,12 @@
 #  _ / /_____/ / __  / _, _/ /___
 # (_)____/____/_/ /_/_/ |_|\____/
 
-ZSHDOT="$HOME/.config/zsh"
-ZFUNC="$ZSHDO/zfunc"
-DOTS="$HOME/dots"
-DOTSBIN="$DOTS/bin"
-backups="$HOME/.backups"
+export ZSHDOT="$HOME/.config/zsh"
+export ZFUNC="$ZSHDO/zfunc"
+export ZDOTS="$HOME/dots"
+export ZDOTSBIN="$DOTS/bin"
+export Zbackups="$HOME/.backups"
 
-export $ZSHDOT
-export $ZFUNC
-export $DOTS
-export $DOTSBIN
-export $backups
 
 function zource() {
 	if [ -f "$1" ]; then
