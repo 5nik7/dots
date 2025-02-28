@@ -5,6 +5,10 @@
 [submodule "androidots"]
 	path = androidots
 	url = https://github.com/5nik7/androidots.git
+<<<<<<< HEAD
 [submodule "secrets"]
+=======
+[submodule "secrets"]
+>>>>>>> 7c5be8e (Update @ 02-28-2025 07:40)
 	path = secrets
 	url = https://github.com/5nik7/secrets.git
