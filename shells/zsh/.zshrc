@@ -4,10 +4,17 @@
 #  _ / /_____/ / __  / _, _/ /___
 # (_)____/____/_/ /_/_/ |_|\____/
 
-export ZSHDOT="${HOME}/.config/zsh"
-export ZFUNC="${ZSHDOT}/zfunc"
-export DOTS="${HOME}/dots"
-export DOTSBIN="${DOTS}/bin"
+ZSHDOT="$HOME/.config/zsh"
+ZFUNC="$ZSHDO/zfunc"
+DOTS="$HOME/dots"
+DOTSBIN="$DOTS/bin"
+backups="$HOME/.backups"
+
+export $ZSHDOT
+export $ZFUNC
+export $DOTS
+export $DOTSBIN
+export $backups
 
 function zource() {
 	if [ -f "$1" ]; then
@@ -24,13 +31,12 @@ function zieces() {
   fi
 }
 
-# zieces "zutil"
+zieces "zutil"
 zieces "functions"
 zieces "options"
 zieces "plugins"
 zieces "completions"
 zieces "aliases"
-# zieces "zbug"
 
 if is_installed fzf; then
   zieces "fzf"
@@ -38,11 +44,13 @@ fi
 
 fpath=( $ZFUNC "${fpath[@]}" )
 
-addir "${HOME}/.local/bin"
-extend_path "${HOME}/.local/bin"
-extend_path "${HOME}/src/nerd-fonts/bin/scripts"
+addir "$HOME/.local/bin"
+addir "$backups"
 
-prepend_path "${DOTSBIN}"
+extend_path "$HOME/.local/bin"
+extend_path "$HOME/src/nerd-fonts/bin/scripts"
+
+prepend_path "$DOTSBIN"
 
 if is_installed zoxide; then
   eval "$(zoxide init zsh)"

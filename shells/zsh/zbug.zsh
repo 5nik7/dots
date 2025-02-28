@@ -1,1 +1,0 @@
-alias ztest='echo "Ok."'
