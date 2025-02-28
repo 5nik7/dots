@@ -21,7 +21,7 @@ rad.json
 #Test results file
 TestResults.xml
 #shhh
-secret/
+# secret*
 #pslab
 lab/
 #clinky
