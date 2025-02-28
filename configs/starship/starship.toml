@@ -138,8 +138,6 @@ Windows = ""
 
 [directory.substitutions]
 # '~/Documents/' = ' '
-# '/' = ''
-# '/' = ''
 # "/" = ""
 "C:/" = "/mnt/c/"
 # "~" = " "
