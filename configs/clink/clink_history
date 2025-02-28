@@ -4741,7 +4741,7 @@ ipconfig
 |	time=1740096372
 |s
 |	time=1740096376
-.d
+|d
 |	time=1740096380
 cd dots
 |	time=1740096385
@@ -4971,6 +4971,10 @@ scoop update *
 |	time=1740561593
 c
 |	time=1740667170
-pwsh
+|wsh
 |	time=1740667398
 exir
+|	time=1740701033
+.d
+|	time=1740701037
+pwsh

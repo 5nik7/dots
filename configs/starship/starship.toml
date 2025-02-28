@@ -55,6 +55,7 @@ ssh_only = true
 format = '([@](white)[$hostname:](white bold))([$ssh_symbol ](white))(style)'
 style = "white"
 # trim_at = '.companyname.com'
+trim_at = "-"
 disabled = false
 ssh_symbol = "  "
 
@@ -137,23 +138,22 @@ Windows = ""
 # disabled = true
 
 [directory.substitutions]
-# '~/Documents/' = ' '
 # "/" = ""
 "C:/" = "/mnt/c/"
 # "~" = " "
 # "~/" = "󰮧 "
-# "~" = "󰮧 "
 "/mnt/c/" = "󰖳 "
 "~/Documents" = " Documents"
 "~/Downloads" = "󰮏 Downloads"
 "~/dev" = " dev"
-# "dots" = " dots"
-# "dots" = "󰓎 dots"
-"dots" = "󰓎 dots"
+# "androidots" = "adroid"
+# "androidots" = "󰓎 adroidots"
+
+"./dots" = "󰓎 dots"
+# "/androidots" = "󰓎 adroidots"
 # "dots" = "󱁾 dots"
 "~/Desktop" = " "
 "~/Videos" = " "
-# "~/Projects/" = " "
 "~/Projects" = "  Projects"
 "~/Pictures" = "  Pictures"
 "~/Music" = " "
@@ -163,19 +163,20 @@ Windows = ""
 
 [directory]
 format = '[$path]($style)[$read_only]($read_only_style) '
-repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+repo_root_format = '[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
 style = 'blue'
 before_repo_root_style = 'blue'
 repo_root_style = 'bright-blue bold'
-truncation_length = 0
-# truncation_symbol = "…/"
+truncation_length = 3
+truncation_symbol = "…/"
 # home_symbol = '~'
-truncate_to_repo = true
+# truncate_to_repo = false
+# truncate_to_repo = true
 # use_os_path_sep = true
 use_os_path_sep = false
 use_logical_path = true
-read_only = " ◈"
-read_only_style = 'bright-blue dimmed'
+# read_only = " ◈"
+# read_only_style = 'bright-blue dimmed'
 
 [line_break]
 disabled = false
