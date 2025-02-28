@@ -2,6 +2,8 @@
 
 # 󰄰  󱪼 󱓼 󰨔 󰑤 󱂎 󱜽 󱁾 󱁺 󱉅 󱉃 󱏷 󱈺 󱏴 󱉋   󰂖    ⚡      󰜥 󱙧 󰓎  󰂓         
 #                        󰇙
+#       󰽪
+
 command_timeout = 10000
 add_newline = true
 
@@ -24,15 +26,6 @@ continuation_prompt = '[│](black)'
 success_symbol = '[](green)'
 error_symbol = '[](red)'
 vimcmd_symbol = '[:](black)'
-# vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[󱓜](black)'
-# vimcmd_symbol = '[󱂍](black)'
-# vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[](black)'
-# vimcmd_symbol = '[󰽪](black)'
-# vimcmd_symbol = '[ ](black)'
 format = '$symbol '
 
 [cmd_duration]
@@ -47,13 +40,13 @@ style_root = 'white bold'
 format = '[$user]($style)'
 disabled = true
 show_always = true
-aliases = { "Administrator" = "󱔏" }
+# aliases = { "Administrator" = "󱔏" }
 # aliases = { "Administrator" = "admin" }
 
 [hostname]
-ssh_only = true
-format = '([@](white)[$hostname:](white bold))([$ssh_symbol ](white))(style)'
-style = "white"
+ssh_only = false
+format = '([@](bright-cyan)[$hostname](bright-cyan))[:](bright-black)([$ssh_symbol ](style))'
+style = "bright-cyan"
 # trim_at = '.companyname.com'
 trim_at = "-"
 disabled = false
@@ -69,6 +62,100 @@ disabled = true
 [fill]
 symbol = ''
 style = 'black'
+
+
+[directory.substitutions]
+"~/Desktop" = " Desktop"
+"~/Videos" = " Videos"
+"~/Pictures" = " Pictures"
+"~/Music" = " Music"
+"~/Documents" = " Documents"
+"~/Downloads" = "󰇚 Downloads"
+"~/dots" = "󱁾 dots"
+"~/dev" = " dev"
+"C:/" = "/c/"
+# "/mnt/c/" = "󰖳 "
+
+[directory]
+# format = '[$path]($style) '
+repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
+style = 'blue'
+before_repo_root_style = 'blue'
+repo_root_style = 'bright-blue bold'
+truncation_length = 10
+# truncation_symbol = "…/"
+# truncate_to_repo = false
+# truncate_to_repo = true
+# use_os_path_sep = true
+use_os_path_sep = false
+use_logical_path = true
+# use_logical_path = false
+# read_only = " 󰒙"
+read_only = " 󰳌"
+# read_only = " "
+# read_only = " ◈"
+read_only_style = 'bright-white dimmed'
+
+[line_break]
+disabled = false
+
+[git_branch]
+symbol = ''
+format = '[($symbol$branch )]($style)'
+style = 'bright-black'
+
+[git_status]
+format = "([\\[](purple)[$all_status]($style)[\\]](purple))"
+style = "purple"
+# deleted = ""
+# deleted = "󰅖"
+# deleted = "󰖭"
+deleted = ""
+# deleted = "󰽪"
+stashed = '󰇁'
+ahead = "⇡"
+behind = "⇣"
+up_to_date = ""
+diverged = "⇕"
+# conflicted = "󰦒"
+conflicted = "="
+renamed = "»"
+modified = "!"
+staged = "+"
+# staged = "󰐕"
+# staged = ""
+# staged = ""
+# untracked = ""
+untracked = "?"
+typechanged = ""
+ignore_submodules = false
+disabled = false
+
+[nodejs]
+detect_files = ['package.json']
+detect_folders = []
+symbol = '󰎙 '
+style = 'green'
+version_format = '${raw}'
+format = '([](bright-black) [${symbol}([$version](bright-green)) ]($style))'
+disabled = false
+
+[conda]
+symbol = '🅒 '
+style = 'bright-green'
+ignore_base = true
+format = '([](bright-black) [$symbol$environment ]($style))'
+
+[python]
+format = '([](bright-black) [${symbol}([$version](green)) ]($style))'
+style = 'bright-green'
+symbol = '󰌠 '
+pyenv_version_name = true
+
+[rust]
+format = '([](bright-black) [${symbol}([$version](red)) ]($style))'
+style = 'bright-red'
+symbol = ' '
 
 [os]
 format = '[$symbol]($style)'
@@ -125,111 +212,6 @@ Windows = ""
 # Windows = "󰖳 "
 # Windows = "󰍲 "
 # Windows = " "
-
-# [shell]
-# format = '[$indicator]($style)'
-# fish_indicator = ''
-# powershell_indicator = 'PS'
-# bash_indicator = ''
-# zsh_indicator = ''
-# cmd_indicator = ''
-# unknown_indicator = ''
-# style = 'bg:none fg:cyan'
-# disabled = true
-
-[directory.substitutions]
-"~/Desktop" = " Desktop"
-"~/Videos" = " Videos"
-"~/Pictures" = " Pictures"
-"~/Music" = " Music"
-"~/Documents" = " Documents"
-"~/Downloads" = "󰇚 Downloads"
-"~/dots" = "󱁾 dots"
-"~/dev" = " dev"
-"C:/" = "/mnt/c/"
-"/mnt/c/" = " "
-
-[directory]
-# format = '[$path]($style) '
-repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) '
-style = 'blue'
-before_repo_root_style = 'blue'
-repo_root_style = 'bright-blue bold'
-truncation_length = 10
-# truncation_symbol = "…/"
-# home_symbol = '󰜥'
-# truncate_to_repo = false
-# truncate_to_repo = true
-# use_os_path_sep = true
-use_os_path_sep = false
-use_logical_path = true
-# use_logical_path = false
-read_only = " 󰒙"
-# read_only = " 󰳌"
-# read_only = " "
-# read_only = " ◈"
-# read_only_style = 'bright-blue dimmed'
-
-[line_break]
-disabled = false
-
-[git_branch]
-symbol = ''
-format = '[($symbol$branch )]($style)'
-style = 'bright-black'
-
-[git_status]
-format = "([\\[](purple)[$all_status]($style)[\\]](purple))"
-style = "purple"
-# deleted = ""
-# deleted = "󰅖"
-# deleted = "󰖭"
-deleted = ""
-# deleted = "󰽪"
-stashed = '󰇁'
-ahead = "⇡"
-behind = "⇣"
-up_to_date = ""
-diverged = "⇕"
-# conflicted = "󰦒"
-conflicted = "="
-renamed = "»"
-modified = "!"
-staged = "+"
-# staged = "󰐕"
-# staged = ""
-# staged = ""
-untracked = ""
-# untracked = "?"
-typechanged = ""
-ignore_submodules = false
-disabled = false
-
-[nodejs]
-detect_files = ['package.json']
-detect_folders = []
-symbol = '󰎙 '
-style = 'green'
-version_format = '${raw}'
-format = '([](bright-black) [${symbol}([$version](bright-green)) ]($style))'
-disabled = false
-
-[conda]
-symbol = '🅒 '
-style = 'bright-green'
-ignore_base = true
-format = '([](bright-black) [$symbol$environment ]($style))'
-
-[python]
-format = '([](bright-black) [${symbol}([$version](green)) ]($style))'
-style = 'bright-green'
-symbol = '󰌠 '
-pyenv_version_name = true
-
-[rust]
-format = '([](bright-black) [${symbol}([$version](red)) ]($style))'
-style = 'bright-red'
-symbol = ' '
 
 [package]
 symbol = "󰏗 "
@@ -335,3 +317,14 @@ symbol = " "
 
 [ocaml]
 symbol = " "
+
+# [shell]
+# format = '[$indicator]($style)'
+# fish_indicator = ''
+# powershell_indicator = 'PS'
+# bash_indicator = ''
+# zsh_indicator = ''
+# cmd_indicator = ''
+# unknown_indicator = ''
+# style = 'bg:none fg:cyan'
+# disabled = true

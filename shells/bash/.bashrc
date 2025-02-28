@@ -1,7 +1,7 @@
 #!/bin/bash
 # [[ "$-" != *i* ]] && return
 # Shell Options
-shopt -s nocaseglobq
+shopt -s nocaseglob
 shopt -s checkwinsize
 # History Options
 shopt -s histappend
@@ -84,3 +84,7 @@ export FZF_DEFAULT_OPTS="--height 60% \
 source <(fzf --bash)
 
 set bell-style none
+
+# 33 is yellow, 32 is green, 31 is red, 36 is cyan, 34 is blue, 35 is magenta, 37 is white, 30 is black, 39 is default
+# export TITLEPREFIX='BASH'
+# export PS1='\[\033]0;$TITLEPREFIX: $PWD\007\]\n\[\033[32m\]\u@\h \[\033[34m\]\w\[\033[30m\]`__git_ps1`\[\033[0m\]\n\]\[\033[39m\] '

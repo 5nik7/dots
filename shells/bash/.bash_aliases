@@ -18,8 +18,6 @@ alias v='nvim'
 
 alias g='git'
 
-alias upd='pkg update && pkg upgrade -y'
-
 alias path='echo $PATH | tr ":" "\n"'
 
 alias ".."="cd .."
