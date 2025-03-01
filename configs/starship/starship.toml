@@ -71,11 +71,11 @@ style = 'black'
 "~/Music" = " Music"
 "~/Documents" = " Documents"
 "~/Downloads" = "󰇚 Downloads"
-"~/dots" = "󱙧 "
+"~/dots" = "󱙧 dots"
 # "dots" = "    dots"
 "~/dev" = " dev"
-"C:/" = "/"
-# "/mnt/c/" = "󰖳 "
+"C:/" = "/mnt/c/"
+"/mnt/c/" = "/"
 
 [directory]
 format = '[$path]($style) '
