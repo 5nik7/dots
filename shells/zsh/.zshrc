@@ -4,25 +4,23 @@
 #  _ / /_____/ / __  / _, _/ /___
 # (_)____/____/_/ /_/_/ |_|\____/
 
-export ZSHDOT="$HOME/.config/zsh"
-export ZFUNC="$ZSHDO/zfunc"
-export ZDOTS="$HOME/dots"
-export ZDOTSBIN="$DOTS/bin"
-export Zbackups="$HOME/.backups"
+export DOTS="${HOME}/dots"
+export ZSHDOT="${DOTS}/shells/zsh"
+export ZFUNC="${ZSHDOT}/zfunc"
+export DOTSBIN="${DOTS}/bin"
+export backups="${HOME}/.backups"
 
 
 function zource() {
-	if [ -f "$1" ]; then
-		source "$1"
+	if [ -f "${1}" ]; then
+		source "${1}"
 	fi
 }
 
-zource "${DOTSBIN}/utils"
-
 function zieces() {
-  local zfile="${ZSHDOT}/$1.zsh"
-  if [ -f "$zfile" ]; then
-    source "$zfile"
+  zfile="${ZSHDOT}/${1}.zsh"
+  if [ -f "${zfile}" ]; then
+    source "${zfile}"
   fi
 }
 
@@ -33,19 +31,15 @@ zieces "plugins"
 zieces "completions"
 zieces "aliases"
 
-if is_installed fzf; then
-  zieces "fzf"
-fi
+fpath=( "${ZFUNC}" "${fpath[@]}" )
 
-fpath=( $ZFUNC "${fpath[@]}" )
+addir "${HOME}/.local/bin"
+addir "${backups}"
 
-addir "$HOME/.local/bin"
-addir "$backups"
+extend_path "${HOME}/.local/bin"
+extend_path "${HOME}/src/nerd-fonts/bin/scripts"
 
-extend_path "$HOME/.local/bin"
-extend_path "$HOME/src/nerd-fonts/bin/scripts"
-
-prepend_path "$DOTSBIN"
+prepend_path "${DOTSBIN}"
 
 if is_installed zoxide; then
   eval "$(zoxide init zsh)"

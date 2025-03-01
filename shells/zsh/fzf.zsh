@@ -46,7 +46,7 @@ export FZF_DEFAULT_OPTS="--height 60% \
 --preview '$CAT_PREVIEWER {}'"
 
 function finst() {
- local fzpkgs="$(pkg list-all | tr '/' ' '  | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
+ fzpkgs="$(pkg list-all | tr '/' ' '  | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
  if [ -z "$fzpkgs" ]; then
    echo "No package selected."
  else
@@ -55,3 +55,4 @@ function finst() {
 }
 
 source <(fzf --zsh)
+
