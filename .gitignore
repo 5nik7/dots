@@ -28,5 +28,4 @@ lab/
 #clinky
 configs/clink/clink_errorlevel_*
 configs/clink/clink_history_*
-configs/clink/clink_history
 configs/clink/clink.log
