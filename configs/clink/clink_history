@@ -4539,7 +4539,7 @@ explorer.exe .
 |	time=1737239005
 |
 |	time=1737243807
-ll
+|l
 |	time=1737243827
 |
 |	time=1738033045
@@ -4945,7 +4945,7 @@ clink config prompt show oh-my-posh
 |	time=1740450542
 l
 |	time=1740450543
-ls
+|s
 |	time=1740450544
 |nv
 |	time=1740450555
@@ -4969,7 +4969,7 @@ btop
 |	time=1740561537
 scoop update *
 |	time=1740561593
-c
+|
 |	time=1740667170
 |wsh
 |	time=1740667398
@@ -4981,4 +4981,12 @@ exir
 |	time=1740757278
 pash
 |	time=1740757280
+|wsh
+|	time=1740795111
+c
+|	time=1740795114
+ll
+|	time=1740795116
+ls
+|	time=1740795123
 pwsh
