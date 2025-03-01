@@ -26,3 +26,6 @@ lab/
 configs/clink/clink_errorlevel_*
 configs/clink/clink_history_*
 configs/clink/clink.log
+configs/clink/clink_history
+configs/clink/clink_history_*
+configs/clink/cclink_errorlevel_9A0C.txt
