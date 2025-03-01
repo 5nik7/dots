@@ -41,6 +41,9 @@ extend_path "${HOME}/src/nerd-fonts/bin/scripts"
 
 prepend_path "${DOTSBIN}"
 
+export SHHHH="${DOTS}/secrets"
+zource "${SHHHH}/secrets.sh"
+
 if is_installed zoxide; then
   eval "$(zoxide init zsh)"
   alias cd='z'
