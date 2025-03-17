@@ -8,7 +8,7 @@ else
    CAT_PREVIEWER='cat'
 fi
 
-FZF_COLORS="bg+:0,\
+FZF_COLORS='bg+:0,\
 bg:-1,\
 spinner:4,\
 hl:12,\
@@ -29,7 +29,7 @@ preview-bg:-1,\
 preview-label:0,\
 label:7,\
 query:13,\
-input-border:4"
+input-border:4'
 
 export FZF_DEFAULT_OPTS="--height 60% \
 --border sharp \
