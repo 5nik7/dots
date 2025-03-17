@@ -31,6 +31,10 @@ zieces "plugins"
 zieces "completions"
 zieces "aliases"
 
+if is_installed fzf; then
+  zieces "fzf"
+fi
+
 fpath=( "${ZFUNC}" "${fpath[@]}" )
 
 addir "${HOME}/.local/bin"
