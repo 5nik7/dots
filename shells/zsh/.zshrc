@@ -40,17 +40,17 @@ if is_installed fzf; then
   fi
 
   export FZF_DEFAULT_OPTS="--height 60% \
-    --border sharp \
-    --layout reverse \
-    --info right \
-    --prompt ' ' \
-    --pointer '┃' \
-    --marker '│' \
-    --separator '──' \
-    --scrollbar '│' \
-    --preview-window='border-sharp' \
-    --preview-window='right:65%' \
-    --preview '$CAT_PREVIEWER {}'"
+--border sharp \
+--layout reverse \
+--info right \
+--prompt ' ' \
+--pointer '┃' \
+--marker '│' \
+--separator '──' \
+--scrollbar '│' \
+--preview-window='border-sharp' \
+--preview-window='right:65%' \
+--preview '$CAT_PREVIEWER {}'"
 
   source <(fzf --zsh)
 
