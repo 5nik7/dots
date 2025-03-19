@@ -1,5 +1,3 @@
-#!/bin/bash
-# [[ "$-" != *i* ]] && return
 # Shell Options
 shopt -s nocaseglob
 shopt -s checkwinsize
@@ -18,72 +16,50 @@ export DOTFILES="$DOTS/configs"
 export DOTSBIN="$DOTS/bin"
 
 function src() {
-    if [ -f "$1" ]; then
+  if [ -f "$1" ]; then
     # shellcheck disable=SC1090
-        source "$1"
-	fi
+    source "$1"
+  fi
 }
 
-src "${HOME}/.bash_functions"
-src "${HOME}/.bash_aliases"
+src "$BASHDOT/utils.bash"
+src "$BASHDOT/functions.bash"
+src "$BASHDOT/aliases.bash"
+
+if cmd_exists fzf; then
+  src "$BASHDOT/fzf.bash"
+fi
 
 extend_path "$DOTSBIN"
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-eval "$(dircolors -b /etc/DIR_COLORS)"
-
-if cmd_exists fd; then
-  export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
+if is_installed zoxide; then
+  eval "$(zoxide init bash)"
+  alias cd='z'
 fi
 
-# if cmd_exists bat; then
-#    CAT_PREVIEWER='bat --style=numbers --color=always --pager=never'
-# else
-#    CAT_PREVIEWER='cat'
-# fi
+if is_installed starship; then
+  eval "$(starship init bash)"
+fi
 
-FZF_COLORS="bg+:0,\
-bg:-1,\
-spinner:4,\
-hl:7:underline,\
-fg:8,\
-header:3,\
-info:8,\
-pointer:6,\
-marker:14,\
-fg+:6,\
-prompt:2,\
-hl+:10:underline,\
-gutter:-1,\
-selected-bg:0,\
-separator:0,\
-preview-border:8,\
-border:8,\
-preview-bg:-1,\
-preview-label:0,\
-label:7,\
-query:13,\
-input-border:4"
+if is_installed perl; then
 
-export FZF_DEFAULT_OPTS="--height 80% \
---border sharp \
---layout reverse \
---info right \
---color '$FZF_COLORS' \
---prompt '> ' \
---pointer '┃' \
---marker '│' \
---separator '──' \
---scrollbar '│' \
---preview-window='border-sharp' \
---preview-window='right:65%'"
-# --preview '$CAT_PREVIEWER {}'"
+  extend_path "${HOME}/perl5/bin"
 
-# shellcheck disable=SC1090
-source <(fzf --bash)
+  # PATH="/data/data/com.termux/files/home/perl5/bin${PATH:+:${PATH}}"; export PATH;
+  PERL5LIB="/data/data/com.termux/files/home/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"
+  export PERL5LIB
+  PERL_LOCAL_LIB_ROOT="/data/data/com.termux/files/home/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
+  export PERL_LOCAL_LIB_ROOT
+  PERL_MB_OPT="--install_base \"/data/data/com.termux/files/home/perl5\""
+  export PERL_MB_OPT
+  PERL_MM_OPT="INSTALL_BASE=/data/data/com.termux/files/home/perl5"
+  export PERL_MM_OPT
+fi
+# eval "$(dircolors -b /etc/DIR_COLORS)"
 
-set bell-style none
+# set bell-style none
 
 # 33 is yellow, 32 is green, 31 is red, 36 is cyan, 34 is blue, 35 is magenta, 37 is white, 30 is black, 39 is default
 # export TITLEPREFIX='BASH'

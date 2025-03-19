@@ -1,40 +1,22 @@
-#!/usr/bin/env bash
-
-# ORANGE="\033[38;5;216m"
-# PURPLE="\033[38;5;140m"
-# GRAY="\033[0;30m"
-# WHITE="\033[0;37m"
-# RED="\033[0;31m"
-# GREEN="\033[0;32m"
-# BLUE="\033[0;34m"
-# YELLOW="\033[0;33m"
-# CYAN="\033[0;36m"
-# PURPLE="\033[0;35m"
-# BRIGHTGRAY="\033[1;30m"
-# BRIGHTWHITE="\033[1;37m"
-# BRIGHTRED="\033[1;31m"
-# BRIGHTBLUE="\033[1;34m"
-# BRIGHTGREEN="\033[1;32m"
-# BRIGHTYELLOW="\033[1;33m"
-# BRIGHTCYAN="\033[1;36m"
-# BRIGHTPURPLE="\033[1;35m"
-
-# NC="\033[0m"
-
-function rel_path() {
-  echo "$(realpath --no-symlinks $1)" | sed "s|^$HOME/|~/|"
+function rl() {
+  current_shell="$(basename "$SHELL")"
+  if [ "$current_shell" = "zsh" ]; then
+    src ~/.zshrc
+    print_in_yellow "\n ZShell reloaded.\n"
+  elif [ "$current_shell" = "bash" ]; then
+    src ~/.bashrc
+    print_in_yellow "\n Bash reloaded.\n"
+  else
+    print_in_red "\n Shell not supported.\n"
+  fi
 }
+# alias rl='rlp'
 
-function fold1() {
-  echo -e "$(basename "$1")"
-}
-
-function fold2() {
-  echo -e "$(basename "$(dirname "$1")")/$(basename "$1")"
-}
-
-function fold3() {
-  echo -e "$(basename "$(dirname "$(dirname "$1")")")/$(basename "$(dirname "$1")")/$(basename "$1")"
+function src() {
+  if [ -f "$1" ]; then
+    # shellcheck disable=SC1090
+    source "$1"
+  fi
 }
 
 function extend_path() {
@@ -53,10 +35,8 @@ function prepend_path() {
   fi
 }
 
-function zource() {
-  if [ -f "$1" ]; then
-    source "$1"
-  fi
+function cmd_exists() {
+  command -v "$1" &>/dev/null
 }
 
 function addir() {
@@ -65,19 +45,9 @@ function addir() {
   fi
 }
 
-function cmd_exists() {
-  command -v "$1" &>/dev/null
-}
-
 function is_installed() {
   dpkg -s "$1" &>/dev/null
   return $?
-}
-
-function check_dir() {
-  if [ ! -d "$(dirname "$1")" ]; then
-    mkdir -p "$(dirname "$1")"
-  fi
 }
 
 function linebreak() {
@@ -124,19 +94,15 @@ function print_in_black() {
 }
 
 function print_error() {
-  print_in_red "\n [✖] $1"
+  print_in_red "\n [✖] $1\n"
 }
 
 function print_success() {
-  print_in_green "\n [] $1"
+  print_in_green "\n [] $1\n"
 }
 
 function print_warning() {
-  print_in_yellow "\n [!] $1"
-}
-
-function success() {
-  print_in_green "\n Done.\n"
+  print_in_yellow "\n [!] $1\n"
 }
 
 function print_link() {
@@ -151,9 +117,8 @@ function print_link() {
 }
 
 function ask() {
-  local prompt="$1"q
   while true; do
-    read -rp "$prompt [Y/n]: " yn
+    read -rp "$1 [Y/n]: " yn
     case $yn in
     [Yy]*) break ;;
     [Nn]*) exit ;;
@@ -163,9 +128,7 @@ function ask() {
 }
 
 function backup() {
-  local time_stamp
   time_stamp=$(date +"%m-%d-%Y.%H%M")
-  local relfile
   relfile=$(rel_path "$1")
   if [ -f "$1" ]; then
     mv -f "$1" "${1}.${time_stamp}.bak"
@@ -174,23 +137,25 @@ function backup() {
 }
 
 function symlink() {
-  local src
-  src="$(realpath "$1")"
-  local target
+  base="$(realpath "$1")"
   target="$(realpath "$2")"
-  local target_dir
   target_dir="$(realpath --logical "$(dirname "$2")")"
-  if [ -e "$src" ]; then
-    if [ ! -e "$target" ]; then
+  if [ -e "$base" ]; then
+    if [ ! -e "$2" ]; then
       addir "$target_dir"
-      ln -s "$src" "$target"
-      print_link "$src" "$target"
+      ln -s "$base" "$target"
+      print_link "$base" "$target"
     else
       backup "$target"
-      ln -s "$src" "$target"
-      print_link "$src" "$target"
+      ln -s "$base" "$target"
+      print_link "$base" "$target"
     fi
   else
-    echo "$(rel_path "$src") does not exist."
+    echo "$(rel_path "$base") does not exist."
   fi
 }
+
+# settitle ()
+# {
+#   echo -ne "\e]2;$@\a\e]1;$@\a";
+# }

@@ -1,23 +1,23 @@
-ORANGE="\033[38;5;216m"
-PURPLE="\033[38;5;140m"
-GRAY="\033[0;30m"
-WHITE="\033[0;37m"
-RED="\033[0;31m"
-GREEN="\033[0;32m"
-BLUE="\033[0;34m"
-YELLOW="\033[0;33m"
-CYAN="\033[0;36m"
-PURPLE="\033[0;35m"
-BRIGHTGRAY="\033[1;30m"
-BRIGHTWHITE="\033[1;37m"
-BRIGHTRED="\033[1;31m"
-BRIGHTBLUE="\033[1;34m"
-BRIGHTGREEN="\033[1;32m"
-BRIGHTYELLOW="\033[1;33m"
-BRIGHTCYAN="\033[1;36m"
-BRIGHTPURPLE="\033[1;35m"
+# ORANGE="\033[38;5;216m"
+# PURPLE="\033[38;5;140m"
+# GRAY="\033[0;30m"
+# WHITE="\033[0;37m"
+# RED="\033[0;31m"
+# GREEN="\033[0;32m"
+# BLUE="\033[0;34m"
+# YELLOW="\033[0;33m"
+# CYAN="\033[0;36m"
+# PURPLE="\033[0;35m"
+# BRIGHTGRAY="\033[1;30m"
+# BRIGHTWHITE="\033[1;37m"
+# BRIGHTRED="\033[1;31m"
+# BRIGHTBLUE="\033[1;34m"
+# BRIGHTGREEN="\033[1;32m"
+# BRIGHTYELLOW="\033[1;33m"
+# BRIGHTCYAN="\033[1;36m"
+# BRIGHTPURPLE="\033[1;35m"
 
-NC="\033[0m"
+# NC="\033[0m"
 
 function rel_path() {
   echo "$(realpath --no-symlinks $1)" | sed "s|^$HOME/|~/|"
@@ -148,47 +148,47 @@ function print_link() {
   print_in_cyan "$rel2\n"
 }
 
-function ask(){
+function ask() {
+  local prompt="$1"q
   while true; do
-    read -rp "$1 [Y/n]: " yn
+    read -rp "$prompt [Y/n]: " yn
     case $yn in
-      [Yy]* ) break;;
-      [Nn]* ) exit;;
-      * ) break;;
+    [Yy]*) break ;;
+    [Nn]*) exit ;;
+    *) break ;;
     esac
   done
 }
 
 function backup() {
+  local time_stamp
+  time_stamp=$(date +"%m-%d-%Y.%H%M")
+  local relfile
+  relfile=$(rel_path "$1")
   if [ -f "$1" ]; then
-    time_stamp="$(date +"%m-%d-%Y.%H%M")"
-    relfile="$(rel_path "$1")"
-    if [ -e "$backups" ]; then
-      addir "$backups"
-      backupfile="${backups}/${1}.${time_stamp}.bak"
-    else
-      backupfile="${1}.${time_stamp}.bak"
-    fi
-    mv -f "$1" "${backupfile}"
-    print_success "${relfile} backed up @ ${backupfile}"
+    mv -f "$1" "${1}.${time_stamp}.bak"
+    print_success "${relfile} backed up @ ${relfile}.${time_stamp}.bak."
   fi
 }
 
 function symlink() {
-  base_file="$(realpath "$1")"
-  target_file="$(realpath "$2")"
+  local src
+  src="$(realpath "$1")"
+  local target
+  target="$(realpath "$2")"
+  local target_dir
   target_dir="$(realpath --logical "$(dirname "$2")")"
-  if [ -e "$base_file" ]; then
-    if [ ! -e "$target_file" ]; then
+  if [ -e "$src" ]; then
+    if [ ! -e "$target" ]; then
       addir "$target_dir"
-      ln -s "$base_file" "$target_filr"
-      print_link "$base_file" "$target_file"
+      ln -s "$src" "$target"
+      print_link "$src" "$target"
     else
-      backup "$target_file"
-      ln -s "$base_file" "$target_file"
-      print_link "$base_file" "$target_file"
+      backup "$target"
+      ln -s "$src" "$target"
+      print_link "$src" "$target"
     fi
   else
-    echo "$(rel_path "$base_file") does not exist."
+    echo "$(rel_path "$src") does not exist."
   fi
 }
