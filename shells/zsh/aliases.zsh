@@ -50,7 +50,7 @@ if cmd_exists eza; then
             level=1
         fi
         linebreak
-        eza --group-directories-first --git-repos --git --icons -n --tree -L "$level"
+        eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
         linebreak
     }
     alias ls='eza'
