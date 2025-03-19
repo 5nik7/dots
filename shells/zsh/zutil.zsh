@@ -179,7 +179,7 @@ function symlink() {
   target_file="$(realpath "$2")"
   target_dir="$(realpath --logical "$(dirname "$2")")"
   if [ -e "$base_file" ]; then
-    if [ ! -e "$target_file" ]; then
+    if [[ ! -f "$target_file" ]]; then
       addir "$target_dir"
       ln -s "$base_file" "$target_filr"
       print_link "$base_file" "$target_file"
