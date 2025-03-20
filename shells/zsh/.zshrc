@@ -32,27 +32,7 @@ zieces "completions"
 zieces "aliases"
 
 if is_installed fzf; then
-
-  if cmd_exists bat; then
-       CAT_PREVIEWER='bat --style=numbers --color=always --pager=never'
-     else
-       CAT_PREVIEWER='cat'
-  fi
-
-  export FZF_DEFAULT_OPTS="--height 60% \
---border sharp \
---layout reverse \
---info right \
---prompt ' ' \
---pointer '┃' \
---marker '│' \
---separator '──' \
---scrollbar '│' \
---preview-window='border-sharp' \
---preview-window='right:65%' \
---preview '$CAT_PREVIEWER {}'"
-
-  source <(fzf --zsh)
+  # zieces "fzf"
 
   function finst() {
     fzpkgs="$(pkg list-all | tr '/' ' '  | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
@@ -63,6 +43,7 @@ if is_installed fzf; then
     fi
   }
 
+  source <(fzf --zsh)
 fi
 
 fpath=( "${ZFUNC}" "${fpath[@]}" )
