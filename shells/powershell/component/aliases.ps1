@@ -61,7 +61,7 @@ if (Test-CommandExists eza) {
         param (
             [int]$L = 1
         )
-        $Arguments += ( '-n', '--tree', '-L', $L )
+        $Arguments += ( '-a', '--no-permissions', '--no-filesize', '--no-time', '--no-user', '-n', '--tree', '-L', $L )
         Get-ChildItemPretty @Arguments
         return
     }
