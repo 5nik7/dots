@@ -160,16 +160,16 @@ function ask(){
 }
 
 function backup() {
-  if [ -f "$1" ]; then
+  if [ -f "$2" ]; then
     time_stamp="$(date +"%m-%d-%Y.%H%M")"
-    relfile="$(rel_path "$1")"
+    relfile="$(rel_path "$2")"
     if [ -e "$backups" ]; then
       addir "$backups"
-      backupfile="${backups}/${1}.${time_stamp}.bak"
+      backupfile="${backups}/${2}.${time_stamp}.bak"
     else
-      backupfile="${1}.${time_stamp}.bak"
+      backupfile="${2}.${time_stamp}.bak"
     fi
-    mv -f "$1" "${backupfile}"
+    mv -f "$2" "${backupfile}"
     print_success "${relfile} backed up @ ${backupfile}"
   fi
 }
@@ -178,13 +178,13 @@ function symlink() {
   base_file="$(realpath "$1")"
   target_file="$(realpath "$2")"
   target_dir="$(realpath --logical "$(dirname "$2")")"
-  if [ -e "$base_file" ]; then
-    if [[ ! -f "$target_file" ]]; then
-      addir "$target_dir"
+  if [ -f "$base_file" ]; then
+    if [ -f "$target_file" ]; then
+      # addir "$target_dir"
+      backup "$target_file"
       ln -s "$base_file" "$target_filr"
       print_link "$base_file" "$target_file"
     else
-      backup "$target_file"
       ln -s "$base_file" "$target_file"
       print_link "$base_file" "$target_file"
     fi
