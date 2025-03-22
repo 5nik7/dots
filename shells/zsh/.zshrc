@@ -43,7 +43,7 @@ if is_installed fzf; then
   #      CAT_PREVIEWER='cat'
   # fi
   #
-  export FZF_DEFAULT_OPTS="--height 80% \
+  export FZF_DEFAULT_OPTS="--height 90% \
     --border sharp \
     --layout reverse \
     --info right \
@@ -53,7 +53,7 @@ if is_installed fzf; then
     --separator '──' \
     --scrollbar '│' \
     --preview-window='border-sharp' \
-    --preview-window='right:65'"
+    --preview-window='bottom:50%'"
 
   export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color bg+:0,bg:-1,spinner:4,hl:7:underline,fg:8,header:3,info:8,pointer:6,marker:14,fg+:6,prompt:2,hl+:10:underline,gutter:-1,selected-bg:0,separator:0,preview-border:8,border:8,preview-bg:-1,preview-label:0,label:7,query:13,input-border:4"
 
