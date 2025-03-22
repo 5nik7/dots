@@ -22,67 +22,75 @@ cmd.ctrld_exits = True
 
 # name: Argument color
 # type: color
-color.arg = bold
+color.arg = sgr 0;38;2;167;166;255
 
 # name: Argument info color
 # type: color
-color.arginfo = magenta
+color.arginfo = sgr 0;3;38;2;167;166;255
 
 # name: Argmatcher color
 # type: color
-color.argmatcher = green
+color.argmatcher = sgr 0;38;2;0;255;204
 
 # name: Shell command completions
 # type: color
-color.cmd = magenta
+color.cmd = sgr 0;38;2;235;111;146
 
 # name: Color for < and > redirection symbols
 # type: color
-color.cmdredir = sgr 38;5;172
+color.cmdredir = sgr 0;38;2;214;233;255
 
 # name: Color for & and | command separators
 # type: color
-color.cmdsep = sgr 38;5;214
+color.cmdsep = sgr 0;38;2;255;183;141
 
 # name: Color for comment row
 # type: color
-color.comment_row = sgr 38;5;87;48;5;18
+color.comment_row = sgr 0;38;2;55;75;114
+
+# name: Common prefix of completions
+# type: color
+color.common_match_prefix = sgr 0;38;2;0;255;251
 
 # name: Description completion color
 # type: color
-color.description = sgr 38;5;39
+color.description = sgr 0;38;2;55;75;114
 
 # name: Doskey completions
 # type: color
-color.doskey = yellow
+color.doskey = sgr 0;38;2;0;255;251
 
 # name: Color for executable command word
 # type: color
-color.executable = magenta
+color.executable = sgr 0;38;2;0;255;251
 
 # name: Filtered completion color
 # type: color
-color.filtered = sgr 38;5;231
+color.filtered = sgr 0;38;2;214;233;255
 
 # name: Flag color
 # type: color
-color.flag = blue
+color.flag = sgr 0;38;2;255;183;141
+
+# name: Color for preferred branch completions
+# type: color
+color.git.star = bright green
 
 # name: Hidden file completions
 # type: color
-color.hidden = sgr 38;5;160
+color.hidden = sgr 0;38;2;55;75;114
 
 # name: History expansion color
 # type: color
-color.histexpand = sgr 97;48;5;55
+color.histexpand = sgr 0;38;2;0;255;204
 
 # name: Horizontal scroll marker color
 # type: color
-color.horizscroll = sgr 38;5;16;48;5;30
+color.horizscroll = reverse
 
 # name: Input text color
 # type: color
-color.input = green
+color.input = sgr 0;38;2;214;233;255
 
 # name: For user-interaction prompts
 # type: color
@@ -90,35 +98,75 @@ color.interact = bold
 
 # name: Message area color
 # type: color
-color.message = default
+color.message = sgr 0;38;2;55;75;114
+
+# name: Modified history line mark color
+# type: color
+color.modmark = sgr 0;38;2;167;166;255
+
+# name: Color for popup lists and messages
+# type: color
+color.popup = sgr 0;38;2;214;233;255;48;2;46;60;91
+
+# name: Color for popup border
+# type: color
+color.popup_border = sgr 0;38;2;55;75;114;48;2;46;60;91
+
+# name: Color for popup description column(s)
+# type: color
+color.popup_desc = sgr 0;38;2;0;255;251;48;2;46;60;91
+
+# name: Color for popup footer message
+# type: color
+color.popup_footer = sgr 0;38;2;214;233;255;48;2;46;60;91
+
+# name: Color for popup title text
+# type: color
+color.popup_header = sgr 0;38;2;255;183;141;48;2;46;60;91
+
+# name: Color for selected item in popup list
+# type: color
+color.popup_select = sgr 0;38;2;214;233;255;48;2;55;75;114
+
+# name: Color for selected item in popup list
+# type: color
+color.popup_selectdesc = sgr 0;38;2;0;255;251;48;2;55;75;114
 
 # name: Prompt color
 # type: color
-color.prompt = magenta
+color.prompt = sgr 0;38;2;214;233;255
 
 # name: Readonly file completions
 # type: color
-color.readonly = sgr 38;5;28
+color.readonly = sgr 0;38;2;167;166;255
 
 # name: Selected completion color
 # type: color
-color.selected_completion = sgr 38;5;16;48;5;254
+color.selected_completion = sgr 0;38;2;214;233;255;48;2;55;75;114
 
 # name: Selection color
 # type: color
-color.selection = sgr 38;5;16;48;5;179
+color.selection = sgr 0;48;2;55;75;114
 
 # name: Color for suggestion text
 # type: color
-color.suggestion = black
+color.suggestion = sgr 0;38;2;55;75;114
 
 # name: Unexpected argument color
 # type: color
-color.unexpected = default
+color.unexpected = sgr 0;38;2;235;111;146
 
 # name: Color for unrecognized command word
 # type: color
-color.unrecognized = red
+color.unrecognized = sgr 0;38;2;235;111;146
+
+# name: Color for yarn run local module
+# type: color
+color.yarn.module = bright green
+
+# name: Color for yarn run project.json script
+# type: color
+color.yarn.script = bright blue
 
 # name: Log terminal input and output
 # type: boolean
@@ -176,15 +224,7 @@ prompt.transient = off
 
 
 
-# name: Color for preferred branch completions
-# type: color
-color.git.star = bright green
+color.envvars = bold
 
-# name: Color for yarn run local module
-# type: color
-color.yarn.module = bright green
-
-# name: Color for yarn run project.json script
-# type: color
-color.yarn.script = bright blue
+color.escapetilde = bold
 

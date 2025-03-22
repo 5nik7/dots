@@ -1,0 +1,39 @@
+# Name: Wal
+
+[set]
+color.arg=#9896FF
+color.arginfo=italic #9896FF
+color.argmatcher=#00FFCC
+color.cmd=#EB6F92
+color.cmdredir=#d6e9ff
+color.cmdsep=#FFB78D
+color.comment_row=#374B72
+color.common_match_prefix=#00FFFB
+color.description=#374B72
+color.doskey=#00FFFB
+color.envvars=#00FFCC
+color.escapetilde=#00FFCC
+color.executable=#00FFFB
+color.filtered=#d6e9ff
+color.flag=#FFB78D
+color.hidden=#374B72
+color.histexpand=#00FFCC
+color.horizscroll=reverse
+color.input=#d6e9ff
+color.interact=bold
+color.message=#374B72
+color.modmark=#9896FF
+color.popup=#d6e9ff on #2E3C5B
+color.popup_border=#374B72 on #2E3C5B
+color.popup_desc=#00FFFB on #2E3C5B
+color.popup_footer=#d6e9ff on #2E3C5B
+color.popup_header=#FFB78D on #2E3C5B
+color.popup_select=#d6e9ff on #374B72
+color.popup_selectdesc=#00FFFB on #374B72
+color.prompt=#d6e9ff
+color.readonly=#9896FF
+color.selected_completion=#d6e9ff on #374B72
+color.selection=default on #374B72
+color.suggestion=#374B72
+color.unexpected=#EB6F92
+color.unrecognized=#EB6F92

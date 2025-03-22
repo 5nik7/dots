@@ -1,127 +1,127 @@
 {
-    "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.32/schema.json",
-    "app_specific_configuration_path": "C:/Users/njen/.config/komorebi/applications.json",
-    "window_hiding_behaviour": "Cloak",
-    "cross_monitor_move_behaviour": "Insert",
-    "default_workspace_padding": 8,
-    "default_container_padding": 8,
-    "border": true,
-    "border_style": "Square",
-    "border_width": 2,
-    "border_offset": -1,
-    "border_colours": {
-        "single": "#4785FF",
-        "unfocused": "#2E3C5B",
-        "floating": "#374B72",
-        "monocle": "#00FFFB",
-        "stack": "#BB9AF7"
+  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.32/schema.json",
+  "app_specific_configuration_path": "C:/Users/njen/.config/komorebi/applications.json",
+  "window_hiding_behaviour": "Cloak",
+  "cross_monitor_move_behaviour": "Insert",
+  "default_workspace_padding": 5,
+  "default_container_padding": 5,
+  "border": true,
+  "border_style": "Square",
+  "border_width": 2,
+  "border_offset": -1,
+  "border_colours": {
+    "single": "#4785FF",
+    "unfocused": "#2E3C5B",
+    "floating": "#374B72",
+    "monocle": "#00FFFB",
+    "stack": "#BB9AF7"
+  },
+  "transparency": true,
+  "transparency_alpha": 235,
+  "animation": {
+    "enabled": true,
+    "duration": 250,
+    "style": "EaseInOutBack",
+    "fps": 60
+  },
+  "stackbar": {
+    "height": 40,
+    "mode": "OnStack",
+    "tabs": {
+      "width": 300
+    }
+  },
+  "ignore_rules": [
+    {
+      "kind": "Exe",
+      "id": "PowerToys.Settings.exe",
+      "matching_strategy": "Equals"
     },
-    "transparency": true,
-    "transparency_alpha": 245,
-    "animation": {
-        "enabled": true,
-        "duration": 250,
-        "style": "EaseInOutBack",
-        "fps": 60
+    {
+      "kind": "Exe",
+      "id": "ImageGlass.exe",
+      "matching_strategy": "Equals"
     },
-    "stackbar": {
-        "height": 40,
-        "mode": "OnStack",
-        "tabs": {
-            "width": 300
-        }
+    {
+      "kind": "Exe",
+      "id": "fontview.exe",
+      "matching_strategy": "Equals"
     },
-    "ignore_rules": [
-        {
-            "kind": "Exe",
-            "id": "PowerToys.Settings.exe",
-            "matching_strategy": "Equals"
-        },
-        {
-            "kind": "Exe",
-            "id": "ImageGlass.exe",
-            "matching_strategy": "Equals"
-        },
-        {
-            "kind": "Exe",
-            "id": "fontview.exe",
-            "matching_strategy": "Equals"
-        },
-        {
-            "kind": "Exe",
-            "id": "ApplicationFrameHost.exe",
-            "matching_strategy": "Equals"
-        }
-    ],
-    "floating.window": {
-        "aspect_ratio": [16, 9]
+    {
+      "kind": "Exe",
+      "id": "ApplicationFrameHost.exe",
+      "matching_strategy": "Equals"
+    }
+  ],
+  "floating.window": {
+    "aspect_ratio": [16, 9]
+  },
+  "floating_applications": [
+    {
+      "kind": "Exe",
+      "id": "PowerToys.Settings.exe",
+      "matching_strategy": "Equals"
     },
-    "floating_applications": [
+    {
+      "kind": "Exe",
+      "id": "fontview.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "GlassWire.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "steamwebhelper.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Title",
+      "id": "Battle.net",
+      "matching_strategy": "Equals"
+    }
+  ],
+  "tray_and_multi_window_applications": [
+    {
+      "kind": "Exe",
+      "id": "GlassWire.exe",
+      "matching_strategy": "Equals"
+    }
+  ],
+  "monitors": [
+    {
+      "workspaces": [
         {
-            "kind": "Exe",
-            "id": "PowerToys.Settings.exe",
-            "matching_strategy": "Equals"
+          "name": "1",
+          "layout": "BSP"
         },
         {
-            "kind": "Exe",
-            "id": "fontview.exe",
-            "matching_strategy": "Equals"
+          "name": "2",
+          "layout": "BSP"
         },
         {
-            "kind": "Exe",
-            "id": "GlassWire.exe",
-            "matching_strategy": "Equals"
+          "name": "3",
+          "layout": "BSP"
         },
         {
-            "kind": "Exe",
-            "id": "steamwebhelper.exe",
-            "matching_strategy": "Equals"
+          "name": "4",
+          "layout": "BSP"
         },
         {
-            "kind": "Title",
-            "id": "Battle.net",
-            "matching_strategy": "Equals"
+          "name": "5",
+          "layout": "BSP"
+        },
+        {
+          "name": "6",
+          "layout": "Grid"
+        },
+        {
+          "name": "7",
+          "layout": "RightMainVerticalStack"
         }
-    ],
-    "tray_and_multi_window_applications": [
-        {
-            "kind": "Exe",
-            "id": "GlassWire.exe",
-            "matching_strategy": "Equals"
-        }
-    ],
-    "monitors": [
-        {
-            "workspaces": [
-                {
-                    "name": " 1 ",
-                    "layout": "BSP"
-                },
-                {
-                    "name": " 2 ",
-                    "layout": "BSP"
-                },
-                {
-                    "name": " 3 ",
-                    "layout": "BSP"
-                },
-                {
-                    "name": " 4 ",
-                    "layout": "BSP"
-                },
-                {
-                    "name": " 5 ",
-                    "layout": "BSP"
-                },
-                {
-                    "name": " 6 ",
-                    "layout": "Grid"
-                },
-                {
-                    "name": " 7 ",
-                    "layout": "RightMainVerticalStack"
-                }
-            ]
-        }
-    ]
+      ]
+    }
+  ]
 }
