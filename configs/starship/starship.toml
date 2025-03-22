@@ -8,6 +8,7 @@ palette = "default"
 
 command_timeout = 10000
 add_newline = true
+follow_symlinks = true
 
 format = """
 $os\
