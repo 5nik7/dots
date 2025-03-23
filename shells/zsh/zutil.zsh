@@ -195,8 +195,7 @@ bak(){
         done
         local backupdir
         backupdir="$HOME/backups"
-        [ ! -d "$backupdir" ] || mkdir -p "$backupdir"
-        mv -fv -- "$filename" "$backupdir/$bakfile"
+        [ -d "$backupdir" ] || { mkdir -p "$backupdir"; mv -fv -- "$filename" "$backupdir/$bakfile"; }
     done
 }
 
