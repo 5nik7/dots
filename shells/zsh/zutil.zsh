@@ -57,6 +57,11 @@ function zource() {
   fi
 }
 
+function is_droid() {
+	[[ -d  "$HOME/.termux" ]] &> /dev/null
+	return $?
+}
+
 function addir() {
   if [ ! -d "$1" ]; then
     mkdir -p "$1"
