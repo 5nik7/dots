@@ -164,20 +164,73 @@ function ask(){
   done
 }
 
-function backup() {
-  if [ -f "$2" ]; then
-    time_stamp="$(date +"%m-%d-%Y.%H%M")"
-    relfile="$(rel_path "$2")"
-    if [ -e "$backups" ]; then
-      addir "$backups"
-      backupfile="${backups}/${2}.${time_stamp}.bak"
-    else
-      backupfile="${2}.${time_stamp}.bak"
-    fi
-    mv -f "$2" "${backupfile}"
-    print_success "${relfile} backed up @ ${backupfile}"
-  fi
+timestamp(){
+    printf "%s" "$(date '+%F %T')  $*"
+    [ $# -gt 0 ] && printf '\n'
 }
+alias tstamp=timestamp
+
+timestampcmd(){
+    local output
+    output="$("$@" 2>&1)"
+    timestamp "$output"
+}
+alias tstampcmd=timestampcmd
+
+# ============================================================================ #
+
+bak(){
+    # TODO: switch this to a .backupstore folder for keeping this stuff instead
+    # cp -av -- "$filename" "$backupdir/$bakfile"
+    for filename in "$@"; do
+        [ -n "$filename" ] || { echo "usage: bak filename"; return 1; }
+        [ -f "$filename" ] || { echo "file '$filename' does not exist"; return 1; }
+        [[ $filename =~ .*\.bak\..* ]] && continue
+        local bakfile
+        bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
+        until ! [ -f "$bakfile" ]; do
+            echo "WARNING: bakfile '$bakfile' already exists, retrying with a new timestamp"
+            sleep 1
+            bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
+        done
+        local backupdir
+        backupdir="$HOME/backups"
+        [ ! -d "$backupdir" ] || mkdir -p "$backupdir"
+        mv -fv -- "$filename" "$backupdir/$bakfile"
+    done
+}
+
+unbak(){
+    # restores the most recent backup of a file
+    for filename in "$@"; do
+        #[ -n "$filename" -o "${filename: -4}" != ".bak" ] || { echo "usage: unbak filename.bak"; return 1; }
+        [ -n "$filename" ] || { echo "usage: unbak filename"; return 1; }
+        #[ -f "$filename" ] || { echo "file '$filename' does not exist"; return 1; }
+        local bakfile
+        local dirname
+        dirname="$(dirname "$filename")"
+        filename="${filename##*/}"
+        # don't use -t switch, we want the newest by name, not one that got touched recently
+        bakfile="$(find "$dirname" -path "*/$filename.bak.*" -o -path "*/$filename.*.bak" 2>/dev/null | sort | tail -n 1)"
+        echo "restoring $bakfile"
+        cp -av -- "$bakfile" "$dirname/$filename"
+    done
+}
+
+# function backup() {
+#   if [ -f "$2" ]; then
+#     time_stamp="$(date +"%m-%d-%Y.%H%M")"
+#     relfile="$(rel_path "$2")"
+#     if [ -e "$backups" ]; then
+#       addir "$backups"
+#       backupfile="${backups}/${2}.${time_stamp}.bak"
+#     else
+#       backupfile="${2}.${time_stamp}.bak"
+#     fi
+#     mv -f "$2" "${backupfile}"
+#     print_success "${relfile} backed up @ ${backupfile}"
+#   fi
+# }
 
 function symlink() {
   base_file="$(realpath "$1")"
