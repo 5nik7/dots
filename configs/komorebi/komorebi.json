@@ -31,15 +31,18 @@
       "width": 300
     }
   },
-  "ignore_rules": [
+  "floating.window": {
+    "aspect_ratio": [16, 9]
+  },
+  "floating_applications": [
     {
-      "kind": "Exe",
-      "id": "PowerToys.Settings.exe",
+      "kind": "Class",
+      "id": "pygame",
       "matching_strategy": "Equals"
     },
     {
       "kind": "Exe",
-      "id": "ImageGlass.exe",
+      "id": "explorer.exe",
       "matching_strategy": "Equals"
     },
     {
@@ -49,14 +52,94 @@
     },
     {
       "kind": "Exe",
+      "id": "Discord.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Title",
+      "id": "Rakuten Viber",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Title",
+      "id": "Skype",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "Telegram.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Title",
+      "id": "Settings",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Title",
+      "id": "Microsoft Store",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "Photoshop.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "Adobe Premiere Pro.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "Illustrator.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
       "id": "ApplicationFrameHost.exe",
       "matching_strategy": "Equals"
-    }
-  ],
-  "floating.window": {
-    "aspect_ratio": [16, 9]
-  },
-  "floating_applications": [
+    },
+    {
+      "kind": "Exe",
+      "id": "vmware.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Class",
+      "id": "MozillaDialogClass",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "yasb.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "Notepad.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "BeemTube.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "python3.12.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "yasb.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "LogiAiPromptBuilder.exe",
+      "matching_strategy": "Equals"
+    },
     {
       "kind": "Exe",
       "id": "PowerToys.Settings.exe",
@@ -74,12 +157,22 @@
     },
     {
       "kind": "Exe",
+      "id": "ImageGlass.exe",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
       "id": "steamwebhelper.exe",
       "matching_strategy": "Equals"
     },
     {
       "kind": "Title",
       "id": "Battle.net",
+      "matching_strategy": "Equals"
+    },
+    {
+      "kind": "Exe",
+      "id": "PowerToys.Settings.exe",
       "matching_strategy": "Equals"
     }
   ],

@@ -111,11 +111,11 @@ widgets:
       max_length_ellipsis: "..."
       monitor_exclusive: false
   clock:
-    type: "yasb.clock.ClockWidget"
-    options:
-      label: "{%a, %d %b %H:%M}"
-      label_alt: "{%A, %d %B %Y %H:%M:%S}"
-      timezones: []
+     type: "yasb.clock.ClockWidget"
+     options:
+       label: "<span>\uf4ab</span> {%I:%M}"
+       label_alt: "<span>\uf4ab</span> {%A, %d %B %Y %H:%M}"
+       timezones: [] #Looking up time zone info from registry
   komorebi_workspaces:
     type: "komorebi.workspaces.WorkspaceWidget"
     options:
