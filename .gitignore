@@ -26,3 +26,5 @@ configs/clink/clink_history*
 configs/clink/clink.log
 #backup files
 *.bak
+#log
+configs/yasb/yasb.log
