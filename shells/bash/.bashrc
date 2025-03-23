@@ -1,3 +1,4 @@
+# shellcheck disable=SC2148
 # Shell Options
 shopt -s nocaseglob
 shopt -s checkwinsize
@@ -34,6 +35,10 @@ extend_path "$DOTSBIN"
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
+if is_installed nvim; then
+    export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
+fi
+
 if is_installed zoxide; then
   eval "$(zoxide init bash)"
   alias cd='z'
@@ -43,20 +48,15 @@ if is_installed starship; then
   eval "$(starship init bash)"
 fi
 
-if is_installed perl; then
+function is_droid() {
+	[[ -d  "$HOME/.termux" ]] &> /dev/null
+	return $?
+}
 
-  extend_path "${HOME}/perl5/bin"
-
-  # PATH="/data/data/com.termux/files/home/perl5/bin${PATH:+:${PATH}}"; export PATH;
-  PERL5LIB="/data/data/com.termux/files/home/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"
-  export PERL5LIB
-  PERL_LOCAL_LIB_ROOT="/data/data/com.termux/files/home/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
-  export PERL_LOCAL_LIB_ROOT
-  PERL_MB_OPT="--install_base \"/data/data/com.termux/files/home/perl5\""
-  export PERL_MB_OPT
-  PERL_MM_OPT="INSTALL_BASE=/data/data/com.termux/files/home/perl5"
-  export PERL_MM_OPT
+if is_droid; then
+    src "$BASHDOT/droid.bash"
 fi
+
 # eval "$(dircolors -b /etc/DIR_COLORS)"
 
 # set bell-style none

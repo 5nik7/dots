@@ -84,6 +84,10 @@ prepend_path "${DOTSBIN}"
 export SHHHH="${DOTS}/secrets"
 zource "${SHHHH}/secrets.sh"
 
+if is_installed nvim; then
+    export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
+fi
+
 if is_installed zoxide; then
   eval "$(zoxide init zsh)"
   alias cd='z'

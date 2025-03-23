@@ -2,6 +2,10 @@
 
 $erricon = $($util.alerts.err.icon)
 
+function find-ln {
+    Get-ChildItem | Where-Object { $_.Attributes -match "ReparsePoint" }
+}
+
 function Add-Path {
     param (
         [Parameter(Mandatory = $true)]
