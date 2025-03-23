@@ -160,13 +160,13 @@ function ask() {
   done
 }
 
-timestamp(){
+function timestamp() {
     printf "%s" "$(date '+%F %T')  $*"
     [ $# -gt 0 ] && printf '\n'
 }
 alias tstamp=timestamp
 
-timestampcmd(){
+function timestampcmd() {
     local output
     output="$("$@" 2>&1)"
     timestamp "$output"
@@ -175,7 +175,7 @@ alias tstampcmd=timestampcmd
 
 # ============================================================================ #
 
-bak(){
+function bak() {
     # TODO: switch this to a .backupstore folder for keeping this stuff instead
     # cp -av -- "$filename" "$backupdir/$bakfile"
     for filename in "$@"; do
@@ -196,7 +196,7 @@ bak(){
 }
 
 
-unbak(){
+function unbak() {
     # restores the most recent backup of a file
     for filename in "$@"; do
         #[ -n "$filename" -o "${filename: -4}" != ".bak" ] || { echo "usage: unbak filename.bak"; return 1; }

@@ -37,12 +37,16 @@ if (Test-CommandExists eza) {
         [CmdletBinding()]
         param (
             [Parameter(ValueFromRemainingArguments = $true)]
-            [string[]]$Arguments
+            [string[]]$Arguments,
+            [string]$Path
         )
+        if ($Path -eq '') {
+            $Path = (Get-Location).ToString()
+        }
         if ($a -or $all) { $Arguments += '--all' }
         if ($l -or $long) { $Arguments += '--long' }
 
-        $Arguments += ( '--group-directories-first', '--git-repos', '--git', '--hyperlink', '--follow-symlinks', '--no-quotes', '--icons' )
+        $Arguments += ( '--group-directories-first', '--git-repos', '--git', '--hyperlink', '--follow-symlinks', '--no-quotes', '--icons') + $Path
         Write-Host ' '
         eza @Arguments
         Write-Host ' '
@@ -51,7 +55,14 @@ if (Test-CommandExists eza) {
 
     function l {
         [CmdletBinding()]
-        $Arguments += ( '-a', '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' )
+        param (
+            [Parameter(ValueFromRemainingArguments = $true)]
+            [string]$Path
+        )
+        if ($Path -eq '') {
+            $Path = (Get-Location).ToString()
+        }
+        $Arguments += ( '-a', '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' )  + $Path
         Get-ChildItemPretty @Arguments
         return
     }
@@ -59,26 +70,35 @@ if (Test-CommandExists eza) {
     function lt {
         [CmdletBinding()]
         param (
-            [int]$L = 1
+            [int]$L = 1,
+            [string]$Path
         )
-        $Arguments += ( '-a', '--no-permissions', '--no-filesize', '--no-time', '--no-user', '-n', '--tree', '-L', $L )
+        if ($Path -eq '') {
+            $Path = (Get-Location).ToString()
+        }
+        $Arguments += ( '-a', '--no-permissions', '--no-filesize', '--no-time', '--no-user', '-n', '--tree', '-L', $L ) + $Path
         Get-ChildItemPretty @Arguments
         return
     }
 
     function ll {
-        $timestyle = '+󰨲 %m/%d/%y 󰅐 %H:%M'
         [CmdletBinding()]
-        $Arguments += ( '-a', '-l', '--flags', '-h', '--time-style', $timestyle )
+        param (
+            [string]$Path
+        )
+        $timestyle = '+󰨲 %m/%d/%y 󰅐 %H:%M'
+        if ($Path -eq '') {
+            $Path = (Get-Location).ToString()
+        }
+        $Arguments += ( '-a', '-l', '--flags', '-h', '--time-style', $timestyle ) + $Path
         Get-ChildItemPretty @Arguments
-
+        return
     }
 
     Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
+} else {
+    Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
 }
-
-
-
 
 if (Test-CommandExists yazi) {
     Set-Alias -Name d -Value yy
