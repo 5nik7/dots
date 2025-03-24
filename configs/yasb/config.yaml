@@ -106,6 +106,7 @@ widgets:
       update_interval: 600 #Update interval in seconds, Min 600
       hide_decimal: true
       location: "USA Yakima 98902"
+      units: "imperial" # Can be 'metric' or 'imperial'
       callbacks:
         on_left: "toggle_label"
       icons:
@@ -195,7 +196,7 @@ widgets:
     type: "yasb.wallpapers.WallpapersWidget"
     options:
       label: "<span>\udb83\ude09</span>"
-      image_path: "C:\\Users\\elrond\\.config\\Wallpapers"
+      image_path: "C:\\Users\\njen\\dots\\walls"
       change_automatically: false
       update_interval: 60
       gallery:
