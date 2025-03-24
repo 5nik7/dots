@@ -38,6 +38,8 @@ function Import-PSMod {
     }
 }
 
+if (Test-CommandExists fzf) { Import-Module "PsFzf" }
+
 Import-PSMod -Name "PowerShellGet"
 Import-PSMod -Name "Terminal-Icons"
 Import-PSMod -Name "PSScriptAnalyzer"
