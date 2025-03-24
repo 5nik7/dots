@@ -6,8 +6,8 @@
       "newline": true,
       "segments": [
         {
-          "background": "#F2C996",
-          "foreground": "#2E3C5B",
+          "background": "#F9E2AF",
+          "foreground": "#45475A",
           "leading_diamond": "\ue0b2",
           "properties": {
             "macos": "\uf179 ",
@@ -16,37 +16,37 @@
           },
           "style": "diamond",
           "template": " {{ if .WSL }}WSL at {{ end }}{{.Icon}}",
-          "trailing_diamond": "<transparent,#F2C996>\ue0b2</>",
+          "trailing_diamond": "<transparent,#F9E2AF>\ue0b2</>",
           "type": "os"
         },
         {
-          "background": "#F2C996",
-          "foreground": "#2E3C5B",
+          "background": "#F9E2AF",
+          "foreground": "#45475A",
           "leading_diamond": "\ue0b2",
           "style": "diamond",
           "template": "\uf489 {{ .Name }}",
-          "trailing_diamond": "<transparent,#F2C996>\ue0b2</>",
+          "trailing_diamond": "<transparent,#F9E2AF>\ue0b2</>",
           "type": "shell"
         },
         {
-          "background": "#5792FF",
-          "foreground": "#d6e9ff",
+          "background": "#89B4FA",
+          "foreground": "#A6ADC8",
           "leading_diamond": "\ue0b2",
           "style": "diamond",
           "template": "\uf85a CPU: {{ round .PhysicalPercentUsed .Precision }}% | ",
           "type": "sysinfo"
         },
         {
-          "background": "#5792FF",
-          "foreground": "#d6e9ff",
+          "background": "#89B4FA",
+          "foreground": "#A6ADC8",
           "style": "diamond",
           "template": "MEM: {{ (div ((sub .PhysicalTotalMemory .PhysicalFreeMemory)|float64) 1000000000.0) }}/{{ (div .PhysicalTotalMemory 1000000000.0) }}GB \uf85a ",
-          "trailing_diamond": "<transparent,#5792FF>\ue0b2</>",
+          "trailing_diamond": "<transparent,#89B4FA>\ue0b2</>",
           "type": "sysinfo"
         },
         {
-          "background": "#374B72",
-          "foreground": "#5792FF",
+          "background": "#585B70",
+          "foreground": "#89B4FA",
           "leading_diamond": "\ue0b2",
           "properties": {
             "style": "roundrock",
@@ -64,8 +64,8 @@
       "alignment": "right",
       "segments": [
         {
-          "background": "#00FFFB",
-          "foreground": "#2E3C5B",
+          "background": "#94E2D5",
+          "foreground": "#45475A",
           "leading_diamond": "\ue0b2",
           "properties": {
             "branch_icon": "\ue725 ",
@@ -136,7 +136,7 @@
   "console_title_template": "{{ .Folder }}",
   "transient_prompt": {
     "background": "transparent",
-    "foreground": "#F2C996",
+    "foreground": "#F9E2AF",
     "template": "\ue285 "
   },
   "version": 2

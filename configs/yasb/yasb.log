@@ -6404,3 +6404,86 @@ pywintypes.error: (0, 'SetForegroundWindow', 'No error message is available')
 2025-03-23 14:49:12 INFO weather.py:369: Fetched new weather data at 2025-03-23 14:49:12.309530
 2025-03-23 14:49:12 INFO github.py:359: Check for GitHub notifications at 2025-03-23 14:49:12.596487
 2025-03-23 14:50:12 INFO github.py:359: Check for GitHub notifications at 2025-03-23 14:50:12.594657
+2025-03-23 16:08:00 INFO log.py:21: Yasb v1.6.7
+2025-03-23 16:08:00 INFO main.py:25: Debug mode enabled.
+2025-03-23 16:08:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:08:01.619375
+2025-03-23 16:08:01 INFO weather.py:369: Fetched new weather data at 2025-03-23 16:08:01.667395
+2025-03-23 16:08:01 DEBUG __init__.py:149: CoInitializeEx(None, 2)
+2025-03-23 16:08:02 DEBUG win32.py:55: Looking up time zone info from registry
+2025-03-23 16:08:04 INFO app_bar.py:103: Bar Created on Screen: M27Q [Bar Height: 39px, DPI Scale: 1.0, Scale Screen: True, Screen Geometry: X: 0, Y: 0, Screen Width: 2560, Screen Height: 1440]
+2025-03-23 16:08:05 WARNING update_check.py:70: Invalid winget output format.
+2025-03-23 16:08:08 INFO event_listener.py:52: Created named pipe yasb-af2f1e83-083b-11f0-afd9-48e7daa79ece
+2025-03-23 16:08:08 INFO event_listener.py:106: Waiting for Komorebi to subscribe to named pipe yasb-af2f1e83-083b-11f0-afd9-48e7daa79ece
+2025-03-23 16:08:08 INFO watcher.py:39: Created file watcher for path C:\Users\njen\.config\yasb
+2025-03-23 16:08:08 DEBUG _windows.py:213: Starting (proactor: <_IocpProactor overlapped#=0 result#=0>)...
+2025-03-23 16:08:08 DEBUG _windows.py:192: Thread started
+2025-03-23 16:08:08 INFO event_listener.py:118: Komorebi connected to named pipe: yasb-af2f1e83-083b-11f0-afd9-48e7daa79ece
+2025-03-23 16:09:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:09:01.607555
+2025-03-23 16:10:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:10:01.605214
+2025-03-23 16:11:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:11:01.606619
+2025-03-23 16:12:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:12:01.606347
+2025-03-23 16:13:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:13:01.607102
+2025-03-23 16:14:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:14:01.607953
+2025-03-23 16:15:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:15:01.606818
+2025-03-23 16:16:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:16:01.606536
+2025-03-23 16:17:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:17:01.607086
+2025-03-23 16:18:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:18:01.606746
+2025-03-23 16:18:01 INFO weather.py:369: Fetched new weather data at 2025-03-23 16:18:01.654993
+2025-03-23 16:19:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:19:01.606352
+2025-03-23 16:20:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:20:01.606020
+2025-03-23 16:21:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:21:01.607110
+2025-03-23 16:22:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:22:01.607149
+2025-03-23 16:23:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:23:01.606402
+2025-03-23 16:24:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:24:01.605311
+2025-03-23 16:25:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:25:01.606554
+2025-03-23 16:26:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:26:01.606694
+2025-03-23 16:27:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:27:01.607056
+2025-03-23 16:28:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:28:01.607348
+2025-03-23 16:28:01 INFO weather.py:369: Fetched new weather data at 2025-03-23 16:28:01.653262
+2025-03-23 16:29:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:29:01.606569
+2025-03-23 16:30:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:30:01.607007
+2025-03-23 16:31:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:31:01.605320
+2025-03-23 16:32:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:32:01.634015
+2025-03-23 16:33:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:33:01.622680
+2025-03-23 16:34:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:34:01.626578
+2025-03-23 16:35:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:35:01.625153
+2025-03-23 16:36:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:36:01.626057
+2025-03-23 16:37:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:37:01.622153
+2025-03-23 16:38:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:38:01.621422
+2025-03-23 16:38:01 INFO weather.py:369: Fetched new weather data at 2025-03-23 16:38:01.656554
+2025-03-23 16:39:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:39:01.626324
+2025-03-23 16:40:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:40:01.622102
+2025-03-23 16:41:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:41:01.622643
+2025-03-23 16:42:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:42:01.622146
+2025-03-23 16:43:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:43:01.625452
+2025-03-23 16:44:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:44:01.626794
+2025-03-23 16:45:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:45:01.638461
+2025-03-23 16:46:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:46:01.637937
+2025-03-23 16:47:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:47:01.637971
+2025-03-23 16:48:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:48:01.639609
+2025-03-23 16:48:01 INFO weather.py:369: Fetched new weather data at 2025-03-23 16:48:01.656607
+2025-03-23 16:49:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:49:01.640464
+2025-03-23 16:50:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:50:01.637638
+2025-03-23 16:51:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:51:01.636661
+2025-03-23 16:52:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:52:01.637311
+2025-03-23 16:53:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:53:01.637468
+2025-03-23 16:54:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:54:01.638178
+2025-03-23 16:55:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:55:01.645208
+2025-03-23 16:56:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:56:01.637958
+2025-03-23 16:57:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:57:01.638289
+2025-03-23 16:58:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:58:01.638641
+2025-03-23 16:58:01 INFO weather.py:369: Fetched new weather data at 2025-03-23 16:58:01.655656
+2025-03-23 16:59:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 16:59:01.637786
+2025-03-23 17:00:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:00:01.636669
+2025-03-23 17:01:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:01:01.688009
+2025-03-23 17:02:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:02:01.685055
+2025-03-23 17:03:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:03:01.697743
+2025-03-23 17:04:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:04:01.684788
+2025-03-23 17:05:01 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:05:01.687533
+2025-03-23 17:06:03 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:06:03.150829
+2025-03-23 17:07:03 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:07:03.150779
+2025-03-23 17:08:03 INFO weather.py:369: Fetched new weather data at 2025-03-23 17:08:03.119220
+2025-03-23 17:08:03 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:08:03.152780
+2025-03-23 17:09:03 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:09:03.153239
+2025-03-23 17:10:03 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:10:03.153511
+2025-03-23 17:11:03 INFO github.py:359: Check for GitHub notifications at 2025-03-23 17:11:03.155181

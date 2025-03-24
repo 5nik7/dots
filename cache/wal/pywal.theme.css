@@ -25,53 +25,53 @@
 :root {
 
     /* Special */
-    --background: #151D38;
-    --foreground: #d6e9ff;
-    --cursor: #5500FF;
+    --background: #1E1E2E;
+    --foreground: #CDD6F4;
+    --cursor: #F5E0DC;
 
     /* Colors */
-    --color0: #2E3C5B;
-    --color1: #EB6F92;
-    --color2: #00FFCC;
-    --color3: #FFB78D;
-    --color4: #477EFF;
-    --color5: #9896FF;
-    --color6: #00FFFB;
-    --color7: #d6e9ff;
-    --color8: #374B72;
-    --color9: #EB6F92;
-    --color10: #8FF8B5;
-    --color11: #F2C996;
-    --color12: #5792FF;
-    --color13: #A7A6FF;
-    --color14: #30F1EA;
-    --color15: #d6e9ff;
+    --color0: #45475A;
+    --color1: #F38BA8;
+    --color2: #A6E3A1;
+    --color3: #F9E2AF;
+    --color4: #89B4FA;
+    --color5: #F5C2E7;
+    --color6: #94E2D5;
+    --color7: #BAC2DE;
+    --color8: #585B70;
+    --color9: #F38BA8;
+    --color10: #A6E3A1;
+    --color11: #F9E2AF;
+    --color12: #89B4FA;
+    --color13: #F5C2E7;
+    --color14: #94E2D5;
+    --color15: #A6ADC8;
 
   --lightbg: color-mix(in srgb, var(--background), var(--color8) 5%);
   --darkbg: color-mix(in srgb, var(--background), black 10%);
 
     /* Special */
-    --bg: 21,29,56;
-    --fg: 214,233,255;
-    --rbgcursor: 85,0,255;
+    --bg: 30,30,46;
+    --fg: 205,214,244;
+    --rbgcursor: 245,224,220;
 
     /* Colors */
-    --rbg0: 46,60,91;
-    --rbg1: 235,111,146;
-    --rbg2: 0,255,204;
-    --rbg3: 255,183,141;
-    --rbg4: 71,126,255;
-    --rbg5: 152,150,255;
-    --rbg6: 0,255,251;
-    --rbg7: 214,233,255;
-    --rbg8: 55,75,114;
-    --rbg9: 235,111,146;
-    --rbg10: 143,248,181;
-    --rbg11: 242,201,150;
-    --rbg12: 87,146,255;
-    --rbg13: 167,166,255;
-    --rbg14: 48,241,234;
-    --rbg15: 214,233,255;
+    --rbg0: 69,71,90;
+    --rbg1: 243,139,168;
+    --rbg2: 166,227,161;
+    --rbg3: 249,226,175;
+    --rbg4: 137,180,250;
+    --rbg5: 245,194,231;
+    --rbg6: 148,226,213;
+    --rbg7: 186,194,222;
+    --rbg8: 88,91,112;
+    --rbg9: 243,139,168;
+    --rbg10: 166,227,161;
+    --rbg11: 249,226,175;
+    --rbg12: 137,180,250;
+    --rbg13: 245,194,231;
+    --rbg14: 148,226,213;
+    --rbg15: 166,173,200;
 
   --dark-bg: rgba(var(--bg),0.96);
   /* transparent; rgba(240,185,190,0.113); to achieve screenshot looking */
@@ -99,10 +99,10 @@
 	--panel-roundness: 0px; /* corner roundness of panels. ONLY WORKS IF unrounding.css IS REMOVED (see above). */
 
 	/* background colors */
-	--bg-0: oklch(from #151D38 l c h); /* main background color. */
-	--bg-1: oklch(from #151D38 calc(l - 0.001) c h); /* background color for secondary elements like code blocks, embeds, etc. */
-	--bg-2: oklch(from #151D38 calc(l + 0.04) c h); /* color of neutral buttons. */
-	--bg-3: oklch(from #151D38 calc(l + 0.05) c h); /* color of neutral buttons when hovered. */
+	--bg-0: oklch(from #1E1E2E l c h); /* main background color. */
+	--bg-1: oklch(from #1E1E2E calc(l - 0.001) c h); /* background color for secondary elements like code blocks, embeds, etc. */
+	--bg-2: oklch(from #1E1E2E calc(l + 0.04) c h); /* color of neutral buttons. */
+	--bg-3: oklch(from #1E1E2E calc(l + 0.05) c h); /* color of neutral buttons when hovered. */
 
 	/* state modifiers */
 	--hover: oklch(54% 0 0 / 0.1); /* color of hovered elements. */
@@ -112,10 +112,10 @@
 	/* text colors */
 	--txt-dark: var(--bg-0); /* color of dark text on colored backgrounds. */
 	--txt-link: var(--cyan); /* color of links. */
-	--txt-0: oklch(from #d6e9ff 100% c h); /* color of bright/white text. */
-	--txt-1: oklch(from #d6e9ff 90% c h); /* main text color. */
-	--txt-2: oklch(from #d6e9ff 50% c h); /* color of secondary text like channel list. */
-	--txt-3: oklch(from #d6e9ff 30% c h); /* color of muted text. */
+	--txt-0: oklch(from #CDD6F4 100% c h); /* color of bright/white text. */
+	--txt-1: oklch(from #CDD6F4 90% c h); /* main text color. */
+	--txt-2: oklch(from #CDD6F4 50% c h); /* color of secondary text like channel list. */
+	--txt-3: oklch(from #CDD6F4 30% c h); /* color of muted text. */
 
 	/* accent colors */
 	--acc-0: var(--purple); /* main accent color. */
@@ -143,15 +143,15 @@
 	--reply-hover-overlay: var(--hover); /* overlay color of message you are replying to when hovered. */
 
 	/* color shades */
-	--pink: oklch(from #2E3C5B l c h);
+	--pink: oklch(from #45475A l c h);
 	--pink-1: oklch(from var(--pink) calc(l - 0.1) c h);
 	--pink-2: oklch(from var(--pink) calc(l - 0.2) c h);
-	--purple: oklch(from #374B72 l c h);
+	--purple: oklch(from #585B70 l c h);
 	--purple-1: oklch(from var(--purple) calc(l - 0.1) c h);
 	--purple-2: oklch(from var(--purple) calc(l - 0.2) c h);
-	--cyan: oklch(from #00FFFB l c h);
-	--yellow: oklch(from #FFB78D l c h);
-	--green: oklch(from #00FFCC l c h);
+	--cyan: oklch(from #94E2D5 l c h);
+	--yellow: oklch(from #F9E2AF l c h);
+	--green: oklch(from #A6E3A1 l c h);
 	--green-1: oklch(from var(--green) calc(l - 0.1) c h);
 	--green-2: oklch(from var(--green) calc(l - 0.2) c h);
 } 

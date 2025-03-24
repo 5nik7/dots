@@ -5,7 +5,7 @@
         "type": "rprompt",
         "segments": [
           {
-            "foreground": "#477EFF",
+            "foreground": "#89B4FA",
             "properties": {
               "time_format": "15:04:05"
             },
@@ -19,16 +19,16 @@
         "alignment": "left",
         "segments": [
           {
-            "background": "#d6e9ff",
-            "foreground": "#2E3C5B",
+            "background": "#BAC2DE",
+            "foreground": "#45475A",
             "powerline_symbol": "\ue0b0",
             "style": "powerline",
             "template": " {{ .UserName }}@{{ .HostName }} ",
             "type": "session"
           },
           {
-            "background": "#30F1EA",
-            "foreground": "#2E3C5B",
+            "background": "#94E2D5",
+            "foreground": "#45475A",
             "powerline_symbol": "\ue0b0",
             "properties": {
               "folder_icon": "\uf115",
@@ -41,8 +41,8 @@
             "type": "path"
           },
           {
-            "background": "#8FF8B5",
-            "foreground": "#00FFFB",
+            "background": "#A6E3A1",
+            "foreground": "#94E2D5",
             "powerline_symbol": "\ue0b0",
             "style": "powerline",
             "template": " {{ .HEAD }} ",
