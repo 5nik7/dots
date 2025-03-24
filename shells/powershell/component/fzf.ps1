@@ -1,3 +1,5 @@
+$env:FZF_DEFAULT_OPTS = $null
+
 function FuzzyOpts {
     param (
         [switch]$f,
