@@ -1,62 +1,69 @@
-function Get-PyenvVersion
-{
-  $PYVER = (Get-Content "$Env:PYENV\version") -replace '\n', ''
-  return $PYVER
+function Get-PyenvVersion {
+    $PYVER = (Get-Content "$Env:PYENV\version") -replace '\n', ''
+    return $PYVER
 }
 $Global:PYVER = Get-PyenvVersion
 $Env:PYVER = $Global:PYVER
 
-function PyenvExePath
-{
-  $PYENVBIN = (Join-Path $env:PYENV "bin")
-  return $PYENVBIN
+function PyenvExePath {
+    $PYENVBIN = (Join-Path $env:PYENV "bin")
+    return $PYENVBIN
 }
 $Global:PYENVBIN = PyenvExePath
 $Env:PYENVBIN = $Global:PYENVBIN
 
-function Get-PyenvExeDir
-{
-  $PYEXEDIR = (Join-Path "$env:PYENV" "versions\$PYVER")
-  return $PYEXEDIR
+function Get-PyenvExeDir {
+    $PYEXEDIR = (Join-Path "$env:PYENV" "versions\$PYVER")
+    return $PYEXEDIR
 }
 $Global:PYEXEDIR = Get-PyenvExeDir
 $Env:PYEXEDIR = $Global:PYEXEDIR
 
-function Get-PyenvScripts
-{
-  $PYENVSCRIPTS = (Join-Path $PYEXEDIR "Scripts")
-  return $PYENVSCRIPTS
+function Get-PyenvScripts {
+    $PYENVSCRIPTS = (Join-Path $PYEXEDIR "Scripts")
+    return $PYENVSCRIPTS
 }
 $Global:PYENVSCRIPTS = Get-PyenvScripts
 $Env:PYENVSCRIPTS = $Global:PYENVSCRIPTS
 
-function Get-PyenvShims
-{
-  $PYENVSHIMS = (Join-Path $env:PYENV "shims")
-  return $PYENVSHIMS
+function Get-PyenvShims {
+    $PYENVSHIMS = (Join-Path $env:PYENV "shims")
+    return $PYENVSHIMS
 }
 $Global:PYENVSHIMS = Get-PyenvShims
 $Env:PYENVSHIMS = $Global:PYENVSHIMS
 
-function Set-Pyenv
-{
-  @(
-    "$Env:PYENVBIN",
-    "$Env:PYEXEDIR",
-    "$Env:PYENVSCRIPTS",
-    "$Env:PYENVSHIMS"
-  ) | ForEach-Object {
-    $Path = "$_"
-    if ($debug)
-    { Write-Host "$_" 
+function Set-Pyenv {
+    param (
+        [switch]$pre = $false
+    )
+    try {
+        @(
+            "$Env:PYENVBIN",
+            "$Env:PYEXEDIR",
+            "$Env:PYENVSCRIPTS",
+            "$Env:PYENVSHIMS"
+        ) | ForEach-Object {
+            $Path = "$_"
+            if ($debug) {
+                Write-Host "$_"
+            }
+            Remove-Path -Path "$Path"
+            if ($pre) {
+                Add-PrependPath -Path "$Path"
+            }
+            else {
+                Add-Path -Path "$Path"
+            }
+        }
     }
-    Remove-Path -Path "$Path"
-    Add-Path -Path "$Path"
-    return
-  }
+    catch {
+        Write-Host "An error occurred: $_"
+        return
+    }
 }
 
-Set-Pyenv -append
+Set-Pyenv
 
 $env:PSCRIPTS = "$env:PSDOT\Scripts"
 $Global:PSCRIPTS = $env:PSCRIPTS

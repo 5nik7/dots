@@ -6,6 +6,30 @@ function find-ln {
     Get-ChildItem | Where-Object { $_.Attributes -match "ReparsePoint" }
 }
 
+function ask {
+    param([string]$message = '')
+
+    $message += ' ' + '[Y/n]'
+
+    # $configData = (Get-Content -Path $terminalProfile | ConvertFrom-Json) | Where-Object { $_ -ne $null }
+    try {
+        $choice = Read-Host $message
+        if ($choice -eq 'y' -or $choice -eq 'Y' -or $choice -eq 'yes' -or $choice -eq 'Yes' -or $choice -eq 'YES' -or $choice -eq '') {
+            return $true
+        }
+        elseif ($choice -eq 'n' -or $choice -eq 'N' -or $choice -eq 'no' -or $choice -eq 'No' -or $choice -eq 'NO') {
+            return $false
+        }
+        else {
+            return $null
+        }
+    }
+    catch {
+        Write-Error "Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
+        return $null
+    }
+}
+
 function Add-Path {
     param (
         [Parameter(Mandatory = $true)]
@@ -131,7 +155,7 @@ function Get-PrettyChildrem {
     }
     if ($OptionalParameters) {
         linebreak
-            (eza -Path $OptionalParameters)
+        (eza -Path $OptionalParameters)
         linebreak
     }
     else {
@@ -218,7 +242,7 @@ function gup {
 }
 
 function Edit-Profile {
-  (& $env:EDITOR ([IO.Path]::GetDirectoryName($profile)))
+    (& $env:EDITOR ([IO.Path]::GetDirectoryName($profile)))
 }
 
 function Get-Functions {
