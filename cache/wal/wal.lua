@@ -19,7 +19,7 @@ M.wal = {
     color12    = "#89B4FA",
     color13    = "#F5C2E7",
     color14    = "#94E2D5",
-    color15    = "#A6ADC8",
+    color15    = "#A6ADC8"
 }
 
 return M
