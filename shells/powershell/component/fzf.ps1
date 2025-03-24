@@ -1,4 +1,4 @@
-$env:FZF_DEFAULT_OPTS = $null
+. "$Env:DOTCACHE\wal\wal.ps1"
 
 function FuzzyOpts {
     param (
@@ -21,6 +21,11 @@ function FuzzyOpts {
         $previewString = $Env:FZF_DIRECTORY_OPTS
     }
     try {
+
+        class FzfSymbolOpts {
+            [bool]$enabled
+            [string]$symbol
+        }
 
         $fzfOptions = @{
             style         = "full"
@@ -58,7 +63,7 @@ function FuzzyOpts {
             'hl+'            = '2:underline'
             'bg'             = '-1'
             'bg+'            = '-1'
-            'preview-bg'     = "-1"
+            'preview-bg'     = "$bg"
             'preview-border' = '0'
             'list-border'    = '0'
             'border'         = '0'
@@ -74,7 +79,7 @@ function FuzzyOpts {
             'prompt'         = '2'
             'preview-label'  = '0'
             'selected-bg'    = '0'
-            'separator'      = "-1"
+            'separator'      = "$bg"
         }
 
         $colorString = ($colorOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
@@ -95,22 +100,24 @@ function FuzzyOpts {
                 else { "--{0}={1}" -f $key, $_.Value }
             }) -join ' '
 
-        $FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
-        $Env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
+        $Global:FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
+        $Env:FZF_DEFAULT_OPTS = $Global:FZF_DEFAULT_OPTS
     }
     catch {
         Write-Host "Error: $_"
     }
 }
 
+FuzzyOpts -f
+
 
 function fh {
 
-    $FZF_DEFAULT_OPTS = FuzzyOpts
+    $Global:FZF_DEFAULT_OPTS = FuzzyOpts
 
     # Searches your command history, sets your clipboard to the selected item - Usage: fh [<string>]
     $find = $args
-    $FZF_DEFAULT_OPTS += ' ' + "--border-label=`" HISTORY `" --tabstop=2 --color=16"
+    $Global:FZF_DEFAULT_OPTS += ' ' + "--border-label=`" HISTORY `" --tabstop=2 --color=16"
     # $Env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
     $selected = Get-Content (Get-PSReadlineOption).HistorySavePath | Where-Object { $_ -like "*$find*" } | Sort-Object -Unique -Descending | fzf
     if (![string]::IsNullOrWhiteSpace($selected)) { Set-Clipboard $selected }
@@ -118,7 +125,7 @@ function fh {
 
 function fzc {
 
-    $FZF_DEFAULT_OPTS = FuzzyOpts -f
+    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -f
     # Runs fzf searching files then cd's to the directory of the selected file - Usage: fzc [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
     elseif ($args -eq "u") { Set-Location $Env:USERPROFILE }
@@ -138,7 +145,7 @@ function fzc {
 
 function fze {
 
-    $FZF_DEFAULT_OPTS = FuzzyOpts -f
+    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -f
 
     # Runs fzf searching files then opens the directory of the selected file in explorer - Usage: fze [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
@@ -160,7 +167,7 @@ function fze {
 
 function fzn {
 
-    $FZF_DEFAULT_OPTS = FuzzyOpts -f
+    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -f
 
     # Runs fzf searching files then opens the directory of the selected file in neovim - Usage: fzn [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
@@ -184,7 +191,7 @@ function fzn {
 
 function dzc {
 
-    $FZF_DEFAULT_OPTS = FuzzyOpts -d
+    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then cd's to the selected directory - Usage: dzc [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
@@ -202,7 +209,7 @@ function dzc {
 
 function dze {
 
-    $FZF_DEFAULT_OPTS = FuzzyOpts -d
+    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then opens the selected directory in explorer - Usage: dze [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
@@ -223,7 +230,7 @@ function dze {
 
 function dzn {
 
-    $FZF_DEFAULT_OPTS = FuzzyOpts -d
+    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then opens the selected directory in neovim - Usage: dzn [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }

@@ -13,7 +13,7 @@ $Global:PSDOT = $env:PSDOT
 $env:PSCOMPONENT = "$env:PSDOT\component"
 $Global:PSCOMPONENT = $env:PSCOMPONENT
 
-foreach ( $includeFile in ("util", "env", "functions", "path", "aliases", "modules", "readline", "completions", "prompt") ) {
+foreach ( $includeFile in ("util", "env", "functions", "path", "aliases", "fzf", "modules", "readline", "completions", "prompt") ) {
     Unblock-File "$env:PSCOMPONENT\$includeFile.ps1"
     . "$env:PSCOMPONENT\$includeFile.ps1"
 }
@@ -22,12 +22,6 @@ $powersecrets = "$Env:DOTS\secrets\secrets.ps1"
 if (Test-Path "$powersecrets") {
     Unblock-File "$powersecrets"
     . "$powersecrets"
-}
-
-$fzFile = if (Test-CommandExists fzf) { 'fzf' }
-if ($fzFile) {
-    Unblock-File "$env:PSCOMPONENT\$FzFile.ps1"
-    . "$env:PSCOMPONENT\$FzFile.ps1"
 }
 
 if ($env:isReloading) {
