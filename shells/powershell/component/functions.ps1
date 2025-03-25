@@ -300,11 +300,45 @@ function q {
     Exit
 }
 
+function Remove-DuplicatePSReadlineHistory {
+    $historyPath = (Get-PSReadLineOption).HistorySavePath
+
+    # backup
+    $directory = (Get-Item $historyPath).DirectoryName
+    $basename = (Get-Item $historyPath).Basename
+    $extension = (Get-Item $historyPath).Extension
+    $timestamp = (Get-Date).ToString("yyyy-MM-ddTHH-mm-ssZ")
+
+    $backupPath = "$directory\$basename-$timestamp-backup$extension"
+
+    Copy-Item $historyPath $backupPath
+
+    # remove duplicate history
+    $uniqueHistory = @()
+    $history = Get-Content $historyPath
+
+    [Array]::Reverse($history)
+
+    $history | ForEach-Object {
+        if (-Not $uniqueHistory.Contains($_)) {
+            $uniqueHistory += $_
+        }
+    }
+
+    [Array]::Reverse($uniqueHistory)
+
+    Clear-Content $historyPath
+
+    $uniqueHistory | Out-File -Append $historyPath
+}
+
+Set-Alias -Name fixhistory -Value Remove-DuplicatePSReadlineHistory
+
 # when "reload" is typed in the terminal, the profile is reloaded
 # use sendkeys to send the enter key to the terminal
-function reload {
-    Add-Type -AssemblyName System.Windows.Forms
-    [System.Windows.Forms.SendKeys]::SendWait(". $")
-    [System.Windows.Forms.SendKeys]::SendWait("PROFILE")
-    [System.Windows.Forms.SendKeys]::SendWait("{ENTER}")
-}
+# function reload {
+#     Add-Type -AssemblyName System.Windows.Forms
+#     [System.Windows.Forms.SendKeys]::SendWait(". $")
+#     [System.Windows.Forms.SendKeys]::SendWait("PROFILE")
+#     [System.Windows.Forms.SendKeys]::SendWait("{ENTER}")
+# }

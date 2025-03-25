@@ -5,6 +5,11 @@ else {
     $env:AdminSymbol = ""
 }
 
+function Invoke-Starship-PreCommand {
+    $WarningPreference = "SilentlyContinue"
+    $ErrorActionPreference = "SilentlyContinue"
+}
+
 Invoke-Expression (&starship init powershell)
 Enable-TransientPrompt
 function Invoke-Starship-TransientFunction {

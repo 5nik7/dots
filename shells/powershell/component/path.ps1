@@ -65,7 +65,7 @@ function Set-Pyenv {
 
 Set-Pyenv
 
-$env:PSCRIPTS = "$env:PSDOT\Scripts"
+$env:PSCRIPTS = "$env:PSDOTS\Scripts"
 $Global:PSCRIPTS = $env:PSCRIPTS
 Add-Path -Path "$env:PSCRIPTS"
 

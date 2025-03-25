@@ -24,7 +24,7 @@ function Import-PSMod {
         return
     }
     if ($Local) {
-        $LocalModulesDir = "$env:PSDOT/Modules"
+        $LocalModulesDir = "$env:PSDOTS/Modules"
         if ($Version) {
             $LocalModuleRootDir = "$LocalModulesDir/$Name/$Version"
         }
@@ -56,3 +56,5 @@ Import-PSMod -Local -Name "powerpath" -Version "0.0.1"
 if ((Get-Module winwal -ListAvailable) -and (Test-Path "$env:PSMODS\winwal\colortool")) {
     Add-Path -Path "$env:PSMODS\winwal\colortool"
 }
+
+Invoke-Expression (& { (zoxide init powershell | Out-String) })

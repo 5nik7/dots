@@ -7,11 +7,43 @@ $Global:DOTS = $env:DOTS
 $env:SHELLS = "$env:DOTS\shells"
 $Global:SHELLS = $env:SHELLS
 
-$env:PSDOT = "$env:SHELLS\powershell"
-$Global:PSDOT = $env:PSDOT
+$env:PSDOTS = "$env:SHELLS\powershell"
+$PSDOTS = $env:PSDOTS
 
-$env:PSCOMPONENT = "$env:PSDOT\component"
+$env:PSCOMPONENT = "$env:PSDOTS\component"
 $Global:PSCOMPONENT = $env:PSCOMPONENT
+
+function psenv {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$path
+    )
+    $envFilePath = Join-Path -Path $path -ChildPath ".env"
+    if (Test-Path $envFilePath) {
+        Get-Content $envFilePath | ForEach-Object {
+            $name, $value = $_.split('=')
+
+            if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
+                continue
+            }
+            $expandedName = [Environment]::ExpandEnvironmentVariables($name)
+            $expandedValue = [Environment]::ExpandEnvironmentVariables($value)
+
+            Set-Item -Path "env:$expandedName" -Value $expandedValue
+        }
+    }
+}
+
+psenv -path $env:PSDOTS
+$env:secretdir = "$Env:DOTS\secrets"
+psenv -path $env:secretdir
+
+# $powersecrets = "$secretdir\secrets.ps1"
+# if (Test-Path "$powersecrets") {
+#     Unblock-File "$powersecrets"
+#     . "$powersecrets"
+# }
 
 foreach ( $includeFile in ("util", "env", "functions", "path", "aliases", "fzf", "modules", "readline", "completions", "prompt") ) {
     Unblock-File "$env:PSCOMPONENT\$includeFile.ps1"

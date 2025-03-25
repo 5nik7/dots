@@ -30,7 +30,7 @@ function Join-Profile {
     param(
         [switch] $i
     )
-    $env:PSDOTPROFILE = "$env:PSDOT\profile.ps1"
+    $env:PSDOTPROFILE = "$env:PSDOTS\profile.ps1"
     $Global:PSDOTPROFILE = $env:PSDOTPROFILE
     $ProfileTargets = ("Microsoft.PowerShell_profile.ps1", "Microsoft.VSCode_profile.ps1")
     $ProfileDocVersions = ("PowerShell", "WindowsPowerShell")
@@ -181,7 +181,7 @@ function Set-Link {
         $basedircolor = $dotcolor
         $basedir = $doticon
     }
-    elseif ($basedir -eq $env:PSDOT) {
+    elseif ($basedir -eq $env:PSDOTS) {
         $basedircolor = $psdotcolor
         $basedir = $psdoticon
     }
@@ -204,7 +204,7 @@ function Set-Link {
         $targetdircolor = $dotcolor
         $targetdir = $doticon
     }
-    elseif ($targetdir -eq $env:PSDOT) {
+    elseif ($targetdir -eq $env:PSDOTS) {
         $targetdircolor = $psdotcolor
         $targetdir = $psdoticon
     }
