@@ -1,3 +1,5 @@
+$modulePath = $PSScriptRoot
+
 function Add-Path {
     param (
         [Parameter(Mandatory = $true)]
@@ -65,6 +67,12 @@ function powerpath {
     )
 
     if ($help -or $path -eq '') {
+        $bannerPath = Join-Path -Path $modulePath -ChildPath "banner"
+        if (Test-Path -Path $bannerPath) {
+            Write-Host ''
+            Get-Content -Path $bannerPath | Write-Host
+            Write-Host ''
+        }
         Write-Host "Usage: Add-Path -Path <string> [-prepend] [-f] [-v] [-i]"
     }
 

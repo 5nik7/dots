@@ -1,9 +1,3 @@
-$padding = 4
-$PadddingOutSpaces = 4
-$PadddingInSpaces = 1
-
-$PadddingOut = " " * $PadddingOutSpaces
-$PadddingIn = " " * $PadddingInSpaces
 
 $util = @{
     colors = @{
@@ -150,7 +144,7 @@ $warntext = $($util.alerts.warn.text)
 $infocolor = $($util.alerts.info.color)
 $infoicon = $($util.alerts.info.icon)
 $infotext = $($util.alerts.info.text)
-$textcolor = "White"
+# $textcolor = "White"
 
 function linebreak {
     param (
@@ -253,33 +247,86 @@ function Write-Color {
 }
 
 function wh {
+    [CmdletBinding()]
     param(
-        [string]$t,
-        [string]$c = 'White',
-        [bool]$nonew = $true,
-        [switch]$new,
-        [int]$sp = 1,
+        [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+        [string[]]$pairs,
+        [switch]$nl,
         [int]$bb = 0,
         [int]$ba = 0,
-        [int]$pad = 0
+        [int]$padout = 0,
+        [int]$padin = 1,
+        [switch]$box,
+        [string]$border = "DarkGray"
     )
-    if ($c -match '^\d+$') {
-        $c = $util.colors.GetEnumerator() | Where-Object { $_.Value -eq [int]$c } | Select-Object -ExpandProperty Key
+
+    $boxSymbolTopLeft = "┌"
+    $boxSymbolTopRight = "┐"
+    $boxSymbolBottomLeft = "└"
+    $boxSymbolBottomRight = "┘"
+    $boxSymbolHorizontal = "─"
+    $boxSymbolVertical = "│"
+
+    linebreak $bb
+
+    $pairsList = @()  # will hold objects like @{ text="Hello"; color="White"; length=... }
+    $totalLength = 0
+
+    # Collect pairs without printing right away
+    for ($i = 0; $i -lt $pairs.Count; $i += 2) {
+        $txt = $pairs[$i]
+        $clr = if ($i + 1 -lt $pairs.Count) { $pairs[$i + 1] } else { 'White' }
+
+        if ($clr -match '^\d+$') {
+            $clr = $util.colors.GetEnumerator() | Where-Object { $_.Value -eq [int]$clr } | Select-Object -ExpandProperty Key
+        }
+        $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_ -eq $clr }
+        if (-not $colorEnum) {
+            Write-Err "Invalid color: $clr"
+            return
+        }
+
+        $pairsList += [pscustomobject]@{ text = $txt; color = $clr }
+        $totalLength += $txt.Length
+    }
+    $totalLength += ($padin * 2)
+    # Build the box lines (if -box is set)
+    $boxTop = (" " * $padout) + $boxSymbolTopLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolTopRight
+    $boxBottom = (" " * $padout) + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolBottomRight
+    $boxLeft = (" " * $padout) + $boxSymbolVertical + (" " * $padin)
+    $boxRight = (" " * $padin) + $boxSymbolVertical
+
+    if ($box) {
+        # Print top line
+        Write-Host $boxTop -ForegroundColor $border
+        # Print middle line start
+        Write-Host -NoNewline $boxLeft -ForegroundColor $border
+        # Print each pair with its color inside the box
+        foreach ($pair in $pairsList) {
+            Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
+        }
+        # Print right boundary
+        Write-Host $boxRight -ForegroundColor $border
+        # Print bottom line
+        Write-Host $boxBottom -ForegroundColor $border
+    }
+    else {
+        # No box: just print each pair
+        foreach ($pair in $pairsList) {
+            Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
+        }
     }
 
-    $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_ -eq $c }
-    if ($null -eq $colorEnum) {
-        Write-Err "Invalid color: $c"
-        return
-    }
-    if ($new) { $nonew = $false }
-    $PadddingOut = " " * $pad
-    $SpaceOut = " " * $sp
-    $OutText = $PadddingOut + $t + $SpaceOut
-    linebreak $bb
-    Write-Host "$OutText" -ForegroundColor $c -NoNewline:$nonew
+    if ($nl) { linebreak }
     linebreak $ba
 }
+
+
+
+
+
+
+
 
 function Write-Info {
     param(
@@ -332,72 +379,4 @@ function Write-Err {
     $txtout = wh -t "$t" -c $tc -ba 1
     $iconout + $txtout
 
-}
-
-<#
-.SYNOPSIS
-    Draws a text box with specified border and text colors.
-
-.DESCRIPTION
-    The Write-Box function creates a text box with customizable border and text colors.
-    The box is padded with spaces for better readability.
-
-.PARAMETER border
-    The color of the border. Default is "DarkGray".
-
-.PARAMETER color
-    The color of the text. Default is "White".
-
-.PARAMETER text
-    The text to be displayed inside the box.
-
-.PARAMETER help
-    If specified, displays help information on how to use the function.
-
-.EXAMPLE
-    Write-Box -text "Hello, World!"
-    Draws a box with the text "Hello, World!" inside it.
-
-.EXAMPLE
-    Write-Box -border "Red" -color "Yellow" -text "Warning!"
-    Draws a box with a red border and yellow text saying "Warning!".
-
-.NOTES
-    Author: njen
-#>
-function Write-Box {
-    param (
-        [switch]$help,
-        [string]$border = "DarkGray",
-        [string]$color = "White",
-        [string]$text
-    )
-
-    if ($help -or -not $text) {
-        Get-Help -Name Write-Box -Full
-        return
-    }
-
-    $boxSymbolTopLeft = "┌"
-    $boxSymbolTopRight = "┐"
-    $boxSymbolBottomLeft = "└"
-    $boxSymbolBottomRight = "┘"
-    $boxSymbolHorizontal = "─"
-    $boxSymbolVertical = "│"
-
-    $paddingLength = $PadddingInSpaces * 2
-    $length = $text.Length + $paddingLength
-
-    $boxTop = $PadddingOut + $boxSymbolTopLeft + ($boxSymbolHorizontal * $length) + $boxSymbolTopRight
-    $boxMiddleLeft = $PadddingOut + $boxSymbolVertical + $PadddingIn
-    $boxMiddleRight = $PadddingIn + $boxSymbolVertical
-    $boxTopBottom = $PadddingOut + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $length) + $boxSymbolBottomRight
-
-    linebreak
-    Write-Color $border $boxTop
-    Write-Color -inline $border $boxMiddleLeft
-    Write-Color -inline $color $text
-    Write-Color $border $boxMiddleRight
-    Write-Color $border $boxTopBottom
-    linebreak
 }

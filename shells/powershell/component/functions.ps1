@@ -30,60 +30,6 @@ function ask {
     }
 }
 
-function Add-Path {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$Path
-    )
-    if (Test-Path $Path) {
-        if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-            $env:Path += ";$Path"
-        }
-    }
-    else {
-        Write-Error "Path '$Path' does not exist"
-    }
-}
-
-function Add-PrependPath {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$Path
-    )
-    if (Test-Path $Path) {
-        if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-            $env:Path = "$Path;$env:Path"
-        }
-    }
-    else {
-        Write-Error "Path '$Path' does not exist"
-    }
-}
-
-function Remove-Path {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$Path
-    )
-    if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
-        $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
-    }
-}
-
-function Remove-DuplicatePaths {
-    $paths = $env:Path -split ';'
-    $uniquePaths = [System.Collections.Generic.HashSet[string]]::new()
-    $newPath = @()
-
-    foreach ($path in $paths) {
-        if ($uniquePaths.Add($path)) {
-            $newPath += $path
-        }
-    }
-
-    $env:Path = $newPath -join ';'
-}
-
 function winutil {
     Invoke-RestMethod "https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1" | Invoke-Expression
 }
@@ -117,9 +63,7 @@ function yy {
 }
 
 function Get-Fetch {
-    Write-Host ""
     fastfetch
-    Write-Host ""
 }
 
 function Get-ContentPretty {
@@ -136,53 +80,6 @@ function Get-ContentPretty {
 
     linebreak
     bat $file
-    linebreak
-}
-
-function Get-PrettyChildrem {
-    <#
-    .SYNOPSIS
-        Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
-        Alias: ls, ll, la, l
-    #>
-    [CmdletBinding()]
-    param (
-        [string[]]$OptionalParameters,
-        [strong]$Path
-    )
-    if (-not $Path) {
-        $Path = $PWD
-    }
-    if ($OptionalParameters) {
-        linebreak
-        (eza -Path $OptionalParameters)
-        linebreak
-    }
-    else {
-        linebreak
-        Get-ChildItemPretty
-        linebreak
-    }
-}
-
-
-function Get-ChildItemPrettyTree {
-    <#
-    .SYNOPSIS
-        Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
-        Alias: ls, ll, la, l
-    #>
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $false, Position = 0)]
-        [string]$Path,
-        [int]$level = 1
-    )
-    if (-not $Path) {
-        $Path = $PWD
-    }
-    linebreak
-    eza --icons --git-repos --git -n -L $level --time-style=relative --hyperlink --follow-symlinks --no-quotes --tree $Path
     linebreak
 }
 
@@ -288,7 +185,7 @@ Function Search-Alias {
 }
 
 function .d {
-    Set-Location "$DOTS"
+    Set-Location "$env:DOTS"
 }
 
 
@@ -300,39 +197,6 @@ function q {
     Exit
 }
 
-function Remove-DuplicatePSReadlineHistory {
-    $historyPath = (Get-PSReadLineOption).HistorySavePath
-
-    # backup
-    $directory = (Get-Item $historyPath).DirectoryName
-    $basename = (Get-Item $historyPath).Basename
-    $extension = (Get-Item $historyPath).Extension
-    $timestamp = (Get-Date).ToString("yyyy-MM-ddTHH-mm-ssZ")
-
-    $backupPath = "$directory\$basename-$timestamp-backup$extension"
-
-    Copy-Item $historyPath $backupPath
-
-    # remove duplicate history
-    $uniqueHistory = @()
-    $history = Get-Content $historyPath
-
-    [Array]::Reverse($history)
-
-    $history | ForEach-Object {
-        if (-Not $uniqueHistory.Contains($_)) {
-            $uniqueHistory += $_
-        }
-    }
-
-    [Array]::Reverse($uniqueHistory)
-
-    Clear-Content $historyPath
-
-    $uniqueHistory | Out-File -Append $historyPath
-}
-
-Set-Alias -Name fixhistory -Value Remove-DuplicatePSReadlineHistory
 
 # when "reload" is typed in the terminal, the profile is reloaded
 # use sendkeys to send the enter key to the terminal

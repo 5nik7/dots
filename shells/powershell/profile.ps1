@@ -1,26 +1,30 @@
 using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
-$env:DOTS = "$env:USERPROFILE\dots"
+$env:DOTS = "$HOME\dots"
 $Global:DOTS = $env:DOTS
+$SHELLS = "$DOTS\shells"
+$PSDOTS = "$SHELLS\powershell"
+$PSCOMPONENT = "$PSDOTS\component"
 
-$env:SHELLS = "$env:DOTS\shells"
-$Global:SHELLS = $env:SHELLS
+$psource = ("util", "functions")
+foreach ( $piece in $psource ) {
+    Unblock-File "$PSCOMPONENT\$piece.ps1"
+    . "$PSCOMPONENT\$piece.ps1"
+}
 
-$env:PSDOTS = "$env:SHELLS\powershell"
-$PSDOTS = $env:PSDOTS
-
-$env:PSCOMPONENT = "$env:PSDOTS\component"
-$Global:PSCOMPONENT = $env:PSCOMPONENT
-
-function psenv {
+function dotenv {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [string]$path
+        [string]$path,
+        [switch]$v
     )
     $envFilePath = Join-Path -Path $path -ChildPath ".env"
     if (Test-Path $envFilePath) {
+        if ($v) {
+            wh '' -c darkgray -sp 0 -bb 0 -pad 2; wh $expandedName -c yellow -sp 1; wh "=" -c darkgray; wh $expandedValue -c white -ba 1
+        }
         Get-Content $envFilePath | ForEach-Object {
             $name, $value = $_.split('=')
 
@@ -31,29 +35,19 @@ function psenv {
             $expandedValue = [Environment]::ExpandEnvironmentVariables($value)
 
             Set-Item -Path "env:$expandedName" -Value $expandedValue
+            if ($v) {
+                wh '' -c darkgray -sp 0 -bb 0 -pad 2; wh $expandedName -c yellow -sp 1; wh "=" -c darkgray; wh $expandedValue -c white -ba 1
+            }
         }
     }
 }
+dotenv $env:DOTS
+dotenv $env:secretdir
 
-psenv -path $env:PSDOTS
-$env:secretdir = "$Env:DOTS\secrets"
-psenv -path $env:secretdir
-
-# $powersecrets = "$secretdir\secrets.ps1"
-# if (Test-Path "$powersecrets") {
-#     Unblock-File "$powersecrets"
-#     . "$powersecrets"
-# }
-
-foreach ( $includeFile in ("util", "env", "functions", "path", "aliases", "fzf", "modules", "readline", "completions", "prompt") ) {
-    Unblock-File "$env:PSCOMPONENT\$includeFile.ps1"
-    . "$env:PSCOMPONENT\$includeFile.ps1"
-}
-
-$powersecrets = "$Env:DOTS\secrets\secrets.ps1"
-if (Test-Path "$powersecrets") {
-    Unblock-File "$powersecrets"
-    . "$powersecrets"
+$psource = ("path", "aliases", "fzf", "modules", "readline", "completions", "prompt")
+foreach ( $piece in $psource ) {
+    Unblock-File "$PSCOMPONENT\$piece.ps1"
+    . "$PSCOMPONENT\$piece.ps1"
 }
 
 if ($env:isReloading) {
