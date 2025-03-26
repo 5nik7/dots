@@ -259,7 +259,6 @@ function Invoke-PowerNerd {
 
 Export-ModuleMember -Function Get-NerdFontGlyphs
 Export-ModuleMember -Function Install-NerdFonts
-Export-ModuleMember -Function $nf
 Export-ModuleMember -Variable canConnectToGitHub
 Export-ModuleMember -Variable modulePath
 Export-ModuleMember -Variable v
