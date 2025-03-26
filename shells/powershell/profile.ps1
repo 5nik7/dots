@@ -7,7 +7,7 @@ $SHELLS = "$DOTS\shells"
 $PSDOTS = "$SHELLS\powershell"
 $PSCOMPONENT = "$PSDOTS\component"
 
-$psource = ("util", "functions")
+$psource = ("util", "functions", "env")
 foreach ( $piece in $psource ) {
     Unblock-File "$PSCOMPONENT\$piece.ps1"
     . "$PSCOMPONENT\$piece.ps1"
@@ -44,7 +44,7 @@ function dotenv {
 dotenv $env:DOTS
 dotenv $env:secretdir
 
-$psource = ("readline", "modules", "prompt", "aliases", "fzf", "path", "completions")
+$psource = ("path", "modules", "readline", "prompt", "aliases", "fzf", "completions")
 foreach ( $piece in $psource ) {
     Unblock-File "$PSCOMPONENT\$piece.ps1"
     . "$PSCOMPONENT\$piece.ps1"

@@ -111,7 +111,7 @@ if (Test-CommandExists nvim) {
     Set-Alias -Name vi -Value nvim
 }
 if (Test-CommandExists fastfetch) {
-    Set-Alias -Name fetch -Value Get-Fetch
+    Set-Alias -Name fetch -Value fastfetch
 }
 if (Test-CommandExists lazygit) {
     Set-Alias -Name lg -Value lazygit.exe

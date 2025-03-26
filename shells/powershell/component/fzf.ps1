@@ -100,9 +100,10 @@ function FuzzyOpts {
                 else { "--{0}={1}" -f $key, $_.Value }
             }) -join ' '
 
-        $FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
-        $Env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
-        $env:_FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
+        $env:_FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
+        $Global:_FZF_DEFAULT_OPTS = $env:_FZF_DEFAULT_OPTS
+        $Global:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS
+        $Env:FZF_DEFAULT_OPTS = $Global:FZF_DEFAULT_OPTS
     }
     catch {
         Write-Host "Error: $_"

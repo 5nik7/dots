@@ -1,6 +1,3 @@
-if ($env:padding) { $padout = $env:padding }
-else { $padout = 3 }
-
 $util = @{
     colors = @{
         Black       = 0
@@ -57,7 +54,6 @@ $warntext = ($($util.alerts.warn.text) + $divider)
 $infocolor = $($util.alerts.info.color)
 $infoicon = ($($util.alerts.info.icon) + $spacer)
 $infotext = ($($util.alerts.info.text) + $divider)
-# $textcolor = "White"
 
 function linebreak {
     param (
@@ -118,7 +114,7 @@ function wh {
         [switch]$nl,
         [int]$bb = 0,
         [int]$ba = 0,
-        [int]$padout = 0,
+        [int]$padout,
         [int]$padin = 1,
         [switch]$box,
         [string]$border = "DarkGray",
@@ -203,6 +199,9 @@ function Write-Info {
     param(
         [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
         [string[]]$pairs,
+        [int]$bb = 0,
+        [int]$ba = 0,
+        [int]$padout,
         [switch]$box,
         [string]$border = "DarkGray"
     )
@@ -214,6 +213,9 @@ function Write-Success {
     param(
         [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
         [string[]]$pairs,
+        [int]$bb = 0,
+        [int]$ba = 0,
+        [int]$padout,
         [switch]$box,
         [string]$border = "DarkGray"
     )
@@ -225,6 +227,9 @@ function Write-Err {
     param(
         [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
         [string[]]$pairs,
+        [int]$bb = 0,
+        [int]$ba = 0,
+        [int]$padout,
         [switch]$box,
         [string]$border = "DarkGray"
     )
@@ -236,9 +241,37 @@ function Write-Warn {
     param(
         [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
         [string[]]$pairs,
+        [int]$bb = 0,
+        [int]$ba = 0,
+        [int]$padout,
         [switch]$box,
         [string]$border = "DarkGray"
     )
     $pairs = @($warnicon, $warncolor, $warntext, $warncolor) + $pairs
     wh -pairs $pairs -padout $env:padding -box:$box -border:$border
+}
+
+function ask {
+    param([string]$message = '')
+
+    $message += ' ' + '[Y/n]'
+
+    # $configData = (Get-Content -Path $terminalProfile | ConvertFrom-Json) | Where-Object { $_ -ne $null }
+    try {
+        $choice = Read-Host $message
+        if ($choice -eq 'y' -or $choice -eq 'Y' -or $choice -eq 'yes' -or $choice -eq 'Yes' -or $choice -eq 'YES' -or $choice -eq '') {
+            return $true
+        }
+        elseif ($choice -eq 'n' -or $choice -eq 'N' -or $choice -eq 'no' -or $choice -eq 'No' -or $choice -eq 'NO') {
+            return $false
+        }
+        else {
+            Write-Err "Invalid choice. Please enter 'y' or 'n'." -box
+            return $null
+        }
+    }
+    catch {
+        Write-Error "Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
+        return $null
+    }
 }

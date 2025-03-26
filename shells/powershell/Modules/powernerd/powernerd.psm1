@@ -258,7 +258,25 @@ function Invoke-PowerNerd {
 }
 
 Export-ModuleMember -Function Get-NerdFontGlyphs
-Export-ModuleMember -Variable nf
+Export-ModuleMember -Function Install-NerdFonts
+Export-ModuleMember -Function $nf
+Export-ModuleMember -Variable canConnectToGitHub
+Export-ModuleMember -Variable modulePath
+Export-ModuleMember -Variable v
+Export-ModuleMember -Variable timeout
+Export-ModuleMember -Variable pingResult
+Export-ModuleMember -Variable localPath
+Export-ModuleMember -Variable localContent
+Export-ModuleMember -Variable remoteContent
+Export-ModuleMember -Variable json
+Export-ModuleMember -Variable glyphName
+Export-ModuleMember -Variable glyphChar
+Export-ModuleMember -Variable glyphCode
+Export-ModuleMember -Variable OptionalParameters
+Export-ModuleMember -Variable format
+Export-ModuleMember -Variable sortedGlyphs
+Export-ModuleMember -Variable glyph
+
 Export-ModuleMember -Function Get-GlyphCharacter
 Export-ModuleMember -Function Get-GlyphCode
 Export-ModuleMember -Function Show-PowerNerdUsage
