@@ -116,7 +116,7 @@ function Show-Command {
     )
     if (-not (Test-CommandExists $Name)) {
         linebreak
-        Write-Color -color Red -text "  $erricon $Name"
+        Write-Err "$Name"
         linebreak
         return
     }

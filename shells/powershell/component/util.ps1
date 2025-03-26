@@ -1,3 +1,5 @@
+if ([int]$env:padding) { [int]$padding = [int]$env:padding }
+else { [int]$padding = 0 }
 
 $util = @{
     colors = @{
@@ -20,24 +22,24 @@ $util = @{
     }
     alerts = @{
         info    = @{
-            text  = "Info:"
-            icon  = "󰋽"
-            color = "Magenta"
+            text  = 'Info'
+            icon  = "󰋽 "
+            color = 'Magenta'
         }
         success = @{
-            text  = "Success:"
-            icon  = ""
-            color = "Green"
+            text  = 'Success'
+            icon  = " "
+            color = 'green'
         }
         warn    = @{
-            text  = "Warning:"
-            icon  = ""
-            color = "Yellow"
+            text  = 'Warning'
+            icon  = " "
+            color = 'yellow'
         }
         err     = @{
-            text  = "Error:"
-            icon  = "󰱥"
-            color = "Red"
+            text  = 'Error'
+            icon  = " "
+            color = 'red'
         }
         symbols = @{
             "smallprompt"                     = @{ icon = "󰅂" }
@@ -132,18 +134,20 @@ $util = @{
         }
     }
 }
+$spacer = " "
+$divider = ": "
 $successcolor = $($util.alerts.success.color)
-$successicon = $($util.alerts.success.icon)
-$successtext = $($util.alerts.success.text)
+$successicon = ($($util.alerts.success.icon) + $spacer)
+$successtext = ($($util.alerts.success.text) + $divider)
 $errcolor = $($util.alerts.err.color)
-$erricon = $($util.alerts.err.icon)
-$errtext = $($util.alerts.err.text)
+$erricon = ($($util.alerts.err.icon) + $spacer)
+$errtext = ($($util.alerts.err.text) + $divider)
 $warncolor = $($util.alerts.warn.color)
-$warnicon = $($util.alerts.warn.icon)
-$warntext = $($util.alerts.warn.text)
+$warnicon = ($($util.alerts.warn.icon) + $spacer)
+$warntext = ($($util.alerts.warn.text) + $divider)
 $infocolor = $($util.alerts.info.color)
-$infoicon = $($util.alerts.info.icon)
-$infotext = $($util.alerts.info.text)
+$infoicon = ($($util.alerts.info.icon) + $spacer)
+$infotext = ($($util.alerts.info.text) + $divider)
 # $textcolor = "White"
 
 function linebreak {
@@ -157,95 +161,46 @@ function linebreak {
 
 <#
 .SYNOPSIS
-    Writes colored text to the console.
+    Writes colored text to the console with optional boxing and padding.
 
 .DESCRIPTION
-    The Write-Color function writes colored text to the console. It supports inline text, color tables, and help information.
+    The wh function writes colored text to the console. It supports inline text, padding, and boxing.
 
-.PARAMETER inline
-    If specified, writes the text inline without a newline at the end.
+.PARAMETER pairs
+    The text and color pairs to be displayed. Each text should be followed by its color.
 
-.PARAMETER color
-    The color of the text. Default is an empty string, which prompts the user to input a color.
+.PARAMETER nl
+    If specified, adds a newline after the text.
 
-.PARAMETER text
-    The text to be displayed. If not specified, prompts the user to input the text.
+.PARAMETER bb
+    The number of blank lines before the text.
 
-.PARAMETER table
-    If specified, displays a color table with available colors.
+.PARAMETER ba
+    The number of blank lines after the text.
 
-.PARAMETER help
-    If specified, displays help information on how to use the function.
+.PARAMETER padout
+    The amount of padding outside the box.
+
+.PARAMETER padin
+    The amount of padding inside the box.
+
+.PARAMETER box
+    If specified, displays the text inside a box.
+
+.PARAMETER border
+    The color of the box border. Default is "DarkGray".
 
 .EXAMPLE
-    Write-Color -color "Red" -text "Hello, World!"
-    Writes "Hello, World!" in red color to the console.
+    wh -pairs "Hello", "Red", "World", "Green"
+    Writes "Hello" in red and "World" in green to the console.
 
 .EXAMPLE
-    Write-Color -table
-    Displays a color table with available colors.
+    wh -pairs "Hello", "Red", "World", "Green" -box
+    Writes "Hello" in red and "World" in green inside a box to the console.
 
 .NOTES
     Author: njen
 #>
-function Write-Color {
-    [CmdletBinding()]
-    param (
-        [switch]$inline,
-        [string]$color = "",
-        [Parameter(ValueFromRemainingArguments = $true)]
-        [string]$text,
-        [switch]$table,
-        [switch]$help
-    )
-
-    if ($help) {
-        Get-Help -Name Write-Color -Full
-        return
-    }
-
-    if ($table) {
-        $borderColor = "DarkGray"
-        Write-Box -text "Color Table" -border $borderColor -color $borderColor
-        foreach ($colorName in $util.colors.Keys | Sort-Object { $util.colors[$_] }) {
-            $colorSpacer = 4
-            $colorSpacerOut = " " * $colorSpacer
-            $colorDivider = "│"
-            $colorValue = $util.colors[$colorName]
-            if ($colorValue -lt 10) { $colorValue = "$colorValue " }
-            Write-Host -foregroundColor $colorName ($colorSpacerOut + (nf md-solid)) -NoNewline
-            Write-Host -foregroundColor $borderColor "  $colorDivider " -NoNewline
-            Write-Host -foregroundColor $colorName "$colorValue" -NoNewline
-            Write-Host -foregroundColor $borderColor " $colorDivider " -NoNewline
-            Write-Host -foregroundColor $colorName "$colorName"
-        }
-        linebreak 2
-        return
-    }
-
-    if ($color -eq "") { $color = Read-Host "Color" }
-    if (-not $text) { $text = Read-Host "Text" }
-
-    # Check if the color is a numeric value and map it to the corresponding color name
-    if ($color -match '^\d+$') {
-        $color = $util.colors.GetEnumerator() | Where-Object { $_.Value -eq [int]$color } | Select-Object -ExpandProperty Key
-    }
-
-    $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_ -eq $color }
-    if ($null -eq $colorEnum) {
-        Write-Err "Invalid color: $color"
-        return
-    }
-
-    $outputText = $text -join " "
-
-    if ($inline) {
-        Write-Host -foregroundColor $color "$outputText" -NoNewline
-        return
-    }
-    Write-Host -foregroundColor $color "$outputText"
-}
-
 function wh {
     [CmdletBinding()]
     param(
@@ -257,8 +212,13 @@ function wh {
         [int]$padout = 0,
         [int]$padin = 1,
         [switch]$box,
-        [string]$border = "DarkGray"
+        [string]$border = "DarkGray",
+        [string]$esc,
+        [string]$escol = "White"
     )
+    if ($env:padding) {
+        $padout = $env:padding
+    }
 
     $boxSymbolTopLeft = "┌"
     $boxSymbolTopRight = "┐"
@@ -306,7 +266,14 @@ function wh {
             Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
         }
         # Print right boundary
-        Write-Host $boxRight -ForegroundColor $border
+        if ($esc) {
+            $escOutput = (" " * $padin) + $esc
+            Write-Host -NoNewline $boxRight -ForegroundColor $border
+            Write-Host $escOutput -ForegroundColor $escol
+        }
+        else {
+            Write-Host $boxRight -ForegroundColor $border
+        }
         # Print bottom line
         Write-Host $boxBottom -ForegroundColor $border
     }
@@ -321,62 +288,42 @@ function wh {
     linebreak $ba
 }
 
-
-
-
-
-
-
-
 function Write-Info {
     param(
-        [string]$t = "",
-        [string]$tc = $infocolor,
-        [string]$ii = $infoicon,
-        [string]$ic = $infocolor,
-        [string]$it = $infotext
+        [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+        [string[]]$pairs,
+        [switch]$box
     )
-    $iconout = wh -t "$ii $it" -c $ic -bb 1 -pad $padding
-    $txtout = wh -t "$t" -c $tc -ba 1
-    $iconout + $txtout
+    $pairs = @($infoicon, $infocolor, $infotext, $infocolor) + $pairs
+    wh -pairs $pairs -bb 1 -padout $padding -box:$box
 }
 
 function Write-Success {
     param(
-        [string]$t = "",
-        [string]$tc = $successcolor,
-        [string]$si = $successicon,
-        [string]$sc = $successcolor,
-        [string]$st = $successtext
+        [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+        [string[]]$pairs,
+        [switch]$box
     )
-    $iconout = wh -t "$si $st" -c $sc -bb 1 -pad $padding
-    $txtout = wh -t "$t" -c $tc -ba 1
-    $iconout + $txtout
-}
-
-function Write-Warn {
-    param(
-        [string]$t = "",
-        [string]$tc = $warncolor,
-        [string]$wi = $warnicon,
-        [string]$wc = $warncolor,
-        [string]$wt = $warntext
-    )
-    $iconout = wh -t "$wi $wt" -c $wc -bb 1 -pad $padding
-    $txtout = wh -t "$t" -c $tc -ba 1
-    $iconout + $txtout
+    $pairs = @($successicon, $successcolor, $successtext, $successcolor) + $pairs
+    wh -pairs $pairs -bb 1 -padout $padding -box:$box
 }
 
 function Write-Err {
     param(
-        [string]$t = "",
-        [string]$tc = $errcolor,
-        [string]$ei = $erricon,
-        [string]$ec = $errcolor,
-        [string]$et = $errtext
+        [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+        [string[]]$pairs,
+        [switch]$box
     )
-    $iconout = wh -t "$ei $et" -c $ec -bb 1 -pad $padding
-    $txtout = wh -t "$t" -c $tc -ba 1
-    $iconout + $txtout
+    $pairs = @($erricon, $errcolor, $errtext, $errcolor) + $pairs
+    wh -pairs $pairs -bb 1 -padout $padding -box:$box
+}
 
+function Write-Warn {
+    param(
+        [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+        [string[]]$pairs,
+        [switch]$box
+    )
+    $pairs = @($warnicon, $warncolor, $warntext, $warncolor) + $pairs
+    wh -pairs $pairs -bb 1 -padout $padding -box:$box
 }

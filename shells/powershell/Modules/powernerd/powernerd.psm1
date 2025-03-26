@@ -116,7 +116,7 @@ function Get-GlyphCharacter {
     )
 
     if ($nf.PSObject.Properties[$glyphName]) {
-        return $nf.$glyphName.char
+        Write-Output $nf.$glyphName.char
     }
     else {
         throw "Glyph '$glyphName' not found."
@@ -143,7 +143,7 @@ function Get-GlyphCode {
     )
 
     if ($nf.PSObject.Properties[$glyphName]) {
-        return $nf.$glyphName.code
+        Write-Output $nf.$glyphName.code
     }
     else {
         throw "Glyph '$glyphName' not found."
@@ -173,6 +173,22 @@ function Install-NerdFonts {
         $OptionalParameters
     )
     & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
+}
+
+function ListNerdFonts {
+    $format = '{0,-4} {1}'
+    $sortedGlyphs = $nf.PSObject.Properties | Sort-Object Name
+    foreach ($glyph in $sortedGlyphs) {
+        $glyphChar = $glyph.Value.char
+        Write-Output ($format -f $glyphChar, $($glyph.Name))
+    }
+
+    # $sortedGlyphs = $nf.PSObject.Properties | Sort-Object Name
+    # foreach ($glyph in $sortedGlyphs) {
+    #     $glyphChar = $glyph.Value.char
+    #     $glyphCode = $glyph.Value.code
+    #     Write-Output ($format -f $($glyph.Name), $glyphChar, $glyphCode)
+    # }
 }
 
 function Invoke-PowerNerd {
@@ -212,7 +228,7 @@ function Invoke-PowerNerd {
         [switch]$help,
         [switch]$install
     )
-    $format = '{0,-7} {1,-5} {2}'
+
 
     if ($install) {
         Install-NerdFonts
@@ -225,24 +241,25 @@ function Invoke-PowerNerd {
     }
 
     if ($fzf) {
-        $GlyphsNamess = $nf.PSObject.Properties.Name
-        &(fzf ($GlyphsNamess | Sort-Object Name))
+        FuzzyOpts
+        $env_FZF_DEFAULT_OPTS += ' ' + "--border-label=`" NERDFONT GLYPHS `" --tabstop=2 --color=16"
+
+        $find = $args
+        $selected = ListNerdFonts | Where-Object { $_ -like "*$find*" } | fzf
+        if (![string]::IsNullOrWhiteSpace($selected)) { Set-Clipboard $selected }
+
     }
 
     if ($list) {
-        $sortedGlyphs = $nf.PSObject.Properties | Sort-Object Name
-        foreach ($glyph in $sortedGlyphs) {
-            $glyphChar = $glyph.Value.char
-            $glyphCode = $glyph.Value.code
-            Write-Host ($format -f $glyphCode, $glyphChar, $($glyph.Name))
-        }
+        ListNerdFonts
     }
+
     if ($glyphName) {
         if ($code) {
-            return Get-GlyphCode -glyphName $glyphName
+            Write-Output Get-GlyphCode -glyphName $glyphName
         }
         else {
-            return Get-GlyphCharacter -glyphName $glyphName
+            Write-Output Get-GlyphCharacter -glyphName $glyphName
         }
     }
 }
@@ -253,5 +270,6 @@ Export-ModuleMember -Function Get-GlyphCharacter
 Export-ModuleMember -Function Get-GlyphCode
 Export-ModuleMember -Function Show-PowerNerdUsage
 Export-ModuleMember -Function Invoke-PowerNerd
+Export-ModuleMember -Function ListNerdFonts
 New-Alias -Name powernerd -Scope Global -Value Invoke-PowerNerd -ErrorAction Ignore
 New-Alias -Name nf -Scope Global -Value Invoke-PowerNerd -ErrorAction Ignore

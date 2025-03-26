@@ -100,8 +100,9 @@ function FuzzyOpts {
                 else { "--{0}={1}" -f $key, $_.Value }
             }) -join ' '
 
-        $Global:FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
-        $Env:FZF_DEFAULT_OPTS = $Global:FZF_DEFAULT_OPTS
+        $FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
+        $Env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
+        $env:_FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
     }
     catch {
         Write-Host "Error: $_"
@@ -113,11 +114,11 @@ FuzzyOpts -f
 
 function fh {
 
-    $Global:FZF_DEFAULT_OPTS = FuzzyOpts
+    $env:_FZF_DEFAULT_OPTS = FuzzyOpts
 
     # Searches your command history, sets your clipboard to the selected item - Usage: fh [<string>]
     $find = $args
-    $Global:FZF_DEFAULT_OPTS += ' ' + "--border-label=`" HISTORY `" --tabstop=2 --color=16"
+    $env:_FZF_DEFAULT_OPTS += ' ' + "--border-label=`" HISTORY `" --tabstop=2 --color=16"
     # $Env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
     $selected = Get-Content (Get-PSReadlineOption).HistorySavePath | Where-Object { $_ -like "*$find*" } | Sort-Object -Unique -Descending | fzf
     if (![string]::IsNullOrWhiteSpace($selected)) { Set-Clipboard $selected }
@@ -125,7 +126,7 @@ function fh {
 
 function fzc {
 
-    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -f
+    $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
     # Runs fzf searching files then cd's to the directory of the selected file - Usage: fzc [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
     elseif ($args -eq "u") { Set-Location $Env:USERPROFILE }
@@ -145,7 +146,8 @@ function fzc {
 
 function fze {
 
-    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -f
+
+    $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
 
     # Runs fzf searching files then opens the directory of the selected file in explorer - Usage: fze [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
@@ -167,7 +169,8 @@ function fze {
 
 function fzn {
 
-    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -f
+
+    $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
 
     # Runs fzf searching files then opens the directory of the selected file in neovim - Usage: fzn [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
@@ -191,7 +194,8 @@ function fzn {
 
 function dzc {
 
-    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -d
+
+    $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then cd's to the selected directory - Usage: dzc [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
@@ -209,7 +213,8 @@ function dzc {
 
 function dze {
 
-    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -d
+
+    $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then opens the selected directory in explorer - Usage: dze [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
@@ -230,7 +235,8 @@ function dze {
 
 function dzn {
 
-    $Global:FZF_DEFAULT_OPTS = FuzzyOpts -d
+
+    $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then opens the selected directory in neovim - Usage: dzn [d | u | c]
     if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }

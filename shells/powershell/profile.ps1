@@ -23,7 +23,7 @@ function dotenv {
     $envFilePath = Join-Path -Path $path -ChildPath ".env"
     if (Test-Path $envFilePath) {
         if ($v) {
-            wh '' -c darkgray -sp 0 -bb 0 -pad 2; wh $expandedName -c yellow -sp 1; wh "=" -c darkgray; wh $expandedValue -c white -ba 1
+            wh "Loading environment variables from $envFilePath" green -box -border darkgray -bb 1 -ba 1 -padout 2
         }
         Get-Content $envFilePath | ForEach-Object {
             $name, $value = $_.split('=')
@@ -36,7 +36,7 @@ function dotenv {
 
             Set-Item -Path "env:$expandedName" -Value $expandedValue
             if ($v) {
-                wh '' -c darkgray -sp 0 -bb 0 -pad 2; wh $expandedName -c yellow -sp 1; wh "=" -c darkgray; wh $expandedValue -c white -ba 1
+                wh '' darkgray $expandedName yellow "=" darkgray $expandedValue white -bb 1 -ba 1 -pad 2
             }
         }
     }
@@ -52,7 +52,7 @@ foreach ( $piece in $psource ) {
 
 if ($env:isReloading) {
     Clear-Host
-    Write-Box -border "DarkGray" -color "Green" -text "Profile reloaded."
+    wh "Profile reloaded." green -box -border darkgray -bb 1 -ba 1 -padout 2
     $env:isReloading = $false
 }
 
@@ -63,8 +63,7 @@ function rl {
 
     $env:isReloading = $true
     Clear-Host
-    Write-Box -border "DarkGray" -color "Blue" -text "Restarting PowerShell.."
-    # linebreak 1; Write-Color Cyan "     $($util.symbols.'nf-cod-debug_restart'.icon)" -inline; Write-Color Blue " Restarting PowerShell..."; linebreak 1
+    wh "Restarting PowerShell.." blue -box -border darkgray -bb 1 -ba 1 -padout 2
     & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
     exit
 }

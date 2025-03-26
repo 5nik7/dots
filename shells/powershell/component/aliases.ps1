@@ -9,7 +9,6 @@ Set-Alias -Name which -Value Show-Command
 Set-Alias -Name touch -Value New-File
 Set-Alias -Name rlp -Value rl
 Set-Alias -Name ln -Value Set-Link
-Set-Alias -Name clr -Value Write-Color
 Set-Alias -Name err -Value Write-Err
 Set-Alias -Name wrn -Value Write-Warn
 Set-Alias -Name scs -Value Write-Success
@@ -62,7 +61,7 @@ if (Test-CommandExists eza) {
         if ($Path -eq '') {
             $Path = (Get-Location).ToString()
         }
-        $Arguments += ( '-a', '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' )  + $Path
+        $Arguments += ( '-a', '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' ) + $Path
         Get-ChildItemPretty @Arguments
         return
     }
@@ -96,7 +95,8 @@ if (Test-CommandExists eza) {
     }
 
     Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
-} else {
+}
+else {
     Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
 }
 

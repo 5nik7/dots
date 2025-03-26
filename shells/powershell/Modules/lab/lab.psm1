@@ -38,7 +38,7 @@ function SetupLab {
             }
         }
         if (-not $quiet) {
-            Write-Info "Setting up lab environment in $Env:LAB"
+            Write-Info "Setting up lab environment in $Env:LAB" -box
         }
     }
     if ($labPath) {
@@ -47,23 +47,23 @@ function SetupLab {
                 $oldLab = "$Env:LAB\PowerShell"
                 Remove-Path -Path $oldLab
                 if (-not $quiet) {
-                    Write-Info "Removed $oldLab from the PATH"
+                    Write-Info "Removed $oldLab from the PATH" -box
                 }
                 $Env:LAB = $labPath
                 if (-not $quiet) {
-                    Write-Info "Setting up lab environment in $Env:LAB"
+                    Write-Info "Setting up lab environment in $Env:LAB" -box
                 }
             }
             else {
                 if (-not $quiet) {
-                    Write-Warn "Lab environment already set up in $Env:LAB"
+                    Write-Warn "Lab environment already set up in $Env:LAB" -box
                 }
                 return
             }
         }
         else {
             if (-not $quiet) {
-                Write-Err "Path $labPath does not exist."
+                Write-Err "Path $labPath does not exist." -box
             }
             return
         }
@@ -74,7 +74,7 @@ function SetupLab {
     if (!(Test-Path($env:LAB))) {
         New-Item -ItemType Directory -Path $env:LAB -ErrorAction Stop | Out-Null
         if (-not $quiet) {
-            Write-Success "Created lab directory: $env:LAB"
+            Write-Success "Created lab directory: $env:LAB" -box
         }
     }
     $env:PSLAB = "$env:LAB\PowerShell"
@@ -82,18 +82,18 @@ function SetupLab {
     if (!(Test-Path($env:PSLAB))) {
         New-Item -ItemType Directory -Path $env:PSLAB -ErrorAction Stop | Out-Null
         if (-not $quiet) {
-            Write-Success "Created PowerShell lab directory: $env:PSLAB"
+            Write-Success "Created PowerShell lab directory: $env:PSLAB" -box
         }
     }
     if ($env:PATH -notlike "*$env:PSLAB*") {
         Add-Path -Path $env:PSLAB
         if (-not $quiet) {
-            Write-Success "Added $env:PSLAB to the PATH"
+            Write-Success "Added $env:PSLAB to the PATH" -box
         }
 
     }
     if (-not $quiet) {
-        Write-Success "Lab environment set up in $env:LAB"
+        Write-Success "Lab environment set up in $env:LAB" -box
     }
 }
 if (!($env:LAB)) {
@@ -116,14 +116,13 @@ else {
 function Get-LabUsage {
     $bannerPath = Join-Path -Path $modulePath -ChildPath "banner"
     if (Test-Path -Path $bannerPath) {
-        linebreak 2
+        wh '' -bb 2
         Get-Content -Path $bannerPath | Write-Host
     }
     else {
-        linebreak 2
-        Write-Host -foregroundColor Cyan " LAB"
+        wh "LAB" cyan -bb 2 -padout 2
     }
-    linebreak
+    wh '' -bb 2
     Write-Output @"
  Usage: lab [-new] [-edit] [-tested] [-delete] [-filename <string>] [-list] [-help] [-dot] [-cat] [-setup] [-labPath <string>] [-quiet]
 
@@ -140,7 +139,7 @@ function Get-LabUsage {
     -labPath   : Specifies the path to the lab directory.
     -quiet     : Suppresses output messages.
 "@
-    linebreak
+    wh '' -bb 1
     return
 }
 
@@ -178,12 +177,12 @@ function Get-LabScripts {
 
     $scriptsPath = $TargetScriptDir
 
-    Write-Box -color $targetcolor -text "Listing scripts in $scriptsPath"
+    wh "Listing scripts in $scriptsPath" $targetcolor -bb 1 -ba 1 -padout 2 -border darkgray -box
     Get-Command -CommandType ExternalScript | ForEach-Object `
     {
         $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
         if ($_.Source -like "$scriptsPath\*") {
-            Write-Host "$PadddingOut $name " -NoNewline
+            wh "$PadddingOut $name " -padout 2
 
             $parameters = $_.Parameters
             if ($null -ne $parameters) {
@@ -191,19 +190,19 @@ function Get-LabScripts {
                 {
                     $p = $parameters[$_]
                     $c = if ($p.ParameterType -like 'Switch') { 'DarkGray' } else { 'DarkCyan' }
-                    Write-Host "-$_ " -NoNewline -ForegroundColor $c
+                    wh "-$_ " $c
                 }
             }
 
             $alias = $aliases[$name]
             if ($alias) {
-                Write-Host " ($alias)" -ForegroundColor DarkGreen -NoNewline
+                wh " ($alias)" DarkGreen
             }
 
             Write-Host
         }
     }
-    linebreak
+    wh '' -bb 1
 }
 
 
@@ -276,8 +275,6 @@ function lab {
         [string]$labPath,
         [switch]$quiet = $false
     )
-    $PadddingOutSpaces = 4
-    $PadddingOut = " " * $PadddingOutSpaces
 
     $TargetScriptDir = $env:PSLAB
     $targeticon = $labicon
@@ -311,16 +308,11 @@ function lab {
         $filePath = "$TargetScriptDir\$filename.ps1"
         if (!(Test-Path $filePath)) {
             New-Item -Path $filePath -ItemType File -ErrorAction Stop | Out-Null
-            linebreak
-            Write-Color $actioncolor "$PadddingOut Created: " -inline
-            Write-Color $dircolor "$TargetScriptDir\" -inline
-            Write-Color $targetcolor $targeticon -inline
-            Write-Color $labscriptcolor  " $filename.ps1"
-            linebreak
+            wh " Created: " $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor " $filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
             return
         }
         else {
-            Write-Err "File $filename.ps1 already exists in $TargetScriptDir."
+            Write-Err "File $filename.ps1 already exists in $TargetScriptDir." -box
             return
         }
     }
@@ -340,12 +332,12 @@ function lab {
                 return
             }
             else {
-                Write-Err "EDITOR environment variable not set."
+                Write-Err "EDITOR environment variable not set." -box
                 return
             }
         }
         else {
-            Write-Err "$patherror"
+            Write-Err "$patherror" -box
             return
         }
     }
@@ -356,20 +348,11 @@ function lab {
         if (Test-Path $filePath) {
             $destination = "$env:PSCRIPTS\$filename.ps1"
             Move-Item -Path $filePath -Destination $destination -ErrorAction Stop | Out-Null
-            linebreak
-            Write-Color $actioncolor "$PadddingOut Moved: " -inline
-            Write-Color $dircolor "$PSLAB\" -inline
-            Write-Color $labiconcolor $labicon -inline
-            Write-Color $labscriptcolor  " $filename.ps1" -inline
-            Write-Color $arrowcolor $arrow -inline
-            Write-Color $dircolor "$env:PSCRIPTS\" -inline
-            Write-Color $pscriptscolor $psdoticon -inline
-            Write-Color $labscriptcolor " $filename.ps1"
-            linebreak
+            wh " Moved: " $actioncolor "$PSLAB\ " $dircolor "$labicon" $labiconcolor " $filename.ps1" $labscriptcolor "$arrow" $arrowcolor "$env:PSCRIPTS" $dircolor "$psdoticon" $pscriptscolor " $filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
             return
         }
         else {
-            Write-Err "File $filename.ps1 not found in $PSLAB."
+            Write-Err "File $filename.ps1 not found in $PSLAB." -box
             return
         }
     }
@@ -379,12 +362,7 @@ function lab {
         $filePath = "$TargetScriptDir\$filename.ps1"
         if (Test-Path $filePath) {
             Remove-Item -Path $filePath -ErrorAction Stop | Out-Null
-            linebreak
-            Write-Color $actioncolor "$PadddingOut Deleted: " -inline
-            Write-Color $dircolor "$TargetScriptDir\" -inline
-            Write-Color $targetcolor $targeticon -inline
-            Write-Color $labscriptcolor  " $filename.ps1"
-            linebreak
+            wh " Deleted: " $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor "$filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
             return
         }
         else {
@@ -398,7 +376,7 @@ function lab {
         elseif (Test-CommandExists bat) { 'bat' }
         elseif (Test-CommandExists cat) { 'cat' }
         else {
-            Write-Err "No command found to display file contents."
+            Write-Err "No command found to display file contents." -box -bb 1 -ba 1 -padout 2
             return
         }
         $filePath = "$TargetScriptDir\$filename.ps1"
@@ -407,7 +385,7 @@ function lab {
             return
         }
         else {
-            Write-Err "File $filename.ps1 not found in $TargetScriptDir."
+            Write-Err "File $filename.ps1 not found in $TargetScriptDir." -box
             return
         }
     }
