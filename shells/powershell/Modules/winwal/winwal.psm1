@@ -11,7 +11,7 @@ function Set-Wallpaper {
 
     # Trigger update of wallpaper
     # modified from https://www.joseespitia.com/2017/09/15/set-wallpaper-powershell-function/
-    Add-Type -TypeDefinition @"
+    Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
 
@@ -20,7 +20,7 @@ public class PInvoke
     [DllImport("User32.dll",CharSet=CharSet.Unicode)]
     public static extern int SystemParametersInfo(UInt32 action, UInt32 iParam, String sParam, UInt32 winIniFlags);
 }
-"@
+'@
 
     # Setting the wallpaper requires an absolute path, so pass image into resolve-path
     [PInvoke]::SystemParametersInfo(0x0014, 0, $($image | Resolve-Path), 0x0003) -eq 1
@@ -64,7 +64,7 @@ function Add-WalColorsSchemes {
         New-Item -Path "$HOME/.config/wal/colorschemes" -ItemType Directory -ErrorAction SilentlyContinue
     }
 
-    @("dark", "light") | ForEach-Object {
+    @('dark', 'light') | ForEach-Object {
         $schemeDir = "$sourceDir/$_"
         $configDir = "$HOME/.config/wal/colorschemes/$_"
         if (!(Test-Path -Path $schemeDir)) {
@@ -89,7 +89,7 @@ function Update-WalCommandPrompt {
     # Install color tool if needed
     if (!(Test-Path -Path $colorTool)) {
         $colorToolZip = "$scriptDir/colortool.zip"
-        Invoke-WebRequest -Uri "https://github.com/microsoft/terminal/releases/download/1904.29002/ColorTool.zip" -OutFile $colorToolZip
+        Invoke-WebRequest -Uri 'https://github.com/microsoft/terminal/releases/download/1904.29002/ColorTool.zip' -OutFile $colorToolZip
         Expand-Archive -Path $colorToolZip -DestinationPath $colorToolDir
         Remove-Item -Path $colorToolZip
     }
@@ -130,7 +130,7 @@ a=230
 
     if (!(Test-Path -Path $EBMDLL)) {
         $EBMZip = "$scriptDir/EBM.zip"
-        Invoke-WebRequest -Uri "https://github.com/Maplespe/ExplorerBlurMica/releases/download/2.0.1/Release_x64.zip" -OutFile $EBMZip
+        Invoke-WebRequest -Uri 'https://github.com/Maplespe/ExplorerBlurMica/releases/download/2.0.1/Release_x64.zip' -OutFile $EBMZip
         Expand-Archive -Path $EBMZip -DestinationPath $EBMDir
         Remove-Item -Path $EBMZip
     }
@@ -142,6 +142,54 @@ a=230
     }
 }
 
+function Update-Komorebi {
+
+    if (!(Test-Path -Path "$HOME/.cache/wal/komorebi.json")) {
+        return
+    }
+    @(
+        # Stable
+        "$HOME/.config/komorebi"
+
+    ) | ForEach-Object {
+        $komorebiDir = "$_"
+        $komorebiProfile = "$komorebiDir/komorebi.json"
+
+        # This version of windows terminal isn't installed
+        if (!(Test-Path -Path $komorebiProfile)) {
+            return
+        }
+
+        Copy-Item -Path $komorebiProfile -Destination "$komorebiDir/komorebi.json.bak"
+
+        # Load existing profile
+        $configData = (Get-Content -Path $komorebiProfile | ConvertFrom-Json) | Where-Object { $_ -ne $null }
+
+        # Create a new list to store schemes
+        $schemes = New-Object Collections.Generic.List[Object]
+
+        $configData.schemes | Where-Object { $_.name -ne 'wal' } | ForEach-Object { $schemes.Add($_) }
+        $walTheme = $(Get-Content "$HOME/.cache/wal/windows-terminal.json" | ConvertFrom-Json)
+        $schemes.Add($walTheme)
+
+        # Update color schemes
+        $configData.schemes = $schemes
+
+        # Set default theme as wal
+        $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name colorScheme -Value 'wal' -Force
+
+        # Set cursor to foreground color
+        if ($walTheme.cursorColor) {
+            $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.cursorColor -Force
+        }
+        else {
+            $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.foreground -Force
+        }
+
+        # Write config to disk
+        $configData | ConvertTo-Json -Depth 32 | Set-Content -Path $komorebiProfile
+    }
+}
 
 function Update-WalTerminal {
     if (!(Test-Path -Path "$HOME/.cache/wal/windows-terminal.json")) {
@@ -177,7 +225,7 @@ function Update-WalTerminal {
         # Create a new list to store schemes
         $schemes = New-Object Collections.Generic.List[Object]
 
-        $configData.schemes | Where-Object { $_.name -ne "wal" } | ForEach-Object { $schemes.Add($_) }
+        $configData.schemes | Where-Object { $_.name -ne 'wal' } | ForEach-Object { $schemes.Add($_) }
         $walTheme = $(Get-Content "$HOME/.cache/wal/windows-terminal.json" | ConvertFrom-Json)
         $schemes.Add($walTheme)
 
@@ -323,39 +371,39 @@ function winwal {
     Add-WalColorsSchemes
 
     if ($help -or $PSCmdlet.MyInvocation.BoundParameters.Count -eq 0) {
-        Write-Host "Usage: winwal [-theme <theme_name>] [-image <image_path>] [-backend <backend>] [-help] [-alpha <alpha>] [-background <background>] [--fg <foreground>] [--iterative] [--cols16 <method>] [--recursive] [--saturate <0.0-1.0>] [--preview] [--vte] [-c] [-l] [-n] [-o <script_name>] [-p <theme_name>] [-q] [-R] [-s] [-t] [-v] [-w] [-e] [--contrast <1.0-21.0>]"
-        Write-Host "  -theme <theme_name>  : Set the theme to use"
-        Write-Host "  -image <image_path>  : Set the image to use"
-        Write-Host "  -backend <backend>   : Set the backend to use"
-        Write-Host "  -help                : Show this help"
-        Write-Host "  -alpha <alpha>       : Set terminal background transparency"
-        Write-Host "  -background <background> : Custom background color to use"
-        Write-Host "  --fg <foreground>    : Custom foreground color to use"
-        Write-Host "  --iterative          : Go through images in order instead of shuffled"
+        Write-Host 'Usage: winwal [-theme <theme_name>] [-image <image_path>] [-backend <backend>] [-help] [-alpha <alpha>] [-background <background>] [--fg <foreground>] [--iterative] [--cols16 <method>] [--recursive] [--saturate <0.0-1.0>] [--preview] [--vte] [-c] [-l] [-n] [-o <script_name>] [-p <theme_name>] [-q] [-R] [-s] [-t] [-v] [-w] [-e] [--contrast <1.0-21.0>]'
+        Write-Host '  -theme <theme_name>  : Set the theme to use'
+        Write-Host '  -image <image_path>  : Set the image to use'
+        Write-Host '  -backend <backend>   : Set the backend to use'
+        Write-Host '  -help                : Show this help'
+        Write-Host '  -alpha <alpha>       : Set terminal background transparency'
+        Write-Host '  -background <background> : Custom background color to use'
+        Write-Host '  --fg <foreground>    : Custom foreground color to use'
+        Write-Host '  --iterative          : Go through images in order instead of shuffled'
         Write-Host "  --cols16 <method>    : Use 16 color output 'darken' or 'lighten'"
-        Write-Host "  --recursive          : Search for images recursively in subdirectories"
-        Write-Host "  --saturate <0.0-1.0> : Set the color saturation"
-        Write-Host "  --preview            : Print the current color palette"
-        Write-Host "  --vte                : Fix text-artifacts printed in VTE terminals"
-        Write-Host "  -c                   : Delete all cached colorschemes"
-        Write-Host "  -l                   : Generate a light colorscheme"
-        Write-Host "  -n                   : Skip setting the wallpaper"
+        Write-Host '  --recursive          : Search for images recursively in subdirectories'
+        Write-Host '  --saturate <0.0-1.0> : Set the color saturation'
+        Write-Host '  --preview            : Print the current color palette'
+        Write-Host '  --vte                : Fix text-artifacts printed in VTE terminals'
+        Write-Host '  -c                   : Delete all cached colorschemes'
+        Write-Host '  -l                   : Generate a light colorscheme'
+        Write-Host '  -n                   : Skip setting the wallpaper'
         Write-Host "  -o <script_name>     : External script to run after 'wal'"
-        Write-Host "  -p <theme_name>      : Permanently save theme with the specified name"
+        Write-Host '  -p <theme_name>      : Permanently save theme with the specified name'
         Write-Host "  -q                   : Quiet mode, don't print anything"
-        Write-Host "  -R                   : Restore previous colorscheme"
-        Write-Host "  -s                   : Skip changing colors in terminals"
-        Write-Host "  -t                   : Skip changing colors in tty"
+        Write-Host '  -R                   : Restore previous colorscheme'
+        Write-Host '  -s                   : Skip changing colors in terminals'
+        Write-Host '  -t                   : Skip changing colors in tty'
         Write-Host "  -v                   : Print 'wal' version"
-        Write-Host "  -w                   : Use last used wallpaper for color generation"
-        Write-Host "  -e                   : Skip reloading gtk/xrdb/i3/sway/polybar"
-        Write-Host "  --contrast <1.0-21.0>: Specify a minimum contrast ratio between palette colors and the source image"
+        Write-Host '  -w                   : Use last used wallpaper for color generation'
+        Write-Host '  -e                   : Skip reloading gtk/xrdb/i3/sway/polybar'
+        Write-Host '  --contrast <1.0-21.0>: Specify a minimum contrast ratio between palette colors and the source image'
         return
     }
 
     if (Get-Command 'wal' -ErrorAction SilentlyContinue) {
         if ($PSCmdlet.ParameterSetName -eq 'Theme') {
-            $walCommand = "wal --theme"
+            $walCommand = 'wal --theme'
             if ($themename) {
                 $walCommand += " $themename"
             }
@@ -370,24 +418,24 @@ function winwal {
         if ($alpha) { $walCommand += " -a $alpha" }
         if ($background) { $walCommand += " -b $background" }
         if ($foreground) { $walCommand += " --fg $foreground" }
-        if ($iterative) { $walCommand += " --iterative" }
+        if ($iterative) { $walCommand += ' --iterative' }
         if ($cols16) { $walCommand += " --cols16 $cols16" }
-        if ($recursive) { $walCommand += " --recursive" }
+        if ($recursive) { $walCommand += ' --recursive' }
         if ($saturate) { $walCommand += " --saturate $saturate" }
-        if ($preview) { $walCommand += " --preview" }
-        if ($vte) { $walCommand += " --vte" }
-        if ($clearCache) { $walCommand += " -c" }
-        if ($light) { $walCommand += " -l" }
-        if ($noWallpaper) { $walCommand += " -n" }
+        if ($preview) { $walCommand += ' --preview' }
+        if ($vte) { $walCommand += ' --vte' }
+        if ($clearCache) { $walCommand += ' -c' }
+        if ($light) { $walCommand += ' -l' }
+        if ($noWallpaper) { $walCommand += ' -n' }
         if ($externalScript) { $walCommand += " -o $externalScript" }
         if ($saveTheme) { $walCommand += " -p $saveTheme" }
-        if ($quiet) { $walCommand += " -q" }
-        if ($restore) { $walCommand += " -R" }
-        if ($skipTerminals) { $walCommand += " -s" }
-        if ($skipTTY) { $walCommand += " -t" }
-        if ($version) { $walCommand += " -v" }
-        if ($useLastWallpaper) { $walCommand += " -w" }
-        if ($skipReload) { $walCommand += " -e" }
+        if ($quiet) { $walCommand += ' -q' }
+        if ($restore) { $walCommand += ' -R' }
+        if ($skipTerminals) { $walCommand += ' -s' }
+        if ($skipTTY) { $walCommand += ' -t' }
+        if ($version) { $walCommand += ' -v' }
+        if ($useLastWallpaper) { $walCommand += ' -w' }
+        if ($skipReload) { $walCommand += ' -e' }
         if ($contrast) { $walCommand += " --contrast $contrast" }
 
         # Invoke wal with the constructed command

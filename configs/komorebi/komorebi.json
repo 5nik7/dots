@@ -10,11 +10,11 @@
   "border_width": 2,
   "border_offset": -1,
   "border_colours": {
-    "single": "#4785FF",
-    "unfocused": "#2E3C5B",
-    "floating": "#374B72",
-    "monocle": "#00FFFB",
-    "stack": "#BB9AF7"
+    "single": "#89B4FA",
+    "unfocused": "#1E1E2E",
+    "floating": "#585B70",
+    "monocle": "#94E2D5",
+    "stack": "#F5C2E7"
   },
   "transparency": true,
   "transparency_alpha": 250,
