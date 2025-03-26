@@ -64,15 +64,15 @@ function Get-NerdFontGlyphs {
     $localPath = Join-Path -Path $modulePath -ChildPath "glyphnames.json"
 
     if (-not $global:canConnectToGitHub) {
-        if ($debug) { Write-Host "󱎘 POWERNERD: GitHub.com not responding within 1 second." -ForegroundColor Yellow }
+        if ($v) { Write-Host "󱎘 POWERNERD: GitHub.com not responding within 1 second." -ForegroundColor Yellow }
         if (Test-Path -Path $localPath) {
-            if ($debug) { Write-Host "󱎘 POWERNERD: $localPath found." -ForegroundColor Green }
+            if ($v) { Write-Host "󱎘 POWERNERD: $localPath found." -ForegroundColor Green }
             $localContent = Get-Content -Path $localPath -Raw
             $json = $localContent | ConvertFrom-Json
             return $json
         }
         else {
-            if ($debug) { Write-Host "󱎘 POWERNERD: $localPath not found." -ForegroundColor Yellow }
+            if ($v) { Write-Host "󱎘 POWERNERD: $localPath not found." -ForegroundColor Yellow }
             return
         }
     }
@@ -182,13 +182,6 @@ function ListNerdFonts {
         $glyphChar = $glyph.Value.char
         Write-Output ($format -f $glyphChar, $($glyph.Name))
     }
-
-    # $sortedGlyphs = $nf.PSObject.Properties | Sort-Object Name
-    # foreach ($glyph in $sortedGlyphs) {
-    #     $glyphChar = $glyph.Value.char
-    #     $glyphCode = $glyph.Value.code
-    #     Write-Output ($format -f $($glyph.Name), $glyphChar, $glyphCode)
-    # }
 }
 
 function Invoke-PowerNerd {

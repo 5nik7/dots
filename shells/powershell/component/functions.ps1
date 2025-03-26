@@ -1,7 +1,5 @@
 ﻿$Global:isAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-$erricon = $($util.alerts.err.icon)
-
 function find-ln {
     Get-ChildItem | Where-Object { $_.Attributes -match "ReparsePoint" }
 }
@@ -21,6 +19,7 @@ function ask {
             return $false
         }
         else {
+            Write-Err "Invalid choice. Please enter 'y' or 'n'." -box
             return $null
         }
     }

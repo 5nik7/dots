@@ -1,5 +1,5 @@
-if ([int]$env:padding) { [int]$padding = [int]$env:padding }
-else { [int]$padding = 0 }
+if ($env:padding) { $padout = $env:padding }
+else { $padout = 3 }
 
 $util = @{
     colors = @{
@@ -22,115 +22,24 @@ $util = @{
     }
     alerts = @{
         info    = @{
-            text  = 'Info'
+            text  = "Info"
             icon  = "󰋽 "
-            color = 'Magenta'
+            color = "Magenta"
         }
         success = @{
-            text  = 'Success'
+            text  = "Success"
             icon  = " "
-            color = 'green'
+            color = "green"
         }
         warn    = @{
-            text  = 'Warning'
+            text  = "Warning"
             icon  = " "
-            color = 'yellow'
+            color = "yellow"
         }
         err     = @{
-            text  = 'Error'
+            text  = "Error"
             icon  = " "
-            color = 'red'
-        }
-        symbols = @{
-            "smallprompt"                     = @{ icon = "󰅂" }
-            "smline"                          = @{ icon = "󱪼" }
-            "ine"                             = @{ icon = "│" }
-            "readhost"                        = @{ icon = "󱪼" }
-            "block"                           = @{ icon = "" }
-            "Google"                          = @{ icon = "" }
-            "Apps"                            = @{ icon = "" }
-            "nf-cod-circle_slash"             = @{ icon = "" }
-            "nf-cod-chevron_right"            = @{ icon = "" }
-            "nf-fa-angle_right"               = @{ icon = "" }
-            "nf-fa-chevron_right"             = @{ icon = "" }
-            "nf-oct-diff"                     = @{ icon = "" }
-            "nf-md-alert"                     = @{ icon = "󰀦" }
-            "nf-oct-alert"                    = @{ icon = "" }
-            "nf-seti-error"                   = @{ icon = "" }
-            "nf-fa-exclamation_triangle"      = @{ icon = "" }
-            "nf-fa-triangle_exclamation"      = @{ icon = "" }
-            "nf-md-solid"                     = @{ icon = "󰚍" }
-            "nf-md-square"                    = @{ icon = "󰝤" }
-            "nf-fa-square_full"               = @{ icon = "" }
-            "nf-fa-square_o"                  = @{ icon = "" }
-            "nf-md-card_outline"              = @{ icon = "󰭶" }
-            "nf-seti-css"                     = @{ icon = "" }
-            "nf-md-pound"                     = @{ icon = "󰐣" }
-            "nf-md-regex"                     = @{ icon = "󰑑" }
-            "nf-seti-search"                  = @{icon = "" }
-            "nf-fa-times"                     = @{ icon = "" }
-            "nf-cod-chrome_close"             = @{ icon = "" }
-            "nf-fae-thin_close"               = @{ icon = "" }
-            "nf-iec-power_off"                = @{ icon = "⭘" }
-            "nf-cod-circle_large"             = @{ icon = "" }
-            "nf-md-check_bold"                = @{ icon = "󰸞" }
-            "nf-md-checkbox_blank"            = @{ icon = "󰄮" }
-            "nf-md-rectangle"                 = @{ icon = "󰹞" }
-            "nf-md-checkbox_intermediate"     = @{ icon = "󰡖" }
-            "nf-md-circle_small"              = @{ icon = "󰧟" }
-            "nf-md-circle_medium"             = @{ icon = "󰧞" }
-            "nf-cod-circle_filled"            = @{ icon = "" }
-            "nf-md-record"                    = @{ icon = "󰑊" }
-            "nf-fa-asterisk"                  = @{ icon = "" }
-            "nf-fa-at"                        = @{ icon = "" }
-            "nf-md-at"                        = @{ icon = "󰁥" }
-            "nf-oct-mention"                  = @{ icon = "" }
-            "nf-fa-ban"                       = @{ icon = "" }
-            "nf-fa-bolt"                      = @{ icon = "" }
-            "nf-fa-certificate"               = @{ icon = "" }
-            "nf-fa-genderless"                = @{ icon = "" }
-            "nf-oct-dot"                      = @{ icon = "" }
-            "nf-weather-degrees"              = @{ icon = "" }
-            "nf-weather-fahrenheit"           = @{ icon = "" }
-            "nf-weather-celsius"              = @{ icon = "" }
-            "nf-fa-microsoft"                 = @{ icon = "" }
-            "nf-fa-windows"                   = @{ icon = "" }
-            "nf-cod-terminal_powershell"      = @{ icon = "" }
-            "nf-seti-powershell"              = @{ icon = "" }
-            "nf-md-debian"                    = @{ icon = "󰣚" }
-            "nf-md-refresh"                   = @{ icon = "" }
-            "nf-md-ubuntu"                    = @{ icon = "󰑐" }
-            "nf-cod-debug_restart"            = @{ icon = "" }
-            "nf-fa-repeat"                    = @{ icon = "" }
-            "nf-md-restore"                   = @{ icon = "" }
-            "nf-md-reload"                    = @{ icon = "󰑓" }
-            "nf-md-sync"                      = @{ icon = "󰦛" }
-            "nf-fa-question"                  = @{ icon = "" }
-            "nf-oct-rel_file_path"            = @{ icon = "" }
-            "nf-fa-search"                    = @{ icon = "" }
-            "nf-md-magnify"                   = @{ icon = "󰍉" }
-            "nf-fa-usd"                       = @{ icon = "" }
-            "nf-fa-dollar_sign"               = @{ icon = "" }
-            "nf-seti-shell"                   = @{ icon = "" }
-            "nf-linux-neovim"                 = @{ icon = "" }
-            "nf-md-ampersand"                 = @{ icon = "󰪍" }
-            "nf-md-asterisk"                  = @{ icon = "󰛄" }
-            "nf-fa-trash_can"                 = @{ icon = "" }
-            "nf-fa-trash_o"                   = @{ icon = "" }
-            "nf-md-flask_outline"             = @{ icon = "󰂖" }
-            "nf-md-alert_rhombus_outline"     = @{ icon = "󱇏" }
-            "nf-fa-star_o"                    = @{ icon = "" }
-            "nf-oct-star"                     = @{ icon = "" }
-            "nf-fa-star"                      = @{ icon = "" }
-            "nf-oct-star_fill"                = @{ icon = "" }
-            "nf-md-star"                      = @{ icon = "" }
-            "nf-cod-star_full"                = @{ icon = "󰓎" }
-            "nf-cod-star_empty"               = @{ icon = "" }
-            "nf-md-star_outline"              = @{ icon = "󰓒" }
-            "nf-md-star_box_outline"          = @{ icon = "󰩴" }
-            "nf-md-star_face"                 = @{ icon = "󰦥" }
-            "nf-oct-north_star"               = @{ icon = "" }
-            "nf-md-format_letter_starts_with" = @{ icon = "󰾺" }
+            color = "red"
         }
     }
 }
@@ -250,7 +159,7 @@ function wh {
         $totalLength += $txt.Length
     }
     $totalLength += ($padin * 2)
-    # Build the box lines (if -box is set)
+
     $boxTop = (" " * $padout) + $boxSymbolTopLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolTopRight
     $boxBottom = (" " * $padout) + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolBottomRight
     $boxLeft = (" " * $padout) + $boxSymbolVertical + (" " * $padin)
@@ -278,7 +187,9 @@ function wh {
         Write-Host $boxBottom -ForegroundColor $border
     }
     else {
+        $padline = (" " * $padout)
         # No box: just print each pair
+        Write-Host -NoNewline  $padline
         foreach ($pair in $pairsList) {
             Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
         }
@@ -292,38 +203,42 @@ function Write-Info {
     param(
         [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
         [string[]]$pairs,
-        [switch]$box
+        [switch]$box,
+        [string]$border = "DarkGray"
     )
     $pairs = @($infoicon, $infocolor, $infotext, $infocolor) + $pairs
-    wh -pairs $pairs -bb 1 -padout $padding -box:$box
+    wh -pairs $pairs -padout $env:padding -box:$box -border:$border
 }
 
 function Write-Success {
     param(
         [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
         [string[]]$pairs,
-        [switch]$box
+        [switch]$box,
+        [string]$border = "DarkGray"
     )
     $pairs = @($successicon, $successcolor, $successtext, $successcolor) + $pairs
-    wh -pairs $pairs -bb 1 -padout $padding -box:$box
+    wh -pairs $pairs -padout $env:padding -box:$box -border:$border
 }
 
 function Write-Err {
     param(
         [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
         [string[]]$pairs,
-        [switch]$box
+        [switch]$box,
+        [string]$border = "DarkGray"
     )
     $pairs = @($erricon, $errcolor, $errtext, $errcolor) + $pairs
-    wh -pairs $pairs -bb 1 -padout $padding -box:$box
+    wh -pairs $pairs -padout $env:padding -box:$box -border:$border
 }
 
 function Write-Warn {
     param(
         [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
         [string[]]$pairs,
-        [switch]$box
+        [switch]$box,
+        [string]$border = "DarkGray"
     )
     $pairs = @($warnicon, $warncolor, $warntext, $warncolor) + $pairs
-    wh -pairs $pairs -bb 1 -padout $padding -box:$box
+    wh -pairs $pairs -padout $env:padding -box:$box -border:$border
 }

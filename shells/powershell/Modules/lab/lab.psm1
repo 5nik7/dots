@@ -139,7 +139,7 @@ function Get-LabUsage {
     -labPath   : Specifies the path to the lab directory.
     -quiet     : Suppresses output messages.
 "@
-    wh '' -bb 1
+    linebreak
     return
 }
 
@@ -202,7 +202,7 @@ function Get-LabScripts {
             Write-Host
         }
     }
-    wh '' -bb 1
+    linebreak
 }
 
 
