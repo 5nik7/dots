@@ -38,20 +38,19 @@ function Import-PSMod {
     }
 }
 
-if (Test-CommandExists fzf) { Import-Module "PsFzf" }
+if (Test-CommandExists fzf) { Import-Module 'PsFzf' }
 
-Import-PSMod -Name "PowerShellGet"
-Import-PSMod -Name "Terminal-Icons"
-Import-PSMod -Name "PSScriptAnalyzer"
-Import-PSMod -Name "Pester"
-Import-PSMod -Name "Plaster"
-Import-PSMod -Core -Name "Microsoft.WinGet.CommandNotFound"
+Import-PSMod -Name 'PowerShellGet'
+Import-PSMod -Name 'Terminal-Icons'
+Import-PSMod -Name 'PSScriptAnalyzer'
+Import-PSMod -Name 'Pester'
+Import-PSMod -Name 'Plaster'
+Import-PSMod -Core -Name 'Microsoft.WinGet.CommandNotFound'
 
-Import-PSMod -Local -Name "powernerd"
-Import-PSMod -Local -Name "winwal"
-Import-PSMod -Local -Name "lab"
-Import-PSMod -Local -Name "PSDots" -Version "0.0.1"
-Import-PSMod -Local -Name "powerpath" -Version "0.0.1"
+Import-PSMod -Local -Name 'powernerd'
+Import-PSMod -Local -Name 'winwal'
+Import-PSMod -Local -Name 'lab'
+Import-PSMod -Local -Name 'PSDots' -Version '0.0.1'
 
 if ((Get-Module winwal -ListAvailable) -and (Test-Path "$env:PSMODS\winwal\colortool")) {
     Add-Path -Path "$env:PSMODS\winwal\colortool"

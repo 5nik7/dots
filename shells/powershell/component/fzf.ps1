@@ -9,15 +9,15 @@ function FuzzyOpts {
     $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`" --preview-window=border-sharp --preview-label=`" PREVIEW `" --border=sharp --border-label=`" FILES `" --tabstop=2 --color=16 --bind=ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up"
     $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`" --preview-window=border-sharp --preview-label=`" PREVIEW `" --border=sharp --border-label=`" DIRECTORIES `" --tabstop=2 --color=16 --bind=ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up"
 
-    $Env:FZF_DEFAULT_COMMAND = "fd --type f --strip-cwd-prefix --hidden --exclude .git"
+    $Env:FZF_DEFAULT_COMMAND = 'fd --type f --strip-cwd-prefix --hidden --exclude .git'
     $previewString = ''
 
     if ($f) {
-        $Env:FZF_DEFAULT_COMMAND = "fd --type f --strip-cwd-prefix --hidden --exclude .git"
+        $Env:FZF_DEFAULT_COMMAND = 'fd --type f --strip-cwd-prefix --hidden --exclude .git'
         $previewString = $Env:FZF_FILE_OPTS
     }
     if ($d) {
-        $Env:FZF_DEFAULT_COMMAND = "fd --type d --strip-cwd-prefix --hidden --exclude .git"
+        $Env:FZF_DEFAULT_COMMAND = 'fd --type d --strip-cwd-prefix --hidden --exclude .git'
         $previewString = $Env:FZF_DIRECTORY_OPTS
     }
     try {
@@ -28,27 +28,27 @@ function FuzzyOpts {
         }
 
         $fzfOptions = @{
-            style         = "full"
+            style         = 'full'
             padding       = 0
             margin        = 0
             ansi          = $true
-            layout        = "reverse"
+            layout        = 'reverse'
             multi         = $true
-            height        = "80%"
+            height        = '80%'
             minheight     = 20
             tabstop       = 2
-            border        = "sharp"
-            listborder    = "sharp"
-            inputborder   = "sharp"
-            info          = "inline"
-            previewwindow = "right:60%,border-sharp"
-            delimiter     = ":"
-            prompt        = @{ symbol = "> " }
-            pointer       = @{ symbol = "┃" }
-            marker        = @{ symbol = "│" }
+            border        = 'sharp'
+            listborder    = 'sharp'
+            inputborder   = 'sharp'
+            info          = 'inline'
+            previewwindow = 'right:60%,border-sharp'
+            delimiter     = ':'
+            prompt        = @{ symbol = '> ' }
+            pointer       = @{ symbol = '┃' }
+            marker        = @{ symbol = '│' }
             separator     = [FzfSymbolOpts]@{
                 enabled = $false
-                symbol  = "-"
+                symbol  = '-'
             }
             scrollbar     = [FzfSymbolOpts]@{
                 enabled = $false
@@ -86,29 +86,29 @@ function FuzzyOpts {
         $colorArg = "--color=$colorString"
 
         $key_mapping = @{
-            minheight     = "min-height"
-            listborder    = "list-border"
-            inputborder   = "input-border"
-            previewwindow = "preview-window"
+            minheight     = 'min-height'
+            listborder    = 'list-border'
+            inputborder   = 'input-border'
+            previewwindow = 'preview-window'
         }
 
         $fzfString = ($fzfOptions.GetEnumerator() | ForEach-Object {
                 $key = if ($key_mapping.ContainsKey($_.Key)) { $key_mapping[$_.Key] } else { $_.Key }
-                if ($_.Value -is [bool]) { "--{0}" -f $key }
-                elseif ($_.Value -is [FzfSymbolOpts] -and $_.Value.enabled -eq $false) { "--no-{0}" -f $key }
+                if ($_.Value -is [bool]) { '--{0}' -f $key }
+                elseif ($_.Value -is [FzfSymbolOpts] -and $_.Value.enabled -eq $false) { '--no-{0}' -f $key }
                 elseif ($_.Value.symbol) { "--{0}='{1}'" -f $key, $_.Value.symbol }
-                else { "--{0}={1}" -f $key, $_.Value }
+                else { '--{0}={1}' -f $key, $_.Value }
             }) -join ' '
 
-        $env:_FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
-        $Global:_FZF_DEFAULT_OPTS = $env:_FZF_DEFAULT_OPTS
-        $Global:FZF_DEFAULT_OPTS = $env:FZF_DEFAULT_OPTS
-        $Env:FZF_DEFAULT_OPTS = $Global:FZF_DEFAULT_OPTS
+        $FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
+        $env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
+        $env:_FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
     }
     catch {
         Write-Host "Error: $_"
     }
 }
+
 
 FuzzyOpts -f
 
@@ -120,7 +120,6 @@ function fh {
     # Searches your command history, sets your clipboard to the selected item - Usage: fh [<string>]
     $find = $args
     $env:_FZF_DEFAULT_OPTS += ' ' + "--border-label=`" HISTORY `" --tabstop=2 --color=16"
-    # $Env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
     $selected = Get-Content (Get-PSReadlineOption).HistorySavePath | Where-Object { $_ -like "*$find*" } | Sort-Object -Unique -Descending | fzf
     if (![string]::IsNullOrWhiteSpace($selected)) { Set-Clipboard $selected }
 }
@@ -129,14 +128,14 @@ function fzc {
 
     $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
     # Runs fzf searching files then cd's to the directory of the selected file - Usage: fzc [d | u | c]
-    if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
-    elseif ($args -eq "u") { Set-Location $Env:USERPROFILE }
-    elseif ($args -eq "c") { Set-Location C:\ }
+    if ($args -eq 'd' -or $args.Count -eq 0) { Set-Location $Env:DOTS }
+    elseif ($args -eq 'u') { Set-Location $Env:USERPROFILE }
+    elseif ($args -eq 'c') { Set-Location C:\ }
     else {
         Write-Output "Invalid argument: $args"
         return
     }
-    $Host.UI.RawUI.WindowTitle = "FZF"
+    $Host.UI.RawUI.WindowTitle = 'FZF'
     $selected = fzf
     if (![string]::IsNullOrWhiteSpace($selected)) {
         $parent = Split-Path -parent -path $selected
@@ -151,14 +150,14 @@ function fze {
     $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
 
     # Runs fzf searching files then opens the directory of the selected file in explorer - Usage: fze [d | u | c]
-    if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
-    elseif ($args -eq "u") { Set-Location $Env:USERPROFILE }
-    elseif ($args -eq "c") { Set-Location C:\ }
+    if ($args -eq 'd' -or $args.Count -eq 0) { Set-Location $Env:DOTS }
+    elseif ($args -eq 'u') { Set-Location $Env:USERPROFILE }
+    elseif ($args -eq 'c') { Set-Location C:\ }
     else {
         Write-Output "Invalid argument: $args"
         return
     }
-    $Host.UI.RawUI.WindowTitle = "FZF"
+    $Host.UI.RawUI.WindowTitle = 'FZF'
     $selected = fzf
     if (![string]::IsNullOrWhiteSpace($selected)) {
         $parent = Split-Path -parent -path $selected
@@ -174,14 +173,14 @@ function fzn {
     $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
 
     # Runs fzf searching files then opens the directory of the selected file in neovim - Usage: fzn [d | u | c]
-    if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
-    elseif ($args -eq "u") { Set-Location $Env:USERPROFILE }
-    elseif ($args -eq "c") { Set-Location C:\ }
+    if ($args -eq 'd' -or $args.Count -eq 0) { Set-Location $Env:DOTS }
+    elseif ($args -eq 'u') { Set-Location $Env:USERPROFILE }
+    elseif ($args -eq 'c') { Set-Location C:\ }
     else {
         Write-Output "Invalid argument: $args"
         return
     }
-    $Host.UI.RawUI.WindowTitle = "FZF"
+    $Host.UI.RawUI.WindowTitle = 'FZF'
     $selected = fzf
     if (![string]::IsNullOrWhiteSpace($selected)) {
         $parent = Split-Path -parent -path $selected
@@ -199,14 +198,14 @@ function dzc {
     $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then cd's to the selected directory - Usage: dzc [d | u | c]
-    if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
-    elseif ($args -eq "u") { Set-Location $Env:USERPROFILE }
-    elseif ($args -eq "c") { Set-Location C:\ }
+    if ($args -eq 'd' -or $args.Count -eq 0) { Set-Location $Env:DOTS }
+    elseif ($args -eq 'u') { Set-Location $Env:USERPROFILE }
+    elseif ($args -eq 'c') { Set-Location C:\ }
     else {
         Write-Output "Invalid argument: $args"
         return
     }
-    $Host.UI.RawUI.WindowTitle = "FZF"
+    $Host.UI.RawUI.WindowTitle = 'FZF'
     $selected = fzf
     if (![string]::IsNullOrWhiteSpace($selected)) { Set-Location $selected }
     else { Set-Location C:\ }
@@ -218,14 +217,14 @@ function dze {
     $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then opens the selected directory in explorer - Usage: dze [d | u | c]
-    if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
-    elseif ($args -eq "u") { Set-Location $Env:USERPROFILE }
-    elseif ($args -eq "c") { Set-Location C:\ }
+    if ($args -eq 'd' -or $args.Count -eq 0) { Set-Location $Env:DOTS }
+    elseif ($args -eq 'u') { Set-Location $Env:USERPROFILE }
+    elseif ($args -eq 'c') { Set-Location C:\ }
     else {
         Write-Output "Invalid argument: $args"
         return
     }
-    $Host.UI.RawUI.WindowTitle = "FZF"
+    $Host.UI.RawUI.WindowTitle = 'FZF'
     $selected = fzf
     if (![string]::IsNullOrWhiteSpace($selected)) {
         Set-Location $selected
@@ -240,14 +239,14 @@ function dzn {
     $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
 
     # Runs fzf searching directories then opens the selected directory in neovim - Usage: dzn [d | u | c]
-    if ($args -eq "d" -or $args.Count -eq 0) { Set-Location $Env:DOTS }
-    elseif ($args -eq "u") { Set-Location $Env:USERPROFILE }
-    elseif ($args -eq "c") { Set-Location C:\ }
+    if ($args -eq 'd' -or $args.Count -eq 0) { Set-Location $Env:DOTS }
+    elseif ($args -eq 'u') { Set-Location $Env:USERPROFILE }
+    elseif ($args -eq 'c') { Set-Location C:\ }
     else {
         Write-Output "Invalid argument: $args"
         return
     }
-    $Host.UI.RawUI.WindowTitle = "FZF"
+    $Host.UI.RawUI.WindowTitle = 'FZF'
     $selected = fzf
     if (![string]::IsNullOrWhiteSpace($selected)) {
         Set-Location $selected

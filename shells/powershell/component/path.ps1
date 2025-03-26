@@ -1,3 +1,61 @@
+function Add-Path {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+    if (Test-Path $Path) {
+        if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+            $env:Path += ";$Path"
+        }
+    }
+    else {
+        Write-Err "Path $Path does not exist"
+    }
+}
+function Add-PrependPath {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+    if (Test-Path $Path) {
+        if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+            $env:Path = "$Path;$env:Path"
+        }
+    }
+    else {
+        Write-Err "Path $Path does not exist"
+    }
+}
+function Remove-Path {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+    if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
+        $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
+    }
+    else {
+        Write-Err "Path $Path does not exist"
+    }
+}
+function Remove-DuplicatePaths {
+    $paths = $env:Path -split ';'
+    $uniquePaths = [System.Collections.Generic.HashSet[string]]::new()
+    $newPath = @()
+
+    foreach ($path in $paths) {
+        if ($uniquePaths.Add($path)) {
+            $newPath += $path
+        }
+        else {
+            Write-Verbose "Duplicate path detected and removed: $path"
+        }
+    }
+
+    $env:Path = $newPath -join ';'
+    Write-Verbose "Duplicate paths have been removed. Updated PATH: $env:Path"
+}
+
 function Get-PyenvVersion {
     $PYVER = (Get-Content "$env:PYENV\version") -replace '\n', ''
     return $PYVER
@@ -6,7 +64,7 @@ $PYVER = Get-PyenvVersion
 $env:PYVER = $PYVER
 
 function PyenvExePath {
-    $PYENVBIN = (Join-Path $env:PYENV "bin")
+    $PYENVBIN = (Join-Path $env:PYENV 'bin')
     return $PYENVBIN
 }
 $PYENVBIN = PyenvExePath
@@ -20,14 +78,14 @@ $PYEXEDIR = Get-PyenvExeDir
 $env:PYEXEDIR = $PYEXEDIR
 
 function Get-PyenvScripts {
-    $PYENVSCRIPTS = (Join-Path $PYEXEDIR "Scripts")
+    $PYENVSCRIPTS = (Join-Path $PYEXEDIR 'Scripts')
     return $PYENVSCRIPTS
 }
 $PYENVSCRIPTS = Get-PyenvScripts
 $env:PYENVSCRIPTS = $PYENVSCRIPTS
 
 function Get-PyenvShims {
-    $PYENVSHIMS = (Join-Path $env:PYENV "shims")
+    $PYENVSHIMS = (Join-Path $env:PYENV 'shims')
     return $PYENVSHIMS
 }
 $PYENVSHIMS = Get-PyenvShims
@@ -62,7 +120,6 @@ function Set-Pyenv {
         return
     }
 }
-
 Set-Pyenv
 
 $env:PSCRIPTS = "$env:PSDOTS\Scripts"
