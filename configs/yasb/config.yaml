@@ -1,6 +1,6 @@
 watch_stylesheet: true
 watch_config: true
-debug: false
+debug: true
 komorebi:
   start_command: "komorebic start --whkd"
   stop_command: "komorebic stop --whkd"
@@ -17,7 +17,7 @@ bars:
       enabled: true
       acrylic: false
       dark_mode: true
-      round_corners: true
+      round_corners: false
       border_color: None
     window_flags:
       always_on_top: false
@@ -186,12 +186,7 @@ widgets:
         - { icon: "\uf422", launch: "launcher" }
         - { icon: "\ueb03", launch: "cmd /c Taskmgr" }
         - { icon: "\uf489", launch: "wt" }
-        - { icon: "\udb84\udec7", launch: "C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE" }
         - { icon: "\uf1ff",launch: "C:\\Users\\amn\\AppData\\Local\\Discord\\Update.exe --processStart Discord.exe" }
-        - { icon: "\ue217",launch: "C:\\Users\\amn\\AppData\\Roaming\\Telegram Desktop\\Telegram.exe" }
-        - { icon: "\ued38",launch: "C:\\Users\\amn\\AppData\\Local\\Viber\\Viber.exe" }
-        - { icon: "\uf17e",launch: "C:\\Program Files (x86)\\Microsoft\\Skype for Desktop\\Skype.exe" }
-        - { icon: "\udb80\ude39",launch: "C:\\Program Files\\Mozilla Firefox\\firefox.exe" }
         - { icon: "\udb82\ude1e",launch: "C:\\Users\\amn\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe" }
   github:
     type: "yasb.github.GithubWidget"
@@ -234,7 +229,7 @@ widgets:
     type: "yasb.wallpapers.WallpapersWidget"
     options:
       label: "<span>\udb83\ude09</span>"
-      image_path: "C:\\Users\\amn\\Pictures\\Wallpapers"
+      image_path: "C:\\Users\\njen\\dots\\walls"
       change_automatically: false
       update_interval: 60
       gallery:

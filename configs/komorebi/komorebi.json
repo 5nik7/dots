@@ -7,7 +7,7 @@
   "default_container_padding": 5,
   "border": true,
   "border_style": "Square",
-  "border_width": 2,
+  "border_width": 1,
   "border_offset": -1,
   "border_colours": {
     "single": "#4785FF",
