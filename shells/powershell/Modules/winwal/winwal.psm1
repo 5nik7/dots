@@ -144,52 +144,34 @@ a=230
 
 function Update-Komorebi {
 
-    if (!(Test-Path -Path "$HOME/.cache/wal/komorebi.json")) {
+    if (!(Test-Path -Path "$HOME\.cache\wal\komorebi.json")) {
         return
     }
-    @(
-        # Stable
-        "$HOME/.config/komorebi"
 
-    ) | ForEach-Object {
-        $komorebiDir = "$_"
-        $komorebiProfile = "$komorebiDir/komorebi.json"
+    $komorebiDir = "$HOME\.config\komorebi"
+    $komorebiConfig = "$komorebiDir\komorebi.json"
 
-        # This version of windows terminal isn't installed
-        if (!(Test-Path -Path $komorebiProfile)) {
-            return
-        }
-
-        Copy-Item -Path $komorebiProfile -Destination "$komorebiDir/komorebi.json.bak"
-
-        # Load existing profile
-        $configData = (Get-Content -Path $komorebiProfile | ConvertFrom-Json) | Where-Object { $_ -ne $null }
-
-        # Create a new list to store schemes
-        $schemes = New-Object Collections.Generic.List[Object]
-
-        $configData.schemes | Where-Object { $_.name -ne 'wal' } | ForEach-Object { $schemes.Add($_) }
-        $walTheme = $(Get-Content "$HOME/.cache/wal/windows-terminal.json" | ConvertFrom-Json)
-        $schemes.Add($walTheme)
-
-        # Update color schemes
-        $configData.schemes = $schemes
-
-        # Set default theme as wal
-        $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name colorScheme -Value 'wal' -Force
-
-        # Set cursor to foreground color
-        if ($walTheme.cursorColor) {
-            $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.cursorColor -Force
-        }
-        else {
-            $configData.profiles.defaults | Add-Member -MemberType NoteProperty -Name cursorColor -Value $walTheme.foreground -Force
-        }
-
-        # Write config to disk
-        $configData | ConvertTo-Json -Depth 32 | Set-Content -Path $komorebiProfile
+    if (!(Test-Path -Path $komorebiConfig)) {
+        return
     }
+
+    Copy-Item -Path $komorebiConfig -Destination "$komorebiDir\komorebi.json.bak"
+
+    $komorebiConfigData = (Get-Content -Path $komorebiConfig | ConvertFrom-Json) | Where-Object { $_ -ne $null }
+
+
+    $border_colours = New-Object Collections.Generic.List[Object]
+
+    $komorebiConfigData.border_colours | ForEach-Object { $border_colours.Add($_) }
+    $komorebiWal = $(Get-Content "$HOME/.cache/wal/komorebi.json" | ConvertFrom-Json)
+    $border_colours.Add($komorebiWal)
+
+    $komorebiConfigData.border_colours = $border_colours
+
+    $komorebiConfigData | ConvertTo-Json -Depth 32 | Set-Content -Path $komorebiConfig
 }
+
+
 
 function Update-WalTerminal {
     if (!(Test-Path -Path "$HOME/.cache/wal/windows-terminal.json")) {

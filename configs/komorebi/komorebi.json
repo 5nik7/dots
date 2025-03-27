@@ -1,21 +1,21 @@
 {
-  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.32/schema.json",
+  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.35/schema.json",
   "app_specific_configuration_path": "C:/Users/njen/.config/komorebi/applications.json",
   "window_hiding_behaviour": "Cloak",
   "cross_monitor_move_behaviour": "Insert",
   "default_workspace_padding": 5,
   "default_container_padding": 5,
   "border": true,
-  "border_style": "Square",
-  "border_width": 2,
-  "border_offset": -1,
   "border_colours": {
     "single": "#89B4FA",
     "unfocused": "#1E1E2E",
-    "floating": "#585B70",
+    "floating": "#A6ADC8",
     "monocle": "#94E2D5",
     "stack": "#F5C2E7"
   },
+  "border_style": "Square",
+  "border_width": 2,
+  "border_offset": -1,
   "transparency": true,
   "transparency_alpha": 250,
   "animation": {
@@ -32,7 +32,10 @@
     }
   },
   "floating.window": {
-    "aspect_ratio": [16, 9]
+    "aspect_ratio": [
+      16,
+      9
+    ]
   },
   "floating_applications": [
     {

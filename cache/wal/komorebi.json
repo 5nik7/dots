@@ -1,7 +1,7 @@
-  "border_colours": {
+{
     "single": "#89B4FA",
     "unfocused": "#1E1E2E",
-    "floating": "#585B70",
+    "floating": "#A6ADC8",
     "monocle": "#94E2D5",
     "stack": "#F5C2E7"
-  }
+}

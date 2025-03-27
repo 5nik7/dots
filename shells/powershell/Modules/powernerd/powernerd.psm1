@@ -19,30 +19,30 @@ function Show-PowerNerdUsage {
         Author: njen
         Version: 1.0.0
     #>
-    $bannerPath = Join-Path -Path $modulePath -ChildPath "banner"
+    $bannerPath = Join-Path -Path $modulePath -ChildPath 'banner'
     if (Test-Path -Path $bannerPath) {
         linebreak 2
         Get-Content -Path $bannerPath | Write-Host
     }
     else {
         linebreak 2
-        Write-Host -foregroundColor Yellow " PowerNerd"
+        Write-Host -foregroundColor Yellow ' PowerNerd'
     }
     linebreak
-    Write-Host -foregroundColor DarkMagenta " NerdFont utility for PowerShell."
+    Write-Host -foregroundColor DarkMagenta ' NerdFont utility for PowerShell.'
     linebreak
-    Write-Host " Usage: powernerd -glyphName <name> [-code] [-list] [-install] [-help]"
+    Write-Host ' Usage: powernerd -glyphName <name> [-code] [-list] [-install] [-help]'
     linebreak
     Write-Host -foregroundColor Yellow "`t-glyphName: " -NoNewline
-    Write-Host "The name of the glyph to retrieve."
+    Write-Host 'The name of the glyph to retrieve.'
     Write-Host -foregroundColor Yellow "`t-code: " -NoNewline
-    Write-Host "Retrieve the glyph code instead of the character."
+    Write-Host 'Retrieve the glyph code instead of the character.'
     Write-Host -foregroundColor Yellow "`t-list: " -NoNewline
-    Write-Host "List all available glyphs."
+    Write-Host 'List all available glyphs.'
     Write-Host -foregroundColor Yellow "`t-install: " -NoNewline
-    Write-Host "Install NerdFonts."
+    Write-Host 'Install NerdFonts.'
     Write-Host -foregroundColor Yellow "`t-help: " -NoNewline
-    Write-Host "Display this help message."
+    Write-Host 'Display this help message.'
     linebreak 2
 
 }
@@ -60,19 +60,16 @@ function Get-NerdFontGlyphs {
     #>
 
 
-    $url = "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/refs/heads/master/glyphnames.json"
-    $localPath = Join-Path -Path $modulePath -ChildPath "glyphnames.json"
+    $url = 'https://raw.githubusercontent.com/ryanoasis/nerd-fonts/refs/heads/master/glyphnames.json'
+    $localPath = Join-Path -Path $modulePath -ChildPath 'glyphnames.json'
 
     if (-not $global:canConnectToGitHub) {
-        if ($v) { Write-Host "󱎘 POWERNERD: GitHub.com not responding within 1 second." -ForegroundColor Yellow }
         if (Test-Path -Path $localPath) {
-            if ($v) { Write-Host "󱎘 POWERNERD: $localPath found." -ForegroundColor Green }
             $localContent = Get-Content -Path $localPath -Raw
             $json = $localContent | ConvertFrom-Json
             return $json
         }
         else {
-            if ($v) { Write-Host "󱎘 POWERNERD: $localPath not found." -ForegroundColor Yellow }
             return
         }
     }
@@ -259,22 +256,7 @@ function Invoke-PowerNerd {
 
 Export-ModuleMember -Function Get-NerdFontGlyphs
 Export-ModuleMember -Function Install-NerdFonts
-Export-ModuleMember -Variable canConnectToGitHub
-Export-ModuleMember -Variable modulePath
-Export-ModuleMember -Variable v
-Export-ModuleMember -Variable timeout
-Export-ModuleMember -Variable pingResult
-Export-ModuleMember -Variable localPath
-Export-ModuleMember -Variable localContent
-Export-ModuleMember -Variable remoteContent
-Export-ModuleMember -Variable json
-Export-ModuleMember -Variable glyphName
-Export-ModuleMember -Variable glyphChar
-Export-ModuleMember -Variable glyphCode
-Export-ModuleMember -Variable OptionalParameters
-Export-ModuleMember -Variable format
-Export-ModuleMember -Variable sortedGlyphs
-Export-ModuleMember -Variable glyph
+Export-ModuleMember -Variable nf
 
 Export-ModuleMember -Function Get-GlyphCharacter
 Export-ModuleMember -Function Get-GlyphCode
