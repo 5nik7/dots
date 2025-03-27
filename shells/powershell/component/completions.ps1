@@ -1,3 +1,4 @@
+(& pyenv-venv completion) | Out-String | Invoke-Expression
 (& gh completion -s powershell) | Out-String | Invoke-Expression
 (& starship completions powershell) | Out-String | Invoke-Expression
 (& bat --completion ps1) | Out-String | Invoke-Expression
