@@ -159,12 +159,9 @@ function Update-Komorebi {
 
     $komorebiConfigData = (Get-Content -Path $komorebiConfig | ConvertFrom-Json) | Where-Object { $_ -ne $null }
 
-
-    $border_colours = New-Object Collections.Generic.List[Object]
-
-    $komorebiConfigData.border_colours | ForEach-Object { $border_colours.Add($_) }
     $komorebiWal = $(Get-Content "$HOME/.cache/wal/komorebi.json" | ConvertFrom-Json)
-    $border_colours.Add($komorebiWal)
+
+    $border_colours = $komorebiWal
 
     $komorebiConfigData.border_colours = $border_colours
 
@@ -255,6 +252,9 @@ function ChangeTheColors {
 
     # Update Windows Terminal
     Update-WalTerminal
+
+    # Update Komorebi
+    Update-Komorebi
 
     # Update prompt defaults
     Update-WalCommandPrompt
