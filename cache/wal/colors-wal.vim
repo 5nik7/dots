@@ -1,5 +1,5 @@
 " Special
-let wallpaper  = "None"
+let wallpaper  = "C:/Users/njen/dev/dots/walls/Cat1.jpg"
 let background = "#1E1E2E"
 let foreground = "#CDD6F4"
 let cursor     = "#F5E0DC"
