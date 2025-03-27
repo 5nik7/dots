@@ -172,6 +172,10 @@ color.yarn.script = bright blue
 # type: boolean
 debug.log_terminal = False
 
+# name: Include launchable documents
+# type: boolean
+exec.associations = True
+
 # name: Include files
 # type: boolean
 exec.files = True
@@ -184,6 +188,10 @@ files.hidden = False
 # type: boolean
 files.system = True
 
+# name: Use default key bindings
+# type: boolean
+fzf.default_bindings = True
+
 # name: Location of fzf.exe if not on the PATH
 # type: string
 fzf.exe_location = C:\Users\nickf\scoop\shims\fzf.exe
@@ -191,6 +199,10 @@ fzf.exe_location = C:\Users\nickf\scoop\shims\fzf.exe
 # name: The number of history lines to save
 # type: integer
 history.max_lines = 25000
+
+# name: Share history between instances
+# type: boolean
+history.shared = True
 
 # name: History item timestamps
 # type: enum
@@ -203,11 +215,15 @@ lua.debug = True
 
 # name: 'require' search path
 # type: string
-lua.path = C:\Users\nickf\scoop\shims\lua.exe
+lua.path = ;;C:\Lua\5.1\lua\?.luac
 
 # name: Prints stack trace on Lua errors
 # type: boolean
 lua.traceback_on_error = True
+
+# name: Coloring rules for completions
+# type: string
+match.coloring_rules = 
 
 # name: Expand envvars when completing
 # type: boolean
@@ -220,7 +236,7 @@ match.substring = True
 # name: Controls when past prompts are collapsed
 # type: enum
 # options: off,always,same_dir
-prompt.transient = off
+prompt.transient = always
 
 
 

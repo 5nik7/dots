@@ -1,11 +1,18 @@
 using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
-$env:DOTS = "$HOME\dots"
+$DOTS = "$env:USERPROFILE\dots"
+$env:DOTS = $DOTS
 $Global:DOTS = $env:DOTS
 $SHELLS = "$DOTS\shells"
+$env:SHELLS = $SHELLS
+$Global:SHELLS = $env:SHELLS
 $PSDOTS = "$SHELLS\powershell"
+$env:PSDOTS = $PSDOTS
+$Global:PSDOTS = $env:PSDOTS
 $PSCOMPONENT = "$PSDOTS\component"
+$env:PSCOMPONENT = $PSCOMPONENT
+$Global:PSCOMPONENT = $env:PSCOMPONENT
 
 $psource = ('util', 'functions', 'env')
 foreach ( $piece in $psource ) {
@@ -49,6 +56,8 @@ foreach ( $piece in $psource ) {
     Unblock-File "$PSCOMPONENT\$piece.ps1"
     . "$PSCOMPONENT\$piece.ps1"
 }
+
+# (& pyenv-venv init)
 
 if ($env:isReloading) {
     Clear-Host
