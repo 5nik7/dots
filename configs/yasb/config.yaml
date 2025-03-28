@@ -2,9 +2,9 @@ watch_stylesheet: true
 watch_config: true
 debug: true
 komorebi:
-  start_command: "komorebic start --whkd"
-  stop_command: "komorebic stop --whkd"
-  reload_command: "komorebic stop --whkd && komorebic start --whkd"
+  start_command: "komorebic start --whkd --masir"
+  stop_command: "komorebic stop --whkd --masir"
+  reload_command: "komorebic stop --whkd --masir && komorebic start --whkd --masir"
 bars:
   primary-bar:
     enabled: true
