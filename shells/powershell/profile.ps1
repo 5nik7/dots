@@ -16,63 +16,63 @@ $Global:PSCOMPONENT = $env:PSCOMPONENT
 
 $psource = ('util', 'functions', 'env')
 foreach ( $piece in $psource ) {
-    Unblock-File "$PSCOMPONENT\$piece.ps1"
-    . "$PSCOMPONENT\$piece.ps1"
+  Unblock-File "$PSCOMPONENT\$piece.ps1"
+  . "$PSCOMPONENT\$piece.ps1"
 }
 
 function dotenv {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$path,
-        [switch]$v
-    )
-    $envFilePath = Join-Path -Path $path -ChildPath '.env'
-    if (Test-Path $envFilePath) {
-        if ($v) {
-            wh 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$env:DOTS\" blue '.env' green -box -border 0 -bb 1 -ba 1 -padout $env:padding
-        }
-        Get-Content $envFilePath | ForEach-Object {
-            $name, $value = $_.split('=')
-
-            if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
-                continue
-            }
-            $expandedName = [Environment]::ExpandEnvironmentVariables($name)
-            $expandedValue = [Environment]::ExpandEnvironmentVariables($value)
-
-            Set-Item -Path "env:$expandedName" -Value $expandedValue
-            if ($v) {
-                wh '' darkgray $expandedName yellow ' = ' darkgray $expandedValue white -bb 1 -ba 1 -padout $env:padding
-            }
-        }
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$path,
+    [switch]$v
+  )
+  $envFilePath = Join-Path -Path $path -ChildPath '.env'
+  if (Test-Path $envFilePath) {
+    if ($v) {
+      wh 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$env:DOTS\" blue '.env' green -box -border 0 -bb 1 -ba 1 -padout $env:padding
     }
+    Get-Content $envFilePath | ForEach-Object {
+      $name, $value = $_.split('=')
+
+      if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
+        continue
+      }
+      $expandedName = [Environment]::ExpandEnvironmentVariables($name)
+      $expandedValue = [Environment]::ExpandEnvironmentVariables($value)
+
+      Set-Item -Path "env:$expandedName" -Value $expandedValue
+      if ($v) {
+        wh '' darkgray $expandedName yellow ' = ' darkgray $expandedValue white -bb 1 -ba 1 -padout $env:padding
+      }
+    }
+  }
 }
 dotenv $env:DOTS
 dotenv $env:secretdir
 
 $psource = ('path', 'fzf', 'modules', 'readline', 'prompt', 'aliases', 'completions')
 foreach ( $piece in $psource ) {
-    Unblock-File "$PSCOMPONENT\$piece.ps1"
-    . "$PSCOMPONENT\$piece.ps1"
+  Unblock-File "$PSCOMPONENT\$piece.ps1"
+  . "$PSCOMPONENT\$piece.ps1"
 }
 
 # (& pyenv-venv init)
 
 if ($env:isReloading) {
-    Clear-Host
-    wh 'Profile reloaded.' green -box -border darkgray -bb 1 -ba 1 -padout $env:padding
-    $env:isReloading = $false
+  Clear-Host
+  wh 'Profile reloaded.' green -box -border darkgray -bb 1 -ba 1 -padout $env:padding
+  $env:isReloading = $false
 }
 
 function rl {
-    [CmdletBinding()]
-    param ()
-    [bool]$env:isReloading = "$true"
+  [CmdletBinding()]
+  param ()
+  [bool]$env:isReloading = "$true"
 
-    $env:isReloading = $true
-    Clear-Host
-    wh 'Restarting PowerShell..' blue -box -border darkgray -bb 1 -ba 1 -padout $env:padding
-    & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
-    exit
+  $env:isReloading = $true
+  Clear-Host
+  wh 'Restarting PowerShell..' blue -box -border darkgray -bb 1 -ba 1 -padout $env:padding
+  & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
+  exit
 }

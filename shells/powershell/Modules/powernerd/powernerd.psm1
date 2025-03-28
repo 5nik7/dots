@@ -1,16 +1,16 @@
 $timeout = 1000
 $pingResult = Get-CimInstance -ClassName Win32_PingStatus -Filter "Address = 'github.com' AND Timeout = $timeout" -Property StatusCode 2>$null
 if ($pingResult.StatusCode -eq 0) {
-    $canConnectToGitHub = $true
+  $canConnectToGitHub = $true
 }
 else {
-    $canConnectToGitHub = $false
+  $canConnectToGitHub = $false
 }
 
 $modulePath = $PSScriptRoot
 
 function Show-PowerNerdUsage {
-    <#
+  <#
     .SYNOPSIS
         Displays usage information for the PowerNerd module.
     .DESCRIPTION
@@ -19,37 +19,37 @@ function Show-PowerNerdUsage {
         Author: njen
         Version: 1.0.0
     #>
-    $bannerPath = Join-Path -Path $modulePath -ChildPath 'banner'
-    if (Test-Path -Path $bannerPath) {
-        linebreak 2
-        Get-Content -Path $bannerPath | Write-Host
-    }
-    else {
-        linebreak 2
-        Write-Host -foregroundColor Yellow ' PowerNerd'
-    }
-    linebreak
-    Write-Host -foregroundColor DarkMagenta ' NerdFont utility for PowerShell.'
-    linebreak
-    Write-Host ' Usage: powernerd -glyphName <name> [-code] [-list] [-install] [-help]'
-    linebreak
-    Write-Host -foregroundColor Yellow "`t-glyphName: " -NoNewline
-    Write-Host 'The name of the glyph to retrieve.'
-    Write-Host -foregroundColor Yellow "`t-code: " -NoNewline
-    Write-Host 'Retrieve the glyph code instead of the character.'
-    Write-Host -foregroundColor Yellow "`t-list: " -NoNewline
-    Write-Host 'List all available glyphs.'
-    Write-Host -foregroundColor Yellow "`t-install: " -NoNewline
-    Write-Host 'Install NerdFonts.'
-    Write-Host -foregroundColor Yellow "`t-help: " -NoNewline
-    Write-Host 'Display this help message.'
+  $bannerPath = Join-Path -Path $modulePath -ChildPath 'banner'
+  if (Test-Path -Path $bannerPath) {
     linebreak 2
+    Get-Content -Path $bannerPath | Write-Host
+  }
+  else {
+    linebreak 2
+    Write-Host -foregroundColor Yellow ' PowerNerd'
+  }
+  linebreak
+  Write-Host -foregroundColor DarkMagenta ' NerdFont utility for PowerShell.'
+  linebreak
+  Write-Host ' Usage: powernerd -glyphName <name> [-code] [-list] [-install] [-help]'
+  linebreak
+  Write-Host -foregroundColor Yellow "`t-glyphName: " -NoNewline
+  Write-Host 'The name of the glyph to retrieve.'
+  Write-Host -foregroundColor Yellow "`t-code: " -NoNewline
+  Write-Host 'Retrieve the glyph code instead of the character.'
+  Write-Host -foregroundColor Yellow "`t-list: " -NoNewline
+  Write-Host 'List all available glyphs.'
+  Write-Host -foregroundColor Yellow "`t-install: " -NoNewline
+  Write-Host 'Install NerdFonts.'
+  Write-Host -foregroundColor Yellow "`t-help: " -NoNewline
+  Write-Host 'Display this help message.'
+  linebreak 2
 
 }
 
 # Function to fetch and parse the glyph names JSON
 function Get-NerdFontGlyphs {
-    <#
+  <#
     .SYNOPSIS
         Fetches and parses the NerdFont glyph names JSON.
     .DESCRIPTION
@@ -60,41 +60,41 @@ function Get-NerdFontGlyphs {
     #>
 
 
-    $url = 'https://raw.githubusercontent.com/ryanoasis/nerd-fonts/refs/heads/master/glyphnames.json'
-    $localPath = Join-Path -Path $modulePath -ChildPath 'glyphnames.json'
+  $url = 'https://raw.githubusercontent.com/ryanoasis/nerd-fonts/refs/heads/master/glyphnames.json'
+  $localPath = Join-Path -Path $modulePath -ChildPath 'glyphnames.json'
 
-    if (-not $global:canConnectToGitHub) {
-        if (Test-Path -Path $localPath) {
-            $localContent = Get-Content -Path $localPath -Raw
-            $json = $localContent | ConvertFrom-Json
-            return $json
-        }
-        else {
-            return
-        }
+  if (-not $global:canConnectToGitHub) {
+    if (Test-Path -Path $localPath) {
+      $localContent = Get-Content -Path $localPath -Raw
+      $json = $localContent | ConvertFrom-Json
+      return $json
     }
-    try {
-        $localContent = Get-Content -Path $localPath -Raw
-        $remoteContent = Invoke-RestMethod -Uri $url
-        if ($localContent -eq $remoteContent) {
-            $json = $localContent | ConvertFrom-Json
-            return $json
-        }
-        else {
-            Invoke-WebRequest -Uri $url -OutFile $localPath
-            $json = $remoteContent
-            return $json
-        }
+    else {
+      return
     }
-    catch {
-        Write-Err "$_"
+  }
+  try {
+    $localContent = Get-Content -Path $localPath -Raw
+    $remoteContent = Invoke-RestMethod -Uri $url
+    if ($localContent -eq $remoteContent) {
+      $json = $localContent | ConvertFrom-Json
+      return $json
     }
+    else {
+      Invoke-WebRequest -Uri $url -OutFile $localPath
+      $json = $remoteContent
+      return $json
+    }
+  }
+  catch {
+    Write-Err "$_"
+  }
 }
 
 $nf = Get-NerdFontGlyphs
 
 function Get-GlyphCharacter {
-    <#
+  <#
     .SYNOPSIS
         Retrieves the character of a specified glyph.
     .DESCRIPTION
@@ -108,20 +108,20 @@ function Get-GlyphCharacter {
         Author: njen
         Version: 1.0.0
     #>
-    param (
-        [string]$glyphName
-    )
+  param (
+    [string]$glyphName
+  )
 
-    if ($nf.PSObject.Properties[$glyphName]) {
-        return $nf.$glyphName.char
-    }
-    else {
-        throw "Glyph '$glyphName' not found."
-    }
+  if ($nf.PSObject.Properties[$glyphName]) {
+    return $nf.$glyphName.char
+  }
+  else {
+    throw "Glyph '$glyphName' not found."
+  }
 }
 
 function Get-GlyphCode {
-    <#
+  <#
     .SYNOPSIS
         Retrieves the code of a specified glyph.
     .DESCRIPTION
@@ -135,20 +135,20 @@ function Get-GlyphCode {
         Author: njen
         Version: 1.0.0
     #>
-    param (
-        [string]$glyphName
-    )
+  param (
+    [string]$glyphName
+  )
 
-    if ($nf.PSObject.Properties[$glyphName]) {
-        return $nf.$glyphName.code
-    }
-    else {
-        throw "Glyph '$glyphName' not found."
-    }
+  if ($nf.PSObject.Properties[$glyphName]) {
+    return $nf.$glyphName.code
+  }
+  else {
+    throw "Glyph '$glyphName' not found."
+  }
 }
 
 function Install-NerdFonts {
-    <#
+  <#
     .SYNOPSIS
         Installs NerdFonts.
     .DESCRIPTION
@@ -165,24 +165,24 @@ function Install-NerdFonts {
         Author: njen
         Version: 1.0.0
     #>
-    param (
-        [Parameter(ValueFromRemainingArguments = $true)]
-        $OptionalParameters
-    )
-    & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
+  param (
+    [Parameter(ValueFromRemainingArguments = $true)]
+    $OptionalParameters
+  )
+  & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
 }
 
 function ListNerdFonts {
-    $format = '{0,-4} {1}'
-    $sortedGlyphs = $nf.PSObject.Properties | Sort-Object Name
-    foreach ($glyph in $sortedGlyphs) {
-        $glyphChar = $glyph.Value.char
-        Write-Output ($format -f $glyphChar, $($glyph.Name))
-    }
+  $format = '{0,-4} {1}'
+  $sortedGlyphs = $nf.PSObject.Properties | Sort-Object Name
+  foreach ($glyph in $sortedGlyphs) {
+    $glyphChar = $glyph.Value.char
+    Write-Output ($format -f $glyphChar, $($glyph.Name))
+  }
 }
 
 function Invoke-PowerNerd {
-    <#
+  <#
     .SYNOPSIS
         Main function to interact with NerdFonts.
     .DESCRIPTION
@@ -210,48 +210,48 @@ function Invoke-PowerNerd {
         Author: njen
         Version: 1.0.0
     #>
-    param (
-        [string]$glyphName,
-        [switch]$fzf,
-        [switch]$code,
-        [switch]$list,
-        [switch]$help,
-        [switch]$install
-    )
+  param (
+    [string]$glyphName,
+    [switch]$fzf,
+    [switch]$code,
+    [switch]$list,
+    [switch]$help,
+    [switch]$install
+  )
 
 
-    if ($install) {
-        Install-NerdFonts
-        return
+  if ($install) {
+    Install-NerdFonts
+    return
+  }
+
+  if ($help) {
+    Show-PowerNerdUsage
+    return
+  }
+
+  if ($fzf) {
+    FuzzyOpts
+    $env_FZF_DEFAULT_OPTS += ' ' + "--border-label=`" NERDFONT GLYPHS `" --tabstop=2 --color=16"
+
+    $find = $args
+    $selected = ListNerdFonts | Where-Object { $_ -like "*$find*" } | fzf
+    if (![string]::IsNullOrWhiteSpace($selected)) { Set-Clipboard $selected }
+
+  }
+
+  if ($list) {
+    ListNerdFonts
+  }
+
+  if ($glyphName) {
+    if ($code) {
+      Get-GlyphCode -glyphName $glyphName
     }
-
-    if ($help) {
-        Show-PowerNerdUsage
-        return
+    else {
+      Get-GlyphCharacter -glyphName $glyphName
     }
-
-    if ($fzf) {
-        FuzzyOpts
-        $env_FZF_DEFAULT_OPTS += ' ' + "--border-label=`" NERDFONT GLYPHS `" --tabstop=2 --color=16"
-
-        $find = $args
-        $selected = ListNerdFonts | Where-Object { $_ -like "*$find*" } | fzf
-        if (![string]::IsNullOrWhiteSpace($selected)) { Set-Clipboard $selected }
-
-    }
-
-    if ($list) {
-        ListNerdFonts
-    }
-
-    if ($glyphName) {
-        if ($code) {
-            Get-GlyphCode -glyphName $glyphName
-        }
-        else {
-            Get-GlyphCharacter -glyphName $glyphName
-        }
-    }
+  }
 }
 
 

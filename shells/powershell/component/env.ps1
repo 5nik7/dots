@@ -15,14 +15,14 @@ elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
 $env:EDITOR = $EDITOR
 function Edit-Item {
-    param (
-        [string]$Path = $PWD
-    )
+  param (
+    [string]$Path = $PWD
+  )
 
-    if ($Path) {
-        & $env:EDITOR $Path
-    }
-    else {
-        & $env:EDITOR
-    }
+  if ($Path) {
+    & $env:EDITOR $Path
+  }
+  else {
+    & $env:EDITOR
+  }
 }
