@@ -113,7 +113,7 @@ function Get-GlyphCharacter {
     )
 
     if ($nf.PSObject.Properties[$glyphName]) {
-        Write-Output $nf.$glyphName.char
+        return $nf.$glyphName.char
     }
     else {
         throw "Glyph '$glyphName' not found."
@@ -140,7 +140,7 @@ function Get-GlyphCode {
     )
 
     if ($nf.PSObject.Properties[$glyphName]) {
-        Write-Output $nf.$glyphName.code
+        return $nf.$glyphName.code
     }
     else {
         throw "Glyph '$glyphName' not found."
@@ -246,13 +246,14 @@ function Invoke-PowerNerd {
 
     if ($glyphName) {
         if ($code) {
-            Write-Output Get-GlyphCode -glyphName $glyphName
+            Get-GlyphCode -glyphName $glyphName
         }
         else {
-            Write-Output Get-GlyphCharacter -glyphName $glyphName
+            Get-GlyphCharacter -glyphName $glyphName
         }
     }
 }
+
 
 Export-ModuleMember -Function Get-NerdFontGlyphs
 Export-ModuleMember -Function Install-NerdFonts
