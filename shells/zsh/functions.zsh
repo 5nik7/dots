@@ -22,9 +22,13 @@ function gup() {
     git commit -m "Update @ $commitDate"
     git push
     echo -e ""
-  else 
+  else
     echo -e "This directory does not contain a .git directory"
   fi
+}
+
+function aptget_check () {
+  apt-get -s upgrade | grep -P "\d\K upgraded"
 }
 
 function finst_pac() {
