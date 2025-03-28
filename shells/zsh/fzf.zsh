@@ -22,8 +22,8 @@ export FZF_DEFAULT_OPTS="--style full \
   --scrollbar '│' \
   --preview-window='border-sharp' \
   --preview-window='bottom:50%'\
-  --preview-label=' PREVIEW ' \
-  --border-label=' FILES ' \
+  --preview-label=' PREVIEW ' --color=7 \
+  --border-label=' FILES ' --color=7 \
   --tabstop=2 \
   --color=16 \
   --preview '${PREVIEWER} {}'"
