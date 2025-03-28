@@ -10,8 +10,9 @@ export ZFUNC="${ZSHDOT}/zfunc"
 export DOTSBIN="${DOTS}/bin"
 export backups="${HOME}/.backups"
 
+export LS_COLORS="$(vivid generate catppuccin-mocha)"
 
-function zource() {
+functio nzource() {
 	if [ -f "${1}" ]; then
 		source "${1}"
 	fi
