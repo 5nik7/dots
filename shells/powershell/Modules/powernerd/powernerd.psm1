@@ -256,7 +256,6 @@ function Invoke-PowerNerd {
 
 Export-ModuleMember -Function Get-NerdFontGlyphs
 Export-ModuleMember -Function Install-NerdFonts
-Export-ModuleMember -Variable nf
 
 Export-ModuleMember -Function Get-GlyphCharacter
 Export-ModuleMember -Function Get-GlyphCode

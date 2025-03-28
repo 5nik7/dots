@@ -13,7 +13,7 @@ $psdoticon = (nf cod-terminal_powershell)
 $dircolor = 'DarkGray'
 
 $arrowcolor = 'DarkGray'
-$arrow = " --> "
+$arrow = ' --> '
 
 $labicon = (nf md-flask_outline)
 $labiconcolor = 'Cyan'
@@ -106,7 +106,7 @@ if ($env:PSCRIPTS) {
     }
 }
 else {
-    $PSScriptsDir = (Get-ItemProperty -Path $PROFILE).DirectoryName + "\Scripts"
+    $PSScriptsDir = (Get-ItemProperty -Path $PROFILE).DirectoryName + '\Scripts'
     if (Test-Path -Path $PSScriptsDir) {
         $env:PSCRIPTS = $PSScriptsDir
         $Global:PSCRIPTS = $env:PSCRIPTS
@@ -114,17 +114,17 @@ else {
 }
 
 function Get-LabUsage {
-    $bannerPath = Join-Path -Path $modulePath -ChildPath "banner"
+    $bannerPath = Join-Path -Path $modulePath -ChildPath 'banner'
     if (Test-Path -Path $bannerPath) {
-        wh '' -bb 2
+        Write-Host
         Get-Content -Path $bannerPath | Write-Host
     }
     else {
-        wh "LAB" cyan -bb 2 -padout 2
+        wh 'LAB' cyan -bb 2 -padout 2
     }
-    wh '' -bb 2
-    Write-Output @"
- Usage: lab [-new] [-edit] [-tested] [-delete] [-filename <string>] [-list] [-help] [-dot] [-cat] [-setup] [-labPath <string>] [-quiet]
+    wh '  Usage: ' blue 'lab' cyan -padin 3 -bb 1
+    Write-Output @'
+ [-new] [-edit] [-tested] [-delete] [-filename <string>] [-list] [-help] [-dot] [-cat] [-setup] [-labPath <string>] [-quiet]
 
     -new       : Creates a new script in the lab.
     -edit      : Edit lab script.
@@ -138,7 +138,7 @@ function Get-LabUsage {
     -setup     : Sets up the lab environment.
     -labPath   : Specifies the path to the lab directory.
     -quiet     : Suppresses output messages.
-"@
+'@
     linebreak
     return
 }
@@ -308,7 +308,7 @@ function lab {
         $filePath = "$TargetScriptDir\$filename.ps1"
         if (!(Test-Path $filePath)) {
             New-Item -Path $filePath -ItemType File -ErrorAction Stop | Out-Null
-            wh " Created: " $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor " $filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
+            wh ' Created: ' $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor " $filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
             return
         }
         else {
@@ -332,7 +332,7 @@ function lab {
                 return
             }
             else {
-                Write-Err "EDITOR environment variable not set." -box
+                Write-Err 'EDITOR environment variable not set.' -box
                 return
             }
         }
@@ -348,7 +348,7 @@ function lab {
         if (Test-Path $filePath) {
             $destination = "$env:PSCRIPTS\$filename.ps1"
             Move-Item -Path $filePath -Destination $destination -ErrorAction Stop | Out-Null
-            wh " Moved: " $actioncolor "$PSLAB\ " $dircolor "$labicon" $labiconcolor " $filename.ps1" $labscriptcolor "$arrow" $arrowcolor "$env:PSCRIPTS" $dircolor "$psdoticon" $pscriptscolor " $filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
+            wh ' Moved: ' $actioncolor "$PSLAB\ " $dircolor "$labicon" $labiconcolor " $filename.ps1" $labscriptcolor "$arrow" $arrowcolor "$env:PSCRIPTS" $dircolor "$psdoticon" $pscriptscolor " $filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
             return
         }
         else {
@@ -362,7 +362,7 @@ function lab {
         $filePath = "$TargetScriptDir\$filename.ps1"
         if (Test-Path $filePath) {
             Remove-Item -Path $filePath -ErrorAction Stop | Out-Null
-            wh " Deleted: " $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor "$filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
+            wh ' Deleted: ' $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor "$filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
             return
         }
         else {
@@ -376,7 +376,7 @@ function lab {
         elseif (Test-CommandExists bat) { 'bat' }
         elseif (Test-CommandExists cat) { 'cat' }
         else {
-            Write-Err "No command found to display file contents." -box -bb 1 -ba 1 -padout 2
+            Write-Err 'No command found to display file contents.' -box -bb 1 -ba 1 -padout 2
             return
         }
         $filePath = "$TargetScriptDir\$filename.ps1"

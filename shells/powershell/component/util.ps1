@@ -19,29 +19,29 @@ $util = @{
     }
     alerts = @{
         info    = @{
-            text  = "Info"
-            icon  = "󰋽 "
-            color = "Magenta"
+            text  = 'Info'
+            icon  = ' '
+            color = 'cyan'
         }
         success = @{
-            text  = "Success"
-            icon  = " "
-            color = "green"
+            text  = 'Success'
+            icon  = ' '
+            color = 'green'
         }
         warn    = @{
-            text  = "Warning"
-            icon  = " "
-            color = "yellow"
+            text  = 'Warning'
+            icon  = ' '
+            color = 'yellow'
         }
         err     = @{
-            text  = "Error"
-            icon  = " "
-            color = "red"
+            text  = 'Error'
+            icon  = ' '
+            color = 'red'
         }
     }
 }
-$spacer = " "
-$divider = ": "
+$spacer = ' '
+$divider = ': '
 $successcolor = $($util.alerts.success.color)
 $successicon = ($($util.alerts.success.icon) + $spacer)
 $successtext = ($($util.alerts.success.text) + $divider)
@@ -117,20 +117,20 @@ function wh {
         [int]$padout,
         [int]$padin = 1,
         [switch]$box,
-        [string]$border = "DarkGray",
+        [string]$border = 'DarkGray',
         [string]$esc,
-        [string]$escol = "White"
+        [string]$escol = 'White'
     )
     if ($env:padding) {
         $padout = $env:padding
     }
 
-    $boxSymbolTopLeft = "┌"
-    $boxSymbolTopRight = "┐"
-    $boxSymbolBottomLeft = "└"
-    $boxSymbolBottomRight = "┘"
-    $boxSymbolHorizontal = "─"
-    $boxSymbolVertical = "│"
+    $boxSymbolTopLeft = '┌'
+    $boxSymbolTopRight = '┐'
+    $boxSymbolBottomLeft = '└'
+    $boxSymbolBottomRight = '┘'
+    $boxSymbolHorizontal = '─'
+    $boxSymbolVertical = '│'
 
     linebreak $bb
 
@@ -156,10 +156,10 @@ function wh {
     }
     $totalLength += ($padin * 2)
 
-    $boxTop = (" " * $padout) + $boxSymbolTopLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolTopRight
-    $boxBottom = (" " * $padout) + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolBottomRight
-    $boxLeft = (" " * $padout) + $boxSymbolVertical + (" " * $padin)
-    $boxRight = (" " * $padin) + $boxSymbolVertical
+    $boxTop = (' ' * $padout) + $boxSymbolTopLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolTopRight
+    $boxBottom = (' ' * $padout) + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolBottomRight
+    $boxLeft = (' ' * $padout) + $boxSymbolVertical + (' ' * $padin)
+    $boxRight = (' ' * $padin) + $boxSymbolVertical
 
     if ($box) {
         # Print top line
@@ -172,7 +172,7 @@ function wh {
         }
         # Print right boundary
         if ($esc) {
-            $escOutput = (" " * $padin) + $esc
+            $escOutput = (' ' * $padin) + $esc
             Write-Host -NoNewline $boxRight -ForegroundColor $border
             Write-Host $escOutput -ForegroundColor $escol
         }
@@ -183,9 +183,9 @@ function wh {
         Write-Host $boxBottom -ForegroundColor $border
     }
     else {
-        $padline = (" " * $padout)
+        $padline = (' ' * $padout)
         # No box: just print each pair
-        Write-Host -NoNewline  $padline
+        Write-Host -NoNewline $padline
         foreach ($pair in $pairsList) {
             Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
         }
@@ -203,7 +203,7 @@ function Write-Info {
         [int]$ba = 0,
         [int]$padout,
         [switch]$box,
-        [string]$border = "DarkGray"
+        [string]$border = 'DarkGray'
     )
     $pairs = @($infoicon, $infocolor, $infotext, $infocolor) + $pairs
     wh -pairs $pairs -padout $env:padding -box:$box -border:$border
@@ -217,7 +217,7 @@ function Write-Success {
         [int]$ba = 0,
         [int]$padout,
         [switch]$box,
-        [string]$border = "DarkGray"
+        [string]$border = 'DarkGray'
     )
     $pairs = @($successicon, $successcolor, $successtext, $successcolor) + $pairs
     wh -pairs $pairs -padout $env:padding -box:$box -border:$border
@@ -231,7 +231,7 @@ function Write-Err {
         [int]$ba = 0,
         [int]$padout,
         [switch]$box,
-        [string]$border = "DarkGray"
+        [string]$border = 'DarkGray'
     )
     $pairs = @($erricon, $errcolor, $errtext, $errcolor) + $pairs
     wh -pairs $pairs -padout $env:padding -box:$box -border:$border
@@ -245,7 +245,7 @@ function Write-Warn {
         [int]$ba = 0,
         [int]$padout,
         [switch]$box,
-        [string]$border = "DarkGray"
+        [string]$border = 'DarkGray'
     )
     $pairs = @($warnicon, $warncolor, $warntext, $warncolor) + $pairs
     wh -pairs $pairs -padout $env:padding -box:$box -border:$border
