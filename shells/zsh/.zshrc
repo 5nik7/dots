@@ -137,6 +137,6 @@ source <(fzf --zsh)
 fi
 
 
-autoload -Uz compinit
-zstyle ':completion:*' menu select
-fpath+=~/.zfunc
+if is_installed direnv; then
+eval "$(direnv hook zsh)"
+fi
