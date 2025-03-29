@@ -140,4 +140,3 @@ function finst() {
 source <(fzf --zsh)
 
 fi
-
