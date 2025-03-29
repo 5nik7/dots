@@ -5,8 +5,9 @@
 # (_)____/____/_/ /_/_/ |_|\____/
 
 export DOTS="${HOME}/dots"
-export ZSHDOT="${DOTS}/shells/zsh"
-export ZFUNC="${ZSHDOT}/zfunc"
+export SHELLS="${DOTS}/shells"
+export ZSHDOTS="${SHELLS}/zsh"
+export ZFUNC="${HOME}/.zfunc"
 export DOTSBIN="${DOTS}/bin"
 export backups="${HOME}/.backups"
 
@@ -21,7 +22,7 @@ functio nzource() {
 }
 
 function zieces() {
-  zfile="${ZSHDOT}/${1}.zsh"
+  zfile="${ZSHDOTS}/${1}.zsh"
   if [ -f "${zfile}" ]; then
     source "${zfile}"
   fi
@@ -33,6 +34,7 @@ zieces "options"
 zieces "plugins"
 zieces "completions"
 zieces "aliases"
+
 fpath=( "${ZFUNC}" "${fpath[@]}" )
 
 if is_droid; then
@@ -65,6 +67,9 @@ if is_installed starship; then
   eval "$(starship init zsh)"
 fi
 
+if is_installed direnv; then
+  eval "$(direnv hook zsh)"
+fi
 
 if is_installed fzf; then
 
@@ -136,7 +141,3 @@ source <(fzf --zsh)
 
 fi
 
-
-if is_installed direnv; then
-eval "$(direnv hook zsh)"
-fi
