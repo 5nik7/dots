@@ -1,3 +1,4 @@
+DIRENV_CONFIG=%LOCALAPPDATA%\direnv
 LANG=en_US.UTF-8
 DOTS=%USERPROFILE%\dots
 secretdir=%DOTS%\secrets

@@ -31,12 +31,6 @@
       "width": 300
     }
   },
-  "floating.window": {
-    "aspect_ratio": [
-      16,
-      9
-    ]
-  },
   "floating_applications": [
     {
       "kind": "Class",

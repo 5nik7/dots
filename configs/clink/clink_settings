@@ -194,7 +194,7 @@ fzf.default_bindings = True
 
 # name: Location of fzf.exe if not on the PATH
 # type: string
-fzf.exe_location = C:\Users\nickf\scoop\shims\fzf.exe
+fzf.exe_location = /c/Users/njen/scoop/shims/fzf
 
 # name: The number of history lines to save
 # type: integer

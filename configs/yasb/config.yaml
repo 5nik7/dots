@@ -2,9 +2,9 @@ watch_stylesheet: true
 watch_config: true
 debug: true
 komorebi:
-  start_command: "komorebic start --whkd --masir"
-  stop_command: "komorebic stop --whkd --masir"
-  reload_command: "komorebic stop --whkd --masir && komorebic start --whkd --masir"
+  start_command: "komorebic start --whkd"
+  stop_command: "komorebic stop --whkd"
+  reload_command: "komorebic stop --whkd && komorebic start --whkd"
 bars:
   primary-bar:
     enabled: true
@@ -32,8 +32,8 @@ bars:
       right: 6
     widgets:
       left: ["komorebi_workspaces","active_window"]
-      center: ["apps"]
-      right: ["update","ai","wallpapers","github","taskbar","weather","whkd","volume","clock", "power_menu"]
+      center: ["clock","apps"]
+      right: ["update","ai","wallpapers","github","taskbar","weather","whkd","volume","power_menu"]
 widgets:
   update:
     type: "yasb.update_check.UpdateCheckWidget"
@@ -62,7 +62,7 @@ widgets:
   clock:
     type: "yasb.clock.ClockWidget"
     options:
-      label: "{%I:%M}"
+      label: "{%a %b %d %H:%M}"
       label_alt: "{%A, %d %B %Y %H:%M:%S}"
       timezones: []
   komorebi_workspaces:

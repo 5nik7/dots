@@ -5,6 +5,7 @@
 [manager]
 ratio = [1, 2, 4]
 show_hidden = true
+linemode = "size_and_mtime"
 
 [preview]
 max_width       = 2200
@@ -17,12 +18,35 @@ edit = [
 	{ run = 'code -w %*', block = true,  desc = "code (block)",   for = "windows" },
 ]
 
-# [[plugin.prepend_fetchers]]
-# id = "git"
-# name = "*"
-# run = "git"
+[[plugin.prepend_fetchers]]
+id = "git"
+name = "*"
+run = "git"
 
-# [[plugin.prepend_fetchers]]
-# id = "git"
-# name = "*/"
-# run = "git"
+[[plugin.prepend_fetchers]]
+id = "git"
+name = "*/"
+run = "git"
+
+[confirm]
+# trash
+trash_title 	= "Trash {n} selected file{s}?"
+trash_origin	= "center"
+trash_offset	= [ 0, 0, 70, 20 ]
+
+# delete
+delete_title 	= "Permanently delete {n} selected file{s}?"
+delete_origin	= "center"
+delete_offset	= [ 0, 0, 70, 20 ]
+
+# overwrite
+overwrite_title   = "Overwrite file?"
+overwrite_content = "Will overwrite the following file:"
+overwrite_origin  = "center"
+overwrite_offset  = [ 0, 0, 50, 15 ]
+
+# quit
+quit_title   = "Quit?"
+quit_content = "The following tasks are still running, are you sure you want to quit?"
+quit_origin  = "center"
+quit_offset  = [ 0, 0, 50, 15 ]

@@ -1,7 +1,8 @@
 using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
-$DOTS = "$env:USERPROFILE\dots"
+$env:HOME = "$env:HOMEPATH"
+$DOTS = "$env:HOME\dots"
 $env:DOTS = $DOTS
 $Global:DOTS = $env:DOTS
 $SHELLS = "$DOTS\shells"
@@ -63,6 +64,8 @@ foreach ( $piece in $psource )
   Unblock-File "$PSCOMPONENT\$piece.ps1"
   . "$PSCOMPONENT\$piece.ps1"
 }
+
+# Invoke-Expression "$(direnv hook pwsh)"
 
 # (& pyenv-venv init)
 

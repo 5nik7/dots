@@ -8,5 +8,15 @@ use = "yazi-rs/plugins:git"
 rev = "7afba3a"
 hash = "7f839f539f4a8248fee04d62ede701f5"
 
+[[plugin.deps]]
+use = "AnirudhG07/rich-preview"
+rev = "2559e5f"
+hash = "c9a3d0731e7d7340e2c6d6126b1f3aa3"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:toggle-pane"
+rev = "2730199"
+hash = "5c9dda1a587b8f5b6f63e3d5375bda88"
+
 [flavor]
 deps = []
