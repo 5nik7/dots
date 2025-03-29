@@ -10,7 +10,9 @@ export ZFUNC="${ZSHDOT}/zfunc"
 export DOTSBIN="${DOTS}/bin"
 export backups="${HOME}/.backups"
 
-export LS_COLORS="$(vivid generate catppuccin-mocha)"
+export DOT_THEME="$(cat $HOME/.theme)"
+
+export LS_COLORS="$(vivid generate $DOT_THEME)"
 
 functio nzource() {
 	if [ -f "${1}" ]; then
@@ -134,3 +136,7 @@ source <(fzf --zsh)
 
 fi
 
+
+autoload -Uz compinit
+zstyle ':completion:*' menu select
+fpath+=~/.zfunc

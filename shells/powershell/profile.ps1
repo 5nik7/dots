@@ -27,7 +27,7 @@ function dotenv {
     [string]$path,
     [switch]$v
   )
-  $envFilePath = Join-Path -Path $path -ChildPath '.env'
+  $envFilePath = Join-Path -Path $path -ChildPath '.dotenv'
   if (Test-Path $envFilePath) {
     if ($v) {
       wh 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$env:DOTS\" blue '.env' green -box -border 0 -bb 1 -ba 1 -padout $env:padding
