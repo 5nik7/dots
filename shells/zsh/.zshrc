@@ -11,7 +11,7 @@ export ZFUNC="${HOME}/.zfunc"
 export DOTSBIN="${DOTS}/bin"
 export backups="${HOME}/.backups"
 
-export DOT_THEME="$(cat $HOME/.theme)"
+export DOT_THEME="$(cat $DOTS/.theme)"
 
 export LS_COLORS="$(vivid generate $DOT_THEME)"
 
