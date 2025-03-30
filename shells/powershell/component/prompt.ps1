@@ -1,20 +1,10 @@
-if ($isAdmin) {
-  $env:AdminSymbol = '#'
-}
-else {
-  $env:AdminSymbol = ''
-}
-
-function Invoke-Starship-PreCommand {
-  $WarningPreference = 'SilentlyContinue'
-  $ErrorActionPreference = 'SilentlyContinue'
+function Invoke-Starship-TransientFunction {
+  &starship module character
 }
 
 Invoke-Expression (&starship init powershell)
 Enable-TransientPrompt
-function Invoke-Starship-TransientFunction {
-  &starship module character
-}
+Invoke-Expression (& { ( zoxide init powershell --cmd cd | Out-String ) })
 
 function OnViModeChangeCore {
   [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
@@ -24,17 +14,20 @@ function OnViModeChangeCore {
   }
   else {
     Write-Host -NoNewLine "`e[5 q"
-  }
+  }1
 }
 
-function OnViModeChangeDesktop {
-  [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
-}
+Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore
 
-if ($PSEdition -eq 'Core') {
-  Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore
-}
 
-if ($PSEdition -eq 'Desktop') {
-  Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeDesktop
-}
+# function OnViModeChangeDesktop {
+#   [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+# }
+
+# if ($PSEdition -eq 'Core') {
+#   Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore
+# }
+
+# if ($PSEdition -eq 'Desktop') {
+#   Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeDesktop
+# }

@@ -43,6 +43,62 @@ function q {
   Exit
 }
 
+function Find-File {
+  <#
+    .SYNOPSIS
+        Finds a file in the current directory and all subdirectories. Alias: ff
+    #>
+  [CmdletBinding()]
+  param (
+    [Parameter(ValueFromPipeline, Mandatory = $true, Position = 0)]
+    [string]$SearchTerm
+  )
+
+  Write-Verbose "Searching for '$SearchTerm' in current directory and subdirectories"
+  $result = Get-ChildItem -Recurse -Filter "*$SearchTerm*" -ErrorAction SilentlyContinue
+
+  Write-Verbose 'Outputting results to table'
+  $result | Format-Table -AutoSize
+}
+
+function Find-String {
+  <#
+    .SYNOPSIS
+        Searches for a string in a file or directory. Alias: grep
+    #>
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true, Position = 0)]
+    [string]$SearchTerm,
+    [Parameter(ValueFromPipeline, Mandatory = $false, Position = 1)]
+    [string]$Directory,
+    [Parameter(Mandatory = $false)]
+    [switch]$Recurse
+  )
+
+  Write-Verbose "Searching for '$SearchTerm' in '$Directory'"
+  if ($Directory) {
+    if ($Recurse) {
+      Write-Verbose "Searching for '$SearchTerm' in '$Directory' and subdirectories"
+      Get-ChildItem -Recurse $Directory | Select-String $SearchTerm
+      return
+    }
+
+    Write-Verbose "Searching for '$SearchTerm' in '$Directory'"
+    Get-ChildItem $Directory | Select-String $SearchTerm
+    return
+  }
+
+  if ($Recurse) {
+    Write-Verbose "Searching for '$SearchTerm' in current directory and subdirectories"
+    Get-ChildItem -Recurse | Select-String $SearchTerm
+    return
+  }
+
+  Write-Verbose "Searching for '$SearchTerm' in current directory"
+  Get-ChildItem | Select-String $SearchTerm
+}
+
 function New-File {
   <#
     .SYNOPSIS
@@ -71,9 +127,7 @@ function Show-Command {
     [string]$Name
   )
   if (-not (Test-CommandExists $Name)) {
-    linebreak
-    Write-Err "$Name"
-    linebreak
+    Write-Err "$Name" -box
     return
   }
   Write-Verbose "Showing definition of '$Name'"

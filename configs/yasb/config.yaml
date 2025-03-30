@@ -31,9 +31,9 @@ bars:
       bottom: 0
       right: 6
     widgets:
-      left: ["komorebi_workspaces","active_window"]
-      center: ["clock","apps"]
-      right: ["update","ai","wallpapers","github","taskbar","weather","whkd","volume","power_menu"]
+      left: ["app_button","komorebi_workspaces","active_window"]
+      center: ["apps"]
+      right: ["update","ai","wallpapers","whkd","github", "weather","volume","clock","power_menu"]
 widgets:
   update:
     type: "yasb.update_check.UpdateCheckWidget"
@@ -62,8 +62,8 @@ widgets:
   clock:
     type: "yasb.clock.ClockWidget"
     options:
-      label: "{%a %b %d %H:%M}"
-      label_alt: "{%A, %d %B %Y %H:%M:%S}"
+      label: "{%H:%M}"
+      label_alt: "{%A, %d %B %Y %H:%M}"
       timezones: []
   komorebi_workspaces:
     type: "komorebi.workspaces.WorkspaceWidget"
@@ -134,15 +134,15 @@ widgets:
         on_left: "toggle_label"
       icons:
         sunnyDay: "\udb81\udd99"
-        clearNight: "\udb81\udd99"
-        cloudyDay: "\udb81\udd99"
-        cloudyNight: "\udb81\udd99"
-        rainyDay: "\udb81\udd99"
-        rainyNight: "\udb81\udd99"
-        snowyIcyDay: "\udb81\udd99"
-        snowyIcyNight: "\udb81\udd99"
-        blizzard: "\udb81\udd99"
-        default: "\udb81\udd99"
+        clearNight: "\udb81\udd94"
+        cloudyDay: "\uebaa"
+        cloudyNight: "\uebaa"
+        rainyDay: "\udb81\udd96"
+        rainyNight: "\udb81\udd96"
+        snowyIcyDay: "\udb81\udd92"
+        snowyIcyNight: "\udb81\udd92"
+        blizzard: "\udb81\udd93"
+        default: "\uebaa"
   volume:
     type: "yasb.volume.VolumeWidget"
     options:
@@ -245,3 +245,20 @@ widgets:
         lazy_load_fadein: 200
         image_corner_radius: 20
         enable_cache: true
+  systray:
+    type: "yasb.systray.SystrayWidget"
+    options:
+      class_name: "systray"
+      show_unpinned: false
+      show_unpinned_button: true
+      show_battery: false
+      show_volume: false
+      show_network: false
+  app_button:
+    type: "yasb.custom.CustomWidget"
+    options:
+      label: "<span>\uf40e</span>"
+      label_alt: "<span>\uf40e</span>"
+      class_name: "app-button"
+      callbacks:
+        on_left: "exec start_menu"
