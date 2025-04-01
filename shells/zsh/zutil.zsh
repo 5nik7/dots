@@ -186,16 +186,16 @@ bak(){
         [ -n "$filename" ] || { echo "usage: bak filename"; return 1; }
         [ -f "$filename" ] || { echo "file '$filename' does not exist"; return 1; }
         [[ $filename =~ .*\.bak\..* ]] && continue
+        local bakdir
+        bakdir="$HOME/.backups"
         local bakfile
-        bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
+        bakfile="$bakdir/$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
         until ! [ -f "$bakfile" ]; do
             echo "WARNING: bakfile '$bakfile' already exists, retrying with a new timestamp"
             sleep 1
             bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
         done
-        local backupdir
-        backupdir="$HOME/backups"
-        [ -d "$backupdir" ] || { mkdir -p "$backupdir"; mv -fv -- "$filename" "$backupdir/$bakfile"; }
+        mv -v  "$filename" "$bakfile"
     done
 }
 
@@ -216,29 +216,32 @@ unbak(){
     done
 }
 
-# function backup() {
-#   if [ -f "$2" ]; then
-#     time_stamp="$(date +"%m-%d-%Y.%H%M")"
-#     relfile="$(rel_path "$2")"
-#     if [ -e "$backups" ]; then
-#       addir "$backups"
-#       backupfile="${backups}/${2}.${time_stamp}.bak"
-#     else
-#       backupfile="${2}.${time_stamp}.bak"
-#     fi
-#     mv -f "$2" "${backupfile}"
-#     print_success "${relfile} backed up @ ${backupfile}"
-#   fi
-# }
+function backup() {
+  if [ -f "$1" ]; then
+    time_stamp="$(date +"%m-%d-%Y.%H%M")"
+    relfile="$(rel_path "$1")"
+    if [ -e "$backups" ]; then
+      addir "$backups"
+      backupfile="${backups}/${1}.${time_stamp}.bak"
+    else
+      backupfile="${1}.${time_stamp}.bak"
+    fi
+    mv -f "$1" "${backupfile}"
+    print_success "${relfile} backed up @ ${backupfile}"
+  fi
+}
 
 function symlink() {
+  local base_file
   base_file="$(realpath "$1")"
+  local target_file
   target_file="$(realpath "$2")"
+  local target_dir
   target_dir="$(realpath --logical "$(dirname "$2")")"
   if [ -f "$base_file" ]; then
     if [ -f "$target_file" ]; then
       # addir "$target_dir"
-      backup "$target_file"
+      bak "$target_file"
       ln -s "$base_file" "$target_filr"
       print_link "$base_file" "$target_file"
     else
