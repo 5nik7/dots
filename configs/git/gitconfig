@@ -152,3 +152,6 @@
 [credential "https://gist.github.com"]
     helper =
     helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+[safe]
+	directory = C:/Users/njen/AppData/Roaming/yazi/state/packages/3db547c6a883e54d90397a0bac9b736f
+	directory = C:/Users/njen/AppData/Roaming/yazi/state/packages/ba1ddc09b405ba076cb70eba644dc695
