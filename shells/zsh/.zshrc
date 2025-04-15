@@ -15,7 +15,7 @@ export DOT_THEME="$(cat $DOTS/.theme)"
 
 export LS_COLORS="$(vivid generate $DOT_THEME)"
 
-functio nzource() {
+function zource() {
 	if [ -f "${1}" ]; then
 		source "${1}"
 	fi
