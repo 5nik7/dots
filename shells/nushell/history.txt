@@ -1,0 +1,116 @@
+clear
+ls
+ls -la
+c
+clear
+ls -la
+exit
+clear
+ls
+env
+ld
+ls
+env
+path
+env path
+env
+c
+cls
+clear
+$PATH
+$env.PATH
+$env.DOTS
+$env.FZF_DEFAULT_OPTS
+gzg
+fzf
+d
+yazi
+d
+fzf
+d
+yazi
+help config nu
+config nu
+config nu -d
+ls
+config nu
+c
+exit
+ls
+v
+ecit
+exit
+config nu -d
+config nu -d > config.nu
+exit
+ex8t
+exit
+help config nu
+help 
+d
+ls
+bqt config.nu
+bat config.nu
+config nu
+exit
+$env.config | table -e | bat -p
+$env.config.table
+$env.config.table.mode
+$env.config.table.mode 
+$env.config.table.mode help
+$env.config.table.mode.
+$env.config.table.mode.$nu.default-config-dir
+$nu.default-config-dir
+config nu --doc | nu-highlight | less -R
+"default", "basic", "compact", "compact_double", "heavy", "light", "none", "reinforced",                                                      # "rounded", "thin", "with_love", "psql", "markdown", "dots", "restructured", "ascii_rounded",                                                          # or "basic_compact"
+$env.config.table.mode.
+$env.config.table.mode = thin
+$env.config.table.mode
+cinfig nu
+config nu
+exit
+ls
+$env.config
+$env.config.table.mode
+$env.config.table
+$env.config | table -e | bat -p
+config nu
+exit
+ls
+$env.config | table -e | bat -p
+config nu
+exit
+ls
+$env.config | table -e | bat -p
+config nu
+config nu --doc | nu-highlight | less -R
+exit
+ls
+$env.config.table.mode
+$env.config.table.mode: 
+$env.config.table = { }
+$env.config.table = {}
+$env.config.table.mode
+$env.config.table = { mode: default }
+$env.config.table.mode
+$env.config.table = { mode: markdowb }
+$env.config.table = { mode: markdown }
+ls
+$env.config.table = { mode: light }
+ls
+$env.config.table = { mode: thin }
+ls
+$env.config.table = { mode: compact }
+ls
+$env.config.table = { mode: psql }
+ls
+c
+clear
+ls
+$env.config.table = { mode: thin }
+config nu
+exit
+ls
+d
+env
+exit
