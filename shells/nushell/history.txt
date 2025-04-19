@@ -114,3 +114,8 @@ ls
 d
 env
 exit
+d
+cd
+.d
+d
+exit

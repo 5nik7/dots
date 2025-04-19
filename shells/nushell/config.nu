@@ -1,7 +1,7 @@
 $env.config.show_banner = false
 
 $env.config.table = {
-  mode: thin 
+  mode: thin
 }
 
 $env.config.color_config = {
@@ -69,3 +69,16 @@ $env.config.color_config = {
         attr: b
     }
 }
+
+def --env y [...args] {
+    let tmp = (mktemp -t "yazi-cwd.XXXXXX")
+    yazi ...$args --cwd-file $tmp
+    let cwd = (open $tmp)
+    if $cwd != "" and $cwd != $env.PWD {
+        cd $cwd
+      }
+    rm -fp $tmp
+}
+
+alias d = y
+
