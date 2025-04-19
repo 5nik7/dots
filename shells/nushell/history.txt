@@ -119,3 +119,14 @@ cd
 .d
 d
 exit
+d
+l
+exit
+l
+exit
+l
+cd
+l
+exit
+c
+d
