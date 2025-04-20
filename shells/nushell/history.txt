@@ -132,5 +132,32 @@ c
 d
 c
 l
+<<<<<<< HEAD
 d
 c
+=======
+ls
+ls -la
+ls --help
+ls -f
+c
+ls -a **/*
+c
+ls --help
+ls -a
+ls -a ~ | where type == dir
+ls ...(glob **/*.{rs,toml})
+c
+l
+ls
+cd dots
+c
+l
+pwd
+git
+d
+l
+eza
+c
+env
+>>>>>>> edec7c6 (meh)
