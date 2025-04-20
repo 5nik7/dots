@@ -22,55 +22,55 @@ cmd.ctrld_exits = True
 
 # name: Argument color
 # type: color
-color.arg = sgr 0;38;2;167;166;255
+color.arg = sgr 0;38;2;245;194;231
 
 # name: Argument info color
 # type: color
-color.arginfo = sgr 0;3;38;2;167;166;255
+color.arginfo = sgr 0;3;38;2;245;194;231
 
 # name: Argmatcher color
 # type: color
-color.argmatcher = sgr 0;38;2;0;255;204
+color.argmatcher = sgr 0;38;2;166;227;161
 
 # name: Shell command completions
 # type: color
-color.cmd = sgr 0;38;2;235;111;146
+color.cmd = sgr 0;38;2;243;139;168
 
 # name: Color for < and > redirection symbols
 # type: color
-color.cmdredir = sgr 0;38;2;214;233;255
+color.cmdredir = sgr 0;38;2;186;194;222
 
 # name: Color for & and | command separators
 # type: color
-color.cmdsep = sgr 0;38;2;255;183;141
+color.cmdsep = sgr 0;38;2;249;226;175
 
 # name: Color for comment row
 # type: color
-color.comment_row = sgr 0;38;2;55;75;114
+color.comment_row = sgr 0;38;2;88;91;112
 
 # name: Common prefix of completions
 # type: color
-color.common_match_prefix = sgr 0;38;2;0;255;251
+color.common_match_prefix = sgr 0;38;2;148;226;213
 
 # name: Description completion color
 # type: color
-color.description = sgr 0;38;2;55;75;114
+color.description = sgr 0;38;2;88;91;112
 
 # name: Doskey completions
 # type: color
-color.doskey = sgr 0;38;2;0;255;251
+color.doskey = sgr 0;38;2;148;226;213
 
 # name: Color for executable command word
 # type: color
-color.executable = sgr 0;38;2;0;255;251
+color.executable = sgr 0;38;2;148;226;213
 
 # name: Filtered completion color
 # type: color
-color.filtered = sgr 0;38;2;214;233;255
+color.filtered = sgr 0;38;2;186;194;222
 
 # name: Flag color
 # type: color
-color.flag = sgr 0;38;2;255;183;141
+color.flag = sgr 0;38;2;249;226;175
 
 # name: Color for preferred branch completions
 # type: color
@@ -78,11 +78,11 @@ color.git.star = bright green
 
 # name: Hidden file completions
 # type: color
-color.hidden = sgr 0;38;2;55;75;114
+color.hidden = sgr 0;38;2;88;91;112
 
 # name: History expansion color
 # type: color
-color.histexpand = sgr 0;38;2;0;255;204
+color.histexpand = sgr 0;38;2;166;227;161
 
 # name: Horizontal scroll marker color
 # type: color
@@ -90,7 +90,7 @@ color.horizscroll = reverse
 
 # name: Input text color
 # type: color
-color.input = sgr 0;38;2;214;233;255
+color.input = sgr 0;38;2;186;194;222
 
 # name: For user-interaction prompts
 # type: color
@@ -98,67 +98,67 @@ color.interact = bold
 
 # name: Message area color
 # type: color
-color.message = sgr 0;38;2;55;75;114
+color.message = sgr 0;38;2;88;91;112
 
 # name: Modified history line mark color
 # type: color
-color.modmark = sgr 0;38;2;167;166;255
+color.modmark = sgr 0;38;2;245;194;231
 
 # name: Color for popup lists and messages
 # type: color
-color.popup = sgr 0;38;2;214;233;255;48;2;46;60;91
+color.popup = sgr 0;38;2;186;194;222;48;2;69;71;90
 
 # name: Color for popup border
 # type: color
-color.popup_border = sgr 0;38;2;55;75;114;48;2;46;60;91
+color.popup_border = sgr 0;38;2;88;91;112;48;2;69;71;90
 
 # name: Color for popup description column(s)
 # type: color
-color.popup_desc = sgr 0;38;2;0;255;251;48;2;46;60;91
+color.popup_desc = sgr 0;38;2;148;226;213;48;2;69;71;90
 
 # name: Color for popup footer message
 # type: color
-color.popup_footer = sgr 0;38;2;214;233;255;48;2;46;60;91
+color.popup_footer = sgr 0;38;2;186;194;222;48;2;69;71;90
 
 # name: Color for popup title text
 # type: color
-color.popup_header = sgr 0;38;2;255;183;141;48;2;46;60;91
+color.popup_header = sgr 0;38;2;249;226;175;48;2;69;71;90
 
 # name: Color for selected item in popup list
 # type: color
-color.popup_select = sgr 0;38;2;214;233;255;48;2;55;75;114
+color.popup_select = sgr 0;38;2;186;194;222;48;2;88;91;112
 
 # name: Color for selected item in popup list
 # type: color
-color.popup_selectdesc = sgr 0;38;2;0;255;251;48;2;55;75;114
+color.popup_selectdesc = sgr 0;38;2;148;226;213;48;2;88;91;112
 
 # name: Prompt color
 # type: color
-color.prompt = sgr 0;38;2;214;233;255
+color.prompt = sgr 0;38;2;186;194;222
 
 # name: Readonly file completions
 # type: color
-color.readonly = sgr 0;38;2;167;166;255
+color.readonly = sgr 0;38;2;245;194;231
 
 # name: Selected completion color
 # type: color
-color.selected_completion = sgr 0;38;2;214;233;255;48;2;55;75;114
+color.selected_completion = sgr 0;38;2;186;194;222;48;2;88;91;112
 
 # name: Selection color
 # type: color
-color.selection = sgr 0;48;2;55;75;114
+color.selection = sgr 0;48;2;88;91;112
 
 # name: Color for suggestion text
 # type: color
-color.suggestion = sgr 0;38;2;55;75;114
+color.suggestion = sgr 0;38;2;88;91;112
 
 # name: Unexpected argument color
 # type: color
-color.unexpected = sgr 0;38;2;235;111;146
+color.unexpected = sgr 0;38;2;243;139;168
 
 # name: Color for unrecognized command word
 # type: color
-color.unrecognized = sgr 0;38;2;235;111;146
+color.unrecognized = sgr 0;38;2;243;139;168
 
 # name: Color for yarn run local module
 # type: color

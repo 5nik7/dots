@@ -25,12 +25,12 @@ $util = @{
     }
     success = @{
       text  = 'Success'
-      icon  = ' '
+      icon  = ' '
       color = 'green'
     }
     warn    = @{
       text  = 'Warning'
-      icon  = ' '
+      icon  = ' '
       color = 'yellow'
     }
     err     = @{
@@ -40,20 +40,19 @@ $util = @{
     }
   }
 }
-$spacer = ' '
-$divider = ': '
+$spacer = ' │ '
 $successcolor = $($util.alerts.success.color)
-$successicon = ($($util.alerts.success.icon) + $spacer)
-$successtext = ($($util.alerts.success.text) + $divider)
+$successicon = $($util.alerts.success.icon)
+$successtext = $($util.alerts.success.text)
 $errcolor = $($util.alerts.err.color)
-$erricon = ($($util.alerts.err.icon) + $spacer)
-$errtext = ($($util.alerts.err.text) + $divider)
+$erricon = $($util.alerts.err.icon)
+$errtext = $($util.alerts.err.text)
 $warncolor = $($util.alerts.warn.color)
-$warnicon = ($($util.alerts.warn.icon) + $spacer)
-$warntext = ($($util.alerts.warn.text) + $divider)
+$warnicon = $($util.alerts.warn.icon)
+$warntext = $($util.alerts.warn.text)
 $infocolor = $($util.alerts.info.color)
-$infoicon = ($($util.alerts.info.icon) + $spacer)
-$infotext = ($($util.alerts.info.text) + $divider)
+$infoicon = $($util.alerts.info.icon)
+$infotext = $($util.alerts.info.text)
 
 function linebreak {
   param (
@@ -199,56 +198,72 @@ function Write-Info {
   param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$pairs,
-    [int]$bb = 0,
-    [int]$ba = 0,
+    [int]$bb = 1,
+    [int]$ba = 1,
     [int]$padout,
     [switch]$box,
     [string]$border = 'DarkGray'
   )
-  $pairs = @($infoicon, $infocolor, $infotext, $infocolor) + $pairs
-  wh -pairs $pairs -padout $env:padding -box:$box -border:$border
+  if (!($box)) {
+    $spacer = ': '
+    $border = $infocolor
+  }
+  $pairs = @($infoicon, $infocolor, $infotext, $infocolor, $spacer, $border) + $pairs
+  wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
 }
 
 function Write-Success {
   param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$pairs,
-    [int]$bb = 0,
-    [int]$ba = 0,
+    [int]$bb = 1,
+    [int]$ba = 1,
     [int]$padout,
     [switch]$box,
     [string]$border = 'DarkGray'
   )
-  $pairs = @($successicon, $successcolor, $successtext, $successcolor) + $pairs
-  wh -pairs $pairs -padout $env:padding -box:$box -border:$border
+  if (!($box)) {
+    $spacer = ': '
+    $border = $successcolor
+  }
+  $pairs = @($successicon, $successcolor, $successtext, $successcolor, $spacer, $border) + $pairs
+  wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
 }
 
 function Write-Err {
   param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$pairs,
-    [int]$bb = 0,
-    [int]$ba = 0,
+    [int]$bb = 1,
+    [int]$ba = 1,
     [int]$padout,
     [switch]$box,
     [string]$border = 'DarkGray'
   )
-  $pairs = @($erricon, $errcolor, $errtext, $errcolor) + $pairs
-  wh -pairs $pairs -padout $env:padding -box:$box -border:$border
+  if (!($box)) {
+    $spacer = ': '
+    $border = $errcolor
+  }
+  $pairs = @($erricon, $errcolor, $errtext, $errcolor, $spacer, $border) + $pairs
+  wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
 }
 
 function Write-Warn {
   param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$pairs,
-    [int]$bb = 0,
-    [int]$ba = 0,
+    [int]$bb = 1,
+    [int]$ba = 1,
     [int]$padout,
     [switch]$box,
     [string]$border = 'DarkGray'
   )
-  $pairs = @($warnicon, $warncolor, $warntext, $warncolor) + $pairs
-  wh -pairs $pairs -padout $env:padding -box:$box -border:$border
+  if (!($box)) {
+    $spacer = ': '
+    $border = $warncolor
+  }
+  $pairs = @($warnicon, $warncolor, $warntext, $warncolor, $spacer, $border) + $pairs
+  wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
 }
 
 function ask {

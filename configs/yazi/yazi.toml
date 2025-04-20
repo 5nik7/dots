@@ -18,16 +18,6 @@ edit = [
   { run = 'code -w %*', block = true, desc = "code (block)", for = "windows" },
 ]
 
-[[plugin.prepend_fetchers]]
-id = "git"
-name = "*"
-run = "git"
-
-[[plugin.prepend_fetchers]]
-id = "git"
-name = "*/"
-run = "git"
-
 [confirm]
 # trash
 trash_title = "Trash {n} selected file{s}?"

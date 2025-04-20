@@ -5,7 +5,6 @@
 Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name path -Value Get-Path
 Set-Alias -Name env -Value Get-Env
-Set-Alias -Name which -Value Show-Command
 Set-Alias -Name touch -Value New-File
 Set-Alias -Name rlp -Value rl
 Set-Alias -Name ln -Value Set-Link

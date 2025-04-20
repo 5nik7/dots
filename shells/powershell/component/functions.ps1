@@ -1,4 +1,64 @@
-﻿function yy {
+﻿# Initial GitHub.com connectivity check with 1 second timeout
+$global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
+
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+function Update-PowerShell {
+  try {
+    Write-Host 'Checking for PowerShell updates...' -ForegroundColor Cyan
+    $updateNeeded = $false
+    $currentVersion = $PSVersionTable.PSVersion.ToString()
+    $gitHubApiUrl = 'https://api.github.com/repos/PowerShell/PowerShell/releases/latest'
+    $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
+    $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
+    if ($currentVersion -lt $latestVersion) {
+      $updateNeeded = $true
+    }
+
+    if ($updateNeeded) {
+      Write-Host 'Updating PowerShell...' -ForegroundColor Yellow
+      Start-Process powershell.exe -ArgumentList '-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements' -Wait -NoNewWindow
+      Write-Host 'PowerShell has been updated. Please restart your shell to reflect changes' -ForegroundColor Magenta
+    }
+    else {
+      Write-Host 'Your PowerShell is up to date.' -ForegroundColor Green
+    }
+  }
+  catch {
+    Write-Error "Failed to update PowerShell. Error: $_"
+  }
+}
+
+function Clear-Cache {
+  # add clear cache logic here
+  Write-Host 'Clearing cache...' -ForegroundColor Cyan
+
+  # Clear Windows Prefetch
+  Write-Host 'Clearing Windows Prefetch...' -ForegroundColor Yellow
+  Remove-Item -Path "$env:SystemRoot\Prefetch\*" -Force -ErrorAction SilentlyContinue
+
+  # Clear Windows Temp
+  Write-Host 'Clearing Windows Temp...' -ForegroundColor Yellow
+  Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+  # Clear User Temp
+  Write-Host 'Clearing User Temp...' -ForegroundColor Yellow
+  Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+  # Clear Internet Explorer Cache
+  Write-Host 'Clearing Internet Explorer Cache...' -ForegroundColor Yellow
+  Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+  Write-Host 'Cache clearing completed.' -ForegroundColor Green
+}
+
+function Test-CommandExists {
+  param($command)
+  $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
+  return $exists
+}
+
+function yy {
   $tmp = [System.IO.Path]::GetTempFileName()
   yazi $args --cwd-file="$tmp"
   $cwd = Get-Content -Path $tmp
@@ -6,6 +66,60 @@
     Set-Location -LiteralPath $cwd
   }
   Remove-Item -Path $tmp
+}
+
+# Clipboard Utilities
+function cpy { Set-Clipboard $args[0] }
+
+function pst { Get-Clipboard }
+
+function touch($file) { '' | Out-File $file -Encoding ASCII }
+
+# Network Utilities
+function Get-PubIP { (Invoke-WebRequest http://ifconfig.me/ip).Content }
+
+function sed($file, $find, $replace) {
+  (Get-Content $file).replace("$find", $replace) | Set-Content $file
+}
+
+function which($name) {
+  Get-Command $name | Select-Object -ExpandProperty Definition
+}
+
+function export($name, $value) {
+  set-item -force -path "env:$name" -value $value;
+}
+
+function pkill($name) {
+  Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
+}
+
+function pgrep($name) {
+  Get-Process $name
+}
+
+function head {
+  param($Path, $n = 10)
+  Get-Content $Path -Head $n
+}
+
+function tail {
+  param($Path, $n = 10, [switch]$f = $false)
+  Get-Content $Path -Tail $n -Wait:$f
+}
+
+function df {
+  get-volume
+}
+# Directory Management
+function mkcd { param($dir) mkdir $dir -Force; Set-Location $dir }
+
+function sysinfo { Get-ComputerInfo }
+
+function unzip ($file) {
+  Write-Output('Extracting', $file, 'to', $pwd)
+  $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
+  Expand-Archive -Path $fullFile -DestinationPath $pwd
 }
 
 function dd {
@@ -99,27 +213,6 @@ function Find-String {
   Get-ChildItem | Select-String $SearchTerm
 }
 
-function New-File {
-  <#
-    .SYNOPSIS
-        Creates a new file with the specified name and extension. Alias: touch
-    #>
-  [CmdletBinding()]
-  param (
-    [Parameter(Mandatory = $true, Position = 0)]
-    [string]$Name
-  )
-
-  Write-Verbose "Creating new file '$Name'"
-  New-Item -ItemType File -Name $Name -Path $PWD | Out-Null
-}
-
-function Test-CommandExists {
-  param($command)
-  $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
-  return $exists
-}
-
 function Show-Command {
   [CmdletBinding()]
   param (
@@ -127,7 +220,7 @@ function Show-Command {
     [string]$Name
   )
   if (-not (Test-CommandExists $Name)) {
-    Write-Err "$Name" -box
+    Write-Err -box $Name Magenta ' not found'
     return
   }
   Write-Verbose "Showing definition of '$Name'"
@@ -151,6 +244,12 @@ function Get-ContentPretty {
   linebreak
 }
 
+# Navigation Shortcuts
+function docs {
+  $docs = if (([Environment]::GetFolderPath('MyDocuments'))) { ([Environment]::GetFolderPath('MyDocuments')) } else { $HOME + '\Documents' }
+  Set-Location -Path $docs
+}
+
 function .d {
   Set-Location "$env:DOTS"
 }
@@ -160,7 +259,7 @@ function cdev {
 }
 
 function Edit-Profile {
-  (& $env:EDITOR ([IO.Path]::GetDirectoryName($profile)))
+  & $env:EDITOR $PROFILE
 }
 
 function .. {
@@ -181,7 +280,14 @@ function Get-Functions {
 }
 
 function winutil {
-  Invoke-RestMethod 'https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1' | Invoke-Expression
+  if ($isAdmin) {
+    Invoke-RestMethod 'https://christitus.com/win' | Invoke-Expression
+  }
+  else {
+    Write-Host 'You need to run this command as an administrator.' -ForegroundColor Red
+    return
+  }
+  # Invoke-RestMethod 'https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1' | Invoke-Expression
 }
 
 function nerdfonts {

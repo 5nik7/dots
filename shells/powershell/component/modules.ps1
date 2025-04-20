@@ -42,11 +42,10 @@ if (Test-CommandExists fzf) { Import-Module 'PsFzf' }
 
 Import-PSMod -Name 'CompletionPredictor'
 Import-PSMod -Name 'PowerShellGet'
-Import-PSMod -Name 'PowerShellGet'
 Import-PSMod -Name 'Terminal-Icons'
-Import-PSMod -Name 'PSScriptAnalyzer'
-Import-PSMod -Name 'Pester'
-Import-PSMod -Name 'Plaster'
+# Import-PSMod -Name 'PSScriptAnalyzer'
+# Import-PSMod -Name 'Pester'
+# Import-PSMod -Name 'Plaster'
 # Import-PSMod -Core -Name 'Microsoft.WinGet.CommandNotFound'
 
 Import-PSMod -Local -Name 'powernerd'
