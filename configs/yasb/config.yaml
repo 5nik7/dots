@@ -35,17 +35,15 @@ bars:
       left:
         [
           "home",
-          "komorebi_workspaces",
-          "active_window",
+          "apps",
+          "komorebi_workspaces"
         ]
       center:
         [
-          "clock",
-          "apps",
+          "active_window"
         ]
       right:
         [
-          "cava",
           "media",
           "volume",
           "weather",
@@ -53,6 +51,7 @@ bars:
           "github",
           "disk",
           "wallpapers",
+          "clock",
           "power_menu"
         ]
 widgets:
@@ -101,8 +100,8 @@ widgets:
       app_list:
         - { icon: "\uf422", launch: "launcher" }
         - { icon: "\ueb03", launch: "cmd /c Taskmgr" }
-        - { icon: "\uf268", launch: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" }
-        - { icon: "\udb82\ude1e",launch: "C:\\vscode\\bin\\code.cmd" }
+        # - { icon: "\uf268", launch: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" }
+        # - { icon: "\udb82\ude1e",launch: "C:\\vscode\\bin\\code.cmd" }
   komorebi_workspaces:
     type: "komorebi.workspaces.WorkspaceWidget"
     options:

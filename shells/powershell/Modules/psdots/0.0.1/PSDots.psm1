@@ -1,15 +1,3 @@
-$PadddingOutSpaces = 4
-$PadddingOut = ' ' * $PadddingOutSpaces
-
-function linebreak {
-  param (
-    [int]$count = 1
-  )
-  for ($i = 0; $i -lt $count; $i++) {
-    Write-Host ''
-  }
-}
-
 $modulePath = $PSScriptRoot
 
 function Join-Profile {
@@ -70,7 +58,7 @@ function New-Backup {
   )
 
   if (!(Test-Path $target)) {
-    Write-Err | Write-Color White "$target does not exist,"
+    Write-Err | Write-Host -ForegroundColor White "$target does not exist,"
     return
   }
 
@@ -91,10 +79,10 @@ function New-Backup {
 
   if (!(Test-Path -Path $backupDir)) {
     linebreak
-    Write-Color Green ' Creating backup directory: ' -inline
+    Write-Host -ForegroundColor Green ' Creating backup directory: ' -NoNewline
     New-Item -ItemType Directory -Path $backupDir -ErrorAction Stop | Out-Null
-    Write-Color DarkBlue " $backupParent\" -inline
-    Write-Color Blue "$backupFolder"
+    Write-Host -ForegroundColor DarkBlue " $backupParent\" -NoNewline
+    Write-Host -ForegroundColor Blue "$backupFolder"
     linebreak
   }
 
@@ -108,11 +96,11 @@ function New-Backup {
     Move-Item -Path $backupFilePath -Destination $backupDir -ErrorAction Stop | Out-Null
   }
   linebreak
-  Write-Color DarkBlue "$PadddingOut  $backupParent\" -inline
-  Write-Color Blue "$backupFolder\" -inline
-  Write-Color DarkYellow '  ' -inline
-  Write-Color White "$targetleaf" -inline
-  Write-Color DarkGray ".$bakDate.bak"
+  Write-Host -ForegroundColor DarkBlue "$PadddingOut  $backupParent\" -NoNewline
+  Write-Host -ForegroundColor Blue "$backupFolder\" -NoNewline
+  Write-Host -ForegroundColor DarkYellow '  ' -NoNewline
+  Write-Host -ForegroundColor White "$targetleaf" -NoNewline
+  Write-Host -ForegroundColor DarkGray ".$bakDate.bak"
   linebreak
   return
 }
@@ -197,8 +185,8 @@ function Set-Link {
     $basedir = "$basedir\"
   }
 
-  if ($basedir -eq 'C:\') {
-    $basedir = "$basedir"
+  if ($targetdir -eq 'C:\') {
+    $targetdir = "$targetdir"
   }
   elseif ($targetdir -eq $env:DOTFILES -or $parentDir -eq $env:DOTFILES) {
     $targetdircolor = $dotcolor
@@ -222,11 +210,11 @@ function Set-Link {
 
   $symlinker = {
     New-Item -ItemType SymbolicLink -Path $target -Target ((Get-Item $base).FullName) -ErrorAction Stop | Out-Null
-    Write-Color $basedircolor "$PadddingOut $basedir" -inline
-    Write-Color $baseleafcolor "$baseleaf" -inline
-    Write-Color $arrowcolor "$arrow" -inline
-    Write-Color $targetdircolor "$targetdir" -inline
-    Write-Color $targetleafcolor "$targetleaf"
+    Write-Host -ForegroundColor $basedircolor "$PadddingOut $basedir" -NoNewline
+    Write-Host -ForegroundColor $baseleafcolor "$baseleaf" -NoNewline
+    Write-Host -ForegroundColor $arrowcolor "$arrow" -NoNewline
+    Write-Host -ForegroundColor $targetdircolor "$targetdir" -NoNewline
+    Write-Host -ForegroundColor $targetleafcolor "$targetleaf"
   }
 
   if (Test-Path -Path $target) {
@@ -236,9 +224,9 @@ function Set-Link {
     }
     if ($i -and (Test-Path $target)) {
       linebreak
-      Write-Color Magenta "$PadddingOut $((Get-Item $target).FullName) " -inline
-      Write-Color Gray 'already exists. '
-      Write-Color Cyan "$PadddingOut Create backup? " -inline
+      Write-Host -ForegroundColor Magenta "$PadddingOut $((Get-Item $target).FullName) " -NoNewline
+      Write-Host -ForegroundColor Gray 'already exists. '
+      Write-Host -ForegroundColor Cyan "$PadddingOut Create backup? " -NoNewline
       $userChoice = Read-Host '[Y/n]'
       if ($userChoice -eq 'n') {
         Write-Warn 'Operation cancelled.'
@@ -249,7 +237,7 @@ function Set-Link {
   }
   if ($i) {
     linebreak
-    Write-Color Cyan "$PadddingOut Create SymLink? " -inline
+    Write-Host -ForegroundColor Cyan "$PadddingOut Create SymLink? " -NoNewline
     $userChoice = Read-Host '[Y/n]'
     if ($userChoice -eq 'n') {
       Write-Warn 'Operation cancelled.'

@@ -1,21 +1,16 @@
-function linebreak {
-  param (
-    [int]$count = 1
-  )
-  for ($i = 0; $i -lt $count; $i++) {
-    Write-Host ''
-  }
-}
 $modulePath = $PSScriptRoot
 
 $actioncolor = 'White'
 $psdoticon = (nf cod-terminal_powershell)
 $dircolor = 'DarkGray'
 
+$spacer = ' │ '
+$spacercolor = 'DarkGray'
+
 $arrowcolor = 'DarkGray'
 $arrow = ' --> '
 
-$labicon = (nf md-flask_outline)
+$labicon = (nf oct-beaker)
 $labiconcolor = 'Cyan'
 $labscriptcolor = 'White'
 $pscriptscolor = 'Blue'
@@ -308,11 +303,11 @@ function lab {
     $filePath = "$TargetScriptDir\$filename.ps1"
     if (!(Test-Path $filePath)) {
       New-Item -Path $filePath -ItemType File -ErrorAction Stop | Out-Null
-      # wh ' Created: ' $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor " $filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
+      wh 'Created: ' $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor " $filename.ps1" $labscriptcolor
       return
     }
     else {
-      wh -box "$filename.ps1" cyan ' already exists in ' white $TargetScriptDir blue
+      wlab "$filename.ps1" cyan ' already exists in ' white $TargetScriptDir blue
       return
     }
   }

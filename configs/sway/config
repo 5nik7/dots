@@ -134,7 +134,7 @@ popup_during_fullscreen smart
 
     # Start your launcher
     bindsym $mod+d exec $menu
-    
+
     bindsym $mod+n exec --no-startup-id flash_window
 
     # Drag floating windows by holding down $mod and left mouse button.
