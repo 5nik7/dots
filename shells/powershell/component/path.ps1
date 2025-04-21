@@ -9,7 +9,7 @@ function Add-Path {
     }
   }
   else {
-    Write-Err "Path $Path does not exist"
+    Write-Err $Path Magenta ' does not exist.'
   }
 }
 function Add-PrependPath {
@@ -23,7 +23,7 @@ function Add-PrependPath {
     }
   }
   else {
-    Write-Err "Path $Path does not exist"
+    Write-Err $Path Magenta ' does not exist.'
   }
 }
 function Remove-Path {
@@ -35,7 +35,7 @@ function Remove-Path {
     $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
   }
   else {
-    Write-Err "Path $Path does not exist"
+    Write-Err $Path Magenta ' does not exist.'
   }
 }
 function Remove-DuplicatePaths {

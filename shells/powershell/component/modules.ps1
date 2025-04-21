@@ -50,8 +50,6 @@ Import-PSMod -Name 'Terminal-Icons'
 
 Import-PSMod -Local -Name 'powernerd'
 Import-PSMod -Local -Name 'winwal'
-Import-PSMod -Local -Name 'lab'
-Import-PSMod -Local -Name 'PSDots' -Version '0.0.1'
 
 if ((Get-Module winwal -ListAvailable) -and (Test-Path "$env:PSMODS\winwal\colortool")) {
   Add-Path -Path "$env:PSMODS\winwal\colortool"

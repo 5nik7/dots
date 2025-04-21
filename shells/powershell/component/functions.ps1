@@ -1,5 +1,5 @@
 ﻿# Initial GitHub.com connectivity check with 1 second timeout
-$global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
+$global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet
 
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
@@ -57,15 +57,39 @@ function Test-CommandExists {
   $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
   return $exists
 }
+# Editor Configuration
+$EDITOR = if (Test-CommandExists code) { 'code' }
+elseif (Test-CommandExists code) { 'nvim' }
+elseif (Test-CommandExists vim) { 'vim' }
+elseif (Test-CommandExists vi) { 'vi' }
+else { 'notepad' }
+$env:EDITOR = $EDITOR
+function Edit-Item {
+  param (
+    [string]$Path = $PWD
+  )
 
-function yy {
-  $tmp = [System.IO.Path]::GetTempFileName()
-  yazi $args --cwd-file="$tmp"
-  $cwd = Get-Content -Path $tmp
-  if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
-    Set-Location -LiteralPath $cwd
+  if ($Path) {
+    & $env:EDITOR $Path
   }
-  Remove-Item -Path $tmp
+  else {
+    & $env:EDITOR
+  }
+}
+Set-Alias -Name edit -Value Edit-Item
+Set-Alias -Name e -Value Edit-Item
+
+if (Test-CommandExists yazi) {
+  function yy {
+    $tmp = [System.IO.Path]::GetTempFileName()
+    yazi $args --cwd-file="$tmp"
+    $cwd = Get-Content -Path $tmp
+    if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
+      Set-Location -LiteralPath $cwd
+    }
+    Remove-Item -Path $tmp
+  }
+  Set-Alias -Name d -Value yy
 }
 
 # Clipboard Utilities
@@ -220,7 +244,7 @@ function Show-Command {
     [string]$Name
   )
   if (-not (Test-CommandExists $Name)) {
-    Write-Err -box $Name Magenta ' not found'
+    Write-Err $Name Magenta ' not found'
     return
   }
   Write-Verbose "Showing definition of '$Name'"
@@ -257,6 +281,7 @@ function .d {
 function cdev {
   Set-Location "$env:DEV"
 }
+Set-Alias -Name dev -Value cdev
 
 function Edit-Profile {
   & $env:EDITOR $PROFILE

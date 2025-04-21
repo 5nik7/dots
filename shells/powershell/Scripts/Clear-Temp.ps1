@@ -1,59 +1,77 @@
-<#
-.SYNOPSIS
-Clear the contents of TEMP, Windows\TEMP, and LocalAppData\TEMP.
+using namespace System.Management.Automation
+using namespace System.Management.Automation.Language
 
-.PARAMETER Quiet
-Suppress any output; default is to report amount of disk space recovered.
-#>
+$env:HOME = "$env:HOMEPATH"
+$DOTS = "$env:HOME\dots"
+$env:DOTS = $DOTS
+$Global:DOTS = $env:DOTS
+$SHELLS = "$DOTS\shells"
+$env:SHELLS = $SHELLS
+$Global:SHELLS = $env:SHELLS
+$PSDOTS = "$SHELLS\powershell"
+$env:PSDOTS = $PSDOTS
+$Global:PSDOTS = $env:PSDOTS
+$PSCOMPONENT = "$PSDOTS\component"
+$env:PSCOMPONENT = $PSCOMPONENT
+$Global:PSCOMPONENT = $env:PSCOMPONENT
 
-# CmdletBinding adds -Verbose functionality, SupportsShouldProcess adds -WhatIf
-[CmdletBinding(SupportsShouldProcess=$true)]
-
-param([switch] $Quiet)
-
-Begin
-{
-	function ClearFolder
-	{
-		param($path)
-
-		if (!(Test-Path $path)) { return }
-
-		$fils = [System.IO.Directory]::GetFiles($path, '*').Count
-		$dirs = [System.IO.Directory]::GetDirectories($path, '*').Count
-
-		Write-Verbose "... clearing $path"
-		Remove-Item -Path "$path\*" -Force -Recurse -ErrorAction:SilentlyContinue
-
-		$fc = $fils - [System.IO.Directory]::GetFiles($path, '*').Count
-		$dc = $dirs - [System.IO.Directory]::GetDirectories($path, '*').Count
-
-		$script:filCount += $fc
-		$script:dirCount += $dc
-
-		if (!$Quiet)
-		{
-			Write-Host "... removed $fc files, $dc directories from $path" -ForegroundColor DarkGray
-		}
-	}
+$psource = ('util', 'functions', 'env')
+foreach ( $piece in $psource ) {
+  Unblock-File "$PSCOMPONENT\$piece.ps1"
+  . "$PSCOMPONENT\$piece.ps1"
 }
-Process
-{
-	$used = (Get-PSDrive C).Used
-	$script:filCount = 0
-	$script:dirCount = 0
 
-	ClearFolder 'C:\Temp'
-	ClearFolder 'C:\Tmp'
-	ClearFolder 'C:\Windows\Temp'
-	ClearFolder (Join-Path $env:LocalAppData 'Temp')
+function dotenv {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$path,
+    [switch]$v
+  )
+  $envFilePath = Join-Path -Path $path -ChildPath '.dotenv'
+  if (Test-Path $envFilePath) {
+    if ($v) {
+      wh 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$env:DOTS\" blue '.env' green -box -border 0 -bb 1 -ba 1 -padout $env:padding
+    }
+    Get-Content $envFilePath | ForEach-Object {
+      $name, $value = $_.split('=')
 
-	if (!$Quiet)
-	{
-		$disk = Get-PSDrive C | Select-Object Used,Free
-		$pct = ($disk.Used / ($disk.Used + $disk.Free)) * 100
-		$recovered = $used - $disk.Used
-		Write-Host "... removed $filCount files, $dirCount directories"
-		Write-Host ("... recovered {0:0.00} MB on drive C, {1:0.00}% used" -f ($recovered / 1024000), $pct)
-	}
+      if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
+        continue
+      }
+      $expandedName = [Environment]::ExpandEnvironmentVariables($name)
+      $expandedValue = [Environment]::ExpandEnvironmentVariables($value)
+
+      Set-Item -Path "env:$expandedName" -Value $expandedValue
+      if ($v) {
+        wh '' darkgray $expandedName yellow ' = ' darkgray $expandedValue white -bb 1 -ba 1 -padout $env:padding
+      }
+    }
+  }
+}
+dotenv $env:DOTS
+dotenv $env:secretdir
+
+$psource = ('path', 'fzf', 'modules', 'hooks', 'readline', 'prompt', 'aliases', 'completions')
+foreach ( $piece in $psource ) {
+  Unblock-File "$PSCOMPONENT\$piece.ps1"
+  . "$PSCOMPONENT\$piece.ps1"
+}
+
+if ($env:isReloading) {
+  Clear-Host
+  wh 'Profile reloaded.' green -box -border darkgray -bb 1 -ba 1 -padout $env:padding
+  $env:isReloading = $false
+}
+
+function rl {
+  [CmdletBinding()]
+  param ()
+  [bool]$env:isReloading = "$true"
+
+  $env:isReloading = $true
+  Clear-Host
+  wh 'Restarting PowerShell..' blue -box -border darkgray -bb 1 -ba 1 -padout $env:padding
+  & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
+  exit
 }

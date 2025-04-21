@@ -17,17 +17,17 @@ function OnViModeChangeCore {
   }1
 }
 
-Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore
+# Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore
 
 
-# function OnViModeChangeDesktop {
-#   [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
-# }
+function OnViModeChangeDesktop {
+  [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+}
 
-# if ($PSEdition -eq 'Core') {
-#   Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore
-# }
+if ($PSEdition -eq 'Core') {
+  Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore
+}
 
-# if ($PSEdition -eq 'Desktop') {
-#   Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeDesktop
-# }
+if ($PSEdition -eq 'Desktop') {
+  Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeDesktop
+}

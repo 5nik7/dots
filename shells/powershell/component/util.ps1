@@ -1,3 +1,10 @@
+$env:box = $true
+if ($env:box -eq $true) { $Global:box = $true }
+else { $Global:box = $false }
+
+if ($env:padding) { $Global:padout = $env:padding }
+else { $Global:padout = 3 }
+
 $util = @{
   colors = @{
     Black       = 0
@@ -146,7 +153,7 @@ function wh {
     }
     $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_ -eq $clr }
     if (-not $colorEnum) {
-      Write-Err "Invalid color: $clr"
+      Write-Err 'Invalid color ' Magenta $clr
       return
     }
 
@@ -206,7 +213,6 @@ function Write-Info {
   )
   if (!($box)) {
     $spacer = ': '
-    $border = $infocolor
   }
   $pairs = @($infoicon, $infocolor, $infotext, $infocolor, $spacer, $border) + $pairs
   wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
@@ -224,7 +230,6 @@ function Write-Success {
   )
   if (!($box)) {
     $spacer = ': '
-    $border = $successcolor
   }
   $pairs = @($successicon, $successcolor, $successtext, $successcolor, $spacer, $border) + $pairs
   wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
@@ -242,7 +247,6 @@ function Write-Err {
   )
   if (!($box)) {
     $spacer = ': '
-    $border = $errcolor
   }
   $pairs = @($erricon, $errcolor, $errtext, $errcolor, $spacer, $border) + $pairs
   wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
@@ -260,7 +264,6 @@ function Write-Warn {
   )
   if (!($box)) {
     $spacer = ': '
-    $border = $warncolor
   }
   $pairs = @($warnicon, $warncolor, $warntext, $warncolor, $spacer, $border) + $pairs
   wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
@@ -281,7 +284,7 @@ function ask {
       return $false
     }
     else {
-      Write-Err "Invalid choice. Please enter 'y' or 'n'." -box
+      Write-Err "Invalid choice. Please enter 'y' or 'n'."
       return $null
     }
   }

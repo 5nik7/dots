@@ -15,23 +15,7 @@ $PSCOMPONENT = "$PSDOTS\component"
 $env:PSCOMPONENT = $PSCOMPONENT
 $Global:PSCOMPONENT = $env:PSCOMPONENT
 
-function Find-WindotsRepository {
-  <#
-    .SYNOPSIS
-        Finds the local Windots repository.
-    #>
-  [CmdletBinding()]
-  param (
-    [Parameter(Mandatory = $true, Position = 0)]
-    [string]$ProfilePath
-  )
-
-  Write-Verbose 'Resolving the symbolic link for the profile'
-  $profileSymbolicLink = Get-ChildItem $ProfilePath | Where-Object FullName -EQ $PROFILE.CurrentUserAllHosts
-  return Split-Path $profileSymbolicLink.Target
-}
-
-$psource = ('util', 'functions', 'env')
+$psource = ('util', 'functions')
 foreach ( $piece in $psource ) {
   Unblock-File "$PSCOMPONENT\$piece.ps1"
   . "$PSCOMPONENT\$piece.ps1"
@@ -68,15 +52,13 @@ function dotenv {
 dotenv $env:DOTS
 dotenv $env:secretdir
 
-$psource = ('path', 'fzf', 'modules', 'hooks', 'readline', 'prompt', 'aliases', 'completions')
+$psource = ('path', 'fzf', 'modules', 'readline', 'prompt', 'aliases', 'completions')
 foreach ( $piece in $psource ) {
   Unblock-File "$PSCOMPONENT\$piece.ps1"
   . "$PSCOMPONENT\$piece.ps1"
 }
 
-# Invoke-Expression "$(direnv hook pwsh)"
-
-# (& pyenv-venv init)
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 if ($env:isReloading) {
   Clear-Host
