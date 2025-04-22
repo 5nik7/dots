@@ -1,19 +1,7 @@
 $modulePath = $PSScriptRoot
 
-$actioncolor = 'White'
 $psdoticon = (nf cod-terminal_powershell)
-$dircolor = 'DarkGray'
-
-$spacer = ' │ '
-$spacercolor = 'DarkGray'
-
-$arrowcolor = 'DarkGray'
-$arrow = ' --> '
-
 $labicon = (nf oct-beaker)
-$labiconcolor = 'Cyan'
-$labscriptcolor = 'White'
-$pscriptscolor = 'Blue'
 
 function SetupLab {
   param (
@@ -33,7 +21,7 @@ function SetupLab {
       }
     }
     if (-not $quiet) {
-      Write-Info "Setting up lab environment in $Env:LAB" -box
+      wh -box "Setting up lab environment in $Env:LAB"
     }
   }
   if ($labPath) {
@@ -42,23 +30,23 @@ function SetupLab {
         $oldLab = "$Env:LAB\PowerShell"
         Remove-Path -Path $oldLab
         if (-not $quiet) {
-          Write-Info "Removed $oldLab from the PATH" -box
+          wh -box "Removed $oldLab from the PATH"
         }
         $Env:LAB = $labPath
         if (-not $quiet) {
-          Write-Info "Setting up lab environment in $Env:LAB" -box
+          wh -box "Setting up lab environment in $Env:LAB"
         }
       }
       else {
         if (-not $quiet) {
-          Write-Warn "Lab environment already set up in $Env:LAB" -box
+          wh -box "Lab environment already set up in $Env:LAB"
         }
         return
       }
     }
     else {
       if (-not $quiet) {
-        Write-Err $Path Magenta ' does not exist.'
+        Write-Err -box $Path Magenta ' does not exist.'
       }
       return
     }
@@ -69,7 +57,7 @@ function SetupLab {
   if (!(Test-Path($env:LAB))) {
     New-Item -ItemType Directory -Path $env:LAB -ErrorAction Stop | Out-Null
     if (-not $quiet) {
-      Write-Success "Created lab directory: $env:LAB" -box
+      Write-Success -box 'Created lab directory: ' White "$env:LAB" Blue
     }
   }
   $env:PSLAB = "$env:LAB\PowerShell"
@@ -77,18 +65,18 @@ function SetupLab {
   if (!(Test-Path($env:PSLAB))) {
     New-Item -ItemType Directory -Path $env:PSLAB -ErrorAction Stop | Out-Null
     if (-not $quiet) {
-      Write-Success "Created PowerShell lab directory: $env:PSLAB" -box
+      Write-Success -box 'Created PowerShell lab directory: ' White "$env:PSLAB" Blue
     }
   }
   if ($env:PATH -notlike "*$env:PSLAB*") {
     Add-Path -Path $env:PSLAB
     if (-not $quiet) {
-      Write-Success "Added $env:PSLAB to the PATH" -box
+      Write-Success -box 'Added ' White "$env:PSLAB" Blue ' to the PATH' White
     }
 
   }
   if (-not $quiet) {
-    Write-Success "Lab environment set up in $env:LAB" -box
+    Write-Success -box 'Lab environment set up in ' White "$env:LAB" Blue
   }
 }
 if (!($env:LAB)) {
@@ -172,12 +160,12 @@ function Get-LabScripts {
 
   $scriptsPath = $TargetScriptDir
 
-  wh "Listing scripts in $scriptsPath" $targetcolor -box
+  wh -box -bb 1 -ba 1 'Listing scripts in ' DarkGray "$scriptsPath" Gray
   Get-Command -CommandType ExternalScript | ForEach-Object `
   {
     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
     if ($_.Source -like "$scriptsPath\*") {
-      wh "$PadddingOut $name"
+      wh "$PadddingOut $name" Gray
 
       $parameters = $_.Parameters
       if ($null -ne $parameters) {
@@ -299,14 +287,14 @@ function lab {
   }
 
   if ($new) {
-    $actioncolor = 'Green'
     $filePath = "$TargetScriptDir\$filename.ps1"
     if (!(Test-Path $filePath)) {
       New-Item -Path $filePath -ItemType File -ErrorAction Stop | Out-Null
-      wh 'Created: ' $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor " $filename.ps1" $labscriptcolor
+      wh -box -bb 1 -ba 1 'Created: ' Green "$TargetScriptDir\$filename.ps1" Gray
       return
     }
     else {
+      wh -box -bb 1 -ba 1 'Created: ' Green "$TargetScriptDir\$filename.ps1" Gray
       wlab "$filename.ps1" cyan ' already exists in ' white $TargetScriptDir blue
       return
     }
@@ -332,36 +320,34 @@ function lab {
       }
     }
     else {
-      Write-Err "$patherror" -box
+      Write-Err -box "$patherror"
       return
     }
   }
 
   if ($tested) {
-    $actioncolor = 'Yellow'
     $filePath = "$PSLAB\$filename.ps1"
     if (Test-Path $filePath) {
       $destination = "$env:PSCRIPTS\$filename.ps1"
       Move-Item -Path $filePath -Destination $destination -ErrorAction Stop | Out-Null
-      # wh ' Moved: ' $actioncolor "$PSLAB\ " $dircolor "$labicon" $labiconcolor " $filename.ps1" $labscriptcolor "$arrow" $arrowcolor "$env:PSCRIPTS" $dircolor "$psdoticon" $pscriptscolor " $filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
+      wh -box -bb 1 -ba 1 ' ' cyan "$env:PSLAB\" magenta "$filename.ps1" red ' --> ' White "$env:PSCRIPTS\" Blue "$filename.ps1" Green
       return
     }
     else {
-      wh -box "$filename.ps1" cyan ' already exists in ' white $PSLAB blue
+      wh -box -bb 1 -ba 1 "$filename.ps1" cyan ' already exists in ' white "$PSLAB" blue
       return
     }
   }
 
   if ($delete) {
-    $actioncolor = 'Red'
     $filePath = "$TargetScriptDir\$filename.ps1"
     if (Test-Path $filePath) {
       Remove-Item -Path $filePath -ErrorAction Stop | Out-Null
-      wh ' Deleted: ' $actioncolor "$TargetScriptDir\ " $dircolor "$targeticon" $targetcolor "$filename.ps1" $labscriptcolor -bb 1 -ba 1 -padout 2 -box -border darkgray
+      wh -box -bb 1 -ba 1 ' ' Gray 'Deleted ' White "$TargetScriptDir\" magenta "$filename.ps1" red
       return
     }
     else {
-      Write-Err "File $filename.ps1 not found in $TargetScriptDir."
+      Write-Err -box "$filename.ps1 " magenta 'not found in ' White "$TargetScriptDir" Gray
       return
     }
   }
@@ -371,7 +357,7 @@ function lab {
     elseif (Test-CommandExists bat) { 'bat' }
     elseif (Test-CommandExists cat) { 'cat' }
     else {
-      Write-Err 'No command found to display file contents.'
+      Write-Err -box 'No command found to display file contents' White
       return
     }
     $filePath = "$TargetScriptDir\$filename.ps1"
@@ -380,7 +366,7 @@ function lab {
       return
     }
     else {
-      Write-Err "File $filename.ps1 not found in $TargetScriptDir." -box
+      Write-Err -box "$filename.ps1 " magenta 'not found in ' White "$TargetScriptDir" Gray
       return
     }
   }

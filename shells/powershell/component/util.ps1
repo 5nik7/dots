@@ -142,22 +142,15 @@ function wh {
 
   $pairsList = @()  # will hold objects like @{ text="Hello"; color="White"; length=... }
   $totalLength = 0
-
   # Collect pairs without printing right away
   for ($i = 0; $i -lt $pairs.Count; $i += 2) {
     $txt = $pairs[$i]
     $clr = if ($i + 1 -lt $pairs.Count) { $pairs[$i + 1] } else { 'White' }
 
-    if ($clr -match '^\d+$') {
-      $clr = $util.colors.GetEnumerator() | Where-Object { $_.Value -eq [int]$clr } | Select-Object -ExpandProperty Key
-    }
-    $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_ -eq $clr }
-    if (-not $colorEnum) {
-      Write-Err 'Invalid color ' Magenta $clr
-      return
-    }
+    # Validate $clr directly against [System.ConsoleColor]
+    $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_.ToString() -eq $clr }
 
-    $pairsList += [pscustomobject]@{ text = $txt; color = $clr }
+    $pairsList += [pscustomobject]@{ text = $txt; color = $colorEnum }
     $totalLength += $txt.Length
   }
   $totalLength += ($padin * 2)

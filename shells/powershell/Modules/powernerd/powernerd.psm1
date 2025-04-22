@@ -147,29 +147,8 @@ function Get-GlyphCode {
   }
 }
 
-function Install-NerdFontsUtil {
-  <#
-    .SYNOPSIS
-        Installs NerdFonts.
-    .DESCRIPTION
-        This function installs NerdFonts by downloading and executing the installation script from the specified URL.
-    .PARAMETER OptionalParameters
-        Additional parameters to pass to the installation script.
-    .EXAMPLE
-        Install-NerdFonts
-        # This will install NerdFonts using the default installation script.
-    .EXAMPLE
-        Install-NerdFonts -OptionalParameters @('-Font', 'FiraCode')
-        # This will install the FiraCode NerdFont.
-    .NOTES
-        Author: njen
-        Version: 1.0.0
-    #>
-  param (
-    [Parameter(ValueFromRemainingArguments = $true)]
-    $OptionalParameters
-  )
-  & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
+function Install-NerdFontsUtil() {
+  & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1'))) @args
 }
 
 function ListNerdFonts {

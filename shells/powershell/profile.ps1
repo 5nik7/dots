@@ -78,4 +78,4 @@ function rl {
   exit
 }
 
-. "C:\Users\njen\Documents\PowerShell\gh-copilot.ps1"
+. 'C:\Users\njen\Documents\PowerShell\gh-copilot.ps1'
