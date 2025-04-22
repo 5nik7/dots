@@ -16,9 +16,9 @@ export DOT_THEME="$(cat $DOTS/.theme)"
 export LS_COLORS="$(vivid generate $DOT_THEME)"
 
 function zource() {
-	if [ -f "${1}" ]; then
-		source "${1}"
-	fi
+  if [ -f "${1}" ]; then
+    source "${1}"
+  fi
 }
 
 function zieces() {
@@ -35,7 +35,7 @@ zieces "plugins"
 zieces "completions"
 zieces "aliases"
 
-fpath=( "${ZFUNC}" "${fpath[@]}" )
+fpath=("${ZFUNC}" "${fpath[@]}")
 
 addir "${HOME}/.local/bin"
 addir "${backups}"
@@ -51,7 +51,7 @@ export SHHHH="${DOTS}/secrets"
 zource "${SHHHH}/secrets.sh"
 
 if is_installed nvim; then
-    export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
+  export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
 fi
 
 if is_installed zoxide; then
@@ -69,17 +69,17 @@ fi
 
 if is_installed fzf; then
 
-if cmd_exists fd; then
-  export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
-fi
+  if cmd_exists fd; then
+    export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
+  fi
 
-if cmd_exists bat; then
-  PREVIEWER='bat --style=numbers --color=always --pager=never'
-else
-  PREVIEWER='cat'
-fi
+  if cmd_exists bat; then
+    PREVIEWER='bat --style=numbers --color=always --pager=never'
+  else
+    PREVIEWER='cat'
+  fi
 
-export FZF_DEFAULT_OPTS="--style full \
+  export FZF_DEFAULT_OPTS="--style full \
 --height 90% \
 --border sharp \
 --input-border sharp \
@@ -99,7 +99,7 @@ export FZF_DEFAULT_OPTS="--style full \
 --color=16 \
 --preview '${PREVIEWER} {}'"
 
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
+  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
 bg+:0,\
 bg:-1,\
 preview-bg:-1,\
@@ -124,19 +124,18 @@ list-border:0,\
 preview-border:0,\
 input-border:8"
 
-function finst() {
-  fzpkgs="$(pkg list-all | tr '/' ' '  | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
-  if [ -z "$fzpkgs" ]; then
-    echo "No package selected."
-  else
-    pkg install -y "$fzpkgs"
-  fi
-}
+  function finst() {
+    fzpkgs="$(pkg list-all | tr '/' ' ' | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
+    if [ -z "$fzpkgs" ]; then
+      echo "No package selected."
+    else
+      pkg install -y "$fzpkgs"
+    fi
+  }
 
-source <(fzf --zsh)
+  source <(fzf --zsh)
 fi
 
 if is_droid; then
-    zieces "droid"
+  zieces "droid"
 fi
-
