@@ -31,7 +31,7 @@ function dotenv {
   $envFilePath = Join-Path -Path $path -ChildPath '.dotenv'
   if (Test-Path $envFilePath) {
     if ($v) {
-      wh 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$env:DOTS\" blue '.env' green -box -border 0 -bb 1 -ba 1 -padout $env:padding
+      wh 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$path\" blue '.env' green -box -border 0 -bb 1 -ba 1 -padout $env:padding
     }
     Get-Content $envFilePath | ForEach-Object {
       $name, $value = $_.split('=')
@@ -39,10 +39,14 @@ function dotenv {
       if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
         continue
       }
+
+      $Global:$name = $name
+
       $expandedName = [Environment]::ExpandEnvironmentVariables($name)
       $expandedValue = [Environment]::ExpandEnvironmentVariables($value)
 
       Set-Item -Path "env:$expandedName" -Value $expandedValue
+
       if ($v) {
         wh '' darkgray $expandedName yellow ' = ' darkgray $expandedValue white -bb 1 -ba 1 -padout $env:padding
       }
@@ -52,13 +56,13 @@ function dotenv {
 dotenv $env:DOTS
 dotenv $env:secretdir
 
-$psource = ('path', 'fzf', 'modules', 'readline', 'prompt', 'aliases', 'completions')
+$psource = ('functions', 'path', 'fzf', 'modules', 'readline', 'prompt', 'aliases', 'completions')
 foreach ( $piece in $psource ) {
   Unblock-File "$PSCOMPONENT\$piece.ps1"
   . "$PSCOMPONENT\$piece.ps1"
 }
 
-Invoke-Expression (& { (zoxide init powershell | Out-String) })
+# Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 if ($env:isReloading) {
   Clear-Host
