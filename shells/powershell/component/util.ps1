@@ -123,7 +123,7 @@ function wh {
     [int]$padout,
     [int]$padin = 1,
     [switch]$box,
-    [string]$border = 'DarkGray',
+    [string]$border = 'Black',
     [string]$esc,
     [string]$escol = 'White'
   )
