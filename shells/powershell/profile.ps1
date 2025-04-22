@@ -77,3 +77,5 @@ function rl {
   & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
   exit
 }
+
+. "C:\Users\njen\Documents\PowerShell\gh-copilot.ps1"
