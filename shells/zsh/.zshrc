@@ -37,10 +37,6 @@ zieces "aliases"
 
 fpath=( "${ZFUNC}" "${fpath[@]}" )
 
-if is_droid; then
-    zource "${ZSHDOT}/droid.zsh"
-fi
-
 addir "${HOME}/.local/bin"
 addir "${backups}"
 
@@ -138,5 +134,9 @@ function finst() {
 }
 
 source <(fzf --zsh)
-
 fi
+
+if is_droid; then
+    zieces "droid"
+fi
+
