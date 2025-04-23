@@ -3,38 +3,33 @@ $global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet
 
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-function Update-PowerShell
-{
-  try
-  {
+function Update-PowerShell {
+  try {
     Write-Host 'Checking for PowerShell updates...' -ForegroundColor Cyan
     $updateNeeded = $false
     $currentVersion = $PSVersionTable.PSVersion.ToString()
     $gitHubApiUrl = 'https://api.github.com/repos/PowerShell/PowerShell/releases/latest'
     $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
     $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
-    if ($currentVersion -lt $latestVersion)
-    {
+    if ($currentVersion -lt $latestVersion) {
       $updateNeeded = $true
     }
 
-    if ($updateNeeded)
-    {
+    if ($updateNeeded) {
       Write-Host 'Updating PowerShell...' -ForegroundColor Yellow
       Start-Process powershell.exe -ArgumentList '-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements' -Wait -NoNewWindow
       Write-Host 'PowerShell has been updated. Please restart your shell to reflect changes' -ForegroundColor Magenta
-    } else
-    {
+    }
+    else {
       Write-Host 'Your PowerShell is up to date.' -ForegroundColor Green
     }
-  } catch
-  {
+  }
+  catch {
     Write-Error "Failed to update PowerShell. Error: $_"
   }
 }
 
-function Clear-Cache
-{
+function Clear-Cache {
   # add clear cache logic here
   Write-Host 'Clearing cache...' -ForegroundColor Cyan
 
@@ -57,176 +52,158 @@ function Clear-Cache
   Write-Host 'Cache clearing completed.' -ForegroundColor Green
 }
 
-function Test-CommandExists
-{
+function Test-CommandExists {
   param($command)
   $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
   return $exists
 }
 # Editor Configuration
-$EDITOR = if (Test-CommandExists nvim)
-{ 'nvim'
-} elseif (Test-CommandExists code)
-{ 'code'
-} elseif (Test-CommandExists vim)
-{ 'vim'
-} elseif (Test-CommandExists vi)
-{ 'vi'
-} else
-{ 'notepad'
+$EDITOR = if (Test-CommandExists nvim) {
+  'nvim'
+}
+elseif (Test-CommandExists code) {
+  'code'
+}
+elseif (Test-CommandExists vim) {
+  'vim'
+}
+elseif (Test-CommandExists vi) {
+  'vi'
+}
+else {
+  'notepad'
 }
 $env:EDITOR = $EDITOR
-function Edit-Item
-{
+function Edit-Item {
   param (
     [string]$Path = $PWD
   )
 
-  if ($Path)
-  {
+  if ($Path) {
     & $env:EDITOR $Path
-  } else
-  {
+  }
+  else {
     & $env:EDITOR
   }
 }
 Set-Alias -Name edit -Value Edit-Item
 Set-Alias -Name e -Value Edit-Item
 
-if (Test-CommandExists yazi)
-{
-  function yy
-  {
+if (Test-CommandExists yazi) {
+  function y {
     $tmp = [System.IO.Path]::GetTempFileName()
     yazi $args --cwd-file="$tmp"
-    $cwd = Get-Content -Path $tmp
-    if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path)
-    {
-      Set-Location -LiteralPath $cwd
+    $cwd = Get-Content -Path $tmp -Encoding UTF8
+    if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
+      Set-Location -LiteralPath ([System.IO.Path]::GetFullPath($cwd))
     }
     Remove-Item -Path $tmp
   }
-  Set-Alias -Name d -Value yy
+  Set-Alias -Name d -Value y
 }
 
 # Clipboard Utilities
-function cpy
-{ Set-Clipboard $args[0]
+function cpy {
+  Set-Clipboard $args[0]
 }
 
-function pst
-{ Get-Clipboard
+function pst {
+  Get-Clipboard
 }
 
-function touch($file)
-{ '' | Out-File $file -Encoding ASCII
+function touch($file) {
+  '' | Out-File $file -Encoding ASCII
 }
 
 # Network Utilities
-function Get-PubIP
-{ (Invoke-WebRequest http://ifconfig.me/ip).Content
+function Get-PubIP {
+  (Invoke-WebRequest http://ifconfig.me/ip).Content
 }
 
-function sed($file, $find, $replace)
-{
+function sed($file, $find, $replace) {
   (Get-Content $file).replace("$find", $replace) | Set-Content $file
 }
 
-function which($name)
-{
+function which($name) {
   Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
-function export($name, $value)
-{
+function export($name, $value) {
   set-item -force -path "env:$name" -value $value;
 }
 
-function pkill($name)
-{
+function pkill($name) {
   Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
 }
 
-function pgrep($name)
-{
+function pgrep($name) {
   Get-Process $name
 }
 
-function head
-{
+function head {
   param($Path, $n = 10)
   Get-Content $Path -Head $n
 }
 
-function tail
-{
+function tail {
   param($Path, $n = 10, [switch]$f = $false)
   Get-Content $Path -Tail $n -Wait:$f
 }
 
-function df
-{
+function df {
   get-volume
 }
 # Directory Management
-function mkcd
-{ param($dir) mkdir $dir -Force; Set-Location $dir
+function mkcd {
+  param($dir) mkdir $dir -Force; Set-Location $dir
 }
 
-function sysinfo
-{ Get-ComputerInfo
+function sysinfo {
+  Get-ComputerInfo
 }
 
-function unzip ($file)
-{
+function unzip ($file) {
   Write-Output('Extracting', $file, 'to', $pwd)
   $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
   Expand-Archive -Path $fullFile -DestinationPath $pwd
 }
 
-function dd
-{
+function dd {
   $currentDirectory = Resolve-Path "$PWD"
   start-process explorer.exe "$currentDirectory"
 }
 
-Function Search-Alias
-{
+Function Search-Alias {
   param (
     [string]$alias
   )
-  if ($alias)
-  {
+  if ($alias) {
     Get-Alias | Where-Object DisplayName -Match $alias
-  } else
-  {
+  }
+  else {
     Get-Alias
   }
 }
 
-function gup
-{
-  if (Test-Path .git)
-  {
+function gup {
+  if (Test-Path .git) {
     $commitDate = Get-Date -Format 'MM-dd-yyyy HH:mm'
     Write-Host ''
     git add .
     git commit -m "Update @ $commitDate"
     git push
     Write-Host ''
-  } else
-  {
+  }
+  else {
     Write-Error 'This directory does not contain a .git directory'
   }
 }
 
-function q
-{
+function q {
   Exit
 }
 
-function Find-File
-{
+function Find-File {
   <#
     .SYNOPSIS
         Finds a file in the current directory and all subdirectories. Alias: ff
@@ -244,8 +221,7 @@ function Find-File
   $result | Format-Table -AutoSize
 }
 
-function Find-String
-{
+function Find-String {
   <#
     .SYNOPSIS
         Searches for a string in a file or directory. Alias: grep
@@ -261,10 +237,8 @@ function Find-String
   )
 
   Write-Verbose "Searching for '$SearchTerm' in '$Directory'"
-  if ($Directory)
-  {
-    if ($Recurse)
-    {
+  if ($Directory) {
+    if ($Recurse) {
       Write-Verbose "Searching for '$SearchTerm' in '$Directory' and subdirectories"
       Get-ChildItem -Recurse $Directory | Select-String $SearchTerm
       return
@@ -275,8 +249,7 @@ function Find-String
     return
   }
 
-  if ($Recurse)
-  {
+  if ($Recurse) {
     Write-Verbose "Searching for '$SearchTerm' in current directory and subdirectories"
     Get-ChildItem -Recurse | Select-String $SearchTerm
     return
@@ -286,15 +259,13 @@ function Find-String
   Get-ChildItem | Select-String $SearchTerm
 }
 
-function Show-Command
-{
+function Show-Command {
   [CmdletBinding()]
   param (
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Name
   )
-  if (-not (Test-CommandExists $Name))
-  {
+  if (-not (Test-CommandExists $Name)) {
     Write-Err $Name Magenta ' not found'
     return
   }
@@ -302,8 +273,7 @@ function Show-Command
   Get-Command $Name | Select-Object -ExpandProperty Definition
 }
 
-function Get-ContentPretty
-{
+function Get-ContentPretty {
   <#
     .SYNOPSIS
         Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
@@ -321,69 +291,58 @@ function Get-ContentPretty
 }
 
 # Navigation Shortcuts
-function docs
-{
-  $docs = if (([Environment]::GetFolderPath('MyDocuments')))
-  { ([Environment]::GetFolderPath('MyDocuments'))
-  } else
-  { $HOME + '\Documents'
+function docs {
+  $docs = if (([Environment]::GetFolderPath('MyDocuments'))) {
+    ([Environment]::GetFolderPath('MyDocuments'))
+  }
+  else {
+    $HOME + '\Documents'
   }
   Set-Location -Path $docs
 }
 
-function .d
-{
+function .d {
   Set-Location "$env:DOTS"
 }
 
-function cdev
-{
+function cdev {
   Set-Location "$env:DEV"
 }
 Set-Alias -Name dev -Value cdev
 
-function Edit-Profile
-{
+function Edit-Profile {
   & $env:EDITOR $PROFILE
 }
 
-function ..
-{
+function .. {
   Set-Location '..'
 }
-function ...
-{
+function ... {
   Set-Location '...'
 }
-function ....
-{
+function .... {
   Set-Location '....'
 }
-function .....
-{
+function ..... {
   Set-Location '.....'
 }
 
-function Get-Functions
-{
+function Get-Functions {
   Get-ChildItem function:\
 }
 
-function winutil
-{
-  if ($isAdmin)
-  {
+function winutil {
+  if ($isAdmin) {
     Invoke-RestMethod 'https://christitus.com/win' | Invoke-Expression
-  } else
-  {
+  }
+  else {
     Write-Host 'You need to run this command as an administrator.' -ForegroundColor Red
     return
   }
   # Invoke-RestMethod 'https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1' | Invoke-Expression
 }
 
-function nerdfonts
-{
+function nerdfonts {
   param (
     [Parameter(ValueFromRemainingArguments = $true)]
     $OptionalParameters
@@ -391,7 +350,6 @@ function nerdfonts
   & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
 }
 
-function find-ln
-{
+function find-ln {
   Get-ChildItem | Where-Object { $_.Attributes -match 'ReparsePoint' }
 }

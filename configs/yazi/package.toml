@@ -1,22 +1,22 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:full-border"
-rev = "7afba3a"
-hash = "3e237eaaeccb0de2d91b11283598fa74"
+rev = "4b027c7"
+hash = "1f3dad061209081a6b04dd6ff2cb06c7"
 
 [[plugin.deps]]
-use = "yazi-rs/plugins:git"
-rev = "7afba3a"
-hash = "7f839f539f4a8248fee04d62ede701f5"
+use = "imsi32/yatline"
+rev = "2ecf715"
+hash = "38e2ea4703ea606d4eef574e8e8b8fd7"
 
 [[plugin.deps]]
-use = "AnirudhG07/rich-preview"
-rev = "2559e5f"
-hash = "c9a3d0731e7d7340e2c6d6126b1f3aa3"
+use = "imsi32/yatline-catppuccin"
+rev = "8cc4773"
+hash = "fd03fb015a28040bca0c0f9a8fe6fd8d"
 
 [[plugin.deps]]
-use = "yazi-rs/plugins:toggle-pane"
-rev = "2730199"
-hash = "5c9dda1a587b8f5b6f63e3d5375bda88"
+use = "wekauwau/yatline-tokyo-night"
+rev = "19dbd25"
+hash = "5f00a80a79b9f7fd8e24d6fa5dbb3ae"
 
 [flavor]
 deps = []
