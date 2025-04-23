@@ -47,6 +47,8 @@ extend_path "${HOME}/.local/share/nvim/mason/bin"
 
 prepend_path "${DOTSBIN}"
 
+extend_path "${HOME}/.cargo/bin"
+
 export SHHHH="${DOTS}/secrets"
 zource "${SHHHH}/secrets.sh"
 
