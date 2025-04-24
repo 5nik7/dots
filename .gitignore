@@ -29,3 +29,5 @@ configs/clink/clink.log
 #log
 configs/yasb/yasb.log
 configs/yasb/yasb.log.*
+#llazy-lock.json
+lazy-lock.json

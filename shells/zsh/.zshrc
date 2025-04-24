@@ -15,6 +15,8 @@ export DOT_THEME="$(cat $DOTS/.theme)"
 
 export LS_COLORS="$(vivid generate $DOT_THEME)"
 
+export GOBIN="${HOME}/go/bin"
+
 function zource() {
   if [ -f "${1}" ]; then
     source "${1}"
@@ -44,6 +46,8 @@ extend_path "${HOME}/.local/bin"
 extend_path "${HOME}/src/nerd-fonts/bin/scripts"
 
 extend_path "${HOME}/.local/share/nvim/mason/bin"
+
+prepend_path "${GOBIN}"
 
 prepend_path "${DOTSBIN}"
 
