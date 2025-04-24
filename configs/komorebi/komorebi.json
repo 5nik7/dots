@@ -32,31 +32,31 @@
     {
       "workspaces": [
         {
-          "name": "I",
+          "name": "1",
           "layout": "BSP"
         },
         {
-          "name": "II",
-          "layout": "VerticalStack"
+          "name": "2",
+          "layout": "BSP"
         },
         {
-          "name": "III",
-          "layout": "HorizontalStack"
+          "name": "3",
+          "layout": "BSP"
         },
         {
-          "name": "IV",
-          "layout": "UltrawideVerticalStack"
+          "name": "4",
+          "layout": "BSP"
         },
         {
-          "name": "V",
-          "layout": "Rows"
+          "name": "5",
+          "layout": "BSP"
         },
         {
-          "name": "VI",
+          "name": "6",
           "layout": "Grid"
         },
         {
-          "name": "VII",
+          "name": "7",
           "layout": "RightMainVerticalStack"
         }
       ]
