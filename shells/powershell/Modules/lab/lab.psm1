@@ -165,7 +165,7 @@ function Get-LabScripts {
   {
     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
     if ($_.Source -like "$scriptsPath\*") {
-      wh -padout $env:padding $name Gray
+      wh -pad $env:padding $name Gray
 
       $parameters = $_.Parameters
       if ($null -ne $parameters) {

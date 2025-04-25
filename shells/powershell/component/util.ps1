@@ -115,17 +115,20 @@ function linebreak {
 function wh {
   [CmdletBinding()]
   param(
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+    [string[]]$pairs,
     [int]$bb = 0,
     [int]$ba = 0,
     [switch]$box,
-    [string[]]$pairs,
-    [int]$padout = 1,
+    [int]$pad = 1,
     [int]$padin = 1,
     [string]$border = 'Black',
-    [string]$esc,
-    [string]$escol = 'White',
     [switch]$nl
   )
+  if ($pairs.Count -eq 0) {
+    Write-Host 'No text provided.'
+    return
+  }
 
   $boxSymbolTopLeft = '┌'
   $boxSymbolTopRight = '┐'
@@ -151,9 +154,9 @@ function wh {
   }
   $totalLength += ($padin * 2)
 
-  $boxTop = (' ' * $padout) + $boxSymbolTopLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolTopRight
-  $boxBottom = (' ' * $padout) + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolBottomRight
-  $boxLeft = (' ' * $padout) + $boxSymbolVertical + (' ' * $padin)
+  $boxTop = (' ' * $pad) + $boxSymbolTopLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolTopRight
+  $boxBottom = (' ' * $pad) + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolBottomRight
+  $boxLeft = (' ' * $pad) + $boxSymbolVertical + (' ' * $padin)
   $boxRight = (' ' * $padin) + $boxSymbolVertical
 
   if ($box) {
@@ -165,26 +168,18 @@ function wh {
     foreach ($pair in $pairsList) {
       Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
     }
-    # Print right boundary
-    if ($esc) {
-      $escOutput = (' ' * $padin) + $esc
-      Write-Host -NoNewline $boxRight -ForegroundColor $border
-      Write-Host $escOutput -ForegroundColor $escol
-    }
-    else {
-      Write-Host $boxRight -ForegroundColor $border
-    }
-    # Print bottom line
-    Write-Host $boxBottom -ForegroundColor $border
+    Write-Host $boxRight -ForegroundColor $border
+    Write-Host -NoNewline $boxBottom -ForegroundColor $border
   }
   else {
-    $padline = (' ' * $padout)
+    $padline = (' ' * $pad)
     # No box: just print each pair
     Write-Host -NoNewline $padline
     foreach ($pair in $pairsList) {
       Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
     }
   }
+  $nl = $true
 
   if ($nl) { linebreak }
   linebreak $ba
@@ -196,7 +191,7 @@ function Write-Info {
     [string[]]$pairs,
     [int]$bb = 1,
     [int]$ba = 1,
-    [int]$padout,
+    [int]$pad,
     [switch]$box,
     [string]$border = 'DarkGray'
   )
@@ -204,7 +199,7 @@ function Write-Info {
     $spacer = ': '
   }
   $pairs = @($infoicon, $infocolor, $infotext, $infocolor, $spacer, $border) + $pairs
-  wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
+  wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
 }
 
 function Write-Success {
@@ -213,7 +208,7 @@ function Write-Success {
     [string[]]$pairs,
     [int]$bb = 1,
     [int]$ba = 1,
-    [int]$padout,
+    [int]$pad,
     [switch]$box,
     [string]$border = 'DarkGray'
   )
@@ -221,7 +216,7 @@ function Write-Success {
     $spacer = ': '
   }
   $pairs = @($successicon, $successcolor, $successtext, $successcolor, $spacer, $border) + $pairs
-  wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
+  wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
 }
 
 function Write-Err {
@@ -230,7 +225,7 @@ function Write-Err {
     [string[]]$pairs,
     [int]$bb = 1,
     [int]$ba = 1,
-    [int]$padout,
+    [int]$pad,
     [switch]$box,
     [string]$border = 'DarkGray'
   )
@@ -238,7 +233,7 @@ function Write-Err {
     $spacer = ': '
   }
   $pairs = @($erricon, $errcolor, $errtext, $errcolor, $spacer, $border) + $pairs
-  wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
+  wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
 }
 
 function Write-Warn {
@@ -247,7 +242,7 @@ function Write-Warn {
     [string[]]$pairs,
     [int]$bb = 1,
     [int]$ba = 1,
-    [int]$padout,
+    [int]$pad,
     [switch]$box,
     [string]$border = 'DarkGray'
   )
@@ -255,7 +250,7 @@ function Write-Warn {
     $spacer = ': '
   }
   $pairs = @($warnicon, $warncolor, $warntext, $warncolor, $spacer, $border) + $pairs
-  wh -pairs $pairs -bb $bb -ba $ba -padout $env:padding -box:$box -border:$border
+  wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
 }
 
 function ask {
