@@ -115,17 +115,16 @@ function linebreak {
 function wh {
   [CmdletBinding()]
   param(
-    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
-    [string[]]$pairs,
-    [switch]$nl,
     [int]$bb = 0,
     [int]$ba = 0,
+    [switch]$box,
+    [string[]]$pairs,
     [int]$padout = 1,
     [int]$padin = 1,
-    [switch]$box,
     [string]$border = 'Black',
     [string]$esc,
-    [string]$escol = 'White'
+    [string]$escol = 'White',
+    [switch]$nl
   )
 
   $boxSymbolTopLeft = '┌'

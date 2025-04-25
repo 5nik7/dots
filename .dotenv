@@ -1,11 +1,14 @@
 DIRENV_CONFIG=%LOCALAPPDATA%\direnv
 LANG=en_US.UTF-8
+LOCALBIN=%USERPROFILE%\.local\bin
 DOTS=%USERPROFILE%\dots
 secretdir=%DOTS%\secrets
 DOTFILES=%DOTS%\configs
 DOTCACHE=%DOTS%\cache
+DOTBIN=%DOTS%\bin
 SHELLS=%DOTS%\shells
 PSDOTS=%SHELLS%\powershell
+PSCRIPTS=%PSDOTS%\Scripts
 PSCOMPONENT=%PSDOTS%\component
 PSCOMPS=%PSDOTS%\completions
 PSMODS=%PSDOTS%\Modules

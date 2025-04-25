@@ -1,3 +1,110 @@
+function Add-PSModulePath {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (Test-Path $Path) {
+    if (-not ($env:PSModulePath -split ';' | Select-String -SimpleMatch $Path)) {
+      $env:PSModulePath = $env:PSModulePath + $Path
+    }
+  }
+  else {
+    Write-Err $Path Magenta ' does not exist.'
+  }
+}
+
+function Import-PSMod {
+  [CmdletBinding()]
+  param (
+    [Parameter()]
+    $Name,
+    [switch]$Local,
+    [string]$RequiredVersion
+  )
+
+  if ($Local) {
+    $LocalModule = "$env:PSMODS\$Name"
+    if (Test-Path $LocalModule) {
+      Import-Module -Name $LocalModule
+    }
+  }
+  else {
+    if (Get-Module $Name -ListAvailable) {
+      Import-Module -Name $Name
+    }
+    else {
+      Install-Module -Name $Name -Scope CurrentUser -Force
+    }
+    return
+  }
+}
+
+function Import-ScoopModule {
+  param (
+    [Parameter()]
+    $Name
+  )
+  Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\$Name"
+}
+
+function Add-Path {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (Test-Path $Path) {
+    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+      $env:Path += ";$Path"
+    }
+  }
+  else {
+    Write-Err $Path Magenta ' does not exist.'
+  }
+}
+function Add-PrependPath {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (Test-Path $Path) {
+    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+      $env:Path = "$Path;$env:Path"
+    }
+  }
+  else {
+    Write-Err $Path Magenta ' does not exist.'
+  }
+}
+function Remove-Path {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
+    $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
+  }
+  else {
+    Write-Err $Path Magenta ' does not exist.'
+  }
+}
+function Remove-DuplicatePaths {
+  $paths = $env:Path -split ';'
+  $uniquePaths = [System.Collections.Generic.HashSet[string]]::new()
+  $newPath = @()
+
+  foreach ($path in $paths) {
+    if ($uniquePaths.Add($path)) {
+      $newPath += $path
+    }
+    else {
+      Write-Verbose "Duplicate path detected and removed: $path"
+    }
+  }
+
+  $env:Path = $newPath -join ';'
+  Write-Verbose "Duplicate paths have been removed. Updated PATH: $env:Path"
+}
+
 # Initial GitHub.com connectivity check with 1 second timeout
 $global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet
 
