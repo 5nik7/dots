@@ -7,7 +7,7 @@
 palette = "default"
 
 command_timeout = 10000
-add_newline = true
+add_newline = false
 follow_symlinks = true
 
 format = """
@@ -26,10 +26,10 @@ $character"""
 continuation_prompt = '[│](black)'
 
 [palettes.default]
-nodever = '#71f27f'
-nodeico = '#2dbc61'
-pyver = '#ffe279'
-pyico = '#ffdb58'
+nodever = 'bright-green'
+nodeico = 'bright-green dimmed'
+pyver = 'bright-yellow'
+pyico = 'bright-yellow dimmed'
 
 [character]
 success_symbol = '[](green)'
@@ -147,9 +147,9 @@ disabled = false
 detect_files = ['package.json']
 detect_folders = []
 symbol = '󰎙 '
-style = 'nodeico'
+style = 'green'
 version_format = '${raw}'
-format = '([](bright-black) [${symbol}([$version](nodever)) ]($style))'
+format = '([](bright-black) [${symbol}([$version](Bright-green)) ]($style))'
 disabled = false
 
 [conda]
@@ -160,8 +160,8 @@ format = '([](bright-black) [$symbol$environment ]($style))'
 
 [python]
 # format = '([\[](bright-black)[${symbol}([$version](green))]($style)[\]](bright-black))'
-format = '([](bright-black) [${symbol}([$version](pyver)) ]($style))'
-style = 'pyico'
+format = '([](bright-black) [${symbol}([$version](bright-yellow)) ]($style))'
+style = "yellow"
 symbol = '󰌠 '
 pyenv_version_name = true
 

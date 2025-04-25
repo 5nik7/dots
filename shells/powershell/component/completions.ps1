@@ -17,4 +17,4 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
   }
 }
 
-Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
+(& glow completion powershell) | Out-String | Invoke-Expression

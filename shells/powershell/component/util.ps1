@@ -120,16 +120,13 @@ function wh {
     [switch]$nl,
     [int]$bb = 0,
     [int]$ba = 0,
-    [int]$padout,
+    [int]$padout = 1,
     [int]$padin = 1,
     [switch]$box,
     [string]$border = 'Black',
     [string]$esc,
     [string]$escol = 'White'
   )
-  if ($env:padding) {
-    $padout = $env:padding
-  }
 
   $boxSymbolTopLeft = '┌'
   $boxSymbolTopRight = '┐'

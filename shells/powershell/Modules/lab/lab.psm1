@@ -165,14 +165,14 @@ function Get-LabScripts {
   {
     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
     if ($_.Source -like "$scriptsPath\*") {
-      wh "$PadddingOut $name" Gray
+      wh -padout $env:padding $name Gray
 
       $parameters = $_.Parameters
       if ($null -ne $parameters) {
         $parameters.Keys | Where-Object { $sysparams -notcontains $_ } | ForEach-Object `
         {
           $p = $parameters[$_]
-          $c = if ($p.ParameterType -like 'Switch') { 'DarkGray' } else { 'DarkCyan' }
+          $c = if ($p.ParameterType -like 'Switch') { 'DarkYellow' } else { 'DarkGray' }
           wh "-$_" $c
         }
       }
@@ -181,8 +181,7 @@ function Get-LabScripts {
       if ($alias) {
         wh "($alias)" DarkGreen
       }
-
-      Write-Host
+      linebreak
     }
   }
   linebreak

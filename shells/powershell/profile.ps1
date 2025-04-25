@@ -17,8 +17,10 @@ $Global:PSCOMPONENT = $env:PSCOMPONENT
 
 $psource = ('util')
 foreach ( $piece in $psource ) {
-  Unblock-File "$PSCOMPONENT\$piece.ps1"
-  . "$PSCOMPONENT\$piece.ps1"
+  if (Test-Path "$PSCOMPONENT\$piece.ps1") {
+    Unblock-File "$PSCOMPONENT\$piece.ps1"
+    . "$PSCOMPONENT\$piece.ps1"
+  }
 }
 
 function dotenv {
@@ -54,13 +56,15 @@ function dotenv {
 dotenv $env:DOTS
 dotenv $env:secretdir
 
-$psource = ('functions', 'path', 'fzf', 'modules', 'readline', 'prompt', 'aliases', 'completions')
+$psource = ('functions', 'path', 'fzf', 'modules', 'readline', 'prompt', 'aliases', 'completions', 'copilot')
 foreach ( $piece in $psource ) {
-  Unblock-File "$PSCOMPONENT\$piece.ps1"
-  . "$PSCOMPONENT\$piece.ps1"
+  if (Test-Path "$PSCOMPONENT\$piece.ps1") {
+    Unblock-File "$PSCOMPONENT\$piece.ps1"
+    . "$PSCOMPONENT\$piece.ps1"
+  }
 }
 
-# Invoke-Expression (& { (zoxide init powershell | Out-String) })
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 if ($env:isReloading) {
   Clear-Host
@@ -79,5 +83,3 @@ function rl {
   & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
   exit
 }
-
-. 'C:\Users\njen\Documents\PowerShell\gh-copilot.ps1'

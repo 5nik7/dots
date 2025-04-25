@@ -38,7 +38,17 @@ function Import-PSMod {
   }
 }
 
-if (Test-CommandExists fzf) { Import-Module 'PsFzf' }
+function Import-ScoopModule {
+  param (
+    [Parameter()]
+    $Name
+  )
+  Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\$Name"
+
+}
+
+Import-ScoopModule -Name 'scoop-completion'
+if (Test-CommandExists fzf) { Import-ScoopModule -Name 'PsFzf' }
 
 Import-PSMod -Name 'CompletionPredictor'
 Import-PSMod -Name 'PowerShellGet'
@@ -48,7 +58,11 @@ Import-PSMod -Name 'Terminal-Icons'
 # Import-PSMod -Name 'Plaster'
 # Import-PSMod -Core -Name 'Microsoft.WinGet.CommandNotFound'
 
-Import-PSMod -Local -Name 'PSDots' -Version '0.0.1'
+Import-PSMod -Local -Name 'catppuccin'
+$Flavor = $Catppuccin['Mocha']
+$Global:Flavor = $Flavor
+
+Import-PSMod -Local -Name 'PSDots'
 Import-PSMod -Local -Name 'powernerd'
 Import-PSMod -Local -Name 'winwal'
 Import-PSMod -Local -Name 'lab'
