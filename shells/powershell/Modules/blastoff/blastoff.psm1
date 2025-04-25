@@ -7,7 +7,7 @@ function Show-BlastoffUsage {
     Get-Content -Path $bannerPath | Write-Host
   }
   linebreak
-  Write-Host -foregroundColor DarkMagenta ' Starship promt theme switcher for PowerShell.'
+  Write-Host -foregroundColor DarkMagenta ' Starship prompt theme switcher for PowerShell.'
   linebreak
   Write-Host ' Usage: blastoff [options]'
   linebreak
