@@ -13,6 +13,7 @@ $Flavor = $Catppuccin['Mocha']
 $Global:Flavor = $Flavor
 
 Import-PSMod -Local -Name 'PSDots'
+Import-PSMod -Local -Name 'blastoff'
 Import-PSMod -Local -Name 'powernerd'
 Import-PSMod -Local -Name 'winwal'
 Import-PSMod -Local -Name 'lab'

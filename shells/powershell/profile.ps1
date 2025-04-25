@@ -33,7 +33,7 @@ function dotenv {
   $envFilePath = Join-Path -Path $path -ChildPath '.dotenv'
   if (Test-Path $envFilePath) {
     if ($v) {
-      wh 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$path\" blue '.env' green -box -border 0 -bb 1 -ba 1 -pad $env:padding
+      wh -box -border 0 -bb 1 -ba 1 -pad $env:padding 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$path\" blue '.env' green
     }
     Get-Content $envFilePath | ForEach-Object {
       $name, $value = $_.split('=')
@@ -48,8 +48,11 @@ function dotenv {
       Set-Item -Path "env:$expandedName" -Value $expandedValue
 
       if ($v) {
-        wh '' darkgray $expandedName yellow ' = ' darkgray $expandedValue white -bb 1 -ba 1 -pad $env:padding
+        wh -bb 0 -ba 0 -nl -pad $env:padding '' darkgray $expandedName Yellow ' = ' DarkGray $expandedValue Gray
       }
+    }
+    if ($v) {
+      linebreak 2
     }
   }
 }
