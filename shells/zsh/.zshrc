@@ -76,7 +76,7 @@ if is_installed fzf; then
   fi
 
   export FZF_DEFAULT_OPTS="--style full \
---height 90% \
+--height ~90% \
 --border sharp \
 --input-border sharp \
 --list-border sharp \

@@ -29,7 +29,7 @@ zstyle ':completion:*' menu no
 
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 
-zstyle ':fzf-tab:*' fzf-flags --color=fg:7,fg+:6,pointer:6,prompt:2,gutter:-1,info:8,separator:0 --bind=tab:accept
+zstyle ':fzf-tab:*' fzf-flags --style=full --height=~90% --border=sharp --input-border=sharp --list-border=sharp --color=bg+:0,bg:-1,preview-bg:-1,selected-bg:0,fg:7,fg+:6,hl:7:underline,hl+:10:underline,header:3,info:8,query:13,gutter:-1,pointer:6,marker:14,prompt:2,spinner:4,label:7,preview-label:0,separator:0,border:0,list-border:0,preview-border:0,input-border:8
 
 # zstyle ':fzf-tab:*' use-fzf-default-opts yes
 
