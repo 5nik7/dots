@@ -98,11 +98,12 @@ if is_installed fzf; then
 --separator '──' \
 --scrollbar '│' \
 --preview-window='border-sharp' \
---preview-window='bottom:50%' \
+--preview-window='bottom:hidden:50%' \
 --preview-label=' PREVIEW ' \
 --border-label=' FILES ' \
 --tabstop=2 \
 --color=16 \
+--bind='Ctrl-X:toggle-preview' \
 --preview '${PREVIEWER} {}'"
 
   export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
