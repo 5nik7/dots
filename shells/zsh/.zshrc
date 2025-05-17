@@ -33,8 +33,8 @@ function zieces() {
 zieces "zutil"
 zieces "functions"
 zieces "options"
-zieces "plugins"
 zieces "completions"
+zieces "plugins"
 zieces "aliases"
 
 fpath=("${ZFUNC}" "${fpath[@]}")
@@ -44,20 +44,16 @@ addir "${backups}"
 
 extend_path "${HOME}/.local/bin"
 extend_path "${HOME}/src/nerd-fonts/bin/scripts"
-
 extend_path "${HOME}/.local/share/nvim/mason/bin"
-
 prepend_path "${GOBIN}"
-
 prepend_path "${DOTSBIN}"
-
 prepend_path "${HOME}/.cargo/bin"
 
 export SHHHH="${DOTS}/secrets"
 zource "${SHHHH}/secrets.sh"
 
-if is_installed nvim; then
-  export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
+if is_installed neovim; then
+  # export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
 fi
 
 if is_installed zoxide; then
@@ -79,12 +75,6 @@ if is_installed fzf; then
     export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
   fi
 
-  if cmd_exists bat; then
-    PREVIEWER='bat --style=numbers --color=always --pager=never'
-  else
-    PREVIEWER='cat'
-  fi
-
   export FZF_DEFAULT_OPTS="--style full \
 --height 90% \
 --border sharp \
@@ -104,7 +94,7 @@ if is_installed fzf; then
 --tabstop=2 \
 --color=16 \
 --bind='Ctrl-X:toggle-preview' \
---preview '${PREVIEWER} {}'"
+--preview 'fzf-preview.sh {}'"
 
   export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
 bg+:0,\
