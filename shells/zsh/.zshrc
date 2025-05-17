@@ -43,7 +43,7 @@ addir "${HOME}/.local/bin"
 addir "${backups}"
 
 extend_path "${HOME}/.local/bin"
-extend_path "${HOME}/src/nerd-fonts/bin/scripts"
+# extend_path "${HOME}/src/nerd-fonts/bin/scripts"
 extend_path "${HOME}/.local/share/nvim/mason/bin"
 prepend_path "${GOBIN}"
 prepend_path "${DOTSBIN}"
