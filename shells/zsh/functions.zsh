@@ -14,6 +14,15 @@ function prepend_path() {
 	fi
 }
 
+function finst() {
+    fzpkgs="$(pkg list-all | tr '/' ' ' | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
+    if [ -z "$fzpkgs" ]; then
+      echo "No package selected."
+    else
+      pkg install -y "$fzpkgs"
+    fi
+  }
+
 function gup() {
   if [ -d .git ]; then
   commitDate=$(date +"%m-%d-%Y %H:%M")

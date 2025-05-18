@@ -57,7 +57,7 @@ function Invoke-Blastoff {
   )
   if ($theme) {
     Get-Content "$env:STARSHIP_THEMES\$theme.toml" > $env:STARSHIP_CONFIG
-    wh -box -border 0 -bb 1 -ba 1 -pad $env:padding 'BLASTOFF' white ' │ ' darkgray 'Theme changed to ' white $theme green
+    wh -box -border 0 -bb 1 -ba 2 -pad $env:padding ' ' red ' │ ' darkgray '3... 2... 1... ' darkgray $theme green
     return
   }
   if ($help) {

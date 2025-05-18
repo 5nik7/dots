@@ -393,7 +393,7 @@ function Get-ContentPretty {
   )
 
   linebreak
-  bat $file
+  & bat -- $file
   linebreak
 }
 

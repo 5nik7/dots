@@ -74,7 +74,7 @@ if (Test-CommandExists eza) {
     param (
       [string]$Path
     )
-    $timestyle = '+󰨲 %m/%d/%y 󰅐 %H:%M'
+    $timestyle = '+󰨲 %Y-%m-%d -  %H:%M'
     if ($Path -eq '') {
       $Path = (Get-Location).ToString()
     }

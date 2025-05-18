@@ -10,9 +10,12 @@ HISTFILESIZE=10000
 export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
 export HISTIGNORE=$'[ \t]*:&:[fb]g:exit'
 
-export DOTS="$HOME/dots"
-export SHELLS="$DOTS/shells"
-export BASHDOT="$SHELLS/bash"
+DOTS="$(dirname "$(dirname "$(dirname "$(readlink "$HOME/.bashrc")")")")"
+export DOTS
+SHELLS="$(dirname "$(dirname "$(readlink "$HOME/.bashrc")")")"
+export SHELLS
+BASHDOT="$(dirname "$(readlink "$HOME/.bashrc")")"
+export BASHDOT
 export DOTFILES="$DOTS/configs"
 export DOTSBIN="$DOTS/bin"
 
@@ -35,18 +38,9 @@ extend_path "$DOTSBIN"
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-if is_installed nvim; then
-    export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
-fi
-
-if is_installed zoxide; then
-  eval "$(zoxide init bash)"
-  alias cd='z'
-fi
-
-if is_installed starship; then
-  eval "$(starship init bash)"
-fi
+# if cmd_exists nvim; then
+    # export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
+# fi
 
 function is_droid() {
 	[[ -d  "$HOME/.termux" ]] &> /dev/null
@@ -64,3 +58,12 @@ fi
 # 33 is yellow, 32 is green, 31 is red, 36 is cyan, 34 is blue, 35 is magenta, 37 is white, 30 is black, 39 is default
 # export TITLEPREFIX='BASH'
 # export PS1='\[\033]0;$TITLEPREFIX: $PWD\007\]\n\[\033[32m\]\u@\h \[\033[34m\]\w\[\033[30m\]`__git_ps1`\[\033[0m\]\n\]\[\033[39m\] '
+
+if cmd_exists starship; then
+  eval "$(starship init bash)"
+fi
+
+if cmd_exists zoxide; then
+  eval "$(zoxide init bash)"
+  alias cd='z'
+fi

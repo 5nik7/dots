@@ -2,23 +2,24 @@
 
 function FuzzyOpts {
   param (
-    [switch]$f,
-    [switch]$d
+    [switch]$d,
+    [string]$previewlabel,
+    [string]$borderlabel,
+    [string]$inputlabel,
+    [string]$listlabel,
+    [string]$headerlabel
   )
 
-  $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`" --preview-window=border-sharp --preview-label=`" PREVIEW `" --border=sharp --border-label=`" FILES `" --tabstop=2 --bind=ctrl-x:toggle-preview"
-  $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`" --preview-window=border-sharp --preview-label=`" PREVIEW `" --border=sharp --border-label=`" DIRECTORIES `" --tabstop=2 --bind=ctrl-x:toggle-preview"
+  $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`" --tabstop=2"
+  $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`" --tabstop=2"
 
-  $Env:FZF_DEFAULT_COMMAND = 'fd --type f --strip-cwd-prefix --hidden --exclude .git'
-  $previewString = ''
-
-  if ($f) {
-    $Env:FZF_DEFAULT_COMMAND = 'fd --type f --strip-cwd-prefix --hidden --exclude .git'
-    $previewString = $Env:FZF_FILE_OPTS
-  }
   if ($d) {
     $Env:FZF_DEFAULT_COMMAND = 'fd --type d --strip-cwd-prefix --hidden --exclude .git'
     $previewString = $Env:FZF_DIRECTORY_OPTS
+  }
+  else {
+    $Env:FZF_DEFAULT_COMMAND = 'fd --type f --strip-cwd-prefix --hidden --exclude .git'
+    $previewString = $Env:FZF_FILE_OPTS
   }
   try {
 
@@ -41,7 +42,7 @@ function FuzzyOpts {
       listborder    = 'sharp'
       inputborder   = 'sharp'
       info          = 'inline'
-      previewwindow = 'right:60%:hidden,border-sharp'
+      previewwindow = 'right:65%:hidden,border-sharp'
       delimiter     = ':'
       prompt        = @{ symbol = '> ' }
       pointer       = @{ symbol = '┃' }
@@ -57,33 +58,42 @@ function FuzzyOpts {
     }
 
     $colorOptions = @{
-      'fg'             = '8'
-      'hl'             = '7:underline'
-      'fg+'            = '6'
-      'hl+'            = '2:underline'
+      'fg'             = $Flavor.Overlay1.Hex()
+      'hl'             = $Flavor.Overlay2.Hex() + ':underline'
+      'fg+'            = $Flavor.Teal.Hex()
+      'hl+'            = $Flavor.Green.Hex() + ':underline'
       'bg'             = '-1'
       'bg+'            = '-1'
-      'preview-bg'     = $Flavor.Mantle.Hex()
-      'preview-border' = '0'
-      'list-border'    = '0'
-      'border'         = '0'
-      'input-border'   = '0'
-      'pointer'        = '6'
-      'label'          = $Flavor.Surface0.Hex()
+      'preview-bg'     = $Flavor.Base.Hex()
+      'list-bg'        = $Flavor.Base.Hex()
+      'input-bg'       = $Flavor.Base.Hex()
+      'preview-border' = $Flavor.Surface0.Hex()
+      'list-border'    = $Flavor.Surface0.Hex()
+      'border'         = $Flavor.Surface0.Hex()
+      'input-border'   = $Flavor.Surface1.Hex()
+      'pointer'        = $Flavor.Teal.Hex()
+      'label'          = $Flavor.Surface2.Hex()
       'header'         = '8'
-      'gutter'         = '-1'
+      'gutter'         = $Flavor.Base.Hex()
       'marker'         = '14'
       'spinner'        = '8'
-      'query'          = '5'
-      'info'           = '8'
-      'prompt'         = '2'
+      'query'          = $Flavor.Text.Hex()
+      'info'           = $Flavor.Surface1.Hex()
+      'prompt'         = $Flavor.Surface1.Hex()
       'preview-label'  = $Flavor.Surface0.Hex()
-      'selected-bg'    = '0'
-      'separator'      = "$bg"
+      'selected-bg'    = $Flavor.Mantle.Hex()
+      'separator'      = $Flavor.Surface0.Hex()
+    }
+
+    $keybindsOptions = @{
+      'ctrl-x' = 'toggle-preview'
     }
 
     $colorString = ($colorOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
     $colorArg = "--color=$colorString"
+
+    $bindString = ($keybindsOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
+    $keybindsArg = "--bind=$bindString"
 
     $key_mapping = @{
       minheight     = 'min-height'
@@ -113,7 +123,22 @@ function FuzzyOpts {
         }
       }) -join ' '
 
-    $FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $previewString
+    $FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $keybindsArg + ' ' + $previewString
+    if ($previewlabel) {
+      $FZF_DEFAULT_OPTS += " --preview-label=' $previewlabel '"
+    }
+    if ($borderlabel) {
+      $FZF_DEFAULT_OPTS += " --border-label=' $borderlabel '"
+    }
+    if ($inputlabel) {
+      $FZF_DEFAULT_OPTS += " --input-label=' $inputlabel '"
+    }
+    if ($listlabel) {
+      $FZF_DEFAULT_OPTS += " --list-label=' $listlabel '"
+    }
+    if ($headerlabel) {
+      $FZF_DEFAULT_OPTS += " --header-label=' $headerlabel '"
+    }
     $env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
     $env:_FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
   }
@@ -122,26 +147,28 @@ function FuzzyOpts {
   }
 }
 
+function FuzzyOptsDefaults {
+  FuzzyOpts -previewlabel 'PREVIEW'
+}
 
-FuzzyOpts -f
-
+FuzzyOptsDefaults
 
 function fzh {
 
-  $env:_FZF_DEFAULT_OPTS = FuzzyOpts
+  FuzzyOpts -borderlabel 'HISTORY'
 
   # Searches your command history, sets your clipboard to the selected item - Usage: fh [<string>]
   $find = $args
-  $env:_FZF_DEFAULT_OPTS += ' ' + "--border-label=`" HISTORY `" --tabstop=2 --color=16"
   $selected = Get-Content (Get-PSReadlineOption).HistorySavePath | Where-Object { $_ -like "*$find*" } | Sort-Object -Unique -Descending | fzf
   if (![string]::IsNullOrWhiteSpace($selected)) {
     Set-Clipboard $selected
   }
+  FuzzyOptsDefaults
 }
 
 function fzc {
 
-  $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
+  FuzzyOpts -d -borderlabel 'CHANGE DIRECTORY'
   # Runs fzf searching files then cd's to the directory of the selected file - Usage: fzc [d | u | c]
   if ($args -eq 'd' -or $args.Count -eq 0) {
     Set-Location $Env:DOTS
@@ -165,6 +192,7 @@ function fzc {
   else {
     Set-Location C:\
   }
+  FuzzyOptsDefaults
 }
 
 function fze {

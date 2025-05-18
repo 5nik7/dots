@@ -52,24 +52,11 @@ prepend_path "${HOME}/.cargo/bin"
 export SHHHH="${DOTS}/secrets"
 zource "${SHHHH}/secrets.sh"
 
-if is_installed neovim; then
+# if is_installed neovim; then
   # export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
-fi
+# fi
 
-if is_installed zoxide; then
-  eval "$(zoxide init zsh)"
-  alias cd='z'
-fi
-
-if is_installed starship; then
-  eval "$(starship init zsh)"
-fi
-
-if is_installed direnv; then
-  eval "$(direnv hook zsh)"
-fi
-
-if is_installed fzf; then
+if cmd_exists fzf; then
 
   if cmd_exists fd; then
     export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
@@ -121,18 +108,22 @@ list-border:0,\
 preview-border:0,\
 input-border:8"
 
-  function finst() {
-    fzpkgs="$(pkg list-all | tr '/' ' ' | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
-    if [ -z "$fzpkgs" ]; then
-      echo "No package selected."
-    else
-      pkg install -y "$fzpkgs"
-    fi
-  }
-
   source <(fzf --zsh)
 fi
 
 if is_droid; then
   zieces "droid"
+fi
+
+if cmd_exists starship; then
+  eval "$(starship init zsh)"
+fi
+
+if cmd_exists direnv; then
+  eval "$(direnv hook zsh)"
+fi
+
+if cmd_exists zoxide; then
+  eval "$(zoxide init zsh)"
+  alias cd='z'
 fi
