@@ -99,18 +99,18 @@ function FuzzyOpts
 
     $fzfString = ($fzfOptions.GetEnumerator() | ForEach-Object {
         $key = if ($key_mapping.ContainsKey($_.Key))
-        { $key_mapping[$_.Key] 
+        { $key_mapping[$_.Key]
         } else
-        { $_.Key 
+        { $_.Key
         }
         if ($_.Value -is [bool])
-        { '--{0}' -f $key 
+        { '--{0}' -f $key
         } elseif ($_.Value -is [FzfSymbolOpts] -and $_.Value.enabled -eq $false)
-        { '--no-{0}' -f $key 
+        { '--no-{0}' -f $key
         } elseif ($_.Value.symbol)
-        { "--{0}='{1}'" -f $key, $_.Value.symbol 
+        { "--{0}='{1}'" -f $key, $_.Value.symbol
         } else
-        { '--{0}={1}' -f $key, $_.Value 
+        { '--{0}={1}' -f $key, $_.Value
         }
       }) -join ' '
 
@@ -137,7 +137,7 @@ function fzh
   $env:_FZF_DEFAULT_OPTS += ' ' + "--border-label=`" HISTORY `" --tabstop=2 --color=16"
   $selected = Get-Content (Get-PSReadlineOption).HistorySavePath | Where-Object { $_ -like "*$find*" } | Sort-Object -Unique -Descending | fzf
   if (![string]::IsNullOrWhiteSpace($selected))
-  { Set-Clipboard $selected 
+  { Set-Clipboard $selected
   }
 }
 
@@ -147,11 +147,11 @@ function fzc
   $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
   # Runs fzf searching files then cd's to the directory of the selected file - Usage: fzc [d | u | c]
   if ($args -eq 'd' -or $args.Count -eq 0)
-  { Set-Location $Env:DOTS 
+  { Set-Location $Env:DOTS
   } elseif ($args -eq 'u')
-  { Set-Location $Env:USERPROFILE 
+  { Set-Location $Env:USERPROFILE
   } elseif ($args -eq 'c')
-  { Set-Location C:\ 
+  { Set-Location C:\
   } else
   {
     Write-Output "Invalid argument: $args"
@@ -164,7 +164,7 @@ function fzc
     $parent = Split-Path -parent -path $selected
     Set-Location $parent
   } else
-  { Set-Location C:\ 
+  { Set-Location C:\
   }
 }
 
@@ -176,11 +176,11 @@ function fze
 
   # Runs fzf searching files then opens the directory of the selected file in explorer - Usage: fze [d | u | c]
   if ($args -eq 'd' -or $args.Count -eq 0)
-  { Set-Location $Env:DOTS 
+  { Set-Location $Env:DOTS
   } elseif ($args -eq 'u')
-  { Set-Location $Env:USERPROFILE 
+  { Set-Location $Env:USERPROFILE
   } elseif ($args -eq 'c')
-  { Set-Location C:\ 
+  { Set-Location C:\
   } else
   {
     Write-Output "Invalid argument: $args"
@@ -194,7 +194,7 @@ function fze
     Set-Location $parent
     explorer .
   } else
-  { Set-Location C:\ 
+  { Set-Location C:\
   }
 }
 
@@ -206,11 +206,11 @@ function fzn
 
   # Runs fzf searching files then opens the directory of the selected file in neovim - Usage: fzn [d | u | c]
   if ($args -eq 'd' -or $args.Count -eq 0)
-  { Set-Location $Env:DOTS 
+  { Set-Location $Env:DOTS
   } elseif ($args -eq 'u')
-  { Set-Location $Env:USERPROFILE 
+  { Set-Location $Env:USERPROFILE
   } elseif ($args -eq 'c')
-  { Set-Location C:\ 
+  { Set-Location C:\
   } else
   {
     Write-Output "Invalid argument: $args"
@@ -226,7 +226,7 @@ function fzn
     $Host.UI.RawUI.WindowTitle = "$p"
     nvim .
   } else
-  { Set-Location C:\ 
+  { Set-Location C:\
   }
 }
 
@@ -238,11 +238,11 @@ function dzc
 
   # Runs fzf searching directories then cd's to the selected directory - Usage: dzc [d | u | c]
   if ($args -eq 'd' -or $args.Count -eq 0)
-  { Set-Location $Env:DOTS 
+  { Set-Location $Env:DOTS
   } elseif ($args -eq 'u')
-  { Set-Location $Env:USERPROFILE 
+  { Set-Location $Env:USERPROFILE
   } elseif ($args -eq 'c')
-  { Set-Location C:\ 
+  { Set-Location C:\
   } else
   {
     Write-Output "Invalid argument: $args"
@@ -251,9 +251,9 @@ function dzc
   $Host.UI.RawUI.WindowTitle = 'FZF'
   $selected = fzf
   if (![string]::IsNullOrWhiteSpace($selected))
-  { Set-Location $selected 
+  { Set-Location $selected
   } else
-  { Set-Location C:\ 
+  { Set-Location C:\
   }
 }
 
@@ -265,11 +265,11 @@ function dze
 
   # Runs fzf searching directories then opens the selected directory in explorer - Usage: dze [d | u | c]
   if ($args -eq 'd' -or $args.Count -eq 0)
-  { Set-Location $Env:DOTS 
+  { Set-Location $Env:DOTS
   } elseif ($args -eq 'u')
-  { Set-Location $Env:USERPROFILE 
+  { Set-Location $Env:USERPROFILE
   } elseif ($args -eq 'c')
-  { Set-Location C:\ 
+  { Set-Location C:\
   } else
   {
     Write-Output "Invalid argument: $args"
@@ -282,7 +282,7 @@ function dze
     Set-Location $selected
     explorer .
   } else
-  { Set-Location C:\ 
+  { Set-Location C:\
   }
 }
 
@@ -294,11 +294,11 @@ function dzn
 
   # Runs fzf searching directories then opens the selected directory in neovim - Usage: dzn [d | u | c]
   if ($args -eq 'd' -or $args.Count -eq 0)
-  { Set-Location $Env:DOTS 
+  { Set-Location $Env:DOTS
   } elseif ($args -eq 'u')
-  { Set-Location $Env:USERPROFILE 
+  { Set-Location $Env:USERPROFILE
   } elseif ($args -eq 'c')
-  { Set-Location C:\ 
+  { Set-Location C:\
   } else
   {
     Write-Output "Invalid argument: $args"
@@ -313,6 +313,10 @@ function dzn
     $Host.UI.RawUI.WindowTitle = "$p"
     nvim .
   } else
-  { Set-Location C:\ 
+  { Set-Location C:\
   }
+}
+
+if (Test-CommandExists fzf)
+{ Import-ScoopModule -Name 'PsFzf' 
 }

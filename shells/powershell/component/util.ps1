@@ -179,7 +179,6 @@ function wh {
       Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
     }
   }
-  $nl = $true
 
   if ($nl) { linebreak }
   linebreak $ba
