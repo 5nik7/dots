@@ -84,8 +84,10 @@ style = 'black'
 # "~/dots" = "󰓎 dots"
 # "~/dots" = "󱙧 dots"
 # "dots" = "    dots"
-"C:/" = "/"
-"/mnt/c" = "win:"
+"C:/" = " "
+# "//" = "/"
+"/mnt/c" = " "
+"/mnt/c/" = " "
 
 [directory]
 # format = '[$path]($style) '
