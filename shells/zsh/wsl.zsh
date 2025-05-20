@@ -1,1 +1,4 @@
 extend_path "/mnt/c/shims"
+extend_path "/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/"
+extend_path "/mnt/c/WINDOWS/System32/"
+extend_path "/mnt/c/WINDOWS/"
