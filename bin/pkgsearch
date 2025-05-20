@@ -146,6 +146,3 @@ case "$distro" in
   fedora) fedora "$request" ;;
   *) die 'unknown distro :(' ;;
 esac
-
-# TODO: homebrew: brew desc -s
-# sample output: https://pastebin.com/raw/3frRf6C7
