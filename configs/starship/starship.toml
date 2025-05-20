@@ -74,18 +74,18 @@ style = 'black'
 
 
 [directory.substitutions]
-"~/Desktop" = " Desktop"
-"~/Videos" = " Videos"
-"~/Pictures" = " Pictures"
-"~/Music" = " Music"
-"~/Documents" = " Documents"
-"~/Downloads" = "󰇚 Downloads"
-"~/dev/dots" = "~/dots"
-"~/dots" = "󰓎 dots"
+# "~/Desktop" = " Desktop"
+# "~/Videos" = " Videos"
+# "~/Pictures" = " Pictures"
+# "~/Music" = " Music"
+# "~/Documents" = " Documents"
+# "~/Downloads" = "󰇚 Downloads"
+# "~/dev/dots" = "~/dots"
+# "~/dots" = "󰓎 dots"
 # "~/dots" = "󱙧 dots"
 # "dots" = "    dots"
-"C:/" = "/mnt/c/"
-"/mnt/c/" = "/"
+# "C:/" = "/mnt/c/"
+# "/mnt/c/" = "/"
 
 [directory]
 # format = '[$path]($style) '
