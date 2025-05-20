@@ -64,6 +64,10 @@ if is_droid; then
   zieces 'droid'
 fi
 
+if [ $WSL_DISTRO_NAME ]; then
+  zieces 'wsl'
+fi
+
 if cmd_exists starship; then
   eval "$(starship init zsh)"
 fi
