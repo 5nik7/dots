@@ -40,4 +40,3 @@ zstyle ':fzf-tab:*' switch-group '<' '>'
 zmodload zsh/complist
 compinit
 _comp_options+=(globdots)   # Include hidden files.
-

@@ -113,4 +113,3 @@ case $words[2] in
         _bat_main
     ;;
 esac
-

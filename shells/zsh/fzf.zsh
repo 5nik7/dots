@@ -1,40 +1,54 @@
-if cmd_exists fd; then
-    export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
-fi
-
-if cmd_exists bat; then
-     PREVIEWER='bat --style=numbers --color=always --pager=never'
-   else
-     PREVIEWER='cat'
-fi
-
-export FZF_DEFAULT_OPTS="--style full \
-  --height 90% \
-  --border sharp \
-  --input-border sharp \
-  --list-border sharp \
-  --layout reverse \
-  --info right \
-  --prompt '> ' \
-  --pointer '┃' \
-  --marker '│' \
-  --separator '──' \
-  --scrollbar '│' \
-  --preview-window='border-sharp' \
-  --preview-window='bottom:50%'\
-  --preview-label=' PREVIEW ' --color=7 \
-  --border-label=' FILES ' --color=7 \
-  --tabstop=2 \
-  --color=16 \
-  --preview '${PREVIEWER} {}'"
-
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color bg+:0,bg:-1,spinner:4,hl:7:underline,fg:8,header:3,info:8,pointer:6,marker:14,fg+:6,prompt:2,hl+:10:underline,gutter:-1,selected-bg:0,separator:0,list-border:0,preview-border:8,border:8,preview-bg:-1,preview-label:0,label:7,query:13,input-border:0"
-
-function finst() {
-  fzpkgs="$(pkg list-all | tr '/' ' '  | grep -v installed | grep -v Listing | awk '{print $1}' | fzf --preview 'apt-cache show {}')"
-  if [ -z "$fzpkgs" ]; then
-    echo "No package selected."
+if is_droid; then
+  preview_pos='bottom:hidden:50%'
   else
-    pkg install -y "$fzpkgs"
-  fi
-};
+  preview_pos='right:hidden:50%'
+fi
+
+if cmd_exists fd; then
+  export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
+fi
+
+# --preview-label=' PREVIEW ' \
+# --border-label=' FILES ' \
+export FZF_DEFAULT_OPTS="--style full \
+--height ~90% \
+--border sharp \
+--input-border sharp \
+--list-border sharp \
+--layout reverse \
+--info right \
+--prompt '> ' \
+--pointer '┃' \
+--marker '│' \
+--separator '──' \
+--scrollbar '│' \
+--preview-window='border-sharp' \
+--preview-window='$preview_pos' \
+--tabstop=2 \
+--bind='Ctrl-X:toggle-preview' \
+--preview 'fzf-preview.sh {}'"
+
+export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
+bg+:0,\
+bg:-1,\
+preview-bg:-1,\
+selected-bg:0,\
+fg:7,\
+fg+:6,\
+hl:7:underline,\
+hl+:10:underline,\
+header:3,\
+info:8,\
+query:13,\
+gutter:-1,\
+pointer:6,\
+marker:14,\
+prompt:2,\
+spinner:4,\
+label:7,\
+preview-label:0,\
+separator:0,\
+border:0,\
+list-border:0,\
+preview-border:0,\
+input-border:8"

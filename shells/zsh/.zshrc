@@ -4,115 +4,64 @@
 #  _ / /_____/ / __  / _, _/ /___
 # (_)____/____/_/ /_/_/ |_|\____/
 
-export DOTS="${HOME}/dots"
-export SHELLS="${DOTS}/shells"
-export ZSHDOTS="${SHELLS}/zsh"
-export ZFUNC="${HOME}/.zfunc"
-export DOTSBIN="${DOTS}/bin"
-export backups="${HOME}/.backups"
+export DOTS="$HOME/dots"
+export SHELLS="$DOTS/shells"
+export ZSHDOTS="$SHELLS/zsh"
+export ZFUNC="$HOME/.zfunc"
+export DOTSBIN="$DOTS/bin"
+export backups="$HOME/.backups"
 
 export DOT_THEME="$(cat $DOTS/.theme)"
 
 export LS_COLORS="$(vivid generate $DOT_THEME)"
 
-export GOBIN="${HOME}/go/bin"
+export GOBIN="$HOME/go/bin"
 
 function zource() {
-  if [ -f "${1}" ]; then
-    source "${1}"
+  if [ -f "$1" ]; then
+    source "$1"
   fi
 }
 
 function zieces() {
-  zfile="${ZSHDOTS}/${1}.zsh"
-  if [ -f "${zfile}" ]; then
-    source "${zfile}"
+  zfile="$ZSHDOTS/$1.zsh"
+  if [ -f "$zfile" ]; then
+    source "$zfile"
   fi
 }
 
-zieces "zutil"
-zieces "functions"
-zieces "options"
-zieces "completions"
-zieces "plugins"
-zieces "aliases"
+zieces 'zutil'
+zieces 'functions'
+zieces 'options'
+zieces 'completions'
+zieces 'plugins'
+zieces 'aliases'
 
-fpath=("${ZFUNC}" "${fpath[@]}")
+fpath=("$ZFUNC" "${fpath[@]}")
 
-addir "${HOME}/.local/bin"
-addir "${backups}"
+addir "$HOME/.local/bin"
+addir "$backups"
 
-extend_path "${HOME}/.local/bin"
-# extend_path "${HOME}/src/nerd-fonts/bin/scripts"
-extend_path "${HOME}/.local/share/nvim/mason/bin"
-prepend_path "${GOBIN}"
-prepend_path "${DOTSBIN}"
-prepend_path "${HOME}/.cargo/bin"
+extend_path "$HOME/.local/bin"
+# extend_path "$HOME/src/nerd-fonts/bin/scripts"
+extend_path "$HOME/.local/share/nvim/mason/bin"
+prepend_path "$GOBIN"
+prepend_path "$DOTSBIN"
+prepend_path "$HOME/.cargo/bin"
 
-export SHHHH="${DOTS}/secrets"
-zource "${SHHHH}/secrets.sh"
+export SHHHH="$DOTS/secrets"
+zource "$SHHHH/secrets.sh"
 
 # if is_installed neovim; then
   # export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
 # fi
 
 if cmd_exists fzf; then
-
-  if cmd_exists fd; then
-    export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
-  fi
-
-  export FZF_DEFAULT_OPTS="--style full \
---height ~90% \
---border sharp \
---input-border sharp \
---list-border sharp \
---layout reverse \
---info right \
---prompt '> ' \
---pointer '┃' \
---marker '│' \
---separator '──' \
---scrollbar '│' \
---preview-window='border-sharp' \
---preview-window='bottom:hidden:50%' \
---preview-label=' PREVIEW ' \
---border-label=' FILES ' \
---tabstop=2 \
---color=16 \
---bind='Ctrl-X:toggle-preview' \
---preview 'fzf-preview.sh {}'"
-
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
-bg+:0,\
-bg:-1,\
-preview-bg:-1,\
-selected-bg:0,\
-fg:7,\
-fg+:6,\
-hl:7:underline,\
-hl+:10:underline,\
-header:3,\
-info:8,\
-query:13,\
-gutter:-1,\
-pointer:6,\
-marker:14,\
-prompt:2,\
-spinner:4,\
-label:7,\
-preview-label:0,\
-separator:0,\
-border:0,\
-list-border:0,\
-preview-border:0,\
-input-border:8"
-
-  source <(fzf --zsh)
+  zieces 'fzf' && source <(fzf --zsh)
 fi
 
 if is_droid; then
-  zieces "droid"
+  zieces 'droid'
 fi
 
 if cmd_exists starship; then
