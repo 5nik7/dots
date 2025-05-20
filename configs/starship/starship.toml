@@ -84,9 +84,10 @@ style = 'black'
 # "~/dots" = "󰓎 dots"
 # "~/dots" = "󱙧 dots"
 # "dots" = "    dots"
-"C:/" = " /"
-# "//" = "/"
+# "C:/" = " /"
+"C:/" = "/"
 "/mnt/c" = " /"
+"//" = "/"
 # "/mnt/c/" = " "
 
 [directory]
