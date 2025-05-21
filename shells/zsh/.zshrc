@@ -65,7 +65,7 @@ if is_droid; then
   zieces 'droid'
 fi
 
-if [ $WSL_DISTRO_NAME ]; then
+if [ -f /etc/wsl.conf ]; then
   zieces 'wsl'
 fi
 
