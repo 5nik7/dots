@@ -35,7 +35,7 @@ alt + shift + left      : komorebic move left
 alt + shift + down      : komorebic move down
 alt + shift + up        : komorebic move up
 alt + shift + right     : komorebic move right
-alt + shift + return    : komorebic promote
+# alt + shift + return    : komorebic promote
 
 # Stack windows
 alt + left              : komorebic stack left

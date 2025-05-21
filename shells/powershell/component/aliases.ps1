@@ -1,6 +1,6 @@
 ﻿Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name path -Value Get-Path.ps1
-Set-Alias -Name env -Value Get-Env.ps1
+Set-Alias -Name wenv -Value Get-Env.ps1
 Set-Alias -Name err -Value Write-Err
 Set-Alias -Name wrn -Value Write-Warn
 Set-Alias -Name scs -Value Write-Success
