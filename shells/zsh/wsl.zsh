@@ -1,3 +1,4 @@
+extend_path "/mnt/c/Users/njen/scoop/shims/"
 extend_path "/mnt/c/shims"
 extend_path "/mnt/c/vscode/bin"
 extend_path "/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0"
