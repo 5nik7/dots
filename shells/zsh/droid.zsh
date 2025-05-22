@@ -1,3 +1,5 @@
+alias upd="pkg update && pkg upgrade -y"
+
 if is_installed perl; then
 
   extend_path "${HOME}/perl5/bin"
