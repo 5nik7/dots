@@ -142,6 +142,7 @@
 [user]
     name = 5nik7
     email = nickflip86@gmail.com
+	signingkey = 4FC33E4D9EB4BEF3
 [github]
     user = 5nik7
 [init]
