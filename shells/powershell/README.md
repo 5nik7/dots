@@ -10,7 +10,7 @@
 New-Item -ItemType SymbolicLink -Path "$(bat --config-dir)" -Target "C:\projects\dots\configs\bat" -ErrorAction Stop
 ```
 
-# Set $env:
+# Set pyenv environment variable 
 
 ```powershell 
 [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
