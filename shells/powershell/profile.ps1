@@ -15,12 +15,9 @@ $PSCOMPONENT = "$PSDOTS\component"
 $env:PSCOMPONENT = $PSCOMPONENT
 $Global:PSCOMPONENT = $env:PSCOMPONENT
 
-$psource = ('util')
-foreach ( $piece in $psource ) {
-  if (Test-Path "$PSCOMPONENT\$piece.ps1") {
-    Unblock-File "$PSCOMPONENT\$piece.ps1"
-    . "$PSCOMPONENT\$piece.ps1"
-  }
+if (Test-Path "$PSCOMPONENT\util.ps1") {
+  Unblock-File "$PSCOMPONENT\util.ps1"
+  . "$PSCOMPONENT\util.ps1"
 }
 
 function dotenv {
@@ -59,7 +56,10 @@ function dotenv {
 dotenv $env:DOTS
 dotenv $env:secretdir
 
-$psource = ('functions', 'path', 'modules', 'fzf', 'readline', 'prompt', 'aliases', 'completions', 'copilot')
+$psource = ('functions', 'path', 'modules', 'fzf', 'readline', 'prompt', 'aliases', 'completions')
+if ($PSEdition -eq 'Core') {
+  $psource += ('copilot')
+}
 foreach ( $piece in $psource ) {
   if (Test-Path "$PSCOMPONENT\$piece.ps1") {
     Unblock-File "$PSCOMPONENT\$piece.ps1"
