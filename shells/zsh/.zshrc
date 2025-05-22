@@ -7,7 +7,7 @@
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
-export ZFUNC="$HOME/.zfunc"
+export ZFUNC=~/.zfunc
 export DOTSBIN="$DOTS/bin"
 export backups="$HOME/.backups"
 
@@ -16,6 +16,8 @@ export DOT_THEME="$(cat $DOTS/.theme)"
 export LS_COLORS="$(vivid generate $DOT_THEME)"
 
 export GOBIN="$HOME/go/bin"
+
+fpath+=("$ZFUNC" "${fpath[@]}")
 
 function zource() {
   if [ -f "$1" ]; then
@@ -36,8 +38,6 @@ zieces 'options'
 zieces 'completions'
 zieces 'plugins'
 zieces 'aliases'
-
-fpath=("$ZFUNC" "${fpath[@]}")
 
 addir "$HOME/.local/bin"
 addir "$backups"
