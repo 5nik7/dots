@@ -209,6 +209,10 @@ if (Test-CommandExists yazi) {
   Set-Alias -Name d -Value y
 }
 
+function mdat($1) {
+  rich -y -a square -S black -e -d 1 --rst --csv --theme catppuccin-mocha -m $1
+}
+
 # Clipboard Utilities
 function cpy {
   Set-Clipboard $args[0]
