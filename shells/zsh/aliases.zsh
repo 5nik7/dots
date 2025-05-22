@@ -12,13 +12,30 @@ function rlp() {
 }
 alias rl='rlp'
 
+if [[ -r /etc/os-release ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
+  distro="${distro%% *}"
+fi
+
+if [[ "$distro" == arch ]]; then
+  alias pacman='sudo pacman'
+  alias upd='sudo pacman -Syu --noconfirm'
+  alias paci='sudo pacman -S'
+  alias pacr='sudo pacman -R'
+fi
+
+if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
+  alias apt='sudo apt'
+  alias upd='sudo apt update && sudo apt upgrade -y'
+  alias apti='sudo apt install'
+  alias aptr='sudo apt remove'
+fi
+
 alias c='clear'
 alias q='exit'
 alias v='nvim'
 
 alias g='git'
-
-alias upd='pkg update && pkg upgrade -y'
 
 alias path='echo $PATH | tr ":" "\n"'
 
