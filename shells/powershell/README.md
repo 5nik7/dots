@@ -1,16 +1,18 @@
-# Set WSLENV from pwsh
+# Powershell Notes
+
+## Set WSLENV from pwsh
 
 ```powershell
 [Environment]::SetEnvironmentVariable("WSLENV", $env:WSLENV + "USERPROFILE/p:", [System.EnvironmentVariableTarget]::User)
 ```
 
-﻿# SymLink
+﻿## SymLink bat
 
 ```powershell
 New-Item -ItemType SymbolicLink -Path "$(bat --config-dir)" -Target "C:\projects\dots\configs\bat" -ErrorAction Stop
 ```
 
-# Set pyenv environment variable 
+## Set pyenv environment variable 
 
 ```powershell 
 [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
