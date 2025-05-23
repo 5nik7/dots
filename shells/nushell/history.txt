@@ -161,3 +161,10 @@ eza
 c
 env
 >>>>>>> edec7c6 (meh)
+ls
+ebnv
+env
+cd
+env
+ls -la
+ls -a

@@ -1,3 +1,5 @@
+source ~/catppuccin_mocha.nu
+
 $env.config.show_banner = false
 
 $env.config.table = {
