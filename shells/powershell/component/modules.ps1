@@ -1,16 +1,11 @@
 Add-PSModulePath -Path $env:PSMODS
 
-Import-PSMod -Name 'CompletionPredictor'
 Import-PSMod -Name 'PowerShellGet'
 Import-PSMod -Name 'Terminal-Icons'
 # Import-PSMod -Name 'PSScriptAnalyzer'
 # Import-PSMod -Name 'Pester'
 # Import-PSMod -Name 'Plaster'
 # Import-PSMod -Core -Name 'Microsoft.WinGet.CommandNotFound'
-
-Import-PSMod -Local -Name 'catppuccin'
-$Flavor = $Catppuccin['Mocha']
-$Global:Flavor = $Flavor
 
 Import-PSMod -Local -Name 'PSDots'
 Import-PSMod -Local -Name 'blastoff'

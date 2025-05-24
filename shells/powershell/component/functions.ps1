@@ -1,3 +1,37 @@
+function dotenv {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$path,
+    [switch]$v
+  )
+  $envFilePath = Join-Path -Path $path -ChildPath '.dotenv'
+  if (Test-Path $envFilePath) {
+    if ($v) {
+      wh -box -border 0 -bb 1 -ba 1 -pad $env:padding 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$path\" blue '.env' green
+    }
+    Get-Content $envFilePath | ForEach-Object {
+      $name, $value = $_.split('=')
+
+      if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
+        continue
+      }
+
+      $expandedName = [Environment]::ExpandEnvironmentVariables($name)
+      $expandedValue = [Environment]::ExpandEnvironmentVariables($value)
+
+      Set-Item -Path "env:$expandedName" -Value $expandedValue
+
+      if ($v) {
+        wh -bb 0 -ba 0 -nl -pad $env:padding '' darkgray $expandedName Yellow ' = ' DarkGray $expandedValue Gray
+      }
+    }
+    if ($v) {
+      linebreak 2
+    }
+  }
+}
+
 function Add-PSModulePath {
   param (
     [Parameter(Mandatory = $true)]

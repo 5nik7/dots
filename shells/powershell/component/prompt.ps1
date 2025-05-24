@@ -4,7 +4,6 @@ function Invoke-Starship-TransientFunction {
 
 Invoke-Expression (&starship init powershell)
 Enable-TransientPrompt
-Invoke-Expression (& { ( zoxide init powershell --cmd cd | Out-String ) })
 
 function OnViModeChangeCore {
   [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()

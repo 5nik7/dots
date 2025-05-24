@@ -20,43 +20,15 @@ if (Test-Path "$PSCOMPONENT\util.ps1") {
   . "$PSCOMPONENT\util.ps1"
 }
 
-function dotenv {
-  [CmdletBinding()]
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$path,
-    [switch]$v
-  )
-  $envFilePath = Join-Path -Path $path -ChildPath '.dotenv'
-  if (Test-Path $envFilePath) {
-    if ($v) {
-      wh -box -border 0 -bb 1 -ba 1 -pad $env:padding 'DOTENV' white ' │ ' darkgray 'LOADING' darkgray ' │ ' darkgray "$path\" blue '.env' green
-    }
-    Get-Content $envFilePath | ForEach-Object {
-      $name, $value = $_.split('=')
-
-      if ([string]::IsNullOrWhiteSpace($name) -or $name.Contains('#')) {
-        continue
-      }
-
-      $expandedName = [Environment]::ExpandEnvironmentVariables($name)
-      $expandedValue = [Environment]::ExpandEnvironmentVariables($value)
-
-      Set-Item -Path "env:$expandedName" -Value $expandedValue
-
-      if ($v) {
-        wh -bb 0 -ba 0 -nl -pad $env:padding '' darkgray $expandedName Yellow ' = ' DarkGray $expandedValue Gray
-      }
-    }
-    if ($v) {
-      linebreak 2
-    }
-  }
+if (Test-Path "$PSCOMPONENT\functions.ps1") {
+  Unblock-File "$PSCOMPONENT\functions.ps1"
+  . "$PSCOMPONENT\functions.ps1"
 }
+
 dotenv $env:DOTS
 dotenv $env:secretdir
 
-$psource = ('functions', 'path', 'modules', 'fzf', 'readline', 'prompt', 'aliases', 'completions')
+$psource = ( 'readline', 'prompt', 'modules', 'fzf', 'aliases', 'completions')
 if ($PSEdition -eq 'Core') {
   $psource += ('copilot')
 }
@@ -67,7 +39,8 @@ foreach ( $piece in $psource ) {
   }
 }
 
-Invoke-Expression (& { (zoxide init powershell | Out-String) })
+Invoke-Expression (& { ( zoxide init powershell --cmd cd | Out-String ) })
+Remove-DuplicatePaths
 
 if ($env:isReloading) {
   Clear-Host
