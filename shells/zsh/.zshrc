@@ -51,11 +51,7 @@ prepend_path "$HOME/.cargo/bin"
 
 export SHHHH="$DOTS/secrets"
 zource "$SHHHH/secrets.sh"
-zource /usr/share/nvm/init-nvm.sh
-
-# if is_installed neovim; then
-  # export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
-# fi
+zource "/usr/share/nvm/init-nvm.sh"
 
 if cmd_exists fzf; then
   zieces 'fzf' && source <(fzf --zsh)
