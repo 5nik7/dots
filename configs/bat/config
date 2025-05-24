@@ -8,8 +8,8 @@
 --theme="wal"
 
 # --style="full"
-# --style="plain"
---style="numbers"
+--style="plain"
+# --style="numbers"
 
 # Enable this to use italic text on the terminal. This is not supported on all
 # terminal emulators (like tmux, by default):
@@ -17,7 +17,7 @@
 --color="always"
 
 # Uncomment the following line to disable automatic paging:
---paging="never"
+--paging="auto"
 --wrap="never"
 
 # Uncomment the following line if you are using less version >= 551 and want to
