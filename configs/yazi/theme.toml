@@ -32,7 +32,8 @@ border_symbol = "│"
 border_style = { fg = "black" }
 
 # Highlighting
-syntect_theme = "~/.cache/wal/wal.tmTheme"
+# syntect_theme = "~/.cache/wal/wal.tmTheme"
+syntect_theme = "~/dots/configs/bat/themes/Catppuccin Mocha.tmTheme"
 
 # : }}}
 
