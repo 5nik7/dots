@@ -12,11 +12,6 @@ require("yatline"):setup({
   part_separator = { open = "", close = "" },
   inverse_separator = { open = "", close = "" },
 
-  -- section_separator = { open = "", close = "" },
-  -- part_separator = { open = "", close = "" },
-  -- inverse_separator = { open = "", close = "" }, --
-
-
   tab_width = 20,
   tab_use_inverse = false,
 
