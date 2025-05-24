@@ -81,3 +81,12 @@ if cmd_exists zoxide; then
   eval "$(zoxide init zsh)"
   alias cd='z'
 fi
+
+if cmd_exists batpipe; then
+    eval "$(batpipe)"
+fi
+
+if cmd_exists batman; then
+  eval "$(batman --export-env)"
+fi
+

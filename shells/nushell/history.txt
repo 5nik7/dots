@@ -179,3 +179,54 @@ l
 ll
 d
 ezit
+l
+ll
+ls
+c
+config nu
+exit
+l
+env
+ls
+config nu
+c
+l
+d
+cd
+path
+echo $path
+env
+env path
+path
+$env
+$env.path
+prettybat
+prettybat .zshrc
+bat-modules 
+bat-modules --update
+batwatch date
+which shitime
+which shitime path
+path  which shitime
+path $(which shitime)
+cat shittime
+cat shitime
+cat /data/data/com.termux/files/home/dots/bin/shitume
+cat /data/data/com.termux/files/home/dots/bin/shitime
+batwatch -t
+batwatch -t -n1 "date '+%l:%M:%S'|toilet -f future -k"
+batwatch --help
+batwatch --command -n1 "date '+%l:%M:%S'|toilet -f future -k"
+batwatch --command "date '+%l:%M:%S'|toilet -f future -k"
+c
+batwatch --command -n1 "date '+%l:%M:%S'"
+which daye
+which date
+batwatch --command -n1 "da$te '+%l:%M:%S'"
+batwatch --command -n1 date '+%l:%M:%S'
+batwatch --command -n1 date '+%l:%M:%S' | figlet
+batwatch --command -n1 date '+%l:%M:%S' | toilet -f future -k
+batwatch --help
+shitme
+shitime
+c
