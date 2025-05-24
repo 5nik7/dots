@@ -35,12 +35,11 @@ bars:
       left:
         [
           "home",
-          "apps",
-          "komorebi_workspaces"
+          "komorebi_workspaces",
+          "active_window"
         ]
       center:
         [
-          "active_window"
         ]
       right:
         [
