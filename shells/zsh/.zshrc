@@ -37,7 +37,6 @@ zieces 'functions'
 zieces 'options'
 zieces 'completions'
 zieces 'plugins'
-zieces 'aliases'
 
 addir "$HOME/.local/bin"
 addir "$backups"
@@ -64,6 +63,8 @@ fi
 if [ -f /etc/wsl.conf ]; then
   zieces 'wsl'
 fi
+
+zieces 'aliases'
 
 if cmd_exists starship; then
   eval "$(starship init zsh)"
