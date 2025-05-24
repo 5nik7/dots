@@ -168,3 +168,14 @@ cd
 env
 ls -la
 ls -a
+d
+exit
+help
+help config
+config nu
+d
+exit
+l
+ll
+d
+ezit
