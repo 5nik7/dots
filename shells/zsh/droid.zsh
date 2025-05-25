@@ -1,5 +1,9 @@
 alias upd="pkg update && pkg upgrade -y"
 
+function google {
+  termux-open-url "https://www.google.com/search?q=$*"
+}
+
 if is_installed perl; then
 
   extend_path "${HOME}/perl5/bin"
