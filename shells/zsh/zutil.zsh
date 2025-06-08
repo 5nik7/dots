@@ -187,9 +187,10 @@ bak(){
         [ -f "$filename" ] || { echo "file '$filename' does not exist"; return 1; }
         [[ $filename =~ .*\.bak\..* ]] && continue
         local bakdir
-        bakdir="$HOME/.backups"
+        # bakdir="$HOME/.backups"
         local bakfile
-        bakfile="$bakdir/$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
+        # bakfile="$bakdir/$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
+        bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
         until ! [ -f "$bakfile" ]; do
             echo "WARNING: bakfile '$bakfile' already exists, retrying with a new timestamp"
             sleep 1
@@ -242,7 +243,7 @@ function symlink() {
     if [ -f "$target_file" ]; then
       # addir "$target_dir"
       bak "$target_file"
-      ln -s "$base_file" "$target_filr"
+      ln -s "$base_file" "$target_file"
       print_link "$base_file" "$target_file"
     else
       ln -s "$base_file" "$target_file"
