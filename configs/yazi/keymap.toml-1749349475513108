@@ -6,7 +6,7 @@
 # desc = "Copy the files to the clipboard" }
 [input]
 prepend_keymap = [{ on = '<Esc>', run = 'close', desc = 'Cancel input' }]
-[mgr]
+[manager]
 # Make all changed keymaps into prepend_keymap, keep the default config as is
 # Easier to Maintain and keep track of
 prepend_keymap = [
