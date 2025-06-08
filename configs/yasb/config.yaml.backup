@@ -1,10 +1,12 @@
 watch_stylesheet: true
 watch_config: true
 debug: false
+
 komorebi:
   start_command: "komorebic start --whkd"
   stop_command: "komorebic stop --whkd"
   reload_command: "komorebic stop --whkd && komorebic start --whkd"
+
 bars:
   primary-bar:
     enabled: true
@@ -192,7 +194,7 @@ widgets:
   clock:
     type: "yasb.clock.ClockWidget"
     options:
-      label: "{%a %b %d %H:%M}"
+      label: "{%I:%M %p}"
       label_alt: "{%A, %d %B %Y %H:%M}"
       timezones: []
       calendar:
