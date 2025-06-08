@@ -1,12 +1,12 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:full-border"
-rev = "55bf699"
-hash = "1f3dad061209081a6b04dd6ff2cb06c7"
+rev = "63f9650"
+hash = "3996fc74044bc44144b323686f887e1"
 
 [[plugin.deps]]
 use = "imsi32/yatline"
-rev = "2ecf715"
-hash = "38e2ea4703ea606d4eef574e8e8b8fd7"
+rev = "4872af0"
+hash = "d32742ded0e73146a8ca590fdc4fb404"
 
 [[plugin.deps]]
 use = "imsi32/yatline-catppuccin"
