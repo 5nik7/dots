@@ -29,10 +29,10 @@ bars:
       width: "100%"
       height: 28
     padding:
-      top: 12
-      left: 8
+      top: 5
+      left: 5
       bottom: 2
-      right: 8
+      right: 5
     widgets:
       left: ["komorebi_workspaces", "active_window"]
       center: []
