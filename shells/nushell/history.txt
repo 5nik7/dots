@@ -230,3 +230,14 @@ batwatch --help
 shitme
 shitime
 c
+l
+ls
+c
+env
+gzg
+fzf
+c
+l
+d
+..
+l

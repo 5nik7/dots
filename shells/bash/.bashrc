@@ -67,3 +67,4 @@ if cmd_exists zoxide; then
   eval "$(zoxide init bash)"
   alias cd='z'
 fi
+eval "$(gh copilot alias -- bash)"

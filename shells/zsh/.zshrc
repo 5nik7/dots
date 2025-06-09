@@ -87,3 +87,4 @@ if cmd_exists batman; then
   eval "$(batman --export-env)"
 fi
 
+eval "$(gh copilot alias -- zsh)"
