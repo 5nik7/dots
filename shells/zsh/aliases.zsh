@@ -1,8 +1,9 @@
 function rlp() {
     local current_shell=$(basename "$SHELL")
     if [ "$current_shell" = "zsh" ]; then
-        zource ~/.zshrc
-        print_in_yellow "\n ZSH reloaded.\n\n"
+        zource ~/.zshrc && clear && \
+        # print_in_yellow "\n ZSH reloaded.\n\n"
+        (toilet -f future "ZSH" && echo -e "RELOADED.") | boxes -d ansi | lolcat
     elif [ "$current_shell" = "bash" ]; then
         zource ~/.bashrc
         print_in_yellow "\n Bash reloaded.\n\n"
