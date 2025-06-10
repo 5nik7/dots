@@ -10,6 +10,9 @@ HISTFILESIZE=10000
 export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
 export HISTIGNORE=$'[ \t]*:&:[fb]g:exit'
 
+LANG=en_US.UTF-8
+export LANG
+
 DOTS="$(dirname "$(dirname "$(dirname "$(readlink "$HOME/.bashrc")")")")"
 export DOTS
 SHELLS="$(dirname "$(dirname "$(readlink "$HOME/.bashrc")")")"
@@ -39,16 +42,16 @@ extend_path "$DOTSBIN"
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # if cmd_exists nvim; then
-    # export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
+# export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
 # fi
 
 function is_droid() {
-	[[ -d  "$HOME/.termux" ]] &> /dev/null
-	return $?
+  [[ -d "$HOME/.termux" ]] &>/dev/null
+  return $?
 }
 
 if is_droid; then
-    src "$BASHDOT/droid.bash"
+  src "$BASHDOT/droid.bash"
 fi
 
 # eval "$(dircolors -b /etc/DIR_COLORS)"

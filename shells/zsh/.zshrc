@@ -4,6 +4,7 @@
 #  _ / /_____/ / __  / _, _/ /___
 # (_)____/____/_/ /_/_/ |_|\____/
 
+export LANG=en_US.UTF-8
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
