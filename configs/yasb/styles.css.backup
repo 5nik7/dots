@@ -23,7 +23,6 @@
   --overlay1: #7f849c;
   --overlay0: #6c7086;
   --surface2: #585b70;
-  --surface1: #45475a;
   --surface1: #282936;
   --base: #1e1e2e;
   --mantle: rgba(24, 24, 37, 0.5);
@@ -45,7 +44,7 @@
 .widget {
   padding: 0 2px;
   margin: 0 2px;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 .widget .icon {
   font-size: 18px;
@@ -107,7 +106,7 @@
 }
 .komorebi-workspaces .ws-btn {
   border: none;
-  background-color: var(--overlay0);
+  background-color: var(--surface2);
   margin: 0px 4px;
   padding: 0;
   color: rgba(0, 0, 0, 0);
@@ -116,7 +115,7 @@
   width: 10px;
 }
 .komorebi-workspaces .ws-btn.populated {
-  background-color: var(--sky);
+  background-color: var(--lavender);
 }
 .komorebi-workspaces .ws-btn.active {
   color: rgba(149, 177, 255, 0);
