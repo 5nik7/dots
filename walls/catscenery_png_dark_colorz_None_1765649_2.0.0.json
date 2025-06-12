@@ -1,0 +1,28 @@
+{
+    "checksum": "673f904eda04dfb104d59c064a0d6986",
+    "wallpaper": "C:/Users/njen/dots/walls/catscenery.png",
+    "alpha": "100",
+    "special": {
+        "background": "#16100f",
+        "foreground": "#c4c3c3",
+        "cursor": "#c4c3c3"
+    },
+    "colors": {
+        "color0": "#16100f",
+        "color1": "#c18c80",
+        "color2": "#c5aca2",
+        "color3": "#8ea1c5",
+        "color4": "#7179aa",
+        "color5": "#868aab",
+        "color6": "#a492a5",
+        "color7": "#c4c3c3",
+        "color8": "#6f5a5a",
+        "color9": "#c18c80",
+        "color10": "#c5aca2",
+        "color11": "#8ea1c5",
+        "color12": "#7179aa",
+        "color13": "#868aab",
+        "color14": "#a492a5",
+        "color15": "#c4c3c3"
+    }
+}

@@ -1,4 +1,5 @@
-/*VARIABLES AND SOME DEFAULT SETTINGS*/
+@import url("../../cache/wal/colors.css");
+
 :root {
   --rosewater: #f5e0dc;
   --flamingo: #f2cdcd;
