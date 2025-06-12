@@ -121,23 +121,6 @@ function Remove-Path {
     Write-Err $Path Magenta ' does not exist.'
   }
 }
-function Remove-DuplicatePaths {
-  $paths = $env:Path -split ';'
-  $uniquePaths = [System.Collections.Generic.HashSet[string]]::new()
-  $newPath = @()
-
-  foreach ($path in $paths) {
-    if ($uniquePaths.Add($path)) {
-      $newPath += $path
-    }
-    else {
-      Write-Verbose "Duplicate path detected and removed: $path"
-    }
-  }
-
-  $env:Path = $newPath -join ';'
-  Write-Verbose "Duplicate paths have been removed. Updated PATH: $env:Path"
-}
 
 # Initial GitHub.com connectivity check with 1 second timeout
 $global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet

@@ -40,6 +40,7 @@ foreach ( $piece in $psource ) {
 }
 
 Invoke-Expression (& { ( zoxide init powershell --cmd cd | Out-String ) })
+Remove-DuplicatePaths
 
 if ($env:isReloading) {
   Clear-Host
