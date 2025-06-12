@@ -27,7 +27,6 @@ $docker_context\
 $kubernetes\
 $container\
 $jobs\
-$time\
 $cmd_duration\
 $status\
 $line_break\
@@ -48,14 +47,14 @@ color_directory = 'yellow'
 color_git = 'cyan'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
-color_env = 'blue'
+color_env = '#fab387'
 color_kubernetes = 'purple'
 color_docker = 'blue'
-color_shell = 'bright-black'
+color_shell = '#7f849c'
 color_container = ''
 color_other = ''
-color_time = 'bright-yellow'
-color_duration = 'bright-yellow'
+color_time = '#b4befe'
+color_duration = '#b4befe'
 
 color_vimcmd_ok = 'black'
 color_vimcmd_replace = 'purple'
@@ -290,6 +289,12 @@ style = "fg:color_other"
 format = '( [$symbol( $number)]($style) )'
 symbol_threshold = 1
 number_threshold = 1
+
+[time]
+disabled = false
+time_format = "%R"
+style = "fg:color_time"
+format = '( [󰔛 $time]($style) )'
 
 [cmd_duration]
 min_time = 2000
