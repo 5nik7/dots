@@ -29,10 +29,10 @@ function FuzzyOpts {
     $fzfOptions = @{
       style         = 'minimal'
       layout        = 'reverse'
-      height        = '~90'
-      minheight     = '10+'
+      height        = '~90%'
+      margin        = '1'
       border        = 'none'
-      previewwindow = 'right:70%:hidden:border-left'
+      previewwindow = 'right:70%:hidden'
       prompt        = @{
         symbol = '> '
       }
@@ -104,10 +104,10 @@ function FuzzyOpts {
           '--no-{0}' -f $key
         }
         if ($_.Value.symbol) {
-          "--{0}='{1}'" -f $key, $_.Value.symbol
+          "--{0} '{1}'" -f $key, $_.Value.symbol
         }
         else {
-          "--{0}='{1}'" -f $key, $_.Value
+          '--{0} {1}' -f $key, $_.Value
         }
       }) -join ' '
 
@@ -135,6 +135,7 @@ function FuzzyOpts {
 }
 
 FuzzyOpts
+
 
 if (Test-CommandExists fzf) {
   Import-ScoopModule -Name 'PsFzf'

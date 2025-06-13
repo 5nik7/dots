@@ -39,7 +39,7 @@ fzpr() {
     pacman -Qq | fzf -q "$1" -m --preview 'pacman -Qi {1}' | xargs -ro pacman -Rns
 }
 
-google {
+function google {
     open "https://www.google.com/search?q=$*"
 }
 
