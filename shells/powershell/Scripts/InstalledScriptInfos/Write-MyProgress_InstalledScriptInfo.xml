@@ -1,0 +1,105 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>System.Management.Automation.PSCustomObject</T>
+      <T>System.Object</T>
+    </TN>
+    <MS>
+      <S N="Name">Write-MyProgress</S>
+      <S N="Version">1.0.1</S>
+      <Obj N="Type" RefId="1">
+        <TN RefId="1">
+          <T>Microsoft.PowerShell.PSResourceGet.UtilClasses.ResourceType</T>
+          <T>System.Enum</T>
+          <T>System.ValueType</T>
+          <T>System.Object</T>
+        </TN>
+        <ToString>Script</ToString>
+        <I32>2</I32>
+      </Obj>
+      <S N="Description">The Write-Progress cmdlet displays a progress bar in a Windows PowerShell command window that depicts the status of a running command or script._x000A__x000A_</S>
+      <S N="Author">thomas.illiet</S>
+      <S N="CompanyName">netboot.fr</S>
+      <S N="Copyright">(c) 2017 Netboot. All rights reserved.</S>
+      <DT N="PublishedDate">2018-01-08T19:28:56.993</DT>
+      <DT N="InstalledDate">2025-06-13T12:40:26.1645773-07:00</DT>
+      <B N="IsPrerelease">false</B>
+      <Nil N="UpdatedDate" />
+      <URI N="LicenseUri">https://raw.githubusercontent.com/Netboot-France/Write-MyProgress/master/LICENSE</URI>
+      <URI N="ProjectUri">https://github.com/Netboot-France/Write-MyProgress</URI>
+      <URI N="IconUri">https://raw.githubusercontent.com/Netboot-France/Write-MyProgress/master/Resource/Icon.png</URI>
+      <Obj N="Tags" RefId="2">
+        <TN RefId="2">
+          <T>System.String[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>Tools</S>
+          <S>PSScript</S>
+        </LST>
+      </Obj>
+      <Obj N="Includes" RefId="3">
+        <TN RefId="3">
+          <T>System.Collections.Hashtable</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">Cmdlet</S>
+            <Obj N="Value" RefId="4">
+              <TNRef RefId="2" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Workflow</S>
+            <Nil N="Value" />
+          </En>
+          <En>
+            <S N="Key">RoleCapability</S>
+            <Nil N="Value" />
+          </En>
+          <En>
+            <S N="Key">Function</S>
+            <Nil N="Value" />
+          </En>
+          <En>
+            <S N="Key">Command</S>
+            <Obj N="Value" RefId="5">
+              <TNRef RefId="2" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">DscResource</S>
+            <Obj N="Value" RefId="6">
+              <TNRef RefId="2" />
+              <LST />
+            </Obj>
+          </En>
+        </DCT>
+      </Obj>
+      <S N="PowerShellGetFormatVersion"></S>
+      <S N="ReleaseNotes"></S>
+      <Obj N="Dependencies" RefId="7">
+        <TN RefId="4">
+          <T>Microsoft.PowerShell.PSResourceGet.UtilClasses.Dependency[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST />
+      </Obj>
+      <S N="RepositorySourceLocation">https://www.powershellgallery.com/api/v2</S>
+      <S N="Repository">PSGallery</S>
+      <Obj N="AdditionalMetadata" RefId="8">
+        <TNRef RefId="0" />
+        <MS>
+          <S N="NormalizedVersion">1.0.1</S>
+          <S N="IsPrerelease">False</S>
+        </MS>
+      </Obj>
+      <S N="InstalledLocation">C:\Users\njen\Documents\PowerShell\Scripts</S>
+    </MS>
+  </Obj>
+</Objs>

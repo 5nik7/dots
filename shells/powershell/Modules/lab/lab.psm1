@@ -160,7 +160,6 @@ function Get-LabScripts {
 
   $scriptsPath = $TargetScriptDir
 
-  wh -box -bb 1 -ba 1 'Listing scripts in ' DarkGray "$scriptsPath" Gray
   Get-Command -CommandType ExternalScript | ForEach-Object `
   {
     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
@@ -371,6 +370,7 @@ function lab {
   }
 
   if ($list) {
+    wh -box -bb 1 -ba 1 'Listing scripts in ' DarkGray "$TargetScriptDir" Gray
     Get-LabScripts $TargetScriptDir $targeticon $targetcolor
     return
   }
