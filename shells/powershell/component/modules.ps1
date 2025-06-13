@@ -3,16 +3,16 @@ Add-PSModulePath -Path $env:PSMODS
 Import-PSMod -Name 'PowerShellGet'
 Import-PSMod -Name 'Terminal-Icons'
 
-# Import-PSMod -Local -Name 'PSDots'
+Import-PSMod -Local -Name 'PSDots'
 Import-PSMod -Local -Name 'blastoff'
 Import-PSMod -Local -Name 'powernerd'
-# Import-PSMod -Local -Name 'winwal'
+Import-PSMod -Local -Name 'winwal'
 Import-PSMod -Local -Name 'lab'
-# Import-PSMod -Local -Name 'WozTools'
+Import-PSMod -Local -Name 'WozTools'
 
-# if ((Get-Module winwal -ListAvailable) -and (Test-Path "$env:PSMODS\winwal\colortool")) {
-#   Add-Path -Path "$env:PSMODS\winwal\colortool"
-# }
+if ((Get-Module winwal -ListAvailable) -and (Test-Path "$env:PSMODS\winwal\colortool")) {
+  Add-Path -Path "$env:PSMODS\winwal\colortool"
+}
 
 Import-ScoopModule -Name 'scoop-completion'
 

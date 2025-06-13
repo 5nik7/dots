@@ -13,8 +13,8 @@ function FuzzyOpts {
   )
   $env:FZF_DEFAULT_OPTS = ''
 
-  # $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`""
-  # $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`""
+  $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`""
+  $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`""
 
   if ($d) {
     $Env:FZF_DEFAULT_COMMAND = 'fd --type d --strip-cwd-prefix --hidden --exclude .git'
@@ -27,12 +27,12 @@ function FuzzyOpts {
   try {
 
     $fzfOptions = @{
-      style         = 'default'
+      style         = 'minimal'
       layout        = 'reverse'
-      height        = '~100%'
+      height        = '~90'
       minheight     = '10+'
       border        = 'none'
-      previewwindow = 'right:70%:hidden'
+      previewwindow = 'right:70%:hidden:border-left'
       prompt        = @{
         symbol = '> '
       }
@@ -58,11 +58,12 @@ function FuzzyOpts {
       'list-border'    = $Flavor.Surface0.Hex()
       'border'         = $Flavor.Surface0.Hex()
       'input-border'   = $Flavor.Surface1.Hex()
-      'pointer'        = $Flavor.Mantle.Hex()
+      'pointer'        = $Flavor.Sapphire.Hex()
       'label'          = $Flavor.Surface2.Hex()
       'gutter'         = 'transparent'
-      'marker'         = 14
-      'spinner'        = 8
+      'marker'         = $Flavor.Yellow.Hex()
+      'spinner'        = $Flavor.Surface1.Hex()
+      'separator'      = $Flavor.Base.Hex()
       'query'          = $Flavor.Text.Hex()
       'info'           = $Flavor.Surface1.Hex()
       'prompt'         = $Flavor.Surface1.Hex()
@@ -134,203 +135,6 @@ function FuzzyOpts {
 }
 
 FuzzyOpts
-
-function fzh {
-
-  FuzzyOpts -borderlabel 'HISTORY'
-
-  # Searches your command history, sets your clipboard to the selected item - Usage: fh [<string>]
-  $find = $args
-  $selected = Get-Content (Get-PSReadlineOption).HistorySavePath | Where-Object { $_ -like "*$find*" } | Sort-Object -Unique -Descending | fzf
-  if (![string]::IsNullOrWhiteSpace($selected)) {
-    Set-Clipboard $selected
-  }
-  FuzzyOptsDefaults
-}
-
-function fzc {
-
-  FuzzyOpts -d -borderlabel 'CHANGE DIRECTORY'
-  # Runs fzf searching files then cd's to the directory of the selected file - Usage: fzc [d | u | c]
-  if ($args -eq 'd' -or $args.Count -eq 0) {
-    Set-Location $Env:DOTS
-  }
-  elseif ($args -eq 'u') {
-    Set-Location $Env:USERPROFILE
-  }
-  elseif ($args -eq 'c') {
-    Set-Location C:\
-  }
-  else {
-    Write-Output "Invalid argument: $args"
-    return
-  }
-  $Host.UI.RawUI.WindowTitle = 'FZF'
-  $selected = fzf
-  if (![string]::IsNullOrWhiteSpace($selected)) {
-    $parent = Split-Path -parent -path $selected
-    Set-Location $parent
-  }
-  else {
-    Set-Location C:\
-  }
-  FuzzyOptsDefaults
-}
-
-function fze {
-
-
-  $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
-
-  # Runs fzf searching files then opens the directory of the selected file in explorer - Usage: fze [d | u | c]
-  if ($args -eq 'd' -or $args.Count -eq 0) {
-    Set-Location $Env:DOTS
-  }
-  elseif ($args -eq 'u') {
-    Set-Location $Env:USERPROFILE
-  }
-  elseif ($args -eq 'c') {
-    Set-Location C:\
-  }
-  else {
-    Write-Output "Invalid argument: $args"
-    return
-  }
-  $Host.UI.RawUI.WindowTitle = 'FZF'
-  $selected = fzf
-  if (![string]::IsNullOrWhiteSpace($selected)) {
-    $parent = Split-Path -parent -path $selected
-    Set-Location $parent
-    explorer .
-  }
-  else {
-    Set-Location C:\
-  }
-}
-
-function fzn {
-
-
-  $env:_FZF_DEFAULT_OPTS = FuzzyOpts -f
-
-  # Runs fzf searching files then opens the directory of the selected file in neovim - Usage: fzn [d | u | c]
-  if ($args -eq 'd' -or $args.Count -eq 0) {
-    Set-Location $Env:DOTS
-  }
-  elseif ($args -eq 'u') {
-    Set-Location $Env:USERPROFILE
-  }
-  elseif ($args -eq 'c') {
-    Set-Location C:\
-  }
-  else {
-    Write-Output "Invalid argument: $args"
-    return
-  }
-  $Host.UI.RawUI.WindowTitle = 'FZF'
-  $selected = fzf
-  if (![string]::IsNullOrWhiteSpace($selected)) {
-    $parent = Split-Path -parent -path $selected
-    Set-Location $parent
-    $p = Split-Path -leaf -path (Get-Location)
-    $Host.UI.RawUI.WindowTitle = "$p"
-    nvim .
-  }
-  else {
-    Set-Location C:\
-  }
-}
-
-function dzc {
-
-
-  $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
-
-  # Runs fzf searching directories then cd's to the selected directory - Usage: dzc [d | u | c]
-  if ($args -eq 'd' -or $args.Count -eq 0) {
-    Set-Location $Env:DOTS
-  }
-  elseif ($args -eq 'u') {
-    Set-Location $Env:USERPROFILE
-  }
-  elseif ($args -eq 'c') {
-    Set-Location C:\
-  }
-  else {
-    Write-Output "Invalid argument: $args"
-    return
-  }
-  $Host.UI.RawUI.WindowTitle = 'FZF'
-  $selected = fzf
-  if (![string]::IsNullOrWhiteSpace($selected)) {
-    Set-Location $selected
-  }
-  else {
-    Set-Location C:\
-  }
-}
-
-function dze {
-
-
-  $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
-
-  # Runs fzf searching directories then opens the selected directory in explorer - Usage: dze [d | u | c]
-  if ($args -eq 'd' -or $args.Count -eq 0) {
-    Set-Location $Env:DOTS
-  }
-  elseif ($args -eq 'u') {
-    Set-Location $Env:USERPROFILE
-  }
-  elseif ($args -eq 'c') {
-    Set-Location C:\
-  }
-  else {
-    Write-Output "Invalid argument: $args"
-    return
-  }
-  $Host.UI.RawUI.WindowTitle = 'FZF'
-  $selected = fzf
-  if (![string]::IsNullOrWhiteSpace($selected)) {
-    Set-Location $selected
-    explorer .
-  }
-  else {
-    Set-Location C:\
-  }
-}
-
-function dzn {
-
-
-  $env:_FZF_DEFAULT_OPTS = FuzzyOpts -d
-
-  # Runs fzf searching directories then opens the selected directory in neovim - Usage: dzn [d | u | c]
-  if ($args -eq 'd' -or $args.Count -eq 0) {
-    Set-Location $Env:DOTS
-  }
-  elseif ($args -eq 'u') {
-    Set-Location $Env:USERPROFILE
-  }
-  elseif ($args -eq 'c') {
-    Set-Location C:\
-  }
-  else {
-    Write-Output "Invalid argument: $args"
-    return
-  }
-  $Host.UI.RawUI.WindowTitle = 'FZF'
-  $selected = fzf
-  if (![string]::IsNullOrWhiteSpace($selected)) {
-    Set-Location $selected
-    $p = Split-Path -leaf -path (Get-Location)
-    $Host.UI.RawUI.WindowTitle = "$p"
-    nvim .
-  }
-  else {
-    Set-Location C:\
-  }
-}
 
 if (Test-CommandExists fzf) {
   Import-ScoopModule -Name 'PsFzf'

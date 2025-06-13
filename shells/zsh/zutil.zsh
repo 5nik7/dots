@@ -19,23 +19,23 @@ BRIGHTPURPLE="\033[1;35m"
 
 NC="\033[0m"
 
-function rel_path() {
+rel_path() {
   echo "$(realpath --no-symlinks $1)" | sed "s|^$HOME/|~/|"
 }
 
-function fold1() {
+fold1() {
   echo -e "$(basename "$1")"
 }
 
-function fold2() {
+fold2() {
   echo -e "$(basename "$(dirname "$1")")/$(basename "$1")"
 }
 
-function fold3() {
+fold3() {
   echo -e "$(basename "$(dirname "$(dirname "$1")")")/$(basename "$(dirname "$1")")/$(basename "$1")"
 }
 
-function extend_path() {
+extend_path() {
   [[ -d "$1" ]] || return
 
   if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
@@ -43,7 +43,7 @@ function extend_path() {
   fi
 }
 
-function prepend_path() {
+prepend_path() {
   [[ -d "$1" ]] || return
 
   if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
@@ -51,98 +51,98 @@ function prepend_path() {
   fi
 }
 
-function zource() {
+zource() {
   if [ -f "$1" ]; then
     source "$1"
   fi
 }
 
-function is_droid() {
+is_droid() {
 	[[ -d  "$HOME/.termux" ]] &> /dev/null
 	return $?
 }
 
-function addir() {
+addir() {
   if [ ! -d "$1" ]; then
     mkdir -p "$1"
   fi
 }
 
-function cmd_exists() {
+cmd_exists() {
   command -v "$1" &>/dev/null
 }
 
-function is_installed() {
+is_installed() {
   dpkg -s "$1" &>/dev/null
   return $?
 }
 
-function check_dir() {
+check_dir() {
   if [ ! -d "$(dirname "$1")" ]; then
     mkdir -p "$(dirname "$1")"
   fi
 }
 
-function linebreak() {
+linebreak() {
   echo -e ""
 }
 
-function print_in_color() {
+print_in_color() {
   printf "%b" \
     "$(tput setaf "$2" 2>/dev/null)" \
     "$1" \
     "$(tput sgr0 2>/dev/null)"
 }
 
-function print_in_green() {
+print_in_green() {
   print_in_color "$1" 2
 }
 
-function print_in_purple() {
+print_in_purple() {
   print_in_color "$1" 5
 }
 
-function print_in_red() {
+print_in_red() {
   print_in_color "$1" 1
 }
 
-function print_in_yellow() {
+print_in_yellow() {
   print_in_color "$1" 3
 }
 
-function print_in_cyan() {
+print_in_cyan() {
   print_in_color "$1" 6
 }
 
-function print_in_blue() {
+print_in_blue() {
   print_in_color "$1" 4
 }
 
-function print_in_white() {
+print_in_white() {
   print_in_color "$1" 7
 }
 
-function print_in_black() {
+print_in_black() {
   print_in_color "$1" 8
 }
 
-function print_error() {
+print_error() {
   print_in_red "\n [✖] $1"
 }
 
-function print_success() {
+print_success() {
   print_in_green "\n [] $1"
 }
 
-function print_warning() {
+print_warning() {
   print_in_yellow "\n [!] $1"
 }
 
-function success() {
+success() {
   print_in_green "\n Done.\n"
 }
 
-function print_link() {
+print_link() {
   local rel1
   rel1=$(rel_path "$1")
   local rel2
@@ -153,7 +153,7 @@ function print_link() {
   print_in_cyan "$rel2\n"
 }
 
-function ask(){
+ask(){
   while true; do
     read -rp "$1 [Y/n]: " yn
     case $yn in
@@ -217,7 +217,7 @@ unbak(){
     done
 }
 
-function backup() {
+backup() {
   if [ -f "$1" ]; then
     time_stamp="$(date +"%m-%d-%Y.%H%M")"
     relfile="$(rel_path "$1")"
@@ -232,7 +232,7 @@ function backup() {
   fi
 }
 
-function symlink() {
+symlink() {
   local base_file
   base_file="$(realpath "$1")"
   local target_file

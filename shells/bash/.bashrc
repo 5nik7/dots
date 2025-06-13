@@ -1,4 +1,8 @@
 # shellcheck disable=SC2148
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
 # Shell Options
 shopt -s nocaseglob
 shopt -s checkwinsize
@@ -12,6 +16,7 @@ export HISTIGNORE=$'[ \t]*:&:[fb]g:exit'
 
 LANG=en_US.UTF-8
 export LANG
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 DOTS="$(dirname "$(dirname "$(dirname "$(readlink "$HOME/.bashrc")")")")"
 export DOTS
@@ -22,7 +27,15 @@ export BASHDOT
 export DOTFILES="$DOTS/configs"
 export DOTSBIN="$DOTS/bin"
 
-function src() {
+DOT_THEME="$(cat "$DOTS"/.theme)"
+export DOT_THEME
+
+LS_COLORS="$(vivid generate "$DOT_THEME")"
+export LS_COLORS
+
+export GOBIN="$HOME/go/bin"
+
+src() {
   if [ -f "$1" ]; then
     # shellcheck disable=SC1090
     source "$1"
@@ -31,21 +44,29 @@ function src() {
 
 src "$BASHDOT/utils.bash"
 src "$BASHDOT/functions.bash"
-src "$BASHDOT/aliases.bash"
+
+addir "$HOME/.local/bin"
+
+extend_path "$HOME/.local/bin"
+# extend_path "$HOME/src/nerd-fonts/bin/scripts"
+extend_path "$HOME/.local/share/nvim/mason/bin"
+prepend_path "$GOBIN"
+prepend_path "$DOTSBIN"
+prepend_path "$HOME/.cargo/bin"
+
+export SHHHH="$DOTS/secrets"
+src "$SHHHH/secrets.sh"
+src "/usr/share/nvm/init-nvm.sh"
 
 if cmd_exists fzf; then
   src "$BASHDOT/fzf.bash"
 fi
 
-extend_path "$DOTSBIN"
+if cmd_exists fzf; then
+  src "$BASHDOT/fzf.bash" && eval "$(fzf --bash)"
+fi
 
-export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-# if cmd_exists nvim; then
-# export MANPAGER='nvim +Man! +"set nocul" +"set noshowcmd" +"set noruler" +"set noshowmode" +"set laststatus=0" +"set showtabline=0" +"set nonumber"'
-# fi
-
-function is_droid() {
+is_droid() {
   [[ -d "$HOME/.termux" ]] &>/dev/null
   return $?
 }
@@ -54,20 +75,33 @@ if is_droid; then
   src "$BASHDOT/droid.bash"
 fi
 
-# eval "$(dircolors -b /etc/DIR_COLORS)"
+if [ -f /etc/wsl.conf ]; then
+  src "$BASHDOT/wsl.bash"
+fi
 
-# set bell-style none
+src "$BASHDOT/aliases.bash"
 
-# 33 is yellow, 32 is green, 31 is red, 36 is cyan, 34 is blue, 35 is magenta, 37 is white, 30 is black, 39 is default
-# export TITLEPREFIX='BASH'
-# export PS1='\[\033]0;$TITLEPREFIX: $PWD\007\]\n\[\033[32m\]\u@\h \[\033[34m\]\w\[\033[30m\]`__git_ps1`\[\033[0m\]\n\]\[\033[39m\] '
+set bell-style none
 
 if cmd_exists starship; then
-  eval "$(starship init bash)"
+  eval "$(starship init zsh)"
+fi
+
+if cmd_exists direnv; then
+  eval "$(direnv hook zsh)"
 fi
 
 if cmd_exists zoxide; then
-  eval "$(zoxide init bash)"
+  eval "$(zoxide init zsh)"
   alias cd='z'
 fi
+
+if cmd_exists batpipe; then
+    eval "$(batpipe)"
+fi
+
+if cmd_exists batman; then
+  eval "$(batman --export-env)"
+fi
+
 eval "$(gh copilot alias -- bash)"

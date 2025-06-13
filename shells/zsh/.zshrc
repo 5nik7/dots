@@ -10,23 +10,24 @@ export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
 export ZFUNC=~/.zfunc
 export DOTSBIN="$DOTS/bin"
-export backups="$HOME/.backups"
+export BASHDOT="$SHELLS/bash"
+export DOTFILES="$DOTS/configs"
 
-export DOT_THEME="$(cat $DOTS/.theme)"
+export DOT_THEME="$(cat "$DOTS"/.theme)"
 
-export LS_COLORS="$(vivid generate $DOT_THEME)"
+export LS_COLORS="$(vivid generate "$DOT_THEME")"
 
 export GOBIN="$HOME/go/bin"
 
 fpath+=("$ZFUNC" "${fpath[@]}")
 
-function zource() {
+zource() {
   if [ -f "$1" ]; then
     source "$1"
   fi
 }
 
-function zieces() {
+zieces() {
   zfile="$ZSHDOTS/$1.zsh"
   if [ -f "$zfile" ]; then
     source "$zfile"
@@ -40,7 +41,6 @@ zieces 'completions'
 zieces 'plugins'
 
 addir "$HOME/.local/bin"
-addir "$backups"
 
 extend_path "$HOME/.local/bin"
 # extend_path "$HOME/src/nerd-fonts/bin/scripts"
@@ -54,7 +54,7 @@ zource "$SHHHH/secrets.sh"
 zource "/usr/share/nvm/init-nvm.sh"
 
 if cmd_exists fzf; then
-  zieces 'fzf' && source <(fzf --zsh)
+  zieces 'fzf' && eval "$(fzf --zsh)"
 fi
 
 if is_droid; then

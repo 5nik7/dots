@@ -1,7 +1,7 @@
 if is_droid; then
-  preview_pos='bottom:hidden:50%'
+  preview_pos='bottom:hidden:50%:border-top'
   else
-  preview_pos='right:hidden:50%'
+  preview_pos='right:hidden:50%:border-left'
 fi
 
 if cmd_exists fd; then
@@ -10,42 +10,38 @@ fi
 
 # --preview-label=' PREVIEW ' \
 # --border-label=' FILES ' \
-export FZF_DEFAULT_OPTS="--style full \
---height ~90% \
---border sharp \
---input-border sharp \
---list-border sharp \
+export FZF_DEFAULT_OPTS="--style minimal \
 --layout reverse \
---info right \
+--height ~90% \
+--min-height 10+ \
+--border none \
+--info hidden \
 --prompt '> ' \
---pointer '┃' \
+--pointer '' \
 --marker '│' \
---separator '──' \
---scrollbar '│' \
---preview-window='border-sharp' \
+--no-separator \
+--no-scrollbar \
 --preview-window='$preview_pos' \
---tabstop=2 \
 --bind='Ctrl-X:toggle-preview' \
 --preview 'fzf-preview.sh {}'"
 
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
-bg+:0,\
+bg+:-1,\
 bg:-1,\
 preview-bg:-1,\
 selected-bg:0,\
-fg:7,\
+fg:15,\
 fg+:6,\
 hl:7:underline,\
 hl+:10:underline,\
-header:3,\
-info:8,\
-query:13,\
+info:0,\
+query:7,\
 gutter:-1,\
-pointer:6,\
-marker:14,\
-prompt:2,\
-spinner:4,\
-label:7,\
+pointer:14,\
+marker:3,\
+prompt:8,\
+spinner:8,\
+label:78,\
 preview-label:0,\
 separator:0,\
 border:0,\
