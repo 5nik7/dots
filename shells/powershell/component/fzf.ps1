@@ -1,5 +1,7 @@
 . "$Env:DOTCACHE\wal\wal.ps1"
 
+$env:FZF_DEFAULT_OPTS = ''
+
 function FuzzyOpts {
   param (
     [switch]$d,
@@ -9,9 +11,10 @@ function FuzzyOpts {
     [string]$listlabel,
     [string]$headerlabel
   )
+  $env:FZF_DEFAULT_OPTS = ''
 
-  $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`" --tabstop=2"
-  $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`" --tabstop=2"
+  # $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`""
+  # $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`""
 
   if ($d) {
     $Env:FZF_DEFAULT_COMMAND = 'fd --type d --strip-cwd-prefix --hidden --exclude .git'
@@ -23,73 +26,60 @@ function FuzzyOpts {
   }
   try {
 
-    class FzfSymbolOpts {
-      [bool]$enabled
-      [string]$symbol
-    }
-
     $fzfOptions = @{
-      style         = 'full'
-      padding       = 0
-      margin        = 0
-      ansi          = $true
+      style         = 'default'
       layout        = 'reverse'
-      multi         = $true
-      height        = '90%'
-      minheight     = 20
-      tabstop       = 2
-      border        = 'sharp'
-      listborder    = 'sharp'
-      inputborder   = 'sharp'
-      info          = 'inline'
-      previewwindow = 'right:65%:hidden,border-sharp'
-      delimiter     = ':'
-      prompt        = @{ symbol = '> ' }
-      pointer       = @{ symbol = '┃' }
-      marker        = @{ symbol = '│' }
-      separator     = [FzfSymbolOpts]@{
-        enabled = $false
-        symbol  = '-'
+      height        = '~100%'
+      minheight     = '10+'
+      border        = 'none'
+      previewwindow = 'right:70%:hidden'
+      prompt        = @{
+        symbol = '> '
       }
-      scrollbar     = [FzfSymbolOpts]@{
-        enabled = $false
-        symbol  = '│'
+      pointer       = @{
+        symbol = ''
+      }
+      marker        = @{
+        symbol = '┃'
       }
     }
 
     $colorOptions = @{
-      'fg'             = $Flavor.Overlay1.Hex()
-      'hl'             = $Flavor.Overlay2.Hex() + ':underline'
+      'fg'             = $Flavor.Overlay2.Hex()
+      'hl'             = $Flavor.Subtext0.Hex() + ':underline'
       'fg+'            = $Flavor.Teal.Hex()
       'hl+'            = $Flavor.Green.Hex() + ':underline'
-      'bg'             = '-1'
-      'bg+'            = '-1'
-      'preview-bg'     = $Flavor.Base.Hex()
-      'list-bg'        = $Flavor.Base.Hex()
-      'input-bg'       = $Flavor.Base.Hex()
+      'bg'             = 'transparent'
+      'bg+'            = 'transparent'
+      'preview-bg'     = 'transparent'
+      'list-bg'        = 'transparent'
+      'input-bg'       = 'transparent'
       'preview-border' = $Flavor.Surface0.Hex()
       'list-border'    = $Flavor.Surface0.Hex()
       'border'         = $Flavor.Surface0.Hex()
       'input-border'   = $Flavor.Surface1.Hex()
-      'pointer'        = $Flavor.Teal.Hex()
+      'pointer'        = $Flavor.Mantle.Hex()
       'label'          = $Flavor.Surface2.Hex()
-      'header'         = '8'
-      'gutter'         = $Flavor.Base.Hex()
-      'marker'         = '14'
-      'spinner'        = '8'
+      'gutter'         = 'transparent'
+      'marker'         = 14
+      'spinner'        = 8
       'query'          = $Flavor.Text.Hex()
       'info'           = $Flavor.Surface1.Hex()
       'prompt'         = $Flavor.Surface1.Hex()
       'preview-label'  = $Flavor.Surface0.Hex()
       'selected-bg'    = $Flavor.Mantle.Hex()
-      'separator'      = $Flavor.Surface0.Hex()
     }
 
     $keybindsOptions = @{
       'ctrl-x' = 'toggle-preview'
     }
 
-    $colorString = ($colorOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
+    $colorString = ($colorOptions.GetEnumerator() | ForEach-Object {
+        if ($_.Value -eq 'transparent') {
+          $_.Value = '-1'
+        }
+        "$($_.Key):$($_.Value)"
+      }) -join ','
     $colorArg = "--color=$colorString"
 
     $bindString = ($keybindsOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
@@ -109,17 +99,14 @@ function FuzzyOpts {
         else {
           $_.Key
         }
-        if ($_.Value -is [bool]) {
-          '--{0}' -f $key
-        }
-        elseif ($_.Value -is [FzfSymbolOpts] -and $_.Value.enabled -eq $false) {
+        if ($_.Value.enabled -eq $false) {
           '--no-{0}' -f $key
         }
-        elseif ($_.Value.symbol) {
+        if ($_.Value.symbol) {
           "--{0}='{1}'" -f $key, $_.Value.symbol
         }
         else {
-          '--{0}={1}' -f $key, $_.Value
+          "--{0}='{1}'" -f $key, $_.Value
         }
       }) -join ' '
 
@@ -140,18 +127,13 @@ function FuzzyOpts {
       $FZF_DEFAULT_OPTS += " --header-label=' $headerlabel '"
     }
     $env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
-    $env:_FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
   }
   catch {
     Write-Host "Error: $_"
   }
 }
 
-function FuzzyOptsDefaults {
-  FuzzyOpts -previewlabel 'PREVIEW'
-}
-
-FuzzyOptsDefaults
+FuzzyOpts
 
 function fzh {
 

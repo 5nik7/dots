@@ -122,37 +122,6 @@ function Remove-Path {
   }
 }
 
-# Initial GitHub.com connectivity check with 1 second timeout
-$global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet
-
-$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
-function Update-PowerShell {
-  try {
-    Write-Host 'Checking for PowerShell updates...' -ForegroundColor Cyan
-    $updateNeeded = $false
-    $currentVersion = $PSVersionTable.PSVersion.ToString()
-    $gitHubApiUrl = 'https://api.github.com/repos/PowerShell/PowerShell/releases/latest'
-    $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
-    $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
-    if ($currentVersion -lt $latestVersion) {
-      $updateNeeded = $true
-    }
-
-    if ($updateNeeded) {
-      Write-Host 'Updating PowerShell...' -ForegroundColor Yellow
-      Start-Process powershell.exe -ArgumentList '-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements' -Wait -NoNewWindow
-      Write-Host 'PowerShell has been updated. Please restart your shell to reflect changes' -ForegroundColor Magenta
-    }
-    else {
-      Write-Host 'Your PowerShell is up to date.' -ForegroundColor Green
-    }
-  }
-  catch {
-    Write-Error "Failed to update PowerShell. Error: $_"
-  }
-}
-
 function Clear-Cache {
   # add clear cache logic here
   Write-Host 'Clearing cache...' -ForegroundColor Cyan
@@ -176,33 +145,29 @@ function Clear-Cache {
   Write-Host 'Cache clearing completed.' -ForegroundColor Green
 }
 
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+function prompt {
+  if ($isAdmin) { '[' + (Get-Location) + '] # ' } else { '[' + (Get-Location) + '] $ ' }
+}
+$adminSuffix = if ($isAdmin) { ' [ADMIN]' } else { '' }
+$Host.UI.RawUI.WindowTitle = "$adminSuffix PowerShell {0}" -f $PSVersionTable.PSVersion.ToString()
+
 function Test-CommandExists {
   param($command)
   $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
   return $exists
 }
 # Editor Configuration
-$EDITOR = if (Test-CommandExists nvim) {
-  'nvim'
-}
-elseif (Test-CommandExists code) {
-  'code'
-}
-elseif (Test-CommandExists vim) {
-  'vim'
-}
-elseif (Test-CommandExists vi) {
-  'vi'
-}
-else {
-  'notepad'
-}
+$EDITOR = if (Test-CommandExists code) { 'code' }
+elseif (Test-CommandExists nvim) { 'nvim' }
+elseif (Test-CommandExists vim) { 'vim' }
+elseif (Test-CommandExists vi) { 'vi' }
+else { 'notepad' }
 $env:EDITOR = $EDITOR
 function Edit-Item {
   param (
     [string]$Path = $PWD
   )
-
   if ($Path) {
     & $env:EDITOR $Path
   }
@@ -212,6 +177,9 @@ function Edit-Item {
 }
 Set-Alias -Name edit -Value Edit-Item
 Set-Alias -Name e -Value Edit-Item
+
+function Edit-Profile { & $env:EDITOR $PROFILE.CurrentUserAllHosts }
+Set-Alias -Name ep -Value Edit-Profile
 
 if (Test-CommandExists yazi) {
   function y {
@@ -226,27 +194,48 @@ if (Test-CommandExists yazi) {
   Set-Alias -Name d -Value y
 }
 
-function mdat($1) {
-  rich -y -a square -S black -e -d 1 --rst --csv --theme catppuccin-mocha -m $1
+function Get-PubIP { (Invoke-WebRequest http://ifconfig.me/ip).Content }
+
+function winutil { Invoke-RestMethod https://christitus.com/win | Invoke-Expression }
+
+
+function trash($path) {
+  $fullPath = (Resolve-Path -Path $path).Path
+
+  if (Test-Path $fullPath) {
+    $item = Get-Item $fullPath
+
+    if ($item.PSIsContainer) {
+      # Handle directory
+      $parentPath = $item.Parent.FullName
+    }
+    else {
+      # Handle file
+      $parentPath = $item.DirectoryName
+    }
+
+    $shell = New-Object -ComObject 'Shell.Application'
+    $shellItem = $shell.NameSpace($parentPath).ParseName($item.Name)
+
+    if ($item) {
+      $shellItem.InvokeVerb('delete')
+      Write-Host "Item '$fullPath' has been moved to the Recycle Bin."
+    }
+    else {
+      Write-Host "Error: Could not find the item '$fullPath' to trash."
+    }
+  }
+  else {
+    Write-Host "Error: Item '$fullPath' does not exist."
+  }
 }
 
 # Clipboard Utilities
-function cpy {
-  Set-Clipboard $args[0]
-}
+function cpy { Set-Clipboard $args[0] }
 
-function pst {
-  Get-Clipboard
-}
+function pst { Get-Clipboard }
 
-function touch($file) {
-  '' | Out-File $file -Encoding ASCII
-}
-
-# Network Utilities
-function Get-PubIP {
-  (Invoke-WebRequest http://ifconfig.me/ip).Content
-}
+function touch($file) { '' | Out-File $file -Encoding ASCII -Force }
 
 function sed($file, $find, $replace) {
   (Get-Content $file).replace("$find", $replace) | Set-Content $file
@@ -264,9 +253,15 @@ function pkill($name) {
   Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
 }
 
-function pgrep($name) {
-  Get-Process $name
+function grep($regex, $dir) {
+  if ( $dir ) {
+    Get-ChildItem $dir | select-string $regex
+    return
+  }
+  $input | select-string $regex
 }
+
+function pgrep($name) { Get-Process $name }
 
 function head {
   param($Path, $n = 10)
@@ -278,22 +273,23 @@ function tail {
   Get-Content $Path -Tail $n -Wait:$f
 }
 
-function df {
-  get-volume
-}
+function df { get-volume }
 # Directory Management
 function mkcd {
   param($dir) mkdir $dir -Force; Set-Location $dir
 }
 
-function sysinfo {
-  Get-ComputerInfo
-}
+function sysinfo { Get-ComputerInfo }
 
 function unzip ($file) {
   Write-Output('Extracting', $file, 'to', $pwd)
   $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
   Expand-Archive -Path $fullFile -DestinationPath $pwd
+}
+
+function docs {
+  $docs = if (([Environment]::GetFolderPath('MyDocuments'))) { ([Environment]::GetFolderPath('MyDocuments')) } else { $HOME + '\Documents' }
+  Set-Location -Path $docs
 }
 
 function dd {
@@ -325,10 +321,6 @@ function gup {
   else {
     Write-Error 'This directory does not contain a .git directory'
   }
-}
-
-function q {
-  Exit
 }
 
 function Find-File {
@@ -401,74 +393,23 @@ function Show-Command {
   Get-Command $Name | Select-Object -ExpandProperty Definition
 }
 
-function Get-ContentPretty {
-  <#
-    .SYNOPSIS
-        Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
-        Alias: ls, ll, la, l
-    #>
-  [CmdletBinding()]
-  param (
-    [Parameter(Mandatory = $true, Position = 1)]
-    [string]$file
-  )
+function mdat($1) { ich -y -a square -S black -e -d 1 --rst --csv --theme catppuccin-mocha -m $1 }
 
-  linebreak
-  & bat -- $file
-  linebreak
-}
+function q { Exit }
 
-# Navigation Shortcuts
-function docs {
-  $docs = if (([Environment]::GetFolderPath('MyDocuments'))) {
-    ([Environment]::GetFolderPath('MyDocuments'))
-  }
-  else {
-    $HOME + '\Documents'
-  }
-  Set-Location -Path $docs
-}
+function .d { Set-Location "$env:DOTS" }
 
-function .d {
-  Set-Location "$env:DOTS"
-}
-
-function cdev {
-  Set-Location "$env:DEV"
-}
+function cdev { Set-Location "$env:DEV" }
 Set-Alias -Name dev -Value cdev
 
-function Edit-Profile {
-  & $env:EDITOR $PROFILE
-}
+function .. { Set-Location '..' }
+function ... { Set-Location '...' }
+function .... { Set-Location '....' }
+function ..... { Set-Location '.....' }
 
-function .. {
-  Set-Location '..'
-}
-function ... {
-  Set-Location '...'
-}
-function .... {
-  Set-Location '....'
-}
-function ..... {
-  Set-Location '.....'
-}
+function Get-Functions { Get-ChildItem function:\ }
 
-function Get-Functions {
-  Get-ChildItem function:\
-}
-
-function winutil {
-  if ($isAdmin) {
-    Invoke-RestMethod 'https://christitus.com/win' | Invoke-Expression
-  }
-  else {
-    Write-Host 'You need to run this command as an administrator.' -ForegroundColor Red
-    return
-  }
-  # Invoke-RestMethod 'https://github.com/ChrisTitusTech/winutil/releases/latest/download/winutil.ps1' | Invoke-Expression
-}
+function find-ln { Get-ChildItem | Where-Object { $_.Attributes -match 'ReparsePoint' } }
 
 function nerdfonts {
   param (
@@ -478,6 +419,92 @@ function nerdfonts {
   & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
 }
 
-function find-ln {
-  Get-ChildItem | Where-Object { $_.Attributes -match 'ReparsePoint' }
+function Show-Help {
+  $helpText = @"
+$($PSStyle.Foreground.Cyan)PowerShell Profile Help$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
+
+$($PSStyle.Foreground.Green)Update-Profile$($PSStyle.Reset) - Checks for profile updates from a remote repository and updates if necessary.
+
+$($PSStyle.Foreground.Green)Update-PowerShell$($PSStyle.Reset) - Checks for the latest PowerShell release and updates if a new version is available.
+
+$($PSStyle.Foreground.Green)Edit-Profile$($PSStyle.Reset) - Opens the current user's profile for editing using the configured editor.
+
+$($PSStyle.Foreground.Green)touch$($PSStyle.Reset) <file> - Creates a new empty file.
+
+$($PSStyle.Foreground.Green)ff$($PSStyle.Reset) <name> - Finds files recursively with the specified name.
+
+$($PSStyle.Foreground.Green)Get-PubIP$($PSStyle.Reset) - Retrieves the public IP address of the machine.
+
+$($PSStyle.Foreground.Green)winutil$($PSStyle.Reset) - Runs the latest WinUtil full-release script from Chris Titus Tech.
+
+$($PSStyle.Foreground.Green)winutildev$($PSStyle.Reset) - Runs the latest WinUtil pre-release script from Chris Titus Tech.
+
+$($PSStyle.Foreground.Green)uptime$($PSStyle.Reset) - Displays the system uptime.
+
+$($PSStyle.Foreground.Green)reload-profile$($PSStyle.Reset) - Reloads the current user's PowerShell profile.
+
+$($PSStyle.Foreground.Green)unzip$($PSStyle.Reset) <file> - Extracts a zip file to the current directory.
+
+$($PSStyle.Foreground.Green)hb$($PSStyle.Reset) <file> - Uploads the specified file's content to a hastebin-like service and returns the URL.
+
+$($PSStyle.Foreground.Green)grep$($PSStyle.Reset) <regex> [dir] - Searches for a regex pattern in files within the specified directory or from the pipeline input.
+
+$($PSStyle.Foreground.Green)df$($PSStyle.Reset) - Displays information about volumes.
+
+$($PSStyle.Foreground.Green)sed$($PSStyle.Reset) <file> <find> <replace> - Replaces text in a file.
+
+$($PSStyle.Foreground.Green)which$($PSStyle.Reset) <name> - Shows the path of the command.
+
+$($PSStyle.Foreground.Green)export$($PSStyle.Reset) <name> <value> - Sets an environment variable.
+
+$($PSStyle.Foreground.Green)pkill$($PSStyle.Reset) <name> - Kills processes by name.
+
+$($PSStyle.Foreground.Green)pgrep$($PSStyle.Reset) <name> - Lists processes by name.
+
+$($PSStyle.Foreground.Green)head$($PSStyle.Reset) <path> [n] - Displays the first n lines of a file (default 10).
+
+$($PSStyle.Foreground.Green)tail$($PSStyle.Reset) <path> [n] - Displays the last n lines of a file (default 10).
+
+$($PSStyle.Foreground.Green)nf$($PSStyle.Reset) <name> - Creates a new file with the specified name.
+
+$($PSStyle.Foreground.Green)mkcd$($PSStyle.Reset) <dir> - Creates and changes to a new directory.
+
+$($PSStyle.Foreground.Green)docs$($PSStyle.Reset) - Changes the current directory to the user's Documents folder.
+
+$($PSStyle.Foreground.Green)dtop$($PSStyle.Reset) - Changes the current directory to the user's Desktop folder.
+
+$($PSStyle.Foreground.Green)ep$($PSStyle.Reset) - Opens the profile for editing.
+
+$($PSStyle.Foreground.Green)k9$($PSStyle.Reset) <name> - Kills a process by name.
+
+$($PSStyle.Foreground.Green)la$($PSStyle.Reset) - Lists all files in the current directory with detailed formatting.
+
+$($PSStyle.Foreground.Green)ll$($PSStyle.Reset) - Lists all files, including hidden, in the current directory with detailed formatting.
+
+$($PSStyle.Foreground.Green)gs$($PSStyle.Reset) - Shortcut for 'git status'.
+
+$($PSStyle.Foreground.Green)ga$($PSStyle.Reset) - Shortcut for 'git add .'.
+
+$($PSStyle.Foreground.Green)gc$($PSStyle.Reset) <message> - Shortcut for 'git commit -m'.
+
+$($PSStyle.Foreground.Green)gp$($PSStyle.Reset) - Shortcut for 'git push'.
+
+$($PSStyle.Foreground.Green)g$($PSStyle.Reset) - Changes to the GitHub directory.
+
+$($PSStyle.Foreground.Green)gcom$($PSStyle.Reset) <message> - Adds all changes and commits with the specified message.
+
+$($PSStyle.Foreground.Green)lazyg$($PSStyle.Reset) <message> - Adds all changes, commits with the specified message, and pushes to the remote repository.
+
+$($PSStyle.Foreground.Green)sysinfo$($PSStyle.Reset) - Displays detailed system information.
+
+$($PSStyle.Foreground.Green)flushdns$($PSStyle.Reset) - Clears the DNS cache.
+
+$($PSStyle.Foreground.Green)cpy$($PSStyle.Reset) <text> - Copies the specified text to the clipboard.
+
+$($PSStyle.Foreground.Green)pst$($PSStyle.Reset) - Retrieves text from the clipboard.
+
+Use '$($PSStyle.Foreground.Magenta)Show-Help$($PSStyle.Reset)' to display this help message.
+"@
+  Write-Host $helpText
 }

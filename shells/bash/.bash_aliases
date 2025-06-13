@@ -1,17 +1,37 @@
-#!/usr/bin/env bash
+#! /usr/bin/env bash
 
-alias path='echo -e ${PATH//:/\\n}'
+function rlp() {
+    local current_shell=$(basename "$SHELL")
+    if [ "$current_shell" = "zsh" ]; then
+        exec zsh && clear && print_in_yellow "\n ZSH reloaded.\n\n"
+        # (toilet -f future "ZSH" && echo -e "RELOADED.") | boxes -d ansi | lolcat
+    elif [ "$current_shell" = "bash" ]; then
+        source ~/.bashrc && clear && print_in_yellow "\n Bash reloaded.\n\n"
+    else
+        print_in_red "\n Shell not supported.\n\n"
+    fi
+}
+alias rl='rlp'
 
-alias rm='rm -v'
-alias cp='cp -v'
-alias mv='mv -v'
+if [[ -r /etc/os-release ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
+  distro="${distro%% *}"
+fi
 
-alias less='less -r'                          # raw control characters
-alias whence='type -a'                        # where, of a sort
-alias grep='grep --color'                     # show differences in colour
-alias egrep='egrep --color=auto'              # show differences in colour
-alias fgrep='fgrep --color=auto'
-           # show differences in colour
+if [[ "$distro" == arch ]]; then
+  alias pacman='sudo pacman'
+  alias upd='sudo pacman -Syu --noconfirm'
+  alias paci='sudo pacman -S'
+  alias pacr='sudo pacman -R'
+fi
+
+if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
+  alias apt='sudo apt'
+  alias upd='sudo apt update && sudo apt upgrade -y'
+  alias apti='sudo apt install'
+  alias aptr='sudo apt remove'
+fi
+
 alias c='clear'
 alias q='exit'
 alias v='nvim'
@@ -28,9 +48,14 @@ alias "......"="cd ../../../../.."
 alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
-alias ".d"='cd "$DOTS" || return'
+alias ".d"="cd $DOTS"
 
 if cmd_exists eza; then
+    function l() {
+        linebreak
+        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+        linebreak
+    }
       function ll() {
         local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
         linebreak
@@ -43,30 +68,53 @@ if cmd_exists eza; then
             level=1
         fi
         linebreak
-        eza --group-directories-first --git-repos --git --icons -n --tree -L "$level"
+        eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
         linebreak
     }
-
-    alias ls='eza --icons'
-    alias l='eza -a -l --group-directories-first --git-repos --git --icons --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes'
-
-    # alias ls='ls -hF --color=tty'                 # classify files in colour
-    # alias dir='ls --color=auto --format=vertical'
-    # alias vdir='ls --color=auto --format=long'
-    # alias ll='ls -l'                              # long list
-    # alias la='ls -A'                              # all but . and ..
-    # alias l='ls -CF'                              #
+    alias ls='ls --color=auto'
 fi
 
 if cmd_exists yazi; then
     function y() {
-      local tmp
-      tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+      local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
       yazi "$@" --cwd-file="$tmp"
       if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-        builtin cd -- "$cwd" || return
+        builtin cd -- "$cwd"
       fi
       rm -f -- "$tmp"
     }
     alias d='y'
+fi
+
+if cmd_exists nvim; then
+    EDITOR='nvim'
+elif cmd_exists vim; then
+    EDITOR='vim'
+elif cmd_exists vi; then
+    EDITOR='vi'
+elif cmd_exists code; then
+    EDITOR='code'
+else
+    EDITOR='nano'
+fi
+
+export EDITOR
+export SYSTEMD_EDITOR=$EDITOR
+export VISUAL="$EDITOR"
+export EDITOR_TERM="$TERMINAL -e $EDITOR"
+
+alias edit='$EDITOR'
+alias e='$EDITOR'
+alias v='$EDITOR'
+alias vi='$EDITOR'
+alias vim='$EDITOR'
+alias sv="sudo $EDITOR"
+
+if [[ -d "$HOME/dev" ]]; then
+  export DEV="$HOME/dev"
+  alias dev="cd $DEV"
+fi
+
+if cmd_exists lazygit; then
+  alias lg='lazygit'
 fi

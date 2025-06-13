@@ -9,19 +9,9 @@ Set-Alias -Name ep -Value Edit-Profile
 Set-Alias -Name concol -Value list-console-colors
 Set-Alias -Name nf -Value powernerd -Option AllScope
 
-if (Test-CommandExists bat) {
-  Set-Alias -Name cat -Value Get-ContentPretty -Option AllScope
-}
+if (Test-CommandExists bat) { Set-Alias -Name cat -Value bat -Option AllScope }
 if (Test-CommandExists eza) {
-
   Function Get-ChildItemPretty {
-    <#
-    .SYNOPSIS
-        Runs eza with a specific set of arguments. Plus some line breaks before and after the output.
-        Alias: ls, ll, la, l
-    #>
-
-
     [CmdletBinding()]
     param (
       [Parameter(ValueFromRemainingArguments = $true)]
@@ -91,14 +81,19 @@ else {
 
 if (Test-CommandExists git) {
   Set-Alias -Name g -Value git
+  function gcl { git clone "$args" }
 }
+
 if (Test-CommandExists nvim) {
   Set-Alias -Name v -Value nvim
   Set-Alias -Name vi -Value nvim
+  Set-Alias -Name vim -Value nvim
 }
+
 if (Test-CommandExists fastfetch) {
   Set-Alias -Name fetch -Value fastfetch
 }
+
 if (Test-CommandExists lazygit) {
   Set-Alias -Name lg -Value lazygit.exe
 }

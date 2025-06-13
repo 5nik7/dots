@@ -32,14 +32,14 @@ if ($host.Name -eq 'ConsoleHost') {
     ContinuationPrompt            = '│'
     BellStyle                     = 'None'
     PredictionSource              = $VersionPredictionSource
-    EditMode                      = 'Vi'
+    EditMode                      = 'Windows' # "Vi" or "Emacs" or "Windows"
     PredictionViewStyle           = 'InlineView' # "InlineView" or "ListView"
     Colors                        = @{
       # Largely based on the Code Editor style guide
       # Emphasis, ListPrediction and ListPredictionSelected are inspired by the Catppuccin fzf theme
 
       # Powershell colours
-      ContinuationPrompt     = $Flavor.Teal.Foreground()
+      ContinuationPrompt     = $Flavor.Base.Foreground()
       Emphasis               = $Flavor.Red.Foreground()
       Selection              = $Flavor.Surface0.Background()
 
@@ -49,7 +49,7 @@ if ($host.Name -eq 'ConsoleHost') {
       ListPredictionSelected = $Flavor.Surface0.Background()
 
       # Syntax highlighting
-      Command                = $Flavor.Blue.Foreground()
+      Command                = $Flavor.Sky.Foreground()
       Comment                = $Flavor.Overlay0.Foreground()
       Default                = $Flavor.Text.Foreground()
       Error                  = $Flavor.Red.Foreground()
@@ -62,24 +62,6 @@ if ($host.Name -eq 'ConsoleHost') {
       Type                   = $Flavor.Yellow.Foreground()
       Variable               = $Flavor.Lavender.Foreground()
     }
-    # Colors                        = @{
-    #   Comment                = 'DarkGray'
-    #   Command                = 'DarkMagenta'
-    #   Emphasis               = 'Red'
-    #   Number                 = 'DarkYellow'
-    #   Member                 = 'White'
-    #   Operator               = 'Yellow'
-    #   Type                   = 'Cyan'
-    #   String                 = 'Green'
-    #   Variable               = 'DarkYellow'
-    #   Parameter              = 'Yellow'
-    #   ContinuationPrompt     = 'Black'
-    #   Default                = 'White'
-    #   InlinePrediction       = 'DarkGray'
-    #   ListPrediction         = 'DarkGray'
-    #   ListPredictionSelected = 'DarkGray'
-    #   ListPredictionTooltip  = 'DarkGray'
-    # }
   }
   Set-PSReadLineOption @PSReadLineOptions
 }
@@ -88,7 +70,15 @@ if ($host.Name -eq 'ConsoleHost') {
 Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
-Set-PSReadLineKeyHandler -Chord Enter -Function ValidateAndAcceptLine
+Set-PSReadLineKeyHandler -Chord 'Ctrl+d' -Function DeleteChar
+Set-PSReadLineKeyHandler -Chord 'Ctrl+w' -Function BackwardDeleteWord
+Set-PSReadLineKeyHandler -Chord 'Alt+d' -Function DeleteWord
+Set-PSReadLineKeyHandler -Chord 'Ctrl+LeftArrow' -Function BackwardWord
+Set-PSReadLineKeyHandler -Chord 'Ctrl+RightArrow' -Function ForwardWord
+Set-PSReadLineKeyHandler -Chord 'Ctrl+z' -Function Undo
+Set-PSReadLineKeyHandler -Chord 'Ctrl+y' -Function Redo
+
+# Set-PSReadLineKeyHandler -Chord Enter -Function ValidateAndAcceptLine
 
 Set-PSReadLineKeyHandler -Key '"', "'" `
   -BriefDescription SmartInsertQuote `
@@ -266,36 +256,36 @@ Set-PSReadLineKeyHandler -Key Backspace `
   }
 }
 
-function Remove-DuplicatePSReadlineHistory {
-  $historyPath = (Get-PSReadLineOption).HistorySavePath
+# function Remove-DuplicatePSReadlineHistory {
+#   $historyPath = (Get-PSReadLineOption).HistorySavePath
 
-  # backup
-  $directory = (Get-Item $historyPath).DirectoryName
-  $basename = (Get-Item $historyPath).Basename
-  $extension = (Get-Item $historyPath).Extension
-  $timestamp = (Get-Date).ToString('yyyy-MM-ddTHH-mm-ssZ')
+#   # backup
+#   $directory = (Get-Item $historyPath).DirectoryName
+#   $basename = (Get-Item $historyPath).Basename
+#   $extension = (Get-Item $historyPath).Extension
+#   $timestamp = (Get-Date).ToString('yyyy-MM-ddTHH-mm-ssZ')
 
-  $backupPath = "$directory\$basename-$timestamp-backup$extension"
+#   $backupPath = "$directory\$basename-$timestamp-backup$extension"
 
-  Copy-Item $historyPath $backupPath
+#   Copy-Item $historyPath $backupPath
 
-  # remove duplicate history
-  $uniqueHistory = @()
-  $history = Get-Content $historyPath
+#   # remove duplicate history
+#   $uniqueHistory = @()
+#   $history = Get-Content $historyPath
 
-  [Array]::Reverse($history)
+#   [Array]::Reverse($history)
 
-  $history | ForEach-Object {
-    if (-Not $uniqueHistory.Contains($_)) {
-      $uniqueHistory += $_
-    }
-  }
+#   $history | ForEach-Object {
+#     if (-Not $uniqueHistory.Contains($_)) {
+#       $uniqueHistory += $_
+#     }
+#   }
 
-  [Array]::Reverse($uniqueHistory)
+#   [Array]::Reverse($uniqueHistory)
 
-  Clear-Content $historyPath
+#   Clear-Content $historyPath
 
-  $uniqueHistory | Out-File -Append $historyPath
-}
+#   $uniqueHistory | Out-File -Append $historyPath
+# }
 
-Set-Alias -Name fixhistory -Value Remove-DuplicatePSReadlineHistory
+# Set-Alias -Name fixhistory -Value Remove-DuplicatePSReadlineHistory

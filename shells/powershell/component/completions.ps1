@@ -16,5 +16,3 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
   }
 }
-
-(& glow completion powershell) | Out-String | Invoke-Expression

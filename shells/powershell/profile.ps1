@@ -1,5 +1,4 @@
-using namespace System.Management.Automation
-using namespace System.Management.Automation.Language
+$global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
 
 $env:HOME = "$env:HOMEPATH"
 $DOTS = "$env:HOME\dots"
@@ -38,8 +37,6 @@ foreach ( $piece in $psource ) {
     . "$PSCOMPONENT\$piece.ps1"
   }
 }
-
-Invoke-Expression (& { ( zoxide init powershell --cmd cd | Out-String ) })
 
 if ($env:isReloading) {
   Clear-Host
