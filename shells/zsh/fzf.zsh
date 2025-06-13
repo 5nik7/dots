@@ -37,7 +37,7 @@ hl+:10:underline,\
 info:0,\
 query:7,\
 gutter:-1,\
-pointer:14,\
+pointer:0,\
 marker:3,\
 prompt:8,\
 spinner:8,\

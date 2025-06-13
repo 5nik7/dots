@@ -58,7 +58,7 @@ function FuzzyOpts {
       'list-border'    = $Flavor.Surface0.Hex()
       'border'         = $Flavor.Surface0.Hex()
       'input-border'   = $Flavor.Surface1.Hex()
-      'pointer'        = $Flavor.Sapphire.Hex()
+      'pointer'        = $Flavor.Base.Hex()
       'label'          = $Flavor.Surface2.Hex()
       'gutter'         = 'transparent'
       'marker'         = $Flavor.Yellow.Hex()
