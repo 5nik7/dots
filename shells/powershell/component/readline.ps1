@@ -33,7 +33,7 @@ if ($host.Name -eq 'ConsoleHost') {
     BellStyle                     = 'None'
     PredictionSource              = $VersionPredictionSource
     EditMode                      = 'Vi'
-    PredictionViewStyle           = 'InlineView' # or "ListView"
+    PredictionViewStyle           = 'InlineView' # "InlineView" or "ListView"
     Colors                        = @{
       # Largely based on the Code Editor style guide
       # Emphasis, ListPrediction and ListPredictionSelected are inspired by the Catppuccin fzf theme
