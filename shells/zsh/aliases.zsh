@@ -1,4 +1,4 @@
-rlp() {
+function rlp() {
     local current_shell=$(basename "$SHELL")
     if [ "$current_shell" = "zsh" ]; then
         exec zsh && clear && print_in_yellow "\n ZSH reloaded.\n\n"

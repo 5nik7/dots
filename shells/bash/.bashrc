@@ -35,7 +35,7 @@ export LS_COLORS
 
 export GOBIN="$HOME/go/bin"
 
-src() {
+function src() {
   if [ -f "$1" ]; then
     # shellcheck disable=SC1090
     source "$1"
@@ -66,7 +66,7 @@ if cmd_exists fzf; then
   src "$BASHDOT/fzf.bash" && eval "$(fzf --bash)"
 fi
 
-is_droid() {
+function is_droid() {
   [[ -d "$HOME/.termux" ]] &>/dev/null
   return $?
 }
@@ -84,15 +84,15 @@ src "$BASHDOT/aliases.bash"
 set bell-style none
 
 if cmd_exists starship; then
-  eval "$(starship init zsh)"
+  eval "$(starship init bash)"
 fi
 
 if cmd_exists direnv; then
-  eval "$(direnv hook zsh)"
+  eval "$(direnv hook bash)"
 fi
 
 if cmd_exists zoxide; then
-  eval "$(zoxide init zsh)"
+  eval "$(zoxide init bash)"
   alias cd='z'
 fi
 

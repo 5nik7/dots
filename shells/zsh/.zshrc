@@ -21,13 +21,13 @@ export GOBIN="$HOME/go/bin"
 
 fpath+=("$ZFUNC" "${fpath[@]}")
 
-zource() {
+function zource() {
   if [ -f "$1" ]; then
     source "$1"
   fi
 }
 
-zieces() {
+function zieces() {
   zfile="$ZSHDOTS/$1.zsh"
   if [ -f "$zfile" ]; then
     source "$zfile"
