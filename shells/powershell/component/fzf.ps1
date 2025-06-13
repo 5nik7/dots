@@ -81,10 +81,10 @@ function FuzzyOpts {
         }
         "$($_.Key):$($_.Value)"
       }) -join ','
-    $colorArg = "--color=$colorString"
+    $colorArg = "--color $colorString"
 
     $bindString = ($keybindsOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
-    $keybindsArg = "--bind=$bindString"
+    $keybindsArg = "--bind $bindString"
 
     $key_mapping = @{
       minheight     = 'min-height'

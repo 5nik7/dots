@@ -1,4 +1,4 @@
-extend_path() {
+function extend_path() {
 	[[ -d "$1" ]] || return
 
 	if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
@@ -6,7 +6,7 @@ extend_path() {
 	fi
 }
 
-prepend_path() {
+function prepend_path() {
 	[[ -d "$1" ]] || return
 
 	if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
@@ -14,7 +14,7 @@ prepend_path() {
 	fi
 }
 
-gup() {
+function gup() {
   if [ -d .git ]; then
   commitDate=$(date +"%m-%d-%Y %H:%M")
     echo -e ""
@@ -27,15 +27,15 @@ gup() {
   fi
 }
 
-aptget_check () {
+function aptget_check () {
   apt-get -s upgrade | grep -P "\d\K upgraded"
 }
 
-fzpi() {
+function fzpi() {
     pacman -Slq | fzf -q "$1" -m --preview 'pacman -Si {1}'| xargs -ro pacman -S
 }
 
-fzpr() {
+function fzpr() {
     pacman -Qq | fzf -q "$1" -m --preview 'pacman -Qi {1}' | xargs -ro pacman -Rns
 }
 
@@ -43,13 +43,13 @@ function google {
     open "https://www.google.com/search?q=$*"
 }
 
-femoji() {
+function femoji() {
     emojis=$(curl -sSL 'https://git.io/JXXO7')
     selected_emoji=$(echo $emojis | fzf)
     echo $selected_emoji
 }
 # ex - archive extractor
-ex() {
+function ex() {
     if [ -f "$1" ]; then
         case $1 in
         *.tar.bz2) tar xjf "$1" ;;
@@ -70,7 +70,7 @@ ex() {
     fi
 }
 
-showcolors256() {
+function showcolors256() {
     local row col blockrow blockcol red green blue
     local showcolor=_showcolor256_${1:-bg}
     local white="\033[1;37m"
@@ -115,14 +115,14 @@ showcolors256() {
     echo
 }
 
-_showcolor256_fg() {
+function _showcolor256_fg() {
     local code=$( printf %03d $1 )
     echo -ne "\033[38;5;${code}m"
     echo -nE " $code "
     echo -ne "\033[0m"
 }
 
-_showcolor256_bg() {
+function _showcolor256_bg() {
     if (( $2 % 2 == 0 )); then
         echo -ne "\033[1;37m"
     else
@@ -134,7 +134,7 @@ _showcolor256_bg() {
     echo -ne "\033[0m"
 }
 
-showcolors16() {
+function showcolors16() {
     _showcolor "\033[0;30m" "\033[1;30m" "\033[40m" "\033[100m"
     _showcolor "\033[0;31m" "\033[1;31m" "\033[41m" "\033[101m"
     _showcolor "\033[0;32m" "\033[1;32m" "\033[42m" "\033[102m"
@@ -145,7 +145,7 @@ showcolors16() {
     _showcolor "\033[0;37m" "\033[1;37m" "\033[47m" "\033[107m"
 }
 
-_showcolor() {
+function _showcolor() {
     for code in $@; do
         echo -ne "$code"
         echo -nE "   $code"
@@ -154,7 +154,7 @@ _showcolor() {
     echo
 }
 
-256color() {
+function 256color() {
 	for code in {000..255}; do
 		print -nP -- "%F{$code}$code %f";
 		if [ $((${code} % 16)) -eq 15 ]; then
@@ -168,11 +168,11 @@ _showcolor() {
 # 	builtin cd "$@" && ls_eza
 # }
 
-fixpath() {
+function fixpath() {
 	PATH=$(echo $(sed 's/:/\n/g' <<<$PATH | sort | uniq) | sed -e 's/\s/':'/g')
 }
 
-cleanvim() {
+function cleanvim() {
 	rm -rf ~/.config/nvim
 	rm -rf ~/.local/share/nvim
 	rm -rf ~/.local/state/nvim
@@ -194,20 +194,7 @@ function ssh-key-info {
    ssh-keygen -l -f "$HOME/.ssh/${1:-id_rsa}"
 }
 
-fzf-history() {
-  RBUFFER="$(history -n 0 | fzf)"
-}
-zle -N fzf-history fzf-history
-
-function prepend-sudo {
-  if [[ $BUFFER != "sudo "* ]]; then
-    BUFFER="sudo $BUFFER"; CURSOR+=5
-  fi
-}
-zle -N prepend-sudo
-bindkey -M vicmd s prepend-sudo
-
-_smooth_fzf() {
+function _smooth_fzf() {
   local fname
   local current_dir="$PWD"
   cd "${XDG_CONFIG_HOME:-~/.config}"
