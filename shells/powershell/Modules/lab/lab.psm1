@@ -244,6 +244,7 @@ function lab {
     #>
   param (
     [switch]$help,
+    [switch]$fzf,
     [switch]$dot,
     [switch]$new,
     [switch]$edit,
@@ -351,8 +352,7 @@ function lab {
   }
 
   if ($cat) {
-    $command = if (Test-CommandExists Get-ContentPretty) { 'Get-ContentPretty' }
-    elseif (Test-CommandExists bat) { 'bat' }
+    $command = if (Test-CommandExists bat) { 'bat' }
     elseif (Test-CommandExists cat) { 'cat' }
     else {
       Write-Err -box 'No command found to display file contents' White

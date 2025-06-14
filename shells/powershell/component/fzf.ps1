@@ -2,9 +2,12 @@
 
 $env:FZF_DEFAULT_OPTS = ''
 
-function FuzzyOpts {
+function Set-FuzzyOpts {
   param (
     [switch]$d,
+    [hashtable]$opts,
+    [hashtable]$colors,
+    [hashtable]$keybinds,
     [string]$previewlabel,
     [string]$borderlabel,
     [string]$inputlabel,
@@ -25,30 +28,29 @@ function FuzzyOpts {
     $previewString = $Env:FZF_FILE_OPTS
   }
   try {
-
-    $fzfOptions = @{
+    # Default opts
+    $defaultOpts = @{
       style         = 'minimal'
       layout        = 'reverse'
       height        = '~90%'
       margin        = '1'
       border        = 'none'
       previewwindow = 'right:70%:hidden'
-      prompt        = @{
-        symbol = '> '
-      }
-      pointer       = @{
-        symbol = ''
-      }
-      marker        = @{
-        symbol = '┃'
-      }
+      prompt        = @{ symbol = '> ' }
+      pointer       = @{ symbol = '' }
+      marker        = @{ symbol = '┃' }
     }
+    if ($opts) {
+      foreach ($k in $opts.Keys) { $defaultOpts[$k] = $opts[$k] }
+    }
+    $opts = $defaultOpts
 
-    $colorOptions = @{
+    # Default colors
+    $defaultColors = @{
       'fg'             = $Flavor.Overlay2.Hex()
-      'hl'             = $Flavor.Subtext0.Hex() + ':underline'
-      'fg+'            = $Flavor.Teal.Hex()
-      'hl+'            = $Flavor.Green.Hex() + ':underline'
+      'hl'             = ($Flavor.Subtext0.Hex() + ':underline')
+      'fg+'            = ($Flavor.Teal.Hex() + ':underline:reverse')
+      'hl+'            = ($Flavor.Green.Hex() + ':underline:reverse')
       'bg'             = 'transparent'
       'bg+'            = 'transparent'
       'preview-bg'     = 'transparent'
@@ -70,12 +72,21 @@ function FuzzyOpts {
       'preview-label'  = $Flavor.Surface0.Hex()
       'selected-bg'    = $Flavor.Mantle.Hex()
     }
+    if ($colors) {
+      foreach ($k in $colors.Keys) { $defaultColors[$k] = $colors[$k] }
+    }
+    $colors = $defaultColors
 
-    $keybindsOptions = @{
+    # Default keybinds
+    $defaultKeybinds = @{
       'ctrl-x' = 'toggle-preview'
     }
+    if ($keybinds) {
+      foreach ($k in $keybinds.Keys) { $defaultKeybinds[$k] = $keybinds[$k] }
+    }
+    $keybinds = $defaultKeybinds
 
-    $colorString = ($colorOptions.GetEnumerator() | ForEach-Object {
+    $colorString = ($colors.GetEnumerator() | ForEach-Object {
         if ($_.Value -eq 'transparent') {
           $_.Value = '-1'
         }
@@ -83,7 +94,7 @@ function FuzzyOpts {
       }) -join ','
     $colorArg = "--color $colorString"
 
-    $bindString = ($keybindsOptions.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
+    $bindString = ($keybinds.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
     $keybindsArg = "--bind $bindString"
 
     $key_mapping = @{
@@ -93,7 +104,7 @@ function FuzzyOpts {
       previewwindow = 'preview-window'
     }
 
-    $fzfString = ($fzfOptions.GetEnumerator() | ForEach-Object {
+    $optsString = ($opts.GetEnumerator() | ForEach-Object {
         $key = if ($key_mapping.ContainsKey($_.Key)) {
           $key_mapping[$_.Key]
         }
@@ -103,7 +114,7 @@ function FuzzyOpts {
         if ($_.Value.enabled -eq $false) {
           '--no-{0}' -f $key
         }
-        if ($_.Value.symbol) {
+        elseif ($_.Value.symbol) {
           "--{0} '{1}'" -f $key, $_.Value.symbol
         }
         else {
@@ -111,7 +122,7 @@ function FuzzyOpts {
         }
       }) -join ' '
 
-    $FZF_DEFAULT_OPTS = $fzfString + ' ' + $colorArg + ' ' + $keybindsArg + ' ' + $previewString
+    $FZF_DEFAULT_OPTS = $optsString + ' ' + $colorArg + ' ' + $keybindsArg + ' ' + $previewString
     if ($previewlabel) {
       $FZF_DEFAULT_OPTS += " --preview-label=' $previewlabel '"
     }
@@ -134,9 +145,46 @@ function FuzzyOpts {
   }
 }
 
-FuzzyOpts
+# Example usage:
+# Set-FuzzyColor 'fg+' ($Flavor.Lavender.Hex() + ':underline:reverse')
+function Set-FuzzyColor {
+  param (
+    [Parameter(Mandatory)]
+    [string]$Key,
+    [Parameter(Mandatory)]
+    [string]$Value
+  )
+  $fuzzyOpts = @{ colors = @{ $Key = $Value } }
+  Set-FuzzyOpts @fuzzyOpts
+}
 
+# Example usage:
+#   Set-FuzzyKeybind 'ctrl-y' 'accept'
+function Set-FuzzyKeybind {
+  param (
+    [Parameter(Mandatory)]
+    [string]$Key,
+    [Parameter(Mandatory)]
+    [string]$Value
+  )
+  $fuzzyOpts = @{ keybinds = @{ $Key = $Value } }
+  Set-FuzzyOpts @fuzzyOpts
+}
+
+function Set-FuzzyOpt {
+  param (
+    [Parameter(Mandatory)]
+    [string]$Key,
+    [Parameter(Mandatory)]
+    [object]$Value
+  )
+  $fuzzyOpts = @{ opts = @{ $Key = $Value } }
+  Set-FuzzyOpts @fuzzyOpts
+}
+
+Set-FuzzyOpts
 
 if (Test-CommandExists fzf) {
   Import-ScoopModule -Name 'PsFzf'
+  Set-PsFzfOption -TabExpansion
 }
