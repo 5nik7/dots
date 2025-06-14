@@ -43,10 +43,10 @@
   "controlStyles[15].styles[0]": "Background:=<ImageBrush Stretch=\"Uniform\" ImageSource=\"$startico\" />",
   "controlStyles[16].target": "Taskbar.ExperienceToggleButton#LaunchListButton[AutomationProperties.AutomationId=StartButton] > Taskbar.TaskListButtonPanel > Microsoft.UI.Xaml.Controls.AnimatedVisualPlayer#Icon",
   "controlStyles[16].styles[0]": "Visibility=Collapsed",
-  "controlStyles[15].styles[1]": "Height=22",
-  "controlStyles[15].styles[2]": "Width=30",
-  "styleConstants[0]": "TransBrush=<WindhawkBlur BlurAmount=\"18\" TintColor=\"#181825\"/>\"",
-  "styleConstants[1]": "BGBrush=<AcrylicBrush TintColor=\"#181825\" TintOpacity=\"0.9\" FallbackColor=\"#1E1E2E\" />",
+  "controlStyles[15].styles[1]": "Height=24",
+  "controlStyles[15].styles[2]": "Width=34",
+  "styleConstants[0]": "TransBrush=<WindhawkBlur BlurAmount=\"18\" TintColor=\"#28293632\"/>\"",
+  "styleConstants[1]": "BGBrush=<AcrylicBrush TintColor=\"#282936\" TintOpacity=\"0.9\" FallbackColor=\"#282936\" />",
   "controlStyles[17].target": "Taskbar.TaskListLabeledButtonPanel@CommonStates > Rectangle#RunningIndicator",
   "controlStyles[17].styles[0]": "Fill=$overlay0",
   "controlStyles[17].styles[1]": "Fill@ActiveNormal=$teal",
@@ -68,6 +68,5 @@
   "styleConstants[8]": "subtext0=#a6adc8",
   "styleConstants[9]": "overlay1=#7f849c",
   "controlStyles[19].styles[2]": "FontSize=14",
-  "styleConstants[10]": "startico=C:\\icons\\start.png",
-  "resourceVariables[0].variableKey": ""
+  "styleConstants[10]": "startico=C:\\icons\\start.png"
 }
