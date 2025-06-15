@@ -393,7 +393,8 @@ function Show-Command {
   Get-Command $Name | Select-Object -ExpandProperty Definition
 }
 
-function mdat($1) { ich -y -a square -S black -e -d 1 --rst --csv --theme catppuccin-mocha -m $1 }
+function mdat($1) { rich --text-full -y -a square -S black -e -d 1 --theme catppuccin-mocha -m $1 }
+function mdpre($1) { rich --text-full -y -e -d 1 --theme catppuccin-mocha -m $1 }
 
 function q { Exit }
 
