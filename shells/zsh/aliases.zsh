@@ -1,14 +1,6 @@
 function rlp() {
-    local current_shell=$(basename "$SHELL")
-    if [ "$current_shell" = "zsh" ]; then
-        exec zsh && clear && print_in_yellow "\n ZSH reloaded.\n\n"
-        # (toilet -f future "ZSH" && echo -e "RELOADED.") | boxes -d ansi | lolcat
-    elif [ "$current_shell" = "bash" ]; then
-        source ~/.bashrc && clear && print_in_yellow "\n Bash reloaded.\n\n"
-    else
-        print_in_red "\n Shell not supported.\n\n"
-    fi
-}
+  source "$HOME/.zshrc" && clear && print_in_yellow "\n ZSH reloaded.\n"
+ }
 alias rl='rlp'
 
 if [[ -r /etc/os-release ]]; then
@@ -69,7 +61,7 @@ if cmd_exists eza; then
         eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
         linebreak
     }
-    alias ls='ls --color=auto'
+    alias ls='eza --icons --group-directories-first'
 fi
 
 if cmd_exists yazi; then

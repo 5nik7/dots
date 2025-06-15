@@ -1,13 +1,5 @@
 function rlp() {
-    local current_shell=$(basename "$SHELL")
-    if [ "$current_shell" = "zsh" ]; then
-        exec zsh && clear && print_in_yellow "\n ZSH reloaded.\n\n"
-        # (toilet -f future "ZSH" && echo -e "RELOADED.") | boxes -d ansi | lolcat
-    elif [ "$current_shell" = "bash" ]; then
-        source ~/.bashrc && clear && print_in_yellow "\n Bash reloaded.\n\n"
-    else
-        print_in_red "\n Shell not supported.\n\n"
-    fi
+  source "$HOME/.bashrc" && clear && print_in_yellow "\n BASH reloaded.\n"
 }
 alias rl='rlp'
 
@@ -49,50 +41,50 @@ alias "........"="cd ../../../../../../.."
 alias ".d"="cd $DOTS"
 
 if cmd_exists eza; then
-    function l() {
-        linebreak
-        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
-        linebreak
-    }
-      function ll() {
-        local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-        linebreak
-        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style "$timestyle"
-        linebreak
-    }
-      function lt() {
-        local level="$1"
-        if [ "$1" = "" ]; then
-            level=1
-        fi
-        linebreak
-        eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
-        linebreak
-    }
-    alias ls='ls --color=auto'
+  function l() {
+    linebreak
+    eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+    linebreak
+  }
+  function ll() {
+    local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
+    linebreak
+    eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style "$timestyle"
+    linebreak
+  }
+  function lt() {
+    local level="$1"
+    if [ "$1" = "" ]; then
+      level=1
+    fi
+    linebreak
+    eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
+    linebreak
+  }
+  alias ls='ls --color=auto'
 fi
 
 if cmd_exists yazi; then
   function y() {
     local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
-	  yazi "$@" --cwd-file="$tmp"
-  	IFS= read -r -d '' cwd < "$tmp"
-  	[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
-  	rm -f -- "$tmp"
-}
-    alias d='y'
+    yazi "$@" --cwd-file="$tmp"
+    IFS= read -r -d '' cwd <"$tmp"
+    [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+    rm -f -- "$tmp"
+  }
+  alias d='y'
 fi
 
 if cmd_exists nvim; then
-    EDITOR='nvim'
+  EDITOR='nvim'
 elif cmd_exists vim; then
-    EDITOR='vim'
+  EDITOR='vim'
 elif cmd_exists vi; then
-    EDITOR='vi'
+  EDITOR='vi'
 elif cmd_exists code; then
-    EDITOR='code'
+  EDITOR='code'
 else
-    EDITOR='nano'
+  EDITOR='nano'
 fi
 
 export EDITOR
