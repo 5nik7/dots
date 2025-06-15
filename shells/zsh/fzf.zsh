@@ -1,3 +1,8 @@
+green="#a6e3a1"
+text="#cdd6f4"
+overlay1="#7f849c"
+mantle="#181825"
+
 if is_droid; then
   preview_pos='bottom:hidden:50%:border-top'
   else
@@ -26,13 +31,13 @@ export FZF_DEFAULT_OPTS="--style minimal \
 --preview 'fzf-preview.sh {}'"
 
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
-bg+:-1,\
+bg+:$mantle,\
 bg:-1,\
 preview-bg:-1,\
 selected-bg:0,\
-fg:#7f849c,\
-fg+:#cdd6f4:bold,\
-hl:#a6e3a1:bold:underline,\
+fg:$overlay1,\
+fg+:$text:bold,\
+hl:$green:bold:underline,\
 hl+:bold:reverse,\
 info:0,\
 query:7,\
