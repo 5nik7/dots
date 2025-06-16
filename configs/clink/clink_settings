@@ -14,7 +14,7 @@ clink.logo = none
 
 # name: Replaces the console title prefix when elevated
 # type: string
-cmd.admin_title_prefix = #
+cmd.admin_title_prefix = ADMIN
 
 # name: Pressing Ctrl-D exits session
 # type: boolean
@@ -223,7 +223,7 @@ lua.traceback_on_error = True
 
 # name: Coloring rules for completions
 # type: string
-match.coloring_rules = 
+match.coloring_rules =
 
 # name: Expand envvars when completing
 # type: boolean
@@ -238,7 +238,9 @@ match.substring = True
 # options: off,always,same_dir
 prompt.transient = always
 
-
+# name: Esc sends a literal escape character
+# type: boolean
+terminal.raw_esc = True
 
 color.envvars = bold
 

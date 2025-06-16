@@ -30,7 +30,7 @@ configs/clink/clink.log
 configs/yasb/yasb.log
 configs/yasb/yasb.log.*
 #llazy-lock.json
-config/nvim/lazy-lock.json
+configs/nvim/lazy-lock.json
 
 # Build and Release Folders
 bin-debug/
