@@ -40,7 +40,7 @@ core:
     foreground: blue
 
   symlink:
-    foreground: sky
+    foreground: teal
 
   multi_hard_link: {}
 
@@ -85,7 +85,7 @@ core:
   sticky: {}
 
   executable_file:
-    foreground: red
+    foreground: green
     font-style: bold
 
 text:
@@ -110,13 +110,13 @@ markup:
 
 programming:
   source:
-    foreground: green
+    foreground: mauve
 
   tooling:
     foreground: teal
 
     continuous-integration:
-      foreground: green
+      foreground: mauve
 
 media:
   foreground: flamingo
@@ -129,7 +129,7 @@ archives:
   font-style: underline
 
 executable:
-  foreground: red
+  foreground: green
   font-style: bold
 
 unimportant:
