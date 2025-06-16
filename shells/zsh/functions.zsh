@@ -215,3 +215,14 @@ function _smooth_fzf() {
   $EDITOR "$fname"
   cd "$current_dir"
 }
+
+if cmd_exists rich; then
+  function mdat() {
+    rich --text-full -y -a square -S black -e -d 1 --theme catppuccin-mocha -m $1
+  }
+
+  function mdpre() {
+    rich --text-full -y -e -d 1 --theme catppuccin-mocha -m $1
+  }
+fi
+
