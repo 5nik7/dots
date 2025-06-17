@@ -4,6 +4,8 @@ if cmd_exists jq; then
   export location="${latitude},${longitude}"
 fi
 
+alias open="termux-open"
+
 export DROIDOTS="$DOTS/androidots"
 
 prepend_path "$DROIDOTS/bin"
