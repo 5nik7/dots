@@ -24,7 +24,6 @@ fi
 
 alias c='clear'
 alias q='exit'
-alias v='nvim'
 
 alias g='git'
 
@@ -42,24 +41,44 @@ alias ".d"="cd $DOTS"
 
 if cmd_exists eza; then
     function l() {
-        linebreak
-        eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
-        linebreak
+      linebreak
+      eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+      linebreak
     }
-      function ll() {
-        local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-        linebreak
-        eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style "$timestyle"
-        linebreak
+    function ll() {
+      # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
+      linebreak
+      eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user
+      linebreak
     }
-      function lt() {
-        local level="$1"
-        if [ "$1" = "" ]; then
-            level=1
-        fi
-        linebreak
-        eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
-        linebreak
+    function lt() {
+      local level="$1"
+      if [ "$1" = "" ]; then
+          level=1
+      fi
+      linebreak
+      eza --group-directories-first --git-repos --git --icons -n --tree -L "$level"
+      linebreak
+    }
+    function la() {
+      linebreak
+      eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+      linebreak
+    }
+    function lla() {
+      # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
+      linebreak
+      eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style "$timestyle"
+      linebreak
+    }
+    function lta() {
+      local level="$1"
+      if [ "$1" = "" ]; then
+          level=1
+      fi
+      linebreak
+      eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
+      linebreak
     }
     alias eza='eza --icons'
     alias ls='eza'

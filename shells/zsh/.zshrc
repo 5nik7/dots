@@ -36,6 +36,7 @@ function zieces() {
 
 zieces 'zutil'
 zieces 'functions'
+zieces 'colors'
 zieces 'options'
 zieces 'completions'
 zieces 'plugins'
