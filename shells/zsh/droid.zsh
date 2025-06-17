@@ -1,3 +1,9 @@
+if cmd_exists jq; then
+  export latitude="$(termux-location | jq '.["latitude"]')"
+  export longitude="$(termux-location | jq '.["longitude"]')"
+  export location="${latitude},${longitude}"
+fi
+
 export DROIDOTS="$DOTS/androidots"
 
 prepend_path "$DROIDOTS/bin"
