@@ -6,10 +6,10 @@ if [ $THEME = 'catppuccin' ]; then
 fi
 
 if cmd_exists catppuccin; then
-  mocha() {
+  function mocha() {
     catppuccin mocha "$@"
   }
-  flavor() {
+  function flavor() {
     catppuccin "$FLAVOR" "$@"
   }
 fi

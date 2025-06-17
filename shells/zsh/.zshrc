@@ -36,7 +36,6 @@ function zieces() {
 
 zieces 'zutil'
 zieces 'functions'
-zieces 'colors'
 zieces 'options'
 zieces 'completions'
 zieces 'plugins'
@@ -67,6 +66,7 @@ if [ -f /etc/wsl.conf ]; then
 fi
 
 zieces 'aliases'
+zieces 'colors'
 
 if cmd_exists starship; then
   eval "$(starship init zsh)"
