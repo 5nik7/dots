@@ -1,7 +1,9 @@
 if cmd_exists jq; then
-  export latitude="$(termux-location | jq '.["latitude"]')"
-  export longitude="$(termux-location | jq '.["longitude"]')"
-  export location="${latitude},${longitude}"
+  location() {
+  latitude="$(termux-location | jq '.["latitude"]')"
+  longitude="$(termux-location | jq '.["longitude"]')"
+  echo "${latitude},${longitude}"
+  }
 fi
 
 alias open="termux-open"
