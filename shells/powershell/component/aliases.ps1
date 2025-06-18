@@ -30,7 +30,6 @@ if (Test-CommandExists eza) {
     Write-Host ' '
     return
   }
-
   function l {
     [CmdletBinding()]
     param (
@@ -40,11 +39,10 @@ if (Test-CommandExists eza) {
     if ($Path -eq '') {
       $Path = (Get-Location).ToString()
     }
-    $Arguments += ( '-a', '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' ) + $Path
+    $Arguments += ( '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' ) + $Path
     Get-ChildItemPretty @Arguments
     return
   }
-
   function lt {
     [CmdletBinding()]
     param (
@@ -54,25 +52,32 @@ if (Test-CommandExists eza) {
     if ($Path -eq '') {
       $Path = (Get-Location).ToString()
     }
-    $Arguments += ( '-a', '--no-permissions', '--no-filesize', '--no-time', '--no-user', '-n', '--tree', '-L', $L ) + $Path
+    $Arguments += ( '--no-permissions', '--no-filesize', '--no-time', '--no-user', '-n', '--tree', '-L', $L ) + $Path
     Get-ChildItemPretty @Arguments
     return
   }
-
   function ll {
     [CmdletBinding()]
     param (
       [string]$Path
     )
-    $timestyle = '+󰨲 %Y-%m-%d -  %H:%M'
+    # $timestyle = '+󰨲 %Y-%m-%d -  %H:%M'
     if ($Path -eq '') {
       $Path = (Get-Location).ToString()
     }
-    $Arguments += ( '-a', '-l', '--flags', '-h', '--time-style', $timestyle ) + $Path
+    $Arguments += ( '-l', '--flags', '-h' ) + $Path
     Get-ChildItemPretty @Arguments
     return
   }
-
+  function la {
+    l -a $args
+  }
+  function lla {
+    ll -a $args
+  }
+  function lta {
+    lt -a $args
+  }
   Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
 }
 else {

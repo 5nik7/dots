@@ -1,10 +1,3 @@
-$env:box = $true
-if ($env:box -eq $true) { $Global:box = $true }
-else { $Global:box = $false }
-
-if ($env:padding) { $Global:padout = $env:padding }
-else { $Global:padout = 3 }
-
 $util = @{
   colors = @{
     Black       = 0
@@ -252,27 +245,27 @@ function Write-Warn {
   wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
 }
 
-function ask {
-  param([string]$message = '')
+# function ask {
+#   param([string]$message = '')
 
-  $message += ' ' + '[Y/n]'
+#   $message += ' ' + '[Y/n]'
 
-  # $configData = (Get-Content -Path $terminalProfile | ConvertFrom-Json) | Where-Object { $_ -ne $null }
-  try {
-    $choice = Read-Host $message
-    if ($choice -eq 'y' -or $choice -eq 'Y' -or $choice -eq 'yes' -or $choice -eq 'Yes' -or $choice -eq 'YES' -or $choice -eq '') {
-      return $true
-    }
-    elseif ($choice -eq 'n' -or $choice -eq 'N' -or $choice -eq 'no' -or $choice -eq 'No' -or $choice -eq 'NO') {
-      return $false
-    }
-    else {
-      Write-Err "Invalid choice. Please enter 'y' or 'n'."
-      return $null
-    }
-  }
-  catch {
-    Write-Error "Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
-    return $null
-  }
-}
+#   # $configData = (Get-Content -Path $terminalProfile | ConvertFrom-Json) | Where-Object { $_ -ne $null }
+#   try {
+#     $choice = Read-Host $message
+#     if ($choice -eq 'y' -or $choice -eq 'Y' -or $choice -eq 'yes' -or $choice -eq 'Yes' -or $choice -eq 'YES' -or $choice -eq '') {
+#       return $true
+#     }
+#     elseif ($choice -eq 'n' -or $choice -eq 'N' -or $choice -eq 'no' -or $choice -eq 'No' -or $choice -eq 'NO') {
+#       return $false
+#     }
+#     else {
+#       Write-Err "Invalid choice. Please enter 'y' or 'n'."
+#       return $null
+#     }
+#   }
+#   catch {
+#     Write-Error "Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
+#     return $null
+#   }
+# }

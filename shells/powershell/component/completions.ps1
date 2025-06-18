@@ -16,3 +16,6 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
   }
 }
+
+Import-ScoopModule -Name 'scoop-completion'
+Import-Module -Name 'git-completion'

@@ -2,7 +2,7 @@ Import-PSMod -Local -Name 'catppuccin'
 $Flavor = $Catppuccin['Mocha']
 $Global:Flavor = $Flavor
 
-Import-PSMod -Name 'CompletionPredictor'
+Import-Module -Name 'CompletionPredictor'
 
 if ($PSEdition -eq 'Core') {
   $PSStyle.Formatting.Debug = $Flavor.Sky.Foreground()

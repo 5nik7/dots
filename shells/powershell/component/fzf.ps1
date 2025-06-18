@@ -1,7 +1,3 @@
-. "$Env:DOTCACHE\wal\wal.ps1"
-
-$env:FZF_DEFAULT_OPTS = ''
-
 function Set-FuzzyOpts {
   param (
     [switch]$d,
