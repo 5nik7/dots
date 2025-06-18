@@ -1,7 +1,4 @@
-green="#a6e3a1"
-text="#cdd6f4"
-overlay1="#7f849c"
-mantle="#181825"
+transparent='-1'
 
 if is_droid; then
   preview_pos='bottom:hidden:50%:border-top'
@@ -21,7 +18,7 @@ export FZF_DEFAULT_OPTS="--style minimal \
 --min-height 10+ \
 --border none \
 --info hidden \
---prompt '> ' \
+--prompt ' > ' \
 --pointer '' \
 --marker '│' \
 --no-separator \
@@ -31,25 +28,25 @@ export FZF_DEFAULT_OPTS="--style minimal \
 --preview 'fzf-preview.sh {}'"
 
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
-bg+:$mantle,\
-bg:-1,\
-preview-bg:-1,\
-selected-bg:0,\
-fg:$overlay1,\
-fg+:$text:bold:reverse,\
-hl:$green:underline,\
-hl+:bold:underline:reverse,\
-info:0,\
-query:7,\
-gutter:-1,\
-pointer:0:dim,\
-marker:3,\
-prompt:8,\
-spinner:8,\
-label:78,\
-preview-label:0,\
-separator:0,\
-border:0,\
-list-border:0,\
-preview-border:0,\
-input-border:8"
+bg+:$(flavor mantle),\
+bg:$transparent,\
+preview-bg:$transparent,\
+selected-bg:$(flavor mantle),\
+fg:$(flavor subtext0),\
+fg+:$(flavor lavender):bold:reverse,\
+hl:$(flavor green):underline,\
+hl+:$(flavor green):bold:underline:reverse,\
+info:$(flavor surface1),\
+query:$(flavor text),\
+gutter:$transparent,\
+pointer:$(flavor base),\
+marker:$(flavor yellow),\
+prompt:$(flavor surface1),\
+spinner:$(flavor surface1),\
+label:$(flavor surface2),\
+preview-label:$(flavor surface0),\
+separator:$(flavor base),\
+border:$(flavor surface0),\
+list-border:$(flavor surface0),\
+preview-border:$(flavor surface0),\
+input-border:$(flavor surface0)"
