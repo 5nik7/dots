@@ -1,5 +1,3 @@
-$global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
-
 $env:HOME = "$env:HOMEPATH"
 $DOTS = "$env:HOME\dots"
 $env:DOTS = $DOTS

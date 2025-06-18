@@ -2,8 +2,6 @@ Import-PSMod -Local -Name 'catppuccin'
 $Flavor = $Catppuccin['Mocha']
 $Global:Flavor = $Flavor
 
-Import-Module -Name 'CompletionPredictor'
-
 if ($PSEdition -eq 'Core') {
   $PSStyle.Formatting.Debug = $Flavor.Sky.Foreground()
   $PSStyle.Formatting.Error = $Flavor.Red.Foreground()
@@ -12,6 +10,7 @@ if ($PSEdition -eq 'Core') {
   $PSStyle.Formatting.TableHeader = $Flavor.Rosewater.Foreground()
   $PSStyle.Formatting.Verbose = $Flavor.Yellow.Foreground()
   $PSStyle.Formatting.Warning = $Flavor.Peach.Foreground()
+  Import-Module -Name 'CompletionPredictor'
 }
 
 if ($host.Name -eq 'ConsoleHost') {
