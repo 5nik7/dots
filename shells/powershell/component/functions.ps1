@@ -59,12 +59,12 @@ function Import-PSMod {
   if ($Local) {
     $LocalModule = "$env:PSMODS\$Name"
     if (Test-Path $LocalModule) {
-      Import-Module -Name $LocalModule
+      Import-Module -Name $LocalModule -Global
     }
   }
   else {
     if (Get-Module $Name -ListAvailable) {
-      Import-Module -Name $Name
+      Import-Module -Name $Name -Global
     }
     else {
       Install-Module -Name $Name -Scope CurrentUser -Force
@@ -78,7 +78,7 @@ function Import-ScoopModule {
     [Parameter()]
     $Name
   )
-  Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\$Name"
+  Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\$Name" -Global
 }
 
 function Add-Path {
@@ -200,6 +200,14 @@ function winutil { Invoke-RestMethod https://christitus.com/win | Invoke-Express
 
 
 function trash($path) {
+  $trashicon = ''
+  if (-not $path) {
+    Write-Host -foregroundColor Blue -NoNewline "$trashicon Usage: "
+    Write-Host -foregroundColor Cyan -NoNewline "trash "
+    Write-Host -foregroundColor White "<path-to-file-or-directory>"
+    return
+  }
+
   $fullPath = (Resolve-Path -Path $path).Path
 
   if (Test-Path $fullPath) {
@@ -219,7 +227,7 @@ function trash($path) {
 
     if ($item) {
       $shellItem.InvokeVerb('delete')
-      Write-Host "Item '$fullPath' has been moved to the Recycle Bin."
+      Write-Host -foregroundColor Green "$trashicon Item '$fullPath' has been moved to the Recycle Bin."
     }
     else {
       Write-Host "Error: Could not find the item '$fullPath' to trash."
@@ -418,4 +426,219 @@ function nerdfonts {
     $OptionalParameters
   )
   & ([scriptblock]::Create((Invoke-WebRequest 'https://to.loredo.me/Install-NerdFont.ps1').Content)) @OptionalParameters
+}
+
+function Remove-DuplicatePSReadlineHistory {
+  $historyPath = (Get-PSReadLineOption).HistorySavePath
+
+  # backup
+  $directory = (Get-Item $historyPath).DirectoryName
+  $basename = (Get-Item $historyPath).Basename
+  $extension = (Get-Item $historyPath).Extension
+  $timestamp = (Get-Date).ToString('yyyy-MM-ddTHH-mm-ssZ')
+
+  $backupPath = "$directory\$basename-$timestamp-backup$extension"
+
+  Copy-Item $historyPath $backupPath
+
+  # remove duplicate history
+  $uniqueHistory = @()
+  $history = Get-Content $historyPath
+
+  [Array]::Reverse($history)
+
+  $history | ForEach-Object {
+    if (-Not $uniqueHistory.Contains($_)) {
+      $uniqueHistory += $_
+    }
+  }
+
+  [Array]::Reverse($uniqueHistory)
+
+  Clear-Content $historyPath
+
+  $uniqueHistory | Out-File -Append $historyPath
+}
+
+Set-Alias -Name fixhistory -Value Remove-DuplicatePSReadlineHistory
+
+function Set-FuzzyOpts {
+  param (
+    [switch]$d,
+    [hashtable]$opts,
+    [hashtable]$colors,
+    [hashtable]$keybinds,
+    [string]$previewlabel,
+    [string]$borderlabel,
+    [string]$inputlabel,
+    [string]$listlabel,
+    [string]$headerlabel
+  )
+  $env:FZF_DEFAULT_OPTS = ''
+
+  $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`""
+  $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`""
+
+  if ($d) {
+    $Env:FZF_DEFAULT_COMMAND = 'fd --type d --strip-cwd-prefix --hidden --exclude .git'
+    $previewString = $Env:FZF_DIRECTORY_OPTS
+  }
+  else {
+    $Env:FZF_DEFAULT_COMMAND = 'fd --type f --strip-cwd-prefix --hidden --exclude .git'
+    $previewString = $Env:FZF_FILE_OPTS
+  }
+  try {
+    # Default opts
+    $defaultOpts = @{
+      style         = 'minimal'
+      layout        = 'reverse'
+      height        = '~90%'
+      margin        = '0'
+      border        = 'none'
+      previewwindow = 'right:70%:hidden'
+      prompt        = @{ symbol = ' > ' }
+      pointer       = @{ symbol = '' }
+      marker        = @{ symbol = '┃' }
+    }
+    if ($opts) {
+      foreach ($k in $opts.Keys) { $defaultOpts[$k] = $opts[$k] }
+    }
+    $opts = $defaultOpts
+
+    # Default colors
+    $defaultColors = @{
+      'fg'             = $Flavor.Subtext0.Hex()
+      'hl'             = ($Flavor.Green.Hex() + ':underline')
+      'fg+'            = ($Flavor.Lavender.Hex() + ':bold:reverse')
+      'hl+'            = ($Flavor.Green.Hex() + ':bold:underline:reverse')
+      'bg'             = 'transparent'
+      'bg+'            = 'transparent'
+      'preview-bg'     = 'transparent'
+      'list-bg'        = 'transparent'
+      'input-bg'       = 'transparent'
+      'preview-border' = $Flavor.Surface0.Hex()
+      'list-border'    = $Flavor.Surface0.Hex()
+      'border'         = $Flavor.Surface0.Hex()
+      'input-border'   = $Flavor.Surface1.Hex()
+      'pointer'        = $Flavor.Base.Hex()
+      'label'          = $Flavor.Surface2.Hex()
+      'gutter'         = 'transparent'
+      'marker'         = $Flavor.Yellow.Hex()
+      'spinner'        = $Flavor.Surface1.Hex()
+      'separator'      = $Flavor.Base.Hex()
+      'query'          = $Flavor.Text.Hex()
+      'info'           = $Flavor.Surface1.Hex()
+      'prompt'         = $Flavor.Surface1.Hex()
+      'preview-label'  = $Flavor.Surface0.Hex()
+      'selected-bg'    = $Flavor.Mantle.Hex()
+    }
+    if ($colors) {
+      foreach ($k in $colors.Keys) { $defaultColors[$k] = $colors[$k] }
+    }
+    $colors = $defaultColors
+
+    # Default keybinds
+    $defaultKeybinds = @{
+      'ctrl-x' = 'toggle-preview'
+    }
+    if ($keybinds) {
+      foreach ($k in $keybinds.Keys) { $defaultKeybinds[$k] = $keybinds[$k] }
+    }
+    $keybinds = $defaultKeybinds
+
+    $colorString = ($colors.GetEnumerator() | ForEach-Object {
+        if ($_.Value -eq 'transparent') {
+          $_.Value = '-1'
+        }
+        "$($_.Key):$($_.Value)"
+      }) -join ','
+    $colorArg = "--color $colorString"
+
+    $bindString = ($keybinds.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
+    $keybindsArg = "--bind $bindString"
+
+    $key_mapping = @{
+      minheight     = 'min-height'
+      listborder    = 'list-border'
+      inputborder   = 'input-border'
+      previewwindow = 'preview-window'
+    }
+
+    $optsString = ($opts.GetEnumerator() | ForEach-Object {
+        $key = if ($key_mapping.ContainsKey($_.Key)) {
+          $key_mapping[$_.Key]
+        }
+        else {
+          $_.Key
+        }
+        if ($_.Value.enabled -eq $false) {
+          '--no-{0}' -f $key
+        }
+        elseif ($_.Value.symbol) {
+          "--{0} '{1}'" -f $key, $_.Value.symbol
+        }
+        else {
+          '--{0} {1}' -f $key, $_.Value
+        }
+      }) -join ' '
+
+    $FZF_DEFAULT_OPTS = $optsString + ' ' + $colorArg + ' ' + $keybindsArg + ' ' + $previewString
+    if ($previewlabel) {
+      $FZF_DEFAULT_OPTS += " --preview-label=' $previewlabel '"
+    }
+    if ($borderlabel) {
+      $FZF_DEFAULT_OPTS += " --border-label=' $borderlabel '"
+    }
+    if ($inputlabel) {
+      $FZF_DEFAULT_OPTS += " --input-label=' $inputlabel '"
+    }
+    if ($listlabel) {
+      $FZF_DEFAULT_OPTS += " --list-label=' $listlabel '"
+    }
+    if ($headerlabel) {
+      $FZF_DEFAULT_OPTS += " --header-label=' $headerlabel '"
+    }
+    $env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
+  }
+  catch {
+    Write-Host "Error: $_"
+  }
+}
+
+
+# Example usage:
+# Set-FuzzyColor 'fg+' ($Flavor.Lavender.Hex() + ':underline:reverse')
+function Set-FuzzyColor {
+  param (
+    [Parameter(Mandatory)]
+    [string]$Key,
+    [Parameter(Mandatory)]
+    [string]$Value
+  )
+  $fuzzyOpts = @{ colors = @{ $Key = $Value } }
+  Set-FuzzyOpts @fuzzyOpts
+}
+
+# Example usage:
+#   Set-FuzzyKeybind 'ctrl-y' 'accept'
+function Set-FuzzyKeybind {
+  param (
+    [Parameter(Mandatory)]
+    [string]$Key,
+    [Parameter(Mandatory)]
+    [string]$Value
+  )
+  $fuzzyOpts = @{ keybinds = @{ $Key = $Value } }
+  Set-FuzzyOpts @fuzzyOpts
+}
+
+function Set-FuzzyOpt {
+  param (
+    [Parameter(Mandatory)]
+    [string]$Key,
+    [Parameter(Mandatory)]
+    [object]$Value
+  )
+  $fuzzyOpts = @{ opts = @{ $Key = $Value } }
+  Set-FuzzyOpts @fuzzyOpts
 }

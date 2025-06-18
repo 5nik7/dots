@@ -36,9 +36,9 @@ bg:-1,\
 preview-bg:-1,\
 selected-bg:0,\
 fg:$overlay1,\
-fg+:$text:bold,\
-hl:$green:bold:underline,\
-hl+:bold:reverse,\
+fg+:$text:bold:reverse,\
+hl:$green:underline,\
+hl+:bold:underline:reverse,\
 info:0,\
 query:7,\
 gutter:-1,\

@@ -56,6 +56,19 @@ if (Test-CommandExists eza) {
     Get-ChildItemPretty @Arguments
     return
   }
+  function lta {
+    [CmdletBinding()]
+    param (
+      [int]$L = 1,
+      [string]$Path
+    )
+    if ($Path -eq '') {
+      $Path = (Get-Location).ToString()
+    }
+    $Arguments += ( '-a', '--no-permissions', '--no-filesize', '--no-time', '--no-user', '-n', '--tree', '-L', $L ) + $Path
+    Get-ChildItemPretty @Arguments
+    return
+  }
   function ll {
     [CmdletBinding()]
     param (
@@ -70,34 +83,33 @@ if (Test-CommandExists eza) {
     return
   }
   function la {
-    l --all @Arguments
-    function lla {
-      ll --all @Arguments
-    }
-    function lta {
-      lt --all @Arguments
-    }
-    Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
+    & eza -la --no-permissions --no-filesize --no-time --no-user --group-directories-first --git-repos --git --hyperlink --follow-symlinks --no-quotes --icons $args
   }
-  else {
-    Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
+  function lla {
+    & eza -la --flags --group-directories-first --git-repos --git --hyperlink --follow-symlinks --no-quotes --icons $args
   }
 
-  if (Test-CommandExists git) {
-    Set-Alias -Name g -Value git
-    function gcl { git clone "$args" }
-  }
+  Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
+}
+else {
+  Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
+}
 
-  if (Test-CommandExists nvim) {
-    Set-Alias -Name v -Value nvim
-    Set-Alias -Name vi -Value nvim
-    Set-Alias -Name vim -Value nvim
-  }
+if (Test-CommandExists git) {
+  Set-Alias -Name g -Value git
+  function gcl { git clone "$args" }
+}
 
-  if (Test-CommandExists fastfetch) {
-    Set-Alias -Name fetch -Value fastfetch
-  }
+if (Test-CommandExists nvim) {
+  Set-Alias -Name v -Value nvim
+  Set-Alias -Name vi -Value nvim
+  Set-Alias -Name vim -Value nvim
+}
 
-  if (Test-CommandExists lazygit) {
-    Set-Alias -Name lg -Value lazygit.exe
-  }
+if (Test-CommandExists fastfetch) {
+  Set-Alias -Name fetch -Value fastfetch
+}
+
+if (Test-CommandExists lazygit) {
+  Set-Alias -Name lg -Value lazygit.exe
+}

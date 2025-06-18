@@ -210,8 +210,7 @@ function Invoke-PowerNerd {
   }
 
   if ($fzf) {
-    FuzzyOpts
-    $env_FZF_DEFAULT_OPTS += ' ' + "--border-label=`" NERDFONT GLYPHS `" --tabstop=2 --color=16"
+    Set-FuzzyOpts -borderlabel "NERDFONT GLYPHS" -opts @{ border = 'sharp' }
 
     $find = $args
     $selected = ListNerdFonts | Where-Object { $_ -like "*$find*" } | fzf
