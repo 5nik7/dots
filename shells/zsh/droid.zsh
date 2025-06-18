@@ -1,5 +1,5 @@
 if cmd_exists jq; then
-  location() {
+  function location() {
   latitude="$(termux-location | jq '.["latitude"]')"
   longitude="$(termux-location | jq '.["longitude"]')"
   echo "${latitude},${longitude}"
@@ -28,6 +28,14 @@ alias upd="pkg update && pkg upgrade -y"
 
 function google {
   termux-open-url "https://www.google.com/search?q=$*"
+}
+
+function www {
+  if [[ $1 == https://* ]]; then
+    termux-open-url "$1"
+  else
+    termux-open-url "https://$1"
+  fi
 }
 
 if is_installed perl; then
