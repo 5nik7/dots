@@ -70,35 +70,34 @@ if (Test-CommandExists eza) {
     return
   }
   function la {
-    l -a $args
+    l --all @Arguments
+    function lla {
+      ll --all @Arguments
+    }
+    function lta {
+      lt --all @Arguments
+    }
+    Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
   }
-  function lla {
-    ll -a $args
+  else {
+    Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
   }
-  function lta {
-    lt -a $args
+
+  if (Test-CommandExists git) {
+    Set-Alias -Name g -Value git
+    function gcl { git clone "$args" }
   }
-  Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
-}
-else {
-  Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
-}
 
-if (Test-CommandExists git) {
-  Set-Alias -Name g -Value git
-  function gcl { git clone "$args" }
-}
+  if (Test-CommandExists nvim) {
+    Set-Alias -Name v -Value nvim
+    Set-Alias -Name vi -Value nvim
+    Set-Alias -Name vim -Value nvim
+  }
 
-if (Test-CommandExists nvim) {
-  Set-Alias -Name v -Value nvim
-  Set-Alias -Name vi -Value nvim
-  Set-Alias -Name vim -Value nvim
-}
+  if (Test-CommandExists fastfetch) {
+    Set-Alias -Name fetch -Value fastfetch
+  }
 
-if (Test-CommandExists fastfetch) {
-  Set-Alias -Name fetch -Value fastfetch
-}
-
-if (Test-CommandExists lazygit) {
-  Set-Alias -Name lg -Value lazygit.exe
-}
+  if (Test-CommandExists lazygit) {
+    Set-Alias -Name lg -Value lazygit.exe
+  }
