@@ -158,7 +158,7 @@ deleted = "×${count}"
 renamed = "»${count}"
 modified = "!${count}"
 staged = "+${count}"
-untracked = "?${count}"
+# untracked = "?${count}"
 ignore_submodules = false
 disabled = false
 
