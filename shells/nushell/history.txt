@@ -242,3 +242,9 @@ d
 ..
 l
 ls
+c
+l
+config nu
+l
+la
+c

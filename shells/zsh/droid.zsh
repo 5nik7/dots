@@ -14,17 +14,7 @@ prepend_path "$DROIDOTS/bin"
 
 alias upd="pkg update && pkg upgrade -y"
 
-# function btry {
-#   BATTERY=$(termux-battery-status | grep percentage | awk '{print $2}' | tr -d ',')
-#   if (( $BATTERY >= 60 ));then
-#     batcol=2
-#   elif (( $BATTERY >= 30 ));then
-#     batcol=3
-#   else
-#     batcol=1
-#   fi
-#   printcol "$BATTERY%\n" $batcol
-# }
+alias ".dd"="cd $DROIDOTS"
 
 function google {
   termux-open-url "https://www.google.com/search?q=$*"

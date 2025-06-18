@@ -29,6 +29,14 @@ alias g='git'
 
 alias path='echo $PATH | tr ":" "\n"'
 
+alias rmr='rm -fvr'
+
+function mkcd() {
+  mkdir -p "$1" && cd "$1"
+}
+
+alias h='history'
+
 alias ".."="cd .."
 alias "..."="cd ../.."
 alias "...."="cd ../../.."
