@@ -52,15 +52,27 @@ base = "#1e1e2e"
 mantle = "#181825"
 crust = "#11111b"
 
+color_ok = 'bright-green'
+color_danger = 'bright-red'
+color_caution = 'bright-yellow'
+
+color_username = ''
+color_directory = 'blue'
+color_env = 'yellow'
+color_kubernetes = 'purple'
+color_docker = 'blue'
+color_shell = 'black'
+color_container = ''
+color_other = ''
+color_time = ''
+color_duration = ''
+color_os = 'blue'
 color_git = 'purple'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
-
-[character]
-success_symbol = '[](green)'
-error_symbol = '[](red)'
-vimcmd_symbol = '[:](black)'
-format = '$symbol '
+color_vimcmd_ok = 'black'
+color_vimcmd_replace = 'yellow'
+color_vimcmd_visual = 'purple'
 
 [cmd_duration]
 # format = "([](black) [󱦟 ](yellow)[$duration]($style))"
@@ -97,39 +109,22 @@ disabled = true
 symbol = ''
 style = 'black'
 
-[directory.substitutions]
-# "~/Desktop" = " Desktop"
-# "~/Videos" = " Videos"
-# "~/Pictures" = " Pictures"
-# "~/Music" = " Music"
-# "~/Documents" = " Documents"
-# "~/Downloads" = "󰇚 Downloads"
-# "~/dev/dots" = "~/dots"
-# "~/dots" = "󰓎 dots"
-# "~/dots" = "󱙧 dots"
-# "dots" = "    dots"
-# "C:/" = " /"
-"C:/" = "/"
-# "/mnt/c" = " /"
-# "//" = "/"
-# "/mnt/c/" = " "
-
 [directory]
 # format = "[ $path ]($style)"
 # format = "[ [$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)$path[$read_only]($read_only_style<) ]($style)"
 # repo_root_format = "[ [$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)$path[$read_only]($read_only_style<) ]($style)"
-style = 'blue'
-before_repo_root_style = 'blue dimmed'
-repo_root_style = "blue bold"
+style = 'fg:color_directory'
+before_repo_root_style = 'fg:color_directory dimmed'
+repo_root_style = "fg:color_directory bold"
 truncation_length = 10
 # truncation_symbol = "…/"
+read_only = " "
+home_symbol = "~"
 truncate_to_repo = true
 use_os_path_sep = false
 use_logical_path = false
-read_only = " 󰳌"
 read_only_style = 'bright-white dimmed'
 fish_style_pwd_dir_length = 0
-
 
 [git_branch]
 symbol = ''
@@ -158,7 +153,7 @@ deleted = "×${count}"
 renamed = "»${count}"
 modified = "!${count}"
 staged = "+${count}"
-# untracked = "?${count}"
+untracked = "?${count}"
 ignore_submodules = false
 disabled = false
 
@@ -209,60 +204,58 @@ style = 'bright-red'
 symbol = '󱘗 '
 
 [os]
-disabled = true
+disabled = false
 style = "fg:color_os"
-format = '[$symbol]($style)'
+format = '[$symbol ]($style)'
 
 [os.symbols]
-Alpaquita = " "
-Alpine = " "
-AlmaLinux = " "
-Amazon = " "
-# Android = " "
-Android = ""
-Arch = " "
-Artix = " "
-CentOS = " "
-Debian = " "
-DragonFly = " "
-Emscripten = " "
-EndeavourOS = " "
-Fedora = " "
-FreeBSD = " "
-Garuda = "󰛓 "
-Gentoo = " "
-HardenedBSD = "󰞌 "
-Illumos = "󰈸 "
+Alpaquita = ""
+Alpine = ""
+AlmaLinux = ""
+Amazon = ""
+Android = ""
+# Android = ""
+Arch = ""
+Artix = ""
+CentOS = ""
+Debian = ""
+DragonFly = ""
+Emscripten = ""
+EndeavourOS = ""
+Fedora = ""
+FreeBSD = ""
+Garuda = "󰛓"
+Gentoo = ""
+HardenedBSD = "󰞌"
+Illumos = "󰈸"
 Kali = " "
-Linux = " "
-Mabox = " "
-Macos = " "
-Manjaro = " "
-Mariner = " "
-MidnightBSD = " "
-Mint = " "
-NetBSD = " "
-NixOS = " "
-OpenBSD = "󰈺 "
-openSUSE = " "
-OracleLinux = "󰌷 "
-Pop = " "
-Raspbian = " "
-Redhat = " "
-RedHatEnterprise = " "
-RockyLinux = " "
-Redox = "󰀘 "
-Solus = "󰠳 "
-SUSE = " "
-Ubuntu = " "
-Unknown = " "
-Void = " "
-# Windows = ""
+Linux = ""
+Mabox = ""
+Macos = ""
+Manjaro = ""
+Mariner = ""
+MidnightBSD = ""
+Mint = ""
+NetBSD = ""
+NixOS = ""
+OpenBSD = "󰈺"
+openSUSE = ""
+OracleLinux = "󰌷"
+Pop = ""
+Raspbian = ""
+Redhat = ""
+RedHatEnterprise = ""
+RockyLinux = ""
+Redox = "󰀘"
+Solus = "󰠳"
+SUSE = ""
+Ubuntu = ""
+Unknown = ""
+Void = ""
 Windows = "󰍲"
 # Windows = "󰚌 "
 # Windows = " "
 # Windows = "󰖳 "
-# Windows = "󰍲 "
 # Windows = " "
 
 [package]
@@ -370,7 +363,6 @@ symbol = " "
 [line_break]
 disabled = false
 
-
 # [shell]
 # format = '[$indicator]($style)'
 # fish_indicator = ''
@@ -381,3 +373,21 @@ disabled = false
 # unknown_indicator = ''
 # style = 'bg:none fg:cyan'
 # disabled = true
+
+[character]
+success_symbol = '[](fg:color_ok)'
+error_symbol = '[](fg:color_danger)'
+vimcmd_symbol = '[](fg:color_vimcmd_ok)'
+vimcmd_replace_one_symbol = '[](fg:color_vimcmd_replace)'
+vimcmd_replace_symbol = '[](fg:color_vimcmd_replace)'
+vimcmd_visual_symbol = '[](fg:color_vimcmd_visual)'
+format = '$symbol '
+
+[directory.substitutions]
+"~/Desktop" = " Desktop"
+# "~/Videos" = " Videos"
+# "~/Pictures" = " Pictures"
+# "~/Music" = " Music"
+# "~/Documents" = " Documents"
+# "~/Downloads" = "󰇚 Downloads"
+"C:/" = "/"

@@ -57,8 +57,8 @@ color_time = '#b4befe'
 color_duration = '#b4befe'
 
 color_vimcmd_ok = 'black'
-color_vimcmd_replace = 'purple'
-color_vimcmd_visual = 'yellow'
+color_vimcmd_replace = 'yellow'
+color_vimcmd_visual = 'purple'
 
 rosewater = "#f5e0dc"
 flamingo = "#f2cdcd"
