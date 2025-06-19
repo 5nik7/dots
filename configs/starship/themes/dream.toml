@@ -17,9 +17,14 @@ $git_status\
 $git_metrics\
 $git_state\
 $nodejs$conda$python$rust\
+$battery\
 $cmd_duration\
+(${custom.btry} )\
 $line_break\
 $character"""
+# (${custom.btry} )\
+
+# right_format = """${custom.btry}"""
 
 palette = "default"
 
@@ -73,6 +78,18 @@ color_git_deleted = 'bright-red'
 color_vimcmd_ok = 'black'
 color_vimcmd_replace = 'yellow'
 color_vimcmd_visual = 'purple'
+
+[custom.btry]
+command = "btry"
+style = ""
+# when = "true"
+when = """ test "$BTRY" = "on" """
+shell = "bash"
+format = '([](bright-black) [$output]($style))'
+# format = "$output"
+
+[battery]
+disabled = true
 
 [cmd_duration]
 # format = "([](black) [󱦟 ](yellow)[$duration]($style))"
