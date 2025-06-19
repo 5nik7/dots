@@ -6,11 +6,14 @@ if cmd_exists jq; then
   }
 fi
 
-alias open="termux-open"
-
 export DROIDOTS="$DOTS/androidots"
 
 prepend_path "$DROIDOTS/bin"
+
+alias open="termux-open"
+
+alias btry-on="export BTRY='on'"
+alias btry-off="export BTRY=''"
 
 alias upd="pkg update && pkg upgrade -y"
 
