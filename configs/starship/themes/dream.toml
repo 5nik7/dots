@@ -23,8 +23,7 @@ $line_break\
 $character"""
 # (${custom.btry} )\
 
-right_format = """${custom.btry} \
-${custom.btryicon}"""
+right_format = """${custom.btry}"""
 
 palette = "default"
 
@@ -73,12 +72,14 @@ color_time = '#74c7ec'
 color_duration = ''
 color_os = 'blue'
 color_git = 'purple'
+color_git_branch = '#6c7086'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
 color_vimcmd_ok = 'black'
 color_vimcmd_replace = 'yellow'
 color_vimcmd_visual = 'purple'
-color_fill = "#313244"
+color_btry_bg = '#313244'
+color_fill = '#313244'
 
 [time]
 disabled = false
@@ -88,20 +89,20 @@ format = '( [$time]($style) )'
 # format = '( [ $time]($style) )'
 
 [custom.btry]
-command = "btry -in -ni"
-style = ""
+command = "btry"
+style = "bg:color_btry_bg"
 # when = "true"
 when = """ test "$BTRY" = "on" """
 shell = "bash"
-format = '$output'
+format = '[$output]($style)'
 
-[custom.btryicon]
-command = "btry -in -i"
-style = ""
-# when = "true"
-when = """ test "$BTRY" = "on" """
-shell = "bash"
-format = '$output'
+# [custom.btryicon]
+# command = "btry -i"
+# style = "bg:color_btry_bg"
+# # when = "true"
+# when = """ test "$BTRY" = "on" """
+# shell = "bash"
+# format = '[$output]($style)'
 
 # [battery]
 # disabled = true
@@ -118,7 +119,6 @@ style_root = 'white bold'
 format = '[$user]($style)'
 disabled = true
 show_always = true
-# aliases = { "Administrator" = "󱔏" }
 # aliases = { "Administrator" = "admin" }
 
 [hostname]
@@ -161,7 +161,7 @@ fish_style_pwd_dir_length = 0
 [git_branch]
 symbol = ''
 format = '[($symbol$branch )]($style)'
-style = 'bright-black'
+style = 'fg:color_git_branch'
 
 [git_commit]
 style = "fg:color_git"
