@@ -248,3 +248,10 @@ config nu
 l
 la
 c
+cd
+env
+l;l
+l
+ll
+c
+ls
