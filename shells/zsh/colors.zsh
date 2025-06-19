@@ -5,11 +5,20 @@ if [ $THEME = 'catppuccin' ]; then
 fi
 
 if cmd_exists catppuccin; then
+  function flavor() {
+    catppuccin "$FLAVOR" "$@"
+  }
   function mocha() {
     catppuccin mocha "$@"
   }
-  function flavor() {
-    catppuccin "$FLAVOR" "$@"
+  function macchiato() {
+    catppuccin macchiato "$@"
+  }
+  function frappe() {
+    catppuccin frappe "$@"
+  }
+  function latte() {
+    catppuccin latte "$@"
   }
   rosewater() {
     catppuccin $FLAVOR "$0"

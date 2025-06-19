@@ -17,7 +17,6 @@ $git_status\
 $git_metrics\
 $git_state\
 $nodejs$conda$python$rust\
-$battery\
 $cmd_duration\
 (${custom.btry} )\
 $line_break\
@@ -88,8 +87,8 @@ shell = "bash"
 format = '([](bright-black) [$output]($style))'
 # format = "$output"
 
-[battery]
-disabled = true
+# [battery]
+# disabled = true
 
 [cmd_duration]
 # format = "([](black) [󱦟 ](yellow)[$duration]($style))"
