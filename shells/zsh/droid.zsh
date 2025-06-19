@@ -12,8 +12,8 @@ prepend_path "$DROIDOTS/bin"
 
 alias open="termux-open"
 
-alias btry-on="export BTRY='on'"
-alias btry-off="export BTRY=''"
+alias bon="export BTRY='on'"
+alias boff="export BTRY=''"
 
 alias upd="pkg update && pkg upgrade -y"
 
