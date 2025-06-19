@@ -23,8 +23,8 @@ $line_break\
 $character"""
 # (${custom.btry} )\
 
-right_format = """${custom.btryicon}\
-${custom.btry}"""
+right_format = """${custom.btry} \
+${custom.btryicon}"""
 
 palette = "default"
 
@@ -69,7 +69,7 @@ color_docker = 'blue'
 color_shell = 'black'
 color_container = ''
 color_other = ''
-color_time = '#b4befe'
+color_time = '#74c7ec'
 color_duration = ''
 color_os = 'blue'
 color_git = 'purple'
@@ -78,6 +78,7 @@ color_git_deleted = 'bright-red'
 color_vimcmd_ok = 'black'
 color_vimcmd_replace = 'yellow'
 color_vimcmd_visual = 'purple'
+color_fill = "#313244"
 
 [time]
 disabled = false
@@ -137,8 +138,8 @@ style = "white dimmed"
 disabled = true
 
 [fill]
-symbol = ''
-style = 'black'
+symbol = '󰍴'
+style = 'fg:color_fill'
 
 [directory]
 # format = "[ $path ]($style)"
