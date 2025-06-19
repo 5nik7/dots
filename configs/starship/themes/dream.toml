@@ -5,8 +5,7 @@ add_newline = true
 follow_symlinks = false
 continuation_prompt = '[│](black)'
 
-format = """
-$os\
+format = """$os\
 ${env_var.AdminSymbol}\
 $username\
 $hostname\
@@ -18,12 +17,14 @@ $git_metrics\
 $git_state\
 $nodejs$conda$python$rust\
 $cmd_duration\
-(${custom.btry} )\
+$fill\
+$time\
 $line_break\
 $character"""
 # (${custom.btry} )\
 
-# right_format = """${custom.btry}"""
+right_format = """${custom.btryicon}\
+${custom.btry}"""
 
 palette = "default"
 
@@ -68,7 +69,7 @@ color_docker = 'blue'
 color_shell = 'black'
 color_container = ''
 color_other = ''
-color_time = ''
+color_time = '#b4befe'
 color_duration = ''
 color_os = 'blue'
 color_git = 'purple'
@@ -78,14 +79,28 @@ color_vimcmd_ok = 'black'
 color_vimcmd_replace = 'yellow'
 color_vimcmd_visual = 'purple'
 
+[time]
+disabled = false
+time_format = "%-I:%M%P"
+style = "fg:color_time"
+format = '( [$time]($style) )'
+# format = '( [ $time]($style) )'
+
 [custom.btry]
-command = "btry"
+command = "btry -in -ni"
 style = ""
 # when = "true"
 when = """ test "$BTRY" = "on" """
 shell = "bash"
-format = '([](bright-black) [$output]($style))'
-# format = "$output"
+format = '$output'
+
+[custom.btryicon]
+command = "btry -in -i"
+style = ""
+# when = "true"
+when = """ test "$BTRY" = "on" """
+shell = "bash"
+format = '$output'
 
 # [battery]
 # disabled = true
@@ -122,7 +137,7 @@ style = "white dimmed"
 disabled = true
 
 [fill]
-symbol = ''
+symbol = ''
 style = 'black'
 
 [directory]
