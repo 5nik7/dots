@@ -78,7 +78,7 @@ color_git_deleted = 'bright-red'
 color_vimcmd_ok = 'black'
 color_vimcmd_replace = 'yellow'
 color_vimcmd_visual = 'purple'
-color_btry_bg = '#313244'
+color_btry_bg = '#181825'
 color_fill = '#313244'
 
 [time]
@@ -94,7 +94,7 @@ style = "bg:color_btry_bg"
 # when = "true"
 when = """ test "$BTRY" = "on" """
 shell = "bash"
-format = '[$output]($style)'
+format = '[](fg:color_btry_bg)[ $output]($style)'
 
 # [custom.btryicon]
 # command = "btry -i"
