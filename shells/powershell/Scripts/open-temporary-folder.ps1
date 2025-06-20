@@ -21,11 +21,11 @@ function GetTempDir {
 try {
 	$Path = GetTempDir
 	if (-not(test-path "$Path" -pathType container)) {
-		throw "Temporary folder at 📂$Path doesn't exist (yet)"
+		throw "Temporary folder at  $Path doesn't exist (yet)"
 	}
 	& "$PSScriptRoot/open-file-explorer.ps1" "$Path"
 	exit 0 # success
 } catch {
-	"⚠️ Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
+	" Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
 	exit 1
 }

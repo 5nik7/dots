@@ -18,11 +18,11 @@ try {
 		$Path = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
 	}
 	if (-not(Test-Path "$Path" -pathType container)) {
-		throw "Downloads folder at 📂$Path doesn't exist (yet)"
+		throw "Downloads folder at  $Path doesn't exist (yet)"
 	}
 	& "$PSScriptRoot/open-file-explorer.ps1" $Path
 	exit 0 # success
 } catch {
-	"⚠️ Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
+	" Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
 	exit 1
 }

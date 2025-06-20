@@ -6,7 +6,7 @@
 .EXAMPLE
 	PS> ./open-file-explorer
 .PARAMETER Path
-	Specifies the path to the folder to display 
+	Specifies the path to the folder to display
 .LINK
 	https://github.com/fleschutz/PowerShell
 .NOTES
@@ -23,6 +23,6 @@ try {
 	}
 	exit 0 # success
 } catch {
-	"⚠️ Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
+	" Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
 	exit 1
 }

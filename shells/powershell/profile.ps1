@@ -80,10 +80,11 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
 
   Set-FuzzyOpts
 
-  if (Test-CommandExists fzf) {
-    Import-ScoopModule -Name 'PsFzf'
-    Set-PsFzfOption -TabExpansion
-  }
+}
+
+if (Test-CommandExists fzf) {
+  Import-ScoopModule -Name 'PsFzf'
+  Set-PsFzfOption -TabExpansion
 }
 
 if ($env:isReloading) {

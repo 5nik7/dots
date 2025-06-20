@@ -14,11 +14,11 @@
 try {
 	$TargetDir = resolve-path "$HOME/Documents"
 	if (-not(test-path "$TargetDir" -pathType container)) {
-		throw "Documents folder at 📂$TargetDir doesn't exist (yet)"
+		throw "Documents folder at  $TargetDir doesn't exist (yet)"
 	}
 	& "$PSScriptRoot/open-file-explorer.ps1" "$TargetDir"
 	exit 0 # success
 } catch {
-	"⚠️ Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
+	" Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
 	exit 1
 }
