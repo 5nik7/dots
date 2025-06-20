@@ -20,82 +20,82 @@ if cmd_exists catppuccin; then
   function latte() {
     catppuccin latte "$@"
   }
-  rosewater() {
+  function rosewater() {
     catppuccin $FLAVOR "$0"
   }
-  flamingo() {
+  function flamingo() {
     catppuccin $FLAVOR "$0"
   }
-  pink() {
+  function pink() {
     catppuccin $FLAVOR "$0"
   }
-  mauve() {
+  function mauve() {
     catppuccin $FLAVOR "$0"
   }
-  red() {
+  function red() {
     catppuccin $FLAVOR "$0"
   }
-  maroon() {
+  function maroon() {
     catppuccin $FLAVOR "$0"
   }
-  peach() {
+ function  peach() {
     catppuccin $FLAVOR "$0"
   }
-  yellow() {
+  function yellow() {
     catppuccin $FLAVOR "$0"
   }
-  green() {
+  function green() {
     catppuccin $FLAVOR "$0"
   }
-  teal() {
+  function teal() {
     catppuccin $FLAVOR "$0"
   }
-  sky() {
+  function sky() {
     catppuccin $FLAVOR "$0"
   }
-  sapphire() {
+  function sapphire() {
     catppuccin $FLAVOR "$0"
   }
-  blue() {
+  function blue() {
     catppuccin $FLAVOR "$0"
   }
-  lavender() {
+  function lavender() {
     catppuccin $FLAVOR "$0"
   }
-  text() {
+  function text() {
     catppuccin $FLAVOR "$0"
   }
-  subtext1() {
+  function subtext1() {
     catppuccin $FLAVOR "$0"
   }
-  subtext0() {
+  function subtext0() {
     catppuccin $FLAVOR "$0"
   }
-  overlay2() {
+  function overlay2() {
     catppuccin $FLAVOR "$0"
   }
-  overlay1() {
+  function overlay1() {
     catppuccin $FLAVOR "$0"
   }
-  overlay0() {
+  function overlay0() {
     catppuccin $FLAVOR "$0"
   }
   surface2() {
     catppuccin $FLAVOR "$0"
   }
-  surface1() {
+  function surface1() {
     catppuccin $FLAVOR "$0"
   }
-  surface0() {
+  function surface0() {
     catppuccin $FLAVOR "$0"
   }
-  base() {
+  function base() {
     catppuccin $FLAVOR "$0"
   }
-  mantle() {
+  function mantle() {
     catppuccin $FLAVOR "$0"
   }
-  crust() {
+  function crust() {
     catppuccin $FLAVOR "$0"
   }
 fi
