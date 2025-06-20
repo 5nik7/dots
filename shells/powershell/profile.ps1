@@ -65,6 +65,7 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
   (& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
   (& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
   (& glow completion powershell) | Out-String | Invoke-Expression
+  (& wezterm shell-completion --shell power-shell) | Out-String | Invoke-Expression
   Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
     [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.Utf8Encoding]::new()
