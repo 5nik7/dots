@@ -50,11 +50,11 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
   Add-PSModulePath -Path $env:PSMODS
   Import-Module -Name 'PowerShellGet' -Global
   Import-Module -Name 'Terminal-Icons' -Global
-  Import-PSMod -Local -Name 'PSDots'
-  Import-PSMod -Local -Name 'blastoff'
-  Import-PSMod -Local -Name 'powernerd'
-  Import-PSMod -Local -Name 'winwal'
-  Import-PSMod -Local -Name 'lab'
+  Import-Module -Name 'PSDots' -Global
+  Import-Module -Name 'blastoff' -Global
+  Import-Module -Name 'powernerd' -Global
+  Import-Module -Name 'winwal' -Global
+  Import-Module -Name 'lab' -Global
   Import-Module -Name UsefulArgumentCompleters -Global
   # Import-UsefulArgumentCompleterSet -OptionalCompleter Hyperv
   (& pyenv-venv completion) | Out-String | Invoke-Expression
