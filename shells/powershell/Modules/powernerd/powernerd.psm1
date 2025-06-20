@@ -215,6 +215,7 @@ function Invoke-PowerNerd {
     $find = $args
     $selected = ListNerdFonts | Where-Object { $_ -like "*$find*" } | fzf
     if (![string]::IsNullOrWhiteSpace($selected)) { Set-Clipboard $selected }
+    Set-FuzzyOpts
 
   }
 
