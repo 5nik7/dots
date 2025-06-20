@@ -150,12 +150,12 @@ before_repo_root_style = 'fg:color_directory dimmed'
 repo_root_style = "fg:color_directory bold"
 truncation_length = 10
 # truncation_symbol = "…/"
-read_only = " "
+read_only = " "
 home_symbol = "~"
 truncate_to_repo = true
 use_os_path_sep = false
 use_logical_path = false
-read_only_style = 'bright-white dimmed'
+read_only_style = 'fg:color_directory dimmed'
 fish_style_pwd_dir_length = 0
 
 [git_branch]
