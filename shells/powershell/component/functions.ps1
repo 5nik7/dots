@@ -321,7 +321,7 @@ function gup {
   if (Test-Path .git) {
     $commitDate = Get-Date -Format 'MM-dd-yyyy HH:mm'
     Write-Host ''
-    git add .
+    git add -A
     git commit -m "Update @ $commitDate"
     git push
     Write-Host ''
