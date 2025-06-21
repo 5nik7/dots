@@ -18,7 +18,7 @@ function gup() {
   if [ -d .git ]; then
   commitDate=$(date +"%m-%d-%Y %H:%M")
     echo -e ""
-    git add .
+    git add -A
     git commit -m "Update @ $commitDate"
     git push
     echo -e ""
