@@ -187,7 +187,7 @@ modified = "!${count}"
 staged = "+${count}"
 untracked = "?${count}"
 ignore_submodules = false
-disabled = false
+disabled = true
 
 [git_metrics]
 format = '([([+$added]($added_style))([-$deleted]($deleted_style))](fg:color_git) )'
