@@ -31,6 +31,12 @@ function www {
   fi
 }
 
+function pkglist(){
+  pkglist="$DROIDOTS/pkglist"
+  command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkglist"
+ sed -i '1d' "$pkglist"
+}
+
 if is_installed perl; then
 
   extend_path "${HOME}/perl5/bin"
