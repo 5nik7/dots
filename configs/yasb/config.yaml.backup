@@ -15,6 +15,9 @@ bars:
     alignment:
       position: "top"
       center: false
+    animation:
+      enabled: true
+      duration: 1000
     blur_effect:
       enabled: false
       acrylic: false
@@ -100,14 +103,19 @@ widgets:
     type: "komorebi.workspaces.WorkspaceWidget"
     options:
       label_offline: "\u26a1 Offline"
-      label_workspace_btn: ""
-      label_workspace_active_btn: ""
-      label_workspace_populated_btn: ""
-      label_default_name: "{index}"
+      label_workspace_btn: "{index}"
+      label_workspace_active_btn: "{index}"
+      label_workspace_populated_btn: "{index}"
+      label_default_name: ""
       label_zero_index: false
       hide_empty_workspaces: false
       hide_if_offline: false
       animation: true
+      container_padding:
+        top: 0
+        left: 5
+        bottom: 0
+        right: 5
   weather:
     type: "yasb.weather.WeatherWidget"
     options:
@@ -159,9 +167,9 @@ widgets:
       label_no_window: ""
       label_icon: true
       label_icon_size: 14
-      max_length: 36
+      max_length: 56
       max_length_ellipsis: "..."
-      monitor_exclusive: false
+      monitor_exclusive: true
   systray:
     type: "yasb.systray.SystrayWidget"
     options:
@@ -222,16 +230,19 @@ widgets:
       gallery:
         enabled: true
         blur: true
-        image_width: 296
-        image_per_page: 6
-        show_buttons: true
+        image_width: 220
+        image_per_page: 8
+        show_buttons: false
         orientation: "portrait"
-        image_spacing: 10
+        image_spacing: 8
         lazy_load: true
         lazy_load_delay: 10
         lazy_load_fadein: 200
         image_corner_radius: 20
         enable_cache: true
+      # run_after: # List of functions to run after wallpaper is updated
+        # - "wal -s -t -e -q -n -i {image}" # Example command to run after wallpaper is updated
+        # - "cmd.exe /c start /min pwsh ./yasb.ps1" # Example command to run after wallpaper is updated
   power_menu:
     type: "yasb.power_menu.PowerMenuWidget"
     options:

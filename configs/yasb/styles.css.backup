@@ -1,4 +1,5 @@
-/*VARIABLES AND SOME DEFAULT SETTINGS*/
+@import url("../../cache/wal/colors.css");
+
 :root {
   --rosewater: #f5e0dc;
   --flamingo: #f2cdcd;
@@ -29,7 +30,8 @@
   --crust: rgba(17, 17, 27, 0.5);
 }
 * {
-  font-size: 12px;
+  font-size: 14px;
+  text-rendering: optimizeLegibility;
   color: var(--text);
   font-weight: 600;
   font-family: "JetBrainsMono NFP", monospace;
@@ -88,7 +90,7 @@
 .apps-widget .label {
   padding-right: 2px;
   color: var(--text);
-  font-size: 14px;
+  /* font-size: 14px; */
 }
 /*KOMOREBI WORKSPACES WIDGET*/
 .komorebi-workspaces {
@@ -100,29 +102,26 @@
 }
 .komorebi-workspaces .offline-status {
   color: var(--overlay0);
-  font-size: 12px;
   padding: 0 4px;
   font-weight: 600;
 }
 .komorebi-workspaces .ws-btn {
   border: none;
-  background-color: var(--surface2);
+  /* background-color: var(--surface2); */
   margin: 0px 4px;
-  padding: 0;
-  color: rgba(0, 0, 0, 0);
-  border-radius: 5px;
-  height: 10px;
-  width: 10px;
+  padding: 2px;
+  color: var(--surface2);
+  font-weight: 500;
+  /* font-size: 14px; */
+  height: 30px;
+  /* border-bottom: 1px solid var(--surface2); */
 }
 .komorebi-workspaces .ws-btn.populated {
-  background-color: var(--lavender);
+  color: var(--lavender);
 }
 .komorebi-workspaces .ws-btn.active {
-  color: rgba(149, 177, 255, 0);
-  background-color: var(--teal);
-  width: 36px;
-  height: 10px;
-  border-radius: 4px;
+  color: var(--teal);
+  font-weight: 900;
 }
 /*WEATHER WIDGET*/
 .weather-widget {
@@ -134,7 +133,7 @@
   padding: 6px;
 }
 .weather-widget .label {
-  font-size: 14px;
+  /* font-size: 14px; */
 }
 /*ACTIVE WINDOW WIDGET*/
 .active-window-widget {
@@ -143,7 +142,7 @@
   padding-left: 10px;
 }
 .active-window-widget .label {
-  font-size: 14px;
+  /* font-size: 14px; */
 }
 .active-window-widget .icon {
   padding-right: 6px;
@@ -156,7 +155,7 @@
   padding-right: 10px;
 }
 .clock-widget .label {
-  font-size: 14px;
+  /* font-size: 14px; */
 }
 /*CLOCK - CALENDAR WIDGET DROPDOWN*/
 .calendar {
@@ -245,10 +244,11 @@
 }
 .volume-widget .icon {
   padding: 0 6px;
+  font-size: 14px;
   color: var(--teal);
 }
 .volume-widget .label {
-  font-size: 14px;
+  /* font-size: 14px; */
 }
 /*AUDIO DROPDOWN*/
 .audio-menu {
@@ -277,7 +277,7 @@
   background-color: var(--surface1);
 }
 .media-widget .label {
-  font-size: 14px;
+  /* font-size: 14px; */
   padding: 0 0px;
 }
 .media-widget .btn {
@@ -292,6 +292,9 @@
   padding-left: 7px;
   background-color: var(--surface1);
 }
+.wallpapers-widget .icon {
+  /* font-size: 20px; */
+}
 /*WALLPAPERS GALLERY*/
 .wallpapers-gallery-window {
   background-color: var(--mantle);
@@ -299,12 +302,10 @@
   margin: 0;
 }
 .wallpapers-gallery-buttons {
-  font-size: 12px;
   font-family: "Bahnschrift", Tahoma, Geneva, Verdana, sans-serif;
   background-color: rgba(255, 255, 255, 0);
   color: white;
   border: none;
-  font-size: 14px;
   padding: 8px 0;
   border-radius: 8px;
   margin: 0 8px 8px 8px;
@@ -331,7 +332,7 @@
 }
 .power-menu-widget .label {
   color: var(--red);
-  font-size: 16px;
+  /* font-size: 14px; */
 }
 /*POWER MENU POPUP*/
 .uptime {
@@ -386,7 +387,7 @@
   background-color: var(--surface1);
 }
 .github-widget .icon {
-  font-size: 16px;
+  /* font-size: 16px; */
 }
 .github-menu {
   background-color: rgba(17, 17, 27, 0.2);
