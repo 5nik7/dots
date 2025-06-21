@@ -187,14 +187,14 @@ modified = "!${count}"
 staged = "+${count}"
 untracked = "?${count}"
 ignore_submodules = false
-disabled = true
+disabled = false
 
 [git_metrics]
 format = '([([+$added]($added_style))([-$deleted]($deleted_style))](fg:color_git) )'
 added_style = "fg:color_git_added"
 deleted_style = "fg:color_git_deleted"
 only_nonzero_diffs = true
-disabled = false
+disabled = true
 
 [git_state]
 style = "fg:color_danger"
