@@ -20,11 +20,11 @@ function gup() {
   if [ -e "$dir/.git" ]; then
   commitDate=$(date +"%m-%d-%Y %H:%M")
     echo
-    git submodule update --recursive
-    git pull --recurse-submodules
-    git add -A
-    git commit -m "Update @ $commitDate"
-    git push
+    # git submodule update --recursive
+    git pull --recurse-submodules &&
+    git add -A &&
+    git commit -m "Update @ $commitDate" &&
+    git push &&
     echo
   else
     echo
