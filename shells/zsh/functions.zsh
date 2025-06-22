@@ -15,15 +15,21 @@ function prepend_path() {
 }
 
 function gup() {
-  if [ -d .git ]; then
+  local dir
+  dir=$(pwd)
+  if [ -e "$dir/.git" ]; then
   commitDate=$(date +"%m-%d-%Y %H:%M")
-    echo -e ""
+    echo
+    git submodule update --recursive
+    git pull --recurse-submodules
     git add -A
     git commit -m "Update @ $commitDate"
     git push
-    echo -e ""
+    echo
   else
-    echo -e "This directory does not contain a .git directory"
+    echo
+    echo "This directory is notna repository"
+    echo
   fi
 }
 
@@ -225,7 +231,6 @@ function fext() {
   echo "${filename##*.}"
 
 }
-
 
 if cmd_exists rich; then
   function mdat() {
