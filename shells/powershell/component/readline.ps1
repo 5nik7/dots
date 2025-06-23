@@ -1,68 +1,69 @@
-Import-PSMod -Local -Name 'catppuccin'
+Import-Module -Name 'catppuccin' -Global
+
 $Flavor = $Catppuccin['Mocha']
 $Global:Flavor = $Flavor
 
 if ($PSEdition -eq 'Core') {
-    $PSStyle.Formatting.Debug = $Flavor.Sky.Foreground()
-    $PSStyle.Formatting.Error = $Flavor.Red.Foreground()
-    $PSStyle.Formatting.ErrorAccent = $Flavor.Blue.Foreground()
-    $PSStyle.Formatting.FormatAccent = $Flavor.Teal.Foreground()
-    $PSStyle.Formatting.TableHeader = $Flavor.Rosewater.Foreground()
-    $PSStyle.Formatting.Verbose = $Flavor.Yellow.Foreground()
-    $PSStyle.Formatting.Warning = $Flavor.Peach.Foreground()
-    Import-Module -Name 'CompletionPredictor'
+  $PSStyle.Formatting.Debug = $Flavor.Sky.Foreground()
+  $PSStyle.Formatting.Error = $Flavor.Red.Foreground()
+  $PSStyle.Formatting.ErrorAccent = $Flavor.Blue.Foreground()
+  $PSStyle.Formatting.FormatAccent = $Flavor.Teal.Foreground()
+  $PSStyle.Formatting.TableHeader = $Flavor.Rosewater.Foreground()
+  $PSStyle.Formatting.Verbose = $Flavor.Yellow.Foreground()
+  $PSStyle.Formatting.Warning = $Flavor.Peach.Foreground()
+  Import-Module -Name 'CompletionPredictor'
 }
 
 if ($host.Name -eq 'ConsoleHost') {
-    Import-Module PSReadLine
+  Import-Module PSReadLine
 
-    if ($PSEdition -ne 'Core') {
-        $VersionPredictionSource = 'History'
+  if ($PSEdition -ne 'Core') {
+    $VersionPredictionSource = 'History'
+  }
+  else {
+    $VersionPredictionSource = 'HistoryAndPlugin'
+  }
+  $PSReadLineOptions = @{
+    HistoryNoDuplicates           = $true
+    HistorySearchCursorMovesToEnd = $true
+    HistorySearchCaseSensitive    = $false
+    MaximumHistoryCount           = '50000'
+    ShowToolTips                  = $true
+    ContinuationPrompt            = '│'
+    BellStyle                     = 'None'
+    PredictionSource              = $VersionPredictionSource
+    EditMode                      = 'Vi' # "Vi" or "Emacs" or "Windows"
+    PredictionViewStyle           = 'InlineView' # "InlineView" or "ListView"
+    Colors                        = @{
+      # Largely based on the Code Editor style guide
+      # Emphasis, ListPrediction and ListPredictionSelected are inspired by the Catppuccin fzf theme
+
+      # Powershell colours
+      ContinuationPrompt     = $Flavor.Base.Foreground()
+      Emphasis               = $Flavor.Red.Foreground()
+      Selection              = $Flavor.Surface0.Background()
+
+      # PSReadLine prediction colours
+      InlinePrediction       = $Flavor.Overlay0.Foreground()
+      ListPrediction         = $Flavor.Mauve.Foreground()
+      ListPredictionSelected = $Flavor.Surface0.Background()
+
+      # Syntax highlighting
+      Command                = $Flavor.Sky.Foreground()
+      Comment                = $Flavor.Overlay0.Foreground()
+      Default                = $Flavor.Text.Foreground()
+      Error                  = $Flavor.Red.Foreground()
+      Keyword                = $Flavor.Mauve.Foreground()
+      Member                 = $Flavor.Rosewater.Foreground()
+      Number                 = $Flavor.Peach.Foreground()
+      Operator               = $Flavor.Sky.Foreground()
+      Parameter              = $Flavor.Pink.Foreground()
+      String                 = $Flavor.Green.Foreground()
+      Type                   = $Flavor.Yellow.Foreground()
+      Variable               = $Flavor.Lavender.Foreground()
     }
-    else {
-        $VersionPredictionSource = 'HistoryAndPlugin'
-    }
-    $PSReadLineOptions = @{
-        HistoryNoDuplicates           = $true
-        HistorySearchCursorMovesToEnd = $true
-        HistorySearchCaseSensitive    = $false
-        MaximumHistoryCount           = '50000'
-        ShowToolTips                  = $true
-        ContinuationPrompt            = '│'
-        BellStyle                     = 'None'
-        PredictionSource              = $VersionPredictionSource
-        EditMode                      = 'Vi' # "Vi" or "Emacs" or "Windows"
-        PredictionViewStyle           = 'InlineView' # "InlineView" or "ListView"
-        Colors                        = @{
-            # Largely based on the Code Editor style guide
-            # Emphasis, ListPrediction and ListPredictionSelected are inspired by the Catppuccin fzf theme
-
-            # Powershell colours
-            ContinuationPrompt     = $Flavor.Base.Foreground()
-            Emphasis               = $Flavor.Red.Foreground()
-            Selection              = $Flavor.Surface0.Background()
-
-            # PSReadLine prediction colours
-            InlinePrediction       = $Flavor.Overlay0.Foreground()
-            ListPrediction         = $Flavor.Mauve.Foreground()
-            ListPredictionSelected = $Flavor.Surface0.Background()
-
-            # Syntax highlighting
-            Command                = $Flavor.Sky.Foreground()
-            Comment                = $Flavor.Overlay0.Foreground()
-            Default                = $Flavor.Text.Foreground()
-            Error                  = $Flavor.Red.Foreground()
-            Keyword                = $Flavor.Mauve.Foreground()
-            Member                 = $Flavor.Rosewater.Foreground()
-            Number                 = $Flavor.Peach.Foreground()
-            Operator               = $Flavor.Sky.Foreground()
-            Parameter              = $Flavor.Pink.Foreground()
-            String                 = $Flavor.Green.Foreground()
-            Type                   = $Flavor.Yellow.Foreground()
-            Variable               = $Flavor.Lavender.Foreground()
-        }
-    }
-    Set-PSReadLineOption @PSReadLineOptions
+  }
+  Set-PSReadLineOption @PSReadLineOptions
 }
 
 # Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete

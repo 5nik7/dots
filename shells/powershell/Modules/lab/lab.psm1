@@ -1,7 +1,7 @@
 $modulePath = $PSScriptRoot
 
-$psdoticon = (nf cod-terminal_powershell)
-$labicon = (nf oct-beaker)
+$psdoticon = ""
+$labicon = ""
 
 function SetupLab {
   param (
@@ -129,7 +129,6 @@ function Get-LabUsage {
 
 function Get-LabScripts {
   # PowerShellIcon = $psdoticon
-  # PSLabIcon =(nf md-flask_outline)
 
   <#
     .SYNOPSIS

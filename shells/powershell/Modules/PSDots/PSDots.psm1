@@ -1,5 +1,287 @@
 $modulePath = $PSScriptRoot
 
+$env:HOME = $env:USERPROFILE
+$Global:DOTS = Join-Path -Path $env:USERPROFILE -ChildPath "dots"
+$env:DOTS = $Global:DOTS
+$Global:DOTFILES = Join-Path -Path $env:DOTS -ChildPath "configs"
+$env:DOTFILES = $Global:DOTFILES
+$Global:SHELLS = Join-Path -Path $env:DOTS -ChildPath "shells"
+$env:SHELLS = $Global:SHELLS
+
+$Global:PSDOTS = Join-Path -Path $env:SHELLS -ChildPath "powershell"
+$env:PSDOTS = $Global:PSDOTS
+$Global:PSCOMPONENT = Join-Path -Path $env:PSDOTS -ChildPath "component"
+$env:PSCOMPONENT = $Global:PSCOMPONENT
+$Global:PSCRIPTS = Join-Path -Path $env:PSDOTS -ChildPath "Scripts"
+$env:PSCRIPTS = $Global:PSCRIPTS
+$Global:PSMODS = Join-Path -Path $env:PSDOTS -ChildPath "Modules"
+$env:PSMODS = $Global:PSMODS
+
+$Global:DOTCACHE = Join-Path -Path $env:DOTS -ChildPath "cache"
+$env:DOTCACHE = $Global:DOTCACHE
+$Global:DOTBIN = Join-Path -Path $env:DOTS -ChildPath "bin"
+$env:DOTBIN = $Global:DOTBIN
+
+$Global:WALLS = Join-Path -Path $env:DOTS -ChildPath "wqlls"
+$env:WALLS = $Global:WALLS
+
+$Global:BASHDOT = Join-Path -Path $env:SHELLS -ChildPath "bash"
+$env:BASHDOT = $Global:BASHDOT
+$Global:ZSHDOT = Join-Path -Path $env:SHELLS -ChildPath "zsh"
+$env:ZSHDOT = $Global:ZSHDOT
+
+$env:padding = 2
+$PadddingOut = ' ' * $env:padding
+
+$util = @{
+  colors = @{
+    Black       = 0
+    DarkRed     = 1
+    DarkGreen   = 2
+    DarkYellow  = 3
+    DarkBlue    = 4
+    DarkMagenta = 5
+    DarkCyan    = 6
+    Gray        = 7
+    DarkGray    = 8
+    Red         = 9
+    Green       = 10
+    Yellow      = 11
+    Blue        = 12
+    Magenta     = 13
+    Cyan        = 14
+    White       = 15
+  }
+  alerts = @{
+    info    = @{
+      text  = 'Info'
+      icon  = ' '
+      color = 'cyan'
+    }
+    success = @{
+      text  = 'Success'
+      icon  = ' '
+      color = 'green'
+    }
+    warn    = @{
+      text  = 'Warning'
+      icon  = ' '
+      color = 'yellow'
+    }
+    err     = @{
+      text  = 'Error'
+      icon  = ' '
+      color = 'red'
+    }
+  }
+}
+$spacer = ' │ '
+$successcolor = $($util.alerts.success.color)
+$successicon = $($util.alerts.success.icon)
+$successtext = $($util.alerts.success.text)
+$errcolor = $($util.alerts.err.color)
+$erricon = $($util.alerts.err.icon)
+$errtext = $($util.alerts.err.text)
+$warncolor = $($util.alerts.warn.color)
+$warnicon = $($util.alerts.warn.icon)
+$warntext = $($util.alerts.warn.text)
+$infocolor = $($util.alerts.info.color)
+$infoicon = $($util.alerts.info.icon)
+$infotext = $($util.alerts.info.text)
+
+function linebreak {
+  param (
+    [int]$count = 1
+  )
+  for ($i = 0; $i -lt $count; $i++) {
+    Write-Host ''
+  }
+}
+
+<#
+.SYNOPSIS
+    Writes colored text to the console with optional boxing and padding.
+
+.DESCRIPTION
+    The wh function writes colored text to the console. It supports inline text, padding, and boxing.
+
+.PARAMETER pairs
+    The text and color pairs to be displayed. Each text should be followed by its color.
+
+.PARAMETER nl
+    If specified, adds a newline after the text.
+
+.PARAMETER bb
+    The number of blank lines before the text.
+
+.PARAMETER ba
+    The number of blank lines after the text.
+
+.PARAMETER padout
+    The amount of padding outside the box.
+
+.PARAMETER padin
+    The amount of padding inside the box.
+
+.PARAMETER box
+    If specified, displays the text inside a box.
+
+.PARAMETER border
+    The color of the box border. Default is "DarkGray".
+
+.EXAMPLE
+    wh -pairs "Hello", "Red", "World", "Green"
+    Writes "Hello" in red and "World" in green to the console.
+
+.EXAMPLE
+    wh -pairs "Hello", "Red", "World", "Green" -box
+    Writes "Hello" in red and "World" in green inside a box to the console.
+
+.NOTES
+    Author: njen
+#>
+function wh {
+  [CmdletBinding()]
+  param(
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+    [string[]]$pairs,
+    [int]$bb = 0,
+    [int]$ba = 0,
+    [switch]$box,
+    [int]$pad = 1,
+    [int]$padin = 1,
+    [string]$border = 'Black',
+    [switch]$nl
+  )
+  if ($pairs.Count -eq 0) {
+    Write-Host 'No text provided.'
+    return
+  }
+
+  $boxSymbolTopLeft = '┌'
+  $boxSymbolTopRight = '┐'
+  $boxSymbolBottomLeft = '└'
+  $boxSymbolBottomRight = '┘'
+  $boxSymbolHorizontal = '─'
+  $boxSymbolVertical = '│'
+
+  linebreak $bb
+
+  $pairsList = @()  # will hold objects like @{ text="Hello"; color="White"; length=... }
+  $totalLength = 0
+  # Collect pairs without printing right away
+  for ($i = 0; $i -lt $pairs.Count; $i += 2) {
+    $txt = $pairs[$i]
+    $clr = if ($i + 1 -lt $pairs.Count) { $pairs[$i + 1] } else { 'White' }
+
+    # Validate $clr directly against [System.ConsoleColor]
+    $colorEnum = [System.ConsoleColor]::GetValues([System.ConsoleColor]) | Where-Object { $_.ToString() -eq $clr }
+
+    $pairsList += [pscustomobject]@{ text = $txt; color = $colorEnum }
+    $totalLength += $txt.Length
+  }
+  $totalLength += ($padin * 2)
+
+  $boxTop = (' ' * $pad) + $boxSymbolTopLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolTopRight
+  $boxBottom = (' ' * $pad) + $boxSymbolBottomLeft + ($boxSymbolHorizontal * $totalLength) + $boxSymbolBottomRight
+  $boxLeft = (' ' * $pad) + $boxSymbolVertical + (' ' * $padin)
+  $boxRight = (' ' * $padin) + $boxSymbolVertical
+
+  if ($box) {
+    # Print top line
+    Write-Host $boxTop -ForegroundColor $border
+    # Print middle line start
+    Write-Host -NoNewline $boxLeft -ForegroundColor $border
+    # Print each pair with its color inside the box
+    foreach ($pair in $pairsList) {
+      Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
+    }
+    Write-Host $boxRight -ForegroundColor $border
+    Write-Host -NoNewline $boxBottom -ForegroundColor $border
+  }
+  else {
+    $padline = (' ' * $pad)
+    # No box: just print each pair
+    Write-Host -NoNewline $padline
+    foreach ($pair in $pairsList) {
+      Write-Host -NoNewline $pair.text -ForegroundColor $pair.color
+    }
+  }
+
+  if ($nl) { linebreak }
+  linebreak $ba
+}
+
+function Write-Info {
+  param(
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+    [string[]]$pairs,
+    [int]$bb = 1,
+    [int]$ba = 1,
+    [int]$pad,
+    [switch]$box,
+    [string]$border = 'DarkGray'
+  )
+  if (!($box)) {
+    $spacer = ': '
+  }
+  $pairs = @($infoicon, $infocolor, $infotext, $infocolor, $spacer, $border) + $pairs
+  wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
+}
+
+function Write-Success {
+  param(
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+    [string[]]$pairs,
+    [int]$bb = 1,
+    [int]$ba = 1,
+    [int]$pad,
+    [switch]$box,
+    [string]$border = 'DarkGray'
+  )
+  if (!($box)) {
+    $spacer = ': '
+  }
+  $pairs = @($successicon, $successcolor, $successtext, $successcolor, $spacer, $border) + $pairs
+  wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
+}
+
+function Write-Err {
+  param(
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+    [string[]]$pairs,
+    [int]$bb = 1,
+    [int]$ba = 1,
+    [int]$pad,
+    [switch]$box,
+    [string]$border = 'DarkGray'
+  )
+  if (!($box)) {
+    $spacer = ': '
+  }
+  $pairs = @($erricon, $errcolor, $errtext, $errcolor, $spacer, $border) + $pairs
+  wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
+}
+
+function Write-Warn {
+  param(
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
+    [string[]]$pairs,
+    [int]$bb = 1,
+    [int]$ba = 1,
+    [int]$pad,
+    [switch]$box,
+    [string]$border = 'DarkGray'
+  )
+  if (!($box)) {
+    $spacer = ': '
+  }
+  $pairs = @($warnicon, $warncolor, $warntext, $warncolor, $spacer, $border) + $pairs
+  wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
+}
+
+
+
 function Join-Profile {
   <#
     .SYNOPSIS
@@ -18,8 +300,8 @@ function Join-Profile {
   param(
     [switch] $i
   )
-  $env:PSDOTPROFILE = "$env:PSDOTS\profile.ps1"
-  $Global:PSDOTPROFILE = $env:PSDOTPROFILE
+  $Global:PSDOTPROFILE = "$env:PSDOTS\Microsoft.PowerShell_profile.ps1"
+  $env:PSDOTPROFILE = $Global:PSDOTPROFILE
   $ProfileTargets = ('Microsoft.PowerShell_profile.ps1', 'Microsoft.VSCode_profile.ps1')
   $ProfileDocVersions = ('PowerShell', 'WindowsPowerShell')
 
@@ -48,7 +330,7 @@ function New-Backup {
         # This will create a backup of the specified file.
     .NOTES
         Author: njen
-        Version: 1.0.0
+        Version: 1.0.1
     #>
   param(
     [Parameter(Mandatory = $true, Position = 0)]
@@ -58,68 +340,67 @@ function New-Backup {
   )
 
   if (!(Test-Path $target)) {
-    Write-Err | Write-Host -ForegroundColor White "$target does not exist,"
+    Write-Error "$target does not exist."
     return
   }
 
-  $targetpath = [System.IO.Path]::GetFullPath($target)
+  $targetpath = [System.IO.Path]::GetFullPath("$target")
   $targetleaf = Split-Path -Path $targetpath -Leaf
-  if ($env:BACKUPS) {
-    $backupDir = "$env:BACKUPS"
-  }
-  else {
-    $backupDir = "$env:USERPROFILE\backups"
-  }
-  $backupParent = Split-Path -Path $backupDir -Parent
-  $backupFolder = Split-Path -Path $backupDir -Leaf
+  $backupDir = Join-Path -Path $env:USERPROFILE -ChildPath "backups"
   $bakDate = Get-Date -Format 'MM-dd-yyyy-HH.mm.ss'
-  $copyFileName = "$target.$bakDate.bak"
   $backupFileName = "$targetleaf.$bakDate.bak"
-  $backupFilePath = Join-Path -Path (Split-Path -Path $target -Parent) -ChildPath $backupFileName
+  $backupFilePath = Join-Path -Path $backupDir -ChildPath $backupFileName
 
   if (!(Test-Path -Path $backupDir)) {
-    linebreak
-    Write-Host -ForegroundColor Green ' Creating backup directory: ' -NoNewline
     New-Item -ItemType Directory -Path $backupDir -ErrorAction Stop | Out-Null
-    Write-Host -ForegroundColor DarkBlue " $backupParent\" -NoNewline
-    Write-Host -ForegroundColor Blue "$backupFolder"
-    linebreak
   }
 
   if ($copy) {
-    Copy-Item -Path $target -Destination $copyFileName -ErrorAction Stop | Out-Null
-    Move-Item -Path $copyFileName -Destination $backupDir -ErrorAction Stop | Out-Null
-
+    Copy-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
   }
   else {
     Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
-    Move-Item -Path $backupFilePath -Destination $backupDir -ErrorAction Stop | Out-Null
+    Move-Item -Path $backupFileName -Destination $backupDir -ErrorAction Stop | Out-Null
   }
-  linebreak
-  Write-Host -ForegroundColor DarkBlue "$PadddingOut  $backupParent\" -NoNewline
-  Write-Host -ForegroundColor Blue "$backupFolder\" -NoNewline
-  Write-Host -ForegroundColor DarkYellow '  ' -NoNewline
-  Write-Host -ForegroundColor White "$targetleaf" -NoNewline
-  Write-Host -ForegroundColor DarkGray ".$bakDate.bak"
-  linebreak
-  return
+
+  Write-Host "Backup created: $backupFilePath"
 }
 
 function Set-Link {
   <#
     .SYNOPSIS
-        Creates a backup of the target file.
+        Creates a symbolic link from a source file or directory to a target location.
+
     .DESCRIPTION
-        This command creates a symbolic link from the base directory to the target directory. If the target is already present, it may prompt for confirmation depending on the interactive mode setting. This override will prevent accidental data loss.
+        This function creates a symbolic link at the specified target path, pointing to the specified base (source) file or directory.
+        If the target already exists, it can prompt the user for confirmation (interactive mode) and will create a backup of the existing target before replacing it.
+        Supports force mode to overwrite without prompting.
+
     .PARAMETER base
-        Base directory for the symbolic link.
+        The source file or directory to link from.
+
     .PARAMETER target
-        Target directory for the symbolic link.
+        The destination path where the symbolic link will be created.
+
     .PARAMETER i
-        Interactive mode. Prompt the user to overwrite the target if it already exists.
+        Interactive mode. Prompts the user before overwriting or backing up an existing target.
+
+    .PARAMETER force
+        Forces the creation of the symbolic link, overwriting the target if it exists, without prompting.
+
+    .EXAMPLE
+        Set-Link -base "$env:DOTFILES\profile.ps1" -target "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1" -i
+
+        Prompts before overwriting and creates a backup if the target exists, then creates a symbolic link.
+
+    .EXAMPLE
+        Set-Link -base "C:\source\file.txt" -target "C:\dest\file.txt" -force
+
+        Overwrites the target without prompting and creates a symbolic link.
+
     .NOTES
         Author: njen
-        Version: 1.0.0
+        Version: 1.0.1
  #>
   param(
     [Parameter(Mandatory = $true, Position = 0)]
@@ -128,127 +409,37 @@ function Set-Link {
     [Parameter(Mandatory = $true, Position = 1)]
     [string] $target,
 
-    [switch] $i
+    [switch] $i,
+    [Alias('f')]
+    [switch] $force
   )
 
-  if (-not (Test-Path -Path $base)) {
-    Write-Warn "$base does not exist."
+  if (!(Test-Path -Path $base)) {
+    Write-Warning "$base does not exist."
     return
   }
   if ($base -eq $target) {
-    Write-Warn "You can't SymLink a file to itself."
+    Write-Warning "You can't SymLink a file to itself."
     return
   }
 
-  $basedircolor = 'Blue'
-  $baseleafcolor = 'DarkGreen'
-  $targetdircolor = 'Blue'
-  $targetleafcolor = 'DarkCyan'
-  $arrowcolor = 'DarkGray'
-  $arrow = '  -->  '
-  $dotcolor = 'Green'
-  $doticon = '󰑊 '
-  $psdotcolor = 'Cyan'
-  $psdoticon = ' '
-  $devcolor = 'Magenta'
-  $devicon = ' '
-  $homecolor = 'Blue'
-  $homeicon = '~/'
-  $basepath = [System.IO.Path]::GetFullPath($base)
-  $basedir = [System.IO.Path]::GetDirectoryName($basepath)
-  $parentDir = Split-Path $basedir -Parent
-  $baseleaf = (Get-Item $basepath).Name
-  $targetpath = [System.IO.Path]::GetFullPath($target)
-  $targetdir = Split-Path $targetpath -Parent
-  $targetleaf = Split-Path -Path $targetpath -Leaf
-
-  if ($basedir -eq 'C:\') {
-    $basedir = "$basedir"
-  }
-  elseif ($basedir -eq $env:DOTFILES -or $parentDir -eq $env:DOTFILES) {
-    $basedircolor = $dotcolor
-    $basedir = $doticon
-  }
-  elseif ($basedir -eq $env:PSDOTS) {
-    $basedircolor = $psdotcolor
-    $basedir = $psdoticon
-  }
-  elseif ($basedir -eq $env:USERPROFILE) {
-    $basedircolor = $homecolor
-    $basedir = $homeicon
-  }
-  elseif ($basedir -eq $env:DEV) {
-    $basedircolor = $devcolor
-    $basedir = $devicon
-  }
-  else {
-    $basedir = "$basedir\"
-  }
-
-  if ($targetdir -eq 'C:\') {
-    $targetdir = "$targetdir"
-  }
-  elseif ($targetdir -eq $env:DOTFILES -or $parentDir -eq $env:DOTFILES) {
-    $targetdircolor = $dotcolor
-    $targetdir = $doticon
-  }
-  elseif ($targetdir -eq $env:PSDOTS) {
-    $targetdircolor = $psdotcolor
-    $targetdir = $psdoticon
-  }
-  elseif ($targetdir -eq $env:USERPROFILE) {
-    $targetdircolor = $homecolor
-    $targetdir = $homeicon
-  }
-  elseif ($targetdir -eq $env:DEV) {
-    $targetdircolor = $devcolor
-    $targetdir = $devicon
-  }
-  else {
-    $targetdir = "$targetdir\"
-  }
-
-  $symlinker = {
-    New-Item -ItemType SymbolicLink -Path $target -Target ((Get-Item $base).FullName) -ErrorAction Stop | Out-Null
-    Write-Host -ForegroundColor $basedircolor "$PadddingOut $basedir" -NoNewline
-    Write-Host -ForegroundColor $baseleafcolor "$baseleaf" -NoNewline
-    Write-Host -ForegroundColor $arrowcolor "$arrow" -NoNewline
-    Write-Host -ForegroundColor $targetdircolor "$targetdir" -NoNewline
-    Write-Host -ForegroundColor $targetleafcolor "$targetleaf"
-  }
-
   if (Test-Path -Path $target) {
-    if ((Get-Item -Path $target).Target -eq ((Get-Item $base).FullName)) {
-      Write-Info "$basedir$baseleaf = $targetdir$targetleaf"
-      return
-    }
-    if ($i -and (Test-Path $target)) {
-      linebreak
-      Write-Host -ForegroundColor Magenta "$PadddingOut $((Get-Item $target).FullName) " -NoNewline
-      Write-Host -ForegroundColor Gray 'already exists. '
-      Write-Host -ForegroundColor Cyan "$PadddingOut Create backup? " -NoNewline
-      $userChoice = Read-Host '[Y/n]'
+    if ($i) {
+      $userChoice = Read-Host "Target exists. Create backup? [Y/n]"
       if ($userChoice -eq 'n') {
-        Write-Warn 'Operation cancelled.'
+        Write-Warning "Operation cancelled."
         return
       }
+      New-Backup -target $target
     }
-    New-Backup -target $target
-  }
-  if ($i) {
-    linebreak
-    Write-Host -ForegroundColor Cyan "$PadddingOut Create SymLink? " -NoNewline
-    $userChoice = Read-Host '[Y/n]'
-    if ($userChoice -eq 'n') {
-      Write-Warn 'Operation cancelled.'
-      return
+    elseif ($force) {
+      New-Backup -target $target
     }
   }
-  linebreak
-  &$symlinker
-  linebreak
-}
 
+  New-Item -ItemType SymbolicLink -Path $target -Target $base -Force:$force -ErrorAction Stop | Out-Null
+  Write-Host "Symbolic link created: $target -> $base"
+}
 
 function Show-DotsUsage {
   <#
@@ -308,6 +499,12 @@ function Invoke-Dots {
 
 }
 
+Export-ModuleMember -Function linebreak
+Export-ModuleMember -Function wh
+Export-ModuleMember -Function Write-Err
+Export-ModuleMember -Function Write-Info
+Export-ModuleMember -Function Write-Success
+Export-ModuleMember -Function Write-Warn
 Export-ModuleMember -Function Join-Profile
 Export-ModuleMember -Function New-Backup
 Export-ModuleMember -Function Set-Link

@@ -47,32 +47,6 @@ function Add-PSModulePath {
   }
 }
 
-function Import-PSMod {
-  [CmdletBinding()]
-  param (
-    [Parameter()]
-    $Name,
-    [switch]$Local,
-    [string]$RequiredVersion
-  )
-
-  if ($Local) {
-    $LocalModule = "$env:PSMODS\$Name"
-    if (Test-Path $LocalModule) {
-      Import-Module -Name $LocalModule -Global
-    }
-  }
-  else {
-    if (Get-Module $Name -ListAvailable) {
-      Import-Module -Name $Name -Global
-    }
-    else {
-      Install-Module -Name $Name -Scope CurrentUser -Force
-    }
-    return
-  }
-}
-
 function Import-ScoopModule {
   param (
     [Parameter()]
@@ -81,46 +55,46 @@ function Import-ScoopModule {
   Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\$Name" -Global
 }
 
-function Add-Path {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-  if (Test-Path $Path) {
-    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-      $env:Path += ";$Path"
-    }
-  }
-  else {
-    Write-Err $Path Magenta ' does not exist.'
-  }
-}
-function Add-PrependPath {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-  if (Test-Path $Path) {
-    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-      $env:Path = "$Path;$env:Path"
-    }
-  }
-  else {
-    Write-Err $Path Magenta ' does not exist.'
-  }
-}
-function Remove-Path {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-  if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
-    $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
-  }
-  else {
-    Write-Err $Path Magenta ' does not exist.'
-  }
-}
+# function Add-Path {
+#   param (
+#     [Parameter(Mandatory = $true)]
+#     [string]$Path
+#   )
+#   if (Test-Path $Path) {
+#     if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+#       $env:Path += ";$Path"
+#     }
+#   }
+#   else {
+#     Write-Err $Path Magenta ' does not exist.'
+#   }
+# }
+# function Add-PrependPath {
+#   param (
+#     [Parameter(Mandatory = $true)]
+#     [string]$Path
+#   )
+#   if (Test-Path $Path) {
+#     if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+#       $env:Path = "$Path;$env:Path"
+#     }
+#   }
+#   else {
+#     Write-Err $Path Magenta ' does not exist.'
+#   }
+# }
+# function Remove-Path {
+#   param (
+#     [Parameter(Mandatory = $true)]
+#     [string]$Path
+#   )
+#   if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
+#     $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
+#   }
+#   else {
+#     Write-Err $Path Magenta ' does not exist.'
+#   }
+# }
 
 function Clear-Cache {
   # add clear cache logic here
@@ -197,7 +171,6 @@ if (Test-CommandExists yazi) {
 function Get-PubIP { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 function winutil { Invoke-RestMethod https://christitus.com/win | Invoke-Expression }
-
 
 function trash($path) {
   $trashicon = ''
@@ -321,7 +294,7 @@ function gup {
   if (Test-Path .git) {
     $commitDate = Get-Date -Format 'MM-dd-yyyy HH:mm'
     Write-Host ''
-    git add -A
+    git add .
     git commit -m "Update @ $commitDate"
     git push
     Write-Host ''
@@ -412,9 +385,9 @@ function cdev { Set-Location "$env:DEV" }
 Set-Alias -Name dev -Value cdev
 
 function .. { Set-Location '..' }
-function ... { Set-Location '...' }
-function .... { Set-Location '....' }
-function ..... { Set-Location '.....' }
+function ... { Set-Location '..\..' }
+function .... { Set-Location '..\..\..' }
+function ..... { Set-Location '..\..\..\..' }
 
 function Get-Functions { Get-ChildItem function:\ }
 

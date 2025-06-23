@@ -1,25 +1,35 @@
 $modulePath = $PSScriptRoot
+$PadddingOut += ' ' * $env:padding
+
+function WriteParams {
+    param (
+      [string]$paramtext,
+      [string]$desctext
+    )
+
+    $format = "{0,-32} {1}"
+    $paramout = $flavor.Teal.Foreground() + ($PadddingOut * 2) + "$paramtext"
+    $descout = $flavor.Text.Foreground() + "$desctext"
+    Write-Host ($format -f $paramout, $descout)
+    linebreak
+}
 
 function Show-BlastoffUsage {
   $bannerPath = Join-Path -Path $modulePath -ChildPath 'banner'
+  $bodesc = $flavor.Maroon.Foreground() + $PadddingOut + "Starship prompt theme switcher for PowerShell"
+
   if (Test-Path -Path $bannerPath) {
     linebreak 2
     Get-Content -Path $bannerPath | Write-Host
   }
+  Write-Host $bodesc
   linebreak
-  Write-Host -foregroundColor DarkMagenta ' Starship prompt theme switcher for PowerShell.'
+  wh -bb 0 -ba 0 -nl -pad $env:padding 'Usage: ' DarkGray 'blastoff ' Magenta '[options]' Cyan
   linebreak
-  Write-Host ' Usage: blastoff [options]'
+  WriteParams -paramtext '-theme' -desctext 'Set the Starship theme.'
+  WriteParams -paramtext '-list' -desctext 'List all available themes.'
+  WriteParams -paramtext '-help' -desctext 'Display this help message.'
   linebreak
-  Write-Host -foregroundColor Cyan "`t-theme: " -NoNewline
-  Write-Host 'Select themes.'
-  linebreak
-  Write-Host -foregroundColor Cyan "`t-list: " -NoNewline
-  Write-Host 'Lists all available themes.'
-  linebreak
-  Write-Host -foregroundColor Cyan "`t-help: " -NoNewline
-  Write-Host 'Display this help message.'
-  linebreak 2
 
 }
 
@@ -30,7 +40,16 @@ function Get-StarshipThemes {
   Get-ChildItem $env:STARSHIP_THEMES | ForEach-Object `
   {
     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
-    wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name Gray
+
+    if ($name -eq $currentStarshipTheme) {
+      $color = 'Green'
+      $output = wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name $color ' (current)' 'DarkGray'
+    } else {
+      $color = 'Gray'
+      $output = wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name $color
+    }
+
+    $output
   }
   linebreak 2
 }
@@ -55,10 +74,26 @@ function Invoke-Blastoff {
     [switch]$list,
     [string]$theme
   )
+  $currentStarshipTheme = [IO.Path]::GetFileNameWithoutExtension((Get-Item -Path $env:STARSHIP_CONFIG | Select-Object -ExpandProperty Target))
+  $targetDir = (Get-Item -Path $env:STARSHIP_CONFIG | Select-Object -ExpandProperty Directory)
+
   if ($theme) {
-    Get-Content "$env:STARSHIP_THEMES\$theme.toml" > $env:STARSHIP_CONFIG
-    wh -box -border 0 -bb 1 -ba 2 -pad $env:padding ' ' red ' │ ' darkgray '3... 2... 1... ' darkgray $theme green
+    $curretDir = Get-Location
+    $sourcePath = "themes\$theme.toml"
+    $targetPath = "starship.toml"
+
+    if (-not (Test-Path -Path "$env:STARSHIP_DIR\themes\$theme.toml")) {
+      Write-Err "$theme not found"
+      return
+    } else {
+
+    Set-Location -Path $targetDir
+    New-Item -ItemType SymbolicLink -Path $targetPath -Target $sourcePath -Force | Out-Null
+    Set-Location -Path $curretDir
+    $currentStarshipTheme = $theme
+    wh -box -border 0 -bb 1 -ba 1 -pad $env:padding '  ' red $theme green
     return
+    }
   }
   if ($help) {
     Show-BlastoffUsage
@@ -69,7 +104,6 @@ function Invoke-Blastoff {
     return
   }
   Show-BlastoffUsage
-  return
 }
 
 

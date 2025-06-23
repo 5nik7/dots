@@ -55,8 +55,8 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
   Import-Module -Name 'powernerd' -Global
   Import-Module -Name 'winwal' -Global
   Import-Module -Name 'lab' -Global
-  Import-Module -Name UsefulArgumentCompleters -Global
-  # Import-UsefulArgumentCompleterSet -OptionalCompleter Hyperv
+  Import-Module -Name 'UsefulArgumentCompleters' -Global
+
   (& pyenv-venv completion) | Out-String | Invoke-Expression
   (& starship completions power-shell) | Out-String | Invoke-Expression
   (& bat --completion ps1) | Out-String | Invoke-Expression
