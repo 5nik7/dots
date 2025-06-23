@@ -255,3 +255,6 @@ l
 ll
 c
 ls
+clear
+l
+env
