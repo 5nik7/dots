@@ -46,6 +46,10 @@ alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
 alias ".d"="cd $DOTS"
+alias ".f"="cd $DOTFILES"
+alias ".s"="cd $SHELLS"
+alias ".sz"="cd $ZSHDOTS"
+alias ".sb"="cd $SHELLS/bash"
 
 if cmd_exists eza; then
     function l() {
