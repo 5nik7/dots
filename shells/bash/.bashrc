@@ -18,11 +18,11 @@ LANG=en_US.UTF-8
 export LANG
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-DOTS="$(dirname "$(dirname "$(dirname "$(readlink "$HOME/.bashrc")")")")"
+DOTS="$HOME/dots"
 export DOTS
-SHELLS="$(dirname "$(dirname "$(readlink "$HOME/.bashrc")")")"
+SHELLS="$DOTS/shells"
 export SHELLS
-BASHDOT="$(dirname "$(readlink "$HOME/.bashrc")")"
+BASHDOT="$SHELLS/bash"
 export BASHDOT
 export DOTFILES="$DOTS/configs"
 export DOTSBIN="$DOTS/bin"
@@ -48,10 +48,9 @@ src "$BASHDOT/functions.bash"
 addir "$HOME/.local/bin"
 
 extend_path "$HOME/.local/bin"
-# extend_path "$HOME/src/nerd-fonts/bin/scripts"
 extend_path "$HOME/.local/share/nvim/mason/bin"
 prepend_path "$GOBIN"
-prepend_path "$DOTSBIN"
+# prepend_path "$DOTSBIN"
 prepend_path "$HOME/.cargo/bin"
 
 export SHHHH="$DOTS/secrets"
@@ -59,17 +58,8 @@ src "$SHHHH/secrets.sh"
 src "/usr/share/nvm/init-nvm.sh"
 
 if cmd_exists fzf; then
-  src "$BASHDOT/fzf.bash"
-fi
-
-if cmd_exists fzf; then
   src "$BASHDOT/fzf.bash" && eval "$(fzf --bash)"
 fi
-
-function is_droid() {
-  [[ -d "$HOME/.termux" ]] &>/dev/null
-  return $?
-}
 
 if is_droid; then
   src "$BASHDOT/droid.bash"
@@ -80,8 +70,7 @@ if [ -f /etc/wsl.conf ]; then
 fi
 
 src "$BASHDOT/aliases.bash"
-
-set bell-style none
+src "$BASHDOT/colors.bash"
 
 if cmd_exists starship; then
   eval "$(starship init bash)"
@@ -97,7 +86,7 @@ if cmd_exists zoxide; then
 fi
 
 if cmd_exists batpipe; then
-    eval "$(batpipe)"
+  eval "$(batpipe)"
 fi
 
 if cmd_exists batman; then
@@ -105,3 +94,5 @@ if cmd_exists batman; then
 fi
 
 eval "$(gh copilot alias -- bash)"
+
+set bell-style none

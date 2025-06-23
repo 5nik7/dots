@@ -24,11 +24,18 @@ fi
 
 alias c='clear'
 alias q='exit'
-alias v='nvim'
 
 alias g='git'
 
 alias path='echo $PATH | tr ":" "\n"'
+
+alias rmr='rm -fvr'
+
+function mkcd() {
+  mkdir -p "$1" && cd "$1"
+}
+
+alias h='history'
 
 alias ".."="cd .."
 alias "..."="cd ../.."
@@ -43,13 +50,13 @@ alias ".d"="cd $DOTS"
 if cmd_exists eza; then
   function l() {
     linebreak
-    eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+    eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
     linebreak
   }
   function ll() {
-    local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
+    # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
     linebreak
-    eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user --time-style "$timestyle"
+    eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user
     linebreak
   }
   function lt() {
@@ -58,18 +65,41 @@ if cmd_exists eza; then
       level=1
     fi
     linebreak
+    eza --group-directories-first --git-repos --git --icons -n --tree -L "$level"
+    linebreak
+  }
+  function la() {
+    linebreak
+    eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+    linebreak
+  }
+  function lla() {
+    # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
+    linebreak
+    eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user
+    linebreak
+  }
+  function lta() {
+    local level="$1"
+    if [ "$1" = "" ]; then
+      level=1
+    fi
+    linebreak
     eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
     linebreak
   }
-  alias ls='ls --color=auto'
+  alias eza='eza --icons'
+  alias ls='eza'
+  alias lsa='ls -a'
 fi
 
 if cmd_exists yazi; then
   function y() {
-    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
     yazi "$@" --cwd-file="$tmp"
-    IFS= read -r -d '' cwd <"$tmp"
-    [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+      builtin cd -- "$cwd"
+    fi
     rm -f -- "$tmp"
   }
   alias d='y'

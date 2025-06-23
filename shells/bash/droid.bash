@@ -1,23 +1,41 @@
+if cmd_exists jq; then
+  function location() {
+  latitude="$(termux-location | jq '.["latitude"]')"
+  longitude="$(termux-location | jq '.["longitude"]')"
+  echo "${latitude},${longitude}"
+  }
+fi
+
 export DROIDOTS="$DOTS/androidots"
 
 prepend_path "$DROIDOTS/bin"
 
+alias open="termux-open"
+
+alias bon="export BTRY='on'"
+alias boff="export BTRY=''"
+
 alias upd="pkg update && pkg upgrade -y"
 
-# function btry {
-#   BATTERY=$(termux-battery-status | grep percentage | awk '{print $2}' | tr -d ',')
-#   if (( $BATTERY >= 60 ));then
-#     batcol=2
-#   elif (( $BATTERY >= 30 ));then
-#     batcol=3
-#   else
-#     batcol=1
-#   fi
-#   printcol "$BATTERY%\n" $batcol
-# }
+alias ".dd"="cd $DROIDOTS"
 
 function google {
   termux-open-url "https://www.google.com/search?q=$*"
+}
+
+function www {
+  if [[ $1 == https://* ]]; then
+    termux-open-url "$1"
+  else
+    termux-open-url "https://$1"
+  fi
+}
+
+function pkglist(){
+ pkglist="$DROIDOTS/pkglist"
+  command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkglist"
+ sed -i '1d' "$pkglist"
+
 }
 
 if is_installed perl; then
