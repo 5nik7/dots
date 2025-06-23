@@ -33,6 +33,13 @@ export DOT_THEME
 LS_COLORS="$(vivid generate "$DOT_THEME")"
 export LS_COLORS
 
+STARSHIP_DIR="$DOTFILES/starship"
+export STARSHIP_DIR
+STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
+export STARSHIP_CONFIG
+STARSHIP_THEMES="$STARSHIP_DIR/themes"
+export STARSHIP_THEMES
+
 export GOBIN="$HOME/go/bin"
 
 function src() {

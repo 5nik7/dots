@@ -177,10 +177,10 @@ function fixpath() {
 }
 
 function cleanvim() {
-	rm -rf ~/.config/nvim
-	rm -rf ~/.local/share/nvim
-	rm -rf ~/.local/state/nvim
-	rm -rf ~/.cache/nvim
+	mv ~/.config/nvim{,.bak}
+	mv ~/.local/share/nvim{,.bak}
+	mv ~/.local/state/nvim{,.bak}
+	mv ~/.cache/nvim{,.bak}
 }
 
 function ssl-download-certificate {
@@ -224,7 +224,7 @@ function fname() {
   basename "$@" | sed 's/\(.*\)\..*/\1/'
 }
 
-function fext() {
+function noext() {
   filename=$(basename "$@")
   echo "${filename##*.}"
 

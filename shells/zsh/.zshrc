@@ -17,6 +17,10 @@ export DOT_THEME="$(cat "$DOTS"/.theme)"
 
 export LS_COLORS="$(vivid generate "$DOT_THEME")"
 
+export STARSHIP_DIR="$DOTFILES/starship"
+export STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
+export STARSHIP_THEMES="$STARSHIP_DIR/themes"
+
 export GOBIN="$HOME/go/bin"
 
 fpath+=("$ZFUNC" "${fpath[@]}")
