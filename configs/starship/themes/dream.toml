@@ -79,6 +79,8 @@ color_vimcmd_ok = 'black'
 color_vimcmd_replace = 'yellow'
 color_vimcmd_visual = 'purple'
 color_btry_bg = '#181825'
+# color_fill = '#303446'
+# color_fill = '#24273a'
 color_fill = '#313244'
 
 [time]
