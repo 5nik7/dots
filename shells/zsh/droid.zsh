@@ -1,10 +1,30 @@
 if cmd_exists jq; then
-  function location() {
-  latitude="$(termux-location | jq '.["latitude"]')"
-  longitude="$(termux-location | jq '.["longitude"]')"
-  echo "${latitude},${longitude}"
+  # latitude="$(termux-location | jq '.["latitude"]')"
+  # longitude="$(termux-location | jq '.["longitude"]')"
+  # location="$latitude,$longitude"
+
+  location() {
+    latitude="$(termux-location | jq '.["latitude"]')"
+    longitude="$(termux-location | jq '.["longitude"]')"
+    location="$latitude,$longitude"
+    echo "$latitude,$longitude"
+    # export LATITUDE="$latitude"
+    # export LONGITUDE="$longitude"
+    # export LOCATION="$location"
   }
 fi
+
+function weather() {
+  location="$(location)"
+  # latitude="$(termux-location | jq '.["latitude"]')"
+  # longitude="$(termux-location | jq '.["longitude"]')"
+  # location="$latitude,$longitude"
+  curl -fGsS "wttr.in/$location?format=1" | sed 's/  //; s/+//'
+  # curl -fGsS "wttr.in/$location?format=1" | sed 's/☀//;s/  //; s/+//'
+  # export LATITUDE="$latitude"
+  # export LONGITUDE="$longitude"
+  # export LOCATION="$location"
+}
 
 export DROIDOTS="$DOTS/androidots"
 
