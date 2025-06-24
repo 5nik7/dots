@@ -19,6 +19,11 @@ foreach ( $piece in $psource ) {
   }
 }
 
+if (Test-CommandExists fzf) {
+  Import-ScoopModule -Name 'PsFzf'
+  Set-PsFzfOption -TabExpansion
+}
+
 # Import-Module -Name 'PowerShellGet' -Global
 Import-Module -Name 'Terminal-Icons' -Global
 Import-Module -Name 'blastoff' -Global
