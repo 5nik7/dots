@@ -23,17 +23,21 @@ export STARSHIP_THEMES="$STARSHIP_DIR/themes"
 
 export GOBIN="$HOME/go/bin"
 
+if [[ -f "$HOME/.pythonrc" ]]; then
+  export PYTHONSTARTUP="$HOME/.pythonrc"
+fi
+
 fpath+=("$ZFUNC" "${fpath[@]}")
 
 function zource() {
-  if [ -f "$1" ]; then
+  if [[ -f "$1" ]]; then
     source "$1"
   fi
 }
 
 function zieces() {
   zfile="$ZSHDOTS/$1.zsh"
-  if [ -f "$zfile" ]; then
+  if [[ -f "$zfile" ]]; then
     source "$zfile"
   fi
 }
