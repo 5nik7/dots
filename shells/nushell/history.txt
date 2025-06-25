@@ -258,3 +258,16 @@ ls
 clear
 l
 env
+c
+weather
+weather | describe
+blue
+catppuccin
+catppuccin | describe
+catppuccin -f mocha | describe
+catppuccin -f mocha -c blue | describe
+catppuccin -f mocha -c blue
+catppuccin -h
+catppuccin -h |describe
+echo test
+echo test | describe

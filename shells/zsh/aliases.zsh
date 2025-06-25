@@ -51,6 +51,12 @@ alias ".s"="cd $SHELLS"
 alias ".sz"="cd $ZSHDOTS"
 alias ".sb"="cd $SHELLS/bash"
 
+if cmd_exists pastel; then
+  alias paint='pastel paint'
+else
+  alias paint="echo -e 'Padtern not found. Install pastel to use this command.'"
+fi
+
 if cmd_exists eza; then
     function l() {
       linebreak
