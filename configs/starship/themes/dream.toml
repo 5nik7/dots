@@ -239,7 +239,7 @@ style = 'bright-red'
 symbol = '󱘗 '
 
 [os]
-disabled = false
+disabled = true
 style = "fg:color_os"
 format = '[$symbol ]($style)'
 
