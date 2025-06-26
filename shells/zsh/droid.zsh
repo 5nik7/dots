@@ -7,6 +7,8 @@ if cmd_exists jq; then
   }
 fi
 
+export location="$(location)"
+
 wttr1 () {
   curl -fGsS "wttr.in/$location?format=1" | sed 's/  //; s/+//'
 }
