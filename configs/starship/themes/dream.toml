@@ -82,16 +82,17 @@ color_vimcmd_visual = 'purple'
 color_btry_bg = '#181825'
 # color_fill = '#303446'
 # color_fill = '#24273a'
-color_fill = '#313244'
+color_fill = '#1e1e2e'
 
 [time]
-disabled = false
+disabled = true
 time_format = "%-I:%M%P"
 style = "fg:color_time"
 format = '( [$time]($style) )'
 # format = '( [ $time]($style) )'
 
 [custom.btry]
+disabled = true
 command = "btry"
 style = "bg:color_btry_bg"
 # when = "true"
@@ -141,6 +142,7 @@ style = "white dimmed"
 disabled = true
 
 [fill]
+disabled = true
 symbol = '󰍴'
 style = 'fg:color_fill'
 
