@@ -60,13 +60,13 @@ fi
 if cmd_exists eza; then
     function l() {
       linebreak
-      eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+      eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
       linebreak
     }
     function ll() {
       # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
       linebreak
-      eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user
+      eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
       linebreak
     }
     function lt() {
@@ -75,18 +75,18 @@ if cmd_exists eza; then
           level=1
       fi
       linebreak
-      eza --group-directories-first --git-repos --git --icons -n --tree -L "$level"
+      eza --group-directories-first --git-repos --git --icons -n --tree -L "$level" "$@"
       linebreak
     }
     function la() {
       linebreak
-      eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+      eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
       linebreak
     }
     function lla() {
       # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
       linebreak
-      eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user
+      eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
       linebreak
     }
     function lta() {
@@ -95,7 +95,7 @@ if cmd_exists eza; then
           level=1
       fi
       linebreak
-      eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
+      eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level" "$@"
       linebreak
     }
     alias eza='eza --icons'
