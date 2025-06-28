@@ -7,11 +7,13 @@ if cmd_exists jq; then
   }
 fi
 
+export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
+
 # export location="$(location)"
 
-wttr1 () {
-  curl -fGsS "wttr.in/$location?format=1" | sed 's/  //; s/+//'
-}
+# wttr1 () {
+#   curl -fGsS "wttr.in/$location?format=1" | sed 's/  //; s/+//'
+# }
 
 export DROIDOTS="$DOTS/androidots"
 

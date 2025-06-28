@@ -148,7 +148,7 @@ if [[ -d "$HOME/dev" ]]; then
 fi
 
 if [[ -d "$HOME/src" ]]; then
-    export SRCDIR="$HOME/dev"
+    export SRCDIR="$HOME/src"
     alias src="cd $SRCDIR"
 fi
 
