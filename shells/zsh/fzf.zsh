@@ -27,7 +27,8 @@ mantle="#181825"
 crust="#11111b"
 
 if is_droid; then
-  preview_pos='bottom:hidden:50%:border-top'
+  # preview_pos='bottom:hidden:50%:border-top'
+  preview_pos='right:hidden:50%:border-sharp'
 else
   preview_pos='right:hidden:50%:border-left'
 fi
