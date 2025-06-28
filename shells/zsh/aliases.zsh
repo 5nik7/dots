@@ -45,11 +45,14 @@ alias "......"="cd ../../../../.."
 alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
+alias ".c"="cd $HOME/.config"
+
 alias ".d"="cd $DOTS"
 alias ".f"="cd $DOTFILES"
 alias ".s"="cd $SHELLS"
 alias ".sz"="cd $ZSHDOTS"
 alias ".sb"="cd $SHELLS/bash"
+alias ".sp"="cd $SHELLS/powershell"
 
 if cmd_exists pastel; then
   alias paint='pastel paint'
@@ -143,6 +146,12 @@ if [[ -d "$HOME/dev" ]]; then
   export DEV="$HOME/dev"
   alias dev="cd $DEV"
 fi
+
+if [[ -d "$HOME/src" ]]; then
+    export SRCDIR="$HOME/dev"
+    alias src="cd $SRCDIR"
+fi
+
 
 if cmd_exists lazygit; then
   alias lg='lazygit'
