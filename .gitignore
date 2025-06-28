@@ -27,6 +27,7 @@ configs/clink/clink.log
 #backup files
 *.bak
 #log
+*.log
 configs/yasb/yasb.log
 configs/yasb/yasb.log.*
 #llazy-lock.json
