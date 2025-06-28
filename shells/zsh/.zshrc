@@ -61,12 +61,14 @@ export SHHHH="$DOTS/secrets"
 zource "$SHHHH/secrets.sh"
 zource "/usr/share/nvm/init-nvm.sh"
 
-if cmd_exists fzf; then
-  zieces 'fzf' && eval "$(fzf --zsh)"
-fi
-
 if is_droid; then
   zieces 'droid'
+fi
+
+zieces 'colors'
+
+if cmd_exists fzf; then
+    zieces 'fzf' && eval "$(fzf --zsh)"
 fi
 
 if [ -f /etc/wsl.conf ]; then
@@ -79,7 +81,6 @@ if cmd_exists zoxide; then
 fi
 
 zieces 'aliases'
-zieces 'colors'
 
 if cmd_exists starship; then
   eval "$(starship init zsh)"
