@@ -24,7 +24,9 @@ alias boff="export BTRY=''"
 
 alias upd="pkg update && pkg upgrade -y"
 
-alias ".dd"="cd $DROIDOTS"
+alias ".a"="cd $DROIDOTS"
+alias ".af"="cd $DROIDOTS/configs"
+alias ".ab"="cd $DROIDOTS/bin"
 
 function google {
   termux-open-url "https://www.google.com/search?q=$*"
