@@ -19,6 +19,8 @@ foreach ( $piece in $psource ) {
   }
 }
 
+Set-FuzzyOpts
+
 if (Test-CommandExists fzf) {
   Import-ScoopModule -Name 'PsFzf'
   Set-PsFzfOption -TabExpansion
@@ -34,10 +36,6 @@ Import-Module -Name UsefulArgumentCompleters -Global
 
 Import-ScoopModule -Name 'scoop-completion'
 Import-Module -Name 'git-completion' -Global
-
-function Set-Completion {
-  (& "$1") | Out-String | Invoke-Expression
-}
 
 & starship completions power-shell | Out-String | Invoke-Expression
 & bat --completion ps1 | Out-String | Invoke-Expression
