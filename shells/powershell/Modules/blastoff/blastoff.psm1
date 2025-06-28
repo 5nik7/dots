@@ -1,17 +1,15 @@
 $modulePath = $PSScriptRoot
 $PadddingOut += ' ' * $env:padding
-
 function WriteParams {
-    param (
-      [string]$paramtext,
-      [string]$desctext
-    )
+  param (
+    [string]$paramtext,
+    [string]$desctext
+  )
 
-    $format = "{0,-32} {1}"
-    $paramout = $flavor.Teal.Foreground() + ($PadddingOut * 2) + "$paramtext"
-    $descout = $flavor.Text.Foreground() + "$desctext"
-    Write-Host ($format -f $paramout, $descout)
-    linebreak
+  $format = "{0,-32} {1}"
+  $paramout = $flavor.Teal.Foreground() + ($PadddingOut * 2) + "$paramtext"
+  $descout = $flavor.Text.Foreground() + "$desctext"
+  Write-Host ($format -f $paramout, $descout)
 }
 
 function Show-BlastoffUsage {
@@ -32,27 +30,73 @@ function Show-BlastoffUsage {
   linebreak
 
 }
-
 function Get-StarshipThemes {
-
-  wh -box -bb 1 -ba 1 -pad $env:padding 'Listing Starship Thenes.' Magenta
-
-  Get-ChildItem $env:STARSHIP_THEMES | ForEach-Object `
-  {
-    $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
-
-    if ($name -eq $currentStarshipTheme) {
-      $color = 'Green'
-      $output = wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name $color ' (current)' 'DarkGray'
-    } else {
-      $color = 'Gray'
-      $output = wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name $color
-    }
-
-    $output
+  function StarshipPresetCheck($name) {
+    $presets = & starship preset --list
+    return $presets -contains $name
   }
-  linebreak 2
+  function StarshipPreset($name) {
+    & starship preset $name
+  }
+
+  $starshipPresets = & starship preset --list
+
+  Write-Host ""
+  Write-Host "$PadddingOut$($flavor.Mauve.Foreground())Themes:$($flavor.Text.Foreground())"
+
+  $themeFiles = Get-ChildItem "$env:STARSHIP_THEMES\*.toml"
+  foreach ($themeFile in $themeFiles) {
+    $name = [IO.Path]::GetFileNameWithoutExtension($themeFile.Name)
+    if (-not ($starshipPresets -contains $name)) {
+      Write-Host -NoNewline "$PadddingOut$($flavor.Surface0.Foreground()) "
+      if ($name -eq $currentStarshipTheme) {
+        Write-Host -NoNewline "$($flavor.Sky.Foreground())$name $($flavor.Surface2.Foreground())(current)"
+      }
+      else {
+        Write-Host -NoNewline "$($flavor.Text.Foreground())$name"
+      }
+      Write-Host "$($flavor.Text.Foreground())"
+    }
+  }
+
+  Write-Host ""
+  Write-Host "$PadddingOut$($flavor.Mauve.Foreground())Presets:$($flavor.Text.Foreground())"
+
+  foreach ($preset in $starshipPresets) {
+    if (-not [string]::IsNullOrWhiteSpace($preset)) {
+      Write-Host -NoNewline "$PadddingOut$($flavor.Surface0.Foreground()) "
+      if ($preset -eq $currentStarshipTheme) {
+        Write-Host -NoNewline "$($flavor.Sky.Foreground())$preset $($flavor.Surface2.Foreground())(current)"
+      }
+      else {
+        Write-Host -NoNewline "$($flavor.Text.Foreground())$preset"
+      }
+      Write-Host "$($flavor.Text.Foreground())"
+    }
+  }
+  Write-Host ""
 }
+# function Get-StarshipThemes {
+
+#   wh -box -bb 1 -ba 1 -pad $env:padding 'Themes:' Magenta
+
+#   Get-ChildItem $env:STARSHIP_THEMES | ForEach-Object `
+#   {
+#     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
+
+#     if ($name -eq $currentStarshipTheme) {
+#       $color = 'Green'
+#       $output = wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name $color ' (current)' 'DarkGray'
+#     }
+#     else {
+#       $color = 'Gray'
+#       $output = wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name $color
+#     }
+
+#     $output
+#   }
+#   linebreak 2
+# }
 
 function Invoke-Blastoff {
   <#
@@ -85,14 +129,15 @@ function Invoke-Blastoff {
     if (-not (Test-Path -Path "$env:STARSHIP_DIR\themes\$theme.toml")) {
       Write-Err "$theme not found"
       return
-    } else {
+    }
+    else {
 
-    Set-Location -Path $targetDir
-    New-Item -ItemType SymbolicLink -Path $targetPath -Target $sourcePath -Force | Out-Null
-    Set-Location -Path $curretDir
-    $currentStarshipTheme = $theme
-    wh -box -border 0 -bb 1 -ba 1 -pad $env:padding '  ' red $theme green
-    return
+      Set-Location -Path $targetDir
+      New-Item -ItemType SymbolicLink -Path $targetPath -Target $sourcePath -Force | Out-Null
+      Set-Location -Path $curretDir
+      $currentStarshipTheme = $theme
+      wh -box -border 0 -bb 1 -ba 1 -pad $env:padding '  ' red $theme green
+      return
     }
   }
   if ($help) {
@@ -105,7 +150,5 @@ function Invoke-Blastoff {
   }
   Show-BlastoffUsage
 }
-
-
 
 New-Alias -Name blastoff -Scope Global -Value Invoke-Blastoff -ErrorAction Ignore
