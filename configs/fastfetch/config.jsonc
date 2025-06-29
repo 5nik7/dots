@@ -7,13 +7,13 @@
     "padding": {
       "top": 1,
       "right": 3,
-      "left": 4
-    }
+      "left": 4,
+    },
   },
   "display": {
     "separator": " ",
     "color": {
-      "separator": "black"
+      "separator": "black",
     },
     "constants": [
       "\u001b[30m───────────────────────────────────────────────────────────────",
@@ -23,64 +23,64 @@
       " \u001b[90m\u001b[31m\u001b[32m\u001b[33m\u001b[34m\u001b[35m\u001b[36m\u001b[37m ",
       " \u001b[90m\u001b[31m\u001b[32m\u001b[33m\u001b[34m\u001b[35m\u001b[36m\u001b[37m ",
       " \u001b[90m█\u001b[31m█\u001b[32m█\u001b[33m█\u001b[34m█\u001b[35m█\u001b[36m█\u001b[37m█ ",
-      "󱑺󱑺"
-    ]
+      "󱑺󱑺",
+    ],
   },
   "modules": [
     "break",
     "break",
     {
       "format": " {#96}{#1}{user-name}{#0}{#37}@{#96}{#1}{host-name}{#0}",
-      "type": "title"
+      "type": "title",
     },
     {
       "format": "{#1}{#keys}\u001b[30m┌{$1}\u001b[30m┐",
-      "type": "custom"
+      "type": "custom",
     },
     {
       "key": "{$2}{#34} ",
-      "type": "os"
+      "type": "os",
     },
     {
       "key": "{$2}{#34} ",
-      "type": "terminal"
+      "type": "terminal",
     },
     {
       "key": "{$2}{#34} ",
-      "type": "shell"
+      "type": "shell",
     },
     {
       "key": "{$2}{#34} ",
       "type": "cpu",
       "showPeCoreCount": true,
-      "temp": true
+      "temp": true,
     },
     {
       "key": "{$2}{#34} ",
-      "type": "gpu"
+      "type": "gpu",
     },
     {
       "key": "{$2}{#34} ",
       "type": "disk",
-      "folders": "/"
+      "folders": "/",
     },
     {
       "key": "{$2}{#34}󰍛 ",
-      "type": "memory"
+      "type": "memory",
     },
     {
       "key": "{$2}{#34}󰩟 ",
       "type": "localip",
-      "format": "{ipv4} ({ifname})"
+      "format": "{ipv4} ({ifname})",
     },
     {
       "format": "{#1}{#keys}\u001b[30m└{$1}\u001b[30m┘",
-      "type": "custom"
+      "type": "custom",
     },
     {
       "type": "custom",
-      "format": "{$3}"
+      "format": "{$3}",
     },
-    "break"
-  ]
+    "break",
+  ],
 }
