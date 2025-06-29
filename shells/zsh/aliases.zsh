@@ -156,3 +156,11 @@ fi
 if cmd_exists lazygit; then
   alias lg='lazygit'
 fi
+
+if cmd_exists glow; then
+  if [[ -f "$DOTFILES/glow/styles/catppuccin-mocha.json" ]]; then
+    alias glow="glow -s $DOTFILES/glow/styles/catppuccin-mocha.json"
+  else
+    alias glow="glow"
+  fi
+fi

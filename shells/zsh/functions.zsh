@@ -224,10 +224,9 @@ function fname() {
   basename "$@" | sed 's/\(.*\)\..*/\1/'
 }
 
-function noext() {
+function fext() {
   filename=$(basename "$@")
   echo "${filename##*.}"
-
 }
 
 if cmd_exists rich; then
