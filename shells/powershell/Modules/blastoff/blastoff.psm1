@@ -76,27 +76,6 @@ function Get-StarshipThemes {
   }
   Write-Host ""
 }
-# function Get-StarshipThemes {
-
-#   wh -box -bb 1 -ba 1 -pad $env:padding 'Themes:' Magenta
-
-#   Get-ChildItem $env:STARSHIP_THEMES | ForEach-Object `
-#   {
-#     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
-
-#     if ($name -eq $currentStarshipTheme) {
-#       $color = 'Green'
-#       $output = wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name $color ' (current)' 'DarkGray'
-#     }
-#     else {
-#       $color = 'Gray'
-#       $output = wh -bb 0 -ba 0 -nl -pad $env:padding '  ' DarkGray $name $color
-#     }
-
-#     $output
-#   }
-#   linebreak 2
-# }
 
 function Invoke-Blastoff {
   <#

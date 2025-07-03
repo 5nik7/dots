@@ -40,7 +40,7 @@ core:
     foreground: blue
 
   symlink:
-    foreground: teal
+    foreground: sky
 
   multi_hard_link: {}
 

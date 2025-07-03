@@ -65,4 +65,5 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
       [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt($null, 0)
     }
   }
+  $env:LS_COLORS = "$(vivid generate catppuccin-mocha)"
 }
