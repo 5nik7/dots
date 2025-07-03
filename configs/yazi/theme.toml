@@ -29,7 +29,7 @@ count_selected = { fg = "white", bg = "yellow" }
 
 # Border
 border_symbol = "│"
-border_style = { fg = "black" }
+border_style = { fg = "#313244" }
 
 # Highlighting
 # syntect_theme = "~/.cache/wal/wal.tmTheme"

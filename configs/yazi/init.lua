@@ -27,12 +27,12 @@ require("yatline"):setup({
       },
       section_b = {},
       section_c = {
-        -- {
-        --   type = "string",
-        --   custom = false,
-        --   name = "hovered_name",
-        --   params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
-        -- },
+        {
+          type = "string",
+          custom = false,
+          name = "hovered_name",
+          params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
+        },
         -- { type = "coloreds", custom = false, name = "tab_path" },
         -- {
         --   type = "string",
@@ -51,7 +51,7 @@ require("yatline"):setup({
         -- { type = "string", custom = false, name = "date", params = { "%a %b %d" } },
       },
       section_c = {
-        -- { type = "coloreds", custom = false, name = "githead" },
+        { type = "coloreds", custom = false, name = "githead" },
       },
     },
   },
@@ -78,7 +78,7 @@ require("yatline"):setup({
         -- { type = "string", custom = false, name = "cursor_percentage" },
       },
       section_c = {
-        { type = "coloreds", custom = false, name = "githead" },
+        -- { type = "coloreds", custom = false, name = "githead" },
 
         { type = "string", custom = false, name = "hovered_file_extension", params = { true } },
         { type = "coloreds", custom = false, name = "permissions" },
