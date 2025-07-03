@@ -271,3 +271,5 @@ catppuccin -h
 catppuccin -h |describe
 echo test
 echo test | describe
+ls
+c
