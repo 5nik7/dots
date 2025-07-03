@@ -1,4 +1,7 @@
-export LANG=en_US.UTF-8
+#  ╔═╗╔═╗╦ ╦╔═╗╔╗╔╦  ╦
+#  ╔═╝╚═╗╠═╣║╣ ║║║╚╗╔╝
+# o╚═╝╚═╝╩ ╩╚═╝╝╚╝ ╚╝ 
+
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
