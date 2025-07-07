@@ -49,7 +49,7 @@ if ($host.Name -eq 'ConsoleHost') {
       ListPredictionSelected = $Flavor.Surface0.Background()
 
       # Syntax highlighting
-      Command                = $Flavor.Sky.Foreground()
+      Command                = $Flavor.Green.Foreground()
       Comment                = $Flavor.Overlay0.Foreground()
       Default                = $Flavor.Text.Foreground()
       Error                  = $Flavor.Red.Foreground()
