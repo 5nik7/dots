@@ -1,16 +1,15 @@
 watch_stylesheet: true
 watch_config: true
 debug: false
-
+update_check: true
 komorebi:
   start_command: "komorebic start --whkd"
   stop_command: "komorebic stop --whkd"
-  reload_command: "komorebic stop --whkd && komorebic start --whkd"
-
+  reload_command: "komorebic reload-configuration"
 bars:
   primary-bar:
     enabled: true
-    screens: ["*"]
+    screens: ['*']
     class_name: "yasb-bar"
     alignment:
       position: "top"
@@ -27,7 +26,7 @@ bars:
     window_flags:
       always_on_top: true
       windows_app_bar: true
-      hide_on_fullscreen: true
+      hide_on_fullscreen: false
     dimensions:
       width: "100%"
       height: 28
@@ -44,9 +43,11 @@ bars:
           "media",
           "volume",
           "weather",
+          "cpu",
+          "memory",
+          "disk",
           "whkd",
           "github",
-          "disk",
           "wallpapers",
           "clock",
           "power_menu",
@@ -139,6 +140,37 @@ widgets:
         snowyIcyNight: "\udb81\udd99"
         blizzard: "\udb81\udd99"
         default: "\udb81\udd99"
+  cpu:
+    type: "yasb.cpu.CpuWidget"
+    options:
+      label: "<span>\uf4bc</span> {info[percent][total]}%"
+      label_alt: "<span>\uf437</span> {info[histograms][cpu_percent]}"
+      update_interval: 2000
+      histogram_icons:
+        - '\u2581' # 0%
+        - '\u2581' # 10%
+        - '\u2582' # 20%
+        - '\u2583' # 30%
+        - '\u2584' # 40%
+        - '\u2585' # 50%
+        - '\u2586' # 60%
+        - '\u2587' # 70%
+        - '\u2588' # 80%+
+      histogram_num_columns: 8
+      callbacks:
+        on_right: "exec cmd /c Taskmgr"
+  memory:
+      type: "yasb.memory.MemoryWidget"
+      options:
+        label: "<span>\uefc5</span> {virtual_mem_used} / {virtual_mem_total}"
+        label_alt: "<span>\uf4bc</span> VIRT: {virtual_mem_percent}% SWAP: {swap_mem_percent}%"
+        update_interval: 5000
+        callbacks:
+          on_right: "exec cmd /c Taskmgr"
+        memory_thresholds:
+          low: 25
+          medium: 50
+          high: 90
   media:
     type: "yasb.media.MediaWidget"
     options:
@@ -241,8 +273,8 @@ widgets:
         image_corner_radius: 20
         enable_cache: true
       # run_after: # List of functions to run after wallpaper is updated
-        # - "wal -s -t -e -q -n -i {image}" # Example command to run after wallpaper is updated
-        # - "cmd.exe /c start /min pwsh ./yasb.ps1" # Example command to run after wallpaper is updated
+      # - "wal -s -t -e -q -n -i {image}" # Example command to run after wallpaper is updated
+      # - "cmd.exe /c start /min pwsh ./yasb.ps1" # Example command to run after wallpaper is updated
   power_menu:
     type: "yasb.power_menu.PowerMenuWidget"
     options:

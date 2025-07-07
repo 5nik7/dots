@@ -123,6 +123,30 @@
   color: var(--teal);
   font-weight: 900;
 }
+/*CPU WIDGET*/
+.cpu-widget {
+  background-color: var(--surface1);
+  padding-right: 10px;
+}
+.cpu-widget .icon {
+  color: var(--mauve);
+  padding: 6px;
+}
+.cpu-widget .label {
+  /* font-size: 14px; */
+}
+/*MEMORY WIDGET*/
+.memory-widget {
+  background-color: var(--surface1);
+  padding-right: 10px;
+}
+.memory-widget .icon {
+  color: var(--pink);
+  padding: 6px;
+}
+.memory-widget .label {
+  /* font-size: 14px; */
+}
 /*WEATHER WIDGET*/
 .weather-widget {
   background-color: var(--surface1);
