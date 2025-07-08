@@ -273,3 +273,4 @@ echo test
 echo test | describe
 ls
 c
+ls
