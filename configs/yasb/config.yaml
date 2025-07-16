@@ -43,6 +43,7 @@ bars:
           "media",
           "volume",
           "weather",
+          # "traffic",
           "cpu",
           "memory",
           "disk",
@@ -140,6 +141,18 @@ widgets:
         snowyIcyNight: "\udb81\udd99"
         blizzard: "\udb81\udd99"
         default: "\udb81\udd99"
+  traffic:
+    type: "yasb.traffic.TrafficWidget"
+    options:
+      label: "<span class='download'>\uea9a {download_speed}</span>|<span class='upload'>{upload_speed} \ueaa1</span>"
+      update_interval: 2000
+      callbacks:
+        on_left: "toggle_menu"
+        on_right: "do_nothing"
+      animation:
+        enabled: true
+        type: "fadeInOut"
+        duration: 200
   cpu:
     type: "yasb.cpu.CpuWidget"
     options:
@@ -162,7 +175,7 @@ widgets:
   memory:
       type: "yasb.memory.MemoryWidget"
       options:
-        label: "<span>\uefc5</span> {virtual_mem_used} / {virtual_mem_total}"
+        label: "<span>\uefc5</span> {virtual_mem_percent}%"
         label_alt: "<span>\uf4bc</span> VIRT: {virtual_mem_percent}% SWAP: {swap_mem_percent}%"
         update_interval: 5000
         callbacks:
