@@ -1,6 +1,6 @@
-# ▒█▀▀▀█ ▒█▀▀▀█ ▒█░▒█ ▒█▀▀▀ ▒█▄░▒█ ▒█░░▒█ 
-# ░▄▄▄▀▀ ░▀▀▀▄▄ ▒█▀▀█ ▒█▀▀▀ ▒█▒█▒█ ░▒█▒█░ 
-# ▒█▄▄▄█ ▒█▄▄▄█ ▒█░▒█ ▒█▄▄▄ ▒█░░▀█ ░░▀▄▀░ 
+# ▒█▀▀▀█ ▒█▀▀▀█ ▒█░▒█ ▒█▀▀▀ ▒█▄░▒█ ▒█░░▒█
+# ░▄▄▄▀▀ ░▀▀▀▄▄ ▒█▀▀█ ▒█▀▀▀ ▒█▒█▒█ ░▒█▒█░
+# ▒█▄▄▄█ ▒█▄▄▄█ ▒█░▒█ ▒█▄▄▄ ▒█░░▀█ ░░▀▄▀░
 
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
@@ -39,6 +39,6 @@ function zieces() {
   fi
 }
 
-[ -z ${WSLENV+x} ] || export PATH="${PATH:+"$PATH:"}$HOME/bin/win-bash-xclip-xsel"
+# [ -z ${WSLENV+x} ] || export PATH="${PATH:+"$PATH:"}$HOME/bin/win-bash-xclip-xsel"
 
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"

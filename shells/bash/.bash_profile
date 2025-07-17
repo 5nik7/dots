@@ -6,4 +6,4 @@ test -f ~/.profile && . ~/.profile
 # shellcheck disable=SC1090
 test -f ~/.bashrc && . ~/.bashrc
 
-[ -z ${WSLENV+x} ] || export PATH="${PATH:+"$PATH:"}$HOME/bin/win-bash-xclip-xsel"
+# [ -z ${WSLENV+x} ] || export PATH="${PATH:+"$PATH:"}$HOME/bin/win-bash-xclip-xsel"

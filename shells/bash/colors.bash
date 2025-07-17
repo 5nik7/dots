@@ -38,7 +38,7 @@ if cmd_exists catppuccin; then
   function maroon() {
     catppuccin $FLAVOR "$0"
   }
- function  peach() {
+  function peach() {
     catppuccin $FLAVOR "$0"
   }
   function yellow() {
@@ -80,7 +80,7 @@ if cmd_exists catppuccin; then
   function overlay0() {
     catppuccin $FLAVOR "$0"
   }
-  surface2() {
+  function surface2() {
     catppuccin $FLAVOR "$0"
   }
   function surface1() {
@@ -98,4 +98,6 @@ if cmd_exists catppuccin; then
   function crust() {
     catppuccin $FLAVOR "$0"
   }
+else
+  echo "catppuccin command not found. Please install it to use the colors."
 fi

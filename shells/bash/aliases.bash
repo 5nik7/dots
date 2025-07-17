@@ -45,76 +45,89 @@ alias "......"="cd ../../../../.."
 alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
+alias ".c"="cd $HOME/.config"
+
 alias ".d"="cd $DOTS"
+alias ".f"="cd $DOTFILES"
+alias ".s"="cd $SHELLS"
+alias ".sz"="cd $ZSHDOTS"
+alias ".sb"="cd $SHELLS/bash"
+alias ".sp"="cd $SHELLS/powershell"
+
+if cmd_exists pastel; then
+  alias paint='pastel paint'
+else
+  alias paint="echo -e 'Padtern not found. Install pastel to use this command.'"
+fi
 
 if cmd_exists eza; then
-  function l() {
-    linebreak
-    eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
-    linebreak
-  }
-  function ll() {
-    # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-    linebreak
-    eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user
-    linebreak
-  }
-  function lt() {
-    local level="$1"
-    if [ "$1" = "" ]; then
-      level=1
-    fi
-    linebreak
-    eza --group-directories-first --git-repos --git --icons -n --tree -L "$level"
-    linebreak
-  }
-  function la() {
-    linebreak
-    eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
-    linebreak
-  }
-  function lla() {
-    # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-    linebreak
-    eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user
-    linebreak
-  }
-  function lta() {
-    local level="$1"
-    if [ "$1" = "" ]; then
-      level=1
-    fi
-    linebreak
-    eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level"
-    linebreak
-  }
-  alias eza='eza --icons'
-  alias ls='eza'
-  alias lsa='ls -a'
+    function l() {
+      linebreak
+      eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
+      linebreak
+    }
+    function ll() {
+      # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
+      linebreak
+      eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
+      linebreak
+    }
+    function lt() {
+      local level="$1"
+      if [ "$1" = "" ]; then
+          level=1
+      fi
+      linebreak
+      eza --group-directories-first --git-repos --git --icons -n --tree -L "$level" "$@"
+      linebreak
+    }
+    function la() {
+      linebreak
+      eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
+      linebreak
+    }
+    function lla() {
+      # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
+      linebreak
+      eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
+      linebreak
+    }
+    function lta() {
+      local level="$1"
+      if [ "$1" = "" ]; then
+          level=1
+      fi
+      linebreak
+      eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level" "$@"
+      linebreak
+    }
+    alias eza='eza --icons'
+    alias ls='eza'
+    alias lsa='ls -a'
 fi
 
 if cmd_exists yazi; then
-  function y() {
-    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-    yazi "$@" --cwd-file="$tmp"
-    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-      builtin cd -- "$cwd"
-    fi
-    rm -f -- "$tmp"
-  }
-  alias d='y'
+    function y() {
+      local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+      yazi "$@" --cwd-file="$tmp"
+      if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+        builtin cd -- "$cwd"
+      fi
+      rm -f -- "$tmp"
+    }
+    alias d='y'
 fi
 
 if cmd_exists nvim; then
-  EDITOR='nvim'
+    EDITOR='nvim'
 elif cmd_exists vim; then
-  EDITOR='vim'
+    EDITOR='vim'
 elif cmd_exists vi; then
-  EDITOR='vi'
+    EDITOR='vi'
 elif cmd_exists code; then
-  EDITOR='code'
+    EDITOR='code'
 else
-  EDITOR='nano'
+    EDITOR='nano'
 fi
 
 export EDITOR
@@ -134,6 +147,20 @@ if [[ -d "$HOME/dev" ]]; then
   alias dev="cd $DEV"
 fi
 
+if [[ -d "$HOME/src" ]]; then
+    export SRCDIR="$HOME/src"
+    alias src="cd $SRCDIR"
+fi
+
+
 if cmd_exists lazygit; then
   alias lg='lazygit'
+fi
+
+if cmd_exists glow; then
+  if [[ -f "$DOTFILES/glow/styles/catppuccin-mocha.json" ]]; then
+    alias glow="glow -s $DOTFILES/glow/styles/catppuccin-mocha.json"
+  else
+    alias glow="glow"
+  fi
 fi

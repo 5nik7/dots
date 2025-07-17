@@ -8,8 +8,6 @@
   --red: #f38ba8;
   --maroon: #eba0ac;
   --peach: #fab387;
-  --peachedit: #ecd093;
-  --peachedit2: #e9bb77;
   --yellow: #f9e2af;
   --green: #a6e3a1;
   --teal: #94e2d5;
@@ -27,8 +25,8 @@
   --surface1: #45475a;
   --surface0: #313244;
   --base: #1e1e2e;
-  --mantle: rgba(24, 24, 37, 0.5);
-  --crust: rgba(17, 17, 27, 0.5);
+  --mantle: #181825;
+  --crust: #11111b;
 }
 * {
   font-size: 12px;
@@ -45,15 +43,19 @@
   margin: 0;
 }
 .widget {
-  padding: 0 2px;
+  background-color: var(--base);
+  /* padding: 0 2px; */
   margin: 0 2px;
   border-radius: 8px;
+  padding-right: 8px;
+  padding-left: 8px;
 }
 .widget .icon {
   font-size: 16px;
   color: var(--overlay1);
 }
 .widget .label {
+  padding: 2px;
   color: var(--text);
 }
 /*HOME WIDGET*/

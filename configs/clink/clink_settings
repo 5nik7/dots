@@ -196,6 +196,10 @@ fzf.default_bindings = True
 # type: string
 fzf.exe_location = /c/Users/njen/scoop/shims/fzf
 
+# name: Height to use for the --height flag
+# type: string
+fzf.height = 80%
+
 # name: The number of history lines to save
 # type: integer
 history.max_lines = 25000

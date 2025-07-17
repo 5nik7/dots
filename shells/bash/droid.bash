@@ -1,10 +1,19 @@
 if cmd_exists jq; then
-  function location() {
-  latitude="$(termux-location | jq '.["latitude"]')"
-  longitude="$(termux-location | jq '.["longitude"]')"
-  echo "${latitude},${longitude}"
+  location() {
+    latitude="$(termux-location | jq '.["latitude"]')"
+    longitude="$(termux-location | jq '.["longitude"]')"
+    location="$latitude,$longitude"
+    echo "$latitude,$longitude"
   }
 fi
+
+export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
+
+# export location="$(location)"
+
+# wttr1 () {
+#   curl -fGsS "wttr.in/$location?format=1" | sed 's/  //; s/+//'
+# }
 
 export DROIDOTS="$DOTS/androidots"
 
@@ -17,7 +26,9 @@ alias boff="export BTRY=''"
 
 alias upd="pkg update && pkg upgrade -y"
 
-alias ".dd"="cd $DROIDOTS"
+alias ".a"="cd $DROIDOTS"
+alias ".af"="cd $DROIDOTS/configs"
+alias ".ab"="cd $DROIDOTS/bin"
 
 function google {
   termux-open-url "https://www.google.com/search?q=$*"

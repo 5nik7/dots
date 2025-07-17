@@ -3,6 +3,8 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
+set bell-style none
+
 # Shell Options
 shopt -s nocaseglob
 shopt -s checkwinsize
@@ -18,39 +20,33 @@ LANG=en_US.UTF-8
 export LANG
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-DOTS="$HOME/dots"
-export DOTS
-SHELLS="$DOTS/shells"
-export SHELLS
-BASHDOT="$SHELLS/bash"
-export BASHDOT
+export DOTS="$HOME/dots"
+export SHELLS="$DOTS/shells"
+export BASHDOT="$SHELLS/bash"
 export DOTFILES="$DOTS/configs"
 export DOTSBIN="$DOTS/bin"
 
-DOT_THEME="$(cat "$DOTS"/.theme)"
-export DOT_THEME
+export DOT_THEME="$(cat "$DOTS"/.theme)"
 
-LS_COLORS="$(vivid generate "$DOT_THEME")"
-export LS_COLORS
+export LS_COLORS="$(vivid generate "$DOT_THEME")"
 
-STARSHIP_DIR="$DOTFILES/starship"
-export STARSHIP_DIR
-STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
-export STARSHIP_CONFIG
-STARSHIP_THEMES="$STARSHIP_DIR/themes"
-export STARSHIP_THEMES
+export STARSHIP_DIR="$DOTFILES/starship"
+export STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
+export STARSHIP_THEMES="$STARSHIP_DIR/themes"
 
 export GOBIN="$HOME/go/bin"
 
-function src() {
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+function so() {
   if [ -f "$1" ]; then
     # shellcheck disable=SC1090
     source "$1"
   fi
 }
 
-src "$BASHDOT/utils.bash"
-src "$BASHDOT/functions.bash"
+so "$BASHDOT/utils.bash"
+so "$BASHDOT/functions.bash"
 
 addir "$HOME/.local/bin"
 
@@ -61,23 +57,29 @@ prepend_path "$GOBIN"
 prepend_path "$HOME/.cargo/bin"
 
 export SHHHH="$DOTS/secrets"
-src "$SHHHH/secrets.sh"
-src "/usr/share/nvm/init-nvm.sh"
-
-if cmd_exists fzf; then
-  src "$BASHDOT/fzf.bash" && eval "$(fzf --bash)"
-fi
+so "$SHHHH/secrets.sh"
+so "/usr/share/nvm/init-nvm.sh"
 
 if is_droid; then
-  src "$BASHDOT/droid.bash"
+  so "$BASHDOT/droid.bash"
+fi
+
+so "$BASHDOT/colors.bash"
+
+if cmd_exists fzf; then
+  so "$BASHDOT/fzf.bash" && eval "$(fzf --bash)"
 fi
 
 if [ -f /etc/wsl.conf ]; then
-  src "$BASHDOT/wsl.bash"
+  so "$BASHDOT/wsl.bash"
 fi
 
-src "$BASHDOT/aliases.bash"
-src "$BASHDOT/colors.bash"
+if cmd_exists zoxide; then
+  eval "$(zoxide init bash)"
+  alias cd='z'
+fi
+
+so "$BASHDOT/aliases.bash"
 
 if cmd_exists starship; then
   eval "$(starship init bash)"
@@ -87,10 +89,6 @@ if cmd_exists direnv; then
   eval "$(direnv hook bash)"
 fi
 
-if cmd_exists zoxide; then
-  eval "$(zoxide init bash)"
-  alias cd='z'
-fi
 
 if cmd_exists batpipe; then
   eval "$(batpipe)"
@@ -102,4 +100,4 @@ fi
 
 eval "$(gh copilot alias -- bash)"
 
-set bell-style none
+
