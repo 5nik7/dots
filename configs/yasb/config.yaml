@@ -24,7 +24,7 @@ bars:
       round_corners: false
       border_color: None
     window_flags:
-      always_on_top: true
+      always_on_top: false
       windows_app_bar: true
       hide_on_fullscreen: false
     dimensions:

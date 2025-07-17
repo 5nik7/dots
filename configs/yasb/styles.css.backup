@@ -24,17 +24,18 @@
   --overlay1: #7f849c;
   --overlay0: #6c7086;
   --surface2: #585b70;
-  --surface1: #282936;
+  --surface1: #45475a;
+  --surface0: #313244;
   --base: #1e1e2e;
   --mantle: rgba(24, 24, 37, 0.5);
   --crust: rgba(17, 17, 27, 0.5);
 }
 * {
-  font-size: 14px;
-  text-rendering: optimizeLegibility;
+  font-size: 12px;
+  /* text-rendering: optimizeLegibility; */
   color: var(--text);
-  font-weight: 600;
-  font-family: "JetBrainsMono NFP", monospace;
+  font-weight: 500;
+  font-family: "JetBrainsMono NFP";
   margin: 0;
   padding: 0;
 }
@@ -49,7 +50,7 @@
   border-radius: 8px;
 }
 .widget .icon {
-  font-size: 18px;
+  font-size: 16px;
   color: var(--overlay1);
 }
 .widget .label {
@@ -57,7 +58,7 @@
 }
 /*HOME WIDGET*/
 .home-widget {
-  background-color: var(--surface1);
+  background-color: var(--base);
   padding-right: 7px;
   padding-left: 7px;
   padding-bottom: 1px;
@@ -85,7 +86,7 @@
 }
 /*CLOCK - CALENDAR WIDGET*/
 .apps-widget {
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 .apps-widget .label {
   padding-right: 2px;
@@ -94,7 +95,7 @@
 }
 /*KOMOREBI WORKSPACES WIDGET*/
 .komorebi-workspaces {
-  background-color: var(--surface1);
+  background-color: var(--base);
   margin-top: 0;
   margin-bottom: 0;
   padding-right: 6px;
@@ -123,13 +124,53 @@
   color: var(--teal);
   font-weight: 900;
 }
+/*TRAFFIC WIDGET*/
+.traffic-widget {
+  background-color: var(--base);
+  /* min-width: 220px;s */
+  padding-right: 10px;
+  padding-left: 10px;
+}
+.traffic-widget .icon {
+  color: var(--mauve);
+  padding: 6px;
+}
+.traffic-widget .label {
+  color: var(--surface2);
+  padding-right: 5px;
+  padding-left: 5px;
+  font-size: 14px;
+  font-weight: normal;
+  margin-left: 1px;
+  outline: none;
+}
+.traffic-widget .download {
+  color: var(--text);
+  text-align: center;
+  flex: content;
+  min-width: 95px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.traffic-widget .upload {
+  color: var(--text);
+  text-align: center;
+  flex: content;
+  min-width: 95px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.traffic-widget .label {
+  /* font-size: 14px; */
+}
 /*CPU WIDGET*/
 .cpu-widget {
-  background-color: var(--surface1);
+  background-color: var(--base);
   padding-right: 10px;
 }
 .cpu-widget .icon {
-  color: var(--mauve);
+  color: var(--sapphire);
   padding: 6px;
 }
 .cpu-widget .label {
@@ -137,11 +178,11 @@
 }
 /*MEMORY WIDGET*/
 .memory-widget {
-  background-color: var(--surface1);
+  background-color: var(--base);
   padding-right: 10px;
 }
 .memory-widget .icon {
-  color: var(--pink);
+  color: var(--maroon);
   padding: 6px;
 }
 .memory-widget .label {
@@ -149,7 +190,7 @@
 }
 /*WEATHER WIDGET*/
 .weather-widget {
-  background-color: var(--surface1);
+  background-color: var(--base);
   padding-right: 10px;
 }
 .weather-widget .icon {
@@ -161,7 +202,7 @@
 }
 /*ACTIVE WINDOW WIDGET*/
 .active-window-widget {
-  background-color: var(--surface1);
+  background-color: var(--base);
   padding-right: 10px;
   padding-left: 10px;
 }
@@ -174,7 +215,7 @@
 }
 /*CLOCK - CALENDAR WIDGET*/
 .clock-widget {
-  background-color: var(--surface1);
+  background-color: var(--base);
   padding-left: 10px;
   padding-right: 10px;
 }
@@ -224,7 +265,7 @@
 .disk-widget {
   padding-right: 7px;
   padding-left: 7px;
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 /*DISK DROPDOWN*/
 .disk-group {
@@ -264,12 +305,12 @@
 .volume-widget {
   padding-right: 9px;
   padding-left: 5px;
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 .volume-widget .icon {
   padding: 0 6px;
   font-size: 14px;
-  color: var(--teal);
+  color: var(--blue);
 }
 .volume-widget .label {
   /* font-size: 14px; */
@@ -298,7 +339,7 @@
 .media-widget {
   padding: 0;
   padding-right: 10px;
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 .media-widget .label {
   /* font-size: 14px; */
@@ -314,7 +355,7 @@
 .wallpapers-widget {
   padding-right: 7px;
   padding-left: 7px;
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 .wallpapers-widget .icon {
   /* font-size: 20px; */
@@ -352,7 +393,7 @@
 .power-menu-widget {
   padding-right: 7px;
   padding-left: 7px;
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 .power-menu-widget .label {
   color: var(--red);
@@ -402,13 +443,13 @@
   padding: 0;
   padding-left: 10px;
   padding-right: 10px;
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 /*GITHUB DROPDOWN*/
 .github-widget {
   padding-right: 7px;
   padding-left: 7px;
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 .github-widget .icon {
   /* font-size: 16px; */
@@ -479,7 +520,7 @@
 .whkd-widget {
   padding-right: 7px;
   padding-left: 7px;
-  background-color: var(--surface1);
+  background-color: var(--base);
 }
 .whkd-widget .icon {
   font-size: 16px;
