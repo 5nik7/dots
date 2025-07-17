@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 THEME=$(echo "$DOT_THEME" | cut -d '-' -f 1)
 if [ $THEME = 'catppuccin' ]; then
   FLAVOR=$(echo "$DOT_THEME" | cut -d '-' -f 2)
@@ -6,97 +8,97 @@ fi
 
 if cmd_exists catppuccin; then
   function flavor() {
-    catppuccin "$FLAVOR" "$@"
+    command catppuccin "$FLAVOR" "$@"
   }
   function mocha() {
-    catppuccin mocha "$@"
+    commandcatppuccin mocha "$@"
   }
   function macchiato() {
-    catppuccin macchiato "$@"
+    command catppuccin macchiato "$@"
   }
   function frappe() {
-    catppuccin frappe "$@"
+    command catppuccin frappe "$@"
   }
   function latte() {
-    catppuccin latte "$@"
+    command catppuccin latte "$@"
   }
   function rosewater() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" rosewater
   }
   function flamingo() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" flamingo
   }
   function pink() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" pink
   }
   function mauve() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" mauve
   }
   function red() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" red
   }
   function maroon() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" maroon
   }
   function peach() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" peach
   }
   function yellow() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" yellow
   }
   function green() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" green
   }
   function teal() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" teal
   }
   function sky() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" sky
   }
   function sapphire() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" sapphire
   }
   function blue() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" blue
   }
   function lavender() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" lavender
   }
   function text() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" text
   }
   function subtext1() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" subtext1
   }
   function subtext0() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" subtext0
   }
   function overlay2() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" overlay2
   }
   function overlay1() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" overlay1
   }
   function overlay0() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" overlay0
   }
   function surface2() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" surface2
   }
   function surface1() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" surface1
   }
   function surface0() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" surface0
   }
   function base() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" base
   }
   function mantle() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" mantle
   }
   function crust() {
-    catppuccin $FLAVOR "$0"
+    command catppuccin "$FLAVOR" crust
   }
 else
   echo "catppuccin command not found. Please install it to use the colors."
