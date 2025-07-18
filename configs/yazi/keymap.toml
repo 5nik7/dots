@@ -6,108 +6,45 @@
 # desc = "Copy the files to the clipboard" }
 [input]
 prepend_keymap = [{ on = '<Esc>', run = 'close', desc = 'Cancel input' }]
+
 [mgr]
 # Make all changed keymaps into prepend_keymap, keep the default config as is
 # Easier to Maintain and keep track of
 prepend_keymap = [
-  { on = [
-    'g',
-    '<Space>',
-  ], run = 'cd --interactive', desc = 'Go to a directory interactively' },
-  { on = [
-    'g',
-    'h',
-  ], run = 'cd ~', desc = 'Go to the home directory' },
-  { on = [
-    'g',
-    '/',
-  ], run = 'cd /', desc = 'Go to the root directory' },
-  { on = [
-    'g',
-    'd',
-  ], run = 'cd ~/Downloads', desc = 'Go to the downloads directory' },
-  { on = [
-    'g',
-    'D',
-  ], run = 'cd ~/Documents', desc = 'Go to the documents directory' },
-  { on = [
-    'g',
-    'c',
-  ], run = 'cd ~/.config', desc = 'Go to the config directory' },
-  { on = [
-    'g',
-    'i',
-  ], run = 'cd ~/Pictures', desc = 'Go to the Pictures directory' },
-  { on = [
-    'g',
-    '.',
-    'd',
-  ], run = 'cd ~/dots', desc = 'Go to the dotfiles directory' },
-  { on = [
-    'g',
-    '.',
-    'c',
-  ], run = 'cd ~/dots/configs', desc = 'Go to the dotfile configs directory' },
-  { on = [
-    'g',
-    '.',
-    's',
-    'z',
-  ], run = 'cd ~/dots/shells/zsh', desc = 'Go to the dotfile configs directory' },
-  { on = [
-    'g',
-    '.',
-    's',
-    'b',
-  ], run = 'cd ~/dots/shells/bash', desc = 'Go to the dotfile configs directory' },
-  { on = [
-    'g',
-    '.',
-    's',
-    'p',
-  ], run = 'cd ~/dots/shells/powershell', desc = 'Go to the dotfile configs directory' },
-  { on = [
-    'g',
-    'w',
-  ], run = 'cd ~/dots/walls', desc = 'Go to the wallpapers directory' },
-  { on = [
-    'g',
-    'b',
-  ], run = 'cd ~/.local/bin', desc = 'Go to the .local/bin directory' },
-  { on = [
-    'g',
-    'l',
-    's',
-  ], run = 'cd ~/.local/share/', desc = 'Go to the .local/share directory' },
+  { on = '<C-x>', run = 'plugin toggle-pane min-preview', desc = 'Show or hide the preview pane' },
+  { on = 'X', run = 'plugin toggle-pane max-preview', desc = 'Maximize or restore the preview pane' },
+  { on = ['g','<Space>'], run = 'cd --interactive', desc = 'Go to a directory interactively' },
+  { on = ['g','h'], run = 'cd ~', desc = 'Go to the home directory' },
+  { on = ['g','/'], run = 'cd /', desc = 'Go to the root directory' },
+  { on = ['g','d'], run = 'cd ~/Downloads', desc = 'Go to the downloads directory' },
+  { on = ['g','D'], run = 'cd ~/Documents', desc = 'Go to the documents directory' },
+  { on = ['g','c'], run = 'cd ~/.config', desc = 'Go to the config directory' },
+  { on = ['g','i'], run = 'cd ~/Pictures', desc = 'Go to the Pictures directory' },
+  { on = ['g','.','d'], run = 'cd ~/dots', desc = 'Go to the dotfiles directory' },
+  { on = ['g','.','c'], run = 'cd ~/dots/configs', desc = 'Go to the dotfile configs directory' },
+  { on = ['g','.','s','z'], run = 'cd ~/dots/shells/zsh', desc = 'Go to the dotfile configs directory' },
+  { on = ['g','.','s','b'], run = 'cd ~/dots/shells/bash', desc = 'Go to the dotfile configs directory' },
+  { on = ['g','.','s','p'], run = 'cd ~/dots/shells/powershell', desc = 'Go to the dotfile configs directory' },
+  { on = ['g','w'], run = 'cd ~/dots/walls', desc = 'Go to the wallpapers directory' },
+  { on = ['g','b'], run = 'cd ~/.local/bin', desc = 'Go to the .local/bin directory' },
+  { on = ['g','l','s'], run = 'cd ~/.local/share/', desc = 'Go to the .local/share directory' },
   { on = 'L', run = 'link', desc = 'Symlink the absolute path of yanked files' },
   { on = 'e', run = 'shell -- bash "$@"', desc = 'Execute the selected file' },
   { on = 'F', run = 'plugin fzf', desc = 'Jump to a directory or reveal a file using fzf' },
-  { on = [
-    'd',
-    'd',
-  ], run = 'remove', desc = 'Trash selected files' },
+  { on = ['d','d'], run = 'remove', desc = 'Trash selected files' },
   { on = '<Backspace>', run = 'unyank', desc = 'Unyank' },
-  { on = '<Esc>', run = [
-    'unyank',
-    'escape',
-  ], desc = 'Clean Unyank/selected, cancel search' },
-  { on = '|', run = 'plugin personal "resize 0 1 2"', desc = 'Toggle Pane ratio of 0, 1, 2' },
-  { on = '`', run = 'plugin personal "random"', desc = 'Pick a random file' },
-  { on = 'l', run = 'plugin personal "smart_enter"', desc = 'Smart enter, Open file or enter directory' },
-  { on = 'J', run = 'plugin personal "move_parent 1"', desc = 'Go to below parent directory' },
-  { on = 'K', run = 'plugin personal "move_parent -1"', desc = 'Go to above parent directory' },
-  { on = '<A-n>', run = 'plugin personal "new_dir"', desc = 'Move to new directory' },
-  { on = '<C-t>', run = 'plugin personal "directory_tab"', desc = 'Open selected directory in a tab' },
-  { on = '<A-p>', run = 'plugin personal "chmod"', desc = 'Chmod on selected files' },
-  { on = '<A-x>', run = 'plugin personal "chmodx"', desc = 'Chmod to executable selected files' },
-  { on = '<A-s>', run = 'plugin personal "share"', desc = 'Share selected file with 0x0.st' },
+  { on = '<Esc>', run = ['unyank', 'escape'], desc = 'Clean Unyank/selected, cancel search' },
+  # { on = '|', run = 'plugin personal "resize 0 1 2"', desc = 'Toggle Pane ratio of 0, 1, 2' },
+  # { on = '`', run = 'plugin personal "random"', desc = 'Pick a random file' },
+  # { on = 'l', run = 'plugin personal "smart_enter"', desc = 'Smart enter, Open file or enter directory' },
+  # { on = 'J', run = 'plugin personal "move_parent 1"', desc = 'Go to below parent directory' },
+  # { on = 'K', run = 'plugin personal "move_parent -1"', desc = 'Go to above parent directory' },
+  # { on = '<A-n>', run = 'plugin personal "new_dir"', desc = 'Move to new directory' },
+  # { on = '<C-t>', run = 'plugin personal "directory_tab"', desc = 'Open selected directory in a tab' },
+  # { on = '<A-p>', run = 'plugin personal "chmod"', desc = 'Chmod on selected files' },
+  # { on = '<A-x>', run = 'plugin personal "chmodx"', desc = 'Chmod to executable selected files' },
+  # { on = '<A-s>', run = 'plugin personal "share"', desc = 'Share selected file with 0x0.st' },
   { on = '!', run = 'shell --block -- $SHELL', desc = 'Open shell here' },
-  { on = [
-    'b',
-    't',
-  ], run = 'shell --interactive -- chmod', desc = 'Testing interactive shells' },
-  { on = [
-    "c",
-    "m",
-  ], run = "plugin chmod", desc = "Chmod on selected files" },
+  { on = ['b','t'], run = 'shell --interactive -- chmod', desc = 'Testing interactive shells' },
+  { on = ['c','m'], run = 'plugin chmod', desc = 'Chmod on selected files' },
 ]

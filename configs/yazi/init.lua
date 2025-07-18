@@ -25,33 +25,41 @@ require("yatline"):setup({
       section_a = {
         { type = "line", custom = false, name = "tabs", params = { "left" } },
       },
-      section_b = {},
-      section_c = {
-        {
-          type = "string",
-          custom = false,
-          name = "hovered_name",
-          params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
-        },
+      section_b = {
         -- { type = "coloreds", custom = false, name = "tab_path" },
         -- {
         --   type = "string",
         --   custom = false,
         --   name = "hovered_path",
-        --   params = { { trimed = true, max_length = 24, trim_length = 10 } },
+        --   params = { { trimed = false, max_length = 24, trim_length = 10 } },
         -- },
-        { type = "coloreds", custom = false, name = "symlink" },
+      },
+      section_c = {
+        -- {
+        --   type = "string",
+        --   custom = false,
+        --   name = "hovered_name",
+        --   params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
+        -- },
+        -- {
+        --   type = "string",
+        --   custom = false,
+        --   name = "hovered_name",
+        --   params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
+        -- },
+        -- { type = "coloreds", custom = false, name = "symlink" },
       },
     },
     right = {
       section_a = {
+        -- { type = "line", custom = false, name = "tabs", params = { "right" } },
         -- { type = "string", custom = false, name = "date", params = { "%I:%M" } },
       },
       section_b = {
         -- { type = "string", custom = false, name = "date", params = { "%a %b %d" } },
       },
       section_c = {
-        { type = "coloreds", custom = false, name = "githead" },
+        -- { type = "coloreds", custom = false, name = "githead" },
       },
     },
   },
@@ -62,25 +70,35 @@ require("yatline"):setup({
         { type = "string", custom = false, name = "tab_mode" },
       },
       section_b = {
-        { type = "string", custom = false, name = "hovered_size" },
+        { type = "coloreds", custom = false, name = "tab_path" },
+        {
+          type = "string",
+          custom = false,
+          name = "hovered_name",
+          params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
+        },
       },
       section_c = {
+        { type = "coloreds", custom = false, name = "githead" },
+        -- { type = "coloreds", custom = false, name = "githead" },
         -- { type = "string", custom = false, name = "tab_path" },
-        { type = "coloreds", custom = false, name = "count" },
+        -- { type = "coloreds", custom = false, name = "count" },
+
       },
     },
     right = {
       section_a = {
-        -- { type = "string", custom = false, name = "date", params = { "%I:%M %p" } },
+        { type = "string", custom = false, name = "date", params = { "%I:%M %p" } },
         -- { type = "string", custom = false, name = "cursor_position" },
       },
       section_b = {
+        { type = "string", custom = false, name = "hovered_size" },
         -- { type = "string", custom = false, name = "cursor_percentage" },
       },
       section_c = {
         -- { type = "coloreds", custom = false, name = "githead" },
 
-        { type = "string", custom = false, name = "hovered_file_extension", params = { true } },
+        -- { type = "string",   custom = false, name = "hovered_file_extension", params = { true } },
         { type = "coloreds", custom = false, name = "permissions" },
       },
     },
@@ -130,7 +148,7 @@ require("yatline-githead"):setup({
 })
 
 require("yatline-tab-path"):setup({
-  path_fg = "cyan",
+  path_fg = "bright blue",
   filter_fg = "brightyellow",
   search_label = " search",
   filter_label = " filter",

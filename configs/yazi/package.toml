@@ -43,5 +43,10 @@ use = "Reledia/glow"
 rev = "bd3eaa5"
 hash = "92b5c58159a51c567f82b618cee2b78"
 
+[[plugin.deps]]
+use = "yazi-rs/plugins:toggle-pane"
+rev = "b886025"
+hash = "d6f60c24d8c0cf57a855bf46115b2502"
+
 [flavor]
 deps = []
