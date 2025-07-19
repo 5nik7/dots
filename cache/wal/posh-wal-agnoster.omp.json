@@ -5,24 +5,24 @@
       "alignment": "left",
       "segments": [
         {
-          "background": "#F9E2AF",
-          "foreground": "#45475A",
+          "background": "#f9e2af",
+          "foreground": "#45475a",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
           "template": " \uf0e7 ",
           "type": "root"
         },
         {
-          "background": "#A6ADC8",
-          "foreground": "#45475A",
+          "background": "#a6adc8",
+          "foreground": "#45475a",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
           "template": " {{ .UserName }}@{{ .HostName }} ",
           "type": "session"
         },
         {
-          "background": "#89B4FA",
-          "foreground": "#45475A",
+          "background": "#89b4fa",
+          "foreground": "#45475a",
           "powerline_symbol": "\ue0b0",
           "properties": {
             "folder_icon": "\uf115",
@@ -35,24 +35,24 @@
           "type": "path"
         },
         {
-          "background": "#A6E3A1",
-          "foreground": "#89B4FA",
+          "background": "#a6e3a1",
+          "foreground": "#89b4fa",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
           "template": " {{ .HEAD }} ",
           "type": "git"
         },
         {
-          "background": "#F5C2E7",
-          "foreground": "#45475A",
+          "background": "#f5c2e7",
+          "foreground": "#45475a",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
           "template": " \ue235 {{ if .Error }}{{ .Error }}{{ else }}{{ if .Venv }}{{ .Venv }} {{ end }}{{ .Full }}{{ end }} ",
           "type": "python"
         },
         {
-          "background": "#F38BA8",
-          "foreground": "#A6ADC8",
+          "background": "#f38ba8",
+          "foreground": "#a6adc8",
           "powerline_symbol": "\ue0b0",
           "style": "powerline",
           "template": " {{ .Meaning }} ",

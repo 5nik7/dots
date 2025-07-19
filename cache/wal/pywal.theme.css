@@ -25,27 +25,27 @@
 :root {
 
     /* Special */
-    --background: #1E1E2E;
-    --foreground: #CDD6F4;
-    --cursor: #F5E0DC;
+    --background: #1e1e2e;
+    --foreground: #cdd6f4;
+    --cursor: #f5e0dc;
 
     /* Colors */
-    --color0: #45475A;
-    --color1: #F38BA8;
-    --color2: #A6E3A1;
-    --color3: #F9E2AF;
-    --color4: #89B4FA;
-    --color5: #F5C2E7;
-    --color6: #94E2D5;
-    --color7: #BAC2DE;
-    --color8: #585B70;
-    --color9: #F38BA8;
-    --color10: #A6E3A1;
-    --color11: #F9E2AF;
-    --color12: #89B4FA;
-    --color13: #F5C2E7;
-    --color14: #94E2D5;
-    --color15: #A6ADC8;
+    --color0: #45475a;
+    --color1: #f38ba8;
+    --color2: #a6e3a1;
+    --color3: #f9e2af;
+    --color4: #89b4fa;
+    --color5: #f5c2e7;
+    --color6: #94e2d5;
+    --color7: #bac2de;
+    --color8: #585b70;
+    --color9: #f38ba8;
+    --color10: #a6e3a1;
+    --color11: #f9e2af;
+    --color12: #89b4fa;
+    --color13: #f5c2e7;
+    --color14: #94e2d5;
+    --color15: #a6adc8;
 
   --lightbg: color-mix(in srgb, var(--background), var(--color8) 5%);
   --darkbg: color-mix(in srgb, var(--background), black 10%);
@@ -99,10 +99,10 @@
 	--panel-roundness: 0px; /* corner roundness of panels. ONLY WORKS IF unrounding.css IS REMOVED (see above). */
 
 	/* background colors */
-	--bg-0: oklch(from #1E1E2E l c h); /* main background color. */
-	--bg-1: oklch(from #1E1E2E calc(l - 0.001) c h); /* background color for secondary elements like code blocks, embeds, etc. */
-	--bg-2: oklch(from #1E1E2E calc(l + 0.04) c h); /* color of neutral buttons. */
-	--bg-3: oklch(from #1E1E2E calc(l + 0.05) c h); /* color of neutral buttons when hovered. */
+	--bg-0: oklch(from #1e1e2e l c h); /* main background color. */
+	--bg-1: oklch(from #1e1e2e calc(l - 0.001) c h); /* background color for secondary elements like code blocks, embeds, etc. */
+	--bg-2: oklch(from #1e1e2e calc(l + 0.04) c h); /* color of neutral buttons. */
+	--bg-3: oklch(from #1e1e2e calc(l + 0.05) c h); /* color of neutral buttons when hovered. */
 
 	/* state modifiers */
 	--hover: oklch(54% 0 0 / 0.1); /* color of hovered elements. */
@@ -112,10 +112,10 @@
 	/* text colors */
 	--txt-dark: var(--bg-0); /* color of dark text on colored backgrounds. */
 	--txt-link: var(--cyan); /* color of links. */
-	--txt-0: oklch(from #CDD6F4 100% c h); /* color of bright/white text. */
-	--txt-1: oklch(from #CDD6F4 90% c h); /* main text color. */
-	--txt-2: oklch(from #CDD6F4 50% c h); /* color of secondary text like channel list. */
-	--txt-3: oklch(from #CDD6F4 30% c h); /* color of muted text. */
+	--txt-0: oklch(from #cdd6f4 100% c h); /* color of bright/white text. */
+	--txt-1: oklch(from #cdd6f4 90% c h); /* main text color. */
+	--txt-2: oklch(from #cdd6f4 50% c h); /* color of secondary text like channel list. */
+	--txt-3: oklch(from #cdd6f4 30% c h); /* color of muted text. */
 
 	/* accent colors */
 	--acc-0: var(--purple); /* main accent color. */
@@ -143,15 +143,15 @@
 	--reply-hover-overlay: var(--hover); /* overlay color of message you are replying to when hovered. */
 
 	/* color shades */
-	--pink: oklch(from #45475A l c h);
+	--pink: oklch(from #45475a l c h);
 	--pink-1: oklch(from var(--pink) calc(l - 0.1) c h);
 	--pink-2: oklch(from var(--pink) calc(l - 0.2) c h);
-	--purple: oklch(from #585B70 l c h);
+	--purple: oklch(from #585b70 l c h);
 	--purple-1: oklch(from var(--purple) calc(l - 0.1) c h);
 	--purple-2: oklch(from var(--purple) calc(l - 0.2) c h);
-	--cyan: oklch(from #94E2D5 l c h);
-	--yellow: oklch(from #F9E2AF l c h);
-	--green: oklch(from #A6E3A1 l c h);
+	--cyan: oklch(from #94e2d5 l c h);
+	--yellow: oklch(from #f9e2af l c h);
+	--green: oklch(from #a6e3a1 l c h);
 	--green-1: oklch(from var(--green) calc(l - 0.1) c h);
 	--green-2: oklch(from var(--green) calc(l - 0.2) c h);
 } 

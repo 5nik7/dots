@@ -29,7 +29,7 @@
   --crust: #11111b;
 }
 * {
-  font-size: 12px;
+  font-size: 14px;
   /* text-rendering: optimizeLegibility; */
   color: var(--text);
   font-weight: 500;
@@ -44,18 +44,19 @@
 }
 .widget {
   background-color: var(--base);
-  /* padding: 0 2px; */
-  margin: 0 2px;
-  border-radius: 8px;
-  padding-right: 8px;
-  padding-left: 8px;
+  margin: 0 1px;
+  border-radius: 5px;
+  /* padding: 0 1px; */
+  /* padding-right: 2px; */
+  /* padding-left: 2px; */
 }
 .widget .icon {
   font-size: 16px;
+  padding: 0 2px;
   color: var(--overlay1);
 }
 .widget .label {
-  padding: 2px;
+  padding: 0 1px;
   color: var(--text);
 }
 /*HOME WIDGET*/
@@ -169,59 +170,76 @@
 /*CPU WIDGET*/
 .cpu-widget {
   background-color: var(--base);
-  padding-right: 10px;
+  padding: 0 4px;
+  /* padding-right: 10px; */
 }
 .cpu-widget .icon {
   color: var(--sapphire);
-  padding: 6px;
+  padding: 0 4px;
+  font-size: 14px;
+  /* padding: 6px; */
 }
 .cpu-widget .label {
+  padding-right: 4px;
   /* font-size: 14px; */
 }
 /*MEMORY WIDGET*/
 .memory-widget {
   background-color: var(--base);
-  padding-right: 10px;
+  padding: 0 4px;
+  /* padding-right: 10px; */
 }
 .memory-widget .icon {
   color: var(--maroon);
-  padding: 6px;
+  padding: 0 4px;
+  /* padding-right: 4px; */
+  font-size: 14px;
 }
 .memory-widget .label {
+  padding-right: 4px;
   /* font-size: 14px; */
 }
 /*WEATHER WIDGET*/
 .weather-widget {
+  padding: 0 4px;
   background-color: var(--base);
-  padding-right: 10px;
+  /* padding-right: 5px; */
 }
 .weather-widget .icon {
+  padding: 0 4px;
   color: var(--yellow);
-  padding: 6px;
+  font-size: 15px;
+  /* padding: 6px; */
 }
 .weather-widget .label {
+  padding-right: 4px;
   /* font-size: 14px; */
 }
 /*ACTIVE WINDOW WIDGET*/
 .active-window-widget {
   background-color: var(--base);
-  padding-right: 10px;
-  padding-left: 10px;
+  padding: 0 4px;
+  /* padding-right: 6px; */
+  /* padding-left: 6px; */
 }
 .active-window-widget .label {
+  padding: 0 4px;
   /* font-size: 14px; */
 }
 .active-window-widget .icon {
-  padding-right: 6px;
+  padding: 0 4px;
+  /* padding-right: 6px; */
   border: none;
 }
 /*CLOCK - CALENDAR WIDGET*/
 .clock-widget {
   background-color: var(--base);
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 0 4px;
+  /* padding-left: 10px; */
+  /* padding-right: 10px; */
 }
 .clock-widget .label {
+  padding: 0 4px;
   /* font-size: 14px; */
 }
 /*CLOCK - CALENDAR WIDGET DROPDOWN*/
@@ -265,8 +283,9 @@
 }
 /*DISK WIDGET*/
 .disk-widget {
-  padding-right: 7px;
-  padding-left: 7px;
+  padding: 0 4px;
+  /* padding-right: 4px; */
+  /* padding-left: 4px; */
   background-color: var(--base);
 }
 /*DISK DROPDOWN*/
@@ -305,17 +324,21 @@
 }
 /*AUDIO WIDGET*/
 .volume-widget {
-  padding-right: 9px;
-  padding-left: 5px;
+  padding: 0 4px;
+  /* padding-right: 9px;
+  padding-left: 5px; */
   background-color: var(--base);
 }
 .volume-widget .icon {
-  padding: 0 6px;
+  /* padding: 0 6px; */
+  padding-right: 4px;
   font-size: 14px;
   color: var(--blue);
 }
 .volume-widget .label {
   /* font-size: 14px; */
+  /* padding-right: 9px; */
+  /* padding-left: 5px; */
 }
 /*AUDIO DROPDOWN*/
 .audio-menu {
@@ -355,12 +378,16 @@
 }
 /*WALLPAPERS WIDGET*/
 .wallpapers-widget {
-  padding-right: 7px;
-  padding-left: 7px;
+  padding: 0 2px;
+  /* padding-right: 4px; */
+  /* padding-left: 4px; */
   background-color: var(--base);
 }
 .wallpapers-widget .icon {
-  /* font-size: 20px; */
+  padding: 0 4px;
+  font-size: 18px;
+  /* padding-right: 4px; */
+  /* padding-left: 4px; */
 }
 /*WALLPAPERS GALLERY*/
 .wallpapers-gallery-window {
@@ -393,12 +420,14 @@
 }
 /*POWER WIDGET*/
 .power-menu-widget {
-  padding-right: 7px;
-  padding-left: 7px;
+  padding: 0 4px;
+  /* padding-right: 2px; */
+  /* padding-left: 2px; */
   background-color: var(--base);
 }
 .power-menu-widget .label {
   color: var(--red);
+  padding: 0 4px;
   /* font-size: 14px; */
 }
 /*POWER MENU POPUP*/
@@ -449,11 +478,14 @@
 }
 /*GITHUB DROPDOWN*/
 .github-widget {
-  padding-right: 7px;
-  padding-left: 7px;
+  padding: 0 4px;
+  /* padding-right: 7px; */
+  /* padding-left: 7px; */
   background-color: var(--base);
 }
 .github-widget .icon {
+  padding: 0 2px;
+  /* padding: 0 2px; */
   /* font-size: 16px; */
 }
 .github-menu {
@@ -520,10 +552,12 @@
 }
 /*GITHUB DROPDOWN*/
 .whkd-widget {
-  padding-right: 7px;
-  padding-left: 7px;
+  padding: 0 4px;
+  /* padding-right: 7px; */
+  /* padding-left: 7px; */
   background-color: var(--base);
 }
 .whkd-widget .icon {
+  padding: 0 4px;
   font-size: 16px;
 }

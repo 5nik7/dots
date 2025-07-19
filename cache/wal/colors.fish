@@ -1,25 +1,39 @@
-set fish_color_normal normal
-set fish_color_command F9E2AF
-set fish_color_param F9E2AF
-set fish_color_redirection $fish_color_param
-set fish_color_comment A6E3A1
-set fish_color_error ff0000
-set fish_color_escape F38BA8
-set fish_color_operator $fish_color_escape
-set fish_color_end F38BA8
-set fish_color_quote A6E3A1
-set fish_color_autosuggestion 585B70
-set fish_color_user 89B4FA
-set fish_color_host 89B4FA
-set fish_color_valid_path --underline
-set fish_color_cwd 89B4FA
-set fish_color_cwd_root red
-set fish_color_match --background=brblue
-set fish_color_search_match bryellow --background=brblack
-set fish_color_selection white --bold --background=brblack
-set fish_color_cancel -r
-set fish_pager_color_prefix white --bold --underline
-set fish_pager_color_completion A6ADC8 --background=45475A
-set fish_pager_color_description $fish_color_quote yellow
-set fish_pager_color_progress 94E2D5 --background=45475A
+set fish_color_autosuggestion 585b70
+set fish_color_cancel f38ba8 '--reverse'
+set fish_color_command a6e3a1
+set fish_color_comment 585b70
+set fish_color_cwd a6e3a1
+set fish_color_cwd_root f38ba8
+set fish_color_end f9e2af
+set fish_color_error f38ba8
+set fish_color_escape f5c2e7
 set fish_color_history_current --bold
+set fish_color_host 89b4fa
+set fish_color_host_remote 89b4fa
+set fish_color_keyword f5c2e7
+set fish_color_match --background=89b4fa
+set fish_color_normal cdd6f4
+set fish_color_operator 94e2d5
+set fish_color_option f9e2af
+set fish_color_param 89b4fa
+set fish_color_quote f9e2af
+set fish_color_redirection f5c2e7
+set fish_color_search_match --background=585b70
+set fish_color_selection --background=585b70
+set fish_color_status f38ba8
+set fish_color_user a6e3a1
+set fish_color_valid_path --underline
+
+set fish_pager_color_background 1e1e2e
+set fish_pager_color_completion cdd6f4
+set fish_pager_color_description 585b70
+set fish_pager_color_prefix a6e3a1
+set fish_pager_color_progress 585b70
+set fish_pager_color_secondary_background 1e1e2e
+set fish_pager_color_secondary_completion cdd6f4
+set fish_pager_color_secondary_description 585b70
+set fish_pager_color_secondary_prefix a6e3a1
+set fish_pager_color_selected_background --background=585b70
+set fish_pager_color_selected_completion cdd6f4
+set fish_pager_color_selected_description 585b70
+set fish_pager_color_selected_prefix a6e3a1
