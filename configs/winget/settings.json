@@ -1,20 +1,17 @@
 {
   "$schema": "https://aka.ms/winget-settings.schema.json",
   "source": {
-    "autoUpdateIntervalInMinutes": 0
+    "autoUpdateIntervalInMinutes": 3
   },
   "visual": {
-    "progressBar": "retro"
+    "progressBar": "sixel",
+    "enableSixels": true
   },
   "installBehavior": {
     "preferences": {
       "scope": "user",
-      "locale": [
-        "en-US"
-      ],
-      "architectures": [
-        "x64"
-      ]
+      "locale": ["en-US"],
+      "architectures": ["x64"]
     }
   },
   "uninstallBehavior": {
@@ -25,9 +22,7 @@
   },
   "logging": {
     "level": "verbose",
-    "channels": [
-      "default"
-    ]
+    "channels": ["default"]
   },
   "interactivity": {
     "disable": true
@@ -36,7 +31,7 @@
     "experimentalCmd": true,
     "experimentalArg": true,
     "directMSI": true,
-    "configuration": false,
-    "resume": true
+    "resume": true,
+    "fonts": true
   }
 }

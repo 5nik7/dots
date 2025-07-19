@@ -19,7 +19,7 @@ M.wal = {{
     color12    = "{color12}",
     color13    = "{color13}",
     color14    = "{color14}",
-    color15    = "{color15}"
+    color15    = "{color15}",
 }}
 
 return M
