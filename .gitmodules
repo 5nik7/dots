@@ -7,9 +7,6 @@
 [submodule "configs/nvim"]
 	path = configs/nvim
 	url = https://github.com/5nik7/nvim.git
-[submodule "shells/powershell/Modules/winwal"]
-	path = shells/powershell/Modules/winwal
-	url = https://github.com/scaryrawr/winwal.git
 [submodule "shells/powershell/Modules/catppuccin"]
 	path = shells/powershell/Modules/catppuccin
 	url = https://github.com/catppuccin/powershell.git
