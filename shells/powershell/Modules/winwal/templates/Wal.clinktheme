@@ -4,7 +4,7 @@
 color.arg={color5}
 color.arginfo=italic {color5}
 color.argmatcher={color2}
-color.cmd={color1}
+color.cmd={color2}
 color.cmdredir={color7}
 color.cmdsep={color3}
 color.comment_row={color8}
