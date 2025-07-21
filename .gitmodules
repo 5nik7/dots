@@ -4,9 +4,6 @@
 [submodule "secrets"]
 	path = secrets
 	url = https://github.com/5nik7/secrets.git
-[submodule "configs/nvim"]
-	path = configs/nvim
-	url = https://github.com/5nik7/nvim.git
 [submodule "shells/powershell/Modules/catppuccin"]
 	path = shells/powershell/Modules/catppuccin
 	url = https://github.com/catppuccin/powershell.git
