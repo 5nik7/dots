@@ -22,7 +22,7 @@ rad.json
 lab/
 #clinky
 **/clink_errorlevel*
-^^/clink_history*
+**/clink_history*
 #backup files
 *.bak
 #log
