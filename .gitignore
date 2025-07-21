@@ -21,17 +21,15 @@ rad.json
 #pslab
 lab/
 #clinky
-configs/clink/clink_errorlevel_*
-configs/clink/clink_history*
-configs/clink/clink.log
+**/clink_errorlevel*
+^^/clink_history*
 #backup files
 *.bak
 #log
 *.log
-configs/yasb/yasb.log
-configs/yasb/yasb.log.*
+
 #llazy-lock.json
-configs/nvim/lazy-lock.json
+**/lazy-lock.json
 
 # Build and Release Folders
 bin-debug/
