@@ -1,3 +1,5 @@
+[Rainmeter]
+
 [Variables]
 background={background.strip}
 foreground={foreground.strip}

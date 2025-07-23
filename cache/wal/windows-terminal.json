@@ -17,6 +17,5 @@
     "brightCyan": "#94e2d5",
     "brightWhite": "#a6adc8",
     "background": "#1e1e2e",
-    "foreground": "#cdd6f4",
-    "cursorColor": "#f5e0dc"
+    "foreground": "#cdd6f4"
 }

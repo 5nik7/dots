@@ -1,5 +1,5 @@
 " Special
-let wallpaper  = "C:/Users/njen/AppData/Local/Temp/catscenery.png"
+let wallpaper  = "None"
 let background = "#1e1e2e"
 let foreground = "#cdd6f4"
 let cursor     = "#f5e0dc"

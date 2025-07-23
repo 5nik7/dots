@@ -1,3 +1,5 @@
+[Rainmeter]
+
 [Variables]
 background=1e1e2e
 foreground=cdd6f4
