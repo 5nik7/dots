@@ -43,6 +43,7 @@ Import-Module -Name 'git-completion' -Global
 & uv generate-shell-completion powershell | Out-String | Invoke-Expression
 & uvx --generate-shell-completion powershell | Out-String | Invoke-Expression
 & glow completion powershell | Out-String | Invoke-Expression
+& gowall completion powershell | Out-String | Invoke-Expression
 
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
   param($wordToComplete, $commandAst, $cursorPosition)
