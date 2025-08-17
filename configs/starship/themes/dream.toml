@@ -56,7 +56,7 @@ base = "#1e1e2e"
 mantle = "#181825"
 crust = "#11111b"
 
-color_ok = 'bright-green'
+color_ok = '#94e2d5'
 color_danger = 'bright-red'
 color_caution = 'bright-yellow'
 
