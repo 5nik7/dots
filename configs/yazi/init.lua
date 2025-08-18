@@ -1,7 +1,7 @@
-require("full-border"):setup {
+require("full-border"):setup({
   -- Available values: ui.Border.PLAIN, ui.Border.ROUNDED
   type = ui.Border.PLAIN,
-}
+})
 
 require("git"):setup()
 require("folder-rules"):setup()
@@ -63,7 +63,7 @@ require("yatline"):setup({
         -- { type = "string", custom = false, name = "date", params = { "%a %b %d" } },
       },
       section_c = {
-        -- { type = "coloreds", custom = false, name = "githead" },
+        { type = "coloreds", custom = false, name = "githead" },
       },
     },
   },
@@ -75,19 +75,14 @@ require("yatline"):setup({
       },
       section_b = {
         { type = "coloreds", custom = false, name = "tab_path" },
+      },
+      section_c = {
         {
           type = "string",
           custom = false,
           name = "hovered_name",
           params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
         },
-      },
-      section_c = {
-        { type = "coloreds", custom = false, name = "githead" },
-        -- { type = "coloreds", custom = false, name = "githead" },
-        -- { type = "string", custom = false, name = "tab_path" },
-        -- { type = "coloreds", custom = false, name = "count" },
-
       },
     },
     right = {
