@@ -274,3 +274,6 @@ echo test | describe
 ls
 c
 ls
+c
+ls
+ls -la

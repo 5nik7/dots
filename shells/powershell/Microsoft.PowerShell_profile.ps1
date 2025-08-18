@@ -32,10 +32,12 @@ Import-Module -Name 'blastoff' -Global
 # Import-Module -Name 'powernerd' -Global
 # Import-Module -Name 'winwal' -Global
 Import-Module -Name 'lab' -Global
-Import-Module -Name UsefulArgumentCompleters -Global
+Import-Module -Name 'UsefulArgumentCompleters' -Global
 
 Import-ScoopModule -Name 'scoop-completion'
 Import-Module -Name 'git-completion' -Global
+Import-Module -Name 'PSToml' -Global
+Import-Module -Name 'powershell-yaml' -Global
 
 & starship completions power-shell | Out-String | Invoke-Expression
 & bat --completion ps1 | Out-String | Invoke-Expression
