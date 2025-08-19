@@ -22,16 +22,13 @@ $env:DOTCACHE = $Global:DOTCACHE
 $Global:DOTBIN = Join-Path -Path $env:DOTS -ChildPath "bin"
 $env:DOTBIN = $Global:DOTBIN
 
-$Global:WALLS = Join-Path -Path $env:DOTS -ChildPath "wqlls"
+$Global:WALLS = Join-Path -Path $env:DOTS -ChildPath "walls"
 $env:WALLS = $Global:WALLS
 
 $Global:BASHDOT = Join-Path -Path $env:SHELLS -ChildPath "bash"
 $env:BASHDOT = $Global:BASHDOT
 $Global:ZSHDOT = Join-Path -Path $env:SHELLS -ChildPath "zsh"
 $env:ZSHDOT = $Global:ZSHDOT
-
-$env:padding = 2
-$PadddingOut = ' ' * $env:padding
 
 $util = @{
   colors = @{
