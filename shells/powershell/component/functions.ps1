@@ -55,46 +55,46 @@ function Import-ScoopModule {
   Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\$Name" -Global
 }
 
-# function Add-Path {
-#   param (
-#     [Parameter(Mandatory = $true)]
-#     [string]$Path
-#   )
-#   if (Test-Path $Path) {
-#     if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-#       $env:Path += ";$Path"
-#     }
-#   }
-#   else {
-#     Write-Err $Path Magenta ' does not exist.'
-#   }
-# }
-# function Add-PrependPath {
-#   param (
-#     [Parameter(Mandatory = $true)]
-#     [string]$Path
-#   )
-#   if (Test-Path $Path) {
-#     if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-#       $env:Path = "$Path;$env:Path"
-#     }
-#   }
-#   else {
-#     Write-Err $Path Magenta ' does not exist.'
-#   }
-# }
-# function Remove-Path {
-#   param (
-#     [Parameter(Mandatory = $true)]
-#     [string]$Path
-#   )
-#   if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
-#     $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
-#   }
-#   else {
-#     Write-Err $Path Magenta ' does not exist.'
-#   }
-# }
+function Add-Path {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (Test-Path $Path) {
+    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+      $env:Path += ";$Path"
+    }
+  }
+  else {
+    Write-Err $Path Magenta ' does not exist.'
+  }
+}
+function Add-PrependPath {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if (Test-Path $Path) {
+    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
+      $env:Path = "$Path;$env:Path"
+    }
+  }
+  else {
+    Write-Err $Path Magenta ' does not exist.'
+  }
+}
+function Remove-Path {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+  if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
+    $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
+  }
+  else {
+    Write-Err $Path Magenta ' does not exist.'
+  }
+}
 
 function Clear-Cache {
   # add clear cache logic here
