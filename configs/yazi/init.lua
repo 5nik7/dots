@@ -1,3 +1,32 @@
+local mocha = {
+  rosewater = "#f5e0dc",
+  flamingo = "#f2cdcd",
+  pink = "#f5c2e7",
+  mauve = "#cba6f7",
+  red = "#f38ba8",
+  maroon = "#eba0ac",
+  peach = "#fab387",
+  yellow = "#f9e2af",
+  green = "#a6e3a1",
+  teal = "#94e2d5",
+  sky = "#89dceb",
+  sapphire = "#74c7ec",
+  blue = "#89b4fa",
+  lavender = "#b4befe",
+  text = "#cdd6f4",
+  subtext1 = "#bac2de",
+  subtext0 = "#a6adc8",
+  overlay2 = "#9399b2",
+  overlay1 = "#7f849c",
+  overlay0 = "#6c7086",
+  surface2 = "#585b70",
+  surface1 = "#45475a",
+  surface0 = "#313244",
+  base = "#1e1e2e",
+  mantle = "#181825",
+  crust = "#11111b",
+}
+
 require("full-border"):setup({
   -- Available values: ui.Border.PLAIN, ui.Border.ROUNDED
   type = ui.Border.PLAIN,
@@ -29,39 +58,14 @@ require("yatline"):setup({
       section_a = {
         { type = "line", custom = false, name = "tabs", params = { "left" } },
       },
-      section_b = {
-        -- { type = "coloreds", custom = false, name = "tab_path" },
-        -- {
-        --   type = "string",
-        --   custom = false,
-        --   name = "hovered_path",
-        --   params = { { trimed = false, max_length = 24, trim_length = 10 } },
-        -- },
-      },
-      section_c = {
-        -- {
-        --   type = "string",
-        --   custom = false,
-        --   name = "hovered_name",
-        --   params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
-        -- },
-        -- {
-        --   type = "string",
-        --   custom = false,
-        --   name = "hovered_name",
-        --   params = { { trimed = false, show_symlink = false, max_length = 24, trim_length = 10 } },
-        -- },
-        -- { type = "coloreds", custom = false, name = "symlink" },
-      },
+      section_b = {},
+      section_c = {},
     },
     right = {
       section_a = {
-        -- { type = "line", custom = false, name = "tabs", params = { "right" } },
         -- { type = "string", custom = false, name = "date", params = { "%I:%M" } },
       },
-      section_b = {
-        -- { type = "string", custom = false, name = "date", params = { "%a %b %d" } },
-      },
+      section_b = {},
       section_c = {
         { type = "coloreds", custom = false, name = "githead" },
       },
@@ -87,16 +91,13 @@ require("yatline"):setup({
     },
     right = {
       section_a = {
-        { type = "string", custom = false, name = "date", params = { "%I:%M %p" } },
         -- { type = "string", custom = false, name = "cursor_position" },
       },
       section_b = {
-        { type = "string", custom = false, name = "hovered_size" },
+        -- { type = "string", custom = false, name = "hovered_size" },
         -- { type = "string", custom = false, name = "cursor_percentage" },
       },
       section_c = {
-        -- { type = "coloreds", custom = false, name = "githead" },
-
         -- { type = "string",   custom = false, name = "hovered_file_extension", params = { true } },
         { type = "coloreds", custom = false, name = "permissions" },
       },
@@ -111,7 +112,7 @@ require("yatline-githead"):setup({
   show_branch = true,
   branch_prefix = "",
   prefix_color = "white",
-  branch_color = "bright black",
+  branch_color = mocha.overlay0,
   branch_symbol = "",
   branch_borders = "",
 
