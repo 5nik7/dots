@@ -57,6 +57,29 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
   }
 }
 
+if ($env:isReloading) {
+  Clear-Host
+  wh ' ' white 'PROFILE ' gray 'RELOADED' green  -box -border black -bb 1 -ba 2 -pad $env:padding
+  $env:isReloading = $false
+}
+
+function rl {
+  [CmdletBinding()]
+  param ()
+  [bool]$env:isReloading = "$true"
+
+  $env:isReloading = $true
+  Clear-Host
+  wh 'RELOADING ' darkgray ' ' white 'PROFILE' gray -box -border black -bb 1 -ba 2 -pad $env:padding
+  & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
+  exit
+}
+
+$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+if (Test-Path($ChocolateyProfile)) {
+  Import-Module "$ChocolateyProfile"
+}
+
 $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCount 1 -Action {
   $Global:PSDefaultParameterValues.Add("Out-Default:OutVariable", "__")
   $Global:PSDefaultParameterValues.Add("Update-Help:UICulture", [cultureinfo]::new("en-US"))
