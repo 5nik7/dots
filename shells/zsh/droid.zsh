@@ -44,11 +44,13 @@ function www {
   fi
 }
 
-function pkglist(){
- pkglist="$DROIDOTS/pkglist"
-  command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkglist"
- sed -i '1d' "$pkglist"
-
+function updpkg(){
+ local pkgins="$DROIDOTS/pkgins"
+ local pkgs="$DROIDOTS/pkgs"
+ command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkgins"
+ sed -i '1d' "$pkgins"
+ command pkg list-all | grep -v 'installed' | tr '/' ' ' | awk '{print $1}' >! "$pkgs"
+ sed -i '1d' "$pkgs"
 }
 
 if is_installed perl; then
