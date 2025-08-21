@@ -45,11 +45,8 @@ function www {
 }
 
 function updpkg(){
- local pkgins="$DROIDOTS/pkgins"
- local pkgs="$DROIDOTS/pkgs"
- command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkgins"
- sed -i '1d' "$pkgins"
- command pkg list-all | grep -v 'installed' | tr '/' ' ' | awk '{print $1}' >! "$pkgs"
+ local pkgs="$DROIDOTS/packages"
+ command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkgs"
  sed -i '1d' "$pkgs"
 }
 
