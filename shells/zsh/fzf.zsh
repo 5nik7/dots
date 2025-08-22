@@ -30,7 +30,7 @@ if is_droid; then
   # preview_pos='bottom:hidden:50%:border-top'
   preview_pos='bottom:hidden:50%:border-sharp'
 else
-  preview_pos='right:hidden:50%:border-left'
+  preview_pos='right:50%:border-left'
 fi
 
 if cmd_exists fd; then
@@ -65,7 +65,7 @@ export FZF_DEFAULT_OPTS="--style minimal \
 --no-scrollbar \
 --preview-window='$preview_pos' \
 --bind='Ctrl-X:toggle-preview' \
---preview 'fzf-preview.sh {}'"
+--preview '$_PREVIEW_ {}'"
 
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
 bg+:${mantle},\
