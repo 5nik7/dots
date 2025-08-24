@@ -46,6 +46,7 @@ alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
 alias ".c"="cd $HOME/.config"
+alias ".l"="cd $HOME/.local"
 
 alias ".d"="cd $DOTS"
 alias ".f"="cd $DOTFILES"
@@ -56,8 +57,6 @@ alias ".sp"="cd $SHELLS/powershell"
 
 if cmd_exists pastel; then
   alias paint='pastel paint'
-else
-  alias paint="echo -e 'Padtern not found. Install pastel to use this command.'"
 fi
 
 if cmd_exists eza; then
