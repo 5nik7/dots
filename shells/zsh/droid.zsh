@@ -7,7 +7,7 @@ if cmd_exists jq; then
   }
 fi
 
-export ZSH_SYSTEM_CLIPBOARD_METHOD=termux""
+export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 
 # export location="$(location)"
 
@@ -22,6 +22,7 @@ export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/config"
 prepend_path "$DROIDOTS/bin"
 
 alias open="termux-open"
+alias rlt="termux-reload-settings"
 
 alias bon="export BTRY='on'"
 alias boff="export BTRY=''"
