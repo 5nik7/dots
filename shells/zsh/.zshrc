@@ -60,3 +60,5 @@ if cmd_exists batman; then
 fi
 
 eval "$(gh copilot alias -- zsh)"
+
+zource "$HOME/.zshrc.local"
