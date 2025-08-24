@@ -32,6 +32,7 @@ alias upd="pkg update && pkg upgrade -y"
 alias ".a"="cd $DROIDOTS"
 alias ".af"="cd $DROIDOTS/configs"
 alias ".ab"="cd $DROIDOTS/bin"
+alias ".v"="cd $DROIDOTS/configs/nvim"
 
 function google {
   termux-open-url "https://www.google.com/search?q=$*"
