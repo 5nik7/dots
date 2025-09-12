@@ -101,3 +101,4 @@ fi
 eval "$(gh copilot alias -- bash)"
 
 
+complete -C /data/data/com.termux/files/home/go/bin/ipinfo -o default ipinfo

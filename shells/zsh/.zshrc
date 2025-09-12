@@ -62,3 +62,5 @@ fi
 eval "$(gh copilot alias -- zsh)"
 
 zource "$HOME/.zshrc.local"
+autoload -U +X bashcompinit && bashcompinit
+complete -o default -C /data/data/com.termux/files/home/go/bin/ipinfo ipinfo
