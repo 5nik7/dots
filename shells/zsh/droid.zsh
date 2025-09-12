@@ -52,11 +52,9 @@ function updpkg(){
  sed -i '1d' "$pkgs"
 }
 
-if is_installed perl; then
+extend_path "${HOME}/perl5/bin"
 
-  extend_path "${HOME}/perl5/bin"
-
-  # PATH="/data/data/com.termux/files/home/perl5/bin${PATH:+:${PATH}}"; export PATH;
+if cmd_exists perl; then
   PERL5LIB="${HOME}/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
   PERL_LOCAL_LIB_ROOT="${HOME}/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
   PERL_MB_OPT="--install_base \"${HOME}/perl5\""; export PERL_MB_OPT;
