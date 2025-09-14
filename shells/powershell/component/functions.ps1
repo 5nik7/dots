@@ -334,13 +334,26 @@ function gup {
     $commitMessage = if ($Message) { $Message } else { "Update @ $(Get-Date -Format 'MM-dd-yyyy HH:mm')" }
     if ($All) {
       git_all add .
-      git_all commit -m "$commitMessage"
-      git_all push --recurse-submodules=on-demand
+      # Check for staged changes
+      $status = git_all diff --cached --name-only
+      if ($status) {
+        git_all commit -m "$commitMessage"
+        git_all push
+      }
+      else {
+        Write-Host "No changes to commit." -ForegroundColor Yellow
+      }
     }
     else {
       git add .
-      git commit -m "$commitMessage"
-      git push
+      $status = git diff --cached --name-only
+      if ($status) {
+        git commit -m "$commitMessage"
+        git push
+      }
+      else {
+        Write-Host "No changes to commit." -ForegroundColor Yellow
+      }
     }
   }
   else {
