@@ -46,6 +46,7 @@ Import-Module -Name 'powershell-yaml' -Global
 & uvx --generate-shell-completion powershell | Out-String | Invoke-Expression
 & glow completion powershell | Out-String | Invoke-Expression
 & gowall completion powershell | Out-String | Invoke-Expression
+& volta completions powershell | Out-String | Invoke-Expression
 
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
   param($wordToComplete, $commandAst, $cursorPosition)
@@ -92,4 +93,5 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
     }
   }
   $env:LS_COLORS = "$(vivid generate catppuccin-mocha)"
+  Remove-DuplicatePaths
 }
