@@ -608,13 +608,13 @@ function git_all {
     [Parameter(ValueFromRemainingArguments = $true)]
     $Args
   )
-  $username = '5nik7'
+  $gitusername = git config get --global user.name
   if (Test-Path .git) {
     # Check remote access before running commands
     $hasAccess = $true
     $remoteUrl = git remote get-url origin 2>$null
-    if (-not $remoteUrl -or ($remoteUrl -notmatch $username)) {
-      # Write-Host "Remote does not contain username '$username'. Cannot run git commands." -ForegroundColor Yellow
+    if (-not $remoteUrl -or ($remoteUrl -notmatch $gitusername)) {
+      # Write-Host "Remote does not contain username '$gitusername'. Cannot run git commands." -ForegroundColor Yellow
       return
     }
     try {
@@ -641,8 +641,8 @@ function git_all {
         # Try a harmless git command to check access
         $subHasAccess = $true
         $subRemoteUrl = git remote get-url origin 2>$null
-        if (-not $subRemoteUrl -or ($subRemoteUrl -notmatch $username)) {
-          # Write-Host "Submodule '$sub' remote does not contain username '$username'. Skipping." -ForegroundColor Yellow
+        if (-not $subRemoteUrl -or ($subRemoteUrl -notmatch $gitusername)) {
+          # Write-Host "Submodule '$sub' remote does not contain username '$gitusername'. Skipping." -ForegroundColor Yellow
           Pop-Location
           continue
         }
@@ -673,11 +673,11 @@ function gup {
     [string]$Message,
     [switch]$All
   )
-  $username = '5nik7'
+  $gitusername = git config get --global user.name
   if (Test-Path .git) {
     $remoteUrl = git remote get-url origin 2>$null
-    if (-not $remoteUrl -or ($remoteUrl -notmatch $username)) {
-      Write-Host "Remote does not contain username '$username'. Cannot push or fetch from remote." -ForegroundColor Yellow
+    if (-not $remoteUrl -or ($remoteUrl -notmatch $gitusername)) {
+      # Write-Host "Remote does not contain username '$gitusername'. Cannot push or fetch from remote." -ForegroundColor Yellow
       return
     }
     $commitMessage = if ($Message) { $Message } else { "Update @ $(Get-Date -Format 'MM-dd-yyyy HH:mm')" }
