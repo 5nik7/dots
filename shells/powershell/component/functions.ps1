@@ -290,106 +290,6 @@ Function Search-Alias {
   }
 }
 
-function git_all {
-  param(
-    [Parameter(ValueFromRemainingArguments = $true)]
-    $Args
-  )
-  if (Test-Path .git) {
-    # Check remote access before running commands
-    $hasAccess = $true
-    try {
-      git ls-remote > $null 2>&1
-    }
-    catch {
-      $hasAccess = $false
-    }
-    if (-not $hasAccess) {
-      Write-Host "Skipping main repo (no remote access or permission denied)" -ForegroundColor Yellow
-      return
-    }
-    git @Args
-    # Get submodule paths from .gitmodules
-    $submodules = @()
-    if (Test-Path .gitmodules) {
-      $submodules = git config --file .gitmodules --get-regexp path | ForEach-Object {
-        $_ -replace '^[^ ]+ ', ''
-      }
-    }
-    foreach ($sub in $submodules) {
-      if (Test-Path $sub) {
-        Push-Location $sub
-        # Try a harmless git command to check access
-        $subHasAccess = $true
-        try {
-          git ls-remote > $null 2>&1
-        }
-        catch {
-          $subHasAccess = $false
-        }
-        if ($subHasAccess) {
-          git @Args
-        }
-        else {
-          Write-Host "Skipping submodule '$sub' (no permission or inaccessible)" -ForegroundColor Yellow
-        }
-        Pop-Location
-      }
-    }
-  }
-  else {
-    Write-Error 'This directory does not contain a .git directory'
-  }
-}
-
-function gup {
-  param(
-    [Parameter(Position = 0)]
-    [string]$Message,
-    [switch]$All
-  )
-  if (Test-Path .git) {
-    # Check remote access before running commands that require it
-    $hasAccess = $true
-    try {
-      git ls-remote > $null 2>&1
-    }
-    catch {
-      $hasAccess = $false
-    }
-    if (-not $hasAccess) {
-      Write-Host "Remote access denied. Cannot push or fetch from remote." -ForegroundColor Yellow
-      return
-    }
-    $commitMessage = if ($Message) { $Message } else { "Update @ $(Get-Date -Format 'MM-dd-yyyy HH:mm')" }
-    if ($All) {
-      git_all add .
-      # Check for staged changes
-      $status = git_all diff --cached --name-only
-      if ($status) {
-        git_all commit -m "$commitMessage"
-        git_all push
-      }
-      else {
-        Write-Host "No changes to commit." -ForegroundColor Yellow
-      }
-    }
-    else {
-      git add .
-      $status = git diff --cached --name-only
-      if ($status) {
-        git commit -m "$commitMessage"
-        git push
-      }
-      else {
-        Write-Host "No changes to commit." -ForegroundColor Yellow
-      }
-    }
-  }
-  else {
-    Write-Error 'This directory does not contain a .git directory'
-  }
-}
 
 function Find-File {
   <#
@@ -701,4 +601,47 @@ function Set-FuzzyOpt {
   )
   $fuzzyOpts = @{ opts = @{ $Key = $Value } }
   Set-FuzzyOpts @fuzzyOpts
+}
+
+function gup {
+  param(
+    [Parameter(Position = 0)]
+    [string]$Message,
+    [switch]$All
+  )
+  $username = '5nik7'
+  if (Test-Path .git) {
+    $remoteUrl = git remote get-url origin 2>$null
+    if (-not $remoteUrl -or ($remoteUrl -notmatch $username)) {
+      Write-Host "Remote does not contain username '$username'. Cannot push or fetch from remote." -ForegroundColor Yellow
+      return
+    }
+    $commitMessage = if ($Message) { $Message } else { "Update @ $(Get-Date -Format 'MM-dd-yyyy HH:mm')" }
+    if ($All) {
+      git_all add .
+      # Check for staged changes
+      $status = git_all diff --cached --name-only
+      if ($status) {
+        git_all commit -m "$commitMessage"
+        git_all push
+      }
+      else {
+        Write-Host "No changes to commit." -ForegroundColor Yellow
+      }
+    }
+    else {
+      git add .
+      $status = git diff --cached --name-only
+      if ($status) {
+        git commit -m "$commitMessage"
+        git push
+      }
+      else {
+        Write-Host "No changes to commit." -ForegroundColor Yellow
+      }
+    }
+  }
+  else {
+    Write-Error 'This directory does not contain a .git directory'
+  }
 }
