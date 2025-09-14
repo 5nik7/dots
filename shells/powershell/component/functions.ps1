@@ -296,6 +296,18 @@ function git_all {
     $Args
   )
   if (Test-Path .git) {
+    # Check remote access before running commands
+    $hasAccess = $true
+    try {
+      git ls-remote > $null 2>&1
+    }
+    catch {
+      $hasAccess = $false
+    }
+    if (-not $hasAccess) {
+      Write-Host "Skipping main repo (no remote access or permission denied)" -ForegroundColor Yellow
+      return
+    }
     git @Args
     # Get submodule paths from .gitmodules
     $submodules = @()
@@ -308,11 +320,17 @@ function git_all {
       if (Test-Path $sub) {
         Push-Location $sub
         # Try a harmless git command to check access
+        $subHasAccess = $true
         try {
           git ls-remote > $null 2>&1
-          git @Args
         }
         catch {
+          $subHasAccess = $false
+        }
+        if ($subHasAccess) {
+          git @Args
+        }
+        else {
           Write-Host "Skipping submodule '$sub' (no permission or inaccessible)" -ForegroundColor Yellow
         }
         Pop-Location
@@ -331,6 +349,18 @@ function gup {
     [switch]$All
   )
   if (Test-Path .git) {
+    # Check remote access before running commands that require it
+    $hasAccess = $true
+    try {
+      git ls-remote > $null 2>&1
+    }
+    catch {
+      $hasAccess = $false
+    }
+    if (-not $hasAccess) {
+      Write-Host "Remote access denied. Cannot push or fetch from remote." -ForegroundColor Yellow
+      return
+    }
     $commitMessage = if ($Message) { $Message } else { "Update @ $(Get-Date -Format 'MM-dd-yyyy HH:mm')" }
     if ($All) {
       git_all add .
