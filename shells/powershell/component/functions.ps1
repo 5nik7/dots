@@ -603,6 +603,70 @@ function Set-FuzzyOpt {
   Set-FuzzyOpts @fuzzyOpts
 }
 
+function git_all {
+  param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    $Args
+  )
+  $username = '5nik7'
+  if (Test-Path .git) {
+    # Check remote access before running commands
+    $hasAccess = $true
+    $remoteUrl = git remote get-url origin 2>$null
+    if (-not $remoteUrl -or ($remoteUrl -notmatch $username)) {
+      Write-Host "Remote does not contain username '$username'. Cannot run git commands." -ForegroundColor Yellow
+      return
+    }
+    try {
+      git ls-remote > $null 2>&1
+    }
+    catch {
+      $hasAccess = $false
+    }
+    if (-not $hasAccess) {
+      Write-Host "Skipping main repo (no remote access or permission denied)" -ForegroundColor Yellow
+      return
+    }
+    git @Args
+    # Get submodule paths from .gitmodules
+    $submodules = @()
+    if (Test-Path .gitmodules) {
+      $submodules = git config --file .gitmodules --get-regexp path | ForEach-Object {
+        $_ -replace '^[^ ]+ ', ''
+      }
+    }
+    foreach ($sub in $submodules) {
+      if (Test-Path $sub) {
+        Push-Location $sub
+        # Try a harmless git command to check access
+        $subHasAccess = $true
+        $subRemoteUrl = git remote get-url origin 2>$null
+        if (-not $subRemoteUrl -or ($subRemoteUrl -notmatch $username)) {
+          Write-Host "Submodule '$sub' remote does not contain username '$username'. Skipping." -ForegroundColor Yellow
+          Pop-Location
+          continue
+        }
+        try {
+          git ls-remote > $null 2>&1
+        }
+        catch {
+          $subHasAccess = $false
+        }
+        if ($subHasAccess) {
+          git @Args
+        }
+        else {
+          Write-Host "Skipping submodule '$sub' (no permission or inaccessible)" -ForegroundColor Yellow
+        }
+        Pop-Location
+      }
+    }
+  }
+  else {
+    Write-Error 'This directory does not contain a .git directory'
+  }
+}
+
 function gup {
   param(
     [Parameter(Position = 0)]
