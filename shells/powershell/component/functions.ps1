@@ -614,7 +614,7 @@ function git_all {
     $hasAccess = $true
     $remoteUrl = git remote get-url origin 2>$null
     if (-not $remoteUrl -or ($remoteUrl -notmatch $username)) {
-      Write-Host "Remote does not contain username '$username'. Cannot run git commands." -ForegroundColor Yellow
+      # Write-Host "Remote does not contain username '$username'. Cannot run git commands." -ForegroundColor Yellow
       return
     }
     try {
@@ -624,7 +624,7 @@ function git_all {
       $hasAccess = $false
     }
     if (-not $hasAccess) {
-      Write-Host "Skipping main repo (no remote access or permission denied)" -ForegroundColor Yellow
+      # Write-Host "Skipping main repo (no remote access or permission denied)" -ForegroundColor Yellow
       return
     }
     git @Args
@@ -642,7 +642,7 @@ function git_all {
         $subHasAccess = $true
         $subRemoteUrl = git remote get-url origin 2>$null
         if (-not $subRemoteUrl -or ($subRemoteUrl -notmatch $username)) {
-          Write-Host "Submodule '$sub' remote does not contain username '$username'. Skipping." -ForegroundColor Yellow
+          # Write-Host "Submodule '$sub' remote does not contain username '$username'. Skipping." -ForegroundColor Yellow
           Pop-Location
           continue
         }
@@ -656,7 +656,7 @@ function git_all {
           git @Args
         }
         else {
-          Write-Host "Skipping submodule '$sub' (no permission or inaccessible)" -ForegroundColor Yellow
+          # Write-Host "Skipping submodule '$sub' (no permission or inaccessible)" -ForegroundColor Yellow
         }
         Pop-Location
       }
