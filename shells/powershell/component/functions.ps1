@@ -297,16 +297,32 @@ function git_all {
   )
   if (Test-Path .git) {
     git @Args
-    git submodule foreach --recursive "git $($Args -join ' ')"
+    # Get submodule paths from .gitmodules
+    $submodules = @()
+    if (Test-Path .gitmodules) {
+      $submodules = git config --file .gitmodules --get-regexp path | ForEach-Object {
+        $_ -replace '^[^ ]+ ', ''
+      }
+    }
+    foreach ($sub in $submodules) {
+      if (Test-Path $sub) {
+        Push-Location $sub
+        # Try a harmless git command to check access
+        try {
+          git ls-remote > $null 2>&1
+          git @Args
+        }
+        catch {
+          Write-Host "Skipping submodule '$sub' (no permission or inaccessible)" -ForegroundColor Yellow
+        }
+        Pop-Location
+      }
+    }
   }
   else {
     Write-Error 'This directory does not contain a .git directory'
   }
 }
-
-# Example usage:
-# git_all status
-# git_all pull
 
 function gup {
   param(
