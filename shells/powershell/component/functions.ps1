@@ -290,14 +290,42 @@ Function Search-Alias {
   }
 }
 
-function gup {
+function git_all {
+  param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    $Args
+  )
   if (Test-Path .git) {
-    $commitDate = Get-Date -Format 'MM-dd-yyyy HH:mm'
-    Write-Host ''
-    git add .
-    git commit -m "Update @ $commitDate"
-    git push
-    Write-Host ''
+    git @Args
+    git submodule foreach --recursive "git $($Args -join ' ')"
+  }
+  else {
+    Write-Error 'This directory does not contain a .git directory'
+  }
+}
+
+# Example usage:
+# git_all status
+# git_all pull
+
+function gup {
+  param(
+    [Parameter(Position = 0)]
+    [string]$Message,
+    [switch]$All
+  )
+  if (Test-Path .git) {
+    $commitMessage = if ($Message) { $Message } else { "Update @ $(Get-Date -Format 'MM-dd-yyyy HH:mm')" }
+    if ($All) {
+      git_all add .
+      git_all commit -m "$commitMessage"
+      git_all push --recurse-submodules=on-demand
+    }
+    else {
+      git add .
+      git commit -m "$commitMessage"
+      git push
+    }
   }
   else {
     Write-Error 'This directory does not contain a .git directory'
