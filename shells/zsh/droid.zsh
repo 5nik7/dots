@@ -1,3 +1,5 @@
+zinit light kutsan/zsh-system-clipboard
+
 if cmd_exists jq; then
   location() {
     latitude="$(termux-location | jq '.["latitude"]')"

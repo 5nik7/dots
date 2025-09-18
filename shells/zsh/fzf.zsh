@@ -30,7 +30,8 @@ if is_droid; then
   # preview_pos='bottom:hidden:50%:border-top'
   preview_pos='bottom:hidden:50%:border-sharp'
 else
-  preview_pos='right:50%:border-left'
+  preview_pos='bottom:hidden:50%:border-sharp'
+  # preview_pos='right:50%:border-left'
 fi
 
 if cmd_exists fd; then

@@ -15,7 +15,7 @@ $git_commit\
 $git_status\
 $git_metrics\
 $git_state\
-$nodejs$conda$python$rust\
+$nodejs$conda$python$rust$lua\
 $cmd_duration\
 $fill\
 $time\
@@ -83,6 +83,7 @@ color_btry_bg = '#181825'
 # color_fill = '#303446'
 # color_fill = '#24273a'
 color_fill = '#1e1e2e'
+color_lua = '#74c7ec'
 
 [time]
 disabled = true
@@ -221,6 +222,12 @@ style = 'green'
 version_format = '${raw}'
 format = '([](bright-black) [${symbol}([$version](Bright-green)) ]($style))'
 disabled = false
+
+[lua]
+detect_folders = []
+style = 'fg:color_lua'
+symbol = " "
+format = '([](bright-black) [${symbol}([$version](fg:color_lua)) ]($style))'
 
 [conda]
 symbol = '🅒 '
@@ -378,9 +385,6 @@ symbol = " "
 
 [kotlin]
 symbol = " "
-
-[lua]
-symbol = " "
 
 [memory_usage]
 symbol = "󰍛 "
