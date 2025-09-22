@@ -46,3 +46,5 @@ bin-release/
 *.apk
 
 **/history.txt
+
+**/FPilot-UserData.json
