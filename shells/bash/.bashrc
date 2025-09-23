@@ -53,7 +53,7 @@ addir "$HOME/.local/bin"
 extend_path "$HOME/.local/bin"
 extend_path "$HOME/.local/share/nvim/mason/bin"
 prepend_path "$GOBIN"
-# prepend_path "$DOTSBIN"
+prepend_path "$DOTSBIN"
 prepend_path "$HOME/.cargo/bin"
 
 export SHHHH="$DOTS/secrets"
@@ -89,7 +89,6 @@ if cmd_exists direnv; then
   eval "$(direnv hook bash)"
 fi
 
-
 if cmd_exists batpipe; then
   eval "$(batpipe)"
 fi
@@ -97,8 +96,6 @@ fi
 if cmd_exists batman; then
   eval "$(batman --export-env)"
 fi
-
-eval "$(gh copilot alias -- bash)"
 
 
 complete -C /data/data/com.termux/files/home/go/bin/ipinfo -o default ipinfo

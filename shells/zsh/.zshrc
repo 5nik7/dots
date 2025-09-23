@@ -64,6 +64,4 @@ if cmd_exists ipinfo; then
   complete -o default -C "$HOME/go/bin/ipinfo" ipinfo
 fi
 
-eval "$(gh copilot alias -- zsh)"
-
 zource "$HOME/.zshrc.local"

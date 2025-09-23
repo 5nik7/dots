@@ -1,0 +1,61 @@
+[color]
+    ui = auto
+[color "branch"]
+    current = yellow bold
+    local = green bold
+    remote = cyan bold
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+    whitespace = red reverse
+[color "status"]
+    added = green bold
+    changed = yellow bold
+    untracked = red bold
+[fetch]
+    prune = true
+    pruneTags = true
+[pull]
+    rebase = true
+[push]
+    default = upstream
+    autoSetupRemote = true
+    followTags = true
+    useForceIfIncludes = true
+[rebase]
+    autoSquash = true
+[core]
+    pager = delta
+    editor = nvim
+    symlinks = true
+    autocrlf = false
+    longpaths = true
+
+[include]
+	path = ~/dots/configs/git/gitppuccin
+
+[delta]
+    features = catppuccin-mocha
+    navigate = true
+    light = false
+    side-by-side = false
+    line-numbers = true
+	true-colors = always
+
+#  --- Aliases ---
+
+[include]
+    path = ~/dots/configs/git/gitaliases
+
+#  --- Personal settings ---
+
+[user]
+    name = 5nik7
+    email = nickflip86@gmail.com
+[github]
+    user = 5nik7
+[init]
+    defaultBranch = main
+
