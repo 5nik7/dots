@@ -71,16 +71,7 @@ if cmd_exists eza; then
       eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
       linebreak
     }
-    function lt() {
-      local level="$1"
-      if [ "$1" = "" ]; then
-          level=1
-      fi
-      linebreak
-      eza --group-directories-first --git-repos --git --icons -n --tree -L "$level" "$@"
-      linebreak
-    }
-    function la() {
+  function la() {
       linebreak
       eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
       linebreak
@@ -91,18 +82,9 @@ if cmd_exists eza; then
       eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
       linebreak
     }
-    function lta() {
-      local level="$1"
-      if [ "$1" = "" ]; then
-          level=1
-      fi
-      linebreak
-      eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level" "$@"
-      linebreak
-    }
-    alias eza='eza --icons --group-directories-first'
-    alias ls='eza'
-    alias lsa='ls -a'
+    alias eza="eza --icons --group-directories-first"
+    alias ls="eza"
+    alias lsa="ls -a"
 fi
 
 if cmd_exists yazi; then
