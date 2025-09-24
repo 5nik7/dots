@@ -100,7 +100,7 @@ if cmd_exists eza; then
       eza -a --group-directories-first --git-repos --git --icons -n --tree -L "$level" "$@"
       linebreak
     }
-    alias eza='eza --icons'
+    alias eza='eza --icons --group-directories-first'
     alias ls='eza'
     alias lsa='ls -a'
 fi
