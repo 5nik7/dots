@@ -59,7 +59,7 @@ export FZF_DEFAULT_OPTS="--style minimal \
 --height ~90% \
 --border none \
 --info hidden \
---prompt ' > ' \
+--prompt ' 󰅂 ' \
 --pointer '' \
 --marker '│' \
 --no-separator \

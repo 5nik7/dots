@@ -418,10 +418,10 @@ disabled = false
 [character]
 success_symbol = '[](fg:color_ok)'
 error_symbol = '[](fg:color_danger)'
-vimcmd_symbol = '[](fg:color_vimcmd_ok)'
-vimcmd_replace_one_symbol = '[](fg:color_vimcmd_replace)'
-vimcmd_replace_symbol = '[](fg:color_vimcmd_replace)'
-vimcmd_visual_symbol = '[](fg:color_vimcmd_visual)'
+vimcmd_symbol = '[󰅂](fg:color_vimcmd_ok)'
+vimcmd_replace_one_symbol = '[󰅂](fg:color_vimcmd_replace)'
+vimcmd_replace_symbol = '[󰅂](fg:color_vimcmd_replace)'
+vimcmd_visual_symbol = '[󰅂](fg:color_vimcmd_visual)'
 format = '$symbol '
 
 [directory.substitutions]
