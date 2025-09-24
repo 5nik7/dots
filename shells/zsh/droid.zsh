@@ -18,8 +18,8 @@ export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 # }
 
 export DROIDOTS="$DOTS/androidots"
-export BAT_CONFIG_DIR="$DROIDOTS/configs/bat"
-export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/config"
+# export BAT_CONFIG_DIR="$DROIDOTS/configs/bat"
+# export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/config"
 
 prepend_path "$DROIDOTS/bin"
 

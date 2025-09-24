@@ -18,6 +18,9 @@ export LS_COLORS="$(vivid generate "$DOT_THEME")"
 export STARSHIP_DIR="$DOTFILES/starship"
 export STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
 export STARSHIP_THEMES="$STARSHIP_DIR/themes"
+export BAT_CONFIG_DIR="$DOTFILES/bat"
+export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/bat.conf"
+export YAZI_CONFIG_HOME="$DOTFILES/yazi"
 
 export GOBIN="$HOME/go/bin"
 
