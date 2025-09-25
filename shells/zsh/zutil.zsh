@@ -103,24 +103,6 @@ function timestampcmd(){
 }
 alias tstampcmd=timestampcmd
 
-function bakfile() {
-# TODO: switch this to a .backupstore folder for keeping this stuff instead
-  # cp -av -- "$filename" "$backupdir/$bakfile"
-  for filename in "$@"; do
-    [ -n "$filename" ] || { echo "usage: bak filename"; return 1; }
-    [ -f "$filename" ] || { echo "file '$filename' does not exist"; return 1; }
-    [[ $filename =~ .*\.bak\..* ]] && continue
-    local bakfile
-    bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
-    until ! [ -f "$bakfile" ]; do
-      echo "WARNING: bakfile '$bakfile' already exists, retrying with a new timestamp"
-      sleep 1
-      bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
-    done
-    cp -av  "$filename" "$bakfile"
-  done
- }
-
 function bak() {
   local usage="usage: bak [options] <file|dir> [more files/dirs...]
 Create timestamped backups of files or directories.
