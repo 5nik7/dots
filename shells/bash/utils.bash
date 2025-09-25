@@ -1,6 +1,6 @@
 function is_droid() {
-	[[ -d  "$HOME/.termux" ]] &> /dev/null
-	return $?
+  [[ -d "$HOME/.termux" ]] &>/dev/null
+  return $?
 }
 
 function addir() {
@@ -90,25 +90,31 @@ function print_link() {
   print_in_cyan "$2\n"
 }
 
-function timestamp(){
-    printf "%s" "$(date '+%F %T')  $*"
-    [ $# -gt 0 ] && printf '\n'
+function timestamp() {
+  printf "%s" "$(date '+%F %T')  $*"
+  [ $# -gt 0 ] && printf '\n'
 }
 alias tstamp=timestamp
 
-function timestampcmd(){
-    local output
-    output="$("$@" 2>&1)"
-    timestamp "$output"
+function timestampcmd() {
+  local output
+  output="$("$@" 2>&1)"
+  timestamp "$output"
 }
 alias tstampcmd=timestampcmd
 
-function bak(){
-# TODO: switch this to a .backupstore folder for keeping this stuff instead
+function bakfile() {
+  # TODO: switch this to a .backupstore folder for keeping this stuff instead
   # cp -av -- "$filename" "$backupdir/$bakfile"
   for filename in "$@"; do
-    [ -n "$filename" ] || { echo "usage: bak filename"; return 1; }
-    [ -f "$filename" ] || { echo "file '$filename' does not exist"; return 1; }
+    [ -n "$filename" ] || {
+      echo "usage: bak filename"
+      return 1
+    }
+    [ -f "$filename" ] || {
+      echo "file '$filename' does not exist"
+      return 1
+    }
     [[ $filename =~ .*\.bak\..* ]] && continue
     local bakfile
     bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
@@ -117,6 +123,42 @@ function bak(){
       sleep 1
       bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
     done
-    cp -v  "$filename" "$bakfile"
+    cp -v "$filename" "$bakfile"
+  done
+}
+
+# Put this in your shell (e.g., ~/.bashrc) or a script file and source it.
+function bak() {
+  [ "$#" -gt 0 ] || {
+    echo "usage: bak <path> [more paths...]"
+    return 1
+  }
+
+  for src in "$@"; do
+    # Existence checks
+    if [ ! -e "$src" ]; then
+      echo "error: '$src' does not exist" >&2
+      continue
+    fi
+
+    # Skip anything that already looks like a backup
+    [[ "$src" =~ \.bak\. ]] && continue
+
+    # Build a timestamp and candidate backup path
+    local ts bakpath
+    ts="$(date '+%F_%T' | sed 's/:/-/g')" # e.g., 2025-09-25_14-03-07
+    bakpath="${src}.bak.${ts}"
+
+    # If a backup with this exact name exists, wait and try again
+    # (covers both files and directories, so use -e)
+    while [ -e "$bakpath" ]; do
+      echo "WARNING: '$bakpath' already exists, retrying with a new timestamp"
+      sleep 1
+      ts="$(date '+%F_%T' | sed 's/:/-/g')"
+      bakpath="${src}.bak.${ts}"
+    done
+
+    # Copy (works for both files and directories)
+    cp -av -- "$src" "$bakpath"
   done
 }

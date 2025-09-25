@@ -103,7 +103,7 @@ function timestampcmd(){
 }
 alias tstampcmd=timestampcmd
 
-function bak(){
+function bakfile() {
 # TODO: switch this to a .backupstore folder for keeping this stuff instead
   # cp -av -- "$filename" "$backupdir/$bakfile"
   for filename in "$@"; do
@@ -117,6 +117,39 @@ function bak(){
       sleep 1
       bakfile="$filename.bak.$(date '+%F_%T' | sed 's/:/-/g')"
     done
-    cp -v  "$filename" "$bakfile"
+    cp -av  "$filename" "$bakfile"
+  done
+ }
+
+# Put this in your shell (e.g., ~/.bashrc) or a script file and source it.
+function bak() {
+  [ "$#" -gt 0 ] || { echo "usage: bak <path> [more paths...]"; return 1; }
+
+  for src in "$@"; do
+    # Existence checks
+    if [ ! -e "$src" ]; then
+      echo "error: '$src' does not exist" >&2
+      continue
+    fi
+
+    # Skip anything that already looks like a backup
+    [[ "$src" =~ \.bak\. ]] && continue
+
+    # Build a timestamp and candidate backup path
+    local ts bakpath
+    ts="$(date '+%F_%T' | sed 's/:/-/g')"     # e.g., 2025-09-25_14-03-07
+    bakpath="${src}.bak.${ts}"
+
+    # If a backup with this exact name exists, wait and try again
+    # (covers both files and directories, so use -e)
+    while [ -e "$bakpath" ]; do
+      echo "WARNING: '$bakpath' already exists, retrying with a new timestamp"
+      sleep 1
+      ts="$(date '+%F_%T' | sed 's/:/-/g')"
+      bakpath="${src}.bak.${ts}"
+    done
+
+    # Copy (works for both files and directories)
+    cp -av -- "$src" "$bakpath"
   done
 }
