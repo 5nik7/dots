@@ -8,6 +8,21 @@ Set-Alias -Name nfo -Value Write-Info
 Set-Alias -Name ep -Value Edit-Profile
 Set-Alias -Name concol -Value list-console-colors
 Set-Alias -Name nf -Value powernerd -Option AllScope
+function glowcommand($file) {
+  # if no file provided
+  if (-not $file -or $file.Trim() -eq '') {
+    Write-Host "No markdown file provided."
+    return
+  }
+  # check if file ends with .md (case-insensitive)
+  if ($file -match '\.md$') {
+    & glow.exe -w 0 -s "$DOTFILES/glow/styles/catppuccin-mocha.json" $file
+  }
+  else {
+    Write-Host "'$file' is not a markdown file."
+  }
+}
+Set-Alias -Name dat -Value glowcommand -Option AllScope
 
 if (Test-CommandExists bat) { Set-Alias -Name cat -Value bat -Option AllScope }
 if (Test-CommandExists eza) {
