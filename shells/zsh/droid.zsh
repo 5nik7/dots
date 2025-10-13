@@ -1,13 +1,5 @@
 zinit light kutsan/zsh-system-clipboard
 
-if cmd_exists jq; then
-  location() {
-    latitude="$(termux-location | jq '.["latitude"]')"
-    longitude="$(termux-location | jq '.["longitude"]')"
-    location="$latitude,$longitude"
-    echo "$latitude,$longitude"
-  }
-fi
 
 export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 

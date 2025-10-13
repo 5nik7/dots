@@ -1,3 +1,29 @@
+function httpGet() {
+  getConfiguredClient() {
+    if command -v curl &>/dev/null; then
+      configuredClient="curl"
+    elif command -v wget &>/dev/null; then
+      configuredClient="wget"
+    elif command -v http &>/dev/null; then
+      configuredClient="httpie"
+    elif command -v fetch &>/dev/null; then
+      configuredClient="fetch"
+    else
+      echo "Error: This tool requires either curl, wget, httpie or fetch to be installed\." >&2
+      return 1
+  fi
+  }
+  getConfiguredClient || exit 1
+  case "$configuredClient" in
+    curl)  curl -A curl -s "$@" ;;
+    wget)  wget -qO- "$@" ;;
+    httpie) http -b GET "$@" ;;
+    fetch) fetch -q "$@" ;;
+  esac
+}
+
+alias get='httpGet'
+
 function is_droid() {
 	[[ -d  "$HOME/.termux" ]] &> /dev/null
 	return $?
@@ -77,10 +103,6 @@ function print_success() {
 
 function print_warning() {
   print_in_yellow "\n [!] $1"
-}
-
-function success() {
-  print_in_green "\n Done.\n"
 }
 
 function print_link() {
