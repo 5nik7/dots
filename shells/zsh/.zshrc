@@ -64,4 +64,4 @@ if cmd_exists ipinfo; then
   complete -o default -C "$HOME/go/bin/ipinfo" ipinfo
 fi
 
-zource "$HOME/.zshrc.local"
+zource "$HOME/.local.zsh"
