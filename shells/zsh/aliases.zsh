@@ -63,26 +63,26 @@ fi
 
 if cmd_exists eza; then
     function l() {
-      linebreak
+     echo
       eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
-      linebreak
+     echo
     }
     function ll() {
       # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-      linebreak
+     echo
       eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
-      linebreak
+     echo
     }
   function la() {
-      linebreak
+     echo
       eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
-      linebreak
+     echo
     }
     function lla() {
       # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-      linebreak
+     echo
       eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
-      linebreak
+     echo
     }
     alias eza="eza --icons --group-directories-first"
     alias ls="eza"
