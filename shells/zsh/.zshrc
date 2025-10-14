@@ -28,6 +28,8 @@ fi
 
 zieces 'colors'
 
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 if cmd_exists fzf; then
     zieces 'fzf' && eval "$(fzf --zsh)"
 fi
@@ -65,3 +67,4 @@ if cmd_exists ipinfo; then
 fi
 
 zource "$HOME/.local.zsh"
+

@@ -60,8 +60,9 @@ export FZF_DEFAULT_OPTS="--style minimal \
 --border none \
 --info hidden \
 --prompt ' 󰅂 ' \
---pointer '' \
---marker '│' \
+--pointer '▐' \
+--marker '▐' \
+--gutter '▐' \
 --no-separator \
 --no-scrollbar \
 --preview-window='$preview_pos' \
@@ -79,8 +80,8 @@ hl:${green}:underline,\
 hl+:${green}:bold:underline:reverse,\
 info:${surface1},\
 query:${text},\
-gutter:${transparent},\
-pointer:${base},\
+gutter:${mantle},\
+pointer:${mauve},\
 marker:${yellow},\
 prompt:${surface1},\
 spinner:${surface1},\

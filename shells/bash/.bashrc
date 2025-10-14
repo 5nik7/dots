@@ -99,3 +99,5 @@ fi
 
 
 complete -C /data/data/com.termux/files/home/go/bin/ipinfo -o default ipinfo
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
