@@ -463,3 +463,4 @@ function rl {
   & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
   exit
 }
+Invoke-Expression "$(vfox activate pwsh)"
