@@ -54,34 +54,38 @@ zstyle ':fzf-tab:complete:*:*' fzf-flags --preview=$extract';$_PREVIEW_ $realpat
 
 # --preview-label=' PREVIEW ' \
 # --border-label=' FILES ' \
-export FZF_DEFAULT_OPTS="--style minimal \
+export FZF_DEFAULT_OPTS="--style default \
 --layout reverse \
 --height ~90% \
 --border none \
 --info hidden \
 --prompt ' 󰅂 ' \
---pointer '▐' \
---marker '▐' \
---gutter '▐' \
+--pointer '▎' \
+--marker '▎' \
+--gutter '▎' \
+--gutter-raw '▎' \
 --no-separator \
 --no-scrollbar \
 --preview-window='$preview_pos' \
---bind='Ctrl-X:toggle-preview' \
+--bind='\
+Ctrl-X:toggle-preview,\
+up:up-match,\
+down:down-match,\
+alt-r:toggle-raw' \
 --preview '$_PREVIEW_ {}'"
 
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
-bg+:${mantle},\
+bg+:${surface0},\
 bg:${transparent},\
 preview-bg:${transparent},\
-selected-bg:${mantle},\
-fg:$subtext0,\
-fg+:${lavender}:bold:reverse,\
-hl:${green}:underline,\
-hl+:${green}:bold:underline:reverse,\
-info:${surface1},\
-query:${text},\
-gutter:${mantle},\
-pointer:${mauve},\
+fg:${subtext0},\
+fg+:${text},\
+hl:${blue}:bold:underline,\
+hl+:${blue}:bold:underline,\
+info:${surface2},\
+query:${mauve},\
+gutter:${surface0},\
+pointer:${surface0},\
 marker:${yellow},\
 prompt:${surface1},\
 spinner:${surface1},\
@@ -91,4 +95,5 @@ separator:${base},\
 border:${surface0},\
 list-border:${surface0},\
 preview-border:${surface0},\
-input-border:${surface0}"
+input-border:${surface0},\
+nomatch:strip:${surface1}:italic"
