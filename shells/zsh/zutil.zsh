@@ -1,31 +1,6 @@
-function httpGet() {
-  getConfiguredClient() {
-    if command -v curl &>/dev/null; then
-      configuredClient="curl"
-    elif command -v wget &>/dev/null; then
-      configuredClient="wget"
-    elif command -v http &>/dev/null; then
-      configuredClient="httpie"
-    elif command -v fetch &>/dev/null; then
-      configuredClient="fetch"
-    else
-      echo "Error: This tool requires either curl, wget, httpie or fetch to be installed\." >&2
-      return 1
-  fi
-  }
-  getConfiguredClient || exit 1
-  case "$configuredClient" in
-    curl)  curl -A curl -s "$@" ;;
-    wget)  wget -qO- "$@" ;;
-    httpie) http -b GET "$@" ;;
-    fetch) fetch -q "$@" ;;
-  esac
-}
-
-alias get='httpGet'
 
 function is_droid() {
-	[[ -d  "$HOME/.termux" ]] &> /dev/null
+  [[ -z "$TERMUX_VERSION" ]] &> /dev/null
 	return $?
 }
 
@@ -50,9 +25,6 @@ function check_dir() {
   fi
 }
 
-function linebreak() {
-  echo
-}
 
 function print_in_color() {
   printf "%b" \
@@ -125,118 +97,4 @@ function timestampcmd(){
 }
 alias tstampcmd=timestampcmd
 
-function bak() {
-  local usage="usage: bak [options] <file|dir> [more files/dirs...]
-Create timestamped backups of files or directories.
-Skips inputs that already contain '.bak.' in their name.
 
-Options:
-  -h, --help     Show this help message and exit
-  -s, --store    Place backups into ~/.bakstore; prompt to create it if missing
-      --yes      With --store, auto-create ~/.bakstore without prompting
-"
-
-  # No args?
-  [ "$#" -gt 0 ] || { echo "$usage"; return 1; }
-
-  # Flags
-  local store_mode=0 auto_yes=0
-  local args=()
-
-  # Parse flags
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      -h|--help) echo "$usage"; return 0 ;;
-      -s|--store) store_mode=1 ;;
-      --yes) auto_yes=1 ;;
-      --) shift; args+=("$@"); break ;;
-      -*)
-        echo "error: unknown option '$1'" >&2
-        echo "$usage"
-        return 1
-        ;;
-      *) args+=("$1") ;;
-    esac
-    shift
-  done
-
-  # Need at least one path to back up
-  [ "${#args[@]}" -gt 0 ] || { echo "$usage"; return 1; }
-
-  # Portable yes/no prompt function (works in bash/zsh/dash; handles no TTY)
-  _bak_confirm() {
-    # $1: prompt
-    local reply
-    if [ "$auto_yes" -eq 1 ]; then
-      return 0
-    fi
-    if [ -t 0 ]; then
-      printf "%s" "$1"
-      IFS= read -r reply
-    elif [ -r /dev/tty ]; then
-      printf "%s" "$1" >/dev/tty
-      IFS= read -r reply </dev/tty
-    else
-      echo "error: cannot prompt (no TTY). Use --yes to auto-create." >&2
-      return 2
-    fi
-    case "$reply" in
-      [Yy]|[Yy][Ee][Ss]) return 0 ;;
-      *) return 1 ;;
-    esac
-  }
-
-  # If --store, ensure ~/.bakstore exists (prompt if missing)
-  local store_dir
-  if [ "$store_mode" -eq 1 ]; then
-    store_dir="$HOME/.bakstore"
-    if [ ! -d "$store_dir" ]; then
-      if _bak_confirm "~/.bakstore does not exist. Create it now? [y/N]: "; then
-        if ! mkdir -p -- "$store_dir"; then
-          echo "error: failed to create '$store_dir'" >&2
-          return 1
-        fi
-      else
-        echo "error: store directory not created; aborting." >&2
-        return 1
-      fi
-    fi
-  fi
-
-  # Backup loop
-  for src in "${args[@]}"; do
-    if [ ! -e "$src" ]; then
-      echo "error: '$src' does not exist" >&2
-      continue
-    fi
-
-    # Skip if already a .bak.
-    case "$src" in
-      *.bak.*) continue ;;
-    esac
-
-    local ts bakname bakpath
-    ts="$(date '+%F_%T' | sed 's/:/-/g')"   # e.g., 2025-09-25_14-03-07
-    bakname="$(basename "$src").bak.${ts}"
-    if [ "$store_mode" -eq 1 ]; then
-      bakpath="$store_dir/$bakname"
-    else
-      bakpath="${src}.bak.${ts}"
-    fi
-
-    # Avoid collisions (file or dir), retry with new timestamp
-    while [ -e "$bakpath" ]; do
-      echo "WARNING: '$bakpath' already exists, retrying..."
-      sleep 1
-      ts="$(date '+%F_%T' | sed 's/:/-/g')"
-      bakname="$(basename "$src").bak.${ts}"
-      if [ "$store_mode" -eq 1 ]; then
-        bakpath="$store_dir/$bakname"
-      else
-        bakpath="${src}.bak.${ts}"
-      fi
-    done
-
-    cp -av -- "$src" "$bakpath"
-  done
-}

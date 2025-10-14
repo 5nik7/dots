@@ -17,7 +17,7 @@ autoload -U compinit
 zstyle ':completion:*:git-checkout:*' sort false
 
 # set descriptions format to enable group support
-zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':completion:*:descriptions' format '%d'
 
 # zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'
 # zstyle ':completion:*:messages' format ' %F{purple} -- %d --%f'

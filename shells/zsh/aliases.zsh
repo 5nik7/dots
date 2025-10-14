@@ -35,6 +35,8 @@ function mkcd() {
   mkdir -p "$1" && cd "$1"
 }
 
+alias get='httpGet'
+
 alias h='history'
 
 alias ".."="cd .."

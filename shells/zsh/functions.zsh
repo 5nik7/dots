@@ -231,7 +231,7 @@ function fext() {
 
 if cmd_exists rich; then
   function mdat() {
-    rich --text-full -y -a square -S black -e -d 1 -m $1
+    rich --text-full -y -e -d 1 -m $1
   }
 
   function mdpre() {

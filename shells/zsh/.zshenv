@@ -13,6 +13,12 @@ export DOTFILES="$DOTS/configs"
 
 export DOT_THEME="$(cat "$DOTS"/.theme)"
 
+THEME=$(echo "$DOT_THEME" | cut -d '-' -f 1)
+if [ $THEME = 'catppuccin' ]; then
+  FLAVOR=$(echo "$DOT_THEME" | cut -d '-' -f 2)
+  export "$FLAVOR"
+fi
+
 export LS_COLORS="$(vivid generate "$DOT_THEME")"
 
 export STARSHIP_DIR="$DOTFILES/starship"
@@ -43,6 +49,9 @@ function zieces() {
   fi
 }
 
-# [ -z ${WSLENV+x} ] || export PATH="${PATH:+"$PATH:"}$HOME/bin/win-bash-xclip-xsel"
-
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+export WTTR_PARAMS='u Q F'
+
+export LYNX_CFG="$DOTFILES/lynx/lynx.cfg"
+export LYNX_LSS="$DOTFILES/lynx/lynx.lss"

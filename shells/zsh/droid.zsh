@@ -1,17 +1,8 @@
 zinit light kutsan/zsh-system-clipboard
 
-
 export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 
-# export location="$(location)"
-
-# wttr1 () {
-#   curl -fGsS "wttr.in/$location?format=1" | sed 's/  //; s/+//'
-# }
-
 export DROIDOTS="$DOTS/androidots"
-# export BAT_CONFIG_DIR="$DROIDOTS/configs/bat"
-# export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/config"
 
 prepend_path "$DROIDOTS/bin"
 
@@ -31,6 +22,7 @@ alias ".v"="cd $DROIDOTS/configs/nvim"
 function google {
   termux-open-url "https://www.google.com/search?q=$*"
 }
+alias goog='google'
 
 function www {
   if [[ $1 == https://* ]]; then

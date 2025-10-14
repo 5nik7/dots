@@ -22,21 +22,15 @@ export SHHHH="$DOTS/secrets"
 zource "$SHHHH/secrets.sh"
 zource "/usr/share/nvm/init-nvm.sh"
 
-if is_droid; then
-  zieces 'droid'
-fi
+is_droid || zieces 'droid'
 
 zieces 'colors'
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-if cmd_exists fzf; then
-    zieces 'fzf' && eval "$(fzf --zsh)"
-fi
+cmd_exists fzf && zieces 'fzf' && eval "$(fzf --zsh)"
 
-if [ -f /etc/wsl.conf ]; then
-  zieces 'wsl'
-fi
+[ -z ${WSLENV+x} ] || zieces 'wsl'
 
 if cmd_exists zoxide; then
   eval "$(zoxide init zsh)"
@@ -65,6 +59,3 @@ if cmd_exists ipinfo; then
   autoload -U +X bashcompinit && bashcompinit
   complete -o default -C "$HOME/go/bin/ipinfo" ipinfo
 fi
-
-zource "$HOME/.local.zsh"
-
