@@ -45,7 +45,7 @@ if ($Host.UI.RawUI) {
 function Get-ArgumentCompleter {
   [CmdletBinding()]
   param(
-    [Parameter(Position=0)][string]$CommandName,
+    [Parameter(Position = 0)][string]$CommandName,
     [switch]$ListAll,
     [switch]$IncludeLazy
   )
@@ -63,18 +63,19 @@ function Get-ArgumentCompleter {
         # Normalize native results into a consistent shape
         foreach ($n in $native) {
           $results += [pscustomobject]@{
-            CommandName = $n.CommandName
-            ParameterName = ($n.ParameterName -as [string])
-            ScriptBlock = $n.ScriptBlock
+            CommandName     = $n.CommandName
+            ParameterName   = ($n.ParameterName -as [string])
+            ScriptBlock     = $n.ScriptBlock
             ScriptBlockType = ($n.ScriptBlock -is [scriptblock]) ? 'ScriptBlock' : ($n.ScriptBlock.GetType().FullName)
-            Source = 'native'
-            HelpMessage = ($n.HelpMessage -as [string])
+            Source          = 'native'
+            HelpMessage     = ($n.HelpMessage -as [string])
           }
         }
         if (-not $ListAll -and $results.Count -gt 0) { return $results }
       }
     }
-  } catch { }
+  }
+  catch { }
 
   # 2) Cached completer scriptblock: __<cmd>CompleterBlock
   try {
@@ -82,16 +83,17 @@ function Get-ArgumentCompleter {
     $v = Get-Variable -Name $varName -Scope Global -ErrorAction SilentlyContinue
     if ($v -and $v.Value -is [scriptblock]) {
       $results += [pscustomobject]@{
-        CommandName = $CommandName
-        ParameterName = ''
-        ScriptBlock = $v.Value
+        CommandName     = $CommandName
+        ParameterName   = ''
+        ScriptBlock     = $v.Value
         ScriptBlockType = 'ScriptBlock'
-        Source = 'dots:cached'
-        HelpMessage = ''
+        Source          = 'dots:cached'
+        HelpMessage     = ''
       }
       if (-not $ListAll) { return $results }
     }
-  } catch { }
+  }
+  catch { }
 
   # 3) Lazy wrapper variable __lazy_<cmd> (include only when requested)
   if ($IncludeLazy -or $ListAll) {
@@ -100,15 +102,16 @@ function Get-ArgumentCompleter {
       $lv = Get-Variable -Name $lazyVar -Scope Global -ErrorAction SilentlyContinue
       if ($lv -and $lv.Value -is [scriptblock]) {
         $results += [pscustomobject]@{
-          CommandName = $CommandName
-          ParameterName = ''
-          ScriptBlock = $lv.Value
+          CommandName     = $CommandName
+          ParameterName   = ''
+          ScriptBlock     = $lv.Value
           ScriptBlockType = 'ScriptBlock'
-          Source = 'dots:lazy-wrapper'
-          HelpMessage = ''
+          Source          = 'dots:lazy-wrapper'
+          HelpMessage     = ''
         }
       }
-    } catch { }
+    }
+    catch { }
   }
 
   if ($results.Count -gt 0) { return $results }
@@ -159,7 +162,8 @@ if ($Host.UI.RawUI) {
       Get-ChildItem -Path $cacheDir -Filter '*.ps1' -File -ErrorAction SilentlyContinue | ForEach-Object {
         try { . $_.FullName } catch { Write-Verbose "Failed to dot-source cached completion $($_.Name): $($_.Exception.Message)" }
       }
-    } catch { }
+    }
+    catch { }
   }
 
   # Lazy-load logging helper
@@ -171,8 +175,8 @@ if ($Host.UI.RawUI) {
 
   function Dots-LogLazyLoad {
     param(
-      [Parameter(Mandatory=$true)][string]$Name,
-      [Parameter(Mandatory=$true)][string]$File,
+      [Parameter(Mandatory = $true)][string]$Name,
+      [Parameter(Mandatory = $true)][string]$File,
       [int]$ElapsedMs
     )
     # Always attempt to write a timestamped lazy-load entry. If writing the dedicated lazy log
@@ -181,14 +185,14 @@ if ($Host.UI.RawUI) {
       if (Test-Path $lazyLogFile) {
         $len = (Get-Item $lazyLogFile).Length
         if ($len -gt $lazyMaxBytes) {
-          for ($i=$lazyBackups-1; $i -ge 0; $i--) {
+          for ($i = $lazyBackups - 1; $i -ge 0; $i--) {
             $src = if ($i -eq 0) { $lazyLogFile } else { "$lazyLogFile.$i" }
             $dst = "$lazyLogFile.$($i + 1)"
             if (Test-Path $src) { Move-Item -Path $src -Destination $dst -Force -ErrorAction SilentlyContinue }
           }
         }
       }
-  $line = "$(Get-Date -Format o)`tLAZYLOAD`t$Name`t$File`tElapsedMs=$ElapsedMs"
+      $line = "$(Get-Date -Format o)`tLAZYLOAD`t$Name`t$File`tElapsedMs=$ElapsedMs"
       Add-Content -Path $lazyLogFile -Value $line -ErrorAction Stop
       # Also update per-command aggregate stats (counts, totalMs, avgMs, lastMs)
       try {
@@ -196,8 +200,8 @@ if ($Host.UI.RawUI) {
         $statsFile = Join-Path $lazyLogsDir 'lazy-load-stats.json'
         function Dots-RecordLazyStats {
           param(
-            [Parameter(Mandatory=$true)][string]$Name,
-            [Parameter(Mandatory=$true)][int]$ElapsedMs
+            [Parameter(Mandatory = $true)][string]$Name,
+            [Parameter(Mandatory = $true)][int]$ElapsedMs
           )
           try {
             $data = @{}
@@ -221,15 +225,18 @@ if ($Host.UI.RawUI) {
             $tmp = "$statsFile.tmp"
             Set-Content -Path $tmp -Value $json -Encoding UTF8 -Force
             Move-Item -Path $tmp -Destination $statsFile -Force
-          } catch { }
+          }
+          catch { }
         }
         # Record this event
         Dots-RecordLazyStats -Name $Name -ElapsedMs $ElapsedMs
-      } catch { }
+      }
+      catch { }
       # Optionally print a visible notice when the env var DOTS_LAZY_VERBOSE=1
       if ($env:DOTS_LAZY_VERBOSE -eq '1') { Write-Host "[dots] lazy-loaded $Name from $File" }
       Write-Verbose "Dots-LogLazyLoad: $Name -> $File"
-    } catch {
+    }
+    catch {
       # Fallback: append to regen.log so events are still captured.
       try { Add-Content -Path (Join-Path $env:LOCALAPPDATA 'dots\logs\regen.log') -Value ("$(Get-Date -Format o)`tLAZYLOAD-FALLBACK`t$Name`t$File") -ErrorAction SilentlyContinue } catch { }
     }
@@ -270,10 +277,12 @@ if ($Host.UI.RawUI) {
                 try { Add-Content -Path (Join-Path $env:LOCALAPPDATA 'dots\logs\regen.log') -Value ("$(Get-Date -Format o)`tLAZYLOAD-FALLBACK`t$($using:CommandName)`t$($using:CacheFile)`tElapsedMs=$elapsed") -ErrorAction SilentlyContinue } catch { }
               }
               if ($env:DOTS_LAZY_VERBOSE -eq '1') { Write-Host "[dots] lazy-loaded $($using:CommandName) from $($using:CacheFile) in ${elapsed}ms" }
-            } catch { }
+            }
+            catch { }
             # Verbose/host diagnostic
             if ($env:DOTS_LAZY_VERBOSE -eq '1') { Write-Host "[dots] lazy-loaded $($using:CommandName) from $($using:CacheFile)" }
-          } catch { }
+          }
+          catch { }
         }
 
         # After loading, attempt to find and call the real completer
@@ -284,7 +293,8 @@ if ($Host.UI.RawUI) {
 
         # Nothing available; return nothing (no completions)
         return
-      } catch {
+      }
+      catch {
         return
       }
     }
@@ -391,40 +401,41 @@ function Get-DotsRegenStatus {
   }
 }
 
-  # Utility: show aggregated lazy-load stats
-  function Get-DotsLazyStats {
-    [CmdletBinding()]
-    param(
-      [int]$Top = 10,
-      [ValidateSet('avgMs','totalMs','count','lastAt')][string]$SortBy = 'avgMs',
-      [switch]$Descending
-    )
+# Utility: show aggregated lazy-load stats
+function Get-DotsLazyStats {
+  [CmdletBinding()]
+  param(
+    [int]$Top = 10,
+    [ValidateSet('avgMs', 'totalMs', 'count', 'lastAt')][string]$SortBy = 'avgMs',
+    [switch]$Descending
+  )
 
-    $statsFile = Join-Path $lazyLogsDir 'lazy-load-stats.json'
-    if (-not (Test-Path $statsFile)) { Write-Error "Lazy stats file not found: $statsFile"; return }
-    try {
-      $json = Get-Content -Path $statsFile -Raw -ErrorAction Stop
-      $data = ConvertFrom-Json $json
-      $objects = @()
-      foreach ($k in $data.PSObject.Properties.Name) {
-        $entry = $data.$k
-        $objects += [pscustomobject]@{
-          Name = $k
-          Count = [int]$entry.count
-          TotalMs = [int]$entry.totalMs
-          AvgMs = [int]$entry.avgMs
-          LastMs = [int]$entry.lastMs
-          LastAt = $entry.lastAt
-        }
+  $statsFile = Join-Path $lazyLogsDir 'lazy-load-stats.json'
+  if (-not (Test-Path $statsFile)) { Write-Error "Lazy stats file not found: $statsFile"; return }
+  try {
+    $json = Get-Content -Path $statsFile -Raw -ErrorAction Stop
+    $data = ConvertFrom-Json $json
+    $objects = @()
+    foreach ($k in $data.PSObject.Properties.Name) {
+      $entry = $data.$k
+      $objects += [pscustomobject]@{
+        Name    = $k
+        Count   = [int]$entry.count
+        TotalMs = [int]$entry.totalMs
+        AvgMs   = [int]$entry.avgMs
+        LastMs  = [int]$entry.lastMs
+        LastAt  = $entry.lastAt
       }
-      if ($SortBy) {
-        if ($Descending) { $objects = $objects | Sort-Object -Property $SortBy -Descending } else { $objects = $objects | Sort-Object -Property $SortBy }
-      }
-      $objects | Select-Object -First $Top | Format-Table -AutoSize
-    } catch {
-      Write-Error "Failed to read lazy stats: $($_.Exception.Message)"
     }
+    if ($SortBy) {
+      if ($Descending) { $objects = $objects | Sort-Object -Property $SortBy -Descending } else { $objects = $objects | Sort-Object -Property $SortBy }
+    }
+    $objects | Select-Object -First $Top | Format-Table -AutoSize
   }
+  catch {
+    Write-Error "Failed to read lazy stats: $($_.Exception.Message)"
+  }
+}
 
 # If user opts in, append the regen status to the prompt. Enable with DOTS_REGEN_PROMPT_INTEGRATE=1
 if ($env:DOTS_REGEN_PROMPT_INTEGRATE -eq '1') {
@@ -463,4 +474,5 @@ function rl {
   & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
   exit
 }
+
 Invoke-Expression "$(vfox activate pwsh)"
