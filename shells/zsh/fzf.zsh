@@ -80,12 +80,12 @@ bg:${transparent},\
 preview-bg:${transparent},\
 fg:${subtext0},\
 fg+:${text}:bold:reverse,\
-hl:${teal}:bold:underline,\
-hl+:${teal}:bold:underline:reverse,\
+hl:${pink}:bold:underline,\
+hl+:${pink}:bold:reverse,\
 info:${surface2},\
 query:${mauve},\
 gutter:${surface0},\
-pointer:${lavender},\
+pointer:${surface1},\
 marker:${yellow},\
 prompt:${surface1},\
 spinner:${surface1},\
