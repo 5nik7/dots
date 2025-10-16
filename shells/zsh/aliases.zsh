@@ -63,20 +63,14 @@ fi
 
 if cmd_exists eza; then
     function l() {
-     echo
       eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
-     echo
     }
     function ll() {
       # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-     echo
       eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
-     echo
     }
   function la() {
-     echo
       eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
-     echo
     }
     function lla() {
       # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'

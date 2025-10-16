@@ -465,7 +465,7 @@ REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
 if [[ $REPO_ROOT == "$REPO_NAME" ]]; then
     REPO_NAME=""
 else
-    REPO_NAME="($REPO_NAME:)"
+    REPO_NAME="$REPO_NAME/"
 fi
 
 GIT_USERNAME_USED=$(command git config --get user.name 2> /dev/null)

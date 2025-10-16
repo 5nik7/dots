@@ -75,17 +75,17 @@ alt-r:toggle-raw' \
 --preview '$_PREVIEW_ {}'"
 
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
-bg+:${surface0},\
+bg+:${transparent},\
 bg:${transparent},\
 preview-bg:${transparent},\
 fg:${subtext0},\
-fg+:${text},\
-hl:${blue}:bold:underline,\
-hl+:${blue}:bold:underline,\
+fg+:${text}:bold:reverse,\
+hl:${teal}:bold:underline,\
+hl+:${teal}:bold:underline:reverse,\
 info:${surface2},\
 query:${mauve},\
 gutter:${surface0},\
-pointer:${surface0},\
+pointer:${lavender},\
 marker:${yellow},\
 prompt:${surface1},\
 spinner:${surface1},\

@@ -231,11 +231,7 @@ function fext() {
 
 if cmd_exists rich; then
   function mdat() {
-    rich --text-full -y -e -d 1 -m $1
+    rich --text-full -y -e -d 1 -m "$@"
   }
-
-  function mdpre() {
-    rich --text-full -y -e -d 1 -m $1
-  }
-fi
+ fi
 
