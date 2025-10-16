@@ -457,12 +457,24 @@ else
     GIT_REMOTE_SYMBOL=" "
 fi
 
+REPO_ROOT_DIR=$(command git rev-parse --show-toplevel)
+REPO_ROOT=$(command basename "$REPO_ROOT_DIR")
+REPO_BASE=$(echo $GIT_REMOTE_URL | sed 's:/[^/]*$::')
+REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
+
+if [[ $REPO_ROOT == "$REPO_NAME" ]]; then
+    REPO_NAME=""
+else
+    REPO_NAME="($REPO_NAME:)"
+fi
+
 GIT_USERNAME_USED=$(command git config --get user.name 2> /dev/null)
 
-echo "$GIT_REMOTE_SYMBOL$GIT_USERNAME_USED@$GIT_REMOTE_URL"
+echo "$GIT_REMOTE_SYMBOL$GIT_USERNAME_USED@$REPO_BASE/$REPO_NAME"
 """
 # Default format is according to the segmented-brackets preset (https://github.com/starship/starship/pull/2747)
-format = '\[[$output]($style)\]'
+# format = '\[[$output]($style)\]'
+format = '[$output]($style)'
 # If you prefer the default Starship style, use the following
 # format = "at [$output]($style)"
 shell = ["bash", "--noprofile", "--norc"]
