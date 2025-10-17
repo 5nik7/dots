@@ -80,8 +80,8 @@ bg:${transparent},\
 preview-bg:${transparent},\
 fg:${subtext0},\
 fg+:${text}:bold:reverse,\
-hl:${pink}:bold:underline,\
-hl+:${pink}:bold:reverse,\
+hl:${teal}:bold:underline,\
+hl+:${teal}:bold:reverse,\
 info:${surface2},\
 query:${mauve},\
 gutter:${surface0},\
