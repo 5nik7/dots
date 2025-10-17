@@ -48,3 +48,5 @@ if cmd_exists perl; then
 fi
 
 prepend_path "${DOTS}/androidots/bin"
+
+alias fetchskull="cat ~/dots/androidots/configs/fastfetch/skull | lolcat -8 >! ~/dots/androidots/configs/fastfetch/skullcolor && cat ~/dots/androidots/configs/fastfetch/skullcolor"
