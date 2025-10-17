@@ -65,6 +65,7 @@ color_username = ''
 color_directory = 'bright-blue'
 color_prepo = 'blue'
 color_repo = '#89dceb'
+color_git_remote = '#74c7ec'
 color_env = 'yellow'
 color_kubernetes = 'purple'
 color_docker = 'blue'
@@ -165,7 +166,7 @@ truncate_to_repo = true
 use_os_path_sep = false
 use_logical_path = false
 read_only_style = 'fg:color_directory dimmed'
-fish_style_pwd_dir_length = 0
+fish_style_pwd_dir_length = 1
 
 [git_branch]
 symbol = ''
@@ -478,4 +479,4 @@ format = '[$output]($style)'
 # If you prefer the default Starship style, use the following
 # format = "at [$output]($style)"
 shell = ["bash", "--noprofile", "--norc"]
-style = 'blue'
+style = "fg:color_git_remote"
