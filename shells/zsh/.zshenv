@@ -49,6 +49,8 @@ function zieces() {
   fi
 }
 
+zource "$HOME/.cargo/env"
+
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 export WTTR_PARAMS='u Q F'

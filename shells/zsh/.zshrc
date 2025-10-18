@@ -59,3 +59,4 @@ if cmd_exists ipinfo; then
   autoload -U +X bashcompinit && bashcompinit
   complete -o default -C "$HOME/go/bin/ipinfo" ipinfo
 fi
+eval "$(vfox activate zsh)"
