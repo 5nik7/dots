@@ -534,7 +534,7 @@ REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
 if [[ $REPO_ROOT == "$REPO_NAME" ]]; then
     REPO_NAME="$REPO_NAME"
 else
-    REPO_NAME="$REPO_NAME[$REPO_ROOT]"
+    REPO_NAME="$REPO_NAME => $REPO_ROOT"
 fi
 
 echo "$REPO_NAME"
@@ -547,7 +547,16 @@ style = "fg:color_git_remote_repo bold"
 description = 'path before repo'
 when = 'git rev-parse --is-inside-work-tree'
 command = """
-GIT_BEFORE_REPO=$(command dirname $(git rev-parse --show-toplevel) | sed 's|^/data/data/com.termux/files/home|~|')
+GIT_BEFORE_REPO=$(command dirname $(git rev-parse --show-toplevel))
+if [[ "$GIT_BEFORE_REPO" =~ "/mnt/c/Users/$USERNAME" ]]; then
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/mnt/c/Users/$USERNAME|~|")
+elif [[ "$GIT_BEFORE_REPO" =~ "C:/Users/$USERNAME" ]]; then
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^C:/Users/$USERNAME|~|")
+elif [[ "$GIT_BEFORE_REPO" =~ "/Users/$USERNAME" ]]; then
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/Users/$USERNAME|~|")
+else
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^$HOME|~|")
+fi
 
 echo "$GIT_BEFORE_REPO/"
 """
