@@ -432,7 +432,7 @@ vimcmd_visual_symbol = '[󰅂](fg:color_vimcmd_visual)'
 format = '$symbol '
 
 [directory.substitutions]
-"~/Desktop" = " Desktop"
+# "~/Desktop" = " Desktop"
 # "~/Videos" = " Videos"
 # "~/Pictures" = " Pictures"
 # "~/Music" = " Music"
