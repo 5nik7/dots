@@ -5,17 +5,21 @@ add_newline = true
 follow_symlinks = false
 continuation_prompt = '[│](black)'
 
-format = """$os\
-(${custom.git_remote_url})\
-${env_var.AdminSymbol}\
-$username\
-$hostname\
-$directory\
+format = """\
+(${custom.git_before}\
+${custom.git_remote_symbol} \
+${custom.git_remote_url}\
+${custom.git_remote_repo}\
+([/](fg:color_repo)${custom.git_prefix}) \
 $git_branch\
 $git_commit\
 $git_status\
 $git_metrics\
-$git_state\
+$git_state)\
+$os\
+$username\
+$hostname\
+$directory\
 $nodejs$conda$python$rust$lua\
 $cmd_duration\
 $fill\
@@ -64,8 +68,12 @@ color_caution = 'bright-yellow'
 color_username = ''
 color_directory = 'bright-blue'
 color_prepo = 'blue'
-color_repo = '#89dceb'
-color_git_remote = '#74c7ec'
+color_repo = 'bright-blue'
+color_git_bracket = '#74c7ec'
+color_git_remote_symbol = '#74c7ec'
+color_git_username = '#74c7ec'
+color_git_remote_url = '#74c7ec'
+color_git_remote_repo = '#89dceb'
 color_env = 'yellow'
 color_kubernetes = 'purple'
 color_docker = 'blue'
@@ -152,21 +160,22 @@ symbol = '󰍴'
 style = 'fg:color_fill'
 
 [directory]
-# format = "[ $path ]($style)"
-# format = "[ [$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)$path[$read_only]($read_only_style<) ]($style)"
-# repo_root_format = "[ [$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)$path[$read_only]($read_only_style<) ]($style)"
 style = 'fg:color_directory'
-before_repo_root_style = 'fg:color_prepo'
-repo_root_style = "fg:color_repo bold"
+truncate_to_repo = true
 truncation_length = 10
+fish_style_pwd_dir_length = 1
+# before_repo_root_style = 'fg:color_prepo'
+repo_root_style = "fg:color_repo bold"
 # truncation_symbol = "…/"
 read_only = " "
 home_symbol = "~"
-truncate_to_repo = true
 use_os_path_sep = false
 use_logical_path = false
 read_only_style = 'fg:color_directory dimmed'
-fish_style_pwd_dir_length = 1
+repo_root_format = ""
+# format = "[ $path ]($style)"
+# format = "[ [$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)$path(cyan)[$read_only]($read_only_style<) ]($style)"
+# repo_root_format = "[ [$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)$path[$read_only]($read_only_style<) ]($style)"
 
 [git_branch]
 symbol = ''
@@ -224,30 +233,24 @@ detect_folders = []
 symbol = '󰎙 '
 style = 'green'
 version_format = '${raw}'
-format = '([](bright-black) [${symbol}([$version](Bright-green)) ]($style))'
+format = '([${symbol}([$version](Bright-green)) ]($style))'
 disabled = false
 
 [lua]
 detect_folders = []
 style = 'fg:color_lua'
 symbol = " "
-format = '([](bright-black) [${symbol}([$version](fg:color_lua)) ]($style))'
-
-[conda]
-symbol = '🅒 '
-style = 'bright-green'
-ignore_base = true
-format = '([](bright-black) [$symbol$environment ]($style))'
+format = '([${symbol}([$version](fg:color_lua)) ]($style))'
 
 [python]
 # format = '([\[](bright-black)[${symbol}([$version](green))]($style)[\]](bright-black))'
-format = '([](bright-black) [${symbol}([$version](bright-yellow)) ]($style))'
+format = '([${symbol}([$version](bright-yellow)) ]($style))'
 style = "yellow"
 symbol = '󰌠 '
 pyenv_version_name = true
 
 [rust]
-format = '([](bright-black) [${symbol}([$version](red)) ]($style))'
+format = '([${symbol}([$version](red)) ]($style))'
 style = 'bright-red'
 symbol = '󱘗 '
 
@@ -437,15 +440,35 @@ format = '$symbol '
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
 
-[custom.git_remote_url]
-description = 'Remote git repository'
+[custom.git_bracket_left]
+description = 'left bracket'
+when = 'git rev-parse --is-inside-work-tree'
+command = """
+echo "["
+"""
+format = '[$output]($style)'
+shell = ["bash", "--noprofile", "--norc"]
+style = "fg:color_git_bracket"
+
+[custom.git_bracket_right]
+description = 'right bracket'
+when = 'git rev-parse --is-inside-work-tree'
+command = """
+echo "]"
+"""
+format = '[$output]($style)'
+shell = ["bash", "--noprofile", "--norc"]
+style = "fg:color_git_bracket"
+
+
+[custom.git_remote_symbol]
+description = 'Remote git repository symbol'
 when = 'git rev-parse --is-inside-work-tree'
 command = """
 GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
 if [[ -z "$GIT_REMOTE" ]]; then
 GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
 fi
-GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
 if [[ "$GIT_REMOTE" =~ "github" ]]; then
     GIT_REMOTE_SYMBOL=" "
 elif [[ "$GIT_REMOTE" =~ "gitlab" ]]; then
@@ -458,25 +481,87 @@ else
     GIT_REMOTE_SYMBOL=" "
 fi
 
+echo "$GIT_REMOTE_SYMBOL"
+"""
+format = '[$output]($style)'
+shell = ["bash", "--noprofile", "--norc"]
+style = "fg:color_git_remote_symbol"
+
+[custom.git_username]
+description = 'Git username'
+when = 'git rev-parse --is-inside-work-tree'
+command = """
+GIT_USERNAME=$(command git config --get user.name 2> /dev/null)
+
+echo "$GIT_USERNAME"
+"""
+format = '[$output]($style)'
+shell = ["bash", "--noprofile", "--norc"]
+style = "fg:color_git_username"
+
+[custom.git_remote_url]
+description = 'Remote git repository url'
+when = 'git rev-parse --is-inside-work-tree'
+command = """
+GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
+if [[ -z "$GIT_REMOTE" ]]; then
+GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
+fi
+GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
+
+REPO_BASE=$(echo $GIT_REMOTE_URL | sed 's:/[^/]*$::')
+
+echo "$REPO_BASE/"
+"""
+format = '[$output]($style)'
+shell = ["bash", "--noprofile", "--norc"]
+style = "fg:color_git_remote_url"
+
+[custom.git_remote_repo]
+description = 'Remote git repository name'
+when = 'git rev-parse --is-inside-work-tree'
+command = """
+GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
+if [[ -z "$GIT_REMOTE" ]]; then
+GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
+fi
+GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
+
 REPO_ROOT_DIR=$(command git rev-parse --show-toplevel)
 REPO_ROOT=$(command basename "$REPO_ROOT_DIR")
-REPO_BASE=$(echo $GIT_REMOTE_URL | sed 's:/[^/]*$::')
 REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
 
 if [[ $REPO_ROOT == "$REPO_NAME" ]]; then
-    REPO_NAME=""
+    REPO_NAME="$REPO_NAME"
 else
-    REPO_NAME="$REPO_NAME/"
+    REPO_NAME="$REPO_NAME[$REPO_ROOT]"
 fi
 
-GIT_USERNAME_USED=$(command git config --get user.name 2> /dev/null)
-
-echo "$GIT_REMOTE_SYMBOL$GIT_USERNAME_USED@$REPO_BASE/$REPO_NAME"
+echo "$REPO_NAME"
 """
-# Default format is according to the segmented-brackets preset (https://github.com/starship/starship/pull/2747)
-# format = '\[[$output]($style)\]'
 format = '[$output]($style)'
-# If you prefer the default Starship style, use the following
-# format = "at [$output]($style)"
 shell = ["bash", "--noprofile", "--norc"]
-style = "fg:color_git_remote"
+style = "fg:color_git_remote_repo bold"
+
+[custom.git_before]
+description = 'path before repo'
+when = 'git rev-parse --is-inside-work-tree'
+command = """
+GIT_BEFORE_REPO=$(command dirname $(git rev-parse --show-toplevel) | sed 's|^/data/data/com.termux/files/home|~|')
+
+echo "$GIT_BEFORE_REPO/"
+"""
+format = '[$output]($style)'
+shell = ["bash", "--noprofile", "--norc"]
+style = "fg:color_prepo"
+
+[custom.git_prefix]
+description = 'repo prefix'
+when = 'git rev-parse --is-inside-work-tree'
+command = """
+GIT_PREFIX=$(command git rev-parse --show-prefix | sed 's:/*$::')
+echo "$GIT_PREFIX"
+"""
+format = '[$output]($style)'
+shell = ["bash", "--noprofile", "--norc"]
+style = "fg:color_directory"
