@@ -61,3 +61,8 @@ if cmd_exists ipinfo; then
   complete -o default -C "$HOME/go/bin/ipinfo" ipinfo
 fi
 
+zource "$HOME/.atuin/bin/env"
+
+if cmd_exists atuin; then
+  eval "$(atuin init zsh)"
+fi
