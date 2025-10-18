@@ -17,6 +17,7 @@ extend_path "$HOME/.local/share/nvim/mason/bin"
 prepend_path "$GOBIN"
 extend_path "$DOTSBIN"
 prepend_path "$HOME/.cargo/bin"
+extend_path "$HOME/.local/share/gem/ruby/3.4.0/bin"
 
 export SHHHH="$DOTS/secrets"
 zource "$SHHHH/secrets.sh"
@@ -59,4 +60,4 @@ if cmd_exists ipinfo; then
   autoload -U +X bashcompinit && bashcompinit
   complete -o default -C "$HOME/go/bin/ipinfo" ipinfo
 fi
-eval "$(vfox activate zsh)"
+
