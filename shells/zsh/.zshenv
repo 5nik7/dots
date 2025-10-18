@@ -53,7 +53,3 @@ export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 export WTTR_PARAMS='u Q F'
 
-export LYNX_CFG="$DOTFILES/lynx/lynx.cfg"
-export LYNX_LSS="$DOTFILES/lynx/lynx.lss"
-
-export TERMUX_APP_PACKAGE_MANAGER='apt'

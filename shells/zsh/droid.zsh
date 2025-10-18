@@ -1,5 +1,10 @@
 zinit light kutsan/zsh-system-clipboard
 
+export LYNX_CFG="$DOTFILES/lynx/lynx.cfg"
+export LYNX_LSS="$DOTFILES/lynx/lynx.lss"
+
+export TERMUX_APP_PACKAGE_MANAGER='apt'
+
 export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 
 export DROIDOTS="$DOTS/androidots"

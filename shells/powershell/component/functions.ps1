@@ -453,15 +453,17 @@ function Set-FuzzyOpts {
   try {
     # Default opts
     $defaultOpts = @{
-      style         = 'minimal'
+      style         = 'default'
       layout        = 'reverse'
       height        = '~90%'
       margin        = '0'
       border        = 'none'
-      previewwindow = 'right:70%:hidden'
-      prompt        = @{ symbol = ' > ' }
-      pointer       = @{ symbol = '' }
+      previewwindow = 'right:70%:hidden:border-sharp'
+      prompt        = @{ symbol = ' 󰅂 ' }
+      pointer       = @{ symbol = '┃' }
       marker        = @{ symbol = '┃' }
+      gutter        = @{ symbol = '┃' }
+      gutterraw     = @{ symbol = '┃' }
     }
     if ($opts) {
       foreach ($k in $opts.Keys) { $defaultOpts[$k] = $opts[$k] }
@@ -471,9 +473,9 @@ function Set-FuzzyOpts {
     # Default colors
     $defaultColors = @{
       'fg'             = $Flavor.Subtext0.Hex()
-      'hl'             = ($Flavor.Green.Hex() + ':underline')
-      'fg+'            = ($Flavor.Lavender.Hex() + ':bold:reverse')
-      'hl+'            = ($Flavor.Green.Hex() + ':bold:underline:reverse')
+      'hl'             = ($Flavor.Teal.Hex() + ':bold:underline')
+      'fg+'            = ($Flavor.Text.Hex() + ':bold:reverse')
+      'hl+'            = ($Flavor.Teal.Hex() + ':bold:reverse')
       'bg'             = 'transparent'
       'bg+'            = 'transparent'
       'preview-bg'     = 'transparent'
@@ -482,10 +484,10 @@ function Set-FuzzyOpts {
       'preview-border' = $Flavor.Surface0.Hex()
       'list-border'    = $Flavor.Surface0.Hex()
       'border'         = $Flavor.Surface0.Hex()
-      'input-border'   = $Flavor.Surface1.Hex()
-      'pointer'        = $Flavor.Base.Hex()
+      'input-border'   = $Flavor.surface0.Hex()
+      'pointer'        = $Flavor.surface1.Hex()
       'label'          = $Flavor.Surface2.Hex()
-      'gutter'         = 'transparent'
+      'gutter'         = $Flavor.Surface0.Hex()
       'marker'         = $Flavor.Yellow.Hex()
       'spinner'        = $Flavor.Surface1.Hex()
       'separator'      = $Flavor.Base.Hex()
@@ -493,7 +495,7 @@ function Set-FuzzyOpts {
       'info'           = $Flavor.Surface1.Hex()
       'prompt'         = $Flavor.Surface1.Hex()
       'preview-label'  = $Flavor.Surface0.Hex()
-      'selected-bg'    = $Flavor.Mantle.Hex()
+      'nomatch'        = 'strip:' + $Flavor.Surface0.Hex() + ':italic'
     }
     if ($colors) {
       foreach ($k in $colors.Keys) { $defaultColors[$k] = $colors[$k] }
@@ -502,7 +504,10 @@ function Set-FuzzyOpts {
 
     # Default keybinds
     $defaultKeybinds = @{
-      'ctrl-x' = 'toggle-preview'
+      'ctrl-x'     = 'toggle-preview'
+      'ctrl-alt-r' = 'toggle-raw'
+      'up'         = 'up-match'
+      'down'       = 'down-match'
     }
     if ($keybinds) {
       foreach ($k in $keybinds.Keys) { $defaultKeybinds[$k] = $keybinds[$k] }
@@ -525,6 +530,7 @@ function Set-FuzzyOpts {
       listborder    = 'list-border'
       inputborder   = 'input-border'
       previewwindow = 'preview-window'
+      gutterraw     = 'gutter-raw'
     }
 
     $optsString = ($opts.GetEnumerator() | ForEach-Object {
