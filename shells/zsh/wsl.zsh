@@ -1,3 +1,7 @@
+export WINROOT=/mnt/c
+export WINHOME=/mnt/c/Users/njen
+export WINDIR=$WINROOT/Windows
+
 extend_path "$WINHOME/scoop/shims"
 extend_path "$WINROOT/shims"
 extend_path "$WINROOT/vscode/bin"
