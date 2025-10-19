@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+win32yank.exe -o --lf
