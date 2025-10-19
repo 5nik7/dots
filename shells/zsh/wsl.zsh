@@ -18,17 +18,14 @@ PERL_LOCAL_LIB_ROOT="/home/njen/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_RO
 PERL_MB_OPT="--install_base \"/home/njen/perl5\""; export PERL_MB_OPT;
 PERL_MM_OPT="INSTALL_BASE=/home/njen/perl5"; export PERL_MM_OPT;
 
-function mdat() {
-  rich --text-full -y -e -d 1 -m "$@"
-}
-
-function google {
+function google() {
     open "https://www.google.com/search?q=$*"
 }
 
-function www {
+function www() {
   if [[ $1 == https://* ]]; then
     open "$1"
   else
     open "https://$1"
+  fi
 }

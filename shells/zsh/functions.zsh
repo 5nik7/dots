@@ -225,9 +225,7 @@ function fext() {
   echo "${filename##*.}"
 }
 
-if cmd_exists rich; then
-  function dat() {
-    rich --text-full -y -e -d 1 -m "$@"
-  }
- fi
+function dat() {
+  rich --text-full -y -e -d 1 -m "$@"
+}
 

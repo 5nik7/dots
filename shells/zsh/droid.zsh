@@ -24,12 +24,12 @@ alias ".af"="cd $DROIDOTS/configs"
 alias ".ab"="cd $DROIDOTS/bin"
 alias ".v"="cd $DROIDOTS/configs/nvim"
 
-function google {
+function google() {
   termux-open-url "https://www.google.com/search?q=$*"
 }
 alias goog='google'
 
-function www {
+function www() {
   if [[ $1 == https://* ]]; then
     termux-open-url "$1"
   else
@@ -37,7 +37,7 @@ function www {
   fi
 }
 
-function updpkg(){
+function updpkg() {
  local pkgs="$DROIDOTS/packages"
  command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkgs"
  sed -i '1d' "$pkgs"
