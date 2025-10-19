@@ -447,17 +447,7 @@ format = '$symbol '
 
 [custom.git_remote_symbol-pwsh]
 description = "Display symbol for remote Git server (pwsh)"
-command = """
-$gitRemote = git ls-remote --get-url
-$symbol = ' ' # If no Git Remote is returned.
-switch -regex ($gitRemote) {\
-    'github'    { $symbol = ' ' }\
-    'gitlab'    { $symbol = ' ' }\
-    'bitbucket' { $symbol = ' ' }\
-     Default    { $symbol = ' ' }\
-}
-echo $symbol
-"""
+command = 'git_remote_icon.ps1'
 require_repo = true
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
 when = "git rev-parse --is-inside-work-tree"
@@ -468,24 +458,7 @@ os = "windows"
 
 [custom.git_remote_symbol-bash]
 description = "Display symbol for remote Git server (bash)"
-command = """
-GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
-if [[ -z "$GIT_REMOTE" ]]; then
-GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
-fi
-if [[ "$GIT_REMOTE" =~ "github" ]]; then
-    GIT_REMOTE_SYMBOL=" "
-elif [[ "$GIT_REMOTE" =~ "gitlab" ]]; then
-    GIT_REMOTE_SYMBOL=" "
-elif [[ "$GIT_REMOTE" =~ "bitbucket" ]]; then
-    GIT_REMOTE_SYMBOL=" "
-elif [[ -n "$GIT_REMOTE" ]]; then
-    GIT_REMOTE_SYMBOL=" "
-else
-    GIT_REMOTE_SYMBOL=" "
-fi
-echo "$GIT_REMOTE_SYMBOL"
-"""
+command = 'git_remote_icon.sh'
 require_repo = true
 shell = ["bash", "--noprofile", "--norc"]
 when = 'git rev-parse --is-inside-work-tree'
