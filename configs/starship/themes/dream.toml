@@ -7,7 +7,10 @@ continuation_prompt = '[│](black)'
 
 format = """\
 (${custom.git_before}\
-${custom.git_remote_symbol} \
+${custom.git_remote_symbol-pwsh} \
+\
+\
+${custom.git_remote_symbol-bash} \
 ${custom.git_remote_url}\
 (${custom.git_remote_repo}[](fg:color_git_remote_url dimmed))\
 ${custom.git_local}\
@@ -442,30 +445,29 @@ format = '$symbol '
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
 
-[custom.git_bracket_left]
-description = 'left bracket'
-when = 'git rev-parse --is-inside-work-tree'
+[custom.git_remote_symbol-pwsh]
+description = "Display symbol for remote Git server (pwsh)"
 command = """
-echo "["
+$gitRemote = git ls-remote --get-url
+$symbol = ' ' # If no Git Remote is returned.
+switch -regex ($gitRemote) {\
+    'github'    { $symbol = ' ' }\
+    'gitlab'    { $symbol = ' ' }\
+    'bitbucket' { $symbol = ' ' }\
+     Default    { $symbol = ' ' }\
+}
+echo $symbol
 """
+require_repo = true
+shell = ["pwsh", "-NoProfile", "-Command", "-"]
+when = "git rev-parse --is-inside-work-tree"
 format = '[$output]($style)'
-shell = ["bash", "--noprofile", "--norc"]
-style = "fg:color_git_bracket"
-
-[custom.git_bracket_right]
-description = 'right bracket'
-when = 'git rev-parse --is-inside-work-tree'
-command = """
-echo "]"
-"""
-format = '[$output]($style)'
-shell = ["bash", "--noprofile", "--norc"]
-style = "fg:color_git_bracket"
+style = "fg:color_git_remote_symbol"
+os = "windows"
 
 
-[custom.git_remote_symbol]
-description = 'Remote git repository symbol'
-when = 'git rev-parse --is-inside-work-tree'
+[custom.git_remote_symbol-bash]
+description = "Display symbol for remote Git server (bash)"
 command = """
 GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
 if [[ -z "$GIT_REMOTE" ]]; then
@@ -482,15 +484,18 @@ elif [[ -n "$GIT_REMOTE" ]]; then
 else
     GIT_REMOTE_SYMBOL=" "
 fi
-
 echo "$GIT_REMOTE_SYMBOL"
 """
-format = '[$output]($style)'
+require_repo = true
 shell = ["bash", "--noprofile", "--norc"]
+when = 'git rev-parse --is-inside-work-tree'
+format = '[$output]($style)'
 style = "fg:color_git_remote_symbol"
+os = "linux"
 
 [custom.git_username]
 description = 'Git username'
+require_repo = true
 when = 'git rev-parse --is-inside-work-tree'
 command = """
 GIT_USERNAME=$(command git config --get user.name 2> /dev/null)
@@ -503,6 +508,7 @@ style = "fg:color_git_username"
 
 [custom.git_remote_url]
 description = 'Remote git repository url'
+require_repo = true
 when = 'git rev-parse --is-inside-work-tree'
 command = """
 GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
@@ -521,6 +527,7 @@ style = "fg:color_git_remote_url"
 
 [custom.git_remote_repo]
 description = 'Remote git repository name'
+require_repo = true
 when = 'git rev-parse --is-inside-work-tree'
 command = """
 GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
@@ -547,6 +554,7 @@ style = "fg:color_git_remote_url"
 
 [custom.git_local]
 description = 'Remote git repository name'
+require_repo = true
 when = 'git rev-parse --is-inside-work-tree'
 command = """
 REPO_ROOT_DIR=$(command git rev-parse --show-toplevel)
@@ -561,6 +569,7 @@ style = "fg:color_git_remote_repo bold"
 
 [custom.git_before]
 description = 'path before repo'
+require_repo = true
 when = 'git rev-parse --is-inside-work-tree'
 command = """
 GIT_BEFORE_REPO=$(command dirname $(git rev-parse --show-toplevel))
@@ -582,6 +591,7 @@ style = "fg:color_prepo"
 
 [custom.git_prefix]
 description = 'repo prefix'
+require_repo = true
 when = 'git rev-parse --is-inside-work-tree'
 command = """
 GIT_PREFIX=$(command git rev-parse --show-prefix | sed 's:/*$::')

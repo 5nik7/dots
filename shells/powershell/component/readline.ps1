@@ -32,7 +32,7 @@ if ($host.Name -eq 'ConsoleHost') {
     ContinuationPrompt            = '│'
     BellStyle                     = 'None'
     PredictionSource              = $VersionPredictionSource
-    EditMode                      = 'Vi' # "Vi" or "Emacs" or "Windows"
+    EditMode                      = 'Windows' # "Vi" or "Emacs" or "Windows"
     PredictionViewStyle           = 'InlineView' # "InlineView" or "ListView"
     Colors                        = @{
       # Largely based on the Code Editor style guide
@@ -66,8 +66,8 @@ if ($host.Name -eq 'ConsoleHost') {
   Set-PSReadLineOption @PSReadLineOptions
 }
 
-# Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
-Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
+Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+# Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 Set-PSReadLineKeyHandler -Chord 'Ctrl+d' -Function DeleteChar
