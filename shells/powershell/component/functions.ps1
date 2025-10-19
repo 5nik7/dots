@@ -32,68 +32,12 @@ function dotenv {
   }
 }
 
-function Add-PSModulePath {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-  if (Test-Path $Path) {
-    if (-not ($env:PSModulePath -split ';' | Select-String -SimpleMatch $Path)) {
-      $env:PSModulePath = $env:PSModulePath + $Path
-    }
-  }
-  else {
-    Write-Err $Path Magenta ' does not exist.'
-  }
-}
-
 function Import-ScoopModule {
   param (
     [Parameter()]
     $Name
   )
   Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\$Name" -Global
-}
-
-function Add-Path {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-  if (Test-Path $Path) {
-    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-      $env:Path += ";$Path"
-    }
-  }
-  else {
-    Write-Err $Path Magenta ' does not exist.'
-  }
-}
-function Add-PrependPath {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-  if (Test-Path $Path) {
-    if (-not ($env:Path -split ';' | Select-String -SimpleMatch $Path)) {
-      $env:Path = "$Path;$env:Path"
-    }
-  }
-  else {
-    Write-Err $Path Magenta ' does not exist.'
-  }
-}
-function Remove-Path {
-  param (
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-  if ($env:Path -split ';' | Select-String -SimpleMatch $Path) {
-    $env:Path = ($env:Path -split ';' | Where-Object { $_ -ne $Path }) -join ';'
-  }
-  else {
-    Write-Err $Path Magenta ' does not exist.'
-  }
 }
 
 function Clear-Cache {
@@ -131,27 +75,6 @@ function Test-CommandExists {
   $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
   return $exists
 }
-# Editor Configuration
-$EDITOR = if (Test-CommandExists code) { 'code' }
-elseif (Test-CommandExists nvim) { 'nvim' }
-elseif (Test-CommandExists vim) { 'vim' }
-elseif (Test-CommandExists vi) { 'vi' }
-else { 'notepad' }
-$env:EDITOR = $EDITOR
-function Edit-Item {
-  param (
-    [string]$Path = $PWD
-  )
-  if ($Path) {
-    & $env:EDITOR $Path
-  }
-  else {
-    & $env:EDITOR
-  }
-}
-Set-Alias -Name edit -Value Edit-Item
-Set-Alias -Name e -Value Edit-Item
-
 function Edit-Profile { & $env:EDITOR $PROFILE.CurrentUserAllHosts }
 Set-Alias -Name ep -Value Edit-Profile
 
@@ -289,7 +212,6 @@ Function Search-Alias {
     Get-Alias
   }
 }
-
 
 function Find-File {
   <#

@@ -1,6 +1,7 @@
 ﻿Set-Alias -Name c -Value Clear-Host
 Set-Alias -Name path -Value Get-Path.ps1
 Set-Alias -Name wenv -Value Get-Env.ps1
+Set-Alias -Name wh -Value Invoke-Wh.ps1
 Set-Alias -Name err -Value Write-Err
 Set-Alias -Name wrn -Value Write-Warn
 Set-Alias -Name scs -Value Write-Success
@@ -112,8 +113,28 @@ else {
 
 if (Test-CommandExists git) {
   Set-Alias -Name g -Value git
-  function gcl { git clone "$args" }
 }
+
+# Editor Configuration
+$EDITOR = if (Test-CommandExists code) { 'code' }
+elseif (Test-CommandExists nvim) { 'nvim' }
+elseif (Test-CommandExists vim) { 'vim' }
+elseif (Test-CommandExists vi) { 'vi' }
+else { 'notepad' }
+$env:EDITOR = $EDITOR
+function Edit-Item {
+  param (
+    [string]$Path = $PWD
+  )
+  if ($Path) {
+    & $env:EDITOR $Path
+  }
+  else {
+    & $env:EDITOR
+  }
+}
+Set-Alias -Name edit -Value Edit-Item
+Set-Alias -Name e -Value Edit-Item
 
 if (Test-CommandExists nvim) {
   Set-Alias -Name v -Value nvim

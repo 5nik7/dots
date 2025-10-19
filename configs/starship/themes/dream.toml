@@ -6,11 +6,12 @@ follow_symlinks = false
 continuation_prompt = '[│](black)'
 
 format = """\
-(${custom.git_before}\
-${custom.git_remote_symbol-pwsh} \
+(${custom.git_before_remote-pwsh}\
+${custom.git_remote_symbol-pwsh}\
 \
+${custom.git_before_remote-bash}\
+${custom.git_remote_symbol-bash}\
 \
-${custom.git_remote_symbol-bash} \
 ${custom.git_remote_url}\
 (${custom.git_remote_repo}[](fg:color_git_remote_url dimmed))\
 ${custom.git_local}\
@@ -88,7 +89,8 @@ color_other = ''
 color_time = '#b4befe'
 color_duration = ''
 color_os = 'blue'
-color_git = 'purple'
+color_git = '#585b70'
+color_count = '#6c7086'
 color_git_branch = '#cba6f7'
 # color_git_branch = '#6c7086'
 color_git_added = 'bright-green'
@@ -196,22 +198,30 @@ tag_symbol = "󰓼 "
 tag_disabled = false
 disabled = false
 
+# [git_status]
+# format = '([$all_status$ahead_behind]($style))'
+# style = 'bold fg:color_git'
+# conflicted = '~${count}'
+# stashed = '*${count}'
+# ahead = '⇡${count}'
+# behind = '⇣${count}'
+# diverged = '⇠${behind_count} ⇢${ahead_count}'
+# untracked = '?${count}'
+# modified = '!${count}'
+# staged = '+${count}'
+# renamed = '»${count}'
+# deleted = '󰖭${count}'
+
 [git_status]
-style = "fg:color_git"
-format = '([$ahead_behind]($style) )([$all_status]($style) )'
-stashed = "*${count}"
-ahead = "⇡${count}"
-behind = "⇣${count}"
-up_to_date = ""
-diverged = "⇡${ahead_count}⇣${behind_count}"
-conflicted = "=${count}"
-deleted = "×${count}"
-renamed = "»${count}"
-modified = "!${count}"
-staged = "+${count}"
-untracked = "?${count}"
-ignore_submodules = false
-disabled = false
+format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](bright-black) ($ahead_behind$stashed)]($style)"
+style = "cyan"
+conflicted = "​"
+untracked = "​"
+modified = "​"
+staged = "​"
+renamed = "​"
+deleted = "​"
+stashed = "≡"
 
 [git_metrics]
 format = '([([+$added]($added_style))([-$deleted]($deleted_style))](fg:color_git) )'
@@ -445,6 +455,18 @@ format = '$symbol '
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
 
+# ----------------------------------------------------
+
+[custom.git_before_remote-pwsh]
+description = "Directory before repo (pwsh)"
+command = 'git_before_remote.ps1'
+require_repo = true
+shell = ["pwsh", "-NoProfile", "-Command", "-"]
+when = "git rev-parse --is-inside-work-tree"
+format = '[$output]($style)'
+style = "fg:color_prepo"
+os = "windows"
+
 [custom.git_remote_symbol-pwsh]
 description = "Display symbol for remote Git server (pwsh)"
 command = 'git_remote_icon.ps1'
@@ -455,6 +477,17 @@ format = '[$output]($style)'
 style = "fg:color_git_remote_symbol"
 os = "windows"
 
+# ----------------------------------------------------
+
+[custom.git_before_remote-bash]
+description = "Directory before repo (bash)"
+command = 'git_before_remote.sh'
+require_repo = true
+shell = ["bash", "--noprofile", "--norc"]
+when = "git rev-parse --is-inside-work-tree"
+format = '[$output]($style)'
+style = "fg:color_prepo"
+os = "linux"
 
 [custom.git_remote_symbol-bash]
 description = "Display symbol for remote Git server (bash)"
@@ -465,6 +498,8 @@ when = 'git rev-parse --is-inside-work-tree'
 format = '[$output]($style)'
 style = "fg:color_git_remote_symbol"
 os = "linux"
+
+# ----------------------------------------------------
 
 [custom.git_username]
 description = 'Git username'
@@ -540,27 +575,6 @@ shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_git_remote_repo bold"
 
 
-[custom.git_before]
-description = 'path before repo'
-require_repo = true
-when = 'git rev-parse --is-inside-work-tree'
-command = """
-GIT_BEFORE_REPO=$(command dirname $(git rev-parse --show-toplevel))
-if [[ "$GIT_BEFORE_REPO" =~ "/mnt/c/Users/$USERNAME" ]]; then
-  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/mnt/c/Users/$USERNAME|~|")
-elif [[ "$GIT_BEFORE_REPO" =~ "C:/Users/$USERNAME" ]]; then
-  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^C:/Users/$USERNAME|~|")
-elif [[ "$GIT_BEFORE_REPO" =~ "/Users/$USERNAME" ]]; then
-  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/Users/$USERNAME|~|")
-else
-  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^$HOME|~|")
-fi
-
-echo "$GIT_BEFORE_REPO/"
-"""
-format = '[$output]($style)'
-shell = ["bash", "--noprofile", "--norc"]
-style = "fg:color_prepo"
 
 [custom.git_prefix]
 description = 'repo prefix'

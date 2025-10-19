@@ -1,108 +1,143 @@
 $modulePath = $PSScriptRoot
 
-$psdoticon = ""
-$labicon = ""
+$psdoticon = ''
+$labicon = ''
 
-function SetupLab {
+function SetupLab
+{
   param (
     [string]$labPath,
     [switch]$quiet
   )
-  if (-not $Env:LAB) {
-    if ($labPath) {
+  if (!($Env:LAB))
+  {
+    if ($labPath)
+    {
       $env:LAB = $labPath
     }
-    else {
-      if ($env:DOTS) {
+    else
+    {
+      if ($env:DOTS)
+      {
         $env:LAB = "$env:DOTS\lab"
       }
-      else {
+      else
+      {
         $env:LAB = "$Env:USERPROFILE\lab"
       }
     }
-    if (-not $quiet) {
-      wh -box "Setting up lab environment in $Env:LAB"
+    if (-not $quiet)
+    {
+      wh 'Setting up lab environment in ' Gray "$Env:LAB" blue -box -bb 1 -ba 2
     }
   }
-  if ($labPath) {
-    if (Test-Path $labPath) {
-      if ($labPath -ne $Env:LAB) {
-        $oldLab = "$Env:LAB\PowerShell"
-        Remove-Path -Path $oldLab
-        if (-not $quiet) {
-          wh -box "Removed $oldLab from the PATH"
+  else
+  {
+    if ($labPath)
+    {
+      if (Test-Path $labPath)
+      {
+        if ($labPath -ne $Env:LAB)
+        {
+          $oldLab = "$Env:LAB\PowerShell"
+          Set-Path -Remove -Path $oldLab
+          if (-not $quiet)
+          {
+            wh 'Removed ' Gray "$oldLab" magenta ' from the PATH' Gray -box -bb 1 -ba 2
+          }
+          $Env:LAB = $labPath
+          if (-not $quiet)
+          {
+            wh 'Setting up lab environment in ' Gray "$Env:LAB" blue -box -bb 1 -ba 2
+          }
         }
-        $Env:LAB = $labPath
-        if (-not $quiet) {
-          wh -box "Setting up lab environment in $Env:LAB"
+        else
+        {
+          if (-not $quiet)
+          {
+            wh 'Lab environment already set up in ' Gray "$Env:LAB" blue -box -bb 1 -ba 2
+          }
+          return
         }
       }
-      else {
-        if (-not $quiet) {
-          wh -box "Lab environment already set up in $Env:LAB"
+      else
+      {
+        if (-not $quiet)
+        {
+          Write-Err $Path Magenta ' does not exist.' Gray -box
         }
         return
       }
-    }
-    else {
-      if (-not $quiet) {
-        Write-Err -box $Path Magenta ' does not exist.'
-      }
-      return
     }
   }
   $labPath = $Env:LAB
   $Global:LAB = $env:LAB
 
-  if (!(Test-Path($env:LAB))) {
+  if (!(Test-Path($env:LAB)))
+  {
     New-Item -ItemType Directory -Path $env:LAB -ErrorAction Stop | Out-Null
-    if (-not $quiet) {
-      Write-Success -box 'Created lab directory: ' White "$env:LAB" Blue
+    if (-not $quiet)
+    {
+      Write-Success 'Created lab directory: ' Gray "$env:LAB" Blue -box
     }
   }
   $env:PSLAB = "$env:LAB\PowerShell"
   $Global:PSLAB = $env:PSLAB
-  if (!(Test-Path($env:PSLAB))) {
+  if (!(Test-Path($env:PSLAB)))
+  {
     New-Item -ItemType Directory -Path $env:PSLAB -ErrorAction Stop | Out-Null
-    if (-not $quiet) {
-      Write-Success -box 'Created PowerShell lab directory: ' White "$env:PSLAB" Blue
+    if (-not $quiet)
+    {
+      Write-Success 'Created lab directory: ' Gray "$env:LAB" Blue -box
+
     }
   }
-  if ($env:PATH -notlike "*$env:PSLAB*") {
-    Add-Path -Path $env:PSLAB
-    if (-not $quiet) {
-      Write-Success -box 'Added ' White "$env:PSLAB" Blue ' to the PATH' White
+  if ($env:PATH -notlike "*$env:PSLAB*")
+  {
+    Set-Path -Add -Path $env:PSLAB
+    if (-not $quiet)
+    {
+      Write-Success 'Added ' Gray "$env:PSLAB" Blue ' to the PATH' Gray -box
     }
 
   }
-  if (-not $quiet) {
-    Write-Success -box 'Lab environment set up in ' White "$env:LAB" Blue
+  if (-not $quiet)
+  {
+    Write-Success 'Lab environment set up in ' Gray "$env:LAB" Blue -box
   }
 }
-if (!($env:LAB)) {
+if (!($env:LAB))
+{
   SetupLab -quiet
 }
 
-if ($env:PSCRIPTS) {
-  if (Test-Path -Path $env:PSCRIPTS) {
+if ($env:PSCRIPTS)
+{
+  if (Test-Path -Path $env:PSCRIPTS)
+  {
     $Global:PSCRIPTS = $env:PSCRIPTS
   }
 }
-else {
+else
+{
   $PSScriptsDir = (Get-ItemProperty -Path $PROFILE).DirectoryName + '\Scripts'
-  if (Test-Path -Path $PSScriptsDir) {
+  if (Test-Path -Path $PSScriptsDir)
+  {
     $env:PSCRIPTS = $PSScriptsDir
     $Global:PSCRIPTS = $env:PSCRIPTS
   }
 }
 
-function Get-LabUsage {
+function Get-LabUsage
+{
   $bannerPath = Join-Path -Path $modulePath -ChildPath 'banner'
-  if (Test-Path -Path $bannerPath) {
+  if (Test-Path -Path $bannerPath)
+  {
     Write-Host
     Get-Content -Path $bannerPath | Write-Host
   }
-  else {
+  else
+  {
     wh 'LAB' cyan
   }
   wh '  Usage: ' blue 'lab' cyan -padin 3 -bb 1 -ba 0
@@ -127,7 +162,8 @@ function Get-LabUsage {
 }
 
 
-function Get-LabScripts {
+function Get-LabScripts
+{
   # PowerShellIcon = $psdoticon
 
   <#
@@ -162,11 +198,16 @@ function Get-LabScripts {
   Get-Command -CommandType ExternalScript | ForEach-Object `
   {
     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
-    if ($_.Source -like "$scriptsPath\*") {
-      wh -pad $env:padding $name Gray
-
+    if ($_.Source -like "$scriptsPath\*")
+    {
+      if ($catppuccin) { Write-Host $Flavor.sapphire.Foreground()'  󰨊'$Flavor.text.Foreground()$name -NoNewline }
+      else
+      {
+        wh -pad 3 '󰨊' DarkBlue $name Gray
+      }
       $parameters = $_.Parameters
-      if ($null -ne $parameters) {
+      if ($null -ne $parameters)
+      {
         $parameters.Keys | Where-Object { $sysparams -notcontains $_ } | ForEach-Object `
         {
           $p = $parameters[$_]
@@ -176,7 +217,8 @@ function Get-LabScripts {
       }
 
       $alias = $aliases[$name]
-      if ($alias) {
+      if ($alias)
+      {
         wh "($alias)" DarkGreen
       }
       linebreak
@@ -186,7 +228,8 @@ function Get-LabScripts {
 }
 
 
-function lab {
+function lab
+{
   <#
     .SYNOPSIS
         Powershell script management for lab environment.
@@ -262,8 +305,10 @@ function lab {
   $targetcolor = $labiconcolor
 
 
-  if ($setup) {
-    if ($labPath) {
+  if ($setup)
+  {
+    if ($labPath)
+    {
       SetupLab -labPath $labPath -quiet:$quiet
       return
     }
@@ -273,103 +318,125 @@ function lab {
 
 
 
-  if ($dot) {
+  if ($dot)
+  {
     $TargetScriptDir = $env:PSCRIPTS
     $targeticon = $psdoticon
     $targetcolor = $pscriptscolor
   }
 
-  if ($help) {
+  if ($help)
+  {
     Get-LabUsage
     return
   }
 
-  if ($new) {
+  if ($new)
+  {
     $filePath = "$TargetScriptDir\$filename.ps1"
-    if (!(Test-Path $filePath)) {
+    if (!(Test-Path $filePath))
+    {
       New-Item -Path $filePath -ItemType File -ErrorAction Stop | Out-Null
-      wh -box -bb 1 -ba 1 'Created: ' Green "$TargetScriptDir\$filename.ps1" Gray
+      Write-Success 'Created: ' Green "$TargetScriptDir\" darkblue "$filename" gray '.ps1' white -box -bb 1 -ba 2
       return
     }
-    else {
-      wh -box -bb 1 -ba 1 'Created: ' Green "$TargetScriptDir\$filename.ps1" Gray
-      wlab "$filename.ps1" cyan ' already exists in ' white $TargetScriptDir blue
+    else
+    {
+      Write-Warn "$filename" cyan '.ps1' DarkCyan ' already exists in ' Gray $TargetScriptDir blue -box
       return
     }
   }
 
-  if ($edit) {
-    if ($edit -eq '') {
+  if ($edit)
+  {
+    if ($edit -eq '')
+    {
       $Path = "$TargetScriptDir"
-      $patherror = "$TargetScriptDir not found."
+      $patherror = "'$TargetScriptDir' not found."
     }
-    else {
+    else
+    {
       $Path = "$TargetScriptDir\$filename.ps1"
-      $patherror = "File $filename.ps1 not found in $TargetScriptDir."
+      $patherror = "File '$filename.ps1' not found in '$TargetScriptDir'."
     }
-    if (Test-Path $Path) {
-      if ($env:EDITOR) {
+    if (Test-Path $Path)
+    {
+      if ($env:EDITOR)
+      {
         & $env:EDITOR $Path
         return
       }
-      else {
-        Write-Err '$EDITOR' Magenta ' environment variable not set.' -box
+      else
+      {
+        Write-Err '$EDITOR' Magenta ' environment variable not set.' Gray -box
         return
       }
     }
-    else {
-      Write-Err -box "$patherror"
+    else
+    {
+      Write-Err "$patherror" magenta -box
       return
     }
   }
 
-  if ($tested) {
+  if ($tested)
+  {
     $filePath = "$PSLAB\$filename.ps1"
-    if (Test-Path $filePath) {
+    if (Test-Path $filePath)
+    {
       $destination = "$env:PSCRIPTS\$filename.ps1"
       Move-Item -Path $filePath -Destination $destination -ErrorAction Stop | Out-Null
-      wh -box -bb 1 -ba 1 ' ' cyan "$env:PSLAB\" magenta "$filename.ps1" red ' --> ' White "$env:PSCRIPTS\" Blue "$filename.ps1" Green
+      wh ' ' cyan "$filename.ps1" white ' --> ' DarkBlue "$env:PSCRIPTS\" Blue "$filename.ps1" Green -box -bb 1 -ba 1
       return
     }
-    else {
-      wh -box -bb 1 -ba 1 "$filename.ps1" cyan ' already exists in ' white "$PSLAB" blue
+    else
+    {
+      Write-Err "$filename" cyan '.ps1' DarkCyan ' already exists in ' Gray "$PSLAB" blue -box -bb 1 -ba 1
       return
     }
   }
 
-  if ($delete) {
+  if ($delete)
+  {
     $filePath = "$TargetScriptDir\$filename.ps1"
-    if (Test-Path $filePath) {
+    if (Test-Path $filePath)
+    {
       Remove-Item -Path $filePath -ErrorAction Stop | Out-Null
-      wh -box -bb 1 -ba 1 ' ' Gray 'Deleted ' White "$TargetScriptDir\" magenta "$filename.ps1" red
+      wh '  ' red 'Deleted ' magenta "$TargetScriptDir\" darkred "$filename.ps1" magenta -box -bb 1 -ba 2
       return
     }
-    else {
-      Write-Err -box "$filename.ps1 " magenta 'not found in ' White "$TargetScriptDir" Gray
+    else
+    {
+      Write-Err "$filename.ps1 " magenta 'not found in ' Gray "$TargetScriptDir" darkmagenta -box -bb 1 -ba 1
       return
     }
   }
 
-  if ($cat) {
+  if ($cat)
+  {
     $command = if (Test-CommandExists bat) { 'bat' }
     elseif (Test-CommandExists cat) { 'cat' }
-    else {
-      Write-Err -box 'No command found to display file contents' White
+    else
+    {
+      Write-Err 'No command found to display file contents' Gray -box
       return
     }
     $filePath = "$TargetScriptDir\$filename.ps1"
-    if (Test-Path $filePath) {
+    if (Test-Path $filePath)
+    {
       & $command $filePath
       return
     }
-    else {
-      Write-Err -box "$filename.ps1 " magenta 'not found in ' White "$TargetScriptDir" Gray
+    else
+    {
+      Write-Err "$filename.ps1 " magenta 'not found in ' Gray "$TargetScriptDir" darkred -box
       return
     }
   }
 
-  if ($list) {
-    wh -box -bb 1 -ba 1 'Listing scripts in ' DarkGray "$TargetScriptDir" Gray
+  if ($list)
+  {
+    wh 'Listing scripts in ' darkcyan "$TargetScriptDir" blue -box -bb 1 -ba 2
     Get-LabScripts $TargetScriptDir $targeticon $targetcolor
     return
   }

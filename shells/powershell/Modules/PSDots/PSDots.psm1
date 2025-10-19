@@ -1,33 +1,33 @@
 $modulePath = $PSScriptRoot
 
 $env:HOME = $env:USERPROFILE
-$Global:DOTS = Join-Path -Path $env:USERPROFILE -ChildPath "dots"
+$Global:DOTS = Join-Path -Path $env:USERPROFILE -ChildPath 'dots'
 $env:DOTS = $Global:DOTS
-$Global:DOTFILES = Join-Path -Path $env:DOTS -ChildPath "configs"
+$Global:DOTFILES = Join-Path -Path $env:DOTS -ChildPath 'configs'
 $env:DOTFILES = $Global:DOTFILES
-$Global:SHELLS = Join-Path -Path $env:DOTS -ChildPath "shells"
+$Global:SHELLS = Join-Path -Path $env:DOTS -ChildPath 'shells'
 $env:SHELLS = $Global:SHELLS
 
-$Global:PSDOTS = Join-Path -Path $env:SHELLS -ChildPath "powershell"
+$Global:PSDOTS = Join-Path -Path $env:SHELLS -ChildPath 'powershell'
 $env:PSDOTS = $Global:PSDOTS
-$Global:PSCOMPONENT = Join-Path -Path $env:PSDOTS -ChildPath "component"
+$Global:PSCOMPONENT = Join-Path -Path $env:PSDOTS -ChildPath 'component'
 $env:PSCOMPONENT = $Global:PSCOMPONENT
-$Global:PSCRIPTS = Join-Path -Path $env:PSDOTS -ChildPath "Scripts"
+$Global:PSCRIPTS = Join-Path -Path $env:PSDOTS -ChildPath 'Scripts'
 $env:PSCRIPTS = $Global:PSCRIPTS
-$Global:PSMODS = Join-Path -Path $env:PSDOTS -ChildPath "Modules"
+$Global:PSMODS = Join-Path -Path $env:PSDOTS -ChildPath 'Modules'
 $env:PSMODS = $Global:PSMODS
 
-$Global:DOTCACHE = Join-Path -Path $env:DOTS -ChildPath "cache"
+$Global:DOTCACHE = Join-Path -Path $env:DOTS -ChildPath 'cache'
 $env:DOTCACHE = $Global:DOTCACHE
-$Global:DOTBIN = Join-Path -Path $env:DOTS -ChildPath "bin"
+$Global:DOTBIN = Join-Path -Path $env:DOTS -ChildPath 'bin'
 $env:DOTBIN = $Global:DOTBIN
 
-$Global:WALLS = Join-Path -Path $env:DOTS -ChildPath "walls"
+$Global:WALLS = Join-Path -Path $env:DOTS -ChildPath 'walls'
 $env:WALLS = $Global:WALLS
 
-$Global:BASHDOT = Join-Path -Path $env:SHELLS -ChildPath "bash"
+$Global:BASHDOT = Join-Path -Path $env:SHELLS -ChildPath 'bash'
 $env:BASHDOT = $Global:BASHDOT
-$Global:ZSHDOT = Join-Path -Path $env:SHELLS -ChildPath "zsh"
+$Global:ZSHDOT = Join-Path -Path $env:SHELLS -ChildPath 'zsh'
 $env:ZSHDOT = $Global:ZSHDOT
 
 $util = @{
@@ -51,17 +51,17 @@ $util = @{
   }
   alerts = @{
     info    = @{
-      text  = 'Info'
+      text  = ''
       icon  = ' '
       color = 'cyan'
     }
     success = @{
-      text  = 'Success'
+      text  = ''
       icon  = ' '
       color = 'green'
     }
     warn    = @{
-      text  = 'Warning'
+      text  = ''
       icon  = ' '
       color = 'yellow'
     }
@@ -86,77 +86,87 @@ $infocolor = $($util.alerts.info.color)
 $infoicon = $($util.alerts.info.icon)
 $infotext = $($util.alerts.info.text)
 
-function linebreak {
+function linebreak
+{
   param (
     [int]$count = 1
   )
-  for ($i = 0; $i -lt $count; $i++) {
+  for ($i = 0; $i -lt $count; $i++)
+  {
     Write-Host ''
   }
 }
 
-function Write-Info {
+function Write-Info
+{
   param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$pairs,
     [int]$bb = 1,
-    [int]$ba = 1,
+    [int]$ba = 2,
     [int]$pad,
     [switch]$box,
-    [string]$border = 'DarkGray'
+    [string]$border = 'Black'
   )
-  if (!($box)) {
+  if (!($box))
+  {
     $spacer = ': '
   }
   $pairs = @($infoicon, $infocolor, $infotext, $infocolor, $spacer, $border) + $pairs
   wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
 }
 
-function Write-Success {
+function Write-Success
+{
   param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$pairs,
     [int]$bb = 1,
-    [int]$ba = 1,
+    [int]$ba = 2,
     [int]$pad,
     [switch]$box,
-    [string]$border = 'DarkGray'
+    [string]$border = $successcolor
   )
-  if (!($box)) {
+  if (!($box))
+  {
     $spacer = ': '
   }
   $pairs = @($successicon, $successcolor, $successtext, $successcolor, $spacer, $border) + $pairs
   wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
 }
 
-function Write-Err {
+function Write-Err
+{
   param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$pairs,
     [int]$bb = 1,
-    [int]$ba = 1,
+    [int]$ba = 2,
     [int]$pad,
     [switch]$box,
-    [string]$border = 'DarkGray'
+    [string]$border = $errcolor
   )
-  if (!($box)) {
+  if (!($box))
+  {
     $spacer = ': '
   }
   $pairs = @($erricon, $errcolor, $errtext, $errcolor, $spacer, $border) + $pairs
   wh -pairs $pairs -bb $bb -ba $ba -pad $env:padding -box:$box -border:$border
 }
 
-function Write-Warn {
+function Write-Warn
+{
   param(
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$pairs,
     [int]$bb = 1,
-    [int]$ba = 1,
+    [int]$ba = 2,
     [int]$pad,
     [switch]$box,
-    [string]$border = 'DarkGray'
+    [string]$border = $warncolor
   )
-  if (!($box)) {
+  if (!($box))
+  {
     $spacer = ': '
   }
   $pairs = @($warnicon, $warncolor, $warntext, $warncolor, $spacer, $border) + $pairs
@@ -165,7 +175,8 @@ function Write-Warn {
 
 
 
-function Join-Profile {
+function Join-Profile
+{
   <#
     .SYNOPSIS
         Sets up PowerShell profile links.
@@ -190,15 +201,18 @@ function Join-Profile {
 
   linebreak
   Write-Host ' Setting up PowerShell Profile links...' -ForegroundColor Cyan
-  foreach ( $ProfileDocVersions in $ProfileDocVersions) {
-    foreach ( $ProfileTarget in $ProfileTargets ) {
+  foreach ( $ProfileDocVersions in $ProfileDocVersions)
+  {
+    foreach ( $ProfileTarget in $ProfileTargets )
+    {
       Set-Link -force -base $PSDOTPROFILE -target "$env:DOCUMENTS\$ProfileDocVersions\$ProfileTarget" -i:$i
     }
   }
   linebreak
 }
 
-function New-Backup {
+function New-Backup
+{
   <#
     .SYNOPSIS
         Creates a backup of the target file.
@@ -222,33 +236,38 @@ function New-Backup {
     # [switch] $copy
   )
 
-  if (!(Test-Path $target)) {
+  if (!(Test-Path $target))
+  {
     Write-Error "$target does not exist."
     return
   }
 
   $targetpath = [System.IO.Path]::GetFullPath("$target")
   $targetleaf = Split-Path -Path $targetpath -Leaf
-  $backupDir = Join-Path -Path $env:USERPROFILE -ChildPath "backups"
+  $backupDir = Join-Path -Path $env:USERPROFILE -ChildPath 'backups'
   $bakDate = Get-Date -Format 'MM-dd-yyyy-HH.mm.ss'
   $backupFileName = "$targetleaf.$bakDate.bak"
   $backupFilePath = Join-Path -Path $backupDir -ChildPath $backupFileName
 
-  if (!(Test-Path -Path $backupDir)) {
+  if (!(Test-Path -Path $backupDir))
+  {
     New-Item -ItemType Directory -Path $backupDir -ErrorAction Stop | Out-Null
   }
 
-  if ($copy) {
+  if ($copy)
+  {
     Copy-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
   }
-  else {
+  else
+  {
     Move-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
   }
 
   Write-Host "Backup created: $backupFilePath"
 }
 
-function Set-Link {
+function Set-Link
+{
   <#
     .SYNOPSIS
         Creates a symbolic link from a source file or directory to a target location.
@@ -296,25 +315,31 @@ function Set-Link {
     [switch] $force
   )
 
-  if (!(Test-Path -Path $base)) {
+  if (!(Test-Path -Path $base))
+  {
     Write-Warning "$base does not exist."
     return
   }
-  if ($base -eq $target) {
+  if ($base -eq $target)
+  {
     Write-Warning "You can't SymLink a file to itself."
     return
   }
 
-  if (Test-Path -Path $target) {
-    if ($i) {
-      $userChoice = Read-Host "Target exists. Create backup? [Y/n]"
-      if ($userChoice -eq 'n') {
-        Write-Warning "Operation cancelled."
+  if (Test-Path -Path $target)
+  {
+    if ($i)
+    {
+      $userChoice = Read-Host 'Target exists. Create backup? [Y/n]'
+      if ($userChoice -eq 'n')
+      {
+        Write-Warning 'Operation cancelled.'
         return
       }
       New-Backup -target $target
     }
-    elseif ($force) {
+    elseif ($force)
+    {
       New-Backup -target $target
     }
   }
@@ -323,7 +348,8 @@ function Set-Link {
   Write-Host "Symbolic link created: $target -> $base"
 }
 
-function Show-DotsUsage {
+function Show-DotsUsage
+{
   <#
     .SYNOPSIS
         Sets up symbolic links for specified files or directories.
@@ -334,26 +360,29 @@ function Show-DotsUsage {
         Version: 1.0.0
     #>
   $bannerPath = Join-Path -Path $modulePath -ChildPath 'banner'
-  if (Test-Path -Path $bannerPath) {
+  if (Test-Path -Path $bannerPath)
+  {
     linebreak 2
     Get-Content -Path $bannerPath | Write-Host
   }
-  else {
+  else
+  {
     linebreak 2
-    Write-Host -foregroundColor Yellow ' DOTS'
+    Write-Host -ForegroundColor Yellow ' DOTS'
   }
   linebreak
-  Write-Host -foregroundColor DarkMagenta ' Dotfiles utility for PowerShell.'
+  Write-Host -ForegroundColor DarkMagenta ' Dotfiles utility for PowerShell.'
   linebreak
   Write-Host ' Usage: dots [options]'
   linebreak
-  Write-Host -foregroundColor Yellow "`t-help: " -NoNewline
+  Write-Host -ForegroundColor Yellow "`t-help: " -NoNewline
   Write-Host 'Display this help message.'
   linebreak 2
 
 }
 
-function Invoke-Dots {
+function Invoke-Dots
+{
   <#
     .SYNOPSIS
         Sets up PowerShell profile links.
@@ -371,18 +400,19 @@ function Invoke-Dots {
   param(
     [switch] $help
   )
-  if ($help) {
+  if ($help)
+  {
     Show-DotsUsage
     return
   }
-  else {
+  else
+  {
     Show-DotsUsage
   }
 
 }
 
 Export-ModuleMember -Function linebreak
-Export-ModuleMember -Function wh
 Export-ModuleMember -Function Write-Err
 Export-ModuleMember -Function Write-Info
 Export-ModuleMember -Function Write-Success
