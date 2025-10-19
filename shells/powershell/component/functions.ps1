@@ -361,11 +361,32 @@ function Show-Command {
   Get-Command $Name | Select-Object -ExpandProperty Definition
 }
 
-function mdatb($1) {
+function datb($1) {
   if ($catppuccin.Macchiato.Base) { $border = $catppuccin.Macchiato.Base.ToString() } else { $border = 'black' };
   rich -y -a square -S $border -d 1 --theme catppuccin-mocha -m $1
 }
-function mdat($1) { rich --text-full -y -e -d 1 -m $1 }
+function dat($1) { rich --pager --text-full -y -e -d 1 -m $1 }
+
+function open {
+  param (
+    [Parameter(Mandatory = $true, ValueFromRemainingArguments = $true)]
+    [string[]]$Paths
+  )
+  foreach ($path in $Paths) {
+    Start-Process $path
+  }
+}
+
+function google {
+  param (
+    [Parameter(Mandatory = $true, ValueFromRemainingArguments = $true)]
+    [string[]]$QueryParts
+  )
+  $query = [string]::Join(' ', $QueryParts)
+  $encodedQuery = [System.Web.HttpUtility]::UrlEncode($query)
+  $url = "https://www.google.com/search?q=$encodedQuery"
+  Start-Process $url
+}
 
 function q { Exit }
 

@@ -22,3 +22,13 @@ function mdat() {
   rich --text-full -y -e -d 1 -m "$@"
 }
 
+function google {
+    open "https://www.google.com/search?q=$*"
+}
+
+function www {
+  if [[ $1 == https://* ]]; then
+    open "$1"
+  else
+    open "https://$1"
+}

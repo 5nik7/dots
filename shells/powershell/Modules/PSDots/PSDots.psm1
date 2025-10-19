@@ -185,14 +185,14 @@ function Join-Profile {
   )
   $Global:PSDOTPROFILE = "$env:PSDOTS\Microsoft.PowerShell_profile.ps1"
   $env:PSDOTPROFILE = $Global:PSDOTPROFILE
-  $ProfileTargets = ('Microsoft.PowerShell_profile.ps1', 'Microsoft.VSCode_profile.ps1')
+  $ProfileTargets = ('Microsoft.PowerShell_profile.ps1')
   $ProfileDocVersions = ('PowerShell', 'WindowsPowerShell')
 
   linebreak
   Write-Host ' Setting up PowerShell Profile links...' -ForegroundColor Cyan
   foreach ( $ProfileDocVersions in $ProfileDocVersions) {
     foreach ( $ProfileTarget in $ProfileTargets ) {
-      Set-Link $PSDOTPROFILE "$env:DOCUMENTS\$ProfileDocVersions\$ProfileTargets"
+      Set-Link -force -base $PSDOTPROFILE -target "$env:DOCUMENTS\$ProfileDocVersions\$ProfileTarget" -i:$i
     }
   }
   linebreak
@@ -217,9 +217,9 @@ function New-Backup {
     #>
   param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [string] $target,
+    [string] $target
 
-    [switch] $copy
+    # [switch] $copy
   )
 
   if (!(Test-Path $target)) {
@@ -242,8 +242,7 @@ function New-Backup {
     Copy-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
   }
   else {
-    Rename-Item -Path $target -NewName $backupFileName -ErrorAction Stop | Out-Null
-    Move-Item -Path $backupFileName -Destination $backupDir -ErrorAction Stop | Out-Null
+    Move-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
   }
 
   Write-Host "Backup created: $backupFilePath"

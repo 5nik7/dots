@@ -22,7 +22,7 @@ function glowcommand($file) {
     Write-Host "'$file' is not a markdown file."
   }
 }
-Set-Alias -Name dat -Value glowcommand -Option AllScope
+Set-Alias -Name mdat -Value glowcommand -Option AllScope
 
 if (Test-CommandExists bat) { Set-Alias -Name cat -Value bat -Option AllScope }
 if (Test-CommandExists eza) {

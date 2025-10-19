@@ -43,10 +43,6 @@ function fzpr() {
     pacman -Qq | fzf -q "$1" -m --preview 'pacman -Qi {1}' | xargs -ro pacman -Rns
 }
 
-function google {
-    open "https://www.google.com/search?q=$*"
-}
-
 function femoji() {
     emojis=$(curl -sSL 'https://git.io/JXXO7')
     selected_emoji=$(echo $emojis | fzf)
@@ -230,7 +226,7 @@ function fext() {
 }
 
 if cmd_exists rich; then
-  function mdat() {
+  function dat() {
     rich --text-full -y -e -d 1 -m "$@"
   }
  fi
