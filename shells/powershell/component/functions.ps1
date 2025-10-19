@@ -365,7 +365,7 @@ function mdatb($1) {
   if ($catppuccin.Macchiato.Base) { $border = $catppuccin.Macchiato.Base.ToString() } else { $border = 'black' };
   rich -y -a square -S $border -d 1 --theme catppuccin-mocha -m $1
 }
-function mdat($1) { rich -y -d 2 --theme catppuccin-mocha -m $1 }
+function mdat($1) { rich --text-full -y -e -d 1 -m $1 }
 
 function q { Exit }
 
