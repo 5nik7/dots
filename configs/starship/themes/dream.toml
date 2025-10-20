@@ -465,6 +465,7 @@ when = "git rev-parse --is-inside-work-tree"
 format = '[$output]($style)'
 style = "fg:color_prepo"
 os = "windows"
+disabled = true
 
 [custom.git_remote_symbol-pwsh]
 description = "Display symbol for remote Git server (pwsh)"
@@ -475,6 +476,7 @@ when = "git rev-parse --is-inside-work-tree"
 format = '[$output ]($style)'
 style = "fg:color_git_remote_symbol"
 os = "windows"
+disabled = true
 
 # ----------------------------------------------------
 
@@ -486,7 +488,7 @@ shell = ["bash", "--noprofile", "--norc"]
 when = "git rev-parse --is-inside-work-tree"
 format = '[$output]($style)'
 style = "fg:color_prepo"
-os = "linux"
+# os = "linux"
 
 [custom.git_remote_symbol-bash]
 description = "Display symbol for remote Git server (bash)"
@@ -496,7 +498,7 @@ shell = ["bash", "--noprofile", "--norc"]
 when = 'git rev-parse --is-inside-work-tree'
 format = '[$output ]($style)'
 style = "fg:color_git_remote_symbol"
-os = "linux"
+# os = "linux"
 
 # ----------------------------------------------------
 
