@@ -514,6 +514,7 @@ echo "$GIT_USERNAME"
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_git_username"
+disabled = true
 
 [custom.git_remote_url]
 description = 'Remote git repository url'
