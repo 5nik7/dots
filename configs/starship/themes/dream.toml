@@ -1,7 +1,7 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 command_timeout = 10000
-add_newline = true
+add_newline = false
 follow_symlinks = false
 continuation_prompt = '[│](black)'
 
@@ -65,7 +65,7 @@ base = "#1e1e2e"
 mantle = "#181825"
 crust = "#11111b"
 
-color_ok = 'bright-green'
+color_ok = 'bright-cyan'
 color_danger = 'bright-red'
 color_caution = 'bright-yellow'
 
