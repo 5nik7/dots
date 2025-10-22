@@ -200,7 +200,7 @@ function Get-LabScripts
     $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
     if ($_.Source -like "$scriptsPath\*")
     {
-      if ($catppuccin) { Write-Host $Flavor.sapphire.Foreground()'  󰨊'$Flavor.text.Foreground()$name -NoNewline }
+      if ($catppuccin) { Write-Host "$($Flavor.sapphire.Foreground())" + '  󰨊' + "$($Flavor.text.Foreground())" + "$name" -NoNewline }
       else
       {
         wh -pad 3 '󰨊' DarkBlue $name Gray
