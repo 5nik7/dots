@@ -39,34 +39,37 @@ palette = "default"
 
 [palettes.default]
 
-rosewater = "#f5e0dc"
-flamingo = "#f2cdcd"
-pink = "#f5c2e7"
-mauve = "#cba6f7"
-red = "#f38ba8"
-maroon = "#eba0ac"
-peach = "#fab387"
-yellow = "#f9e2af"
-green = "#a6e3a1"
-teal = "#94e2d5"
-sky = "#89dceb"
-sapphire = "#74c7ec"
-blue = "#89b4fa"
-lavender = "#b4befe"
-text = "#cdd6f4"
-subtext1 = "#bac2de"
-subtext0 = "#a6adc8"
-overlay2 = "#9399b2"
-overlay1 = "#7f849c"
-overlay0 = "#6c7086"
-surface2 = "#585b70"
-surface1 = "#45475a"
-surface0 = "#313244"
-base = "#1e1e2e"
-mantle = "#181825"
-crust = "#11111b"
+rosewater = '#f5e0dc'
+flamingo = '#f2adcd'
+pink = '#f5c2e7'
+mauve = '#cba6f7'
+red = '#f38ba8'
+maroon = '#eba0ac'
+peach = '#fab387'
+yellow = '#f9e2af'
+green = '#a6e3a1'
+teal = '#94e2d5'
+sky = '#89dceb'
+sapphire = '#74c7ec'
+blue = '#89b4fa'
+lavender = '#b4befe'
+text = '#cdd6f4'
+subtext1 = '#bac2de'
+subtext0 = '#a6adc8'
+overlay2 = '#9399b2'
+overlay1 = '#7f849c'
+overlay0 = '#6c7086'
+surface2 = '#585b70'
+surface1 = '#45475a'
+surface0 = '#313244'
+base = '#1e1e2e'
+mantle = '#181825'
+crust = '#11111b'
 
-color_ok = 'bright-cyan'
+macchiato_surface0 = '#363a4f'
+macchiato_base = '#24273a'
+
+color_ok = 'bright-green'
 color_danger = 'bright-red'
 color_caution = 'bright-yellow'
 
@@ -90,7 +93,7 @@ color_time = '#b4befe'
 color_duration = ''
 color_os = 'blue'
 color_git = '#585b70'
-color_count = '#6c7086'
+color_count = '#94e2d5'
 color_git_branch = '#cba6f7'
 # color_git_branch = '#6c7086'
 color_git_added = 'bright-green'
@@ -101,7 +104,7 @@ color_vimcmd_visual = 'purple'
 color_btry_bg = '#181825'
 # color_fill = '#303446'
 # color_fill = '#24273a'
-color_fill = '#24273a'
+color_fill = '#313244'
 color_lua = '#74c7ec'
 
 [time]
@@ -214,8 +217,8 @@ disabled = false
 # deleted = '󰖭${count}'
 
 [git_status]
-format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](bright-black) ($ahead_behind$stashed)]($style)"
-style = "cyan"
+format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](fg:color_git) ($ahead_behind$stashed)]($style)"
+style = "fg:color_git"
 conflicted = "​"
 untracked = "​"
 modified = "​"
