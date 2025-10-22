@@ -31,7 +31,8 @@ $time\
 $line_break\
 $character"""
 # (${custom.btry} )\
-
+# [](fg:#1e1e2e bg:color_fill)\
+#
 right_format = """${custom.btry}"""
 
 palette = "default"
@@ -100,7 +101,7 @@ color_vimcmd_visual = 'purple'
 color_btry_bg = '#181825'
 # color_fill = '#303446'
 # color_fill = '#24273a'
-color_fill = '#1e1e2e'
+color_fill = '#24273a'
 color_lua = '#74c7ec'
 
 [time]
@@ -161,8 +162,9 @@ style = "white dimmed"
 disabled = true
 
 [fill]
-disabled = true
+disabled = false
 symbol = '󰍴'
+# symbol = ' '
 style = 'fg:color_fill'
 
 [directory]
