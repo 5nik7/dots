@@ -6,11 +6,8 @@ follow_symlinks = false
 continuation_prompt = '[│](black)'
 
 format = """\
-(${custom.git_before_remote-pwsh}\
-${custom.git_remote_symbol-pwsh}\
-${custom.git_before_remote-bash}\
+(${custom.git_before_remote-bash}\
 ${custom.git_remote_symbol-bash}\
-\
 ${custom.git_remote_url}\
 (${custom.git_remote_repo}[](fg:color_git_remote_url dimmed))\
 ${custom.git_local}\
@@ -32,7 +29,9 @@ $line_break\
 $character"""
 # (${custom.btry} )\
 # [](fg:#1e1e2e bg:color_fill)\
-#
+# (${custom.git_before_remote-pwsh}\
+# ${custom.git_remote_symbol-pwsh}\
+
 right_format = """${custom.btry}"""
 
 palette = "default"
