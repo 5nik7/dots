@@ -92,6 +92,16 @@ if cmd_exists catppuccin; then
   function crust() {
     catppuccin $FLAVOR "$0"
   }
+if cmd_exists pastel; then
+  function escol {
+    pastel format ansi-24bit-escapecode "$@"
+  }
+  function creset {
+    esc=$'\033'
+    c_reset="${esc}[0m"
+    printf "$c_reset"
+  }
+fi
 else
   echo "catppuccin command not found. Please install it to use the colors."
 fi
