@@ -1,6 +1,6 @@
 
 function is_droid() {
-  [[ -z "$TERMUX_VERSION" ]] &> /dev/null
+  [[ -z "$ANDROID_DATA" ]] &> /dev/null
 	return $?
 }
 
