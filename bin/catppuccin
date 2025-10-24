@@ -35,6 +35,7 @@ declare -r fg_mantle="${esc}[38;2;24;24;37m"
 declare -r fg_crust="${esc}[38;2;17;17;27m"
 declare -r bg_mantle="${esc}[48;2;24;24;37m"
 declare -r spacer="${fg_surface0}│${c_reset}"
+declare -r caticon="󰄛"
 
 default="mocha"
 
@@ -225,7 +226,7 @@ print_all() {
 }
 
 err() {
-  printf "${fg_red}${bold} %s${c_reset}\n" "$1"
+  printf "${fg_red} ${caticon}${bold} %s${c_reset}\n" "$1"
 }
 
 usage() {
@@ -234,7 +235,7 @@ usage() {
   echo -e "${fg_surface1}     |\___/|"
   echo -e "     )     ("
   echo -e "    =\     /="
-  echo -e "      ${fg_red})═══(${fg_overlay0}    Usage: ${fg_mauve}catppuccin ${fg_pink}-f ${fg_text}FLAVOR ${fg_overlay0}[${fg_pink}-c ${fg_text}COLOR${fg_overlay0}]"
+  echo -e "      ${fg_red})═══(${fg_overlay0}    Usage: ${bold}${fg_mauve}catppuccin${c_reset} ${fg_pink}-f ${fg_text}FLAVOR ${fg_overlay0}[${fg_pink}-c ${fg_text}COLOR${fg_overlay0}]"
   echo -e "${fg_surface1}     /     \\"
   echo -e "     |     |     ${fg_overlay0}Options:"
   echo -e "${fg_surface1}    /       \     ${fg_pink}-f, --flavor    ${fg_lavender}Set the Catppuccin flavor"
