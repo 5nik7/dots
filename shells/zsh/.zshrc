@@ -25,11 +25,33 @@ zource "/usr/share/nvm/init-nvm.sh"
 
 is_droid || zieces 'droid'
 
-zieces 'colors'
+function theme() {
+  has_theme() { command vivid generate "$1" &>/dev/null }
+  if has_theme "$1"; then
+    echo "$1" >! "${DOTS}/.theme"
+    set_theme
+  else
+    echo "'$1' not a theme."
+  fi
+}
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+function set_theme() {
+  export DOT_THEME="$(cat "$DOTS"/.theme)"
+  export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
+  if [[ "$THEME" == "catppuccin" ]]; then
+    export FLAVOR="$(echo "$DOT_THEME" | cut -d '-' -f 2)"
+  fi
 
-cmd_exists fzf && zieces 'fzf' && eval "$(fzf --zsh)"
+  export LS_COLORS="$(vivid generate "$DOT_THEME")"
+
+  zieces 'colors'
+
+  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+  cmd_exists fzf && zieces 'fzf' && eval "$(fzf --zsh)"
+}
+
+set_theme
+
 
 [ -z ${WSLENV+x} ] || zieces 'wsl'
 

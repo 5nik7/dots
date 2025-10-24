@@ -11,14 +11,6 @@ export DOTSBIN="$DOTS/bin"
 export BASHDOT="$SHELLS/bash"
 export DOTFILES="$DOTS/configs"
 
-export DOT_THEME="$(cat "$DOTS"/.theme)"
-export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
-if [[ "$THEME" == "catppuccin" ]]; then
-  export FLAVOR="$(echo "$DOT_THEME" | cut -d '-' -f 2)"
-fi
-
-export LS_COLORS="$(vivid generate "$DOT_THEME")"
-
 export STARSHIP_DIR="$DOTFILES/starship"
 export STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
 export STARSHIP_THEMES="$STARSHIP_DIR/themes"
