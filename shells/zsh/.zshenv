@@ -12,11 +12,9 @@ export BASHDOT="$SHELLS/bash"
 export DOTFILES="$DOTS/configs"
 
 export DOT_THEME="$(cat "$DOTS"/.theme)"
-
-THEME=$(echo "$DOT_THEME" | cut -d '-' -f 1)
-if [ $THEME = 'catppuccin' ]; then
-  FLAVOR=$(echo "$DOT_THEME" | cut -d '-' -f 2)
-  export "$FLAVOR"
+export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
+if [[ "$THEME" == "catppuccin" ]]; then
+  export FLAVOR="$(echo "$DOT_THEME" | cut -d '-' -f 2)"
 fi
 
 export LS_COLORS="$(vivid generate "$DOT_THEME")"

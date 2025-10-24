@@ -2,6 +2,11 @@
 
 declare -r esc=$'\033'
 declare -r c_reset="${esc}[0m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+declare -r rev="${esc}[7m"
 declare -r fg_rosewater="${esc}[38;2;245;224;220m"
 declare -r fg_flamingo="${esc}[38;2;242;205;205m"
 declare -r fg_pink="${esc}[38;2;245;194;231m"
@@ -29,6 +34,9 @@ declare -r fg_base="${esc}[38;2;30;30;46m"
 declare -r fg_mantle="${esc}[38;2;24;24;37m"
 declare -r fg_crust="${esc}[38;2;17;17;27m"
 declare -r bg_mantle="${esc}[48;2;24;24;37m"
+declare -r spacer="${fg_surface0}│${c_reset}"
+
+default="mocha"
 
 mocha() {
   rosewater='#f5e0dc'
@@ -158,12 +166,66 @@ start() {
   fi
 }
 
+color_codes() {
+  if cmd_exists pastel; then
+    print_ansi_24bit="$(pastel format ansi-24bit "${!var}")"
+    print_rgb="$(pastel format rgb "${!var}")"
+    print_hsl="$(pastel format hsl "${!var}")"
+    printf "${bold}%-9s${c_reset} ${spacer} %s ${spacer} %-18s ${spacer} %s\n" "$var" "${!var}" "$print_rgb" "$print_hsl"
+  else
+    printf "${bold}%-9s${c_reset} ${spacer} %s\n" "$var" "${!var}"
+  fi
+}
+
 print_colors() {
-  echo " $FLAVOR:"
+  echo -e "${fg_mauve}${bold} $FLAVOR:${c_reset}"
   for var in rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface1 surface0 base mantle crust; do
     start
-    printf "%-10s %s\n" "$var" "${!var}"
+    color_codes
   done
+}
+
+list_colors() {
+  echo -e "${fg_mauve}${bold} colors:${c_reset}"
+  for col in rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface1 surface0 base mantle crust; do
+    printf "${fg_text}   %s${c_reset}\n" "$col"
+  done
+}
+
+list_flavors() {
+  echo -e "${fg_mauve}${bold} flavors:${c_reset}"
+  for flav in mocha macchiato frappe latte; do
+    if [[ "$flav" == "$FLAVOR" ]]; then
+      flavcol="${fg_pink}"
+    else
+      flavcol="${fg_text}"
+    fi
+    if [[ "$flav" == "$default" ]]; then
+      printf "${flavcol}   %s${c_reset} ${fg_surface2}%s${c_reset}\n" "$flav" "(default)"
+    else
+      printf "${flavcol}   %s${c_reset}\n" "$flav"
+    fi
+  done
+}
+
+print_all() {
+  for flav in mocha macchiato frappe latte; do
+    FLAVOR="$flav"
+    case "$FLAVOR" in
+    mocha) mocha ;;
+    macchiato) macchiato ;;
+    latte) latte ;;
+    frappe) frappe ;;
+    esac
+
+    echo
+    print_colors
+  done
+  echo
+}
+
+err() {
+  printf "${fg_red}${bold} %s${c_reset}\n" "$1"
 }
 
 usage() {
@@ -177,16 +239,25 @@ usage() {
   echo -e "     |     |     ${fg_overlay0}Options:"
   echo -e "${fg_surface1}    /       \     ${fg_pink}-f, --flavor    ${fg_lavender}Set the Catppuccin flavor"
   echo -e "${fg_surface1}    \       /     ${fg_pink}-c, --color     ${fg_lavender}Output specified color value"
-  echo -e "${fg_surface1}     \__  _/      ${fg_pink}-h, --help      ${fg_lavender}Show this help message"
-  echo -e "${fg_surface1}       ( ("
-  echo -e "        ) )"
+  echo -e "${fg_surface1}     \__  _/      ${fg_pink}-a, --all       ${fg_lavender}Show all colors"
+  echo -e "${fg_surface1}       ( (        ${fg_pink}-h, --help      ${fg_lavender}Show this help message"
+  echo -e "${fg_surface1}        ) )"
   echo -e "       (_("
   echo -e "${c_reset}"
 }
 
 # Parse arguments
-FLAVOR=""
+# FLAVOR=""
 COLOR=""
+
+if [[ ! -z "$FLAVOR" ]]; then
+  FLAVOR="$default" # Default flavor if none specified
+fi
+
+if [[ $# == 0 ]]; then
+  usage
+  exit 0
+fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -194,17 +265,35 @@ while [[ $# -gt 0 ]]; do
     usage
     exit 0
     ;;
+  -a | --all)
+    print_all
+    exit 0
+    ;;
   -f | --flavor)
-    FLAVOR="$2"
-    shift 2
+    if [[ -n "$2" ]]; then
+      FLAVOR="$2"
+      shift 2
+    else
+      echo
+      list_flavors
+      echo
+      exit 0
+    fi
     ;;
   mocha | macchiato | frappe | latte)
     FLAVOR="$1"
     shift
     ;;
   -c | --color)
-    COLOR="$2"
-    shift 2
+    if [[ -n "$2" ]]; then
+      COLOR="$2"
+      shift 2
+    else
+      echo
+      list_colors
+      echo
+      exit 0
+    fi
     ;;
   rosewater | flamingo | pink | mauve | red | maroon | peach | yellow | green | teal | sky | sapphire | blue | lavender | text | subtext1 | subtext0 | overlay2 | overlay1 | overlay0 | surface2 | surface1 | surface0 | base | mantle | crust)
     COLOR="$1"
@@ -217,25 +306,34 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$FLAVOR" ]]; then
-  FLAVOR="mocha" # Default flavor if none specified
-fi
-
 case "$FLAVOR" in
 mocha) mocha ;;
 macchiato) macchiato ;;
 latte) latte ;;
 frappe) frappe ;;
-*) usage ;;
+*)
+  echo
+  err "'$FLAVOR' is not a flavor."
+  echo
+  list_flavors
+  echo
+  exit 0
+  ;;
 esac
 
 if [[ -n "$COLOR" ]]; then
   if [[ -n "${!COLOR}" ]]; then
     echo "${!COLOR}"
   else
-    echo "Color '$COLOR' not found in flavor '$FLAVOR'."
+    echo
+    err "Color '$COLOR' not found in flavor '$FLAVOR'."
+    echo
+    list_colors
+    echo
     exit 1
   fi
 else
+  echo
   print_colors
+  echo
 fi
