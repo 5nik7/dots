@@ -216,7 +216,7 @@ disabled = false
 # deleted = '󰖭${count}'
 
 [git_status]
-format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](fg:color_git) ($ahead_behind$stashed)]($style)"
+format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](fg:color_git)( $ahead_behind$stashed)]($style)"
 style = "fg:color_git"
 conflicted = "​"
 untracked = "​"
@@ -262,10 +262,11 @@ format = '([${symbol}([$version](fg:color_lua)) ]($style))'
 
 [python]
 # format = '([\[](bright-black)[${symbol}([$version](green))]($style)[\]](bright-black))'
-format = '([${symbol}([$version](bright-yellow)) ]($style))'
-style = "yellow"
+# format = '([${symbol}([$version](bright-yellow)) ]($style))'
+# style = "yellow"
+format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
 symbol = '󰌠 '
-pyenv_version_name = true
+# pyenv_version_name = true
 
 [rust]
 format = '([${symbol}([$version](red)) ]($style))'
