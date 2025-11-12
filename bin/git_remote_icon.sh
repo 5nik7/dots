@@ -5,8 +5,9 @@ if [[ -z "$GIT_REMOTE" ]]; then
   GIT_REMOTE=$(command git ls-remote --get-url 2>/dev/null)
 fi
 if [[ "$GIT_REMOTE" =~ "github" ]]; then
+  GIT_REMOTE_SYMBOL=""
   # GIT_REMOTE_SYMBOL=""
-  GIT_REMOTE_SYMBOL=""
+  # GIT_REMOTE_SYMBOL=""
 elif [[ "$GIT_REMOTE" =~ "gitlab" ]]; then
   GIT_REMOTE_SYMBOL=""
 elif [[ "$GIT_REMOTE" =~ "bitbucket" ]]; then
