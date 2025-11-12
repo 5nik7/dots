@@ -6,10 +6,10 @@ follow_symlinks = false
 continuation_prompt = '[│](black)'
 
 format = """\
-(${custom.git_before_remote-bash}\
-${custom.git_remote_symbol-bash}\
-${custom.git_before_remote-pwsh}\
+(${custom.git_before_remote-pwsh}\
 ${custom.git_remote_symbol-pwsh}\
+${custom.git_before_remote-bash}\
+${custom.git_remote_symbol-bash}\
 ${custom.git_remote_url}\
 (${custom.git_remote_repo}[](fg:color_git_remote_url dimmed))\
 ${custom.git_local}\
@@ -480,7 +480,7 @@ command = 'git_remote_icon.ps1'
 require_repo = true
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
 when = "git rev-parse --is-inside-work-tree"
-format = '[$output ]($style)'
+format = '[$output]($style)'
 style = "fg:color_git_remote_symbol"
 os = "windows"
 disabled = false
