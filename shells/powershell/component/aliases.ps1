@@ -7,34 +7,43 @@ Set-Alias -Name wrn -Value Write-Warn
 Set-Alias -Name scs -Value Write-Success
 Set-Alias -Name nfo -Value Write-Info
 Set-Alias -Name ep -Value Edit-Profile
+Set-Alias -Name cpy -Value Set-Clipboard
+Set-Alias -Name pst -Value Get-Clipboard
 Set-Alias -Name concol -Value list-console-colors
 Set-Alias -Name nf -Value powernerd -Option AllScope
-function glowcommand($file) {
+function glowcommand($file)
+{
   # if no file provided
-  if (-not $file -or $file.Trim() -eq '') {
-    Write-Host "No markdown file provided."
+  if (-not $file -or $file.Trim() -eq '')
+  {
+    Write-Host 'No markdown file provided.'
     return
   }
   # check if file ends with .md (case-insensitive)
-  if ($file -match '\.md$') {
+  if ($file -match '\.md$')
+  {
     & glow.exe -w 0 -s "$DOTFILES/glow/styles/catppuccin-mocha.json" $file
   }
-  else {
+  else
+  {
     Write-Host "'$file' is not a markdown file."
   }
 }
 Set-Alias -Name mdat -Value glowcommand -Option AllScope
 
 if (Test-CommandExists bat) { Set-Alias -Name cat -Value bat -Option AllScope }
-if (Test-CommandExists eza) {
-  Function Get-ChildItemPretty {
+if (Test-CommandExists eza)
+{
+  function Get-ChildItemPretty
+  {
     [CmdletBinding()]
     param (
       [Parameter(ValueFromRemainingArguments = $true)]
       [string[]]$Arguments,
       [string]$Path
     )
-    if ($Path -eq '') {
+    if ($Path -eq '')
+    {
       $Path = (Get-Location).ToString()
     }
     if ($a -or $all) { $Arguments += '--all' }
@@ -46,72 +55,84 @@ if (Test-CommandExists eza) {
     Write-Host ' '
     return
   }
-  function l {
+  function l
+  {
     [CmdletBinding()]
     param (
       [Parameter(ValueFromRemainingArguments = $true)]
       [string]$Path
     )
-    if ($Path -eq '') {
+    if ($Path -eq '')
+    {
       $Path = (Get-Location).ToString()
     }
     $Arguments += ( '-l', '--no-permissions', '--no-filesize', '--no-time', '--no-user' ) + $Path
     Get-ChildItemPretty @Arguments
     return
   }
-  function lt {
+  function lt
+  {
     [CmdletBinding()]
     param (
       [int]$L = 1,
       [string]$Path
     )
-    if ($Path -eq '') {
+    if ($Path -eq '')
+    {
       $Path = (Get-Location).ToString()
     }
     $Arguments += ( '--no-permissions', '--no-filesize', '--no-time', '--no-user', '-n', '--tree', '-L', $L ) + $Path
     Get-ChildItemPretty @Arguments
     return
   }
-  function lta {
+  function lta
+  {
     [CmdletBinding()]
     param (
       [int]$L = 1,
       [string]$Path
     )
-    if ($Path -eq '') {
+    if ($Path -eq '')
+    {
       $Path = (Get-Location).ToString()
     }
     $Arguments += ( '-a', '--no-permissions', '--no-filesize', '--no-time', '--no-user', '-n', '--tree', '-L', $L ) + $Path
     Get-ChildItemPretty @Arguments
     return
   }
-  function ll {
+  function ll
+  {
     [CmdletBinding()]
     param (
       [string]$Path
     )
     # $timestyle = '+󰨲 %Y-%m-%d -  %H:%M'
-    if ($Path -eq '') {
+    if ($Path -eq '')
+    {
       $Path = (Get-Location).ToString()
     }
     $Arguments += ( '-l', '--flags', '-h' ) + $Path
     Get-ChildItemPretty @Arguments
     return
   }
-  function la {
+  function la
+  {
     & eza -la --no-permissions --no-filesize --no-time --no-user --group-directories-first --git-repos --git --hyperlink --follow-symlinks --no-quotes --icons $args
   }
-  function lla {
+  function lla
+  {
     & eza -la --flags --group-directories-first --git-repos --git --hyperlink --follow-symlinks --no-quotes --icons $args
   }
 
   Set-Alias -Name ls -Value Get-ChildItemPretty -Option AllScope
 }
-else {
+else
+{
   Set-Alias -Name ls -Value Get-ChildItem -Option AllScope
 }
 
-if (Test-CommandExists git) {
+if (Test-CommandExists git)
+{
   Set-Alias -Name g -Value git
 }
 
@@ -122,30 +143,36 @@ elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
 $env:EDITOR = $EDITOR
-function Edit-Item {
+function Edit-Item
+{
   param (
     [string]$Path = $PWD
   )
-  if ($Path) {
+  if ($Path)
+  {
     & $env:EDITOR $Path
   }
-  else {
+  else
+  {
     & $env:EDITOR
   }
 }
 Set-Alias -Name edit -Value Edit-Item
 Set-Alias -Name e -Value Edit-Item
 
-if (Test-CommandExists nvim) {
+if (Test-CommandExists nvim)
+{
   Set-Alias -Name v -Value nvim
   Set-Alias -Name vi -Value nvim
   Set-Alias -Name vim -Value nvim
 }
 
-if (Test-CommandExists fastfetch) {
+if (Test-CommandExists fastfetch)
+{
   Set-Alias -Name fetch -Value fastfetch
 }
 
-if (Test-CommandExists lazygit) {
+if (Test-CommandExists lazygit)
+{
   Set-Alias -Name lg -Value lazygit.exe
 }
