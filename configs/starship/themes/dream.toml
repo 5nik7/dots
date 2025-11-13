@@ -1,19 +1,22 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 command_timeout = 10000
-add_newline = true
+add_newline = false
 follow_symlinks = false
 continuation_prompt = '[│](black)'
 
-format = """\
+format = """
+
+$fill($nodejs$conda$python$rust$lua)
 (${custom.git_before_remote-pwsh}\
 ${custom.git_before_remote-bash}\
 ${custom.git_remote_symbol-pwsh}\
 ${custom.git_remote_symbol-bash}\
 ${custom.git_remote_url}\
-(${custom.git_remote_repo}[/](fg:color_directory dimmed))\
-${custom.git_local}\
-([/](fg:color_directory)${custom.git_prefix}) \
+${custom.git_remote_repo}\
+([/](fg:color_repo dimmed)\
+${custom.git_local})\
+([/](fg:color_repo)${custom.git_prefix}) \
 $git_branch\
 $git_commit\
 $git_status\
@@ -23,9 +26,7 @@ $os\
 $username\
 $hostname\
 $directory\
-$nodejs$conda$python$rust$lua\
 $cmd_duration\
-$fill\
 $time\
 $line_break\
 $character"""
@@ -75,14 +76,19 @@ color_danger = 'bright-red'
 color_caution = 'bright-yellow'
 
 color_username = ''
-color_directory = 'blue'
-color_prepo = 'blue'
-color_repo = '#89dceb'
-color_repo_bg = '#24273a'
+color_directory = 'bright-blue'
+color_prepo = 'bright-blue'
+color_repo = 'bright-blue'
+# color_repo = '#89dceb'
+# color_repo_bg = '#303446'
+color_repo_bg = '#181825'
+# color_repo_bg = '#11111b'
+# color_repo_bg = '#24273a'
 color_git_bracket = '#74c7ec'
 color_git_remote_symbol = '#74c7ec'
 color_git_username = '#74c7ec'
 color_git_remote_url = '#74c7ec'
+# color_git_remote_repo = '#94e2d5'
 color_git_remote_repo = '#89dceb'
 color_git_equal = '#585b70'
 color_env = 'yellow'
@@ -106,7 +112,7 @@ color_vimcmd_visual = 'purple'
 color_btry_bg = '#181825'
 # color_fill = '#303446'
 # color_fill = '#24273a'
-color_fill = '#24273a'
+color_fill = '#313244'
 color_lua = '#74c7ec'
 
 [time]
@@ -555,34 +561,39 @@ fi
 GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
 
 REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
-REPO_ROOT_DIR=$(command git rev-parse --show-toplevel)
-REPO_ROOT=$(command basename "$REPO_ROOT_DIR")
-
-if [[ $REPO_ROOT == "$REPO_NAME" ]]; then
-    REPO_NAME=""
-else
-    REPO_NAME="$REPO_NAME"
-fi
 
 echo "$REPO_NAME"
 """
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
-style = "fg:color_git_remote_url bg:color_repo_bg bold"
+style = "fg:color_git_remote_repo bg:color_repo_bg bold"
 
 [custom.git_local]
 description = 'Remote git repository name'
 require_repo = true
 when = 'git rev-parse --is-inside-work-tree'
 command = """
+GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
+if [[ -z "$GIT_REMOTE" ]]; then
+GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
+fi
+GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
+
+REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
 REPO_ROOT_DIR=$(command git rev-parse --show-toplevel)
 REPO_ROOT=$(command basename "$REPO_ROOT_DIR")
+
+if [[ $REPO_ROOT == "$REPO_NAME" ]]; then
+    REPO_ROOT=""
+else
+    REPO_ROOT="$REPO_ROOT"
+fi
 
 echo "$REPO_ROOT"
 """
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
-style = "fg:color_git_remote_repo bold"
+style = "fg:color_repo bold"
 
 
 [custom.git_prefix]
