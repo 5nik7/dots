@@ -1,7 +1,7 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 command_timeout = 10000
-add_newline = false
+add_newline = true
 follow_symlinks = false
 continuation_prompt = '[│](black)'
 
@@ -11,7 +11,7 @@ ${custom.git_before_remote-bash}\
 ${custom.git_remote_symbol-pwsh}\
 ${custom.git_remote_symbol-bash}\
 ${custom.git_remote_url}\
-(${custom.git_remote_repo}[/](fg:color_directory))\
+(${custom.git_remote_repo}[/](fg:color_directory dimmed))\
 ${custom.git_local}\
 ([/](fg:color_directory)${custom.git_prefix}) \
 $git_branch\
@@ -106,7 +106,7 @@ color_vimcmd_visual = 'purple'
 color_btry_bg = '#181825'
 # color_fill = '#303446'
 # color_fill = '#24273a'
-color_fill = '#313244'
+color_fill = '#24273a'
 color_lua = '#74c7ec'
 
 [time]
@@ -595,4 +595,4 @@ echo "$GIT_PREFIX"
 """
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
-style = "fg:color_directory"
+style = "fg:color_repo"
