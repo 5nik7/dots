@@ -5,7 +5,6 @@
 zieces 'zutil'
 zieces 'functions'
 zieces 'options'
-zieces 'completions'
 zieces 'plugins'
 
 addir "$HOME/.local/bin"
@@ -45,12 +44,13 @@ function set_theme() {
 
   zieces 'colors'
 
-  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-  cmd_exists fzf && zieces 'fzf' && eval "$(fzf --zsh)"
+  zource "${HOME}/.fzf.zsh"
+  cmd_exists fzf && zieces 'fzf'
 }
 
 set_theme
 
+zieces 'completions'
 
 [ -z ${WSLENV+x} ] || zieces 'wsl'
 
@@ -87,3 +87,4 @@ zource "$HOME/.atuin/bin/env"
 if cmd_exists atuin; then
   eval "$(atuin init zsh)"
 fi
+
