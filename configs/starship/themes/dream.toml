@@ -6,7 +6,6 @@ follow_symlinks = false
 continuation_prompt = '[│](black)'
 
 format = """
-
 $fill($nodejs$conda$python$rust$lua)
 (${custom.git_before_remote-pwsh}\
 ${custom.git_before_remote-bash}\
