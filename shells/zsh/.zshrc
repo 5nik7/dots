@@ -87,4 +87,3 @@ zource "$HOME/.atuin/bin/env"
 if cmd_exists atuin; then
   eval "$(atuin init zsh)"
 fi
-

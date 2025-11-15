@@ -1,5 +1,3 @@
-# shellcheck disable=SC2148
-
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
@@ -96,7 +94,6 @@ fi
 if cmd_exists batman; then
   eval "$(batman --export-env)"
 fi
-
 
 complete -C /data/data/com.termux/files/home/go/bin/ipinfo -o default ipinfo
 
