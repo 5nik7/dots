@@ -5,17 +5,22 @@ add_newline = false
 follow_symlinks = false
 continuation_prompt = '[│](black)'
 
-format = """
-$fill($nodejs$conda$python$rust$lua)
-(${custom.git_before_remote-pwsh}\
-${custom.git_before_remote-bash}\
+# (${custom.git_before_remote-pwsh}\
+
+format = """\
+[${custom.shell-pwsh}$fill($nodejs$conda$python$rust$lua)
+((${custom.git_before_remote-pwsh}\
 ${custom.git_remote_symbol-pwsh}\
+${custom.git_remote-pwsh}\
+${custom.git_remote_repo-pwsh}\
+([/](fg:color_repo)${custom.git_prefix}) )\
+(${custom.git_before_remote-bash}\
 ${custom.git_remote_symbol-bash}\
-${custom.git_remote_url}\
-${custom.git_remote_repo}\
+${custom.git_remote-bash}\
+${custom.git_remote_repo-bash}\
 ([/](fg:color_repo dimmed)\
-${custom.git_local})\
-([/](fg:color_repo)${custom.git_prefix}) \
+${custom.git_local-bash})\
+([/](fg:color_repo)${custom.git_prefix-bash}) )\
 $git_branch\
 $git_commit\
 $git_status\
@@ -27,14 +32,14 @@ $hostname\
 $directory\
 $cmd_duration\
 $time\
-$line_break\
+](bg:color_bg)
 $character"""
 # (${custom.btry} )\
 # [](fg:#1e1e2e bg:color_fill)\
 # (${custom.git_before_remote-pwsh}\
 # ${custom.git_remote_symbol-pwsh}\
 
-right_format = """${custom.btry}"""
+# right_format = """${custom.btry}"""
 
 palette = "default"
 
@@ -75,12 +80,15 @@ color_danger = 'bright-red'
 color_caution = 'bright-yellow'
 
 color_username = ''
+color_bg = 'transparent'
 color_directory = 'bright-blue'
 color_prepo = 'bright-blue'
 color_repo = 'bright-blue'
 # color_repo = '#89dceb'
 # color_repo_bg = '#303446'
-color_repo_bg = '#181825'
+color_repo_bg = 'transparent'
+# color_repo_bg = '#1e1e2e'
+# color_repo_bg = '#181825'
 # color_repo_bg = '#11111b'
 # color_repo_bg = '#24273a'
 color_git_bracket = '#74c7ec'
@@ -113,6 +121,7 @@ color_btry_bg = '#181825'
 # color_fill = '#24273a'
 color_fill = '#313244'
 color_lua = '#74c7ec'
+color_rust = '#EBA0AC'
 
 [time]
 disabled = true
@@ -173,9 +182,14 @@ disabled = true
 
 [fill]
 disabled = false
+# symbol = ''
 symbol = '󰍴'
+# symbol = '─'
+# symbol = '━'
+# symbol = '═'
+# symbol = '╌'
 # symbol = ' '
-style = 'fg:color_fill'
+style = 'fg:color_fill bg:color_bg'
 
 [directory]
 style = 'fg:color_directory'
@@ -277,9 +291,19 @@ symbol = '󰌠 '
 # pyenv_version_name = true
 
 [rust]
-format = '([${symbol}([$version](red)) ]($style))'
-style = 'bright-red'
-symbol = '󱘗 '
+format = "[$symbol($version )]($style)"
+version_format = "v${raw}"
+# symbol = "🦀 "
+style = "fg:color_rust"
+disabled = false
+detect_extensions = ["rs"]
+detect_files = ["Cargo.toml"]
+detect_folders = []
+# format = "[$symbol($version )]($style)"
+# format = '([${symbol}([$version](fg:color_rust)) ]($style))'
+# style = 'fg:color_rust'
+symbol = "\ue68b "
+# symbol = ' '
 
 [os]
 disabled = true
@@ -469,151 +493,133 @@ format = '$symbol '
 
 # ----------------------------------------------------
 
+
+[custom.shell-pwsh]
+command = "Write-Host $env:STARSHIP_SHELL"  # shows output of command
+when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
+style = "dimmed blue"
+format = "[$output]($style)"
+shell = ["pwsh", "-NoProfile", "-Command", "-"]
+disabled = true
+
 [custom.git_before_remote-pwsh]
 description = "Directory before repo (pwsh)"
 command = 'git_before_remote.ps1'
 require_repo = true
+when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
-when = "git rev-parse --is-inside-work-tree"
 format = '[$output]($style)'
 style = "fg:color_prepo"
-os = "windows"
 disabled = false
 
 [custom.git_remote_symbol-pwsh]
 description = "Display symbol for remote Git server (pwsh)"
 command = 'git_remote_icon.ps1'
 require_repo = true
+when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
-when = "git rev-parse --is-inside-work-tree"
-format = '[$output]($style)'
+format = '[$output ]($style)'
 style = "fg:color_git_remote_symbol bg:color_repo_bg"
-os = "windows"
 disabled = false
 
 [custom.git_remote-pwsh]
-description = "Display symbol for remote Git server (pwsh)"
+description = "Remote git repository url (pwsh)"
 command = 'git_remote.ps1'
 require_repo = true
+when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
-when = "git rev-parse --is-inside-work-tree"
 format = '[$output]($style)'
-style = "fg:color_git_remote_symbol"
-os = "windows"
+style = "fg:color_git_remote_url bg:color_repo_bg"
+disabled = false
+
+[custom.git_remote_repo-pwsh]
+description = "Remote git repository namer (pwsh)"
+command = 'git_remote_repo.ps1'
+require_repo = true
+when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
+shell = ["pwsh", "-NoProfile", "-Command", "-"]
+format = '[$output]($style)'
+style = "fg:color_git_remote_repo bg:color_repo_bg bold"
 disabled = false
 
 # ----------------------------------------------------
+
+[custom.shell-bash]
+command = "echo $STARSHIP_SHELL"  # shows output of command
+when = """ test "$STARSHIP_SHELL" == "bash" """
+style = "dimmed blue"
+format = "[$output]($style)"
+shell = ["bash", "--noprofile", "--norc"]
+disabled = false
 
 [custom.git_before_remote-bash]
 description = "Directory before repo (bash)"
 command = 'git_before_remote.sh'
 require_repo = true
 shell = ["bash", "--noprofile", "--norc"]
-when = "git rev-parse --is-inside-work-tree"
+when = """ test "$STARSHIP_SHELL" == "bash" """
 format = '[$output]($style)'
 style = "fg:color_prepo"
-# os = "linux"
+disabled = false# os = "linux"
 
 [custom.git_remote_symbol-bash]
 description = "Display symbol for remote Git server (bash)"
 command = 'git_remote_icon.sh'
 require_repo = true
 shell = ["bash", "--noprofile", "--norc"]
-when = 'git rev-parse --is-inside-work-tree'
+when = """ test "$STARSHIP_SHELL" == "bash" """
 format = '[$output ]($style)'
 style = "fg:color_git_remote_symbol bg:color_repo_bg"
-# os = "linux"
+disabled = false
 
-# ----------------------------------------------------
-
-[custom.git_username]
-description = 'Git username'
-require_repo = true
-when = 'git rev-parse --is-inside-work-tree'
-command = """
-GIT_USERNAME=$(command git config --get user.name 2> /dev/null)
-
-echo "$GIT_USERNAME"
-"""
-format = '[$output]($style)'
-shell = ["bash", "--noprofile", "--norc"]
-style = "fg:color_git_username"
-disabled = true
-
-[custom.git_remote_url]
+[custom.git_remote-bash]
 description = 'Remote git repository url'
 require_repo = true
-when = 'git rev-parse --is-inside-work-tree'
-command = """
-GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
-if [[ -z "$GIT_REMOTE" ]]; then
-GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
-fi
-GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
-
-REPO_BASE=$(echo $GIT_REMOTE_URL | sed 's:/[^/]*$::')
-
-echo "$REPO_BASE/"
-"""
+when = """ test "$STARSHIP_SHELL" == "bash" """
+command = 'git_remote_url.sh'
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_git_remote_url bg:color_repo_bg"
 
-[custom.git_remote_repo]
+[custom.git_remote_repo-bash]
 description = 'Remote git repository name'
 require_repo = true
-when = 'git rev-parse --is-inside-work-tree'
-command = """
-GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
-if [[ -z "$GIT_REMOTE" ]]; then
-GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
-fi
-GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
-
-REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
-
-echo "$REPO_NAME"
-"""
+when = """ test "$STARSHIP_SHELL" == "bash" """
+command = 'git_remote_repo.sh'
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_git_remote_repo bg:color_repo_bg bold"
 
-[custom.git_local]
+[custom.git_local-bash]
 description = 'Remote git repository name'
 require_repo = true
-when = 'git rev-parse --is-inside-work-tree'
-command = """
-GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
-if [[ -z "$GIT_REMOTE" ]]; then
-GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
-fi
-GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
-
-REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
-REPO_ROOT_DIR=$(command git rev-parse --show-toplevel)
-REPO_ROOT=$(command basename "$REPO_ROOT_DIR")
-
-if [[ $REPO_ROOT == "$REPO_NAME" ]]; then
-    REPO_ROOT=""
-else
-    REPO_ROOT="$REPO_ROOT"
-fi
-
-echo "$REPO_ROOT"
-"""
+when = """ test "$STARSHIP_SHELL" == "bash" """
+command = 'git-local.sh'
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_repo bold"
 
-
-[custom.git_prefix]
+[custom.git_prefix-bash]
 description = 'repo prefix'
 require_repo = true
-when = 'git rev-parse --is-inside-work-tree'
-command = """
-GIT_PREFIX=$(command git rev-parse --show-prefix | sed 's:/*$::')
-echo "$GIT_PREFIX"
-"""
+when = """ test "$STARSHIP_SHELL" == "bash" """
+command = 'git_prefix.sh'
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_repo"
+
+# ----------------------------------------------------
+
+# [custom.git_username]
+# description = 'Git username'
+# require_repo = true
+# when = 'git rev-parse --is-inside-work-tree'
+# command = """
+# GIT_USERNAME=$(command git config --get user.name 2> /dev/null)
+
+# echo "$GIT_USERNAME"
+# """
+# format = '[$output]($style)'
+# shell = ["bash", "--noprofile", "--norc"]
+# style = "fg:color_git_username"
+# disabled = true
