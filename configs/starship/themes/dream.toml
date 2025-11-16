@@ -550,7 +550,7 @@ disabled = false
 
 [custom.shell-bash]
 command = "echo $STARSHIP_SHELL"  # shows output of command
-when = """ test "$STARSHIP_SHELL" != "pwsh" """
+when = """ test "$STARSHIP_SHELL" == "zsh" """
 style = "dimmed blue"
 format = "[$output]($style)"
 shell = ["bash", "--noprofile", "--norc"]
@@ -558,20 +558,50 @@ disabled = false
 
 [custom.git_before_remote-bash]
 description = "Directory before repo (bash)"
-command = 'git_before_remote.sh'
 require_repo = true
 shell = ["bash", "--noprofile", "--norc"]
-when = """ test "$STARSHIP_SHELL" != "pwsh" """
+when = """ test "$STARSHIP_SHELL" == "zsh" """
+command = """
+GIT_BEFORE_REPO=$(command dirname $(git rev-parse --show-toplevel))
+if [[ "$GIT_BEFORE_REPO" =~ "/mnt/c/Users/$USERNAME" ]]; then
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/mnt/c/Users/$USERNAME|~|")
+elif [[ "$GIT_BEFORE_REPO" =~ "C:/Users/$USERNAME" ]]; then
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^C:/Users/$USERNAME|~|")
+else
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^$HOME|~|")
+fi
+
+echo "$GIT_BEFORE_REPO/"
+"""
 format = '[$output]($style)'
 style = "fg:color_prepo"
 disabled = false# os = "linux"
 
 [custom.git_remote_symbol-bash]
 description = "Display symbol for remote Git server (bash)"
-command = 'git_remote_icon.sh'
 require_repo = true
 shell = ["bash", "--noprofile", "--norc"]
-when = """ test "$STARSHIP_SHELL" != "pwsh" """
+when = """ test "$STARSHIP_SHELL" == "zsh" """
+command = """
+GIT_REMOTE=$(command git remote get-url origin 2>/dev/null)
+if [[ -z "$GIT_REMOTE" ]]; then
+  GIT_REMOTE=$(command git ls-remote --get-url 2>/dev/null)
+fi
+if [[ "$GIT_REMOTE" =~ "github" ]]; then
+  GIT_REMOTE_SYMBOL=""
+  # GIT_REMOTE_SYMBOL=""
+  # GIT_REMOTE_SYMBOL=""
+elif [[ "$GIT_REMOTE" =~ "gitlab" ]]; then
+  GIT_REMOTE_SYMBOL=""
+elif [[ "$GIT_REMOTE" =~ "bitbucket" ]]; then
+  GIT_REMOTE_SYMBOL=""
+elif [[ -n "$GIT_REMOTE" ]]; then
+  GIT_REMOTE_SYMBOL=""
+else
+  GIT_REMOTE_SYMBOL=""
+fi
+echo "$GIT_REMOTE_SYMBOL"
+"""
 format = '[$output ]($style)'
 style = "fg:color_git_remote_symbol bg:color_repo_bg"
 disabled = false
@@ -579,8 +609,18 @@ disabled = false
 [custom.git_remote-bash]
 description = 'Remote git repository url'
 require_repo = true
-when = """ test "$STARSHIP_SHELL" != "pwsh" """
-command = 'git_remote_url.sh'
+when = """ test "$STARSHIP_SHELL" == "zsh" """
+command = """
+GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
+if [[ -z "$GIT_REMOTE" ]]; then
+GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
+fi
+GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
+
+REPO_BASE=$(echo $GIT_REMOTE_URL | sed 's:/[^/]*$::')
+
+echo "$REPO_BASE/"
+"""
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_git_remote_url bg:color_repo_bg"
@@ -588,8 +628,18 @@ style = "fg:color_git_remote_url bg:color_repo_bg"
 [custom.git_remote_repo-bash]
 description = 'Remote git repository name'
 require_repo = true
-when = """ test "$STARSHIP_SHELL" != "pwsh" """
-command = 'git_remote_repo.sh'
+when = """ test "$STARSHIP_SHELL" == "zsh" """
+command = """
+GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
+if [[ -z "$GIT_REMOTE" ]]; then
+GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
+fi
+GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
+
+REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
+
+echo "$REPO_NAME"
+"""
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_git_remote_repo bg:color_repo_bg bold"
@@ -597,8 +647,25 @@ style = "fg:color_git_remote_repo bg:color_repo_bg bold"
 [custom.git_local-bash]
 description = 'Remote git repository name'
 require_repo = true
-when = """ test "$STARSHIP_SHELL" != "pwsh" """
-command = 'git-local.sh'
+when = """ test "$STARSHIP_SHELL" == "zsh" """
+command = """
+GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
+if [[ -z "$GIT_REMOTE" ]]; then
+GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
+fi
+GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E 's/^https?:\\/\\/(.+@)?//; s/\\.git$//;  s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//')
+
+REPO_NAME=$(echo $GIT_REMOTE_URL | sed -E 's/.+\\/([^\\/]+)$/\\1/')
+REPO_ROOT_DIR=$(command git rev-parse --show-toplevel)
+REPO_ROOT=$(command basename "$REPO_ROOT_DIR")
+if [[ $REPO_ROOT == "$REPO_NAME" ]]; then
+    REPO_ROOT=""
+else
+    REPO_ROOT="$REPO_ROOT"
+fi
+
+echo "$REPO_ROOT"
+"""
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_repo bold"
@@ -606,8 +673,11 @@ style = "fg:color_repo bold"
 [custom.git_prefix-bash]
 description = 'repo prefix'
 require_repo = true
-when = """ test "$STARSHIP_SHELL" != "pwsh" """
-command = 'git_prefix.sh'
+when = """ test "$STARSHIP_SHELL" == "zsh" """
+command = """
+GIT_PREFIX=$(command git rev-parse --show-prefix | sed 's:/*$::')
+echo "$GIT_PREFIX"
+"""
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 style = "fg:color_repo"
