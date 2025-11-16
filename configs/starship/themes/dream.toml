@@ -550,7 +550,7 @@ disabled = false
 
 [custom.shell-bash]
 command = "echo $STARSHIP_SHELL"  # shows output of command
-when = """ test "$STARSHIP_SHELL" == "bash" """
+when = """ test "$STARSHIP_SHELL" != "pwsh" """
 style = "dimmed blue"
 format = "[$output]($style)"
 shell = ["bash", "--noprofile", "--norc"]
@@ -561,7 +561,7 @@ description = "Directory before repo (bash)"
 command = 'git_before_remote.sh'
 require_repo = true
 shell = ["bash", "--noprofile", "--norc"]
-when = """ test "$STARSHIP_SHELL" == "bash" """
+when = """ test "$STARSHIP_SHELL" != "pwsh" """
 format = '[$output]($style)'
 style = "fg:color_prepo"
 disabled = false# os = "linux"
@@ -571,7 +571,7 @@ description = "Display symbol for remote Git server (bash)"
 command = 'git_remote_icon.sh'
 require_repo = true
 shell = ["bash", "--noprofile", "--norc"]
-when = """ test "$STARSHIP_SHELL" == "bash" """
+when = """ test "$STARSHIP_SHELL" != "pwsh" """
 format = '[$output ]($style)'
 style = "fg:color_git_remote_symbol bg:color_repo_bg"
 disabled = false
@@ -579,7 +579,7 @@ disabled = false
 [custom.git_remote-bash]
 description = 'Remote git repository url'
 require_repo = true
-when = """ test "$STARSHIP_SHELL" == "bash" """
+when = """ test "$STARSHIP_SHELL" != "pwsh" """
 command = 'git_remote_url.sh'
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
@@ -588,7 +588,7 @@ style = "fg:color_git_remote_url bg:color_repo_bg"
 [custom.git_remote_repo-bash]
 description = 'Remote git repository name'
 require_repo = true
-when = """ test "$STARSHIP_SHELL" == "bash" """
+when = """ test "$STARSHIP_SHELL" != "pwsh" """
 command = 'git_remote_repo.sh'
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
@@ -597,7 +597,7 @@ style = "fg:color_git_remote_repo bg:color_repo_bg bold"
 [custom.git_local-bash]
 description = 'Remote git repository name'
 require_repo = true
-when = """ test "$STARSHIP_SHELL" == "bash" """
+when = """ test "$STARSHIP_SHELL" != "pwsh" """
 command = 'git-local.sh'
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
@@ -606,7 +606,7 @@ style = "fg:color_repo bold"
 [custom.git_prefix-bash]
 description = 'repo prefix'
 require_repo = true
-when = """ test "$STARSHIP_SHELL" == "bash" """
+when = """ test "$STARSHIP_SHELL" != "pwsh" """
 command = 'git_prefix.sh'
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
