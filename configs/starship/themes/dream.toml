@@ -182,8 +182,12 @@ disabled = true
 
 [fill]
 disabled = false
-# symbol = ''
-symbol = '󰍴'
+# symbol = ''
+# symbol = ''
+# symbol = '󰖰'
+symbol = ''
+# symbol = ''
+# symbol = '󰍴'
 # symbol = '─'
 # symbol = '━'
 # symbol = '═'
