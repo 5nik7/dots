@@ -7,33 +7,33 @@
 
 colors:
   # variable: "rrggbb" | source-names (if divergent)
-  fg:        "c0caf5"
-  bg:        "1a1b26"
+  fg: "c0caf5"
+  bg: "1a1b26"
 
-  gray1:     "283457" # bg_visual
-  gray2:     "414868" # terminal_black
-  gray3:     "565f89" # comment
+  gray1: "283457" # bg_visual
+  gray2: "414868" # terminal_black
+  gray3: "565f89" # comment
 
-  red1:      "f7768e" # red
-  red2:      "db4b4b" # red1/error
-  orange:    "ff9e64"
-  yellow:    "e0af68"
+  red1: "f7768e" # red
+  red2: "db4b4b" # red1/error
+  orange: "ff9e64"
+  yellow: "e0af68"
 
-  green1:    "9ece6a" # green
-  green2:    "1abc9c" # teal/hint
-  green3:    "73daca" # green1
+  green1: "9ece6a" # green
+  green2: "1abc9c" # teal/hint
+  green3: "73daca" # green1
 
-  blue1:     "b4f9f8" # blue6
-  blue2:     "41a6b5" # green2
-  blue3:     "0db9d7" # blue2/info
-  blue4:     "89ddff" # blue5
-  blue5:     "7dcfff" # cyan
-  blue6:     "7aa2f7" # blue
+  blue1: "b4f9f8" # blue6
+  blue2: "41a6b5" # green2
+  blue3: "0db9d7" # blue2/info
+  blue4: "89ddff" # blue5
+  blue5: "7dcfff" # cyan
+  blue6: "7aa2f7" # blue
 
-  purple1:   "9d7cd8" # purple
-  purple2:   "bb9af7" # magenta
+  purple1: "9d7cd8" # purple
+  purple2: "bb9af7" # magenta
 
-  bg_red1:   "2d1a27"
+  bg_red1: "2d1a27"
   bg_orange: "312025"
   bg_yellow: "2d2424"
   bg_green1: "202925"
@@ -124,6 +124,7 @@ archives:
   font-style: bold
 
 media:
+  foreground: blue3
   audio:
     foreground: blue3
     font-style: bold

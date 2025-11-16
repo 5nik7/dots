@@ -1,21 +1,21 @@
 # Author: https://github.com/fredericrous
 # Inspired by the Lava theme for Fish-Shell
 colors:
-  base01: '6b3608'
-  base0: '839496'
-  base2: 'eee8d5'
-  yellow: 'b58900'
-  background_color: '1a1a1a'
-  black: '000000'
-  orangedir: 'e06206'
-  darkorange: 'FF9400'
-  amber: 'FFC100'
-  vermilion: 'FF4B00'
-  alpine: 'BF9C30'
-  christine: 'BF5B30'
-  fire: 'A63000'
-  kourkinova: 'BF5B30'
-  chardonnay: 'FFC373'
+  base01: "6b3608"
+  base0: "839496"
+  base2: "eee8d5"
+  yellow: "b58900"
+  background_color: "1a1a1a"
+  black: "000000"
+  orangedir: "e06206"
+  darkorange: "FF9400"
+  amber: "FFC100"
+  vermilion: "FF4B00"
+  alpine: "BF9C30"
+  christine: "BF5B30"
+  fire: "A63000"
+  kourkinova: "BF5B30"
+  chardonnay: "FFC373"
 
 core:
   regular_file:
@@ -86,14 +86,11 @@ core:
   normal_text:
     foreground: base0
 
-  other_writable:
-    {}
+  other_writable: {}
 
-  sticky:
-    {}
+  sticky: {}
 
-  sticky_other_writable:
-    {}
+  sticky_other_writable: {}
 
 text:
   special:
@@ -127,6 +124,7 @@ programming:
       foreground: chardonnay
 
 media:
+  foreground: kourkinova
   image:
     foreground: kourkinova
 
