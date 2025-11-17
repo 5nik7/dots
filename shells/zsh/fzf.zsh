@@ -1,31 +1,3 @@
-transparent="-1"
-rosewater=$(rosewater)
-flamingo=$(flamingo)
-pink=$(pink)
-mauve=$(mauve)
-red=$(red)
-maroon=$(maroon)
-peach=$(peach)
-yellow=$(yellow)
-green=$(green)
-teal=$(teal)
-sky=$(sky)
-sapphire=$(sapphire)
-blue=$(blue)
-lavender=$(lavender)
-text=$(text)
-subtext1=$(subtext1)
-subtext0=$(subtext0)
-overlay2=$(overlay2)
-overlay1=$(overlay1)
-overlay0=$(overlay0)
-surface2=$(surface2)
-surface1=$(surface1)
-surface0=$(surface0)
-base=$(base)
-mantle=$(mantle)
-crust=$(crust)
-
 if is_droid; then
   # preview_pos='bottom:hidden:50%:border-top'
   preview_pos='bottom:hidden:50%:border-sharp'
@@ -54,7 +26,8 @@ zstyle ':fzf-tab:complete:*:*' fzf-flags --preview=$extract';$_PREVIEW_ $realpat
 
 # --preview-label=' PREVIEW ' \
 # --border-label=' FILES ' \
-export FZF_DEFAULT_OPTS="--style default \
+export FZF_DEFAULT_OPTS="\
+--style default \
 --layout reverse \
 --height ~90% \
 --border none \
@@ -74,26 +47,4 @@ down:down-match,\
 alt-r:toggle-raw' \
 --preview '$_PREVIEW_ {}'"
 
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
-bg+:${transparent},\
-bg:${transparent},\
-preview-bg:${transparent},\
-fg:${subtext0},\
-fg+:${text}:bold:reverse,\
-hl:${teal}:bold:underline,\
-hl+:${teal}:bold:reverse,\
-info:${surface2},\
-query:${mauve},\
-gutter:${surface0},\
-pointer:${surface1},\
-marker:${yellow},\
-prompt:${surface1},\
-spinner:${surface1},\
-label:${surface2},\
-preview-label:${surface0},\
-separator:${base},\
-border:${surface0},\
-list-border:${surface0},\
-preview-border:${surface0},\
-input-border:${surface0},\
-nomatch:strip:${surface1}:italic"
+

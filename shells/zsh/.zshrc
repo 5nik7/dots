@@ -1,5 +1,5 @@
  #  ╔═╗╔═╗╦ ╦╦═╗╔═╗
- #  ╔═╝╚═╗╠═╣╠╦╝║  
+ #  ╔═╝╚═╗╠═╣╠╦╝║
  # o╚═╝╚═╝╩ ╩╩╚═╚═╝
 
 zieces 'zutil'
@@ -34,18 +34,24 @@ function theme() {
 }
 
 function set_theme() {
+  export THEMESROOT="$DOTS/themes"
+  export THEMEBIN="$THEMESROOT/bin"
+  prepend_path "$THEMEBIN"
   export DOT_THEME="$(cat "$DOTS"/.theme)"
   export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
   if [[ "$THEME" == "catppuccin" ]]; then
     export FLAVOR="$(echo "$DOT_THEME" | cut -d '-' -f 2)"
   fi
+  export THEMEDIR="$THEMESROOT/$THEME"
 
   export LS_COLORS="$(vivid generate "$DOT_THEME")"
 
-  zieces 'colors'
+  zource "$THEMEDIR/colors.zsh"
 
   zource "${HOME}/.fzf.zsh"
-  cmd_exists fzf && zieces 'fzf'
+  cmd_exists fzf &&\
+    zieces 'fzf' &&\
+    zource "$THEMEDIR/fzf.zsh"
 }
 
 set_theme
