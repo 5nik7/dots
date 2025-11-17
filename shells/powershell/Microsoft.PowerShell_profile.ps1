@@ -71,23 +71,9 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
 # Remove-DuplicatePaths
 
 Invoke-Expression "$(vfox activate pwsh)"
-
-if ($env:isReloading)
-{
-  Clear-Host
-  wh ' ' white 'PROFILE ' gray 'RELOADED' green -box -border black -bb 1 -ba 2 -pad $env:padding
-  $env:isReloading = $false
-}
-
 function rl
 {
-  [CmdletBinding()]
-  param ()
-  [bool]$env:isReloading = "$true"
-
-  $env:isReloading = $true
-  Clear-Host
-  wh 'RELOADING ' darkgray ' ' white 'PROFILE' gray -box -border black -bb 1 -ba 2 -pad $env:padding
-  & pwsh -NoExit -Command "Set-Location -Path $(Get-Location)'"
-  exit
+  wh 'RELOADING ' darkgray ' ' white 'PROFILE' gray -box -border black -bb 1 -ba 1 -pad $env:padding
+  & $PROFILE
+  wh ' ' white 'PROFILE ' gray 'RELOADED' green -box -border black -bb 0 -ba 1 -pad $env:padding
 }
