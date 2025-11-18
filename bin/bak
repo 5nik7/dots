@@ -17,18 +17,18 @@ logo() {
 }
 
 info() {
-  printf '  %s\n' "${GREEN}$*${NO_COLOR}"
+  printf ' %s\n' "${GREEN}$*${NO_COLOR}"
 }
 
 flag() {
-  printf "    %-28s %s\n" "${BOLD}${CYAN}$1${NO_COLOR}" " ${GREEN}$2${NO_COLOR}"
+  printf "  %-28s %s\n" "${BOLD}${CYAN}$1${NO_COLOR}" " ${GREEN}$2${NO_COLOR}"
 }
 
 usage() {
   local header="
-  █▀▀▀▄ ▄▀▀▀▄ █  ▄▀
-  █▀▀▀▄ █▀▀▀█ █▀▀▄
-  ▀▀▀▀  ▀   ▀ ▀   ▀"
+ █▀▀▀▄ ▄▀▀▀▄ █  ▄▀
+ █▀▀▀▄ █▀▀▀█ █▀▀▄
+ ▀▀▀▀  ▀   ▀ ▀   ▀"
   logo "${header}"
   info "usage: ${BLUE}${BOLD}bak${NO_COLOR} ${CYAN}[options]${NO_COLOR} <file|dir> [more files/dirs...]"
   info "Create timestamped backups of files or directories."
