@@ -1,3 +1,14 @@
+esc=$'\033'
+c_reset="${esc}[0m"
+bold="${esc}[1m"
+dim="${esc}[2m"
+italic="${esc}[3m"
+underline="${esc}[4m"
+invert="${esc}[7m"
+fg_red="${esc}[31m"
+fg_green="${esc}[32m"
+fg_yellow="${esc}[33m"
+
 function extend_path() {
 	[[ -d "$1" ]] || return
 
@@ -26,7 +37,7 @@ function gup() {
     echo
   else
     echo
-    echo "This directory is notna repository"
+    printf "${fg_red} ${bold}  Not a repository${c_reset}\n"
     echo
   fi
 }
