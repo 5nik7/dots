@@ -26,14 +26,6 @@ if ($Host.UI.RawUI)
       . $pfile
     }
   }
-
-  Set-FuzzyOpts -ErrorAction SilentlyContinue
-
-  if (Get-Command fzf -ErrorAction SilentlyContinue)
-  {
-    Import-ScoopModule -Name 'PsFzf' -ErrorAction SilentlyContinue
-    Set-PsFzfOption -TabExpansion -ErrorAction SilentlyContinue
-  }
 }
 
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
@@ -43,6 +35,12 @@ if (Test-Path($ChocolateyProfile))
 }
 
 $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCount 1 -Action {
+  Set-FuzzyOpts -ErrorAction SilentlyContinue
+  if (Get-Command fzf -ErrorAction SilentlyContinue)
+  {
+    Import-ScoopModule -Name 'PsFzf' -ErrorAction SilentlyContinue
+    Set-PsFzfOption -TabExpansion -ErrorAction SilentlyContinue
+  }
   Import-Module -Global -Name 'Terminal-Icons'
   Import-Module -Global -Name 'lab'
   Import-Module -Global -Name 'blastoff'
@@ -67,6 +65,9 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
       [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
   }
+  (& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
+  (& gh completion --shell powershell) | Out-String | Invoke-Expression
+  (& starship completions powershell) | Out-String | Invoke-Expression
 }
 # Remove-DuplicatePaths
 
