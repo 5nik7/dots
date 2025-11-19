@@ -30,14 +30,13 @@ usage() {
  █▀▀▀▄ █▀▀▀█ █▀▀▄
  ▀▀▀▀  ▀   ▀ ▀   ▀"
   logo "${header}"
+  info "Utility for backing up your files."
   info "usage: ${BLUE}${BOLD}bak${NO_COLOR} ${CYAN}[options]${NO_COLOR} <file|dir> [more files/dirs...]"
-  info "Create timestamped backups of files or directories."
-  info "Skips inputs that already contain '.bak.' in their name."
   echo
   info "Options:"
-  flag "-h, --help" "Show this help message and exit"
-  flag "-s, --store" "Place backups into ~/.bakstore; prompt to create it if missing"
-  flag "--yes" "With --store, auto-create ~/.bakstore without prompting"
+  flag "-h, --help" "You're looking at it"
+  flag "-s, --store" "Place backups into ~/.bakstore"
+  flag "-y, --yes" "Auto yes to prompts"
   echo
 }
 
@@ -60,7 +59,7 @@ bak() {
       return 0
       ;;
     -s | --store) store_mode=1 ;;
-    --yes) auto_yes=1 ;;
+    -y | --yes) auto_yes=1 ;;
     --)
       shift
       args+=("$@")
