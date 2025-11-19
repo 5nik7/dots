@@ -26,8 +26,8 @@ function prepend_path() {
 }
 
 function gup() {
-  local dir
-  dir=$(pwd)
+  local ico=""
+  local dir=$(pwd)
   if [ -e "$dir/.git" ]; then
   commitDate=$(date +"%m-%d-%Y %H:%M")
     echo
@@ -37,7 +37,7 @@ function gup() {
     echo
   else
     echo
-    printf "${fg_red} ${bold}  Not a repository${c_reset}\n"
+    printf "\n${fg_red} %s '${bold} %s${c_reset}${fg_red}' %s${c_reset}\n\n" "${ico}" "${dir}" "not a repository"
     echo
   fi
 }

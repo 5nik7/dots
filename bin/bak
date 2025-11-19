@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 
 BOLD="$(tput bold 2>/dev/null || printf '')"
+UNDERLINE="$(tput smul 2>/dev/null || printf '')"
+ITALIC="$(tput sitm 2>/dev/null || printf '')"
+DIM="$(tput dim 2>/dev/null || printf '')"
+INVERT="$(tput rev 2>/dev/null || printf '')"
+BLINK="$(tput blink 2>/dev/null || printf '')"
+INVIS="$(tput invis 2>/dev/null || printf '')"
 GREY="$(tput setaf 7 2>/dev/null || printf '')"
 BLACK="$(tput setaf 8 2>/dev/null || printf '')"
-UNDERLINE="$(tput smul 2>/dev/null || printf '')"
 RED="$(tput setaf 1 2>/dev/null || printf '')"
 GREEN="$(tput setaf 2 2>/dev/null || printf '')"
 YELLOW="$(tput setaf 3 2>/dev/null || printf '')"
 BLUE="$(tput setaf 4 2>/dev/null || printf '')"
+DARKBLUE="$(tput setaf 12 2>/dev/null || printf '')"
 MAGENTA="$(tput setaf 5 2>/dev/null || printf '')"
 CYAN="$(tput setaf 6 2>/dev/null || printf '')"
 NO_COLOR="$(tput sgr0 2>/dev/null || printf '')"
@@ -20,12 +26,16 @@ warn() {
   printf '\n %s\n\n' "${YELLOW}! WARNING: $*${NO_COLOR}"
 }
 
-logo() {
-  echo "${BLUE}$*${NO_COLOR}"
+info() {
+  printf ' %s\n' "${GREY}${DIM}$*${NO_COLOR}"
 }
 
-info() {
+disc() {
   printf ' %s\n' "${GREEN}$*${NO_COLOR}"
+}
+
+logo() {
+  echo "${MAGENTA}$*${NO_COLOR}"
 }
 
 flag() {
@@ -41,8 +51,8 @@ usage() {
  █▀▀▀▄ █▀▀▀█ █▀▀▄
  ▀▀▀▀  ▀   ▀ ▀   ▀"
       logo "${header}"
-      info "Utility for backing up your files."
-      info "usage: ${BLUE}${BOLD}bak${NO_COLOR} ${CYAN}[options]${NO_COLOR} <file|dir> [more files/dirs...]"
+      disc "Utility for backing up your files"
+      info "usage:${NO_COLOR} ${MAGENTA}${BOLD}bak${NO_COLOR} ${CYAN}[options]${NO_COLOR} ${BLUE}<file|dir>${NO_COLOR} ${BLUE}${DIM}[more files/dirs...]${NO_COLOR}"
       echo
       break
       ;;
