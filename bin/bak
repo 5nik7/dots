@@ -12,6 +12,14 @@ MAGENTA="$(tput setaf 5 2>/dev/null || printf '')"
 CYAN="$(tput setaf 6 2>/dev/null || printf '')"
 NO_COLOR="$(tput sgr0 2>/dev/null || printf '')"
 
+error() {
+  printf '\n %s\n\n' "${RED}x ERROR: $*${NO_COLOR}" >&2
+}
+
+warn() {
+  printf '\n %s\n\n' "${YELLOW}! WARNING: $*${NO_COLOR}"
+}
+
 logo() {
   echo "${BLUE}$*${NO_COLOR}"
 }
@@ -25,16 +33,23 @@ flag() {
 }
 
 usage() {
-  local header="
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+    header)
+      local header="
  █▀▀▀▄ ▄▀▀▀▄ █  ▄▀
  █▀▀▀▄ █▀▀▀█ █▀▀▄
  ▀▀▀▀  ▀   ▀ ▀   ▀"
-  logo "${header}"
-  info "Utility for backing up your files."
-  info "usage: ${BLUE}${BOLD}bak${NO_COLOR} ${CYAN}[options]${NO_COLOR} <file|dir> [more files/dirs...]"
-  echo
+      logo "${header}"
+      info "Utility for backing up your files."
+      info "usage: ${BLUE}${BOLD}bak${NO_COLOR} ${CYAN}[options]${NO_COLOR} <file|dir> [more files/dirs...]"
+      echo
+      break
+      ;;
+    esac
+  done
   info "Options:"
-  flag "-h, --help" "You're looking at it"
+  flag "-h, --help" "Displays help"
   flag "-s, --store" "Place backups into ~/.bakstore"
   flag "-y, --yes" "Auto yes to prompts"
   echo
@@ -43,7 +58,7 @@ usage() {
 bak() {
   # No args?
   [ "$#" -gt 0 ] || {
-    usage
+    usage header
     return 1
   }
 
@@ -55,7 +70,7 @@ bak() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
     -h | --help)
-      usgae
+      usage header
       return 0
       ;;
     -s | --store) store_mode=1 ;;
@@ -66,7 +81,7 @@ bak() {
       break
       ;;
     -*)
-      echo "error: unknown option '$1'" >&2
+      error "unknown option '${BOLD}${MAGENTA}${1}${NO_COLOR}${RED}'"
       usage
       return 1
       ;;
@@ -77,7 +92,7 @@ bak() {
 
   # Need at least one path to back up
   [ "${#args[@]}" -gt 0 ] || {
-    usage
+    usage header
     return 1
   }
 
@@ -95,7 +110,7 @@ bak() {
       printf "%s" "$1" >/dev/tty
       IFS= read -r reply </dev/tty
     else
-      echo "error: cannot prompt (no TTY). Use --yes to auto-create." >&2
+      error "cannot prompt (no TTY). Use --yes to auto-create."
       return 2
     fi
     case "$reply" in
@@ -111,11 +126,11 @@ bak() {
     if [ ! -d "$store_dir" ]; then
       if _bak_confirm "~/.bakstore does not exist. Create it now? [y/N]: "; then
         if ! mkdir -p -- "$store_dir"; then
-          echo "error: failed to create '$store_dir'" >&2
+          error "failed to create '$store_dir'"
           return 1
         fi
       else
-        echo "error: store directory not created; aborting." >&2
+        error "store directory not created; aborting."
         return 1
       fi
     fi
@@ -124,7 +139,7 @@ bak() {
   # Backup loop
   for src in "${args[@]}"; do
     if [ ! -e "$src" ]; then
-      echo "error: '$src' does not exist" >&2
+      error "'${BOLD}${MAGENTA}${src}${NO_COLOR}${RED}' does not exist"
       continue
     fi
 
@@ -144,7 +159,7 @@ bak() {
 
     # Avoid collisions (file or dir), retry with new timestamp
     while [ -e "$bakpath" ]; do
-      echo "WARNING: '$bakpath' already exists, retrying..."
+      warn "'$bakpath' already exists, retrying..."
       sleep 1
       ts="$(date '+%F_%T' | sed 's/:/-/g')"
       bakname="$(basename "$src").bak.${ts}"
