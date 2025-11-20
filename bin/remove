@@ -7,22 +7,27 @@ declare -r dim="${esc}[2m"
 declare -r italic="${esc}[3m"
 declare -r underline="${esc}[4m"
 declare -r rev="${esc}[7m"
+declare -r fg_black="${esc}[1;30m"
 declare -r fg_red="${esc}[1;31m"
 declare -r fg_green="${esc}[1;32m"
 declare -r fg_yellow="${esc}[1;33m"
+declare -r fg_darkblue="${esc}[0;34m"
 declare -r fg_blue="${esc}[1;34m"
 declare -r fg_magenta="${esc}[1;35m"
 declare -r fg_cyan="${esc}[1;36m"
 declare -r fg_white="${esc}[1;37m"
-declare -r trash=""
+declare -r trashico=""
+declare -r arrowico="<-"
+declare -r arrowcolor="${fg_black}"
 declare -r errico=""
 declare -r trashcolor="${fg_green}"
+declare -r dircolor="${fg_darkblue}"
 
 rmed() {
   local targetpath="$(realpath "$@")"
   local targetdir="$(dirname "$targetpath" | sed "s|^${HOME}|~|")"
   local targetname="$(basename "$targetpath")"
-  printf " ${trashcolor}${trash}${trashcolor} ${dim}<-${c_reset} ${targeticon} ${fg_blue}%s${targetcolor}${bold}%s${c_reset}\n" "$targetdir/" "$targetname"
+  printf " ${trashcolor}${trashico}${c_reset}${arrowcolor} ${arrowico}${c_reset} ${targeticon} ${dircolor}%s${targetcolor}${bold}%s${c_reset}\n" "$targetdir/" "$targetname"
 }
 
 error() {
@@ -41,7 +46,7 @@ for target in "$@"; do
     rmed "$target"
   elif [ -d "$target" ]; then
     targetcolor="${fg_blue}"
-    targeticon="${fg_blue}${c_reset}"
+    targeticon="${fg_darkblue}${c_reset}"
     command rm -fr "$target"
     rmed "$target"
   else
