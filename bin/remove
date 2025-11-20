@@ -23,33 +23,146 @@ declare -r errico=""
 declare -r trashcolor="${fg_green}"
 declare -r dircolor="${fg_darkblue}"
 
+BOLD="$(tput bold 2>/dev/null || printf '')"
+UNDERLINE="$(tput smul 2>/dev/null || printf '')"
+ITALIC="$(tput sitm 2>/dev/null || printf '')"
+DIM="$(tput dim 2>/dev/null || printf '')"
+INVERT="$(tput rev 2>/dev/null || printf '')"
+BLINK="$(tput blink 2>/dev/null || printf '')"
+INVIS="$(tput invis 2>/dev/null || printf '')"
+GREY="$(tput setaf 7 2>/dev/null || printf '')"
+BLACK="$(tput setaf 8 2>/dev/null || printf '')"
+RED="$(tput setaf 1 2>/dev/null || printf '')"
+GREEN="$(tput setaf 2 2>/dev/null || printf '')"
+YELLOW="$(tput setaf 3 2>/dev/null || printf '')"
+BLUE="$(tput setaf 4 2>/dev/null || printf '')"
+DARKBLUE="$(tput setaf 12 2>/dev/null || printf '')"
+MAGENTA="$(tput setaf 5 2>/dev/null || printf '')"
+CYAN="$(tput setaf 6 2>/dev/null || printf '')"
+NO_COLOR="$(tput sgr0 2>/dev/null || printf '')"
+
+error() {
+  printf ' %s\n' "${RED}${errico} $*${NO_COLOR}" >&2
+}
+
+warn() {
+  printf '\n %s\n\n' "${YELLOW}! WARNING: $*${NO_COLOR}"
+}
+
+info() {
+  printf ' %s\n' "${GREY}${DIM}$*${NO_COLOR}"
+}
+
+disc() {
+  printf ' %s\n' "${GREEN}$*${NO_COLOR}"
+}
+
+logo() {
+  echo "${MAGENTA}$*${NO_COLOR}"
+}
+
+flag() {
+  printf "  %-28s %s\n" "${BOLD}${CYAN}$1${NO_COLOR}" " ${GREEN}$2${NO_COLOR}"
+}
+
+usage() {
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+    header)
+      local header="
+                         █▀▀▀▄ ▄▀▀▀▄ █  ▄▀
+                          █▀▀▀▄ █▀▀▀█ █▀▀▄
+                           ▀▀▀▀  ▀   ▀ ▀   ▀"
+      logo "${header}"
+      disc "Utility for backing up your files"
+      info "usage:${NO_COLOR} ${MAGENTA}${BOLD}bak${NO_COLOR} ${CYAN}[options]${NO_COLOR} ${BLUE}<file|dir>${NO_COLOR} ${BLUE}${DIM}[more files/dirs...]${NO_COLOR}"
+      echo
+      break
+      ;;
+    esac
+  done
+  info "Options:"
+  flag "-h, --help" "Displays help"
+  flag "-s, --store" "Place backups into ~/.bakstore"
+  flag "-y, --yes" "Auto yes to prompts"
+  echo
+}
+
 rmed() {
-  local targetpath="$(realpath "$@")"
-  local targetdir="$(dirname "$targetpath" | sed "s|^${HOME}|~|")"
-  local targetname="$(basename "$targetpath")"
+  local targetpath targetdir targetname
+  targetpath="$1"
+  targetdir="$(dirname "$targetpath" | sed "s|^${HOME}|~|")"
+  targetname="$(basename "$targetpath")"
   printf " ${trashcolor}${trashico}${c_reset}${arrowcolor} ${arrowico}${c_reset} ${targeticon} ${dircolor}%s${targetcolor}${bold}%s${c_reset}\n" "$targetdir/" "$targetname"
   command rm -fr "$targetpath"
 }
 
-error() {
-  local targetpath="$(realpath "$@")"
-  local targetdir="$(dirname "$targetpath" | sed "s|^${HOME}|~|")"
-  local targetname="$(basename "$targetpath")"
-  printf " ${fg_red}${errico} ${fg_magenta}%s/${bold}%s${c_reset}${fg_red} does not exist${c_reset}\n" "$targetdir" "$targetname"
+main() {
+  # No args?
+  [ "$#" -gt 0 ] || {
+    usage header
+    return 1
+  }
+
+  local backup=0
+  local args=()
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+    -h | --help)
+      usage header
+      return 0
+      ;;
+    --)
+      shift
+      args+=("$@")
+      break
+      ;;
+    -b | --backup) backup=1 ;;
+    -*)
+      error "unknown option '${1}"
+      usage
+      return 1
+      ;;
+    *) args+=("$1") ;;
+    esac
+    shift
+  done
+
+  [ "${#args[@]}" -gt 0 ] || {
+    usage header
+    return 1
+  }
+
+  for src in "${args[@]}"; do
+    local targetpath targetdir targetname
+    targetpath=$(realpath "$src")
+    targetdir=$(dirname "$targetpath" | sed "s|^${HOME}|~|")
+    targetname=$(basename "$targetpath")
+
+    if [ ! -e "$targetpath" ]; then
+      error " ${fg_magenta}${targetdir}/${bold}$targetname${c_reset}${fg_red} does not exist"
+      continue
+    fi
+
+    if [ "$backup" -eq 1 ]; then
+      bak -s -y "$targetpath"
+    fi
+
+    local targetcolor targetico
+    if [ -f "$targetpath" ]; then
+      targetcolor="${c_reset}"
+      targeticon="󰡯"
+    fi
+    if [ -d "$targetpath" ]; then
+      targetcolor="${fg_blue}"
+      targeticon="${fg_darkblue}${c_reset}"
+    fi
+    printf " ${trashcolor}${trashico}${c_reset}${arrowcolor} ${arrowico}${c_reset} ${targeticon} ${dircolor}%s${targetcolor}${bold}%s${c_reset}\n" "$targetdir/" "$targetname"
+    rm -fr -- "$targetpath"
+  done
 }
 
 echo
-for target in "$@"; do
-  if [ -f "$target" ]; then
-    targetcolor="${c_reset}"
-    targeticon="󰡯"
-    rmed "$target"
-  elif [ -d "$target" ]; then
-    targetcolor="${fg_blue}"
-    targeticon="${fg_darkblue}${c_reset}"
-    rmed "$target"
-   else
-    error "$target"
-  fi
-done
+main "$@"
 echo
