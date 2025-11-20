@@ -28,6 +28,7 @@ rmed() {
   local targetdir="$(dirname "$targetpath" | sed "s|^${HOME}|~|")"
   local targetname="$(basename "$targetpath")"
   printf " ${trashcolor}${trashico}${c_reset}${arrowcolor} ${arrowico}${c_reset} ${targeticon} ${dircolor}%s${targetcolor}${bold}%s${c_reset}\n" "$targetdir/" "$targetname"
+  command rm -fr "$targetpath"
 }
 
 error() {
@@ -42,14 +43,12 @@ for target in "$@"; do
   if [ -f "$target" ]; then
     targetcolor="${c_reset}"
     targeticon="󰡯"
-    command rm -f "$target"
     rmed "$target"
   elif [ -d "$target" ]; then
     targetcolor="${fg_blue}"
     targeticon="${fg_darkblue}${c_reset}"
-    command rm -fr "$target"
     rmed "$target"
-  else
+   else
     error "$target"
   fi
 done
