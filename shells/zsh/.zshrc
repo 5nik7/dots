@@ -8,13 +8,12 @@ zieces 'options'
 zieces 'plugins'
 
 addir "$HOME/.local/bin"
-extend_path "$HOME/.local/bin"
-extend_path "$HOME/.local/share/nvim/mason/bin"
+prepend_path "$DOTSBIN"
 prepend_path "$GOBIN"
-extend_path "$DOTSBIN"
+prepend_path "$DOTSBIN"
 prepend_path "$HOME/.cargo/bin"
 extend_path "$HOME/.local/share/gem/ruby/3.4.0/bin"
-
+prepend_path "$HOME/.local/bin"
 export SHHHH="$DOTS/secrets"
 zource "$SHHHH/secrets.sh"
 zource "/usr/share/nvm/init-nvm.sh"
