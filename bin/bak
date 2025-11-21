@@ -1,5 +1,32 @@
 #!/usr/bin/env bash
 
+declare -r esc=$'\033'
+declare -r c_reset="${esc}[0m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+declare -r rev="${esc}[7m"
+declare -r fg_black="${esc}[1;30m"
+declare -r fg_red="${esc}[1;31m"
+declare -r fg_green="${esc}[1;32m"
+declare -r fg_yellow="${esc}[1;33m"
+declare -r fg_darkblue="${esc}[0;34m"
+declare -r fg_blue="${esc}[1;34m"
+declare -r fg_magenta="${esc}[1;35m"
+declare -r fg_cyan="${esc}[1;36m"
+declare -r fg_white="${esc}[1;37m"
+declare -r trashico=""
+declare -r arrowico_l="<-"
+declare -r arrowico_r="->"
+declare -r arrowcolor="${fg_black}"
+declare -r errico=""
+declare -t errcolor="${fg_red}"
+declare -r warnico=""
+declare -t warncolor="${fg_yellow}"
+declare -r trashcolor="${fg_green}"
+declare -r dircolor="${fg_darkblue}"
+
 BOLD="$(tput bold 2>/dev/null || printf '')"
 UNDERLINE="$(tput smul 2>/dev/null || printf '')"
 ITALIC="$(tput sitm 2>/dev/null || printf '')"
@@ -18,12 +45,16 @@ MAGENTA="$(tput setaf 5 2>/dev/null || printf '')"
 CYAN="$(tput setaf 6 2>/dev/null || printf '')"
 NO_COLOR="$(tput sgr0 2>/dev/null || printf '')"
 
+output() {
+  printf ' %s\n' "$*"
+}
+
 error() {
-  printf '\n %s\n\n' "${RED}x ERROR: $*${NO_COLOR}" >&2
+  printf ' %s\n' "${errcolor}${errico} $*${NO_COLOR}" >&2
 }
 
 warn() {
-  printf '\n %s\n\n' "${YELLOW}! WARNING: $*${NO_COLOR}"
+  printf ' %s\n' "${warncolor}${warnico} $*${NO_COLOR}"
 }
 
 info() {
@@ -62,18 +93,21 @@ usage() {
   flag "-h, --help" "Displays help"
   flag "-s, --store" "Place backups into ~/.bakstore"
   flag "-y, --yes" "Auto yes to prompts"
+  flag "-q, --quiet" "Suppress output"
+  flag "-v, --verbose" "All the output"
   echo
 }
 
 bak() {
   # No args?
   [ "$#" -gt 0 ] || {
+    lnbr=''
     usage header
     return 1
   }
 
   # Flags
-  local store_mode=0 auto_yes=0
+  local store_mode=0 auto_yes=0 quiet_mode=0 verbose_mode=0
   local args=()
 
   # Parse flags
@@ -85,13 +119,19 @@ bak() {
       ;;
     -s | --store) store_mode=1 ;;
     -y | --yes) auto_yes=1 ;;
+    -q | --quiet)
+      quiet_mode=1
+      ;;
+    -v | --verbose) verbose_mode=1 ;;
     --)
       shift
       args+=("$@")
       break
       ;;
     -*)
+      echo
       error "unknown option '${BOLD}${MAGENTA}${1}${NO_COLOR}${RED}'"
+      echo
       usage
       return 1
       ;;
@@ -105,6 +145,8 @@ bak() {
     usage header
     return 1
   }
+
+  [ "$quiet_mode" -eq 1 ] || echo
 
   # Portable yes/no prompt function (works in bash/zsh/dash; handles no TTY)
   _bak_confirm() {
@@ -148,8 +190,15 @@ bak() {
 
   # Backup loop
   for src in "${args[@]}"; do
+    local srcpath srcdir srcname
+    srcpath=$(realpath "$src")
+    srcdir=$(dirname "$srcpath" | sed "s|${HOME}|~|")
+    srcname=$(basename "$srcpath")
+
     if [ ! -e "$src" ]; then
-      error "'${BOLD}${MAGENTA}${src}${NO_COLOR}${RED}' does not exist"
+      if [ "$quiet_mode" -eq 0 ]; then
+        error "'${MAGENTA}${srcdir}/${BOLD}$srcname${NO_COLOR}${RED}' does not exist"
+      fi
       continue
     fi
 
@@ -180,8 +229,21 @@ bak() {
       fi
     done
 
-    cp -av -- "$src" "$bakpath"
+    if [ "$verbose_mode" -eq 1 ]; then
+      cp -av -- "$src" "$bakpath"
+    elif [ "$quiet_mode" -eq 1 ]; then
+      cp -a -- "$src" "$bakpath"
+    else
+      cp -a -- "$src" "$bakpath"
+
+      local srcout bakout
+      srcout="$(eza --color=always --icons=always --dereference -d "$src" | sed "s|${HOME}|~|")"
+      bakout="$(eza --color=always --icons=always --dereference -d "$bakpath" | sed "s|${HOME}|~|")"
+
+      output "$srcout ${arrowcolor}${arrowico_r}${c_reset} $bakout"
+    fi
   done
+  [ "$quiet_mode" -eq 1 ] || echo
 }
 
 bak "$@"

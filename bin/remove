@@ -20,6 +20,10 @@ declare -r trashico=""
 declare -r arrowico="<-"
 declare -r arrowcolor="${fg_black}"
 declare -r errico=""
+declare -t errcolor="${fg_red}"
+declare -r warnico=""
+declare -t warncolor="${fg_yellow}"
+
 declare -r trashcolor="${fg_green}"
 declare -r dircolor="${fg_darkblue}"
 
@@ -42,11 +46,11 @@ CYAN="$(tput setaf 6 2>/dev/null || printf '')"
 NO_COLOR="$(tput sgr0 2>/dev/null || printf '')"
 
 error() {
-  printf ' %s\n' "${RED}${errico} $*${NO_COLOR}" >&2
+  printf ' %s\n' "${errcolor}${errico} $*${c_reset}" >&2
 }
 
 warn() {
-  printf '\n %s\n\n' "${YELLOW}! WARNING: $*${NO_COLOR}"
+  printf ' %s\n' "${warncolor}${warnico} $*${NO_COLOR}"
 }
 
 info() {
@@ -70,12 +74,12 @@ usage() {
     case "$1" in
     header)
       local header="
-                         █▀▀▀▄ ▄▀▀▀▄ █  ▄▀
-                          █▀▀▀▄ █▀▀▀█ █▀▀▄
-                           ▀▀▀▀  ▀   ▀ ▀   ▀"
+█▀▀▀▄ █▀▀▀▀ █▀▄▀█ ▄▀▀▀▄ █   █ █▀▀▀▀
+█▀▀▀▄ █▀▀   █   █ █   █  █ █  █▀▀
+▀   ▀ ▀▀▀▀▀ ▀   ▀  ▀▀▀    ▀   ▀▀▀▀▀"
       logo "${header}"
-      disc "Utility for backing up your files"
-      info "usage:${NO_COLOR} ${MAGENTA}${BOLD}bak${NO_COLOR} ${CYAN}[options]${NO_COLOR} ${BLUE}<file|dir>${NO_COLOR} ${BLUE}${DIM}[more files/dirs...]${NO_COLOR}"
+      disc "Utility for deleting files"
+      info "usage:${NO_COLOR} ${MAGENTA}${BOLD}remove${NO_COLOR} ${CYAN}[options]${NO_COLOR} ${BLUE}<file|dir>${NO_COLOR} ${BLUE}${DIM}[more files/dirs...]${NO_COLOR}"
       echo
       break
       ;;
@@ -83,8 +87,7 @@ usage() {
   done
   info "Options:"
   flag "-h, --help" "Displays help"
-  flag "-s, --store" "Place backups into ~/.bakstore"
-  flag "-y, --yes" "Auto yes to prompts"
+  flag "-b, --backup" "Place backups into ~/.bakstore"
   echo
 }
 
