@@ -49,13 +49,25 @@ alias "........"="cd ../../../../../../.."
 
 alias ".c"="cd $HOME/.config"
 alias ".l"="cd $HOME/.local"
+alias ".lb"="cd $HOME/.local/bin"
+alias ".lsh"="cd $HOME/.local/share"
+alias ".lst"="cd $HOME/.local/state"
+alias ".v"="cd $HOME/.config/nvim"
 
 alias ".d"="cd $DOTS"
 alias ".f"="cd $DOTFILES"
+alias ".b"="cd $DOTSBIN"
 alias ".s"="cd $SHELLS"
 alias ".sz"="cd $ZSHDOTS"
 alias ".sb"="cd $SHELLS/bash"
 alias ".sp"="cd $SHELLS/powershell"
+
+alias ".a"="cd $DROIDOTS"
+alias ".af"="cd $DROIDOTS/configs"
+alias ".ab"="cd $DROIDOTS/bin"
+
+alias ".w"="cd $WINDOTS"
+alias ".wf"="cd $WINDOTS/configs"
 
 if cmd_exists pastel; then
   alias paint='pastel paint'

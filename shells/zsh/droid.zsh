@@ -32,29 +32,6 @@ function google() {
 }
 alias goog='google'
 
-function www() {
-  [ "$#" -gt 0 ] || {
-  ingit=$(command git rev-parse --is-inside-work-tree 2> /dev/null)
-  if [ "$ingit" = true ]; then
-    GIT_REMOTE=$(command git remote get-url origin 2> /dev/null)
-    if [[ -z "$GIT_REMOTE" ]]; then
-      GIT_REMOTE=$(command git ls-remote --get-url 2> /dev/null)
-    fi
-    GIT_REMOTE_URL=$(echo $GIT_REMOTE | sed -E "s/^https?:\\/\\/(.+@)?//; s/\\.git$//; s/\\.git$//; s/.+@(.+):([[:digit:]]+)\\/(.+)$/\\1\\/\\3/; s/.+@(.+):(.+)$/\\1\\/\\2/; s/\\/$//")
-    termux-open-url "https://$GIT_REMOTE_URL"
-  else
-    termux-open-url "https://google.com"
-  fi
-  }
-  if [ "$#" -gt 0 ]; then
-    if [[ $1 == https://* ]]; then
-      termux-open-url "$1"
-    else
-      termux-open-url "https://$1"
-    fi
-  fi
-}
-
 function updpkg() {
  local pkgs="$DROIDOTS/packages"
  command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkgs"
