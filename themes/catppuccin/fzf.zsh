@@ -1,32 +1,32 @@
 transparent="-1"
-rosewater=$(rosewater)
-flamingo=$(flamingo)
-pink=$(pink)
-mauve=$(mauve)
-red=$(red)
-maroon=$(maroon)
-peach=$(peach)
-yellow=$(yellow)
-green=$(green)
-teal=$(teal)
-sky=$(sky)
-sapphire=$(sapphire)
-blue=$(blue)
-lavender=$(lavender)
-text=$(text)
-subtext1=$(subtext1)
-subtext0=$(subtext0)
-overlay2=$(overlay2)
-overlay1=$(overlay1)
-overlay0=$(overlay0)
-surface2=$(surface2)
-surface1=$(surface1)
-surface0=$(surface0)
-base=$(base)
-mantle=$(mantle)
-crust=$(crust)
+rosewater=$(catppuccin rosewater)
+flamingo=$(catppuccin flamingo)
+pink=$(catppuccin pink)
+mauve=$(catppuccin mauve)
+red=$(catppuccin red)
+maroon=$(catppuccin maroon)
+peach=$(catppuccin peach)
+yellow=$(catppuccin yellow)
+green=$(catppuccin green)
+teal=$(catppuccin teal)
+sky=$(catppuccin sky)
+sapphire=$(catppuccin sapphire)
+blue=$(catppuccin blue)
+lavender=$(catppuccin lavender)
+text=$(catppuccin text)
+subtext1=$(catppuccin subtext1)
+subtext0=$(catppuccin subtext0)
+overlay2=$(catppuccin overlay2)
+overlay1=$(catppuccin overlay1)
+overlay0=$(catppuccin overlay0)
+surface2=$(catppuccin surface2)
+surface1=$(catppuccin surface1)
+surface0=$(catppuccin surface0)
+base=$(catppuccin base)
+mantle=$(catppuccin mantle)
+crust=$(catppuccin crust)
 
-export _FZF_COLORS_="--color \
+_FZF_COLORS_="--color \
 bg+:${transparent},\
 bg:${transparent},\
 preview-bg:${transparent},\
@@ -50,4 +50,3 @@ preview-border:${surface0},\
 input-border:${surface0},\
 nomatch:strip:${surface1}:italic"
 
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS $_FZF_COLORS_"

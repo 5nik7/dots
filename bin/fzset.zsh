@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 declare -r esc=$'\033'
 declare -r c_reset="${esc}[0m"
@@ -123,7 +123,7 @@ $_FZF_COLORS_"
   debug "setopts: FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS}"
 }
 
-main() {
+fzfset() {
   local FZF_DEFAULT_OPTS fopts fpreview fpos fcolors
   fopts="$(echo "${_FZF_OPTS_}")"
   debug "fopts: ${fopts}"
@@ -143,7 +143,7 @@ main() {
   [ "$#" -gt 0 ] || {
     setopts
     debug "default: FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS}"
-    exit
+    return
   }
 
   export FZF_DEFAULT_OPTS=''
@@ -154,7 +154,7 @@ main() {
     case "$1" in
     -h | --help)
       usage header
-      exit
+      return
       ;;
     opts)
       fopts="$2"
@@ -178,5 +178,3 @@ main() {
   setopts
   debug "FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS}"
 }
-
-main "$@"
