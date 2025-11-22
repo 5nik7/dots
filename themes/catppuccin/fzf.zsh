@@ -26,7 +26,7 @@ base=$(base)
 mantle=$(mantle)
 crust=$(crust)
 
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color \
+export _FZF_COLORS_="--color \
 bg+:${transparent},\
 bg:${transparent},\
 preview-bg:${transparent},\
@@ -49,3 +49,5 @@ list-border:${surface0},\
 preview-border:${surface0},\
 input-border:${surface0},\
 nomatch:strip:${surface1}:italic"
+
+export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS $_FZF_COLORS_"

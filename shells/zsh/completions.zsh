@@ -38,6 +38,18 @@ zstyle ':fzf-tab:*' use-fzf-default-opts yes
 # switch group using `<` and `>`
 zstyle ':fzf-tab:*' switch-group '<' '>'
 
+local extract="
+local in=\${\${\"\$(<{f})\"%\$'\0'*}#*\$'\0'}
+local -A ctxt
+for entry in \${(@ps:\2:)CTXT}; do
+      local key=\${entry%%=*}
+      local value=\${entry#*=}
+      ctxt[\$key]=\$value
+done
+local realpath=\${ctxt[IPREFIX]}\${ctxt[hpre]}\$in
+realpath=\${(Qe)~realpath}
+"
+zstyle ':fzf-tab:complete:*:*' fzf-flags --preview=$extract';$_PREVIEW_ $realpath'
 
 zmodload zsh/complist
 compinit

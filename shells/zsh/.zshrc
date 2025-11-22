@@ -47,8 +47,7 @@ function set_theme() {
 
   zource "${HOME}/.fzf.zsh"
   cmd_exists fzf &&\
-    zieces 'fzf' &&\
-    zource "$THEMEDIR/fzf.zsh"
+    zieces 'fzf'
 }
 
 set_theme

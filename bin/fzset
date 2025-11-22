@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+main() {
+  local _FZF_OPTS_ _PREVIEW_ _FZF_PREVIEW_POS_ _FZF_COLORS_
+  _FZF_OPTS_="${_FZF_OPTS_}"
+  _FZF_PREVIEW_POS_="${_FZF_PREVIEW_POS_}"
+  _FZF_COLORS_="${_FZF_COLORS_}"
+  if [ -n "$BASH_VERSION" ]; then
+    _PREVIEW_="fzf-preview.sh"
+  elif [ -n "$ZSH_VERSION" ]; then
+    _PREVIEW_="preview.zsh"
+  else
+    echo "Not bash or zsh"
+    exit 1
+  fi
+
+  [ "$#" -gt 0 ] || {
+    export FZF_DEFAULT_OPTS="${_FZF_OPTS_} ${_FZF_COLORS_} ${_FZF_PREVIEW_POS_} ${_PREVIEW_}"
+    exit 0
+  }
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+    -h | --help)
+      usage header
+      exit
+      ;;
+    opts)
+      _FZF_OPTS_="$2"
+      shift 2
+      ;;
+    colors)
+      _FZF_COL9RS_="$2"
+      shift 2
+      ;;
+    pos)
+      _FZF_PREVIEW_POS_="$2"
+      shift 2
+      ;;
+    *) break ;;
+    esac
+  done
+
+  export FZF_DEFAULT_OPTS="${_FZF_OPTS_} ${_FZF_COLORS_} ${_FZF_PREVIEW_POS_} ${_PREVIEW_}"
+
+}
+
+main "$@"
