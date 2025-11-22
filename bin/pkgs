@@ -80,7 +80,7 @@ install() {
 }
 
 termux() {
-  fzf --preview='pkg show {1}' \
+  fzf --preview='apt-cache show {1}' \
     --query="$1" \
     < <(apt-cache pkgnames - "$@" | sort) | install "$(select_from 'pkg' 'apt' 'apt-get') install"
 }
