@@ -26,7 +26,7 @@ base=$(catppuccin base)
 mantle=$(catppuccin mantle)
 crust=$(catppuccin crust)
 
-_FZF_COLORS_="--color \
+_FZF_COLORS_="\
 bg+:${transparent},\
 bg:${transparent},\
 preview-bg:${transparent},\

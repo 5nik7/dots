@@ -1,6 +1,7 @@
 
 # Basic auto/tab complete:
 autoload -U compinit
+
 # zstyle ':completion:*' menu select
 
 # zstyle ':completion:*' group-name ''
