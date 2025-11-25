@@ -2596,7 +2596,7 @@ END jstone
 BOX vim-box
 
 author   "Ricky Anderson <ricky.anderson2696@gmail.com>"
-designer "(public domain)"
+designer "Bram Moolenaar"
 tags     ("simple", "programming", "box")
 
 sample
@@ -2907,7 +2907,7 @@ shapes {
          " ")
     w   ("|")
     e   ("|")
-    
+
 }
 
 elastic (n, s, e, w)
@@ -2943,7 +2943,7 @@ sample
            //   \ \
           (|     | )
          /'\_   _/`\
-         \___)=(___/  
+         \___)=(___/
 ends
 
 shapes {
@@ -3010,7 +3010,7 @@ shapes {
          " ")
     w   ("|")
     e   ("|")
-    
+
 }
 
 elastic (n, s, e, w)
@@ -3541,4 +3541,43 @@ END dragon
 # ============================================================================
 
 
-#EOF                                     vim: set ai sw=4 expandtab syn=boxes:
+BOX ansi-black
+
+author   "chorpler"
+designer "(public domain)"
+tags     ("box", "simple", "unicode")
+
+sample
+    ┌──────────────────────┐
+    │                      │
+    │                      │
+    │                      │
+    │                      │
+    │                      │
+    │                      │
+    │                      │
+    └──────────────────────┘
+ends
+
+shapes {
+    nw  ("[0;30m┌[0m")
+    n   ("[0;30m─[0m")
+    ne  ("[0;30m┐[0m")
+    e   ("[0;30m│[0m")
+    se  ("[0;30m┘[0m")
+    s   ("[0;30m─[0m")
+    sw  ("[0;30m└[0m")
+    w   ("[0;30m│[0m")
+}
+
+padding { horiz 1 }
+
+elastic (n,e,s,W)
+
+END ansi-black
+
+
+# ============================================================================
+
+
+# vim: set ai sw=4 expandtab syn=boxes:

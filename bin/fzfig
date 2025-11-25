@@ -1,8 +1,14 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
+
+figfonts() {
+  command ls "$(command figlet -I2)"
+}
 
 fzfig() {
   local text="${1}"
-  pyfiglet "$text" -f "$(pyfiglet -l | fzf --style=minimal --preview-window='default:up:40%' --preview "pyfiglet $text -f {}")"
+  local output="$(figlet -f "$(figfonts | grep .flf | cut -d. -f1 | fzf --preview-window='default:up:50%' --preview="figlet -f {} ${text}")" "$text" 2>/dev/null)"
+  echo -e "$output" &
+  echo -e "$output" | cpy
 }
 
 fzfig "$@"

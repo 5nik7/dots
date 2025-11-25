@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+fzfig() {
+  local text="${1}"
+  pyfiglet "$text" -f "$(pyfiglet -l | fzf --style=minimal --preview-window='default:up:40%' --preview "pyfiglet $text -f {}")"
+}
+
+fzfig "$@"

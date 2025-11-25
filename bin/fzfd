@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+fd --type file |
+    fzf --prompt 'Files> ' \
+    --header 'CTRL-T: Switch between Files/Directories' \
+    --bind 'ctrl-t:transform:[[ ! $FZF_PROMPT =~ Files ]] && echo "change-prompt(Files> )+reload(fd --type file)" ||  echo "change-prompt(Directories> )+reload(fd --type directory)"' \
+    --preview '[[ $FZF_PROMPT =~ Files ]] && bat --color=always {} || eza -1a --icons --color=always {}'
