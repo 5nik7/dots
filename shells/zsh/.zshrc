@@ -90,3 +90,4 @@ if cmd_exists atuin; then
   eval "$(atuin init zsh)"
 fi
 
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix

@@ -153,3 +153,5 @@ if cmd_exists glow; then
     alias glow="glow"
   fi
 fi
+
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix

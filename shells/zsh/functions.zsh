@@ -240,3 +240,4 @@ function dat() {
   rich --text-full -y -e -d 1 -m "$@"
 }
 
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix

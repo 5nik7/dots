@@ -55,3 +55,5 @@ zstyle ':fzf-tab:complete:*:*' fzf-flags --preview=$extract';$_PREVIEW_ $realpat
 zmodload zsh/complist
 compinit
 _comp_options+=(globdots)   # Include hidden files.
+
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix

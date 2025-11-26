@@ -548,3 +548,5 @@ EOF
     esac
   done
 }
+
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix

@@ -29,3 +29,5 @@ function www() {
     open "https://$1"
   fi
 }
+
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix

@@ -50,3 +50,5 @@ fi
 prepend_path "${DOTS}/androidots/bin"
 
 alias fetchskull="cat ~/dots/androidots/configs/fastfetch/skull | lolcat -8 >! ~/dots/androidots/configs/fastfetch/skullcolor && cat ~/dots/androidots/configs/fastfetch/skullcolor"
+
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix
