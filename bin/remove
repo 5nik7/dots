@@ -74,9 +74,9 @@ usage() {
     case "$1" in
     header)
       local header="
-█▀▀▀▄ █▀▀▀▀ █▀▄▀█ ▄▀▀▀▄ █   █ █▀▀▀▀
-█▀▀▀▄ █▀▀   █   █ █   █  █ █  █▀▀
-▀   ▀ ▀▀▀▀▀ ▀   ▀  ▀▀▀    ▀   ▀▀▀▀▀"
+ █▀▀▀▄ █▀▀▀▀ █▀▄▀█ ▄▀▀▀▄ █   █ █▀▀▀▀
+ █▀▀▀▄ █▀▀   █   █ █   █  █ █  █▀▀
+ ▀   ▀ ▀▀▀▀▀ ▀   ▀  ▀▀▀    ▀   ▀▀▀▀▀"
       logo "${header}"
       disc "Utility for deleting files"
       info "usage:${NO_COLOR} ${MAGENTA}${BOLD}remove${NO_COLOR} ${CYAN}[options]${NO_COLOR} ${BLUE}<file|dir>${NO_COLOR} ${BLUE}${DIM}[more files/dirs...]${NO_COLOR}"
