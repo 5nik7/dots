@@ -10,6 +10,3 @@
 [submodule "windots"]
 	path = windots
   url = https://github.com/5nik7/windots.git
-[submodule "Notes"]
-	path = Notes
-	url = https://github.com/5nik7/Notes.git
