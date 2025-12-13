@@ -185,14 +185,14 @@ disabled = false
 # symbol = ''
 # symbol = ''
 # symbol = '󰖰'
-symbol = ''
+# symbol = ''
 # symbol = ''
 # symbol = '󰍴'
 # symbol = '─'
 # symbol = '━'
 # symbol = '═'
 # symbol = '╌'
-# symbol = ' '
+symbol = ' '
 style = 'fg:color_fill bg:color_bg'
 
 [directory]
@@ -206,7 +206,7 @@ repo_root_style = "fg:color_repo bold"
 read_only = " "
 home_symbol = "~"
 use_os_path_sep = false
-use_logical_path = false
+use_logical_path = true
 read_only_style = 'fg:color_directory dimmed'
 repo_root_format = ""
 # format = "[ $path ]($style)"
@@ -494,7 +494,7 @@ format = '$symbol '
 # "~/Documents" = " Documents"
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
-"/storage/emulated/0" = "~"
+"/storage/emulated/0/Documents" = "DOCS"
 
 # ----------------------------------------------------
 
@@ -578,6 +578,8 @@ if [[ "$GIT_BEFORE_REPO" =~ "/mnt/c/Users/$USERNAME" ]]; then
   GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/mnt/c/Users/$USERNAME|~|")
 elif [[ "$GIT_BEFORE_REPO" =~ "C:/Users/$USERNAME" ]]; then
   GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^C:/Users/$USERNAME|~|")
+elif [[ "$GIT_BEFORE_REPO" =~ "/storage/emulated/0/Documents" ]]; then
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/storage/emulated/0/Documents|DOCS|")
 else
   GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^$HOME|~|")
 fi
