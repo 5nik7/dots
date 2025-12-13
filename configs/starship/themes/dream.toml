@@ -494,12 +494,13 @@ format = '$symbol '
 # "~/Documents" = " Documents"
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
+"/storage/emulated/0" = "~"
 
 # ----------------------------------------------------
 
 
 [custom.shell-pwsh]
-command = "Write-Host $env:STARSHIP_SHELL"  # shows output of command
+command = "Write-Host $env:STARSHIP_SHELL"          # shows output of command
 when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 style = "dimmed blue"
 format = "[$output]($style)"
@@ -559,7 +560,7 @@ disabled = false
 # ----------------------------------------------------
 
 [custom.shell-bash]
-command = "echo $STARSHIP_SHELL"  # shows output of command
+command = "echo $STARSHIP_SHELL"               # shows output of command
 when = """ test "$STARSHIP_SHELL" == "zsh" """
 style = "dimmed blue"
 format = "[$output]($style)"
@@ -585,7 +586,7 @@ echo "$GIT_BEFORE_REPO/"
 """
 format = '[$output]($style)'
 style = "fg:color_prepo"
-disabled = false# os = "linux"
+disabled = false # os = "linux"
 
 [custom.git_remote_symbol-bash]
 description = "Display symbol for remote Git server (bash)"
