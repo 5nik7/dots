@@ -24,7 +24,6 @@ if [[ -f "$HOME/.pythonrc" ]]; then
     export PYTHONSTARTUP="$HOME/.pythonrc"
 fi
 
-fpath+=("$ZFUNC" "${fpath[@]}")
 
 function zource() {
   if [[ -f "$1" ]]; then

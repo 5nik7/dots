@@ -1,4 +1,4 @@
- #  ╔═╗╔═╗╦ ╦╦═╗╔═╗
+#  ╔═╗╔═╗╦ ╦╦═╗╔═╗
  #  ╔═╝╚═╗╠═╣╠╦╝║
  # o╚═╝╚═╝╩ ╩╩╚═╚═╝
 
@@ -89,5 +89,7 @@ zource "$HOME/.atuin/bin/env"
 if cmd_exists atuin; then
   eval "$(atuin init zsh)"
 fi
+
+fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix
