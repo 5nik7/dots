@@ -579,7 +579,7 @@ if [[ "$GIT_BEFORE_REPO" =~ "/mnt/c/Users/$USERNAME" ]]; then
 elif [[ "$GIT_BEFORE_REPO" =~ "C:/Users/$USERNAME" ]]; then
   GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^C:/Users/$USERNAME|~|")
 elif [[ "$GIT_BEFORE_REPO" =~ "/storage/emulated/0/Documents" ]]; then
-  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/storage/emulated/0/Documents|DOCS|")
+  GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^/storage/emulated/0/Documents|󰈙|")
 else
   GIT_BEFORE_REPO=$(echo "$GIT_BEFORE_REPO" | sed "s|^$HOME|~|")
 fi

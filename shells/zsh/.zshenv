@@ -10,6 +10,7 @@ export DOTSBIN="$DOTS/bin"
 export BASHDOT="$SHELLS/bash"
 export DOTFILES="$DOTS/configs"
 export WINDOTS="$DOTS/windots"
+export DOCS="$HOME/Documents"
 
 export STARSHIP_DIR="$DOTFILES/starship"
 export STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
