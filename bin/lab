@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+
+usage() {
+  cat <<EOF
+Usage:
+  lab <command>
+  lab -c <command> | lab --code <command>
+  lab -e <command> | lab --edit <command>
+  lab help | -h | --help
+
+Behavior:
+  - No args, or: help, -h, --help
+      → show this help message.
+
+  - lab <command>
+      → if <command> is executable, print its path (which <command>).
+      → otherwise, error.
+
+  - lab -c <command> | lab --code <command>
+      → ensure <command> exists (is executable) or error.
+      → resolve its path.
+      → if the target looks like a script/text:
+            - if 'bat' exists, run: bat <path>
+            - else, run: cat <path>
+        if it looks like a compiled binary, print an error.
+
+  - lab -e <command> | lab --edit <command>
+      → same checks as -c / --code:
+          * ensure command exists
+          * ensure the underlying file is script/text, not compiled binary
+        then:
+          * if \$EDITOR is set, run: \$EDITOR <path>
+          * else try: vim, then vi, then nano
+          * if none exist, error.
+EOF
+}
+
+error() {
+  echo "lab: error: $*" >&2
+  exit 1
+}
+
+# No args or help flags
+if [ $# -eq 0 ] || [ "$1" = "help" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  usage
+  exit 0
+fi
+
+# Helper: ensure command exists and get its path
+resolve_cmd_path() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    error "command '$cmd' not found"
+  fi
+  command -v "$cmd"
+}
+
+# Helper: ensure file is script/text (not compiled) using `file`
+ensure_readable_source() {
+  local path="$1"
+
+  if ! command -v file >/dev/null 2>&1; then
+    echo "lab: warning: 'file' command not found; cannot reliably detect binaries." >&2
+    return 0  # let caller decide what to do
+  fi
+
+  local desc
+  desc="$(file -b "$path")"
+
+  if echo "$desc" | grep -qiE 'script|text'; then
+    return 0
+  else
+    error "'$path' appears to be a compiled binary: $desc"
+  fi
+}
+
+# --- Code viewing mode: -c / --code ---
+if [ "$1" = "-c" ] || [ "$1" = "--code" ]; then
+  # Need a command name after -c/--code
+  if [ $# -lt 2 ]; then
+    error "missing command name for $1 (see: lab --help)"
+  fi
+
+  cmd="$2"
+  cmd_path="$(resolve_cmd_path "$cmd")"
+
+  # Ensure it's readable source (or at least warn if we can't tell)
+  ensure_readable_source "$cmd_path" || exit 1
+
+  if command -v bat >/dev/null 2>&1; then
+    bat "$cmd_path"
+  else
+    cat "$cmd_path"
+  fi
+  exit 0
+fi
+
+# --- Edit mode: -e / --edit ---
+if [ "$1" = "-e" ] || [ "$1" = "--edit" ]; then
+  # Need a command name after -e/--edit
+  if [ $# -lt 2 ]; then
+    error "missing command name for $1 (see: lab --help)"
+  fi
+
+  cmd="$2"
+  cmd_path="$(resolve_cmd_path "$cmd")"
+
+  # Ensure it's readable source (or at least warn if we can't tell)
+  ensure_readable_source "$cmd_path" || exit 1
+
+  # Choose editor: $EDITOR, then vim, vi, nano
+  if [ -n "$EDITOR" ]; then
+    "$EDITOR" "$cmd_path"
+    exit $?
+  fi
+
+  if command -v vim >/dev/null 2>&1; then
+    vim "$cmd_path"
+    exit $?
+  fi
+
+  if command -v vi >/dev/null 2>&1; then
+    vi "$cmd_path"
+    exit $?
+  fi
+
+  if command -v nano >/dev/null 2>&1; then
+    nano "$cmd_path"
+    exit $?
+  fi
+
+  error "no suitable editor found (set \$EDITOR or install vim/vi/nano)"
+fi
+
+# --- Default behavior: lab <command> → which <command> ---
+
+# Check if $1 is an executable command
+if command -v "$1" >/dev/null 2>&1; then
+  which "$1"
+  exit 0
+fi
+
+# Anything else is an error when args > 0
+error "invalid input '$1'"
