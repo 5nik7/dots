@@ -35,11 +35,11 @@ fg+:${text}:bold:reverse,\
 hl:${teal}:bold:underline,\
 hl+:${teal}:bold:reverse,\
 info:${surface2},\
-query:${mauve},\
+query:${sky},\
 gutter:${surface0},\
 pointer:${surface1},\
 marker:${yellow},\
-prompt:${lavender},\
+prompt:${mauve},\
 spinner:${surface1},\
 label:${surface2},\
 preview-label:${surface0},\
