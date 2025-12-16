@@ -35,7 +35,7 @@ fg+:${text}:bold:reverse,\
 hl:${teal}:bold:underline,\
 hl+:${teal}:bold:reverse,\
 info:${surface2},\
-query:${sky},\
+query:${yellow},\
 gutter:${surface0},\
 pointer:${surface1},\
 marker:${yellow},\
