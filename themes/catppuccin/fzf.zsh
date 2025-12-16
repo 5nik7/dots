@@ -39,7 +39,7 @@ query:${mauve},\
 gutter:${surface0},\
 pointer:${surface1},\
 marker:${yellow},\
-prompt:${surface1},\
+prompt:${lavender},\
 spinner:${surface1},\
 label:${surface2},\
 preview-label:${surface0},\

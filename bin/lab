@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
 usage() {
-  cat <<EOF
+  cat <<'EOF'
 Usage:
   lab <command>
-  lab -c <command> | lab --code <command>
-  lab -e <command> | lab --edit <command>
-  lab help | -h | --help
+  lab -c <command>       | lab --code <command>
+  lab -e <command>       | lab --edit <command>
+  lab -f                 | lab --fzf
+  lab -f -r              | lab --fzf --run
+  lab -f -c              | lab --fzf --code
+  lab -f -e              | lab --fzf --edit
+  lab help               | lab -h | lab --help
 
 Behavior:
   - No args, or: help, -h, --help
@@ -29,9 +33,33 @@ Behavior:
           * ensure command exists
           * ensure the underlying file is script/text, not compiled binary
         then:
-          * if \$EDITOR is set, run: \$EDITOR <path>
+          * if $EDITOR is set, run: $EDITOR <path>
           * else try: vim, then vi, then nano
           * if none exist, error.
+
+  - lab -f | lab --fzf
+      → fuzzy-find ALL external executable commands (from $PATH) with fzf.
+      → preview:
+           * if the target is text/script: bat/cat the file
+           * otherwise: show file(1) info for the binary
+      → when a command is selected:
+           * print its resolved path (like: which <selection>).
+
+  - lab -f -r | lab --fzf --run
+      → same as -f, but after selection:
+           * execute the resolved path.
+
+  - lab -f -c | lab --fzf --code
+      → fuzzy-find ONLY executable commands whose file is text/script.
+      → preview: bat/cat the file.
+      → when a command is selected:
+           * behave like: lab -c <selection>.
+
+  - lab -f -e | lab --fzf --edit
+      → fuzzy-find ONLY executable commands whose file is text/script.
+      → preview: bat/cat the file.
+      → when a command is selected:
+           * behave like: lab -e <selection>.
 EOF
 }
 
@@ -39,12 +67,6 @@ error() {
   echo "lab: error: $*" >&2
   exit 1
 }
-
-# No args or help flags
-if [ $# -eq 0 ] || [ "$1" = "help" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-  usage
-  exit 0
-fi
 
 # Helper: ensure command exists and get its path
 resolve_cmd_path() {
@@ -61,7 +83,7 @@ ensure_readable_source() {
 
   if ! command -v file >/dev/null 2>&1; then
     echo "lab: warning: 'file' command not found; cannot reliably detect binaries." >&2
-    return 0  # let caller decide what to do
+    return 0 # let caller decide what to do
   fi
 
   local desc
@@ -74,9 +96,181 @@ ensure_readable_source() {
   fi
 }
 
+# Helper: heuristic "is this text/script?" check, non-fatal
+is_text_like() {
+  local path="$1"
+  if ! command -v file >/dev/null 2>&1; then
+    # If we can't tell, treat as text to avoid hiding things
+    return 0
+  fi
+  local desc
+  desc="$(file -b "$path")"
+  if echo "$desc" | grep -qiE 'script|text'; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+open_in_editor() {
+  local path="$1"
+
+  if [ -n "$EDITOR" ]; then
+    "$EDITOR" "$path"
+    return $?
+  fi
+
+  if command -v vim >/dev/null 2>&1; then
+    vim "$path"
+    return $?
+  fi
+
+  if command -v vi >/dev/null 2>&1; then
+    vi "$path"
+    return $?
+  fi
+
+  if command -v nano >/dev/null 2>&1; then
+    nano "$path"
+    return $?
+  fi
+
+  error "no suitable editor found (set \$EDITOR or install vim/vi/nano)"
+}
+
+ensure_fzf() {
+  if ! command -v fzf >/dev/null 2>&1; then
+    error "fzf not found (install fzf to use -f/--fzf)"
+  fi
+}
+
+# Pick a command via fzf
+# arg1: "0" → any external executable
+#       "1" → only text-like executables
+fzf_pick_command() {
+  local text_only="$1"
+
+  ensure_fzf
+
+  compgen -c | sort -u |
+    while read -r cmd; do
+      # Only keep commands with a real external path
+      cmd_path=$(type -P "$cmd" 2>/dev/null) || continue
+      [ -n "$cmd_path" ] || continue
+
+      if [ "$text_only" = "1" ]; then
+        if ! is_text_like "$cmd_path"; then
+          continue
+        fi
+      fi
+
+      printf '%s\n' "$cmd"
+    done |
+    fzf --prompt="  cmd 󰅂 "
+}
+
+# --- Help / usage ---
+if [ $# -eq 0 ] || [ "$1" = "help" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  usage
+  exit 0
+fi
+
+########################################
+# FZF MODES (-f/--fzf [+ -r/-c/-e])
+########################################
+
+# Detect if fzf flag is present at all
+has_fzf_flag=0
+for a in "$@"; do
+  case "$a" in
+  -f | --fzf) has_fzf_flag=1 ;;
+  esac
+done
+
+if [ "$has_fzf_flag" -eq 1 ]; then
+  # Only allow at most one secondary flag among -r/--run, -c/--code, -e/--edit
+  mode="none"
+  for a in "$@"; do
+    case "$a" in
+    -f | --fzf) ;;
+    -r | --run)
+      if [ "$mode" != "none" ]; then
+        error "only one of -r/--run, -c/--code, -e/--edit may be combined with -f/--fzf"
+      fi
+      mode="run"
+      ;;
+    -c | --code)
+      if [ "$mode" != "none" ]; then
+        error "only one of -r/--run, -c/--code, -e/--edit may be combined with -f/--fzf"
+      fi
+      mode="code"
+      ;;
+    -e | --edit)
+      if [ "$mode" != "none" ]; then
+        error "only one of -r/--run, -c/--code, -e/--edit may be combined with -f/--fzf"
+      fi
+      mode="edit"
+      ;;
+    *)
+      # Any non-flag or unknown arg is invalid in fzf mode
+      if [ "${a#-}" = "$a" ]; then
+        error "unexpected argument '$a' in fzf mode"
+      else
+        error "unknown flag '$a'"
+      fi
+      ;;
+    esac
+  done
+
+  # Now act based on mode
+  case "$mode" in
+  none)
+    # lab -f : pick any external executable, print its path
+    selection="$(fzf_pick_command 0)"
+    [ -z "$selection" ] && exit 1
+    cmd_path="$(resolve_cmd_path "$selection")"
+    echo "$cmd_path"
+    exit 0
+    ;;
+  run)
+    # lab -f -r : pick any external executable, then run it
+    selection="$(fzf_pick_command 0)"
+    [ -z "$selection" ] && exit 1
+    cmd_path="$(resolve_cmd_path "$selection")"
+    "$cmd_path"
+    exit $?
+    ;;
+  code)
+    # lab -f -c : pick only text-like executables, then show code
+    selection="$(fzf_pick_command 1)"
+    [ -z "$selection" ] && exit 1
+    cmd_path="$(resolve_cmd_path "$selection")"
+    ensure_readable_source "$cmd_path" || exit 1
+    if command -v bat >/dev/null 2>&1; then
+      bat "$cmd_path"
+    else
+      cat "$cmd_path"
+    fi
+    exit 0
+    ;;
+  edit)
+    # lab -f -e : pick only text-like executables, then edit
+    selection="$(fzf_pick_command 1)"
+    [ -z "$selection" ] && exit 1
+    cmd_path="$(resolve_cmd_path "$selection")"
+    ensure_readable_source "$cmd_path" || exit 1
+    open_in_editor "$cmd_path"
+    exit $?
+    ;;
+  esac
+fi
+
+########################################
+# NON-FZF MODES (-c, -e, default)
+########################################
+
 # --- Code viewing mode: -c / --code ---
 if [ "$1" = "-c" ] || [ "$1" = "--code" ]; then
-  # Need a command name after -c/--code
   if [ $# -lt 2 ]; then
     error "missing command name for $1 (see: lab --help)"
   fi
@@ -84,7 +278,6 @@ if [ "$1" = "-c" ] || [ "$1" = "--code" ]; then
   cmd="$2"
   cmd_path="$(resolve_cmd_path "$cmd")"
 
-  # Ensure it's readable source (or at least warn if we can't tell)
   ensure_readable_source "$cmd_path" || exit 1
 
   if command -v bat >/dev/null 2>&1; then
@@ -97,7 +290,6 @@ fi
 
 # --- Edit mode: -e / --edit ---
 if [ "$1" = "-e" ] || [ "$1" = "--edit" ]; then
-  # Need a command name after -e/--edit
   if [ $# -lt 2 ]; then
     error "missing command name for $1 (see: lab --help)"
   fi
@@ -105,40 +297,16 @@ if [ "$1" = "-e" ] || [ "$1" = "--edit" ]; then
   cmd="$2"
   cmd_path="$(resolve_cmd_path "$cmd")"
 
-  # Ensure it's readable source (or at least warn if we can't tell)
   ensure_readable_source "$cmd_path" || exit 1
 
-  # Choose editor: $EDITOR, then vim, vi, nano
-  if [ -n "$EDITOR" ]; then
-    "$EDITOR" "$cmd_path"
-    exit $?
-  fi
-
-  if command -v vim >/dev/null 2>&1; then
-    vim "$cmd_path"
-    exit $?
-  fi
-
-  if command -v vi >/dev/null 2>&1; then
-    vi "$cmd_path"
-    exit $?
-  fi
-
-  if command -v nano >/dev/null 2>&1; then
-    nano "$cmd_path"
-    exit $?
-  fi
-
-  error "no suitable editor found (set \$EDITOR or install vim/vi/nano)"
+  open_in_editor "$cmd_path"
+  exit $?
 fi
 
 # --- Default behavior: lab <command> → which <command> ---
-
-# Check if $1 is an executable command
 if command -v "$1" >/dev/null 2>&1; then
   which "$1"
   exit 0
 fi
 
-# Anything else is an error when args > 0
 error "invalid input '$1'"

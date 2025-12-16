@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# Build a list of *all* executable entries in PATH.
+# Includes: binaries, scripts, symlinks, wrappers—anything with execute bit set.
+
+cmds=$(printf "%s" "$PATH" |
+  tr ':' '\n' |
+  while IFS= read -r dir; do
+    [ -d "$dir" ] || continue
+
+    # find all files that are executable by anyone (user/group/other)
+    find "$dir" -maxdepth 1 -type f -executable -printf "%f\n" 2>/dev/null
+
+    # also include symlinks to executables
+    find "$dir" -maxdepth 1 -type l -exec test -x {} \; -printf "%f\n" 2>/dev/null
+  done | sort -u)
+
+# If nothing found
+[ -z "$cmds" ] && {
+  printf "No executables found in PATH\n" >&2
+  exit 1
+}
+
+# Send to fzf
+printf "%s\n" "$cmds" | fzf --prompt="  cmd > "
