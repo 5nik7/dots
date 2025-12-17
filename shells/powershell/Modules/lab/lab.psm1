@@ -141,7 +141,7 @@ function Get-LabUsage
   {
     wh 'LAB' cyan
   }
-  wh '  Usage: ' blue 'lab' cyan -padin 3 -bb 1 -ba 0
+  wh " $labicon Usage: " blue 'lab' cyan -padin 3 -bb 1 -ba 0
   Write-Output @'
  [-new] [-edit] [-tested] [-delete] [-filename <string>] [-list] [-help] [-dot] [-cat] [-setup] [-labPath <string>] [-quiet]
 
@@ -204,7 +204,7 @@ function Get-LabScripts
       if ($catppuccin) { Write-Host "$($Flavor.sapphire.Foreground())  $ps1icon $($Flavor.text.Foreground())$name" -NoNewline }
       else
       {
-        wh -pad 3 '󰨊' DarkBlue $name Gray
+        wh -pad 3 $ps1icon DarkBlue $name Gray
       }
       $parameters = $_.Parameters
       if ($null -ne $parameters)

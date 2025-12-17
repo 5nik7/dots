@@ -52,6 +52,7 @@ $null = Register-EngineEvent -SourceIdentifier 'PowerShell.OnIdle' -MaxTriggerCo
   Import-Module -Global -Name 'git-completion'
   Import-Module -Global -Name 'PSToml'
   Import-Module -Global -Name 'powershell-yaml'
+  Import-Module -Global -Name 'WozTools'
 
   try { if (Get-Command vivid -ErrorAction SilentlyContinue) { $env:LS_COLORS = "$(vivid generate catppuccin-mocha)" } } catch { }
 
