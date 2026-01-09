@@ -32,15 +32,27 @@ colors:
   crust: "11111b"
 
 core:
-  normal_text: {}
+  normal_text:
+    foreground: subtext1
   regular_file: {}
-  reset_to_normal: {}
+  reset_to_normal:
+    foreground: subtext1
 
   directory:
     foreground: blue
+    font-style: bold
 
   symlink:
     foreground: sky
+
+  broken_symlink:
+    foreground: mantle
+    background: red
+    font-style: bold
+
+  missing_symlink_target:
+    foreground: red
+    font-style: bold
 
   multi_hard_link: {}
 
@@ -64,73 +76,88 @@ core:
     foreground: pink
     background: surface0
 
-  broken_symlink:
-    foreground: crust
-    background: red
+  setuid:
+    foreground: subtext0
 
-  missing_symlink_target:
-    foreground: crust
-    background: red
+  setgid:
+    foreground: subtext0
 
-  setuid: {}
+  file_with_capability:
+    foreground: subtext1
 
-  setgid: {}
+  sticky_other_writable:
+    foreground: base
+    background: sky
+    font-style: bold
 
-  file_with_capability: {}
+  other_writable:
+    foreground: sky
+    background: overlay2
+    font-style: bold
 
-  sticky_other_writable: {}
-
-  other_writable: {}
-
-  sticky: {}
+  sticky:
+    foreground: overlay2
 
   executable_file:
     foreground: green
     font-style: bold
 
 text:
+  foreground: text
   special:
-    foreground: base
-    background: yellow
-
-  todo:
+    foreground: lavender
     font-style: bold
-
+  todo:
+    foreground: pink
+    font-style: bold
   licenses:
-    foreground: overlay2
-
+    foreground: overlay1
   configuration:
-    foreground: yellow
-
-  other:
-    foreground: yellow
+    foreground: peach
+    font-style: bold
+    dockerfile:
+      foreground: sky
 
 markup:
-  foreground: yellow
+  foreground: text
 
 programming:
+  foreground: yellow
   source:
-    foreground: mauve
-
+    foreground: yellow
+    font-style: bold
   tooling:
-    foreground: teal
-
+    foreground: sapphire
+    font-style: bold
     continuous-integration:
-      foreground: mauve
+      foreground: sapphire
+      font-style: italic
 
 media:
-  foreground: flamingo
+  foreground: mauve
+  audio:
+    foreground: yellow
+    font-style: italic
+  image:
+    foreground: mauve
+    font-style: bold
+  video:
+    foreground: text
+    font-style: bold
+  fonts:
+    foreground: subtext1
+    font-style: bold
 
 office:
   foreground: red
 
 archives:
-  foreground: sapphire
-  font-style: underline
+  foreground: maroon
+  font-style: bold
 
 executable:
   foreground: green
   font-style: bold
 
 unimportant:
-  foreground: surface2
+  foreground: overlay0

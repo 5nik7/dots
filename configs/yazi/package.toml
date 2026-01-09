@@ -45,18 +45,30 @@ hash = "92b5c58159a51c567f82b618cee2b78"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:toggle-pane"
-rev = "b886025"
-hash = "d6f60c24d8c0cf57a855bf46115b2502"
+rev = "68f7d48"
+hash = "8a7c58225816a163a6e8730c0adafbc8"
 
 [[plugin.deps]]
 use = "Lil-Dank/lazygit"
-rev = "8f37dc5"
-hash = "ee71543790f0ce3951161045a3787abd"
+rev = "0e56060"
+hash = "ab2e66065a94cca4886b303518e44bd8"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:types"
-rev = "e95c7b3"
-hash = "1e047e1b13b5e3fc6ab1f5d0d04a14e2"
+rev = "68f7d48"
+hash = "a3564fe0d051557df2a191ca0b212c2d"
 
-[flavor]
-deps = []
+[[flavor.deps]]
+use = "yazi-rs/flavors:catppuccin-mocha"
+rev = "4a1802a"
+hash = "b951d27afe197d154f6da9683b46c5f8"
+
+[[flavor.deps]]
+use = "Mintass/rose-pine"
+rev = "8343340"
+hash = "d92db727dc16db9357f0dcda2758170c"
+
+[[flavor.deps]]
+use = "5nik7/njen"
+rev = "4596bb9"
+hash = "1b8077e6fecac6ed2d0a973079fc80e2"
