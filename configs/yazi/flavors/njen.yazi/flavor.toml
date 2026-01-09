@@ -191,13 +191,13 @@ title_error = { fg = "#f38ba8" }
 
 rules = [
   # Image
-  { mime = "image/*", fg = "#f2cdcd" },
+  { mime = "image/*", fg = "#cba6f7" },
   # Media
   { mime = "{audio,video}/*", fg = "#f9e2af" },
   # Archive
   { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#f5c2e7" },
   # Document
-  { mime = "application/{pdf,doc,rtf}", fg = "#a6e3a1" },
+  { mime = "application/{pdf,doc,rtf}", fg = "yellow" },
   # Virtual file system
   { mime = "vfs/{absent,stale}", fg = "gray" },
   # Fallback
