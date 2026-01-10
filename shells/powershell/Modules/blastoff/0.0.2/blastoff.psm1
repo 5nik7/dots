@@ -53,7 +53,7 @@ function Get-StarshipThemes {
     $name = [IO.Path]::GetFileNameWithoutExtension($themeFile.Name)
     if (-not ($starshipPresets -contains $name)) {
       Write-Host -NoNewline "$PadddingOut$($flavor.Surface0.Foreground()) "
-      if ($name -eq $currentthemename) {
+      if ($name -eq $CurrentStarshipTheme) {
         Write-Host -NoNewline "$($flavor.Sky.Foreground())$name $($flavor.Surface2.Foreground())(current)"
       }
       else {
@@ -69,7 +69,7 @@ function Get-StarshipThemes {
   foreach ($preset in $starshipPresets) {
     if (-not [string]::IsNullOrWhiteSpace($preset)) {
       Write-Host -NoNewline "$PadddingOut$($flavor.Surface0.Foreground()) "
-      if ($preset -eq $currentthemename) {
+      if ($preset -eq $CurrentStarshipTheme) {
         Write-Host -NoNewline "$($flavor.Sky.Foreground())$preset $($flavor.Surface2.Foreground())(current)"
       }
       else {
@@ -99,66 +99,70 @@ function Invoke-Blastoff {
   param (
     [switch]$help,
     [switch]$list,
-    [string]$theme
+    [string]$theme = ''
   )
 
   $DotConfig = "$HOME\.config"
   $DefaultConfigPath = "$DotConfig\starship.toml"
-  $DefualtStarshipDir = "$DotConfig\starship"
-  $DefualtThemeDir = "$DefualtStarshipDir\themes"
+  $DefaultStarshipDir = "$DotConfig\starship"
 
-  $themedir = if ($env:STARSHIP_THEMES -and (Test-Path $env:STARSHIP_THEMES)) { $env:STARSHIP_THEMES }
-  elseif (!(Test-Path -Path $DefualtThemeDir)) {
-    New-Item -ItemType Directory -Path $DefualtThemeDir -Force | Out-Null
-  }
-  else { $DefualtThemeDir }
-  
   $config = if ($env:STARSHIP_CONFIG -and (Test-Path $env:STARSHIP_CONFIG)) { $env:STARSHIP_CONFIG }
   else { $DefaultConfigPath }
+  
 
-
-  $config = Get-Item $config
-  $configdir = $config.DirectoryName
-  $islink = if ($config.LinkType -eq 'SymbolicLink') { $true } else { $false }
+  $item = Get-Item $config
+  $configdir = $item.DirectoryName.ToString()
+  $islink = if ($item.LinkType -eq 'SymbolicLink') { $true } else { $false }
   if ($islink) {
-    $currenttheme = Get-Item $config.ResolvedTarget
-    $currentthemename = $currenttheme.BaseName
-  }
-  else {
-    $currenttheme = $null
-  }
-
-  if ($theme) {
-    $currentDir = Get-Location
-    $theme = Get-Item "$themedir\$theme.toml"
-    $themebase = $theme.BaseName
-    $themename = $theme.Name
-
-    if (-not (Test-Path -Path "$theme")) {
-      Write-Host -ForegroundColor red "$themename not found in $configdir"
-      return
+    $CurrentStarshipTheme = $item.ResolvedTarget | ForEach-Object {
+      $_.ToString()
+    } | Split-Path -Leaf | ForEach-Object {
+      [IO.Path]::GetFileNameWithoutExtension($_)
     }
-    else {
-      if ($currentthemename -eq $themebase) {
+  }
+
+  if ($theme -ne '') {
+    $DefaultThemeDir = "$DefaultStarshipDir\themes"
+    
+    $themedir = if ($env:STARSHIP_THEMES -and (Test-Path $env:STARSHIP_THEMES)) { $env:STARSHIP_THEMES }
+    elseif (!(Test-Path -Path $DefaultThemeDir)) {
+      New-Item -ItemType Directory -Path $DefaultThemeDir -Force | Out-Null
+    }
+    else { $DefaultThemeDir }
+  
+
+    $currentDir = Get-Location
+    $themepath = "$themedir\$theme.toml"
+    $item = Get-Item $themepath -ErrorAction SilentlyContinue
+    $themebase = $item.BaseName | ForEach-Object {
+      $_.ToString()
+    }
+
+    if (Test-Path -Path $themepath) {
+      if (!($theme -eq $CurrentStarshipTheme)) {
+        Set-Location -Path $configdir
+        $relconfig = Get-RelativePath -Path $config -RelativeTo $configdir
+        $reltheme = Get-RelativePath -Path $themepath -RelativeTo $configdir  
+        New-Item -ItemType SymbolicLink -Path $relconfig -Target $reltheme -Force | Out-Null
+        Set-Location -Path $currentDir
+        $CurrentStarshipTheme = $theme
         Write-Host ''
-        Write-Host -ForegroundColor Yellow "Starship theme is already set to $themebase"
+        Write-Host -ForegroundColor red '   ' -NoNewline
+        Write-Host -ForegroundColor White  'Starship theme set to ' -NoNewLine
+        Write-Host -ForegroundColor Magenta "$theme"
         Write-Host ''
         return
       }
-      $relconfig = Get-RelativePath -Path $config -RelativeTo $configdir
-      $reltheme = Get-RelativePath -Path $currenttheme -RelativeTo $configdir
-      Set-Location -Path $configdir
-      New-Item -ItemType SymbolicLink -Path $relconfig -Target $reltheme -Force | Out-Null
-      Set-Location -Path $currentDir
-      $currenttheme = $theme
-      Write-Host ''
-      Write-Host -ForegroundColor red '   ' -NoNewline
-      Write-Host -ForegroundColor White  'Starship theme set to ' -NoNewLine
-      Write-Host -ForegroundColor Magenta "$themebase"
-      Write-Host ''
-      return
+      else {
+        Write-Host ''
+        Write-Host -ForegroundColor Yellow "Starship theme is already set to $theme"
+        Write-Host ''
+      }
     }
-  }
+    else {    
+      Write-Host -ForegroundColor red "$themebase.toml not found in $configdir"
+    }
+  } 
   if ($help) {
     Show-BlastoffUsage
     return
@@ -170,6 +174,6 @@ function Invoke-Blastoff {
   Show-BlastoffUsage
 }
 
-Export-ModuleMember -Function Write-Params, Show-BlastoffUsage, Get-StarshipThemes, Invoke-Blastoff
-
 New-Alias -Name blastoff -Scope Global -Value Invoke-Blastoff -ErrorAction Ignore
+
+Export-ModuleMember -Function * -Alias * -Variable *
