@@ -35,6 +35,24 @@ require("full-border"):setup({
 require("git"):setup()
 require("folder-rules"):setup()
 
+require("bookmarks"):setup({
+  last_directory = { enable = false, persist = false, mode = "dir" },
+  persist = "none",
+  desc_format = "full",
+  file_pick_mode = "hover",
+  custom_desc_input = false,
+  show_keys = false,
+  notify = {
+    enable = false,
+    timeout = 1,
+    message = {
+      new = "New bookmark '<key>' -> '<folder>'",
+      delete = "Deleted bookmark in '<key>'",
+      delete_all = "Deleted all bookmarks",
+    },
+  },
+})
+
 -- local catppuccin_theme = require("yatline-catppuccin"):setup("mocha")
 --
 -- require("yatline"):setup({
