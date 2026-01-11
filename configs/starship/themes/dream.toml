@@ -613,7 +613,14 @@ disabled = false
 
 [custom.git_prefix-pwsh]
 description = "Remote git repository namer (pwsh)"
-command = 'git_prefix.ps1'
+command ="""
+$gitPrefix = git rev-parse --show-prefix
+if ($gitPrefix)
+{
+  $gitPrefix = $gitPrefix.TrimEnd('/')
+}
+Write-Output $gitPrefix
+"""
 require_repo = true
 when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
