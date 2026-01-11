@@ -498,7 +498,6 @@ format = '$symbol '
 
 # ----------------------------------------------------
 
-
 [custom.shell-pwsh]
 command = "Write-Host $env:STARSHIP_SHELL"          # shows output of command
 when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
@@ -520,6 +519,7 @@ shell = ["pwsh", "-NoProfile", "-Command", "-"]
 format = '[$output]($style)'
 style = "fg:color_prepo"
 disabled = false
+use_stdin = false
 
 [custom.git_remote_symbol-pwsh]
 description = "Display symbol for remote Git server (pwsh)"

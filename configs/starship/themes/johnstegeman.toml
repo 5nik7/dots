@@ -1,41 +1,43 @@
 add_newline = true
-# format = "$os $directory$python$direnv$status$fill${custom.git_branch}${custom.git_status}${custom.starship-jj}$line_break$character"
-palette = "osaka"
+format = "$os $directory$python$direnv$status$fill${custom.git_branch}${custom.git_status}${custom.starship-jj}$line_break$character"
+palette = "rose-pine"
 
 [fill]
 symbol = " "
 
 [directory]
 format = "[$path]($style)"
-style = "fg:base06 bg:bg01"
+style = "fg:iris"
 truncate_to_repo = false
 truncation_length = 5
 
 [git_branch]
-format = "[[ $symbol $branch](fg:palette2 bg:bg01)]($style)"
-style = "bg:bg01 fg:palette2"
+format = "[[ $symbol $branch](fg:foam)]($style)"
+style = "fg:foam"
 symbol = ""
 
 [git_status]
 ahead = " ⇡${count}"
 behind = " ⇣${count}"
-deleted = "[ x${count}](fg:palette2 bg:bg01)"
+deleted = "[ x${count}](fg:love)"
 format = " $untracked$modified$staged$deleted"
-modified = "[ !${count}](fg:palette3 bg:bg01)"
-staged = "[ +${count}](fg:palette2 bg:bg01)"
-untracked = "[ ?${count}](fg:base06 bg:bg01)"
+modified = "[ !${count}](fg:iris)"
+staged = "[ +${count}](fg:pine)"
+untracked = "[ ?${count}](fg:gold)"
 
-#[custom.git_status]
-#when = "! jj --ignore-working-copy root"
-#command = "starship module git_status"
-#description = "Only show git_status if we're not in a jj repo"
+[custom.git_status]
+when = "! jj --ignore-working-copy root"
+command = "starship module git_status"
+description = "Only show git_status if we're not in a jj repo"
 
 [custom.git_commit]
+shell = ["sh", "--norc"]
 when = "! jj --ignore-working-copy root"
 command = "starship module git_commit"
 description = "Only show git_commit if we're not in a jj repo"
 
 [custom.git_branch]
+shell = ["sh", "--norc"]
 when = "! jj --ignore-working-copy root"
 command = "starship module git_branch"
 description = "Only show git_branch if we're not in a jj repo"
@@ -46,7 +48,7 @@ ssh_only = false
 [os]
 disabled = false
 format = "[$symbol ]($style)"
-style = "bg:bg01 fg:base06"
+style = "fg:text"
 
 [os.symbols]
 Macos = ""
@@ -79,13 +81,25 @@ palette7 = "#aab1d3"
 palette8 = "#424866"
 palette9 = "#e77d8f"
 
+
+[palettes.rose-pine]
+overlay = '#26233a'
+love = '#eb6f92'
+gold = '#f6c177'
+rose = '#ebbcba'
+pine = '#31748f'
+foam = '#9ccfd8'
+iris = '#c4a7e7'
+text = '#e0def4'
+
 [python]
 format = "[ $symbol$pyenv_prefix($version)(\\($virtualenv\\))]($style)"
-style = "bg:bg01 fg:base02"
+style = "pine"
 symbol = ""
 
 # custom module for jj status
 [custom.jj]
+shell = ["sh", "--norc"]
 description = "The current jj status"
 when = "jj --ignore-working-copy root"
 symbol = " "
@@ -110,6 +124,12 @@ jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 -
 '
 '''
 
-# [custom.starship-jj]
-# when = "true"
-# command = "/Users/jstegeman/.cargo/bin/starship-jj starship prompt"
+[custom.starship-jj]
+when = "true"
+shell = ["sh", "--norc"]
+# Use starship-jj from PATH (typically in ~/.cargo/bin or system PATH)
+command = "starship-jj --ignore-working-copy starship prompt"
+
+[character]
+success_symbol = '[❯](foam) '
+error_symbol = '[❯](love) '
