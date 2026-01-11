@@ -1,51 +1,34 @@
-# Get the remote URL (origin first, then generic)
+# Get the remote URL
 $gitRemote = git remote get-url origin 2>$null
 if (-not $gitRemote) { $gitRemote = git ls-remote --get-url 2>$null }
 
-# Normalize to: host/user/repo   (no scheme, creds, port, or .git)
-$normalized = $null
-if ($gitRemote)
-{
-  $s = $gitRemote.Trim() -replace '\.git$', ''
-
-  # Try standard URI (https://..., ssh://..., etc.)
-  $uri = $null
-  if ([Uri]::TryCreate($s, [UriKind]::Absolute, [ref]$uri))
-  {
-    $uriHost = $uri.Host
-    $path = $uri.AbsolutePath.Trim('/')
-    $normalized = ($uriHost + '/' + $path).TrimEnd('/')
-  }
-
-  # Fallback for scp-like forms: [user@]host[:port]/path or [user@]host:path
-  if (-not $normalized)
-  {
-    if ($s -match '^(?:(?<user>.+)@)?(?<host>[^:\/]+):(?:(?<port>\d+)\/)?(?<path>.+)$')
-    {
-      $normalized = ($Matches['host'] + '/' + $Matches['path']).TrimEnd('/')
-    }
-    else
-    {
-      # Last resort: strip optional scheme/creds if present
-      $normalized = ($s -replace '^(?:https?:\/\/)?(?:.+@)?', '').TrimEnd('/')
-    }
-  }
+if (-not $gitRemote) {
+  return
 }
 
-# Remove the last segment -> host/user
-$repoBase = ''
-if ($normalized)
-{
-  $parts = $normalized -split '/'
-  $repoBase = if ($parts.Length -gt 1) { ($parts[0..($parts.Length - 2)] -join '/') } else { $normalized }
+# Remove .git suffix and normalize
+$url = $gitRemote.Trim() -replace '\\.git$', ''
+
+# Handle scp-style: user@host:path
+if ($url -match '^(?:.+@)?([^:/]+):(?:\\d+/)?(.+)$') {
+  $hostname = $Matches[1]
+  $path = $Matches[2]
+}
+# Handle standard URLs
+elseif ($url -match '^(?:https?://|ssh://)?(?:.+@)?([^:/]+)(?::\\d+)?/(.+)$') {
+  $hostname = $Matches[1]
+  $path = $Matches[2]
+}
+else {
+  return
 }
 
-# Output with trailing slash (Bash echoed "$REPO_BASE/")
-if ($repoBase)
-{
-  Write-Output ($repoBase.TrimEnd('/') + '/')
+# Remove last segment from path (repo name)
+$pathParts = $path.Trim('/') -split '/'
+if ($pathParts.Length -gt 1) {
+  $base = $pathParts[0..($pathParts.Length - 2)] -join '/'
+  Write-Output "$hostname/$base/"
 }
-else
-{
-  Write-Output '/'
+else {
+  Write-Output "$hostname/"
 }

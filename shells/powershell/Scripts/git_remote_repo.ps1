@@ -1,6 +1,4 @@
-try
-{
-  $gitRemote = git remote get-url origin 2>$null
+$gitRemote = git remote get-url origin 2>$null
   if ([string]::IsNullOrEmpty($gitRemote))
   {
     $gitRemote = git ls-remote --get-url 2>$null
@@ -8,12 +6,7 @@ try
 
   if (-not [string]::IsNullOrEmpty($gitRemote))
   {
-    $gitRemoteUrl = $gitRemote.Trim() -replace '^https?:\/\/(.+@)?' -replace '\.git$' -replace '.+@(.+):(\d+)\/(.+)$', '$1/$3' -replace '.+@(.+):(.+)$', '$1/$2' -replace '\/$'
+    $gitRemoteUrl = $gitRemote.Trim() -replace '^https?:\\/\\/(.+@)?' -replace '\\.git$' -replace '.+@(.+):(\\d+)\\/(.+)$', '$1/$3' -replace '.+@(.+):(.+)$', '$1/$2' -replace '\\/$'
     $repoName = $gitRemoteUrl -replace '.+\/([^\/]+)$', '$1'
-    Write-Output $repoName
+    $repoName
   }
-}
-catch
-{
-  # Git command failed or not in a git repository
-}

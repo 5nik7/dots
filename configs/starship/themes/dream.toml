@@ -509,7 +509,11 @@ disabled = true
 
 [custom.git_before_remote-pwsh]
 description = "Directory before repo (pwsh)"
-command = 'git_before_remote.ps1'
+command = """
+$gitBeforeRepo = ($(Split-Path $(git rev-parse --show-toplevel 2>$null) -Parent) -replace [regex]::Escape($HOME), '~') -replace '\\', '/'
+
+Write-Host "$gitBeforeRepo/"
+"""
 require_repo = true
 when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
@@ -519,7 +523,18 @@ disabled = false
 
 [custom.git_remote_symbol-pwsh]
 description = "Display symbol for remote Git server (pwsh)"
-command = 'git_remote_icon.ps1'
+command = """
+$gitRemote = git ls-remote --get-url
+$symbol = '' # If no Git Remote is returned.
+switch -regex ($gitRemote)
+{
+  'github' { $symbol = '' }
+  'gitlab' { $symbol = '' }
+  'bitbucket' { $symbol = '' }
+  default { $symbol = '' }
+}
+Write-Host $symbol
+"""
 require_repo = true
 when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
@@ -529,7 +544,42 @@ disabled = false
 
 [custom.git_remote-pwsh]
 description = "Remote git repository url (pwsh)"
-command = 'git_remote.ps1'
+command = """
+# Get the remote URL
+$gitRemote = git remote get-url origin 2>$null
+if (-not $gitRemote) { $gitRemote = git ls-remote --get-url 2>$null }
+
+if (-not $gitRemote) {
+  return
+}
+
+# Remove .git suffix and normalize
+$url = $gitRemote.Trim() -replace '\\.git$', ''
+
+# Handle scp-style: user@host:path
+if ($url -match '^(?:.+@)?([^:/]+):(?:\\d+/)?(.+)$') {
+  $hostname = $Matches[1]
+  $path = $Matches[2]
+}
+# Handle standard URLs
+elseif ($url -match '^(?:https?://|ssh://)?(?:.+@)?([^:/]+)(?::\\d+)?/(.+)$') {
+  $hostname = $Matches[1]
+  $path = $Matches[2]
+}
+else {
+  return
+}
+
+# Remove last segment from path (repo name)
+$pathParts = $path.Trim('/') -split '/'
+if ($pathParts.Length -gt 1) {
+  $base = $pathParts[0..($pathParts.Length - 2)] -join '/'
+  Write-Output "$hostname/$base/"
+}
+else {
+  Write-Output "$hostname/"
+}
+"""
 require_repo = true
 when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
@@ -539,7 +589,21 @@ disabled = false
 
 [custom.git_remote_repo-pwsh]
 description = "Remote git repository namer (pwsh)"
-command = 'git_remote_repo.ps1'
+command = """
+$gitRemote = git remote get-url origin 2>$null
+  if ([string]::IsNullOrEmpty($gitRemote))
+  {
+    $gitRemote = git ls-remote --get-url 2>$null
+  }
+
+  if (-not [string]::IsNullOrEmpty($gitRemote))
+  {
+    $gitRemoteUrl = $gitRemote.Trim() -replace '^https?:\\\\/\\\\/(.+@)?' -replace '\\\\.git$' -replace '.+@(.+):(\\\\d+)\\\\/(.+)$', '$1/$3' -replace '.+@(.+):(.+)$', '$1/$2' -replace '\\\\/$'
+    $repoName = $gitRemoteUrl -replace '.+\\\\/([^\\\\/]+)$', '$1'
+    $repoName
+  }
+
+"""
 require_repo = true
 when = """ test "$env:STARSHIP_SHELL" == "pwsh" """
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
