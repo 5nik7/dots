@@ -1,0 +1,432 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+# follow_symlinks = false
+
+format = """\
+[$fill($nodejs$conda$python$rust$lua)
+$os\
+$username\
+$hostname\
+${custom.git_remote_icon}\
+$directory\
+$git_branch\
+$git_commit\
+$git_status\
+$git_metrics\
+$git_state\
+$cmd_duration\
+$time\
+](bg:color_bg)
+$character"""
+
+palette = "default"
+
+[palettes.default]
+
+rosewater = '#f5e0dc'
+flamingo = '#f2adcd'
+pink = '#f5c2e7'
+mauve = '#cba6f7'
+red = '#f38ba8'
+maroon = '#eba0ac'
+peach = '#fab387'
+yellow = '#f9e2af'
+green = '#a6e3a1'
+teal = '#94e2d5'
+sky = '#89dceb'
+sapphire = '#74c7ec'
+blue = '#89b4fa'
+lavender = '#b4befe'
+text = '#cdd6f4'
+subtext1 = '#bac2de'
+subtext0 = '#a6adc8'
+overlay2 = '#9399b2'
+overlay1 = '#7f849c'
+overlay0 = '#6c7086'
+surface2 = '#585b70'
+surface1 = '#45475a'
+surface0 = '#313244'
+base = '#1e1e2e'
+mantle = '#181825'
+crust = '#11111b'
+
+macchiato_surface0 = '#363a4f'
+macchiato_base = '#24273a'
+
+color_ok = 'bright-green'
+color_danger = 'bright-red'
+color_caution = 'bright-yellow'
+
+color_username = ''
+color_bg = 'transparent'
+color_directory = 'bright-blue'
+color_prepo = 'bright-blue'
+color_repo = '#89dceb'
+color_repo_bg = 'transparent'
+color_git_bracket = '#74c7ec'
+color_git_remote_symbol = '#74c7ec'
+color_git_username = '#74c7ec'
+color_git_remote_url = '#74c7ec'
+color_git_remote_repo = '#89dceb'
+color_git_equal = '#585b70'
+color_env = 'yellow'
+color_kubernetes = 'purple'
+color_docker = 'blue'
+color_shell = 'black'
+color_container = ''
+color_other = ''
+color_time = '#b4befe'
+color_duration = ''
+color_os = 'blue'
+color_git = '#585b70'
+color_count = '#94e2d5'
+color_git_branch = '#cba6f7'
+color_git_added = 'bright-green'
+color_git_deleted = 'bright-red'
+color_vimcmd_ok = 'black'
+color_vimcmd_replace = 'yellow'
+color_vimcmd_visual = 'purple'
+color_btry_bg = '#181825'
+color_fill = '#313244'
+color_lua = '#74c7ec'
+color_rust = '#EBA0AC'
+
+[time]
+disabled = true
+time_format = "%-I:%M%P"
+style = "fg:color_time"
+format = '( [$time]($style) )'
+# format = '( [ $time]($style) )'
+[cmd_duration]
+format = "([](bright-black)[ $duration]($style))"
+style = "bright-black"
+disabled = true
+
+[username]
+style_user = 'white'
+style_root = 'white bold'
+format = '[$user]($style)'
+disabled = true
+show_always = true
+# aliases = { "Administrator" = "admin" }
+
+[hostname]
+ssh_only = true
+format = '([@](white)[$hostname](white))[:](bright-white dimmed)([$ssh_symbol ](style))'
+style = "bright-white"
+# trim_at = '.companyname.com'
+trim_at = "-"
+disabled = false
+ssh_symbol = "  "
+
+[fill]
+disabled = false
+# symbol = ''
+# symbol = ''
+# symbol = '󰖰'
+# symbol = ''
+# symbol = ''
+# symbol = '󰍴'
+# symbol = '─'
+# symbol = '━'
+# symbol = '═'
+# symbol = '╌'
+symbol = ' '
+style = 'fg:color_fill bg:color_bg'
+
+[directory]
+style = 'fg:color_directory'
+truncate_to_repo = false
+truncation_length = 10
+fish_style_pwd_dir_length = 1
+repo_root_style = "fg:color_repo bold"
+read_only = " "
+home_symbol = "~"
+use_os_path_sep = false
+use_logical_path = true
+read_only_style = 'fg:color_directory dimmed'
+# truncation_symbol = "…/"
+
+[git_branch]
+symbol = ''
+format = '[($symbol$branch )]($style)'
+style = 'fg:color_git_branch'
+
+[git_commit]
+style = "fg:color_git"
+format = "([($tag)(@$hash)]($style) )"
+commit_hash_length = 7
+only_detached = true
+tag_symbol = "󰓼 "
+tag_disabled = false
+disabled = false
+
+# [git_status]
+# format = '([$all_status$ahead_behind]($style))'
+# style = 'bold fg:color_git'
+# conflicted = '~${count}'
+# stashed = '*${count}'
+# ahead = '⇡${count}'
+# behind = '⇣${count}'
+# diverged = '⇠${behind_count} ⇢${ahead_count}'
+# untracked = '?${count}'
+# modified = '!${count}'
+# staged = '+${count}'
+# renamed = '»${count}'
+# deleted = '󰖭${count}'
+
+[git_status]
+format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](fg:color_git)( $ahead_behind$stashed)]($style)"
+style = "fg:color_git"
+conflicted = "​"
+untracked = "​"
+modified = "​"
+staged = "​"
+renamed = "​"
+deleted = "​"
+stashed = "≡"
+
+[git_metrics]
+format = '([([+$added]($added_style))([-$deleted]($deleted_style))](fg:color_git) )'
+added_style = "fg:color_git_added"
+deleted_style = "fg:color_git_deleted"
+only_nonzero_diffs = true
+disabled = true
+
+[git_state]
+style = "fg:color_danger"
+format = '([$state( $progress_current/$progress_total)]($style bold) )'
+rebase = "REBASING"
+merge = "MERGING"
+revert = "REVERTING"
+cherry_pick = "CHERRY-PICKING"
+bisect = "BISECTING"
+am = "AM"
+am_or_rebase = "AM/REBASE"
+disabled = false
+
+[nodejs]
+detect_files = ['package.json']
+detect_folders = []
+symbol = '󰎙 '
+style = 'green'
+version_format = '${raw}'
+format = '([${symbol}([$version](Bright-green)) ]($style))'
+disabled = false
+
+[lua]
+detect_folders = []
+style = 'fg:color_lua'
+symbol = " "
+format = '([${symbol}([$version](fg:color_lua)) ]($style))'
+
+[python]
+format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+symbol = '󰌠 '
+
+[rust]
+format = "[$symbol($version )]($style)"
+version_format = "v${raw}"
+style = "fg:color_rust"
+disabled = false
+detect_extensions = ["rs"]
+detect_files = ["Cargo.toml"]
+detect_folders = []
+symbol = "\ue68b "
+
+[os]
+disabled = true
+style = "fg:color_os"
+format = '[$symbol ]($style)'
+
+[os.symbols]
+Alpaquita = ""
+Alpine = ""
+AlmaLinux = ""
+Amazon = ""
+Android = ""
+Arch = ""
+Artix = ""
+CentOS = ""
+Debian = ""
+DragonFly = ""
+Emscripten = ""
+EndeavourOS = ""
+Fedora = ""
+FreeBSD = ""
+Garuda = "󰛓"
+Gentoo = ""
+HardenedBSD = "󰞌"
+Illumos = "󰈸"
+Kali = " "
+Linux = ""
+Mabox = ""
+Macos = ""
+Manjaro = ""
+Mariner = ""
+MidnightBSD = ""
+Mint = ""
+NetBSD = ""
+NixOS = ""
+OpenBSD = "󰈺"
+openSUSE = ""
+OracleLinux = "󰌷"
+Pop = ""
+Raspbian = ""
+Redhat = ""
+RedHatEnterprise = ""
+RockyLinux = ""
+Redox = "󰀘"
+Solus = "󰠳"
+SUSE = ""
+Ubuntu = ""
+Unknown = ""
+Void = ""
+Windows = "󰍲"
+# Windows = "󰚌"
+# Windows = ""
+# Windows = "󰖳"
+# Windows = ""
+
+[package]
+symbol = "󰏗 "
+
+[perl]
+symbol = " "
+
+[php]
+symbol = " "
+
+[pijul_channel]
+symbol = " "
+
+[rlang]
+symbol = "󰟔 "
+
+[ruby]
+symbol = " "
+
+[scala]
+symbol = " "
+
+[swift]
+symbol = " "
+
+[zig]
+symbol = " "
+
+[gradle]
+symbol = " "
+
+[aws]
+symbol = "  "
+
+[buf]
+symbol = " "
+
+[c]
+symbol = " "
+
+[crystal]
+symbol = " "
+
+[dart]
+symbol = " "
+
+[docker_context]
+symbol = " "
+
+[elixir]
+symbol = " "
+
+[elm]
+symbol = " "
+
+[fennel]
+symbol = " "
+
+[fossil_branch]
+symbol = " "
+
+[golang]
+symbol = " "
+
+[guix_shell]
+symbol = " "
+
+[haskell]
+symbol = " "
+
+[haxe]
+symbol = " "
+
+[hg_branch]
+symbol = " "
+
+[java]
+symbol = " "
+
+[julia]
+symbol = " "
+
+[kotlin]
+symbol = " "
+
+[memory_usage]
+symbol = "󰍛 "
+
+[meson]
+symbol = "󰔷 "
+
+[nim]
+symbol = "󰆥 "
+
+[nix_shell]
+symbol = " "
+
+[ocaml]
+symbol = " "
+
+[line_break]
+disabled = false
+
+# [shell]
+# format = '[$indicator]($style)'
+# fish_indicator = ''
+# powershell_indicator = 'PS'
+# bash_indicator = ''
+# zsh_indicator = ''
+# cmd_indicator = ''
+# unknown_indicator = ''
+# style = 'bg:none fg:cyan'
+# disabled = true
+
+[character]
+success_symbol = '[](fg:color_ok bold)'
+error_symbol = '[](fg:color_danger bold)'
+vimcmd_symbol = '[󰅂](fg:color_vimcmd_ok)'
+vimcmd_replace_one_symbol = '[󰅂](fg:color_vimcmd_replace)'
+vimcmd_replace_symbol = '[󰅂](fg:color_vimcmd_replace)'
+vimcmd_visual_symbol = '[󰅂](fg:color_vimcmd_visual)'
+format = '$symbol '
+
+[directory.substitutions]
+# "~/Desktop" = " Desktop"
+# "~/Videos" = " Videos"
+# "~/Pictures" = " Pictures"
+# "~/Music" = " Music"
+# "~/Documents" = " Documents"
+# "~/Downloads" = "󰇚 Downloads"
+"C:/" = "/"
+"/storage/emulated/0/Documents" = "DOCS"
+
+[custom.git_remote_icon]
+description = "Git host icon"
+when = 'git remote get-url origin 2>/dev/null'
+command = """
+ICON=$(git-remote-info -I0)
+echo "$ICON"
+"""
+format = '[$output ]($style)'
+style = "fg:color_git_remote_symbol"

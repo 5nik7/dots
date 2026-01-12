@@ -1,0 +1,366 @@
+#!/usr/bin/env bash
+
+# ---- colors (TTY-safe, POSIX-safe) ----
+if [ -t 1 ]; then
+  ESC=$(printf '\033')
+  C_RESET="${ESC}[0m"
+  C_BOLD="${ESC}[1m"
+  C_CYAN="${ESC}[36m"
+  C_GREEN="${ESC}[32m"
+  C_YELLOW="${ESC}[33m"
+else
+  C_RESET='' C_BOLD='' C_CYAN='' C_GREEN='' C_YELLOW=''
+fi
+
+usage() {
+  cat <<EOF
+${C_BOLD}${C_CYAN}git-remote-info${C_RESET}
+
+${C_BOLD}Usage:${C_RESET}
+  ${C_CYAN}git-remote-info${C_RESET} ${C_YELLOW}[path] [remote]${C_RESET} ${C_GREEN}[flags]${C_RESET}
+  ${C_CYAN}git-remote-info${C_RESET} ${C_GREEN}-h | --help${C_RESET}
+
+${C_BOLD}Behavior:${C_RESET}
+  • No args:
+      – If current dir is a git repo → outputs ${C_BOLD}--default${C_RESET}
+      – Otherwise → prints this help
+  • Positional:
+      – ${C_YELLOW}path${C_RESET}   (default: ${C_BOLD}.${C_RESET})
+      – ${C_YELLOW}remote${C_RESET} (default: ${C_BOLD}origin${C_RESET})
+  • If no scope flags are provided → defaults to ${C_BOLD}--default${C_RESET}
+
+${C_BOLD}Scope flags:${C_RESET}
+  ${C_GREEN}--default${C_RESET}             scheme, host, owner, repo
+  ${C_GREEN}-a${C_RESET}, ${C_GREEN}--all${C_RESET}         everything: scheme, host, owner, repo, basename, fullname, is_ssh, icon
+  ${C_GREEN}-s${C_RESET}, ${C_GREEN}--scheme${C_RESET}     scheme
+  ${C_GREEN}-H${C_RESET}, ${C_GREEN}--host${C_RESET}       host
+  ${C_GREEN}-o${C_RESET}, ${C_GREEN}--owner${C_RESET}      owner
+  ${C_GREEN}-r${C_RESET}, ${C_GREEN}--repo${C_RESET}       repo (no .git)
+  ${C_GREEN}-b${C_RESET}, ${C_GREEN}--basename${C_RESET}   basename (repo only)
+  ${C_GREEN}-f${C_RESET}, ${C_GREEN}--fullname${C_RESET}   fullname (owner/repo)
+  ${C_GREEN}-i${C_RESET}, ${C_GREEN}--is-ssh${C_RESET}     is_ssh
+  ${C_GREEN}-I${C_RESET}, ${C_GREEN}--icon${C_RESET}       icon for host (explicit icon implies --value)
+  ${C_GREEN}-E${C_RESET}, ${C_GREEN}--env${C_RESET}        exportable vars (export KEY='VAL')
+
+${C_BOLD}Formatting flags:${C_RESET}
+  ${C_GREEN}-v${C_RESET}, ${C_GREEN}--value${C_RESET}      values only
+  ${C_GREEN}-0${C_RESET}, ${C_GREEN}--null${C_RESET}       NUL-delimited output
+      ${C_GREEN}--join${C_RESET} ${C_YELLOW}SEP${C_RESET}   join outputs with SEP
+
+${C_BOLD}Notes:${C_RESET}
+  • Clustered short flags supported: ${C_CYAN}-orv${C_RESET}, ${C_CYAN}-aH0${C_RESET}
+
+Exit codes:
+  0 success / usage shown
+  2 git missing / repo missing / bad args
+  3 parse error
+EOF
+}
+
+fail() {
+  code=$1
+  shift
+  printf '%s\n' "$*" >&2
+  exit "$code"
+}
+
+command -v git >/dev/null 2>&1 || fail 2 "error: git not found"
+
+# No-arg behavior
+if [ $# -eq 0 ] && ! git -C . rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  usage
+  exit 0
+fi
+
+path='.'
+remote='origin'
+
+want_i=false want_s=false want_h=false want_o=false want_r=false
+want_b=false want_f=false want_I=false
+want_any=false
+
+want_value=false want_null=false want_join=false join_sep=''
+want_env=false
+
+icon_explicit=false
+
+set_scope_default() {
+  want_s=true
+  want_h=true
+  want_o=true
+  want_r=true
+  want_any=true
+}
+
+set_scope_all() {
+  want_s=true
+  want_h=true
+  want_o=true
+  want_r=true
+  want_b=true
+  want_f=true
+  want_i=true
+  want_I=true
+  want_any=true
+}
+
+apply_short_flag() {
+  c=$1
+  case "$c" in
+  h)
+    usage
+    exit 0
+    ;;
+  a) set_scope_all ;;
+  s)
+    want_s=true
+    want_any=true
+    ;;
+  H)
+    want_h=true
+    want_any=true
+    ;;
+  o)
+    want_o=true
+    want_any=true
+    ;;
+  r)
+    want_r=true
+    want_any=true
+    ;;
+  b)
+    want_b=true
+    want_any=true
+    ;;
+  f)
+    want_f=true
+    want_any=true
+    ;;
+  i)
+    want_i=true
+    want_any=true
+    ;;
+  I)
+    want_I=true
+    want_any=true
+    icon_explicit=true
+    ;;
+  E) want_env=true ;;
+  v) want_value=true ;;
+  0) want_null=true ;;
+  *) fail 2 "unknown option: -$c" ;;
+  esac
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+  -h | --help)
+    usage
+    exit 0
+    ;;
+
+  --default) set_scope_default ;;
+  -a | --all) set_scope_all ;;
+
+  --scheme)
+    want_s=true
+    want_any=true
+    ;;
+  --host)
+    want_h=true
+    want_any=true
+    ;;
+  --owner)
+    want_o=true
+    want_any=true
+    ;;
+  --repo)
+    want_r=true
+    want_any=true
+    ;;
+  --basename)
+    want_b=true
+    want_any=true
+    ;;
+  --fullname)
+    want_f=true
+    want_any=true
+    ;;
+  --is-ssh)
+    want_i=true
+    want_any=true
+    ;;
+  --icon)
+    want_I=true
+    want_any=true
+    icon_explicit=true
+    ;;
+
+  --env) want_env=true ;;
+  --value) want_value=true ;;
+  --null) want_null=true ;;
+  --join)
+    shift
+    [ $# -gt 0 ] || fail 2 "--join needs a separator"
+    join_sep=$1
+    want_join=true
+    ;;
+
+  -[!-]*)
+    flags=${1#-}
+    while [ -n "$flags" ]; do
+      c=$(printf '%s' "$flags" | cut -c1)
+      flags=$(printf '%s' "$flags" | cut -c2-)
+      apply_short_flag "$c"
+    done
+    ;;
+
+  --*) fail 2 "unknown option: $1" ;;
+
+  *)
+    if [ "$path" = "." ]; then
+      path=$1
+    elif [ "$remote" = "origin" ]; then
+      remote=$1
+    else
+      fail 2 "too many positional args: $1"
+    fi
+    ;;
+  esac
+  shift
+done
+
+# default scope == --default
+if [ "$want_any" = false ]; then
+  set_scope_default
+fi
+
+# --icon implies --value ONLY when explicitly requested (not via --all)
+if [ "$icon_explicit" = true ] && [ "$want_env" = false ]; then
+  want_value=true
+fi
+
+git -C "$path" rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
+  fail 2 "not a git repo: $path"
+
+# ---- starship-style vars + fallback ----
+GIT_REMOTE=$(git -C "$path" remote get-url "$remote" 2>/dev/null)
+if [ -z "$GIT_REMOTE" ]; then
+  GIT_REMOTE=$(git -C "$path" ls-remote --get-url 2>/dev/null)
+fi
+
+# icon (your rules)
+if [ -z "$GIT_REMOTE" ]; then
+  GIT_REMOTE_SYMBOL=""
+elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'github'; then
+  GIT_REMOTE_SYMBOL=""
+elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'gitlab'; then
+  GIT_REMOTE_SYMBOL=""
+elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'bitbucket'; then
+  GIT_REMOTE_SYMBOL=""
+elif [ -n "$GIT_REMOTE" ]; then
+  GIT_REMOTE_SYMBOL=""
+else
+  GIT_REMOTE_SYMBOL=""
+fi
+
+# If remote missing and user requested more than icon, bail
+if [ -z "$GIT_REMOTE" ]; then
+  only_icon=true
+  [ "$want_s" = true ] && only_icon=false
+  [ "$want_h" = true ] && only_icon=false
+  [ "$want_o" = true ] && only_icon=false
+  [ "$want_r" = true ] && only_icon=false
+  [ "$want_b" = true ] && only_icon=false
+  [ "$want_f" = true ] && only_icon=false
+  [ "$want_i" = true ] && only_icon=false
+  if [ "$only_icon" = false ]; then
+    fail 3 "parse error: no remote url found"
+  fi
+fi
+
+# is_ssh
+if printf '%s\n' "$GIT_REMOTE" | grep -Eq '^(ssh://|[^@]+@[^:/]+[:/])'; then
+  is_ssh=true
+else
+  is_ssh=false
+fi
+
+# scheme
+scheme=unknown
+if printf '%s\n' "$GIT_REMOTE" | grep -Eq '^[a-zA-Z][a-zA-Z0-9+.-]*://'; then
+  scheme=https
+elif [ "$is_ssh" = true ]; then
+  scheme=ssh
+fi
+
+# host
+host=$(printf '%s\n' "$GIT_REMOTE" | sed -n \
+  -e 's#^[^:]*://\([^/]\+\)/.*#\1#p' \
+  -e 's#^[^@]*@\([^:/]\+\)[:/].*#\1#p')
+
+# owner + repo (repo sans .git)
+set -- $(printf '%s\n' "$GIT_REMOTE" | sed -n 's#.*[/:]\([^/]\+\)/\([^/]\+\)#\1 \2#p')
+owner=$1
+repo=${2%.git}
+
+# allow icon-only even if parse fails
+if [ -n "$GIT_REMOTE" ] && { [ -z "$host" ] || [ -z "$owner" ] || [ -z "$repo" ]; }; then
+  if [ "$want_I" = true ] &&
+    [ "$want_s" = false ] && [ "$want_h" = false ] && [ "$want_o" = false ] && [ "$want_r" = false ] &&
+    [ "$want_b" = false ] && [ "$want_f" = false ] && [ "$want_i" = false ]; then
+    :
+  else
+    fail 3 "parse error: could not parse remote url"
+  fi
+fi
+
+basename=$repo
+fullname=$owner/$repo
+
+env_quote() { printf "%s" "$1" | sed "s/'/'\"'\"'/g"; }
+
+format_token() {
+  k=$1 v=$2
+  if [ "$want_env" = true ]; then
+    qv=$(env_quote "$v")
+    printf "export %s='%s'" "$k" "$qv"
+  elif [ "$want_value" = true ]; then
+    printf "%s" "$v"
+  else
+    printf "%s=%s" "$k" "$v"
+  fi
+}
+
+emit_token() {
+  tok=$1
+  if [ "$want_join" = true ]; then
+    joined=${joined:+$joined$join_sep}$tok
+  else
+    if [ "$want_null" = true ]; then
+      printf '%s\0' "$tok"
+    else
+      printf '%s\n' "$tok"
+    fi
+  fi
+}
+
+joined=''
+
+[ "$want_s" = true ] && emit_token "$(format_token scheme "$scheme")"
+[ "$want_h" = true ] && emit_token "$(format_token host "$host")"
+[ "$want_o" = true ] && emit_token "$(format_token owner "$owner")"
+[ "$want_r" = true ] && emit_token "$(format_token repo "$repo")"
+[ "$want_b" = true ] && emit_token "$(format_token basename "$basename")"
+[ "$want_f" = true ] && emit_token "$(format_token fullname "$fullname")"
+[ "$want_i" = true ] && emit_token "$(format_token is_ssh "$is_ssh")"
+[ "$want_I" = true ] && emit_token "$(format_token icon "$GIT_REMOTE_SYMBOL")"
+
+if [ "$want_join" = true ]; then
+  if [ "$want_null" = true ]; then
+    printf '%s\0' "$joined"
+  else
+    printf '%s\n' "$joined"
+  fi
+fi
+
