@@ -2,6 +2,7 @@
 
 add_newline = false
 # follow_symlinks = false
+command_timeout = 2000
 
 format = """\
 [$fill($nodejs$conda$python$rust$lua)
