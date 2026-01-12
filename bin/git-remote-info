@@ -253,7 +253,7 @@ fi
 if [ -z "$GIT_REMOTE" ]; then
   GIT_REMOTE_SYMBOL=""
 elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'github'; then
-  GIT_REMOTE_SYMBOL=""
+  GIT_REMOTE_SYMBOL="󰊤"
 elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'gitlab'; then
   GIT_REMOTE_SYMBOL=""
 elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'bitbucket'; then
@@ -363,4 +363,3 @@ if [ "$want_join" = true ]; then
     printf '%s\n' "$joined"
   fi
 fi
-

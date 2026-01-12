@@ -142,7 +142,7 @@ if (-not $GIT_REMOTE) { $GIT_REMOTE = (git -C $path ls-remote --get-url 2>$null)
 
 # icon logic (your rules)
 if (-not $GIT_REMOTE) { $GIT_REMOTE_SYMBOL = "" }
-elseif ($GIT_REMOTE -match 'github') { $GIT_REMOTE_SYMBOL = "" }
+elseif ($GIT_REMOTE -match 'github') { $GIT_REMOTE_SYMBOL = "󰊤" }
 elseif ($GIT_REMOTE -match 'gitlab') { $GIT_REMOTE_SYMBOL = "" }
 elseif ($GIT_REMOTE -match 'bitbucket') { $GIT_REMOTE_SYMBOL = "" }
 elseif ($GIT_REMOTE) { $GIT_REMOTE_SYMBOL = "" }

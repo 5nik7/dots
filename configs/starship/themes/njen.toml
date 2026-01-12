@@ -11,7 +11,7 @@ $username\
 $hostname\
 $directory\
 (\
-${custom.git_remote_icon} \
+${custom.git_remote_icon}\
 $git_branch\
 $git_commit\
 $git_status\
@@ -64,6 +64,8 @@ color_caution = 'bright-yellow'
 color_username = ''
 color_bg = 'transparent'
 color_directory = 'bright-blue'
+color_directory_repo = '#89dceb'
+color_directory_readonly = 'yellow'
 color_prepo = 'bright-blue'
 color_repo = '#89dceb'
 color_repo_bg = 'transparent'
@@ -139,22 +141,22 @@ symbol = ' '
 style = 'fg:color_fill bg:color_bg'
 
 [directory]
-style = 'fg:blue'
+style = 'fg:color_directory'
 truncate_to_repo = false
 truncation_length = 10
 fish_style_pwd_dir_length = 1
-repo_root_style = "fg:cyan bold"
+repo_root_style = "fg:color_directory_repo bold"
 read_only = " "
 home_symbol = "~"
 use_os_path_sep = false
 use_logical_path = true
-read_only_style = 'fg:blue dimmed'
+read_only_style = 'fg:color_directory_readonly'
 # truncation_symbol = "…/"
 
 [git_branch]
 symbol = ''
 format = '[($symbol$branch )]($style)'
-style = 'fg:purple'
+style = 'fg:color_git_branch'
 
 [git_commit]
 style = "fg:color_git"
@@ -432,4 +434,4 @@ ICON=$(git-remote-info -I0)
 echo "$ICON"
 """
 format = '[$output ]($style)'
-style = "purple"
+style = 'fg:color_git_branch'
