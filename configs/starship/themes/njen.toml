@@ -54,20 +54,14 @@ base = '#1e1e2e'
 mantle = '#181825'
 crust = '#11111b'
 
-macchiato_surface0 = '#363a4f'
-macchiato_base = '#24273a'
-
 color_ok = 'bright-green'
 color_danger = 'bright-red'
 color_caution = 'bright-yellow'
-
 color_username = ''
 color_bg = 'transparent'
 color_directory = 'bright-blue'
-color_directory_repo = '#89dceb'
-color_directory_readonly = 'yellow'
-color_prepo = 'bright-blue'
-color_repo = '#89dceb'
+color_directory_repo = 'bright-cyan'
+color_directory_readonly = '#74c7ec'
 color_repo_bg = 'transparent'
 color_git_bracket = '#74c7ec'
 color_git_remote_symbol = '#74c7ec'
@@ -96,6 +90,7 @@ color_btry_bg = '#181825'
 color_fill = '#313244'
 color_lua = '#74c7ec'
 color_rust = '#EBA0AC'
+color_node = 'bright-green'
 
 [time]
 disabled = true
@@ -103,6 +98,7 @@ time_format = "%-I:%M%P"
 style = "fg:color_time"
 format = '( [$time]($style) )'
 # format = '( [ $time]($style) )'
+
 [cmd_duration]
 format = "([](bright-black)[ $duration]($style))"
 style = "bright-black"
@@ -146,7 +142,7 @@ truncate_to_repo = false
 truncation_length = 10
 fish_style_pwd_dir_length = 1
 repo_root_style = "fg:color_directory_repo bold"
-read_only = " "
+read_only = " 󰌾"
 home_symbol = "~"
 use_os_path_sep = false
 use_logical_path = true
@@ -215,9 +211,9 @@ disabled = false
 detect_files = ['package.json']
 detect_folders = []
 symbol = '󰎙 '
-style = 'green'
+style = 'fg:color_node'
 version_format = '${raw}'
-format = '([${symbol}([$version](Bright-green)) ]($style))'
+format = '([${symbol}([$version](fg:color_node)) ]($style))'
 disabled = false
 
 [lua]
@@ -408,8 +404,8 @@ disabled = false
 # disabled = true
 
 [character]
-success_symbol = '[](fg:color_ok bold)'
-error_symbol = '[](fg:color_danger bold)'
+success_symbol = '[](fg:color_ok bold)'
+error_symbol = '[](fg:color_danger bold)'
 vimcmd_symbol = '[󰅂](fg:color_vimcmd_ok)'
 vimcmd_replace_one_symbol = '[󰅂](fg:color_vimcmd_replace)'
 vimcmd_replace_symbol = '[󰅂](fg:color_vimcmd_replace)'
