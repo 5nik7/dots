@@ -2,7 +2,7 @@
 
 add_newline = false
 # follow_symlinks = false
-command_timeout = 2000
+command_timeout = 5000
 
 format = """\
 [$fill($nodejs$conda$python$rust$lua)
@@ -426,7 +426,7 @@ format = '$symbol '
 description = "Git host icon"
 when = 'git remote get-url origin 2>/dev/null'
 command = """
-echo "$(git-remote-info --icon -0)"
+echo "$(git-remote-info --icon)"
 """
 format = '[$output ]($style)'
 style = 'fg:color_git_branch'
