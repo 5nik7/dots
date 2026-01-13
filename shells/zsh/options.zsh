@@ -25,6 +25,7 @@ setopt_if_exists always_to_end
 setopt_if_exists auto_list
 setopt_if_exists menu_complete
 setopt_if_exists complete_in_word
+setopt_if_exists re_match_pcre
 
 unset setopt_if_exists
 unsetopt beep

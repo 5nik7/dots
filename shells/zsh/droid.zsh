@@ -2,6 +2,14 @@ export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 
 zinit light kutsan/zsh-system-clipboard
 
+function zvm_config() {
+  ZVM_SYSTEM_CLIPBOARD_ENABLED=true
+  ZVM_CLIPBOARD_COPY_CMD='termux-clipboard-set'
+  ZVM_CLIPBOARD_PASTE_CMD='termux-clipboard-get'
+}
+
+zinit light jeffreytse/zsh-vi-mode
+
 export LYNX_CFG="$DOTFILES/lynx/lynx.cfg"
 export LYNX_LSS="$DOTFILES/lynx/lynx.lss"
 
