@@ -33,8 +33,8 @@ function Usage {
 
 function Fail([string]$m, [int]$code = 2) { [Console]::Error.WriteLine($m); exit $code }
 
-$path="."
-$remote="origin"
+$path = (Get-Location)
+$remote = "origin"
 
 $wantScheme=$false; $wantHost=$false; $wantOwner=$false; $wantRepo=$false
 $wantBasename=$false; $wantFullname=$false; $wantIsSsh=$false; $wantIcon=$false
