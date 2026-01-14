@@ -424,6 +424,7 @@ format = '$symbol '
 
 [custom.git_remote_icon]
 description = "Git host icon"
+shell = ["bash"]
 when = 'git remote get-url origin 2>/dev/null'
 command = """
 echo "$(git-remote-info --icon)"
