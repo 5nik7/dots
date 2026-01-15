@@ -66,15 +66,17 @@ if [ $# -eq 0 ] && ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 0
 fi
 
+is_remote=''
 cwd=$(pwd)
 
 path="$cwd"
 remote='origin'
 
+want_icon=false
 want_i=false want_s=false want_h=false want_o=false want_r=false
 want_any=false
 
-want_value=false want_null=false want_join=false join_sep=''
+want_kwy=false want_value=true want_null=false want_join=false join_sep=''
 
 icon_explicit=false
 
@@ -87,7 +89,7 @@ set_scope_default() {
 }
 
 set_scope_all() {
-  want_I=true
+  want_icon=true
   want_s=true
   want_h=true
   want_o=true
@@ -119,11 +121,11 @@ apply_short_flag() {
     want_r=true
     want_any=true
     ;;
-  I)
-    want_I=true
+  i)
+    want_icon=true
     want_any=true
-    icon_explicit=true
     ;;
+  k) want_key=true ;;
   v) want_value=true ;;
   0) want_null=true ;;
   *) fail 2 "unknown option: -$c" ;;
@@ -156,11 +158,10 @@ while [ $# -gt 0 ]; do
     want_any=true
     ;;
   --icon)
-    want_I=true
+    want_icon=true
     want_any=true
-    icon_explicit=true
     ;;
-  --value) want_value=true ;;
+  --key) want_key=true ;;
   --null) want_null=true ;;
   --join)
     shift
@@ -198,18 +199,13 @@ if [ "$want_any" = false ]; then
   set_scope_default
 fi
 
-# --icon implies --value ONLY when explicitly requested (not via --all)
-if [ "$icon_explicit" = true ]; then
-  want_value=true
-fi
-
 git -C "$path" rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
   fail 2 "not a git repo: $path"
 
 # ---- starship-style vars + fallback ----
 GIT_REMOTE=$(git -C "$path" remote get-url "$remote" 2>/dev/null)
 if [ -z "$GIT_REMOTE" ]; then
-  GIT_REMOTE=$(git -C "$path" ls-remote --get-url 2>/dev/null)
+  GIT_REMOTE=$(git -C "$path" ls-remote --get-url 2>/dev/null0)
 fi
 
 # icon (your rules)
@@ -225,18 +221,6 @@ elif [ -n "$GIT_REMOTE" ]; then
   GIT_REMOTE_SYMBOL=""
 else
   GIT_REMOTE_SYMBOL=""
-fi
-
-# If remote missing and user requested more than icon, bail
-if [ -z "$GIT_REMOTE" ]; then
-  only_icon=true
-  [ "$want_s" = true ] && only_icon=false
-  [ "$want_h" = true ] && only_icon=false
-  [ "$want_o" = true ] && only_icon=false
-  [ "$want_r" = true ] && only_icon=false
-  if [ "$only_icon" = false ]; then
-    fail 3 "parse error: no remote url found"
-  fi
 fi
 
 if printf '%s\n' "$GIT_REMOTE" | grep -Eq '^(ssh://|[^@]+@[^:/]+[:/])'; then
@@ -262,22 +246,12 @@ set -- $(printf '%s\n' "$GIT_REMOTE" | sed -n 's#.*[/:]\([^/]\+\)/\([^/]\+\)#\1 
 owner=$1
 repo=${2%.git}
 
-# allow icon-only even if parse fails
-if [ -n "$GIT_REMOTE" ] && { [ -z "$host" ] || [ -z "$owner" ] || [ -z "$repo" ]; }; then
-  if [ "$want_I" = true ] &&
-    [ "$want_s" = false ] && [ "$want_h" = false ] && [ "$want_o" = false ] && [ "$want_r" = false ]; then
-    :
-  else
-    fail 3 "parse error: could not parse remote url"
-  fi
-fi
-
 format_token() {
   k=$1 v=$2
-  if [ "$want_value" = true ]; then
-    printf "%s" "$v"
-  else
+  if [ "$want_key" = true ]; then
     printf "%s=%s" "$k" "$v"
+  else
+    printf "%s" "$v"
   fi
 }
 
@@ -296,7 +270,7 @@ emit_token() {
 
 joined=''
 
-[ "$want_I" = true ] && emit_token "$(format_token icon "$GIT_REMOTE_SYMBOL")"
+[ "$want_icon" = true ] && emit_token "$(format_token icon "$GIT_REMOTE_SYMBOL")"
 [ "$want_s" = true ] && emit_token "$(format_token scheme "$scheme")"
 [ "$want_h" = true ] && emit_token "$(format_token host "$host")"
 [ "$want_o" = true ] && emit_token "$(format_token owner "$owner")"
