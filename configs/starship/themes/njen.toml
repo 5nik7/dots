@@ -12,6 +12,7 @@ $hostname\
 $directory\
 (\
 ${custom.git_remote_icon}\
+${custom.git_remote_icon-pwsh}\
 $git_branch\
 $git_commit\
 $git_status\
@@ -437,7 +438,7 @@ description = "Git host icon"
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
 when = 'git remote get-url origin 2>$null'
 command = """
-echo "$(git-remote-info --icon)"
+git-it.ps1 -Iv 2>&1
 """
 format = '[$output ]($style)'
 style = 'fg:color_git_branch'
