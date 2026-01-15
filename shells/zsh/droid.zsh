@@ -6,6 +6,10 @@ function zvm_config() {
   ZVM_SYSTEM_CLIPBOARD_ENABLED=true
   ZVM_CLIPBOARD_COPY_CMD='termux-clipboard-set'
   ZVM_CLIPBOARD_PASTE_CMD='termux-clipboard-get'
+
+  ZVM_OPEN_CMD='termux-open'
+  ZVM_OPEN_URL_CMD='termux-open-url'
+  ZVM_OPEN_FILE_CMD='nvim'
 }
 
 zinit light jeffreytse/zsh-vi-mode
