@@ -143,7 +143,7 @@ bak() {
   # Need at least one path to back up
   [ "${#args[@]}" -gt 0 ] || {
     usage header
-    return 1
+    return 0
   }
 
   [ "$quiet_mode" -eq 1 ] || echo

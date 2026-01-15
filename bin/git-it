@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+separator='='
+
 if [ -t 1 ]; then
   ESC=$(printf '\033')
   C_RESET="${ESC}[0m"
@@ -15,17 +17,22 @@ if [ -t 1 ]; then
   C_BLUE="${ESC}[34m"
   C_MAGENTA="${ESC}[35m"
   C_CYAN="${ESC}[36m"
+  C_WHITE="${ESC}[37m"
 else
-  C_RESET='' C_BOLD='' C_DIM='' C_ITALIC='' C_UNDERLINE='' C_REVERSE='' C_BLACK='' C_RED='' C_GREEN='' C_YELLOW='' C_BLUE='' C_MAGENTA='' C_CYAN=''
+  C_RESET='' C_BOLD='' C_DIM='' C_ITALIC='' C_UNDERLINE='' C_REVERSE='' C_BLACK='' C_RED='' C_GREEN='' C_YELLOW='' C_BLUE='' C_MAGENTA='' C_CYAN='' C_WHITE=''
 fi
+
+color_key="${C_BLUE}"
+color_value="${C_BOLD}${C_GREEN}"
+color_separator="${color_key}${C_DIM}"
 
 usage() {
   cat <<EOF
-${C_BOLD}${C_CYAN}git-remote-info${C_RESET}
+${C_BOLD}${C_CYAN}$cmdname${C_RESET}
 
 ${C_BOLD}Usage:${C_RESET}
-${C_CYAN} git-remote-info${C_RESET} ${C_YELLOW}[path] [remote]${C_RESET} ${C_GREEN}[flags]${C_RESET}
-${C_CYAN} git-remote-info${C_RESET} ${C_GREEN}-h | --help${C_RESET}
+${C_CYAN} $cmdname${C_RESET} ${C_YELLOW}[path] [remote]${C_RESET} ${C_GREEN}[flags]${C_RESET}
+${C_CYAN} $cmdname${C_RESET} ${C_GREEN}-h | --help${C_RESET}
 
 ${C_BOLD}Scope flags:${C_RESET}
 ${C_GREEN} --default${C_RESET}
@@ -58,6 +65,10 @@ fail() {
   exit "$code"
 }
 
+pathit() {
+  "$1" | sed "s|${HOME}|~|"
+}
+
 command -v git >/dev/null 2>&1 || fail 2 "error: git not found"
 
 # No-arg behavior
@@ -66,34 +77,41 @@ if [ $# -eq 0 ] && ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 0
 fi
 
-is_remote=''
-cwd=$(pwd)
+cmdname=$(basename "$0")
 
-path="$cwd"
+is_remote=''
 remote='origin'
 
-want_icon=false
-want_i=false want_s=false want_h=false want_o=false want_r=false
-want_any=false
+cwd=$(pwd)
+path="$cwd"
+pathout="$(echo "$path" | sed "s|${HOME}|~|")"
 
-want_kwy=false want_value=true want_null=false want_join=false join_sep=''
+want_any=false want_icon=false want_scheme=false want_host=false want_owner=false want_repo=false
+want_color=false want_kwy=false want_value=true want_null=false want_join=false join_sep=''
 
 icon_explicit=false
 
 set_scope_default() {
-  want_s=true
-  want_h=true
-  want_o=true
-  want_r=true
+  want_color=true
+  want_key=true
+  want_url=true
+  want_icon=true
+  want_scheme=true
+  want_host=true
+  want_owner=true
+  want_repo=true
   want_any=true
 }
 
 set_scope_all() {
+  want_color=true
+  want_key=true
+  want_url=true
   want_icon=true
-  want_s=true
-  want_h=true
-  want_o=true
-  want_r=true
+  want_scheme=true
+  want_host=true
+  want_owner=true
+  want_repo=true
   want_any=true
 }
 
@@ -106,25 +124,33 @@ apply_short_flag() {
     ;;
   a) set_scope_all ;;
   s)
-    want_s=true
+    want_scheme=true
     want_any=true
     ;;
   H)
-    want_h=true
+    want_host=true
     want_any=true
     ;;
   o)
-    want_o=true
+    want_owner=true
     want_any=true
     ;;
   r)
-    want_r=true
+    want_repo=true
     want_any=true
     ;;
   i)
     want_icon=true
     want_any=true
     ;;
+  u)
+    want_url=true
+    want_any=true
+    ;;
+  c)
+    want_color=true
+    ;;
+
   k) want_key=true ;;
   v) want_value=true ;;
   0) want_null=true ;;
@@ -142,30 +168,47 @@ while [ $# -gt 0 ]; do
   -a | --all) set_scope_all ;;
 
   --scheme)
-    want_s=true
+    want_scheme=true
     want_any=true
     ;;
   --host)
-    want_h=true
+    want_host=true
     want_any=true
     ;;
   --owner)
-    want_o=true
+    want_owner=true
     want_any=true
     ;;
   --repo)
-    want_r=true
+    want_repo=true
     want_any=true
     ;;
   --icon)
     want_icon=true
     want_any=true
     ;;
-  --key) want_key=true ;;
-  --null) want_null=true ;;
-  --join)
+  --url)
+    want_url=true
+    want_any=true
+    ;;
+  --color)
+    want_color=true
+    ;;
+  --sep)
+    shift
+    [ $# -gt 0 ] || fail 2 "--sep needs a separator"
+    want_key=true
+    separator=$1
+    ;;
+
+  -k | --key)
+    want_key=truw
+    ;;
+  -0 | --null) want_null=true ;;
+  -j | --join)
     shift
     [ $# -gt 0 ] || fail 2 "--join needs a separator"
+    want_key=false
     join_sep=$1
     want_join=true
     ;;
@@ -200,7 +243,7 @@ if [ "$want_any" = false ]; then
 fi
 
 git -C "$path" rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
-  fail 2 "not a git repo: $path"
+  fail 2 "$pathout not a git repo"
 
 # ---- starship-style vars + fallback ----
 GIT_REMOTE=$(git -C "$path" remote get-url "$remote" 2>/dev/null)
@@ -248,8 +291,13 @@ repo=${2%.git}
 
 format_token() {
   k=$1 v=$2
+  if [ "$want_color" = true ]; then
+    k="${color_key}$k${C_RESET}"
+    v="${color_value}$v${C_RESET}"
+    separator="${color_separator}$separator${C_RESET}"
+  fi
   if [ "$want_key" = true ]; then
-    printf "%s=%s" "$k" "$v"
+    printf "%s%s%s" "$k" "$separator" "$v"
   else
     printf "%s" "$v"
   fi
@@ -270,11 +318,12 @@ emit_token() {
 
 joined=''
 
+[ "$want_url" = true ] && emit_token "$(format_token url "$GIT_REMOTE")"
 [ "$want_icon" = true ] && emit_token "$(format_token icon "$GIT_REMOTE_SYMBOL")"
-[ "$want_s" = true ] && emit_token "$(format_token scheme "$scheme")"
-[ "$want_h" = true ] && emit_token "$(format_token host "$host")"
-[ "$want_o" = true ] && emit_token "$(format_token owner "$owner")"
-[ "$want_r" = true ] && emit_token "$(format_token repo "$repo")"
+[ "$want_scheme" = true ] && emit_token "$(format_token scheme "$scheme")"
+[ "$want_host" = true ] && emit_token "$(format_token host "$host")"
+[ "$want_owner" = true ] && emit_token "$(format_token owner "$owner")"
+[ "$want_repo" = true ] && emit_token "$(format_token repo "$repo")"
 
 if [ "$want_join" = true ]; then
   if [ "$want_null" = true ]; then

@@ -426,7 +426,7 @@ format = '$symbol '
 description = "Git host icon"
 when = 'git remote get-url origin 2>/dev/null'
 command = """
-echo "$(git-remote-info --icon)"
+echo "$(git-it -i)"
 """
 format = '[$output ]($style)'
 style = 'fg:color_git_branch'
