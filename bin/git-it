@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+cmdname=$(basename "$0")
 separator='='
 
 if [ -t 1 ]; then
@@ -29,36 +30,41 @@ color_value="${C_BOLD}${C_GREEN}"
 color_flag="${C_GREEN}"
 color_description=""
 
+uhead() {
+  printf "%s\n" "${C_BOLD}$1${C_RESET}"
+}
+
 uflag() {
   printf " %s, %-21s %s\n" "${color_flag}$1${C_RESET}" "${color_flag}$2${C_RESET}" "${color_description}$3${C_RESET}"
 }
 
-usage() {
+print_usage() {
 
   cat <<EOF
-${C_CYAN}     ▀   ▄       ▀   ▄
-█▀█  █  ▀█▀ ▄▄▄  █  ▀█▀
-█▄█  █   █▄      █   █▄
-▄▄█${C_RESET}
+${C_CYAN}
+▄▀▀▀▀ ▀▀█▀▀ ▀▀█▀▀       ▀▀█▀▀ ▀▀█▀▀
+█ ▀▀█   █     █   ▀▀▀▀▀   █     █
+ ▀▀▀  ▀▀▀▀▀   ▀         ▀▀▀▀▀   ▀
+${C_RESET}
 EOF
+  uhead 'Usage:'
   cat <<EOF
-
-${C_BOLD}Usage:${C_RESET}
 ${C_CYAN} $cmdname${C_RESET} ${C_YELLOW}[path] [remote]${C_RESET} ${C_GREEN}[flags]${C_RESET}
 ${C_CYAN} $cmdname${C_RESET} ${C_GREEN}-h | --help${C_RESET}
-
-${C_BOLD}Scope flags:${C_RESET}
 EOF
+  echo
+  uhead 'Scope flags:'
   uflag -a --all ''
   uflag -i --icon 'icon for host'
   uflag -p --protocol 'Git operations protocol'
+  uflag -H --host 'host'
+  uflag -o --owner 'owner'
+  uflag -r --repo 'repo name (no .git)'
+  echo
+  uhead 'Formatting flags:'
+  uflag -k --key 'print keys'
+  uflag -v --value 'print values (default true)'
   cat <<EOF
-${C_GREEN} -H${C_RESET}, ${C_GREEN}--host${C_RESET}       host
-${C_GREEN} -o${C_RESET}, ${C_GREEN}--owner${C_RESET}      owner
-${C_GREEN} -r${C_RESET}, ${C_GREEN}--repo${C_RESET}       repo (no .git)
-
-${C_BOLD}Formatting flags:${C_RESET}
-${C_GREEN} -v${C_RESET}, ${C_GREEN}--value${C_RESET}      values only
 ${C_GREEN} -0${C_RESET}, ${C_GREEN}--null${C_RESET}       NUL-delimited output
 ${C_GREEN} --join${C_RESET} ${C_YELLOW}SEP${C_RESET}   join outputs with SEP
 
@@ -87,11 +93,9 @@ command -v git >/dev/null 2>&1 || fail 2 "error: git not found"
 
 # No-arg behavior
 if [ $# -eq 0 ] && ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  usage
+  print_usage
   exit 0
 fi
-
-cmdname=$(basename "$0")
 
 is_remote=''
 remote='origin'
@@ -133,7 +137,7 @@ apply_short_flag() {
   c=$1
   case "$c" in
   h)
-    usage
+    print_usage
     exit 0
     ;;
   a) set_scope_all ;;
@@ -175,7 +179,7 @@ apply_short_flag() {
 while [ $# -gt 0 ]; do
   case "$1" in
   -h | --help)
-    usage
+    print_usage
     exit 0
     ;;
   --default) set_scope_default ;;
