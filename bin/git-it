@@ -18,13 +18,14 @@ if [ -t 1 ]; then
   C_MAGENTA="${ESC}[35m"
   C_CYAN="${ESC}[36m"
   C_WHITE="${ESC}[37m"
+  C_BRIGHT_BLACK="${ESC}[1;30m"
 else
-  C_RESET='' C_BOLD='' C_DIM='' C_ITALIC='' C_UNDERLINE='' C_REVERSE='' C_BLACK='' C_RED='' C_GREEN='' C_YELLOW='' C_BLUE='' C_MAGENTA='' C_CYAN='' C_WHITE=''
+  C_RESET='' C_BOLD='' C_DIM='' C_ITALIC='' C_UNDERLINE='' C_REVERSE='' C_BLACK='' C_RED='' C_GREEN='' C_YELLOW='' C_BLUE='' C_MAGENTA='' C_CYAN='' C_WHITE='' C_BRIGHT_BLACK=''
 fi
 
 color_key="${C_BLUE}"
-color_value="${C_BOLD}${C_GREEN}"
 color_separator="${color_key}${C_DIM}"
+color_value="${C_BOLD}${C_GREEN}"
 
 usage() {
   cat <<EOF
@@ -38,7 +39,7 @@ ${C_BOLD}Scope flags:${C_RESET}
 ${C_GREEN} --default${C_RESET}
 ${C_GREEN} -a${C_RESET}, ${C_GREEN}--all${C_RESET}
 ${C_GREEN} -I${C_RESET}, ${C_GREEN}--icon${C_RESET}       icon for host
-${C_GREEN} -s${C_RESET}, ${C_GREEN}--scheme${C_RESET}     scheme
+${C_GREEN} -p${C_RESET}, ${C_GREEN}--protocol${C_RESET}     protocol
 ${C_GREEN} -H${C_RESET}, ${C_GREEN}--host${C_RESET}       host
 ${C_GREEN} -o${C_RESET}, ${C_GREEN}--owner${C_RESET}      owner
 ${C_GREEN} -r${C_RESET}, ${C_GREEN}--repo${C_RESET}       repo (no .git)
@@ -86,7 +87,7 @@ cwd=$(pwd)
 path="$cwd"
 pathout="$(echo "$path" | sed "s|${HOME}|~|")"
 
-want_any=false want_icon=false want_scheme=false want_host=false want_owner=false want_repo=false
+want_any=false want_icon=false want_protocol=false want_host=false want_owner=false want_repo=false
 want_color=false want_kwy=false want_value=true want_null=false want_join=false join_sep=''
 
 icon_explicit=false
@@ -96,7 +97,7 @@ set_scope_default() {
   want_key=true
   want_url=true
   want_icon=true
-  want_scheme=true
+  want_protocol=true
   want_host=true
   want_owner=true
   want_repo=true
@@ -108,7 +109,7 @@ set_scope_all() {
   want_key=true
   want_url=true
   want_icon=true
-  want_scheme=true
+  want_protocol=true
   want_host=true
   want_owner=true
   want_repo=true
@@ -123,8 +124,8 @@ apply_short_flag() {
     exit 0
     ;;
   a) set_scope_all ;;
-  s)
-    want_scheme=true
+  p)
+    want_protocol=true
     want_any=true
     ;;
   H)
@@ -167,8 +168,8 @@ while [ $# -gt 0 ]; do
   --default) set_scope_default ;;
   -a | --all) set_scope_all ;;
 
-  --scheme)
-    want_scheme=true
+  --protocol)
+    want_protocol=true
     want_any=true
     ;;
   --host)
@@ -272,11 +273,11 @@ else
   is_ssh=false
 fi
 
-scheme=unknown
+protocol=unknown
 if printf '%s\n' "$GIT_REMOTE" | grep -Eq '^[a-zA-Z][a-zA-Z0-9+.-]*://'; then
-  scheme=https
+  protocol=https
 elif [ "$is_ssh" = true ]; then
-  scheme=ssh
+  protocol=ssh
 fi
 
 # host
@@ -320,7 +321,7 @@ joined=''
 
 [ "$want_url" = true ] && emit_token "$(format_token url "$GIT_REMOTE")"
 [ "$want_icon" = true ] && emit_token "$(format_token icon "$GIT_REMOTE_SYMBOL")"
-[ "$want_scheme" = true ] && emit_token "$(format_token scheme "$scheme")"
+[ "$want_protocol" = true ] && emit_token "$(format_token protocol "$protocol")"
 [ "$want_host" = true ] && emit_token "$(format_token host "$host")"
 [ "$want_owner" = true ] && emit_token "$(format_token owner "$owner")"
 [ "$want_repo" = true ] && emit_token "$(format_token repo "$repo")"
