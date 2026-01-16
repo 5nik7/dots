@@ -36,7 +36,12 @@ uflag() {
 usage() {
 
   cat <<EOF
-${C_BOLD}${C_CYAN}$cmdname${C_RESET}
+${C_CYAN}     ▀   ▄       ▀   ▄
+█▀█  █  ▀█▀ ▄▄▄  █  ▀█▀
+█▄█  █   █▄      █   █▄
+▄▄█${C_RESET}
+EOF
+  cat <<EOF
 
 ${C_BOLD}Usage:${C_RESET}
 ${C_CYAN} $cmdname${C_RESET} ${C_YELLOW}[path] [remote]${C_RESET} ${C_GREEN}[flags]${C_RESET}
