@@ -26,8 +26,15 @@ fi
 color_key="${C_BLUE}"
 color_separator="${color_key}${C_DIM}"
 color_value="${C_BOLD}${C_GREEN}"
+color_flag="${C_GREEN}"
+color_description=""
+
+uflag() {
+  printf " %s, %-21s %s\n" "${color_flag}$1${C_RESET}" "${color_flag}$2${C_RESET}" "${color_description}$3${C_RESET}"
+}
 
 usage() {
+
   cat <<EOF
 ${C_BOLD}${C_CYAN}$cmdname${C_RESET}
 
@@ -36,10 +43,11 @@ ${C_CYAN} $cmdname${C_RESET} ${C_YELLOW}[path] [remote]${C_RESET} ${C_GREEN}[fla
 ${C_CYAN} $cmdname${C_RESET} ${C_GREEN}-h | --help${C_RESET}
 
 ${C_BOLD}Scope flags:${C_RESET}
-${C_GREEN} --default${C_RESET}
-${C_GREEN} -a${C_RESET}, ${C_GREEN}--all${C_RESET}
-${C_GREEN} -I${C_RESET}, ${C_GREEN}--icon${C_RESET}       icon for host
-${C_GREEN} -p${C_RESET}, ${C_GREEN}--protocol${C_RESET}     protocol
+EOF
+  uflag -a --all ''
+  uflag -i --icon 'icon for host'
+  uflag -p --protocol 'Git operations protocol'
+  cat <<EOF
 ${C_GREEN} -H${C_RESET}, ${C_GREEN}--host${C_RESET}       host
 ${C_GREEN} -o${C_RESET}, ${C_GREEN}--owner${C_RESET}      owner
 ${C_GREEN} -r${C_RESET}, ${C_GREEN}--repo${C_RESET}       repo (no .git)
