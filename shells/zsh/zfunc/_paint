@@ -1,0 +1,115 @@
+#compdef paint
+# Zsh completion for: paint
+#
+# Features:
+# - Token-order flexible (paint accepts styles/colors/targets anywhere before text)
+# - Stops suggesting tokens AFTER `--` (treat remaining args as literal text)
+# - Smarter `bright`: if previous token is `bright`, only suggests color names/codes
+
+local -a opts styles color_names color_nums bright_nums join_modes
+local expl
+
+opts=(
+  '--ansi[Use ANSI escape codes (default)]'
+  '--tput[Use tput/terminfo sequences]'
+  '-e[Append newline (echo-like)]'
+  '--echo[Append newline (echo-like)]'
+  '-t[Print color table and exit]'
+  '--table[Print color table and exit]'
+  '--join=[Delimiter when joining stdin + suffix text]:join mode:(newline space none)'
+  '--escapes-stdin[Interpret backslash escapes from stdin]'
+  '-fg[Next color applies to foreground (default)]'
+  '--foreground[Next color applies to foreground (default)]'
+  '-bg[Next color applies to background]'
+  '--background[Next color applies to background]'
+  '-h[Show help]'
+  '--help[Show help]'
+)
+
+styles=(
+  'bold:enable bold'
+  'dim:enable dim'
+  'italic:enable italic'
+  'underline:enable underline'
+  'blink:enable blink'
+  'reverse:enable reverse video'
+  'invis:enable invisible'
+  '--bold:enable bold'
+  '--dim:enable dim'
+  '--italic:enable italic'
+  '--underline:enable underline'
+  '--blink:enable blink'
+  '--reverse:enable reverse video'
+  '--invis:enable invisible'
+)
+
+color_names=(black red green yellow blue magenta cyan white)
+color_nums=(0 1 2 3 4 5 6 7)
+bright_nums=(8 9 10 11 12 13 14 15)
+join_modes=(newline space none)
+
+# --- Helpers ---
+_paint_has_double_dash() {
+  local i
+  for i in {2..$#words}; do
+    [[ ${words[i]} == -- ]] && return 0
+  done
+  return 1
+}
+
+_paint_colors_describe() {
+  # Suggest colors (name + codes). This is used after `bright` too.
+  local -a items
+  items=(
+    ${color_names[@]/%/:color name}
+    ${color_nums[@]/%/:color code}
+    ${bright_nums[@]/%/:bright color code}
+  )
+  _describe -t colors 'color' items -V
+}
+
+# If user already typed `--`, we treat everything after as text: no token suggestions.
+if _paint_has_double_dash; then
+  # Only complete files/words as "text" after `--` (no special token completion).
+  _arguments -s -S $opts '*:text: _default'
+  return 0
+fi
+
+# Normal mode (before `--`)
+_arguments -s -S \
+  $opts \
+  '*:token or text:->tok' && return 0
+
+case $state in
+  tok)
+    # If previous word is --join and user didn't use =, complete join modes
+    if [[ ${words[CURRENT-1]} == --join ]]; then
+      _describe -t join_modes 'join mode' join_modes
+      return 0
+    fi
+
+    # Smarter `bright`: if previous token is `bright`, ONLY suggest colors.
+    if [[ ${words[CURRENT-1]} == bright ]]; then
+      _paint_colors_describe
+      return 0
+    fi
+
+    # Otherwise offer token suggestions (options already handled by _arguments)
+    local -a token_suggestions
+    token_suggestions=(
+      'bright:make next color bright'
+      '-:read stdin explicitly'
+      '--:end tokens/options (treat rest as text)'
+      $styles
+      '-fg:foreground target'
+      '--foreground:foreground target'
+      '-bg:background target'
+      '--background:background target'
+      ${color_names[@]/%/:color name}
+      ${color_nums[@]/%/:color code}
+      ${bright_nums[@]/%/:bright color code}
+    )
+
+    _describe -t tokens 'token' token_suggestions -V
+    ;;
+esac

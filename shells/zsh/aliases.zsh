@@ -73,7 +73,7 @@ alias ".w"="cd $WINDOTS"
 alias ".wf"="cd $WINDOTS/configs"
 
 if cmd_exists pastel; then
-  alias paint='pastel paint'
+  alias ppaint='pastel paint'
 fi
 
 if cmd_exists eza; then

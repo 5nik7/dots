@@ -1,0 +1,337 @@
+#!/usr/bin/env bash
+# paint — render styled, colored text in your terminal
+#
+# Supports args + piping:
+#   date | paint blue
+#   paint blue "$(date)"
+#   paint blue -                    # explicit: read stdin
+#
+# Interprets backslash escapes in TEXT args (printf %b style):
+#   paint blue "test\n"
+#
+# Optional: interpret escapes from stdin too:
+#   printf 'a\\nb\\n' | paint --escapes-stdin blue
+#
+# Joining stdin + extra TEXT (when "-" is used):
+#   echo "hi" | paint blue - "there"                 # default join: newline (smart)
+#   echo "hi" | paint blue --join space - "there"
+#   echo "hi" | paint blue --join none  - "there"
+#
+# SMART JOIN (best practice default):
+# - When --join newline and stdin already ends with a newline, paint will NOT add an extra newline.
+# - This keeps pipelines from producing accidental blank lines.
+#
+# Notes:
+# - If terminal does NOT support color, output stays plain (no styling/escapes).
+# - Output is STREAMED (no command substitution capture), so trailing newlines are preserved.
+
+set -euo pipefail
+
+prog="${0##*/}"
+die() { printf '%s: %s\n' "$prog" "$*" >&2; exit 1; }
+
+# ---------- terminal capability check ----------
+supports_color() {
+  [[ -t 1 ]] || return 1
+  [[ "${TERM:-}" != "dumb" && -n "${TERM:-}" ]] || return 1
+
+  if command -v tput >/dev/null 2>&1; then
+    local n
+    n="$(tput colors 2>/dev/null || echo 0)"
+    [[ "$n" =~ ^[0-9]+$ ]] || n=0
+    (( n >= 8 )) && return 0
+  fi
+
+  [[ -n "${COLORTERM:-}" ]] && return 0
+  [[ "${TERM:-}" =~ (xterm|screen|tmux|rxvt|linux|vt100|ansi|color|cygwin) ]] && return 0
+  return 1
+}
+
+CAN_COLOR=0
+supports_color && CAN_COLOR=1
+
+# ---------- constants ----------
+declare -A STYLE_SGR=(
+  [bold]=1
+  [dim]=2
+  [italic]=3
+  [underline]=4
+  [blink]=5
+  [reverse]=7
+  [invis]=8
+)
+
+# ---------- token helpers ----------
+color_to_index() {
+  local tok="$1"
+  case "$tok" in
+    black|0)   echo 0 ;;
+    red|1)     echo 1 ;;
+    green|2)   echo 2 ;;
+    yellow|3)  echo 3 ;;
+    blue|4)    echo 4 ;;
+    magenta|5) echo 5 ;;
+    cyan|6)    echo 6 ;;
+    white|7)   echo 7 ;;
+    [0-9]|1[0-5]) echo "$tok" ;; # allow 0..15 directly
+    *) return 1 ;;
+  esac
+}
+
+# ---------- join ----------
+join_mode="newline" # best-practice default (pipeline-safe)
+print_join_delim() {
+  case "$1" in
+    newline) printf '\n' ;;
+    space)   printf ' ' ;;
+    none)    : ;;
+    *) return 1 ;;
+  esac
+}
+
+# ---------- escapes ----------
+print_arg_text() { printf '%b' "$1"; }
+
+# stdin: raw by default; opt-in escape interpretation (stream transform)
+print_stdin_raw_or_escaped() {
+  if (( escapes_stdin )); then
+    if command -v python3 >/dev/null 2>&1; then
+      python3 - <<'PY'
+import sys
+data = sys.stdin.read()
+sys.stdout.write(bytes(data, "utf-8").decode("unicode_escape"))
+PY
+    elif command -v perl >/dev/null 2>&1; then
+      perl -pe 's/\\r/\r/g; s/\\n/\n/g; s/\\t/\t/g; s/\\a/\a/g; s/\\b/\b/g; s/\\f/\f/g; s/\\v/\v/g; s/\\\\/\\/g;'
+    else
+      cat
+    fi
+  else
+    cat
+  fi
+}
+
+# ---------- rendering ----------
+build_ansi_prefix() {
+  # args: styles_assoc_name fg_index bg_index
+  local styles_name="$1" fg="$2" bg="$3"
+  declare -n _styles="$styles_name"
+
+  local sgr=() k
+  for k in "${!_styles[@]}"; do
+    sgr+=("${STYLE_SGR[$k]}")
+  done
+
+  if [[ -n "$fg" ]]; then
+    if (( fg <= 7 )); then sgr+=("$((30 + fg))"); else sgr+=("$((90 + (fg - 8)))"); fi
+  fi
+  if [[ -n "$bg" ]]; then
+    if (( bg <= 7 )); then sgr+=("$((40 + bg))"); else sgr+=("$((100 + (bg - 8)))"); fi
+  fi
+
+  ((${#sgr[@]})) && printf '\033[%sm' "$(IFS=';'; echo "${sgr[*]}")"
+}
+
+build_tput_prefix() {
+  local styles_name="$1" fg="$2" bg="$3"
+  declare -n _styles="$styles_name"
+  command -v tput >/dev/null 2>&1 || return 0
+
+  local pre=""
+  [[ -n "${_styles[bold]+x}"      ]] && pre+=$(tput bold 2>/dev/null || true)
+  [[ -n "${_styles[dim]+x}"       ]] && pre+=$(tput dim 2>/dev/null || true)
+  [[ -n "${_styles[italic]+x}"    ]] && pre+=$(tput sitm 2>/dev/null || true)
+  [[ -n "${_styles[underline]+x}" ]] && pre+=$(tput smul 2>/dev/null || true)
+  [[ -n "${_styles[blink]+x}"     ]] && pre+=$(tput blink 2>/dev/null || true)
+  [[ -n "${_styles[reverse]+x}"   ]] && pre+=$(tput rev 2>/dev/null || true)
+  [[ -n "${_styles[invis]+x}"     ]] && pre+=$(tput invis 2>/dev/null || true)
+
+  [[ -n "$fg" ]] && pre+=$(tput setaf "$fg" 2>/dev/null || true)
+  [[ -n "$bg" ]] && pre+=$(tput setab "$bg" 2>/dev/null || true)
+
+  printf '%b' "$pre"
+}
+
+reset_seq() {
+  case "$mode" in
+    tput)
+      command -v tput >/dev/null 2>&1 && tput sgr0 2>/dev/null || printf '\033[0m'
+      ;;
+    *)
+      printf '\033[0m'
+      ;;
+  esac
+}
+
+print_prefix() {
+  (( CAN_COLOR )) || return 0
+  case "$mode" in
+    tput) build_tput_prefix style_on "$fg_index" "$bg_index" ;;
+    *)    build_ansi_prefix style_on "$fg_index" "$bg_index" ;;
+  esac
+}
+
+print_reset() {
+  (( CAN_COLOR )) || return 0
+  reset_seq
+}
+
+# ---------- UI helpers ----------
+fmt_ansi() {
+  local sgr="${1:-}" txt="${2:-}"
+  if (( CAN_COLOR )) && [[ -n "$sgr" ]]; then
+    printf '\033[%sm%s\033[0m' "$sgr" "$txt"
+  else
+    printf '%s' "$txt"
+  fi
+}
+
+usage() {
+  printf '%s — render styled, colored text in your terminal\n\n' "$(fmt_ansi '1;4' 'paint')"
+  printf '%s\n' "$(fmt_ansi '1' 'USAGE')"
+  printf '  paint [options|tokens...] [--] [TEXT...]\n'
+  printf '  paint [options|tokens...] -        # explicit: read stdin\n\n'
+  printf '%s\n' "$(fmt_ansi '1' 'EXAMPLES')"
+  printf '  paint blue "test\\n"\n'
+  printf '  echo "test" | paint blue\n'
+  printf '  echo "test" | paint blue --join newline - "test"   # smart (no double blank line)\n'
+  printf '  printf "a\\\\nb\\\\n" | paint --escapes-stdin blue\n\n'
+  printf '%s\n' "$(fmt_ansi '1' 'OPTIONS')"
+  printf '  --ansi                Use ANSI escape codes (default)\n'
+  printf '  --tput                Use tput/terminfo sequences\n'
+  printf '  -e, --echo            Append newline (echo-like). Default is printf-like (no newline).\n'
+  printf '  --join <newline|space|none>\n'
+  printf '                        Delimiter when joining stdin + extra TEXT (default: newline, smart)\n'
+  printf '  --escapes-stdin       Interpret backslash escapes from stdin\n'
+}
+
+# ---------- parsing ----------
+mode="ansi"
+target="fg"
+bright_next=0
+append_newline=0
+escapes_stdin=0
+
+declare -A style_on=()
+fg_index=""
+bg_index=""
+
+text_parts=()
+text_started=0
+force_stdin=0
+
+while (($#)); do
+  a="$1"; shift
+
+  if (( text_started )); then
+    [[ "$a" == "-" ]] && { force_stdin=1; continue; }
+    text_parts+=("$a")
+    continue
+  fi
+
+  case "$a" in
+    -h|--help) usage; exit 0 ;;
+    --) text_started=1; continue ;;
+
+    --ansi) mode="ansi" ;;
+    --tput) mode="tput" ;;
+
+    -e|--echo) append_newline=1 ;;
+
+    --escapes-stdin) escapes_stdin=1 ;;
+
+    --join)
+      (($#)) || die "--join requires: newline|space|none"
+      join_mode="$1"; shift
+      print_join_delim "$join_mode" >/dev/null 2>&1 || die "invalid --join: $join_mode"
+      ;;
+
+    -fg|--foreground) target="fg" ;;
+    -bg|--background) target="bg" ;;
+
+    bright) bright_next=1 ;;
+
+    bold|dim|italic|underline|blink|reverse|invis) style_on["$a"]=1 ;;
+    --bold|--dim|--italic|--underline|--blink|--reverse|--invis) style_on["${a#--}"]=1 ;;
+
+    *)
+      if idx="$(color_to_index "$a" 2>/dev/null)"; then
+        if (( idx >= 0 && idx <= 7 )) && (( bright_next )); then idx=$((idx + 8)); fi
+        [[ "$target" == "fg" ]] && fg_index="$idx" || bg_index="$idx"
+        bright_next=0
+      else
+        text_started=1
+        [[ "$a" == "-" ]] && force_stdin=1 || text_parts+=("$a")
+      fi
+      ;;
+  esac
+done
+
+# ---------- output (STREAMING; preserves trailing newlines) ----------
+# smart newline join requires knowing whether stdin ends in '\n'.
+# Best practice: buffer stdin in a temp file ONLY when we must join a suffix.
+needs_stdin=0
+suffix_present=0
+((${#text_parts[@]} > 0)) && suffix_present=1
+(( force_stdin )) && needs_stdin=1
+if (( !needs_stdin )) && [[ ! -t 0 ]] && (( ${#text_parts[@]} == 0 )); then
+  # implicit stdin usage
+  needs_stdin=1
+fi
+
+print_prefix
+
+if (( force_stdin )); then
+  [[ -t 0 ]] && { print_reset; die "stdin token '-' provided but stdin is not piped"; }
+
+  if (( suffix_present )) && [[ "$join_mode" == "newline" ]]; then
+    # Smart join: only add newline if stdin doesn't already end with one.
+    tmp="${TMPDIR:-/tmp}/${prog}.$$.$RANDOM"
+    trap 'rm -f "$tmp"' EXIT
+
+    # Capture stdin (raw or escape-decoded) into temp file without stripping newlines.
+    # We keep exact bytes as produced by print_stdin_raw_or_escaped.
+    print_stdin_raw_or_escaped >"$tmp"
+
+    # Emit stdin
+    cat "$tmp"
+
+    # If last byte isn't '\n', add join newline
+    if [[ -s "$tmp" ]]; then
+      # tail -c is widely available (coreutils / busybox)
+      last_byte="$(tail -c 1 "$tmp" 2>/dev/null || true)"
+      [[ "$last_byte" != $'\n' ]] && printf '\n'
+    else
+      # empty stdin: newline join should still produce one newline between parts
+      printf '\n'
+    fi
+
+    # Emit suffix (args; escapes interpreted)
+    print_arg_text "${text_parts[*]}"
+  else
+    # No smart check needed (space/none joins, or no suffix)
+    print_stdin_raw_or_escaped
+    if (( suffix_present )); then
+      print_join_delim "$join_mode"
+      print_arg_text "${text_parts[*]}"
+    fi
+  fi
+
+elif ((${#text_parts[@]} > 0)); then
+  # Args-only mode
+  print_arg_text "${text_parts[*]}"
+
+elif [[ ! -t 0 ]]; then
+  # Implicit stdin mode (no suffix => no smart join needed)
+  print_stdin_raw_or_escaped
+
+else
+  print_reset
+  die "no text provided (try: $prog blue \"test\\n\" or: echo test | $prog blue or: $prog blue -)"
+fi
+
+print_reset
+
+if (( append_newline )); then
+  printf '\n'
+fi
