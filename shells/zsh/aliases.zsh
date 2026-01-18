@@ -27,7 +27,7 @@ alias q='exit'
 
 alias g='git'
 
-alias path='echo $PATH | tr ":" "\n"'
+alias path='echo $PATH | tr ":" "\n" | sed "s|${HOME}|~|"'
 
 alias rmr='rm -fvr'
 
