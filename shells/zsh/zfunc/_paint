@@ -4,7 +4,8 @@
 # Features:
 # - Stops suggesting tokens AFTER `--`
 # - Smarter `bright`: after `bright`, only suggests colors
-# - Includes all paint options (color mode, escapes stdin, join, completion, table)
+# - Completes --border colors
+# - Includes all paint options (color mode, escapes stdin, join, completion, table, box)
 
 local -a opts styles color_names color_nums bright_nums join_modes color_modes
 local expl
@@ -14,13 +15,15 @@ opts=(
   '--tput[Use tput/terminfo sequences]'
   '-e[Append newline (echo-like)]'
   '--echo[Append newline (echo-like)]'
-  '-t[Print color table and exit]'
-  '--table[Print color table and exit]'
+  '-t[Print token/color tables and exit]'
+  '--table[Print token/color tables and exit]'
   '--join=[Delimiter when joining stdin + suffix text]:join mode:(newline space none)'
   '--escapes-stdin[Interpret backslash escapes from stdin]'
   '--color=[Color output mode]:mode:(always auto never)'
   '--force-color[Force color output (same as --color always)]'
   '--no-color[Disable color output (same as --color never)]'
+  '--box[Draw a border box around the rendered text]'
+  '--border=[Border color token for --box]:border color:->border'
   '--completion=[Print completion script]:shell:(zsh)'
   '-fg[Next color applies to foreground (default)]'
   '--foreground[Next color applies to foreground (default)]'
@@ -90,6 +93,10 @@ case $state in
       _describe -t color_modes 'color mode' color_modes
       return 0
     fi
+    if [[ ${words[CURRENT-1]} == --border ]]; then
+      _paint_colors_describe
+      return 0
+    fi
     if [[ ${words[CURRENT-1]} == bright ]]; then
       _paint_colors_describe
       return 0
@@ -111,5 +118,8 @@ case $state in
     )
 
     _describe -t tokens 'token' token_suggestions -V
+    ;;
+  border)
+    _paint_colors_describe
     ;;
 esac
