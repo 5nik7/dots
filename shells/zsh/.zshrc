@@ -92,4 +92,12 @@ fi
 
 # fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
 
+if cmd_exists uv; then
+  eval "$(uv generate-shell-completion zsh)"
+fi
+
+if cmd_exists uvx; then
+  eval "$(uvx --generate-shell-completion zsh)"
+fi
+
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix
