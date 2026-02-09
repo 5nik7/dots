@@ -437,7 +437,8 @@ description = "Git host icon"
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
 when = 'git remote get-url origin 2>$null'
 command = """
-git-it.ps1 -Iv 2>&1
+$icon = $(git-it -I)
+echo $icon
 """
 format = '[$output ]($style)'
 style = 'fg:color_git_branch'
