@@ -1,17 +1,17 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:full-border"
-rev = "c179ea4"
+rev = "88990a6"
 hash = "3996fc74044bc44144b323686f887e1"
 
 [[plugin.deps]]
 use = "imsi32/yatline"
-rev = "88bd1c5"
-hash = "981acbe9b758b1af3a8154c932bb936d"
+rev = "c5d4b48"
+hash = "e6e98d12b1648d1894c2b560d85eeaa7"
 
 [[plugin.deps]]
 use = "imsi32/yatline-catppuccin"
-rev = "8cc4773"
-hash = "fd03fb015a28040bca0c0f9a8fe6fd8d"
+rev = "6c3f166"
+hash = "e1d5b1c34c53c4c4661d910eb3a6fd95"
 
 [[plugin.deps]]
 use = "wekauwau/yatline-tokyo-night"
@@ -25,17 +25,17 @@ hash = "b58a6786383df06dc16fc6dbd1876d31"
 
 [[plugin.deps]]
 use = "imsi32/yatline-githead"
-rev = "f8f969e"
-hash = "4d441b38138ce6492a4e10fa349fd65"
+rev = "929e52c"
+hash = "8282baf02fcd6aac00ccad2276775358"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:git"
-rev = "c179ea4"
-hash = "36a484acf6a0a0219c543ccb4cee218f"
+rev = "88990a6"
+hash = "270915fa8282a19908449530ff66f7e2"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:chmod"
-rev = "c179ea4"
+rev = "88990a6"
 hash = "8da0b15a97b5dfd13941d1ecc617ac7c"
 
 [[plugin.deps]]
@@ -45,7 +45,7 @@ hash = "92b5c58159a51c567f82b618cee2b78"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:toggle-pane"
-rev = "c179ea4"
+rev = "88990a6"
 hash = "8a7c58225816a163a6e8730c0adafbc8"
 
 [[plugin.deps]]
@@ -55,8 +55,8 @@ hash = "ab2e66065a94cca4886b303518e44bd8"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:types"
-rev = "c179ea4"
-hash = "daf9e3d12688cf855fce665839efcd6d"
+rev = "88990a6"
+hash = "83b5b82b595c39a660bf2b170987e5e7"
 
 [[plugin.deps]]
 use = "dedukun/bookmarks"
@@ -65,13 +65,13 @@ hash = "92fbb5483657fa7976cdf4e0104e18e0"
 
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-mocha"
-rev = "4a1802a"
-hash = "b951d27afe197d154f6da9683b46c5f8"
+rev = "4c57537"
+hash = "8eabb4e88096f10905a6df62cfaadbf4"
 
 [[flavor.deps]]
 use = "Mintass/rose-pine"
-rev = "8343340"
-hash = "d92db727dc16db9357f0dcda2758170c"
+rev = "d91f8f2"
+hash = "87da3630653b6d272e43658418599188"
 
 [[flavor.deps]]
 use = "5nik7/njen"
