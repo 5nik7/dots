@@ -6,6 +6,7 @@ italic="${esc}[3m"
 underline="${esc}[4m"
 invert="${esc}[7m"
 fg_red="${esc}[31m"
+fg_bright_red="${esc}[91m"
 fg_green="${esc}[32m"
 fg_yellow="${esc}[33m"
 
@@ -25,9 +26,16 @@ function prepend_path() {
 	fi
 }
 
+function fpath() {
+	[[ -e "$1" ]] || return
+
+  echo "$1" | command sed "s|${HOME}|~|" | command sed "s|${PREFIX}|/usr|"
+}
+
 function gup() {
-  local ico=""
+  local ico=''
   local dir=$(pwd)
+  local fdir=$(fpath $dir)
   if [ -e "$dir/.git" ]; then
   commitDate=$(date +"%m-%d-%Y %H:%M")
     echo
@@ -36,9 +44,7 @@ function gup() {
     git push &&
     echo
   else
-    echo
-    printf "\n${fg_red} %s '${bold} %s${c_reset}${fg_red}' %s${c_reset}\n\n" "${ico}" "${dir}" "not a repository"
-    echo
+    printf "\n${fg_red} %s '${fg_bright_red}${bold}%s${c_reset}${fg_red}' %s${c_reset}\n" "${ico}" "${fdir}" "not a repo."
   fi
 }
 
