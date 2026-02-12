@@ -24,6 +24,8 @@ export TERMUX_APP_PACKAGE_MANAGER='apt'
 
 export DROIDOTS="$DOTS/androidots"
 
+export RISH_APPLICATION_ID="com.termux"
+
 prepend_path "$DROIDOTS/bin"
 
 function open() {
