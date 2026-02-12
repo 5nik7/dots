@@ -165,7 +165,7 @@
 	#############
 	subadd = !sh -c 'git submodule add git://github.com/$1 $2/$(basename $1)' -
 	subup = submodule update --init --recursive
-	subpull = !git submodule foreach git pull --tags origin master
+	subpull = !git submodule foreach git pull --tags origin main
 	#############
 	assume = update-index --assume-unchanged
 	unassume = update-index --no-assume-unchanged
@@ -187,5 +187,4 @@
 	#############
 	ours = "!f() { git checkout --ours $@ && git add $@; }; f"
 	theirs = "!f() { git checkout --theirs $@ && git add $@; }; f"
-	subrepo = !sh -c 'git filter-branch --prune-empty --subdirectory-filter $1 master' -
 	human = name-rev --name-only --refs=refs/heads/*
