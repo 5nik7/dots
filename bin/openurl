@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+main() {
+  if [[ "$@" == https://* ]]; then
+    open "$*"
+  else
+    open "https://$*"
+  fi
+}
+
+main "$@"
