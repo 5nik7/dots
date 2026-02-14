@@ -1,21 +1,3 @@
-BOLD="$(tput bold 2>/dev/null || printf '')"
-UNDERLINE="$(tput smul 2>/dev/null || printf '')"
-ITALIC="$(tput sitm 2>/dev/null || printf '')"
-DIM="$(tput dim 2>/dev/null || printf '')"
-INVERT="$(tput rev 2>/dev/null || printf '')"
-BLINK="$(tput blink 2>/dev/null || printf '')"
-INVIS="$(tput invis 2>/dev/null || printf '')"
-GREY="$(tput setaf 7 2>/dev/null || printf '')"
-BLACK="$(tput setaf 8 2>/dev/null || printf '')"
-RED="$(tput setaf 1 2>/dev/null || printf '')"
-GREEN="$(tput setaf 2 2>/dev/null || printf '')"
-YELLOW="$(tput setaf 3 2>/dev/null || printf '')"
-BLUE="$(tput setaf 4 2>/dev/null || printf '')"
-DARKBLUE="$(tput setaf 12 2>/dev/null || printf '')"
-MAGENTA="$(tput setaf 5 2>/dev/null || printf '')"
-CYAN="$(tput setaf 6 2>/dev/null || printf '')"
-NO_COLOR="$(tput sgr0 2>/dev/null || printf '')"
-
 if cmd_exists fd; then
   export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
 fi
