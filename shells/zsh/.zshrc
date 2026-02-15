@@ -69,6 +69,7 @@ fi
 
 if cmd_exists direnv; then
   eval "$(direnv hook zsh)"
+  export DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m'
 fi
 
 if cmd_exists batpipe; then

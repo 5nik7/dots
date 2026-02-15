@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
+output=''
+
 figfonts() {
   command ls "$(command figlet -I2)"
 }
 
-fzfig() {
-  local text="${1}"
-  local output="$(figlet -f "$(figfonts | grep .flf | cut -d. -f1 | fzf --preview-window='default:up:50%' --preview="figlet -f {} ${text}")" "$text" 2>/dev/null)"
-  echo -e "$output" &
-  echo -e "$output" | cpy
+main() {
+  local text=$1
+  local output=$(figlet -f "$(figfonts | grep .flf | cut -d. -f1 | fzf --preview-window='default:up:50%' --preview="figlet -f {} ${text}")" "$text" 2>/dev/null)
+  [[ -z $output ]] || echo -e "$output" | cpy || pst
 }
 
-fzfig "$@"
+main "$@"
