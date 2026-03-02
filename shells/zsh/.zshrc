@@ -105,8 +105,8 @@ if cmd_exists tv; then
   eval "$(tv init zsh)"
 fi
 
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix
-
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select
+
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix
