@@ -51,8 +51,9 @@ alias goog='google'
 
 function updpkg() {
  local pkgs="$DROIDOTS/packages"
- command pkg list-installed | tr '/' ' ' | awk '{print $1}' >! "$pkgs"
- sed -i '1d' "$pkgs"
+ echo "$(pkg list-installed 2>/dev/null)" | sed '1d' | tr "/" " " | awk '{print $1}' >! "$pkgs"
+ # command pkg list-installed > /dev/null 2>&1 | tr '/' ' ' | awk '{print $1}' >! "$pkgs"
+ # sed -i '1d' "$pkgs"
 }
 
 extend_path "${HOME}/perl5/bin"
