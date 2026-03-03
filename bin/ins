@@ -58,7 +58,7 @@ fzf() {
     --bind='Ctrl-X:toggle-preview' \
     --no-hscroll --inline-info \
     --preview-window="$preview_pos" \
-    --header='tab: select | Ctrl-X: preview | Alt-I: hide/show installed' \
+    --header='tab: select | Ctrl-X: preview | Ctrl-I: hide/show installed' \
     "$@"
 }
 
@@ -74,9 +74,9 @@ install() {
 }
 
 # -----------------------------------------------------------------------------
-# File-backed toggle (Termux-safe)
-# - fzf starts with list from stdin
-# - Alt-I reloads from one of two precomputed files
+# File-backed Ctrl-I toggle (Termux-safe)
+# - fzf reads initial list from stdin
+# - Ctrl-I reloads from one of two precomputed files
 # -----------------------------------------------------------------------------
 run_fzf_toggle_files() {
   local query="$1"; shift
@@ -91,9 +91,8 @@ run_fzf_toggle_files() {
   printf "0" >"$st"
 
   # POSIX-sh compatible bind (fzf executes binds via /bin/sh -c)
-  # IMPORTANT: use alt-i (Ctrl-I == TAB in terminals)
   local bind_toggle
-  bind_toggle="alt-i:execute-silent(if [ \"\$(cat \"$st\")\" = 1 ]; then echo 0 >\"$st\"; else echo 1 >\"$st\"; fi)+reload(sh -c 'if [ \"\$(cat \"$st\")\" = 1 ]; then cat \"$file_hide\"; else cat \"$file_all\"; fi')"
+  bind_toggle="ctrl-i:execute-silent(if [ \"\$(cat \"$st\")\" = 1 ]; then echo 0 >\"$st\"; else echo 1 >\"$st\"; fi)+reload(sh -c 'if [ \"\$(cat \"$st\")\" = 1 ]; then cat \"$file_hide\"; else cat \"$file_all\"; fi')"
 
   local out
   out="$(
@@ -113,7 +112,7 @@ run_fzf_toggle_files() {
 # APT list (TAB-delimited):
 #   col1: status marker (colored)  "[i]" or spaces
 #   col2: raw package name         (NO color)  <-- preview/install
-#   col3: display line             (status embedded => "[i] 7zip" spacing)
+#   col3: pretty line (colored pkg + desc)
 # -----------------------------------------------------------------------------
 apt_list_annotated() {
   local hide_installed=0
@@ -140,10 +139,9 @@ apt_list_annotated() {
         if (hide && is_inst) next;
 
         status = (is_inst ? yellow "[i]" reset : "   ");
-        # Embed status + exactly one space before package name:
-        display = status " " green pkg reset " - " $0;
+        pretty = green pkg reset " - " $0;
 
-        print status "\t" pkg "\t" display;
+        print status "\t" pkg "\t" pretty;
       }
     '
 }
@@ -167,12 +165,13 @@ apt_pick_and_install() {
       run_fzf_toggle_files "$query" \
         'apt-cache show {2}' \
         $'\t' \
-        '3' \
+        '1,3' \
         "$f_all" \
         "$f_hide"
   )"
 
   rm -f "$f_all" "$f_hide" 2>/dev/null || true
+
   [[ -n "$picked" ]] || return 0
 
   printf '%s\n' "$picked" |
@@ -187,7 +186,6 @@ apt_pick_and_install() {
 #   col3: raw package name (NO color) <-- preview/install
 #   col4: info/version/etc
 #   col5: description
-#   col6: display line (status embedded for tight spacing)
 # -----------------------------------------------------------------------------
 pacman_search_list() {
   local search_cmd="$1"     # pacman / paru / yay / etc
@@ -201,7 +199,7 @@ pacman_search_list() {
   installed="$(pacman -Qq 2>/dev/null || true)"
 
   $search_cmd -Ss "${query:-}" 2>/dev/null |
-    gawk -v blue="$c_blue" -v green="$c_green" -v yellow="$c_yellow" -v reset="$c_reset" \
+    gawk -v blue="$c_blue" -v yellow="$c_yellow" -v reset="$c_reset" \
          -v installed_list="$installed" -v hide="$hide_installed" '
       BEGIN {
         n = split(installed_list, a, "\n");
@@ -223,9 +221,7 @@ pacman_search_list() {
         info = gensub(/[^ ]* /, "", 1, header);
         sub(/^[[:space:]]+/, "", descr);
 
-        display = status " " repo_c " " green name reset " " info " " descr;
-
-        print status "\t" repo_c "\t" name "\t" info "\t" descr "\t" display;
+        print status "\t" repo_c "\t" name "\t" info "\t" descr;
       }
     '
 }
@@ -249,12 +245,13 @@ pacman_pick_and_install() {
       run_fzf_toggle_files "$query" \
         "$preview_cmd" \
         $'\t' \
-        '6' \
+        '1,2,3,4,5' \
         "$f_all" \
         "$f_hide"
   )"
 
   rm -f "$f_all" "$f_hide" 2>/dev/null || true
+
   [[ -n "$picked" ]] || return 0
 
   printf '%s\n' "$picked" |
