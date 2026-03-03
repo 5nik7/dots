@@ -29,7 +29,7 @@ export RISH_APPLICATION_ID="com.termux"
 prepend_path "$DROIDOTS/bin"
 
 function open() {
-  termux-open "$@"
+  termux-open "$@" &>/dev/null &
 }
 
 alias rlt="termux-reload-settings"
