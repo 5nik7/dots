@@ -10,7 +10,7 @@ declare -r c_blue="${esc}[34m"
 declare -r c_black="${esc}[30m"
 
 declare distro
-declare preview_pos='right:hidden'
+declare preview_pos='bottom:hidden'
 
 usage() {
   LESS=-FEXR less <<'HELP'
