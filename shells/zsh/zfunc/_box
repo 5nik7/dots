@@ -1,0 +1,72 @@
+#compdef box
+# Zsh completion for "box"
+# Place as: ~/.zsh/completions/_box  (or any directory in $fpath)
+
+# Helper: non-negative integer matcher
+_box__nonneg_int() {
+  # _guard requires a pattern; (#b) enables backrefs, but we just need a numeric check
+  _guard '[0-9]#' 'non-negative integer'
+}
+
+# If you want to be extra friendly about colors, we can accept anything (ANSI sequence),
+# but we can also offer a few common examples as "values" so users see suggestions.
+# Keep it lightweight: users can still type raw $'\e[31m' etc.
+_box__color_examples() {
+  local -a vals
+  vals=(
+    $'\\e[0m:reset'
+    $'\\e[1m:bold'
+    $'\\e[2m:dim'
+    $'\\e[4m:underline'
+    $'\\e[31m:red'
+    $'\\e[32m:green'
+    $'\\e[33m:yellow'
+    $'\\e[34m:blue'
+    $'\\e[35m:magenta'
+    $'\\e[36m:cyan'
+    $'\\e[37m:white'
+    $'\\e[90m:bright black'
+    $'\\e[91m:bright red'
+    $'\\e[92m:bright green'
+    $'\\e[93m:bright yellow'
+    $'\\e[94m:bright blue'
+    $'\\e[95m:bright magenta'
+    $'\\e[96m:bright cyan'
+    $'\\e[97m:bright white'
+  )
+  _describe -t values 'ANSI escape (examples; you can type any sequence)' vals -Q
+}
+
+# Main completion
+_box() {
+  local -a opts
+  opts=(
+    '(-h --help)'{-h,--help}'[Print usage and exit]'
+
+    '-bc[Box color as an ANSI escape sequence]:color:_box__color_examples'
+    '-tc[Title color as an ANSI escape sequence]:color:_box__color_examples'
+
+    '-vp[Vertical padding (blank rows)]:padding:_box__nonneg_int'
+    '-hp[Horizontal padding (spaces each side)]:padding:_box__nonneg_int'
+
+    '-s[Separator character for columns (single char recommended)]:separator character:'
+    '-t[Title for the box]:title:'
+
+    '-T[Theme to use]:theme:(unicode ascii plain)'
+  )
+
+  _arguments -s -S \
+    $opts \
+    '*: :->args' && return
+
+  # No positional args are accepted by the script (it reads stdin).
+  # If user types extra words, you could optionally complete nothing / warn.
+  case $state in
+    args)
+      # Don’t offer file completion etc. because the script treats extras as invalid args.
+      _message 'no positional arguments (reads from stdin)'
+      ;;
+  esac
+}
+
+_box "$@"
