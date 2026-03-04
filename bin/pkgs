@@ -14,7 +14,7 @@ declare preview_pos='right:hidden'
 
 usage() {
   LESS=-FEXR less <<'HELP'
-pkgsearch [options] [query]
+pkgs [options] [query]
   lists and installs packages from your distro's repositories
 
   without any arguments pkgsearch will list all available packages from your cache
@@ -23,11 +23,17 @@ HELP
 }
 
 err() { printf "${c_red}%s${c_reset}\n" "$*" >&2; }
-die() { err "$*"; exit 1; }
+die() {
+  err "$*"
+  exit 1
+}
 
 has() {
   local verbose=0
-  if [[ $1 == '-v' ]]; then verbose=1; shift; fi
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
   for c; do
     c="${c%% *}"
     if ! command -v "$c" &>/dev/null; then
@@ -41,7 +47,10 @@ select_from() {
   local cmd='command -v'
   for a; do
     case "$a" in
-      -c) cmd="$2"; shift 2 ;;
+    -c)
+      cmd="$2"
+      shift 2
+      ;;
     esac
   done
   for c; do
@@ -79,12 +88,18 @@ install() {
 # - Alt-I reloads from one of two precomputed files
 # -----------------------------------------------------------------------------
 run_fzf_toggle_files() {
-  local query="$1"; shift
-  local preview="$1"; shift
-  local delimiter="$1"; shift
-  local with_nth="$1"; shift
-  local file_all="$1"; shift
-  local file_hide="$1"; shift
+  local query="$1"
+  shift
+  local preview="$1"
+  shift
+  local delimiter="$1"
+  shift
+  local with_nth="$1"
+  shift
+  local file_all="$1"
+  shift
+  local file_hide="$1"
+  shift
 
   local st
   st="$(mktemp "${TMPDIR:-/tmp}/pkgsearch.hide.XXXXXX")" || return 1
@@ -98,11 +113,11 @@ run_fzf_toggle_files() {
   local out
   out="$(
     fzf --query="$query" \
-        --delimiter="$delimiter" \
-        --with-nth="$with_nth" \
-        --preview="$preview" \
-        --bind="$bind_toggle" \
-        "$@"
+      --delimiter="$delimiter" \
+      --with-nth="$with_nth" \
+      --preview="$preview" \
+      --bind="$bind_toggle" \
+      "$@"
   )"
 
   rm -f "$st" 2>/dev/null || true
@@ -126,7 +141,7 @@ apt_list_annotated() {
 
   apt-cache search '.*' 2>/dev/null | sort |
     gawk -v green="$c_green" -v yellow="$c_yellow" -v reset="$c_reset" \
-         -v installed_list="$installed" -v hide="$hide_installed" '
+      -v installed_list="$installed" -v hide="$hide_installed" '
       BEGIN {
         n = split(installed_list, a, "\n");
         for (i = 1; i <= n; i++) if (a[i] != "") inst[a[i]] = 1;
@@ -150,13 +165,16 @@ apt_list_annotated() {
 
 apt_pick_and_install() {
   local query="$1"
-  local installer_prefix="$2"   # "" or "sudo "
-  local installer_bin="$3"      # apt / apt-get / aptitude / pkg
+  local installer_prefix="$2" # "" or "sudo "
+  local installer_bin="$3"    # apt / apt-get / aptitude / pkg
   local cmd="${installer_prefix}${installer_bin} install"
 
   local f_all f_hide
   f_all="$(mktemp "${TMPDIR:-/tmp}/pkgsearch.apt.all.XXXXXX")" || return 1
-  f_hide="$(mktemp "${TMPDIR:-/tmp}/pkgsearch.apt.hide.XXXXXX")" || { rm -f "$f_all"; return 1; }
+  f_hide="$(mktemp "${TMPDIR:-/tmp}/pkgsearch.apt.hide.XXXXXX")" || {
+    rm -f "$f_all"
+    return 1
+  }
 
   apt_list_annotated >"$f_all"
   apt_list_annotated --hide-installed >"$f_hide"
@@ -190,7 +208,7 @@ apt_pick_and_install() {
 #   col6: display line (status embedded for tight spacing)
 # -----------------------------------------------------------------------------
 pacman_search_list() {
-  local search_cmd="$1"     # pacman / paru / yay / etc
+  local search_cmd="$1" # pacman / paru / yay / etc
   local query="$2"
   local hide_installed=0
   [[ $3 == "--hide-installed" ]] && hide_installed=1
@@ -202,7 +220,7 @@ pacman_search_list() {
 
   $search_cmd -Ss "${query:-}" 2>/dev/null |
     gawk -v blue="$c_blue" -v green="$c_green" -v yellow="$c_yellow" -v reset="$c_reset" \
-         -v installed_list="$installed" -v hide="$hide_installed" '
+      -v installed_list="$installed" -v hide="$hide_installed" '
       BEGIN {
         n = split(installed_list, a, "\n");
         for (i = 1; i <= n; i++) if (a[i] != "") inst[a[i]] = 1;
@@ -232,13 +250,16 @@ pacman_search_list() {
 
 pacman_pick_and_install() {
   local query="$1"
-  local search_cmd="$2"          # pacman / paru / yay ...
-  local preview_cmd="$3"         # e.g. "pacman -Si {3}" or "yay -Si {3}"
-  local install_cmd="$4"         # e.g. "sudo pacman -S" or "yay -S"
+  local search_cmd="$2"  # pacman / paru / yay ...
+  local preview_cmd="$3" # e.g. "pacman -Si {3}" or "yay -Si {3}"
+  local install_cmd="$4" # e.g. "sudo pacman -S" or "yay -S"
 
   local f_all f_hide
   f_all="$(mktemp "${TMPDIR:-/tmp}/pkgsearch.pac.all.XXXXXX")" || return 1
-  f_hide="$(mktemp "${TMPDIR:-/tmp}/pkgsearch.pac.hide.XXXXXX")" || { rm -f "$f_all"; return 1; }
+  f_hide="$(mktemp "${TMPDIR:-/tmp}/pkgsearch.pac.hide.XXXXXX")" || {
+    rm -f "$f_all"
+    return 1
+  }
 
   pacman_search_list "$search_cmd" "$query" >"$f_all"
   pacman_search_list "$search_cmd" "$query" --hide-installed >"$f_hide"
@@ -281,11 +302,11 @@ termux() {
   pm="${pm,,}"
 
   case "$pm" in
-    pacman*) termux_pacman "$1" ;;
-    apt*|'') termux_apt "$1" ;;
-    *)
-      if command -v pacman &>/dev/null; then termux_pacman "$1"; else termux_apt "$1"; fi
-      ;;
+  pacman*) termux_pacman "$1" ;;
+  apt* | '') termux_apt "$1" ;;
+  *)
+    if command -v pacman &>/dev/null; then termux_pacman "$1"; else termux_apt "$1"; fi
+    ;;
   esac
 }
 
@@ -330,9 +351,15 @@ fedora() {
 # -----------------------------------------------------------------------------
 while true; do
   case "$1" in
-    -h|--help) usage; exit 0 ;;
-    -p|--preview) preview_pos="$2"; shift 2 ;;
-    *) break ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  -p | --preview)
+    preview_pos="$2"
+    shift 2
+    ;;
+  *) break ;;
   esac
 done
 
@@ -349,10 +376,10 @@ elif [[ -r "$TERMUX__PREFIX/etc/os-release" ]]; then
 fi
 
 case "$distro" in
-  debian|ubuntu) debian "$request" ;;
-  arch) arch "$request" ;;
-  void) void "$request" ;;
-  fedora) fedora "$request" ;;
-  termux) termux "$request" ;;
-  *) die 'unknown distro :(' ;;
+debian | ubuntu) debian "$request" ;;
+arch) arch "$request" ;;
+void) void "$request" ;;
+fedora) fedora "$request" ;;
+termux) termux "$request" ;;
+*) die 'unknown distro :(' ;;
 esac
