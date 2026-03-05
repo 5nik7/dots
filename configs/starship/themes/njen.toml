@@ -421,6 +421,11 @@ format = '$symbol '
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
 "/storage/emulated/0/Documents" = "DOCS"
+# "~/src" = "source:"
+# "~/src/c" = " ~/src/c"
+# "~/src/c" = " ~/src/c"
+# "/" = " "
+# "~/src/rust" = " ~/src/rust"
 
 [custom.git_remote_icon]
 description = "Git host icon"
