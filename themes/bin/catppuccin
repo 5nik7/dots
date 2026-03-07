@@ -376,7 +376,7 @@ frappe) frappe ;;
   echo
   list_flavors
   echo
-  exit 0
+  exit 1
   ;;
 esac
 
