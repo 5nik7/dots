@@ -34,10 +34,11 @@ declare -r fg_base="${esc}[38;2;30;30;46m"
 declare -r fg_mantle="${esc}[38;2;24;24;37m"
 declare -r fg_crust="${esc}[38;2;17;17;27m"
 declare -r bg_mantle="${esc}[48;2;24;24;37m"
-declare -r spacer="${fg_surface0}│${c_reset}"
+declare -r spacer="${dim}=${c_reset}"
 declare -r caticon="󰄛"
 
 default="mocha"
+bgcolor="mantle"
 
 mocha() {
   rosewater='#f5e0dc'
@@ -159,31 +160,63 @@ cmd_exists() {
   command -v "$1" &>/dev/null
 }
 
+foreground() {
+  COLOR="$1"
+  local r="$(pastel format rgb-r "${!COLOR}")"
+  local g="$(pastel format rgb-g "${!COLOR}")"
+  local b="$(pastel format rgb-b "${!COLOR}")"
+  local foreground="${esc}[38;2;${r};${g};${b}m"
+
+  printf "%s" "$foreground"
+}
+
+background() {
+  COLOR="$1"
+  local r="$(pastel format rgb-r "${!COLOR}")"
+  local g="$(pastel format rgb-g "${!COLOR}")"
+  local b="$(pastel format rgb-b "${!COLOR}")"
+  local background="${esc}[48;2;${r};${g};${b}m"
+
+  printf "%s" "$background"
+}
+
 start() {
   if cmd_exists pastel; then
-    pastel paint --no-newline "${!var}" '  󰄮  '
+    local bg=$(background base)
+    local ansi="$(pastel format ansi-24bit-escapecode "${!var}")"
+    local block='󰄮'
+    printf "%s%s%s  " "$bg" "$ansi" "$block"
   else
-    printf "  "
+    printf ''
   fi
 }
 
 color_codes() {
-  if cmd_exists pastel; then
-    print_ansi_24bit="$(pastel format ansi-24bit "${!var}")"
-    print_rgb="$(pastel format rgb "${!var}")"
-    print_hsl="$(pastel format hsl "${!var}")"
-    printf "${bold}%-9s${c_reset} ${spacer} %s ${spacer} %-18s ${spacer} %s\n" "$var" "${!var}" "$print_rgb" "$print_hsl"
+  # local fg=''
+  local fg=$(foreground text)
+  # local bg=''
+  local bg=$(background "$bgcolor")
+  local ansi=$(foreground "$var")
+  local block='󰄮'
+  if [[ -n "$FORMAT" ]]; then
+    local formatted="$(pastel -m "$color_mode" format "$FORMAT" "${!var}")"
+    printf "${bg} ${ansi}${block}  ${fg}%-9s ${spacer}${fg}${bg} %s \n" "$var" "$formatted"
   else
-    printf "${bold}%-9s${c_reset} ${spacer} %s\n" "$var" "${!var}"
+    printf "${bg} ${ansi}${block}  ${fg}%-9s ${spacer}${fg}${bg} %s \n" "$var" "${!var}"
   fi
 }
 
 print_colors() {
-  echo -e "${fg_mauve}${bold} $FLAVOR:${c_reset}"
+  local flavor="$FLAVOR"
+  local fg=$(foreground text)
+  local bg=$(background "$bgcolor")
+  local tc=$(foreground mauve)
+  local bc=$(foreground surface0)
   for var in rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface1 surface0 base mantle crust; do
-    start
+    # start
     color_codes
-  done
+  done | box -bc "${bg}${bc}" -t "${flavor}" -tc "${bg}${bold}${tc}"
+
 }
 
 list_colors() {
@@ -218,11 +251,8 @@ print_all() {
     latte) latte ;;
     frappe) frappe ;;
     esac
-
-    echo
     print_colors
   done
-  echo
 }
 
 err() {
@@ -230,26 +260,28 @@ err() {
 }
 
 usage() {
-  # echo -e "${bg_mantle}"
+  local prog=${0##*/}
   echo -e ""
-  echo -e "${fg_surface1}     |\___/|"
-  echo -e "     )     ("
-  echo -e "    =\     /="
-  echo -e "      ${fg_red})═══(${fg_overlay0}    Usage: ${bold}${fg_mauve}catppuccin${c_reset} ${fg_pink}-f ${fg_text}FLAVOR ${fg_overlay0}[${fg_pink}-c ${fg_text}COLOR${fg_overlay0}]"
-  echo -e "${fg_surface1}     /     \\"
-  echo -e "     |     |     ${fg_overlay0}Options:"
-  echo -e "${fg_surface1}    /       \     ${fg_pink}-f, --flavor    ${fg_lavender}Set the Catppuccin flavor"
-  echo -e "${fg_surface1}    \       /     ${fg_pink}-c, --color     ${fg_lavender}Output specified color value"
-  echo -e "${fg_surface1}     \__  _/      ${fg_pink}-a, --all       ${fg_lavender}Show all colors"
-  echo -e "${fg_surface1}       ( (        ${fg_pink}-h, --help      ${fg_lavender}Show this help message"
-  echo -e "${fg_surface1}        ) )"
-  echo -e "       (_("
+  echo -e "${fg_surface1}     |\___/|${c_reset}"
+  echo -e "${fg_surface1}     )     (${c_reset}"
+  echo -e "${fg_surface1}    =\     /=${c_reset}"
+  echo -e "      ${fg_red})═══(${fg_overlay0}    Usage: ${bold}${fg_mauve}${prog}${c_reset} ${fg_pink}-f ${fg_text}FLAVOR ${fg_overlay0}[${fg_pink}-c ${fg_text}COLOR${fg_overlay0}]${c_reset}"
+  echo -e "${fg_surface1}     /     \\${c_reset}"
+  echo -e "${fg_surface1}     |     |     ${fg_overlay0}Options:${c_reset}"
+  echo -e "${fg_surface1}    /       \     ${fg_pink}-f, --flavor    ${fg_lavender}Set the Catppuccin flavor${c_reset}"
+  echo -e "${fg_surface1}    \       /     ${fg_pink}-c, --color     ${fg_lavender}Output specified color value   ${c_reset}"
+  echo -e "${fg_surface1}     \__  _/      ${fg_pink}-a, --all       ${fg_lavender}Show all colors${c_reset}"
+  echo -e "${fg_surface1}       ( (        ${fg_pink}-h, --help      ${fg_lavender}Show this help message${c_reset}"
+  echo -e "${fg_surface1}        ) )${c_reset}"
+  echo -e "${fg_surface1}       (_(${c_reset}"
   echo -e "${c_reset}"
 }
 
 # Parse arguments
 # FLAVOR=""
 COLOR=""
+FORMAT=""
+color_mode='auto'
 
 if [[ ! -z "$FLAVOR" ]]; then
   FLAVOR="$default" # Default flavor if none specified
@@ -300,6 +332,32 @@ while [[ $# -gt 0 ]]; do
     COLOR="$1"
     shift
     ;;
+  --format)
+    if [[ -n "$2" ]]; then
+      FORMAT="$2"
+      shift 2
+    else
+      formats=(rgb rgb-float rgb-r rgb-g rgb-b hex hsl hsl-hue hsl-saturation hsl-lightness hsv hsv-hue hsv-saturation hsv-value lch lch-lightness lch-chroma lch-hue oklch oklch-lightness oklch-chroma oklch-hue lab lab-a lab-b oklab oklab-l oklab-a oklab-b luminance brightness ansi-8bit ansi-24bit ansi-8bit-value ansi-8bit-escapecode ansi-24bit-escapecode cmyk name)
+      echo "${formats[@]}"
+      exit 0
+    fi
+    ;;
+  ansi)
+    FORMAT="ansi-24bit"
+    shift
+    ;;
+  esc)
+    FORMAT="ansi-24bit-escapecode"
+    shift
+    ;;
+  rgb | rgb-float | rgb-r | rgb-g | rgb-b | hex | hsl | hsl-hue | hsl-saturation | hsl-lightness | hsv | hsv-hue | hsv-saturation | hsv-value | lch | lch-lightness | lch-chroma | lch-hue | oklch | oklch-lightness | oklch-chroma | oklch-hue | lab | lab-a | lab-b | oklab | oklab-l | oklab-a | oklab-b | luminance | brightness | ansi-8bit | ansi-24bit | ansi-8bit-value | ansi-8bit-escapecode | ansi-24bit-escapecode | cmyk | name)
+    FORMAT="$1"
+    shift
+    ;;
+  -r | --raw)
+    color_mode='off'
+    shift
+    ;;
   *)
     echo -e "${fg_red}Unknown option:${fg_text} $1${c_reset}"
     exit 1
@@ -324,7 +382,11 @@ esac
 
 if [[ -n "$COLOR" ]]; then
   if [[ -n "${!COLOR}" ]]; then
-    echo "${!COLOR}"
+    if [[ -n "$FORMAT" ]]; then
+      pastel -m "$color_mode" format "$FORMAT" "${!COLOR}"
+    else
+      echo "${!COLOR}"
+    fi
   else
     echo
     err "Color '$COLOR' not found in flavor '$FLAVOR'."
@@ -334,7 +396,5 @@ if [[ -n "$COLOR" ]]; then
     exit 1
   fi
 else
-  echo
   print_colors
-  echo
 fi
