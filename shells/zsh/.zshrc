@@ -136,6 +136,13 @@ iswsl() {
   fi
 }
 
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+prepend_path "$BUN_INSTALL/bin"
+
 # fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select

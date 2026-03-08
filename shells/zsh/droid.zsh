@@ -49,10 +49,8 @@ function google() {
 }
 alias goog='google'
 
-function fpath() {
-	[[ -e "$1" ]] || return
-
-  echo "$1" | command sed "s|${HOME}|~|" | command sed "s|${PREFIX}|/usr|"
+function spath() {
+  echo "$1" | sed "s|${HOME}|~|" | sed "s|${PREFIX}|/usr|"
 }
 
 function updpkg() {

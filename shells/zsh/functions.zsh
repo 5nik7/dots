@@ -26,16 +26,14 @@ function prepend_path() {
 	fi
 }
 
-function fpath() {
-	[[ -e "$1" ]] || return
-
-  echo "$1" | command sed "s|${HOME}|~|"
+function spath() {
+  echo "$@" | sed "s|${HOME}|~|"
 }
 
 function gup() {
   local ico=''
   local dir=$(pwd)
-  local fdir=$(fpath $dir)
+  local sdir=$(spath $dir)
   if [ -e "$dir/.git" ]; then
   commitDate=$(date +"%m-%d-%Y %H:%M")
     echo
@@ -44,7 +42,7 @@ function gup() {
     git push &&
     echo
   else
-    printf "\n${fg_red} %s '${fg_bright_red}${bold}%s${c_reset}${fg_red}' %s${c_reset}\n" "${ico}" "${fdir}" "not a repo root."
+    printf "\n${fg_red} %s '${fg_bright_red}${bold}%s${c_reset}${fg_red}' %s${c_reset}\n" "${ico}" "${sdir}" "not a repo root."
   fi
 }
 
