@@ -1,3 +1,18 @@
 #!/usr/bin/env bash
 
-win32yank.exe -i --crlf "$@"
+cmd_exists() {
+  command -v "$1" &>/dev/null
+}
+
+if cmd_exists clip.exe; then
+  clip.exe
+elif cmd_exists pwsh.exe; then
+  pwsh.exe -Command "Set-Clipboard -Value \$input"
+elif cmd_exists powershell.exe; then
+  powershell.exe -Command "Set-Clipboard -Value \$input"
+elif cmd_exists win32yank.exe; then
+  win32yank.exe -i --crlf "$@"
+else
+  echo "No clipboard utility found." >&2
+  exit 1
+fi

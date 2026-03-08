@@ -1,3 +1,12 @@
 #!/usr/bin/env bash
 
-win32yank.exe -o --lf
+pwsh.exe -Command "Get-Clipboard"
+
+# elif cmd_exists pwsh.exe; then
+#   pwsh.exe -Command "Get-Clipboard"
+# elif cmd_exists win32yank.exe; then
+#   win32yank.exe -o --lf
+# else
+#   echo "No clipboard utility found." >&2
+#   exit 1
+# fi

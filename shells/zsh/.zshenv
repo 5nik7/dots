@@ -5,7 +5,7 @@
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
-export ZFUNC="$ZSHDOTS/zfunc"
+export ZFUNC="$HOME/.zfunc"
 export DOTSBIN="$DOTS/bin"
 export BASHDOT="$SHELLS/bash"
 export DOTFILES="$DOTS/configs"

@@ -19,7 +19,7 @@ export SHHHH="$DOTS/secrets"
 zource "$SHHHH/secrets.sh"
 zource "/usr/share/nvm/init-nvm.sh"
 
-is_droid || zieces 'droid'
+
 
 function theme() {
   has_theme() { command vivid generate "$1" &>/dev/null }
@@ -55,7 +55,6 @@ set_theme
 
 zieces 'completions'
 
-[ -z ${WSLENV+x} ] || zieces 'wsl'
 
 if cmd_exists zoxide; then
   eval "$(zoxide init zsh)"
@@ -106,7 +105,38 @@ if cmd_exists tv; then
   eval "$(tv init zsh)"
 fi
 
-fpath+=~/.zfunc; autoload -Uz compinit; compinit
+if [[ -r /etc/os-release ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
+  distro="${distro%% *}"
+fi
+
+if [[ -r "$TERMUX__PREFIX/etc/os-release" ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$TERMUX__PREFIX/etc/os-release")
+  distro="${distro%% *}"
+fi
+
+if [[ "$distro" == "termux" ]]; then
+  zieces 'droid'
+fi
+
+alias distro='echo $distro'
+
+if [[ -r /etc/wsl-distribution.conf ]]; then
+  iswsl=true
+  zieces 'wsl'
+fi
+
+iswsl() {
+  if [[ "$iswsl" == true ]] &> /dev/null; then
+	echo "true"
+	return 0
+  else
+	echo "false"
+	return 1
+  fi
+}
+
+# fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 zstyle ':completion:*' menu select
 

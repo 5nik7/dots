@@ -10,13 +10,19 @@ extend_path "$WINDIR/System32/WindowsPowerShell/v1.0"
 extend_path "$WINDIR/System32"
 extend_path "$WINDIR"
 
-eval "$(vfox activate zsh)"
+if cmd_exists vfox; then
+  eval "$(vfox activate zsh)"
+fi
 
 PATH="/home/njen/perl5/bin${PATH:+:${PATH}}"; export PATH;
 PERL5LIB="/home/njen/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
 PERL_LOCAL_LIB_ROOT="/home/njen/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
 PERL_MB_OPT="--install_base \"/home/njen/perl5\""; export PERL_MB_OPT;
 PERL_MM_OPT="INSTALL_BASE=/home/njen/perl5"; export PERL_MM_OPT;
+
+function open() {
+	pwsh.exe -Command "Start-Process '$1' -WindowStyle Hidden -ErrorAction SilentlyContinue"
+}
 
 function google() {
     open "https://www.google.com/search?q=$*"
@@ -29,5 +35,7 @@ function www() {
     open "https://$1"
   fi
 }
+
+alias path='echo $PATH | tr ":" "\n"'
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix
