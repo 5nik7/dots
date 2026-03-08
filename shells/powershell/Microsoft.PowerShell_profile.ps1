@@ -62,6 +62,19 @@ function env {
     Get-ChildItem env:
 }
 
+function RepeatString {
+    param(
+        [string]$Text,
+        [int]$Count
+    )
+
+    if ($Count -le 0 -or $null -eq $Text) {
+        return ''
+    }
+
+    $Text * $Count
+}
+
 Import-Module Terminal-Icons
 Import-Module PSFzf
 Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
