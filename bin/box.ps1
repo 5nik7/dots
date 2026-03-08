@@ -1,148 +1,75 @@
 #!/usr/bin/env pwsh
-[CmdletBinding()]
-param(
-    [Alias('h')]
-    [switch]$Help,
-
-    [string]$bc = '',
-    [string]$tc = '',
-    [int]$vp = 0,
-    [int]$hp = 0,
-    [string]$s = '',
-
-    [Alias('Title')]
-    [string]$t = '',
-
-    [Alias('th')]
-    [ValidateSet('unicode', 'ascii', 'plain')]
-    [string]$Theme = 'unicode',
-
-    [Parameter(ValueFromPipeline = $true)]
-    [AllowNull()]
-    [AllowEmptyString()]
-    [string[]]$InputObject
-)
-
 Set-StrictMode -Version Latest
 
 $RST = "$([char]27)[0m"
-$script:PipelineLines = [System.Collections.Generic.List[string]]::new()
 
 function Repeat-Char {
     param(
         [Parameter(Mandatory)]
         [string]$Char,
-
         [Parameter(Mandatory)]
         [int]$Count
     )
 
-    if ($Count -le 0) {
-        return ''
-    }
-
+    if ($Count -le 0) { return '' }
     return ($Char * $Count)
 }
 
 function Strip-Ansi {
-    param(
-        [AllowNull()]
-        [string]$Text
-    )
-
-    if ($null -eq $Text) {
-        return ''
-    }
-
+    param([AllowNull()][string]$Text)
+    if ($null -eq $Text) { return '' }
     return [regex]::Replace($Text, '\x1b\[[0-9;?]*[@-~]', '')
 }
 
 function Get-DisplayLength {
-    param(
-        [AllowNull()]
-        [string]$Text
-    )
-
+    param([AllowNull()][string]$Text)
     return (Strip-Ansi $Text).Length
 }
 
 function Show-Usage {
-    $prog = Split-Path -Leaf $PSCommandPath
+    $prog = if ($PSCommandPath) { Split-Path -Leaf $PSCommandPath } else { 'box.ps1' }
 @"
-Usage: $prog [-t title] [...] < input
+Usage:
+  $prog [-t <title>] [options] [text...]
+  "hello world" | $prog
+  Get-Content file.txt | $prog
 
-Create a unicode or ASCII box around input text
-
-Input sources
-  - PowerShell pipeline input
-  - redirected stdin
-
-Options
-  -h, -Help        Print this message and exit
-  -bc <color>      Color to use for the box (as ANSI escape sequence)
-  -tc <color>      Color to use for the title (as ANSI escape sequence)
-  -vp <padding>    Number of spaces to pad the box vertically, defaults to 0
-  -hp <padding>    Number of spaces to pad the box horizontally, defaults to 0
-  -s <sep>         Specify the separator character, defaults to none
-  -t <title>       Title for the box, defaults to nothing
-  -Theme <theme>   Theme to use (possible: unicode, ascii, plain)
-  -th <theme>      Short alias for -Theme
+Options:
+  -h, -Help, --help  Print this message and exit
+  -bc <color>        ANSI escape sequence for the box color
+  -tc <color>        ANSI escape sequence for the title color
+  -vp <padding>      Vertical padding inside the box (default: 0)
+  -hp <padding>      Horizontal padding inside the box (default: 0)
+  -s <sep>           Separator character/string for columns
+  -t <title>         Title for the box
+  -Theme <theme>     Theme: unicode, ascii, plain
+  -th <theme>        Short alias for -Theme
+  -T <theme>         Compatibility alias for theme
 "@
 }
 
 function Fatal {
-    param(
-        [Parameter(ValueFromRemainingArguments = $true)]
-        [object[]]$Message
-    )
-
+    param([Parameter(ValueFromRemainingArguments = $true)][object[]]$Message)
     [Console]::Error.WriteLine("[FATAL] " + ($Message -join ' '))
     exit 1
 }
 
-function Get-BoxInputLines {
-    $lines = @()
+function Render-Box {
+    param(
+        [string[]]$InputLines,
+        [string]$BoxColor,
+        [string]$TitleColor,
+        [int]$VerticalPadding,
+        [int]$HorizontalPadding,
+        [string]$Separator,
+        [string]$TitleText,
+        [ValidateSet('unicode', 'ascii', 'plain')]
+        [string]$ThemeName
+    )
 
-    if ($script:PipelineLines.Count -gt 0) {
-        $lines = @($script:PipelineLines)
-    }
-    elseif ([Console]::IsInputRedirected) {
-        $rawInput = [Console]::In.ReadToEnd()
+    $horizontalPad = Repeat-Char ' ' $HorizontalPadding
 
-        if ([string]::IsNullOrEmpty($rawInput)) {
-            $lines = @('')
-        }
-        else {
-            $lines = [regex]::Split($rawInput, "\r?\n")
-
-            if ($lines.Count -gt 0 -and $lines[-1] -eq '') {
-                $lines = $lines[0..($lines.Count - 2)]
-            }
-
-            if ($lines.Count -eq 0) {
-                $lines = @('')
-            }
-        }
-    }
-    else {
-        $lines = @('')
-    }
-
-    return ,$lines
-}
-
-function Invoke-Box {
-    $color = $bc
-    $tcolor = $tc
-    $title = $t
-    $sep = $s
-    $vpadding = $vp
-    $hpaddingCount = $hp
-    $theme = $Theme
-
-    $hpadding = Repeat-Char ' ' $hpaddingCount
-
-    switch ($theme) {
+    switch ($ThemeName) {
         'unicode' {
             $WE  = '─'
             $NS  = '│'
@@ -174,21 +101,25 @@ function Invoke-Box {
             $NWE = ' '
         }
         default {
-            Fatal "invalid theme name: $theme"
+            Fatal "invalid theme name: $ThemeName"
         }
     }
 
-    $inputLines = Get-BoxInputLines
+    if (-not $InputLines -or $InputLines.Count -eq 0) {
+        $InputLines = @('')
+    }
 
     $maxCols = @()
     $numCols = 1
 
-    foreach ($line in $inputLines) {
-        if ($sep -ne '') {
-            $sepCount = ([regex]::Matches($line, [regex]::Escape($sep))).Count
-            $lineCols = $sepCount + 1
-        }
-        else {
+    foreach ($line in $InputLines) {
+        $lineText = if ($null -eq $line) { '' } else { [string]$line }
+
+        if ($Separator -ne '') {
+            $cells = $lineText -split [regex]::Escape($Separator), -1
+            $lineCols = $cells.Count
+        } else {
+            $cells = @($lineText)
             $lineCols = 1
         }
 
@@ -196,22 +127,14 @@ function Invoke-Box {
             $numCols = $lineCols
         }
 
-        if ($sep -ne '') {
-            $cells = $line -split [regex]::Escape($sep), -1
-        }
-        else {
-            $cells = @($line)
-        }
-
         for ($i = 0; $i -lt $lineCols; $i++) {
             $cellValue = if ($i -lt $cells.Count) { $cells[$i] } else { '' }
-            $cell = $hpadding + $cellValue + $hpadding
+            $cell = $horizontalPad + $cellValue + $horizontalPad
             $cellLen = Get-DisplayLength $cell
 
             if ($i -ge $maxCols.Count) {
                 $maxCols += $cellLen
-            }
-            elseif ($cellLen -gt $maxCols[$i]) {
+            } elseif ($cellLen -gt $maxCols[$i]) {
                 $maxCols[$i] = $cellLen
             }
         }
@@ -221,21 +144,16 @@ function Invoke-Box {
         $maxCols += 0
     }
 
-    $line = $color + $SE + $WE + $RST
-    $line += $tcolor + $title + $RST + $color
+    $line = $BoxColor + $SE + $WE + $RST
+    $line += $TitleColor + $TitleText + $RST + $BoxColor
 
-    $offset = $title.Length + 1
+    $offset = $TitleText.Length + 1
     for ($i = 0; $i -lt $numCols; $i++) {
         $maxLen = $maxCols[$i]
         $copy = $maxLen
+        if ($i -lt ($numCols - 1)) { $copy++ }
 
-        if ($i -lt ($numCols - 1)) {
-            $copy++
-        }
-
-        if ($offset -gt 0) {
-            $maxLen -= $offset
-        }
+        if ($offset -gt 0) { $maxLen -= $offset }
 
         if ($maxLen -lt 0) {
             $offset -= $copy
@@ -244,88 +162,183 @@ function Invoke-Box {
 
         $offset = 0
         $line += Repeat-Char $WE $maxLen
-
-        if ($i -lt ($numCols - 1)) {
-            $line += $SWE
-        }
+        if ($i -lt ($numCols - 1)) { $line += $SWE }
     }
 
     $line += $SW + $RST
     Write-Output $line
 
-    if ($vpadding -gt 0) {
-        $padLine = if ($sep -ne '') { Repeat-Char $sep ($numCols - 1) } else { '' }
+    if ($VerticalPadding -gt 0) {
+        $padLine = if ($Separator -ne '') {
+            $parts = for ($i = 0; $i -lt $numCols; $i++) { '' }
+            ($parts -join $Separator)
+        } else {
+            ''
+        }
 
         $padded = @()
-        for ($i = 0; $i -lt $vpadding; $i++) {
-            $padded += $padLine
-        }
-        $padded += $inputLines
-        for ($i = 0; $i -lt $vpadding; $i++) {
-            $padded += $padLine
-        }
-
-        $inputLines = $padded
+        for ($i = 0; $i -lt $VerticalPadding; $i++) { $padded += $padLine }
+        $padded += $InputLines
+        for ($i = 0; $i -lt $VerticalPadding; $i++) { $padded += $padLine }
+        $InputLines = $padded
     }
 
-    foreach ($row in $inputLines) {
-        if ($sep -ne '') {
-            $cells = $row -split [regex]::Escape($sep), -1
-        }
-        else {
-            $cells = @($row)
+    foreach ($row in $InputLines) {
+        $rowText = if ($null -eq $row) { '' } else { [string]$row }
+
+        if ($Separator -ne '') {
+            $cells = $rowText -split [regex]::Escape($Separator), -1
+        } else {
+            $cells = @($rowText)
         }
 
-        $outLine = $color + $NS + $RST
+        $outLine = $BoxColor + $NS + $RST
 
         for ($i = 0; $i -lt $numCols; $i++) {
             $cellValue = if ($i -lt $cells.Count) { $cells[$i] } else { '' }
-            $cell = $hpadding + $cellValue + $hpadding
+            $cell = $horizontalPad + $cellValue + $horizontalPad
             $len = Get-DisplayLength $cell
             $maxLen = $maxCols[$i]
 
             $outLine += $cell
             $outLine += Repeat-Char ' ' ($maxLen - $len)
-            $outLine += $color + $NS + $RST
+            $outLine += $BoxColor + $NS + $RST
         }
 
         Write-Output $outLine
     }
 
-    $line = $color + $NE
+    $line = $BoxColor + $NE
     for ($i = 0; $i -lt $numCols; $i++) {
         $maxLen = $maxCols[$i]
         $line += Repeat-Char $WE $maxLen
-
-        if ($i -lt ($numCols - 1)) {
-            $line += $NWE
-        }
+        if ($i -lt ($numCols - 1)) { $line += $NWE }
     }
-
     $line += $NW + $RST
     Write-Output $line
 }
 
-begin {
-    if ($Help) {
-        Show-Usage
-        exit 0
-    }
-}
+# Manual arg parsing
+$showHelp = $false
+$boxColor = ''
+$titleColor = ''
+$verticalPadding = 0
+$horizontalPadding = 0
+$separator = ''
+$titleText = ''
+$themeName = 'unicode'
+$textArgs = [System.Collections.Generic.List[string]]::new()
 
-process {
-    if ($null -ne $InputObject) {
-        foreach ($obj in $InputObject) {
-            if ($null -eq $obj) {
-                $script:PipelineLines.Add('')
+$argv = @($args)
+$i = 0
+while ($i -lt $argv.Count) {
+    $arg = [string]$argv[$i]
+
+    switch -Regex ($arg) {
+        '^(?:-h|-Help|--help)$' {
+            $showHelp = $true
+            $i++
+            continue
+        }
+        '^-bc$' {
+            if ($i + 1 -ge $argv.Count) { Fatal "missing value for -bc" }
+            $boxColor = [string]$argv[$i + 1]
+            $i += 2
+            continue
+        }
+        '^-tc$' {
+            if ($i + 1 -ge $argv.Count) { Fatal "missing value for -tc" }
+            $titleColor = [string]$argv[$i + 1]
+            $i += 2
+            continue
+        }
+        '^-vp$' {
+            if ($i + 1 -ge $argv.Count) { Fatal "missing value for -vp" }
+            try { $verticalPadding = [int]$argv[$i + 1] } catch { Fatal "invalid integer for -vp: $($argv[$i + 1])" }
+            $i += 2
+            continue
+        }
+        '^-hp$' {
+            if ($i + 1 -ge $argv.Count) { Fatal "missing value for -hp" }
+            try { $horizontalPadding = [int]$argv[$i + 1] } catch { Fatal "invalid integer for -hp: $($argv[$i + 1])" }
+            $i += 2
+            continue
+        }
+        '^-s$' {
+            if ($i + 1 -ge $argv.Count) { Fatal "missing value for -s" }
+            $separator = [string]$argv[$i + 1]
+            $i += 2
+            continue
+        }
+        '^-t$' {
+            if ($i + 1 -ge $argv.Count) { Fatal "missing value for -t" }
+            $titleText = [string]$argv[$i + 1]
+            $i += 2
+            continue
+        }
+        '^(?:-Theme|-th|-T)$' {
+            if ($i + 1 -ge $argv.Count) { Fatal "missing value for $arg" }
+            $candidate = [string]$argv[$i + 1]
+            if ($candidate -notin @('unicode', 'ascii', 'plain')) {
+                Fatal "invalid theme name: $candidate"
             }
-            else {
-                $script:PipelineLines.Add([string]$obj)
+            $themeName = $candidate
+            $i += 2
+            continue
+        }
+        '^--$' {
+            for ($j = $i + 1; $j -lt $argv.Count; $j++) {
+                $textArgs.Add([string]$argv[$j])
             }
+            break
+        }
+        '^-.*' {
+            Fatal "invalid argument: $arg"
+        }
+        default {
+            $textArgs.Add($arg)
+            $i++
+            continue
         }
     }
+
+    break
 }
 
-end {
-    Invoke-Box
+if ($showHelp) {
+    Show-Usage
+    exit 0
 }
+
+if ($verticalPadding -lt 0) { Fatal "vertical padding must be >= 0" }
+if ($horizontalPadding -lt 0) { Fatal "horizontal padding must be >= 0" }
+
+# Collect input in the right order:
+# 1. Actual pipeline input
+# 2. Direct text arguments
+# 3. Empty line fallback
+$inputLines = @()
+
+if ($MyInvocation.ExpectingInput) {
+    $inputLines = @(
+        $input | ForEach-Object {
+            if ($null -eq $_) { '' } else { [string]$_ }
+        }
+    )
+}
+elseif ($textArgs.Count -gt 0) {
+    $inputLines = $textArgs.ToArray()
+}
+else {
+    $inputLines = @('')
+}
+
+Render-Box `
+    -InputLines $inputLines `
+    -BoxColor $boxColor `
+    -TitleColor $titleColor `
+    -VerticalPadding $verticalPadding `
+    -HorizontalPadding $horizontalPadding `
+    -Separator $separator `
+    -TitleText $titleText `
+    -ThemeName $themeName
