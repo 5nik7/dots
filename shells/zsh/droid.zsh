@@ -49,6 +49,12 @@ function google() {
 }
 alias goog='google'
 
+function fpath() {
+	[[ -e "$1" ]] || return
+
+  echo "$1" | command sed "s|${HOME}|~|" | command sed "s|${PREFIX}|/usr|"
+}
+
 function updpkg() {
  local pkgs="$DROIDOTS/packages"
  echo "$(pkg list-installed 2>/dev/null)" | sed '1d' | tr "/" " " | awk '{print $1}' >! "$pkgs"

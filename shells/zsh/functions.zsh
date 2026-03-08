@@ -29,7 +29,7 @@ function prepend_path() {
 function fpath() {
 	[[ -e "$1" ]] || return
 
-  echo "$1" | command sed "s|${HOME}|~|" | command sed "s|${PREFIX}|/usr|"
+  echo "$1" | command sed "s|${HOME}|~|"
 }
 
 function gup() {
