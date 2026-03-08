@@ -108,16 +108,27 @@ fi
 if [[ -r /etc/os-release ]]; then
   distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
   distro="${distro%% *}"
-fi
-
-if [[ -r "$TERMUX__PREFIX/etc/os-release" ]]; then
+elif [[ -r "$TERMUX__PREFIX/etc/os-release" ]]; then
   distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$TERMUX__PREFIX/etc/os-release")
   distro="${distro%% *}"
+elif [[ -n "$TERMUX_VERSION" ]]; then
+  distro='termux'
 fi
 
 if [[ "$distro" == "termux" ]]; then
+  istermux=true
   zieces 'droid'
 fi
+
+istermux() {
+  if [[ "$istermux" == true ]] &> /dev/null; then
+    echo "true"
+    return 0
+  else
+    echo "false"
+    return 1
+  fi
+}
 
 alias distro='echo $distro'
 
@@ -128,11 +139,11 @@ fi
 
 iswsl() {
   if [[ "$iswsl" == true ]] &> /dev/null; then
-	echo "true"
-	return 0
+    echo "true"
+    return 0
   else
-	echo "false"
-	return 1
+    echo "false"
+    return 1
   fi
 }
 
