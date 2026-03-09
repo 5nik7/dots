@@ -23,10 +23,11 @@ export LYNX_LSS="$DOTFILES/lynx/lynx.lss"
 export TERMUX_APP_PACKAGE_MANAGER='apt'
 
 export DROIDOTS="$DOTS/androidots"
+export DROIDBIN="$DROIDOTS/bin"
 
 export RISH_APPLICATION_ID="com.termux"
 
-prepend_path "$DROIDOTS/bin"
+prepend_path "$DROIDBIN"
 
 function open() {
   termux-open "$@" &>/dev/null &

@@ -2,13 +2,11 @@
 
 # Simple CLI for shell-color-scripts
 
-# if [[ "$DEV" -gt 0 ]]; then
-#     DIR_COLORSCRIPTS="./colorscripts"
-# else
-#     DIR_COLORSCRIPTS="$HOME/.local/share/asciiart"
-# fi
-
-DIR_COLORSCRIPTS="$HOME/.local/share/asciiart"
+if [[ "$DEV" -gt 0 ]] &>/dev/null; then
+  DIR_COLORSCRIPTS="./colorscripts"
+else
+  DIR_COLORSCRIPTS="$HOME/.local/share/asciiart"
+fi
 
 if command -v find &>/dev/null; then
   LS_CMD="$(command -v find) ${DIR_COLORSCRIPTS} -maxdepth 1 -type f"

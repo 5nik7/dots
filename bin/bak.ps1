@@ -1,5 +1,3 @@
-
-#!/usr/bin/env pwsh
 [CmdletBinding()]
 param(
     [Alias('h')]

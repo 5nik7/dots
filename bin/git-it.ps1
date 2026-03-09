@@ -1,4 +1,3 @@
-#!/usr/bin/env pwsh
 # PowerShell conversion of git-it bash script
 
 $ErrorActionPreference = 'Stop'

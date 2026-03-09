@@ -1,4 +1,3 @@
-#!/usr/bin/env pwsh
 Set-StrictMode -Version Latest
 
 $RST = "$([char]27)[0m"

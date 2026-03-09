@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+clean_path() {
+  local old_path="${PATH:-}"
+  local new_path=""
+  local entry
+  local IFS=:
+  declare -A seen
+
+  for entry in $old_path; do
+    [[ -z "$entry" ]] && continue
+    [[ -n "${seen[$entry]}" ]] && continue
+    seen["$entry"]=1
+
+    if [[ -d "$entry" ]]; then
+      if [[ -z "$new_path" ]]; then
+        new_path="$entry"
+      else
+        new_path="$new_path:$entry"
+      fi
+    else
+      printf 'removed from PATH: %s\n' "$entry" >&2
+    fi
+  done
+
+  PATH="$new_path"
+  export PATH
+}
+
+clean_path

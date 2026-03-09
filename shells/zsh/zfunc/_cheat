@@ -1,4 +1,4 @@
-#compdef cht
+#compdef cheat
 
 __CHTSH_LANGS=($(curl -s cheat.sh/:list))
 _arguments -C \
