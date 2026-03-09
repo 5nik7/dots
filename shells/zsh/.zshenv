@@ -48,6 +48,4 @@ zource "$HOME/.cargo/env"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-export WTTR_PARAMS='u Q F'
-
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix
