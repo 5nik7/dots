@@ -11,19 +11,19 @@ fg_green="${esc}[32m"
 fg_yellow="${esc}[33m"
 
 function extend_path() {
-	[[ -d "$1" ]] || return
-
-	if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-		export PATH="$PATH:$1"
-	fi
+	if [[ -d "$1" ]]; then
+	  if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+		  export PATH="$PATH:$1"
+	  fi
+  fi 2> /dev/null
 }
 
 function prepend_path() {
-	[[ -d "$1" ]] || return
-
-	if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-		export PATH="$1:$PATH"
-	fi
+	if [[ -d "$1" ]]; then
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+		  export PATH="$1:$PATH"
+	  fi
+  fi 2> /dev/null
 }
 
 function spath() {

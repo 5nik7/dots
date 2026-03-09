@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-clean_path() {
+main() {
   local old_path="${PATH:-}"
   local new_path=""
   local entry
@@ -19,12 +19,11 @@ clean_path() {
         new_path="$new_path:$entry"
       fi
     else
-      printf 'removed from PATH: %s\n' "$entry" >&2
+      printf 'Not a Directory: %s\n' "$entry" >&2
     fi
   done
 
-  PATH="$new_path"
-  export PATH
+  echo "$new_path"
 }
 
-clean_path
+main
