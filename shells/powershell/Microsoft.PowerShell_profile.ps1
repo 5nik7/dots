@@ -865,6 +865,7 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
         }
 }
 
+Import-Module pscompletions
 
 Invoke-Expression (&starship init powershell)
 
