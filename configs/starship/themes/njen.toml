@@ -2,7 +2,7 @@
 
 add_newline = false
 follow_symlinks = false
-command_timeout = 500000
+command_timeout = 5000
 
 format = """\
 [$fill($nodejs$conda$python$rust$lua)
@@ -12,6 +12,7 @@ $hostname\
 $directory\
 (\
 ${custom.git_remote_icon}\
+${custom.git_remote_icon-pwsh}\
 $git_branch\
 $git_commit\
 $git_status\
@@ -421,11 +422,6 @@ format = '$symbol '
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
 "/storage/emulated/0/Documents" = "DOCS"
-# "~/src" = "source:"
-# "~/src/c" = " ~/src/c"
-# "~/src/c" = " ~/src/c"
-# "/" = " "
-# "~/src/rust" = " ~/src/rust"
 
 [custom.git_remote_icon]
 description = "Git host icon"
@@ -438,12 +434,12 @@ style = 'fg:color_git_branch'
 # shell = ["bash"]
 
 [custom.git_remote_icon-pwsh]
+disabled = true
 description = "Git host icon"
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
 when = 'git remote get-url origin 2>$null'
 command = """
-$icon = $(git-it -I)
-echo $icon
+git-it.ps1 -Iv 2>&1
 """
 format = '[$output ]($style)'
 style = 'fg:color_git_branch'
