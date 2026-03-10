@@ -5,7 +5,24 @@ follow_symlinks = false
 command_timeout = 5000
 
 format = """\
-[$fill($nodejs$conda$python$rust$lua)
+[\
+$fill\
+(\
+$c\
+$rust\
+$golang\
+$nodejs\
+$php\
+$java\
+$kotlin\
+$haskell\
+$python\
+$docker_context\
+$kubernetes\
+$shell\
+$container\
+$package\
+)
 $os\
 $username\
 $hostname\
@@ -19,10 +36,14 @@ $git_status\
 $git_metrics\
 $git_state\
 )\
-$cmd_duration\
-$time\
+(\
+$fill\
+)\
 ](bg:color_bg)
-$character"""
+$status$character"""
+
+right_format = """
+$time"""
 
 palette = "default"
 
@@ -57,12 +78,13 @@ crust = '#11111b'
 
 color_ok = 'bright-green'
 color_danger = 'bright-red'
+color_error = 'red'
 color_caution = 'bright-yellow'
 color_username = ''
 color_bg = 'transparent'
 color_directory = 'bright-blue'
 color_directory_repo = 'bright-cyan'
-color_directory_readonly = '#74c7ec'
+color_directory_readonly = 'bright-black'
 color_repo_bg = 'transparent'
 color_git_bracket = '#74c7ec'
 color_git_remote_symbol = '#74c7ec'
@@ -70,7 +92,8 @@ color_git_username = '#74c7ec'
 color_git_remote_url = '#74c7ec'
 color_git_remote_repo = '#89dceb'
 color_git_equal = '#585b70'
-color_env = 'yellow'
+color_env = '#7f849c'
+color_package = '#fab387'
 color_kubernetes = 'purple'
 color_docker = 'blue'
 color_shell = 'black'
@@ -79,11 +102,10 @@ color_other = ''
 color_time = '#b4befe'
 color_duration = ''
 color_os = 'blue'
-color_git = '#585b70'
-color_count = '#94e2d5'
-color_git_branch = '#cba6f7'
+color_git = 'cyan'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
+color_git_branch = '#cba6f7'
 color_vimcmd_ok = 'black'
 color_vimcmd_replace = 'yellow'
 color_vimcmd_visual = 'purple'
@@ -92,6 +114,25 @@ color_fill = '#313244'
 color_lua = '#74c7ec'
 color_rust = '#EBA0AC'
 color_node = 'bright-green'
+
+[status]
+disabled = true
+format = '( [$status]($style))'
+# format = '([$symbol( $common_meaning)( $signal_name)]($style))'
+map_symbol = true
+pipestatus = true
+# symbol = ''
+symbol = '󰅙'
+# symbol = ''
+success_symbol = ''
+not_found_symbol = ''
+not_executable_symbol = '󰜺'
+# not_executable_symbol = '󰂭'
+# sigint_symbol = ''
+sigint_symbol = '󰐊'
+signal_symbol = '󱐋'
+style = 'fg:color_error'
+recognize_signal_code = true
 
 [time]
 disabled = true
@@ -138,21 +179,26 @@ symbol = ' '
 style = 'fg:color_fill bg:color_bg'
 
 [directory]
+before_repo_root_style = 'fg:color_directory'
 style = 'fg:color_directory'
+format = '[$path]($style)( [$read_only]($read_only_style))'
+repo_root_style = 'fg:sky bold'
+repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path](fg:sapphire)( [$read_only]($read_only_style))'
 truncate_to_repo = false
 truncation_length = 10
 fish_style_pwd_dir_length = 1
-repo_root_style = "fg:color_directory_repo bold"
-read_only = " 󰌾"
+# repo_root_style = "fg:color_directory_repo bold"
+# read_only = ""
+read_only = "󰌾"
 home_symbol = "~"
 use_os_path_sep = false
-use_logical_path = true
-read_only_style = 'fg:color_directory_readonly'
+use_logical_path = false
+read_only_style = 'fg:color_directory dimmed'
 # truncation_symbol = "…/"
 
 [git_branch]
 symbol = ''
-format = '[($symbol$branch )]($style)'
+format = '( [$symbol$branch]($style) )'
 style = 'fg:color_git_branch'
 
 [git_commit]
@@ -179,22 +225,28 @@ disabled = false
 # deleted = '󰖭${count}'
 
 [git_status]
-format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](fg:color_git)( $ahead_behind$stashed)]($style)"
 style = "fg:color_git"
-conflicted = "​"
-untracked = "​"
-modified = "​"
-staged = "​"
-renamed = "​"
-deleted = "​"
-stashed = "≡"
+format = '([$ahead_behind]($style) )([$all_status]($style) )'
+stashed = "*${count}"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+up_to_date = ""
+diverged = "⇡${ahead_count}⇣${behind_count}"
+conflicted = "=${count}"
+deleted = "×${count}"
+renamed = "»${count}"
+modified = "!${count}"
+staged = "+${count}"
+untracked = "?${count}"
+ignore_submodules = false
+disabled = false
 
 [git_metrics]
 format = '([([+$added]($added_style))([-$deleted]($deleted_style))](fg:color_git) )'
 added_style = "fg:color_git_added"
 deleted_style = "fg:color_git_deleted"
 only_nonzero_diffs = true
-disabled = true
+disabled = false
 
 [git_state]
 style = "fg:color_danger"
@@ -208,34 +260,104 @@ am = "AM"
 am_or_rebase = "AM/REBASE"
 disabled = false
 
+# [git_status]
+# format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](fg:color_git)( $ahead_behind$stashed)]($style)"
+# style = "fg:color_git"
+# conflicted = "​"
+# untracked = "​"
+# modified = "​"
+# staged = "​"
+# renamed = "​"
+# deleted = "​"
+# stashed = "≡"
+
 [nodejs]
-detect_files = ['package.json']
-detect_folders = []
-symbol = '󰎙 '
-style = 'fg:color_node'
+symbol = ""
+# style = "fg:color_env"
+format = '( [$symbol( $version)]($style) )'
+
+[c]
+symbol = ""
+# style = "fg:color_env"
+format = '( [$symbol( $version)]($style) )'
+
+[rust]
+symbol = "󱘗"
+# style = "fg:color_env"
+format = '( [$symbol( $version)]($style) )'
+
+[golang]
+symbol = "󰟓"
+# style = "fg:color_env"
+format = '( [$symbol( $version)]($style) )'
+
+[php]
+symbol = ""
+style = "fg:color_env"
+format = '( [$symbol( $version)]($style) )'
+
+[java]
+symbol = ""
+# style = "fg:color_env"
+format = '( [$symbol( $version)]($style) )'
+
+[kotlin]
+symbol = ""
+# style = "fg:color_env"
+format = '( [$symbol( $version)]($style) )'
+
+[haskell]
+symbol = ""
+# style = "fg:color_env"
+format = '( [$symbol( $version)]($style) )'
+
+[python]
+symbol = ""
+# style = "fg:color_env"
+format = '( [$symbol( $version)( $virtualenv)]($style) )'
 version_format = '${raw}'
-format = '([${symbol}([$version](fg:color_node)) ]($style))'
+
+[package]
+disabled = false
+symbol = "󰏗"
+# style = "fg:peach"
+format = '( [$symbol( $version)]($style) )'
+
+[docker_context]
+symbol = ""
+# style = "fg:color_docker"
+format = '( [$symbol( $context)]($style) )'
+
+[kubernetes]
+symbol = "󱃾"
+# style = "fg:color_kubernetes"
+format = '( [($symbol( $cluster))]($style) )'
 disabled = false
 
+# [nodejs]
+# detect_files = ['package.json']
+# detect_folders = []
+# symbol = '󰎙 '
+# style = 'fg:color_node'
+# version_format = '${raw}'
+# format = '([${symbol}([$version](fg:color_node)) ]($style))'
+# disabled = false
+#
 [lua]
 detect_folders = []
 style = 'fg:color_lua'
 symbol = " "
 format = '([${symbol}([$version](fg:color_lua)) ]($style))'
 
-[python]
-format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
-symbol = '󰌠 '
-
-[rust]
-format = "[$symbol($version )]($style)"
-version_format = "v${raw}"
-style = "fg:color_rust"
-disabled = false
-detect_extensions = ["rs"]
-detect_files = ["Cargo.toml"]
-detect_folders = []
-symbol = "\ue68b "
+# [rust]
+# format = "[$symbol($version )]($style)"
+# version_format = "v${raw}"
+# style = "fg:color_rust"
+# disabled = false
+# detect_extensions = ["rs"]
+# detect_files = ["Cargo.toml"]
+# detect_folders = []
+# symbol = "\ue68b "
 
 [os]
 disabled = true
@@ -291,14 +413,9 @@ Windows = "󰍲"
 # Windows = "󰖳"
 # Windows = ""
 
-[package]
-symbol = "󰏗 "
 
 [perl]
 symbol = " "
-
-[php]
-symbol = " "
 
 [pijul_channel]
 symbol = " "
@@ -327,17 +444,11 @@ symbol = "  "
 [buf]
 symbol = " "
 
-[c]
-symbol = " "
-
 [crystal]
 symbol = " "
 
 [dart]
 symbol = " "
-
-[docker_context]
-symbol = " "
 
 [elixir]
 symbol = " "
@@ -351,14 +462,8 @@ symbol = " "
 [fossil_branch]
 symbol = " "
 
-[golang]
-symbol = " "
-
 [guix_shell]
 symbol = " "
-
-[haskell]
-symbol = " "
 
 [haxe]
 symbol = " "
@@ -366,14 +471,8 @@ symbol = " "
 [hg_branch]
 symbol = " "
 
-[java]
-symbol = " "
-
 [julia]
 symbol = " "
-
-[kotlin]
-symbol = " "
 
 [memory_usage]
 symbol = "󰍛 "
@@ -421,7 +520,7 @@ format = '$symbol '
 # "~/Documents" = " Documents"
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
-"/storage/emulated/0/Documents" = "DOCS"
+"/storage/emulated/0/Documents" = "~/Documents"
 
 [custom.git_remote_icon]
 description = "Git host icon"
@@ -429,7 +528,7 @@ when = 'git remote get-url origin 2>/dev/null'
 command = """
 echo "$(git-it -i)"
 """
-format = '[$output ]($style)'
+format = '( [$output]($style))'
 style = 'fg:color_git_branch'
 # shell = ["bash"]
 
