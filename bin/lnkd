@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+main() {
+  local path="${PWD%/}"
+  local cur=""
+  local found=1
+
+  [[ -z "$path" ]] && path="/"
+  IFS='/' read -r -a parts <<<"$path"
+
+  [[ "$path" == /* ]] && cur="/"
+
+  for part in "${parts[@]}"; do
+    [[ -z "$part" ]] && continue
+
+    if [[ "$cur" == "/" ]]; then
+      cur="/$part"
+    else
+      cur="$cur/$part"
+    fi
+
+    if [[ -L "$cur" ]]; then
+      printf '%s\n' "$cur"
+      found=0
+    fi
+  done
+
+  return "$found"
+}
+
+main

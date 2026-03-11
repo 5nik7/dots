@@ -1,0 +1,321 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+	cat <<'EOF'
+linked - inspect the symlinked parent component inside $PWD
+
+Usage:
+  linked [option] [-r|--raw]
+  linked -f|--format FORMAT [-r|--raw]
+
+Default:
+  Print the full symlink path found inside $PWD, formatted with ~ for $HOME.
+
+Options:
+      --full               Print full symlink path (default)
+  -d, --dirname            Print dirname of the symlink path
+  -b, --basename           Print basename of the symlink path
+  -p, --prefix             Print path below the symlink within $PWD
+
+  -s, --source             Print full symlink source/target path
+  -D, --source-dirname     Print dirname of the symlink source/target path
+  -B, --source-basename    Print basename of the symlink source/target path
+
+  -f, --format FORMAT      Print custom formatted output
+
+  -r, --raw                Do not replace $HOME with ~
+  -h, --help               Show this help
+
+Format placeholders:
+  %l   full symlink path
+  %d   symlink dirname
+  %b   symlink basename
+  %p   prefix below the symlink in $PWD
+
+  %s   full source/target path
+  %D   source dirname
+  %B   source basename
+  %P   full source path plus prefix
+
+  %%   literal percent sign
+
+Examples:
+  Suppose:
+
+    $PWD
+      /path/to/home/path/to/dirname/symlink/prefixed/path
+
+    symlink
+      /path/to/home/path/to/dirname/symlink -> /path/to/home/path/two/dirname/source
+
+  linked
+    ~/path/to/home/path/to/dirname/symlink
+
+  linked --dirname
+    ~/path/to/home/path/to/dirname
+
+  linked --basename
+    symlink
+
+  linked --prefix
+    prefixed/path
+
+  linked --source
+    ~/path/to/home/path/two/dirname/source
+
+  linked --source-dirname
+    ~/path/to/home/path/two/dirname
+
+  linked --source-basename
+    source
+
+  linked -f '%d/%b/%p -> %D/%B/%p'
+    ~/path/to/home/path/to/dirname/symlink/prefixed/path -> ~/path/to/home/path/two/dirname/source/prefixed/path
+
+Notes:
+  - linked searches $PWD component-by-component and uses the deepest symlink found.
+  - If no symlink component exists in $PWD, linked exits non-zero.
+  - %P is shorthand for the source path with the current prefix appended.
+EOF
+}
+
+format_path() {
+	local path=$1
+	if (( RAW )); then
+		printf '%s' "$path"
+	else
+		printf '%s' "$path" | sed "s|^${HOME}|~|"
+	fi
+}
+
+print_path() {
+	local path=$1
+	format_path "$path"
+	printf '\n'
+}
+
+abspath() {
+	local path=$1
+	local base=${2:-$PWD}
+
+	if [[ $path == /* ]]; then
+		printf '%s\n' "$path"
+	else
+		printf '%s\n' "$base/$path"
+	fi
+}
+
+normalize_path() {
+	local path=$1
+	local dir base
+
+	dir=$(dirname -- "$path")
+	base=$(basename -- "$path")
+
+	if cd -P -- "$dir" 2>/dev/null; then
+		printf '%s/%s\n' "$(pwd -P)" "$base"
+	else
+		printf '%s\n' "$path"
+	fi
+}
+
+find_deepest_symlink_in_pwd() {
+	local path="${PWD%/}"
+	local cur=""
+	local part
+	local -a parts
+	local i
+
+	SYMLINK_PATH=""
+	SYMLINK_INDEX=-1
+
+	[[ -z $path ]] && path="/"
+
+	IFS='/' read -r -a parts <<< "$path"
+
+	if [[ $path == /* ]]; then
+		cur="/"
+	fi
+
+	for i in "${!parts[@]}"; do
+		part=${parts[i]}
+		[[ -z $part ]] && continue
+
+		if [[ $cur == "/" ]]; then
+			cur="/$part"
+		elif [[ -z $cur ]]; then
+			cur="$part"
+		else
+			cur="$cur/$part"
+		fi
+
+		if [[ -L $cur ]]; then
+			SYMLINK_PATH=$cur
+			SYMLINK_INDEX=$i
+		fi
+	done
+
+	[[ -n $SYMLINK_PATH ]]
+}
+
+build_prefix_from_index() {
+	local idx=$1
+	local path="${PWD%/}"
+	local -a parts
+	local out=()
+	local i
+
+	IFS='/' read -r -a parts <<< "$path"
+
+	for i in "${!parts[@]}"; do
+		[[ -z ${parts[i]} ]] && continue
+		if (( i > idx )); then
+			out+=("${parts[i]}")
+		fi
+	done
+
+	((${#out[@]})) && printf '%s\n' "$(IFS=/; echo "${out[*]}")" || printf '\n'
+}
+
+join_path_and_prefix() {
+	local base=$1
+	local prefix=$2
+
+	if [[ -z $prefix ]]; then
+		printf '%s\n' "$base"
+	else
+		printf '%s/%s\n' "${base%/}" "$prefix"
+	fi
+}
+
+render_format() {
+	local fmt=$1
+	local out
+
+	local l d b p s D B P
+
+	l=$(format_path "$SYMLINK_PATH")
+	d=$(format_path "$SYMLINK_DIRNAME")
+	b=$SYMLINK_BASENAME
+	p=$PREFIX
+
+	s=$(format_path "$SOURCE_ABS")
+	D=$(format_path "$SOURCE_DIRNAME")
+	B=$SOURCE_BASENAME
+	P=$(format_path "$SOURCE_WITH_PREFIX")
+
+	out=$fmt
+	out=${out//%%/$'\001'}
+
+	out=${out//%l/$l}
+	out=${out//%d/$d}
+	out=${out//%b/$b}
+	out=${out//%p/$p}
+
+	out=${out//%s/$s}
+	out=${out//%D/$D}
+	out=${out//%B/$B}
+	out=${out//%P/$P}
+
+	out=${out//$'\001'/%}
+
+	printf '%s\n' "$out"
+}
+
+RAW=0
+MODE="full"
+FORMAT_STRING=""
+
+while (($#)); do
+	case $1 in
+		--full)
+			MODE="full"
+			;;
+		-d|--dirname)
+			MODE="dirname"
+			;;
+		-b|--basename)
+			MODE="basename"
+			;;
+		-p|--prefix)
+			MODE="prefix"
+			;;
+		-s|--source)
+			MODE="source"
+			;;
+		-D|--source-dirname)
+			MODE="source_dirname"
+			;;
+		-B|--source-basename)
+			MODE="source_basename"
+			;;
+		-f|--format)
+			shift
+			if (($# == 0)); then
+				printf 'linked: missing format string for -f|--format\n\n' >&2
+				usage >&2
+				exit 2
+			fi
+			MODE="format"
+			FORMAT_STRING=$1
+			;;
+		-r|--raw)
+			RAW=1
+			;;
+		-h|--help)
+			usage
+			exit 0
+			;;
+		*)
+			printf 'linked: unknown option: %s\n\n' "$1" >&2
+			usage >&2
+			exit 2
+			;;
+	esac
+	shift
+done
+
+if ! find_deepest_symlink_in_pwd; then
+	printf 'linked: no symlink component found in $PWD\n' >&2
+	exit 1
+fi
+
+SYMLINK_DIRNAME=$(dirname -- "$SYMLINK_PATH")
+SYMLINK_BASENAME=$(basename -- "$SYMLINK_PATH")
+PREFIX=$(build_prefix_from_index "$SYMLINK_INDEX")
+
+LINK_TARGET=$(readlink -- "$SYMLINK_PATH")
+SOURCE_ABS=$(abspath "$LINK_TARGET" "$(dirname -- "$SYMLINK_PATH")")
+SOURCE_ABS=$(normalize_path "$SOURCE_ABS")
+SOURCE_DIRNAME=$(dirname -- "$SOURCE_ABS")
+SOURCE_BASENAME=$(basename -- "$SOURCE_ABS")
+SOURCE_WITH_PREFIX=$(join_path_and_prefix "$SOURCE_ABS" "$PREFIX")
+
+case $MODE in
+	full)
+		print_path "$SYMLINK_PATH"
+		;;
+	dirname)
+		print_path "$SYMLINK_DIRNAME"
+		;;
+	basename)
+		printf '%s\n' "$SYMLINK_BASENAME"
+		;;
+	prefix)
+		printf '%s\n' "$PREFIX"
+		;;
+	source)
+		print_path "$SOURCE_ABS"
+		;;
+	source_dirname)
+		print_path "$SOURCE_DIRNAME"
+		;;
+	source_basename)
+		printf '%s\n' "$SOURCE_BASENAME"
+		;;
+	format)
+		render_format "$FORMAT_STRING"
+		;;
+esac

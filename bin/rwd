@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+cwd() {
+  echo "$(pwd)"
+}
+
+lwd() {
+  realpath -L "$(pwd)"
+}
+
+spath() {
+  echo "$1" | sed "s|${HOME}|~|"
+}
+
+main() {
+  local wd1 wd2 rwd
+
+  wd1="$(cwd)"
+  wd2="$(lwd)"
+
+  if [[ "$wd1" == "$wd2" ]]; then
+    return 1
+  else
+    local swd="$(spath "$wd1")"
+    echo "$swd"
+  fi
+}
+
+main

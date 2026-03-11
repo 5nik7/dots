@@ -26,6 +26,7 @@ $package\
 $os\
 $username\
 $hostname\
+${custom.rwd}\
 $directory\
 (\
 ${custom.git_remote_icon}\
@@ -521,6 +522,15 @@ format = '$symbol '
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
 "/storage/emulated/0/Documents" = "~/Documents"
+
+[custom.rwd]
+description = "cwd"
+when = true
+command = "rwd"
+style = "fg:color_directory"
+format = '([$output[ -> ](bright-black)]($style))'
+symbol = ""
+# shell = ["bash", "--noprofile", "--norc"]
 
 [custom.git_remote_icon]
 description = "Git host icon"

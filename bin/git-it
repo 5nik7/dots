@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cmdname=$(basename "$0")
+prog=${0##*/}
 separator='='
 
 if [ -t 1 ]; then
@@ -49,8 +49,8 @@ ${C_RESET}
 EOF
   uhead 'Usage:'
   cat <<EOF
-${C_CYAN} $cmdname${C_RESET} ${C_YELLOW}[path] [remote]${C_RESET} ${C_GREEN}[flags]${C_RESET}
-${C_CYAN} $cmdname${C_RESET} ${C_GREEN}-h | --help${C_RESET}
+${C_CYAN} $prog${C_RESET} ${C_YELLOW}[path] [remote]${C_RESET} ${C_GREEN}[flags]${C_RESET}
+${C_CYAN} $prog${C_RESET} ${C_GREEN}-h | --help${C_RESET}
 EOF
   echo
   uhead 'Scope flags:'
