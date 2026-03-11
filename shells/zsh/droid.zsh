@@ -50,8 +50,16 @@ function google() {
 }
 alias goog='google'
 
+alias path='echo -e ${PATH//:/\\n}'
+alias "p:"='echo $PATH | tr ":" "\n"'
+
+
+alias "s:"='spath'
+
 function spath() {
-  echo "$1" | sed "s|${HOME}|~|" | sed "s|${PREFIX}|/usr|"
+  local args=()
+
+  echo | sed "s|${HOME}|~|" | sed "s|${PREFIX}|/usr|"
 }
 
 function updpkg() {

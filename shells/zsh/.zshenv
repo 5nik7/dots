@@ -2,6 +2,14 @@
  #  ╔═╝╚═╗╠═╣║╣ ║║║╚╗╔╝
  # o╚═╝╚═╝╩ ╩╚═╝╝╚╝ ╚╝
 
+esc=$'\033'
+c_reset="${esc}[0m"
+c_red="${esc}[31m"
+c_green="${esc}[32m"
+c_yellow="${esc}[33m"
+c_blue="${esc}[34m"
+c_black="${esc}[30m"
+
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
@@ -24,24 +32,38 @@ export YAZI_CONFIG_HOME="$DOTFILES/yazi"
 
 export GOBIN="$HOME/go/bin"
 
-if [[ -f "$HOME/.pythonrc" ]]; then
-    export PYTHONSTARTUP="$HOME/.pythonrc"
-fi
+[ -f "$HOME/.pythonrc" ] &>/dev/null && export PYTHONSTARTUP="$HOME/.pythonrc"
 
 fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
 
 function zource() {
-  if [[ -f "$1" ]]; then
-    source "$1"
-  fi
+  local files
+  filea="$@"
+  for file in "${files[@]}"; do
+    if [[ -f "$file" ]] &>/dev/null;then
+      source "$file"
+    fi
+  done
 }
 
 function zieces() {
-  zfile="$ZSHDOTS/$1.zsh"
-  if [[ -f "$zfile" ]]; then
-    source "$zfile"
-  fi
+  [ -f "$ZSHDOTS/$1.zsh" ] &>/dev/null
+  source "$ZSHDOTS/$1.zsh"
 }
+
+# function zieces() {
+#   local zfiles
+#   ZIECES=()
+#   [ -z "$ZSHDOTS" ] &>/dev/null && buggin "ZSHDOTS = $ZSHDOTS"
+#   zfiles="$@"
+#   for file in "${zfiles[@]}";do
+#     ZIECE="$ZSHDOTS/$file.zsh"
+#     [ -f "$ZIECE" ] &>/dev/null
+#     source "$file"
+#     ZIECES+="$ZIECE"
+#   done
+#   export ZIECES
+# }
 
 zource "$HOME/.cargo/env"
 

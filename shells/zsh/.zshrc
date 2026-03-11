@@ -148,15 +148,17 @@ iswsl() {
   fi
 }
 
-# bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
-# bun
-export BUN_INSTALL="$HOME/.bun"
-prepend_path "$BUN_INSTALL/bin"
+BUN_INSTALL="$HOME/.bun"
+if [[ -d "$BUN_INSTALL" ]]; then
+  export BUN_INSTALL="$HOME/.bun"
+  [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+  prepend_path "$BUN_INSTALL/bin"
+fi &>/dev/null
+
 
 # fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
-zstyle ':completion:*' menu select
+# zstyle ':completion:*' menu select
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix

@@ -1,0 +1,12 @@
+#compdef buggin
+
+buggin() {
+  local BUGGIN
+    [[ -z "$BUGGIN" ]] &>/dev/null || {
+    local ts=$(date +"%m-%d-%Y %H:%M:%S")
+    local dbug="${c_black}[${c_reset}${c_blue}${ts}${c_reset}${c_black}]${c_reset}${c_yellow}[DEBUG]${c_reset}\t"
+    printf "%s ${c_green}%s${c_reset}\n" "$dbug" "$*" >&2
+  }
+}
+
+

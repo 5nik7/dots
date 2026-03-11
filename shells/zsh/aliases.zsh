@@ -1,5 +1,7 @@
 function rlp() {
-  source "$HOME/.zshrc" && clear && print_in_yellow "\n ZSH reloaded.\n"
+  exec zsh;
+  clear;
+  print_in_yellow "\n ZSH reloaded.\n"
  }
 alias rl='rlp'
 
@@ -27,13 +29,18 @@ alias q='exit'
 
 alias g='git'
 
-alias path='echo $PATH | tr ":" "\n" | sed "s|${HOME}|~|" | sed "s|${PREFIX}|/usr|"'
+alias "p:"='echo -e ${PATH//:/\\n}'
+
+alias path='echo $PATH | tr ":" "\n"'
+# alias path='echo $PATH | tr ":" "\n" | sed "s|${HOME}|~|"'
 
 alias rmr='rm -fvr'
 
-function mkcd() {
-  mkdir -p "$1" && cd "$1"
-}
+# function mkcd() {
+#   mkdir -p "$1" && cd "$1"
+# }
+
+mkcd() { mkdir -p "$@" && cd $_; }
 
 alias get='httpGet'
 
@@ -72,30 +79,20 @@ alias ".ab"="cd $DROIDOTS/bin"
 alias ".w"="cd $WINDOTS"
 alias ".wf"="cd $WINDOTS/configs"
 
-if cmd_exists pastel; then
-  alias ppaint='pastel paint'
-fi
-
 if cmd_exists eza; then
     function l() {
-      eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
+      eza -1 -a "$@"
     }
     function ll() {
-      # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-      eza -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
+      eza -l "$@"
     }
   function la() {
-      eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
+      eza -a  "$@"
     }
-    function lla() {
-      # local timestyle='+󰨲 %m/%d/%y 󰅐 %H:%M'
-     echo
-      eza -a -l --group-directories-first --git-repos --git --icons --hyperlink --follow-symlinks --no-quotes --modified -h --no-user "$@"
-     echo
-    }
-    alias eza="eza --icons --group-directories-first"
+    alias eza="eza --icons"
     alias ls="eza"
     alias lsa="ls -a"
+    alias lla="ls -l -a"
 fi
 
 if cmd_exists yazi; then
@@ -128,7 +125,6 @@ export VISUAL="$EDITOR"
 export EDITOR_TERM="$TERMINAL -e $EDITOR"
 
 alias edit='$EDITOR'
-alias e='$EDITOR'
 alias v='$EDITOR'
 alias vi='$EDITOR'
 alias vim='$EDITOR'
