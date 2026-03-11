@@ -12,7 +12,7 @@ main() {
   local buggin="$buggin"
   if [ -n "$buggin" ] &>/dev/null; then
     local ts=$(date +"%m-%d-%Y %H:%M:%S")
-    local dbug="${c_black}[${c_reset}${c_blue}${ts}${c_reset}${c_black}]${c_reset}${c_yellow}[DEBUG]${c_reset}"
+    local dbug="${c_blue}[${c_reset}${c_blue}${ts}${c_reset}${c_blue}]${c_reset}${c_yellow}[DEBUG]${c_reset}"
     printf "%s ${c_green}%s${c_reset}\t\n" "$dbug" "$*" >&2
     exit 0
   else
