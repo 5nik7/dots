@@ -90,8 +90,6 @@ if cmd_exists atuin; then
   eval "$(atuin init zsh)"
 fi
 
-# fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
-
 if cmd_exists uv; then
   eval "$(uv generate-shell-completion zsh)"
 fi
@@ -153,9 +151,6 @@ if [[ -d "$BUN_INSTALL" ]]; then
   [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
   prepend_path "$BUN_INSTALL/bin"
 fi &>/dev/null
-
-
-# fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 # zstyle ':completion:*' menu select
 

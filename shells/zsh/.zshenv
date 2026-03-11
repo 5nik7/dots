@@ -2,14 +2,6 @@
  #  ╔═╝╚═╗╠═╣║╣ ║║║╚╗╔╝
  # o╚═╝╚═╝╩ ╩╚═╝╝╚╝ ╚╝
 
-esc=$'\033'
-c_reset="${esc}[0m"
-c_red="${esc}[31m"
-c_green="${esc}[32m"
-c_yellow="${esc}[33m"
-c_blue="${esc}[34m"
-c_black="${esc}[30m"
-
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
@@ -37,33 +29,16 @@ export GOBIN="$HOME/go/bin"
 fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
 
 function zource() {
-  local files
-  filea="$@"
-  for file in "${files[@]}"; do
-    if [[ -f "$file" ]] &>/dev/null;then
-      source "$file"
-    fi
-  done
+  if [[ -f "$1" ]]; then
+      source "$1"
+  fi
 }
 
 function zieces() {
-  [ -f "$ZSHDOTS/$1.zsh" ] &>/dev/null
-  source "$ZSHDOTS/$1.zsh"
+  if [[ -f "$ZSHDOTS/$1.zsh" ]]; then
+    source "$ZSHDOTS/$1.zsh"
+  fi
 }
-
-# function zieces() {
-#   local zfiles
-#   ZIECES=()
-#   [ -z "$ZSHDOTS" ] &>/dev/null && buggin "ZSHDOTS = $ZSHDOTS"
-#   zfiles="$@"
-#   for file in "${zfiles[@]}";do
-#     ZIECE="$ZSHDOTS/$file.zsh"
-#     [ -f "$ZIECE" ] &>/dev/null
-#     source "$file"
-#     ZIECES+="$ZIECE"
-#   done
-#   export ZIECES
-# }
 
 zource "$HOME/.cargo/env"
 
