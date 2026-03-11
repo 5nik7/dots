@@ -54,12 +54,10 @@ alias path='echo -e ${PATH//:/\\n}'
 alias "p:"='echo $PATH | tr ":" "\n"'
 
 
-alias "s:"='spath'
-
 function spath() {
-  local args=()
+  local args="$@"
 
-  echo | sed "s|${HOME}|~|" | sed "s|${PREFIX}|/usr|"
+  echo "${args[@]}" | sed "s|${HOME}|~|" | sed "s|${PREFIX}|/usr|"
 }
 
 function updpkg() {

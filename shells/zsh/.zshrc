@@ -20,8 +20,6 @@ export SHHHH="$DOTS/secrets"
 zource "$SHHHH/secrets.sh"
 zource "/usr/share/nvm/init-nvm.sh"
 
-
-
 function theme() {
   has_theme() { command vivid generate "$1" &>/dev/null }
   if has_theme "$1"; then
