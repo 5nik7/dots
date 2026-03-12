@@ -530,7 +530,7 @@ command = "rwd"
 style = "fg:color_directory"
 format = '([$output[ -> ](bright-black bold)]($style))'
 symbol = ""
-# shell = ["bash", "--noprofile", "--norc"]
+shell = ["bash", "--noprofile", "--norc"]
 
 [custom.git_remote_icon]
 description = "Git host icon"
@@ -540,7 +540,7 @@ echo "$(git-it -i)"
 """
 format = '( [$output]($style))'
 style = 'fg:color_git_branch'
-# shell = ["bash"]
+shell = ["bash", "--noprofile", "--norc"]
 
 [custom.git_remote_icon-pwsh]
 disabled = true
