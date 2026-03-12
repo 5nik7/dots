@@ -1,19 +1,40 @@
 #!/usr/bin/env bash
 
+declare buggin
+
 declare -r esc=$'\033'
 declare -r c_reset="${esc}[0m"
-declare -r c_red="${esc}[31m"
-declare -r c_green="${esc}[32m"
-declare -r c_yellow="${esc}[33m"
-declare -r c_blue="${esc}[34m"
-declare -r c_black="${esc}[30m"
+declare -r c_black="${esc}[0;30m"
+declare -r c_red="${esc}[0;31m"
+declare -r c_green="${esc}[0;32m"
+declare -r c_yellow="${esc}[0;33m"
+declare -r c_blue="${esc}[0;34m"
+declare -r c_magenta="${esc}[0;35m"
+declare -r c_cyan="${esc}[0;36m"
+declare -r c_white="${esc}[0;37m"
+declare -r c_black_b="${esc}[1;30m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+
+debug="${c_yellow}"
+timestamp="${c_cyan}"
+output="${bold}"
+border="$c_black_b"
+
+bug="[DEBUG]"
+date='%H:%M:%S'
+fulldatel='%y-%m-%d %H:%M:%S'
 
 main() {
   local buggin="$buggin"
   if [ -n "$buggin" ] &>/dev/null; then
-    local ts=$(date +"%m-%d-%Y %H:%M:%S")
-    local dbug="${c_blue}[${c_reset}${c_blue}${ts}${c_reset}${c_blue}]${c_reset}${c_yellow}[DEBUG]${c_reset}"
-    printf "%s ${c_green}%s${c_reset}\t\n" "$dbug" "$*" >&2
+    local ts=$(date +"${date}")
+    local dbug="${debug}${bug}${c_reset}"
+    local stamp="${timestamp}${ts}${c_reset}"
+    printf "%s ${output}%s${c_reset}" "$stamp" "$*" | box -hp 1 -bc "$border" -t "$bug" -tc "$debug" >&2
+
     exit 0
   else
     exit 1

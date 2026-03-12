@@ -528,7 +528,7 @@ description = "cwd"
 when = true
 command = "rwd"
 style = "fg:color_directory"
-format = '([$output[ -> ](bright-black)]($style))'
+format = '([$output[ -> ](bright-black bold)]($style))'
 symbol = ""
 # shell = ["bash", "--noprofile", "--norc"]
 
