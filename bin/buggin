@@ -19,7 +19,7 @@ declare -r italic="${esc}[3m"
 declare -r underline="${esc}[4m"
 
 debug="${c_yellow}"
-timestamp="${c_cyan}"
+timestamp="${c_green}"
 output="${bold}"
 border="$c_black_b"
 
@@ -33,6 +33,7 @@ main() {
     local ts=$(date +"${date}")
     local dbug="${debug}${bug}${c_reset}"
     local stamp="${timestamp}${ts}${c_reset}"
+    echo
     printf "%s ${output}%s${c_reset}" "$stamp" "$*" | box -hp 1 -bc "$border" -t "$bug" -tc "$debug" >&2
 
     exit 0
