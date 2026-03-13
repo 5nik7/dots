@@ -2,7 +2,7 @@
 
 add_newline = false
 follow_symlinks = false
-command_timeout = 5000
+command_timeout = 10000
 
 format = """\
 [\
@@ -529,7 +529,6 @@ when = true
 command = "rwd"
 style = "fg:color_directory"
 format = '([$output[ -> ](bright-black bold)]($style))'
-symbol = ""
 shell = ["bash", "--noprofile", "--norc"]
 
 [custom.git_remote_icon]
