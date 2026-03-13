@@ -79,7 +79,7 @@ alias ".ab"="cd $DROIDOTS/bin"
 alias ".w"="cd $WINDOTS"
 alias ".wf"="cd $WINDOTS/configs"
 
-export eza_opts=("--icons" "--group-directories-first")
+export eza_opts=("--color=always" "--icons" "--group-directories-first")
 
 if cmd_exists eza; then
   function lscmd() {
@@ -91,14 +91,16 @@ if cmd_exists eza; then
     fi
   eza $opts $@
 }
-    # alias eza="eza"
-    alias ls="lscmd"
-    alias lsa="ls -a"
-    alias l="ls -1"
-    alias ll"ls -l"
-    alias la="ls -1a"
-    alias lla="ls -la"
+alias ls="lscmd"
+else
+  alias ls="ls --color=always"
 fi
+
+alias lsa="ls -a"
+alias l="ls -1"
+alias ll"ls -l"
+alias la="ls -1a"
+alias lla="ls -la"
 
 if cmd_exists yazi; then
     function y() {
@@ -141,10 +143,11 @@ if [[ -d "$HOME/dev" ]]; then
 fi
 
 if [[ -d "$HOME/src" ]]; then
-    export SRCDIR="$HOME/src"
-    alias src="cd $SRCDIR"
+  export SRCDIR="$HOME/src"
+  src() {
+    cd "$SRCDIR/$(fd --type directory --base-directory=$SRCDIR/ --max-depth=2 --color=always | fzf --ansi)"
+  }
 fi
-
 
 if cmd_exists lazygit; then
   alias lg='lazygit'
