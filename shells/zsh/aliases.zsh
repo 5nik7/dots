@@ -40,6 +40,12 @@ alias rmr='rm -fvr'
 #   mkdir -p "$1" && cd "$1"
 # }
 
+zd() {
+  cd $(echo $(eza -la --show-symlinks --no-filesize --no-permissions --no-time --no-user --only-dirs --icons=always --color=always | fzf --ansi) | strip-ansi | awk '{print $2}')
+}
+
+alias "f."="zd"
+
 mkcd() { mkdir -p "$@" && cd $_; }
 
 alias get='httpGet'

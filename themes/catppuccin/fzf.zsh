@@ -28,13 +28,13 @@ crust=$(catppuccin crust)
 macchiato_base=$(catppuccin macchiato base)
 
 _FZF_COLORS_="\
-bg+:${surface0},\
+bg+:${transparent},\
 bg:${transparent},\
 preview-bg:${transparent},\
 fg+:strip:${mauve}:bold,\
 fg:regular,\
-hl:${lavender}:bold,\
-hl+:${pink}:bold,\
+hl:${flamingo}:bold,\
+hl+:${mauve}:bold:underline-double,\
 info:${surface2},\
 query:${yellow},\
 gutter:regular:${surface0},\
