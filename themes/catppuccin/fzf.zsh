@@ -25,19 +25,20 @@ surface0=$(catppuccin surface0)
 base=$(catppuccin base)
 mantle=$(catppuccin mantle)
 crust=$(catppuccin crust)
+macchiato_base=$(catppuccin macchiato base)
 
 _FZF_COLORS_="\
-bg+:${transparent},\
+bg+:${surface0},\
 bg:${transparent},\
 preview-bg:${transparent},\
-fg:${overlay2},\
-fg+:${flamingo}:bold:reverse,\
-hl:${text}:bold:underline,\
-hl+:${peach}:bold:reverse,\
+fg+:strip:${mauve}:bold,\
+fg:regular,\
+hl:${lavender}:bold,\
+hl+:${pink}:bold,\
 info:${surface2},\
 query:${yellow},\
-gutter:${surface0},\
-pointer:${surface2},\
+gutter:regular:${surface0},\
+pointer:regular:${surface1}:bold,\
 marker:${yellow},\
 prompt:${mauve},\
 spinner:${surface1},\
