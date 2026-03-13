@@ -41,7 +41,8 @@ alias rmr='rm -fvr'
 # }
 
 zd() {
-  cd $(echo $(eza -la --show-symlinks --no-filesize --no-permissions --no-time --no-user --only-dirs --icons=always --color=always | fzf --ansi) | strip-ansi | awk '{print $2}')
+  local dir
+  dir=$(echo $(eza -la --show-symlinks --no-filesize --no-permissions --no-time --no-user --git-ignore --only-dirs --icons=always --color=always ${1:-.} | fzf -e --ansi) | strip-ansi | awk '{print $2}') && [ -n "$dir" ] &>/dev/null && cd $dir
 }
 
 alias "f."="zd"
@@ -85,7 +86,7 @@ alias ".ab"="cd $DROIDOTS/bin"
 alias ".w"="cd $WINDOTS"
 alias ".wf"="cd $WINDOTS/configs"
 
-export eza_opts=("--color=always" "--icons" "--group-directories-first")
+export eza_opts=("--icons=always" "--color=always" "--icons" "--group-directories-first")
 
 if cmd_exists eza; then
   function lscmd() {
