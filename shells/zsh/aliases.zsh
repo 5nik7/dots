@@ -79,20 +79,25 @@ alias ".ab"="cd $DROIDOTS/bin"
 alias ".w"="cd $WINDOTS"
 alias ".wf"="cd $WINDOTS/configs"
 
+export eza_opts=("--icons" "--group-directories-first")
+
 if cmd_exists eza; then
-    function l() {
-      eza -1 -a "$@"
-    }
-    function ll() {
-      eza -l "$@"
-    }
-  function la() {
-      eza -a  "$@"
-    }
-    alias eza="eza --icons"
-    alias ls="eza"
+  function lscmd() {
+    local opts=()
+    if [ -n "$eza_opts" ]; then
+    for opt in "${eza_opts[@]}";do
+      opts+="$opt"
+    done
+    fi
+  eza $opts $@
+}
+    # alias eza="eza"
+    alias ls="lscmd"
     alias lsa="ls -a"
-    alias lla="ls -l -a"
+    alias l="ls -1"
+    alias ll"ls -l"
+    alias la="ls -1a"
+    alias lla="ls -la"
 fi
 
 if cmd_exists yazi; then
