@@ -40,12 +40,14 @@ alias rmr='rm -fvr'
 #   mkdir -p "$1" && cd "$1"
 # }
 
-zd() {
-  local dir
-  dir=$(echo $(eza -la --show-symlinks --no-filesize --no-permissions --no-time --no-user --git-ignore --only-dirs --icons=always --color=always ${1:-.} | fzf -e --ansi) | strip-ansi | awk '{print $2}') && [ -n "$dir" ] &>/dev/null && cd $dir
+fzd() {
+  local cmd selection input target
+  input=${1:-.}
+  cmd=cd
+  selection=$(echo $(eza -la --show-symlinks --no-filesize --no-permissions --no-time --no-user --git-ignore --only-dirs --icons=always --color=always $input | fzf -e --ansi) | strip-ansi | awk '{print $2}') && [ -n "$selection" ] &>/dev/null && $cmd "$input/$selection"
 }
 
-alias "f."="zd"
+alias "zd"="fzd"
 
 mkcd() { mkdir -p "$@" && cd $_; }
 
@@ -105,7 +107,7 @@ fi
 
 alias lsa="ls -a"
 alias l="ls -1"
-alias ll"ls -l"
+alias ll"ls -la"
 alias la="ls -1a"
 alias lla="ls -la"
 
@@ -152,7 +154,7 @@ fi
 if [[ -d "$HOME/src" ]]; then
   export SRCDIR="$HOME/src"
   src() {
-    cd "$SRCDIR/$(fd --type directory --base-directory=$SRCDIR/ --max-depth=2 --color=always | fzf --ansi)"
+    fzd "${SRCDIR}"
   }
 fi
 
