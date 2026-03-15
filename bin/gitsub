@@ -1,0 +1,563 @@
+#!/usr/bin/env bash
+
+set -u
+
+usage() {
+	cat <<'EOF'
+Usage: gitsub [options]
+
+Check whether the current directory is inside a Git repository that is a
+submodule of a parent Git repository located higher on the same path.
+
+Options:
+  -q, --quiet
+      Print nothing; use exit status only
+
+  -e, --exists-only
+      Same as --quiet; useful for scripting
+
+  --status
+      Print explicit status text:
+        submodule
+        not-submodule
+
+  -r, --raw
+      Print raw absolute paths instead of replacing $HOME with ~
+
+  -p, --parent
+      Print the immediate parent repository root
+
+  -o, --outermost, --toplevel
+      Print the outermost parent repository root found above the current
+      submodule chain on the same path
+
+  -s, --path
+      Print the submodule path relative to the reference selected by
+      --relative-to (default: parent)
+
+  --path-parent
+      Print the path relative to the immediate parent repository
+
+  -O, --path-outermost
+      Print the path relative to the outermost parent repository
+
+  --relative-to parent|outermost|current
+      Select how --path and %S are resolved (default: parent)
+
+  -c, --current
+      Print the current repository root
+
+  -n, --name
+      Print the basename of the current repository root
+
+  -j, --json
+      Print JSON output
+
+  -f, --format FORMAT
+      Print custom formatted output using tokens:
+
+        %P  immediate parent repository root
+        %O  outermost parent repository root
+        %S  path relative to reference selected by --relative-to
+        %T  path relative to outermost parent repository
+        %C  current repository root
+        %N  basename of current repository root
+        %%  literal percent sign
+
+  --completion bash|zsh
+      Print completion script for the selected shell
+
+  -h, --help
+      Show this help message
+
+Default output:
+  yes   if the current repo is a submodule of a parent repo
+  no    otherwise
+
+Exit codes:
+  0  current repo is a submodule of a parent repo
+  1  current repo is not a submodule of a parent repo
+  2  not inside a git repository / usage error
+EOF
+}
+
+print_bash_completion() {
+	cat <<'EOF'
+_gitsub() {
+	local cur prev
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+	local opts=(
+		-q --quiet
+		-e --exists-only
+		--status
+		-r --raw
+		-p --parent
+		-o --outermost
+		--toplevel
+		-s --path
+		--path-parent
+		-O --path-outermost
+		--relative-to
+		-c --current
+		-n --name
+		-j --json
+		-f --format
+		--completion
+		-h --help
+	)
+
+	case "$prev" in
+		--relative-to)
+			COMPREPLY=( $(compgen -W "parent outermost current" -- "$cur") )
+			return 0
+			;;
+		--completion)
+			COMPREPLY=( $(compgen -W "bash zsh" -- "$cur") )
+			return 0
+			;;
+		-f|--format)
+			COMPREPLY=()
+			return 0
+			;;
+	esac
+
+	if [[ "$cur" == -* ]]; then
+		COMPREPLY=( $(compgen -W "${opts[*]}" -- "$cur") )
+		return 0
+	fi
+
+	COMPREPLY=()
+}
+
+complete -F _gitsub gitsub
+EOF
+}
+
+print_zsh_completion() {
+	cat <<'EOF'
+#compdef gitsub
+
+_gitsub() {
+	local -a opts
+	opts=(
+		'-q[Print nothing; use exit status only]'
+		'--quiet[Print nothing; use exit status only]'
+		'-e[Same as --quiet; useful for scripting]'
+		'--exists-only[Same as --quiet; useful for scripting]'
+		'--status[Print explicit status text]'
+		'-r[Print raw absolute paths instead of replacing $HOME with ~]'
+		'--raw[Print raw absolute paths instead of replacing $HOME with ~]'
+		'-p[Print the immediate parent repository root]'
+		'--parent[Print the immediate parent repository root]'
+		'-o[Print the outermost parent repository root]'
+		'--outermost[Print the outermost parent repository root]'
+		'--toplevel[Alias for --outermost]'
+		'-s[Print path according to --relative-to]'
+		'--path[Print path according to --relative-to]'
+		'--path-parent[Print the path relative to the immediate parent repository]'
+		'-O[Print the path relative to the outermost parent repository]'
+		'--path-outermost[Print the path relative to the outermost parent repository]'
+		'--relative-to[Select how --path and %S are resolved]:reference:(parent outermost current)'
+		'-c[Print the current repository root]'
+		'--current[Print the current repository root]'
+		'-n[Print the basename of the current repository root]'
+		'--name[Print the basename of the current repository root]'
+		'-j[Print JSON output]'
+		'--json[Print JSON output]'
+		'-f[Print custom formatted output]:format string: '
+		'--format[Print custom formatted output]:format string: '
+		'--completion[Print completion script]:shell:(bash zsh)'
+		'-h[Show help message]'
+		'--help[Show help message]'
+	)
+
+	_arguments -s $opts
+}
+
+_gitsub "$@"
+EOF
+}
+
+quiet=0
+exists_only=0
+status_mode=0
+raw=0
+print_parent=0
+print_outermost=0
+print_path=0
+print_path_outermost=0
+print_current=0
+print_name=0
+json=0
+format=''
+relative_to='parent'
+completion_shell=''
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		-q|--quiet)
+			quiet=1
+			;;
+		-e|--exists-only)
+			exists_only=1
+			quiet=1
+			;;
+		--status)
+			status_mode=1
+			;;
+		-r|--raw)
+			raw=1
+			;;
+		-p|--parent)
+			print_parent=1
+			;;
+		-o|--outermost|--toplevel)
+			print_outermost=1
+			;;
+		-s|--path)
+			print_path=1
+			;;
+		--path-parent)
+			print_path=1
+			relative_to='parent'
+			;;
+		-O|--path-outermost)
+			print_path_outermost=1
+			;;
+		--relative-to)
+			shift
+			if [[ $# -eq 0 ]]; then
+				printf 'Error: --relative-to requires an argument\n' >&2
+				usage >&2
+				exit 2
+			fi
+			case "$1" in
+				parent|outermost|current)
+					relative_to=$1
+					;;
+				*)
+					printf 'Error: invalid --relative-to value: %s\n' "$1" >&2
+					usage >&2
+					exit 2
+					;;
+			esac
+			;;
+		-c|--current)
+			print_current=1
+			;;
+		-n|--name)
+			print_name=1
+			;;
+		-j|--json)
+			json=1
+			;;
+		-f|--format)
+			shift
+			if [[ $# -eq 0 ]]; then
+				printf 'Error: --format requires an argument\n' >&2
+				usage >&2
+				exit 2
+			fi
+			format=$1
+			;;
+		--completion)
+			shift
+			if [[ $# -eq 0 ]]; then
+				printf 'Error: --completion requires an argument (bash|zsh)\n' >&2
+				usage >&2
+				exit 2
+			fi
+			case "$1" in
+				bash|zsh)
+					completion_shell=$1
+					;;
+				*)
+					printf 'Error: invalid --completion value: %s\n' "$1" >&2
+					usage >&2
+					exit 2
+					;;
+			esac
+			;;
+		-h|--help)
+			usage
+			exit 0
+			;;
+		--)
+			shift
+			break
+			;;
+		-*)
+			printf 'Error: unknown option: %s\n' "$1" >&2
+			usage >&2
+			exit 2
+			;;
+		*)
+			printf 'Error: unexpected argument: %s\n' "$1" >&2
+			usage >&2
+			exit 2
+			;;
+	esac
+	shift
+done
+
+if [[ -n "$completion_shell" ]]; then
+	case "$completion_shell" in
+		bash) print_bash_completion ;;
+		zsh)  print_zsh_completion ;;
+	esac
+	exit 0
+fi
+
+canon_dir() {
+	(
+		cd "$1" 2>/dev/null && pwd -P
+	)
+}
+
+basename_sh() {
+	local s=$1
+	s=${s%/}
+	printf '%s\n' "${s##*/}"
+}
+
+path_display() {
+	local p=$1
+	if (( raw )); then
+		printf '%s\n' "$p"
+	else
+		case "$p" in
+			"$HOME")
+				printf '~\n'
+				;;
+			"$HOME"/*)
+				printf '~/%s\n' "${p#"$HOME"/}"
+				;;
+			*)
+				printf '%s\n' "$p"
+				;;
+		esac
+	fi
+}
+
+json_escape() {
+	local s=$1
+	s=${s//\\/\\\\}
+	s=${s//\"/\\\"}
+	s=${s//$'\n'/\\n}
+	s=${s//$'\r'/\\r}
+	s=${s//$'\t'/\\t}
+	printf '%s' "$s"
+}
+
+path_from_base() {
+	local base=$1
+	local target=$2
+
+	case "$target" in
+		"$base")
+			printf '.\n'
+			;;
+		"$base"/*)
+			printf '%s\n' "${target#"$base"/}"
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
+format_output() {
+	local fmt=$1
+	local out=
+	local i ch next
+	local len=${#fmt}
+
+	for (( i=0; i<len; i++ )); do
+		ch=${fmt:i:1}
+
+		if [[ "$ch" == "%" && $((i + 1)) -lt $len ]]; then
+			next=${fmt:i+1:1}
+			case "$next" in
+				P) out+=$parent_repo_disp; ((i++)) ;;
+				O) out+=$outermost_repo_disp; ((i++)) ;;
+				S) out+=$selected_path; ((i++)) ;;
+				T) out+=$outermost_path; ((i++)) ;;
+				C) out+=$current_root_disp; ((i++)) ;;
+				N) out+=$submodule_name; ((i++)) ;;
+				%) out+='%'; ((i++)) ;;
+				*)
+					out+="$ch$next"
+					((i++))
+					;;
+			esac
+		else
+			out+="$ch"
+		fi
+	done
+
+	printf '%s\n' "$out"
+}
+
+find_parent_submodule_chain() {
+	local search_dir
+	local candidate_parent
+	local rel_path
+	local found_parent=''
+	local found_path=''
+	local found_outermost=''
+
+	search_dir=$(dirname "$current_root")
+
+	while [[ "$search_dir" != "/" && -n "$search_dir" ]]; do
+		if candidate_parent=$(git -C "$search_dir" rev-parse --show-toplevel 2>/dev/null); then
+			candidate_parent=$(canon_dir "$candidate_parent") || return 1
+
+			if [[ "$candidate_parent" != "$current_root" ]]; then
+				case "$current_root" in
+					"$candidate_parent")
+						rel_path='.'
+						;;
+					"$candidate_parent"/*)
+						rel_path=${current_root#"$candidate_parent"/}
+						;;
+					*)
+						search_dir=$(dirname "$search_dir")
+						continue
+						;;
+				esac
+
+				if [[ "$rel_path" != "." ]]; then
+					if git -C "$candidate_parent" config -f .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null \
+						| awk '{print $2}' \
+						| grep -Fx -- "$rel_path" >/dev/null 2>&1; then
+						if [[ -z "$found_parent" ]]; then
+							found_parent=$candidate_parent
+							found_path=$rel_path
+						fi
+						found_outermost=$candidate_parent
+					elif git -C "$candidate_parent" ls-files --stage -- "$rel_path" 2>/dev/null \
+						| awk '$1 == "160000" { found=1 } END { exit(found ? 0 : 1) }'; then
+						if [[ -z "$found_parent" ]]; then
+							found_parent=$candidate_parent
+							found_path=$rel_path
+						fi
+						found_outermost=$candidate_parent
+					fi
+				fi
+			fi
+		fi
+
+		search_dir=$(dirname "$search_dir")
+	done
+
+	if [[ -n "$found_parent" ]]; then
+		printf '%s\n%s\n%s\n' "$found_parent" "$found_path" "$found_outermost"
+		return 0
+	fi
+
+	return 1
+}
+
+if ! current_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+	(( quiet )) || printf 'Not inside a git repository\n' >&2
+	exit 2
+fi
+
+current_root=$(canon_dir "$current_root") || exit 2
+
+if result=$(find_parent_submodule_chain); then
+	parent_repo=$(printf '%s\n' "$result" | sed -n '1p')
+	parent_path=$(printf '%s\n' "$result" | sed -n '2p')
+	outermost_repo=$(printf '%s\n' "$result" | sed -n '3p')
+	submodule_name=$(basename_sh "$current_root")
+
+	outermost_path=$(path_from_base "$outermost_repo" "$current_root") || exit 1
+
+	case "$relative_to" in
+		parent)
+			selected_path=$parent_path
+			;;
+		outermost)
+			selected_path=$outermost_path
+			;;
+		current)
+			selected_path='.'
+			;;
+	esac
+
+	current_root_disp=$(path_display "$current_root")
+	parent_repo_disp=$(path_display "$parent_repo")
+	outermost_repo_disp=$(path_display "$outermost_repo")
+
+	if (( quiet )); then
+		exit 0
+	fi
+
+	if (( json )); then
+		printf '{\n'
+		printf '  "is_submodule": true,\n'
+		printf '  "current": "%s",\n' "$(json_escape "$current_root_disp")"
+		printf '  "parent": "%s",\n' "$(json_escape "$parent_repo_disp")"
+		printf '  "outermost": "%s",\n' "$(json_escape "$outermost_repo_disp")"
+		printf '  "path": "%s",\n' "$(json_escape "$selected_path")"
+		printf '  "path_parent": "%s",\n' "$(json_escape "$parent_path")"
+		printf '  "path_outermost": "%s",\n' "$(json_escape "$outermost_path")"
+		printf '  "relative_to": "%s",\n' "$(json_escape "$relative_to")"
+		printf '  "name": "%s"\n' "$(json_escape "$submodule_name")"
+		printf '}\n'
+		exit 0
+	fi
+
+	if (( status_mode )); then
+		printf 'submodule\n'
+		exit 0
+	fi
+
+	if [[ -n "$format" ]]; then
+		format_output "$format"
+		exit 0
+	fi
+
+	if (( print_parent || print_outermost || print_path || print_path_outermost || print_current || print_name )); then
+		(( print_parent )) && printf '%s\n' "$parent_repo_disp"
+		(( print_outermost )) && printf '%s\n' "$outermost_repo_disp"
+		(( print_path )) && printf '%s\n' "$selected_path"
+		(( print_path_outermost )) && printf '%s\n' "$outermost_path"
+		(( print_current )) && printf '%s\n' "$current_root_disp"
+		(( print_name )) && printf '%s\n' "$submodule_name"
+	else
+		printf 'yes\n'
+	fi
+
+	exit 0
+else
+	if (( quiet )); then
+		exit 1
+	fi
+
+	if (( json )); then
+		printf '{\n'
+		printf '  "is_submodule": false\n'
+		printf '}\n'
+		exit 1
+	fi
+
+	if (( status_mode )); then
+		printf 'not-submodule\n'
+		exit 1
+	fi
+
+	if [[ -n "$format" ]]; then
+		exit 1
+	fi
+
+	if (( print_parent || print_outermost || print_path || print_path_outermost || print_current || print_name )); then
+		exit 1
+	else
+		printf 'no\n'
+	fi
+
+	exit 1
+fi

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#
 # Display supported terminal color palette and available text effects.
 #
 # - Display the palette:

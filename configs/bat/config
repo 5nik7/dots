@@ -4,18 +4,22 @@
 
 # Specify desired highlighting theme (e.g. "TwoDark"). Run `bat --list-themes`
 # for a list of all available themes
---theme="Catppuccin Mocha"
+# --theme="wal"
+--theme="njen"
+# --theme="Catppuccin Mocha"
 
 # --style="full"
-# --style="plain"
---style="numbers"
+--style="plain"
+# --style="numbers"
 
 # Enable this to use italic text on the terminal. This is not supported on all
 # terminal emulators (like tmux, by default):
 # --italic-text=always
 
 # Uncomment the following line to disable automatic paging:
---paging="auto"
+# --paging="auto"
+
+# --wrap="auto"
 
 --decorations="auto"
 

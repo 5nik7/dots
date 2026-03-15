@@ -27,7 +27,7 @@ export DROIDBIN="$DROIDOTS/bin"
 
 export RISH_APPLICATION_ID="com.termux"
 
-prepend_path "$DROIDBIN"
+prepath "$DROIDBIN"
 
 function open() {
   termux-open "$@" &>/dev/null &
@@ -45,14 +45,8 @@ alias ".af"="cd $DROIDOTS/configs"
 alias ".ab"="cd $DROIDOTS/bin"
 alias ".v"="cd $DROIDOTS/configs/nvim"
 
-function google() {
-  termux-open-url "https://www.google.com/search?q=$*"
-}
-alias goog='google'
-
 alias path='echo -e ${PATH//:/\\n}'
 alias "p:"='echo $PATH | tr ":" "\n"'
-
 
 function spath() {
   local args="$@"
@@ -60,24 +54,18 @@ function spath() {
   echo "${args[@]}" | sed "s|${HOME}|~|" | sed "s|${PREFIX}|/usr|"
 }
 
-function updpkg() {
- local pkgs="$DROIDOTS/packages"
- echo "$(pkg list-installed 2>/dev/null)" | sed '1d' | tr "/" " " | awk '{print $1}' >! "$pkgs"
- # command pkg list-installed > /dev/null 2>&1 | tr '/' ' ' | awk '{print $1}' >! "$pkgs"
- # sed -i '1d' "$pkgs"
+updpkg() {
+  local pkgs="$DROIDOTS/packages"
+  echo "$(pkg list-installed 2>/dev/null)" | sed '1d' | tr "/" " " | awk '{print $1}' >! "$pkgs"
 }
 
-extend_path "${HOME}/perl5/bin"
+extpath "${HOME}/perl5/bin"
 
-if cmd_exists perl; then
+if has perl; then
   PERL5LIB="${HOME}/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
   PERL_LOCAL_LIB_ROOT="${HOME}/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
   PERL_MB_OPT="--install_base \"${HOME}/perl5\""; export PERL_MB_OPT;
   PERL_MM_OPT="INSTALL_BASE=${HOME}/perl5"; export PERL_MM_OPT;
 fi
-
-prepend_path "${DOTS}/androidots/bin"
-
-# alias fetchskull="cat ~/dots/androidots/configs/fastfetch/skull | lolcat -8 >! ~/dots/androidots/configs/fastfetch/skullcolor && cat ~/dots/androidots/configs/fastfetch/skullcolor"
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix

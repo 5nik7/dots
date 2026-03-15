@@ -2,17 +2,15 @@ export WINROOT=/mnt/c
 export WINHOME=/mnt/c/Users/njen
 export WINDIR=$WINROOT/Windows
 
-extend_path "$WINHOME/scoop/shims"
-extend_path "$WINROOT/shims"
-extend_path "$WINROOT/shims/pwsh"
-extend_path "$WINROOT/vscode/bin"
-extend_path "$WINDIR/System32/WindowsPowerShell/v1.0"
-extend_path "$WINDIR/System32"
-extend_path "$WINDIR"
+extpath "$WINHOME/scoop/shims"
+extpath "$WINROOT/shims"
+extpath "$WINROOT/shims/pwsh"
+extpath "$WINROOT/vscode/bin"
+extpath "$WINDIR/System32/WindowsPowerShell/v1.0"
+extpath "$WINDIR/System32"
+extpath "$WINDIR"
 
-if cmd_exists vfox; then
-  eval "$(vfox activate zsh)"
-fi
+has vfox && eval "$(vfox activate zsh)"
 
 PATH="/home/njen/perl5/bin${PATH:+:${PATH}}"; export PATH;
 PERL5LIB="/home/njen/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
@@ -23,19 +21,5 @@ PERL_MM_OPT="INSTALL_BASE=/home/njen/perl5"; export PERL_MM_OPT;
 function open() {
 	pwsh.exe -Command "Start-Process '$1' -WindowStyle Hidden -ErrorAction SilentlyContinue"
 }
-
-function google() {
-    open "https://www.google.com/search?q=$*"
-}
-
-function www() {
-  if [[ $1 == https://* ]]; then
-    open "$1"
-  else
-    open "https://$1"
-  fi
-}
-
-alias path='echo $PATH | tr ":" "\n"'
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix

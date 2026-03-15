@@ -1,14 +1,8 @@
 function rlp() {
-  exec zsh;
-  clear;
-  print_in_yellow "\n ZSH reloaded.\n"
+  exec zsh && clear && \
+    printf "\n${YELLOW}%s${RST}\n" "ZSH reloaded"
  }
 alias rl='rlp'
-
-if [[ -r /etc/os-release ]]; then
-  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
-  distro="${distro%% *}"
-fi
 
 if [[ "$distro" == arch ]]; then
   alias pacman='sudo pacman'
@@ -40,7 +34,7 @@ alias rmr='rm -fvr'
 #   mkdir -p "$1" && cd "$1"
 # }
 
-fzd() {
+function fzd() {
   local cmd selection input target
   input=${1:-.}
   cmd=cd
@@ -49,7 +43,7 @@ fzd() {
 
 alias "zd"="fzd"
 
-mkcd() { mkdir -p "$@" && cd $_; }
+function mkcd() { mkdir -p "$@" && cd $_; }
 
 alias get='httpGet'
 
@@ -90,7 +84,7 @@ alias ".wf"="cd $WINDOTS/configs"
 
 export eza_opts=("--icons=always" "--color=always" "--icons" "--group-directories-first")
 
-if cmd_exists eza; then
+if has eza; then
   function lscmd() {
     local opts=()
     if [ -n "$eza_opts" ]; then
@@ -111,7 +105,7 @@ alias ll"ls -la"
 alias la="ls -1a"
 alias lla="ls -la"
 
-if cmd_exists yazi; then
+if has yazi; then
     function y() {
       local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
       yazi "$@" --cwd-file="$tmp"
@@ -123,13 +117,13 @@ if cmd_exists yazi; then
     alias d='y'
 fi
 
-if cmd_exists nvim; then
+if has nvim; then
     EDITOR='nvim'
-elif cmd_exists vim; then
+elif has vim; then
     EDITOR='vim'
-elif cmd_exists vi; then
+elif has vi; then
     EDITOR='vi'
-elif cmd_exists code; then
+elif has code; then
     EDITOR='code'
 else
     EDITOR='nano'
@@ -158,11 +152,9 @@ if [[ -d "$HOME/src" ]]; then
   }
 fi
 
-if cmd_exists lazygit; then
-  alias lg='lazygit'
-fi
+has lazygit && alias lg='lazygit'
 
-if cmd_exists glow; then
+if has glow; then
   if [[ -f "$DOTFILES/glow/styles/catppuccin-mocha.json" ]]; then
     alias glow="glow -s $DOTFILES/glow/styles/catppuccin-mocha.json"
   else

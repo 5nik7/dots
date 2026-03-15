@@ -1,0 +1,243 @@
+#!/usr/bin/env bash
+
+declare -r esc=$'\033'
+declare -r c_reset="${esc}[0m"
+declare -r c_red="${esc}[31m"
+declare -r c_green="${esc}[32m"
+declare -r c_yellow="${esc}[33m"
+declare -r c_blue="${esc}[34m"
+declare -r c_black="${esc}[30m"
+declare -r rocket=" "
+
+err() { printf "${c_red}%s %s${c_reset}\n" "$rocket" "$*" >&2; }
+die() {
+  err "$*"
+  exit 1
+}
+
+ok() {
+  printf "${c_green}%s %s${c_reset}\n" "$rocket" "$*"
+}
+
+has() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do
+    c="${c%% *}"
+    if ! command -v "$c" &>/dev/null; then
+      ((verbose)) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
+has -v starship;|| die "starship command found"
+
+rockeship() {
+cat <<'EOF'
+      ,
+     / \
+    / _ \
+   |.o '.|
+   |'._.'|
+   |     |
+ .'|  |  |'.
+/  |  |  |  \
+|,-'--|--'-.|
+EOF
+}
+
+
+usage {
+local prog=${0##*/}
+cat <<-eof
+Usage: $prog [options]
+
+Options:
+  -t, --theme
+      set the starship theme
+
+  -l --list
+      list all available themes
+
+  -h, --help
+      Show this help message
+eof
+}
+
+path_display() {
+	local p=$1
+	if (( raw )); then
+		printf '%s\n' "$p"
+	else
+		case "$p" in
+			"$HOME")
+				printf '~\n'
+				;;
+			"$HOME"/*)
+				printf '~/%s\n' "${p#"$HOME"/}"
+				;;
+			*)
+				printf '%s\n' "$p"
+				;;
+		esac
+	fi
+}
+
+checkdir() {
+  local dir
+  for dir in "$@"; do
+    [ -d "$dir" ] || {
+      local opath=$(ypath_display "$dir")
+      if ask "$sir does not exist. Create it?" Y; then
+        mkdir -p "$dir" && ok "$opath created"
+        return 0
+      else
+        die "$opath not created"
+      fi
+    }
+  done
+  return 0
+}
+
+ask() {
+	# https://djm.me/ask
+	local prompt default reply
+
+	while true; do
+
+		if [ "${2:-}" = "Y" ]; then
+			prompt="Y/n"
+			default=Y
+		elif [ "${2:-}" = "N" ]; then
+			prompt="y/N"
+			default=N
+		else
+			prompt="y/n"
+			default=
+		fi
+
+		echo -e -n "$1 [$prompt] "
+		read -r reply </dev/tty
+
+		if [ -z "$reply" ]; then
+			reply=$default
+		fi
+
+		case "$reply" in
+		Y* | y*) return 0 ;;
+		N* | n*) return 1 ;;
+		esac
+
+	done
+}
+
+notpreset(){
+  starship  preset "$@" &>/dev/null
+}
+
+list_themes() {
+  echo "themes:"
+  for theme in "${themse[@]}"; do
+    local name=$(basename "$theme" .toml)
+    if [["$name" == "$current" ]]; then
+iscurrent=" (current)"
+else
+iscurrent=''
+    fi
+    notpreset "$name" || printf "%s%s\n" "$thrme" "$iscurrent"
+  done
+  echo "presets:"
+  for preset in "${ppresets[@]}"; do
+    starshippreset "$preset" >$file
+    if [[ "$preset" == "$currentStarshipTheme" ]]; then
+      theme_output "$currentbgcolor" "$currentcolor" "$currenttxt" "$currentthemecolor" "$preset"
+    else
+      theme_output "$themebgcolor" "$bulletsymbolcolor" "$bulletsymbol" "$themecolor" "$preset"
+    fi
+    linebreak
+  done
+  linebreak
+}
+
+set_theme(){
+#
+#     sourcePath="$STARSHIP_THEMES/$theme.toml"
+#     targetPath="$STARSHIP_CONFIG"
+#
+#     if [[ ! -f "$sourcePath" ]]; then
+#       linebreak
+#       printf "%s${switchbgcolor}${errorcolor}%s ${c_reset}${switchbgcolor}${underline}${bold}${fg_red}%s${c_reset}${switchbgcolor} ${fg_red}%s${c_reset}" "$PADDING" "$errorsymbol" "$theme" "not found."
+#       linebreak
+#       exit 1
+#     fi
+#     if [[ "$theme" == "$current" ]]; then
+#     die ""
+#     else
+#       cd "$STARSHIP_DIR" || return
+#       ln -sf "themes/$theme.toml" "starship.toml"
+#       exit 0
+#     fi
+#   fi
+}
+
+if [[ -n "$STARSHIP_CONFIG" ]]; then
+  config="$STARSHIP_CONFIG"
+else
+  config="$HOME/.config/starship.toml"
+fi
+  cdir="$(dirname "$config")"
+
+  if [[ -f "$config" ]]; then
+    file=true
+    if [[ -l "$config" ]];then
+      linked=true
+    else
+      linked=flase
+    fi
+  else
+    file=false
+    checkdir $cdir
+  fi
+
+  if [[ -n  "$STARSHIP_THEMES" ]]; then
+    tdir="$STARSHIP_THEMES"
+  else
+    tdir="$HOME/.config/starship/themes"
+  fi
+  checkdir $tdir
+  checkpresets
+
+  themes=$Stdir/*.toml
+  presets=$(starship preset --list)
+
+   if [[ $linked = "true" ]]; then
+      current=""$(readlink "$comfig")" .toml)"
+   fi
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -l | --list)
+      list_themes
+      shift
+      ;;
+    -t | --theme)
+			if [[ $# -eq 0 ]]; then
+
+      theme="$2"
+      exit 0
+      ;;
+    *)
+        err "Unknown option: $1"
+        usage
+        exit 1
+      ;;
+    esac
+  done

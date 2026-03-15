@@ -8,17 +8,22 @@ zieces 'options'
 zieces 'plugins'
 
 addir "$HOME/.local/bin"
-prepend_path "$DOTSBIN"
-prepend_path "$GOBIN"
-prepend_path "$DOTSBIN"
-prepend_path "$DOTSLOCALBIN"
-prepend_path "$HOME/.cargo/bin"
-extend_path "$HOME/.local/share/gem/ruby/3.4.0/bin"
-prepend_path "$HOME/.local/bin"
-prepend_path "$HOME/bin"
-export SHHHH="$DOTS/secrets"
-zource "$SHHHH/secrets.sh"
-zource "/usr/share/nvm/init-nvm.sh"
+prepath "$GOBIN"
+extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
+prepath "$DOTSBIN"
+prepath "$DOTSLOCALBIN"
+prepath "$HOME/.cargo/bin"
+prepath "$HOME/.local/bin"
+prepath "$HOME/bin"
+prepath "$DOTSCRIPTS"
+prepath "$DOTSBIN"
+
+so "$HOME/.cargo/env"
+so "$DOTSHHHH/secrets.sh"
+so "/usr/share/nvm/init-nvm.sh"
+
+
+[ -f "$HOME/.pythonrc" ] &>/dev/null && export PYTHONSTARTUP="$HOME/.pythonrc"
 
 function theme() {
   has_theme() { command vivid generate "$1" &>/dev/null }
@@ -33,7 +38,7 @@ function theme() {
 function set_theme() {
   export THEMESROOT="$DOTS/themes"
   export THEMEBIN="$THEMESROOT/bin"
-  prepend_path "$THEMEBIN"
+  prepath "$THEMEBIN"
   export DOT_THEME="$(cat "$DOTS"/.theme)"
   export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
   if [[ "$THEME" == "catppuccin" ]]; then
@@ -62,18 +67,12 @@ fi
 
 zieces 'aliases'
 
-if cmd_exists starship; then
-  eval "$(starship init zsh)"
-fi
+has starship && eval "$(starship init zsh)"
 
-if cmd_exists direnv; then
-  eval "$(direnv hook zsh)"
+has direnv && eval "$(direnv hook zsh)" && \
   export DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m'
-fi
 
-if cmd_exists batpipe; then
-    eval "$(batpipe)"
-fi
+has batpipe && eval "$(batpipe)"
 
 if cmd_exists batman; then
   eval "$(batman --export-env)"
@@ -117,7 +116,7 @@ if [[ "$distro" == "termux" ]]; then
   zieces 'droid'
 fi
 
-istermux() {
+function istermux() {
   if [[ "$istermux" == true ]] &> /dev/null; then
     echo "true"
     return 0
@@ -134,7 +133,7 @@ if [[ -r /etc/wsl-distribution.conf ]]; then
   zieces 'wsl'
 fi
 
-iswsl() {
+function iswsl() {
   if [[ "$iswsl" == true ]] &> /dev/null; then
     echo "true"
     return 0
@@ -145,13 +144,12 @@ iswsl() {
 }
 
 
-BUN_INSTALL="$HOME/.bun"
-if [[ -d "$BUN_INSTALL" ]]; then
+if checkdir "$HOME/.bun"; then
   export BUN_INSTALL="$HOME/.bun"
   [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
   prepend_path "$BUN_INSTALL/bin"
-fi &>/dev/null
+fi
 
-# zstyle ':completion:*' menu select
+fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix

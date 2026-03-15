@@ -3,15 +3,7 @@
 <plist version="1.0">
     <dict>
         <key>name</key>
-        <string>Catppuccin Mocha</string>
-        <key>semanticClass</key>
-        <string>theme.dark.catppuccin-mocha</string>
-        <key>uuid</key>
-        <string>627ce890-fabb-4d39-9819-7be71f4bdca7</string>
-        <key>author</key>
-        <string>Catppuccin Org</string>
-        <key>colorSpaceName</key>
-        <string>sRGB</string>
+        <string>njen</string>
         <key>settings</key>
         <array>
             <dict>

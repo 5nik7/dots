@@ -5,13 +5,15 @@
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
-export ZFUNC="$HOME/.zfunc"
+export ZFUNC="$ZSHDOTS/zfunc"
 export DOTSBIN="$DOTS/bin"
+export DOTSCRIPTS="$DOTS/scripts"
+export DOTFILES="$DOTS/configs"
+export DOTSHHHH="$DOTS/secrets"
 export DOTSLOCAL="$DOTS/local"
 export DOTSLOCALBIN="$DOTSLOCAL/bin"
 export DOTSLOCALSHARE="$DOTSLOCAL/share"
 export BASHDOT="$SHELLS/bash"
-export DOTFILES="$DOTS/configs"
 export WINDOTS="$DOTS/windots"
 export DOCS="$HOME/Documents"
 
@@ -24,9 +26,8 @@ export YAZI_CONFIG_HOME="$DOTFILES/yazi"
 
 export GOBIN="$HOME/go/bin"
 
-[ -f "$HOME/.pythonrc" ] &>/dev/null && export PYTHONSTARTUP="$HOME/.pythonrc"
-
-fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 function zource() {
   if [[ -f "$1" ]]; then
@@ -40,9 +41,23 @@ function zieces() {
   fi
 }
 
-zource "$HOME/.cargo/env"
+function extpath() {
+	if [[ -d "$1" ]]; then
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+      export PATH="$PATH:$1"
+    fi
+  fi 2> /dev/null
+}
 
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+function prepath() {
+	if [[ -d "$1" ]]; then
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+		  export PATH="$1:$PATH"
+	  fi
+  fi 2> /dev/null
+}
+
+
+fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix

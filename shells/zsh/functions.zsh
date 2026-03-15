@@ -1,35 +1,3 @@
-esc=$'\033'
-c_reset="${esc}[0m"
-bold="${esc}[1m"
-dim="${esc}[2m"
-italic="${esc}[3m"
-underline="${esc}[4m"
-invert="${esc}[7m"
-fg_red="${esc}[31m"
-fg_bright_red="${esc}[91m"
-fg_green="${esc}[32m"
-fg_yellow="${esc}[33m"
-
-function extend_path() {
-	if [[ -d "$1" ]]; then
-	  if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-		  export PATH="$PATH:$1"
-	  fi
-  fi 2> /dev/null
-}
-
-function prepend_path() {
-	if [[ -d "$1" ]]; then
-    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-		  export PATH="$1:$PATH"
-	  fi
-  fi 2> /dev/null
-}
-
-function spath() {
-  echo "$@" | sed "s|${HOME}|~|"
-}
-
 function gup() {
   local ico=''
   local dir=$(pwd)
@@ -178,10 +146,6 @@ function 256color() {
 	done
 }
 
-
-# cd() {
-# 	builtin cd "$@" && ls_eza
-# }
 
 function fixpath() {
 	PATH=$(echo $(sed 's/:/\n/g' <<<$PATH | sort | uniq) | sed -e 's/\s/':'/g')

@@ -1,4 +1,4 @@
-if cmd_exists fd; then
+if has fd; then
   export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
 fi
 
@@ -23,7 +23,7 @@ up:up-match,\
 down:down-match,\
 alt-r:toggle-raw"
 
-zource "$THEMEDIR/fzf.zsh"
+so "$THEMEDIR/fzf.zsh"
 _FZF_PREVIEW_POS_='bottom:hidden:50%:border-sharp'
 _PREVIEW_="preview.zsh"
 
@@ -46,7 +46,7 @@ fzdef
   #   echo "fzopt: wrote $rc"
   # }
 
-fzopt() {
+function fzopt() {
   # -------------------------
   # Help / usage
   # -------------------------
