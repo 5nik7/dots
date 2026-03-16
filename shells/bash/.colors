@@ -14,7 +14,7 @@ YELLOW="$(tput setaf 3 2>/dev/null || printf '')"
 BLUE="$(tput setaf 4 2>/dev/null || printf '')"
 MAGENTA="$(tput setaf 5 2>/dev/null || printf '')"
 CYAN="$(tput setaf 6 2>/dev/null || printf '')"
-GREY="$(tput setaf 7 2>/dev/null || printf '')"
+GREY
 BRIGHTBLACK="$(tput setaf 8 2>/dev/null || printf '')"
 BRIGHTRED="$(tput setaf 9 2>/dev/null || printf '')"
 BRIGHTGREEN="$(tput setaf 10 2>/dev/null || printf '')"

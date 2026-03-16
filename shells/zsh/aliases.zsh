@@ -68,9 +68,10 @@ alias ".lst"="cd $HOME/.local/state"
 alias ".v"="cd $HOME/.config/nvim"
 
 alias ".d"="cd $DOTS"
-alias ".f"="cd $DOTFILES"
+alias ".df"="cd $DOTFILES"
 alias ".b"="cd $DOTSBIN"
 alias ".s"="cd $SHELLS"
+alias ".sc"="cd $DOTSCRIPTS"
 alias ".sz"="cd $ZSHDOTS"
 alias ".sb"="cd $SHELLS/bash"
 alias ".sp"="cd $SHELLS/powershell"
@@ -140,16 +141,14 @@ alias vi='$EDITOR'
 alias vim='$EDITOR'
 alias sv="sudo $EDITOR"
 
-if checkdir "$HOME/dev"; then
+if [[ -d "$HOME/dev" ]]; then
   export DEV="$HOME/dev"
-  alias dev="cd $DEV"
+  alias dev="fzd $DEV"
 fi
 
-if checkdir "$HOME/src"; then
+if [[ -d "$HOME/src" ]]; then
   export SRCDIR="$HOME/src"
-  src() {
-    fzd "${SRCDIR}"
-  }
+  alias src="fzd ${SRCDIR}"
 fi
 
 has lazygit && alias lg='lazygit'

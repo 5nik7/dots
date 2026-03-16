@@ -1,15 +1,17 @@
-zieces 'colors' || BOLD='' UNDERLINE='' ITALIC='' DIM='' INVERT='' BLINK='' INVIS='' BLACK='' RED='' GREEN='' YELLOW='' BLUE='' MAGENTA='' CYAN='' GREY='' BRIGHTBLACK='' BRIGHTRED='' BRIGHTGREEN='' BRIGHTYELLOW='' BRIGHTBLUE='' BRIGHTMAGENTA='' BRIGHTCYAN='' WHITE='' RST=''
+#!/usr/bin/env bash
 
-function err() {
+. ~/.colors || BOLD='' UNDERLINE='' ITALIC='' DIM='' INVERT='' BLINK='' INVIS='' BLACK='' RED='' GREEN='' YELLOW='' BLUE='' MAGENTA='' CYAN='' GREY='' BRIGHTBLACK='' BRIGHTRED='' BRIGHTGREEN='' BRIGHTYELLOW='' BRIGHTBLUE='' BRIGHTMAGENTA='' BRIGHTCYAN='' WHITE='' RST=''
+
+err() {
   local erricon=""
   printf "${BOLD}${BRIGHTRED}${erricon} %s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${RED}" }
 
-function ok() { printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${GREEN}" }
+ok() { printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${GREEN}" }
 
-function warn() { printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}" }
+warn() { printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}" }
 
 
-function pathout() {
+pathout() {
 	local p
   local raw=0
   if [[ $1 == '-r' ]]; then
@@ -35,7 +37,7 @@ function pathout() {
   done
 }
 
-function so() {
+so() {
   local file
   local verbose=0
   if [[ $1 == '-v' ]]; then
@@ -54,7 +56,7 @@ function so() {
   done
 }
 
-function checkdir() {
+checkdir() {
   local dir
   local verbose=0
   local first=0
@@ -79,7 +81,7 @@ for dir in "$@"; do
   return 1
 }
 
-function addir() {
+addir() {
   local dir
   local verbose=0
   if [[ $1 == '-v' ]]; then
@@ -99,7 +101,7 @@ function addir() {
   done
 }
 
-function has() {
+has() {
   local verbose=0
   if [[ $1 == '-v' ]]; then
     verbose=1
@@ -114,7 +116,7 @@ function has() {
   done
 }
 
-function cmd_exists() {
+cmd_exists() {
  local verbose=0
   if [[ $1 == '-v' ]]; then
     verbose=1
@@ -129,29 +131,29 @@ function cmd_exists() {
   done
 }
 
-function is_installed() {
+is_installed() {
   dpkg -s "$1" &>/dev/null
   return $?
 }
 
 if has eza; then
-  function fileicon() {
+  fileicon() {
     eza --icons=always --treat-dirs-as-files $@ | awk '{print $1}'
   }
 fi
 
-function upper() { echo "${@}" | awk '{print toupper($0)}'; }
+upper() { echo "${@}" | awk '{print toupper($0)}'; }
 lower() { echo "${@}" | awk '{print tolower($0)}'; }
 
-function timestamp(){
+timestamp(){
     printf "%s" "$(date '+%F %T')  $*"
     [ $# -gt 0 ] && printf '\n'
 }
 
-function timestampcmd(){
+timestampcmd(){
     local output
     output="$("$@" 2>&1)"
     timestamp "$output"
 }
 
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix
+# vim: set noet ft=bash tw=4 sw=4 ff=unix

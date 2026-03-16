@@ -1,5 +1,5 @@
 if has fd; then
-  export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --exclude .git'
+  export FZF_DEFAULT_COMMAND='fd --type f --color=always --ignore-case --strip-cwd-prefix --hidden --exclude .git'
 fi
 
 fzdef() {
@@ -15,7 +15,8 @@ _FZF_OPTS_="\
 --gutter='▎' \
 --gutter-raw='▎' \
 --no-separator \
---no-scrollbar"
+--no-scrollbar \
+-e"
 
 _FZF_BINDS_="\
 Ctrl-X:toggle-preview,\
