@@ -92,13 +92,13 @@ addir() {
   fi
   for dir in "$@"; do
     local out=$(pathout $dir)
-    if [ -e "$dir" ]; then
+    if [ ! -e "$dir" ]; then
+      mkdir -p "$dir" &>/dev/null
       local icon=$(fileicon $dir)
-      ((verbose)) && warn "$out: already exists"
+      ((verbose)) && ok "$icon $out: created"
     else
       local icon=$(fileicon $dir)
-      mkdir -p "$dir" &>/dev/null
-      ((verbose)) && ok "$icon $out: created"
+      ((verbose)) && warn "$out: already exists"
     fi
   done
 }
@@ -147,6 +147,7 @@ fi
 upper() { echo "${@}" | awk '{print toupper($0)}'; }
 lower() { echo "${@}" | awk '{print tolower($0)}'; }
 
+
 timestamp(){
     printf "%s" "$(date '+%F %T')  $*"
     [ $# -gt 0 ] && printf '\n'
@@ -157,5 +158,13 @@ timestampcmd(){
     output="$("$@" 2>&1)"
     timestamp "$output"
 }
+
+alias sshconfig="vim ~/.ssh/configs"
+
+alias sshcompile="echo -n >! ~/.ssh/config && cat
+~/.ssh/configs/*.config >> ~/.ssh/config && cat ~/.ssh/configs/default
+>> ~/.ssh/config"
+
+alias ssh="sshcompile && ssh"
 
 # vim: set noet ft=bash tw=4 sw=4 ff=unix

@@ -88,13 +88,13 @@ function addir() {
   fi
   for dir in "$@"; do
     local out=$(pathout $dir)
-    if [ -e "$dir" ]; then
+    if [ ! -e "$dir" ]; then
+      mkdir -p "$dir" &>/dev/null
       local icon=$(fileicon $dir)
-      ((verbose)) && warn "$out: already exists"
+      ((verbose)) && ok "$icon $out: created"
     else
       local icon=$(fileicon $dir)
-      mkdir -p "$dir" &>/dev/null
-      ((verbose)) && ok "$icon $out: created"
+      ((verbose)) && warn "$out: already exists"
     fi
   done
 }

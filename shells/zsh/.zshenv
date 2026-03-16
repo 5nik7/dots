@@ -2,6 +2,8 @@
 #  ╔═╝╚═╗╠═╣║╣ ║║║╚╗╔╝
 # o╚═╝╚═╝╩ ╩╚═╝╝╚╝ ╚╝
 
+[[ -f "~/dots/bin/util" ]] && sourve "~/dots/bin/util"
+
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"
