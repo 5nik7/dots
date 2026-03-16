@@ -1,6 +1,6 @@
 function rlp() {
-  exec zsh && clear && \
-    printf "\n${YELLOW}%s${RST}\n" "ZSH reloaded"
+  exec zsh; clear;
+    ok "ZSH reloaded"
  }
 alias rl='rlp'
 
@@ -140,12 +140,12 @@ alias vi='$EDITOR'
 alias vim='$EDITOR'
 alias sv="sudo $EDITOR"
 
-if [[ -d "$HOME/dev" ]]; then
+if checkdir "$HOME/dev"; then
   export DEV="$HOME/dev"
   alias dev="cd $DEV"
 fi
 
-if [[ -d "$HOME/src" ]]; then
+if checkdir "$HOME/src"; then
   export SRCDIR="$HOME/src"
   src() {
     fzd "${SRCDIR}"

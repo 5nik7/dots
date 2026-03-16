@@ -29,6 +29,8 @@ export GOBIN="$HOME/go/bin"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
+fpath+=("$ZFUNC" "${fpath[@]}")
+
 function zource() {
   if [[ -f "$1" ]]; then
       source "$1"
@@ -57,7 +59,6 @@ function prepath() {
   fi 2> /dev/null
 }
 
-
-fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
+# fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix

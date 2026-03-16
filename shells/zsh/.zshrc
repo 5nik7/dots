@@ -2,6 +2,10 @@
 #  ╔═╝╚═╗╠═╣╠╦╝║
 # o╚═╝╚═╝╩ ╩╩╚═╚═╝
 
+if [ -n "${ZSH_DEBUGRC+1}" ]; then
+    zmodload zsh/zprof
+fi
+
 zieces 'zutil'
 zieces 'functions'
 zieces 'options'
@@ -59,7 +63,6 @@ set_theme
 
 zieces 'completions'
 
-
 if cmd_exists zoxide; then
   eval "$(zoxide init zsh)"
   alias cd='z'
@@ -69,37 +72,27 @@ zieces 'aliases'
 
 has starship && eval "$(starship init zsh)"
 
-has direnv && eval "$(direnv hook zsh)" && \
-  export DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m'
+has direnv && {
+  eval "$(direnv hook zsh)"
+  export DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m' }
 
 has batpipe && eval "$(batpipe)"
 
-if cmd_exists batman; then
-  eval "$(batman --export-env)"
-fi
+has batman && eval "$(batman --export-env)"
 
-if cmd_exists ipinfo; then
+has ipinfo && {
   autoload -U +X bashcompinit && bashcompinit
-  complete -o default -C "$HOME/go/bin/ipinfo" ipinfo
-fi
+  complete -o default -C "$HOME/go/bin/ipinfo" ipinfo }
 
-zource "$HOME/.atuin/bin/env"
+so "$HOME/.atuin/bin/env"
 
-if cmd_exists atuin; then
-  eval "$(atuin init zsh)"
-fi
+has atuin && eval "$(atuin init zsh)"
 
-if cmd_exists uv; then
-  eval "$(uv generate-shell-completion zsh)"
-fi
+has uv && eval "$(uv generate-shell-completion zsh)"
 
-if cmd_exists uvx; then
-  eval "$(uvx --generate-shell-completion zsh)"
-fi
+has uvx && eval "$(uvx --generate-shell-completion zsh)"
 
-if cmd_exists tv; then
-  eval "$(tv init zsh)"
-fi
+has tv && eval "$(tv init zsh)"
 
 if [[ -r /etc/os-release ]]; then
   distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
@@ -147,9 +140,11 @@ function iswsl() {
 if checkdir "$HOME/.bun"; then
   export BUN_INSTALL="$HOME/.bun"
   [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-  prepend_path "$BUN_INSTALL/bin"
+  prepath "$BUN_INSTALL/bin"
 fi
 
-fpath+=("$ZFUNC" "${fpath[@]}"); autoload -Uz compinit; compinit
+if [ -n "${ZSH_DEBUGRC+1}" ]; then
+    zprof
+fi
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix

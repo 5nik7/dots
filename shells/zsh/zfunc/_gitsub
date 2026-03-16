@@ -1,0 +1,40 @@
+#compdef gitsub
+
+_gitsub() {
+	local -a opts
+	opts=(
+		'-q[Print nothing; use exit status only]'
+		'--quiet[Print nothing; use exit status only]'
+		'-e[Same as --quiet; useful for scripting]'
+		'--exists-only[Same as --quiet; useful for scripting]'
+		'--status[Print explicit status text]'
+		'-r[Print raw absolute paths instead of replacing $HOME with ~]'
+		'--raw[Print raw absolute paths instead of replacing $HOME with ~]'
+		'-p[Print the immediate parent repository root]'
+		'--parent[Print the immediate parent repository root]'
+		'-o[Print the outermost parent repository root]'
+		'--outermost[Print the outermost parent repository root]'
+		'--toplevel[Alias for --outermost]'
+		'-s[Print path according to --relative-to]'
+		'--path[Print path according to --relative-to]'
+		'--path-parent[Print the path relative to the immediate parent repository]'
+		'-O[Print the path relative to the outermost parent repository]'
+		'--path-outermost[Print the path relative to the outermost parent repository]'
+		'--relative-to[Select how --path and %S are resolved]:reference:(parent outermost current)'
+		'-c[Print the current repository root]'
+		'--current[Print the current repository root]'
+		'-n[Print the basename of the current repository root]'
+		'--name[Print the basename of the current repository root]'
+		'-j[Print JSON output]'
+		'--json[Print JSON output]'
+		'-f[Print custom formatted output]:format string: '
+		'--format[Print custom formatted output]:format string: '
+		'--completion[Print completion script]:shell:(bash zsh)'
+		'-h[Show help message]'
+		'--help[Show help message]'
+	)
+
+	_arguments -s $opts
+}
+
+_gitsub "$@"
