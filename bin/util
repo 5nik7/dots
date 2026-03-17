@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-zieces() {
-  local dir file
-  if [[ -f "$ZSHDOTS/$1.zsh" ]]; then
-    source "$ZSHDOTS/$1.zsh"
-  fi
-}
 
 extpath() {
 	if [[ -d "$1" ]]; then
@@ -80,11 +74,57 @@ pathout() {
   done
 }
 
+
+shellmod() {
+  local filename
+  local shell=$(basename $(echo $SHELL))
+  local exists=0
+  local verbose=0
+  local first=0
+
+ ((buggin)) && verbose=1
+
+  while (($#)); do
+    case $1 in
+    -v | --verboss)
+      verbose=1
+      shift
+    ;;
+    -1 | --first)
+      first=1
+      shift
+      ;;
+    * ) break ;;
+    esac
+  done
+  for filename in "$@"; do
+    local modfile="$DOTS/shells/$shell/$filename.$shell"
+    local out=$(pathout $modfile)
+    if [[ -f "$modfile" ]]; then
+      exists+=1
+      local icon=$(fileicon $modfile)
+      source "$modfile"
+      ((verbose)) && ok "$icon $out: sourced"
+      ((first)) && return 0
+    else
+      ((verbose)) && err "$out: not found"
+    fi
+    done
+    ((exists >= 1)) && return 0
+    return 1
+}
+
+alias zieces="shellmod"
+alias zmod="shellmod"
+
+
 so() {
   local file
   local exists=0
   local verbose=0
   local first=0
+
+ ((buggin)) && verbose=1
 
   while (($#)); do
     case $1 in
@@ -121,6 +161,8 @@ check() {
   local verbose=0
   local first=0
 
+  ((buggin)) && verbose=1
+
   while (($#)); do
     case $1 in
     -v | --verboss)
@@ -155,6 +197,8 @@ checkdir() {
   local verbose=0
   local first=0
 
+  ((buggin)) && verbose=1
+
   while (($#)); do
     case $1 in
     -v | --verboss)
@@ -186,6 +230,9 @@ checkdir() {
 addir() {
   local dir
   local verbose=0
+
+  ((buggin)) && verbose=1
+
   if [[ $1 == '-v' ]]; then
     verbose=1
     shift
@@ -205,6 +252,9 @@ addir() {
 
 has() {
   local verbose=0
+
+  ((buggin)) && verbose=1
+
   if [[ $1 == '-v' ]]; then
     verbose=1
     shift

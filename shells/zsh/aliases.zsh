@@ -1,8 +1,5 @@
 function rlp() {
   source ~/.zshrc;
-  source ~/dots/bin/util;
-  clear;
-  sleep 1;
   ok "ZSH reloaded";
  }
 alias rl='rlp'
