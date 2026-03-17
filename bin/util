@@ -1,8 +1,27 @@
 #!/usr/bin/env bash
 
-. ~/dots/bin/colors || BOLD='' UNDERLINE='' ITALIC='' DIM='' INVERT='' BLINK='' INVIS='' BLACK='' RED='' GREEN='' YELLOW='' BLUE='' MAGENTA='' CYAN='' GREY='' BRIGHTBLACK='' BRIGHTRED='' BRIGHTGREEN='' BRIGHTYELLOW='' BRIGHTBLUE='' BRIGHTMAGENTA='' BRIGHTCYAN='' WHITE='' RST=''
+zieces() {
+  local dir file
+  if [[ -f "$ZSHDOTS/$1.zsh" ]]; then
+    source "$ZSHDOTS/$1.zsh"
+  fi
+}
 
+extpath() {
+	if [[ -d "$1" ]]; then
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+      export PATH="$PATH:$1"
+    fi
+  fi 2> /dev/null
+}
 
+prepath() {
+	if [[ -d "$1" ]]; then
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+		  export PATH="$1:$PATH"
+	  fi
+  fi 2> /dev/null
+}
 
 err() {
   local erricon=""
@@ -12,6 +31,28 @@ ok() { printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${GREEN}" }
 
 warn() { printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}" }
 
+has() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do
+    c="${c%% *}"
+    if ! command -v "$c" &>/dev/null; then
+      ((verbose)) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
+if has eza; then
+  fileicon() {
+    eza --icons=always --treat-dirs-as-files $@ | awk '{print $1}'
+  }
+else
+  fileicon() {}
+fi
 
 pathout() {
 	local p
@@ -41,38 +82,96 @@ pathout() {
 
 so() {
   local file
+  local exists=0
   local verbose=0
-  if [[ $1 == '-v' ]]; then
-    verbose=1
-    shift
-  fi
+  local first=0
+
+  while (($#)); do
+    case $1 in
+    -v | --verboss)
+      verbose=1
+      shift
+    ;;
+    -1 | --first)
+      first=1
+      shift
+      ;;
+    * ) break ;;
+    esac
+  done
   for file in "$@"; do
-    local out=$(pathout $file)
-    if [ -f "$file" ]; then
+    if [[ -f "$file" ]]; then
+      exists+=1
       local icon=$(fileicon $file)
+      local out=$(pathout $file)
       source "$file"
       ((verbose)) && ok "$icon $out: sourced"
+      ((first)) && return 0
     else
-      ((verbose)) && err "$out: not found"
+      ((verbose)) && err "$file: not found"
     fi
+    done
+    ((exists >= 1)) && return 0
+    return 1
+}
+
+check() {
+  local input
+  local exists=0
+  local verbose=0
+  local first=0
+
+  while (($#)); do
+    case $1 in
+    -v | --verboss)
+      verbose=1
+      shift
+    ;;
+    -1 | --first)
+      first=1
+      shift
+      ;;
+    * ) break ;;
+    esac
   done
+for input in "$@"; do
+  if [[ -e "$input" ]]; then
+    exists+=1
+    local out=$(pathout $input)
+    local icon=$(fileicon $dir)
+    ((verbose)) && ok "$icon $out: found"
+    ((first)) && return 0
+  else
+  ((verbose)) && err "$input: not found"
+  fi
+  done
+  ((exists >= 1)) && return 0
+  return 1
 }
 
 checkdir() {
   local dir
+  local exists=0
   local verbose=0
   local first=0
-  if [[ $1 == '-v' ]]; then
-    verbose=1
-    shift
-  fi
-  if [[ $1 == '-1' ]]; then
-    first=1
-    shift
-  fi
-for dir in "$@"; do
-  local out=$(pathout $dir)
-    if [ -d "$dir" ]; then
+
+  while (($#)); do
+    case $1 in
+    -v | --verboss)
+      verbose=1
+      shift
+    ;;
+    -1 | --first)
+      first=1
+      shift
+      ;;
+    * ) break ;;
+    esac
+  done
+    for dir in "$@"; do
+    if [[ -d "$dir" ]]; then
+      exists+=1
+      local out=$(pathout $dir)
       local icon=$(fileicon $dir)
       ((verbose)) && ok "$icon $out: found"
       ((first)) && return 0
@@ -80,6 +179,7 @@ for dir in "$@"; do
       ((verbose)) && err "$dir: not found"
     fi
   done
+  ((exists >= 1)) && return 0
   return 1
 }
 
@@ -138,15 +238,8 @@ is_installed() {
   return $?
 }
 
-if has eza; then
-  fileicon() {
-    eza --icons=always --treat-dirs-as-files $@ | awk '{print $1}'
-  }
-fi
-
 upper() { echo "${@}" | awk '{print toupper($0)}'; }
 lower() { echo "${@}" | awk '{print tolower($0)}'; }
-
 
 timestamp(){
     printf "%s" "$(date '+%F %T')  $*"
@@ -159,12 +252,4 @@ timestampcmd(){
     timestamp "$output"
 }
 
-alias sshconfig="vim ~/.ssh/configs"
-
-alias sshcompile="echo -n >! ~/.ssh/config && cat
-~/.ssh/configs/*.config >> ~/.ssh/config && cat ~/.ssh/configs/default
->> ~/.ssh/config"
-
-alias ssh="sshcompile && ssh"
-
-# vim: set noet ft=bash tw=4 sw=4 ff=unix
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix

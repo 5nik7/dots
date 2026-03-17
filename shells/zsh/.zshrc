@@ -6,7 +6,16 @@ if [ -n "${ZSH_DEBUGRC+1}" ]; then
     zmodload zsh/zprof
 fi
 
-zieces 'zutil'
+[ -f "$COLORS" ] && source "$COLORS"
+[ -f "$UTIL" ] && source "$UTIL"
+
+fpath+=("$ZFUNC" "${fpath[@]}")
+
+autoload -U +X bashcompinit && bashcompinit
+autoload -U compinit; compinit
+autoload -U colors; colors
+
+# zieces 'zutil'
 zieces 'functions'
 zieces 'options'
 zieces 'plugins'
@@ -29,8 +38,9 @@ so "/usr/share/nvm/init-nvm.sh"
 
 [ -f "$HOME/.pythonrc" ] &>/dev/null && export PYTHONSTARTUP="$HOME/.pythonrc"
 
-function theme() {
-  has_theme() { command vivid generate "$1" &>/dev/null }
+has_theme() { command vivid generate "$1" &>/dev/null }
+
+theme() {
   if has_theme "$1"; then
     echo "$1" >! "${DOTS}/.theme"
     set_theme
@@ -39,7 +49,7 @@ function theme() {
   fi
 }
 
-function set_theme() {
+set_theme() {
   export THEMESROOT="$DOTS/themes"
   export THEMEBIN="$THEMESROOT/bin"
   prepath "$THEMEBIN"
@@ -52,10 +62,10 @@ function set_theme() {
 
   export LS_COLORS="$(vivid generate "$DOT_THEME")"
 
-  zource "$THEMEDIR/colors.zsh"
+  so "$THEMEDIR/colors.zsh"
+  so "${HOME}/.fzf.zsh"
 
-  zource "${HOME}/.fzf.zsh"
-  cmd_exists fzf &&\
+  has fzf &&\
     zieces 'fzf'
 }
 
@@ -63,10 +73,10 @@ set_theme
 
 zieces 'completions'
 
-if cmd_exists zoxide; then
+has zoxide && {
   eval "$(zoxide init zsh)"
   alias cd='z'
-fi
+}
 
 zieces 'aliases'
 
@@ -80,13 +90,9 @@ has batpipe && eval "$(batpipe)"
 
 has batman && eval "$(batman --export-env)"
 
-has ipinfo && {
-  autoload -U +X bashcompinit && bashcompinit
-  complete -o default -C "$HOME/go/bin/ipinfo" ipinfo }
+has ipinfo && { complete -o default -C "$HOME/go/bin/ipinfo" ipinfo }
 
-so "$HOME/.atuin/bin/env"
-
-has atuin && eval "$(atuin init zsh)"
+so "$HOME/.atuin/bin/env" && has atuin && eval "$(atuin init zsh)"
 
 has uv && eval "$(uv generate-shell-completion zsh)"
 
@@ -109,7 +115,7 @@ if [[ "$distro" == "termux" ]]; then
   zieces 'droid'
 fi
 
-function istermux() {
+istermux() {
   if [[ "$istermux" == true ]] &> /dev/null; then
     echo "true"
     return 0
@@ -126,7 +132,7 @@ if [[ -r /etc/wsl-distribution.conf ]]; then
   zieces 'wsl'
 fi
 
-function iswsl() {
+iswsl() {
   if [[ "$iswsl" == true ]] &> /dev/null; then
     echo "true"
     return 0

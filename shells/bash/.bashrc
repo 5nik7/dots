@@ -3,37 +3,30 @@
 # [ -z "$PS1" ] && return
 [[ $- != *i* ]] && return
 
+[ -f "$COLORS" ] && source "$COLORS"
+[ -f "$UTIL" ] && source "$UTIL"
+
 LANG=en_US.UTF-8
 export LANG
 
 INPUTRC=~/.inputrc
 
-unction cmd_exists() {
-  command -v "$1" &>/dev/null
-}
-
-function is_installed() {
-  dpkg -s "$1" &>/dev/null
-  return $?
-}
-
-if cmd_exists nvim; then
-    EDITOR='nvim'
-elif cmd_exists vim; then
-    EDITOR='vim'
-elif cmd_exists vi; then
-    EDITOR='vi'
-elif cmd_exists code; then
-    EDITOR='code'
+if has nvim; then
+  EDITOR='nvim'
+elif has vim; then
+  EDITOR='vim'
+elif had vi; then
+  EDITOR='vi'
+elif had code; then
+  EDITOR='code'
 else
-    EDITOR='nano'
+  EDITOR='nano'
 fi
 
 # avoid ctrl-s freeze your terminal
 stty stop ""
 
-
-[ -f ~/.bash_aliases ] && . ~/.bash_aliases
+so ~/.bash_aliases
 
 htmldecode() {
   : "${*//+/ }"
@@ -83,7 +76,6 @@ biggest() { du -k * | sort -nr | cut -f2 | head -20 | xargs -d "\n" du -sh; }
 top10() { history | awk '{print $2}' | sort | uniq -c | sort -rn | head; }
 beep() { echo -e -n \\a; }
 dict() { curl "dict://dict.org/d:${1%%/}"; }
-
 
 export LS_COLORS=$LS_COLORS:"*.wmv=01;35":"*.wma=01;35":"*.flv=01;35":"*.m4a=01;35":"*.mp3=01;35":"*.mp4=01;35"
 
@@ -144,5 +136,4 @@ backup() {
   cp -a ${file} ${backupdir}/$(basename ${file}).${timestamp}
   return $?
 }
-
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+[ so ~/.fzf.bash

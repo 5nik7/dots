@@ -1,4 +1,25 @@
-zieces 'colors' || BOLD='' UNDERLINE='' ITALIC='' DIM='' INVERT='' BLINK='' INVIS='' BLACK='' RED='' GREEN='' YELLOW='' BLUE='' MAGENTA='' CYAN='' GREY='' BRIGHTBLACK='' BRIGHTRED='' BRIGHTGREEN='' BRIGHTYELLOW='' BRIGHTBLUE='' BRIGHTMAGENTA='' BRIGHTCYAN='' WHITE='' RST=''
+function zieces() {
+  local dir file
+  if [[ -f "$ZSHDOTS/$1.zsh" ]]; then
+    source "$ZSHDOTS/$1.zsh"
+  fi
+}
+
+function extpath() {
+	if [[ -d "$1" ]]; then
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+      export PATH="$PATH:$1"
+    fi
+  fi 2> /dev/null
+}
+
+function prepath() {
+	if [[ -d "$1" ]]; then
+    if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
+		  export PATH="$1:$PATH"
+	  fi
+  fi 2> /dev/null
+}
 
 function err() {
   local erricon=""
@@ -8,6 +29,28 @@ function ok() { printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${
 
 function warn() { printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}" }
 
+function has() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do
+    c="${c%% *}"
+    if ! command -v "$c" &>/dev/null; then
+      ((verbose)) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
+if has eza; then
+  function fileicon() {
+    eza --icons=always --treat-dirs-as-files $@ | awk '{print $1}'
+  }
+else
+  function fileicon() {}
+fi
 
 function pathout() {
 	local p
@@ -134,11 +177,7 @@ function is_installed() {
   return $?
 }
 
-if has eza; then
-  function fileicon() {
-    eza --icons=always --treat-dirs-as-files $@ | awk '{print $1}'
-  }
-fi
+
 
 function upper() { echo "${@}" | awk '{print toupper($0)}'; }
 lower() { echo "${@}" | awk '{print tolower($0)}'; }
