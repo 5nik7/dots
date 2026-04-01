@@ -74,10 +74,13 @@ pathout() {
   done
 }
 
+shell() {
+  ps | grep $(echo $$) | awk '{ print $4 }'
+}
 
 shellmod() {
   local filename
-  local shell=$(basename $(echo $SHELL))
+  local shell=$(basename $(shell))
   local exists=0
   local verbose=0
   local first=0
@@ -291,6 +294,12 @@ is_installed() {
 upper() { echo "${@}" | awk '{print toupper($0)}'; }
 lower() { echo "${@}" | awk '{print tolower($0)}'; }
 
+getextension() {
+  echo "Full filename: $(basename ${1})"
+  echo "Extension: ${1##*.}"
+  echo "without extension: ${1%.*}"
+}
+
 timestamp(){
     printf "%s" "$(date '+%F %T')  $*"
     [ $# -gt 0 ] && printf '\n'
@@ -300,6 +309,93 @@ timestampcmd(){
     local output
     output="$("$@" 2>&1)"
     timestamp "$output"
+}
+
+
+compact() {
+  if [ "$#" -ge "1" ]; then
+    case "$1" in
+    *.[tT][aA][rR].[bB][zZ] | *.[tT][bB][zZ])
+      local file="$1"
+      shift
+      tar jcvf "$file" "$@"
+      ;;
+    *.[tT][aA][rR].[bB][zZ]2 | *.[tT][bB][zZ]2)
+      local file="$1"
+      shift
+      tar jcvf "$file" "$@"
+      ;;
+    *.[tT][aA][rR].[gG][zZ] | *.[tT][gG][zZ])
+      local file="$1"
+      shift
+      tar zcvf "$file" "$@"
+      ;;
+    *.[gG][tT][gG][zZ])
+      local file="$1"
+      shift
+      tar zcvf "$file" "$@"
+      ;;
+    *[bB][zZ]2)
+      shift
+      bzip2 -z -k "$@"
+      ;;
+    *.[rR][aA][rR])
+      local file="$1"
+      shift
+      rar a -r "$file" "$@"
+      ;;
+    *[gG][zZ])
+      shift
+      gzip -r "$@"
+      ;;
+    *.[tT][aA][rR])
+      local file="$1"
+      shift
+      tar cvf "$file" "$@"
+      ;;
+    *.[zZ][iI][pP])
+      local file="$1"
+      shift
+      zip -r "$file" "$@"
+      ;;
+    *.7[zZ])
+      local file="$1"
+      shift
+      7z a -r "$file" "$@"
+      ;;
+    *.[xX][zZ])
+      local file="$1"
+      shift
+      tar Jcvf "$file" "$@"
+      ;;
+    *) echo "don't know how to compact '$i' ..." ;;
+    esac
+  else
+    echo "Insufficient arguments."
+  fi
+}
+
+extract() {
+  for i in "$@"; do
+    if [ -f "$i" ]; then
+      case "$i" in
+      *.[tT][aA][rR].[bB][zZ] | *.[tT][bB][zZ]) tar xjvf "$i" ;;
+      *.[tT][aA][rR].[bB][zZ]2 | *.[tT][bB][zZ]2) tar xjvf "$i" ;;
+      *.[tT][aA][rR].[gG][zZ] | *.[tT][gG][zZ]) tar xzvf "$i" ;;
+      *.[gG][tT][gG][zZ]) tar xzvf "$i" ;;
+      *.[bB][zZ]2) bunzip2 "$i" ;;
+      *.[rR][aA][rR]) rar x -o+ "$i" ;;
+      *.[gG][zZ]) gunzip "$i" ;;
+      *.[tT][aA][rR]) tar xvf "$i" ;;
+      *.[zZ][iI][pP]) unzip -o "$i" ;;
+      *.Z) uncompress "$i" ;;
+      *.7[zZ]) 7z x "$i" ;;
+      *) echo "don't know how to extract '$i' ..." ;;
+      esac
+    else
+      echo "$i is not a valid file"
+    fi
+  done
 }
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix

@@ -10,7 +10,7 @@ function gup() {
     git push &&
     echo
   else
-    printf "\n${fg_red} %s '${fg_bright_red}${bold}%s${c_reset}${fg_red}' %s${c_reset}\n" "${ico}" "${sdir}" "not a repo root."
+    printf "\n${RED} %s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "${ico}" "${sdir}" "not a repo root."
   fi
 }
 

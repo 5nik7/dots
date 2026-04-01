@@ -1,6 +1,6 @@
 function rlp() {
   source ~/.zshrc;
-  ok "ZSH reloaded";
+  ok " ZSH RELOADED";
  }
 alias rl='rlp'
 
