@@ -57,7 +57,7 @@ main() {
   }
   while [ "$#" -gt 0 ]; do
     case $1 in
-    ':' | '?' | -q | --query)
+    ':' | -q | --query | -s | --search | -g | --google)
       shift
       if (($# == 0)); then
         openurl "https://google.com"
