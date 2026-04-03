@@ -98,12 +98,12 @@ usage() {
   echo
 }
 
-bak() {
+main() {
   # No args?
   [ "$#" -gt 0 ] || {
     lnbr=''
     usage header
-    return 1
+    return 0
   }
 
   # Flags
@@ -246,4 +246,4 @@ bak() {
   [ "$quiet_mode" -eq 1 ] || echo
 }
 
-bak "$@"
+main "$@"
