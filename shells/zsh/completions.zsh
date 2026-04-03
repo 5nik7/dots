@@ -1,5 +1,5 @@
 # Basic auto/tab complete:
-autoload -U compinit
+autoload -Uz compinit
 # zstyle ':completion:*' menu select
 # zstyle ':completion:*' group-name ''
 # zstyle ':completion:*' completer _expand _extensions _complete _ignored _approximate

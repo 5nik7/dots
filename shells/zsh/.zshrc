@@ -12,7 +12,7 @@ fi
 fpath+=("$ZFUNC" "${fpath[@]}")
 
 autoload -U +X bashcompinit && bashcompinit
-autoload -U compinit; compinit
+autoload -Uz compinit; compinit
 autoload -U colors; colors
 
 # zieces 'zutil'

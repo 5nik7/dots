@@ -10,12 +10,15 @@ function zvm_config() {
   ZVM_OPEN_CMD='termux-open'
   ZVM_OPEN_URL_CMD='termux-open-url'
   ZVM_OPEN_FILE_CMD='nvim'
-  ZVM_VI_HIGHLIGHT_FOREGROUND=#000000
-  ZVM_VI_HIGHLIGHT_BACKGROUND=magenta
+  ZVM_VI_HIGHLIGHT_FOREGROUND="$crust"
+  ZVM_VI_HIGHLIGHT_BACKGROUND="$flamingo"
   ZVM_VI_HIGHLIGHT_EXTRASTYLE=bold
+
 }
 
 zinit light jeffreytse/zsh-vi-mode
+
+zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
 export LYNX_CFG="$DOTFILES/lynx/lynx.cfg"
 export LYNX_LSS="$DOTFILES/lynx/lynx.lss"
