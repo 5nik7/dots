@@ -16,7 +16,8 @@ _FZF_OPTS_="\
 --gutter-raw='▎' \
 --no-separator \
 --no-scrollbar \
--e"
+-e \
+--ansi"
 
 _FZF_BINDS_="\
 Ctrl-X:toggle-preview,\

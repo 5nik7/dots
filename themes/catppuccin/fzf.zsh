@@ -34,7 +34,7 @@ preview-bg:${transparent},\
 fg+:strip:${mauve}:bold,\
 fg:regular,\
 hl:${flamingo}:bold,\
-hl+:${mauve}:bold:underline-double,\
+hl+:${pink}:bold:underline-double,\
 info:${surface2},\
 query:${yellow},\
 gutter:regular:${surface0},\
