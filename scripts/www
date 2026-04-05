@@ -20,7 +20,7 @@ openurl() {
   if [[ "$*" == http://* ]]; then
     die "$* Npt Secure"
   elif [[ "$*" == https://* ]]; then
-    ppen "$*"
+    open "$*"
     exit 0
   else
     open "https://$*"
