@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+main() {
+  local p
+  local raw=0
+  if [[ $1 == '-r' ]]; then
+    raw=1
+    shift
+  fi
+  for p in "$@"; do
+    if ((raw)); then
+      printf '%s\n' "$p"
+    else
+      case "$p" in
+      "$HOME")
+        printf '~\n'
+        ;;
+      "$HOME"/*)
+        printf '~/%s\n' "${p#"$HOME"/}"
+        ;;
+      *)
+        printf '%s\n' "$p"
+        ;;
+      esac
+    fi
+  done
+}
+
+main "$@"

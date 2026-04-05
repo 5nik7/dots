@@ -27,6 +27,7 @@ $os\
 $username\
 $hostname\
 ${custom.rwd}\
+${custom.dirname}\
 $directory\
 (\
 ${custom.git_remote_icon}\
@@ -107,9 +108,9 @@ color_git = 'cyan'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
 color_git_branch = '#cba6f7'
-color_vimcmd_ok = 'black'
-color_vimcmd_replace = 'yellow'
-color_vimcmd_visual = 'purple'
+color_vimcmd_ok = 'bright-black'
+color_vimcmd_replace = '#eba0ac'
+color_vimcmd_visual = '#cba6f7'
 color_btry_bg = '#181825'
 color_fill = '#313244'
 color_lua = '#74c7ec'
@@ -185,7 +186,7 @@ style = 'fg:color_directory'
 format = '[$path]($style)( [$read_only]($read_only_style))'
 repo_root_style = 'fg:sky bold'
 repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path](fg:sapphire)( [$read_only]($read_only_style))'
-truncate_to_repo = false
+truncate_to_repo = true
 truncation_length = 10
 fish_style_pwd_dir_length = 1
 # repo_root_style = "fg:color_directory_repo bold"
@@ -507,10 +508,8 @@ disabled = false
 [character]
 success_symbol = '[](fg:color_ok bold)'
 error_symbol = '[](fg:color_danger bold)'
-vimcmd_symbol = '[󰅂](fg:color_vimcmd_ok)'
-vimcmd_replace_one_symbol = '[󰅂](fg:color_vimcmd_replace)'
-vimcmd_replace_symbol = '[󰅂](fg:color_vimcmd_replace)'
-vimcmd_visual_symbol = '[󰅂](fg:color_vimcmd_visual)'
+vimcmd_symbol = '[▎](fg:color_vimcmd_ok)'
+# vimcmd_symbol = '[](fg:color_vimcmd_ok)'
 format = '$symbol '
 
 [directory.substitutions]
@@ -522,6 +521,18 @@ format = '$symbol '
 # "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
 "/storage/emulated/0/Documents" = "~/Documents"
+
+[custom.dirname]
+description = "dir path"
+when = 'git rev-parse --show-toplevel 2>/dev/null && ! gitsub -e'
+command = """
+dir=$(dirout $(git rev-parse --show-toplevel 2>/dev/null))
+
+echo "$dir/"
+"""
+style = "fg:color_directory"
+format = '[$output]($style)'
+shell = ["bash", "--noprofile", "--norc"]
 
 [custom.rwd]
 description = "cwd"
