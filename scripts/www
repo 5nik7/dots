@@ -20,10 +20,10 @@ openurl() {
   if [[ "$*" == http://* ]]; then
     die "$* Npt Secure"
   elif [[ "$*" == https://* ]]; then
-    termux-open-url "$*"
+    ppen "$*"
     exit 0
   else
-    termux-open-url "https://$*"
+    open "https://$*"
     exit 0
   fi
 }
