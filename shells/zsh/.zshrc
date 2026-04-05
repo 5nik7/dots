@@ -35,7 +35,6 @@ so "$HOME/.cargo/env"
 so "$DOTSHHHH/secrets.sh"
 so "/usr/share/nvm/init-nvm.sh"
 
-
 [ -f "$HOME/.pythonrc" ] &>/dev/null && export PYTHONSTARTUP="$HOME/.pythonrc"
 
 has_theme() { command vivid generate "$1" &>/dev/null }
@@ -154,3 +153,10 @@ if [ -n "${ZSH_DEBUGRC+1}" ]; then
 fi
 
 # vim: set noet ft=zsh tw=4 sw=4 ff=unix
+
+# bun completions
+[ -s "/home/njen/.bun/_bun" ] && source "/home/njen/.bun/_bun"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
