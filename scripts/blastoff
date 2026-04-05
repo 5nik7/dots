@@ -1,0 +1,315 @@
+#!/usr/bin/env bash
+
+declare -r esc=$'\033'
+declare -r c_reset="${esc}[0m"
+
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+declare -r blink="${esc}[5m"
+declare -r inverse="${esc}[7m"
+declare -r strike="${esc}[9m"
+
+declare -r c_red="${esc}[31m"
+declare -r c_green="${esc}[32m"
+declare -r c_yellow="${esc}[33m"
+declare -r fg_rosewater="${esc}[38;2;245;224;220m"
+declare -r fg_flamingo="${esc}[38;2;242;205;205m"
+declare -r fg_pink="${esc}[38;2;245;194;231m"
+declare -r fg_mauve="${esc}[38;2;203;166;247m"
+declare -r fg_red="${esc}[38;2;243;139;168m"
+declare -r fg_maroon="${esc}[38;2;235;160;172m"
+declare -r fg_peach="${esc}[38;2;250;179;135m"
+declare -r fg_yellow="${esc}[38;2;249;226;175m"
+declare -r fg_green="${esc}[38;2;166;227;161m"
+declare -r fg_teal="${esc}[38;2;148;226;213m"
+declare -r fg_sky="${esc}[38;2;137;220;235m"
+declare -r fg_sapphire="${esc}[38;2;116;199;236m"
+declare -r fg_blue="${esc}[38;2;137;180;250m"
+declare -r fg_lavender="${esc}[38;2;180;190;254m"
+declare -r fg_text="${esc}[38;2;205;214;244m"
+declare -r fg_subtext1="${esc}[38;2;186;194;224m"
+declare -r fg_subtext0="${esc}[38;2;166;173;200m"
+declare -r fg_overlay2="${esc}[38;2;147;153;178m"
+declare -r fg_overlay1="${esc}[38;2;127;132;156m"
+declare -r fg_overlay0="${esc}[38;2;108;113;134m"
+declare -r fg_surface2="${esc}[38;2;88;91;112m"
+declare -r fg_surface1="${esc}[38;2;69;71;90m"
+declare -r fg_surface0="${esc}[38;2;49;50;68m"
+declare -r fg_base="${esc}[38;2;30;30;46m"
+declare -r fg_mantle="${esc}[38;2;24;24;37m"
+declare -r fg_crust="${esc}[38;2;17;17;27m"
+
+declare -r bg_surface0="${esc}[48;2;49;50;68m"
+declare -r bg_base="${esc}[48;2;30;30;46m"
+declare -r bg_mantle="${esc}[48;2;24;24;37m"
+declare -r bg_crust="${esc}[48;2;17;17;27m"
+declare -r bg_red="${esc}[48;2;36;27;42m"
+
+declare -r latte_pink="${esc}[38;2;234;118;203m"
+declare -r latte_mauve="${esc}[38;2;136;57;239m"
+declare -r latte_lavender="${esc}[38;2;114;135;253m"
+
+bannerbgcolor="${bg_mantle}"
+taglinebgcolor="${bg_mantle}"
+taglinecolor="${bold}${latte_mauve}"
+usagecolor="${italic}${fg_surface2}"
+usagetext="Usage:"
+cmdcolor="${bold}${fg_pink}"
+leftbracket="["
+rightbracket="]"
+parambgcolor="${bg_mantle}"
+paramcolor="${fg_mauve}"
+descbgcolor="${parambgcolor}"
+desccolor="${fg_lavender}"
+optscolor="${paramcolor}"
+optstext="options"
+bracketcolor="${dim}${optscolor}"
+
+headerbgcolor="${bg_surface0}"
+themeheadercolor="${bold}${bg_surface0}${fg_mauve}"
+headertext_theme="THEMES"
+headertext_preset="PRESETS"
+bulletsymbolcolor="${fg_surface0}"
+bulletsymbol=""
+currentbgcolor="${bg_crust}"
+currentthemecolor="${bold}${fg_pink}"
+
+currentcolor="${fg_surface1}"
+currenttxt=""
+themebgcolor="${bg_mantle}"
+themecolor="${fg_lavender}"
+presetcolor="${themecolor}"
+switchbgcolor="${bg_mantle}"
+rocketcolor="${fg_red}"
+rocket=" "
+bigrocketbg="${bg_mantle}"
+errorsymbol=""
+errorcolor="${fg_red}"
+alertsymbol="󰗖"
+alertcolor="${fg_peach}"
+
+l1="      ${c_reset}${rocketcolor}${bigrocketbg},"
+l2="     ${c_reset}${rocketcolor}${bigrocketbg}/ \\"
+l3="  ${c_reset}${rocketcolor}${bigrocketbg}/ _ \\"
+l4=" ${c_reset}${rocketcolor}${bigrocketbg}|.o '.|"
+l5=" ${c_reset}${rocketcolor}${bigrocketbg}|'._.'|"
+l6=" ${c_reset}${rocketcolor}${bigrocketbg}|     |"
+l7=" ${c_reset}${rocketcolor}${bigrocketbg}.'|  |  |'."
+l8="${c_reset}${rocketcolor}${bigrocketbg}/  |  |  |  \\"
+l9="${c_reset}${rocketcolor}${bigrocketbg}|,-'--|--'-.|"
+
+# Variables
+DOTS="$HOME/dots"
+DOTFILES="$DOTS/configs"
+STARSHIP_DIR="$DOTFILES/starship"
+STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
+STARSHIP_THEMES="$STARSHIP_DIR/themes"
+PADDING="  "
+
+function linebreak {
+    echo -e "${c_reset}"
+}
+
+function starship_pre_check {
+    if [[ ! -d "$STARSHIP_THEMES" ]]; then
+        echo "Starship themes directory not found: $STARSHIP_THEMES"
+        return 1
+    fi
+    if [[ ! -f "$STARSHIP_CONFIG" ]]; then
+        echo "Starship config file not found: $STARSHIP_CONFIG"
+        return 1
+    fi
+    return 0
+}
+
+function bannerline() {
+    local dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local linenumber="$1"
+    cat "$dir/blastoffbanner" | sed -n "${linenumber}p"
+}
+
+function banner() {
+    local line1="$(bannerline '1')"
+    local line2="$(bannerline '2')"
+    local line3="$(bannerline '3')"
+    printf "%-33s%s${c_reset}\n" "$PADDING" "$l1"
+    printf "%-33s%s${c_reset}\n" "$PADDING" "$l2"
+    printf "%s${bannerbgcolor}%s%s%s${c_reset}\n" "$PADDING" "$PADDING" "$line1" "$l3"
+    printf "%s${bannerbgcolor}%s%s%s${c_reset}\n" "$PADDING" "$PADDING" "$line2" "$l4"
+    printf "%s${bannerbgcolor}%s%s%s${c_reset}\n" "$PADDING" "$PADDING" "$line3" "$l4"
+}
+
+function write_tagline {
+    local tagline="$1"
+    printf "%s${taglinebgcolor}%s${taglinecolor}%-31s%s${c_reset}\n${c_reset}" "$PADDING" "$PADDING" "$tagline" "$l6"
+    printf "%-33s%s${c_reset}\n" "$PADDING" "$l7"
+}
+
+function write_usage {
+    local usage="$1"
+    local cmd="$2"
+    local left="$3"
+    local opts="$4"
+    local right="$5"
+    printf "%-3s${usagecolor}%-30s${c_reset}${rocketcolor}%s${c_reset}\n" "$PADDING" "$usage" "$l8"
+    printf "%-5s${cmdcolor}%s${c_reset} ${bracketcolor}%s${c_reset}${optscolor}%s${c_reset}${bracketcolor}%-11s${c_reset}${rocketcolor}%s${c_reset}\n" "$PADDING" "$cmd" "$left" "$opts" "$right" "$l9"
+}
+
+function write_params {
+    local paramtext="$1"
+    local desctext="$2"
+    printf "${PADDING}${parambgcolor}${paramcolor}${PADDING}%-12s${PADDING}${descbgcolor}${desccolor}${PADDING}%-26s${PADDING}${c_reset}\n" "$paramtext" "$desctext"
+}
+
+function write_header {
+    local headertext="$1"
+    printf "${PADDING}${headerbgcolor}${themeheadercolor}%s${c_reset}\n" "$headertext"
+}
+
+function write_bullet() {
+    local bullet="$1"
+    printf "${PADDING}${bgcolor}${bulletcolor} %s ${c_reset}" "$bullet"
+
+}
+
+function write_themes {
+    local name="$1"
+    printf "${bgcolor}${color}%-22s %s" "$name" "$c_reset"
+}
+function theme_output {
+    local bgcolor="$1"
+    local bulletcolor="$2"
+    local bullet="$3"
+    local color="$4"
+    local name="$5"
+    write_bullet "$bullet"
+    write_themes "$name"
+}
+
+function theme_switch {
+    local theme="$1"
+    linebreak
+    printf "${PADDING}${switchbgcolor}${rocketcolor} ${rocket} ${currentthemecolor}%s ${c_reset}\n" "$theme"
+    linebreak
+}
+
+function show_blastoff_usage {
+    banner
+    write_tagline "Starship Theme Switcher"
+    write_usage "$usagetext" "$(basename "$0")" "$leftbracket" "$optstext" "$rightbracket"
+    linebreak
+    write_params "-t, --theme" "Set the Starship theme."
+    write_params "-l, --list" "List all available themes."
+    write_params "-h, --help" "Display this help message."
+    linebreak
+}
+
+function get_starship_themes {
+    starshippresetcheck() {
+        command starship preset --list | grep "$1"
+    }
+    starshippreset() {
+        command starship preset "$1"
+    }
+    starshippresets="$(command starship preset --list)"
+    linebreak
+    write_header "$headertext_theme"
+    for theme in "$STARSHIP_THEMES"/*.toml; do
+        name=$(basename "$theme" .toml)
+        if [[ ! "$name" == "$(starshippresetcheck $name)" ]]; then
+            if [[ "$name" == "$currentStarshipTheme" ]]; then
+                theme_output "$currentbgcolor" "$currentcolor" "$currenttxt" "$currentthemecolor" "$name"
+            else
+                theme_output "$themebgcolor" "$bulletsymbolcolor" "$bulletsymbol" "$themecolor" "$name"
+            fi
+            linebreak
+        fi
+    done
+    linebreak
+    write_header "$headertext_preset"
+    for preset in $starshippresets; do
+        file="$STARSHIP_THEMES/$preset.toml"
+        starshippreset "$preset" >$file
+        if [[ "$preset" == "$currentStarshipTheme" ]]; then
+            theme_output "$currentbgcolor" "$currentcolor" "$currenttxt" "$currentthemecolor" "$preset"
+        else
+            theme_output "$themebgcolor" "$bulletsymbolcolor" "$bulletsymbol" "$themecolor" "$preset"
+        fi
+        linebreak
+    done
+    linebreak
+}
+
+function blastoff {
+    local help=false
+    local list=false
+    theme=""
+
+    starship_pre_check
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+        -h | --help)
+            help=true
+            shift
+            ;;
+        -l | --list)
+            list=true
+            shift
+            ;;
+        -t | --theme)
+            theme="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            # show_blastoff_usage
+            return
+            ;;
+        esac
+    done
+
+    currentStarshipTheme=$(basename "$(readlink "$STARSHIP_CONFIG")" .toml)
+
+    if [[ "$help" == true ]]; then
+        show_blastoff_usage
+        exit
+    fi
+
+    if [[ "$list" == true ]]; then
+        get_starship_themes
+        exit
+    fi
+
+    if [[ "$theme" != "" ]]; then
+        sourcePath="$STARSHIP_THEMES/$theme.toml"
+        targetPath="$STARSHIP_CONFIG"
+
+        if [[ ! -f "$sourcePath" ]]; then
+            linebreak
+            printf "%s${switchbgcolor}${errorcolor}%s ${c_reset}${switchbgcolor}${underline}${bold}${fg_red}%s${c_reset}${switchbgcolor} ${fg_red}%s${c_reset}" "$PADDING" "$errorsymbol" "$theme" "not found."
+            linebreak
+            exit 2
+        fi
+        if [[ "$theme" == "$currentStarshipTheme" ]]; then
+            linebreak
+            printf "%s${switchbgcolor}${alertcolor}%s ${fg_flamingo}%s ${underline}${bold}${fg_rosewater}%s${c_reset}${switchbgcolor}${fg_flamingo}%s${c_reset}" "$PADDING" "$alertsymbol" "Already using theme" "$theme" "."
+            linebreak
+            exit
+        else
+            cwd=$(pwd)
+            cd "$STARSHIP_DIR" || return
+            ln -sf "themes/$theme.toml" "starship.toml"
+            currentStarshipTheme="$theme"
+            theme_switch "$currentStarshipTheme"
+            cd $cwd
+            exit
+        fi
+    fi
+    show_blastoff_usage
+
+}
+
+blastoff "$@"
