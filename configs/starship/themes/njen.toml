@@ -28,6 +28,7 @@ $username\
 $hostname\
 ${custom.rwd}\
 ${custom.dirname}\
+${custom.dirname-pwsh}\
 $directory\
 (\
 ${custom.git_remote_icon}\
@@ -527,12 +528,22 @@ description = "dir path"
 when = 'git rev-parse --show-toplevel 2>/dev/null && ! gitsub -e'
 command = """
 dir=$(dirout $(git rev-parse --show-toplevel 2>/dev/null))
-
-echo "$dir/"
+echo "$dir"
 """
 style = "fg:color_directory"
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
+
+[custom.dirname-pwsh]
+description = "dir path"
+when = 'git rev-parse --show-toplevel 2>$null'
+command = """
+$dir = (($PWD).Path).Replace((Get-Item $PWD).BaseName, "").Replace("$HOME", "~").Replace("\\", "/")
+Write-Output $dir
+"""
+style = "fg:color_directory"
+format = '[$output]($style)'
+shell = ["pwsh", "-NoProfile", "-Command", "-"]
 
 [custom.rwd]
 description = "cwd"
@@ -553,12 +564,10 @@ style = 'fg:color_git_branch'
 shell = ["bash", "--noprofile", "--norc"]
 
 [custom.git_remote_icon-pwsh]
-disabled = true
+disabled = false
 description = "Git host icon"
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
-when = 'git remote get-url origin 2>$null'
-command = """
-git-it.ps1 -Iv 2>&1
-"""
-format = '[$output ]($style)'
+when = true
+command = "git_remote_icon.ps1"
+format = '( [$output]($style))'
 style = 'fg:color_git_branch'

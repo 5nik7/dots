@@ -40,9 +40,9 @@ function Usage {
     Write-Host "${C_BOLD}Scope flags:${C_RESET}"
     Write-Host "${C_GREEN} --default${C_RESET}"
     Write-Host "${C_GREEN} -a${C_RESET}, ${C_GREEN}--all${C_RESET}"
-    Write-Host "${C_GREEN} -I${C_RESET}, ${C_GREEN}--icon${C_RESET}       icon for host"
+    Write-Host "${C_GREEN} -i${C_RESET}, ${C_GREEN}--icon${C_RESET}       icon for host"
     Write-Host "${C_GREEN} -s${C_RESET}, ${C_GREEN}--scheme${C_RESET}     scheme"
-    Write-Host "${C_GREEN} -H${C_RESET}, ${C_GREEN}--host${C_RESET}       host"
+    Write-Host "${C_GREEN} -n${C_RESET}, ${C_GREEN}--host${C_RESET}       host"
     Write-Host "${C_GREEN} -o${C_RESET}, ${C_GREEN}--owner${C_RESET}      owner"
     Write-Host "${C_GREEN} -r${C_RESET}, ${C_GREEN}--repo${C_RESET}       repo (no .git)"
     Write-Host ""
@@ -52,7 +52,7 @@ function Usage {
     Write-Host "${C_GREEN} --join${C_RESET} ${C_YELLOW}SEP${C_RESET}   join outputs with SEP"
     Write-Host ""
     Write-Host "${C_BOLD}Notes:${C_RESET}"
-    Write-Host "  • Clustered short flags supported: ${C_CYAN}-orv${C_RESET}, ${C_CYAN}-aH0${C_RESET}"
+    Write-Host "  • Clustered short flags supported: ${C_CYAN}-orv${C_RESET}, ${C_CYAN}-ani0${C_RESET}"
     Write-Host ""
     Write-Host "Exit codes:"
     Write-Host "  0 success / usage shown"
@@ -72,8 +72,7 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 }
 
 # Initialize variables
-$cwd = Get-Location | Select-Object -ExpandProperty Path
-$path = $cwd
+$path = $PWD
 $remote = "origin"
 $separator = '='
 
@@ -120,10 +119,10 @@ function ApplyShortChar([char]$c) {
         'h' { Usage; exit 0 }
         'a' { SetScopeAll }
         's' { $script:want_scheme = $true; $script:want_any = $true }
-        'H' { $script:want_host = $true; $script:want_any = $true }
+        'n' { $script:want_host = $true; $script:want_any = $true }
         'o' { $script:want_owner = $true; $script:want_any = $true }
         'r' { $script:want_repo = $true; $script:want_any = $true }
-        'I' { $script:want_icon = $true; $script:want_any = $true }
+        'i' { $script:want_icon = $true; $script:want_any = $true }
         'u' { $script:want_url = $true; $script:want_any = $true }
         'c' { $script:want_color = $true }
         'k' { $script:want_key = $true }

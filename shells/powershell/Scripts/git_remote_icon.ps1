@@ -1,10 +1,17 @@
-$gitRemote = git ls-remote --get-url
-$symbol = '' # If no Git Remote is returned.
-switch -regex ($gitRemote)
+$remote = git ls-remote --get-url 2>$null
+
+if ($remote)
 {
-  'github' { $symbol = '' }
+  $remote = $remote.ToLower()
+}
+switch -regex ($remote)
+{
+  'github' { $symbol = '󰊤' }
   'gitlab' { $symbol = '' }
   'bitbucket' { $symbol = '' }
-  default { $symbol = '' }
+  default { $symbol = '' }
 }
-Write-Host $symbol
+if ($symbol)
+{
+  Write-Host $symbol -NoNewline
+}
