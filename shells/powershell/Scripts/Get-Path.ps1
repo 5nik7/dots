@@ -127,7 +127,7 @@ Process
 	}
 
 	Write-Host
-	Write-Host "PATH contains $($env:Path.Length) bytes" -NoNewline
+	Write-Host "PATH contains $($env:Path.Length) bytes" -NoNewline -ForegroundColor Gray
 
 	if (($env:Path).Length -gt ([Int16]::MaxValue * 0.80))
 	{
