@@ -1,17 +1,12 @@
-$remote = git ls-remote --get-url 2>$null
+$icon = $null
 
-if ($remote)
-{
-  $remote = $remote.ToLower()
+if (git remote get-url origin 2>$null) {
+  $script:want_icon = $true
 }
-switch -regex ($remote)
-{
-  'github' { $symbol = '󰊤' }
-  'gitlab' { $symbol = '' }
-  'bitbucket' { $symbol = '' }
-  default { $symbol = '' }
-}
-if ($symbol)
-{
-  Write-Host $symbol -NoNewline
+
+if ($script:want_icon) {
+  $icon = (git-it -i 2>$null) -replace '\s+', ''
+  if ($icon) {
+    Write-Host $icon
+  }
 }
