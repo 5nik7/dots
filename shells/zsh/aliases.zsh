@@ -58,7 +58,7 @@ alias "......."="cd ../../../../../.."
 alias "........"="cd ../../../../../../.."
 
 alias "docs"="cd $DOCS"
-alias "notes"="cd $DOCS/Notes"
+alias "notes"="cd $NOTES"
 
 alias ".c"="cd $HOME/.config"
 alias ".l"="cd $HOME/.local"

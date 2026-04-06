@@ -18,6 +18,7 @@ export DOTSLOCALSHARE="$DOTSLOCAL/share"
 export BASHDOT="$SHELLS/bash"
 export WINDOTS="$DOTS/windots"
 export DOCS="$HOME/Documents"
+export NOTES="$DOCS/notes"
 
 export STARSHIP_DIR="$DOTFILES/starship"
 export STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
