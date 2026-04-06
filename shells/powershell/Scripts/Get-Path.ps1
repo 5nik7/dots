@@ -11,7 +11,7 @@ Sorts the strings alphabetically, otherwise displays them in the order in which
 they appear in the PATH environment variable
 
 .DESCRIPTION
-Reports whether each path references an existing directory, if it is duplicated in 
+Reports whether each path references an existing directory, if it is duplicated in
 the PATH environment variable, if it is and empty entry. See the Repair-Path command
 for a description of how it cleans up the PATH. Also reports the PATH length and
 warns when it exceeds 80% capacity.
@@ -108,17 +108,17 @@ Process
 			{
 				if ($source.Contains('P'))
 				{
-					Write-Host($format -f $source, $path) -ForegroundColor White
+					Write-Host($format -f $source, $path) -ForegroundColor Cyan
 				}
 				elseif ($source.Contains('U'))
 				{
 					if ($usrExpos -contains $path) { $source = "*$source" }
-					Write-Host($format -f $source, $path) -ForegroundColor Gray
+					Write-Host($format -f $source, $path) -ForegroundColor White
 				}
 				else
 				{
 					if ($sysExpos -contains $path) { $source = "*$source" }
-					Write-Host($format -f $source, $path) -ForegroundColor DarkGray
+					Write-Host($format -f $source, $path) -ForegroundColor Magenta
 				}
 			}
 		}
