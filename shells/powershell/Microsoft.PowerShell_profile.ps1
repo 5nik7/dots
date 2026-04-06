@@ -1,4 +1,6 @@
-$env:DOTS = "$HOME\dots"
+$DOTS = "$HOME\dots"
+$env:DOTS = $DOTS
+$Global:DOTS = $DOTS
 
 $env:STARSHIP_CONFIG = "$env:DOTS\configs\starship\starship.toml"
 $env:STARSHIP_THEMES = "$env:DOTS\configs\starship\themes"
