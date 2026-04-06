@@ -525,7 +525,7 @@ format = '$symbol '
 
 [custom.dirname]
 description = "dir path"
-when = 'git rev-parse --show-toplevel 2>/dev/null && ! gitsub -e'
+when = 'git rev-parse --show-toplevel 2>/dev/null'
 command = """
 dir=$(dirout $(git rev-parse --show-toplevel 2>/dev/null))
 echo "$dir"

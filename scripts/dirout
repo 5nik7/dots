@@ -2,6 +2,7 @@
 
 main() {
   local p
+  local slash='/'
   local raw=0
   if [[ $1 == '-r' ]]; then
     raw=1
@@ -14,13 +15,13 @@ main() {
     else
       case "$p" in
       "$HOME")
-        printf '~\n'
+        printf '~%s\n' "$slash"
         ;;
       "$HOME"/*)
-        printf '~/%s\n' "${p#"$HOME"/}"
+        printf '~/%s%s\n' "${p#"$HOME"/}" "$slash"
         ;;
       *)
-        printf '%s\n' "$p"
+        printf '%s%s\n' "$p" "$slash"
         ;;
       esac
     fi
