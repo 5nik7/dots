@@ -2,6 +2,18 @@
 #  ╔═╝╚═╗╠═╣║╣ ║║║╚╗╔╝
 # o╚═╝╚═╝╩ ╩╚═╝╝╚╝ ╚╝
 
+if [[ -r /etc/os-release ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
+  distro="${distro%% *}"
+elif [[ -r "$PREFIX/etc/os-release" ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$TERMUX__PREFIX/etc/os-release")
+  distro="${distro%% *}"
+elif [[ -n "$TERMUX_VERSION" ]]; then
+  distro='termux'
+fi
+
+export distro
+
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"

@@ -99,16 +99,6 @@ has uvx && eval "$(uvx --generate-shell-completion zsh)"
 
 has tv && eval "$(tv init zsh)"
 
-if [[ -r /etc/os-release ]]; then
-  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
-  distro="${distro%% *}"
-elif [[ -r "$TERMUX__PREFIX/etc/os-release" ]]; then
-  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$TERMUX__PREFIX/etc/os-release")
-  distro="${distro%% *}"
-elif [[ -n "$TERMUX_VERSION" ]]; then
-  distro='termux'
-fi
-
 if [[ "$distro" == "termux" ]]; then
   istermux=true
   zieces 'droid'
