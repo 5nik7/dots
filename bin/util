@@ -1,29 +1,33 @@
 #!/usr/bin/env bash
 
-
 extpath() {
-	if [[ -d "$1" ]]; then
+  if [[ -d "$1" ]]; then
     if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
       export PATH="$PATH:$1"
     fi
-  fi 2> /dev/null
+  fi 2>/dev/null
 }
 
 prepath() {
-	if [[ -d "$1" ]]; then
+  if [[ -d "$1" ]]; then
     if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-		  export PATH="$1:$PATH"
-	  fi
-  fi 2> /dev/null
+      export PATH="$1:$PATH"
+    fi
+  fi 2>/dev/null
 }
 
 err() {
-  local erricon=""
-  printf "${BOLD}${BRIGHTRED}${erricon} %s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${RED}" }
+  local erricon="ERROR"
+  printf "${RED}%s ${DIM}│ ${RST}${BOLD}${BRIGHTRED}%s${RST}\n" "${erricon}" "$*" | box -hp 1 -bc "${DIM}${RED}"
+}
 
-ok() { printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${GREEN}" }
+ok() {
+  printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${GREEN}"
+}
 
-warn() { printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}" }
+warn() {
+  printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}"
+}
 
 has() {
   local verbose=0
@@ -42,34 +46,69 @@ has() {
 
 if has eza; then
   fileicon() {
-    eza --icons=always --treat-dirs-as-files $@ | awk '{print $1}'
+    eza --icons=always --color=always --treat-dirs-as-files $@ | awk '{print $1}'
   }
 else
   fileicon() {}
 fi
 
 pathout() {
-	local p
+  local p
   local raw=0
   if [[ $1 == '-r' ]]; then
     raw=1
     shift
   fi
   for p in "$@"; do
-    if (( raw )); then
+    if ((raw)); then
       printf '%s\n' "$p"
     else
-		case "$p" in
-			"$HOME")
-				printf '~\n'
-				;;
-			"$HOME"/*)
-				printf '~/%s\n' "${p#"$HOME"/}"
-				;;
-			*)
-				printf '%s\n' "$p"
-				;;
-		esac
+      case "$p" in
+      "$HOME")
+        printf '~\n'
+        ;;
+      "$HOME"/*)
+        printf '~/%s\n' "${p#"$HOME"/}"
+        ;;
+      *)
+        printf '%s\n' "$p"
+        ;;
+      esac
+    fi
+  done
+}
+
+dirout() {
+  local p
+  local slash=''
+  local raw=0
+  if [[ $1 == '-r' ]]; then
+    raw=1
+    shift
+  fi
+  if [[ $1 == '-j' ]]; then
+    slash='/'
+    shift
+  fi
+  if [[ $# -eq 0 ]]; then
+    set -- "$pwd"
+  fi
+  for p in "$@"; do
+    p=$(dirname "$p")
+    if ((raw)); then
+      printf '%s\n' "$p"
+    else
+      case "$p" in
+      "$HOME")
+        printf '~%s\n' "$slash"
+        ;;
+      "$HOME"/*)
+        printf '~/%s%s\n' "${p#"$HOME"/}" "$slash"
+        ;;
+      *)
+        printf '%s%s\n' "$p" "$slash"
+        ;;
+      esac
     fi
   done
 }
@@ -85,19 +124,19 @@ shellmod() {
   local verbose=0
   local first=0
 
- ((buggin)) && verbose=1
+  ((buggin)) && verbose=1
 
   while (($#)); do
     case $1 in
     -v | --verboss)
       verbose=1
       shift
-    ;;
+      ;;
     -1 | --first)
       first=1
       shift
       ;;
-    * ) break ;;
+    *) break ;;
     esac
   done
   for filename in "$@"; do
@@ -112,14 +151,13 @@ shellmod() {
     else
       ((verbose)) && err "$out: not found"
     fi
-    done
-    ((exists >= 1)) && return 0
-    return 1
+  done
+  ((exists >= 1)) && return 0
+  return 1
 }
 
 alias zieces="shellmod"
 alias zmod="shellmod"
-
 
 so() {
   local file
@@ -127,35 +165,36 @@ so() {
   local verbose=0
   local first=0
 
- ((buggin)) && verbose=1
+  ((buggin)) && verbose=1
 
   while (($#)); do
     case $1 in
     -v | --verboss)
       verbose=1
       shift
-    ;;
+      ;;
     -1 | --first)
       first=1
       shift
       ;;
-    * ) break ;;
+    *) break ;;
     esac
   done
   for file in "$@"; do
+    local dir=$(dirout $file)
+    local base=$(basename $file)
     if [[ -f "$file" ]]; then
       exists+=1
       local icon=$(fileicon $file)
-      local out=$(pathout $file)
       source "$file"
-      ((verbose)) && ok "$icon $out: sourced"
+      ((verbose)) && ok "$icon $dir/$base: sourced"
       ((first)) && return 0
     else
-      ((verbose)) && err "$file: not found"
+      ((verbose)) && err "$dir/$bsse: not found"
     fi
-    done
-    ((exists >= 1)) && return 0
-    return 1
+  done
+  ((exists >= 1)) && return 0
+  return 1
 }
 
 check() {
@@ -171,24 +210,24 @@ check() {
     -v | --verboss)
       verbose=1
       shift
-    ;;
+      ;;
     -1 | --first)
       first=1
       shift
       ;;
-    * ) break ;;
+    *) break ;;
     esac
   done
-for input in "$@"; do
-  if [[ -e "$input" ]]; then
-    exists+=1
-    local out=$(pathout $input)
-    local icon=$(fileicon $dir)
-    ((verbose)) && ok "$icon $out: found"
-    ((first)) && return 0
-  else
-  ((verbose)) && err "$input: not found"
-  fi
+  for input in "$@"; do
+    if [[ -e "$input" ]]; then
+      exists+=1
+      local out=$(pathout $input)
+      local icon=$(fileicon $input)
+      ((verbose)) && ok "$icon $out: found"
+      ((first)) && return 0
+    else
+      ((verbose)) && err "$input: not found"
+    fi
   done
   ((exists >= 1)) && return 0
   return 1
@@ -207,15 +246,15 @@ checkdir() {
     -v | --verboss)
       verbose=1
       shift
-    ;;
+      ;;
     -1 | --first)
       first=1
       shift
       ;;
-    * ) break ;;
+    *) break ;;
     esac
   done
-    for dir in "$@"; do
+  for dir in "$@"; do
     if [[ -d "$dir" ]]; then
       exists+=1
       local out=$(pathout $dir)
@@ -272,7 +311,7 @@ has() {
 }
 
 cmd_exists() {
- local verbose=0
+  local verbose=0
   if [[ $1 == '-v' ]]; then
     verbose=1
     shift
@@ -300,17 +339,16 @@ getextension() {
   echo "without extension: ${1%.*}"
 }
 
-timestamp(){
-    printf "%s" "$(date '+%F %T')  $*"
-    [ $# -gt 0 ] && printf '\n'
+timestamp() {
+  printf "%s" "$(date '+%F %T')  $*"
+  [ $# -gt 0 ] && printf '\n'
 }
 
-timestampcmd(){
-    local output
-    output="$("$@" 2>&1)"
-    timestamp "$output"
+timestampcmd() {
+  local output
+  output="$("$@" 2>&1)"
+  timestamp "$output"
 }
-
 
 compact() {
   if [ "$#" -ge "1" ]; then

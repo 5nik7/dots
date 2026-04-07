@@ -2,11 +2,18 @@
 
 main() {
   local p
-  local slash='/'
+  local slash=''
   local raw=0
   if [[ $1 == '-r' ]]; then
     raw=1
     shift
+  fi
+  if [[ $1 == '-j' ]]; then
+    slash='/'
+    shift
+  fi
+  if [[ $# -eq 0 ]]; then
+    set -- "$pwd"
   fi
   for p in "$@"; do
     p=$(dirname "$p")
