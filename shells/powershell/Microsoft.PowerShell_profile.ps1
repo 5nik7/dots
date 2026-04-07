@@ -870,11 +870,10 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 Import-Module pscompletions
 
 function Invoke-Starship-PreCommand {
-  if (git remote get-url origin 2>$null) {
-   $env:git_remote_icon = (git-it -i 2>$null) -replace '\s+', ''
-} else {
-  $env:git_remote_icon = $null
-}
+  # This is a workaround for a bug in starship where the prompt doesn't update after certain commands
+  # that change the directory, such as 'cd' or 'd'.
+  # By invoking a no-op command before each prompt, we can force starship to update the prompt with the new directory.
+  $null = Get-ChildItem -Path $PWD
 }
 
 Invoke-Expression (&starship init powershell)
