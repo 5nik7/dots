@@ -17,7 +17,7 @@ prepath() {
 }
 
 err() {
-  local erricon="ERROR"
+  local erricon=""
   printf "${RED}%s ${DIM}│ ${RST}${BOLD}${BRIGHTRED}%s${RST}\n" "${erricon}" "$*" | box -hp 1 -bc "${DIM}${RED}"
 }
 
