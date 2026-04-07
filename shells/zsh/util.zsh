@@ -6,28 +6,29 @@ function zieces() {
 }
 
 function extpath() {
-	if [[ -d "$1" ]]; then
+  if [[ -d "$1" ]]; then
     if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
       export PATH="$PATH:$1"
     fi
-  fi 2> /dev/null
+  fi 2>/dev/null
 }
 
 function prepath() {
-	if [[ -d "$1" ]]; then
+  if [[ -d "$1" ]]; then
     if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
-		  export PATH="$1:$PATH"
-	  fi
-  fi 2> /dev/null
+      export PATH="$1:$PATH"
+    fi
+  fi 2>/dev/null
 }
 
 function err() {
   local erricon=""
-  printf "${BOLD}${BRIGHTRED}${erricon} %s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${RED}" }
+  printf "${BOLD}${BRIGHTRED}${erricon} %s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${RED}"
+}
 
-function ok() { printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${GREEN}" }
+function ok() { printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${GREEN}"; }
 
-function warn() { printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}" }
+function warn() { printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}"; }
 
 function has() {
   local verbose=0
@@ -49,31 +50,31 @@ if has eza; then
     eza --icons=always --treat-dirs-as-files $@ | awk '{print $1}'
   }
 else
-  function fileicon() {}
+  function fileicon() { }
 fi
 
 function pathout() {
-	local p
+  local p
   local raw=0
   if [[ $1 == '-r' ]]; then
     raw=1
     shift
   fi
   for p in "$@"; do
-    if (( raw )); then
+    if ((raw)); then
       printf '%s\n' "$p"
     else
-		case "$p" in
-			"$HOME")
-				printf '~\n'
-				;;
-			"$HOME"/*)
-				printf '~/%s\n' "${p#"$HOME"/}"
-				;;
-			*)
-				printf '%s\n' "$p"
-				;;
-		esac
+      case "$p" in
+      "$HOME")
+        printf '~\n'
+        ;;
+      "$HOME"/*)
+        printf '~/%s\n' "${p#"$HOME"/}"
+        ;;
+      *)
+        printf '%s\n' "$p"
+        ;;
+      esac
     fi
   done
 }
@@ -109,8 +110,8 @@ function checkdir() {
     first=1
     shift
   fi
-for dir in "$@"; do
-  local out=$(pathout $dir)
+  for dir in "$@"; do
+    local out=$(pathout $dir)
     if [ -d "$dir" ]; then
       local icon=$(fileicon $dir)
       ((verbose)) && ok "$icon $out: found"
@@ -158,7 +159,7 @@ function has() {
 }
 
 function cmd_exists() {
- local verbose=0
+  local verbose=0
   if [[ $1 == '-v' ]]; then
     verbose=1
     shift
@@ -177,20 +178,16 @@ function is_installed() {
   return $?
 }
 
-
-
 function upper() { echo "${@}" | awk '{print toupper($0)}'; }
 lower() { echo "${@}" | awk '{print tolower($0)}'; }
 
-function timestamp(){
-    printf "%s" "$(date '+%F %T')  $*"
-    [ $# -gt 0 ] && printf '\n'
+function timestamp() {
+  printf "%s" "$(date '+%F %T')  $*"
+  [ $# -gt 0 ] && printf '\n'
 }
 
-function timestampcmd(){
-    local output
-    output="$("$@" 2>&1)"
-    timestamp "$output"
+function timestampcmd() {
+  local output
+  output="$("$@" 2>&1)"
+  timestamp "$output"
 }
-
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix

@@ -3,7 +3,7 @@ if has fd; then
 fi
 
 fzdef() {
-_FZF_OPTS_="\
+  _FZF_OPTS_="\
 --style=default \
 --layout=reverse \
 --height=~90% \
@@ -19,34 +19,32 @@ _FZF_OPTS_="\
 -e \
 --ansi"
 
-_FZF_BINDS_="\
+  _FZF_BINDS_="\
 Ctrl-X:toggle-preview,\
 up:up-match,\
 down:down-match,\
 alt-r:toggle-raw"
 
-so "$THEMEDIR/fzf.zsh"
-_FZF_PREVIEW_POS_='bottom:hidden:50%:border-sharp'
-_PREVIEW_="preview.zsh"
+  so "$THEMEDIR/fzf.zsh"
+  _FZF_PREVIEW_POS_='bottom:hidden:50%:border-sharp'
+  _PREVIEW_="preview.zsh"
 
-export _FZF_OPTS_ _FZF_BINDS_ _FZF_COLORS_ _FZF_PREVIEW_POS_ _PREVIEW_
+  export _FZF_OPTS_ _FZF_BINDS_ _FZF_COLORS_ _FZF_PREVIEW_POS_ _PREVIEW_
 
-export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --color=$_FZF_COLORS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
+  export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --color=$_FZF_COLORS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
 }
 
 fzdef
 
-
-
-  # _fz_write_rc() {
-  #   local rc=~/.fzfrc
-  #   if [[ -f $rc ]]; then
-  #   print -r -- "$FZF_DEFAULT_OPTS" | sed 's/ --/\n--/g' >! "$rc"
-  # else
-  #   print -r -- "$FZF_DEFAULT_OPTS" | sed 's/ --/\n--/g' > "$rc"
-  #   fi
-  #   echo "fzopt: wrote $rc"
-  # }
+# _fz_write_rc() {
+#   local rc=~/.fzfrc
+#   if [[ -f $rc ]]; then
+#   print -r -- "$FZF_DEFAULT_OPTS" | sed 's/ --/\n--/g' >! "$rc"
+# else
+#   print -r -- "$FZF_DEFAULT_OPTS" | sed 's/ --/\n--/g' > "$rc"
+#   fi
+#   echo "fzopt: wrote $rc"
+# }
 
 function fzopt() {
   # -------------------------
@@ -126,15 +124,15 @@ EOF
     local key=$1
     if [[ $key == no-* ]]; then
       local base=${key#no-}
-      (( ${_fz_valid_opts[(I)$base]} )) && return 0
+      ((${_fz_valid_opts[(I)$base]})) && return 0
     fi
-    (( ${_fz_valid_opts[(I)$key]} )) && return 0
+    ((${_fz_valid_opts[(I)$key]})) && return 0
     return 1
   }
 
   _fz_is_valid_color_key() {
     local ckey=$1
-    (( ${_fz_color_keys[(I)$ckey]} )) && return 0
+    ((${_fz_color_keys[(I)$ckey]})) && return 0
     return 1
   }
 
@@ -147,7 +145,7 @@ EOF
 
   _fz_write_rc() {
     local rc=~/.fzfrc
-    print -r -- "$FZF_DEFAULT_OPTS" | sed 's/ --/\n--/g' > "$rc"
+    print -r -- "$FZF_DEFAULT_OPTS" | sed 's/ --/\n--/g' >"$rc"
     echo "fzopt: wrote $rc"
   }
 
@@ -172,7 +170,7 @@ EOF
     local -a new
     local i changed=0
 
-    for (( i=1; i<=${#words}; ++i )); do
+    for ((i = 1; i <= ${#words}; ++i)); do
       local w=${words[i]}
 
       # Handle:
@@ -180,8 +178,8 @@ EOF
       #   --key=value
       #   --key='value with spaces'
       if [[ $w == --$key ]]; then
-        if (( i+1 <= ${#words} )) && [[ ${words[i+1]} != --* ]]; then
-          (( i++ ))  # skip old value token
+        if ((i + 1 <= ${#words})) && [[ ${words[i+1]} != --* ]]; then
+          ((i++)) # skip old value token
         fi
         new+=("--$key='$val'")
         changed=1
@@ -193,13 +191,14 @@ EOF
       fi
     done
 
-    (( !changed )) && new+=("--$key='$val'")
+    ((!changed)) && new+=("--$key='$val'")
 
     words=("${new[@]}")
 
     # Extra cleanup for preview: remove any stray "{}'" token from older broken values
     if [[ $key == preview ]]; then
-      local -a cleaned; local t
+      local -a cleaned
+      local t
       for t in "${words[@]}"; do
         [[ $t == "{}'" ]] && continue
         cleaned+=("$t")
@@ -223,25 +222,25 @@ EOF
     local -a new
     local i changed=0
 
-    for (( i=1; i<=${#words}; ++i )); do
+    for ((i = 1; i <= ${#words}; ++i)); do
       local w=${words[i]}
       case $w in
-        "--$key")
-          new+=("--$key=$val")
-          (( i++ ))  # skip old value
-          changed=1
-          ;;
-        "--$key="*)
-          new+=("--$key=$val")
-          changed=1
-          ;;
-        *)
-          new+=("$w")
-          ;;
+      "--$key")
+        new+=("--$key=$val")
+        ((i++)) # skip old value
+        changed=1
+        ;;
+      "--$key="*)
+        new+=("--$key=$val")
+        changed=1
+        ;;
+      *)
+        new+=("$w")
+        ;;
       esac
     done
 
-    (( !changed )) && new+=("--$key=$val")
+    ((!changed)) && new+=("--$key=$val")
 
     words=("${new[@]}")
     FZF_DEFAULT_OPTS="${(j: :)words}"
@@ -278,7 +277,7 @@ EOF
             found=1
           fi
         done
-        (( !found )) && parts+=("${ckey}:${cval}")
+        ((!found)) && parts+=("${ckey}:${cval}")
 
         if [[ ${words[i]} == --color ]]; then
           words[i+1]="${(j:,:)parts}"
@@ -299,7 +298,8 @@ EOF
 
   _fzcolor_unset() {
     [[ $# -eq 0 ]] && return 0
-    local -A rm; local k
+    local -A rm
+    local k
     for k in "$@"; do
       if _fz_is_valid_color_key "$k"; then
         rm[$k]=1
@@ -328,22 +328,23 @@ EOF
           new_parts+=("${parts[j]}")
         done
 
-        if (( ${#new_parts} )); then
+        if ((${#new_parts})); then
           if [[ ${words[i]} == --color ]]; then
             words[i+1]="${(j:,:)new_parts}"
           else
             words[i]="--color=${(j:,:)new_parts}"
           fi
         else
-          local -a tmp; local t
+          local -a tmp
+          local t
           if [[ ${words[i]} == --color ]]; then
             for t in {1..$#words}; do
-              (( t == i || t == i+1 )) && continue
+              ((t == i || t == i + 1)) && continue
               tmp+=("${words[t]}")
             done
           else
             for t in {1..$#words}; do
-              (( t == i )) && continue
+              ((t == i)) && continue
               tmp+=("${words[t]}")
             done
           fi
@@ -388,7 +389,7 @@ EOF
             found=1
           fi
         done
-        (( !found )) && parts+=("${bkey}:${bval}")
+        ((!found)) && parts+=("${bkey}:${bval}")
 
         bind_list="${(j:,:)parts}"
 
@@ -410,7 +411,8 @@ EOF
 
   _fzbind_unset() {
     [[ $# -eq 0 ]] && return 0
-    local -A rm; local k
+    local -A rm
+    local k
     for k in "$@"; do rm[$k]=1; done
 
     local i
@@ -438,7 +440,7 @@ EOF
           new_parts+=("${parts[j]}")
         done
 
-        if (( ${#new_parts} )); then
+        if ((${#new_parts})); then
           bind_list="${(j:,:)new_parts}"
           if [[ ${words[i]} == --bind ]]; then
             words[i+1]="$bind_list"
@@ -446,15 +448,16 @@ EOF
             words[i]="--bind=$bind_list"
           fi
         else
-          local -a tmp; local t
+          local -a tmp
+          local t
           if [[ ${words[i]} == --bind ]]; then
             for t in {1..$#words}; do
-              (( t == i || t == i+1 )) && continue
+              ((t == i || t == i + 1)) && continue
               tmp+=("${words[t]}")
             done
           else
             for t in {1..$#words}; do
-              (( t == i )) && continue
+              ((t == i)) && continue
               tmp+=("${words[t]}")
             done
           fi
@@ -471,66 +474,64 @@ EOF
   # main arg loop
   # -------------------------
   local i=1
-  while (( i <= $#args )); do
+  while ((i <= $#args)); do
     case ${args[i]} in
-      color)
-        (( i + 2 > $#args )) && {
-          echo "fzopt: 'color' requires <color-key> <color-value>" >&2
-          return 1
-        }
-        _fzcolor_set "${args[i+1]}" "${args[i+2]}" || return 1
-        (( i += 3 ))
-        ;;
-      bind)
-        (( i + 2 > $#args )) && {
-          echo "fzopt: 'bind' requires <key> <action>" >&2
-          return 1
-        }
-        _fzbind_set "${args[i+1]}" "${args[i+2]}" || return 1
-        (( i += 3 ))
-        ;;
-      uncolor)
-        (( i + 1 > $#args )) && {
-          echo "fzopt: 'uncolor' requires at least one <color-key>" >&2
-          return 1
-        }
-        local -a to_rm_color=()
-        (( i++ ))
-        while (( i <= $#args )) && [[ ${args[i]} != color && ${args[i]} != bind && ${args[i]} != unbind && ${args[i]} != uncolor ]]; do
-          to_rm_color+=("${args[i]}")
-          (( i++ ))
-        done
-        _fzcolor_unset "${to_rm_color[@]}"
-        ;;
-      unbind)
-        (( i + 1 > $#args )) && {
-          echo "fzopt: 'unbind' requires at least one <key>" >&2
-          return 1
-        }
-        local -a to_rm_bind=()
-        (( i++ ))
-        while (( i <= $#args )) && [[ ${args[i]} != color && ${args[i]} != bind && ${args[i]} != unbind && ${args[i]} != uncolor ]]; do
-          to_rm_bind+=("${args[i]}")
-          (( i++ ))
-        done
-        _fzbind_unset "${to_rm_bind[@]}"
-        ;;
-      *)
-        (( i + 1 > $#args )) && {
-          echo "fzopt: normal option requires <key> <value>" >&2
-          return 1
-        }
-        local key=${args[i]}
-        local val=${args[i+1]}
-        if (( ${_fz_stringy_keys[(I)$key]} )); then
-          _fzopt_set_stringy "$key" "$val" || return 1
-        else
-          _fzopt_set_normal "$key" "$val" || return 1
-        fi
-        (( i += 2 ))
-        ;;
+    color)
+      ((i + 2 > $#args)) && {
+        echo "fzopt: 'color' requires <color-key> <color-value>" >&2
+        return 1
+      }
+      _fzcolor_set "${args[i+1]}" "${args[i+2]}" || return 1
+      ((i += 3))
+      ;;
+    bind)
+      ((i + 2 > $#args)) && {
+        echo "fzopt: 'bind' requires <key> <action>" >&2
+        return 1
+      }
+      _fzbind_set "${args[i+1]}" "${args[i+2]}" || return 1
+      ((i += 3))
+      ;;
+    uncolor)
+      ((i + 1 > $#args)) && {
+        echo "fzopt: 'uncolor' requires at least one <color-key>" >&2
+        return 1
+      }
+      local -a to_rm_color=()
+      ((i++))
+      while ((i <= $#args)) && [[ ${args[i]} != color && ${args[i]} != bind && ${args[i]} != unbind && ${args[i]} != uncolor ]]; do
+        to_rm_color+=("${args[i]}")
+        ((i++))
+      done
+      _fzcolor_unset "${to_rm_color[@]}"
+      ;;
+    unbind)
+      ((i + 1 > $#args)) && {
+        echo "fzopt: 'unbind' requires at least one <key>" >&2
+        return 1
+      }
+      local -a to_rm_bind=()
+      ((i++))
+      while ((i <= $#args)) && [[ ${args[i]} != color && ${args[i]} != bind && ${args[i]} != unbind && ${args[i]} != uncolor ]]; do
+        to_rm_bind+=("${args[i]}")
+        ((i++))
+      done
+      _fzbind_unset "${to_rm_bind[@]}"
+      ;;
+    *)
+      ((i + 1 > $#args)) && {
+        echo "fzopt: normal option requires <key> <value>" >&2
+        return 1
+      }
+      local key=${args[i]}
+      local val=${args[i+1]}
+      if ((${_fz_stringy_keys[(I)$key]})); then
+        _fzopt_set_stringy "$key" "$val" || return 1
+      else
+        _fzopt_set_normal "$key" "$val" || return 1
+      fi
+      ((i += 2))
+      ;;
     esac
   done
 }
-
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix

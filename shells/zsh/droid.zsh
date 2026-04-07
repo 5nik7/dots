@@ -59,16 +59,18 @@ function spath() {
 
 updpkg() {
   local pkgs="$DROIDOTS/packages"
-  echo "$(pkg list-installed 2>/dev/null)" | sed '1d' | tr "/" " " | awk '{print $1}' >! "$pkgs"
+  echo "$(pkg list-installed 2>/dev/null)" | sed '1d' | tr "/" " " | awk '{print $1}' >|"$pkgs"
 }
 
 extpath "${HOME}/perl5/bin"
 
 if has perl; then
-  PERL5LIB="${HOME}/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
-  PERL_LOCAL_LIB_ROOT="${HOME}/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
-  PERL_MB_OPT="--install_base \"${HOME}/perl5\""; export PERL_MB_OPT;
-  PERL_MM_OPT="INSTALL_BASE=${HOME}/perl5"; export PERL_MM_OPT;
+  PERL5LIB="${HOME}/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"
+  export PERL5LIB
+  PERL_LOCAL_LIB_ROOT="${HOME}/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
+  export PERL_LOCAL_LIB_ROOT
+  PERL_MB_OPT="--install_base \"${HOME}/perl5\""
+  export PERL_MB_OPT
+  PERL_MM_OPT="INSTALL_BASE=${HOME}/perl5"
+  export PERL_MM_OPT
 fi
-
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix

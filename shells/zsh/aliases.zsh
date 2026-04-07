@@ -1,7 +1,7 @@
 function rlp() {
-  source ~/.zshrc;
-  ok " ZSH RELOADED";
- }
+  source ~/.zshrc
+  ok " ZSH RELOADED"
+}
 alias rl='rlp'
 
 if [[ "$distro" == arch ]]; then
@@ -89,13 +89,13 @@ if has eza; then
   function lscmd() {
     local opts=()
     if [ -n "$eza_opts" ]; then
-    for opt in "${eza_opts[@]}";do
-      opts+="$opt"
-    done
+      for opt in "${eza_opts[@]}"; do
+        opts+="$opt"
+      done
     fi
-  eza $opts $@
-}
-alias ls="lscmd"
+    eza $opts $@
+  }
+  alias ls="lscmd"
 else
   alias ls="ls --color=always"
 fi
@@ -107,27 +107,27 @@ alias la="ls -1a"
 alias lla="ls -la"
 
 if has yazi; then
-    function y() {
-      local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-      yazi "$@" --cwd-file="$tmp"
-      if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-        builtin cd -- "$cwd"
-      fi
-      rm -f -- "$tmp"
-    }
-    alias d='y'
+  function y() {
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+    yazi "$@" --cwd-file="$tmp"
+    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+      builtin cd -- "$cwd"
+    fi
+    rm -f -- "$tmp"
+  }
+  alias d='y'
 fi
 
 if has nvim; then
-    EDITOR='nvim'
+  EDITOR='nvim'
 elif has vim; then
-    EDITOR='vim'
+  EDITOR='vim'
 elif has vi; then
-    EDITOR='vi'
+  EDITOR='vi'
 elif has code; then
-    EDITOR='code'
+  EDITOR='code'
 else
-    EDITOR='nano'
+  EDITOR='nano'
 fi
 
 export EDITOR
@@ -160,5 +160,3 @@ if has glow; then
     alias glow="glow"
   fi
 fi
-
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix

@@ -11,6 +11,4 @@ zinit light zsh-users/zsh-history-substring-search
 # zinit light jeffreytse/zsh-vi-mode
 
 autoload -Uz _zinit
-(( ${+_comps} )) && _comps[zinit]=_zinit
-
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix
+((${+_comps})) && _comps[zinit]=_zinit
