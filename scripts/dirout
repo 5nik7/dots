@@ -13,7 +13,7 @@ main() {
     shift
   fi
   if [[ $# -eq 0 ]]; then
-    set -- "$pwd"
+    set -- "$PWD"
   fi
   for p in "$@"; do
     p=$(dirname "$p")

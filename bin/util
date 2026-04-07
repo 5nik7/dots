@@ -46,7 +46,8 @@ has() {
 
 if has eza; then
   fileicon() {
-    eza --icons=always --color=always --treat-dirs-as-files "$@" &>/dev/null | awk '{print $1}'
+    local icon=$(eza --icons=always ~-color=always --treat-dirs-as-files "$@" &>/dev/null | awk '{print $1}')
+    printf '%s' "$icon"
   }
 else
   fileicon() {}
@@ -91,7 +92,7 @@ dirout() {
     shift
   fi
   if [[ $# -eq 0 ]]; then
-    set -- "$pwd"
+    set -- "$PWD"
   fi
   for p in "$@"; do
     p=$(dirname "$p")
