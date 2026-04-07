@@ -46,8 +46,7 @@ has() {
 
 if has eza; then
   fileicon() {
-    local icon=$(eza --icons=always ~-color=always --treat-dirs-as-files "$@" &>/dev/null | awk '{print $1}')
-    printf '%s' "$icon"
+    eza --icons=always ~-color=always --treat-dirs-as-files "$@" &>/dev/null | awk '{print $1}'
   }
 else
   fileicon() {}
