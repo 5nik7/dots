@@ -869,6 +869,14 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 
 Import-Module pscompletions
 
+function Invoke-Starship-PreCommand {
+  if (git remote get-url origin 2>$null) {
+   $env:git_remote_icon = (git-it -i 2>$null) -replace '\s+', ''
+} else {
+  $env:git_remote_icon = $null
+}
+}
+
 Invoke-Expression (&starship init powershell)
 
 Invoke-Expression "$(vfox activate pwsh)"
