@@ -46,7 +46,7 @@ has() {
 
 if has eza; then
   fileicon() {
-    eza --icons=always --color=always --treat-dirs-as-files $@ | awk '{print $1}'
+    eza --icons=always --color=always --treat-dirs-as-files "$@" &>/dev/null | awk '{print $1}'
   }
 else
   fileicon() {}
@@ -190,7 +190,7 @@ so() {
       ((verbose)) && ok "$icon $dir/$base: sourced"
       ((first)) && return 0
     else
-      ((verbose)) && err "$dir/$bsse: not found"
+      ((verbose)) && err "$dir/$base: not found"
     fi
   done
   ((exists >= 1)) && return 0
@@ -219,14 +219,15 @@ check() {
     esac
   done
   for input in "$@"; do
+    local dir=$(dirout $input)
+    local base=$(basename $input)
     if [[ -e "$input" ]]; then
       exists+=1
-      local out=$(pathout $input)
       local icon=$(fileicon $input)
-      ((verbose)) && ok "$icon $out: found"
+      ((verbose)) && ok "$icon $dir/$base: found"
       ((first)) && return 0
     else
-      ((verbose)) && err "$input: not found"
+      ((verbose)) && err "$dir/$base: not found"
     fi
   done
   ((exists >= 1)) && return 0
