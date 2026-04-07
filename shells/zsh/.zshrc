@@ -142,8 +142,6 @@ if [ -n "${ZSH_DEBUGRC+1}" ]; then
     zprof
 fi
 
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix
-
 # bun completions
 [ -s "/home/njen/.bun/_bun" ] && source "/home/njen/.bun/_bun"
 

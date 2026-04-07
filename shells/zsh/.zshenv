@@ -12,6 +12,10 @@ elif [[ -n "$TERMUX_VERSION" ]]; then
   distro='termux'
 fi
 
+if [[ -z "$distro" ]]; then
+  distro='unknown'
+fi
+
 export distro
 
 export DOTS="$HOME/dots"
@@ -41,6 +45,3 @@ export YAZI_CONFIG_HOME="$DOTFILES/yazi"
 export GOBIN="$HOME/go/bin"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-
-
-# vim: set noet ft=zsh tw=4 sw=4 ff=unix
