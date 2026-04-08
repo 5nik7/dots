@@ -54,8 +54,8 @@
 	#############
 	g = grep -p
 	#############
-	l = log --oneline
-	lg = log --oneline --graph --decorate
+  l = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=short
+	ll = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --all
 	#############
 	ls = ls-files
 	lsf = !git ls-files | grep -i
