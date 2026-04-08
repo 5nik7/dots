@@ -1,1 +1,48 @@
 #!/usr/bin/env bash
+
+ESC=$(printf '\033')
+RED="${ESC}[31m"
+RST="${ESC}[0m"
+
+# remote=$(git -C "$path" remote get-url "$remote" 2>/dev/null)
+
+fail() {
+  code=$1
+  shift
+  printf '%s\n' "${RED}$*${RST}" >&2
+  exit "$code"
+}
+
+has() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+gh_user_api() {
+  local username
+  if has gh; then
+    username=$(gh auth status --json hosts --jq '.hosts[] | .[] | .login')
+  else
+    username=$(git config --get github.user)
+  fi
+  if [ -z "$username" ]; then
+    fail 1 "GitHub username not found. Please set it using 'git config --global github.user <username>' or authenticate with 'gh auth login'."
+  fi
+  echo "$username"
+}
+
+in_git() {
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
+main() {
+  if ! in_git; then
+    fail 1 "Not inside a git repository."
+  fi
+
+  local username
+  username=$(gh_user_api)
+
+  echo "GitHub username: $username"
+}
+
+main "$@"
