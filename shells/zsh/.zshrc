@@ -179,14 +179,14 @@ if checkdir "$HOME/.bun"; then
   export BUN_INSTALL="$HOME/.bun"
   [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
   prepath "$BUN_INSTALL/bin"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/njen/.bun/_bun"
 fi
 
-# bun completions
-[ -s "/home/njen/.bun/_bun" ] && source "/home/njen/.bun/_bun"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+if checkdir "$HOME/.nvm"; then
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+fi  
 
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
     zprof
