@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 
+DIM=$'\x1b[38;5;241m' # dim
+
 output=''
 
 figfonts() {
-  command ls "$(command figlet -I2)"
+  local dir=$(command figlet -I2)
+  find $dir -type f -name '*.flf' -printf '%f\n' | cut -d. -f1 | sort 2>/dev/null
 }
 
 main() {
-  local text=$1
-  local output=$(figlet -f "$(figfonts | grep .flf | cut -d. -f1 | fzf --preview-window='default:up:50%' --preview="figlet -f {} ${text}")" "$text" 2>/dev/null)
-  [[ -z $output ]] || echo -e "$output" | cpy || pst
+  local text='test'
+  [[ -n $1 ]] && text="$*"
+  local output=$(figlet -f "$(figfonts | fzf --preview-window='default:right:75%:border-left' --preview="figlet -f {} ${text}")" "$text" 2>/dev/null)
+  [[ ! -n "$output" ]] || echo -e "$output" | cpy && echo "$output"
 }
 
 main "$@"
