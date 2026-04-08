@@ -100,7 +100,7 @@ fi
 is_remote=''
 remote='origin'
 
-cwd=$(pwd)
+cwd=$PWD
 path="$cwd"
 pathout="$(echo "$path" | sed "s|${HOME}|~|")"
 
