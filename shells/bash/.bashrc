@@ -136,4 +136,5 @@ backup() {
   cp -a ${file} ${backupdir}/$(basename ${file}).${timestamp}
   return $?
 }
-[ so ~/.fzf.bash
+
+so ~/.fzf.bash
