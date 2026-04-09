@@ -11,8 +11,8 @@ function Test-CommandExists {
   return $exists
 }
 
-$EDITOR = if (Test-CommandExists code) { 'code' }
-elseif (Test-CommandExists nvim) { 'nvim' }
+$EDITOR = if (Test-CommandExists code) { 'nvim' }
+elseif (Test-CommandExists nvim) { 'code' }
 elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
@@ -85,52 +85,7 @@ Set-PsFzfOption -TabExpansion
 Import-Module Catppuccin
 $Flavor = $Catppuccin['Mocha']
 
-# $ENV:FZF_DEFAULT_OPTS = @"
-# --color=bg+:$($Flavor.Surface0),bg:$($Flavor.Base),spinner:$($Flavor.Rosewater)
-# --color=hl:$($Flavor.Red),fg:$($Flavor.Text),header:$($Flavor.Red)
-# --color=info:$($Flavor.Mauve),pointer:$($Flavor.Rosewater),marker:$($Flavor.Rosewater)
-# --color=fg+:$($Flavor.Text),prompt:$($Flavor.Mauve),hl+:$($Flavor.Red)
-# --color=border:$($Flavor.Surface2)
-# "@
 
-# $Colors = @{
-# 	# Largely based on the Code Editor style guide
-# 	# Emphasis, ListPrediction and ListPredictionSelected are inspired by the Catppuccin fzf theme
-	
-# 	# Powershell colours
-# 	ContinuationPrompt     = $Flavor.Teal.Foreground()
-# 	Emphasis               = $Flavor.Red.Foreground()
-# 	Selection              = $Flavor.Surface0.Background()
-	
-# 	# PSReadLine prediction colours
-# 	InlinePrediction       = $Flavor.Overlay0.Foreground()
-# 	ListPrediction         = $Flavor.Mauve.Foreground()
-# 	ListPredictionSelected = $Flavor.Surface0.Background()
-
-# 	# Syntax highlighting
-# 	Command                = $Flavor.Blue.Foreground()
-# 	Comment                = $Flavor.Overlay0.Foreground()
-# 	Default                = $Flavor.Text.Foreground()
-# 	Error                  = $Flavor.Red.Foreground()
-# 	Keyword                = $Flavor.Mauve.Foreground()
-# 	Member                 = $Flavor.Rosewater.Foreground()
-# 	Number                 = $Flavor.Peach.Foreground()
-# 	Operator               = $Flavor.Sky.Foreground()
-# 	Parameter              = $Flavor.Pink.Foreground()
-# 	String                 = $Flavor.Green.Foreground()
-# 	Type                   = $Flavor.Yellow.Foreground()
-# 	Variable               = $Flavor.Lavender.Foreground()
-# }
-
-# Set-PSReadLineOption -Colors $Colors
-
-# $PSStyle.Formatting.Debug = $Flavor.Sky.Foreground()
-# $PSStyle.Formatting.Error = $Flavor.Red.Foreground()
-# $PSStyle.Formatting.ErrorAccent = $Flavor.Blue.Foreground()
-# $PSStyle.Formatting.FormatAccent = $Flavor.Teal.Foreground()
-# $PSStyle.Formatting.TableHeader = $Flavor.Rosewater.Foreground()
-# $PSStyle.Formatting.Verbose = $Flavor.Yellow.Foreground()
-# $PSStyle.Formatting.Warning = $Flavor.Peach.Foreground()
 
 
 
@@ -806,7 +761,7 @@ function New-Backup
   $targetdir = $item.DirectoryName | ForEach-Object { Resolve-Path $_ }
   $bakDate = Get-Date -Format 'MM-dd-yyyy-HH.mm.ss'
   $backupname = "$targetname.$bakDate.bak"
-  
+
   if ($store)
   {
     $bakstore = "$HOME\.bakstore"
@@ -867,6 +822,46 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
         }
 }
 
+# $ENV:FZF_DEFAULT_OPTS = @"
+# --color=bg+:$($Flavor.Surface0),bg:$($Flavor.Base),spinner:$($Flavor.Rosewater)
+# --color=hl:$($Flavor.Red),fg:$($Flavor.Text),header:$($Flavor.Red)
+# --color=info:$($Flavor.Mauve),pointer:$($Flavor.Rosewater),marker:$($Flavor.Rosewater)
+# --color=fg+:$($Flavor.Text),prompt:$($Flavor.Mauve),hl+:$($Flavor.Red)
+# --color=border:$($Flavor.Surface2)
+# "@
+
+$PSReadLineOptions = @{
+  HistoryNoDuplicates           = $true
+  HistorySearchCursorMovesToEnd = $true
+  HistorySearchCaseSensitive    = $false
+  MaximumHistoryCount           = '50000'
+  BellStyle                     = 'None'
+  EditMode                      = 'Vi' # "Vi" or "Emacs" or "Windows"
+  PredictionViewStyle           = 'InlineView' # "InlineView" or "ListView"
+  Colors                        = @{
+    Command                   = 'Blue'
+    Comment                   = 'DarkGray'
+    InlinePrediction          = 'DarkGray'
+    Parameter                 = 'Cyan'
+    String                    = 'Green'
+    Variable                  = 'Yellow'
+        # Keyword                   = "`e[92m"
+    # ListPrediction            = "`e[33m"
+    # ListPredictionSelected    = "`e[48;5;238m"
+    # ListPredictionTooltip     = "`e[97;2;3m"
+    # Member                    = "`e[37m"
+    # Number                    = "`e[97m"
+    # Type                      = "`e[37m"
+    # Operator                  = "`e[90m"
+    # ContinuationPrompt        = "`e[37m"
+    # Emphasis                  = "`e[96m"
+    # Error                     = "`e[91m"
+  }
+}
+
+Set-PSReadLineOption @PSReadLineOptions
+
+
 Import-Module pscompletions
 
 function Invoke-Starship-PreCommand {
@@ -876,6 +871,24 @@ function Invoke-Starship-PreCommand {
   $null = Get-ChildItem -Path $PWD
 }
 
+function Invoke-Starship-TransientFunction { &starship module character }
+function OnViModeChangeCore {
+  if ($args[0] -eq 'Command') {
+    [Microsoft.PowerShell.PSConsoleReadLine]::ForwardChar()
+    Write-Host -NoNewLine "`e[2 q"
+  }
+  else {
+    Write-Host -NoNewLine "`e[5 q"
+  }
+}
+
+function OnViModeChangeDesktop { [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt() }
+
+if ($PSEdition -eq 'Core') { Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeCore }
+
+if ($PSEdition -eq 'Desktop') { Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChangeDesktop }
+
 Invoke-Expression (&starship init powershell)
+Enable-TransientPrompt
 
 Invoke-Expression "$(vfox activate pwsh)"

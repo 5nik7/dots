@@ -568,6 +568,9 @@ disabled = false
 description = "Git host icon"
 shell = ["pwsh", "-NoProfile", "-Command", "-"]
 when = true
-command = "git_remote_icon.ps1"
+command = """
+$icon = (git-it -i 2>$null)
+Write-Host $icon
+"""
 format = '( [$output]($style))'
 style = 'fg:color_git_branch'
