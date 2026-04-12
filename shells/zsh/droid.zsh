@@ -1,3 +1,5 @@
+[ -z $USER ] && export USER="$(whoami)"
+
 export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 
 zinit light kutsan/zsh-system-clipboard
