@@ -213,20 +213,6 @@ tag_symbol = "󰓼 "
 tag_disabled = false
 disabled = false
 
-# [git_status]
-# format = '([$all_status$ahead_behind]($style))'
-# style = 'bold fg:color_git'
-# conflicted = '~${count}'
-# stashed = '*${count}'
-# ahead = '⇡${count}'
-# behind = '⇣${count}'
-# diverged = '⇠${behind_count} ⇢${ahead_count}'
-# untracked = '?${count}'
-# modified = '!${count}'
-# staged = '+${count}'
-# renamed = '»${count}'
-# deleted = '󰖭${count}'
-
 [git_status]
 style = "fg:color_git"
 format = '([$ahead_behind]($style) )([$all_status]($style) )'
@@ -262,17 +248,6 @@ bisect = "BISECTING"
 am = "AM"
 am_or_rebase = "AM/REBASE"
 disabled = false
-
-# [git_status]
-# format = "[[(󰛄$conflicted$untracked$modified$staged$renamed$deleted)](fg:color_git)( $ahead_behind$stashed)]($style)"
-# style = "fg:color_git"
-# conflicted = "​"
-# untracked = "​"
-# modified = "​"
-# staged = "​"
-# renamed = "​"
-# deleted = "​"
-# stashed = "≡"
 
 [nodejs]
 symbol = ""
@@ -337,30 +312,12 @@ symbol = "󱃾"
 format = '( [($symbol( $cluster))]($style) )'
 disabled = false
 
-# [nodejs]
-# detect_files = ['package.json']
-# detect_folders = []
-# symbol = '󰎙 '
-# style = 'fg:color_node'
-# version_format = '${raw}'
-# format = '([${symbol}([$version](fg:color_node)) ]($style))'
-# disabled = false
-#
+
 [lua]
 detect_folders = []
 style = 'fg:color_lua'
 symbol = " "
 format = '([${symbol}([$version](fg:color_lua)) ]($style))'
-
-# [rust]
-# format = "[$symbol($version )]($style)"
-# version_format = "v${raw}"
-# style = "fg:color_rust"
-# disabled = false
-# detect_extensions = ["rs"]
-# detect_files = ["Cargo.toml"]
-# detect_folders = []
-# symbol = "\ue68b "
 
 [os]
 disabled = true
@@ -514,14 +471,8 @@ vimcmd_symbol = '[▎](fg:color_vimcmd_ok)'
 format = '$symbol '
 
 [directory.substitutions]
-# "~/Desktop" = " Desktop"
-# "~/Videos" = " Videos"
-# "~/Pictures" = " Pictures"
-# "~/Music" = " Music"
-# "~/Documents" = " Documents"
-# "~/Downloads" = "󰇚 Downloads"
 "C:/" = "/"
-"/storage/emulated/0/Documents" = "~/Documents"
+# "/storage/emulated/0/Documents" = "~/Documents"
 
 [custom.dirname]
 description = "dir path"
