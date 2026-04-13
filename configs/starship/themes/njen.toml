@@ -224,7 +224,7 @@ diverged = "⇡${ahead_count}⇣${behind_count}"
 conflicted = "=${count}"
 deleted = "×${count}"
 renamed = "»${count}"
-modified = ""
+modified = "!${count}"
 staged = "+${count}"
 untracked = "?${count}"
 ignore_submodules = false
@@ -311,7 +311,6 @@ symbol = "󱃾"
 # style = "fg:color_kubernetes"
 format = '( [($symbol( $cluster))]($style) )'
 disabled = false
-
 
 [lua]
 detect_folders = []
