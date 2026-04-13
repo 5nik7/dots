@@ -1,3 +1,17 @@
+function zvm_config() {
+  ZVM_SYSTEM_CLIPBOARD_ENABLED=true
+  ZVM_CLIPBOARD_COPY_CMD='cpy'
+  ZVM_CLIPBOARD_PASTE_CMD='cmd'
+
+  ZVM_OPEN_CMD='open'
+  ZVM_OPEN_URL_CMD='open-url'
+  ZVM_OPEN_FILE_CMD='nvim'
+  ZVM_VI_HIGHLIGHT_FOREGROUND="$crust"
+  ZVM_VI_HIGHLIGHT_BACKGROUND="$flamingo"
+  ZVM_VI_HIGHLIGHT_EXTRASTYLE=bold
+
+}
+
 export WINROOT=/mnt/c
 export WINHOME=/mnt/c/Users/njen
 export WINDIR=$WINROOT/Windows
@@ -11,6 +25,8 @@ extpath "$WINDIR/System32"
 extpath "$WINDIR"
 
 has vfox && eval "$(vfox activate zsh)"
+
+
 
 PATH="/home/njen/perl5/bin${PATH:+:${PATH}}"
 export PATH

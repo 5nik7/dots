@@ -2,6 +2,8 @@
 
 export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 
+zinit light kutsan/zsh-system-clipboard
+
 function zvm_config() {
   ZVM_SYSTEM_CLIPBOARD_ENABLED=true
   ZVM_CLIPBOARD_COPY_CMD='termux-clipboard-set'
