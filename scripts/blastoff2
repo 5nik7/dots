@@ -34,10 +34,10 @@ has() {
   done
 }
 
-has -v starship;|| die "starship command found"
+has -v starship || die "starship command found"
 
 rockeship() {
-cat <<'EOF'
+  cat <<'EOF'
       ,
      / \
     / _ \
@@ -50,10 +50,9 @@ cat <<'EOF'
 EOF
 }
 
-
-usage {
-local prog=${0##*/}
-cat <<-eof
+usage() {
+  local prog=${0##*/}
+  cat <<-EOF
 Usage: $prog [options]
 
 Options:
@@ -65,33 +64,33 @@ Options:
 
   -h, --help
       Show this help message
-eof
+EOF
 }
 
 path_display() {
-	local p=$1
-	if (( raw )); then
-		printf '%s\n' "$p"
-	else
-		case "$p" in
-			"$HOME")
-				printf '~\n'
-				;;
-			"$HOME"/*)
-				printf '~/%s\n' "${p#"$HOME"/}"
-				;;
-			*)
-				printf '%s\n' "$p"
-				;;
-		esac
-	fi
+  local p=$1
+  if ((raw)); then
+    printf '%s\n' "$p"
+  else
+    case "$p" in
+    "$HOME")
+      printf '~\n'
+      ;;
+    "$HOME"/*)
+      printf '~/%s\n' "${p#"$HOME"/}"
+      ;;
+    *)
+      printf '%s\n' "$p"
+      ;;
+    esac
+  fi
 }
 
 checkdir() {
   local dir
   for dir in "$@"; do
     [ -d "$dir" ] || {
-      local opath=$(ypath_display "$dir")
+      local opath=$(path_display "$dir")
       if ask "$sir does not exist. Create it?" Y; then
         mkdir -p "$dir" && ok "$opath created"
         return 0
@@ -104,119 +103,82 @@ checkdir() {
 }
 
 ask() {
-	# https://djm.me/ask
-	local prompt default reply
+  # https://djm.me/ask
+  local prompt default reply
 
-	while true; do
+  while true; do
 
-		if [ "${2:-}" = "Y" ]; then
-			prompt="Y/n"
-			default=Y
-		elif [ "${2:-}" = "N" ]; then
-			prompt="y/N"
-			default=N
-		else
-			prompt="y/n"
-			default=
-		fi
-
-		echo -e -n "$1 [$prompt] "
-		read -r reply </dev/tty
-
-		if [ -z "$reply" ]; then
-			reply=$default
-		fi
-
-		case "$reply" in
-		Y* | y*) return 0 ;;
-		N* | n*) return 1 ;;
-		esac
-
-	done
-}
-
-notpreset(){
-  starship  preset "$@" &>/dev/null
-}
-
-list_themes() {
-  echo "themes:"
-  for theme in "${themse[@]}"; do
-    local name=$(basename "$theme" .toml)
-    if [["$name" == "$current" ]]; then
-iscurrent=" (current)"
-else
-iscurrent=''
-    fi
-    notpreset "$name" || printf "%s%s\n" "$thrme" "$iscurrent"
-  done
-  echo "presets:"
-  for preset in "${ppresets[@]}"; do
-    starshippreset "$preset" >$file
-    if [[ "$preset" == "$currentStarshipTheme" ]]; then
-      theme_output "$currentbgcolor" "$currentcolor" "$currenttxt" "$currentthemecolor" "$preset"
+    if [ "${2:-}" = "Y" ]; then
+      prompt="Y/n"
+      default=Y
+    elif [ "${2:-}" = "N" ]; then
+      prompt="y/N"
+      default=N
     else
-      theme_output "$themebgcolor" "$bulletsymbolcolor" "$bulletsymbol" "$themecolor" "$preset"
+      prompt="y/n"
+      default=
     fi
-    linebreak
+
+    echo -e -n "$1 [$prompt] "
+    read -r reply </dev/tty
+
+    if [ -z "$reply" ]; then
+      reply=$default
+    fi
+
+    case "$reply" in
+    Y* | y*) return 0 ;;
+    N* | n*) return 1 ;;
+    esac
+
   done
-  linebreak
 }
 
-set_theme(){
-#
-#     sourcePath="$STARSHIP_THEMES/$theme.toml"
-#     targetPath="$STARSHIP_CONFIG"
-#
-#     if [[ ! -f "$sourcePath" ]]; then
-#       linebreak
-#       printf "%s${switchbgcolor}${errorcolor}%s ${c_reset}${switchbgcolor}${underline}${bold}${fg_red}%s${c_reset}${switchbgcolor} ${fg_red}%s${c_reset}" "$PADDING" "$errorsymbol" "$theme" "not found."
-#       linebreak
-#       exit 1
-#     fi
-#     if [[ "$theme" == "$current" ]]; then
-#     die ""
-#     else
-#       cd "$STARSHIP_DIR" || return
-#       ln -sf "themes/$theme.toml" "starship.toml"
-#       exit 0
-#     fi
-#   fi
-}
+config="$STARSHIP_CONFIG"
 
-if [[ -n "$STARSHIP_CONFIG" ]]; then
-  config="$STARSHIP_CONFIG"
-else
+if [[ -z $config ]]; then
   config="$HOME/.config/starship.toml"
 fi
-  cdir="$(dirname "$config")"
 
-  if [[ -f "$config" ]]; then
-    file=true
-    if [[ -l "$config" ]];then
-      linked=true
-    else
-      linked=flase
+cdir="$(dirname "$config")"
+
+tdir="$STARSHIP_THEMES"
+
+if [[ -z "$tdir" ]]; then
+  tdir="$HOME/.config/starship/themes"
+fi
+
+current="$(readlink "$config")"
+
+themes=(${tdir}/*)
+presets=$(starship preset --list)
+
+list_themes() {
+  current=$(basename "$current")
+  current="${current%%.*}"
+  echo "themes:"
+  for theme in "${themes[@]}"; do
+    theme=$(basename "$theme")
+    theme="${theme%%.*}"
+    if [[ "$current" == "$theme" ]]; then
+      theme="${c_green}${theme}${c_reset} (current)"
     fi
-  else
-    file=false
-    checkdir $cdir
+    if ! echo $presets | grep $theme &>/dev/null; then
+      printf "%s\n" "$theme"
+    fi
+  done
+  echo "presets:"
+  for preset in "${presets[@]}"; do
+    printf "%s\n" "$preset"
+  done
+  echo
+}
+
+main() {
+  if [[ $# -eq 0 ]]; then
+    usage
+    exit 0
   fi
-
-  if [[ -n  "$STARSHIP_THEMES" ]]; then
-    tdir="$STARSHIP_THEMES"
-  else
-    tdir="$HOME/.config/starship/themes"
-  fi
-  checkdir $tdir
-  checkpresets
-
-  themes=$Stdir/*.toml
-  presets=$(starship preset --list)
-
-   if [[ $linked = "true" ]]; then
-      current=""$(readlink "$comfig")" .toml)"
-   fi
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -229,15 +191,21 @@ fi
       shift
       ;;
     -t | --theme)
-			if [[ $# -eq 0 ]]; then
-
+      if [[ -z "$2" ]]; then
+        err "No theme specified"
+        usage
+        exit 1
+      fi
       theme="$2"
       exit 0
       ;;
     *)
-        err "Unknown option: $1"
-        usage
-        exit 1
+      err "Unknown option: $1"
+      usage
+      exit 1
       ;;
     esac
   done
+}
+
+main "$@"
