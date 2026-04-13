@@ -135,7 +135,7 @@ if checkdir "$HOME/.bun"; then
   export BUN_INSTALL="$HOME/.bun"
   [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
   prepath "$BUN_INSTALL/bin"
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/njen/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 fi
 
 if checkdir "$HOME/.nvm"; then
