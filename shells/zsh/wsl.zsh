@@ -1,7 +1,7 @@
 function zvm_config() {
   ZVM_SYSTEM_CLIPBOARD_ENABLED=true
   ZVM_CLIPBOARD_COPY_CMD='cpy'
-  ZVM_CLIPBOARD_PASTE_CMD='cmd'
+  ZVM_CLIPBOARD_PASTE_CMD='pst'
 
   ZVM_OPEN_CMD='open'
   ZVM_OPEN_URL_CMD='open-url'
