@@ -149,22 +149,23 @@ if [[ -z "$tdir" ]]; then
 fi
 
 current="$(readlink "$config")"
+currentbase=$(basename "$current")
+currentname="${currentbase%%.*}"
 
 themes=(${tdir}/*)
 presets=$(starship preset --list)
 
 list_themes() {
-  current=$(basename "$current")
-  current="${current%%.*}"
+  local current=$currentname
   echo "themes:"
   for theme in "${themes[@]}"; do
-    theme=$(basename "$theme")
-    theme="${theme%%.*}"
-    if [[ "$current" == "$theme" ]]; then
-      theme="${c_green}${theme}${c_reset} (current)"
+    local themebase=$(basename "$theme")
+    local themename="${themebase%%.*}"
+    if [[ "$currentname" == "$themename" ]]; then
+      themename="${c_green}${themename}${c_reset} (current)"
     fi
-    if ! echo $presets | grep $theme &>/dev/null; then
-      printf "%s\n" "$theme"
+    if ! echo $presets | grep $themename &>/dev/null; then
+      printf "%s\n" "$themename"
     fi
   done
   echo "presets:"
