@@ -2,8 +2,6 @@
 
 export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
 
-zinit light kutsan/zsh-system-clipboard
-
 function zvm_config() {
   ZVM_SYSTEM_CLIPBOARD_ENABLED=true
   ZVM_CLIPBOARD_COPY_CMD='termux-clipboard-set'
@@ -17,8 +15,6 @@ function zvm_config() {
   ZVM_VI_HIGHLIGHT_EXTRASTYLE=bold
 
 }
-
-zinit light jeffreytse/zsh-vi-mode
 
 zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
