@@ -224,7 +224,7 @@ diverged = "⇡${ahead_count}⇣${behind_count}"
 conflicted = "=${count}"
 deleted = "×${count}"
 renamed = "»${count}"
-modified = "!${count}"
+# modified = "!${count}"
 staged = "+${count}"
 untracked = "?${count}"
 ignore_submodules = false
