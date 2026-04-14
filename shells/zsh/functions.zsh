@@ -22,7 +22,7 @@ function gup() {
       cd "$root"
     fi
     if has_gitmodified; then
-      echo "Updating git repo at ${CYAN}${BOLD}$root${RST}..."
+      printf "\n${GREEN} %s ${CYAN} %s${BRIGHTCYAN}${BOLD}%s${RST}\n" "Updating" "${ico}" "$out"
       git add . && git commit -m "Update @ $commitDate" && git push && echo
       if [[ "$root" != "$cwd" ]]; then
         cd "$cwd"
