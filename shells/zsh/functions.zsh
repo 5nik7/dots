@@ -71,7 +71,7 @@ function gup() {
         fi
       else
         echo
-        printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "up to date." | box -hp 1 -bc "${DIM}${PEACH}"
+        printf "${YELLOW}%s ${BRIGHTYELLOW}${BOLD}%s${RST}${PEACH} %s${RST}\n" "$ico" "$repo" "up to date." | box -hp 1 -bc "${DIM}${PEACH}"
       fi
     else
       out="$(pathout $cwd)"
