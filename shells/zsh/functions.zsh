@@ -71,18 +71,18 @@ function gup() {
         fi
       else
         echo
-        printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "up to date."
+        printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "up to date." | box -hp 1 -bc "${DIM}${PEACH}"
       fi
     else
       out="$(pathout $cwd)"
       echo
-      printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not my repo."
+      printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not my repo." | box -hp 1 -bc "${DIM}${RED}"
       return 1
     fi
   else
     out="$(pathout $cwd)"
     echo
-    printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not a repo."
+    printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not a repo." | box -hp 1 -bc "${DIM}${RED}"
     return 1
   fi
 
