@@ -37,13 +37,18 @@ function gup() {
       local repo=$(git-it -r)
       local branch=$(git branch | awk '{print $2}')
       local root=$(git rev-parse --show-toplevel)
+      local upstream=$(git rev-parse --abrev-ref --symbolic-full-name @{upstream} 2>/dev/null)
+      local ahead=$(git rev-list --left-right --count "$upstream"...HEAD 2>/dev/null | awk '{print $1}')
+      local behind=$(git rev-list --left-right --count "$upstream"...HEAD 2>/dev/null | awk '{print $2}')
       local subdirs=($(git submodule --quiet foreach 'git rev-parse --show-toplevel'))
       gitmodified=$(gitmodified)
       gitdeleted=$(gitdeleted)
       if [[ "$root" != "$cwd" ]]; then
         cd "$root"
       fi
-      git pull --recurse-submodules -q &>/dev/null
+      if [[ "$behind" -gt 0 ]]; then
+        git pull --recurse-submodules -q &>/dev/null
+      fi
       for subdir in "${subdirs[@]}"; do
         if [[ -d "$subdir" ]]; then
           cd "$subdir"
