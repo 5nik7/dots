@@ -65,7 +65,7 @@ function gup() {
         fi
       else
         echo
-        printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "nothing to commit."
+        printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "up to date."
       fi
     else
       out="$(pathout $cwd)"
