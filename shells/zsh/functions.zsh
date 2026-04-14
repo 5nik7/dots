@@ -81,7 +81,7 @@ function gup() {
             local subbranch=$(git branch | awk '{print $2}')
             echo
             printf "${SUBTEXT}%s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "submodule:" "$ico" "$subrepo" "$branchico$subbranch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
-            git add . && git commit -m "Update @ $ts" && git push
+            git add . && git commit -m "$commitmsg" && git push
           fi
         fi
       done
@@ -89,7 +89,7 @@ function gup() {
       if gitcheck; then
         echo
         printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
-        git add . && git commit -m "Update @ $ts" && git push
+        git add . && git commit -m "$commitmsg" && git push
         if [[ "$root" != "$cwd" ]]; then
           cd "$cwd"
         fi
