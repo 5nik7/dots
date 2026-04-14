@@ -43,7 +43,7 @@ function gup() {
       if [[ "$root" != "$cwd" ]]; then
         cd "$root"
       fi
-      git pull --recurse-submodules -q
+      git pull --recurse-submodules -q &>/dev/null
       for subdir in "${subdirs[@]}"; do
         if [[ -d "$subdir" ]]; then
           cd "$subdir"
