@@ -1,3 +1,7 @@
+function in_git() {
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
 function gitcheck() {
   if mygit; then
     local changed=$(git status -s | grep -E '^\s*??\s' | awk '{print $2}')
@@ -27,45 +31,51 @@ function gup() {
   local branchico=''
   local gitico=''
   local gitmodified gitdeleted ico repo root subdirs subrepo subbranch out
-  if mygit; then
-    local ico=$(git-it -i)
-    local repo=$(git-it -r)
-    local branch=$(git branch | awk '{print $2}')
-    local root=$(git rev-parse --show-toplevel)
-    local subdirs=($(git submodule --quiet foreach 'git rev-parse --show-toplevel'))
-    gitmodified=$(gitmodified)
-    gitdeleted=$(gitdeleted)
-    if [[ "$root" != "$cwd" ]]; then
-      cd "$root"
-    fi
-    for subdir in "${subdirs[@]}"; do
-      if [[ -d "$subdir" ]]; then
-        cd "$subdir"
-        if mygit && gitcheck; then
-          local subrepo=$(gitsub -f '%B')
-          local subbranch=$(git branch | awk '{print $2}')
-          echo
-          printf "${SUBTEXT}%s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "submodule:" "$ico" "$subrepo" "$branchico$subbranch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
-          git add . && git commit -m "Update @ $ts" && git push
-        fi
-      fi
-    done
-    cd "$root"
-    if gitcheck; then
-      echo
-      printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
-      git add . && git commit -m "Update @ $ts" && git push
+  if in_git; then
+    if mygit; then
+      local ico=$(git-it -i)
+      local repo=$(git-it -r)
+      local branch=$(git branch | awk '{print $2}')
+      local root=$(git rev-parse --show-toplevel)
+      local subdirs=($(git submodule --quiet foreach 'git rev-parse --show-toplevel'))
+      gitmodified=$(gitmodified)
+      gitdeleted=$(gitdeleted)
       if [[ "$root" != "$cwd" ]]; then
-        cd "$cwd"
+        cd "$root"
+      fi
+      for subdir in "${subdirs[@]}"; do
+        if [[ -d "$subdir" ]]; then
+          cd "$subdir"
+          if mygit && gitcheck; then
+            local subrepo=$(gitsub -f '%B')
+            local subbranch=$(git branch | awk '{print $2}')
+            echo
+            printf "${SUBTEXT}%s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "submodule:" "$ico" "$subrepo" "$branchico$subbranch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
+            git add . && git commit -m "Update @ $ts" && git push
+          fi
+        fi
+      done
+      cd "$root"
+      if gitcheck; then
+        echo
+        printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
+        git add . && git commit -m "Update @ $ts" && git push
+        if [[ "$root" != "$cwd" ]]; then
+          cd "$cwd"
+        fi
+      else
+        echo
+        printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "nothing to commit."
       fi
     else
-      echo
-      printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "nothing to commit."
+      out="$(pathout $cwd)"
+      printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not my repo."
     fi
   else
     out="$(pathout $cwd)"
     printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not a repo."
   fi
+
 }
 
 function aptget_check() {
