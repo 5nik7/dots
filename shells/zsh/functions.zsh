@@ -1,16 +1,37 @@
+function gitmodified() {
+  if mygit; then
+    git status -s | grep -E '^\s*M\s' | awk '{print $2}'
+  fi
+}
+
+function has_gitmodified() {
+  if mygit; then
+    (git status -s --porcelain | grep M) &>/dev/null
+  fi
+}
+
 function gup() {
   local ico=''
-  local dir=$(pwd)
-  local sdir=$(spath $dir)
-  if [ -e "$dir/.git" ]; then
-    commitDate=$(date +"%m-%d-%Y %H:%M")
-    echo
-    git add . &&
-      git commit -m "Update @ $commitDate" &&
-      git push &&
-      echo
+  local commitDate=$(date +"%m-%d-%Y %H:%M")
+  local cwd=$PWD
+  local out=$(pathout $cwd)
+  if mygit; then
+    local root=$(git rev-parse --show-toplevel)
+    local out=$(pathout $root)
+    if [[ "$root" != "$cwd" ]]; then
+      cd "$root"
+    fi
+    if has_gitmodified; then
+      echo "Updating git repo at ${CYAN}${BOLD}$root${RST}..."
+      git add . && git commit -m "Update @ $commitDate" && git push && echo
+      if [[ "$root" != "$cwd" ]]; then
+        cd "$cwd"
+      fi
+    else
+      printf "\n${YELLOW} %s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "${ico}" "$out" "nothing to commit."
+    fi
   else
-    printf "\n${RED} %s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "${ico}" "${sdir}" "not a repo root."
+    printf "\n${RED} %s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "${ico}" "$out" "not a repo root."
   fi
 }
 
@@ -172,11 +193,6 @@ function ssh-key-info {
   ssh-keygen -l -f "$HOME/.ssh/${1:-id_rsa}"
 }
 
-function fzf-history() {
-  RBUFFER="$(history -n 0 | fzf)"
-}
-zle -N fzf-history fzf-history
-
 function prepend-sudo {
   if [[ $BUFFER != "sudo "* ]]; then
     BUFFER="sudo $BUFFER"
@@ -185,15 +201,6 @@ function prepend-sudo {
 }
 zle -N prepend-sudo
 bindkey -M vicmd s prepend-sudo
-
-function _smooth_fzf() {
-  local fname
-  local current_dir="$PWD"
-  cd "${XDG_CONFIG_HOME:-~/.config}"
-  fname="$(fzf)" || return
-  $EDITOR "$fname"
-  cd "$current_dir"
-}
 
 function fname() {
   basename "$@" | sed 's/\(.*\)\..*/\1/'

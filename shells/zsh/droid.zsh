@@ -15,8 +15,9 @@ function zvm_config() {
   ZVM_VI_HIGHLIGHT_FOREGROUND="$crust"
   ZVM_VI_HIGHLIGHT_BACKGROUND="$flamingo"
   ZVM_VI_HIGHLIGHT_EXTRASTYLE=bold
-
 }
+
+zinit light jeffreytse/zsh-vi-mode
 
 zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 

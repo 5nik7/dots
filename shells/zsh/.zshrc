@@ -147,7 +147,3 @@ fi
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
     zprof
 fi
-
-
-# bun completions
-[ -s "/home/njen/.bun/_bun" ] && source "/home/njen/.bun/_bun"
