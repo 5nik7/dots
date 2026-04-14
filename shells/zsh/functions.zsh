@@ -76,13 +76,13 @@ function gup() {
     else
       out="$(pathout $cwd)"
       echo
-      printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not my repo." | box -hp 1 -bc "${DIM}${RED}"
+      printf "${MAROON}%s ${MAROON}${BOLD}%s${RST}${RED} %s${RST}\n" "$gitico" "$out" "not my repo." | box -hp 1 -bc "${DIM}${RED}"
       return 1
     fi
   else
     out="$(pathout $cwd)"
     echo
-    printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not a repo." | box -hp 1 -bc "${DIM}${RED}"
+    printf "${MAROON}%s ${MAROON}${BOLD}%s${RST}${RED} %s${RST}\n" "$gitico" "$out" "not a repo." | box -hp 1 -bc "${DIM}${RED}"
     return 1
   fi
 
