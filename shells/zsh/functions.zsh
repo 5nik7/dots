@@ -59,11 +59,11 @@ function gup() {
         cd "$cwd"
       fi
     else
-      printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "nothing to commit."
+      printf "\n${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "nothing to commit."
     fi
   else
-    out=$(pathout $cwd)
-    printf "${RED} %s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not a repo."
+    out="$(pathout $cwd)"
+    printf "\n${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not a repo."
   fi
 }
 
