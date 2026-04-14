@@ -18,6 +18,19 @@ fi
 
 export distro
 
+distro() {
+  local distro="${distro:-unknown}"
+  echo "$distro"
+}
+
+if [[ "$distro" == "termux" ]]; then
+  istermux=true
+fi
+
+if [[ -r /etc/wsl-distribution.conf ]]; then
+  iswsl=true
+fi
+
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export ZSHDOTS="$SHELLS/zsh"

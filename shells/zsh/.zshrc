@@ -15,6 +15,26 @@ autoload -U +X bashcompinit && bashcompinit
 autoload -Uz compinit; compinit
 autoload -U colors; colors
 
+istermux() {
+  if [[ "$istermux" == true ]] &> /dev/null; then
+    echo "true"
+    return 0
+  else
+    echo "false"
+    return 1
+  fi
+}
+
+iswsl() {
+  if [[ "$iswsl" == true ]] &> /dev/null; then
+    echo "true"
+    return 0
+  else
+    echo "false"
+    return 1
+  fi
+}
+
 # zieces 'zutil'
 zieces 'functions'
 zieces 'options'
@@ -99,37 +119,14 @@ has uvx && eval "$(uvx --generate-shell-completion zsh)"
 
 has tv && eval "$(tv init zsh)"
 
-if [[ "$distro" == "termux" ]]; then
-  istermux=true
-  zieces 'droid'
+
+if [[ "$istermux" == true ]] &> /dev/null; then
+  zieces 'termux'
 fi
 
-istermux() {
-  if [[ "$istermux" == true ]] &> /dev/null; then
-    echo "true"
-    return 0
-  else
-    echo "false"
-    return 1
-  fi
-}
-
-alias distro='echo $distro'
-
-if [[ -r /etc/wsl-distribution.conf ]]; then
-  iswsl=true
+if [[ "$iswsl" == true ]] &> /dev/null; then
   zieces 'wsl'
 fi
-
-iswsl() {
-  if [[ "$iswsl" == true ]] &> /dev/null; then
-    echo "true"
-    return 0
-  else
-    echo "false"
-    return 1
-  fi
-}
 
 if checkdir "$HOME/.bun"; then
   export BUN_INSTALL="$HOME/.bun"
@@ -142,7 +139,7 @@ if checkdir "$HOME/.nvm"; then
   export NVM_DIR="$HOME/.nvm"
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
   [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-fi  
+fi
 
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
     zprof

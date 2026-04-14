@@ -1,3 +1,25 @@
+function gethost() {
+  local host
+  if [[ -n "$HOST" ]]; then
+    if [[ "$HOST" == "localhost" ]]; then
+      if [[ -n "$distro" ]]; then
+        host="$distro"
+      else
+        host="unknown"
+      fi
+    else
+      if [[ "$iswsl" == true ]]; then
+        host="$HOST (WSL)"
+      else
+        host="$HOST"
+      fi
+    fi
+  else
+    host="unknown"
+  fi
+  echo "$host"
+}
+
 function in_git() {
   git rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
@@ -26,7 +48,9 @@ function gitdeleted() {
 }
 
 function gup() {
-  local ts=$(date +"%m-%d-%Y %H:%M")
+  local host=$(gethost)
+  local ts=$(date +"%Y-%m-%d %H:%M")
+  local commitmsg="Sync from $host on $ts"
   local cwd=$PWD
   local branchico=''
   local gitico=''
