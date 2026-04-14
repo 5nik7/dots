@@ -69,10 +69,12 @@ function gup() {
       fi
     else
       out="$(pathout $cwd)"
+      echo
       printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not my repo."
     fi
   else
     out="$(pathout $cwd)"
+    echo
     printf "${RED}%s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not a repo."
   fi
 
