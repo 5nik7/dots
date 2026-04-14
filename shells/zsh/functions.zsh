@@ -24,7 +24,6 @@ function gitdeleted() {
 function gup() {
   local ts=$(date +"%m-%d-%Y %H:%M")
   local cwd=$PWD
-  local out=$(pathout $cwd)
   local branchico=''
   local gitico=''
   local gitmodified gitdeleted ico repo root subdirs subrepo subbranch out
@@ -60,9 +59,10 @@ function gup() {
         cd "$cwd"
       fi
     else
-      printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$out" "nothing to commit."
+      printf "${YELLOW}%s '${BRIGHTYELLOW}${BOLD}%s${RST}${YELLOW}' %s${RST}\n" "$ico" "$repo" "nothing to commit."
     fi
   else
+    out=$(pathout $cwd)
     printf "${RED} %s '${BRIGHTRED}${BOLD}%s${RST}${RED}' %s${RST}\n" "$gitico" "$out" "not a repo."
   fi
 }
