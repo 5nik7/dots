@@ -266,12 +266,12 @@ git -C "$path" rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
 # ---- starship-style vars + fallback ----
 GIT_REMOTE=$(git -C "$path" remote get-url "$remote" 2>/dev/null)
 if [ -z "$GIT_REMOTE" ]; then
-  GIT_REMOTE=$(git -C "$path" ls-remote --get-url 2>/dev/null0)
+  GIT_REMOTE=$(git -C "$path" ls-remote --get-url 2>/dev/null)
 fi
 
 # icon (your rules)
 if [ -z "$GIT_REMOTE" ]; then
-  GIT_REMOTE_SYMBOL=""
+  GIT_REMOTE_SYMBOL=""
 elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'github'; then
   GIT_REMOTE_SYMBOL="󰊤"
 elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'gitlab'; then
@@ -279,9 +279,9 @@ elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'gitlab'; then
 elif printf '%s\n' "$GIT_REMOTE" | grep -qi 'bitbucket'; then
   GIT_REMOTE_SYMBOL=""
 elif [ -n "$GIT_REMOTE" ]; then
-  GIT_REMOTE_SYMBOL=""
+  GIT_REMOTE_SYMBOL=""
 else
-  GIT_REMOTE_SYMBOL=""
+  GIT_REMOTE_SYMBOL=""
 fi
 
 if printf '%s\n' "$GIT_REMOTE" | grep -Eq '^(ssh://|[^@]+@[^:/]+[:/])'; then

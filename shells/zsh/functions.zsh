@@ -1,29 +1,60 @@
+function gitcheck() {
+  if mygit; then
+    local changed=$(git status -s | grep -E '^\s*??\s' | awk '{print $2}')
+    if [[ -n "$changed" ]]; then
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
 function gitmodified() {
   if mygit; then
     git status -s | grep -E '^\s*M\s' | awk '{print $2}'
   fi
 }
 
-function has_gitmodified() {
+function gitdeleted() {
   if mygit; then
-    (git status -s --porcelain | grep M) &>/dev/null
+    git status -s | grep -E '^\s*D\s' | awk '{print $2}'
   fi
 }
 
 function gup() {
-  local ico=''
-  local commitDate=$(date +"%m-%d-%Y %H:%M")
+  local ts=$(date +"%m-%d-%Y %H:%M")
   local cwd=$PWD
-  local out=$(pathout $cwd)
+  local branchico=''
+  local gitmodified gitdeleted ico repo root subdirs subrepo subbranch out
   if mygit; then
+    local ico=$(git-it -i)
+    local repo=$(git-it -r)
+    local branch=$(git branch | awk '{print $2}')
     local root=$(git rev-parse --show-toplevel)
     local out=$(pathout $root)
+    local subdirs=($(git submodule --quiet foreach 'git rev-parse --show-toplevel'))
+    gitmodified=$(gitmodified)
+    gitdeleted=$(gitdeleted)
     if [[ "$root" != "$cwd" ]]; then
       cd "$root"
     fi
-    if has_gitmodified; then
-      printf "\n${GREEN} %s ${CYAN} %s${BRIGHTCYAN}${BOLD}%s${RST}\n" "Updating" "${ico}" "$out"
-      git add . && git commit -m "Update @ $commitDate" && git push && echo
+    for subdir in "${subdirs[@]}"; do
+      if [[ -d "$subdir" ]]; then
+        cd "$subdir"
+        if mygit && gitcheck; then
+          local subrepo=$(gitsub -f '%B')
+          local subbranch=$(git branch | awk '{print $2}')
+          echo
+          printf "${SUBTEXT}%s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "submodule:" "$ico" "$subrepo" "$branchico$subbranch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
+          git add . && git commit -m "Update @ $ts" && git push
+        fi
+      fi
+    done
+    cd "$root"
+    if gitcheck; then
+      echo
+      printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
+      git add . && git commit -m "Update @ $ts" && git push
       if [[ "$root" != "$cwd" ]]; then
         cd "$cwd"
       fi
