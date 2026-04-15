@@ -98,18 +98,6 @@ subrecurse() {
   git submodule status --recursive | awk '{print $2}'
 }
 
-is_submodule() {
-  local mod="$1"
-  local submodules=($(subrecurse))
-  for sub in "${submodules[@]}"; do
-    if [[ $mod == $sub ]]; then
-      return 0
-    else
-      return 1
-    fi
-  done
-}
-
 modified() {
   local statpad=$((pad + 4))
   local modified=($(gitmodified))
@@ -117,15 +105,10 @@ modified() {
     local stats=$(git diff --stat --stat-width=$((COLUMNS - statpad)) --color=always | grep "|")
     for mod in "${modified[@]}"; do
       local file
-      if is_submodule "$mod"; then
-        local ico='󰊤'
-        file="${SKY}${ico} ${BOLD}${mod}${RST}"
+      if has eza; then
+        file=$(eza --color=always --icons=always "$mod" 2>/dev/null) || file="${YELLOW}${mod}${RST}"
       else
-        if has eza; then
-          file=$(eza --color=always --icons=always "$mod" 2>/dev/null)
-        else
-          file="${YELLOW}${mod}${RST}"
-        fi
+        file="${YELLOW}${mod}${RST}"
       fi
       echo "$stats" | grep "$mod" | sed "s|${mod}|${file}${RST}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
     done | box -bc $BRIGHTBLACK -hp 1 -t "MODIFIED:" -tc $YELLOW | lpad "$lpad"
