@@ -104,7 +104,7 @@ modified() {
   if [[ -n "$modified" ]]; then
     local stats=$(git diff --stat --stat-width=$((COLUMNS - statpad)) --color=always | grep "|")
     for mod in "${modified[@]}"; do
-      echo "$stats" | grep "$mod" | sed "s|${mod}|${YELLOW}${BOLD}${mod}${RST}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
+      echo "$stats" | grep "$mod" | sed "s|${mod}|${TEXT}${BOLD}${mod}${RST}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
     done | box -bc $BRIGHTBLACK -hp 1 -t "MODIFIED:" -tc $YELLOW | lpad "$lpad"
   fi
 }
