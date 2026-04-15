@@ -96,7 +96,7 @@ submodules() {
 
 is_submodule() {
   local submodules=$(submodules)
-  for sub in $submodules; do
+  for sub in "${submodules[@]}"; do
     local sub=$(basename "$sub")
     if [[ "$1" == "$sub" ]]; then
       return 0
