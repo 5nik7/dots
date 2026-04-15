@@ -117,8 +117,7 @@ modified() {
     for mod in $(gitmodified); do
       local file
       if is_submodule "$mod"; then
-        local root=$PWD
-        local ico=$(git-it -i "$root/$mod")
+        local ico='󰊤'
         file="${SKY}${ico} ${BOLD}${mod}${RST}"
       else
         if has eza; then
