@@ -167,7 +167,7 @@ subcheck() {
     local submodules=$(submodules)
     if [[ -n "$submodules" ]]; then
       for sub in "${submodules[@]}"; do
-        subcheck "$sub" "$commitmsg" && subup "$sub" "$commitmsg"
+        subup "$sub" "$commitmsg"
       done
     fi
   fi
