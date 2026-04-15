@@ -18,6 +18,10 @@ if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
   alias aptr='sudo apt remove'
 fi
 
+if has git-up; then
+  alias gup='git-up'
+fi
+
 alias c='clear'
 alias q='exit'
 
