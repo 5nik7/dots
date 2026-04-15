@@ -31,7 +31,7 @@ function in_git() {
 
 function gitcheck() {
   if mygit; then
-    local changed=$(git status -s | grep -E '^\s*??\s' | awk '{print $2}')
+    local changed=$(git status -s | awk '{print $2}')
     if [[ -n "$changed" ]]; then
       return 0
     else
