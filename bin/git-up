@@ -95,9 +95,8 @@ submodules() {
 }
 
 is_submodule() {
-  local submodules=$(submodules)
+  local submodules=($(git submodule status --recursive | awk '{print $2}'))
   for sub in "${submodules[@]}"; do
-    local sub=$(basename "$sub")
     if [[ "$1" == "$sub" ]]; then
       return 0
     else
