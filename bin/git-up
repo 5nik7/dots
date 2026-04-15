@@ -101,7 +101,7 @@ subrecurse() {
 is_submodule() {
   local submodules=($(subrecurse))
   for sub in "${submodules[@]}"; do
-    if [[ "$1" == "$sub" ]]; then
+    if [[ "$1" =~ "$sub" ]]; then
       return 0
     else
       return 1
@@ -126,7 +126,7 @@ modified() {
           file="${YELLOW}${mod}${RST}"
         fi
       fi
-      echo "$stats" | grep "$mod" | sed "s| ${mod}|${file}${RST}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
+      echo "$stats" | grep "$mod" | sed "s|${mod}|${file}${RST}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
     done | box -bc $BRIGHTBLACK -hp 1 -t "MODIFIED:" -tc $YELLOW | lpad "$lpad"
   fi
 }
@@ -141,7 +141,7 @@ deleted() {
       local dir=$(dirname "$del")
       local base=$(basename "$del")
       local file="${DARKRED}${dir}/${RST}${BOLD}${BRIGHTRED}${base}${RST}"
-      echo "$stats" | grep "$del" | sed "s| ${del}|${minus} ${file}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
+      echo "$stats" | grep "$del" | sed "s|${del}|${minus} ${file}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
     done | box -bc $BRIGHTBLACK -hp 1 -t "DELETED:" -tc $BRIGHTRED | lpad "$lpad"
   fi
 }
