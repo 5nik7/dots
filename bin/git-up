@@ -28,7 +28,7 @@ gethost() {
   if [[ -n "$HOST" ]]; then
     if [[ "$HOST" == "localhost" ]]; then
       if [[ -n "$distro" ]]; then
-        host="$distro"
+        host=$(distro)
       else
         host="unknown"
       fi
