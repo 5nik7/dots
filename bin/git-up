@@ -167,8 +167,8 @@ subup() {
     local submodules=$(submodules)
     if [[ -n "$submodules" ]]; then
       for sub in $submodules; do
-        if [[ -d "$subdir/$sub" ]]; then
-          subup "$subdir/$sub"
+        if [[ -d "$sub" ]]; then
+          subup "$sub"
         fi
       done
     fi
