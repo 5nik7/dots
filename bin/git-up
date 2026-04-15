@@ -168,7 +168,6 @@ untracked() {
 
 subup() {
   local subdir="$1"
-  local commitmsg="$2"
   if [[ -d "$subdir" ]]; then
     cd "$subdir"
     if mygit && gitcheck; then
@@ -179,19 +178,19 @@ subup() {
       modified
       deleted
       untracked
-      git add . && git commit -m "$commitmsg" --quiet && git push --quiet
+      return 0
+    else
+      return 1
     fi
   fi
 }
 
 repoup() {
-  local commitmsg="$1"
   echo
   printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}" | lpad "$lpad"
   modified
   deleted
   untracked
-  git add . && git commit -m "$commitmsg" --quiet && git push --quiet
 }
 
 catchup() {
@@ -229,12 +228,12 @@ main() {
       fi
       catchup
       for subdir in "${subdirs[@]}"; do
-        subup "$subdir" "$commitmsg"
+        subup "$subdir" && git add . && git commit -m "$commitmsg" --quiet && git push --quiet
+
       done
       cd "$root"
       if gitcheck; then
-        repoup "$commitmsg"
-        # git add . && git commit -m "$commitmsg" && git push
+        repoup && git add . && git commit -m "$commitmsg" && git push
         if [[ "$root" != "$cwd" ]]; then
           cd "$cwd"
         fi
