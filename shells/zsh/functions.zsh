@@ -1,3 +1,8 @@
+function termw() {
+  local width="$(stty size | cut -d" " -f2)"
+  echo "$width"
+}
+
 function gethost() {
   local host
   if [[ -n "$HOST" ]]; then
@@ -37,79 +42,38 @@ function gitcheck() {
 
 function gitmodified() {
   if mygit; then
-    git status -s | grep -E '^\s*M\s' | awk '{print $2}'
+    local modified=$(git status -s | grep -E '^\s*M\s' | awk '{print $2}')
+    if [[ -n "$modified" ]]; then
+      echo "$modified"
+      return 0
+    else
+      return 1
+    fi
   fi
 }
 
 function gitdeleted() {
   if mygit; then
-    git status -s | grep -E '^\s*D\s' | awk '{print $2}'
+    local deleted=$(git status -s | grep -E '^\s*D\s' | awk '{print $2}')
+    if [[ -n "$deleted" ]]; then
+      echo "$deleted"
+      return 0
+    else
+      return 1
+    fi
   fi
 }
 
-function gup() {
-  local host=$(gethost)
-  local ts=$(date +"%Y-%m-%d %H:%M")
-  local commitmsg="Sync from $host on $ts"
-  local cwd=$PWD
-  local branchico=''
-  local gitico=''
-  local gitmodified gitdeleted ico repo root subdirs subrepo subbranch out
-  if in_git; then
-    if mygit; then
-      local ico=$(git-it -i)
-      local repo=$(git-it -r)
-      local branch=$(git branch | awk '{print $2}')
-      local root=$(git rev-parse --show-toplevel)
-      local upstream=$(git rev-parse --abrev-ref --symbolic-full-name @{upstream} 2>/dev/null)
-      local ahead=$(git rev-list --left-right --count "$upstream"...HEAD 2>/dev/null | awk '{print $1}')
-      local behind=$(git rev-list --left-right --count "$upstream"...HEAD 2>/dev/null | awk '{print $2}')
-      local subdirs=($(git submodule --quiet foreach 'git rev-parse --show-toplevel'))
-      gitmodified=$(gitmodified)
-      gitdeleted=$(gitdeleted)
-      if [[ "$root" != "$cwd" ]]; then
-        cd "$root"
-      fi
-      if [[ "$behind" -gt 0 ]]; then
-        git pull --recurse-submodules -q &>/dev/null
-      fi
-      for subdir in "${subdirs[@]}"; do
-        if [[ -d "$subdir" ]]; then
-          cd "$subdir"
-          if mygit && gitcheck; then
-            local subrepo=$(gitsub -f '%B')
-            local subbranch=$(git branch | awk '{print $2}')
-            echo
-            printf "${SUBTEXT}%s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "submodule:" "$ico" "$subrepo" "$branchico$subbranch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
-            git add . && git commit -m "$commitmsg" && git push
-          fi
-        fi
-      done
-      cd "$root"
-      if gitcheck; then
-        echo
-        printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}"
-        git add . && git commit -m "$commitmsg" && git push
-        if [[ "$root" != "$cwd" ]]; then
-          cd "$cwd"
-        fi
-      else
-        echo
-        printf "${YELLOW}%s ${BRIGHTYELLOW}${BOLD}%s${RST}${PEACH} %s${RST}\n" "$ico" "$repo" "up to date." | box -hp 1 -bc "${DIM}${PEACH}"
-      fi
+function gituntracked() {
+  if mygit; then
+    local untracked=$(git status -s | grep '??' | awk '{print $2}')
+    if [[ -n "$untracked" ]]; then
+      echo "$untracked"
+      return 0
     else
-      out="$(pathout $cwd)"
-      echo
-      printf "${MAROON}%s ${MAROON}${BOLD}%s${RST}${RED} %s${RST}\n" "$gitico" "$out" "not my repo." | box -hp 1 -bc "${DIM}${RED}"
       return 1
     fi
-  else
-    out="$(pathout $cwd)"
-    echo
-    printf "${MAROON}%s ${MAROON}${BOLD}%s${RST}${RED} %s${RST}\n" "$gitico" "$out" "not a repo." | box -hp 1 -bc "${DIM}${RED}"
-    return 1
   fi
-
 }
 
 function aptget_check() {

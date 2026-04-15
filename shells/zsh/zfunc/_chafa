@@ -1,0 +1,298 @@
+#compdef chafa
+
+# zsh completion for chafa
+
+local context state line
+typeset -A opt_args
+
+_chafa_bool() {
+  local -a vals
+  vals=(
+    'on:enable'
+    'off:disable'
+  )
+  _describe -t chafa-bool 'boolean value' vals
+}
+
+_chafa_bool_auto() {
+  local -a vals
+  vals=(
+    'auto:automatic'
+    'on:enable'
+    'off:disable'
+  )
+  _describe -t chafa-bool-auto 'setting' vals
+}
+
+_chafa_probe() {
+  local -a vals
+  vals=(
+    'auto:automatic probing'
+    'on:force probing'
+    'off:disable probing'
+  )
+  _describe -t chafa-probe 'probe mode' vals
+  _message 'seconds'
+}
+
+_chafa_probe_mode() {
+  local -a vals
+  vals=(
+    'any:any available method'
+    'ctty:controlling tty'
+    'stdio:standard I/O'
+  )
+  _describe -t chafa-probe-mode 'probe mode' vals
+}
+
+_chafa_format() {
+  local -a vals
+  vals=(
+    'iterm:iTerm graphics'
+    'kitty:Kitty graphics'
+    'sixels:SIXEL graphics'
+    'symbols:character art'
+  )
+  _describe -t chafa-format 'output format' vals
+}
+
+_chafa_passthrough() {
+  local -a vals
+  vals=(
+    'auto:automatic'
+    'none:disable passthrough'
+    'screen:GNU screen passthrough'
+    'tmux:tmux passthrough'
+  )
+  _describe -t chafa-passthrough 'passthrough mode' vals
+}
+
+_chafa_align() {
+  local -a vals
+  vals=(
+    'top,left'
+    'top,mid'
+    'top,right'
+    'mid,left'
+    'mid,mid'
+    'mid,right'
+    'bottom,left'
+    'bottom,mid'
+    'bottom,right'
+  )
+  _describe -t chafa-align 'alignment' vals
+  _message 'alignment like top,left or mid,mid'
+}
+
+_chafa_exact_size() {
+  local -a vals
+  vals=(
+    'auto:automatic'
+    'on:match exactly'
+    'off:do not match exactly'
+  )
+  _describe -t chafa-exact-size 'exact size mode' vals
+}
+
+_chafa_grid() {
+  compadd auto
+  _message 'grid size like CxR, 4, x3, or auto'
+}
+
+_chafa_font_ratio() {
+  _message 'font ratio as W/H or real number'
+}
+
+_chafa_size() {
+  _message 'dimensions as WxH'
+}
+
+_chafa_duration() {
+  _message 'seconds'
+}
+
+_chafa_speed() {
+  _message 'speed multiplier or fps value like 2 or 24fps'
+}
+
+_chafa_color_mode() {
+  local -a vals
+  vals=(
+    'none:no colors'
+    '2:2 colors'
+    '8:8 colors'
+    '16/8:16/8 mode'
+    '16:16 colors'
+    '240:240 colors'
+    '256:256 colors'
+    'full:truecolor'
+  )
+  _describe -t chafa-color-mode 'color mode' vals
+}
+
+_chafa_color_extractor() {
+  local -a vals
+  vals=(
+    'average:average color'
+    'median:median color'
+  )
+  _describe -t chafa-color-extractor 'color extractor' vals
+}
+
+_chafa_color_space() {
+  local -a vals
+  vals=(
+    'rgb:RGB color space'
+    'din99d:DIN99d color space'
+  )
+  _describe -t chafa-color-space 'color space' vals
+}
+
+_chafa_dither() {
+  local -a vals
+  vals=(
+    'none:no dithering'
+    'ordered:ordered dithering'
+    'diffusion:error diffusion'
+    'noise:noise dithering'
+  )
+  _describe -t chafa-dither 'dither mode' vals
+}
+
+_chafa_dither_grain() {
+  local -a vals
+  vals=(
+    '1x1' '1x2' '1x4' '1x8'
+    '2x1' '2x2' '2x4' '2x8'
+    '4x1' '4x2' '4x4' '4x8'
+    '8x1' '8x2' '8x4' '8x8'
+  )
+  _describe -t chafa-dither-grain 'dither grain' vals
+}
+
+_chafa_color() {
+  local -a vals
+  vals=(
+    black red green yellow blue magenta cyan white
+    gray grey maroon olive lime aqua teal navy purple silver
+    orange pink brown
+  )
+  _describe -t chafa-color 'color name' vals
+  _message 'color name or hex value like #RRGGBB'
+}
+
+_chafa_work() {
+  local -a vals
+  vals=(1 2 3 4 5 6 7 8 9)
+  _describe -t chafa-work 'work level' vals
+}
+
+_chafa_optimize() {
+  local -a vals
+  vals=(0 1 2 3 4 5 6 7 8 9)
+  _describe -t chafa-optimize 'optimization level' vals
+}
+
+_chafa_file_or_dash() {
+  compadd -- -
+  _files
+}
+
+_chafa_symbol_expr() {
+  local -a vals
+  vals=(
+    'all:all symbol classes'
+    'alnum:alphanumeric'
+    'alpha:alphabetic'
+    'ambiguous:ambiguous-width symbols'
+    'ascii:ASCII symbols'
+    'bad:low-quality symbols'
+    'block:block elements'
+    'border:border symbols'
+    'braille:braille patterns'
+    'diagonal:diagonal symbols'
+    'digit:numeric digits'
+    'dot:dot symbols'
+    'extra:extra symbols'
+    'geometric:geometric shapes'
+    'half:half blocks'
+    'hhalf:horizontal half blocks'
+    'imported:imported glyphs'
+    'inverted:inverted symbols'
+    'latin:Latin symbols'
+    'legacy:legacy symbols'
+    'narrow:narrow symbols'
+    'none:no symbols'
+    'quad:quadrant blocks'
+    'sextant:sextant blocks'
+    'solid:solid symbols'
+    'space:space characters'
+    'stipple:stipple patterns'
+    'technical:technical symbols'
+    'ugly:ugly symbols'
+    'vhalf:vertical half blocks'
+    'wedge:wedge symbols'
+    'wide:wide symbols'
+  )
+  _describe -t chafa-symbol-class 'symbol class' vals
+  _message 'symbol expression like block+border-diagonal'
+}
+
+_arguments -s -S \
+  '(-h --help)'{-h,--help}'[show help]' \
+  '--files=[read list of files from path or - for stdin]:path or -:_chafa_file_or_dash' \
+  '--files0=[read NUL-separated list of files from path or - for stdin]:path or -:_chafa_file_or_dash' \
+  '--probe=[probe terminal capabilities]:mode or seconds:_chafa_probe' \
+  '--probe-mode=[how to probe the terminal]:probe mode:_chafa_probe_mode' \
+  '--version[show version]' \
+  '(-v --verbose)'{-v,--verbose}'[be verbose]' \
+  \
+  '(-f --format)'{-f+,--format=}'[set output format]:format:_chafa_format' \
+  '(-O --optimize)'{-O+,--optimize=}'[optimization level]:level:_chafa_optimize' \
+  '--relative=[use relative cursor positioning]:on/off:_chafa_bool' \
+  '--passthrough=[graphics protocol passthrough]:mode:_chafa_passthrough' \
+  '--polite=[enable polite mode]:on/off:_chafa_bool' \
+  \
+  '--align=[horizontal and vertical alignment]:alignment:_chafa_align' \
+  '--clear[clear screen before each file]' \
+  '--exact-size=[try to match input size exactly]:mode:_chafa_exact_size' \
+  '--fit-width[fit images to view width]' \
+  '--font-ratio=[target font width/height ratio]:ratio:_chafa_font_ratio' \
+  '--grid=[grid layout]:grid:_chafa_grid' \
+  '-g[alias for --grid auto]' \
+  '--label=[show filenames below images]:on/off:_chafa_bool' \
+  '-l[alias for --label on]' \
+  '--link=[link labels]:mode:_chafa_bool_auto' \
+  '--margin-bottom=[reserve rows at bottom]:rows:' \
+  '--margin-right=[reserve columns on right]:columns:' \
+  '--scale=[scale image]:scale or max:(max)' \
+  '(-s --size)'{-s+,--size=}'[maximum image dimensions]:dimensions:_chafa_size' \
+  '--stretch[stretch image to fit output dimensions]' \
+  '--view-size=[view size in columns and rows]:dimensions:_chafa_size' \
+  \
+  '--animate=[allow animation]:on/off:_chafa_bool' \
+  '(-d --duration)'{-d+,--duration=}'[how long to show each file]:seconds:_chafa_duration' \
+  '--speed=[animation speed]:speed:_chafa_speed' \
+  '--watch[watch a single input file for changes]' \
+  \
+  '--bg=[background color]:color:_chafa_color' \
+  '(-c --colors)'{-c+,--colors=}'[set output color mode]:mode:_chafa_color_mode' \
+  '--color-extractor=[method for extracting color]:extractor:_chafa_color_extractor' \
+  '--color-space=[color space used for quantization]:color space:_chafa_color_space' \
+  '--dither=[set dither mode]:dither:_chafa_dither' \
+  '--dither-grain=[set dither grain dimensions]:grain:_chafa_dither_grain' \
+  '--dither-intensity=[multiplier for dither intensity]:intensity:' \
+  '--fg=[foreground color]:color:_chafa_color' \
+  '--invert[swap foreground and background colors]' \
+  '(-p --preprocess)'{-p+,--preprocess=}'[image preprocessing]:on/off:_chafa_bool' \
+  '(-t --threshold)'{-t+,--threshold=}'[lower threshold for full transparency]:threshold:' \
+  \
+  '--threads=[maximum CPU threads to use]:threads:' \
+  '(-w --work)'{-w+,--work=}'[CPU and memory work level]:level:_chafa_work' \
+  \
+  '--fg-only[use foreground colors only]' \
+  '--fill=[character symbols to use for fill/gradients]:symbol expression:_chafa_symbol_expr' \
+  '--glyph-file=[load glyph information from file]:file:_files' \
+  '--symbols=[character symbols to employ in final output]:symbol expression:_chafa_symbol_expr' \
+  \
+  '*:file:_files'

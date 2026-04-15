@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+
+padding=1
+lpad=$(repeat-char " " $padding)
+pad=$((padding * 2))
+
+SCRIPTDIR=$(dirname "$(readlink -f "$0")")
+
+if [[ -f $SCRIPTDIR/colors ]]; then
+  source $SCRIPTDIR/colors
+else
+  echo "Colors file not found. Please ensure 'colors' is in the same directory as this script."
+  exit 1
+fi
+
+DARKRED="${ESC}[38;2;238;93;134m"
+
+if [[ -n $COLOUMNS ]]; then
+  COLUMNS=$COLOUMNS
+fi
+
+has() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+gethost() {
+  local host
+  if [[ -n "$HOST" ]]; then
+    if [[ "$HOST" == "localhost" ]]; then
+      if [[ -n "$distro" ]]; then
+        host="$distro"
+      else
+        host="unknown"
+      fi
+    else
+      if [[ "$iswsl" == true ]]; then
+        host="$HOST (WSL)"
+      else
+        host="$HOST"
+      fi
+    fi
+  else
+    host="unknown"
+  fi
+  echo "$host"
+}
+
+in_git() {
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
+gitcheck() {
+  if mygit; then
+    local changed=$(git status -s | grep -E '^\s*??\s' | awk '{print $2}')
+    if [[ -n "$changed" ]]; then
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
+gitmodified() {
+  if mygit; then
+    local modified=$(git status -s | grep -E '^\s*M\s' | awk '{print $2}')
+    if [[ -n "$modified" ]]; then
+      echo "$modified"
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
+gitdeleted() {
+  if mygit; then
+    local deleted=$(git status -s | grep -E '^\s*D\s' | awk '{print $2}')
+    if [[ -n "$deleted" ]]; then
+      echo "$deleted"
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
+gituntracked() {
+  if mygit; then
+    local untracked=$(git status -s | grep '??' | awk '{print $2}')
+    if [[ -n "$untracked" ]]; then
+      echo "$untracked"
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
+modified() {
+  local statpad=$((pad + 4))
+  local modified=$(gitmodified)
+  if [[ -n "$modified" ]]; then
+    local stats=$(git diff --stat --stat-width=$((COLUMNS - statpad)) --color=always | grep "|")
+    for mod in $(gitmodified); do
+      if has eza; then
+        local file=$(eza --color=always --icons=always "$mod" 2>/dev/null)
+      else
+        local file="${YELLOW}${mod}${RST}"
+      fi
+      echo "$stats" | grep "$mod" | sed "s| ${mod}|${file}${RST}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
+    done | box -bc $BRIGHTBLACK -hp 1 -t "MODIFIED:" -tc $YELLOW | lpad "$lpad"
+  fi
+}
+
+deleted() {
+  local minus="${DARKRED}󰍴${RST}"
+  local statpad=$((pad + 4))
+  local deleted=$(gitdeleted)
+  if [[ -n "$deleted" ]]; then
+    local stats=$(git diff --stat --stat-width=$((COLUMNS - statpad)) --color=always | grep "|")
+    for del in $(gitdeleted); do
+      local dir=$(dirname "$del")
+      local base=$(basename "$del")
+      local file="${DARKRED}${dir}/${RST}${BOLD}${BRIGHTRED}${base}${RST}"
+      echo "$stats" | grep "$del" | sed "s| ${del}|${minus} ${file}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
+    done | box -bc $BRIGHTBLACK -hp 1 -t "DELETED:" -tc $BRIGHTRED | lpad "$lpad"
+  fi
+}
+
+untracked() {
+  local plus="${GREEN}${RST}"
+  local untracked=$(gituntracked)
+  if [[ -n "$untracked" ]]; then
+    for un in $(gituntracked); do
+      if has eza; then
+        local file=$(eza --color=always --icons=always "$un" 2>/dev/null)
+      else
+        local file="${GREEN}${un}${RST}"
+      fi
+      printf "%s %s\n" "${plus}" "${file}"
+    done | box -bc $BRIGHTBLACK -hp 1 -t "UNTRACKED:" -tc $GREEN | lpad "$lpad"
+  fi
+}
+
+subup() {
+  local subdir="$1"
+  if [[ -d "$subdir" ]]; then
+    cd "$subdir"
+    if mygit && gitcheck; then
+      local subrepo=$(gitsub -f '%B')
+      local subbranch=$(git branch | awk '{print $2}')
+      echo
+      printf "${SUBTEXT}%s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "submodule:" "$ico" "$subrepo" "$branchico$subbranch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}" | lpad "$lpad"
+      modified
+      deleted
+      untracked
+      git add . && git commit -m "$commitmsg" --quiet && git push --quiet
+    fi
+  fi
+}
+
+repoup() {
+  echo
+  printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}" | lpad "$lpad"
+  modified
+  deleted
+  untracked
+  git add . && git commit -m "$commitmsg" --quiet && git push --quiet
+}
+
+catchup() {
+  if [[ "$behind" -gt 0 ]]; then
+    git pull --recurse-submodules -q &>/dev/null
+  fi
+}
+
+main() {
+  local width="$(stty size | cut -d" " -f2)"
+  local host=$(gethost)
+  local ts=$(date +"%Y-%m-%d %H:%M")
+  local commitmsg="Sync via $host on $ts"
+  local cwd=$PWD
+  local branchico=''
+  local gitico=''
+  local gitmodified gitdeleted ico repo root subdirs subrepo subbranch out
+  if in_git; then
+    if mygit; then
+      local ico=$(git-it -i)
+      local repo=$(git-it -r)
+      local branch=$(git branch | awk '{print $2}')
+      local root=$(git rev-parse --show-toplevel)
+      local upstream=$(git rev-parse --abrev-ref --symbolic-full-name @{upstream} 2>/dev/null)
+      local ahead=$(git rev-list --left-right --count "$upstream"...HEAD 2>/dev/null | awk '{print $1}')
+      local behind=$(git rev-list --left-right --count "$upstream"...HEAD 2>/dev/null | awk '{print $2}')
+      local subdirs=($(git submodule --quiet foreach 'git rev-parse --show-toplevel'))
+      gitmodified=$(gitmodified)
+      gitdeleted=$(gitdeleted)
+      if [[ -n $1 ]]; then
+        commitmsg="$1 via $host on $ts"
+      fi
+      if [[ "$root" != "$cwd" ]]; then
+        cd "$root"
+      fi
+      catchup
+      for subdir in "${subdirs[@]}"; do
+        subup "$subdir"
+      done
+      cd "$root"
+      if gitcheck; then
+        repoup
+        # git add . && git commit -m "$commitmsg" && git push
+        if [[ "$root" != "$cwd" ]]; then
+          cd "$cwd"
+        fi
+      else
+        echo
+        printf "${YELLOW}%s ${BRIGHTYELLOW}${BOLD}%s${RST}${PEACH} %s${RST}\n" "$ico" "$repo" "up to date." | box -hp 1 -bc "${DIM}${PEACH}" | lpad "$lpad"
+      fi
+    else
+      out="$(pathout $cwd)"
+      echo
+      printf "${MAROON}%s ${MAROON}${BOLD}%s${RST}${RED} %s${RST}\n" "$gitico" "$out" "not my repo." | box -hp 1 -bc "${DIM}${RED}" | lpad "$lpad"
+      return 1
+    fi
+  else
+    out="$(pathout $cwd)"
+    echo
+    printf "${MAROON}%s ${MAROON}${BOLD}%s${RST}${RED} %s${RST}\n" "$gitico" "$out" "not a repo." | box -hp 1 -bc "${DIM}${RED}" | lpad "$lpad"
+    return 1
+  fi
+}
+
+main "$@"

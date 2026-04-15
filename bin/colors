@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+ESC=$'\033'
 BOLD="$(tput bold 2>/dev/null || printf '')"
 UNDERLINE="$(tput smul 2>/dev/null || printf '')"
 ITALIC="$(tput sitm 2>/dev/null || printf '')"

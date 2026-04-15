@@ -121,7 +121,7 @@ has tv && eval "$(tv init zsh)"
 
 
 if [[ "$istermux" == true ]] &> /dev/null; then
-  zieces 'termux'
+  zieces 'droid'
 fi
 
 if [[ "$iswsl" == true ]] &> /dev/null; then
