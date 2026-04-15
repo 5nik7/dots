@@ -9,13 +9,6 @@ elif [[ -r "$PREFIX/etc/os-release" ]]; then
 elif [[ -n "$TERMUX_VERSION" ]]; then
   distro='termux'
 fi
-
-if [[ -z "$distro" ]]; then
-  distro='unknown'
-fi
-
-export distro
-
 if [[ -r /etc/wsl-distribution.conf ]]; then
   iswsl=true
 fi
@@ -48,14 +41,11 @@ has() {
 }
 
 gethost() {
-  local distro="$distro"
   local host
   if [[ -n "$HOST" ]]; then
     if [[ "$HOST" == "localhost" ]]; then
       if [[ -n "$distro" ]]; then
         host="$distro"
-      else
-        host="unknown"
       fi
     else
       if [[ "$iswsl" == true ]]; then
@@ -64,8 +54,6 @@ gethost() {
         host="$HOST"
       fi
     fi
-  else
-    host="unknown"
   fi
   echo "$host"
 }
@@ -233,7 +221,7 @@ main() {
       local subdirs=($(git submodule --quiet foreach 'git rev-parse --show-toplevel'))
       gitmodified=$(gitmodified)
       gitdeleted=$(gitdeleted)
-      if [[ -n $1 ]]; then
+      if [[ -n "$1" ]]; then
         commitmsg="$1 via $host on $ts"
       fi
       if [[ "$root" != "$cwd" ]]; then

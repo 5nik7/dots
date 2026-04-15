@@ -4,8 +4,6 @@ function gethost() {
     if [[ "$HOST" == "localhost" ]]; then
       if [[ -n "$distro" ]]; then
         host="$distro"
-      else
-        host="unknown"
       fi
     else
       if [[ "$iswsl" == true ]]; then
@@ -14,8 +12,6 @@ function gethost() {
         host="$HOST"
       fi
     fi
-  else
-    host="unknown"
   fi
   echo "$host"
 }
