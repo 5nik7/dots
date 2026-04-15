@@ -1,8 +1,8 @@
-#compdef catppuccin-catwalk
+#compdef catwalk
 
 autoload -U is-at-least
 
-_catppuccin-catwalk() {
+_catwalk() {
     typeset -A opt_args
     typeset -a _arguments_options
     local ret=1
@@ -34,14 +34,14 @@ _catppuccin-catwalk() {
 '::frappe -- Path to Frappé image:_files' \
 '::macchiato -- Path to Macchiato image:_files' \
 '::mocha -- Path to Mocha image:_files' \
-":: :_catppuccin-catwalk_commands" \
-"*::: :->catppuccin-catwalk" \
+":: :_catwalk_commands" \
+"*::: :->catwalk" \
 && ret=0
     case $state in
-    (catppuccin-catwalk)
+    (catwalk)
         words=($line[5] "${words[@]}")
         (( CURRENT += 1 ))
-        curcontext="${curcontext%:*:*}:catppuccin-catwalk-command-$line[5]:"
+        curcontext="${curcontext%:*:*}:catwalk-command-$line[5]:"
         case $line[5] in
             (completion)
 _arguments "${_arguments_options[@]}" : \
@@ -52,7 +52,7 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (help)
 _arguments "${_arguments_options[@]}" : \
-":: :_catppuccin-catwalk__subcmd__help_commands" \
+":: :_catwalk__subcmd__help_commands" \
 "*::: :->help" \
 && ret=0
 
@@ -60,7 +60,7 @@ _arguments "${_arguments_options[@]}" : \
     (help)
         words=($line[1] "${words[@]}")
         (( CURRENT += 1 ))
-        curcontext="${curcontext%:*:*}:catppuccin-catwalk-help-command-$line[1]:"
+        curcontext="${curcontext%:*:*}:catwalk-help-command-$line[1]:"
         case $line[1] in
             (completion)
 _arguments "${_arguments_options[@]}" : \
@@ -79,40 +79,40 @@ esac
 esac
 }
 
-(( $+functions[_catppuccin-catwalk_commands] )) ||
-_catppuccin-catwalk_commands() {
+(( $+functions[_catwalk_commands] )) ||
+_catwalk_commands() {
     local commands; commands=(
 'completion:Generates a completion file for the given shell' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
-    _describe -t commands 'catppuccin-catwalk commands' commands "$@"
+    _describe -t commands 'catwalk commands' commands "$@"
 }
-(( $+functions[_catppuccin-catwalk__subcmd__completion_commands] )) ||
-_catppuccin-catwalk__subcmd__completion_commands() {
+(( $+functions[_catwalk__subcmd__completion_commands] )) ||
+_catwalk__subcmd__completion_commands() {
     local commands; commands=()
-    _describe -t commands 'catppuccin-catwalk completion commands' commands "$@"
+    _describe -t commands 'catwalk completion commands' commands "$@"
 }
-(( $+functions[_catppuccin-catwalk__subcmd__help_commands] )) ||
-_catppuccin-catwalk__subcmd__help_commands() {
+(( $+functions[_catwalk__subcmd__help_commands] )) ||
+_catwalk__subcmd__help_commands() {
     local commands; commands=(
 'completion:Generates a completion file for the given shell' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
-    _describe -t commands 'catppuccin-catwalk help commands' commands "$@"
+    _describe -t commands 'catwalk help commands' commands "$@"
 }
-(( $+functions[_catppuccin-catwalk__subcmd__help__subcmd__completion_commands] )) ||
-_catppuccin-catwalk__subcmd__help__subcmd__completion_commands() {
+(( $+functions[_catwalk__subcmd__help__subcmd__completion_commands] )) ||
+_catwalk__subcmd__help__subcmd__completion_commands() {
     local commands; commands=()
-    _describe -t commands 'catppuccin-catwalk help completion commands' commands "$@"
+    _describe -t commands 'catwalk help completion commands' commands "$@"
 }
-(( $+functions[_catppuccin-catwalk__subcmd__help__subcmd__help_commands] )) ||
-_catppuccin-catwalk__subcmd__help__subcmd__help_commands() {
+(( $+functions[_catwalk__subcmd__help__subcmd__help_commands] )) ||
+_catwalk__subcmd__help__subcmd__help_commands() {
     local commands; commands=()
-    _describe -t commands 'catppuccin-catwalk help help commands' commands "$@"
+    _describe -t commands 'catwalk help help commands' commands "$@"
 }
 
-if [ "$funcstack[1]" = "_catppuccin-catwalk" ]; then
-    _catppuccin-catwalk "$@"
+if [ "$funcstack[1]" = "_catwalk" ]; then
+    _catwalk "$@"
 else
-    compdef _catppuccin-catwalk catppuccin-catwalk
+    compdef _catwalk catwalk
 fi
