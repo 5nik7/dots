@@ -90,8 +90,20 @@ gituntracked() {
   fi
 }
 
+submodules() {
+  git submodule --quiet foreach 'git rev-parse --show-toplevel'
+}
+
 is_submodule() {
-  git submodule | awk '{print $2}' | grep "$1" >/dev/null 2>&1
+  local submodules=$(submodules)
+  for sub in $submodules; do
+    local sub=$(basename "$sub")
+    if [[ "$1" == "$sub" ]]; then
+      return 0
+    else
+      return 1
+    fi
+  done
 }
 
 modified() {
@@ -149,8 +161,17 @@ untracked() {
 
 subup() {
   local subdir="$1"
+  local commitmsg="$2"
   if [[ -d "$subdir" ]]; then
     cd "$subdir"
+    local submodules=$(submodules)
+    if [[ -n "$submodules" ]]; then
+      for sub in $submodules; do
+        if [[ -d "$subdir/$sub" ]]; then
+          subup "$subdir/$sub"
+        fi
+      done
+    fi
     if mygit && gitcheck; then
       local subrepo=$(gitsub -f '%B')
       local subbranch=$(git branch | awk '{print $2}')
@@ -159,19 +180,19 @@ subup() {
       modified
       deleted
       untracked
-      return 0
-    else
-      return 1
+      git add . && git commit -m "$commitmsg" --quiet && git push --quiet
     fi
   fi
 }
 
 repoup() {
+  local commitmsg="$1"
   echo
   printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}" | lpad "$lpad"
   modified
   deleted
   untracked
+  git add . && git add . && git commit -m "$commitmsg" --quiet && git push --quiet
 }
 
 catchup() {
@@ -197,9 +218,7 @@ main() {
       local upstream=$(git rev-parse --abrev-ref --symbolic-full-name @{upstream} 2>/dev/null)
       local ahead=$(git rev-list --left-right --count "$upstream"...HEAD 2>/dev/null | awk '{print $1}')
       local behind=$(git rev-list --left-right --count "$upstream"...HEAD 2>/dev/null | awk '{print $2}')
-      local subdirs=($(git submodule --quiet foreach 'git rev-parse --show-toplevel'))
-      gitmodified=$(gitmodified)
-      gitdeleted=$(gitdeleted)
+      local subdirs=($(submodules))
       if [[ -n "$1" ]]; then
         commitmsg="$1 via $host on $ts"
       fi
@@ -208,12 +227,11 @@ main() {
       fi
       catchup
       for subdir in "${subdirs[@]}"; do
-        subup "$subdir" && git add . && git commit -m "$commitmsg" --quiet && git push --quiet
-
+        subup "$subdir" "$commitmsg"
       done
       cd "$root"
       if gitcheck; then
-        repoup && git add . && git add . && git commit -m "$commitmsg" --quiet && git push --quiet
+        repoup "$commitmsg"
         if [[ "$root" != "$cwd" ]]; then
           cd "$cwd"
         fi
