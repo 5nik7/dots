@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
 
+if [[ -r /etc/os-release ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
+  distro="${distro%% *}"
+elif [[ -r "$PREFIX/etc/os-release" ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$TERMUX__PREFIX/etc/os-release")
+  distro="${distro%% *}"
+elif [[ -n "$TERMUX_VERSION" ]]; then
+  distro='termux'
+fi
+
+if [[ -z "$distro" ]]; then
+  distro='unknown'
+fi
+
+if [[ -r /etc/wsl-distribution.conf ]]; then
+  iswsl=true
+fi
+
 padding=1
 lpad=$(repeat-char " " $padding)
 pad=$((padding * 2))
@@ -28,7 +46,7 @@ gethost() {
   if [[ -n "$HOST" ]]; then
     if [[ "$HOST" == "localhost" ]]; then
       if [[ -n "$distro" ]]; then
-        host=$(distro)
+        host="$distro"
       else
         host="unknown"
       fi
