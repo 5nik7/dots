@@ -159,19 +159,25 @@ untracked() {
   fi
 }
 
-subup() {
+subcheck() {
   local subdir="$1"
   local commitmsg="$2"
   if [[ -d "$subdir" ]]; then
     cd "$subdir"
     local submodules=$(submodules)
     if [[ -n "$submodules" ]]; then
-      for sub in $submodules; do
-        if [[ -d "$sub" ]]; then
-          subup "$sub"
-        fi
+      for sub in "${submodules[@]}"; do
+        subcheck "$sub" "$commitmsg" && subup "$sub" "$commitmsg"
       done
     fi
+  fi
+}
+
+subup() {
+  local subdir="$1"
+  local commitmsg="$2"
+  if [[ -d "$subdir" ]]; then
+    cd "$subdir"
     if mygit && gitcheck; then
       local subrepo=$(gitsub -f '%B')
       local subbranch=$(git branch | awk '{print $2}')
@@ -227,7 +233,7 @@ main() {
       fi
       catchup
       for subdir in "${subdirs[@]}"; do
-        subup "$subdir" "$commitmsg"
+        subcheck "$subdir" "$commitmsg" && subup "$subdir" "$commitmsg"
       done
       cd "$root"
       if gitcheck; then
