@@ -117,7 +117,7 @@ modified() {
     for mod in $(gitmodified); do
       local file
       if is_submodule "$mod"; then
-        local root=$(git rev-parse --show-toplevel)
+        local root=$PWD
         local ico=$(git-it -i "$root/$mod")
         file="${SKY}${ico} ${BOLD}${mod}${RST}"
       else
