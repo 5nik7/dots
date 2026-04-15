@@ -1,18 +1,5 @@
 #!/usr/bin/env bash
 
-if [[ -r /etc/os-release ]]; then
-  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
-  distro="${distro%% *}"
-elif [[ -r "$PREFIX/etc/os-release" ]]; then
-  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$TERMUX__PREFIX/etc/os-release")
-  distro="${distro%% *}"
-elif [[ -n "$TERMUX_VERSION" ]]; then
-  distro='termux'
-fi
-if [[ -r /etc/wsl-distribution.conf ]]; then
-  iswsl=true
-fi
-
 padding=1
 lpad=$(repeat-char " " $padding)
 pad=$((padding * 2))
@@ -32,30 +19,8 @@ if [[ -n $COLOUMNS ]]; then
   COLUMNS=$COLOUMNS
 fi
 
-if [[ -n $HOST ]]; then
-  HOST=$(echo "$HOST" | tr '[:upper:]' '[:lower:]')
-fi
-
 has() {
   command -v "$1" >/dev/null 2>&1
-}
-
-gethost() {
-  local host
-  if [[ -n "$HOST" ]]; then
-    if [[ "$HOST" == "localhost" ]]; then
-      if [[ -n "$distro" ]]; then
-        host="$distro"
-      fi
-    else
-      if [[ "$iswsl" == true ]]; then
-        host="$HOST (WSL)"
-      else
-        host="$HOST"
-      fi
-    fi
-  fi
-  echo "$host"
 }
 
 in_git() {
@@ -233,7 +198,7 @@ main() {
       done
       cd "$root"
       if gitcheck; then
-        repoup && git add . && git commit -m "$commitmsg" && git push
+        repoup && git add . && git add . && git commit -m "$commitmsg" --quiet && git push --quiet
         if [[ "$root" != "$cwd" ]]; then
           cd "$cwd"
         fi
