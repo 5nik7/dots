@@ -94,8 +94,12 @@ submodules() {
   git submodule --quiet foreach 'git rev-parse --show-toplevel'
 }
 
+subrecurse() {
+  git submodule status --recursive | awk '{print $2}'
+}
+
 is_submodule() {
-  local submodules=($(git submodule status --recursive | awk '{print $2}'))
+  local submodules=($(subrecurse))
   for sub in "${submodules[@]}"; do
     if [[ "$1" == "$sub" ]]; then
       return 0
@@ -159,6 +163,7 @@ untracked() {
 }
 
 subcheck() {
+  local cwd=$PWD
   local subdir="$1"
   local commitmsg="$2"
   if [[ -d "$subdir" ]]; then
@@ -170,13 +175,17 @@ subcheck() {
       done
     fi
   fi
+  cd $cwd
 }
 
 subup() {
+  local cwd=$PWD
   local subdir="$1"
   local commitmsg="$2"
   if [[ -d "$subdir" ]]; then
-    cd "$subdir"
+    if [[ ! $subdir == $cwd ]]; then
+      cd "$subdir"
+    fi
     if mygit && gitcheck; then
       local subrepo=$(gitsub -f '%B')
       local subbranch=$(git branch | awk '{print $2}')
