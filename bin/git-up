@@ -164,7 +164,7 @@ subcheck() {
   local commitmsg="$2"
   if [[ -d "$subdir" ]]; then
     cd "$subdir"
-    local submodules=$(submodules)
+    local submodules=($(submodules))
     if [[ -n "$submodules" ]]; then
       for sub in "${submodules[@]}"; do
         subup "$sub" "$commitmsg"
