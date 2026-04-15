@@ -99,9 +99,10 @@ subrecurse() {
 }
 
 is_submodule() {
+  local mod="$1"
   local submodules=($(subrecurse))
   for sub in "${submodules[@]}"; do
-    if [[ "$1" =~ "$sub" ]]; then
+    if [[ $mod == $sub ]]; then
       return 0
     else
       return 1
@@ -111,10 +112,10 @@ is_submodule() {
 
 modified() {
   local statpad=$((pad + 4))
-  local modified=$(gitmodified)
+  local modified=($(gitmodified))
   if [[ -n "$modified" ]]; then
     local stats=$(git diff --stat --stat-width=$((COLUMNS - statpad)) --color=always | grep "|")
-    for mod in $(gitmodified); do
+    for mod in "${modified[@]}"; do
       local file
       if is_submodule "$mod"; then
         local ico='󰊤'
