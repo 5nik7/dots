@@ -19,6 +19,22 @@ if [[ -n $COLOUMNS ]]; then
   COLUMNS=$COLOUMNS
 fi
 
+if [[ -n $HOST ]]; then
+  host=$(echo "HOST" | tr '[:upper:]' '[:lower:]')
+else
+  host=$(hostname -s | tr '[:upper:]' '[:lower:]')
+fi
+
+if [[ -n $host ]]; then
+  if [[ "$host" == "localhost" ]]; then
+    host=$(echo $distro | tr '[:upper:]' '[:lower:]')
+  else
+    host=$(echo $host | tr '[:upper:]' '[:lower:]')
+  fi
+else
+  host="unknown"
+fi
+
 has() {
   command -v "$1" >/dev/null 2>&1
 }
@@ -166,7 +182,6 @@ catchup() {
 
 main() {
   local width="$(stty size | cut -d" " -f2)"
-  local host=$(gethost)
   local ts=$(date +"%Y-%m-%d %H:%M")
   local commitmsg="Sync via $host on $ts"
   local cwd=$PWD
