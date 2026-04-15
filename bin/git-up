@@ -96,16 +96,27 @@ gituntracked() {
   fi
 }
 
+is_submodule() {
+  git submodule | awk '{print $2}' | grep "$1" >/dev/null 2>&1
+}
+
 modified() {
   local statpad=$((pad + 4))
   local modified=$(gitmodified)
   if [[ -n "$modified" ]]; then
     local stats=$(git diff --stat --stat-width=$((COLUMNS - statpad)) --color=always | grep "|")
     for mod in $(gitmodified); do
-      if has eza; then
-        local file=$(eza --color=always --icons=always "$mod" 2>/dev/null)
+      local file
+      if is_submodule "$mod"; then
+        local root=$(git rev-parse --show-toplevel)
+        local ico=$(git-it -i "$root/$mod")
+        file="${SKY}${ico} ${BOLD}${mod}${RST}"
       else
-        local file="${YELLOW}${mod}${RST}"
+        if has eza; then
+          file=$(eza --color=always --icons=always "$mod" 2>/dev/null)
+        else
+          file="${YELLOW}${mod}${RST}"
+        fi
       fi
       echo "$stats" | grep "$mod" | sed "s| ${mod}|${file}${RST}|" | sed "s/|/${BRIGHTBLACK}|${RST}/"
     done | box -bc $BRIGHTBLACK -hp 1 -t "MODIFIED:" -tc $YELLOW | lpad "$lpad"
@@ -144,6 +155,7 @@ untracked() {
 
 subup() {
   local subdir="$1"
+  local commitmsg="$commitmsg"
   if [[ -d "$subdir" ]]; then
     cd "$subdir"
     if mygit && gitcheck; then
@@ -160,6 +172,7 @@ subup() {
 }
 
 repoup() {
+  local commitmsg="$commitmsg"
   echo
   printf "${SUBTEXT} %s ${SKY}%s ${SKY}${BOLD}%s${RST} ${MAUVE}%s${RST}\n" "repo:" "$ico" "$repo" "$branchico$branch" | box -hp 1 -bc "${DIM}${SAPPHIRE}" -t "UPDATE" -tc "${SAPPHIRE}" | lpad "$lpad"
   modified

@@ -1,8 +1,3 @@
-function termw() {
-  local width="$(stty size | cut -d" " -f2)"
-  echo "$width"
-}
-
 function gethost() {
   local host
   if [[ -n "$HOST" ]]; then
@@ -74,6 +69,10 @@ function gituntracked() {
       return 1
     fi
   fi
+}
+
+function is_submodule() {
+  git submodule | awk '{print $2}' | grep "$1" >/dev/null 2>&1
 }
 
 function aptget_check() {
