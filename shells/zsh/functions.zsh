@@ -67,8 +67,48 @@ function gituntracked() {
   fi
 }
 
+function submodules() {
+  local recurse=0
+  if in_git; then
+    if [[ $1 == '-r' ]]; then
+      recurse=1
+      shift
+    fi
+    if ((recurse)); then
+      git submodule status --recursive | awk '{print $2}'
+    else
+      git submodule status | awk '{print $2}'
+    fi
+  else
+    return 1
+  fi
+}
+
 function is_submodule() {
-  git submodule | awk '{print $2}' | grep "$1" >/dev/null 2>&1
+  local submodule
+  local submodules=()
+  local recurse=0
+  if in_git; then
+    local cdup=$(git rev-parse --show-cdup)
+    if [[ $1 == '-r' ]]; then
+      recurse=1
+      shift
+    fi
+    if ((recurse)); then
+      submodules=($(git submodule status --recursive | awk '{print $2}'))
+    else
+      submodules=($(git submodule status | awk '{print $2}'))
+    fi
+    for submodule in "${submodules[@]}"; do
+      if [[ "${cdup}${@}" == "$submodule" ]]; then
+        return 0
+      else
+        return 1
+      fi
+    done
+  else
+    return 1
+  fi
 }
 
 function aptget_check() {

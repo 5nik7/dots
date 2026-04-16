@@ -1,45 +1,31 @@
 #!/usr/bin/env bash
 
-declare buggin
+SCRIPTDIR=$(dirname "$(readlink -f "$0")")
+. $SCRIPTDIR/colors || exit 1
 
-declare -r esc=$'\033'
-declare -r c_reset="${esc}[0m"
-declare -r c_black="${esc}[0;30m"
-declare -r c_red="${esc}[0;31m"
-declare -r c_green="${esc}[0;32m"
-declare -r c_yellow="${esc}[0;33m"
-declare -r c_blue="${esc}[0;34m"
-declare -r c_magenta="${esc}[0;35m"
-declare -r c_cyan="${esc}[0;36m"
-declare -r c_white="${esc}[0;37m"
-declare -r c_black_b="${esc}[1;30m"
-declare -r bold="${esc}[1m"
-declare -r dim="${esc}[2m"
-declare -r italic="${esc}[3m"
-declare -r underline="${esc}[4m"
+debug="${YELLOW}"
+timestamp="${PEACH}"
+nonocolor="$timestamp"
+output="${BOLD}"
+border="${BLACK}"
+bugcolor="${BRIGHTBLACK}"
 
-debug="${c_yellow}"
-timestamp="${c_green}"
-output="${bold}"
-border="$c_black_b"
+bugico=' '
+#  
+title=''
+date='%H:%M:%S:'
+nano=$(awk '{ printf "%.4f\n", $1}' < <(date +'.%N') | sed "s|\.| |" | awk '{ print $2 }')
+fulldatel='%y-%m-%d %H:%M:%S:'
 
-bug="[DEBUG]"
-date='%H:%M:%S'
-fulldatel='%y-%m-%d %H:%M:%S'
-
-main() {
-  local buggin="$buggin"
-  if [ -n "$buggin" ] &>/dev/null; then
-    local ts=$(date +"${date}")
-    local dbug="${debug}${bug}${c_reset}"
-    local stamp="${timestamp}${ts}${c_reset}"
-    echo
-    printf "%s ${output}%s${c_reset}" "$stamp" "$*" | box -hp 1 -bc "$border" -t "$bug" -tc "$debug" >&2
-
-    exit 0
-  else
-    exit 1
-  fi
+buggin() {
+  local bug="${bugcolor}${bugico}${RST}"
+  local ts=$(date +"${date}")
+  local dbug="${debug}${bug}${RST}"
+  local stamp="${timestamp}${ts}${RST}"
+  local ns="${nonocolor}${nano}${RST}"
+  printf '%s %s%s|%s' "$bug" "$stamp" "$ns" "$*" | box -hp 1 -bc "$border" -t "$title" -tc "$debug" -s '|'
 }
 
-main "$@"
+if ! (return &>/dev/null); then
+  buggin "$@"
+fi
