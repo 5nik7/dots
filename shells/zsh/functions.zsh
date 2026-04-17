@@ -21,9 +21,17 @@ function in_git() {
 }
 
 function gitcheck() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
   if mygit; then
     local changed=$(git status -s | awk '{print $2}')
     if [[ -n "$changed" ]]; then
+      if ((verbose)); then
+        echo "$changed"
+      fi
       return 0
     else
       return 1
@@ -60,6 +68,18 @@ function gituntracked() {
     local untracked=$(git status -s | grep '??' | awk '{print $2}')
     if [[ -n "$untracked" ]]; then
       echo "$untracked"
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
+function gitsubmodule() {
+  if mygit; then
+    local deleted=$(git status -s | grep -E '^\s*m\s' | awk '{print $2}')
+    if [[ -n "$deleted" ]]; then
+      echo "$deleted"
       return 0
     else
       return 1

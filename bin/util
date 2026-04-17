@@ -17,16 +17,19 @@ prepath() {
 }
 
 err() {
-  local erricon=""
-  printf "${RED}%s ${DIM}│ ${RST}${BOLD}${BRIGHTRED}%s${RST}\n" "${erricon}" "$*" | box -hp 1 -bc "${DIM}${RED}"
+  #   
+  local erricon=""
+  printf "${RED}%s|${BOLD}${BRIGHTRED}%s${RST}\n" "$erricon" "$*" | box -hp 1 -bc "${DIM}${RED}" -s '|'
 }
 
 ok() {
-  printf "${BRIGHTGREEN}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${GREEN}"
+  local okicon=""
+  printf "${GREEN}%s|${BOLD}${BRIGHTGREEN}%s${RST}\n" "$okicon" "$*" | box -hp 1 -bc "${DIM}${GREEN}" -s '|'
 }
 
 warn() {
-  printf "${BRIGHTYELLOW}%s${RST}\n" "$*" | box -hp 1 -bc "${DIM}${YELLOW}"
+  local warnicon=""
+  printf "${YELLOW}%s|${BOLD}${BRIGHTYELLOW}%s${RST}\n" "$warnicon" "$*" | box -hp 1 -bc "${DIM}${YELLOW}" -s '|'
 }
 
 has() {
@@ -45,11 +48,19 @@ has() {
 }
 
 fileicon() {
+  local icon=''
   if has eza; then
-    eza --icons=always ~-color=always --treat-dirs-as-files "$@" &>/dev/null | awk '{print $1}'
-  else
-    printf ''
+    icon=$(eza --treat-dirs-as-files --icons=always --color=always "$@" 2>/dev/null | cut -d ' ' -f 1 || printf '')
   fi
+  printf '%s\n' "$icon"
+}
+
+filename() {
+  local base
+  if has eza; then
+    base=$(basename -a "$(eza --treat-dirs-as-files --color=always "$@" 2>/dev/null)" || basename -a "$@")
+  fi
+  printf '%s\n' "$base"
 }
 
 pathout() {
@@ -79,34 +90,43 @@ pathout() {
 }
 
 dirout() {
-  local p
-  local slash
+  local p slash color reset
   local raw=0
-  if [[ $1 == '-r' ]]; then
-    raw=1
-    shift
-  fi
-  if [[ $1 == '-j' ]]; then
-    slash='/'
-    shift
-  fi
+  while (($#)); do
+    case $1 in
+    -r | --raw)
+      raw=1
+      shift
+      ;;
+    -j | --join)
+      slash='/'
+      shift
+      ;;
+    -c | --color)
+      color="$BLUE"
+      reset="$RST"
+      shift
+      ;;
+    *) break ;;
+    esac
+  done
   if [[ $# -eq 0 ]]; then
     set -- "$PWD"
   fi
   for p in "$@"; do
     p=$(dirname "$p")
     if ((raw)); then
-      printf '%s\n' "$p"
+      printf '%s%s%s%s\n' "$color" "$p" "$slash" "$reset"
     else
       case "$p" in
       "$HOME")
-        printf '~%s\n' "$slash"
+        printf '%s~%s%s\n' "$color" "$slash" "$reset"
         ;;
       "$HOME"/*)
-        printf '~/%s%s\n' "${p#"$HOME"/}" "$slash"
+        printf '%s~/%s%s%s\n' "$color" "${p#"$HOME"/}" "$slash" "$reset"
         ;;
       *)
-        printf '%s%s\n' "$p" "$slash"
+        printf '%s%s%s%s\n' "$color" "$p" "$slash" "$reset"
         ;;
       esac
     fi
@@ -118,7 +138,7 @@ shell() {
 }
 
 shellmod() {
-  local filename
+  local filename icon dir base
   local shell=$(basename $(shell))
   local exists=0
   local verbose=0
@@ -141,15 +161,22 @@ shellmod() {
   done
   for filename in "$@"; do
     local modfile="$DOTS/shells/$shell/$filename.$shell"
-    local out=$(pathout $modfile)
     if [[ -f "$modfile" ]]; then
       exists+=1
-      local icon=$(fileicon $modfile)
       source "$modfile"
-      ((verbose)) && ok "$icon $out: sourced"
+      if ((verbose)); then
+        icon=$(fileicon $modfile)
+        dir=$(dirout -c -j $modfile)
+        base=$(filename $modfile)
+        ok "sourced|$icon $dir$base"
+      fi
       ((first)) && return 0
     else
-      ((verbose)) && err "$out: not found"
+      if ((verbose)); then
+        dir=$(dirout -j $modfile)
+        base=$(basename $modfile)
+        err "$dir$base|not found"
+      fi
     fi
   done
   ((exists >= 1)) && return 0
@@ -160,7 +187,7 @@ alias zieces="shellmod"
 alias zmod="shellmod"
 
 so() {
-  local file
+  local file icon dir base
   local exists=0
   local verbose=0
   local first=0
@@ -181,16 +208,22 @@ so() {
     esac
   done
   for file in "$@"; do
-    local dir=$(dirout $file)
-    local base=$(basename $file)
     if [[ -f "$file" ]]; then
       exists+=1
-      local icon=$(fileicon $file)
       source "$file"
-      ((verbose)) && ok "$icon $dir/$base: sourced"
+      if ((verbose)); then
+        icon=$(fileicon $file)
+        dir=$(dirout -c -j $file)
+        base=$(filename $file)
+        ok "sourced|$icon $dir$base"
+      fi
       ((first)) && return 0
     else
-      ((verbose)) && err "$dir/$base: not found"
+      if ((verbose)); then
+        dir=$(dirout -j $file)
+        base=$(basename $file)
+        err "$dir$base|not found"
+      fi
     fi
   done
   ((exists >= 1)) && return 0
@@ -219,10 +252,10 @@ check() {
     esac
   done
   for input in "$@"; do
-    local out=$(pathout $input)
     if [[ -e "$input" ]]; then
-      exists+=1
+      local out=$(pathout $input)
       local icon=$(fileicon $input)
+      exists+=1
       ((verbose)) && ok "$icon $out: found"
       ((first)) && return 0
     else
