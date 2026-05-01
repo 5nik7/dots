@@ -108,6 +108,33 @@ STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
 STARSHIP_THEMES="$STARSHIP_DIR/themes"
 PADDING="  "
 
+err() { printf "${errorcolor}%s %s${c_reset}\n" "$rocket" "$*" >&2; }
+die() {
+  err "$*"
+  exit 1
+}
+
+ok() {
+  printf "${c_green}%s %s${c_reset}\n" "$rocket" "$*"
+}
+
+has() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do
+    c="${c%% *}"
+    if ! command -v "$c" &>/dev/null; then
+      ((verbose)) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
+has -v starship || die "starship command found"
+
 linebreak() {
   echo -e "${c_reset}"
 }
@@ -193,7 +220,6 @@ theme_switch() {
   local theme="$1"
   linebreak
   printf "${PADDING}${switchbgcolor}${rocketcolor} ${rocket} ${currentthemecolor}%s ${c_reset}\n" "$theme"
-  linebreak
 }
 
 show_blastoff_usage() {
@@ -275,10 +301,8 @@ main() {
         exit
       fi
       ;;
-    *)
-      echo "Unknown option: $1"
-      # show_blastoff_usage
-      exit 1
+    * | -* | --*)
+      die "Unknown option: $*"
       ;;
     esac
   done
