@@ -474,7 +474,7 @@ format = '$symbol '
 
 [custom.dirname]
 description = "dir path"
-when = 'git rev-parse --show-toplevel 2>/dev/null'
+when = '[ ! $STARSHIP_SHELL == "pwsh" ] && git rev-parse --show-toplevel 2>/dev/null'
 command = """
 dir=$(dirout -j $(git rev-parse --show-toplevel 2>/dev/null))
 echo "$dir"
@@ -504,7 +504,7 @@ shell = ["bash", "--noprofile", "--norc"]
 
 [custom.git_remote_icon]
 description = "Git host icon"
-when = 'git remote get-url origin 2>/dev/null'
+when = '[ ! $STARSHIP_SHELL == "pwsh" ] && git remote get-url origin 2>/dev/null'
 command = """
 echo "$(git-it -i)"
 """
