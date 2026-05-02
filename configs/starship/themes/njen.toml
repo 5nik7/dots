@@ -19,7 +19,6 @@ $haskell\
 $python\
 $docker_context\
 $kubernetes\
-$shell\
 $container\
 $package\
 )
@@ -43,7 +42,7 @@ $git_state\
 $fill\
 )\
 ](bg:color_bg)
-$status$character"""
+$shell$status$character"""
 
 right_format = """
 $time"""
@@ -120,8 +119,8 @@ color_node = 'bright-green'
 
 [status]
 disabled = true
-format = '( [$status]($style))'
-# format = '([$symbol( $common_meaning)( $signal_name)]($style))'
+# format = '( [$status]($style))'
+format = '([$symbol( $common_meaning)( $signal_name)]($style))'
 map_symbol = true
 pipestatus = true
 # symbol = ''
@@ -451,16 +450,16 @@ symbol = " "
 [line_break]
 disabled = false
 
-# [shell]
-# format = '[$indicator]($style)'
-# fish_indicator = ''
-# powershell_indicator = 'PS'
-# bash_indicator = ''
-# zsh_indicator = ''
-# cmd_indicator = ''
-# unknown_indicator = ''
-# style = 'bg:none fg:cyan'
-# disabled = true
+[shell]
+format = '[$indicator]($style)'
+fish_indicator = 'fish'
+powershell_indicator = 'PS'
+bash_indicator = ''
+zsh_indicator = 'zsh'
+cmd_indicator = 'cmd'
+unknown_indicator = ''
+style = 'bg:none fg:lavender'
+disabled = true
 
 [character]
 success_symbol = '[](fg:color_ok bold)'
