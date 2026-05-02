@@ -17,7 +17,7 @@ linemode       = "none"
 show_hidden    = false
 show_symlink   = true
 scrolloff      = 5
-mouse_events   = [ "click", "scroll" ]
+mouse_events   = [ "click", "scroll", "drag" ]
 
 [preview]
 wrap            = "no"
@@ -76,11 +76,10 @@ rules = [
  { mime = "image/*", use = [ "open", "reveal" ] },
  # Media
  { mime = "{audio,video}/*", use = [ "play", "reveal" ] },
+ # Code
+ { mime = "application/{json,ndjson,javascript,wine-extension-ini}", use = [ "edit", "reveal" ] },
  # Archive
  { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract", "reveal" ] },
- # JSON
- { mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
- { mime = "*/javascript", use = [ "edit", "reveal" ] },
  # Empty file
  { mime = "inode/empty", use = [ "edit", "reveal" ] },
  # Virtual file system
@@ -102,12 +101,15 @@ suppress_preload = false
 
 [plugin]
 fetchers = [
- # Mimetype
- { id = "mime", url = "*/",         run = "mime.dir", prio = "high" },
- { id = "mime", url = "local://*",  run = "mime.local", prio = "high" },
- { id = "mime", url = "remote://*", run = "mime.remote", prio = "high" },
+ # MIME-type
+ { url = "*/",         run = "mime.dir",    prio = "high", group = "mime" },
+ { url = "local://*",  run = "mime.local",  prio = "high", group = "mime" },
+ { url = "remote://*", run = "mime.remote", prio = "high", group = "mime" },
 ]
 spotters = [
+ # Multi-file
+ { mime = "multi/*", run = "multi" },
+ # Folder
  { url = "*/", run = "folder" },
  # Code
  { mime = "text/*", run = "code" },

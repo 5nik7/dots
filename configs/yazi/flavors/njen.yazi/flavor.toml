@@ -11,22 +11,16 @@ overall = {}
 # : Manager {{{
 
 [mgr]
-cwd = { fg = "lightcyan" }
+cwd = { fg = "lightblue", bold = true }
 
-# hovered = { bg = "black" }
-# preview_hovered = { underline = true }
-
-# Find
 find_keyword = { fg = "#f9e2af", bold = true, italic = true, underline = true }
 find_position = { fg = "#f5c2e7", bg = "reset", bold = true, italic = true }
-
-# Marker
+symlink_target = { italic = true }
 marker_copied = { fg = "#a6e3a1", bg = "#a6e3a1" }
 marker_cut = { fg = "#f38ba8", bg = "#f38ba8" }
 marker_marked = { fg = "#94e2d5", bg = "#94e2d5" }
 marker_selected = { fg = "#f9e2af", bg = "#f9e2af" }
 
-# Count
 count_copied = { fg = "#1e1e2e", bg = "#a6e3a1" }
 count_cut = { fg = "#1e1e2e", bg = "#f38ba8" }
 count_selected = { fg = "#1e1e2e", bg = "#f9e2af" }
@@ -73,9 +67,8 @@ unset_alt = { fg = "#f2cdcd", bg = "#313244" }
 [indicator]
 parent = { reversed = true, bold = true }
 current = { reversed = true, bold = true }
-preview = { bg = "black", underline = false, bold = true }
-padding = { open = "█", close = "" }
-
+preview = { underline = true, bg = "#313244" }
+padding = { open = "█", close = "█" }
 # : }}}
 
 
@@ -83,8 +76,8 @@ padding = { open = "█", close = "" }
 
 [status]
 overall = {}
-sep_left = { open = "", close = "" }
-sep_right = { open = "", close = "" }
+sep_left = { open = "", close = "" }
+sep_right = { open = "", close = "" }
 
 # Permissions
 perm_sep = { fg = "black" }
@@ -181,6 +174,9 @@ tbl_cell = { fg = "#f5c2e7", bg = "#45475a" }
 title_info = { fg = "#a6e3a1" }
 title_warn = { fg = "#f9e2af" }
 title_error = { fg = "#f38ba8" }
+icon_info = ""
+icon_warn = ""
+icon_error = ""
 
 # : }}}
 
@@ -191,21 +187,73 @@ title_error = { fg = "#f38ba8" }
 
 rules = [
   # Image
-  { mime = "image/*", fg = "#cba6f7" },
+  { mime = "image/*", fg = "#cba6f7", bold = true },
   # Media
-  { mime = "{audio,video}/*", fg = "#f9e2af" },
+  { mime = "{audio,video}/*", fg = "#f5c2e7" },
   # Archive
-  { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#f5c2e7" },
+  { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#eba0ac" },
   # Document
-  { mime = "application/{pdf,doc,rtf}", fg = "yellow" },
+  { mime = "application/{pdf,doc,rtf}", fg = "#b4befe" },
   # Virtual file system
-  { mime = "vfs/{absent,stale}", fg = "gray" },
+  { mime = "vfs/{absent,stale}", fg = "#9399b2" },
   # Fallback
-  { url = "*", fg = "#cdd6f4" },
-  { url = "*/", fg = "lightblue" },
-  # TODO: remove
-  { name = "*", fg = "#cdd6f4" },
-  { name = "*/", fg = "lightblue" },
+  { url = "*", is = "block", fg = "#74c7ec", bg = "#313244" },
+  { url = "*", is = "char", fg = "#f5c2e7", bg = "#313244" },
+  { url = "*/", fg = "blue", bold = false },
+  { url = "*", is = "exec", fg = "#a6e3a1", bold = true },
+  { url = "*", is = "link", fg = "#89dceb" },
+  { url = "*", is = "orphan", fg = "#181825", bg = "#f38ba8", bold = true },
+  { url = "*", is = "fifo", fg = "#11111b", bg = "#89b4fa" },
+  { url = "*", is = "sock", fg = "#11111b", bg = "#f5c2e7" },
+  { url = "*.log", fg = "#a6adc8", bold = true },
+
+  { url = "*.md", fg = "#b4befe", bold = true },
+  { url = "*.toml", fg = "#fab387", bold = true },
+  { url = "*.json", fg = "#fab387", bold = true },
+  { url = "*.xml", fg = "#fab387", bold = false },
+  { url = "*.git*", fg = "#7f849c", bold = true },
+  { url = "*.dockerignore", fg = "#7f849c", bold = true },
+  { url = "*.editorconfig", fg = "#7f849c", bold = true },
+  { url = "*LICENSE*", fg = "#7f849c", bold = true },
+  { url = "*package-lock.json", fg = "#6c7086" },
 ]
 
 # : }}}
+
+[icon]
+conds = [
+  # Special files
+  { if = "orphan", text = "", fg = "#cdd6f4" },
+  { if = "link", text = "", fg = "#89dceb" },
+  { if = "block", text = "", fg = "#f2cdcd" },
+  { if = "char", text = "", fg = "#f2cdcd" },
+  { if = "fifo", text = "", fg = "#f2cdcd" },
+  { if = "sock", text = "", fg = "#f2cdcd" },
+  { if = "sticky", text = "", fg = "#f2cdcd" },
+  { if = "dummy", text = "", fg = "#f38ba8" },
+
+  # Fallback
+  { if = "dir & hovered", text = "", fg = "blue" },
+  { if = "hidden & dir", text = "", fg = "blue" },
+  { if = "dir", text = "", fg = "blue" },
+  { if = "exec", text = "", fg = "lightgreen" },
+  { if = "!dir", text = "", fg = "#cdd6f4" },
+]
+prepend_conds = [{ if = "link & dir", text = "", fg = "#74c7ec" }]
+dirs = [
+  { name = ".config", text = "", fg = "#f5c2e7" },
+  { name = "dots", text = "", fg = "#f5c2e7" },
+  { name = ".git", text = "󰊢", fg = "#6c7086" },
+  { name = ".github", text = "", fg = "#6c7086" },
+  { name = ".npm", text = "", fg = "#6c7086" },
+  { name = "Desktop", text = "", fg = "#94e2d5" },
+  { name = "Development", text = "", fg = "#94e2d5" },
+  { name = "Documents", text = "󱔘", fg = "#94e2d5" },
+  { name = "Downloads", text = "󰉍", fg = "#94e2d5" },
+  { name = "Library", text = "", fg = "#94e2d5" },
+  { name = "Movies", text = "", fg = "#94e2d5" },
+  { name = "Music", text = "", fg = "#94e2d5" },
+  { name = "Pictures", text = "", fg = "#94e2d5" },
+  { name = "Public", text = "", fg = "#94e2d5" },
+  { name = "Videos", text = "", fg = "#94e2d5" },
+]
