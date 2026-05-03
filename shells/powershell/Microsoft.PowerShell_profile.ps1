@@ -2,8 +2,21 @@ $DOTS = "$HOME\dots"
 $env:DOTS = $DOTS
 $Global:DOTS = $DOTS
 
-$env:STARSHIP_CONFIG = "$env:DOTS\configs\starship\starship.toml"
-$env:STARSHIP_THEMES = "$env:DOTS\configs\starship\themes"
+$DOTFILES = "$DOTS\configs"
+$env:DOTFILES = $DOTFILES
+$Global:DOTFILES = $DOTFILES
+
+$DOTSBIN = "$OOTS\bin"
+$env:DOTSBIN = $DOTSBIN
+$Global:DOTSBIN = $DOTSBIN
+
+$DOTSCRIPTS = "$OOTS\scripts"
+$env:DOTSCRIPTS = $DOTSCRIPTS
+$Global:DOTSCRIPTS = $DOTSCRIPTS
+
+$env:STARSHIP_CONFIG = "$env:DOTFILES\starship\starship.toml"
+$env:STARSHIP_DIR = [System.IO.Path]::GetDirectoryName($env:STARSHIP_CONFIG)
+$env:STARSHIP_THEMES = "$env:DOTFILES\starship\themes"
 
 function Test-CommandExists {
   param($command)
@@ -34,17 +47,17 @@ function Edit-Item
 Set-Alias -Name edit -Value Edit-Item
 Set-Alias -Name e -Value Edit-Item
 
-Import-Module blastoff
-
-function d {
-    $tmp = (New-TemporaryFile).FullName
-    yazi.exe $args --cwd-file="$tmp"
-    $cwd = Get-Content -Path $tmp -Encoding UTF8
-    if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
-        Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
-    }
-    Remove-Item -Path $tmp
+if (Test-CommandExists lazygit)
+{
+  Set-Alias -Name lg -Value lazygit.exe
 }
+
+if (Test-CommandExists git)
+{
+  Set-Alias -Name g -Value git
+}
+
+Import-Module blastoff
 
 function c {
     Clear-Host
@@ -86,10 +99,6 @@ Import-Module Catppuccin
 $Flavor = $Catppuccin['Mocha']
 
 
-
-
-
-
 function Import-ScoopModule {
   param (
     [Parameter()]
@@ -128,24 +137,19 @@ function prompt {
 $adminSuffix = if ($isAdmin) { ' [ADMIN]' } else { '' }
 $Host.UI.RawUI.WindowTitle = "$adminSuffix PowerShell {0}" -f $PSVersionTable.PSVersion.ToString()
 
-function Test-CommandExists {
-  param($command)
-  $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
-  return $exists
-}
 function Edit-Profile { & $env:EDITOR $PROFILE.CurrentUserAllHosts }
 Set-Alias -Name ep -Value Edit-Profile
 
 if (Test-CommandExists yazi) {
-  function y {
-    $tmp = [System.IO.Path]::GetTempFileName()
-    yazi $args --cwd-file="$tmp"
-    $cwd = Get-Content -Path $tmp -Encoding UTF8
-    if (-not [String]::IsNullOrEmpty($cwd) -and $cwd -ne $PWD.Path) {
-      Set-Location -LiteralPath ([System.IO.Path]::GetFullPath($cwd))
-    }
-    Remove-Item -Path $tmp
-  }
+function y {
+	$tmp = (New-TemporaryFile).FullName
+	yazi.exe $args --cwd-file="$tmp"
+	$cwd = Get-Content -Path $tmp -Encoding UTF8
+	if ($cwd -and $cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
+		Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
+	}
+	Remove-Item -Path $tmp
+}
   Set-Alias -Name d -Value y
 }
 
@@ -199,14 +203,6 @@ function pst { Get-Clipboard }
 
 function touch($file) { '' | Out-File $file -Encoding ASCII -Force }
 
-function sed($file, $find, $replace) {
-  (Get-Content $file).replace("$find", $replace) | Set-Content $file
-}
-
-function which($name) {
-  Get-Command $name | Select-Object -ExpandProperty Definition
-}
-
 function export($name, $value) {
   set-item -force -path "env:$name" -value $value;
 }
@@ -215,7 +211,7 @@ function pkill($name) {
   Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
 }
 
-function grep($regex, $dir) {
+function greps($regex, $dir) {
   if ( $dir ) {
     Get-ChildItem $dir | select-string $regex
     return
@@ -371,6 +367,7 @@ function google {
 function q { Exit }
 
 function .d { Set-Location "$env:DOTS" }
+function .df { Set-Location "$env:DOTFILES" }
 
 function cdev { Set-Location "$env:DEV" }
 Set-Alias -Name dev -Value cdev
@@ -425,193 +422,6 @@ function Remove-DuplicatePSReadlineHistory {
 }
 
 Set-Alias -Name fixhistory -Value Remove-DuplicatePSReadlineHistory
-
-# function Set-FuzzyOpts {
-#   param (
-#     [switch]$d,
-#     [hashtable]$opts,
-#     [hashtable]$colors,
-#     [hashtable]$keybinds,
-#     [string]$previewlabel,
-#     [string]$borderlabel,
-#     [string]$inputlabel,
-#     [string]$listlabel,
-#     [string]$headerlabel
-#   )
-#   $env:FZF_DEFAULT_OPTS = ''
-
-#   $Env:FZF_FILE_OPTS = "--preview=`"bat --style=numbers --color=always {}`""
-#   $Env:FZF_DIRECTORY_OPTS = "--preview=`"eza -la --color=always --group-directories-first --icons --no-permissions --no-time --no-filesize --no-user --git-repos --git --follow-symlinks --no-quotes --stdin {}`""
-
-#   if ($d) {
-#     $Env:FZF_DEFAULT_COMMAND = 'fd --type d --strip-cwd-prefix --hidden --exclude .git'
-#     $previewString = $Env:FZF_DIRECTORY_OPTS
-#   }
-#   else {
-#     $Env:FZF_DEFAULT_COMMAND = 'fd --type f --strip-cwd-prefix --hidden --exclude .git'
-#     $previewString = $Env:FZF_FILE_OPTS
-#   }
-#   try {
-#     # Default opts
-#     $defaultOpts = @{
-#       style         = 'default'
-#       layout        = 'reverse'
-#       height        = '~90%'
-#       margin        = '0'
-#       border        = 'none'
-#       previewwindow = 'right:70%:hidden:border-sharp'
-#       prompt        = @{ symbol = ' 󰅂 ' }
-#       pointer       = @{ symbol = '┃' }
-#       marker        = @{ symbol = '┃' }
-#       gutter        = @{ symbol = '┃' }
-#       gutterraw     = @{ symbol = '┃' }
-#     }
-#     if ($opts) {
-#       foreach ($k in $opts.Keys) { $defaultOpts[$k] = $opts[$k] }
-#     }
-#     $opts = $defaultOpts
-
-#     # Default colors
-#     $defaultColors = @{
-#       'fg'             = $Flavor.Subtext0.Hex()
-#       'hl'             = ($Flavor.Teal.Hex() + ':bold:underline')
-#       'fg+'            = ($Flavor.Text.Hex() + ':bold:reverse')
-#       'hl+'            = ($Flavor.Teal.Hex() + ':bold:reverse')
-#       'bg'             = 'transparent'
-#       'bg+'            = 'transparent'
-#       'preview-bg'     = 'transparent'
-#       'list-bg'        = 'transparent'
-#       'input-bg'       = 'transparent'
-#       'preview-border' = $Flavor.Surface0.Hex()
-#       'list-border'    = $Flavor.Surface0.Hex()
-#       'border'         = $Flavor.Surface0.Hex()
-#       'input-border'   = $Flavor.surface0.Hex()
-#       'pointer'        = $Flavor.surface1.Hex()
-#       'label'          = $Flavor.Surface2.Hex()
-#       'gutter'         = $Flavor.Surface0.Hex()
-#       'marker'         = $Flavor.Yellow.Hex()
-#       'spinner'        = $Flavor.Surface1.Hex()
-#       'separator'      = $Flavor.Base.Hex()
-#       'query'          = $Flavor.Text.Hex()
-#       'info'           = $Flavor.Surface1.Hex()
-#       'prompt'         = $Flavor.Surface1.Hex()
-#       'preview-label'  = $Flavor.Surface0.Hex()
-#       'nomatch'        = 'strip:' + $Flavor.Surface0.Hex() + ':italic'
-#     }
-#     if ($colors) {
-#       foreach ($k in $colors.Keys) { $defaultColors[$k] = $colors[$k] }
-#     }
-#     $colors = $defaultColors
-
-#     # Default keybinds
-#     $defaultKeybinds = @{
-#       'ctrl-x'     = 'toggle-preview'
-#       'ctrl-alt-r' = 'toggle-raw'
-#       'up'         = 'up-match'
-#       'down'       = 'down-match'
-#     }
-#     if ($keybinds) {
-#       foreach ($k in $keybinds.Keys) { $defaultKeybinds[$k] = $keybinds[$k] }
-#     }
-#     $keybinds = $defaultKeybinds
-
-#     $colorString = ($colors.GetEnumerator() | ForEach-Object {
-#         if ($_.Value -eq 'transparent') {
-#           $_.Value = '-1'
-#         }
-#         "$($_.Key):$($_.Value)"
-#       }) -join ','
-#     $colorArg = "--color $colorString"
-
-#     $bindString = ($keybinds.GetEnumerator() | ForEach-Object { "$($_.Key):$($_.Value)" }) -join ','
-#     $keybindsArg = "--bind $bindString"
-
-#     $key_mapping = @{
-#       minheight     = 'min-height'
-#       listborder    = 'list-border'
-#       inputborder   = 'input-border'
-#       previewwindow = 'preview-window'
-#       gutterraw     = 'gutter-raw'
-#     }
-
-#     $optsString = ($opts.GetEnumerator() | ForEach-Object {
-#         $key = if ($key_mapping.ContainsKey($_.Key)) {
-#           $key_mapping[$_.Key]
-#         }
-#         else {
-#           $_.Key
-#         }
-#         if ($_.Value.enabled -eq $false) {
-#           '--no-{0}' -f $key
-#         }
-#         elseif ($_.Value.symbol) {
-#           "--{0} '{1}'" -f $key, $_.Value.symbol
-#         }
-#         else {
-#           '--{0} {1}' -f $key, $_.Value
-#         }
-#       }) -join ' '
-
-#     $FZF_DEFAULT_OPTS = $optsString + ' ' + $colorArg + ' ' + $keybindsArg + ' ' + $previewString
-#     if ($previewlabel) {
-#       $FZF_DEFAULT_OPTS += " --preview-label=' $previewlabel '"
-#     }
-#     if ($borderlabel) {
-#       $FZF_DEFAULT_OPTS += " --border-label=' $borderlabel '"
-#     }
-#     if ($inputlabel) {
-#       $FZF_DEFAULT_OPTS += " --input-label=' $inputlabel '"
-#     }
-#     if ($listlabel) {
-#       $FZF_DEFAULT_OPTS += " --list-label=' $listlabel '"
-#     }
-#     if ($headerlabel) {
-#       $FZF_DEFAULT_OPTS += " --header-label=' $headerlabel '"
-#     }
-#     $env:FZF_DEFAULT_OPTS = $FZF_DEFAULT_OPTS
-#   }
-#   catch {
-#     Write-Host "Error: $_"
-#   }
-# }
-
-
-# # Example usage:
-# # Set-FuzzyColor 'fg+' ($Flavor.Lavender.Hex() + ':underline:reverse')
-# function Set-FuzzyColor {
-#   param (
-#     [Parameter(Mandatory)]
-#     [string]$Key,
-#     [Parameter(Mandatory)]
-#     [string]$Value
-#   )
-#   $fuzzyOpts = @{ colors = @{ $Key = $Value } }
-#   Set-FuzzyOpts @fuzzyOpts
-# }
-
-# # Example usage:
-# #   Set-FuzzyKeybind 'ctrl-y' 'accept'
-# function Set-FuzzyKeybind {
-#   param (
-#     [Parameter(Mandatory)]
-#     [string]$Key,
-#     [Parameter(Mandatory)]
-#     [string]$Value
-#   )
-#   $fuzzyOpts = @{ keybinds = @{ $Key = $Value } }
-#   Set-FuzzyOpts @fuzzyOpts
-# }
-
-# function Set-FuzzyOpt {
-#   param (
-#     [Parameter(Mandatory)]
-#     [string]$Key,
-#     [Parameter(Mandatory)]
-#     [object]$Value
-#   )
-#   $fuzzyOpts = @{ opts = @{ $Key = $Value } }
-#   Set-FuzzyOpts @fuzzyOpts
-# }
 
 function git_all {
   param(
@@ -861,7 +671,6 @@ $PSReadLineOptions = @{
 
 Set-PSReadLineOption @PSReadLineOptions
 
-
 Import-Module pscompletions
 
 function Invoke-Starship-PreCommand {
@@ -893,11 +702,6 @@ Enable-TransientPrompt
 
 Invoke-Expression "$(vfox activate pwsh)"
 
-# Import the Chocolatey Profile that contains the necessary code to enable
-# tab-completions to function for `choco`.
-# Be aware that if you are missing these lines from your profile, tab completion
-# for `choco` will not function.
-# See https://ch0.co/tab-completion for details.
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
   Import-Module "$ChocolateyProfile"
