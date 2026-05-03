@@ -111,15 +111,38 @@ alias la="ls -1a"
 alias lla="ls -la"
 
 if has yazi; then
+
   function y() {
-    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-    yazi "$@" --cwd-file="$tmp"
-    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-      builtin cd -- "$cwd"
-    fi
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+    command yazi "$@" --cwd-file="$tmp"
+    IFS= read -r -d '' cwd <"$tmp"
+    [ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
     rm -f -- "$tmp"
   }
   alias d='y'
+
+  function yap() {
+    local yaziProject="$1"
+    shift
+    if [ -z "$yaziProject" ]; then
+      >&2 echo "ERROR: The first argument must be a project"
+      return 64
+    fi
+
+    # Generate random Yazi client ID (DDS / `ya emit` uses `YAZI_ID`)
+    local yaziId=$RANDOM
+
+    # Use Yazi's DDS to run a plugin command after Yazi has started
+    # (the nested subshell is only to suppress "Done" output for the job)
+    ( (
+      sleep 0.1
+      YAZI_ID=$yaziId ya emit plugin projects "load $yaziProject"
+    ) &)
+
+    # Run Yazi with the generated client ID
+    y --client-id $yaziId "$@" || return $?
+  }
+
 fi
 
 if has nvim; then

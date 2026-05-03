@@ -43,6 +43,55 @@ local palette = {
   crust = "#11111b",
 }
 
+require("projects"):setup({
+  event = {
+    save = {
+      enable = true,
+      name = "project-saved",
+    },
+    load = {
+      enable = true,
+      name = "project-loaded",
+    },
+    delete = {
+      enable = true,
+      name = "project-deleted",
+    },
+    delete_all = {
+      enable = true,
+      name = "project-deleted-all",
+    },
+    merge = {
+      enable = true,
+      name = "project-merged",
+    },
+  },
+  save = {
+    method = "yazi", -- yazi | lua
+    yazi_load_event = "@projects-load", -- event name when loading projects in `yazi` method
+    lua_save_path = "", -- path of saved file in `lua` method, comment out or assign explicitly
+    -- default value:
+    -- windows: "%APPDATA%/yazi/state/projects.json"
+    -- unix: "~/.local/state/yazi/projects.json"
+  },
+  last = {
+    update_after_save = true,
+    update_after_load = true,
+    update_before_quit = false,
+    load_after_start = false,
+  },
+  merge = {
+    event = "projects-merge",
+    quit_after_merge = false,
+  },
+  notify = {
+    enable = true,
+    title = "Projects",
+    timeout = 3,
+    level = "info",
+  },
+})
+
 require("yatline"):setup({
 
   section_separator = { open = "", close = "" },
@@ -55,7 +104,7 @@ require("yatline"):setup({
     fg = palette.crust,
     bold = false,
     underline = false,
-
+    reversed = true,
     bg_mode = {
       normal = palette.blue,
       select = palette.mauve,
@@ -65,11 +114,11 @@ require("yatline"):setup({
   style_b = { bg = palette.surface0, fg = palette.text },
   style_c = { bg = palette.base, fg = palette.text },
 
-  permissions_t_fg = palette.lavender,
+  permissions_t_fg = palette.subtext1,
   permissions_r_fg = palette.yellow,
   permissions_w_fg = palette.red,
   permissions_x_fg = palette.green,
-  permissions_s_fg = palette.surface0,
+  permissions_s_fg = palette.surface1,
 
   tab_width = 0,
 
@@ -97,10 +146,19 @@ require("yatline"):setup({
         { type = "line", name = "tabs" },
       },
       section_b = {
+        {
+          type = "coloreds",
+          custom = false,
+          name = "string_based_component",
+          params = { "tab_path", "blue", { false, 24, 10 } },
+        },
+        -- { type = "string", custom = false, name = "tab_path", params = { false, 24, 10 } },
         -- { type = "coloreds", custom = false, name = "tab_path" },
-        -- { type = "string", custom = false, name = "tab_path" },
       },
-      section_c = {},
+      section_c = {
+
+        { type = "string", custom = false, name = "hovered_name" },
+      },
     },
     right = {
       section_a = {
@@ -110,9 +168,7 @@ require("yatline"):setup({
       section_b = {
         -- { type = "string", name = "date", params = { "%X" } },
       },
-      section_c = {
-        { type = "coloreds", custom = false, name = "githead" },
-      },
+      section_c = {},
     },
   },
 
@@ -125,8 +181,7 @@ require("yatline"):setup({
         -- { type = "string", name = "hovered_size" },
       },
       section_c = {
-        -- { type = "string", name = "hovered_path" },
-        { type = "string", custom = false, name = "hovered_name" },
+        { type = "coloreds", custom = false, name = "githead" },
         -- { type = "coloreds", name = "count" },
       },
     },
@@ -137,11 +192,11 @@ require("yatline"):setup({
       },
       section_b = {
         -- { type = "string", name = "cursor_percentage" },
-        { type = "coloreds", name = "permissions" },
         -- { type = "coloreds", custom = false, name = "permissions" },
       },
       section_c = {
-        { type = "string", name = "hovered_file_extension", params = { true } },
+        { type = "coloreds", name = "permissions" },
+        -- { type = "string", name = "hovered_file_extension", params = { true } },
         -- { type = "coloreds", name = "permissions" },
       },
     },
@@ -213,15 +268,15 @@ require("yatline-githead"):setup({
   untracked_color = palette.teal,
   untracked_symbol = "?",
 })
-Status:children_add(function(self)
-  local arrow = "  "
-  local h = self._current.hovered
-  if h and h.link_to then
-    return ui.Line({
-      ui.Span(tostring(arrow)):fg("darkgray"),
-      ui.Span(tostring(h.link_to)):fg(palette.sapphire),
-    })
-  else
-    return ""
-  end
-end, 3300, Status.LEFT)
+-- Status:children_add(function(self)
+--   local arrow = "  "
+--   local h = self._current.hovered
+--   if h and h.link_to then
+--     return ui.Line({
+--       ui.Span(tostring(arrow)):fg("darkgray"),
+--       ui.Span(tostring(h.link_to)):fg(palette.sapphire),
+--     })
+--   else
+--     return ""
+--   end
+-- end, 3300, Status.LEFT)
