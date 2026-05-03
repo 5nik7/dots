@@ -30,64 +30,59 @@ elseif (Test-CommandExists vim) { 'vim' }
 elseif (Test-CommandExists vi) { 'vi' }
 else { 'notepad' }
 $env:EDITOR = $EDITOR
-function Edit-Item
-{
+function Edit-Item {
   param (
     [string]$Path = $PWD
   )
-  if ($Path)
-  {
+  if ($Path) {
     & $env:EDITOR $Path
   }
-  else
-  {
+  else {
     & $env:EDITOR
   }
 }
 Set-Alias -Name edit -Value Edit-Item
 Set-Alias -Name e -Value Edit-Item
 
-if (Test-CommandExists lazygit)
-{
+if (Test-CommandExists lazygit) {
   Set-Alias -Name lg -Value lazygit.exe
 }
 
-if (Test-CommandExists git)
-{
+if (Test-CommandExists git) {
   Set-Alias -Name g -Value git
 }
 
 Import-Module blastoff
 
 function c {
-    Clear-Host
+  Clear-Host
 }
 
 function Invoke-eza {
-    param (
-        [Parameter(ValueFromRemainingArguments = $true)]
-        $Args
-    )
-    eza --icons=always --group-directories-first --git --git-repos @Args
+  param (
+    [Parameter(ValueFromRemainingArguments = $true)]
+    $Args
+  )
+  eza --icons=always --group-directories-first --git --git-repos @Args
 }
 
-Set-Alias -Name ls -Value Invoke-eza
+Set-Alias -Name ls -Value Invoke-eza -Option AllScope
 
 function env {
-    Get-ChildItem env:
+  Get-ChildItem env:
 }
 
 function RepeatString {
-    param(
-        [string]$Text,
-        [int]$Count
-    )
+  param(
+    [string]$Text,
+    [int]$Count
+  )
 
-    if ($Count -le 0 -or $null -eq $Text) {
-        return ''
-    }
+  if ($Count -le 0 -or $null -eq $Text) {
+    return ''
+  }
 
-    $Text * $Count
+  $Text * $Count
 }
 
 Import-Module Terminal-Icons
@@ -141,15 +136,15 @@ function Edit-Profile { & $env:EDITOR $PROFILE.CurrentUserAllHosts }
 Set-Alias -Name ep -Value Edit-Profile
 
 if (Test-CommandExists yazi) {
-function y {
-	$tmp = (New-TemporaryFile).FullName
-	yazi.exe $args --cwd-file="$tmp"
-	$cwd = Get-Content -Path $tmp -Encoding UTF8
-	if ($cwd -and $cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
-		Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
-	}
-	Remove-Item -Path $tmp
-}
+  function y {
+    $tmp = (New-TemporaryFile).FullName
+    yazi.exe $args --cwd-file="$tmp"
+    $cwd = Get-Content -Path $tmp -Encoding UTF8
+    if ($cwd -and $cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
+      Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
+    }
+    Remove-Item -Path $tmp
+  }
   Set-Alias -Name d -Value y
 }
 
@@ -197,7 +192,7 @@ function trash($path) {
 }
 
 # Clipboard Utilities
-function cpy { Set-Clipboard $args[0] }
+function cpy { clip.exe }
 
 function pst { Get-Clipboard }
 
@@ -530,8 +525,7 @@ function gup {
   }
 }
 
-function New-Backup
-{
+function New-Backup {
   <#
     .SYNOPSIS
         Creates a backup of the target file or directory.
@@ -561,8 +555,7 @@ function New-Backup
   $item = Get-Item $target
   $targetpath = $item.FullName
 
-  if (!(Test-Path $targetpath))
-  {
+  if (!(Test-Path $targetpath)) {
     Write-Error "$targetpath does not exist."
     return
   }
@@ -572,37 +565,30 @@ function New-Backup
   $bakDate = Get-Date -Format 'MM-dd-yyyy-HH.mm.ss'
   $backupname = "$targetname.$bakDate.bak"
 
-  if ($store)
-  {
+  if ($store) {
     $bakstore = "$HOME\.bakstore"
-    if (!(Test-Path $bakstore))
-    {
+    if (!(Test-Path $bakstore)) {
       New-Item -ItemType Directory -Path $bakstore -ErrorAction Stop | Out-Null
     }
     $backupFilePath = Join-Path "$bakstore" + "$backupname"
-  } else {
+  }
+  else {
     $backupFilePath = Join-Path "$targetdir" + "$backupname"
   }
 
-  if ($copy)
-  {
-    if ($item.PSIsContainer)
-    {
+  if ($copy) {
+    if ($item.PSIsContainer) {
       Copy-Item -Path $target -Destination $backupFilePath -Recurse -ErrorAction Stop | Out-Null
     }
-    else
-    {
+    else {
       Copy-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
     }
   }
-  else
-  {
-    if ($item.PSIsContainer)
-    {
+  else {
+    if ($item.PSIsContainer) {
       Move-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
     }
-    else
-    {
+    else {
       Move-Item -Path $target -Destination $backupFilePath -ErrorAction Stop | Out-Null
     }
   }
@@ -612,24 +598,24 @@ function New-Backup
 
 try { if (Get-Command vivid -ErrorAction SilentlyContinue) { $env:LS_COLORS = "$(vivid generate tokyonight-night)" } } catch { }
 
-Invoke-Expression (@(starship completions powershell) -replace " ''\)$"," ' ')" -join "`n")
+Invoke-Expression (@(starship completions powershell) -replace " ''\)$", " ' ')" -join "`n")
 
-Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$"," ' ')" -join "`n")
+Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$", " ' ')" -join "`n")
 
-Invoke-Expression (@(bat --completion ps1) -replace " ''\)$"," ' ')" -join "`n")
+Invoke-Expression (@(bat --completion ps1) -replace " ''\)$", " ' ')" -join "`n")
 
-Invoke-Expression (@(uv generate-shell-completion powershell) -replace " ''\)$"," ' ')" -join "`n")
+Invoke-Expression (@(uv generate-shell-completion powershell) -replace " ''\)$", " ' ')" -join "`n")
 
-Invoke-Expression (@(uvx --generate-shell-completion powershell) -replace " ''\)$"," ' ')" -join "`n")
+Invoke-Expression (@(uvx --generate-shell-completion powershell) -replace " ''\)$", " ' ')" -join "`n")
 
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
-    param($wordToComplete, $commandAst, $cursorPosition)
-        [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.Utf8Encoding]::new()
-        $Local:word = $wordToComplete.Replace('"', '""')
-        $Local:ast = $commandAst.ToString().Replace('"', '""')
-        winget complete --word="$Local:word" --commandline "$Local:ast" --position $cursorPosition | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-        }
+  param($wordToComplete, $commandAst, $cursorPosition)
+  [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.Utf8Encoding]::new()
+  $Local:word = $wordToComplete.Replace('"', '""')
+  $Local:ast = $commandAst.ToString().Replace('"', '""')
+  winget complete --word="$Local:word" --commandline "$Local:ast" --position $cursorPosition | ForEach-Object {
+    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+  }
 }
 
 # $ENV:FZF_DEFAULT_OPTS = @"
@@ -647,15 +633,13 @@ $PSReadLineOptions = @{
   MaximumHistoryCount           = '50000'
   BellStyle                     = 'None'
   EditMode                      = 'Vi' # "Vi" or "Emacs" or "Windows"
-  PredictionViewStyle           = 'InlineView' # "InlineView" or "ListView"
   Colors                        = @{
-    Command                   = 'Blue'
-    Comment                   = 'DarkGray'
-    InlinePrediction          = 'DarkGray'
-    Parameter                 = 'Cyan'
-    String                    = 'Green'
-    Variable                  = 'Yellow'
-        # Keyword                   = "`e[92m"
+    Command   = 'Blue'
+    Comment   = 'DarkGray'
+    Parameter = 'Cyan'
+    String    = 'Green'
+    Variable  = 'Yellow'
+    # Keyword                   = "`e[92m"
     # ListPrediction            = "`e[33m"
     # ListPredictionSelected    = "`e[48;5;238m"
     # ListPredictionTooltip     = "`e[97;2;3m"
@@ -670,6 +654,12 @@ $PSReadLineOptions = @{
 }
 
 Set-PSReadLineOption @PSReadLineOptions
+
+if ($PSEdition -eq 'Core') {
+  Set-PSReadLineOption -PredictionViewStyle 'InlineView'
+  Set-PSReadLineOption -Colors @{InlinePrediction = 'DarkGray' }
+}
+
 
 Import-Module pscompletions
 
@@ -689,6 +679,10 @@ function OnViModeChangeCore {
   else {
     Write-Host -NoNewLine "`e[5 q"
   }
+}
+
+function OnViModeChangeDesktop {
+    [Microsoft.PowerShell.PSConsoleReadLine]::ForwardChar()
 }
 
 function OnViModeChangeDesktop { [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt() }
