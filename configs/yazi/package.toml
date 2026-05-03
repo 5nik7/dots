@@ -75,8 +75,8 @@ hash = "87da3630653b6d272e43658418599188"
 
 [[flavor.deps]]
 use = "5nik7/njen"
-rev = "272b15d"
-hash = "1a7ac00b5911c10f72a04d25363f06a5"
+rev = "5f9d62e"
+hash = "ec8b769e0f28e2dc081b166439eeca3d"
 
 [[flavor.deps]]
 use = "6ruby1/eldritch"

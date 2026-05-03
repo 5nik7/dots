@@ -11,7 +11,7 @@ overall = {}
 # : Manager {{{
 
 [mgr]
-cwd = { fg = "lightblue", bold = true }
+cwd = { fg = "lightcyan", bg = "#181825", bold = true }
 
 find_keyword = { fg = "#f9e2af", bold = true, italic = true, underline = true }
 find_position = { fg = "#f5c2e7", bg = "reset", bold = true, italic = true }
