@@ -17,14 +17,28 @@ prepath() {
 }
 
 err() {
-  #   
-  local erricon=""
-  printf "${RED}%s|${BOLD}${BRIGHTRED}%s${RST}\n" "$erricon" "$*" | box -hp 1 -bc "${DIM}${RED}" -s '|'
+  local parts line
+  local sep='|'
+  local erricon="✕"
+
+  for line in "$@"; do
+    IFS=$sep read -r parts <<<"$line"
+    parts=($RED"${parts[@]}"$RED)
+    printf '%s%s%s\n' "$RED$erricon" "$sep" "${parts[@]}"
+
+  done | box -hp 1 -bc "${DIM}${RED}" -s $sep
 }
 
 ok() {
+  local parts line
+  local sep='|'
   local okicon=""
-  printf "${GREEN}%s|${BOLD}${BRIGHTGREEN}%s${RST}\n" "$okicon" "$*" | box -hp 1 -bc "${DIM}${GREEN}" -s '|'
+
+  for line in "$@"; do
+    IFS=$sep read -r parts <<<"$line"
+    parts=($GREEN"${parts[@]}"$GREEN)
+    printf '%s%s%s\n' "$GREEN$okicon" "$sep" "${parts[@]}"
+  done | box -hp 1 -bc "${DIM}${GREEN}" -s $sep
 }
 
 warn() {
@@ -231,7 +245,7 @@ so() {
 }
 
 check() {
-  local input
+  local input icon dir base
   local exists=0
   local verbose=0
   local first=0
@@ -253,13 +267,20 @@ check() {
   done
   for input in "$@"; do
     if [[ -e "$input" ]]; then
-      local out=$(pathout $input)
-      local icon=$(fileicon $input)
       exists+=1
-      ((verbose)) && ok "$icon $out: found"
+      if ((verbose)); then
+        icon=$(fileicon $input)
+        dir=$(dirout -c -j $input)
+        base=$(filename $input)
+        ok "found|$icon $dir$base"
+      fi
       ((first)) && return 0
     else
-      ((verbose)) && err "$out: not found"
+      if ((verbose)); then
+        dir=$(dirout -j $input)
+        base=$(basename $input)
+        err "$dir$base|not found"
+      fi
     fi
   done
   ((exists >= 1)) && return 0
@@ -267,7 +288,7 @@ check() {
 }
 
 checkdir() {
-  local dir
+  local input icon dir base
   local exists=0
   local verbose=0
   local first=0
@@ -287,15 +308,22 @@ checkdir() {
     *) break ;;
     esac
   done
-  for dir in "$@"; do
-    if [[ -d "$dir" ]]; then
-      local out=$(pathout $dir)
+  for input in "$@"; do
+    if [[ -d "$input" ]]; then
       exists+=1
-      local icon=$(fileicon $dir)
-      ((verbose)) && ok "$icon $out: found"
+      if ((verbose)); then
+        icon=$(fileicon $input)
+        dir=$(dirout -c -j $input)
+        base=$(filename $input)
+        ok "found|$icon $dir$base"
+      fi
       ((first)) && return 0
     else
-      ((verbose)) && err "$out: not found"
+      if ((verbose)); then
+        dir=$(dirout -j $input)
+        base=$(basename $input)
+        err "$dir$base|not found"
+      fi
     fi
   done
   ((exists >= 1)) && return 0

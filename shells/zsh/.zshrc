@@ -16,21 +16,31 @@ autoload -Uz compinit; compinit
 autoload -U colors; colors
 
 istermux() {
+local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
   if [[ "$istermux" == true ]] &> /dev/null; then
-    echo "true"
+   ((verbose)) && echo "true"
     return 0
   else
-    echo "false"
+   ((verbose)) && echo "false"
     return 1
   fi
 }
 
 iswsl() {
+local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
   if [[ "$iswsl" == true ]] &> /dev/null; then
-    echo "true"
+    ((verbose)) && echo "true"
     return 0
   else
-    echo "false"
+    ((verbose)) && echo "false"
     return 1
   fi
 }
