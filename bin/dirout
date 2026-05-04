@@ -1,34 +1,43 @@
 #!/usr/bin/env bash
 
 main() {
-  local p
-  local slash=''
+  local p slash color reset
   local raw=0
-  if [[ $1 == '-r' ]]; then
-    raw=1
-    shift
-  fi
-  if [[ $1 == '-j' ]]; then
-    slash='/'
-    shift
-  fi
+  while (($#)); do
+    case $1 in
+    -r | --raw)
+      raw=1
+      shift
+      ;;
+    -j | --join)
+      slash='/'
+      shift
+      ;;
+    -c | --color)
+      color="$BLUE"
+      reset="$RST"
+      shift
+      ;;
+    *) break ;;
+    esac
+  done
   if [[ $# -eq 0 ]]; then
     set -- "$PWD"
   fi
   for p in "$@"; do
     p=$(dirname "$p")
     if ((raw)); then
-      printf '%s\n' "$p"
+      printf '%s%s%s%s\n' "$color" "$p" "$slash" "$reset"
     else
       case "$p" in
       "$HOME")
-        printf '~%s\n' "$slash"
+        printf '%s~%s%s\n' "$color" "$slash" "$reset"
         ;;
       "$HOME"/*)
-        printf '~/%s%s\n' "${p#"$HOME"/}" "$slash"
+        printf '%s~/%s%s%s\n' "$color" "${p#"$HOME"/}" "$slash" "$reset"
         ;;
       *)
-        printf '%s%s\n' "$p" "$slash"
+        printf '%s%s%s%s\n' "$color" "$p" "$slash" "$reset"
         ;;
       esac
     fi
