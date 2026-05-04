@@ -42,8 +42,15 @@ ok() {
 }
 
 warn() {
+  local parts line
+  local sep='|'
   local warnicon=""
-  printf "${YELLOW}%s|${BOLD}${BRIGHTYELLOW}%s${RST}\n" "$warnicon" "$*" | box -hp 1 -bc "${DIM}${YELLOW}" -s '|'
+
+  for line in "$@"; do
+    IFS=$sep read -r parts <<<"$line"
+    parts=($YELLOW"${parts[@]}"$YELLOW)
+    printf '%s%s%s\n' "$YELLOW$warnicon" "$sep" "${parts[@]}"
+  done | box -hp 1 -bc "${DIM}${YELLOW}" -s $sep
 }
 
 has() {
@@ -198,7 +205,6 @@ shellmod() {
 }
 
 alias zieces="shellmod"
-alias zmod="shellmod"
 
 so() {
   local file icon dir base
