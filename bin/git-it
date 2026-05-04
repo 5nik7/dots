@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# ▄▀▀▀▀ ▀▀█▀▀ ▀▀█▀▀       ▀▀█▀▀ ▀▀█▀▀
+# █ ▀▀█   █     █   ▀▀▀▀▀   █     █
+#  ▀▀▀  ▀▀▀▀▀   ▀         ▀▀▀▀▀   ▀
 prog=${0##*/}
 separator='='
 
@@ -20,6 +23,8 @@ if [ -t 1 ]; then
   C_CYAN="${ESC}[36m"
   C_WHITE="${ESC}[37m"
   C_BRIGHT_BLACK="${ESC}[1;30m"
+  PEACH="$(tput setaf 216 2>/dev/null || printf '')"
+  MAUVE="$(tput setaf 183 2>/dev/null || printf '')"
 else
   C_RESET='' C_BOLD='' C_DIM='' C_ITALIC='' C_UNDERLINE='' C_REVERSE='' C_BLACK='' C_RED='' C_GREEN='' C_YELLOW='' C_BLUE='' C_MAGENTA='' C_CYAN='' C_WHITE='' C_BRIGHT_BLACK=''
 fi
@@ -42,9 +47,10 @@ print_usage() {
 
   cat <<EOF
 ${C_CYAN}
-▄▀▀▀▀ ▀▀█▀▀ ▀▀█▀▀       ▀▀█▀▀ ▀▀█▀▀
+▄▀▀▀▄  ▀█▀  ▀▀█▀▀        ▀█▀  ▀▀█▀▀
+█       █     █           █     █
 █ ▀▀█   █     █   ▀▀▀▀▀   █     █
- ▀▀▀  ▀▀▀▀▀   ▀         ▀▀▀▀▀   ▀
+▀▄▄▄▀  ▄█▄    █          ▄█▄    █
 ${C_RESET}
 EOF
   uhead 'Usage:'
