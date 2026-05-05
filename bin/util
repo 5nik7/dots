@@ -26,7 +26,7 @@ err() {
     parts=($RED"${parts[@]}"$RED)
     printf '%s%s%s\n' "$RED$erricon" "$sep" "${parts[@]}"
 
-  done | box -hp 1 -bc "${DIM}${RED}" -s $sep
+  done | box -hp 1 -bc "${DIM}${DARKRED}" -s $sep
 }
 
 ok() {
@@ -38,7 +38,7 @@ ok() {
     IFS=$sep read -r parts <<<"$line"
     parts=($GREEN"${parts[@]}"$GREEN)
     printf '%s%s%s\n' "$GREEN$okicon" "$sep" "${parts[@]}"
-  done | box -hp 1 -bc "${DIM}${GREEN}" -s $sep
+  done | box -hp 1 -bc "${DIM}${DARKGREEN}" -s $sep
 }
 
 warn() {

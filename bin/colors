@@ -38,3 +38,6 @@ OVERLAY0="$(tput setaf 60 2>/dev/null || printf '')"
 SURFACE1="$(tput setaf 238 2>/dev/null || printf '')"
 SURFACE0="$(tput setaf 235 2>/dev/null || printf '')"
 RST="$(tput sgr0 2>/dev/null || printf '')"
+
+DARKGREEN="${ESC}[38;5;029m"
+DARKRED="${ESC}[38;5;168m"
