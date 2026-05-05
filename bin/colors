@@ -41,3 +41,4 @@ RST="$(tput sgr0 2>/dev/null || printf '')"
 
 DARKGREEN="${ESC}[38;5;029m"
 DARKRED="${ESC}[38;5;168m"
+DARKYELLOW="${ESC}[38;5;136m"

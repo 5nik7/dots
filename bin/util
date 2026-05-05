@@ -50,7 +50,7 @@ warn() {
     IFS=$sep read -r parts <<<"$line"
     parts=($YELLOW"${parts[@]}"$YELLOW)
     printf '%s%s%s\n' "$YELLOW$warnicon" "$sep" "${parts[@]}"
-  done | box -hp 1 -bc "${DIM}${YELLOW}" -s $sep
+  done | box -hp 1 -bc "${DIM}${DARKYELLOW}" -s $sep
 }
 
 has() {
