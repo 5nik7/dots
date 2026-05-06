@@ -470,7 +470,8 @@ format = '$symbol '
 
 [directory.substitutions]
 "C:/" = "/"
-# "/storage/emulated/0/Documents" = "~/Documents"
+"/data/data/com.termux/files/usr" = "/usr"
+# "/storage/emulated/0" = "/storage"
 
 [custom.dirname]
 description = "dir path"
