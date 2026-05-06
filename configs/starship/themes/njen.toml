@@ -500,7 +500,7 @@ description = "cwd"
 when = true
 command = "rwd"
 style = "fg:color_directory"
-format = '([$output[ -> ](bright-black bold)]($style))'
+format = '([$output[->](bright-black bold)]($style))'
 shell = ["bash", "--noprofile", "--norc"]
 
 [custom.git_remote_icon]
