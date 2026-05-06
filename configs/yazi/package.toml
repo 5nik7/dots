@@ -80,8 +80,8 @@ hash = "87da3630653b6d272e43658418599188"
 
 [[flavor.deps]]
 use = "5nik7/njen"
-rev = "5f9d62e"
-hash = "ec8b769e0f28e2dc081b166439eeca3d"
+rev = "1c92b9c"
+hash = "ad280d4b5fd24cc6afbb54471b11b347"
 
 [[flavor.deps]]
 use = "6ruby1/eldritch"
