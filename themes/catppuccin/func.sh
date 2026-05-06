@@ -1,4 +1,5 @@
-if cmd_exists catppuccin; then
+if has catppuccin; then
+
   function flavor() {
     catppuccin "$FLAVOR" "$@"
   }
@@ -118,16 +119,6 @@ if cmd_exists catppuccin; then
     local format=${1:-esc}
     catppuccin $flavor -r ${format} "$0"
   }
-if cmd_exists pastel; then
-  function escol {
-    pastel format ansi-24bit-escapecode "$@"
-  }
-  function creset {
-    esc=$'\033'
-    c_reset="${esc}[0m"
-    printf "$c_reset"
-  }
-fi
 else
   echo "catppuccin command not found. Please install it to use the colors."
 fi

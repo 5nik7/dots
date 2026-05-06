@@ -25,11 +25,11 @@ up:up-match,\
 down:down-match,\
 alt-r:toggle-raw"
 
-  so "$THEMEDIR/fzf.zsh"
+  # so "$THEMECONF/fzf.sh"
   _FZF_PREVIEW_POS_='bottom:hidden:50%:border-sharp'
   _PREVIEW_="preview.zsh"
 
-  export _FZF_OPTS_ _FZF_BINDS_ _FZF_COLORS_ _FZF_PREVIEW_POS_ _PREVIEW_
+  export _FZF_OPTS_ _FZF_BINDS_ _FZF_PREVIEW_POS_ _PREVIEW_
 
   export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --color=$_FZF_COLORS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
 }
@@ -178,7 +178,7 @@ EOF
       #   --key=value
       #   --key='value with spaces'
       if [[ $w == --$key ]]; then
-        if ((i + 1 <= ${#words})) && [[ ${words[i+1]} != --* ]]; then
+        if ((i + 1 <= ${#words})) && [[ ${words[i + 1]} != --* ]]; then
           ((i++)) # skip old value token
         fi
         new+=("--$key='$val'")
@@ -262,7 +262,7 @@ EOF
       if [[ ${words[i]} == --color || ${words[i]} == --color=* ]]; then
         local color_list
         if [[ ${words[i]} == --color ]]; then
-          color_list=${words[i+1]}
+          color_list=${words[i + 1]}
         else
           color_list=${words[i]#--color=}
         fi
@@ -280,7 +280,7 @@ EOF
         ((!found)) && parts+=("${ckey}:${cval}")
 
         if [[ ${words[i]} == --color ]]; then
-          words[i+1]="${(j:,:)parts}"
+          words[i + 1]="${(j:,:)parts}"
         else
           words[i]="--color=${(j:,:)parts}"
         fi
@@ -313,7 +313,7 @@ EOF
       if [[ ${words[i]} == --color || ${words[i]} == --color=* ]]; then
         local color_list
         if [[ ${words[i]} == --color ]]; then
-          color_list=${words[i+1]}
+          color_list=${words[i + 1]}
         else
           color_list=${words[i]#--color=}
         fi
@@ -330,7 +330,7 @@ EOF
 
         if ((${#new_parts})); then
           if [[ ${words[i]} == --color ]]; then
-            words[i+1]="${(j:,:)new_parts}"
+            words[i + 1]="${(j:,:)new_parts}"
           else
             words[i]="--color=${(j:,:)new_parts}"
           fi
@@ -368,7 +368,7 @@ EOF
       if [[ ${words[i]} == --bind || ${words[i]} == --bind=* ]]; then
         local bind_list
         if [[ ${words[i]} == --bind ]]; then
-          bind_list=${words[i+1]}
+          bind_list=${words[i + 1]}
         else
           bind_list=${words[i]#--bind=}
         fi
@@ -394,7 +394,7 @@ EOF
         bind_list="${(j:,:)parts}"
 
         if [[ ${words[i]} == --bind ]]; then
-          words[i+1]="$bind_list"
+          words[i + 1]="$bind_list"
         else
           words[i]="--bind=$bind_list"
         fi
@@ -420,7 +420,7 @@ EOF
       if [[ ${words[i]} == --bind || ${words[i]} == --bind=* ]]; then
         local bind_list
         if [[ ${words[i]} == --bind ]]; then
-          bind_list=${words[i+1]}
+          bind_list=${words[i + 1]}
         else
           bind_list=${words[i]#--bind=}
         fi
@@ -443,7 +443,7 @@ EOF
         if ((${#new_parts})); then
           bind_list="${(j:,:)new_parts}"
           if [[ ${words[i]} == --bind ]]; then
-            words[i+1]="$bind_list"
+            words[i + 1]="$bind_list"
           else
             words[i]="--bind=$bind_list"
           fi
@@ -481,7 +481,7 @@ EOF
         echo "fzopt: 'color' requires <color-key> <color-value>" >&2
         return 1
       }
-      _fzcolor_set "${args[i+1]}" "${args[i+2]}" || return 1
+      _fzcolor_set "${args[i + 1]}" "${args[i + 2]}" || return 1
       ((i += 3))
       ;;
     bind)
@@ -489,7 +489,7 @@ EOF
         echo "fzopt: 'bind' requires <key> <action>" >&2
         return 1
       }
-      _fzbind_set "${args[i+1]}" "${args[i+2]}" || return 1
+      _fzbind_set "${args[i + 1]}" "${args[i + 2]}" || return 1
       ((i += 3))
       ;;
     uncolor)
@@ -524,7 +524,7 @@ EOF
         return 1
       }
       local key=${args[i]}
-      local val=${args[i+1]}
+      local val=${args[i + 1]}
       if ((${_fz_stringy_keys[(I)$key]})); then
         _fzopt_set_stringy "$key" "$val" || return 1
       else

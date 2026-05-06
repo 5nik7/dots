@@ -83,18 +83,25 @@ set_theme() {
   export THEMEBIN="$THEMESROOT/bin"
   prepath "$THEMEBIN"
   export DOT_THEME="$(cat "$DOTS"/.theme)"
-  export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
-  if [[ "$THEME" == "catppuccin" ]]; then
+  if [[ $DOT_THEME == *-* ]]; then
+    export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
     export FLAVOR="$(echo "$DOT_THEME" | cut -d '-' -f 2)"
   fi
   export THEMEDIR="$THEMESROOT/$THEME"
+  export THEMESRC="$THEMEDIR/src"
+  export THEMECONF="$THEMEDIR/conf"
 
   export LS_COLORS="$(vivid generate "$DOT_THEME")"
 
-  so "$THEMEDIR/colors.zsh"
-  so "${HOME}/.fzf.zsh"
+  so "$THEMEDIR/func.sh"
+  so "$THEMEDIR/colors.sh"
+
+  for file in $THEMESRC/*;do
+    so "$file"
+  done
 
   has fzf &&\
+    so "${HOME}/.fzf.zsh"
     zieces 'fzf'
 }
 
