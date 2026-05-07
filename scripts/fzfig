@@ -24,13 +24,34 @@ figfonts() {
 }
 
 main() {
+  local cmd
+  local pipe=0
   local text='test'
+  local preview
+  while (($#)); do
+    case $1 in
+    -p | --pipe)
+      pipe=1
+      cmd=$2
+      shift 2
+      ;;
+    *) break ;;
+    esac
+  done
+
   [[ -n $1 ]] && text="$*"
+
+  if ((pipe)); then
+    preview="figlet -f {} ${text} | $cmd"
+  else
+    preview="figlet -f {} ${text}"
+  fi
+
   local output=$(figlet -f "$(figfonts | fzf --smart-case --cycle \
     --prompt "$text󰅂 " \
     --height '100%' \
     --color="preview-label:2,prompt:6,preview-bg:#181825,preview-border:#181825" \
-    --preview-window='default:down:50%:wrap-word:border-sharp' --preview="figlet -f {} ${text} | lolcat")" "$text" 2>/dev/null)
+    --preview-window='default:down:50%:wrap-word:border-sharp' --preview="$preview")" "$text" 2>/dev/null)
   [[ ! -n "$output" ]] || echo -e "$output" | cpy && echo "$output"
 }
 
