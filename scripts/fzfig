@@ -30,7 +30,7 @@ main() {
     --prompt "$text󰅂 " \
     --height '100%' \
     --color="preview-label:2,prompt:6,preview-bg:#181825,preview-border:#181825" \
-    --preview-window='default:down:50%:wrap-word:border-sharp' --preview="figlet -f {} ${text}")" "$text" 2>/dev/null)
+    --preview-window='default:down:50%:wrap-word:border-sharp' --preview="figlet -f {} ${text} | lolcat")" "$text" 2>/dev/null)
   [[ ! -n "$output" ]] || echo -e "$output" | cpy && echo "$output"
 }
 

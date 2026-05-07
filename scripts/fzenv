@@ -15,17 +15,20 @@ declare -r dim="${esc}[2m"
 declare -r italic="${esc}[3m"
 declare -r underline="${esc}[4m"
 declare -r rev="${esc}[7m"
+declare -r c21="${esc}[38;5;021m"
+declare -r c22="${esc}[38;5;022m"
 
 main() {
-  (env | sed "s/=/==/") | fzf --smart-case \
+  (env | sed "s/=/…/") | fzf --smart-case \
     --prompt '󰇁󰅂 ' \
     --height '100%' \
     --ansi --cycle \
     --color="preview-label:2,prompt:6,preview-bg:#181825,preview-border:#181825" \
-    -d '==' --with-nth '{1}' \
+    -d … \
+    --with-nth '{1}' \
     --preview-window='default:50%:down:wrap-word:border-sharp' \
     --preview-label-pos 'top' \
-    --preview "printf '${bold}${magenta}%s${rst}${white}=${rst}%s' {1} {2}" \
+    --preview "printf '${c21}%s${rst}\n${bold}%s${rst}' {1} {2}" \
     --query "${1:-}" \
     --accept-nth '{1}={2}'
 }

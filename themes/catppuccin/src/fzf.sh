@@ -8,12 +8,12 @@ bg:${transparent},\
 preview-bg:${transparent},\
 fg+:strip:${mauve}:bold,\
 fg:regular,\
-hl:${flamingo}:bold,\
-hl+:${pink}:bold:underline-double,\
+hl:${sky}:underline,\
+hl+:${green}:bold:underline,\
 info:${surface2},\
 query:${yellow},\
 gutter:regular:${surface0},\
-pointer:regular:${overlay1}:bold,\
+pointer:regular:${surface2}:bold,\
 marker:${yellow},\
 prompt:${mauve},\
 spinner:${surface1},\
