@@ -363,15 +363,15 @@ while true; do
   esac
 done
 
-has -v fzf gawk || die "missing deps: fzf and/or gawk"
+has -v fzf gawk || die
 
 request="$*"
 
 if [[ -r /etc/os-release ]]; then
   distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' /etc/os-release)
   distro="${distro%% *}"
-elif [[ -r "$TERMUX__PREFIX/etc/os-release" ]]; then
-  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$TERMUX__PREFIX/etc/os-release")
+elif [[ -r "$PREFIX/etc/os-release" ]]; then
+  distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$PREFIX/etc/os-release")
   distro="${distro%% *}"
 fi
 

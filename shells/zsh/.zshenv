@@ -12,9 +12,7 @@ elif [[ -r "$prefix/etc/os-release" ]]; then
   distro="${distro%% *}"
 elif [[ -n "$prefix" ]]; then
   distro='termux'
-fi
-
-if [[ -z "$distro" ]]; then
+else
   distro='unknown'
 fi
 

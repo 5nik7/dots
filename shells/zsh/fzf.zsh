@@ -16,7 +16,8 @@ fzdef() {
 --gutter-raw='▎' \
 --no-separator \
 --no-scrollbar \
--e \
+-x \
+--smart-case \
 --ansi"
 
   _FZF_BINDS_="\
@@ -26,7 +27,7 @@ down:down-match,\
 alt-r:toggle-raw"
 
   # so "$THEMECONF/fzf.sh"
-  _FZF_PREVIEW_POS_='bottom:hidden:50%:border-sharp'
+  _FZF_PREVIEW_POS_='right:hidden:50%:border-left'
   _PREVIEW_="preview.zsh"
 
   export _FZF_OPTS_ _FZF_BINDS_ _FZF_PREVIEW_POS_ _PREVIEW_

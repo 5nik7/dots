@@ -13,7 +13,7 @@ hl+:${pink}:bold:underline-double,\
 info:${surface2},\
 query:${yellow},\
 gutter:regular:${surface0},\
-pointer:regular:${overlay0}:bold,\
+pointer:regular:${overlay1}:bold,\
 marker:${yellow},\
 prompt:${mauve},\
 spinner:${surface1},\
