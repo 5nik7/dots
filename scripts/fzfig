@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 
-DIM=$'\x1b[38;5;241m' # dim
+declare -r esc=$'\033'
+declare -r rst="${esc}[0m"
+declare -r black="${esc}[30m"
+declare -r red="${esc}[31m"
+declare -r green="${esc}[32m"
+declare -r yellow="${esc}[33m"
+declare -r blue="${esc}[34m"
+declare -r magenta="${esc}[35m"
+declare -r cyan="${esc}[36m"
+declare -r white="${esc}[37m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+declare -r rev="${esc}[7m"
 
 output=''
 
@@ -12,7 +26,11 @@ figfonts() {
 main() {
   local text='test'
   [[ -n $1 ]] && text="$*"
-  local output=$(figlet -f "$(figfonts | fzf --preview-window='default:right:75%:border-left' --preview="figlet -f {} ${text}")" "$text" 2>/dev/null)
+  local output=$(figlet -f "$(figfonts | fzf --smart-case --cycle \
+    --prompt "$text󰅂 " \
+    --height '100%' \
+    --color="preview-label:2,prompt:6,preview-bg:#181825,preview-border:#181825" \
+    --preview-window='default:down:50%:wrap-word:border-sharp' --preview="figlet -f {} ${text}")" "$text" 2>/dev/null)
   [[ ! -n "$output" ]] || echo -e "$output" | cpy && echo "$output"
 }
 
