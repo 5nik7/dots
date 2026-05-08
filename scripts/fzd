@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+declare -r esc=$'\033'
+declare -r rst="${esc}[0m"
+declare -r black="${esc}[30m"
+declare -r red="${esc}[31m"
+declare -r green="${esc}[32m"
+declare -r yellow="${esc}[33m"
+declare -r blue="${esc}[34m"
+declare -r magenta="${esc}[35m"
+declare -r cyan="${esc}[36m"
+declare -r white="${esc}[37m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+declare -r rev="${esc}[7m"
+declare -r c16="${esc}[38;5;016m"
+declare -r c17="${esc}[38;5;017m"
+declare -r c18="${esc}[38;5;018m"
+declare -r c19="${esc}[38;5;019m"
+declare -r c20="${esc}[38;5;020m"
+declare -r c21="${esc}[38;5;021m"
+declare -r c22="${esc}[38;5;022m"
+declare -r c23="${esc}[38;5;023m"
+
+err() { printf "${red}%s${rst}\n" "$*" >&2; }
+die() {
+  err "$*"
+  exit 1
+}
+
+has() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do
+    c="${c%% *}"
+    if ! command -v "$c" &>/dev/null; then
+      ((verbose)) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
+has -v eza fzf strip-ansi awk || die
+
+# strip-ansi() (
+#   shopt -s extglob
+#   local IFS=
+#   local line
+#   while read -r line || [[ -n $line ]]; do
+#     printf '%s\n' "${line//$'\e'[\[(]*([0-9;])[@-n]/}"
+#   done
+# )
+
+eza() {
+  command eza -1a \
+    --show-symlinks --no-filesize --no-permissions --no-time --no-user --git-ignore --only-dirs --icons="always" --color="always" -- "$@"
+}
+
+fzf() {
+  command fzf -e +s --cycle --ansi \
+    --bind='Ctrl-X:toggle-preview' \
+    -d ' ' \
+    --with-nth '{1} {2}' \
+    --preview "printf '%s\n' {1} {2} {}" \
+    --preview-window="default:50%:right:border-left" \
+    --query "${1:-$2}" \
+    --accept-nth '{2}' | strip-ansi
+}
+
+# (env | sed "s/=/…/") | fzf --smart-case \
+#   --prompt '󰇁󰅂 ' \
+#   --height '100%' \
+#   --ansi --cycle \
+#   --color="preview-label:2,prompt:6,preview-bg:#181825,preview-border:#181825" \
+#   -d … \
+#   --with-nth '{1}' \
+#   --preview-window='default:50%:down:wrap-word:border-sharp' \
+#   --preview-label-pos 'top' \
+#   --preview "printf '${c21}%s${rst}\n${bold}%s${rst}' {1} {2}" \
+#   --query "${1:-}" \
+#   --accept-nth '{1}={2}'
+#
+
+cd() {
+  builtin cd "$@"
+}
+
+main() {
+  local out
+  local in=${1:-.}
+
+  [[ -d "${in}" ]] || die "${in} not a directory"
+  local selection="$(eza "${in}" | fzf)"
+
+  cd $in
+  if [[ ! -n $selection ]] 2>/dev/null; then
+    out="${in}"
+  else
+    out="${in}/${selection}"
+  fi
+  cd "$out"
+}
+
+main "$@"

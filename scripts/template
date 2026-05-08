@@ -1,1 +1,74 @@
 #!/usr/bin/env bash
+
+declare -r esc=$'\033'
+declare -r rst="${esc}[0m"
+declare -r black="${esc}[30m"
+declare -r red="${esc}[31m"
+declare -r green="${esc}[32m"
+declare -r yellow="${esc}[33m"
+declare -r blue="${esc}[34m"
+declare -r magenta="${esc}[35m"
+declare -r cyan="${esc}[36m"
+declare -r white="${esc}[37m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+declare -r rev="${esc}[7m"
+declare -r c16="${esc}[38;5;016m"
+declare -r c17="${esc}[38;5;017m"
+declare -r c18="${esc}[38;5;018m"
+declare -r c19="${esc}[38;5;019m"
+declare -r c20="${esc}[38;5;020m"
+declare -r c21="${esc}[38;5;021m"
+declare -r c22="${esc}[38;5;022m"
+declare -r c23="${esc}[38;5;023m"
+
+err() { printf "${red}%s %s${rst}\n" "[ERROR]" "$*" >&2; }
+die() {
+  err "$*"
+  exit 1
+}
+
+has() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do
+    c="${c%% *}"
+    if ! command -v "$c" &>/dev/null; then
+      ((verbose)) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
+usage() {
+  local prog=${0##*/}
+  cat <<-EOF
+	Usage: $prog [options] [...]
+
+	Description...
+
+	Options
+	  -h, --help     Print this message and exit
+	EOF
+}
+
+main() {
+  while [[ -n $1 ]]; do
+    case "$1" in
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -o | --opt)
+      ;;
+    *) die "invalid argument: $1" ;;
+    esac
+  done
+}
+
+main "$@"

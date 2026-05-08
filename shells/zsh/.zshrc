@@ -158,6 +158,8 @@ if checkdir "$HOME/.nvm"; then
   [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 fi
 
+zle_highlight=('paste:none')
+
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
     zprof
 fi

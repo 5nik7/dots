@@ -38,13 +38,6 @@ alias rmr='rm -fvr'
 #   mkdir -p "$1" && cd "$1"
 # }
 
-function fzd() {
-  local cmd selection input target
-  input=${1:-.}
-  cmd=cd
-  selection=$(echo $(eza -la --show-symlinks --no-filesize --no-permissions --no-time --no-user --git-ignore --only-dirs --icons=always --color=always $input | fzf -e --ansi) | strip-ansi | awk '{print $2}') && [ -n "$selection" ] &>/dev/null && $cmd "$input/$selection"
-}
-
 alias "zd"="fzd"
 
 function mkcd() { mkdir -p "$@" && cd $_; }
@@ -87,19 +80,9 @@ alias ".ab"="cd $DROIDOTS/bin"
 alias ".w"="cd $WINDOTS"
 alias ".wf"="cd $WINDOTS/configs"
 
-export eza_opts=("--icons=always" "--color=always" "--icons" "--group-directories-first")
-
 if has eza; then
-  function lscmd() {
-    local opts=()
-    if [ -n "$eza_opts" ]; then
-      for opt in "${eza_opts[@]}"; do
-        opts+="$opt"
-      done
-    fi
-    eza $opts $@
-  }
-  alias ls="lscmd"
+  export eza_opts=("--icons=always" "--color=always" "--group-directories-first")
+  alias ls="eza ${eza_opts[*]}"
 else
   alias ls="ls --color=always"
 fi

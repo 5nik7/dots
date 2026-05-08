@@ -1,44 +1,16 @@
 #!/usr/bin/env bash
-
-declare -r esc=$'\033'
-declare -r c_reset="${esc}[0m"
-declare -r bold="${esc}[1m"
-declare -r dim="${esc}[2m"
-declare -r italic="${esc}[3m"
-declare -r underline="${esc}[4m"
-declare -r rev="${esc}[7m"
-declare -r fg_rosewater="${esc}[38;2;245;224;220m"
-declare -r fg_flamingo="${esc}[38;2;242;205;205m"
-declare -r fg_pink="${esc}[38;2;245;194;231m"
-declare -r fg_mauve="${esc}[38;2;203;166;247m"
-declare -r fg_red="${esc}[38;2;243;139;168m"
-declare -r fg_maroon="${esc}[38;2;235;160;172m"
-declare -r fg_peach="${esc}[38;2;250;179;135m"
-declare -r fg_yellow="${esc}[38;2;249;226;175m"
-declare -r fg_green="${esc}[38;2;166;227;161m"
-declare -r fg_teal="${esc}[38;2;148;226;213m"
-declare -r fg_sky="${esc}[38;2;137;220;235m"
-declare -r fg_sapphire="${esc}[38;2;116;199;236m"
-declare -r fg_blue="${esc}[38;2;137;180;250m"
-declare -r fg_lavender="${esc}[38;2;180;190;254m"
-declare -r fg_text="${esc}[38;2;205;214;244m"
-declare -r fg_subtext1="${esc}[38;2;186;194;224m"
-declare -r fg_subtext0="${esc}[38;2;166;173;200m"
-declare -r fg_overlay2="${esc}[38;2;147;153;178m"
-declare -r fg_overlay1="${esc}[38;2;127;132;156m"
-declare -r fg_overlay0="${esc}[38;2;108;113;134m"
-declare -r fg_surface2="${esc}[38;2;88;91;112m"
-declare -r fg_surface1="${esc}[38;2;69;71;90m"
-declare -r fg_surface0="${esc}[38;2;49;50;68m"
-declare -r fg_base="${esc}[38;2;30;30;46m"
-declare -r fg_mantle="${esc}[38;2;24;24;37m"
-declare -r fg_crust="${esc}[38;2;17;17;27m"
-declare -r bg_mantle="${esc}[48;2;24;24;37m"
-declare -r spacer="${dim}=${c_reset}"
-declare -r caticon="󰄛"
-
-default="mocha"
-bgcolor="mantle"
+#      |\___/|
+#      )     (
+#     =\     /=
+#       )═══(    Usage: catppuccin -f FLAVOR [-c COLOR]
+#      /     \
+#      |     |     Options:
+#     /       \     -f, --flavor    Specified flavor
+#     \       /     -c, --color     Specified color
+#      \__  _/      -a, --all       Show all colors
+#        ( (        -h, --help      Show help
+#         ) )
+#        (_(
 
 mocha() {
   rosewater='#f5e0dc'
@@ -156,90 +128,149 @@ frappe() {
   crust='#232634'
 }
 
+declare -r sdir="${0%/*}"
+
+declare -r esc=$'\033'
+declare -r rst="${esc}[0m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+declare -r rev="${esc}[7m"
+
+declare -r base_black="${esc}[30m"
+declare -r base_red="${esc}[31m"
+declare -r base_green="${esc}[32m"
+declare -r base_yellow="${esc}[33m"
+declare -r base_blue="${esc}[34m"
+declare -r base_magenta="${esc}[35m"
+declare -r base_cyan="${esc}[36m"
+declare -r base_white="${esc}[37m"
+
+declare sep='|'
+declare caticon="󰄛"
+declare block='󰄮'
+declare default_flavor="mocha"
+declare default_format="hex"
+
+err() { printf "${base_red}%s %s %s${rst}\n\n" "$caticon" "[ERROR]" "$*" >&2; }
+die() {
+  err "$*"
+  exit 1
+}
+
+has() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do
+    c="${c%% *}"
+    if ! command -v "$c" &>/dev/null; then
+      ((verbose)) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
 cmd_exists() {
   command -v "$1" &>/dev/null
 }
 
-foreground() {
+has -v pastel || die
+
+fg() {
   COLOR="$1"
   local r="$(pastel format rgb-r "${!COLOR}")"
   local g="$(pastel format rgb-g "${!COLOR}")"
   local b="$(pastel format rgb-b "${!COLOR}")"
-  local foreground="${esc}[38;2;${r};${g};${b}m"
+  local fg="${esc}[38;2;${r};${g};${b}m"
 
-  printf "%s" "$foreground"
+  printf "%s" "$fg"
 }
 
-background() {
+bg() {
   COLOR="$1"
   local r="$(pastel format rgb-r "${!COLOR}")"
   local g="$(pastel format rgb-g "${!COLOR}")"
   local b="$(pastel format rgb-b "${!COLOR}")"
-  local background="${esc}[48;2;${r};${g};${b}m"
+  local bg="${esc}[48;2;${r};${g};${b}m"
 
-  printf "%s" "$background"
+  printf "%s" "$bg"
 }
 
-start() {
-  if cmd_exists pastel; then
-    local bg=$(background base)
-    local ansi="$(pastel format ansi-24bit-escapecode "${!var}")"
-    local block='󰄮'
-    printf "%s%s%s  " "$bg" "$ansi" "$block"
-  else
-    printf ''
-  fi
+logo() {
+  local logo=("$(cat "$sdir/logo")")
+  for line in "${logo[@]}"; do
+    printf '%s\n' "$line"
+  done
+}
+
+helpman() {
+  local IFS=
+  local line
+  while read -r line || [[ -n $line ]]; do
+    printf '%s%s\n' "$line" "$sep"
+  done
+}
+
+usage() {
+  logo
+  local prog=${0##*/}
+  cat <<-EOF
+  Usage: $prog [options] [...]
+
+	Description...
+
+	Options
+	  -h, --help     Print this message and exit
+EOF
 }
 
 color_codes() {
-  # local fg=''
-  local fg=$(foreground text)
-  # local bg=''
-  local bg=$(background "$bgcolor")
-  local ansi=$(foreground "$var")
-  local block='󰄮'
-  if [[ -n "$FORMAT" ]]; then
-    local formatted="$(pastel -m "$color_mode" format "$FORMAT" "${!var}")"
-    printf "${bg} ${ansi}${block}  ${fg}%-9s ${spacer}${fg}${bg} %s \n" "$var" "$formatted"
-  else
-    printf "${bg} ${ansi}${block}  ${fg}%-9s ${spacer}${fg}${bg} %s \n" "$var" "${!var}"
-  fi
+  local fg_var=$(fg "$var")
+  local fg_text=$(fg "text")
+  local fmtd="$(pastel -m "$color_mode" format "$FORMAT" "${!var}")"
+  printf '%s%s%s%s%s%s%s\n' "${fg_var}" "${block}" "${rst}" "${sep}" "${var}" "${sep}" "${fmtd}"
 }
 
 print_colors() {
   local flavor="$FLAVOR"
-  local fg=$(foreground text)
-  local bg=$(background "$bgcolor")
-  local tc=$(foreground mauve)
-  local bc=$(foreground surface0)
+  local tc=$(fg mauve)
+  local bc=$(fg surface0)
   for var in rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface1 surface0 base mantle crust; do
     # start
     color_codes
-  done | box -bc "${bg}${bc}" -t "${flavor}" -tc "${bg}${bold}${tc}"
+  done | box -hp 1 -bc "${bc}" -t "${flavor}" -tc "${tc}" -s "$sep"
 
 }
 
 list_colors() {
-  echo -e "${fg_mauve}${bold} colors:${c_reset}"
+  local tc=$(fg mauve)
+  local bc=$(fg surface0)
+  local fg_text=$(fg "text")
   for col in rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface1 surface0 base mantle crust; do
-    printf "${fg_text}   %s${c_reset}\n" "$col"
-  done
+    printf '%s%s%s\n' "${fg_text}${col}${rst}"
+  done | box -hp 1 -bc "${bc}" -t "colors:" -tc "${tc}" -s "$sep"
 }
 
 list_flavors() {
-  echo -e "${fg_mauve}${bold} flavors:${c_reset}"
+  local current=${FLAVOR}
+  local tc=$(fg mauve)
+  local bc=$(fg surface0)
   for flav in mocha macchiato frappe latte; do
-    if [[ "$flav" == "$FLAVOR" ]]; then
-      flavcol="${fg_pink}"
+    if [[ "$flav" == "$current" ]]; then
+      flavcol="$(fg pink)"
     else
-      flavcol="${fg_text}"
+      flavcol="$(fg text)"
     fi
-    if [[ "$flav" == "$default" ]]; then
-      printf "${flavcol}   %s${c_reset} ${fg_surface2}%s${c_reset}\n" "$flav" "(default)"
+    if [[ "$flav" == "$default_flavor" ]]; then
+      printf "%s%s\n" "${flavcol}${flav}${rst}" "$(fg overlay2)(default)${rst}"
     else
-      printf "${flavcol}   %s${c_reset}\n" "$flav"
+      printf "%s\n" "${flavcol}${flav}${rst}"
     fi
-  done
+  done | box -hp 1 -bc "${bc}" -t "flavors:" -tc "${tc}" -s "$sep"
 }
 
 print_all() {
@@ -255,146 +286,129 @@ print_all() {
   done
 }
 
-err() {
-  printf "${fg_red} ${caticon}${bold} %s${c_reset}\n" "$1"
-}
+main() {
+  # Parse arguments
+  # FLAVOR=""
+  COLOR=""
+  color_mode='auto'
 
-usage() {
-  local prog=${0##*/}
-  echo -e ""
-  echo -e "${fg_surface1}     |\___/|${c_reset}"
-  echo -e "${fg_surface1}     )     (${c_reset}"
-  echo -e "${fg_surface1}    =\     /=${c_reset}"
-  echo -e "      ${fg_red})═══(${fg_overlay0}    Usage: ${bold}${fg_mauve}${prog}${c_reset} ${fg_pink}-f ${fg_text}FLAVOR ${fg_overlay0}[${fg_pink}-c ${fg_text}COLOR${fg_overlay0}]${c_reset}"
-  echo -e "${fg_surface1}     /     \\${c_reset}"
-  echo -e "${fg_surface1}     |     |     ${fg_overlay0}Options:${c_reset}"
-  echo -e "${fg_surface1}    /       \     ${fg_pink}-f, --flavor    ${fg_lavender}Specified flavor${c_reset}"
-  echo -e "${fg_surface1}    \       /     ${fg_pink}-c, --color     ${fg_lavender}Specified color${c_reset}"
-  echo -e "${fg_surface1}     \__  _/      ${fg_pink}-a, --all       ${fg_lavender}Show all colors${c_reset}"
-  echo -e "${fg_surface1}       ( (        ${fg_pink}-h, --help      ${fg_lavender}Show help${c_reset}"
-  echo -e "${fg_surface1}        ) )${c_reset}"
-  echo -e "${fg_surface1}       (_(${c_reset}"
-  echo -e "${c_reset}"
-}
+  if [[ ! -z "$FLAVOR" ]]; then
+    FLAVOR="$default_flavor" # Default flavor if none specified
+  fi
 
-# Parse arguments
-# FLAVOR=""
-COLOR=""
-FORMAT=""
-color_mode='auto'
+  if [[ -z "$FORMAT" ]]; then
+    FORMAT="$default_format"
+  fi
 
-if [[ ! -z "$FLAVOR" ]]; then
-  FLAVOR="$default" # Default flavor if none specified
-fi
-
-if [[ $# == 0 ]]; then
-  usage
-  exit 0
-fi
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-  -h | --help)
+  if [[ $# == 0 ]]; then
     usage
     exit 0
-    ;;
-  -a | --all)
-    print_all
-    exit 0
-    ;;
-  -f | --flavor)
-    if [[ -n "$2" ]]; then
-      FLAVOR="$2"
-      shift 2
-    else
-      echo
-      list_flavors
-      echo
+  fi
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -h | --help)
+      usage
       exit 0
-    fi
-    ;;
-  mocha | macchiato | frappe | latte)
-    FLAVOR="$1"
-    shift
-    ;;
-  -c | --color)
-    if [[ -n "$2" ]]; then
-      COLOR="$2"
-      shift 2
-    else
-      echo
-      list_colors
-      echo
+      ;;
+    -a | --all)
+      print_all
       exit 0
-    fi
-    ;;
-  rosewater | flamingo | pink | mauve | red | maroon | peach | yellow | green | teal | sky | sapphire | blue | lavender | text | subtext1 | subtext0 | overlay2 | overlay1 | overlay0 | surface2 | surface1 | surface0 | base | mantle | crust)
-    COLOR="$1"
-    shift
-    ;;
-  --format)
-    if [[ -n "$2" ]]; then
-      FORMAT="$2"
-      shift 2
-    else
-      formats=(rgb rgb-float rgb-r rgb-g rgb-b hex hsl hsl-hue hsl-saturation hsl-lightness hsv hsv-hue hsv-saturation hsv-value lch lch-lightness lch-chroma lch-hue oklch oklch-lightness oklch-chroma oklch-hue lab lab-a lab-b oklab oklab-l oklab-a oklab-b luminance brightness ansi-8bit ansi-24bit ansi-8bit-value ansi-8bit-escapecode ansi-24bit-escapecode cmyk name)
-      echo "${formats[@]}"
-      exit 0
-    fi
-    ;;
-  ansi)
-    FORMAT="ansi-24bit"
-    shift
-    ;;
-  esc)
-    FORMAT="ansi-24bit-escapecode"
-    shift
-    ;;
-  rgb | rgb-float | rgb-r | rgb-g | rgb-b | hex | hsl | hsl-hue | hsl-saturation | hsl-lightness | hsv | hsv-hue | hsv-saturation | hsv-value | lch | lch-lightness | lch-chroma | lch-hue | oklch | oklch-lightness | oklch-chroma | oklch-hue | lab | lab-a | lab-b | oklab | oklab-l | oklab-a | oklab-b | luminance | brightness | ansi-8bit | ansi-24bit | ansi-8bit-value | ansi-8bit-escapecode | ansi-24bit-escapecode | cmyk | name)
-    FORMAT="$1"
-    shift
-    ;;
-  -r | --raw)
-    color_mode='off'
-    shift
-    ;;
+      ;;
+    -f | --flavor)
+      if [[ -n "$2" ]]; then
+        FLAVOR="$2"
+        shift 2
+      else
+        list_flavors
+        exit 0
+      fi
+      ;;
+    mocha | macchiato | frappe | latte)
+      FLAVOR="$1"
+      shift
+      ;;
+    -c | --color)
+      if [[ -n "$2" ]]; then
+        COLOR="$2"
+        shift 2
+      else
+        echo
+        list_colors
+        echo
+        exit 0
+      fi
+      ;;
+    rosewater | flamingo | pink | mauve | red | maroon | peach | yellow | green | teal | sky | sapphire | blue | lavender | text | subtext1 | subtext0 | overlay2 | overlay1 | overlay0 | surface2 | surface1 | surface0 | base | mantle | crust)
+      COLOR="$1"
+      shift
+      ;;
+    --format)
+      if [[ -n "$2" ]]; then
+        FORMAT="$2"
+        shift 2
+      else
+        formats=(rgb rgb-float rgb-r rgb-g rgb-b hex hsl hsl-hue hsl-saturation hsl-lightness hsv hsv-hue hsv-saturation hsv-value lch lch-lightness lch-chroma lch-hue oklch oklch-lightness oklch-chroma oklch-hue lab lab-a lab-b oklab oklab-l oklab-a oklab-b luminance brightness ansi-8bit ansi-24bit ansi-8bit-value ansi-8bit-escapecode ansi-24bit-escapecode cmyk name)
+        echo "${formats[@]}"
+        exit 0
+      fi
+      ;;
+    ansi)
+      FORMAT="ansi-24bit"
+      shift
+      ;;
+    esc)
+      FORMAT="ansi-24bit-escapecode"
+      shift
+      ;;
+    rgb | rgb-float | rgb-r | rgb-g | rgb-b | hex | hsl | hsl-hue | hsl-saturation | hsl-lightness | hsv | hsv-hue | hsv-saturation | hsv-value | lch | lch-lightness | lch-chroma | lch-hue | oklch | oklch-lightness | oklch-chroma | oklch-hue | lab | lab-a | lab-b | oklab | oklab-l | oklab-a | oklab-b | luminance | brightness | ansi-8bit | ansi-24bit | ansi-8bit-value | ansi-8bit-escapecode | ansi-24bit-escapecode | cmyk | name)
+      FORMAT="$1"
+      shift
+      ;;
+    -r | --raw)
+      color_mode='off'
+      shift
+      ;;
+    *)
+      err "Unknown option: $1"
+      exit 1
+      ;;
+    esac
+  done
+
+  case "$FLAVOR" in
+  mocha) mocha ;;
+  macchiato) macchiato ;;
+  latte) latte ;;
+  frappe) frappe ;;
   *)
-    echo -e "${fg_red}Unknown option:${fg_text} $1${c_reset}"
+    echo
+    err "'$FLAVOR' is not a flavor."
+    list_flavors
     exit 1
     ;;
   esac
-done
 
-case "$FLAVOR" in
-mocha) mocha ;;
-macchiato) macchiato ;;
-latte) latte ;;
-frappe) frappe ;;
-*)
-  echo
-  err "'$FLAVOR' is not a flavor."
-  echo
-  list_flavors
-  echo
-  exit 1
-  ;;
-esac
-
-if [[ -n "$COLOR" ]]; then
-  if [[ -n "${!COLOR}" ]]; then
-    if [[ -n "$FORMAT" ]]; then
-      pastel -m "$color_mode" format "$FORMAT" "${!COLOR}"
+  if [[ -n "$COLOR" ]]; then
+    if [[ -n "${!COLOR}" ]]; then
+      if [[ -n "$FORMAT" ]]; then
+        pastel -m "$color_mode" format "$FORMAT" "${!COLOR}"
+      else
+        pastel -m "$color_mode" format "$FORMAT" "${!COLOR}"
+      fi
     else
-      echo "${!COLOR}"
+      echo
+      err "Color '$COLOR' not found in flavor '$FLAVOR'."
+      echo
+      list_colors
+      echo
+      exit 1
     fi
   else
-    echo
-    err "Color '$COLOR' not found in flavor '$FLAVOR'."
-    echo
-    list_colors
-    echo
-    exit 1
+    print_colors
   fi
-else
-  print_colors
-fi
+}
+
+main "$@"
+
+#

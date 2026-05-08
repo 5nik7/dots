@@ -29,8 +29,6 @@ setopt_if_exists re_match_pcre
 unset setopt_if_exists
 unsetopt beep
 
-zle_highlight=('paste:none')
-
 bindkey -v
 export KEYTIMEOUT=1
 
