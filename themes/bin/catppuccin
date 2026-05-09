@@ -219,8 +219,8 @@ Options
 }
 
 color_codes() {
-  local cmode="${COLORMODE:-off}"
-  local cformat="${COLORFORMAT:-hex}"
+  local cmode="${COLORMODE}"
+  local cformat="${COLORFORMAT}"
   local fg_var=$(fg "$var")
   local fg_text=$(fg "text")
   local fmtd=$(chcmd pastel -m "$cmode" format "$cformat" "${!var}")
@@ -272,19 +272,28 @@ auto | off | 24bit | 8bit
 }
 
 list_formats() {
-  IFS= read -d '' -r colorformats <<-EOF
+  IFS= read -d '' -ra colorformats <<-EOF
 name hex cmyk luminance brightness
+
 rgb[-float|-r|-g|-b]
+
 hsl[-hue|-saturation|-lightness]
+
 hsv[-hue|-saturation|-value]
+
 lch[-lightness|-chroma|-hue]
+
 oklch[-lightness|-chroma|-hue]
+
 lab[-a|-b]
+
 oklab[-l|-e|-b]
+
 ansi-8bit[-value|-escapecode]
+
 ansi-24bit[-value|-escapecode]
 	EOF
-  echo "$colorformats" | box -hp 1 -bc "${bc}" -t "formats:" -tc "${tc}" -s "${sep}"
+  echo "${colorformats[@]}" | box -hp 1 -bc "${bc}" -t "formats:" -tc "${tc}" -s ''
 }
 
 print_all() {
@@ -405,7 +414,7 @@ main() {
       if [[ -n "$COLORFORMAT" ]]; then
         cmode="${COLOPMODE:-auto}"
         cformat="${COLORFORMAT:-hex}"
-        chcmd pastel -m "$cmode" format "$cformat" "${!COLOR}"
+        chcmd pastel -m "$COLORMODE" format "$COLORFORMAT" "${!COLOR}"
       else
         echo "${!COLOR}"
       fi

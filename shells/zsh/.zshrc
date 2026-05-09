@@ -87,7 +87,7 @@ set_theme() {
     export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
     export FLAVOR="$(echo "$DOT_THEME" | cut -d '-' -f 2)"
   fi
-  export COLORMODE="off"
+  export COLORMODE="auto"
   export COLORFORMAT="hex"
   export THEMEDIR="$THEMESROOT/$THEME"
   export THEMESRC="$THEMEDIR/src"
