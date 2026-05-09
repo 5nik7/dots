@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+log() { echo "[*]" "$@"; }
+log_error() { echo "[*]" "$@" 1>&2; }
+
+chcmd() {
+  "$@" &>/dev/null && "$@"
+}
+
 extpath() {
   if [[ -d "$1" ]]; then
     if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"; then
@@ -26,18 +33,18 @@ err() {
     parts=($RED"${parts[@]}"$RED)
     printf '%s%s%s\n' "$RED$erricon" "$sep" "${parts[@]}"
 
-  done | box -hp 1 -bc "${DIM}${DARKRED}" -s $sep
+  done | box -hp 1 -btc "${DIM}${DARKRED}" -s $sep
 }
 
 ok() {
-  local parts line
+  local lin parts
   local sep='|'
   local okicon=""
 
   for line in "$@"; do
     IFS=$sep read -r parts <<<"$line"
-    parts=($GREEN"${parts[@]}"$GREEN)
-    printf '%s%s%s\n' "$GREEN$okicon" "$sep" "${parts[@]}"
+    parts=(${GREEN}"${parts[@]}"${GREEN})
+    printf '%s%s%s\n' "${GREEN}$okicon" "$sep" "${parts[@]}"
   done | box -hp 1 -bc "${DIM}${DARKGREEN}" -s $sep
 }
 
@@ -67,6 +74,7 @@ has() {
     fi
   done
 }
+alias cmd_exists="has"
 
 fileicon() {
   local icon=''
@@ -295,6 +303,7 @@ check() {
 
 checkdir() {
   local input icon dir base
+  local found=()
   local exists=0
   local verbose=0
   local first=0
@@ -316,6 +325,7 @@ checkdir() {
   done
   for input in "$@"; do
     if [[ -d "$input" ]]; then
+      found+="$input"
       exists+=1
       if ((verbose)); then
         icon=$(fileicon $input)
@@ -332,8 +342,11 @@ checkdir() {
       fi
     fi
   done
-  ((exists >= 1)) && return 0
-  return 1
+  if ((exists >= 1)); then
+    return 0
+  else
+    return 1
+  fi
 }
 
 addir() {
@@ -355,21 +368,6 @@ addir() {
     else
       local icon=$(fileicon $dir)
       ((verbose)) && warn "$out: already exists"
-    fi
-  done
-}
-
-cmd_exists() {
-  local verbose=0
-  if [[ $1 == '-v' ]]; then
-    verbose=1
-    shift
-  fi
-  for c; do
-    c="${c%% *}"
-    if ! command -v "$c" &>/dev/null; then
-      ((verbose)) && err "$c not found"
-      return 1
     fi
   done
 }
@@ -397,90 +395,4 @@ timestampcmd() {
   local output
   output="$("$@" 2>&1)"
   timestamp "$output"
-}
-
-compact() {
-  if [ "$#" -ge "1" ]; then
-    case "$1" in
-    *.[tT][aA][rR].[bB][zZ] | *.[tT][bB][zZ])
-      local file="$1"
-      shift
-      tar jcvf "$file" "$@"
-      ;;
-    *.[tT][aA][rR].[bB][zZ]2 | *.[tT][bB][zZ]2)
-      local file="$1"
-      shift
-      tar jcvf "$file" "$@"
-      ;;
-    *.[tT][aA][rR].[gG][zZ] | *.[tT][gG][zZ])
-      local file="$1"
-      shift
-      tar zcvf "$file" "$@"
-      ;;
-    *.[gG][tT][gG][zZ])
-      local file="$1"
-      shift
-      tar zcvf "$file" "$@"
-      ;;
-    *[bB][zZ]2)
-      shift
-      bzip2 -z -k "$@"
-      ;;
-    *.[rR][aA][rR])
-      local file="$1"
-      shift
-      rar a -r "$file" "$@"
-      ;;
-    *[gG][zZ])
-      shift
-      gzip -r "$@"
-      ;;
-    *.[tT][aA][rR])
-      local file="$1"
-      shift
-      tar cvf "$file" "$@"
-      ;;
-    *.[zZ][iI][pP])
-      local file="$1"
-      shift
-      zip -r "$file" "$@"
-      ;;
-    *.7[zZ])
-      local file="$1"
-      shift
-      7z a -r "$file" "$@"
-      ;;
-    *.[xX][zZ])
-      local file="$1"
-      shift
-      tar Jcvf "$file" "$@"
-      ;;
-    *) echo "don't know how to compact '$i' ..." ;;
-    esac
-  else
-    echo "Insufficient arguments."
-  fi
-}
-
-extract() {
-  for i in "$@"; do
-    if [ -f "$i" ]; then
-      case "$i" in
-      *.[tT][aA][rR].[bB][zZ] | *.[tT][bB][zZ]) tar xjvf "$i" ;;
-      *.[tT][aA][rR].[bB][zZ]2 | *.[tT][bB][zZ]2) tar xjvf "$i" ;;
-      *.[tT][aA][rR].[gG][zZ] | *.[tT][gG][zZ]) tar xzvf "$i" ;;
-      *.[gG][tT][gG][zZ]) tar xzvf "$i" ;;
-      *.[bB][zZ]2) bunzip2 "$i" ;;
-      *.[rR][aA][rR]) rar x -o+ "$i" ;;
-      *.[gG][zZ]) gunzip "$i" ;;
-      *.[tT][aA][rR]) tar xvf "$i" ;;
-      *.[zZ][iI][pP]) unzip -o "$i" ;;
-      *.Z) uncompress "$i" ;;
-      *.7[zZ]) 7z x "$i" ;;
-      *) echo "don't know how to extract '$i' ..." ;;
-      esac
-    else
-      echo "$i is not a valid file"
-    fi
-  done
 }
