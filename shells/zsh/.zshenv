@@ -31,6 +31,36 @@ if [[ -r /etc/wsl-distribution.conf ]]; then
   iswsl=true
 fi
 
+istermux() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  if [[ "$istermux" == true ]] &>/dev/null; then
+    ((verbose)) && echo "true"
+    return 0
+  else
+    ((verbose)) && echo "false"
+    return 1
+  fi
+}
+
+iswsl() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  if [[ "$iswsl" == true ]] &>/dev/null; then
+    ((verbose)) && echo "true"
+    return 0
+  else
+    ((verbose)) && echo "false"
+    return 1
+  fi
+}
+
 # set global default env
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"

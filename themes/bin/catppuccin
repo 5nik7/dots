@@ -1,7 +1,34 @@
 #!/usr/bin/env bash
 
-PROG=${0##*/}
-SDIR=${0%/*}
+declare -A colornames
+
+colornames=(
+  rosewater
+  flamingo
+  pink m
+  auve
+  red
+  maroon
+  peach
+  yellow
+  green
+  teal
+  sky
+  sapphire
+  blue
+  lavender
+  text
+  subtext1
+  subtext0
+  overlay2
+  overlay1
+  overlay0
+  surface2
+  surface0
+  base
+  mantle
+  crust
+)
 
 mocha() {
   rosewater='#f5e0dc'
@@ -29,7 +56,7 @@ mocha() {
   surface0='#313244'
   base='#1e1e2e'
   mantle='#181825'
-  crust='#11111b'
+  urust='#11111b'
 }
 
 macchiato() {
@@ -119,30 +146,35 @@ frappe() {
   crust='#232634'
 }
 
-declare -r esc=$'\033'
-declare -r rst="${esc}[0m"
-declare -r bold="${esc}[1m"
-declare -r dim="${esc}[2m"
-declare -r italic="${esc}[3m"
-declare -r underline="${esc}[4m"
-declare -r rev="${esc}[7m"
+esc=$'\033'
+rst="${esc}[0m"
+bold="${esc}[1m"
+dim="${esc}[2m"
+italic="${esc}[3m"
+underline="${esc}[4m"
+rev="${esc}[7m"
+black="${esc}[30m"
+red="${esc}[31m"
+green="${esc}[32m"
+yellow="${esc}[33m"
+blue="${esc}[34m"
+magenta="${esc}[35m"
+cyan="${esc}[36m"
+white="${esc}[37m"
 
-declare -r base_black="${esc}[30m"
-declare -r base_red="${esc}[31m"
-declare -r base_green="${esc}[32m"
-declare -r base_yellow="${esc}[33m"
-declare -r base_blue="${esc}[34m"
-declare -r base_magenta="${esc}[35m"
-declare -r base_cyan="${esc}[36m"
-declare -r base_white="${esc}[37m"
-
-declare sep='|'
-declare caticon="󰄛"
+default_flavor="mocha"
+default_format="hex"
+declare -r prog="${0##*/}"
+declare -r sdir="${0%/*}"
+declare ep='|'
+declare aticon="󰄛"
 declare block='󰄮'
-declare default_flavor="mocha"
-declare default_format="hex"
+declare logo="${sdir}/logo"
+declare box=1
+declare raw=0
+declare array=0
 
-err() { printf "${base_red}%s %s %s${rst}\n\n" "[ERROR]" "$caticon" "$*" >&2; }
+err() { printf "${red}%s %s %s${rst}\n" "[ERROR]" "$caticon" "$*" >&2; }
 die() {
   err "$*"
   exit 1
@@ -197,16 +229,18 @@ tc=$(fg mauve)
 bc=$(fg surface0)
 
 logo() {
-  while IFS= read -r logo; do
+  local IFS=
+  while read -r logo; do
     echo "$logo"
-  done <${SDIR}/logo
+  done <"$logo"
   unset IFS
 }
 
 usage() {
+  local IFS=
   local usage
-  IFS= read -d '' -r usage <<-EOF
-Usage: $PROG [options] [...]
+  read -d '' -r usage <<-EOF
+Usage: ${prog} [options] [...]
 
 Description...
 
@@ -219,22 +253,48 @@ Options
 }
 
 color_codes() {
-  local cmode="${COLORMODE}"
-  local cformat="${COLORFORMAT}"
+  local var="$1"
+  local format="$COLORFORMAT"
   local fg_var=$(fg "$var")
   local fg_text=$(fg "text")
-  local fmtd=$(chcmd pastel -m "$cmode" format "$cformat" "${!var}")
-  printf '%s%s%s%s%s%s%s\n' "${fg_var}" "${block}" "${rst}" "${sep}" "${var}" "${sep}" "${fmtd}"
+  local fmtd=$(chcmd pastel -m off format "$COLORFORMAT" "${!var}")
+  if ((raw)); then
+    if ((array)); then
+      printf '%s%s%s[%s]="%s"\n' "$flavor" "_" "$format" "$var" "${fmtd}"
+
+    else
+      printf "%s='%s'\n" "${var}" "${fmtd}"
+    fi
+  else
+    printf '%s|%s|%s\n' "${fg_var}${block}${rst}" "${var}" "${fmtd}"
+  fi
 }
 
 print_colors() {
+  local IFS=
   local flavor="$FLAVOR"
+  local format="$COLORFORMAT"
+  local codes=()
+  local var
 
   for var in rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface1 surface0 base mantle crust; do
-    # start
-    color_codes
-  done | box -hp 1 -bc "${bc}" -t "${flavor}" -tc "${tc}" -s "${sep}"
 
+    codes+=($(color_codes "$var"))
+
+  done
+  if ((box)); then
+    printf '%s\n' "${codes[@]}" | box -hp 1 -bc "${bc}" -t "$flavor[$format]" -tc "${tc}" -s '|'
+  else
+    if ((array)); then
+      echo "declare -A "${flavor}"_"${format}";"
+      for code in "${codes[@]}"; do
+        echo "$code;"
+      done
+    else
+      echo "$flavor["$format"]"
+      printf '%s\n' "${codes[@]}"
+    fi
+  fi
 }
 
 list_colors() {
@@ -264,36 +324,32 @@ list_flavors() {
   done | box -hp 1 -bc "${bc}" -t "flavors:" -tc "${tc}" -s "${sep}"
 }
 
-list_modes() {
-  IFS= read -r colormodes <<-EOF
-auto | off | 24bit | 8bit
-	EOF
-  echo "$colormodes" | box -hp 1 -bc "${bc}" -t "modes:" -tc "${tc}" -s "${sep}"
-}
-
 list_formats() {
-  IFS= read -d '' -ra colorformats <<-EOF
+  local IFS=
+  local colorsformats
+  read -d '' -ra colorformats <<-EOF
 name hex cmyk luminance brightness
 
-rgb[-float|-r|-g|-b]
+rgb|-float|-r|-g|-b
 
-hsl[-hue|-saturation|-lightness]
+hsl|-hue|-saturation|-lightness
 
-hsv[-hue|-saturation|-value]
+hsv|-hue|-saturation|-value
 
-lch[-lightness|-chroma|-hue]
+lch|-lightness|-chroma|-hue
 
-oklch[-lightness|-chroma|-hue]
+oklch|-lightness|-chroma|-hue
 
-lab[-a|-b]
+lab|-a|-b
 
-oklab[-l|-e|-b]
+oklab|-l|-e|-b
 
-ansi-8bit[-value|-escapecode]
+ansi-8bit|-value|-escapecode
 
-ansi-24bit[-value|-escapecode]
+ansi-24bit|-value|-escapecode
 	EOF
   echo "${colorformats[@]}" | box -hp 1 -bc "${bc}" -t "formats:" -tc "${tc}" -s ''
+  unset IFS
 }
 
 print_all() {
@@ -310,13 +366,19 @@ print_all() {
 }
 
 main() {
-  local cmode
-  local cformat
+  local box=1
+  local raw=0
+  local array=0
   COLOR=""
-  # COLORMODE="auto"
+  COLORFORMAT=""
+  COLORMODE=""
 
   if [[ ! -z "$FLAVOR" ]]; then
     FLAVOR="$default_flavor"
+  fi
+
+  if [[ -z "$COLORFORMAT" ]]; then
+    COLORFORMAT="$default_format"
   fi
 
   if [[ $# == 0 ]]; then
@@ -326,13 +388,24 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+    -a | --array)
+      raw=1
+      array=1
+      box=0
+      shift
+      ;;
+    -r | --raw)
+      raw=1
+      box=0
+      shift
+      ;;
     -h | --help)
       usage
-      exit 0
+      exit
       ;;
-    -a | --all)
+    --all)
       print_all
-      exit 0
+      exit
       ;;
     -f | --flavor)
       if [[ -n "$2" ]]; then
@@ -340,7 +413,7 @@ main() {
         shift 2
       else
         list_flavors
-        exit 0
+        exit
       fi
       ;;
     mocha | macchiato | frappe | latte)
@@ -353,7 +426,7 @@ main() {
         shift 2
       else
         list_colors
-        exit 0
+        exit
       fi
       ;;
     rosewater | flamingo | pink | mauve | red | maroon | peach | yellow | green | teal | sky | sapphire | blue | lavender | text | subtext1 | subtext0 | overlay2 | overlay1 | overlay0 | surface2 | surface1 | surface0 | base | mantle | crust)
@@ -366,28 +439,15 @@ main() {
         shift 2
       else
         list_formats
-        exit 0
+        exit
       fi
+      ;;
+    esc | -e)
+      COLORFORMAT="ansi-24bit-escapecode"
+      shift
       ;;
     rgb | rgb-float | rgb-r | rgb-g | rgb-b | hex | hsl | hsl-hue | hsl-saturation | hsl-lightness | hsv | hsv-hue | hsv-saturation | hsv-value | lch | lch-lightness | lch-chroma | lch-hue | oklch | oklch-lightness | oklch-chroma | oklch-hue | lab | lab-a | lab-b | oklab | oklab-l | oklab-a | oklab-b | luminance | brightness | ansi-8bit | ansi-24bit | ansi-8bit-value | ansi-8bit-escapecode | ansi-24bit-escapecode | cmyk | name)
       COLORFORMAT="$1"
-      shift
-      ;;
-    -m | --mode)
-      if [[ -n "$2" ]]; then
-        COLORMODE="$2"
-        shift 2
-      else
-        list_modes
-        exit 0
-      fi
-      ;;
-    auto | off | 24bit | 8bit)
-      COLORMODE="$1"
-      shift
-      ;;
-    -r | --raw)
-      COLORMODE="off"
       shift
       ;;
     *)
@@ -412,9 +472,7 @@ main() {
   if [[ -n "$COLOR" ]]; then
     if [[ -n "${!COLOR}" ]]; then
       if [[ -n "$COLORFORMAT" ]]; then
-        cmode="${COLOPMODE:-auto}"
-        cformat="${COLORFORMAT:-hex}"
-        chcmd pastel -m "$COLORMODE" format "$COLORFORMAT" "${!COLOR}"
+        chcmd pastel -m off format "$COLORFORMAT" "${!COLOR}"
       else
         echo "${!COLOR}"
       fi

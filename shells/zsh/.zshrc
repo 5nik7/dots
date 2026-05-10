@@ -15,36 +15,6 @@ autoload -U +X bashcompinit && bashcompinit
 autoload -Uz compinit; compinit
 autoload -U colors; colors
 
-istermux() {
-local verbose=0
-  if [[ $1 == '-v' ]]; then
-    verbose=1
-    shift
-  fi
-  if [[ "$istermux" == true ]] &> /dev/null; then
-   ((verbose)) && echo "true"
-    return 0
-  else
-   ((verbose)) && echo "false"
-    return 1
-  fi
-}
-
-iswsl() {
-local verbose=0
-  if [[ $1 == '-v' ]]; then
-    verbose=1
-    shift
-  fi
-  if [[ "$iswsl" == true ]] &> /dev/null; then
-    ((verbose)) && echo "true"
-    return 0
-  else
-    ((verbose)) && echo "false"
-    return 1
-  fi
-}
-
 # zieces 'zutil'
 zieces 'functions'
 zieces 'options'
@@ -87,8 +57,7 @@ set_theme() {
     export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
     export FLAVOR="$(echo "$DOT_THEME" | cut -d '-' -f 2)"
   fi
-  export COLORMODE="auto"
-  export COLORFORMAT="hex"
+
   export THEMEDIR="$THEMESROOT/$THEME"
   export THEMESRC="$THEMEDIR/src"
   export THEMECONF="$THEMEDIR/conf"

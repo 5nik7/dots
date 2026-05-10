@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+prog=${0##*/}
+
 declare -r esc=$'\033'
 declare -r rst="${esc}[0m"
 declare -r black="${esc}[30m"
@@ -45,20 +47,31 @@ has() {
   done
 }
 
+chcmd() {
+  "$@" &>/dev/null && "$@"
+}
+
 usage() {
   local prog=${0##*/}
-  cat <<-EOF
-	Usage: $prog [options] [...]
+  IFS= read -d '' -r usage <<-EOF
+	Usage: ${prog} [options] [...]
 
 	Description...
 
 	Options
 	  -h, --help     Print this message and exit
 	EOF
+  echo "$usage"
 }
 
 main() {
-  while [[ -n $1 ]]; do
+
+  if [[ $# == 0 ]]; then
+    usage
+    exit 0
+  fi
+
+  while [[ $# -gt 0 ]]; do
     case "$1" in
     -h | --help)
       usage
