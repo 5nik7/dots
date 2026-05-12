@@ -17,14 +17,6 @@ declare -r dim="${esc}[2m"
 declare -r italic="${esc}[3m"
 declare -r underline="${esc}[4m"
 declare -r rev="${esc}[7m"
-declare -r c16="${esc}[38;5;016m"
-declare -r c17="${esc}[38;5;017m"
-declare -r c18="${esc}[38;5;018m"
-declare -r c19="${esc}[38;5;019m"
-declare -r c20="${esc}[38;5;020m"
-declare -r c21="${esc}[38;5;021m"
-declare -r c22="${esc}[38;5;022m"
-declare -r c23="${esc}[38;5;023m"
 
 err() { printf "${red}%s %s${rst}\n" "[ERROR]" "$*" >&2; }
 die() {
@@ -75,11 +67,15 @@ main() {
     case "$1" in
     -h | --help)
       usage
-      exit 0
+      exit
       ;;
-    -o | --opt)
+    -* | --*)
+      echo "$1"
+      exit
       ;;
-    *) die "invalid argument: $1" ;;
+    *)
+      die "$*"
+      ;;
     esac
   done
 }

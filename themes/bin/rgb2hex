@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+prog=${0##*/}
+
+declare -r esc=$'\033'
+declare -r rst="${esc}[0m"
+declare -r black="${esc}[30m"
+declare -r red="${esc}[31m"
+declare -r green="${esc}[32m"
+declare -r yellow="${esc}[33m"
+declare -r blue="${esc}[34m"
+declare -r magenta="${esc}[35m"
+declare -r cyan="${esc}[36m"
+declare -r white="${esc}[37m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r italic="${esc}[3m"
+declare -r underline="${esc}[4m"
+declare -r rev="${esc}[7m"
+
+err() { printf "${red}%s %s${rst}\n" "[ERROR]" "$*" >&2; }
+die() {
+  err "$*"
+  exit 1
+}
+
+has() {
+  local verbose=0
+  if [[ $1 == '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do
+    c="${c%% *}"
+    if ! command -v "$c" &>/dev/null; then
+      ((verbose)) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
+chcmd() {
+  "$@" &>/dev/null && "$@"
+}
+
+usage() {
+  local prog=${0##*/}
+  IFS= read -d '' -r usage <<-EOF
+	Usage: ${prog} [options] [...]
+
+	Description...
+
+	Options
+	  -h, --help     Print this message and exit
+	EOF
+  echo "$usage"
+}
+
+main() {
+  local ired igreen iblue
+
+  if [[ $# == 0 ]]; then
+    usage
+    exit 0
+  fi
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    red | -r | --red)
+      if [[ "$2" -lt 256 ]]; then
+        ired="$2"
+        shift 2
+      else
+        err "bad $1 int: $2"
+        usage >&2
+        exit 2
+      fi
+      ;;
+    green | -g | --green)
+      if [[ "$2" -lt 256 ]]; then
+        igreen="$2"
+        shift 2
+      else
+        err "bad $1 int: $2"
+        usage >&2
+        exit 2
+
+      fi
+      ;;
+    blue | -b | --blue)
+      if [[ "$2" -lt 256 ]]; then
+        iblue="$2"
+        shift 2
+      else
+        err "bad $1 int: $2"
+        usage >&2
+        exit 2
+      fi
+      ;;
+    -h | --help | help)
+      usage
+      exit
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      err "Unknown option: $1"
+      usage >&2
+      exit 2
+      ;;
+    *)
+      if [[ "$1" -lt 256 ]]; then
+        if [[ -z "$ired" ]]; then
+          ired=$1
+          shift
+        elif [[ -z "$igreen" ]]; then
+          igreen=$1
+          shift
+        elif [[ -z "$iblue" ]]; then
+          iblue=$1
+          shift
+        else
+          err "Too many arguments: $1"
+          usage >&2
+          exit 2
+        fi
+      else
+        err "bad int $1"
+        usage >&2
+        exit 2
+      fi
+      ;;
+    esac
+  done
+
+  if [[ -z "$ired" ]]; then
+    ired=0
+  fi
+  if [[ -z "$igreen" ]]; then
+    igreen=0
+  fi
+  if [[ -z "$iblue" ]]; then
+    iblue=0
+  fi
+
+  printf "#%02x%02x%02x\n" $ired $igreen $iblue
+}
+
+main "$@"

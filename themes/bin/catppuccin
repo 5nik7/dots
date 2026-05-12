@@ -56,7 +56,7 @@ mocha() {
   surface0='#313244'
   base='#1e1e2e'
   mantle='#181825'
-  urust='#11111b'
+  crust='#11111b'
 }
 
 macchiato() {
@@ -203,6 +203,19 @@ has -v pastel || die
 
 chcmd() {
   "$@" &>/dev/null && "$@"
+}
+
+hex2rgb() {
+  hex="$1"
+  hex=${hex#\#}
+  printf "%d %d %d\n" 0x${hex:0:2} 0x${hex:2:2} 0x${hex:4:2}
+}
+
+rgb2hex() {
+  local ired="$1"
+  local igreen="$2"
+  local iblue="$3"
+  printf "#%02x%02x%02x\n" "$ired" "$igreen" "$iblue"
 }
 
 fg() {
