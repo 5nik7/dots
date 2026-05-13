@@ -30,7 +30,7 @@ transparent="-1"
 _FZF_COLORS_="\
 bg+:${transparent},\
 bg:${transparent},\
-preview-bg:${transparent},\
+preview-bg:$mantle,\
 fg+:strip:${mauve}:bold,\
 fg:regular,\
 hl:${sky}:underline,\
@@ -47,6 +47,6 @@ preview-label:${surface0},\
 separator:${base},\
 border:${surface0},\
 list-border:${surface0},\
-preview-border:${surface0},\
+preview-border:${mantle},\
 input-border:${surface0},\
 nomatch:strip:${surface1}:italic"

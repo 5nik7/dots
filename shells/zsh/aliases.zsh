@@ -153,12 +153,12 @@ alias sv="sudo $EDITOR"
 
 if [[ -d "$HOME/dev" ]]; then
   export DEV="$HOME/dev"
-  alias dev="fzd $DEV"
+  alias dev="cd $DEV"
 fi
 
 if [[ -d "$HOME/src" ]]; then
   export SRCDIR="$HOME/src"
-  alias src="fzd ${SRCDIR}"
+  alias src="cd ${SRCDIR}"
 fi
 
 has lazygit && alias lg='lazygit'
