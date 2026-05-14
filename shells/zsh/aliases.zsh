@@ -22,6 +22,8 @@ if has git-up; then
   alias gup='git-up'
 fi
 
+alias d8="date '+%-I:%M %p'"
+
 alias c='clear'
 alias q='exit'
 
