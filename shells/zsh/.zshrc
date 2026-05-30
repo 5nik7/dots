@@ -107,6 +107,9 @@ has uvx && eval "$(uvx --generate-shell-completion zsh)"
 
 has tv && eval "$(tv init zsh)"
 
+has mise && eval "$(mise activate zsh)"
+
+has usage && source <(usage g completion-init zsh)
 
 if [[ "$istermux" == true ]] &> /dev/null; then
   zieces 'droid'

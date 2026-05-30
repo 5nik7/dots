@@ -138,3 +138,7 @@ backup() {
 }
 
 so ~/.fzf.bash
+
+has mise && eval "$(mise activate bash)"
+
+has usage && source <(usage g completion-init bash)
