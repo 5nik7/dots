@@ -18,7 +18,7 @@ fi
 
 export distro
 
-distro() {
+dotsro() {
   local distro="${distro:-unknown}"
   echo "$distro"
 }
