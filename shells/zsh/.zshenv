@@ -10,7 +10,7 @@ if [[ -r /etc/os-release ]]; then
 elif [[ -r "$prefix/etc/os-release" ]]; then
   distro=$(awk -F'=' '"NAME" == $1 { gsub("\"", "", $2); print tolower($2); }' "$prefix/etc/os-release")
   distro="${distro%% *}"
-elif [[ -n "$prefix" ]]; then
+elif [[ -n "${TERMUX_VERSION:-}" ]]; then
   distro='termux'
 else
   distro='unknown'
@@ -66,8 +66,12 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
-export DOCS="$HOME/Documents"
-export NOTES="$DOCS/notes"
+
+docs="${DOCS:-$HOME/Documents}"
+export DOCS="$docs"
+
+notes="${NOTES:-$HOME/Notes}"
+export NOTES="$notes"
 
 # set dots env
 export DOTS="${DOTS:-$HOME/dots}"
