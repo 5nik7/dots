@@ -33,7 +33,7 @@ err() {
     parts=($RED"${parts[@]}"$RED)
     printf '%s%s%s\n' "$RED$erricon" "$sep" "${parts[@]}"
 
-  done | box -hp 1 -btc "${DIM}${DARKRED}" -s $sep
+  done | box -hp 1 -bc "${DIM}${DARKRED}" -s $sep
 }
 
 ok() {
