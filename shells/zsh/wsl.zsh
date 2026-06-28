@@ -25,7 +25,7 @@ extpath "$WINDIR/System32"
 extpath "$WINDIR"
 
 has vfox && eval "$(vfox activate zsh)"
-
+has bob && eval "$(bob complete zsh)"
 
 
 PATH="/home/njen/perl5/bin${PATH:+:${PATH}}"
