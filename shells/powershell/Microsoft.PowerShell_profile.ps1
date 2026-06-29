@@ -663,6 +663,8 @@ if ($PSEdition -eq 'Core') {
 
 Import-Module pscompletions
 
+if (Test-CommandExists zoxide) { Invoke-Expression (& { (zoxide init powershell | Out-String) }) }
+
 function Invoke-Starship-PreCommand {
   # This is a workaround for a bug in starship where the prompt doesn't update after certain commands
   # that change the directory, such as 'cd' or 'd'.
