@@ -105,6 +105,8 @@ has uv && eval "$(uv generate-shell-completion zsh)"
 
 has uvx && eval "$(uvx --generate-shell-completion zsh)"
 
+so "$HOME/.bun/_bun"
+
 has tv && eval "$(tv init zsh)"
 
 has mise && eval "$(mise activate zsh)"
