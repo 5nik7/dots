@@ -9,6 +9,9 @@ linked - inspect the symlinked parent component inside $PWD
 Usage:
   linked [option] [-r|--raw]
   linked -f|--format FORMAT [-r|--raw]
+  linked -j|--json [-r|--raw]
+  linked -A|--arrays [auto|bash|zsh] [-r|--raw]
+  linked --completion bash|zsh
 
 Default:
   Print the full symlink path found inside $PWD, formatted with ~ for $HOME.
@@ -23,10 +26,28 @@ Options:
   -D, --source-dirname     Print dirname of the symlink source/target path
   -B, --source-basename    Print basename of the symlink source/target path
 
-  -f, --format FORMAT      Print custom formatted output
+  -C, --shared-prefix      Print shared/common prefix directory between
+                           the symlink path and source path
 
-  -r, --raw                Do not replace $HOME with ~
+  -e, --link-branch-dir    Print symlink-side directory path after the shared
+                           prefix and before the symlink basename
+  -E, --source-branch-dir  Print source-side directory path after the shared
+                           prefix and before the source basename
+
+  -f, --format FORMAT      Print custom formatted output
+  -j, --json               Print all collected linked data as JSON
+  -A, --arrays [SHELL]     Print eval-safe associative arrays
+      --array [SHELL]      Alias for --arrays
+
+  -r, --raw                Do not replace $HOME with ~ for normal/string output
   -h, --help               Show this help
+
+      --completion SHELL   Print completion script for bash or zsh
+
+Array shells:
+  auto                     Detect from $LINKED_ARRAY_SHELL or $SHELL
+  bash                     Emit Bash declare -gA syntax
+  zsh                      Emit zsh typeset -gA syntax
 
 Format placeholders:
   %l   full symlink path
@@ -39,54 +60,208 @@ Format placeholders:
   %B   source basename
   %P   full source path plus prefix
 
+  %c   shared/common prefix directory between symlink path and source path
+  %e   symlink-side branch directory after shared prefix, before symlink basename
+  %E   source-side branch directory after shared prefix, before source basename
+
   %%   literal percent sign
 
 Examples:
-  Suppose:
-
-    $PWD
-      /path/to/home/path/to/dirname/symlink/prefixed/path
-
-    symlink
-      /path/to/home/path/to/dirname/symlink -> /path/to/home/path/two/dirname/source
-
   linked
-    ~/path/to/home/path/to/dirname/symlink
-
   linked --dirname
-    ~/path/to/home/path/to/dirname
-
   linked --basename
-    symlink
-
   linked --prefix
-    prefixed/path
-
   linked --source
-    ~/path/to/home/path/two/dirname/source
-
   linked --source-dirname
-    ~/path/to/home/path/two/dirname
-
   linked --source-basename
-    source
+  linked --shared-prefix
+  linked --link-branch-dir
+  linked --source-branch-dir
 
   linked -f '%d/%b/%p -> %D/%B/%p'
-    ~/path/to/home/path/to/dirname/symlink/prefixed/path -> ~/path/to/home/path/two/dirname/source/prefixed/path
+  linked -f 'shared: %c'
+  linked -f 'link branch: %e'
+  linked -f 'source branch: %E'
+  linked -f '%c/{%e,%E}/%b'
+  linked -f '%l -> %P'
+
+JSON:
+  linked --json
+
+Arrays:
+  # zsh users:
+  eval "$(linked --arrays zsh)"
+
+  # bash users:
+  eval "$(linked --arrays bash)"
+
+  # auto-detect from $LINKED_ARRAY_SHELL or $SHELL:
+  eval "$(linked --arrays)"
+
+  echo "${linked[symlink_path]}"
+  echo "${linked_raw[source_path]}"
+  echo "${linked[link_branch_dir]}"
+  echo "${linked[source_branch_dir]}"
+  echo "${linked_symlink_parts[1]}"
+  echo "${linked_source_parts[3]}"
+
+Completion:
+  linked --completion bash > ~/.local/share/bash-completion/completions/linked
+
+  linked --completion zsh > ~/.zfunc/_linked
 
 Notes:
   - linked searches $PWD component-by-component and uses the deepest symlink found.
   - If no symlink component exists in $PWD, linked exits non-zero.
   - %P is shorthand for the source path with the current prefix appended.
+  - %c compares the symlink path and source path by path components, not raw string characters.
+  - %e and %E are relative branch directories from %c to the parent dirs of %b and %B.
+  - --json includes raw paths, display paths, path parts, branch dirs, and metadata.
+  - --arrays outputs shell code intended for eval. Use --arrays zsh when evaling in zsh.
 EOF
+}
+
+completion_bash() {
+	cat <<'EOF'
+# bash completion for linked
+
+_linked() {
+	local cur prev
+	COMPREPLY=()
+
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+	case "$prev" in
+		--completion)
+			COMPREPLY=( $(compgen -W "bash zsh" -- "$cur") )
+			return 0
+			;;
+		-f|--format)
+			return 0
+			;;
+		-A|--arrays|--array)
+			COMPREPLY=( $(compgen -W "auto bash zsh" -- "$cur") )
+			return 0
+			;;
+	esac
+
+	case "$cur" in
+		--completion=*)
+			COMPREPLY=( $(compgen -W "bash zsh" -- "${cur#--completion=}") )
+			COMPREPLY=( "${COMPREPLY[@]/#/--completion=}" )
+			return 0
+			;;
+		--arrays=*|--array=*)
+			local prefix value
+			prefix=${cur%%=*}=
+			value=${cur#*=}
+			COMPREPLY=( $(compgen -W "auto bash zsh" -- "$value") )
+			COMPREPLY=( "${COMPREPLY[@]/#/$prefix}" )
+			return 0
+			;;
+		--format=*)
+			return 0
+			;;
+	esac
+
+	local opts="
+		--full
+		-d --dirname
+		-b --basename
+		-p --prefix
+		-s --source
+		-D --source-dirname
+		-B --source-basename
+		-C --shared-prefix
+		-e --link-branch-dir
+		-E --source-branch-dir
+		-f --format
+		-j --json
+		-A --arrays --array
+		-r --raw
+		-h --help
+		--completion
+	"
+
+	COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+	return 0
+}
+
+complete -F _linked linked
+EOF
+}
+
+completion_zsh() {
+	cat <<'EOF'
+#compdef linked
+# zsh completion for linked
+
+_linked() {
+	_arguments -s \
+		'--full[print full symlink path]' \
+		'(-d --dirname)'{-d,--dirname}'[print dirname of the symlink path]' \
+		'(-b --basename)'{-b,--basename}'[print basename of the symlink path]' \
+		'(-p --prefix)'{-p,--prefix}'[print path below the symlink within PWD]' \
+		'(-s --source)'{-s,--source}'[print full symlink source/target path]' \
+		'(-D --source-dirname)'{-D,--source-dirname}'[print dirname of the source/target path]' \
+		'(-B --source-basename)'{-B,--source-basename}'[print basename of the source/target path]' \
+		'(-C --shared-prefix)'{-C,--shared-prefix}'[print shared prefix between symlink and source paths]' \
+		'(-e --link-branch-dir)'{-e,--link-branch-dir}'[print symlink-side branch dir after shared prefix before basename]' \
+		'(-E --source-branch-dir)'{-E,--source-branch-dir}'[print source-side branch dir after shared prefix before basename]' \
+		'(-f --format)'{-f,--format}'[print custom formatted output]:format string:' \
+		'(-j --json)'{-j,--json}'[print all collected linked data as JSON]' \
+		'(-A --arrays --array)'{-A,--arrays,--array}'[print eval-safe associative arrays]::shell:(auto bash zsh)' \
+		'(-r --raw)'{-r,--raw}'[do not replace HOME with ~]' \
+		'(-h --help)'{-h,--help}'[show help]' \
+		'--completion[print shell completion script]:shell:(bash zsh)'
+}
+
+_linked "$@"
+EOF
+}
+
+print_completion() {
+	local shell=$1
+
+	case "$shell" in
+		bash)
+			completion_bash
+			;;
+		zsh)
+			completion_zsh
+			;;
+		*)
+			printf 'linked: unsupported completion shell: %s\n' "$shell" >&2
+			printf 'linked: expected one of: bash, zsh\n' >&2
+			exit 2
+			;;
+	esac
+}
+
+display_path() {
+	local path=$1
+
+	if [[ -n ${HOME:-} ]]; then
+		if [[ $path == "$HOME" ]]; then
+			printf '~'
+		elif [[ $path == "$HOME"/* ]]; then
+			printf '~/%s' "${path#"$HOME"/}"
+		else
+			printf '%s' "$path"
+		fi
+	else
+		printf '%s' "$path"
+	fi
 }
 
 format_path() {
 	local path=$1
+
 	if (( RAW )); then
 		printf '%s' "$path"
 	else
-		printf '%s' "$path" | sed "s|^${HOME}|~|"
+		display_path "$path"
 	fi
 }
 
@@ -109,13 +284,13 @@ abspath() {
 
 normalize_path() {
 	local path=$1
-	local dir base
+	local dir base physical_dir
 
 	dir=$(dirname -- "$path")
 	base=$(basename -- "$path")
 
-	if cd -P -- "$dir" 2>/dev/null; then
-		printf '%s/%s\n' "$(pwd -P)" "$base"
+	if physical_dir=$(cd -P -- "$dir" 2>/dev/null && pwd -P); then
+		printf '%s/%s\n' "$physical_dir" "$base"
 	else
 		printf '%s\n' "$path"
 	fi
@@ -171,12 +346,18 @@ build_prefix_from_index() {
 
 	for i in "${!parts[@]}"; do
 		[[ -z ${parts[i]} ]] && continue
+
 		if (( i > idx )); then
 			out+=("${parts[i]}")
 		fi
 	done
 
-	((${#out[@]})) && printf '%s\n' "$(IFS=/; echo "${out[*]}")" || printf '\n'
+	if ((${#out[@]})); then
+		local IFS=/
+		printf '%s\n' "${out[*]}"
+	else
+		printf '\n'
+	fi
 }
 
 join_path_and_prefix() {
@@ -190,11 +371,782 @@ join_path_and_prefix() {
 	fi
 }
 
+common_prefix_path() {
+	local a=${1%/}
+	local b=${2%/}
+	local a_abs=0
+	local b_abs=0
+	local a_trim b_trim
+	local -a a_parts b_parts out
+	local i max
+
+	[[ -z $a ]] && a="/"
+	[[ -z $b ]] && b="/"
+
+	[[ $a == /* ]] && a_abs=1
+	[[ $b == /* ]] && b_abs=1
+
+	a_trim=${a#/}
+	b_trim=${b#/}
+
+	IFS='/' read -r -a a_parts <<< "$a_trim"
+	IFS='/' read -r -a b_parts <<< "$b_trim"
+
+	max=${#a_parts[@]}
+	((${#b_parts[@]} < max)) && max=${#b_parts[@]}
+
+	for ((i = 0; i < max; i++)); do
+		[[ -z ${a_parts[i]} && -z ${b_parts[i]} ]] && continue
+		[[ ${a_parts[i]} == "${b_parts[i]}" ]] || break
+		out+=("${a_parts[i]}")
+	done
+
+	if (( a_abs && b_abs )); then
+		if ((${#out[@]})); then
+			local IFS=/
+			printf '/%s\n' "${out[*]}"
+		else
+			printf '/\n'
+		fi
+	else
+		if ((${#out[@]})); then
+			local IFS=/
+			printf '%s\n' "${out[*]}"
+		else
+			printf '\n'
+		fi
+	fi
+}
+
+relative_after_prefix() {
+	local path=${1%/}
+	local prefix=${2%/}
+
+	if [[ -z $path ]]; then
+		printf '\n'
+		return
+	fi
+
+	if [[ -z $prefix ]]; then
+		printf '%s\n' "$path"
+		return
+	fi
+
+	if [[ $path == "$prefix" ]]; then
+		printf '\n'
+		return
+	fi
+
+	if [[ $prefix == "/" ]]; then
+		printf '%s\n' "${path#/}"
+		return
+	fi
+
+	if [[ $path == "$prefix"/* ]]; then
+		printf '%s\n' "${path#"$prefix"/}"
+	else
+		printf '%s\n' "$path"
+	fi
+}
+
+path_part_count() {
+	local path=${1%/}
+	local trim
+	local -a parts
+	local count=0
+	local part
+
+	if [[ -z $path ]]; then
+		printf '0\n'
+		return
+	fi
+
+	if [[ $path == "/" ]]; then
+		printf '1\n'
+		return
+	fi
+
+	if [[ $path == /* ]]; then
+		count=1
+		trim=${path#/}
+	else
+		trim=$path
+	fi
+
+	IFS='/' read -r -a parts <<< "$trim"
+
+	for part in "${parts[@]}"; do
+		if [[ -n $part ]]; then
+			count=$((count + 1))
+		fi
+	done
+
+	printf '%s\n' "$count"
+}
+
+json_escape() {
+	local s=$1
+
+	s=${s//\\/\\\\}
+	s=${s//\"/\\\"}
+	s=${s//$'\t'/\\t}
+	s=${s//$'\r'/\\r}
+	s=${s//$'\n'/\\n}
+
+	printf '%s' "$s"
+}
+
+json_string() {
+	printf '"'
+	json_escape "$1"
+	printf '"'
+}
+
+json_bool() {
+	case ${1:-0} in
+		1|true|TRUE|yes|YES)
+			printf 'true'
+			;;
+		*)
+			printf 'false'
+			;;
+	esac
+}
+
+json_path_parts() {
+	local path=${1%/}
+	local trim
+	local -a parts
+	local part
+	local first=1
+
+	printf '['
+
+	if [[ -z $path ]]; then
+		printf ']'
+		return
+	fi
+
+	if [[ $path == "/" ]]; then
+		json_string "/"
+		printf ']'
+		return
+	fi
+
+	if [[ $path == /* ]]; then
+		json_string "/"
+		first=0
+		trim=${path#/}
+	else
+		trim=$path
+	fi
+
+	IFS='/' read -r -a parts <<< "$trim"
+
+	for part in "${parts[@]}"; do
+		[[ -n $part ]] || continue
+
+		if (( first )); then
+			first=0
+		else
+			printf ','
+		fi
+
+		json_string "$part"
+	done
+
+	printf ']'
+}
+
+print_json() {
+	local pwd_physical
+
+	pwd_physical=$(pwd -P)
+
+	printf '{\n'
+
+	printf '  "tool": "linked",\n'
+
+	printf '  "raw_output": '
+	json_bool "$RAW"
+	printf ',\n'
+
+	printf '  "array_shell_default": '
+	json_string "$(detect_array_shell)"
+	printf ',\n'
+
+	printf '  "pwd": {\n'
+	printf '    "logical": '
+	json_string "$PWD"
+	printf ',\n'
+	printf '    "physical": '
+	json_string "$pwd_physical"
+	printf ',\n'
+	printf '    "display": '
+	json_string "$(display_path "$PWD")"
+	printf ',\n'
+	printf '    "parts": '
+	json_path_parts "$PWD"
+	printf '\n'
+	printf '  },\n'
+
+	printf '  "symlink": {\n'
+	printf '    "path": '
+	json_string "$SYMLINK_PATH"
+	printf ',\n'
+	printf '    "display_path": '
+	json_string "$(display_path "$SYMLINK_PATH")"
+	printf ',\n'
+	printf '    "dirname": '
+	json_string "$SYMLINK_DIRNAME"
+	printf ',\n'
+	printf '    "display_dirname": '
+	json_string "$(display_path "$SYMLINK_DIRNAME")"
+	printf ',\n'
+	printf '    "basename": '
+	json_string "$SYMLINK_BASENAME"
+	printf ',\n'
+	printf '    "index": %s,\n' "$SYMLINK_INDEX"
+	printf '    "readlink": '
+	json_string "$LINK_TARGET"
+	printf ',\n'
+	printf '    "branch_dir": '
+	json_string "$LINK_BRANCH_DIR"
+	printf ',\n'
+	printf '    "branch_parts": '
+	json_path_parts "$LINK_BRANCH_DIR"
+	printf ',\n'
+	printf '    "parts": '
+	json_path_parts "$SYMLINK_PATH"
+	printf '\n'
+	printf '  },\n'
+
+	printf '  "source": {\n'
+	printf '    "path": '
+	json_string "$SOURCE_ABS"
+	printf ',\n'
+	printf '    "display_path": '
+	json_string "$(display_path "$SOURCE_ABS")"
+	printf ',\n'
+	printf '    "dirname": '
+	json_string "$SOURCE_DIRNAME"
+	printf ',\n'
+	printf '    "display_dirname": '
+	json_string "$(display_path "$SOURCE_DIRNAME")"
+	printf ',\n'
+	printf '    "basename": '
+	json_string "$SOURCE_BASENAME"
+	printf ',\n'
+	printf '    "branch_dir": '
+	json_string "$SOURCE_BRANCH_DIR"
+	printf ',\n'
+	printf '    "branch_parts": '
+	json_path_parts "$SOURCE_BRANCH_DIR"
+	printf ',\n'
+	printf '    "with_prefix": '
+	json_string "$SOURCE_WITH_PREFIX"
+	printf ',\n'
+	printf '    "display_with_prefix": '
+	json_string "$(display_path "$SOURCE_WITH_PREFIX")"
+	printf ',\n'
+	printf '    "parts": '
+	json_path_parts "$SOURCE_ABS"
+	printf ',\n'
+	printf '    "with_prefix_parts": '
+	json_path_parts "$SOURCE_WITH_PREFIX"
+	printf '\n'
+	printf '  },\n'
+
+	printf '  "prefix": {\n'
+	printf '    "path": '
+	json_string "$PREFIX"
+	printf ',\n'
+	printf '    "parts": '
+	json_path_parts "$PREFIX"
+	printf ',\n'
+	printf '    "part_count": %s\n' "$(path_part_count "$PREFIX")"
+	printf '  },\n'
+
+	printf '  "shared_prefix": {\n'
+	printf '    "path": '
+	json_string "$SHARED_PREFIX"
+	printf ',\n'
+	printf '    "display_path": '
+	json_string "$(display_path "$SHARED_PREFIX")"
+	printf ',\n'
+	printf '    "parts": '
+	json_path_parts "$SHARED_PREFIX"
+	printf ',\n'
+	printf '    "part_count": %s\n' "$(path_part_count "$SHARED_PREFIX")"
+	printf '  },\n'
+
+	printf '  "branch_dirs": {\n'
+	printf '    "link": '
+	json_string "$LINK_BRANCH_DIR"
+	printf ',\n'
+	printf '    "source": '
+	json_string "$SOURCE_BRANCH_DIR"
+	printf ',\n'
+	printf '    "link_parts": '
+	json_path_parts "$LINK_BRANCH_DIR"
+	printf ',\n'
+	printf '    "source_parts": '
+	json_path_parts "$SOURCE_BRANCH_DIR"
+	printf '\n'
+	printf '  },\n'
+
+	printf '  "placeholders": {\n'
+	printf '    "%%l": '
+	json_string "$(format_path "$SYMLINK_PATH")"
+	printf ',\n'
+	printf '    "%%d": '
+	json_string "$(format_path "$SYMLINK_DIRNAME")"
+	printf ',\n'
+	printf '    "%%b": '
+	json_string "$SYMLINK_BASENAME"
+	printf ',\n'
+	printf '    "%%p": '
+	json_string "$PREFIX"
+	printf ',\n'
+	printf '    "%%s": '
+	json_string "$(format_path "$SOURCE_ABS")"
+	printf ',\n'
+	printf '    "%%D": '
+	json_string "$(format_path "$SOURCE_DIRNAME")"
+	printf ',\n'
+	printf '    "%%B": '
+	json_string "$SOURCE_BASENAME"
+	printf ',\n'
+	printf '    "%%P": '
+	json_string "$(format_path "$SOURCE_WITH_PREFIX")"
+	printf ',\n'
+	printf '    "%%c": '
+	json_string "$(format_path "$SHARED_PREFIX")"
+	printf ',\n'
+	printf '    "%%e": '
+	json_string "$LINK_BRANCH_DIR"
+	printf ',\n'
+	printf '    "%%E": '
+	json_string "$SOURCE_BRANCH_DIR"
+	printf '\n'
+	printf '  }\n'
+
+	printf '}\n'
+}
+
+single_quote() {
+	local s=$1
+
+	s=${s//\'/\'\\\'\'}
+	printf "'%s'" "$s"
+}
+
+bash_assoc_entry() {
+	local key=$1
+	local value=$2
+
+	printf '  [%s]=%s\n' "$(single_quote "$key")" "$(single_quote "$value")"
+}
+
+zsh_assoc_entry() {
+	local key=$1
+	local value=$2
+
+	printf '  %s %s\n' "$(single_quote "$key")" "$(single_quote "$value")"
+}
+
+emit_assoc_path_parts_bash() {
+	local name=$1
+	local path=${2%/}
+	local trim
+	local -a parts
+	local part
+	local idx=0
+
+	printf 'declare -gA %s=(\n' "$name"
+
+	if [[ -z $path ]]; then
+		bash_assoc_entry "__length" 0
+		printf ')\n'
+		return
+	fi
+
+	if [[ $path == "/" ]]; then
+		bash_assoc_entry 0 "/"
+		bash_assoc_entry "__length" 1
+		printf ')\n'
+		return
+	fi
+
+	if [[ $path == /* ]]; then
+		bash_assoc_entry "$idx" "/"
+		idx=$((idx + 1))
+		trim=${path#/}
+	else
+		trim=$path
+	fi
+
+	IFS='/' read -r -a parts <<< "$trim"
+
+	for part in "${parts[@]}"; do
+		[[ -n $part ]] || continue
+		bash_assoc_entry "$idx" "$part"
+		idx=$((idx + 1))
+	done
+
+	bash_assoc_entry "__length" "$idx"
+	printf ')\n'
+}
+
+emit_assoc_path_parts_zsh() {
+	local name=$1
+	local path=${2%/}
+	local trim
+	local -a parts
+	local part
+	local idx=0
+
+	printf 'typeset -gA %s\n' "$name"
+	printf '%s=(\n' "$name"
+
+	if [[ -z $path ]]; then
+		zsh_assoc_entry "__length" 0
+		printf ')\n'
+		return
+	fi
+
+	if [[ $path == "/" ]]; then
+		zsh_assoc_entry 0 "/"
+		zsh_assoc_entry "__length" 1
+		printf ')\n'
+		return
+	fi
+
+	if [[ $path == /* ]]; then
+		zsh_assoc_entry "$idx" "/"
+		idx=$((idx + 1))
+		trim=${path#/}
+	else
+		trim=$path
+	fi
+
+	IFS='/' read -r -a parts <<< "$trim"
+
+	for part in "${parts[@]}"; do
+		[[ -n $part ]] || continue
+		zsh_assoc_entry "$idx" "$part"
+		idx=$((idx + 1))
+	done
+
+	zsh_assoc_entry "__length" "$idx"
+	printf ')\n'
+}
+
+emit_main_assoc_bash() {
+	local name=$1
+	shift
+	local key value
+
+	printf 'declare -gA %s=(\n' "$name"
+	while (($#)); do
+		key=$1
+		value=$2
+		bash_assoc_entry "$key" "$value"
+		shift 2
+	done
+	printf ')\n'
+}
+
+emit_main_assoc_zsh() {
+	local name=$1
+	shift
+	local key value
+
+	printf 'typeset -gA %s\n' "$name"
+	printf '%s=(\n' "$name"
+	while (($#)); do
+		key=$1
+		value=$2
+		zsh_assoc_entry "$key" "$value"
+		shift 2
+	done
+	printf ')\n'
+}
+
+detect_array_shell() {
+	local requested=${ARRAY_SHELL:-auto}
+	local shell_name
+
+	if [[ $requested != auto ]]; then
+		printf '%s\n' "$requested"
+		return
+	fi
+
+	if [[ -n ${LINKED_ARRAY_SHELL:-} ]]; then
+		case ${LINKED_ARRAY_SHELL##*/} in
+			zsh)
+				printf 'zsh\n'
+				return
+				;;
+			bash)
+				printf 'bash\n'
+				return
+				;;
+		esac
+	fi
+
+	shell_name=${SHELL##*/}
+	case $shell_name in
+		zsh)
+			printf 'zsh\n'
+			;;
+		bash)
+			printf 'bash\n'
+			;;
+		*)
+			printf 'bash\n'
+			;;
+	esac
+}
+
+validate_array_shell() {
+	case $1 in
+		auto|bash|zsh)
+			return 0
+			;;
+		*)
+			printf 'linked: unsupported array shell: %s\n' "$1" >&2
+			printf 'linked: expected one of: auto, bash, zsh\n' >&2
+			exit 2
+			;;
+	esac
+}
+
+print_arrays_bash() {
+	local pwd_physical
+
+	pwd_physical=$(pwd -P)
+
+	cat <<'EOF'
+# linked arrays for bash
+# Usage:
+#   eval "$(linked --arrays bash)"
+#
+# Main arrays:
+#   linked[...]      display/formatted values, affected by -r|--raw
+#   linked_raw[...]  raw absolute/logical values
+#
+# Path part arrays:
+#   linked_pwd_parts[0]
+#   linked_symlink_parts[0]
+#   linked_source_parts[0]
+#   linked_source_with_prefix_parts[0]
+#   linked_prefix_parts[0]
+#   linked_shared_prefix_parts[0]
+#   linked_link_branch_parts[0]
+#   linked_source_branch_parts[0]
+#
+# Each path part array includes:
+#   [0], [1], [2], ...
+#   [__length]
+EOF
+
+	emit_main_assoc_bash linked \
+		"tool" "linked" \
+		"array_shell" "bash" \
+		"raw_output" "$RAW" \
+		"pwd" "$(format_path "$PWD")" \
+		"pwd_physical" "$(format_path "$pwd_physical")" \
+		"symlink_path" "$(format_path "$SYMLINK_PATH")" \
+		"symlink_dirname" "$(format_path "$SYMLINK_DIRNAME")" \
+		"symlink_basename" "$SYMLINK_BASENAME" \
+		"symlink_index" "$SYMLINK_INDEX" \
+		"symlink_readlink" "$LINK_TARGET" \
+		"link_branch_dir" "$LINK_BRANCH_DIR" \
+		"source_path" "$(format_path "$SOURCE_ABS")" \
+		"source_dirname" "$(format_path "$SOURCE_DIRNAME")" \
+		"source_basename" "$SOURCE_BASENAME" \
+		"source_branch_dir" "$SOURCE_BRANCH_DIR" \
+		"source_with_prefix" "$(format_path "$SOURCE_WITH_PREFIX")" \
+		"prefix" "$PREFIX" \
+		"shared_prefix" "$(format_path "$SHARED_PREFIX")" \
+		"%l" "$(format_path "$SYMLINK_PATH")" \
+		"%d" "$(format_path "$SYMLINK_DIRNAME")" \
+		"%b" "$SYMLINK_BASENAME" \
+		"%p" "$PREFIX" \
+		"%s" "$(format_path "$SOURCE_ABS")" \
+		"%D" "$(format_path "$SOURCE_DIRNAME")" \
+		"%B" "$SOURCE_BASENAME" \
+		"%P" "$(format_path "$SOURCE_WITH_PREFIX")" \
+		"%c" "$(format_path "$SHARED_PREFIX")" \
+		"%e" "$LINK_BRANCH_DIR" \
+		"%E" "$SOURCE_BRANCH_DIR"
+
+	printf '\n'
+
+	emit_main_assoc_bash linked_raw \
+		"tool" "linked" \
+		"array_shell" "bash" \
+		"pwd" "$PWD" \
+		"pwd_physical" "$pwd_physical" \
+		"symlink_path" "$SYMLINK_PATH" \
+		"symlink_dirname" "$SYMLINK_DIRNAME" \
+		"symlink_basename" "$SYMLINK_BASENAME" \
+		"symlink_index" "$SYMLINK_INDEX" \
+		"symlink_readlink" "$LINK_TARGET" \
+		"link_branch_dir" "$LINK_BRANCH_DIR" \
+		"source_path" "$SOURCE_ABS" \
+		"source_dirname" "$SOURCE_DIRNAME" \
+		"source_basename" "$SOURCE_BASENAME" \
+		"source_branch_dir" "$SOURCE_BRANCH_DIR" \
+		"source_with_prefix" "$SOURCE_WITH_PREFIX" \
+		"prefix" "$PREFIX" \
+		"shared_prefix" "$SHARED_PREFIX"
+
+	printf '\n'
+	emit_assoc_path_parts_bash "linked_pwd_parts" "$PWD"
+	printf '\n'
+	emit_assoc_path_parts_bash "linked_symlink_parts" "$SYMLINK_PATH"
+	printf '\n'
+	emit_assoc_path_parts_bash "linked_source_parts" "$SOURCE_ABS"
+	printf '\n'
+	emit_assoc_path_parts_bash "linked_source_with_prefix_parts" "$SOURCE_WITH_PREFIX"
+	printf '\n'
+	emit_assoc_path_parts_bash "linked_prefix_parts" "$PREFIX"
+	printf '\n'
+	emit_assoc_path_parts_bash "linked_shared_prefix_parts" "$SHARED_PREFIX"
+	printf '\n'
+	emit_assoc_path_parts_bash "linked_link_branch_parts" "$LINK_BRANCH_DIR"
+	printf '\n'
+	emit_assoc_path_parts_bash "linked_source_branch_parts" "$SOURCE_BRANCH_DIR"
+}
+
+print_arrays_zsh() {
+	local pwd_physical
+
+	pwd_physical=$(pwd -P)
+
+	cat <<'EOF'
+# linked arrays for zsh
+# Usage:
+#   eval "$(linked --arrays zsh)"
+#
+# Main arrays:
+#   linked[...]      display/formatted values, affected by -r|--raw
+#   linked_raw[...]  raw absolute/logical values
+#
+# Path part arrays:
+#   linked_pwd_parts[0]
+#   linked_symlink_parts[0]
+#   linked_source_parts[0]
+#   linked_source_with_prefix_parts[0]
+#   linked_prefix_parts[0]
+#   linked_shared_prefix_parts[0]
+#   linked_link_branch_parts[0]
+#   linked_source_branch_parts[0]
+#
+# Each path part array includes:
+#   [0], [1], [2], ...
+#   [__length]
+EOF
+
+	emit_main_assoc_zsh linked \
+		"tool" "linked" \
+		"array_shell" "zsh" \
+		"raw_output" "$RAW" \
+		"pwd" "$(format_path "$PWD")" \
+		"pwd_physical" "$(format_path "$pwd_physical")" \
+		"symlink_path" "$(format_path "$SYMLINK_PATH")" \
+		"symlink_dirname" "$(format_path "$SYMLINK_DIRNAME")" \
+		"symlink_basename" "$SYMLINK_BASENAME" \
+		"symlink_index" "$SYMLINK_INDEX" \
+		"symlink_readlink" "$LINK_TARGET" \
+		"link_branch_dir" "$LINK_BRANCH_DIR" \
+		"source_path" "$(format_path "$SOURCE_ABS")" \
+		"source_dirname" "$(format_path "$SOURCE_DIRNAME")" \
+		"source_basename" "$SOURCE_BASENAME" \
+		"source_branch_dir" "$SOURCE_BRANCH_DIR" \
+		"source_with_prefix" "$(format_path "$SOURCE_WITH_PREFIX")" \
+		"prefix" "$PREFIX" \
+		"shared_prefix" "$(format_path "$SHARED_PREFIX")" \
+		"%l" "$(format_path "$SYMLINK_PATH")" \
+		"%d" "$(format_path "$SYMLINK_DIRNAME")" \
+		"%b" "$SYMLINK_BASENAME" \
+		"%p" "$PREFIX" \
+		"%s" "$(format_path "$SOURCE_ABS")" \
+		"%D" "$(format_path "$SOURCE_DIRNAME")" \
+		"%B" "$SOURCE_BASENAME" \
+		"%P" "$(format_path "$SOURCE_WITH_PREFIX")" \
+		"%c" "$(format_path "$SHARED_PREFIX")" \
+		"%e" "$LINK_BRANCH_DIR" \
+		"%E" "$SOURCE_BRANCH_DIR"
+
+	printf '\n'
+
+	emit_main_assoc_zsh linked_raw \
+		"tool" "linked" \
+		"array_shell" "zsh" \
+		"pwd" "$PWD" \
+		"pwd_physical" "$pwd_physical" \
+		"symlink_path" "$SYMLINK_PATH" \
+		"symlink_dirname" "$SYMLINK_DIRNAME" \
+		"symlink_basename" "$SYMLINK_BASENAME" \
+		"symlink_index" "$SYMLINK_INDEX" \
+		"symlink_readlink" "$LINK_TARGET" \
+		"link_branch_dir" "$LINK_BRANCH_DIR" \
+		"source_path" "$SOURCE_ABS" \
+		"source_dirname" "$SOURCE_DIRNAME" \
+		"source_basename" "$SOURCE_BASENAME" \
+		"source_branch_dir" "$SOURCE_BRANCH_DIR" \
+		"source_with_prefix" "$SOURCE_WITH_PREFIX" \
+		"prefix" "$PREFIX" \
+		"shared_prefix" "$SHARED_PREFIX"
+
+	printf '\n'
+	emit_assoc_path_parts_zsh "linked_pwd_parts" "$PWD"
+	printf '\n'
+	emit_assoc_path_parts_zsh "linked_symlink_parts" "$SYMLINK_PATH"
+	printf '\n'
+	emit_assoc_path_parts_zsh "linked_source_parts" "$SOURCE_ABS"
+	printf '\n'
+	emit_assoc_path_parts_zsh "linked_source_with_prefix_parts" "$SOURCE_WITH_PREFIX"
+	printf '\n'
+	emit_assoc_path_parts_zsh "linked_prefix_parts" "$PREFIX"
+	printf '\n'
+	emit_assoc_path_parts_zsh "linked_shared_prefix_parts" "$SHARED_PREFIX"
+	printf '\n'
+	emit_assoc_path_parts_zsh "linked_link_branch_parts" "$LINK_BRANCH_DIR"
+	printf '\n'
+	emit_assoc_path_parts_zsh "linked_source_branch_parts" "$SOURCE_BRANCH_DIR"
+}
+
+print_arrays() {
+	local shell
+
+	shell=$(detect_array_shell)
+	validate_array_shell "$shell"
+
+	case $shell in
+		bash)
+			print_arrays_bash
+			;;
+		zsh)
+			print_arrays_zsh
+			;;
+		*)
+			printf 'linked: unsupported array shell: %s\n' "$shell" >&2
+			exit 2
+			;;
+	esac
+}
+
 render_format() {
 	local fmt=$1
 	local out
 
-	local l d b p s D B P
+	local l d b p
+	local s D B P
+	local c e E
 
 	l=$(format_path "$SYMLINK_PATH")
 	d=$(format_path "$SYMLINK_DIRNAME")
@@ -206,7 +1158,12 @@ render_format() {
 	B=$SOURCE_BASENAME
 	P=$(format_path "$SOURCE_WITH_PREFIX")
 
+	c=$(format_path "$SHARED_PREFIX")
+	e=$LINK_BRANCH_DIR
+	E=$SOURCE_BRANCH_DIR
+
 	out=$fmt
+
 	out=${out//%%/$'\001'}
 
 	out=${out//%l/$l}
@@ -219,6 +1176,10 @@ render_format() {
 	out=${out//%B/$B}
 	out=${out//%P/$P}
 
+	out=${out//%c/$c}
+	out=${out//%e/$e}
+	out=${out//%E/$E}
+
 	out=${out//$'\001'/%}
 
 	printf '%s\n' "$out"
@@ -227,6 +1188,7 @@ render_format() {
 RAW=0
 MODE="full"
 FORMAT_STRING=""
+ARRAY_SHELL="auto"
 
 while (($#)); do
 	case $1 in
@@ -251,18 +1213,69 @@ while (($#)); do
 		-B|--source-basename)
 			MODE="source_basename"
 			;;
+		-C|--shared-prefix)
+			MODE="shared_prefix"
+			;;
+		-e|--link-branch-dir)
+			MODE="link_branch_dir"
+			;;
+		-E|--source-branch-dir)
+			MODE="source_branch_dir"
+			;;
 		-f|--format)
 			shift
+
 			if (($# == 0)); then
 				printf 'linked: missing format string for -f|--format\n\n' >&2
 				usage >&2
 				exit 2
 			fi
+
 			MODE="format"
 			FORMAT_STRING=$1
 			;;
+		--format=*)
+			MODE="format"
+			FORMAT_STRING=${1#*=}
+			;;
+		-j|--json)
+			MODE="json"
+			;;
+		-A|--arrays|--array)
+			MODE="arrays"
+
+			if (($# > 1)); then
+				case $2 in
+					auto|bash|zsh)
+						ARRAY_SHELL=$2
+						shift
+						;;
+				esac
+			fi
+			;;
+		--arrays=*|--array=*)
+			MODE="arrays"
+			ARRAY_SHELL=${1#*=}
+			validate_array_shell "$ARRAY_SHELL"
+			;;
 		-r|--raw)
 			RAW=1
+			;;
+		--completion)
+			shift
+
+			if (($# == 0)); then
+				printf 'linked: missing shell for --completion\n' >&2
+				printf 'linked: expected one of: bash, zsh\n' >&2
+				exit 2
+			fi
+
+			print_completion "$1"
+			exit 0
+			;;
+		--completion=*)
+			print_completion "${1#*=}"
+			exit 0
 			;;
 		-h|--help)
 			usage
@@ -274,8 +1287,11 @@ while (($#)); do
 			exit 2
 			;;
 	esac
+
 	shift
 done
+
+validate_array_shell "$ARRAY_SHELL"
 
 if ! find_deepest_symlink_in_pwd; then
 	printf 'linked: no symlink component found in $PWD\n' >&2
@@ -292,6 +1308,10 @@ SOURCE_ABS=$(normalize_path "$SOURCE_ABS")
 SOURCE_DIRNAME=$(dirname -- "$SOURCE_ABS")
 SOURCE_BASENAME=$(basename -- "$SOURCE_ABS")
 SOURCE_WITH_PREFIX=$(join_path_and_prefix "$SOURCE_ABS" "$PREFIX")
+
+SHARED_PREFIX=$(common_prefix_path "$SYMLINK_PATH" "$SOURCE_ABS")
+LINK_BRANCH_DIR=$(relative_after_prefix "$SYMLINK_DIRNAME" "$SHARED_PREFIX")
+SOURCE_BRANCH_DIR=$(relative_after_prefix "$SOURCE_DIRNAME" "$SHARED_PREFIX")
 
 case $MODE in
 	full)
@@ -315,7 +1335,22 @@ case $MODE in
 	source_basename)
 		printf '%s\n' "$SOURCE_BASENAME"
 		;;
+	shared_prefix)
+		print_path "$SHARED_PREFIX"
+		;;
+	link_branch_dir)
+		printf '%s\n' "$LINK_BRANCH_DIR"
+		;;
+	source_branch_dir)
+		printf '%s\n' "$SOURCE_BRANCH_DIR"
+		;;
 	format)
 		render_format "$FORMAT_STRING"
+		;;
+	json)
+		print_json
+		;;
+	arrays)
+		print_arrays
 		;;
 esac
