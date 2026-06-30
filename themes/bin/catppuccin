@@ -273,7 +273,7 @@ color_codes() {
   local fmtd=$(chcmd pastel -m off format "$COLORFORMAT" "${!var}")
   if ((raw)); then
     if ((array)); then
-      printf '%s%s%s[%s]="%s"\n' "$flavor" "_" "$format" "$var" "${fmtd}"
+      printf "%s%s%s[%s]='%s'\n" "$flavor" "_" "$format" "$var" "${fmtd}"
 
     else
       printf "%s='%s'\n" "${var}" "${fmtd}"
@@ -299,12 +299,12 @@ print_colors() {
     printf '%s\n' "${codes[@]}" | box -hp 1 -bc "${bc}" -t "$flavor[$format]" -tc "${tc}" -s '|'
   else
     if ((array)); then
-      echo "declare -A "${flavor}"_"${format}";"
+      echo "declare -gA "${flavor}"_"${format}";"
       for code in "${codes[@]}"; do
         echo "$code;"
       done
     else
-      echo "$flavor["$format"]"
+      echo "$flavor['$format']"
       printf '%s\n' "${codes[@]}"
     fi
   fi
