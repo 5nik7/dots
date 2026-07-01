@@ -6,19 +6,21 @@ _linked() {
 		'--full[print full symlink path]' \
 		'(-d --dirname)'{-d,--dirname}'[print dirname of the symlink path]' \
 		'(-b --basename)'{-b,--basename}'[print basename of the symlink path]' \
-		'(-p --prefix)'{-p,--prefix}'[print path below the symlink within PWD]' \
+		'(-p --prefix)'{-p,--prefix}'[print path below the symlink within inspected path]' \
 		'(-s --source)'{-s,--source}'[print full symlink source/target path]' \
 		'(-D --source-dirname)'{-D,--source-dirname}'[print dirname of the source/target path]' \
 		'(-B --source-basename)'{-B,--source-basename}'[print basename of the source/target path]' \
 		'(-C --shared-prefix)'{-C,--shared-prefix}'[print shared prefix between symlink and source paths]' \
 		'(-e --link-branch-dir)'{-e,--link-branch-dir}'[print symlink-side branch dir after shared prefix before basename]' \
 		'(-E --source-branch-dir)'{-E,--source-branch-dir}'[print source-side branch dir after shared prefix before basename]' \
+		'(-m --shared-basename)'{-m,--shared-basename}'[print basename only if symlink and source basenames match]' \
 		'(-f --format)'{-f,--format}'[print custom formatted output]:format string:' \
 		'(-j --json)'{-j,--json}'[print all collected linked data as JSON]' \
 		'(-A --arrays --array)'{-A,--arrays,--array}'[print eval-safe associative arrays]::shell:(auto bash zsh)' \
 		'(-r --raw)'{-r,--raw}'[do not replace HOME with ~]' \
 		'(-h --help)'{-h,--help}'[show help]' \
-		'--completion[print shell completion script]:shell:(bash zsh)'
+		'--completion[print shell completion script]:shell:(bash zsh)' \
+		'1:target path:_files'
 }
 
 _linked "$@"
