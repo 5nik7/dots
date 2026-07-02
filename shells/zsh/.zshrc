@@ -3,7 +3,7 @@
 # o╚═╝╚═╝╩ ╩╩╚═╚═╝
 
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
-    zmodload zsh/zprof
+  zmodload zsh/zprof
 fi
 
 [ -f "$COLORS" ] && source "$COLORS"
@@ -12,8 +12,10 @@ fi
 fpath+=("$ZFUNC" "${fpath[@]}")
 
 autoload -U +X bashcompinit && bashcompinit
-autoload -Uz compinit; compinit
-autoload -U colors; colors
+autoload -Uz compinit
+compinit
+autoload -U colors
+colors
 
 # zieces 'zutil'
 zieces 'functions'
@@ -35,13 +37,16 @@ so "$HOME/.cargo/env"
 so "$DOTSHHHH/secrets.sh"
 so "/usr/share/nvm/init-nvm.sh"
 
-[ -f "$HOME/.pythonrc" ] &>/dev/null && export PYTHONSTARTUP="$HOME/.pythonrc"
+PYTHONSTARTUP="$HOME/.pythonrc"
+if check $PYTHONSTARTUP; then
+  export PYTHONSTARTUP
+fi
 
-has_theme() { command vivid generate "$1" &>/dev/null }
+has_theme() { command vivid generate "$1" &>/dev/null; }
 
 theme() {
   if has_theme "$1"; then
-    echo "$1" >! "${DOTS}/.theme"
+    echo "$1" >|"${DOTS}/.theme"
     set_theme
   else
     echo "'$1' not a theme."
@@ -67,37 +72,42 @@ set_theme() {
   so "$THEMEDIR/func.sh"
   so "$THEMEDIR/colors.sh"
 
-  for file in $THEMESRC/*;do
+  for file in $THEMESRC/*; do
     so "$file"
   done
 
-  has fzf &&\
-    so "${HOME}/.fzf.zsh"
+  if has fzf; then
+    so "$HOME/.fzf.zsh"
     zieces 'fzf'
+  fi
 }
 
 set_theme
 
 zieces 'completions'
 
-has zoxide && {
+if has zoxide; then
   eval "$(zoxide init zsh)"
   alias cd='z'
-}
+fi
 
 zieces 'aliases'
 
-has starship && eval "$(starship init zsh)"
+if has starship; then
+  eval "$(starship init zsh)" && eval "$(starship completions zsh)"
+fi
 
-has direnv && {
+if has direnv; then
   eval "$(direnv hook zsh)"
-  export DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m' }
+  DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m'
+  export DIRENV_LOG_FORMAT
+fi
 
 has batpipe && eval "$(batpipe)"
 
 has batman && eval "$(batman --export-env)"
 
-has ipinfo && { complete -o default -C "$HOME/go/bin/ipinfo" ipinfo }
+has ipinfo && { complete -o default -C "$HOME/go/bin/ipinfo" ipinfo; }
 
 so "$HOME/.atuin/bin/env" && has atuin && eval "$(atuin init zsh)"
 
@@ -105,39 +115,39 @@ has uv && eval "$(uv generate-shell-completion zsh)"
 
 has uvx && eval "$(uvx --generate-shell-completion zsh)"
 
-so "$HOME/.bun/_bun"
-
 has tv && eval "$(tv init zsh)"
 
 has mise && eval "$(mise activate zsh)"
 
 has usage && source <(usage g completion-init zsh)
 
-if [[ "$istermux" == true ]] &> /dev/null; then
+if [[ "$istermux" == true ]] &>/dev/null; then
   zieces 'droid'
 fi
 
-if [[ "$iswsl" == true ]] &> /dev/null; then
+if [[ "$iswsl" == true ]] &>/dev/null; then
   zieces 'wsl'
 fi
 
 if checkdir "$HOME/.bun"; then
   export BUN_INSTALL="$HOME/.bun"
-  [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
   prepath "$BUN_INSTALL/bin"
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+  so "$HOME/.bun/_bun"
 fi
 
 if checkdir "$HOME/.nvm"; then
   export NVM_DIR="$HOME/.nvm"
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+  so "$NVM_DIR/nvm.sh"          # This loads nvm
+  so "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 fi
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 zle_highlight=('paste:none')
 
+if has fzf; then
+  so "$HOME/.fzf.zsh"
+  zieces "fzf"
+fi
+
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
-    zprof
+  zprof
 fi

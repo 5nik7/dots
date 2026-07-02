@@ -24,22 +24,26 @@ prepath() {
 }
 
 err() {
-  local parts line
+  local input="$@"
+  local parts=()
+  local part line
   local sep='|'
-  local erricon="✕"
+  local icon=""
 
-  for line in "$@"; do
-    IFS=$sep read -r parts <<<"$line"
-    parts=($RED"${parts[@]}"$RED)
-    printf '%s%s%s\n' "$RED$erricon" "$sep" "${parts[@]}"
-
-  done | box -hp 1 -bc "${DIM}${DARKRED}" -s $sep
+  for line in "${input[@]}"; do
+    IFS=$sep read -A parts <<<"$line"
+    printf '%s' "$RED" "$icon" "$RST"
+    for part in "${parts[@]}"; do
+      printf '%s' "$sep" "$RED" "$part" "$RST"
+    done
+  done | box -hp 1 -bc "$BLACK" -s $sep
 }
 
 ok() {
   local line parts
   local sep='|'
   local okicon=""
+  local input="$@"
 
   for line in "$@"; do
     IFS=$sep read -r parts <<<"$line"
@@ -215,6 +219,7 @@ shellmod() {
 alias zieces="shellmod"
 
 so() {
+  local input=()
   local file icon dir base
   local exists=0
   local verbose=0
@@ -235,8 +240,9 @@ so() {
     *) break ;;
     esac
   done
-  for file in "$@"; do
-    if [[ -f "$file" ]]; then
+  input="$@"
+  for file in "${input[@]}"; do
+    if [[ -s "$file" ]]; then
       exists+=1
       source "$file"
       if ((verbose)); then
@@ -254,8 +260,11 @@ so() {
       fi
     fi
   done
-  ((exists >= 1)) && return 0
-  return 1
+  if ((exists >= 1)); then
+    return 0
+  else
+    return 1
+  fi
 }
 
 check() {
@@ -297,8 +306,11 @@ check() {
       fi
     fi
   done
-  ((exists >= 1)) && return 0
-  return 1
+  if ((exists >= 1)); then
+    return 0
+  else
+    return 1
+  fi
 }
 
 checkdir() {
