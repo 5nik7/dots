@@ -1,4 +1,4 @@
-function gethost() {
+gethost() {
   local host
   if [[ -n "$HOST" ]]; then
     if [[ "$HOST" == "localhost" ]]; then
@@ -16,11 +16,11 @@ function gethost() {
   echo "$host"
 }
 
-function in_git() {
+in_git() {
   git rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
 
-function gitcheck() {
+gitcheck() {
   local verbose=0
   if [[ $1 == '-v' ]]; then
     verbose=1
@@ -39,7 +39,7 @@ function gitcheck() {
   fi
 }
 
-function gitmodified() {
+gitmodified() {
   if mygit; then
     local modified=$(git status -s | grep -E '^\s*M\s' | awk '{print $2}')
     if [[ -n "$modified" ]]; then
@@ -51,7 +51,7 @@ function gitmodified() {
   fi
 }
 
-function gitdeleted() {
+gitdeleted() {
   if mygit; then
     local deleted=$(git status -s | grep -E '^\s*D\s' | awk '{print $2}')
     if [[ -n "$deleted" ]]; then
@@ -63,7 +63,7 @@ function gitdeleted() {
   fi
 }
 
-function gituntracked() {
+gituntracked() {
   if mygit; then
     local untracked=$(git status -s | grep '??' | awk '{print $2}')
     if [[ -n "$untracked" ]]; then
@@ -75,7 +75,7 @@ function gituntracked() {
   fi
 }
 
-function gitsubmodule() {
+gitsubmodule() {
   if mygit; then
     local deleted=$(git status -s | grep -E '^\s*m\s' | awk '{print $2}')
     if [[ -n "$deleted" ]]; then
@@ -87,7 +87,7 @@ function gitsubmodule() {
   fi
 }
 
-function submodules() {
+submodules() {
   local recurse=0
   if in_git; then
     if [[ $1 == '-r' ]]; then
@@ -104,7 +104,7 @@ function submodules() {
   fi
 }
 
-function is_submodule() {
+is_submodule() {
   local submodule
   local submodules=()
   local recurse=0
@@ -131,25 +131,34 @@ function is_submodule() {
   fi
 }
 
-function aptget_check() {
+colorcodes() {
+  local -a colors
+  for i in {000..255}; do
+    colors+=("%F{$i}$i%f")
+  done
+  print -cP $colors
+}
+
+aptget_check() {
   apt-get -s upgrade | grep -P "\d\K upgraded"
 }
 
-function fzpi() {
+fzpi() {
   pacman -Slq | fzf -q "$1" -m --preview 'pacman -Si {1}' | xargs -ro pacman -S
 }
 
-function fzpr() {
+fzpr() {
   pacman -Qq | fzf -q "$1" -m --preview 'pacman -Qi {1}' | xargs -ro pacman -Rns
 }
 
-function femoji() {
+femoji() {
   emojis=$(curl -sSL 'https://git.io/JXXO7')
   selected_emoji=$(echo $emojis | fzf)
   echo $selected_emoji
 }
+
 # ex - archive extractor
-function ex() {
+ex() {
   if [ -f "$1" ]; then
     case $1 in
     *.tar.bz2) tar xjf "$1" ;;
@@ -170,7 +179,7 @@ function ex() {
   fi
 }
 
-function showcolors256() {
+showcolors256() {
   local row col blockrow blockcol red green blue
   local showcolor=_showcolor256_${1:-bg}
   local white="\033[1;37m"
@@ -215,14 +224,14 @@ function showcolors256() {
   echo
 }
 
-function _showcolor256_fg() {
+_showcolor256_fg() {
   local code=$(printf %03d $1)
   echo -ne "\033[38;5;${code}m"
   echo -nE " $code "
   echo -ne "\033[0m"
 }
 
-function _showcolor256_bg() {
+_showcolor256_bg() {
   if (($2 % 2 == 0)); then
     echo -ne "\033[1;37m"
   else
@@ -234,7 +243,7 @@ function _showcolor256_bg() {
   echo -ne "\033[0m"
 }
 
-function showcolors16() {
+showcolors16() {
   _showcolor "\033[0;30m" "\033[1;30m" "\033[40m" "\033[100m"
   _showcolor "\033[0;31m" "\033[1;31m" "\033[41m" "\033[101m"
   _showcolor "\033[0;32m" "\033[1;32m" "\033[42m" "\033[102m"
@@ -245,7 +254,7 @@ function showcolors16() {
   _showcolor "\033[0;37m" "\033[1;37m" "\033[47m" "\033[107m"
 }
 
-function _showcolor() {
+_showcolor() {
   for code in $@; do
     echo -ne "$code"
     echo -nE "   $code"
@@ -254,7 +263,7 @@ function _showcolor() {
   echo
 }
 
-function 256color() {
+256color() {
   for code in {000..255}; do
     print -nP -- "%F{$code}$code %f"
     if [ $((${code} % 16)) -eq 15 ]; then
@@ -263,33 +272,33 @@ function 256color() {
   done
 }
 
-function fixpath() {
+fixpath() {
   PATH=$(echo $(sed 's/:/\n/g' <<<$PATH | sort | uniq) | sed -e 's/\s/':'/g')
 }
 
-function cleanvim() {
+cleanvim() {
   mv ~/.config/nvim{,.bak}
   mv ~/.local/share/nvim{,.bak}
   mv ~/.local/state/nvim{,.bak}
   mv ~/.cache/nvim{,.bak}
 }
 
-function ssl-download-certificate {
+ssl-download-certificate() {
   local host=$1
   local port=${2:-443}
   openssl s_client -showcerts -connect "${host}:${port}" </dev/null 2>/dev/null | openssl 'x509' -outform 'PEM' >"${host}:${port}.pem"
 }
 
-function ssh-key-set {
+ssh-key-set() {
   ssh-add -D
   ssh-add "$HOME/.ssh/${1:-id_rsa}"
 }
 
-function ssh-key-info {
+ssh-key-info() {
   ssh-keygen -l -f "$HOME/.ssh/${1:-id_rsa}"
 }
 
-function prepend-sudo {
+prepend-sudo() {
   if [[ $BUFFER != "sudo "* ]]; then
     BUFFER="sudo $BUFFER"
     CURSOR+=5
@@ -298,15 +307,15 @@ function prepend-sudo {
 zle -N prepend-sudo
 bindkey -M vicmd s prepend-sudo
 
-function fname() {
+fname() {
   basename "$@" | sed 's/\(.*\)\..*/\1/'
 }
 
-function fext() {
+fext() {
   filename=$(basename "$@")
   echo "${filename##*.}"
 }
 
-function dat() {
+dat() {
   rich --text-full -y -e -d 1 -m "$@"
 }

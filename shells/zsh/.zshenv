@@ -100,4 +100,7 @@ export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/bat.conf"
 export YAZI_CONFIG_HOME="$DOTFILES/yazi"
 
 export GOBIN="${GOBIN:-$HOME/go/bin}"
-. "/home/njen/.local/share/bob/env/env.sh"
+
+if [[ -r "${XDG_DATA_HOME}/bob/env/env.sh" ]]; then
+  . "${XDG_DATA_HOME}/bob/env/env.sh"
+fi
