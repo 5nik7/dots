@@ -37,7 +37,7 @@ err() {
 }
 
 ok() {
-  local lin parts
+  local line parts
   local sep='|'
   local okicon=""
 
