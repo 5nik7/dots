@@ -1,3 +1,7 @@
+ls_repos() {
+  print -l **/*(e:'[[ -d $REPLY/.git ]]':)
+}
+
 gethost() {
   local host
   if [[ -n "$HOST" ]]; then
