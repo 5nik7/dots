@@ -135,7 +135,40 @@ is_submodule() {
   fi
 }
 
-colorcodes() {
+# print a colorized diff
+colordiff() {
+  local red=$(tput setaf 1 2>/dev/null)
+  local green=$(tput setaf 2 2>/dev/null)
+  local cyan=$(tput setaf 6 2>/dev/null)
+  local reset=$(tput sgr0 2>/dev/null)
+
+  diff -u "$@" | awk "
+	/^\-/ {
+		printf(\"%s\", \"$red\");
+	}
+	/^\+/ {
+		printf(\"%s\", \"$green\");
+	}
+	/^@/ {
+		printf(\"%s\", \"$cyan\");
+	}
+
+	{
+		print \$0 \"$reset\";
+	}"
+
+  return "${PIPESTATUS[0]}"
+}
+
+ls_colors() {
+  local i
+  for i in {0..255}; do
+    printf "\x1b[38;5;${i}mcolor %d\n" "$i"
+  done
+  tput sgr0
+}
+
+color_codes() {
   local -a colors
   for i in {000..255}; do
     colors+=("%F{$i}$i%f")
@@ -181,6 +214,35 @@ ex() {
   else
     echo "'$1' is not a valid file"
   fi
+}
+
+htmldecode() {
+  : "${*//+/ }"
+  echo -e "${_//&#x/\x}" | tr -d ';'
+}
+
+urldecode() {
+  : "${*//+/ }"
+  echo -e "${_//%/\\x}"
+}
+
+over() {
+  awk -v c="${1:-80}" 'length($0) > c {
+		printf("%4d %s\n", NR, $0);
+	}'
+}
+
+truecolor-rainbow() {
+  local i r g b
+  for ((i = 0; i < 77; i++)); do
+    r=$((255 - (i * 255 / 76)))
+    g=$((i * 510 / 76))
+    b=$((i * 255 / 76))
+    ((g > 255)) && g=$((510 - g))
+    printf '\033[48;2;%d;%d;%dm ' "$r" "$g" "$b"
+  done
+  tput sgr0
+  echo
 }
 
 showcolors256() {
@@ -322,4 +384,44 @@ fext() {
 
 dat() {
   rich --text-full -y -e -d 1 -m "$@"
+}
+
+# Platform-independent interfaces
+interfaces() {
+  node <<-EOF
+	var os = require('os');
+	var i = os.networkInterfaces();
+	Object.keys(i).forEach(function(name) {
+		i[name].forEach(function(int) {
+			if (int.family === 'IPv4') {
+				console.log('%s: %s', name, int.address);
+			}
+		});
+	});
+	EOF
+}
+
+# Calculate CPU load / Core Count
+load() {
+  node -p <<-EOF
+	var os = require('os');
+	var c = os.cpus().length;
+	os.loadavg().map(function(l) {
+		return (l/c).toFixed(2);
+	}).join(' ');
+	EOF
+}
+
+# Platform-independent memory usage
+meminfo() {
+  node <<-EOF
+	var os = require('os');
+	var free = os.freemem();
+	var total = os.totalmem();
+	var used = total - free;
+	console.log('memory: %dmb / %dmb (%d%%)',
+	    Math.round(used / 1024 / 1024),
+	    Math.round(total / 1024 / 1024),
+	    Math.round(used * 100 / total));
+	EOF
 }

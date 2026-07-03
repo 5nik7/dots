@@ -11,6 +11,35 @@ fi
 
 fpath+=("$ZFUNC" "${fpath[@]}")
 
+# Support colors in less
+export LESS_TERMCAP_mb=$(
+  tput bold
+  tput setaf 1
+)
+export LESS_TERMCAP_md=$(
+  tput bold
+  tput setaf 1
+)
+export LESS_TERMCAP_me=$(tput sgr0)
+export LESS_TERMCAP_se=$(tput sgr0)
+export LESS_TERMCAP_so=$(
+  tput bold
+  tput setaf 3
+  tput setab 4
+)
+export LESS_TERMCAP_ue=$(tput sgr0)
+export LESS_TERMCAP_us=$(
+  tput smul
+  tput bold
+  tput setaf 2
+)
+export LESS_TERMCAP_mr=$(tput rev)
+export LESS_TERMCAP_mh=$(tput dim)
+export LESS_TERMCAP_ZN=$(tput ssubm)
+export LESS_TERMCAP_ZV=$(tput rsubm)
+export LESS_TERMCAP_ZO=$(tput ssupm)
+export LESS_TERMCAP_ZW=$(tput rsupm)
+
 autoload -U +X bashcompinit && bashcompinit
 autoload -Uz compinit
 compinit
@@ -42,32 +71,61 @@ if check $PYTHONSTARTUP; then
   export PYTHONSTARTUP
 fi
 
+export THEMESROOT="$DOTS/themes"
+export THEMEBIN="$THEMESROOT/bin"
+prepath "$THEMEBIN"
+export THEMEFILE="$THEMESROOT/.theme"
+export DEFAULT_THEME="${DEFAULT_THEME:-catppuccin}"
+export DEFAULT_FLAVOR="${DEFAULT_FLAVOR:-mocha}"
+
+if [[ ! -f $THEMEFILE ]]; then
+  THEME="${DEFAULT_THEME}"
+  FLAVOR="${DEFAULT_FLAVOR}"
+  echo "${DEFAULT_THEME}-${DEFAULT_FLAVOR}" >"$THEMEFILE"
+fi
+
 has_theme() { command vivid generate "$1" &>/dev/null; }
 
 theme() {
-  if has_theme "$1"; then
-    echo "$1" >|"${DOTS}/.theme"
-    set_theme
+  local new="$1"
+  local old="$THEME"
+  if has_theme "$new"; then
+    if [[ $new == $old ]]; then
+      warn "'$new' is current theme."
+      return 1
+    else
+      echo "$new" >|"$THEMEFILE"
+      set_theme "$new"
+    fi
   else
-    echo "'$1' not a theme."
+    err "'$new' not a theme."
+    return 1
   fi
 }
 
 set_theme() {
-  export THEMESROOT="$DOTS/themes"
-  export THEMEBIN="$THEMESROOT/bin"
-  prepath "$THEMEBIN"
-  export DOT_THEME="$(cat "$DOTS"/.theme)"
-  if [[ $DOT_THEME == *-* ]]; then
-    export THEME="$(echo "$DOT_THEME" | cut -d '-' -f 1)"
-    export FLAVOR="$(echo "$DOT_THEME" | cut -d '-' -f 2)"
+  local t out
+
+  if [[ -n "$1" ]]; then
+    t="$1"
+  else
+    t="$(cat "$THEMEFILE")"
+  fi
+
+  if [[ $t == *-* ]]; then
+    export THEME="$(echo "$t" | cut -d '-' -f 1)"
+    export FLAVOR="$(echo "$t" | cut -d '-' -f 2)"
+    out="THEME:$THEME|FLAVOR:$FLAVOR"
+  else
+    export THEME="$t"
+    out="THEME:$THEME"
   fi
 
   export THEMEDIR="$THEMESROOT/$THEME"
   export THEMESRC="$THEMEDIR/src"
   export THEMECONF="$THEMEDIR/conf"
 
-  export LS_COLORS="$(vivid generate "$DOT_THEME")"
+  export LS_COLORS="$(vivid generate "$t")"
 
   so "$THEMEDIR/func.sh"
   so "$THEMEDIR/colors.sh"
@@ -77,14 +135,22 @@ set_theme() {
   done
 
   if has fzf; then
-    so "$HOME/.fzf.zsh"
     zieces 'fzf'
+  fi
+
+  if [[ -n "$1" ]]; then
+    ok "$out"
   fi
 }
 
 set_theme
 
 zieces 'completions'
+
+if has fzf; then
+  so "$HOME/.fzf.zsh"
+  zieces 'fzf'
+fi
 
 if has zoxide; then
   eval "$(zoxide init zsh)"
@@ -121,11 +187,11 @@ has mise && eval "$(mise activate zsh)"
 
 has usage && source <(usage g completion-init zsh)
 
-if [[ "$istermux" == true ]] &>/dev/null; then
+if [[ "$is_termux" == true ]] &>/dev/null; then
   zieces 'droid'
 fi
 
-if [[ "$iswsl" == true ]] &>/dev/null; then
+if [[ "$is_wsl" == true ]] &>/dev/null; then
   zieces 'wsl'
 fi
 
@@ -142,11 +208,6 @@ if checkdir "$HOME/.nvm"; then
 fi
 
 zle_highlight=('paste:none')
-
-if has fzf; then
-  so "$HOME/.fzf.zsh"
-  zieces "fzf"
-fi
 
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
   zprof

@@ -18,26 +18,26 @@ fi
 
 export distro
 
-dotsro() {
+dotstro() {
   local distro="${distro:-unknown}"
   echo "$distro"
 }
 
 if [[ "$distro" == "termux" ]]; then
-  istermux=true
+  is_termux=true
 fi
 
 if [[ -r /etc/wsl-distribution.conf ]]; then
-  iswsl=true
+  is_wsl=true
 fi
 
-istermux() {
+is_termux() {
   local verbose=0
   if [[ $1 == '-v' ]]; then
     verbose=1
     shift
   fi
-  if [[ "$istermux" == true ]] &>/dev/null; then
+  if [[ "$is_termux" == true ]] &>/dev/null; then
     ((verbose)) && echo "true"
     return 0
   else
@@ -46,13 +46,13 @@ istermux() {
   fi
 }
 
-iswsl() {
+is_wsl() {
   local verbose=0
   if [[ $1 == '-v' ]]; then
     verbose=1
     shift
   fi
-  if [[ "$iswsl" == true ]] &>/dev/null; then
+  if [[ "$is_wsl" == true ]] &>/dev/null; then
     ((verbose)) && echo "true"
     return 0
   else
@@ -60,6 +60,19 @@ iswsl() {
     return 1
   fi
 }
+
+has_pip_pkg() {
+  local pkg="$1"
+  command -v pip &>/dev/null || return 1
+  pip show $pkg -q 2>/dev/null || return 1
+  return 0
+}
+
+if has_pip_pkg distro; then
+  if is_termux; then
+    alias distro="distro -r $prefix"
+  fi
+fi
 
 # set global default env
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
@@ -99,6 +112,10 @@ export BAT_CONFIG_DIR="$DOTFILES/bat"
 export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/bat.conf"
 export YAZI_CONFIG_HOME="$DOTFILES/yazi"
 
+[ -f "$COLORS" ] && source "$COLORS"
+[ -f "$UTIL" ] && source "$UTIL"
+
+fpath+=("$ZFUNC" "${fpath[@]}")
 export GOBIN="${GOBIN:-$HOME/go/bin}"
 
 if [[ -r "${XDG_DATA_HOME}/bob/env/env.sh" ]]; then
