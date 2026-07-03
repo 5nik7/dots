@@ -51,6 +51,11 @@ zieces 'functions'
 zieces 'options'
 zieces 'plugins'
 
+if has fzf; then
+  so "$HOME/.fzf.zsh"
+  zieces 'fzf'
+fi
+
 addir "$HOME/.local/bin"
 prepath "$GOBIN"
 extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
@@ -134,9 +139,7 @@ set_theme() {
     so "$file"
   done
 
-  if has fzf; then
-    zieces 'fzf'
-  fi
+  zieces 'fzf'
 
   if [[ -n "$1" ]]; then
     ok "$out"
@@ -145,12 +148,9 @@ set_theme() {
 
 set_theme
 
-zieces 'completions'
+fzdef
 
-if has fzf; then
-  so "$HOME/.fzf.zsh"
-  zieces 'fzf'
-fi
+zieces 'completions'
 
 if has zoxide; then
   eval "$(zoxide init zsh)"

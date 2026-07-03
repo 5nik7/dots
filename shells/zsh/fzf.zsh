@@ -1,9 +1,11 @@
+so "$HOME/.fzf.zsh"
+
 if has fd; then
   export FZF_DEFAULT_COMMAND='fd --type f --color=always --ignore-case --strip-cwd-prefix --hidden --exclude .git'
 fi
 
 fzdef() {
-  _FZF_OPTS_="\
+  $_FZF_OPTS_="\
 --style=default \
 --layout=reverse \
 --height=~90% \
@@ -20,17 +22,15 @@ fzdef() {
 --smart-case \
 --ansi"
 
-  _FZF_BINDS_="\
+  export $_FZF_BINDS_="\
 Ctrl-X:toggle-preview,\
 up:up-match,\
 down:down-match,\
 alt-r:toggle-raw"
 
   # so "$THEMECONF/fzf.sh"
-  _FZF_PREVIEW_POS_='right:hidden:50%:wrap-word:border-left'
+  export $_FZF_PREVIEW_POS_='right:hidden:50%:wrap-word:border-left'
   _PREVIEW_="preview.zsh"
-
-  export _FZF_OPTS_ _FZF_BINDS_ _FZF_PREVIEW_POS_ _PREVIEW_
 
   export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --color=$_FZF_COLORS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
 }
