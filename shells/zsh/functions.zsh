@@ -108,33 +108,6 @@ submodules() {
   fi
 }
 
-is_submodule() {
-  local submodule
-  local submodules=()
-  local recurse=0
-  if in_git; then
-    local cdup=$(git rev-parse --show-cdup)
-    if [[ $1 == '-r' ]]; then
-      recurse=1
-      shift
-    fi
-    if ((recurse)); then
-      submodules=($(git submodule status --recursive | awk '{print $2}'))
-    else
-      submodules=($(git submodule status | awk '{print $2}'))
-    fi
-    for submodule in "${submodules[@]}"; do
-      if [[ "${cdup}${@}" == "$submodule" ]]; then
-        return 0
-      else
-        return 1
-      fi
-    done
-  else
-    return 1
-  fi
-}
-
 # print a colorized diff
 colordiff() {
   local red=$(tput setaf 1 2>/dev/null)
@@ -192,44 +165,6 @@ femoji() {
   emojis=$(curl -sSL 'https://git.io/JXXO7')
   selected_emoji=$(echo $emojis | fzf)
   echo $selected_emoji
-}
-
-# ex - archive extractor
-ex() {
-  if [ -f "$1" ]; then
-    case $1 in
-    *.tar.bz2) tar xjf "$1" ;;
-    *.tar.gz) tar xzf "$1" ;;
-    *.bz2) bunzip2 "$1" ;;
-    *.rar) unrar x "$1" ;;
-    *.gz) gunzip "$1" ;;
-    *.tar) tar xf "$1" ;;
-    *.tbz2) tar xjf "$1" ;;
-    *.tgz) tar xzf "$1" ;;
-    *.zip) unzip "$1" ;;
-    *.Z) uncompress "$1" ;;
-    *.7z) 7z x "$1" ;;
-    *) echo "'$1' cannot be extracted via ex()" ;;
-    esac
-  else
-    echo "'$1' is not a valid file"
-  fi
-}
-
-htmldecode() {
-  : "${*//+/ }"
-  echo -e "${_//&#x/\x}" | tr -d ';'
-}
-
-urldecode() {
-  : "${*//+/ }"
-  echo -e "${_//%/\\x}"
-}
-
-over() {
-  awk -v c="${1:-80}" 'length($0) > c {
-		printf("%4d %s\n", NR, $0);
-	}'
 }
 
 truecolor-rainbow() {
@@ -363,15 +298,6 @@ ssh-key-set() {
 ssh-key-info() {
   ssh-keygen -l -f "$HOME/.ssh/${1:-id_rsa}"
 }
-
-prepend-sudo() {
-  if [[ $BUFFER != "sudo "* ]]; then
-    BUFFER="sudo $BUFFER"
-    CURSOR+=5
-  fi
-}
-zle -N prepend-sudo
-bindkey -M vicmd s prepend-sudo
 
 fname() {
   basename "$@" | sed 's/\(.*\)\..*/\1/'

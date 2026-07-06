@@ -1,98 +1,93 @@
-if has catppuccin; then
-
-  function flavor() {
-    catppuccin "$FLAVOR" "$@"
-  }
-  function mocha() {
-    catppuccin mocha "$@"
-  }
-  function macchiato() {
-    catppuccin macchiato "$@"
-  }
-  function frappe() {
-    catppuccin frappe "$@"
-  }
-  function latte() {
-    catppuccin latte "$@"
-  }
-  function rosewater() {
-    catppuccin "$0" "$@"
-  }
-  function flamingo() {
-    catppuccin "$0" "$@"
-  }
-  function pink() {
-    catppuccin "$0" "$@"
-  }
-  function mauve() {
-    catppuccin "$0" "$@"
-  }
-  function red() {
-    catppuccin "$0" "$@"
-  }
-  function maroon() {
-    catppuccin "$0" "$@"
-  }
-  function peach() {
-    catppuccin "$0" "$@"
-  }
-  function yellow() {
-    catppuccin "$0" "$@"
-  }
-  function green() {
-    catppuccin "$0" "$@"
-  }
-  function teal() {
-    catppuccin "$0" "$@"
-  }
-  function sky() {
-    catppuccin "$0" "$@"
-  }
-  function sapphire() {
-    catppuccin "$0" "$@"
-  }
-  function blue() {
-    catppuccin "$0" "$@"
-  }
-  function lavender() {
-    catppuccin "$0" "$@"
-  }
-  function text() {
-    catppuccin "$0" "$@"
-  }
-  function subtext1() {
-    catppuccin "$0" "$@"
-  }
-  function subtext0() {
-    catppuccin "$0" "$@"
-  }
-  function overlay2() {
-    catppuccin "$0" "$@"
-  }
-  function overlay1() {
-    catppuccin "$0" "$@"
-  }
-  function overlay0() {
-    catppuccin "$0" "$@"
-  }
-  function surface2() {
-    catppuccin "$0" "$@"
-  }
-  function surface1() {
-    catppuccin "$0" "$@"
-  }
-  function surface0() {
-    catppuccin "$0" "$@"
-  }
-  function base() {
-    catppuccin "$0" "$@"
-  }
-  function mantle() {
-    catppuccin "$0" "$@"
-  }
-  function crust() {
-    catppuccin "$0" "$@"
-  }
-else
-  echo "catppuccin command not found. Please install it to use the colors."
-fi
+# flavor() {
+#   catppuccin "$FLAVOR" "$@"
+# }
+# mocha() {
+#   catppuccin mocha "$@"
+# }
+# macchiato() {
+#   catppuccin macchiato "$@"
+# }
+# frappe() {
+#   catppuccin frappe "$@"
+# }
+# latte() {
+#   catppuccin latte "$@"
+# }
+# rosewater() {
+#   catppuccin "$0" "$@"
+# }
+# flamingo() {
+#   catppuccin "$0" "$@"
+# }
+# pink() {
+#   catppuccin "$0" "$@"
+# }
+# mauve() {
+#   catppuccin "$0" "$@"
+# }
+# red() {
+#   catppuccin "$0" "$@"
+# }
+# maroon() {
+#   catppuccin "$0" "$@"
+# }
+# peach() {
+#   catppuccin "$0" "$@"
+# }
+# yellow() {
+#   catppuccin "$0" "$@"
+# }
+# green() {
+#   catppuccin "$0" "$@"
+# }
+# teal() {
+#   catppuccin "$0" "$@"
+# }
+# sky() {
+#   catppuccin "$0" "$@"
+# }
+# sapphire() {
+#   catppuccin "$0" "$@"
+# }
+# blue() {
+#   catppuccin "$0" "$@"
+# }
+# lavender() {
+#   catppuccin "$0" "$@"
+# }
+# text() {
+#   catppuccin "$0" "$@"
+# }
+# subtext1() {
+#   catppuccin "$0" "$@"
+# }
+# subtext0() {
+#   catppuccin "$0" "$@"
+# }
+# overlay2() {
+#   catppuccin "$0" "$@"
+# }
+# overlay1() {
+#   catppuccin "$0" "$@"
+# }
+# overlay0() {
+#   catppuccin "$0" "$@"
+# }
+# surface2() {
+#   catppuccin "$0" "$@"
+# }
+# surface1() {
+#   catppuccin "$0" "$@"
+# }
+# surface0() {
+#   catppuccin "$0" "$@"
+# }
+# base() {
+#   catppuccin "$0" "$@"
+# }
+# mantle() {
+#   catppuccin "$0" "$@"
+# }
+# crust() {
+#   catppuccin "$0" "$@"
+# }

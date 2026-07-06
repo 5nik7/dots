@@ -1,5 +1,5 @@
-function rlp() {
-  source ~/.zshrc
+rlp() {
+  . ~/.zshrc
   ok " ZSH RELOADED"
 }
 alias rl='rlp'
@@ -18,9 +18,7 @@ if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
   alias aptr='sudo apt remove'
 fi
 
-if has git-up; then
-  alias gup='git-up'
-fi
+alias gup='git-up'
 
 alias d8="date '+%-I:%M %p'"
 
@@ -42,8 +40,6 @@ alias rmr='rm -fvr'
 
 alias "zd"="fzd"
 
-function mkcd() { mkdir -p "$@" && cd $_; }
-
 alias get='httpGet'
 
 alias h='history'
@@ -64,23 +60,15 @@ alias ".l"="cd $HOME/.local"
 alias ".lb"="cd $HOME/.local/bin"
 alias ".lsh"="cd $HOME/.local/share"
 alias ".lst"="cd $HOME/.local/state"
-alias ".v"="cd $HOME/.config/nvim"
 
-alias ".d"="cd $DOTS"
-alias ".df"="cd $DOTFILES"
-alias ".b"="cd $DOTSBIN"
-alias ".s"="cd $SHELLS"
-alias ".sc"="cd $DOTSCRIPTS"
-alias ".sz"="cd $ZSHDOTS"
-alias ".sb"="cd $SHELLS/bash"
-alias ".sp"="cd $SHELLS/powershell"
-
-alias ".a"="cd $DROIDOTS"
-alias ".af"="cd $DROIDOTS/configs"
-alias ".ab"="cd $DROIDOTS/bin"
-
-alias ".w"="cd $WINDOTS"
-alias ".wf"="cd $WINDOTS/configs"
+alias ".d"="cd $dot[root]"
+alias ".df"="cd $dot[files]"
+alias ".b"="cd $dot[bin]"
+alias ".s"="cd $dot[shells]"
+alias ".sc"="cd $dot[scripts]"
+alias ".sz"="cd $shells[zsh]"
+alias ".sb"="cd $shella[bash]"
+alias ".sp"="cd $shells[pwsh]"
 
 if has eza; then
   export eza_opts=("--icons=always" "--color=always" "--group-directories-first")
@@ -97,16 +85,16 @@ alias lla="ls -la"
 
 if has yazi; then
 
-  function y() {
+  y() {
     local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
     command yazi "$@" --cwd-file="$tmp"
-    IFS= read -r -d '' cwd < "$tmp"
+    IFS= read -r -d '' cwd <"$tmp"
     [ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
     command rm -f -- "$tmp"
   }
   alias d='y'
 
-  function yap() {
+  yap() {
     local yaziProject="$1"
     shift
     if [ -z "$yaziProject" ]; then
@@ -129,23 +117,6 @@ if has yazi; then
   }
 
 fi
-
-if has nvim; then
-  EDITOR='nvim'
-elif has vim; then
-  EDITOR='vim'
-elif has vi; then
-  EDITOR='vi'
-elif has code; then
-  EDITOR='code'
-else
-  EDITOR='nano'
-fi
-
-export EDITOR
-export SYSTEMD_EDITOR=$EDITOR
-export VISUAL="$EDITOR"
-export EDITOR_TERM="$TERMINAL -e $EDITOR"
 
 alias edit='$EDITOR'
 alias v='$EDITOR'

@@ -1,4 +1,4 @@
-source ~/catppuccin_mocha.nu
+source ~/dots/shells/nushell/catppuccin_mocha.nu
 
 $env.config.show_banner = false
 

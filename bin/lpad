@@ -8,13 +8,13 @@
 
 # echo ... | lpad '  '
 lpad() {
-	local s=$1
-	local line=
-	while IFS= read -r line; do
-		echo "$s$line"
-	done
+  local s=$1
+  local line=
+  while IFS= read -r line; do
+    echo "$s$line"
+  done
 }
 
 if ! (return &>/dev/null); then
-	lpad "$@"
+  lpad "$@"
 fi

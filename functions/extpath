@@ -1,0 +1,9 @@
+extpath () {
+	if [[ -d "$1" ]]
+	then
+		if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"
+		then
+			export PATH="$PATH:$1" 
+		fi
+	fi 2> /dev/null
+}

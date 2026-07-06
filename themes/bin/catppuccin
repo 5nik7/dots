@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
-palette=(rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface0 base mantle crust)
+if [ -z $FLAVOR ]; then
+  FLAVOR='mocha'
+fi
 
 flavors=(mocha macchiato frappe latte)
+
+palette=(rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface0 base mantle crust)
 
 mocha() {
   rosewater='#f5e0dc'
@@ -120,22 +124,7 @@ latte() {
   base='#eff1f5'
 }
 
-esc=$'\033'
-rst="${esc}[0m"
-bold="${esc}[1m"
-dim="${esc}[2m"
-italic="${esc}[3m"
-underline="${esc}[4m"
-rev="${esc}[7m"
-black="${esc}[30m"
-red="${esc}[31m"
-green="${esc}[32m"
-yellow="${esc}[33m"
-blue="${esc}[34m"
-magenta="${esc}[35m"
-cyan="${esc}[36m"
-white="${esc}[37m"
-
+declare ESC=$'\x1b'
 default_flavor="mocha"
 default_format="hex"
 declare -r prog="${0##*/}"
@@ -148,7 +137,7 @@ declare box=1
 declare raw=0
 declare array=0
 
-err() { printf "${red}%s %s %s${rst}\n" "[ERROR]" "$caticon" "$*" >&2; }
+err() { printf "${RED}%s%s%s${RST}\n" "[ERROR]" "$caticon" "$*" >&2; }
 die() {
   err "$*"
   exit 1
@@ -192,28 +181,20 @@ rgb2hex() {
   printf "#%02x%02x%02x\n" "$ired" "$igreen" "$iblue"
 }
 
-fg() {
-  COLOR="$1"
-  local r=$(chcmd pastel format rgb-r ${!COLOR})
-  local g=$(chcmd pastel format rgb-g ${!COLOR})
-  local b=$(chcmd pastel format rgb-b ${!COLOR})
-  local fg="${esc}[38;2;${r};${g};${b}m"
-
-  printf "%s" "$fg"
+escfg() {
+  hex="$1"
+  hex=${hex#\#}
+  printf "${ESC}[38;2;%d;%d;%dm\n" 0x${hex:0:2} 0x${hex:2:2} 0x${hex:4:2}
 }
 
-bg() {
-  COLOR="$1"
-  local r=$(chcmd pastel -m off format rgb-r ${!COLOR})
-  local g=$(chcmd pastel -m off format rgb-g ${!COLOR})
-  local b=$(chcmd pastel -m off format rgb-b ${!COLOR})
-  local bg="${esc}[48;2;${r};${g};${b}m"
-
-  printf "%s" "$bg"
+escbg() {
+  hex="$1"
+  hex=${hex#\#}
+  printf "${ESC}[48;2;%d;%d;%dm\n" 0x${hex:0:2} 0x${hex:2:2} 0x${hex:4:2}
 }
 
-tc=$(fg mauve)
-bc=$(fg surface0)
+tc="$GREEN"
+bc="$BRIGHTBLACK"
 
 logo() {
   local IFS=
@@ -242,18 +223,19 @@ Options
 color_codes() {
   local var="$1"
   local format="$COLORFORMAT"
-  local fg_var=$(fg "$var")
-  local fg_text=$(fg "text")
+  local varcol="$(escfg "${!var}")"
   local fmtd=$(chcmd pastel -m off format "$COLORFORMAT" "${!var}")
   if ((raw)); then
     if ((array)); then
-      printf "%s[%s]='%s'\n" "$flavor" "$var" "${fmtd}"
+      unset "$vat"
 
+      printf "%s\n" $fmtd
+      # printf "%s=([\'%s\']=\'%s\')" $var $format $fmtd
     else
       printf "%s='%s'\n" "${var}" "${fmtd}"
     fi
   else
-    printf '%s|%s|%s\n' "${fg_var}${block}${rst}" "${var}" "${fmtd}"
+    printf '%s|%s|%s\n' "${varcol}${block}${rst}" "${var}" "${fmtd}"
   fi
 }
 
@@ -273,46 +255,42 @@ print_colors() {
     printf '%s\n' "${codes[@]}" | box -hp 1 -bc "${bc}" -t "$flavor[$format]" -tc "${tc}" -s '|'
   else
     if ((array)); then
-      echo "declare -gA "${flavor}";"
       for code in "${codes[@]}"; do
-        echo "$code;"
+        echo "$code"
       done
-    else
-      echo "$flavor['$format']"
-      printf '%s\n' "${codes[@]}"
     fi
   fi
 }
 
 list_colors() {
-  local tc=$(fg mauve)
-  local bc=$(fg surface0)
-  local fg_text=$(fg "text")
+  local tc="$GREEN"
+  local bc="$BLACK"
+  local vcol="$WHITE"
   if ((raw)); then
     echo "${palette[@]}"
   else
     for col in "${palette[@]}"; do
-      printf '%s%s%s\n' "${fg_text}${col}${rst}"
-    done | box -hp 1 -bc "${bc}" -t "colors:" -tc "${tc}" -s "${sep}"
+      printf '%s%s%s\n' "${vcol}${col}${rst}"
+    done | box -hp 1 -bc "$bc" -t "colors:" -tc "${tc}" -s "${sep}"
   fi
 }
 
 list_flavors() {
   local current=${FLAVOR}
-  local tc=$(fg mauve)
-  local bc=$(fg surface0)
+  local tc=$(fgcolor mauve)
+  local bc=$(fgcolor surface0)
 
   if ((raw)); then
     echo "${flavors[@]}"
   else
     for flav in "${flavors[@]}"; do
       if [[ "$flav" == "$current" ]]; then
-        flavcol="$(fg pink)"
+        flavcol="$(fgcolor pink)"
       else
-        flavcol="$(fg text)"
+        flavcol="$(fgcolor text)"
       fi
       if [[ "$flav" == "$default_flavor" ]]; then
-        printf "%s%s\n" "${flavcol}${flav}${rst}" "$(fg overlay2)(default)${rst}"
+        printf "%s%s\n" "${flavcol}${flav}${rst}" "$(fgcolor overlay2)(default)${rst}"
       else
         printf "%s\n" "${flavcol}${flav}${rst}"
       fi
@@ -368,14 +346,6 @@ main() {
   COLOR=""
   COLORFORMAT=""
   COLORMODE=""
-
-  if [[ ! -z "$FLAVOR" ]]; then
-    FLAVOR="$default_flavor"
-  fi
-
-  if [[ -z "$COLORFORMAT" ]]; then
-    COLORFORMAT="$default_format"
-  fi
 
   if [[ $# == 0 ]]; then
     usage
@@ -452,6 +422,10 @@ main() {
       ;;
     esac
   done
+
+  if [[ -z "$COLORFORMAT" ]]; then
+    COLORFORMAT="$default_format"
+  fi
 
   case "$FLAVOR" in
   mocha) mocha ;;

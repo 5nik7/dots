@@ -1,0 +1,9 @@
+prepath () {
+	if [[ -d "$1" ]]
+	then
+		if ! echo "$PATH" | tr ":" "\n" | grep -qx "$1"
+		then
+			export PATH="$1:$PATH" 
+		fi
+	fi 2> /dev/null
+}

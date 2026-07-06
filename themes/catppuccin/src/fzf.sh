@@ -27,7 +27,7 @@ crust=$(catppuccin crust hex)
 
 transparent="-1"
 
-_FZF_COLORS_="\
+export _FZF_COLORS_="\
 bg+:${transparent},\
 bg:${transparent},\
 preview-bg:$mantle,\

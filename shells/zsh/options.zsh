@@ -8,6 +8,9 @@ setopt_if_exists() {
   fi
 }
 
+setopt_if_exists no_bg_nice
+setopt_if_exists local_options
+setopt_if_exists local_traps
 setopt_if_exists hist_expire_dups_first
 setopt_if_exists hist_ignore_dups
 setopt_if_exists hist_ignore_space
@@ -25,6 +28,8 @@ setopt_if_exists auto_list
 setopt_if_exists menu_complete
 setopt_if_exists complete_in_word
 setopt_if_exists re_match_pcre
+setopt_if_exists complete_aliases
+setopt_if_exists ignore_eof
 
 unset setopt_if_exists
 unsetopt beep
@@ -32,7 +37,7 @@ unsetopt beep
 bindkey -v
 export KEYTIMEOUT=1
 
-function zle-keymap-select {
+zle-keymap-select() {
   if [[ ${KEYMAP} == vicmd ]] ||
     [[ $1 = 'block' ]]; then
     echo -ne '\e[1 q'
@@ -53,3 +58,5 @@ echo -ne '\e[5 q'                # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q'; } # Use beam shape cursor for each new prompt.
 
 export VI_MODE_SET_CURSOR=true
+
+zle_highlight=('paste:none')

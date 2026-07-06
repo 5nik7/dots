@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
-. $SCRIPTDIR/colors || exit 1
+. $SCRIPTDIR/colors.env || exit 1
 
 padding=1
 lpad=$(repeat-char " " $padding)

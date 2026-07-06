@@ -6,66 +6,105 @@ if [ -n "${ZSH_DEBUGRC+1}" ]; then
   zmodload zsh/zprof
 fi
 
-[ -f "$COLORS" ] && source "$COLORS"
-[ -f "$UTIL" ] && source "$UTIL"
+# set global default env
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
-fpath+=("$ZFUNC" "${fpath[@]}")
+export DOTS="${SOTS:-$HOME/dots}"
 
-# Support colors in less
-export LESS_TERMCAP_mb=$(
-  tput bold
-  tput setaf 1
-)
-export LESS_TERMCAP_md=$(
-  tput bold
-  tput setaf 1
-)
-export LESS_TERMCAP_me=$(tput sgr0)
-export LESS_TERMCAP_se=$(tput sgr0)
-export LESS_TERMCAP_so=$(
-  tput bold
-  tput setaf 3
-  tput setab 4
-)
-export LESS_TERMCAP_ue=$(tput sgr0)
-export LESS_TERMCAP_us=$(
-  tput smul
-  tput bold
-  tput setaf 2
-)
-export LESS_TERMCAP_mr=$(tput rev)
-export LESS_TERMCAP_mh=$(tput dim)
-export LESS_TERMCAP_ZN=$(tput ssubm)
-export LESS_TERMCAP_ZV=$(tput rsubm)
-export LESS_TERMCAP_ZO=$(tput ssupm)
-export LESS_TERMCAP_ZW=$(tput rsupm)
+[ -r "$DOTS/bin/util" ] && source "$DOTS/bin/util"
 
-autoload -U +X bashcompinit && bashcompinit
-autoload -Uz compinit
-compinit
+if has nvim; then
+  EDITOR='nvim'
+elif has vim; then
+  EDITOR='vim'
+elif has vi; then
+  EDITOR='vi'
+elif has code; then
+  EDITOR='code'
+else
+  EDITOR='nano'
+fi
+
+export EDITOR
+export SYSTEMD_EDITOR=$EDITOR
+export VISUAL="$EDITOR"
+export EDITOR_TERM="$TERMINAL -e $EDITOR"
+
+export ZSH="$DOTS/shells/zsh"
+export ZSHCOMP="$ZSH/completions"
+
+declare -xgA zsh
+declare -x zsh[root]="$ZSH"
+declare -x zsh[completions]="$ZSHCOMP"
+
+prepath "$zsh[completions]"
+
+fpath=($zsh[completions] $fpath)
+
+environments=($DOTS/**/*.env)
+
+for file in ${(M)environments#*/*.env}; do
+  source $file
+done
+
+docs="${DOCS:-$HOME/Documents}"
+export DOCS="$docs"
+
+notes="${NOTES:-$HOME/Notes}"
+export NOTES="$notes"
+
+# set config env
+export STARSHIP_CONFIG="${dot[configs]}/starship/starship.toml"
+export STARSHIP_DIR="${STARSHIP_CONFIG%/*}"
+export STARSHIP_THEMES="$STARSHIP_DIR/themes"
+
+export BAT_CONFIG_DIR="${dot[configs]}/bat"
+export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/bat.conf"
+export YAZI_CONFIG_HOME="$DOTFILES/yazi"
+
+[ -r "$HOME/.fzf.zsh" ] && source "$HOME/.fzf.zsh"
+
+[ -r "${XDG_DATA_HOME}/bob/env/env.sh" ] && source "${XDG_DATA_HOME}/bob/env/env.sh
+"
+export GOBIN="${GOBIN:-$HOME/go/bin}"
 autoload -U colors
 colors
 
-# zieces 'zutil'
+export CLICOLOR=1
+
+autoload -U +X bashcompinit && bashcompinit
+autoload -Uz compinit
+
+# if [[ -n $HOME/.zcompdump(#qN.mh+24) ]]; then
+#   compinit -d $HOME/.zcompdump
+# else
+#   compinit -C
+# fi
+
+zmodload zsh/complist
+compinit
+_comp_options+=(globdots)
+
+alias zieces="shellmod"
+
 zieces 'functions'
+zieces 'aliases'
 zieces 'options'
+zieces 'fzf'
+zieces 'completions'
 zieces 'plugins'
 
-if has fzf; then
-  so "$HOME/.fzf.zsh"
-  zieces 'fzf'
-fi
-
-addir "$HOME/.local/bin"
 prepath "$GOBIN"
 extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
-prepath "$DOTSBIN"
-prepath "$DOTSLOCALBIN"
 prepath "$HOME/.cargo/bin"
-prepath "$HOME/.local/bin"
-prepath "$HOME/bin"
-prepath "$DOTSCRIPTS"
-prepath "$DOTSBIN"
+prepath "$HOME/.local/bin" || addir "$HOME/.local/bin"
+prepath "$HOME/bin
+"
+
+#add each topic folder to fpath so that they can add functions and completion scripts
 
 so "$HOME/.cargo/env"
 so "$DOTSHHHH/secrets.sh"
@@ -76,91 +115,9 @@ if check $PYTHONSTARTUP; then
   export PYTHONSTARTUP
 fi
 
-export THEMESROOT="$DOTS/themes"
-export THEMEBIN="$THEMESROOT/bin"
-prepath "$THEMEBIN"
-export THEMEFILE="$THEMESROOT/.theme"
-export DEFAULT_THEME="${DEFAULT_THEME:-catppuccin}"
-export DEFAULT_FLAVOR="${DEFAULT_FLAVOR:-mocha}"
-
-if [[ ! -f $THEMEFILE ]]; then
-  THEME="${DEFAULT_THEME}"
-  FLAVOR="${DEFAULT_FLAVOR}"
-  echo "${DEFAULT_THEME}-${DEFAULT_FLAVOR}" >"$THEMEFILE"
-fi
-
-has_theme() { command vivid generate "$1" &>/dev/null; }
-
-theme() {
-  local new="$1"
-  local old="$THEME"
-  if has_theme "$new"; then
-    if [[ $new == $old ]]; then
-      warn "'$new' is current theme."
-      return 1
-    else
-      echo "$new" >|"$THEMEFILE"
-      set_theme "$new"
-    fi
-  else
-    err "'$new' not a theme."
-    return 1
-  fi
-}
-
-set_theme() {
-  local t out
-
-  if [[ -n "$1" ]]; then
-    t="$1"
-  else
-    t="$(cat "$THEMEFILE")"
-  fi
-
-  if [[ $t == *-* ]]; then
-    export THEME="$(echo "$t" | cut -d '-' -f 1)"
-    export FLAVOR="$(echo "$t" | cut -d '-' -f 2)"
-    out="THEME:$THEME|FLAVOR:$FLAVOR"
-  else
-    export THEME="$t"
-    out="THEME:$THEME"
-  fi
-
-  export THEMEDIR="$THEMESROOT/$THEME"
-  export THEMESRC="$THEMEDIR/src"
-  export THEMECONF="$THEMEDIR/conf"
-
-  export LS_COLORS="$(vivid generate "$t")"
-
-  so "$THEMEDIR/func.sh"
-  so "$THEMEDIR/colors.sh"
-
-  for file in $THEMESRC/*; do
-    so "$file"
-  done
-
-  zieces 'fzf'
-
-  if [[ -n "$1" ]]; then
-    ok "$out"
-  fi
-}
-
-set_theme
-
-fzdef
-
-zieces 'completions'
-
 if has zoxide; then
   eval "$(zoxide init zsh)"
   alias cd='z'
-fi
-
-zieces 'aliases'
-
-if has starship; then
-  eval "$(starship init zsh)" && eval "$(starship completions zsh)"
 fi
 
 if has direnv; then
@@ -173,19 +130,36 @@ has batpipe && eval "$(batpipe)"
 
 has batman && eval "$(batman --export-env)"
 
-has ipinfo && { complete -o default -C "$HOME/go/bin/ipinfo" ipinfo; }
-
 so "$HOME/.atuin/bin/env" && has atuin && eval "$(atuin init zsh)"
-
-has uv && eval "$(uv generate-shell-completion zsh)"
-
-has uvx && eval "$(uvx --generate-shell-completion zsh)"
 
 has tv && eval "$(tv init zsh)"
 
 has mise && eval "$(mise activate zsh)"
 
+if checkdir "$HOME/.bun"; then
+  export BUN_INSTALL="$HOME/.bun"
+  prepath "$BUN_INSTALL/bin"
+  so "$HOME/.bun/_bun"
+fi
+
+NVM_DIR="${NVM_DIR}:-$HOME/.nvm}"
+if checkdir "$NVM_DIR"; then
+  so "$NVM_DIR/nvm.sh"          # This loads nvm
+  so "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+fi
+
+# autoload -U +X bashcompinit && bashcompinit
+#
+# autoload -Uz compinit
+# compinit
+
 has usage && source <(usage g completion-init zsh)
+
+has uv && eval "$(uv generate-shell-completion zsh)"
+
+has uvx && eval "$(uvx --generate-shell-completion zsh)"
+
+has ipinfo && { complete -o default -C "$HOME/go/bin/ipinfo" ipinfo; }
 
 if [[ "$is_termux" == true ]] &>/dev/null; then
   zieces 'droid'
@@ -195,19 +169,11 @@ if [[ "$is_wsl" == true ]] &>/dev/null; then
   zieces 'wsl'
 fi
 
-if checkdir "$HOME/.bun"; then
-  export BUN_INSTALL="$HOME/.bun"
-  prepath "$BUN_INSTALL/bin"
-  so "$HOME/.bun/_bun"
+if has starship; then
+  eval "$(starship init zsh)" && eval "$(starship completions zsh)"
 fi
 
-if checkdir "$HOME/.nvm"; then
-  export NVM_DIR="$HOME/.nvm"
-  so "$NVM_DIR/nvm.sh"          # This loads nvm
-  so "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-fi
-
-zle_highlight=('paste:none')
+[ -r "${zsh[local]}" ] && source "${zsh[local]}"
 
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
   zprof

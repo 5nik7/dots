@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# ▄▀▀▀▀ ▀▀█▀▀ ▀▀█▀▀       ▀▀█▀▀ ▀▀█▀▀
-# █ ▀▀█   █     █   ▀▀▀▀▀   █     █
-#  ▀▀▀  ▀▀▀▀▀   ▀         ▀▀▀▀▀   ▀
 prog=${0##*/}
 separator='='
 
@@ -43,14 +40,23 @@ uflag() {
   printf " %s, %-21s %s\n" "${color_flag}$1${C_RESET}" "${color_flag}$2${C_RESET}" "${color_description}$3${C_RESET}"
 }
 
-print_usage() {
+header() {
+  cat <<EOF
+ ▄▀▀▀▀ ▀▀█▀▀ ▀▀█▀▀       ▀▀█▀▀ ▀▀█▀▀
+ █ ▀▀█   █     █   ▀▀▀▀▀   █     █
+  ▀▀▀  ▀▀▀▀▀   ▀         ▀▀▀▀▀   ▀
+EOF
+  # ▄▀▀▀▄  ▀█▀  ▀▀█▀▀        ▀█▀  ▀▀█▀▀
+  # █       █     █           █     █
+  # █ ▀▀█   █     █   ▀▀▀▀▀   █     █
+  # ▀▄▄▄▀  ▄█▄    █          ▄█▄    █
+}
 
+print_usage() {
+  local header="$(header)"
   cat <<EOF
 ${C_CYAN}
-▄▀▀▀▄  ▀█▀  ▀▀█▀▀        ▀█▀  ▀▀█▀▀
-█       █     █           █     █
-█ ▀▀█   █     █   ▀▀▀▀▀   █     █
-▀▄▄▄▀  ▄█▄    █          ▄█▄    █
+${header}
 ${C_RESET}
 EOF
   uhead 'Usage:'

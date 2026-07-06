@@ -1,6 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 log() { echo "[*]" "$@"; }
+
 log_error() { echo "[*]" "$@" 1>&2; }
 
 chcmd() {
@@ -29,7 +30,6 @@ err() {
   local part line
   local sep='|'
   local icon=""
-
   for line in "${input[@]}"; do
     IFS=$sep read -A parts <<<"$line"
     printf '%s' "$RED" "$icon" "$RST"
@@ -44,19 +44,17 @@ ok() {
   local sep='|'
   local okicon=""
   local input="$@"
-
   for line in "$@"; do
     IFS=$sep read -r parts <<<"$line"
     parts=(${GREEN}"${parts[@]}"${GREEN})
     printf '%s%s%s\n' "${GREEN}$okicon" "$sep" "${parts[@]}"
-  done | box -hp 1 -bc "${DIM}${DARKGREEN}" -s $sep
+  done | box -hp 1 -bc "$BLACK" -s $sep
 }
 
 warn() {
   local parts line
   local sep='|'
   local warnicon=""
-
   for line in "$@"; do
     IFS=$sep read -r parts <<<"$line"
     parts=($YELLOW"${parts[@]}"$YELLOW)
@@ -78,7 +76,6 @@ has() {
     fi
   done
 }
-alias cmd_exists="has"
 
 fileicon() {
   local icon=''
@@ -176,9 +173,7 @@ shellmod() {
   local exists=0
   local verbose=0
   local first=0
-
   ((buggin)) && verbose=1
-
   while (($#)); do
     case $1 in
     -v | --verboss)
@@ -216,17 +211,13 @@ shellmod() {
   return 1
 }
 
-alias zieces="shellmod"
-
 so() {
   local input=()
   local file icon dir base
   local exists=0
   local verbose=0
   local first=0
-
   ((buggin)) && verbose=1
-
   while (($#)); do
     case $1 in
     -v | --verboss)
@@ -272,9 +263,7 @@ check() {
   local exists=0
   local verbose=0
   local first=0
-
   ((buggin)) && verbose=1
-
   while (($#)); do
     case $1 in
     -v | --verboss)
@@ -319,9 +308,7 @@ checkdir() {
   local exists=0
   local verbose=0
   local first=0
-
   ((buggin)) && verbose=1
-
   while (($#)); do
     case $1 in
     -v | --verboss)
@@ -364,9 +351,7 @@ checkdir() {
 addir() {
   local dir
   local verbose=0
-
   ((buggin)) && verbose=1
-
   if [[ $1 == '-v' ]]; then
     verbose=1
     shift
@@ -390,6 +375,7 @@ is_installed() {
 }
 
 upper() { echo "${@}" | awk '{print toupper($0)}'; }
+
 lower() { echo "${@}" | awk '{print tolower($0)}'; }
 
 getextension() {
