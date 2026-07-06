@@ -194,7 +194,7 @@ escbg() {
 }
 
 tc="$GREEN"
-bc="$BRIGHTBLACK"
+bc="$BLACK"
 
 logo() {
   local IFS=
@@ -276,20 +276,20 @@ list_colors() {
 
 list_flavors() {
   local current=${FLAVOR}
-  local tc=$(fgcolor mauve)
-  local bc=$(fgcolor surface0)
+  local tc=${GREEN}
+  local bc=${BLACK}
 
   if ((raw)); then
     echo "${flavors[@]}"
   else
     for flav in "${flavors[@]}"; do
       if [[ "$flav" == "$current" ]]; then
-        flavcol="$(fgcolor pink)"
+        flavcol="${MAGENTA}"
       else
-        flavcol="$(fgcolor text)"
+        flavcol="${WHITE}"
       fi
       if [[ "$flav" == "$default_flavor" ]]; then
-        printf "%s%s\n" "${flavcol}${flav}${rst}" "$(fgcolor overlay2)(default)${rst}"
+        printf "%s%s\n" "${flavcol}${flav}${rst}" "${BRIGHTBLACK}(default)${rst}"
       else
         printf "%s\n" "${flavcol}${flav}${rst}"
       fi
