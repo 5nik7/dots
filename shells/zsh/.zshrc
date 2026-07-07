@@ -69,8 +69,8 @@ export YAZI_CONFIG_HOME="$DOTFILES/yazi"
 
 [ -r "$HOME/.fzf.zsh" ] && source "$HOME/.fzf.zsh"
 
-[ -r "${XDG_DATA_HOME}/bob/env/env.sh" ] && source "${XDG_DATA_HOME}/bob/env/env.sh
-"
+[ -r "${XDG_DATA_HOME}/bob/env/env.sh" ] && source "${XDG_DATA_HOME}/bob/env/env.sh"
+
 export GOBIN="${GOBIN:-$HOME/go/bin}"
 autoload -U colors
 colors
