@@ -398,7 +398,7 @@ main() {
       COLOR="$1"
       shift
       ;;
-    --format)
+    -F | --format)
       if [[ -n "$2" ]]; then
         COLORFORMAT="$2"
         shift 2

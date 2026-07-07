@@ -3,6 +3,10 @@
 # [ -z "$PS1" ] && return
 [[ $- != *i* ]] && return
 
+export DOTS="$HOME/dots"
+export COLORS="$DOTS/bin/colors.env"
+export UTIL="$DOTS/bin/util"
+
 [ -f "$COLORS" ] && source "$COLORS"
 [ -f "$UTIL" ] && source "$UTIL"
 
