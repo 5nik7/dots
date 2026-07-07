@@ -92,12 +92,12 @@ _comp_options+=(globdots)
 
 alias zieces="shellmod"
 
-zieces 'functions'
-zieces 'aliases'
-zieces 'options'
-zieces 'fzf'
-zieces 'completions'
-zieces 'plugins'
+shellmod "functions"
+shellmod "aliases"
+shellmod "options"
+shellmod "fzf"
+shellmod "completions"
+shellmod "plugins"
 
 prepath "$GOBIN"
 extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
