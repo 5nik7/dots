@@ -80,12 +80,6 @@ export CLICOLOR=1
 autoload -U +X bashcompinit && bashcompinit
 autoload -Uz compinit
 
-# if [[ -n $HOME/.zcompdump(#qN.mh+24) ]]; then
-#   compinit -d $HOME/.zcompdump
-# else
-#   compinit -C
-# fi
-
 zmodload zsh/complist
 compinit
 _comp_options+=(globdots)
@@ -103,10 +97,7 @@ prepath "$GOBIN"
 extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
 prepath "$HOME/.cargo/bin"
 prepath "$HOME/.local/bin" || addir "$HOME/.local/bin"
-prepath "$HOME/bin
-"
-
-#add each topic folder to fpath so that they can add functions and completion scripts
+prepath "$HOME/bin"
 
 so "$HOME/.cargo/env"
 so "$DOTSHHHH/secrets.sh"
@@ -150,11 +141,6 @@ if checkdir "$NVM_DIR"; then
   so "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 fi
 
-# autoload -U +X bashcompinit && bashcompinit
-#
-# autoload -Uz compinit
-# compinit
-
 has usage && source <(usage g completion-init zsh)
 
 has uv && eval "$(uv generate-shell-completion zsh)"
@@ -176,6 +162,12 @@ if has starship; then
 fi
 
 [ -r "${zsh[local]}" ] && source "${zsh[local]}"
+
+# if [[ -n $HOME/.zcompdump(#qN.mh+24) ]]; then
+#   compinit -d $HOME/.zcompdump
+# else
+#   compinit -C
+# fi
 
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
   zprof
