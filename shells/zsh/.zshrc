@@ -149,14 +149,6 @@ has uvx && eval "$(uvx --generate-shell-completion zsh)"
 
 has ipinfo && { complete -o default -C "$HOME/go/bin/ipinfo" ipinfo; }
 
-if [[ "$is_termux" == true ]] &>/dev/null; then
-  zieces 'droid'
-fi
-
-if [[ "$is_wsl" == true ]] &>/dev/null; then
-  zieces 'wsl'
-fi
-
 if has starship; then
   eval "$(starship init zsh)" && eval "$(starship completions zsh)"
 fi

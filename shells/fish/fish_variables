@@ -9,4 +9,4 @@ SETUVAR _fisher_patrickf1_2F_fzf_2E_fish_files:\x7e/\x2econfig/fish/functions/_f
 SETUVAR _fisher_plugins:jorgebucaran/fisher\x1ecatppuccin/fish\x1efranciscolourenco/done\x1epatrickf1/fzf\x2efish\x1ejorgebucaran/autopair\x2efish
 SETUVAR _fisher_upgraded_to_4_4:\x1d
 SETUVAR fish_features:no\x2dkeyboard\x2dprotocols
-SETUVAR --export fish_user_paths:/data/data/com\x2etermux/files/home/\x2elocal/bin\x1e/data/data/com\x2etermux/files/home/\x2ecargo/bin\x1e/bin
+SETUVAR --export fish_user_paths:/data/data/com\x2etermux/files/home/\x2elocal/bin\x1e/data/data/com\x2etermux/files/home/\x2ecargo/bin\x1e/bin\x1e/data/data/com\x2etermux/files/home/\x2efzf/bin
