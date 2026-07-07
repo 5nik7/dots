@@ -50,3 +50,5 @@ list-border:${surface0},\
 preview-border:${mantle},\
 input-border:${surface0},\
 nomatch:strip:${surface1}:italic"
+
+export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} --color=$_FZF_COLORS_"

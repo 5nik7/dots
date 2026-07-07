@@ -1,0 +1,42 @@
+#compdef rgb2hex
+# zsh completion for rgb2hex
+# Install:
+#   rgb2hex --completion zsh > ~/.zfunc/_rgb2hex
+# Then ensure ~/.zfunc is in $fpath and run: autoload -Uz compinit && compinit
+
+_rgb2hex() {
+  local state
+
+  case "${words[CURRENT-1]}" in
+    -r|--red|red|-g|--green|green|-b|--blue|blue)
+      compadd -- {0..255}
+      return
+      ;;
+    --completion|completion)
+      compadd -- bash zsh
+      return
+      ;;
+  esac
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[print help and exit]' \
+    '(-H --nohash)'{-H,--nohash}'[omit leading # from output]' \
+    '(-r --red)'{-r,--red}'[set red component]:red value:->component' \
+    '(-g --green)'{-g,--green}'[set green component]:green value:->component' \
+    '(-b --blue)'{-b,--blue}'[set blue component]:blue value:->component' \
+    '--completion[print shell completion script]:shell:(bash zsh)' \
+    '*::argument:->args' && return
+
+  case "$state" in
+    component)
+      compadd -- {0..255}
+      ;;
+    args)
+      compadd -- help red green blue
+      compadd -- {0..255}
+      compadd -S '' -- 'rgb('
+      ;;
+  esac
+}
+
+_rgb2hex "$@"

@@ -19,6 +19,7 @@ declare -r underline="${esc}[4m"
 declare -r rev="${esc}[7m"
 
 err() { printf "${red}%s %s${rst}\n" "[ERROR]" "$*" >&2; }
+
 die() {
   err "$*"
   exit 1
@@ -46,18 +47,177 @@ chcmd() {
 usage() {
   local prog=${0##*/}
   IFS= read -d '' -r usage <<-EOF
-	Usage: ${prog} [options] [...]
+	Usage:
+	  ${prog} [options] R G B
+	  ${prog} [options] red R green G blue B
+	  ${prog} [options] rgb(R,G,B)
+	  ${prog} --completion bash|zsh
 
-	Description...
+	Description:
+	  Convert RGB decimal values to a hexadecimal color string.
 
-	Options
-	  -h, --help     Print this message and exit
+	Arguments:
+	  R G B                 RGB decimal values, each from 0 to 255
+	  rgb(R,G,B)            RGB function notation
+	                        Quote it if it contains spaces, e.g. 'rgb(255, 128, 0)'
+
+	Options:
+	  -r, --red N           Set red component, 0 to 255
+	  -g, --green N         Set green component, 0 to 255
+	  -b, --blue N          Set blue component, 0 to 255
+	  -H, --nohash          Omit the leading # from output
+	  --completion SHELL    Print shell completion script: bash or zsh
+	  -h, --help, help      Print this message and exit
+
+	Examples:
+	  ${prog} 255 128 0
+	  ${prog} --red 255 --green 128 --blue 0
+	  ${prog} red 255 green 128 blue 0
+	  ${prog} 'rgb(255, 128, 0)'
+	  ${prog} --nohash 'rgb(255,128,0)'
 	EOF
   echo "$usage"
 }
 
+die_usage() {
+  err "$*"
+  usage >&2
+  exit 2
+}
+
+is_rgb_component() {
+  [[ $1 =~ ^[0-9]+$ ]] && ((10#$1 <= 255))
+}
+
+normalize_rgb_component() {
+  printf '%d' "$((10#$1))"
+}
+
+set_component() {
+  local name=$1 value=$2
+
+  is_rgb_component "$value" || die_usage "bad $name int: $value"
+
+  case "$name" in
+    red) r=$(normalize_rgb_component "$value") ;;
+    green) g=$(normalize_rgb_component "$value") ;;
+    blue) b=$(normalize_rgb_component "$value") ;;
+  esac
+}
+
+completion_func_name() {
+  local name=${prog//[^A-Za-z0-9_]/_}
+  printf '_%s' "$name"
+}
+
+completion_bash() {
+  local fn qprog
+  fn=$(completion_func_name)
+  printf -v qprog '%q' "$prog"
+
+  cat <<EOF
+# bash completion for ${prog}
+# Install:
+#   ${prog} --completion bash > ~/.local/share/bash-completion/completions/${prog}
+
+${fn}() {
+  local cur prev
+  COMPREPLY=()
+  cur="\${COMP_WORDS[COMP_CWORD]}"
+  prev="\${COMP_WORDS[COMP_CWORD-1]}"
+
+  case "\$prev" in
+    -r|--red|red|-g|--green|green|-b|--blue|blue)
+      COMPREPLY=( \$(compgen -W "\$(printf '%s ' {0..255})" -- "\$cur") )
+      return 0
+      ;;
+    --completion|completion)
+      COMPREPLY=( \$(compgen -W "bash zsh" -- "\$cur") )
+      return 0
+      ;;
+  esac
+
+  case "\$cur" in
+    -*)
+      COMPREPLY=( \$(compgen -W "-h --help -H --nohash -r --red -g --green -b --blue --completion" -- "\$cur") )
+      ;;
+    rgb*)
+      COMPREPLY=( \$(compgen -W "rgb(" -- "\$cur") )
+      ;;
+    *)
+      COMPREPLY=( \$(compgen -W "help red green blue rgb(" -- "\$cur") )
+      COMPREPLY+=( \$(compgen -W "\$(printf '%s ' {0..255})" -- "\$cur") )
+      ;;
+  esac
+}
+
+complete -F ${fn} -- ${qprog}
+EOF
+}
+
+completion_zsh() {
+  local fn
+  fn=$(completion_func_name)
+
+  cat <<EOF
+#compdef ${prog}
+# zsh completion for ${prog}
+# Install:
+#   ${prog} --completion zsh > ~/.zfunc/_${prog}
+# Then ensure ~/.zfunc is in \$fpath and run: autoload -Uz compinit && compinit
+
+${fn}() {
+  local state
+
+  case "\${words[CURRENT-1]}" in
+    -r|--red|red|-g|--green|green|-b|--blue|blue)
+      compadd -- {0..255}
+      return
+      ;;
+    --completion|completion)
+      compadd -- bash zsh
+      return
+      ;;
+  esac
+
+  _arguments -C \\
+    '(-h --help)'{-h,--help}'[print help and exit]' \\
+    '(-H --nohash)'{-H,--nohash}'[omit leading # from output]' \\
+    '(-r --red)'{-r,--red}'[set red component]:red value:->component' \\
+    '(-g --green)'{-g,--green}'[set green component]:green value:->component' \\
+    '(-b --blue)'{-b,--blue}'[set blue component]:blue value:->component' \\
+    '--completion[print shell completion script]:shell:(bash zsh)' \\
+    '*::argument:->args' && return
+
+  case "\$state" in
+    component)
+      compadd -- {0..255}
+      ;;
+    args)
+      compadd -- help red green blue
+      compadd -- {0..255}
+      compadd -S '' -- 'rgb('
+      ;;
+  esac
+}
+
+${fn} "\$@"
+EOF
+}
+
+print_completion() {
+  local shell=$1
+
+  case "$shell" in
+    bash) completion_bash ;;
+    zsh) completion_zsh ;;
+    *) die_usage "unsupported completion shell: $shell" ;;
+  esac
+}
+
 main() {
-  local ired igreen iblue
+  local hash=1
+  local r='' g='' b=''
 
   if [[ $# == 0 ]]; then
     usage
@@ -66,86 +226,91 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+    -H | --nohash)
+      hash=0
+      shift
+      ;;
     red | -r | --red)
-      if [[ "$2" -lt 256 ]]; then
-        ired="$2"
-        shift 2
-      else
-        err "bad $1 int: $2"
-        usage >&2
-        exit 2
-      fi
+      [[ $# -ge 2 ]] || die_usage "missing value for $1"
+      set_component red "$2"
+      shift 2
       ;;
     green | -g | --green)
-      if [[ "$2" -lt 256 ]]; then
-        igreen="$2"
-        shift 2
-      else
-        err "bad $1 int: $2"
-        usage >&2
-        exit 2
-
-      fi
+      [[ $# -ge 2 ]] || die_usage "missing value for $1"
+      set_component green "$2"
+      shift 2
       ;;
     blue | -b | --blue)
-      if [[ "$2" -lt 256 ]]; then
-        iblue="$2"
-        shift 2
+      [[ $# -ge 2 ]] || die_usage "missing value for $1"
+      set_component blue "$2"
+      shift 2
+      ;;
+    rgb\(*\))
+      if [[ $1 =~ ^rgb\([[:space:]]*([0-9]+)[[:space:]]*,[[:space:]]*([0-9]+)[[:space:]]*,[[:space:]]*([0-9]+)[[:space:]]*\)$ ]]; then
+        rr=${BASH_REMATCH[1]}
+        gg=${BASH_REMATCH[2]}
+        bb=${BASH_REMATCH[3]}
+
+        set_component red "$rr"
+        set_component green "$gg"
+        set_component blue "$bb"
+        shift
       else
-        err "bad $1 int: $2"
-        usage >&2
-        exit 2
+        die_usage "bad rgb value: $1"
       fi
+      ;;
+    --completion)
+      [[ $# -ge 2 ]] || die_usage "missing shell for --completion"
+      print_completion "$2"
+      exit 0
+      ;;
+    --completion=*)
+      print_completion "${1#--completion=}"
+      exit 0
+      ;;
+    completion)
+      [[ $# -ge 2 ]] || die_usage "missing shell for completion"
+      print_completion "$2"
+      exit 0
       ;;
     -h | --help | help)
       usage
-      exit
+      exit 0
       ;;
     --)
       shift
       break
       ;;
     -*)
-      err "Unknown option: $1"
-      usage >&2
-      exit 2
+      die_usage "Unknown option: $1"
       ;;
     *)
-      if [[ "$1" -lt 256 ]]; then
-        if [[ -z "$ired" ]]; then
-          ired=$1
-          shift
-        elif [[ -z "$igreen" ]]; then
-          igreen=$1
-          shift
-        elif [[ -z "$iblue" ]]; then
-          iblue=$1
-          shift
+      if is_rgb_component "$1"; then
+        if [[ -z $r ]]; then
+          r=$(normalize_rgb_component "$1")
+        elif [[ -z $g ]]; then
+          g=$(normalize_rgb_component "$1")
+        elif [[ -z $b ]]; then
+          b=$(normalize_rgb_component "$1")
         else
-          err "Too many arguments: $1"
-          usage >&2
-          exit 2
+          die_usage "Too many arguments: $1"
         fi
+        shift
       else
-        err "bad int $1"
-        usage >&2
-        exit 2
+        die_usage "bad int: $1"
       fi
       ;;
     esac
   done
 
-  if [[ -z "$ired" ]]; then
-    ired=0
-  fi
-  if [[ -z "$igreen" ]]; then
-    igreen=0
-  fi
-  if [[ -z "$iblue" ]]; then
-    iblue=0
+  if [[ -z $r || -z $g || -z $b ]]; then
+    die_usage "missing RGB value(s)"
   fi
 
-  printf "#%02x%02x%02x\n" $ired $igreen $iblue
+  if ((hash)); then
+    printf '#'
+  fi
+  printf '%02x%02x%02x\n' "$r" "$g" "$b"
 }
 
 main "$@"

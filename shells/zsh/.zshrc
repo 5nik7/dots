@@ -33,6 +33,8 @@ export SYSTEMD_EDITOR=$EDITOR
 export VISUAL="$EDITOR"
 export EDITOR_TERM="$TERMINAL -e $EDITOR"
 
+fpath=($PREFIX/share/zsh/site-functions $fpath)
+
 export ZSH="$DOTS/shells/zsh"
 export ZSHCOMP="$ZSH/completions"
 

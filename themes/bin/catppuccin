@@ -228,7 +228,14 @@ color_codes() {
   local fmtd=$(chcmd pastel -m off format "$COLORFORMAT" "${!var}")
   if ((raw)); then
     if ((array)); then
-      printf "%s[%s-%s]=%s;" "$flavor" "$var" "$format" "$fmtd"
+      case "$format" in
+      ansi-24bit) format="ansi" ;;
+      rgb-r) format="r" ;;
+      rgb-g) format="g" ;;
+      rgb-b) format="b" ;;
+      *) format="$format" ;;
+      esac
+      printf '%s[%s]="%s";' "$var" "$format" "$fmtd"
     else
       printf "%s='%s'\n" "${var}" "${fmtd}"
     fi
@@ -252,11 +259,16 @@ print_colors() {
   if ((box)); then
     printf '%s\n' "${codes[@]}" | box -hp 1 -bc "${bc}" -t "$flavor[$format]" -tc "${tc}" -s '|'
   else
-    if ((array)); then
-      echo "declare -xgA "$flavor";"
-      for code in "${codes[@]}"; do
-        echo "$code"
-      done
+    if ((raw)); then
+      if ((array)); then
+        for code in "${codes[@]}"; do
+          echo "$code"
+        done
+      else
+        for code in "${codes[@]}"; do
+          echo "$code"
+        done
+      fi
     fi
   fi
 }
@@ -338,7 +350,37 @@ print_all() {
   done
 }
 
+init() {
+  local formats=("hex" "ansi-24bit" "rgb" "rgb-r" "rgb-g" "rgb-b")
+  raw=1
+  array=1
+  box=0
+  for color in "${palette[@]}"; do
+    echo "declare -xgA $color;"
+  done
+
+  case "$FLAVOR" in
+  mocha) mocha ;;
+  macchiato) macchiato ;;
+  latte) latte ;;
+  frappe) frappe ;;
+  *)
+    err "'$FLAVOR' is not a flavor."
+    list_flavors
+    exit 1
+    ;;
+  esac
+
+  for format in "${formats[@]}"; do
+    COLORFORMAT="$format"
+    print_colors
+  done
+}
+
 main() {
+  raw=0
+  array=0
+  box=1
   local box=1
   local raw=0
   local array=0
@@ -353,6 +395,10 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+    init | --init)
+      init
+      exit
+      ;;
     -a | --array)
       raw=1
       array=1
