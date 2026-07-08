@@ -124,20 +124,40 @@ latte() {
   base='#eff1f5'
 }
 
-declare ESC=$'\x1b'
+if [ -t 1 ]; then
+  ESC=$(printf '\033')
+  RST="${ESC}[0m"
+  BOLD="${ESC}[1m"
+  DIM="${ESC}[2m"
+  ITALIC="${ESC}[3m"
+  UNDERLINE="${ESC}[4m"
+  REVERSE="${ESC}[7m"
+  BLACK="${ESC}[30m"
+  RED="${ESC}[31m"
+  GREEN="${ESC}[32m"
+  YELLOW="${ESC}[33m"
+  BLUE="${ESC}[34m"
+  MAGENTA="${ESC}[35m"
+  CYAN="${ESC}[36m"
+  WHITE="${ESC}[37m"
+  BRIGHTBLACK="${ESC}[1;30m"
+else
+  RST='' BOLD='' DIM='' ITALIC='' UNDERLINE='' REVERSE='' BLACK='' RED='' GREEN='' YELLOW='' BLUE='' MAGENTA='' CYAN='' WHITE='' BRIGHTBLACK=''
+fi
+
 default_flavor="mocha"
 default_format="hex"
 declare -r prog="${0##*/}"
 declare -r sdir="${0%/*}"
 declare sep='|'
-declare aticon="󰄛"
+declare caticon="󰄛"
 declare block='󰄮'
 declare logo="${sdir}/logo"
 declare box=1
 declare raw=0
 declare array=0
 
-err() { printf "${RED}%s%s%s${RST}\n" "[ERROR]" "$caticon" "$*" >&2; }
+err() { printf "${RED}%s ${BOLD}%s %s${RST}\n" "$caticon" "[ERROR]" "$*" >&2; }
 die() {
   err "$*"
   exit 1
@@ -208,7 +228,7 @@ usage() {
   local IFS=
   local usage
   read -d '' -r usage <<-EOF
-Usage: ${prog} [options] [...]
+Usage: ${MAGENTA}${prog}${RST} [options] [...]
 
 Description...
 
@@ -229,13 +249,14 @@ color_codes() {
   if ((raw)); then
     if ((array)); then
       case "$format" in
-      ansi-24bit) format="ansi" ;;
+      ansi-24bit) format="24" ;;
+      ansi-8bit) format="8" ;;
       rgb-r) format="r" ;;
       rgb-g) format="g" ;;
       rgb-b) format="b" ;;
       *) format="$format" ;;
       esac
-      printf '%s[%s]="%s";' "$var" "$format" "$fmtd"
+      printf '[%s]="%s"\n' "$format" "$fmtd"
     else
       printf "%s='%s'\n" "${var}" "${fmtd}"
     fi
@@ -351,13 +372,13 @@ print_all() {
 }
 
 init() {
-  local formats=("hex" "ansi-24bit" "rgb" "rgb-r" "rgb-g" "rgb-b")
+  local formats=("hex" "rgb" "rgb-r" "rgb-g" "rgb-b" "ansi-24bit" "ansi-8bit")
   raw=1
   array=1
   box=0
-  for color in "${palette[@]}"; do
-    echo "declare -xgA $color;"
-  done
+  # for color in "${palette[@]}"; do
+  #   echo "declare -xgA $color;"
+  # done
 
   case "$FLAVOR" in
   mocha) mocha ;;
@@ -371,9 +392,13 @@ init() {
     ;;
   esac
 
-  for format in "${formats[@]}"; do
-    COLORFORMAT="$format"
-    print_colors
+  for color in "${palette[@]}"; do
+    echo "declare -xgA ${color}=("
+    for format in "${formats[@]}"; do
+      COLORFORMAT="$format"
+      color_codes "$color"
+    done
+    echo ")"
   done
 }
 
