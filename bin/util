@@ -211,6 +211,8 @@ shellmod() {
   return 1
 }
 
+alias zieces="shellmod"
+
 so() {
   local input=()
   local file icon dir base

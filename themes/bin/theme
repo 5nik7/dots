@@ -2,9 +2,9 @@
 
 declare -gA theme
 
-themes[cmd]="${0##*/}"
-themes[default]="$theme[root]/.default"
-themes[global]="$theme[root]/.theme"
+themes[cmdname]="${0##*/}"
+themes[default]="$themes[root]/.default"
+themes[global]="$themes[root]/.theme"
 themes[local]="${HOME}/.theme"
 
 if [[ -r "$themes[local]" ]]; then
@@ -17,7 +17,7 @@ fi
 
 has_theme() { command vivid generate "$1" &>/dev/null; }
 
-theme() {
+change_theme() {
   local new="$1"
   local old="$THEME"
   if has_theme "$new"; then
@@ -40,7 +40,7 @@ set_theme() {
   if [[ -n "$1" ]]; then
     t="$1"
   else
-    t="$(cat "$themes[file]")"
+    t="$(command cat "$themes[file]")"
   fi
 
   if [[ $t == *-* ]]; then
@@ -50,16 +50,17 @@ set_theme() {
     export FLAVOR="$theme[flavor]"
     out="THEME:$THEME|FLAVOR:$FLAVOR"
   else
-    unset themes[flavor] FLAVOR
     theme[current]="$t"
     export THEME="$theme[current]"
     out="THEME:$THEME"
   fi
-
+  
   export THEMEDIR="$themes[root]/$THEME"
   export THEMESRC="$THEMEDIR/src"
 
-  export LS_COLORS="$(vivid generate "$t")"
+  export LS_COLORS="$(command vivid generate "$t")" 2>/dev/null
+
+  eval "$(current_theme init)"
 
   for file in $THEMESRC/*; do
     . "$file"

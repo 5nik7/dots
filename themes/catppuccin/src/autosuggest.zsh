@@ -1,1 +1,1 @@
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=$overlay0"
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=${overlay0[hex]}"

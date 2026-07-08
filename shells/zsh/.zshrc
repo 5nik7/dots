@@ -84,14 +84,14 @@ zmodload zsh/complist
 compinit
 _comp_options+=(globdots)
 
-alias zieces="shellmod"
-
-eval "$(catppuccin init)"
-
 shellmod "functions"
 shellmod "aliases"
 shellmod "options"
 shellmod "fzf"
+
+so "${themes[cmd]}"
+set_theme 2>/dev/null
+
 shellmod "completions"
 shellmod "plugins"
 
