@@ -86,6 +86,8 @@ _comp_options+=(globdots)
 
 alias zieces="shellmod"
 
+eval "$(catppuccin init)"
+
 shellmod "functions"
 shellmod "aliases"
 shellmod "options"

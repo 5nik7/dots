@@ -2,20 +2,17 @@
 
 declare -gA theme
 
-theme[cmd]="${0##*/}"
-theme[root]="$DOTS/themes"
-theme[bin]="$theme[root]/bin"
-theme[file]="$theme[root]/.current"
+themes[cmd]="${0##*/}"
+themes[default]="$theme[root]/.default"
+themes[global]="$theme[root]/.theme"
+themes[local]="${HOME}/.theme"
 
-THEME[ROOT]="$DOTS/themes"
-THEME[BIN]="${THEME[ROOT]}/bin"
-export THEMEFILE="$THEMESROOT/.theme"
-export DEFAULT_THEME="${DEFAULT_THEME:-catppuccin}"
-export DEFAULT_FLAVOR="${DEFAULT_FLAVOR:-mocha}"
-if [[ ! -r "$THEMEFILE" ]]; then
-  THEME="${DEFAULT_THEME}"
-  FLAVOR="${DEFAULT_FLAVOR}"
-  echo "${DEFAULT_THEME}-${DEFAULT_FLAVOR}" >"$THEMEFILE"
+if [[ -r "$themes[local]" ]]; then
+  themes[file]="$themes[local]"
+elif [[ -r "$themes[global]" ]]; then
+  themes[file]="$themes[global]"
+else
+  themes[file]="$themes[default]"
 fi
 
 has_theme() { command vivid generate "$1" &>/dev/null; }
@@ -43,32 +40,30 @@ set_theme() {
   if [[ -n "$1" ]]; then
     t="$1"
   else
-    t="$(cat "$THEMEFILE")"
+    t="$(cat "$themes[file]")"
   fi
 
   if [[ $t == *-* ]]; then
-    export THEME="$(echo "$t" | cut -d '-' -f 1)"
-    export FLAVOR="$(echo "$t" | cut -d '-' -f 2)"
+    theme[current]="$(echo "$t" | cut -d '-' -f 1)"
+    theme[flavor]="$(echo "$t" | cut -d '-' -f 2)"
+    export THEME="$theme[current]"
+    export FLAVOR="$theme[flavor]"
     out="THEME:$THEME|FLAVOR:$FLAVOR"
   else
-    export THEME="$t"
+    unset themes[flavor] FLAVOR
+    theme[current]="$t"
+    export THEME="$theme[current]"
     out="THEME:$THEME"
   fi
 
-  export THEMEDIR="$THEMESROOT/$THEME"
+  export THEMEDIR="$themes[root]/$THEME"
   export THEMESRC="$THEMEDIR/src"
-  export THEMECONF="$THEMEDIR/conf"
 
   export LS_COLORS="$(vivid generate "$t")"
-
-  so "$THEMEDIR/func.sh"
-  so "$THEMEDIR/colors.sh"
 
   for file in $THEMESRC/*; do
     . "$file"
   done
-
-  fzdef
 
   if [[ -n "$1" ]]; then
     ok "$out"
