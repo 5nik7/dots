@@ -33,18 +33,11 @@ export SYSTEMD_EDITOR=$EDITOR
 export VISUAL="$EDITOR"
 export EDITOR_TERM="$TERMINAL -e $EDITOR"
 
-fpath=($PREFIX/share/zsh/site-functions $fpath)
-
 export ZSH="$DOTS/shells/zsh"
 export ZSHCOMP="$ZSH/completions"
-
 declare -xgA zsh
 declare -x zsh[root]="$ZSH"
 declare -x zsh[completions]="$ZSHCOMP"
-
-prepath "$zsh[completions]"
-
-fpath=($zsh[completions] $fpath)
 
 environments=($DOTS/**/*.env)
 
@@ -83,6 +76,12 @@ autoload -Uz compinit
 zmodload zsh/complist
 compinit
 _comp_options+=(globdots)
+
+prepath "$zsh[completions]"
+
+fpath=($PREFIX/share/zsh/site-functions $fpath)
+
+fpath=($zsh[completions] $fpath)
 
 shellmod "functions"
 shellmod "aliases"
