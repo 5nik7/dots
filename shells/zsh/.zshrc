@@ -162,6 +162,8 @@ fi
 #   compinit -C
 # fi
 
+compinit
+
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
   zprof
 fi
