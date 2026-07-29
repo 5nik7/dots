@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 
 declare -gA theme
+declare -gA themes
 
 themes[cmdname]="${0##*/}"
-themes[default]="$themes[root]/.default"
-themes[global]="$themes[root]/.theme"
+themes[default]="${themes[root]}/.default"
+themes[global]="${themes[root]}/.theme"
 themes[local]="${HOME}/.theme"
 
-if [[ -r "$themes[local]" ]]; then
-  themes[file]="$themes[local]"
-elif [[ -r "$themes[global]" ]]; then
-  themes[file]="$themes[global]"
+if [[ -r "${themes[local]}" ]]; then
+  themes[file]="${themes[local]}"
+elif [[ -r "${themes[global]}" ]]; then
+  themes[file]="${themes[global]}"
 else
-  themes[file]="$themes[default]"
+  themes[file]="${themes[default]}"
 fi
 
 has_theme() { command vivid generate "$1" &>/dev/null; }
@@ -21,7 +22,7 @@ change_theme() {
   local new="$1"
   local old="$THEME"
   if has_theme "$new"; then
-    if [[ $new == $old ]]; then
+    if [[ $new == "$old" ]]; then
       warn "'$new' is current theme."
       return 1
     else
@@ -40,29 +41,32 @@ set_theme() {
   if [[ -n "$1" ]]; then
     t="$1"
   else
-    t="$(command cat "$themes[file]")"
+    t="$(command cat "${themes[file]}")"
   fi
 
   if [[ $t == *-* ]]; then
     theme[current]="$(echo "$t" | cut -d '-' -f 1)"
     theme[flavor]="$(echo "$t" | cut -d '-' -f 2)"
-    export THEME="$theme[current]"
-    export FLAVOR="$theme[flavor]"
+    export THEME="${theme[current]}"
+    export FLAVOR="${theme[flavor]}"
     out="THEME:$THEME|FLAVOR:$FLAVOR"
   else
     theme[current]="$t"
-    export THEME="$theme[current]"
+    export THEME="${theme[current]}"
     out="THEME:$THEME"
   fi
-  
-  export THEMEDIR="$themes[root]/$THEME"
+  
+  export THEMEDIR="${themes[root]}/$THEME"
   export THEMESRC="$THEMEDIR/src"
 
-  export LS_COLORS="$(command vivid generate "$t")" 2>/dev/null
+  local colors
+  colors="$(command vivid generate "$t")" 2>/dev/null
+  export LS_COLORS="$colors"
 
   eval "$(current_theme init)"
 
-  for file in $THEMESRC/*; do
+  for file in "$THEMESRC"/*; do
+    # shellcheck source=/dev/null
     . "$file"
   done
 
