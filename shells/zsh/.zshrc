@@ -142,6 +142,11 @@ if checkdir "$NVM_DIR"; then
   so "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 fi
 
+RBENV="$HOME/.rbenv/bin/rbenv"
+if check "$RBENV"; then
+  eval "$(~/.rbenv/bin/rbenv init - --no-rehash zsh)"
+fi
+
 has usage && source <(usage g completion-init zsh)
 
 has uv && eval "$(uv generate-shell-completion zsh)"
