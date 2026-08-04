@@ -1,6 +1,6 @@
 rlp() {
   . ~/.zshrc
-  ok " ZSH RELOADED"
+  ok "ZSH RELOADED"
 }
 alias rl='rlp'
 
