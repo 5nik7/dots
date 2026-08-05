@@ -50,8 +50,8 @@ main() {
   local output=$(figlet -f "$(figfonts | fzf --smart-case --cycle \
     --prompt "$text󰅂 " \
     --height '100%' \
-    --color="preview-label:2,prompt:6,preview-bg:#181825,preview-border:#181825" \
-    --preview-window='default:down:50%:wrap-word:border-sharp' --preview="$preview")" "$text" 2>/dev/null)
+    --color="preview-label:2,prompt:6,preview-bg:-1,preview-border:0" \
+    --preview-window='default:down:50%:nowrap:border-sharp' --preview="$preview")" "$text" 2>/dev/null)
   [[ ! -n "$output" ]] || echo -e "$output" | cpy && echo "$output"
 }
 
