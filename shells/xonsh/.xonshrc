@@ -16,3 +16,13 @@ aliases["y"] = _y
 
 aliases["d"] = _y
 
+def _q(args):
+  exit
+
+aliases["q"] = _q
+
+def _c(args):
+  clear
+
+aliases["c"] = _c
+
