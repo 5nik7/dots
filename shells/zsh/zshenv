@@ -67,3 +67,5 @@ has_pip_pkg() {
   pip show $pkg -q 2>/dev/null || return 1
   return 0
 }
+
+# vim: set noet ft=zsh tw=4 sw=4 ff=unix
