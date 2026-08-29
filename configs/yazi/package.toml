@@ -4,11 +4,6 @@ rev = "c591a36"
 hash = "f281261ff04ad7ec867c3f802a50835f"
 
 [[plugin.deps]]
-use = "imsi32/yatline"
-rev = "c5d4b48"
-hash = "e6e98d12b1648d1894c2b560d85eeaa7"
-
-[[plugin.deps]]
 use = "imsi32/yatline-catppuccin"
 rev = "6c3f166"
 hash = "e1d5b1c34c53c4c4661d910eb3a6fd95"
@@ -67,6 +62,11 @@ hash = "92fbb5483657fa7976cdf4e0104e18e0"
 use = "MasouShizuka/projects"
 rev = "22a4006"
 hash = "195d1b8c8fc1a944883b5ce3d92d7ca7"
+
+[[plugin.deps]]
+use = "5nik7/yatline"
+rev = "ab24733"
+hash = "de0cdd7af3fe4576d3c98cedd8c6524b"
 
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-mocha"
