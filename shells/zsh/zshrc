@@ -170,6 +170,8 @@ compinit
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+enable-fzf-tab
+
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
   zprof
 fi
