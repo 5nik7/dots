@@ -102,7 +102,6 @@ prepath "$HOME/bin"
 
 so "$HOME/.cargo/env"
 so "$DOTSHHHH/secrets.sh"
-so "/usr/share/nvm/init-nvm.sh"
 
 PYTHONSTARTUP="$HOME/.pythonrc"
 if check $PYTHONSTARTUP; then
@@ -168,6 +167,8 @@ fi
 # fi
 
 compinit
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 if [ -n "${ZSH_DEBUGRC+1}" ]; then
   zprof
