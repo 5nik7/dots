@@ -1,0 +1,548 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
+  "logo": null,
+  "display": {
+    "stat": false,
+    "pipe": false,
+    "showErrors": false,
+    "disableLinewrap": false,
+    "hideCursor": false,
+    "separator": ": ",
+    "color": {
+      "keys": "",
+      "title": "",
+      "output": "",
+      "separator": ""
+    },
+    "brightColor": true,
+    "duration": {
+      "abbreviation": false,
+      "spaceBeforeUnit": "default"
+    },
+    "size": {
+      "maxPrefix": "YB",
+      "binaryPrefix": "iec",
+      "ndigits": 2,
+      "spaceBeforeUnit": "default"
+    },
+    "temp": {
+      "unit": "D",
+      "ndigits": 1,
+      "color": {
+        "green": "32",
+        "yellow": "93",
+        "red": "91"
+      },
+      "spaceBeforeUnit": "default"
+    },
+    "percent": {
+      "type": [
+        "num",
+        "num-color"
+      ],
+      "ndigits": 0,
+      "color": {
+        "green": "32",
+        "yellow": "93",
+        "red": "91"
+      },
+      "spaceBeforeUnit": "default",
+      "width": 0
+    },
+    "bar": {
+      "char": {
+        "elapsed": "■",
+        "total": "-"
+      },
+      "border": {
+        "left": "[ ",
+        "right": " ]",
+        "leftElapsed": "",
+        "rightElapsed": ""
+      },
+      "color": {
+        "elapsed": "auto",
+        "total": "97",
+        "border": "97"
+      },
+      "width": 10
+    },
+    "fraction": {
+      "ndigits": 2,
+      "trailingZeros": "default"
+    },
+    "noBuffer": false,
+    "key": {
+      "width": 0,
+      "type": "string",
+      "paddingLeft": 0
+    },
+    "freq": {
+      "ndigits": 2,
+      "spaceBeforeUnit": "default"
+    },
+    "constants": []
+  },
+  "general": {
+    "thread": true,
+    "processingTimeout": 5000,
+    "detectVersion": true,
+    "playerName": "",
+    "dsForceDrm": false
+  },
+  "modules": [
+    {
+      "type": "title",
+      "key": " ",
+      "keyIcon": "",
+      "fqdn": false,
+      "color": {
+        "user": "",
+        "at": "",
+        "host": ""
+      }
+    },
+    {
+      "type": "separator",
+      "string": "-",
+      "outputColor": "",
+      "times": 0
+    },
+    {
+      "type": "os",
+      "keyIcon": ""
+    },
+    {
+      "type": "host",
+      "keyIcon": "󰌢"
+    },
+    {
+      "type": "bios",
+      "keyIcon": ""
+    },
+    {
+      "type": "bootmgr",
+      "keyIcon": ""
+    },
+    {
+      "type": "board",
+      "keyIcon": ""
+    },
+    {
+      "type": "chassis",
+      "keyIcon": ""
+    },
+    {
+      "type": "kernel",
+      "keyIcon": ""
+    },
+    {
+      "type": "initsystem",
+      "keyIcon": "󰿄"
+    },
+    {
+      "type": "uptime",
+      "keyIcon": ""
+    },
+    {
+      "type": "loadavg",
+      "keyIcon": "",
+      "ndigits": 2,
+      "compact": true,
+      "percent": {
+        "green": 50,
+        "yellow": 80,
+        "type": 0
+      }
+    },
+    {
+      "type": "processes",
+      "keyIcon": ""
+    },
+    {
+      "type": "packages",
+      "keyIcon": "󰏖",
+      "disabled": [
+        "winget"
+      ],
+      "combined": false
+    },
+    {
+      "type": "shell",
+      "keyIcon": ""
+    },
+    {
+      "type": "editor",
+      "keyIcon": "󱞎"
+    },
+    {
+      "type": "display",
+      "keyIcon": "󰍹",
+      "compactType": "none",
+      "preciseRefreshRate": false,
+      "order": null
+    },
+    {
+      "type": "brightness",
+      "keyIcon": "󰯪",
+      "ddcciSleep": 10,
+      "percent": {
+        "green": 100,
+        "yellow": 100,
+        "type": 0
+      },
+      "compact": false
+    },
+    {
+      "type": "monitor",
+      "keyIcon": "󰹑"
+    },
+    {
+      "type": "lm",
+      "keyIcon": "󰧨"
+    },
+    {
+      "type": "de",
+      "keyIcon": ""
+    },
+    {
+      "type": "wm",
+      "keyIcon": "",
+      "detectPlugin": true
+    },
+    {
+      "type": "wmtheme",
+      "keyIcon": "󰓸"
+    },
+    {
+      "type": "theme",
+      "keyIcon": "󰉼"
+    },
+    {
+      "type": "icons",
+      "keyIcon": ""
+    },
+    {
+      "type": "font",
+      "keyIcon": ""
+    },
+    {
+      "type": "cursor",
+      "keyIcon": "󰆿"
+    },
+    {
+      "type": "wallpaper",
+      "keyIcon": "󰸉"
+    },
+    {
+      "type": "terminal",
+      "keyIcon": ""
+    },
+    {
+      "type": "terminalfont",
+      "keyIcon": ""
+    },
+    {
+      "type": "terminalsize",
+      "keyIcon": "󰲎"
+    },
+    {
+      "type": "terminaltheme",
+      "keyIcon": "󰔎"
+    },
+    {
+      "type": "cpu",
+      "keyIcon": "",
+      "temp": false,
+      "showPeCoreCount": true,
+      "tempSensor": ""
+    },
+    {
+      "type": "cpucache",
+      "keyIcon": "",
+      "compact": false
+    },
+    {
+      "type": "cpuusage",
+      "keyIcon": "󰓅",
+      "separate": false,
+      "percent": {
+        "green": 50,
+        "yellow": 80,
+        "type": 0
+      },
+      "waitTime": 200
+    },
+    {
+      "type": "gpu",
+      "keyIcon": "󰾲",
+      "driverSpecific": false,
+      "detectionMethod": "auto",
+      "temp": false,
+      "hideType": "none",
+      "percent": {
+        "green": 50,
+        "yellow": 80,
+        "type": 0
+      }
+    },
+    {
+      "type": "codec",
+      "keyIcon": "󰈫",
+      "splitGPU": false,
+      "useVulkan": false,
+      "showType": "both"
+    },
+    {
+      "type": "memory",
+      "keyIcon": "",
+      "percent": {
+        "green": 50,
+        "yellow": 80,
+        "type": 0
+      }
+    },
+    {
+      "type": "physicalmemory",
+      "keyIcon": "󰑭",
+      "showEmptySlots": false
+    },
+    {
+      "type": "swap",
+      "percent": {
+        "green": 50,
+        "yellow": 80,
+        "type": 0
+      },
+      "keyIcon": "󰓡",
+      "separate": false
+    },
+    {
+      "type": "disk",
+      "keyIcon": "",
+      "showRegular": true,
+      "showExternal": true,
+      "showHidden": false,
+      "showSubvolumes": false,
+      "showReadOnly": true,
+      "showUnknown": false,
+      "folders": "",
+      "hideFolders": "",
+      "hideFS": "",
+      "useAvailable": false,
+      "percent": {
+        "green": 50,
+        "yellow": 80,
+        "type": 0
+      }
+    },
+    {
+      "type": "btrfs",
+      "keyIcon": "󱑛",
+      "percent": {
+        "green": 50,
+        "yellow": 80,
+        "type": 0
+      }
+    },
+    {
+      "type": "zpool",
+      "keyIcon": "󱑛",
+      "percent": {
+        "green": 50,
+        "yellow": 80,
+        "type": 0
+      }
+    },
+    {
+      "type": "battery",
+      "keyIcon": "",
+      "temp": false,
+      "percent": {
+        "green": 50,
+        "yellow": 20,
+        "type": 0
+      }
+    },
+    {
+      "type": "poweradapter",
+      "keyIcon": "󰚥"
+    },
+    {
+      "type": "player",
+      "keyIcon": "󰥠"
+    },
+    {
+      "type": "media",
+      "keyIcon": "",
+      "percent": {
+        "green": 100,
+        "yellow": 100,
+        "type": 0
+      }
+    },
+    {
+      "type": "publicip",
+      "keyIcon": "󰩠",
+      "url": "",
+      "timeout": 0,
+      "ipv6": false
+    },
+    {
+      "type": "localip",
+      "keyIcon": "󰩟",
+      "showIpv4": true,
+      "showIpv6": false,
+      "showMac": false,
+      "showLoop": false,
+      "showPrefixLen": true,
+      "showMtu": false,
+      "showSpeed": false,
+      "showFlags": false,
+      "compact": false,
+      "defaultRouteOnly": false,
+      "showAllIps": false,
+      "namePrefix": ""
+    },
+    {
+      "type": "dns",
+      "keyIcon": "󰇖",
+      "showType": "both"
+    },
+    {
+      "type": "wifi",
+      "keyIcon": "",
+      "percent": {
+        "green": 75,
+        "yellow": 50,
+        "type": 0
+      }
+    },
+    {
+      "type": "datetime",
+      "keyIcon": ""
+    },
+    {
+      "type": "locale",
+      "keyIcon": ""
+    },
+    {
+      "type": "vulkan",
+      "keyIcon": ""
+    },
+    {
+      "type": "opengl",
+      "keyIcon": "",
+      "library": "auto"
+    },
+    {
+      "type": "opencl",
+      "keyIcon": ""
+    },
+    {
+      "type": "users",
+      "keyIcon": "",
+      "compact": false,
+      "myselfOnly": false
+    },
+    {
+      "type": "bluetooth",
+      "keyIcon": "",
+      "showDisconnected": false,
+      "percent": {
+        "green": 50,
+        "yellow": 20,
+        "type": 0
+      }
+    },
+    {
+      "type": "bluetoothradio",
+      "keyIcon": "󰐻"
+    },
+    {
+      "type": "sound",
+      "keyIcon": "",
+      "soundType": "main",
+      "percent": {
+        "green": 80,
+        "yellow": 90,
+        "type": 0
+      }
+    },
+    {
+      "type": "camera",
+      "keyIcon": "󰄀"
+    },
+    {
+      "type": "gamepad",
+      "keyIcon": "󰺵",
+      "percent": {
+        "green": 50,
+        "yellow": 20,
+        "type": 0
+      }
+    },
+    {
+      "type": "mouse",
+      "keyIcon": "󰍽"
+    },
+    {
+      "type": "keyboard",
+      "keyIcon": ""
+    },
+    {
+      "type": "weather",
+      "keyIcon": "󰖙",
+      "location": "",
+      "outputFormat": "%t+-+%C+(%l)",
+      "timeout": 0
+    },
+    {
+      "type": "netio",
+      "keyIcon": "󰾆",
+      "namePrefix": "",
+      "defaultRouteOnly": false,
+      "detectTotal": false,
+      "waitTime": 1000
+    },
+    {
+      "type": "diskio",
+      "keyIcon": "󰓅",
+      "namePrefix": "",
+      "detectTotal": false,
+      "waitTime": 1000
+    },
+    {
+      "type": "physicaldisk",
+      "keyIcon": "󰋊",
+      "namePrefix": "",
+      "temp": false,
+      "hideVirtual": false,
+      "hideUnused": true
+    },
+    {
+      "type": "tpm",
+      "keyIcon": ""
+    },
+    {
+      "type": "version",
+      "keyIcon": ""
+    },
+    "break",
+    {
+      "type": "colors",
+      "key": " ",
+      "keyIcon": "",
+      "symbol": "block",
+      "paddingLeft": 0,
+      "block": {
+        "width": 3,
+        "range": [
+          0,
+          15
+        ]
+      },
+      "brightness": "default"
+    }
+  ]
+}
