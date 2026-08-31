@@ -67,10 +67,34 @@ FLAVOR=${FLAVOR:-$default_flavor}
 COLOR=
 COLORFORMAT=
 
-err() { printf '%s %s %s\n' "${ansi_maroon}${caticon}${rst}" "${ansi_brightred}${bold}[ERROR]${rst}" "${ansi_red}$*${rst}" >&2; }
+err() { printf '\n%s %s %s\n\n' "${ansi_maroon}${caticon}${rst}" "${ansi_brightred}${bold}[ERROR]${rst}" "${ansi_red}$*${rst}" >&2; }
 die() {
-  err "$*"
-  exit 1
+  local code=1
+  local err cmd
+  if [[ $# -eq 0 ]]; then
+    exit 1
+  fi
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -n | --code)
+      code="$2"
+      shift 2
+      ;;
+    -c | --cmd)
+      cmd="$2"
+      printf '%s' "$cmd"
+      shift 2
+      ;;
+    *)
+      err="$(err $1)"
+      printf '%s' "$err"
+      shift
+      ;;
+    esac
+  done
+  printf '%s\n' "$*"
+  exit "$code"
 }
 
 logo() {
@@ -226,9 +250,9 @@ print_completion() {
   local shell=$1
 
   case "$shell" in
-    bash) completion_bash ;;
-    zsh) completion_zsh ;;
-    *) die "Unsupported completion shell: $shell" ;;
+  bash) completion_bash ;;
+  zsh) completion_zsh ;;
+  *) die "Unsupported completion shell: $shell" ;;
   esac
 }
 
@@ -354,11 +378,11 @@ latte() {
 
 load_flavor() {
   case "$1" in
-    mocha) mocha ;;
-    macchiato) macchiato ;;
-    frappe) frappe ;;
-    latte) latte ;;
-    *) return 1 ;;
+  mocha) mocha ;;
+  macchiato) macchiato ;;
+  frappe) frappe ;;
+  latte) latte ;;
+  *) return 1 ;;
   esac
 
   current_palette=()
@@ -398,12 +422,12 @@ rgb_to_ansi8() {
   local b=$3
   local rc gc bc
 
-  if (( r == g && g == b )); then
-    if (( r < 8 )); then
+  if ((r == g && g == b)); then
+    if ((r < 8)); then
       printf '16\n'
       return
     fi
-    if (( r > 248 )); then
+    if ((r > 248)); then
       printf '231\n'
       return
     fi
@@ -458,20 +482,20 @@ format_value() {
   ansi8="$(rgb_to_ansi8 "$r" "$g" "$b")"
 
   case "$format" in
-    name) printf '%s\n' "$name" ;;
-    hex) printf '%s\n' "$hex" ;;
-    rgb) printf '%s %s %s\n' "$r" "$g" "$b" ;;
-    r|rgb-r) printf '%s\n' "$r" ;;
-    g|rgb-g) printf '%s\n' "$g" ;;
-    b|rgb-b) printf '%s\n' "$b" ;;
-    luminance) rgb_to_luminance "$r" "$g" "$b" ;;
-    brightness) rgb_to_brightness "$r" "$g" "$b" ;;
-    cmyk) rgb_to_cmyk "$r" "$g" "$b" ;;
-    ansi-8bit|ansi-8bit-value) printf '%s\n' "$ansi8" ;;
-    ansi-8bit-escapecode) ansi8_escape "$ansi8" ;;
-    ansi-24bit) printf '38;2;%s;%s;%s\n' "$r" "$g" "$b" ;;
-    ansi-24bit-escapecode|esc) rgb_escape "$r" "$g" "$b" ;;
-    *) die "Unsupported format: $format" ;;
+  name) printf '%s\n' "$name" ;;
+  hex) printf '%s\n' "$hex" ;;
+  rgb) printf '%s %s %s\n' "$r" "$g" "$b" ;;
+  r | rgb-r) printf '%s\n' "$r" ;;
+  g | rgb-g) printf '%s\n' "$g" ;;
+  b | rgb-b) printf '%s\n' "$b" ;;
+  luminance) rgb_to_luminance "$r" "$g" "$b" ;;
+  brightness) rgb_to_brightness "$r" "$g" "$b" ;;
+  cmyk) rgb_to_cmyk "$r" "$g" "$b" ;;
+  ansi-8bit | ansi-8bit-value) printf '%s\n' "$ansi8" ;;
+  ansi-8bit-escapecode) ansi8_escape "$ansi8" ;;
+  ansi-24bit) printf '38;2;%s;%s;%s\n' "$r" "$g" "$b" ;;
+  ansi-24bit-escapecode | esc) rgb_escape "$r" "$g" "$b" ;;
+  *) die "Unsupported format: $format" ;;
   esac
 }
 
@@ -485,7 +509,7 @@ swatch() {
 list_colors() {
   load_flavor "$FLAVOR" || load_flavor "$default_flavor" || return 1
 
-  if (( raw )); then
+  if ((raw)); then
     printf '%s\n' "${palette[@]}"
     return
   fi
@@ -498,7 +522,7 @@ list_colors() {
 }
 
 list_flavors() {
-  if (( raw )); then
+  if ((raw)); then
     printf '%s\n' "${flavors[@]}"
     return
   fi
@@ -524,16 +548,12 @@ list_formats() {
 validate_format() {
   local format=$1
   case "$format" in
-    name|hex|rgb|r|g|b|rgb-r|rgb-g|rgb-b|luminance|brightness|cmyk|ansi-8bit|ansi-8bit-value|ansi-8bit-escapecode|ansi-24bit|ansi-24bit-escapecode|esc)
-      return 0
-      ;;
-    *)
-      printf '\n'
-      err "Unsupported format: $format"
-      printf '\n'
-      list_formats
-      exit 1
-      ;;
+  name | hex | rgb | r | g | b | rgb-r | rgb-g | rgb-b | luminance | brightness | cmyk | ansi-8bit | ansi-8bit-value | ansi-8bit-escapecode | ansi-24bit | ansi-24bit-escapecode | esc)
+    return 0
+    ;;
+  *)
+    die "Unsupported format: $format" -c "$(list_formats)"
+    ;;
   esac
 }
 
@@ -544,8 +564,8 @@ print_colors() {
   for name in "${palette[@]}"; do
     hex="${current_palette[$name]}"
     value="$(format_value "$name" "$format" "$hex")"
-    if (( raw )); then
-      if (( array )); then
+    if ((raw)); then
+      if ((array)); then
         printf '%s=%q\n' "$name" "$value"
       else
         printf '%s\n' "$value"
@@ -611,9 +631,7 @@ init() {
   fi
 
   load_flavor "$FLAVOR" || {
-    err "'$FLAVOR' is not a flavor."
-    list_flavors
-    exit 1
+    die "'$FLAVOR' is not a flavor." -c "$(list_flavors)"
   }
 
   mkdir -p "$cache_dir"
@@ -654,95 +672,91 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      init|--init)
-        init
+    init | --init)
+      init
+      exit 0
+      ;;
+    -a | --array)
+      raw=1
+      array=1
+      box=0
+      shift
+      ;;
+    -r | --raw)
+      raw=1
+      box=0
+      shift
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    --all)
+      load_flavor "$FLAVOR" || load_flavor "$default_flavor"
+      print_all
+      exit 0
+      ;;
+    --completion)
+      [[ $# -ge 2 ]] || die "missing shell for --completion"
+      print_completion "$2"
+      exit 0
+      ;;
+    --completion=*)
+      print_completion "${1#--completion=}"
+      exit 0
+      ;;
+    completion)
+      [[ $# -ge 2 ]] || die "missing shell for completion"
+      print_completion "$2"
+      exit 0
+      ;;
+    -f | --flavor)
+      if [[ -n ${2:-} ]]; then
+        FLAVOR=$2
+        shift 2
+      else
+        list_flavors
         exit 0
-        ;;
-      -a|--array)
-        raw=1
-        array=1
-        box=0
-        shift
-        ;;
-      -r|--raw)
-        raw=1
-        box=0
-        shift
-        ;;
-      -h|--help)
-        usage
+      fi
+      ;;
+    mocha | macchiato | frappe | latte)
+      FLAVOR=$1
+      shift
+      ;;
+    -c | --color)
+      if [[ -n ${2:-} ]]; then
+        COLOR=$2
+        shift 2
+      else
+        list_colors
         exit 0
-        ;;
-      --all)
-        load_flavor "$FLAVOR" || load_flavor "$default_flavor"
-        print_all
+      fi
+      ;;
+    rosewater | flamingo | pink | mauve | red | maroon | peach | yellow | green | teal | sky | sapphire | blue | lavender | text | subtext1 | subtext0 | overlay2 | overlay1 | overlay0 | surface2 | surface1 | surface0 | base | mantle | crust)
+      COLOR=$1
+      shift
+      ;;
+    -F | --format)
+      if [[ -n ${2:-} ]]; then
+        COLORFORMAT=$2
+        shift 2
+      else
+        list_formats
         exit 0
-        ;;
-      --completion)
-        [[ $# -ge 2 ]] || die "missing shell for --completion"
-        print_completion "$2"
-        exit 0
-        ;;
-      --completion=*)
-        print_completion "${1#--completion=}"
-        exit 0
-        ;;
-      completion)
-        [[ $# -ge 2 ]] || die "missing shell for completion"
-        print_completion "$2"
-        exit 0
-        ;;
-      -f|--flavor)
-        if [[ -n ${2:-} ]]; then
-          FLAVOR=$2
-          shift 2
-        else
-          list_flavors
-          exit 0
-        fi
-        ;;
-      mocha|macchiato|frappe|latte)
-        FLAVOR=$1
-        shift
-        ;;
-      -c|--color)
-        if [[ -n ${2:-} ]]; then
-          COLOR=$2
-          shift 2
-        else
-          list_colors
-          exit 0
-        fi
-        ;;
-      rosewater|flamingo|pink|mauve|red|maroon|peach|yellow|green|teal|sky|sapphire|blue|lavender|text|subtext1|subtext0|overlay2|overlay1|overlay0|surface2|surface1|surface0|base|mantle|crust)
-        COLOR=$1
-        shift
-        ;;
-      -F|--format)
-        if [[ -n ${2:-} ]]; then
-          COLORFORMAT=$2
-          shift 2
-        else
-          list_formats
-          exit 0
-        fi
-        ;;
-      esc|-e)
-        COLORFORMAT='esc'
-        shift
-        ;;
-      name|hex|rgb|r|g|b|rgb-r|rgb-g|rgb-b|luminance|brightness|cmyk|ansi-8bit|ansi-8bit-value|ansi-8bit-escapecode|ansi-24bit|ansi-24bit-escapecode)
-        COLORFORMAT=$1
-        shift
-        ;;
-      *)
-        CATPPUCCIN_SHOW_LOGO=''
-        printf '\n'
-        err "Unknown option: $1"
-        printf '\n'
-        usage
-        exit 1
-        ;;
+      fi
+      ;;
+    esc | -e)
+      COLORFORMAT='esc'
+      shift
+      ;;
+    name | hex | rgb | r | g | b | rgb-r | rgb-g | rgb-b | luminance | brightness | cmyk | ansi-8bit | ansi-8bit-value | ansi-8bit-escapecode | ansi-24bit | ansi-24bit-escapecode)
+      COLORFORMAT=$1
+      shift
+      ;;
+    *)
+      CATPPUCCIN_SHOW_LOGO=''
+      die "Unknown option: $1" -c "$(usage)"
+      ;;
     esac
   done
 
@@ -750,23 +764,14 @@ main() {
   validate_format "$COLORFORMAT"
 
   load_flavor "$FLAVOR" || {
-    printf '\n'
-    err "'$FLAVOR' is not a flavor."
-    printf '\n'
-    list_flavors
-    exit 1
+    die "'$FLAVOR' is not a flavor." -c "$(list_flavors)"
   }
 
   if [[ -n ${COLOR:-} ]]; then
     if [[ -n ${current_palette[$COLOR]+x} ]]; then
       format_value "$COLOR" "$COLORFORMAT" "${current_palette[$COLOR]}"
     else
-      printf '\n'
-      err "Color '$COLOR' not found in flavor '$FLAVOR'."
-      printf '\n'
-      list_colors
-      printf '\n'
-      exit 1
+      die "Color '$COLOR' not found in flavor '$FLAVOR'." -c "$(list_colors)"
     fi
   else
     print_colors
