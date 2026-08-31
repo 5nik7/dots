@@ -1,12 +1,90 @@
 #!/usr/bin/env bash
 
-if [ -z "$FLAVOR" ]; then
-  FLAVOR='mocha'
-fi
+set -u
+
+declare -r esc=$'\033'
+declare -r rst="${esc}[0m"
+declare -r bold="${esc}[1m"
+declare -r dim="${esc}[2m"
+declare -r underline="${esc}[4m"
+declare -r reverse="${esc}[7m"
+declare -r ansi_black="${esc}[30m"
+declare -r ansi_red="${esc}[31m"
+declare -r ansi_green="${esc}[32m"
+declare -r ansi_yellow="${esc}[33m"
+declare -r ansi_blue="${esc}[34m"
+declare -r ansi_magenta="${esc}[35m"
+declare -r ansi_cyan="${esc}[36m"
+declare -r ansi_white="${esc}[37m"
+declare -r ansi_brightblack="${esc}[1;30m"
+
+declare -r prog="${0##*/}"
+declare -r sdir="${0%/*}"
+declare -r caticon='󰄛'
+declare -r block='󰄮'
+declare -r default_flavor='mocha'
+declare -r default_format='hex'
 
 flavors=(mocha macchiato frappe latte)
-
 palette=(rosewater flamingo pink mauve red maroon peach yellow green teal sky sapphire blue lavender text subtext1 subtext0 overlay2 overlay1 overlay0 surface2 surface1 surface0 base mantle crust)
+supported_formats=(name hex rgb rgb-r rgb-g rgb-b luminance brightness cmyk ansi-8bit ansi-8bit-value ansi-8bit-escapecode ansi-24bit ansi-24bit-escapecode esc)
+
+declare -A current_palette=()
+declare -A current_rgb=()
+declare -A current_ansi8=()
+
+box=0
+raw=0
+array=0
+FLAVOR=${FLAVOR:-$default_flavor}
+COLOR=
+COLORFORMAT=
+
+err() { printf '%s %s %s\n' "${ansi_red}${caticon}${rst}" "${bold}[ERROR]${rst}" "$*" >&2; }
+die() {
+  err "$*"
+  exit 1
+}
+
+logo() {
+  local logo_file="${sdir}/logo"
+  [[ -f "$logo_file" ]] || return 0
+  while IFS= read -r line; do
+    printf '%s\n' "$line"
+  done <"$logo_file"
+}
+
+usage() {
+  cat <<EOF
+Usage: ${prog} [options] [color]
+
+Print Catppuccin palette values, color previews, or shell-friendly arrays.
+
+Options
+  -h, --help                  Print this message and exit
+  -f, --flavor FLAVOR         Select a flavor: mocha, macchiato, frappe, latte
+  -c, --color COLOR           Select a color name from the palette
+  -F, --format FORMAT         Select an output format
+  -r, --raw                   Print plain values instead of the preview table
+  -a, --array                 Alias for --raw; emits shell assignment-friendly output
+  --all                       Print every flavor in the preview table
+  init, --init                Emit sourceable Bash arrays for the current flavor
+
+Supported formats
+  name, hex, rgb, rgb-r, rgb-g, rgb-b, luminance, brightness, cmyk,
+  ansi-8bit, ansi-8bit-value, ansi-8bit-escapecode, ansi-24bit,
+  ansi-24bit-escapecode, esc
+
+Examples
+  ${prog} mocha
+  ${prog} --color blue --format rgb
+  ${prog} init | source /dev/stdin
+EOF
+  if [[ -n ${CATPPUCCIN_SHOW_LOGO:-} ]]; then
+    printf '\n'
+    logo
+  fi
+}
 
 mark_palette_used() {
   : "${rosewater:-}" "${flamingo:-}" "${pink:-}" "${mauve:-}" "${red:-}" "${maroon:-}" "${peach:-}" "${yellow:-}" "${green:-}" "${teal:-}" "${sky:-}" "${sapphire:-}" "${blue:-}" "${lavender:-}" "${text:-}" "${subtext1:-}" "${subtext0:-}" "${overlay2:-}" "${overlay1:-}" "${overlay0:-}" "${surface2:-}" "${surface1:-}" "${surface0:-}" "${base:-}" "${mantle:-}" "${crust:-}"
@@ -128,405 +206,380 @@ latte() {
   base='#eff1f5'
 }
 
-if [ -t 1 ]; then
-  ESC=$(printf '\033')
-  RST="${ESC}[0m"
-  BOLD="${ESC}[1m"
-  DIM="${ESC}[2m"
-  UNDERLINE="${ESC}[4m"
-  REVERSE="${ESC}[7m"
-  BLACK="${ESC}[30m"
-  RED="${ESC}[31m"
-  GREEN="${ESC}[32m"
-  YELLOW="${ESC}[33m"
-  BLUE="${ESC}[34m"
-  MAGENTA="${ESC}[35m"
-  CYAN="${ESC}[36m"
-  WHITE="${ESC}[37m"
-  BRIGHTBLACK="${ESC}[1;30m"
-else
-  RST='' BOLD='' DIM='' UNDERLINE='' REVERSE='' BLACK='' RED='' GREEN='' YELLOW='' BLUE='' MAGENTA='' CYAN='' WHITE='' BRIGHTBLACK=''
-fi
+load_flavor() {
+  case "$1" in
+    mocha) mocha ;;
+    macchiato) macchiato ;;
+    frappe) frappe ;;
+    latte) latte ;;
+    *) return 1 ;;
+  esac
 
-export REVERSE
+  current_palette=()
+  current_rgb=()
+  current_ansi8=()
 
-default_flavor="mocha"
-default_format="hex"
-declare -r prog="${0##*/}"
-declare -r sdir="${0%/*}"
-declare sep='|'
-declare caticon="󰄛"
-declare block='󰄮'
-declare logo="${sdir}/logo"
-declare box=1
-declare raw=0
-declare array=0
-
-err() { printf "${RED}%s ${BOLD}%s %s${RST}\n" "$caticon" "[ERROR]" "$*" >&2; }
-die() {
-  err "$*"
-  exit 1
-}
-
-has() {
-  local verbose=0
-  if [[ $1 == '-v' ]]; then
-    verbose=1
-    shift
-  fi
-  for c; do
-    c="${c%% *}"
-    if ! command -v "$c" &>/dev/null; then
-      ((verbose)) && err "$c not found"
-      return 1
-    fi
+  local color hex rgb
+  for color in "${palette[@]}"; do
+    hex="${!color}"
+    current_palette["$color"]="$hex"
+    rgb="$(hex_to_rgb "$hex")"
+    current_rgb["$color"]="$rgb"
+    current_ansi8["$color"]="$(rgb_to_ansi8 $rgb)"
   done
 }
 
-cmd_exists() {
-  command -v "$1" &>/dev/null
+hex_to_rgb() {
+  local hex="${1#\#}"
+  printf '%d %d %d\n' "$((16#${hex:0:2}))" "$((16#${hex:2:2}))" "$((16#${hex:4:2}))"
 }
 
-has -v pastel || die
-
-chcmd() {
-  "$@" 2>/dev/null
+rgb_escape() {
+  local r=$1
+  local g=$2
+  local b=$3
+  printf '%s[38;2;%s;%s;%sm' "$esc" "$r" "$g" "$b"
 }
 
-hex2rgb() {
-  hex="$1"
-  hex=${hex#\#}
-  printf "%d %d %d\n" 0x"${hex:0:2}" 0x"${hex:2:2}" 0x"${hex:4:2}"
+ansi8_escape() {
+  local code=$1
+  printf '%s[38;5;%sm' "$esc" "$code"
 }
 
-rgb2hex() {
-  local ired="$1"
-  local igreen="$2"
-  local iblue="$3"
-  printf "#%02x%02x%02x\n" "$ired" "$igreen" "$iblue"
-}
+rgb_to_ansi8() {
+  local r=$1
+  local g=$2
+  local b=$3
+  local rc gc bc
 
-escfg() {
-  hex="$1"
-  hex=${hex#\#}
-  printf "${ESC}[38;2;%d;%d;%dm\n" 0x"${hex:0:2}" 0x"${hex:2:2}" 0x"${hex:4:2}"
-}
-
-escbg() {
-  hex="$1"
-  hex=${hex#\#}
-  printf "${ESC}[48;2;%d;%d;%dm\n" 0x"${hex:0:2}" 0x"${hex:2:2}" 0x"${hex:4:2}"
-}
-
-tc="$GREEN"
-bc="$BLACK"
-
-logo() {
-  local IFS=
-  while read -r logo; do
-    echo "$logo"
-  done <"$logo"
-  unset IFS
-}
-
-usage() {
-  local IFS=
-  local usage
-  read -d '' -r usage <<-EOF
-Usage: ${UNDERLINE}${MAGENTA}${prog}${RST} [options] [...]
-
-${DIM}Description...${RST}
-
-Options
-  -h, --help     Print this message and exit
-	EOF
-  logo
-  echo "$usage"
-  unset IFS
-}
-
-color_codes() {
-  local flavor="$FLAVOR"
-  local var="$1"
-  local format="$COLORFORMAT"
-  local varcol="$(escfg "${!var}")"
-  local fmtd=$(chcmd pastel -m off format "$COLORFORMAT" "${!var}")
-  if ((raw)); then
-    if ((array)); then
-      case "$format" in
-      ansi-24bit) format="24" ;;
-      ansi-8bit) format="8" ;;
-      rgb-r) format="r" ;;
-      rgb-g) format="g" ;;
-      rgb-b) format="b" ;;
-      *) format="$format" ;;
-      esac
-      printf '[%s]="%s"\n' "$format" "$fmtd"
-    else
-      printf "%s='%s'\n" "${var}" "${fmtd}"
+  if (( r == g && g == b )); then
+    if (( r < 8 )); then
+      printf '16\n'
+      return
     fi
-  else
-    printf '%s|%s|%s\n' "${varcol}${block}${RST}" "${var}" "${fmtd}"
+    if (( r > 248 )); then
+      printf '231\n'
+      return
+    fi
+    printf '%d\n' "$((232 + ((r - 8) * 24 / 247)))"
+    return
   fi
+
+  rc=$(((r * 5 + 127) / 255))
+  gc=$(((g * 5 + 127) / 255))
+  bc=$(((b * 5 + 127) / 255))
+  printf '%d\n' "$((16 + 36 * rc + 6 * gc + bc))"
 }
 
-print_colors() {
-  local IFS=
-  local flavor="$FLAVOR"
-  local format="$COLORFORMAT"
-  local codes=()
-  local var
+rgb_to_luminance() {
+  local r=$1
+  local g=$2
+  local b=$3
+  awk -v r="$r" -v g="$g" -v b="$b" 'function lin(c){c/=255; return c <= 0.04045 ? c/12.92 : ((c + 0.055) / 1.055) ^ 2.4} BEGIN { printf "%.6f\n", 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) }'
+}
 
-  for var in "${palette[@]}"; do
+rgb_to_brightness() {
+  local r=$1
+  local g=$2
+  local b=$3
+  awk -v r="$r" -v g="$g" -v b="$b" 'BEGIN { printf "%d\n", int((0.299 * r + 0.587 * g + 0.114 * b) + 0.5) }'
+}
 
-    codes+=("$(color_codes "$var")")
+rgb_to_cmyk() {
+  local r=$1
+  local g=$2
+  local b=$3
+  awk -v r="$r" -v g="$g" -v b="$b" 'function min3(a, b, c){return a < b ? (a < c ? a : c) : (b < c ? b : c)} BEGIN { c = 1 - (r / 255); m = 1 - (g / 255); y = 1 - (b / 255); k = min3(c, m, y); if (k >= 0.999999) { printf "0 0 0 100\n"; exit } c = (c - k) / (1 - k); m = (m - k) / (1 - k); y = (y - k) / (1 - k); printf "%d %d %d %d\n", int(c * 100 + 0.5), int(m * 100 + 0.5), int(y * 100 + 0.5), int(k * 100 + 0.5) }'
+}
 
-  done
-  if ((box)); then
-    printf '%s\n' "${codes[@]}" | box -hp 1 -bc "${bc}" -t "${flavor}[$format]" -tc "${tc}" -s '|'
-  else
-    if ((raw)); then
-      if ((array)); then
-        for code in "${codes[@]}"; do
-          echo "$code"
-        done
-      else
-        for code in "${codes[@]}"; do
-          echo "$code"
-        done
-      fi
-    fi
-  fi
+init_cache_dir() {
+  printf '%s/catppuccin' "${XDG_CACHE_HOME:-$HOME/.cache}"
+}
+
+init_cache_file() {
+  local script_mtime
+  script_mtime=$(stat -c '%Y' "$0" 2>/dev/null || printf '0')
+  printf '%s/%s.%s.%s.init' "$(init_cache_dir)" "$prog" "$FLAVOR" "$script_mtime"
+}
+
+format_value() {
+  local name=$1
+  local format=$2
+  local hex=$3
+  local r g b ansi8
+
+  read -r r g b <<<"$(hex_to_rgb "$hex")"
+  ansi8="$(rgb_to_ansi8 "$r" "$g" "$b")"
+
+  case "$format" in
+    name) printf '%s\n' "$name" ;;
+    hex) printf '%s\n' "$hex" ;;
+    rgb) printf '%s %s %s\n' "$r" "$g" "$b" ;;
+    rgb-r) printf '%s\n' "$r" ;;
+    rgb-g) printf '%s\n' "$g" ;;
+    rgb-b) printf '%s\n' "$b" ;;
+    luminance) rgb_to_luminance "$r" "$g" "$b" ;;
+    brightness) rgb_to_brightness "$r" "$g" "$b" ;;
+    cmyk) rgb_to_cmyk "$r" "$g" "$b" ;;
+    ansi-8bit|ansi-8bit-value) printf '%s\n' "$ansi8" ;;
+    ansi-8bit-escapecode) ansi8_escape "$ansi8" ;;
+    ansi-24bit) printf '38;2;%s;%s;%s\n' "$r" "$g" "$b" ;;
+    ansi-24bit-escapecode|esc) rgb_escape "$r" "$g" "$b" ;;
+    *) die "Unsupported format: $format" ;;
+  esac
+}
+
+swatch() {
+  local hex=$1
+  local r g b
+  read -r r g b <<<"$(hex_to_rgb "$hex")"
+  printf '%s%s%s' "$(rgb_escape "$r" "$g" "$b")" "$block" "$rst"
 }
 
 list_colors() {
-  local tc="$GREEN"
-  local bc="$BLACK"
-  local vcol="$WHITE"
-  if ((raw)); then
-    echo "${palette[@]}"
-  else
-    for col in "${palette[@]}"; do
-      printf '%s%s%s\n' "${vcol}${col}${RST}"
-    done | box -hp 1 -bc "$bc" -t "colors:" -tc "${tc}" -s "${sep}"
+  if (( raw )); then
+    printf '%s\n' "${palette[@]}"
+    return
   fi
+
+  printf '%s\n' 'Colors:'
+  local name
+  for name in "${palette[@]}"; do
+    printf '  %s %s\n' "$(swatch "${current_palette[$name]}")" "$name"
+  done
 }
 
 list_flavors() {
-  local current=${FLAVOR}
-  local tc=${GREEN}
-  local bc=${BLACK}
-
-  if ((raw)); then
-    echo "${flavors[@]}"
-  else
-    for flav in "${flavors[@]}"; do
-      if [[ "$flav" == "$current" ]]; then
-        flavcol="${MAGENTA}"
-      else
-        flavcol="${WHITE}"
-      fi
-      if [[ "$flav" == "$default_flavor" ]]; then
-        printf "%s%s\n" "${flavcol}${flav}${RST}" "${BRIGHTBLACK}(default)${RST}"
-      else
-        printf "%s\n" "${flavcol}${flav}${RST}"
-      fi
-    done | box -hp 1 -bc "${bc}" -t "flavors:" -tc "${tc}" -s "${sep}"
+  if (( raw )); then
+    printf '%s\n' "${flavors[@]}"
+    return
   fi
+
+  printf '%s\n' 'Flavors:'
+  local flavor current=${FLAVOR}
+  for flavor in "${flavors[@]}"; do
+    if [[ $flavor == "$current" ]]; then
+      printf '  %s%s%s%s\n' "$ansi_magenta" "$flavor" "$rst" " ${ansi_brightblack}(current)${rst}"
+    elif [[ $flavor == "$default_flavor" ]]; then
+      printf '  %s%s%s%s\n' "$ansi_white" "$flavor" "$rst" " ${ansi_brightblack}(default)${rst}"
+    else
+      printf '  %s%s%s\n' "$ansi_white" "$flavor" "$rst"
+    fi
+  done
 }
 
 list_formats() {
-  local IFS=
-  local colorsformats
-  read -d '' -ra colorformats <<-EOF
-name hex cmyk luminance brightness
+  printf '%s\n' 'Formats:'
+  printf '  %s\n' "${supported_formats[@]}"
+}
 
-rgb|-float|-r|-g|-b
+print_colors() {
+  local format=${COLORFORMAT:-$default_format}
+  local name hex value
 
-hsl|-hue|-saturation|-lightness
-
-hsv|-hue|-saturation|-value
-
-lch|-lightness|-chroma|-hue
-
-oklch|-lightness|-chroma|-hue
-
-lab|-a|-b
-
-oklab|-l|-e|-b
-
-ansi-8bit|-value|-escapecode
-
-ansi-24bit|-value|-escapecode
-	EOF
-  echo "${colorformats[@]}" | box -hp 1 -bc "${bc}" -t "formats:" -tc "${tc}" -s ''
-  unset IFS
+  for name in "${palette[@]}"; do
+    hex="${current_palette[$name]}"
+    value="$(format_value "$name" "$format" "$hex")"
+    if (( raw )); then
+      if (( array )); then
+        printf '%s=%q\n' "$name" "$value"
+      else
+        printf '%s\n' "$value"
+      fi
+    else
+      printf '%s %-10s %s\n' "$(swatch "$hex")" "$name" "$value"
+    fi
+  done
 }
 
 print_all() {
-  for flav in "${flavors[@]}"; do
-    FLAVOR="$flav"
-    case "$FLAVOR" in
-    mocha) mocha ;;
-    macchiato) macchiato ;;
-    latte) latte ;;
-    frappe) frappe ;;
-    esac
+  local flavor
+  for flavor in "${flavors[@]}"; do
+    load_flavor "$flavor" || continue
+    printf '%s\n' "${bold}${flavor}${rst}"
     print_colors
+    printf '\n'
   done
+}
+
+emit_shell_array() {
+  local array_name=$1
+  shift
+  printf 'declare -gA %s=(\n' "$array_name"
+  local key value
+  for key in "$@"; do
+    value="${current_palette[$key]}"
+    printf '  [%q]=%q\n' "$key" "$value"
+  done
+  printf ')\n'
+}
+
+emit_shell_array_rgb() {
+  local array_name=$1
+  shift
+  printf 'declare -gA %s=(\n' "$array_name"
+  local key
+  for key in "$@"; do
+    printf '  [%q]=%q\n' "$key" "${current_rgb[$key]}"
+  done
+  printf ')\n'
+}
+
+emit_shell_array_ansi8() {
+  local array_name=$1
+  shift
+  printf 'declare -gA %s=(\n' "$array_name"
+  local key
+  for key in "$@"; do
+    printf '  [%q]=%q\n' "$key" "${current_ansi8[$key]}"
+  done
+  printf ')\n'
 }
 
 init() {
-  local formats=("hex" "rgb" "rgb-r" "rgb-g" "rgb-b" "ansi-24bit" "ansi-8bit")
-  raw=1
-  array=1
-  box=0
-  # for color in "${palette[@]}"; do
-  #   echo "declare -xgA $color;"
-  # done
+  local cache_file cache_dir
+  cache_dir="$(init_cache_dir)"
+  cache_file="$(init_cache_file)"
 
-  case "$FLAVOR" in
-  mocha) mocha ;;
-  macchiato) macchiato ;;
-  latte) latte ;;
-  frappe) frappe ;;
-  *)
+  if [[ -r "$cache_file" ]]; then
+    cat "$cache_file"
+    return 0
+  fi
+
+  load_flavor "$FLAVOR" || {
     err "'$FLAVOR' is not a flavor."
     list_flavors
     exit 1
-    ;;
-  esac
+  }
 
-  for color in "${palette[@]}"; do
-    echo "declare -xgA ${color}=("
-    for format in "${formats[@]}"; do
-      COLORFORMAT="$format"
-      color_codes "$color"
+  mkdir -p "$cache_dir"
+  {
+    printf 'declare -ga catppuccin_palette=(%s)\n' "${palette[*]@Q}"
+    printf 'declare -g catppuccin_flavor=%q\n' "$FLAVOR"
+
+    local flavor color format value
+    for flavor in "${flavors[@]}"; do
+      load_flavor "$flavor" || continue
+      for color in "${palette[@]}"; do
+        if [[ $flavor == "$FLAVOR" ]]; then
+          printf 'declare -gA %s=(\n' "$color"
+          for format in "${supported_formats[@]}"; do
+            value="$(format_value "$color" "$format" "${current_palette[$color]}")"
+            printf '  [%q]=%q\n' "$format" "$value"
+          done
+          printf ')\n'
+        fi
+
+        printf 'declare -gA %s_%s=(\n' "$flavor" "$color"
+        for format in "${supported_formats[@]}"; do
+          value="$(format_value "$color" "$format" "${current_palette[$color]}")"
+          printf '  [%q]=%q\n' "$format" "$value"
+        done
+        printf ')\n'
+      done
     done
-    echo ")"
-  done
+  } | tee "$cache_file"
 }
 
 main() {
-  raw=0
-  array=0
-  box=1
-  local box=1
-  local raw=0
-  local array=0
-  COLOR=""
-  COLORFORMAT=""
-  COLORMODE=""
-
-  if [[ $# == 0 ]]; then
+  if [[ $# -eq 0 ]]; then
     usage
     exit 0
   fi
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-    init | --init)
-      init
-      exit
-      ;;
-    -a | --array)
-      raw=1
-      array=1
-      box=0
-      shift
-      ;;
-    -r | --raw)
-      raw=1
-      box=0
-      shift
-      ;;
-    -h | --help)
-      usage
-      exit
-      ;;
-    --all)
-      print_all
-      exit
-      ;;
-    -f | --flavor)
-      if [[ -n "$2" ]]; then
-        FLAVOR="$2"
-        shift 2
-      else
-        list_flavors
-        exit
-      fi
-      ;;
-    mocha | macchiato | frappe | latte)
-      FLAVOR="$1"
-      shift
-      ;;
-    -c | --color)
-      if [[ -n "$2" ]]; then
-        COLOR="$2"
-        shift 2
-      else
-        list_colors
-        exit
-      fi
-      ;;
-    rosewater | flamingo | pink | mauve | red | maroon | peach | yellow | green | teal | sky | sapphire | blue | lavender | text | subtext1 | subtext0 | overlay2 | overlay1 | overlay0 | surface2 | surface1 | surface0 | base | mantle | crust)
-      COLOR="$1"
-      shift
-      ;;
-    -F | --format)
-      if [[ -n "$2" ]]; then
-        COLORFORMAT="$2"
-        shift 2
-      else
-        list_formats
-        exit
-      fi
-      ;;
-    esc | -e)
-      COLORFORMAT="ansi-24bit-escapecode"
-      shift
-      ;;
-    rgb | rgb-float | rgb-r | rgb-g | rgb-b | hex | hsl | hsl-hue | hsl-saturation | hsl-lightness | hsv | hsv-hue | hsv-saturation | hsv-value | lch | lch-lightness | lch-chroma | lch-hue | oklch | oklch-lightness | oklch-chroma | oklch-hue | lab | lab-a | lab-b | oklab | oklab-l | oklab-a | oklab-b | luminance | brightness | ansi-8bit | ansi-24bit | ansi-8bit-value | ansi-8bit-escapecode | ansi-24bit-escapecode | cmyk | name)
-      COLORFORMAT="$1"
-      shift
-      ;;
-    *)
-      err "Unknown option: $1"
-      exit 1
-      ;;
+      init|--init)
+        init
+        exit 0
+        ;;
+      -a|--array)
+        raw=1
+        array=1
+        box=0
+        shift
+        ;;
+      -r|--raw)
+        raw=1
+        box=0
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      --all)
+        load_flavor "$FLAVOR" || load_flavor "$default_flavor"
+        print_all
+        exit 0
+        ;;
+      -f|--flavor)
+        if [[ -n ${2:-} ]]; then
+          FLAVOR=$2
+          shift 2
+        else
+          list_flavors
+          exit 0
+        fi
+        ;;
+      mocha|macchiato|frappe|latte)
+        FLAVOR=$1
+        shift
+        ;;
+      -c|--color)
+        if [[ -n ${2:-} ]]; then
+          COLOR=$2
+          shift 2
+        else
+          list_colors
+          exit 0
+        fi
+        ;;
+      rosewater|flamingo|pink|mauve|red|maroon|peach|yellow|green|teal|sky|sapphire|blue|lavender|text|subtext1|subtext0|overlay2|overlay1|overlay0|surface2|surface1|surface0|base|mantle|crust)
+        COLOR=$1
+        shift
+        ;;
+      -F|--format)
+        if [[ -n ${2:-} ]]; then
+          COLORFORMAT=$2
+          shift 2
+        else
+          list_formats
+          exit 0
+        fi
+        ;;
+      esc|-e)
+        COLORFORMAT='esc'
+        shift
+        ;;
+      name|hex|rgb|rgb-r|rgb-g|rgb-b|luminance|brightness|cmyk|ansi-8bit|ansi-8bit-value|ansi-8bit-escapecode|ansi-24bit|ansi-24bit-escapecode)
+        COLORFORMAT=$1
+        shift
+        ;;
+      *)
+        err "Unknown option: $1"
+        exit 1
+        ;;
     esac
   done
 
-  if [[ -z "$COLORFORMAT" ]]; then
-    COLORFORMAT="$default_format"
-  fi
+  COLORFORMAT=${COLORFORMAT:-$default_format}
 
-  case "$FLAVOR" in
-  mocha) mocha ;;
-  macchiato) macchiato ;;
-  latte) latte ;;
-  frappe) frappe ;;
-  *)
+  load_flavor "$FLAVOR" || {
     err "'$FLAVOR' is not a flavor."
     list_flavors
     exit 1
-    ;;
-  esac
+  }
 
-  if [[ -n "$COLOR" ]]; then
-    if [[ -n "${!COLOR}" ]]; then
-      if [[ -n "$COLORFORMAT" ]]; then
-        chcmd pastel -m off format "$COLORFORMAT" "${!COLOR}"
-      else
-        echo "${!COLOR}"
-      fi
+  if [[ -n ${COLOR:-} ]]; then
+    if [[ -n ${current_palette[$COLOR]+x} ]]; then
+      format_value "$COLOR" "$COLORFORMAT" "${current_palette[$COLOR]}"
     else
-      echo
+      printf '\n'
       err "Color '$COLOR' not found in flavor '$FLAVOR'."
-      echo
+      printf '\n'
       list_colors
-      echo
+      printf '\n'
       exit 1
     fi
   else

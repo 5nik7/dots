@@ -83,6 +83,12 @@ fpath=($PREFIX/share/zsh/site-functions $fpath)
 
 fpath=($zsh[completions] $fpath)
 
+prepath "$GOBIN"
+extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
+prepath "$HOME/.cargo/bin"
+prepath "$HOME/.local/bin" || addir "$HOME/.local/bin"
+prepath "$HOME/bin"
+
 shellmod "functions"
 shellmod "aliases"
 shellmod "options"
@@ -93,12 +99,6 @@ set_theme 2>/dev/null
 
 shellmod "completions"
 shellmod "plugins"
-
-prepath "$GOBIN"
-extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
-prepath "$HOME/.cargo/bin"
-prepath "$HOME/.local/bin" || addir "$HOME/.local/bin"
-prepath "$HOME/bin"
 
 so "$HOME/.cargo/env"
 so "$DOTSHHHH/secrets.sh"
