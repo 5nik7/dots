@@ -1,13 +1,18 @@
-# ~/.config/starship.toml
+"$schema" = 'https://starship.rs/config-schema.json'
+
+command_timeout = 10000
+scan_timeout = 10000
 
 format = """
+${custom.gh}\
 $directory\
 $username\
 $hostname\
 $git_branch\
-$git_state\
-$git_status\
 $git_commit\
+$git_status\
+$git_metrics\
+$git_state\
 $aws\
 $nodejs\
 $python\
@@ -52,18 +57,29 @@ surface0 = '#313244'
 base = '#1e1e2e'
 mantle = '#181825'
 crust = '#11111b'
+pop = '#242438'
 
 [character]
 success_symbol = "[->](bold green)"
 error_symbol = "[->](bold red)"
+vimcmd_symbol = '[󰫻](fg:blue bold)'
 # vicmd_symbol = "[❮](bold yellow)"
 # success_symbol = '[](fg:color_ok bold)'
 # error_symbol = '[](fg:color_danger bold)'
-vimcmd_symbol = '[▎](fg:blue bold)'
+
+[custom.gh]
+description = "Git host icon"
+when = true
+command = "git remote get-url origin 2>/dev/null | grep -iq 'github' && echo "
+format = '([$output ]($style))'
+style = 'fg:sapphire'
+# symbol = "󰊤"
+# shell = ["bash", "--noprofile", "--norc"]
 
 [directory]
 style = "fg:sapphire bold"
-format = "[ ]($style)[$path]($style) "
+format = "[$path]($style) "
+# format = "[ ]($style)[$path]($style) "
 truncation_length = 3
 truncation_symbol = "…/"
 read_only = " "
@@ -84,20 +100,50 @@ symbol = " "
 style = "fg:mauve bold"
 format = '[$symbol$branch·]($style)'
 
-[git_status]
-style = "fg:mauve bold"
-ahead = '⇡${count}'
-diverged = '⇕⇡${ahead_count}⇣${behind_count}'
-behind = '⇣${count}'
-
 [git_commit]
-style = "fg:mauve bold"
-commit_hash_length = 4
-tag_symbol = '🔖 '
+style = "fg:mauve"
+format = "([($tag)(@$hash)]($style) )"
+commit_hash_length = 7
+only_detached = true
+tag_symbol = "󰓼 "
+tag_disabled = false
+disabled = false
+
+[git_status]
+style = "fg:bright-purple"
+format = '([$ahead_behind]($style) )([$all_status]($style) )'
+stashed = "*${count}"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+up_to_date = ""
+diverged = "⇡${ahead_count}⇣${behind_count}"
+conflicted = "=${count}"
+deleted = "×${count}"
+renamed = "»${count}"
+modified = "!${count}"
+staged = "+${count}"
+untracked = "?${count}"
+ignore_submodules = false
+disabled = false
+
+[git_metrics]
+format = '([([+$added]($added_style))([-$deleted]($deleted_style))](fg:cyan) )'
+added_style = "fg:bright-green"
+deleted_style = "fg:bright-red"
+only_nonzero_diffs = true
+disabled = false
 
 [git_state]
-style = "fg:mauve bold"
-format = '\([$state( $progress_current of $progress_total)]($style)\) '
+style = "fg:red"
+format = '([$state( $progress_current/$progress_total)]($style bold) )'
+rebase = "REBASING"
+merge = "MERGING"
+revert = "REVERTING"
+cherry_pick = "CHERRY-PICKING"
+bisect = "BISECTING"
+am = "AM"
+am_or_rebase = "AM/REBASE"
+disabled = false
 
 [nodejs]
 symbol = "⬢ "
@@ -157,6 +203,6 @@ style = "fg:yellow bold"
 
 [time]
 disabled = false
-time_format = "%T"
+time_format = "%-I:%M:%S"
 format = "[$time]($style) "
-style = "fg:mauve bold"
+style = "fg:overlay1 bold"
