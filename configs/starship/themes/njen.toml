@@ -43,10 +43,6 @@ $fill\
 ](bg:color_bg)
 $shell$status$character"""
 
-
-# ${custom.git_remote_icon-pwsh}\
-# ${custom.dirname-pwsh}\
-
 right_format = """
 $time"""
 
@@ -488,17 +484,6 @@ style = "fg:color_directory"
 format = '[$output]($style)'
 shell = ["bash", "--noprofile", "--norc"]
 
-[custom.dirname-pwsh]
-description = "dir path"
-when = 'git rev-parse --show-toplevel 2>$null'
-command = """
-$dir = (($PWD).Path).Replace((Get-Item $PWD).BaseName, "").Replace("$HOME", "~").Replace("\\", "/")
-Write-Output $dir
-"""
-style = "fg:color_directory"
-format = '[$output]($style)'
-shell = ["pwsh", "-NoProfile", "-Command", "-"]
-
 [custom.rwd]
 description = "cwd"
 when = true
@@ -516,15 +501,3 @@ echo "$(git-it -i)"
 format = '( [$output]($style))'
 style = 'fg:color_git_branch'
 shell = ["bash", "--noprofile", "--norc"]
-
-[custom.git_remote_icon-pwsh]
-disabled = false
-description = "Git host icon"
-shell = ["pwsh", "-NoProfile", "-Command", "-"]
-when = true
-command = """
-$icon = (git-it -i 2>$null)
-Write-Host $icon
-"""
-format = '( [$output]($style))'
-style = 'fg:color_git_branch'
