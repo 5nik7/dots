@@ -28,11 +28,9 @@ $username\
 $hostname\
 ${custom.rwd}\
 ${custom.dirname}\
-${custom.dirname-pwsh}\
 $directory\
 (\
 ${custom.git_remote_icon}\
-${custom.git_remote_icon-pwsh}\
 $git_branch\
 $git_commit\
 $git_status\
@@ -44,6 +42,10 @@ $fill\
 )\
 ](bg:color_bg)
 $shell$status$character"""
+
+
+# ${custom.git_remote_icon-pwsh}\
+# ${custom.dirname-pwsh}\
 
 right_format = """
 $time"""

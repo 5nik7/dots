@@ -78,9 +78,6 @@ format = 'via [$symbol]($style)'
 [lua]
 format = 'via [$symbol]($style)'
 
-[maven]
-format = 'via [$symbol]($style)'
-
 [meson]
 format = 'via [$symbol]($style)'
 

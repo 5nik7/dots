@@ -52,10 +52,8 @@ $julia\
 $kotlin\
 $gradle\
 $lua\
-$maven\
 $nim\
 $nodejs\
-$bun\
 $ocaml\
 $opa\
 $perl\
@@ -220,10 +218,6 @@ version_format = "${raw}"
 detect_files = ["package-lock.json", "yarn.lock"]
 detect_folders = ["node_modules"]
 detect_extensions = []
-
-[bun]
-format = " [bun](italic) [◫ ($version)](bold bright-green)"
-version_format = "${raw}"
 
 [python]
 format = " [py](italic) [${symbol}${version}]($style)"
