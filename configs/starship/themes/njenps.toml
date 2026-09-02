@@ -70,13 +70,13 @@ read_only = " "
 read_only_style = "red"
 
 [username]
-style_user = "fg:teal bold"
+style_user = "fg:bright-cyan bold"
 style_root = "fg:red bold"
-format = '[\[$user\]]($style)' #Remove '\[' or '\]' if you do not want brackets
+format = '[\[$user\]]($style)'     #Remove '\[' or '\]' if you do not want brackets
 show_always = true
 
 [hostname]
-format = "[@$hostname:](fg:teal bold)"
+format = "[@$hostname:](fg:bright-cyan bold)"
 ssh_only = false
 
 [git_branch]

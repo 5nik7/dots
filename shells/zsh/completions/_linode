@@ -1,0 +1,161 @@
+#compdef linode-cli linode lin
+
+# Native Zsh completion for Linode CLI.
+#
+# The command and action lists are derived from the output of:
+#   linode completion bash
+#   linode completion fish
+#
+# Linode's generated completions expose resource groups and their actions, but
+# not action-specific options or argument values.  This completion intentionally
+# stops after the action instead of guessing those values.
+
+local context state state_descr line
+typeset -A opt_args
+local -a groups actions
+local group
+
+groups=(
+  'account:Manage account settings, billing, and availability'
+  'betas:Manage beta program enrollment'
+  'child-account:Manage child accounts'
+  'events:View and update account events'
+  'payment-methods:Manage payment methods'
+  'service-transfers:Manage service transfers'
+  'users:Manage account users'
+  'databases:Manage database services'
+  'domains:Manage domains and DNS records'
+  'images:Manage disk images'
+  'image-sharegroups:Manage image sharing groups'
+  'linodes:Manage Linode instances'
+  'kernels:View available kernels'
+  'stackscripts:Manage StackScripts'
+  'lke:Manage Linode Kubernetes Engine clusters'
+  'resource-locks:Manage resource locks'
+  'longview:Manage Longview clients and plans'
+  'maintenance:View maintenance policies'
+  'managed:Manage Linode Managed services'
+  'marketplace:Manage Marketplace contacts'
+  'alerts:Manage alerting channels and definitions'
+  'monitor:View monitoring dashboards and metrics'
+  'streams:Manage data streams and destinations'
+  'network-transfer:View network transfer pricing'
+  'firewalls:Manage Cloud Firewalls'
+  'networking:Manage IP addresses and IPv6 ranges'
+  'vlans:Manage VLANs'
+  'nodebalancers:Manage NodeBalancers'
+  'object-storage:Manage Object Storage'
+  'placement:Manage placement groups'
+  'profile:Manage the current user profile'
+  'phone:Manage phone verification'
+  'security-questions:View security questions'
+  'sshkeys:Manage SSH keys'
+  'regions:View regions and availability'
+  'tickets:Manage support tickets'
+  'tags:Manage tags'
+  'volumes:Manage block-storage volumes'
+  'vpcs:Manage VPCs and subnets'
+  '--help:Show Linode CLI help'
+)
+
+typeset -A action_map
+action_map=(
+  account
+    'view update get-availability get-account-availability cancel invoices-list invoice-view invoice-items logins-list login-view maintenance-list notifications-list clients-list client-create client-view client-update client-delete client-reset-secret payments-list payment-create payment-view promo-add settings settings-update enable-managed transfer --help'
+  betas
+    'enrolled enroll enrolled-view list view --help'
+  child-account
+    'list view create --help'
+  events
+    'list view mark-seen --help'
+  payment-methods
+    'list add view delete default --help'
+  service-transfers
+    'list create view cancel accept --help'
+  users
+    'list create view update delete --help'
+  databases
+    'engines engine-view list mysql-config-view mysql-list mysql-create mysql-view mysql-update mysql-delete mysql-creds-view mysql-creds-reset mysql-patch mysql-resume mysql-ssl-cert mysql-suspend postgres-config-view postgresql-list postgresql-create postgresql-view postgresql-update postgresql-delete postgresql-conn-pool-list postgresql-conn-pool-create view postgresql-conn-pool-update postgresql-conn-pool-delete postgresql-creds-view postgresql-creds-reset postgresql-patch postgresql-resume postgresql-ssl-cert postgresql-suspend types type-view --help'
+  domains
+    'list create import view update delete clone records-list records-create records-view records-update records-delete zone-file --help'
+  images
+    'list create upload view update delete replicate sharegroups-list --help'
+  image-sharegroups
+    'list create tokens-list token-create token-view token-update token-delete view-by-token images-list-by-token view update delete images-list image-add image-update image-remove members-list member-add member-view member-update member-delete --help'
+  linodes
+    'list create view update delete backups-list snapshot backups-cancel backups-enable backup-view backup-restore boot clone configs-list config-create config-view config-update config-delete config-interfaces-list config-interface-add config-interfaces-order config-interface-view config-interface-update config-interface-delete disks-list disk-create disk-view disk-update disk-delete disk-clone disk-reset-password disk-resize firewalls-list firewalls-update post-apply-firewalls interfaces-list interface-add interface-history-list interfaces-settings-list interface-settings-update interface-view interface-update interface-delete interface-firewalls-list ips-list ip-add ip-view ip-update ip-delete migrate upgrade nodebalancers linode-reset-password reboot rebuild rescue resize shutdown transfer-view interfaces-upgrade volumes types type-view --help'
+  kernels
+    'list view --help'
+  stackscripts
+    'list create view update delete --help'
+  lke
+    'clusters-list cluster-create cluster-view cluster-update cluster-delete api-endpoints-list cluster-acl-view cluster-acl-update cluster-acl-delete cluster-dashboard-url kubeconfig-view kubeconfig-delete node-view node-delete node-recycle pools-list pool-create pool-view pool-update pool-delete pool-recycle cluster-nodes-recycle regenerate service-token-delete tiered-versions-list tiered-version-view types versions-list version-view --help'
+  resource-locks
+    'ls create view delete --help'
+  longview
+    'list create view update delete plan-view plan-update subscriptions-list subscription-view types --help'
+  maintenance
+    'policies-list --help'
+  managed
+    'contacts-list contact-create contact-view contact-update contact-delete credentials-list credential-create credential-sshkey-view credential-view credential-update credential-revoke credential-update-username-password issues-list issue-view linode-settings-list linode-setting-view linode-setting-update services-list service-create service-view service-update service-delete service-disable service-enable stats-list --help'
+  marketplace
+    'contacts-create --help'
+  alerts
+    'channels-list channels-create channels-view channels-update channels-delete channels-alerts-list definitions-list-all service-definitions-list definition-create definition-view definition-update definition-delete definition-entities-list --help'
+  monitor
+    'dashboards-list-all dashboards-view service-list service-view dashboards-list metrics-list token-get --help'
+  streams
+    'ls create destinations-list destination-create destination-view destination-update destination-delete destination-history-view view update delete history-view --help'
+  network-transfer
+    'prices --help'
+  firewalls
+    'list create firewall-settings-list firewall-settings-update templates-list template-view view update delete devices-list device-create device-view device-delete versions-list version-view rules-list rules-update --help'
+  networking
+    'ips-list ip-add ip-assign ip-share ip-view ip-update v6-pools v6-ranges v6-range-create v6-range-view v6-range-delete --help'
+  vlans
+    'list delete --help'
+  nodebalancers
+    'list create types view update delete configs-list config-create config-view config-update config-delete nodes-list node-create node-view node-update node-delete config-rebuild firewalls vpcs-list vpc-view --help'
+  object-storage
+    'ssl-view ssl-upload ssl-delete cancel clusters-list clusters-view endpoints global-quotas-list global-quota-view global-quota-usage-view keys-list keys-create keys-view keys-update keys-delete quotas-list quota-view quota-usage-view transfer-view types --help'
+  placement
+    'groups-list group-create group-view group-update group-delete assign-linode unassign-linode --help'
+  profile
+    'view update apps-list app-view app-delete devices-list device-view device-revoke logins-list login-view tfa-disable tfa-enable tfa-confirm tokens-list token-create token-view token-update token-delete --help'
+  phone
+    'sms-code-send delete verify --help'
+  security-questions
+    'list --help'
+  sshkeys
+    'list create view update delete --help'
+  regions
+    'list list-avail view view-avail --help'
+  tickets
+    'list create view close replies reply --help'
+  tags
+    'list create delete --help'
+  volumes
+    'list create types view update delete attach clone detach resize --help'
+  vpcs
+    'list create ips-all-list view update delete ips-list subnets-list subnet-create subnet-view subnet-update subnet-delete --help'
+)
+
+_arguments -C \
+  '1:resource group:->group' \
+  '2:action:->action' \
+  '*::argument:->argument'
+
+case $state in
+  group)
+    _describe -t linode-groups 'resource group' groups
+    ;;
+  action)
+    group=${line[1]}
+    actions=( ${(s: :)action_map[$group]} )
+    (( ${#actions} )) && _describe -t linode-actions "${group} action" actions
+    ;;
+  argument)
+    # The generated Bash and Fish data contains no argument-level metadata.
+    return 1
+    ;;
+esac
