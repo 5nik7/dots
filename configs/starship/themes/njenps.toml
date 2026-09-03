@@ -205,4 +205,4 @@ style = "fg:yellow bold"
 disabled = false
 time_format = "%-I:%M:%S"
 format = "[$time]($style) "
-style = "fg:overlay1 bold"
+style = "fg:overlay0 bold"
