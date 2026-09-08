@@ -164,7 +164,8 @@ dirout() {
 }
 
 shell() {
-  ps | grep $(echo $$) | awk '{ print $4 }'
+  # ps | grep $(echo $$) | awk '{ print $4 }'
+  echo "${SHELL##*/}"
 }
 
 shellmod() {
