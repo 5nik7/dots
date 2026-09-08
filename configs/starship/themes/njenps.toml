@@ -62,7 +62,8 @@ pop = '#242438'
 [character]
 success_symbol = "[->](bold green)"
 error_symbol = "[->](bold red)"
-vimcmd_symbol = '[󰫻](fg:blue bold)'
+vimcmd_symbol = '[▎](fg:blue bold)'
+# vimcmd_symbol = '[󰫻](fg:blue bold)'
 # vicmd_symbol = "[❮](bold yellow)"
 # success_symbol = '[](fg:color_ok bold)'
 # error_symbol = '[](fg:color_danger bold)'
