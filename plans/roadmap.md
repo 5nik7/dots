@@ -45,6 +45,7 @@ The owner authorized the limited [Termux portability experiment](phase-1-portabi
 - [x] Validate Termux filesystem and link primitives in a disposable target.
 - [ ] Record the implementation-language decision.
 - [x] Establish initial unit test and formatting commands.
+- [~] Add bounded native Linux CI validation and retained evidence. The workflow/harness are prepared; actual execution and reviewed results are pending.
 
 Exit criteria:
 

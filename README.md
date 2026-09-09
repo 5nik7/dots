@@ -8,9 +8,9 @@ The repository contains the existing dotfiles collection, the Bash `bin/dots` pr
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
 
-## Try the Termux Experiment
+## Try the Portability Experiment
 
-**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64. The live `dots` command and dotfiles are unchanged.
+**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64. The live `dots` command and dotfiles are unchanged. The same harness now accepts native Linux/AMD64; its first CI execution remains pending.
 
 From the repository root, using the installed Go 1.27.x toolchain and Python 3 without optimization (`PYTHONOPTIMIZE` unset or `0`; no `-O`/`-OO`). The verifier rejects optimized Python before invoking tools or creating build artifacts:
 

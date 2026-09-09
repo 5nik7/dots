@@ -10,7 +10,7 @@ This is the design source for the future CLI until a validated command registry 
 
 ## Implemented Experimental Interface
 
-The isolated `dots-spike` executable is built explicitly using the [README instructions](../README.md#try-the-termux-experiment). It implements only:
+The isolated `dots-spike` executable is built explicitly using the [README instructions](../README.md#try-the-portability-experiment). It implements only:
 
 | Invocation | Behavior |
 | --- | --- |

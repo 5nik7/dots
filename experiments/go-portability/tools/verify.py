@@ -61,7 +61,7 @@ def environments(root, go):
         "XDG_STATE_HOME": str(root / "state"), "XDG_CACHE_HOME": str(root / "cache"),
         "TMPDIR": str(root / "tmp"), "TMP": str(root / "tmp"), "TEMP": str(root / "tmp"),
         "USERPROFILE": str(root / "home"), "APPDATA": str(root / "config"), "LOCALAPPDATA": str(root / "data"),
-        "GOENV": "off", "GOWORK": "off", "GOTOOLCHAIN": "local", "GOPROXY": "off", "GOSUMDB": "off",
+        "GOENV": "off", "GOWORK": "off", "GOTOOLCHAIN": "local", "GOPROXY": "off", "GOSUMDB": "off", "GOVCS": "off",
         "GOPATH": str(root / "gopath"), "GOMODCACHE": str(root / "cache" / "gomod"),
         "GOCACHE": str(root / "cache" / "gobuild"), "GOTMPDIR": str(root / "tooltmp"),
         "CGO_ENABLED": "0", "GOFLAGS": "-mod=readonly -buildvcs=false", "GIT_OPTIONAL_LOCKS": "0",
@@ -70,12 +70,46 @@ def environments(root, go):
     for key in ("PREFIX", "TERMUX_VERSION", "SystemRoot", "WINDIR"):
         if key in os.environ:
             env[key] = os.environ[key]
+    # GOTELEMETRY is a read-only go env value, not an environment override.
+    # Seed the owned configuration before any Go tool can collect counters.
+    telemetry = root / "config" / "go" / "telemetry"
+    telemetry.mkdir(parents=True)
+    (telemetry / "mode").write_text("off\n", encoding="utf-8")
     child = dict(env, PATH="", PREFIX=str(root / "runtime" / "usr"), TERMUX_VERSION="fixture")
     # Do not expose Go cache/config variables to the executable under test.
     for key in list(child):
         if key.startswith("GO") or key.startswith("GIT_"):
             del child[key]
     return env, child
+
+
+def configure_native(info, env, child):
+    native = (info["GOHOSTOS"], info["GOHOSTARCH"])
+    platforms = {("android", "arm64"): "termux", ("linux", "amd64"): "linux"}
+    if native not in platforms:
+        raise RuntimeError("Supported native verification hosts: Termux android/arm64 and Linux linux/amd64; other execution remains deferred.")
+    env.update(GOOS=native[0], GOARCH=native[1])
+    if native[0] == "linux":
+        for target in (env, child):
+            target.pop("PREFIX", None)
+            target.pop("TERMUX_VERSION", None)
+    return (platforms[native], *native)
+
+
+def source_fingerprints():
+    paths = [MODULE / "go.mod", REPO / "logo.txt"]
+    for directory in ("cmd", "internal", "tests"):
+        paths.extend((MODULE / directory).rglob("*.go"))
+    paths.extend((MODULE / "tools").glob("*.py"))
+    workflow = REPO / ".github" / "workflows" / "phase-1-linux.yml"
+    if workflow.exists():
+        paths.append(workflow)
+    result = {}
+    for path in sorted(paths):
+        if path.is_symlink() or any(p.is_symlink() for p in path.parents if p.is_relative_to(REPO)):
+            raise RuntimeError("Refusing symlinked verification input")
+        result[str(path.relative_to(REPO))] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return result
 
 
 def snapshot(paths):
@@ -90,7 +124,7 @@ def snapshot(paths):
     return result
 
 
-def cli_checks(binary, root, env):
+def cli_checks(binary, root, env, identity):
     targets = [root / name for name in ("home", "config", "data", "state", "cache", "runtime", "tmp")]
     logo = Path(env["DOTS"]) / "logo.txt"
     logo.write_text("FIXTURE LOGO\n", encoding="utf-8")
@@ -110,8 +144,10 @@ def cli_checks(binary, root, env):
             report = json.loads(proc.stdout)
             assert set(report) == {"schema_version", "platform", "os", "architecture", "go_version", "evidence", "paths", "capabilities", "warnings"}
             assert report["schema_version"] == 1 and all(v == "not_probed" for v in report["capabilities"].values())
-            assert (report["platform"], report["os"], report["architecture"]) == ("termux", "android", "arm64")
+            assert (report["platform"], report["os"], report["architecture"]) == identity
             assert "FIXTURE LOGO" not in proc.stdout and "\x1b" not in proc.stdout
+        elif args == ["doctor"]:
+            assert f"Platform: {identity[0]}\n" in proc.stdout
         elif not args or args in (["help"], ["-h"], ["--help"], ["doctor", "--help"]):
             assert proc.stdout.startswith("FIXTURE LOGO\n\n")
     assert before == snapshot(targets), "Read-only CLI changed fixture roots"
@@ -215,6 +251,7 @@ def main():
     if mode == "docs":
         doc_checks()
         return
+    fingerprints = source_fingerprints()
     go = tool("go")
     hyperfine = tool("hyperfine") if mode == "bench" else None
     gofmt = tool("gofmt") if mode == "check" else None
@@ -226,16 +263,16 @@ def main():
         env, child = environments(root, go)
         if mode == "check":
             run([sys.executable, "-B", MODULE / "tools" / "test_verify.py"], cwd=root, env=env)
-        info = json.loads(run([go, "env", "-json", "GOHOSTOS", "GOHOSTARCH", "GOVERSION"], cwd=source, env=env, capture=True).stdout)
-        if info["GOHOSTOS"] != "android" or info["GOHOSTARCH"] != "arm64":
-            raise RuntimeError("This runner is verified only for native Termux android/arm64; other target execution remains deferred.")
-        # Explicit settings prevent the host's persistent Go configuration from
-        # influencing the build. Telemetry is disabled by Go on Android.
-        native = (info["GOHOSTOS"], info["GOHOSTARCH"])
-        env.update(GOOS=native[0], GOARCH=native[1])
+        info = json.loads(run([go, "env", "-json", "GOHOSTOS", "GOHOSTARCH", "GOVERSION", "GOTELEMETRY", "GOTELEMETRYDIR"], cwd=source, env=env, capture=True).stdout)
+        if info["GOTELEMETRY"] != "off" or Path(info["GOTELEMETRYDIR"]) != root / "config" / "go" / "telemetry":
+            raise RuntimeError("Go telemetry is not off in the test-owned configuration directory")
+        identity = configure_native(info, env, child)
         binary = build(go, source, root, env)
         metadata = {"date_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     "toolchain": info, "build_flags": BUILD_FLAGS, "cgo_enabled": 0,
+                    "python_version": sys.version.split()[0], "source_sha256": fingerprints,
+                    "native_target": "/".join(identity[1:]), "executed_natively": mode in ("check", "bench"),
+                    "go_isolation": {key: env[key] for key in ("GOENV", "GOWORK", "GOTOOLCHAIN", "GOPROXY", "GOSUMDB", "GOVCS")},
                     "kernel": os.uname().release, "machine": os.uname().machine,
                     "termux_version": os.environ.get("TERMUX_VERSION", "unknown"),
                     "binary_bytes": binary.stat().st_size, "sha256": hashlib.sha256(binary.read_bytes()).hexdigest()}
@@ -244,16 +281,20 @@ def main():
             if unformatted:
                 raise RuntimeError("Run gofmt on the experimental Go sources:\n" + unformatted)
             # Go tests use fixture roots; process checks separately enforce an empty PATH.
-            test_env = dict(env, DOTS=child["DOTS"], PREFIX=child["PREFIX"])
+            test_env = dict(env, DOTS=child["DOTS"])
+            for key in ("PREFIX", "TERMUX_VERSION"):
+                if key in child:
+                    test_env[key] = child[key]
             run([go, "vet", "./..."], cwd=source, env=test_env)
             run([go, "test", "-count=1", "-v", "./..."], cwd=source, env=test_env)
-            cli_checks(binary, root, child)
+            cli_checks(binary, root, child, identity)
             relocated = root / "relocated" / "module"
             source_copy(relocated)
             repeat = build(go, relocated, root, env, "repeat")
             assert binary.read_bytes() == repeat.read_bytes(), "repeated relocated build differed"
             elf = run([readelf, "-l", "-d", binary], cwd=root, env=env, capture=True).stdout
             metadata["elf"] = elf
+            metadata["readelf_version"] = run([readelf, "--version"], cwd=root, env=env, capture=True).stdout.splitlines()[0]
             print("ELF dependencies:", file=sys.stderr)
             print("\n".join(line for line in elf.splitlines() if "interpreter" in line or "NEEDED" in line) or "No interpreter/NEEDED entries", file=sys.stderr)
             metadata["checks"] = "Python optimization regressions, gofmt, vet, uncached Go tests, CLI processes, relocated identical rebuild, ELF inspection, Markdown links"
@@ -275,10 +316,13 @@ def main():
             print("Cross-compilation passed; foreign executables and tests were NOT run.", file=sys.stderr)
         # Retain only reviewable artifacts. The much larger tool caches and all
         # test roots are deleted by TemporaryDirectory, which owns this root.
+        if source_fingerprints() != fingerprints:
+            raise RuntimeError("Verification inputs changed during execution")
         artifact = Path(tempfile.mkdtemp(prefix="dots-spike-artifact-")).resolve()
         shutil.copytree(root / "bin", artifact / "bin")
         shutil.copyfile(REPO / "logo.txt", artifact / "logo.txt")
-        (artifact / "evidence.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+        sanitized = json.dumps(metadata, indent=2).replace(str(root), "<work>").replace(str(REPO), "<checkout>")
+        (artifact / "evidence.json").write_text(sanitized + "\n", encoding="utf-8")
         print(f"Evidence: {artifact / 'evidence.json'}", file=sys.stderr)
         # stdout is just the executable path, suitable for command substitution.
         print(artifact / "bin" / "dots-spike")

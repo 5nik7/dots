@@ -12,6 +12,10 @@ The Android/ARM64 build uses `CGO_ENABLED=0`, the default Android PIE mode, `-tr
 
 Linux/AMD64 and Windows/AMD64 executables and test binaries were cross-compiled using the installed Termux toolchain. They were not executed. Windows/WSL detector fixtures ran on Termux, not on those systems. Native desktop and WSL execution, Windows filesystem behavior, Android shared storage, other Android architectures, release distribution, and installation remain unverified. See the [focused results](../plans/phase-1-portability.md).
 
+### Native Linux Validation Status
+
+The shared harness and branch-push Ubuntu 24.04/AMD64 workflow are implemented; the first native Linux execution is pending. They cover the same isolated CLI/filesystem regressions and benchmark method as Termux. This prepared infrastructure does not yet upgrade the support matrix. Windows execution and release/distribution checks remain pending. See [testing.md](testing.md#native-linux-ci) for tool provisioning, telemetry isolation, and artifact retention.
+
 ### Experimental Read-Only File Opening
 
 Help uses a platform adapter for read-only file opening. Unix builds, including Termux and Linux/WSL, use `O_NONBLOCK` so opening a logo replaced with a FIFO does not wait for a writer. The CLI validates the actual opened handle before reading and omits non-regular, empty, or oversized objects. Valid symlinks to regular logo files remain supported. Non-Unix builds retain native `os.Open` semantics and use the same handle validation; this does not provide a Unix FIFO guarantee on Windows or a general filesystem I/O deadline.
