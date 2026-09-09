@@ -35,18 +35,44 @@ path_display() {
   fi
 }
 
+print_logo() {
+  local logo source=${BASH_SOURCE[0]} source_dir target line
+
+  if [[ -n ${DOTS:-} ]]; then
+    logo=${DOTS%/}/logo.txt
+  else
+    # Resolve only this executable, never scan the repository or invoke Git.
+    [[ $source == */* ]] || source=./$source
+    while [[ -L $source ]]; do
+      source_dir=${source%/*}
+      target=$(readlink -- "$source" 2>/dev/null) || return 0
+      case $target in
+      /*) source=$target ;;
+      *) source=$source_dir/$target ;;
+      esac
+    done
+    logo=${source%/*}/../logo.txt
+  fi
+
+  # A logo is optional. Reject directories, FIFOs, and unreadable files.
+  [[ -f $logo && -r $logo && -s $logo ]] || return 0
+  while IFS= read -r line || [[ -n $line ]]; do
+    printf '%s\n' "$line"
+  done < "$logo"
+  printf '\n'
+}
+
 usage() {
   local prog=${0##*/}
-  cat <<-eof
-
-  █▀▀▄  ▄▀▀▀▄ ▀▀█▀▀ ▄▀▀▀▄
-  █   █ █   █   █   ▀▄▄▄
-  █   █ █   █   █       █
-  █▄▄▀  ▀▄▄▄▀   █   ▀▄▄▄▀
-
-$prog - for your dotfilea
-  -h --help    display this help message
-eof
+  print_logo
+  printf '%s - for your dotfiles\n\n' "$prog"
+  printf '%s\n' \
+    "Usage: $prog [help | -h | --help]" \
+    "       $prog [-r | --raw] {-d | --dir}" \
+    '' \
+    '  help, -h, --help    Display this help message' \
+    '  -d, --dir          Print the configured repository directory ($DOTS)' \
+    '  -r, --raw          Do not abbreviate home paths (before --dir)'
 }
 
 main() {
@@ -59,13 +85,13 @@ main() {
       path_display "$DOTS"
       exit 0
       ;;
-    -h | --help)
+    help | -h | --help)
       usage
       exit 0
       ;;
     *)
-      err "unknown option: %s\n\n" "$1"
-      usage >&3
+      err "unknown command or option: $1"
+      usage >&2
       exit 1
       ;;
     esac
