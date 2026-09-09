@@ -100,6 +100,8 @@ set_theme 2>/dev/null
 shellmod "completions"
 shellmod "plugins"
 
+# export SSL_CERT_FILE="$PREFIX/etc/tls/cert.pem"
+
 so "$HOME/.cargo/env"
 so "$DOTSHHHH/secrets.sh"
 
