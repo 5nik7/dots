@@ -204,6 +204,11 @@ def benchmark(binary, root, env, hyperfine):
 
 
 def main():
+    if sys.flags.optimize:
+        raise RuntimeError(
+            "optimized Python is unsupported because it disables verification assertions; "
+            "rerun without -O/-OO and with PYTHONOPTIMIZE unset or 0."
+        )
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("build", "check", "bench", "cross", "docs"))
     mode = parser.parse_args().mode
@@ -219,6 +224,8 @@ def main():
         source = root / "repo" / "module with spaces"
         source_copy(source)
         env, child = environments(root, go)
+        if mode == "check":
+            run([sys.executable, "-B", MODULE / "tools" / "test_verify.py"], cwd=root, env=env)
         info = json.loads(run([go, "env", "-json", "GOHOSTOS", "GOHOSTARCH", "GOVERSION"], cwd=source, env=env, capture=True).stdout)
         if info["GOHOSTOS"] != "android" or info["GOHOSTARCH"] != "arm64":
             raise RuntimeError("This runner is verified only for native Termux android/arm64; other target execution remains deferred.")
@@ -249,7 +256,7 @@ def main():
             metadata["elf"] = elf
             print("ELF dependencies:", file=sys.stderr)
             print("\n".join(line for line in elf.splitlines() if "interpreter" in line or "NEEDED" in line) or "No interpreter/NEEDED entries", file=sys.stderr)
-            metadata["checks"] = "gofmt, vet, uncached Go tests, CLI processes, relocated identical rebuild, ELF inspection, Markdown links"
+            metadata["checks"] = "Python optimization regressions, gofmt, vet, uncached Go tests, CLI processes, relocated identical rebuild, ELF inspection, Markdown links"
             doc_checks()
         elif mode == "bench":
             metadata["hyperfine"] = run([hyperfine, "--version"], cwd=root, env=env, capture=True).stdout.strip()

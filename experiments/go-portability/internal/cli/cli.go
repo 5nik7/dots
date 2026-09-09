@@ -121,17 +121,26 @@ func loadLogo(repo string, executable func() (string, error)) string {
 		}
 		repo = filepath.Dir(filepath.Dir(exe))
 	}
-	path := filepath.Join(repo, "logo.txt")
+	return readLogo(filepath.Join(repo, "logo.txt"), platform.OpenReadOnly)
+}
+
+func readLogo(path string, open func(string) (*os.File, error)) string {
 	info, err := os.Stat(path)
 	const limit = 64 * 1024
 	if err != nil || !info.Mode().IsRegular() || info.Size() == 0 || info.Size() > limit {
 		return ""
 	}
-	file, err := os.Open(path)
+	file, err := open(path)
 	if err != nil {
 		return ""
 	}
 	defer file.Close()
+	// The pathname may have changed since the preliminary check. Only read
+	// after classifying the handle we actually opened.
+	info, err = file.Stat()
+	if err != nil || !info.Mode().IsRegular() || info.Size() == 0 || info.Size() > limit {
+		return ""
+	}
 	data, err := io.ReadAll(io.LimitReader(file, limit+1))
 	if err != nil || len(data) == 0 || len(data) > limit {
 		return ""

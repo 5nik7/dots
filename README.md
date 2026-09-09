@@ -12,7 +12,7 @@ There is not yet a supported remote installer or a production-ready `dots apply`
 
 **Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64. The live `dots` command and dotfiles are unchanged.
 
-From the repository root, using the installed Go 1.27.x toolchain and Python 3:
+From the repository root, using the installed Go 1.27.x toolchain and Python 3 without optimization (`PYTHONOPTIMIZE` unset or `0`; no `-O`/`-OO`). The verifier rejects optimized Python before invoking tools or creating build artifacts:
 
 ```bash
 DOTS_SPIKE_BIN="$(python3 experiments/go-portability/tools/verify.py build)"
@@ -24,7 +24,7 @@ DOTS="$PWD" "$DOTS_SPIKE_BIN" --help
 
 The build command prints the executable path on stdout and progress on stderr. It retains the binary, a public logo copy, and `evidence.json` in a unique directory under the temporary directory. Tool caches and build work are disposable; nothing is installed or added to `PATH`, and no dependencies are downloaded. Temporary artifacts may be removed by the system; rebuild when needed.
 
-Help loads the optional `logo.txt` from `$DOTS` or, when unset, beside the executable's parent `bin/` directory. Missing or unusable logos do not prevent help. Version and diagnostic output contain no logo. Diagnostics reports candidate paths and `not_probed` filesystem capabilities; it does not create files, load configuration contents, or apply changes.
+Help loads the optional `logo.txt` from `$DOTS` or, when unset, beside the executable's parent `bin/` directory. Missing or unusable logos are omitted, and valid file symlinks are supported. Version and diagnostic output contain no logo. Diagnostics reports candidate paths and `not_probed` filesystem capabilities; it does not create files, load configuration contents, or apply changes.
 
 Run focused checks or startup measurements with:
 

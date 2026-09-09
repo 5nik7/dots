@@ -73,6 +73,61 @@ Python-timed first-observed invocations were 8.574 ms for help and 6.468 ms for 
 
 `python3 experiments/go-portability/tools/verify.py cross` successfully built Linux/AMD64 and Windows/AMD64 executables and compiled all three test packages for each target with `go test -c`. None of those foreign artifacts was executed. WSL/Windows detection fixtures were executed on Termux and do not verify native runtime, paths, permissions, or filesystem behavior. No proot, emulator, package change, or additional toolchain was used.
 
+### Python Verifier Review Follow-up
+
+The completed review of `8980621c49c507fbd7aec0bc0cfe32ab052ea467` confirmed that Python optimization removes the harness assertions for CLI behavior, read-only snapshots, and identical rebuilds. This focused follow-up starts from that commit on `feat/phase-1-portability` with a clean working tree. Go remains provisional; the Go sources, executable behavior, live command, logo, and dotfiles are outside this fix.
+
+The verifier now explicitly rejects an optimized interpreter before argument parsing, tool lookup/invocation, or temporary work/artifact creation. The regression launches both `-O` and `PYTHONOPTIMIZE=1` across all five modes and verifier help, requiring the optimization-specific stderr error, exit status 1, empty stdout, and unchanged test-owned fixture roots. `check` includes this regression before Go invocation. The standalone entry point is `python3 -B experiments/go-portability/tools/test_verify.py`.
+
+Validated on 2026-09-09 with Python 3.14.6 (optimization level 0) and Go 1.27.1, natively on Termux 0.119.0-beta.3, Android/ARM64. The normal check started at `2026-09-09T22:19:07Z`; its build metadata timestamp is `2026-09-09T22:19:21Z`. The kernel, build flags, 4,069,044-byte executable, and SHA-256 match the original results above.
+
+| Command or check | Actual outcome |
+| --- | --- |
+| `python3 -B experiments/go-portability/tools/test_verify.py` against the original verifier | Failed as expected: both tests, all 12 cases; optimization was not rejected for the required reason |
+| Same regression after the fix | Passed: 2 tests, 12 cases; each optimized child returned 1 with the exact error, empty stdout, and unchanged fixture roots |
+| `python3 experiments/go-portability/tools/verify.py check` | Passed: Python regression, formatting, vet, all 12 top-level Go tests, 10 CLI requests, 7 optional-logo cases, fallback/reload, read-only snapshots, identical relocated rebuild, ELF inspection, and 68 relative Markdown links in 23 files |
+| `python3 experiments/go-portability/tools/verify.py docs` and `git diff --check` | Passed after the results update |
+| Diff against `8980621` for Go sources, live command, logo, shells, configurations, and submodule declarations | Empty |
+
+Sanitized verification evidence is retained outside the checkout at `/data/data/com.termux/files/usr/tmp/dots-verifier-fix-ffw8cxdu/`: before/after regression logs, the complete native-check log, build metadata, and validation results. `tested-source.json` records the base commit, branch, dirty working-tree status, and SHA-256 for every public input captured in `tested-source/`, including the modified verifier and new untracked regression test. All captured inputs were unchanged during the regression and native check. Only this plan's results were amended afterward; `final-source.json` and the final tracked diff record that documentation update and identify the complete uncommitted change. Final documentation/whitespace checks are recorded separately. The native binaries, logo, and original harness metadata are retained at `/data/data/com.termux/files/usr/tmp/dots-spike-artifact-763yvxl1/`. Temporary evidence may be removed by the system.
+
+The Python verification review finding is resolved. The original startup measurements, timestamp, source baseline, and cross-compilation results above remain historical evidence; neither benchmarks nor cross-compilation were rerun for this Python-only fix. Native desktop execution remained untested and Go remained provisional at the end of this Python-only follow-up. The separate logo Stat/Open race was deferred at that point; its subsequent fix is recorded below.
+
+### Logo Replacement Review Follow-up
+
+**Completed for the Termux experiment; native desktop validation remains open.** Continued from the Python verifier fix above with its uncommitted changes intact. Go remains provisional and the live command/dotfile setup is unchanged. The loader retains its early optional-file check, opens read-only through the platform adapter, and classifies the actual handle before reading. Unix builds use `O_NONBLOCK` to avoid waiting for a FIFO writer. Valid logo symlinks, formatting, the 64 KiB bound, and logo-free version/diagnostic output are preserved. Other platforms retain native read-only open semantics and gain the handle check; this does not establish native desktop support or a universal filesystem timeout.
+
+The new Unix `TestLogoReplacement` has four deterministic child cases: replacing a regular logo with a FIFO, replacing its symlink target with a FIFO, a FIFO with a writer, and an unchanged regular-file symlink. The parent runs the child with an empty `PATH`, test-owned roots, and a 10-second deadline. The passing child completed in approximately 0.01 seconds on this device; that duration is a test observation, not a startup benchmark.
+
+| Verification | Actual outcome on 2026-09-09 |
+| --- | --- |
+| `python3 experiments/go-portability/tools/verify.py check` | Passed: Python optimization regression, formatting, vet, all 13 top-level Go tests, CLI/optional-logo checks, read-only snapshots, identical relocated rebuild, ELF inspection, and 68 Markdown links in 23 files |
+| Focused regression against disposable copies with each fix component removed | Both failed as expected at the 10-second child deadline: blocking open failed on `fifo`; missing handle validation failed on `fifo-with-writer`. Only copied source was changed. The recorded command was `go test -count=1 -timeout=30s -run=^TestLogoReplacement$ -v ./internal/cli`, using the harness's isolated Go environment. |
+| `python3 experiments/go-portability/tools/verify.py cross` | Built Linux/AMD64 and Windows/AMD64 executables and compiled all three test packages for each. No foreign artifact was executed. The Unix replacement test is included in the Linux test binary, not the Windows build. |
+| `python3 experiments/go-portability/tools/verify.py bench` | Passed; both commands have 600 successful measured executions and retained raw samples |
+| Final `python3 experiments/go-portability/tools/verify.py docs` and `git diff --check` | Passed; live command, logo, shells, configurations, and submodule declarations remain unchanged |
+
+The environment remains Termux 0.119.0-beta.3 on Android/ARM64, Python 3.14.6, Go 1.27.1, and hyperfine 1.20.0, with the same kernel and app-private temporary filesystem as the original run. Native check metadata is timestamped `2026-09-09T22:34:23Z`; benchmark metadata is timestamped `2026-09-09T22:36:03Z`. Build flags and runtime dependencies are unchanged: Android PIE, `CGO_ENABLED=0`, `-trimpath -buildvcs=false -mod=readonly`, `/system/bin/linker64`, and no ELF `DT_NEEDED` entries. The new executable is 4,070,316 bytes with SHA-256 `af73814fe6777aa2436ab5dc4c6dce18a2a9d53a9f8fa693f9f1686aa2c8d693`; native artifacts from check, cross, and bench are identical.
+
+The updated measurements use the original method: prebuilt executable, public logo, empty `PATH`, `hyperfine --shell=none`, three alternating-order batches with 20 warmups and 200 samples per command per batch, and stdout discarded. Tests and cross-compilation completed before timing began.
+
+| Command | Warm samples | Median | p95 | Minimum | Maximum |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `--help` | 600 | 8.314 ms | 10.188 ms | 7.193 ms | 19.767 ms |
+| `--version` | 600 | 8.261 ms | 10.127 ms | 7.251 ms | 15.380 ms |
+
+First-observed Python timings were 8.097 ms for help and 7.240 ms for version; neither is a controlled cold-cache measurement. Relative to the historical run above, observed medians are 0.510 ms higher for help and 0.241 ms higher for version, while p95 values are lower. Help now performs an additional handle metadata check, but these separate runs do not isolate that cost: background activity, power state, and thermals were uncontrolled, and hyperfine reported outliers. No speedup, causal regression estimate, or hard performance budget is claimed. The historical measurements and their provenance above are retained unchanged.
+
+Sanitized logs, raw benchmark evidence, expected-failure mutation logs, and exact tested source are retained outside the checkout at `/data/data/com.termux/files/usr/tmp/dots-logo-fix-mhhzhd3q/`. `starting-source.json` identifies the preceding Python fix; `tested-source.json`, `tested-source/`, and `tested-tracked.patch` identify commit `8980621c49c507fbd7aec0bc0cfe32ab052ea467` plus all uncommitted Python/logo changes and public documentation. All captured inputs were unchanged during verification. Only this plan's results were amended afterward, as recorded in `final-source.json` and the final source snapshot/diff. `run_verification.py` records the one-off orchestration and isolated mutation method; it is retained evidence, not a new repository runner. Artifacts are at `/data/data/com.termux/files/usr/tmp/dots-spike-artifact-aebcll2s/` (native check), `dots-spike-artifact-ea1az1mq/` (cross-compilation), and `dots-spike-artifact-atmy2suv/` (benchmark) under the same temporary directory. Temporary evidence may be removed by the system.
+
+Both Phase 1 review findings are now resolved for the verified Termux experiment. Native Linux/Windows execution, desktop startup, controlled cold-cache measurements, and release/distribution checks remain open. No package changes, bootstrap, real-home installation, transaction engine, or Phase 2 work was introduced.
+
+### Reviewable Checkpoint
+
+On 2026-09-09 the complete logo-fix evidence directory and its three referenced artifact directories were copied into the private, durable archive `/data/data/com.termux/files/home/dots-review-evidence-20260909-8b5f6e31/`, outside both the checkout and temporary storage. All 117 copied files were verified by SHA-256; the original evidence remains intact. Archive directories are owner-only (`0700`), with owner-only files (`0600`, or `0700` for executables). `preservation.json` maps original locations to archived content, while `logo-fix/` preserves the recorded manifests and logs verbatim. Native-check, cross-compilation, and benchmark binaries are retained under `artifacts/`.
+
+The implementation, verifier, and tests exactly match `tested-source.json`. The plan differs because it records the completed results and this preservation checkpoint. A newer owner edit to `logo.txt` is unrelated to these fixes and is excluded from the checkpoint; the logo retained in the commit matches the tested input. Existing native verification, cross-compilation, mutation checks, and startup measurements therefore apply to the checkpoint without a behavioral rerun. Documentation links and staged whitespace are checked again for this added record. No evidence snapshots, logs, or binaries are added to Git.
+
 ## Remaining Decisions and Next Milestone
 
 Review these results before adopting Go or promoting the experimental module into the permanent core layout. Complete native Linux/Windows execution and desktop startup evidence, decide the release/distribution strategy, and establish acceptable performance budgets with the owner. Cold-cache evidence remains separately incomplete. Then scope Phase 2's command registry, extension trust, longest-prefix resolution, shared metadata, and completion design. Manifest format, migrated modules, transaction behavior, bootstrap, real-home installation, and repository-size changes remain deferred.

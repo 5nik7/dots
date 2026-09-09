@@ -12,6 +12,12 @@ The Android/ARM64 build uses `CGO_ENABLED=0`, the default Android PIE mode, `-tr
 
 Linux/AMD64 and Windows/AMD64 executables and test binaries were cross-compiled using the installed Termux toolchain. They were not executed. Windows/WSL detector fixtures ran on Termux, not on those systems. Native desktop and WSL execution, Windows filesystem behavior, Android shared storage, other Android architectures, release distribution, and installation remain unverified. See the [focused results](../plans/phase-1-portability.md).
 
+### Experimental Read-Only File Opening
+
+Help uses a platform adapter for read-only file opening. Unix builds, including Termux and Linux/WSL, use `O_NONBLOCK` so opening a logo replaced with a FIFO does not wait for a writer. The CLI validates the actual opened handle before reading and omits non-regular, empty, or oversized objects. Valid symlinks to regular logo files remain supported. Non-Unix builds retain native `os.Open` semantics and use the same handle validation; this does not provide a Unix FIFO guarantee on Windows or a general filesystem I/O deadline.
+
+The deterministic replacement tests execute on native Termux only. Linux/Windows compilation is checked separately; no new native desktop or shared-storage support claim is made.
+
 ### Experimental Detector and Paths
 
 The collector reads only `HOME`, `PREFIX`, `TERMUX_VERSION`, `DOTS`, the four XDG home variables, `TMPDIR`, `WSL_INTEROP`, and `WSL_DISTRO_NAME`. It also observes Go runtime/executable identity; on Android/Linux it checks the prefix's `bin` directory and Android linker metadata; on Linux it reads at most 4096 bytes of `/proc/sys/kernel/osrelease`. It does not read dotfile contents, enumerate the full environment, query packages, or invoke a shell. Environment evidence reports marker presence rather than arbitrary values.
