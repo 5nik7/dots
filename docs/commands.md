@@ -1,8 +1,34 @@
 # Command Model
 
-**Status: Proposed**
+**Status: Experimental interface implemented below; production command model proposed**
 
 This is the design source for the future CLI until a validated command registry becomes authoritative. The current `bin/dots` prototype does not implement this command set.
+
+## Implemented Bash Prototype
+
+`bin/dots` supports no arguments, `help`, `-h`, and `--help` for help. `-d`/`--dir` prints `$DOTS`; preceding it with `-r`/`--raw` disables home abbreviation. Unknown input prints an error and help to stderr and exits 1. It has no version or diagnostic command. This behavior remains separate from the experiment.
+
+## Implemented Experimental Interface
+
+The isolated `dots-spike` executable is built explicitly using the [README instructions](../README.md#try-the-termux-experiment). It implements only:
+
+| Invocation | Behavior |
+| --- | --- |
+| No arguments, `help`, `-h`, `--help` | Human help with the optional logo, on stdout |
+| `--version` | One line: `dots-spike 0.0.0-spike <Go version> <GOOS>/<GOARCH>`; no logo or repository inspection |
+| `doctor` | Read-only platform evidence, quoted candidate paths, warnings, and unprobed capabilities |
+| `doctor --json` | A single JSON report without a logo, ANSI styling, or diagnostic text on stdout |
+| `doctor -h`, `doctor --help` | Contextual help with the optional logo; does not run diagnostics |
+
+Extra arguments and unimplemented commands are rejected, including `version`, `completion`, `apply`, and the prototype's directory flags. Exit codes are 0 for successful output (including diagnostic reports with warnings or unknown platforms), 1 for output failure, and 2 for unsupported arguments. Usage errors go to stderr without echoing potentially sensitive argument values. This mapping does not settle future apply/undo statuses.
+
+Help follows the prototype's logo lookup: if `$DOTS` is nonempty, read its `logo.txt`; otherwise resolve executable symlinks and look in the executable directory's parent. A configured but missing logo does not fall back to another repository. The harness provides an artifact `bin/dots-spike` and parent `logo.txt`. Empty, unreadable, missing, broken-link, or non-regular logos are silently omitted. The experiment also omits logos larger than 64 KiB to bound help work. Content is preserved, its final line terminated if necessary, and a separating newline added. Only successful help requests read the logo. No recursive repository search or Git invocation occurs.
+
+The small table in `internal/cli/cli.go` is the source for accepted built-in names and help descriptions; tests check metadata completeness, name collisions, and advertised entries. Full discovery, generated Markdown, and shell completion remain Phase 2 proposals. The experiment provides no completion command or installation, and tests explicitly reject that route. No extension metadata carrier has been selected.
+
+### Experimental Diagnostic JSON Schema 1
+
+The fixed top-level keys are `schema_version`, `platform`, `os`, `architecture`, `go_version`, `evidence`, `paths`, `capabilities`, and `warnings`. `evidence` and `warnings` are arrays; `paths` and `capabilities` are objects, never null. Available path candidates are included; unavailable paths are omitted with warnings where applicable. `capabilities` contains `file_symlink`, `directory_symlink`, and `copy`, all set to `not_probed`. Detection and path limitations are defined in [platforms.md](platforms.md). This schema describes the experiment, not a resolved specification or transaction state.
 
 ## Interface Shape
 
@@ -44,7 +70,7 @@ Built-ins cannot be shadowed silently. Search precedence and trust must be expli
 | `dots apply` | Apply an approved plan as a transaction | Transaction foundation |
 | `dots undo` | Validate and reverse a recorded transaction | Transaction foundation |
 | `dots history` | List and inspect transactions and backups | Transaction foundation |
-| `dots doctor` | Report platform, paths, capabilities, requirements, and recovery issues | Resolver |
+| `dots doctor` | Report platform, paths, capabilities, requirements, and recovery issues | Limited diagnostics in Phase 1 experiment; full route at resolver |
 | `dots files` | Inspect, edit, diff, and adopt managed files | Termux MVP |
 | `dots links` | Inspect, check, and repair managed links | Termux MVP |
 | `dots scripts` | Discover, run, edit, and optionally expose repository scripts | Later MVP |
@@ -218,4 +244,3 @@ Exit statuses need a final decision before public automation examples are publis
 - Unknown command or missing executable.
 
 Record the final stable mapping in this document and in machine-readable command documentation.
-

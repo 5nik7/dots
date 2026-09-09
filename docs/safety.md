@@ -4,6 +4,12 @@
 
 Safety is a core product feature of `dots`, not a wrapper around destructive file operations. This document is authoritative for planning, mutation, backup, rollback, undo, package, hook, repository, and secret behavior.
 
+## Implemented Experiment Boundary
+
+The [Phase 1 experiment](../plans/phase-1-portability.md) exposes no managed filesystem mutation command. Help may read the optional public logo. Diagnostics reads allowlisted path/environment inputs and limited runtime metadata, without opening dotfile contents or creating capability probes. Version output does not inspect the repository. Unknown arguments are not echoed into diagnostics.
+
+Symlink/copy operations exist only in disposable tests, using directory-rooted filesystem APIs and exclusive creation to exercise refusal on existing targets. Build caches, fixture setup, and retained development artifacts belong to harness-owned temporary roots. These tests do not implement backup, apply, rollback, undo, or a journal and provide no exception to the managed-mutation transaction rules below. Read-only CLI process checks compare controlled fixture roots before and after execution; they are not a system-wide syscall audit.
+
 ## Guarantees
 
 The intended guarantees are:
@@ -206,4 +212,3 @@ The planner needs explicit allowed destination roots. A destination outside thos
 Path validation occurs after variable expansion and normalization. Reject traversal, empty target, filesystem root, unresolved variable, unexpected UNC/device path, and other platform-specific escapes before mutation.
 
 No recursive destructive action may use an unresolved environment variable, broad home directory, repository root, or filesystem root as its target.
-

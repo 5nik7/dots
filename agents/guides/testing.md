@@ -47,5 +47,6 @@ Never let a test:
 
 ## Documentation
 
-The test commands in `docs/testing.md` must exist before they are presented as runnable. Until runners are implemented, label proposed names clearly. Update the relevant task guide when a new mandatory suite or verification step is introduced.
+For changes to `experiments/go-portability/`, use `python3 experiments/go-portability/tools/verify.py check` from the repository root on native Termux Android/ARM64. This runner provides the required temporary Go configuration, caches, and fixture roots; avoid running Go build/test commands directly with inherited machine settings. Run `bench` when startup behavior changes, `cross` when checking compilation boundaries, and `docs` for relative Markdown links. These are modes of the same script, not new dots commands. See `docs/testing.md` for prerequisites, evidence retention, and the distinction between native execution and cross-compilation.
 
+The test commands in `docs/testing.md` must exist before they are presented as runnable. Until runners are implemented, label proposed names clearly. Update the relevant task guide when a new mandatory suite or verification step is introduced.

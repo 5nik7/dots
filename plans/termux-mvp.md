@@ -10,7 +10,7 @@ On the current Termux installation, use the new core to manage selected shared a
 
 ## Dependencies
 
-- Core language and Termux artifact validated by the Phase 1 spike.
+- Core language and Termux artifact validated by the [Phase 1 experiment](phase-1-portability.md). Native experimental evidence exists; final Go adoption and distribution remain undecided.
 - Command center sufficient for implemented lifecycle routes.
 - Manifest/profile resolver.
 - Filesystem observer and planner.
@@ -152,4 +152,3 @@ Reloading application settings can affect active sessions. Treat reload as an ex
 - Test runners and evidence go to `../docs/testing.md`.
 - Implemented user workflow goes to `../README.md`.
 - Completed roadmap items are checked in `roadmap.md` in the same change.
-

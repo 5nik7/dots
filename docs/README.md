@@ -1,6 +1,6 @@
 # Dots Documentation
 
-The `dots` CLI is currently in the design and incremental-migration phase. These documents define the working direction without claiming that proposed commands already exist.
+The `dots` CLI is in the design and incremental-migration phase, with an isolated [Termux portability experiment](../plans/phase-1-portability.md) now implemented. These documents distinguish experimental evidence from proposed production behavior.
 
 ## Start Here
 
@@ -36,4 +36,3 @@ Agents and contributors must begin with [`../AGENTS.md`](../AGENTS.md), then rea
 - **Deprecated** means the behavior remains temporarily for compatibility.
 
 When implementation changes a documented behavior, update the authoritative document in the same change. When a proposed design becomes real, replace its status label and remove stale caveats.
-

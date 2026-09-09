@@ -1,6 +1,6 @@
 # Dots Roadmap
 
-**Status: Proposed**
+**Status: Active incremental implementation; later phases proposed**
 
 This roadmap sequences the future `dots` CLI around its riskiest foundations: Termux portability, deterministic specification resolution, and recoverable filesystem mutation.
 
@@ -20,8 +20,8 @@ Goal: establish sources of truth before implementation changes the live reposito
 - [x] Add working principles, architecture, command, specification, safety, platform, and testing docs.
 - [x] Record a baseline inventory of the current public repository.
 - [x] Define the first Termux MVP plan.
-- [ ] Review working decisions with the project owner.
-- [ ] Create decision records for accepted foundational choices.
+- [~] Review working decisions with the project owner. The isolated Go experiment is approved; other foundational choices remain open.
+- [~] Create decision records for accepted foundational choices. [0001](../docs/decisions/0001-go-portability-experiment.md) authorizes evaluation only.
 - [ ] Classify current files by module, destination, platform, ownership, size, generated status, and sensitivity.
 - [ ] Identify current commands/configurations that require compatibility during migration.
 
@@ -34,15 +34,17 @@ Exit criteria:
 
 Goal: prove the executable model before building stateful behavior.
 
-- [ ] Create a minimal core project without altering current dotfile installation.
-- [ ] Implement version and basic help fast paths.
-- [ ] Implement normalized platform diagnostic interfaces.
-- [ ] Build and run a candidate Go core on the current Termux architecture.
-- [ ] Build and run candidate Linux and Windows artifacts.
-- [ ] Measure cold and warm startup baselines.
-- [ ] Validate Termux filesystem and link primitives in a disposable target.
+The owner authorized the limited [Termux portability experiment](phase-1-portability.md) before the unrelated Phase 0 manifest, module-selection, and repository-size decisions. This does not waive those decisions for subsequent phases or settle the permanent core language/layout.
+
+- [x] Create a minimal core project without altering current dotfile installation.
+- [x] Implement version and basic help fast paths.
+- [~] Implement normalized platform diagnostic interfaces. Termux evidence/candidates work; native Windows paths and live capability probing remain deferred.
+- [x] Build and run a candidate Go core on the current Termux architecture.
+- [~] Build and run candidate Linux and Windows artifacts. AMD64 executables/tests cross-compile; native execution is pending.
+- [~] Measure cold and warm startup baselines. The experiment records first-observed and warm runs; controlled cold-cache and desktop baselines remain pending.
+- [x] Validate Termux filesystem and link primitives in a disposable target.
 - [ ] Record the implementation-language decision.
-- [ ] Establish initial unit test and formatting commands.
+- [x] Establish initial unit test and formatting commands.
 
 Exit criteria:
 
@@ -202,4 +204,3 @@ Goal: expand capability without burdening the core bootstrap.
 - Whether a higher-level `dots sync` workflow should compose repository, source, package, and apply stages.
 
 Resolve deferred decisions only when the next phase requires them.
-

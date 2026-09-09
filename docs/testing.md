@@ -1,10 +1,37 @@
 # Testing Strategy
 
-**Status: Proposed; test runner names are not yet implemented**
+**Status: Focused Termux experiment runner implemented; broader strategy proposed**
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 
-## Isolation Model
+## Implemented Portability Runner
+
+From the repository root on native Termux Android/ARM64:
+
+```bash
+python3 experiments/go-portability/tools/verify.py build
+python3 experiments/go-portability/tools/verify.py check
+python3 experiments/go-portability/tools/verify.py bench
+python3 experiments/go-portability/tools/verify.py cross
+python3 experiments/go-portability/tools/verify.py docs
+git diff --check
+```
+
+`build` uses installed Go 1.27.x and Python 3. `check` additionally needs `gofmt` and `readelf`; `bench` needs `hyperfine`. `cross` uses only the same Go/Python tools. Missing tools are named explicitly and never installed. The harness currently refuses non-Android/ARM64 Go hosts; native runners for other platforms remain deferred. `docs` is a read-only relative Markdown link check and does not require Go.
+
+Each non-documentation invocation owns a fresh temporary work directory, copies only the experiment's Go sources and the public logo, and supplies isolated home/config/data/state/cache/temp/bin/repository roots. Go configuration is ignored with `GOENV=off` and `GOWORK=off`; automatic toolchain/module downloads are disabled with `GOTOOLCHAIN=local`, `GOPROXY=off`, and `GOSUMDB=off`. Go caches, GOPATH, and compiler scratch files are redirected into the owned root. Go disables telemetry on the Android host. Tests do not source shell configuration or call package managers. No `go install`, `go env -w`, dependency fetch, or submodule operation is used.
+
+At completion the harness retains only artifacts in a new temporary `dots-spike-artifact-*` directory: `bin/`, the public `logo.txt` copy, and `evidence.json`. It prints the native executable path on stdout and progress/evidence location on stderr. Build work, caches, and fixtures are automatically cleaned through their owning temporary-directory context. The module's `.gitignore` also excludes accidental local binaries/test executables and Python bytecode. The harness does not create bytecode. Do not add retained temporary evidence or binaries to Git; record reviewed summaries in the focused plan.
+
+`check` runs `gofmt -l`, `go vet ./...`, and uncached `go test -count=1 -v ./...` in the copied module. Tests cover argument/stream contracts, help/version fast paths, metadata collisions, JSON schema, platform detection/false positives, path defaults, and warning behavior. Go filesystem tests use `testing.T.TempDir` and `os.Root` to test file/directory links, explicit exclusive copies, spaces, Unicode, leading dashes, existing objects, broken links, missing parents, and traversal/symlink escape refusal. Escape sentinels are also test-owned. These primitives are not production apply or rollback operations.
+
+The harness executes the prebuilt CLI with an empty `PATH` and controlled environment, tests optional logo failures (including a FIFO), checks dynamic logo reload and executable-symlink fallback, and compares fixture snapshots before and after read-only requests. Snapshots cover contents, object types, sizes, and modification times, not access times or system-wide syscall tracing. It also compares a rebuild from a relocated source path byte-for-byte and records ELF interpreter/library metadata.
+
+`bench` builds once, then runs the compiled executable directly with the public logo and an empty `PATH`. It records a Python-timed first observed invocation for each command, followed by three hyperfine batches per command, 20 warmups and 200 measured executions per batch, with alternating command order, no shell, and stdout discarded. The 600 samples per command yield pooled median, nearest-rank p95, minimum, and maximum. Raw batches and build/environment metadata are retained in `evidence.json`. First-observed timings include the Python parent's spawn/wait overhead and have uncontrolled filesystem cache state. Warm hyperfine timings measure complete process execution. Neither establishes true cold-cache startup or a shell-startup budget; no cache flush, reboot, or power/thermal control is performed.
+
+`cross` builds Linux/AMD64 and Windows/AMD64 executables and compiles each test package with `go test -c`; it does not run foreign artifacts. Fixture success on Termux is not native Windows/WSL evidence. No race-detector, desktop runtime, transaction, or bootstrap suite is claimed. Results and limitations are recorded in the [focused plan](../plans/phase-1-portability.md).
+
+## Broader Proposed Isolation Model
 
 Every test that can mutate state receives explicit test-owned roots:
 
@@ -143,4 +170,3 @@ For manual checks that CI cannot reproduce, record:
 - Result and observed limitation.
 
 Do not upgrade a support-matrix status based on an undocumented one-off success.
-

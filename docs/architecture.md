@@ -1,8 +1,16 @@
 # Architecture
 
-**Status: Proposed**
+**Status: Proposed architecture; isolated Termux portability experiment implemented**
 
 This document defines the working architecture for the future `dots` CLI. It separates durable boundaries from implementation choices that still require validation.
+
+## Implemented Experimental Boundary
+
+`experiments/go-portability/` is an independent Go module containing a `cmd/dots-spike` entry point, private CLI and platform packages, test-only filesystem primitives, and a Python verification harness. It adds no root Go module and does not replace `bin/dots` or move live sources. The CLI owns only help, version, and read-only diagnostics; platform/runtime/path collection stays in the platform package. There is no resolver, extension dispatcher, state store, or mutation API.
+
+The harness copies only experimental Go sources and the public `logo.txt` to a temporary build repository, isolates Go settings and caches, and retains reviewable binaries/evidence in a separate temporary artifact directory. Help reads a logo file at runtime rather than embedding another source copy. The executable uses only the Go standard library and invokes no subprocesses. Python, Go tools, and benchmark/inspection tools are development dependencies, not executable runtime dependencies.
+
+The [experiment plan](../plans/phase-1-portability.md) and [evaluation decision](decisions/0001-go-portability-experiment.md) record scope and evidence. The boundaries below remain the proposed production architecture; successful primitive tests do not implement transactions or managed-file safety.
 
 ## System Context
 
@@ -94,7 +102,7 @@ Extension discovery and metadata are described in `commands.md`. Extensions may 
 
 ## Working Implementation Direction
 
-A compiled Go core is the current recommendation because it offers one portable implementation, quick startup, robust filesystem APIs, structured data support, and distributable binaries. This choice remains provisional until the first Termux spike proves:
+A compiled Go core remains the working recommendation. The isolated Termux experiment now supplies startup and filesystem evidence; adoption still requires owner review and distribution/desktop validation. Evaluate the direction against these criteria:
 
 - A supported Android/Termux artifact can be built and distributed reliably.
 - Startup performance is acceptable on the target device.
@@ -184,4 +192,3 @@ A future convenience workflow may compose them, but each stage must remain visib
 The repository and its enabled extensions are executable trust inputs. Public bootstrap should establish the core and public repository without implicitly expanding trust to private submodules or arbitrary commands found anywhere on `PATH`.
 
 Extension search locations, precedence, and opt-in rules must be documented before external discovery is enabled. Secrets and credentials are never ordinary diagnostic fields.
-

@@ -1,8 +1,26 @@
 # Platform Model
 
-**Status: Proposed; no future platform support is yet claimed as implemented**
+**Status: Experimental Termux core verified; broader platform model proposed**
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
+
+## Implemented Phase 1 Observations
+
+The separate `dots-spike` executable has been built and run natively with Go 1.27.1 on Termux 0.119.0-beta.3, Android API 35, ARM64, kernel `5.4.274-qgki-30957850-abG996USQSJHZB1`. Test-owned directories under the Termux temporary directory report f2fs. Successful file/directory symlinks and explicit regular-file copies apply only to these fixtures, not Android shared storage or every possible destination.
+
+The Android/ARM64 build uses `CGO_ENABLED=0`, the default Android PIE mode, `-trimpath`, `-buildvcs=false`, and no third-party modules. ELF inspection reports `/system/bin/linker64` as interpreter and no `DT_NEEDED` shared-library entries. Thus the executable still requires the Android runtime/loader; it does not require an installed Go runtime, Python, shell helpers, or additional declared shared libraries. It starts with an empty `PATH`. Rebuilding the same source from another directory with the same toolchain produced identical bytes; this is not a multi-toolchain or release reproducibility claim.
+
+Linux/AMD64 and Windows/AMD64 executables and test binaries were cross-compiled using the installed Termux toolchain. They were not executed. Windows/WSL detector fixtures ran on Termux, not on those systems. Native desktop and WSL execution, Windows filesystem behavior, Android shared storage, other Android architectures, release distribution, and installation remain unverified. See the [focused results](../plans/phase-1-portability.md).
+
+### Experimental Detector and Paths
+
+The collector reads only `HOME`, `PREFIX`, `TERMUX_VERSION`, `DOTS`, the four XDG home variables, `TMPDIR`, `WSL_INTEROP`, and `WSL_DISTRO_NAME`. It also observes Go runtime/executable identity; on Android/Linux it checks the prefix's `bin` directory and Android linker metadata; on Linux it reads at most 4096 bytes of `/proc/sys/kernel/osrelease`. It does not read dotfile contents, enumerate the full environment, query packages, or invoke a shell. Environment evidence reports marker presence rather than arbitrary values.
+
+Native Windows runtime identity takes precedence. Termux classification requires Android evidence (the Android Go runtime or an Android linker), a nonempty Termux version marker, and an absolute prefix ending in `usr` with an existing `bin` directory. Android without sufficient Termux evidence reports `unknown`. A conventional Linux runtime checks WSL environment or case-insensitive Microsoft kernel markers before reporting `linux`. These markers are heuristic observations, not authentication; manually forged environments can mislead classification. There is no public override flag in the spike; unit tests inject inputs directly.
+
+For Termux/Linux/WSL, diagnostics reports the Unix path candidates in the table below. Relative environment paths are rejected with a warning and use a valid default candidate where available. Missing/invalid `HOME` does not trigger account-database lookup or invent home-relative candidates. The repository candidate uses `$DOTS` or `<home>/dots`; `temp` uses an absolute `$TMPDIR`, otherwise `<prefix>/tmp` on Termux or `/tmp` on Linux/WSL. These are candidates, not a claim that directories exist, are owned, or are writable. `executable` is the observed binary path; it is not an installation recommendation.
+
+Windows and unknown platforms report runtime identity, executable path when available, and a warning that path resolution is unimplemented. Native Windows known-folder resolution remains proposed. No platform has a live capability probe in `doctor`: `file_symlink`, `directory_symlink`, and `copy` always report `not_probed`.
 
 ## Terminology
 
@@ -63,8 +81,8 @@ Capability checks may depend on destination filesystem and volume.
 
 | Capability | Termux | Linux | WSL filesystem | Native Windows |
 | --- | --- | --- | --- | --- |
-| File symbolic link | Validate in spike | Expected, verify errors | Expected inside distribution | Capability-test permissions/policy |
-| Directory symbolic link | Validate in spike | Expected, verify errors | Expected inside distribution | Capability-test permissions/policy |
+| File symbolic link | Verified in disposable f2fs fixtures only | Expected, verify errors | Expected inside distribution | Capability-test permissions/policy |
+| Directory symbolic link | Verified in disposable f2fs fixtures only | Expected, verify errors | Expected inside distribution | Capability-test permissions/policy |
 | Hardlink | Later capability | Same-filesystem only | Same-filesystem only | Same-volume file only |
 | Junction | Not applicable | Not applicable | Not Linux-native | Directory option |
 | Cross Windows/WSL link | Block by default | Not applicable | Block by default | Block by default |
@@ -121,8 +139,8 @@ Update this matrix only with verified results.
 
 | Subsystem | Termux | Linux | WSL | Windows |
 | --- | --- | --- | --- | --- |
-| Core starts | Planned spike | Planned | Planned | Planned |
-| Platform diagnostics | Planned | Planned | Planned | Planned |
+| Core starts | Experimental: native Android/ARM64 | AMD64 compiled only; not run | Not run | AMD64 compiled only; not run |
+| Platform diagnostics | Experimental: native evidence and candidate paths | Fixture-tested only | Detector fixtures only | Detector fixtures only; paths deferred |
 | Spec resolution | Planned | Planned | Planned | Planned |
 | Read-only plan | Planned MVP | Planned | Planned | Planned |
 | Link/copy apply | Planned MVP | Planned | Planned | Planned |
@@ -133,4 +151,3 @@ Update this matrix only with verified results.
 | Hosted CI | To decide | Planned | To decide | Planned |
 
 `Planned` is not a support claim. Replace it with explicit experimental or supported labels only after acceptance criteria and tests are documented.
-
