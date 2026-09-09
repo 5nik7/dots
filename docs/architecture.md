@@ -1,6 +1,6 @@
 # Architecture
 
-**Status: Proposed architecture; isolated Termux portability experiment implemented**
+**Status: Proposed architecture; isolated portability experiment verified on Termux and Linux CI**
 
 This document defines the working architecture for the future `dots` CLI. It separates durable boundaries from implementation choices that still require validation.
 
@@ -10,7 +10,7 @@ This document defines the working architecture for the future `dots` CLI. It sep
 
 The harness copies only experimental Go sources and the public `logo.txt` to a temporary build repository, isolates Go settings and caches, and retains reviewable binaries/evidence in a separate temporary artifact directory. Help reads a logo file at runtime rather than embedding another source copy. The executable uses only the Go standard library and invokes no subprocesses. Python, Go tools, and benchmark/inspection tools are development dependencies, not executable runtime dependencies.
 
-The branch-specific Linux workflow provisions CI development tools and delegates check/benchmark execution to `tools/ci_verify.py`. That collector owns sanitized source, runtime, and result artifacts outside the checkout; the shared verifier owns offline Go settings, telemetry isolation, fixture roots, and host-specific expectations. Native Linux support claims require actual CI results.
+The branch-specific Linux workflow provisions CI development tools and delegates check/benchmark execution to `tools/ci_verify.py`. That collector owns sanitized source, runtime, and result artifacts outside the checkout; the shared verifier owns offline Go settings, telemetry isolation, fixture roots, and host-specific expectations. The recorded native Linux CI run passed; claims remain limited to its experimental commands and disposable filesystem fixtures.
 
 The [experiment plan](../plans/phase-1-portability.md) and [evaluation decision](decisions/0001-go-portability-experiment.md) record scope and evidence. The boundaries below remain the proposed production architecture; successful primitive tests do not implement transactions or managed-file safety.
 
@@ -104,7 +104,7 @@ Extension discovery and metadata are described in `commands.md`. Extensions may 
 
 ## Working Implementation Direction
 
-A compiled Go core remains the working recommendation. The isolated Termux experiment now supplies startup and filesystem evidence; adoption still requires owner review and distribution/desktop validation. Evaluate the direction against these criteria:
+A compiled Go core remains the working recommendation. The isolated experiment supplies native Termux and Linux CI startup/filesystem evidence; adoption still requires owner review, Windows execution, and distribution validation. Linux CI timings are not a representative desktop-hardware or cold-cache baseline. Evaluate the direction against these criteria:
 
 - A supported Android/Termux artifact can be built and distributed reliably.
 - Startup performance is acceptable on the target device.

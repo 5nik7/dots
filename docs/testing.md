@@ -1,12 +1,12 @@
 # Testing Strategy
 
-**Status: Focused portability runner implemented; native Linux CI validation pending; broader strategy proposed**
+**Status: Focused runner verified on native Termux and Linux CI; broader strategy proposed**
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 
 ## Implemented Portability Runner
 
-From the repository root on native Termux Android/ARM64 or Linux/AMD64 (Linux execution evidence is pending the first CI run):
+From the repository root on native Termux Android/ARM64 or Linux/AMD64:
 
 ```bash
 python3 experiments/go-portability/tools/verify.py build
@@ -51,7 +51,7 @@ The [Phase 1 workflow](../.github/workflows/phase-1-linux.yml) runs on pushes to
 
 An always-run upload step retains `phase-1-linux-<commit>-<attempt>` for 30 days: sanitized check/benchmark logs, `tested-source.json` and public source snapshots, native binaries and `evidence.json`, `raw-timings.json`, hashes, and result summaries. Logs from failed verifier processes are included when available; provisioning/collector failures remain visible in the workflow job log. Downloaded artifact executables may need their execute bit restored because GitHub artifact storage does not preserve file permissions. These are review artifacts, not release packages.
 
-Startup results are **Linux CI measurements**, using the existing warm/first-observed method. Virtualized runner CPU allocation, co-tenancy, frequency, and cache state are not controlled; this does not establish controlled cold-cache or representative desktop-hardware performance. Infrastructure availability alone is not a passing run: actual run links and outcomes belong in the [Phase 1 results](../plans/phase-1-portability.md). Windows execution and distribution checks remain pending.
+Startup results are **Linux CI measurements**, using the existing warm/first-observed method. Virtualized runner CPU allocation, co-tenancy, frequency, and cache state are not controlled; this does not establish controlled cold-cache or representative desktop-hardware performance. Infrastructure availability alone is not a passing run: actual run links and outcomes belong in the [Phase 1 results](../plans/phase-1-portability.md). The first [native Linux run](https://github.com/5nik7/dots/actions/runs/34416309614) passed check, bench, source/binary identity checks, and evidence upload on 2026-09-09. Its [artifact](https://github.com/5nik7/dots/actions/runs/34416309614/artifacts/10129219910) was downloaded and its source/file hashes and timing summaries verified against the committed inputs and raw samples. Windows execution and distribution checks remain pending.
 
 ## Broader Proposed Isolation Model
 

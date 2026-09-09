@@ -1,6 +1,6 @@
 # Phase 1 Termux Portability Experiment
 
-**Status: Completed for the authorized Termux experiment; broader Phase 1 and Go adoption remain open**
+**Status: Authorized Termux experiment and bounded native Linux CI validation completed; broader Phase 1 and Go adoption remain open**
 
 ## Scope and Reconciliation
 
@@ -12,7 +12,7 @@ This limited prerequisite may proceed while Phase 0's manifest, module, and repo
 
 ## Boundaries
 
-No package installation, proot, bootstrap, real-home installation, transaction engine, shell changes, directory migration, secret reads, private submodule initialization, commits, or pushes. No production mutation API is introduced. Go adoption, distribution, extension protocol, manifests, and permanent core layout remain deferred.
+The original experiment authorized no package installation, proot, bootstrap, real-home installation, transaction engine, shell changes, directory migration, secret reads, private submodule initialization, commits, or pushes. Subsequent checkpoint and Linux tasks explicitly authorized scoped feature-branch commits/pushes; the Linux task additionally allowed development prerequisites in CI only. The other boundaries remain in force. No production mutation API is introduced. Go adoption, distribution, extension protocol, manifests, and permanent core layout remain deferred.
 
 ## Work and Acceptance
 
@@ -130,12 +130,54 @@ The implementation, verifier, and tests exactly match `tested-source.json`. The 
 
 ### Native Linux Validation
 
-**In progress; infrastructure is not execution evidence.** Start from `b043a321ffe367504b4a1fdc4bdf03bda543fc32` on `feat/phase-1-portability`. Preserve the owner's unrelated `logo.txt` change unstaged. Extend the existing harness only for native Linux/AMD64 alongside Termux Android/ARM64, retaining the optimization guard, owned roots, logo replacement regression, offline Go configuration, and existing benchmark method. Seed telemetry mode `off` in the owned XDG config directory before the first Go invocation and verify the toolchain's reported mode and directory.
+**Passed on native Linux/AMD64 in GitHub Actions; Go remains provisional.** This bounded task started from `b043a321ffe367504b4a1fdc4bdf03bda543fc32` on `feat/phase-1-portability`. Commit `6a18cc50b007fb1e0fedcedb6e4a214c0174d235` added Linux expectations, environment regressions, the CI collector/workflow, and corresponding documentation. Go implementation and Go tests were unchanged; the owner's unrelated `logo.txt` edit remained unstaged and was not sent to CI. Documentation recording these results was added after the measured commit.
 
-Add a branch-push GitHub Actions job on Ubuntu 24.04/AMD64. Provision Go 1.27.1 and inspection/benchmark prerequisites in CI only, check out without submodules, disable development-tool caches/downloads during verification, and run native check followed by bench sequentially. Retain sanitized logs, source fingerprints/snapshots, runner/tool metadata, binaries and hashes, `evidence.json`, and raw timing batches as CI artifacts, including failure logs. Commit/push the bounded changes, inspect actual CI execution, then record the observed outcomes and remaining limits. Go remains provisional; Windows execution, distribution, bootstrap, installation, transactions, and Phase 2 are outside this task.
+The harness accepts native Termux Android/ARM64 and Linux/AMD64. Linux children omit Termux markers; both retain owned home/config/data/state/cache/temp/repository roots, the optimization guard, and the logo replacement regression. Before invoking Go, it seeds telemetry mode `off` in its owned XDG config directory and checks the reported mode/location. `GOENV`, `GOWORK`, `GOPROXY`, `GOSUMDB`, and `GOVCS` are `off`; `GOTOOLCHAIN=local`. Verification does not fetch modules or toolchains. The branch-push workflow provisions development prerequisites in CI only and checks out without initializing submodules.
+
+[Run 34416309614, attempt 1](https://github.com/5nik7/dots/actions/runs/34416309614) completed successfully on 2026-09-09. The actual entry point was `python3 -B experiments/go-portability/tools/ci_verify.py`, which ran `python3 -B experiments/go-portability/tools/verify.py check` followed by `python3 -B experiments/go-portability/tools/verify.py bench`, sequentially. This built and executed native Linux artifacts; it was not cross-compilation or emulation.
+
+| Environment/build item | Recorded value |
+| --- | --- |
+| Runner | GitHub-hosted `ubuntu-24.04`, image `ubuntu24` / `20260907.300.1`; Ubuntu 24.04.5 LTS |
+| Runtime | Linux `x86_64`, kernel `6.17.0-1022-azure` |
+| CPU | Intel Xeon 6973P-C; 4 logical CPUs reported and available through affinity |
+| Test filesystem | `stat -f -c %T` reported `ext2/ext3` for the temporary evidence filesystem; this ext-family magic label does not distinguish the precise mounted ext variant |
+| Tools | Go 1.27.1 (`linux/amd64`), Python 3.12.3, hyperfine 1.18.0, GNU readelf/binutils 2.42; Git 2.55.0 in the job log |
+| Check/benchmark metadata time | `2026-09-09T23:18:48.503430Z` / `2026-09-09T23:18:59.233111Z` |
+| Build | Standard library only; `CGO_ENABLED=0`; `-trimpath -buildvcs=false -mod=readonly`; no stripping flags |
+| Native binary | 3,991,208 bytes; SHA-256 `979a4f412d24d815ea484a5e8c291f70a2bc1da7cfeafaeebc30b25d37a603e5` |
+| Dependencies/repeatability | No ELF interpreter or `DT_NEEDED` entries; identical relocated rebuild and identical check/bench binaries |
+
+| Acceptance/check | Actual result |
+| --- | --- |
+| Host-aware harness and isolated Go configuration | Passed on native Linux; telemetry reports `off` under `<work>/config/go/telemetry`; supported-host and inherited-configuration regressions passed |
+| Python regressions | Passed: 4 tests, including all 12 optimized-interpreter rejection cases, before Go invocation |
+| Formatting and vet | Passed: `gofmt -l cmd internal tests` produced no paths; `go vet ./...` exited 0 |
+| Native Go tests | Passed: `go test -count=1 -v ./...`, 13 top-level tests; all four isolated `TestLogoReplacement` child cases passed |
+| Disposable filesystem tests | Passed: file/directory symlinks, exclusive copies, spaces, Unicode, leading dashes, existing files/directories/broken links, missing parents, and escape refusal |
+| Empty-PATH CLI and snapshots | Passed: 10 command requests, Linux human/JSON identity, 7 optional-logo cases, fallback/reload, secret sentinels excluded, target snapshots unchanged |
+| Rebuild and runtime inspection | Passed: byte-identical rebuild from a relocated module; `readelf -l -d` reports no interpreter or shared-library requirements |
+| Startup method | Passed: original no-shell method, 3 alternating batches, 20 warmups and 200 measured executions per command per batch, public committed logo, empty PATH, stdout discarded |
+| Documentation and source preservation | Passed: 71 relative links in 23 documents at the measured commit; `git diff --check`; clean committed verification inputs before/after both runs |
+| Evidence retention and review | Passed: artifact upload completed; downloaded ZIP digest, 31 contained file hashes, 15 source fingerprints against the committed files, and raw timing summaries independently checked |
+
+**Linux CI startup measurements:**
+
+| Command | Warm samples | Median | p95 | Minimum | Maximum |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `--help` | 600 | 0.977 ms | 1.244 ms | 0.781 ms | 1.391 ms |
+| `--version` | 600 | 0.963 ms | 1.215 ms | 0.762 ms | 1.332 ms |
+
+Python-timed first-observed invocations were 1.312 ms for help and 1.150 ms for version. They include spawn/wait overhead and uncontrolled cache state. The virtualized runner's frequency, co-tenancy, power, thermal state, and caches were not controlled. These are Linux CI observations, not controlled cold-start performance, a physical desktop baseline, a cross-host speedup, or an approved performance budget. Historical Termux measurements above retain their original provenance.
+
+The [CI artifact](https://github.com/5nik7/dots/actions/runs/34416309614/artifacts/10129219910), named `phase-1-linux-6a18cc50b007fb1e0fedcedb6e4a214c0174d235-1`, contains sanitized check/bench logs, `tested-source.json` and the public input snapshots, runner metadata, native binaries, both `evidence.json` files, raw timing batches, file hashes, and result summaries. ZIP SHA-256 is `1e8b86dfc150c4b8c97646125c3d52902a17f7f785caefb1b0123d160d89b958`; size is 7,185,047 bytes. GitHub reports expiry `2026-10-09T23:19:01Z` (30-day retention). These review artifacts are not a release package; archive permissions and authenticated artifact retrieval do not establish release distribution. A downloaded review copy is retained at `/data/data/com.termux/files/usr/tmp/dots-linux-phase1-1lxhd2gs/phase-1-linux-6a18cc5.zip`, subject to temporary-file cleanup. No artifact, snapshot, or binary is committed.
+
+Termux compatibility was rechecked with `python3 experiments/go-portability/tools/verify.py check` before the Linux commit: four Python tests, all 13 Go tests, CLI/snapshot checks, identical rebuild, and Android dependency inspection passed. Metadata time is `2026-09-09T23:11:08.814556Z`, Go 1.27.1, Python 3.14.6. The 4,070,316-byte binary remains `af73814fe6777aa2436ab5dc4c6dce18a2a9d53a9f8fa693f9f1686aa2c8d693`. Local evidence at `/data/data/com.termux/files/usr/tmp/dots-spike-artifact-u95xd0tq/evidence.json` fingerprints the uncommitted harness/workflow and the owner's local logo; that logo differs from the clean committed CI input. The CLI tests use an owned fixture logo. No Termux benchmark or cross-compilation was rerun because executable behavior was unchanged, and nothing was installed in Termux.
+
+Windows execution, Windows filesystem policy, release packaging/checksums/permissions, clean destination retrieval/execution, WSL execution, other Linux distributions/architectures, and controlled cold-cache performance remain untested. The CI log reports Node runtime deprecation warnings for two pinned actions; checkout and artifact upload nevertheless completed successfully. No remote bootstrap, live installation, transaction engine, or Phase 2 work was performed.
 
 ## Remaining Decisions and Next Milestone
 
-Review these results before adopting Go or promoting the experimental module into the permanent core layout. Complete native Linux/Windows execution and desktop startup evidence, decide the release/distribution strategy, and establish acceptable performance budgets with the owner. Cold-cache evidence remains separately incomplete. Then scope Phase 2's command registry, extension trust, longest-prefix resolution, shared metadata, and completion design. Manifest format, migrated modules, transaction behavior, bootstrap, real-home installation, and repository-size changes remain deferred.
+Review these results before adopting Go or promoting the experimental module into the permanent core layout. Native Linux CI execution now passes. The next bounded task should adapt the isolated harness for native Windows/AMD64 and record actual runtime/filesystem behavior without installation; keep release/distribution checks separately pending. Decide the distribution strategy and acceptable performance budgets with the owner, and gather representative desktop-hardware evidence if required. Cold-cache evidence remains separately incomplete. Then scope Phase 2's command registry, extension trust, longest-prefix resolution, shared metadata, and completion design. Manifest format, migrated modules, transaction behavior, bootstrap, real-home installation, and repository-size changes remain deferred.
 
 The implemented command surface is documented in [commands.md](../docs/commands.md), runtime/path limitations in [platforms.md](../docs/platforms.md), and runner guarantees in [testing.md](../docs/testing.md). No documentation for a feature implemented in this experiment is intentionally deferred.
