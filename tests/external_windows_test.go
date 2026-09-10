@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"os"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -27,24 +29,40 @@ func consoleRun(t *testing.T, event, stall string) (string, error, time.Duration
 	if job == 0 {
 		t.Fatal("CreateJobObjectW", err)
 	}
-	terminate := func() {
-		ok, _, e := testKernel.NewProc("TerminateJobObject").Call(job, 94)
-		if ok == 0 {
-			t.Errorf("TerminateJobObject: %v", e)
-		}
+	var terminateOnce sync.Once
+	var terminateErr error
+	terminate := func() error {
+		terminateOnce.Do(func() {
+			ok, _, e := testKernel.NewProc("TerminateJobObject").Call(job, 94)
+			if ok == 0 {
+				terminateErr = e
+			}
+		})
+		return terminateErr
 	}
 	defer syscall.CloseHandle(syscall.Handle(job))
-	defer terminate()
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	defer func() {
+		if err := terminate(); err != nil {
+			t.Error("TerminateJobObject", err)
+		}
+	}()
+	limit := 10 * time.Second
+	if stall != "" {
+		limit = 2 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), limit)
 	defer cancel()
 	self, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
 	}
-	cmd := exec.CommandContext(ctx, self, "-test.run=^TestWindowsConsoleHelper$", "-test.timeout=11s")
+	cmd := exec.CommandContext(ctx, self, "-test.run=^TestWindowsConsoleHelper$", "-test.timeout=12s", "-test.v")
 	cmd.Env = append(os.Environ(), "DOTS_CONSOLE_HELPER=1", "DOTS_CONSOLE_EVENT="+event, "DOTS_CONSOLE_STALL="+stall, "DOTS_CONSOLE_BIN="+bin, "DOTS_CONSOLE_ROOT="+root)
 	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x10} // real new console; no new process group
-	cmd.WaitDelay = 500 * time.Millisecond                      // bound copier waits on inherited output pipes
+	// Cancel the entire owned job, not only the helper or dots PID. This also
+	// releases writers inherited by descendants on non-deadline-capable pipes.
+	cmd.Cancel = terminate
+	cmd.WaitDelay = 500 * time.Millisecond // bound copier waits on inherited output pipes
 	var output bytes.Buffer
 	cmd.Stdout = &output
 	cmd.Stderr = &output
@@ -58,7 +76,7 @@ func consoleRun(t *testing.T, event, stall string) (string, error, time.Duration
 		t.Fatal(err)
 	}
 	// Ensure the immediate child is reaped on every early failure, too.
-	defer func() { terminate(); _ = cmd.Process.Kill(); _ = cmd.Wait() }()
+	defer func() { _ = terminate(); _ = cmd.Process.Kill(); _ = cmd.Wait() }()
 	handle, err := syscall.OpenProcess(0x100|0x1, false, uint32(cmd.Process.Pid)) // SET_QUOTA | TERMINATE
 	if err != nil {
 		t.Fatal(err)
@@ -99,12 +117,17 @@ func consoleRun(t *testing.T, event, stall string) (string, error, time.Duration
 		defer syscall.CloseHandle(fixture)
 	}
 	err = cmd.Wait()
-	terminate()
+	if cleanupErr := terminate(); cleanupErr != nil {
+		t.Fatal("TerminateJobObject", cleanupErr)
+	}
 	if fixture != 0 {
 		status, waitErr := syscall.WaitForSingleObject(fixture, 2000)
 		if waitErr != nil || status != syscall.WAIT_OBJECT_0 {
 			t.Fatalf("fixture still running after cleanup: status=%d err=%v", status, waitErr)
 		}
+	}
+	if ctx.Err() != nil {
+		err = ctx.Err()
 	}
 	return output.String(), err, time.Since(start)
 }
@@ -124,12 +147,12 @@ func TestWindowsConsoleFailureCleanup(t *testing.T) {
 	for _, stall := range []string{"stall-ready", "stall-interrupt"} {
 		t.Run(stall, func(t *testing.T) {
 			out, err, elapsed := consoleRun(t, "0", stall)
-			expected := "readiness"
+			expected := "waiting for fixture readiness"
 			if stall == "stall-interrupt" {
-				expected = "signal not handled"
+				expected = "console event sent; waiting for fixture interruption"
 			}
-			if err == nil || !strings.Contains(out, expected) || !strings.Contains(out, "i/o timeout") {
-				t.Fatalf("did not fail at bounded pipe read: %v %s", err, out)
+			if !errors.Is(err, context.DeadlineExceeded) || !strings.Contains(out, expected) {
+				t.Fatalf("did not fail at the stalled phase deadline: %v %s", err, out)
 			}
 			// Less than the fixture's independent eight-second watchdog: job cleanup,
 			// not waiting for self-expiry, must release the inherited pipes and process.
@@ -158,6 +181,7 @@ func TestWindowsConsoleHelper(t *testing.T) {
 	}
 	root := os.Getenv("DOTS_CONSOLE_ROOT")
 	cmd, r := signalProcess(t, os.Getenv("DOTS_CONSOLE_BIN"), root, "DOTS_FIXTURE_MODE="+mode, "DOTS_FIXTURE_PID_FILE="+filepath.Join(root, "fixture.pid"))
+	t.Log("waiting for fixture readiness")
 	_ = readyPID(t, r)
 	event, err := strconv.Atoi(os.Getenv("DOTS_CONSOLE_EVENT"))
 	if err != nil {
@@ -167,6 +191,7 @@ func TestWindowsConsoleHelper(t *testing.T) {
 	if ok == 0 {
 		t.Fatal("GenerateConsoleCtrlEvent", err)
 	}
+	t.Log("console event sent; waiting for fixture interruption")
 	interruptedExit(t, cmd, r)
 	select {
 	case <-events:

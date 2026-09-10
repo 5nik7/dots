@@ -126,16 +126,6 @@ func signalProcess(t *testing.T, bin, root string, extraEnv ...string) (*exec.Cm
 	if err != nil {
 		t.Fatal(err)
 	}
-	// A descendant can retain stdout after the wrapper exits. Bound the read
-	// itself, independently of process cancellation. os.Pipe supports deadlines.
-	readLimit := 6 * time.Second
-	if os.Getenv("DOTS_CONSOLE_STALL") != "" {
-		readLimit = time.Second
-	}
-	if err = pipe.(*os.File).SetReadDeadline(time.Now().Add(readLimit)); err != nil {
-		_ = pipe.Close()
-		t.Fatal(err)
-	}
 	if err = cmd.Start(); err != nil {
 		_ = pipe.Close()
 		t.Fatal(err)
