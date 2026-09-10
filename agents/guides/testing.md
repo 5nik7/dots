@@ -67,3 +67,5 @@ The test commands in `docs/testing.md` must exist before they are presented as r
 For external changes, retain strict sidecar/root tests, targeted operation counts, empty-PATH forwarding and static-help snapshots. Native Windows Ctrl+C and Ctrl+Break acceptance must use a real disposable console; an injected cancellation or skipped case is not a substitute. Never weaken acceptance to make CI green.
 
 Console-test failure cleanup must own the entire disposable process tree, not just the dispatcher PID. Keep the startup-gated Windows Job Object, job deadlines/WaitDelay, independent fixture lifetime and negative process-handle assertions. Do not change the product interruption contract to simplify tests. Benchmark result labeling must refuse count mismatches before applying labels.
+
+Catalog acceptance adds exact schema/projection/ordering tests and isolated native JSON process tests for hidden/unavailable records, failure streams, discovery limits, nonexecution and unchanged roots. Retain separate `discovery-json-10` warm measurements with strict sample/result counts; do not substitute JSON timings for the historical text-discovery baseline.

@@ -54,17 +54,17 @@ func registry(out, errOut io.Writer, logo func() string, diagnose func() platfor
 			}
 			return outputStatus(report.WriteText(out))
 		}},
-		{Metadata: dispatch.Metadata{ID: "commands", Route: []string{"commands"}, Summary: "List or validate static command metadata", Synopsis: "commands [--check | -h | --help]", Examples: []string{"dots commands"}, Platforms: []string{"*"}, Outputs: []dispatch.Output{{Format: "text"}}, Mutation: "read-only"}, Handler: func(args []string) int {
+		{Metadata: dispatch.Metadata{ID: "commands", Route: []string{"commands"}, Summary: "List or validate static command metadata", Synopsis: "commands [--json | --check | -h | --help]", Examples: []string{"dots commands", "dots commands --json"}, Platforms: []string{"*"}, Outputs: []dispatch.Output{{Format: "text"}, {Format: "json", SchemaVersion: 1}}, Mutation: "read-only"}, Handler: func(args []string) int {
 			if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
 				return help(out, logo, r, "commands")
 			}
-			if len(args) > 1 || len(args) == 1 && args[0] != "--check" {
+			if len(args) > 1 || len(args) == 1 && args[0] != "--check" && args[0] != "--json" {
 				return usageError()
 			}
 			if len(discover) > 0 {
 				return discover[0](r, args)
 			}
-			return commandList(out, r, nil, len(args) == 1)
+			return commandListing(out, errOut, r, nil, args)
 		}},
 	}
 	var err error
@@ -98,11 +98,11 @@ func Run(args []string, out, errOut io.Writer, logo func() string, diagnose func
 		if err != nil {
 			return reportError(err)
 		}
-		definitions, err := resolver.Discover(len(args) == 1)
+		definitions, err := resolver.Discover(len(args) == 1 && args[0] == "--check")
 		if err != nil {
 			return reportError(err)
 		}
-		return commandList(out, r, definitions, len(args) == 1)
+		return commandListing(out, errOut, r, definitions, args)
 	})
 	if err != nil {
 		fmt.Fprintln(errOut, "dots: invalid built-in registry")

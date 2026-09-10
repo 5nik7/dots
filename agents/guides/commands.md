@@ -64,7 +64,7 @@ The mandatory JSON sidecar is accepted in [decision 0003](../../docs/decisions/0
 - Structured-output support.
 - Mutation classification, when useful for help and policy checks.
 
-Do not add comment-header parsing or runtime metadata handshakes. Static help/discovery must not execute extensions; completion and structured discovery remain deferred.
+Do not add comment-header parsing or runtime metadata handshakes. Static help/discovery must not execute extensions; schema-1 discovery follows [decision 0004](../../docs/decisions/0004-versioned-command-discovery.md). Completion generation remains deferred.
 
 ## Output
 
@@ -98,3 +98,5 @@ A command change normally requires all of the following:
 
 Before finishing, verify that proposed commands are not presented as implemented and that generated documentation, once introduced, is regenerated rather than edited by hand.
 
+
+Catalog changes must preserve the public schema separately from private metadata structs, non-null arrays, typed availability codes, hidden/unavailable records, deterministic ordering and complete validation before stdout. Keep prefix syntax/root-count errors at 2 and discovery validation/resource-limit failures at 1. Test the global-only version representation and catalog self-description. Do not add completion generation merely to update this catalog.

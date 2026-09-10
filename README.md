@@ -20,6 +20,7 @@ DOTS_DEV_BIN="$(python3 -B tools/verify_core.py build)"
 "$DOTS_DEV_BIN" doctor --json
 "$DOTS_DEV_BIN" commands
 "$DOTS_DEV_BIN" commands --check
+"$DOTS_DEV_BIN" commands --json
 ```
 
 The verifier creates test-owned build/config/cache/output roots, disables Go downloads and telemetry, and prints only the resulting binary path on stdout. Nothing is installed or added to PATH. The artifact includes `bin/dots`, the optional public logo and sanitized build evidence; it may be removed with temporary storage. A configured `$DOTS` still controls optional-logo lookup. The active `bin/dots` and its directory flags are unchanged.
@@ -32,9 +33,10 @@ if ($LASTEXITCODE -ne 0) { throw "Development build failed" }
 & $dev --help
 & $dev --version
 & $dev doctor --json
+& $dev commands --json
 ```
 
-Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). The development extension mechanism is opt-in per invocation: repeat prefix `--command-dir <absolute-trusted-directory>` to select roots. Each executable requires a strict JSON sidecar; use `commands`, `commands --check`, or `<route> --help` for static inspection without execution. See the [exact protocol and example metadata](docs/commands.md#development-external-protocol). No real dotfile extension ships. Unix executes native files; Windows supports `.exe` only in local case-insensitive NTFS roots. Selecting a root trusts its code; this is not a sandbox or publisher authentication. WSL execution, completions, installation, manifests, transactions, bootstrap and releases remain deferred.
+Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). The development extension mechanism is opt-in per invocation: repeat prefix `--command-dir <absolute-trusted-directory>` to select roots. Each executable requires a strict JSON sidecar; use `commands`, `commands --json`, `commands --check`, or `<route> --help` for static inspection without execution. See the [exact protocol and example metadata](docs/commands.md#development-external-protocol). `commands --json` emits the [schema-1 catalog](docs/commands.md#machine-readable-command-catalog), including hidden and unavailable definitions with explicit attributes; no roots yields built-ins only. It cannot be combined with `--check`. No real dotfile extension ships. Unix executes native files; Windows supports `.exe` only in local case-insensitive NTFS roots. Selecting a root trusts its code; this is not a sandbox or publisher authentication. WSL execution, completions, installation, manifests, transactions, bootstrap and releases remain deferred.
 
 ## Try the Portability Experiment
 

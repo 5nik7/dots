@@ -113,3 +113,22 @@ Remove the new `zip(strict=True)` Python-version dependency using explicit resul
 The first Windows review run rejected `SetReadDeadline` on the runner pipe handles before fixture startup. The revised supervisor cancels the entire test job at its deadline and retains `WaitDelay` for inherited output-copy pipes. Acceptance remains unchanged: native success cases plus deadline failures at both stalled phases and a signaled fixture process handle after cleanup.
 
 The revised isolated Termux check passed 29 top-level Go test outcomes with no skips and seven Python regressions. The core binary SHA-256 remains `af5ffcb6f786a84d1b60ce4c87dd01484a60eecf32f18bc31a4d455b9177d6ff`, identical to the retained pre-review core. Native Windows success/negative acceptance and final push/PR workflow results must be inspected and retained separately before delivery.
+
+## Authorized Command Catalog Slice
+
+Status: Accepted for implementation under [decision 0004](../docs/decisions/0004-versioned-command-discovery.md).
+
+Start from PR #3 merge `4286c6f` in a separate `feat/phase-2-command-catalog` worktree. Preserve older worktrees/indexes, original logo edit, recovery ref, live prototype and historical evidence. Implement CLI-owned schema-1 catalog types over shared projections and ordinary discovery, with explicit mode selection, typed availability reasons, deterministic ordering, complete validation before output and no execution. Update metadata, user/reference/agent documentation and the native CI branch trigger. No execution/routing adapter changes, completion, configuration, installation or mutations.
+
+- [x] Implement catalog projection, mode and schema/status/nonexecution acceptance.
+- [x] Run isolated native Termux check and separate JSON-discovery warm measurements.
+- [ ] Inspect final-head Linux/Windows CI including retained experiment and console-cleanup regressions.
+- [ ] Synchronize documentation, retain sanitized evidence and verify unrelated-work preservation.
+
+### Catalog Termux Results
+
+The isolated `python3 -B tools/verify_core.py check` passed 35 top-level Go tests (including catalog schema/process/error/limit cases), with no skips, and seven Python regressions. Formatting, vet, dependency guard/inspection, unchanged-root checks, logo bytes and identical relocated rebuild passed. The JSON slice leaves native execution and pure routing sources unchanged. Documentation links and `git diff --check` passed separately after documentation synchronization.
+
+Fresh `bench` evidence uses the approved 600 warm samples per series. Termux median / p95: help 8.024 / 11.048 ms; version 8.160 / 11.747 ms; external dispatch 17.445 / 45.208 ms; text discovery (10) 12.307 / 48.068 ms; JSON discovery (10) 17.587 / 62.817 ms. Help/version meet their 12 / 20 ms advisory targets. The discovery/external batches show substantial timing variability; these are observed baselines, not controlled causal comparisons or new latency budgets. No controlled cold-start result is claimed. Registry lookups remain zero-allocation.
+
+Evidence: `$HOME/dots-review-evidence/phase-2-catalog-3aq372sx/`, including separate native check/bench artifacts, logs and exact source snapshots. Check/bench binary SHA-256 is `3bb2ea7fa8c87b897997fffc845d8a77da7f089589194271e9fc04860df43ebb`; raw sample counts and summaries were recomputed. Source fingerprints identify this local implementation before commit; final-commit desktop results must be inspected separately. Historical evidence and original logo/index identities are preserved.
