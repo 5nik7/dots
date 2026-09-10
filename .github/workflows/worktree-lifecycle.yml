@@ -1,0 +1,35 @@
+name: Development worktree lifecycle
+
+on:
+  push:
+    branches: [chore/worktree-lifecycle, main]
+    paths: ['tools/worktree_lifecycle.py', 'tools/test_worktree_lifecycle.py', '**/*.md', '.github/workflows/worktree-lifecycle.yml']
+  pull_request:
+    branches: [main]
+    paths: ['tools/worktree_lifecycle.py', 'tools/test_worktree_lifecycle.py', '**/*.md', '.github/workflows/worktree-lifecycle.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  lifecycle:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Isolated lifecycle tests
+        env:
+          PYTHONUTF8: '1'
+        run: python -B tools/test_worktree_lifecycle.py
+      - name: Documentation links
+        env:
+          PYTHONUTF8: '1'
+        run: python -B tools/verify_core.py docs
+      - name: Whitespace
+        run: git show --format= --check HEAD

@@ -199,3 +199,7 @@ A future convenience workflow may compose them, but each stage must remain visib
 The repository and its enabled extensions are executable trust inputs. Public bootstrap should establish the core and public repository without implicitly expanding trust to private submodules or arbitrary commands found anywhere on `PATH`.
 
 [Decision 0003](decisions/0003-trusted-external-command-protocol.md) fixes explicit prefix-only roots, duplicate refusal, static JSON and native adapters for development dispatch. Root selection trusts code and its parent directories; validation does not authenticate publishers, sandbox code or prevent concurrent replacement. Secrets and credentials are never ordinary diagnostic fields.
+
+## Local Development Worktree Tooling
+
+`tools/worktree_lifecycle.py` manages explicitly enrolled development worktrees independently of the public CLI and transaction architecture. It owns only Git-local enrollment/lock metadata and guarded calls to non-force Git worktree removal. Policy, activation in older checkouts, known-live-use review and platform limitations are defined in the [agent worktree guide](../agents/guides/worktrees.md). No CLI command, configuration loader, hook or background service is added.

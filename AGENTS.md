@@ -24,6 +24,7 @@ Track phase status in [`plans/roadmap.md`](plans/roadmap.md) and Termux scope in
 
 Read the guide matching the work before changing files:
 
+- [`agents/guides/worktrees.md`](agents/guides/worktrees.md) — one-worktree capacity, explicit enrollment, preview and authorized cleanup.
 - [`agents/guides/commands.md`](agents/guides/commands.md) — dispatcher behavior, command naming, metadata, help, and completions.
 - [`agents/guides/managed-files.md`](agents/guides/managed-files.md) — modules, manifests, link/copy behavior, adoption, planning, and rollback.
 - [`agents/guides/bootstrap.md`](agents/guides/bootstrap.md) — remote installers, repository cloning, first-run setup, and private sources.
@@ -155,6 +156,12 @@ Read `docs/safety.md` before changing any mutating path.
 - Do not add generated caches, bytecode, build outputs, downloaded archives, or machine-local state to Git.
 - Prefer dependency manifests or lazily fetched optional sources over vendoring large third-party trees.
 - Do not rewrite repository history, remove existing submodules, or move large directory trees without explicit approval and a recovery plan.
+
+## Development Worktree Lifecycle
+
+Keep at most one active development worktree alongside the original checkout. Inspect existing worktrees before creating another. Follow [the worktree guide](agents/guides/worktrees.md): explicitly enroll workflow-managed worktrees; automatically remove eligible merged ones during authorized maintenance/implementation, after a verified merge or at the next eligible task boundary. Do not repeatedly request owner approval for already authorized eligible cleanup. Read-only planning reports candidates without removal or fetch. Preserve original/current-session/helper worktrees, all branch/recovery refs, review evidence and uncertain/local work. No name-pattern authorization, force removal, backup archives, hooks or scheduled cleanup.
+
+An older original checkout does not automatically load policy committed elsewhere. Future sessions must explicitly read current instructions from the reviewed fetched revision as described in the guide; preserve the original HEAD, index and unrelated edits.
 
 ## Change Workflow
 
