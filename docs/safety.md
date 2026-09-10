@@ -12,6 +12,8 @@ Symlink/copy operations exist only in disposable tests, using directory-rooted f
 
 The distribution experiment creates/extracts only fixed-layout bundles under fresh harness-owned roots. It verifies the external SHA-256 manifest and the complete allowed regular-file member set before destination creation, then uses exclusive writes. It rejects existing destinations and unsafe paths/types; no archive-selected links, permissions, or ownership are applied. These bounded fixture writes are not managed installation or a transaction API. Checksums are integrity agreements with the supplied manifest, not publisher authentication. See [testing.md](testing.md#experimental-distribution-check) for exact limits and regression guarantees.
 
+The [proposed packaging and release-trust direction](decisions/0002-phase-1-go-adoption.md#packaging-and-release-trust) separates checksum integrity from publisher authentication and lists gates before public release or remote bootstrap. It is pending owner approval and does not authorize installation or weaken the transaction rules below.
+
 ## Guarantees
 
 The intended guarantees are:

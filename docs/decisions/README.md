@@ -60,3 +60,7 @@ Link related records when applicable.
 
 Do not edit an accepted record to make an old decision appear different. Add a new record that supersedes it, then update the relevant reference documentation.
 
+## Records
+
+- [0001: Evaluate Go in an isolated Termux experiment](0001-go-portability-experiment.md) — Accepted for the experiment only.
+- [0002: Adopt Go for the core with bounded initial coverage](0002-phase-1-go-adoption.md) — Proposed, pending owner approval.

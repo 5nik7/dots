@@ -173,6 +173,8 @@ Real package-manager integration belongs in disposable images or machines with e
 
 ## Performance
 
+The [Phase 1 adoption proposal](decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy) proposes concrete warm targets and a regression-review policy using the existing method. Numeric checks remain advisory pending representative desktop evidence and approval; no new runner or threshold enforcement is implemented.
+
 Establish baselines before hard budgets.
 
 Measure at least:

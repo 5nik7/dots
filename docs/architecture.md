@@ -106,6 +106,8 @@ Extension discovery and metadata are described in `commands.md`. Extensions may 
 
 ## Working Implementation Direction
 
+The [Phase 1 adoption proposal](decisions/0002-phase-1-go-adoption.md) recommends Go, initial development targets, and an additive permanent-core/registry slice. It is **Proposed, pending owner approval**; no permanent placement or Phase 2 implementation is accepted by that proposal.
+
 A compiled Go core remains the working recommendation. The isolated experiment supplies native Termux and Linux/Windows CI startup/filesystem evidence; adoption still requires owner review and decisions on supported baselines and permanent release policy. Bounded bundle verification/extraction/native execution now passes on Termux, Linux, and Windows. CI timings are not a representative desktop-hardware or cold-cache baseline. Evaluate the direction against these criteria:
 
 - A supported Android/Termux artifact can be built and distributed reliably.

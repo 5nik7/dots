@@ -44,7 +44,7 @@ The owner authorized the limited [Termux portability experiment](phase-1-portabi
 - [~] Measure cold and warm startup baselines. The experiment records Termux and Linux/Windows CI first-observed/warm runs; controlled cold-cache and representative desktop-hardware baselines remain pending.
 - [x] Validate Termux filesystem and link primitives in a disposable target.
 - [x] Complete the bounded distribution experiment: verified bundles, checksum refusal, fresh extraction, and native execution passed on Termux/Linux/Windows. Permanent release strategy and Go adoption remain open; see the [distribution results](phase-1-portability.md#bounded-distribution-experiment).
-- [ ] Record the implementation-language decision.
+- [~] Record the implementation-language decision. [0002](../docs/decisions/0002-phase-1-go-adoption.md) is decision-ready and **Proposed, pending owner approval**; Go adoption and Phase 2 remain unapproved.
 - [x] Establish initial unit test and formatting commands.
 - [x] Complete bounded native Windows CI validation. Native runtime/fixtures, startup, dependencies, and retained evidence reviewed; `GOVCS=*:off` corrected and Termux/Linux rechecks passed. Go remains provisional; permanent release policy and Windows policy variations remain open. See the [focused results](phase-1-portability.md#bounded-native-windows-follow-up).
 - [x] Add bounded native Linux CI validation and retained evidence. Native checks, startup samples, and uploaded artifact hashes/source were reviewed; see the [focused results](phase-1-portability.md#native-linux-validation).
@@ -58,6 +58,8 @@ Exit criteria:
 ## Phase 2: Command Center
 
 Goal: establish the stable discovery and extension foundation.
+
+After explicit approval, the proposed first task is the [permanent-core and built-in-only registry slice](../docs/decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task--only-after-approval). No Phase 2 implementation starts from preparing that proposal.
 
 - [ ] Implement built-in route registration.
 - [ ] Implement longest-prefix direct external command resolution.
