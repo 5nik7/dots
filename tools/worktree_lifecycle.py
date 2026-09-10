@@ -104,8 +104,13 @@ class Lifecycle:
 
     def worktrees(self):
         blocks = self.git(self.original, 'worktree', 'list', '--porcelain', '-z').split('\0\0')
-        return [dict(part.split(' ', 1) if ' ' in part else (part, '')
-                     for part in block.split('\0') if part) for block in blocks if block]
+        records = [dict(part.split(' ', 1) if ' ' in part else (part, '')
+                        for part in block.split('\0') if part) for block in blocks if block]
+        for record in records:
+            if 'worktree' in record:
+                # Git prints forward slashes on Windows; compare native paths.
+                record['worktree'] = str(Path(record['worktree']).resolve())
+        return records
 
     def load(self):
         if self.registry.is_symlink():
