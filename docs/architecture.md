@@ -106,7 +106,7 @@ Extension discovery and metadata are described in `commands.md`. Extensions may 
 
 ## Working Implementation Direction
 
-A compiled Go core remains the working recommendation. The isolated experiment supplies native Termux and Linux/Windows CI startup/filesystem evidence; adoption still requires owner review and distribution validation. CI timings are not a representative desktop-hardware or cold-cache baseline. Evaluate the direction against these criteria:
+A compiled Go core remains the working recommendation. The isolated experiment supplies native Termux and Linux/Windows CI startup/filesystem evidence; adoption still requires owner review and decisions on supported baselines and permanent release policy. Bounded bundle verification/extraction/native execution now passes on Termux, Linux, and Windows. CI timings are not a representative desktop-hardware or cold-cache baseline. Evaluate the direction against these criteria:
 
 - A supported Android/Termux artifact can be built and distributed reliably.
 - Startup performance is acceptable on the target device.

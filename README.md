@@ -10,7 +10,7 @@ There is not yet a supported remote installer or a production-ready `dots apply`
 
 ## Try the Portability Experiment
 
-**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in GitHub Actions. The live `dots` command and dotfiles are unchanged. Linux and Windows CI results establish execution on the recorded runners; bounded distribution tooling is available as an experiment; native distribution results are being collected. Permanent release packaging and publisher authentication remain undecided.
+**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in GitHub Actions. The live `dots` command and dotfiles are unchanged. Linux and Windows CI results establish execution on the recorded runners; bounded distribution bundles have also been packaged, verified, extracted, and executed natively on all three targets. Permanent release packaging and publisher authentication remain undecided.
 
 From the repository root, using the installed Go 1.27.x toolchain and Python 3 without optimization (`PYTHONOPTIMIZE` unset or `0`; no `-O`/`-OO`). The verifier rejects optimized Python before invoking tools or creating build artifacts:
 
