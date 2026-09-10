@@ -199,6 +199,7 @@ Until formal runners exist, never invent commands in documentation. Record inten
 
 ## Git
 
+- Before pushing, verify the remote push destination and intended branch ref. Use an explicit branch refspec such as `HEAD:refs/heads/<branch>`; do not rely on upstream or default push routing. Direct updates to `main` require explicit task authorization.
 - Keep commits atomic and limited to one coherent purpose.
 - Use succinct commit messages that describe the change.
 - Do not discard, reset, or overwrite unrelated working-tree changes.
@@ -214,4 +215,3 @@ A change is done only when:
 - Cross-platform effects were considered and documented.
 - Performance-sensitive paths were measured when affected.
 - Help, metadata, completions, examples, README, reference docs, and plans are synchronized where applicable.
-
