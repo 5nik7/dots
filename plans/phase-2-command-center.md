@@ -150,15 +150,15 @@ PR creation returned HTTP 403 from the GitHub integration and local `gh` authent
 
 ## Authorized Zsh Completion Slice
 
-Status: In progress under owner approval of [decision 0005](../docs/decisions/0005-static-zsh-completion.md).
+Status: Implemented and verified natively under owner approval of [decision 0005](../docs/decisions/0005-static-zsh-completion.md).
 
 Start from verified main `2ae087926305e6dee742b61ffb488f774a833c74` in the explicitly enrolled `feat/phase-2-zsh-completion` worktree after eligible lifecycle cleanup. Preserve the original checkout, all branch/recovery refs, live configuration and historical evidence.
 
 - [x] Shared in-memory catalog and stdout-only Zsh generator, registry/help and error contracts.
 - [x] Literal ordered root context, bounded static candidates, safe quoting and argument boundaries.
-- [ ] Real isolated Termux/Linux Zsh acceptance; native Windows generation/CLI checks without Zsh claims.
-- [ ] Existing native core/experiment gates, startup measurements, disposable demonstration and retained evidence.
-- [ ] Documentation, final-commit CI review, explicit branch push and PR or comparison fallback.
+- [x] Real isolated Termux/Linux Zsh acceptance; native Windows generation/CLI checks without Zsh claims.
+- [x] Existing native core/experiment gates, startup measurements, disposable demonstration and retained evidence.
+- [x] Documentation, explicit branch push and comparison fallback. Implementation CI passed; final documentation-commit revalidation is retained separately in delivery evidence.
 
 No installation, live shell startup edits, Bash/Fish/PowerShell renderers, argument-schema expansion, package installation on Termux or merge. Retain this worktree while the implementation session uses it.
 
@@ -177,3 +177,16 @@ The isolated core check passed 40 top-level Go tests with no skips and seven Pyt
 Each series retains 600 samples under the existing three-batch method. Help/version meet the accepted Termux advisory budgets. These are fresh observations, not controlled causal speedups or cold-cache results. Check/bench binaries match at SHA-256 `3ff0f733c2e0d0fb89e094004e141d8d27217395aaa1cc7e00a9a7df000bb333`. Generation and interactive latency have no new numeric budget; runtime nonexecution and embedded-only candidate evaluation are structural guarantees.
 
 Evidence is retained under `$HOME/dots-review-evidence/phase-2-zsh-iwmrh6tl/`: exact tested inputs, native check/bench artifacts, sanitized logs and a disposable demonstration using the retained development binary. No live PATH/startup or prototype file changed. Desktop and final-commit CI results are recorded separately after inspection.
+
+### Zsh Native Desktop Results
+
+[Run 34451668350](https://github.com/5nik7/dots/actions/runs/34451668350) passed both native jobs at `64f1c34e69203a92d227040e2b48878f745d0572`. Linux passed all 40 top-level Go tests, including real Zsh 5.9 candidate and native completion-system tests. Windows passed 39 of 41 top-level tests; the two Zsh runtime cases are explicitly unavailable there. Windows generation, catalog/error/availability, real console Ctrl+C/Ctrl+Break and stalled-console cleanup tests passed. Both hosts retained the independent experiment check/distribution gates and seven core Python regressions.
+
+| Host | Help median / p95 (ms) | Version median / p95 (ms) |
+| --- | --- | --- |
+| Linux | 1.032 / 1.334 | 0.996 / 1.282 |
+| Windows | 7.743 / 9.030 | 7.448 / 8.409 |
+
+All five warm series have 600 samples; raw counts and median/p95 values were recomputed. Help/version satisfy each host's advisory budgets. All 43 core input fingerprints match the tested commit, and check/bench binary identities match within each host. Sanitized CI metadata, raw samples and review summaries are retained beside the Termux evidence. Review uses CI job-log metadata, not local desktop execution or downloaded artifact ZIP verification. Final documentation-only CI results retain their own commit identity.
+
+PR creation returned HTTP 403 from the GitHub integration; the existing local gh credential is invalid. Use the [comparison](https://github.com/5nik7/dots/compare/main...feat/phase-2-zsh-completion), with the prepared title/body retained in the evidence directory. No merge or live installation occurred. The original HEAD/index/logo and existing recovery refs remain protected; this session's enrolled Zsh worktree is retained.
