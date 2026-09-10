@@ -69,3 +69,9 @@ For external changes, retain strict sidecar/root tests, targeted operation count
 Console-test failure cleanup must own the entire disposable process tree, not just the dispatcher PID. Keep the startup-gated Windows Job Object, job deadlines/WaitDelay, independent fixture lifetime and negative process-handle assertions. Do not change the product interruption contract to simplify tests. Benchmark result labeling must refuse count mismatches before applying labels.
 
 Catalog acceptance adds exact schema/projection/ordering tests and isolated native JSON process tests for hidden/unavailable records, failure streams, discovery limits, nonexecution and unchanged roots. Retain separate `discovery-json-10` warm measurements with strict sample/result counts; do not substitute JSON timings for the historical text-discovery baseline.
+
+## Development Worktree Helper
+
+Use `python3 -B tools/test_worktree_lifecycle.py` for the separate local lifecycle helper; see [the workflow guide](worktrees.md). Tests use disposable repositories, local bare remotes and owned environment roots. Preserve refusal cases and distinguish injected idle snapshots from native process detection. Do not run the helper against live fixtures to test deletion. The focused workflow adds this gate without replacing existing native core/experiment gates.
+
+Lifecycle review regressions verify preview/apply retain native FIFO and filesystem socket fixtures where supported, and that a fresh remote-main fetch ignores an additional configured recovery-branch mapping while preserving every local branch. Device/unknown modes and metadata denial use injected `lstat` results; they do not establish native device-node coverage. Native Windows FIFO/socket fixtures are unavailable and skipped. Positive portable removal still injects an idle process snapshot; native process coverage remains separate.

@@ -139,3 +139,7 @@ Agents must read [`AGENTS.md`](AGENTS.md) before changing the project and then r
 ## Migration Approach
 
 The current dotfiles remain in place while the new core is developed beside them. Migration will proceed one module at a time, beginning with a small Termux profile. Existing submodules, platform repositories, large assets, and actively used scripts will not be removed or reorganized without a focused plan and recovery path.
+
+## Development Worktrees
+
+Contributors use [one explicitly managed development worktree](agents/guides/worktrees.md) alongside the original checkout. `tools/worktree_lifecycle.py` defaults to preview and provides guarded cleanup after verified merge; it is development tooling, not a public `dots` command. Read the guide before registration/apply, including how to load current policy when the original checkout intentionally stays on an older HEAD. Nothing installs hooks or background cleanup.
