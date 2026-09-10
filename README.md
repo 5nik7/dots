@@ -36,7 +36,35 @@ if ($LASTEXITCODE -ne 0) { throw "Development build failed" }
 & $dev commands --json
 ```
 
-Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). The development extension mechanism is opt-in per invocation: repeat prefix `--command-dir <absolute-trusted-directory>` to select roots. Each executable requires a strict JSON sidecar; use `commands`, `commands --json`, `commands --check`, or `<route> --help` for static inspection without execution. See the [exact protocol and example metadata](docs/commands.md#development-external-protocol). `commands --json` emits the [schema-1 catalog](docs/commands.md#machine-readable-command-catalog), including hidden and unavailable definitions with explicit attributes; no roots yields built-ins only. It cannot be combined with `--check`. No real dotfile extension ships. Unix executes native files; Windows supports `.exe` only in local case-insensitive NTFS roots. Selecting a root trusts its code; this is not a sandbox or publisher authentication. WSL execution, completions, installation, manifests, transactions, bootstrap and releases remain deferred.
+Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM, plus Zsh on Termux/Linux; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). The development extension mechanism is opt-in per invocation: repeat prefix `--command-dir <absolute-trusted-directory>` to select roots. Each executable requires a strict JSON sidecar; use `commands`, `commands --json`, `commands --check`, or `<route> --help` for static inspection without execution. See the [exact protocol and example metadata](docs/commands.md#development-external-protocol). `commands --json` emits the [schema-1 catalog](docs/commands.md#machine-readable-command-catalog), including hidden and unavailable definitions with explicit attributes; no roots yields built-ins only. It cannot be combined with `--check`. No real dotfile extension ships. Unix executes native files; Windows supports `.exe` only in local case-insensitive NTFS roots. Selecting a root trusts its code; this is not a sandbox or publisher authentication. WSL execution, other completion renderers, installation, manifests, transactions, bootstrap and releases remain deferred.
+
+### Disposable Zsh completion demo
+
+The permanent development binary supports `completion zsh`; the live Bash prototype does not. The generator prints a static script and installs nothing. With an already built development binary in `DOTS_DEV_BIN` (from the build example above), run the following in a separate disposable Zsh process. `mktemp` creates only a new demo directory; retain or remove that exact directory after inspection. The demo uses temporary HOME and ZDOTDIR directories and does not edit live startup files. Zsh still reads its system zshenv, if present.
+
+```bash
+demo_root="$(mktemp -d "${TMPDIR:-/tmp}/dots-zsh-demo.XXXXXXXX")"
+mkdir "$demo_root/bin"
+ln -s "$DOTS_DEV_BIN" "$demo_root/bin/dots"
+"$DOTS_DEV_BIN" completion zsh > "$demo_root/completion.zsh"
+env -i HOME="$demo_root" ZDOTDIR="$demo_root" XDG_CONFIG_HOME="$demo_root" \
+  XDG_DATA_HOME="$demo_root" XDG_STATE_HOME="$demo_root" XDG_CACHE_HOME="$demo_root" \
+  TMPDIR="$demo_root" TERM=xterm PATH="$demo_root/bin" \
+  "$(command -v zsh)" -f
+```
+
+Inside that disposable shell, initialize its completion system without a dump file and source the generated script:
+
+```zsh
+autoload -Uz compinit
+compinit -i -D
+source "$HOME/completion.zsh"
+```
+
+Type `dots do` and press Tab to complete `doctor`. The disposable PATH resolves `dots` to the development binary; `dots --version` demonstrates that binding. Exit when finished.
+
+Routes and represented global spellings are completed; command flags and argument values are not inferred. To include external routes, generate with explicit prefix `--command-dir` roots and use that identical ordered root spelling in the completed invocation. The script performs no runtime discovery or extension execution. See the [completion contract](docs/commands.md#static-zsh-completion). Native Windows generation is distinct from Termux/Linux Zsh runtime verification.
+
 
 ## Try the Portability Experiment
 

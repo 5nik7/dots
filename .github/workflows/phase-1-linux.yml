@@ -2,7 +2,7 @@ name: Native portability and core commands
 
 on:
   push:
-    branches: [feat/phase-1-portability, feat/phase-2-core-registry, feat/phase-2-external-dispatch, feat/phase-2-command-catalog, main]
+    branches: [feat/phase-1-portability, feat/phase-2-core-registry, feat/phase-2-external-dispatch, feat/phase-2-command-catalog, feat/phase-2-zsh-completion, main]
   pull_request:
     branches: [main]
 
@@ -25,7 +25,7 @@ jobs:
       - name: Provision CI development prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends hyperfine binutils
+          sudo apt-get install --yes --no-install-recommends hyperfine binutils zsh
       - name: Native verification and distribution checks
         run: python3 -B experiments/go-portability/tools/ci_verify.py
       - name: Retain validation evidence

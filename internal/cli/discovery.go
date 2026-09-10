@@ -87,19 +87,19 @@ func compareString(a, b string) int {
 	}
 	return 0
 }
-func encodeCatalog(r *dispatch.Registry, definitions []extension.Definition) ([]byte, error) {
+func buildCatalog(r *dispatch.Registry, definitions []extension.Definition) (catalog, error) {
 	result := catalog{SchemaVersion: 1, Commands: []catalogCommand{}}
 	for _, m := range r.Project() {
 		c, err := projectCatalog(m, "builtin", nil)
 		if err != nil {
-			return nil, err
+			return catalog{}, err
 		}
 		result.Commands = append(result.Commands, c)
 	}
 	for _, d := range definitions {
 		c, err := projectCatalog(d.Metadata.Projection(), "external", d.Availability)
 		if err != nil {
-			return nil, err
+			return catalog{}, err
 		}
 		result.Commands = append(result.Commands, c)
 	}
@@ -109,6 +109,14 @@ func encodeCatalog(r *dispatch.Registry, definitions []extension.Definition) ([]
 		}
 		return compareString(a.ID, b.ID)
 	})
+	return result, nil
+}
+
+func encodeCatalog(r *dispatch.Registry, definitions []extension.Definition) ([]byte, error) {
+	result, err := buildCatalog(r, definitions)
+	if err != nil {
+		return nil, err
+	}
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return nil, err

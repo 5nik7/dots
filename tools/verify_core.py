@@ -367,6 +367,7 @@ def main():
     go = tool("go")
     hyperfine = tool("hyperfine") if mode == "bench" else None
     gofmt = tool("gofmt") if mode == "check" else None
+    zsh = tool("zsh") if mode == "check" and os.name != "nt" else None
     inspector = tool("llvm-readobj" if os.name == "nt" else "readelf") if mode == "check" else None
     with tempfile.TemporaryDirectory(prefix="dots-core-work-") as temporary:
         root = Path(temporary).resolve()
@@ -399,6 +400,11 @@ def main():
             # Go tests use fixture roots; process checks separately enforce an empty PATH.
             fixture = build(go, source, root, env, "extension-fixture", package="./tests/fixtures/command")
             test_env = dict(env, DOTS=child["DOTS"], DOTS_CORE_TEST_BIN=str(binary), DOTS_EXTENSION_TEST_BIN=str(fixture))
+            if zsh:
+                test_env["DOTS_ZSH_TEST_BIN"] = zsh
+                metadata["zsh_version"] = run([zsh, "--version"], cwd=root, env=child, capture=True).stdout.strip()
+            else:
+                metadata["zsh_runtime"] = "unavailable: native Windows CLI generation only"
             for key in ("PREFIX", "TERMUX_VERSION"):
                 if key in child:
                     test_env[key] = child[key]

@@ -10,7 +10,7 @@ The permanent built-in table in `internal/cli/cli.go` is authoritative for its i
 
 ## Permanent Development Interface
 
-The root module builds `cmd/dots` into a separate test-owned executable, never `bin/dots`. It implements the same bounded read-only requests as the experiment below, with `dots` branding and `--version` output `dots 0.0.0-dev <Go version> <GOOS>/<GOARCH>`. Help identifies it as a development binary and renders its entries from the validated registry. The bounded external interface below adds `commands`; no `version` token route, completion or managed mutation is enabled. The live prototype's directory flags remain exclusive to that prototype.
+The root module builds `cmd/dots` into a separate test-owned executable, never `bin/dots`. It implements the same bounded read-only requests as the experiment below, with `dots` branding and `--version` output `dots 0.0.0-dev <Go version> <GOOS>/<GOARCH>`. Help identifies it as a development binary and renders its entries from the validated registry. The bounded external interface below adds `commands` and static `completion zsh`; no `version` token route or managed mutation is enabled. The live prototype's directory flags remain exclusive to that prototype.
 
 No arguments select help. `help`, `-h`, and `--help` display global help; `doctor -h` and `doctor --help` display contextual help without running diagnostics. `doctor` and `doctor --json` report the same candidate-path and `not_probed` capability model, diagnostic schema 1, and Windows missing-path warning as the experiment. Version and JSON never read the logo. Built-in extra/unknown arguments are rejected without echoing their values. Core exit codes are 0 for success, 1 for output/validation/access/launch failure, and 2 for usage/unknown routes; native external exit status is propagated. Future managed-operation statuses remain undecided.
 
@@ -36,7 +36,7 @@ The optional logo retains the experiment's bounded handle validation, Unix nonbl
 
 An in-memory token tree chooses the deepest exact built-in match and forwards the remaining argument slice unchanged. The chosen handler validates its arguments. Global options are resolved separately. Injected unavailable-platform/capability cases produce `ErrUnavailable`, distinct from `ErrUnknown`; no shipped command requires a probe or uses this distinction to claim new platform support. Direct lookup depends on argument depth, not repository or registry size.
 
-`Project` returns an ordered defensive metadata copy for help and future renderers. Tests cover help/example agreement and projection mutation isolation. The schema-1 catalog uses this projection. Completion and Markdown-command-reference generators remain deferred and will share metadata instead of maintaining a competing table.
+`Project` returns an ordered defensive metadata copy for help and future renderers. Tests cover help/example agreement and projection mutation isolation. The schema-1 catalog uses this projection. The Zsh generator shares the in-memory catalog builder; Markdown-command-reference generation remains deferred.
 
 ## Development External Protocol
 
@@ -73,17 +73,29 @@ The filename must be `dots-probe.json`; the executable is derived from that rout
 
 Candidate routing is pure and bounded; filesystem access happens in the separate resolver. Probe longest route first across all roots at each depth. Existing malformed, unavailable or unsupported deeper definitions block shorter fallback. Direct dispatch/help performs targeted probes only; explicit `commands` enumeration is bounded, sorted, and fails without partial output. Hidden definitions are omitted from ordinary listing but checked by `--check`. Valid foreign-platform definitions are listed as unavailable; `--check` tolerates an intentionally foreign declaration but refuses a missing/unsupported executable declared for the current platform.
 
-For external routes, any `-h` or `--help` before the first `--` selects static metadata help. A `--` stops matching and is itself forwarded; help flags after it are literal. All remaining values, environment, cwd and actual standard streams pass through unchanged. Extensions receive no shell expansion or output rewriting. Unix replaces the dispatcher process; Windows waits in the shared console and preserves child exit status after Ctrl+C/Ctrl+Break. Unsupported input is 2; metadata/root/conflict/entry/unavailable/unsupported/launch failures are 1 with distinct fixed diagnostics. Static help/discovery never execute extensions. There is no persistent cache or completion generator. The JSON catalog below is a separate rendering of ordinary discovery.
+For external routes, any `-h` or `--help` before the first `--` selects static metadata help. A `--` stops matching and is itself forwarded; help flags after it are literal. All remaining values, environment, cwd and actual standard streams pass through unchanged. Extensions receive no shell expansion or output rewriting. Unix replaces the dispatcher process; Windows waits in the shared console and preserves child exit status after Ctrl+C/Ctrl+Break. Unsupported input is 2; metadata/root/conflict/entry/unavailable/unsupported/launch failures are 1 with distinct fixed diagnostics. Static help/discovery never execute extensions. There is no persistent cache. Zsh generation is specified below. The JSON catalog below is a separate rendering of ordinary discovery.
 
 ## Machine-Readable Command Catalog
 
-`dots commands --json` is implemented for the development executable. Prefix it with repeated explicit `--command-dir` roots to include external definitions. With no roots it returns only the four built-ins without implicit search or platform collection. It uses the same projections and ordinary discovery as text listing, never extension execution.
+`dots commands --json` is implemented for the development executable. Prefix it with repeated explicit `--command-dir` roots to include external definitions. With no roots it returns only the registered built-ins without implicit search or platform collection. It uses the same projections and ordinary discovery as text listing, never extension execution.
 
 [Decision 0004](decisions/0004-versioned-command-discovery.md#catalog-schema-1) owns the complete public schema, ordering and compatibility rules. The envelope has integer `schema_version: 1` and a `commands` array; each record includes kind/ID, route/global spellings/aliases, descriptive metadata, declared platforms/capabilities/outputs/mutation, hidden status and static availability. Arrays are never null. External IDs join canonical route tokens with hyphens. Version remains a global-only entry, not a `dots version` route. Available records have a null reason; unavailable records have typed stable reason codes.
 
-JSON includes hidden and valid unavailable records; human listing continues filtering hidden entries. Unavailability is static eligibility, not proof of successful execution or authenticated/sandboxed code. No resolved executable/root paths are added. Metadata descriptions are author-provided text. Command inventory changes do not change schema version; breaking structure or field meaning does. Later completion and documentation generators can consume these records, but this slice adds no argument grammar or generators.
+JSON includes hidden and valid unavailable records; human listing continues filtering hidden entries. Unavailability is static eligibility, not proof of successful execution or authenticated/sandboxed code. No resolved executable/root paths are added. Metadata descriptions are author-provided text. Command inventory changes do not change schema version; breaking structure or field meaning does. Zsh generation consumes the same in-memory records. Argument grammar and Markdown generation remain deferred.
 
 Successful JSON is a complete two-space-indented object and final newline on stdout, with no logo or stderr. `--json` is mutually exclusive with all other commands flags, including `--check`; repeated/extra flags and prefix syntax/root-count errors return 2. Discovery validation, collisions, inaccessible/invalid entries and discovery resource limits return 1 with empty stdout and fixed stderr diagnostics. Hidden metadata is validated too. Serialization completes before writing; writer errors return 1 when reported to the CLI and may leave incomplete output. Native signal termination is unchanged. No JSON error envelope is emitted. Existing `--check` semantics and built-in/help precedence remain unchanged.
+
+## Static Zsh Completion
+
+`dots completion zsh` emits a complete native Zsh script to stdout. `completion -h` and `completion --help` show help without checking root health. Source the generated script only in a shell where `compinit` has already initialized completion. The generator does not initialize or install anything. See [decision 0005](decisions/0005-static-zsh-completion.md) for the exact contract and [README](../README.md#disposable-zsh-completion-demo) for an isolated example.
+
+The shared catalog builder validates all selected definitions before output, then the renderer omits hidden/unavailable entries and includes canonical routes, represented aliases, intermediate prefixes and represented global spellings. No `version` route or inferred flags/values are added. `synopsis` and examples are descriptions, not argument grammar: even known `--json`/`--check` flags and the `zsh` argument are outside completion until represented structurally.
+
+Explicit prefix `--command-dir` roots create an external snapshot. Completion compares the exact ordered root argument strings (decoded shell quoting, no expansion or path normalization) against the embedded generation context. Different count, order, case, trailing separators or alias spelling falls back to built-ins only. While entering a root value or after malformed/excess prefix pairs, completion returns nothing. Prefix options are recognized only before a route. After `--` or a completed token outside the known route tree, it returns nothing; terminal routes offer only known deeper routes.
+
+Generation, loading and completion execute no extensions. The generated function uses embedded arrays and Zsh builtins without invoking dots, Git, JSON tools or filesystem discovery. Root strings are safely quoted literals in the script, while descriptive metadata is omitted. Snapshots require explicit regeneration after changes; execution still revalidates real roots.
+
+Success is script-only stdout, no logo/stderr, exit 0. Unsupported shell/extra arguments and prefix syntax failures return 2; discovery validation/access/collision/limit and writer failures return 1. Validation failures produce empty stdout; writer failure may leave incomplete output. Bash/Fish/PowerShell, installation and richer argument metadata remain deferred.
 
 ## Implemented Experimental Interface
 
@@ -101,7 +113,7 @@ Extra arguments and unimplemented commands are rejected, including `version`, `c
 
 Help follows the prototype's logo lookup: if `$DOTS` is nonempty, read its `logo.txt`; otherwise resolve executable symlinks and look in the executable directory's parent. A configured but missing logo does not fall back to another repository. The harness provides an artifact `bin/dots-spike` and parent `logo.txt`. Empty, unreadable, missing, broken-link, or non-regular logos are silently omitted. The experiment also omits logos larger than 64 KiB to bound help work. Content is preserved, its final line terminated if necessary, and a separating newline added. Only successful help requests read the logo. The loader checks the pathname, then validates the opened file handle before reading. On Unix it opens in nonblocking mode so replacement with a FIFO between the checks does not wait for a writer; valid symlinks to regular files still work. This is not a general timeout for filesystem path lookup or regular-file I/O. No recursive repository search or Git invocation occurs.
 
-The small table in `experiments/go-portability/internal/cli/cli.go` is the source for accepted built-in names and help descriptions; tests check metadata completeness, name collisions, and advertised entries. Full discovery, generated Markdown, and shell completion remain Phase 2 proposals. The experiment provides no completion command or installation, and tests explicitly reject that route. The experiment does not implement the later permanent external metadata carrier.
+The small table in `experiments/go-portability/internal/cli/cli.go` is the source for accepted built-in names and help descriptions; tests check metadata completeness, name collisions, and advertised entries. The permanent core implements discovery and bounded Zsh generation separately; generated Markdown remains proposed. The experiment provides no completion command or installation, and tests explicitly reject that route. The experiment does not implement the later permanent external metadata carrier.
 
 ### Experimental Diagnostic JSON Schema 1
 
@@ -109,7 +121,7 @@ The fixed top-level keys are `schema_version`, `platform`, `os`, `architecture`,
 
 ## Interface Shape
 
-The [accepted next implementation boundary](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is implemented for the read-only built-in registry. The bounded external protocol is implemented under decision 0003. Broader completion, public structured discovery, real management commands and installation remain deferred; live and experimental interfaces are unchanged.
+The [accepted next implementation boundary](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is implemented for the read-only built-in registry. The bounded external protocol is implemented under decision 0003. Schema-1 JSON discovery and bounded Zsh completion generation are implemented. Other completion renderers, real management commands and installation remain deferred; live and experimental interfaces are unchanged.
 
 Users interact with space-separated routes:
 
@@ -161,7 +173,7 @@ Built-ins cannot be shadowed silently. The development protocol uses only explic
 | `dots profiles` | List, inspect, select, and explain profile composition | Resolver |
 | `dots config` | Locate, inspect, edit, get, set, and validate configuration | Resolver |
 | `dots commands` | Discover, validate, and serialize command metadata | Dispatcher |
-| `dots completion` | Generate or install shell completion definitions | Dispatcher |
+| `dots completion` | Generate shell completion definitions; installation deferred | Zsh generation implemented |
 | `dots repo` | Inspect and deliberately synchronize the main repository | Bootstrap/packages |
 | `dots sources` | Inspect and synchronize optional, private, or third-party sources | Later |
 | `dots self` | Install, update, and diagnose the CLI executable itself | Releases |
@@ -278,7 +290,7 @@ Schema 1 uses mandatory JSON sidecars, without a runtime handshake. Richer mutat
 
 ## Discovery
 
-`commands` and `commands --check` are implemented. `--all`, `--json` and `--markdown` below remain proposed:
+`commands`, `commands --json` and `commands --check` are implemented. `--all` and `--markdown` below remain proposed:
 
 ```text
 dots commands

@@ -68,7 +68,7 @@ The approved first task is the [permanent-core and built-in-only registry slice]
 - [~] Implement contextual help and group discovery. Global/doctor/commands and targeted external help derive from metadata; recursive group help remains deferred.
 - [~] Implement command metadata validation and collision detection. Built-ins and external sidecars/routes are validated.
 - [x] Implement machine-readable command discovery (`commands --json`, decision 0004); native verification is tracked in the focused plan.
-- [ ] Generate Bash, Zsh, Fish, and PowerShell completion data as supported.
+- [~] Generate shell completion data: implemented and natively verified bounded Zsh generation under [decision 0005](../docs/decisions/0005-static-zsh-completion.md); native acceptance tracked in the Phase 2 plan. Bash, Fish and PowerShell remain deferred.
 - [~] Add dispatch, collision, unavailable-platform, and structured-output tests. Built-in/JSON and external dispatch tests exist; native external acceptance is tracked in the focused plan.
 - [x] Record accepted command protocol decision 0003.
 

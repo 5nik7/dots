@@ -26,6 +26,18 @@ func registry(out, errOut io.Writer, logo func() string, diagnose func() platfor
 		return 2
 	}
 	entries := []dispatch.Entry{
+		{Metadata: dispatch.Metadata{ID: "completion", Route: []string{"completion"}, Summary: "Generate static Zsh completion (no installation)", Synopsis: "completion (zsh | -h | --help)", Examples: []string{"dots completion zsh"}, Platforms: []string{"*"}, Outputs: []dispatch.Output{{Format: "text"}}, Mutation: "read-only"}, Handler: func(args []string) int {
+			if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
+				return help(out, logo, r, "completion")
+			}
+			if len(args) != 1 || args[0] != "zsh" {
+				return usageError()
+			}
+			if len(discover) > 0 {
+				return discover[0](r, []string{"completion", "zsh"})
+			}
+			return completionOutput(out, errOut, r, nil, nil)
+		}},
 		{Metadata: dispatch.Metadata{ID: "help", Route: []string{"help"}, GlobalOptions: []string{"-h", "--help"}, Summary: "Display this help message", Synopsis: "help, -h, --help", Examples: []string{"dots --help"}, Platforms: []string{"*"}, Outputs: []dispatch.Output{{Format: "text"}}, Mutation: "read-only"}, Handler: func(args []string) int {
 			if len(args) != 0 {
 				return usageError()
@@ -101,6 +113,9 @@ func Run(args []string, out, errOut io.Writer, logo func() string, diagnose func
 		definitions, err := resolver.Discover(len(args) == 1 && args[0] == "--check")
 		if err != nil {
 			return reportError(err)
+		}
+		if len(args) == 2 && args[0] == "completion" {
+			return completionOutput(out, errOut, r, definitions, roots)
 		}
 		return commandListing(out, errOut, r, definitions, args)
 	})

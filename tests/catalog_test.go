@@ -75,10 +75,10 @@ func TestCatalogProcess(t *testing.T) {
 			}
 		}
 	}
-	if json.Unmarshal(out, &c) != nil || c.SchemaVersion != 1 || len(c.Commands) != 6 {
+	if json.Unmarshal(out, &c) != nil || c.SchemaVersion != 1 || len(c.Commands) != 7 {
 		t.Fatal(string(out))
 	}
-	if c.Commands[4].ID != "probe" || c.Commands[4].Availability.Status != "available" || c.Commands[4].Availability.Reason != nil || c.Commands[5].ID != "probe-child" || !c.Commands[5].Hidden || c.Commands[5].Availability.Reason == nil || *c.Commands[5].Availability.Reason != "unavailable" || c.Commands[5].Summary != `日本語 "quoted" <metadata>` {
+	if c.Commands[5].ID != "probe" || c.Commands[5].Availability.Status != "available" || c.Commands[5].Availability.Reason != nil || c.Commands[6].ID != "probe-child" || !c.Commands[6].Hidden || c.Commands[6].Availability.Reason == nil || *c.Commands[6].Availability.Reason != "unavailable" || c.Commands[6].Summary != `日本語 "quoted" <metadata>` {
 		t.Fatal(string(out))
 	}
 	if bytes.Contains(out, []byte(root)) || bytes.Contains(out, []byte("fixture stderr")) || bytes.Contains(out, []byte("Sentinel")) {
@@ -196,6 +196,11 @@ func TestCatalogValidationProcess(t *testing.T) {
 				if code != 1 {
 					t.Fatal("changed check semantics")
 				}
+			}
+			completionArgs := append(append([]string{}, args[:len(args)-2]...), "completion", "zsh")
+			completionCode, completion, completionErr := catalogRun(t, bin, root, completionArgs...)
+			if completionCode != want || (want == 1 && (len(completion) != 0 || completionErr == "")) || (want == 0 && (completionErr != "" || bytes.Contains(completion, []byte("'probe'")))) {
+				t.Fatal("completion validation/availability", completionCode, string(completion), completionErr)
 			}
 			if !reflect.DeepEqual(before, snapshot(t, root)) {
 				t.Fatal("catalog mutated roots")

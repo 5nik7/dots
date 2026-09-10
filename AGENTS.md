@@ -90,7 +90,7 @@ External `dots-*` commands may add cohesive features. They must not replace or c
 
 ## Command Contract
 
-Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) for development extensions: no implicit roots, protected namespaces, mandatory static JSON, targeted direct lookup, native execution only, and no claim of sandboxing or protection from concurrent trusted-file replacement. Tests use disposable fixture commands only. Follow [decision 0004](docs/decisions/0004-versioned-command-discovery.md) for the versioned static command catalog; completion generation remains deferred.
+Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) for development extensions: no implicit roots, protected namespaces, mandatory static JSON, targeted direct lookup, native execution only, and no claim of sandboxing or protection from concurrent trusted-file replacement. Tests use disposable fixture commands only. Follow [decision 0004](docs/decisions/0004-versioned-command-discovery.md) for the versioned static command catalog; Zsh generation follows [decision 0005](docs/decisions/0005-static-zsh-completion.md).
 
 - User-facing routes use spaces: `dots files list`.
 - External command filenames use hyphens: `dots-files` or `dots-files-list`.

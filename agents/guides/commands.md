@@ -64,7 +64,7 @@ The mandatory JSON sidecar is accepted in [decision 0003](../../docs/decisions/0
 - Structured-output support.
 - Mutation classification, when useful for help and policy checks.
 
-Do not add comment-header parsing or runtime metadata handshakes. Static help/discovery must not execute extensions; schema-1 discovery follows [decision 0004](../../docs/decisions/0004-versioned-command-discovery.md). Completion generation remains deferred.
+Do not add comment-header parsing or runtime metadata handshakes. Static help/discovery must not execute extensions; schema-1 discovery follows [decision 0004](../../docs/decisions/0004-versioned-command-discovery.md). Zsh generation follows [decision 0005](../../docs/decisions/0005-static-zsh-completion.md).
 
 ## Output
 
