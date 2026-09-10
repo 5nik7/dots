@@ -48,7 +48,7 @@ class OptimizationRejectionTests(unittest.TestCase):
             if optimize is not None:
                 env["PYTHONOPTIMIZE"] = optimize
             before = snapshot(root)
-            for mode in ("build", "check", "bench", "cross", "docs", "--help"):
+            for mode in ("build", "check", "bench", "cross", "dist", "docs", "--help"):
                 with self.subTest(mode=mode):
                     result = subprocess.run(
                         [sys.executable, "-B", *flags, str(VERIFIER), mode],

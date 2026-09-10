@@ -93,8 +93,7 @@ def collect(temporary, runner_os, env):
     runner = {key: os.environ.get(key, "unknown") for key in
               ("RUNNER_OS", "RUNNER_ARCH", "RUNNER_ENVIRONMENT", "ImageOS", "ImageVersion",
                "GITHUB_REPOSITORY", "GITHUB_REF", "GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT")}
-    runner.update(cpu_count=os.cpu_count(), python=sys.version.split()[0],
-                  hyperfine=capture(["hyperfine", "--version"]))
+    runner.update(cpu_count=os.cpu_count(), python=sys.version.split()[0], git=capture(["git", "--version"]))
     if runner_os == "Windows":
         runner.update(kernel=str(sys.getwindowsversion()),
                       machine=os.environ.get("PROCESSOR_ARCHITECTURE", "unknown"),
@@ -114,12 +113,12 @@ def collect(temporary, runner_os, env):
                 runner["os_release"][key] = value.strip('"')
         runner["cpu_model"] = next((line.split(":", 1)[1].strip() for line in Path("/proc/cpuinfo").read_text(encoding="utf-8").splitlines()
                                     if line.startswith("model name")), "unknown")
-    runner["limitations"] = runner_os + " CI measurements; no controlled cold cache, CPU frequency, co-tenancy, power or thermal state; not a desktop hardware baseline"
+    runner["limitations"] = runner_os + " native CI execution; startup not remeasured; reuse prior timing evidence only when binary identity and behavior match; no controlled desktop hardware baseline"
     write_json(output / "runner.json", runner)
     print(json.dumps(runner, indent=2), flush=True)
     results = []
     hashes = []
-    for mode in ("check", "bench"):
+    for mode in ("check", "dist"):
         command = [sys.executable, "-B", str(verify.MODULE / "tools" / "verify.py"), mode]
         proc = subprocess.run(command, cwd=verify.REPO, env=env, capture_output=True, text=True, encoding="utf-8", timeout=900)
         (output / (mode + ".stdout.log")).write_text(sanitized(proc.stdout), encoding="utf-8")
@@ -144,11 +143,10 @@ def collect(temporary, runner_os, env):
         hashes.append(metadata["sha256"])
         print(mode + " binary SHA-256: " + metadata["sha256"], flush=True)
         print(json.dumps({key: value for key, value in metadata.items() if key not in ("benchmark", "elf", "dependencies")}, indent=2), flush=True)
-        if mode == "bench":
-            write_json(output / "raw-timings.json", metadata["benchmark"]["batches"])
-            print(json.dumps(metadata["benchmark"]["summary"], indent=2), flush=True)
+        if mode == "dist" and (metadata["distribution"]["source_commit"] != commit or metadata["distribution"]["status"] != "passed"):
+            raise RuntimeError("Distribution evidence differs from workflow source or did not pass")
     if len(set(hashes)) != 1 or verify.source_fingerprints() != fingerprints:
-        raise RuntimeError("Source or native binary changed between check and benchmark")
+        raise RuntimeError("Source or native binary changed between check and distribution")
     result = subprocess.run(["git", "diff", "--check"], cwd=verify.REPO, env=env, capture_output=True, text=True, encoding="utf-8", check=True)
     (output / "whitespace.log").write_text(sanitized(result.stdout + result.stderr), encoding="utf-8")
     final_status = capture(["git", "status", "--porcelain=v1", "--", *fingerprints])

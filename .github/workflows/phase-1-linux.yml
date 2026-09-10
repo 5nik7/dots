@@ -23,8 +23,8 @@ jobs:
       - name: Provision CI development prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends hyperfine binutils
-      - name: Native verification and startup measurements
+          sudo apt-get install --yes --no-install-recommends binutils
+      - name: Native verification and distribution checks
         run: python3 -B experiments/go-portability/tools/ci_verify.py
       - name: Retain validation evidence
         if: always()
@@ -57,14 +57,12 @@ jobs:
       - name: Provision CI development prerequisites
         shell: pwsh
         run: |
-          choco install hyperfine --version=1.20.0 --yes --no-progress
-          if ($LASTEXITCODE -ne 0) { throw 'hyperfine provisioning failed' }
           $llvmBin = Join-Path $env:ProgramFiles 'LLVM\bin'
           if (-not (Test-Path (Join-Path $llvmBin 'llvm-readobj.exe'))) {
             throw 'Missing runner prerequisite: LLVM llvm-readobj.exe'
           }
           $llvmBin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-      - name: Native verification and startup measurements
+      - name: Native verification and distribution checks
         shell: pwsh
         env:
           PYTHONUTF8: '1'

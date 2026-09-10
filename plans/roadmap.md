@@ -43,6 +43,7 @@ The owner authorized the limited [Termux portability experiment](phase-1-portabi
 - [x] Build and run candidate Linux and Windows artifacts. Both AMD64 targets cross-compile and now also execute binaries/tests natively in CI; support remains limited to the experimental surface and recorded fixtures.
 - [~] Measure cold and warm startup baselines. The experiment records Termux and Linux/Windows CI first-observed/warm runs; controlled cold-cache and representative desktop-hardware baselines remain pending.
 - [x] Validate Termux filesystem and link primitives in a disposable target.
+- [ ] Complete the bounded distribution experiment: verified bundles, checksum refusal, fresh extraction, and native execution on Termux/Linux/Windows. Implementation in progress; permanent release strategy remains open.
 - [ ] Record the implementation-language decision.
 - [x] Establish initial unit test and formatting commands.
 - [x] Complete bounded native Windows CI validation. Native runtime/fixtures, startup, dependencies, and retained evidence reviewed; `GOVCS=*:off` corrected and Termux/Linux rechecks passed. Go remains provisional; distribution and Windows policy variations remain open. See the [focused results](phase-1-portability.md#bounded-native-windows-follow-up).

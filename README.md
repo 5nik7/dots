@@ -10,7 +10,7 @@ There is not yet a supported remote installer or a production-ready `dots apply`
 
 ## Try the Portability Experiment
 
-**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in GitHub Actions. The live `dots` command and dotfiles are unchanged. Linux and Windows CI results establish execution on the recorded runners; release/distribution checks remain pending.
+**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in GitHub Actions. The live `dots` command and dotfiles are unchanged. Linux and Windows CI results establish execution on the recorded runners; bounded distribution tooling is available as an experiment; native distribution results are being collected. Permanent release packaging and publisher authentication remain undecided.
 
 From the repository root, using the installed Go 1.27.x toolchain and Python 3 without optimization (`PYTHONOPTIMIZE` unset or `0`; no `-O`/`-OO`). The verifier rejects optimized Python before invoking tools or creating build artifacts:
 
@@ -47,6 +47,14 @@ python experiments/go-portability/tools/verify.py check
 ```
 
 Windows diagnostics explicitly leave known-folder resolution unimplemented and filesystem capabilities unprobed. Link tests report actual availability without changing security policy; copy checks run independently.
+
+The experimental distribution check builds, packages, verifies, extracts, and runs the native executable in disposable directories:
+
+```bash
+python3 experiments/go-portability/tools/verify.py dist
+```
+
+In PowerShell use `python experiments/go-portability/tools/verify.py dist`. This additionally needs installed Git. It uses the **committed** public logo, preserving and excluding any local logo edit. Go source inputs must match the recorded commit. Bundles contain the executable under `bin/`, the logo, and `bundle.json`; an external `SHA256SUMS` covers the `.tar.gz` (Termux/Linux) or `.zip` (Windows). The printed executable path belongs to the retained temporary artifact; bundles, checksums, and CLI logs are under its sibling `distribution/` directory. Nothing is installed. Checksums establish agreement with the supplied manifest, not publisher authentication. See the [distribution guarantees and limitations](docs/testing.md#experimental-distribution-check).
 
 ## Intended Experience
 

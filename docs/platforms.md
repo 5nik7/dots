@@ -40,6 +40,10 @@ For Termux/Linux/WSL, diagnostics reports the Unix path candidates in the table 
 
 Windows and unknown platforms report runtime identity, executable path when available, and a warning that path resolution is unimplemented. Native Windows known-folder resolution remains proposed. No platform has a live capability probe in `doctor`: `file_symlink`, `directory_symlink`, and `copy` always report `not_probed`.
 
+### Experimental Distribution Validation
+
+The harness implements native experimental `.tar.gz` bundles for Termux Android/ARM64 and Linux/AMD64, and `.zip` bundles for Windows/AMD64. Native distribution results are pending. Each bundle uses executable-relative logo discovery and contains the committed public logo, never the owner’s unrelated working-tree edit. The extracted binary is checked against the build, then executed with empty PATH and isolated roots after the original copied build inputs are removed. Unix execute permissions are verified; Windows proves process execution without assigning POSIX permission semantics. Format regressions cover both archive types on each host; they do not establish foreign-target execution. See [testing.md](testing.md#experimental-distribution-check) for layout, checksum/path guarantees, and bounded-extractor limitations. Permanent releases, publisher authentication/signing, authenticated download transport, and installation remain undecided or untested.
+
 ## Terminology
 
 - Platform identifies the execution environment.

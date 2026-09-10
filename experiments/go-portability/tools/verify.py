@@ -280,6 +280,93 @@ def doc_checks():
     print(f"Relative Markdown links passed ({checked} links in {len(files)} files).", file=sys.stderr)
 
 
+def distribution_checks(binary, source, root, env, identity, info, fingerprints, git):
+    import distribution as dist
+
+    def git_bytes(*args):
+        return subprocess.run([git, *args], cwd=REPO, env=env, capture_output=True,
+                              check=True, timeout=30).stdout
+
+    commit = git_bytes("rev-parse", "HEAD").decode("ascii").strip()
+    dist.require(re.fullmatch(r"[0-9a-f]{40}", commit), "Invalid source commit")
+    logo = git_bytes("show", commit + ":logo.txt")
+    source_hashes = {}
+    for name, digest in fingerprints.items():
+        if name.endswith(".go") or name.endswith("/go.mod"):
+            dist.require(dist.sha256(git_bytes("show", commit + ":" + name)) == digest,
+                         "Distribution requires Go inputs matching the recorded commit: " + name)
+            source_hashes[name] = digest
+    files, expected = dist.payloads(binary.read_bytes(), logo, identity, commit, source_hashes)
+    output = root / "distribution"
+    archive, checksum = dist.pack(output, files, expected)
+
+    # A separate corrupt archive keeps the same basename/manifest entry.
+    corrupt = root / "corrupt archive"
+    corrupt.mkdir()
+    damaged = bytearray(archive.read_bytes())
+    damaged[len(damaged) // 2] ^= 1
+    bad_archive = corrupt / archive.name
+    bad_archive.write_bytes(damaged)
+    refused = corrupt / "must not extract 日本語"
+    try:
+        dist.extract_verified(bad_archive, checksum, refused, expected)
+    except dist.ChecksumMismatch:
+        dist.require(not refused.exists(), "Corrupt archive created an extraction destination")
+    else:
+        raise RuntimeError("Corrupt archive was accepted")
+
+    runtime = root / "relocated execution 日本語"
+    runtime_env, child = environments(runtime, sys.executable)
+    configure_native(info, runtime_env, child)
+    child.pop("DOTS")  # Only executable-relative bundled-logo discovery can work.
+    # Delete ONLY our copied build inputs, proving they are unnecessary at runtime.
+    dist.require(binary.parent == root / "bin" and source.is_relative_to(root / "repo"), "Unexpected owned build location")
+    shutil.rmtree(root / "bin")
+    shutil.rmtree(root / "repo")
+    extracted = dist.extract_verified(archive, checksum, runtime / "bundle with spaces 日本語", expected)
+    dist.require(dist.sha256(extracted.read_bytes()) == expected["files"]["bin/" + extracted.name]["sha256"],
+                 "Extracted executable differs from verified build")
+    permissions = {"status": "not_applicable", "reason": "Windows execution does not use POSIX executable bits"}
+    if os.name != "nt":
+        for name, mode in (("bin/" + extracted.name, 0o755), ("logo.txt", 0o644), ("bundle.json", 0o644)):
+            dist.require(stat.S_IMODE((extracted.parent.parent / name).stat().st_mode) == mode, "Extracted permissions differ")
+        permissions = {"status": "passed", "binary": "0755", "logo_and_metadata": "0644"}
+    before = snapshot([runtime])
+    logs = []
+    logo_text = logo.decode("utf-8")
+    logo_prefix = logo_text + ("" if logo_text.endswith("\n") else "\n") + "\n"
+    report = None
+    for args in (["--help"], ["--version"], ["doctor", "--json"]):
+        proc = subprocess.run([str(extracted), *args], env=child, cwd=runtime / "runtime",
+                              capture_output=True, text=True, encoding="utf-8", timeout=10)
+        dist.require(proc.returncode == 0 and not proc.stderr, "Extracted CLI failed: " + " ".join(args))
+        if args == ["--help"]:
+            dist.require(proc.stdout.startswith(logo_prefix) and "Usage:" in proc.stdout, "Bundled logo missing from help")
+        elif args == ["--version"]:
+            dist.require(proc.stdout == f"dots-spike 0.0.0-spike {info['GOVERSION']} {identity[1]}/{identity[2]}\n", "Unexpected version output")
+        else:
+            report = json.loads(proc.stdout)
+            dist.require((report["platform"], report["os"], report["architecture"]) == identity, "Unexpected extracted platform identity")
+            dist.require(all(value == "not_probed" for value in report["capabilities"].values()), "Diagnostics probed capabilities")
+            dist.require(Path(report["paths"]["executable"]) == extracted, "Diagnostics used an original executable path")
+        # Redact parsed JSON before encoding Windows backslashes into log strings.
+        logged_stdout = json.dumps(redact(report, [(root, "<work>"), (REPO, "<checkout>")]), indent=2) + "\n" if args == ["doctor", "--json"] else proc.stdout
+        logs.append({"arguments": args, "exit_code": proc.returncode, "stdout": logged_stdout, "stderr": proc.stderr})
+    dist.require(before == snapshot([runtime]), "Extracted CLI mutated runtime fixture roots")
+    (output / "cli.json").write_bytes(dist.json_bytes(redact(logs, [(root, "<work>"), (REPO, "<checkout>")])))
+    result = {"status": "passed", "source_commit": commit, "bundle": archive.name,
+              "archive_sha256": dist.sha256(archive.read_bytes()), "manifest": checksum.name,
+              "metadata": expected, "committed_logo_sha256": dist.sha256(logo),
+              "corrupt_archive": "rejected before extraction or execution", "layout": sorted(files),
+              "original_build_inputs_removed": True, "extracted_binary_matches": True,
+              "empty_path": True, "dots_unset": True, "runtime_snapshots": "unchanged",
+              "native_cli_requests": len(logs), "permissions": permissions,
+              "git_version": git_bytes("--version").decode("utf-8").strip(),
+              "limitations": "Fixed-layout test-owned extraction only; SHA-256 agrees with supplied manifest, not publisher authentication; no signing, download transport, installation or cold-cache claim"}
+    print("Distribution checks: " + json.dumps(result, sort_keys=True), file=sys.stderr)
+    return extracted, result
+
+
 def build(go, source, root, env, name="dots-spike", target=None):
     binary = root / "bin" / executable_name(name, target[0] if target else env["GOOS"])
     build_env = dict(env)
@@ -329,7 +416,7 @@ def main():
             "rerun without -O/-OO and with PYTHONOPTIMIZE unset or 0."
         )
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("build", "check", "bench", "cross", "docs"))
+    parser.add_argument("mode", choices=("build", "check", "bench", "cross", "dist", "docs"))
     mode = parser.parse_args().mode
     if mode == "docs":
         doc_checks()
@@ -339,13 +426,15 @@ def main():
     hyperfine = tool("hyperfine") if mode == "bench" else None
     gofmt = tool("gofmt") if mode == "check" else None
     inspector = tool("llvm-readobj" if os.name == "nt" else "readelf") if mode == "check" else None
+    git = tool("git") if mode == "dist" else None
     with tempfile.TemporaryDirectory(prefix="dots-portability-work-") as temporary:
         root = Path(temporary).resolve()
         source = root / "repo" / "module with spaces"
         source_copy(source)
         env, child = environments(root, go)
-        if mode == "check":
+        if mode in ("check", "dist"):
             run([sys.executable, "-B", MODULE / "tools" / "test_verify.py"], cwd=root, env=env)
+            run([sys.executable, "-B", MODULE / "tools" / "test_distribution.py"], cwd=root, env=env)
         info = json.loads(run([go, "env", "-json", "GOHOSTOS", "GOHOSTARCH", "GOVERSION", "GOTELEMETRY", "GOTELEMETRYDIR"], cwd=source, env=env, capture=True).stdout)
         if info["GOTELEMETRY"] != "off" or Path(info["GOTELEMETRYDIR"]) != root / "config" / "go" / "telemetry":
             raise RuntimeError("Go telemetry is not off in the test-owned configuration directory")
@@ -354,7 +443,7 @@ def main():
         metadata = {"date_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     "toolchain": info, "build_flags": BUILD_FLAGS, "cgo_enabled": 0,
                     "python_version": sys.version.split()[0], "source_sha256": fingerprints,
-                    "native_target": "/".join(identity[1:]), "executed_natively": mode in ("check", "bench"),
+                    "native_target": "/".join(identity[1:]), "executed_natively": mode in ("check", "bench", "dist"),
                     "go_isolation": {key: env[key] for key in ("GOENV", "GOWORK", "GOTOOLCHAIN", "GOPROXY", "GOSUMDB", "GOVCS")},
                     "kernel": str(sys.getwindowsversion()) if os.name == "nt" else os.uname().release,
                     "machine": info["GOHOSTARCH"] if os.name == "nt" else os.uname().machine,
@@ -402,6 +491,9 @@ def main():
             print("Runtime dependency inspection:\n" + dependency, file=sys.stderr)
             metadata["checks"] = "Python regressions, gofmt, vet, uncached native Go tests, CLI processes, relocated identical rebuild, runtime dependency inspection, Markdown links"
             doc_checks()
+        elif mode == "dist":
+            binary, metadata["distribution"] = distribution_checks(binary, source, root, env, identity, info, fingerprints, git)
+            doc_checks()
         elif mode == "bench":
             metadata["hyperfine"] = run([hyperfine, "--version"], cwd=root, env=env, capture=True).stdout.strip()
             metadata["benchmark"] = benchmark(binary, root, child, hyperfine)
@@ -422,8 +514,10 @@ def main():
         if source_fingerprints() != fingerprints:
             raise RuntimeError("Verification inputs changed during execution")
         artifact = Path(tempfile.mkdtemp(prefix="dots-spike-artifact-")).resolve()
-        shutil.copytree(root / "bin", artifact / "bin")
-        shutil.copyfile(REPO / "logo.txt", artifact / "logo.txt")
+        shutil.copytree(binary.parent, artifact / "bin")
+        shutil.copyfile(binary.parent.parent / "logo.txt" if mode == "dist" else REPO / "logo.txt", artifact / "logo.txt")
+        if mode == "dist":
+            shutil.copytree(root / "distribution", artifact / "distribution")
         sanitized = json.dumps(redact(metadata, [(root, "<work>"), (REPO, "<checkout>")]), indent=2)
         (artifact / "evidence.json").write_text(sanitized + "\n", encoding="utf-8")
         print(f"Evidence: {artifact / 'evidence.json'}", file=sys.stderr)
