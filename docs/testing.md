@@ -16,7 +16,7 @@ python3 -B tools/verify_core.py docs
 python3 -B tools/test_verify_core.py
 ```
 
-Use `python` in PowerShell. Supported native verification hosts are Termux Android/ARM64, Linux/AMD64, and Windows/AMD64, with the installed Go 1.27.1 policy pin enforced. Other architectures are refused. Python must be unoptimized: six Python regressions include ten early optimization-refusal cases covering all four modes and help with `-O` or positive `PYTHONOPTIMIZE`. Missing prerequisites never trigger installation. Build uses only Go/Python; check adds gofmt and readelf/LLVM, bench adds hyperfine. No core distribution/cross/installer mode is introduced.
+Use `python` in PowerShell. Supported native verification hosts are Termux Android/ARM64, Linux/AMD64, and Windows/AMD64, with the installed Go 1.27.1 policy pin enforced. Other architectures are refused. Python must be unoptimized: seven Python regressions include ten early optimization-refusal cases covering all four modes and help with `-O` or positive `PYTHONOPTIMIZE`. Missing prerequisites never trigger installation. Build uses only Go/Python; check adds gofmt and readelf/LLVM, bench adds hyperfine. No core distribution/cross/installer mode is introduced.
 
 The runner copies only root `go.mod` and `.go` sources under `cmd`, `internal`, and `tests` into a fresh owned source tree with spaces in its path. It fingerprints those inputs, the public logo, its three Python tools, and the workflow. It rejects symlinked inputs and changes during execution. Source, runtime, home/config/data/state/cache/temp, Go caches/configuration, and telemetry are isolated with the same offline policy as the experiment below (`GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, `GOPROXY=off`, `GOSUMDB=off`, `GOVCS=*:off`, `CGO_ENABLED=0`). Telemetry is seeded off in the owned config before invoking Go and its location is checked. No real shell config, user Go config, credentials, or package database is used. Windows retains only required system paths and redirects user folders.
 
@@ -259,3 +259,11 @@ For manual checks that CI cannot reproduce, record:
 - Result and observed limitation.
 
 Do not upgrade a support-matrix status based on an undocumented one-off success.
+
+## PR #3 Test-Infrastructure Review
+
+Signal fixtures now have an independent eight-second lifetime, including stalled readiness/interruption modes. Direct pipe reads have deadlines; helper output-copy waits use `exec.Cmd.WaitDelay`. Windows console tests assign the helper to a test-owned Job Object before releasing its stdin startup gate, so every wrapper/fixture child belongs to the job. Cleanup terminates that job even when the helper or wrapper has already exited, and reaps the immediate process. This is test infrastructure, not a product process-tree cleanup guarantee.
+
+Native negative tests stall readiness and interruption separately, require the expected pipe timeout and completion within six seconds, terminate the job, then wait on a fixture process handle opened while it was alive to prove no fixture process remains. Existing real Ctrl+C/Ctrl+Break success tests remain required. A separate native fixture test proves the independent watchdog exits with status 92 before the outer deadline.
+
+Benchmark labeling uses an explicit result-count check before ordinary `zip`, removing the added Python 3.10 requirement from `zip(strict=True)`. Missing and extra results fail before any labels are applied, and the existing 600-sample checks remain strict. A seventh Python regression covers exact, missing and extra result counts. This change does not alter the existing runner's other Python API requirements or claim native verification on older interpreters.

@@ -116,20 +116,31 @@ func TestExternalProcessContract(t *testing.T) {
 }
 
 // Start a signal-aware fixture and wait until its native handler is ready.
-func signalProcess(t *testing.T, bin, root string) (*exec.Cmd, *bufio.Reader) {
+func signalProcess(t *testing.T, bin, root string, extraEnv ...string) (*exec.Cmd, *bufio.Reader) {
 	t.Helper()
 	cmd := exec.Command(bin, "--command-dir", root, "probe")
-	cmd.Env = fixtureEnv("wait")
+	cmd.Env = append(fixtureEnv("wait"), extraEnv...)
 	cmd.Dir = root
 	cmd.Stderr = os.Stderr
 	pipe, err := cmd.StdoutPipe()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = cmd.Start(); err != nil {
+	// A descendant can retain stdout after the wrapper exits. Bound the read
+	// itself, independently of process cancellation. os.Pipe supports deadlines.
+	readLimit := 6 * time.Second
+	if os.Getenv("DOTS_CONSOLE_STALL") != "" {
+		readLimit = time.Second
+	}
+	if err = pipe.(*os.File).SetReadDeadline(time.Now().Add(readLimit)); err != nil {
+		_ = pipe.Close()
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = cmd.Process.Kill() })
+	if err = cmd.Start(); err != nil {
+		_ = pipe.Close()
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = cmd.Process.Kill(); _ = pipe.Close(); _ = cmd.Wait() })
 	return cmd, bufio.NewReader(pipe)
 }
 func readyPID(t *testing.T, r *bufio.Reader) int {
@@ -192,5 +203,23 @@ func TestExternalExitStatusesAndLaunchFailure(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err == nil || cmd.ProcessState.ExitCode() != 1 || string(out) != "dots: external command launch failed\n" {
 		t.Fatalf("launch error: %v %s", err, out)
+	}
+}
+
+// Exercise the fixture's independent watchdog without a wrapper or supervisor.
+func TestFixtureLifetime(t *testing.T) {
+	fixture := os.Getenv("DOTS_EXTENSION_TEST_BIN")
+	if !filepath.IsAbs(fixture) {
+		t.Fatal("use isolated core verifier")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, fixture)
+	cmd.Env = fixtureEnv("stall-ready")
+	cmd.Dir = t.TempDir()
+	cmd.WaitDelay = 500 * time.Millisecond
+	err := cmd.Run()
+	if ctx.Err() != nil || err == nil || cmd.ProcessState.ExitCode() != 92 {
+		t.Fatalf("fixture watchdog failed: %v context=%v", err, ctx.Err())
 	}
 }

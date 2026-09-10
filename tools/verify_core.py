@@ -289,6 +289,15 @@ def build(go, source, root, env, name="dots", target=None, package="./cmd/dots")
     return binary
 
 
+def label_benchmark_results(results, names):
+    # Explicit count check keeps Python 3.9 compatibility (zip(strict=True)
+    # requires 3.10), and refuses both missing and extra results before mutation.
+    if len(results) != len(names):
+        raise RuntimeError("Benchmark result count differs from requested commands")
+    for item, name in zip(results, names):
+        item["measurement"] = name
+
+
 def benchmark(binary, root, env, hyperfine, fixture):
     if os.name == "nt":
         # Exercise hyperfine shell_words quoting with spaces and backslashes.
@@ -327,8 +336,7 @@ def benchmark(binary, root, env, hyperfine, fixture):
         run([hyperfine, "--shell=none", "--warmup", "20", "--runs", "200", "--export-json", output,
              *[shlex.join(commands[name]) for name in names]], cwd=root, env=env)
         result = json.loads(output.read_text(encoding="utf-8"))
-        for item, name in zip(result["results"], names, strict=True):
-            item["measurement"] = name
+        label_benchmark_results(result["results"], names)
         batches.append(result)
     summary = {}
     for name in commands:

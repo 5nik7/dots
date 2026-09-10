@@ -122,6 +122,16 @@ class HarnessEnvironmentTests(unittest.TestCase):
         self.assertEqual(result["nested"][0]["location"], r"<owned>\file")
         self.assertNotIn("owned path", self.verify.json.dumps(result))
 
+    def test_benchmark_result_count(self):
+        results = [{}, {}]
+        self.verify.label_benchmark_results(results, ["help", "version"])
+        self.assertEqual(results, [{"measurement": "help"}, {"measurement": "version"}])
+        for count in (0, 1, 3):
+            results = [{} for _ in range(count)]
+            with self.subTest(count=count), self.assertRaisesRegex(RuntimeError, "result count"):
+                self.verify.label_benchmark_results(results, ["help", "version"])
+            self.assertEqual(results, [{} for _ in range(count)])
+
     def test_windows_symlink_refusals(self):
         for code in (5, 50, 1314, 87):
             with self.subTest(winerror=code), tempfile.TemporaryDirectory() as temporary:
