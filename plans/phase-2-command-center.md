@@ -113,3 +113,37 @@ Remove the new `zip(strict=True)` Python-version dependency using explicit resul
 The first Windows review run rejected `SetReadDeadline` on the runner pipe handles before fixture startup. The revised supervisor cancels the entire test job at its deadline and retains `WaitDelay` for inherited output-copy pipes. Acceptance remains unchanged: native success cases plus deadline failures at both stalled phases and a signaled fixture process handle after cleanup.
 
 The revised isolated Termux check passed 29 top-level Go test outcomes with no skips and seven Python regressions. The core binary SHA-256 remains `af5ffcb6f786a84d1b60ce4c87dd01484a60eecf32f18bc31a4d455b9177d6ff`, identical to the retained pre-review core. Native Windows success/negative acceptance and final push/PR workflow results must be inspected and retained separately before delivery.
+
+## Authorized Command Catalog Slice
+
+Status: Implemented and verified natively under [decision 0004](../docs/decisions/0004-versioned-command-discovery.md).
+
+Start from PR #3 merge `4286c6f` in a separate `feat/phase-2-command-catalog` worktree. Preserve older worktrees/indexes, original logo edit, recovery ref, live prototype and historical evidence. Implement CLI-owned schema-1 catalog types over shared projections and ordinary discovery, with explicit mode selection, typed availability reasons, deterministic ordering, complete validation before output and no execution. Update metadata, user/reference/agent documentation and the native CI branch trigger. No execution/routing adapter changes, completion, configuration, installation or mutations.
+
+- [x] Implement catalog projection, mode and schema/status/nonexecution acceptance.
+- [x] Run isolated native Termux check and separate JSON-discovery warm measurements.
+- [x] Inspect implementation Linux/Windows CI including retained experiment and console-cleanup regressions; retain final-head revalidation separately at delivery.
+- [x] Synchronize documentation, retain sanitized evidence and verify unrelated-work preservation.
+
+### Catalog Termux Results
+
+The isolated `python3 -B tools/verify_core.py check` passed 35 top-level Go tests (including catalog schema/process/error/limit cases), with no skips, and seven Python regressions. Formatting, vet, dependency guard/inspection, unchanged-root checks, logo bytes and identical relocated rebuild passed. The JSON slice leaves native execution and pure routing sources unchanged. Documentation links and `git diff --check` passed separately after documentation synchronization.
+
+Fresh `bench` evidence uses the approved 600 warm samples per series. Termux median / p95: help 8.024 / 11.048 ms; version 8.160 / 11.747 ms; external dispatch 17.445 / 45.208 ms; text discovery (10) 12.307 / 48.068 ms; JSON discovery (10) 17.587 / 62.817 ms. Help/version meet their 12 / 20 ms advisory targets. The discovery/external batches show substantial timing variability; these are observed baselines, not controlled causal comparisons or new latency budgets. No controlled cold-start result is claimed. Registry lookups remain zero-allocation.
+
+Evidence: `$HOME/dots-review-evidence/phase-2-catalog-3aq372sx/`, including separate native check/bench artifacts, logs and exact source snapshots. Check/bench binary SHA-256 is `3bb2ea7fa8c87b897997fffc845d8a77da7f089589194271e9fc04860df43ebb`; raw sample counts and summaries were recomputed. Source fingerprints identify this local implementation before commit; final-commit desktop results must be inspected separately. Historical evidence and original logo/index identities are preserved.
+
+### Catalog Native Desktop Results
+
+[Run 34441014484](https://github.com/5nik7/dots/actions/runs/34441014484) passed both native jobs at `24102a4cbbb243d5166a4506bce237a7e75e5b88`. Linux passed 35 top-level Go tests and Windows 36, with no skipped cases; each passed seven Python regressions. Windows passed real Ctrl+C/Ctrl+Break acceptance and both stalled-readiness/stalled-interruption cleanup cases. Independent experiment check/distribution and core formatting/vet/dependency/source/relocation checks passed on both hosts.
+
+| Native CI host | Help median / p95 | Version median / p95 | External median / p95 | Text discovery (10) median / p95 | JSON discovery (10) median / p95 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Ubuntu 24.04.5 / AMD64 | 1.149 / 1.313 ms | 1.123 / 1.286 ms | 2.314 / 2.488 ms | 1.907 / 2.114 ms | 2.014 / 2.253 ms |
+| Windows build 26100 / AMD64 | 7.700 / 8.697 ms | 7.393 / 8.444 ms | 16.699 / 19.092 ms | 10.312 / 12.187 ms | 10.319 / 12.039 ms |
+
+All series contain 600 warm samples and help/version meet accepted absolute targets. Hosted results are advisory; Windows used an AMD runner/image different from the retained PR #3 Intel run, so cross-run discovery differences are not a controlled regression comparison. Registry lookup remained zero-allocation. JSON has a separate new baseline; no controlled cold-cache or physical-desktop claim is made.
+
+Reviewed evidence in the catalog directory includes sanitized native job logs, extracted check/bench metadata, runner details and review summaries. All 40 input hashes were verified against the tested commit; check/bench binary identities match within each host; all timing summaries were recomputed from raw samples. Desktop review uses CI logs, not locally downloaded archive verification or desktop execution on Termux. Final documentation-only commit CI is retained separately at delivery rather than relabeling these measurements.
+
+PR creation returned HTTP 403 from the GitHub integration and local `gh` authentication was invalid. The authorized fallback is the [comparison](https://github.com/5nik7/dots/compare/main...feat/phase-2-command-catalog); a prepared PR description is retained beside the evidence. No merge is authorized. Existing worktrees' HEAD/status/logo/index identities and remote main/recovery refs were rechecked unchanged. Remaining limitations include WSL execution, other architectures, restricted Windows ACLs/known folders, broader filesystems, production OS floors, release trust and representative performance evidence; completions/configuration/installation/mutations remain outside this slice.

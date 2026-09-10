@@ -2,7 +2,7 @@ name: Native portability and core commands
 
 on:
   push:
-    branches: [feat/phase-1-portability, feat/phase-2-core-registry, feat/phase-2-external-dispatch, main]
+    branches: [feat/phase-1-portability, feat/phase-2-core-registry, feat/phase-2-external-dispatch, feat/phase-2-command-catalog, main]
   pull_request:
     branches: [main]
 

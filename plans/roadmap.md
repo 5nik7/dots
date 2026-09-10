@@ -64,10 +64,10 @@ The approved first task is the [permanent-core and built-in-only registry slice]
 - [x] Implement the first validated read-only built-in registry in the permanent core.
 - [x] Implement bounded development longest-prefix external resolution under [decision 0003](../docs/decisions/0003-trusted-external-command-protocol.md).
 - [x] Define explicit prefix-only trusted roots and duplicate refusal; no implicit search.
-- [~] Finalize command metadata representation. Typed private built-in metadata/projections are implemented; strict JSON sidecars are accepted; public structured discovery remains deferred.
+- [~] Finalize command metadata representation. Typed private built-in metadata/projections are implemented; strict JSON sidecars are accepted; schema-1 public catalog is accepted in decision 0004 and implemented; richer argument metadata remains deferred.
 - [~] Implement contextual help and group discovery. Global/doctor/commands and targeted external help derive from metadata; recursive group help remains deferred.
 - [~] Implement command metadata validation and collision detection. Built-ins and external sidecars/routes are validated.
-- [ ] Implement machine-readable command discovery.
+- [x] Implement machine-readable command discovery (`commands --json`, decision 0004); native verification is tracked in the focused plan.
 - [ ] Generate Bash, Zsh, Fish, and PowerShell completion data as supported.
 - [~] Add dispatch, collision, unavailable-platform, and structured-output tests. Built-in/JSON and external dispatch tests exist; native external acceptance is tracked in the focused plan.
 - [x] Record accepted command protocol decision 0003.

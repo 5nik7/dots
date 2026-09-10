@@ -226,3 +226,7 @@ The planner needs explicit allowed destination roots. A destination outside thos
 Path validation occurs after variable expansion and normalization. Reject traversal, empty target, filesystem root, unresolved variable, unexpected UNC/device path, and other platform-specific escapes before mutation.
 
 No recursive destructive action may use an unresolved environment variable, broad home directory, repository root, or filesystem root as its target.
+
+## Static Command Catalog
+
+The [versioned catalog](decisions/0004-versioned-command-discovery.md) reads only explicit command roots and metadata, validates the complete discovery result before stdout, and executes no extensions. It includes hidden/unavailable records; hidden is presentation metadata, not a confidentiality boundary. No resolved paths or environment values are added, but author-provided descriptions are reproduced. Availability and read-only declarations do not authenticate, sandbox or protect against concurrent replacement of trusted files.

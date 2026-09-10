@@ -323,7 +323,8 @@ def benchmark(binary, root, env, hyperfine, fixture):
     env = dict(env, DOTS_FIXTURE_MODE="noop")
     commands = {"--help": [str(binary), "--help"], "--version": [str(binary), "--version"],
                 "external-dispatch": [str(binary), "--command-dir", str(command_root), "probe0"],
-                "discovery-10": [str(binary), "--command-dir", str(command_root), "commands"]}
+                "discovery-10": [str(binary), "--command-dir", str(command_root), "commands"],
+                "discovery-json-10": [str(binary), "--command-dir", str(command_root), "commands", "--json"]}
     first = {}
     for name, argv in commands.items():
         start = time.perf_counter_ns()

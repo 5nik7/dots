@@ -84,7 +84,7 @@ func TestExternalProcessContract(t *testing.T) {
 		t.Fatalf("forwarding: %+v %s", got, stderr.String())
 	}
 	before := snapshot(t, root)
-	for _, args := range [][]string{{"probe", "--help"}, {"probe", "child", "-h"}, {"probe", "child", "--option", "--help"}, {"commands"}, {"commands", "--check"}} {
+	for _, args := range [][]string{{"probe", "--help"}, {"probe", "child", "-h"}, {"probe", "child", "--option", "--help"}, {"commands"}, {"commands", "--check"}, {"commands", "--json"}} {
 		cmd = exec.CommandContext(ctx, bin, append([]string{"--command-dir", root}, args...)...)
 		cmd.Env = fixtureEnv("echo")
 		cmd.Dir = root
