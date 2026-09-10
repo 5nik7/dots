@@ -10,7 +10,7 @@ There is not yet a supported remote installer or a production-ready `dots apply`
 
 ## Try the Portability Experiment
 
-**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64 and Ubuntu Linux/AMD64 in GitHub Actions. The live `dots` command and dotfiles are unchanged. Linux CI results establish execution on the recorded runner; Windows execution and release/distribution checks remain pending.
+**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64 and Ubuntu Linux/AMD64 in GitHub Actions. The live `dots` command and dotfiles are unchanged. Linux CI results establish execution on the recorded runner; The Windows harness and CI job are implemented; native results and release/distribution checks remain pending.
 
 From the repository root, using the installed Go 1.27.x toolchain and Python 3 without optimization (`PYTHONOPTIMIZE` unset or `0`; no `-O`/`-OO`). The verifier rejects optimized Python before invoking tools or creating build artifacts:
 
@@ -33,7 +33,20 @@ python3 experiments/go-portability/tools/verify.py check
 python3 experiments/go-portability/tools/verify.py bench
 ```
 
-Checks additionally use installed `gofmt` and `readelf`; measurements use installed `hyperfine`. Missing prerequisites are reported without installation. See the [experiment plan and results](plans/phase-1-portability.md), [testing instructions](docs/testing.md), and [platform evidence](docs/platforms.md). Linux/Windows compilation does not establish that those artifacts run on their target platforms.
+Checks additionally use installed `gofmt` and `readelf` on Unix or `llvm-readobj` on Windows; measurements use installed `hyperfine`. Missing prerequisites are reported without installation. See the [experiment plan and results](plans/phase-1-portability.md), [testing instructions](docs/testing.md), and [platform evidence](docs/platforms.md). Linux/Windows compilation does not establish that those artifacts run on their target platforms.
+
+The Windows harness accepts native Windows/AMD64. With Go and Python already installed, PowerShell can build and try the separate executable:
+
+```powershell
+$spike = python experiments/go-portability/tools/verify.py build
+if ($LASTEXITCODE -ne 0) { throw "Experimental build failed" }
+& $spike --help
+& $spike --version
+& $spike doctor --json
+python experiments/go-portability/tools/verify.py check
+```
+
+Windows diagnostics explicitly leave known-folder resolution unimplemented and filesystem capabilities unprobed. Link tests report actual availability without changing security policy; copy checks run independently.
 
 ## Intended Experience
 

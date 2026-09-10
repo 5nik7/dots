@@ -31,10 +31,14 @@ def tool(name):
 
 def run(args, *, cwd, env, capture=False):
     print("+ " + shlex.join(map(str, args)), file=sys.stderr, flush=True)
-    return subprocess.run(
-        list(map(str, args)), cwd=cwd, env=env, check=True, text=True,
+    result = subprocess.run(
+        list(map(str, args)), cwd=cwd, env=env, text=True, encoding="utf-8",
         stdout=subprocess.PIPE if capture else sys.stderr, stderr=None, timeout=600,
     )
+    if result.returncode and capture:
+        print(result.stdout, file=sys.stderr)
+    result.check_returncode()
+    return result
 
 
 def source_copy(destination):
@@ -61,15 +65,18 @@ def environments(root, go):
         "XDG_STATE_HOME": str(root / "state"), "XDG_CACHE_HOME": str(root / "cache"),
         "TMPDIR": str(root / "tmp"), "TMP": str(root / "tmp"), "TEMP": str(root / "tmp"),
         "USERPROFILE": str(root / "home"), "APPDATA": str(root / "config"), "LOCALAPPDATA": str(root / "data"),
-        "GOENV": "off", "GOWORK": "off", "GOTOOLCHAIN": "local", "GOPROXY": "off", "GOSUMDB": "off", "GOVCS": "off",
+        "GOENV": "off", "GOWORK": "off", "GOTOOLCHAIN": "local", "GOPROXY": "off", "GOSUMDB": "off", "GOVCS": "*:off",
         "GOPATH": str(root / "gopath"), "GOMODCACHE": str(root / "cache" / "gomod"),
         "GOCACHE": str(root / "cache" / "gobuild"), "GOTMPDIR": str(root / "tooltmp"),
         "CGO_ENABLED": "0", "GOFLAGS": "-mod=readonly -buildvcs=false", "GIT_OPTIONAL_LOCKS": "0",
         "DOTS": str(root / "runtime" / "repo"), "NO_COLOR": "1", "LANG": "C.UTF-8",
+        "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8", "PYTHONDONTWRITEBYTECODE": "1",
     }
     for key in ("PREFIX", "TERMUX_VERSION", "SystemRoot", "WINDIR"):
         if key in os.environ:
             env[key] = os.environ[key]
+    if os.name == "nt":
+        env["HOMEDRIVE"], env["HOMEPATH"] = os.path.splitdrive(env["USERPROFILE"])
     # GOTELEMETRY is a read-only go env value, not an environment override.
     # Seed the owned configuration before any Go tool can collect counters.
     telemetry = root / "config" / "go" / "telemetry"
@@ -85,11 +92,11 @@ def environments(root, go):
 
 def configure_native(info, env, child):
     native = (info["GOHOSTOS"], info["GOHOSTARCH"])
-    platforms = {("android", "arm64"): "termux", ("linux", "amd64"): "linux"}
+    platforms = {("android", "arm64"): "termux", ("linux", "amd64"): "linux", ("windows", "amd64"): "windows"}
     if native not in platforms:
-        raise RuntimeError("Supported native verification hosts: Termux android/arm64 and Linux linux/amd64; other execution remains deferred.")
+        raise RuntimeError("Supported native verification hosts: Termux android/arm64, Linux linux/amd64, and Windows windows/amd64; other execution remains deferred.")
     env.update(GOOS=native[0], GOARCH=native[1])
-    if native[0] == "linux":
+    if native[0] != "android":
         for target in (env, child):
             target.pop("PREFIX", None)
             target.pop("TERMUX_VERSION", None)
@@ -108,7 +115,51 @@ def source_fingerprints():
     for path in sorted(paths):
         if path.is_symlink() or any(p.is_symlink() for p in path.parents if p.is_relative_to(REPO)):
             raise RuntimeError("Refusing symlinked verification input")
-        result[str(path.relative_to(REPO))] = hashlib.sha256(path.read_bytes()).hexdigest()
+        result[path.relative_to(REPO).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return result
+
+
+def redact(value, substitutions):
+    """Replace paths before JSON encoding, including Windows backslashes."""
+    if isinstance(value, str):
+        for path, replacement in substitutions:
+            value = value.replace(str(path), replacement).replace(str(path).replace("\\", "/"), replacement)
+        return value
+    if isinstance(value, dict):
+        return {key: redact(item, substitutions) for key, item in value.items()}
+    if isinstance(value, list):
+        return [redact(item, substitutions) for item in value]
+    return value
+
+
+def executable_name(name="dots-spike", target=None):
+    windows = (target == "windows") if target is not None else os.name == "nt"
+    return name + (".exe" if windows and not name.endswith(".exe") else "")
+
+
+def symlink_capabilities(root, windows=None):
+    """Observe only owned fixtures; unexpected errors fail verification."""
+    if windows is None:
+        windows = os.name == "nt"
+    base = root / "symlink capabilities"
+    base.mkdir()
+    source = base / "source"
+    source.write_text("fixture", encoding="utf-8")
+    directory = base / "directory"
+    directory.mkdir()
+    result = {}
+    for kind, target, is_dir in (("file", source, False), ("directory", directory, True)):
+        link = base / (kind + " link")
+        try:
+            link.symlink_to(target, target_is_directory=is_dir)
+        except OSError as error:
+            if not windows or getattr(error, "winerror", None) not in (5, 50, 1314):
+                raise
+            result[kind] = {"status": "unavailable", "winerror": error.winerror, "reason": error.strerror}
+        else:
+            assert link.is_symlink() and link.resolve() == target.resolve()
+            link.unlink()
+            result[kind] = {"status": "passed"}
     return result
 
 
@@ -125,6 +176,8 @@ def snapshot(paths):
 
 
 def cli_checks(binary, root, env, identity):
+    links = symlink_capabilities(root)
+    results = {"symlink_capabilities": links, "cases": {}}
     targets = [root / name for name in ("home", "config", "data", "state", "cache", "runtime", "tmp")]
     logo = Path(env["DOTS"]) / "logo.txt"
     logo.write_text("FIXTURE LOGO\n", encoding="utf-8")
@@ -134,7 +187,7 @@ def cli_checks(binary, root, env, identity):
              (["apply"], 2), (["doctor", "--json", "TOP_SECRET_ARGUMENT"], 2)]
     secret_env = dict(env, TOP_SECRET="TOP_SECRET_VALUE")
     for args, expected in cases:
-        proc = subprocess.run([str(binary), *args], env=secret_env, cwd=root / "runtime", capture_output=True, text=True, timeout=10)
+        proc = subprocess.run([str(binary), *args], env=secret_env, cwd=root / "runtime", capture_output=True, text=True, encoding="utf-8", timeout=10)
         assert proc.returncode == expected, (args, proc.returncode, proc.stderr)
         assert (not proc.stderr) if expected == 0 else (not proc.stdout and proc.stderr)
         assert "TOP_SECRET" not in proc.stdout + proc.stderr
@@ -146,6 +199,9 @@ def cli_checks(binary, root, env, identity):
             assert report["schema_version"] == 1 and all(v == "not_probed" for v in report["capabilities"].values())
             assert (report["platform"], report["os"], report["architecture"]) == identity
             assert "FIXTURE LOGO" not in proc.stdout and "\x1b" not in proc.stdout
+            if identity[0] == "windows":
+                assert set(report["paths"]) == {"executable"}
+                assert report["warnings"] == ["Path resolution is not implemented for this platform in the spike."]
         elif args == ["doctor"]:
             assert f"Platform: {identity[0]}\n" in proc.stdout
         elif not args or args in (["help"], ["-h"], ["--help"], ["doctor", "--help"]):
@@ -154,7 +210,16 @@ def cli_checks(binary, root, env, identity):
 
     # Optional-logo failure modes, including a FIFO that must never be opened.
     logo.unlink()
-    modes = ["missing", "empty", "directory", "unreadable", "oversize", "broken-link"]
+    modes = ["missing", "empty", "directory", "oversize"]
+    if os.name != "nt":
+        modes.append("unreadable")
+    else:
+        results["cases"]["unreadable-logo"] = {"status": "untested", "reason": "Windows chmod does not establish ACL read denial; policy unchanged"}
+        results["cases"]["fifo-logo-replacement"] = {"status": "unavailable", "reason": "Unix FIFO regression is excluded from Windows builds"}
+    if links["file"]["status"] == "passed":
+        modes.append("broken-link")
+    else:
+        results["cases"]["broken-link-logo"] = {"status": "unavailable", "reason": links["file"]}
     if hasattr(os, "mkfifo"):
         modes.append("fifo")
     for mode in modes:
@@ -166,10 +231,11 @@ def cli_checks(binary, root, env, identity):
         elif mode == "oversize": logo.write_bytes(b"x" * 65537)
         elif mode == "broken-link": logo.symlink_to("missing-logo-source")
         elif mode == "fifo": os.mkfifo(logo, 0o600)
-        proc = subprocess.run([str(binary), "--help"], env=env, cwd=root, capture_output=True, text=True, timeout=10)
+        proc = subprocess.run([str(binary), "--help"], env=env, cwd=root, capture_output=True, text=True, encoding="utf-8", timeout=10)
         assert proc.returncode == 0 and "Usage:" in proc.stdout and not proc.stderr, mode
         if mode != "unreadable" or not os.access(logo, os.R_OK):
             assert proc.stdout.startswith("dots-spike -"), mode
+        results["cases"]["logo-" + mode] = {"status": "passed"}
         if logo.is_dir(): logo.rmdir()
         elif logo.exists() or logo.is_symlink():
             if mode == "unreadable": logo.chmod(0o600)
@@ -178,15 +244,24 @@ def cli_checks(binary, root, env, identity):
     # Executable-relative fallback follows a symlink without a repository walk.
     fallback = root / "logo.txt"
     fallback.write_text("FALLBACK LOGO", encoding="utf-8")
-    alias = root / "runtime" / "bin" / "alias"
-    alias.symlink_to(binary)
     without_dots = {key: value for key, value in env.items() if key != "DOTS"}
-    proc = subprocess.run([str(alias), "help"], env=without_dots, cwd=root / "runtime", capture_output=True, text=True, timeout=10)
+    proc = subprocess.run([str(binary), "help"], env=without_dots, cwd=root / "runtime", capture_output=True, text=True, encoding="utf-8", timeout=10)
     assert proc.returncode == 0 and proc.stdout.startswith("FALLBACK LOGO\n\n")
+    results["cases"]["direct-fallback"] = {"status": "passed"}
+    if links["file"]["status"] == "passed":
+        alias = root / "runtime" / "bin" / executable_name("alias")
+        alias.symlink_to(binary)
+        proc = subprocess.run([str(alias), "help"], env=without_dots, cwd=root / "runtime", capture_output=True, text=True, encoding="utf-8", timeout=10)
+        assert proc.returncode == 0 and proc.stdout.startswith("FALLBACK LOGO\n\n")
+        results["cases"]["symlink-fallback"] = {"status": "passed"}
+    else:
+        results["cases"]["symlink-fallback"] = {"status": "unavailable", "reason": links["file"]}
     logo.write_text("UPDATED LOGO", encoding="utf-8")
-    proc = subprocess.run([str(binary), "--help"], env=env, cwd=root, capture_output=True, text=True, timeout=10)
+    proc = subprocess.run([str(binary), "--help"], env=env, cwd=root, capture_output=True, text=True, encoding="utf-8", timeout=10)
     assert proc.stdout.startswith("UPDATED LOGO\n\n"), "logo must be loaded dynamically"
-    print(f"CLI process checks passed ({len(cases)} requests, {len(modes)} optional-logo cases, symlink fallback and reload).", file=sys.stderr)
+    results["cases"].update(commands={"status": "passed", "count": len(cases)}, snapshots={"status": "passed"}, reload={"status": "passed"})
+    print("CLI results: " + json.dumps(results, sort_keys=True), file=sys.stderr)
+    return results
 
 
 def doc_checks():
@@ -206,7 +281,7 @@ def doc_checks():
 
 
 def build(go, source, root, env, name="dots-spike", target=None):
-    binary = root / "bin" / name
+    binary = root / "bin" / executable_name(name, target[0] if target else env["GOOS"])
     build_env = dict(env)
     if target:
         build_env.update(GOOS=target[0], GOARCH=target[1])
@@ -215,6 +290,13 @@ def build(go, source, root, env, name="dots-spike", target=None):
 
 
 def benchmark(binary, root, env, hyperfine):
+    if os.name == "nt":
+        # Exercise hyperfine shell_words quoting with spaces and backslashes.
+        spaced = root / "benchmark bin"
+        spaced.mkdir()
+        relocated = spaced / binary.name
+        shutil.copyfile(binary, relocated)
+        binary = relocated
     # The logo used in measurements is copied verbatim from the public source.
     shutil.copyfile(REPO / "logo.txt", Path(env["DOTS"]) / "logo.txt")
     first = {}
@@ -227,6 +309,7 @@ def benchmark(binary, root, env, hyperfine):
         output = root / f"timings-{batch}.json"
         args = ("--help", "--version") if batch % 2 == 0 else ("--version", "--help")
         run([hyperfine, "--shell=none", "--warmup", "20", "--runs", "200", "--export-json", output,
+             # hyperfine --shell=none uses shell_words on Windows too.
              *[shlex.join([str(binary), arg]) for arg in args]], cwd=root, env=env)
         batches.append(json.loads(output.read_text(encoding="utf-8")))
     summary = {}
@@ -255,7 +338,7 @@ def main():
     go = tool("go")
     hyperfine = tool("hyperfine") if mode == "bench" else None
     gofmt = tool("gofmt") if mode == "check" else None
-    readelf = tool("readelf") if mode == "check" else None
+    inspector = tool("llvm-readobj" if os.name == "nt" else "readelf") if mode == "check" else None
     with tempfile.TemporaryDirectory(prefix="dots-portability-work-") as temporary:
         root = Path(temporary).resolve()
         source = root / "repo" / "module with spaces"
@@ -273,7 +356,8 @@ def main():
                     "python_version": sys.version.split()[0], "source_sha256": fingerprints,
                     "native_target": "/".join(identity[1:]), "executed_natively": mode in ("check", "bench"),
                     "go_isolation": {key: env[key] for key in ("GOENV", "GOWORK", "GOTOOLCHAIN", "GOPROXY", "GOSUMDB", "GOVCS")},
-                    "kernel": os.uname().release, "machine": os.uname().machine,
+                    "kernel": str(sys.getwindowsversion()) if os.name == "nt" else os.uname().release,
+                    "machine": info["GOHOSTARCH"] if os.name == "nt" else os.uname().machine,
                     "termux_version": os.environ.get("TERMUX_VERSION", "unknown"),
                     "binary_bytes": binary.stat().st_size, "sha256": hashlib.sha256(binary.read_bytes()).hexdigest()}
         if mode == "check":
@@ -286,18 +370,37 @@ def main():
                 if key in child:
                     test_env[key] = child[key]
             run([go, "vet", "./..."], cwd=source, env=test_env)
-            run([go, "test", "-count=1", "-v", "./..."], cwd=source, env=test_env)
-            cli_checks(binary, root, child, identity)
+            tested = run([go, "test", "-count=1", "-json", "./..."], cwd=source, env=test_env, capture=True)
+            outcomes = []
+            for line in tested.stdout.splitlines():
+                event = json.loads(line)
+                if event.get("Output"):
+                    print(event["Output"], end="", file=sys.stderr)
+                if event.get("Test") and event["Action"] in ("pass", "skip", "fail"):
+                    outcomes.append({"package": event["Package"], "test": event["Test"],
+                                     "status": {"pass": "passed", "skip": "unavailable", "fail": "failed"}[event["Action"]]})
+            metadata["go_tests"] = outcomes
+            metadata["cli"] = cli_checks(binary, root, child, identity)
             relocated = root / "relocated" / "module"
             source_copy(relocated)
             repeat = build(go, relocated, root, env, "repeat")
             assert binary.read_bytes() == repeat.read_bytes(), "repeated relocated build differed"
-            elf = run([readelf, "-l", "-d", binary], cwd=root, env=env, capture=True).stdout
-            metadata["elf"] = elf
-            metadata["readelf_version"] = run([readelf, "--version"], cwd=root, env=env, capture=True).stdout.splitlines()[0]
-            print("ELF dependencies:", file=sys.stderr)
-            print("\n".join(line for line in elf.splitlines() if "interpreter" in line or "NEEDED" in line) or "No interpreter/NEEDED entries", file=sys.stderr)
-            metadata["checks"] = "Python optimization regressions, gofmt, vet, uncached Go tests, CLI processes, relocated identical rebuild, ELF inspection, Markdown links"
+            if os.name == "nt":
+                dependency = run([inspector, "--file-headers", "--coff-imports", binary], cwd=root, env=env, capture=True).stdout
+                if "IMAGE_FILE_MACHINE_AMD64" not in dependency:
+                    raise RuntimeError("PE inspector did not identify an AMD64 executable")
+                imports = sorted(set(re.findall(r"Name: ([^\r\n]+\.dll)", dependency, re.IGNORECASE)))
+                if not imports:
+                    raise RuntimeError("PE import inspection returned no DLL names")
+                metadata["dependencies"] = {"format": "PE/COFF", "imports": imports, "inspection": dependency,
+                    "limitation": "Static import table only; dynamic/transitive Windows DLL loading is not enumerated"}
+            else:
+                dependency = run([inspector, "-l", "-d", binary], cwd=root, env=env, capture=True).stdout
+                metadata["elf"] = dependency
+                metadata["dependencies"] = {"format": "ELF", "inspection": dependency}
+            metadata["inspector_version"] = run([inspector, "--version"], cwd=root, env=env, capture=True).stdout.strip()
+            print("Runtime dependency inspection:\n" + dependency, file=sys.stderr)
+            metadata["checks"] = "Python regressions, gofmt, vet, uncached native Go tests, CLI processes, relocated identical rebuild, runtime dependency inspection, Markdown links"
             doc_checks()
         elif mode == "bench":
             metadata["hyperfine"] = run([hyperfine, "--version"], cwd=root, env=env, capture=True).stdout.strip()
@@ -321,11 +424,11 @@ def main():
         artifact = Path(tempfile.mkdtemp(prefix="dots-spike-artifact-")).resolve()
         shutil.copytree(root / "bin", artifact / "bin")
         shutil.copyfile(REPO / "logo.txt", artifact / "logo.txt")
-        sanitized = json.dumps(metadata, indent=2).replace(str(root), "<work>").replace(str(REPO), "<checkout>")
+        sanitized = json.dumps(redact(metadata, [(root, "<work>"), (REPO, "<checkout>")]), indent=2)
         (artifact / "evidence.json").write_text(sanitized + "\n", encoding="utf-8")
         print(f"Evidence: {artifact / 'evidence.json'}", file=sys.stderr)
         # stdout is just the executable path, suitable for command substitution.
-        print(artifact / "bin" / "dots-spike")
+        print(artifact / "bin" / binary.name)
 
 
 if __name__ == "__main__":

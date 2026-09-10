@@ -50,7 +50,7 @@ The largest groups include wallpapers, font files, PowerShell DLLs, and demo med
 
 `bin/dots` currently provides a prototype help display and a repository-directory option. The owner's commits through `c1be6eb` added the public `logo.txt`, dynamic optional logo loading, a `help` spelling, and repaired error output. The Phase 1 change preserves that command, logo, and shell configuration. It does not implement the command discovery, specification, planning, or transaction model described in the new design docs.
 
-The additive `experiments/go-portability/` module now contains a separate Go executable with help, version, and read-only diagnostics, plus isolated filesystem tests and a development harness. The `.github/workflows/phase-1-linux.yml` workflow and CI evidence collector add a bounded native Linux validation path. They own no live dotfiles. Build artifacts and caches stay outside the checkout. See the [focused plan](../plans/phase-1-portability.md) for evidence. The historical inventory and size measurements above have not been recomputed or replaced by this addition.
+The additive `experiments/go-portability/` module now contains a separate Go executable with help, version, and read-only diagnostics, plus isolated filesystem tests and a development harness. The `.github/workflows/phase-1-linux.yml` workflow and CI evidence collector provide bounded native Linux and Windows validation jobs. Linux execution is recorded; Windows execution results are pending. They own no live dotfiles. Build artifacts and caches stay outside the checkout. See the [focused plan](../plans/phase-1-portability.md) for evidence. The historical inventory and size measurements above have not been recomputed or replaced by this addition.
 
 `dot.env` currently:
 

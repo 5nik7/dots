@@ -45,6 +45,7 @@ The owner authorized the limited [Termux portability experiment](phase-1-portabi
 - [x] Validate Termux filesystem and link primitives in a disposable target.
 - [ ] Record the implementation-language decision.
 - [x] Establish initial unit test and formatting commands.
+- [ ] Complete bounded native Windows CI validation. Shared harness, independent copy/link cases, and Windows job implemented; native results pending. Correct verification to `GOVCS=*:off` and retain the Termux/Linux rechecks.
 - [x] Add bounded native Linux CI validation and retained evidence. Native checks, startup samples, and uploaded artifact hashes/source were reviewed; see the [focused results](phase-1-portability.md#native-linux-validation).
 
 Exit criteria:

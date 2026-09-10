@@ -52,7 +52,7 @@ class OptimizationRejectionTests(unittest.TestCase):
                 with self.subTest(mode=mode):
                     result = subprocess.run(
                         [sys.executable, "-B", *flags, str(VERIFIER), mode],
-                        cwd=root / "repo", env=env, capture_output=True, text=True, timeout=10,
+                        cwd=root / "repo", env=env, capture_output=True, text=True, encoding="utf-8", timeout=10,
                     )
                     self.assertEqual(result.returncode, 1)
                     self.assertEqual(result.stdout, "")
@@ -73,7 +73,7 @@ class HarnessEnvironmentTests(unittest.TestCase):
         spec.loader.exec_module(self.verify)
 
     def test_native_identity_and_markers(self):
-        for native, expected in ((('android', 'arm64'), 'termux'), (('linux', 'amd64'), 'linux')):
+        for native, expected in ((('android', 'arm64'), 'termux'), (('linux', 'amd64'), 'linux'), (('windows', 'amd64'), 'windows')):
             with self.subTest(native=native):
                 env = {"PREFIX": "fixture", "TERMUX_VERSION": "fixture"}
                 child = dict(env, PATH="")
@@ -84,7 +84,7 @@ class HarnessEnvironmentTests(unittest.TestCase):
                 for target in (env, child):
                     self.assertEqual("TERMUX_VERSION" in target, expected == "termux")
                     self.assertEqual("PREFIX" in target, expected == "termux")
-        for native in (("linux", "arm64"), ("windows", "amd64"), ("android", "amd64")):
+        for native in (("linux", "arm64"), ("windows", "arm64"), ("android", "amd64")):
             with self.subTest(unsupported=native), self.assertRaisesRegex(RuntimeError, "Supported native verification hosts"):
                 self.verify.configure_native(dict(zip(("GOHOSTOS", "GOHOSTARCH"), native)), {}, {})
 
@@ -97,16 +97,44 @@ class HarnessEnvironmentTests(unittest.TestCase):
             with patch.dict(os.environ, poison, clear=True):
                 env, child = self.verify.environments(root, "/toolchain/bin/go")
             self.assertEqual((root / "config/go/telemetry/mode").read_text(), "off\n")
-            for key in ("GOENV", "GOWORK", "GOPROXY", "GOSUMDB", "GOVCS"):
+            for key in ("GOENV", "GOWORK", "GOPROXY", "GOSUMDB"):
                 self.assertEqual(env[key], "off")
+            self.assertEqual(env["GOVCS"], "*:off")
             self.assertEqual(env["GOTOOLCHAIN"], "local")
             for key in ("HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME",
-                        "TMPDIR", "GOPATH", "GOCACHE", "GOMODCACHE", "GOTMPDIR"):
+                        "TMPDIR", "TMP", "TEMP", "USERPROFILE", "APPDATA", "LOCALAPPDATA",
+                        "GOPATH", "GOCACHE", "GOMODCACHE", "GOTMPDIR"):
                 self.assertTrue(Path(env[key]).is_relative_to(root), key)
+            if os.name == "nt":
+                self.assertEqual(env["HOMEDRIVE"] + env["HOMEPATH"], env["USERPROFILE"])
             self.assertNotIn("WSL_INTEROP", child)
             self.assertNotIn("SECRET_SENTINEL", env)
             self.assertFalse(any(key.startswith("GO") for key in child))
             self.assertEqual(child["PATH"], "")
+
+    def test_executable_names_and_windows_path_redaction(self):
+        self.assertEqual(self.verify.executable_name("dots-spike", "windows"), "dots-spike.exe")
+        self.assertEqual(self.verify.executable_name("repeat.exe", "windows"), "repeat.exe")
+        self.assertEqual(self.verify.executable_name("dots-spike", "linux"), "dots-spike")
+        path = r"C:\owned path\repo"
+        value = {"nested": [{"location": path + r"\file"}]}
+        result = self.verify.redact(value, [(path, "<owned>")])
+        self.assertEqual(result["nested"][0]["location"], r"<owned>\file")
+        self.assertNotIn("owned path", self.verify.json.dumps(result))
+
+    def test_windows_symlink_refusals(self):
+        for code in (5, 50, 1314, 87):
+            with self.subTest(winerror=code), tempfile.TemporaryDirectory() as temporary:
+                error = OSError("fixture refusal")
+                error.winerror = code
+                with patch.object(Path, "symlink_to", side_effect=error):
+                    if code == 87:
+                        with self.assertRaises(OSError):
+                            self.verify.symlink_capabilities(Path(temporary), windows=True)
+                    else:
+                        result = self.verify.symlink_capabilities(Path(temporary), windows=True)
+                        self.assertEqual({v["status"] for v in result.values()}, {"unavailable"})
+                        self.assertEqual({v["winerror"] for v in result.values()}, {code})
 
 
 if __name__ == "__main__":
