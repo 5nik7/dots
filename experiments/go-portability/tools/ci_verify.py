@@ -80,6 +80,10 @@ def collect(temporary, runner_os, env):
         target = output / "tested-source" / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
+        committed = subprocess.run(["git", "show", commit + ":" + name], cwd=verify.REPO,
+                                   env=env, capture_output=True, check=True, timeout=30).stdout
+        if data != committed:
+            raise RuntimeError("Checkout bytes differ from committed input (check line-ending conversion): " + name)
     identity = {"commit": commit, "sha256": fingerprints,
                 "source_status": capture(["git", "status", "--porcelain=v1", "--", *fingerprints])}
     write_json(output / "tested-source.json", identity)
