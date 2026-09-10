@@ -101,7 +101,7 @@ func TestDevelopmentProcess(t *testing.T) {
 	if !filepath.IsAbs(binary) {
 		t.Fatal("run through tools/verify_core.py check with a test-owned prebuilt binary")
 	}
-	root := t.TempDir()
+	root := filepath.Join(t.TempDir(), "-core space 日本語")
 	for _, name := range []string{"home", "config", "data", "state", "cache", "tmp", "repo", "bin", "usr/bin"} {
 		if err := os.MkdirAll(filepath.Join(root, name), 0700); err != nil {
 			t.Fatal(err)
