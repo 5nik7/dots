@@ -156,3 +156,7 @@ All four decisions above were approved at the revision identified in the owner a
 ## Supersedes or Superseded By
 
 This record settles the language question left open by [0001](0001-go-portability-experiment.md). That accepted experiment authorization and its evidence remain historical and unchanged; this decision does not invalidate them.
+
+## Implementation Follow-up
+
+The first permanent read-only core/registry slice is implemented and tracked in [the Phase 2 plan](../../plans/phase-2-command-center.md). Statements above about implementation status describe the decision at acceptance; its scope, remaining gates, and historical evidence are preserved.

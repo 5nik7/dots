@@ -4,6 +4,32 @@
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 
+## Permanent Core Verification
+
+The independent root-core runner exists alongside the preserved experiment:
+
+```bash
+python3 -B tools/verify_core.py build
+python3 -B tools/verify_core.py check
+python3 -B tools/verify_core.py bench
+python3 -B tools/verify_core.py docs
+python3 -B tools/test_verify_core.py
+```
+
+Use `python` in PowerShell. Supported native verification hosts are Termux Android/ARM64, Linux/AMD64, and Windows/AMD64, with the installed Go 1.27.1 policy pin enforced. Other architectures are refused. Python must be unoptimized: six Python regressions include ten early optimization-refusal cases covering all four modes and help with `-O` or positive `PYTHONOPTIMIZE`. Missing prerequisites never trigger installation. Build uses only Go/Python; check adds gofmt and readelf/LLVM, bench adds hyperfine. No core distribution/cross/installer mode is introduced.
+
+The runner copies only root `go.mod` and `.go` sources under `cmd`, `internal`, and `tests` into a fresh owned source tree with spaces in its path. It fingerprints those inputs, the public logo, its three Python tools, and the workflow. It rejects symlinked inputs and changes during execution. Source, runtime, home/config/data/state/cache/temp, Go caches/configuration, and telemetry are isolated with the same offline policy as the experiment below (`GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, `GOPROXY=off`, `GOSUMDB=off`, `GOVCS=*:off`, `CGO_ENABLED=0`). Telemetry is seeded off in the owned config before invoking Go and its location is checked. No real shell config, user Go config, credentials, or package database is used. Windows retains only required system paths and redirects user folders.
+
+`check` runs the Python regressions, formatting, vet, uncached Go JSON tests, process/optional-logo checks, dependency inspection, a byte-identical relocated rebuild, and documentation links. `tests/cli_test.go` requires an absolute runner-supplied `DOTS_CORE_TEST_BIN`; missing input fails closed instead of building against inherited settings. Its process cases use explicit owned roots, empty PATH, poison configuration/extension fixtures, sensitive sentinels, deadline-bounded execution, and unchanged-root snapshots. These snapshots cover type/mode/size/modification time and regular-file hashes, not access times or a system-wide syscall trace.
+
+Registry tests cover canonical/alias/global collisions, required metadata, overlapping synthetic routes, unchanged remaining arguments, global-only version, injected unavailability, and defensive projections. CLI tests compare help/examples to the same metadata. A dependency guard requires `internal/dispatch` to have no `os`, `io/fs`, `path/filepath`, `os/exec`, or `net` dependency, keeping direct lookup independent of runtime discovery. The ported Unix logo replacement test retains its isolated child and 10-second deadline. Windows ACL-denied logos remain untested; native known-folder resolution is unimplemented and capabilities stay `not_probed`. No filesystem mutation engine was ported from the experiment.
+
+`bench` builds once and measures complete `--help`/`--version` processes using the existing three alternating batches, 20 warmups and 200 samples per command per batch, empty PATH, no shell, public logo and discarded stdout. It retains all 600 samples per command and median/nearest-rank p95/min/max, plus separate first-observed Python timings. It then runs `BenchmarkRegistryLookup` at 3, 1,000 and 10,000 synthetic entries, `-benchmem -benchtime=200ms -count=3`; raw ns/op, allocation and iteration results measure in-process lookup only. Registry construction is outside that timed loop; it remains included in complete-process startup. Benchmarks and builds/checks run sequentially. Budgets and review thresholds in decision 0002 remain advisory numeric checks, with no cold-cache or physical-desktop claim.
+
+Every mode except docs retains `bin/dots` (or `.exe`), the logo and sanitized `evidence.json` under a unique `dots-core-artifact-*` temporary directory; caches and fixture roots are removed. Preserve reviewed evidence privately under `$HOME/dots-review-evidence` before temporary retention expires. The source hashes identify uncommitted local runs; CI also compares every input to its commit and retains exact public source snapshots. Reuse historical experiment evidence only for unchanged experimental inputs; the new core has its own fresh binary identity and measurements.
+
+`tools/ci_core.py` runs core check then bench and verifies source/native binary identity across both. The existing workflow now covers `main`, both Phase 1/Phase 2 feature branches, and PRs targeting `main`; PR checkout and evidence identify GitHub's tested merge commit. The existing experiment collector still runs check/dist and uploads its independent artifact before core checks. Native Linux/Windows jobs provision development hyperfine/readelf/LLVM only in CI, then run offline verification. Core artifacts are `phase-2-core-<linux|windows>-<commit>-<attempt>`, retained for 30 days, with allowlisted source, logs, binary, raw timings and hashes. Final native outcomes and limitations are recorded in the [focused plan](../plans/phase-2-command-center.md).
+
 ## Implemented Portability Runner
 
 From the repository root on native Termux Android/ARM64, Linux/AMD64, or Windows/AMD64 (use `python` in PowerShell when that is the installed Python command):
@@ -80,7 +106,7 @@ Current CI runs `check` and `dist`; previous startup evidence is reused only aft
 
 ## Native Linux and Windows CI
 
-The [Phase 1 workflow](../.github/workflows/phase-1-linux.yml) runs on pushes to `feat/phase-1-portability`, using `ubuntu-24.04`/AMD64 and `windows-2025`/AMD64 jobs, pinned action revisions, Go 1.27.1, and disabled setup-go caching. Linux CI provisions `binutils`; Windows CI requires the runner’s LLVM `llvm-readobj`; Termux never installs them through this runner. Checkout uses `submodules: false` and does not retain credentials. Windows checkout sets both `core.autocrlf=false` and `core.eol=lf` to preserve committed bytes under this repository's `text=auto` attributes. The collector compares every captured input byte-for-byte with `git show <commit>:<path>` before verification; a clean Git status alone does not establish identical line endings. Verification subprocesses receive allowlisted environment values without GitHub tokens, then the harness creates its own Go and CLI environments. Toolchain/module downloads remain disabled throughout verification.
+The [Phase 1 workflow](../.github/workflows/phase-1-linux.yml) runs on pushes to `feat/phase-1-portability`, `feat/phase-2-core-registry`, and `main`, and on PRs targeting `main`, using `ubuntu-24.04`/AMD64 and `windows-2025`/AMD64 jobs, pinned action revisions, Go 1.27.1, and disabled setup-go caching. Linux CI provisions `binutils` and `hyperfine`; Windows CI provisions hyperfine 1.20.0 and requires the runner’s LLVM `llvm-readobj`; Termux never installs them through this runner. Checkout uses `submodules: false` and does not retain credentials. Windows checkout sets both `core.autocrlf=false` and `core.eol=lf` to preserve committed bytes under this repository's `text=auto` attributes. The collector compares every captured input byte-for-byte with `git show <commit>:<path>` before verification; a clean Git status alone does not establish identical line endings. Verification subprocesses receive allowlisted environment values without GitHub tokens, then the harness creates its own Go and CLI environments. Toolchain/module downloads remain disabled throughout verification.
 
 `python3 -B experiments/go-portability/tools/ci_verify.py` is the CI-only collector. It now runs `check` then `dist` sequentially and verifies commit identity, clean public inputs, matching source hashes, and identical native binaries across both runs. Its artifact directory is `$RUNNER_TEMP/dots-linux-evidence` or `$RUNNER_TEMP/dots-windows-evidence`, outside the checkout. It records runner image/kernel/CPU/filesystem details and actual Go, Python, Git, and readelf/LLVM versions; no full environment dump is collected.
 
@@ -173,7 +199,7 @@ Real package-manager integration belongs in disposable images or machines with e
 
 ## Performance
 
-The [accepted Phase 1 adoption decision](decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy) sets concrete warm targets and a regression-review policy using the existing method. Numeric checks remain advisory pending representative desktop evidence and a separately approved enforcement policy; no new runner or threshold enforcement is implemented.
+The [accepted Phase 1 adoption decision](decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy) sets concrete warm targets and a regression-review policy using the existing method. Numeric checks remain advisory pending representative desktop evidence and a separately approved enforcement policy; the core runner records measurements without enforcing numeric thresholds.
 
 Establish baselines before hard budgets.
 

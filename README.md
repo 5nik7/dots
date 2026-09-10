@@ -4,9 +4,35 @@
 
 ## Status
 
-The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture is in the design and incremental-migration phase. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The permanent core and Phase 2 remain unimplemented.
+The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture is in the design and incremental-migration phase. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; the broader Phase 2 command center remains deferred.
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
+
+## Try the Permanent Development Core
+
+With Go 1.27.1 and Python 3 already installed, run from this checkout (not the original live checkout):
+
+```bash
+DOTS_DEV_BIN="$(python3 -B tools/verify_core.py build)"
+"$DOTS_DEV_BIN" --help
+"$DOTS_DEV_BIN" --version
+"$DOTS_DEV_BIN" doctor
+"$DOTS_DEV_BIN" doctor --json
+```
+
+The verifier creates test-owned build/config/cache/output roots, disables Go downloads and telemetry, and prints only the resulting binary path on stdout. Nothing is installed or added to PATH. The artifact includes `bin/dots`, the optional public logo and sanitized build evidence; it may be removed with temporary storage. A configured `$DOTS` still controls optional-logo lookup. The active `bin/dots` and its directory flags are unchanged.
+
+PowerShell uses `python -B tools/verify_core.py build` to obtain the separate `.exe` path:
+
+```powershell
+$dev = python -B tools/verify_core.py build
+if ($LASTEXITCODE -ne 0) { throw "Development build failed" }
+& $dev --help
+& $dev --version
+& $dev doctor --json
+```
+
+Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). No external command execution, completion, installation, manifest, transaction, bootstrap, or release functionality is included.
 
 ## Try the Portability Experiment
 

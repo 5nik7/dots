@@ -4,6 +4,10 @@
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
 
+## Permanent Development Core
+
+The root core ports the experimental read-only platform adapter and optional-logo opening unchanged, including schema 1, marker heuristics, candidate Unix paths, missing Windows path warnings and `not_probed` capabilities. Its registry uses injected availability metadata and does not perform capability probes. The native root-core verification and fresh timing results are tracked separately in the [first-slice plan](../plans/phase-2-command-center.md); the historical observations below retain their original executable identities. Native Windows known folders/restricted ACLs, WSL execution, other architectures, broader filesystems and production OS floors remain deferred. No apply/package/bootstrap/shell support follows from core startup.
+
 ## Implemented Phase 1 Observations
 
 The separate `dots-spike` executable has been built and run natively with Go 1.27.1 on Termux 0.119.0-beta.3, Android API 35, ARM64, kernel `5.4.274-qgki-30957850-abG996USQSJHZB1`. Test-owned directories under the Termux temporary directory report f2fs. Successful file/directory symlinks and explicit regular-file copies apply only to these fixtures, not Android shared storage or every possible destination.

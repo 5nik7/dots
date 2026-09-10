@@ -16,7 +16,7 @@ The project is in the design and incremental-migration phase.
 - The existing dotfiles tree remains live and must not be reorganized wholesale without an approved migration plan.
 - Commands and manifests described in `docs/` may be proposed rather than implemented. Never document a proposed command as currently usable.
 - Termux is the first implementation target. Cross-platform boundaries must still be preserved from the first change.
-- Go adoption and the bounded next core slice are accepted in [decision 0002](docs/decisions/0002-phase-1-go-adoption.md). The permanent core and Phase 2 remain unimplemented; untested platform and release capabilities stay deferred.
+- Go adoption and the bounded next core slice are accepted in [decision 0002](docs/decisions/0002-phase-1-go-adoption.md). The first permanent read-only core/registry slice is implemented; external dispatch and the broader command center remain deferred. Untested platform and release capabilities stay deferred.
 
 Track phase status in [`plans/roadmap.md`](plans/roadmap.md) and Termux scope in [`plans/termux-mvp.md`](plans/termux-mvp.md).
 
@@ -74,7 +74,7 @@ See `docs/principles.md` for the consequences of each principle.
 
 ## Working Architecture
 
-Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent core will be introduced incrementally beside the preserved experiment. POSIX shell and PowerShell bootstrap scripts and the Omarchy-inspired external command protocol remain intended boundaries; adoption does not establish production installation support or implement them.
+Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent read-only core now lives beside the preserved independent experiment. POSIX shell and PowerShell bootstrap scripts and the Omarchy-inspired external command protocol remain intended boundaries; adoption does not establish production installation support or implement them.
 
 The core owns operations that require consistent safety or state:
 

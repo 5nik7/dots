@@ -1,12 +1,42 @@
 # Command Model
 
-**Status: Experimental interface implemented below; production command model proposed**
+**Status: Permanent read-only built-ins implemented; external command/discovery model proposed**
 
-This is the design source for the future CLI until a validated command registry becomes authoritative. The current `bin/dots` prototype does not implement this command set.
+The permanent built-in table in `internal/cli/cli.go` is authoritative for its implemented surface. This document remains the design source for the broader future CLI. The current `bin/dots` prototype does not implement this command set.
 
 ## Implemented Bash Prototype
 
 `bin/dots` supports no arguments, `help`, `-h`, and `--help` for help. `-d`/`--dir` prints `$DOTS`; preceding it with `-r`/`--raw` disables home abbreviation. Unknown input prints an error and help to stderr and exits 1. It has no version or diagnostic command. This behavior remains separate from the experiment.
+
+## Permanent Development Interface
+
+The root module builds `cmd/dots` into a separate test-owned executable, never `bin/dots`. It implements the same bounded read-only requests as the experiment below, with `dots` branding and `--version` output `dots 0.0.0-dev <Go version> <GOOS>/<GOARCH>`. Help identifies it as a development binary and renders its entries from the validated registry. No `version`, `commands`, completion, external command, or managed mutation route is enabled. The live prototype's directory flags remain exclusive to that prototype.
+
+No arguments select help. `help`, `-h`, and `--help` display global help; `doctor -h` and `doctor --help` display contextual help without running diagnostics. `doctor` and `doctor --json` report the same candidate-path and `not_probed` capability model, diagnostic schema 1, and Windows missing-path warning as the experiment. Version and JSON never read the logo. All extra/unknown arguments are rejected without echoing their values. Exit codes remain 0 for successful output, 1 for output/registry failure, and 2 for unsupported arguments; this does not select the future mutation/unavailable-command exit mapping.
+
+The optional logo retains the experiment's bounded handle validation, Unix nonblocking opening, DOTS-first lookup and executable-symlink-relative fallback. Only successful help reads it. Registry construction/lookup does not inspect the repository, load configuration, scan PATH, or collect platform evidence. See the [core verification instructions](testing.md#permanent-core-verification) and [first-slice plan](../plans/phase-2-command-center.md).
+
+### Built-in Metadata Contract
+
+`internal/dispatch.Metadata` is the private typed carrier accepted for this slice under [decision 0002](decisions/0002-phase-1-go-adoption.md). It is not a public discovery schema or an extension metadata format.
+
+| Field | Implemented meaning |
+| --- | --- |
+| `ID` | Unique handler identity, bound to a non-nil `Entry.Handler` |
+| `Route` | Canonical token sequence; empty only for global-only entries such as `--version` |
+| `GlobalOptions` | Separate dash-prefixed invocation spellings; they do not expose a `version` token route |
+| `Aliases` | Compatibility token routes, validated in the same collision namespace as canonical routes |
+| `Summary`, `Synopsis`, `Examples` | Required help text and executable examples |
+| `Platforms`, `Capabilities` | Explicit platform IDs or sole wildcard `*`, plus injected required capability identifiers |
+| `Hidden` | Omit from normal help without changing lookup |
+| `Outputs` | Unique `text` (schema 0) or `json` (positive schema version) descriptors |
+| `Mutation` | Only `read-only` accepted in this slice |
+
+`dispatch.New` validates the complete table before exposing handlers: duplicate IDs/routes/aliases/options, invalid route tokens, missing/default metadata, unsupported platforms/outputs/mutation classes, and nil handlers are refused. The default entry is help. All shipped entries declare `*` and no required capabilities, so startup never needs platform collection to resolve a route.
+
+An in-memory token tree chooses the deepest exact built-in match and forwards the remaining argument slice unchanged. The chosen handler validates its arguments. Global options are resolved separately. Injected unavailable-platform/capability cases produce `ErrUnavailable`, distinct from `ErrUnknown`; no shipped command requires a probe or uses this distinction to claim new platform support. Direct lookup depends on argument depth, not repository or registry size.
+
+`Project` returns an ordered defensive metadata copy for help and future renderers. Tests cover help/example agreement and projection mutation isolation. No completion/JSON-discovery/Markdown-command-reference generator is implemented; those future consumers will use this projection instead of a competing table.
 
 ## Implemented Experimental Interface
 
@@ -24,7 +54,7 @@ Extra arguments and unimplemented commands are rejected, including `version`, `c
 
 Help follows the prototype's logo lookup: if `$DOTS` is nonempty, read its `logo.txt`; otherwise resolve executable symlinks and look in the executable directory's parent. A configured but missing logo does not fall back to another repository. The harness provides an artifact `bin/dots-spike` and parent `logo.txt`. Empty, unreadable, missing, broken-link, or non-regular logos are silently omitted. The experiment also omits logos larger than 64 KiB to bound help work. Content is preserved, its final line terminated if necessary, and a separating newline added. Only successful help requests read the logo. The loader checks the pathname, then validates the opened file handle before reading. On Unix it opens in nonblocking mode so replacement with a FIFO between the checks does not wait for a writer; valid symlinks to regular files still work. This is not a general timeout for filesystem path lookup or regular-file I/O. No recursive repository search or Git invocation occurs.
 
-The small table in `internal/cli/cli.go` is the source for accepted built-in names and help descriptions; tests check metadata completeness, name collisions, and advertised entries. Full discovery, generated Markdown, and shell completion remain Phase 2 proposals. The experiment provides no completion command or installation, and tests explicitly reject that route. No extension metadata carrier has been selected.
+The small table in `experiments/go-portability/internal/cli/cli.go` is the source for accepted built-in names and help descriptions; tests check metadata completeness, name collisions, and advertised entries. Full discovery, generated Markdown, and shell completion remain Phase 2 proposals. The experiment provides no completion command or installation, and tests explicitly reject that route. No extension metadata carrier has been selected.
 
 ### Experimental Diagnostic JSON Schema 1
 
@@ -32,7 +62,7 @@ The fixed top-level keys are `schema_version`, `platform`, `os`, `architecture`,
 
 ## Interface Shape
 
-The [accepted next implementation boundary](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) scopes a permanent built-in-only registry for a later task. Phase 2 remains unimplemented. External dispatch, discovery/completion commands, and the extension metadata carrier remain deferred; the live and experimental interfaces above are unchanged.
+The [accepted next implementation boundary](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is implemented for the read-only built-in registry. The broader Phase 2 command center remains deferred. External dispatch, discovery/completion commands, and the extension metadata carrier remain deferred; the live and experimental interfaces above are unchanged.
 
 Users interact with space-separated routes:
 
@@ -72,7 +102,7 @@ Built-ins cannot be shadowed silently. Search precedence and trust must be expli
 | `dots apply` | Apply an approved plan as a transaction | Transaction foundation |
 | `dots undo` | Validate and reverse a recorded transaction | Transaction foundation |
 | `dots history` | List and inspect transactions and backups | Transaction foundation |
-| `dots doctor` | Report platform, paths, capabilities, requirements, and recovery issues | Limited diagnostics in Phase 1 experiment; full route at resolver |
+| `dots doctor` | Report platform, paths, capabilities, requirements, and recovery issues | Read-only candidate diagnostics implemented; full route at resolver |
 | `dots files` | Inspect, edit, diff, and adopt managed files | Termux MVP |
 | `dots links` | Inspect, check, and repair managed links | Termux MVP |
 | `dots scripts` | Discover, run, edit, and optionally expose repository scripts | Later MVP |
@@ -182,7 +212,7 @@ Do not make `--force` a universal bypass. Force behavior must be scoped to the o
 
 ## Metadata
 
-The metadata carrier remains undecided. The model must support:
+The external metadata carrier remains undecided. The private built-in carrier is implemented above; the broader model must support:
 
 | Field | Requirement |
 | --- | --- |

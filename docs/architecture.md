@@ -1,8 +1,14 @@
 # Architecture
 
-**Status: Go adoption and first permanent-core boundary accepted; broader architecture proposed and Phase 2 unimplemented**
+**Status: Go adoption and first permanent-core boundary accepted; permanent read-only core implemented; broader architecture proposed**
 
 This document defines the working architecture for the future `dots` CLI. It separates durable boundaries from implementation choices that still require validation.
+
+## Implemented Permanent Core Boundary
+
+Root `go.mod` (`github.com/5nik7/dots`, Go 1.27.1) and `cmd/dots` now own the separate permanent development binary. `internal/cli` binds only help/version/doctor and renders registry metadata; `internal/dispatch` validates typed entries and resolves token routes/global spellings entirely in memory; `internal/platform` owns the ported read-only observations and file opening. There is no external execution or mutation API. The active `bin/dots` remains untouched.
+
+`tools/verify_core.py` copies only selected core inputs into owned temporary roots; `tools/ci_core.py` collects native check/startup/registry evidence. These tools are independent of the preserved experimental module and its collectors. CI runs both surfaces sequentially. Only the CLI logo provider and doctor adapter inspect allowlisted runtime inputs; registry lookup has no filesystem/process dependencies. See [commands](commands.md#built-in-metadata-contract), [verification](testing.md#permanent-core-verification), and the [first-slice plan](../plans/phase-2-command-center.md).
 
 ## Implemented Experimental Boundary
 
@@ -108,7 +114,7 @@ Extension discovery and metadata are described in `commands.md`. Extensions may 
 
 [Decision 0002](decisions/0002-phase-1-go-adoption.md) accepts Go, the initial toolchain/development targets, warm-start policy, minimal bundle/release-trust direction, and additive permanent-core/registry scope. Native Termux and Linux/Windows CI evidence supports that decision; it does not establish production OS floors, representative desktop performance, or controlled cold-cache results.
 
-The first permanent implementation will use root `go.mod`, `cmd/dots`, and private CLI, dispatch, and platform packages for the existing read-only built-ins. Its [bounded file and test scope](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is accepted but unimplemented. The independent experiment and its historical output remain unchanged; its provisional-language banner predates adoption. External execution, manifests, state, and transactions stay outside the first slice.
+The first permanent implementation uses root `go.mod`, `cmd/dots`, and private CLI, dispatch, and platform packages for the approved read-only built-ins. Its [bounded file and test scope](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is implemented in the bounded first slice. The independent experiment and its historical output remain unchanged; its provisional-language banner predates adoption. External execution, manifests, state, and transactions stay outside the first slice.
 
 POSIX shell and PowerShell remain intended bootstrap and extension boundaries. They must not become separate implementations of desired-state resolution or transactions. Public release and remote bootstrap remain gated by the accepted trust requirements and deferred verification work in decision 0002.
 

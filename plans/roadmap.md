@@ -44,7 +44,7 @@ The owner authorized the limited [Termux portability experiment](phase-1-portabi
 - [~] Measure cold and warm startup baselines. The experiment records Termux and Linux/Windows CI first-observed/warm runs; controlled cold-cache and representative desktop-hardware baselines remain pending.
 - [x] Validate Termux filesystem and link primitives in a disposable target.
 - [x] Complete the bounded distribution experiment: verified bundles, checksum refusal, fresh extraction, and native execution passed on Termux/Linux/Windows. Go and the bundle/release-trust direction are accepted in decision 0002; release implementation and support gates remain open; see the [distribution results](phase-1-portability.md#bounded-distribution-experiment).
-- [x] Record the implementation-language decision. [0002](../docs/decisions/0002-phase-1-go-adoption.md) was accepted by the owner on 2026-09-10 as proposed at `c7d86a989e6397a3ecd74407e63097994f183694`. Its next implementation boundary is approved; Phase 2 remains unimplemented.
+- [x] Record the implementation-language decision. [0002](../docs/decisions/0002-phase-1-go-adoption.md) was accepted by the owner on 2026-09-10 as proposed at `c7d86a989e6397a3ecd74407e63097994f183694`. Its next implementation boundary is approved; The first Phase 2 read-only core slice is now implemented; broader Phase 2 remains open.
 - [x] Establish initial unit test and formatting commands.
 - [x] Complete bounded native Windows CI validation. Native runtime/fixtures, startup, dependencies, and retained evidence reviewed; `GOVCS=*:off` corrected and Termux/Linux rechecks passed. Go adoption is now accepted; release implementation and Windows policy variations remain open. See the [focused results](phase-1-portability.md#bounded-native-windows-follow-up).
 - [x] Add bounded native Linux CI validation and retained evidence. Native checks, startup samples, and uploaded artifact hashes/source were reviewed; see the [focused results](phase-1-portability.md#native-linux-validation).
@@ -59,17 +59,17 @@ Exit criteria:
 
 Goal: establish the stable discovery and extension foundation.
 
-The approved first task is the [permanent-core and built-in-only registry slice](../docs/decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task). It remains unimplemented; the approval-recording and PR task changes documentation only.
+The approved first task is the [permanent-core and built-in-only registry slice](../docs/decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task). Implementation and native acceptance results are tracked in [phase-2-command-center.md](phase-2-command-center.md); the experiment remains independent.
 
-- [ ] Implement built-in route registration.
+- [x] Implement the first validated read-only built-in registry in the permanent core.
 - [ ] Implement longest-prefix direct external command resolution.
 - [ ] Define trusted extension directories and precedence.
-- [ ] Finalize command metadata representation.
-- [ ] Implement contextual help and group discovery.
-- [ ] Implement command metadata validation and collision detection.
+- [~] Finalize command metadata representation. Typed private built-in metadata/projections are implemented; external carrier and public discovery remain undecided.
+- [~] Implement contextual help and group discovery. Approved global/doctor help derives from metadata; group discovery remains deferred.
+- [~] Implement command metadata validation and collision detection. Built-in tables are validated; external routes remain deferred.
 - [ ] Implement machine-readable command discovery.
 - [ ] Generate Bash, Zsh, Fish, and PowerShell completion data as supported.
-- [ ] Add dispatch, collision, unavailable-platform, and structured-output tests.
+- [~] Add dispatch, collision, unavailable-platform, and structured-output tests. Built-in/JSON tests exist; external dispatch coverage remains deferred.
 - [ ] Record the command protocol decision.
 
 Exit criteria:

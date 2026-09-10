@@ -6,6 +6,7 @@ Plans describe active or proposed work. Durable architecture and behavior belong
 
 - [`roadmap.md`](roadmap.md) — project phases, dependencies, decision gates, and completion criteria.
 - [`phase-1-portability.md`](phase-1-portability.md) — completed isolated Go experiment, retained evidence, accepted adoption decision, and deferred portability coverage.
+- [`phase-2-command-center.md`](phase-2-command-center.md) — permanent read-only core/registry slice and native verification.
 - [`termux-mvp.md`](termux-mvp.md) — first usable platform slice and acceptance criteria.
 
 ## Plan Rules
