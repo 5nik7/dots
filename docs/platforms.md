@@ -1,8 +1,12 @@
 # Platform Model
 
-**Status: Experimental core verified on native Termux and Linux/Windows CI; broader platform model proposed**
+**Status: Permanent read-only core and independent experiment verified on native Termux and Linux/Windows CI; broader platform model proposed**
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
+
+## Permanent Development Core
+
+The root core ports the experimental read-only platform adapter and optional-logo opening unchanged, including schema 1, marker heuristics, candidate Unix paths, missing Windows path warnings and `not_probed` capabilities. Its registry uses injected availability metadata and does not perform capability probes. Root-core checks and fresh benchmarks passed on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in CI; this is development coverage of the read-only surface. The native root-core verification and fresh timing results are tracked separately in the [first-slice plan](../plans/phase-2-command-center.md); the historical observations below retain their original executable identities. Native Windows known folders/restricted ACLs, WSL execution, other architectures, broader filesystems and production OS floors remain deferred. No apply/package/bootstrap/shell support follows from core startup.
 
 ## Implemented Phase 1 Observations
 

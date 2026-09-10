@@ -1,6 +1,6 @@
 # Phase 1 Termux Portability Experiment
 
-**Status: Bounded portability/distribution experiments completed and Go adoption accepted; remaining platform/release gates deferred and Phase 2 unimplemented**
+**Status: Bounded portability/distribution experiments completed and Go adoption accepted; remaining platform/release gates deferred; first Phase 2 slice tracked separately**
 
 The owner approved all four decisions in [0002](../docs/decisions/0002-phase-1-go-adoption.md) as proposed at `c7d86a989e6397a3ecd74407e63097994f183694` on 2026-09-10. The results below retain their original chronology, including then-provisional language status; current policy is the accepted decision. Acceptance does not complete untested capabilities.
 
@@ -300,7 +300,7 @@ These results prove this bounded build/package/verify/extract/execute path. They
 
 The owner accepted [0002: Go adoption](../docs/decisions/0002-phase-1-go-adoption.md) on 2026-09-10, approving all four decisions at proposal commit `c7d86a989e6397a3ecd74407e63097994f183694`. The language, initial development targets/toolchain, advisory warm budgets and regression-review policy, bundle/release-trust direction, gap classifications, and first permanent-core task are accepted. Their implementation and production-support gates remain pending. Experimental checksums alone do not authenticate a publisher.
 
-The next implementation boundary is the accepted built-in-only permanent-core slice; this approval-recording task does not implement it. The historical experiment decision, executable, tests, and retained evidence are unchanged.
+The accepted built-in-only permanent-core slice is now tracked in [the Phase 2 plan](phase-2-command-center.md). The historical approval-recording task did not implement it. The historical experiment decision, executable, tests, and retained evidence are unchanged.
 
 The retained final-checkpoint [CI run 34424607080](https://github.com/5nik7/dots/actions/runs/34424607080) passed native Linux/Windows checks and distribution verification at `dcfea900875656750c6c4b763c1f9119e4339b6a`. Final Termux distribution evidence and desktop reviews are retained separately in the existing private distribution archive; decision 0002 records their provenance and reuses verified results without relabeling earlier measurements.
 

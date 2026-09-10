@@ -52,6 +52,8 @@ The largest groups include wallpapers, font files, PowerShell DLLs, and demo med
 
 The additive `experiments/go-portability/` module now contains a separate Go executable with help, version, and read-only diagnostics, plus isolated filesystem tests and a development harness. The `.github/workflows/phase-1-linux.yml` workflow and CI evidence collector provide bounded native Linux and Windows validation jobs. Both jobs have executed successfully with retained source, binary, test, dependency, and timing evidence. The shared verifier now also has a bounded distribution mode and archive failure regressions; native distribution execution now passes on all three experimental targets, and artifacts remain outside the checkout. They own no live dotfiles. Build artifacts and caches stay outside the checkout. See the [focused plan](../plans/phase-1-portability.md) for evidence. The historical inventory and size measurements above have not been recomputed or replaced by this addition.
 
+The permanent root module now adds `cmd/dots`, private CLI/dispatch/platform packages, isolated process tests and `tools/verify_core.py`/`tools/ci_core.py`. Its binary remains in owned development artifacts and does not replace the live command. The independent experiment and the historical inventory above remain intact. See the [first-slice plan](../plans/phase-2-command-center.md).
+
 `dot.env` currently:
 
 - Uses Zsh-specific associative arrays.

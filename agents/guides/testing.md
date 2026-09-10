@@ -44,7 +44,13 @@ Never let a test:
 - Benchmark with representative small and large command/module sets.
 - Record environment, build mode, sample count, and statistical summary.
 - Do not call a change faster based on one interactive run.
-- Follow the accepted warm targets and regression-review policy in [decision 0002](../../docs/decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy). Numeric timing checks remain advisory; confirmed comparable regressions require a fix or owner-approved exception. No new timing gate or core runner is implemented by accepting that policy.
+- Follow the accepted warm targets and regression-review policy in [decision 0002](../../docs/decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy). Numeric timing checks remain advisory; confirmed comparable regressions require a fix or owner-approved exception. Numeric gates remain advisory; the permanent core now has the isolated runner below.
+
+## Permanent Core
+
+For root `cmd/dots`, `internal`, and `tests`, use `python3 -B tools/verify_core.py check`, `bench`, `build`, or `docs` (`python` on Windows). Run check before bench and keep other builds/tests out of timing intervals. The runner enforces installed Go 1.27.1, owns configuration/cache/telemetry and runtime roots, and supplies the prebuilt binary required by process tests. Do not use inherited raw Go build/test settings. Use `python3 -B tools/test_verify_core.py` for the six Python regressions without Go. See [testing.md](../../docs/testing.md#permanent-core-verification) for guarantees, CI, measurement method, and durable retention.
+
+Preserve the independent experiment and its verifier. Core verification does not authorize an installed executable, external execution, completions, or managed mutation. Keep the dispatch dependency guard, metadata projection tests, argument/error contracts, optional-logo replacement regression and empty-PATH process snapshots.
 
 ## Documentation
 
