@@ -30,7 +30,7 @@ func TestCLI(t *testing.T) {
 		{"doctor short help", []string{"doctor", "-h"}, 0, "Usage: dots doctor", true, false},
 		{"unknown", []string{"TOP_SECRET"}, 2, "", false, false},
 		{"unimplemented", []string{"apply"}, 2, "", false, false},
-		{"completion deferred", []string{"completion"}, 2, "", false, false},
+		{"completion needs shell", []string{"completion"}, 2, "", false, false},
 		{"extra help", []string{"help", "TOP_SECRET"}, 2, "", false, false},
 		{"extra version", []string{"--version", "TOP_SECRET"}, 2, "", false, false},
 		{"unknown flag", []string{"doctor", "--reveal"}, 2, "", false, false},
@@ -79,7 +79,7 @@ func TestMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(r.Project()) != 4 {
+	if len(r.Project()) != 5 {
 		t.Fatal("unexpected command surface")
 	}
 	if Run([]string{"--help"}, &out, &errOut, func() string { return "" }, nil) != 0 {

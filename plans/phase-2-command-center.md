@@ -147,3 +147,33 @@ All series contain 600 warm samples and help/version meet accepted absolute targ
 Reviewed evidence in the catalog directory includes sanitized native job logs, extracted check/bench metadata, runner details and review summaries. All 40 input hashes were verified against the tested commit; check/bench binary identities match within each host; all timing summaries were recomputed from raw samples. Desktop review uses CI logs, not locally downloaded archive verification or desktop execution on Termux. Final documentation-only commit CI is retained separately at delivery rather than relabeling these measurements.
 
 PR creation returned HTTP 403 from the GitHub integration and local `gh` authentication was invalid. The authorized fallback is the [comparison](https://github.com/5nik7/dots/compare/main...feat/phase-2-command-catalog); a prepared PR description is retained beside the evidence. No merge is authorized. Existing worktrees' HEAD/status/logo/index identities and remote main/recovery refs were rechecked unchanged. Remaining limitations include WSL execution, other architectures, restricted Windows ACLs/known folders, broader filesystems, production OS floors, release trust and representative performance evidence; completions/configuration/installation/mutations remain outside this slice.
+
+## Authorized Zsh Completion Slice
+
+Status: In progress under owner approval of [decision 0005](../docs/decisions/0005-static-zsh-completion.md).
+
+Start from verified main `2ae087926305e6dee742b61ffb488f774a833c74` in the explicitly enrolled `feat/phase-2-zsh-completion` worktree after eligible lifecycle cleanup. Preserve the original checkout, all branch/recovery refs, live configuration and historical evidence.
+
+- [x] Shared in-memory catalog and stdout-only Zsh generator, registry/help and error contracts.
+- [x] Literal ordered root context, bounded static candidates, safe quoting and argument boundaries.
+- [ ] Real isolated Termux/Linux Zsh acceptance; native Windows generation/CLI checks without Zsh claims.
+- [ ] Existing native core/experiment gates, startup measurements, disposable demonstration and retained evidence.
+- [ ] Documentation, final-commit CI review, explicit branch push and PR or comparison fallback.
+
+No installation, live shell startup edits, Bash/Fish/PowerShell renderers, argument-schema expansion, package installation on Termux or merge. Retain this worktree while the implementation session uses it.
+
+### Zsh Termux Results
+
+The isolated core check passed 40 top-level Go tests with no skips and seven Python regressions on Termux Android/ARM64 using zsh 5.9.2 (aarch64-unknown-linux-android). Candidate tests execute the generated function in real Zsh with an empty PATH, and the native pseudo-terminal test initializes compinit without a dump file and exercises normal completion registration with the real compadd builtin. Shared schema/projection, full discovery-failure/availability, native external interruption, unchanged-root, dependency and identical relocated-build checks passed.
+
+| Warm series | Median / p95 (ms) |
+| --- | --- |
+| --help | 8.590 / 10.284 |
+| --version | 8.336 / 10.000 |
+| external-dispatch | 16.200 / 19.214 |
+| discovery-10 | 10.696 / 13.133 |
+| discovery-json-10 | 10.823 / 12.348 |
+
+Each series retains 600 samples under the existing three-batch method. Help/version meet the accepted Termux advisory budgets. These are fresh observations, not controlled causal speedups or cold-cache results. Check/bench binaries match at SHA-256 `3ff0f733c2e0d0fb89e094004e141d8d27217395aaa1cc7e00a9a7df000bb333`. Generation and interactive latency have no new numeric budget; runtime nonexecution and embedded-only candidate evaluation are structural guarantees.
+
+Evidence is retained under `$HOME/dots-review-evidence/phase-2-zsh-iwmrh6tl/`: exact tested inputs, native check/bench artifacts, sanitized logs and a disposable demonstration using the retained development binary. No live PATH/startup or prototype file changed. Desktop and final-commit CI results are recorded separately after inspection.

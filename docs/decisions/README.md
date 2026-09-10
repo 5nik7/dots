@@ -66,3 +66,4 @@ Do not edit an accepted record to make an old decision appear different. Add a n
 - [0002: Adopt Go for the core with bounded initial coverage](0002-phase-1-go-adoption.md) — Accepted by the owner on 2026-09-10; bounded permanent-core implementation is present; production support remains pending.
 - [0003: Trusted external command protocol](0003-trusted-external-command-protocol.md) — Accepted; bounded development extension mechanism implemented.
 - [0004: Versioned machine-readable command discovery](0004-versioned-command-discovery.md) — Accepted by the owner; schema-1 catalog over shared static metadata.
+- [0005: Static Zsh completion](0005-static-zsh-completion.md) — Accepted; stdout-only generation over the shared catalog, with literal ordered root context.

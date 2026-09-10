@@ -31,7 +31,7 @@ func TestCatalogContract(t *testing.T) {
 	if err := json.Unmarshal(envelope["commands"], &records); err != nil {
 		t.Fatal(err)
 	}
-	wantIDs := []string{"commands", "doctor", "help", "version"}
+	wantIDs := []string{"commands", "completion", "doctor", "help", "version"}
 	keys := strings.Fields("kind id route global_options aliases summary synopsis examples platforms capabilities hidden outputs mutation availability")
 	for i, record := range records {
 		if len(record) != len(keys) {
@@ -64,7 +64,7 @@ func TestCatalogContract(t *testing.T) {
 			t.Fatal("availability", record)
 		}
 	}
-	if len(records) != 4 || string(records[3]["route"]) != "[]" || !bytes.Contains(records[3]["global_options"], []byte(`"--version"`)) {
+	if len(records) != 5 || string(records[4]["route"]) != "[]" || !bytes.Contains(records[4]["global_options"], []byte(`"--version"`)) {
 		t.Fatal("global-only version")
 	}
 	var outputs []catalogOutput
@@ -138,7 +138,7 @@ func TestCatalogExternalOrder(t *testing.T) {
 		t.Fatal("ordering or path leak", err)
 	}
 	var c catalog
-	if json.Unmarshal(a, &c) != nil || len(c.Commands) != 6 || c.Commands[4].ID != "files-list" || !c.Commands[5].Hidden {
+	if json.Unmarshal(a, &c) != nil || len(c.Commands) != 7 || c.Commands[5].ID != "files-list" || !c.Commands[6].Hidden {
 		t.Fatal("missing hidden/ID", string(a))
 	}
 }

@@ -187,3 +187,7 @@ Update this matrix only with verified results.
 | Hosted CI | To decide | Experimental: native Phase 1 check and bench | To decide | Experimental: native Phase 1 check and bench |
 
 `Planned` is not a support claim. Replace it with explicit experimental or supported labels only after acceptance criteria and tests are documented.
+
+## Development Zsh Completion
+
+The portable development CLI can generate Zsh source without a Zsh dependency. Native Zsh runtime acceptance targets Termux and Linux only; native Windows tests verify CLI generation, not shell execution. Other shells, WSL runtime and completion installation remain deferred. See [decision 0005](decisions/0005-static-zsh-completion.md) and [Phase 2 evidence](../plans/phase-2-command-center.md#authorized-zsh-completion-slice).
