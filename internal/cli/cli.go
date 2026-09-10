@@ -1,4 +1,4 @@
-// Package cli binds the permanent read-only built-ins to their registry.
+// Package cli binds the permanent built-ins and explicit external resolver.
 package cli
 
 import (
@@ -221,7 +221,7 @@ func help(out io.Writer, logo func() string, r *dispatch.Registry, id string) in
 			}
 		}
 	} else {
-		text.WriteString("Usage: dots <command or global option>\n\n")
+		text.WriteString("Usage: dots [--command-dir <absolute-trusted-root>]... <command or global option>\n\n")
 		for _, m := range metadata {
 			if !m.Hidden {
 				fmt.Fprintf(&text, "  %-30s %s\n", m.Synopsis, m.Summary)

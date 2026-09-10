@@ -74,8 +74,8 @@ Implementation order: pure candidate/metadata contracts; explicit root and targe
 
 - [x] Verify base/worktrees and commit the exact authorized logo cleanup separately.
 - [x] Record accepted protocol, exact limits, reservations and trust boundary before implementation.
-- [ ] Implement strict metadata, explicit roots, targeted routing and static discovery/help.
-- [ ] Implement native Unix/Windows execution adapters and required interruption regressions.
+- [x] Implement strict metadata, explicit roots, targeted routing and static discovery/help.
+- [x] Implement native Unix/Windows execution adapters and required interruption regressions.
 - [ ] Pass native Termux/Linux/Windows core verification and retained experiment checks.
 - [ ] Measure help/version, external execution and discovery independently; verify cleaned logo.
 - [ ] Synchronize documentation, retain sanitized evidence, inspect final-head CI and prepare PR.

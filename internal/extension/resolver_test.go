@@ -130,3 +130,14 @@ func TestUnsafeEntriesAndLimits(t *testing.T) {
 	_, err = r.Discover(false)
 	kind(t, err, Limit)
 }
+
+func TestDiscoveryRejectsNonASCIIFilenames(t *testing.T) {
+	r := resolver(t, t.TempDir())
+	r.windows = true
+	r.access.Entries = func(string) ([]string, error) { return []string{"DOTS-K.JSON"}, nil }
+	_, err := r.Discover(false)
+	kind(t, err, InvalidMetadata)
+	r.access.Entries = func(string) ([]string, error) { return nil, os.ErrPermission }
+	_, err = r.Discover(false)
+	kind(t, err, RootFailure)
+}

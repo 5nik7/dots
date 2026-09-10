@@ -50,3 +50,7 @@ Implicit PATH/repository discovery would expand trust without selection. First-d
 ## Validation
 
 Require native isolated Termux ARM64, Linux AMD64 and Windows AMD64 checks with Go 1.27.1 and standard-library dependencies. Preserve offline/telemetry isolation and independent experiment checks. Test routing, strict metadata, root/case identity, protected precedence, argument/stream/exit contracts, native console interruption, no-execution discovery/help and unchanged owned roots. Benchmark help/version, targeted external dispatch and enumerated discovery separately using the existing warm method; numeric limits remain advisory under decision 0002. Preserve raw samples, source/binary/logo identities and gaps outside Git. Implementation results belong in the plan and must not turn untested capabilities into support claims.
+
+## Native API References
+
+Windows quoting follows [Go exec.Command](https://pkg.go.dev/os/exec#Command); `.cmd`/`.bat` and custom shell parsers are excluded. Console tests use [GenerateConsoleCtrlEvent](https://learn.microsoft.com/en-us/windows/console/generateconsolectrlevent) with a zero process-group ID inside a disposable console, so both wrapper and child receive the broadcast.

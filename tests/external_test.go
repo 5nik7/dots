@@ -156,3 +156,41 @@ func interruptedExit(t *testing.T, cmd *exec.Cmd, r *bufio.Reader) {
 		t.Fatalf("wrapper failed to await native exit: %v", err)
 	}
 }
+
+func TestExternalExitStatusesAndLaunchFailure(t *testing.T) {
+	bin, root := externalFixture(t)
+	codes := []int{0, 1, 2, 255}
+	if runtime.GOOS == "windows" {
+		codes = append(codes, 3221225786)
+	}
+	for _, code := range codes {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		cmd := exec.CommandContext(ctx, bin, "--command-dir", root, "probe", "--")
+		cmd.Env = fixtureEnv("echo")
+		for i, v := range cmd.Env {
+			if strings.HasPrefix(v, "DOTS_FIXTURE_EXIT=") {
+				cmd.Env[i] = fmt.Sprintf("DOTS_FIXTURE_EXIT=%d", code)
+			}
+		}
+		err := cmd.Run()
+		cancel()
+		if cmd.ProcessState == nil || cmd.ProcessState.ExitCode() != code {
+			t.Fatalf("status %d: %v", code, err)
+		}
+	}
+	native := "dots-probe"
+	if runtime.GOOS == "windows" {
+		native += ".exe"
+	}
+	if err := os.WriteFile(filepath.Join(root, native), []byte("not an executable format"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, bin, "--command-dir", root, "probe")
+	cmd.Env = fixtureEnv("echo")
+	out, err := cmd.CombinedOutput()
+	if err == nil || cmd.ProcessState.ExitCode() != 1 || string(out) != "dots: external command launch failed\n" {
+		t.Fatalf("launch error: %v %s", err, out)
+	}
+}

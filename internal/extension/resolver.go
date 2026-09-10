@@ -215,10 +215,20 @@ func (r *Resolver) Discover(check bool) ([]Definition, error) {
 		}
 		for _, name := range names {
 			if r.windows {
-				name = strings.ToLower(name)
+				name = strings.Map(func(c rune) rune {
+					if c >= 'A' && c <= 'Z' {
+						return c + ('a' - 'A')
+					}
+					return c
+				}, name)
 			}
 			if !strings.HasPrefix(name, "dots-") {
 				continue
+			}
+			for _, c := range name {
+				if c > 127 {
+					return nil, fail(InvalidMetadata)
+				}
 			}
 			base := name
 			for _, suffix := range suffixes {

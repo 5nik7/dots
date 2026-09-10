@@ -16,7 +16,7 @@ func TestBuiltinsPrecedeRootHealth(t *testing.T) {
 			t.Fatal(args, code, errOut.String())
 		}
 	}
-	for _, args := range [][]string{{"--command-dir"}, {"--command-dir", ""}, {"--command-dir=x", "files"}} {
+	for _, args := range [][]string{{"--command-dir"}, {"--command-dir", ""}, {"--command-dir", "--help"}, {"--command-dir=x", "files"}} {
 		var out, errOut bytes.Buffer
 		if code := Run(args, &out, &errOut, nil, nil); code != 2 {
 			t.Fatal(args, code)
