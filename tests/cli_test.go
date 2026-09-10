@@ -26,13 +26,29 @@ type observed struct {
 func snapshot(t *testing.T, root string) map[string]observed {
 	t.Helper()
 	result := map[string]observed{}
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(root, func(path string, _ fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		info, err := d.Info()
+		info, err := os.Lstat(path)
 		if err != nil {
 			return err
+		}
+		if info.IsDir() {
+			// Read directory metadata from its handle, not cached parent
+			// enumeration data. NTFS exposed stale creation-time entries in CI.
+			dir, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			info, err = dir.Stat()
+			closeErr := dir.Close()
+			if err != nil {
+				return err
+			}
+			if closeErr != nil {
+				return closeErr
+			}
 		}
 		item := observed{Mode: info.Mode(), Size: info.Size(), Modified: info.ModTime().UnixNano()}
 		if info.Mode().IsRegular() {
@@ -49,6 +65,35 @@ func snapshot(t *testing.T, root string) map[string]observed {
 		t.Fatal(err)
 	}
 	return result
+}
+
+func TestSnapshotStableAndDetectsChanges(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "populated")
+	if err := os.Mkdir(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(dir, "fixture")
+	if err := os.WriteFile(file, []byte("before"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	before := snapshot(t, root)
+	if !reflect.DeepEqual(before, snapshot(t, root)) {
+		t.Fatal("snapshot changed without a CLI or fixture mutation")
+	}
+	if err := os.WriteFile(file, []byte("after!"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if reflect.DeepEqual(before, snapshot(t, root)) {
+		t.Fatal("snapshot missed a same-size content change")
+	}
+	before = snapshot(t, root)
+	if err := os.Remove(file); err != nil {
+		t.Fatal(err)
+	}
+	if reflect.DeepEqual(before, snapshot(t, root)) {
+		t.Fatal("snapshot missed removal")
+	}
 }
 
 func TestDevelopmentProcess(t *testing.T) {
