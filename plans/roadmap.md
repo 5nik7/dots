@@ -1,6 +1,6 @@
 # Dots Roadmap
 
-**Status: Proposed**
+**Status: Active incremental implementation; later phases proposed**
 
 This roadmap sequences the future `dots` CLI around its riskiest foundations: Termux portability, deterministic specification resolution, and recoverable filesystem mutation.
 
@@ -20,8 +20,8 @@ Goal: establish sources of truth before implementation changes the live reposito
 - [x] Add working principles, architecture, command, specification, safety, platform, and testing docs.
 - [x] Record a baseline inventory of the current public repository.
 - [x] Define the first Termux MVP plan.
-- [ ] Review working decisions with the project owner.
-- [ ] Create decision records for accepted foundational choices.
+- [~] Review working decisions with the project owner. The isolated experiment and Go adoption are approved; unrelated foundational choices remain open.
+- [~] Create decision records for accepted foundational choices. [0001](../docs/decisions/0001-go-portability-experiment.md) preserves the historical evaluation authorization; [0002](../docs/decisions/0002-phase-1-go-adoption.md) accepts Go adoption. Other foundational decisions remain open.
 - [ ] Classify current files by module, destination, platform, ownership, size, generated status, and sensitivity.
 - [ ] Identify current commands/configurations that require compatibility during migration.
 
@@ -34,15 +34,20 @@ Exit criteria:
 
 Goal: prove the executable model before building stateful behavior.
 
-- [ ] Create a minimal core project without altering current dotfile installation.
-- [ ] Implement version and basic help fast paths.
-- [ ] Implement normalized platform diagnostic interfaces.
-- [ ] Build and run a candidate Go core on the current Termux architecture.
-- [ ] Build and run candidate Linux and Windows artifacts.
-- [ ] Measure cold and warm startup baselines.
-- [ ] Validate Termux filesystem and link primitives in a disposable target.
-- [ ] Record the implementation-language decision.
-- [ ] Establish initial unit test and formatting commands.
+The owner authorized the limited [Termux portability experiment](phase-1-portability.md) before the unrelated Phase 0 manifest, module-selection, and repository-size decisions. This does not waive those decisions for subsequent phases or implement the permanent core. The later accepted decision 0002 settles the language and first additive core placement.
+
+- [x] Create a minimal core project without altering current dotfile installation.
+- [x] Implement version and basic help fast paths.
+- [~] Implement normalized platform diagnostic interfaces. Termux/Linux identity and candidate paths work; native Windows identity is verified in CI, while known-folder paths and live capability probing remain deferred.
+- [x] Build and run a candidate Go core on the current Termux architecture.
+- [x] Build and run candidate Linux and Windows artifacts. Both AMD64 targets cross-compile and now also execute binaries/tests natively in CI; support remains limited to the experimental surface and recorded fixtures.
+- [~] Measure cold and warm startup baselines. The experiment records Termux and Linux/Windows CI first-observed/warm runs; controlled cold-cache and representative desktop-hardware baselines remain pending.
+- [x] Validate Termux filesystem and link primitives in a disposable target.
+- [x] Complete the bounded distribution experiment: verified bundles, checksum refusal, fresh extraction, and native execution passed on Termux/Linux/Windows. Go and the bundle/release-trust direction are accepted in decision 0002; release implementation and support gates remain open; see the [distribution results](phase-1-portability.md#bounded-distribution-experiment).
+- [x] Record the implementation-language decision. [0002](../docs/decisions/0002-phase-1-go-adoption.md) was accepted by the owner on 2026-09-10 as proposed at `c7d86a989e6397a3ecd74407e63097994f183694`. Its next implementation boundary is approved; Phase 2 remains unimplemented.
+- [x] Establish initial unit test and formatting commands.
+- [x] Complete bounded native Windows CI validation. Native runtime/fixtures, startup, dependencies, and retained evidence reviewed; `GOVCS=*:off` corrected and Termux/Linux rechecks passed. Go adoption is now accepted; release implementation and Windows policy variations remain open. See the [focused results](phase-1-portability.md#bounded-native-windows-follow-up).
+- [x] Add bounded native Linux CI validation and retained evidence. Native checks, startup samples, and uploaded artifact hashes/source were reviewed; see the [focused results](phase-1-portability.md#native-linux-validation).
 
 Exit criteria:
 
@@ -53,6 +58,8 @@ Exit criteria:
 ## Phase 2: Command Center
 
 Goal: establish the stable discovery and extension foundation.
+
+The approved first task is the [permanent-core and built-in-only registry slice](../docs/decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task). It remains unimplemented; the approval-recording and PR task changes documentation only.
 
 - [ ] Implement built-in route registration.
 - [ ] Implement longest-prefix direct external command resolution.
@@ -202,4 +209,3 @@ Goal: expand capability without burdening the core bootstrap.
 - Whether a higher-level `dots sync` workflow should compose repository, source, package, and apply stages.
 
 Resolve deferred decisions only when the next phase requires them.
-

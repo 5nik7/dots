@@ -1,8 +1,20 @@
 # Architecture
 
-**Status: Proposed**
+**Status: Go adoption and first permanent-core boundary accepted; broader architecture proposed and Phase 2 unimplemented**
 
 This document defines the working architecture for the future `dots` CLI. It separates durable boundaries from implementation choices that still require validation.
+
+## Implemented Experimental Boundary
+
+`experiments/go-portability/` is an independent Go module containing a `cmd/dots-spike` entry point, private CLI and platform packages, test-only filesystem primitives, and a Python verification harness. It adds no root Go module and does not replace `bin/dots` or move live sources. The CLI owns only help, version, and read-only diagnostics; platform/runtime/path collection and platform-specific read-only file opening stay in the platform package. Logo lookup, size/type validation, and formatting stay in the CLI package. There is no resolver, extension dispatcher, state store, or mutation API.
+
+The harness copies only experimental Go sources and the public `logo.txt` to a temporary build repository, isolates Go settings and caches, and retains reviewable binaries/evidence in a separate temporary artifact directory. Help reads a logo file at runtime rather than embedding another source copy. The executable uses only the Go standard library and invokes no subprocesses. Python, Go tools, and benchmark/inspection tools are development dependencies, not executable runtime dependencies.
+
+The branch-specific Linux/Windows workflow provisions CI development tools and delegates check/distribution execution to `tools/ci_verify.py`. That collector owns sanitized source, runtime, and result artifacts outside the checkout; the shared verifier owns offline Go settings, telemetry isolation, fixture roots, and host-specific expectations. Recorded native Linux and Windows CI runs passed; claims remain limited to its experimental commands and disposable filesystem fixtures.
+
+The verifier’s experimental `dist` mode delegates fixed-layout bundle encoding, checksum validation, and extraction to `tools/distribution.py`. It packages committed Go build identity and the committed public logo, then executes extracted artifacts in separate owned roots. This development boundary does not select a permanent release strategy, add an installer, or change the core command surface.
+
+The [experiment plan](../plans/phase-1-portability.md) and [evaluation decision](decisions/0001-go-portability-experiment.md) record scope and evidence. The boundaries below remain the proposed production architecture; successful primitive tests do not implement transactions or managed-file safety.
 
 ## System Context
 
@@ -94,16 +106,11 @@ Extension discovery and metadata are described in `commands.md`. Extensions may 
 
 ## Working Implementation Direction
 
-A compiled Go core is the current recommendation because it offers one portable implementation, quick startup, robust filesystem APIs, structured data support, and distributable binaries. This choice remains provisional until the first Termux spike proves:
+[Decision 0002](decisions/0002-phase-1-go-adoption.md) accepts Go, the initial toolchain/development targets, warm-start policy, minimal bundle/release-trust direction, and additive permanent-core/registry scope. Native Termux and Linux/Windows CI evidence supports that decision; it does not establish production OS floors, representative desktop performance, or controlled cold-cache results.
 
-- A supported Android/Termux artifact can be built and distributed reliably.
-- Startup performance is acceptable on the target device.
-- Required filesystem and symlink operations behave correctly.
-- The binary has no undeclared runtime dependencies.
+The first permanent implementation will use root `go.mod`, `cmd/dots`, and private CLI, dispatch, and platform packages for the existing read-only built-ins. Its [bounded file and test scope](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is accepted but unimplemented. The independent experiment and its historical output remain unchanged; its provisional-language banner predates adoption. External execution, manifests, state, and transactions stay outside the first slice.
 
-POSIX shell and PowerShell remain necessary for initial download/install and platform-specific extensions. They should not become separate implementations of desired-state resolution or transactions.
-
-Record the final language decision in `docs/decisions/` after the spike.
+POSIX shell and PowerShell remain intended bootstrap and extension boundaries. They must not become separate implementations of desired-state resolution or transactions. Public release and remote bootstrap remain gated by the accepted trust requirements and deferred verification work in decision 0002.
 
 ## Target Repository Shape
 
@@ -184,4 +191,3 @@ A future convenience workflow may compose them, but each stage must remain visib
 The repository and its enabled extensions are executable trust inputs. Public bootstrap should establish the core and public repository without implicitly expanding trust to private submodules or arbitrary commands found anywhere on `PATH`.
 
 Extension search locations, precedence, and opt-in rules must be documented before external discovery is enabled. Secrets and credentials are never ordinary diagnostic fields.
-

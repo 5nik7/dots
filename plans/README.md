@@ -5,6 +5,7 @@ Plans describe active or proposed work. Durable architecture and behavior belong
 ## Active Planning Documents
 
 - [`roadmap.md`](roadmap.md) — project phases, dependencies, decision gates, and completion criteria.
+- [`phase-1-portability.md`](phase-1-portability.md) — completed isolated Go experiment, retained evidence, accepted adoption decision, and deferred portability coverage.
 - [`termux-mvp.md`](termux-mvp.md) — first usable platform slice and acceptance criteria.
 
 ## Plan Rules
@@ -17,4 +18,3 @@ Plans describe active or proposed work. Durable architecture and behavior belong
 - Do not leave completed plans as the only documentation for implemented behavior.
 
 When a plan is complete, retain it if it explains migration or decision history. Mark it complete and link the resulting implementation/reference rather than rewriting its original goal.
-

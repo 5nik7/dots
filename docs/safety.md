@@ -4,6 +4,16 @@
 
 Safety is a core product feature of `dots`, not a wrapper around destructive file operations. This document is authoritative for planning, mutation, backup, rollback, undo, package, hook, repository, and secret behavior.
 
+## Implemented Experiment Boundary
+
+The [Phase 1 experiment](../plans/phase-1-portability.md) exposes no managed filesystem mutation command. Help may read the optional public logo. It validates the opened handle before reading; Unix opens are nonblocking to avoid waiting for a writer if a regular logo is replaced with a FIFO. This does not impose a general filesystem I/O deadline. Diagnostics reads allowlisted path/environment inputs and limited runtime metadata, without opening dotfile contents or creating capability probes. Version output does not inspect the repository. Unknown arguments are not echoed into diagnostics.
+
+Symlink/copy operations exist only in disposable tests, using directory-rooted filesystem APIs and exclusive creation to exercise refusal on existing targets. Build caches, fixture setup, and retained development artifacts belong to harness-owned temporary roots. Native Windows tests retain required OS environment paths but isolate user/config/temp roots. Copy and traversal cases do not depend on link privileges. Recognized Windows link permission/capability failures are reported as unavailable, never as successful links or silent copy fallback. Tests do not change Developer Mode, registry, elevation, or security policy; Windows ACL-denied-logo cases remain untested. CI may provision development tools before verification; verification-time toolchain/module downloads are disabled, including `GOVCS=*:off`. These tests do not implement backup, apply, rollback, undo, or a journal and provide no exception to the managed-mutation transaction rules below. Read-only CLI process checks compare controlled fixture roots before and after execution; they are not a system-wide syscall audit.
+
+The distribution experiment creates/extracts only fixed-layout bundles under fresh harness-owned roots. It verifies the external SHA-256 manifest and the complete allowed regular-file member set before destination creation, then uses exclusive writes. It rejects existing destinations and unsafe paths/types; no archive-selected links, permissions, or ownership are applied. These bounded fixture writes are not managed installation or a transaction API. Checksums are integrity agreements with the supplied manifest, not publisher authentication. See [testing.md](testing.md#experimental-distribution-check) for exact limits and regression guarantees.
+
+The [accepted packaging and release-trust direction](decisions/0002-phase-1-go-adoption.md#packaging-and-release-trust) separates checksum integrity from publisher authentication and lists gates before public release or remote bootstrap. Its implementation remains pending; acceptance does not authorize installation or weaken the transaction rules below.
+
 ## Guarantees
 
 The intended guarantees are:
@@ -206,4 +216,3 @@ The planner needs explicit allowed destination roots. A destination outside thos
 Path validation occurs after variable expansion and normalization. Reject traversal, empty target, filesystem root, unresolved variable, unexpected UNC/device path, and other platform-specific escapes before mutation.
 
 No recursive destructive action may use an unresolved environment variable, broad home directory, repository root, or filesystem root as its target.
-
