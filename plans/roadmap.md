@@ -62,15 +62,15 @@ Goal: establish the stable discovery and extension foundation.
 The approved first task is the [permanent-core and built-in-only registry slice](../docs/decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task). Implementation and native acceptance results are tracked in [phase-2-command-center.md](phase-2-command-center.md); the experiment remains independent.
 
 - [x] Implement the first validated read-only built-in registry in the permanent core.
-- [ ] Implement longest-prefix direct external command resolution.
-- [ ] Define trusted extension directories and precedence.
-- [~] Finalize command metadata representation. Typed private built-in metadata/projections are implemented; external carrier and public discovery remain undecided.
-- [~] Implement contextual help and group discovery. Approved global/doctor help derives from metadata; group discovery remains deferred.
-- [~] Implement command metadata validation and collision detection. Built-in tables are validated; external routes remain deferred.
+- [x] Implement bounded development longest-prefix external resolution under [decision 0003](../docs/decisions/0003-trusted-external-command-protocol.md).
+- [x] Define explicit prefix-only trusted roots and duplicate refusal; no implicit search.
+- [~] Finalize command metadata representation. Typed private built-in metadata/projections are implemented; strict JSON sidecars are accepted; public structured discovery remains deferred.
+- [~] Implement contextual help and group discovery. Global/doctor/commands and targeted external help derive from metadata; recursive group help remains deferred.
+- [~] Implement command metadata validation and collision detection. Built-ins and external sidecars/routes are validated.
 - [ ] Implement machine-readable command discovery.
 - [ ] Generate Bash, Zsh, Fish, and PowerShell completion data as supported.
-- [~] Add dispatch, collision, unavailable-platform, and structured-output tests. Built-in/JSON tests exist; external dispatch coverage remains deferred.
-- [ ] Record the command protocol decision.
+- [~] Add dispatch, collision, unavailable-platform, and structured-output tests. Built-in/JSON and external dispatch tests exist; native external acceptance is tracked in the focused plan.
+- [x] Record accepted command protocol decision 0003.
 
 Exit criteria:
 

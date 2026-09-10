@@ -16,7 +16,7 @@ The project is in the design and incremental-migration phase.
 - The existing dotfiles tree remains live and must not be reorganized wholesale without an approved migration plan.
 - Commands and manifests described in `docs/` may be proposed rather than implemented. Never document a proposed command as currently usable.
 - Termux is the first implementation target. Cross-platform boundaries must still be preserved from the first change.
-- Go adoption and the bounded next core slice are accepted in [decision 0002](docs/decisions/0002-phase-1-go-adoption.md). The first permanent read-only core/registry slice is implemented; external dispatch and the broader command center remain deferred. Untested platform and release capabilities stay deferred.
+- Go adoption and the bounded next core slice are accepted in [decision 0002](docs/decisions/0002-phase-1-go-adoption.md). The first permanent read-only core/registry slice is implemented; the development-only external protocol is accepted in [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) and implemented alongside it. Broader command-center features remain deferred. Untested platform and release capabilities stay deferred.
 
 Track phase status in [`plans/roadmap.md`](plans/roadmap.md) and Termux scope in [`plans/termux-mvp.md`](plans/termux-mvp.md).
 
@@ -74,7 +74,7 @@ See `docs/principles.md` for the consequences of each principle.
 
 ## Working Architecture
 
-Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent read-only core now lives beside the preserved independent experiment. POSIX shell and PowerShell bootstrap scripts and the Omarchy-inspired external command protocol remain intended boundaries; adoption does not establish production installation support or implement them.
+Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent read-only core now lives beside the preserved independent experiment. The development external protocol now uses explicit roots, strict sidecars and native adapters. POSIX shell/PowerShell bootstrap and production installation remain unimplemented.
 
 The core owns operations that require consistent safety or state:
 
@@ -88,6 +88,8 @@ The core owns operations that require consistent safety or state:
 External `dots-*` commands may add cohesive features. They must not replace or circumvent the transaction engine for managed filesystem changes.
 
 ## Command Contract
+
+Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) for development extensions: no implicit roots, protected namespaces, mandatory static JSON, targeted direct lookup, native execution only, and no claim of sandboxing or protection from concurrent trusted-file replacement. Tests use disposable fixture commands only.
 
 - User-facing routes use spaces: `dots files list`.
 - External command filenames use hyphens: `dots-files` or `dots-files-list`.

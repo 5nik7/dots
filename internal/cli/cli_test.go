@@ -79,7 +79,7 @@ func TestMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(r.Project()) != 3 {
+	if len(r.Project()) != 4 {
 		t.Fatal("unexpected command surface")
 	}
 	if Run([]string{"--help"}, &out, &errOut, func() string { return "" }, nil) != 0 {

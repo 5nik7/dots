@@ -138,7 +138,7 @@ func TestDevelopmentProcess(t *testing.T) {
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
 			err := cmd.Run()
-			valid := len(args) == 0 || len(args) == 1 && (args[0] == "--help" || args[0] == "help" || args[0] == "-h" || args[0] == "--version" || args[0] == "doctor") || len(args) == 2 && args[0] == "doctor" && (args[1] == "--json" || args[1] == "-h" || args[1] == "--help")
+			valid := len(args) == 0 || len(args) == 1 && (args[0] == "--help" || args[0] == "help" || args[0] == "-h" || args[0] == "--version" || args[0] == "doctor" || args[0] == "commands") || len(args) == 2 && args[0] == "doctor" && (args[1] == "--json" || args[1] == "-h" || args[1] == "--help")
 			if ctx.Err() != nil {
 				t.Fatal("command exceeded deadline")
 			}

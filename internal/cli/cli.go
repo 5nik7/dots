@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/5nik7/dots/internal/dispatch"
+	"github.com/5nik7/dots/internal/extension"
 	"github.com/5nik7/dots/internal/platform"
 )
 
@@ -18,7 +19,7 @@ const Version = "0.0.0-dev"
 
 // Registry constructs validated metadata and closures without inspecting the
 // environment. Only successful help/doctor handlers invoke their providers.
-func registry(out, errOut io.Writer, logo func() string, diagnose func() platform.Report) (*dispatch.Registry, error) {
+func registry(out, errOut io.Writer, logo func() string, diagnose func() platform.Report, discover ...func(*dispatch.Registry, []string) int) (*dispatch.Registry, error) {
 	var r *dispatch.Registry
 	usageError := func() int {
 		fmt.Fprintln(errOut, "dots: unknown command or unsupported arguments; use --help")
@@ -53,6 +54,18 @@ func registry(out, errOut io.Writer, logo func() string, diagnose func() platfor
 			}
 			return outputStatus(report.WriteText(out))
 		}},
+		{Metadata: dispatch.Metadata{ID: "commands", Route: []string{"commands"}, Summary: "List or validate static command metadata", Synopsis: "commands [--check | -h | --help]", Examples: []string{"dots commands"}, Platforms: []string{"*"}, Outputs: []dispatch.Output{{Format: "text"}}, Mutation: "read-only"}, Handler: func(args []string) int {
+			if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
+				return help(out, logo, r, "commands")
+			}
+			if len(args) > 1 || len(args) == 1 && args[0] != "--check" {
+				return usageError()
+			}
+			if len(discover) > 0 {
+				return discover[0](r, args)
+			}
+			return commandList(out, r, nil, len(args) == 1)
+		}},
 	}
 	var err error
 	r, err = dispatch.New(entries, "help")
@@ -60,23 +73,128 @@ func registry(out, errOut io.Writer, logo func() string, diagnose func() platfor
 }
 
 func Run(args []string, out, errOut io.Writer, logo func() string, diagnose func() platform.Report) int {
-	r, err := registry(out, errOut, logo, diagnose)
+	roots, remaining, err := commandPrefix(args)
+	if err != nil {
+		fmt.Fprintln(errOut, "dots: invalid --command-dir syntax or root-count limit")
+		return 2
+	}
+	args = remaining
+	reportError := func(err error) int {
+		fmt.Fprintln(errOut, "dots: "+err.Error())
+		if e, ok := err.(*extension.Error); ok && e.Kind == extension.Unknown {
+			return 2
+		}
+		return 1
+	}
+	resolve := func() (*extension.Resolver, error) {
+		target := "unknown"
+		if len(roots) > 0 {
+			target = diagnose().Platform
+		}
+		return extension.New(roots, target, extension.NativeAccess())
+	}
+	r, err := registry(out, errOut, logo, diagnose, func(r *dispatch.Registry, args []string) int {
+		resolver, err := resolve()
+		if err != nil {
+			return reportError(err)
+		}
+		definitions, err := resolver.Discover(len(args) == 1)
+		if err != nil {
+			return reportError(err)
+		}
+		return commandList(out, r, definitions, len(args) == 1)
+	})
 	if err != nil {
 		fmt.Fprintln(errOut, "dots: invalid built-in registry")
 		return 1
 	}
-	// All shipped read-only entries support every runtime, including diagnostic
-	// reports for unknown platforms. No platform inspection is needed for lookup.
-	handler, remaining, err := r.Resolve(args, "", nil)
+	handler, rest, err := r.Resolve(args, "", nil)
+	if err == nil {
+		return handler(rest)
+	}
+	if len(args) == 0 || dispatch.Protected(args[0]) {
+		return reportError(&extension.Error{Kind: extension.Unknown})
+	}
+	candidates, err := dispatch.Candidates(args)
 	if err != nil {
-		if err == dispatch.ErrUnavailable {
-			fmt.Fprintln(errOut, "dots: command unavailable on this platform")
-		} else {
-			fmt.Fprintln(errOut, "dots: unknown command or unsupported arguments; use --help")
-		}
+		fmt.Fprintln(errOut, "dots: external route exceeds matching limit; use -- before arguments")
 		return 2
 	}
-	return handler(remaining)
+	if len(candidates) == 0 || len(roots) == 0 {
+		return reportError(&extension.Error{Kind: extension.Unknown})
+	}
+	resolver, err := resolve()
+	if err != nil {
+		return reportError(err)
+	}
+	definition, route, err := resolver.Lookup(candidates)
+	if err != nil {
+		return reportError(err)
+	}
+	if dispatch.ExternalHelp(args) {
+		return externalHelp(out, definition)
+	}
+	if definition.Availability != nil {
+		return reportError(definition.Availability)
+	}
+	code, err := platform.ExecuteExtension(definition.Path, args[len(route):])
+	if err != nil {
+		fmt.Fprintln(errOut, "dots: external command launch failed")
+		return 1
+	}
+	return code
+}
+
+func commandPrefix(args []string) ([]string, []string, error) {
+	roots := []string{}
+	for len(args) > 0 && args[0] == "--command-dir" {
+		if len(args) < 2 || args[1] == "" || strings.HasPrefix(args[1], "-") || len(roots) == dispatch.MaxCommandRoots {
+			return nil, nil, fmt.Errorf("invalid command roots")
+		}
+		roots = append(roots, args[1])
+		args = args[2:]
+	}
+	return roots, args, nil
+}
+
+func commandList(out io.Writer, r *dispatch.Registry, definitions []extension.Definition, check bool) int {
+	var text strings.Builder
+	for _, m := range r.Project() {
+		if check || !m.Hidden {
+			fmt.Fprintf(&text, "%s: %s [built-in]\n", m.Synopsis, m.Summary)
+		}
+	}
+	for _, d := range definitions {
+		m := d.Metadata.Projection()
+		if !check && m.Hidden {
+			continue
+		}
+		status := "external, declared read-only"
+		if d.Availability != nil {
+			status = d.Availability.Error()
+		}
+		fmt.Fprintf(&text, "%s: %s [%s]\n", strings.Join(m.Route, " "), m.Summary, status)
+	}
+	if check {
+		text.WriteString("Command metadata validation passed.\n")
+	}
+	_, err := io.WriteString(out, text.String())
+	return outputStatus(err)
+}
+
+func externalHelp(out io.Writer, d *extension.Definition) int {
+	m := d.Metadata.Projection()
+	var text strings.Builder
+	fmt.Fprintf(&text, "Usage: dots %s\n\n%s\n", m.Synopsis, m.Summary)
+	for _, example := range m.Examples {
+		fmt.Fprintf(&text, "  %s\n", example)
+	}
+	text.WriteString("\nExternal command; read-only is an author declaration.\n")
+	if d.Availability != nil {
+		fmt.Fprintf(&text, "Unavailable: %s\n", d.Availability)
+	}
+	_, err := io.WriteString(out, text.String())
+	return outputStatus(err)
 }
 
 func outputStatus(err error) int {
@@ -95,7 +213,11 @@ func help(out io.Writer, logo func() string, r *dispatch.Registry, id string) in
 		for _, m := range metadata {
 			if m.ID == id {
 				fmt.Fprintf(&text, "Usage: dots %s\n\n%s.\n", m.Synopsis, m.Summary)
-				text.WriteString("No configuration contents are read and no capabilities are probed by writing files.\n")
+				if id == "doctor" {
+					text.WriteString("No configuration contents are read and no capabilities are probed by writing files.\n")
+				} else {
+					text.WriteString("Reads static metadata only; no extensions are executed.\n")
+				}
 			}
 		}
 	} else {
@@ -105,7 +227,7 @@ func help(out io.Writer, logo func() string, r *dispatch.Registry, id string) in
 				fmt.Fprintf(&text, "  %-30s %s\n", m.Synopsis, m.Summary)
 			}
 		}
-		text.WriteString("\nDevelopment binary; no installation or managed-file operations are implemented.\n")
+		text.WriteString("\nDevelopment binary; use commands to discover explicitly selected extensions. No installation or managed-file operations are implemented.\n")
 	}
 	_, err := io.WriteString(out, text.String())
 	return outputStatus(err)

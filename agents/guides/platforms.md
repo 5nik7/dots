@@ -53,3 +53,7 @@ For each new capability or platform:
 
 Platform support is not complete merely because the CLI starts. Track planning, links, copies, undo, packages, bootstrap, shell integration, and CI separately in the support matrix.
 
+
+## Development External Adapters
+
+Follow [decision 0003](../../docs/decisions/0003-trusted-external-command-protocol.md): Unix direct exec with execute bits; native Windows `.exe` only, local fixed-drive NTFS, case-sensitive roots refused, and same-console waiting. No PATH/suffix/interpreter inference or WSL path translation. Test Windows quoting and real Ctrl+C/Ctrl+Break natively; preserve explicit deferred known-folder, ACL, WSL and filesystem coverage.

@@ -62,3 +62,22 @@ The private evidence directory above contains `ci-60e591c-{linux,windows}.log`, 
 ## Next Boundary
 
 This slice leaves the active prototype, historical experiment and all live sources in place. The next implementation task must first settle the trusted external-command search and metadata protocol, including directories, precedence, suffix/interpreter rules and validation, before adding an external resolver. Known folders and restricted Windows permissions stay gated before affected installation behavior; WSL, broader filesystems, other architectures, production OS floors, remaining performance evidence and release trust retain decision 0002's classifications.
+
+
+## Authorized External-Command Slice
+
+Status: In progress after owner approval of [decision 0003](../docs/decisions/0003-trusted-external-command-protocol.md).
+
+Start from PR #2 merge `1de01687` in the separate `feat/phase-2-external-dispatch` worktree. Preserve both older worktrees and the recovery ref. Transfer only the owner-authorized exact whitespace-cleaned logo into a separate commit; retain its new hash without modifying historical evidence.
+
+Implementation order: pure candidate/metadata contracts; explicit root and targeted lookup; static discovery/help; native process adapters; isolated fixture/process/console tests; verifier/CI and benchmarks; documentation and final native evidence. Keep `internal/dispatch` free of filesystem/process dependencies. Add no real external management commands.
+
+- [x] Verify base/worktrees and commit the exact authorized logo cleanup separately.
+- [x] Record accepted protocol, exact limits, reservations and trust boundary before implementation.
+- [ ] Implement strict metadata, explicit roots, targeted routing and static discovery/help.
+- [ ] Implement native Unix/Windows execution adapters and required interruption regressions.
+- [ ] Pass native Termux/Linux/Windows core verification and retained experiment checks.
+- [ ] Measure help/version, external execution and discovery independently; verify cleaned logo.
+- [ ] Synchronize documentation, retain sanitized evidence, inspect final-head CI and prepare PR.
+
+No bootstrap, installation, packages, dotfile mutation, transactions, completion, releases or merge belongs in this task. Windows console tests are required; unavailable cases remain explicit blockers for the affected interruption claim.

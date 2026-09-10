@@ -1,6 +1,6 @@
 # Dots Documentation
 
-The `dots` CLI is in the design and incremental-migration phase, with an isolated [portability experiment](../plans/phase-1-portability.md) verified natively on Termux and Linux/Windows CI, including bounded bundle packaging, verification, extraction, and execution. [Decision 0002](decisions/0002-phase-1-go-adoption.md) accepts Go and the bounded core task, now implemented for read-only built-ins with the broader command center deferred. These documents distinguish accepted design, experimental evidence, and unimplemented production behavior.
+The `dots` CLI is in the design and incremental-migration phase, with an isolated [portability experiment](../plans/phase-1-portability.md) verified natively on Termux and Linux/Windows CI, including bounded bundle packaging, verification, extraction, and execution. [Decision 0002](decisions/0002-phase-1-go-adoption.md) accepts Go and the bounded core task, implemented for read-only built-ins. [Decision 0003](decisions/0003-trusted-external-command-protocol.md) accepts the implemented development external protocol; broader production commands remain deferred. These documents distinguish accepted design, experimental evidence, and unimplemented production behavior.
 
 ## Start Here
 
