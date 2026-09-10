@@ -217,7 +217,7 @@ class Lifecycle:
                 references.append(Path(os.environ[key]).expanduser().resolve())
         references.extend(Path(p).resolve() for p in os.environ.get('PATH', '').split(os.pathsep) if p)
         home = Path.home()
-        references.extend(home / p for p in ('.config', '.local/share', '.local/state', '.cache',
+        references.extend(home / p for p in ('dots-review-evidence', '.config', '.local/share', '.local/state', '.cache',
                                             '.bashrc', '.bash_profile', '.profile', '.zshrc', '.zprofile'))
         if any(inside(Path(p).resolve(), root) for p in references):
             return 'protected original/session/helper or known live path'

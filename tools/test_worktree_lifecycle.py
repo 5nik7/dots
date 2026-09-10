@@ -162,6 +162,7 @@ class LifecycleTests(unittest.TestCase):
         self.assertTrue(self.candidate.exists())
 
     def test_session_helper_and_known_live_paths_refused(self):
+        self.assertIn('protected', self.lc.live_use(Path.home() / 'dots-review-evidence', []))
         self.lc.session = self.candidate
         self.assertIn('protected', self.result()['reason'])
         self.lc.session = self.original
