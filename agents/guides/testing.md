@@ -44,6 +44,7 @@ Never let a test:
 - Benchmark with representative small and large command/module sets.
 - Record environment, build mode, sample count, and statistical summary.
 - Do not call a change faster based on one interactive run.
+- Follow the accepted warm targets and regression-review policy in [decision 0002](../../docs/decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy). Numeric timing checks remain advisory; confirmed comparable regressions require a fix or owner-approved exception. No new timing gate or core runner is implemented by accepting that policy.
 
 ## Documentation
 

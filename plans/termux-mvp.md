@@ -10,7 +10,7 @@ On the current Termux installation, use the new core to manage selected shared a
 
 ## Dependencies
 
-- Core language and Termux artifact validated by the [Phase 1 experiment](phase-1-portability.md). Native experimental evidence exists; final Go adoption and distribution remain undecided.
+- Core language and Termux artifact validated by the [Phase 1 experiment](phase-1-portability.md). Native experimental evidence exists and [Go adoption is accepted](../docs/decisions/0002-phase-1-go-adoption.md). Permanent release/installation implementation and its trust/verification gates remain pending.
 - Command center sufficient for implemented lifecycle routes.
 - Manifest/profile resolver.
 - Filesystem observer and planner.

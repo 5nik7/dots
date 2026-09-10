@@ -18,7 +18,7 @@ python3 experiments/go-portability/tools/verify.py docs
 git diff --check
 ```
 
-`build` uses installed Go 1.27.x and Python 3. `check` additionally needs `gofmt` and either `readelf` on Unix or LLVM `llvm-readobj` on Windows; `bench` needs `hyperfine`. `cross` uses only the same Go/Python tools. `dist` additionally needs installed Git to read the committed logo and identify committed Go build inputs; archive/compression/checksum handling uses the Python standard library. Missing tools are named explicitly and never installed. The harness accepts native Android/ARM64, Linux/AMD64, and Windows/AMD64 Go hosts; other native hosts remain deferred. Human and JSON diagnostic expectations follow the selected native host; Linux and Windows child environments omit Termux markers. Windows diagnostics require runtime identity, the executable path, unprobed capabilities, and an explicit warning that known-folder/path resolution is unimplemented. `docs` is a read-only relative Markdown link check and does not require Go.
+`build` is verified with installed Go 1.27.1 and Python 3. The accepted build/test baseline is Go 1.27.1; the preserved experiment still declares its historical `go 1.27.0` module minimum and does not enforce the project policy pin. `check` additionally needs `gofmt` and either `readelf` on Unix or LLVM `llvm-readobj` on Windows; `bench` needs `hyperfine`. `cross` uses only the same Go/Python tools. `dist` additionally needs installed Git to read the committed logo and identify committed Go build inputs; archive/compression/checksum handling uses the Python standard library. Missing tools are named explicitly and never installed. The harness accepts native Android/ARM64, Linux/AMD64, and Windows/AMD64 Go hosts; other native hosts remain deferred. Human and JSON diagnostic expectations follow the selected native host; Linux and Windows child environments omit Termux markers. Windows diagnostics require runtime identity, the executable path, unprobed capabilities, and an explicit warning that known-folder/path resolution is unimplemented. `docs` is a read-only relative Markdown link check and does not require Go.
 
 Use Python without optimization. Every verifier mode, including its own `--help`, rejects an optimized interpreter (`python3 -O`, `python3 -OO`, or a positive `PYTHONOPTIMIZE`) with exit status 1 and an explicit error on stderr, before argument parsing, tool lookup/invocation, or temporary work/artifact creation. Rerun without optimization flags and with `PYTHONOPTIMIZE` unset or `0`. This guard keeps the existing assertion-based CLI behavior, read-only fixture, and identical rebuild checks active.
 
@@ -173,7 +173,7 @@ Real package-manager integration belongs in disposable images or machines with e
 
 ## Performance
 
-The [Phase 1 adoption proposal](decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy) proposes concrete warm targets and a regression-review policy using the existing method. Numeric checks remain advisory pending representative desktop evidence and approval; no new runner or threshold enforcement is implemented.
+The [accepted Phase 1 adoption decision](decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy) sets concrete warm targets and a regression-review policy using the existing method. Numeric checks remain advisory pending representative desktop evidence and a separately approved enforcement policy; no new runner or threshold enforcement is implemented.
 
 Establish baselines before hard budgets.
 

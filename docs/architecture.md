@@ -1,6 +1,6 @@
 # Architecture
 
-**Status: Proposed architecture; isolated portability experiment verified on Termux and Linux/Windows CI**
+**Status: Go adoption and first permanent-core boundary accepted; broader architecture proposed and Phase 2 unimplemented**
 
 This document defines the working architecture for the future `dots` CLI. It separates durable boundaries from implementation choices that still require validation.
 
@@ -106,18 +106,11 @@ Extension discovery and metadata are described in `commands.md`. Extensions may 
 
 ## Working Implementation Direction
 
-The [Phase 1 adoption proposal](decisions/0002-phase-1-go-adoption.md) recommends Go, initial development targets, and an additive permanent-core/registry slice. It is **Proposed, pending owner approval**; no permanent placement or Phase 2 implementation is accepted by that proposal.
+[Decision 0002](decisions/0002-phase-1-go-adoption.md) accepts Go, the initial toolchain/development targets, warm-start policy, minimal bundle/release-trust direction, and additive permanent-core/registry scope. Native Termux and Linux/Windows CI evidence supports that decision; it does not establish production OS floors, representative desktop performance, or controlled cold-cache results.
 
-A compiled Go core remains the working recommendation. The isolated experiment supplies native Termux and Linux/Windows CI startup/filesystem evidence; adoption still requires owner review and decisions on supported baselines and permanent release policy. Bounded bundle verification/extraction/native execution now passes on Termux, Linux, and Windows. CI timings are not a representative desktop-hardware or cold-cache baseline. Evaluate the direction against these criteria:
+The first permanent implementation will use root `go.mod`, `cmd/dots`, and private CLI, dispatch, and platform packages for the existing read-only built-ins. Its [bounded file and test scope](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is accepted but unimplemented. The independent experiment and its historical output remain unchanged; its provisional-language banner predates adoption. External execution, manifests, state, and transactions stay outside the first slice.
 
-- A supported Android/Termux artifact can be built and distributed reliably.
-- Startup performance is acceptable on the target device.
-- Required filesystem and symlink operations behave correctly.
-- The binary has no undeclared runtime dependencies.
-
-POSIX shell and PowerShell remain necessary for initial download/install and platform-specific extensions. They should not become separate implementations of desired-state resolution or transactions.
-
-Record the final language decision in `docs/decisions/` after the spike.
+POSIX shell and PowerShell remain intended bootstrap and extension boundaries. They must not become separate implementations of desired-state resolution or transactions. Public release and remote bootstrap remain gated by the accepted trust requirements and deferred verification work in decision 0002.
 
 ## Target Repository Shape
 

@@ -32,7 +32,7 @@ The fixed top-level keys are `schema_version`, `platform`, `os`, `architecture`,
 
 ## Interface Shape
 
-The [proposed next implementation boundary](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task--only-after-approval) scopes a permanent built-in-only registry after owner approval. External dispatch, discovery/completion commands, and the extension metadata carrier remain deferred; the live and experimental interfaces above are unchanged.
+The [accepted next implementation boundary](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) scopes a permanent built-in-only registry for a later task. Phase 2 remains unimplemented. External dispatch, discovery/completion commands, and the extension metadata carrier remain deferred; the live and experimental interfaces above are unchanged.
 
 Users interact with space-separated routes:
 

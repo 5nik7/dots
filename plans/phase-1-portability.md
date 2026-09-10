@@ -1,6 +1,8 @@
 # Phase 1 Termux Portability Experiment
 
-**Status: Authorized Termux experiment, native Linux/Windows CI validation, and bounded distribution experiment completed; broader Phase 1 and Go adoption remain open**
+**Status: Bounded portability/distribution experiments completed and Go adoption accepted; remaining platform/release gates deferred and Phase 2 unimplemented**
+
+The owner approved all four decisions in [0002](../docs/decisions/0002-phase-1-go-adoption.md) as proposed at `c7d86a989e6397a3ecd74407e63097994f183694` on 2026-09-10. The results below retain their original chronology, including then-provisional language status; current policy is the accepted decision. Acceptance does not complete untested capabilities.
 
 ## Scope and Reconciliation
 
@@ -296,9 +298,11 @@ These results prove this bounded build/package/verify/extract/execute path. They
 
 ## Remaining Decisions and Next Milestone
 
-The bounded native execution and distribution evidence supports Go as the candidate; it remains provisional pending owner review. The Phase 1 decision checkpoint is now prepared in [0002: Go adoption proposal](../docs/decisions/0002-phase-1-go-adoption.md), **Proposed, pending owner approval**. It recommends the language, initial development targets/toolchain, warm budgets, bundle and release-trust direction, gap classifications, and the smallest permanent-core task after approval. These recommendations are not accepted policies or implemented functionality. Experimental `.tar.gz`/`.zip` layouts and checksum manifests alone do not settle authenticated release delivery.
+The owner accepted [0002: Go adoption](../docs/decisions/0002-phase-1-go-adoption.md) on 2026-09-10, approving all four decisions at proposal commit `c7d86a989e6397a3ecd74407e63097994f183694`. The language, initial development targets/toolchain, advisory warm budgets and regression-review policy, bundle/release-trust direction, gap classifications, and first permanent-core task are accepted. Their implementation and production-support gates remain pending. Experimental checksums alone do not authenticate a publisher.
 
-The retained final-checkpoint [CI run 34424607080](https://github.com/5nik7/dots/actions/runs/34424607080) passed native Linux/Windows checks and distribution verification at `dcfea900875656750c6c4b763c1f9119e4339b6a`. Final Termux distribution evidence and desktop reviews are retained separately in the existing private distribution archive; the proposal records their provenance and reuses verified results without relabeling earlier measurements.
+The next implementation boundary is the accepted built-in-only permanent-core slice; this approval-recording task does not implement it. The historical experiment decision, executable, tests, and retained evidence are unchanged.
+
+The retained final-checkpoint [CI run 34424607080](https://github.com/5nik7/dots/actions/runs/34424607080) passed native Linux/Windows checks and distribution verification at `dcfea900875656750c6c4b763c1f9119e4339b6a`. Final Termux distribution evidence and desktop reviews are retained separately in the existing private distribution archive; decision 0002 records their provenance and reuses verified results without relabeling earlier measurements.
 
 Restricted/unelevated Windows policy and ACL behavior, known-folder resolution, UNC/junction/long-path/cross-volume cases, WSL/other architectures, and controlled cold-cache or representative desktop-hardware performance remain separate gaps. Scope any required follow-up explicitly. No Phase 2, bootstrap, real-home installation, transaction, manifest, migration, or repository-size work begins automatically from this evidence.
 

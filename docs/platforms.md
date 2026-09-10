@@ -54,7 +54,7 @@ The harness implements native experimental `.tar.gz` bundles for Termux Android/
 
 ## Initial Platform IDs
 
-The [Phase 1 adoption proposal](decisions/0002-phase-1-go-adoption.md#initial-targets-and-toolchain) defines proposed initial development targets and distinguishes observed environments from production OS floors. Its [gap classifications](decisions/0002-phase-1-go-adoption.md#remaining-gaps-and-gates) remain pending owner approval; this support matrix is not upgraded by the proposal.
+The [accepted Phase 1 adoption decision](decisions/0002-phase-1-go-adoption.md#initial-targets-and-toolchain) defines initial development targets and distinguishes observed environments from production OS floors. Its [gap classifications](decisions/0002-phase-1-go-adoption.md#remaining-gaps-and-gates) are accepted; this support matrix is not upgraded by language adoption.
 
 | ID | Meaning | First priority |
 | --- | --- | --- |
