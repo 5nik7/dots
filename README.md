@@ -40,7 +40,7 @@ Run `python3 -B tools/verify_core.py check` for isolated validation and `python3
 
 ### Disposable Zsh completion demo
 
-The permanent development binary supports `completion zsh`; the live Bash prototype does not. The generator prints a static script and installs nothing. With an already built development binary in `DOTS_DEV_BIN` (from the build example above), run the following in a separate disposable Zsh process. `mktemp` creates only a new demo directory; retain or remove that exact directory after inspection. No live shell startup files are sourced or edited.
+The permanent development binary supports `completion zsh`; the live Bash prototype does not. The generator prints a static script and installs nothing. With an already built development binary in `DOTS_DEV_BIN` (from the build example above), run the following in a separate disposable Zsh process. `mktemp` creates only a new demo directory; retain or remove that exact directory after inspection. The demo uses temporary HOME and ZDOTDIR directories and does not edit live startup files. Zsh still reads its system zshenv, if present.
 
 ```bash
 demo_root="$(mktemp -d "${TMPDIR:-/tmp}/dots-zsh-demo.XXXXXXXX")"
