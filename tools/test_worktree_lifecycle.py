@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import shutil
+import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -123,6 +125,76 @@ class LifecycleTests(unittest.TestCase):
                     p.rmdir()
                 else:
                     p.unlink()
+        self.preserved()
+
+    def assert_special_retained(self, path):
+        before = path.lstat()
+        registry = self.lc.registry.read_bytes()
+        for apply in (False, True):
+            with self.subTest(apply=apply):
+                result = self.result(apply=apply)
+                self.assertEqual(result['status'], 'skipped', result)
+                self.assertTrue(self.candidate.is_dir())
+                after = path.lstat()
+                self.assertEqual((after.st_mode, after.st_ino), (before.st_mode, before.st_ino))
+                self.assertEqual(self.lc.registry.read_bytes(), registry)
+        self.preserved()
+
+    def test_native_fifo_retained(self):
+        if not hasattr(os, 'mkfifo'):
+            self.skipTest('native filesystem FIFO creation unavailable')
+        path = self.candidate / 'local-fifo'
+        os.mkfifo(path)
+        self.assertTrue(stat.S_ISFIFO(path.lstat().st_mode))
+        self.assert_special_retained(path)
+
+    def test_native_socket_retained(self):
+        if os.name != 'posix' or not hasattr(socket, 'AF_UNIX'):
+            self.skipTest('native POSIX filesystem socket fixture unavailable')
+        path = self.candidate / 'local-socket'
+        # Relative bind avoids the Unix socket path-length limit on Termux.
+        previous = Path.cwd()
+        try:
+            os.chdir(self.candidate)
+            with socket.socket(socket.AF_UNIX) as fixture:
+                fixture.bind(path.name)
+        finally:
+            os.chdir(previous)
+        self.assertTrue(stat.S_ISSOCK(path.lstat().st_mode))
+        self.assert_special_retained(path)
+
+    def test_injected_special_and_uncertain_metadata_retained(self):
+        # Device nodes/unknown modes are injected: no elevation or device access.
+        path = self.candidate / 'tracked'
+        original = Path.lstat
+        for mode in (stat.S_IFIFO, stat.S_IFSOCK, stat.S_IFCHR, stat.S_IFBLK, 0, None):
+            with self.subTest(mode=mode):
+                def inspect(p, *args, **kwargs):
+                    if p == path:
+                        if mode is None:
+                            raise PermissionError('injected metadata denial')
+                        return os.stat_result((mode, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+                    return original(p, *args, **kwargs)
+                with patch.object(Path, 'lstat', inspect):
+                    for apply in (False, True):
+                        self.assertEqual(self.result(apply=apply)['status'], 'skipped')
+                self.assertEqual(path.read_text(), 'initial\n')
+        self.preserved()
+
+    def test_fetch_ignores_configured_recovery_mapping(self):
+        cached = self.git(self.original, 'rev-parse', 'refs/remotes/origin/main')
+        (self.candidate / 'tracked').write_text('new remote main\n')
+        self.git(self.candidate, 'add', 'tracked')
+        self.git(self.candidate, 'commit', '-m', 'advance fixture remote main')
+        fresh = self.git(self.candidate, 'rev-parse', 'HEAD')
+        self.git(self.candidate, 'push', str(self.remote), 'HEAD:refs/heads/main')
+        self.git(self.original, 'config', '--add', 'remote.origin.fetch',
+                 'refs/heads/main:refs/heads/recovery/fixture')
+        self.refs = self.git(self.original, 'for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads')
+        self.assertNotEqual(cached, fresh)
+        self.assertEqual(self.git(self.original, 'rev-parse', 'refs/remotes/origin/main'), cached)
+        self.assertEqual(self.result()['status'], 'removed')
+        self.assertEqual(self.git(self.original, 'rev-parse', 'refs/remotes/origin/main'), fresh)
         self.preserved()
 
     def test_unmerged_then_fresh_remote_merge(self):

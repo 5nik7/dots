@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import stat
 from pathlib import Path
 import subprocess
 import sys
@@ -197,6 +198,15 @@ class Lifecycle:
         def uncertain(error):
             raise Refusal('directory inspection uncertainty')
         for directory, dirs, files in os.walk(root, followlinks=False, onerror=uncertain):
+            # Git status omits some untracked special objects. Inspect metadata
+            # without following symlinks or opening FIFOs, sockets or devices.
+            for name in dirs + files:
+                try:
+                    mode = (Path(directory) / name).lstat().st_mode
+                except OSError:
+                    return 'filesystem entry inspection uncertainty'
+                if not (stat.S_ISREG(mode) or stat.S_ISDIR(mode) or stat.S_ISLNK(mode)):
+                    return 'unsupported filesystem entry type'
             rel = str(Path(directory).relative_to(root))
             if rel in submodules:
                 if dirs or files:
@@ -269,7 +279,7 @@ class Lifecycle:
                     # Restrict fetch destination: no pruning, tags, submodules,
                     # user refspecs, branch deletion or automatic maintenance.
                     self.git(self.original, 'fetch', '--no-recurse-submodules', '--no-prune',
-                             '--no-tags', '--no-auto-maintenance', 'origin',
+                             '--no-tags', '--no-auto-maintenance', '--refmap=', 'origin',
                              'refs/heads/main:refs/remotes/origin/main')
                     root, refreshed_head = self.eligible(record, protects)
                     if refreshed_head != head:
