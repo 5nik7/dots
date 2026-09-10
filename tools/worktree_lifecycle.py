@@ -23,6 +23,7 @@ def process_use(root):
     proc = Path('/proc')
     if os.name != 'posix' or not (proc / 'self' / 'fd').is_dir():
         return 'process inspection unavailable on this host'
+    uncertain = False
     try:
         for process in proc.iterdir():
             if not process.name.isdigit():
@@ -60,12 +61,15 @@ def process_use(root):
                                 continue
                         except FileNotFoundError:
                             continue
-                        return 'process inspection permission uncertainty'
+                        # Keep scanning so a definite live reference is reported
+                        # even when an earlier process was inaccessible. Either
+                        # outcome still refuses removal.
+                        uncertain = True
             except FileNotFoundError:
                 continue
     except (OSError, UnicodeError):
         return 'process inspection uncertainty'
-    return None
+    return 'process inspection permission uncertainty' if uncertain else None
 
 
 class Lifecycle:
