@@ -38,14 +38,14 @@ The owner authorized the limited [Termux portability experiment](phase-1-portabi
 
 - [x] Create a minimal core project without altering current dotfile installation.
 - [x] Implement version and basic help fast paths.
-- [~] Implement normalized platform diagnostic interfaces. Termux and Linux CI identity/candidates work; native Windows paths and live capability probing remain deferred.
+- [~] Implement normalized platform diagnostic interfaces. Termux/Linux identity and candidate paths work; native Windows identity is verified in CI, while known-folder paths and live capability probing remain deferred.
 - [x] Build and run a candidate Go core on the current Termux architecture.
-- [~] Build and run candidate Linux and Windows artifacts. Both AMD64 targets cross-compile; Linux executable/tests now also run natively in CI. Windows execution is pending.
-- [~] Measure cold and warm startup baselines. The experiment records Termux and Linux CI first-observed/warm runs; controlled cold-cache and representative desktop-hardware baselines remain pending.
+- [x] Build and run candidate Linux and Windows artifacts. Both AMD64 targets cross-compile and now also execute binaries/tests natively in CI; support remains limited to the experimental surface and recorded fixtures.
+- [~] Measure cold and warm startup baselines. The experiment records Termux and Linux/Windows CI first-observed/warm runs; controlled cold-cache and representative desktop-hardware baselines remain pending.
 - [x] Validate Termux filesystem and link primitives in a disposable target.
 - [ ] Record the implementation-language decision.
 - [x] Establish initial unit test and formatting commands.
-- [ ] Complete bounded native Windows CI validation. Shared harness, independent copy/link cases, and Windows job implemented; native results pending. Correct verification to `GOVCS=*:off` and retain the Termux/Linux rechecks.
+- [x] Complete bounded native Windows CI validation. Native runtime/fixtures, startup, dependencies, and retained evidence reviewed; `GOVCS=*:off` corrected and Termux/Linux rechecks passed. Go remains provisional; distribution and Windows policy variations remain open. See the [focused results](phase-1-portability.md#bounded-native-windows-follow-up).
 - [x] Add bounded native Linux CI validation and retained evidence. Native checks, startup samples, and uploaded artifact hashes/source were reviewed; see the [focused results](phase-1-portability.md#native-linux-validation).
 
 Exit criteria:

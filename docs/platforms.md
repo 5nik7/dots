@@ -1,6 +1,6 @@
 # Platform Model
 
-**Status: Experimental core verified on native Termux and Linux CI; broader platform model proposed**
+**Status: Experimental core verified on native Termux and Linux/Windows CI; broader platform model proposed**
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
 
@@ -10,17 +10,25 @@ The separate `dots-spike` executable has been built and run natively with Go 1.2
 
 The Android/ARM64 build uses `CGO_ENABLED=0`, the default Android PIE mode, `-trimpath`, `-buildvcs=false`, and no third-party modules. ELF inspection reports `/system/bin/linker64` as interpreter and no `DT_NEEDED` shared-library entries. Thus the executable still requires the Android runtime/loader; it does not require an installed Go runtime, Python, shell helpers, or additional declared shared libraries. It starts with an empty `PATH`. Rebuilding the same source from another directory with the same toolchain produced identical bytes; this is not a multi-toolchain or release reproducibility claim.
 
-Linux/AMD64 and Windows/AMD64 executables and test binaries were cross-compiled using the installed Termux toolchain. They were not executed. Windows/WSL detector fixtures ran on Termux, not on those systems. Native Linux CI execution is recorded separately below. Native Windows/WSL execution, Windows filesystem behavior, Android shared storage, other Android architectures, release distribution, and installation remain unverified. See the [focused results](../plans/phase-1-portability.md).
+Linux/AMD64 and Windows/AMD64 executables and test binaries were cross-compiled using the installed Termux toolchain. They were not executed. Windows/WSL detector fixtures ran on Termux, not on those systems. Native Linux and Windows CI execution is recorded separately below. WSL execution, Windows policy/filesystem variations beyond these fixtures, Android shared storage, other Android architectures, release distribution, and installation remain unverified. See the [focused results](../plans/phase-1-portability.md).
 
 ### Native Linux Validation Status
 
-The shared harness built and executed the Linux/AMD64 executable and all 13 Go tests in [GitHub Actions run 34416309614](https://github.com/5nik7/dots/actions/runs/34416309614) on 2026-09-09. The runner reported Ubuntu 24.04.5 LTS, image `20260907.300.1`, kernel `6.17.0-1022-azure`, and `stat -f` filesystem type `ext2/ext3` (an ext-family magic label, not a precise mounted-filesystem claim). Four Python tests, empty-PATH CLI checks, read-only snapshots, logo replacement cases, file/directory symlinks, exclusive copies, and relocated identical rebuild all passed in owned roots. The 3,991,208-byte Go 1.27.1 binary has no ELF interpreter or `DT_NEEDED` entries. Startup measurements are Linux CI observations, not controlled cold-cache or physical desktop-hardware results. Windows execution and release/distribution checks remain pending. See [testing.md](testing.md#native-linux-and-windows-ci) for tool provisioning, telemetry isolation, and artifact retention.
+The shared harness built and executed the Linux/AMD64 executable and all 13 Go tests in [GitHub Actions run 34416309614](https://github.com/5nik7/dots/actions/runs/34416309614) on 2026-09-09. The runner reported Ubuntu 24.04.5 LTS, image `20260907.300.1`, kernel `6.17.0-1022-azure`, and `stat -f` filesystem type `ext2/ext3` (an ext-family magic label, not a precise mounted-filesystem claim). Four Python tests, empty-PATH CLI checks, read-only snapshots, logo replacement cases, file/directory symlinks, exclusive copies, and relocated identical rebuild all passed in owned roots. The 3,991,208-byte Go 1.27.1 binary has no ELF interpreter or `DT_NEEDED` entries. Startup measurements are Linux CI observations, not controlled cold-cache or physical desktop-hardware results. Windows execution is recorded below; release/distribution checks remain pending. See [testing.md](testing.md#native-linux-and-windows-ci) for tool provisioning, telemetry isolation, and artifact retention.
+
+### Native Windows Validation Status
+
+[Run 34421915915](https://github.com/5nik7/dots/actions/runs/34421915915), at `fe0e5d722a322bca9d97c48aaa1dac688752e17a` on 2026-09-10, built and executed the Windows/AMD64 executable, 14 top-level Go tests, and six Python regressions. The `windows-2025` runner reported Windows build 26100, image `win25-vs2026` / `20260907.229.1`, four logical CPUs, and NTFS. Empty-PATH help/version/human and JSON diagnostics, optional logos, unchanged fixture snapshots, independent copies, file/directory links, existing-target refusal, spaces/Unicode/leading dashes, missing parents, and traversal/link escape checks passed. Both symlink types were available; no permission denial was observed. Windows directory-rooted operations refused existing directories with `EISDIR`, and tests verified preservation after that refusal.
+
+The Go 1.27.1 `CGO_ENABLED=0` executable is 4,207,104 bytes, with SHA-256 `8850624e20a07a8f983b851fd0427f41a0d0e896b1c07b857ff3993afd5a909a`. LLVM 20.1.8 identified an AMD64 PE/COFF image with `kernel32.dll` in its static import table. Native execution with an empty PATH passed, but static imports do not enumerate dynamic/transitive Windows DLL dependencies. Relocated rebuild and check/benchmark binaries matched byte-for-byte.
+
+These results apply to this hosted runner and its disposable NTFS fixtures. Developer Mode, registry, elevation, and security policy were not changed by verification. A machine that denies links is not represented by this success: refusal classification is separately regression-tested with mocked errors 5, 50, and 1314. Windows ACL-denied logos, UNC/network paths, junctions, long-path policy, cross-volume behavior, and ordinary unelevated desktop policy variations remain untested. Native Windows known-folder resolution remains unimplemented; `doctor` reports capabilities as `not_probed`. See the [focused results](../plans/phase-1-portability.md#bounded-native-windows-follow-up) for startup and artifact provenance.
 
 ### Experimental Read-Only File Opening
 
 Help uses a platform adapter for read-only file opening. Unix builds, including Termux and Linux/WSL, use `O_NONBLOCK` so opening a logo replaced with a FIFO does not wait for a writer. The CLI validates the actual opened handle before reading and omits non-regular, empty, or oversized objects. Valid symlinks to regular logo files remain supported. Non-Unix builds retain native `os.Open` semantics and use the same handle validation; this does not provide a Unix FIFO guarantee on Windows or a general filesystem I/O deadline.
 
-The deterministic replacement tests passed natively on Termux and Linux CI. Windows compilation is checked separately; Windows execution and shared-storage behavior remain unverified.
+The deterministic replacement tests passed natively on Termux and Linux CI. Windows execution is recorded separately; Unix FIFO behavior is unavailable on Windows, Windows ACL-denied logos are untested, and shared-storage behavior remains unverified.
 
 ### Experimental Detector and Paths
 
@@ -91,8 +99,8 @@ Capability checks may depend on destination filesystem and volume.
 
 | Capability | Termux | Linux | WSL filesystem | Native Windows |
 | --- | --- | --- | --- | --- |
-| File symbolic link | Verified in disposable f2fs fixtures only | Verified in disposable Linux CI fixtures only | Expected inside distribution | Capability-test permissions/policy |
-| Directory symbolic link | Verified in disposable f2fs fixtures only | Verified in disposable Linux CI fixtures only | Expected inside distribution | Capability-test permissions/policy |
+| File symbolic link | Verified in disposable f2fs fixtures only | Verified in disposable Linux CI fixtures only | Expected inside distribution | Verified in disposable NTFS CI fixtures only; other policies untested |
+| Directory symbolic link | Verified in disposable f2fs fixtures only | Verified in disposable Linux CI fixtures only | Expected inside distribution | Verified in disposable NTFS CI fixtures only; other policies untested |
 | Hardlink | Later capability | Same-filesystem only | Same-filesystem only | Same-volume file only |
 | Junction | Not applicable | Not applicable | Not Linux-native | Directory option |
 | Cross Windows/WSL link | Block by default | Not applicable | Block by default | Block by default |
@@ -149,8 +157,8 @@ Update this matrix only with verified results.
 
 | Subsystem | Termux | Linux | WSL | Windows |
 | --- | --- | --- | --- | --- |
-| Core starts | Experimental: native Android/ARM64 | Experimental: native AMD64 on Ubuntu CI | Not run | AMD64 compiled only; not run |
-| Platform diagnostics | Experimental: native evidence and candidate paths | Experimental: native Linux identity with owned path fixtures | Detector fixtures only | Detector fixtures only; paths deferred |
+| Core starts | Experimental: native Android/ARM64 | Experimental: native AMD64 on Ubuntu CI | Not run | Experimental: native AMD64 on Windows CI |
+| Platform diagnostics | Experimental: native evidence and candidate paths | Experimental: native Linux identity with owned path fixtures | Detector fixtures only | Experimental: native Windows identity; known-folder paths deferred |
 | Spec resolution | Planned | Planned | Planned | Planned |
 | Read-only plan | Planned MVP | Planned | Planned | Planned |
 | Link/copy apply | Planned MVP | Planned | Planned | Planned |
@@ -158,6 +166,6 @@ Update this matrix only with verified results.
 | Package install | Planned after file MVP | Planned | Planned | Planned |
 | Bootstrap | Planned after file MVP | Planned | Planned | Planned |
 | Shell integration | Planned Zsh/Bash | Planned | Planned | Planned PowerShell |
-| Hosted CI | To decide | Experimental: native Phase 1 check and bench | To decide | Planned |
+| Hosted CI | To decide | Experimental: native Phase 1 check and bench | To decide | Experimental: native Phase 1 check and bench |
 
 `Planned` is not a support claim. Replace it with explicit experimental or supported labels only after acceptance criteria and tests are documented.

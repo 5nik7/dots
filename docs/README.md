@@ -1,6 +1,6 @@
 # Dots Documentation
 
-The `dots` CLI is in the design and incremental-migration phase, with an isolated [portability experiment](../plans/phase-1-portability.md) verified natively on Termux and Linux CI. These documents distinguish experimental evidence from proposed production behavior.
+The `dots` CLI is in the design and incremental-migration phase, with an isolated [portability experiment](../plans/phase-1-portability.md) verified natively on Termux and Linux/Windows CI. These documents distinguish experimental evidence from proposed production behavior.
 
 ## Start Here
 

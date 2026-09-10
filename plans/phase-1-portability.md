@@ -1,6 +1,6 @@
 # Phase 1 Termux Portability Experiment
 
-**Status: Authorized Termux experiment and bounded native Linux CI validation completed; broader Phase 1 and Go adoption remain open**
+**Status: Authorized Termux experiment and bounded native Linux/Windows CI validation completed; broader Phase 1 and Go adoption remain open**
 
 ## Scope and Reconciliation
 
@@ -178,18 +178,74 @@ Windows execution, Windows filesystem policy, release packaging/checksums/permis
 
 ### Bounded Native Windows Follow-up
 
-**In progress; Go remains provisional.** This authorized task starts from Linux checkpoint `a337794311ed71038c42f199b0701cd900483946` on `feat/phase-1-portability`, preserving the owner's unrelated `logo.txt` edit. The resumed shell and isolated create/read/delete/cleanup check passed on 2026-09-10. The earlier blocked draft was not persisted; implementation follows its reviewed scope.
+**Passed on native Windows/AMD64 and Linux/AMD64 CI, with a native Termux recheck; Go remains provisional.** This authorized task started from Linux checkpoint `a337794311ed71038c42f199b0701cd900483946` on `feat/phase-1-portability`, preserving the owner's unrelated `logo.txt` edit. The resumed shell and isolated create/read/delete/cleanup check passed on 2026-09-10. The implementation stays within the authorized validation scope.
 
-Correct current verification to `GOVCS=*:off`, including its test and documentation. The previous `off` value lacked the required pattern separator; historical records retain the actual inputs used then. Extend the shared harness for Windows/AMD64 executable names, native paths/quoting, OS environment requirements, isolated Go settings/telemetry, UTF-8 logs, and PE dependency inspection. Preserve the optimization guard and Unix logo replacement regression. Separate copy/traversal tests from symlink privilege requirements and report unavailable/untested cases without changing security policy.
+Current verification uses `GOVCS=*:off`, with its test and documentation corrected. The previous `off` value lacked the required pattern separator; historical records retain the actual inputs used then. The shared harness now handles Windows/AMD64 executable names, native paths/quoting, OS environment requirements, isolated Go settings/telemetry, UTF-8 logs, and PE dependency inspection. The optimization guard and Unix logo replacement regression are preserved. Copy/traversal tests run independently of symlink privilege requirements, and unavailable/untested cases are explicit without changing security policy.
 
-Keep the Linux job and add native Windows CI execution plus the established startup method. Record actual source identity, dependencies, outcomes, timings, and runner limitations. Recheck Termux, inspect both jobs on the final pushed commit, and preserve downloaded evidence privately under `$HOME/dots-review-evidence`, outside the checkout and temporary storage. Windows known-folder resolution, live capability probes, distribution, bootstrap, installation, transactions, and Phase 2 remain outside this task.
+The existing Linux job is preserved alongside native Windows CI execution and the established startup method. Source identity, dependencies, outcomes, timings, and runner limitations are retained. Both jobs passed on the implementation commit below, and Termux was rechecked. Downloaded evidence is preserved privately under `$HOME/dots-review-evidence`, outside the checkout and temporary storage. The documentation checkpoint triggers a further run whose final-commit results are reviewed and retained separately. Windows known-folder resolution, live capability probes, distribution, bootstrap, installation, transactions, and Phase 2 remain outside this task.
 
 The first Windows attempt, [run 34421433827](https://github.com/5nik7/dots/actions/runs/34421433827) at `3717ab3416dc5c6d815f1972d4b489e086060232`, passed Python regressions and native build but failed formatting before vet/Go tests/CLI execution. All 15 captured inputs differed from committed bytes only by CRLF conversion. `core.autocrlf=false` alone did not override native line endings under the existing `text=auto` attributes. The workflow now also sets `core.eol=lf`, and the collector compares captured bytes directly with committed blobs before invoking verification. The failed Windows ZIP and successful Linux ZIP from this run are preserved in the private durable evidence archive. No Windows startup result is claimed for the failed attempt.
 
 The second Windows attempt, [run 34421664838](https://github.com/5nik7/dots/actions/runs/34421664838) at `d83edccc22b8e3188d2726190ca9ef9bf6b86b94`, passed committed-byte checks, formatting, vet, Python regressions, CLI unit tests, copies, file/directory symlinks, and escape cases. The existing-directory copy/link cases failed their error expectation: native Windows returned `EISDIR` instead of `ErrExist`. The test now accepts only that additional Windows directory-specific refusal and still verifies object identity and content/link preservation. Later executable CLI checks and startup measurements were not reached in that failed attempt; Linux passed again.
 
+#### Successful Native Execution and Shared Rechecks
+
+[Run 34421915915, attempt 1](https://github.com/5nik7/dots/actions/runs/34421915915) passed both jobs on 2026-09-10 at implementation commit `fe0e5d722a322bca9d97c48aaa1dac688752e17a`. These were native builds and executions on separate hosted Windows/AMD64 and Linux/AMD64 machines, not cross-compilation, WSL, or emulation. The Windows job ran `python -B experiments/go-portability/tools/ci_verify.py`; Linux used `python3 -B experiments/go-portability/tools/ci_verify.py`. Each collector invoked the corresponding interpreter with `-B experiments/go-portability/tools/verify.py check`, then `bench`. Exact interpreter paths/argv and tool commands are retained in result metadata and logs.
+
+| Check | Windows/AMD64 | Linux/AMD64 |
+| --- | --- | --- |
+| Committed source bytes, isolated config/caches/roots, offline settings | Passed; `GOVCS=*:off`, telemetry `off` under owned `APPDATA` | Passed; same controls, owned XDG telemetry path |
+| Python regressions | Passed: 6 tests, including 12 optimization rejection cases | Passed: same 6 tests |
+| Formatting and vet | Passed: `gofmt -l cmd internal tests`; `go vet ./...` | Passed: same commands |
+| Native Go tests | Passed: `go test -count=1 -json ./...`; 14 top-level tests, 56 pass events including subtests, no skips/failures | Passed: 15 top-level tests, 57 pass events, no skips/failures |
+| Copy and link fixtures | Passed: independent copies, file/directory symlinks, spaces/Unicode/leading dashes, broken links, existing objects, missing parents, slash/backslash traversal and symlink escape refusal | Passed: equivalent native Unix cases |
+| Actual link permission/capability | Both file/directory links available; no permission refusal observed | Both link types available |
+| Empty-PATH CLI and snapshots | Passed: 10 requests, native identity and explicit unimplemented-path warning, stream/secret checks, snapshots unchanged | Passed: 10 requests, Linux identity and snapshots unchanged |
+| Optional logos | Passed: missing, empty, directory, oversized, broken link, direct/symlink executable fallback, dynamic reload | Passed: same, plus unreadable/FIFO fixtures |
+| Unix logo replacement regression | Unavailable: excluded by Unix build constraint | Passed: all four isolated child cases |
+| Windows ACL-denied logo | Untested; no ACL/security-policy change | Not applicable |
+| Rebuild/dependencies | Passed: relocated identical rebuild; AMD64 PE/COFF; static `kernel32.dll` import | Passed: relocated identical rebuild; no ELF interpreter or `DT_NEEDED` entries |
+| Startup and retention | Passed: established first-observed/warm method, all raw samples, identical check/bench binaries, evidence upload | Passed: same method and retention |
+| Documentation/source preservation | Passed: relative links, whitespace, clean inputs before/after, captured bytes match commit | Passed: same checks |
+
+The six Python tests include mocked Windows refusal classification for errors 5, 50, and 1314; those are not observations of a restricted Windows machine. An unexpected error fails the suite. Copies remain independently runnable when symlink cases are unavailable. Windows known-folder resolution, live `doctor` capability probes, ACL-denied logos, UNC/network/junction/long-path/cross-volume behavior, and ordinary unelevated desktop policy variations remain unimplemented or untested as described in [platforms.md](../docs/platforms.md). Static PE imports do not enumerate dynamic/transitive Windows DLL loading.
+
+| Environment/build item | Windows CI | Linux CI |
+| --- | --- | --- |
+| Runner | `windows-2025`; image `win25-vs2026` / `20260907.229.1`; Windows build 26100 | `ubuntu-24.04`; Ubuntu 24.04.5 LTS; image `20260907.300.1`; kernel `6.17.0-1022-azure` |
+| CPU | `Intel64 Family 6 Model 207 Stepping 2, GenuineIntel`; 4 logical CPUs; affinity not measured | Intel Xeon Platinum 8573C; 4 logical CPUs and 4 available through affinity |
+| Evidence/test volume | NTFS via volume API, without retaining serial number | `ext2/ext3` from `stat -f` (ext-family magic label) |
+| Tools | Go 1.27.1; Python 3.12.10; hyperfine 1.20.0; LLVM 20.1.8; Git 2.55.0.windows.5 in job log | Go 1.27.1; Python 3.12.3; hyperfine 1.18.0; binutils/readelf 2.42; Git 2.55.0 in job log |
+| Build | Standard library only; `CGO_ENABLED=0`; `-trimpath -buildvcs=false -mod=readonly`; no stripping | Same flags and dependency policy |
+| Binary | 4,207,104 bytes; `8850624e20a07a8f983b851fd0427f41a0d0e896b1c07b857ff3993afd5a909a` | 3,991,208 bytes; unchanged `979a4f412d24d815ea484a5e8c291f70a2bc1da7cfeafaeebc30b25d37a603e5` |
+| Check/bench metadata time (UTC) | `00:36:27.321306` / `00:36:45.693830`, 2026-09-10 | `00:35:51.406872` / `00:36:03.748424`, 2026-09-10 |
+
+**Windows CI and Linux CI startup measurements, kept separate:**
+
+| Host | Command | Samples | Median | p95 | Minimum | Maximum | Python first observed |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Windows CI | `--help` | 600 | 6.645 ms | 7.314 ms | 6.288 ms | 9.843 ms | 23.798 ms |
+| Windows CI | `--version` | 600 | 6.345 ms | 6.916 ms | 6.033 ms | 7.443 ms | 6.854 ms |
+| Linux CI | `--help` | 600 | 1.002 ms | 1.251 ms | 0.809 ms | 1.431 ms | 1.317 ms |
+| Linux CI | `--version` | 600 | 0.963 ms | 1.199 ms | 0.758 ms | 1.366 ms | 1.008 ms |
+
+Each command has three alternating hyperfine batches with 20 warmups and 200 measured executions per batch, `--shell=none`, empty PATH, stdout discarded, and the committed public logo. Windows also runs from a path containing spaces; `shlex.join` follows hyperfine's `shell_words` command-expression parsing, while Python invokes tools through argument arrays. The first-observed Windows help call was 23.798 ms; it includes Python spawn/wait overhead and is not a controlled cold-cache result. Hosted CPU allocation, co-tenancy, filesystem caches, frequency, thermal/power state, and Windows process/security-scanner overhead are uncontrolled. These numbers are platform-specific CI observations, not a comparative speedup, representative desktop-hardware baseline, or approved startup budget. Historical Termux/Linux measurements above are preserved with their original source and environment.
+
+The native Termux recheck ran `python3 experiments/go-portability/tools/verify.py check` successfully on 2026-09-10, metadata time `00:34:42.922462Z`, after the Windows directory-refusal adjustment. All six Python tests, 15 top-level Go tests, empty-PATH CLI/snapshots, Unix logo replacement, relocated rebuild, dependency inspection, and documentation links passed. Go 1.27.1 / Python 3.14.6 produced the unchanged 4,070,316-byte Android/ARM64 binary `af73814fe6777aa2436ab5dc4c6dce18a2a9d53a9f8fa693f9f1686aa2c8d693`, with `/system/bin/linker64` and no `DT_NEEDED` entries. No benchmark or cross-compilation was rerun in Termux because executable behavior did not change; no packages were installed.
+
+Termux `tested-source.json` identifies `d83edccc22b8e3188d2726190ca9ef9bf6b86b94` plus the then-uncommitted Windows directory-refusal test and owner logo. All 14 non-logo input hashes match `fe0e5d722a322bca9d97c48aaa1dac688752e17a` exactly. The unrelated local logo is `400a1229f5ef3bd7d60d529ef498d25d2ac77f8cbc8da129abd90953c0b654d9`; committed CI uses `c9b9059f2c336cb53838aa3287ec7135caa21183a4aa158fe94923bb0af62948`. CLI checks use owned fixture logos. Documentation added after measurement does not alter the tested implementation/harness inputs.
+
+Durable sanitized evidence is archived privately at `/data/data/com.termux/files/home/dots-review-evidence/phase-1-windows-20260910-1dse8mjt/`, outside temporary storage and the checkout. `termux-recheck/` retains exact sources, identity, logs, binaries, `evidence.json`, and a committed-input comparison; `termux-check/` preserves the earlier successful recheck. `historical-linux/` preserves both previously downloaded Linux checkpoint ZIPs and their provenance without moving or overwriting the originals. Downloaded Windows/Linux ZIPs from all attempts remain separate, with GitHub metadata and independent review reports alongside them. Directories are `0700`, files `0600`; archived executables require an explicit execute-bit restoration to run on Unix. Nothing from this archive is in Git.
+
+| Successful run artifact | ZIP bytes | ZIP SHA-256 |
+| --- | ---: | --- |
+| [Windows, artifact 10131239084](https://github.com/5nik7/dots/actions/runs/34421915915/artifacts/10131239084), `windows-fe0e5d7.zip` | 7,495,491 | `ff4e685dfdd0d2d648d07be87ada8e2d7e39739cb359758ceda78443fd225ddb` |
+| [Linux, artifact 10131218148](https://github.com/5nik7/dots/actions/runs/34421915915/artifacts/10131218148), `linux-fe0e5d7.zip` | 7,190,466 | `577dbc2acd65e549cc4d4c56213759142bb362b22c06d6375e64deccb28c5cb0` |
+
+Both ZIP digests matched GitHub's recorded digests. Independently checked 32 contained file hashes and all 15 source fingerprints per archive against the committed files; recomputed each 600-sample timing summary from raw batches; confirmed native check/bench binary hashes match. CI artifacts have 30-day retention; durable private copies preserve the evidence beyond that service retention. Action runtime deprecation warnings did not prevent execution or upload. No infrastructure blocker remains for this bounded validation. Distribution, controlled cold-cache performance, representative desktop policy/hardware, and final Go adoption remain open. The evidence supports keeping Go as the provisional candidate and proceeding to a bounded distribution experiment; it does not establish full Windows support or a production safety engine.
+
 ## Remaining Decisions and Next Milestone
 
-Review these results before adopting Go or promoting the experimental module into the permanent core layout. Native Linux CI execution now passes. The next bounded task should adapt the isolated harness for native Windows/AMD64 and record actual runtime/filesystem behavior without installation; keep release/distribution checks separately pending. Decide the distribution strategy and acceptable performance budgets with the owner, and gather representative desktop-hardware evidence if required. Cold-cache evidence remains separately incomplete. Then scope Phase 2's command registry, extension trust, longest-prefix resolution, shared metadata, and completion design. Manifest format, migrated modules, transaction behavior, bootstrap, real-home installation, and repository-size changes remain deferred.
+Review these results before adopting Go or promoting the experimental module into the permanent core layout. Native Linux and Windows CI execution now pass. The next bounded task should validate local distribution bundles in isolated native CI roots: package the existing executable and public logo, generate and verify checksums, extract into a fresh path with spaces, and run help/version/JSON with an empty PATH while checking archive layout and executable permissions. Include a corrupt-checksum refusal case. Keep this as a review artifact experiment with no release publication, remote bootstrap, PATH modification, or real-home installation. Windows policy/ACL variations need a separately scoped disposable unelevated environment without changing security policy. Decide the distribution strategy and acceptable performance budgets with the owner, and gather representative desktop-hardware evidence if required. Cold-cache evidence remains separately incomplete. Then scope Phase 2's command registry, extension trust, longest-prefix resolution, shared metadata, and completion design. Manifest format, migrated modules, transaction behavior, bootstrap, real-home installation, and repository-size changes remain deferred.
 
 The implemented command surface is documented in [commands.md](../docs/commands.md), runtime/path limitations in [platforms.md](../docs/platforms.md), and runner guarantees in [testing.md](../docs/testing.md). No documentation for a feature implemented in this experiment is intentionally deferred.

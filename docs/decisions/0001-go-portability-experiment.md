@@ -15,7 +15,7 @@ This accepts evaluating Go, not adopting it as the production core language. The
 
 ## Consequences
 
-Go can be rejected without changing the existing setup or higher-level design. The experiment uses Go 1.27.0 as its module minimum and records the actual installed toolchain; no project-wide supported Go version is selected. The harness supports native Android/ARM64, Linux/AMD64, and Windows/AMD64 Go hosts; the Windows job is implemented with native results pending. The later authorized Linux follow-up built and executed the experiment in Ubuntu CI, with owned roots, offline verification, and telemetry isolation. Cross-compilation still supplies compilation evidence only. Native Windows execution, release distribution, controlled cold-cache measurements, and final language approval remain separate gates; Linux CI timings do not establish representative desktop-hardware performance.
+Go can be rejected without changing the existing setup or higher-level design. The experiment uses Go 1.27.0 as its module minimum and records the actual installed toolchain; no project-wide supported Go version is selected. The harness supports native Android/ARM64, Linux/AMD64, and Windows/AMD64 Go hosts; both desktop CI jobs now have native execution evidence. The later authorized Linux follow-up built and executed the experiment in Ubuntu CI, with owned roots, offline verification, and telemetry isolation. Cross-compilation still supplies compilation evidence only. The later Windows follow-up executed the native Windows/AMD64 CLI and fixtures, while leaving known-folder resolution and policy variations open. Release distribution, controlled cold-cache measurements, and final language approval remain separate gates; CI timings do not establish representative desktop-hardware performance.
 
 ## Alternatives Considered
 
@@ -25,7 +25,7 @@ Go can be rejected without changing the existing setup or higher-level design. T
 
 ## Validation
 
-See the [experiment plan and results](../../plans/phase-1-portability.md), [platform evidence](../platforms.md), and [testing instructions](../testing.md). No real-home installation, Termux package changes, proot, secret reads, or submodule initialization are part of the experiment. The bounded Linux and Windows follow-ups authorize development prerequisite provisioning in CI and feature-branch commits/pushes only; it does not change the language decision.
+See the [experiment plan and results](../../plans/phase-1-portability.md), [platform evidence](../platforms.md), and [testing instructions](../testing.md). No real-home installation, Termux package changes, proot, secret reads, or submodule initialization are part of the experiment. The bounded Linux and Windows follow-ups authorize development prerequisite provisioning in CI and feature-branch commits/pushes only; they do not change the language decision.
 
 ## Supersedes or Superseded By
 
