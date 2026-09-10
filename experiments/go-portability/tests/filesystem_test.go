@@ -165,7 +165,13 @@ func TestExistingTargets(t *testing.T) {
 						err = r.Symlink("source", "target")
 						linkAvailable(t, err)
 					}
-					if !errors.Is(err, os.ErrExist) {
+					refused := errors.Is(err, os.ErrExist)
+					// Windows directory-rooted APIs classify an existing directory
+					// as EISDIR. Require that specific refusal, then check preservation.
+					if runtime.GOOS == "windows" && kind == "directory" && errors.Is(err, syscall.EISDIR) {
+						refused = true
+					}
+					if !refused {
 						t.Fatalf("%s overwrite refusal: %v", strategy, err)
 					}
 					after, err := r.Lstat("target")
