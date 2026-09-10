@@ -4,7 +4,7 @@
 
 ## Status
 
-The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture is in the design and incremental-migration phase. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; the broader Phase 2 command center remains deferred.
+The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture is in the design and incremental-migration phase. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
 
@@ -18,6 +18,8 @@ DOTS_DEV_BIN="$(python3 -B tools/verify_core.py build)"
 "$DOTS_DEV_BIN" --version
 "$DOTS_DEV_BIN" doctor
 "$DOTS_DEV_BIN" doctor --json
+"$DOTS_DEV_BIN" commands
+"$DOTS_DEV_BIN" commands --check
 ```
 
 The verifier creates test-owned build/config/cache/output roots, disables Go downloads and telemetry, and prints only the resulting binary path on stdout. Nothing is installed or added to PATH. The artifact includes `bin/dots`, the optional public logo and sanitized build evidence; it may be removed with temporary storage. A configured `$DOTS` still controls optional-logo lookup. The active `bin/dots` and its directory flags are unchanged.
@@ -32,7 +34,7 @@ if ($LASTEXITCODE -ne 0) { throw "Development build failed" }
 & $dev doctor --json
 ```
 
-Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). No external command execution, completion, installation, manifest, transaction, bootstrap, or release functionality is included.
+Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). The development extension mechanism is opt-in per invocation: repeat prefix `--command-dir <absolute-trusted-directory>` to select roots. Each executable requires a strict JSON sidecar; use `commands`, `commands --check`, or `<route> --help` for static inspection without execution. See the [exact protocol and example metadata](docs/commands.md#development-external-protocol). No real dotfile extension ships. Unix executes native files; Windows supports `.exe` only in local case-insensitive NTFS roots. Selecting a root trusts its code; this is not a sandbox or publisher authentication. WSL execution, completions, installation, manifests, transactions, bootstrap and releases remain deferred.
 
 ## Try the Portability Experiment
 
@@ -98,7 +100,7 @@ dots links check
 dots themes apply <name>
 ```
 
-External commands named `dots-*` will be automatically available through the main command. For example, `dots-themes-apply` can provide `dots themes apply` without adding routing code to the dispatcher.
+External commands named `dots-*` with matching sidecars can be available through explicitly selected trusted roots. For example, `dots-themes-apply` can provide `dots themes apply` without adding routing code to the dispatcher.
 
 These examples describe the intended interface and are not yet implemented.
 

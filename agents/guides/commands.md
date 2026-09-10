@@ -26,7 +26,7 @@ The external-command protocol is an extension mechanism. Safety-critical operati
 
 - The main command is `dots`.
 - External command basenames start with `dots-`.
-- Filename hyphens map to route spaces unless explicit metadata defines another route.
+- Filename hyphens map to route spaces; schema 1 sidecars must match the basename exactly.
 - Use plural nouns for browsable collections when that is the established group: `files`, `links`, `scripts`, `shells`, `themes`, `packages`, `profiles`, `commands`, and `sources`.
 - Use verbs for lifecycle actions: `plan`, `apply`, `undo`, and `bootstrap`.
 - Avoid synonyms and aliases for new commands. Add an alias only to preserve an established name.
@@ -45,14 +45,14 @@ If `dots-themes-apply` exists, execute it with `tokyonight` as the remaining arg
 Resolution requirements:
 
 - Built-in routes have explicit precedence and cannot be shadowed silently.
-- Official and user extension directories have documented precedence.
+- Development roots are explicitly repeated prefix `--command-dir` options only; duplicates fail instead of selecting a winner.
 - Duplicate canonical routes are errors surfaced by command validation.
 - Platform-incompatible commands may be discoverable as unavailable, but must not fail with a misleading "unknown command" result.
-- Windows extensions may require recognized executable suffixes or an explicit interpreter. Do not assume Unix executable bits.
+- Native Windows accepts `.exe` only, with the argument convention and NTFS root restrictions in decision 0003. Do not infer an interpreter or Unix permission semantics.
 
 ## Metadata
 
-The exact metadata representation is still a draft. Preserve these semantic fields when selecting the final format:
+The mandatory JSON sidecar is accepted in [decision 0003](../../docs/decisions/0003-trusted-external-command-protocol.md). Read it before changing roots, routes, metadata, discovery/help or execution. Its exact keys, limits, reservations and failure categories are normative. Richer future metadata must preserve:
 
 - Canonical route.
 - Short summary.
@@ -64,7 +64,7 @@ The exact metadata representation is still a draft. Preserve these semantic fiel
 - Structured-output support.
 - Mutation classification, when useful for help and policy checks.
 
-Scripts may eventually carry comment headers such as `# dots:summary=...`; compiled extensions need a sidecar or metadata handshake. Do not finalize syntax in code without updating `docs/commands.md` and recording the decision.
+Do not add comment-header parsing or runtime metadata handshakes. Static help/discovery must not execute extensions; completion and structured discovery remain deferred.
 
 ## Output
 
@@ -79,7 +79,7 @@ Scripts may eventually carry comment headers such as `# dots:summary=...`; compi
 
 - The common direct-dispatch path must not parse every command file.
 - Do not invoke Git merely to locate the installed executable or dispatch a route.
-- Cache discovery only after measuring a need, and define correct invalidation before adding the cache.
+- No persistent cache in this slice. Targeted direct probes and enumeration must remain separate.
 - Completion should consume generated or cached metadata rather than repeatedly resolving the complete machine specification.
 - Add or update dispatcher benchmarks whenever route lookup changes materially.
 

@@ -48,9 +48,9 @@ Never let a test:
 
 ## Permanent Core
 
-For root `cmd/dots`, `internal`, and `tests`, use `python3 -B tools/verify_core.py check`, `bench`, `build`, or `docs` (`python` on Windows). Run check before bench and keep other builds/tests out of timing intervals. The runner enforces installed Go 1.27.1, owns configuration/cache/telemetry and runtime roots, and supplies the prebuilt binary required by process tests. Do not use inherited raw Go build/test settings. Use `python3 -B tools/test_verify_core.py` for the six Python regressions without Go. See [testing.md](../../docs/testing.md#permanent-core-verification) for guarantees, CI, measurement method, and durable retention.
+For root `cmd/dots`, `internal`, and `tests`, use `python3 -B tools/verify_core.py check`, `bench`, `build`, or `docs` (`python` on Windows). Run check before bench and keep other builds/tests out of timing intervals. The runner enforces installed Go 1.27.1, owns configuration/cache/telemetry and runtime roots, and supplies the prebuilt binary required by process tests. Do not use inherited raw Go build/test settings. Use `python3 -B tools/test_verify_core.py` for the seven core Python regressions without Go. See [testing.md](../../docs/testing.md#permanent-core-verification) for guarantees, CI, measurement method, and durable retention.
 
-Preserve the independent experiment and its verifier. Core verification does not authorize an installed executable, external execution, completions, or managed mutation. Keep the dispatch dependency guard, metadata projection tests, argument/error contracts, optional-logo replacement regression and empty-PATH process snapshots.
+Preserve the independent experiment and its verifier. Core verification may execute only disposable extension fixtures under decision 0003; it does not authorize an installed executable, real management commands, completions or managed mutation. Keep the dispatch dependency guard, metadata projection tests, argument/error contracts, optional-logo replacement regression and empty-PATH process snapshots.
 
 ## Documentation
 
@@ -63,3 +63,7 @@ Keep `GOVCS=*:off` alongside the other offline settings. On Windows preserve req
 The Unix Go suite includes an isolated child-process regression for logo replacement with a FIFO; preserve its deadline and test-owned roots when changing logo opening. See `docs/testing.md` for the exact boundary it tests.
 
 The test commands in `docs/testing.md` must exist before they are presented as runnable. Until runners are implemented, label proposed names clearly. Update the relevant task guide when a new mandatory suite or verification step is introduced.
+
+For external changes, retain strict sidecar/root tests, targeted operation counts, empty-PATH forwarding and static-help snapshots. Native Windows Ctrl+C and Ctrl+Break acceptance must use a real disposable console; an injected cancellation or skipped case is not a substitute. Never weaken acceptance to make CI green.
+
+Console-test failure cleanup must own the entire disposable process tree, not just the dispatcher PID. Keep the startup-gated Windows Job Object, job deadlines/WaitDelay, independent fixture lifetime and negative process-handle assertions. Do not change the product interruption contract to simplify tests. Benchmark result labeling must refuse count mismatches before applying labels.

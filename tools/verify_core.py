@@ -280,16 +280,25 @@ def doc_checks():
     print(f"Relative Markdown links passed ({checked} links in {len(files)} files).", file=sys.stderr)
 
 
-def build(go, source, root, env, name="dots", target=None):
+def build(go, source, root, env, name="dots", target=None, package="./cmd/dots"):
     binary = root / "bin" / executable_name(name, target[0] if target else env["GOOS"])
     build_env = dict(env)
     if target:
         build_env.update(GOOS=target[0], GOARCH=target[1])
-    run([go, "build", *BUILD_FLAGS, "-o", binary, "./cmd/dots"], cwd=source, env=build_env)
+    run([go, "build", *BUILD_FLAGS, "-o", binary, package], cwd=source, env=build_env)
     return binary
 
 
-def benchmark(binary, root, env, hyperfine):
+def label_benchmark_results(results, names):
+    # Explicit count check keeps Python 3.9 compatibility (zip(strict=True)
+    # requires 3.10), and refuses both missing and extra results before mutation.
+    if len(results) != len(names):
+        raise RuntimeError("Benchmark result count differs from requested commands")
+    for item, name in zip(results, names):
+        item["measurement"] = name
+
+
+def benchmark(binary, root, env, hyperfine, fixture):
     if os.name == "nt":
         # Exercise hyperfine shell_words quoting with spaces and backslashes.
         spaced = root / "benchmark bin"
@@ -299,26 +308,45 @@ def benchmark(binary, root, env, hyperfine):
         binary = relocated
     # The logo used in measurements is copied verbatim from the public source.
     shutil.copyfile(REPO / "logo.txt", Path(env["DOTS"]) / "logo.txt")
+    command_root = root / "trusted benchmark commands"
+    command_root.mkdir()
+    for index in range(10):
+        route = f"probe{index}"
+        shutil.copyfile(fixture, command_root / executable_name("dots-" + route))
+        (command_root / executable_name("dots-" + route)).chmod(0o700)
+        sidecar = {"schema_version": 1, "route": [route], "summary": "Disposable benchmark fixture",
+                   "synopsis": route + " [args]", "examples": ["dots " + route],
+                   "platforms": ["termux", "linux", "windows"], "hidden": False,
+                   "outputs": [{"format": "text", "schema_version": 0}], "mutation": "read-only",
+                   "aliases": [], "capabilities": []}
+        (command_root / ("dots-" + route + ".json")).write_text(json.dumps(sidecar), encoding="utf-8")
+    env = dict(env, DOTS_FIXTURE_MODE="noop")
+    commands = {"--help": [str(binary), "--help"], "--version": [str(binary), "--version"],
+                "external-dispatch": [str(binary), "--command-dir", str(command_root), "probe0"],
+                "discovery-10": [str(binary), "--command-dir", str(command_root), "commands"]}
     first = {}
-    for argument in ("--help", "--version"):
+    for name, argv in commands.items():
         start = time.perf_counter_ns()
-        subprocess.run([str(binary), argument], env=env, cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True, timeout=10)
-        first[argument] = (time.perf_counter_ns() - start) / 1e9
+        subprocess.run(argv, env=env, cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True, timeout=10)
+        first[name] = (time.perf_counter_ns() - start) / 1e9
     batches = []
     for batch in range(3):
         output = root / f"timings-{batch}.json"
-        args = ("--help", "--version") if batch % 2 == 0 else ("--version", "--help")
+        names = list(commands) if batch % 2 == 0 else list(reversed(commands))
         run([hyperfine, "--shell=none", "--warmup", "20", "--runs", "200", "--export-json", output,
-             # hyperfine --shell=none uses shell_words on Windows too.
-             *[shlex.join([str(binary), arg]) for arg in args]], cwd=root, env=env)
-        batches.append(json.loads(output.read_text(encoding="utf-8")))
+             *[shlex.join(commands[name]) for name in names]], cwd=root, env=env)
+        result = json.loads(output.read_text(encoding="utf-8"))
+        label_benchmark_results(result["results"], names)
+        batches.append(result)
     summary = {}
-    for arg in ("--help", "--version"):
-        values = sorted(t for batch in batches for result in batch["results"] if result["command"].endswith(arg) for t in result["times"])
-        summary[arg] = {"samples": len(values), "median_ms": (values[299] + values[300]) * 500,
-                        "p95_ms": values[569] * 1000, "min_ms": values[0] * 1000, "max_ms": values[-1] * 1000}
+    for name in commands:
+        values = sorted(t for batch in batches for result in batch["results"] if result["measurement"] == name for t in result["times"])
+        assert len(values) == 600
+        summary[name] = {"samples": len(values), "median_ms": (values[299] + values[300]) * 500,
+                         "p95_ms": values[569] * 1000, "min_ms": values[0] * 1000, "max_ms": values[-1] * 1000}
     return {"method": "hyperfine --shell=none; 3 batches, 20 warmups and 200 samples per command per batch; alternating order; stdout discarded",
             "cold_cache": "not measured; no cache eviction or reboot", "first_observed_seconds": first,
+            "external_fixture": {"definitions": 10, "roots": 1, "behavior": "native no-op process", "sha256": hashlib.sha256(fixture.read_bytes()).hexdigest()},
             "summary": summary, "batches": batches}
 
 
@@ -361,13 +389,15 @@ def main():
                     "kernel": str(sys.getwindowsversion()) if os.name == "nt" else os.uname().release,
                     "machine": info["GOHOSTARCH"] if os.name == "nt" else os.uname().machine,
                     "termux_version": os.environ.get("TERMUX_VERSION", "unknown"),
+                    "logo_sha256": hashlib.sha256((REPO / "logo.txt").read_bytes()).hexdigest(),
                     "binary_bytes": binary.stat().st_size, "sha256": hashlib.sha256(binary.read_bytes()).hexdigest()}
         if mode == "check":
             unformatted = run([gofmt, "-l", "cmd", "internal", "tests"], cwd=source, env=env, capture=True).stdout
             if unformatted:
                 raise RuntimeError("Run gofmt on the core Go sources:\n" + unformatted)
             # Go tests use fixture roots; process checks separately enforce an empty PATH.
-            test_env = dict(env, DOTS=child["DOTS"], DOTS_CORE_TEST_BIN=str(binary))
+            fixture = build(go, source, root, env, "extension-fixture", package="./tests/fixtures/command")
+            test_env = dict(env, DOTS=child["DOTS"], DOTS_CORE_TEST_BIN=str(binary), DOTS_EXTENSION_TEST_BIN=str(fixture))
             for key in ("PREFIX", "TERMUX_VERSION"):
                 if key in child:
                     test_env[key] = child[key]
@@ -387,6 +417,12 @@ def main():
                                      "status": {"pass": "passed", "skip": "unavailable", "fail": "failed"}[event["Action"]]})
             metadata["go_tests"] = outcomes
             metadata["cli"] = cli_checks(binary, root, child, identity)
+            public_logo = (REPO / "logo.txt").read_bytes()
+            (Path(child["DOTS"]) / "logo.txt").write_bytes(public_logo)
+            shown = subprocess.run([str(binary), "--help"], env=child, cwd=root, capture_output=True, check=True, timeout=10).stdout
+            expected_logo = public_logo if public_logo.endswith(b"\n") else public_logo + b"\n"
+            assert shown.startswith(expected_logo + b"\n"), "public logo display differs from source bytes"
+            metadata["public_logo_display"] = "passed: exact bytes plus separating newline"
             relocated = root / "relocated" / "module"
             source_copy(relocated)
             repeat = build(go, relocated, root, env, "repeat")
@@ -410,7 +446,8 @@ def main():
             doc_checks()
         elif mode == "bench":
             metadata["hyperfine"] = run([hyperfine, "--version"], cwd=root, env=env, capture=True).stdout.strip()
-            metadata["benchmark"] = benchmark(binary, root, child, hyperfine)
+            fixture = build(go, source, root, env, "extension-fixture", package="./tests/fixtures/command")
+            metadata["benchmark"] = benchmark(binary, root, child, hyperfine, fixture)
             registry_result = run([go, "test", "-run=^$", "-bench=^BenchmarkRegistryLookup$", "-benchmem", "-benchtime=200ms", "-count=3", "./internal/dispatch"], cwd=source, env=env, capture=True).stdout
             metadata["registry_benchmark"] = {"method": "Go benchmark, 200ms adaptive iterations, 3 repetitions per registry size; in-process lookup only", "raw": registry_result}
             print(registry_result, file=sys.stderr)
