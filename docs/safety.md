@@ -6,7 +6,7 @@ Safety is a core product feature of `dots`, not a wrapper around destructive fil
 
 ## Permanent Read-Only Core
 
-The root development executable implements only help/version/doctor through a validated built-in registry. It preserves the experiment's bounded optional-logo handle checks, explicit missing-platform-path warnings, unprobed diagnostics and argument redaction. No manifest, extension, configuration content, transaction, cache write, or installation command is loaded by dispatch. Test-only filesystem mutation primitives remain in the independent experiment. The [core verifier](testing.md#permanent-core-verification) owns all build/cache/fixture writes and proves unchanged runtime roots; it never replaces the active `bin/dots` or edits shell configuration.
+The root development executable implements help/version/doctor/commands through a validated built-in registry, plus the bounded external protocol below. It preserves the experiment's bounded optional-logo handle checks, explicit missing-platform-path warnings, unprobed diagnostics and argument redaction. Built-in startup loads no manifests, configuration contents, transaction state or external code. Only explicitly requested external resolution reads sidecars, and only direct external dispatch executes a selected extension. There is no persistent cache or installation surface. Test-only filesystem mutation primitives remain in the independent experiment. The [core verifier](testing.md#permanent-core-verification) owns all build/cache/fixture writes and proves unchanged runtime roots; it never replaces the active `bin/dots` or edits shell configuration.
 
 ## Development Extension Trust
 

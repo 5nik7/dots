@@ -41,6 +41,8 @@ func TestWindowsConsoleHelper(t *testing.T) {
 	signal.Notify(events, os.Interrupt)
 	defer signal.Stop(events)
 	cmd, r := signalProcess(t, os.Getenv("DOTS_CONSOLE_BIN"), os.Getenv("DOTS_CONSOLE_ROOT"))
+	timer := time.AfterFunc(10*time.Second, func() { _ = cmd.Process.Kill() })
+	defer timer.Stop()
 	_ = readyPID(t, r)
 	event, err := strconv.Atoi(os.Getenv("DOTS_CONSOLE_EVENT"))
 	if err != nil {
