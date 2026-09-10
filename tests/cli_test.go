@@ -129,7 +129,20 @@ func TestDevelopmentProcess(t *testing.T) {
 					t.Fatal("decorated JSON")
 				}
 			}
-			if !reflect.DeepEqual(before, snapshot(t, root)) {
+			after := snapshot(t, root)
+			if !reflect.DeepEqual(before, after) {
+				for path, old := range before {
+					if current, ok := after[path]; !ok || current != old {
+						rel, _ := filepath.Rel(root, path)
+						t.Logf("changed %s: before=%+v after=%+v present=%t", rel, old, current, ok)
+					}
+				}
+				for path := range after {
+					if _, ok := before[path]; !ok {
+						rel, _ := filepath.Rel(root, path)
+						t.Logf("added %s", rel)
+					}
+				}
 				t.Fatal("read-only process changed owned roots")
 			}
 		})
