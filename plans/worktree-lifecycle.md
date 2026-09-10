@@ -1,6 +1,6 @@
 # Bounded Development Worktree Lifecycle
 
-Status: Implemented; focused native CI pending delivery (2026-09-10).
+Status: Implemented; verified results and limitations below (2026-09-10).
 
 Use one `chore/worktree-lifecycle` worktree from fetched `origin/main`; preserve the original checkout's HEAD/logo/index, every branch/recovery ref and retained evidence. This is local development maintenance, not a public dots command or managed-dotfile operation.
 
@@ -10,8 +10,8 @@ Document one-worktree capacity, exact authorized-maintenance/implementation trig
 
 - [x] Helper and isolated refusal/removal tests.
 - [x] Policy/agent guide and reference updates.
-- [ ] Focused checks, preservation audit, explicit feature push and CI inspection.
-- [ ] PR or prepared comparison fallback; retain current worktree until a later eligible boundary after merge.
+- [x] Focused checks, preservation audit, explicit feature push and CI inspection; final-head revalidation is retained with delivery.
+- [x] Prepared comparison fallback; retain current worktree until a later eligible boundary after merge.
 
 ## Local Results
 
@@ -26,3 +26,9 @@ Future sessions starting from the old original HEAD must explicitly load the fet
 The first focused Linux run found same-account process-inspection permission restrictions before the test child was visited. The helper correctly refused cleanup, but returned uncertainty before identifying the known active child, so the native detection assertion failed. The inspector now continues after recording permission uncertainty: a definite active reference takes precedence; absent one, any recorded uncertainty still blocks removal. No eligibility rule or assertion was relaxed. Native positive removal is explicitly unavailable on a host with denied inspection. Matrix fail-fast is disabled so Linux findings do not cancel Windows coverage. The original failed log is retained with its commit identity.
 
 The follow-up Linux suite passed with native eligible removal explicitly unavailable under runner process permissions. Windows exposed Git's forward-slash worktree paths being compared as raw strings to Python's native paths; registration now normalizes Git-reported paths through the native path API. The CI whitespace step initially saw a shallow checkout as a root commit and included unrelated historical files; checkout now retains the parent commit so the check examines the actual commit diff. No historical source whitespace is changed.
+
+## Verified CI and Delivery Boundary
+
+[Run 34446557376](https://github.com/5nik7/dots/actions/runs/34446557376) passed Linux and Windows tests, documentation links and commit whitespace at `f2516237896875e969c44d7ea4edb8fdd6afa358`. Each host ran 14 tests: Linux skipped only native eligible removal because some same-account processes were inaccessible; Windows skipped only the live-symlink fixture rather than changing privileges. Windows native process cases verify explicit unavailability, not native removal capability. Both hosts passed the injected-idle eligible-removal and refusal cases. Termux passed all 14, including native eligible removal, with no skips. The explicit evidence-directory protection follow-up also passed all 14 locally; its final-head CI is retained separately at delivery.
+
+PR creation returned integration HTTP 403 and local `gh` authentication was invalid. Use the [comparison](https://github.com/5nik7/dots/compare/main...chore/worktree-lifecycle) and retained `PR-title.txt` / `PR-description.md`. No merge, completion work or real worktree removal is part of delivery. The original remains at its older HEAD and does not automatically load this policy. Existing native core/experiment workflow contents are unchanged; no Go builds or timing reruns were added to this local tooling task.

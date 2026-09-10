@@ -22,7 +22,7 @@ For authorized implementation/maintenance after this change merges:
 
 ```bash
 cd "$HOME/repos/dots"
-git -c submodule.recurse=false fetch --no-recurse-submodules --no-prune origin
+git -c submodule.recurse=false fetch --no-recurse-submodules --no-prune --no-tags --no-auto-maintenance origin refs/heads/main:refs/remotes/origin/main
 policy_revision="$(git rev-parse origin/main)"
 git show "$policy_revision:AGENTS.md"
 git show "$policy_revision:agents/guides/worktrees.md"
