@@ -4,6 +4,16 @@
 
 Safety is a core product feature of `dots`, not a wrapper around destructive file operations. This document is authoritative for planning, mutation, backup, rollback, undo, package, hook, repository, and secret behavior.
 
+## Permanent Read-Only Core
+
+The root development executable implements help/version/doctor/commands through a validated built-in registry, plus the bounded external protocol below. It preserves the experiment's bounded optional-logo handle checks, explicit missing-platform-path warnings, unprobed diagnostics and argument redaction. Built-in startup loads no manifests, configuration contents, transaction state or external code. Only explicitly requested external resolution reads sidecars, and only direct external dispatch executes a selected extension. There is no persistent cache or installation surface. Test-only filesystem mutation primitives remain in the independent experiment. The [core verifier](testing.md#permanent-core-verification) owns all build/cache/fixture writes and proves unchanged runtime roots; it never replaces the active `bin/dots` or edits shell configuration.
+
+## Development Extension Trust
+
+The [accepted protocol](decisions/0003-trusted-external-command-protocol.md) permits execution only from explicit trusted `--command-dir` roots, with mandatory bounded static metadata and protected core namespaces. Help/discovery never execute extensions. No real management command ships; fixture execution belongs only to disposable test roots. A `read-only` sidecar is an author assertion, not an enforced sandbox: an invoked extension has the user's environment, working directory and streams and can exercise user privileges. Do not infer safety or publisher authentication from JSON, filename or executable validation.
+
+Root identity and opened-handle metadata checks reject accidental malformed objects. They do not prevent an adversary replacing trusted files or parent directories between checks and execution. No execute-by-handle, ownership/ACL enforcement, credential isolation or process-tree cleanup guarantee is made. Future managed writes still require core transaction APIs; this slice does not implement or exempt them.
+
 ## Implemented Experiment Boundary
 
 The [Phase 1 experiment](../plans/phase-1-portability.md) exposes no managed filesystem mutation command. Help may read the optional public logo. It validates the opened handle before reading; Unix opens are nonblocking to avoid waiting for a writer if a regular logo is replaced with a FIFO. This does not impose a general filesystem I/O deadline. Diagnostics reads allowlisted path/environment inputs and limited runtime metadata, without opening dotfile contents or creating capability probes. Version output does not inspect the repository. Unknown arguments are not echoed into diagnostics.
@@ -216,3 +226,17 @@ The planner needs explicit allowed destination roots. A destination outside thos
 Path validation occurs after variable expansion and normalization. Reject traversal, empty target, filesystem root, unresolved variable, unexpected UNC/device path, and other platform-specific escapes before mutation.
 
 No recursive destructive action may use an unresolved environment variable, broad home directory, repository root, or filesystem root as its target.
+
+## Static Command Catalog
+
+The [versioned catalog](decisions/0004-versioned-command-discovery.md) reads only explicit command roots and metadata, validates the complete discovery result before stdout, and executes no extensions. It includes hidden/unavailable records; hidden is presentation metadata, not a confidentiality boundary. No resolved paths or environment values are added, but author-provided descriptions are reproduced. Availability and read-only declarations do not authenticate, sandbox or protect against concurrent replacement of trusted files.
+
+## Authorized Development Worktree Cleanup
+
+Local repository maintenance is separate from managed dotfile transactions. The [worktree lifecycle](../agents/guides/worktrees.md) permits automatic cleanup only of explicitly enrolled, merged, unused, clean linked development worktrees during authorized tasks. Read-only planning cannot remove them. Original/session/helper roots, live references, local content, branch/recovery refs and review evidence are protected; uncertain checks skip and Git removal never uses force. This does not authorize a general-purpose recursive deletion API or relaxed managed-file safety.
+
+Lifecycle cleanup supplements Git status with metadata-only entry classification and refuses special or uncertain filesystem objects. Its fresh-main fetch uses an empty `--refmap=` and an explicit destination, preventing configured fetch mappings from updating local branch/recovery refs. The trusted-filesystem and concurrent-change limitations in the worktree guide still apply.
+
+## Static Completion Boundary
+
+[Zsh generation](decisions/0005-static-zsh-completion.md) validates all metadata before stdout and never executes extensions. Generated scripts omit descriptions, safely quote explicit root strings, and use only embedded route data at completion time. Ordered literal context matching is a conservative presentation filter, not filesystem identity or a trust guarantee. Root paths occur only in explicitly generated script context, not the JSON catalog. No installation, startup edit, persistent cache or implicit discovery is performed.

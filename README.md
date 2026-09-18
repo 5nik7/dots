@@ -4,9 +4,67 @@
 
 ## Status
 
-The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture is in the design and incremental-migration phase. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The permanent core and Phase 2 remain unimplemented.
+The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture is in the design and incremental-migration phase. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
+
+## Try the Permanent Development Core
+
+With Go 1.27.1 and Python 3 already installed, run from this checkout (not the original live checkout):
+
+```bash
+DOTS_DEV_BIN="$(python3 -B tools/verify_core.py build)"
+"$DOTS_DEV_BIN" --help
+"$DOTS_DEV_BIN" --version
+"$DOTS_DEV_BIN" doctor
+"$DOTS_DEV_BIN" doctor --json
+"$DOTS_DEV_BIN" commands
+"$DOTS_DEV_BIN" commands --check
+"$DOTS_DEV_BIN" commands --json
+```
+
+The verifier creates test-owned build/config/cache/output roots, disables Go downloads and telemetry, and prints only the resulting binary path on stdout. Nothing is installed or added to PATH. The artifact includes `bin/dots`, the optional public logo and sanitized build evidence; it may be removed with temporary storage. A configured `$DOTS` still controls optional-logo lookup. The active `bin/dots` and its directory flags are unchanged.
+
+PowerShell uses `python -B tools/verify_core.py build` to obtain the separate `.exe` path:
+
+```powershell
+$dev = python -B tools/verify_core.py build
+if ($LASTEXITCODE -ne 0) { throw "Development build failed" }
+& $dev --help
+& $dev --version
+& $dev doctor --json
+& $dev commands --json
+```
+
+Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM, plus Zsh on Termux/Linux; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). The development extension mechanism is opt-in per invocation: repeat prefix `--command-dir <absolute-trusted-directory>` to select roots. Each executable requires a strict JSON sidecar; use `commands`, `commands --json`, `commands --check`, or `<route> --help` for static inspection without execution. See the [exact protocol and example metadata](docs/commands.md#development-external-protocol). `commands --json` emits the [schema-1 catalog](docs/commands.md#machine-readable-command-catalog), including hidden and unavailable definitions with explicit attributes; no roots yields built-ins only. It cannot be combined with `--check`. No real dotfile extension ships. Unix executes native files; Windows supports `.exe` only in local case-insensitive NTFS roots. Selecting a root trusts its code; this is not a sandbox or publisher authentication. WSL execution, other completion renderers, installation, manifests, transactions, bootstrap and releases remain deferred.
+
+### Disposable Zsh completion demo
+
+The permanent development binary supports `completion zsh`; the live Bash prototype does not. The generator prints a static script and installs nothing. With an already built development binary in `DOTS_DEV_BIN` (from the build example above), run the following in a separate disposable Zsh process. `mktemp` creates only a new demo directory; retain or remove that exact directory after inspection. The demo uses temporary HOME and ZDOTDIR directories and does not edit live startup files. Zsh still reads its system zshenv, if present.
+
+```bash
+demo_root="$(mktemp -d "${TMPDIR:-/tmp}/dots-zsh-demo.XXXXXXXX")"
+mkdir "$demo_root/bin"
+ln -s "$DOTS_DEV_BIN" "$demo_root/bin/dots"
+"$DOTS_DEV_BIN" completion zsh > "$demo_root/completion.zsh"
+env -i HOME="$demo_root" ZDOTDIR="$demo_root" XDG_CONFIG_HOME="$demo_root" \
+  XDG_DATA_HOME="$demo_root" XDG_STATE_HOME="$demo_root" XDG_CACHE_HOME="$demo_root" \
+  TMPDIR="$demo_root" TERM=xterm PATH="$demo_root/bin" \
+  "$(command -v zsh)" -f
+```
+
+Inside that disposable shell, initialize its completion system without a dump file and source the generated script:
+
+```zsh
+autoload -Uz compinit
+compinit -i -D
+source "$HOME/completion.zsh"
+```
+
+Type `dots do` and press Tab to complete `doctor`. The disposable PATH resolves `dots` to the development binary; `dots --version` demonstrates that binding. Exit when finished.
+
+Routes and represented global spellings are completed; command flags and argument values are not inferred. To include external routes, generate with explicit prefix `--command-dir` roots and use that identical ordered root spelling in the completed invocation. The script performs no runtime discovery or extension execution. See the [completion contract](docs/commands.md#static-zsh-completion). Native Windows generation is distinct from Termux/Linux Zsh runtime verification.
+
 
 ## Try the Portability Experiment
 
@@ -72,7 +130,7 @@ dots links check
 dots themes apply <name>
 ```
 
-External commands named `dots-*` will be automatically available through the main command. For example, `dots-themes-apply` can provide `dots themes apply` without adding routing code to the dispatcher.
+External commands named `dots-*` with matching sidecars can be available through explicitly selected trusted roots. For example, `dots-themes-apply` can provide `dots themes apply` without adding routing code to the dispatcher.
 
 These examples describe the intended interface and are not yet implemented.
 
@@ -109,3 +167,7 @@ Agents must read [`AGENTS.md`](AGENTS.md) before changing the project and then r
 ## Migration Approach
 
 The current dotfiles remain in place while the new core is developed beside them. Migration will proceed one module at a time, beginning with a small Termux profile. Existing submodules, platform repositories, large assets, and actively used scripts will not be removed or reorganized without a focused plan and recovery path.
+
+## Development Worktrees
+
+Contributors use [one explicitly managed development worktree](agents/guides/worktrees.md) alongside the original checkout. `tools/worktree_lifecycle.py` defaults to preview and provides guarded cleanup after verified merge; it is development tooling, not a public `dots` command. Read the guide before registration/apply, including how to load current policy when the original checkout intentionally stays on an older HEAD. Nothing installs hooks or background cleanup.

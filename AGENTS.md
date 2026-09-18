@@ -16,7 +16,7 @@ The project is in the design and incremental-migration phase.
 - The existing dotfiles tree remains live and must not be reorganized wholesale without an approved migration plan.
 - Commands and manifests described in `docs/` may be proposed rather than implemented. Never document a proposed command as currently usable.
 - Termux is the first implementation target. Cross-platform boundaries must still be preserved from the first change.
-- Go adoption and the bounded next core slice are accepted in [decision 0002](docs/decisions/0002-phase-1-go-adoption.md). The permanent core and Phase 2 remain unimplemented; untested platform and release capabilities stay deferred.
+- Go adoption and the bounded next core slice are accepted in [decision 0002](docs/decisions/0002-phase-1-go-adoption.md). The first permanent read-only core/registry slice is implemented; the development-only external protocol is accepted in [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) and implemented alongside it. Broader command-center features remain deferred. Untested platform and release capabilities stay deferred.
 
 Track phase status in [`plans/roadmap.md`](plans/roadmap.md) and Termux scope in [`plans/termux-mvp.md`](plans/termux-mvp.md).
 
@@ -24,6 +24,7 @@ Track phase status in [`plans/roadmap.md`](plans/roadmap.md) and Termux scope in
 
 Read the guide matching the work before changing files:
 
+- [`agents/guides/worktrees.md`](agents/guides/worktrees.md) — one-worktree capacity, explicit enrollment, preview and authorized cleanup.
 - [`agents/guides/commands.md`](agents/guides/commands.md) — dispatcher behavior, command naming, metadata, help, and completions.
 - [`agents/guides/managed-files.md`](agents/guides/managed-files.md) — modules, manifests, link/copy behavior, adoption, planning, and rollback.
 - [`agents/guides/bootstrap.md`](agents/guides/bootstrap.md) — remote installers, repository cloning, first-run setup, and private sources.
@@ -74,7 +75,7 @@ See `docs/principles.md` for the consequences of each principle.
 
 ## Working Architecture
 
-Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent core will be introduced incrementally beside the preserved experiment. POSIX shell and PowerShell bootstrap scripts and the Omarchy-inspired external command protocol remain intended boundaries; adoption does not establish production installation support or implement them.
+Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent read-only core now lives beside the preserved independent experiment. The development external protocol now uses explicit roots, strict sidecars and native adapters. POSIX shell/PowerShell bootstrap and production installation remain unimplemented.
 
 The core owns operations that require consistent safety or state:
 
@@ -88,6 +89,8 @@ The core owns operations that require consistent safety or state:
 External `dots-*` commands may add cohesive features. They must not replace or circumvent the transaction engine for managed filesystem changes.
 
 ## Command Contract
+
+Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) for development extensions: no implicit roots, protected namespaces, mandatory static JSON, targeted direct lookup, native execution only, and no claim of sandboxing or protection from concurrent trusted-file replacement. Tests use disposable fixture commands only. Follow [decision 0004](docs/decisions/0004-versioned-command-discovery.md) for the versioned static command catalog; Zsh generation follows [decision 0005](docs/decisions/0005-static-zsh-completion.md).
 
 - User-facing routes use spaces: `dots files list`.
 - External command filenames use hyphens: `dots-files` or `dots-files-list`.
@@ -154,6 +157,12 @@ Read `docs/safety.md` before changing any mutating path.
 - Prefer dependency manifests or lazily fetched optional sources over vendoring large third-party trees.
 - Do not rewrite repository history, remove existing submodules, or move large directory trees without explicit approval and a recovery plan.
 
+## Development Worktree Lifecycle
+
+Keep at most one active development worktree alongside the original checkout. Inspect existing worktrees before creating another. Follow [the worktree guide](agents/guides/worktrees.md): explicitly enroll workflow-managed worktrees; automatically remove eligible merged ones during authorized maintenance/implementation, after a verified merge or at the next eligible task boundary. Do not repeatedly request owner approval for already authorized eligible cleanup. Read-only planning reports candidates without removal or fetch. Preserve original/current-session/helper worktrees, all branch/recovery refs, review evidence and uncertain/local work. No name-pattern authorization, force removal, backup archives, hooks or scheduled cleanup.
+
+An older original checkout does not automatically load policy committed elsewhere. Future sessions must explicitly read current instructions from the reviewed fetched revision as described in the guide; preserve the original HEAD, index and unrelated edits.
+
 ## Change Workflow
 
 For non-trivial work:
@@ -199,6 +208,7 @@ Until formal runners exist, never invent commands in documentation. Record inten
 
 ## Git
 
+- Before pushing, verify the remote push destination and intended branch ref. Use an explicit branch refspec such as `HEAD:refs/heads/<branch>`; do not rely on upstream or default push routing. Direct updates to `main` require explicit task authorization.
 - Keep commits atomic and limited to one coherent purpose.
 - Use succinct commit messages that describe the change.
 - Do not discard, reset, or overwrite unrelated working-tree changes.
@@ -214,4 +224,3 @@ A change is done only when:
 - Cross-platform effects were considered and documented.
 - Performance-sensitive paths were measured when affected.
 - Help, metadata, completions, examples, README, reference docs, and plans are synchronized where applicable.
-

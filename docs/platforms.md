@@ -1,8 +1,20 @@
 # Platform Model
 
-**Status: Experimental core verified on native Termux and Linux/Windows CI; broader platform model proposed**
+**Status: Permanent read-only core and independent experiment verified on native Termux and Linux/Windows CI; broader platform model proposed**
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
+
+## Permanent Development Core
+
+The root core ports the experimental read-only platform adapter and optional-logo opening unchanged, including schema 1, marker heuristics, candidate Unix paths, missing Windows path warnings and `not_probed` capabilities. Its registry uses injected availability metadata and does not perform capability probes. Root-core checks and fresh benchmarks passed on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in CI; this is development coverage of the read-only surface. The native root-core verification and fresh timing results are tracked separately in the [first-slice plan](../plans/phase-2-command-center.md); the historical observations below retain their original executable identities. Native Windows known folders/restricted ACLs, WSL execution, other architectures, broader filesystems and production OS floors remain deferred. No apply/package/bootstrap/shell support follows from core startup.
+
+The [schema-1 catalog](decisions/0004-versioned-command-discovery.md) reports existing static availability without new capability probes or executable launches. Foreign-platform and WSL definitions remain discoverable as unavailable; catalog support does not enable WSL execution or expand native filesystem support.
+
+### Development External Execution
+
+[Decision 0003](decisions/0003-trusted-external-command-protocol.md) adds native execution behind explicit trusted roots. Termux/Linux require regular executable files and use direct process replacement; shebang resolution belongs to the OS, with no shell retry or Termux rewriting. Windows accepts `.exe` with Go's CommandLineToArgvW-compatible quoting, inherited standard handles and the same console. Root policy requires local fixed-drive NTFS and disabled per-directory case sensitivity; UNC/device/ADS/drive-relative paths and immediate reparse entries are refused. Resolved root aliases are deduplicated by object identity. No POSIX permission assumption is applied on Windows.
+
+Native interruption acceptance requires Unix signal/PID checks and actual Windows console broadcasts for Ctrl+C and Ctrl+Break. Results are tracked in the [external slice](../plans/phase-2-command-center.md#authorized-external-command-slice). A .exe extension using a custom shell parser is outside the argument contract. WSL execution remains explicitly unavailable even with matching metadata. These restrictions do not establish production OS floors, known-folder resolution, restricted ACL policy, cross-volume/network filesystems, other architectures, or descendant cleanup.
 
 ## Implemented Phase 1 Observations
 
@@ -175,3 +187,7 @@ Update this matrix only with verified results.
 | Hosted CI | To decide | Experimental: native Phase 1 check and bench | To decide | Experimental: native Phase 1 check and bench |
 
 `Planned` is not a support claim. Replace it with explicit experimental or supported labels only after acceptance criteria and tests are documented.
+
+## Development Zsh Completion
+
+The portable development CLI can generate Zsh source without a Zsh dependency. Native Zsh runtime acceptance targets Termux and Linux only; native Windows tests verify CLI generation, not shell execution. Other shells, WSL runtime and completion installation remain deferred. See [decision 0005](decisions/0005-static-zsh-completion.md) and [Phase 2 evidence](../plans/phase-2-command-center.md#authorized-zsh-completion-slice).

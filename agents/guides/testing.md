@@ -44,7 +44,13 @@ Never let a test:
 - Benchmark with representative small and large command/module sets.
 - Record environment, build mode, sample count, and statistical summary.
 - Do not call a change faster based on one interactive run.
-- Follow the accepted warm targets and regression-review policy in [decision 0002](../../docs/decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy). Numeric timing checks remain advisory; confirmed comparable regressions require a fix or owner-approved exception. No new timing gate or core runner is implemented by accepting that policy.
+- Follow the accepted warm targets and regression-review policy in [decision 0002](../../docs/decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy). Numeric timing checks remain advisory; confirmed comparable regressions require a fix or owner-approved exception. Numeric gates remain advisory; the permanent core now has the isolated runner below.
+
+## Permanent Core
+
+For root `cmd/dots`, `internal`, and `tests`, use `python3 -B tools/verify_core.py check`, `bench`, `build`, or `docs` (`python` on Windows). Run check before bench and keep other builds/tests out of timing intervals. The runner enforces installed Go 1.27.1, owns configuration/cache/telemetry and runtime roots, and supplies the prebuilt binary required by process tests. Do not use inherited raw Go build/test settings. Use `python3 -B tools/test_verify_core.py` for the seven core Python regressions without Go. See [testing.md](../../docs/testing.md#permanent-core-verification) for guarantees, CI, measurement method, and durable retention.
+
+Preserve the independent experiment and its verifier. Core verification may execute only disposable extension fixtures under decision 0003; it does not authorize an installed executable, real management commands, live completion installation or managed mutation. Keep the dispatch dependency guard, metadata projection tests, argument/error contracts, optional-logo replacement regression and empty-PATH process snapshots.
 
 ## Documentation
 
@@ -57,3 +63,17 @@ Keep `GOVCS=*:off` alongside the other offline settings. On Windows preserve req
 The Unix Go suite includes an isolated child-process regression for logo replacement with a FIFO; preserve its deadline and test-owned roots when changing logo opening. See `docs/testing.md` for the exact boundary it tests.
 
 The test commands in `docs/testing.md` must exist before they are presented as runnable. Until runners are implemented, label proposed names clearly. Update the relevant task guide when a new mandatory suite or verification step is introduced.
+
+For external changes, retain strict sidecar/root tests, targeted operation counts, empty-PATH forwarding and static-help snapshots. Native Windows Ctrl+C and Ctrl+Break acceptance must use a real disposable console; an injected cancellation or skipped case is not a substitute. Never weaken acceptance to make CI green.
+
+Console-test failure cleanup must own the entire disposable process tree, not just the dispatcher PID. Keep the startup-gated Windows Job Object, job deadlines/WaitDelay, independent fixture lifetime and negative process-handle assertions. Do not change the product interruption contract to simplify tests. Benchmark result labeling must refuse count mismatches before applying labels.
+
+Catalog acceptance adds exact schema/projection/ordering tests and isolated native JSON process tests for hidden/unavailable records, failure streams, discovery limits, nonexecution and unchanged roots. Retain separate `discovery-json-10` warm measurements with strict sample/result counts; do not substitute JSON timings for the historical text-discovery baseline.
+
+## Development Worktree Helper
+
+Use `python3 -B tools/test_worktree_lifecycle.py` for the separate local lifecycle helper; see [the workflow guide](worktrees.md). Tests use disposable repositories, local bare remotes and owned environment roots. Preserve refusal cases and distinguish injected idle snapshots from native process detection. Do not run the helper against live fixtures to test deletion. The focused workflow adds this gate without replacing existing native core/experiment gates.
+
+Lifecycle review regressions verify preview/apply retain native FIFO and filesystem socket fixtures where supported, and that a fresh remote-main fetch ignores an additional configured recovery-branch mapping while preserving every local branch. Device/unknown modes and metadata denial use injected `lstat` results; they do not establish native device-node coverage. Native Windows FIFO/socket fixtures are unavailable and skipped. Positive portable removal still injects an idle process snapshot; native process coverage remains separate.
+
+For completion changes, follow [decision 0005](../../docs/decisions/0005-static-zsh-completion.md). Require installed Zsh for Termux/Linux core check, isolated real candidate and ZLE tests, literal ordered root matching, safe quoting and unchanged roots. Windows CLI generation coverage must never be labeled native Zsh coverage. CI may provision Zsh; the runner never installs it.

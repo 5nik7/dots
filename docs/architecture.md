@@ -1,8 +1,14 @@
 # Architecture
 
-**Status: Go adoption and first permanent-core boundary accepted; broader architecture proposed and Phase 2 unimplemented**
+**Status: Go adoption and first permanent-core boundary accepted; permanent read-only core implemented; broader architecture proposed**
 
 This document defines the working architecture for the future `dots` CLI. It separates durable boundaries from implementation choices that still require validation.
+
+## Implemented Permanent Core Boundary
+
+Root `go.mod` (`github.com/5nik7/dots`, Go 1.27.1) and `cmd/dots` now own the separate permanent development binary. `internal/cli` binds help/version/doctor/commands/completion and renders registry and static extension metadata; `internal/dispatch` validates typed entries and resolves token routes/global spellings entirely in memory; `internal/platform` owns the ported read-only observations and file opening. `internal/extension` owns strict sidecar validation, explicit-root resolution and bounded enumeration; `internal/platform` owns native file/root policy and execution. `internal/cli/discovery.go` owns the public schema-1 catalog DTOs, shared in-memory construction and serialization over shared defensive projections and ordinary extension discovery. Public JSON types are separate from private registry/sidecar carriers; direct dispatch does not construct a catalog. No mutation API exists. The active `bin/dots` remains untouched.
+
+`tools/verify_core.py` copies only selected core inputs into owned temporary roots; `tools/ci_core.py` collects native check/startup/registry evidence. These tools are independent of the preserved experimental module and its collectors. CI runs both surfaces sequentially. The CLI logo/doctor adapters and explicit external resolver inspect their scoped runtime inputs; registry and candidate lookup have no filesystem/process dependencies. See [commands](commands.md#built-in-metadata-contract), [verification](testing.md#permanent-core-verification), and the [first-slice plan](../plans/phase-2-command-center.md).
 
 ## Implemented Experimental Boundary
 
@@ -108,7 +114,7 @@ Extension discovery and metadata are described in `commands.md`. Extensions may 
 
 [Decision 0002](decisions/0002-phase-1-go-adoption.md) accepts Go, the initial toolchain/development targets, warm-start policy, minimal bundle/release-trust direction, and additive permanent-core/registry scope. Native Termux and Linux/Windows CI evidence supports that decision; it does not establish production OS floors, representative desktop performance, or controlled cold-cache results.
 
-The first permanent implementation will use root `go.mod`, `cmd/dots`, and private CLI, dispatch, and platform packages for the existing read-only built-ins. Its [bounded file and test scope](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is accepted but unimplemented. The independent experiment and its historical output remain unchanged; its provisional-language banner predates adoption. External execution, manifests, state, and transactions stay outside the first slice.
+The first permanent implementation uses root `go.mod`, `cmd/dots`, and private CLI, dispatch, and platform packages for the approved read-only built-ins. Its [bounded file and test scope](decisions/0002-phase-1-go-adoption.md#next-bounded-implementation-task) is implemented in the bounded first slice. The independent experiment and its historical output remain unchanged; its provisional-language banner predates adoption. External execution, manifests, state, and transactions stay outside the first slice.
 
 POSIX shell and PowerShell remain intended bootstrap and extension boundaries. They must not become separate implementations of desired-state resolution or transactions. Public release and remote bootstrap remain gated by the accepted trust requirements and deferred verification work in decision 0002.
 
@@ -120,6 +126,8 @@ The target is an incremental destination, not authorization for a wholesale move
 dots/
 ├── cmd/dots/                 compiled CLI entry point
 ├── internal/                 private core packages
+│   ├── cli/
+│   ├── extension/             implemented development resolver
 │   ├── dispatch/
 │   ├── platform/
 │   ├── config/
@@ -190,4 +198,10 @@ A future convenience workflow may compose them, but each stage must remain visib
 
 The repository and its enabled extensions are executable trust inputs. Public bootstrap should establish the core and public repository without implicitly expanding trust to private submodules or arbitrary commands found anywhere on `PATH`.
 
-Extension search locations, precedence, and opt-in rules must be documented before external discovery is enabled. Secrets and credentials are never ordinary diagnostic fields.
+[Decision 0003](decisions/0003-trusted-external-command-protocol.md) fixes explicit prefix-only roots, duplicate refusal, static JSON and native adapters for development dispatch. Root selection trusts code and its parent directories; validation does not authenticate publishers, sandbox code or prevent concurrent replacement. Secrets and credentials are never ordinary diagnostic fields.
+
+## Local Development Worktree Tooling
+
+`tools/worktree_lifecycle.py` manages explicitly enrolled development worktrees independently of the public CLI and transaction architecture. It owns only Git-local enrollment/lock metadata and guarded calls to non-force Git worktree removal. Policy, activation in older checkouts, known-live-use review and platform limitations are defined in the [agent worktree guide](../agents/guides/worktrees.md). No CLI command, configuration loader, hook or background service is added.
+
+The [Zsh renderer](decisions/0005-static-zsh-completion.md) in `internal/cli/completion.go` consumes that catalog after full validation. It owns shell quoting and a static embedded route/root snapshot, without adding I/O dependencies to dispatch or runtime discovery to shell startup.
