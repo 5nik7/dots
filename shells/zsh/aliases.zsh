@@ -18,7 +18,7 @@ if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
   alias aptr='sudo apt remove'
 fi
 
-alias gup='git-up'
+alias gup="git-it publish --all --yes -m 'Sync repository tree'"
 
 alias d8="date '+%-I:%M %p'"
 
