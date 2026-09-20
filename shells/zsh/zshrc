@@ -79,9 +79,7 @@ _comp_options+=(globdots)
 
 prepath "$zsh[completions]"
 
-fpath=($PREFIX/share/zsh/site-functions $fpath)
-
-fpath=($zsh[completions] $fpath)
+fpath=($PREFIX/share/zsh/site-functions ${zsh[completions]} $fpath)
 
 prepath "$GOBIN"
 extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
@@ -159,6 +157,8 @@ has ipinfo && { complete -o default -C "$HOME/go/bin/ipinfo" ipinfo; }
 if has starship; then
   eval "$(starship init zsh)" && eval "$(starship completions zsh)"
 fi
+
+so "$HOME/.local/share/leaf/completions/_leaf"
 
 [ -r "${zsh[local]}" ] && source "${zsh[local]}"
 
