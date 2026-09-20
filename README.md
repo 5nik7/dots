@@ -8,6 +8,25 @@ The repository contains the existing dotfiles collection, the Bash `bin/dots` pr
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
 
+## Optional Neovim Configuration
+
+The public [Neovim configuration repository](https://github.com/5nik7/nvim) is available as a Git submodule at `configs/nvim`. From the `dots` repository root, initialize only this source:
+
+```bash
+git submodule update --init -- configs/nvim
+```
+
+`dots` records an exact configuration commit. The submodule's `main` branch is used only when explicitly requesting a remote update. With a clean submodule checkout and any local commits safely preserved, review an update with:
+
+```bash
+git submodule update --remote --checkout -- configs/nvim
+git diff --submodule=log -- configs/nvim
+```
+
+After review, stage `configs/nvim` and commit its new reference in `dots`. Configuration edits belong in the Neovim repository; publish those commits before publishing a `dots` reference to them. Keep submodule operations scoped to this path so other optional and private sources remain opt-in.
+
+Initialization only retrieves source; it does not activate the configuration, install plugins or packages, or change the existing Neovim configuration. Follow the submodule's [installation instructions](https://github.com/5nik7/nvim#install-as-the-default-config) when deliberately activating it, preserving the existing config first. Keep platform-specific plugin, data, and cache directories separate. This source addition does not establish new `dots` platform or installation support.
+
 ## Try the Permanent Development Core
 
 With Go 1.27.1 and Python 3 already installed, run from this checkout (not the original live checkout):

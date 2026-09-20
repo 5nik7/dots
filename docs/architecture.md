@@ -153,6 +153,8 @@ dots/
 
 Existing `bin/`, `configs/`, `shells/`, `themes/`, platform submodules, and other live directories remain in place until a focused module migration moves their ownership.
 
+The optional `configs/nvim` submodule owns independently versioned Neovim configuration source. The parent repository owns its source declaration and pinned commit, with explicit initialization and update described in the [README](../README.md#optional-neovim-configuration). This addition provides no core manifest, managed activation, plugin installation, or runtime-state ownership; existing live configuration remains in place.
+
 ## Storage Boundaries
 
 The repository stores source configuration and versioned manifests. Machine-local configuration and runtime state remain outside it.

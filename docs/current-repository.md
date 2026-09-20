@@ -73,8 +73,11 @@ The repository declares:
 | `secrets` | Private or sensitive material | Could not be initialized anonymously during inspection |
 | `windots` | Windows-specific personal repository | Optional platform source; not required for public base inspection |
 | `shells/powershell/Modules/catppuccin` | Third-party PowerShell module | Public third-party dependency |
+| `configs/nvim` | Independently versioned Neovim configuration from `5nik7/nvim` | Public optional source; initialize only when requested |
 
 Bootstrap must clone the main repository without `--recurse-submodules`. Selected sources can be authenticated and synchronized later.
+
+`configs/nvim` was added on 2026-09-20 after the historical baseline above; the recorded tree-size measurements remain unchanged. Its HTTPS URL and update branch `main` are declared in `.gitmodules`, while the parent commit pins the selected configuration revision. See the [README workflow](../README.md#optional-neovim-configuration). Adding this source does not move existing configuration, replace a live Neovim link, or install plugins or packages.
 
 ## Generated and Vendored Material
 
