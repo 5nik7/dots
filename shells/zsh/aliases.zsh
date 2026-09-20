@@ -71,7 +71,7 @@ alias ".sb"="cd $shella[bash]"
 alias ".sp"="cd $shells[pwsh]"
 
 if has eza; then
-  export eza_opts=("--icons=always" "--color=always" "--group-directories-first")
+  export eza_opts=("--icons=auto" "--color=auto" "--group-directories-first" "--no-user" "--time-style=iso" "--git" "--git-repos")
   alias ls="eza ${eza_opts[*]}"
 else
   alias ls="ls --color=always"
