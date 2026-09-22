@@ -79,3 +79,11 @@ The unit suite owns disposable roots and needs installed Zsh plus basic host too
 Timing fixtures use fresh HOME, configuration, state, cache, history, and repository roots. Termux interpreter support is retained. The non-PTY startup test can emit ZLE warnings from installed integrations; real interaction is checked separately using a controlling pseudo-terminal. Use `tools/zsh_compare.py <baseline-source-directory>` for a public-interface comparison. The PTY runner accepts `--baseline` to report historical reload differences without failing its equality check. Fixtures and logs remain in the reported temporary directory for inspection. Logs contain fixture state only.
 
 `ZSH_DEBUGRC=1` retains function profiling. Use the disposable fixture for profiling, especially when private/local modules could have side effects. Measurements and limitations belong in the [focused plan](../../plans/zsh-startup.md).
+
+## Shared theme selection
+
+The [theme engine](../../docs/themes.md) preserves existing Catppuccin arrays and shell
+settings. `dots themes set catppuccin FLAVOR` publishes a shared selection; the next
+prompt loads its initialization once. The unchanged prompt path uses builtins only
+and preserves command status. `set_theme ID` remains session-only; `change_theme ID`
+persists through the shared publisher.

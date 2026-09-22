@@ -1,1 +1,18 @@
-catppuccin
+#!/usr/bin/env bash
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../../lib/dots/themes" && pwd) || exit
+source "$DT_LIB/core.bash"
+if [[ ${1:-} == init || ${1:-} == --init ]]; then
+  shift
+  set -- init "$@"
+  source "$DT_LIB/cli.bash"
+  exit $?
+fi
+dt_selected || exit
+export FLAVOR=$DT_FLAVOR
+if [[ $DT_THEME == catppuccin ]]; then source "$DT_LIB/legacy.bash"
+else
+  case ${1:-} in
+    init|--init) dt_cached_init bash ;;
+    *) source "$DT_LIB/cli.bash" ;;
+  esac
+fi

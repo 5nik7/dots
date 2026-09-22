@@ -12,6 +12,11 @@ Work in the existing checkout on `main` by default, with task-relevant edits all
 
 The phases below retain their completed milestones, evidence, dependencies, and proposed future scope. Unfinished roadmap work is paused; its listing does not authorize agents to advance it during unrelated maintenance.
 
+The owner has also approved developing the live Bash command framework independently
+of the paused Go roadmap. [Bash framework implementation](bash-dispatcher.md) tracks
+routing, discovery, presentation, and three-shell completion. It does not resume
+managed installation or the Go phases below.
+
 ## Completion Legend
 
 - `[ ]` Not started.
@@ -217,3 +222,9 @@ Goal: expand capability without burdening the core bootstrap.
 - Whether a higher-level `dots sync` workflow should compose repository, source, package, and apply stages.
 
 Resolve deferred decisions only when the next phase requires them.
+
+## Shared Theme Slice
+
+The [shared theme implementation](themes.md) adds Catppuccin data files, Bash commands,
+Zsh refresh and Neovim integration while Go remains paused. General theme installation,
+other app adapters, and the broader Phase 4 module work remain deferred.

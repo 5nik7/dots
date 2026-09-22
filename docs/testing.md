@@ -6,6 +6,25 @@ The [Go development pause](../plans/roadmap.md#current-priority) retains existin
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 
+## Bash Command Framework
+
+Run `python3 -B tools/test_bash_dots.py` for disposable routing/metadata/output and
+native Bash/Zsh/Fish completion tests. All three shells are required; missing
+interpreters must be installed by the owner, not silently skipped. The suite
+includes real controlling-terminal Tab presses and live command additions.
+`tools/bash_dots_pty.py` provides the owned-terminal helper. Use
+`shellcheck bin/dots lib/dots/*.bash lib/dots/completion/bash` plus `bash -n`,
+`zsh -dfn`, and `fish --no-config -n` for the corresponding sources.
+
+`python3 -B tools/bench_bash_dots.py --samples 20` measures help, directory lookup,
+dispatch, discovery, completion, and adapter registration in owned roots. Catalog
+sizes are 0/100/1,000 additional commands plus one dispatch probe. It keeps raw
+samples in the printed temporary directory. Run timing sequentially, without other
+tests competing for the device. These advisory measurements are not CI/native
+coverage for other platforms. Also run `python3 -B tools/test_zsh.py` and
+`python3 -B tools/zsh_interactive.py --samples 3` when changing integration; the
+latter exercises dots completion with the copied public FZF-tab setup.
+
 ## Existing Zsh Configuration
 
 `python3 -B tools/test_zsh.py` checks the shell configuration in owned temporary roots. `python3 -B tools/zsh_fixture.py --samples 10` measures isolated startup; `python3 -B tools/zsh_interactive.py --samples 5` exercises native PTY interaction, reloads, and input-ready timing using copied public plugins and synthetic private modules. No dependencies are installed and fixture Git refuses remote operations. The [Zsh guide](../shells/zsh/README.md) specifies prerequisites and evidence limits; the [focused plan](../plans/zsh-startup.md) records results. These checks do not require Go.
@@ -289,3 +308,27 @@ Lifecycle review regressions verify preview/apply retain native FIFO and filesys
 The core `check` runner requires an installed Zsh on Termux/Linux and supplies its absolute path as `DOTS_ZSH_TEST_BIN`; it records the version. Generation itself needs no shell. Native Windows runs CLI generation/schema/error tests and explicitly skips two Zsh runtime tests. Linux CI may provision Zsh before offline checks; Termux verification never installs prerequisites.
 
 `tests/completion_test.go` exercises the development binary and real `zsh -f` with owned home/config/state/cache/temp roots and empty PATH. Candidate cases capture the generated function's compadd boundary; a separate pseudo-terminal ZLE widget calls the native compadd builtin. Root count/order/spelling and quoted metacharacters, route prefixes, terminal/argument/flag/`--` boundaries, hostile metadata, full validation, nonexecution and unchanged-root snapshots are required. Preserve native core/experiment, console cleanup and performance gates. No real startup or completion installation belongs in verification.
+
+## Shared Themes
+
+Run `python3 -B tools/test_themes.py` for palette validation, all-flavor legacy
+initialization compatibility, cache invalidation, command/completion contracts,
+publication idempotence, lock contention, injected durability failures, SIGKILL
+recovery, drift refusal, Zsh prompt refresh, and Neovim focus integration. All
+mutable roots and executed official commands are copied into disposable fixtures.
+The Neovim test copies installed public Catppuccin source, disables unrelated
+integrations, and never runs the live LazyVim startup or downloads dependencies.
+It reports a skip if that public source is unavailable. The committed legacy digest
+was captured from the previous script's ordered 4 × 26 × 15 initialization values;
+it detects numeric rounding and ANSI-byte changes as well as palette drift.
+
+Run `python3 -B tools/bench_themes.py --samples 10` for isolated cold/warm
+initialization, unchanged Zsh prompt checks and minimal Neovim startup. An optional
+`--baseline-script /path/to/preserved/catppuccin` compares the former implementation
+in a separate owned cache. Measurements are sequential, retained in a temporary
+JSON artifact, and do not establish full LazyVim startup performance.
+
+This change also requires the Bash dispatcher suite, Zsh suite, real Zsh/FZF-tab
+PTY acceptance, Bash/Zsh syntax checks, ShellCheck, StyLua, and documentation links.
+Native Termux tests do not establish WSL/Linux/MSYS/Windows execution or power-loss
+recovery guarantees.

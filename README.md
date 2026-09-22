@@ -6,9 +6,60 @@
 
 Further Go implementation and migration are **paused** as of 2026-09-22. Current work focuses on maintaining the existing dotfiles, scripts, configurations, and documentation directly in the main checkout. Existing Go code, tests, and CI remain in place; the [roadmap](plans/roadmap.md#current-priority) tracks resumption.
 
-The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture remains partially implemented, with further development paused. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
+The repository contains the existing dotfiles collection, the modular Bash `bin/dots` command framework, and an isolated experimental Go core under `experiments/go-portability/`. The Go command architecture remains partially implemented, with further Go development paused. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
+
+## Bash Command Framework
+
+The live `dots` command discovers executable `dots-*` commands in `$DOTS/bin` and
+`$DOTS/local/bin`. For example, adding `dots-themes-list` makes `dots themes list`
+available immediately. The shared theme commands below ship with the framework.
+Bash 4.4+ is required.
+
+```bash
+dots                         # Colorful help and available commands
+dots commands                # List registered commands
+dots commands --check        # Validate metadata and route collisions
+dots --raw --dir              # Print the repository path
+dots --icons=never help       # Use plain status markers
+dots completion bash         # Print an adapter (also zsh or fish)
+```
+
+Nerd Font icons and color are automatic in terminals; `--color=auto|always|never`
+and `--icons=auto|always|never` override their environment defaults, `DOTS_COLOR`
+and `DOTS_ICONS`. Automatic color respects `NO_COLOR`. Additional trusted roots
+can be selected with repeated prefix `--command-dir /absolute/directory` options.
+Duplicate command routes fail instead of silently overriding one another.
+
+Bash, Zsh, and Fish adapters are included in the repository's shell configuration.
+They discover new commands and declared arguments on the next Tab, without a
+startup scan. Open a fresh shell to load the new adapter. Help and completion read
+optional static comment headers and never execute extensions. See the
+[command authoring and completion contract](docs/commands.md#implemented-bash-command-framework)
+for header examples, shared output helpers, and standalone integration.
+
+## Shared Themes
+
+Catppuccin palettes now live in separate TOML flavor files. Preview colors, query
+values, and select a shared Zsh/Neovim theme:
+
+```bash
+dots themes list
+dots themes list catppuccin
+dots themes show catppuccin mocha
+dots themes color catppuccin mocha blue rgb
+dots themes set catppuccin latte
+dots themes current
+```
+
+Zsh updates at its next prompt; the repository's Neovim configuration updates on
+focus or `:DotsThemeReload`. Mocha preserves your custom highlights; other flavors
+adapt them to their palettes. Existing `catppuccin` and `current_theme` commands
+remain available. Bash, Zsh and Fish complete theme/flavor/color arguments.
+Switching records per-user state and preserves previous generations without
+rewriting app configs. Palette edits take effect after running `set` again.
+See [theme formats, compatibility, dependencies and behavior](docs/themes.md).
 
 ## Zsh Configuration
 
@@ -69,7 +120,7 @@ Run `python3 -B tools/verify_core.py check` for isolated validation and `python3
 
 ### Disposable Zsh completion demo
 
-The permanent development binary supports `completion zsh`; the live Bash prototype does not. The generator prints a static script and installs nothing. With an already built development binary in `DOTS_DEV_BIN` (from the build example above), run the following in a separate disposable Zsh process. `mktemp` creates only a new demo directory; retain or remove that exact directory after inspection. The demo uses temporary HOME and ZDOTDIR directories and does not edit live startup files. Zsh still reads its system zshenv, if present.
+The permanent Go development binary supports its own static `completion zsh` generator, separate from the live Bash framework’s on-demand three-shell adapters. The Go generator prints a static script and installs nothing. With an already built development binary in `DOTS_DEV_BIN` (from the build example above), run the following in a separate disposable Zsh process. `mktemp` creates only a new demo directory; retain or remove that exact directory after inspection. The demo uses temporary HOME and ZDOTDIR directories and does not edit live startup files. Zsh still reads its system zshenv, if present.
 
 ```bash
 demo_root="$(mktemp -d "${TMPDIR:-/tmp}/dots-zsh-demo.XXXXXXXX")"

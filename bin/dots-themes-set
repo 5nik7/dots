@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Switch Zsh and Neovim theme
+# dots:usage=THEME [FLAVOR]
+# dots:argument=1|theme|Theme name
+# dots:argument=2|flavor|Flavor name
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- set "$@"
+source "$DT_LIB/cli.bash"

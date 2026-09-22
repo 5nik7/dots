@@ -4,6 +4,8 @@
 [[ $- != *i* ]] && return
 
 export DOTS="$HOME/dots"
+# Register dots completion without running discovery during shell startup.
+[[ ! -r "$DOTS/shells/bash/completions/dots.bash" ]] || source "$DOTS/shells/bash/completions/dots.bash"
 export COLORS="$DOTS/bin/colors.env"
 export UTIL="$DOTS/bin/util"
 

@@ -10,6 +10,16 @@ Ordinary task-relevant edits to repository source files, including live dotfiles
 
 The transaction guarantees below govern managed installation, target replacement, backup, and undo operations. Permission to edit their source code does not authorize executing those operations against the live machine.
 
+## Bash Command Framework
+
+The Bash dispatcher reads trusted command directories and optional static metadata.
+Help, listing, validation, and completion never run extensions. Direct execution
+runs trusted executables with the user's privileges and inherited streams; no
+sandbox, mutation classification, transactional guarantee, or automatic elevation
+is implied. Symlinked extensions are allowed. The shared presentation library does
+not filter/redact extension output. Tests use disposable commands and owned roots.
+See [decision 0006](decisions/0006-bash-command-framework.md).
+
 ## Existing Shell Startup
 
 The existing Zsh configuration uses user-local completion, Vivid, and Catppuccin caches independently of the proposed managed-file transaction engine. These are rebuildable generated data. Completion generation validates successful output before atomic publication; failed output is not evaluated. Ordinary startup retains its existing optional plugin bootstrap and private/local sourcing behavior. Tests use copied public dependencies and synthetic private modules under owned roots; they must never run the live startup chain against the developer's home. See the [Zsh guide](../shells/zsh/README.md).
@@ -250,3 +260,38 @@ Lifecycle cleanup supplements Git status with metadata-only entry classification
 ## Static Completion Boundary
 
 [Zsh generation](decisions/0005-static-zsh-completion.md) validates all metadata before stdout and never executes extensions. Generated scripts omit descriptions, safely quote explicit root strings, and use only embedded route data at completion time. Ordered literal context matching is a conservative presentation filter, not filesystem identity or a trust guarantee. Root paths occur only in explicitly generated script context, not the JSON catalog. No installation, startup edit, persistent cache or implicit discovery is performed.
+
+## Theme Selection Publication
+
+**Implemented bounded state operation**, separate from the proposed managed-file
+installer. `dots themes set` authorizes publication of one shared palette generation;
+it does not authorize application-config replacement. It validates the theme and
+Neovim adapter before state creation, classifies every state ancestor and pointer
+without following symlinks, and refuses unexpected objects or dot components.
+An exclusive `flock` serializes switches. Existing lock files are not truncated.
+
+New generations are private transaction directories with the previous token and
+all generated artifacts. The helper rechecks the source fingerprint, flushes
+files/directories using required `sync -f`, records `prepared`, and atomically
+renames the new active token before recording `committed`. Until activation,
+readers continue using the previous complete generation. Runtime errors and
+INT/TERM restore the previous token (or remove a first selection) and record
+`rolled-back`. SIGKILL releases the kernel lock; the next switch recovers prepared
+journals before proceeding. A changed token that matches neither the transaction
+nor its previous selection blocks recovery rather than overwriting drift.
+
+Completed and incomplete generations are retained. A directory interrupted before
+its prepared journal cannot have been activated and is ignored by recovery.
+Rollback failure reports the retained journal path; no backup is discarded.
+An unknown status or invalid pointer requires inspection. After correcting the
+reported filesystem/permission issue, rerun `set` to retry recovery. This is not
+a general undo API, app installation engine, pruning facility or arbitrary-hook
+mechanism. Coherent published data may be observed before a crashed prepared
+transaction is rolled back on the next switch.
+
+State and generated shell initialization are trusted user-owned data, like existing
+shell caches. This implementation does not defend against concurrent hostile
+replacement of trusted directories/files. Durability depends on the filesystem's
+`sync -f` and rename semantics; native Termux fixtures cover process failure, not
+physical power loss. Read-only queries/help/completion do not create state; `init`
+may populate a separately documented disposable cache. Tests use owned roots only.

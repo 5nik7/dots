@@ -1,16 +1,136 @@
 # Command Model
 
-**Status: Development built-ins and bounded external protocol implemented; production command family proposed**
+**Status: Bash command framework and separate Go development interfaces implemented; broader managed command family proposed**
 
-The permanent built-in table in `internal/cli/cli.go` is authoritative for its implemented surface. This document remains the design source for the broader future CLI. The current `bin/dots` prototype does not implement this command set.
+The permanent built-in table in `internal/cli/cli.go` is authoritative for its implemented surface. This document remains the design source for the broader future CLI. The live Bash framework below implements dispatch and discovery, not the broader managed command set.
 
-## Implemented Bash Prototype
+## Implemented Bash Command Framework
 
-`bin/dots` supports no arguments, `help`, `-h`, and `--help` for help. `-d`/`--dir` prints `$DOTS`; preceding it with `-r`/`--raw` disables home abbreviation. Unknown input prints an error and help to stderr and exits 1. It has no version or diagnostic command. This behavior remains separate from the experiment.
+The live `bin/dots` follows [decision 0006](decisions/0006-bash-command-framework.md).
+It requires Bash 4.4+. The Go interfaces below remain separate and paused.
+
+### Routing and Roots
+
+`dots-themes-apply` is callable as `dots themes apply`. Filenames use lowercase
+segments matching `[a-z][a-z0-9]*`, separated by hyphens. Probe the longest initial
+sequence of route words first, stopping at a flag, `--`, or another non-route
+word; remaining arguments, including `--`, pass unchanged. Execute the selected
+file directly with its shebang; no shell inference, output interception, or
+argument evaluation occurs. Extension status and standard handles are preserved.
+
+Search `$DOTS/bin`, `$DOTS/local/bin`, and repeated prefix
+`--command-dir ABSOLUTE_DIRECTORY` additions. Missing default directories are
+optional; explicit directories must exist. The same directory selected through
+multiple aliases is searched once. `$DOTS` selects the repository; when unset,
+infer it from the dispatcher location, resolving executable symlinks. Internal
+libraries always come from the dispatcher installation. No PATH-wide or recursive
+search occurs. Executable symlinks to regular files are allowed. Duplicate routes
+across distinct roots fail; a nonexecutable or broken deeper candidate blocks
+fallback. Roots are trusted execution inputs, not a sandbox.
+
+The protected first tokens are `help`, `doctor`, `commands`, `completion`,
+`version`, `status`, `spec`, `plan`, `apply`, `undo`, `history`, `backup`, `config`,
+`bootstrap`, and `self`, plus the private `__complete` endpoint. Reserved but
+unimplemented routes remain unavailable. Reservations do not add features.
+
+### Public Interface
+
+- `dots`, `dots help`, `dots -h`, `dots --help`: global help and visible commands.
+- `dots help ROUTE...`, `dots ROUTE... --help`: static contextual help without
+  executing an extension. A help flag before the first `--` is intercepted;
+  after `--` it belongs to the extension. Groups without an executable show
+  descendants. An executable group runs normally when called without help.
+- `dots commands`: visible built-ins and external commands in deterministic
+  root/directory order. `dots commands --check` validates every definition,
+  including hidden commands, and reports success only after complete validation.
+- `dots completion bash|zsh|fish`: print the native adapter, without installation.
+- `dots [-r|--raw] -d|--dir`: repository path, abbreviated beneath HOME unless raw.
+- Prefix `--color=auto|always|never` and `--icons=auto|always|never`: presentation.
+  Flags after the route belong to the extension, except intercepted help.
+
+Success is 0. Unknown routes, collisions, malformed metadata, and access errors
+are 1. Invalid dispatcher syntax is 2. `exec` launch failures retain Bash's
+126/127 behavior. No `--version`, JSON catalog, or management operation is added.
+
+### Optional Metadata
+
+Read the initial shebang/comment/blank-line header only, up to 128 lines and
+16 KiB. Stop at the first code line. Metadata is literal text, never sourced.
+Control characters are refused in declarations; CRLF line endings are accepted.
+Routes come from filenames, not headers. Missing declarations get generic help;
+malformed declarations fail help/discovery/validation but do not block ordinary
+direct execution. Discovery validates before emitting its catalog.
+
+```bash
+#!/usr/bin/env bash
+# dots:summary=Manage example themes
+# dots:usage=[OPTIONS] DIRECTORY
+# dots:example=dots themes --flavor mocha ./themes
+# dots:option=--flavor|-f|choice:mocha,latte|Palette flavor
+# dots:option=--verbose|-v|flag|Verbose output
+# dots:argument=1|directory|Theme directory
+# dots:hidden=false
+```
+
+This is an authoring example, not a shipped theme command. `summary`, `usage`,
+and `hidden` may appear once; `example`, `option`, and `argument` repeat. Unknown
+fields fail validation. `hidden` is `true` or `false`, defaulting to false.
+
+Option records are `LONG|SHORT|TYPE|DESCRIPTION`, with an empty SHORT allowed.
+Long names use `--[a-z][a-z0-9-]*`; short names are one alphanumeric character
+preceded by `-`. Option names must be unique. Positional records are
+`POSITION|TYPE|DESCRIPTION`: positions start at 1 and are contiguous; a final `*`
+applies to remaining positions. Types are `flag` (options only), `string`, `file`,
+`directory`, `choice:VALUE,VALUE`, or the core-owned theme data types
+`theme`, `flavor`, `palette-color`, and `color-format`. Flavor/color providers
+use preceding positional theme/flavor arguments; they read data and never execute
+extensions. Fields cannot contain `|`; choice values
+cannot contain commas. Descriptions are required. No code callbacks, aliases,
+implicit option grammar, or combined-short-option parsing are provided.
+
+### Presentation Helpers
+
+Bash extensions may `source "$DOTS_LIB_DIR/ui.bash"` when launched through dots.
+The sourceable helpers are `dots::heading`, `dots::row`, `dots::kv`, `dots::info`,
+`dots::success`, `dots::warning`, and `dots::error`. Rows/kv take label and value;
+other helpers take message text. Warnings/errors write stderr, other helpers
+stdout. Directly invoked standalone extensions must locate/source the library
+explicitly if `DOTS_LIB_DIR` is absent.
+
+`DOTS_COLOR` and `DOTS_ICONS` default to `auto`; explicit prefix flags override
+them and are exported to extensions. Automatic color requires the destination
+stream to be a terminal, TERM other than dumb, and empty/unset NO_COLOR. Explicit
+always can override NO_COLOR. Automatic icons require a usable terminal; there
+is no font detection. Use `--icons=never` for ASCII status markers. Stdout and
+stderr are styled independently. Directory output and completion data remain
+plain. Shared helpers use Bash builtins and ANSI colors, not the shell startup
+chain, theme generators, or the existing general-purpose util script.
+
+### Completion
+
+All adapters query the dispatcher on Tab, not on shell startup. A typed route prefix restricts metadata reads to matching filenames; an empty prefix enumerates the full catalog. New commands and
+metadata edits are reflected on the next request. Hints cover route words,
+built-in flags, declared extension options, fixed choices, and native shell
+file/directory completion. Options consuming values, long `--name=value`, `--`,
+and cursor position are respected. Completion handles literal quoting without evaluating shell substitutions. Unknown option grammar stops argument hints
+rather than guessing. Undeclared arguments do not get inferred file candidates.
+Descriptions are supplied where supported. Hidden routes are omitted from normal
+suggestions, but explicit use remains possible.
+
+Repository Bash startup sources its adapter; Zsh and Fish use their existing
+completion directories. Zsh does not run another compinit. Fresh shells load the
+new files; other installations can source the output of `dots completion SHELL`
+using that shell's normal mechanisms. No live-home installation is performed.
+
+The internal `__complete SHELL INDEX -- WORDS...` interface takes the command
+word at index 0 and includes an empty current word when appropriate. It emits
+literal tab-separated candidate/value/description records or file/directory
+instructions; adapters never eval them. It is private to these adapters, not a
+versioned public API. Failed queries produce no candidates or diagnostics.
 
 ## Permanent Development Interface
 
-The root module builds `cmd/dots` into a separate test-owned executable, never `bin/dots`. It implements the same bounded read-only requests as the experiment below, with `dots` branding and `--version` output `dots 0.0.0-dev <Go version> <GOOS>/<GOARCH>`. Help identifies it as a development binary and renders its entries from the validated registry. The bounded external interface below adds `commands` and static `completion zsh`; no `version` token route or managed mutation is enabled. The live prototype's directory flags remain exclusive to that prototype.
+The root module builds `cmd/dots` into a separate test-owned executable, never `bin/dots`. It implements the same bounded read-only requests as the experiment below, with `dots` branding and `--version` output `dots 0.0.0-dev <Go version> <GOOS>/<GOARCH>`. Help identifies it as a development binary and renders its entries from the validated registry. The bounded external interface below adds `commands` and static `completion zsh`; no `version` token route or managed mutation is enabled. The live Bash framework's directory flags remain exclusive to that executable.
 
 No arguments select help. `help`, `-h`, and `--help` display global help; `doctor -h` and `doctor --help` display contextual help without running diagnostics. `doctor` and `doctor --json` report the same candidate-path and `not_probed` capability model, diagnostic schema 1, and Windows missing-path warning as the experiment. Version and JSON never read the logo. Built-in extra/unknown arguments are rejected without echoing their values. Core exit codes are 0 for success, 1 for output/validation/access/launch failure, and 2 for usage/unknown routes; native external exit status is propagated. Future managed-operation statuses remain undecided.
 
@@ -166,7 +286,7 @@ Built-ins cannot be shadowed silently. The development protocol uses only explic
 | `dots links` | Inspect, check, and repair managed links | Termux MVP |
 | `dots scripts` | Discover, run, edit, and optionally expose repository scripts | Later MVP |
 | `dots shells` | Inspect and configure shell integrations | Later MVP |
-| `dots themes` | Inspect, preview, and apply coordinated themes | Later |
+| `dots themes` | List, preview, query, initialize and select shared palettes | Bash implementation; broader app support later |
 | `dots packages` | Inspect and install normalized package sets | Bootstrap/packages |
 | `dots env` | Inspect and generate shell-specific environment integration | Later MVP |
 | `dots backup` | Inspect, create, restore, and prune explicit snapshots and transaction backups | Transaction foundation |
@@ -337,3 +457,12 @@ Exit statuses need a final decision before public automation examples are publis
 - Unknown command or missing executable.
 
 Record the final stable mapping in this document and in machine-readable command documentation.
+
+## Implemented Bash Theme Commands
+
+The route, argument, format, compatibility and exit-status contract is maintained
+in [Shared themes](themes.md#commands). Static headers on the official
+`dots-themes-*` entry points drive dispatcher help and completion. The closed
+palette providers augment that metadata with current theme files; they do not
+introduce extension callbacks or change the Go protocol. `themes set` delegates
+state publication to the shared helper described in [decision 0007](decisions/0007-data-driven-themes.md).

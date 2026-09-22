@@ -245,6 +245,11 @@ _dots_completion_plugins
 ''')
 
     def test_theme_switch_and_repeat_preserve_palette_and_fzf_options(self):
+        shutil.copytree(REPO / 'lib/dots', self.repo / 'lib/dots')
+        for command in (REPO / 'bin').glob('dots-themes*'):
+            shutil.copy2(command, self.repo / 'bin' / command.name)
+        shutil.copytree(REPO / 'themes/catppuccin/flavors', self.repo / 'themes/catppuccin/flavors')
+        shutil.copy2(REPO / 'themes/catppuccin/theme.toml', self.repo / 'themes/catppuccin/theme.toml')
         (self.repo / 'themes/bin').mkdir()
         shutil.copy2(REPO / 'themes/bin/theme', self.repo / 'themes/bin/theme')
         src = self.repo / 'themes/catppuccin/src'
@@ -260,12 +265,12 @@ current_theme() { print -r -- "typeset -g PALETTE_FLAVOR=$FLAVOR"; }
 _dots_vivid_colors() { REPLY="colors:$1"; }
 ok() { :; }
 set_theme
-[[ $PALETTE_FLAVOR == mocha && $LS_COLORS == colors:catppuccin-mocha ]] || exit 1
+[[ $catppuccin_flavor == mocha && $LS_COLORS == colors:catppuccin-mocha ]] || exit 1
 before=$FZF_DEFAULT_OPTS
 set_theme
 [[ $FZF_DEFAULT_OPTS == $before ]] || exit 2
 set_theme catppuccin-latte
-[[ $PALETTE_FLAVOR == latte && $LS_COLORS == colors:catppuccin-latte ]] || exit 3
+[[ $catppuccin_flavor == latte && $LS_COLORS == colors:catppuccin-latte ]] || exit 3
 [[ $FZF_DEFAULT_OPTS != *mocha* && $FZF_DEFAULT_OPTS == *latte* ]]
 ''')
 

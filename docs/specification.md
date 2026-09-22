@@ -298,3 +298,11 @@ The structured representation must be versioned before it is treated as an autom
 
 Record each material conclusion in `docs/decisions/` and update this document rather than leaving the answer only in a plan or conversation.
 
+
+## Implemented Theme Data Boundary
+
+The Bash [theme format and selection rules](themes.md) are implemented independently
+of the proposed module/profile manifests above. Palette TOML is a deliberately
+restricted string/table format, not the module manifest parser. Runtime selection
+uses per-user immutable generations with legacy read-only fallback; it never turns
+a platform into a profile or changes module collision/installation semantics.

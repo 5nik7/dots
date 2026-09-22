@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Print a color value
+# dots:usage=THEME FLAVOR COLOR [FORMAT]
+# dots:argument=1|theme|Theme name
+# dots:argument=2|flavor|Flavor name
+# dots:argument=3|palette-color|Color name
+# dots:argument=4|color-format|Output format
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- color "$@"
+source "$DT_LIB/cli.bash"

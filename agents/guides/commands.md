@@ -2,6 +2,12 @@
 
 Read this guide before adding or changing the `dots` dispatcher, a built-in route, an external `dots-*` command, command metadata, help, completion, or structured discovery output.
 
+## Live Bash Framework
+
+The live `bin/dots` follows [decision 0006](../../docs/decisions/0006-bash-command-framework.md) and the [Bash command contract](../../docs/commands.md#implemented-bash-command-framework). Its executable-relative libraries are independent of user startup. Default repository/local roots, executable symlinks, optional `# dots:` headers, and on-demand three-shell completion are deliberate exceptions to the Go-specific rules below. Preserve byte-for-byte argument/stream forwarding and keep catalog parsing off direct dispatch. Update the shared built-in metadata and shell adapters together when changing their interfaces.
+
+Run `python3 -B tools/test_bash_dots.py`, shell syntax checks and ShellCheck for Bash changes; use `python3 -B tools/bench_bash_dots.py` for measured lookup changes. Shell-completion work also requires the existing Zsh/FZF-tab acceptance. See the testing guide. Do not retrofit the Bash protocol into Go while its development is paused.
+
 ## Design Goal
 
 The command family should retain the useful properties of Omarchy's dispatcher while remaining portable to Termux, Linux, WSL, and native Windows:
@@ -32,7 +38,7 @@ The external-command protocol is an extension mechanism. Safety-critical operati
 - Avoid synonyms and aliases for new commands. Add an alias only to preserve an established name.
 - Keep `self update`, `repo pull`, `packages install`, and `apply` distinct; do not create one ambiguous command that performs all of them.
 
-## Resolution
+## Go Development Resolution
 
 Given `dots themes apply tokyonight`, resolution should try candidates from longest to shortest:
 
@@ -50,7 +56,7 @@ Resolution requirements:
 - Platform-incompatible commands may be discoverable as unavailable, but must not fail with a misleading "unknown command" result.
 - Native Windows accepts `.exe` only, with the argument convention and NTFS root restrictions in decision 0003. Do not infer an interpreter or Unix permission semantics.
 
-## Metadata
+## Go Development Metadata
 
 The mandatory JSON sidecar is accepted in [decision 0003](../../docs/decisions/0003-trusted-external-command-protocol.md). Read it before changing roots, routes, metadata, discovery/help or execution. Its exact keys, limits, reservations and failure categories are normative. Richer future metadata must preserve:
 
@@ -100,3 +106,6 @@ Before finishing, verify that proposed commands are not presented as implemented
 
 
 Catalog changes must preserve the public schema separately from private metadata structs, non-null arrays, typed availability codes, hidden/unavailable records, deterministic ordering and complete validation before stdout. Keep prefix syntax/root-count errors at 2 and discovery validation/resource-limit failures at 1. Test the global-only version representation and catalog self-description. Do not add completion generation merely to update this catalog.
+
+Theme metadata providers and command behavior follow [Shared themes](../../docs/themes.md).
+They read palette data without extension execution; test with `python3 -B tools/test_themes.py`.

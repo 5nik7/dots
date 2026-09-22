@@ -66,6 +66,12 @@ class Session:
 
 def exercise(source, samples, baseline=False):
     root, repo, env = fixture(source)
+    if (repo / 'lib/dots').is_dir():
+        probe = repo / 'bin/dots-fixture'
+        probe.write_text('#!' + shutil.which('bash') + '\n'
+                         '# dots:option=--flavor||choice:mocha,latte|Palette\n'
+                         'printf "DOTS_ARG<%s>\\n" "$@"\n')
+        probe.chmod(0o700)
     # Copy public vivid input into owned config so its lookup matches a linked installation.
     shutil.copytree(repo / 'configs/vivid', Path(env['XDG_CONFIG_HOME']) / 'vivid')
     # Representative Git contexts are owned copies, never the live repository.
@@ -115,6 +121,13 @@ add-zle-hook-widget line-init _dots_test_ready
         refreshed = session.wait()
         if b'fzf-tab-complete' not in refreshed:
             raise RuntimeError('Completion refresh lost the Tab widget')
+        if (repo / 'lib/dots').is_dir():
+            session.send('dots fixture --flavor m\t')
+            session.wait(marker=b'mocha', timeout=30)
+            session.send('\r')
+            completed = session.wait()
+            if b'DOTS_ARG<mocha>' not in completed:
+                raise RuntimeError('dots completion did not integrate with FZF-tab')
         # Wait for the picker's actual prompt before sending cancellation;
         # initialization can exceed a fixed sleep on mobile hardware.
         for label, keys in (('Tab', 'ls \t'), ('cd Tab', 'cd \t'), ('history', '\x12')):

@@ -4,6 +4,16 @@
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
 
+## Bash Framework Coverage
+
+The live Bash dispatcher requires Bash 4.4+ and a POSIX-like executable environment.
+Termux has native dispatch and Bash/Zsh/Fish completion tests, including interactive
+Tab acceptance. Linux/WSL and MSYS are design targets, not newly verified platforms.
+No PowerShell/native Windows dispatch, path translation, or Windows execution
+adapter is added. Ordinary unsymlinked invocation, help, and routing use Bash
+builtins; resolving a symlinked launcher additionally requires `readlink`.
+This coverage is separate from the Go platform matrix below.
+
 ## Existing Zsh Configuration
 
 The [existing shell configuration](../shells/zsh/README.md) has Termux-native checks and isolated Linux/WSL/MSYS detection fixtures. WSL uses Linux paths; MSYS has its own adapter boundary. Native Linux/WSL/MSYS interactive behavior remains unverified. These shell checks do not expand the Go core or production installation support claims below.
@@ -195,3 +205,14 @@ Update this matrix only with verified results.
 ## Development Zsh Completion
 
 The portable development CLI can generate Zsh source without a Zsh dependency. Native Zsh runtime acceptance targets Termux and Linux only; native Windows tests verify CLI generation, not shell execution. Other shells, WSL runtime and completion installation remain deferred. See [decision 0005](decisions/0005-static-zsh-completion.md) and [Phase 2 evidence](../plans/phase-2-command-center.md#authorized-zsh-completion-slice).
+
+## Bash Theme Integration
+
+The palette engine and Zsh/Neovim adapters are natively tested on Termux. They use
+XDG state/cache roots with HOME fallbacks and no path translation. Switching
+requires `flock`, `sync -f`, `sha256sum`, AWK and standard file utilities; unsupported
+capabilities fail at the operation boundary. Paths with spaces and Unicode are
+covered in fixtures. WSL/Linux/MSYS execution remains unverified; native Windows
+Bash execution and filesystem durability are not claimed. Native Windows and WSL
+must retain separate state stores. Other applications and automatic Bash/Fish
+prompt theming are outside this version. See [Shared themes](themes.md).

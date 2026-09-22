@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=List themes or flavors
+# dots:usage=[THEME]
+# dots:argument=1|theme|Theme name
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- list "$@"
+source "$DT_LIB/cli.bash"

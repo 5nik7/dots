@@ -12,7 +12,7 @@ The intended experience is one command family with discoverable routes such as `
 
 The current focus is everyday maintenance of the existing dotfiles, scripts, configurations, and documentation. Further Go implementation and migration work is paused indefinitely as of 2026-09-22; see the [roadmap](plans/roadmap.md#current-priority). Preserve the existing Go code, tests, and CI. Resume the Go roadmap only when the owner requests it; specifically requested Go fixes remain allowed.
 
-- The existing `bin/dots` is a prototype, not the final command architecture.
+- The live `bin/dots` is the modular Bash command framework under [decision 0006](docs/decisions/0006-bash-command-framework.md). It does not implement general managed installation; bounded theme-state publication follows [decision 0007](docs/decisions/0007-data-driven-themes.md).
 - The existing dotfiles tree remains live and must not be reorganized wholesale without an approved migration plan.
 - Commands and manifests described in `docs/` may be proposed rather than implemented. Never document a proposed command as currently usable.
 - Termux is the first implementation target. Cross-platform boundaries must still be preserved from the first change.
@@ -89,6 +89,8 @@ The core owns operations that require consistent safety or state:
 External `dots-*` commands may add cohesive features. They must not replace or circumvent the transaction engine for managed filesystem changes.
 
 ## Command Contract
+
+For the live Bash executable, follow [decision 0006](docs/decisions/0006-bash-command-framework.md): repository/local roots plus explicit extras, executable symlinks, optional static comment headers, shared presentation helpers, and on-demand Bash/Zsh/Fish completion. These intentional differences do not change the Go development protocol below. No catalog scans during shell startup or ordinary direct dispatch; no extension execution for help or completion.
 
 Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) for development extensions: no implicit roots, protected namespaces, mandatory static JSON, targeted direct lookup, native execution only, and no claim of sandboxing or protection from concurrent trusted-file replacement. Tests use disposable fixture commands only. Follow [decision 0004](docs/decisions/0004-versioned-command-discovery.md) for the versioned static command catalog; Zsh generation follows [decision 0005](docs/decisions/0005-static-zsh-completion.md).
 

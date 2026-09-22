@@ -48,7 +48,7 @@ The largest groups include wallpapers, font files, PowerShell DLLs, and demo med
 
 ## Existing Command and Environment
 
-`bin/dots` currently provides a prototype help display and a repository-directory option. The owner's commits through `c1be6eb` added the public `logo.txt`, dynamic optional logo loading, a `help` spelling, and repaired error output. The Phase 1 change preserves that command, logo, and shell configuration. It does not implement the command discovery, specification, planning, or transaction model described in the new design docs.
+At the Phase 1 baseline, `bin/dots` provided a prototype help display and a repository-directory option. The live command has since become the [Bash framework](commands.md#implemented-bash-command-framework); the remainder of this paragraph records the earlier baseline. The owner's commits through `c1be6eb` added the public `logo.txt`, dynamic optional logo loading, a `help` spelling, and repaired error output. The Phase 1 change preserves that command, logo, and shell configuration. It does not implement the command discovery, specification, planning, or transaction model described in the new design docs.
 
 The additive `experiments/go-portability/` module now contains a separate Go executable with help, version, and read-only diagnostics, plus isolated filesystem tests and a development harness. The `.github/workflows/phase-1-linux.yml` workflow and CI evidence collector provide bounded native Linux and Windows validation jobs. Both jobs have executed successfully with retained source, binary, test, dependency, and timing evidence. The shared verifier now also has a bounded distribution mode and archive failure regressions; native distribution execution now passes on all three experimental targets, and artifacts remain outside the checkout. They own no live dotfiles. Build artifacts and caches stay outside the checkout. See the [focused plan](../plans/phase-1-portability.md) for evidence. The historical inventory and size measurements above have not been recomputed or replaced by this addition.
 
@@ -103,3 +103,11 @@ Do not delete these categories as general cleanup. Each migration should identif
 - Keep compatibility wrappers only where an existing command is actively used.
 
 Update this document when a migration materially changes the baseline. Preserve prior measurements in a decision or completed plan when they are needed to explain history.
+
+## Theme Migration
+
+The live Catppuccin implementation now stores four palettes as TOML data, with
+shared Bash libraries and command entry points. The `current_theme` symlink has
+become a selection-aware wrapper. Zsh refreshes shared selection at prompts; the
+Neovim submodule has a corresponding JSON reader and focus adapter. Existing app
+assets remain in place. See [Shared themes](themes.md) for the implemented scope.

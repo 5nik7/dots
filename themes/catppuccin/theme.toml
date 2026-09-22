@@ -1,0 +1,15 @@
+name = "Catppuccin"
+default_flavor = "mocha"
+[roles]
+background = "base"
+foreground = "text"
+muted = "overlay0"
+accent = "mauve"
+selection = "surface1"
+error = "red"
+warning = "yellow"
+info = "blue"
+hint = "teal"
+[integrations]
+nvim = "catppuccin"
+vivid = "catppuccin"

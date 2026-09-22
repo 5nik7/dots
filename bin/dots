@@ -1,104 +1,25 @@
 #!/usr/bin/env bash
-
+# A small entry point; catalog and presentation are loaded only when requested.
 set -o pipefail
-
-declare -r esc=$'\033'
-declare -r c_reset="${esc}[0m"
-declare -r c_red="${esc}[31m"
-declare -r c_green="${esc}[32m"
-declare -r c_yellow="${esc}[33m"
-declare -r c_blue="${esc}[34m"
-declare -r c_black="${esc}[30m"
-
-err() { printf "${c_red}%s${c_reset}\n" "$*" >&2; }
-die() {
-  err "$*"
+if (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4) )); then
+  printf 'dots requires Bash 4.4 or newer\n' >&2
   exit 1
-}
+fi
 
-path_display() {
-  local p=$1
-  if ((raw)); then
-    printf '%s\n' "$p"
-  else
-    case "$p" in
-    "$HOME")
-      printf '~\n'
-      ;;
-    "$HOME"/*)
-      printf '~/%s\n' "${p#"$HOME"/}"
-      ;;
-    *)
-      printf '%s\n' "$p"
-      ;;
-    esac
-  fi
-}
-
-print_logo() {
-  local logo source=${BASH_SOURCE[0]} source_dir target line
-
-  if [[ -n ${DOTS:-} ]]; then
-    logo=${DOTS%/}/logo.txt
-  else
-    # Resolve only this executable, never scan the repository or invoke Git.
-    [[ $source == */* ]] || source=./$source
-    while [[ -L $source ]]; do
-      source_dir=${source%/*}
-      target=$(readlink -- "$source" 2>/dev/null) || return 0
-      case $target in
-      /*) source=$target ;;
-      *) source=$source_dir/$target ;;
-      esac
-    done
-    logo=${source%/*}/../logo.txt
-  fi
-
-  # A logo is optional. Reject directories, FIFOs, and unreadable files.
-  [[ -f $logo && -r $logo && -s $logo ]] || return 0
-  while IFS= read -r line || [[ -n $line ]]; do
-    printf '%s\n' "$line"
-  done < "$logo"
-  printf '\n'
-}
-
-usage() {
-  local prog=${0##*/}
-  print_logo
-  printf '%s - for your dotfiles\n\n' "$prog"
-  printf '%s\n' \
-    "Usage: $prog [help | -h | --help]" \
-    "       $prog [-r | --raw] {-d | --dir}" \
-    '' \
-    '  help, -h, --help    Display this help message' \
-    '  -d, --dir          Print the configured repository directory ($DOTS)' \
-    '  -r, --raw          Do not abbreviate home paths (before --dir)'
-}
-
-main() {
-  while (($#)); do
-    case $1 in
-    -r | --raw)
-      raw=1
-      ;;
-    -d | --dir)
-      path_display "$DOTS"
-      exit 0
-      ;;
-    help | -h | --help)
-      usage
-      exit 0
-      ;;
-    *)
-      err "unknown command or option: $1"
-      usage >&2
-      exit 1
-      ;;
-    esac
-    shift
-  done
-  usage
-  exit 0
-}
-
-main "$@"
+_dots_source=${BASH_SOURCE[0]}
+[[ $_dots_source == /* ]] || _dots_source=$PWD/$_dots_source
+_dots_links=0
+while [[ -L $_dots_source ]]; do
+  (( ++_dots_links <= 40 )) || { printf 'dots: executable symlink loop\n' >&2; exit 1; }
+  _dots_target=$(readlink -- "$_dots_source") || exit 1
+  if [[ $_dots_target == /* ]]; then _dots_source=$_dots_target
+  else _dots_source=${_dots_source%/*}/$_dots_target; fi
+done
+DOTS_LIB_DIR=${_dots_source%/*}/../lib/dots
+if [[ -z ${DOTS:-} ]]; then
+  DOTS=$(cd -- "${_dots_source%/*}/.." && pwd -P) || exit 1
+fi
+export DOTS DOTS_LIB_DIR
+# shellcheck source=lib/dots/dispatch.bash
+source "$DOTS_LIB_DIR/dispatch.bash"
+dots_main "$@"

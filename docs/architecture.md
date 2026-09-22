@@ -4,13 +4,23 @@
 
 This document defines the working architecture for the future `dots` CLI. It separates durable boundaries from implementation choices that still require validation. Further Go implementation and migration are [paused](../plans/roadmap.md#current-priority); existing code, tests, and CI remain in place.
 
+## Live Bash Framework
+
+`bin/dots` locates the installation and delegates to `lib/dots/dispatch.bash`.
+Routing probes only candidate filenames. `catalog.bash` owns static header parsing
+and the shared built-in/help model; `ui.bash` is a sourceable presentation library;
+`complete.bash` computes literal suggestions. Native adapter sources live under
+`lib/dots/completion` and are linked into the repository's shell completion trees.
+Only help/discovery/completion load the catalog. There is no catalog cache,
+general transaction engine, or dependency on the Go binary. See [decision 0006](decisions/0006-bash-command-framework.md).
+
 ## Existing Zsh Configuration
 
 The live shell configuration is maintained independently of the paused Go core. `shells/zsh/zshrc` owns startup order; its `core/`, `integrations/`, and `platforms/` modules separate shared setup, tool activation, and execution-environment detection. Existing public module entry points remain available. Generated shell data belongs in user cache directories, not the repository. See the [Zsh guide](../shells/zsh/README.md).
 
 ## Implemented Permanent Core Boundary
 
-Root `go.mod` (`github.com/5nik7/dots`, Go 1.27.1) and `cmd/dots` now own the separate permanent development binary. `internal/cli` binds help/version/doctor/commands/completion and renders registry and static extension metadata; `internal/dispatch` validates typed entries and resolves token routes/global spellings entirely in memory; `internal/platform` owns the ported read-only observations and file opening. `internal/extension` owns strict sidecar validation, explicit-root resolution and bounded enumeration; `internal/platform` owns native file/root policy and execution. `internal/cli/discovery.go` owns the public schema-1 catalog DTOs, shared in-memory construction and serialization over shared defensive projections and ordinary extension discovery. Public JSON types are separate from private registry/sidecar carriers; direct dispatch does not construct a catalog. No mutation API exists. The active `bin/dots` remains a separate Bash prototype and may be maintained under the repository editing policy.
+Root `go.mod` (`github.com/5nik7/dots`, Go 1.27.1) and `cmd/dots` now own the separate permanent development binary. `internal/cli` binds help/version/doctor/commands/completion and renders registry and static extension metadata; `internal/dispatch` validates typed entries and resolves token routes/global spellings entirely in memory; `internal/platform` owns the ported read-only observations and file opening. `internal/extension` owns strict sidecar validation, explicit-root resolution and bounded enumeration; `internal/platform` owns native file/root policy and execution. `internal/cli/discovery.go` owns the public schema-1 catalog DTOs, shared in-memory construction and serialization over shared defensive projections and ordinary extension discovery. Public JSON types are separate from private registry/sidecar carriers; direct dispatch does not construct a catalog. No mutation API exists. The active `bin/dots` is a separate Bash command framework and may be maintained under the repository editing policy.
 
 `tools/verify_core.py` copies only selected core inputs into owned temporary roots; `tools/ci_core.py` collects native check/startup/registry evidence. These tools are independent of the preserved experimental module and its collectors. CI runs both surfaces sequentially. The CLI logo/doctor adapters and explicit external resolver inspect their scoped runtime inputs; registry and candidate lookup have no filesystem/process dependencies. See [commands](commands.md#built-in-metadata-contract), [verification](testing.md#permanent-core-verification), and the [first-slice plan](../plans/phase-2-command-center.md).
 
@@ -211,3 +221,13 @@ The repository and its enabled extensions are executable trust inputs. Public bo
 `tools/worktree_lifecycle.py` manages explicitly enrolled development worktrees independently of the public CLI and transaction architecture. It owns only Git-local enrollment/lock metadata and guarded calls to non-force Git worktree removal. Ordinary maintenance uses the existing checkout without invoking this helper. Optional worktree procedures, known-live-use review and platform limitations are defined in the [agent worktree guide](../agents/guides/worktrees.md). No CLI command, configuration loader, hook or background service is added.
 
 The [Zsh renderer](decisions/0005-static-zsh-completion.md) in `internal/cli/completion.go` consumes that catalog after full validation. It owns shell quoting and a static embedded route/root snapshot, without adding I/O dependencies to dispatch or runtime discovery to shell startup.
+
+## Shared Theme Engine
+
+`lib/dots/themes` owns validated palette loading, conversions, cached initialization,
+legacy interfaces and bounded state publication. Small `dots-themes-*` entry points
+expose it through the Bash dispatcher. Theme/flavor data belongs in the existing
+`themes` tree. Zsh reads generated shell data; the Neovim submodule reads generated
+JSON. The sole shared mutable resource is the active generation token and its
+owned state subtree; application configurations remain repository sources.
+See [theme behavior](themes.md) and [decision 0007](decisions/0007-data-driven-themes.md).

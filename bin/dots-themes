@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# dots:summary=Browse and switch themes
+# dots:usage=[COMMAND]
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+source "$DT_LIB/cli.bash"

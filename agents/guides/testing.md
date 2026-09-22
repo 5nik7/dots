@@ -72,6 +72,15 @@ Console-test failure cleanup must own the entire disposable process tree, not ju
 
 Catalog acceptance adds exact schema/projection/ordering tests and isolated native JSON process tests for hidden/unavailable records, failure streams, discovery limits, nonexecution and unchanged roots. Retain separate `discovery-json-10` warm measurements with strict sample/result counts; do not substitute JSON timings for the historical text-discovery baseline.
 
+## Bash Command Framework
+
+Use the [Bash test entry points](../../docs/testing.md#bash-command-framework) for
+`bin/dots`, `lib/dots`, and its three shell adapters. Test all installed Bash/Zsh/Fish
+interpreters with owned homes and fixture commands, including real Tab input and
+changes visible without reloading. Never execute existing `dots-*` extensions as
+test fixtures. Keep sequential benchmark intervals free of other tests. Preserve
+the existing Zsh cache/reload regression coverage and FZF-tab acceptance.
+
 ## Existing Zsh Configuration
 
 For Zsh startup changes, run `python3 -B tools/test_zsh.py` plus the isolated startup and PTY runners described in [the Zsh guide](../../shells/zsh/README.md). Capture the baseline before editing and keep timing runs sequential. Never profile the live startup chain against the real home; private/platform modules use synthetic substitutes. Treat native Termux results and other-platform fixtures separately.
@@ -83,3 +92,8 @@ Use `python3 -B tools/test_worktree_lifecycle.py` for the separate local lifecyc
 Lifecycle review regressions verify preview/apply retain native FIFO and filesystem socket fixtures where supported, and that a fresh remote-main fetch ignores an additional configured recovery-branch mapping while preserving every local branch. Device/unknown modes and metadata denial use injected `lstat` results; they do not establish native device-node coverage. Native Windows FIFO/socket fixtures are unavailable and skipped. Positive portable removal still injects an idle process snapshot; native process coverage remains separate.
 
 For completion changes, follow [decision 0005](../../docs/decisions/0005-static-zsh-completion.md). Require installed Zsh for Termux/Linux core check, isolated real candidate and ZLE tests, literal ordered root matching, safe quoting and unchanged roots. Windows CLI generation coverage must never be labeled native Zsh coverage. CI may provision Zsh; the runner never installs it.
+
+For shared palette, state publication, Zsh refresh, or Neovim theme adapter changes,
+run `python3 -B tools/test_themes.py`; use `python3 -B tools/bench_themes.py` for performance.
+The editor test copies installed public Catppuccin source and never starts live LazyVim
+or downloads plugins. A missing public plugin is reported as a skipped editor test.

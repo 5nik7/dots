@@ -1,87 +1,79 @@
 #!/usr/bin/env bash
+# Sourceable Bash/Zsh adapter; only Zsh installs an automatic prompt hook. Fast prompt checks use only Zsh builtins.
+declare -gA theme themes
+themes[root]=${themes[root]:-${DOTHEMES:-$DOTS/themes}}
+themes[default]=${themes[root]}/.default
+themes[global]=${themes[root]}/.theme
+themes[local]=$HOME/.theme
+themes[file]=${themes[default]}
+[[ ! -r ${themes[global]} ]] || themes[file]=${themes[global]}
+[[ ! -r ${themes[local]} ]] || themes[file]=${themes[local]}
+_DOTS_THEME_STATE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes
 
-declare -gA theme
-declare -gA themes
-
-themes[cmdname]="${0##*/}"
-themes[default]="${themes[root]}/.default"
-themes[global]="${themes[root]}/.theme"
-themes[local]="${HOME}/.theme"
-
-if [[ -r "${themes[local]}" ]]; then
-  themes[file]="${themes[local]}"
-elif [[ -r "${themes[global]}" ]]; then
-  themes[file]="${themes[global]}"
-else
-  themes[file]="${themes[default]}"
-fi
-
-has_theme() { command vivid generate "$1" &>/dev/null; }
-
-change_theme() {
-  local new="$1"
-  local old="$THEME"
-  if has_theme "$new"; then
-    if [[ $new == "$old" ]]; then
-      warn "'$new' is current theme."
-      return 1
-    else
-      echo "$new" >|"${THEMEFILE:-${themes[file]}}"
-      set_theme "$new"
-    fi
-  else
-    err "'$new' not a theme."
-    return 1
-  fi
+has_theme() {
+  local flavor=''
+  [[ $1 != *-* ]] || flavor=${1#*-}
+  "$DOTS/bin/dots-themes-show" "${1%%-*}" "$flavor" >/dev/null 2>&1
 }
-
+change_theme() {
+  local flavor=''
+  [[ $1 != *-* ]] || flavor=${1#*-}
+  "$DOTS/bin/dots-themes-set" "${1%%-*}" "$flavor" || return
+  set_theme
+}
 set_theme() {
-  local t out
-
-  if [[ -n "$1" ]]; then
-    t="$1"
-  else
-    t="$(<"${themes[file]}")"
+  [[ -z ${ZSH_VERSION:-} ]] || setopt local_options nonomatch
+  local requested=${1:-} generation='' output file colors
+  if [[ -f $_DOTS_THEME_STATE/current && ! -L $_DOTS_THEME_STATE/current ]]; then
+    IFS= read -r generation < "$_DOTS_THEME_STATE/current" || return 1
+    [[ $generation == g.* && ${generation#g.} != *[^a-zA-Z0-9]* && -n ${generation#g.} ]] || return 1
   fi
-
-  if [[ $t == *-* ]]; then
-    theme[current]="${t%%-*}"
-    theme[flavor]="${t#*-}"
-    theme[flavor]="${theme[flavor]%%-*}"
-    export THEME="${theme[current]}"
-    export FLAVOR="${theme[flavor]}"
-    out="THEME:$THEME|FLAVOR:$FLAVOR"
+  if [[ -n $generation && -z $requested ]]; then
+    file=$_DOTS_THEME_STATE/generations/$generation/init.zsh
+    [[ -f $file && ! -L $file ]] || return 1
+    source "$file" || return
   else
-    theme[current]="$t"
-    export THEME="${theme[current]}"
-    out="THEME:$THEME"
+    output=$(DOTS_THEME_SELECTION=$requested "$DOTS/bin/dots-themes-init" --shell zsh) || return
+    [[ -n $output ]] || return 1
+    eval "$output" || return
   fi
-  
-  export THEMEDIR="${themes[root]}/$THEME"
-  export THEMESRC="$THEMEDIR/src"
-
-  local colors
+  theme[current]=$THEME theme[flavor]=$FLAVOR
+  export THEMEDIR=${themes[root]}/$THEME THEMESRC=${themes[root]}/$THEME/src
+  _DOTS_THEME_GENERATION=$generation
   if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_vivid_colors]} )); then
-    _dots_vivid_colors "$t" && colors=$REPLY
-  else
-    colors="$(command vivid generate "$t")" 2>/dev/null
+    _dots_vivid_colors "$THEME-$FLAVOR" && export LS_COLORS=$REPLY
+  elif command -v vivid >/dev/null 2>&1; then
+    colors=$(command vivid generate "$THEME-$FLAVOR" 2>/dev/null) && export LS_COLORS=$colors
   fi
-  export LS_COLORS="$colors"
-
-  eval "$(current_theme init)"
-
-  # Reapplying a theme replaces its FZF colors instead of appending copies.
   if [[ -n ${_FZF_OPTS_:-} ]]; then
     export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
+  else
+    if [[ -z ${_DOTS_THEME_FZF_BASE+x} ]]; then _DOTS_THEME_FZF_BASE=${FZF_DEFAULT_OPTS:-}; fi
+    export FZF_DEFAULT_OPTS=$_DOTS_THEME_FZF_BASE
   fi
-  local file
-  for file in "$THEMESRC"/*; do
-    [[ -f $file ]] || continue
-    # shellcheck source=/dev/null
-    . "$file"
-  done
-
-  if [[ -n "$1" ]]; then
-    ok "$out"
+  if [[ $THEME == catppuccin ]]; then
+    for file in "$THEMESRC"/*.zsh; do [[ -f $file ]] || continue; source "$file"; done
+  else
+    export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=${dots_roles[muted]}"
+    export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=fg:${dots_roles[foreground]},bg:${dots_roles[background]},hl:${dots_roles[accent]},bg+:${dots_roles[selection]}"
   fi
+  return 0
 }
+_dots_theme_precmd() {
+  local previous_status=$? generation=''
+  if [[ -f $_DOTS_THEME_STATE/current && ! -L $_DOTS_THEME_STATE/current ]]; then
+    IFS= read -r generation < "$_DOTS_THEME_STATE/current"
+    if [[ $generation != ${_DOTS_THEME_GENERATION:-} && $generation != ${_DOTS_THEME_FAILED:-} ]]; then
+      if set_theme; then _DOTS_THEME_FAILED=''
+      else
+        _DOTS_THEME_FAILED=$generation
+        print -u2 -- 'dots themes: could not load updated theme; keeping previous colors'
+      fi
+    fi
+  fi
+  return $previous_status
+}
+if [[ -n ${ZSH_VERSION:-} ]]; then
+  autoload -Uz add-zsh-hook
+  add-zsh-hook precmd _dots_theme_precmd
+fi
