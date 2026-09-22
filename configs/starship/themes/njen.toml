@@ -1,6 +1,6 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-add_newline = false
+add_newline = true
 follow_symlinks = false
 command_timeout = 10000
 scan_timeout = 10000
@@ -26,11 +26,9 @@ $package\
 $os\
 $username\
 $hostname\
-${custom.rwd}\
-${custom.dirname}\
 $directory\
 (\
-${custom.git_remote_icon}\
+(${custom.gh} )\
 $git_branch\
 $git_commit\
 $git_status\
@@ -43,8 +41,7 @@ $fill\
 ](bg:color_bg)
 $shell$status$character"""
 
-right_format = """
-$time"""
+right_format = "$cmd_duration $time"
 
 palette = "default"
 
@@ -83,7 +80,7 @@ color_error = 'red'
 color_caution = 'bright-yellow'
 color_username = ''
 color_bg = 'transparent'
-color_directory = 'blue'
+color_directory = 'bright-blue'
 color_directory_repo = 'bright-cyan'
 color_directory_repo_leaf = 'cyan'
 color_directory_readonly = 'bright-black'
@@ -136,17 +133,29 @@ signal_symbol = '󱐋'
 style = 'fg:color_error'
 recognize_signal_code = true
 
-[time]
-disabled = true
-time_format = "%-I:%M%P"
-style = "fg:color_time"
-format = '( [$time]($style) )'
-# format = '( [ $time]($style) )'
-
 [cmd_duration]
-format = "([](bright-black)[ $duration]($style))"
-style = "bright-black"
-disabled = true
+min_time = 200
+format = '[\($duration\)]($style)'
+style = "fg:yellow bold"
+# format = '[\(⏱ $duration\)]($style) '
+
+[time]
+disabled = false
+time_format = "%-I:%M:%S"
+format = "[$time]($style)"
+style = "fg:overlay0 bold"
+
+# [time]
+# disabled = true
+# time_format = "%-I:%M%P"
+# style = "fg:color_time"
+# format = '( [$time]($style) )'
+# # format = '( [ $time]($style) )'
+#
+# [cmd_duration]
+# format = "([](bright-black)[ $duration]($style))"
+# style = "bright-black"
+# disabled = true
 
 [username]
 style_user = 'white'
@@ -181,26 +190,27 @@ symbol = ' '
 style = 'fg:color_fill bg:color_bg'
 
 [directory]
-before_repo_root_style = 'fg:color_directory'
-style = 'fg:color_directory'
-format = '[$path]($style)( [$read_only]($read_only_style))'
-repo_root_style = 'fg:color_directory_repo bold'
-repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path](fg:color_directory_repo_leaf)( [$read_only]($read_only_style))'
-truncate_to_repo = true
-truncation_length = 10
-fish_style_pwd_dir_length = 1
+# before_repo_root_style = 'fg:color_directory'
+# style = 'fg:color_directory'
+# format = '[$path]($style)( [$read_only]($read_only_style))'
+# repo_root_style = 'fg:color_directory_repo bold'
+# repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path](fg:color_directory_repo_leaf)( [$read_only]($read_only_style))'
+# truncate_to_repo = true
+# truncation_length = 10
+# truncation_symbol = "…/"
+# fish_style_pwd_dir_length = 1
 # repo_root_style = "fg:color_directory_repo bold"
 # read_only = ""
 read_only = "󰌾"
-home_symbol = "~"
-use_os_path_sep = false
-use_logical_path = false
-read_only_style = 'fg:color_directory dimmed'
+# home_symbol = "~"
+# use_os_path_sep = false
+# use_logical_path = false
+# read_only_style = 'fg:color_directory dimmed'
 # truncation_symbol = "…/"
 
 [git_branch]
 symbol = ''
-format = '( [$symbol$branch]($style) )'
+format = '([$symbol$branch]($style) )'
 style = 'fg:color_git_branch'
 
 [git_commit]
@@ -473,24 +483,31 @@ format = '$symbol '
 "/data/data/com.termux/files/usr" = "/usr"
 # "/storage/emulated/0" = "/storage"
 
-[custom.dirname]
-description = "dir path"
-when = '[ ! $STARSHIP_SHELL == "pwsh" ] && git rev-parse --show-toplevel 2>/dev/null'
-command = """
-dir=$(dirout -j $(git rev-parse --show-toplevel 2>/dev/null))
-echo "$dir"
-"""
-style = "fg:color_directory"
-format = '[$output]($style)'
-shell = ["bash", "--noprofile", "--norc"]
-
-[custom.rwd]
-description = "cwd"
+[custom.gh]
+description = "Git host icon"
 when = true
-command = "rwd"
-style = "fg:color_directory"
-format = '([$output[->](bright-black bold)]($style))'
-shell = ["bash", "--noprofile", "--norc"]
+command = "git remote get-url origin 2>/dev/null | grep -iq 'github' && echo "
+format = '([$output]($style))'
+style = 'fg:color_git_branch'
+
+# [custom.dirname]
+# description = "dir path"
+# when = '[ ! $STARSHIP_SHELL == "pwsh" ] && git rev-parse --show-toplevel 2>/dev/null'
+# command = """
+# dir=$(dirout -j $(git rev-parse --show-toplevel 2>/dev/null))
+# echo "$dir"
+# """
+# style = "fg:color_directory"
+# format = '[$output]($style)'
+# shell = ["bash", "--noprofile", "--norc"]
+
+# [custom.rwd]
+# description = "cwd"
+# when = true
+# command = "rwd"
+# style = "fg:color_directory"
+# format = '([$output[->](bright-black bold)]($style))'
+# shell = ["bash", "--noprofile", "--norc"]
 
 [custom.git_remote_icon]
 description = "Git host icon"
