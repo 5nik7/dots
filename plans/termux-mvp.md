@@ -1,6 +1,8 @@
 # Termux MVP Plan
 
-**Status: Proposed**
+**Status: Paused; proposed scope retained**
+
+The [current roadmap priority](roadmap.md#current-priority) pauses this migration until the owner requests resumption. Its limited module selection governs the future MVP, not ordinary task-relevant edits elsewhere in the repository.
 
 The Termux MVP is the first end-to-end proof that `dots` can inspect, plan, apply, track, and undo real dotfile changes safely. It deliberately manages a small subset of the current repository.
 

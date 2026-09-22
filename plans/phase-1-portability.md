@@ -4,6 +4,8 @@
 
 The owner approved all four decisions in [0002](../docs/decisions/0002-phase-1-go-adoption.md) as proposed at `c7d86a989e6397a3ecd74407e63097994f183694` on 2026-09-10. The results below retain their original chronology, including then-provisional language status; current policy is the accepted decision. Acceptance does not complete untested capabilities.
 
+The [current roadmap priority](roadmap.md#current-priority) pauses further Go implementation and migration as of 2026-09-22. The restrictions and provisional status statements below describe the historical experiment and follow-ups; current task-relevant maintenance follows [AGENTS.md](../AGENTS.md). Existing code, tests, CI, and recorded results are retained.
+
 ## Scope and Reconciliation
 
 Start from `c1be6eb2417ece2218beb5f724de1b8de27cf403` with a clean working tree. The owner's intervening commits added `logo.txt`, committed the Zsh changes, and repaired the Bash prototype's help/error path. Preserve these files exactly. The experiment is additive under `experiments/go-portability/`; the live `bin/dots` remains the active command.

@@ -1,8 +1,16 @@
 # Dots Roadmap
 
-**Status: Active incremental implementation; later phases proposed**
+**Status: Repository maintenance active; further Go implementation and migration paused**
 
 This roadmap sequences the future `dots` CLI around its riskiest foundations: Termux portability, deterministic specification resolution, and recoverable filesystem mutation.
+
+## Current Priority
+
+As of 2026-09-22, prioritize everyday maintenance of the existing dotfiles, scripts, configurations, and documentation. Further Go implementation and migration work is paused indefinitely and resumes only at the owner's request. Specifically requested Go fixes remain allowed. Keep the existing Go implementation, experiment, tests, and CI in place; Go remains the accepted core language.
+
+Work in the existing checkout on `main` by default, with task-relevant edits allowed throughout the repository under [AGENTS.md](../AGENTS.md). A separate branch or worktree is optional. Earlier slice-specific file restrictions and checkout-preservation instructions are historical, not ongoing maintenance restrictions.
+
+The phases below retain their completed milestones, evidence, dependencies, and proposed future scope. Unfinished roadmap work is paused; its listing does not authorize agents to advance it during unrelated maintenance.
 
 ## Completion Legend
 

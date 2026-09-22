@@ -2,6 +2,8 @@
 
 **Status: Focused runner verified on native Termux and Linux/Windows CI; broader strategy proposed**
 
+The [Go development pause](../plans/roadmap.md#current-priority) retains existing tests and CI. Run checks appropriate to the changed files from the existing checkout, keeping their fixture roots isolated as described below. Documentation-only policy changes require link and whitespace checks; they do not require Go builds or benchmarks.
+
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 
 ## Permanent Core Verification
@@ -274,7 +276,7 @@ Benchmark labeling uses an explicit result-count check before ordinary `zip`, re
 
 ## Development Worktree Lifecycle Tests
 
-`python3 -B tools/test_worktree_lifecycle.py` runs isolated development-helper tests without Go, package changes, network requests or live-home mutations. It covers eligible removal, preview/fetch refusal, staged/modified/untracked/ignored/empty local content, unmerged and freshly merged heads, registration/identity/capacity, active/uncertain use, original/session/helper/live paths and Git refusal. Portable removal tests inject an idle process snapshot; native Unix tests check a disposable live child and eligible removal when process inspection is available. Native Windows process inspection/removal is deferred and fails closed; Windows symlink privilege is never enabled for tests. The development-tooling CI workflow runs this suite and documentation/whitespace checks; existing native CLI gates are unchanged. See [the lifecycle guide](../agents/guides/worktrees.md) for activation, metadata and exact cleanup triggers.
+`python3 -B tools/test_worktree_lifecycle.py` runs isolated development-helper tests without Go, package changes, network requests or live-home mutations. It covers eligible removal, preview/fetch refusal, staged/modified/untracked/ignored/empty local content, unmerged and freshly merged heads, registration/identity/capacity, active/uncertain use, original/session/helper/live paths and Git refusal. Portable removal tests inject an idle process snapshot; native Unix tests check a disposable live child and eligible removal when process inspection is available. Native Windows process inspection/removal is deferred and fails closed; Windows symlink privilege is never enabled for tests. The development-tooling CI workflow runs this suite and documentation/whitespace checks; existing native CLI gates are unchanged. See [the lifecycle guide](../agents/guides/worktrees.md) for optional use, metadata and deliberate cleanup triggers.
 
 Lifecycle review regressions verify preview/apply retain native FIFO and filesystem socket fixtures where supported, and that a fresh remote-main fetch ignores an additional configured recovery-branch mapping while preserving every local branch. Device/unknown modes and metadata denial use injected `lstat` results; they do not establish native device-node coverage. Native Windows FIFO/socket fixtures are unavailable and skipped. Positive portable removal still injects an idle process snapshot; native process coverage remains separate.
 

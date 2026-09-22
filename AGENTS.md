@@ -10,7 +10,7 @@ The intended experience is one command family with discoverable routes such as `
 
 ## Current Phase
 
-The project is in the design and incremental-migration phase.
+The current focus is everyday maintenance of the existing dotfiles, scripts, configurations, and documentation. Further Go implementation and migration work is paused indefinitely as of 2026-09-22; see the [roadmap](plans/roadmap.md#current-priority). Preserve the existing Go code, tests, and CI. Resume the Go roadmap only when the owner requests it; specifically requested Go fixes remain allowed.
 
 - The existing `bin/dots` is a prototype, not the final command architecture.
 - The existing dotfiles tree remains live and must not be reorganized wholesale without an approved migration plan.
@@ -24,7 +24,7 @@ Track phase status in [`plans/roadmap.md`](plans/roadmap.md) and Termux scope in
 
 Read the guide matching the work before changing files:
 
-- [`agents/guides/worktrees.md`](agents/guides/worktrees.md) — one-worktree capacity, explicit enrollment, preview and authorized cleanup.
+- [`agents/guides/worktrees.md`](agents/guides/worktrees.md) — default checkout workflow and optional worktree creation, enrollment, preview, and cleanup.
 - [`agents/guides/commands.md`](agents/guides/commands.md) — dispatcher behavior, command naming, metadata, help, and completions.
 - [`agents/guides/managed-files.md`](agents/guides/managed-files.md) — modules, manifests, link/copy behavior, adoption, planning, and rollback.
 - [`agents/guides/bootstrap.md`](agents/guides/bootstrap.md) — remote installers, repository cloning, first-run setup, and private sources.
@@ -115,6 +115,8 @@ Do not encode a platform as an ordinary profile internally, even if a temporary 
 
 ## Safety Invariants
 
+The transaction requirements below govern managed installation, replacement, backup, and undo operations. Ordinary edits to repository source files, including live dotfiles, do not require the proposed Go transaction engine; preserve unrelated work and use Git history for committed source recovery.
+
 - Read-only inspection and planning must not mutate the target machine, repository, package database, or state store.
 - Every managed filesystem mutation must belong to a transaction with a durable journal.
 - Existing targets are never overwritten or deleted without classification and an applicable backup or explicit refusal policy.
@@ -150,7 +152,9 @@ Read `docs/safety.md` before changing any mutating path.
 
 ## Repository and Migration Discipline
 
-- Preserve unrelated existing files and user changes.
+- Any repository file may be edited when relevant to the requested task, including `bin/dots`, live configurations, scripts, documentation, and Go sources. File restrictions in earlier implementation slices are historical task boundaries, not a permanent allowlist.
+- Preserve unrelated existing files and user changes; inspect Git status before editing.
+- For task-relevant submodule edits, follow the submodule's local instructions and separate Git history. Editing permission does not authorize unrelated submodule initialization, updates, commits, or pushes.
 - Migrate incrementally by module, beginning with a deliberately small Termux slice.
 - Do not initialize private or optional submodules merely to run general tests or documentation checks.
 - Do not add generated caches, bytecode, build outputs, downloaded archives, or machine-local state to Git.
@@ -159,9 +163,11 @@ Read `docs/safety.md` before changing any mutating path.
 
 ## Development Worktree Lifecycle
 
-Keep at most one active development worktree alongside the original checkout. Inspect existing worktrees before creating another. Follow [the worktree guide](agents/guides/worktrees.md): explicitly enroll workflow-managed worktrees; automatically remove eligible merged ones during authorized maintenance/implementation, after a verified merge or at the next eligible task boundary. Do not repeatedly request owner approval for already authorized eligible cleanup. Read-only planning reports candidates without removal or fetch. Preserve original/current-session/helper worktrees, all branch/recovery refs, review evidence and uncertain/local work. No name-pattern authorization, force removal, backup archives, hooks or scheduled cleanup.
+Work directly in the existing checkout on `main` by default. A separate branch or worktree is optional when the task calls for it; ordinary maintenance requires no worktree creation, enrollment, remote-policy fetch, or cleanup. Read the instructions in the current checkout.
 
-An older original checkout does not automatically load policy committed elsewhere. Future sessions must explicitly read current instructions from the reviewed fetched revision as described in the guide; preserve the original HEAD, index and unrelated edits.
+When deliberately using or maintaining linked worktrees, follow [the worktree guide](agents/guides/worktrees.md), including its one-additional-worktree capacity and guarded cleanup. Preserve unrelated work, branch/recovery refs, and review evidence.
+
+Git history provides recovery for committed repository edits. Preserve uncommitted and untracked work separately; reverting a commit does not recover those changes or undo external machine effects. Do not commit, push, reset, or revert without task authorization.
 
 ## Change Workflow
 

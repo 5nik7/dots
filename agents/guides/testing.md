@@ -2,6 +2,8 @@
 
 Read this guide before adding tests, changing test runners, touching mutation code, or claiming platform support or a performance improvement.
 
+The [Go development pause](../../plans/roadmap.md#current-priority) retains existing tests and CI. Run checks appropriate to the changed files from the existing checkout with test-owned roots. For documentation-only policy changes, run `python3 -B tools/verify_core.py docs` and `git diff --check`; Go builds, benchmarks, and helper regression suites are unnecessary unless their implementation changes.
+
 ## Isolation Is Mandatory
 
 Tests must receive explicit test-owned roots for home, repository, config, data, state, cache, and executable installation. A test must fail closed if any resolved mutation target escapes those roots.

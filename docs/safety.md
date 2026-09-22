@@ -4,6 +4,12 @@
 
 Safety is a core product feature of `dots`, not a wrapper around destructive file operations. This document is authoritative for planning, mutation, backup, rollback, undo, package, hook, repository, and secret behavior.
 
+## Repository Editing Boundary
+
+Ordinary task-relevant edits to repository source files, including live dotfiles and scripts, are allowed in the existing checkout under [AGENTS.md](../AGENTS.md). They do not require the proposed Go transaction engine. Inspect Git status and preserve unrelated, uncommitted, and untracked work. Git history provides recovery for committed repository edits; reverting a commit does not recover uncommitted work or reverse external machine effects.
+
+The transaction guarantees below govern managed installation, target replacement, backup, and undo operations. Permission to edit their source code does not authorize executing those operations against the live machine.
+
 ## Permanent Read-Only Core
 
 The root development executable implements help/version/doctor/commands through a validated built-in registry, plus the bounded external protocol below. It preserves the experiment's bounded optional-logo handle checks, explicit missing-platform-path warnings, unprobed diagnostics and argument redaction. Built-in startup loads no manifests, configuration contents, transaction state or external code. Only explicitly requested external resolution reads sidecars, and only direct external dispatch executes a selected extension. There is no persistent cache or installation surface. Test-only filesystem mutation primitives remain in the independent experiment. The [core verifier](testing.md#permanent-core-verification) owns all build/cache/fixture writes and proves unchanged runtime roots; it never replaces the active `bin/dots` or edits shell configuration.
@@ -233,7 +239,7 @@ The [versioned catalog](decisions/0004-versioned-command-discovery.md) reads onl
 
 ## Authorized Development Worktree Cleanup
 
-Local repository maintenance is separate from managed dotfile transactions. The [worktree lifecycle](../agents/guides/worktrees.md) permits automatic cleanup only of explicitly enrolled, merged, unused, clean linked development worktrees during authorized tasks. Read-only planning cannot remove them. Original/session/helper roots, live references, local content, branch/recovery refs and review evidence are protected; uncertain checks skip and Git removal never uses force. This does not authorize a general-purpose recursive deletion API or relaxed managed-file safety.
+Local repository maintenance is separate from managed dotfile transactions. The [worktree lifecycle](../agents/guides/worktrees.md) permits automatic cleanup only of explicitly enrolled, merged, unused, clean linked development worktrees during deliberately selected worktree maintenance. Ordinary repository edits do not trigger cleanup. Read-only planning cannot remove worktrees. Original/session/helper roots, live references, local content, branch/recovery refs and review evidence are protected; uncertain checks skip and Git removal never uses force. This does not authorize a general-purpose recursive deletion API or relaxed managed-file safety.
 
 Lifecycle cleanup supplements Git status with metadata-only entry classification and refuses special or uncertain filesystem objects. Its fresh-main fetch uses an empty `--refmap=` and an explicit destination, preventing configured fetch mappings from updating local branch/recovery refs. The trusted-filesystem and concurrent-change limitations in the worktree guide still apply.
 

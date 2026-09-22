@@ -4,7 +4,9 @@
 
 ## Status
 
-The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture is in the design and incremental-migration phase. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
+Further Go implementation and migration are **paused** as of 2026-09-22. Current work focuses on maintaining the existing dotfiles, scripts, configurations, and documentation directly in the main checkout. Existing Go code, tests, and CI remain in place; the [roadmap](plans/roadmap.md#current-priority) tracks resumption.
+
+The repository contains the existing dotfiles collection, the Bash `bin/dots` prototype, and an isolated experimental Go core under `experiments/go-portability/`. The new command architecture remains partially implemented, with further development paused. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
 
@@ -29,7 +31,7 @@ Initialization only retrieves source; it does not activate the configuration, in
 
 ## Try the Permanent Development Core
 
-With Go 1.27.1 and Python 3 already installed, run from this checkout (not the original live checkout):
+With Go 1.27.1 and Python 3 already installed, run from the existing checkout:
 
 ```bash
 DOTS_DEV_BIN="$(python3 -B tools/verify_core.py build)"
@@ -185,8 +187,8 @@ Agents must read [`AGENTS.md`](AGENTS.md) before changing the project and then r
 
 ## Migration Approach
 
-The current dotfiles remain in place while the new core is developed beside them. Migration will proceed one module at a time, beginning with a small Termux profile. Existing submodules, platform repositories, large assets, and actively used scripts will not be removed or reorganized without a focused plan and recovery path.
+The current dotfiles remain available for ordinary maintenance while migration is paused. When resumed, migration will proceed one module at a time, beginning with a small Termux profile. Existing submodules, platform repositories, large assets, and actively used scripts will not be removed or reorganized without a focused plan and recovery path.
 
 ## Development Worktrees
 
-Contributors use [one explicitly managed development worktree](agents/guides/worktrees.md) alongside the original checkout. `tools/worktree_lifecycle.py` defaults to preview and provides guarded cleanup after verified merge; it is development tooling, not a public `dots` command. Read the guide before registration/apply, including how to load current policy when the original checkout intentionally stays on an older HEAD. Nothing installs hooks or background cleanup.
+Contributors work directly in the existing checkout on `main` by default. Task-relevant edits are allowed throughout the repository, with unrelated changes preserved. Separate branches and worktrees are optional; ordinary maintenance requires no worktree setup or cleanup. The [worktree guide](agents/guides/worktrees.md) retains procedures for deliberate worktree use and guarded cleanup with `tools/worktree_lifecycle.py`. Git history supports recovery of committed edits; uncommitted work and external machine effects need separate care.

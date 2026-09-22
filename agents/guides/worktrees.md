@@ -1,48 +1,38 @@
 # Development Worktree Lifecycle
 
-This guide governs local development tooling, separate from the public `dots` CLI. Read it before creating, registering or cleaning development worktrees. The owner authorized automatic eligible cleanup during maintenance and implementation workflows; a fresh approval question is not required for each eligible managed worktree. Explicit task constraints still take precedence.
+Work directly in the existing checkout on `main` by default. Read its `AGENTS.md` and task guides, inspect Git status, and preserve unrelated work. Ordinary maintenance requires no new branch or worktree, enrollment, remote-policy fetch, or cleanup. Earlier requirements to preserve the original checkout unchanged applied to historical implementation tasks.
+
+This guide governs optional local development tooling, separate from the public `dots` CLI. Use the procedures below only when a task calls for a separate worktree or deliberate worktree maintenance. Creating a worktree is optional; the existing helper and its removal safeguards remain available.
 
 ## Capacity and Triggers
 
-Keep at most one active development worktree alongside the original checkout. Run `git worktree list --porcelain` and inspect every existing worktree before creating another. Reuse the existing worktree only when its branch and outstanding work match the authorized task. If it is active, dirty, unmerged, unmanaged or uncertain, report the blocker and do not create a second worktree. Registration enforces this capacity; Git itself is not intercepted.
+When deliberately using linked worktrees, keep at most one active development worktree alongside the original checkout. Run `git worktree list --porcelain` and inspect every existing worktree before creating another. Reuse the existing worktree only when its branch and outstanding work match the authorized task. If it is active, dirty, unmerged, unmanaged or uncertain, do not create a second worktree. This does not block task-relevant edits in the main checkout. Registration enforces this capacity; Git itself is not intercepted.
 
-At the start of authorized implementation or maintenance, and after verifying a merge, inspect managed cleanup candidates. Remove eligible candidates automatically after the checks below. A worktree containing the current session or executing helper is protected even after merge: defer its cleanup to the next eligible task boundary, from outside it. Do not register an old unmanaged worktree merely to make a cleanup preview green; registration is a deliberate workflow enrollment, not a name-pattern inference.
+During deliberately selected worktree maintenance, inspect managed cleanup candidates and remove eligible ones after the checks below; no repeated owner approval is required for already authorized eligible cleanup. Ordinary implementation, maintenance, or a merge alone does not trigger cleanup. A worktree containing the current session or executing helper is protected even after merge: defer its cleanup to a later worktree-maintenance task from outside it. Do not register an old unmanaged worktree merely to make a cleanup preview green; registration is deliberate enrollment, not a name-pattern inference.
 
-During explicitly read-only planning, inspect and report candidates only. Do not fetch, register, export tools to disk or apply cleanup in that task. A cached `origin/main` preview is not a fresh merge verification. No hook, timer, background service or scheduled job performs cleanup; “automatic” means the agent invokes the helper at these authorized task boundaries without repeatedly asking the owner.
+During explicitly read-only worktree planning, inspect and report candidates only. Do not fetch, register, export tools to disk or apply cleanup. A cached `origin/main` preview is not a fresh merge verification. No hook, timer, background service or scheduled job performs cleanup.
 
-## Load Current Instructions When the Original Checkout Is Older
+## Select Instructions and Tools
 
-The original checkout may intentionally remain at an older HEAD to preserve live files and its index. Committing or merging this guide elsewhere does **not** update that checkout's `AGENTS.md`, nor does Codex automatically load instructions from remote refs. Do not reset it or overwrite its guide to activate this policy.
+Use the instructions in the current checkout for ordinary edits. Loading policy from remote refs is not a startup requirement. If a deliberate worktree task needs a newer reviewed policy or helper from another revision, read that exact revision and preserve unrelated local content; do not reset the checkout to activate it.
 
-For future sessions, include this startup instruction in the task (or read it explicitly before acting):
-
-> Worktree lifecycle applies. From the original checkout, inspect Git/worktree status and preserve its HEAD, index and unrelated edits. For an authorized implementation/maintenance task, fetch origin without submodule recursion, then read AGENTS.md and agents/guides/worktrees.md from the fetched origin/main. Read-only planning uses cached refs and reports candidates without cleanup. Load the new worktree's AGENTS.md and relevant guides before editing.
-
-For authorized implementation/maintenance after this change merges:
+Before creating a linked worktree from remote main, fetch without submodule recursion or unrelated ref changes:
 
 ```bash
-cd "$HOME/repos/dots"
 git -c submodule.recurse=false fetch --no-recurse-submodules --no-prune --no-tags --no-auto-maintenance --refmap= origin refs/heads/main:refs/remotes/origin/main
-policy_revision="$(git rev-parse origin/main)"
-git show "$policy_revision:AGENTS.md"
-git show "$policy_revision:agents/guides/worktrees.md"
 ```
 
-Until merge, the owner may explicitly direct a session to read the pushed `origin/chore/worktree-lifecycle` revision instead. Do not claim that unmerged policy is already in `origin/main`.
-
-If the older original checkout lacks the helper, export only the reviewed helper at the selected revision into a new test/tool-owned temporary directory. This is one small script, not a worktree backup. Do this only in an authorized non-read-only task:
+Use a reviewed tracked helper from outside any cleanup candidate. For the helper in the original checkout, set the path used by the examples below:
 
 ```bash
-lifecycle_tools="$(mktemp -d "${TMPDIR:-/tmp}/dots-worktree-tool.XXXXXXXX")"
-git show "$policy_revision:tools/worktree_lifecycle.py" > "$lifecycle_tools/worktree_lifecycle.py" &&
-python3 -B "$lifecycle_tools/worktree_lifecycle.py" --repo "$HOME/repos/dots"
+lifecycle_tools="$HOME/repos/dots/tools"
 ```
 
-Use this exported script from outside the cleanup candidate. It must be the reviewed tracked helper, not an unreviewed copy from a dirty candidate. No executable is installed and PATH is unchanged. A currently available reviewed helper may also be used directly; its containing worktree will be protected.
+If the required reviewed helper exists only in another revision, export that script into a test/tool-owned temporary directory during the authorized worktree task. Do not use an unreviewed dirty copy. The helper's containing worktree is protected from removal. No executable is installed and PATH is unchanged.
 
 ## Explicit Enrollment and Preview
 
-Before creating a worktree, resolve capacity as above. Create a branch from verified fetched `origin/main`, under an immediate sibling directory of the original checkout, then register that exact path:
+When a task calls for a separate worktree, resolve capacity as above. Create a branch from verified fetched `origin/main`, under an immediate sibling directory of the original checkout, then register that exact path:
 
 ```bash
 # Example only: choose the authorized task's branch and unused sibling path.
@@ -87,6 +77,6 @@ These checks assume trusted local Git metadata and no concurrent worktree/user-f
 
 ## Verification and Delivery
 
-Run `python3 -B tools/test_worktree_lifecycle.py` (`python` on Windows), `python3 -B tools/verify_core.py docs`, and `git diff --check`. Tests own temporary home/config/state/cache/repository roots and local bare remotes, with no network or package installation. Positive portable removal tests inject a known idle snapshot; native process tests separately prove detection of an active child and eligible removal when process inspection is available. Windows symlink privilege is not changed. Existing native core/experiment CI gates remain intact; this tooling-only slice requires no Go build or startup benchmark rerun locally.
+For helper changes, run `python3 -B tools/test_worktree_lifecycle.py` (`python` on Windows), `python3 -B tools/verify_core.py docs`, and `git diff --check`. Tests own temporary home/config/state/cache/repository roots and local bare remotes, with no network or package installation. Positive portable removal tests inject a known idle snapshot; native process tests separately prove detection of an active child and eligible removal when process inspection is available. Windows symlink privilege is not changed. Existing native core/experiment CI gates remain intact; helper-only changes require no Go build or startup benchmark rerun locally. For documentation-only changes, run the documentation and whitespace checks without rerunning the helper suite.
 
-Report managed/removed/skipped paths and reasons, source revision, verification, and how the next session loads current policy. Do not remove the current session's worktree at delivery. After verified merge, clean it at the next authorized boundary from another helper/session location.
+For worktree maintenance, report managed/removed/skipped paths and reasons, source revision, and verification. Do not remove the current session's worktree at delivery. After verified merge, it may be cleaned during a later deliberately selected worktree-maintenance task from another helper/session location.

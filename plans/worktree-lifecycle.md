@@ -2,6 +2,8 @@
 
 Status: Implemented; verified results and limitations below (2026-09-10).
 
+**Historical workflow:** As of 2026-09-22, ordinary maintenance uses the existing checkout under [AGENTS.md](../AGENTS.md). The separate-worktree, original-checkout preservation, remote-policy loading, and automatic cleanup triggers below describe the earlier implementation task. Current optional worktree procedures are defined in the [worktree guide](../agents/guides/worktrees.md); the helper and its safeguards remain implemented.
+
 Use one `chore/worktree-lifecycle` worktree from fetched `origin/main`; preserve the original checkout's HEAD/logo/index, every branch/recovery ref and retained evidence. This is local development maintenance, not a public dots command or managed-dotfile operation.
 
 Implement a preview-default Python helper, explicit registration tied to Git worktree identity, and apply gated by fresh nonrecursive fetch, merge ancestry, complete local-file inspection, protected original/session/helper paths, known live references and conclusive process inspection. Require the calling agent to review idle sessions and text-based live-configuration references that OS process checks cannot discover; no override may bypass a detected hazard. Unknown eligibility is a skip. Use only non-force `git worktree remove` and retain all branch refs. Do not create backup archives or install automation.

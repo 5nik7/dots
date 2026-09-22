@@ -1,6 +1,8 @@
 # Phase 2: Permanent Core and Command Dispatch
 
-**Status: Built-in and bounded external slices implemented and verified natively; broader command center deferred**
+**Status: Built-in, external, catalog, and Zsh slices implemented and verified natively; further development paused**
+
+The [current roadmap priority](roadmap.md#current-priority) pauses further Go development as of 2026-09-22. The scope, separate-worktree requirements, file-preservation instructions, and delivery restrictions below record earlier tasks and their evidence. They do not restrict current task-relevant maintenance under [AGENTS.md](../AGENTS.md).
 
 ## First Slice Scope (Completed)
 

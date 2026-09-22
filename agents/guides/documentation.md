@@ -19,6 +19,7 @@ Use status labels consistently:
 - **Implemented** — present and verified in the repository.
 - **Proposed** — intended direction that may still change.
 - **Draft** — incomplete specification requiring decisions or validation.
+- **Paused** — further work is on hold until the owner requests resumption; this scheduling status does not change whether existing functionality is implemented.
 - **Deprecated** — still present for compatibility with a documented replacement.
 - **Removed** — historical only; do not show as usable.
 
