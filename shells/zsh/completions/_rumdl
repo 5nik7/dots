@@ -63,7 +63,7 @@ pylint\:"Pylint-compatible format"
 azure\:"Azure Pipelines logging commands"
 sarif\:"SARIF 2.1.0 for static analysis tools"
 junit\:"JUnit XML for CI test reporters"))' \
-'--flavor=[Markdown flavor to use\: standard (also accepts gfm/github/commonmark), mkdocs, mdx, pandoc, quarto, obsidian, kramdown, azure_devops (also accepts azure/ado), or myst (also accepts mystmd)]:FLAVOR:(standard mkdocs mdx pandoc quarto obsidian kramdown azure_devops myst)' \
+'--flavor=[Markdown flavor to use\: standard (also accepts gfm/github/commonmark), mkdocs, mdx, pandoc, quarto, obsidian, kramdown, azure_devops (also accepts azure/ado), myst (also accepts mystmd), hugo (also accepts goldmark), mdg (also accepts markdown_with_gherkin), or gh-aw (preview)]:FLAVOR:(standard mkdocs mdx pandoc quarto obsidian kramdown azure_devops myst hugo mdg gh-aw)' \
 '--fail-on=[Exit code behavior\: '\''any'\'' (default) exits 1 on any violation, '\''warning'\'' on warning+error, '\''error'\'' only on errors, '\''never'\'' always exits 0]:FAIL_ON:((any\:"Exit 1 on any violation (info, warning, or error)"
 warning\:"Exit 1 on warning or error severity violations"
 error\:"Exit 1 only on error-severity violations"
@@ -77,17 +77,22 @@ never\:"Always exit 0"))' \
 '--check[Exit with code 1 if any formatting changes would be made (for CI)]' \
 '-l[Deprecated and hidden\: rule listing moved to \`rumdl rule\`. When passed, \`run_check\` prints guidance to the canonical commands and exits]' \
 '--list-rules[Deprecated and hidden\: rule listing moved to \`rumdl rule\`. When passed, \`run_check\` prints guidance to the canonical commands and exits]' \
+'(--only-code-block-tools --stdin)--no-code-block-tools[Skip configured code-block tools while preserving all other configuration]' \
+'(--no-code-block-tools --stdin)--only-code-block-tools[Run only configured code-block tools, without processing the outer Markdown document]' \
 '--no-exclude[Disable all exclude patterns]' \
 '-q[Print diagnostics, but suppress summary lines]' \
 '--quiet[Print diagnostics, but suppress summary lines]' \
 '--show-full-path[Show absolute file paths in output instead of relative paths]' \
 '--stderr[Output diagnostics to stderr instead of stdout]' \
 '--no-cache[Disable caching (re-check all files)]' \
+'--deny-config-warnings[Treat configuration warnings as errors (exit code 2)]' \
 '-v[Show detailed output]' \
 '--verbose[Show detailed output]' \
 '--profile[Show profiling information]' \
 '--statistics[Show statistics summary of rule violations]' \
 '--stdin[Read from stdin instead of files]' \
+'(--stdin --stdin-filename -f --fix --diff --check -w --watch --no-code-block-tools --only-code-block-tools)--stdin-batch[Read NUL-delimited path/content pairs from stdin]' \
+'--stdin-batch-closed-world[Resolve links only against documents supplied by --stdin-batch]' \
 '-s[Suppress diagnostics and summaries]' \
 '--silent[Suppress diagnostics and summaries]' \
 '-w[Run in watch mode by re-running whenever files change]' \
@@ -130,7 +135,7 @@ pylint\:"Pylint-compatible format"
 azure\:"Azure Pipelines logging commands"
 sarif\:"SARIF 2.1.0 for static analysis tools"
 junit\:"JUnit XML for CI test reporters"))' \
-'--flavor=[Markdown flavor to use while formatting\: standard (also accepts gfm/github/commonmark), mkdocs, mdx, pandoc, quarto, obsidian, kramdown, or azure_devops (also accepts azure/ado)]:FLAVOR:(standard mkdocs mdx pandoc quarto obsidian kramdown azure_devops myst)' \
+'--flavor=[Markdown flavor to use while formatting\: standard (also accepts gfm/github/commonmark), mkdocs, mdx, pandoc, quarto, obsidian, kramdown, azure_devops (also accepts azure/ado), myst (also accepts mystmd), hugo (also accepts goldmark), mdg (also accepts markdown_with_gherkin), or gh-aw (preview)]:FLAVOR:(standard mkdocs mdx pandoc quarto obsidian kramdown azure_devops myst hugo mdg gh-aw)' \
 '--fail-on=[Hidden compatibility flag; fmt always exits with formatter-style semantics]:FAIL_ON:((any\:"Exit 1 on any violation (info, warning, or error)"
 warning\:"Exit 1 on warning or error severity violations"
 error\:"Exit 1 only on error-severity violations"
@@ -142,12 +147,15 @@ never\:"Always exit 0"))' \
 '--check[Exit with code 1 if any formatting changes would be made (for CI)]' \
 '-l[Deprecated and hidden compatibility flag from check; routed to the same guidance path as \`check --list-rules\`]' \
 '--list-rules[Deprecated and hidden compatibility flag from check; routed to the same guidance path as \`check --list-rules\`]' \
+'(--only-code-block-tools --stdin)--no-code-block-tools[Skip configured code-block tools while preserving all other configuration]' \
+'(--no-code-block-tools --stdin)--only-code-block-tools[Run only configured code-block tools, without processing the outer Markdown document]' \
 '--no-exclude[Disable all exclude patterns]' \
 '-q[Print diagnostics, but suppress summary lines]' \
 '--quiet[Print diagnostics, but suppress summary lines]' \
 '--show-full-path[Show absolute file paths in output instead of relative paths]' \
 '--stderr[Output diagnostics to stderr instead of stdout]' \
 '--no-cache[Disable caching (re-check all files)]' \
+'--deny-config-warnings[Treat configuration warnings as errors (exit code 2)]' \
 '-v[Show detailed formatter output]' \
 '--verbose[Show detailed formatter output]' \
 '--profile[Hidden compatibility flag from check]' \
