@@ -1,0 +1,6 @@
+[custom.gh]
+description = "Git host icon"
+when = true
+command = "git remote get-url origin 2>/dev/null | grep -iq 'github' && echo "
+format = '([$output]($style))'
+style = 'fg:color_git_branch'

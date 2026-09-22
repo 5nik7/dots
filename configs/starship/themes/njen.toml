@@ -38,12 +38,9 @@ $git_state\
 ](bg:color_bg)
 $shell$status$character"""
 
-right_format = "$cmd_duration $time"
-
 palette = "default"
 
 [palettes.default]
-
 rosewater = '#f5e0dc'
 flamingo = '#f2adcd'
 pink = '#f5c2e7'
@@ -75,89 +72,43 @@ color_ok = 'bright-green'
 color_danger = 'bright-red'
 color_error = 'red'
 color_caution = 'bright-yellow'
-color_username = ''
+color_username = 'bright-white'
+color_rootname = 'bright-white'
+color_hostname = 'bright-white'
 color_bg = 'transparent'
 color_directory = 'bright-blue'
 color_directory_repo = 'bright-cyan'
-color_directory_repo_leaf = 'cyan'
-color_directory_readonly = 'bright-black'
-color_repo_bg = 'transparent'
-color_git_bracket = '#74c7ec'
-color_git_remote_symbol = '#74c7ec'
-color_git_username = '#74c7ec'
-color_git_remote_url = '#74c7ec'
-color_git_remote_repo = '#89dceb'
-color_git_equal = '#585b70'
-color_env = '#7f849c'
 color_package = '#fab387'
 color_kubernetes = 'purple'
 color_docker = 'blue'
 color_shell = 'black'
-color_container = ''
-color_other = ''
-color_time = '#b4befe'
-color_duration = ''
 color_os = 'blue'
 color_git = 'cyan'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
 color_git_branch = '#cba6f7'
 color_vimcmd_ok = 'bright-black'
-color_vimcmd_replace = '#eba0ac'
+color_vimcmd_replace = 'red'
 color_vimcmd_visual = '#cba6f7'
-color_btry_bg = '#181825'
-color_fill = '#313244'
-color_lua = '#74c7ec'
-color_rust = '#EBA0AC'
-color_node = 'bright-green'
+color_fill = 'transparent'
 
 [status]
 disabled = true
-# format = '( [$status]($style))'
 format = '([$symbol( $common_meaning)( $signal_name)]($style))'
 map_symbol = true
 pipestatus = true
-# symbol = ''
 symbol = '󰅙'
-# symbol = ''
 success_symbol = ''
 not_found_symbol = ''
 not_executable_symbol = '󰜺'
-# not_executable_symbol = '󰂭'
-# sigint_symbol = ''
 sigint_symbol = '󰐊'
 signal_symbol = '󱐋'
 style = 'fg:color_error'
 recognize_signal_code = true
 
-[cmd_duration]
-disabled = true
-min_time = 200
-format = '([\($duration\)]($style))'
-style = "fg:yellow bold"
-# format = '[\(⏱ $duration\)]($style) '
-
-[time]
-disabled = true
-time_format = "%-I:%M:%S"
-format = "([$time]($style))"
-style = "fg:overlay0 bold"
-
-# [time]
-# disabled = true
-# time_format = "%-I:%M%P"
-# style = "fg:color_time"
-# format = '( [$time]($style) )'
-# # format = '( [ $time]($style) )'
-#
-# [cmd_duration]
-# format = "([](bright-black)[ $duration]($style))"
-# style = "bright-black"
-# disabled = true
-
 [username]
-style_user = 'white'
-style_root = 'white bold'
+style_user = 'fg:color_username'
+style_root = 'fg:color_rootname'
 format = '[$user]($style)'
 disabled = true
 show_always = true
@@ -165,12 +116,12 @@ show_always = true
 
 [hostname]
 ssh_only = true
-format = '([@](white)[$hostname](white))[:](bright-white dimmed)([$ssh_symbol ](style))'
-style = "bright-white"
+format = '([@$hostname:](style))'
+style = "fg:color_hostname"
 # trim_at = '.companyname.com'
 trim_at = "-"
 disabled = false
-ssh_symbol = "  "
+ssh_symbol = ""
 
 [fill]
 disabled = false
@@ -188,6 +139,7 @@ symbol = ' '
 style = 'fg:color_fill bg:color_bg'
 
 [directory]
+read_only = "󰌾"
 # before_repo_root_style = 'fg:color_directory'
 # style = 'fg:color_directory'
 # format = '[$path]($style)( [$read_only]($read_only_style))'
@@ -199,7 +151,6 @@ style = 'fg:color_fill bg:color_bg'
 # fish_style_pwd_dir_length = 1
 # repo_root_style = "fg:color_directory_repo bold"
 # read_only = ""
-read_only = "󰌾"
 # home_symbol = "~"
 # use_os_path_sep = false
 # use_logical_path = false
@@ -258,70 +209,57 @@ disabled = false
 
 [nodejs]
 symbol = ""
-# style = "fg:color_env"
 format = '( [$symbol( $version)]($style))'
 
 [c]
 symbol = ""
-# style = "fg:color_env"
 format = '( [$symbol( $version)]($style))'
 
 [rust]
 symbol = "󱘗"
-# style = "fg:color_env"
 format = '( [$symbol( $version)]($style))'
 
 [golang]
 symbol = "󰟓"
-# style = "fg:color_env"
 format = '( [$symbol( $version)]($style))'
 
 [php]
 symbol = ""
-# style = "fg:color_env"
 format = '( [$symbol( $version)]($style))'
 
 [java]
 symbol = ""
-# style = "fg:color_env"
 format = '( [$symbol( $version)]($style))'
 
 [kotlin]
 symbol = ""
-# style = "fg:color_env"
 format = '( [$symbol( $version)]($style))'
 
 [haskell]
 symbol = ""
-# style = "fg:color_env"
 format = '( [$symbol( $version)]($style))'
 
 [python]
 symbol = ""
-# style = "fg:color_env"
 format = '( [$symbol( $version)( $virtualenv)]($style))'
 version_format = '${raw}'
 
 [package]
 disabled = false
 symbol = "󰏗"
-# style = "fg:peach"
 format = '( [$symbol( $version)]($style))'
 
 [docker_context]
 symbol = ""
-# style = "fg:color_docker"
 format = '( [$symbol( $context)]($style))'
 
 [kubernetes]
 symbol = "󱃾"
-# style = "fg:color_kubernetes"
 format = '( [($symbol( $cluster))]($style))'
 disabled = false
 
 [lua]
 detect_folders = []
-# style = 'fg:color_lua'
 symbol = " "
 format = '( [$symbol( $version)]($style))'
 
@@ -373,11 +311,10 @@ SUSE = ""
 Ubuntu = ""
 Unknown = ""
 Void = ""
-Windows = "󰍲"
+Windows = ""
+# Windows = "󰍲"
 # Windows = "󰚌"
-# Windows = ""
 # Windows = "󰖳"
-# Windows = ""
 
 
 [perl]
@@ -466,14 +403,13 @@ bash_indicator = ''
 zsh_indicator = 'zsh'
 cmd_indicator = 'cmd'
 unknown_indicator = ''
-style = 'bg:none fg:lavender'
+style = 'bg:none fg:color_shell'
 disabled = true
 
 [character]
 success_symbol = '[](fg:color_ok bold)'
 error_symbol = '[](fg:color_danger bold)'
 vimcmd_symbol = '[▎](fg:color_vimcmd_ok)'
-# vimcmd_symbol = '[](fg:color_vimcmd_ok)'
 format = '$symbol '
 
 [directory.substitutions]
@@ -507,12 +443,12 @@ style = 'fg:color_git_branch'
 # format = '([$output[->](bright-black bold)]($style))'
 # shell = ["bash", "--noprofile", "--norc"]
 
-[custom.git_remote_icon]
-description = "Git host icon"
-when = '[ ! $STARSHIP_SHELL == "pwsh" ] && git remote get-url origin 2>/dev/null'
-command = """
-echo "$(git-it -i)"
-"""
-format = '( [$output]($style))'
-style = 'fg:color_git_branch'
-shell = ["bash", "--noprofile", "--norc"]
+# [custom.git_remote_icon]
+# description = "Git host icon"
+# when = '[ ! $STARSHIP_SHELL == "pwsh" ] && git remote get-url origin 2>/dev/null'
+# command = """
+# echo "$(git-it -i)"
+# """
+# format = '( [$output]($style))'
+# style = 'fg:color_git_branch'
+# shell = ["bash", "--noprofile", "--norc"]

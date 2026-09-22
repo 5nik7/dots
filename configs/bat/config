@@ -16,10 +16,9 @@
 # --italic-text=always
 
 # Uncomment the following line to disable automatic paging:
-# --paging="auto"
-
-# --wrap="auto"
-
+--color="auto"
+--paging="auto"
+--wrap="auto"
 --decorations="auto"
 
 # Uncomment the following line if you are using less version >= 551 and want to
