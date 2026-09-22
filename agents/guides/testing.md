@@ -72,6 +72,10 @@ Console-test failure cleanup must own the entire disposable process tree, not ju
 
 Catalog acceptance adds exact schema/projection/ordering tests and isolated native JSON process tests for hidden/unavailable records, failure streams, discovery limits, nonexecution and unchanged roots. Retain separate `discovery-json-10` warm measurements with strict sample/result counts; do not substitute JSON timings for the historical text-discovery baseline.
 
+## Existing Zsh Configuration
+
+For Zsh startup changes, run `python3 -B tools/test_zsh.py` plus the isolated startup and PTY runners described in [the Zsh guide](../../shells/zsh/README.md). Capture the baseline before editing and keep timing runs sequential. Never profile the live startup chain against the real home; private/platform modules use synthetic substitutes. Treat native Termux results and other-platform fixtures separately.
+
 ## Development Worktree Helper
 
 Use `python3 -B tools/test_worktree_lifecycle.py` for the separate local lifecycle helper; see [the workflow guide](worktrees.md). Tests use disposable repositories, local bare remotes and owned environment roots. Preserve refusal cases and distinguish injected idle snapshots from native process detection. Do not run the helper against live fixtures to test deletion. The focused workflow adds this gate without replacing existing native core/experiment gates.

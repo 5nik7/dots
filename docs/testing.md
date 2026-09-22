@@ -6,6 +6,10 @@ The [Go development pause](../plans/roadmap.md#current-priority) retains existin
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 
+## Existing Zsh Configuration
+
+`python3 -B tools/test_zsh.py` checks the shell configuration in owned temporary roots. `python3 -B tools/zsh_fixture.py --samples 10` measures isolated startup; `python3 -B tools/zsh_interactive.py --samples 5` exercises native PTY interaction, reloads, and input-ready timing using copied public plugins and synthetic private modules. No dependencies are installed and fixture Git refuses remote operations. The [Zsh guide](../shells/zsh/README.md) specifies prerequisites and evidence limits; the [focused plan](../plans/zsh-startup.md) records results. These checks do not require Go.
+
 ## Permanent Core Verification
 
 The independent root-core runner exists alongside the preserved experiment:

@@ -34,6 +34,7 @@ setopt_if_exists ignore_eof
 unset setopt_if_exists
 unsetopt beep
 
+if [[ -z ${_DOTS_ZLE_READY:-} ]]; then
 bindkey -v
 export KEYTIMEOUT=1
 
@@ -60,3 +61,6 @@ preexec() { echo -ne '\e[5 q'; } # Use beam shape cursor for each new prompt.
 export VI_MODE_SET_CURSOR=true
 
 zle_highlight=('paste:none')
+
+_DOTS_ZLE_READY=1
+fi

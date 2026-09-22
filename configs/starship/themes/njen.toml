@@ -420,7 +420,7 @@ format = '$symbol '
 [custom.gh]
 description = "Git host icon"
 when = true
-command = "git remote get-url origin 2>/dev/null | grep -iq 'github' && echo "
+command = """remote=$(git remote get-url origin 2>/dev/null); case "$remote" in *[gG][iI][tT][hH][uU][bB]*) printf '\n';; esac"""
 format = '([$output]($style))'
 style = 'fg:color_git_branch'
 

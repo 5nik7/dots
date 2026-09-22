@@ -4,6 +4,10 @@
 
 This document defines the working architecture for the future `dots` CLI. It separates durable boundaries from implementation choices that still require validation. Further Go implementation and migration are [paused](../plans/roadmap.md#current-priority); existing code, tests, and CI remain in place.
 
+## Existing Zsh Configuration
+
+The live shell configuration is maintained independently of the paused Go core. `shells/zsh/zshrc` owns startup order; its `core/`, `integrations/`, and `platforms/` modules separate shared setup, tool activation, and execution-environment detection. Existing public module entry points remain available. Generated shell data belongs in user cache directories, not the repository. See the [Zsh guide](../shells/zsh/README.md).
+
 ## Implemented Permanent Core Boundary
 
 Root `go.mod` (`github.com/5nik7/dots`, Go 1.27.1) and `cmd/dots` now own the separate permanent development binary. `internal/cli` binds help/version/doctor/commands/completion and renders registry and static extension metadata; `internal/dispatch` validates typed entries and resolves token routes/global spellings entirely in memory; `internal/platform` owns the ported read-only observations and file opening. `internal/extension` owns strict sidecar validation, explicit-root resolution and bounded enumeration; `internal/platform` owns native file/root policy and execution. `internal/cli/discovery.go` owns the public schema-1 catalog DTOs, shared in-memory construction and serialization over shared defensive projections and ordinary extension discovery. Public JSON types are separate from private registry/sidecar carriers; direct dispatch does not construct a catalog. No mutation API exists. The active `bin/dots` remains a separate Bash prototype and may be maintained under the repository editing policy.

@@ -26,7 +26,7 @@ change_theme() {
       warn "'$new' is current theme."
       return 1
     else
-      echo "$new" >|"$THEMEFILE"
+      echo "$new" >|"${THEMEFILE:-${themes[file]}}"
       set_theme "$new"
     fi
   else
@@ -41,12 +41,13 @@ set_theme() {
   if [[ -n "$1" ]]; then
     t="$1"
   else
-    t="$(command cat "${themes[file]}")"
+    t="$(<"${themes[file]}")"
   fi
 
   if [[ $t == *-* ]]; then
-    theme[current]="$(echo "$t" | cut -d '-' -f 1)"
-    theme[flavor]="$(echo "$t" | cut -d '-' -f 2)"
+    theme[current]="${t%%-*}"
+    theme[flavor]="${t#*-}"
+    theme[flavor]="${theme[flavor]%%-*}"
     export THEME="${theme[current]}"
     export FLAVOR="${theme[flavor]}"
     out="THEME:$THEME|FLAVOR:$FLAVOR"
@@ -60,12 +61,22 @@ set_theme() {
   export THEMESRC="$THEMEDIR/src"
 
   local colors
-  colors="$(command vivid generate "$t")" 2>/dev/null
+  if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_vivid_colors]} )); then
+    _dots_vivid_colors "$t" && colors=$REPLY
+  else
+    colors="$(command vivid generate "$t")" 2>/dev/null
+  fi
   export LS_COLORS="$colors"
 
   eval "$(current_theme init)"
 
+  # Reapplying a theme replaces its FZF colors instead of appending copies.
+  if [[ -n ${_FZF_OPTS_:-} ]]; then
+    export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
+  fi
+  local file
   for file in "$THEMESRC"/*; do
+    [[ -f $file ]] || continue
     # shellcheck source=/dev/null
     . "$file"
   done

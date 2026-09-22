@@ -151,6 +151,15 @@ palette() {
 
 alias color_codes="palette"
 
+palette_bg() {
+  local -a colors
+  local i
+  for i in {000..255}; do
+    colors+=("%K{$i}$i%k")
+  done
+  print -cP $colors
+}
+
 aptget_check() {
   apt-get -s upgrade | grep -P "\d\K upgraded"
 }
@@ -276,7 +285,8 @@ _showcolor() {
 }
 
 fixpath() {
-  PATH=$(echo $(sed 's/:/\n/g' <<<$PATH | sort | uniq) | sed -e 's/\s/':'/g')
+  path=("${(@u)path}")
+  export PATH
 }
 
 cleanvim() {

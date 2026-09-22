@@ -79,7 +79,7 @@ fi
 
 alias lsa="ls -a"
 alias l="ls -1"
-alias ll"ls -la"
+alias ll="ls -la"
 alias la="ls -1a"
 alias lla="ls -la"
 

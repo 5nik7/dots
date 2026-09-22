@@ -36,10 +36,3 @@ local realpath=\${ctxt[IPREFIX]}\${ctxt[hpre]}\$in
 realpath=\${(Qe)~realpath}
 "
 zstyle ':fzf-tab:complete:*:*' fzf-flags --preview=$extract';$_PREVIEW_ $realpath'
-
-fpath=("$DOTS/shells/zsh/completions" $fpath)
-
-zmodload zsh/complist
-autoload -Uz compinit
-compinit
-_comp_options+=(globdots) # Include hidden files.

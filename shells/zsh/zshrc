@@ -1,198 +1,30 @@
-#  ╔═╗╔═╗╦ ╦╦═╗╔═╗
-#  ╔═╝╚═╗╠═╣╠╦╝║
-# o╚═╝╚═╝╩ ╩╩╚═╚═╝
-
-if [ -n "${ZSH_DEBUGRC+1}" ]; then
-  zmodload zsh/zprof
-fi
-
-# set global default env
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
-
-export DOTS="$HOME/dots"
-
-[ -r "$DOTS/bin/util" ] && source "$DOTS/bin/util"
-
-if has nvim; then
-  EDITOR='nvim'
-elif has vim; then
-  EDITOR='vim'
-elif has vi; then
-  EDITOR='vi'
-elif has code; then
-  EDITOR='code'
-else
-  EDITOR='nano'
-fi
-
-export EDITOR
-export SYSTEMD_EDITOR=$EDITOR
-export VISUAL="$EDITOR"
-export EDITOR_TERM="$TERMINAL -e $EDITOR"
-
+# Interactive entry point: explicit order, immediate readiness, one compinit.
+[[ -n ${ZSH_DEBUGRC+1} ]] && zmodload zsh/zprof
+export DOTS="${DOTS:-$HOME/dots}"
 export ZSH="$DOTS/shells/zsh"
-export ZSHCOMP="$ZSH/completions"
-declare -xgA zsh
-declare -x zsh[root]="$ZSH"
-declare -x zsh[completions]="$ZSHCOMP"
-
-environments=($DOTS/**/*.env)
-
-for file in ${(M)environments#*/*.env}; do
-  source $file
-done
-
-docs="${DOCS:-$HOME/Documents}"
-export DOCS="$docs"
-
-notes="${NOTES:-$HOME/Notes}"
-export NOTES="$notes"
-
-# set config env
-export STARSHIP_CONFIG="${dot[configs]}/starship/starship.toml"
-export STARSHIP_DIR="${STARSHIP_CONFIG%/*}"
-export STARSHIP_THEMES="$STARSHIP_DIR/themes"
-
-export BAT_CONFIG_DIR="${dot[configs]}/bat"
-export BAT_CONFIG_PATH="$BAT_CONFIG_DIR/bat.conf"
-export YAZI_CONFIG_HOME="$DOTFILES/yazi"
-
-[ -r "$HOME/.fzf.zsh" ] && source "$HOME/.fzf.zsh"
-
-[ -r "${XDG_DATA_HOME}/bob/env/env.sh" ] && source "${XDG_DATA_HOME}/bob/env/env.sh"
-
-export GOBIN="${GOBIN:-$HOME/go/bin}"
-autoload -U colors
+[[ -n ${DOTS_PLATFORM:-} ]] || source "$ZSH/platforms/detect.zsh"
+source "$ZSH/core/environment.zsh"
+source "$ZSH/core/cache.zsh"
+autoload -Uz colors
 colors
-
 export CLICOLOR=1
 
-autoload -U +X bashcompinit && bashcompinit
-autoload -Uz compinit
-
-zmodload zsh/complist
-compinit
-_comp_options+=(globdots)
-
-prepath "$zsh[completions]"
-
-fpath=($PREFIX/share/zsh/site-functions ${zsh[completions]} $fpath)
-
-prepath "$GOBIN"
-extpath "$HOME/.local/share/gem/ruby/3.4.0/bin"
-prepath "$HOME/.cargo/bin"
-prepath "$HOME/.local/bin" || addir "$HOME/.local/bin"
-prepath "$HOME/bin"
-
-shellmod "functions"
-shellmod "aliases"
-shellmod "options"
-shellmod "fzf"
-
+# Compatibility modules remain sourceable at their original locations.
+source "$ZSH/functions.zsh"
+source "$ZSH/aliases.zsh"
+source "$ZSH/options.zsh"
+source "$ZSH/fzf.zsh"
 so "${themes[cmd]}"
 set_theme 2>/dev/null
+source "$ZSH/completions.zsh"
+source "$ZSH/integrations/plugins.zsh"
+_dots_completion_plugins
+source "$ZSH/core/completion.zsh"
+source "$ZSH/integrations/tools.zsh"
+[[ -r "${zsh[local]}" ]] && source "${zsh[local]}"
+source "$ZSH/integrations/fzf.zsh"
+_dots_widget_plugins
 
-shellmod "completions"
-shellmod "plugins"
-
-# export SSL_CERT_FILE="$PREFIX/etc/tls/cert.pem"
-
-so "$HOME/.cargo/env"
-so "$DOTSHHHH/secrets.sh"
-
-PYTHONSTARTUP="$HOME/.pythonrc"
-if check $PYTHONSTARTUP; then
-  export PYTHONSTARTUP
-fi
-
-if has zoxide; then
-  eval "$(zoxide init zsh)"
-  alias cd='z'
-fi
-
-if has direnv; then
-  eval "$(direnv hook zsh)"
-  DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m'
-  export DIRENV_LOG_FORMAT
-fi
-
-has batpipe && eval "$(batpipe)"
-
-has usage && source <(usage g completion-init zsh)
-
-has batman && eval "$(batman --export-env)"
-
-so "$HOME/.atuin/bin/env" && has atuin && eval "$(atuin init zsh)"
-
-has tv && eval "$(tv init zsh)"
-
-has mise && eval "$(mise activate zsh)"
-
-if checkdir "$HOME/.bun"; then
-  export BUN_INSTALL="$HOME/.bun"
-  prepath "$BUN_INSTALL/bin"
-  so "$HOME/.bun/_bun"
-fi
-
-NVM_DIR="${NVM_DIR}:-$HOME/.nvm}"
-if checkdir "$NVM_DIR"; then
-  so "$NVM_DIR/nvm.sh"          # This loads nvm
-  so "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-fi
-
-RBENV="$HOME/.rbenv/bin/rbenv"
-if check "$RBENV"; then
-  eval "$(~/.rbenv/bin/rbenv init - --no-rehash zsh)"
-fi
-
-has uv && eval "$(uv generate-shell-completion zsh)"
-
-has uvx && eval "$(uvx --generate-shell-completion zsh)"
-
-has ipinfo && { complete -o default -C "$HOME/go/bin/ipinfo" ipinfo; }
-
-if has starship; then
-  eval "$(starship init zsh)" && eval "$(starship completions zsh)"
-fi
-
-so "$HOME/.local/share/leaf/completions/_leaf"
-
-[ -r "${zsh[local]}" ] && source "${zsh[local]}"
-
-# if [[ -n $HOME/.zcompdump(#qN.mh+24) ]]; then
-#   compinit -d $HOME/.zcompdump
-# else
-#   compinit -C
-# fi
-
-compinit
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-enable-fzf-tab
-
-reload-completion() {
-  local input="$@"
-
-  for comp in "${input[@]}"; do
-    unfunction "_$comp" 2>/dev/null
-    autoload -Uz "_$comp"
-  done
-}
-alias rlc="reload-completion"
-
-reload-completions() {
-  local dump=${ZSH_COMPDUMP:-${ZDOTDIR:-$HOME}/.zcompdump}
-
-  rm -f -- "$dump" "$dump.zwc"
-  autoload -Uz compinit
-  compinit -d "$dump"
-}
-alias rlcs="reload-completions"
-
-if [ -n "${ZSH_DEBUGRC+1}" ]; then
-  zprof
-fi
+[[ -n ${ZSH_DEBUGRC+1} ]] && zprof
+# Do not propagate an optional tool's absence as the startup status.
+true

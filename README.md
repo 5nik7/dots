@@ -10,6 +10,14 @@ The repository contains the existing dotfiles collection, the Bash `bin/dots` pr
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
 
+## Zsh Configuration
+
+Use `palette` to preview all 256 terminal foreground colors, or `palette_bg` for background colors in the same numbered column layout.
+
+The existing [Zsh configuration](shells/zsh/README.md) now uses explicit modules, one completion initialization, immediate tool integrations, and generated-data caches. It preserves the Termux workflow; native WSL/Linux and MSYS2 verification remain pending. See the guide for module registration, reloads, and isolated checks.
+
+Startup automatically repairs completion dumps containing unquoted names such as `_uu-[`, preventing the resulting startup and Tab-completion errors.
+
 ## Optional Neovim Configuration
 
 The public [Neovim configuration repository](https://github.com/5nik7/nvim) is available as a Git submodule at `configs/nvim`. From the `dots` repository root, initialize only this source:

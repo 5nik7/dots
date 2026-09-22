@@ -41,7 +41,7 @@ main() {
 
   local username
   username=$(gituser)
-  local owner=$(git-it -o) || fail 1
+  local owner=$(git-it --get owner) || fail 1
 
   # echo "GitHub username: $username"
   # echo "Repo owner: $owner"

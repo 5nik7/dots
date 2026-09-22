@@ -4,6 +4,10 @@
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
 
+## Existing Zsh Configuration
+
+The [existing shell configuration](../shells/zsh/README.md) has Termux-native checks and isolated Linux/WSL/MSYS detection fixtures. WSL uses Linux paths; MSYS has its own adapter boundary. Native Linux/WSL/MSYS interactive behavior remains unverified. These shell checks do not expand the Go core or production installation support claims below.
+
 ## Permanent Development Core
 
 The root core ports the experimental read-only platform adapter and optional-logo opening unchanged, including schema 1, marker heuristics, candidate Unix paths, missing Windows path warnings and `not_probed` capabilities. Its registry uses injected availability metadata and does not perform capability probes. Root-core checks and fresh benchmarks passed on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in CI; this is development coverage of the read-only surface. The native root-core verification and fresh timing results are tracked separately in the [first-slice plan](../plans/phase-2-command-center.md); the historical observations below retain their original executable identities. Native Windows known folders/restricted ACLs, WSL execution, other architectures, broader filesystems and production OS floors remain deferred. No apply/package/bootstrap/shell support follows from core startup.
