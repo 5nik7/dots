@@ -141,13 +141,15 @@ ls_colors() {
   tput sgr0
 }
 
-color_codes() {
+palette() {
   local -a colors
   for i in {000..255}; do
     colors+=("%F{$i}$i%f")
   done
   print -cP $colors
 }
+
+alias color_codes="palette"
 
 aptget_check() {
   apt-get -s upgrade | grep -P "\d\K upgraded"

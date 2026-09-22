@@ -10,8 +10,8 @@ hl:${sky[hex]}:underline,\
 hl+:${green[hex]}:bold:underline,\
 info:${surface2[hex]},\
 query:${yellow[hex]},\
-gutter:regular:${surface0[hex]},\
-pointer:regular:${surface2[hex]}:bold,\
+gutter:regular:${base[hex]},\
+pointer:regular:${mauve[hex]}:bold,\
 marker:${yellow[hex]},\
 prompt:${mauve[hex]},\
 spinner:${surface1[hex]},\
