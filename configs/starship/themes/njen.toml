@@ -1,6 +1,6 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-add_newline = true
+add_newline = false
 follow_symlinks = false
 command_timeout = 10000
 scan_timeout = 10000
@@ -34,9 +34,6 @@ $git_commit\
 $git_status\
 $git_metrics\
 $git_state\
-)\
-(\
-$fill\
 )\
 ](bg:color_bg)
 $shell$status$character"""
@@ -134,15 +131,16 @@ style = 'fg:color_error'
 recognize_signal_code = true
 
 [cmd_duration]
+disabled = true
 min_time = 200
-format = '[\($duration\)]($style)'
+format = '([\($duration\)]($style))'
 style = "fg:yellow bold"
 # format = '[\(⏱ $duration\)]($style) '
 
 [time]
-disabled = false
+disabled = true
 time_format = "%-I:%M:%S"
-format = "[$time]($style)"
+format = "([$time]($style))"
 style = "fg:overlay0 bold"
 
 # [time]
@@ -261,71 +259,71 @@ disabled = false
 [nodejs]
 symbol = ""
 # style = "fg:color_env"
-format = '( [$symbol( $version)]($style) )'
+format = '( [$symbol( $version)]($style))'
 
 [c]
 symbol = ""
 # style = "fg:color_env"
-format = '( [$symbol( $version)]($style) )'
+format = '( [$symbol( $version)]($style))'
 
 [rust]
 symbol = "󱘗"
 # style = "fg:color_env"
-format = '( [$symbol( $version)]($style) )'
+format = '( [$symbol( $version)]($style))'
 
 [golang]
 symbol = "󰟓"
 # style = "fg:color_env"
-format = '( [$symbol( $version)]($style) )'
+format = '( [$symbol( $version)]($style))'
 
 [php]
 symbol = ""
-style = "fg:color_env"
-format = '( [$symbol( $version)]($style) )'
+# style = "fg:color_env"
+format = '( [$symbol( $version)]($style))'
 
 [java]
 symbol = ""
 # style = "fg:color_env"
-format = '( [$symbol( $version)]($style) )'
+format = '( [$symbol( $version)]($style))'
 
 [kotlin]
 symbol = ""
 # style = "fg:color_env"
-format = '( [$symbol( $version)]($style) )'
+format = '( [$symbol( $version)]($style))'
 
 [haskell]
 symbol = ""
 # style = "fg:color_env"
-format = '( [$symbol( $version)]($style) )'
+format = '( [$symbol( $version)]($style))'
 
 [python]
 symbol = ""
 # style = "fg:color_env"
-format = '( [$symbol( $version)( $virtualenv)]($style) )'
+format = '( [$symbol( $version)( $virtualenv)]($style))'
 version_format = '${raw}'
 
 [package]
 disabled = false
 symbol = "󰏗"
 # style = "fg:peach"
-format = '( [$symbol( $version)]($style) )'
+format = '( [$symbol( $version)]($style))'
 
 [docker_context]
 symbol = ""
 # style = "fg:color_docker"
-format = '( [$symbol( $context)]($style) )'
+format = '( [$symbol( $context)]($style))'
 
 [kubernetes]
 symbol = "󱃾"
 # style = "fg:color_kubernetes"
-format = '( [($symbol( $cluster))]($style) )'
+format = '( [($symbol( $cluster))]($style))'
 disabled = false
 
 [lua]
 detect_folders = []
-style = 'fg:color_lua'
+# style = 'fg:color_lua'
 symbol = " "
-format = '([${symbol}([$version](fg:color_lua)) ]($style))'
+format = '( [$symbol( $version)]($style))'
 
 [os]
 disabled = true
