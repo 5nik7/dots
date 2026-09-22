@@ -34,14 +34,16 @@ Duplicate command routes fail instead of silently overriding one another.
 
 Bash, Zsh, and Fish adapters are included in the repository's shell configuration.
 They discover new commands and declared arguments on the next Tab, without a
-startup scan. Open a fresh shell to load the new adapter. Help and completion read
+startup scan. Zsh completion menus align command/option names and descriptions in columns,
+including in FZF-tab. Open a fresh shell to load the new adapter. Help and completion read
 optional static comment headers and never execute extensions. See the
 [command authoring and completion contract](docs/commands.md#implemented-bash-command-framework)
 for header examples, shared output helpers, and standalone integration.
 
 ## Shared Themes
 
-Catppuccin palettes now live in separate TOML flavor files. Preview colors, query
+Catppuccin, TokyoNight, Rosé Pine, Kanagawa and Gruvbox palettes live in separate
+TOML flavor files. Pywal16 can import your generated palette. Preview colors, query
 values, and select a shared Zsh/Neovim theme:
 
 ```bash
@@ -49,17 +51,23 @@ dots themes list
 dots themes list catppuccin
 dots themes show catppuccin mocha
 dots themes color catppuccin mocha blue rgb
-dots themes set catppuccin latte
+dots themes set tokyonight night
+dots themes set rose-pine moon
+dots themes set kanagawa dragon
+dots themes set gruvbox dark
 dots themes current
 ```
 
 Zsh updates at its next prompt; the repository's Neovim configuration updates on
-focus or `:DotsThemeReload`. Mocha preserves your custom highlights; other flavors
-adapt them to their palettes. Existing `catppuccin` and `current_theme` commands
+focus or `:DotsThemeReload`. Install the newly declared Neovim plugins through
+`:Lazy` if needed. Mocha preserves your custom highlights; other Catppuccin flavors
+adapt them to their palettes. All families update the dashboard colors. Existing `catppuccin` and `current_theme` commands
 remain available. Bash, Zsh and Fish complete theme/flavor/color arguments.
 Switching records per-user state and preserves previous generations without
 rewriting app configs. Palette edits take effect after running `set` again.
-See [theme formats, compatibility, dependencies and behavior](docs/themes.md).
+For pywal16, generate colors with your existing `wal` installation, then run
+`dots themes set pywal16`. Repeat that command to import a new palette.
+See [available flavors, formats, compatibility and dependencies](docs/themes.md).
 
 ## Zsh Configuration
 

@@ -306,3 +306,8 @@ of the proposed module/profile manifests above. Palette TOML is a deliberately
 restricted string/table format, not the module manifest parser. Runtime selection
 uses per-user immutable generations with legacy read-only fallback; it never turns
 a platform into a profile or changes module collision/installation semantics.
+Family IDs permit internal hyphens, flavors do not, and native color names preserve
+case/underscores. Metadata can override semantic mappings in `[roles.FLAVOR]`.
+The sole dynamic `source = "pywal16"` imports validated colors.sh literals; it is
+not an arbitrary source callback. Schema-1 published JSON includes additive resolved
+hex `roles`; the Neovim reader still accepts earlier Catppuccin snapshots without it.

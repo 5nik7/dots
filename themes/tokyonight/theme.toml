@@ -1,0 +1,14 @@
+name = "TokyoNight"
+default_flavor = "night"
+[roles]
+background = "bg"
+foreground = "fg"
+muted = "comment"
+accent = "magenta"
+selection = "bg_visual"
+error = "error"
+warning = "warning"
+info = "info"
+hint = "hint"
+[integrations]
+nvim = "tokyonight"

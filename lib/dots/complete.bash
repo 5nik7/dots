@@ -23,7 +23,7 @@ dots_value_candidates() {
             name=${file%/theme.toml}; dots_candidate "$lead${name##*/}"
           done ;;
         flavor)
-          dt_id "$theme_name" || return 0
+          dt_theme_id "$theme_name" || return 0
           for file in "$DT_ROOT/$theme_name/flavors/"*.toml; do
             [[ -f $file ]] || continue
             name=${file##*/}; dots_candidate "$lead${name%.toml}"

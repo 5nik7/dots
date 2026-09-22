@@ -62,7 +62,7 @@ class Themes(unittest.TestCase):
                           'source "$DT_LIB/../ui.bash"; source "$DT_LIB/state.bash"; ' + body, code=code)
 
     def test_routes_values_and_plain_output(self):
-        self.assertEqual(self.dots('themes', 'list').stdout, 'catppuccin\n')
+        self.assertEqual(set(self.dots('themes', 'list').stdout.split()), {'catppuccin','tokyonight','rose-pine','kanagawa','gruvbox','pywal16'})
         self.assertEqual(set(self.dots('themes', 'list', 'catppuccin').stdout.split()),
                          {'mocha', 'frappe', 'latte', 'macchiato'})
         self.assertEqual(self.dots('themes', 'color', 'catppuccin', 'mocha', 'blue', 'rgb').stdout,
@@ -300,6 +300,7 @@ source "$DOTS/themes/bin/theme"
         (lua / 'util').mkdir(parents=True)
         (lua / 'config/highlights').mkdir(parents=True)
         shutil.copy2(REPO / 'configs/nvim/lua/util/dots_theme.lua', lua / 'util/dots_theme.lua')
+        shutil.copy2(REPO / 'configs/nvim/lua/util/dots_theme_adapters.lua', lua / 'util/dots_theme_adapters.lua')
         shutil.copy2(REPO / 'configs/nvim/lua/config/highlights/catppuccin.lua', lua / 'config/highlights/catppuccin.lua')
         self.dots('themes', 'set', 'catppuccin')
         script = self.root / 'check.lua'
@@ -317,6 +318,12 @@ local function hl(name) return vim.api.nvim_get_hl(0, {name=name, link=false}) e
 assert(hl("Visual").bg == 0x2f4858)
 assert(hl("Comment").fg == 0x5b6078)
 assert(hl("CursorLine").bg == 0x242438)
+local setup = cat.setup
+local redundant = 0
+cat.setup = function(...) redundant = redundant + 1; return setup(...) end
+bridge.startup()
+assert(redundant == 0, "startup must reuse the already configured Catppuccin snapshot")
+cat.setup = setup
 for _, flavor in ipairs({"latte", "frappe", "macchiato", "mocha"}) do
   vim.fn.system({"bash", vim.env.DOTS .. "/bin/dots-themes-set", "catppuccin", flavor})
   assert(vim.v.shell_error == 0)
@@ -342,6 +349,172 @@ print("NVIM_THEME_OK")
         result = self.run_command([NVIM, '--headless', '-u', 'NONE', '-i', 'NONE',
                                    '-l', str(script)])
         self.assertIn('NVIM_THEME_OK', result.stdout + result.stderr)
+
+    def wal_export(self, suffix=''):
+        p = self.home / 'cache/wal/colors.sh'
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("background='#102030'\nforeground='#eeeeee'\ncursor='#abcdef'\n" + ''.join(
+            f"color{i}='#{i+32:02x}{i+48:02x}{i+64:02x}'\n" for i in range(16)) + suffix)
+        return p
+
+    def test_fixed_families_roles_selection_and_native_keys(self):
+        families = {'tokyonight': ['day','moon','night','storm'], 'rose-pine': ['dawn','main','moon'],
+                    'kanagawa': ['dragon','lotus','wave'], 'gruvbox': ['dark','light']}
+        for theme, flavors in families.items():
+            self.assertEqual(self.dots('themes','list',theme).stdout.split(), flavors)
+            for flavor in flavors:
+                self.dots('themes','set',theme,flavor)
+                self.assertEqual(self.dots('themes','current').stdout, f'{theme}-{flavor}\n')
+                data = json.loads((self.generation() / 'palette.json').read_text())
+                self.assertEqual(len(data['roles']),9)
+                self.assertIn(data['roles']['background'], data['palette'].values())
+        self.assertEqual(self.dots('themes','color','kanagawa','wave','sumiInk3').stdout, '#1F1F28\n')
+        self.assertEqual(self.dots('themes','color','rose-pine','main','_nc').stdout, '#16141f\n')
+        self.dots('themes','set','rose-pine')
+        p = self.run_command([BASH,str(self.repo/'themes/bin/current_theme'),'base','hex'])
+        self.assertEqual(p.stdout, '#191724\n')
+        self.dots('themes','set','kanagawa','wave')
+        p = self.run_command([BASH,str(self.repo/'themes/bin/current_theme'),'lotus','lotusWhite3','hex'])
+        self.assertEqual(p.stdout, '#f2ecbc\n')
+        self.dots('themes','set','rose-pine')
+        self.dots('themes','set','rose-pine','invalid',code=1)
+        self.assertEqual(self.dots('themes','current').stdout,'rose-pine-main\n')
+
+    def test_pywal_import_snapshot_refresh_and_missing_input(self):
+        self.assertEqual(self.dots('themes','list','pywal16').stdout,'current\n')
+        self.dots('themes','set','pywal16',code=1)
+        self.assertFalse(self.state.exists())
+        p = self.wal_export('touch "$HOME/SHOULD_NOT_EXIST"\n')
+        self.dots('themes','set','pywal16')
+        generation = self.generation()
+        self.assertFalse((self.home/'SHOULD_NOT_EXIST').exists())
+        self.assertEqual(self.dots('themes','color','pywal16','current','background').stdout,'#102030\n')
+        before = self.dots('themes','init').stdout
+        p.write_text(p.read_text().replace('#102030','#fafafa'))
+        self.assertEqual(self.dots('themes','init').stdout,before)
+        self.dots('themes','set','pywal16')
+        self.assertNotEqual(self.generation(),generation)
+        self.assertNotEqual(self.dots('themes','init').stdout,before)
+        p.unlink()
+        self.assertEqual(self.dots('themes','current').stdout,'pywal16-current\n')
+        self.dots('themes','init')
+
+    def test_pywal_rejects_invalid_exports_without_side_effects(self):
+        for suffix in ["background='#ffffff'\n", "color1=$(touch BAD)\n", "cursor='red'\n", '\0trailing', 'x'*65537]:
+            self.wal_export(suffix)
+            self.dots('themes','set','pywal16',code=1)
+            self.assertFalse(self.state.exists())
+            self.assertFalse((self.home/'BAD').exists())
+        p = self.wal_export()
+        p.write_text(p.read_text().replace("cursor='#abcdef'", 'cursor="#abcdef\''))
+        self.dots('themes','set','pywal16',code=1)
+        self.assertFalse(self.state.exists())
+        p = self.wal_export()
+        p.write_text(p.read_text().replace("color15='#2f3f4f'\n",''))
+        self.dots('themes','set','pywal16',code=1)
+        self.assertFalse(self.state.exists())
+
+    def test_hyphenated_completion_and_zsh_roundtrip(self):
+        for shell in ('bash','zsh','fish'):
+            self.assertIn('rose-pine',self.dots('__complete',shell,'3','--','dots','themes','set','rose-').stdout)
+            self.assertIn('dawn',self.dots('__complete',shell,'4','--','dots','themes','set','rose-pine','').stdout)
+            self.assertIn('sumiInk3',self.dots('__complete',shell,'5','--','dots','themes','color','kanagawa','wave','sumi').stdout)
+        if ZSH:
+            self.shell(r'''typeset -A themes; themes[root]=$DOTS/themes
+source "$DOTS/themes/bin/theme"
+LS_COLORS='*.custom=01;35'
+set_theme catppuccin-mocha
+change_theme rose-pine-dawn >/dev/null
+[[ $THEME == rose-pine && $FLAVOR == dawn && ${dots_palette[base]} == '#faf4ed' ]] || exit 1
+[[ $LS_COLORS == *'*.custom=01;35'* && $LS_COLORS == *'38;2;'* ]] || exit 2
+before=$FZF_DEFAULT_OPTS
+set_theme
+[[ $FZF_DEFAULT_OPTS == $before ]] || exit 3
+has_theme rose-pine || exit 4
+change_theme catppuccin-mocha >/dev/null
+[[ $THEME == catppuccin && ${blue[hex]} == '#89b4fa' ]] || exit 5
+''',ZSH)
+
+    @unittest.skipUnless(NVIM, 'Neovim unavailable')
+    def test_neovim_all_native_families(self):
+        names={'tokyonight':'tokyonight.nvim','rose-pine':'rose-pine','kanagawa':'kanagawa.nvim',
+               'gruvbox':'gruvbox.nvim','pywal16':'pywal16.nvim'}
+        config=os.environ.get('DOTS_THEME_PLUGIN_SOURCES')
+        sources=json.loads(Path(config).read_text()) if config else {}
+        deps=self.root/'plugins';deps.mkdir()
+        for theme,directory in names.items():
+            path=Path(sources[theme]['path']) if theme in sources else Path(os.environ['HOME'])/'.local/share/nvim/lazy'/directory
+            if not path.is_dir(): self.skipTest('public plugin source unavailable: '+theme)
+            shutil.copytree(path,deps/theme,ignore=shutil.ignore_patterns('.git'))
+        cat = Path(sources['catppuccin']['path']) if 'catppuccin' in sources else Path(os.environ['HOME'])/'.local/share/nvim/lazy/catppuccin'
+        if not (cat/'lua/catppuccin/init.lua').is_file(): self.skipTest('public plugin source unavailable: catppuccin')
+        shutil.copytree(cat,deps/'catppuccin',ignore=shutil.ignore_patterns('.git'))
+        (self.root/'lua/util').mkdir(parents=True)
+        for name in ['dots_theme.lua','dots_theme_adapters.lua']:
+            shutil.copy2(REPO/'configs/nvim/lua/util'/name,self.root/'lua/util'/name)
+        shutil.copytree(REPO/'configs/nvim/colors',self.root/'colors')
+        self.wal_export()
+        self.dots('themes','set','tokyonight','night')
+        script=self.root/'families.lua'
+        script.write_text(r'''local root=vim.env.HOME.."/.."
+vim.opt.rtp:prepend(root)
+for _,name in ipairs({"tokyonight","rose-pine","kanagawa","gruvbox","pywal16","catppuccin"}) do
+  vim.opt.rtp:append(root.."/plugins/"..name)
+end
+local bridge=require("util.dots_theme")
+bridge.startup()
+assert(vim.g.colors_name == "tokyonight-night")
+assert(not package.loaded.catppuccin, "startup must not load the unselected family")
+local choices={
+ {"tokyonight","day","light"},{"tokyonight","moon","dark"},{"tokyonight","storm","dark"},
+ {"rose-pine","main","dark"},{"rose-pine","dawn","light"},{"rose-pine","moon","dark"},
+ {"kanagawa","wave","dark"},{"kanagawa","lotus","light"},{"kanagawa","dragon","dark"},
+ {"gruvbox","dark","dark"},{"gruvbox","light","light"},{"pywal16","current","dark"},
+ {"catppuccin","mocha","dark"}
+}
+local function snapshot()
+ local state=vim.env.XDG_STATE_HOME.."/dots/themes"
+ local g=vim.fn.readfile(state.."/current")[1]
+ return vim.json.decode(table.concat(vim.fn.readfile(state.."/generations/"..g.."/palette.json"),"\n"))
+end
+for _,choice in ipairs(choices) do
+ local theme,flavor,mode=unpack(choice)
+ vim.fn.system({"bash",vim.env.DOTS.."/bin/dots-themes-set",theme,flavor})
+ assert(vim.v.shell_error==0,theme.." set failed")
+ vim.api.nvim_exec_autocmds("FocusGained",{})
+ assert(vim.o.background==mode,theme.." wrong background")
+ local data=snapshot()
+ local hl=vim.api.nvim_get_hl(0,{name="Normal",link=false})
+ assert(hl.fg==tonumber(data.roles.foreground:sub(2),16),theme.." wrong foreground: "..vim.inspect(hl))
+ local gradient=bridge.gradient_colors()
+ assert(#gradient>=5)
+ if theme~="catppuccin" then assert(gradient[1]==data.roles.info) end
+end
+-- Same-theme palette edits must change highlights, not reuse the plugin's old cache.
+local file=vim.env.DOTS.."/themes/tokyonight/flavors/night.toml"
+local lines=vim.fn.readfile(file)
+for i,line in ipairs(lines) do if line:match('^fg =') then lines[i]='fg = "#112233"' end end
+vim.fn.writefile(lines,file)
+vim.fn.system({"bash",vim.env.DOTS.."/bin/dots-themes-set","tokyonight","night"})
+assert(vim.v.shell_error==0)
+bridge.reload(true)
+assert(vim.api.nvim_get_hl(0,{name="Normal",link=false}).fg==0x112233)
+-- A missing plugin adapter must preserve the previous display and report only once.
+local adapters=require("util.dots_theme_adapters")
+local saved=adapters.prepare
+adapters.prepare=function(data) if data.theme=="rose-pine" then error("missing plugin fixture") end;return saved(data) end
+vim.fn.system({"bash",vim.env.DOTS.."/bin/dots-themes-set","rose-pine","main"})
+local warnings=0;vim.notify=function() warnings=warnings+1 end
+bridge.reload();bridge.reload()
+assert(warnings==1)
+assert(vim.api.nvim_get_hl(0,{name="Normal",link=false}).fg==0x112233)
+adapters.prepare=saved
+bridge.reload(true)
+assert(vim.api.nvim_get_hl(0,{name="Normal",link=false}).fg==0xe0def4)
+print("ALL_FAMILIES_OK")
+''')
+        result=self.run_command([NVIM,'--headless','-u','NONE','-i','NONE','-l',str(script)])
+        self.assertIn('ALL_FAMILIES_OK',result.stdout+result.stderr)
 
 
 if __name__ == '__main__':

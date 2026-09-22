@@ -114,7 +114,8 @@ built-in flags, declared extension options, fixed choices, and native shell
 file/directory completion. Options consuming values, long `--name=value`, `--`,
 and cursor position are respected. Completion handles literal quoting without evaluating shell substitutions. Unknown option grammar stops argument hints
 rather than guessing. Undeclared arguments do not get inferred file candidates.
-Descriptions are supplied where supported. Hidden routes are omitted from normal
+Descriptions are supplied where supported. Zsh menu labels show `value -- description`, padding names to a shared column
+(including FZF-tab); accepting a match inserts only its value. Hidden routes are omitted from normal
 suggestions, but explicit use remains possible.
 
 Repository Bash startup sources its adapter; Zsh and Fish use their existing
@@ -466,3 +467,7 @@ in [Shared themes](themes.md#commands). Static headers on the official
 palette providers augment that metadata with current theme files; they do not
 introduce extension callbacks or change the Go protocol. `themes set` delegates
 state publication to the shared helper described in [decision 0007](decisions/0007-data-driven-themes.md).
+The supported families include hyphenated `rose-pine` identifiers and native palette
+keys such as `sumiInk3`. All three shell providers discover their flavors/colors;
+pywal16 flavor discovery works without its optional generated input. No new routes
+or flags are needed for these families.

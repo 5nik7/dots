@@ -64,17 +64,24 @@ print -r -- $(( (EPOCHREALTIME-start)/10000 ))
             lua = fixture.root / 'lua/util'
             lua.mkdir(parents=True)
             shutil.copy2(REPO / 'configs/nvim/lua/util/dots_theme.lua', lua / 'dots_theme.lua')
+            shutil.copy2(REPO / 'configs/nvim/lua/util/dots_theme_adapters.lua', lua / 'dots_theme_adapters.lua')
             script = fixture.root / 'bench.lua'
             script.write_text('''local root=vim.env.HOME.."/.."
 vim.opt.rtp:prepend(root); vim.opt.rtp:prepend(root.."/catppuccin")
 local opts={flavour="mocha",default_integrations=false,auto_integrations=false,integrations={}}
-if vim.env.DOTS_BENCH_BRIDGE == "1" then opts=require("util.dots_theme").options(opts) end
-require("catppuccin").setup(opts); vim.cmd.colorscheme("catppuccin-nvim")
+if vim.env.DOTS_BENCH_BRIDGE ~= "0" then opts=require("util.dots_theme").options(opts) end
+require("catppuccin").setup(opts)
+if vim.env.DOTS_BENCH_BRIDGE == "2" then require("util.dots_theme").startup()
+else vim.cmd.colorscheme("catppuccin-nvim") end
 ''')
-            for name, enabled in [('nvim_without_bridge', '0'), ('nvim_with_bridge', '1')]:
+            for name, enabled in [('nvim_without_bridge', '0'), ('nvim_with_bridge', '1'), ('nvim_with_startup', '2')]:
                 env = {**fixture.env, 'DOTS_BENCH_BRIDGE': enabled,
                        'XDG_CACHE_HOME': str(fixture.home / ('cache-' + name))}
                 results[name] = measure([NVIM, '--headless', '-u', 'NONE', '-i', 'NONE', '-l', str(script)], env)
+        results['tokyonight_init'] = measure([BASH, str(fixture.repo / 'bin/dots-themes-init')],
+            {**fixture.env, 'DOTS_THEME_SELECTION': 'tokyonight-night'})
+        fixture.dots('themes', 'set', 'tokyonight')
+        results['tokyonight_selected_init'] = measure([BASH, str(fixture.repo / 'bin/dots-themes-init')])
         out = Path(tempfile.mkdtemp(prefix='dots-theme-bench-')) / 'results.json'
         out.write_text(json.dumps(results, indent=2) + '\n')
         print(out)

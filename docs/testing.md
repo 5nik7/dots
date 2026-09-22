@@ -23,7 +23,8 @@ samples in the printed temporary directory. Run timing sequentially, without oth
 tests competing for the device. These advisory measurements are not CI/native
 coverage for other platforms. Also run `python3 -B tools/test_zsh.py` and
 `python3 -B tools/zsh_interactive.py --samples 3` when changing integration; the
-latter exercises dots completion with the copied public FZF-tab setup.
+latter exercises dots completion with the copied public FZF-tab setup, including
+aligned command/option labels alongside descriptions and literal insertion.
 
 ## Existing Zsh Configuration
 
@@ -316,14 +317,20 @@ initialization compatibility, cache invalidation, command/completion contracts,
 publication idempotence, lock contention, injected durability failures, SIGKILL
 recovery, drift refusal, Zsh prompt refresh, and Neovim focus integration. All
 mutable roots and executed official commands are copied into disposable fixtures.
-The Neovim test copies installed public Catppuccin source, disables unrelated
-integrations, and never runs the live LazyVim startup or downloads dependencies.
-It reports a skip if that public source is unavailable. The committed legacy digest
+The Neovim tests copy public plugin source, disable unrelated integrations, and
+never run the live LazyVim startup or download dependencies. Catppuccin coverage
+uses installed source; all-family coverage uses installed plugins or an explicit
+`DOTS_THEME_PLUGIN_SOURCES` JSON file mapping each family to `{"path":"/source"}`.
+Missing dependencies report skips. Coverage includes every fixed variant, hyphenated
+IDs, native keys, pywal16 rejection/nonexecution/snapshot retention, shell color
+refresh, actual native plugin highlighting, light/dark transitions, palette edits,
+missing-plugin rollback and manual retry. The committed legacy digest
 was captured from the previous script's ordered 4 × 26 × 15 initialization values;
 it detects numeric rounding and ANSI-byte changes as well as palette drift.
 
 Run `python3 -B tools/bench_themes.py --samples 10` for isolated cold/warm
-initialization, unchanged Zsh prompt checks and minimal Neovim startup. An optional
+initialization for Catppuccin/TokyoNight, unchanged Zsh prompt checks and minimal
+Neovim startup (options-only compatibility and the full shared-startup adapter). An optional
 `--baseline-script /path/to/preserved/catppuccin` compares the former implementation
 in a separate owned cache. Measurements are sequential, retained in a temporary
 JSON artifact, and do not establish full LazyVim startup performance.

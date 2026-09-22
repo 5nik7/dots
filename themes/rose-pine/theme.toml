@@ -1,0 +1,14 @@
+name = "Rosé Pine"
+default_flavor = "main"
+[roles]
+background = "base"
+foreground = "text"
+muted = "muted"
+accent = "iris"
+selection = "highlight_med"
+error = "love"
+warning = "gold"
+info = "foam"
+hint = "pine"
+[integrations]
+nvim = "rose-pine"

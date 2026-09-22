@@ -230,4 +230,9 @@ expose it through the Bash dispatcher. Theme/flavor data belongs in the existing
 `themes` tree. Zsh reads generated shell data; the Neovim submodule reads generated
 JSON. The sole shared mutable resource is the active generation token and its
 owned state subtree; application configurations remain repository sources.
-See [theme behavior](themes.md) and [decision 0007](decisions/0007-data-driven-themes.md).
+Native per-family Neovim adapters live in `lua/util/dots_theme_adapters.lua`; the
+reader/event lifecycle remains in `lua/util/dots_theme.lua`. Dashboard colors use
+that reader's active palette. The pywal16 input adapter only imports literal color
+data into the existing publication path; no new state owner or wallpaper service
+is introduced. See [theme behavior](themes.md) and
+[decision 0007](decisions/0007-data-driven-themes.md).

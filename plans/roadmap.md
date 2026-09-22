@@ -226,5 +226,7 @@ Resolve deferred decisions only when the next phase requires them.
 ## Shared Theme Slice
 
 The [shared theme implementation](themes.md) adds Catppuccin data files, Bash commands,
-Zsh refresh and Neovim integration while Go remains paused. General theme installation,
+Zsh refresh and Neovim integration while Go remains paused. The
+[additional theme families](theme-families.md) extend the same engine and adapters.
+General theme installation,
 other app adapters, and the broader Phase 4 module work remain deferred.

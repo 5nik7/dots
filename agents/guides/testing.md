@@ -95,5 +95,6 @@ For completion changes, follow [decision 0005](../../docs/decisions/0005-static-
 
 For shared palette, state publication, Zsh refresh, or Neovim theme adapter changes,
 run `python3 -B tools/test_themes.py`; use `python3 -B tools/bench_themes.py` for performance.
-The editor test copies installed public Catppuccin source and never starts live LazyVim
-or downloads plugins. A missing public plugin is reported as a skipped editor test.
+The editor tests copy public plugin sources and never start live LazyVim or download
+plugins. Missing sources report skipped tests; the optional source-map input for all
+families is documented in [Shared Themes](../../docs/testing.md#shared-themes).

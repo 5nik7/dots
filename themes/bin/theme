@@ -10,15 +10,19 @@ themes[file]=${themes[default]}
 [[ ! -r ${themes[local]} ]] || themes[file]=${themes[local]}
 _DOTS_THEME_STATE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes
 
+_dots_theme_parts() {
+  local id=$1
+  if [[ -f ${themes[root]}/$id/theme.toml ]]; then
+    _DOTS_REQUEST_THEME=$id _DOTS_REQUEST_FLAVOR=''
+  else _DOTS_REQUEST_THEME=${id%-*} _DOTS_REQUEST_FLAVOR=${id##*-}; fi
+}
 has_theme() {
-  local flavor=''
-  [[ $1 != *-* ]] || flavor=${1#*-}
-  "$DOTS/bin/dots-themes-show" "${1%%-*}" "$flavor" >/dev/null 2>&1
+  _dots_theme_parts "$1"
+  "$DOTS/bin/dots-themes-show" "$_DOTS_REQUEST_THEME" "$_DOTS_REQUEST_FLAVOR" >/dev/null 2>&1
 }
 change_theme() {
-  local flavor=''
-  [[ $1 != *-* ]] || flavor=${1#*-}
-  "$DOTS/bin/dots-themes-set" "${1%%-*}" "$flavor" || return
+  _dots_theme_parts "$1"
+  "$DOTS/bin/dots-themes-set" "$_DOTS_REQUEST_THEME" "$_DOTS_REQUEST_FLAVOR" || return
   set_theme
 }
 set_theme() {
@@ -37,13 +41,18 @@ set_theme() {
     [[ -n $output ]] || return 1
     eval "$output" || return
   fi
+  [[ -n ${_DOTS_THEME_LS_BASE+x} ]] || _DOTS_THEME_LS_BASE=${LS_COLORS:-}
   theme[current]=$THEME theme[flavor]=$FLAVOR
   export THEMEDIR=${themes[root]}/$THEME THEMESRC=${themes[root]}/$THEME/src
   _DOTS_THEME_GENERATION=$generation
-  if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_vivid_colors]} )); then
-    _dots_vivid_colors "$THEME-$FLAVOR" && export LS_COLORS=$REPLY
-  elif command -v vivid >/dev/null 2>&1; then
-    colors=$(command vivid generate "$THEME-$FLAVOR" 2>/dev/null) && export LS_COLORS=$colors
+  # Role-based rules also provide a fallback when Vivid is unavailable.
+  export LS_COLORS="${_DOTS_THEME_LS_BASE:+$_DOTS_THEME_LS_BASE:}${DOTS_THEME_LS_COLORS:-}"
+  if [[ $THEME == catppuccin ]]; then
+    if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_vivid_colors]} )); then
+      _dots_vivid_colors "$THEME-$FLAVOR" && export LS_COLORS=$REPLY
+    elif command -v vivid >/dev/null 2>&1; then
+      colors=$(command vivid generate "$THEME-$FLAVOR" 2>/dev/null) && export LS_COLORS=$colors
+    fi
   fi
   if [[ -n ${_FZF_OPTS_:-} ]]; then
     export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
@@ -55,7 +64,8 @@ set_theme() {
     for file in "$THEMESRC"/*.zsh; do [[ -f $file ]] || continue; source "$file"; done
   else
     export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=${dots_roles[muted]}"
-    export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=fg:${dots_roles[foreground]},bg:${dots_roles[background]},hl:${dots_roles[accent]},bg+:${dots_roles[selection]}"
+    export _FZF_COLORS_="bg:-1,bg+:-1,fg:${dots_roles[foreground]},fg+:${dots_roles[foreground]},hl:${dots_roles[accent]},hl+:${dots_roles[accent]},info:${dots_roles[muted]},prompt:${dots_roles[accent]},pointer:${dots_roles[accent]},marker:${dots_roles[warning]},spinner:${dots_roles[info]},border:${dots_roles[muted]}"
+    export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=$_FZF_COLORS_"
   fi
   return 0
 }
@@ -63,7 +73,7 @@ _dots_theme_precmd() {
   local previous_status=$? generation=''
   if [[ -f $_DOTS_THEME_STATE/current && ! -L $_DOTS_THEME_STATE/current ]]; then
     IFS= read -r generation < "$_DOTS_THEME_STATE/current"
-    if [[ $generation != ${_DOTS_THEME_GENERATION:-} && $generation != ${_DOTS_THEME_FAILED:-} ]]; then
+    if [[ $generation != "${_DOTS_THEME_GENERATION:-}" && $generation != "${_DOTS_THEME_FAILED:-}" ]]; then
       if set_theme; then _DOTS_THEME_FAILED=''
       else
         _DOTS_THEME_FAILED=$generation

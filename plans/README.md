@@ -25,3 +25,4 @@ The [roadmap](roadmap.md#current-priority) owns current priorities: repository m
 When a plan is complete, retain it if it explains migration or decision history. Mark it complete and link the resulting implementation/reference rather than rewriting its original goal.
 
 - [Shared theme implementation](themes.md): TOML palettes, compatibility, Zsh and Neovim integration.
+- [Additional theme families](theme-families.md): native palettes/adapters and pywal16 snapshot import.

@@ -58,14 +58,12 @@ dt_set() (
   # shellcheck disable=SC2034
   local theme=$1 flavor=${2:-} dir='' complete=0 rc=0 previous fingerprint stored=''
   dt_load "$theme" "$flavor" || exit 1
-  # This version ships the Catppuccin Neovim adapter only.
-  [[ ${DT_META[integrations.nvim]:-} == catppuccin && $DT_THEME == catppuccin ]] || { dt_error 'theme has no supported Neovim adapter'; exit 1; }
-  case $DT_FLAVOR in mocha|macchiato|frappe|latte) ;;
-    *) dt_error 'unsupported Neovim Catppuccin flavor'; exit 1 ;;
-  esac
-  local target_flavor=$DT_FLAVOR candidate
-  for candidate in mocha macchiato frappe latte; do dt_load "$theme" "$candidate" || exit 1; done
-  dt_load "$theme" "$target_flavor" || exit 1
+  dt_supported || { dt_error 'theme/flavor has no supported Neovim adapter'; exit 1; }
+  if [[ $DT_THEME == catppuccin ]]; then
+    local target_flavor=$DT_FLAVOR candidate
+    for candidate in mocha macchiato frappe latte; do dt_load "$theme" "$candidate" || exit 1; done
+    dt_load "$theme" "$target_flavor" || exit 1
+  fi
   dt_fingerprint || exit 1; fingerprint=$REPLY
   dt_state_preflight || exit 1
   mkdir -p -- "$DT_STATE/generations" || exit 1

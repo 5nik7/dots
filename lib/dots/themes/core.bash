@@ -8,11 +8,27 @@ declare -A DT_DATA=() DT_COLORS=() DT_META=() DT_VALUES=() DT_LINES=() DT_META_L
 declare -a DT_KEYS=() DT_NAMES=()
 dt_error() { printf 'dots themes: %s\n' "$*" >&2; return 1; }
 dt_id() { [[ $1 =~ ^[a-z][a-z0-9_]*$ ]]; }
+dt_theme_id() { [[ $1 =~ ^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$ ]]; }
+dt_key() { [[ $1 =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; }
+# Flavors do not contain hyphens; split persisted IDs at the final delimiter.
+dt_split() {
+  local id=$1
+  if [[ ${2:-} != persisted && -f $DT_ROOT/$id/theme.toml ]]; then DT_THEME=$id DT_FLAVOR=''
+  else DT_THEME=${id%-*} DT_FLAVOR=${id##*-}; fi
+  dt_theme_id "$DT_THEME" && { [[ -z $DT_FLAVOR ]] || dt_id "$DT_FLAVOR"; }
+}
+dt_supported() {
+  [[ ${DT_META[integrations.nvim]:-} == "$DT_THEME" ]] || return 1
+  case $DT_THEME:$DT_FLAVOR in
+    catppuccin:mocha|catppuccin:macchiato|catppuccin:frappe|catppuccin:latte|tokyonight:night|tokyonight:storm|tokyonight:moon|tokyonight:day|rose-pine:main|rose-pine:moon|rose-pine:dawn|kanagawa:wave|kanagawa:dragon|kanagawa:lotus|gruvbox:dark|gruvbox:light|pywal16:current) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 dt_parse() {
   local file=$1 mode=$2 line section='' key value full n=0
-  local table='^[[:space:]]*\[([a-z][a-z0-9_]*)\][[:space:]]*(#.*)?$'
-  local pair='^[[:space:]]*([a-z][a-z0-9_]*)[[:space:]]*=[[:space:]]*"([^"\\]*)"[[:space:]]*(#.*)?$'
-  local literal="^[[:space:]]*([a-z][a-z0-9_]*)[[:space:]]*=[[:space:]]*'([^']*)'[[:space:]]*(#.*)?$"
+  local table='^[[:space:]]*\[([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)?)\][[:space:]]*(#.*)?$'
+  local pair='^[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*=[[:space:]]*"([^"\\]*)"[[:space:]]*(#.*)?$'
+  local literal="^[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*=[[:space:]]*'([^']*)'[[:space:]]*(#.*)?$"
   local -A sections=()
   DT_DATA=() DT_KEYS=() DT_LINES=()
   [[ -f $file && -r $file ]] || { dt_error "cannot read $file"; return 1; }
@@ -21,7 +37,7 @@ dt_parse() {
     [[ $line =~ ^[[:space:]]*(#.*)?$ ]] && continue
     if [[ $line =~ $table ]]; then
       section=${BASH_REMATCH[1]}
-      [[ $mode == metadata && ( $section == roles || $section == integrations ) && ! ${sections[$section]+yes} ]] || { dt_error "$file:$n: unsupported or duplicate table"; return 1; }
+      [[ $mode == metadata && ( $section == roles || $section == roles.* || $section == integrations ) && ! ${sections[$section]+yes} ]] || { dt_error "$file:$n: unsupported or duplicate table"; return 1; }
       sections[$section]=1; continue
     fi
     if [[ $line =~ $pair || $line =~ $literal ]]; then
@@ -29,9 +45,9 @@ dt_parse() {
       [[ ! ${DT_DATA[$full]+yes} && ! $value =~ [[:cntrl:]] ]] || { dt_error "$file:$n: duplicate key or control character"; return 1; }
       if [[ $mode == palette ]]; then
         [[ $value =~ ^#[a-fA-F0-9]{6}$ ]] || { dt_error "$file:$n: expected #RRGGBB"; return 1; }
-      elif [[ $section == roles ]]; then
-        dt_id "$value" || { dt_error "$file:$n: expected a color name"; return 1; }
-      elif [[ $full != name && $full != default_flavor && $full != integrations.nvim && $full != integrations.vivid ]]; then
+      elif [[ $section == roles || $section == roles.* ]]; then
+        dt_key "$value" || { dt_error "$file:$n: expected a color name"; return 1; }
+      elif [[ $full != name && $full != source && $full != default_flavor && $full != integrations.nvim && $full != integrations.vivid ]]; then
         dt_error "$file:$n: unsupported metadata key $full"; return 1
       fi
       DT_DATA[$full]=$value; DT_LINES[$full]=$n; DT_KEYS+=("$full")
@@ -42,16 +58,26 @@ dt_parse() {
 }
 dt_load() {
   local theme=$1 flavor=${2:-} key role
-  dt_id "$theme" || { dt_error 'invalid theme identifier'; return 1; }
+  dt_theme_id "$theme" || { dt_error 'invalid theme identifier'; return 1; }
   dt_parse "$DT_ROOT/$theme/theme.toml" metadata || return
   DT_META=() DT_META_LINES=(); for key in "${DT_KEYS[@]}"; do DT_META[$key]=${DT_DATA[$key]}; DT_META_LINES[$key]=${DT_LINES[$key]}; done
   flavor=${flavor:-${DT_META[default_flavor]:-}}
   dt_id "$flavor" || { dt_error 'invalid or missing flavor'; return 1; }
-  dt_parse "$DT_ROOT/$theme/flavors/$flavor.toml" palette || return
+  if [[ ${DT_META[source]:-} ]]; then
+    [[ $theme == pywal16 && $flavor == current && ${DT_META[source]} == pywal16 ]] || { dt_error 'unsupported palette source'; return 1; }
+    source "$DT_LIB/pywal.bash"
+    dt_pywal_load || return
+  else dt_parse "$DT_ROOT/$theme/flavors/$flavor.toml" palette || return; fi
+  # Resolve flavor-specific roles over the family defaults.
+  for key in "${!DT_META[@]}"; do
+    [[ $key == roles.$flavor.* ]] || continue
+    role=roles.${key##*.}
+    DT_META[$role]=${DT_META[$key]} DT_META_LINES[$role]=${DT_META_LINES[$key]}
+  done
   DT_THEME=$theme DT_FLAVOR=$flavor DT_NAMES=("${DT_KEYS[@]}") DT_COLORS=() DT_VALUES=()
   for key in "${DT_NAMES[@]}"; do DT_COLORS[$key]=${DT_DATA[$key]}; done
   for key in "${!DT_META[@]}"; do
-    [[ $key == roles.* ]] || continue
+    [[ $key == roles.* && ${key#roles.} != *.* ]] || continue
     role=${DT_META[$key]}
     [[ ${DT_COLORS[$role]+yes} ]] || { dt_error "$DT_ROOT/$theme/theme.toml:${DT_META_LINES[$key]}: role $key references missing color $role"; return 1; }
   done
@@ -75,8 +101,8 @@ dt_selected() {
   local file id
   if [[ ${DOTS_THEME_SELECTION:-} ]]; then
     id=$DOTS_THEME_SELECTION
-    if [[ $id == *-* ]]; then dt_load "${id%%-*}" "${id#*-}" || return
-    else dt_load "$id" || return; fi
+    dt_split "$id" || { dt_error 'invalid selected identifier'; return 1; }
+    dt_load "$DT_THEME" "$DT_FLAVOR" || return
     DT_GENERATION=''
     return 0
   fi
@@ -87,10 +113,9 @@ dt_selected() {
   elif [[ -r $DT_ROOT/.theme ]]; then file=$DT_ROOT/.theme
   else file=$DT_ROOT/.default; fi
   IFS= read -r id < "$file" || [[ $id ]] || { dt_error 'no theme selection'; return 1; }
-  DT_THEME=${id%%-*} DT_FLAVOR=''
-  [[ $id != *-* ]] || DT_FLAVOR=${id#*-}
+  dt_split "$id" "${DT_GENERATION:+persisted}" || { dt_error 'invalid selected identifier'; return 1; }
   if [[ ${1:-load} == selection && -n $DT_FLAVOR ]]; then
-    dt_id "$DT_THEME" && dt_id "$DT_FLAVOR" || { dt_error 'invalid selected identifier'; return 1; }
+    dt_theme_id "$DT_THEME" && dt_id "$DT_FLAVOR" || { dt_error 'invalid selected identifier'; return 1; }
   else dt_load "$DT_THEME" "$DT_FLAVOR"; fi
 }
 dt_rgb() {
@@ -138,7 +163,14 @@ dt_value() {
 }
 dt_fingerprint() {
   local sum
-  sum=$(set -o pipefail; cat "$DT_LIB/"*.bash "$DT_ROOT/$DT_THEME/theme.toml" "$DT_ROOT/$DT_THEME/flavors/"*.toml | sha256sum) || return
+  local -a inputs=("$DT_LIB/"*.bash "$DT_ROOT/$DT_THEME/theme.toml" "$DT_ROOT/$DT_THEME/flavors/"*.toml)
+  if [[ $DT_THEME == pywal16 ]]; then
+    # Revalidate a dynamic export on the cache path as well as publication.
+    [[ ${DT_META[source]:-} == pywal16 && -n ${DT_PYWAL_INPUT:-} ]] || dt_load "$DT_THEME" "$DT_FLAVOR" || return
+    [[ -f $DT_PYWAL_FILE && $(<"$DT_PYWAL_FILE") == "$DT_PYWAL_INPUT" ]] || { dt_error 'pywal16 input changed; retry the command'; return 1; }
+    inputs+=("$DT_PYWAL_FILE")
+  fi
+  sum=$(set -o pipefail; cat "${inputs[@]}" | sha256sum) || return
   REPLY=${sum%% *}
 }
 dt_emit_array() {
@@ -165,6 +197,17 @@ dt_emit_init() {
   printf ')\ndeclare -gA dots_roles=(\n'
   for role in background foreground muted accent selection error warning info hint; do printf ' [%q]=%q\n' "$role" "${DT_COLORS[${DT_META[roles.$role]}]}"; done
   printf ')\n'
+  local ls='' code kind
+  for kind in di ln ex or mi pi so bd cd su sg tw ow st '*.tar' '*.gz' '*.zip' '*.png' '*.jpg'; do
+    case $kind in
+      di) role=accent ;; ln|pi|so) role=info ;; or|mi|su|sg) role=error ;;
+      ex|tw|ow|st) role=hint ;; *) role=warning ;;
+    esac
+    dt_rgb "${DT_COLORS[${DT_META[roles.$role]}]}"
+    code="38;2;$DT_R;$DT_G;$DT_B"
+    ls+="${ls:+:}$kind=$code"
+  done
+  printf 'export DOTS_THEME_LS_COLORS=%q\n' "$ls"
   if [[ $theme == catppuccin ]]; then
     printf 'declare -ga catppuccin_palette=('; printf ' %q' "${DT_NAMES[@]}"; printf ')\ndeclare -g catppuccin_flavor=%q\n' "$selected"
     for flavor in mocha macchiato frappe latte; do
@@ -179,7 +222,7 @@ dt_emit_init() {
 }
 dt_cached_init() {
   local shell=$1 file cache=${XDG_CACHE_HOME:-$HOME/.cache}/dots/themes tmp
-  dt_id "$DT_THEME" && dt_id "$DT_FLAVOR" || { dt_error 'invalid theme or flavor'; return 1; }
+  dt_theme_id "$DT_THEME" && dt_id "$DT_FLAVOR" || { dt_error 'invalid theme or flavor'; return 1; }
   dt_fingerprint || return
   file=$cache/$DT_THEME-$DT_FLAVOR-$REPLY.$shell
   if [[ -f $file && ! -L $file ]]; then cat "$file"; return; fi
@@ -196,5 +239,10 @@ dt_json() {
   # All identifiers and colors are validated; no arbitrary strings enter JSON.
   printf '{"schema":1,"theme":"%s","flavor":"%s","palette":{' "$DT_THEME" "$DT_FLAVOR"
   for name in "${DT_NAMES[@]}"; do printf '%s"%s":"%s"' "$sep" "$name" "${DT_COLORS[$name]}"; sep=,; done
+  printf '},"roles":{'
+  sep=''
+  for name in background foreground muted accent selection error warning info hint; do
+    printf '%s"%s":"%s"' "$sep" "$name" "${DT_COLORS[${DT_META[roles.$name]}]}"; sep=,
+  done
   printf '}}\n'
 }

@@ -1,0 +1,15 @@
+name = "Pywal16"
+default_flavor = "current"
+source = "pywal16"
+[roles]
+background = "background"
+foreground = "foreground"
+muted = "color8"
+accent = "color5"
+selection = "color8"
+error = "color1"
+warning = "color3"
+info = "color4"
+hint = "color6"
+[integrations]
+nvim = "pywal16"

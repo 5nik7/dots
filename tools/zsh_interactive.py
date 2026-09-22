@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import pty
+import re
 import select
 import shutil
 import statistics
@@ -69,9 +70,15 @@ def exercise(source, samples, baseline=False):
     if (repo / 'lib/dots').is_dir():
         probe = repo / 'bin/dots-fixture'
         probe.write_text('#!' + shutil.which('bash') + '\n'
+                         '# dots:summary=Fixture completion probe\n'
                          '# dots:option=--flavor||choice:mocha,latte|Palette\n'
                          'printf "DOTS_ARG<%s>\\n" "$@"\n')
         probe.chmod(0o700)
+        other = repo / 'bin/dots-fixtureother'
+        other.write_text('#!' + shutil.which('bash') + '\n'
+                         '# dots:summary=Other completion probe\n'
+                         'printf "OTHER_PROBE\\n"\n')
+        other.chmod(0o700)
     # Copy public vivid input into owned config so its lookup matches a linked installation.
     shutil.copytree(repo / 'configs/vivid', Path(env['XDG_CONFIG_HOME']) / 'vivid')
     # Representative Git contexts are owned copies, never the live repository.
@@ -122,6 +129,18 @@ add-zle-hook-widget line-init _dots_test_ready
         if b'fzf-tab-complete' not in refreshed:
             raise RuntimeError('Completion refresh lost the Tab widget')
         if (repo / 'lib/dots').is_dir():
+            # Inspect real FZF-tab rows, not only the eventual inserted match.
+            for typed, label in (('dots fixture\t', f"{'fixture':<12} -- Fixture completion probe"),
+                                 ('dots --\t', f"{'--color=':<13} -- Color mode (DOTS_COLOR)")):
+                session.send(typed)
+                shown = session.wait(marker=label.split(' -- ')[-1].encode(), timeout=30)
+                plain = re.sub(rb'\x1b\[[0-?]*[ -/]*[@-~]', b'', shown)
+                if label.encode() not in plain:
+                    raise RuntimeError('Missing completion value in FZF-tab label: ' + repr(plain[-3000:]))
+                session.send('\x03')
+                session.wait(marker=b'\x1b[?2004l', timeout=15)
+                session.send('\x15:\r')
+                session.wait(timeout=20)
             session.send('dots fixture --flavor m\t')
             session.wait(marker=b'mocha', timeout=30)
             session.send('\r')

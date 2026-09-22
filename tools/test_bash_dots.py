@@ -290,6 +290,30 @@ _dots
         self.assertEqual(p.stdout, 'mocha\nmocha\n')
         self.assertEqual(p.stderr, '')
 
+    def test_zsh_completion_labels_include_values_and_descriptions(self):
+        self.hints()
+        p = self.shell(ZSH, r'''autoload -Uz compinit; compinit -D
+source "$DOTS/lib/dots/completion/zsh"
+compadd() {
+  local values=candidates labels=descriptions i
+  if [[ $1 == -S ]]; then values=prefixes labels=prefix_descriptions; fi
+  local -a actual=("${(@P)values}") display=("${(@P)labels}")
+  for (( i=1; i<=${#actual}; i++ )); do
+    print -r -- "$actual[i]"$'\t'"$display[i]"
+  done
+}
+words=(dots ''); CURRENT=2; _dots
+words=(dots themes --fl); CURRENT=3; _dots
+words=(dots themes --flavor m); CURRENT=4; _dots
+''')
+        rows = dict(line.split('\t', 1) for line in p.stdout.splitlines())
+        self.assertEqual(rows['themes'], f"{'themes':<13} -- Manage themes")
+        self.assertEqual(rows['--help'], f"{'--help':<13} -- Show help")
+        self.assertEqual(rows['--flavor'], '--flavor -- Palette flavor')
+        self.assertEqual(rows['--color='], f"{'--color=':<13} -- Color mode (DOTS_COLOR)")
+        self.assertEqual(rows['mocha'], 'mocha')
+        self.assertEqual(p.stderr, '')
+
     def test_real_tab_in_bash_zsh_and_fish(self):
         from bash_dots_pty import exercise
         header = self.hints().read_text().split('\n', 1)[1].rsplit('printf', 1)[0]

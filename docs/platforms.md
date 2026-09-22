@@ -208,7 +208,9 @@ The portable development CLI can generate Zsh source without a Zsh dependency. N
 
 ## Bash Theme Integration
 
-The palette engine and Zsh/Neovim adapters are natively tested on Termux. They use
+The palette engine and Zsh/Neovim adapters are natively tested on Termux, including
+the additional fixed theme families and pywal16 snapshot import. Pywal16 input uses
+explicit/cache paths without requiring a wallpaper tool at shell/editor startup. They use
 XDG state/cache roots with HOME fallbacks and no path translation. Switching
 requires `flock`, `sync -f`, `sha256sum`, AWK and standard file utilities; unsupported
 capabilities fail at the operation boundary. Paths with spaces and Unicode are

@@ -18,7 +18,7 @@ dt_main() {
     list)
       (($# <= 1)) || return 2
       if (($#)); then
-        dt_load "$1" || return
+        dt_theme_id "$1" && dt_parse "$DT_ROOT/$1/theme.toml" metadata || return
         for file in "$DT_ROOT/$1/flavors/"*.toml; do [[ -f $file ]] || continue; name=${file##*/}; printf '%s\n' "${name%.toml}"; done
       else
         for file in "$DT_ROOT/"*/theme.toml; do [[ -f $file ]] || continue; name=${file%/theme.toml}; printf '%s\n' "${name##*/}"; done

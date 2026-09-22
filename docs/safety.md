@@ -269,6 +269,11 @@ it does not authorize application-config replacement. It validates the theme and
 Neovim adapter before state creation, classifies every state ancestor and pointer
 without following symlinks, and refuses unexpected objects or dot components.
 An exclusive `flock` serializes switches. Existing lock files are not truncated.
+Pywal16 imports at most 64 KiB of generated colors.sh as literal color data, never
+as executable input. Missing, malformed, duplicate or incomplete colors refuse
+publication. The source fingerprint includes the export and rechecks consistency;
+wallpaper paths and unrelated export lines never enter the published JSON. Selecting
+any family does not execute a palette generator or install its Neovim plugin.
 
 New generations are private transaction directories with the previous token and
 all generated artifacts. The helper rechecks the source fingerprint, flushes
