@@ -4,53 +4,61 @@ rlp() {
 }
 alias rl='rlp'
 
-if [[ "$distro" == arch ]]; then
-  alias pacman='sudo pacman'
-  alias upd='sudo pacman -Syu --noconfirm'
-  alias paci='sudo pacman -S'
-  alias pacr='sudo pacman -R'
-fi
-
-if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
-  alias apt='sudo apt'
-  alias upd='sudo apt update && sudo apt upgrade -y'
-  alias apti='sudo apt install'
-  alias aptr='sudo apt remove'
-fi
-
-alias gup="git-it publish --all --yes -m 'Sync repository tree'"
-
-alias d8="date '+%-I:%M %p'"
+gup() {
+  local msg
+  if [ "$#" -eq 0 ]; then
+    msg='Sync repository tree'
+  else
+    msg="$@"
+  fi
+  command git-it publish --all --yes -m "$msg"
+}
 
 alias c='clear'
 alias q='exit'
-
+alias t='tmux attach || tmux new -s Work'
 alias g='git'
+alias gcm='git commit -m'
+alias gcam='git commit -a -m'
+alias gcad='git commit -a --amend'
 
 alias "p:"='echo -e ${PATH//:/\\n}'
-
 alias path='echo $PATH | tr ":" "\n"'
 # alias path='echo $PATH | tr ":" "\n" | sed "s|${HOME}|~|"'
-
 alias rmr='rm -fvr'
-
-# function mkcd() {
-#   mkdir -p "$1" && cd "$1"
-# }
-
-alias "zd"="fzd"
-
+alias d8="date '+%-I:%M %p'"
 alias get='httpGet'
-
 alias h='history'
+mkcd() {
+  source "${dot[scripts]}/mkcd" "$@"
+}
 
-alias ".."="cd .."
-alias "..."="cd ../.."
-alias "...."="cd ../../.."
-alias "....."="cd ../../../.."
-alias "......"="cd ../../../../.."
-alias "......."="cd ../../../../../.."
-alias "........"="cd ../../../../../../.."
+if command -v zoxide &>/dev/null; then
+  alias cd="zd"
+  zd() {
+    if (($# == 0)); then
+      builtin cd ~ || return
+    elif [[ -d $1 ]]; then
+      builtin cd "$1" || return
+    else
+      if ! z "$@"; then
+        echo "Error: Directory not found"
+        return 1
+      fi
+
+      printf "\U000F17A9 "
+      pwd
+    fi
+  }
+fi
+
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+alias ......='cd ../../../../..'
+alias .......='cd ../../../../../..'
+alias ........='cd ../../../../../../..'
 
 alias "docs"="cd $DOCS"
 alias "notes"="cd $NOTES"
@@ -70,21 +78,18 @@ alias ".sz"="cd $shells[zsh]"
 alias ".sb"="cd $shella[bash]"
 alias ".sp"="cd $shells[pwsh]"
 
-if has eza; then
-  export eza_opts=("--icons=auto" "--color=auto" "--group-directories-first" "--no-user" "--time-style=iso" "--git" "--git-repos")
-  alias ls="eza ${eza_opts[*]}"
-else
-  alias ls="ls --color=always"
+if command -v eza &>/dev/null; then
+  alias l='eza --no-user --no-filesize --no-time --no-permissions --group-directories-first --git --git-repos --icons=auto'
+  alias ls='eza -lh --no-user --no-filesize --no-time --no-permissions --group-directories-first --git --git-repos --icons=auto'
+  alias lsa='ls -a'
+  alias la='lsa'
+  alias ll='eza -lh --group-directories-first --git --git-repos --icons=auto'
+  alias lla='ll -a'
+  alias lt='eza --tree --level=2 --long --icons --git --git-repos --no-filesize --no-time --no-permissions --no-user'
+  alias lta='lt -a'
 fi
 
-alias lsa="ls -a"
-alias l="ls -1"
-alias ll="ls -la"
-alias la="ls -1a"
-alias lla="ls -la"
-
-if has yazi; then
-
+if command -v yazi &>/dev/null; then
   y() {
     local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
     command yazi "$@" --cwd-file="$tmp"
@@ -115,7 +120,6 @@ if has yazi; then
     # Run Yazi with the generated client ID
     y --client-id $yaziId "$@" || return $?
   }
-
 fi
 
 alias edit='$EDITOR'
@@ -124,22 +128,60 @@ alias vi='$EDITOR'
 alias vim='$EDITOR'
 alias sv="sudo $EDITOR"
 
-if [[ -d "$HOME/dev" ]]; then
-  export DEV="$HOME/dev"
-  alias dev="cd $DEV"
+if [[ "$TERM" == "xterm-kitty" ]]; then
+  alias ff="fzf --preview 'case \$(file --mime-type -b {}) in image/*) kitty icat --clear --transfer-mode=memory --stdin=no --place=\${FZF_PREVIEW_COLUMNS}x\${FZF_PREVIEW_LINES}@0x0 {} ;; *) bat --style=numbers --color=always {} ;; esac'"
+else
+  alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
+fi
+alias eff='$EDITOR "$(ff)"'
+sff() {
+  if [ $# -eq 0 ]; then
+    echo "Usage: sff <destination> (e.g. sff host:/tmp/)"
+    return 1
+  fi
+  local file
+  file=$(find . -type f -printf '%T@\t%p\n' | sort -rn | cut -f2- | ff) && [ -n "$file" ] && scp "$file" "$1"
+}
+
+if [ -d "$HOME/repos" ]; then
+  REPOS="$HOME/repos"
+  alias repos="cd ${REPOS}"
 fi
 
-if [[ -d "$HOME/src" ]]; then
-  export SRCDIR="$HOME/src"
+if [ -d "$HOME/dev" ]; then
+  DEV="$HOME/dev"
+  alias dev="cd ${DEV}"
+fi
+
+if [ -d "$HOME/src" ]; then
+  SRCDIR="$HOME/src"
   alias src="cd ${SRCDIR}"
 fi
 
-has lazygit && alias lg='lazygit'
-
-if has glow; then
-  if [[ -f "$DOTFILES/glow/styles/catppuccin-mocha.json" ]]; then
-    alias glow="glow -s $DOTFILES/glow/styles/catppuccin-mocha.json"
-  else
-    alias glow="glow"
-  fi
+if command -v lazygit &>/dev/null; then
+  alias lg='lazygit'
 fi
+
+n() { if [ "$#" -eq 0 ]; then command nvim .; else command nvim "$@"; fi; }
+
+# if has glow; then
+#   if [[ -f "$DOTFILES/glow/styles/catppuccin-mocha.json" ]]; then
+#     alias glow="glow -s $DOTFILES/glow/styles/catppuccin-mocha.json"
+#   else
+#     alias glow="glow"
+#   fi
+# fi
+
+# if [[ "$distro" == arch ]]; then
+#   alias pacman='sudo pacman'
+#   alias upd='sudo pacman -Syu --noconfirm'
+#   alias paci='sudo pacman -S'
+#   alias pacr='sudo pacman -R'
+# fi
+#
+# if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
+#   alias apt='sudo apt'
+#   alias upd='sudo apt update && sudo apt upgrade -y'
+#   alias apti='sudo apt install'
+#   alias aptr='sudo apt remove'
+# fi

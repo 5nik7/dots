@@ -4,6 +4,8 @@
 
 The permanent built-in table in `internal/cli/cli.go` is authoritative for its implemented surface. This document remains the design source for the broader future CLI. The live Bash framework below implements dispatch and discovery, not the broader managed command set.
 
+The existing Zsh helper `mkcd <directory>` is separate from the `dots` command family. Its [usage and path handling](../README.md#zsh-configuration) are implemented by `scripts/mkcd`, sourced through the Zsh function to change the current shell's directory.
+
 ## Implemented Bash Command Framework
 
 The live `bin/dots` follows [decision 0006](decisions/0006-bash-command-framework.md).

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+_dots_mkcd() {
+  if [[ $# -ne 1 || -z $1 ]]; then
+    printf 'Usage: mkcd <directory>\n' >&2
+    return 1
+  fi
+
+  if [[ ! -d $1 ]]; then
+    if [[ -e $1 || -L $1 ]]; then
+      printf 'mkcd: not a directory: %s\n' "$1" >&2
+      return 1
+    fi
+    command mkdir -p -- "$1" || return
+  fi
+
+  CDPATH= builtin cd -- "$1"
+}
+
+# Source this script to change the calling shell's directory.
+_dots_mkcd "$@"

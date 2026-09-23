@@ -14,7 +14,7 @@ source "$ZSH/functions.zsh"
 source "$ZSH/aliases.zsh"
 source "$ZSH/options.zsh"
 source "$ZSH/fzf.zsh"
-so "${themes[cmd]}"
+source "${themes[cmd]}"
 set_theme 2>/dev/null
 source "$ZSH/completions.zsh"
 source "$ZSH/integrations/plugins.zsh"

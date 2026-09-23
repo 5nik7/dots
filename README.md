@@ -73,6 +73,8 @@ See [available flavors, formats, compatibility and dependencies](docs/themes.md)
 
 Use `palette` to preview all 256 terminal foreground colors, or `palette_bg` for background colors in the same numbered column layout.
 
+Use `mkcd <directory>` in the configured Zsh shell to enter an existing directory or create missing parents and enter the new directory. It requires exactly one nonempty path and refuses existing files or broken symlinks. The Zsh function sources [scripts/mkcd](scripts/mkcd) so the directory change affects your current shell; in Bash, use `source /path/to/dots/scripts/mkcd "directory"` directly.
+
 The existing [Zsh configuration](shells/zsh/README.md) now uses explicit modules, one completion initialization, immediate tool integrations, and generated-data caches. It preserves the Termux workflow; native WSL/Linux and MSYS2 verification remain pending. See the guide for module registration, reloads, and isolated checks.
 
 Startup automatically repairs completion dumps containing unquoted names such as `_uu-[`, preventing the resulting startup and Tab-completion errors.
