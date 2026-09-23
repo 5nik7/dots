@@ -63,8 +63,8 @@ print -r -- $(( (EPOCHREALTIME-start)/10000 ))
             shutil.copytree(plugin, fixture.root / 'catppuccin', ignore=shutil.ignore_patterns('.git'))
             lua = fixture.root / 'lua/util'
             lua.mkdir(parents=True)
-            shutil.copy2(REPO / 'configs/nvim/lua/util/dots_theme.lua', lua / 'dots_theme.lua')
-            shutil.copy2(REPO / 'configs/nvim/lua/util/dots_theme_adapters.lua', lua / 'dots_theme_adapters.lua')
+            shutil.copy2(REPO / 'config/nvim/lua/util/dots_theme.lua', lua / 'dots_theme.lua')
+            shutil.copy2(REPO / 'config/nvim/lua/util/dots_theme_adapters.lua', lua / 'dots_theme_adapters.lua')
             script = fixture.root / 'bench.lua'
             script.write_text('''local root=vim.env.HOME.."/.."
 vim.opt.rtp:prepend(root); vim.opt.rtp:prepend(root.."/catppuccin")

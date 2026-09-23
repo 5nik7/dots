@@ -339,3 +339,87 @@ This change also requires the Bash dispatcher suite, Zsh suite, real Zsh/FZF-tab
 PTY acceptance, Bash/Zsh syntax checks, ShellCheck, StyLua, and documentation links.
 Native Termux tests do not establish WSL/Linux/MSYS/Windows execution or power-loss
 recovery guarantees.
+
+## Files Catalog and Omarchy-Style Themes
+
+Run the focused suites from the parent checkout:
+
+```bash
+python3 -B tools/test_files.py
+python3 -B tools/test_theme_workflow.py
+python3 -B tools/test_themes.py
+python3 -B tools/test_bash_dots.py
+```
+
+The file suite covers read-only observation, unavailable sources, exact/nested
+ownership conflicts, broken links, metadata round trips/idempotence/refusal,
+static help/completion and journaled config-link migration/rollback/drift. Fixtures
+include spaces, Unicode, leading-dash filenames and missing target parents.
+The workflow suite covers all 33 flat selections, personal template precedence,
+failed-render atomicity, generic Neovim highlights, semantic cache invalidation,
+connector backup/recovery, all application connector paths, native tmux relative
+include loading through an owned socket, staged-link interruption, local Git install/update/remove,
+dirty refusal and data nonexecution. Theme fixtures explicitly isolate TMUX_TMPDIR;
+the native tmux test starts and stops only its own server. Android, Wayland and X11 wallpaper adapters are
+fake executables: their argument/failure contracts are tested, not actual rendering.
+
+On native Termux, 2026-09-23, these suites passed 7 + 10 + 23 + 22 tests (62 total).
+All native-family Neovim fixture cases ran using available public plugin sources.
+ShellCheck, targeted StyLua, Bash syntax, route metadata, relative Markdown links
+and parent/child `git diff --check` passed. No live theme, wallpaper, editor startup,
+plugin installation or remote theme download was used for verification.
+
+The separate `tools/test_zsh.py` suite passed 15/17. Its two `ll == 'ls -la'`
+expectations fail identically against an exported HEAD baseline: the unchanged
+alias source only defines `ll` in its eza branch. This pre-existing discrepancy is
+retained rather than changing unrelated shell behavior in this task. Isolated PTY
+acceptance passed reload equality (hooks, fzf options, fpath and keys), Tab/FZF-tab,
+directory completion and history picker checks. Its first timing interval overlapped
+a separate test, so those PTY timings are not used as performance evidence below.
+Native desktop application reload/rendering, WSL and native Windows remain unverified.
+
+For sequential advisory measurements:
+
+```bash
+python3 -B tools/bench_files.py --samples 5
+python3 -B tools/bench_themes.py --samples 10
+python3 -B tools/bench_bash_dots.py --samples 10
+python3 -B tools/zsh_fixture.py --samples 5
+```
+
+The 2026-09-23 Termux theme comparison used exported parent/Neovim HEAD source in
+owned roots, then current source with the same fixture and installed public plugins.
+Theme measurements use 10 warm samples; prompt cost is averaged over 10,000 calls.
+
+| Operation | Before | After |
+| --- | ---: | ---: |
+| Cached Catppuccin initialization | 27.5 ms | 31.5 ms |
+| Published initialization | 19.2 ms | 20.3 ms |
+| Unchanged Zsh theme prompt check | 0.041 ms | 0.038 ms |
+| Minimal Neovim with shared startup | 35.7 ms | 35.8 ms |
+| Unpublished TokyoNight initialization | 39.3 ms | 49.8 ms |
+
+The unpublished paths now validate semantic data and fingerprint templates as well
+as native palettes. Batched hashing removed an intermediate 200–247 ms regression;
+published snapshots avoid this work during normal startup. These are small fixture
+measurements, not full LazyVim startup or guarantees for another device.
+
+File JSON inventory medians were 107 ms / 308 ms / 2,220 ms for 100 / 1,000 / 10,000
+records (five warm samples, Linux observation targets on a native Termux host).
+No persistent catalog cache is added. Direct Bash dispatch was 18.7 / 22.5 / 19.9 ms
+with 0 / 100 / 1,000 additional commands; narrow-prefix completion was 17.9 / 19.3 /
+18.9 ms. Full discovery scales with command count; shell adapter registration added
+approximately 0.4–0.6 ms in these fixtures. Timing intervals were sequential.
+
+Raw benchmark JSON is retained outside Git under
+`~/.local/state/dots/verification/config-themes-20260923/` on the implementation host.
+The config migration separately retains its home-link rollback journal and original
+repository-link text under `~/.local/state/dots/migrations/`. The 14 migrated live
+links were checked against their recorded targets; all 897 old config paths still
+have corresponding objects in `config/`. No managed install/undo acceptance is implied.
+
+Full public Zsh fixture startup was also compared sequentially (five warm samples):
+830 ms before versus 843 ms after, with noninteractive startup 9.4 ms versus 8.8 ms.
+Application-cache cold startup was 3.56 s versus 3.14 s. The warm difference is about
+1.6%; these samples do not establish a general speedup. Raw before/after JSON is
+in the same retained verification directory.

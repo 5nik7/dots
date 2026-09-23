@@ -2,7 +2,7 @@
 
 **Status: Observed baseline for migration planning**
 
-This inventory was captured from public `main` commit `d2eeef9c204efe9f24dbe7f907072d7a40e58e8e` on 2026-09-09. It documents constraints; it is not authorization to remove or reorganize files.
+This inventory was captured from public `main` commit `d2eeef9c204efe9f24dbe7f907072d7a40e58e8e` on 2026-09-09. It documents constraints; it is not authorization to remove or reorganize files. The original `configs/` directory is shown below with its current canonical name `config/`; the historical size measurements are unchanged.
 
 ## Top-Level Shape
 
@@ -10,7 +10,7 @@ The current repository includes:
 
 ```text
 bin/
-configs/
+config/
 fonts/
 functions/
 local/
@@ -37,7 +37,7 @@ Approximate current checked-in blob sizes measured from the commit tree:
 | `walls/` | 62 | 161.7 MiB |
 | `shells/` | 378 | 57.1 MiB |
 | `fonts/` | 16 | 39.3 MiB |
-| `configs/` | 692 | 19.7 MiB |
+| `config/` | 692 | 19.7 MiB |
 | `local/` | 55 | 0.3 MiB |
 | `scripts/` | 71 | 0.3 MiB |
 | `bin/` | 34 | 0.2 MiB |
@@ -73,11 +73,11 @@ The repository declares:
 | `secrets` | Private or sensitive material | Could not be initialized anonymously during inspection |
 | `windots` | Windows-specific personal repository | Optional platform source; not required for public base inspection |
 | `shells/powershell/Modules/catppuccin` | Third-party PowerShell module | Public third-party dependency |
-| `configs/nvim` | Independently versioned Neovim configuration from `5nik7/nvim` | Public optional source; initialize only when requested |
+| `config/nvim` | Independently versioned Neovim configuration from `5nik7/nvim` | Public optional source; initialize only when requested |
 
 Bootstrap must clone the main repository without `--recurse-submodules`. Selected sources can be authenticated and synchronized later.
 
-`configs/nvim` was added on 2026-09-20 after the historical baseline above; the recorded tree-size measurements remain unchanged. Its HTTPS URL and update branch `main` are declared in `.gitmodules`, while the parent commit pins the selected configuration revision. See the [README workflow](../README.md#optional-neovim-configuration). Adding this source does not move existing configuration, replace a live Neovim link, or install plugins or packages.
+`config/nvim` was added on 2026-09-20 after the historical baseline above; the recorded tree-size measurements remain unchanged. Its HTTPS URL and update branch `main` are declared in `.gitmodules`, while the parent commit pins the selected configuration revision. See the [README workflow](../README.md#optional-neovim-configuration). Adding this source does not move existing configuration, replace a live Neovim link, or install plugins or packages.
 
 ## Generated and Vendored Material
 
@@ -111,3 +111,25 @@ shared Bash libraries and command entry points. The `current_theme` symlink has
 become a selection-aware wrapper. Zsh refreshes shared selection at prompts; the
 Neovim submodule has a corresponding JSON reader and focus adapter. Existing app
 assets remain in place. See [Shared themes](themes.md) for the implemented scope.
+
+## 2026-09-23 Config, Catalog and Theme Expansion
+
+The owner's directory moves are retained at `config/` in Dots, Androidots and Windots,
+with temporary `configs -> config` aliases. The Neovim submodule worktree and gitlink
+path are `config/nvim`; its internal Git directory name remains `configs/nvim` and
+its selected commit is unchanged. Fourteen inspected live home/config links were
+retargeted without changing resolved sources; the recovery journal is stored in
+`~/.local/state/dots/migrations/config-paths-20260923.json`.
+
+The [file catalog](files.md) adds explicit repository composition and per-repository
+metadata without installation. Flat themes and bundled backgrounds now live under
+`themes/`; `default/themed` owns application templates. The theme import records its
+Omarchy commit and licenses in each imported directory. These assets expand the
+historical tree size above; those baseline counts are not current measurements.
+See [themes](themes.md) for app connectors, Git lifecycle and wallpaper boundaries.
+
+Fourteen additional repository-owned Rofi/Starship symlinks were changed to relative
+targets within `config/`, preserving their resolved source identity. Original link
+text is retained at `~/.local/state/dots/migrations/config-source-links-20260923.json`.
+All 897 historical config paths across the three repositories still have mapped
+objects in the canonical directories.

@@ -2,9 +2,19 @@
 
 **Status: Bash command framework and separate Go development interfaces implemented; broader managed command family proposed**
 
-The permanent built-in table in `internal/cli/cli.go` is authoritative for its implemented surface. This document remains the design source for the broader future CLI. The live Bash framework below implements dispatch and discovery, not the broader managed command set.
+The permanent built-in table in `internal/cli/cli.go` is authoritative for its implemented surface. This document remains the design source for the broader future CLI. The live Bash framework implements dispatch, file inventory and bounded theme workflows; the broader managed command set remains proposed.
 
 The existing Zsh helper `mkcd <directory>` is separate from the `dots` command family. Its [usage and path handling](../README.md#zsh-configuration) are implemented by `scripts/mkcd`, sourced through the Zsh function to change the current shell's directory.
+
+## Implemented Files and Theme Routes
+
+The [files reference](files.md) defines `dots files sources|discover|list|locate|show|source|target|track`,
+filters, sorting and schema-1 JSON. `track` changes catalog metadata only; no file
+installation command is implemented. The [themes reference](themes.md) defines
+`dots theme list|show|current|dir|color|set|refresh|init|switcher|install|update|remove`
+and `dots theme bg list|current|set|next|select|switcher`. The plural `dots themes`
+commands retain their documented native palette interfaces. Shell completion reads
+static route metadata and core-owned data providers; it never executes extensions.
 
 ## Implemented Bash Command Framework
 
@@ -84,7 +94,8 @@ preceded by `-`. Option names must be unique. Positional records are
 `POSITION|TYPE|DESCRIPTION`: positions start at 1 and are contiguous; a final `*`
 applies to remaining positions. Types are `flag` (options only), `string`, `file`,
 `directory`, `choice:VALUE,VALUE`, or the core-owned theme data types
-`theme`, `flavor`, `palette-color`, and `color-format`. Flavor/color providers
+`theme`, `flavor`, `palette-color`, `color-format`, `theme-id`, `file-resource`, and
+`file-repository`. The latter three read flat theme IDs and qualified catalog IDs. Flavor/color providers
 use preceding positional theme/flavor arguments; they read data and never execute
 extensions. Fields cannot contain `|`; choice values
 cannot contain commas. Descriptions are required. No code callbacks, aliases,

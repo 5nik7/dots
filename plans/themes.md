@@ -62,3 +62,9 @@ Retained artifacts:
 The older comparison artifact labels the kernel Linux; it was collected in Termux.
 The final benchmark explicitly labels Termux. Other operating environments and actual
 power-loss recovery remain unverified. No live selection or application state was changed.
+
+## Authorized follow-up
+
+See [Omarchy-style themes](omarchy-themes.md), [files catalog](files-catalog.md), and [configuration path migration](config-path-migration.md). The completed results above describe their original implementation; the follow-up has separate acceptance.
+
+The authorized [Omarchy theme expansion](omarchy-themes.md) and [files catalog](files-catalog.md) are now implemented under [decision 0008](../docs/decisions/0008-config-catalog-and-theme-apps.md). Earlier completed-slice evidence remains historical; current contracts are in the linked references.

@@ -1,6 +1,6 @@
 # Safety and Recovery Model
 
-**Status: Proposed invariant set; transaction details remain draft**
+**Status: Implemented bounded workflows below; general installation transactions remain draft**
 
 Safety is a core product feature of `dots`, not a wrapper around destructive file operations. This document is authoritative for planning, mutation, backup, rollback, undo, package, hook, repository, and secret behavior.
 
@@ -265,7 +265,7 @@ Lifecycle cleanup supplements Git status with metadata-only entry classification
 
 **Implemented bounded state operation**, separate from the proposed managed-file
 installer. `dots themes set` authorizes publication of one shared palette generation;
-it does not authorize application-config replacement. It validates the theme and
+its expanded connector boundary is defined below and in decision 0008. It validates the theme and
 Neovim adapter before state creation, classifies every state ancestor and pointer
 without following symlinks, and refuses unexpected objects or dot components.
 An exclusive `flock` serializes switches. Existing lock files are not truncated.
@@ -300,3 +300,46 @@ replacement of trusted directories/files. Durability depends on the filesystem's
 `sync -f` and rename semantics; native Termux fixtures cover process failure, not
 physical power loss. Read-only queries/help/completion do not create state; `init`
 may populate a separately documented disposable cache. Tests use owned roots only.
+
+## File Catalog and Configuration Migration
+
+File reads expose metadata and observed links, never source contents. Explicit
+private-source exclusions apply to discovery and inspection. `files track` writes
+only the owning repository catalog with locking, fsync and atomic replacement;
+identical records are a no-op and existing IDs need `--update`. It does not install
+anything. Catalog updates are source edits recovered through version control.
+
+The scoped config-path migration helper defaults to preview. Apply preflights every
+link and confirms old/new paths resolve to the same existing source. An exclusive
+staging link and durable per-operation JSON journal record original link text;
+rollback runs in reverse and refuses drift. The journal is required and must live
+outside repository source. Compatibility aliases remain. This helper does not move
+directory trees, replace files or initialize submodules.
+
+## Theme Application and Source Expansion
+
+Decision 0008 expands the earlier theme-state publisher to the stable active link
+and fixed application connectors documented in [themes](themes.md). Complete app
+outputs and bat caches are generated before pointer publication. Preflight refuses
+unexpected state objects and real connector directories. Existing connector files
+or links are backed up in the generation journal, flushed and rechecked before
+replacement. Failure restores connectors in reverse order and both selection
+pointers. Known staged links from prepared transactions are recovered on the next
+switch; unknown staging objects and post-write drift refuse destructive recovery.
+No complete generation or backup is automatically pruned. Reload failures preserve
+the published theme and report a retry path; external app state is not rolled back.
+
+Git theme lifecycle commands use managed-checkout markers, an exclusive user-root
+lock, staged clones, validation and atomic journal status updates. Update refuses
+dirty or non-fast-forward histories; remove refuses the active theme. Prior trees
+remain in `.archives`; interrupted replacements recover from `.transactions` on the
+next operation. Imported symlinks and executable theme/config inputs are not used.
+These are trusted source directories, not protection against concurrent hostile
+replacement. HTTPS/SSH Git can require the user's normal network credentials;
+there is no automatic recursive submodule initialization or hook execution.
+
+Wallpaper actions record attempted/successful paths, preserve the successful record
+on adapter failure, and use a timeout. An external Android/desktop API may mutate
+before failing; there is no promise to recover an unknown prior wallpaper. A palette
+switch does not imply wallpaper permission. Only explicit `bg` actions or
+`set --background` invoke an adapter. Native Windows/WSL wallpaper is unsupported.

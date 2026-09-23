@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Update installed themes
+# dots:usage=ID | --all
+# dots:argument=1|theme-id|Theme identifier
+# dots:option=--all||flag|Update every managed Git theme
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- update "$@"
+source "$DT_LIB/commands.bash"

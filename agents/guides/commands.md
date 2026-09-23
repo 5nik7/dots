@@ -109,3 +109,9 @@ Catalog changes must preserve the public schema separately from private metadata
 
 Theme metadata providers and command behavior follow [Shared themes](../../docs/themes.md).
 They read palette data without extension execution; test with `python3 -B tools/test_themes.py`.
+
+The implemented singular `theme` routes and `files` routes are documented in
+[themes](../../docs/themes.md) and [files](../../docs/files.md). Flat theme/resource
+completion uses core-owned readers (`theme-id`, `file-resource`, `file-repository`),
+never extension callbacks. Keep static headers, contextual help and completion
+cases synchronized. Native `themes` routes retain their positional grammar.

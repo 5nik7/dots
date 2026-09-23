@@ -165,9 +165,9 @@ dots/
 └── README.md
 ```
 
-Existing `bin/`, `configs/`, `shells/`, `themes/`, platform submodules, and other live directories remain in place until a focused module migration moves their ownership.
+Existing `bin/`, `config/`, `shells/`, `themes/`, platform submodules, and other live directories remain in place until a focused module migration moves their ownership.
 
-The optional `configs/nvim` submodule owns independently versioned Neovim configuration source. The parent repository owns its source declaration and pinned commit, with explicit initialization and update described in the [README](../README.md#optional-neovim-configuration). This addition provides no core manifest, managed activation, plugin installation, or runtime-state ownership; existing live configuration remains in place.
+The optional `config/nvim` submodule owns independently versioned Neovim configuration source. The parent repository owns its source declaration and pinned commit, with explicit initialization and update described in the [README](../README.md#optional-neovim-configuration). This addition provides no core manifest, managed activation, plugin installation, or runtime-state ownership; existing live configuration remains in place.
 
 ## Storage Boundaries
 
@@ -222,17 +222,40 @@ The repository and its enabled extensions are executable trust inputs. Public bo
 
 The [Zsh renderer](decisions/0005-static-zsh-completion.md) in `internal/cli/completion.go` consumes that catalog after full validation. It owns shell quoting and a static embedded route/root snapshot, without adding I/O dependencies to dispatch or runtime discovery to shell startup.
 
+## File Catalog and Configuration Layout
+
+`config/` is the canonical source directory; `configs -> config` is a temporary
+compatibility alias in the parent and platform repositories. The parent owns the
+Neovim gitlink at `config/nvim`; Neovim retains independent Git history.
+`tools/migrate_config_paths.py` previews and journals identity-preserving retargeting
+of existing home links. It is separate from a future general installation engine.
+
+`.dots/sources.json` owns repository composition and exclusions. Each repository owns
+its `.dots/files.json` resource metadata. `lib/dots/files/catalog.py` owns validation,
+read-only observation/discovery, classification and atomic metadata tracking. Thin
+`bin/dots-files-*` commands expose this through the Bash dispatcher; completion uses
+the same data reader directly without extension execution. See [files](files.md).
+
 ## Shared Theme Engine
 
-`lib/dots/themes` owns validated palette loading, conversions, cached initialization,
-legacy interfaces and bounded state publication. Small `dots-themes-*` entry points
-expose it through the Bash dispatcher. Theme/flavor data belongs in the existing
-`themes` tree. Zsh reads generated shell data; the Neovim submodule reads generated
-JSON. The sole shared mutable resource is the active generation token and its
-owned state subtree; application configurations remain repository sources.
-Native per-family Neovim adapters live in `lua/util/dots_theme_adapters.lua`; the
-reader/event lifecycle remains in `lua/util/dots_theme.lua`. Dashboard colors use
-that reader's active palette. The pywal16 input adapter only imports literal color
-data into the existing publication path; no new state owner or wallpaper service
-is introduced. See [theme behavior](themes.md) and
-[decision 0007](decisions/0007-data-driven-themes.md).
+`lib/dots/themes` owns native palette loading, semantic colors, literal template
+rendering, cached initialization, compatibility APIs, journaled publication, fixed
+application connectors, Git source lifecycle and explicit wallpaper adapters.
+`bin/dots-theme-*` exposes the flat workflow; `dots-themes-*` preserves legacy routes.
+`themes/bin/*` remains compatibility entry points, with shared shell logic in `lib`.
+
+Flat `themes/ID` variants own semantic `colors.toml`, optional native `palette.toml`
+and backgrounds. `default/themed` owns bundled templates; per-user `dots/themed`
+overrides them. User-installed themes contribute data only. The stable XDG state
+`dots/current/theme` symlink selects a generation under `dots/themes/generations`.
+Journals preserve previous pointers and fixed app connector objects. Application
+settings remain in `config`; generated palettes, bat caches, backups and wallpaper
+selection records belong in machine-local state. Connector paths beneath symlinked
+app directories may physically reside in a repository and must not be published as
+machine-specific configuration.
+
+Native and generic Neovim adapters live in `lua/util/dots_theme_adapters.lua`; the
+reader/event lifecycle remains in `lua/util/dots_theme.lua`. Zsh reads generated shell
+data and Neovim reads validated JSON. Wallpaper actions use explicit capability-checked
+adapters; no polling or automatic wallpaper service is introduced. See [themes](themes.md)
+and [decision 0008](decisions/0008-config-catalog-and-theme-apps.md).

@@ -19,7 +19,7 @@ def fixture(source=REPO, plugins=True):
     home.mkdir()
     repo = home / 'dots'
     repo.mkdir()
-    for name in ('shells/zsh', 'themes', 'configs/starship', 'configs/vivid'):
+    for name in ('shells/zsh', 'themes', 'config/starship', 'config/vivid', 'default/themed'):
         shutil.copytree(source / name, repo / name, symlinks=True)
     # The shared _dots adapter links into the public Bash dispatcher library.
     # Historical baseline snapshots may predate this component.
@@ -33,7 +33,7 @@ def fixture(source=REPO, plugins=True):
         if name == 'bin/box' and not original.exists():
             original = REPO / name
         shutil.copy2(original, dest)
-    for original in (source / 'bin').glob('dots-themes*'):
+    for original in (source / 'bin').glob('dots-theme*'):
         shutil.copy2(original, repo / 'bin' / original.name)
     # Preserve module presence/order, without reading private or platform-local values.
     for name in ('androidots/termux.env', 'windots/win.env', 'secrets/secrets.env', 'secrets/secrets.sh'):

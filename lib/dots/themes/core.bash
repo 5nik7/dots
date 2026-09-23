@@ -18,6 +18,7 @@ dt_split() {
   dt_theme_id "$DT_THEME" && { [[ -z $DT_FLAVOR ]] || dt_id "$DT_FLAVOR"; }
 }
 dt_supported() {
+  [[ ${DT_ADAPTER:-native} != generic ]] || return 0
   [[ ${DT_META[integrations.nvim]:-} == "$DT_THEME" ]] || return 1
   case $DT_THEME:$DT_FLAVOR in
     catppuccin:mocha|catppuccin:macchiato|catppuccin:frappe|catppuccin:latte|tokyonight:night|tokyonight:storm|tokyonight:moon|tokyonight:day|rose-pine:main|rose-pine:moon|rose-pine:dawn|kanagawa:wave|kanagawa:dragon|kanagawa:lotus|gruvbox:dark|gruvbox:light|pywal16:current) return 0 ;;
@@ -47,7 +48,7 @@ dt_parse() {
         [[ $value =~ ^#[a-fA-F0-9]{6}$ ]] || { dt_error "$file:$n: expected #RRGGBB"; return 1; }
       elif [[ $section == roles || $section == roles.* ]]; then
         dt_key "$value" || { dt_error "$file:$n: expected a color name"; return 1; }
-      elif [[ $full != name && $full != source && $full != default_flavor && $full != integrations.nvim && $full != integrations.vivid ]]; then
+      elif [[ $full != name && $full != source && $full != default_flavor && $full != integrations.nvim && $full != integrations.vivid && $full != family && $full != flavor ]]; then
         dt_error "$file:$n: unsupported metadata key $full"; return 1
       fi
       DT_DATA[$full]=$value; DT_LINES[$full]=$n; DT_KEYS+=("$full")
@@ -56,7 +57,7 @@ dt_parse() {
   done < "$file"
   ((${#DT_KEYS[@]})) || { dt_error "$file: empty data"; return 1; }
 }
-dt_load() {
+dt_native_load() {
   local theme=$1 flavor=${2:-} key role
   dt_theme_id "$theme" || { dt_error 'invalid theme identifier'; return 1; }
   dt_parse "$DT_ROOT/$theme/theme.toml" metadata || return
@@ -92,6 +93,22 @@ dt_load() {
 }
 dt_generation() {
   DT_GENERATION=''
+  local active=${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme target
+  if [[ -e $active || -L $active ]]; then
+    [[ -L $active ]] || { dt_error 'invalid active theme'; return 1; }
+    # Usually the compatibility token and stable link agree. Verify their inode
+    # identity with Bash builtins; readlink is only needed during publication.
+    if [[ -f $DT_STATE/current && ! -L $DT_STATE/current ]] && IFS= read -r DT_GENERATION < "$DT_STATE/current"; then
+      target=$DT_STATE/generations/$DT_GENERATION
+      if [[ $DT_GENERATION =~ ^g\.[a-zA-Z0-9]+$ && -d $target && ! -L $target && $active -ef $target ]]; then
+        return 0
+      fi
+    fi
+    target=$(readlink -- "$active") || return
+    DT_GENERATION=${target##*/}
+    [[ $target == "$DT_STATE/generations/$DT_GENERATION" && $DT_GENERATION =~ ^g\.[a-zA-Z0-9]+$ && -d $target && ! -L $target ]] || { dt_error 'invalid active theme'; return 1; }
+    return 0
+  fi
   [[ -e $DT_STATE/current || -L $DT_STATE/current ]] || return 0
   [[ -f $DT_STATE/current && ! -L $DT_STATE/current ]] || { dt_error 'invalid active selection'; return 1; }
   IFS= read -r DT_GENERATION < "$DT_STATE/current" || return 1
@@ -162,15 +179,24 @@ dt_value() {
   esac
 }
 dt_fingerprint() {
-  local sum
-  local -a inputs=("$DT_LIB/"*.bash "$DT_ROOT/$DT_THEME/theme.toml" "$DT_ROOT/$DT_THEME/flavors/"*.toml)
+  local sum input
+  local -a inputs=("$DT_LIB/"*.bash)
+  if [[ ${DT_ADAPTER:-native} != generic ]]; then
+    inputs+=("$DT_ROOT/$DT_THEME/theme.toml" "$DT_ROOT/$DT_THEME/flavors/"*.toml)
+  fi
+  if [[ -n ${DT_THEME_DIR:-} ]]; then
+    for input in "$DT_THEME_DIR/"*.toml "$DT_THEME_DIR/"*.conf "$DT_THEME_DIR/"*.theme "$DT_THEME_DIR/"*.properties "$DT_THEME_DIR/"*.tmTheme; do
+      [[ ! -f $input ]] || inputs+=("$input")
+    done
+  fi
+  for input in "$DT_TEMPLATES/"*.tpl "$DT_USER_TEMPLATES/"*.tpl; do [[ ! -f $input ]] || inputs+=("$input"); done
   if [[ $DT_THEME == pywal16 ]]; then
-    # Revalidate a dynamic export on the cache path as well as publication.
     [[ ${DT_META[source]:-} == pywal16 && -n ${DT_PYWAL_INPUT:-} ]] || dt_load "$DT_THEME" "$DT_FLAVOR" || return
     [[ -f $DT_PYWAL_FILE && $(<"$DT_PYWAL_FILE") == "$DT_PYWAL_INPUT" ]] || { dt_error 'pywal16 input changed; retry the command'; return 1; }
     inputs+=("$DT_PYWAL_FILE")
   fi
-  sum=$(set -o pipefail; cat "${inputs[@]}" | sha256sum) || return
+  # Batch hashing preserves filename/content identity without one process per file.
+  sum=$(set -o pipefail; sha256sum -- "${inputs[@]}" | sha256sum) || return
   REPLY=${sum%% *}
 }
 dt_emit_array() {
@@ -188,14 +214,14 @@ dt_emit_init() {
   if [[ $shell == fish ]]; then
     printf 'set -gx THEME %s\nset -gx FLAVOR %s\n' "$theme" "$selected"
     for name in "${DT_NAMES[@]}"; do printf "set -g dots_color_%s '%s'\n" "$name" "${DT_COLORS[$name]}"; done
-    for role in background foreground muted accent selection error warning info hint; do printf "set -g dots_role_%s '%s'\n" "$role" "${DT_COLORS[${DT_META[roles.$role]}]}"; done
+    for role in background foreground muted accent selection error warning info hint; do printf "set -g dots_role_%s '%s'\n" "$role" "${DT_SEMANTIC[$role]:-${DT_COLORS[${DT_META[roles.$role]}]}}"; done
     return
   fi
   printf 'export THEME=%q FLAVOR=%q\n' "$theme" "$selected"
   printf 'declare -gA dots_palette=(\n'
   for name in "${DT_NAMES[@]}"; do printf ' [%q]=%q\n' "$name" "${DT_COLORS[$name]}"; done
   printf ')\ndeclare -gA dots_roles=(\n'
-  for role in background foreground muted accent selection error warning info hint; do printf ' [%q]=%q\n' "$role" "${DT_COLORS[${DT_META[roles.$role]}]}"; done
+  for role in background foreground muted accent selection error warning info hint; do printf ' [%q]=%q\n' "$role" "${DT_SEMANTIC[$role]:-${DT_COLORS[${DT_META[roles.$role]}]}}"; done
   printf ')\n'
   local ls='' code kind
   for kind in di ln ex or mi pi so bd cd su sg tw ow st '*.tar' '*.gz' '*.zip' '*.png' '*.jpg'; do
@@ -203,7 +229,7 @@ dt_emit_init() {
       di) role=accent ;; ln|pi|so) role=info ;; or|mi|su|sg) role=error ;;
       ex|tw|ow|st) role=hint ;; *) role=warning ;;
     esac
-    dt_rgb "${DT_COLORS[${DT_META[roles.$role]}]}"
+    dt_rgb "${DT_SEMANTIC[$role]:-${DT_COLORS[${DT_META[roles.$role]}]}}"
     code="38;2;$DT_R;$DT_G;$DT_B"
     ls+="${ls:+:}$kind=$code"
   done
@@ -223,6 +249,9 @@ dt_emit_init() {
 dt_cached_init() {
   local shell=$1 file cache=${XDG_CACHE_HOME:-$HOME/.cache}/dots/themes tmp
   dt_theme_id "$DT_THEME" && dt_id "$DT_FLAVOR" || { dt_error 'invalid theme or flavor'; return 1; }
+  if [[ -z ${DT_THEME_DIR:-} && ( -d $DT_ROOT/$DT_THEME-$DT_FLAVOR || -d $DT_USER_THEMES/$DT_THEME-$DT_FLAVOR ) ]]; then
+    dt_find_theme "$DT_THEME-$DT_FLAVOR" || return
+  fi
   dt_fingerprint || return
   file=$cache/$DT_THEME-$DT_FLAVOR-$REPLY.$shell
   if [[ -f $file && ! -L $file ]]; then cat "$file"; return; fi
@@ -237,12 +266,15 @@ dt_cached_init() {
 dt_json() {
   local name sep=''
   # All identifiers and colors are validated; no arbitrary strings enter JSON.
-  printf '{"schema":1,"theme":"%s","flavor":"%s","palette":{' "$DT_THEME" "$DT_FLAVOR"
+  printf '{"schema":1,"id":"%s","adapter":"%s","mode":"%s","theme":"%s","flavor":"%s","palette":{' "${DT_ID:-$DT_THEME-$DT_FLAVOR}" "${DT_ADAPTER:-native}" "${DT_MODE:-dark}" "$DT_THEME" "$DT_FLAVOR"
   for name in "${DT_NAMES[@]}"; do printf '%s"%s":"%s"' "$sep" "$name" "${DT_COLORS[$name]}"; sep=,; done
   printf '},"roles":{'
   sep=''
   for name in background foreground muted accent selection error warning info hint; do
-    printf '%s"%s":"%s"' "$sep" "$name" "${DT_COLORS[${DT_META[roles.$name]}]}"; sep=,
+    printf '%s"%s":"%s"' "$sep" "$name" "${DT_SEMANTIC[$name]:-${DT_COLORS[${DT_META[roles.$name]}]}}"; sep=,
   done
   printf '}}\n'
 }
+
+# shellcheck source=render.bash
+source "$DT_LIB/render.bash"

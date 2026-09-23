@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Install a Git theme
+# dots:usage=URL [--name ID]
+# dots:argument=1|string|HTTPS or SSH Git URL
+# dots:option=--name||string|Local theme identifier
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- install "$@"
+source "$DT_LIB/commands.bash"

@@ -1,8 +1,8 @@
 # Termux MVP Plan
 
-**Status: Paused; proposed scope retained**
+**Status: File inventory/catalog implemented; general installation remains deferred**
 
-The [current roadmap priority](roadmap.md#current-priority) pauses this migration until the owner requests resumption. Its limited module selection governs the future MVP, not ordinary task-relevant edits elsewhere in the repository.
+The owner authorized and the repository implements the bounded [files inventory and catalog](files-catalog.md), alongside the [configuration path migration](config-path-migration.md) and [theme expansion](omarchy-themes.md). The general transaction stages below remain proposed. Its limited module selection governs the future MVP, not ordinary task-relevant edits elsewhere in the repository.
 
 The Termux MVP is the first end-to-end proof that `dots` can inspect, plan, apply, track, and undo real dotfile changes safely. It deliberately manages a small subset of the current repository.
 
@@ -31,7 +31,7 @@ Final selection follows the repository inventory. Prefer a small set with high v
 - Termux configuration such as properties or colors only after reload behavior is represented safely.
 - Generated shell environment integration, if it can replace the current Zsh-specific `dot.env` behavior without slowing startup.
 
-Do not migrate all `configs/`, fonts, wallpapers, PowerShell content, secrets, or the complete Android submodule in the MVP.
+Do not migrate all `config/`, fonts, wallpapers, PowerShell content, secrets, or the complete Android submodule in the MVP.
 
 ## Profile Selection
 
@@ -48,6 +48,11 @@ A bootstrap convenience flag may select Termux, but the persisted desired-state 
 ## Work Stages
 
 ### 1. Inventory the Candidate Files
+
+Source/target metadata, platform, ownership and observed object classification are
+implemented in the JSON catalog. Sensitivity/consumer/reload review and the general
+module transaction stages below remain proposed. The separately approved config-link
+migration and theme connectors do not constitute completion of the general MVP.
 
 - Record source path, current destination, current object type, sensitivity, current consumers, and required reload behavior.
 - Identify whether any candidate currently comes from `androidots` or `secrets`.

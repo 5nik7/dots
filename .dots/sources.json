@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "id": "dots",
+      "path": ".",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "roots": [
+        "config",
+        "shells",
+        "scripts",
+        "bin"
+      ]
+    },
+    {
+      "id": "androidots",
+      "path": "androidots",
+      "platforms": [
+        "termux"
+      ],
+      "roots": [
+        "config",
+        "termux",
+        "bin"
+      ]
+    },
+    {
+      "id": "windots",
+      "path": "windots",
+      "platforms": [
+        "windows"
+      ],
+      "roots": [
+        "config"
+      ]
+    },
+    {
+      "id": "nvim",
+      "path": "config/nvim",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "roots": [
+        "."
+      ]
+    },
+    {
+      "id": "secrets",
+      "path": "secrets",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "roots": [],
+      "excluded": true
+    },
+    {
+      "id": "powershell-catppuccin",
+      "path": "shells/powershell/Modules/catppuccin",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "roots": [],
+      "excluded": true
+    },
+    {
+      "id": "rainmeter-suite",
+      "path": "windots/rainmeter/5ui7e",
+      "platforms": [
+        "windows"
+      ],
+      "roots": [],
+      "excluded": true
+    }
+  ]
+}

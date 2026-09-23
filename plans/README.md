@@ -11,7 +11,7 @@ The [roadmap](roadmap.md#current-priority) owns current priorities: repository m
 - [`roadmap.md`](roadmap.md) — project phases, dependencies, decision gates, and completion criteria.
 - [`phase-1-portability.md`](phase-1-portability.md) — completed isolated Go experiment, retained evidence, accepted adoption decision, and deferred portability coverage.
 - [`phase-2-command-center.md`](phase-2-command-center.md) — implemented command-center slices and native verification; further development paused.
-- [`termux-mvp.md`](termux-mvp.md) — paused proposed first usable platform slice and acceptance criteria.
+- [`termux-mvp.md`](termux-mvp.md) — implemented file inventory plus deferred installation stages and acceptance criteria.
 
 ## Plan Rules
 
@@ -26,3 +26,11 @@ When a plan is complete, retain it if it explains migration or decision history.
 
 - [Shared theme implementation](themes.md): TOML palettes, compatibility, Zsh and Neovim integration.
 - [Additional theme families](theme-families.md): native palettes/adapters and pywal16 snapshot import.
+
+## Completed configuration and command work
+
+- [Configuration path migration](config-path-migration.md).
+- [Files catalog](files-catalog.md).
+- [Omarchy-style themes](omarchy-themes.md).
+
+These authorized Bash/Python workstreams extend the existing implementation without resuming Go development.

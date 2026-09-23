@@ -311,3 +311,13 @@ case/underscores. Metadata can override semantic mappings in `[roles.FLAVOR]`.
 The sole dynamic `source = "pywal16"` imports validated colors.sh literals; it is
 not an arbitrary source callback. Schema-1 published JSON includes additive resolved
 hex `roles`; the Neovim reader still accepts earlier Catppuccin snapshots without it.
+
+## Implemented Inventory Catalog Boundary
+
+The module/profile manifests above remain proposed. The separate schema-1 JSON
+[file catalog](files.md) is implemented for locating, classifying and tracking
+source/target intent. It uses `.dots/sources.json` plus per-repository `.dots/files.json`,
+explicit platform applicability and qualified replacement IDs. Directory ownership
+conflicts with nested target claims. It does not implement module dependency
+resolution, install planning, copying, linking, adoption or undo. A recorded `copy`
+strategy is intent only; future installation retains the default-link contract.

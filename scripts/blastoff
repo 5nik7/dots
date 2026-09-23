@@ -102,7 +102,7 @@ l9="${c_reset}${rocketcolor}${bigrocketbg}|,-'--|--'-.|"
 
 # Variables
 DOTS="$HOME/dots"
-DOTFILES="$DOTS/configs"
+DOTFILES="$DOTS/config"
 STARSHIP_DIR="$DOTFILES/starship"
 STARSHIP_CONFIG="$STARSHIP_DIR/starship.toml"
 STARSHIP_THEMES="$STARSHIP_DIR/themes"

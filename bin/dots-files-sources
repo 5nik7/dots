@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Sources file catalog resources
+# dots:usage=[OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--all-platforms||flag|Include inactive platforms
+# dots:option=--repo||file-repository|Repository ID
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/catalog.py" sources "$@"

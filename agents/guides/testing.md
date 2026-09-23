@@ -98,3 +98,10 @@ run `python3 -B tools/test_themes.py`; use `python3 -B tools/bench_themes.py` fo
 The editor tests copy public plugin sources and never start live LazyVim or download
 plugins. Missing sources report skipped tests; the optional source-map input for all
 families is documented in [Shared Themes](../../docs/testing.md#shared-themes).
+
+For inventory/catalog or config-link migration changes, run
+`python3 -B tools/test_files.py`. For flat theme templates, connectors, imports and
+wallpaper adapters, also run `python3 -B tools/test_theme_workflow.py`. These suites
+own their home/config/state/source roots; local Git fixtures and fake external
+adapters require no network or live app changes. Use `python3 -B tools/bench_files.py`
+for inventory scaling, sequentially with other benchmarks.

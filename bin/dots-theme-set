@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# dots:summary=Switch application themes
+# dots:usage=ID [--background] [--dry-run]
+# dots:argument=1|theme-id|Theme identifier
+# dots:option=--dry-run||flag|Preview changes
+# dots:option=--background||flag|Apply a theme background
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- set "$@"
+source "$DT_LIB/commands.bash"

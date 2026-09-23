@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Emit shell theme initialization
+# dots:usage=[--shell SHELL]
+# dots:option=--shell||choice:bash,zsh,fish|Output shell
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- init "$@"
+source "$DT_LIB/commands.bash"

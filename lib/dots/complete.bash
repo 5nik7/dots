@@ -11,6 +11,21 @@ dots_value_candidates() {
   local type=$1 lead=${2:-} value
   local -a values=()
   case $type in
+    theme-id)
+      local path name root=${DOTHEMES:-${THEMES:-$DOTS/themes}} user=${XDG_CONFIG_HOME:-$HOME/.config}/dots/themes
+      for path in "$root/"*/colors.toml "$user/"*/colors.toml; do
+        [[ -f $path && ! -L $path ]] || continue
+        name=${path%/colors.toml}; dots_candidate "$lead${name##*/}"
+      done
+      [[ ! -d $root/pywal16-current ]] || dots_candidate "${lead}pywal16-current"
+      ;;
+    file-resource|file-repository)
+      local action=list
+      [[ $type != file-repository ]] || action=sources
+      local output
+      output=$(python3 -B "$DOTS_LIB_DIR/files/catalog.py" "$action" --all-platforms 2>/dev/null) || return 0
+      while IFS=$'\t' read -r value _; do dots_candidate "$lead$value"; done <<< "$output"
+      ;;
     theme|flavor|palette-color|color-format)
       local DT_LIB=$DOTS_LIB_DIR/themes name file theme_name='' flavor_name=''
       source "$DT_LIB/core.bash"
@@ -19,7 +34,7 @@ dots_value_candidates() {
       case $type in
         theme)
           for file in "$DT_ROOT/"*/theme.toml; do
-            [[ -f $file ]] || continue
+            [[ -f $file && -d ${file%/theme.toml}/flavors ]] || continue
             name=${file%/theme.toml}; dots_candidate "$lead${name##*/}"
           done ;;
         flavor)
@@ -72,6 +87,7 @@ dots_complete() {
   [[ $shell == bash || $shell == zsh || $shell == fish ]] || return 2
   [[ $cursor =~ ^[0-9]+$ && ${3:-} == -- ]] || return 2
   shift 3
+  # shellcheck disable=SC2034
   local -a DOTS_POSITIONALS=() words=("$@") DOTS_SUGGESTIONS=() DOTS_EXTRA_ROOTS=() DOTS_ROOTS=()
   (( cursor >= 1 && cursor < ${#words[@]} )) || return 2
   local DOTS_CURRENT=${words[cursor]} index=1 token prefix='' help=0 resolved start

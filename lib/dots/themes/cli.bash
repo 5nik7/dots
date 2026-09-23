@@ -21,7 +21,7 @@ dt_main() {
         dt_theme_id "$1" && dt_parse "$DT_ROOT/$1/theme.toml" metadata || return
         for file in "$DT_ROOT/$1/flavors/"*.toml; do [[ -f $file ]] || continue; name=${file##*/}; printf '%s\n' "${name%.toml}"; done
       else
-        for file in "$DT_ROOT/"*/theme.toml; do [[ -f $file ]] || continue; name=${file%/theme.toml}; printf '%s\n' "${name##*/}"; done
+        for file in "$DT_ROOT/"*/theme.toml; do [[ -f $file && -d ${file%/theme.toml}/flavors ]] || continue; name=${file%/theme.toml}; printf '%s\n' "${name##*/}"; done
       fi ;;
     current) (($# == 0)) || return 2; dt_selected selection && printf '%s-%s\n' "$DT_THEME" "$DT_FLAVOR" ;;
     show)

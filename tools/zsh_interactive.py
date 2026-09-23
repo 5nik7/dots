@@ -80,7 +80,7 @@ def exercise(source, samples, baseline=False):
                          'printf "OTHER_PROBE\\n"\n')
         other.chmod(0o700)
     # Copy public vivid input into owned config so its lookup matches a linked installation.
-    shutil.copytree(repo / 'configs/vivid', Path(env['XDG_CONFIG_HOME']) / 'vivid')
+    shutil.copytree(repo / 'config/vivid', Path(env['XDG_CONFIG_HOME']) / 'vivid')
     # Representative Git contexts are owned copies, never the live repository.
     small = root / 'small-repo'
     small.mkdir()

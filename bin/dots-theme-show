@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Preview a theme palette
+# dots:usage=ID
+# dots:argument=1|theme-id|Theme identifier
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- show "$@"
+source "$DT_LIB/commands.bash"

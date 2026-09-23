@@ -42,32 +42,49 @@ for header examples, shared output helpers, and standalone integration.
 
 ## Shared Themes
 
-Catppuccin, TokyoNight, Rosé Pine, Kanagawa and Gruvbox palettes live in separate
-TOML flavor files. Pywal16 can import your generated palette. Preview colors, query
-values, and select a shared Zsh/Neovim theme:
+The Omarchy-style theme tree has 33 selectable variants under `themes/`, with
+shared templates in `default/themed/`. The active generated files live at
+`~/.local/state/dots/current/theme/` (XDG_STATE_HOME is respected).
 
 ```bash
-dots themes list
-dots themes list catppuccin
-dots themes show catppuccin mocha
-dots themes color catppuccin mocha blue rgb
-dots themes set tokyonight night
-dots themes set rose-pine moon
-dots themes set kanagawa dragon
-dots themes set gruvbox dark
-dots themes current
+dots theme list
+dots theme show nord
+dots theme set catppuccin-mocha --dry-run
+dots theme set catppuccin-mocha
+dots theme refresh
+dots theme bg next                 # Explicit wallpaper change
 ```
 
-Zsh updates at its next prompt; the repository's Neovim configuration updates on
-focus or `:DotsThemeReload`. Install the newly declared Neovim plugins through
-`:Lazy` if needed. Mocha preserves your custom highlights; other Catppuccin flavors
-adapt them to their palettes. All families update the dashboard colors. Existing `catppuccin` and `current_theme` commands
-remain available. Bash, Zsh and Fish complete theme/flavor/color arguments.
-Switching records per-user state and preserves previous generations without
-rewriting app configs. Palette edits take effect after running `set` again.
-For pywal16, generate colors with your existing `wal` installation, then run
-`dots themes set pywal16`. Repeat that command to import a new palette.
-See [available flavors, formats, compatibility and dependencies](docs/themes.md).
+The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat and Yazi.
+Selection journals and backs up fixed application theme connectors. Zsh refreshes
+at the next prompt; Neovim refreshes on focus or `:DotsThemeReload`. Native palette
+APIs, `catppuccin`, `current_theme`, and the plural `dots themes` commands remain
+available. Missing Neovim plugins can be installed through your normal `:Lazy`
+workflow; generic imported themes need no downloaded Lua. Git theme installation,
+updates, template overrides and wallpaper adapters are described in
+[Shared themes](docs/themes.md). Wallpaper changes are always explicit.
+
+## Files and Configuration Layout
+
+`config/` is canonical in Dots, Androidots and Windots. Temporary `configs -> config`
+aliases remain for compatibility. The Neovim submodule now lives at `config/nvim`.
+
+```bash
+dots files sources
+dots files list --sort app
+dots files list --repo androidots --platform termux
+dots files locate kitty
+dots files show dots:kitty
+dots files list --all-platforms --json
+```
+
+The first files slice locates and classifies sources and destinations, and tracks
+intent in each repository's `.dots/files.json`. Androidots contributes Termux
+resources explicitly; unavailable/private sources are not initialized. `track`
+changes catalog metadata only. File installation (`set`, using links by default),
+add/remove/edit, adoption and undo are future work. See the [catalog reference](docs/files.md)
+for tracking, filters, JSON and ownership rules. Python 3.9+ is required for this
+POSIX implementation; discovery additionally uses Git.
 
 ## Zsh Configuration
 
@@ -81,20 +98,20 @@ Startup automatically repairs completion dumps containing unquoted names such as
 
 ## Optional Neovim Configuration
 
-The public [Neovim configuration repository](https://github.com/5nik7/nvim) is available as a Git submodule at `configs/nvim`. From the `dots` repository root, initialize only this source:
+The public [Neovim configuration repository](https://github.com/5nik7/nvim) is available as a Git submodule at `config/nvim`. From the `dots` repository root, initialize only this source:
 
 ```bash
-git submodule update --init -- configs/nvim
+git submodule update --init -- config/nvim
 ```
 
 `dots` records an exact configuration commit. The submodule's `main` branch is used only when explicitly requesting a remote update. With a clean submodule checkout and any local commits safely preserved, review an update with:
 
 ```bash
-git submodule update --remote --checkout -- configs/nvim
-git diff --submodule=log -- configs/nvim
+git submodule update --remote --checkout -- config/nvim
+git diff --submodule=log -- config/nvim
 ```
 
-After review, stage `configs/nvim` and commit its new reference in `dots`. Configuration edits belong in the Neovim repository; publish those commits before publishing a `dots` reference to them. Keep submodule operations scoped to this path so other optional and private sources remain opt-in.
+After review, stage `config/nvim` and commit its new reference in `dots`. Configuration edits belong in the Neovim repository; publish those commits before publishing a `dots` reference to them. Keep submodule operations scoped to this path so other optional and private sources remain opt-in.
 
 Initialization only retrieves source; it does not activate the configuration, install plugins or packages, or change the existing Neovim configuration. Follow the submodule's [installation instructions](https://github.com/5nik7/nvim#install-as-the-default-config) when deliberately activating it, preserving the existing config first. Keep platform-specific plugin, data, and cache directories separate. This source addition does not establish new `dots` platform or installation support.
 

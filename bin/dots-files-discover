@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# dots:summary=Discover file catalog resources
+# dots:usage=[OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--all-platforms||flag|Include inactive platforms
+# dots:option=--repo||file-repository|Repository ID
+# dots:option=--app||string|Filter by application
+# dots:option=--category||string|Filter by category
+# dots:option=--status||string|Filter by observed status
+# dots:option=--platform||choice:termux,linux,wsl,windows|Observe a platform
+# dots:option=--sort||choice:id,app,repository,source,status|Sort by id, app, repository, source or status
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/catalog.py" discover "$@"

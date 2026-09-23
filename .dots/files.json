@@ -1,0 +1,701 @@
+{
+  "schema": 1,
+  "repository": "dots",
+  "resources": [
+    {
+      "id": "thunar",
+      "source": "config/Thunar",
+      "app": "thunar",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/Thunar",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "vifm",
+      "source": "config/Vifm",
+      "app": "vifm",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/Vifm",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "bat",
+      "source": "config/bat",
+      "app": "bat",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/bat",
+      "strategy": "directory-link",
+      "replaces": [
+        "androidots:bat"
+      ]
+    },
+    {
+      "id": "boxes",
+      "source": "config/boxes",
+      "app": "boxes",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/boxes",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "btop",
+      "source": "config/btop",
+      "app": "btop",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/btop",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "chrome",
+      "source": "config/chrome",
+      "app": "chrome",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/chrome",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "conda",
+      "source": "config/conda",
+      "app": "conda",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/conda",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "dconf",
+      "source": "config/dconf",
+      "app": "dconf",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/dconf",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "eww",
+      "source": "config/eww",
+      "app": "eww",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/eww",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "fastfetch",
+      "source": "config/fastfetch",
+      "app": "fastfetch",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/fastfetch",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "flashfocus",
+      "source": "config/flashfocus",
+      "app": "flashfocus",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/flashfocus",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "fsh",
+      "source": "config/fsh",
+      "app": "fsh",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/fsh",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "git",
+      "source": "config/git",
+      "app": "git",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/git",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "git-it",
+      "source": "config/git-it",
+      "app": "git-it",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/git-it",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "glow",
+      "source": "config/glow",
+      "app": "glow",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/glow",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "gtk-2-0",
+      "source": "config/gtk-2.0",
+      "app": "gtk-2-0",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/gtk-2.0",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "gtk-3-0",
+      "source": "config/gtk-3.0",
+      "app": "gtk-3-0",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/gtk-3.0",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "htop",
+      "source": "config/htop",
+      "app": "htop",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/htop",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "imv",
+      "source": "config/imv",
+      "app": "imv",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/imv",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "inkscape",
+      "source": "config/inkscape",
+      "app": "inkscape",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/inkscape",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "ironbar",
+      "source": "config/ironbar",
+      "app": "ironbar",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/ironbar",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "kitty",
+      "source": "config/kitty",
+      "app": "kitty",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/kitty",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "leaf",
+      "source": "config/leaf",
+      "app": "leaf",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/leaf",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "lsd",
+      "source": "config/lsd",
+      "app": "lsd",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/lsd",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "lynx",
+      "source": "config/lynx",
+      "app": "lynx",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/lynx",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "mdcat",
+      "source": "config/mdcat",
+      "app": "mdcat",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/mdcat",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "mpv",
+      "source": "config/mpv",
+      "app": "mpv",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/mpv",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "neofetch",
+      "source": "config/neofetch",
+      "app": "neofetch",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/neofetch",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "nwg-look",
+      "source": "config/nwg-look",
+      "app": "nwg-look",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/nwg-look",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "oomox",
+      "source": "config/oomox",
+      "app": "oomox",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/oomox",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "paru",
+      "source": "config/paru",
+      "app": "paru",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/paru",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "qbittorrent",
+      "source": "config/qbittorrent",
+      "app": "qbittorrent",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/qbittorrent",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "qt5ct",
+      "source": "config/qt5ct",
+      "app": "qt5ct",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/qt5ct",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "qt6ct",
+      "source": "config/qt6ct",
+      "app": "qt6ct",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/qt6ct",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "ranger",
+      "source": "config/ranger",
+      "app": "ranger",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/ranger",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "rofi",
+      "source": "config/rofi",
+      "app": "rofi",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/rofi",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "starship",
+      "source": "config/starship",
+      "app": "starship",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/starship",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "stylua",
+      "source": "config/stylua",
+      "app": "stylua",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/stylua",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "sway",
+      "source": "config/sway",
+      "app": "sway",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/sway",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "sworkstyle",
+      "source": "config/sworkstyle",
+      "app": "sworkstyle",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/sworkstyle",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "tmux",
+      "source": "config/tmux",
+      "app": "tmux",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/tmux",
+      "strategy": "directory-link",
+      "replaces": [
+        "androidots:tmux"
+      ]
+    },
+    {
+      "id": "vivid",
+      "source": "config/vivid",
+      "app": "vivid",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/vivid",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "wal",
+      "source": "config/wal",
+      "app": "wal",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/wal",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "waybar",
+      "source": "config/waybar",
+      "app": "waybar",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/waybar",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "xfce4",
+      "source": "config/xfce4",
+      "app": "xfce4",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/xfce4",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "xsettingsd",
+      "source": "config/xsettingsd",
+      "app": "xsettingsd",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/xsettingsd",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "yazi",
+      "source": "config/yazi",
+      "app": "yazi",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/yazi",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "zshenv",
+      "source": "shells/zsh/zshenv",
+      "app": "zsh",
+      "category": "shell",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${HOME}/.zshenv",
+      "strategy": "link"
+    },
+    {
+      "id": "zshrc",
+      "source": "shells/zsh/zshrc",
+      "app": "zsh",
+      "category": "shell",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${HOME}/.zshrc",
+      "strategy": "link"
+    },
+    {
+      "id": "bashrc",
+      "source": "shells/bash/.bashrc",
+      "app": "bash",
+      "category": "shell",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${HOME}/.bashrc",
+      "strategy": "link"
+    },
+    {
+      "id": "bash_profile",
+      "source": "shells/bash/.bash_profile",
+      "app": "bash",
+      "category": "shell",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${HOME}/.bash_profile",
+      "strategy": "link"
+    },
+    {
+      "id": "xonshrc",
+      "source": "shells/xonsh/.xonshrc",
+      "app": "xonsh",
+      "category": "shell",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${HOME}/.xonshrc",
+      "strategy": "link"
+    },
+    {
+      "id": "profile",
+      "source": "shells/profile",
+      "app": "profile",
+      "category": "shell",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${HOME}/.profile",
+      "strategy": "link"
+    }
+  ]
+}

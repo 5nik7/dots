@@ -218,3 +218,19 @@ covered in fixtures. WSL/Linux/MSYS execution remains unverified; native Windows
 Bash execution and filesystem durability are not claimed. Native Windows and WSL
 must retain separate state stores. Other applications and automatic Bash/Fish
 prompt theming are outside this version. See [Shared themes](themes.md).
+
+## Implemented Files and Theme Adapters
+
+The live Bash framework remains distinct from portable Go development. File catalog
+commands use Python 3.9+ and POSIX flock, with read-only platform overrides for
+inventory. Termux combines common and Androidots catalogs; Windots remains
+inventory-only without a native Windows destination adapter. Discovery uses Git
+and does not initialize submodules. `config/` is canonical in all three repositories.
+
+Themes honor XDG config/state/cache roots. Fixed application connectors include
+Termux colors; TERMUX_VERSION plus the Termux PREFIX boundary enables its reload and
+explicit `termux-wallpaper` adapter. Linux wallpaper uses swww on Wayland or feh on
+X11. WSL and native Windows wallpaper are unsupported. Termux:API, fzf, bat, tmux,
+Kitty remote control and wallpaper tools are checked only when needed. Native
+Termux fixture checks are recorded in [testing](testing.md); Linux adapter calls are
+simulated, and native desktop rendering remains unverified.

@@ -95,3 +95,9 @@ shell to load its new adapter. Go development remains paused.
 Final runtime source SHA-256: `80a9b6e9769e426781dc6747568c0a52255f30d4887bbe7898507cf8ca0e8910`.
 This hashes sorted paths and contents, NUL-delimited, for `bin/dots` and files
 under `lib/dots`, including the final cursor-position fix after the timing run.
+
+## Authorized follow-up
+
+See [Omarchy-style themes](omarchy-themes.md), [files catalog](files-catalog.md), and [configuration path migration](config-path-migration.md). The completed results above describe their original implementation; the follow-up has separate acceptance.
+
+The authorized [Omarchy theme expansion](omarchy-themes.md) and [files catalog](files-catalog.md) are now implemented under [decision 0008](../docs/decisions/0008-config-catalog-and-theme-apps.md). Earlier completed-slice evidence remains historical; current contracts are in the linked references.

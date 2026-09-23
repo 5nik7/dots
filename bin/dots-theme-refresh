@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# dots:summary=Regenerate the selected theme
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- refresh "$@"
+source "$DT_LIB/commands.bash"

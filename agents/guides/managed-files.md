@@ -84,3 +84,14 @@ Cover at least:
 
 Any change to classification, force behavior, backup contents, journal fields, or undo semantics requires corresponding updates to `docs/safety.md` and `docs/specification.md`.
 
+
+## Implemented Catalog and Config Migration
+
+Read [files](../../docs/files.md) before changing `lib/dots/files`, `.dots` catalogs
+or `bin/dots-files-*`. Catalog tracking edits source metadata only; do not add
+installation behavior under an inventory route. Keep owning-repository boundaries,
+private exclusions, explicit replacements and directory collision classification.
+`config/` is canonical in Dots/Androidots/Windots; retain compatibility aliases.
+The separate `tools/migrate_config_paths.py` defaults to preview and requires an
+absolute recovery journal for apply/rollback. Never use real-home migration as a test.
+Run `python3 -B tools/test_files.py`; scale checks use `tools/bench_files.py`.

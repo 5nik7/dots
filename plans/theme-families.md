@@ -25,7 +25,7 @@ PTY acceptance, lint/format/docs checks and sequential benchmarks. Baseline:
 The [theme reference](../docs/themes.md) owns the available flavors, input format,
 shared shell/editor behavior and dependencies. All requested families are present;
 Go development remains paused. Native palettes and license/provenance files stay in
-the existing theme tree. Neovim changes are in the separate `configs/nvim` repository.
+the existing theme tree. Neovim changes are in the separate `config/nvim` repository.
 No live selection or installed plugin directory was changed.
 
 Native Termux verification:
@@ -84,3 +84,9 @@ These are actual plugin tests under isolated minimal Neovim, not full live LazyV
 startup or native Linux/WSL/MSYS/Windows verification. Normal Lazy plugin installation
 and live focus/UI acceptance remain user-environment checks. No documentation is
 intentionally deferred.
+
+## Authorized follow-up
+
+See [Omarchy-style themes](omarchy-themes.md), [files catalog](files-catalog.md), and [configuration path migration](config-path-migration.md). The completed results above describe their original implementation; the follow-up has separate acceptance.
+
+The authorized [Omarchy theme expansion](omarchy-themes.md) and [files catalog](files-catalog.md) are now implemented under [decision 0008](../docs/decisions/0008-config-catalog-and-theme-apps.md). Earlier completed-slice evidence remains historical; current contracts are in the linked references.

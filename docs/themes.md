@@ -1,6 +1,117 @@
 # Shared themes
 
-**Status: Implemented for the families below, Zsh, and the repository's Neovim configuration.**
+**Status: Implemented flat themes, application templates, Git theme sources and explicit wallpapers.**
+
+The live interface is `dots theme`, using `bin/dots-theme-*` commands. The older
+`dots themes` and palette commands remain compatible. The layout follows the local
+Omarchy reference while retaining Dots' shell and Neovim palette APIs; see
+[decision 0008](decisions/0008-config-catalog-and-theme-apps.md).
+
+## Flat themes and templates
+
+Selectable variants live at `themes/ID/`, normally with `colors.toml`, `theme.toml`,
+optional native `palette.toml`, and `backgrounds/`. There are 33 bundled selections:
+the previous 17 variants plus Omarchy's additional variants, merging six overlaps.
+Overlapping semantic colors use Omarchy's appearance. Its Rosé Pine import is Dawn;
+Main and Moon remain separate. Import provenance and license text are retained beside
+the themes and under `default/themed`. Background assets are bundled (54.6 MB across 92 files).
+
+`colors.toml` is the shared application palette: quoted `#RRGGBB` assignments plus
+optional `mode = "light"` or `"dark"`. Foreground/background are required; ANSI and
+semantic roles are resolved from supplied keys with deterministic fallbacks. No
+TOML is executed. Desktop-only Omarchy gradient decorations are inert. The native
+`palette.toml` retains upstream names for the legacy color-query API. Compatibility
+family `flavors/*.toml` files link to these native palettes. Edit `colors.toml` to
+change shared application appearance, then publish again with `set` or `refresh`.
+
+Templates under `default/themed/*.tpl` render into a fresh generation. Literal
+`{{ color }}`, `{{ color_strip }}` (hex without #) and `{{ color_rgb }}` (comma-separated
+RGB) are supported; unresolved variables refuse publication. Personal templates in
+`${XDG_CONFIG_HOME:-$HOME/.config}/dots/themed` override bundled templates by filename.
+A trusted bundled theme's explicit application file takes precedence over both.
+Downloaded themes contribute colors and backgrounds only. Templates never evaluate
+shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
+and Yazi data; Zsh/Fish and Neovim data come from the palette generator.
+
+```bash
+dots theme list
+dots theme show nord
+dots theme color accent --theme catppuccin-mocha
+dots theme dir nord
+dots theme set nord --dry-run
+dots theme set nord
+dots theme current
+dots theme refresh
+dots theme switcher                 # optional fzf
+```
+
+`set ID` publishes colors only. `--background` additionally requests an explicit
+wallpaper action after successful publication; wallpaper failure leaves colors
+selected. `--dry-run` prints the selection, publication path and planned connectors
+without creating state. `refresh` rebuilds changed inputs and retries available app
+reloads even when generation inputs are unchanged. `init [--shell bash|zsh|fish]`
+prints sourceable initialization. Theme IDs complete from local data on Tab.
+
+## Application connections
+
+The stable path is `${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme`, a symlink
+to a complete generation. Kitty includes `~/.local/state/dots/current/theme/kitty.conf`
+and a local `dots-theme.conf` connector for nondefault XDG state roots. Tmux uses its
+local connector. Btop selects `dots.theme`; Yazi selects the `dots` flavor. Bat reads
+the generated `Dots` theme and per-generation cache through shell initialization.
+Existing app settings and Neovim transparency remain in their source configurations.
+
+On selection, fixed connector links are created only for configured applications:
+Kitty/tmux `dots-theme.conf`, btop `themes/dots.theme`, Yazi `flavors/dots.yazi`, and
+Termux `~/.termux/colors.properties`. Existing regular files or symlinks are saved in
+the generation's connector journal before replacement; real directories are refused.
+Parent application directories must exist. If an application directory itself is
+linked into a repository, the connector lives in that source directory. It is
+machine state, not a configuration to commit. No generic files installer is involved.
+
+Termux settings reload when available; an existing tmux server reloads the generated
+colors; Kitty remote control is used only when KITTY_LISTEN_ON is supplied. Reload
+failures report that colors were published and can be retried with `refresh`. Apps
+without a running reload adapter pick up the files through their normal startup.
+No terminal/editor process is restarted and no plugin or package is installed.
+
+## User themes and wallpapers
+
+```bash
+dots theme install https://example.org/owner/theme.git --name my-theme
+dots theme update my-theme
+dots theme update --all
+dots theme remove my-theme
+dots theme bg list
+dots theme bg next
+dots theme bg set /absolute/image.png
+dots theme bg set /absolute/image.png --lock-screen
+dots theme bg current
+```
+
+Git themes live in `${XDG_CONFIG_HOME:-$HOME/.config}/dots/themes/ID`. Installation
+accepts HTTPS/SSH Git sources, validates color data in a staged clone, and never
+selects automatically. Updates require a managed, clean checkout and fast-forward
+history. Removal refuses the current theme. Updates/removals retain prior sources
+under `.archives`; `.transactions` records interrupted publication for recovery on
+the next lifecycle action. Git hooks and global/system Git configuration are disabled
+for these operations. Downloaded scripts/configuration are never sourced. Manual
+bundled/user ID collisions refuse selection. Recovery is bounded to theme sources;
+there is no generic Git repository manager.
+
+Background discovery includes the selected theme's `backgrounds/` and personal
+`~/.config/dots/backgrounds/ID` (with XDG_CONFIG_HOME respected). `next` cycles images;
+`select` reapplies the remembered image or the first; `switcher` uses optional fzf.
+PNG, JPEG, WebP and BMP are supported. Android uses `termux-wallpaper` (Termux:API),
+Wayland uses `swww img`, and X11 uses `feh`; adapters are capability-checked and have
+a 15-second timeout. `--lock-screen` is Android-only and does not replace the stored
+home-wallpaper selection. WSL/native Windows and video wallpapers are unsupported.
+A failed adapter preserves the previous successful record, but an external API may
+have changed the device before failing; prior wallpapers are not backed up. Actions
+are explicit and journaled, never automatic consequences of ordinary palette set.
+
+## Native palette compatibility
+
 
 | Family | Flavors (default first) |
 | --- | --- |
@@ -15,7 +126,7 @@ Fixed palettes retain upstream color names. Each fixed family has `SOURCE.md`
 and upstream license text beside its metadata. Pywal16 has no fixed palette: see
 [its import contract](#pywal16-import).
 
-## Commands
+## Legacy commands
 
 | Route | Output or effect |
 | --- | --- |
@@ -39,9 +150,9 @@ Formats are `name`, `hex`, `rgb`, `r`, `g`, `b`, `rgb-r`, `rgb-g`, `rgb-b`,
 `ansi-8bit-escapecode`, `ansi-24bit`, `ansi-24bit-escapecode`, and `esc`.
 RGB and CMYK channels are space separated; CMYK channels are integer percentages.
 
-## Palette source format
+## Native palette source format
 
-Each theme has `themes/IDENTIFIER/theme.toml` and `flavors/FLAVOR.toml`.
+Each legacy family has `themes/IDENTIFIER/theme.toml` and `flavors/FLAVOR.toml` links. Flat variants own the native data in `palette.toml`.
 The root can be selected with `DOTHEMES`, then `THEMES`; otherwise it is relative
 to the installed engine. Family identifiers allow internal hyphens (`rose-pine`);
 flavor identifiers use `[a-z][a-z0-9_]*`. Native color keys use
@@ -82,8 +193,8 @@ vivid = "catppuccin"
 All nine roles are required and must reference colors in the selected flavor.
 Optional `[roles.FLAVOR]` tables override individual mappings, useful when a light
 variant has different native names. Querying, previewing and initialization discover
-theme files without hardcoded family lists. Persisted switching requires a supported
-family/flavor and its matching Neovim adapter. Adding another app integration is an
+theme files without hardcoded family lists. Native families use their matching Neovim adapter. Other flat variants use the
+built-in generic highlight adapter without executing downloaded code. Adding another app integration is an
 explicit adapter change; metadata cannot run commands. `vivid` records the integration
 identity; Catppuccin retains its Vivid path with a semantic-color fallback when
 unavailable. Other families generate basic
@@ -131,18 +242,20 @@ are never automatically rewritten or imported. `DOTS_THEME_SELECTION=theme-flavo
 is an explicit session-only override used by the existing `set_theme ID` function.
 `change_theme ID` persists through `dots themes set`, then updates the calling Zsh.
 
-State lives in `${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes`. `current` holds
-one validated generation token. Each `generations/g.*` directory contains its
+State lives in `${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes`. Its legacy `current`
+token is maintained for compatibility; readers prefer the stable sibling
+`dots/current/theme` link. Publication journals restore both pointers on failure. Each `generations/g.*` directory contains its
 selection, fingerprint, `palette.json` (schema 1), `init.zsh` (also Bash compatible), `init.fish`,
 previous-generation token, and journal status. Readers load one complete generation.
-The JSON carries theme, flavor, native palette values and resolved hex `roles`; it contains no executable
+The JSON carries theme, flavor, ID, adapter, mode, native palette values and resolved hex `roles`; it contains no executable
 Lua or machine paths. Neovim uses its JSON decoder, not a second TOML parser.
 
 Generations are immutable snapshots. After editing palette files, run `set` again
 to publish the changes, including when keeping the same theme/flavor. The fingerprint
-covers all flavor files, metadata and Bash generator modules, plus the input export
-for pywal16. Unchanged selection
-and fingerprint cause no changes to the generation or active pointer. `current` and initialization read the published snapshot even if palette source
+covers native flavor files, selected semantic palette and app data, personal/default
+templates, metadata and Bash generator modules, plus the input export for pywal16.
+Background images do not invalidate palette generations. Unchanged selection
+and fingerprint, with all connectors correct, cause no changes to the generation or active pointer. `current` and initialization read the published snapshot even if palette source
 files are temporarily invalid. Explicit palette queries read the source files. Previous
 complete generations are retained; no automatic pruning or general undo command
 is provided. To return to a previous flavor, use `set` with that flavor.
@@ -168,12 +281,12 @@ options remain on `catppuccin`. Generic initialization exposes
 The Catppuccin Bash/Zsh initialization also includes the legacy color arrays.
 
 Zsh loads generated initialization at startup. Its prompt hook reads the small
-active token with builtins and reloads only when it changes. It preserves the
+active link with builtins and reloads only when it changes. It preserves the
 previous command's status, hooks, FZF options, and autosuggestion styling. Existing
 Catppuccin shell sources remain in use. Bash/Fish receive command completions and
 explicit initialization output; automatic shell theme hooks are Zsh-only.
 
-The adapter in `configs/nvim` reads shared data at startup and on `FocusGained` or
+The adapter in `config/nvim` reads shared data at startup and on `FocusGained` or
 `VimResume`. `:DotsThemeReload` explicitly retries/reapplies it when focus reporting
 is unavailable. Native plugin adapters apply each palette through the corresponding
 plugin's configuration API; pywal16 uses upstream highlights with validated snapshot
@@ -188,8 +301,8 @@ when needed. Install missing declarations through your normal `:Lazy` workflow, 
 use `:DotsThemeReload`. Publishing with the CLI validates adapter support, not local
 plugin installation. Neither the CLI nor the adapter installs plugins itself.
 
-Mocha keeps its existing custom highlights. Other Catppuccin flavors use their own `surface0`
-for selected lines, `surface1` for visual selections and line numbers, `surface2`
-for comments, and `mauve` for dashboard icons. Transparency and plugin options remain
-in the Neovim configuration. Switching never rewrites that configuration, installs
-plugins, contacts another editor process, or edits other application configs.
+Native plugins retain their syntax highlighting and custom options; shared foreground,
+selection and dashboard accent follow the semantic palette. Transparency remains
+in the Neovim configuration. Generic themes apply core/editor/plugin highlight groups
+from the validated palette. Switching does not rewrite Lua or install plugins.
+The sourceable compatibility `themes/bin/theme` delegates to `lib/dots/themes/shell.bash`.

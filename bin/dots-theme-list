@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# dots:summary=List selectable themes
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+set -- list "$@"
+source "$DT_LIB/commands.bash"

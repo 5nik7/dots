@@ -48,3 +48,13 @@ bin-release/
 **/history.txt
 
 **/FPilot-UserData.json
+
+# File catalog write locks
+.dots/*.lock
+
+!/bin/
+!/bin/dots*
+
+# Machine-local theme connectors (colors are generated in XDG state).
+/config/kitty/dots-theme.conf
+/config/tmux/dots-theme.conf

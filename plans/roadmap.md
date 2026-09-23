@@ -17,6 +17,10 @@ of the paused Go roadmap. [Bash framework implementation](bash-dispatcher.md) tr
 routing, discovery, presentation, and three-shell completion. It does not resume
 managed installation or the Go phases below.
 
+## Implemented maintenance expansion
+
+The owner authorized the [configuration migration](config-path-migration.md), [files catalog](files-catalog.md), and [Omarchy-style themes](omarchy-themes.md). The bounded implementation and isolated tests are complete. Files inspection and catalog metadata are available; general file installation, adoption, removal, editing, transactions and undo remain future work. Androidots owns Termux-specific resources.
+
 ## Completion Legend
 
 - `[ ]` Not started.
@@ -35,7 +39,7 @@ Goal: establish sources of truth before implementation changes the live reposito
 - [x] Define the first Termux MVP plan.
 - [~] Review working decisions with the project owner. The isolated experiment and Go adoption are approved; unrelated foundational choices remain open.
 - [~] Create decision records for accepted foundational choices. [0001](../docs/decisions/0001-go-portability-experiment.md) preserves the historical evaluation authorization; [0002](../docs/decisions/0002-phase-1-go-adoption.md) accepts Go adoption. Other foundational decisions remain open.
-- [ ] Classify current files by module, destination, platform, ownership, size, generated status, and sensitivity.
+- [~] Classify current files by module, destination, platform, ownership, size, generated status, and sensitivity. The implemented JSON catalog covers source/target, app, category and platform; broader module/sensitivity review remains pending.
 - [ ] Identify current commands/configurations that require compatibility during migration.
 
 Exit criteria:

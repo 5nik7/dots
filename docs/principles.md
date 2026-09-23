@@ -121,3 +121,9 @@ The first Termux milestone does not need to:
 
 Keeping these out of the first milestone protects the foundations that later features depend on.
 
+
+The implemented files catalog keeps source ownership explicit, especially Androidots'
+Termux resources, while general installation remains deferred. Omarchy-style theme
+selection is a bounded exception with fixed, journaled connectors; downloaded theme
+content remains data. These choices apply the existing priorities without changing
+their order; see [decision 0008](decisions/0008-config-catalog-and-theme-apps.md).

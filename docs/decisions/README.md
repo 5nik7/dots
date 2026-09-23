@@ -71,3 +71,5 @@ Do not edit an accepted record to make an old decision appear different. Add a n
 - [0006: Modular Bash command framework](0006-bash-command-framework.md) — Accepted; live Bash protocol, independent of the paused Go interface.
 
 - [0007: Data-driven themes and bounded Bash selection state](0007-data-driven-themes.md).
+
+- [0008: Configuration catalogs and application themes](0008-config-catalog-and-theme-apps.md) — Accepted; canonical config paths, files metadata and Omarchy-style themes.

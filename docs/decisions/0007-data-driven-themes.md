@@ -3,6 +3,8 @@
 Status: Accepted
 Date: 2026-09-22
 
+The original slice below is preserved as decision history. [Decision 0008](0008-config-catalog-and-theme-apps.md) expands its state-only boundary to flat themes, templates and fixed application connectors.
+
 ## Context
 
 The owner approved extracting Catppuccin's four palettes into TOML, preserving

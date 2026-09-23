@@ -26,7 +26,7 @@ export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 export DOTS="$HOME/dots"
 export SHELLS="$DOTS/shells"
 export BASHDOT="$SHELLS/bash"
-export DOTFILES="$DOTS/configs"
+export DOTFILES="$DOTS/config"
 export DOTSBIN="$DOTS/bin"
 
 export DOT_THEME="$(cat "$DOTS"/.theme)"

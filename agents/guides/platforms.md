@@ -57,3 +57,8 @@ Platform support is not complete merely because the CLI starts. Track planning, 
 ## Development External Adapters
 
 Follow [decision 0003](../../docs/decisions/0003-trusted-external-command-protocol.md): Unix direct exec with execute bits; native Windows `.exe` only, local fixed-drive NTFS, case-sensitive roots refused, and same-console waiting. No PATH/suffix/interpreter inference or WSL path translation. Test Windows quoting and real Ctrl+C/Ctrl+Break natively; preserve explicit deferred known-folder, ACL, WSL and filesystem coverage.
+
+The catalog's `--platform` is an observation override, not proof of native support.
+Androidots catalogs apply only to Termux; missing/private submodules must remain
+uninitialized. Theme wallpaper calls use explicit Android, Wayland or X11 adapters;
+mock tests do not establish actual desktop or Android wallpaper rendering.

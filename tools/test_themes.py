@@ -23,16 +23,16 @@ class Themes(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.repo = self.root / 'repo space ü -dash'
         self.repo.mkdir()
-        for name in ('lib/dots', 'themes'):
+        for name in ('lib/dots', 'themes', 'default'):
             shutil.copytree(REPO / name, self.repo / name, symlinks=True)
         (self.repo / 'bin').mkdir()
-        for p in [REPO / 'bin/dots', *REPO.glob('bin/dots-themes*')]:
+        for p in [REPO / 'bin/dots', *REPO.glob('bin/dots-theme*')]:
             shutil.copy2(p, self.repo / 'bin' / p.name)
         self.home = self.root / 'home'
         self.home.mkdir()
         self.env = {'HOME': str(self.home), 'DOTS': str(self.repo), 'DOTS_COLOR': 'never',
                     'PATH': str(self.repo / 'bin') + ':' + str(Path(BASH).parent) + ':/usr/bin:/bin',
-                    'TMPDIR': str(self.root), 'TERM': 'xterm-256color', 'ZDOTDIR': str(self.home)}
+                    'TMPDIR': str(self.root), 'TMUX_TMPDIR': str(self.root), 'TERM': 'xterm-256color', 'ZDOTDIR': str(self.home)}
         for kind in ('CONFIG', 'CACHE', 'STATE', 'DATA'):
             self.env['XDG_' + kind + '_HOME'] = str(self.home / kind.lower())
         if os.environ.get('LD_PRELOAD'):
@@ -299,9 +299,9 @@ source "$DOTS/themes/bin/theme"
         lua = self.root / 'lua'
         (lua / 'util').mkdir(parents=True)
         (lua / 'config/highlights').mkdir(parents=True)
-        shutil.copy2(REPO / 'configs/nvim/lua/util/dots_theme.lua', lua / 'util/dots_theme.lua')
-        shutil.copy2(REPO / 'configs/nvim/lua/util/dots_theme_adapters.lua', lua / 'util/dots_theme_adapters.lua')
-        shutil.copy2(REPO / 'configs/nvim/lua/config/highlights/catppuccin.lua', lua / 'config/highlights/catppuccin.lua')
+        shutil.copy2(REPO / 'config/nvim/lua/util/dots_theme.lua', lua / 'util/dots_theme.lua')
+        shutil.copy2(REPO / 'config/nvim/lua/util/dots_theme_adapters.lua', lua / 'util/dots_theme_adapters.lua')
+        shutil.copy2(REPO / 'config/nvim/lua/config/highlights/catppuccin.lua', lua / 'config/highlights/catppuccin.lua')
         self.dots('themes', 'set', 'catppuccin')
         script = self.root / 'check.lua'
         script.write_text(r'''local root = vim.env.HOME .. "/.."
@@ -331,14 +331,16 @@ for _, flavor in ipairs({"latte", "frappe", "macchiato", "mocha"}) do
   assert(cat.options.flavour == flavor)
   local colors = require("catppuccin.palettes").get_palette(flavor)
   if flavor ~= "mocha" then
-    assert(hl("Visual").bg == tonumber(colors.surface1:sub(2),16))
+    local published = vim.json.decode(table.concat(vim.fn.readfile(vim.env.XDG_STATE_HOME .. "/dots/current/theme/palette.json"), "\n"))
+    assert(hl("Visual").bg == tonumber(published.roles.selection:sub(2),16))
     assert(hl("CursorLine").bg == tonumber(colors.surface0:sub(2),16))
   end
   assert(cat.options.transparent_background)
 end
 local count = 0
 vim.notify = function() count = count + 1 end
-vim.fn.writefile({"invalid"}, vim.env.XDG_STATE_HOME .. "/dots/themes/current")
+vim.uv.fs_unlink(vim.env.XDG_STATE_HOME .. "/dots/current/theme")
+vim.uv.fs_symlink("invalid", vim.env.XDG_STATE_HOME .. "/dots/current/theme")
 bridge.reload(); bridge.reload()
 vim.wait(30)
 assert(count == 1, "diagnostics must be bounded")
@@ -367,7 +369,7 @@ print("NVIM_THEME_OK")
                 self.assertEqual(self.dots('themes','current').stdout, f'{theme}-{flavor}\n')
                 data = json.loads((self.generation() / 'palette.json').read_text())
                 self.assertEqual(len(data['roles']),9)
-                self.assertIn(data['roles']['background'], data['palette'].values())
+                self.assertRegex(data['roles']['background'], r'^#[0-9a-fA-F]{6}$')
         self.assertEqual(self.dots('themes','color','kanagawa','wave','sumiInk3').stdout, '#1F1F28\n')
         self.assertEqual(self.dots('themes','color','rose-pine','main','_nc').stdout, '#16141f\n')
         self.dots('themes','set','rose-pine')
@@ -451,8 +453,8 @@ change_theme catppuccin-mocha >/dev/null
         shutil.copytree(cat,deps/'catppuccin',ignore=shutil.ignore_patterns('.git'))
         (self.root/'lua/util').mkdir(parents=True)
         for name in ['dots_theme.lua','dots_theme_adapters.lua']:
-            shutil.copy2(REPO/'configs/nvim/lua/util'/name,self.root/'lua/util'/name)
-        shutil.copytree(REPO/'configs/nvim/colors',self.root/'colors')
+            shutil.copy2(REPO/'config/nvim/lua/util'/name,self.root/'lua/util'/name)
+        shutil.copytree(REPO/'config/nvim/colors',self.root/'colors')
         self.wal_export()
         self.dots('themes','set','tokyonight','night')
         script=self.root/'families.lua'
@@ -491,9 +493,9 @@ for _,choice in ipairs(choices) do
  if theme~="catppuccin" then assert(gradient[1]==data.roles.info) end
 end
 -- Same-theme palette edits must change highlights, not reuse the plugin's old cache.
-local file=vim.env.DOTS.."/themes/tokyonight/flavors/night.toml"
+local file=vim.env.DOTS.."/themes/tokyonight-night/colors.toml"
 local lines=vim.fn.readfile(file)
-for i,line in ipairs(lines) do if line:match('^fg =') then lines[i]='fg = "#112233"' end end
+for i,line in ipairs(lines) do if line:match('^foreground =') then lines[i]='foreground = "#112233"' end end
 vim.fn.writefile(lines,file)
 vim.fn.system({"bash",vim.env.DOTS.."/bin/dots-themes-set","tokyonight","night"})
 assert(vim.v.shell_error==0)
