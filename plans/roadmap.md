@@ -21,6 +21,12 @@ managed installation or the Go phases below.
 
 The owner authorized the [configuration migration](config-path-migration.md), [files catalog](files-catalog.md), and [Omarchy-style themes](omarchy-themes.md). The bounded implementation and isolated tests are complete. Files inspection and catalog metadata are available; general file installation, adoption, removal, editing, transactions and undo remain future work. Androidots owns Termux-specific resources.
 
+## Presentation Requirement Across Phases
+
+As of 2026-09-24, every new or changed first-party human view must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Colorized terminal output, cohesive layouts and wording, and readable plain fallbacks are part of delivery for help, inspection, previews, successful operations, failures and recovery. JSON, raw values, generated code and other data interfaces retain their contracts.
+
+The live Bash/theme/file views provide the initial implementation and [recorded evidence](../docs/testing.md#terminal-presentation). Future phases must budget for the applicable output cases and renderer parity; older tools and paused Go slices are not declared retroactively conformant. This requirement does not authorize advancing deferred phases.
+
 ## Completion Legend
 
 - `[ ]` Not started.

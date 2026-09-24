@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Current theme backgrounds
+# dots:summary=Print the current wallpaper path
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- bg current "$@"
 source "$DT_LIB/commands.bash"

@@ -13,6 +13,12 @@ The [roadmap](roadmap.md#current-priority) owns current priorities: repository m
 - [`phase-2-command-center.md`](phase-2-command-center.md) — implemented command-center slices and native verification; further development paused.
 - [`termux-mvp.md`](termux-mvp.md) — implemented file inventory plus deferred installation stages and acceptance criteria.
 
+## Presentation Gate for Every Plan
+
+The [presentation contract](../docs/presentation.md) is the single source of truth for cohesive, polished human output under [decision 0009](../docs/decisions/0009-cohesive-command-presentation.md). Every plan inherits it, including completed plans when revisited and paused plans when explicitly resumed. This does not reopen completed work or resume paused implementation.
+
+Before implementing a human view, name its renderer, human/data modes and representative states; include the contract's [acceptance gate](../docs/presentation.md#acceptance-gate) in verification. Review related commands together for consistent layout, labels, status colors and wording. Preserve structured and script-facing output, readable plain fallbacks and explicit presentation preferences. Mark inapplicable cases and unverified coverage rather than claiming project-wide runtime conformance.
+
 ## Plan Rules
 
 - State whether a plan is proposed, active, paused, blocked, or completed. A pause describes scheduling, not the implementation status of completed work.

@@ -9,14 +9,21 @@ dt_bg_files() {
 dt_bg() (
   local action=${1:-help} file='' locked=0 previous='' record temp journal
   (($# == 0)) || shift
+  if [[ $action == help ]]; then dt_help bg; return; fi
   dt_current_id || return; DT_BG_ID=$REPLY
   dt_find_theme "$DT_BG_ID" || return
   record=$DT_STATE/backgrounds/$DT_BG_ID
   local -a files=()
   mapfile -d '' -t files < <(dt_bg_files "$DT_THEME_DIR" | LC_ALL=C sort -zu)
   case $action in
-    help) printf 'dots theme bg: list, current, set FILE [--lock-screen], next, switcher\n'; return ;;
-    list) (($# == 0)) || return 2; ((${#files[@]} == 0)) || printf '%s\n' "${files[@]}"; return ;;
+    list)
+      (($# == 0)) || return 2
+      if dots::human; then
+        dots::heading "Backgrounds / $DT_BG_ID"
+        for file in "${files[@]}"; do dots::path "$file"; dots::row "${file##*/}" "$REPLY"; done
+        printf '\n  %s backgrounds available\n' "${#files[@]}"
+      else ((${#files[@]} == 0)) || printf '%s\n' "${files[@]}"; fi
+      return ;;
     current) (($# == 0)) || return 2; [[ -f $DT_STATE/background-current && ! -L $DT_STATE/background-current ]] && cat "$DT_STATE/background-current"; return ;;
     set) (($# >= 1 && $# <= 2)) || return 2; file=$1; shift
       if (($#)); then [[ $1 == --lock-screen ]] || return 2; locked=1; fi ;;
@@ -68,5 +75,10 @@ dt_bg() (
     temp=$(mktemp "$DT_STATE/.background.XXXXXXXX") || return
     printf '%s\n' "$file" > "$temp"; dt_flush "$temp" && mv -- "$temp" "$DT_STATE/background-current" || return
   fi
-  printf 'committed\n%s\n' "$file" > "$journal"; dt_flush "$journal" && dt_flush "$DT_STATE"
+  printf 'committed\n%s\n' "$file" > "$journal"; dt_flush "$journal" && dt_flush "$DT_STATE" || return
+  if dots::human; then
+    dots::path "$file"
+    if ((locked)); then dots::success "Lock-screen background: $REPLY"
+    else dots::success "Background: $REPLY"; fi
+  fi
 )

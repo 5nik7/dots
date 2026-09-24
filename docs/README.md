@@ -7,6 +7,7 @@ The `dots` CLI is in the design and incremental-migration phase, with an isolate
 - [`principles.md`](principles.md) — priorities and engineering invariants.
 - [`architecture.md`](architecture.md) — system boundaries, execution flow, and target repository shape.
 - [`commands.md`](commands.md) — proposed CLI vocabulary and external command model.
+- [`presentation.md`](presentation.md) — required human output style, color/icon policy, data-interface boundaries and acceptance gate for new or changed commands.
 - [`specification.md`](specification.md) — draft modules, profiles, hosts, manifests, and resolution rules.
 - [`safety.md`](safety.md) — plan, apply, backup, transaction, rollback, undo, and secret handling.
 - [`platforms.md`](platforms.md) — Termux, Linux, WSL, and Windows behavior.

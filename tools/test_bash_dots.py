@@ -132,6 +132,17 @@ class DotsFixture(unittest.TestCase):
         p = self.run_dots('__complete', 'bash', '1', '--', 'dots', '', code=1)
         self.assertEqual((p.stdout, p.stderr), ('', ''))
 
+    def test_executable_group_help_lists_static_descendants(self):
+        self.command('themes', '# dots:summary=Theme manager', 'touch "$HOME/executed"')
+        self.command('themes-list', '# dots:summary=List themes', 'touch "$HOME/executed"')
+        self.command('themes-secret', '# dots:hidden=true', 'touch "$HOME/executed"')
+        output = self.run_dots('--color=always', 'help', 'themes').stdout
+        self.assertIn('themes list', output)
+        self.assertIn('List themes', output)
+        self.assertNotIn('themes secret', output)
+        self.assertIn('\x1b', output)
+        self.assertFalse((self.home / 'executed').exists())
+
     def test_header_limits_control_characters_and_duplicate_options(self):
         for header in ['# dots:summary=x\n# dots:summary=y', '# dots:summary=bad\x1btext',
                        '# dots:summary=' + 'x' * 17000,

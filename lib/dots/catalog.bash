@@ -202,8 +202,15 @@ dots_help() {
   dots_resolve "${words[@]}"; resolved=$?
   if (( resolved == 1 )); then return 1; fi
   if (( resolved == 0 && DOTS_CONSUMED == ${#words[@]} )); then
-    dots_metadata "$DOTS_EXECUTABLE" && dots_command_help "$route"
-    return
+    dots_catalog_load "${route// /-}-" || return
+    dots_metadata "$DOTS_EXECUTABLE" && dots_command_help "$route" || return
+    # Executable groups still expose their descendants through static metadata.
+    for word in "${DOTS_CATALOG[@]}"; do
+      if [[ ${DOTS_CATALOG_HIDDEN[$word]} != true ]]; then
+        printf '\n'; dots_catalog_print "$route"; break
+      fi
+    done
+    return 0
   fi
   dots_catalog_load "${route// /-}-" || return
   if ((${#DOTS_CATALOG[@]})); then dots_catalog_print "$route"

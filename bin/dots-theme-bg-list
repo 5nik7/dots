@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=List theme backgrounds
+# dots:summary=List backgrounds for the selected theme
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- bg list "$@"
 source "$DT_LIB/commands.bash"

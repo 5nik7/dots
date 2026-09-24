@@ -50,8 +50,7 @@ unimplemented routes remain unavailable. Reservations do not add features.
 - `dots`, `dots help`, `dots -h`, `dots --help`: global help and visible commands.
 - `dots help ROUTE...`, `dots ROUTE... --help`: static contextual help without
   executing an extension. A help flag before the first `--` is intercepted;
-  after `--` it belongs to the extension. Groups without an executable show
-  descendants. An executable group runs normally when called without help.
+  after `--` it belongs to the extension. Groups show their visible descendants, including groups with an executable. An executable group runs normally when called without help.
 - `dots commands`: visible built-ins and external commands in deterministic
   root/directory order. `dots commands --check` validates every definition,
   including hidden commands, and reports success only after complete validation.
@@ -103,6 +102,8 @@ implicit option grammar, or combined-short-option parsing are provided.
 
 ### Presentation Helpers
 
+The [presentation contract](presentation.md) defines the required visual language and acceptance gate for every new or changed first-party human view. The helpers and controls below are implemented; broader adoption follows each command's authorized implementation scope.
+
 Bash extensions may `source "$DOTS_LIB_DIR/ui.bash"` when launched through dots.
 The sourceable helpers are `dots::heading`, `dots::row`, `dots::kv`, `dots::info`,
 `dots::success`, `dots::warning`, and `dots::error`. Rows/kv take label and value;
@@ -118,6 +119,22 @@ is no font detection. Use `--icons=never` for ASCII status markers. Stdout and
 stderr are styled independently. Directory output and completion data remain
 plain. Shared helpers use Bash builtins and ANSI colors, not the shell startup
 chain, theme generators, or the existing general-purpose util script.
+
+Theme and file human views share this presentation policy. Terminal listings use
+headings, status colors/icons, counts and readable paths; forced color or icons also
+enable that layout when redirected. `NO_COLOR` disables automatic color while
+retaining the terminal layout. `dots --color=never --icons=never ...` gives a plain
+terminal view. Lists piped without forced decoration retain their existing line/TSV
+formats. JSON, file source/target queries, theme current/dir/color/background-current
+queries, shell initialization and completion keep their data format even when
+color is forced (explicit ANSI color-value formats still return ANSI as requested).
+
+`dots::human`, `dots::path` and `dots::swatch` support the Bash theme views. The
+Python file catalog implements the same color/icon policy for its own output.
+Completion explicitly requests undecorated catalog rows, regardless of global
+presentation settings. Neither view loads shell configuration or introduces a
+startup scan. Executable-group help lists static child metadata without running
+commands, so `dots theme`, `dots files` and `dots theme bg` are discoverable menus.
 
 ### Completion
 
@@ -384,7 +401,7 @@ Automatic transaction backups and explicit snapshots may share storage infrastru
 
 ## Proposed Global Options
 
-The exact spelling remains draft. Apply the same semantics consistently rather than allowing each command to reinterpret them.
+The exact spelling remains draft. Apply the same semantics consistently rather than allowing each command to reinterpret them. These options are not additions to the live Bash interface; it already uses prefix `--color=auto|always|never` and `--icons=auto|always|never`. Future human views must follow the [presentation contract](presentation.md).
 
 | Option | Meaning |
 | --- | --- |
@@ -438,7 +455,7 @@ dots commands --check
 
 ## Future Help
 
-Recursive group help remains proposed. Current global help is built-in-only; external help is targeted and static as specified below.
+For the paused Go development executable, recursive group help remains proposed. Its current global help is built-in-only; external help is targeted and static as specified below. The live Bash framework already implements static group help as documented above.
 
 - `dots --help` lists stable common commands and discoverable groups.
 - `dots <group> --help` lists routes in that group.

@@ -30,3 +30,19 @@ dots::info() { dots::style; printf '%s%s%s %s\n' "$DOTS_UI_BLUE" "$DOTS_UI_INFO"
 dots::success() { dots::style; printf '%s%s%s %s\n' "$DOTS_UI_GREEN" "$DOTS_UI_OK" "$DOTS_UI_RESET" "$*"; }
 dots::warning() { dots::style 2; printf '%s%s%s %s\n' "$DOTS_UI_YELLOW" "$DOTS_UI_WARN" "$DOTS_UI_RESET" "$*" >&2; }
 dots::error() { dots::style 2; printf '%s%s%s %s\n' "$DOTS_UI_RED" "$DOTS_UI_ERROR" "$DOTS_UI_RESET" "$*" >&2; }
+
+# Rich listings in terminals, or when decoration is explicitly requested.
+# Value/path/JSON commands must bypass this regardless of presentation settings.
+dots::human() { [[ -t 1 || ${DOTS_COLOR:-auto} == always || ${DOTS_ICONS:-auto} == always ]]; }
+dots::path() {
+  REPLY=$1
+  # A literal tilde is for display, not path resolution.
+  # shellcheck disable=SC2088
+  [[ ! ${HOME:-} || $1 != "$HOME"/* ]] || REPLY="~/${1#"$HOME"/}"
+}
+dots::swatch() {
+  dots::style
+  local hex=${1#\#}
+  [[ $hex =~ ^[a-fA-F0-9]{6}$ && $DOTS_UI_RESET ]] || return 0
+  printf '\e[48;2;%d;%d;%dm  %s ' "$((16#${hex:0:2}))" "$((16#${hex:2:2}))" "$((16#${hex:4:2}))" "$DOTS_UI_RESET"
+}

@@ -77,7 +77,9 @@ Do not add comment-header parsing or runtime metadata handshakes. Static help/di
 - Human help belongs on stdout for successful help requests.
 - Usage errors and diagnostics belong on stderr.
 - Structured output must be valid even when color is enabled globally; never mix decoration into JSON.
-- Respect `NO_COLOR` and non-interactive output once color support exists.
+- Follow the [presentation contract](../../docs/presentation.md) for every new or changed first-party human view, including help, empty results and diagnostics. Reuse the shared renderer or verify equivalent behavior.
+- Use the implemented color/icon controls and their documented `NO_COLOR`, terminal and forced-output precedence. Preserve readable plain layouts and all script-facing data formats.
+- Include the presentation acceptance gate in the focused plan and review representative output alongside related commands.
 - Use stable field names and version structured records if they become externally consumable.
 - Avoid forcing a pager or interactive selector when stdout is not a terminal.
 

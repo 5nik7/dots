@@ -81,6 +81,8 @@ changes visible without reloading. Never execute existing `dots-*` extensions as
 test fixtures. Keep sequential benchmark intervals free of other tests. Preserve
 the existing Zsh cache/reload regression coverage and FZF-tab acceptance.
 
+For new or changed human views, apply the [presentation acceptance gate](../../docs/presentation.md#acceptance-gate) using the existing command suites and test-owned roots. Cover the applicable output modes and states, review representative terminal layouts, and report gaps. Cross-renderer policy checks and forced-decoration data checks are required when shared presentation behavior changes; current evidence does not establish every command or native platform.
+
 ## Existing Zsh Configuration
 
 For Zsh startup changes, run `python3 -B tools/test_zsh.py` plus the isolated startup and PTY runners described in [the Zsh guide](../../shells/zsh/README.md). Capture the baseline before editing and keep timing runs sequential. Never profile the live startup chain against the real home; private/platform modules use synthetic substitutes. Treat native Termux results and other-platform fixtures separately.

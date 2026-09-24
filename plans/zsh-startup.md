@@ -67,3 +67,7 @@ The new regression failed before the fix and passes afterward. It exercises init
 - Private/platform module contents and external local startup customizations were intentionally excluded from tests. Their real-world cost and side effects remain outside these measurements.
 - Generated-data invalidation uses file metadata, not content hashing on every shell launch. Metadata-preserving edits can require `rlcs`; stateful activation-code changes require a new shell.
 - Existing first-run plugin downloads remain possible during ordinary user startup. Test fixtures refuse Git remote operations and install nothing.
+
+## Presentation Acceptance for Follow-up Work
+
+Future dots-owned human shell diagnostics must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Keep ordinary startup quiet, preserve generated initialization/completion and palette data, and do not load extra presentation dependencies or scan commands during startup. Third-party shell interfaces retain their own output contracts.

@@ -31,7 +31,7 @@ Never place a proposed installation command in the README as if it is safe to ru
 | --- | --- |
 | Component or directory ownership | `docs/architecture.md` |
 | Product invariant or priority | `docs/principles.md`, plus a decision record when material |
-| Command, flag, help, output, or metadata | `docs/commands.md`, generated reference, README when user-facing |
+| Command, flag, help, output, or metadata | `docs/commands.md`, generated reference, README when user-facing; `docs/presentation.md` owns shared human output policy |
 | Manifest, profile, variable, or precedence | `docs/specification.md` |
 | Mutation, backup, rollback, force, package, or secret handling | `docs/safety.md` |
 | Platform paths, detection, capability, or limitation | `docs/platforms.md` |
@@ -52,6 +52,7 @@ Never place a proposed installation command in the README as if it is safe to ru
 ## Plans and Decisions
 
 - Plans are living documents while work is active.
+- Every plan inherits the [presentation gate](../../plans/README.md#presentation-gate-for-every-plan). Link the shared contract rather than maintaining separate palettes or layout rules, and distinguish accepted requirements from verified runtime coverage.
 - Update checkboxes and status in the same change that completes or changes work.
 - Move durable conclusions from a plan into the relevant reference document.
 - Record a material architectural decision in `docs/decisions/` rather than leaving its reasoning only in chat or a completed plan.

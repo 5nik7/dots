@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Next theme backgrounds
+# dots:summary=Use the next theme background
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- bg next "$@"
 source "$DT_LIB/commands.bash"

@@ -64,6 +64,15 @@ workflow; generic imported themes need no downloaded Lua. Git theme installation
 updates, template overrides and wallpaper adapters are described in
 [Shared themes](docs/themes.md). Wallpaper changes are always explicit.
 
+Theme and file commands now have colored terminal views: palette swatches, active
+theme markers, file statuses, and paths that wrap on narrow screens. Group commands
+show their available subcommands. Use `dots --color=always theme show nord` to force
+color, or `dots --color=never --icons=never files list` for plain styling. Automatic
+color respects `NO_COLOR`; JSON, path queries, initialization and completion remain
+usable by scripts. Piped lists keep their plain format unless decoration is forced.
+
+The [presentation contract](docs/presentation.md) makes this cohesive style a requirement for new and changed first-party human views, including help, empty results and failures. Future commands must use the same visual language while respecting plain-output preferences and script interfaces; this is a planning requirement, not a claim that every existing tool has been restyled.
+
 ## Files and Configuration Layout
 
 `config/` is canonical in Dots, Androidots and Windots. Temporary `configs -> config`

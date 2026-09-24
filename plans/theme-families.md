@@ -90,3 +90,7 @@ intentionally deferred.
 See [Omarchy-style themes](omarchy-themes.md), [files catalog](files-catalog.md), and [configuration path migration](config-path-migration.md). The completed results above describe their original implementation; the follow-up has separate acceptance.
 
 The authorized [Omarchy theme expansion](omarchy-themes.md) and [files catalog](files-catalog.md) are now implemented under [decision 0008](../docs/decisions/0008-config-catalog-and-theme-apps.md). Earlier completed-slice evidence remains historical; current contracts are in the linked references.
+
+## Presentation Acceptance for Follow-up Work
+
+Future family/import command views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Preview swatches use actual palette colors; statuses and diagnostics use the shared visual language. Preserve palette data and adapter formats, and report unavailable optional integrations consistently.

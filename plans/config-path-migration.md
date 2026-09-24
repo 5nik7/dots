@@ -28,3 +28,7 @@ targets within `config/`, preserving their resolved source identity. Original li
 text is retained at `~/.local/state/dots/migrations/config-source-links-20260923.json`.
 All 897 historical config paths across the three repositories still have mapped
 objects in the canonical directories.
+
+## Presentation Acceptance for Follow-up Work
+
+Any future human migration preview or recovery view must meet the [presentation contract](../docs/presentation.md) and its acceptance gate, with consistent source/target, drift and recovery wording. Preserve the helper's machine-readable reports and durable journal format. This requirement does not repeat the completed migration or authorize alias removal.

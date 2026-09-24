@@ -101,3 +101,7 @@ under `lib/dots`, including the final cursor-position fix after the timing run.
 See [Omarchy-style themes](omarchy-themes.md), [files catalog](files-catalog.md), and [configuration path migration](config-path-migration.md). The completed results above describe their original implementation; the follow-up has separate acceptance.
 
 The authorized [Omarchy theme expansion](omarchy-themes.md) and [files catalog](files-catalog.md) are now implemented under [decision 0008](../docs/decisions/0008-config-catalog-and-theme-apps.md). Earlier completed-slice evidence remains historical; current contracts are in the linked references.
+
+## Presentation Acceptance for Follow-up Work
+
+Future dispatcher/help changes must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Keep the shared Bash helpers authoritative, evaluate stdout/stderr independently, and preserve extension forwarding and generated completion data. Initial theme/file presentation evidence is recorded in [testing](../docs/testing.md#terminal-presentation).

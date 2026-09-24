@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Show file catalog resources
+# dots:summary=Inspect a tracked file
 # dots:usage=ID [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--all-platforms||flag|Include inactive platforms

@@ -192,3 +192,7 @@ Evidence is retained under `$HOME/dots-review-evidence/phase-2-zsh-iwmrh6tl/`: e
 All five warm series have 600 samples; raw counts and median/p95 values were recomputed. Help/version satisfy each host's advisory budgets. All 43 core input fingerprints match the tested commit, and check/bench binary identities match within each host. Sanitized CI metadata, raw samples and review summaries are retained beside the Termux evidence. Review uses CI job-log metadata, not local desktop execution or downloaded artifact ZIP verification. Final documentation-only CI results retain their own commit identity.
 
 PR creation returned HTTP 403 from the GitHub integration; the existing local gh credential is invalid. Use the [comparison](https://github.com/5nik7/dots/compare/main...feat/phase-2-zsh-completion), with the prepared title/body retained in the evidence directory. No merge or live installation occurred. The original HEAD/index/logo and existing recovery refs remain protected; this session's enrolled Zsh worktree is retained.
+
+## Presentation Acceptance for Follow-up Work
+
+When explicitly resumed, new or changed Go human views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate through a core-owned renderer with policy parity. Preserve structured discovery, generated completion and external stream forwarding. Further Go development remains paused; existing results below do not imply that this presentation rollout is implemented.

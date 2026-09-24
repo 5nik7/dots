@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Track file catalog resources
+# dots:summary=Record file ownership and destination metadata
 # dots:usage=SOURCE [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--all-platforms||flag|Include inactive platforms

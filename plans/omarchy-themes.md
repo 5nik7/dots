@@ -15,3 +15,14 @@ Termux fixture checks cover all 33 selections, compatibility, state recovery and
 application data. Android/desktop wallpaper APIs use fake adapters in tests; actual
 wallpaper rendering and native desktop application reloads remain unverified.
 No real theme or wallpaper was selected during implementation.
+
+## Terminal presentation follow-up (2026-09-24)
+
+Implemented colored human output using the dispatcher's color/icon policy, static
+subcommand menus and terminal-aware layouts. Plain pipelines, JSON, scalar/path
+queries, initialization and completion retain their data contracts. Validation is
+recorded in [testing](../docs/testing.md#terminal-presentation).
+
+## Presentation Acceptance for Follow-up Work
+
+Future theme and wallpaper changes must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Keep list/detail, preview, selection, import/update/remove and failure messages cohesive. Palette swatches show theme colors while diagnostics retain shared semantic roles; preserve scalar queries, generated initialization, app configuration and legacy APIs.

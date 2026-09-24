@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Target file catalog resources
+# dots:summary=Print a file destination path
 # dots:usage=ID [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--all-platforms||flag|Include inactive platforms

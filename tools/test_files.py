@@ -83,6 +83,62 @@ class Files(unittest.TestCase):
         self.assertEqual(call("files", "source", "dots:app").strip(), str(self.repo / "config/app"))
         self.assertIn("dots:app", call("__complete", "zsh", "3", "--", "dots", "files", "show", "dots:"))
         self.assertIn("dots", call("__complete", "fish", "4", "--", "dots", "files", "list", "--repo", "d"))
+        with patch.dict(os.environ, {"DOTS_COLOR": "always", "DOTS_ICONS": "always"}):
+            hints = call("__complete", "zsh", "3", "--", "dots", "files", "show", "dots:")
+            self.assertIn("candidate\tdots:app\t", hints)
+            self.assertNotIn("\x1b", hints)
+
+
+    def test_pretty_output_preserves_machine_interfaces(self):
+        cmd = [sys.executable, "-B", str(ROOT / "lib/dots/files/catalog.py")]
+        env = dict(os.environ, DOTS_COLOR="always", DOTS_ICONS="never", COLUMNS="40")
+        def run(*args):
+            p = subprocess.run(cmd + list(args), env=env, text=True, capture_output=True)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            return p.stdout
+        display = run("list")
+        self.assertIn("\x1b[", display)
+        self.assertIn("[+] linked", display)
+        self.assertIn("Source", display)
+        self.assertIn("Target", run("show", "dots:app"))
+        self.assertIn("File sources", run("sources"))
+        self.assertIn("No matching resources", run("list", "--app", "absent"))
+        self.assertEqual(run("source", "dots:app"), str(self.repo / "config/app") + "\n")
+        self.assertNotIn("\x1b", run("list", "--json"))
+        self.assertEqual(json.loads(run("list", "--json"))["resources"][0]["status"], "linked")
+        self.assertFalse((self.repo / ".dots/files.lock").exists())
+        env.update(DOTS_COLOR="never", DOTS_ICONS="always")
+        self.assertNotIn("\x1b", run("list"))
+        self.assertIn("", run("list"))
+        env.update(DOTS_COLOR="auto", DOTS_ICONS="auto")
+        self.assertTrue(run("list").startswith("dots:app\tlinked\t"))
+
+    def test_terminal_presentation_and_no_color(self):
+        import pty
+        cmd = [sys.executable, "-B", str(ROOT / "lib/dots/files/catalog.py"), "list"]
+        for extra, colored in [({}, True), ({"NO_COLOR": "1"}, False), ({"TERM": "dumb"}, False), ({"DOTS_COLOR": "never"}, False)]:
+            env = dict(os.environ, TERM="xterm-256color", DOTS_COLOR="auto", DOTS_ICONS="never", NO_COLOR="")
+            env.update(extra)
+            master, slave = pty.openpty()
+            try:
+                proc = subprocess.run(cmd, env=env, stdout=slave, stderr=subprocess.PIPE, timeout=10)
+                os.close(slave); slave = None
+                output = b""
+                while True:
+                    try:
+                        chunk = os.read(master, 4096)
+                    except OSError:
+                        break
+                    if not chunk:
+                        break
+                    output += chunk
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                self.assertEqual(b"\x1b[" in output, colored)
+                self.assertIn(b"Source", output)
+            finally:
+                if slave is not None:
+                    os.close(slave)
+                os.close(master)
 
     def test_directory_ownership_and_catalog_symlink_refusal(self):
         child = dict(self.row, id="child", source="config/app/-settings", strategy="link", target="${CONFIG}/app/settings")

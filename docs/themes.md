@@ -52,6 +52,23 @@ without creating state. `refresh` rebuilds changed inputs and retries available 
 reloads even when generation inputs are unchanged. `init [--shell bash|zsh|fish]`
 prints sourceable initialization. Theme IDs complete from local data on Tab.
 
+## Presentation
+
+`dots theme` and `dots theme bg` show colored help with subcommand descriptions,
+derived from the same static metadata as completion. In terminals, `list` marks the
+current theme and shows a count, `show` displays true-color swatches beside hex
+values, `set --dry-run` formats the planned paths, and background listings show
+readable names/paths. Successful wallpaper actions report the chosen image.
+Theme operations use the existing success/error styles.
+
+Automatic color honors NO_COLOR, TERM and the output stream. Override it with
+`dots --color=always theme show nord` or disable decoration with
+`dots --color=never --icons=never theme list`. Forced color/icons select the human
+view even when redirected. Unforced piped listings retain their plain formats.
+`current`, `dir`, `color`, `bg current` and `init` retain their machine-consumable
+values under every presentation setting; explicit ANSI color formats remain
+intentional ANSI output. Legacy plural interfaces retain their existing formats.
+
 ## Application connections
 
 The stable path is `${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme`, a symlink

@@ -32,8 +32,11 @@ List/discover/locate accept `--repo`, `--app`, `--category`, `--status`, `--plat
 `--all-platforms`, `--sort id|app|repository|source|status`, and `--json`. The default
 platform is detected; other platforms can be inspected explicitly. `--json` emits
 one schema-1 object with `platform`, `resources` and `sources`; diagnostics go to
-stderr. Human lists are tab-separated ID, status, source and target. Sources list
-ID, availability, repository root and platforms. Success is 0; validation/I/O
+stderr. Terminal views use colored status markers, counts and labeled source/target paths,
+abbreviating HOME as `~` and wrapping long paths for narrow screens. Details show
+application, category, platform, strategy and ownership information. Empty results
+are explicit. Piped lists retain tab-separated ID, status, source and target; piped
+sources retain ID, availability, repository root and platforms. Success is 0; validation/I/O
 errors are 1 and invalid command syntax is 2.
 
 Tracking writes only repository metadata, with an exclusive lock, flushed temporary
@@ -106,3 +109,18 @@ Theme publication may deliberately connect Termux colors to generated state inst
 of the catalogued baseline source. Inventory reports that link as `linked-elsewhere`;
 it does not infer adoption or overwrite it. General installation will need to account
 for these specialized generated targets explicitly.
+
+## Presentation
+
+Color/icons follow the dispatcher's `auto|always|never` policy, including NO_COLOR.
+The following force or disable decoration; global options go before `files`:
+
+```bash
+dots --color=always files list --sort app
+dots --color=never --icons=never files show dots:kitty
+```
+
+Forced color/icons select the human layout even when redirected. `--json` and
+`source`/`target` always retain their machine output. Completion uses plain rows
+independently of these settings. Tracking reports metadata saved without claiming
+files were installed. Human file views escape control characters in filenames.

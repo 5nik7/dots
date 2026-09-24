@@ -50,6 +50,7 @@ Do not maintain competing exhaustive lists.
 - Product priorities: `docs/principles.md`.
 - Architecture and component ownership: `docs/architecture.md`.
 - Command routes and semantics: eventually the command registry; until implemented, `docs/commands.md` is the design source.
+- Human output style and acceptance: `docs/presentation.md`.
 - Manifest semantics and precedence: `docs/specification.md`.
 - Destructive-operation rules: `docs/safety.md`.
 - Platform support claims: `docs/platforms.md`.
@@ -102,6 +103,7 @@ Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md)
 - Help, completion, JSON discovery, and Markdown command reference must derive from the same metadata.
 - Do not require `fzf`, `jq`, `sed`, `awk`, Git, or a package manager merely to start the CLI or display basic help.
 - Keep stdout machine-consumable when a command promises structured output. Send diagnostics to stderr.
+- Every new or changed first-party human view must follow [the presentation contract](docs/presentation.md): cohesive layouts and wording, shared semantic colors, readable plain fallbacks, and preserved data interfaces. Apply its acceptance gate in every focused plan.
 
 Do not add a new command or rename an existing route without updating `docs/commands.md`, completion behavior, command metadata tests, and user-facing documentation when applicable.
 

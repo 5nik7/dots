@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Set theme backgrounds
+# dots:summary=Set a wallpaper image
 # dots:usage=FILE [--lock-screen]
 # dots:argument=1|file|Background image
 # dots:option=--lock-screen||flag|Set the Android lock-screen wallpaper

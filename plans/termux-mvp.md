@@ -159,3 +159,7 @@ Reloading application settings can affect active sessions. Treat reload as an ex
 - Test runners and evidence go to `../docs/testing.md`.
 - Implemented user workflow goes to `../README.md`.
 - Completed roadmap items are checked in `roadmap.md` in the same change.
+
+## Presentation Acceptance for Follow-up Work
+
+All future human MVP views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Plan narrow Termux layouts and plain fallbacks for inventory, preview, conflict, apply, partial failure and undo/recovery states. Include Androidots-owned commands in the same review while respecting local guides; preserve JSON and journal data. General installation remains deferred.

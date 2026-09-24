@@ -423,3 +423,20 @@ Full public Zsh fixture startup was also compared sequentially (five warm sample
 Application-cache cold startup was 3.56 s versus 3.14 s. The warm difference is about
 1.6%; these samples do not establish a general speedup. Raw before/after JSON is
 in the same retained verification directory.
+
+## Terminal Presentation
+
+The [presentation acceptance gate](presentation.md#acceptance-gate) applies to all new or changed first-party human views. The evidence below covers the initial implementation only. Future changes must add applicable missing state, stream, layout and renderer-parity cases, including visual review at 40, 80 and 120 columns. Record automated checks separately from visual review, and native results separately from simulated platform fixtures. Do not infer complete cross-command or desktop coverage from these Termux results.
+
+The existing file, theme workflow and Bash suites cover presentation in disposable
+roots: colored/undecorated terminal output, NO_COLOR and TERM=dumb through an actual
+PTY, forced color/icons, narrow file views, empty results, theme swatches, active
+selection markers, dry-run output, and static executable-group menus. They verify
+plain piped listings, JSON, path/scalar queries, shell initialization and completion
+under forced decoration. Hidden child commands remain hidden and help never runs
+extensions. Use the existing `tools/test_files.py`, `tools/test_theme_workflow.py`
+and `tools/test_bash_dots.py` runners; no live theme activation is needed.
+
+On native Termux, 2026-09-24, presentation validation passed 9 file tests, 11 theme
+workflow tests, 23 Bash framework tests and 23 theme compatibility tests (66 total).
+ShellCheck, relative Markdown links and `git diff --check` also passed.

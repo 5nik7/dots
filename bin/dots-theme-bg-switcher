@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Switcher theme backgrounds
+# dots:summary=Choose a background with FZF
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- bg switcher "$@"
 source "$DT_LIB/commands.bash"

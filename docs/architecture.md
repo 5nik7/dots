@@ -14,6 +14,8 @@ and the shared built-in/help model; `ui.bash` is a sourceable presentation libra
 Only help/discovery/completion load the catalog. There is no catalog cache,
 general transaction engine, or dependency on the Go binary. See [decision 0006](decisions/0006-bash-command-framework.md).
 
+The [presentation contract](presentation.md) owns human output policy. `ui.bash` implements the shared Bash renderer; the file catalog's Python `Presentation` class mirrors it and requires policy parity checks when changed. Domain commands own their result data and choose human or data views explicitly. The dispatcher preserves extension streams; it does not decorate arbitrary output. This requirement applies to future authorized core work without changing the paused Go implementation.
+
 ## Existing Zsh Configuration
 
 The live shell configuration is maintained independently of the paused Go core. `shells/zsh/zshrc` owns startup order; its `core/`, `integrations/`, and `platforms/` modules separate shared setup, tool activation, and execution-environment detection. Existing public module entry points remain available. Generated shell data belongs in user cache directories, not the repository. See the [Zsh guide](../shells/zsh/README.md).
@@ -231,7 +233,7 @@ Neovim gitlink at `config/nvim`; Neovim retains independent Git history.
 of existing home links. It is separate from a future general installation engine.
 
 `.dots/sources.json` owns repository composition and exclusions. Each repository owns
-its `.dots/files.json` resource metadata. `lib/dots/files/catalog.py` owns validation,
+its `.dots/files.json` resource metadata. `lib/dots/files/catalog.py` owns terminal presentation using the Bash UI color/icon policy, validation,
 read-only observation/discovery, classification and atomic metadata tracking. Thin
 `bin/dots-files-*` commands expose this through the Bash dispatcher; completion uses
 the same data reader directly without extension execution. See [files](files.md).

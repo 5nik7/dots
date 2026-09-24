@@ -97,6 +97,8 @@ Users and automation should be able to inspect:
 
 Human output can be concise; structured output must be stable and complete enough for tooling.
 
+Polished, cohesive human output is a required part of the interface. Commands must share visual hierarchy, terminology, semantic colors and readable plain fallbacks, including empty and failure states. Respect terminal capabilities and explicit color/icon preferences; preserve script-facing data formats. The [presentation contract](presentation.md) and [decision 0009](decisions/0009-cohesive-command-presentation.md) make this an acceptance requirement for new and changed human views without resuming paused implementation.
+
 ## 10. Treat Documentation and Tests as Part of the Interface
 
 Behavior, help, examples, completions, schemas, tests, and plans must not evolve independently.

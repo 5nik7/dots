@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Locate file catalog resources
+# dots:summary=Find files by name, app, source or target
 # dots:usage=QUERY [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--all-platforms||flag|Include inactive platforms

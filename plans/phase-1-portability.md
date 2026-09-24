@@ -309,3 +309,7 @@ The retained final-checkpoint [CI run 34424607080](https://github.com/5nik7/dots
 Restricted/unelevated Windows policy and ACL behavior, known-folder resolution, UNC/junction/long-path/cross-volume cases, WSL/other architectures, and controlled cold-cache or representative desktop-hardware performance remain separate gaps. Scope any required follow-up explicitly. No Phase 2, bootstrap, real-home installation, transaction, manifest, migration, or repository-size work begins automatically from this evidence.
 
 The implemented command surface is documented in [commands.md](../docs/commands.md), runtime/path limitations in [platforms.md](../docs/platforms.md), and runner guarantees in [testing.md](../docs/testing.md). No documentation for a feature implemented in this experiment is intentionally deferred.
+
+## Presentation Acceptance for Follow-up Work
+
+If further experiment work is explicitly authorized, new or changed human views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Preserve machine-readable verifier and distribution reports. The historical measurements and completed output checks below remain evidence for their original scope, not proof of current presentation conformance.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Discover file catalog resources
+# dots:summary=Find sources not yet tracked
 # dots:usage=[OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--all-platforms||flag|Include inactive platforms

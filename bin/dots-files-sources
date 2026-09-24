@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Sources file catalog resources
+# dots:summary=List repositories contributing file resources
 # dots:usage=[OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--all-platforms||flag|Include inactive platforms

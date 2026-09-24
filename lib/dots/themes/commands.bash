@@ -1,6 +1,24 @@
 # Singular theme CLI. Legacy plural routes retain their positional interfaces.
 source "$DT_LIB/core.bash"
 source "$DT_LIB/../ui.bash"
+dt_error() { dots::error "dots theme: $*"; return 1; }
+# backgrounds.bash also calls this helper with the bg route argument.
+# shellcheck disable=SC2120
+dt_help() { "${DT_LIB%/lib/dots/themes}/bin/dots" help theme "$@"; }
+dt_list() {
+  local id selected='' count=0
+  if ! dots::human; then dt_theme_ids | LC_ALL=C sort; return; fi
+  if dt_current_id 2>/dev/null; then selected=$REPLY; fi
+  dots::heading 'Themes'
+  while IFS= read -r id; do
+    dots::style
+    if [[ $id == "$selected" ]]; then
+      printf '  %s%s%s  %s%s current%s\n' "$DOTS_UI_BLUE" "$id" "$DOTS_UI_RESET" "$DOTS_UI_GREEN" "$DOTS_UI_OK" "$DOTS_UI_RESET"
+    else printf '  %s%s%s\n' "$DOTS_UI_BLUE" "$id" "$DOTS_UI_RESET"; fi
+    ((count+=1))
+  done < <(dt_theme_ids | LC_ALL=C sort)
+  printf '\n  %s themes available\n' "$count"
+}
 dt_current_id() {
   dt_selected selection || return
   REPLY=$DT_THEME-$DT_FLAVOR
@@ -22,8 +40,8 @@ dt_command() {
   local action=${1:-help} name key value id dry=0 background=0
   (($# == 0)) || shift
   case $action in
-    help) printf '%s\n' 'dots theme: list, show ID, current, dir [ID], color COLOR [FORMAT] [--theme ID]' '  set ID [--background] [--dry-run], refresh, init [--shell SHELL], switcher' '  install URL [--name ID], update ID|--all, remove ID, bg COMMAND';;
-    list) (($# == 0)) || return 2; dt_theme_ids | LC_ALL=C sort ;;
+    help) dt_help ;;
+    list) (($# == 0)) || return 2; dt_list ;;
     current) (($# == 0)) || return 2; dt_current_id && printf '%s\n' "$REPLY" ;;
     dir)
       (($# <= 1)) || return 2
@@ -34,7 +52,17 @@ dt_command() {
       (($# == 1)) || return 2
       dt_load "$1" || return
       dots::heading "$DT_ID ($DT_MODE)"
-      for key in "${!DT_SEMANTIC[@]}"; do printf '%s\t%s\n' "$key" "${DT_SEMANTIC[$key]}"; done | LC_ALL=C sort ;;
+      if dots::human; then
+        while IFS= read -r key; do
+          value=${DT_SEMANTIC[$key]}
+          dots::style
+          printf '  %s%-24s%s ' "$DOTS_UI_BLUE" "$key" "$DOTS_UI_RESET"
+          dots::swatch "$value"
+          printf '%s\n' "$value"
+        done < <(printf '%s\n' "${!DT_SEMANTIC[@]}" | LC_ALL=C sort)
+      else
+        for key in "${!DT_SEMANTIC[@]}"; do printf '%s\t%s\n' "$key" "${DT_SEMANTIC[$key]}"; done | LC_ALL=C sort
+      fi ;;
     color)
       local -a args=()
       id=''
@@ -60,6 +88,16 @@ dt_command() {
       source "$DT_LIB/state.bash"
       dt_state_preflight || return
       if ((dry)); then
+        if dots::human; then
+          dots::heading 'Theme preview'
+          dots::row 'Select' "$id"
+          dots::path "$DT_ACTIVE"; dots::row 'Publish' "$REPLY"
+          for name in "${DT_CONNECT_TARGETS[@]}"; do dots::path "$name"; dots::row 'Connect' "$REPLY"; done
+          dots::row 'Reload' 'Available Termux, tmux and Kitty adapters'
+          (( ! background )) || dots::row 'Background' 'Apply the selected theme background'
+          printf '\n'; dots::info 'Preview only; no changes made'
+          return 0
+        fi
         printf 'Select %s\nPublish %s\n' "$id" "$DT_ACTIVE"
         for name in "${DT_CONNECT_TARGETS[@]}"; do printf 'Connect %s\n' "$name"; done
         printf 'Reload available Termux, tmux and Kitty adapters\n'

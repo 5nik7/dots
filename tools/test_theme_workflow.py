@@ -26,6 +26,25 @@ class Workflow(old.Themes):
         self.assertEqual(self.dots("theme", "color", "accent", "--theme", "catppuccin-mocha").stdout.strip(), "#89b4fa")
         self.assertFalse(self.state.exists())
 
+    def test_presentation_and_raw_theme_queries(self):
+        env = dict(self.env, DOTS_COLOR="always", DOTS_ICONS="never")
+        self.assertIn("theme set", self.dots("theme", env=env).stdout)
+        self.assertIn("theme bg next", self.dots("theme", "bg", env=env).stdout)
+        listing = self.dots("theme", "list", env=env).stdout
+        self.assertIn("[+] current", listing)
+        self.assertIn("33 themes available", listing)
+        self.assertIn("\x1b[48;2;", self.dots("theme", "show", "nord", env=env).stdout)
+        preview = self.dots("theme", "set", "nord", "--dry-run", env=env).stdout
+        self.assertIn("Theme preview", preview)
+        self.assertIn("Preview only", preview)
+        self.assertIn("Backgrounds", self.dots("theme", "bg", "list", env=env).stdout)
+        for args in [("current",), ("dir", "nord"), ("color", "accent", "--theme", "nord"), ("init",)]:
+            self.assertNotIn("\x1b", self.dots("theme", *args, env=env).stdout)
+        error = self.dots("theme", "show", "absent", env=env, code=1)
+        self.assertEqual(error.stdout, "")
+        self.assertIn("\x1b", error.stderr)
+        self.assertFalse(self.state.exists())
+
     def test_template_precedence_atomic_output_and_generic(self):
         user = self.home / "config/dots/themed"
         user.mkdir(parents=True)

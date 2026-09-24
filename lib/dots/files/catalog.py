@@ -6,13 +6,103 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import stat
 import subprocess
 import sys
 import tempfile
+import textwrap
+import unicodedata
 
 ID = re.compile(r"^[a-z][a-z0-9_-]*$")
 PLATFORMS = {"termux", "linux", "wsl", "windows"}
+
+
+class Presentation:
+    """Python rendering of the same terminal/color/icon policy as ui.bash."""
+    def __init__(self, stream=None):
+        self.stream = stream if stream is not None else sys.stdout
+        terminal = self.stream.isatty() and os.environ.get("TERM", "dumb") != "dumb"
+        mode, icons = os.environ.get("DOTS_COLOR", "auto"), os.environ.get("DOTS_ICONS", "auto")
+        self.color = mode == "always" or (mode == "auto" and terminal and not os.environ.get("NO_COLOR"))
+        self.icons = icons == "always" or (icons == "auto" and terminal)
+        self.human = self.stream.isatty() or mode == "always" or icons == "always"
+        self.width = max(24, shutil.get_terminal_size((80, 24)).columns)
+
+    @staticmethod
+    def clean(value):
+        # Show path controls literally; never let a discovered filename issue ANSI.
+        return "".join(c if c.isprintable() or unicodedata.category(c) == "Co" else repr(c)[1:-1] for c in str(value))
+
+    def paint(self, value, code):
+        value = self.clean(value)
+        return f"\033[{code}m{value}\033[0m" if self.color else value
+
+    def emit(self, value=""):
+        print(value, file=self.stream)
+
+    def heading(self, title):
+        self.emit(self.paint(title, "1;96"))
+
+    def path(self, value):
+        if value is None:
+            return "not mapped"
+        home = os.environ.get("HOME", "").rstrip("/")
+        value = str(value)
+        return "~" + value[len(home):] if home and (value == home or value.startswith(home + "/")) else value
+
+    def detail(self, label, value):
+        text = ", ".join(map(str, value)) if isinstance(value, list) else "yes" if value is True else "no" if value is False else "not mapped" if value is None else str(value)
+        label = self.clean(label)
+        prefix = f"    {label:<10} "
+        # Wrap display lines without losing the full path, including on phones.
+        lines = textwrap.wrap(self.clean(text), width=max(8, self.width-len(prefix)), break_on_hyphens=False, replace_whitespace=False) or [""]
+        self.emit(self.paint(prefix, "94") + lines[0])
+        for line in lines[1:]:
+            self.emit(" " * len(prefix) + line)
+
+    def status(self, status):
+        if status in ("linked", "available", "tracked"):
+            code, icon = "92", "" if self.icons else "[+]"
+        elif status in ("conflict", "broken-link", "source-broken-link", "source-missing", "unavailable", "linked-elsewhere"):
+            code, icon = "91", "" if self.icons else "[x]"
+        elif status in ("replaced", "excluded", "inactive-platform"):
+            code, icon = "90", "󰋽" if self.icons else "[i]"
+        else:
+            code, icon = "93", "" if self.icons else "[!]"
+        return self.paint(f"{icon} {status.replace('-', ' ')}", code)
+
+    def render(self, action, rows, platform, repository=None):
+        titles = {"sources": "File sources", "list": "Files", "locate": "Located files", "discover": "Discovered files", "show": "File details", "track": "Tracked file"}
+        self.heading(titles[action])
+        noun = ("repository" if len(rows) == 1 else "repositories") if action == "sources" else ("resource" if len(rows) == 1 else "resources")
+        self.emit(self.paint(f"  {len(rows)} {noun} / {platform}", "90"))
+        if not rows:
+            self.emit("\n  No matching resources." if action != "sources" else "\n  No matching repositories.")
+            return
+        for row in rows:
+            self.emit()
+            identity = row["id"] if action != "track" else f"{repository}:{row['id']}"
+            identity = self.clean(identity)
+            status = row.get("status", "tracked")
+            if len(identity) + len(status) + 10 <= self.width:
+                width = min(34, max(len(identity), self.width-32))
+                self.emit("  " + self.paint(f"{identity:<{width}}", "1;94") + "  " + self.status(status))
+            else:
+                self.emit("  " + self.paint(identity, "1;94"))
+                self.emit("    " + self.status(status))
+            if action == "sources":
+                self.detail("Root", self.path(row["root"]))
+                self.detail("Platforms", row["platforms"])
+            else:
+                self.detail("Source", self.path(row.get("source")))
+                self.detail("Target", self.path(row.get("target")))
+                if action in ("show", "track"):
+                    for key, label in (("app", "App"), ("category", "Category"), ("repository", "Repository"), ("platforms", "Platforms"), ("applicable", "Applicable"), ("tracked", "Tracked"), ("strategy", "Strategy"), ("target_spec", "Target spec"), ("replaces", "Replaces"), ("replaced_by", "Replaced by"), ("conflicts", "Conflicts"), ("replacement_unavailable", "Unavailable replacement")):
+                        if key in row:
+                            self.detail(label, row[key])
+        if action == "track":
+            self.emit("\n  Catalog metadata saved; no files installed.")
 
 
 def read_json(path):
@@ -352,6 +442,8 @@ def main(argv=None):
         if value is None:
             raise ValueError("resource has no resolved target")
         print(value)
+    elif Presentation().human:
+        Presentation().render(args.action, rows, args.platform, args.repo)
     elif args.action == "show":
         for key, value in rows[0].items():
             print(f"{key}: {value}")
@@ -368,5 +460,6 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
-        print(f"dots files: {exc}", file=sys.stderr)
+        ui = Presentation(sys.stderr)
+        ui.emit(ui.paint(f"dots files: {exc}", "91"))
         sys.exit(1)

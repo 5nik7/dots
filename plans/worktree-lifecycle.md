@@ -42,3 +42,7 @@ The new isolated regressions reproduced both reviewed defects against `9268b5130
 The helper now classifies every walked entry with `lstat`, refusing special/unknown types and metadata errors without opening special files. Cleanup and the documented startup fetch use `--refmap=` with the explicit remote-main refspec. The fetch regression proves freshness from an advanced local bare remote and unchanged local branch/recovery refs.
 
 Native Termux passed all 18 lifecycle tests, including FIFO/socket retention in preview/apply and native process/removal coverage. Device-node and unknown-mode classification plus denied metadata are injected; no native device-node capability is claimed. Windows FIFO and filesystem socket fixtures are explicitly unavailable; native Windows removal remains deferred. Final-commit Linux/Windows results and the updated prepared PR description are retained with review evidence under `$HOME/dots-review-evidence/worktree-lifecycle-review-ifj3xvwe/`. No real worktree cleanup, Go build or benchmark is part of this correction.
+
+## Presentation Acceptance for Follow-up Work
+
+Future human lifecycle summaries must meet the [presentation contract](../docs/presentation.md) and its acceptance gate, especially preview, refusal and recovery messages. Preserve machine-readable reports, review tokens and evidence artifacts exactly. This does not authorize worktree operations or change the completed helper's output.

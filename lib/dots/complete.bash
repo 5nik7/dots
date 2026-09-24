@@ -23,7 +23,7 @@ dots_value_candidates() {
       local action=list
       [[ $type != file-repository ]] || action=sources
       local output
-      output=$(python3 -B "$DOTS_LIB_DIR/files/catalog.py" "$action" --all-platforms 2>/dev/null) || return 0
+      output=$(DOTS_COLOR=never DOTS_ICONS=never python3 -B "$DOTS_LIB_DIR/files/catalog.py" "$action" --all-platforms 2>/dev/null) || return 0
       while IFS=$'\t' read -r value _; do dots_candidate "$lead$value"; done <<< "$output"
       ;;
     theme|flavor|palette-color|color-format)
