@@ -1,6 +1,6 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-add_newline = false
+add_newline = true
 follow_symlinks = false
 command_timeout = 10000
 scan_timeout = 10000
@@ -14,6 +14,7 @@ $rust\
 $golang\
 $nodejs\
 $php\
+$lua\
 $java\
 $kotlin\
 $haskell\
@@ -21,7 +22,7 @@ $python\
 $docker_context\
 $kubernetes\
 $container\
-$package\
+$package \
 )
 $os\
 $username\
@@ -139,23 +140,10 @@ symbol = ' '
 style = 'fg:color_fill bg:color_bg'
 
 [directory]
-read_only = "󰌾"
-# before_repo_root_style = 'fg:color_directory'
-# style = 'fg:color_directory'
-# format = '[$path]($style)( [$read_only]($read_only_style))'
-# repo_root_style = 'fg:color_directory_repo bold'
-# repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path](fg:color_directory_repo_leaf)( [$read_only]($read_only_style))'
-# truncate_to_repo = true
-# truncation_length = 10
-# truncation_symbol = "…/"
-# fish_style_pwd_dir_length = 1
-# repo_root_style = "fg:color_directory_repo bold"
-# read_only = ""
-# home_symbol = "~"
-# use_os_path_sep = false
-# use_logical_path = false
-# read_only_style = 'fg:color_directory dimmed'
-# truncation_symbol = "…/"
+truncation_length = 2
+truncation_symbol = "…/"
+repo_root_style = "bold cyan"
+repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 
 [git_branch]
 symbol = ''
