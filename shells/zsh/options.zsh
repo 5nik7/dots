@@ -8,6 +8,7 @@ setopt_if_exists() {
   fi
 }
 
+setopt_if_exists append_history
 setopt_if_exists no_bg_nice
 setopt_if_exists local_options
 setopt_if_exists local_traps
@@ -19,6 +20,7 @@ setopt_if_exists hist_ignore_all_dups
 setopt_if_exists hist_find_no_dups
 setopt_if_exists inc_append_history
 setopt_if_exists share_history
+setopt_if_exists inc_apend_history
 setopt_if_exists extended_glob
 setopt_if_exists no_clobber
 setopt_if_exists interactive_comments
@@ -35,32 +37,32 @@ unset setopt_if_exists
 unsetopt beep
 
 if [[ -z ${_DOTS_ZLE_READY:-} ]]; then
-bindkey -v
-export KEYTIMEOUT=1
+  bindkey -v
+  export KEYTIMEOUT=1
 
-zle-keymap-select() {
-  if [[ ${KEYMAP} == vicmd ]] ||
-    [[ $1 = 'block' ]]; then
-    echo -ne '\e[1 q'
-  elif [[ ${KEYMAP} == main ]] ||
-    [[ ${KEYMAP} == viins ]] ||
-    [[ ${KEYMAP} = '' ]] ||
-    [[ $1 = 'beam' ]]; then
-    echo -ne '\e[5 q'
-  fi
-}
-zle -N zle-keymap-select
-zle-line-init() {
-  zle -K viins # initiate `vi insert` as keymap (can be removed if `bindkey -V` has been set elsewhere)
-  echo -ne "\e[5 q"
-}
-zle -N zle-line-init
-echo -ne '\e[5 q'                # Use beam shape cursor on startup.
-preexec() { echo -ne '\e[5 q'; } # Use beam shape cursor for each new prompt.
+  zle-keymap-select() {
+    if [[ ${KEYMAP} == vicmd ]] ||
+      [[ $1 = 'block' ]]; then
+      echo -ne '\e[1 q'
+    elif [[ ${KEYMAP} == main ]] ||
+      [[ ${KEYMAP} == viins ]] ||
+      [[ ${KEYMAP} = '' ]] ||
+      [[ $1 = 'beam' ]]; then
+      echo -ne '\e[5 q'
+    fi
+  }
+  zle -N zle-keymap-select
+  zle-line-init() {
+    zle -K viins # initiate `vi insert` as keymap (can be removed if `bindkey -V` has been set elsewhere)
+    echo -ne "\e[5 q"
+  }
+  zle -N zle-line-init
+  echo -ne '\e[5 q'                # Use beam shape cursor on startup.
+  preexec() { echo -ne '\e[5 q'; } # Use beam shape cursor for each new prompt.
 
-export VI_MODE_SET_CURSOR=true
+  export VI_MODE_SET_CURSOR=true
 
-zle_highlight=('paste:none')
+  zle_highlight=('paste:none')
 
-_DOTS_ZLE_READY=1
+  _DOTS_ZLE_READY=1
 fi
