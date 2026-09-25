@@ -88,8 +88,10 @@ color_os = 'blue'
 color_git = 'cyan'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
-color_git_branch = "bright-cyan"
-# color_git_branch = '#cba6f7'
+# color_git_branch = "cyan"
+color_git_branch = '#cba6f7'
+# color_git_branch = '#74c7ec'
+# color_git_branch = '#fab387'
 color_vimcmd_ok = 'bright-black'
 color_vimcmd_replace = 'red'
 color_vimcmd_visual = '#cba6f7'
@@ -144,13 +146,14 @@ style = 'fg:color_fill bg:color_bg'
 [directory]
 truncation_length = 2
 truncation_symbol = "…/"
-repo_root_style = "bold cyan"
+repo_root_style = "bold bright-cyan"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 read_only = " "
 
 [custom.git-prompt-string]
 command = "git-prompt-string || :"
 when = true
+disabled = false
 
 [git_branch]
 symbol = ''
