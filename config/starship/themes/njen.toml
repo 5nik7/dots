@@ -30,6 +30,7 @@ $hostname\
 $directory\
 (\
 (${custom.gh} )\
+${custom.git-prompt-string}\
 $git_branch\
 $git_commit\
 $git_status\
@@ -87,7 +88,8 @@ color_os = 'blue'
 color_git = 'cyan'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
-color_git_branch = '#cba6f7'
+color_git_branch = "bright-cyan"
+# color_git_branch = '#cba6f7'
 color_vimcmd_ok = 'bright-black'
 color_vimcmd_replace = 'red'
 color_vimcmd_visual = '#cba6f7'
@@ -144,11 +146,17 @@ truncation_length = 2
 truncation_symbol = "…/"
 repo_root_style = "bold cyan"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+read_only = " "
+
+[custom.git-prompt-string]
+command = "git-prompt-string || :"
+when = true
 
 [git_branch]
 symbol = ''
 format = '([$symbol$branch]($style) )'
 style = 'fg:color_git_branch'
+disabled = true
 
 [git_commit]
 style = "fg:color_git"
