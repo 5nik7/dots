@@ -117,3 +117,5 @@ The implemented singular `theme` routes and `files` routes are documented in
 completion uses core-owned readers (`theme-id`, `file-resource`, `file-repository`),
 never extension callbacks. Keep static headers, contextual help and completion
 cases synchronized. Native `themes` routes retain their positional grammar.
+
+The [Git family](../../docs/git.md) uses static Bash headers and a dots-owned backend; it never requires the standalone git-it executable. Run `python3 -B tools/test_git_operations.py` for changes, including literal paths and recursive safety. Keep raw JSON separate from compact human views. File mutations use the shared engine described in the managed-files guide.

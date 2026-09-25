@@ -11,6 +11,13 @@ dots_value_candidates() {
   local type=$1 lead=${2:-} value
   local -a values=()
   case $type in
+    anodize-theme)
+      local path name root=${DOTHEMES:-${THEMES:-$DOTS/themes}}
+      for path in "$root/"*/anodize.json; do
+        [[ -f $path && ! -L $path ]] || continue
+        name=${path%/anodize.json}; dots_candidate "$lead${name##*/}"
+      done
+      ;;
     theme-id)
       local path name root=${DOTHEMES:-${THEMES:-$DOTS/themes}} user=${XDG_CONFIG_HOME:-$HOME/.config}/dots/themes
       for path in "$root/"*/colors.toml "$user/"*/colors.toml; do

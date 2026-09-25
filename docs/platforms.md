@@ -234,3 +234,11 @@ X11. WSL and native Windows wallpaper are unsupported. Termux:API, fzf, bat, tmu
 Kitty remote control and wallpaper tools are checked only when needed. Native
 Termux fixture checks are recorded in [testing](testing.md); Linux adapter calls are
 simulated, and native desktop rendering remains unverified.
+
+## Bounded Git and file operations
+
+The live Git family requires Bash 5, Git, POSIX utilities and (for publish) sha256sum. It rejects native Windows shell environments; Linux/WSL use the POSIX boundary with native validation reported separately. File operations use the existing Python POSIX adapter, no privilege elevation, and XDG config/state roots. There is no native Windows mutation adapter, link-to-copy fallback, or cross-Windows/WSL translation. Termux-owned discovery rules live in Androidots. See [Git](git.md), [files](files.md) and [verification](testing.md#git-and-managed-file-operations).
+
+## Anodize scope
+
+The pure Go Anodize library accepts bytes/data without platform paths. The current CLI requires Python 3.11+, Bash, POSIX file transactions and the existing theme adapter tools. Native Termux is verified; Linux/WSL integration and native Windows authoring are not newly verified. Wallpaper actions retain the existing fixed adapter support, including WSL refusal. No APK, Android language binding or TUI is shipped. See [Anodize](anodize.md).

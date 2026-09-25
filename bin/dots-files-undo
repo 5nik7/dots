@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Undo a file transaction without discarding drift
+# dots:usage=TRANSACTION [OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--dry-run||flag|Preview without changes
+# dots:option=--yes||flag|Apply the displayed plan without prompting
+# dots:option=--backup||flag|Retain verified backups
+# dots:option=--no-backup||flag|Disable optional retained backups
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/manage.py" undo "$@"

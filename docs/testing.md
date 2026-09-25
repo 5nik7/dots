@@ -317,20 +317,19 @@ initialization compatibility, cache invalidation, command/completion contracts,
 publication idempotence, lock contention, injected durability failures, SIGKILL
 recovery, drift refusal, Zsh prompt refresh, and Neovim focus integration. All
 mutable roots and executed official commands are copied into disposable fixtures.
-The Neovim tests copy public plugin source, disable unrelated integrations, and
-never run the live LazyVim startup or download dependencies. Catppuccin coverage
-uses installed source; all-family coverage uses installed plugins or an explicit
-`DOTS_THEME_PLUGIN_SOURCES` JSON file mapping each family to `{"path":"/source"}`.
-Missing dependencies report skips. Coverage includes every fixed variant, hyphenated
-IDs, native keys, pywal16 rejection/nonexecution/snapshot retention, shell color
-refresh, actual native plugin highlighting, light/dark transitions, palette edits,
-missing-plugin rollback and manual retry. The committed legacy digest
+The Neovim tests copy the local Anodize.nvim public runtime from
+`ANODIZE_NVIM_DIR` or `~/repos/Anodize.nvim`; absent sources report a skip.
+They never run live LazyVim startup or download dependencies. Coverage includes
+all 17 native variants, generic themes, raw compatibility helpers, light/dark,
+focus/manual reload, invalid-update retention and manual colorscheme gating.
+Native family plugins are not required by these editor fixtures.
+The committed legacy digest
 was captured from the previous script's ordered 4 × 26 × 15 initialization values;
 it detects numeric rounding and ANSI-byte changes as well as palette drift.
 
 Run `python3 -B tools/bench_themes.py --samples 10` for isolated cold/warm
 initialization for Catppuccin/TokyoNight, unchanged Zsh prompt checks and minimal
-Neovim startup (options-only compatibility and the full shared-startup adapter). An optional
+Neovim startup (Anodize standalone and the shared Dots startup bridge). An optional
 `--baseline-script /path/to/preserved/catppuccin` compares the former implementation
 in a separate owned cache. Measurements are sequential, retained in a temporary
 JSON artifact, and do not establish full LazyVim startup performance.
@@ -440,3 +439,115 @@ and `tools/test_bash_dots.py` runners; no live theme activation is needed.
 On native Termux, 2026-09-24, presentation validation passed 9 file tests, 11 theme
 workflow tests, 23 Bash framework tests and 23 theme compatibility tests (66 total).
 ShellCheck, relative Markdown links and `git diff --check` also passed.
+
+## Git and Managed File Operations
+
+Run `python3 -B tools/test_git_operations.py` and
+`python3 -B tools/test_file_operations.py`. Both use disposable owned roots.
+Git fixtures use local bare remotes with test-only SSH transport; no network or
+personal publication is required. File fixtures isolate HOME, config/state and
+source repositories, including actual abrupt process exit after a replacement
+rename followed by journal-driven recovery. The engine has no production test
+failure switches.
+
+Git checks include cached status, explicit roots and initialization, unusual
+submodule paths, staged-only/all publication, preserved deliberate pointers,
+child-first ordering, rejected pushes, independent siblings, pinned/remote sync,
+local edits/divergence and unsafe topology. File checks cover discovery, verified
+adoption, per-file/whole-directory links, removal, backup defaults/overrides,
+restore, undo drift, copy/preview failures, interrupted recovery, idempotence,
+credential exclusions and terminal/plain/JSON views.
+
+Also run existing file inventory and Bash framework suites for shared metadata,
+completion and rendering contracts; ShellCheck and shell syntax checks for Git
+modules and route wrappers; documentation links and whitespace checks. Native
+Termux results are distinct from simulated fixtures; no native Windows management
+or desktop filesystem guarantees follow from these tests.
+
+### Native Termux results (2026-09-25)
+
+The new Git suite passed 25 tests and file-operation suite passed 18 tests. Existing
+inventory (9) and Bash framework (23) suites also passed, for 75 tests. ShellCheck,
+Python/shell syntax, static help/completion and relative documentation links were
+checked separately. Tests include actual PTY preference/cancellation checks and
+an abrupt file-operation process exit; no live config or remote publication was
+performed. Native Linux/WSL and Windows operation validation was not run.
+
+The subsequent system-discovery readability change passed 21 file-operation tests,
+9 inventory tests and 23 Bash framework tests (53 total). New fixtures cover compact
+directory grouping, verbose/all modes, complete JSON under forced decoration,
+pruned cache/session/dependency/preview trees, preserved settings/custom assets,
+scan eligibility, unchanged source/home trees, terminal controls and 40/80/120-column
+layouts. Representative output was reviewed at those widths. This follow-up did
+not change or rerun the Git engine suite.
+
+`python3 -B tools/bench_git_operations.py` measures sequential warm status on
+owned trees with 1, 5 and 10 repositories (three samples each). Median times before
+removing repeated registration scans were 194.5, 1109.9 and 2678.9 ms; afterward
+188.8, 991.8 and 2109.8 ms. Final samples in milliseconds: 194.1/185.0/188.8,
+991.8/959.7/1218.8, and 1925.6/2118.5/2109.8. This is a small native timing sample,
+not a cold-start or general performance guarantee. Status still performs real Git
+inspection per repository; no persistent cache or startup scan was introduced.
+
+## Anodize verification
+
+Run `python3 -B tools/verify_anodize.py check` for an isolated offline Go build, package tests, vet and `tools/test_anodize.py` integration tests. `build` explicitly replaces the ignored private engine artifact; `bench` runs repeated engine benchmarks in temporary build/cache roots. The verifier retains Termux executable compatibility while isolating HOME/XDG/config/cache/temp roots. No network downloads or live publication occurs.
+
+Coverage includes all 23 modes in light/dark, deterministic generation, bounded image decoding, repeatable adjustments, import/export round trips, receipt drift and collision refusal, retained undo, injected failure rollback, abrupt-exit recovery, template preflight, additive palette JSON, raw output, narrow/normal/wide presentation, static metadata and three-shell completion. Wallpaper tests use a fixture executable. Existing `test_themes.py`, `test_theme_workflow.py`, `test_file_operations.py`, `test_files.py`, and `test_bash_dots.py` verify shared boundaries. Android APK, TUI, desktop wallpaper tools and the separate plugin are not certified by this suite.
+
+### Anodize baseline (2026-09-25)
+
+Native Termux Android/arm64, installed Go 1.27.1, ordinary device load. Three Go benchmark repetitions: 32×32 PNG extraction 2.98–4.63 ms/op (~1.89 MB allocated/op); seed generation 0.268–0.290 ms/op (~30.7 KB/op); 1920×1080 synthetic PNG extraction 103.6–107.7 ms/op (~29.2 MB/op). These are in-process engine measurements, not app latency or peak memory claims.
+
+CLI measurements include Bash/Python/engine process startup, with 20 samples after three warmups in isolated fixture roots:
+
+| Read-only operation | Median | p95 |
+| --- | ---: | ---: |
+| Standalone help | 257.95 ms | 384.10 ms |
+| Standalone modes | 269.11 ms | 286.54 ms |
+| `dots anodize modes` | 229.41 ms | 318.80 ms |
+| One-pixel image extraction | 294.94 ms | 335.75 ms |
+
+Device load and process startup dominate these small commands. The different route samples are not a controlled route-speed comparison. No startup cache was introduced; ordinary Dots dispatch and shell startup never invoke the Anodize engine. Cold-cache, desktop, APK and editor integration timings remain unverified.
+
+## Anodize Neovim integration
+
+Run `python3 -B tools/test_anodize_nvim.py` for five focused Dots/editor cases.
+The fixture copies only public runtime sources and selected Dots helpers, sets
+isolated HOME/XDG/config/state/cache/data/runtime/log/temp roots, and starts Neovim
+with `-u NONE -i NONE -n --noplugin`. It stubs the dashboard interface, not its
+animation code. The Lazy-order test copies the installed public lazy.nvim Lua
+source and enables plugin loading only after restricting runtime/package paths;
+its two local specifications exercise early colorscheme loading without LazyVim
+bootstrap. Process calls are rejected during that startup test.
+
+Coverage includes missing-state/plugin fallback, active-only compatibility reload,
+manual selection, opaque floats and transparent main windows, terminal opt-out,
+Mocha overrides, inactive dimming, lualine layout and palette refresh, dashboard
+elapsed-time continuity, hidden-window pause/resume, animation opt-out and cleanup.
+The authored-theme case uses the prebuilt core to save/publish only into fixture
+roots, then verifies editor colors. Build the engine with
+`python3 -B tools/verify_anodize.py build`; this case reports a skip if unavailable.
+The Lazy test similarly reports a skip if public loader source is unavailable.
+
+On native Termux, the five focused cases, 23 shared-theme tests and 11 workflow
+tests pass without skips. Those suites cover real fixture publication and all 17
+family/flavor combinations. Formatting and parent/nested Git whitespace checks
+are required. This evidence does not establish the appearance of a live Snacks
+UI, a full normal LazyVim startup, or native desktop/Windows support.
+
+The updated `python3 -B tools/bench_themes.py --samples 5` measured minimal isolated
+Neovim startup on 2026-09-25: Anodize standalone median 65.59 ms (first 72.32 ms),
+Anodize with Dots startup median 75.65 ms (first 79.49 ms). These include complete
+editor process startup and all configured Anodize highlight integrations; they
+are not comparable to an in-process reload benchmark or full LazyVim startup.
+The earlier native-plugin measurements used a different runtime workload and
+sampling session. No new cache was introduced to mask that difference.
+
+### Anodize completion and manual verification
+
+Run `python3 -B tools/test_anodize_integration.py` without the Go engine. It requires Bash, Zsh, Fish and mandoc, and tests parser/header consistency, static mode choices, generated-artifact freshness, manual lint, root presentation prefixes versus seed colors, theme providers, file paths, descriptions and literal insertion via real Tab presses. Each shell owns disposable HOME/XDG/config/cache/state/repository roots. A sentinel engine verifies completion never runs it. Run the Bash dispatcher suite for shared metadata/provider changes and the existing Zsh/FZF-tab acceptance for shell registration.
+
+`python3 -B tools/generate_anodize_integration.py --check` verifies generated adapters/manual without writing. `mandoc -Tlint man/anodize.1` checks the section-1 manual. Native Windows shell completion remains outside the implemented POSIX CLI scope.
+
+Native Termux verification (2026-09-25): all four Anodize integration cases, 23 Bash dispatcher cases and 14 authoring cases passed. Zsh/FZF-tab acceptance includes standalone Anodize option labels and unchanged reload state. The broader Zsh suite has two unrelated `ll` alias expectation failures, reproduced after removing Anodize from its disposable fixtures (15/17 passed).

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# dots:summary=Inspect and restore retained file backups
+# dots:usage=[SUBCOMMAND]
+exec "${BASH_SOURCE[0]%/*}/dots" help files backups

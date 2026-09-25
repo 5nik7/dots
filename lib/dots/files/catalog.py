@@ -62,8 +62,10 @@ class Presentation:
             self.emit(" " * len(prefix) + line)
 
     def status(self, status):
-        if status in ("linked", "available", "tracked"):
+        if status in ("linked", "available", "tracked", "managed"):
             code, icon = "92", "" if self.icons else "[+]"
+        elif status in ("candidate", "existing-source"):
+            code, icon = "94", "󰋽" if self.icons else "[i]"
         elif status in ("conflict", "broken-link", "source-broken-link", "source-missing", "unavailable", "linked-elsewhere"):
             code, icon = "91", "" if self.icons else "[x]"
         elif status in ("replaced", "excluded", "inactive-platform"):

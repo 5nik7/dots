@@ -1,0 +1,27 @@
+# No catalog is read until Fish requests completion.
+function __anodize_complete_fish
+    set -l words (commandline -opc)
+    set -l current (commandline -ct)
+    set -a words "$current"
+    set -l cursor (math (count $words) - 1)
+    for record in (command anodize __complete fish $cursor -- $words 2>/dev/null)
+        set -l fields (string split \t -- "$record")
+        switch "$fields[1]"
+            case candidate
+                printf '%s\t%s\n' "$fields[2]" "$fields[3]"
+            case file directory
+                set -l prefix (string sub -s (math (string length -- "$fields[2]") + 1) -- "$current")
+                set -l values
+                if test "$fields[1]" = directory
+                    set values (__fish_complete_directories "$prefix")
+                else
+                    set values (__fish_complete_path "$prefix")
+                end
+                # Helper output may contain descriptions separated by a tab.
+                for value in $values
+                    printf '%s%s\n' "$fields[2]" "$value"
+                end
+        end
+    end
+end
+complete -c anodize -f -a '(__anodize_complete_fish)'

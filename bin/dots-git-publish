@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# dots:summary=Preview and publish children before parents
+# dots:usage=[OPTIONS]
+# dots:option=--directory|-C|directory|Repository or subtree directory
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--full-paths||flag|Show absolute human paths
+# dots:option=--dry-run||flag|Local preview without changes or network
+# dots:option=--all||flag|Include unstaged ordinary files
+# dots:option=--yes||flag|Accept the publication preview
+# dots:option=--message|-m|string|Commit message
+# dots:option=--config||file|Owner configuration file
+# dots:option=--no-config||flag|Ignore owner configuration
+GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3
+exec bash "$GIT_LIB/main.bash" publish "$@"

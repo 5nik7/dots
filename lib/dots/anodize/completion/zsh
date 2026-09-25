@@ -1,0 +1,48 @@
+#compdef anodize
+# Works both as an autoloaded _anodize function and when explicitly sourced.
+_anodize() {
+  local record kind value description display lead
+  local -i width=0 i
+  local -a records candidates descriptions prefixes prefix_descriptions input_words
+  input_words=("${(@Q)words}")
+  # ZLE's PREFIX ends at the cursor, while words may include a suffix after it.
+  if [[ -n ${compstate[context]:-} ]]; then input_words[CURRENT]=$PREFIX; fi
+  records=("${(@f)$(command anodize __complete zsh "$((CURRENT-1))" -- "${input_words[@]}" 2>/dev/null)}")
+  for record in "${records[@]}"; do
+    kind=${record%%$'\t'*}; record=${record#*$'\t'}
+    value=${record%%$'\t'*}; description=${record#*$'\t'}
+    case $kind in
+      candidate)
+        if [[ -n $description ]] && (( ${#value} > width )); then width=${#value}; fi
+        if [[ $value == *= ]]; then
+          prefixes+=("$value"); prefix_descriptions+=("$description")
+        else
+          candidates+=("$value"); descriptions+=("$description")
+        fi ;;
+      file|directory)
+        lead=$value
+        if [[ -n $lead ]]; then compset -P "${(b)lead}"; fi
+        if [[ $kind == directory ]]; then _files -/; else _files; fi ;;
+    esac
+  done
+  # One display column across both ordinary matches and no-space prefixes.
+  # compadd -d replaces the visible match; insertion still uses the raw arrays.
+  for (( i=1; i<=${#candidates}; i++ )); do
+    display=${candidates[i]}
+    [[ -z ${descriptions[i]} ]] || printf -v display '%-*s -- %s' "$width" "$display" "${descriptions[i]}"
+    descriptions[i]=$display
+  done
+  for (( i=1; i<=${#prefixes}; i++ )); do
+    display=${prefixes[i]}
+    [[ -z ${prefix_descriptions[i]} ]] || printf -v display '%-*s -- %s' "$width" "$display" "${prefix_descriptions[i]}"
+    prefix_descriptions[i]=$display
+  done
+  (( ${#candidates} )) && compadd -d descriptions -a candidates
+  (( ${#prefixes} )) && compadd -S '' -d prefix_descriptions -a prefixes
+  return 0
+}
+if [[ $ZSH_EVAL_CONTEXT == *:file ]]; then
+  (( ${+functions[compdef]} )) && compdef _anodize anodize
+else
+  _anodize "$@"
+fi

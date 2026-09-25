@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=Print shell completion source
+# dots:usage=bash|zsh|fish
+# dots:argument=1|choice:bash,zsh,fish|Shell adapter to print
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" completion "$@"

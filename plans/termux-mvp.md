@@ -1,6 +1,6 @@
 # Termux MVP Plan
 
-**Status: File inventory/catalog implemented; general installation remains deferred**
+**Status: File inventory and bounded managed operations implemented; general profile installation and the live MVP drill remain deferred**
 
 The owner authorized and the repository implements the bounded [files inventory and catalog](files-catalog.md), alongside the [configuration path migration](config-path-migration.md) and [theme expansion](omarchy-themes.md). The general transaction stages below remain proposed. Its limited module selection governs the future MVP, not ordinary task-relevant edits elsewhere in the repository.
 
@@ -125,7 +125,7 @@ migration and theme connectors do not constitute completion of the general MVP.
 
 ### Termux Binary Compatibility
 
-The proposed Go core must first prove a reliable build artifact for the current Android architecture and Termux runtime. Failure returns the project to the implementation-language decision without changing the specification or safety goals.
+The experimental and permanent read-only Go slices have verified native Termux builds. The remaining risk is a distributable production installation and general managed-operation engine, not an untested language choice. Those gates remain paused; the bounded Bash/Python implementation and Anodize exception do not complete them.
 
 ### Existing Shell Coupling
 
@@ -163,3 +163,11 @@ Reloading application settings can affect active sessions. Treat reload as an ex
 ## Presentation Acceptance for Follow-up Work
 
 All future human MVP views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Plan narrow Termux layouts and plain fallbacks for inventory, preview, conflict, apply, partial failure and undo/recovery states. Include Androidots-owned commands in the same review while respecting local guides; preserve JSON and journal data. General installation remains deferred.
+
+## Bounded operation implementation
+
+The [Git and file operation slice](git-and-file-operations.md) implements per-catalog adoption/link/remove, optional snapshots, journaled recovery and recursive Git operations. These isolated implementation results do not complete the live profile apply/undo drill or implement general module/profile resolution. Androidots contributes versioned Termux search locations.
+
+## Anodize scope extension
+
+The owner-authorized [Anodize plan](anodize.md) adds local palette extraction, authoring and existing theme publication on Termux. It does not implement the general installation roadmap. Pure engine tests and disposable CLI fixtures have passed; local Neovim integration is verified in isolated fixtures; Android application packaging and live UI verification remain follow-ups.

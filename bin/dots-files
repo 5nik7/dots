@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-# dots:summary=Locate, track and inspect configuration files
+# dots:summary=Discover, import, link and manage configuration files
 # dots:usage=[SUBCOMMAND]
 exec "${BASH_SOURCE[0]%/*}/dots" help files

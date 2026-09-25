@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# dots:summary=Import configurations and link them into place
+# dots:usage=PATH... | --scan [OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--dry-run||flag|Preview without changes
+# dots:option=--yes||flag|Apply the displayed plan without prompting
+# dots:option=--backup||flag|Retain verified backups
+# dots:option=--no-backup||flag|Disable optional retained backups
+# dots:option=--scan||flag|Import eligible registered configurations
+# dots:option=--directory-link||flag|Own and link entire directories
+# dots:option=--repo||file-repository|Owning repository
+# dots:argument=*|file|Configuration path
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/manage.py" add "$@"

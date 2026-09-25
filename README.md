@@ -4,9 +4,9 @@
 
 ## Status
 
-Further Go implementation and migration are **paused** as of 2026-09-22. Current work focuses on maintaining the existing dotfiles, scripts, configurations, and documentation directly in the main checkout. Existing Go code, tests, and CI remain in place; the [roadmap](plans/roadmap.md#current-priority) tracks resumption.
+General Go implementation and migration are **paused** as of 2026-09-22. Current work focuses on maintaining the existing dotfiles, scripts, configurations, and documentation directly in the main checkout. Existing Go code, tests, and CI remain in place; the [roadmap](plans/roadmap.md#current-priority) tracks resumption.
 
-The repository contains the existing dotfiles collection, the modular Bash `bin/dots` command framework, and an isolated experimental Go core under `experiments/go-portability/`. The Go command architecture remains partially implemented, with further Go development paused. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
+The repository contains the existing dotfiles collection, the modular Bash `bin/dots` command framework, and an isolated experimental Go core under `experiments/go-portability/`. The Go command architecture remains partially implemented, with general Go development paused except the owner-authorized Anodize slice. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
 
 There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
 
@@ -57,10 +57,9 @@ dots theme bg next                 # Explicit wallpaper change
 
 The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat and Yazi.
 Selection journals and backs up fixed application theme connectors. Zsh refreshes
-at the next prompt; Neovim refreshes on focus or `:DotsThemeReload`. Native palette
+at the next prompt; Neovim uses the local Anodize.nvim plugin and refreshes on state changes, focus or `:DotsThemeReload`. Native palette
 APIs, `catppuccin`, `current_theme`, and the plural `dots themes` commands remain
-available. Missing Neovim plugins can be installed through your normal `:Lazy`
-workflow; generic imported themes need no downloaded Lua. Git theme installation,
+available. The local editor plugin defaults to `~/repos/Anodize.nvim` (override with `ANODIZE_NVIM_DIR`); generic imported themes need no downloaded Lua. Git theme installation,
 updates, template overrides and wallpaper adapters are described in
 [Shared themes](docs/themes.md). Wallpaper changes are always explicit.
 
@@ -72,6 +71,20 @@ color respects `NO_COLOR`; JSON, path queries, initialization and completion rem
 usable by scripts. Piped lists keep their plain format unless decoration is forced.
 
 The [presentation contract](docs/presentation.md) makes this cohesive style a requirement for new and changed first-party human views, including help, empty results and failures. Future commands must use the same visual language while respecting plain-output preferences and script interfaces; this is a planning requirement, not a claim that every existing tool has been restyled.
+
+## Anodize palette authoring
+
+Anodize provides a reusable Go color engine and CLI for creating themes from images, seed colors, existing themes and local imports. Build the private engine explicitly, then preview a new theme:
+
+```sh
+python3 -B tools/verify_anodize.py build
+bin/anodize create dusk --color '#725ac1' --dry-run
+bin/anodize create dusk --color '#725ac1' --yes
+bin/anodize preview dusk
+bin/anodize apply dusk --dry-run
+```
+
+`dots anodize` provides the same routes. Run `anodize --help` for commands and examples, or `anodize create --help` for source and save options. Bash, Zsh and Fish completion is available through `anodize completion SHELL`; read the manual with `man -l man/anodize.1` from the checkout. See [shell setup](docs/anodize.md#shell-completion-and-manual) for loading completions and installing the manual. Saves use recoverable file transactions and do not activate themes. Apply separately with `--yes` after reviewing its preview. See [Anodize](docs/anodize.md) for image extraction, repeatable adjustments, imports/exports, dependencies and limitations. Dots Neovim integration uses the separate local Anodize.nvim checkout. Android APK and TUI remain follow-up work. This is a scoped exception to the general Go pause.
 
 ## Files and Configuration Layout
 
@@ -90,10 +103,50 @@ dots files list --all-platforms --json
 The first files slice locates and classifies sources and destinations, and tracks
 intent in each repository's `.dots/files.json`. Androidots contributes Termux
 resources explicitly; unavailable/private sources are not initialized. `track`
-changes catalog metadata only. File installation (`set`, using links by default),
-add/remove/edit, adoption and undo are future work. See the [catalog reference](docs/files.md)
+changes catalog metadata only. Bounded file operations use links by default;
+add/link/remove, adoption, undo and backups are available below. Editing and general
+profile installation remain future work. See the [catalog reference](docs/files.md)
 for tracking, filters, JSON and ownership rules. Python 3.9+ is required for this
 POSIX implementation; discovery additionally uses Git.
+
+## Git and Managed Configurations
+
+`dots git` manages the dots repository and registered nested submodules. Status
+uses local tracking information; publication previews staged changes and pushes
+children before parents. Synchronization keeps recorded child commits unless
+explicitly asked to advance them. Configure allowed publication owners using the
+[Git guide](docs/git.md).
+
+```bash
+dots git status
+dots git publish --dry-run
+dots git sync --dry-run
+dots files locations
+dots files discover --system
+dots files discover --system --verbose
+dots files add ~/.config/example --dry-run
+dots files add ~/.config/example --backup
+```
+
+File adoption copies and verifies configs into their owning repository, then links
+individual files at their original locations. Search locations are versioned;
+Termux-specific mappings belong to Androidots. `files link ID` installs a known
+resource; `files remove ID` (or `rm`) stops managing it while preserving a regular
+local config and the repository source. Commands preview before confirmation;
+`--yes` is explicit unattended approval. Nothing automatically stages or publishes
+imports.
+
+System discovery defaults to compact config-directory groups with colored counts
+and paths. Use `--verbose` for individual files and source mappings, or `--all` to
+include managed/excluded entries. `--json` always retains the full observed list.
+Known caches, session data and generated preview trees are excluded from adoption.
+
+Retained backups default off. Use `--backup` or the machine-local preference;
+mandatory temporary rollback protection remains active either way. `files backups
+list|show|restore`, `files history`, `files undo`, and `files recover` expose
+snapshots and transaction recovery. Backups live in dots' XDG state, separately
+from the unchanged `bak` utility. Read the [file guide](docs/files.md) for exact
+semantics, restrictions, IDs and recovery examples.
 
 ## Zsh Configuration
 

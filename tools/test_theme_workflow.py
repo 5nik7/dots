@@ -72,22 +72,15 @@ class Workflow(old.Themes):
     @unittest.skipUnless(old.NVIM, "Neovim unavailable")
     def test_generic_editor_and_static_completion(self):
         self.dots("theme", "set", "nord")
-        util = self.root / "lua/util"
-        util.mkdir(parents=True)
-        for name in ("dots_theme.lua", "dots_theme_adapters.lua"):
-            shutil.copy2(old.REPO / "config/nvim/lua/util" / name, util / name)
-        script = self.root / "generic.lua"
-        script.write_text('''vim.opt.rtp:prepend(vim.env.HOME .. "/..")
-local themes = require("util.dots_theme")
-themes.startup()
-assert(vim.g.colors_name == "dots-nord")
-local normal = vim.api.nvim_get_hl(0, { name="Normal", link=false })
-assert(normal.fg == tonumber("d8dee9",16) and normal.bg == nil)
-local visual = vim.api.nvim_get_hl(0, { name="Visual", link=false })
-local data = vim.json.decode(table.concat(vim.fn.readfile(vim.env.XDG_STATE_HOME .. "/dots/current/theme/palette.json"), "\\n"))
-assert(visual.bg == tonumber(data.roles.selection:sub(2),16))
+        from nvim_theme_fixture import install, run
+        install(self)
+        run(self, r'''bridge.startup()
+assert(vim.g.colors_name == "anodize")
+assert(hl("Normal").fg == 0xd8dee9 and hl("Normal").bg == nil)
+local data=snapshot()
+assert(hl("Visual").bg == tonumber(data.roles.selection:sub(2),16))
+assert(require("anodize").get_palette().metadata.id == "nord")
 ''')
-        self.run_command([old.NVIM, "--headless", "-u", "NONE", "-i", "NONE", "-l", str(script)])
         for shell in ("bash", "zsh", "fish"):
             self.assertIn("nord", self.dots("__complete", shell, "3", "--", "dots", "theme", "set", "no").stdout)
         self.assertIn("--dry-run", self.dots("help", "theme", "set").stdout)

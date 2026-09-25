@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Inspect an image palette
+# dots:usage=IMAGE [OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--mode||choice:normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high-contrast,duotone|Extraction mode
+# dots:option=--light||flag|Generate light colors
+# dots:option=--dark||flag|Generate dark colors
+# dots:argument=1|file|Input file
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" extract "$@"

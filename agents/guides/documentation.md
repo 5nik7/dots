@@ -69,3 +69,5 @@ Before finishing a documentation change:
 5. Confirm repeated lists have a named source of truth.
 6. Update the applicable plan status.
 
+
+For bounded Git/file operations, synchronize `docs/git.md`, `docs/files.md`, `docs/safety.md` and the focused Git/file plan. Do not describe optional retained snapshots as required for every operation or imply that Git publication has atomic rollback.

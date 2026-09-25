@@ -321,3 +321,11 @@ explicit platform applicability and qualified replacement IDs. Directory ownersh
 conflicts with nested target claims. It does not implement module dependency
 resolution, install planning, copying, linking, adoption or undo. A recorded `copy`
 strategy is intent only; future installation retains the default-link contract.
+
+## Implemented location and operation data
+
+The [catalog/location formats](files.md) are the bounded JSON schema-1 model under decision 0010, separate from the draft module/profile format above. Per-repository `.dots/file-locations.json` describes platform-specific roots/exact paths, import destinations and exclusions. Existing catalog claims win over adoption; owner ambiguity and duplicate destinations are errors. Machine-local `dots/files.json` contains schema 1 and a boolean `backup`; CLI backup flags override it. Journals and snapshots have schema 1 and transaction IDs, object identities/hashes, phases and prior catalog/link metadata. They are machine state, not desired-state manifests. No arbitrary environment interpolation, hooks or private-source initialization is added.
+
+## Implemented Anodize recipe
+
+`themes/ID/anodize.json` is a separate schema-1 authoring document, not a module/profile manifest. [Its recipe contract](anodize.md#recipe-and-ownership) owns baseline colors, absolute adjustments, overrides, generation options, source references and local generated-file receipts. Generated `colors.toml` uses the existing flat-theme contract. No new general installation semantics are implied.

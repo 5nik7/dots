@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# dots:summary=Import a local palette
+# dots:usage=FILE --name ID --format FORMAT [OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--dry-run||flag|Preview without changes
+# dots:option=--yes||flag|Apply the displayed plan
+# dots:option=--mode||choice:normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high-contrast,duotone|Extraction mode
+# dots:option=--light||flag|Generate light colors
+# dots:option=--dark||flag|Generate dark colors
+# dots:option=--reference-wallpaper||flag|Keep external wallpaper reference
+# dots:option=--format||choice:anodize,aether,base16,colors|Data format
+# dots:option=--name||string|New theme ID
+# dots:argument=1|file|Input file
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" import "$@"

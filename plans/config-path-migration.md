@@ -18,9 +18,10 @@ python3 -B tools/migrate_config_paths.py --home "$HOME" --repo "$HOME/dots"
 ```
 
 Rollback is explicit via the same roots plus `--rollback --journal ABSOLUTE_PATH`;
-it refuses link drift. Compatibility aliases and the Neovim pin remain. The scoped
-Neovim gitlink path move is staged; other source edits remain uncommitted, including
-independent platform/Neovim repositories. No whole-tree staging or history rewrite
+it refuses link drift. Compatibility aliases and the Neovim pin remain. At the migration checkpoint, the scoped
+Neovim gitlink path move was staged and other source edits were uncommitted, including
+independent platform/Neovim repositories. This is historical index evidence; inspect
+current Git state before staging or delivering any follow-up. No whole-tree staging or history rewrite
 was performed. Remove aliases only in a future reviewed cleanup.
 
 Fourteen additional repository-owned Rofi/Starship symlinks were changed to relative

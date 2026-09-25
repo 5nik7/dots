@@ -130,8 +130,11 @@ add-zle-hook-widget line-init _dots_test_ready
             raise RuntimeError('Completion refresh lost the Tab widget')
         if (repo / 'lib/dots').is_dir():
             # Inspect real FZF-tab rows, not only the eventual inserted match.
-            for typed, label in (('dots fixture\t', f"{'fixture':<12} -- Fixture completion probe"),
-                                 ('dots --\t', f"{'--color=':<13} -- Color mode (DOTS_COLOR)")):
+            label_cases = [('dots fixture\t', f"{'fixture':<12} -- Fixture completion probe"),
+                           ('dots --\t', f"{'--color=':<13} -- Color mode (DOTS_COLOR)")]
+            if (repo / 'bin/anodize').is_file():
+                label_cases.append(('anodize --\t', f"{'--color=':<8} -- Color mode (DOTS_COLOR)"))
+            for typed, label in label_cases:
                 session.send(typed)
                 shown = session.wait(marker=label.split(' -- ')[-1].encode(), timeout=30)
                 plain = re.sub(rb'\x1b\[[0-?]*[ -/]*[@-~]', b'', shown)

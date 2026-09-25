@@ -291,66 +291,45 @@ source "$DOTS/themes/bin/theme"
 
     @unittest.skipUnless(NVIM, 'Neovim unavailable')
     def test_neovim_real_palette_and_focus_reload(self):
-        plugin = Path(os.environ['HOME']) / '.local/share/nvim/lazy/catppuccin'
-        if not (plugin / 'lua/catppuccin/init.lua').is_file():
-            self.skipTest('installed public Catppuccin source unavailable')
-        # Copy public source only; never start the live LazyVim configuration.
-        shutil.copytree(plugin, self.root / 'catppuccin', ignore=shutil.ignore_patterns('.git'))
-        lua = self.root / 'lua'
-        (lua / 'util').mkdir(parents=True)
-        (lua / 'config/highlights').mkdir(parents=True)
-        shutil.copy2(REPO / 'config/nvim/lua/util/dots_theme.lua', lua / 'util/dots_theme.lua')
-        shutil.copy2(REPO / 'config/nvim/lua/util/dots_theme_adapters.lua', lua / 'util/dots_theme_adapters.lua')
-        shutil.copy2(REPO / 'config/nvim/lua/config/highlights/catppuccin.lua', lua / 'config/highlights/catppuccin.lua')
+        from nvim_theme_fixture import install, run
+        install(self)
         self.dots('themes', 'set', 'catppuccin')
-        script = self.root / 'check.lua'
-        script.write_text(r'''local root = vim.env.HOME .. "/.."
-vim.opt.rtp:prepend(root)
-vim.opt.rtp:prepend(root .. "/catppuccin")
-local cat = require("catppuccin")
-local bridge = require("util.dots_theme")
-local opts = bridge.options({flavour="mocha", transparent_background=true,
-  default_integrations=false, auto_integrations=false, integrations={},
-  custom_highlights=require("config.highlights.catppuccin")})
-cat.setup(opts)
-vim.cmd.colorscheme("catppuccin-nvim")
-local function hl(name) return vim.api.nvim_get_hl(0, {name=name, link=false}) end
-assert(hl("Visual").bg == 0x2f4858)
-assert(hl("Comment").fg == 0x5b6078)
-assert(hl("CursorLine").bg == 0x242438)
-local setup = cat.setup
-local redundant = 0
-cat.setup = function(...) redundant = redundant + 1; return setup(...) end
+        run(self, r'''vim.g.terminal_color_0 = "#010203"
 bridge.startup()
-assert(redundant == 0, "startup must reuse the already configured Catppuccin snapshot")
-cat.setup = setup
+assert(loads == 1 and vim.g.colors_name == "anodize")
+assert(hl("Normal").bg == nil and hl("NormalFloat").bg == 0x1e1e2e)
+assert(hl("Comment").fg == 0x5b6078 and hl("LineNr").fg == 0x494d64)
+assert(hl("CursorLine").bg == 0x242438 and not hl("CursorLineNr").bold)
+assert(hl("NormalNC").fg ~= hl("Normal").fg and hl("NormalNC").bg == nil)
+assert(vim.g.terminal_color_0 == "#010203")
+assert(not package.loaded.catppuccin and not package.loaded["util.dots_theme_adapters"])
+local opts=bridge.options({})
+assert(opts.flavour == "mocha" and opts.color_overrides.mocha.base == "#1e1e2e")
 for _, flavor in ipairs({"latte", "frappe", "macchiato", "mocha"}) do
-  vim.fn.system({"bash", vim.env.DOTS .. "/bin/dots-themes-set", "catppuccin", flavor})
-  assert(vim.v.shell_error == 0)
-  vim.api.nvim_exec_autocmds("FocusGained", {})
-  assert(cat.options.flavour == flavor)
-  local colors = require("catppuccin.palettes").get_palette(flavor)
-  if flavor ~= "mocha" then
-    local published = vim.json.decode(table.concat(vim.fn.readfile(vim.env.XDG_STATE_HOME .. "/dots/current/theme/palette.json"), "\n"))
-    assert(hl("Visual").bg == tonumber(published.roles.selection:sub(2),16))
-    assert(hl("CursorLine").bg == tonumber(colors.surface0:sub(2),16))
-  end
-  assert(cat.options.transparent_background)
+ publish("catppuccin", flavor)
+ vim.api.nvim_exec_autocmds("FocusGained", {})
+ assert(current("catppuccin-"..flavor))
+ local p=require("anodize").get_palette()
+ assert(hl("Normal").fg == tonumber(p.roles.foreground:sub(2),16))
+ assert(hl("Visual").bg == tonumber(p.roles.selection:sub(2),16))
+ assert(hl("NormalFloat").bg == tonumber(p.roles.background:sub(2),16))
+ if flavor ~= "mocha" then assert(hl("CursorLine").bg == tonumber(p.colors.lighter_background:sub(2),16)) end
+ assert(vim.g.terminal_color_0 == "#010203")
 end
-local count = 0
-vim.notify = function() count = count + 1 end
-vim.uv.fs_unlink(vim.env.XDG_STATE_HOME .. "/dots/current/theme")
-vim.uv.fs_symlink("invalid", vim.env.XDG_STATE_HOME .. "/dots/current/theme")
-bridge.reload(); bridge.reload()
-vim.wait(30)
-assert(count == 1, "diagnostics must be bounded")
-assert(cat.options.flavour == "mocha")
+local previous = hl("Normal").fg
+local count=0;vim.notify=function() count=count+1 end
+vim.uv.fs_unlink(vim.env.XDG_STATE_HOME.."/dots/current/theme")
+vim.uv.fs_symlink("invalid",vim.env.XDG_STATE_HOME.."/dots/current/theme")
+bridge.reload();bridge.reload();vim.wait(150)
+assert(count == 1 and hl("Normal").fg == previous)
 assert(vim.fn.exists(":DotsThemeReload") == 2)
-print("NVIM_THEME_OK")
+vim.cmd.colorscheme("habamax")
+vim.api.nvim_exec_autocmds("FocusGained", {})
+vim.cmd.DotsThemeReload();vim.wait(150)
+assert(vim.g.colors_name == "habamax")
+assert(bridge.reload(true) == false)
+assert(not require("anodize").get_palette())
 ''')
-        result = self.run_command([NVIM, '--headless', '-u', 'NONE', '-i', 'NONE',
-                                   '-l', str(script)])
-        self.assertIn('NVIM_THEME_OK', result.stdout + result.stderr)
 
     def wal_export(self, suffix=''):
         p = self.home / 'cache/wal/colors.sh'
@@ -439,34 +418,12 @@ change_theme catppuccin-mocha >/dev/null
 
     @unittest.skipUnless(NVIM, 'Neovim unavailable')
     def test_neovim_all_native_families(self):
-        names={'tokyonight':'tokyonight.nvim','rose-pine':'rose-pine','kanagawa':'kanagawa.nvim',
-               'gruvbox':'gruvbox.nvim','pywal16':'pywal16.nvim'}
-        config=os.environ.get('DOTS_THEME_PLUGIN_SOURCES')
-        sources=json.loads(Path(config).read_text()) if config else {}
-        deps=self.root/'plugins';deps.mkdir()
-        for theme,directory in names.items():
-            path=Path(sources[theme]['path']) if theme in sources else Path(os.environ['HOME'])/'.local/share/nvim/lazy'/directory
-            if not path.is_dir(): self.skipTest('public plugin source unavailable: '+theme)
-            shutil.copytree(path,deps/theme,ignore=shutil.ignore_patterns('.git'))
-        cat = Path(sources['catppuccin']['path']) if 'catppuccin' in sources else Path(os.environ['HOME'])/'.local/share/nvim/lazy/catppuccin'
-        if not (cat/'lua/catppuccin/init.lua').is_file(): self.skipTest('public plugin source unavailable: catppuccin')
-        shutil.copytree(cat,deps/'catppuccin',ignore=shutil.ignore_patterns('.git'))
-        (self.root/'lua/util').mkdir(parents=True)
-        for name in ['dots_theme.lua','dots_theme_adapters.lua']:
-            shutil.copy2(REPO/'config/nvim/lua/util'/name,self.root/'lua/util'/name)
-        shutil.copytree(REPO/'config/nvim/colors',self.root/'colors')
+        from nvim_theme_fixture import install, run
+        install(self)
         self.wal_export()
-        self.dots('themes','set','tokyonight','night')
-        script=self.root/'families.lua'
-        script.write_text(r'''local root=vim.env.HOME.."/.."
-vim.opt.rtp:prepend(root)
-for _,name in ipairs({"tokyonight","rose-pine","kanagawa","gruvbox","pywal16","catppuccin"}) do
-  vim.opt.rtp:append(root.."/plugins/"..name)
-end
-local bridge=require("util.dots_theme")
-bridge.startup()
-assert(vim.g.colors_name == "tokyonight-night")
-assert(not package.loaded.catppuccin, "startup must not load the unselected family")
+        self.dots('themes', 'set', 'tokyonight', 'night')
+        run(self, r'''bridge.startup()
+assert(vim.g.colors_name == "anodize")
 local choices={
  {"tokyonight","day","light"},{"tokyonight","moon","dark"},{"tokyonight","storm","dark"},
  {"rose-pine","main","dark"},{"rose-pine","dawn","light"},{"rose-pine","moon","dark"},
@@ -474,49 +431,29 @@ local choices={
  {"gruvbox","dark","dark"},{"gruvbox","light","light"},{"pywal16","current","dark"},
  {"catppuccin","mocha","dark"}
 }
-local function snapshot()
- local state=vim.env.XDG_STATE_HOME.."/dots/themes"
- local g=vim.fn.readfile(state.."/current")[1]
- return vim.json.decode(table.concat(vim.fn.readfile(state.."/generations/"..g.."/palette.json"),"\n"))
-end
-for _,choice in ipairs(choices) do
- local theme,flavor,mode=unpack(choice)
- vim.fn.system({"bash",vim.env.DOTS.."/bin/dots-themes-set",theme,flavor})
- assert(vim.v.shell_error==0,theme.." set failed")
- vim.api.nvim_exec_autocmds("FocusGained",{})
- assert(vim.o.background==mode,theme.." wrong background")
+for _, choice in ipairs(choices) do
+ publish(choice[1],choice[2])
+ vim.cmd.DotsThemeReload()
+ assert(current(choice[1].."-"..choice[2]))
+ assert(vim.o.background==choice[3])
  local data=snapshot()
- local hl=vim.api.nvim_get_hl(0,{name="Normal",link=false})
- assert(hl.fg==tonumber(data.roles.foreground:sub(2),16),theme.." wrong foreground: "..vim.inspect(hl))
- local gradient=bridge.gradient_colors()
- assert(#gradient>=5)
- if theme~="catppuccin" then assert(gradient[1]==data.roles.info) end
+ assert(hl("Normal").fg==tonumber(data.roles.foreground:sub(2),16))
+ assert(vim.deep_equal(bridge.gradient_colors(),{data.roles.info,data.roles.hint,data.roles.warning,data.roles.error,data.roles.accent}))
+ if choice[1]=="pywal16" then
+  local raw=bridge.pywal_colors()
+  assert(raw.color0==data.palette.color0 and raw.transparent=="NONE")
+ end
 end
--- Same-theme palette edits must change highlights, not reuse the plugin's old cache.
+assert(not pcall(bridge.pywal_colors))
 local file=vim.env.DOTS.."/themes/tokyonight-night/colors.toml"
 local lines=vim.fn.readfile(file)
 for i,line in ipairs(lines) do if line:match('^foreground =') then lines[i]='foreground = "#112233"' end end
 vim.fn.writefile(lines,file)
-vim.fn.system({"bash",vim.env.DOTS.."/bin/dots-themes-set","tokyonight","night"})
-assert(vim.v.shell_error==0)
-bridge.reload(true)
-assert(vim.api.nvim_get_hl(0,{name="Normal",link=false}).fg==0x112233)
--- A missing plugin adapter must preserve the previous display and report only once.
-local adapters=require("util.dots_theme_adapters")
-local saved=adapters.prepare
-adapters.prepare=function(data) if data.theme=="rose-pine" then error("missing plugin fixture") end;return saved(data) end
-vim.fn.system({"bash",vim.env.DOTS.."/bin/dots-themes-set","rose-pine","main"})
-local warnings=0;vim.notify=function() warnings=warnings+1 end
-bridge.reload();bridge.reload()
-assert(warnings==1)
-assert(vim.api.nvim_get_hl(0,{name="Normal",link=false}).fg==0x112233)
-adapters.prepare=saved
-bridge.reload(true)
-assert(vim.api.nvim_get_hl(0,{name="Normal",link=false}).fg==0xe0def4)
-print("ALL_FAMILIES_OK")
+publish("tokyonight","night")
+assert(bridge.reload(true))
+assert(hl("Normal").fg==0x112233)
+assert(not package.loaded.tokyonight and not package.loaded.catppuccin)
 ''')
-        result=self.run_command([NVIM,'--headless','-u','NONE','-i','NONE','-l',str(script)])
-        self.assertIn('ALL_FAMILIES_OK',result.stdout+result.stderr)
 
 
 if __name__ == '__main__':

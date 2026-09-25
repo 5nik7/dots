@@ -1,6 +1,6 @@
 # Zsh Startup Optimization
 
-**Status: Implemented; native Termux and isolated fixture verification complete, with platform limits below**
+**Status: Optimization implemented; original verification retained; two current alias regression failures noted below**
 
 Optimize the existing Zsh configuration in the main checkout while preserving immediate integration readiness, prompt details, aliases, completion, theme switching, and reloads. Go development remains paused.
 
@@ -62,7 +62,7 @@ The new regression failed before the fix and passes afterward. It exercises init
 
 ## Remaining Limits
 
-- Empty-cache startup still spends substantial time in the existing Catppuccin palette generator. Its output/cache contract was retained; this is the largest remaining first-run optimization candidate.
+- The original empty-cache profile identified Catppuccin generation as expensive. The subsequent [shared-theme slice](themes.md#performance-evidence) changed and measured that path. Reprofile current startup before naming its largest remaining cost; the original ranking is historical.
 - Linux/WSL and MSYS2 have detection/path fixtures and adapter boundaries, not native interactive acceptance. No new platform or installer support is claimed.
 - Private/platform module contents and external local startup customizations were intentionally excluded from tests. Their real-world cost and side effects remain outside these measurements.
 - Generated-data invalidation uses file metadata, not content hashing on every shell launch. Metadata-preserving edits can require `rlcs`; stateful activation-code changes require a new shell.
@@ -71,3 +71,7 @@ The new regression failed before the fix and passes afterward. It exercises init
 ## Presentation Acceptance for Follow-up Work
 
 Future dots-owned human shell diagnostics must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Keep ordinary startup quiet, preserve generated initialization/completion and palette data, and do not load extra presentation dependencies or scan commands during startup. Third-party shell interfaces retain their own output contracts.
+
+## Current regression checkpoint (2026-09-25)
+
+The Anodize completion follow-up passed real Zsh/FZF-tab acceptance and reload equality. The broader suite passed 15/17 cases: `test_shellmod_uses_running_shell_and_corrected_alias` and `test_startup_without_optional_tools_or_plugins` still assume `ll='ls -la'`. Both failures reproduced in disposable fixtures without Anodize completion. Current aliases define an eza-specific `ll` only when eza is available. Reconcile the fallback behavior and test isolation in a focused shell fix, preserving the configured eza layout; do not report all 17 current tests as passing or discard the original passing evidence.

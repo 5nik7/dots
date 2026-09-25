@@ -2,6 +2,8 @@
 
 **Status: Implemented**
 
+**Current integration:** This plan retains the original palette/native-plugin implementation and measurements. The completed [Anodize plan](anodize.md) now owns the active Dots Neovim bridge, local Anodize.nvim setup and consumer acceptance. Native theme plugins remain optional/manual compatibility paths. Consult [current verification](../docs/testing.md#anodize-neovim-integration) before treating these historical tests as current startup behavior.
+
 Add TokyoNight (night/storm/moon/day), Rosé Pine (main/moon/dawn), Kanagawa
 (wave/dragon/lotus), Gruvbox (dark/light), and a pywal16 current-palette source.
 Keep native color names, add per-flavor role mappings where needed, and support

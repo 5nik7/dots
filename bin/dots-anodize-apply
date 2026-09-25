@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Publish an authored theme through Dots
+# dots:usage=ID [OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--dry-run||flag|Preview without changes
+# dots:option=--yes||flag|Apply the displayed plan
+# dots:option=--background||flag|Also apply wallpaper
+# dots:argument=1|theme-id|Theme identifier
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" apply "$@"

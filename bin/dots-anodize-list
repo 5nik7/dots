@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=List authored themes
+# dots:usage=[OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" list "$@"

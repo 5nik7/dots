@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=List managed file transactions
+# dots:usage= [OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/manage.py" history "$@"

@@ -10,8 +10,7 @@
 Go implementation remains paused. No commits, pushes, package installation or live theme/wallpaper activation are included. Existing user changes and independent submodule histories are preserved.
 
 The contract is in [docs/files.md](../docs/files.md). Sorting and categories are
-metadata/views; no source files are moved. Future `add`, `remove`, `set` (links by
-default), `edit`, adoption and undo require a separate installation plan.
+metadata/views; no source files are moved. The approved [Git and file operations plan](git-and-file-operations.md) now adds bounded add/link/remove, adoption, undo and recovery. Editing and general profile installation remain deferred.
 
 ## Terminal presentation follow-up (2026-09-24)
 
@@ -22,4 +21,4 @@ recorded in [testing](../docs/testing.md#terminal-presentation).
 
 ## Presentation Acceptance for Follow-up Work
 
-Future inventory and installation slices must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Preserve the current JSON, TSV and raw-path interfaces; keep Python presentation policy aligned with Bash. Use consistent Source, Target, Repository and Status fields across Dots and submodule resources. Proposed add/remove/set/edit flows must plan preview, conflict, partial failure and recovery views alongside the operation itself; they remain deferred.
+Future inventory and installation slices must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Preserve the current JSON, TSV and raw-path interfaces; keep Python presentation policy aligned with Bash. Use consistent Source, Target, Repository and Status fields across Dots and submodule resources. Bounded add/link/remove and undo/recovery flows are implemented under the [Git and file operations plan](git-and-file-operations.md). Further set/edit and general profile installation remain deferred; their future plans must cover preview, conflict, partial failure and recovery views.

@@ -4,14 +4,28 @@ Plans describe active, paused, proposed, or completed work. Durable architecture
 
 ## Planning Documents
 
-The [roadmap](roadmap.md#current-priority) owns current priorities: repository maintenance is active; further Go implementation and migration are paused until the owner requests resumption.
+The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday maintenance is active; general Go implementation/migration is paused. The implemented [Anodize slice](anodize.md) is an owner-authorized exception, not a resumption of the general roadmap. A proposed next task is a recommendation until the owner requests implementation.
 
-- [`bash-dispatcher.md`](bash-dispatcher.md) — modular Bash dispatcher, presentation, completion, and verification.
-- [`zsh-startup.md`](zsh-startup.md) — existing Zsh optimization, compatibility checks, and measured results.
-- [`roadmap.md`](roadmap.md) — project phases, dependencies, decision gates, and completion criteria.
-- [`phase-1-portability.md`](phase-1-portability.md) — completed isolated Go experiment, retained evidence, accepted adoption decision, and deferred portability coverage.
-- [`phase-2-command-center.md`](phase-2-command-center.md) — implemented command-center slices and native verification; further development paused.
-- [`termux-mvp.md`](termux-mvp.md) — implemented file inventory plus deferred installation stages and acceptance criteria.
+| Plan | Current role |
+| --- | --- |
+| [Roadmap](roadmap.md) | Current priorities and retained, paused Go phases. |
+| [Anodize](anodize.md) | Implemented core/CLI, local Neovim integration, completions and manual. |
+| [Anodize next steps](anodize-next.md) | Proposed foundation hardening, then separately scoped frontend work. |
+| [Git and managed files](git-and-file-operations.md) | Implemented bounded operations and quieter discovery. |
+| [Files catalog](files-catalog.md) | Implemented catalog; later mutations belong to the Git/files slice. |
+| [Omarchy-style themes](omarchy-themes.md) | Implemented flat themes, fixed connectors and explicit wallpaper adapters. |
+| [Shared themes](themes.md) | Completed original shared palette slice; historical editor evidence. |
+| [Additional theme families](theme-families.md) | Completed family expansion; historical editor evidence. |
+| [Configuration paths](config-path-migration.md) | Completed migration; compatibility aliases remain. |
+| [Bash dispatcher](bash-dispatcher.md) | Implemented live command framework and three-shell completion. |
+| [Zsh startup](zsh-startup.md) | Completed optimization; current regression limits recorded separately. |
+| [Worktree lifecycle](worktree-lifecycle.md) | Implemented optional helper; older workflow rules are historical. |
+| [Phase 1 portability](phase-1-portability.md) | Completed experiments and historical evidence; remaining gates deferred. |
+| [Phase 2 command center](phase-2-command-center.md) | Implemented development Go slices; further implementation paused. |
+| [Termux MVP](termux-mvp.md) | Bounded operations exist; general profiles and live MVP drill deferred. |
+| [Planning review](planning-review-2026-09-25.md) | Completed consistency review and evidence limits. |
+
+[Copyable next-agent prompt](prompts/anodize-hardening.md) includes the recommended scope and the owner's recorded working preferences. It does not authorize the current agent to start that future task.
 
 ## Presentation Gate for Every Plan
 
@@ -29,14 +43,3 @@ Before implementing a human view, name its renderer, human/data modes and repres
 - Do not leave completed plans as the only documentation for implemented behavior.
 
 When a plan is complete, retain it if it explains migration or decision history. Mark it complete and link the resulting implementation/reference rather than rewriting its original goal.
-
-- [Shared theme implementation](themes.md): TOML palettes, compatibility, Zsh and Neovim integration.
-- [Additional theme families](theme-families.md): native palettes/adapters and pywal16 snapshot import.
-
-## Completed configuration and command work
-
-- [Configuration path migration](config-path-migration.md).
-- [Files catalog](files-catalog.md).
-- [Omarchy-style themes](omarchy-themes.md).
-
-These authorized Bash/Python workstreams extend the existing implementation without resuming Go development.

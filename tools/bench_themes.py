@@ -58,26 +58,22 @@ repeat 10000; do _dots_theme_precmd; done
 print -r -- $(( (EPOCHREALTIME-start)/10000 ))
 ''', ZSH)
             results['unchanged_prompt_seconds_per_call'] = float(p.stdout.strip())
-        plugin = Path(os.environ['HOME']) / '.local/share/nvim/lazy/catppuccin'
-        if NVIM and plugin.is_dir():
-            shutil.copytree(plugin, fixture.root / 'catppuccin', ignore=shutil.ignore_patterns('.git'))
-            lua = fixture.root / 'lua/util'
-            lua.mkdir(parents=True)
-            shutil.copy2(REPO / 'config/nvim/lua/util/dots_theme.lua', lua / 'dots_theme.lua')
-            shutil.copy2(REPO / 'config/nvim/lua/util/dots_theme_adapters.lua', lua / 'dots_theme_adapters.lua')
+        plugin = Path(os.environ.get('ANODIZE_NVIM_DIR') or Path.home() / 'repos/Anodize.nvim')
+        if NVIM and (plugin / 'lua/anodize/init.lua').is_file():
+            from nvim_theme_fixture import install, PRELUDE
+            install(fixture)
             script = fixture.root / 'bench.lua'
-            script.write_text('''local root=vim.env.HOME.."/.."
-vim.opt.rtp:prepend(root); vim.opt.rtp:prepend(root.."/catppuccin")
-local opts={flavour="mocha",default_integrations=false,auto_integrations=false,integrations={}}
-if vim.env.DOTS_BENCH_BRIDGE ~= "0" then opts=require("util.dots_theme").options(opts) end
-require("catppuccin").setup(opts)
-if vim.env.DOTS_BENCH_BRIDGE == "2" then require("util.dots_theme").startup()
-else vim.cmd.colorscheme("catppuccin-nvim") end
+            script.write_text(PRELUDE + '''
+if vim.env.DOTS_BENCH_BRIDGE == "0" then
+ spec.opts.source=false
+ spec.config(spec,spec.opts)
+ vim.cmd.colorscheme("anodize")
+else bridge.startup() end
 ''')
-            for name, enabled in [('nvim_without_bridge', '0'), ('nvim_with_bridge', '1'), ('nvim_with_startup', '2')]:
+            for name, enabled in [('nvim_anodize_standalone', '0'), ('nvim_anodize_dots', '1')]:
                 env = {**fixture.env, 'DOTS_BENCH_BRIDGE': enabled,
                        'XDG_CACHE_HOME': str(fixture.home / ('cache-' + name))}
-                results[name] = measure([NVIM, '--headless', '-u', 'NONE', '-i', 'NONE', '-l', str(script)], env)
+                results[name] = measure([NVIM, '--headless', '-u', 'NONE', '-i', 'NONE', '-n', '--noplugin', '-l', str(script)], env)
         results['tokyonight_init'] = measure([BASH, str(fixture.repo / 'bin/dots-themes-init')],
             {**fixture.env, 'DOTS_THEME_SELECTION': 'tokyonight-night'})
         fixture.dots('themes', 'set', 'tokyonight')

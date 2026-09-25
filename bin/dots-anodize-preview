@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Preview colors or app configuration
+# dots:usage=ID [OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--app||choice:kitty,tmux,btop,termux,bat,yazi|Application preview
+# dots:argument=1|theme-id|Theme identifier
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" preview "$@"

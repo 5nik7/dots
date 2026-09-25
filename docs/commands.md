@@ -9,12 +9,32 @@ The existing Zsh helper `mkcd <directory>` is separate from the `dots` command f
 ## Implemented Files and Theme Routes
 
 The [files reference](files.md) defines `dots files sources|discover|list|locate|show|source|target|track`,
-filters, sorting and schema-1 JSON. `track` changes catalog metadata only; no file
-installation command is implemented. The [themes reference](themes.md) defines
+filters, sorting and schema-1 JSON. `track` changes catalog metadata only; bounded
+managed operations are documented separately below. The [themes reference](themes.md) defines
 `dots theme list|show|current|dir|color|set|refresh|init|switcher|install|update|remove`
 and `dots theme bg list|current|set|next|select|switcher`. The plural `dots themes`
 commands retain their documented native palette interfaces. Shell completion reads
 static route metadata and core-owned data providers; it never executes extensions.
+
+## Implemented Git and managed-file operations
+
+The [Git reference](git.md) defines `dots git status|publish|sync`, recursive
+semantics, configuration, compact views and JSON. Git synchronization now belongs
+to `dots git sync`; the former proposed `dots repo pull` spelling is superseded.
+This remains distinct from future bootstrap and optional-source resolution.
+
+The [files reference](files.md) also defines `locations`, `discover --system`,
+`add`, `link`, `remove`/`rm`, `history`, `undo`, `recover` and
+`backups list|show|restore`. Metadata-only `track` and existing inventory formats
+remain compatible. These operations do not implement the future global
+`dots apply`, `undo`, `history` or `backup` namespaces.
+
+`files discover --system` groups config candidates by directory by default and
+summarizes managed/excluded entries. `--verbose` shows individual files and source
+mappings; `--all` includes the summarized statuses. Both flags require `--system`.
+`--repo` filters owners, and `--json` always emits complete schema-1 `items` without
+human grouping/filtering or decoration. Repository discovery keeps its existing
+filters and format; see [files](files.md#user-configuration-discovery).
 
 ## Implemented Bash Command Framework
 
@@ -325,7 +345,7 @@ Built-ins cannot be shadowed silently. The development protocol uses only explic
 | `dots config` | Locate, inspect, edit, get, set, and validate configuration | Resolver |
 | `dots commands` | Discover, validate, and serialize command metadata | Dispatcher |
 | `dots completion` | Generate shell completion definitions; installation deferred | Zsh generation implemented |
-| `dots repo` | Inspect and deliberately synchronize the main repository | Bootstrap/packages |
+| `dots repo` | Inspect future clone/bootstrap metadata; Git operations use `dots git` | Bootstrap/packages |
 | `dots sources` | Inspect and synchronize optional, private, or third-party sources | Later |
 | `dots self` | Install, update, and diagnose the CLI executable itself | Releases |
 | `dots version` | Show CLI, schema, repository, and build information | Dispatcher |
@@ -341,7 +361,7 @@ Avoid using `install`, `update`, or `sync` without a qualifying object.
 | `dots bootstrap` or remote bootstrap script | Prepare a fresh machine and hand control to the installed CLI |
 | `dots self install` | Install the CLI executable |
 | `dots self update` | Update the CLI executable |
-| `dots repo pull` | Fetch and integrate repository changes under explicit Git safety rules |
+| `dots git sync` | Fetch and integrate repository changes under explicit Git safety rules (implemented) |
 | `dots sources sync` | Fetch selected optional/private source revisions |
 | `dots packages install` | Install missing packages selected by the specification |
 | `dots apply` | Reconcile managed machine state with the resolved specification |
@@ -501,3 +521,7 @@ The supported families include hyphenated `rose-pine` identifiers and native pal
 keys such as `sumiInk3`. All three shell providers discover their flavors/colors;
 pywal16 flavor discovery works without its optional generated input. No new routes
 or flags are needed for these families.
+
+## Implemented Anodize commands
+
+`dots anodize` and standalone `anodize` expose the same authoring commands. The complete [command and flag contract](anodize.md#commands-and-flags) covers modes, extract, create, import, list, show, edit, preview, export, apply and completion. `anodize completion bash|zsh|fish` (also `dots anodize completion`) emits standalone shell integration as plain source. Static choices cover extraction modes, adjustment/color keys, formats and apps; the `anodize-theme` metadata type supplies repository-owned authored theme IDs for edit. See the [completion and manual guide](anodize.md#shell-completion-and-manual). Static wrapper metadata supplies Dots help/discovery/completion without running the engine. Standalone `anodize --help` and `anodize COMMAND --help` use width-aware Dots presentation with command examples and option descriptions; argparse coloring is disabled so only the shared renderer emits ANSI. Mutations preview by default without interactive confirmation or `--yes`; raw exports/app previews remain undecorated. The private engine is built explicitly with `python3 -B tools/verify_anodize.py build`.

@@ -6,6 +6,25 @@ dt_bg_files() {
     case ${file,,} in *.png|*.jpg|*.jpeg|*.webp|*.bmp) printf '%s\0' "$file" ;; esac
   done
 }
+dt_bg_preflight() {
+  local file=$1 locked=${2:-0}
+  [[ -f $file && $file != *$'\n'* ]] || { dt_error 'background must be an existing image'; return 1; }
+  case ${file,,} in *.png|*.jpg|*.jpeg|*.webp|*.bmp) ;; *) dt_error 'unsupported background image'; return 1 ;; esac
+  file=$(realpath -- "$file") || return
+  local kernel=''
+  [[ ! -r /proc/sys/kernel/osrelease ]] || IFS= read -r kernel < /proc/sys/kernel/osrelease
+  DT_BG_COMMAND=()
+  if [[ ${TERMUX_VERSION:-} && ${PREFIX:-} == */usr ]]; then
+    DT_BG_COMMAND=(termux-wallpaper -f "$file"); (( ! locked )) || DT_BG_COMMAND+=(-l)
+  elif ((locked)); then dt_error 'lock-screen wallpaper is Android-only'; return 1
+  elif [[ ${WSL_DISTRO_NAME:-} || ${WSL_INTEROP:-} || ${kernel,,} == *microsoft* ]]; then dt_error 'WSL wallpaper changes are unavailable'; return 1
+  elif [[ ${OS:-} == Windows_NT || ${OSTYPE:-} == msys* || ${OSTYPE:-} == cygwin* ]]; then dt_error 'native Windows wallpaper changes are unavailable'; return 1
+  elif [[ ${WAYLAND_DISPLAY:-} ]]; then DT_BG_COMMAND=(swww img "$file")
+  elif [[ ${DISPLAY:-} ]]; then DT_BG_COMMAND=(feh --no-fehbg --bg-fill "$file")
+  else dt_error 'no supported wallpaper session'; return 1; fi
+  command -v "${DT_BG_COMMAND[0]}" >/dev/null && command -v timeout >/dev/null || { dt_error 'wallpaper adapter or timeout unavailable'; return 1; }
+  DT_BG_FILE=$file
+}
 dt_bg() (
   local action=${1:-help} file='' locked=0 previous='' record temp journal
   (($# == 0)) || shift
@@ -46,21 +65,8 @@ dt_bg() (
       file=$(printf '%s\n' "${files[@]}" | fzf --prompt='Background: ') || return ;;
     *) return 2 ;;
   esac
-  [[ -f $file && $file != *$'\n'* ]] || { dt_error 'background must be an existing image'; return 1; }
-  case ${file,,} in *.png|*.jpg|*.jpeg|*.webp|*.bmp) ;; *) dt_error 'unsupported background image'; return 1 ;; esac
-  file=$(realpath -- "$file") || return
-  local kernel=''
-  [[ ! -r /proc/sys/kernel/osrelease ]] || IFS= read -r kernel < /proc/sys/kernel/osrelease
-  local -a command=()
-  if [[ ${TERMUX_VERSION:-} && ${PREFIX:-} == */usr ]]; then
-    command=(termux-wallpaper -f "$file"); (( ! locked )) || command+=(-l)
-  elif ((locked)); then dt_error 'lock-screen wallpaper is Android-only'; return 1
-  elif [[ ${WSL_DISTRO_NAME:-} || ${WSL_INTEROP:-} || ${kernel,,} == *microsoft* ]]; then dt_error 'WSL wallpaper changes are unavailable'; return 1
-  elif [[ ${OS:-} == Windows_NT || ${OSTYPE:-} == msys* || ${OSTYPE:-} == cygwin* ]]; then dt_error 'native Windows wallpaper changes are unavailable'; return 1
-  elif [[ ${WAYLAND_DISPLAY:-} ]]; then command=(swww img "$file")
-  elif [[ ${DISPLAY:-} ]]; then command=(feh --no-fehbg --bg-fill "$file")
-  else dt_error 'no supported wallpaper session'; return 1; fi
-  command -v "${command[0]}" >/dev/null && command -v timeout >/dev/null || { dt_error 'wallpaper adapter or timeout unavailable'; return 1; }
+  dt_bg_preflight "$file" "$locked" || return
+  file=$DT_BG_FILE
   source "$DT_LIB/state.bash"
   dt_state_preflight || return
   [[ ! -L $DT_STATE/backgrounds && ! -L $record && ! -L $DT_STATE/background-current && ! -L $DT_STATE/background.lock ]] || return 1
@@ -68,7 +74,7 @@ dt_bg() (
   exec 8>"$DT_STATE/background.lock"; flock -n 8 || return 1
   journal=$(mktemp "$DT_STATE/backgrounds/action.XXXXXXXX") || return
   printf 'prepared\n%s\n' "$file" > "$journal"; dt_flush "$journal" || return
-  if ! timeout 15 "${command[@]}"; then printf 'failed\n%s\n' "$file" > "$journal"; dt_flush "$journal"; dt_error 'wallpaper failed; app theme remains published'; return 1; fi
+  if ! timeout 15 "${DT_BG_COMMAND[@]}"; then printf 'failed\n%s\n' "$file" > "$journal"; dt_flush "$journal"; dt_error 'wallpaper failed; app theme remains published'; return 1; fi
   if (( ! locked )); then
     temp=$(mktemp "$DT_STATE/backgrounds/.selection.XXXXXXXX") || return
     printf '%s\n' "$file" > "$temp"; dt_flush "$temp" && mv -- "$temp" "$record" || return

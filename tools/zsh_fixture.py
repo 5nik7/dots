@@ -35,6 +35,9 @@ def fixture(source=REPO, plugins=True):
         shutil.copy2(original, dest)
     for original in (source / 'bin').glob('dots-theme*'):
         shutil.copy2(original, repo / 'bin' / original.name)
+    for original in [source / 'bin/anodize', *(source / 'bin').glob('dots-anodize*')]:
+        if original.is_file():
+            shutil.copy2(original, repo / 'bin' / original.name)
     # Preserve module presence/order, without reading private or platform-local values.
     for name in ('androidots/termux.env', 'windots/win.env', 'secrets/secrets.env', 'secrets/secrets.sh'):
         dest = repo / name

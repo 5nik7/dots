@@ -303,23 +303,26 @@ previous command's status, hooks, FZF options, and autosuggestion styling. Exist
 Catppuccin shell sources remain in use. Bash/Fish receive command completions and
 explicit initialization output; automatic shell theme hooks are Zsh-only.
 
-The adapter in `config/nvim` reads shared data at startup and on `FocusGained` or
-`VimResume`. `:DotsThemeReload` explicitly retries/reapplies it when focus reporting
-is unavailable. Native plugin adapters apply each palette through the corresponding
-plugin's configuration API; pywal16 uses upstream highlights with validated snapshot
-colors through `dots-pywal16`, avoiding the plugin's live Vimscript import. Light/dark
-background follows the variant (or pywal16 background brightness). Colorscheme events
-update the dashboard palette without changing its animation. Without shared state,
-existing Mocha configuration remains the default. Invalid data or missing/failing
-plugins retain previous colors and report a bounded warning; manual reload retries.
+The local Anodize.nvim plugin renders shared native and generic palettes in
+`config/nvim`. Its source defaults to `~/repos/Anodize.nvim`, overridden by
+`ANODIZE_NVIM_DIR`. It reads validated JSON without CLI calls, watches stable state
+parents and handles focus/resume. `:DotsThemeReload` delegates to its active-only
+reload; after manually choosing another colorscheme, use `:colorscheme anodize`
+to return. No old native-adapter focus loader runs alongside it.
 
-The additional plugins are declared in `lua/plugins/dots_themes.lua` and lazy-loaded
-when needed. Install missing declarations through your normal `:Lazy` workflow, then
-use `:DotsThemeReload`. Publishing with the CLI validates adapter support, not local
-plugin installation. Neither the CLI nor the adapter installs plugins itself.
+Dots owns transparent main windows, opaque floats, terminal-color opt-out,
+15% inactive foreground dimming, Mocha exceptions and other personal highlights.
+Lualine uses the Anodize palette without layout changes. Dashboard role updates
+preserve animation phase and lifecycle. Missing/invalid shared state uses the
+plugin fallback initially and retains last-good colors on reload. An unavailable
+local plugin reports its path and falls back to bundled habamax. Optional native
+plugins remain available for manual selection; they are not Anodize dependencies.
+See [Neovim integration](anodize.md#neovim-integration) and the nested configuration
+README. No downloaded theme code is executed and no plugin is installed by the
+reader or CLI.
 
-Native plugins retain their syntax highlighting and custom options; shared foreground,
-selection and dashboard accent follow the semantic palette. Transparency remains
-in the Neovim configuration. Generic themes apply core/editor/plugin highlight groups
-from the validated palette. Switching does not rewrite Lua or install plugins.
 The sourceable compatibility `themes/bin/theme` delegates to `lib/dots/themes/shell.bash`.
+
+## Anodize authoring and consumer colors
+
+[Anodize](anodize.md) creates editable themes using the existing flat theme layout and publisher. Saving and applying are separate operations. Published schema-1 `palette.json` includes an additive `colors` object containing normalized named hex colors and ANSI aliases; existing `palette`, `roles`, and `adapter` fields remain available. The publisher fingerprint includes engine source changes, so a subsequent explicit apply creates an updated generation when necessary. No automatic live theme switch is performed by this source update.

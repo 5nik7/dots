@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# dots:summary=Author palettes and recoverable themes
+# dots:usage=COMMAND [OPTIONS]
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" "$@"

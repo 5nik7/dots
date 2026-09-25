@@ -195,4 +195,4 @@ PR creation returned HTTP 403 from the GitHub integration; the existing local gh
 
 ## Presentation Acceptance for Follow-up Work
 
-When explicitly resumed, new or changed Go human views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate through a core-owned renderer with policy parity. Preserve structured discovery, generated completion and external stream forwarding. Further Go development remains paused; existing results below do not imply that this presentation rollout is implemented.
+When explicitly resumed, new or changed Go human views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate through a core-owned renderer with policy parity. Preserve structured discovery, generated completion and external stream forwarding. Further Go development remains paused; existing results above do not imply that this presentation rollout is implemented.

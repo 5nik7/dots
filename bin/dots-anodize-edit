@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# dots:summary=Edit an authored theme
+# dots:usage=ID [OPTIONS]
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--dry-run||flag|Preview without changes
+# dots:option=--yes||flag|Apply the displayed plan
+# dots:option=--mode||choice:normal,monochromatic,analogous,pastel,material,colorful,muted,bright,complementary,triadic,split-complementary,tetradic,fire,ocean,forest,earthtone,neon,sunset,vaporwave,midnight,aurora,high-contrast,duotone|Extraction mode
+# dots:option=--light||flag|Generate light colors
+# dots:option=--dark||flag|Generate dark colors
+# dots:option=--adjust||choice:vibrance=,saturation=,contrast=,brightness=,shadows=,highlights=,hueShift=,temperature=,tint=,gamma=,blackPoint=,whitePoint=|Adjustment NAME=VALUE
+# dots:option=--set||choice:background=,red=,green=,yellow=,blue=,magenta=,cyan=,foreground=,muted=,bright_red=,bright_green=,bright_yellow=,bright_blue=,bright_magenta=,bright_cyan=,bright_foreground=,accent=,cursor=,selection=,selection_background=,selection_foreground=,error=,warning=,info=,hint=,orange=,brown=,dark_background=,darker_background=,lighter_background=,dark_foreground=,light_foreground=|Override COLOR=HEX
+# dots:option=--reextract||flag|Regenerate from saved source
+# dots:option=--reset-adjustments||flag|Clear adjustments
+# dots:option=--reference-wallpaper||flag|Keep external wallpaper reference
+# dots:argument=1|anodize-theme|Authored theme identifier
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" edit "$@"

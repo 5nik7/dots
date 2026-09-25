@@ -256,8 +256,24 @@ selection records belong in machine-local state. Connector paths beneath symlink
 app directories may physically reside in a repository and must not be published as
 machine-specific configuration.
 
-Native and generic Neovim adapters live in `lua/util/dots_theme_adapters.lua`; the
-reader/event lifecycle remains in `lua/util/dots_theme.lua`. Zsh reads generated shell
-data and Neovim reads validated JSON. Wallpaper actions use explicit capability-checked
-adapters; no polling or automatic wallpaper service is introduced. See [themes](themes.md)
-and [decision 0008](decisions/0008-config-catalog-and-theme-apps.md).
+The separate local Anodize.nvim plugin owns Neovim palette normalization, rendering
+and reload lifecycle. `config/nvim/lua/util/dots_theme.lua` preserves the startup,
+reload and dashboard interfaces; `dots_theme_legacy.lua` retains bounded raw data
+for compatibility helpers only. Personal highlights and lualine configuration
+remain Dots-owned. The old native adapter module is retained for compatibility,
+but is not part of startup or automatic reload. Zsh continues reading generated
+shell data. Wallpaper actions remain explicit capability-checked adapters. See
+[themes](themes.md), [Anodize](anodize.md#neovim-integration), and
+[decision 0008](decisions/0008-config-catalog-and-theme-apps.md).
+
+## Git and file operation engines
+
+Under [decision 0010](decisions/0010-git-and-managed-file-operations.md), `lib/dots/git` owns the adapted, attributed Git engine and uses shared Bash UI helpers. Inspection and mutation are separate modules, with static command metadata and no standalone git-it dependency. Git operations are incremental and preserve partial results.
+
+`lib/dots/files/manage.py` composes location registries, catalog ownership, preview and presentation. `transactions.py` owns durable staging, object integrity, locks, replacement, rollback, snapshots and recovery. Every mutating file route uses it; `track` remains metadata-only. Catalog and location data belong to their owning repositories. User preferences and transaction/backup records belong in XDG config/state. This is a bounded POSIX implementation, not the general Go module/profile engine.
+
+## Anodize authoring boundary
+
+The owner-authorized [Anodize slice](anodize.md) is an exception to the general Go pause. `anodize/` is an independent pure Go color engine; `lib/dots/anodize/` owns Python authoring and the private Bash publication bridge. It reuses `files/transactions.py` and existing theme rendering/publication. `bin/anodize` and static `dots-anodize-*` routes provide CLI access. No engine calls occur during shell startup. See [decision 0011](decisions/0011-anodize-authoring.md).
+
+Anodize standalone completion reuses generated copies of the shared Bash/Zsh/Fish adapters. Its private query bridge translates the standalone command line into the Dots completion protocol, reading bundled static headers and the selected theme repository without executing leaf commands or the Go engine. `tools/generate_anodize_integration.py` owns reproducible adapter generation and `man/anodize.1`; command and option text in the manual comes from the Python parser.

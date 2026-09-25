@@ -343,3 +343,58 @@ on adapter failure, and use a timeout. An external Android/desktop API may mutat
 before failing; there is no promise to recover an unknown prior wallpaper. A palette
 switch does not imply wallpaper permission. Only explicit `bg` actions or
 `set --background` invoke an adapter. Native Windows/WSL wallpaper is unsupported.
+
+## Managed File Transactions
+
+The bounded POSIX engine under decision 0010 implements add, link, stop-managing
+remove, restore, undo and interrupted recovery. Before writes it validates the
+complete operation set, source/target overlap, ownership and path boundaries,
+then locks the state and affected catalogs. It stages and verifies object copies
+before live replacement and records durable per-object phases before renames.
+Symlinked parents and special files are refused. Existing unrelated links,
+including generated theme connectors, are never overwritten by these operations.
+
+Temporary sibling replacement and reverse rollback preserve the original object.
+Recovery compares current objects with recorded before/after identities and
+refuses drift. Interrupted rollback is repeatable; unresolved transactions block
+new writes. Sources, targets and catalog records participate in the same journal.
+Do not claim protection against hostile concurrent filesystem replacement or
+applications writing continuously during adoption: close editors/apps before
+applying a reviewed batch. Preflight and boundary checks detect observed drift.
+
+Retained snapshots are opt-in, independent of temporary rollback protection. An
+occupied different target requires a verified retained backup before linking.
+Backups and journals live in private transaction/state directories outside source
+repositories. On success without retained backups, content payloads are discarded;
+prior catalog/link metadata and hashes remain. Undo uses verified unchanged
+repository content where possible and refuses unavailable original content.
+Retained snapshot payloads are not automatically pruned. Backup restore changes
+data objects; undo reverses catalog ownership too. No automatic force or pruning
+route is implemented. Standalone bak remains outside this managed contract.
+
+Adoption uses registered roots, excludes known credentials and local/generated
+state, and rejects recognizable credential material without printing content.
+The shared discovery/adoption exclusions prune known cache/session/dependency
+trees, cookies, backup files and generated application previews; see
+[system discovery](files.md#user-configuration-discovery). Human grouping and
+hidden-status summaries never alter the scan's adoption eligibility or JSON data.
+These checks are conservative rather than exhaustive. No command automatically
+stages, commits or publishes adopted files. Remove keeps the repository source
+and a regular usable config; it is not destructive repository deletion.
+
+## Recursive Git Operations
+
+The [Git family](git.md) is a separate bounded Git workflow, not a managed-file
+transaction. Status and previews are local and read-only. Actual sync/publish use
+per-repository common-directory locks, observed-state rechecks, explicit branch
+choices and conservative refusal policies. Git hooks/signing and credential
+helpers remain active during explicitly requested real operations. Only sync
+--init authorizes missing-submodule initialization. Publication validates the
+actual push URL and configured owner, uses explicit refspecs, retains staged
+pointer intent and blocks dependent parents after child failure. Completed work
+is retained; no multi-repository rollback is promised. Tests never perform these
+operations against live repositories or external services.
+
+## Anodize authoring and apply
+
+Create/import/edit and export-to-file use the existing file transaction Store with retained snapshots. Existing IDs/export destinations, generated-file drift and unsafe theme objects are refused. Complete staging and digest guards protect saves; existing file history, undo and recovery routes apply. Saves do not activate themes. [Anodize](anodize.md) documents confirmation, copied versus referenced wallpaper, and bounded input formats. Apply uses the existing theme publisher after template/target preflight. Explicit wallpaper changes are journaled post-publication adapter actions; a wallpaper failure leaves the app theme published and returns an error. Read-only previews only use disposable temporary rendering directories.

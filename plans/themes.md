@@ -2,6 +2,8 @@
 
 **Status: Implemented and validated on native Termux**
 
+**Current integration:** This plan retains the original palette/native-plugin implementation and measurements. The completed [Anodize plan](anodize.md) now owns the active Dots Neovim bridge, local Anodize.nvim setup and consumer acceptance. Native theme plugins remain optional/manual compatibility paths. Consult [current verification](../docs/testing.md#anodize-neovim-integration) before treating these historical tests as current startup behavior.
+
 Approved scope: four Catppuccin TOML palettes; native color names and semantic roles;
 shared Bash query/conversion engine; compatible catppuccin/current_theme entry points;
 Zsh prompt refresh; Neovim startup/focus refresh; Bash/Zsh/Fish command completion.
@@ -71,4 +73,4 @@ The authorized [Omarchy theme expansion](omarchy-themes.md) and [files catalog](
 
 ## Presentation Acceptance for Follow-up Work
 
-Future command views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Preserve native palette queries and generated application/shell data while using shared diagnostic colors and wording. This does not change application UI theming or the completed evidence below.
+Future command views must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Preserve native palette queries and generated application/shell data while using shared diagnostic colors and wording. This does not change application UI theming or the completed evidence above.

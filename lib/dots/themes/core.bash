@@ -273,6 +273,13 @@ dt_json() {
   for name in background foreground muted accent selection error warning info hint; do
     printf '%s"%s":"%s"' "$sep" "$name" "${DT_SEMANTIC[$name]:-${DT_COLORS[${DT_META[roles.$name]}]}}"; sep=,
   done
+  printf '},"colors":{'
+  sep=''
+  # Additive normalized data for consumers that do not load native theme plugins.
+  while IFS= read -r name; do
+    [[ $name != mode ]] || continue
+    printf '%s"%s":"%s"' "$sep" "$name" "${DT_SEMANTIC[$name]}"; sep=,
+  done < <(printf '%s\n' "${!DT_SEMANTIC[@]}" | LC_ALL=C sort)
   printf '}}\n'
 }
 

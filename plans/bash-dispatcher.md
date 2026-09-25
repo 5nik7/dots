@@ -105,3 +105,5 @@ The authorized [Omarchy theme expansion](omarchy-themes.md) and [files catalog](
 ## Presentation Acceptance for Follow-up Work
 
 Future dispatcher/help changes must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Keep the shared Bash helpers authoritative, evaluate stdout/stderr independently, and preserve extension forwarding and generated completion data. Initial theme/file presentation evidence is recorded in [testing](../docs/testing.md#terminal-presentation).
+
+The [Git and managed-file expansion](git-and-file-operations.md) adds static route metadata and shared presentation without changing direct-dispatch lookup or resuming Go development.

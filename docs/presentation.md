@@ -29,6 +29,8 @@ Automatic color requires a terminal on the destination stream, `TERM` other than
 | Warning or attention | Yellow | A condition needing attention or a skipped operation requiring explanation |
 | Error or conflict | Red | Failure, blocked operation, conflict or unavailable required resource |
 | Secondary or inactive detail | Dim/muted | Supporting context, exclusions and inactive selections |
+| Resource path accent | Magenta | Distinguishes paths from blue repository names and labels |
+| Collection count accent | Cyan | Highlights quantities without implying success or failure |
 
 Keep status text alongside color; a green marker alone cannot explain whether an item is linked, tracked or selected. Use the shared marker vocabulary with an ASCII fallback. Palette previews may display their actual swatch colors, but diagnostic meanings remain consistent across selected themes. Color may emphasize facts; it must never imply success before an operation succeeds.
 

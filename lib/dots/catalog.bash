@@ -36,7 +36,7 @@ dots_type_valid() {
   local value
   case $1 in
     flag|string|file|directory) return 0 ;;
-    theme|flavor|palette-color|color-format|file-resource|file-repository|theme-id) return 0 ;;
+    theme|flavor|palette-color|color-format|file-resource|file-repository|theme-id|anodize-theme) return 0 ;;
     choice:*)
       [[ ${1#choice:} && $1 != *, && $1 != *,,* ]] || return 1
       local -a values=()

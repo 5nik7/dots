@@ -1,12 +1,12 @@
 # Dots Roadmap
 
-**Status: Repository maintenance active; further Go implementation and migration paused**
+**Status: Repository maintenance active; general Go implementation/migration paused; scoped Anodize core/CLI exception implemented**
 
 This roadmap sequences the future `dots` CLI around its riskiest foundations: Termux portability, deterministic specification resolution, and recoverable filesystem mutation.
 
 ## Current Priority
 
-As of 2026-09-22, prioritize everyday maintenance of the existing dotfiles, scripts, configurations, and documentation. Further Go implementation and migration work is paused indefinitely and resumes only at the owner's request. Specifically requested Go fixes remain allowed. Keep the existing Go implementation, experiment, tests, and CI in place; Go remains the accepted core language.
+As of 2026-09-22, prioritize everyday maintenance of the existing dotfiles, scripts, configurations, and documentation. Further Go implementation and migration work is paused indefinitely and resumes only at the owner's request. Specifically requested Go fixes remain allowed. The owner-authorized [Anodize core/CLI slice](anodize.md) is implemented as a scoped exception; general Go migration stays paused. Keep the existing Go implementation, experiment, tests, and CI in place; Go remains the accepted core language.
 
 Work in the existing checkout on `main` by default, with task-relevant edits allowed throughout the repository under [AGENTS.md](../AGENTS.md). A separate branch or worktree is optional. Earlier slice-specific file restrictions and checkout-preservation instructions are historical, not ongoing maintenance restrictions.
 
@@ -19,7 +19,7 @@ managed installation or the Go phases below.
 
 ## Implemented maintenance expansion
 
-The owner authorized the [configuration migration](config-path-migration.md), [files catalog](files-catalog.md), and [Omarchy-style themes](omarchy-themes.md). The bounded implementation and isolated tests are complete. Files inspection and catalog metadata are available; general file installation, adoption, removal, editing, transactions and undo remain future work. Androidots owns Termux-specific resources.
+The owner authorized the [configuration migration](config-path-migration.md), [files catalog](files-catalog.md), and [Omarchy-style themes](omarchy-themes.md). The bounded implementation and isolated tests are complete. Files inspection and catalog metadata are available; bounded file adoption/link/remove, transactions and recovery are implemented under [decision 0010](../docs/decisions/0010-git-and-managed-file-operations.md); editing and general profile installation remain future work. Androidots owns Termux-specific resources.
 
 ## Presentation Requirement Across Phases
 
@@ -100,6 +100,8 @@ Exit criteria:
 - Adding a valid `dots-*` extension makes it discoverable without editing the central dispatcher.
 - A normal direct route avoids full registry scanning.
 - Help, discovery, completion, and generated reference agree.
+
+The remaining phase checklists describe the future general Go core, not an inventory of missing live Bash/Python commands. The implemented bounded catalogs, theme publisher and file transaction Store are tracked in their focused plans; they do not satisfy general manifest/profile-engine milestones.
 
 ## Phase 3: Specification and Read-Only Planning
 
@@ -238,5 +240,16 @@ Resolve deferred decisions only when the next phase requires them.
 The [shared theme implementation](themes.md) adds Catppuccin data files, Bash commands,
 Zsh refresh and Neovim integration while Go remains paused. The
 [additional theme families](theme-families.md) extend the same engine and adapters.
-General theme installation,
-other app adapters, and the broader Phase 4 module work remain deferred.
+Local/Git flat-theme installation and fixed app connectors were subsequently implemented in the [Omarchy-style expansion](omarchy-themes.md). Arbitrary hooks, new frontend/platform support and the broader general transaction/module work remain deferred. Neovim now uses the local Anodize.nvim integration; original family-plugin measurements remain historical.
+
+## Git and file operation expansion
+
+The approved [focused plan](git-and-file-operations.md) adds self-contained recursive Git status/publish/sync and a bounded shared Python file transaction layer. This does not resume the Go phases, bootstrap optional sources automatically, perform a live import or publish a repository. Retained backups are opt-in; safe temporary rollback protection remains mandatory. The [presentation contract](../docs/presentation.md) governs all new views.
+
+## Scoped Anodize exception
+
+On 2026-09-25 the owner authorized [Anodize core/CLI implementation](anodize.md), an isolated Go color engine with adapters to the existing Bash/Python framework. This does not resume the general Go roadmap. The separate local Neovim plugin is integrated after its tested handoff; Android APK, TUI and arbitrary hooks remain deferred.
+
+## Recommended next work (proposed)
+
+[Anodize foundation hardening](anodize-next.md) is the recommended next bounded task: close verification gaps, review the versioned engine/recipe/consumer boundaries, and exercise a complete recoverable authoring workflow in fixtures. The Android app remains a long-term goal and a TUI an optional follow-up. Neither frontend, release publication, nor a live activation is authorized by listing it here.

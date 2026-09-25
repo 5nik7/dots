@@ -107,3 +107,15 @@ wallpaper adapters, also run `python3 -B tools/test_theme_workflow.py`. These su
 own their home/config/state/source roots; local Git fixtures and fake external
 adapters require no network or live app changes. Use `python3 -B tools/bench_files.py`
 for inventory scaling, sequentially with other benchmarks.
+
+## Git and managed file operations
+
+Use `python3 -B tools/test_git_operations.py` and `python3 -B tools/test_file_operations.py` for the bounded operation engines. Fixtures own configuration/state/Git roots; publication uses local bare remotes through a test-only transport. Include abrupt interruption, snapshot drift, partial failure and optional backup cases. Run existing file and Bash suites for shared contracts and completion; never test sync, publish, import or restore against live repositories or configs.
+
+## Anodize
+
+Use `python3 -B tools/verify_anodize.py check` for the isolated core/CLI suite and `bench` for engine measurements. `build` writes only the ignored private executable. Keep all integration roots disposable and retain Termux LD_PRELOAD compatibility in spawned environments. Run existing theme/file/dispatcher suites for shared changes. Do not run the real Neovim startup or apply a live theme as a test.
+
+For the Dots Neovim bridge, run `python3 -B tools/test_anodize_nvim.py` plus the existing theme suites. Set `ANODIZE_NVIM_DIR` to a completed local plugin checkout when needed. The shared helper copies public runtime files; do not replace it with a normal editor startup. Preserve dashboard timing and test manual colorscheme inactivity explicitly.
+
+For Anodize completions or manual changes, run `python3 -B tools/test_anodize_integration.py` (Bash, Zsh, Fish and mandoc required), generated-artifact freshness, and the shared Bash/Zsh/FZF-tab checks when their integration changes. Completion must work without the private Go engine.

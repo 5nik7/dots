@@ -73,3 +73,8 @@ Do not edit an accepted record to make an old decision appear different. Add a n
 - [0007: Data-driven themes and bounded Bash selection state](0007-data-driven-themes.md).
 
 - [0008: Configuration catalogs and application themes](0008-config-catalog-and-theme-apps.md) — Accepted; canonical config paths, files metadata and Omarchy-style themes.
+
+- [0009: Cohesive command presentation](0009-cohesive-command-presentation.md).
+- [0010: Git and managed-file operations](0010-git-and-managed-file-operations.md).
+
+- [0011: Anodize palette authoring](0011-anodize-authoring.md) — accepted scoped core/CLI implementation.

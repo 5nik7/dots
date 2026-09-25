@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# dots:summary=Inspect, publish and synchronize Git repositories recursively
+# dots:usage=[SUBCOMMAND]
+exec "${BASH_SOURCE[0]%/*}/dots" help git

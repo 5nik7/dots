@@ -4,6 +4,8 @@ The `dots` CLI is in the design and incremental-migration phase, with an isolate
 
 ## Start Here
 
+- [Git operations](git.md) and [managed files](files.md) — implemented bounded workflows.
+
 - [`principles.md`](principles.md) — priorities and engineering invariants.
 - [`architecture.md`](architecture.md) — system boundaries, execution flow, and target repository shape.
 - [`commands.md`](commands.md) — proposed CLI vocabulary and external command model.
@@ -37,3 +39,5 @@ Agents and contributors must begin with [`../AGENTS.md`](../AGENTS.md), then rea
 - **Deprecated** means the behavior remains temporarily for compatibility.
 
 When implementation changes a documented behavior, update the authoritative document in the same change. When a proposed design becomes real, replace its status label and remove stale caveats.
+
+- [Anodize](anodize.md) — implemented palette authoring, recipe, CLI and publication boundaries.

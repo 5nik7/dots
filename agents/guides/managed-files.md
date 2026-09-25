@@ -4,7 +4,7 @@ Read this guide before changing module manifests, profile resolution, file adopt
 
 ## Boundary
 
-The core transaction engine owns managed filesystem mutations. A platform adapter may perform a primitive selected by the engine, but an extension must not independently replace files in a user's home directory and claim the operation is managed by `dots`.
+The shared transaction engine owns managed filesystem mutations. For the implemented catalog-backed POSIX slice, this is `lib/dots/files/transactions.py` under decision 0010; the general Go engine remains paused. A platform adapter may perform a primitive selected by the engine, but an extension must not independently replace files in a user's home directory and claim the operation is managed by `dots`.
 
 ## Before Editing
 
@@ -95,3 +95,7 @@ private exclusions, explicit replacements and directory collision classification
 The separate `tools/migrate_config_paths.py` defaults to preview and requires an
 absolute recovery journal for apply/rollback. Never use real-home migration as a test.
 Run `python3 -B tools/test_files.py`; scale checks use `tools/bench_files.py`.
+
+## Bounded managed operations
+
+Read [files](../../docs/files.md) and [decision 0010](../../docs/decisions/0010-git-and-managed-file-operations.md) before changing adoption, linking, removal or backups. All routes use the shared Python engine and existing per-repository ownership. Keep optional retained snapshots separate from mandatory temporary rollback data. Remove preserves both a usable config and the repository source. Never use bak as an unverified replacement primitive. Run `python3 -B tools/test_file_operations.py` alongside catalog regressions; use only disposable homes and repositories.

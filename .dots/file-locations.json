@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "repository": "dots",
+  "locations": [
+    {
+      "id": "xdg-config",
+      "kind": "root",
+      "target": "${CONFIG}",
+      "source": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "exclusions": [
+        "dots/*"
+      ]
+    },
+    {
+      "id": "zshenv",
+      "kind": "file",
+      "target": "${HOME}/.zshenv",
+      "source": "shells/zsh/zshenv",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "zshrc",
+      "kind": "file",
+      "target": "${HOME}/.zshrc",
+      "source": "shells/zsh/zshrc",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "bashrc",
+      "kind": "file",
+      "target": "${HOME}/.bashrc",
+      "source": "shells/bash/.bashrc",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "bash_profile",
+      "kind": "file",
+      "target": "${HOME}/.bash_profile",
+      "source": "shells/bash/.bash_profile",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "xonshrc",
+      "kind": "file",
+      "target": "${HOME}/.xonshrc",
+      "source": "shells/xonsh/.xonshrc",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "profile",
+      "kind": "file",
+      "target": "${HOME}/.profile",
+      "source": "shells/profile",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    }
+  ]
+}

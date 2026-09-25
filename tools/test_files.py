@@ -80,6 +80,10 @@ class Files(unittest.TestCase):
             return proc.stdout
         call("commands", "--check")
         self.assertIn("--strategy", call("help", "files", "track"))
+        discovery_help = call("help", "files", "discover")
+        for flag in ("--verbose", "--all"):
+            self.assertIn(flag, discovery_help)
+            self.assertIn("candidate\t" + flag + "\t", call("__complete", "zsh", "4", "--", "dots", "files", "discover", "--system", "--"))
         self.assertEqual(call("files", "source", "dots:app").strip(), str(self.repo / "config/app"))
         self.assertIn("dots:app", call("__complete", "zsh", "3", "--", "dots", "files", "show", "dots:"))
         self.assertIn("dots", call("__complete", "fish", "4", "--", "dots", "files", "list", "--repo", "d"))

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# dots:option=--system||flag|Search registered user config locations
+# dots:option=--verbose||flag|With --system, show individual files and source mappings
+# dots:option=--all||flag|With --system, include managed and excluded entries
 # dots:summary=Find sources not yet tracked
 # dots:usage=[OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
@@ -10,4 +13,11 @@
 # dots:option=--platform||choice:termux,linux,wsl,windows|Observe a platform
 # dots:option=--sort||choice:id,app,repository,source,status|Sort by id, app, repository, source or status
 FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+for arg; do
+  if [[ $arg == --system ]]; then
+    args=()
+    for item; do [[ $item == --system ]] || args+=("$item"); done
+    exec python3 -B "$FILES_LIB/manage.py" system "${args[@]}"
+  fi
+done
 exec python3 -B "$FILES_LIB/catalog.py" discover "$@"
