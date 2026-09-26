@@ -1,0 +1,34 @@
+{
+  "adjustments": {},
+  "baseline": {
+    "accent": "#7b77b9",
+    "background": "#0b031f",
+    "blue": "#7b77b9",
+    "bright_blue": "#8e8adc",
+    "bright_cyan": "#beecff",
+    "bright_foreground": "#f5f4ff",
+    "bright_green": "#94deff",
+    "bright_magenta": "#d2aaff",
+    "bright_red": "#c795da",
+    "bright_yellow": "#ffc6ff",
+    "cyan": "#b1d7ff",
+    "foreground": "#f8dfff",
+    "green": "#8fc7ff",
+    "magenta": "#b99aec",
+    "muted": "#605f66",
+    "red": "#ac85bb",
+    "yellow": "#ffd0ff"
+  },
+  "generated": {
+    "colors.toml": "c77d5109c9bb2140b954953575b6857510371614f2a4ed3193ec72f2b5c66754",
+    "theme.toml": "dd00e6fe314f2cedb9b5b6c915ea6ebaecd70620981908b032d6e8d30f948bf9"
+  },
+  "id": "dusk",
+  "options": {
+    "light": false,
+    "mode": "normal"
+  },
+  "overrides": {},
+  "schema": 1,
+  "seed": "#725ac1"
+}

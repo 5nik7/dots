@@ -149,6 +149,7 @@ truncation_symbol = "…/"
 repo_root_style = "bold bright-cyan"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 read_only = " "
+read_only_style = "bright-black"
 
 [custom.git-prompt-string]
 command = "git-prompt-string || :"
