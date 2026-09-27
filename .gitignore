@@ -59,4 +59,4 @@ bin-release/
 /config/kitty/dots-theme.conf
 /config/tmux/dots-theme.conf
 
-/config/yazi/plugins/dots.yazi
+/config/yazi/flavors/dots.yazi
