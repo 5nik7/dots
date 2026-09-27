@@ -58,3 +58,5 @@ bin-release/
 # Machine-local theme connectors (colors are generated in XDG state).
 /config/kitty/dots-theme.conf
 /config/tmux/dots-theme.conf
+
+/config/yazi/plugins/dots.yazi
