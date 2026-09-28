@@ -7,45 +7,45 @@
 
 [[mgr.prepend_keymap]]
 on = ["<C-x>"]
-run = "plugin toggle-pane min-preview"
+run = "plugin dots -- toggle-pane min-preview"
 desc = "Show or hide the preview pane"
 
 [[mgr.prepend_keymap]]
 on = ["X"]
-run = "plugin toggle-pane max-preview"
+run = "plugin dots -- toggle-pane max-preview"
 desc = "Maximize or restore the preview pane"
 
 [[mgr.prepend_keymap]]
 on = ["P", "s"]
-run = "plugin projects save"
+run = "plugin dots -- projects save"
 desc = "Save current project"
 
 [[mgr.prepend_keymap]]
 on = ["P", "l"]
-run = "plugin projects load"
+run = "plugin dots -- projects load"
 desc = "Load project"
 
 [[mgr.prepend_keymap]]
 on = ["P", "P"]
-run = "plugin projects load_last"
+run = "plugin dots -- projects load_last"
 desc = "Load last project"
 
 [[mgr.prepend_keymap]]
 on = ["P", "d"]
-run = "plugin projects delete"
+run = "plugin dots -- projects delete"
 desc = "Delete project"
 
 [[mgr.prepend_keymap]]
 on = ["P", "D"]
-run = "plugin projects delete_all"
+run = "plugin dots -- projects delete_all"
 desc = "Delete all projects"
 
 [[mgr.prepend_keymap]]
 on = ["P", "m"]
-run = "plugin projects 'merge current'"
+run = "plugin dots -- projects merge current"
 desc = "Merge current tab to other projects"
 
 [[mgr.prepend_keymap]]
 on = ["P", "M"]
-run = "plugin projects 'merge all'"
+run = "plugin dots -- projects merge all"
 desc = "Merge current project to other projects"

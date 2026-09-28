@@ -32,11 +32,11 @@ ueberzug_offset = [0, 0, 0, 0]
 [[plugin.prepend_fetchers]]
 id = "git"    # Remove if Yazi > v26.1.22
 url = "*"
-run = "git"
+run = "dots"
 group = "git"
 
 [[plugin.prepend_fetchers]]
 id = "git"    # Remove if Yazi > v26.1.22
 url = "*/"
-run = "git"
+run = "dots"
 group = "git"

@@ -6,6 +6,12 @@ The [Go development pause](../plans/roadmap.md#current-priority) retains existin
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 
+## Yazi Plugin Bundle
+
+From `config/yazi/plugins/dots.yazi`, run `lua test.lua`, `lua test-symlink.lua`, and `python3 -B test-native.py`. The Lua fixtures check dispatcher forwarding, setup order, pane restoration, combined Git refresh/stale-result rejection, and symlink layout. The native Unix PTY runner copies the repository's Yazi config into temporary home/config/state/cache/data/runtime roots, isolates the DDS socket directory and Git configuration, and installs only the combined plugin plus a test probe. It exercises Git callbacks/fetching, distinct module state, project save/load/last/delete/delete-all and merge event dispatch, folder sorting, pane shortcuts, and 40/80/160-column redraws.
+
+Native verification covers Termux with Yazi 26.9.1. Windows paths in Lua fixtures are simulated; no native Windows or desktop Linux claim follows. Redraw checks catch runtime errors but do not prove pixel-perfect visual equivalence. See the [plugin README](../config/yazi/plugins/dots.yazi/README.md#verification) and [focused plan](../plans/yazi-plugin-consolidation.md) for evidence and boundaries.
+
 ## Bash Command Framework
 
 Run `python3 -B tools/test_bash_dots.py` for disposable routing/metadata/output and

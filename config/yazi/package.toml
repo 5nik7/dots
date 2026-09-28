@@ -1,52 +1,7 @@
 [[plugin.deps]]
-use = "yazi-rs/plugins:full-border"
-rev = "c591a36"
-hash = "f281261ff04ad7ec867c3f802a50835f"
-
-[[plugin.deps]]
-use = "imsi32/yatline-catppuccin"
-rev = "6c3f166"
-hash = "e1d5b1c34c53c4c4661d910eb3a6fd95"
-
-[[plugin.deps]]
-use = "wekauwau/yatline-tokyo-night"
-rev = "b4a6310"
-hash = "215729a555fe5286f1eb35520963d08"
-
-[[plugin.deps]]
-use = "blackdaemon/yatline-tab-path"
-rev = "101fe7c"
-hash = "b58a6786383df06dc16fc6dbd1876d31"
-
-[[plugin.deps]]
-use = "imsi32/yatline-githead"
-rev = "929e52c"
-hash = "8282baf02fcd6aac00ccad2276775358"
-
-[[plugin.deps]]
-use = "yazi-rs/plugins:git"
-rev = "c591a36"
-hash = "5bb0bfab901d3601c370eafdd66edd31"
-
-[[plugin.deps]]
 use = "yazi-rs/plugins:chmod"
 rev = "c591a36"
 hash = "87472b05a8c420100f6a2b9cde1e7746"
-
-[[plugin.deps]]
-use = "Reledia/glow"
-rev = "bd3eaa5"
-hash = "92b5c58159a51c567f82b618cee2b78"
-
-[[plugin.deps]]
-use = "yazi-rs/plugins:toggle-pane"
-rev = "c591a36"
-hash = "5b2fbef7d1513ce38ff72623a071a5e"
-
-[[plugin.deps]]
-use = "Lil-Dank/lazygit"
-rev = "e73fd74"
-hash = "6ea5f37c7f219671ec504cb8311f889d"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:types"
@@ -58,42 +13,5 @@ use = "dedukun/bookmarks"
 rev = "9ef1254"
 hash = "92fbb5483657fa7976cdf4e0104e18e0"
 
-[[plugin.deps]]
-use = "MasouShizuka/projects"
-rev = "22a4006"
-hash = "195d1b8c8fc1a944883b5ce3d92d7ca7"
-
-[[plugin.deps]]
-use = "5nik7/yatline"
-rev = "ab24733"
-hash = "de0cdd7af3fe4576d3c98cedd8c6524b"
-
-[[plugin.deps]]
-use = "wekauwau/yatline-modified-time"
-rev = "2d33471"
-hash = "8fa6028ef832b34cf32f4ee43cb0ae35"
-
-[[plugin.deps]]
-use = "jaja360/yatline-hostname-username"
-rev = "448e8a1"
-hash = "9888b4708cb9fb7ecdac610f57d0389e"
-
-[[flavor.deps]]
-use = "yazi-rs/flavors:catppuccin-mocha"
-rev = "20b47bf"
-hash = "ce320f877fe709b189433941aba747c4"
-
-[[flavor.deps]]
-use = "Mintass/rose-pine"
-rev = "d91f8f2"
-hash = "87da3630653b6d272e43658418599188"
-
-[[flavor.deps]]
-use = "5nik7/njen"
-rev = "1c92b9c"
-hash = "ad280d4b5fd24cc6afbb54471b11b347"
-
-[[flavor.deps]]
-use = "6ruby1/eldritch"
-rev = "7b5bf34"
-hash = "d73a2192b13f0267461d5424a7f10cd1"
+[flavor]
+deps = []

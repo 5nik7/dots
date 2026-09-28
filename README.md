@@ -55,7 +55,7 @@ dots theme refresh
 dots theme bg next                 # Explicit wallpaper change
 ```
 
-The Yazi status line includes the local [dots-repo Yatline component](config/yazi/plugins/dots-repo.yazi/README.md), which shows the Git working tree folder name before branch details and hides outside repositories.
+The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dots.yazi/README.md), combining the Dotline header/status renderer, Git indicators, saved projects, folder rules, and pane toggles. Its repository component shows the Git working tree folder name before branch details and hides outside repositories.
 
 The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, FZF and Gum.
 The FZF template supplies published shell colors; Zsh picks them up at the next

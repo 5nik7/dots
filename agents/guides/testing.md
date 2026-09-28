@@ -87,6 +87,10 @@ the existing Zsh cache/reload regression coverage and FZF-tab acceptance.
 
 For new or changed human views, apply the [presentation acceptance gate](../../docs/presentation.md#acceptance-gate) using the existing command suites and test-owned roots. Cover the applicable output modes and states, review representative terminal layouts, and report gaps. Cross-renderer policy checks and forced-decoration data checks are required when shared presentation behavior changes; current evidence does not establish every command or native platform.
 
+## Existing Yazi Configuration
+
+For `config/yazi/plugins/dots.yazi` changes, run its Lua dispatcher and symlink fixtures and its isolated native PTY runner as documented in [Testing Strategy](../../docs/testing.md#yazi-plugin-bundle). The native runner needs Python, Git, and Yazi on a Unix PTY and owns all home/config/state/cache/runtime and DDS storage. Never test project saves, deletions, or merge events against the live configuration. Keep fixture results, native platform evidence, and visual review limits distinct.
+
 ## Existing Zsh Configuration
 
 For Zsh startup changes, run `python3 -B tools/test_zsh.py` plus the isolated startup and PTY runners described in [the Zsh guide](../../shells/zsh/README.md). Capture the baseline before editing and keep timing runs sequential. Never profile the live startup chain against the real home; private/platform modules use synthetic substitutes. Treat native Termux results and other-platform fixtures separately.

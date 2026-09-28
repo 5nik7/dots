@@ -22,6 +22,12 @@ policy and plain numbered prompts; the existing `ui.bash` remains subprocess-fre
 The theme switcher's review loop validates selection and previews through the
 existing theme engine before delegating Apply to its unchanged publisher.
 
+## Existing Yazi Configuration
+
+`config/yazi/plugins/dots.yazi` owns the active Yazi plugin bundle. Its `main.lua` exposes setup, command dispatch, and Git fetching; internal Lua modules retain separate Yazi-managed state. Dotline is the bundled Yatline-derived renderer, with a combined Git-head/repository module, a local symlink component, and a bundled hostname/user component. The Git-head module owns both display getters and one shared refresh generation. Borders, folder rules, projects, and pane toggles share the same plugin directory.
+
+The Yazi `init.lua` owns personal options, while its keymap and fetcher rules address `dots`. Original merged plugin directories remain inactive for reference and are no longer package dependencies. The [plugin README](../config/yazi/plugins/dots.yazi/README.md) owns configuration and command details. This is application configuration, independent of the Dots CLI and managed-file transaction engine.
+
 ## Existing Zsh Configuration
 
 The live shell configuration is maintained independently of the paused Go core. `shells/zsh/zshrc` owns startup order; its `core/`, `integrations/`, and `platforms/` modules separate shared setup, tool activation, and execution-environment detection. Existing public module entry points remain available. Generated shell data belongs in user cache directories, not the repository. See the [Zsh guide](../shells/zsh/README.md).
