@@ -101,9 +101,10 @@ Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md)
 - Use a fast direct-resolution path. Do not scan or parse every extension for an ordinary known route.
 - Built-ins cannot be shadowed silently. Duplicate routes are validation failures.
 - Help, completion, JSON discovery, and Markdown command reference must derive from the same metadata.
-- Do not require `fzf`, `jq`, `sed`, `awk`, Git, or a package manager merely to start the CLI or display basic help.
+- Do not require `gum`, `fzf`, `jq`, `sed`, `awk`, Git, or a package manager merely to start the CLI or display basic help.
 - Keep stdout machine-consumable when a command promises structured output. Send diagnostics to stderr.
 - Every new or changed first-party human view must follow [the presentation contract](docs/presentation.md): cohesive layouts and wording, shared semantic colors, readable plain fallbacks, and preserved data interfaces. Apply its acceptance gate in every focused plan.
+- Prefer optional Gum for suitable new or changed interactive workflows, following [the presentation contract](docs/presentation.md#optional-gum-interactions). Use shared adapters, capability checks and useful fallbacks; preserve scripts, cancellation and explicit approval semantics.
 
 Do not add a new command or rename an existing route without updating `docs/commands.md`, completion behavior, command metadata tests, and user-facing documentation when applicable.
 

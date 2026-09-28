@@ -399,6 +399,19 @@ relative documentation links and whitespace checks passed. Isolated Zsh startup
 and PTY checks passed, including equal hooks/FZF options/fpath/keys after reload,
 Tab/FZF-tab, directory completion and history selection. No live theme was activated.
 
+The subsequent Gum shell conversion on 2026-09-28 passed all three focused
+application-environment workflow checks on native Termux. The full workflow suite
+passed 12/14, with the same two existing 33-versus-34 theme-count failures noted
+above. All 23 shared-theme tests passed. Bash and Zsh both
+exported all 116 colors to a child process, tolerated repeat sourcing, and loaded
+the new accent after a theme change. Personal and bundled shell overrides retained
+precedence and fingerprint refresh while remaining unexecuted during publication.
+An exact comparison against the previous Lua template preserved every mapping in
+order. Bash/Zsh syntax, relative Markdown links and whitespace checks passed.
+This evidence covers explicit shell consumption in disposable roots; no live
+shell configuration or active theme was changed, and desktop/Windows execution
+was not tested.
+
 Sequential three-sample advisory theme measurements recorded selected Catppuccin
 initialization at 19.1 ms before and 23.2 ms after, and the unchanged prompt check
 at 36.6 µs before and 44.1 µs after; the unchanged prompt path still adds no new
@@ -513,6 +526,16 @@ scan eligibility, unchanged source/home trees, terminal controls and 40/80/120-c
 layouts. Representative output was reviewed at those widths. This follow-up did
 not change or rerun the Git engine suite.
 
+The 2026-09-28 publication staging correction passed 27 Git, 8 confirmation and
+23 Bash dispatcher tests on native Termux. The ignored-directory regression
+failed before the fix and passed afterward: tracked edits/deletions remain
+eligible while ignored new files stay untracked. A separate fixture verifies
+literal special-character gitlink exclusions and preserves a staged pointer when
+the child HEAD differs. All publication used disposable local remotes. A read-only
+staging dry-run on the owner checkout passed, with unchanged index hash and HEAD;
+no live publication was retried. Syntax, ShellCheck, docs links and whitespace
+checks passed. See the [focused plan](../plans/git-and-file-operations.md#publish-staging-correction-2026-09-28).
+
 `python3 -B tools/bench_git_operations.py` measures sequential warm status on
 owned trees with 1, 5 and 10 repositories (three samples each). Median times before
 removing repeated registration scans were 194.5, 1109.9 and 2678.9 ms; afterward
@@ -583,3 +606,82 @@ Run `python3 -B tools/test_anodize_integration.py` without the Go engine. It req
 `python3 -B tools/generate_anodize_integration.py --check` verifies generated adapters/manual without writing. `mandoc -Tlint man/anodize.1` checks the section-1 manual. Native Windows shell completion remains outside the implemented POSIX CLI scope.
 
 Native Termux verification (2026-09-25): all four Anodize integration cases, 23 Bash dispatcher cases and 14 authoring cases passed. Zsh/FZF-tab acceptance includes standalone Anodize option labels and unchanged reload state. The broader Zsh suite has two unrelated `ll` alias expectation failures, reproduced after removing Anodize from its disposable fixtures (15/17 passed).
+
+## Optional interactive theme picker
+
+`python3 -B tools/test_theme_picker.py` exercises the Gum-first switcher under
+owned PTYs and disposable home/config/state/repository roots. Fixture tools cover
+backend precedence, Back/Apply/Cancel, one publication on Apply, selection validation,
+preview failure, empty catalogs, tool errors, missing tools, plain-menu input,
+color precedence and noninteractive/data-interface bypass. Installed Gum enables
+native filtering, review/cancellation and interruption checks; missing Gum skips
+those native checks without installing anything. Width checks use 40, 80 and 120
+columns. Run the shared theme/workflow and Bash suites for adjacent contracts.
+
+On 2026-09-28, all 14 picker tests passed on native Termux, including real Gum
+2.0.0 filter/review/cancellation at 40/80/120 columns, forced color over NO_COLOR,
+ASCII/Unicode modes, Ctrl-C and Escape, and installed FZF filtering/review/cancel.
+A separate 40-column terminal transcript review confirmed readable palette rows
+and the Back/Apply/Cancel menu. Deterministic fixture cases covered failure paths
+and all backend choices; plain-menu Apply and Gum-fixture Apply each published
+exactly one disposable generation. Bash dispatcher and shared-theme checks each
+passed 23/23. The
+workflow suite passed 12/14 with its previously documented 33-versus-34 theme-count
+failures. Shell syntax, focused ShellCheck, documentation links and whitespace
+checks passed. No live theme, wallpaper or shell configuration was changed. Native
+Linux, WSL and Windows interaction remain unverified. Existing ordinary dispatch
+and shell-startup paths do not load the interaction adapter; no performance claim
+is made for the new interactive path.
+
+## Interactive tracked-config browser
+
+Run `python3 -B tools/test_files_browser.py` for the browser controller, guarded
+plans and Python/Bash UI bridge. Tests use disposable repository/catalog/home and
+state roots. Scripted choices cover preview, backup toggles, mutations, drift,
+refusals and refresh; private PATHs select bridge backends deterministically.
+Installed Gum/FZF enable native PTY checks, otherwise those cases are skipped.
+Run `tools/test_files.py`, `tools/test_file_operations.py`,
+`tools/test_bash_dots.py` and `tools/test_theme_picker.py` with `python3 -B` for
+adjacent contracts. Native runtime evidence does not establish other platforms.
+
+On 2026-09-28, browser checks passed 17/17, catalog checks 9/9, file-operation
+checks 21/21, Bash dispatcher checks 23/23 and theme-picker checks 14/14. Native
+Termux Gum/FZF PTYs verified details/exit and Gum Apply against a disposable target;
+Gum details ran at 40/80/120 columns. A separate 40-column forced-color/icon
+transcript was reviewed. The common POSIX catalog fixtures identify as Linux with
+isolated platform inputs, not as evidence of native Linux execution. Syntax,
+focused ShellCheck, documentation links and whitespace checks passed. Browser
+checks cover source/target/catalog/composition drift, protected links, directory
+materialization refusal, no-op links, backup-required replacement and metadata-only
+browsing with control characters displayed literally. No real configs or state
+were modified; other native platforms remain unverified.
+
+
+## Optional operation confirmations
+
+Run `python3 -B tools/test_confirmations.py` for file/Git approval integration and
+shared adapter checks. Fixtures own all home/config/state/cache/data and Git
+roots; publication uses only disposable local bare remotes. Cases cover default
+Cancel, approval, selector failure and interruption, invalid labels, drift while
+reviewing, missing tools, dumb/redirected terminals, JSON and explicit approval
+bypass, and inherited theme/presentation policy. Installed Gum enables native PTY
+checks; fixture tool results are distinct from native tool evidence.
+
+Anodize confirmation cases live in `tools/test_anodize.py`; run them through
+`python3 -B tools/verify_anodize.py check`, which supplies the isolated engine.
+Also run the existing browser, theme-picker, file catalog/operation, Git and Bash
+suites for changes to this shared layer. No verification applies live configs,
+activates themes or publishes the developer's repositories.
+
+On 2026-09-28, native Termux confirmation checks passed 8/8, Anodize's isolated
+Go checks and 16/16 CLI tests passed, and browser 17/17, picker 14/14, file
+operations 21/21, Git operations 25/25, catalog 9/9 and Bash dispatcher 23/23
+passed. Real Gum PTYs verified default Cancel, Apply/Publish, Escape and Ctrl-C at
+40/80 columns, including forced color/icons; a plain 40-column transcript was
+reviewed. Anodize's new prompts used fixture Gum. Syntax, focused ShellCheck,
+Markdown links and whitespace checks passed. Other native platforms remain
+unverified; see the [focused plan](../plans/gum-confirmations.md).
+
+The accompanying shared-theme suite passed 23/23. Theme workflow remained 12/14:
+the existing flat-catalog and presentation assertions expect 33 themes, while the
+current catalog contains 34. Those unrelated assertions remain unchanged.

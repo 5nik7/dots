@@ -10,6 +10,9 @@ import sys
 import tempfile
 import textwrap
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from interaction import gum_confirm
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'files'))
 from catalog import Presentation
 from transactions import digest, exists, parents_safe
@@ -207,6 +210,9 @@ def confirm(args, view):
         present(view, args.json)
         return False
     present(view)
+    approved = gum_confirm('Apply this plan?')
+    if approved is not None:
+        return approved
     return input('Apply this plan? [y/N] ').strip().lower() in ('y', 'yes')
 
 
@@ -386,6 +392,10 @@ def main(argv=None):
 if __name__ == '__main__':
     try:
         main()
+    except KeyboardInterrupt:
+        ui = Presentation(sys.stderr)
+        ui.emit(ui.paint('anodize: interrupted.', '93'))
+        sys.exit(130)
     except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         ui = Presentation(sys.stderr)
         ui.emit(ui.paint('anodize: ' + str(exc), '91'))

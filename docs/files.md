@@ -11,6 +11,7 @@ help requires Python or Git. Go development remains paused.
 
 ```bash
 dots files sources
+dots files browse
 dots files list --sort app
 dots files list --repo androidots --platform termux
 dots files list --all-platforms --json
@@ -55,6 +56,50 @@ a no-op. `--replaces REPOSITORY:ID` is repeatable. Tracking does not install, mo
 link, copy, stage in Git, or read the contents of the source. The separate managed
 operations below implement add, link, remove/rm, undo and recovery. Editing and
 general module/profile installation remain future work.
+
+## Interactive tracked-config browser
+
+`dots files browse` searches tracked configs applicable to the detected platform,
+one resource at a time. Optional `--repo`, `--app`, `--category` and `--status`
+filters use the existing catalog fields. Search includes qualified ID, app, status
+and source/target paths. Details show the full paths, strategy, platform and
+ownership metadata without displaying file contents. Unavailable/excluded sources
+are reported without initialization. Empty filtered results exit successfully.
+
+The browser prefers Gum, falls back to FZF, then uses a numbered menu; `TERM=dumb`
+uses the plain menu. It requires terminal input and output. Help/completion never
+launch a UI, and existing list/show JSON and path interfaces are unchanged.
+For scripts use the existing list/show and link/remove commands. The browser has
+no `--json`, `--yes`, discovery, platform override, editor or batch mode.
+
+After selection choose **Back to list**, **Link**, **Stop managing**,
+**Retained backups: on/off**, or **Exit**. Back to list is the default. Stop managing
+uses the existing removal semantics: preserve the repository source, materialize
+matching managed links, retain regular configs and leave absent targets absent.
+Conflicts, protected links, missing sources and other blocked plans display the
+planner's reason without offering Apply.
+
+Link or Stop managing presents the actual managed-operation plan and backup mode,
+then **Back**, **Apply** and **Exit**, with Back as the default. Only Apply executes
+the approved operations and guards. Source, target or catalog drift refuses the
+operation instead of silently recomputing the preview. Changing backups requires
+returning to details and obtaining a new preview; it changes this session only,
+starting from the existing backup preference. Existing-target replacement still
+requires a retained backup, and unrelated/generated links remain protected.
+
+After success, transaction/backup IDs are shown where present. Choose Return to
+list or Exit; the catalog is refreshed before returning. Failures stop browsing
+and preserve the transaction engine's rollback/recovery behavior. Browsing,
+details, backup toggles, preview, Back and Exit create no state directories, locks
+or journals. Operation planning may hash contents for drift protection but does
+not display them.
+
+Explicit Exit returns 0; Ctrl-C and plain-menu Escape/EOF return 130. Gum retains
+the [documented Escape/error ambiguity](presentation.md#optional-gum-interactions).
+Other tool/validation/operation errors return 1; invalid CLI syntax returns 2.
+The chosen backend is fixed for the session, with no fallback after a UI failure.
+Inherited Gum colors and Dots presentation controls are respected without sourcing
+shell configuration. Native Windows managed operations remain unsupported.
 
 ## Ownership and formats
 
@@ -182,6 +227,14 @@ dots files link dots:example --backup
 dots files remove dots:example
 dots files rm dots:example           # Alias for remove
 ```
+
+Interactive human confirmations prefer Gum's **Cancel / Apply** menu, with Cancel
+selected by default. Missing tools, dumb terminals or redirected output retain
+the text prompt. JSON retains its stderr text prompt when stdin is a terminal;
+`--yes` and `--dry-run` bypass Gum. Explicit Cancel makes no changes; selector
+failure stops without another prompt, and Ctrl-C exits 130. This applies to the
+existing shared approval point, including recovery and backup restoration. See
+the [interaction contract](presentation.md#optional-gum-interactions).
 
 All mutations preview before confirmation; `--yes` enables unattended execution,
 `--dry-run` writes nothing, and `--json` keeps stdout structured. Examples using

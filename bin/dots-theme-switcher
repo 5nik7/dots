@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Select a theme with FZF
+# dots:summary=Preview and apply a theme interactively (Gum, FZF or plain menu)
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- switcher "$@"
 source "$DT_LIB/commands.bash"

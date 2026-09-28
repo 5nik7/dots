@@ -85,6 +85,31 @@ Success is 0. Unknown routes, collisions, malformed metadata, and access errors
 are 1. Invalid dispatcher syntax is 2. `exec` launch failures retain Bash's
 126/127 behavior. No `--version`, JSON catalog, or management operation is added.
 
+Existing approval points in file operations, Anodize and Git publish prefer
+optional Gum menus with Cancel selected by default. They retain existing text
+fallbacks and command-specific JSON behavior; `--yes` and `--dry-run` bypass Gum.
+No routes or flags change. See the [confirmation contract](presentation.md#optional-gum-interactions).
+
+For `dots git publish --all`, ignore rules exclude new files; already tracked
+files remain eligible even under ignored directories. Staging preserves registered
+submodule pointers and may leave partial index changes on failure; see [Git](git.md).
+
+`dots theme switcher` is an interactive-only route: Gum selection, FZF fallback
+or a numbered menu, followed by palette review and Back/Apply/Cancel. It takes no
+arguments. Only Apply calls the existing publisher. Nonterminal input/output is
+refused; use list/set for scripts. See the [switcher contract](themes.md#interactive-theme-switcher)
+for cancellation and failure statuses. Help and completion remain static and do
+not probe or invoke UI tools.
+
+`dots files browse [--repo ID] [--app APP] [--category CATEGORY] [--status STATUS]`
+is a terminal-only, single-resource browser of tracked configs on the detected
+platform. Its Link/Stop managing actions require an approved guarded preview;
+retained backups can be toggled for the session. Explicit Exit succeeds; syntax
+errors return 2 and operational errors return 1. Cancellation follows the
+[browser contract](files.md#interactive-tracked-config-browser). It adds no JSON,
+unattended, platform override or batch interface. Its static header supplies help,
+route/flag completion and repository-ID completion without invoking the browser.
+
 ### Optional Metadata
 
 Read the initial shebang/comment/blank-line header only, up to 128 lines and

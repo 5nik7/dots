@@ -47,9 +47,53 @@ Keep status text alongside color; a green marker alone cannot explain whether an
 
 Successful help and result views belong on stdout. Warnings, errors and diagnostics belong on stderr. Preserve documented exit statuses and keep diagnostics out of structured stdout. A successful result summary may describe skipped items, but it must not hide failures reported on stderr.
 
+## Optional Gum interactions
+
+**Accepted convention, 2026-09-28; theme switcher, tracked-config browser and operation confirmations are implemented.**
+Prefer Gum for new or changed first-party interactions when a searchable selector,
+confirmation, text entry or bounded progress display improves usability. Adopt it
+incrementally within the task's scope. Keep routine help, rows and messages in the
+shared renderer; do not add a Gum subprocess merely to decorate static output.
+
+Gum is optional. Check availability only on the interactive path and provide a
+useful fallback. Require suitable terminal streams before launching a UI, preserve
+noninteractive arguments and explicit approval semantics, and never prompt or
+animate through data streams. Cancelling, empty selection or UI failure must not
+approve an operation. Do not retry a failed UI through a different backend.
+Preserve meaningful tool exit statuses; Gum 2.0 uses status 1 for both Escape and
+runtime errors, so do not label every such result as a user cancellation. See its
+[filter result handling](https://github.com/charmbracelet/gum/blob/v2.0.0/filter/command.go)
+and [exit handling](https://github.com/charmbracelet/gum/blob/v2.0.0/main.go).
+
+Use a shared adapter, the existing color/icon controls and readable plain output.
+Honor `NO_COLOR` under automatic color and explicit `always` precedence. ASCII
+mode also disables tool help that embeds Unicode key glyphs. Inherited Gum color
+variables may style widgets; never source shell configuration implicitly to get
+them. Semantic diagnostics remain owned by Dots. Tool availability, redirected
+streams, cancellation and failures belong in focused tests alongside native PTY
+acceptance. No runtime package installation or general command conversion is
+implied by this convention.
+
+The [theme switcher](themes.md#interactive-theme-switcher) uses Gum, then FZF,
+then a numbered menu. The [tracked-config browser](files.md#interactive-tracked-config-browser)
+uses the same adapters and requires operation review before Apply.
+
+Managed-file operations and Anodize offer **Cancel / Apply**; Git publish offers
+**Cancel / Publish**. Cancel is selected by default. These confirmations use Gum
+only with terminal stdin, stdout and stderr, a non-dumb terminal, and the required
+executables (Gum, plus Bash for Python callers). Otherwise each command retains
+its existing text prompt. There is no FZF confirmation fallback. An explicit
+Cancel preserves the command's existing cancellation result; selector errors
+stop before approval, and Ctrl-C exits 130. JSON, `--yes` and `--dry-run` paths
+bypass Gum entirely and preserve their command-specific semantics. No preview or
+operation plan is rebuilt by the interaction layer.
+
+The background switcher and other existing prompts retain their documented
+behavior until scoped follow-up work changes them.
+
 ## Ownership and Compatibility
 
-`lib/dots/ui.bash` owns the shared Bash helpers. The Python file catalog's `Presentation` renderer mirrors the policy; it is not a generated binding. New Bash commands must reuse the helpers. Other first-party implementations must match this contract through an equivalent renderer and policy tests rather than inventing per-command colors or message conventions. See [architecture](architecture.md#live-bash-framework).
+`lib/dots/ui.bash` owns the shared Bash helpers. The lazy `lib/dots/interactive.bash` adapter owns optional UI selection, Gum invocation policy and numbered prompts; interactive callers reserve fd 3 for the visible terminal before capturing selector output. The Python file catalog's `Presentation` renderer mirrors the policy; it is not a generated binding. New Bash commands must reuse the helpers. Other first-party implementations must match this contract through an equivalent renderer and policy tests rather than inventing per-command colors or message conventions. See [architecture](architecture.md#live-bash-framework).
 
 The dispatcher forwards extension streams unchanged. First-party extensions, including relevant Androidots and other submodule commands, follow this contract when added or changed, respecting their local guides. User and third-party extensions are encouraged to use the helpers; the dispatcher does not restyle arbitrary output. Generated app configuration and application UIs retain their own formats and theme contracts.
 

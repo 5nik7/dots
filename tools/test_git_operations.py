@@ -419,6 +419,60 @@ class GitOperations(unittest.TestCase):
         self.cli(top,'sync','--init')
         self.assertTrue((top/'middle/.git').exists())
 
+    def test_publish_all_with_tracked_files_under_ignored_directory(self):
+        _, bare, repo = self.remote_repo('tracked-ignored')
+        (repo / 'lab').mkdir()
+        for name in ('changed', 'deleted', 'unchanged'):
+            (repo / 'lab' / name).write_text('original\n')
+        self.git(repo, 'add', '--', 'lab')
+        (repo / '.gitignore').write_text('lab/\n')
+        self.git(repo, 'add', '--', '.gitignore')
+        self.git(repo, 'commit', '-m', 'tracked files with later ignore rule')
+        self.git(repo, 'push', str(bare), 'HEAD:refs/heads/main')
+        self.owned_remote(repo, bare)
+        (repo / 'lab/changed').write_text('updated\n')
+        (repo / 'lab/deleted').unlink()
+        (repo / 'lab/ignored-new').write_text('must stay untracked\n')
+        special = '-new ü[1]\nfile'
+        (repo / special).write_text('new\n')
+        index = (repo / '.git/index').read_bytes()
+        preview = json.loads(self.cli(repo, 'publish', '--all', '--dry-run', '--json').stdout)
+        selected = {event['file'] for event in preview['events'] if event['status'] == 'selected'}
+        self.assertEqual(selected, {'lab/changed', 'lab/deleted', special})
+        self.assertEqual((repo / '.git/index').read_bytes(), index)
+        self.cli(repo, 'publish', '--all', '--yes', '-m', 'update tracked files')
+        self.assertEqual(self.git(bare, 'show', 'main:lab/changed'), 'updated')
+        self.assertEqual(self.git(bare, 'show', 'main:lab/unchanged'), 'original')
+        self.assertEqual(self.git(bare, 'show', 'main:' + special), 'new')
+        tree = self.git(bare, 'ls-tree', '-r', '--name-only', 'main')
+        self.assertNotIn('lab/deleted', tree)
+        self.assertNotIn('lab/ignored-new', tree)
+        self.assertEqual((repo / 'lab/ignored-new').read_text(), 'must stay untracked\n')
+        self.assertEqual(self.git(repo, 'status', '--porcelain'), '')
+
+    def test_all_staging_preserves_literal_gitlinks(self):
+        source = self.repo('staging-child')
+        parent = self.repo('staging-parent')
+        name = 'mods/-literal[1] space\tline\nü'
+        self.git(parent, 'submodule', 'add', '--name', 'literal-child', '--', str(source), name)
+        self.git(parent, 'commit', '-am', 'add literal child')
+        child = parent / name
+        (child / 'file').write_text('second\n')
+        self.git(child, 'commit', '-am', 'second')
+        self.git(parent, 'add', '--', ':(literal)' + name)
+        staged = self.git(parent, 'ls-files', '--stage', '-z', '--', ':(literal)' + name)
+        (child / 'file').write_text('third\n')
+        self.git(child, 'commit', '-am', 'third')
+        (child / 'untracked').write_text('child work\n')
+        neighbor = name + '-notes'
+        (parent / neighbor).write_text('parent work\n')
+        script = ('source "$1/common.bash"; source "$1/inspect.bash"; '
+                  'source "$1/operations.bash"; stage_own_files "$2"')
+        self.run_cmd(['bash', '-c', script, 'stage-fixture', str(PROJECT / 'lib/dots/git'), str(parent)])
+        self.assertEqual(self.git(parent, 'ls-files', '--stage', '-z', '--', ':(literal)' + name), staged)
+        self.assertEqual(self.git(parent, 'show', ':' + neighbor), 'parent work')
+        self.assertEqual(self.git(child, 'status', '--porcelain'), '?? untracked')
+
     def test_staged_pointer_with_all(self):
         top, mid, leaf, _, _, leaf_bare = self.publish_tree()
         (leaf/'second').write_text('second')

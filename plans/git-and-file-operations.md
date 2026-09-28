@@ -63,3 +63,23 @@ lint/docs checks and a repeatable status timing fixture. Nested symlinks/Git
 metadata require manual whole-directory materialization; source collisions,
 protected theme connectors and drift are refused. No automatic pruning, live
 imports, Git commits/pushes or native Windows mutation support was added.
+
+
+### Publish staging correction, 2026-09-28
+
+Implemented: `publish --all` now stages from the repository root with literal
+exclusions for registered gitlinks. Tracked files beneath ignored directories
+remain eligible without force-adding ignored new files or replacing deliberately
+staged child pointers. Failure diagnostics explain that staged changes are retained.
+
+Verification on native Termux: Git 27/27, Gum confirmations 8/8 and Bash dispatcher
+23/23 passed. The ignored-directory regression failed before the fix and passed
+afterward; fixtures cover tracked edits/deletions, ignored untracked files, unusual
+names, and a deliberately staged submodule pointer whose path includes brackets,
+Unicode, whitespace and a newline. Fixtures use local bare remotes only.
+
+The corrected staging command also passed a read-only `git add --dry-run` against
+the owner's checkout. The index hash and HEAD remained unchanged. Shell/Python
+syntax, focused ShellCheck, relative documentation links and whitespace passed.
+The Git guide, safety/command reference and README are synchronized. No live
+commit, push, fetch, index update or rollback was performed during this repair.

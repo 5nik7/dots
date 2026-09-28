@@ -16,6 +16,12 @@ general transaction engine, or dependency on the Go binary. See [decision 0006](
 
 The [presentation contract](presentation.md) owns human output policy. `ui.bash` implements the shared Bash renderer; the file catalog's Python `Presentation` class mirrors it and requires policy parity checks when changed. Domain commands own their result data and choose human or data views explicitly. The dispatcher preserves extension streams; it does not decorate arbitrary output. This requirement applies to future authorized core work without changing the paused Go implementation.
 
+The optional `lib/dots/interactive.bash` adapter is loaded only by interactive
+command paths. It owns Gum/FZF capability selection, child-only presentation
+policy and plain numbered prompts; the existing `ui.bash` remains subprocess-free.
+The theme switcher's review loop validates selection and previews through the
+existing theme engine before delegating Apply to its unchanged publisher.
+
 ## Existing Zsh Configuration
 
 The live shell configuration is maintained independently of the paused Go core. `shells/zsh/zshrc` owns startup order; its `core/`, `integrations/`, and `platforms/` modules separate shared setup, tool activation, and execution-environment detection. Existing public module entry points remain available. Generated shell data belongs in user cache directories, not the repository. See the [Zsh guide](../shells/zsh/README.md).
@@ -244,8 +250,8 @@ the same data reader directly without extension execution. See [files](files.md)
 rendering, cached initialization, compatibility APIs, journaled publication, fixed
 application connectors, Git source lifecycle and explicit wallpaper adapters.
 Its `app-env.bash` adapter validates rendered FZF assignments as literal data
-and adds their colors to published Bash/Zsh and Fish initialization. The Gum Lua
-template remains a rendered artifact for an explicitly configured Hilbish consumer.
+and adds their colors to published Bash/Zsh and Fish initialization. The Gum shell
+template remains a rendered artifact for explicit sourcing in Bash/Zsh.
 `bin/dots-theme-*` exposes the flat workflow; `dots-themes-*` preserves legacy routes.
 `themes/bin/*` remains compatibility entry points, with shared shell logic in `lib`.
 
@@ -272,6 +278,17 @@ shell data. Wallpaper actions remain explicit capability-checked adapters. See
 ## Git and file operation engines
 
 Under [decision 0010](decisions/0010-git-and-managed-file-operations.md), `lib/dots/git` owns the adapted, attributed Git engine and uses shared Bash UI helpers. Inspection and mutation are separate modules, with static command metadata and no standalone git-it dependency. Git operations are incremental and preserve partial results.
+
+`lib/dots/files/browser.py` owns the interactive tracked-config controller and
+uses the catalog's observation/detail renderer plus the existing Manager planner
+and Store transaction engine. `lib/dots/interaction.py` owns shared Python
+selection and optional confirmation plumbing, with `interactive-select.bash` as
+its private argv/result bridge to the Bash interaction adapter: keyboard stdin,
+terminal UI on the provided stderr stream, and exact selection on stdout. The
+browser supplies its visible stdout terminal as that UI stream; file and Anodize
+confirmations supply stderr, keeping captured results separate. No shell
+expressions are evaluated from selection labels. The browser retains approved
+operations and source/target/catalog guards in memory until Apply.
 
 `lib/dots/files/manage.py` composes location registries, catalog ownership, preview and presentation. `transactions.py` owns durable staging, object integrity, locks, replacement, rollback, snapshots and recovery. Every mutating file route uses it; `track` remains metadata-only. Catalog and location data belong to their owning repositories. User preferences and transaction/backup records belong in XDG config/state. This is a bounded POSIX implementation, not the general Go module/profile engine.
 

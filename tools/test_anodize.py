@@ -6,11 +6,14 @@ import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import sys
 import unittest
 from unittest import mock
 
 import test_themes
+import test_confirmations
+import test_theme_picker
 from test_themes import REPO, BASH
 
 sys.path.insert(0, str(REPO / 'lib/dots/files'))
@@ -52,6 +55,42 @@ class Anodize(unittest.TestCase):
     def author(self):
         with mock.patch.dict(os.environ, self.env, clear=True):
             yield Author()
+
+    terminal = test_theme_picker.Picker.terminal
+
+    def test_gum_confirmations(self):
+        test_confirmations.install_gum(self.root, self.env)
+        command = [BASH, str(self.repo / 'bin/anodize'), 'create', 'approval', '--color', '#725ac1']
+        self.script = shlex.join(command)
+        for choice, code in [('Cancel', 0), ('EXIT:1', 1), ('EXIT:130', 130), ('unknown', 1)]:
+            with self.subTest(choice=choice):
+                self.env['GUM_CHOICE'] = choice
+                out = self.terminal(code=code)
+                self.assertNotIn(b'[y/N]', out)
+                self.assertNotIn(b'Traceback', out)
+                self.assertFalse((self.repo / 'themes/approval').exists())
+                self.assertFalse((self.home / 'state').exists())
+        self.env['GUM_CHOICE'] = 'Apply'
+        self.terminal()
+        self.assertTrue((self.repo / 'themes/approval/anodize.json').is_file())
+        self.assertFalse(self.active.exists())  # Saving never activates a theme.
+
+    def test_confirmation_bypass_and_plain_fallback(self):
+        test_confirmations.install_gum(self.root, self.env)
+        command = [BASH, str(self.repo / 'bin/anodize'), 'create', 'approval', '--color', '#725ac1']
+        self.script = shlex.join(command)
+        self.terminal(self.script + ' --dry-run')
+        self.terminal(self.script + ' --json')
+        self.cli('create', 'approval', '--color', '#725ac1')  # Nonterminal preview.
+        self.terminal(env=dict(self.env, TERM='dumb'), steps=((b'[y/N]', b'n\r'),))
+        captured = self.home / 'redirected'
+        self.terminal(self.script + ' > ' + shlex.quote(str(captured)),
+                      steps=((b'', b'n\r'),))
+        self.assertIn('[y/N]', captured.read_text())
+        self.assertFalse((self.repo / 'themes/approval').exists())
+        self.terminal(self.script + ' --yes')
+        self.assertTrue((self.repo / 'themes/approval/anodize.json').is_file())
+        self.assertFalse((self.home / 'gum-calls').exists())
 
     def test_modes_help_metadata_and_completion(self):
         for width in ('40', '80', '120'):

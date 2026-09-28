@@ -56,26 +56,28 @@ FZF adapter; other legacy adapters remain. Older generations and session-only
 `set_theme ID` retain the existing FZF behavior. No new app connector or automatic
 Bash/Fish prompt hook is installed.
 
-`gum_env.lua.tpl` stays a separate Hilbish consumer. It renders to
-`gum_env.lua` under the active theme path and uses Hilbish's `os.setenv` extension,
-as used by its [upstream initialization](https://github.com/sammy-ette/Hilbish/blob/v2.3.4/nature/init.lua).
-Its colors are not exported by the Bash/Zsh/Fish initialization, and Dots never
-executes the generated Lua. Personal template and bundled `gum_env.lua` overrides
-follow the same rendering precedence as other app files. To load the current
-colors explicitly from a Hilbish configuration:
+`gum_env.sh.tpl` renders to `gum_env.sh` under the active theme path. It exports
+all 116 Gum color variables directly in Bash or Zsh, without Lua or Hilbish.
+Dots renders this artifact but never executes it or loads it through automatic
+shell initialization. Personal `gum_env.sh.tpl` templates and bundled
+`gum_env.sh` overrides follow the same rendering precedence as other app files.
+To publish and explicitly load the current colors:
 
-```lua
-local state = os.getenv("XDG_STATE_HOME")
-if not state or state == "" then
-  state = assert(os.getenv("HOME")) .. "/.local/state"
-end
-dofile(state .. "/dots/current/theme/gum_env.lua")
+```bash
+dots theme refresh
+source "${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/gum_env.sh"
 ```
 
-Publish with `dots theme refresh` first. Reload the Lua file in Hilbish after
-subsequent theme changes; no Hilbish prompt hook or configuration is installed.
-Already-running Gum processes retain their environment. Native Hilbish execution
-is not yet verified; isolated Lua tests substitute the `os.setenv` extension.
+Source the file again after theme changes. To load it in new shells, add the
+`source` line to your Bash or Zsh configuration after publishing a theme.
+Already-running Gum processes retain their environment. The generic Gum Style
+exports include `FOREGROUND`, `BACKGROUND`, `BORDER_FOREGROUND` and
+`BORDER_BACKGROUND`; explicit sourcing sets these alongside `GUM_*` variables.
+Sourcing runs trusted user-owned shell configuration, including any overrides.
+The shell template replaces `gum_env.lua.tpl`; existing personal Lua templates
+or bundled Lua overrides are not converted. Move custom color assignments to
+`gum_env.sh.tpl` or `gum_env.sh` using `export NAME='#RRGGBB'` syntax.
+This consumer targets Bash/Zsh; Fish and PowerShell need their own export syntax.
 
 The bundled `bat.tmTheme.tpl` provides 70 syntax rules, including language-specific,
 Markdown and diff scopes. Comments and brackets use `muted`, selection and line
@@ -96,7 +98,7 @@ dots theme set nord --dry-run
 dots theme set nord
 dots theme current
 dots theme refresh
-dots theme switcher                 # optional fzf
+dots theme switcher                 # Gum, FZF or a plain terminal menu
 ```
 
 `set ID` publishes colors only. `--background` additionally requests an explicit
@@ -105,6 +107,29 @@ selected. `--dry-run` prints the selection, publication path and planned connect
 without creating state. `refresh` rebuilds changed inputs and retries available app
 reloads even when generation inputs are unchanged. `init [--shell bash|zsh|fish]`
 prints sourceable initialization. Theme IDs complete from local data on Tab.
+
+## Interactive theme switcher
+
+`dots theme switcher` requires terminal input and output. It prefers `gum filter`,
+falls back to FZF with its live palette preview, and uses a numbered menu when
+neither tool is available or `TERM=dumb`. The backend is chosen once per invocation;
+selector failures never launch another backend. The FZF fallback ignores inherited
+`FZF_DEFAULT_OPTS` and `FZF_DEFAULT_OPTS_FILE` so user bindings cannot bypass the
+single-selection interface or Dots presentation controls.
+
+After selection, Dots shows the palette and offers **Back**, **Apply** and **Cancel**.
+Back is the default. Only Apply invokes the existing `set ID` publisher and app
+reloads; no wallpaper change is requested. Back returns to the catalog, and Cancel
+exits successfully without changing state. Selector output must match an offered
+ID, and preview failure prevents publication. The plain menu accepts a numbered
+choice, Enter for the indicated default, and Escape or Ctrl-D to abort.
+
+Explicit Cancel exits 0; plain-menu Escape/EOF and Ctrl-C exit 130. Gum 2.0 returns
+1 for Escape as well as runtime errors (Escape leaves filter input first, then
+another Escape quits); Dots preserves this ambiguity. Other selector failures,
+invalid selections, empty catalogs and noninteractive calls exit 1. In scripts use
+`dots theme list` and `dots theme set ID` instead. Gum widgets honor inherited Gum
+colors and Dots color/icon controls; the switcher does not source `gum_env.sh`.
 
 ## Presentation
 

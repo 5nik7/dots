@@ -22,6 +22,8 @@ bin/anodize apply dusk --dry-run
 
 Saving a theme does not select or activate it. Review `anodize apply dusk --dry-run`, then use `anodize apply dusk --yes` to publish. Mutating commands prompt on interactive input; without a terminal or with `--json`, omission of `--yes` returns the preview. `--dry-run` takes precedence over `--yes` and creates no persistent state.
 
+Interactive human confirmations prefer Gum's **Cancel / Apply** menu with Cancel selected by default, falling back to the existing text prompt when tools or terminal streams are unavailable. JSON, nonterminal preview, `--yes` and `--dry-run` do not probe Gum. Selector failure stops without retry; Ctrl-C exits 130 without a traceback. These prompts cover create/import/edit, export to a file and apply; saving still does not activate a theme. See the [interaction contract](presentation.md#optional-gum-interactions).
+
 ## Commands and flags
 
 Authoring commands accept `--json` for a schema-1 response unless they return a raw format. `completion` emits only shell source and does not accept `--json`. Prefix `--color=auto|always|never` and `--icons=auto|always|never` follow the shared presentation policy. `--color HEX` after `create` means the seed color.

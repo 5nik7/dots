@@ -79,6 +79,7 @@ Do not add comment-header parsing or runtime metadata handshakes. Static help/di
 - Structured output must be valid even when color is enabled globally; never mix decoration into JSON.
 - Follow the [presentation contract](../../docs/presentation.md) for every new or changed first-party human view, including help, empty results and diagnostics. Reuse the shared renderer or verify equivalent behavior.
 - Use the implemented color/icon controls and their documented `NO_COLOR`, terminal and forced-output precedence. Preserve readable plain layouts and all script-facing data formats.
+- Prefer optional Gum for suitable interactive flows under the [Gum convention](../../docs/presentation.md#optional-gum-interactions). Reuse the lazy interaction adapter; keep tool probes out of help, completion and ordinary dispatch. Test missing tools, fallbacks, cancellation and noninteractive behavior.
 - Include the presentation acceptance gate in the focused plan and review representative output alongside related commands.
 - Use stable field names and version structured records if they become externally consumable.
 - Avoid forcing a pager or interactive selector when stdout is not a terminal.

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# dots:summary=Browse tracked configs and review link or stop-managing operations
+# dots:usage=[OPTIONS]
+# dots:option=--repo||file-repository|Filter by repository ID
+# dots:option=--app||string|Filter by application
+# dots:option=--category||string|Filter by category
+# dots:option=--status||string|Filter by observed status
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/browser.py" "$@"

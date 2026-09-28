@@ -10,6 +10,9 @@ import stat
 import sys
 import textwrap
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from interaction import gum_confirm
+
 from catalog import Catalog, Presentation, read_json, platform, relative, ID
 from transactions import Store, digest, exists, parents_safe
 
@@ -482,8 +485,11 @@ def main():
     if not args.yes:
         if not sys.stdin.isatty():
             parser.error('use --dry-run to inspect or --yes to apply without a terminal')
-        print('Apply these changes? [y/N] ', end='', file=sys.stderr, flush=True)
-        if input().lower() != 'y':
+        approved = None if args.json else gum_confirm('Apply these changes?')
+        if approved is None:
+            print('Apply these changes? [y/N] ', end='', file=sys.stderr, flush=True)
+            approved = input().lower() == 'y'
+        if not approved:
             if args.json:
                 print(json.dumps(dict(preview, status='cancelled')))
             else:

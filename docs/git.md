@@ -31,10 +31,20 @@ and plain fallbacks apply; no fetch occurs during status.
 
 Publish is staged-only by default, also publishing existing ahead commits. `--all`
 stages ordinary tracked and untracked files, respecting ignore rules; gitlinks are
-handled separately so deliberately staged pointers are preserved. Review the
+handled separately so deliberately staged pointers are preserved. Tracked files
+remain eligible even beneath ignored directories; ignored new files stay excluded.
+Staging failures can leave some changes staged; inspect `git status` before retrying. Review the
 preview, then confirm once; unattended callers require `--yes`. A default UTC
 message is generated if `-m` / `--message` is omitted. Children publish before
 parents; failed children block dependent parents, while safe siblings continue.
+
+Human terminal approval uses Gum's **Cancel / Publish** menu when available,
+with Cancel selected by default. Otherwise the existing text prompt applies.
+JSON keeps its stderr text prompt; `--yes` and `--dry-run` bypass Gum. Selector
+failure does not retry or publish, and Ctrl-C exits 130. Existing previews,
+fingerprint checks and incremental publication are unchanged. See the
+[interaction contract](presentation.md#optional-gum-interactions).
+
 Changed detached/foreign dependencies are blocked; unchanged ones need not be
 owned. Hooks and signing remain enabled. Only the configured upstream branch is
 pushed using an explicit refspec, without tags or force.

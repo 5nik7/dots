@@ -105,6 +105,18 @@ The editor tests copy public plugin sources and never start live LazyVim or down
 plugins. Missing sources report skipped tests; the optional source-map input for all
 families is documented in [Shared Themes](../../docs/testing.md#shared-themes).
 
+For the optional Gum adapter or theme switcher, run
+`python3 -B tools/test_theme_picker.py` plus the shared theme/workflow and Bash
+suites. This runner owns its PTYs, tool fixtures, homes and publication roots;
+installed Gum enables native selection/cancellation checks at 40/80/120 columns.
+Keep native tool evidence distinct from deterministic fixture backend tests.
+
+For the tracked-config browser and Python/Bash interaction bridge, run
+`python3 -B tools/test_files_browser.py`, the file catalog/operation suites, the
+Bash dispatcher suite and the existing theme picker tests. Keep preview and
+cancellation free of state writes; exercise metadata/source/target drift between
+review and Apply. Native Gum/FZF PTY checks must use disposable catalogs and homes.
+
 For inventory/catalog or config-link migration changes, run
 `python3 -B tools/test_files.py`. For flat theme templates, connectors, imports and
 wallpaper adapters, also run `python3 -B tools/test_theme_workflow.py`. These suites
@@ -123,3 +135,11 @@ Use `python3 -B tools/verify_anodize.py check` for the isolated core/CLI suite a
 For the Dots Neovim bridge, run `python3 -B tools/test_anodize_nvim.py` plus the existing theme suites. Set `ANODIZE_NVIM_DIR` to a completed local plugin checkout when needed. The shared helper copies public runtime files; do not replace it with a normal editor startup. Preserve dashboard timing and test manual colorscheme inactivity explicitly.
 
 For Anodize completions or manual changes, run `python3 -B tools/test_anodize_integration.py` (Bash, Zsh, Fish and mandoc required), generated-artifact freshness, and the shared Bash/Zsh/FZF-tab checks when their integration changes. Completion must work without the private Go engine.
+
+
+For shared operation confirmations, run `python3 -B tools/test_confirmations.py`
+and the existing file/Git, browser, theme-picker and Bash suites. Anodize cases
+must run through `python3 -B tools/verify_anodize.py check`. Preserve each command's
+JSON/plain fallback and approval semantics; test selector failure without retry
+and drift while the prompt is open. Native Gum checks require disposable PTYs and
+local-only publication fixtures; see [testing](../../docs/testing.md#optional-operation-confirmations).

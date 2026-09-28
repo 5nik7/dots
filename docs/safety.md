@@ -113,6 +113,13 @@ Each operation should include:
 
 Apply consumes the plan representation. It must validate that critical observations have not changed between planning and mutation.
 
+Implemented file, Anodize and Git approval prompts may use optional Gum after the
+existing preview. The interaction layer neither replans nor applies operations;
+only an exact affirmative choice reaches the existing operation path. Default
+Cancel, selector failure and interruption grant no approval. Tool failure never
+falls through to a second prompt. Existing JSON and explicit approval flags retain
+their semantics; see [presentation](presentation.md#optional-gum-interactions).
+
 ## Transaction Lifecycle
 
 1. Validate specification and complete plan.
@@ -333,9 +340,18 @@ FZF environment templates are parsed as restricted literal assignments before
 publication. Shell template code is never executed. Invalid statements or color
 values refuse the new generation, leaving the active selection intact. Only
 validated FZF color tokens enter generated shell initialization; this adds no
-hook or general environment-variable injection interface. The Gum Lua template
-is rendered but never executed by Dots or loaded by its shell adapters. Loading
-it explicitly in Hilbish executes trusted user-owned Lua configuration.
+hook or general environment-variable injection interface. The Gum shell template
+is rendered but never executed by Dots or loaded by its shell adapters. Explicitly
+sourcing `gum_env.sh` executes trusted user-owned shell configuration, including
+any personal or bundled overrides; these are not restricted to literal assignments.
+
+The interactive theme switcher does not publish during selection, palette preview,
+Back, Cancel or selector failure. It validates the selected ID against its offered
+catalog and requires an explicit Apply action before calling the existing theme
+publisher, which revalidates the theme and operation set. UI output is treated as
+data, never evaluated. Missing tools select a fallback before interaction begins;
+UI failure does not retry through another backend. Nonterminal input/output is
+refused instead of obtaining confirmation through redirected data streams.
 
 Git theme lifecycle commands use managed-checkout markers, an exclusive user-root
 lock, staged clones, validation and atomic journal status updates. Update refuses
@@ -370,6 +386,17 @@ Do not claim protection against hostile concurrent filesystem replacement or
 applications writing continuously during adoption: close editors/apps before
 applying a reviewed batch. Preflight and boundary checks detect observed drift.
 
+The tracked-file browser is a presentation client of the same transaction engine.
+Catalog browsing, details, backup toggles and previews do not create state, locks
+or journals. Only an explicit Apply choice submits the exact in-memory plan and
+guards previously displayed. In addition to operation guards, the browser binds
+source composition and non-excluded catalogs (including absent catalogs) to the
+preview, so ownership changes require a new review. Source/target guards also
+cover no-op plans. It validates selector output against offered choices and never
+evaluates labels or paths. An apply failure stops the browser; normal transaction
+rollback/recovery remains authoritative. Session backup toggles never write user
+preferences or bypass planner refusals. Details display metadata, not contents.
+
 Retained snapshots are opt-in, independent of temporary rollback protection. An
 occupied different target requires a verified retained backup before linking.
 Backups and journals live in private transaction/state directories outside source
@@ -399,7 +426,11 @@ choices and conservative refusal policies. Git hooks/signing and credential
 helpers remain active during explicitly requested real operations. Only sync
 --init authorizes missing-submodule initialization. Publication validates the
 actual push URL and configured owner, uses explicit refspecs, retains staged
-pointer intent and blocks dependent parents after child failure. Completed work
+pointer intent and blocks dependent parents after child failure. `publish --all`
+stages ordinary files from the repository root with literal gitlink exclusions;
+tracked files beneath ignored directories remain eligible, without force-adding
+ignored new files. A staging failure may leave partial index changes for review.
+Completed work
 is retained; no multi-repository rollback is promised. Tests never perform these
 operations against live repositories or external services.
 

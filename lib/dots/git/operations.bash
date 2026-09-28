@@ -252,7 +252,7 @@ publish_node() {
         event "$dir" blocked 'inputs or destination changed during preflight'; return 1
     fi
     if ((ALL)); then
-        stage_own_files "$dir" || { event "$dir" failed 'staging failed; inspect index'; return 1; }
+        stage_own_files "$dir" || { event "$dir" failed 'staging failed; staged changes retained (inspect git status)'; return 1; }
     fi
     if ! git -C "$dir" diff --cached --quiet --ignore-submodules=none --; then
         if ! git -C "$dir" commit -m "$MESSAGE" >/dev/null 2>&1; then
@@ -320,8 +320,15 @@ operations_main() {
                         done
                     } >&2
                 fi
-                printf '%sPublish the selected changes? [y/N]%s ' "$ERR_BOLD" "$ERR_RESET" >&2
-                IFS= read -r answer || answer=''
+                # Source only at the existing approval point; JSON never probes Gum.
+                source "$LIB/../interactive.bash"
+                if ((!JSON)) && dots::gum_confirm_available; then
+                    answer=$(dots::gum_confirm 'Publish the selected changes?' Publish) || return $?
+                    if [[ $answer == Publish ]]; then answer=y; else answer=n; fi
+                else
+                    printf '%sPublish the selected changes? [y/N]%s ' "$ERR_BOLD" "$ERR_RESET" >&2
+                    IFS= read -r answer || answer=''
+                fi
                 if [[ $answer != y && $answer != Y ]]; then event "$ROOT" cancelled 'nothing committed or pushed'; operations_report; return "$RESULT"; fi
             fi
             if ((!JSON)); then dots::heading "Publishing selected repositories"; LAST_EVENT_REPO=''; fi
@@ -347,15 +354,11 @@ operations_main() {
 # Stage ordinary files only. Gitlinks are deliberately staged by publication.
 stage_own_files() {
     local dir=$1 path
-    local -A links=()
-    local -a files=() paths=()
+    local -a paths=(.)
     children "$dir" || return 1
-    for path in "${CHILD_PATHS[@]}"; do links[$path]=1; done
-    records_cmd git -C "$dir" ls-files --cached --others --exclude-standard -z || return 1
-    paths=("${RECORDS[@]}")
-    for path in "${paths[@]}"; do
-        [[ -v links[$path] ]] || files+=(":(literal)$path")
-    done
-    ((${#files[@]})) || return 0
-    git -C "$dir" add --all -- "${files[@]}" >/dev/null 2>&1
+    for path in "${CHILD_PATHS[@]}"; do paths+=(":(top,exclude,literal)$path"); done
+    # Let Git handle tracked paths beneath ignored directories. Explicitly naming
+    # every tracked file can trigger ignored-ancestor errors after partial staging.
+    # Literal gitlink exclusions preserve the pointers selected by publication.
+    git -C "$dir" add --all -- "${paths[@]}" >/dev/null 2>&1
 }

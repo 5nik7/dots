@@ -36,4 +36,31 @@ Scope: connect `fzf.sh.tpl` to published shell initialization, and retain `gum_e
 - [x] Verify template overrides, refresh, invalid-input refusal and shell consumption in isolated roots; record native runtime and performance evidence.
 - [x] Update theme documentation and README. Apply the presentation gate above to generated app colors and preserve undecorated initialization output.
 
-Verification and advisory timings are recorded in [testing](../docs/testing.md#files-catalog-and-omarchy-style-themes). The new focused checks pass; existing theme-count and Zsh alias failures reproduce with original code. Gum remains Hilbish-only per owner direction; native Hilbish execution is unverified because the executable is unavailable. No live theme was selected.
+Verification and advisory timings are recorded in [testing](../docs/testing.md#files-catalog-and-omarchy-style-themes). The new focused checks pass; existing theme-count and Zsh alias failures reproduce with original code. At that stage Gum was Hilbish-only per owner direction; native Hilbish execution is unverified because the executable is unavailable. No live theme was selected.
+
+## Gum without Hilbish (2026-09-28)
+
+Owner-requested follow-up: replace `gum_env.lua.tpl` with `gum_env.sh.tpl` for explicit Bash/Zsh sourcing. Preserve all 116 palette mappings, bundled/personal override precedence and fingerprint refresh. Dots renders the shell file without executing it or adding it to automatic initialization. Existing Lua overrides are not converted automatically. The presentation gate above applies to the preserved app colors and undecorated exports.
+
+- [x] Convert the template and update bundled override discovery/fingerprinting.
+- [x] Verify Bash/Zsh exports, reload, overrides and publication-time nonexecution in disposable roots.
+- [x] Synchronize usage, architecture, safety and verification documentation.
+
+Verification: all three focused workflow checks and all 23 shared-theme tests passed on native Termux. The complete workflow suite passed 12/14 with the two previously documented theme-count failures. All 116 mappings match the former Lua template. Shell syntax, documentation links and whitespace checks passed; no live theme was activated. See [testing](../docs/testing.md#files-catalog-and-omarchy-style-themes).
+
+## Gum-first theme picker (2026-09-28)
+
+Owner-approved scope: establish Gum as the preferred optional interaction tool and implement `dots theme switcher` with Gum, FZF and numbered-menu backends. Selection leads to palette review and Back/Apply/Cancel; only Apply calls the existing publisher. Preserve explicit Gum environment loading, scripting interfaces, the earlier shell-template work and the paused Go boundary. The presentation acceptance gate above applies at 40/80/120 columns, with plain/color/icon modes and native versus fixture evidence distinguished.
+
+- [x] Add a lazy shared interaction adapter and the theme review loop.
+- [x] Test backend preference, review/apply, cancellation, errors, noninteractive refusal and presentation controls in owned roots; exercise installed Gum in a native PTY.
+- [x] Update the authoritative presentation convention, contributor pointers, command metadata and behavior/safety/testing documentation.
+
+Compatibility finding: Gum 2.0 returns 1 for both Escape cancellation and runtime errors. Preserve that ambiguous status instead of masking tool failures as cancellation; Ctrl-C retains 130. Explicit Cancel returns 0; plain-menu Escape/EOF returns 130. No failure starts a fallback backend or publishes a theme.
+
+Completed evidence: picker checks passed 14/14, including native Gum 2.0.0 and
+FZF PTY interaction; shared-theme and Bash dispatcher suites each passed 23/23.
+Workflow checks passed 12/14 with the two existing theme-count expectations.
+A 40-column native transcript review, shell syntax, focused ShellCheck, relative
+links and whitespace checks passed. No live state was activated. Full coverage
+and platform limits are recorded in [testing](../docs/testing.md#optional-interactive-theme-picker).

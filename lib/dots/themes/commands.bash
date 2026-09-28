@@ -108,9 +108,8 @@ dt_command() {
       if ((background)); then source "$DT_LIB/backgrounds.bash"; dt_bg select; fi ;;
     switcher)
       (($# == 0)) || return 2
-      command -v fzf >/dev/null || { dt_error 'theme switcher requires fzf'; return 1; }
-      id=$(dt_theme_ids | LC_ALL=C sort | fzf --prompt='Theme: ' --preview='dots theme show {}') || return
-      [[ $id ]] && dt_command set "$id" ;;
+      source "$DT_LIB/switcher.bash"
+      dt_switcher ;;
     install|update|remove) source "$DT_LIB/install.bash"; dt_git_theme "$action" "$@" ;;
     bg) source "$DT_LIB/backgrounds.bash"; dt_bg "$@" ;;
     *) return 2 ;;

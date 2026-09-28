@@ -60,7 +60,15 @@ The Yazi status line includes the local [dots-repo Yatline component](config/yaz
 The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, FZF and Gum.
 The FZF template supplies published shell colors; Zsh picks them up at the next
 prompt after `dots theme refresh`, preserving FZF layout and key bindings. Gum
-colors render as `gum_env.lua` for explicit loading in Hilbish.
+colors render as `gum_env.sh` for explicit sourcing in Bash/Zsh, without Lua or
+Hilbish; see the [loading instructions](docs/themes.md).
+`dots theme switcher` offers searchable Gum selection, palette review and
+Back/Apply/Cancel, with FZF and plain-menu fallbacks. Gum is the preferred optional
+tool for suitable new interactive workflows; see the [presentation convention](docs/presentation.md#optional-gum-interactions).
+File operations and Anodize also offer **Cancel / Apply**, and Git publishing
+uses **Cancel / Publish**, with Cancel selected by default. Existing text prompts
+remain available without Gum or suitable terminals. `--yes`, `--dry-run` and JSON
+keep their existing behavior.
 Bat and Yazi share the syntax rules in `default/themed/bat.tmTheme.tpl`, including
 language-specific scopes and palette-based comments, selections, and diff colors.
 Selection journals and backs up fixed application theme connectors. Zsh refreshes
@@ -100,12 +108,18 @@ aliases remain for compatibility. The Neovim submodule now lives at `config/nvim
 
 ```bash
 dots files sources
+dots files browse
 dots files list --sort app
 dots files list --repo androidots --platform termux
 dots files locate kitty
 dots files show dots:kitty
 dots files list --all-platforms --json
 ```
+
+`dots files browse` provides a searchable Gum/FZF/plain-menu view of tracked
+configs. Inspect paths and status, toggle retained backups for the session, and
+review Link or Stop managing before Apply. It does not display file contents or
+launch an editor. See the [browser guide](docs/files.md#interactive-tracked-config-browser).
 
 The first files slice locates and classifies sources and destinations, and tracks
 intent in each repository's `.dots/files.json`. Androidots contributes Termux
@@ -120,7 +134,9 @@ POSIX implementation; discovery additionally uses Git.
 
 `dots git` manages the dots repository and registered nested submodules. Status
 uses local tracking information; publication previews staged changes and pushes
-children before parents. Synchronization keeps recorded child commits unless
+children before parents. `publish --all` includes tracked edits/deletions and
+non-ignored new files, including edits to files already tracked beneath ignored
+directories. Synchronization keeps recorded child commits unless
 explicitly asked to advance them. Configure allowed publication owners using the
 [Git guide](docs/git.md).
 
