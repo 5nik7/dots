@@ -172,16 +172,16 @@ n() { if [ "$#" -eq 0 ]; then command nvim .; else command nvim "$@"; fi; }
 #   fi
 # fi
 
-# if [[ "$distro" == arch ]]; then
-#   alias pacman='sudo pacman'
-#   alias upd='sudo pacman -Syu --noconfirm'
-#   alias paci='sudo pacman -S'
-#   alias pacr='sudo pacman -R'
-# fi
-#
-# if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
-#   alias apt='sudo apt'
-#   alias upd='sudo apt update && sudo apt upgrade -y'
-#   alias apti='sudo apt install'
-#   alias aptr='sudo apt remove'
-# fi
+if [[ "$distro" == arch ]]; then
+  alias pacman='sudo pacman'
+  alias upd='sudo pacman -Syu --noconfirm'
+  alias paci='sudo pacman -S'
+  alias pacr='sudo pacman -R'
+fi
+
+if [[ "$distro" == ubuntu || "$distro" == debian ]]; then
+  alias apt='sudo apt'
+  alias upd='sudo apt update && sudo apt upgrade -y'
+  alias apti='sudo apt install'
+  alias aptr='sudo apt remove'
+fi

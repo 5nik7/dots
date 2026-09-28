@@ -15,21 +15,19 @@ require("git"):setup({
 require("folder-rules"):setup()
 
 local palette = {
-  rosewater = "#f5e0dc",
-  flamingo = "#f2cdcd",
-  pink = "#f5c2e7",
-  mauve = "#cba6f7",
-  red = "#f38ba8",
-  maroon = "#eba0ac",
-  peach = "#fab387",
-  yellow = "#f9e2af",
-  green = "#a6e3a1",
-  teal = "#94e2d5",
-  sky = "#89dceb",
-  sapphire = "#74c7ec",
-  blue = "#89b4fa",
+  pink = "magenta",
+  mauve = "magenta",
+  red = "red",
+  maroon = "red",
+  peach = "yellow",
+  yellow = "yellow",
+  green = "green",
+  teal = "cyan",
+  sky = "cyan",
+  sapphire = "cyan",
+  blue = "blue",
   lavender = "#b4befe",
-  text = "#cdd6f4",
+  text = "white",
   subtext1 = "#bac2de",
   subtext0 = "#a6adc8",
   overlay2 = "#9399b2",
@@ -101,24 +99,24 @@ require("yatline"):setup({
   padding = { inner = 1, outer = 1 },
 
   style_a = {
-    fg = palette.crust,
+    fg = "black",
     bold = false,
     underline = false,
     reversed = true,
     bg_mode = {
-      normal = palette.blue,
-      select = palette.mauve,
-      un_set = palette.red,
+      normal = "blue",
+      select = "pink",
+      un_set = "red",
     },
   },
-  style_b = { bg = palette.surface0, fg = palette.text },
-  style_c = { bg = palette.base, fg = palette.text },
+  style_b = { bg = "black", fg = "white" },
+  style_c = { bg = "black", fg = "white" },
 
-  permissions_t_fg = palette.subtext1,
-  permissions_r_fg = palette.yellow,
-  permissions_w_fg = palette.red,
-  permissions_x_fg = palette.green,
-  permissions_s_fg = palette.surface1,
+  permissions_t_fg = "black",
+  permissions_r_fg = "yellow",
+  permissions_w_fg = "red",
+  permissions_x_fg = "green",
+  permissions_s_fg = "black",
 
   tab_width = 0,
 
@@ -221,7 +219,7 @@ require("yatline-githead"):setup({
 
   show_branch = true,
   branch_prefix = "",
-  branch_color = palette.mauve,
+  branch_color = "magenta",
   branch_symbol = "",
   branch_borders = "",
 
@@ -229,7 +227,7 @@ require("yatline-githead"):setup({
   always_show_remote_branch = false, -- always show remote branch even if it the same as local branch
   always_show_remote_repo = false, -- Adds `origin/` if `always_show_remote_branch` is enabled
   remote_branch_prefix = ":",
-  remote_branch_color = "bright magenta",
+  remote_branch_color = "magenta",
 
   show_tag = true, -- only shown if branch is not available
   always_show_tag = false,
@@ -238,34 +236,34 @@ require("yatline-githead"):setup({
 
   show_commit = true, -- only shown if branch AND tag are not available
   always_show_commit = false,
-  commit_color = "bright magenta",
+  commit_color = "magenta",
   commit_symbol = "@",
 
   show_behind_ahead_remote = true,
-  behind_remote_color = palette.pink,
+  behind_remote_color = "magenta",
   behind_remote_symbol = "⇣",
-  ahead_remote_color = palette.pink,
+  ahead_remote_color = "magenta",
   ahead_remote_symbol = "⇡",
 
   show_stashes = true,
-  stashes_color = palette.overlay2,
+  stashes_color = "darkgray",
   stashes_symbol = "$",
 
   show_state = true,
   show_state_prefix = true,
-  state_color = palette.red,
+  state_color = "red",
   state_symbol = "~",
 
   show_staged = true,
-  staged_color = palette.teal,
+  staged_color = "cyan",
   staged_symbol = "+",
 
   show_unstaged = true,
-  unstaged_color = palette.sapphire,
+  unstaged_color = "cyan",
   unstaged_symbol = "!",
 
   show_untracked = true,
-  untracked_color = palette.teal,
+  untracked_color = "cyan",
   untracked_symbol = "?",
 })
 Status:children_add(function(self)
@@ -274,7 +272,7 @@ Status:children_add(function(self)
   if h and h.link_to then
     return ui.Line({
       ui.Span(tostring(arrow)):fg("darkgray"),
-      ui.Span(tostring(h.link_to)):fg(palette.sapphire),
+      ui.Span(tostring(h.link_to)):fg("cyan"),
     })
   else
     return ""

@@ -33,6 +33,16 @@ Downloaded themes contribute colors and backgrounds only. Templates never evalua
 shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
 and Yazi data; Zsh/Fish and Neovim data come from the palette generator.
 
+The bundled `bat.tmTheme.tpl` provides 70 syntax rules, including language-specific,
+Markdown and diff scopes. Comments and brackets use `muted`, selection and line
+highlights use `selection`, and diff headers use `blue`. Its rendered `bat.tmTheme`
+is also copied to `yazi/tmtheme.xml` in the same generation; `yazi.toml` becomes
+`yazi/flavor.toml`. The Yazi `flavors/dots.yazi` connector points to that generated
+`yazi` directory, so both applications share the syntax theme. Edit the template
+and run `dots theme refresh` to publish changes; generated files are replaced on
+publication. Personal templates and bundled application overrides retain the
+precedence described above.
+
 ```bash
 dots theme list
 dots theme show nord

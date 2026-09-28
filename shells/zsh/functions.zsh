@@ -1,3 +1,43 @@
+# Create a new worktree and branch from within current git directory.
+ga() {
+  if [[ -z "$1" ]]; then
+    echo "Usage: ga [branch name]"
+    return 1
+  fi
+
+  local branch="$1"
+  local base="$(basename "$PWD")"
+  local wt_path="../${base}--${branch}"
+
+  git worktree add -b "$branch" "$wt_path"
+  mise trust "$wt_path"
+  cd "$wt_path"
+}
+
+# Remove worktree and branch from within active worktree directory.
+gd() {
+  if gum confirm "Remove worktree and branch?"; then
+    local cwd base branch root worktree
+
+    cwd="$(pwd)"
+    worktree="$(basename "$cwd")"
+
+    # split on first `--`
+    root="${worktree%%--*}"
+    branch="${worktree#*--}"
+
+    # Protect against accidentally nuking a non-worktree directory
+    if [[ "$root" != "$worktree" ]]; then
+      cd "../$root"
+      git worktree remove "$cwd" --force || return 1
+      git branch -D "$branch"
+    fi
+  fi
+}
+
+compress() { tar -czf "${1%/}.tar.gz" "${1%/}"; }
+alias decompress="tar -xzf"
+
 ls_repos() {
   print -l **/*(e:'[[ -d $REPLY/.git ]]':)
 }
@@ -10,7 +50,7 @@ gethost() {
         host="$distro"
       fi
     else
-      if [[ "$iswsl" == true ]]; then
+      if [[ "$is_wsl" == true ]]; then
         host="$HOST (WSL)"
       else
         host="$HOST"
@@ -150,15 +190,6 @@ palette() {
 }
 
 alias color_codes="palette"
-
-palette_bg() {
-  local -a colors
-  local i
-  for i in {000..255}; do
-    colors+=("%K{$i}$i%k")
-  done
-  print -cP $colors
-}
 
 aptget_check() {
   apt-get -s upgrade | grep -P "\d\K upgraded"

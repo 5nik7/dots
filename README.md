@@ -56,6 +56,8 @@ dots theme bg next                 # Explicit wallpaper change
 ```
 
 The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat and Yazi.
+Bat and Yazi share the syntax rules in `default/themed/bat.tmTheme.tpl`, including
+language-specific scopes and palette-based comments, selections, and diff colors.
 Selection journals and backs up fixed application theme connectors. Zsh refreshes
 at the next prompt; Neovim uses the local Anodize.nvim plugin and refreshes on state changes, focus or `:DotsThemeReload`. Native palette
 APIs, `catppuccin`, `current_theme`, and the plural `dots themes` commands remain
