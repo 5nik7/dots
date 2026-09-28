@@ -2,7 +2,7 @@
 
 add_newline = true
 
-command_timeout = 2000
+command_timeout = 10000
 
 format = """
 $os\
@@ -239,7 +239,7 @@ format = '( [($symbol( $cluster))]($style) )'
 disabled = false
 
 [shell]
-disabled = false
+disabled = true
 format = '[  $indicator ]($style)'
 bash_indicator = "bash"
 fish_indicator = "fish"
@@ -317,7 +317,7 @@ threshold = 100
 style = "fg:color_other"
 
 [time]
-disabled = false
+disabled = true
 time_format = "%R"
 style = "fg:color_time"
 format = '( [󰔛 $time]($style) )'
@@ -327,7 +327,7 @@ min_time = 2000
 format = '( [󱫑 $duration]($style) )'
 style = 'fg:color_duration'
 show_milliseconds = false
-disabled = false
+disabled = true
 
 [status]
 disabled = false

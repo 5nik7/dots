@@ -5,7 +5,7 @@ preview-bg:{{ dark_background }},\
 fg+:strip:{{ accent }}:bold,\
 fg:regular,\
 hl:{{ selection_foreground }}:underline,\
-hl+:{{ green }}:bold:underline,\
+hl+:{{ bright_green }}:bold:underline,\
 info:{{ muted }},\
 query:{{ warning }},\
 gutter:regular:{{ background }},\

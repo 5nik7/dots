@@ -329,6 +329,14 @@ switch; unknown staging objects and post-write drift refuse destructive recovery
 No complete generation or backup is automatically pruned. Reload failures preserve
 the published theme and report a retry path; external app state is not rolled back.
 
+FZF environment templates are parsed as restricted literal assignments before
+publication. Shell template code is never executed. Invalid statements or color
+values refuse the new generation, leaving the active selection intact. Only
+validated FZF color tokens enter generated shell initialization; this adds no
+hook or general environment-variable injection interface. The Gum Lua template
+is rendered but never executed by Dots or loaded by its shell adapters. Loading
+it explicitly in Hilbish executes trusted user-owned Lua configuration.
+
 Git theme lifecycle commands use managed-checkout markers, an exclusive user-root
 lock, staged clones, validation and atomic journal status updates. Update refuses
 dirty or non-fast-forward histories; remove refuses the active theme. Prior trees

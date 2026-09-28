@@ -15,6 +15,112 @@ spec.loader.exec_module(old)
 
 class Workflow(old.Themes):
     # Only inherit the fixture, not the older suite's cases.
+    def test_application_environment_templates_and_shell_refresh(self):
+        self.dots("theme", "set", "nord")
+        first = self.generation()
+        for name in ("fzf.sh", "gum_env.lua"):
+            self.assertNotIn("{{", (first / name).read_text())
+        for shell in (old.BASH, old.ZSH):
+            if not shell:
+                continue
+            result = self.shell(r'''
+FZF_DEFAULT_OPTS='--height=40% --layout=reverse'
+source "$DOTS/themes/bin/theme"
+set_theme || exit 1
+[[ -z ${GUM_CONFIRM_PROMPT_FOREGROUND+x} ]] || exit 2
+[[ $_FZF_COLORS_ == *'preview-bg:#222730'* ]] || exit 3
+before=$FZF_DEFAULT_OPTS
+set_theme || exit 4
+[[ $FZF_DEFAULT_OPTS == "$before" ]] || exit 5
+"$DOTS/bin/dots-theme-set" catppuccin-latte >/dev/null || exit 6
+set_theme || exit 7
+[[ $_FZF_COLORS_ == *'prompt:#1e66f5'* ]] || exit 8
+[[ $FZF_DEFAULT_OPTS == '--height=40% --layout=reverse --color='* ]] || exit 9
+printf '%s\n' "$FZF_DEFAULT_OPTS"
+''', shell)
+            self.assertEqual(result.stdout.count("--color="), 1)
+            # Start the next shell from the same initial selection.
+            self.dots("theme", "set", "nord")
+
+        # Public init output must work without loading the shell adapter.
+        for shell in ("bash", "zsh", "fish"):
+            executable = shutil.which(shell)
+            if not executable:
+                continue
+            init = self.root / ("consumer." + shell)
+            init.write_text(self.dots("theme", "init", "--shell", shell).stdout)
+            if shell == "fish":
+                body = 'set -gx FZF_DEFAULT_OPTS --height=40%; source "$INIT"; source "$INIT"; printf "%s\\n" "$GUM_CONFIRM_PROMPT_FOREGROUND" "$FZF_DEFAULT_OPTS"'
+                args = [executable, "--no-config", "-c", body]
+            else:
+                body = 'export FZF_DEFAULT_OPTS=--height=40%; source "$INIT"; source "$INIT"; printf "%s\\n" "$GUM_CONFIRM_PROMPT_FOREGROUND" "$FZF_DEFAULT_OPTS"'
+                args = [executable, "-f", "-c", body]
+            result = self.run_command(args, env=dict(self.env, INIT=str(init)))
+            self.assertIn("\n--height=40% --color=", result.stdout)
+            self.assertEqual(result.stdout.count("--color="), 1)
+
+    def test_application_environment_overrides_and_refusal(self):
+        user = self.home / "config/dots/themed"
+        user.mkdir(parents=True)
+        fzf = user / "fzf.sh.tpl"
+        fzf.write_text('export _FZF_COLORS_="fg:{{ foreground }},bg:-1"\n')
+        self.dots("theme", "set", "nord")
+        before = self.generation()
+        self.assertIn('fg:#d8dee9,bg:-1', (before / "fzf.sh").read_text())
+        # Bundled app files win over personal templates and participate in refresh.
+        override = self.repo / "themes/nord/fzf.sh"
+        override.write_text('export _FZF_COLORS_="fg:#112233"\n')
+        self.dots("theme", "refresh")
+        self.assertIn('fg:#112233', (self.generation() / "fzf.sh").read_text())
+        override.write_text('export _FZF_COLORS_="fg:#445566"\n')
+        self.dots("theme", "refresh")
+        self.assertIn('fg:#445566', (self.generation() / "fzf.sh").read_text())
+        override.unlink()
+        self.dots("theme", "refresh")
+        before = self.generation()
+        for file, invalid in (
+            (fzf, 'export _FZF_COLORS_="$(touch SENTINEL)"\n'),
+            (fzf, 'export _FZF_COLORS_="fg:#nothex"\n'),
+            (fzf, 'export _FZF_COLORS_="fg:256"\n'),
+            (fzf, 'export _FZF_COLORS_="fg:#ffffff"\ntouch SENTINEL\n'),
+        ):
+            original = file.read_text()
+            file.write_text(invalid)
+            self.dots("theme", "refresh", code=1)
+            self.assertEqual(self.generation(), before)
+            self.assertFalse((self.home / "SENTINEL").exists())
+            file.write_text(original)
+
+    @unittest.skipUnless(shutil.which("lua"), "Lua unavailable")
+    def test_hilbish_gum_template(self):
+        self.dots("theme", "set", "nord")
+        generated = self.generation() / "gum_env.lua"
+        script = self.root / "gum-consumer.lua"
+        script.write_text('''local colors = {}
+os.setenv = function(key, value)
+  assert(not colors[key], "duplicate color assignment")
+  assert(value:match("^#%x%x%x%x%x%x$"), "unresolved color")
+  colors[key] = value
+end
+dofile(arg[1])
+assert(colors.GUM_CONFIRM_PROMPT_FOREGROUND == "#81a1c1")
+assert(colors.FOREGROUND == "#d8dee9")
+assert(colors.GUM_LOG_SEPARATOR_BACKGROUND == "#2e3440")
+local count = 0
+for _ in pairs(colors) do count = count + 1 end
+assert(count > 100)
+''')
+        self.run_command([shutil.which("lua"), str(script), str(generated)])
+        for name in ("init.zsh", "init.fish"):
+            self.assertNotIn("GUM_", (self.generation() / name).read_text())
+            self.assertNotIn("gum_env.lua", (self.generation() / name).read_text())
+        # A Lua override remains inert during publication and refresh.
+        user = self.home / "config/dots/themed"
+        user.mkdir(parents=True)
+        (user / "gum_env.lua.tpl").write_text('os.execute("touch SENTINEL")\n')
+        self.dots("theme", "refresh")
+        self.assertFalse((self.home / "SENTINEL").exists())
+
     def test_flat_palette_catalog(self):
         names = self.dots("theme", "list").stdout.splitlines()
         self.assertEqual(len(names), 33)

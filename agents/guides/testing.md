@@ -48,6 +48,10 @@ Never let a test:
 - Do not call a change faster based on one interactive run.
 - Follow the accepted warm targets and regression-review policy in [decision 0002](../../docs/decisions/0002-phase-1-go-adoption.md#performance-budgets-and-regression-policy). Numeric timing checks remain advisory; confirmed comparable regressions require a fix or owner-approved exception. Numeric gates remain advisory; the permanent core now has the isolated runner below.
 
+## Yazi Configuration
+
+For the local symlink header component, use the isolated Lua checks described in [the testing reference](../../docs/testing.md#yazi-symlink-component). Keep simulated text widths and Windows paths distinct from native Yazi rendering evidence.
+
 ## Permanent Core
 
 For root `cmd/dots`, `internal`, and `tests`, use `python3 -B tools/verify_core.py check`, `bench`, `build`, or `docs` (`python` on Windows). Run check before bench and keep other builds/tests out of timing intervals. The runner enforces installed Go 1.27.1, owns configuration/cache/telemetry and runtime roots, and supplies the prebuilt binary required by process tests. Do not use inherited raw Go build/test settings. Use `python3 -B tools/test_verify_core.py` for the seven core Python regressions without Go. See [testing.md](../../docs/testing.md#permanent-core-verification) for guarantees, CI, measurement method, and durable retention.

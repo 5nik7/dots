@@ -68,6 +68,16 @@ use = "5nik7/yatline"
 rev = "ab24733"
 hash = "de0cdd7af3fe4576d3c98cedd8c6524b"
 
+[[plugin.deps]]
+use = "wekauwau/yatline-modified-time"
+rev = "2d33471"
+hash = "8fa6028ef832b34cf32f4ee43cb0ae35"
+
+[[plugin.deps]]
+use = "jaja360/yatline-hostname-username"
+rev = "448e8a1"
+hash = "9888b4708cb9fb7ecdac610f57d0389e"
+
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-mocha"
 rev = "20b47bf"

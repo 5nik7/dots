@@ -55,7 +55,12 @@ dots theme refresh
 dots theme bg next                 # Explicit wallpaper change
 ```
 
-The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat and Yazi.
+The Yazi status line includes the local [dots-repo Yatline component](config/yazi/plugins/dots-repo.yazi/README.md), which shows the Git working tree folder name before branch details and hides outside repositories.
+
+The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, FZF and Gum.
+The FZF template supplies published shell colors; Zsh picks them up at the next
+prompt after `dots theme refresh`, preserving FZF layout and key bindings. Gum
+colors render as `gum_env.lua` for explicit loading in Hilbish.
 Bat and Yazi share the syntax rules in `default/themed/bat.tmTheme.tpl`, including
 language-specific scopes and palette-based comments, selections, and diff colors.
 Selection journals and backs up fixed application theme connectors. Zsh refreshes

@@ -30,6 +30,10 @@ aligned command/option labels alongside descriptions and literal insertion.
 
 `python3 -B tools/test_zsh.py` checks the shell configuration in owned temporary roots. `python3 -B tools/zsh_fixture.py --samples 10` measures isolated startup; `python3 -B tools/zsh_interactive.py --samples 5` exercises native PTY interaction, reloads, and input-ready timing using copied public plugins and synthetic private modules. No dependencies are installed and fixture Git refuses remote operations. The [Zsh guide](../shells/zsh/README.md) specifies prerequisites and evidence limits; the [focused plan](../plans/zsh-startup.md) records results. These checks do not require Go.
 
+## Yazi Symlink Component
+
+From `config/yazi/plugins/dots-symlink.yazi`, run `lua test.lua` for isolated layout checks. The fixtures cover changing width budgets, whole-directory shortening, independent caps, colors, root separators, empty directories, and simulated Windows paths. The Lua text adapter approximates terminal widths; it does not establish native rendering or Windows support. See the [plugin guide](../config/yazi/plugins/dots-symlink.yazi/README.md).
+
 ## Permanent Core Verification
 
 The independent root-core runner exists alongside the preserved experiment:
@@ -376,6 +380,34 @@ acceptance passed reload equality (hooks, fzf options, fpath and keys), Tab/FZF-
 directory completion and history picker checks. Its first timing interval overlapped
 a separate test, so those PTY timings are not used as performance evidence below.
 Native desktop application reload/rendering, WSL and native Windows remain unverified.
+
+On 2026-09-28, the FZF/Hilbish template follow-up passed all 23 shared-theme tests
+and 23 Bash dispatcher tests. The expanded workflow suite passed 12/14, including
+three new tests for published FZF colors in Bash/Zsh/Fish, idempotent reload,
+personal/bundled overrides, fingerprint refresh, malformed/injected FZF input
+refusal, and Gum Lua rendering without publication-time execution. Its two
+failures still expect 33 themes while the current catalog contains 34. Zsh passed
+15/17 with the two alias expectations described above. All four failures were
+reproduced against original HEAD code in disposable fixtures.
+
+Installed FZF 0.74.4 accepted the generated color list, and Gum 2.0.0 rendered the
+expected colors using assignments captured through a Lua `os.setenv` test double.
+All 116 Gum mappings were preserved. Hilbish is unavailable locally: this verifies
+Lua syntax/assignments and Gum rendering, not native Hilbish execution. Shell
+syntax checks, focused ShellCheck (with existing core diagnostic exclusions),
+relative documentation links and whitespace checks passed. Isolated Zsh startup
+and PTY checks passed, including equal hooks/FZF options/fpath/keys after reload,
+Tab/FZF-tab, directory completion and history selection. No live theme was activated.
+
+Sequential three-sample advisory theme measurements recorded selected Catppuccin
+initialization at 19.1 ms before and 23.2 ms after, and the unchanged prompt check
+at 36.6 µs before and 44.1 µs after; the unchanged prompt path still adds no new
+process or template reads. These small, noisy samples establish no speedup or
+controlled regression claim. The final isolated Zsh startup median was 871 ms
+(three samples), and PTY input readiness was 1.436 s (two samples). Temporary
+evidence directories are `dots-theme-bench-kzvh8gfx` (baseline),
+`dots-theme-bench-1ed12yt9` (after), `dots-zsh-re6ezv4b` (startup), and
+`dots-zsh-n3r9kdfe` (PTY), under the Termux temporary directory.
 
 For sequential advisory measurements:
 

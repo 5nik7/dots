@@ -31,6 +31,8 @@ change_theme() {
 set_theme() {
   [[ -z ${ZSH_VERSION:-} ]] || setopt local_options nonomatch
   local requested=${1:-} generation='' output file colors
+  # Older generations and session-only palettes retain the role-based fallback.
+  unset DOTS_THEME_FZF_COLORS
   if [[ -L $_DOTS_THEME_ACTIVE ]]; then
     if [[ -n ${ZSH_VERSION:-} ]]; then generation=${${_DOTS_THEME_ACTIVE:A}:t}
     else generation=$(readlink -- "$_DOTS_THEME_ACTIVE"); generation=${generation##*/}; fi
@@ -68,11 +70,17 @@ set_theme() {
     export FZF_DEFAULT_OPTS=$_DOTS_THEME_FZF_BASE
   fi
   if [[ $THEME == catppuccin ]]; then
-    for file in "$THEMESRC"/*.zsh; do [[ -f $file ]] || continue; source "$file"; done
+    for file in "$THEMESRC"/*.zsh; do
+      # Published template colors supersede the legacy FZF adapter.
+      [[ -f $file ]] || continue
+      [[ ${file##*/} != fzf.zsh || -z ${DOTS_THEME_FZF_COLORS:-} ]] || continue
+      source "$file"
+    done
   fi
   {
     export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=${dots_roles[muted]}"
     export _FZF_COLORS_="bg:-1,bg+:-1,fg:${dots_roles[foreground]},fg+:${dots_roles[foreground]},hl:${dots_roles[accent]},hl+:${dots_roles[accent]},info:${dots_roles[muted]},prompt:${dots_roles[accent]},pointer:${dots_roles[accent]},marker:${dots_roles[warning]},spinner:${dots_roles[info]},border:${dots_roles[muted]}"
+    [[ ! ${DOTS_THEME_FZF_COLORS:-} ]] || export _FZF_COLORS_=$DOTS_THEME_FZF_COLORS
     export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=$_FZF_COLORS_"
   }
   return 0

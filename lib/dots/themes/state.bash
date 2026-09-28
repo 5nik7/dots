@@ -1,6 +1,8 @@
 # Bounded theme-state publisher and journaled application connector links.
 # shellcheck source=apps.bash
 source "$DT_LIB/apps.bash"
+# shellcheck source=app-env.bash
+source "$DT_LIB/app-env.bash"
 # flock releases the lock even after SIGKILL. sync -f is a required mutation capability.
 dt_flush() { sync -f "$1"; }
 dt_record() {
@@ -126,6 +128,7 @@ dt_set() (
     dt_emit_init fish > "$dir/init.fish" || exit 1
   if [[ -n ${DT_SEMANTIC[background]:-} ]]; then
     dt_render "$dir" || exit 1
+    dt_app_init "$dir" || exit 1
   fi
   if [[ -f $dir/bat.tmTheme ]] && command -v bat >/dev/null; then
     mkdir -p "$dir/bat-source/themes" "$dir/bat-cache" || exit 1

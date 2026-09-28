@@ -243,6 +243,9 @@ the same data reader directly without extension execution. See [files](files.md)
 `lib/dots/themes` owns native palette loading, semantic colors, literal template
 rendering, cached initialization, compatibility APIs, journaled publication, fixed
 application connectors, Git source lifecycle and explicit wallpaper adapters.
+Its `app-env.bash` adapter validates rendered FZF assignments as literal data
+and adds their colors to published Bash/Zsh and Fish initialization. The Gum Lua
+template remains a rendered artifact for an explicitly configured Hilbish consumer.
 `bin/dots-theme-*` exposes the flat workflow; `dots-themes-*` preserves legacy routes.
 `themes/bin/*` remains compatibility entry points, with shared shell logic in `lib`.
 

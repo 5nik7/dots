@@ -106,7 +106,7 @@ dt_render() {
   local -A rendered=()
   # Only bundled app overrides are trusted. Installed repositories supply colors/images only.
   if [[ $DT_THEME_DIR == "$DT_ROOT/"* ]]; then
-    for filename in kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml; do
+    for filename in kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.lua; do
       if [[ -f $DT_THEME_DIR/$filename && ! -L $DT_THEME_DIR/$filename ]]; then
         cp -- "$DT_THEME_DIR/$filename" "$dir/$filename" || return
         rendered[$filename]=1

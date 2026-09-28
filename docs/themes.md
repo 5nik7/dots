@@ -33,6 +33,50 @@ Downloaded themes contribute colors and backgrounds only. Templates never evalua
 shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
 and Yazi data; Zsh/Fish and Neovim data come from the palette generator.
 
+`fzf.sh.tpl` supplies FZF colors to published Bash/Zsh and Fish initialization.
+Zsh refreshes them at the next prompt; Bash and Fish users can explicitly load
+`dots theme init` output for their shell. Running FZF processes retain their
+existing environment. Personal templates override the defaults, and a bundled
+`fzf.sh` application file takes precedence over both. Refresh tracks these edits.
+After updating the shell adapter itself, open a fresh shell or reload your shell
+configuration once so the new adapter is loaded.
+
+The FZF template accepts one `export _FZF_COLORS_="..."` assignment (including
+backslash-newline continuations), blank lines, comments, and the optional exact
+`export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} --color=$_FZF_COLORS_"` line. Colors
+must be `#RRGGBB`, `-1`, or ANSI indices 0–255, optionally combined with style
+attributes such as `regular`, `bold`, `strip`, `italic` and `underline`. Selectors
+use literal lowercase names, hyphens and plus signs. Other statements or malformed
+values refuse publication. Dots parses this file as data; it never sources it.
+
+Shell initialization preserves the original FZF options and replaces its generated
+color option on repeat loads. Dots' Zsh adapter also preserves configured bindings
+and preview settings. Published template colors supersede the legacy Catppuccin
+FZF adapter; other legacy adapters remain. Older generations and session-only
+`set_theme ID` retain the existing FZF behavior. No new app connector or automatic
+Bash/Fish prompt hook is installed.
+
+`gum_env.lua.tpl` stays a separate Hilbish consumer. It renders to
+`gum_env.lua` under the active theme path and uses Hilbish's `os.setenv` extension,
+as used by its [upstream initialization](https://github.com/sammy-ette/Hilbish/blob/v2.3.4/nature/init.lua).
+Its colors are not exported by the Bash/Zsh/Fish initialization, and Dots never
+executes the generated Lua. Personal template and bundled `gum_env.lua` overrides
+follow the same rendering precedence as other app files. To load the current
+colors explicitly from a Hilbish configuration:
+
+```lua
+local state = os.getenv("XDG_STATE_HOME")
+if not state or state == "" then
+  state = assert(os.getenv("HOME")) .. "/.local/state"
+end
+dofile(state .. "/dots/current/theme/gum_env.lua")
+```
+
+Publish with `dots theme refresh` first. Reload the Lua file in Hilbish after
+subsequent theme changes; no Hilbish prompt hook or configuration is installed.
+Already-running Gum processes retain their environment. Native Hilbish execution
+is not yet verified; isolated Lua tests substitute the `os.setenv` extension.
+
 The bundled `bat.tmTheme.tpl` provides 70 syntax rules, including language-specific,
 Markdown and diff scopes. Comments and brackets use `muted`, selection and line
 highlights use `selection`, and diff headers use `blue`. Its rendered `bat.tmTheme`

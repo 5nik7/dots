@@ -92,15 +92,20 @@ require("projects"):setup({
 
 require("yatline"):setup({
 
-  section_separator = { open = "", close = "" },
-  part_separator = { open = "", close = "" },
-  inverse_separator = { open = "", close = "" },
+  section_separator_open = "",
+  section_separator_close = "",
+
+  inverse_separator_open = "",
+  inverse_separator_close = "",
+
+  part_separator_open = "",
+  part_separator_close = "",
 
   padding = { inner = 1, outer = 1 },
 
   style_a = {
     fg = "black",
-    bold = false,
+    bold = true,
     underline = false,
     reversed = true,
     bg_mode = {
@@ -144,19 +149,11 @@ require("yatline"):setup({
         { type = "line", name = "tabs" },
       },
       section_b = {
-        {
-          type = "coloreds",
-          custom = false,
-          name = "string_based_component",
-          params = { "tab_path", "blue", { false, 24, 10 } },
-        },
+        { type = "coloreds", custom = false, name = "symlink" },
         -- { type = "string", custom = false, name = "tab_path", params = { false, 24, 10 } },
         -- { type = "coloreds", custom = false, name = "tab_path" },
       },
-      section_c = {
-
-        { type = "string", custom = false, name = "hovered_name" },
-      },
+      section_c = {},
     },
     right = {
       section_a = {
@@ -173,12 +170,14 @@ require("yatline"):setup({
   status_line = {
     left = {
       section_a = {
-        { type = "string", name = "tab_mode" },
+        -- { type = "string", name = "tab_mode" },
+        { type = "string", name = "date", params = { "%H:%M" } },
       },
       section_b = {
         -- { type = "string", name = "hovered_size" },
       },
       section_c = {
+        { type = "coloreds", custom = false, name = "repo_name" },
         { type = "coloreds", custom = false, name = "githead" },
         -- { type = "coloreds", name = "count" },
       },
@@ -189,6 +188,7 @@ require("yatline"):setup({
         -- { type = "string", name = "hovered_size" },
       },
       section_b = {
+        -- { type = "coloreds", custom = false, name = "hostname_username" },
         -- { type = "string", name = "cursor_percentage" },
         -- { type = "coloreds", custom = false, name = "permissions" },
       },
@@ -200,7 +200,31 @@ require("yatline"):setup({
     },
   },
 })
---
+
+require("dots-repo"):setup({
+  repo_color = "blue",
+  repo_prefix = "", -- Literal text; include any desired trailing space.
+  repo_symbol = "", -- Optional icon; i
+})
+
+require("dots-symlink"):setup({
+  auto_fit = true,
+  path_color = "blue",
+  path_max_length = 0,
+  path_shorten = true,
+  path_rtl = true,
+  name_color = "white",
+  name_max_length = 0, -- 0 means unlimited.
+  name_shorten = true,
+  name_rtl = false,
+  arrow = "  ",
+  arrow_color = "darkgray",
+  link_color = "cyan",
+  link_max_length = 0,
+  link_shorten = true,
+  link_rtl = true,
+})
+
 require("yatline-githead"):setup({
   order = {
     "branch",
@@ -266,15 +290,8 @@ require("yatline-githead"):setup({
   untracked_color = "cyan",
   untracked_symbol = "?",
 })
-Status:children_add(function(self)
-  local arrow = "  "
-  local h = self._current.hovered
-  if h and h.link_to then
-    return ui.Line({
-      ui.Span(tostring(arrow)):fg("darkgray"),
-      ui.Span(tostring(h.link_to)):fg("cyan"),
-    })
-  else
-    return ""
-  end
-end, 3300, Status.LEFT)
+
+require("yatline-hostname-username"):setup({
+  color = "red",
+  mode = "both", -- "host", "user", "both"
+})

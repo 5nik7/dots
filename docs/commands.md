@@ -15,6 +15,8 @@ managed operations are documented separately below. The [themes reference](theme
 and `dots theme bg list|current|set|next|select|switcher`. The plural `dots themes`
 commands retain their documented native palette interfaces. Shell completion reads
 static route metadata and core-owned data providers; it never executes extensions.
+Published `theme init --shell bash|zsh|fish` output includes the FZF
+environment colors described in the [template contract](themes.md#flat-themes-and-templates).
 
 ## Implemented Git and managed-file operations
 
