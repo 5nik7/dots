@@ -21,13 +21,18 @@ def benchmark(samples):
     shutil.copy2(REPO / 'bin/dots', repo / 'bin/dots')
     shutil.copy2(REPO / 'logo.txt', repo / 'logo.txt')
     shutil.copytree(REPO / 'lib/dots', repo / 'lib/dots')
+    # Generation only checks loader readability; never evaluate them here.
+    for shell, filename in (('bash', 'init.bash'), ('zsh', 'init.zsh')):
+        target = repo / 'shells' / shell / filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(REPO / 'shells' / shell / filename, target)
     env = {'HOME': str(home), 'DOTS': str(repo), 'PATH': os.environ['PATH'], 'TERM': 'dumb',
            'TMPDIR': str(root), 'XDG_CONFIG_HOME': str(home / 'config'),
            'XDG_CACHE_HOME': str(home / 'cache'), 'XDG_STATE_HOME': str(home / 'state'),
            'XDG_DATA_HOME': str(home / 'data')}
     if os.environ.get('LD_PRELOAD'): env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
     bash = shutil.which('bash')
-    cases = {'help': ['--help'], 'dir': ['--dir'], 'dispatch': ['probe'],
+    cases = {'init': ['init'], 'help': ['--help'], 'dir': ['--dir'], 'dispatch': ['probe'],
              'catalog': ['commands'], 'completion': ['__complete', 'bash', '1', '--', 'dots', ''],
              'completion_prefix': ['__complete', 'bash', '1', '--', 'dots', 'pr']}
     probe = repo / 'bin/dots-probe'; probe.write_text('#!' + bash + '\nexit 0\n'); probe.chmod(0o700)

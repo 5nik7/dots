@@ -46,8 +46,8 @@ def main():
             results['legacy_init'] = measure([BASH, str(baseline), 'init'], env)
         command = [BASH, str(fixture.repo / 'themes/bin/catppuccin'), 'init']
         results['new_init'] = measure(command)
-        fixture.dots('themes', 'set', 'catppuccin')
-        results['selected_init'] = measure([BASH, str(fixture.repo / 'bin/dots-themes-init')])
+        fixture.dots('theme', 'set', 'catppuccin-mocha')
+        results['selected_init'] = measure([BASH, str(fixture.repo / 'bin/dots-theme-init')])
         if ZSH:
             p = fixture.shell('''typeset -A themes; themes[root]=$DOTS/themes
 source "$DOTS/themes/bin/theme"
@@ -74,10 +74,10 @@ else bridge.startup() end
                 env = {**fixture.env, 'DOTS_BENCH_BRIDGE': enabled,
                        'XDG_CACHE_HOME': str(fixture.home / ('cache-' + name))}
                 results[name] = measure([NVIM, '--headless', '-u', 'NONE', '-i', 'NONE', '-n', '--noplugin', '-l', str(script)], env)
-        results['tokyonight_init'] = measure([BASH, str(fixture.repo / 'bin/dots-themes-init')],
+        results['tokyonight_init'] = measure([BASH, str(fixture.repo / 'bin/dots-theme-init')],
             {**fixture.env, 'DOTS_THEME_SELECTION': 'tokyonight-night'})
-        fixture.dots('themes', 'set', 'tokyonight')
-        results['tokyonight_selected_init'] = measure([BASH, str(fixture.repo / 'bin/dots-themes-init')])
+        fixture.dots('theme', 'set', 'tokyonight-night')
+        results['tokyonight_selected_init'] = measure([BASH, str(fixture.repo / 'bin/dots-theme-init')])
         out = Path(tempfile.mkdtemp(prefix='dots-theme-bench-')) / 'results.json'
         out.write_text(json.dumps(results, indent=2) + '\n')
         print(out)

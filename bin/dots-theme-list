@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # dots:summary=List selectable themes
+# dots:usage=[--families | --flavors FAMILY]
+# dots:option=--families||flag|List native palette families
+# dots:option=--flavors||theme|List a family's flavors
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- list "$@"
 source "$DT_LIB/commands.bash"

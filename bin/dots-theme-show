@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # dots:summary=Preview a theme palette
-# dots:usage=ID
+# dots:usage=ID [--native]
 # dots:argument=1|theme-id|Theme identifier
+# dots:option=--native||flag|Show upstream palette colors
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- show "$@"
 source "$DT_LIB/commands.bash"

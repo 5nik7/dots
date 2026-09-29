@@ -33,3 +33,5 @@ Verification on native Termux: four engine-free integration cases (including rea
 ## Remaining work and ownership
 
 The implemented slice is complete within its recorded fixture scope. [Next steps](anodize-next.md) proposes foundation hardening before a new frontend. Normal LazyVim visual acceptance, real wallpaper APIs, desktop platforms, distribution/release work and frontend selection remain distinct gates. The Anodize.nvim plan predates the additive `colors` field; Dots now publishes it while retaining existing schema-1 fields and role authority. No plugin protocol redesign is implied.
+
+The separately authorized [theme plugin slice](theme-plugins.md) now covers explicitly enabled local post-publication hooks. Earlier arbitrary-hook exclusions remain applicable to downloaded-theme execution and broader hook systems. This does not expand the Go or Anodize.nvim scope.

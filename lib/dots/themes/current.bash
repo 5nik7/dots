@@ -2,8 +2,8 @@
 dt_current() {
   local color='' format=hex raw=0 array=0 token name file flavor=$DT_FLAVOR
   if (($# == 0)); then
-    set -- show "$DT_THEME" "$DT_FLAVOR"
-    source "$DT_LIB/cli.bash"
+    source "$DT_LIB/views.bash"
+    dt_native_preview
     return
   fi
   while (($#)); do

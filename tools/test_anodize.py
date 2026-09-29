@@ -51,6 +51,33 @@ class Anodize(unittest.TestCase):
     def recipe(self, name='example'):
         return json.loads((self.repo / 'themes' / name / 'anodize.json').read_text())
 
+    def test_local_plugins_share_publication_and_keep_authoring_inert(self):
+        hooks = self.home / 'config/dots/hooks/theme-set.d'
+        hooks.mkdir(parents=True)
+        hook = hooks / '20-anodize-check.sh'
+        hook.write_text('printf "%s %s\\n" "$DOTS_THEME_ID" "$DOTS_THEME_REASON" >> "$HOME/plugin-runs"\n')
+        self.dots('theme', 'plugins', 'enable', 'anodize-check')
+        self.create()
+        self.cli('edit', 'example', '--adjust', 'gamma=1.1', '--yes')
+        self.cli('export', 'example', '--format', 'colors')
+        self.cli('preview', 'example', '--app', 'kitty')
+        self.cli('apply', 'example', '--dry-run', '--json')
+        log = self.home / 'plugin-runs'
+        self.assertFalse(log.exists())
+        result = self.cli('apply', 'example', '--yes', '--json', DOTS_COLOR='always')
+        json.loads(result.stdout)
+        self.assertEqual(len(log.read_text().splitlines()), 1)
+        self.cli('apply', 'example', '--yes')
+        self.assertEqual(len(log.read_text().splitlines()), 1)
+        self.dots('theme', 'refresh')
+        self.assertEqual(len(log.read_text().splitlines()), 2)
+        self.assertTrue(log.read_text().splitlines()[-1].endswith(' refresh'))
+        hook.write_text('exit 9')
+        self.cli('edit', 'example', '--adjust', 'gamma=1.2', '--yes')
+        result = self.cli('apply', 'example', '--yes', '--json')
+        json.loads(result.stdout)
+        self.assertIn('Theme remains published', result.stderr)
+
     @contextmanager
     def author(self):
         with mock.patch.dict(os.environ, self.env, clear=True):

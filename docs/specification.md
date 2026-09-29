@@ -329,3 +329,7 @@ The [catalog/location formats](files.md) are the bounded JSON schema-1 model und
 ## Implemented Anodize recipe
 
 `themes/ID/anodize.json` is a separate schema-1 authoring document, not a module/profile manifest. [Its recipe contract](anodize.md#recipe-and-ownership) owns baseline colors, absolute adjustments, overrides, generation options, source references and local generated-file receipts. Generated `colors.toml` uses the existing flat-theme contract. No new general installation semantics are implied.
+
+## Implemented shell path variables
+
+Native shell initialization is independent of the proposed module/profile resolver. Its [environment contract](shell-init.md#environment-and-execution) owns the checkout-derived `DOTS`, `SHELLS`, binary/script/config/secrets paths and shell-directory aliases. The resolved startup file or native loader determines the checkout; initialization replaces inherited Dots path values. Custom overrides can be applied after initialization. This does not change CLI manifest precedence or introduce general environment interpolation.

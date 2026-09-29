@@ -22,7 +22,8 @@ class ZshTests(unittest.TestCase):
                 shutil.copytree(REPO / name, self.repo / name)
             else:
                 (self.repo / name).mkdir(parents=True, exist_ok=True)
-        for name in ('bin/util', 'bin/colors.env'):
+        for name in ('bin/lib/common.sh', 'bin/dots', 'shells/environment.sh'):
+            (self.repo / name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(REPO / name, self.repo / name)
         self.env = {'HOME': str(self.root), 'ZDOTDIR': str(self.root),
                     'DOTS': str(self.repo), 'XDG_CACHE_HOME': str(self.root / 'cache'),
@@ -43,7 +44,7 @@ class ZshTests(unittest.TestCase):
     def test_paths_preserve_precedence_literal_names_and_missing(self):
         for name in ('first', 'space ü', '-dash', 'literal[1]'):
             (self.root / name).mkdir()
-        self.shell('''source "$DOTS/bin/util"
+        self.shell('''source "$DOTS/bin/lib/common.sh"
 path=("$HOME/first" "$HOME/space ü")
 prepath "$HOME/space ü"
 [[ $path[1] == "$HOME/first" ]] || exit 1
@@ -91,20 +92,18 @@ source "$DOTS/shells/zsh/platforms/detect.zsh"
 [[ $DOTS_PLATFORM == termux && $is_termux == true && $distro == termux ]]
 ''')
 
-    def test_color_arrays_and_terminal_capabilities(self):
-        self.shell('''source "$DOTS/bin/colors.env"
+    def test_color_arrays_without_legacy_globals(self):
+        self.shell('''source "$DOTS/bin/lib/common.sh"
+build_color_arrays
 (( ${#FG} == 256 && ${#BG} == 256 && ${#COLOR} == 256 )) || exit 1
 for i in {0..255}; do
   [[ $FG[$i] == $'\\e'"[38;5;${i}m" ]] || exit 2
   [[ $BG[$i] == $'\\e'"[48;5;${i}m" ]] || exit 3
   [[ $COLOR[$i] == $'\\e'"[38;5;${i}mcolor $i" ]] || exit 4
 done
-[[ $BOLD == "$(tput bold)" && $rst == "$(tput sgr0)" ]] || exit 5
-names=(BLACK RED GREEN YELLOW BLUE MAGENTA CYAN GREY BRIGHTBLACK BRIGHTRED BRIGHTGREEN BRIGHTYELLOW BRIGHTBLUE BRIGHTMAGENTA BRIGHTCYAN WHITE)
-for i in {1..16}; do [[ ${(P)names[$i]} == "$(tput setaf $((i-1)))" ]] || exit 6; done
-before=$RED
-source "$DOTS/bin/colors.env"
-[[ $RED == $before ]]
+[[ ! ${BOLD+x} && ! ${RED+x} && ! ${RST+x} ]] || exit 5
+build_color_arrays
+(( ${#FG} == 256 && ${#BG} == 256 && ${#COLOR} == 256 ))
 ''')
 
     def generator(self, content):
@@ -154,7 +153,7 @@ source "$DOTS/shells/zsh/zshenv"
 ''')
 
     def test_shellmod_uses_running_shell_and_corrected_alias(self):
-        self.shell('''source "$DOTS/bin/util"
+        self.shell('''source "$DOTS/bin/lib/common.sh"
 SHELL=/bin/bash
 # Minimal prerequisites, with optional tool probes absent.
 has() { return 1; }
@@ -197,7 +196,7 @@ _dots_vivid_colors latte
         nvm = self.root / '.nvm'
         nvm.mkdir()
         (nvm / 'nvm.sh').write_text('typeset -g NVM_FIXTURE_READY=yes\n')
-        self.shell('''source "$DOTS/bin/util"
+        self.shell('''source "$DOTS/bin/lib/common.sh"
 has() { return 1; }
 source "$DOTS/shells/zsh/integrations/tools.zsh"
 [[ $NVM_DIR == "$HOME/.nvm" && $NVM_FIXTURE_READY == yes ]]
@@ -217,7 +216,7 @@ source "$DOTS/shells/zsh/integrations/tools.zsh"
             link.symlink_to(repo / 'shells/zsh' / name)
         minimal = root / 'minimal-bin'
         minimal.mkdir()
-        for name in ('zsh', 'mkdir', 'rm', 'mv'):
+        for name in ('bash', 'zsh', 'mkdir', 'rm', 'mv'):
             exe = shutil.which(name)
             (minimal / name).symlink_to(exe)
         env['PATH'] = str(minimal)
@@ -246,7 +245,7 @@ _dots_completion_plugins
 
     def test_theme_switch_and_repeat_preserve_palette_and_fzf_options(self):
         shutil.copytree(REPO / 'lib/dots', self.repo / 'lib/dots')
-        for command in (REPO / 'bin').glob('dots-themes*'):
+        for command in (REPO / 'bin').glob('dots-theme*'):
             shutil.copy2(command, self.repo / 'bin' / command.name)
         shutil.copytree(REPO / 'themes/catppuccin/flavors', self.repo / 'themes/catppuccin/flavors')
         shutil.copy2(REPO / 'themes/catppuccin/theme.toml', self.repo / 'themes/catppuccin/theme.toml')
@@ -256,7 +255,7 @@ _dots_completion_plugins
         src.mkdir(parents=True)
         (src / 'fzf.zsh').write_text('FZF_DEFAULT_OPTS+=" --color=$FLAVOR"\n')
         (self.repo / 'themes/.default').write_text('catppuccin-mocha\n')
-        self.shell('''source "$DOTS/bin/util"
+        self.shell('''source "$DOTS/bin/lib/common.sh"
 typeset -A themes
 themes[root]="$DOTS/themes"
 source "$DOTS/themes/bin/theme"
@@ -277,7 +276,7 @@ set_theme catppuccin-latte
     def test_syntax(self):
         files = list((self.repo / 'shells/zsh').rglob('*.zsh'))
         files += [self.repo / 'shells/zsh/zshenv', self.repo / 'shells/zsh/zshrc',
-                  self.repo / 'bin/colors.env', self.repo / 'bin/util']
+                  self.repo / 'bin/lib/common.sh']
         for file in files:
             p = subprocess.run([ZSH, '-dfn', str(file)], env=self.env, capture_output=True, text=True)
             self.assertEqual(p.returncode, 0, str(file) + p.stderr)

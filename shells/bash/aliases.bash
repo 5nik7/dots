@@ -50,17 +50,17 @@ alias ".c"="cd $HOME/.config"
 alias ".d"="cd $DOTS"
 alias ".f"="cd $DOTFILES"
 alias ".s"="cd $SHELLS"
-alias ".sz"="cd $ZSHDOTS"
+alias ".sz"="cd $ZSH"
 alias ".sb"="cd $SHELLS/bash"
 alias ".sp"="cd $SHELLS/powershell"
 
-if cmd_exists pastel; then
+if has pastel; then
   alias paint='pastel paint'
 else
   alias paint="echo -e 'Padtern not found. Install pastel to use this command.'"
 fi
 
-if cmd_exists eza; then
+if has eza; then
     function l() {
       linebreak
       eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes "$@"
@@ -106,7 +106,7 @@ if cmd_exists eza; then
     alias lsa='ls -a'
 fi
 
-if cmd_exists yazi; then
+if has yazi; then
     function y() {
       local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
       yazi "$@" --cwd-file="$tmp"
@@ -118,13 +118,13 @@ if cmd_exists yazi; then
     alias d='y'
 fi
 
-if cmd_exists nvim; then
+if has nvim; then
     EDITOR='nvim'
-elif cmd_exists vim; then
+elif has vim; then
     EDITOR='vim'
-elif cmd_exists vi; then
+elif has vi; then
     EDITOR='vi'
-elif cmd_exists code; then
+elif has code; then
     EDITOR='code'
 else
     EDITOR='nano'
@@ -153,11 +153,11 @@ if [[ -d "$HOME/src" ]]; then
 fi
 
 
-if cmd_exists lazygit; then
+if has lazygit; then
   alias lg='lazygit'
 fi
 
-if cmd_exists glow; then
+if has glow; then
   if [[ -f "$DOTFILES/glow/styles/catppuccin-mocha.json" ]]; then
     alias glow="glow -s $DOTFILES/glow/styles/catppuccin-mocha.json"
   else

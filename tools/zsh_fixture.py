@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+from public_fixture import copy_public_tree
 import statistics
 import subprocess
 import tempfile
@@ -20,19 +21,19 @@ def fixture(source=REPO, plugins=True):
     repo = home / 'dots'
     repo.mkdir()
     for name in ('shells/zsh', 'themes', 'config/starship', 'config/vivid', 'default/themed'):
-        shutil.copytree(source / name, repo / name, symlinks=True)
+        copy_public_tree(source / name, repo / name, repo=source, fixture=repo, aliases=(REPO,))
     # The shared _dots adapter links into the public Bash dispatcher library.
     # Historical baseline snapshots may predate this component.
     if (source / 'lib/dots').is_dir():
-        shutil.copytree(source / 'lib/dots', repo / 'lib/dots', symlinks=True)
-    for name in ('bin/dots', 'bin/util', 'bin/colors.env', 'bin/box', 'dot.env', 'ruby/ruby.env',
+        copy_public_tree(source / 'lib/dots', repo / 'lib/dots', repo=source, fixture=repo, aliases=(REPO,))
+    for name in ('bin/dots', 'bin/lib/common.sh', 'dot.env', 'ruby/ruby.env',
                  'shells/shells.env', 'scripts/preview.zsh', 'scripts/batman', 'scripts/batpipe'):
         dest = repo / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         original = source / name
-        if name == 'bin/box' and not original.exists():
-            original = REPO / name
         shutil.copy2(original, dest)
+    if (source / 'shells/environment.sh').is_file():
+        shutil.copy2(source / 'shells/environment.sh', repo / 'shells/environment.sh')
     for original in (source / 'bin').glob('dots-theme*'):
         shutil.copy2(original, repo / 'bin' / original.name)
     for original in [source / 'bin/anodize', *(source / 'bin').glob('dots-anodize*')]:

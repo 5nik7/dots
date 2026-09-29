@@ -1,8 +1,28 @@
 #!/usr/bin/env bash
 
+# Styling is optional and located from this script, never an inherited DOTS root.
+_dirout_style() {
+  local file=${BASH_SOURCE[0]} directory target hops=0
+  [[ $file == /* ]] || file=$PWD/$file
+  while :; do
+    directory=$(CDPATH='' builtin cd -P -- "${file%/*}" && builtin pwd -P) || return 0
+    file=$directory/${file##*/}
+    [[ -L $file ]] || break
+    (( ++hops <= 40 )) || return 0
+    target=$(command readlink "$file") || return 0
+    if [[ $target == /* ]]; then file=$target
+    else file=$directory/$target; fi
+  done
+  [[ -r $directory/../lib/dots/ui.bash ]] || return 0
+  # shellcheck source=lib/dots/ui.bash
+  source "$directory/../lib/dots/ui.bash"
+  dots::style
+  color=$DOTS_UI_BLUE reset=$DOTS_UI_RESET
+}
+
 main() {
-  local p slash color reset
-  local raw=0
+  local p slash='' color='' reset=''
+  local raw=0 styled=0
   while (($#)); do
     case $1 in
     -r | --raw)
@@ -14,13 +34,13 @@ main() {
       shift
       ;;
     -c | --color)
-      color="$BLUE"
-      reset="$RST"
+      styled=1
       shift
       ;;
     *) break ;;
     esac
   done
+  if (( styled )); then _dirout_style 2>/dev/null; fi
   if [[ $# -eq 0 ]]; then
     set -- "$PWD"
   fi

@@ -16,11 +16,16 @@ The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday mai
 | [Gum confirmations](gum-confirmations.md) | Optional confirmations for file operations, Anodize and Git publish. |
 | [Tracked-config browser](files-browser.md) | Implemented Gum/FZF/plain browser with guarded operation review. |
 | [Files catalog](files-catalog.md) | Implemented catalog; later mutations belong to the Git/files slice. |
+| [Unified theme CLI](theme-cli.md) | Consolidation on `dots theme` with native palette queries. |
+| [Theme plugins](theme-plugins.md) | Explicit local hooks and journaled GTK 3/Qt6ct integrations. |
 | [Omarchy-style themes](omarchy-themes.md) | Implemented flat themes, fixed connectors and explicit wallpaper adapters. |
 | [Shared themes](themes.md) | Completed original shared palette slice; historical editor evidence. |
 | [Additional theme families](theme-families.md) | Completed family expansion; historical editor evidence. |
 | [Configuration paths](config-path-migration.md) | Completed migration; compatibility aliases remain. |
+| [Shell initialization](shell-init.md) | Unified native shell hooks and startup migration. |
 | [Bash dispatcher](bash-dispatcher.md) | Implemented live command framework and three-shell completion. |
+| [Common helpers](common-helpers.md) | Consolidated Bash/Zsh helpers, explicit color arrays and migrated callers. |
+| [Shared shell utilities](util.md) | Historical utility optimization before consolidation. |
 | [Zsh startup](zsh-startup.md) | Completed optimization; current regression limits recorded separately. |
 | [Worktree lifecycle](worktree-lifecycle.md) | Implemented optional helper; older workflow rules are historical. |
 | [Phase 1 portability](phase-1-portability.md) | Completed experiments and historical evidence; remaining gates deferred. |

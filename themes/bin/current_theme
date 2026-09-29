@@ -3,8 +3,8 @@ DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../../lib/dots/themes" && pwd) || exit
 source "$DT_LIB/core.bash"
 if [[ ${1:-} == init || ${1:-} == --init ]]; then
   shift
-  set -- init "$@"
-  source "$DT_LIB/cli.bash"
+  source "$DT_LIB/views.bash"
+  dt_init "$@"
   exit $?
 fi
 dt_selected || exit

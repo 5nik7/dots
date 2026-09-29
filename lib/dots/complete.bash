@@ -11,6 +11,11 @@ dots_value_candidates() {
   local type=$1 lead=${2:-} value
   local -a values=()
   case $type in
+    theme-plugin)
+      local output
+      output=$(python3 -B "$DOTS_LIB_DIR/themes/plugins.py" __names 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
+      ;;
     anodize-theme)
       local path name root=${DOTHEMES:-${THEMES:-$DOTS/themes}}
       for path in "$root/"*/anodize.json; do
@@ -33,8 +38,25 @@ dots_value_candidates() {
       output=$(DOTS_COLOR=never DOTS_ICONS=never python3 -B "$DOTS_LIB_DIR/files/catalog.py" "$action" --all-platforms 2>/dev/null) || return 0
       while IFS=$'\t' read -r value _; do dots_candidate "$lead$value"; done <<< "$output"
       ;;
+    theme-color)
+      local DT_LIB=$DOTS_LIB_DIR/themes name id=${DOTS_OPTION_VALUES[--theme]:-}
+      source "$DT_LIB/core.bash"
+      if [[ ! $id ]]; then
+        dt_selected selection 2>/dev/null || return 0
+        id=$DT_THEME-$DT_FLAVOR
+        [[ -d $DT_ROOT/$id || -d $DT_USER_THEMES/$id ]] || id=$DT_THEME
+      fi
+      dt_find_theme "$id" 2>/dev/null && dt_load "$id" 2>/dev/null || return 0
+      local -A names=()
+      for name in "${DT_NAMES[@]}"; do names[$name]=1; done
+      if [[ ! ${DOTS_OPTION_VALUES[--native]:-} ]]; then
+        for name in "${!DT_SEMANTIC[@]}"; do names[$name]=1; done
+      fi
+      while IFS= read -r name; do [[ ! $name ]] || dots_candidate "$lead$name"; done < <(printf '%s\n' "${!names[@]}" | LC_ALL=C sort)
+      ;;
     theme|flavor|palette-color|color-format)
       local DT_LIB=$DOTS_LIB_DIR/themes name file theme_name='' flavor_name=''
+      # shellcheck source=themes/core.bash
       source "$DT_LIB/core.bash"
       # Positional data is collected by the completion parser, never evaluated.
       theme_name=${DOTS_POSITIONALS[0]:-} flavor_name=${DOTS_POSITIONALS[1]:-}
@@ -96,9 +118,10 @@ dots_complete() {
   shift 3
   # shellcheck disable=SC2034
   local -a DOTS_POSITIONALS=() words=("$@") DOTS_SUGGESTIONS=() DOTS_EXTRA_ROOTS=() DOTS_ROOTS=()
+  local -A DOTS_OPTION_VALUES=()
   (( cursor >= 1 && cursor < ${#words[@]} )) || return 2
   local DOTS_CURRENT=${words[cursor]} index=1 token prefix='' help=0 resolved start
-  local expected='' positional=1 options=1 long short type description row position lead=''
+  local expected='' expected_option='' positional=1 options=1 long short type description row position lead=''
   # Only words before the cursor affect context; words after it are ignored.
   while (( index < cursor )); do
     token=${words[index]}
@@ -134,6 +157,12 @@ dots_complete() {
     if (( index == cursor )); then
       for token in "${DOTS_BUILTIN_NAMES[@]}"; do dots_candidate "$token" "${DOTS_BUILTIN_SUMMARY[$token]}"; done
       dots_completion_children '' || return
+    elif [[ ${words[index]} == init ]]; then
+      if (( cursor == index+1 )); then
+        dots_builtin_metadata init
+        dots_value_candidates choice:bash,zsh,fish,powershell,nu,xonsh
+        (( help )) || dots_candidate --help 'Show command help'
+      fi
     elif [[ ${words[index]} == completion ]]; then
       if (( cursor == index+1 )); then for token in bash zsh fish; do dots_candidate "$token"; done; fi
     elif [[ ${words[index]} == commands ]]; then
@@ -163,11 +192,13 @@ dots_complete() {
           dots_metadata "$executable" || return
           for ((index=start+consumed; index<cursor; index++)); do
             token=${words[index]}
-            if [[ $expected ]]; then expected=; continue; fi
+            if [[ $expected ]]; then DOTS_OPTION_VALUES[$expected_option]=$token; expected=; continue; fi
             if (( options )) && [[ $token == -- ]]; then options=0; continue; fi
             if (( options )) && [[ $token == -* ]]; then
               if dots_find_option "${token%%=*}"; then
-                [[ $DOTS_OPTION_TYPE == flag || $token == *=* ]] || expected=$DOTS_OPTION_TYPE
+                if [[ $DOTS_OPTION_TYPE == flag ]]; then DOTS_OPTION_VALUES[${token%%=*}]=1
+                elif [[ $token == *=* ]]; then DOTS_OPTION_VALUES[${token%%=*}]=${token#*=}
+                else expected=$DOTS_OPTION_TYPE; expected_option=$token; fi
               else
                 # Unknown option grammar cannot safely predict the next argument.
                 return 0

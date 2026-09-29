@@ -13,7 +13,7 @@ There is not yet a supported remote installer or a production-ready `dots apply`
 ## Bash Command Framework
 
 The live `dots` command discovers executable `dots-*` commands in `$DOTS/bin` and
-`$DOTS/local/bin`. For example, adding `dots-themes-list` makes `dots themes list`
+`$DOTS/local/bin`. For example, adding `dots-example-list` makes `dots example list`
 available immediately. The shared theme commands below ship with the framework.
 Bash 4.4+ is required.
 
@@ -41,6 +41,18 @@ including in FZF-tab. Open a fresh shell to load the new adapter. Help and compl
 optional static comment headers and never execute extensions. See the
 [command authoring and completion contract](docs/commands.md#implemented-bash-command-framework)
 for header examples, shared output helpers, and standalone integration.
+
+## Shell initialization
+
+Bash and Zsh also share the sourceable [`bin/lib/common.sh` helpers](docs/shell-utils.md) for PATH edits, optional file loading, checks, messages, formatting, spinners and explicit color-array construction. Startup no longer creates named color globals; human output obtains styles lazily from the shared renderer. These helpers use builtins for path and case operations, preserve source failures, and need no optional display tools during startup.
+
+**Implemented.** Load the existing Dots environment and shell configuration in Bash or Zsh with:
+
+```sh
+eval "$(dots init)"
+```
+
+The repository startup files resolve their actual location through symlinks and load the adjacent native loader, so `dots` need not already be on PATH. Moving the complete checkout and updating its links is sufficient; inherited Dots path variables are replaced with paths from that checkout. Shared setup adds existing `DOTBIN` and `DOTSCRIPTS` directories to PATH. Fish, PowerShell, Nushell and Xonsh have native adapters; linked Nushell configs need no generated hook, and PowerShell initialization needs no Bash. See [shell initialization](docs/shell-init.md) for setup, post-initialization overrides, reload behavior and platform limits. No home-directory links or packages are installed by this command.
 
 ## Shared Themes
 
@@ -75,8 +87,8 @@ Bat and Yazi share the syntax rules in `default/themed/bat.tmTheme.tpl`, includi
 language-specific scopes and palette-based comments, selections, and diff colors.
 Selection journals and backs up fixed application theme connectors. Zsh refreshes
 at the next prompt; Neovim uses the local Anodize.nvim plugin and refreshes on state changes, focus or `:DotsThemeReload`. Native palette
-APIs, `catppuccin`, `current_theme`, and the plural `dots themes` commands remain
-available. The local editor plugin defaults to `~/repos/Anodize.nvim` (override with `ANODIZE_NVIM_DIR`); generic imported themes need no downloaded Lua. Git theme installation,
+APIs, including `catppuccin` and `current_theme`, remain available. Theme management uses only `dots theme`; see the
+[plural-command migration table](docs/themes.md#migration-from-plural-commands) for script updates. The local editor plugin defaults to `~/repos/Anodize.nvim` (override with `ANODIZE_NVIM_DIR`); generic imported themes need no downloaded Lua. Git theme installation,
 updates, template overrides and wallpaper adapters are described in
 [Shared themes](docs/themes.md). Wallpaper changes are always explicit.
 
@@ -321,10 +333,10 @@ dots plan
 dots apply
 dots files list
 dots links check
-dots themes apply <name>
+dots example apply <name>
 ```
 
-External commands named `dots-*` with matching sidecars can be available through explicitly selected trusted roots. For example, `dots-themes-apply` can provide `dots themes apply` without adding routing code to the dispatcher.
+External commands named `dots-*` with matching sidecars can be available through explicitly selected trusted roots. For example, `dots-example-apply` can provide `dots example apply` without adding routing code to the dispatcher.
 
 These examples describe the intended interface and are not yet implemented.
 
@@ -365,3 +377,24 @@ The current dotfiles remain available for ordinary maintenance while migration i
 ## Development Worktrees
 
 Contributors work directly in the existing checkout on `main` by default. Task-relevant edits are allowed throughout the repository, with unrelated changes preserved. Separate branches and worktrees are optional; ordinary maintenance requires no worktree setup or cleanup. The [worktree guide](agents/guides/worktrees.md) retains procedures for deliberate worktree use and guarded cleanup with `tools/worktree_lifecycle.py`. Git history supports recovery of committed edits; uncommitted work and external machine effects need separate care.
+
+## Local theme plugins
+
+`dots theme plugins` manages explicitly enabled integrations shared by ordinary
+Dots themes and Anodize application. GTK 3 and Qt6ct are bundled and disabled by
+default; trusted custom Bash hooks can be enabled separately.
+
+```bash
+dots theme plugins list
+dots theme plugins doctor
+dots theme plugins enable gtk
+dots theme plugins run gtk
+dots theme plugins disable gtk
+```
+
+Enable/disable only persist selection. Successful theme publication runs enabled
+plugins, and explicit refresh retries them. Disabling keeps existing output.
+Bundled app writes use retained backups and the file transaction engine; arbitrary
+custom hook effects are not sandboxed or automatically reversible. See the
+[plugin guide](docs/theme-plugins.md) for Qt6ct, authoring, palette variables,
+recovery, JSON output, and desktop limitations. Downloaded themes remain data-only.

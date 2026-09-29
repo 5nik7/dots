@@ -4,9 +4,9 @@ The shared configuration supports the existing Termux workflow with explicit sta
 
 ## Startup Order
 
-`zshenv` sets the repository default and detects the execution environment without external commands. It retains `dotstro`, `is_termux`, `is_wsl`, and `has_pip_pkg`. Set `DOTS` before launching Zsh to use another checkout; its default is `$HOME/dots`.
+`zshenv` resolves its source file through symlinks, exports checkout-derived paths including `DOTS`, `SHELLS`, and `ZSH`, and detects the execution environment without external commands. It retains `dotstro`, `is_termux`, and `is_wsl`. Link startup files from the desired checkout; inherited Dots path variables are replaced. Set custom overrides after initialization.
 
-`zshrc` loads these stages synchronously:
+`zshrc` resolves its own source file and loads the adjacent `init.zsh` directly; that loader establishes the shared paths, and `interactive.zsh` loads these stages synchronously:
 
 1. `core/environment.zsh`: XDG defaults, shared utilities, environment modules, editor selection, and paths.
 2. `core/cache.zsh`, existing functions/aliases/options/FZF settings, and the selected theme.
@@ -24,7 +24,6 @@ The explicit compatibility list replaces the recursive repository scan:
 
 ```text
 androidots/termux.env
-bin/colors.env
 dot.env
 ruby/ruby.env
 secrets/secrets.env
@@ -44,13 +43,15 @@ The existing `secrets.sh` and `zsh[local]` hooks remain supported and reapply on
 
 ## Paths and Platforms
 
-Zsh path insertion uses literal array membership and preserves existing precedence. Existing directories are retained in place; missing directories are not added. `fixpath` removes duplicate entries without sorting executable precedence. Shared utility functions retain their Bash path implementation.
+Zsh path insertion uses literal array membership and preserves existing precedence. Existing directories are retained in place; missing directories are not added. `fixpath` removes duplicate entries without sorting executable precedence. Bash and Zsh source `bin/lib/common.sh` for shared utilities; startup explicitly builds its color arrays. The retired colors environment file is no longer sourced, and startup does not create named color globals.
 
 Termux derives site-functions from its prefix. Linux and WSL retain the installed shell's native completion paths. WSL detection accepts its environment markers, kernel release, or distribution configuration; distribution names remain separate from execution context. MSYS/Cygwin detection selects the MSYS adapter. No adapter translates drive paths, imports Windows PATH, or enables cross-filesystem linking.
 
 For WSL performance, prefer keeping the checkout, plugins, and cache on its Linux filesystem. MSYS2's native behavior still requires verification.
 
 ## Generated Data and Reloads
+
+When `pip` is installed, its Zsh completion is generated directly with `pip completion --zsh` after `compinit` on startup and again through `rl` or `rlcs`. This completion is not cached.
 
 Generated `uv`, `uvx`, and Starship completions live beneath `$XDG_CACHE_HOME/dots/zsh/<platform>-<zsh-version>/`. Cache signatures include the resolved executable's path and file metadata and generator arguments. Generation is synchronous on a miss, validated as Zsh syntax, and published through a temporary file and rename. Failed generation is never evaluated. If storage is unavailable, successful validated output can still be used for the current shell.
 
@@ -83,7 +84,11 @@ Timing fixtures use fresh HOME, configuration, state, cache, history, and reposi
 ## Shared theme selection
 
 The [theme engine](../../docs/themes.md) preserves existing Catppuccin arrays and shell
-settings. `dots themes set catppuccin FLAVOR` publishes a shared selection; the next
+settings. `dots theme set catppuccin-FLAVOR` publishes a shared selection; the next
 prompt loads its initialization once. The unchanged prompt path uses builtins only
 and preserves command status. `set_theme ID` remains session-only; `change_theme ID`
 persists through the shared publisher.
+
+## Unified initialization
+
+Bash and Zsh can use `eval "$(dots init)"`; the repository wrapper bootstraps through the executable under `DOTS`. See the [shared hook contract](../../docs/shell-init.md). Noninteractive `zshenv` remains independent of the CLI.

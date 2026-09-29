@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=Disable future runs of a theme plugin
+# dots:usage=NAME
+# dots:argument=1|theme-plugin|Plugin name
+PLUGIN_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+exec python3 -B "$PLUGIN_LIB/plugins.py" disable "$@"

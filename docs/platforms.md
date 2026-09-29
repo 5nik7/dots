@@ -14,6 +14,10 @@ adapter is added. Ordinary unsymlinked invocation, help, and routing use Bash
 builtins; resolving a symlinked launcher additionally requires `readlink`.
 This coverage is separate from the Go platform matrix below.
 
+## Shell initialization coverage
+
+The [initialization hook](shell-init.md) has native adapters for Bash, Zsh, Fish, Nushell, Xonsh, and PowerShell. Local Termux verification covers the first five installed interpreters; the Xonsh interactive fixture uses readline with a PTY. PowerShell is unavailable locally, so its native runtime tests are skipped and Windows startup remains unverified. The PowerShell adapter requires no Bash and does not translate Windows/WSL paths. Native startup files derive checkout paths through file and directory symlinks; PowerShell also resolves directory junctions. Native Windows link behavior remains unverified locally. Bash file-link resolution uses `readlink` without GNU-only options; Nushell uses parse-time `path self` with strict `path expand`. This does not extend support for the rest of the live Bash CLI on native Windows.
+
 ## Existing Zsh Configuration
 
 The [existing shell configuration](../shells/zsh/README.md) has Termux-native checks and isolated Linux/WSL/MSYS detection fixtures. WSL uses Linux paths; MSYS has its own adapter boundary. Native Linux/WSL/MSYS interactive behavior remains unverified. These shell checks do not expand the Go core or production installation support claims below.
@@ -242,3 +246,13 @@ The live Git family requires Bash 5, Git, POSIX utilities and (for publish) sha2
 ## Anodize scope
 
 The pure Go Anodize library accepts bytes/data without platform paths. The current CLI requires Python 3.11+, Bash, POSIX file transactions and the existing theme adapter tools. Native Termux is verified; Linux/WSL integration and native Windows authoring are not newly verified. Wallpaper actions retain the existing fixed adapter support, including WSL refusal. No APK, Android language binding or TUI is shipped. See [Anodize](anodize.md).
+
+## Theme plugin boundary
+
+The [local theme plugin manager](theme-plugins.md) follows the existing Bash/Python
+POSIX theme architecture. Execution supports Linux, WSL and Termux capability
+boundaries; unsupported POSIX platforms report skipped execution. GTK 3 requires
+`gtk-launch` plus an existing GTK 3 config directory; Qt6ct requires `qt6ct` plus
+its config directory. Missing optional apps skip without installing anything.
+Native Windows plugin execution is deferred. Native Termux fixture tests with
+stub apps do not establish live GTK/Qt appearance or desktop reload behavior.

@@ -1,6 +1,6 @@
-# Singular theme CLI. Legacy plural routes retain their positional interfaces.
+# Unified theme CLI. Public theme arguments use selectable full IDs.
 source "$DT_LIB/core.bash"
-source "$DT_LIB/../ui.bash"
+source "$DT_LIB/views.bash"
 dt_error() { dots::error "dots theme: $*"; return 1; }
 # backgrounds.bash also calls this helper with the bg route argument.
 # shellcheck disable=SC2120
@@ -37,11 +37,16 @@ dt_theme_ids() {
   [[ ! -d $DT_ROOT/pywal16-current ]] || printf 'pywal16-current\n'
 }
 dt_command() {
-  local action=${1:-help} name key value id dry=0 background=0
+  local action=${1:-help} name key value id dry=0 background=0 native=0
   (($# == 0)) || shift
   case $action in
     help) dt_help ;;
-    list) (($# == 0)) || return 2; dt_list ;;
+    list)
+      if (($# == 0)); then dt_list
+      elif [[ $# == 1 && $1 == --families ]]; then dt_palette_list families
+      elif [[ $# == 2 && $1 == --flavors ]]; then dt_palette_list flavors "$2"
+      elif [[ $# == 1 && $1 == --flavors=* ]]; then dt_palette_list flavors "${1#*=}"
+      else return 2; fi ;;
     current) (($# == 0)) || return 2; dt_current_id && printf '%s\n' "$REPLY" ;;
     dir)
       (($# <= 1)) || return 2
@@ -49,8 +54,19 @@ dt_command() {
       dt_find_theme "$id" || { dt_error 'theme not found'; return 1; }
       printf '%s\n' "$DT_THEME_DIR" ;;
     show)
-      (($# == 1)) || return 2
-      dt_load "$1" || return
+      id=''
+      while (($#)); do
+        case $1 in
+          --native) native=1 ;;
+          -*) return 2 ;;
+          *) [[ ! $id ]] || return 2; id=$1 ;;
+        esac
+        shift
+      done
+      [[ $id ]] || return 2
+      dt_find_theme "$id" || { dt_error 'unknown selectable theme ID'; return 1; }
+      dt_load "$id" || return
+      if ((native)); then dt_native_preview; return; fi
       dots::heading "$DT_ID ($DT_MODE)"
       if dots::human; then
         while IFS= read -r key; do
@@ -67,16 +83,26 @@ dt_command() {
       local -a args=()
       id=''
       while (($#)); do
-        case $1 in --theme) (($# >= 2)) || return 2; id=$2; shift 2 ;; *) args+=("$1"); shift ;; esac
+        case $1 in
+          --theme) (($# >= 2)) && [[ -n $2 && $2 != -* ]] || return 2; id=$2; shift 2 ;;
+          --theme=*) id=${1#*=}; [[ $id ]] || return 2; shift ;;
+          --native) native=1; shift ;;
+          -*) return 2 ;;
+          *) args+=("$1"); shift ;;
+        esac
       done
       ((${#args[@]} >= 1 && ${#args[@]} <= 2)) || return 2
       if [[ ! $id ]]; then dt_current_id || return; id=$REPLY; fi
+      dt_find_theme "$id" || { dt_error 'unknown selectable theme ID'; return 1; }
       dt_load "$id" || return
-      key=${args[0]}; value=${DT_SEMANTIC[$key]:-${DT_COLORS[$key]:-}}
+      key=${args[0]}
+      dt_key "$key" || { dt_error 'invalid color name'; return 1; }
+      value=${DT_SEMANTIC[$key]:-${DT_COLORS[$key]:-}}
+      (( ! native )) || value=${DT_COLORS[$key]:-}
       [[ $value ]] || { dt_error 'unknown color'; return 1; }
       if [[ $key == mode ]]; then printf '%s\n' "$value"
       else dt_value "$key" "${args[1]:-hex}" "$value" && printf '%s\n' "$REPLY"; fi ;;
-    init) set -- init "$@"; source "$DT_LIB/cli.bash" ;;
+    init) dt_init "$@" ;;
     set|refresh)
       if [[ $action == refresh ]]; then (($# == 0)) || return 2; dt_current_id || return; id=$REPLY; export DOTS_THEME_REFRESH=1
       else (($# >= 1)) || return 2; id=$1; shift; fi
@@ -84,6 +110,7 @@ dt_command() {
         case $1 in --dry-run) dry=1 ;; --background) background=1 ;; *) return 2 ;; esac
         shift
       done
+      dt_find_theme "$id" || { dt_error 'unknown selectable theme ID'; return 1; }
       dt_load "$id" || return
       source "$DT_LIB/state.bash"
       dt_state_preflight || return

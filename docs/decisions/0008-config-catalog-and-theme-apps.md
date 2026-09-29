@@ -1,5 +1,8 @@
 # 0008: Configuration catalogs and application themes
 
+Plural CLI compatibility is superseded by [decision 0012](0012-unified-theme-cli.md). The original decision below records its historical scope.
+
+
 **Status: Accepted and implemented, 2026-09-23.**
 
 The owner requested an Omarchy-like command and theme layout, completion of the
@@ -33,3 +36,7 @@ This is an authorized expansion of the earlier Zsh/Neovim-only slice. It does no
 introduce arbitrary install manifests, hooks, remote bootstrap, package installation
 or native Windows management. See [themes](../themes.md), [files](../files.md),
 [safety](../safety.md), and the three focused plans under `plans/` for the contracts.
+
+## Authorized local-hook extension (2026-09-29)
+
+The [theme plugin manager](../theme-plugins.md) extends this historical slice with explicitly enabled local post-commit Bash hooks and journaled GTK 3/Qt6ct adapters. Its bounded authorization supersedes the earlier blanket hook exclusion; downloaded themes and palette/template data remain non-executable. Arbitrary user-hook effects remain outside publication rollback.

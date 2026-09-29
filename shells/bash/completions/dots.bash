@@ -1,1 +1,1 @@
-../../../lib/dots/completion/bash
+/data/data/com.termux/files/home/repos/dots/shells/bash/completions/../../../lib/dots/completion/bash

@@ -1,2 +1,7 @@
-test -f ~/dots/bin/colors.env && . ~/dots/bin/colors.env
-test -f ~/dots/bin/util && . ~/dots/bin/util
+# The native shell entry point selects the checkout. No home-directory guess.
+if [ -n "${DOTS:-}" ]; then
+  if [ -r "$DOTS/bin/lib/common.sh" ]; then
+    . "$DOTS/bin/lib/common.sh"
+    build_color_arrays
+  fi
+fi

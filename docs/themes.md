@@ -1,13 +1,23 @@
 # Shared themes
 
-**Status: Implemented flat themes, application templates, Git theme sources and explicit wallpapers.**
+**Status: Implemented flat themes, application templates, Git theme sources, explicit wallpapers and opt-in local theme plugins.**
 
-The live interface is `dots theme`, using `bin/dots-theme-*` commands. The older
-`dots themes` and palette commands remain compatible. The layout follows the local
+The sole theme CLI is `dots theme`, using `bin/dots-theme-*` commands.
+Standalone palette helpers remain available; the plural CLI was removed under
+[decision 0012](decisions/0012-unified-theme-cli.md). The layout follows the local
 Omarchy reference while retaining Dots' shell and Neovim palette APIs; see
 [decision 0008](decisions/0008-config-catalog-and-theme-apps.md).
 
 Theme preparation, rendering, bat caches, publication, quiet reloads and installed-source validation use [terminal progress](presentation.md#operation-progress). Batch updates show processed checkout counts. Downloads, tmux reloads and wallpaper adapters use static phase messages to keep child output readable. `DOTS_PROGRESS=never` disables these displays. Raw queries, shell initialization and dry runs stay undecorated.
+
+## Local theme plugins
+
+`dots theme plugins list|enable|disable|run|doctor` adds explicitly enabled GTK 3,
+Qt6ct and trusted local hooks. The shared post-commit publisher covers theme set,
+refresh and Anodize apply; unchanged refresh retries integrations. Enable/disable
+only persist selection. Bundled app writes use journaled copies; arbitrary local
+hook effects are outside publication rollback. See [plugin authoring and safety](theme-plugins.md).
+Downloaded themes remain data-only and never provide executable hooks.
 
 ## Flat themes and templates
 
@@ -148,7 +158,7 @@ Automatic color honors NO_COLOR, TERM and the output stream. Override it with
 view even when redirected. Unforced piped listings retain their plain formats.
 `current`, `dir`, `color`, `bg current` and `init` retain their machine-consumable
 values under every presentation setting; explicit ANSI color formats remain
-intentional ANSI output. Legacy plural interfaces retain their existing formats.
+intentional ANSI output. Native palette queries use the same output policy.
 
 ## Application connections
 
@@ -224,31 +234,29 @@ Fixed palettes retain upstream color names. Each fixed family has `SOURCE.md`
 and upstream license text beside its metadata. Pywal16 has no fixed palette: see
 [its import contract](#pywal16-import).
 
-## Legacy commands
+## Native palette queries
 
-| Route | Output or effect |
+`dots theme list --families` lists native family names. `dots theme list --flavors FAMILY` lists that family's flavor names; these two filters are mutually exclusive. Plain redirected output is one identifier per line. Human views use the shared theme presentation. Pywal16 flavor discovery does not require generated input. Unknown families fail with a diagnostic.
+
+`dots theme show ID --native` previews upstream palette names and values. `dots theme color COLOR [FORMAT] [--theme ID] --native` queries that map exclusively. Without `--native`, color queries prefer application semantic colors, falling back to native names. This distinction matters when the same name has different upstream and application values. Generic themes use their existing engine palette representation. Formats and scalar bytes remain unchanged, including explicitly requested ANSI formats.
+
+## Migration from plural commands
+
+The `dots themes` and `dots-themes-*` commands have been removed without aliases. Update scripts using these replacements:
+
+| Removed syntax | Replacement |
 | --- | --- |
-| `dots themes` | Theme command help |
-| `dots themes list [THEME]` | Plain theme identifiers, or a theme's flavor identifiers |
-| `dots themes show THEME [FLAVOR]` | Palette table with terminal-aware color swatches |
-| `dots themes color THEME FLAVOR COLOR [FORMAT]` | One color value; default format is `hex` |
-| `dots themes current` | Plain `theme-flavor` identifier |
-| `dots themes init [--shell bash\|zsh\|fish]` | Sourceable initialization; default shell is Zsh |
-| `dots themes set THEME [FLAVOR]` | Journaled shared selection; omitted flavor uses the declared default |
+| `dots themes list` | `dots theme list --families` |
+| `dots themes list catppuccin` | `dots theme list --flavors catppuccin` |
+| `dots themes set catppuccin mocha` | `dots theme set catppuccin-mocha` |
+| `dots themes show catppuccin mocha` | `dots theme show catppuccin-mocha --native` |
+| `dots themes color catppuccin mocha blue rgb` | `dots theme color blue rgb --theme catppuccin-mocha --native` |
+| `dots themes current` | `dots theme current` |
+| `dots themes init --shell zsh` | `dots theme init --shell zsh` |
 
-The executable names follow the same routes (`dots-themes-set`, for example).
-Arguments are positional except `init --shell`. Exit statuses are 0 for success,
-1 for data/publication errors, and 2 for invalid arguments. Diagnostics use stderr.
-`list`, `current`, `color`, and `init` never decorate their output. `show`, help,
-and switch status use the existing color/icon policy. Escape-code color formats
-intentionally return ANSI bytes, even when normal UI decoration is disabled.
+Use full selectable IDs for `set`, `show`, and `color --theme`; family-only shortcuts and separate family/flavor arguments are rejected. `current` returns the selectable full ID, including generic names such as `nord`. Direct executables use `dots-theme-*`. Shell palette helpers (`catppuccin`, `current_theme`, `set_theme`, and `change_theme`) retain their APIs; their implementation uses the unified engine and routes. Existing state paths, generation schemas, and active selections need no migration.
 
-Formats are `name`, `hex`, `rgb`, `r`, `g`, `b`, `rgb-r`, `rgb-g`, `rgb-b`,
-`luminance`, `brightness`, `cmyk`, `ansi-8bit`, `ansi-8bit-value`,
-`ansi-8bit-escapecode`, `ansi-24bit`, `ansi-24bit-escapecode`, and `esc`.
-RGB and CMYK channels are space separated; CMYK channels are integer percentages.
-
-## Native palette source format
+Exit statuses remain 0 for success, 1 for data/publication errors, and 2 for invalid arguments. Diagnostics use stderr. Initialization defaults to Zsh and remains sourceable with `--shell bash|zsh|fish`.
 
 Each legacy family has `themes/IDENTIFIER/theme.toml` and `flavors/FLAVOR.toml` links. Flat variants own the native data in `palette.toml`.
 The root can be selected with `DOTHEMES`, then `THEMES`; otherwise it is relative
@@ -312,7 +320,7 @@ where applicable. Palette input is never sourced or evaluated.
 Generate a palette using your existing pywal16/wal installation, then publish it:
 
 ```bash
-dots themes set pywal16
+dots theme set pywal16-current
 # After generating another wallpaper palette, run the same command again.
 ```
 
@@ -338,7 +346,7 @@ Read-only selection uses the active shared generation if present, otherwise
 `$HOME/.theme`, the theme root's `.theme`, then `.default`. These legacy files
 are never automatically rewritten or imported. `DOTS_THEME_SELECTION=theme-flavor`
 is an explicit session-only override used by the existing `set_theme ID` function.
-`change_theme ID` persists through `dots themes set`, then updates the calling Zsh.
+`change_theme ID` persists through `dots theme set`, then updates the calling Zsh.
 
 State lives in `${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes`. Its legacy `current`
 token is maintained for compatibility; readers prefer the stable sibling

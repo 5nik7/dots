@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=List theme plugins and availability
+# dots:usage=[--json]
+# dots:option=--json||flag|Emit versioned JSON
+PLUGIN_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+exec python3 -B "$PLUGIN_LIB/plugins.py" list "$@"

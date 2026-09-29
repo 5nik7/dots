@@ -2,6 +2,7 @@ _dots_tool_completions() {
   (( $+commands[uv] )) && _dots_source_generated uv uv generate-shell-completion zsh
   (( $+commands[uvx] )) && _dots_source_generated uvx uvx --generate-shell-completion zsh
   (( $+commands[starship] )) && _dots_source_generated starship starship completions zsh
+  (( $+commands[pip] )) && eval "$(pip completion --zsh)"
   return 0
 }
 

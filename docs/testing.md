@@ -6,6 +6,22 @@ The [Go development pause](../plans/roadmap.md#current-priority) retains existin
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
 
+## Shared shell utilities
+
+Run `python3 -B tools/test_common.py` for sourceable `bin/lib/common.sh` behavior in disposable Bash/Zsh homes. The suite covers literal PATH membership, idempotence, empty PATH, multiple source arguments, source status and side effects, running-shell module lookup, broken links, mkdir refusal/failure, single command execution, filename/dirname oracles, optional eza, raw data, case conversion, message policy and stubbed package queries. It also covers quiet loading, exact/repeated global array construction, independence from retired color globals, dirout policy for the shell helper and standalone script (including symlinked invocation and missing-renderer fallback), formatting, and spinner status, interruption, cleanup and trap preservation. It never reads the live package database. Missing interpreters are explicit skips. Also run shell syntax checks, `shellcheck -x bin/lib/common.sh`, the shell-init/dispatcher/Zsh suites below and the isolated Zsh PTY runner.
+
+Use `python3 -B tools/bench_common.py --before /path/to/saved-helper.sh --samples 5 --iterations 100` to compare a saved pre-change source with current helpers; omit `--before` for current-only measurements. The saved helper must provide the utility API used by the benchmark; the pre-consolidation utility snapshot is also supported. The runner copies each source into owned runtime roots and retains source hashes, platform identity and every sample in the printed temporary directory. Warm batches measure utility loading, PATH membership, directory formatting, case conversion and single-file sourcing, including shell process startup. Run sequentially without other tests or builds. These are advisory microbenchmarks, not full startup or desktop-platform claims. Results and integration limits for the current change are recorded in [the common-helper plan](../plans/common-helpers.md).
+
+## Shell initialization
+
+The shell-init suites also verify direct and linked startup, relative/absolute/chained links, symlinked parent directories, relocation, stale inherited checkout variables, working-directory preservation, and missing or cyclic links in test-owned roots. The native PowerShell runner includes capability-gated link tests; missing runtimes and unavailable link privileges are reported as skips.
+
+Run `python3 -B tools/test_shell_init.py` for native emission/evaluation, literal quoting, common defaults, overrides, repeat initialization, nested shells, optional tools and native metadata. All runtime roots are disposable; private modules are synthetic, and no live startup files are sourced. The Xonsh interactive fixture uses a PTY and readline. Missing interpreters are explicit skips. Environment fixtures verify repeat initialization adds only the existing repository binary/script directories and does not insert the retired repository-local binary directory. Use `python3 -B tools/test_powershell_init.py` for native PowerShell acceptance, including on Windows without Bash or POSIX PTYs. It owns all runtime paths, parses the actual interactive body without executing it, and evaluates only noninteractive initialization. Native Windows evidence remains separate from Unix or emitted-text checks.
+
+The shared `tools/public_fixture.py` copier rebases repository symlinks into fixture roots and rejects external targets before copying. Run `python3 -B tools/test_public_fixture.py` for write-through isolation regressions.
+
+Also run `python3 -B tools/test_bash_dots.py`, `python3 -B tools/test_zsh.py`, `python3 -B tools/zsh_interactive.py --samples 3`, shell syntax checks and ShellCheck. Existing theme checks cover preserved shell/theme behavior. Measure startup sequentially with `tools/zsh_fixture.py` against a retained public source snapshot, and initialization generation with `tools/bench_bash_dots.py`. Known baseline failures and measured results belong in the [focused plan](../plans/shell-init.md).
+
 ## Operation progress
 
 Run `python3 -B tools/test_progress.py` for isolated native Unix PTY coverage of Bash/Python progress. The suite owns home/config/state/cache roots and checks delayed/fast work, counted phases, nested rendering, output modes, color/icon policy, 40/80/120 columns, control-character labels, prompt suspension, child exit status, interruption, renderer failure and worker cleanup. Disposable file transactions verify progress during real apply and injected rollback; controller tests prohibit animation for JSON/dry-run paths. PTY tests require Bash and Python; Gum is unnecessary.
@@ -355,6 +371,18 @@ PTY acceptance, Bash/Zsh syntax checks, ShellCheck, StyLua, and documentation li
 Native Termux tests do not establish WSL/Linux/MSYS/Windows execution or power-loss
 recovery guarantees.
 
+## Unified Theme CLI
+
+The [migration plan](../plans/theme-cli.md) and [decision 0012](decisions/0012-unified-theme-cli.md) consolidate the live interface under `dots theme`. `python3 -B tools/test_themes.py` now checks removed plural routes, full-ID validation, native family/flavor discovery, semantic/native color collisions, undecorated scalar values, generic palettes, contextual completion, and preserved helper APIs alongside the existing state/recovery and editor tests. No live theme is selected by verification.
+
+On native Termux Android/ARM64, 2026-09-29, the unified theme suite passed 27 tests, Bash dispatcher 23, theme picker 14, local theme plugins 20, file operations 21, Anodize Neovim bridge 5, and Anodize completion/manual integration 4. `tools/verify_anodize.py check` passed Go tests/vet and all 17 CLI integration tests. Shell initialization passed 17 tests with two PowerShell cases skipped. Targeted tests also passed after final color-name validation and silent `has_theme` error handling adjustments.
+
+Changed palette views were exercised and reviewed in native PTYs at 40/80/120 columns. Tests cover forced/disabled/automatic color, `NO_COLOR`, `TERM=dumb`, native color formats, and redirected values. Bash/Zsh/Fish dispatcher Tab tests passed. Syntax, targeted StyLua, focused ShellCheck with existing core diagnostic exclusions, and diff whitespace checks passed. Native desktop and Windows behavior was not verified.
+
+The workflow suite passed 12/14 with its two pre-existing 33-versus-34 theme-count assertions. Zsh passed 15/17 with its two pre-existing alias expectations. The broader Zsh/FZF-tab PTY run reached the completion/history checks but failed its diagnostic gate because reload invokes missing `box`; the saved pre-migration source reproduces that failure. The repository-wide Markdown gate still fails the pre-existing `docs/testing.md` link to the removed `config/yazi/plugins/dots-symlink.yazi/README.md`; the full relative-link audit found no newly broken links. These failures were retained rather than weakening acceptance or changing unrelated behavior.
+
+`tools/bench_themes.py --samples 3` completed before and after the migration, sequentially in owned roots. All later timings, including unchanged editor/helper controls, were slower, so these snapshots do not establish a regression attributable to this change. A follow-up alternating comparison of the original plural init parser and unified init against one fixture generation and the current shared engine measured 29.24 ms versus 30.86 ms warm medians over 20 samples each. The observed difference was approximately 1.62 ms; no scanning or subprocess was added to the unchanged prompt path. Measurements are advisory mobile-device evidence, not a cross-platform performance guarantee.
+
 ## Files Catalog and Omarchy-Style Themes
 
 Run the focused suites from the parent checkout:
@@ -697,3 +725,17 @@ unverified; see the [focused plan](../plans/gum-confirmations.md).
 The accompanying shared-theme suite passed 23/23. Theme workflow remained 12/14:
 the existing flat-catalog and presentation assertions expect 33 themes, while the
 current catalog contains 34. Those unrelated assertions remain unchanged.
+
+## Theme plugins
+
+Run `python3 -B tools/test_theme_plugins.py` for isolated discovery, selection,
+execution/recursion/concurrency, clean output, managed app preservation and
+interruption/recovery/undo. Fixtures use copied public trees with rebased links,
+owned HOME/XDG roots and stub GTK/Qt commands. No real application config is changed.
+Run the existing theme/workflow, file-operation and Bash-framework suites alongside
+it; `python3 -B tools/verify_anodize.py check` includes shared-publication and inert
+authoring acceptance. Use `python3 -B tools/test_anodize_integration.py` for the
+shared shell metadata boundaries and existing Zsh/FZF-tab checks when completion
+changes. Syntax/ShellCheck, Markdown links and `git diff --check` remain required.
+Report native Termux separately from simulated platform skips and desktop fixtures.
+Live GTK/Qt visual behavior and native Windows execution require separate evidence.

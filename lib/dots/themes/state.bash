@@ -4,6 +4,8 @@ source "$DT_LIB/apps.bash"
 source "$DT_LIB/../progress.bash"
 # shellcheck source=app-env.bash
 source "$DT_LIB/app-env.bash"
+# shellcheck source=plugins.bash
+source "$DT_LIB/plugins.bash"
 # flock releases the lock even after SIGKILL. sync -f is a required mutation capability.
 dt_flush() { sync -f "$1"; }
 dt_record() {
@@ -89,6 +91,7 @@ dt_state_preflight() {
   for part in flock sync sha256sum mktemp awk cat mkdir mv rm cp ln readlink cmp; do command -v "$part" >/dev/null || { dt_error "theme switching requires $part"; return 1; }; done
 }
 dt_set() (
+  [[ ! ${DOTS_THEME_PLUGIN_RUNNING:-} ]] || { dt_error "recursive theme publication from a plugin is refused"; exit 1; }
   set -o pipefail
   umask 077
   # complete and rc are read by the EXIT trap.
@@ -100,9 +103,11 @@ dt_set() (
   dt_load "$theme" "$flavor" || exit 1
   dt_supported || { dt_error 'theme/flavor has no supported Neovim adapter'; exit 1; }
   if [[ $DT_THEME == catppuccin ]]; then
-    local target_flavor=$DT_FLAVOR candidate
-    for candidate in mocha macchiato frappe latte; do dt_load "$theme" "$candidate" || exit 1; done
-    dt_load "$theme" "$target_flavor" || exit 1
+    local family=$DT_THEME candidate
+    # A full selectable ID ignores a separate flavor. Validate the family here
+    # because generated shell arrays include every Catppuccin flavor.
+    for candidate in mocha macchiato frappe latte; do dt_load "$family" "$candidate" || exit 1; done
+    dt_load "$theme" "$flavor" || exit 1
   fi
   dt_fingerprint || exit 1; fingerprint=$REPLY
   dt_state_preflight || exit 1
@@ -118,7 +123,7 @@ dt_set() (
     local selected
     IFS= read -r selected < "$DT_STATE/generations/$DT_GENERATION/selection" || exit 1
     if [[ $stored == "$fingerprint" && $selected == "$DT_THEME-$DT_FLAVOR" ]] && dt_apps_current; then
-      if [[ ${DOTS_THEME_REFRESH:-} == 1 ]]; then dt_apps_reload; fi
+      if [[ ${DOTS_THEME_REFRESH:-} == 1 ]]; then dt_apps_reload; dt_plugins_after_publish; fi
       dots::success "Already using $selected"; exit 0
     fi
   fi
@@ -166,5 +171,6 @@ dt_set() (
   # shellcheck disable=SC2034
   complete=1
   dt_apps_reload
+  dt_plugins_after_publish
   dots::success "Selected $DT_THEME-$DT_FLAVOR (Zsh: next prompt; Neovim: next focus)"
 )

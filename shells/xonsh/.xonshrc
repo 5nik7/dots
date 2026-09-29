@@ -1,28 +1,7 @@
-# XONSH WIZARD START
-# source-zsh "echo loading xonsh foreign shell"
-# XONSH WIZARD END
-
-def _y(args):
-  tmp = $(mktemp -t "yazi-cwd.XXXXXX")
-  args.append(f"--cwd-file={tmp}")
-  $[yazi @(args)]
-  with open(tmp) as f:
-    cwd = f.read()
-  if cwd != $PWD:
-    cd @(cwd)
-  rm -f -- @(tmp)
-
-aliases["y"] = _y
-
-aliases["d"] = _y
-
-def _q(args):
-  exit
-
-aliases["q"] = _q
-
-def _c(args):
-  clear
-
-aliases["c"] = _c
-
+# __file__ is supplied both by native rc startup and by source.
+import os as _dots_os
+_dots_file = _dots_os.path.realpath(__file__, strict=True)
+_dots_directory = _dots_os.path.dirname(_dots_file)
+if not _dots_os.path.isfile(_dots_os.path.join(_dots_directory, '../../bin/dots')):
+    raise RuntimeError('dots: Xonsh startup requires the Dots checkout layout')
+source @(_dots_os.path.join(_dots_directory, 'init.xsh'))

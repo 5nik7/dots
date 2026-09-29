@@ -78,3 +78,5 @@ Do not edit an accepted record to make an old decision appear different. Add a n
 - [0010: Git and managed-file operations](0010-git-and-managed-file-operations.md).
 
 - [0011: Anodize palette authoring](0011-anodize-authoring.md) — accepted scoped core/CLI implementation.
+
+- [0012: One theme command family](0012-unified-theme-cli.md) — Accepted; supersedes plural CLI compatibility.

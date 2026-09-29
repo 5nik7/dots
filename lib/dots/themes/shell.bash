@@ -13,19 +13,25 @@ themes[file]=${themes[default]}
 _DOTS_THEME_STATE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes
 _DOTS_THEME_ACTIVE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme
 
-_dots_theme_parts() {
-  local id=$1
-  if [[ -f ${themes[root]}/$id/theme.toml ]]; then
-    _DOTS_REQUEST_THEME=$id _DOTS_REQUEST_FLAVOR=''
-  else _DOTS_REQUEST_THEME=${id%-*} _DOTS_REQUEST_FLAVOR=${id##*-}; fi
+# Existing shell helper APIs also accept a native family with its default flavor.
+# Resolve only those calls through the shared Bash reader, never at shell startup.
+_dots_theme_full_id() {
+  REPLY=$1
+  if [[ -d ${themes[root]}/$1/flavors ]]; then
+    REPLY=$(command bash -c '
+      DT_LIB=$1
+      source "$DT_LIB/core.bash"
+      dt_load "$2" || exit
+      printf "%s\n" "$DT_ID"
+    ' -- "$DOTS/lib/dots/themes" "$1") || return
+  fi
 }
 has_theme() {
-  _dots_theme_parts "$1"
-  "$DOTS/bin/dots-themes-show" "$_DOTS_REQUEST_THEME" "$_DOTS_REQUEST_FLAVOR" >/dev/null 2>&1
+  { _dots_theme_full_id "$1" && "$DOTS/bin/dots-theme-show" "$REPLY"; } >/dev/null 2>&1
 }
 change_theme() {
-  _dots_theme_parts "$1"
-  "$DOTS/bin/dots-themes-set" "$_DOTS_REQUEST_THEME" "$_DOTS_REQUEST_FLAVOR" || return
+  _dots_theme_full_id "$1" || return
+  "$DOTS/bin/dots-theme-set" "$REPLY" || return
   set_theme
 }
 set_theme() {
@@ -46,7 +52,7 @@ set_theme() {
     [[ -f $file && ! -L $file ]] || return 1
     source "$file" || return
   else
-    output=$(DOTS_THEME_SELECTION=$requested "$DOTS/bin/dots-themes-init" --shell zsh) || return
+    output=$(DOTS_THEME_SELECTION=$requested "$DOTS/bin/dots-theme-init" --shell zsh) || return
     [[ -n $output ]] || return 1
     eval "$output" || return
   fi
@@ -97,7 +103,7 @@ _dots_theme_precmd() {
       if set_theme; then _DOTS_THEME_FAILED=''
       else
         _DOTS_THEME_FAILED=$generation
-        print -u2 -- 'dots themes: could not load updated theme; keeping previous colors'
+        print -u2 -- 'dots theme: could not load updated theme; keeping previous colors'
       fi
     fi
   fi

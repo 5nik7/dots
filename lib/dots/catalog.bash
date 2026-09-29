@@ -3,11 +3,12 @@
 source "$DOTS_LIB_DIR/ui.bash"
 
 # Built-in presentation and completion share the same static metadata.
-DOTS_BUILTIN_NAMES=(help commands completion)
+DOTS_BUILTIN_NAMES=(help commands completion init)
 declare -A DOTS_BUILTIN_SUMMARY=(
   [help]='Show global or command help'
   [commands]='List or validate registered commands'
   [completion]='Print Bash, Zsh, or Fish integration'
+  [init]='Print native shell initialization'
 )
 DOTS_GLOBAL_OPTIONS=(
   '--help|-h|flag|Show help'
@@ -22,6 +23,11 @@ dots_builtin_metadata() {
   DOTS_META_USAGE='' DOTS_META_HIDDEN=false
   DOTS_META_OPTIONS=() DOTS_META_ARGUMENTS=() DOTS_META_EXAMPLES=()
   case $1 in
+    init)
+      DOTS_META_USAGE='[bash|zsh|fish|powershell|nu|xonsh]'
+      DOTS_META_ARGUMENTS=('1|choice:bash,zsh,fish,powershell,nu,xonsh|Shell adapter (default: Bash/Zsh)')
+      # shellcheck disable=SC2016
+      DOTS_META_EXAMPLES=('eval "$(dots init)"' 'dots init fish | source') ;;
     help) DOTS_META_USAGE='[ROUTE...]' ;;
     commands)
       DOTS_META_USAGE='[--check]'
@@ -36,7 +42,7 @@ dots_type_valid() {
   local value
   case $1 in
     flag|string|file|directory) return 0 ;;
-    theme|flavor|palette-color|color-format|file-resource|file-repository|theme-id|anodize-theme) return 0 ;;
+    theme|flavor|palette-color|color-format|file-resource|file-repository|theme-id|theme-color|anodize-theme|theme-plugin) return 0 ;;
     choice:*)
       [[ ${1#choice:} && $1 != *, && $1 != *,,* ]] || return 1
       local -a values=()
@@ -194,7 +200,7 @@ dots_help() {
     return 0
   fi
   case $route in
-    commands|completion|help) dots_builtin_metadata "$route"; dots_command_help "$route"; return ;;
+    commands|completion|init|help) dots_builtin_metadata "$route"; dots_command_help "$route"; return ;;
   esac
   # Preserve argv boundaries; the normalized route is only used for display.
   local -a words=()

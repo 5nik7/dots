@@ -105,6 +105,7 @@ For completion changes, follow [decision 0005](../../docs/decisions/0005-static-
 
 For shared palette, state publication, Zsh refresh, or Neovim theme adapter changes,
 run `python3 -B tools/test_themes.py`; use `python3 -B tools/bench_themes.py` for performance.
+The theme suite also covers the unified full-ID CLI, removed plural routes, native palette filtering/querying, and contextual color completion. Preserve these migration checks alongside publication/recovery tests.
 The editor tests copy public plugin sources and never start live LazyVim or download
 plugins. Missing sources report skipped tests; the optional source-map input for all
 families is documented in [Shared Themes](../../docs/testing.md#shared-themes).
@@ -149,3 +150,11 @@ and drift while the prompt is open. Native Gum checks require disposable PTYs an
 local-only publication fixtures; see [testing](../../docs/testing.md#optional-operation-confirmations).
 
 For shared progress or its integrations, run `python3 -B tools/test_progress.py` and the affected command suites. Follow the [progress testing contract](../../docs/testing.md#operation-progress), including data-mode suppression, native PTY cleanup, prompt-capable children and transaction rollback. Keep benchmark measurements sequential.
+
+## Shell initialization
+
+For `dots init` or native startup-loader changes, run `python3 -B tools/test_shell_init.py` on Unix and `python3 -B tools/test_powershell_init.py` for portable native PowerShell acceptance, the Bash dispatcher and Zsh suites, affected theme tests, and native syntax checks. Use the isolated PTY and timing fixtures for interactive/startup changes. Use `tools/public_fixture.py` when copying these public trees so absolute symlinks cannot write through to the live checkout. Preserve synthetic private modules and distinguish unavailable PowerShell/Windows evidence from verified native Termux shells. See [initialization testing](../../docs/testing.md#shell-initialization).
+
+For local theme plugins, run `python3 -B tools/test_theme_plugins.py` plus the existing theme/workflow, file-operation, Bash-framework and Anodize suites described in [testing](../../docs/testing.md#theme-plugins). Preserve test-owned roots, stub desktop apps, non-execution in read-only paths, and explicit desktop/native-Windows limitations.
+
+For `bin/lib/common.sh`, run `python3 -B tools/test_common.py`, Bash/Zsh syntax checks and `shellcheck -x bin/lib/common.sh`, then the shell-init, dispatcher and Zsh regressions. Use the isolated PTY runner for reload changes. Preserve a pre-change utility snapshot and run `tools/bench_common.py` sequentially for hot-path changes; see [utility verification](../../docs/testing.md#shared-shell-utilities). Keep package checks stubbed and all directory creation inside fixtures.

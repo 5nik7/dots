@@ -60,3 +60,6 @@ bin-release/
 /config/tmux/dots-theme.conf
 
 /config/yazi/flavors/dots.yazi
+
+# Optional generated Nushell initialization (when config is linked here).
+/shells/nushell/dots-init.nu

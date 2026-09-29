@@ -19,6 +19,8 @@ managed installation or the Go phases below.
 
 ## Implemented maintenance expansion
 
+The [unified theme CLI](theme-cli.md) consolidates theme management under `dots theme`, with full IDs and explicit native palette queries, under [decision 0012](../docs/decisions/0012-unified-theme-cli.md). It does not change saved state or resume Go migration.
+
 The owner authorized the [configuration migration](config-path-migration.md), [files catalog](files-catalog.md), and [Omarchy-style themes](omarchy-themes.md). The bounded implementation and isolated tests are complete. Files inspection and catalog metadata are available; bounded file adoption/link/remove, transactions and recovery are implemented under [decision 0010](../docs/decisions/0010-git-and-managed-file-operations.md); editing and general profile installation remain future work. Androidots owns Termux-specific resources.
 
 ## Presentation Requirement Across Phases

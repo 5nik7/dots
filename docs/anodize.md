@@ -146,3 +146,12 @@ source gives a warning and bundled habamax fallback. Missing shared state uses
 Anodize's built-in palette. Invalid updates preserve the last working colors.
 See the [nested configuration guide](https://github.com/5nik7/nvim/blob/1ae8641e206927ee12572a28a5082992ae5e7981/README.md#shared-dots-themes-through-anodize)
 and [integration validation](testing.md#anodize-neovim-integration).
+
+## Explicitly enabled local theme plugins
+
+Apply uses the shared Dots publisher's [plugin runner](theme-plugins.md). A new
+publication runs enabled plugins once; create/edit/save/export/preview and dry-run
+never execute them. Unchanged apply is a no-op; `dots theme refresh` or
+`dots theme plugins run` retries integrations explicitly. Automatic hook failures
+leave the theme published and report retry guidance on stderr without corrupting
+Anodize JSON. The separate Anodize.nvim project is unchanged.

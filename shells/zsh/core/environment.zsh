@@ -2,13 +2,13 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
-export DOTS="${DOTS:-$HOME/dots}"
 export ZSH="$DOTS/shells/zsh" ZSHCOMP="$DOTS/shells/zsh/completions"
 typeset -gA zsh
 zsh[root]=$ZSH
 zsh[completions]=$ZSHCOMP
 
-source "$DOTS/bin/util"
+source "$DOTS/bin/lib/common.sh"
+build_color_arrays
 # Keep the historical editor selection point before optional runtime managers.
 if has nvim; then EDITOR=nvim
 elif has vim; then EDITOR=vim
@@ -22,9 +22,11 @@ export EDITOR_TERM="$TERMINAL -e $EDITOR"
 # Explicit compatibility order from the former recursive glob. Optional sources
 # stay optional. Extra modules are absolute paths, in the owner's chosen order.
 local module
-for module in androidots/termux.env bin/colors.env dot.env ruby/ruby.env \
+for module in androidots/termux.env dot.env ruby/ruby.env \
     secrets/secrets.env shells/shells.env themes/themes.env windots/win.env; do
-  [[ -r "$DOTS/$module" ]] && source "$DOTS/$module"
+  if [[ -r "$DOTS/$module" ]]; then
+    source "$DOTS/$module"
+  fi
 done
 for module in "${DOTS_ZSH_EXTRA_ENV[@]}"; do
   [[ -r $module ]] && source "$module"

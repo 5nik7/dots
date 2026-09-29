@@ -52,7 +52,7 @@ _G.require=original
 ''')
 
     def test_lualine_and_highlight_preferences(self):
-        self.dots('themes','set','catppuccin')
+        self.dots('theme', 'set', 'catppuccin-mocha')
         run(self, r'''
 bridge.startup()
 local p=require("anodize").get_palette()
@@ -78,7 +78,7 @@ assert(hl("NormalFloat").bg==tonumber(snapshot().roles.background:sub(2),16))
 ''')
 
     def test_dashboard_repaint_preserves_phase_and_cleanup(self):
-        self.dots('themes','set','catppuccin')
+        self.dots('theme', 'set', 'catppuccin-mocha')
         run(self, r'''
 bridge.startup()
 local uv=vim.uv or vim.loop
@@ -136,7 +136,7 @@ uv.hrtime=real_clock
         target = self.root / 'lazy fixture'
         shutil.copytree(source, target / 'lua')
         self.env['NVIM_TEST_LAZY'] = str(target)
-        self.dots('themes','set','catppuccin')
+        self.dots('theme', 'set', 'catppuccin-mocha')
         run(self, r'''
 package.loaded.lazy=nil
 vim.go.loadplugins=true -- Runtime/package paths already contain only fixture sources.

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# dots:summary=Manage explicitly enabled local theme plugins
+# dots:usage=[SUBCOMMAND]
+exec "${BASH_SOURCE[0]%/*}/dots" help theme plugins "$@"

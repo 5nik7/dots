@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # dots:summary=Query a theme color
-# dots:usage=COLOR [FORMAT] [--theme ID]
-# dots:argument=1|string|Color name
+# dots:usage=COLOR [FORMAT] [--theme ID] [--native]
+# dots:argument=1|theme-color|Color name
 # dots:argument=2|color-format|Output format
 # dots:option=--theme||theme-id|Theme identifier
+# dots:option=--native||flag|Query upstream palette colors
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- color "$@"
 source "$DT_LIB/commands.bash"

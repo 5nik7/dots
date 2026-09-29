@@ -10,7 +10,7 @@ dots_error() {
 
 dots_reserved() {
   case $1 in
-    help|doctor|commands|completion|version|status|spec|plan|apply|undo|history|backup|config|bootstrap|self|__complete) return 0 ;;
+    init|help|doctor|commands|completion|version|status|spec|plan|apply|undo|history|backup|config|bootstrap|self|__complete) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -86,6 +86,16 @@ dots_main() {
     case $mode in auto|always|never) ;; *) dots_error 'Invalid DOTS_COLOR or DOTS_ICONS setting'; return 2 ;; esac
   done
   case ${1:-help} in
+    init)
+      shift
+      if (($# == 1)) && [[ $1 == -h || $1 == --help ]]; then
+        source "$DOTS_LIB_DIR/catalog.bash"
+        dots_help init
+        return
+      fi
+      source "$DOTS_LIB_DIR/init.bash"
+      dots_init "$@"
+      return ;;
     __complete)
       shift
       # Completion errors never enter a shell's candidate stream.

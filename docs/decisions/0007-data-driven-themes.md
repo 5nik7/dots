@@ -1,5 +1,8 @@
 # 0007: Data-driven themes and bounded Bash selection state
 
+Plural CLI compatibility is superseded by [decision 0012](0012-unified-theme-cli.md). The original decision below records its historical scope.
+
+
 Status: Accepted
 Date: 2026-09-22
 
@@ -38,3 +41,7 @@ AWK and durable switching needs `flock` and `sync -f`. Native Windows support is
 not claimed. Previous generations remain available; retention and general undo
 are deferred. See [theme behavior](../themes.md) and [safety](../safety.md#theme-selection-publication)
 for the exact boundaries and recovery rules.
+
+## Authorized local-hook extension (2026-09-29)
+
+The [theme plugin manager](../theme-plugins.md) extends this historical slice with explicitly enabled local post-commit Bash hooks and journaled GTK 3/Qt6ct adapters. Its bounded authorization supersedes the earlier blanket hook exclusion; downloaded themes and palette/template data remain non-executable. Arbitrary user-hook effects remain outside publication rollback.

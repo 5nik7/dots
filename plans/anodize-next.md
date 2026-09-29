@@ -44,3 +44,5 @@ After this foundation is accepted, choose a separately scoped frontend task. The
 - Installation, distribution, source-license review and releases remain separately scoped work. Neither frontend is described as implemented or supported today.
 
 The [next-agent prompt](prompts/anodize-hardening.md) carries the immediate task and recorded working preferences.
+
+The separately authorized [theme plugin slice](theme-plugins.md) now covers explicitly enabled local post-publication hooks. Earlier arbitrary-hook exclusions remain applicable to downloaded-theme execution and broader hook systems. This does not expand the Go or Anodize.nvim scope.

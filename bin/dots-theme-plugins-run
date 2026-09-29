@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Run enabled plugins against the published theme
+# dots:usage=[NAME] [--json]
+# dots:argument=1|theme-plugin|Plugin name
+# dots:option=--json||flag|Emit versioned JSON
+PLUGIN_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+exec python3 -B "$PLUGIN_LIB/plugins.py" run "$@"

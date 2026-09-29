@@ -37,7 +37,7 @@ class DotsFixture(unittest.TestCase):
         if os.environ.get('LD_PRELOAD'):
             self.env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
 
-    def command(self, name='themes', header='', body=None, directory=None):
+    def command(self, name='samples', header='', body=None, directory=None):
         directory = directory or self.repo / 'bin'
         directory.mkdir(parents=True, exist_ok=True)
         p = directory / ('dots-' + name)
@@ -63,9 +63,9 @@ class DotsFixture(unittest.TestCase):
         return [line.split('\t') for line in p.stdout.splitlines()]
 
     def hints(self):
-        return self.command(header='''# dots:summary=Manage themes
+        return self.command(header='''# dots:summary=Manage samples
 # dots:usage=[OPTIONS] DIRECTORY
-# dots:example=dots themes --flavor mocha .
+# dots:example=dots samples --flavor mocha .
 # dots:option=--flavor|-f|choice:mocha,latte|Palette flavor
 # dots:option=--output|-o|file|Destination file
 # dots:option=--verbose|-v|flag|Verbose output
@@ -86,60 +86,60 @@ class DotsFixture(unittest.TestCase):
         self.assertEqual(p.stdout.strip(), str(self.repo))
 
     def test_longest_route_literal_argv_streams_and_exit(self):
-        self.command('themes')
-        self.command('themes-apply', body='printf "<%s>\\n" "$@"; printf error >&2; exit 23')
-        p = self.run_dots('themes', 'apply', 'two words', '', '*', '$(touch nope)', '--', '--help', code=23)
+        self.command('samples')
+        self.command('samples-apply', body='printf "<%s>\\n" "$@"; printf error >&2; exit 23')
+        p = self.run_dots('samples', 'apply', 'two words', '', '*', '$(touch nope)', '--', '--help', code=23)
         self.assertEqual(p.stdout, '<two words>\n<>\n<*>\n<$(touch nope)>\n<-->\n<--help>\n')
         self.assertEqual(p.stderr, 'error')
         self.assertFalse((self.home / 'nope').exists())
 
     def test_root_discovery_duplicates_and_explicit_root(self):
-        self.command('themes', directory=self.repo / 'local/bin')
-        self.assertEqual(self.run_dots('themes', 'ok').stdout, '<ok>\n')
-        self.command('themes')
-        self.run_dots('themes', code=1)
+        self.command('samples', directory=self.repo / 'local/bin')
+        self.assertEqual(self.run_dots('samples', 'ok').stdout, '<ok>\n')
+        self.command('samples')
+        self.run_dots('samples', code=1)
         self.run_dots('commands', '--check', code=1)
-        (self.repo / 'bin/dots-themes').unlink()
+        (self.repo / 'bin/dots-samples').unlink()
         extra = self.root / 'extra space'
         self.command('hello', directory=extra)
         self.assertEqual(self.run_dots('--command-dir', str(extra), 'hello', 'x').stdout, '<x>\n')
         self.run_dots('hello', code=1)
         self.run_dots('--command-dir', 'relative', code=2)
-        self.run_dots('--command-dir', str(self.repo / 'local/bin'), 'themes')
+        self.run_dots('--command-dir', str(self.repo / 'local/bin'), 'samples')
 
     def test_symlink_and_broken_or_nonexecutable_deeper_route(self):
         target = self.command('source')
-        (self.repo / 'bin/dots-themes').symlink_to(target)
-        self.run_dots('themes')
-        deep = self.command('themes-apply')
+        (self.repo / 'bin/dots-samples').symlink_to(target)
+        self.run_dots('samples')
+        deep = self.command('samples-apply')
         deep.chmod(0o600)
-        self.run_dots('themes', 'apply', code=1)
+        self.run_dots('samples', 'apply', code=1)
         deep.unlink(); deep.symlink_to(self.root / 'missing')
-        self.run_dots('themes', 'apply', code=1)
+        self.run_dots('samples', 'apply', code=1)
 
     def test_no_execution_during_discovery_help_and_completion(self):
-        self.command('themes', '# dots:summary=Theme manager', 'touch "$HOME/executed"')
-        for args in [('help',), ('commands',), ('commands', '--check'), ('themes', '--help'), ('help', 'themes')]:
+        self.command('samples', '# dots:summary=Theme manager', 'touch "$HOME/executed"')
+        for args in [('help',), ('commands',), ('commands', '--check'), ('samples', '--help'), ('help', 'samples')]:
             self.run_dots(*args)
-        self.complete('th')
+        self.complete('sa')
         self.assertFalse((self.home / 'executed').exists())
 
     def test_malformed_metadata_does_not_block_direct_execution(self):
-        self.command('themes', '# dots:unknown=x')
-        self.run_dots('themes', 'ok')
-        self.run_dots('themes', '--help', code=1)
+        self.command('samples', '# dots:unknown=x')
+        self.run_dots('samples', 'ok')
+        self.run_dots('samples', '--help', code=1)
         self.run_dots('commands', '--check', code=1)
         p = self.run_dots('__complete', 'bash', '1', '--', 'dots', '', code=1)
         self.assertEqual((p.stdout, p.stderr), ('', ''))
 
     def test_executable_group_help_lists_static_descendants(self):
-        self.command('themes', '# dots:summary=Theme manager', 'touch "$HOME/executed"')
-        self.command('themes-list', '# dots:summary=List themes', 'touch "$HOME/executed"')
-        self.command('themes-secret', '# dots:hidden=true', 'touch "$HOME/executed"')
-        output = self.run_dots('--color=always', 'help', 'themes').stdout
-        self.assertIn('themes list', output)
-        self.assertIn('List themes', output)
-        self.assertNotIn('themes secret', output)
+        self.command('samples', '# dots:summary=Theme manager', 'touch "$HOME/executed"')
+        self.command('samples-list', '# dots:summary=List samples', 'touch "$HOME/executed"')
+        self.command('samples-secret', '# dots:hidden=true', 'touch "$HOME/executed"')
+        output = self.run_dots('--color=always', 'help', 'samples').stdout
+        self.assertIn('samples list', output)
+        self.assertIn('List samples', output)
+        self.assertNotIn('samples secret', output)
         self.assertIn('\x1b', output)
         self.assertFalse((self.home / 'executed').exists())
 
@@ -149,27 +149,27 @@ class DotsFixture(unittest.TestCase):
                        '# dots:option=--x||flag|X\n# dots:option=--x||flag|X',
                        '# dots:argument=2|file|File', '# dots:hidden=maybe',
                        '# dots:option=--x||flag|X|', '# dots:argument=1|file|X|']:
-            self.command('themes', header)
+            self.command('samples', header)
             self.run_dots('commands', '--check', code=1)
 
     def test_hidden_group_and_reserved_routes(self):
-        self.command('themes-list', '# dots:summary=List themes')
-        self.command('themes-secret', '# dots:hidden=true')
-        p = self.run_dots('themes')
-        self.assertIn('themes list', p.stdout)
-        self.assertNotIn('themes secret', p.stdout)
-        self.run_dots('themes', 'secret')
-        self.assertIn('themes', str(self.complete('th')))
-        self.assertNotIn('secret', str(self.complete('themes', '')))
+        self.command('samples-list', '# dots:summary=List samples')
+        self.command('samples-secret', '# dots:hidden=true')
+        p = self.run_dots('samples')
+        self.assertIn('samples list', p.stdout)
+        self.assertNotIn('samples secret', p.stdout)
+        self.run_dots('samples', 'secret')
+        self.assertIn('samples', str(self.complete('sa')))
+        self.assertNotIn('secret', str(self.complete('samples', '')))
         self.command('apply')
         self.run_dots('apply', code=1)
         self.run_dots('commands', '--check', code=1)
 
     def test_metadata_is_literal_and_help_never_intercepts_after_separator(self):
-        self.command('themes', '# dots:summary=$(touch "$HOME/pwned")')
-        self.assertIn('$(touch', self.run_dots('help', 'themes').stdout)
+        self.command('samples', '# dots:summary=$(touch "$HOME/pwned")')
+        self.assertIn('$(touch', self.run_dots('help', 'samples').stdout)
         self.assertFalse((self.home / 'pwned').exists())
-        self.assertEqual(self.run_dots('themes', '--', '--help').stdout, '<-->\n<--help>\n')
+        self.assertEqual(self.run_dots('samples', '--', '--help').stdout, '<-->\n<--help>\n')
 
     def test_exec_keeps_pid_and_delivers_signals(self):
         self.command('waiter', body='trap "exit 42" TERM; printf "%s\\n" "$$"; read -r line')
@@ -242,15 +242,15 @@ dots::error 'Error'
 
     def test_completion_routes_options_values_and_new_commands(self):
         self.hints()
-        self.assertIn(['candidate', 'themes', 'Manage themes'], self.complete('th'))
-        self.assertIn(['candidate', '--flavor', 'Palette flavor'], self.complete('themes', '--f'))
-        self.assertIn(['candidate', 'mocha', ''], self.complete('themes', '--flavor', 'm'))
-        self.assertIn(['candidate', '--flavor=mocha', ''], self.complete('themes', '--flavor=m'))
-        self.assertIn(['directory', '', ''], self.complete('themes', ''))
-        self.assertIn(['directory', '', ''], self.complete('themes', '--', '--f'))
-        self.assertIn(['candidate', 'yes', ''], self.complete('themes', 'path', 'y'))
-        self.command('themes-list')
-        self.assertIn(['candidate', 'list', 'Run themes list'], self.complete('themes', 'l'))
+        self.assertIn(['candidate', 'samples', 'Manage samples'], self.complete('sa'))
+        self.assertIn(['candidate', '--flavor', 'Palette flavor'], self.complete('samples', '--f'))
+        self.assertIn(['candidate', 'mocha', ''], self.complete('samples', '--flavor', 'm'))
+        self.assertIn(['candidate', '--flavor=mocha', ''], self.complete('samples', '--flavor=m'))
+        self.assertIn(['directory', '', ''], self.complete('samples', ''))
+        self.assertIn(['directory', '', ''], self.complete('samples', '--', '--f'))
+        self.assertIn(['candidate', 'yes', ''], self.complete('samples', 'path', 'y'))
+        self.command('samples-list')
+        self.assertIn(['candidate', 'list', 'Run samples list'], self.complete('samples', 'l'))
         self.assertIn(['candidate', '--color=always', ''], self.complete('--color=a'))
         self.assertIn(['candidate', 'fish', ''], self.complete('completion', 'f'))
 
@@ -266,9 +266,9 @@ dots::error 'Error'
         self.hints()
         (self.home / 'folder with spaces').mkdir()
         p = self.shell(BASH, '''source "$DOTS/lib/dots/completion/bash"
-COMP_WORDS=(dots themes --flavor = m); COMP_CWORD=4
+COMP_WORDS=(dots samples --flavor = m); COMP_CWORD=4
 _dots_complete_bash; printf '<%s>\\n' "${COMPREPLY[@]}"
-COMP_WORDS=(dots themes 'folder'); COMP_CWORD=2
+COMP_WORDS=(dots samples 'folder'); COMP_CWORD=2
 _dots_complete_bash; printf '<%s>\\n' "${COMPREPLY[@]}"
 ''')
         self.assertEqual(p.stdout, '<mocha>\n<folder with spaces>\n')
@@ -277,8 +277,8 @@ _dots_complete_bash; printf '<%s>\\n' "${COMPREPLY[@]}"
         self.hints()
         (self.home / 'folder with spaces').mkdir()
         p = self.shell(FISH, '''source "$DOTS/lib/dots/completion/fish"
-complete -C 'dots themes --flavor m'
-complete -C 'dots themes folder'
+complete -C 'dots samples --flavor m'
+complete -C 'dots samples folder'
 ''')
         self.assertIn('mocha', p.stdout)
         self.assertIn('folder', p.stdout)
@@ -291,11 +291,11 @@ source "$DOTS/lib/dots/completion/zsh"
 [[ $_comps[dots] == _dots ]] || exit 1
 # Unit capture for literal arrays; real ZLE is covered by the PTY acceptance.
 compadd() { print -rl -- "${candidates[@]}"; }
-words=(dots themes --flavor m); CURRENT=4
+words=(dots samples --flavor m); CURRENT=4
 _dots
 typeset -A compstate=(context command)
 PREFIX=m
-words=(dots themes --flavor not_the_cursor_prefix)
+words=(dots samples --flavor not_the_cursor_prefix)
 _dots
 ''')
         self.assertEqual(p.stdout, 'mocha\nmocha\n')
@@ -314,11 +314,11 @@ compadd() {
   done
 }
 words=(dots ''); CURRENT=2; _dots
-words=(dots themes --fl); CURRENT=3; _dots
-words=(dots themes --flavor m); CURRENT=4; _dots
+words=(dots samples --fl); CURRENT=3; _dots
+words=(dots samples --flavor m); CURRENT=4; _dots
 ''')
         rows = dict(line.split('\t', 1) for line in p.stdout.splitlines())
-        self.assertEqual(rows['themes'], f"{'themes':<13} -- Manage themes")
+        self.assertEqual(rows['samples'], f"{'samples':<13} -- Manage samples")
         self.assertEqual(rows['--help'], f"{'--help':<13} -- Show help")
         self.assertEqual(rows['--flavor'], '--flavor -- Palette flavor')
         self.assertEqual(rows['--color='], f"{'--color=':<13} -- Color mode (DOTS_COLOR)")
@@ -328,7 +328,7 @@ words=(dots themes --flavor m); CURRENT=4; _dots
     def test_real_tab_in_bash_zsh_and_fish(self):
         from bash_dots_pty import exercise
         header = self.hints().read_text().split('\n', 1)[1].rsplit('printf', 1)[0]
-        self.command('themes', header, 'printf "%s\\n" "$@" > "$HOME/args"; printf "EXECUTED\\n"')
+        self.command('samples', header, 'printf "%s\\n" "$@" > "$HOME/args"; printf "EXECUTED\\n"')
         (self.home / 'folder with spaces').mkdir()
         for executable in (BASH, ZSH, FISH):
             with self.subTest(shell=executable):

@@ -6,14 +6,24 @@ The permanent built-in table in `internal/cli/cli.go` is authoritative for its i
 
 The existing Zsh helper `mkcd <directory>` is separate from the `dots` command family. Its [usage and path handling](../README.md#zsh-configuration) are implemented by `scripts/mkcd`, sourced through the Zsh function to change the current shell's directory.
 
+## Implemented shell initialization
+
+The sourceable [shell utility functions](shell-utils.md) have their own documented argument, stream and status contracts; they do not add dispatcher routes or completion metadata.
+
+`dots init [bash|zsh|fish|powershell|nu|xonsh]` emits native initialization code. With no argument, the generated code selects Bash or Zsh in the calling shell. `init` is reserved and bypasses extension discovery. Help and shell-name completion use built-in metadata. Native `bin/dots.ps1` supports `init [powershell]` and help only. Evaluating a hook derives Dots path variables from the physical loader location, replacing inherited path values; custom overrides belong after initialization. Repository rc files resolve symlinks and source their adjacent loaders directly. See [shell initialization](shell-init.md) for the full interface, bootstrap, error statuses and native invocation examples.
+
 ## Implemented Files and Theme Routes
 
 The [files reference](files.md) defines `dots files sources|discover|list|locate|show|source|target|track`,
 filters, sorting and schema-1 JSON. `track` changes catalog metadata only; bounded
 managed operations are documented separately below. The [themes reference](themes.md) defines
 `dots theme list|show|current|dir|color|set|refresh|init|switcher|install|update|remove`
-and `dots theme bg list|current|set|next|select|switcher`. The plural `dots themes`
-commands retain their documented native palette interfaces. Shell completion reads
+and `dots theme bg list|current|set|next|select|switcher`.
+The [local plugin manager](theme-plugins.md) implements `dots theme plugins` help,
+`list [--json]`, `enable NAME`, `disable NAME`, `run [NAME] [--json]`, and
+`doctor [NAME] [--json]`. Selection changes do not apply themes; run requires explicit
+enablement. List/doctor are read-only; machine output uses schema-1 JSON. The unified `dots theme` interface uses full IDs; native palette discovery and
+queries use `list --families`, `list --flavors FAMILY`, and `show`/`color --native`. Shell completion reads
 static route metadata and core-owned data providers; it never executes extensions.
 Published `theme init --shell bash|zsh|fish` output includes the FZF
 environment colors described in the [template contract](themes.md#flat-themes-and-templates).
@@ -45,7 +55,7 @@ It requires Bash 4.4+. The Go interfaces below remain separate and paused.
 
 ### Routing and Roots
 
-`dots-themes-apply` is callable as `dots themes apply`. Filenames use lowercase
+`dots-example-apply` is callable as `dots example apply`. Filenames use lowercase
 segments matching `[a-z][a-z0-9]*`, separated by hyphens. Probe the longest initial
 sequence of route words first, stopping at a flag, `--`, or another non-route
 word; remaining arguments, including `--`, pass unchanged. Execute the selected
@@ -123,7 +133,7 @@ direct execution. Discovery validates before emitting its catalog.
 #!/usr/bin/env bash
 # dots:summary=Manage example themes
 # dots:usage=[OPTIONS] DIRECTORY
-# dots:example=dots themes --flavor mocha ./themes
+# dots:example=dots example --flavor mocha ./themes
 # dots:option=--flavor|-f|choice:mocha,latte|Palette flavor
 # dots:option=--verbose|-v|flag|Verbose output
 # dots:argument=1|directory|Theme directory
@@ -140,9 +150,9 @@ preceded by `-`. Option names must be unique. Positional records are
 `POSITION|TYPE|DESCRIPTION`: positions start at 1 and are contiguous; a final `*`
 applies to remaining positions. Types are `flag` (options only), `string`, `file`,
 `directory`, `choice:VALUE,VALUE`, or the core-owned theme data types
-`theme`, `flavor`, `palette-color`, `color-format`, `theme-id`, `file-resource`, and
-`file-repository`. The latter three read flat theme IDs and qualified catalog IDs. Flavor/color providers
-use preceding positional theme/flavor arguments; they read data and never execute
+`theme`, `flavor`, `palette-color`, `color-format`, `theme-id`, `theme-color`, `theme-plugin`, `file-resource`, and
+`file-repository`. `theme-plugin` reads local plugin names without executing hooks;
+`theme-id`, `file-resource`, and `file-repository` read flat theme IDs and qualified catalog IDs. `theme` lists native families for `list --flavors`. `theme-color` reads the selected theme or a preceding `--theme ID`/`--theme=ID`, honoring a preceding `--native`; it suggests native names alone in native mode and semantic/native names otherwise. The retained generic `flavor`/`palette-color` metadata providers use preceding positional family/flavor arguments. All providers read data and never execute
 extensions. Fields cannot contain `|`; choice values
 cannot contain commas. Descriptions are required. No code callbacks, aliases,
 implicit option grammar, or combined-short-option parsing are provided.
@@ -165,7 +175,7 @@ always can override NO_COLOR. Automatic icons require a usable terminal; there
 is no font detection. Use `--icons=never` for ASCII status markers. Stdout and
 stderr are styled independently. Directory output and completion data remain
 plain. Shared helpers use Bash builtins and ANSI colors, not the shell startup
-chain, theme generators, or the existing general-purpose util script.
+chain, theme generators, or the general-purpose `bin/lib/common.sh` helper. Common loads this renderer lazily when a human output helper is called. The shared and standalone `dirout` helpers opt into this policy with `-c`; calls without `-c` stay undecorated. They no longer consume legacy BLUE/RST globals. See [shell utilities](shell-utils.md) for their separate shell interfaces.
 
 `DOTS_PROGRESS=auto|never` controls the [operation progress display](presentation.md#operation-progress), independently of color/icons. Unset means `auto`; invalid values disable progress. There is no new route, flag or completion token. Human terminal work can animate after 500 ms, including read-only scans and `--yes` operations. Data, dry-run and redirected modes bypass the display even with forced decoration.
 
@@ -328,17 +338,17 @@ Users interact with space-separated routes:
 ```text
 dots status
 dots files list
-dots themes apply tokyonight
+dots example apply tokyonight
 ```
 
 External command files use an Omarchy-inspired hyphenated form:
 
 ```text
 dots-files
-dots-themes-apply
+dots-example-apply
 ```
 
-For `dots themes apply tokyonight`, the dispatcher searches from the longest candidate toward the group command. If `dots-themes-apply` exists, it receives `tokyonight` unchanged.
+For `dots example apply tokyonight`, the dispatcher searches from the longest candidate toward the group command. If `dots-example-apply` exists, it receives `tokyonight` unchanged.
 
 ## Command Classes
 
@@ -366,7 +376,7 @@ Built-ins cannot be shadowed silently. The development protocol uses only explic
 | `dots links` | Inspect, check, and repair managed links | Termux MVP |
 | `dots scripts` | Discover, run, edit, and optionally expose repository scripts | Later MVP |
 | `dots shells` | Inspect and configure shell integrations | Later MVP |
-| `dots themes` | List, preview, query, initialize and select shared palettes | Bash implementation; broader app support later |
+| `dots theme` | List, preview, query, initialize and select shared palettes | Bash implementation; broader app support later |
 | `dots packages` | Inspect and install normalized package sets | Bootstrap/packages |
 | `dots env` | Inspect and generate shell-specific environment integration | Later MVP |
 | `dots backup` | Inspect, create, restore, and prune explicit snapshots and transaction backups | Transaction foundation |
@@ -542,14 +552,13 @@ Record the final stable mapping in this document and in machine-readable command
 
 The route, argument, format, compatibility and exit-status contract is maintained
 in [Shared themes](themes.md#commands). Static headers on the official
-`dots-themes-*` entry points drive dispatcher help and completion. The closed
+`dots-theme-*` entry points drive dispatcher help and completion. The closed
 palette providers augment that metadata with current theme files; they do not
-introduce extension callbacks or change the Go protocol. `themes set` delegates
+introduce extension callbacks or change the Go protocol. `theme set` delegates
 state publication to the shared helper described in [decision 0007](decisions/0007-data-driven-themes.md).
 The supported families include hyphenated `rose-pine` identifiers and native palette
-keys such as `sumiInk3`. All three shell providers discover their flavors/colors;
-pywal16 flavor discovery works without its optional generated input. No new routes
-or flags are needed for these families.
+keys such as `sumiInk3`. All three shell providers discover full IDs, families and contextual colors;
+pywal16 flavor discovery works without its optional generated input. Palette filtering and native query flags are documented in the shared theme reference.
 
 ## Implemented Anodize commands
 

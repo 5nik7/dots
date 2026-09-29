@@ -12,8 +12,8 @@ Run `python3 -B tools/test_bash_dots.py`, shell syntax checks and ShellCheck for
 
 The command family should retain the useful properties of Omarchy's dispatcher while remaining portable to Termux, Linux, WSL, and native Windows:
 
-- A direct executable such as `dots-themes` is available as `dots themes`.
-- A deeper executable such as `dots-themes-apply` is available as `dots themes apply`.
+- A direct executable such as `dots-example` is available as `dots example`.
+- A deeper executable such as `dots-example-apply` is available as `dots example apply`.
 - The longest matching prefix wins and unused arguments are forwarded unchanged.
 - Known direct routes avoid a full command-registry scan.
 - Help, completions, validation, JSON output, and generated Markdown share one metadata source.
@@ -33,20 +33,20 @@ The external-command protocol is an extension mechanism. Safety-critical operati
 - The main command is `dots`.
 - External command basenames start with `dots-`.
 - Filename hyphens map to route spaces; schema 1 sidecars must match the basename exactly.
-- Use plural nouns for browsable collections when that is the established group: `files`, `links`, `scripts`, `shells`, `themes`, `packages`, `profiles`, `commands`, and `sources`.
+- Use plural nouns for browsable collections when that is the established group: `files`, `links`, `scripts`, `shells`, `packages`, `profiles`, `commands`, and `sources`.
 - Use verbs for lifecycle actions: `plan`, `apply`, `undo`, and `bootstrap`.
 - Avoid synonyms and aliases for new commands. Add an alias only to preserve an established name.
 - Keep `self update`, `repo pull`, `packages install`, and `apply` distinct; do not create one ambiguous command that performs all of them.
 
 ## Go Development Resolution
 
-Given `dots themes apply tokyonight`, resolution should try candidates from longest to shortest:
+Given `dots example apply tokyonight`, resolution should try candidates from longest to shortest:
 
-1. `dots-themes-apply-tokyonight`
-2. `dots-themes-apply`
-3. `dots-themes`
+1. `dots-example-apply-tokyonight`
+2. `dots-example-apply`
+3. `dots-example`
 
-If `dots-themes-apply` exists, execute it with `tokyonight` as the remaining argument.
+If `dots-example-apply` exists, execute it with `tokyonight` as the remaining argument.
 
 Resolution requirements:
 
@@ -117,6 +117,6 @@ The implemented singular `theme` routes and `files` routes are documented in
 [themes](../../docs/themes.md) and [files](../../docs/files.md). Flat theme/resource
 completion uses core-owned readers (`theme-id`, `file-resource`, `file-repository`),
 never extension callbacks. Keep static headers, contextual help and completion
-cases synchronized. Native `themes` routes retain their positional grammar.
+cases synchronized. Theme selection uses full IDs under `dots theme`; palette discovery and native queries use the documented options. Do not restore plural routes or a second positional grammar.
 
 The [Git family](../../docs/git.md) uses static Bash headers and a dots-owned backend; it never requires the standalone git-it executable. Run `python3 -B tools/test_git_operations.py` for changes, including literal paths and recursive safety. Keep raw JSON separate from compact human views. File mutations use the shared engine described in the managed-files guide.

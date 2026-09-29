@@ -1,5 +1,7 @@
 # Additional shared theme families
 
+The theme CLI is now consolidated under `dots theme`; see the [migration plan](theme-cli.md) and [current command contract](../docs/themes.md#migration-from-plural-commands). Earlier compatibility and test results below describe their original scope.
+
 **Status: Implemented**
 
 **Current integration:** This plan retains the original palette/native-plugin implementation and measurements. The completed [Anodize plan](anodize.md) now owns the active Dots Neovim bridge, local Anodize.nvim setup and consumer acceptance. Native theme plugins remain optional/manual compatibility paths. Consult [current verification](../docs/testing.md#anodize-neovim-integration) before treating these historical tests as current startup behavior.

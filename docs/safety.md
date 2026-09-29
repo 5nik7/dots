@@ -225,7 +225,19 @@ Arbitrary hooks weaken dry-run and rollback guarantees.
 - Capture exit status and bounded, redacted logs.
 - Do not claim that transaction rollback reversed a hook without a verified inverse protocol.
 
-General hooks are outside the initial Termux MVP.
+General hooks remain outside the initial Termux MVP. The specifically authorized
+[local theme plugin manager](theme-plugins.md) is a bounded exception: explicit
+per-file enablement, post-commit execution, separate Bash children, nonblocking
+locks and recursion refusal. No hooks are discovered in downloaded themes.
+Custom hooks run with user privileges, are not sandboxed and have no automatic
+inverse; their effects are never described as rolled back. Exit status and bounded
+diagnostics are reported without persistent hook-output or environment logs.
+
+The bundled GTK 3/Qt6ct adapters use the existing file Store with complete preflight,
+retained backups, target guards, ownership receipts, rollback and drift-aware
+undo/recovery. Copies stay fixed after disabling. Disable neither deletes output
+nor restores old settings. Automatic failures leave the theme published and report
+a retry path; malformed/ambiguous plugin configuration prevents execution.
 
 ## Secrets
 
@@ -271,7 +283,7 @@ Lifecycle cleanup supplements Git status with metadata-only entry classification
 ## Theme Selection Publication
 
 **Implemented bounded state operation**, separate from the proposed managed-file
-installer. `dots themes set` authorizes publication of one shared palette generation;
+installer. `dots theme set` authorizes publication of one shared palette generation;
 its expanded connector boundary is defined below and in decision 0008. It validates the theme and
 Neovim adapter before state creation, classifies every state ancestor and pointer
 without following symlinks, and refuses unexpected objects or dot components.

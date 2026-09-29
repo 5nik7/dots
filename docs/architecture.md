@@ -28,9 +28,15 @@ existing theme engine before delegating Apply to its unchanged publisher.
 
 The Yazi `init.lua` owns personal options, while its keymap and fetcher rules address `dots`. Original merged plugin directories remain inactive for reference and are no longer package dependencies. The [plugin README](../config/yazi/plugins/dots.yazi/README.md) owns configuration and command details. This is application configuration, independent of the Dots CLI and managed-file transaction engine.
 
+## Shell initialization ownership
+
+`lib/dots/init.bash` owns the live initialization code generator and runs before extension discovery. Native loaders and extracted interactive configuration belong to `shells/`; Bash and Zsh share `shells/environment.sh`, while the other shells implement the same checkout-derived variable contract in native syntax. `bin/dots.ps1` is a bounded native PowerShell generator, not a second command dispatcher. Generation never evaluates shell configuration; private modules remain caller-side sources. See [shell initialization](shell-init.md).
+
+`bin/lib/common.sh` owns shared sourceable Bash/Zsh utility, logging, formatting, spinner and color-array helpers. Loading only defines helpers; startup explicitly builds the arrays. The former `bin/colors.env` and its startup-created named globals are removed. Human helpers obtain styles lazily from the renderer; caller-owned variables remain untouched. Path operations, case conversion and quiet checks use builtins; human messages lazily reuse `lib/dots/ui.bash`, with a plain fallback for standalone copies. Optional eza formatting is confined to explicitly requested filename/icon helpers. See [shell utilities](shell-utils.md).
+
 ## Existing Zsh Configuration
 
-The live shell configuration is maintained independently of the paused Go core. `shells/zsh/zshrc` owns startup order; its `core/`, `integrations/`, and `platforms/` modules separate shared setup, tool activation, and execution-environment detection. Existing public module entry points remain available. Generated shell data belongs in user cache directories, not the repository. See the [Zsh guide](../shells/zsh/README.md).
+The live shell configuration is maintained independently of the paused Go core. `shells/zsh/zshrc` resolves its own file through symlinks and sources the adjacent `init.zsh` directly; `interactive.zsh` owns startup order; its `core/`, `integrations/`, and `platforms/` modules separate shared setup, tool activation, and execution-environment detection. Existing public module entry points remain available. Generated shell data belongs in user cache directories, not the repository. See the [Zsh guide](../shells/zsh/README.md).
 
 ## Implemented Permanent Core Boundary
 
@@ -258,7 +264,7 @@ application connectors, Git source lifecycle and explicit wallpaper adapters.
 Its `app-env.bash` adapter validates rendered FZF assignments as literal data
 and adds their colors to published Bash/Zsh and Fish initialization. The Gum shell
 template remains a rendered artifact for explicit sourcing in Bash/Zsh.
-`bin/dots-theme-*` exposes the flat workflow; `dots-themes-*` preserves legacy routes.
+`bin/dots-theme-*` exposes the sole theme CLI, including native palette discovery and queries. Shared view/initialization helpers serve the CLI and palette helper APIs; there is no separate plural parser.
 `themes/bin/*` remains compatibility entry points, with shared shell logic in `lib`.
 
 Flat `themes/ID` variants own semantic `colors.toml`, optional native `palette.toml`
@@ -307,3 +313,17 @@ operations and source/target/catalog guards in memory until Apply.
 The owner-authorized [Anodize slice](anodize.md) is an exception to the general Go pause. `anodize/` is an independent pure Go color engine; `lib/dots/anodize/` owns Python authoring and the private Bash publication bridge. It reuses `files/transactions.py` and existing theme rendering/publication. `bin/anodize` and static `dots-anodize-*` routes provide CLI access. No engine calls occur during shell startup. See [decision 0011](decisions/0011-anodize-authoring.md).
 
 Anodize standalone completion reuses generated copies of the shared Bash/Zsh/Fish adapters. Its private query bridge translates the standalone command line into the Dots completion protocol, reading bundled static headers and the selected theme repository without executing leaf commands or the Go engine. `tools/generate_anodize_integration.py` owns reproducible adapter generation and `man/anodize.1`; command and option text in the manual comes from the Python parser.
+
+## Local theme plugin execution
+
+The Bash theme publisher invokes the Python plugin coordinator once after commit.
+Anodize continues to delegate apply to that publisher. The coordinator reads the
+immutable generation's normalized palette JSON, serializes execution under the
+existing publication lock and a plugin lock, and runs explicitly selected Bash
+children. Neither downloaded themes nor shell startup discover executable hooks.
+
+Bundled GTK 3 and Qt6ct adapters consume rendered template data and use the existing
+file Store for app copies, narrow configuration registration and ownership receipts
+in one retained-backup transaction. Custom user hook effects are outside that Store
+and publication rollback. The [plugin contract](theme-plugins.md) owns discovery,
+selection, runtime environment and retry behavior.

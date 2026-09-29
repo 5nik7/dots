@@ -1,5 +1,7 @@
 # Omarchy-style themes
 
+The theme CLI is now consolidated under `dots theme`; see the [migration plan](theme-cli.md) and [current command contract](../docs/themes.md#migration-from-plural-commands). Earlier compatibility and test results below describe their original scope.
+
 **Status: Implemented; isolated verification recorded in docs/testing.md**
 
 - [x] Flatten palettes and import Omarchy colors and backgrounds.

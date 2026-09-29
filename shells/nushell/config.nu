@@ -1,25 +1,3 @@
-source ~/dots/shells/nushell/catppuccin_mocha.nu
-
-$env.config.show_banner = false
-
-$env.config.table = {
-  mode: thin
-}
-
-def --env y [...args] {
-    let tmp = (mktemp -t "yazi-cwd.XXXXXX")
-    yazi ...$args --cwd-file $tmp
-    let cwd = (open $tmp)
-    if $cwd != "" and $cwd != $env.PWD {
-        cd $cwd
-      }
-    rm -fp $tmp
-}
-
-alias d = y
-
-alias q = exit
-alias c = clear
-
-alias l = eza -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
-alias la = eza -a -l --group-directories-first --git-repos --git --icons --time-style relative --no-permissions --no-filesize --no-time --no-user --hyperlink --follow-symlinks --no-quotes
+# A linked config always loads its own checkout, regardless of old generated hooks.
+const dots_loader = (path self | path expand --strict | path dirname | path join 'init.nu')
+source $dots_loader

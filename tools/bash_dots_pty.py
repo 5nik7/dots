@@ -70,12 +70,12 @@ def exercise(fixture, executable):
         terminal.wait(b'INITIALIZED\r\n')
         # Each executed command records exactly what the shell actually passed.
         for typed, marker, expected in [
-            ('dots themes --flavor m\t', b'mocha', 'mocha'),
-            ('dots themes --flavor=m\t', b'mocha', '--flavor=mocha'),
-            ('dots themes --pick two\t', b'words', 'two words'),
-            ('dots themes --pick evil\t', b'marker', 'evil$(touch marker)'),
-            ('dots themes folder\t', b'spaces', 'folder with spaces/'),
-            ('dots themes "folder\t', b'spaces', 'folder with spaces/'),
+            ('dots samples --flavor m\t', b'mocha', 'mocha'),
+            ('dots samples --flavor=m\t', b'mocha', '--flavor=mocha'),
+            ('dots samples --pick two\t', b'words', 'two words'),
+            ('dots samples --pick evil\t', b'marker', 'evil$(touch marker)'),
+            ('dots samples folder\t', b'spaces', 'folder with spaces/'),
+            ('dots samples "folder\t', b'spaces', 'folder with spaces/'),
         ]:
             capture = fixture.home / 'args'
             if capture.exists(): capture.unlink()

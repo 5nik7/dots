@@ -47,8 +47,8 @@ local function snapshot()
  return vim.json.decode(table.concat(vim.fn.readfile(vim.env.XDG_STATE_HOME.."/dots/current/theme/palette.json"),"\n"))
 end
 local function publish(theme, flavor)
- local command = {"bash", vim.env.DOTS.."/bin/dots-themes-set", theme}
- if flavor then table.insert(command, flavor) end
+ local id = flavor and (theme.."-"..flavor) or theme
+ local command = {"bash", vim.env.DOTS.."/bin/dots-theme-set", id}
  vim.fn.system(command)
  assert(vim.v.shell_error == 0, "fixture publication failed")
 end

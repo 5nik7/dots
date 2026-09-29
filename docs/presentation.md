@@ -118,7 +118,7 @@ Clear and stop the display before results, diagnostics, confirmation or selectio
 
 The dispatcher forwards extension streams unchanged. First-party extensions, including relevant Androidots and other submodule commands, follow this contract when added or changed, respecting their local guides. User and third-party extensions are encouraged to use the helpers; the dispatcher does not restyle arbitrary output. Generated app configuration and application UIs retain their own formats and theme contracts.
 
-Preserve existing script interfaces and legacy plural theme APIs. Styling work must not add shell-startup scans, load live user configuration, require optional UI dependencies, or change command semantics. The paused Go core and historical experiments retain their current behavior until separately authorized work applies this contract.
+Preserve the unified theme data interfaces and palette helper APIs. The plural CLI removal is explicitly authorized in [decision 0012](decisions/0012-unified-theme-cli.md); styling changes do not independently authorize API removal. Styling work must not add shell-startup scans, load live user configuration, require optional UI dependencies, or change command semantics. The paused Go core and historical experiments retain their current behavior until separately authorized work applies this contract.
 
 ## Acceptance Gate
 

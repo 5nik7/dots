@@ -643,7 +643,7 @@ let fzf_external_completer = {|spans|
 
 # Guard against re-sourcing: wrapping the completer multiple times would
 # nest wrappers and grow the call chain on every reload.
-if ($env.__fzf_completer_registered? | default false) != true {
+if ($env.__fzf_completer_pid? | default 0) != $nu.pid {
 
   # Get the currently configured external completer, if any exists
   let previous_external_completer = $env.config? | get completions? | get external? | get completer?
@@ -678,6 +678,7 @@ if ($env.__fzf_completer_registered? | default false) != true {
   }
 
   $env.__fzf_completer_registered = true
+  $env.__fzf_completer_pid = $nu.pid
 }
 
 #  vim: set sts=2 ts=2 sw=2 tw=120 et :
