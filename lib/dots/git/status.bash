@@ -31,11 +31,16 @@ status_main() {
     [[ $columns =~ ^[0-9]+$ ]] || columns=80
     local -a rows=() paths=() codes=() oldpaths=()
     declare -A STATUS_ERRORS=()
+    # Shared progress scope, read by the renderer.
+    # shellcheck disable=SC2034
+    local DOTS_PROGRESS_STARTED='' progress_count=0
+    trap 'dots::progress_stop' EXIT
     RESULT=0 STATUS_DIRS=()
-    collect_status "$ROOT"
+    dots::progress_run 'Discovering repositories' collect_status "$ROOT"
     if ((JSON)); then printf '{"schema":1,"remote_state":"cached","repositories":['
     else dots::heading 'Git status'; fi
     for dir in "${STATUS_DIRS[@]}"; do
+        dots::progress_start "Inspecting repositories: ${dir##*/}" "$progress_count" "${#STATUS_DIRS[@]}"
         branch='' ahead=null behind=null state=clean paths=() codes=() oldpaths=()
         if [[ -v STATUS_ERRORS[$dir] ]]; then state=blocked
         elif ! repo_root "$dir" || [[ $REPLY != "$dir" ]]; then state=missing; RESULT=1
@@ -60,6 +65,9 @@ status_main() {
                 read -r ahead behind <<< "$REPLY"
             fi
         fi
+        ((progress_count+=1))
+        dots::progress_update 'Inspecting repositories' "$progress_count" "${#STATUS_DIRS[@]}"
+        dots::progress_stop
         count=${#paths[@]}
         if [[ $state == clean ]]; then ((clean+=1)); else ((changed+=1)); fi
         if ((JSON)); then

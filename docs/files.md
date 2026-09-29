@@ -7,6 +7,8 @@ intent, classifying targets, and listing them. It requires Python 3.9+ on a POSI
 host; discovery additionally requires Git. Neither ordinary dispatch nor basic
 help requires Python or Git. Go development remains paused.
 
+Slow catalog/system discovery, browser loading, planning and file operations use [terminal progress](presentation.md#operation-progress). Preparation, apply and reverse recovery have separate item counts; final results retain transaction and recovery details. `DOTS_PROGRESS=never` disables the display. JSON, raw source/target queries and dry runs never animate.
+
 ## Commands
 
 ```bash

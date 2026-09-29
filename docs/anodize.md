@@ -4,6 +4,8 @@
 
 Anodize creates and edits Dots themes from local images, seed colors, existing themes and imported palettes. Its reusable Go package performs extraction and color adjustments without filesystem or process access. The CLI reuses Dots presentation, file transactions and theme publication. [Decision 0011](decisions/0011-anodize-authoring.md) defines these boundaries.
 
+Both `dots anodize` and standalone `anodize` use [terminal progress](presentation.md#operation-progress) for slow loading, extraction, rendering, saves and application. Saves share the file engine's phase counts. `DOTS_PROGRESS=never` disables progress; JSON, raw exports/app previews, completion and dry runs bypass it. No Go engine protocol change is involved.
+
 ## Build and first use
 
 Use installed Go 1.27.1, Python 3.11 or newer, Bash and the existing POSIX theme tools. From the Dots checkout:

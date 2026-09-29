@@ -12,6 +12,7 @@ import tempfile
 import tomllib
 
 from catalog import read_json
+from progress import tracked
 from transactions import Store, digest, exists, parents_safe
 
 ID = re.compile(r'^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$')
@@ -103,10 +104,11 @@ class Author:
             raise ValueError('unsupported engine response')
         return result
 
+    @tracked('Processing theme')
     def theme_bridge(self, action, identity, *args):
         if not ID.fullmatch(identity):
             raise ValueError('invalid theme ID')
-        env = dict(os.environ, DOTHEMES=str(self.themes), THEMES=str(self.themes))
+        env = dict(os.environ, DOTHEMES=str(self.themes), THEMES=str(self.themes), DOTS_PROGRESS='never')
         proc = subprocess.run(['bash', str(self.bridge), action, identity, *map(str, args)], env=env,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120)
         if proc.returncode:
@@ -114,6 +116,7 @@ class Author:
         # Successful adapter diagnostics are returned separately, never parsed.
         return proc.stdout, proc.stderr
 
+    @tracked('Rendering palette')
     def render(self, doc):
         if not isinstance(doc, dict) or not isinstance(doc.get('id'), str) or not ID.fullmatch(doc['id']):
             raise ValueError('invalid Anodize document ID')
@@ -126,6 +129,7 @@ class Author:
             raise ValueError('invalid wallpaper reference')
         return self.call('render', document={k: v for k, v in doc.items() if k != 'generated'})
 
+    @tracked('Generating palette')
     def generate(self, image=None, seed=None, options=None):
         kwargs = dict(options=options or dict(mode='normal', light=False))
         if image:
@@ -143,6 +147,7 @@ class Author:
             raise ValueError('theme directory must not be a symlink')
         return path
 
+    @tracked('Loading theme')
     def load(self, identity, owned=False):
         path = self.target(identity)
         if exists(path / 'anodize.json'):
@@ -169,6 +174,7 @@ class Author:
             if hashlib.sha256(regular_bytes(path / name, 32 << 20)).hexdigest() != expected:
                 raise ValueError('generated file changed; refusing to overwrite: ' + name)
 
+    @tracked('Importing palette')
     def imported(self, path, identity, fmt):
         data = regular_bytes(path)
         notes = []
@@ -240,6 +246,7 @@ class Author:
             raise ValueError('state root must be absolute')
         return Store(state / 'dots')
 
+    @tracked('Preparing theme files')
     def prepare(self, doc, edit=False, reference=False, wallpaper=None):
         path = self.target(doc['id'])
         if exists(path) and not edit:
@@ -290,6 +297,7 @@ class Author:
         return dict(schema=1, status='unchanged' if unchanged else 'preview', action='edit' if edit else 'create',
                     target=str(path), files=files, guards=guards, document=doc)
 
+    @tracked('Saving theme files')
     def save(self, plan):
         if plan['status'] == 'unchanged':
             return {'schema': 1, 'status': 'unchanged', 'target': plan['target']}

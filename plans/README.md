@@ -12,6 +12,7 @@ The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday mai
 | [Anodize](anodize.md) | Implemented core/CLI, local Neovim integration, completions and manual. |
 | [Anodize next steps](anodize-next.md) | Proposed foundation hardening, then separately scoped frontend work. |
 | [Git and managed files](git-and-file-operations.md) | Implemented bounded operations and quieter discovery. |
+| [Operation progress](progress.md) | Delayed terminal spinners and phase bars across core commands. |
 | [Gum confirmations](gum-confirmations.md) | Optional confirmations for file operations, Anodize and Git publish. |
 | [Tracked-config browser](files-browser.md) | Implemented Gum/FZF/plain browser with guarded operation review. |
 | [Files catalog](files-catalog.md) | Implemented catalog; later mutations belong to the Git/files slice. |

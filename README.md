@@ -32,6 +32,8 @@ and `DOTS_ICONS`. Automatic color respects `NO_COLOR`. Additional trusted roots
 can be selected with repeated prefix `--command-dir /absolute/directory` options.
 Duplicate command routes fail instead of silently overriding one another.
 
+Slow Git, theme, file and Anodize operations show colorful spinners or phase progress bars after 500 ms in a terminal. Set `DOTS_PROGRESS=never` to disable progress independently of colors. JSON, raw output, dry runs and redirected commands stay free of progress displays; `--yes` retains terminal progress. Prompt-capable external commands use a static phase message. See [operation progress](docs/presentation.md#operation-progress).
+
 Bash, Zsh, and Fish adapters are included in the repository's shell configuration.
 They discover new commands and declared arguments on the next Tab, without a
 startup scan. Zsh completion menus align command/option names and descriptions in columns,

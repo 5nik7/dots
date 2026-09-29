@@ -6,7 +6,7 @@ DT_STATE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes
 DT_FORMATS=(name hex rgb r g b rgb-r rgb-g rgb-b luminance brightness cmyk ansi-8bit ansi-8bit-value ansi-8bit-escapecode ansi-24bit ansi-24bit-escapecode esc)
 declare -A DT_DATA=() DT_COLORS=() DT_META=() DT_VALUES=() DT_LINES=() DT_META_LINES=()
 declare -a DT_KEYS=() DT_NAMES=()
-dt_error() { printf 'dots themes: %s\n' "$*" >&2; return 1; }
+dt_error() { [[ -z ${DOTS_PROGRESS_FD:-} ]] || dots::progress_stop; printf 'dots themes: %s\n' "$*" >&2; return 1; }
 dt_id() { [[ $1 =~ ^[a-z][a-z0-9_]*$ ]]; }
 dt_theme_id() { [[ $1 =~ ^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$ ]]; }
 dt_key() { [[ $1 =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; }

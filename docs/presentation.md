@@ -91,6 +91,27 @@ operation plan is rebuilt by the interaction layer.
 The background switcher and other existing prompts retain their documented
 behavior until scoped follow-up work changes them.
 
+## Operation progress
+
+**Implemented, 2026-09-29.** Slow human views in the Git, theme, file and Anodize command families use a shared transient display on stderr. Animation starts after 500 ms; fast work remains quiet. Both stdout and stderr must be terminals, and `TERM` must not be `dumb`. `DOTS_PROGRESS=auto|never` controls progress independently of colors and icons; unset means `auto`, and an unrecognized value disables it. There is no progress CLI flag or required optional tool.
+
+Known operation counts use a bar with `completed/total` for the named phase. Unknown work uses a spinner. Counts describe processed items, not elapsed time or successful publication. Cyan marks activity and blue marks the phase; permanent result views remain authoritative for success, unchanged work, failure and recovery. No success is inferred from a full preparation bar. Finalization and integrity checks use a spinner.
+
+| Family | Progress coverage |
+| --- | --- |
+| Git | Repository discovery, status inspection, publication input collection and local sync/publish phases; status/publication use known repository counts. |
+| Themes | Preparation, rendering, bat cache generation, publication, quiet application reloads and installed-theme validation; `update --all` uses the selected checkout count. |
+| Files | Discovery, catalog/browser loading, planning and integrity checks; transaction preparation, replacement and reverse recovery use operation counts. |
+| Anodize | Theme loading/import, image/seed generation, rendering, preparation, save and application through both entry points; saves share file transaction progress. |
+
+Prompt-capable or directly outputting external commands use a static phase message instead of animation: Git fetch/init/commit/push, theme downloads, tmux reloads and wallpaper adapters. These messages appear immediately before the child starts so prompts and child output remain readable, even when a child takes a long time. Progress does not capture, reroute or replay child output. Existing timeout and exit-status behavior is retained.
+
+`--yes` retains progress but bypasses confirmation. JSON, raw paths, scalar queries, raw exports/app previews, generated shell code, initialization, completion, help, dry runs and redirected output bypass the progress UI, including static phase messages. Explicit color/icon settings never override this gate. Slow human read-only discovery is eligible and does not write progress files or application state.
+
+The existing color and icon policy applies. ASCII mode uses `|/-\` and `#` bars; disabled color removes ANSI color sequences while carriage returns and spaces update the line. Neither renderer hides the cursor or changes terminal input mode. Transient labels are sanitized and shortened to fit; final result and recovery text keeps complete paths. Bash escapes non-ASCII path characters for predictable cell widths, while Python measures combining and wide characters. Bash uses optional `stty` to read the initial terminal width and otherwise falls back to `COLUMNS` or 80 columns.
+
+Clear and stop the display before results, diagnostics, confirmation or selection. Nested work shares the active renderer; captured private bridges disable their own progress. Renderer errors disable presentation without approving, cancelling or retrying work. File notifications run at existing journal boundaries and never alter transaction ordering or schemas. Rendering workers must release inherited locks, terminate on completion/interruption, and preserve the operation's result.
+
 ## Ownership and Compatibility
 
 `lib/dots/ui.bash` owns the shared Bash helpers. The lazy `lib/dots/interactive.bash` adapter owns optional UI selection, Gum invocation policy and numbered prompts; interactive callers reserve fd 3 for the visible terminal before capturing selector output. The Python file catalog's `Presentation` renderer mirrors the policy; it is not a generated binding. New Bash commands must reuse the helpers. Other first-party implementations must match this contract through an equivalent renderer and policy tests rather than inventing per-command colors or message conventions. See [architecture](architecture.md#live-bash-framework).

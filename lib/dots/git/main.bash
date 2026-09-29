@@ -57,6 +57,9 @@ text_cmd canonical_dir "$TARGET" 2>/dev/null || die 3 'target must be an existin
 repo_root "$REPLY" || die 3 'not inside a Git worktree'
 ROOT=$REPLY
 colors
+source "$LIB/../progress.bash"
+DOTS_PROGRESS_HUMAN=0
+((JSON || DRY_RUN)) || DOTS_PROGRESS_HUMAN=1
 if [[ $CMD == status ]]; then
     source "$LIB/status.bash"
     status_main

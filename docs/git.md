@@ -9,6 +9,8 @@ outermost parent. Only registered submodules are traversed, independently of the
 file catalog and its platform/private exclusions. Missing repositories are never
 initialized by inspection or publication.
 
+[Terminal progress](presentation.md#operation-progress) covers recursive inspection and local operation phases, with repository counts when known. Fetch, initialization, commit and push use static phase messages so credentials, hooks and signing retain terminal access. `DOTS_PROGRESS=never` disables both displays; JSON and dry runs bypass them. Completion counts do not imply that every repository was successfully published.
+
 ```bash
 dots git status
 dots git status --full-paths

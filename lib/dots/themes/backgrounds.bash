@@ -74,6 +74,9 @@ dt_bg() (
   exec 8>"$DT_STATE/background.lock"; flock -n 8 || return 1
   journal=$(mktemp "$DT_STATE/backgrounds/action.XXXXXXXX") || return
   printf 'prepared\n%s\n' "$file" > "$journal"; dt_flush "$journal" || return
+  # shellcheck disable=SC2034
+  local DOTS_PROGRESS_HUMAN=1
+  dots::progress_external 'Applying wallpaper'
   if ! timeout 15 "${DT_BG_COMMAND[@]}"; then printf 'failed\n%s\n' "$file" > "$journal"; dt_flush "$journal"; dt_error 'wallpaper failed; app theme remains published'; return 1; fi
   if (( ! locked )); then
     temp=$(mktemp "$DT_STATE/backgrounds/.selection.XXXXXXXX") || return

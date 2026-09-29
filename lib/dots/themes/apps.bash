@@ -94,16 +94,21 @@ dt_apps_restore() {
   done
 }
 dt_apps_reload() {
+  dots::progress_start 'Checking application reloads'
   local failures=0
   if [[ ${TERMUX_VERSION:-} && ${PREFIX:-} == */usr && -d $HOME/.termux ]] && command -v termux-reload-settings >/dev/null; then
+    dots::progress_update 'Reloading Termux settings'
     termux-reload-settings >/dev/null 2>&1 || { dt_error 'Termux reload failed'; failures=1; }
   fi
   if command -v tmux >/dev/null && tmux list-sessions >/dev/null 2>&1; then
+    dots::progress_external 'Reloading tmux configuration'
     tmux source-file "$DT_ACTIVE/tmux.conf" || { dt_error 'tmux reload failed'; failures=1; }
   fi
   if [[ ${KITTY_LISTEN_ON:-} ]] && command -v kitty >/dev/null; then
+    dots::progress_start 'Reloading Kitty colors'
     kitty @ --to "$KITTY_LISTEN_ON" set-colors --all --configured "$DT_ACTIVE/kitty.conf" >/dev/null 2>&1 || { dt_error 'Kitty reload failed'; failures=1; }
   fi
+  dots::progress_stop
   (( ! failures )) || printf 'Theme is published; retry app reloads with dots theme refresh.\n' >&2
   return 0
 }

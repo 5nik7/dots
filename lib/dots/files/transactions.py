@@ -9,12 +9,17 @@ import fcntl
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 import shutil
 import stat
 import uuid
 
 from catalog import atomic_json, read_json
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from progress import tracked, report
 
 
 def exists(path):
@@ -126,6 +131,7 @@ class Store:
         self.root = self.state / 'files' / 'transactions'
         self.backups = self.state / 'backups'
 
+    @tracked('Reading transaction history')
     def records(self):
         if not self.root.exists():
             return []
@@ -157,6 +163,7 @@ class Store:
     def save(self, doc):
         atomic_json(self.root / doc['id'] / 'journal.json', doc)
 
+    @tracked('Checking file operation inputs')
     def apply(self, action, operations, guards, retain=False, catalogs=()):
         """Operations are {path, source|link|data|delete}; guards bind preview inputs."""
         if not operations:
@@ -178,6 +185,7 @@ class Store:
                    'retain_backup': retain, 'catalogs': list(map(str, catalogs)), 'operations': [], 'created_parents': []}
             self.save(doc)
             try:
+                report('Preparing files', 0, len(operations))
                 for i, op in enumerate(operations):
                     path = Path(op['path'])
                     parents_safe(path)
@@ -207,12 +215,15 @@ class Store:
                     entry['after'] = digest(after)
                     doc['operations'].append(entry)
                     self.save(doc)
+                    report('Preparing files', i + 1, len(operations))
+                report('Verifying prepared files')
                 # All copies and metadata are ready before the first live replacement.
                 for path, expected in guards.items():
                     if digest(path) != expected:
                         raise ValueError(f'changed during preflight: {path}')
                 doc['status'] = 'applying'
                 self.save(doc)
+                report('Applying files', 0, len(doc['operations']))
                 for i, entry in enumerate(doc['operations']):
                     path = Path(entry['path'])
                     missing = []
@@ -243,6 +254,8 @@ class Store:
                         sync_dir(path.parent)
                     entry['phase'] = 'done'
                     self.save(doc)
+                    report('Applying files', i + 1, len(doc['operations']))
+                report('Finalizing file transaction')
                 if retain:
                     parents_safe(self.backups / identity)
                     private_directory(self.backups)
@@ -283,11 +296,14 @@ class Store:
             if exists(backup):
                 backup.unlink()
 
+    @tracked('Rolling back files')
     def rollback(self, doc):
         doc['status'] = 'rolling-back'
         self.save(doc)
         directory = self.root / doc['id']
-        for i in reversed(range(len(doc['operations']))):
+        report('Rolling back files', 0, len(doc['operations']))
+        for completed, i in enumerate(reversed(range(len(doc['operations'])))):
+            report('Rolling back files', completed, len(doc['operations']))
             entry = doc['operations'][i]
             path = Path(entry['path'])
             parents_safe(path)
@@ -320,6 +336,7 @@ class Store:
             sync_dir(path.parent)
             entry['phase'] = 'rolled-back'
             self.save(doc)
+        report('Finalizing file recovery')
         for parent in reversed(doc['created_parents']):
             if not parent['created']:
                 continue
@@ -331,6 +348,7 @@ class Store:
         self.save(doc)
         self.cleanup(doc)
 
+    @tracked('Recovering files')
     def recover(self, identity):
         doc = self.load(identity)
         with self.locked(doc['catalogs']):
@@ -340,6 +358,7 @@ class Store:
             self.rollback(doc)
         return doc
 
+    @tracked('Verifying undo inputs')
     def inverse(self, identity):
         doc = self.load(identity)
         if doc['status'] != 'complete':

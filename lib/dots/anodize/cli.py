@@ -12,6 +12,7 @@ import textwrap
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from interaction import gum_confirm
+from progress import configure
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'files'))
 from catalog import Presentation
@@ -246,6 +247,9 @@ def main(argv=None):
         source = Path(__file__).with_name('completion') / args.shell
         sys.stdout.write(source.read_text())
         return
+    configure(not getattr(args, 'json', False) and not getattr(args, 'dry_run', False)
+              and not (args.action == 'export' and not args.output)
+              and not (args.action == 'preview' and args.app))
     author = Author()
     action = args.action
     if action == 'modes':

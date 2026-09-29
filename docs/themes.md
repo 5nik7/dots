@@ -7,6 +7,8 @@ The live interface is `dots theme`, using `bin/dots-theme-*` commands. The older
 Omarchy reference while retaining Dots' shell and Neovim palette APIs; see
 [decision 0008](decisions/0008-config-catalog-and-theme-apps.md).
 
+Theme preparation, rendering, bat caches, publication, quiet reloads and installed-source validation use [terminal progress](presentation.md#operation-progress). Batch updates show processed checkout counts. Downloads, tmux reloads and wallpaper adapters use static phase messages to keep child output readable. `DOTS_PROGRESS=never` disables these displays. Raw queries, shell initialization and dry runs stay undecorated.
+
 ## Flat themes and templates
 
 Selectable variants live at `themes/ID/`, normally with `colors.toml`, `theme.toml`,

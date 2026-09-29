@@ -12,6 +12,7 @@ import textwrap
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from interaction import gum_confirm
+from progress import Progress, configure, tracked
 
 from catalog import Catalog, Presentation, read_json, platform, relative, ID
 from transactions import Store, digest, exists, parents_safe
@@ -138,6 +139,7 @@ class Manager:
                     raise ValueError('possible credential material; import refused: ' + str(path))
                 tail = text[-256:]
 
+    @tracked('Discovering system configs')
     def system(self, repo=None):
         claims = {r['target']: r for r in self.catalog.records() if r['target']}
         rows, seen = [], set()
@@ -179,6 +181,7 @@ class Manager:
                         rows.append({'path': str(path), 'status': 'excluded', 'repository': loc['repository']})
         return sorted(rows, key=lambda x: x['path'])
 
+    @tracked('Planning file operations')
     def plan(self, args):
         ops, guards, docs, views = [], {}, {}, []
         records = self.catalog.records()
@@ -392,6 +395,7 @@ def main():
     backups.add_argument('--backup', action='store_true', default=None)
     backups.add_argument('--no-backup', dest='backup', action='store_false')
     args = parser.parse_args()
+    configure(not args.json and not args.dry_run)
     if args.action != 'system' and (args.verbose or args.include_all):
         parser.error('--verbose and --all require discover --system')
     if args.action != 'add' and (args.scan or args.directory_link):
@@ -429,48 +433,49 @@ def main():
         return
     if args.backup is None:
         args.backup = manager.backup_default()
-    if args.action in ('undo', 'recover', 'backups-restore'):
-        if len(args.values) != 1:
-            parser.error('one transaction or backup ID is required')
-        identity = args.values[0]
-        if args.action == 'recover':
-            doc = manager.store.load(identity)
-            if doc['status'] not in ('preparing', 'applying', 'rolling-back', 'recovery-required'):
-                raise ValueError('transaction does not need recovery')
-            ops, guards, catalogs = [], {}, doc['catalogs']
-            views = [dict(x, status='recover') for x in doc['operations']]
-        elif args.action == 'undo':
-            ops, guards, catalogs = manager.store.inverse(identity)
-            views = [dict(x, status='undo') for x in ops]
+    with Progress('Planning file operations'):
+        if args.action in ('undo', 'recover', 'backups-restore'):
+            if len(args.values) != 1:
+                parser.error('one transaction or backup ID is required')
+            identity = args.values[0]
+            if args.action == 'recover':
+                doc = manager.store.load(identity)
+                if doc['status'] not in ('preparing', 'applying', 'rolling-back', 'recovery-required'):
+                    raise ValueError('transaction does not need recovery')
+                ops, guards, catalogs = [], {}, doc['catalogs']
+                views = [dict(x, status='recover') for x in doc['operations']]
+            elif args.action == 'undo':
+                ops, guards, catalogs = manager.store.inverse(identity)
+                views = [dict(x, status='undo') for x in ops]
+            else:
+                record = read_json(manager.store.backups / (identity + '.json')) if re.fullmatch('[a-f0-9]{32}', identity) else None
+                if not record:
+                    raise ValueError('invalid backup ID')
+                doc = manager.store.load(identity)
+                if doc['status'] != 'complete':
+                    raise ValueError('backup transaction is not complete')
+                ops, guards, catalogs, views = [], {}, [], []
+                for i, entry in enumerate(doc['operations']):
+                    # Restore data objects; catalog changes belong to undo, not restore.
+                    if entry['before'] is None or entry['path'] in doc['catalogs']:
+                        continue
+                    path = entry['path']
+                    current = digest(path)
+                    if current == entry['before']:
+                        continue
+                    if current != entry['after'] and current is not None and not args.backup:
+                        raise ValueError('changed restore target requires --backup')
+                    source = manager.store.root / identity / f'{i}-before'
+                    if digest(source) != entry['before']:
+                        raise ValueError('backup failed verification')
+                    ops.append({'path': path, 'source': str(source)})
+                    guards[path] = current
+                    guards[str(source)] = entry['before']
+                    views.append({'path': path, 'status': 'restore'})
         else:
-            record = read_json(manager.store.backups / (identity + '.json')) if re.fullmatch('[a-f0-9]{32}', identity) else None
-            if not record:
-                raise ValueError('invalid backup ID')
-            doc = manager.store.load(identity)
-            if doc['status'] != 'complete':
-                raise ValueError('backup transaction is not complete')
-            ops, guards, catalogs, views = [], {}, [], []
-            for i, entry in enumerate(doc['operations']):
-                # Restore data objects; catalog changes belong to undo, not restore.
-                if entry['before'] is None or entry['path'] in doc['catalogs']:
-                    continue
-                path = entry['path']
-                current = digest(path)
-                if current == entry['before']:
-                    continue
-                if current != entry['after'] and current is not None and not args.backup:
-                    raise ValueError('changed restore target requires --backup')
-                source = manager.store.root / identity / f'{i}-before'
-                if digest(source) != entry['before']:
-                    raise ValueError('backup failed verification')
-                ops.append({'path': path, 'source': str(source)})
-                guards[path] = current
-                guards[str(source)] = entry['before']
-                views.append({'path': path, 'status': 'restore'})
-    else:
-        if not args.values and not (args.action == 'add' and args.scan):
-            parser.error('select paths or qualified resource IDs')
-        ops, guards, catalogs, views = manager.plan(args)
+            if not args.values and not (args.action == 'add' and args.scan):
+                parser.error('select paths or qualified resource IDs')
+            ops, guards, catalogs, views = manager.plan(args)
     preview = {'schema': 1, 'action': args.action, 'dry_run': args.dry_run, 'backup': args.backup, 'items': views}
     if args.dry_run:
         if args.json:

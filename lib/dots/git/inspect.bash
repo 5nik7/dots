@@ -174,6 +174,7 @@ upstream() {
 }
 
 fetch_branch() {
+    dots::progress_external "Fetching upstream: ${1##*/}"
     git -C "$1" -c fetch.recurseSubmodules=false fetch --quiet --no-tags --no-recurse-submodules \
         --refmap= -- "$2" "$3:$4" >/dev/null 2>&1
 }

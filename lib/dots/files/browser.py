@@ -9,8 +9,10 @@ from catalog import Presentation
 from manage import Manager, show
 from transactions import digest, parents_safe
 from interaction import Selector, SelectionEnded as EndBrowser
+from progress import configure, tracked
 
 
+@tracked('Planning file operation')
 def planned_operation(identity, action, backup):
     """Retain the exact plan plus all catalog inputs governing its ownership."""
     root = Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[3]).resolve()
@@ -58,6 +60,7 @@ class Browser:
             raise EndBrowser()
         return choice
 
+    @tracked('Loading file browser')
     def catalog(self):
         manager = Manager()
         rows = manager.catalog.records()
@@ -146,6 +149,7 @@ def main():
     args = parser.parse_args()
     if not sys.stdin.isatty() or not sys.stdout.isatty():
         raise ValueError('browser needs terminal input and output; use dots files list/show and link/remove for scripts')
+    configure()
     Browser(args).run()
 
 

@@ -1,6 +1,8 @@
-# Sourceable Bash presentation helpers. No shell configuration or subprocesses.
+# Sourceable Bash presentation helpers. Static views use builtins; an active
+# progress worker is stopped before output. Never source shell configuration.
 # DOTS_COLOR / DOTS_ICONS: auto, always, never; dispatcher flags override them.
 dots::style() {
+  [[ -z ${DOTS_PROGRESS_FD:-} ]] || dots::progress_stop
   local fd=${1:-1} mode=${DOTS_COLOR:-auto} icons=${DOTS_ICONS:-auto}
   DOTS_UI_RESET='' DOTS_UI_BOLD='' DOTS_UI_BLUE='' DOTS_UI_GREEN=''
   DOTS_UI_YELLOW='' DOTS_UI_RED='' DOTS_UI_CYAN=''

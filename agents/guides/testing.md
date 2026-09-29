@@ -147,3 +147,5 @@ must run through `python3 -B tools/verify_anodize.py check`. Preserve each comma
 JSON/plain fallback and approval semantics; test selector failure without retry
 and drift while the prompt is open. Native Gum checks require disposable PTYs and
 local-only publication fixtures; see [testing](../../docs/testing.md#optional-operation-confirmations).
+
+For shared progress or its integrations, run `python3 -B tools/test_progress.py` and the affected command suites. Follow the [progress testing contract](../../docs/testing.md#operation-progress), including data-mode suppression, native PTY cleanup, prompt-capable children and transaction rollback. Keep benchmark measurements sequential.

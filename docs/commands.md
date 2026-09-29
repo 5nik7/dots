@@ -167,6 +167,8 @@ stderr are styled independently. Directory output and completion data remain
 plain. Shared helpers use Bash builtins and ANSI colors, not the shell startup
 chain, theme generators, or the existing general-purpose util script.
 
+`DOTS_PROGRESS=auto|never` controls the [operation progress display](presentation.md#operation-progress), independently of color/icons. Unset means `auto`; invalid values disable progress. There is no new route, flag or completion token. Human terminal work can animate after 500 ms, including read-only scans and `--yes` operations. Data, dry-run and redirected modes bypass the display even with forced decoration.
+
 Theme and file human views share this presentation policy. Terminal listings use
 headings, status colors/icons, counts and readable paths; forced color or icons also
 enable that layout when redirected. `NO_COLOR` disables automatic color while

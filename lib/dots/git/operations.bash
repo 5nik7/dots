@@ -1,6 +1,7 @@
 # shellcheck disable=SC2034,SC2153
 # Adapted from git-it 0.1.0; see LICENSE.
 cleanup_locks() {
+    dots::progress_stop
     local dir
     for dir in "${LOCKS[@]}"; do rmdir -- "$dir" 2>/dev/null || :; done
 }
@@ -20,6 +21,7 @@ lock_repo() {
 }
 
 sync_children() {
+    dots::progress_start 'Discovering submodules'
     local dir=$1 i path oid child
     local -a paths=() oids=()
     children "$dir" || { event "$dir" blocked 'cannot enumerate a conflict-free submodule index'; return 1; }
@@ -36,6 +38,7 @@ sync_children() {
             if [[ -d $child ]] && [[ -n $(find "$child" -mindepth 1 -maxdepth 1 -print -quit) ]]; then
                 event "$child" blocked 'uninitialized submodule directory is not empty'; continue
             fi
+            dots::progress_external "Initializing submodule: $path"
             if ! git --literal-pathspecs -C "$dir" -c submodule.recurse=false submodule update --init --checkout -- "$path" >/dev/null 2>&1; then
                 event "$child" failed 'initialization failed; check URL, credentials, and Git transport policy'; continue
             fi
@@ -46,6 +49,7 @@ sync_children() {
 
 sync_node() {
     local dir=$1 pinned=${2:-} parent=${3:-} path=${4:-} before target name branch remote ref tracking attached=0
+    dots::progress_start "Inspecting repository: ${dir##*/}"
     [[ ! -v VISITED[$dir] ]] || { event "$dir" blocked 'repeated repository in traversal'; return 1; }
     VISITED[$dir]=1
     lock_repo "$dir" || return 1
@@ -81,11 +85,13 @@ sync_node() {
         target=$pinned
         if ! git -C "$dir" cat-file -e "$target^{commit}" 2>/dev/null; then
             select_remote "$dir" || return 1; remote=${REMOTE:-origin}
+            dots::progress_external "Fetching recorded commit: ${dir##*/}"
             if ! git -C "$dir" fetch --quiet --no-tags --no-recurse-submodules -- "$remote" "$target" >/dev/null 2>&1; then
                 event "$dir" failed 'recorded commit could not be fetched'; return 1
             fi
         fi
     fi
+    dots::progress_start "Updating repository: ${dir##*/}"
     # Fetch can invoke credential helpers; recheck worktree state afterwards.
     if ! clean_own_files "$dir" || ! text_cmd git -C "$dir" rev-parse HEAD || [[ $REPLY != "$before" ]]; then
         event "$dir" blocked 'repository changed during fetch'; return 1
@@ -136,6 +142,7 @@ fingerprint() {
 collect_publish() {
     local dir=$1 parent=${2:-} path child
     local -a paths=()
+    dots::progress_start "Collecting publish inputs: ${dir##*/}"
     [[ ! -v VISITED[$dir] ]] || { event "$dir" blocked 'repeated repository'; return 1; }
     VISITED[$dir]=1; PARENT[$dir]=$parent
     lock_repo "$dir" || { BLOCKED[$dir]=1; return 1; }
@@ -255,10 +262,12 @@ publish_node() {
         stage_own_files "$dir" || { event "$dir" failed 'staging failed; staged changes retained (inspect git status)'; return 1; }
     fi
     if ! git -C "$dir" diff --cached --quiet --ignore-submodules=none --; then
+        dots::progress_external "Committing selected changes: ${dir##*/}"
         if ! git -C "$dir" commit -m "$MESSAGE" >/dev/null 2>&1; then
             event "$dir" failed 'commit failed; staged changes retained (check identity and hooks)'; return 1
         fi
     fi
+    dots::progress_external "Pushing selected changes: ${dir##*/}"
     if ! git -C "$dir" -c push.followTags=false push --porcelain --recurse-submodules=check -- "$destination" "HEAD:$ref" >/dev/null 2>&1; then
         event "$dir" failed 'push failed; local commit retained and parent publication blocked'; return 1
     fi
@@ -290,6 +299,7 @@ publish_node() {
 }
 
 operations_main() {
+    local DOTS_PROGRESS_STARTED='' progress_count=0
     EVENT_DIRS=(); EVENT_STATES=(); EVENT_REASONS=(); EVENT_FILES=(); EVENT_CODES=(); LAST_EVENT_REPO=''; LOCKS=(); PUB_DIRS=(); RESULT=0; PUBLISH_CANDIDATES=0
     declare -gA HELD=() VISITED=() BLOCKED=() SNAPSHOTS=() PARENT=() EXPECTED=()
     declare -gA PREVIEW_DEST=() PREVIEW_REF=() PREVIEW_REMOTE=() PREVIEW_BRANCH=()
@@ -303,7 +313,7 @@ operations_main() {
         if [[ -z $MESSAGE ]]; then
             text_cmd date -u '+%Y-%m-%d %H:%M UTC'; MESSAGE="Sync via ${HOSTNAME:-unknown} on $REPLY"
         fi
-        collect_publish "$ROOT" || RESULT=1
+        dots::progress_run 'Collecting publish inputs' collect_publish "$ROOT" || RESULT=1
         local dir parent answer
         ((!JSON)) && dots::heading "Publish preview"
         for dir in "${PUB_DIRS[@]}"; do publish_preview "$dir"; done
@@ -333,6 +343,7 @@ operations_main() {
             fi
             if ((!JSON)); then dots::heading "Publishing selected repositories"; LAST_EVENT_REPO=''; fi
             for dir in "${PUB_DIRS[@]}"; do
+                dots::progress_start "Publishing repositories: ${dir##*/}" "$progress_count" "${#PUB_DIRS[@]}"
                 parent=${PARENT[$dir]}
                 # Validate parent BEFORE permitting the known child-induced change.
                 if [[ -n $parent ]]; then
@@ -343,9 +354,13 @@ operations_main() {
                 if ! publish_node "$dir"; then
                     RESULT=1; [[ -z $parent ]] || BLOCKED[$parent]=1
                 fi
+                ((progress_count+=1))
+                dots::progress_update 'Publishing repositories' "$progress_count" "${#PUB_DIRS[@]}"
+                dots::progress_stop
             done
         fi
     fi
+    dots::progress_stop
     operations_report
     return "$RESULT"
 }

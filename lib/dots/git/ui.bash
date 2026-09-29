@@ -29,6 +29,7 @@ repo_label() {
     REPLY=$candidate
 }
 render_event() {
+    dots::progress_stop
     local dir=$1 state=$2 detail=$3 file=${4:-} code=$DOTS_UI_CYAN marker='[i]' label
     dots::style
     repo_label "$dir"; display "$REPLY"; label=$REPLY
@@ -58,6 +59,7 @@ render_event() {
     fi
 }
 event() {
+    dots::progress_stop
     local dir=$1 state=$2 reason=$3
     EVENT_DIRS+=("$dir"); EVENT_STATES+=("$state"); EVENT_REASONS+=("$reason")
     EVENT_FILES+=("${4:-}"); EVENT_CODES+=("${5:-}")

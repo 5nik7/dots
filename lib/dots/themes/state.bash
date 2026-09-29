@@ -1,6 +1,7 @@
 # Bounded theme-state publisher and journaled application connector links.
 # shellcheck source=apps.bash
 source "$DT_LIB/apps.bash"
+source "$DT_LIB/../progress.bash"
 # shellcheck source=app-env.bash
 source "$DT_LIB/app-env.bash"
 # flock releases the lock even after SIGKILL. sync -f is a required mutation capability.
@@ -92,6 +93,9 @@ dt_set() (
   umask 077
   # complete and rc are read by the EXIT trap.
   # shellcheck disable=SC2034
+  local DOTS_PROGRESS_HUMAN=1 DOTS_PROGRESS_STARTED=''
+  trap 'dots::progress_stop' EXIT
+  dots::progress_start 'Preparing theme'
   local theme=$1 flavor=${2:-} dir='' complete=0 rc=0 previous fingerprint stored=''
   dt_load "$theme" "$flavor" || exit 1
   dt_supported || { dt_error 'theme/flavor has no supported Neovim adapter'; exit 1; }
@@ -127,12 +131,14 @@ dt_set() (
     dt_emit_init zsh > "$dir/init.zsh" &&
     dt_emit_init fish > "$dir/init.fish" || exit 1
   if [[ -n ${DT_SEMANTIC[background]:-} ]]; then
+    dots::progress_update 'Rendering application themes'
     dt_render "$dir" || exit 1
     dt_app_init "$dir" || exit 1
   fi
   if [[ -f $dir/bat.tmTheme ]] && command -v bat >/dev/null; then
     mkdir -p "$dir/bat-source/themes" "$dir/bat-cache" || exit 1
     cp -- "$dir/bat.tmTheme" "$dir/bat-source/themes/Dots.tmTheme" || exit 1
+    dots::progress_update 'Building bat theme cache'
     (cd -- "$dir/bat-source" && BAT_CONFIG_PATH=/dev/null BAT_THEME=ansi BAT_CONFIG_DIR="$dir/bat-source" BAT_CACHE_PATH="$dir/bat-cache" bat cache --build --source "$dir/bat-source" --target "$dir/bat-cache" >/dev/null) || { dt_error 'bat theme cache build failed'; exit 1; }
     printf 'export BAT_THEME=Dots BAT_CACHE_PATH=%q\n' "$dir/bat-cache" >> "$dir/init.zsh"
     local fish_cache=$dir/bat-cache
@@ -146,9 +152,10 @@ dt_set() (
   while IFS= read -r -d '' file; do dt_flush "$file" || exit 1; done < <(find "$dir" -type f -print0)
   dt_flush "$dir" && dt_flush "$DT_STATE/generations" || exit 1
   dt_record "$dir" prepared || exit 1
-  trap 'rc=$?; if (( ! complete )); then dt_restore "$dir" || dt_error "recovery required: $dir"; fi; exit "$rc"' EXIT
+  trap 'rc=$?; dots::progress_stop; if (( ! complete )); then dt_restore "$dir" || dt_error "recovery required: $dir"; fi; exit "$rc"' EXIT
   trap 'exit 130' INT
   trap 'exit 143' TERM
+  dots::progress_update 'Publishing theme'
   printf '%s\n' "${dir##*/}" > "$dir/active.new" && dt_flush "$dir/active.new" &&
     mv -f -- "$dir/active.new" "$DT_STATE/current" && dt_flush "$DT_STATE" || exit 1
   if [[ -f $dir/kitty.conf ]]; then

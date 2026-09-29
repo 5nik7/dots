@@ -14,6 +14,9 @@ import tempfile
 import textwrap
 import unicodedata
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from progress import configure, tracked
+
 ID = re.compile(r"^[a-z][a-z0-9_-]*$")
 PLATFORMS = {"termux", "linux", "wsl", "windows"}
 
@@ -233,6 +236,7 @@ class Catalog:
             return None  # No native Windows destination adapter yet.
         return str(Path(base) / suffix)
 
+    @tracked('Inspecting file catalog')
     def records(self):
         result = []
         for source in self.sources:
@@ -306,6 +310,7 @@ class Catalog:
             return "missing"
         return "existing-directory" if target.is_dir() else "existing-file"
 
+    @tracked('Discovering files')
     def discover(self):
         tracked = self.records()
         covered = [(Path(r["source"]), r["strategy"] == "directory-link") for r in tracked]
@@ -343,6 +348,7 @@ class Catalog:
                                    status="discovered", tracked=False))
         return result
 
+    @tracked('Tracking file metadata')
     def track(self, args):
         source = next((s for s in self.sources if s["id"] == args.repo), None)
         if not source or source["status"] != "available":
@@ -410,6 +416,7 @@ def main(argv=None):
     parser.add_argument("--replaces", action="append")
     parser.add_argument("--update", action="store_true")
     args = parser.parse_args(argv)
+    configure(not args.json and args.action not in ('source', 'target'))
     cat = Catalog(Path(os.environ.get("DOTS") or Path(__file__).resolve().parents[3]), args.platform)
     if args.action in ("locate", "show", "source", "target", "track") and not args.value:
         parser.error("this action requires a query, resource ID, or source")

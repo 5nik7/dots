@@ -48,8 +48,9 @@ color_caution = 'bright-yellow'
 color_os = 'red'
 color_username = 'red'
 color_hostname = 'red'
-color_directory = 'blue'
-color_git = 'purple'
+color_directory = 'yellow'
+color_git = 'cyan'
+color_git_branch = 'purple'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
 color_env = 'blue'
@@ -119,8 +120,8 @@ use_logical_path = true
 
 [git_branch]
 symbol = ""
-style = "fg:color_git"
-format = '( [$symbol $branch]($style) )'
+style = "fg:color_git_branch"
+format = '( [$symbol$branch]($style) )'
 only_attached = true
 ignore_branches = []
 truncation_length = 25
