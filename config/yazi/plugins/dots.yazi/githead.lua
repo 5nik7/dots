@@ -1,12 +1,13 @@
 ---@diagnostic disable: undefined-global
 
--- Repository name and status belong to the same refresh generation.
-local save = ya.sync(function(this, cwd, request, name, output)
+-- Repository name, remote metadata and status share one refresh generation.
+local save = ya.sync(function(this, cwd, request, name, output, repo_info)
 	if request ~= this.request or cx.active.current.cwd ~= Url(cwd) then
 		return
 	end
 	this.cwd = cwd
 	this.name = name
+	this.repo_info = repo_info
 	if cwd:match("%.git[/\\]") or cwd:match("%.git$") then
 		output = nil
 	end
@@ -14,11 +15,32 @@ local save = ya.sync(function(this, cwd, request, name, output)
 	ui.render()
 end)
 
+-- git-it owns remote selection, host aliases and configured namespace ownership.
+-- Keep only presentation fields; never surface remote URLs or diagnostics.
+local function remote_info(cwd)
+	local output = Command("git-it")
+		:arg({ "info", "--json" })
+		:cwd(cwd)
+		:stdout(Command.PIPED)
+		:stderr(Command.NULL)
+		:output()
+	if not output or not output.status.success or #output.stdout > 65536 then return nil end
+	local ok, info = pcall(require(".json").decode, output.stdout)
+	if not ok or type(info) ~= "table" or type(info.icon) ~= "string" or type(info.owned) ~= "boolean" then
+		return nil
+	end
+	local icon = info.icon:gsub("%c", " "):gsub("^%s+", ""):gsub("%s+$", "")
+	if icon == "" then return nil end
+	return { icon = icon, owned = info.owned }
+end
+
 return {
 	setup = function(this, options)
 		options = options or {}
 		local repo_theme = options.theme or options
 		local repo_color = repo_theme.repo_color or "blue"
+		local repo_owned_color = repo_theme.repo_owned_color or repo_color
+		local show_remote_icon = options.show_remote_icon ~= false
 		local repo_prefix = options.repo_prefix or ""
 		local repo_symbol = options.repo_symbol or ""
 
@@ -26,7 +48,10 @@ return {
 			if not this.name or this.cwd ~= tostring(cx.active.current.cwd) then
 				return nil
 			end
-			return { { repo_prefix .. repo_symbol .. this.name, repo_color } }
+			local info = this.repo_info
+			local icon = show_remote_icon and info and (info.icon .. " ") or ""
+			local color = info and info.owned == true and repo_owned_color or repo_color
+			return { { icon .. repo_prefix .. repo_symbol .. this.name, color } }
 		end
 
 		local config = {
@@ -396,7 +421,7 @@ return {
 
 		local callback = function()
 			this.request = (this.request or 0) + 1
-			this.cwd, this.name, this.output = nil, nil, nil
+			this.cwd, this.name, this.output, this.repo_info = nil, nil, nil, nil
 			ui.render()
 			local cwd = cx.active.current.cwd
 			if not cwd.spec.is_regular then
@@ -611,6 +636,6 @@ return {
 		get_remote_branch()
 		get_git_log()
 
-		save(cwd, request, name, data)
+		save(cwd, request, name, data, name and remote_info(cwd) or nil)
 	end,
 }

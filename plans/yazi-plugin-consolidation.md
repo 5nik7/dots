@@ -10,6 +10,8 @@ The [plugin README](../config/yazi/plugins/dots.yazi/README.md) owns the feature
 
 Repository naming and Git-head status are combined in `githead.lua` with one event subscription set and request generation. The `githead` display component joins repository name and status with a plain space in one colored group, and the active section contains only that component. Repository styling options live under `githead`; the separate bundled `repo.lua` and dispatch route are removed. The original standalone `dots-repo.yazi` remains untouched.
 
+The bundled hovered-path component is named `hover.lua`, with a `hover` setup table and colored getter. Its regression runner is `test-hover.lua`. Module loading, the active header, native probe, and documentation use those names together; path fitting, icons, colors, and symlink-target behavior are preserved. The inactive standalone symlink plugins retain their original names and interfaces.
+
 ## Acceptance and evidence
 
 - [x] Consolidate sources and JSON helper; retain original license notices.

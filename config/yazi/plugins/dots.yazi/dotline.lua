@@ -30,7 +30,7 @@ local ComponentType = {
   C = 2, -- Components on the third section. [ | | C ... ] or [ ... C | | ]
 }
 
---- @alias Colored [string, Color] Stores text and its foreground color.
+--- @alias Colored { [1]: string, [2]: Color?, style?: any } Text with a foreground color or full Yazi style.
 --- @alias Coloreds Colored[] The array of Coloreds.
 
 --- @generic T
@@ -643,8 +643,8 @@ function Dotline.string.get:hovered_file_extension(show_icon)
     end
 
     if show_icon then
-      local icon = hovered:icon().text
-      return icon .. " " .. name
+      local icon = th.icon:match(hovered)
+      return icon and icon.text .. " " .. name or name
     else
       return name
     end
@@ -956,7 +956,11 @@ function Dotline.coloreds.create(coloreds, component_type)
   for i, colored in ipairs(coloreds) do
     local span = ui.Span(colored[1])
     set_component_style(span, component_type)
-    span:fg(colored[2])
+    if colored.style then
+      span:style(colored.style)
+    else
+      span:fg(colored[2])
+    end
 
     spans[i] = span
   end

@@ -9,7 +9,9 @@ require("dots"):setup({
     order = 1500,
   },
 
-  folder_rules = {},
+  folder_rules = {
+    { name = "Downloads", sort = "mtime", reverse = true, dir_first = false },
+  },
 
   projects = {
     event = {
@@ -118,20 +120,13 @@ require("dots"):setup({
         section_a = {
           { type = "line", name = "tabs" },
         },
-        section_b = {
-          { type = "coloreds", custom = false, name = "symlink" },
-          -- { type = "string", custom = false, name = "tab_path", params = { false, 24, 10 } },
-          -- { type = "coloreds", custom = false, name = "tab_path" },
-        },
+        section_b = {},
         section_c = {},
       },
       right = {
-        section_a = {
-          -- { type = "string", custom = false, name = "tab_num_files" },
-          -- { type = "string", name = "date", params = { "%A, %d %B %Y" } },
-        },
+        section_a = {},
         section_b = {
-          -- { type = "string", name = "date", params = { "%X" } },
+          { type = "coloreds", custom = false, name = "githead" },
         },
         section_c = {},
       },
@@ -140,56 +135,57 @@ require("dots"):setup({
     status_line = {
       left = {
         section_a = {
-          -- { type = "string", name = "tab_mode" },
           { type = "string", name = "date", params = { "%H:%M" } },
         },
         section_b = {
-          -- { type = "string", name = "hovered_size" },
+
+          { type = "coloreds", custom = false, name = "hover" },
         },
-        section_c = {
-          { type = "coloreds", custom = false, name = "githead" },
-          -- { type = "coloreds", name = "count" },
-        },
+        section_c = {},
       },
       right = {
-        section_a = {
-          -- { type = "string", name = "cursor_position" },
-          -- { type = "string", name = "hovered_size" },
-        },
-        section_b = {
-          -- { type = "coloreds", custom = false, name = "hostname_username" },
-          -- { type = "string", name = "cursor_percentage" },
-          -- { type = "coloreds", custom = false, name = "permissions" },
-        },
+        section_a = {},
+        section_b = {},
         section_c = {
           { type = "coloreds", name = "permissions" },
-          -- { type = "string", name = "hovered_file_extension", params = { true } },
-          -- { type = "coloreds", name = "permissions" },
         },
       },
     },
   },
 
-  symlink = {
+  hover = {
     auto_fit = true,
-    path_color = "blue",
+    show_path = true,
+    show_name = true,
+    show_icon = true,
+    show_link = true,
+    icon_prefix = " ",
+    icon_suffix = " ",
+    styles = {
+      path = { source = "directory" },
+      name = { source = "file" },
+      icon = { source = "name" },
+      arrow = { source = "custom", fg = "darkgray" },
+      link_dir = { source = "directory" },
+      link = { source = "target" },
+      -- Add fg/bg or attributes to any part, e.g. name = { source = "file", bg = "reset", bold = false }.
+    },
     path_max_length = 0,
     path_shorten = true,
     path_rtl = true,
-    name_color = "white",
     name_max_length = 0, -- 0 means unlimited.
     name_shorten = true,
     name_rtl = false,
     arrow = "  ",
-    arrow_color = "darkgray",
-    link_color = "cyan",
     link_max_length = 0,
     link_shorten = true,
     link_rtl = true,
   },
 
   githead = {
+    show_remote_icon = true,
     repo_color = "blue",
+    repo_owned_color = "yellow",
     repo_prefix = "", -- Literal text; include any desired trailing space.
     repo_symbol = "", -- Optional icon; i
     order = {

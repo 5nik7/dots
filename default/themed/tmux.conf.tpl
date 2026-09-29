@@ -1,6 +1,6 @@
 set -g status-style "bg=default,fg={{ foreground }}"
 set -g status-left "#[fg={{ background }},bg={{ accent }},bold] #S #[bg=default] "
-set -g status-right "#[fg={{ accent }}]#h "
+set -g status-right "#[fg=blue]#{?pane_in_mode,COPY ,}#{?client_prefix,PREFIX ,}#{?window_zoomed_flag,ZOOM ,}#[fg=brightblack]#h "
 set -g window-status-format "#[fg={{ muted }}] #I:#W "
 set -g window-status-current-format "#[fg={{ accent }},bold] #I:#W "
 set -g pane-border-style "fg={{ muted }}"

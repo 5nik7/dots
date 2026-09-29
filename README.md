@@ -55,7 +55,7 @@ dots theme refresh
 dots theme bg next                 # Explicit wallpaper change
 ```
 
-The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dots.yazi/README.md), combining the Dotline header/status renderer, Git indicators, saved projects, folder rules, and pane toggles. Its repository component shows the Git working tree folder name before branch details and hides outside repositories.
+The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dots.yazi/README.md), combining the Dotline header/status renderer, Git indicators, saved projects, folder rules, and pane toggles. File panes use inherited `LS_COLORS` styles, including backgrounds and text attributes; the `hover` header component defaults to the symlink’s own style before the arrow and the target basename’s actual style after it, with a separately styled target directory, with independent style sources, color/attribute overrides, and visibility options for each part. Its repository component shows the Git working tree folder name before branch details and hides outside repositories. Optional `git-it` adds a remote host icon and a configurable color for repositories matching its configured owners; the personal config uses green for owned repositories and blue otherwise.
 
 The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, FZF and Gum.
 The FZF template supplies published shell colors; Zsh picks them up at the next

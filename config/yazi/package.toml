@@ -1,17 +1,7 @@
 [[plugin.deps]]
-use = "yazi-rs/plugins:chmod"
-rev = "c591a36"
-hash = "87472b05a8c420100f6a2b9cde1e7746"
-
-[[plugin.deps]]
-use = "yazi-rs/plugins:types"
-rev = "c591a36"
-hash = "ff056b5acd05d915dc3a3936cb0cfd3e"
-
-[[plugin.deps]]
-use = "dedukun/bookmarks"
-rev = "9ef1254"
-hash = "92fbb5483657fa7976cdf4e0104e18e0"
+use = "5nik7/dots"
+rev = "7f0ea4a"
+hash = "9db9e1f85d5b44640accdf6b8b861eeb"
 
 [flavor]
 deps = []

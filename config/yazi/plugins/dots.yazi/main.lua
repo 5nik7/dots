@@ -6,12 +6,13 @@ local toggle_pane = require(".toggle-pane")
 
 local function setup(_, options)
   options = options or {}
+  require(".ls-colors"):setup(options.ls_colors or {})
   require(".full-border"):setup(options.full_border or {})
   require(".git"):setup(options.git or {})
-  require(".folder-rules"):setup()
+  require(".folder-rules"):setup(options.folder_rules or {})
   require(".projects"):setup(options.projects or {})
   require(".dotline"):setup(options.dotline or {})
-  require(".symlink"):setup(options.symlink or {})
+  require(".hover"):setup(options.hover or {})
   require(".githead"):setup(options.githead or {})
   require(".hostname-username"):setup(options.hostname_username or {})
 end
