@@ -263,7 +263,10 @@ rendering, cached initialization, compatibility APIs, journaled publication, fix
 application connectors, Git source lifecycle and explicit wallpaper adapters.
 Its `app-env.bash` adapter validates rendered FZF assignments as literal data
 and adds their colors to published Bash/Zsh and Fish initialization. The Gum shell
-template remains a rendered artifact for explicit sourcing in Bash/Zsh.
+template is rendered without execution during publication. The small `gum-env.bash`
+adapter loads the published artifact in interactive Bash startup and the Bash/Zsh
+`set_theme` published-palette path, including Zsh prompt refresh. Noninteractive
+startup and generated theme-init output remain independent.
 `bin/dots-theme-*` exposes the sole theme CLI, including native palette discovery and queries. Shared view/initialization helpers serve the CLI and palette helper APIs; there is no separate plural parser.
 `themes/bin/*` remains compatibility entry points, with shared shell logic in `lib`.
 

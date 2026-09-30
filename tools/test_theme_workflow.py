@@ -27,13 +27,14 @@ class Workflow(old.Themes):
 FZF_DEFAULT_OPTS='--height=40% --layout=reverse'
 source "$DOTS/themes/bin/theme"
 set_theme || exit 1
-[[ -z ${GUM_CONFIRM_PROMPT_FOREGROUND+x} ]] || exit 2
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#81a1c1' ]] || exit 2
 [[ $_FZF_COLORS_ == *'preview-bg:#222730'* ]] || exit 3
 before=$FZF_DEFAULT_OPTS
 set_theme || exit 4
 [[ $FZF_DEFAULT_OPTS == "$before" ]] || exit 5
 "$DOTS/bin/dots-theme-set" catppuccin-latte >/dev/null || exit 6
 set_theme || exit 7
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#1e66f5' ]] || exit 10
 [[ $_FZF_COLORS_ == *'prompt:#1e66f5'* ]] || exit 8
 [[ $FZF_DEFAULT_OPTS == '--height=40% --layout=reverse --color='* ]] || exit 9
 printf '%s\n' "$FZF_DEFAULT_OPTS"

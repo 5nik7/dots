@@ -37,6 +37,11 @@ change_theme() {
 set_theme() {
   [[ -z ${ZSH_VERSION:-} ]] || setopt local_options nonomatch
   local requested=${1:-} generation='' output file colors
+  # Follow the published artifact even when no generated shell palette exists.
+  # Explicit session-only selections do not publish a matching Gum environment.
+  if [[ -z $requested ]]; then
+    source "$DOTS/lib/dots/themes/gum-env.bash" || return
+  fi
   # Older generations and session-only palettes retain the role-based fallback.
   unset DOTS_THEME_FZF_COLORS
   if [[ -L $_DOTS_THEME_ACTIVE ]]; then

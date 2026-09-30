@@ -22,6 +22,8 @@ The shared `tools/public_fixture.py` copier rebases repository symlinks into fix
 
 Also run `python3 -B tools/test_bash_dots.py`, `python3 -B tools/test_zsh.py`, `python3 -B tools/zsh_interactive.py --samples 3`, shell syntax checks and ShellCheck. Existing theme checks cover preserved shell/theme behavior. Measure startup sequentially with `tools/zsh_fixture.py` against a retained public source snapshot, and initialization generation with `tools/bench_bash_dots.py`. Known baseline failures and measured results belong in the [focused plan](../plans/shell-init.md).
 
+Gum automatic loading is covered by the shell-init and theme/workflow suites: interactive Bash/Zsh startup and reload, child exports, XDG paths with spaces/Unicode, HOME fallback, optional missing files, noninteractive exclusion and Zsh generation refresh. Publication and generated theme initialization continue to leave shell overrides unexecuted. Fixtures own all state roots; do not source live user startup or activate a live theme for these checks.
+
 ## Operation progress
 
 Run `python3 -B tools/test_progress.py` for isolated native Unix PTY coverage of Bash/Python progress. The suite owns home/config/state/cache roots and checks delayed/fast work, counted phases, nested rendering, output modes, color/icon policy, 40/80/120 columns, control-character labels, prompt suspension, child exit status, interruption, renderer failure and worker cleanup. Disposable file transactions verify progress during real apply and injected rollback; controller tests prohibit animation for JSON/dry-run paths. PTY tests require Bash and Python; Gum is unnecessary.

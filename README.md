@@ -74,8 +74,9 @@ The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dot
 The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, FZF and Gum.
 The FZF template supplies published shell colors; Zsh picks them up at the next
 prompt after `dots theme refresh`, preserving FZF layout and key bindings. Gum
-colors render as `gum_env.sh` for explicit sourcing in Bash/Zsh, without Lua or
-Hilbish; see the [loading instructions](docs/themes.md).
+colors render as `gum_env.sh` and load automatically in interactive Bash/Zsh,
+without Lua or Hilbish. Zsh refreshes them with published theme changes; see the
+[loading instructions](docs/themes.md).
 `dots theme switcher` offers searchable Gum selection, palette review and
 Back/Apply/Cancel, with FZF and plain-menu fallbacks. Gum is the preferred optional
 tool for suitable new interactive workflows; see the [presentation convention](docs/presentation.md#optional-gum-interactions).

@@ -70,8 +70,12 @@ Bash/Fish prompt hook is installed.
 
 `gum_env.sh.tpl` renders to `gum_env.sh` under the active theme path. It exports
 all 116 Gum color variables directly in Bash or Zsh, without Lua or Hilbish.
-Dots renders this artifact but never executes it or loads it through automatic
-shell initialization. Personal `gum_env.sh.tpl` templates and bundled
+Interactive Bash/Zsh startup automatically sources the readable published file
+at `${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/gum_env.sh`.
+Missing files are optional; loading needs no Gum executable or theme regeneration.
+Zsh also reloads it through the existing published-theme refresh hook; Bash reloads
+it when its interactive configuration is sourced again. Publication itself never
+executes the artifact. Personal `gum_env.sh.tpl` templates and bundled
 `gum_env.sh` overrides follow the same rendering precedence as other app files.
 To publish and explicitly load the current colors:
 
@@ -80,11 +84,13 @@ dots theme refresh
 source "${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/gum_env.sh"
 ```
 
-Source the file again after theme changes. To load it in new shells, add the
-`source` line to your Bash or Zsh configuration after publishing a theme.
+The explicit source command also updates an already-running Bash session immediately.
+Zsh picks up published generation changes at its next prompt. Session-only
+`set_theme ID` calls do not load a different Gum artifact. Noninteractive startup,
+CLI data paths and generated `dots theme init` output do not source this file.
 Already-running Gum processes retain their environment. The generic Gum Style
 exports include `FOREGROUND`, `BACKGROUND`, `BORDER_FOREGROUND` and
-`BORDER_BACKGROUND`; explicit sourcing sets these alongside `GUM_*` variables.
+`BORDER_BACKGROUND`; automatic and explicit sourcing set these alongside `GUM_*` variables.
 Sourcing runs trusted user-owned shell configuration, including any overrides.
 The shell template replaces `gum_env.lua.tpl`; existing personal Lua templates
 or bundled Lua overrides are not converted. Move custom color assignments to

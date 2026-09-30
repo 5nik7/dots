@@ -233,6 +233,32 @@ type mkcd; alias rl''', interactive=True)
             with self.subTest(shell=shell):
                 self.shell(shell, self.generated(shell) + suffix)
 
+    def test_bash_gum_environment_startup_reload_and_noninteractive_boundary(self):
+        self.minimal_tools()
+        self.env['XDG_STATE_HOME'] = str(self.home / 'state space ü')
+        gum = Path(self.env['XDG_STATE_HOME']) / 'dots/current/theme/gum_env.sh'
+        gum.parent.mkdir(parents=True)
+        gum.write_text("export GUM_CONFIRM_PROMPT_FOREGROUND='#123456'\n")
+        hook = self.generated('bash')
+        self.shell('bash', hook + '\n[[ ! ${GUM_CONFIRM_PROMPT_FOREGROUND+x} ]]')
+        self.shell('bash', hook + '''
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#123456' ]] || exit 1
+[[ $(bash --noprofile --norc -c 'printf %s "$GUM_CONFIRM_PROMPT_FOREGROUND"') == '#123456' ]] || exit 2
+printf "export GUM_CONFIRM_PROMPT_FOREGROUND='#654321'\\n" >| "$XDG_STATE_HOME/dots/current/theme/gum_env.sh"
+''' + hook + "\n[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#654321' ]]", interactive=True)
+        gum.unlink()
+        self.shell('bash', hook + '\n[[ ! ${GUM_CONFIRM_PROMPT_FOREGROUND+x} ]]', interactive=True)
+        # The shared adapter also honors the default state root without any tools.
+        gum = self.home / '.local/state/dots/current/theme/gum_env.sh'
+        gum.parent.mkdir(parents=True)
+        gum.write_text("export GUM_CONFIRM_PROMPT_FOREGROUND='#abcdef'\n")
+        for shell in ('bash', 'zsh'):
+            self.shell(shell, '''unset XDG_STATE_HOME
+PATH=''
+source "$DOTS/lib/dots/themes/gum-env.bash"
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#abcdef' ]]
+''')
+
     def test_bash_optional_activation_runs_once(self):
         self.minimal_tools()
         tool = self.root / 'tools/mise'
@@ -254,7 +280,12 @@ type mkcd; alias rl''', interactive=True)
             (repo / 'scripts' / name).unlink()
         (Path(env['HOME']) / '.fzf.zsh').unlink()
         (repo / 'secrets/secrets.env').write_text('PRIVATE_COUNT=$(( ${PRIVATE_COUNT:-0} + 1 ))\n')
+        gum = Path(env['XDG_STATE_HOME']) / 'dots/current/theme/gum_env.sh'
+        gum.parent.mkdir(parents=True)
+        gum.write_text("export GUM_CONFIRM_PROMPT_FOREGROUND='#123456'\n")
         code = '''
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#123456' ]] || exit 9
+printf "export GUM_CONFIRM_PROMPT_FOREGROUND='#654321'\\n" >| "$XDG_STATE_HOME/dots/current/theme/gum_env.sh"
 [[ $PRIVATE_COUNT == 1 && $_DOTS_COMPINIT_READY == 1 ]] || exit 1
 [[ $DOTCONFIG == "$DOTS/config" && $SHELLS == "$DOTS/shells" ]] || exit 5
 [[ ! ${RED+x} && ! ${BLUE+x} && ! ${BOLD+x} && ! ${RST+x} && ! ${COLORS+x} ]] || exit 7
@@ -263,6 +294,7 @@ before_path=$PATH
 before_hooks="${(j.:.)precmd_functions}"
 source "$DOTS/shells/zsh/zshrc"
 [[ $PRIVATE_COUNT == 2 && $_DOTS_COMPINIT_READY == 1 ]] || exit 2
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#654321' ]] || exit 10
 [[ $RED == red && $BLUE == blue && $BOLD == bold && $RST == reset && $COLORS == caller ]] || exit 8
 [[ ${#FG} == 256 && ${#BG} == 256 && ${#COLOR} == 256 ]] || exit 6
 [[ $PATH == "$before_path" && "${(j.:.)precmd_functions}" == "$before_hooks" ]] || exit 3

@@ -12,6 +12,7 @@ if [[ -r $UTIL ]]; then
   source "$UTIL"
   build_color_arrays
 fi
+source "$DOTS/lib/dots/themes/gum-env.bash"
 
 LANG=en_US.UTF-8
 export LANG

@@ -353,8 +353,11 @@ publication. Shell template code is never executed. Invalid statements or color
 values refuse the new generation, leaving the active selection intact. Only
 validated FZF color tokens enter generated shell initialization; this adds no
 hook or general environment-variable injection interface. The Gum shell template
-is rendered but never executed by Dots or loaded by its shell adapters. Explicitly
-sourcing `gum_env.sh` executes trusted user-owned shell configuration, including
+is rendered without execution during publication, refresh or CLI data output.
+The owner-authorized interactive Bash/Zsh startup adapters automatically source
+the readable published `gum_env.sh`; Zsh also reloads it on published-generation
+changes. Missing files are optional and noninteractive startup does not load it.
+Automatic or explicit sourcing executes trusted user-owned shell configuration, including
 any personal or bundled overrides; these are not restricted to literal assignments.
 
 The interactive theme switcher does not publish during selection, palette preview,

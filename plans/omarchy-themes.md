@@ -66,3 +66,13 @@ Workflow checks passed 12/14 with the two existing theme-count expectations.
 A 40-column native transcript review, shell syntax, focused ShellCheck, relative
 links and whitespace checks passed. No live state was activated. Full coverage
 and platform limits are recorded in [testing](../docs/testing.md#optional-interactive-theme-picker).
+
+## Automatic Gum environment loading — implemented, 2026-09-29
+
+The owner requested automatic sourcing of the published Gum environment, superseding the earlier explicit-only loading boundary. A shared guarded Bash/Zsh adapter at the XDG state path is invoked by interactive Bash startup and the published `set_theme` path used by Zsh startup and prompt refresh. Missing files remain optional, no Gum/tool probe or subprocess is added, and noninteractive startup, generated init output and publication remain inert. Treat custom shell overrides as trusted configuration. No new selector or presentation layout is introduced; existing Gum presentation policy remains authoritative.
+
+Native Termux verification: all 116 exports from a copied active artifact matched in isolated Bash/Zsh environments. Shell initialization passed 27 tests with 3 PowerShell skips; dispatcher passed 23/23. Workflow passed 12/14 with the existing catalog-count failures; Zsh passed 15/17 with the existing alias expectations. Theme tests passed 26/27, including generation refresh; the Neovim all-family case exceeded its 40-second timeout in the full suite, alone, and in a fixture restored to the original theme adapter with the new loader removed. Native Zsh PTY checks passed completion, history, cursor transitions and reload equality for hooks, FZF options, completion paths and key bindings. PTY timing output overlapped the theme suite and is not performance evidence.
+
+Separate sequential, alternating before/after startup measurements used HEAD source snapshots in disposable fixtures, the copied 116-export artifact, seven warm samples per version, interactive shells without a PTY, minimal Bash tools and Zsh without plugins. Median Bash startup was 79.052/78.912 ms; Zsh was 1956.666/1976.411 ms. These are advisory native Termux measurements, not desktop/Windows evidence or a speed claim.
+
+Bash/Zsh syntax, the new adapter's ShellCheck and whitespace checks passed. The existing theme adapter retains its baseline SC2153 informational warning. The documentation gate remains blocked by the existing retired Yazi plugin link in docs/testing.md; this change introduces no new relative-link targets. No live theme was activated or user shell reloaded.

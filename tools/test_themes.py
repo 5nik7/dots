@@ -364,10 +364,12 @@ _dots_vivid_colors() { REPLY=colors:$1; }
 FZF_DEFAULT_OPTS='--height=40%'
 set_theme || exit 1
 [[ ${blue[hex]} == '#89b4fa' ]] || exit 2
+[[ -n $GUM_CONFIRM_PROMPT_FOREGROUND ]] || exit 7
 "$DOTS/bin/dots-theme-set" catppuccin-latte >/dev/null || exit 3
 false
 _dots_theme_precmd
 [[ $? == 1 && $FLAVOR == latte && ${blue[hex]} == '#1e66f5' ]] || exit 4
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#1e66f5' ]] || exit 8
 before=$FZF_DEFAULT_OPTS
 set_theme
 [[ $FZF_DEFAULT_OPTS == $before ]] || exit 5

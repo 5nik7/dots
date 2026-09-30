@@ -81,6 +81,8 @@ Repeated evaluation reapplies ordinary configuration without duplicate Dots PATH
 
 Explicit noninteractive initialization loads only common paths. Zsh's `zshenv` also derives and exports the checkout paths and performs native platform detection without external commands. Native startup wrappers load their adjacent loaders without starting the CLI. Login-file behavior and existing local hooks remain in place. Repository source edits do not create or replace home-directory links.
 
+Interactive Bash/Zsh startup also loads the published Gum environment from `${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/gum_env.sh` when it is a readable regular file. Missing artifacts are optional. The file is trusted shell configuration, including personal overrides; noninteractive initialization and hook generation do not execute it. Zsh's existing published-theme hook reloads Gum colors on generation changes, while Bash reloads them with its interactive configuration. See [theme environment loading](themes.md).
+
 ## Verification
 
 Run `python3 -B tools/test_shell_init.py` for isolated native contracts. It owns home, config, data, state, cache, repository, and terminal fixtures; private modules are synthetic. Unavailable shells are reported as skips. The Xonsh interactive test uses readline with a test-owned PTY rather than depending on optional prompt-toolkit. Run `python3 -B tools/test_powershell_init.py` on a machine with `pwsh` for portable native PowerShell parsing, generation, environment and error checks. This separate runner does not require Bash, POSIX PTYs, symlink privileges or a live profile. It is not native Windows evidence when run on another platform.
