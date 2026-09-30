@@ -6,9 +6,3 @@ if [[ ! -r $_dots_zsh_file || ! -r ${_dots_zsh_file:h}/../environment.sh || ! -r
   return 1
 fi
 source "${_dots_zsh_file:h}/init.zsh"
-
-# >>> pi-completion >>>
-fpath=("/data/data/com.termux/files/usr/share/zsh/functions/Calendar" $fpath)
-export PI_COMPLETION_VERSION="0.84.2"
-autoload -Uz compinit && compinit
-# <<< pi-completion <<<
