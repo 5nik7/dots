@@ -21,14 +21,14 @@ MARK = b'__DOTS_INPUT_READY__'
 
 
 class Session:
-    def __init__(self, env, cwd):
+    def __init__(self, env, cwd, argv=None):
         master, slave = pty.openpty()
         self.master = master
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 30, 120, 0, 0))
         def terminal():
             os.setsid()
             fcntl.ioctl(slave, termios.TIOCSCTTY, 0)
-        self.process = subprocess.Popen([ZSH, '-di'], stdin=slave, stdout=slave, stderr=slave,
+        self.process = subprocess.Popen(argv or [ZSH, '-di'], stdin=slave, stdout=slave, stderr=slave,
                                         env=env, cwd=cwd, preexec_fn=terminal)
         os.close(slave)
         self.output = bytearray()

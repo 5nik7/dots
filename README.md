@@ -44,6 +44,8 @@ for header examples, shared output helpers, and standalone integration.
 
 ## Shell initialization
 
+Bash and Zsh now share their [interactive functions and aliases](docs/shared-shells.md). Bash uses Readline vi mode, the same Starship configuration, FZF/Gum theme colors and supported native tool integrations. `ff` is the shared FZF picker; Bash's former filename search is `findfiles`. Zsh-only editor plugins remain native.
+
 Bash and Zsh also share the sourceable [`bin/lib/common.sh` helpers](docs/shell-utils.md) for PATH edits, optional file loading, checks, messages, formatting, spinners and explicit color-array construction. Startup no longer creates named color globals; human output obtains styles lazily from the shared renderer. These helpers use builtins for path and case operations, preserve source failures, and need no optional display tools during startup.
 
 **Implemented.** Load the existing Dots environment and shell configuration in Bash or Zsh with:
@@ -71,11 +73,11 @@ dots theme bg next                 # Explicit wallpaper change
 
 The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dots.yazi/README.md), combining the Dotline header/status renderer, Git indicators, saved projects, folder rules, and pane toggles. File panes use inherited `LS_COLORS` styles, including backgrounds and text attributes; the `hover` header component defaults to the symlink’s own style before the arrow and the target basename’s actual style after it, with a separately styled target directory, with independent style sources, color/attribute overrides, and visibility options for each part. Its repository component shows the Git working tree folder name before branch details and hides outside repositories. Optional `git-it` adds a remote host icon and a configurable color for repositories matching its configured owners; the personal config uses green for owned repositories and blue otherwise.
 
-The shared palette supplies Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, FZF and Gum.
-The FZF template supplies published shell colors; Zsh picks them up at the next
+The shared palette supplies Bash, Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, FZF and Gum.
+The FZF template supplies published shell colors; Bash and Zsh pick them up at the next
 prompt after `dots theme refresh`, preserving FZF layout and key bindings. Gum
 colors render as `gum_env.sh` and load automatically in interactive Bash/Zsh,
-without Lua or Hilbish. Zsh refreshes them with published theme changes; see the
+without Lua or Hilbish. Both shells refresh them with published theme changes; see the
 [loading instructions](docs/themes.md).
 `dots theme switcher` offers searchable Gum selection, palette review and
 Back/Apply/Cancel, with FZF and plain-menu fallbacks. Gum is the preferred optional
@@ -86,7 +88,7 @@ remain available without Gum or suitable terminals. `--yes`, `--dry-run` and JSO
 keep their existing behavior.
 Bat and Yazi share the syntax rules in `default/themed/bat.tmTheme.tpl`, including
 language-specific scopes and palette-based comments, selections, and diff colors.
-Selection journals and backs up fixed application theme connectors. Zsh refreshes
+Selection journals and backs up fixed application theme connectors. Bash and Zsh refresh
 at the next prompt; Neovim uses the local Anodize.nvim plugin and refreshes on state changes, focus or `:DotsThemeReload`. Native palette
 APIs, including `catppuccin` and `current_theme`, remain available. Theme management uses only `dots theme`; see the
 [plural-command migration table](docs/themes.md#migration-from-plural-commands) for script updates. The local editor plugin defaults to `~/repos/Anodize.nvim` (override with `ANODIZE_NVIM_DIR`); generic imported themes need no downloaded Lua. Git theme installation,
@@ -190,7 +192,7 @@ semantics, restrictions, IDs and recovery examples.
 
 Use `palette` to preview all 256 terminal foreground colors, or `palette_bg` for background colors in the same numbered column layout.
 
-Use `mkcd <directory>` in the configured Zsh shell to enter an existing directory or create missing parents and enter the new directory. It requires exactly one nonempty path and refuses existing files or broken symlinks. The Zsh function sources [scripts/mkcd](scripts/mkcd) so the directory change affects your current shell; in Bash, use `source /path/to/dots/scripts/mkcd "directory"` directly.
+Use `mkcd <directory>` in either configured Bash or Zsh shell to enter an existing directory or create missing parents and enter the new directory. It requires exactly one nonempty path and refuses existing files or broken symlinks. The shared function sources [scripts/mkcd](scripts/mkcd) so the directory change affects your current shell.
 
 The existing [Zsh configuration](shells/zsh/README.md) now uses explicit modules, one completion initialization, immediate tool integrations, and generated-data caches. It preserves the Termux workflow; native WSL/Linux and MSYS2 verification remain pending. See the guide for module registration, reloads, and isolated checks.
 

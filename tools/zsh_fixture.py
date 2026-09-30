@@ -22,6 +22,8 @@ def fixture(source=REPO, plugins=True):
     repo.mkdir()
     for name in ('shells/zsh', 'themes', 'config/starship', 'config/vivid', 'default/themed'):
         copy_public_tree(source / name, repo / name, repo=source, fixture=repo, aliases=(REPO,))
+    if (source / 'shells/shared').is_dir():
+        copy_public_tree(source / 'shells/shared', repo / 'shells/shared', repo=source, fixture=repo, aliases=(REPO,))
     # The shared _dots adapter links into the public Bash dispatcher library.
     # Historical baseline snapshots may predate this component.
     if (source / 'lib/dots').is_dir():

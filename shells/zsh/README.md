@@ -9,12 +9,12 @@ The shared configuration supports the existing Termux workflow with explicit sta
 `zshrc` resolves its own source file and loads the adjacent `init.zsh` directly; that loader establishes the shared paths, and `interactive.zsh` loads these stages synchronously:
 
 1. `core/environment.zsh`: XDG defaults, shared utilities, environment modules, editor selection, and paths.
-2. `core/cache.zsh`, existing functions/aliases/options/FZF settings, and the selected theme.
+2. `core/cache.zsh`, shared functions/options/FZF settings, and the selected theme.
 3. Installed completion providers, followed by `core/completion.zsh` and one `compinit` with its normal ownership checks.
-4. `integrations/tools.zsh`: immediately available runtime managers, directory hooks, history integration, generated completions, and Starship.
+4. `integrations/tools.zsh`: immediately available runtime managers, directory hooks, history integration, generated completions, Starship, then shared aliases.
 5. The existing local configuration hook, FZF shell bindings, then FZF-tab and widget-wrapping plugins.
 
-Existing `functions.zsh`, `aliases.zsh`, `options.zsh`, `fzf.zsh`, `completions.zsh`, and `plugins.zsh` entry points remain available. Tool activation and plugin/widget wrapping happen once per shell; start a new shell after changing their activation code. `rl` reloads ordinary configuration and reapplies the theme without duplicating hooks or FZF options.
+User-facing functions and aliases are maintained in the [shared shell resources](../../docs/shared-shells.md). Existing `functions.zsh`, `aliases.zsh`, `options.zsh`, `fzf.zsh`, `completions.zsh`, and `plugins.zsh` entry points remain available. Tool activation and plugin/widget wrapping happen once per shell; start a new shell after changing their activation code. `rl` reloads ordinary configuration and reapplies the theme without duplicating hooks or FZF options.
 
 The first-run Zinit/plugin download behavior is retained. Installed plugins are reused. Missing optional tools do not prevent basic shell use; this is not an installer or a claim that every optional integration works without its dependencies.
 

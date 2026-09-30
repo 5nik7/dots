@@ -15,7 +15,6 @@ PYTHONSTARTUP="$HOME/.pythonrc"
 typeset -gA _DOTS_TOOL_READY
 if has zoxide && [[ -z ${_DOTS_TOOL_READY[zoxide]:-} ]]; then
   eval "$(zoxide init zsh)"
-  alias cd=z
   _DOTS_TOOL_READY[zoxide]=1
 fi
 if has direnv && [[ -z ${_DOTS_TOOL_READY[direnv]:-} ]]; then

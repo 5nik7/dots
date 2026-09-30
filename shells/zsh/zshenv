@@ -11,13 +11,3 @@ unset _dots_zsh_file
 source "$DOTS/shells/environment.sh" || return
 prefix="${TERMUX__PREFIX:-${PREFIX:-}}"
 [[ -r "$DOTS/shells/zsh/platforms/detect.zsh" ]] && source "$DOTS/shells/zsh/platforms/detect.zsh"
-
-dotstro() { print -r -- "${distro:-unknown}"; }
-is_termux() {
-  [[ $1 == -v ]] && print -r -- "${is_termux:-false}"
-  [[ ${is_termux:-false} == true ]]
-}
-is_wsl() {
-  [[ $1 == -v ]] && print -r -- "${is_wsl:-false}"
-  [[ ${is_wsl:-false} == true ]]
-}

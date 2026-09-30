@@ -265,7 +265,7 @@ Its `app-env.bash` adapter validates rendered FZF assignments as literal data
 and adds their colors to published Bash/Zsh and Fish initialization. The Gum shell
 template is rendered without execution during publication. The small `gum-env.bash`
 adapter loads the published artifact in interactive Bash startup and the Bash/Zsh
-`set_theme` published-palette path, including Zsh prompt refresh. Noninteractive
+`set_theme` published-palette path, including Bash/Zsh prompt refresh. Noninteractive
 startup and generated theme-init output remain independent.
 `bin/dots-theme-*` exposes the sole theme CLI, including native palette discovery and queries. Shared view/initialization helpers serve the CLI and palette helper APIs; there is no separate plural parser.
 `themes/bin/*` remains compatibility entry points, with shared shell logic in `lib`.
@@ -330,3 +330,7 @@ file Store for app copies, narrow configuration registration and ownership recei
 in one retained-backup transaction. Custom user hook effects are outside that Store
 and publication rollback. The [plugin contract](theme-plugins.md) owns discovery,
 selection, runtime environment and retry behavior.
+
+## Shared interactive shells
+
+`shells/shared/` owns portable public environment settings, platform detection, runtime paths, FZF settings and user-facing functions/aliases for Bash and Zsh. `bin/lib/common.sh` remains the script utility library. Native startup routing, completion engines, ZLE/Readline hooks and tool activation remain in shell adapters; old function/alias files delegate to the shared resources. Zsh private/platform modules remain native. See [shared shells](shared-shells.md) for precedence, compatibility, prompt refresh and supported integrations.

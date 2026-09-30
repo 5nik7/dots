@@ -17,8 +17,8 @@ class ZshTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.repo = self.root / 'repo space ü'
-        for name in ('shells/zsh', 'bin', 'themes'):
-            if name == 'shells/zsh':
+        for name in ('shells/zsh', 'shells/shared', 'bin', 'themes'):
+            if name.startswith('shells/'):
                 shutil.copytree(REPO / name, self.repo / name)
             else:
                 (self.repo / name).mkdir(parents=True, exist_ok=True)

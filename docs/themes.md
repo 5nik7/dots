@@ -46,7 +46,7 @@ shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, ba
 and Yazi data; Zsh/Fish and Neovim data come from the palette generator.
 
 `fzf.sh.tpl` supplies FZF colors to published Bash/Zsh and Fish initialization.
-Zsh refreshes them at the next prompt; Bash and Fish users can explicitly load
+Bash and Zsh refresh them at the next prompt; Fish users can explicitly load
 `dots theme init` output for their shell. Running FZF processes retain their
 existing environment. Personal templates override the defaults, and a bundled
 `fzf.sh` application file takes precedence over both. Refresh tracks these edits.
@@ -62,19 +62,17 @@ use literal lowercase names, hyphens and plus signs. Other statements or malform
 values refuse publication. Dots parses this file as data; it never sources it.
 
 Shell initialization preserves the original FZF options and replaces its generated
-color option on repeat loads. Dots' Zsh adapter also preserves configured bindings
+color option on repeat loads. Dots' Bash/Zsh adapters also preserve configured bindings
 and preview settings. Published template colors supersede the legacy Catppuccin
 FZF adapter; other legacy adapters remain. Older generations and session-only
-`set_theme ID` retain the existing FZF behavior. No new app connector or automatic
-Bash/Fish prompt hook is installed.
+`set_theme ID` retain the existing FZF behavior. No new app connector is installed. Bash/Zsh use their native prompt hooks; Fish remains explicit.
 
 `gum_env.sh.tpl` renders to `gum_env.sh` under the active theme path. It exports
 all 116 Gum color variables directly in Bash or Zsh, without Lua or Hilbish.
 Interactive Bash/Zsh startup automatically sources the readable published file
 at `${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/gum_env.sh`.
 Missing files are optional; loading needs no Gum executable or theme regeneration.
-Zsh also reloads it through the existing published-theme refresh hook; Bash reloads
-it when its interactive configuration is sourced again. Publication itself never
+Both shells reload it through their published-theme refresh hooks and configuration reloads. Publication itself never
 executes the artifact. Personal `gum_env.sh.tpl` templates and bundled
 `gum_env.sh` overrides follow the same rendering precedence as other app files.
 To publish and explicitly load the current colors:
@@ -85,7 +83,7 @@ source "${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/gum_env.sh"
 ```
 
 The explicit source command also updates an already-running Bash session immediately.
-Zsh picks up published generation changes at its next prompt. Session-only
+Bash and Zsh pick up published generation changes at their next prompt. Session-only
 `set_theme ID` calls do not load a different Gum artifact. Noninteractive startup,
 CLI data paths and generated `dots theme init` output do not source this file.
 Already-running Gum processes retain their environment. The generic Gum Style
@@ -392,11 +390,13 @@ options remain on `catppuccin`. Generic initialization exposes
 `dots_color_NAME` and `dots_role_NAME` variables plus `THEME` and `FLAVOR`.
 The Catppuccin Bash/Zsh initialization also includes the legacy color arrays.
 
-Zsh loads generated initialization at startup. Its prompt hook reads the small
-active link with builtins and reloads only when it changes. It preserves the
-previous command's status, hooks, FZF options, and autosuggestion styling. Existing
-Catppuccin shell sources remain in use. Bash/Fish receive command completions and
-explicit initialization output; automatic shell theme hooks are Zsh-only.
+Bash and Zsh load generated initialization at startup. Their prompt hooks check the
+published generation with builtins on the unchanged path and reload only when it
+changes. Bash compares the active link with the loaded generation directory;
+resolving a changed link may invoke readlink once. The hooks preserve the previous
+command's status, existing hooks and FZF options; Zsh also retains autosuggestion
+styling. Existing Catppuccin shell sources remain in use. Fish receives explicit
+initialization output and does not install an automatic theme hook.
 
 The local Anodize.nvim plugin renders shared native and generic palettes in
 `config/nvim`. Its source defaults to `~/repos/Anodize.nvim`, overridden by

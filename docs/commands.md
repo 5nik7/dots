@@ -4,7 +4,7 @@
 
 The permanent built-in table in `internal/cli/cli.go` is authoritative for its implemented surface. This document remains the design source for the broader future CLI. The live Bash framework implements dispatch, file inventory and bounded theme workflows; the broader managed command set remains proposed.
 
-The existing Zsh helper `mkcd <directory>` is separate from the `dots` command family. Its [usage and path handling](../README.md#zsh-configuration) are implemented by `scripts/mkcd`, sourced through the Zsh function to change the current shell's directory.
+The shared Bash/Zsh helper `mkcd <directory>` is separate from the `dots` command family. Its [usage and path handling](../README.md#zsh-configuration) are implemented by `scripts/mkcd`, sourced through the shared function to change the current shell's directory.
 
 ## Implemented shell initialization
 
@@ -563,3 +563,7 @@ pywal16 flavor discovery works without its optional generated input. Palette fil
 ## Implemented Anodize commands
 
 `dots anodize` and standalone `anodize` expose the same authoring commands. The complete [command and flag contract](anodize.md#commands-and-flags) covers modes, extract, create, import, list, show, edit, preview, export, apply and completion. `anodize completion bash|zsh|fish` (also `dots anodize completion`) emits standalone shell integration as plain source. Static choices cover extraction modes, adjustment/color keys, formats and apps; the `anodize-theme` metadata type supplies repository-owned authored theme IDs for edit. See the [completion and manual guide](anodize.md#shell-completion-and-manual). Static wrapper metadata supplies Dots help/discovery/completion without running the engine. Standalone `anodize --help` and `anodize COMMAND --help` use width-aware Dots presentation with command examples and option descriptions; argparse coloring is disabled so only the shared renderer emits ANSI. Mutations preview by default without interactive confirmation or `--yes`; raw exports/app previews remain undecorated. The private engine is built explicitly with `python3 -B tools/verify_anodize.py build`.
+
+## Shared interactive shell commands
+
+Bash and Zsh share the [interactive helper contract](shared-shells.md#commands-and-compatibility). `ff` opens FZF in both shells; `findfiles` preserves Bash's former filename search. `rl`, `rlc` and `rlcs` select native reload/completion implementations. These are shell helpers, not new `dots` command routes.

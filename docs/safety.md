@@ -355,7 +355,7 @@ validated FZF color tokens enter generated shell initialization; this adds no
 hook or general environment-variable injection interface. The Gum shell template
 is rendered without execution during publication, refresh or CLI data output.
 The owner-authorized interactive Bash/Zsh startup adapters automatically source
-the readable published `gum_env.sh`; Zsh also reloads it on published-generation
+the readable published `gum_env.sh`; both shells also reload it on published-generation
 changes. Missing files are optional and noninteractive startup does not load it.
 Automatic or explicit sourcing executes trusted user-owned shell configuration, including
 any personal or bundled overrides; these are not restricted to literal assignments.

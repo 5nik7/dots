@@ -65,6 +65,7 @@ set_theme() {
   theme[current]=$THEME theme[flavor]=$FLAVOR
   export THEMEDIR=${themes[root]}/$THEME THEMESRC=${themes[root]}/$THEME/src
   _DOTS_THEME_GENERATION=$generation
+  _DOTS_THEME_LOADED_DIR=$_DOTS_THEME_STATE/generations/$generation
   # Role-based rules also provide a fallback when Vivid is unavailable.
   export LS_COLORS="${_DOTS_THEME_LS_BASE:+$_DOTS_THEME_LS_BASE:}${DOTS_THEME_LS_COLORS:-}"
   if [[ $THEME == catppuccin ]]; then
@@ -99,16 +100,22 @@ set_theme() {
 _dots_theme_precmd() {
   local previous_status=$? generation=''
   if [[ -L $_DOTS_THEME_ACTIVE ]]; then
-    generation=${${_DOTS_THEME_ACTIVE:A}:t}
+    if [[ -n ${ZSH_VERSION:-} ]]; then generation=${${_DOTS_THEME_ACTIVE:A}:t}
+    elif [[ -n ${_DOTS_THEME_LOADED_DIR:-} && $_DOTS_THEME_ACTIVE -ef $_DOTS_THEME_LOADED_DIR ]]; then
+      return "$previous_status"
+    elif [[ -n ${_DOTS_THEME_FAILED_DIR:-} && $_DOTS_THEME_ACTIVE -ef $_DOTS_THEME_FAILED_DIR ]]; then
+      return "$previous_status"
+    else generation=$(readlink -- "$_DOTS_THEME_ACTIVE"); generation=${generation##*/}; fi
   elif [[ -f $_DOTS_THEME_STATE/current && ! -L $_DOTS_THEME_STATE/current ]]; then
     IFS= read -r generation < "$_DOTS_THEME_STATE/current"
   fi
   if [[ -n $generation ]]; then
     if [[ $generation != "${_DOTS_THEME_GENERATION:-}" && $generation != "${_DOTS_THEME_FAILED:-}" ]]; then
-      if set_theme; then _DOTS_THEME_FAILED=''
+      if set_theme; then _DOTS_THEME_FAILED=''; _DOTS_THEME_FAILED_DIR=''
       else
         _DOTS_THEME_FAILED=$generation
-        print -u2 -- 'dots theme: could not load updated theme; keeping previous colors'
+        _DOTS_THEME_FAILED_DIR=$_DOTS_THEME_STATE/generations/$generation
+        printf '%s\n' 'dots theme: could not load updated theme; keeping previous colors' >&2
       fi
     fi
   fi

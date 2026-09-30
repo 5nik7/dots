@@ -57,15 +57,14 @@ _dots_completion_compat
 autoload -Uz bashcompinit
 (( ${+functions[complete]} )) || bashcompinit
 
-reload-completion() {
+_dots_zsh_reload_completion() {
   local comp
   for comp in "$@"; do
     unfunction "_$comp" 2>/dev/null
     autoload -Uz "_$comp"
   done
 }
-alias rlc=reload-completion
-reload-completions() {
+_dots_zsh_reload_completions() {
   rm -f -- "$ZSH_COMPDUMP" "$ZSH_COMPDUMP.zwc"
   local name directory="$XDG_CACHE_HOME/dots/zsh/${DOTS_PLATFORM:-linux}-$ZSH_VERSION"
   for name in uv uvx starship; do rm -f -- "$directory/$name.zsh"; done
@@ -77,4 +76,6 @@ reload-completions() {
   (( ${+functions[enable-fzf-tab]} )) && enable-fzf-tab
   return 0
 }
-alias rlcs=reload-completions
+
+# Retain sourceable standalone completion setup.
+typeset -f reload-completions >/dev/null || source "$DOTS/shells/shared/functions.sh"

@@ -256,3 +256,7 @@ boundaries; unsupported POSIX platforms report skipped execution. GTK 3 requires
 its config directory. Missing optional apps skip without installing anything.
 Native Windows plugin execution is deferred. Native Termux fixture tests with
 stub apps do not establish live GTK/Qt appearance or desktop reload behavior.
+
+## Shared Bash/Zsh interactive adapters
+
+The [shared shell configuration](shared-shells.md) uses builtin-only Termux/Linux/WSL/MSYS detection and native shell adapters. Bash retains the existing Bash 4.4+ requirement; cursor indicators are capability-gated by its bundled Readline version. Installed tools are optional, shell histories remain separate, and no paths are translated between Windows and WSL. Native interactive evidence is Termux-only; desktop and Windows support is not established by fixture detection checks.

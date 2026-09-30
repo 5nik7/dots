@@ -10,7 +10,6 @@ export CLICOLOR=1
 
 # Compatibility modules remain sourceable at their original locations.
 source "$ZSH/functions.zsh"
-source "$ZSH/aliases.zsh"
 source "$ZSH/options.zsh"
 source "$ZSH/fzf.zsh"
 source "${themes[cmd]}"
@@ -20,6 +19,7 @@ source "$ZSH/integrations/plugins.zsh"
 _dots_completion_plugins
 source "$ZSH/core/completion.zsh"
 source "$ZSH/integrations/tools.zsh"
+source "$DOTS/shells/shared/aliases.sh"
 [[ -r "${zsh[local]}" ]] && source "${zsh[local]}"
 source "$ZSH/integrations/fzf.zsh"
 _dots_widget_plugins

@@ -279,13 +279,14 @@ source "$DOTS/lib/dots/themes/gum-env.bash"
         for name in ('batpipe', 'batman'):
             (repo / 'scripts' / name).unlink()
         (Path(env['HOME']) / '.fzf.zsh').unlink()
-        (repo / 'secrets/secrets.env').write_text('PRIVATE_COUNT=$(( ${PRIVATE_COUNT:-0} + 1 ))\n')
+        (repo / 'secrets/secrets.env').write_text('PRIVATE_COUNT=$(( ${PRIVATE_COUNT:-0} + 1 ))\ndot[configs]="$HOME/custom config"\n')
         gum = Path(env['XDG_STATE_HOME']) / 'dots/current/theme/gum_env.sh'
         gum.parent.mkdir(parents=True)
         gum.write_text("export GUM_CONFIRM_PROMPT_FOREGROUND='#123456'\n")
         code = '''
 [[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#123456' ]] || exit 9
 printf "export GUM_CONFIRM_PROMPT_FOREGROUND='#654321'\\n" >| "$XDG_STATE_HOME/dots/current/theme/gum_env.sh"
+[[ $STARSHIP_CONFIG == "$HOME/custom config/starship/starship.toml" ]] || exit 11
 [[ $PRIVATE_COUNT == 1 && $_DOTS_COMPINIT_READY == 1 ]] || exit 1
 [[ $DOTCONFIG == "$DOTS/config" && $SHELLS == "$DOTS/shells" ]] || exit 5
 [[ ! ${RED+x} && ! ${BLUE+x} && ! ${BOLD+x} && ! ${RST+x} && ! ${COLORS+x} ]] || exit 7
