@@ -124,7 +124,9 @@ review and Apply. Native Gum/FZF PTY checks must use disposable catalogs and hom
 
 For inventory/catalog or config-link migration changes, run
 `python3 -B tools/test_files.py`. For flat theme templates, connectors, imports and
-wallpaper adapters, also run `python3 -B tools/test_theme_workflow.py`. These suites
+wallpaper adapters, also run `python3 -B tools/test_theme_workflow.py`. For Pi connector
+changes, enable its optional native loader/watcher check with `PI_THEME_MODULE` as
+described in [testing](../../docs/testing.md#files-catalog-and-omarchy-style-themes). These suites
 own their home/config/state/source roots; local Git fixtures and fake external
 adapters require no network or live app changes. Use `python3 -B tools/bench_files.py`
 for inventory scaling, sequentially with other benchmarks.

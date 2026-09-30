@@ -239,6 +239,13 @@ Kitty remote control and wallpaper tools are checked only when needed. Native
 Termux fixture checks are recorded in [testing](testing.md); Linux adapter calls are
 simulated, and native desktop rendering remains unverified.
 
+The Pi connector uses `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/themes/dots.json`,
+not XDG config. An existing themes directory is required; absolute agent paths
+and leading `~/` are supported, while relative paths and dot components are refused.
+It uses the existing POSIX symlink journal. Pi 0.99.1 theme loading and directory-watch
+reload have isolated native Termux coverage; desktop/WSL rendering and native Windows
+connectors are not verified. See [Pi setup](themes.md#pi).
+
 ## Bounded Git and file operations
 
 The live Git family requires Bash 5, Git, POSIX utilities and (for publish) sha256sum. It rejects native Windows shell environments; Linux/WSL use the POSIX boundary with native validation reported separately. File operations use the existing Python POSIX adapter, no privilege elevation, and XDG config/state roots. There is no native Windows mutation adapter, link-to-copy fallback, or cross-Windows/WSL translation. Termux-owned discovery rules live in Androidots. See [Git](git.md), [files](files.md) and [verification](testing.md#git-and-managed-file-operations).

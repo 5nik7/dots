@@ -16,6 +16,14 @@ dt_connector_staging_owned() {
 dt_apps_plan() {
   DT_CONNECT_TARGETS=() DT_CONNECT_SOURCES=()
   local config=${XDG_CONFIG_HOME:-$HOME/.config} path name
+  local pi_agent=${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}
+  case $pi_agent in
+    \~) pi_agent=$HOME ;;
+    \~/*) pi_agent=$HOME/${pi_agent#\~/} ;;
+  esac
+  [[ $pi_agent == /* && $pi_agent != *$'\n'* && /$pi_agent/ != */../* && /$pi_agent/ != */./* ]] || {
+    dt_error 'Pi agent directory must be an absolute path without dot components'; return 1;
+  }
   for name in kitty tmux btop yazi; do
     [[ -d $config/$name ]] || continue
     case $name in
@@ -31,6 +39,11 @@ dt_apps_plan() {
     [[ ! -e $path || -f $path || -L $path ]] || return 1
     DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/termux.properties")
   fi
+  if [[ -d $pi_agent/themes ]]; then
+    path=$pi_agent/themes/dots.json
+    [[ ! -e $path || -f $path || -L $path ]] || { dt_error "cannot connect theme target: $path"; return 1; }
+    DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/pi.json")
+  fi
   for path in "${DT_CONNECT_TARGETS[@]}"; do
     [[ $path != *$'\n'* && -w ${path%/*} ]] || { dt_error 'unsafe or unwritable connector'; return 1; }
     if [[ -e $path.dots-theme-new || -L $path.dots-theme-new ]]; then
@@ -43,7 +56,9 @@ dt_apps_connect() {
   mkdir "$dir/connectors" || return
   for ((index=0;index<${#DT_CONNECT_TARGETS[@]};index++)); do
     target=${DT_CONNECT_TARGETS[index]} source=${DT_CONNECT_SOURCES[index]}
-    if [[ -L $target && $(readlink -- "$target") == "$source" ]]; then continue; fi
+    # Pi watches its themes directory, not the active generation link. Renew its
+    # connector on publication to notify that watcher, using the same journal.
+    if [[ $source != "$DT_ACTIVE/pi.json" && -L $target && $(readlink -- "$target") == "$source" ]]; then continue; fi
     entry=$dir/connectors/$index; mkdir "$entry" || return
     printf '%s\n' "$target" > "$entry/target"
     printf '%s\n' "$source" > "$entry/source"

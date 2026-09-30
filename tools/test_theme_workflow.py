@@ -16,6 +16,34 @@ spec.loader.exec_module(old)
 
 class Workflow(old.Themes):
     # Only inherit the fixture, not the older suite's cases.
+    @unittest.skipUnless(old.ZSH, "Zsh unavailable")
+    def test_completion_colors_follow_prompt_refresh(self):
+        completion = self.repo / "completions.zsh"
+        shutil.copy2(old.REPO / "shells/zsh/completions.zsh", completion)
+        self.dots("theme", "set", "nord")
+        self.shell(r'''
+source "$DOTS/themes/bin/theme"
+set_theme || exit 1
+source "$DOTS/completions.zsh"
+zstyle -a ':completion:*' list-colors before
+old_ls=$LS_COLORS
+"$DOTS/bin/dots-theme-set" catppuccin-latte >/dev/null || exit 2
+false
+_dots_theme_precmd
+[[ $? == 1 ]] || exit 3
+zstyle -a ':completion:*' list-colors after
+[[ $LS_COLORS != $old_ls ]] || exit 4
+[[ ${(j.:.)after} == $LS_COLORS && $before != $after ]] || exit 5
+[[ $FZF_DEFAULT_OPTS == *'prompt:#1e66f5'* ]] || exit 6
+_dots_theme_precmd
+zstyle -a ':completion:*' list-colors again
+[[ $after == $again ]] || exit 7
+# Style evaluation is literal splitting, not shell evaluation.
+LS_COLORS='di=01;34:*.x=$(touch SENTINEL)'
+zstyle -a ':completion:*' list-colors literal
+[[ ${(j.:.)literal} == $LS_COLORS && ! -e SENTINEL ]] || exit 8
+''', old.ZSH)
+
     def test_application_environment_templates_and_shell_refresh(self):
         self.dots("theme", "set", "nord")
         first = self.generation()
@@ -92,6 +120,165 @@ printf '%s\n' "$FZF_DEFAULT_OPTS"
             self.assertEqual(self.generation(), before)
             self.assertFalse((self.home / "SENTINEL").exists())
             file.write_text(original)
+
+    def test_pi_template_connector_refresh_and_rollback(self):
+        themes = self.home / ".pi/agent/themes"
+        themes.mkdir(parents=True)
+        target = themes / "dots.json"
+        target.write_text('{"original": true}\n')
+        preview = self.dots("theme", "set", "nord", "--dry-run").stdout
+        self.assertIn(str(target), preview)
+        self.assertFalse(self.state.exists())
+        self.dots("theme", "set", "nord")
+        first = self.generation()
+        self.assertTrue(target.is_symlink())
+        data = json.loads(target.read_text())
+        self.assertEqual(data["name"], "dots")
+        self.assertEqual(data["appearance"], "dark")
+        self.assertEqual(data["vars"]["bg"], "#2e3440")
+        self.assertEqual(data["vars"]["accent"], "#81a1c1")
+        for value in data["vars"].values():
+            self.assertRegex(value, r"^#[0-9a-fA-F]{6}$")
+        for value in data["colors"].values():
+            self.assertIn(value, data["vars"])
+        self.assertNotIn("{{", target.read_text())
+        inode = target.lstat().st_ino
+        self.dots("theme", "refresh")
+        self.assertEqual(self.generation(), first)
+        self.assertEqual(target.lstat().st_ino, inode)
+        self.dots("theme", "set", "catppuccin-latte")
+        second = self.generation()
+        self.assertNotEqual(target.lstat().st_ino, inode)
+        self.assertEqual(json.loads(target.read_text())["appearance"], "light")
+        self.assertEqual(json.loads(target.read_text())["vars"]["bg"], "#eff1f5")
+        self.engine('dt_restore "' + str(second) + '"')
+        self.assertEqual(json.loads(target.read_text()), data)
+        self.engine('dt_restore "' + str(first) + '"')
+        self.assertFalse(target.is_symlink())
+        self.assertEqual(target.read_text(), '{"original": true}\n')
+
+    def test_pi_custom_directory_overrides_and_refusal(self):
+        agent = self.home / "-pi space ü"
+        themes = agent / "themes"
+        themes.mkdir(parents=True)
+        self.env["PI_CODING_AGENT_DIR"] = "~/-pi space ü"
+        target = themes / "dots.json"
+        for color in ("never", "always"):
+            preview = self.dots("theme", "set", "nord", "--dry-run",
+                                env=dict(self.env, DOTS_COLOR=color, DOTS_ICONS="never")).stdout
+            self.assertIn("dots.json", preview)
+            self.assertIn("-pi space ü", preview)
+            self.assertFalse(self.state.exists())
+            self.assertFalse(target.exists())
+        self.dots("theme", "set", "nord")
+        self.assertTrue(target.is_symlink())
+        self.assertFalse((self.home / ".pi").exists())
+        user = self.home / "config/dots/themed"
+        user.mkdir(parents=True)
+        template = user / "pi.json.tpl"
+        template.write_text((self.repo / "default/themed/pi.json.tpl").read_text().replace(
+            '"accent": "{{ accent }}"', '"accent": "{{ red }}"'))
+        self.dots("theme", "refresh")
+        self.assertEqual(json.loads(target.read_text())["vars"]["accent"], "#bf616a")
+        override = self.repo / "themes/nord/pi.json"
+        data = json.loads(target.read_text())
+        data["vars"]["accent"] = "#112233"
+        override.write_text(json.dumps(data))
+        self.dots("theme", "refresh")
+        self.assertEqual(json.loads(target.read_text()), data)
+        data["vars"]["accent"] = "#445566"
+        override.write_text(json.dumps(data))
+        self.dots("theme", "refresh")
+        self.assertEqual(json.loads(target.read_text()), data)
+        before = self.generation()
+        target.unlink()
+        target.mkdir()
+        self.dots("theme", "refresh", code=1)
+        self.assertEqual(self.generation(), before)
+        self.assertTrue(target.is_dir())
+        self.env["PI_CODING_AGENT_DIR"] = "relative/agent"
+        self.dots("theme", "set", "nord", "--dry-run", code=1)
+
+    def test_pi_interrupted_connector_recovery_and_drift(self):
+        themes = self.home / ".pi/agent/themes"
+        themes.mkdir(parents=True)
+        prior = themes / "personal.json"
+        prior.write_text('{"keep": true}\n')
+        target = themes / "dots.json"
+        target.symlink_to(prior)
+        self.dots("theme", "set", "nord")
+        first = self.generation()
+        self.assertTrue((first / "connectors/0/old").is_symlink())
+        # Simulate SIGKILL after the journal and staged connector are durable.
+        target.unlink()
+        target.symlink_to(prior)
+        staging = Path(str(target) + ".dots-theme-new")
+        staging.symlink_to(self.home / "state/dots/current/theme/pi.json")
+        (first / "status").write_text("prepared\n")
+        self.dots("theme", "set", "catppuccin-latte")
+        self.assertEqual((first / "status").read_text(), "rolled-back\n")
+        self.assertFalse(staging.is_symlink())
+        second = self.generation()
+        self.engine('dt_restore "' + str(second) + '"')
+        self.assertEqual(target.readlink(), prior)
+        self.assertEqual(prior.read_text(), '{"keep": true}\n')
+        self.dots("theme", "set", "nord")
+        third = self.generation()
+        target.unlink()
+        target.write_text("user changed after publication\n")
+        self.engine('dt_restore "' + str(third) + '"', code=1)
+        self.assertEqual(target.read_text(), "user changed after publication\n")
+
+    def test_pi_template_renders_all_palettes(self):
+        self.wal_export()
+        names = self.dots("theme", "list").stdout.splitlines()
+        for name in names:
+            with self.subTest(theme=name):
+                output = self.root / name
+                output.mkdir()
+                self.env["RENDER_OUTPUT"] = str(output)
+                self.env["RENDER_THEME"] = name
+                self.engine('dt_load "$RENDER_THEME" && dt_render "$RENDER_OUTPUT"')
+                data = json.loads((output / "pi.json").read_text())
+                self.assertIn(data["appearance"], ("light", "dark"))
+                for value in data["vars"].values():
+                    self.assertRegex(value, r"^#[0-9a-fA-F]{6}$")
+                for value in data["export"].values():
+                    self.assertRegex(value, r"^#[0-9a-fA-F]{6}$")
+
+    def test_pi_absent_directory_is_optional(self):
+        self.dots("theme", "set", "nord")
+        self.assertTrue((self.generation() / "pi.json").is_file())
+        self.assertFalse((self.home / ".pi").exists())
+
+    @unittest.skipUnless(shutil.which("node") and os.environ.get("PI_THEME_MODULE"),
+                         "set PI_THEME_MODULE to installed Pi dist/modes/interactive/theme/theme.js")
+    def test_pi_native_theme_loader_and_hot_reload(self):
+        themes = self.home / ".pi/agent/themes"
+        themes.mkdir(parents=True)
+        self.dots("theme", "set", "nord")
+        script = self.root / "pi-consumer.mjs"
+        script.write_text(r'''
+import {pathToFileURL} from 'node:url';
+import {spawnSync} from 'node:child_process';
+const pi = await import(pathToFileURL(process.env.PI_THEME_MODULE).href);
+const file = process.env.HOME + '/.pi/agent/themes/dots.json';
+const before = pi.loadThemeFromPath(file, 'truecolor').getFgAnsi('accent');
+pi.initTheme('dots', true);
+const timeout = setTimeout(() => { console.error('No Pi reload event'); process.exit(1); }, 8000);
+pi.onThemeChange(() => {
+  if (pi.theme.getFgAnsi('accent') === before) return;
+  clearTimeout(timeout);
+  pi.stopThemeWatcher();
+  console.log('Pi hot reload passed');
+});
+const result = spawnSync(process.env.BASH_TEST, [process.env.DOTS + '/bin/dots-theme-set', 'catppuccin-latte'], {encoding:'utf8'});
+if (result.status !== 0) { console.error(result.stderr); process.exit(2); }
+''')
+        env = dict(self.env, PI_THEME_MODULE=str(Path(os.environ["PI_THEME_MODULE"]).resolve()),
+                   BASH_TEST=old.BASH)
+        result = self.run_command([shutil.which("node"), str(script)], env=env)
+        self.assertIn("Pi hot reload passed", result.stdout)
 
     def test_shell_gum_template(self):
         self.dots("theme", "set", "nord")

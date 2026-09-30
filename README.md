@@ -74,12 +74,17 @@ dots theme bg next                 # Explicit wallpaper change
 
 The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dots.yazi/README.md), combining the Dotline header/status renderer, Git indicators, saved projects, folder rules, and pane toggles. File panes use inherited `LS_COLORS` styles, including backgrounds and text attributes; the `hover` header component defaults to the symlink’s own style before the arrow and the target basename’s actual style after it, with a separately styled target directory, with independent style sources, color/attribute overrides, and visibility options for each part. Its repository component shows the Git working tree folder name before branch details and hides outside repositories. Optional `git-it` adds a remote host icon and a configurable color for repositories matching its configured owners; the personal config uses green for owned repositories and blue otherwise.
 
-The shared palette supplies Bash, Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, FZF and Gum.
+The shared palette supplies Bash, Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, Pi, FZF and Gum.
 The FZF template supplies published shell colors; Bash and Zsh pick them up at the next
 prompt after `dots theme refresh`, preserving FZF layout and key bindings. Gum
 colors render as `gum_env.sh` and load automatically in interactive Bash/Zsh,
 without Lua or Hilbish. Both shells refresh them with published theme changes; see the
-[loading instructions](docs/themes.md).
+[loading instructions](docs/themes.md). Fzf-tab file colors now follow the current
+`LS_COLORS` at completion time; reload Zsh once to load this fix.
+Pi uses `default/themed/pi.json.tpl`: with `~/.pi/agent/themes` present, run
+`dots theme refresh`, then `/reload` in Pi and select **dots** in `/settings` → **Theme**.
+Subsequent publications hot-reload that theme. See [Pi setup](docs/themes.md#pi)
+for custom agent directories and connector backups.
 `dots theme switcher` offers fullscreen FZF selection with a live color-palette
 preview below the list, styled with the current theme's published FZF colors,
 then Back/Apply/Cancel review (using Gum when available).

@@ -27,6 +27,9 @@ queries use `list --families`, `list --flavors FAMILY`, and `show`/`color --nati
 static route metadata and core-owned data providers; it never executes extensions.
 Published `theme init --shell bash|zsh|fish` output includes the FZF
 environment colors described in the [template contract](themes.md#flat-themes-and-templates).
+`theme set`/`refresh` also render the Pi theme and connect an existing agent themes
+directory through the same journal; dry-run previews include that target. See
+[Pi setup](themes.md#pi) for selection, custom paths and automatic reload.
 
 ## Implemented Git and managed-file operations
 

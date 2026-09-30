@@ -345,6 +345,10 @@ or links are backed up in the generation journal, flushed and rechecked before
 replacement. Failure restores connectors in reverse order and both selection
 pointers. Known staged links from prepared transactions are recovered on the next
 switch; unknown staging objects and post-write drift refuse destructive recovery.
+The Pi connector targets only `themes/dots.json` in an existing agent themes directory;
+settings and other themes are untouched. Changed publication renews this link even
+when its text is unchanged, using the same backup and restore journal to notify Pi's
+directory watcher. Unchanged refresh remains a no-op. No Pi directory is created.
 No complete generation or backup is automatically pruned. Reload failures preserve
 the published theme and report a retry path; external app state is not rolled back.
 

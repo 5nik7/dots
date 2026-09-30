@@ -414,6 +414,16 @@ dirty refusal and data nonexecution. Theme fixtures explicitly isolate TMUX_TMPD
 the native tmux test starts and stops only its own server. Android, Wayland and X11 wallpaper adapters are
 fake executables: their argument/failure contracts are tested, not actual rendering.
 
+The workflow suite also checks Pi JSON rendering, light/dark selection, custom agent
+paths, optional absent directories, template/override refresh, connector backups,
+rollback and directory refusal. Set `PI_THEME_MODULE` to an installed Pi package's
+`dist/modes/interactive/theme/theme.js` to enable its optional native loader/hot-reload
+test (requires Node). It imports only the theme module with a disposable agent directory;
+it never starts live Pi or loads user settings/extensions. Without that path it reports
+a skip. The completion regression reproduces a Nord → Latte prompt refresh and verifies
+that Zsh/fzf-tab's `list-colors` style follows `LS_COLORS`, preserving exit status and
+literal values. Run the existing Zsh PTY suite for interactive plugin acceptance.
+
 On native Termux, 2026-09-23, these suites passed 7 + 10 + 23 + 22 tests (62 total).
 All native-family Neovim fixture cases ran using available public plugin sources.
 ShellCheck, targeted StyLua, Bash syntax, route metadata, relative Markdown links

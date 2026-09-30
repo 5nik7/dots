@@ -44,15 +44,16 @@ RGB) are supported; unresolved variables refuse publication. Personal templates 
 A trusted bundled theme's explicit application file takes precedence over both.
 Downloaded themes contribute colors and backgrounds only. Templates never evaluate
 shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
-and Yazi data; Zsh/Fish and Neovim data come from the palette generator.
+Yazi and Pi data; Zsh/Fish and Neovim data come from the palette generator.
 
 `fzf.sh.tpl` supplies FZF colors to published Bash/Zsh and Fish initialization.
 Bash and Zsh refresh them at the next prompt; Fish users can explicitly load
 `dots theme init` output for their shell. Running FZF processes retain their
 existing environment. Personal templates override the defaults, and a bundled
 `fzf.sh` application file takes precedence over both. Refresh tracks these edits.
-After updating the shell adapter itself, open a fresh shell or reload your shell
-configuration once so the new adapter is loaded.
+Zsh completion and fzf-tab file colors resolve `LS_COLORS` at each completion, rather
+than retaining startup colors. After updating the shell adapter or completion
+configuration itself, open a fresh shell or reload your shell configuration once.
 
 The FZF template accepts one `export _FZF_COLORS_="..."` assignment (including
 backslash-newline continuations), blank lines, comments, and the optional exact
@@ -66,7 +67,7 @@ Shell initialization preserves the original FZF options and replaces its generat
 color option on repeat loads. Dots' Bash/Zsh adapters also preserve configured bindings
 and preview settings. Published template colors supersede the legacy Catppuccin
 FZF adapter; other legacy adapters remain. Older generations and session-only
-`set_theme ID` retain the existing FZF behavior. No new app connector is installed. Bash/Zsh use their native prompt hooks; Fish remains explicit.
+`set_theme ID` retain the existing FZF behavior. FZF needs no app connector. Bash/Zsh use their native prompt hooks; Fish remains explicit.
 
 `gum_env.sh.tpl` renders to `gum_env.sh` under the active theme path. It exports
 all 116 Gum color variables directly in Bash or Zsh, without Lua or Hilbish.
@@ -187,7 +188,7 @@ Existing app settings and Neovim transparency remain in their source configurati
 
 On selection, fixed connector links are created only for configured applications:
 Kitty/tmux `dots-theme.conf`, btop `themes/dots.theme`, Yazi `flavors/dots.yazi`, and
-Termux `~/.termux/colors.properties`. Existing regular files or symlinks are saved in
+Termux `~/.termux/colors.properties`, and Pi's `themes/dots.json` (see below). Existing regular files or symlinks are saved in
 the generation's connector journal before replacement; real directories are refused.
 Parent application directories must exist. If an application directory itself is
 linked into a repository, the connector lives in that source directory. It is
@@ -198,6 +199,37 @@ colors; Kitty remote control is used only when KITTY_LISTEN_ON is supplied. Relo
 failures report that colors were published and can be retried with `refresh`. Apps
 without a running reload adapter pick up the files through their normal startup.
 No terminal/editor process is restarted and no plugin or package is installed.
+
+### Pi
+
+`default/themed/pi.json.tpl` renders a custom Pi theme named `dots` to `pi.json`
+in each generation. It maps UI, Markdown, syntax and export colors to the shared
+palette, including light/dark appearance. Panels use `lighter_background` rather
+than fixed Mocha tints. Personal `pi.json.tpl` templates and bundled `pi.json`
+overrides follow normal precedence and invalidate the publication fingerprint.
+
+When `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/themes` exists, publication links
+`dots.json` there to the active generation's `pi.json`. The agent directory must
+be absolute, without `.`/`..` components; `~` and `~/` are expanded. It is not an
+XDG config path. No Pi executable is required, and no settings file is rewritten.
+For first-time setup with the default directory:
+
+```bash
+mkdir -p ~/.pi/agent/themes
+dots theme refresh
+```
+
+In Pi, run `/reload` and select **dots** under `/settings` → **Theme**. Alternatively,
+set `"theme": "dots"` in Pi's settings. With a custom agent directory, create its
+`themes` subdirectory and supply the same `PI_CODING_AGENT_DIR` to both applications.
+Missing themes directories are skipped, not created by the publisher.
+
+Pi watches its own themes directory, not Dots' active-state pointer. On changed
+publication, Dots atomically renews the Pi connector through the existing backup
+journal, notifying Pi to hot-reload the selected `dots` theme. Unchanged refresh
+preserves the connector and generation. Other selected Pi themes are unaffected.
+The installed Pi 0.99.1 loader/watcher was verified in an isolated Termux fixture;
+older versions may require `/reload`. No live Pi process is restarted.
 
 ## User themes and wallpapers
 

@@ -1,7 +1,8 @@
 zstyle ':completion:*:git-checkout:*' sort false
 zstyle ':completion:*:descriptions' format '%d'
 # zstyle ':completion:*:warnings' format ' %F{red}-- no matches found --%f'
-zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# Resolve at completion time: theme refresh replaces LS_COLORS after startup.
+zstyle -e ':completion:*' list-colors 'reply=("${(@s.:.)LS_COLORS}")'
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:*' use-fzf-default-opts yes
 zstyle ':fzf-tab:*' switch-group '<' '>'
