@@ -120,6 +120,73 @@ class Themes(unittest.TestCase):
         self.assertFalse(self.state.exists())
         self.assertFalse((self.home / 'cache').exists())
 
+    def test_discovery_preserves_listing_and_completion_eligibility(self):
+        root = self.root / 'theme data ü space'
+        user = self.home / 'config/dots/themes'
+        root.mkdir()
+        user.mkdir(parents=True)
+        for directory, identity in ((root, 'shared'), (user, 'shared'),
+                                    (root, 'valid'), (user, 'user-only'),
+                                    (root, '-invalid ü')):
+            theme = directory / identity
+            theme.mkdir()
+            (theme / 'colors.toml').write_text('invalid palette data: discovery must not parse it')
+        linked = root / 'linked'
+        linked.mkdir()
+        (linked / 'colors.toml').symlink_to(root / 'valid/colors.toml')
+        broken = root / 'broken'
+        broken.mkdir()
+        (broken / 'colors.toml').symlink_to(root / 'absent')
+        (root / 'pywal16-current').mkdir()
+        env = {**self.env, 'DOTHEMES': str(root)}
+        self.assertEqual(self.dots('theme', 'list', env=env).stdout.splitlines(),
+                         ['pywal16-current', 'shared', 'user-only', 'valid'])
+        expected = ['-invalid ü', 'shared', 'valid', 'shared', 'user-only', 'pywal16-current']
+        def candidates(shell):
+            result = self.dots('__complete', shell, '3', '--', 'dots', 'theme', 'set', '', env=env)
+            return [line.split('\t')[1] for line in result.stdout.splitlines() if line.startswith('candidate\t')]
+        for shell in ('bash', 'zsh', 'fish'):
+            self.assertEqual(candidates(shell), expected)
+        self.dots('theme', 'show', 'shared', env=env, code=1)
+        fresh = user / 'new-theme'
+        fresh.mkdir()
+        (fresh / 'colors.toml').write_text('unparsed')
+        for shell in ('bash', 'zsh', 'fish'):
+            self.assertIn('new-theme', candidates(shell))
+        # The installed executable may use a different inherited DOTS checkout.
+        checkout = self.root / 'alternate checkout ü'
+        (checkout / 'themes/alternate').mkdir(parents=True)
+        (checkout / 'themes/alternate/colors.toml').write_text('unparsed')
+        alternate = {**self.env, 'DOTS': str(checkout)}
+        result = self.dots('--command-dir', str(self.repo / 'bin'), '__complete', 'bash', '5',
+                           '--', 'dots', '--command-dir', str(self.repo / 'bin'), 'theme', 'set', '', env=alternate)
+        self.assertIn('candidate\talternate\t', result.stdout)
+        self.assertNotIn('candidate\tnord\t', result.stdout)
+        self.assertFalse(self.state.exists())
+        self.assertFalse((self.home / 'cache').exists())
+
+    def test_discovery_source_is_inert_and_native_ids_are_shared(self):
+        result = self.shell('set -eu; source "$DOTS/lib/dots/themes/discovery.bash"')
+        self.assertEqual(result.stdout, '')
+        self.assertEqual(result.stderr, '')
+        for kind, family in (('families', ''), ('flavors', 'catppuccin'), ('flavors', 'pywal16')):
+            args = ('--families',) if kind == 'families' else ('--flavors', family)
+            expected = self.dots('theme', 'list', *args).stdout
+            result = self.shell('DT_LIB="$DOTS/lib/dots/themes"; source "$DT_LIB/core.bash"; '
+                                f'dt_discover_ids {kind} {family}; '
+                                'if ((${#DT_DISCOVERY_IDS[@]})); then printf "%s\\n" "${DT_DISCOVERY_IDS[@]}"; fi')
+            self.assertEqual(result.stdout, expected)
+        self.shell('DT_LIB="$DOTS/lib/dots/themes"; source "$DT_LIB/core.bash"; '
+                   'dt_discover_ids families; ((${#DT_DISCOVERY_IDS[@]})) || exit 1; '
+                   'dt_discover_ids flavors ../invalid; ((${#DT_DISCOVERY_IDS[@]} == 0)) || exit 2; '
+                   'dt_discover_ids flavors missing; ((${#DT_DISCOVERY_IDS[@]} == 0)) || exit 3; '
+                   '! dt_discover_ids invalid; ((${#DT_DISCOVERY_IDS[@]} == 0)) || exit 4')
+        result = self.shell('DT_LIB="$DOTS/lib/dots/themes"; source "$DT_LIB/core.bash"; '
+                            'dt_current_id || exit; printf "%s\\n" "$REPLY"')
+        self.assertEqual(result.stdout, self.dots('theme', 'current').stdout)
+        self.assertFalse(self.state.exists())
+        self.assertFalse((self.home / 'cache').exists())
+
     def test_native_queries_distinguish_semantic_values_and_preserve_bytes(self):
         palette = self.repo / 'themes/catppuccin-mocha/colors.toml'
         palette.write_text(palette.read_text().replace('blue = "#89b4fa"', 'blue = "#123456"'))

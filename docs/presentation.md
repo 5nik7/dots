@@ -74,8 +74,9 @@ streams, cancellation and failures belong in focused tests alongside native PTY
 acceptance. No runtime package installation or general command conversion is
 implied by this convention.
 
-The [theme switcher](themes.md#interactive-theme-switcher) uses Gum, then FZF,
-then a numbered menu. The [tracked-config browser](files.md#interactive-tracked-config-browser)
+The [theme switcher](themes.md#interactive-theme-switcher) prefers FZF for live
+palette previews, then Gum, then a numbered menu. This scoped exception preserves
+Gum-first Back/Apply/Cancel review; shared backend precedence is unchanged. The [tracked-config browser](files.md#interactive-tracked-config-browser)
 uses the same adapters and requires operation review before Apply.
 
 Managed-file operations and Anodize offer **Cancel / Apply**; Git publish offers

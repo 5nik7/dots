@@ -19,8 +19,9 @@ The [presentation contract](presentation.md) owns human output policy. `ui.bash`
 The optional `lib/dots/interactive.bash` adapter is loaded only by interactive
 command paths. It owns Gum/FZF capability selection, child-only presentation
 policy and plain numbered prompts; the existing `ui.bash` remains subprocess-free.
-The theme switcher's review loop validates selection and previews through the
-existing theme engine before delegating Apply to its unchanged publisher.
+The theme switcher locally prefers FZF for live palette browsing while retaining
+the shared backend for review actions. Its review loop validates selection and
+previews through the existing theme engine before delegating Apply to its unchanged publisher.
 
 ## Existing Yazi Configuration
 
@@ -267,7 +268,7 @@ template is rendered without execution during publication. The small `gum-env.ba
 adapter loads the published artifact in interactive Bash startup and the Bash/Zsh
 `set_theme` published-palette path, including Bash/Zsh prompt refresh. Noninteractive
 startup and generated theme-init output remain independent.
-`bin/dots-theme-*` exposes the sole theme CLI, including native palette discovery and queries. Shared view/initialization helpers serve the CLI and palette helper APIs; there is no separate plural parser.
+`bin/dots-theme-*` exposes the sole theme CLI, including native palette discovery and queries. The data-only `discovery.bash` module owns flat theme IDs, current-ID resolution and native family/flavor enumeration for commands, switcher, views and completion. Sourcing only defines helpers; scans remain on demand. Listing retains ID validation/deduplication, while completion preserves its existing literal hints; selection validation remains in the loader. Shared view/initialization helpers serve the CLI and palette helper APIs; there is no separate plural parser.
 `themes/bin/*` remains compatibility entry points, with shared shell logic in `lib`.
 
 Flat `themes/ID` variants own semantic `colors.toml`, optional native `palette.toml`

@@ -62,7 +62,30 @@ dt_bg() (
       (($# == 0)) || return 2
       command -v fzf >/dev/null || { dt_error 'background switcher requires fzf'; return 1; }
       ((${#files[@]})) || { dt_error 'no theme backgrounds'; return 1; }
-      file=$(printf '%s\n' "${files[@]}" | fzf --prompt='Background: ') || return ;;
+      local label selected row
+      local -a rows=() picker=(--read0 --delimiter=$'\t' --with-nth=1 --nth=1 --no-multi --prompt='Background: '
+        --no-height --layout=reverse --margin=0 --padding=0)
+      for file in "${files[@]}"; do
+        label=${file##*/}; label=${label%.*}
+        label=${label//[[:cntrl:]]/?}
+        rows+=("$label"$'\t'"$file")
+      done
+      if command -v chafa >/dev/null; then
+        # FZF expands the quoted placeholder and supplies preview dimensions.
+        # shellcheck disable=SC2016
+        picker+=('--preview-window=down,70%,nohidden' --preview
+          'chafa --format=symbols --animate=off --scale=max --size "$FZF_PREVIEW_COLUMNS"x"$FZF_PREVIEW_LINES" -- {s2..}')
+      else
+        picker+=(--preview-window=hidden --preview '')
+      fi
+      selected=$(printf '%s\0' "${rows[@]}" | fzf "${picker[@]}") || return
+      # Validate the original record, not its potentially ambiguous display label.
+      file=''
+      for row in "${rows[@]}"; do
+        [[ $selected == "$row" ]] || continue
+        file=${row#*$'\t'}; break
+      done
+      [[ $file ]] || { dt_error 'invalid background selection'; return 1; } ;;
     *) return 2 ;;
   esac
   dt_bg_preflight "$file" "$locked" || return

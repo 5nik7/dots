@@ -375,6 +375,10 @@ PTY acceptance, Bash/Zsh syntax checks, ShellCheck, StyLua, and documentation li
 Native Termux tests do not establish WSL/Linux/MSYS/Windows execution or power-loss
 recovery guarantees.
 
+### Shared discovery refactor
+
+The [shared discovery plan](../plans/theme-discovery.md) records the behavior-preserving extraction into `lib/dots/themes/discovery.bash`. `tools/test_themes.py` includes inert-source, current/native-ID parity, cleared-result, alternate checkout root and bundled/user discovery fixtures. Tests retain the distinction between validated/deduplicated listing and literal completion hints, including invalid and duplicate names, symlink/broken palettes and next-request freshness across Bash/Zsh/Fish. Workflow inventory/count checks derive their expectations from fixture data rather than a hardcoded theme count; the accent assertion compares the source palette. Native Termux verification, benchmark evidence and pre-existing Neovim deadline/Markdown-link limitations are recorded in the plan. No test runner or platform claim is added.
+
 ## Unified Theme CLI
 
 The [migration plan](../plans/theme-cli.md) and [decision 0012](decisions/0012-unified-theme-cli.md) consolidate the live interface under `dots theme`. `python3 -B tools/test_themes.py` now checks removed plural routes, full-ID validation, native family/flavor discovery, semantic/native color collisions, undecorated scalar values, generic palettes, contextual completion, and preserved helper APIs alongside the existing state/recovery and editor tests. No live theme is selected by verification.
@@ -653,14 +657,19 @@ Native Termux verification (2026-09-25): all four Anodize integration cases, 23 
 
 ## Optional interactive theme picker
 
-`python3 -B tools/test_theme_picker.py` exercises the Gum-first switcher under
+`python3 -B tools/test_theme_picker.py` exercises the FZF-first live-preview switcher under
 owned PTYs and disposable home/config/state/repository roots. Fixture tools cover
 backend precedence, Back/Apply/Cancel, one publication on Apply, selection validation,
 preview failure, empty catalogs, tool errors, missing tools, plain-menu input,
 color precedence and noninteractive/data-interface bypass. Installed Gum enables
 native filtering, review/cancellation and interruption checks; missing Gum skips
 those native checks without installing anything. Width checks use 40, 80 and 120
-columns. Run the shared theme/workflow and Bash suites for adjacent contracts.
+columns. Installed FZF also enables live hovered-palette cancellation checks at
+40/80/120 columns and forced-color preview/review coverage. Mixed FZF/Gum fixtures
+verify FZF browsing, Gum review, no fallback after failure, and one publication
+only on Apply. Published FZF color fixtures verify current-artifact precedence over
+unpublished edits/stale shell variables, color controls and refusal without shell
+execution for malformed data. Run the shared theme/workflow and Bash suites for adjacent contracts.
 
 On 2026-09-28, all 14 picker tests passed on native Termux, including real Gum
 2.0.0 filter/review/cancellation at 40/80/120 columns, forced color over NO_COLOR,

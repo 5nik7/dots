@@ -22,8 +22,9 @@ Downloaded themes remain data-only and never provide executable hooks.
 ## Flat themes and templates
 
 Selectable variants live at `themes/ID/`, normally with `colors.toml`, `theme.toml`,
-optional native `palette.toml`, and `backgrounds/`. There are 33 bundled selections:
-the previous 17 variants plus Omarchy's additional variants, merging six overlaps.
+optional native `palette.toml`, and `backgrounds/`. There are 33 flat variants plus
+the dynamic `pywal16-current` selection (34 bundled selections in total).
+The flat variants include the previous palette variants and Omarchy imports, merging six overlaps.
 Overlapping semantic colors use Omarchy's appearance. Its Rosé Pine import is Dawn;
 Main and Moon remain separate. Import provenance and license text are retained beside
 the themes and under `default/themed`. Background assets are bundled (54.6 MB across 92 files).
@@ -126,14 +127,25 @@ prints sourceable initialization. Theme IDs complete from local data on Tab.
 
 ## Interactive theme switcher
 
-`dots theme switcher` requires terminal input and output. It prefers `gum filter`,
-falls back to FZF with its live palette preview, and uses a numbered menu when
-neither tool is available or `TERM=dumb`. The backend is chosen once per invocation;
-selector failures never launch another backend. The FZF fallback ignores inherited
+`dots theme switcher` requires terminal input and output. It prefers fullscreen
+FZF with the prompt/list at the top and a visible live palette preview below,
+occupying 70% of the height. Hovering shows the theme's semantic colors and hex
+values via `theme show`, with swatches when terminal color policy allows them.
+Browsing never applies a theme. Without FZF it uses `gum filter`, or a numbered
+menu when neither tool is available or `TERM=dumb`; these fallbacks show the palette
+after selection. Backends are chosen once per invocation; selector failures never
+launch another backend. FZF ignores inherited
 `FZF_DEFAULT_OPTS` and `FZF_DEFAULT_OPTS_FILE` so user bindings cannot bypass the
-single-selection interface or Dots presentation controls.
+single-selection interface or Dots presentation controls. It reads the published
+`$XDG_STATE_HOME/dots/current/theme/fzf.sh` (default
+`~/.local/state/dots/current/theme/fzf.sh`) through the shared literal color parser,
+not by sourcing shell code, and supplies its colors explicitly to FZF. Unpublished
+theme edits and stale shell color variables do not affect the picker. Missing
+published colors leave FZF defaults; malformed color data refuses selection.
+`NO_COLOR` and Dots color controls still apply, including explicit `always` precedence.
 
-After selection, Dots shows the palette and offers **Back**, **Apply** and **Cancel**.
+After selection, Dots shows the palette and offers **Back**, **Apply** and **Cancel**,
+using Gum when available (even after FZF browsing), otherwise a numbered menu.
 Back is the default. Only Apply invokes the existing `set ID` publisher and app
 reloads; no wallpaper change is requested. Back returns to the catalog, and Cancel
 exits successfully without changing state. Selector output must match an offered
@@ -214,6 +226,17 @@ there is no generic Git repository manager.
 Background discovery includes the selected theme's `backgrounds/` and personal
 `~/.config/dots/backgrounds/ID` (with XDG_CONFIG_HOME respected). `next` cycles images;
 `select` reapplies the remembered image or the first; `switcher` uses optional fzf.
+The background picker uses fullscreen FZF with the prompt and list at the top,
+overriding inherited height, layout, margin and padding settings.
+It displays and searches only basenames without their final
+extension, retaining full paths internally (including for duplicate labels).
+Optional Chafa renders the hovered image as terminal symbols in a bottom
+preview occupying 70% of the height, scaled to the largest fit while preserving
+aspect ratio (no stretching or cropping), and explicitly shown by default even when
+inherited FZF options hide previews. Without Chafa, selection works without a
+preview. Hovering does not apply the wallpaper; accepting a selection does.
+Cancellation or an invalid selection makes no wallpaper/state changes. Raw
+`bg list` and `bg current` output retains full paths.
 PNG, JPEG, WebP and BMP are supported. Android uses `termux-wallpaper` (Termux:API),
 Wayland uses `swww img`, and X11 uses `feh`; adapters are capability-checked and have
 a 15-second timeout. `--lock-screen` is Android-only and does not replace the stored
@@ -237,6 +260,10 @@ are explicit and journaled, never automatic consequences of ordinary palette set
 Fixed palettes retain upstream color names. Each fixed family has `SOURCE.md`
 and upstream license text beside its metadata. Pywal16 has no fixed palette: see
 [its import contract](#pywal16-import).
+
+## Shared discovery
+
+`lib/dots/themes/discovery.bash` is the data-only reader shared by listing, the switcher, current-ID queries, native palette views and completion. Loading it performs no scans or command dispatch; discovery happens only when requested. Flat listing validates and deduplicates IDs, while completion retains its existing literal filename hints, including duplicates and invalid names. These hints do not authorize selection: the loader still rejects invalid IDs and duplicate bundled/user themes. Native flavor views retain metadata validation. No discovery cache or shell-startup scan is added.
 
 ## Native palette queries
 

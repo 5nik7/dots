@@ -24,12 +24,12 @@ dots_value_candidates() {
       done
       ;;
     theme-id)
-      local path name root=${DOTHEMES:-${THEMES:-$DOTS/themes}} user=${XDG_CONFIG_HOME:-$HOME/.config}/dots/themes
-      for path in "$root/"*/colors.toml "$user/"*/colors.toml; do
-        [[ -f $path && ! -L $path ]] || continue
-        name=${path%/colors.toml}; dots_candidate "$lead${name##*/}"
-      done
-      [[ ! -d $root/pywal16-current ]] || dots_candidate "${lead}pywal16-current"
+      local DT_ROOT=${DOTHEMES:-${THEMES:-$DOTS/themes}} DT_USER_THEMES=${XDG_CONFIG_HOME:-$HOME/.config}/dots/themes name
+      # Literal hints need only discovery, not palette loading or validation.
+      # shellcheck source=themes/discovery.bash
+      source "$DOTS_LIB_DIR/themes/discovery.bash"
+      dt_discover_ids theme-id completion || return
+      for name in "${DT_DISCOVERY_IDS[@]}"; do dots_candidate "$lead$name"; done
       ;;
     file-resource|file-repository)
       local action=list
@@ -42,9 +42,8 @@ dots_value_candidates() {
       local DT_LIB=$DOTS_LIB_DIR/themes name id=${DOTS_OPTION_VALUES[--theme]:-}
       source "$DT_LIB/core.bash"
       if [[ ! $id ]]; then
-        dt_selected selection 2>/dev/null || return 0
-        id=$DT_THEME-$DT_FLAVOR
-        [[ -d $DT_ROOT/$id || -d $DT_USER_THEMES/$id ]] || id=$DT_THEME
+        dt_current_id 2>/dev/null || return 0
+        id=$REPLY
       fi
       dt_find_theme "$id" 2>/dev/null && dt_load "$id" 2>/dev/null || return 0
       local -A names=()
@@ -55,23 +54,18 @@ dots_value_candidates() {
       while IFS= read -r name; do [[ ! $name ]] || dots_candidate "$lead$name"; done < <(printf '%s\n' "${!names[@]}" | LC_ALL=C sort)
       ;;
     theme|flavor|palette-color|color-format)
-      local DT_LIB=$DOTS_LIB_DIR/themes name file theme_name='' flavor_name=''
+      local DT_LIB=$DOTS_LIB_DIR/themes name theme_name='' flavor_name=''
       # shellcheck source=themes/core.bash
       source "$DT_LIB/core.bash"
       # Positional data is collected by the completion parser, never evaluated.
       theme_name=${DOTS_POSITIONALS[0]:-} flavor_name=${DOTS_POSITIONALS[1]:-}
       case $type in
         theme)
-          for file in "$DT_ROOT/"*/theme.toml; do
-            [[ -f $file && -d ${file%/theme.toml}/flavors ]] || continue
-            name=${file%/theme.toml}; dots_candidate "$lead${name##*/}"
-          done ;;
+          dt_discover_ids families || return
+          for name in "${DT_DISCOVERY_IDS[@]}"; do dots_candidate "$lead$name"; done ;;
         flavor)
-          dt_theme_id "$theme_name" || return 0
-          for file in "$DT_ROOT/$theme_name/flavors/"*.toml; do
-            [[ -f $file ]] || continue
-            name=${file##*/}; dots_candidate "$lead${name%.toml}"
-          done ;;
+          dt_discover_ids flavors "$theme_name" || return
+          for name in "${DT_DISCOVERY_IDS[@]}"; do dots_candidate "$lead$name"; done ;;
         palette-color)
           dt_load "$theme_name" "$flavor_name" 2>/dev/null || return 0
           for name in "${DT_NAMES[@]}"; do dots_candidate "$lead$name"; done ;;

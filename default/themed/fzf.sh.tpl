@@ -13,6 +13,13 @@ pointer:regular:{{ accent }}:bold,\
 marker:{{ warning }},\
 prompt:{{ accent }},\
 spinner:{{ dark_foreground }},\
+header:{{ hint }},\
+header-label:{{ dark_foreground }},\
+footer:{{ info }},\
+footer-label:{{ dark_foreground }},\
+input-label:{{ dark_foreground }},\
+list-label:{{ dark_foreground }},\
+preview-label:{{ dark_foreground }},\
 label:{{ muted }},\
 preview-label:{{ lighter_background }},\
 separator:{{ background }},\

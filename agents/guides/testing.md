@@ -105,7 +105,7 @@ For completion changes, follow [decision 0005](../../docs/decisions/0005-static-
 
 For shared palette, state publication, Zsh refresh, or Neovim theme adapter changes,
 run `python3 -B tools/test_themes.py`; use `python3 -B tools/bench_themes.py` for performance.
-The theme suite also covers the unified full-ID CLI, removed plural routes, native palette filtering/querying, and contextual color completion. Preserve these migration checks alongside publication/recovery tests.
+The theme suite also covers the unified full-ID CLI, removed plural routes, native palette filtering/querying, and contextual color completion. Preserve these migration checks alongside publication/recovery tests. Shared discovery fixtures verify inert sourcing, cleared enumeration results, alternate inherited checkout roots, listing/completion eligibility and next-request freshness; keep enumeration in-process for completion and measure changes before adding subprocesses.
 The editor tests copy public plugin sources and never start live LazyVim or download
 plugins. Missing sources report skipped tests; the optional source-map input for all
 families is documented in [Shared Themes](../../docs/testing.md#shared-themes).

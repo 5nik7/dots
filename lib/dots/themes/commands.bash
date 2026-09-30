@@ -19,23 +19,6 @@ dt_list() {
   done < <(dt_theme_ids | LC_ALL=C sort)
   printf '\n  %s themes available\n' "$count"
 }
-dt_current_id() {
-  dt_selected selection || return
-  REPLY=$DT_THEME-$DT_FLAVOR
-  [[ -d $DT_ROOT/$REPLY || -d $DT_USER_THEMES/$REPLY ]] || REPLY=$DT_THEME
-}
-dt_theme_ids() {
-  local path name
-  local -A seen=()
-  for path in "$DT_ROOT/"*/colors.toml "$DT_USER_THEMES/"*/colors.toml; do
-    [[ -f $path && ! -L $path ]] || continue
-    name=${path%/colors.toml}; name=${name##*/}
-    dt_theme_id "$name" || continue
-    [[ ! ${seen[$name]:-} ]] || continue
-    seen[$name]=1; printf '%s\n' "$name"
-  done
-  [[ ! -d $DT_ROOT/pywal16-current ]] || printf 'pywal16-current\n'
-}
 dt_command() {
   local action=${1:-help} name key value id dry=0 background=0 native=0
   (($# == 0)) || shift

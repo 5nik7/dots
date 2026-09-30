@@ -285,3 +285,5 @@ dt_json() {
 
 # shellcheck source=render.bash
 source "$DT_LIB/render.bash"
+# shellcheck source=discovery.bash
+source "$DT_LIB/discovery.bash"

@@ -1,8 +1,9 @@
 # Translate the FZF template as literal data, never shell code.
 # Literal shell expressions below are generated code or exact input grammar.
 # shellcheck disable=SC2016
-dt_app_init() {
+dt_fzf_colors() {
   local dir=$1 line text colors='' file
+  REPLY=''
   local fzf_assignment='^export _FZF_COLORS_="([^"]+)"$'
   local fzf_atom='(#[a-fA-F0-9]{6}|-1|[0-9]{1,2}|1[0-9]{2}|2[0-4][0-9]|25[0-5]|regular|bold|dim|italic|underline|blink|reverse|strikethrough|strip|nobold|nodim|noitalic|nounderline|noblink|noreverse|nostrikethrough)'
   local fzf_entry="[a-z][a-z+-]*:$fzf_atom(:$fzf_atom)*"
@@ -22,6 +23,12 @@ dt_app_init() {
     done <<< "$text"
     [[ $colors ]] || { dt_error 'fzf.sh is missing _FZF_COLORS_'; return 1; }
   fi
+  REPLY=$colors
+}
+dt_app_init() {
+  local dir=$1 colors
+  dt_fzf_colors "$dir" || return
+  colors=$REPLY
   # All validation finishes before adding code to the generated initialization.
   {
     printf 'export DOTS_THEME_FZF_COLORS=%q\n' "$colors"

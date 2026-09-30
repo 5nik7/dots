@@ -104,12 +104,20 @@ For `dots git publish --all`, ignore rules exclude new files; already tracked
 files remain eligible even under ignored directories. Staging preserves registered
 submodule pointers and may leave partial index changes on failure; see [Git](git.md).
 
-`dots theme switcher` is an interactive-only route: Gum selection, FZF fallback
-or a numbered menu, followed by palette review and Back/Apply/Cancel. It takes no
+`dots theme switcher` is an interactive-only route: fullscreen FZF selection with
+a live bottom palette preview and current published FZF colors, falling back to
+Gum or a numbered menu. Palette
+review and Back/Apply/Cancel use Gum when available, otherwise a numbered menu. It takes no
 arguments. Only Apply calls the existing publisher. Nonterminal input/output is
 refused; use list/set for scripts. See the [switcher contract](themes.md#interactive-theme-switcher)
 for cancellation and failure statuses. Help and completion remain static and do
 not probe or invoke UI tools.
+
+`dots theme bg switcher` uses fullscreen FZF with the prompt and list at the top,
+basename-only labels (no extension), and
+an optional bottom Chafa image preview occupying 70% of the height. Acceptance applies the selected full
+path; hovering and cancellation do not apply changes. Without Chafa it remains a
+text picker. See [backgrounds](themes.md) for adapter behavior.
 
 `dots files browse [--repo ID] [--app APP] [--category CATEGORY] [--status STATUS]`
 is a terminal-only, single-resource browser of tracked configs on the detected
@@ -152,7 +160,7 @@ applies to remaining positions. Types are `flag` (options only), `string`, `file
 `directory`, `choice:VALUE,VALUE`, or the core-owned theme data types
 `theme`, `flavor`, `palette-color`, `color-format`, `theme-id`, `theme-color`, `theme-plugin`, `file-resource`, and
 `file-repository`. `theme-plugin` reads local plugin names without executing hooks;
-`theme-id`, `file-resource`, and `file-repository` read flat theme IDs and qualified catalog IDs. `theme` lists native families for `list --flavors`. `theme-color` reads the selected theme or a preceding `--theme ID`/`--theme=ID`, honoring a preceding `--native`; it suggests native names alone in native mode and semantic/native names otherwise. The retained generic `flavor`/`palette-color` metadata providers use preceding positional family/flavor arguments. All providers read data and never execute
+`theme-id`, `file-resource`, and `file-repository` read flat theme IDs and qualified catalog IDs. Theme ID and native family/flavor enumeration use the data-only shared theme discovery module; current-ID reconstruction is shared with theme queries. Flat completion retains literal filename hints (including duplicates and invalid names); listing validates/deduplicates IDs and selection still validates them. `theme` lists native families for `list --flavors`. `theme-color` reads the selected theme or a preceding `--theme ID`/`--theme=ID`, honoring a preceding `--native`; it suggests native names alone in native mode and semantic/native names otherwise. The retained generic `flavor`/`palette-color` metadata providers use preceding positional family/flavor arguments. All providers read data and never execute
 extensions. Fields cannot contain `|`; choice values
 cannot contain commas. Descriptions are required. No code callbacks, aliases,
 implicit option grammar, or combined-short-option parsing are provided.

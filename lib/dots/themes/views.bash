@@ -26,21 +26,14 @@ dt_native_preview() {
 }
 
 dt_palette_list() {
-  local kind=$1 family=${2:-} file name
+  local kind=$1 family=${2:-} name
   local -a names=()
   if [[ $kind == flavors ]]; then
     dt_theme_id "$family" && [[ -d $DT_ROOT/$family/flavors ]] || { dt_error 'unknown palette family'; return 1; }
     dt_parse "$DT_ROOT/$family/theme.toml" metadata || return
-    for file in "$DT_ROOT/$family/flavors/"*.toml; do
-      [[ -f $file ]] || continue
-      name=${file##*/}; names+=("${name%.toml}")
-    done
-  else
-    for file in "$DT_ROOT/"*/theme.toml; do
-      [[ -f $file && -d ${file%/theme.toml}/flavors ]] || continue
-      name=${file%/theme.toml}; names+=("${name##*/}")
-    done
   fi
+  dt_discover_ids "$kind" "$family" || return
+  names=("${DT_DISCOVERY_IDS[@]}")
   if dots::human; then
     if [[ $kind == flavors ]]; then dots::heading "$family flavors"; else dots::heading 'Palette families'; fi
     for name in "${names[@]}"; do dots::row "$name"; done

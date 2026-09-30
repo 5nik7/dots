@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import tomllib
 import unittest
 
 spec = importlib.util.spec_from_file_location("oldthemes", Path(__file__).with_name("test_themes.py"))
@@ -142,13 +143,16 @@ printf '%s' "$GUM_CONFIRM_PROMPT_FOREGROUND"
 
     def test_flat_palette_catalog(self):
         names = self.dots("theme", "list").stdout.splitlines()
-        self.assertEqual(len(names), 33)
-        self.assertEqual(len(set(names)), 33)
+        expected = {path.parent.name for path in (self.repo / 'themes').glob('*/colors.toml')
+                    if path.is_file() and not path.is_symlink()} | {'pywal16-current'}
+        self.assertEqual(set(names), expected)
+        self.assertEqual(len(names), len(expected))
         for name in names:
             if name == "pywal16-current":
                 self.wal_export()
             self.dots("theme", "show", name)
-        self.assertEqual(self.dots("theme", "color", "accent", "--theme", "catppuccin-mocha").stdout.strip(), "#89b4fa")
+        palette = tomllib.loads((self.repo / 'themes/catppuccin-mocha/colors.toml').read_text())
+        self.assertEqual(self.dots("theme", "color", "accent", "--theme", "catppuccin-mocha").stdout.strip(), palette['accent'])
         self.assertFalse(self.state.exists())
 
     def test_presentation_and_raw_theme_queries(self):
@@ -157,7 +161,8 @@ printf '%s' "$GUM_CONFIRM_PROMPT_FOREGROUND"
         self.assertIn("theme bg next", self.dots("theme", "bg", env=env).stdout)
         listing = self.dots("theme", "list", env=env).stdout
         self.assertIn("[+] current", listing)
-        self.assertIn("33 themes available", listing)
+        count = len(self.dots("theme", "list").stdout.splitlines())
+        self.assertIn(f"{count} themes available", listing)
         self.assertIn("\x1b[48;2;", self.dots("theme", "show", "nord", env=env).stdout)
         preview = self.dots("theme", "set", "nord", "--dry-run", env=env).stdout
         self.assertIn("Theme preview", preview)
@@ -341,6 +346,77 @@ assert(require("anodize").get_palette().metadata.id == "nord")
         self.dots("theme", "remove", "fixture")
         self.assertFalse(installed.exists())
         self.assertTrue(list((installed.parent / ".archives").iterdir()))
+
+    def test_background_switcher_labels_preview_and_cancellation(self):
+        self.dots("theme", "set", "nord")
+        backgrounds = self.home / "config/dots/backgrounds/nord"
+        backgrounds.mkdir(parents=True)
+        image = backgrounds / "-雪 ' $(false).night.jpg"
+        image.write_bytes(b"fixture")
+        duplicate = backgrounds / "-雪 ' $(false).night.png"
+        duplicate.write_bytes(b"fixture")
+        fake = self.root / "pickerbin"
+        fake.mkdir()
+        picker = fake / "fzf"
+        picker.write_text(f'''#!{shutil.which("python3")}
+import json, os, pathlib, shlex, subprocess, sys
+rows = sys.stdin.buffer.read().decode().split('\\0')
+args = sys.argv[1:]
+pathlib.Path(os.environ['HOME'], 'picker.json').write_text(json.dumps([args, rows]))
+if os.environ.get('PICKER_CANCEL'):
+    sys.exit(130)
+if os.environ.get('PICKER_INVALID'):
+    print(os.environ['PICKER_IMAGE'])
+    sys.exit(0)
+row = next(row for row in rows if row.endswith(os.environ['PICKER_IMAGE']))
+if '--preview' in args:
+    preview = args[args.index('--preview') + 1]
+    preview = preview.replace('{{s2..}}', shlex.quote(os.environ['PICKER_IMAGE']))
+    subprocess.run(preview, shell=True, check=True, env=dict(os.environ,
+        FZF_PREVIEW_COLUMNS='37', FZF_PREVIEW_LINES='18'))
+print(row)
+''')
+        picker.chmod(0o755)
+        for name, output in (("chafa", "preview-call"), ("termux-wallpaper", "wallpaper-call")):
+            adapter = fake / name
+            adapter.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" > "$HOME/{output}"\n')
+            adapter.chmod(0o755)
+        env = dict(self.env, TERMUX_VERSION="fixture", PREFIX=str(self.root / "usr"),
+                   PATH=str(fake) + ":" + self.env["PATH"], PICKER_IMAGE=str(image))
+        self.dots("theme", "bg", "switcher", env=env)
+        args, rows = json.loads((self.home / "picker.json").read_text())
+        self.assertIn("--with-nth=1", args)
+        self.assertIn("--nth=1", args)
+        self.assertIn("--preview-window=down,70%,nohidden", args)
+        for option in ('--no-height', '--layout=reverse', '--margin=0', '--padding=0'):
+            self.assertIn(option, args)
+        self.assertIn(image.stem + "\t" + str(image), rows)
+        self.assertIn(duplicate.stem + "\t" + str(duplicate), rows)
+        native_fzf = shutil.which("fzf")
+        if native_fzf:
+            result = subprocess.run([native_fzf, *args, '--filter=.night'],
+                                    input='\0'.join(rows), text=True, capture_output=True,
+                                    env=dict(self.env, FZF_DEFAULT_OPTS='--height=~90% --layout=default --margin=2 --padding=1',
+                                             FZF_DEFAULT_OPTS_FILE=''),
+                                    timeout=10, check=True)
+            self.assertEqual(set(result.stdout.splitlines()),
+                             {image.stem + "\t" + str(image), duplicate.stem + "\t" + str(duplicate)})
+        self.assertEqual((self.home / "preview-call").read_text().splitlines(),
+                         ['--format=symbols', '--animate=off', '--scale=max', '--size', '37x18', '--', str(image)])
+        self.assertEqual(self.dots("theme", "bg", "current").stdout, str(image) + "\n")
+        self.dots("theme", "bg", "switcher", env=dict(env, PICKER_CANCEL="1"), code=130)
+        self.dots("theme", "bg", "switcher", env=dict(env, PICKER_INVALID="1"), code=1)
+        self.assertEqual(self.dots("theme", "bg", "current").stdout, str(image) + "\n")
+        # Hide only Chafa, independently of the developer's installed tools.
+        startup = self.root / "no-chafa.bash"
+        startup.write_text('command() {\n'
+                           '  [[ $1 != -v || $2 != chafa ]] || return 1\n'
+                           '  builtin command "$@"\n}\n')
+        (self.home / "preview-call").write_text("not invoked")
+        self.dots("theme", "bg", "switcher", env=dict(env, BASH_ENV=str(startup)))
+        args, _ = json.loads((self.home / "picker.json").read_text())
+        self.assertIn("--preview-window=hidden", args)
+        self.assertEqual((self.home / "preview-call").read_text(), "not invoked")
 
     def test_wallpaper_explicit_adapter_and_failure(self):
         self.dots("theme", "set", "nord")

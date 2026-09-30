@@ -115,7 +115,7 @@ printf '%s\\n' "$value"
             os.close(master)
 
     def test_gum_review_back_cancel_and_policy(self):
-        self.fixture_ui(); self.fixture_ui('fzf')
+        self.fixture_ui()
         self.queue(('nord', 'catppuccin-latte'), ('Back', 'Cancel'))
         env = dict(self.env, GUM_FILTER_PROMPT_FOREGROUND='#123456', CLICOLOR_FORCE='1')
         out = self.terminal(env=env)
@@ -136,8 +136,29 @@ printf '%s\\n' "$value"
         self.assertEqual([x.split()[0] for x in self.calls.read_text().splitlines()], ['filter', 'choose'])
         self.assertFalse((self.state / 'background').exists())
 
-    def test_tool_errors_and_invalid_results_never_fall_back(self):
+    def test_fzf_live_preview_with_gum_review(self):
         self.fixture_ui(); self.fixture_ui('fzf')
+        self.queue(('nord', 'catppuccin-latte'), ('Back', 'Cancel'))
+        self.terminal()
+        calls = self.calls.read_text().splitlines()
+        self.assertTrue(calls[0].startswith('--no-multi '))
+        self.assertTrue(calls[1].startswith('choose '))
+        self.assertTrue(calls[2].startswith('--no-multi '))
+        self.assertTrue(calls[3].startswith('choose '))
+        self.assertFalse(self.state.exists())
+        self.calls.unlink()
+        self.queue(('EXIT:7',))
+        self.terminal(code=1)
+        self.assertEqual(len(self.calls.read_text().splitlines()), 1)
+        self.assertFalse(self.state.exists())
+        self.queue(actions=('Apply',))
+        self.terminal(timeout=45)
+        self.assertEqual(self.dots('theme', 'current').stdout.strip(), 'nord')
+        self.assertEqual(len(list((self.state / 'generations').glob('g.*'))), 1)
+        self.assertFalse((self.state / 'background-current').exists())
+
+    def test_tool_errors_and_invalid_results_never_fall_back(self):
+        self.fixture_ui()
         for selection, action, code in [('EXIT:7', 'Apply', 1), ('EXIT:1', 'Apply', 1),
                                        ('EXIT:130', 'Apply', 130), ('EMPTY', 'Apply', 130),
                                        ('MULTI', 'Apply', 1), ('../bad', 'Apply', 1),
@@ -166,6 +187,10 @@ printf '%s\\n' "$value"
         args = self.calls.read_text()
         self.assertIn('--preview=', args)
         self.assertIn('--no-multi', args)
+        self.assertIn('--no-height', args)
+        self.assertIn('--layout=reverse', args)
+        self.assertIn('--preview-window=down\\,70%\\,nohidden', args)
+        self.assertIn('--color=never', args)
         self.assertIn('--color=bw', args)
         self.assertIn('--no-unicode', args)
         self.assertFalse(self.state.exists())
@@ -173,6 +198,39 @@ printf '%s\\n' "$value"
         self.terminal(code=130)
         self.queue(('EXIT:2',))
         self.terminal(code=1)
+
+    def test_fzf_uses_published_colors_without_sourcing_shell(self):
+        self.fixture_ui('fzf')
+        override = self.repo / 'themes/nord/fzf.sh'
+        override.write_text('export _FZF_COLORS_="fg:#112233"\n')
+        self.dots('theme', 'set', 'nord')
+        generation = self.generation()
+        # Unpublished edits and stale shell colors must not override the active artifact.
+        override.write_text('export _FZF_COLORS_="fg:#445566"\n')
+        for mode, no_color, expected in [('always', '1', '--color=fg:#112233'),
+                                         ('auto', '', '--color=fg:#112233'),
+                                         ('auto', '1', '--color=bw'),
+                                         ('never', '', '--color=bw')]:
+            with self.subTest(mode=mode, no_color=no_color):
+                self.calls.unlink(missing_ok=True)
+                self.queue()
+                self.terminal(steps=((b'Number [1]', b'3\r'),),
+                              env=dict(self.env, DOTS_COLOR=mode, NO_COLOR=no_color,
+                                       FZF_DEFAULT_OPTS='--color=fg:#778899',
+                                       DOTS_THEME_FZF_COLORS='fg:#778899'))
+                args = self.calls.read_text()
+                self.assertIn(expected, args)
+                self.assertNotIn('#445566', args)
+                self.assertNotIn('#778899', args)
+                self.assertEqual(self.generation(), generation)
+        # The parser is shared with publication and must not execute even trusted files.
+        (generation / 'fzf.sh').write_text('export _FZF_COLORS_="$(touch SENTINEL)"\n')
+        self.calls.unlink()
+        self.queue()
+        self.terminal(env=dict(self.env, DOTS_COLOR='always'), code=1)
+        self.assertFalse(self.calls.exists())
+        self.assertFalse((self.home / 'SENTINEL').exists())
+        self.assertEqual(self.generation(), generation)
 
     def test_plain_menu_defaults_invalid_input_escape_and_eof(self):
         script = self.script.replace('dt_command switcher', 'dt_theme_ids() { printf "nord\\n"; }; dt_command switcher')
@@ -214,7 +272,7 @@ printf '%s\\n' "$value"
                      ('theme', 'color', 'accent', '--theme', 'nord'),
                      ('completion', 'bash'), ('commands', '--check')]:
             self.dots(*args, env=dict(self.env, DOTS_COLOR='always'))
-        self.assertIn('Gum, FZF or plain menu', self.dots('theme', 'switcher', '--help').stdout)
+        self.assertIn('live palette preview', self.dots('theme', 'switcher', '--help').stdout)
         self.assertFalse(self.calls.exists())
         self.assertFalse(self.state.exists())
 
@@ -258,8 +316,16 @@ printf '%s\\n' "$value"
         self.env['PICKER_TOOLS'] = 'fzf'
         script = self.script.replace('dt_command switcher',
                                      'dt_theme_ids() { printf "catppuccin-frappe\\nnord\\n"; }; dt_command switcher')
-        out = self.terminal(script, steps=((b'Theme:', b'nord'), (b'1/2', b'\r'), (b'Number [1]', b'3\r')))
-        self.assertIn(b'nord (dark)', out)
+        for width in (40, 80, 120):
+            with self.subTest(width=width):
+                out = self.terminal(script, width=width,
+                                    steps=((b'Theme:', b'nord'), (b'nord (dark)', b'\x03')), code=130)
+                self.assertIn(b'foreground', out)
+                self.assertNotRegex(out, rb'\x1b\[[0-9;]*(?:38|48);2;')
+                self.assertFalse(self.state.exists())
+        out = self.terminal(script, env=dict(self.env, DOTS_COLOR='always', NO_COLOR='1'),
+                            steps=((b'Theme:', b'nord'), (b'nord (dark)', b'\r'), (b'Number [1]', b'3\r')))
+        self.assertRegex(out, rb'\x1b\[[0-9;]*(?:38|48);2;')
         self.assertIn(b'Cancelled', out)
         self.assertFalse(self.state.exists())
 

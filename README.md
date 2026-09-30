@@ -58,8 +58,8 @@ The repository startup files resolve their actual location through symlinks and 
 
 ## Shared Themes
 
-The Omarchy-style theme tree has 33 selectable variants under `themes/`, with
-shared templates in `default/themed/`. The active generated files live at
+The Omarchy-style theme tree has 33 flat variants under `themes/`, plus the dynamic
+`pywal16-current` selection, with shared templates in `default/themed/`. The active generated files live at
 `~/.local/state/dots/current/theme/` (XDG_STATE_HOME is respected).
 
 ```bash
@@ -79,8 +79,10 @@ prompt after `dots theme refresh`, preserving FZF layout and key bindings. Gum
 colors render as `gum_env.sh` and load automatically in interactive Bash/Zsh,
 without Lua or Hilbish. Both shells refresh them with published theme changes; see the
 [loading instructions](docs/themes.md).
-`dots theme switcher` offers searchable Gum selection, palette review and
-Back/Apply/Cancel, with FZF and plain-menu fallbacks. Gum is the preferred optional
+`dots theme switcher` offers fullscreen FZF selection with a live color-palette
+preview below the list, styled with the current theme's published FZF colors,
+then Back/Apply/Cancel review (using Gum when available).
+Without FZF, selection falls back to Gum or a plain menu. Gum is the preferred optional
 tool for suitable new interactive workflows; see the [presentation convention](docs/presentation.md#optional-gum-interactions).
 File operations and Anodize also offer **Cancel / Apply**, and Git publishing
 uses **Cancel / Publish**, with Cancel selected by default. Existing text prompts
@@ -94,6 +96,9 @@ APIs, including `catppuccin` and `current_theme`, remain available. Theme manage
 [plural-command migration table](docs/themes.md#migration-from-plural-commands) for script updates. The local editor plugin defaults to `~/repos/Anodize.nvim` (override with `ANODIZE_NVIM_DIR`); generic imported themes need no downloaded Lua. Git theme installation,
 updates, template overrides and wallpaper adapters are described in
 [Shared themes](docs/themes.md). Wallpaper changes are always explicit.
+`dots theme bg switcher` shows filenames without extensions in fullscreen FZF,
+with the prompt and list at the top and a
+bottom image preview occupying 70% of the height when optional Chafa is installed.
 
 Theme and file commands now have colored terminal views: palette swatches, active
 theme markers, file statuses, and paths that wrap on narrow screens. Group commands
