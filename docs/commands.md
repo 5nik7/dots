@@ -131,6 +131,18 @@ errors return 2 and operational errors return 1. Cancellation follows the
 unattended, platform override or batch interface. Its static header supplies help,
 route/flag completion and repository-ID completion without invoking the browser.
 
+### Tmux keybinding reference
+
+**Implemented.** `dots menu tmux keys [--print]`, also available directly as `dots-menu-tmux-keys`, is a read-only human reference for the currently addressed tmux server. It lists bindings with nonempty `-N` notes, including defaults and plugins, but never their command bodies or an executable selection. It does not read tmux configuration files. Sections are `prefix`, `root`, `copy-mode-vi`, `copy-mode`, then other tables lexically, omitting empty sections and preserving tmux's key order within each table. The legend shows distinct enabled `prefix`/`prefix2` values from the current pane's session, or global values when no pane context is available. Custom table names do not imply a particular entry sequence.
+
+With terminal stdin/stdout and a non-dumb terminal, the command opens optional `less -R`: `/` searches, `n` advances, and `q` closes. Short lists remain open. Pager settings are child-local, inherited `LESS` options and preprocessor hooks are cleared, and secure mode disables shell/editor escapes. `$PAGER` is not evaluated. Missing `less` produces a warning and a complete printed view; pager failures do not retry through another backend. `--print` and redirected output bypass paging; empty collections also print directly, with a hint to add `bind -N` descriptions. Printed text is a human interface, not a stable machine schema.
+
+The shared presentation controls apply, including automatic color based on the destination terminal before pager piping, independent stderr styling, `NO_COLOR`, and readable ASCII fallbacks. Keys and descriptions stay on the same logical line even in narrow popups, with a compact per-table key column padded to at most 12 characters. Longer keys and descriptions remain complete and may wrap naturally in the terminal; the prefix legend is also inline. Control characters in queried values are shown as visible escapes, never passed to the terminal. There is no JSON interface.
+
+Requires Bash 4.4+ and tmux with `list-keys -F`, `key_table`/`key_string`/`key_note`, and `q|a` format support; native verification used tmux 3.7c. One formatted listing safely quotes field values, and the command parses it without evaluation. The global tmux `-N` flag prohibits starting a server; `-u` preserves Unicode and separators even under an ASCII client locale. Unsupported/malformed listings, unavailable servers, and failed prefix queries produce no partial stdout. No configuration is sourced, server reloaded, or state written.
+
+`-h`/`--help` works without tmux or less. Static metadata provides route and `--print` completion for Bash/Zsh/Fish without invoking either tool. Success, empty results, and normal pager exit return 0; operational/pager failures return 1; unknown arguments return 2; pager interruption returns 130. The [README](../README.md#tmux-keybinding-reference) shows the popup binding. Its per-popup `-S "fg=blue"` border and styled bold cyan title use tmux's terminal palette without changing global popup options. These tmux-owned decorations are independent of the viewer's Dots color controls. The direct executable must be on tmux's PATH.
+
 ### Optional Metadata
 
 Read the initial shebang/comment/blank-line header only, up to 128 lines and

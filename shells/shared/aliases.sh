@@ -1,10 +1,9 @@
 # Shared interactive aliases. The function loader handles alias-safe definitions.
 # Remove the old Bash function forms and our capability-dependent aliases first.
-unset -f l ll la lla lt lta ff 2>/dev/null || :
-unalias eff ls eza l ll la lla lt lta lsa cd d lg glow paint dev src repos pacman upd paci pacr apt apti aptr 2>/dev/null || :
+unset -f l ll la lla lt lta ff 2> /dev/null || :
+unalias t eff ls eza l ll la lla lt lta lsa cd d lg glow paint dev src repos pacman upd paci pacr apt apti aptr 2> /dev/null || :
 alias rl=rlp rlc=reload-completion rlcs=reload-completions
 alias c=clear q=exit h=history g=git
-alias t='tmux attach || tmux new -s Work'
 alias gcm='git commit -m' gcam='git commit -a -m' gcad='git commit -a --amend'
 alias 'p:'='printf "%s\n" "${PATH//:/$'"'\n'"'}"'
 alias path='printf "%s\n" "${PATH//:/$'"'\n'"'}"'
@@ -31,14 +30,23 @@ else
 fi
 alias lsa='ls -a' la=lsa lla='ll -a' lta='lt -a'
 # Match the final effective Zsh binding, after native zoxide activation.
-if has zoxide && typeset -f z >/dev/null 2>&1; then alias cd=z; fi
+if has zoxide && typeset -f z > /dev/null 2>&1; then alias cd=z; fi
 if has yazi; then alias d=y; fi
 if has lazygit; then alias lg=lazygit; fi
 alias edit='$EDITOR' e='$EDITOR' v='$EDITOR' vi='$EDITOR' vim='$EDITOR' sv='sudo "$EDITOR"'
 alias ff=_dots_file_picker
-if [[ -d $HOME/repos ]]; then export REPOS="$HOME/repos"; alias repos='cd -- "$REPOS"'; fi
-if [[ -d $HOME/dev ]]; then export DEV="$HOME/dev"; alias dev='cd -- "$DEV"'; fi
-if [[ -d $HOME/src ]]; then export SRCDIR="$HOME/src"; alias src='cd -- "$SRCDIR"'; fi
+if [[ -d $HOME/repos ]]; then
+  export REPOS="$HOME/repos"
+  alias repos='cd -- "$REPOS"'
+fi
+if [[ -d $HOME/dev ]]; then
+  export DEV="$HOME/dev"
+  alias dev='cd -- "$DEV"'
+fi
+if [[ -d $HOME/src ]]; then
+  export SRCDIR="$HOME/src"
+  alias src='cd -- "$SRCDIR"'
+fi
 if has pastel; then alias paint='pastel paint'; else alias paint=_dots_paint; fi
 if has glow && [[ -f $DOTFILES/glow/styles/catppuccin-mocha.json ]]; then
   alias glow='glow -s "$DOTFILES/glow/styles/catppuccin-mocha.json"'

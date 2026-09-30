@@ -107,6 +107,193 @@ fixpath
         p.chmod(0o700)
         return p
 
+    def tmux_stub(self):
+        # No real tmux executable/server is ever used. Each invocation is logged
+        # as NUL-separated argv with an empty record terminator.
+        self.env['TMUX_LOG'] = str(self.root / 'tmux.log')
+        self.env['TMUX_CHECKS'] = str(self.root / 'tmux.checks')
+        self.stub('tmux', r'''printf '%s\0' "$@" >> "$TMUX_LOG"
+printf '\0' >> "$TMUX_LOG"
+case $1 in
+  has-session)
+    count=0
+    [[ ! -f $TMUX_CHECKS ]] || read -r count < "$TMUX_CHECKS"
+    count=$((count + 1))
+    printf '%s\n' "$count" > "$TMUX_CHECKS"
+    case $TMUX_CASE in
+      existing|switch-error) exit 0 ;;
+      race) (( count > 1 )) && exit 0 ;;
+    esac
+    exit 1 ;;
+  new-session)
+    case $TMUX_CASE in
+      race) printf 'duplicate session\n' >&2; exit 1 ;;
+      create-error) printf 'create denied\n' >&2; exit 23 ;;
+      attach-error) printf 'attach denied\n' >&2; exit 24 ;;
+    esac ;;
+  switch-client)
+    if [[ $TMUX_CASE == switch-error ]]; then
+      printf 'switch denied\n' >&2; exit 25
+    fi ;;
+  *) printf 'unexpected tmux command\n' >&2; exit 99 ;;
+esac
+''')
+
+    def tmux_run(self, shell, invocation='t', *, inside=False, case='existing',
+                 status=0, prefix=''):
+        self.env['TMUX'] = 'fixture-server,123,0' if inside else ''
+        self.env['TMUX_CASE'] = case
+        for name in ('tmux.log', 'tmux.checks'):
+            (self.root / name).unlink(missing_ok=True)
+        proc = self.shell(shell, self.shared() + prefix + '\n' + invocation +
+                          f'\nresult=$?\n[[ $result == {status} ]] || '
+                          '{ printf "unexpected status: %s\\n" "$result" >&2; exit 90; }\n')
+        log = self.root / 'tmux.log'
+        calls = []
+        if log.exists():
+            calls = [record.decode().split('\0')
+                     for record in log.read_bytes().split(b'\0\0') if record]
+        return proc, calls
+
+    def test_tmux_outside_default_names_and_quoting(self):
+        self.tmux_stub()
+        for shell in ('bash', 'zsh'):
+            for session in (None, 'Work', 'Work other', '-dash', 'équipe 日本',
+                            'quote\' " $HOME $(touch injected) * ? [x] ;'):
+                with self.subTest(shell=shell, session=session):
+                    self.env['SESSION_NAME'] = session or ''
+                    proc, calls = self.tmux_run(
+                        shell, 't' if session is None else 't "$SESSION_NAME"')
+                    self.assertEqual(calls, [['new-session', '-A', '-s',
+                                             session or 'Work', '-c', str(self.home)]])
+                    self.assertEqual(proc.stdout + proc.stderr, '')
+                    self.assertFalse((self.home / 'injected').exists())
+
+    def test_tmux_infers_project_root_and_explicit_name_skips_git(self):
+        self.tmux_stub()
+        self.stub('git', '''printf 'git\\n' >> "$HOME/git-calls"
+[[ $* == 'rev-parse --show-toplevel' ]] || exit 90
+printf '%s\\n' "$TEST_PROJECT_ROOT"
+''')
+        for shell in ('bash', 'zsh'):
+            for folder, session in [('dots', 'dots'), ('my.project:ü', 'my-project-ü'),
+                                    ('space project', 'space project'), ('-dash', '-dash')]:
+                project = self.home / folder
+                nested = project / 'src/nested'
+                nested.mkdir(parents=True, exist_ok=True)
+                self.env.update(TEST_PROJECT_ROOT=str(project), TEST_NESTED=str(nested))
+                for inside in (False, True):
+                    (self.home / 'git-calls').unlink(missing_ok=True)
+                    proc, calls = self.tmux_run(shell, inside=inside, case='missing',
+                                                prefix='builtin cd -- "$TEST_NESTED"')
+                    if inside:
+                        expected = [['has-session', '-t', '=' + session],
+                                    ['new-session', '-d', '-s', session, '-c', str(project)],
+                                    ['switch-client', '-t', '=' + session]]
+                    else:
+                        expected = [['new-session', '-A', '-s', session, '-c', str(project)]]
+                    self.assertEqual(calls, expected)
+                    self.assertEqual(proc.stdout + proc.stderr, '')
+                    self.assertEqual((self.home / 'git-calls').read_text(), 'git\n')
+                (self.home / 'git-calls').unlink()
+                _, calls = self.tmux_run(shell, 't custom', prefix='builtin cd -- "$TEST_NESTED"')
+                self.assertEqual(calls, [['new-session', '-A', '-s', 'custom', '-c', str(nested)]])
+                self.assertFalse((self.home / 'git-calls').exists())
+
+    def test_tmux_non_repository_falls_back_without_git_diagnostics(self):
+        self.tmux_stub()
+        self.stub('git', "printf 'fatal: not a repository\\n' >&2; exit 128\n")
+        for shell in ('bash', 'zsh'):
+            proc, calls = self.tmux_run(shell)
+            self.assertEqual(calls, [['new-session', '-A', '-s', 'Work', '-c', str(self.home)]])
+            self.assertEqual(proc.stdout + proc.stderr, '')
+        # The fixture PATH contains no Git once the mock is removed.
+        (self.root / 'tools/git').unlink()
+        for shell in ('bash', 'zsh'):
+            proc, calls = self.tmux_run(shell)
+            self.assertEqual(calls, [['new-session', '-A', '-s', 'Work', '-c', str(self.home)]])
+            self.assertEqual(proc.stdout + proc.stderr, '')
+
+    def test_tmux_rejects_invalid_arguments_before_execution(self):
+        self.tmux_stub()
+        for shell in ('bash', 'zsh'):
+            invalid = ['', 'a:b', 'a.b'] + [f'a{chr(n)}b' for n in (*range(1, 32), 127)]
+            for session in invalid:
+                with self.subTest(shell=shell, session=repr(session)):
+                    self.env['SESSION_NAME'] = session
+                    proc, calls = self.tmux_run(shell, 't "$SESSION_NAME"', status=2)
+                    self.assertEqual(calls, [])
+                    self.assertEqual(proc.stdout, '')
+                    self.assertIn('Usage: t [session-name]', proc.stderr)
+            proc, calls = self.tmux_run(shell, 't first second', status=2)
+            self.assertEqual(calls, [])
+            self.assertEqual(proc.stdout, '')
+            self.assertIn('Usage: t [session-name]', proc.stderr)
+
+    def test_tmux_inside_exact_existing_and_new_sessions(self):
+        self.tmux_stub()
+        for shell in ('bash', 'zsh'):
+            for session in ('Work', '-dash', 'space ü', 'Work*', '=literal'):
+                for case in ('existing', 'missing'):
+                    with self.subTest(shell=shell, session=session, case=case):
+                        self.env['SESSION_NAME'] = session
+                        proc, calls = self.tmux_run(shell, 't "$SESSION_NAME"',
+                                                    inside=True, case=case)
+                        expected = [['has-session', '-t', '=' + session]]
+                        if case == 'missing':
+                            expected += [['new-session', '-d', '-s', session,
+                                          '-c', str(self.home)]]
+                        expected += [['switch-client', '-t', '=' + session]]
+                        self.assertEqual(calls, expected)
+                        self.assertEqual(proc.stdout + proc.stderr, '')
+            _, calls = self.tmux_run(shell, inside=True)
+            self.assertEqual(calls, [['has-session', '-t', '=Work'],
+                                     ['switch-client', '-t', '=Work']])
+
+    def test_tmux_failures_and_concurrent_creation(self):
+        self.tmux_stub()
+        has = ['has-session', '-t', '=Work']
+        create = ['new-session', '-d', '-s', 'Work', '-c', str(self.home)]
+        switch = ['switch-client', '-t', '=Work']
+        for shell in ('bash', 'zsh'):
+            for case, inside, status, diagnostic, expected in (
+                ('attach-error', False, 24, 'attach denied',
+                 [['new-session', '-A', '-s', 'Work', '-c', str(self.home)]]),
+                ('switch-error', True, 25, 'switch denied', [has, switch]),
+                ('create-error', True, 23, 'create denied', [has, create, has]),
+                ('race', True, 0, 'duplicate session', [has, create, has, switch]),
+            ):
+                with self.subTest(shell=shell, case=case):
+                    proc, calls = self.tmux_run(shell, inside=inside, case=case, status=status)
+                    self.assertEqual(calls, expected)
+                    self.assertEqual(proc.stdout, '')
+                    self.assertIn(diagnostic, proc.stderr)
+
+    def test_tmux_missing_command_and_old_alias_reload(self):
+        for shell in ('bash', 'zsh'):
+            # Empty PATH makes the missing-tool case independent of host tools.
+            proc = self.shell(shell, self.shared() + '''
+PATH=''
+t > "$HOME/t-out" 2> "$HOME/t-err"
+[[ $? == 127 ]] || exit 1
+[[ ! -s $HOME/t-out ]] || exit 2
+''')
+            self.assertIn('tmux not found', (self.home / 't-err').read_text())
+        self.tmux_stub()
+        for shell in ('bash', 'zsh'):
+            enable = 'setopt aliases' if shell == 'zsh' else 'shopt -s expand_aliases'
+            prefix = enable + '\n'
+            for _ in range(3):
+                prefix += '''alias t='printf LEGACY; false'
+source "$DOTS/shells/shared/functions.sh" || exit 1
+source "$DOTS/shells/shared/aliases.sh" || exit 2
+alias t >/dev/null 2>&1 && exit 3
+typeset -f t >/dev/null || exit 4
+'''
+            proc, calls = self.tmux_run(shell, "eval 't'", prefix=prefix)
+            self.assertEqual(calls, [['new-session', '-A', '-s', 'Work', '-c', str(self.home)]])
+            self.assertEqual(proc.stdout + proc.stderr, '')
+
     def test_yazi_exit_cleanup_and_editor_cancel(self):
         self.stub('yazi', '''for arg; do case $arg in --cwd-file=*) target=${arg#*=};; esac; done
 printf '%s\\n' "$HOME/destination ü" >| "$target"

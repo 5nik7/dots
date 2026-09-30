@@ -1,0 +1,11 @@
+test_colors_icons_and_single_call (__main__.TmuxStatus.test_colors_icons_and_single_call) ... ok
+test_failure_and_missing_checkout_clear_old_result (__main__.TmuxStatus.test_failure_and_missing_checkout_clear_old_result) ... ok
+test_layout_and_template_ownership (__main__.TmuxStatus.test_layout_and_template_ownership) ... ok
+test_malformed_or_unsafe_output_is_not_forwarded (__main__.TmuxStatus.test_malformed_or_unsafe_output_is_not_forwarded) ... ok
+test_native_config_legacy_theme_and_async_battery (__main__.TmuxStatus.test_native_config_legacy_theme_and_async_battery) ... ok
+test_upstream_thresholds_icons_and_one_mock_api_request (__main__.TmuxStatus.test_upstream_thresholds_icons_and_one_mock_api_request) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.005s
+
+OK

@@ -87,6 +87,14 @@ the existing Zsh cache/reload regression coverage and FZF-tab acceptance.
 
 For new or changed human views, apply the [presentation acceptance gate](../../docs/presentation.md#acceptance-gate) using the existing command suites and test-owned roots. Cover the applicable output modes and states, review representative terminal layouts, and report gaps. Cross-renderer policy checks and forced-decoration data checks are required when shared presentation behavior changes; current evidence does not establish every command or native platform.
 
+## Tmux status and named sessions
+
+For the status adapter/configuration, run `python3 -B tools/test_tmux_status.py` and the theme/workflow suites. The optional `DOTS_TEST_BATTERY_SOURCE` integration copies only upstream source into the fixture, mocks all battery API calls and never loads real battery configuration. For `t`, run `python3 -B tools/test_tmux_sessions.py`, the shared-shell regressions and applicable shell suites/PTY runners below. Keep tmux sockets, sessions, homes and configurations test-owned; never source into the live server. See [status testing](../../docs/testing.md#tmux-status-and-named-sessions).
+
+## Tmux keybinding reference
+
+For `dots menu tmux keys`, run `python3 -B tools/test_tmux_keys.py`, the Bash dispatcher suite, and the syntax/ShellCheck commands in the [testing reference](../../docs/testing.md#tmux-keybinding-reference). Keep native tmux sockets, sessions, configs and PTYs test-owned; never load the user's config or modify the live server. Preserve Termux's inherited `LD_PRELOAD`. Record missing tmux/less native checks as skips and retain static-help/completion nonexecution coverage.
+
 ## Existing Yazi Configuration
 
 For `config/yazi/plugins/dots.yazi` changes, run its Lua dispatcher, Git-head metadata, hover and LS_COLORS fixtures, GNU ls oracle comparisons, and isolated native PTY runner as documented in [Testing Strategy](../../docs/testing.md#yazi-plugin-bundle). The native runner needs Python, Git, git-it, and Yazi on a Unix PTY and owns all home/config/state/cache/runtime and DDS storage. Never test project saves, deletions, or merge events against the live configuration. Keep fixture results, native platform evidence, and visual review limits distinct.

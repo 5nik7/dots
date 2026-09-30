@@ -15,6 +15,43 @@ elif builtin shopt -q expand_aliases; then
   builtin shopt -u expand_aliases
 fi
 
+# Default to the Git worktree's name/root; explicit names retain the caller's cwd.
+# Inside tmux switch the current client instead of nesting another client.
+t() {
+  local name=${1-Work} directory=$PWD project result
+  if (( $# > 1 )) || [[ -z $name || $name == *[[:cntrl:].:]* ]]; then
+    printf 'Usage: t [session-name] (nonempty; no control characters, colon or dot)\n' >&2
+    return 2
+  fi
+  command -v tmux >/dev/null 2>&1 || {
+    printf 't: tmux not found\n' >&2
+    return 127
+  }
+  if (( $# == 0 )) && project=$(command git rev-parse --show-toplevel 2>/dev/null) && [[ -d $project ]]; then
+    directory=$project
+    name=${project##*/}
+    # Only inferred names are normalized: tmux forbids dots/colons in names.
+    name=${name//[[:cntrl:].:]/-}
+    name=${name:-Work}
+  fi
+  if [[ -z ${TMUX:-} ]]; then
+    command tmux new-session -A -s "$name" -c "$directory"
+    return $?
+  fi
+  # '=' prevents tmux's prefix/glob target matching, including for dash names.
+  if ! command tmux has-session -t "=$name" 2>/dev/null; then
+    if command tmux new-session -d -s "$name" -c "$directory"; then
+      :
+    else
+      result=$?
+      # Another client may have created it since our first check. Keep the
+      # creation diagnostic, and its failure status unless that exact name exists.
+      command tmux has-session -t "=$name" 2>/dev/null || return "$result"
+    fi
+  fi
+  command tmux switch-client -t "=$name"
+}
+
 # Create a new worktree and branch from within current git directory.
 ga() {
   if [[ -z "$1" ]]; then

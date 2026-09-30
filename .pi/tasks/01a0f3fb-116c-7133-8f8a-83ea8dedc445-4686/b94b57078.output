@@ -1,0 +1,8 @@
+test_inside_creates_switches_and_reuses_exact_sessions (__main__.TmuxSessions.test_inside_creates_switches_and_reuses_exact_sessions) ... ok
+test_outside_exact_default_and_existing_names (__main__.TmuxSessions.test_outside_exact_default_and_existing_names) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 6.380s
+
+OK
+

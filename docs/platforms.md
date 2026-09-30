@@ -14,6 +14,8 @@ adapter is added. Ordinary unsymlinked invocation, help, and routing use Bash
 builtins; resolving a symlinked launcher additionally requires `readlink`.
 This coverage is separate from the Go platform matrix below.
 
+The [tmux keybinding reference](commands.md#tmux-keybinding-reference) requires Bash 4.4+ and tmux's formatted key listing (`list-keys -F` with `q|a` quoting). Optional less provides paging; missing less falls back to printed output. Native Termux checks use tmux 3.7c, a disposable popup, and controlling-terminal less tests. Linux/WSL remain compatible design targets without new native evidence; native Windows is not supported by this Bash/tmux command. No paths are translated or dependencies installed.
+
 ## Shell initialization coverage
 
 The [initialization hook](shell-init.md) has native adapters for Bash, Zsh, Fish, Nushell, Xonsh, and PowerShell. Local Termux verification covers the first five installed interpreters; the Xonsh interactive fixture uses readline with a PTY. PowerShell is unavailable locally, so its native runtime tests are skipped and Windows startup remains unverified. The PowerShell adapter requires no Bash and does not translate Windows/WSL paths. Native startup files derive checkout paths through file and directory symlinks; PowerShell also resolves directory junctions. Native Windows link behavior remains unverified locally. Bash file-link resolution uses `readlink` without GNU-only options; Nushell uses parse-time `path self` with strict `path expand`. This does not extend support for the rest of the live Bash CLI on native Windows.

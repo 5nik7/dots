@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# dots:summary=Browse described live tmux keybindings in a searchable pager
+# dots:usage=[--print]
+# dots:option=--print||flag|Print without opening a pager
+# dots:example=dots menu tmux keys
+# dots:example=dots --color=always menu tmux keys --print
+DT_KEYS_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=../lib/dots/tmux-keys.bash
+source "$DT_KEYS_LIB/tmux-keys.bash"
+dots_tmux::main "$@"

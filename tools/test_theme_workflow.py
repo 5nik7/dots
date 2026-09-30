@@ -449,6 +449,8 @@ assert(require("anodize").get_palette().metadata.id == "nord")
         import xml.etree.ElementTree as ET
         ET.parse(active / "bat.tmTheme")
         self.assertIn("color15=", original.read_text())
+        # Themes publish colors, not the user's clock/battery status layout.
+        self.assertNotIn("status-right", (active / "tmux.conf").read_text())
         tmux = shutil.which("tmux")
         if tmux:
             socket = self.root / "owned-tmux.socket"
@@ -458,7 +460,10 @@ assert(require("anodize").get_palette().metadata.id == "nord")
             command = [tmux, "-S", str(socket)]
             try:
                 self.run_command(command + ["-f", "/dev/null", "new-session", "-d", "-s", "fixture", "sleep 30"])
+                self.run_command(command + ["set-option", "-g", "status-right", "clock  battery"])
                 self.run_command(command + ["source-file", str(cfg)])
+                self.assertEqual(self.run_command(command + ["show-options", "-gv", "status-right"]).stdout.strip(),
+                                 "clock  battery")
                 style = self.run_command(command + ["show-options", "-gv", "status-style"]).stdout
                 self.assertIn("#d8dee9", style)
                 self.assertIn("bg=default", style)

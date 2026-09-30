@@ -1,0 +1,28 @@
+{
+  "id": "b2525c5f7",
+  "name": "Baseline tmux regression tests",
+  "command": "python3 -B tools/test_tmux_keys.py > /tmp/dots-tmux-baseline.log 2>&1; result=$?; tail -n 35 /tmp/dots-tmux-baseline.log; exit \"$result\"",
+  "status": "failed",
+  "outputPath": ".pi/tasks/01a0f3ee-d34b-7133-8f8a-83e8472047be-4686/b2525c5f7.output",
+  "cwd": "/data/data/com.termux/files/home/dots",
+  "startTime": 1790799781338,
+  "endTime": 1790799781462,
+  "exitCode": 1,
+  "signal": null,
+  "pid": 21819,
+  "bytesWritten": 141,
+  "isAgent": false,
+  "surviveReload": false,
+  "error": "Exited with code 1",
+  "notified": true,
+  "notifyOnCompletion": true,
+  "triggerOnCompletion": true,
+  "shellPolicy": {
+    "policy": "inherit",
+    "executable": "/data/data/com.termux/files/usr/bin/zsh",
+    "argvPrefix": [
+      "-c"
+    ],
+    "dialect": "posix"
+  }
+}

@@ -1,0 +1,2 @@
+zsh:1: permission denied: /tmp/dots-tmux-baseline.log
+tail: cannot open '/tmp/dots-tmux-baseline.log' for reading: No such file or directory

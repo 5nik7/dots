@@ -18,6 +18,11 @@ Zsh's effective behavior is the default for conflicting definitions. Existing Zs
 | `cd` | zoxide's `z` after successful activation; native cd otherwise. |
 | `y` / `d`, `yap` | Yazi navigation/project helpers; failures preserve the caller's directory and temporary files are cleaned up. |
 | `mkcd directory` | Enter an existing directory or create parents and enter it; refuse non-directory targets. |
+| `t [session-name]` | Attach/create the explicit session, or infer the current Git worktree root's basename; default to **Work** outside Git. Inside tmux, switch without nesting. |
+
+With no argument, `t` asks Git for the current worktree root, including from nested directories, and uses that root directory's basename as the session name. A linked worktree uses its own directory name, not the main checkout's name. New inferred sessions start at the root; existing sessions retain their state. Dots, colons and control characters in inferred names become hyphens (for example, `Anodize.nvim` becomes `Anodize-nvim`). Repositories with the same resulting name share a session; pass distinct explicit names when needed. Missing Git or a non-repository directory quietly falls back to **Work** in the caller's directory. Detection happens only when invoking plain `t`, never at shell startup.
+
+`t name` bypasses Git detection and creates missing sessions in the caller's directory. It accepts one quoted name, including spaces, Unicode and leading dashes. Empty explicit names, extra arguments, control characters, `:` and `.` are rejected with status 2. Tmux errors are returned instead of attaching to an unrelated session. Shared reload removes the old `t` alias, so `rl` activates the function without restarting the shell.
 
 Git/worktree, package, network and backup helpers remain explicit user commands. Startup never invokes them. Their existing workflows are not replaced by a new management engine.
 

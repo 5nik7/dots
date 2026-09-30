@@ -7,9 +7,10 @@ _dots_bash_source_dir() {
     directory=$(CDPATH='' builtin cd -P -- "${file%/*}" && builtin pwd -P) || return 1
     file=$directory/${file##*/}
     [[ -L $file ]] || break
-    (( ++hops <= 40 )) || return 1
+    ((++hops <= 40)) || return 1
     target=$(command readlink "$file") || return 1
-    if [[ $target == /* ]]; then file=$target
+    if [[ $target == /* ]]; then
+      file=$target
     else file=$directory/$target; fi
   done
   [[ -r $file ]] || return 1

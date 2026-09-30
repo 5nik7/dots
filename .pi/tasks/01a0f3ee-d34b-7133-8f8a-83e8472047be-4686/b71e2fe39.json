@@ -1,0 +1,28 @@
+{
+  "id": "b71e2fe39",
+  "name": "Shell and theme regressions",
+  "command": "python3 -B - <<'PY'\nimport pathlib, subprocess, tempfile\nlogs = pathlib.Path(tempfile.mkdtemp(prefix='dots-tmux-checks-'))\nprint('Full logs:', logs, flush=True)\nchecks = [\n ['python3', '-B', 'tools/test_common.py'],\n ['python3', '-B', 'tools/test_shell_init.py'],\n ['python3', '-B', 'tools/test_bash_dots.py'],\n ['python3', '-B', 'tools/test_zsh.py'],\n ['python3', '-B', 'tools/test_themes.py'],\n ['python3', '-B', 'tools/test_theme_workflow.py'],\n ['python3', '-B', 'tools/bash_interactive.py'],\n ['python3', '-B', 'tools/zsh_interactive.py', '--samples', '3'],\n]\nfailed = False\nfor args in checks:\n name = pathlib.Path(args[2]).stem\n try:\n  p = subprocess.run(args, capture_output=True, text=True, timeout=240)\n  text = p.stdout + p.stderr\n  (logs / (name + '.log')).write_text(text)\n  print(name, 'PASS' if p.returncode == 0 else 'FAIL', 'exit', p.returncode, flush=True)\n  print(text[-3500:] if p.returncode else text[-900:], flush=True)\n  failed |= bool(p.returncode)\n except subprocess.TimeoutExpired:\n  print(name, 'TIMEOUT', flush=True)\n  failed = True\nraise SystemExit(1 if failed else 0)\nPY",
+  "status": "completed",
+  "outputPath": ".pi/tasks/01a0f3ee-d34b-7133-8f8a-83e8472047be-4686/b71e2fe39.output",
+  "cwd": "/data/data/com.termux/files/home/dots",
+  "startTime": 1790800214728,
+  "endTime": 1790800597304,
+  "exitCode": 0,
+  "signal": null,
+  "pid": 30309,
+  "bytesWritten": 2234,
+  "isAgent": false,
+  "surviveReload": false,
+  "notified": true,
+  "notifyOnCompletion": true,
+  "triggerOnCompletion": true,
+  "timeoutSeconds": 900,
+  "shellPolicy": {
+    "policy": "inherit",
+    "executable": "/data/data/com.termux/files/usr/bin/zsh",
+    "argvPrefix": [
+      "-c"
+    ],
+    "dialect": "posix"
+  }
+}

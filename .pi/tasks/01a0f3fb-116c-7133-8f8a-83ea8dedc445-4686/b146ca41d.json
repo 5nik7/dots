@@ -1,0 +1,29 @@
+{
+  "id": "b146ca41d",
+  "name": "Native tmux session tests",
+  "command": "python3 -B -c 'import subprocess; p=subprocess.run([\"python3\", \"-B\", \"tools/test_tmux_sessions.py\", \"-v\"], capture_output=True, text=True); print((p.stdout+p.stderr)[-14000:]); raise SystemExit(p.returncode)'",
+  "status": "failed",
+  "outputPath": ".pi/tasks/01a0f3fb-116c-7133-8f8a-83ea8dedc445-4686/b146ca41d.output",
+  "cwd": "/data/data/com.termux/files/home/dots",
+  "startTime": 1790800283136,
+  "endTime": 1790800292513,
+  "exitCode": 1,
+  "signal": null,
+  "pid": 3491,
+  "bytesWritten": 3980,
+  "isAgent": false,
+  "surviveReload": false,
+  "error": "Exited with code 1",
+  "notified": true,
+  "notifyOnCompletion": true,
+  "triggerOnCompletion": true,
+  "timeoutSeconds": 240,
+  "shellPolicy": {
+    "policy": "inherit",
+    "executable": "/data/data/com.termux/files/usr/bin/zsh",
+    "argvPrefix": [
+      "-c"
+    ],
+    "dialect": "posix"
+  }
+}

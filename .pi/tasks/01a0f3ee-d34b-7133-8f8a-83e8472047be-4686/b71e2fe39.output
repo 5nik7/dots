@@ -1,0 +1,62 @@
+Full logs: /data/data/com.termux/files/usr/tmp/dots-tmux-checks-r71nlkhc
+test_common PASS exit 0
+.............................
+----------------------------------------------------------------------
+Ran 29 tests in 7.566s
+
+OK
+
+test_shell_init PASS exit 0
+................s....ss.......
+----------------------------------------------------------------------
+Ran 30 tests in 20.152s
+
+OK (skipped=3)
+
+test_bash_dots PASS exit 0
+........................
+----------------------------------------------------------------------
+Ran 24 tests in 21.321s
+
+OK
+
+test_zsh PASS exit 0
+......................
+----------------------------------------------------------------------
+Ran 22 tests in 4.298s
+
+OK
+
+test_themes PASS exit 0
+.............................
+----------------------------------------------------------------------
+Ran 29 tests in 159.823s
+
+OK
+
+test_theme_workflow PASS exit 0
+..............s.......
+----------------------------------------------------------------------
+Ran 22 tests in 101.632s
+
+OK (skipped=1)
+
+bash_interactive PASS exit 0
+Bash prompt ready
+{
+  "fixture": "/data/data/com.termux/files/usr/tmp/dots-zsh-hzcdfjss",
+  "reload_equal": {
+    "keys": true,
+    "hooks": true,
+    "fzf": true
+  },
+  "status": true,
+  "history_picker": true,
+  "vi_cursor": true,
+  "tab_completion": true
+}
+
+zsh_interactive PASS exit 0
+2C\u001b[32mp\u001b[32mr\u001b[32mi\u001b[32mn\u001b[32mt\u001b[39m\u001b[4C\u001b[36m-\u001b[36m-\u001b[39m\u001b[9C\u001b[?2004l\r\r\n\u001b[5 q__BINDINGS__\r\n\"^R\" fzf-history-widget\r\n\"^I\" fzf-tab-complete\r\n\"^R\" fzf-history-widget\r\n__HOOKS__\r\n_direnv_hook\r\n_dots_theme_precmd\r\n_atuin_precmd\r\n_mise_hook_precmd\r\nprompt_starship_precmd\r\n_zsh_autosuggest_start\r\n__END__\r\n\u001b[1m\u001b[7m%\u001b[27m\u001b[1m\u001b[0m                                                                                                                       \r \r\r\u001b[0m\u001b[27m\u001b[24m\u001b[J\r\n\u001b[31m\ue70e@localhost \u001b[33m ~ \u001b[0m\r\n\u001b[1;92m\uf460\u001b[0m \u001b[K\u001b[5 q\r\r\u001b[A\u001b[A\u001b[0m\u001b[27m\u001b[24m\u001b[J\r\n\u001b[31m\ue70e@localhost \u001b[33m ~ \u001b[0m\r\n\u001b[1;92m\uf460\u001b[0m \u001b[K\u001b[5 q__DOTS_INPUT_READY__\r\n"
+}
+

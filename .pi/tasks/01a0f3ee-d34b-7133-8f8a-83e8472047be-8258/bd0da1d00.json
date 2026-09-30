@@ -1,0 +1,28 @@
+{
+  "id": "bd0da1d00",
+  "name": "Project session regression tests",
+  "command": "python3 -B tools/test_shared_shells.py && python3 -B tools/test_tmux_sessions.py && python3 -B tools/test_shell_init.py",
+  "status": "completed",
+  "outputPath": ".pi/tasks/01a0f3ee-d34b-7133-8f8a-83e8472047be-8258/bd0da1d00.output",
+  "cwd": "/data/data/com.termux/files/home/dots",
+  "startTime": 1790801682234,
+  "endTime": 1790801725484,
+  "exitCode": 0,
+  "signal": null,
+  "pid": 15236,
+  "bytesWritten": 362,
+  "isAgent": false,
+  "surviveReload": false,
+  "notified": true,
+  "notifyOnCompletion": true,
+  "triggerOnCompletion": true,
+  "timeoutSeconds": 180,
+  "shellPolicy": {
+    "policy": "inherit",
+    "executable": "/data/data/com.termux/files/usr/bin/zsh",
+    "argvPrefix": [
+      "-c"
+    ],
+    "dialect": "posix"
+  }
+}

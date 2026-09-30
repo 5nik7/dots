@@ -1,0 +1,58 @@
+test_inside_creates_switches_and_reuses_exact_sessions (__main__.TmuxSessions.test_inside_creates_switches_and_reuses_exact_sessions) ... 
+  test_inside_creates_switches_and_reuses_exact_sessions (__main__.TmuxSessions.test_inside_creates_switches_and_reuses_exact_sessions) (shell='bash') ... ERROR
+  test_inside_creates_switches_and_reuses_exact_sessions (__main__.TmuxSessions.test_inside_creates_switches_and_reuses_exact_sessions) (shell='zsh') ... FAIL
+test_outside_exact_default_and_existing_names (__main__.TmuxSessions.test_outside_exact_default_and_existing_names) ... 
+  test_outside_exact_default_and_existing_names (__main__.TmuxSessions.test_outside_exact_default_and_existing_names) (shell='bash') ... ERROR
+  test_outside_exact_default_and_existing_names (__main__.TmuxSessions.test_outside_exact_default_and_existing_names) (shell='zsh') ... ERROR
+
+======================================================================
+ERROR: test_inside_creates_switches_and_reuses_exact_sessions (__main__.TmuxSessions.test_inside_creates_switches_and_reuses_exact_sessions) (shell='bash')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/dots/tools/test_tmux_sessions.py", line 191, in test_inside_creates_switches_and_reuses_exact_sessions
+    self.inside(source, name, marker)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/home/dots/tools/test_tmux_sessions.py", line 142, in inside
+    pane = self.session(source)[1]
+           ~~~~~~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+
+======================================================================
+ERROR: test_outside_exact_default_and_existing_names (__main__.TmuxSessions.test_outside_exact_default_and_existing_names) (shell='bash')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/dots/tools/test_tmux_sessions.py", line 160, in test_outside_exact_default_and_existing_names
+    self.assertEqual(created[2], str(self.cwd))
+                     ~~~~~~~^^^
+IndexError: list index out of range
+
+======================================================================
+ERROR: test_outside_exact_default_and_existing_names (__main__.TmuxSessions.test_outside_exact_default_and_existing_names) (shell='zsh')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/dots/tools/test_tmux_sessions.py", line 160, in test_outside_exact_default_and_existing_names
+    self.assertEqual(created[2], str(self.cwd))
+                     ~~~~~~~^^^
+IndexError: list index out of range
+
+======================================================================
+FAIL: test_inside_creates_switches_and_reuses_exact_sessions (__main__.TmuxSessions.test_inside_creates_switches_and_reuses_exact_sessions) (shell='zsh')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/dots/tools/test_tmux_sessions.py", line 184, in test_inside_creates_switches_and_reuses_exact_sessions
+    proc = self.attach(shell, source)
+  File "/data/data/com.termux/files/home/dots/tools/test_tmux_sessions.py", line 131, in attach
+    self.wait_for(lambda: self.client_session() == (name or 'Work'),
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  'client attached to exact session')
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/home/dots/tools/test_tmux_sessions.py", line 102, in wait_for
+    self.fail('timed out: ' + description)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: timed out: client attached to exact session
+
+----------------------------------------------------------------------
+Ran 2 tests in 9.096s
+
+FAILED (failures=1, errors=3)
+

@@ -1,0 +1,28 @@
+{
+  "id": "b0173f247",
+  "name": "Tmux keybinding compatibility tests",
+  "command": "python3 -B tools/test_tmux_keys.py",
+  "status": "failed",
+  "outputPath": ".pi/tasks/01a0f3ee-d34b-7133-8f8a-83e8472047be-4686/b0173f247.output",
+  "cwd": "/data/data/com.termux/files/home/dots",
+  "startTime": 1790800239044,
+  "endTime": 1790800242821,
+  "exitCode": 1,
+  "signal": null,
+  "pid": 31765,
+  "bytesWritten": 837,
+  "isAgent": false,
+  "surviveReload": false,
+  "error": "Exited with code 1",
+  "notified": true,
+  "notifyOnCompletion": true,
+  "triggerOnCompletion": true,
+  "shellPolicy": {
+    "policy": "inherit",
+    "executable": "/data/data/com.termux/files/usr/bin/zsh",
+    "argvPrefix": [
+      "-c"
+    ],
+    "dialect": "posix"
+  }
+}

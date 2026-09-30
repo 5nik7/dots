@@ -1,0 +1,28 @@
+{
+  "id": "b1107c8f6",
+  "name": "Battery status regression tests",
+  "command": "DOTS_TEST_BATTERY_SOURCE=\"$HOME/repos/battery/battery\" python3 -B tools/test_tmux_status.py -v",
+  "status": "failed",
+  "outputPath": ".pi/tasks/01a0f3ee-d34b-7133-8f8a-83e8472047be-4686/b1107c8f6.output",
+  "cwd": "/data/data/com.termux/files/home/dots",
+  "startTime": 1790799971023,
+  "endTime": 1790799981685,
+  "exitCode": 1,
+  "signal": null,
+  "pid": 25915,
+  "bytesWritten": 2745,
+  "isAgent": false,
+  "surviveReload": false,
+  "error": "Exited with code 1",
+  "notified": true,
+  "notifyOnCompletion": true,
+  "triggerOnCompletion": true,
+  "shellPolicy": {
+    "policy": "inherit",
+    "executable": "/data/data/com.termux/files/usr/bin/zsh",
+    "argvPrefix": [
+      "-c"
+    ],
+    "dialect": "posix"
+  }
+}

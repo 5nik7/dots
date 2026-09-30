@@ -1,0 +1,14 @@
+........F..........
+======================================================================
+FAIL: test_native_popup_from_repository_binding (__main__.TmuxKeysTests.test_native_popup_from_repository_binding)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/dots/tools/test_tmux_keys.py", line 311, in test_native_popup_from_repository_binding
+    self.assertIn('-S "fg=blue"', binding)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '-S "fg=blue"' not found in 'bind -N "Show Tmux keybindings" ? display-popup -E -w 85% -h 85% -S "fg=brightblack" -T "#[fg=yellow,bold]\U000f0306#[default]" "dots-menu-tmux-keys"'
+
+----------------------------------------------------------------------
+Ran 19 tests in 3.575s
+
+FAILED (failures=1)

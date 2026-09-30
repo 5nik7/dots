@@ -43,6 +43,26 @@ optional static comment headers and never execute extensions. See the
 [command authoring and completion contract](docs/commands.md#implemented-bash-command-framework)
 for header examples, shared output helpers, and standalone integration.
 
+## Tmux keybinding reference
+
+`dots menu tmux keys` (or `dots-menu-tmux-keys`) shows described live tmux bindings, including defaults and plugins, grouped by key table with colorized keys and a prefix legend. Compact rows keep each key beside its description, including in narrow popups. The optional `less` pager provides `/` search, `n` next match, and `q` to close; bindings are never executed. Use `--print` to bypass paging. Redirected output defaults to plain text; the standard Dots color controls apply.
+
+The repository tmux config uses:
+
+```tmux
+bind -N "Show Tmux keybindings" ? display-popup -E -w 80% -h 70% -S "fg=blue" -T "#[fg=cyan,bold]Tmux keybindings#[default]" "dots-menu-tmux-keys"
+```
+
+The popup uses a blue border and bold cyan title from the terminal palette, without changing other popups. Keep the repository `bin` directory on tmux's PATH. This requires a running tmux server with `list-keys -F` and `q|a` formats (verified on Termux with tmux 3.7c); unsupported versions report an error. No server is started or reloaded. Without `less`, the command warns and prints instead. See the [command reference](docs/commands.md#tmux-keybinding-reference).
+
+## Tmux status and sessions
+
+The right status bar keeps the blue conditional COPY/PREFIX/ZOOM indicators, followed by the clock, two spaces, and a battery icon plus percentage. The adapter calls `~/repos/battery/battery`, preserving its charging icons and percentage thresholds while translating ANSI colors into tmux styles. Missing or invalid battery output hides that segment. A Nerd Font is needed for the icon. The main tmux configuration owns the layout; generated themes only supply styling.
+
+In Bash and Zsh, plain `t` uses the current Git repository/worktree's directory name—even from a subdirectory—so running it in this repo opens **dots**. Missing automatically named sessions start at the repository root. Outside Git repositories (or without Git), it defaults to **Work** in the current directory. `t project` explicitly opens **project**, creating it in the current directory if needed. Existing sessions are reused; inside tmux, the function switches rather than nesting. Quote names containing spaces. See [shared shell commands](docs/shared-shells.md#commands-and-compatibility).
+
+After updating, use `rl` to load the function and tmux **prefix + q** to reload the status configuration. Neither happens automatically.
+
 ## Shell initialization
 
 Bash and Zsh now share their [interactive functions and aliases](docs/shared-shells.md). Bash uses Readline vi mode, the same Starship configuration, FZF/Gum theme colors and supported native tool integrations. `ff` is the shared FZF picker; Bash's former filename search is `findfiles`. Zsh-only editor plugins remain native.
