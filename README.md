@@ -209,6 +209,8 @@ The existing [Zsh configuration](shells/zsh/README.md) now uses explicit modules
 
 Startup automatically repairs completion dumps containing unquoted names such as `_uu-[`, preventing the resulting startup and Tab-completion errors.
 
+[Deja](shells/zsh/README.md#deja-suggestions) is the default suggestion engine when its native binary is installed. Open a fresh shell to activate it, or use `DOTS_ZSH_SUGGESTIONS=autosuggestions zsh` for optional `zsh-autosuggestions`. A missing Deja binary falls back to autosuggestions; the two engines never load together through this selector. Tab stays with FZF-tab. History import is manual, and Deja keeps its own plaintext local database and background daemon.
+
 ## Optional Neovim Configuration
 
 The public [Neovim configuration repository](https://github.com/5nik7/nvim) is available as a Git submodule at `config/nvim`. From the `dots` repository root, initialize only this source:

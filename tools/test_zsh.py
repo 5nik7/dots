@@ -230,6 +230,77 @@ source "$DOTS/shells/zsh/integrations/tools.zsh"
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertNotIn('command not found', p.stderr)
 
+    def suggestion_shell(self, code):
+        return self.shell('''source "$DOTS/shells/zsh/integrations/plugins.zsh"
+typeset -a loaded ice
+zinit() {
+  case $1 in
+    light) loaded+=("$2");;
+    ice) ice=("${@:2}");;
+  esac
+}
+''' + code)
+
+    def test_autosuggestions_override_and_reload_do_not_mix_engines(self):
+        self.suggestion_shell('''DOTS_ZSH_SUGGESTIONS=autosuggestions
+_dots_widget_plugins
+DOTS_ZSH_SUGGESTIONS=deja
+_dots_widget_plugins
+[[ $_DOTS_SUGGESTION_ENGINE == autosuggestions ]] || exit 1
+[[ ${#loaded} == 4 && $loaded[3] == zsh-users/zsh-autosuggestions ]] || exit 2
+(( ${#ice} == 0 ))
+''')
+
+    def test_deja_default_selected_once_with_tab_and_style_defaults(self):
+        exe = self.root / 'deja'
+        exe.write_text('#!' + ZSH + '\\nexit 99\\n')
+        exe.chmod(0o700)
+        self.suggestion_shell('''path=("$HOME" $path)
+unset DOTS_ZSH_SUGGESTIONS
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#123456'
+_dots_widget_plugins
+DOTS_ZSH_SUGGESTIONS=autosuggestions
+_dots_widget_plugins
+[[ $_DOTS_SUGGESTION_ENGINE == deja ]] || exit 1
+[[ ${#loaded} == 4 && $loaded[3] == Giammarco-Ferranti/deja ]] || exit 2
+[[ $DEJA_CYCLE_KEY == '' && $DEJA_HIGHLIGHT_STYLE == 'fg=#123456' ]] || exit 3
+[[ "${(j: :)ice}" == 'lucid depth=1 pickdeja.plugin.zsh' ]]
+''')
+
+    def test_deja_missing_and_invalid_selection_fall_back(self):
+        for value in ('deja', 'invalid', ''):
+            with self.subTest(value=value):
+                p = self.suggestion_shell(f'''path=()
+DOTS_ZSH_SUGGESTIONS='{value}'
+_dots_suggestion_plugin
+[[ $_DOTS_SUGGESTION_ENGINE == autosuggestions ]] || exit 1
+[[ $loaded == zsh-users/zsh-autosuggestions ]]
+''')
+                self.assertIn('using zsh-autosuggestions', p.stderr)
+
+    def test_deja_preserves_explicit_keys_and_style(self):
+        exe = self.root / 'deja'
+        exe.write_text('#!' + ZSH + '\\nexit 99\\n')
+        exe.chmod(0o700)
+        for style in ('', 'fg=cyan'):
+            self.suggestion_shell(f'''path=("$HOME" $path)
+DOTS_ZSH_SUGGESTIONS=deja
+DEJA_CYCLE_KEY='^N'
+DEJA_HIGHLIGHT_STYLE='{style}'
+_dots_suggestion_plugin
+[[ $DEJA_CYCLE_KEY == '^N' && $DEJA_HIGHLIGHT_STYLE == '{style}' ]]
+''')
+
+    def test_suggestion_load_failure_can_retry(self):
+        self.suggestion_shell('''DOTS_ZSH_SUGGESTIONS=autosuggestions
+zinit() { return 1; }
+_dots_suggestion_plugin && exit 1
+[[ -z ${_DOTS_SUGGESTION_ENGINE:-} ]] || exit 2
+zinit() { return 0; }
+_dots_suggestion_plugin
+[[ $_DOTS_SUGGESTION_ENGINE == autosuggestions ]]
+''')
+
     def test_plugin_paths_keep_prefix_and_appended_provider_order(self):
         self.shell('''source "$DOTS/shells/zsh/integrations/plugins.zsh"
 typeset -U fpath

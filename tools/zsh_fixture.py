@@ -81,6 +81,8 @@ def fixture(source=REPO, plugins=True):
                             ignore=shutil.ignore_patterns('.git', '*.zwc'), symlinks=False)
         (target / 'zinit.git/.git').mkdir()
     env = {
+        # General fixtures need no Deja binary; test_deja exercises the default.
+        'DOTS_ZSH_SUGGESTIONS': 'autosuggestions',
         'HOME': str(home), 'ZDOTDIR': str(home), 'DOTS': str(repo),
         'XDG_CONFIG_HOME': str(home / '.config'), 'XDG_CACHE_HOME': str(home / '.cache'),
         'XDG_DATA_HOME': str(home / '.local/share'), 'XDG_STATE_HOME': str(home / '.local/state'),

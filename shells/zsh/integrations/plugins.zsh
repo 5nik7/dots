@@ -35,11 +35,39 @@ _dots_completion_plugins() {
   done
   _DOTS_PLUGIN_PATHS_READY=1
 }
+# Select once per shell: switching engines requires a fresh shell, not rl.
+_dots_suggestion_plugin() {
+  [[ -n ${_DOTS_SUGGESTION_ENGINE:-} ]] && return 0
+  local engine=${DOTS_ZSH_SUGGESTIONS:-deja}
+  case $engine in
+    deja)
+      if (( ! $+commands[deja] )); then
+        print -ru2 -- 'dots: deja is not installed; using zsh-autosuggestions'
+        engine=autosuggestions
+      fi
+      ;;
+    autosuggestions) ;;
+    *)
+      print -ru2 -- 'dots: invalid DOTS_ZSH_SUGGESTIONS; using zsh-autosuggestions'
+      engine=autosuggestions
+      ;;
+  esac
+  if [[ $engine == deja ]]; then
+    # Leave Tab to fzf-tab; preserve explicit user key/style choices (even empty).
+    export DEJA_CYCLE_KEY=${DEJA_CYCLE_KEY-}
+    export DEJA_HIGHLIGHT_STYLE=${DEJA_HIGHLIGHT_STYLE-${ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE:-fg=8}}
+    zinit ice lucid depth=1 pick'deja.plugin.zsh'
+    _dots_load_plugin Giammarco-Ferranti/deja || return
+  else
+    _dots_load_plugin zsh-users/zsh-autosuggestions || return
+  fi
+  typeset -g _DOTS_SUGGESTION_ENGINE=$engine
+}
 _dots_widget_plugins() {
   _dots_plugin_setup || return
   _dots_load_plugin Aloxaf/fzf-tab
   _dots_load_plugin zdharma-continuum/fast-syntax-highlighting
-  _dots_load_plugin zsh-users/zsh-autosuggestions
+  _dots_suggestion_plugin
   _dots_load_plugin zsh-users/zsh-history-substring-search
   autoload -Uz _zinit
   (( ${+_comps} )) && _comps[zinit]=_zinit

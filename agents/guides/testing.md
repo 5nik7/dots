@@ -95,6 +95,8 @@ For `config/yazi/plugins/dots.yazi` changes, run its Lua dispatcher, Git-head me
 
 For Zsh startup changes, run `python3 -B tools/test_zsh.py` plus the isolated startup and PTY runners described in [the Zsh guide](../../shells/zsh/README.md). Capture the baseline before editing and keep timing runs sequential. Never profile the live startup chain against the real home; private/platform modules use synthetic substitutes. Treat native Termux results and other-platform fixtures separately.
 
+For Deja integration changes, also run `tools/test_deja.py` with explicit native binary/plugin paths as described in the Zsh guide. Never use live history or let test daemons escape cleanup; keep upstream test limitations separate from native PTY results.
+
 ## Development Worktree Helper
 
 Use `python3 -B tools/test_worktree_lifecycle.py` for the separate local lifecycle helper; see [the workflow guide](worktrees.md). Tests use disposable repositories, local bare remotes and owned environment roots. Preserve refusal cases and distinguish injected idle snapshots from native process detection. Do not run the helper against live fixtures to test deletion. The focused workflow adds this gate without replacing existing native core/experiment gates.

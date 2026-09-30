@@ -18,6 +18,24 @@ User-facing functions and aliases are maintained in the [shared shell resources]
 
 The first-run Zinit/plugin download behavior is retained. Installed plugins are reused. Missing optional tools do not prevent basic shell use; this is not an installer or a claim that every optional integration works without its dependencies.
 
+## Deja suggestions
+
+Deja is the default when its native executable is on PATH. Open a fresh shell to use it; an unset or empty `DOTS_ZSH_SUGGESTIONS` selects Deja. To use the optional `zsh-autosuggestions` engine instead:
+
+```zsh
+DOTS_ZSH_SUGGESTIONS=autosuggestions zsh
+```
+
+Exit that shell to return to the previous session. For persistent selection, export `DOTS_ZSH_SUGGESTIONS=autosuggestions` in your existing local configuration hook (before widget plugins load), then open a fresh shell. Remove that export or set it to `deja` to restore the default in a new shell. `rl` deliberately does not switch engines: stacking their widget wrappers is unsafe. Missing binaries or invalid selector values warn and fall back to autosuggestions for that shell.
+
+Zinit loads `Giammarco-Ferranti/deja` synchronously with `lucid depth=1 pick'deja.plugin.zsh'`, using the existing load-once wrapper. No `wait` ice is used. Zinit can download the plugin but does not install/build the executable; do not also source `deja init zsh` elsewhere or load either engine through another plugin list.
+
+Deja's default Tab binding is disabled so FZF-tab retains completion. To cycle alternatives, set `DEJA_CYCLE_KEY` to a spare key before startup; explicit values, including empty strings, are preserved. Right arrow accepts a suggestion. `DEJA_HIGHLIGHT_STYLE` initially inherits `ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE` (or `fg=8`) unless explicitly set. This is a startup snapshot, not live palette synchronization; restart after a theme change or supply an explicit style.
+
+Deja starts a per-user background daemon and stores plaintext command history, generated integration, and its socket under `~/.local/share/deja`, independent of XDG overrides. It can learn secrets in ordinary commands; review upstream history exclusion guidance. No history import occurs at startup. Upstream's optional `deja import` reads `~/.zsh_history` specifically, not an arbitrary `$HISTFILE`; inspect your history location before choosing to import. Leaving the trial does not erase its database or stop its persistent daemon. Do not use broad process-name kills or delete the database as part of switching engines.
+
+On Termux, use a native source build with Go >=1.25.2, CGO enabled, and Clang; upstream Linux release binaries are not Android builds. The tested source revision and native acceptance are recorded in the [trial plan](../../plans/deja-trial.md). The curl installer is not used: it would edit startup configuration independently of Dots. Other native platforms remain unverified here. Deja is currently measurably slower to initialize than autosuggestions; this tradeoff was accepted when promoting it to the default.
+
 ## Environment Modules
 
 The explicit compatibility list replaces the recursive repository scan:
@@ -75,9 +93,17 @@ python3 -B tools/verify_core.py docs
 git diff --check
 ```
 
-The unit suite owns disposable roots and needs installed Zsh plus basic host tools. The timing and PTY tools also require the existing public Zinit installation and five configured plugins; they copy them without Git history. They copy only selected public configuration and use synthetic private/platform modules. Their Git wrapper refuses remote operations. They do not install dependencies or source the developer's startup files.
+The unit suite owns disposable roots and needs installed Zsh plus basic host tools. The timing and PTY tools explicitly select autosuggestions to avoid requiring a Deja binary, and require the existing public Zinit installation and five configured plugins; they copy them without Git history. They copy only selected public configuration and use synthetic private/platform modules. Their Git wrapper refuses remote operations. They do not install dependencies or source the developer's startup files.
 
 Timing fixtures use fresh HOME, configuration, state, cache, history, and repository roots. Termux interpreter support is retained. The non-PTY startup test can emit ZLE warnings from installed integrations; real interaction is checked separately using a controlling pseudo-terminal. Use `tools/zsh_compare.py <baseline-source-directory>` for a public-interface comparison. The PTY runner accepts `--baseline` to report historical reload differences without failing its equality check. Fixtures and logs remain in the reported temporary directory for inspection. Logs contain fixture state only.
+
+For native default-engine acceptance, supply a previously built binary and the reviewed upstream plugin file (no downloads):
+
+```bash
+python3 -B tools/test_deja.py --binary /path/to/deja --plugin /path/to/deja.plugin.zsh
+```
+
+This opt-in runner copies both into the public fixture, leaves the selector unset to exercise default Deja activation, uses synthetic history, owns and stops its daemon, exercises real PTY acceptance/vi/Tab/reload behavior, and compares warm startup for both engines. Retained logs contain fixture data only. The ordinary Zsh suite also checks selection/fallback/override behavior without requiring Deja.
 
 `ZSH_DEBUGRC=1` retains function profiling. Use the disposable fixture for profiling, especially when private/local modules could have side effects. Measurements and limitations belong in the [focused plan](../../plans/zsh-startup.md).
 
