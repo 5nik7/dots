@@ -26,6 +26,7 @@ dots --icons=never help       # Use plain status markers
 dots completion bash         # Print an adapter (also zsh or fish)
 ```
 
+The help logo uses a top-to-bottom blue → cyan gradient when color is enabled.
 Nerd Font icons and color are automatic in terminals; `--color=auto|always|never`
 and `--icons=auto|always|never` override their environment defaults, `DOTS_COLOR`
 and `DOTS_ICONS`. Automatic color respects `NO_COLOR`. Additional trusted roots

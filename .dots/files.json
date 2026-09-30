@@ -3,30 +3,30 @@
   "repository": "dots",
   "resources": [
     {
-      "id": "thunar",
-      "source": "config/Thunar",
-      "app": "thunar",
-      "category": "config",
+      "id": "bash_profile",
+      "source": "shells/bash/.bash_profile",
+      "app": "bash",
+      "category": "shell",
       "platforms": [
         "termux",
         "linux",
         "wsl"
       ],
-      "target": "${CONFIG}/Thunar",
-      "strategy": "directory-link"
+      "target": "${HOME}/.bash_profile",
+      "strategy": "link"
     },
     {
-      "id": "vifm",
-      "source": "config/Vifm",
-      "app": "vifm",
-      "category": "config",
+      "id": "bashrc",
+      "source": "shells/bash/.bashrc",
+      "app": "bash",
+      "category": "shell",
       "platforms": [
         "termux",
         "linux",
         "wsl"
       ],
-      "target": "${CONFIG}/Vifm",
-      "strategy": "directory-link"
+      "target": "${HOME}/.bashrc",
+      "strategy": "link"
     },
     {
       "id": "bat",
@@ -409,6 +409,19 @@
       "strategy": "directory-link"
     },
     {
+      "id": "profile",
+      "source": "shells/profile",
+      "app": "profile",
+      "category": "shell",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${HOME}/.profile",
+      "strategy": "link"
+    },
+    {
       "id": "qbittorrent",
       "source": "config/qbittorrent",
       "app": "qbittorrent",
@@ -526,6 +539,19 @@
       "strategy": "directory-link"
     },
     {
+      "id": "thunar",
+      "source": "config/Thunar",
+      "app": "thunar",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/Thunar",
+      "strategy": "directory-link"
+    },
+    {
       "id": "tmux",
       "source": "config/tmux",
       "app": "tmux",
@@ -540,6 +566,19 @@
       "replaces": [
         "androidots:tmux"
       ]
+    },
+    {
+      "id": "vifm",
+      "source": "config/Vifm",
+      "app": "vifm",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "target": "${CONFIG}/Vifm",
+      "strategy": "directory-link"
     },
     {
       "id": "vivid",
@@ -581,17 +620,17 @@
       "strategy": "directory-link"
     },
     {
-      "id": "xfce4",
-      "source": "config/xfce4",
-      "app": "xfce4",
-      "category": "config",
+      "id": "xonshrc",
+      "source": "shells/xonsh/.xonshrc",
+      "app": "xonsh",
+      "category": "shell",
       "platforms": [
         "termux",
         "linux",
         "wsl"
       ],
-      "target": "${CONFIG}/xfce4",
-      "strategy": "directory-link"
+      "target": "${HOME}/.xonshrc",
+      "strategy": "link"
     },
     {
       "id": "xsettingsd",
@@ -643,58 +682,6 @@
         "wsl"
       ],
       "target": "${HOME}/.zshrc",
-      "strategy": "link"
-    },
-    {
-      "id": "bashrc",
-      "source": "shells/bash/.bashrc",
-      "app": "bash",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${HOME}/.bashrc",
-      "strategy": "link"
-    },
-    {
-      "id": "bash_profile",
-      "source": "shells/bash/.bash_profile",
-      "app": "bash",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${HOME}/.bash_profile",
-      "strategy": "link"
-    },
-    {
-      "id": "xonshrc",
-      "source": "shells/xonsh/.xonshrc",
-      "app": "xonsh",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${HOME}/.xonshrc",
-      "strategy": "link"
-    },
-    {
-      "id": "profile",
-      "source": "shells/profile",
-      "app": "profile",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${HOME}/.profile",
       "strategy": "link"
     }
   ]

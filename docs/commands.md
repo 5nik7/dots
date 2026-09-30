@@ -185,6 +185,8 @@ stderr are styled independently. Directory output and completion data remain
 plain. Shared helpers use Bash builtins and ANSI colors, not the shell startup
 chain, theme generators, or the general-purpose `bin/lib/common.sh` helper. Common loads this renderer lazily when a human output helper is called. The shared and standalone `dirout` helpers opt into this policy with `-c`; calls without `-c` stay undecorated. They no longer consume legacy BLUE/RST globals. See [shell utilities](shell-utils.md) for their separate shell interfaces.
 
+Global help renders the optional `$DOTS/logo.txt` with a top-to-bottom blue-to-cyan truecolor gradient through `dots::logo`. It preserves the artwork and follows the same color controls; redirected automatic output stays plain. No external coloring tool is required.
+
 `DOTS_PROGRESS=auto|never` controls the [operation progress display](presentation.md#operation-progress), independently of color/icons. Unset means `auto`; invalid values disable progress. There is no new route, flag or completion token. Human terminal work can animate after 500 ms, including read-only scans and `--yes` operations. Data, dry-run and redirected modes bypass the display even with forced decoration.
 
 Theme and file human views share this presentation policy. Terminal listings use

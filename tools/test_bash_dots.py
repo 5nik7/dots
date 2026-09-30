@@ -218,6 +218,25 @@ dots::error 'Error'
         self.assertNotIn('\x1b', self.run_dots('help', env=dict(self.env, NO_COLOR='1')).stdout)
         self.assertIn('\x1b', self.run_dots('--color=always', 'help', env=dict(self.env, NO_COLOR='1')).stdout)
 
+    def test_logo_gradient(self):
+        logo = '╔══╗  \\ art\n middle\n╚══╝'
+        (self.repo / 'logo.txt').write_text(logo)
+        plain = logo + '\n\n'
+        gradient = ('\x1b[38;2;0;96;255m╔══╗  \\ art\x1b[0m\n'
+                    '\x1b[38;2;0;175;255m middle\x1b[0m\n'
+                    '\x1b[38;2;0;255;255m╚══╝\x1b[0m\n\n')
+        self.assertTrue(self.run_dots('help').stdout.startswith(plain))
+        self.assertTrue(self.run_dots('--color=never', 'help').stdout.startswith(plain))
+        self.assertTrue(self.run_dots('--color=always', 'help').stdout.startswith(gradient))
+        self.assertTrue(self.run_dots('--color=always', 'help',
+                                     env=dict(self.env, NO_COLOR='1')).stdout.startswith(gradient))
+        for content in ('', 'single', 'one\n\nthree\n'):
+            (self.repo / 'logo.txt').write_text(content)
+            output = self.run_dots('--color=always', 'help').stdout
+            self.assertIn('Usage', output)
+            if content == 'single':
+                self.assertTrue(output.startswith('\x1b[38;2;0;96;255msingle\x1b[0m\n\n'))
+
     def test_automatic_styles_evaluate_stdout_and_stderr_independently(self):
         self.command('style', body='source "$DOTS_LIB_DIR/ui.bash"; dots::success Hello; dots::error Failure')
         for extra, colored in [({}, True), ({'NO_COLOR': '1'}, False), ({'TERM': 'dumb'}, False)]:

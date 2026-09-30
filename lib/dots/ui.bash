@@ -16,6 +16,23 @@ dots::style() {
     DOTS_UI_INFO='󰋽' DOTS_UI_OK='' DOTS_UI_WARN='' DOTS_UI_ERROR=''
   fi
 }
+# Render trusted logo text with a vertical blue-to-cyan gradient.
+# Keep whole lines intact (including Unicode art); no external color tools.
+dots::logo() {
+  dots::style
+  local line i steps
+  local -a lines=()
+  while IFS='' read -r line || [[ -n $line ]]; do lines+=("$line"); done
+  steps=$((${#lines[@]} - 1))
+  (( steps > 0 )) || steps=1
+  for ((i=0; i<${#lines[@]}; i++)); do
+    if [[ $DOTS_UI_RESET ]]; then
+      printf '\e[38;2;0;%d;255m%s%s\n' "$((96 + 159 * i / steps))" "${lines[i]}" "$DOTS_UI_RESET"
+    else
+      printf '%s\n' "${lines[i]}"
+    fi
+  done
+}
 dots::heading() { dots::style; printf '%s%s%s%s\n' "$DOTS_UI_BOLD" "$DOTS_UI_CYAN" "$*" "$DOTS_UI_RESET"; }
 dots::row() {
   dots::style

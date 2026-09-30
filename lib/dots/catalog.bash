@@ -184,7 +184,7 @@ dots_help() {
   if [[ -z $route ]]; then
     dots_catalog_load || return
     if [[ -f $DOTS/logo.txt && -r $DOTS/logo.txt ]]; then
-      while IFS='' read -r line || [[ -n $line ]]; do printf '%s\n' "$line"; done < "$DOTS/logo.txt"
+      dots::logo < "$DOTS/logo.txt"
       printf '\n'
     fi
     dots::heading 'dots — your command center'
