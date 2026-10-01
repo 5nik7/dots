@@ -1,0 +1,129 @@
+# ~/.config/starship.toml
+
+format = """
+$directory\
+$username\
+$hostname\
+$git_branch\
+$git_state\
+$git_status\
+$git_commit\
+$aws\
+$nodejs\
+$python\
+$rust\
+$golang\
+$docker_context\
+$package\
+$line_break\
+$character"""
+
+# Right side of the prompt
+right_format = "$cmd_duration $time"
+
+add_newline = true
+
+[character]
+success_symbol = "[->](bold green)"
+error_symbol = "[->](bold red)"
+vicmd_symbol = "[❮](bold yellow)"
+
+[directory]
+style = "#04d1f9 bold"  
+format = "[ ]($style)[$path]($style) "
+truncation_length = 3
+truncation_symbol = "…/"
+read_only = " "
+read_only_style = "red"
+
+[username]
+style_user = "#37f499 bold"
+style_root = "#f16c75 bold"
+format = '[\[$user\]]($style)' #Remove '\[' or '\]' if you do not want brackets
+show_always = true
+
+[hostname]
+format = "[@$hostname:](#37f499 bold)"
+ssh_only = false
+
+[git_branch]
+symbol = " "
+style = "#a48cf2 bold"
+format = '[$symbol$branch·]($style)'
+
+[git_status]
+style = "#a48cf2 bold"
+ahead = '⇡${count}'
+diverged = '⇕⇡${ahead_count}⇣${behind_count}'
+behind = '⇣${count}'
+
+[git_commit]
+style = "#a48cf2 bold"
+commit_hash_length = 4
+tag_symbol = '🔖 '
+
+[git_state]
+style = "#a48cf2 bold"
+format = '\([$state( $progress_current of $progress_total)]($style)\) '
+
+[nodejs]
+symbol = "⬢ "
+style = "green"
+format = "[$symbol($version)]($style) "
+
+[lua]
+format = 'via [🌕 $version](bold blue) '
+
+[python]
+symbol = " "
+style = "blue"
+format = "[$symbol($version)]($style) "
+
+[rust]
+symbol = "🦀 "
+style = "red"
+format = "[$symbol($version)]($style) "
+
+[golang]
+symbol = " "
+style = "cyan"
+format = "[$symbol($version)]($style) "
+
+[docker_context]
+symbol = "🐳 "
+style = "blue bold"
+format = "[$symbol$context]($style) "
+
+[terraform]
+format = '[🏎💨 $workspace]($style) '
+
+[aws]
+format = "on [$symbol($profile)(($region))]($style) "
+symbol = "  "
+style = "bold yellow"
+disabled = true
+[aws.region_aliases]
+ap-southeast-2 = 'au'
+us-east-1 = 'va'
+
+[azure]
+disabled = false
+format = "on [$symbol($username)]($style) "
+symbol = "󰠅 "
+style = "blue bold"
+
+[package]
+symbol = "📦 "
+style = "208 bold"
+format = "[$symbol$version]($style) "
+
+[cmd_duration]
+min_time = 200
+format = '[\(⏱ $duration\)]($style) '
+style = "#f7c67f bold"
+
+[time]
+disabled = false
+time_format = "%T"
+format = "[$time]($style) "
+style = "bold #a48cf2"
