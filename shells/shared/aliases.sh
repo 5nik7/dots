@@ -33,7 +33,7 @@ alias lsa='ls -a' la=lsa lla='ll -a' lta='lt -a'
 if has zoxide && typeset -f z > /dev/null 2>&1; then alias cd=z; fi
 if has yazi; then alias d=y; fi
 if has lazygit; then alias lg=lazygit; fi
-alias edit='$EDITOR' e='$EDITOR' v='$EDITOR' vi='$EDITOR' vim='$EDITOR' sv='sudo "$EDITOR"'
+alias edit='$EDITOR' e='$EDITOR' v='$EDITOR' vi='$EDITOR' vim='$EDITOR'
 alias ff=_dots_file_picker
 if [[ -d $HOME/repos ]]; then
   export REPOS="$HOME/repos"

@@ -303,10 +303,3 @@ vimcmd_symbol = '[▎](bold fg:color_vimcmd_ok)'
 vimcmd_replace_one_symbol = '[❮](bold fg:color_vimcmd_replace)'
 vimcmd_replace_symbol = '[❮](bold fg:color_vimcmd_replace)'
 vimcmd_visual_symbol = '[❮](bold fg:color_vimcmd_visual)'
-
-[custom.gh]
-description = "Git host icon"
-when = true
-command = "git remote get-url origin 2>/dev/null | grep -iq 'github' && echo "
-format = '([$output]($style))'
-style = 'fg:color_git_branch'
