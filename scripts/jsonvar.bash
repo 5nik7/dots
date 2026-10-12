@@ -12,7 +12,7 @@
 
 _jv-usage() {
 	local usage
-	read -r -d '' usage <<-EOF
+	IFS=$' \n\t' read -r -d '' usage <<-EOF
 	Usage: jsonvar [-aev] [[name], ...]
 
 	Serialize bash variables to JSON output
@@ -26,11 +26,128 @@ _jv-usage() {
 	echo "$usage"
 }
 
+# validate strings that bash supports (no nul support)
+_jv-validate-utf8() {
+	local s=$1
+
+	# 0xxxxxxx                            1 byte,  7 bits
+	# 110xxxxx 10xxxxxx                   2 bytes, 11 bits
+	# 1110xxxx 10xxxxxx 10xxxxxx          3 bytes, 16 bits
+	# 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx 4 bytes, 21 bits
+
+	local LC_ALL=C
+	local len=${#s}
+
+	local i=0
+	while ((i < len)); do
+		local cp b1 b2 b3 b4 n
+
+		# grab first byte
+		printf -v b1 '%d' "'${s:i:1}"
+
+		# check: b is 0xxxxxxx (1 octet)
+		if (( (b1 & 2#10000000) == 0 )); then
+			# 1 byte character, ASCII
+			n=1
+
+			# 0xxxxxxx
+			cp=$(( b1 & 2#01111111 ))
+
+		# check: b is 110xxxxx (2 octet)
+		elif (( (b1 & 2#11100000) == 2#11000000 )); then
+			# 2 byte character
+			n=2
+
+			(( i + 1 < len )) || return 1
+
+			printf -v b2 '%d' "'${s:i+1:1}"
+
+			(( (b2 & 2#11000000) == 2#10000000 )) || return 1
+
+			# 110xxxxx 10xxxxxx
+			cp=$((
+				((b1 & 2#00011111) << 6) |
+				 (b2 & 2#00111111)
+			))
+
+		# check: b is 1110xxxx (3 octet)
+		elif (( (b1 & 2#11110000) == 2#11100000 )); then
+			# 3 byte character
+			n=3
+
+			(( i + 2 < len )) || return 1
+
+			printf -v b2 '%d' "'${s:i+1:1}"
+			printf -v b3 '%d' "'${s:i+2:1}"
+
+			(( (b2 & 2#11000000) == 2#10000000 )) || return 1
+			(( (b3 & 2#11000000) == 2#10000000 )) || return 1
+
+			# 1110xxxx 10xxxxxx 10xxxxxx
+			cp=$((
+				((b1 & 2#00001111) << 12) |
+				((b2 & 2#00111111) << 6) |
+				 (b3 & 2#00111111)
+			))
+
+		# check: b is 11110xxx (4 octet)
+		elif (( (b1 & 2#11111000) == 2#11110000 )); then
+			# 4 byte character
+			n=4
+
+			(( i + 3 < len )) || return 1
+
+			printf -v b2 '%d' "'${s:i+1:1}"
+			printf -v b3 '%d' "'${s:i+2:1}"
+			printf -v b4 '%d' "'${s:i+3:1}"
+
+			(( (b2 & 2#11000000) == 2#10000000 )) || return 1
+			(( (b3 & 2#11000000) == 2#10000000 )) || return 1
+			(( (b4 & 2#11000000) == 2#10000000 )) || return 1
+
+			# 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+			cp=$((
+				((b1 & 2#00000111) << 18) |
+				((b2 & 2#00111111) << 12) |
+				((b3 & 2#00111111) << 6) |
+				 (b4 & 2#00111111)
+			))
+		else
+			return 1
+		fi
+		(( i += n ))
+
+		# at this point we have a codepoint and we've filtered out
+		# invalid "looking" bytes, but we still have more work to do
+
+		# check for overlong sequences
+		case "$n" in
+			1) ((cp >= 0x00000000 && cp <= 0x0000007F)) || return 1;;
+			2) ((cp >= 0x00000080 && cp <= 0x000007FF)) || return 1;;
+			3) ((cp >= 0x00000800 && cp <= 0x0000FFFF)) || return 1;;
+			4) ((cp >= 0x00010000 && cp <= 0x0010FFFF)) || return 1;;
+			*) exit 1;;
+		esac
+
+		# check for utf-16 surrogate pair domain
+		# U+D800 and U+DFFF
+		((cp >= 0xd800 && cp <= 0xdff)) && return 1
+	done
+
+	return 0
+}
+
 _jv-json-encode-string() {
 	local s=$1
 
 	local LC_ALL=C
 	local -A table=()
+
+	# let's ensure the string is utf-8 before doing anything
+	if ! _jv-validate-utf8 "$s"; then
+		printf 'null'
+		return 0
+	fi
 
 	# we can start at 1 because bash variables can't have nul bytes in them
 	local hex byte esc i
@@ -76,13 +193,19 @@ _jv-json-encode-number() {
 	local num=$1
 	local re='^-?([0-9]+)$'
 
-	# validate that it is a valid number
-	if [[ $num =~ $re ]]; then
-		printf '%d' "$num"
-	else
-		# perhaps print a warning to the screen?
+	# make sure it walks like a duck
+	if ! [[ $num =~ $re ]]; then
 		printf 'null'
+		return
 	fi
+
+	# make sure it quacks like a duck
+	if ! printf -v num '%d' "$num"; then
+		printf 'null'
+		return
+	fi
+
+	printf '%s' "$num"
 }
 
 _jv-encode-variable() {
@@ -94,7 +217,7 @@ _jv-encode-variable() {
 	# nameref.
 	# see https://github.com/bahamas10/bash-jsonvar/issues/6
 	local _jv_attrs
-	read -r _ _jv_attrs _ < <(declare -p "$_jv_name")
+	IFS=' ' read -r _ _jv_attrs _ < <(declare -p -- "$_jv_name")
 
 	case "$_jv_attrs" in
 		*n*) # process namerefs
@@ -199,7 +322,7 @@ jsonvar() {
 			fi
 
 			# check to make sure the variable is defined
-			if ! declare -p "$_jv_key" &>/dev/null; then
+			if ! declare -p -- "$_jv_key" &>/dev/null; then
 				echo "[error] variable '$_jv_key' not defined" >&2
 				_jv_error='true'
 			fi
@@ -286,6 +409,14 @@ else
 	declare -i test_bad_int
 
 	declare -n test_nameref='test_indexed'
+
+	test_bad_octal='08'
+	declare -i test_bad_octal
+
+	test_big_int=99999999999999999999999
+	declare -i test_big_int
+
+	test_bad_utf8=$'a\xffb'
 
 	jsonvar "$@"
 fi
