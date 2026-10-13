@@ -63,3 +63,5 @@ bin-release/
 
 # Optional generated Nushell initialization (when config is linked here).
 /shells/nushell/dots-init.nu
+
+/config/blastoff/backups/*
