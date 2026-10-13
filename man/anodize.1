@@ -28,6 +28,22 @@ After create, \fB\-\-color HEX\fR instead specifies a seed color.
 .B \-\-icons=auto|always|never
 Control icons where supported.
 .TP
+.B \-\-logo=text|auto|kitty|chafa
+Choose logo rendering (default: text). This Anodize option also works after
+COMMAND.
+Auto selects supported Kitty graphics, then optional Chafa symbols, then
+bundled ASCII.
+Missing tools or assets fall back to ASCII. Redirected or undecorated output
+uses text.
+.TP
+.B \-\-logo\-layout=auto|horizontal|stacked|icon
+Choose a layout, always bounded to the destination terminal. Also accepted
+after COMMAND.
+Help prefers horizontal artwork at 80 columns; short or narrow views use a
+compact mark.
+Human results and diagnostics always include compact branding. Data output is
+unchanged.
+.TP
 .B \-h, \-\-help
 Show help without needing the engine.
 .SH COMMANDS
@@ -37,6 +53,13 @@ List extraction modes.
 .B "\-h, \-\-help"
 show this help message and exit.
 .TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .SS "anodize extract FILE [OPTIONS]"
@@ -44,6 +67,13 @@ Inspect an image palette.
 .TP
 .B "\-h, \-\-help"
 show this help message and exit.
+.TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
 .TP
 .B "\-\-json"
 Emit versioned JSON.
@@ -64,6 +94,13 @@ Create an authored theme.
 .TP
 .B "\-h, \-\-help"
 show this help message and exit.
+.TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
 .TP
 .B "\-\-json"
 Emit versioned JSON.
@@ -109,6 +146,13 @@ Import a local blueprint or palette.
 .B "\-h, \-\-help"
 show this help message and exit.
 .TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
@@ -144,6 +188,13 @@ List authored themes.
 .B "\-h, \-\-help"
 show this help message and exit.
 .TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .SS "anodize show ID [OPTIONS]"
@@ -151,6 +202,13 @@ Inspect an authored theme.
 .TP
 .B "\-h, \-\-help"
 show this help message and exit.
+.TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
 .TP
 .B "\-\-json"
 Emit versioned JSON.
@@ -162,6 +220,13 @@ Edit an authored theme.
 .TP
 .B "\-h, \-\-help"
 show this help message and exit.
+.TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
 .TP
 .B "\-\-json"
 Emit versioned JSON.
@@ -204,6 +269,13 @@ Preview colors or app configuration.
 .B "\-h, \-\-help"
 show this help message and exit.
 .TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
@@ -218,6 +290,13 @@ Export a theme.
 .TP
 .B "\-h, \-\-help"
 show this help message and exit.
+.TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
 .TP
 .B "\-\-json"
 Emit versioned JSON.
@@ -242,6 +321,13 @@ Publish through Dots.
 .B "\-h, \-\-help"
 show this help message and exit.
 .TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
@@ -261,6 +347,13 @@ Print shell completion source.
 .TP
 .B "\-h, \-\-help"
 show this help message and exit.
+.TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
 .TP
 .B "SHELL"
 Shell adapter to print (required): bash, zsh, fish.
@@ -333,11 +426,16 @@ Explicit prebuilt private engine executable.
 .B DOTS_COLOR, DOTS_ICONS
 Default presentation modes: auto, always or never.
 .TP
+.B ANODIZE_LOGO, ANODIZE_LOGO_LAYOUT
+Default logo renderer and layout; command options override them. Invalid
+environment values use text and auto.
+.TP
 .B NO_COLOR, TERM
 Control automatic color selection.
 .TP
-.B COLUMNS
-Human-output wrapping width.
+.B COLUMNS, LINES
+Fallback logo dimensions when the destination terminal size is unavailable.
+COLUMNS also controls human-output wrapping.
 .TP
 .B HOME, XDG_CONFIG_HOME, XDG_STATE_HOME
 User config, theme and recovery-state roots used by Dots.

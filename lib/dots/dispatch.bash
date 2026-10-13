@@ -139,13 +139,26 @@ dots_main() {
     [[ $word == -- ]] && break
     [[ $word == -h || $word == --help ]] && want_help=1
   done
-  dots_resolve "$@"; resolved=$?
+  local -a help_args=("$@")
+  if (( want_help )) && [[ $1 == anodize ]]; then
+    # Anodize logo prefixes do not hide the leaf's static help metadata.
+    local help_start=1
+    while (( help_start < ${#help_args[@]} )); do
+      case ${help_args[help_start]} in
+        --logo=*|--logo-layout=*) (( ++help_start )) ;;
+        --logo|--logo-layout) (( help_start+=2 )) ;;
+        *) break ;;
+      esac
+    done
+    help_args=(anodize "${help_args[@]:help_start}")
+  fi
+  dots_resolve "${help_args[@]}"; resolved=$?
   if (( resolved == 1 )); then return 1; fi
   if (( resolved == 0 )); then
     if (( want_help )); then
       source "$DOTS_LIB_DIR/catalog.bash"
       dots_metadata "$DOTS_EXECUTABLE" || return
-      dots_command_help "$DOTS_ROUTE"
+      dots_command_help "$DOTS_ROUTE" "$@"
     else
       shift "$DOTS_CONSUMED"
       exec "$DOTS_EXECUTABLE" "$@"

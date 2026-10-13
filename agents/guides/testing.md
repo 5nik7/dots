@@ -147,6 +147,8 @@ Use `python3 -B tools/test_git_operations.py` and `python3 -B tools/test_file_op
 
 ## Anodize
 
+For logo changes, use `python3 -B tools/test_anodize_logo.py` for engine-free policy/PTY checks; the main Anodize check also runs it. Cover both Python help and static Dots metadata help without executing an extension. Keep Kitty protocol fixtures distinct from real graphics-terminal visual evidence.
+
 Use `python3 -B tools/verify_anodize.py check` for the isolated core/CLI suite and `bench` for engine measurements. `build` writes only the ignored private executable. Keep all integration roots disposable and retain Termux LD_PRELOAD compatibility in spawned environments. Run existing theme/file/dispatcher suites for shared changes. Do not run the real Neovim startup or apply a live theme as a test.
 
 For the Dots Neovim bridge, run `python3 -B tools/test_anodize_nvim.py` plus the existing theme suites. Set `ANODIZE_NVIM_DIR` to a completed local plugin checkout when needed. The shared helper copies public runtime files; do not replace it with a normal editor startup. Preserve dashboard timing and test manual colorscheme inactivity explicitly.

@@ -223,6 +223,15 @@ class Anodize(unittest.TestCase):
                 self.assertIn('already adjusted',result.stdout)
                 self.assertEqual(self.recipe(fmt)['provenance']['aether_adjustments']['brightness'],30)
 
+    def test_logo_preserves_raw_and_structured_interfaces(self):
+        self.create()
+        for args in [('show','example','--json'), ('export','example','--format','colors'),
+                     ('export','example'), ('preview','example','--app','kitty')]:
+            expected = self.cli(*args).stdout
+            for renderer in ('text','auto','kitty','chafa'):
+                actual = self.cli(*args,'--logo='+renderer, DOTS_COLOR='always', DOTS_ICONS='always').stdout
+                self.assertEqual(actual, expected)
+
     def test_base16_and_export_collision(self):
         source=self.root/'base16.yaml'
         source.write_text('scheme: Test\n'+''.join(f'base{i:02X}: "{i*0x111111:06x}"\n' for i in range(16)))

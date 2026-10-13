@@ -26,6 +26,39 @@ Saving a theme does not select or activate it. Review `anodize apply dusk --dry-
 
 Interactive human confirmations prefer Gum's **Cancel / Apply** menu with Cancel selected by default, falling back to the existing text prompt when tools or terminal streams are unavailable. JSON, nonterminal preview, `--yes` and `--dry-run` do not probe Gum. Selector failure stops without retry; Ctrl-C exits 130 without a traceback. These prompts cover create/import/edit, export to a file and apply; saving still does not activate a theme. See the [interaction contract](presentation.md#optional-gum-interactions).
 
+## Terminal logo
+
+**Implemented, 2026-10-13.** Both entry points display the Anodize mark at the start of every human view. Usage/help gets a larger header; results, previews, confirmations, empty lists and diagnostics get compact branding. JSON, raw exports, app configuration, completion source and completion candidates never contain a logo. Redirected human output retains a compact text mark.
+
+The default is bundled ASCII art, with no image tool, special font or engine requirement. Original transparent PNGs and terminal approximations are bundled with [asset provenance](../lib/dots/anodize/assets/README.md); the downloads directories are not runtime dependencies.
+
+| Option | Behavior |
+| --- | --- |
+| `--logo=text` | Bundled portable character art; the default. |
+| `--logo=auto` | Recognized Kitty graphics, otherwise optional Chafa character art, otherwise bundled text. |
+| `--logo=kitty` | Request Kitty graphics; fall back to bundled text when unavailable. |
+| `--logo=chafa` | Request Chafa character art; fall back to bundled text when unavailable. |
+| `--logo-layout=auto\|horizontal\|stacked\|icon` | Request a layout, always reduced to fit the available space. |
+
+Both `--option=value` and `--option value` work before or after the Anodize subcommand. Put options before `--help` for standalone help. These are Anodize options, not global Dots options:
+
+Invoking Anodize with only logo options displays its usage. A forwarded publication diagnostic block receives one compact stderr header, independently of the successful result on stdout.
+
+```sh
+anodize --logo=auto --help
+dots anodize --logo=chafa --logo-layout=horizontal --help
+dots anodize preview dusk --logo=auto
+ANODIZE_LOGO=chafa anodize --help
+```
+
+`ANODIZE_LOGO` and `ANODIZE_LOGO_LAYOUT` set persistent defaults; explicit options win. Invalid environment values use `text` and `auto`; invalid command options are usage errors. There is no logo-off mode for human views. Existing `--color=never`, `NO_COLOR` and redirected output use text; explicit `--color=always` retains the shared override of `NO_COLOR`. `--icons=never` selects ASCII and prevents Kitty output. Color/icon controls retain their existing prefix placement and do not disable the mark.
+
+Sizing reads the destination terminal, then valid `COLUMNS`/`LINES`, then 80×24. Automatic full headers prefer horizontal artwork from 80 columns, stacked artwork below that, and icon/compact forms when height is limited. Full headers use at most eight rows and one-third of the terminal height; routine headers use at most three rows. A tiny ASCII mark remains on very small screens. Artwork uses an estimated 1:2 character-cell aspect ratio. PNG wordmarks default to the dark-background variant; a light-background `COLORFGBG` hint selects dark lettering.
+
+Kitty support is conservatively inferred from `TERM=xterm-kitty` or Kitty window identification with an xterm terminal, excluding tmux, screen and Zellij. No terminal queries read input, and unknown graphics terminals fall back. Chafa runs only when requested by `auto` or `chafa`, with symbol output, probing/animation/cursor hiding disabled and a one-second timeout. Failed or empty rendering falls back to text. Neither backend installs tools or changes the operation's exit status. These heuristics are not a guarantee for stale or manually overridden terminal variables.
+
+Dots metadata help remains static: it never executes the Anodize extension or engine. Its default header uses Bash and the same text assets, with optional `stty` for terminal size; optional graphics call only the core-owned logo renderer. `dots help anodize` uses the environment defaults.
+
 ## Commands and flags
 
 Authoring commands accept `--json` for a schema-1 response unless they return a raw format. `completion` emits only shell source and does not accept `--json`. Prefix `--color=auto|always|never` and `--icons=auto|always|never` follow the shared presentation policy. `--color HEX` after `create` means the seed color.

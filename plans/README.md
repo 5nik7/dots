@@ -10,6 +10,7 @@ The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday mai
 | --- | --- |
 | [Roadmap](roadmap.md) | Current priorities and retained, paused Go phases. |
 | [Anodize](anodize.md) | Implemented core/CLI, local Neovim integration, completions and manual. |
+| [Anodize terminal branding](anodize-logo.md) | Responsive portable logos and optional Kitty/Chafa rendering. |
 | [Anodize next steps](anodize-next.md) | Proposed foundation hardening, then separately scoped frontend work. |
 | [Git and managed files](git-and-file-operations.md) | Implemented bounded operations and quieter discovery. |
 | [Operation progress](progress.md) | Delayed terminal spinners and phase bars across core commands. |

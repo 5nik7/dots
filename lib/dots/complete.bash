@@ -147,6 +147,28 @@ dots_complete() {
       dots_completion_children '' || return
     fi
   else
+    # Anodize accepts its presentation options before the action as well as
+    # on leaves. Remove only complete, valid prefix options for route lookup;
+    # an option being completed still uses static metadata below.
+    if [[ ${words[index]} == anodize ]]; then
+      local prefix_end=$((index+1)) prefix_count=0 prefix_value prefix_flag
+      while (( prefix_end < cursor )); do
+        token=${words[prefix_end]}
+        prefix_flag=${token%%=*}
+        case $prefix_flag in --logo|--logo-layout) ;; *) break ;; esac
+        if [[ $token == *=* ]]; then prefix_value=${token#*=}; prefix_count=1
+        else
+          (( prefix_end+1 < cursor )) || break
+          prefix_value=${words[prefix_end+1]}; prefix_count=2
+        fi
+        case $prefix_flag:$prefix_value in
+          --logo:text|--logo:auto|--logo:kitty|--logo:chafa|--logo-layout:auto|--logo-layout:horizontal|--logo-layout:stacked|--logo-layout:icon) ;;
+          *) return 0 ;;
+        esac
+        words=("${words[@]:0:prefix_end}" "${words[@]:prefix_end+prefix_count}")
+        (( cursor-=prefix_count ))
+      done
+    fi
     if [[ ${words[index]} == help ]]; then help=1; (( ++index )); fi
     if (( index == cursor )); then
       for token in "${DOTS_BUILTIN_NAMES[@]}"; do dots_candidate "$token" "${DOTS_BUILTIN_SUMMARY[$token]}"; done

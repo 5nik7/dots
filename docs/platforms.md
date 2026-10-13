@@ -256,6 +256,8 @@ The live Git family requires Bash 5, Git, POSIX utilities and (for publish) sha2
 
 ## Anodize scope
 
+Terminal branding is capability-based, not platform-name based. Portable ASCII is the default. Optional Kitty rendering uses conservative environment hints and excludes unknown multiplexer passthrough; optional Chafa uses symbol output without probing. The [logo contract](anodize.md#terminal-logo) documents fallbacks and sizing assumptions. Native Termux PTY/text/Chafa checks and simulated Kitty protocol checks do not establish native Kitty, Linux/WSL graphics, or Windows support.
+
 The pure Go Anodize library accepts bytes/data without platform paths. The current CLI requires Python 3.11+, Bash, POSIX file transactions and the existing theme adapter tools. Native Termux is verified; Linux/WSL integration and native Windows authoring are not newly verified. Wallpaper actions retain the existing fixed adapter support, including WSL refusal. No APK, Android language binding or TUI is shipped. See [Anodize](anodize.md).
 
 ## Theme plugin boundary

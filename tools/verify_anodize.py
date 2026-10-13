@@ -66,6 +66,7 @@ def main():
         if os.environ.get('LD_PRELOAD'):
             env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
         subprocess.run([sys.executable, '-B', str(REPO / 'tools/test_anodize.py')], env=env, check=True, cwd=REPO)
+        subprocess.run([sys.executable, '-B', str(REPO / 'tools/test_anodize_logo.py')], env=env, check=True, cwd=REPO)
 
 if __name__ == '__main__':
     main()

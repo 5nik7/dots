@@ -150,6 +150,12 @@ dots_catalog_print() {
 
 dots_command_help() {
   local route=$1 row long short type description position
+  shift
+  if [[ $route == anodize || $route == anodize\ * ]]; then
+    # Shared core renderer only: help must never execute the resolved extension.
+    source "$DOTS_LIB_DIR/anodize/logo.bash"
+    dots::anodize_logo "$@" || return
+  fi
   dots::heading "dots $route"
   printf '%s\n\n' "${DOTS_META_SUMMARY:-Run $route}"
   dots::heading 'Usage'

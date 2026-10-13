@@ -93,6 +93,11 @@ class Integration(unittest.TestCase):
         self.assertIn('candidate\tcompletion\t', self.candidates(''))
         self.assertNotIn('candidate\tcommands\t', self.candidates(''))
         cases = [
+            (('--logo=a',), '--logo=auto'),
+            (('--logo-layout', 'h'), 'horizontal'),
+            (('--logo', 'auto', '--logo-layout=icon', 'pr'), 'preview'),
+            (('--logo=auto', 'preview', 'dusk', '--app=k'), '--app=kitty'),
+            (('preview', 'dusk', '--logo=c'), '--logo=chafa'),
             (('--color=a',), '--color=always'),
             (('--color=always', '--icons=never', 'cr'), 'create'),
             (('completion', 'z'), 'zsh'),
@@ -117,6 +122,17 @@ class Integration(unittest.TestCase):
         self.assertEqual(self.candidates('create', 'new', '--unknown', ''), '')
         self.assertNotIn('\x1b', self.candidates('--color=always', 'create', 'new', '--m'))
         self.assertFalse((self.home/'engine-ran').exists())
+
+    def test_dots_logo_prefix_completions(self):
+        for shell in ('bash','zsh','fish'):
+            for words, value in [
+                (('anodize','--logo=a'), '--logo=auto'),
+                (('anodize','--logo','auto','pr'), 'preview'),
+                (('anodize','--logo=auto','preview','dusk','--app=k'), '--app=kitty'),
+                (('anodize','preview','dusk','--logo-layout','h'), 'horizontal'),
+            ]:
+                out=self.run_dots('__complete',shell,str(len(words)),'--','dots',*words).stdout
+                self.assertIn('candidate\t'+value+'\t',out)
         self.assertFalse((self.home/'state').exists())
 
     def test_shell_candidates_and_registration(self):
@@ -171,6 +187,8 @@ printf 'EXECUTED\\n'
                         ('anodize edit dusk --adjust bright\t12', b'brightness', 'brightness=12'),
                         ('anodize extract wall\t', b'png', 'wall ü space.png'),
                         ('anodize --color=al\t', b'always', '--color=always'),
+                        ('anodize --logo=ch\t', b'chafa', '--logo=chafa'),
+                        ('anodize --logo=text preview dusk --logo-layout=hor\t', b'horizontal', '--logo-layout=horizontal'),
                     ):
                         terminal.send(typed)
                         terminal.wait(marker)

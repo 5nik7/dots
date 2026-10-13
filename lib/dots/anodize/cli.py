@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'files'))
 from catalog import Presentation
 from transactions import digest, exists, parents_safe
 from authoring import Author, encode, new_document, regular_bytes, toml_colors
+from logo import add_options, render as render_logo
 
 
 class Parser(argparse.ArgumentParser):
@@ -32,6 +33,7 @@ class Parser(argparse.ArgumentParser):
 
     def print_help(self, file=None):
         ui = Presentation(file)
+        render_logo(ui, full=True)
 
         def paragraph(text, indent=2, color=None):
             for line in textwrap.wrap(ui.clean(text), width=ui.width-indent,
@@ -59,7 +61,7 @@ class Parser(argparse.ArgumentParser):
         ui.emit()
         ui.heading('Usage')
         positional = [a for a in self._actions if not a.option_strings and a is not commands]
-        suffix = 'COMMAND [OPTIONS]' if commands else ' '.join([a.dest.upper() for a in positional] + ['[OPTIONS]'])
+        suffix = '[OPTIONS] COMMAND [OPTIONS]' if commands else ' '.join([a.dest.upper() for a in positional] + ['[OPTIONS]'])
         paragraph(f'{self.prog} {suffix}', color='95')
         if commands:
             rows('Commands', [(name, child.description) for name, child in commands.choices.items()])
@@ -102,7 +104,8 @@ class UsageError(ValueError):
 
 def parser():
     p = Parser(prog='anodize', description='Author palettes and save recoverable Dots themes.')
-    sub = p.add_subparsers(dest='action', required=True, parser_class=Parser)
+    add_options(p)
+    sub = p.add_subparsers(dest='action', parser_class=Parser)
     descriptions = {'modes': 'List extraction modes', 'extract': 'Inspect an image palette', 'create': 'Create an authored theme',
                     'import': 'Import a local blueprint or palette', 'list': 'List authored themes', 'show': 'Inspect an authored theme',
                     'edit': 'Edit an authored theme', 'preview': 'Preview colors or app configuration', 'export': 'Export a theme',
@@ -110,6 +113,7 @@ def parser():
     descriptions['completion'] = 'Print shell completion source'
     for action, description in descriptions.items():
         q = sub.add_parser(action, help=description, description=description)
+        add_options(q)
         if action == 'completion':
             q.add_argument('shell', choices=['bash', 'zsh', 'fish'], help='Shell adapter to print')
             continue
@@ -157,6 +161,7 @@ def present(result, use_json=False):
         sys.stdout.buffer.write(encode(result))
         return
     ui = Presentation()
+    render_logo(ui)
     ui.heading('Anodize')
     if 'modes' in result:
         for mode in result['modes']:
@@ -243,6 +248,9 @@ def main(argv=None):
         p.print_help()
         return
     args = p.parse_args(values)
+    if args.action is None:
+        p.print_help()
+        return
     if args.action == 'completion':
         source = Path(__file__).with_name('completion') / args.shell
         sys.stdout.write(source.read_text())
@@ -388,6 +396,8 @@ def main(argv=None):
         if confirm(args, view):
             raw, diagnostics = author.theme_bridge('apply', args.id, *(['background', wallpaper or ''] if args.background else []))
             if diagnostics:
+                render_logo(Presentation(sys.stderr))
+                sys.stderr.flush()
                 sys.stderr.buffer.write(diagnostics)
             present(dict(json.loads(raw), id=args.id), args.json)
         return
@@ -398,9 +408,11 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         ui = Presentation(sys.stderr)
+        render_logo(ui)
         ui.emit(ui.paint('anodize: interrupted.', '93'))
         sys.exit(130)
     except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         ui = Presentation(sys.stderr)
+        render_logo(ui)
         ui.emit(ui.paint('anodize: ' + str(exc), '91'))
         sys.exit(2 if isinstance(exc, UsageError) else 1)

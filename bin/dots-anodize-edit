@@ -13,5 +13,7 @@
 # dots:option=--reset-adjustments||flag|Clear adjustments
 # dots:option=--reference-wallpaper||flag|Keep external wallpaper reference
 # dots:argument=1|anodize-theme|Authored theme identifier
+# dots:option=--logo||choice:text,auto,kitty,chafa|Logo renderer (default: text)
+# dots:option=--logo-layout||choice:auto,horizontal,stacked,icon|Logo layout, bounded to fit
 ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
 exec python3 -B "$ANODIZE_LIB/cli.py" edit "$@"

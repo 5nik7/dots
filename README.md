@@ -137,6 +137,8 @@ The [presentation contract](docs/presentation.md) makes this cohesive style a re
 
 ## Anodize palette authoring
 
+Anodize help and human results always include its logo, with portable ASCII by default and layouts that fit the terminal. Try `dots anodize --logo=auto --help` for detected graphics or `--logo=chafa` for optional Chafa character art; set `ANODIZE_LOGO` to keep a preference. JSON, raw configuration, exports and completions stay undecorated. See [logo controls and fallbacks](docs/anodize.md#terminal-logo).
+
 Anodize provides a reusable Go color engine and CLI for creating themes from images, seed colors, existing themes and local imports. Build the private engine explicitly, then preview a new theme:
 
 ```sh

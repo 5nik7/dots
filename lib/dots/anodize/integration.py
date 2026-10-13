@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from logo import MODES, LAYOUTS
 
 
 def complete(argv, parser):
@@ -13,22 +14,39 @@ def complete(argv, parser):
     words = argv[3:]
     if not 1 <= cursor < len(words):
         raise ValueError('invalid completion cursor')
-    # Drop words after the cursor. Presentation prefixes are only legal before
-    # the action; create --color is a seed and must retain its original meaning.
+    # Drop words after the cursor. Strip root presentation options here;
+    # create --color is a seed and leaf logo options use static metadata below.
     words = words[1:cursor+1]
-    while len(words) > 1 and words[0].startswith(('--color=', '--icons=')):
-        if words.pop(0).split('=', 1)[1] not in ('auto', 'always', 'never'):
+    prefixes = {'--color': ('auto', 'always', 'never'), '--icons': ('auto', 'always', 'never'),
+                '--logo': MODES, '--logo-layout': LAYOUTS}
+    while len(words) > 1:
+        flag, equals, value = words[0].partition('=')
+        if flag not in prefixes:
+            break
+        if not equals:
+            if flag in ('--color', '--icons'):
+                return
+            if len(words) == 2:
+                for value in prefixes[flag]:
+                    if value.startswith(words[1]):
+                        print('candidate', value, '', sep='\t')
+                return
+            value = words.pop(1)
+        words.pop(0)
+        if value not in prefixes[flag]:
             return
     current = words[-1]
     if len(words) == 1:
         candidates = [('--help', 'Show help'), ('-h', 'Show help'),
                       ('--color=', 'Color mode (DOTS_COLOR)'),
-                      ('--icons=', 'Icon mode (DOTS_ICONS)')]
+                      ('--icons=', 'Icon mode (DOTS_ICONS)'),
+                      ('--logo=', 'Logo renderer (ANODIZE_LOGO)'),
+                      ('--logo-layout=', 'Logo layout (ANODIZE_LOGO_LAYOUT)')]
         actions = next(a for a in parser._actions if isinstance(a, argparse._SubParsersAction))
         candidates += [(name, child.description) for name, child in actions.choices.items()]
-        if current.startswith(('--color=', '--icons=')):
-            lead = current.split('=', 1)[0] + '='
-            candidates = [(lead + mode, '') for mode in ('auto', 'always', 'never')]
+        if '=' in current and current.split('=', 1)[0] in prefixes:
+            flag = current.split('=', 1)[0]
+            candidates = [(flag + '=' + mode, '') for mode in prefixes[flag]]
         for value, description in candidates:
             if value.startswith(current):
                 print('candidate', value, description, sep='\t')
