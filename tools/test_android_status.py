@@ -20,7 +20,7 @@ class AndroidStatus(unittest.TestCase):
         self.fx.setUp()
         self.addCleanup(self.fx.doCleanups)
         self.render = runpy.run_path(str(self.fx.android_adapter))['render']
-        self.unknown = '\n'
+        self.unknown = '?  \n'
 
     def run_adapter(self):
         result = subprocess.run([sys.executable, '-B', str(self.fx.android_adapter)],
@@ -42,7 +42,7 @@ class AndroidStatus(unittest.TestCase):
         self.fx.android_scripts['cell'].unlink()
         self.assertEqual(self.run_adapter(), self.fx.android_text() + ' \n')
         self.fx.android_scripts['wifi'].unlink()
-        self.assertEqual(self.run_adapter(), '\n')
+        self.assertEqual(self.run_adapter(), self.unknown)
 
     def test_network_visibility_matrix(self):
         for connected in (True, False, None, 'false', 0):
@@ -51,23 +51,25 @@ class AndroidStatus(unittest.TestCase):
                     wifi = dict(module='wifi', icon='\U000f0928', stale=False,
                                 state='connected', data={'connected': connected, 'level': 4})
                     cell = dict(module='cell', icon='\U000f08f8', stale=False,
-                                state='registered', data={'data_enabled': enabled, 'data_state': state, 'level': 3})
+                                state='registered', data={'data_enabled': enabled, 'data_state': state, 'device_stale': False, 'level': 3})
                     select = runpy.run_path(str(self.fx.android_adapter))['select_network']
                     result = re.sub(r'#\[[^]]*\]', '', select([wifi, cell]))
                     if connected is True:
                         expected = '\U000f0928 '
-                    elif connected is not False or enabled is False or state in ('connecting', 'disconnected', 'suspended'):
+                    elif connected is not False:
+                        expected = '? '
+                    elif enabled is False or state in ('connecting', 'disconnected', 'suspended'):
                         expected = ''
                     elif enabled is True and state == 'connected':
                         expected = '\U000f08fa '
                     else:
-                        expected = '\U000f08fa?'
+                        expected = '? '
                         self.assertIn('#[fg=brightblack]', select([wifi, cell]))
                     self.assertEqual(result, expected, (connected, enabled, state))
         self.fx.android_snapshot('wifi', connected=False, stale=True)
         self.assertEqual(self.run_adapter(), self.fx.android_text(stale=True, network='cell') + ' \n')
         self.fx.android_snapshot('wifi', connected=None)
-        self.assertEqual(self.run_adapter(), '\n')
+        self.assertEqual(self.run_adapter(), self.unknown)
 
     def test_unknown_cell_when_wifi_is_disconnected(self):
         self.fx.android_snapshot('wifi', connected=False)
@@ -81,9 +83,9 @@ class AndroidStatus(unittest.TestCase):
                 (self.fx.home / 'cell.json').write_text('broken')
             else:
                 (self.fx.home / 'cell-delay').touch()
-            self.assertEqual(self.run_adapter(), '\U000f08fa? \n', state)
+            self.assertEqual(self.run_adapter(), self.unknown, state)
         self.fx.android_snapshot('wifi', connected=None)
-        self.assertEqual(self.run_adapter(), '\n')
+        self.assertEqual(self.run_adapter(), self.unknown)
 
     def test_signal_states_counts_and_stale_markers(self):
         for module in ('wifi', 'cell'):
@@ -104,6 +106,51 @@ class AndroidStatus(unittest.TestCase):
             self.render('wifi', dict(module='wifi', icon='\U000f0928', stale=False, data={}),
                         ['default', 'white', 'cyan', 'red]#(bad)', 'yellow', 'green'])
 
+    def test_stale_negative_and_independent_device_freshness(self):
+        self.fx.android_snapshot('wifi', connected=False)
+        # Old signal does not invalidate fresh evidence that data is disabled.
+        self.fx.android_snapshot('cell', stale=True, data_enabled=False, device_stale=False)
+        self.assertEqual(self.run_adapter(), '\n')
+        self.fx.android_snapshot('cell', stale=True, data_enabled=False, device_stale=True)
+        self.assertEqual(self.run_adapter(), '?~ \n')
+        self.fx.android_snapshot('wifi', connected=False, stale=True)
+        self.fx.android_snapshot('cell', data_enabled=False)
+        self.assertEqual(self.run_adapter(), '?~ \n')
+        self.fx.android_snapshot('wifi', connected=None)
+        self.fx.android_snapshot('cell', stale=True)
+        self.assertEqual(self.run_adapter(), '?~ \n')
+        # Missing/invalid freshness cannot establish a fresh negative decision.
+        self.fx.android_snapshot('wifi', connected=False)
+        for value in (None, 0, 'false'):
+            path = self.fx.home / 'cell.json'
+            self.fx.android_snapshot('cell', data_enabled=False)
+            result = json.loads(path.read_text())
+            result['data']['device_stale'] = value
+            path.write_text(json.dumps(result))
+            self.assertEqual(self.run_adapter(), self.unknown)
+
+    def test_unavailable_wifi_with_each_cell_activity(self):
+        script = self.fx.android_scripts['wifi']
+        original = script.read_text()
+        for failure in ('missing', 'invalid', 'failed', 'timeout'):
+            for enabled in (True, False, None):
+                with self.subTest(failure=failure, enabled=enabled):
+                    self.fx.android_snapshot('cell', data_enabled=enabled,
+                                             data_state='connected' if enabled is not None else None)
+                    if failure == 'missing':
+                        script.unlink(missing_ok=True)
+                    elif failure == 'invalid':
+                        script.write_text('print("broken")\n')
+                    else:
+                        script.write_text(original)
+                        (self.fx.home / ('wifi-' + ('fail' if failure == 'failed' else 'delay'))).touch()
+                    self.assertEqual(self.run_adapter(), self.unknown)
+                    for flag in ('fail', 'delay'):
+                        (self.fx.home / ('wifi-' + flag)).unlink(missing_ok=True)
+        script.write_text(original)
+        self.fx.android_snapshot('wifi')
+        self.assertEqual(self.run_adapter(), self.fx.android_text() + ' \n')
+
     def test_invalid_fields_and_unsafe_text_are_not_forwarded(self):
         for icon in ['', 'wifi', '#(touch BAD)', '#[fg=red]', '\x1b[31m\U000f0928',
                      '\U000f0928\n', '\U000f0928\t', '\U000f0928\x00', '\U000f0928\u200b']:
@@ -116,7 +163,7 @@ class AndroidStatus(unittest.TestCase):
                 self.render('wifi', snapshot)
         (self.fx.home / 'wifi.json').write_text('invalid')
         (self.fx.home / 'cell-fail').touch()
-        self.assertEqual(self.run_adapter(), '\n')
+        self.assertEqual(self.run_adapter(), self.unknown)
 
     def test_parallel_deadlines_oversized_and_invalid_encoding(self):
         for module in status.ANDROID_ICONS:
@@ -128,7 +175,7 @@ class AndroidStatus(unittest.TestCase):
             (self.fx.home / (module + '-delay')).unlink()
         self.fx.android_scripts['wifi'].write_text('import sys\nsys.stdout.write("x" * (3 * 1024 * 1024))\n')
         self.fx.android_scripts['cell'].write_text('import sys\nsys.stdout.buffer.write(b"\\xff")\n')
-        self.assertEqual(self.run_adapter(), '\n')
+        self.assertEqual(self.run_adapter(), self.unknown)
 
     def test_timeout_reaps_helper_descendants(self):
         script = self.fx.android_scripts['wifi']
@@ -136,7 +183,7 @@ class AndroidStatus(unittest.TestCase):
                           'p = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])\n' +
                           'Path(os.environ["HOME"], "child-pid").write_text(str(p.pid))\n' +
                           'time.sleep(30)\n')
-        self.assertEqual(self.run_adapter(), '\n')
+        self.assertEqual(self.run_adapter(), self.unknown)
         pid = int((self.fx.home / 'child-pid').read_text())
         deadline = time.monotonic() + 2
         while time.monotonic() < deadline:
@@ -222,7 +269,7 @@ print((home / (name + '-response')).read_text())
         document = json.loads(path.read_text())
         document['providers']['device']['success']['mono'] -= 301
         path.write_text(json.dumps(document))
-        self.assertEqual(self.run_adapter(), '\U000f08fa? \n')
+        self.assertEqual(self.run_adapter(), self.unknown)
         self.assertEqual((self.fx.home / 'device-api-calls').read_text(), failed_calls)
         (self.fx.home / 'device-api-fail').unlink()
         self.refresh('cell')
@@ -232,6 +279,40 @@ print((home / (name + '-response')).read_text())
         self.assertEqual(self.run_adapter(), '\n')
         for module in ('notification', 'volume', 'location'):
             self.assertFalse((self.cache / (module + '.json')).exists())
+
+    def test_real_wifi_failure_expiration_and_explicit_recovery(self):
+        self.install_real_scripts_with_fake_providers()
+        self.refresh('wifi')
+        self.refresh('cell')
+        (self.fx.home / 'wifi-api-fail').touch()
+        self.refresh('wifi', code=1)
+        self.assertEqual(self.run_adapter(), '\U000f0928~ \n')
+        path = self.cache / 'wifi.json'
+        document = json.loads(path.read_text())
+        document['providers']['wifi']['success']['mono'] -= 301
+        path.write_text(json.dumps(document))
+        calls = (self.fx.home / 'wifi-api-calls').read_text()
+        for enabled in (True, False, None):
+            (self.fx.home / 'device-response').write_text(json.dumps(
+                {'data_enabled': enabled, 'data_state': 'connected' if enabled is not None else None}))
+            self.refresh('cell')
+            self.assertEqual(self.run_adapter(), self.unknown)
+        self.assertEqual((self.fx.home / 'wifi-api-calls').read_text(), calls)
+        # Recovery is explicit; an ordinary read cannot re-enable this provider.
+        (self.fx.home / 'wifi-api-fail').unlink()
+        self.assertEqual(self.run_adapter(), self.unknown)
+        self.assertEqual((self.fx.home / 'wifi-api-calls').read_text(), calls)
+        self.refresh('wifi')
+        self.assertEqual(self.run_adapter(), '\U000f0928  \n')
+        # A failed negative observation remains uncertain rather than disappearing.
+        (self.fx.home / 'wifi-response').write_text('{"supplicant_state":"DISCONNECTED"}')
+        (self.fx.home / 'device-response').write_text('{"data_enabled":false,"data_state":"disconnected"}')
+        self.refresh('wifi')
+        self.refresh('cell')
+        self.assertEqual(self.run_adapter(), '\n')
+        (self.fx.home / 'wifi-api-fail').touch()
+        self.refresh('wifi', code=1)
+        self.assertEqual(self.run_adapter(), '?~ \n')
 
 
 if __name__ == '__main__':

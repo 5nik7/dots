@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the active cached network indicator before the tmux battery segment."""
+"""Render cached network activity or uncertainty before the tmux battery segment."""
 
 from concurrent.futures import ThreadPoolExecutor
 import json
@@ -53,21 +53,27 @@ def render(module, snapshot, colors=COLORS):
     return f"#[fg={color}]{glyph}{marker}#[default]"
 
 
+def uncertain(snapshots, colors=COLORS):
+    # A neutral glyph makes no claim about the transport or internet access.
+    marker = "~" if any(item is not None and item["stale"] for item in snapshots) else " "
+    return f"#[fg={colors[1]}]?{marker}#[default]"
+
+
 def select_network(snapshots, colors=COLORS):
     wifi, cell = snapshots
-    if wifi is None:
-        return ""
-    connected = wifi["data"].get("connected")
+    connected = wifi["data"].get("connected") if wifi is not None else None
     if connected is True:
         return render("wifi", wifi, colors)
     if connected is not False:
-        return ""
+        return uncertain(snapshots, colors)
     data = cell["data"] if cell is not None else {}
     if data.get("data_enabled") is False or data.get("data_state") in ("disconnected", "connecting", "suspended"):
-        return ""
+        # Signal freshness cannot establish telephony-device activity freshness.
+        if not wifi["stale"] and data.get("device_stale") is False:
+            return ""
+        return uncertain(snapshots, colors)
     if data.get("data_enabled") is not True or data.get("data_state") != "connected":
-        # This is an availability marker, not a claim of active mobile data.
-        return f"#[fg={colors[1]}]{CELL_ICON}?#[default]"
+        return uncertain(snapshots, colors)
     if wifi["stale"] and not cell["stale"]:
         # The fallback decision also relies on the cached Wi-Fi observation.
         cell = dict(cell, stale=True, icon=cell["icon"] + "~")
@@ -131,7 +137,7 @@ def main():
             with ThreadPoolExecutor(max_workers=len(MODULES)) as executor:
                 output = select_network(list(executor.map(snapshot, MODULES)), colors)
         except (OSError, RuntimeError):
-            pass
+            output = uncertain([], colors)
     # No orphan separator when both networks are hidden; newline clears old output.
     print(output + " " if output else "")
 

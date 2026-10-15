@@ -12,7 +12,7 @@ COLOR = re.compile(r"(?:#[0-9a-fA-F]{6}|default|(?:bright)?(?:black|red|green|ye
 TTY = re.compile(r"pts/[0-9]+\Z")
 
 
-def render(snapshot, tty, colors, width=None, split_current=False):
+def render(snapshot, tty, colors, width=None, split_current=False, split_badge=False):
     """Preserve discovery order; never forward process names or arbitrary styles."""
     if len(colors) != 4 or not all(COLOR.fullmatch(color) for color in colors):
         raise ValueError("invalid colors")
@@ -23,6 +23,9 @@ def render(snapshot, tty, colors, width=None, split_current=False):
         raise ValueError("invalid session count")
     if width is not None and (type(width) is not int or width < 0):
         raise ValueError("invalid width")
+    if split_current and split_badge:
+        raise ValueError("conflicting split modes")
+    split = split_current or split_badge
     terminals, pids = set(), set()
     entries = []
     tty = tty.removeprefix("/dev/")
@@ -38,20 +41,21 @@ def render(snapshot, tty, colors, width=None, split_current=False):
         current = terminal == tty
         bg, fg = colors[2:] if current else colors[:2]
         focus = "focus" if current else "on"
-        directive = f"list={focus}," if width is None and not split_current else ""
-        entries.append((f"#[{directive}bg={bg},fg={fg},nobold,nounderscore] {number} ",
+        directive = f"list={focus}," if width is None and not split else ""
+        weight = "bold" if split_badge else "nobold"
+        entries.append((f"#[{directive}bg={bg},fg={fg},{weight},nounderscore] {number} ",
                         len(str(number)) + 2, current))
-    if width is None and not split_current:
+    if width is None and not split:
         return "".join(entry[0] for entry in entries)
     if width is None:
         width = sum(entry[1] for entry in entries)
     if not entries or width == 0:
-        return "|" if split_current else ""
+        return "||" if split_badge else "|" if split_current else ""
     current = next((i for i, entry in enumerate(entries) if entry[2]), 0)
     left, right = current, current + 1
     size = entries[current][1]
     if size > width:
-        return "|" if split_current else ""  # Never emit a partial numeric label.
+        return "||" if split_badge else "|" if split_current else ""
     while True:
         candidates = []
         if left > 0:
@@ -65,15 +69,21 @@ def render(snapshot, tty, colors, width=None, split_current=False):
         left, right, size = min(candidates, key=lambda c: abs((current - c[0]) - (c[1] - current - 1)))
     # Markers use the row style, not either neighboring number's background.
     output = ("#[default]<" if left > 0 and size < width else "")
-    for entry in entries[left:right]:
-        output += entry[0]
+    for index in range(left, right):
+        entry = entries[index]
+        if split_badge and entry[2]:
+            # Only a validated number crosses this boundary. The config joins
+            # the optional project name and owns the whole badge's padding.
+            output += f"#[default]|{index + 1}|"
+        else:
+            output += entry[0]
         if split_current and entry[2]:
             output += "#[default]|"
     output += "#[default]"
     if right < len(entries) and size + (left > 0) < width:
         output += ">"
-    if split_current and "|" not in output:
-        output += "|"  # Unmatched clients keep all numbers before tmux content.
+    if split and "|" not in output:
+        output += "||" if split_badge else "|"
     return output
 
 
@@ -85,6 +95,9 @@ def main(argv=None):
         split_current = "--split-current" in args
         if split_current:
             args.remove("--split-current")
+        split_badge = "--split-badge" in args
+        if split_badge:
+            args.remove("--split-badge")
         if args and args[-1].startswith("--width="):
             width = int(args.pop()[8:])
         if len(args) != 5 or not args[0].startswith("--tty="):
@@ -98,7 +111,7 @@ def main(argv=None):
         )
         if len(result.stdout) > 65536:
             raise ValueError("oversized snapshot")
-        output = render(json.loads(result.stdout), args[0][6:], args[1:], width, split_current)
+        output = render(json.loads(result.stdout), args[0][6:], args[1:], width, split_current, split_badge)
     except (OSError, ValueError, subprocess.SubprocessError):
         pass
     # A newline clears tmux's cached successful result after errors or tab exits.

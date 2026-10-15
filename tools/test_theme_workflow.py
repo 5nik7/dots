@@ -593,9 +593,12 @@ assert(require("anodize").get_palette().metadata.id == "nord")
         self.assertNotIn("status-right", (active / "tmux.conf").read_text())
         palette = json.loads((active / "palette.json").read_text())["colors"]
         for option, semantic in (("bg", "background"), ("fg", "foreground"),
-                                 ("inactive-bg", "lighter_background"), ("inactive-fg", "hint"),
+                                 ("inactive-bg", "background"), ("inactive-fg", "hint"),
                                  ("current-bg", "hint"), ("current-fg", "darker_background"),
-                                 ("lower-bg", "background"), ("window-bg", "dark_background"), ("muted", "muted"), ("hint", "hint"),
+                                 ("lower-bg", "background"), ("window-bg", "dark_background"),
+                                 ("window-fg", "light_foreground"), ("selected-bg", "selection"),
+                                 ("clock-bg", "dark_background"), ("clock-fg", "info"),
+                                 ("muted", "muted"), ("hint", "hint"),
                                  ("red", "red"), ("yellow", "yellow"), ("green", "green")):
             self.assertIn(f'set -g @dots-termux-{option} "{palette[semantic]}"',
                           (active / "tmux.conf").read_text())

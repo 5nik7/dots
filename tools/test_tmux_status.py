@@ -83,12 +83,13 @@ print((home / (module + '.json')).read_text())
             self.android_snapshot(module)
 
     def android_snapshot(self, module, icon=None, stale=False, count=3, connected=True,
-                         data_enabled=True, data_state="connected"):
+                         data_enabled=True, data_state="connected", device_stale=None):
         icon = (icon or ANDROID_ICONS[module]) + ('~' if stale else '')
         state = dict(wifi='connected', cell='registered', notification='active', location='unknown', volume='medium')[module]
         data = dict(module=module, icon=icon, stale=stale, state=state,
                     data={'count': count, 'level': 4, 'connected': connected,
-                          'data_enabled': data_enabled, 'data_state': data_state}, error='PRIVATE error', text='PRIVATE label')
+                          'data_enabled': data_enabled, 'data_state': data_state,
+                          'device_stale': stale if device_stale is None else device_stale}, error='PRIVATE error', text='PRIVATE label')
         (self.home / (module + '.json')).write_text(json.dumps(data))
 
     def android_text(self, stale=False, network='wifi'):
@@ -264,6 +265,28 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.sessions_script.unlink()
         self.assertEqual(self.run_sessions(), '\n')
 
+    def test_split_badge_keeps_numbers_and_padding_separate(self):
+        render = runpy.run_path(str(self.termux_adapter))['render']
+        snapshot = {'count': 3, 'sessions': [dict(tty=f'pts/{i}', pid=i+1) for i in range(3)]}
+        colors = ['#112233', '#aabbcc', '#aabbcc', '#010203']
+        for tty, expected in [('pts/0', '|1| 2  3 '),
+                              ('pts/1', ' 1 |2| 3 '),
+                              ('pts/2', ' 1  2 |3|'),
+                              ('pts/99', ' 1  2  3 ||')]:
+            output = render(snapshot, tty, colors, 20, split_badge=True)
+            self.assertEqual(re.sub(r'#\[[^]]*\]', '', output), expected)
+            self.assertNotIn('list=', output)
+            self.assertNotIn('nobold', output)
+        for width in range(11):
+            output = re.sub(r'#\[[^]]*\]', '', render(snapshot, 'pts/1', colors, width, split_badge=True))
+            before, current, after = output.split('|')
+            # The current number's two spaces are supplied by the tmux badge.
+            self.assertLessEqual(len(before + current + after) + (2 if current else 0), width)
+            if width >= 3:
+                self.assertEqual(current, '2')
+        with self.assertRaises(ValueError):
+            render(snapshot, 'pts/1', colors, split_current=True, split_badge=True)
+
     def test_layout_and_template_ownership(self):
         config = (REPO / 'config/tmux/tmux.conf').read_text()
         left = next(line for line in config.splitlines() if line.startswith('set -g status-left '))
@@ -301,7 +324,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
 
     def write_theme(self, accent='#abcdef', background='#112233', dark_background='#223344'):
         palette = dict(background=background, foreground='#eeeeee', accent=accent,
-                       muted='#888888', info='#123456', selection='#654321',
+                       muted='#888888', light_foreground='#ccddee', info='#123456', selection='#654321',
                        dark_background=dark_background, lighter_background='#445566', dark_foreground='#778899',
                        hint='#aabbcc', darker_background='#010203', red='#ff0000', yellow='#ffff00', green='#00ff00')
         template = (REPO / 'default/themed/tmux.conf.tpl').read_text()
@@ -329,18 +352,18 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         tmux('source-file', str(config))
         self.assertEqual(tmux('show-option', '-g', 'status-format'), rows)
         tmux('set-option', '-t', '=fixture:', '@dots-termux-default', '1')
-        self.assertEqual(tmux('display-message', '-p', '#{E:status-left}'), '')
+        self.assertEqual(re.sub(r'#\[[^]]*\]', '', tmux('display-message', '-p', '#{E:status-left}')), '')
         tmux('source-file', str(config))
-        self.assertEqual(tmux('display-message', '-p', '#{E:status-left}'), '')
+        self.assertEqual(re.sub(r'#\[[^]]*\]', '', tmux('display-message', '-p', '#{E:status-left}')), '')
         tmux('set-option', '-u', '-t', '=fixture:', '@dots-termux-default')
         self.assertIn('fixture', tmux('display-message', '-p', '#{E:status-left}'))
         for accent in ['#abcdef', '#fedcba']:
             tmux('source-file', str(self.write_theme(accent)))
             self.assertEqual(tmux('show-option', '-g', 'status-format'), rows)
-            self.assertIn(f'bg={accent}', tmux('display-message', '-p', '#{E:status-left}'))
+            self.assertIn('bg=#aabbcc', tmux('display-message', '-p', '#{E:status-left}'))
             self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-current-bg'), '#aabbcc')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-bg'), '#112233')
-            self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-inactive-bg'), '#445566')
+            self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-inactive-bg'), '#112233')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-inactive-fg'), '#aabbcc')
             self.assertIn('fg=#123456,bold,nounderscore',
                           tmux('show-option', '-gqv', 'window-status-current-format'))
@@ -348,7 +371,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             self.assertEqual(tmux('show-option', '-gqv', 'pane-active-border-style'), 'fg=#654321')
         tmux('set-option', '-t', '=fixture:', '@dots-termux-default', '1')
         tmux('source-file', str(self.write_theme()))
-        self.assertEqual(tmux('display-message', '-p', '#{E:status-left}'), '')
+        self.assertEqual(re.sub(r'#\[[^]]*\]', '', tmux('display-message', '-p', '#{E:status-left}')), '')
         tmux('set-option', '-u', '-t', '=fixture:', '@dots-termux-default')
         tmux('set-environment', '-gu', 'TERMUX_VERSION')
         tmux('source-file', str(config))
@@ -361,6 +384,87 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         other, _ = self.server('nontermux', termux=False)
         other('source-file', str(config))
         self.assertEqual(other('show-option', '-gqv', 'status'), 'on')
+        other('set-option', '-gw', 'automatic-rename', 'off')
+        other('rename-window', 'fixture')
+        self.assertIn(' 0:fixture ', other('display-message', '-p', '#{E:window-status-current-format}'))
+
+    @unittest.skipUnless(TMUX, 'native tmux unavailable')
+    def test_native_network_uncertainty_and_recovery(self):
+        config = self.write_config()
+        self.write_theme()
+        inner, base = self.server('network')
+        inner('source-file', str(config))
+        inner('set-option', '-g', 'status-interval', '1')
+        outer, _ = self.server('network-view', termux=False)
+        outer('set-option', '-g', 'status', 'off')
+        outer('set-option', '-g', 'default-terminal', 'tmux-256color')
+        attach = shlex.join(['env', '-u', 'TMUX', '-u', 'TMUX_PANE', *base, 'attach-session', '-t', 'fixture'])
+        outer('new-session', '-d', '-s', 'view', '-x', '80', '-y', '24', attach)
+        deadline = time.monotonic() + 5
+        while not inner('list-clients', '-F', '#{client_tty}'):
+            self.assertLess(time.monotonic(), deadline, 'network fixture client must finish attaching')
+            time.sleep(.05)
+        # Every transition uses a real attached client's rendered upper row.
+        cases = [
+            (True, True, False, False, self.android_text(), (0, 255, 0)),
+            (False, False, False, False, '', None),
+            (None, True, False, False, '? ', (136, 136, 136)),
+            (None, False, False, False, '? ', (136, 136, 136)),
+            (None, None, False, False, '? ', (136, 136, 136)),
+            (False, None, False, False, '? ', (136, 136, 136)),
+            (False, False, True, False, '?~', (136, 136, 136)),
+            (False, False, False, True, '?~', (136, 136, 136)),
+            (False, True, True, False, self.android_text(stale=True, network='cell'), (136, 136, 136)),
+            (False, True, False, False, self.android_text(network='cell'), (0, 255, 0)),
+            (True, True, False, False, self.android_text(), (0, 255, 0)),
+        ]
+        for width in (40, 80, 120):
+            outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
+            battery_position = None
+            for connected, enabled, wifi_stale, cell_stale, expected, color in cases:
+                with self.subTest(width=width, connected=connected, enabled=enabled,
+                                  wifi_stale=wifi_stale, cell_stale=cell_stale):
+                    calls = self.home / 'cell-calls'
+                    count = calls.read_text().count('call') if calls.exists() else 0
+                    self.android_snapshot('wifi', connected=connected, stale=wifi_stale)
+                    self.android_snapshot('cell', data_enabled=enabled, stale=cell_stale,
+                                          data_state='connected' if enabled is not None else None)
+                    def ready(rows):
+                        if len(rows) < 2 or not calls.exists() or calls.read_text().count('call') <= count:
+                            return False
+                        top = self.plain(rows[0])
+                        if '󰁹 80%' not in top:
+                            return False
+                        if expected:
+                            return expected + ' 󰁹 80%' in top
+                        return '?' not in top and all(ANDROID_ICONS[m] not in top for m in ('wifi', 'cell'))
+                    inner('refresh-client', '-S')
+                    rows = self.await_screen(outer, 'view', ready)
+                    top = self.plain(rows[0])
+                    self.assertRegex(top, r'^ (?:[1-9]|1[0-2]):[0-5][0-9] ')
+                    position = top.index('󰁹')
+                    if battery_position is None:
+                        battery_position = position
+                    self.assertEqual(position, battery_position)
+                    if expected:
+                        self.assertEqual(top.index(expected), position - 3)
+                        self.assertEqual(self.colors_at(rows[0], expected[0]),
+                                         {'fg': color, 'bg': (17, 34, 51)})
+                    self.assertNotIn('PRIVATE', '\n'.join(rows))
+            # Reload while uncertain, twice at each width, then observe recovery.
+            self.android_snapshot('wifi', connected=None)
+            self.await_screen(outer, 'view', lambda rows: bool(rows) and '?  󰁹 80%' in self.plain(rows[0]))
+            for _ in range(2):
+                inner('source-file', str(config))
+                inner('set-option', '-g', 'status-interval', '1')
+                rows = self.await_screen(outer, 'view', lambda rows:
+                    bool(rows) and '?  󰁹 80%' in self.plain(rows[0]))
+                self.assertEqual(self.plain(rows[0]).index('󰁹'), battery_position)
+            self.android_snapshot('wifi')
+            self.await_screen(outer, 'view', lambda rows: bool(rows) and self.android_text() in rows[0])
+        self.assertTrue(inner('list-clients', '-F', '#{client_tty}'))
+        for module in ('notification', 'volume', 'location'):
+            self.assertFalse((self.home / (module + '-calls')).exists())
 
     @unittest.skipUnless(TMUX, 'native tmux unavailable')
     def test_native_grouped_numbers_share_one_job(self):
@@ -380,18 +484,93 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         attach = shlex.join(['env', '-u', 'TMUX', '-u', 'TMUX_PANE', *base, 'attach-session', '-t', 'fixture'])
         outer('new-session', '-d', '-s', 'view', '-x', '80', '-y', '24', attach)
         lines = self.await_screen(outer, 'view', lambda rows:
-            len(rows) > 1 and ' 1 ' in rows[1] and '0:window' in rows[1] and ' 2 ' in rows[1])
+            len(rows) > 1 and ' 1:fixture ' in rows[1] and '0:window' in rows[1] and ' 2 ' in rows[1])
         row = self.plain(lines[1])
-        self.assertLess(row.index(' 1 '), row.index('fixture'))
+        self.assertLess(row.index(' 1:fixture '), row.index('fixture'))
         self.assertLess(row.index('0:window'), row.index(' 2 '))
         self.assertEqual(calls.read_text(), 'call\n')
-        self.assertRegex(row, r'^ 1  fixture   0:window  2 *$')
+        self.assertRegex(row, r'^ 1:fixture  0:window  2 *$')
         self.assertEqual(self.colors_at(lines[1], ' 2 '),
-                         {'fg': (170, 187, 204), 'bg': (68, 85, 102)})
+                         {'fg': (170, 187, 204), 'bg': (17, 34, 51)})
 
     @staticmethod
     def plain(text):
         return re.sub(r'\x1b\[[0-9;]*m', '', text)
+
+    @unittest.skipUnless(TMUX, 'native tmux unavailable')
+    def test_native_compact_badges_names_and_padding(self):
+        self.write_theme()
+        inner, base = self.server('compact')
+        config = self.write_config()
+        inner('source-file', str(config))
+        inner('set-option', '-g', 'status-interval', '1')
+        inner('set-option', '-gw', 'automatic-rename', 'off')
+        inner('set-option', '-g', 'renumber-windows', 'off')
+        inner('rename-session', 'dots')
+        inner('rename-window', '-t', 'dots:0', 'dots')
+        inner('new-window', '-d', '-t', 'dots:1', '-n', 'shell', 'sleep 120')
+        outer, _ = self.server('compact-view', termux=False)
+        outer('set-option', '-g', 'status', 'off')
+        attach = shlex.join(['env', '-u', 'TMUX', '-u', 'TMUX_PANE', *base, 'attach-session', '-t', 'dots'])
+        outer('new-session', '-d', '-s', 'view', '-x', '80', '-y', '24', attach)
+        tty = outer('display-message', '-p', '-t', 'view', '#{pane_tty}')
+        self.snapshot([tty, 'pts/99999'])
+
+        def row_equals(expected):
+            return self.await_screen(outer, 'view', lambda rows:
+                len(rows) > 1 and rows[1].rstrip() == expected.rstrip())
+
+        for width in (40, 80, 120):
+            outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
+            rows = row_equals(' 1:dots  0  1:shell  2 ')
+            self.assertEqual(self.colors_at(rows[1], '1:dots'),
+                             {'fg': (1, 2, 3), 'bg': (170, 187, 204)})
+            self.assertEqual(self.colors_at(rows[1], ' 0 '),
+                             {'fg': (18, 52, 86), 'bg': (101, 67, 33)})
+            self.assertEqual(self.colors_at(rows[1], '1:shell'),
+                             {'fg': (204, 221, 238), 'bg': (34, 51, 68)})
+            self.assertEqual(self.colors_at(rows[1], ' 2 '),
+                             {'fg': (170, 187, 204), 'bg': (17, 34, 51)})
+            clock = re.search(r'[0-9]+:[0-9]{2}', self.plain(rows[0]))[0]
+            self.assertEqual(self.colors_at(rows[0], clock),
+                             {'fg': (18, 52, 86), 'bg': (34, 51, 68)})
+            self.assertNotIn('\x1b[4m', rows[1])
+            inner('select-window', '-t', 'dots:1')
+            row_equals(' 1:dots  0  1:shell  2 ')
+            inner('rename-window', '-t', 'dots:0', 'Dots')
+            row_equals(' 1:dots  0:Dots  1:shell  2 ')
+            inner('set-option', '-t', 'dots', '@dots-termux-default', '1')
+            row_equals(' 1  0:Dots  1:shell  2 ')
+            inner('rename-window', '-t', 'dots:0', 'dots')
+            row_equals(' 1  0  1:shell  2 ')
+            inner('set-option', '-u', '-t', 'dots', '@dots-termux-default')
+            inner('select-window', '-t', 'dots:0')
+            for _ in range(2):
+                inner('source-file', str(config))
+                inner('set-option', '-g', 'status-interval', '1')
+                row_equals(' 1:dots  0  1:shell  2 ')
+            inner('source-file', str(self.write_theme()))
+            row_equals(' 1:dots  0  1:shell  2 ')
+            self.snapshot(['pts/99999', tty])
+            row_equals(' 1  2:dots  0  1:shell ')
+            self.snapshot([tty, 'pts/99999'])
+        # Names stay literal and comparisons precede clipping; neither a pipe
+        # nor tmux-format punctuation is part of the numeric helper protocol.
+        outer('resize-window', '-t', 'view', '-x', '120', '-y', '24')
+        for name in ('猫项目', 'a|b', 'a,b', '#[fg=red]', '#{pane_id}', '#(touch BAD)', '$(touch BAD)'):
+            inner('rename-session', '#{l:' + name + '}')
+            inner('rename-window', '-t', ':0', '#{l:' + name + '}')
+            row_equals(f' 1:{name}  0  1:shell  2 ')
+            self.assertFalse((self.home / 'BAD').exists())
+            inner('rename-window', '-t', ':1', '#{l:' + name + '}')
+            row_equals(f' 1:{name}  0  1  2 ')
+            inner('rename-window', '-t', ':1', 'shell')
+        inner('rename-session', 'project-long-name-that-will-be-clipped')
+        inner('rename-window', '-t', ':0', 'project-long-name-that-will-be-clipped')
+        outer('resize-window', '-t', 'view', '-x', '40', '-y', '24')
+        row_equals(' 1:projec  0  1:shell  2 ')
+        inner('set-option', '-g', '@dots-termux-badge-width', '3')
+        row_equals(' 1  0  1:shell  2 ')
 
     @staticmethod
     def colors_at(text, needle):
@@ -447,28 +626,29 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             time.sleep(.05)
         for width in [40, 80, 120]:
             for index, name in enumerate(['one', 'two'], 2):
+                badge_name = 'fixture'[:min(width // 4, 30) - 4]
                 outer('resize-window', '-t', name, '-x', str(width), '-y', '24')
                 inner('refresh-client', '-S')
                 lines = self.await_screen(outer, name, lambda rows:
-                    len(rows) > 1 and f' {index} ' in rows[1] and '80%' in rows[0]
-                    and self.android_text() in rows[0] and 'fixture' in rows[1])
+                    len(rows) > 1 and f' {index}:{badge_name} ' in rows[1] and '80%' in rows[0]
+                    and self.android_text() in rows[0] and badge_name in rows[1])
                 top, bottom = map(self.plain, lines[:2])
                 self.assertRegex(top, r'^ (?:[1-9]|1[0-2]):[0-5][0-9] ')
                 self.assertRegex(top, r' (?:[1-9]|1[0-2]):[0-5][0-9] ')
-                self.assertLess(bottom.index(f' {index} '), bottom.index('fixture'))
-                self.assertLess(bottom.index('fixture'), bottom.index('0:window'))
+                self.assertLess(bottom.index(f' {index}:{badge_name} '), bottom.index(badge_name))
+                self.assertLess(bottom.index(badge_name), bottom.index('0:window'))
                 if index == 2:
                     self.assertLess(bottom.index('0:window'), bottom.index(' 3 '))
                 else:
-                    self.assertLess(bottom.index(' 2 '), bottom.index(' 3 '))
+                    self.assertLess(bottom.index(' 2 '), bottom.index(' 3:'))
                 self.assertNotIn('|', bottom)
                 self.assertNotIn('80%', bottom)
                 self.assertLess(top.index(self.android_text()), top.index('80%'))
                 self.assertNotIn(self.android_text(), bottom)
                 self.assertIn('0:window', bottom)
-                self.assertEqual(self.colors_at(lines[1], '0:window')['bg'], (34, 51, 68))
+                self.assertEqual(self.colors_at(lines[1], '0:window')['bg'], (101, 67, 33))
                 # Capture through an outer fixture tmux: real rendered cells and attributes.
-                self.assertIn('48;2;68;85;102', lines[1])
+                self.assertIn('48;2;101;67;33', lines[1])
                 self.assertIn('48;2;17;34;51', lines[0])
                 self.assertIn('38;2;170;187;204', lines[1])
                 self.assertEqual(self.colors_at(lines[0], ANDROID_ICONS['wifi']),
@@ -477,14 +657,14 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                                  {'fg': (0, 255, 0), 'bg': (17, 34, 51)})
                 self.assertIn('38;2;1;2;3', lines[1])
                 self.assertIn('48;2;170;187;204', lines[1])
-                active = re.search(r'38;2;1;2;3[^m]*m(?:\x1b\[[0-9;]*m)* ([0-9]+) ', lines[1])
+                active = re.search(rf'38;2;1;2;3[^m]*m(?:\x1b\[[0-9;]*m)* ([0-9]+):{badge_name} ', lines[1])
                 self.assertIsNotNone(active, lines[0])
                 self.assertEqual(int(active[1]), index)
                 self.assertNotIn('\x1b[4m', lines[1])
                 inner('set-option', '-t', '=fixture:', '@dots-termux-default', '1')
                 self.await_screen(outer, name, lambda rows:
                     len(rows) > 1 and '80%' in rows[0] and '0:window' in rows[1]
-                    and 'fixture' not in rows[1])
+                    and ':fixt' not in rows[1])
                 inner('set-option', '-u', '-t', '=fixture:', '@dots-termux-default')
         # Verify native mouse targets beside the number strip and badge.
         # The fixture predates config loading and starts at window zero.
@@ -496,9 +676,9 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             lines = self.await_screen(outer, 'one', lambda rows:
                 len(rows) > 1 and '0:window' in rows[1] and '1:other' in rows[1])
             self.assertEqual(self.colors_at(lines[1], '0:window'),
-                             {'fg': (18, 52, 86), 'bg': (34, 51, 68)})
+                             {'fg': (18, 52, 86), 'bg': (101, 67, 33)})
             self.assertEqual(self.colors_at(lines[1], '1:other'),
-                             {'fg': (136, 136, 136), 'bg': (34, 51, 68)})
+                             {'fg': (204, 221, 238), 'bg': (34, 51, 68)})
             x = self.plain(lines[1]).index('1:other') + 1
             time.sleep(.5)  # Separate clicks, not double/triple-click gestures.
             outer('send-keys', '-t', 'one', '-l', f'\x1b[<0;{x};2M\x1b[<0;{x};2m')
@@ -513,7 +693,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         inner('rename-session', '-t', 'fixture', long_name)
         for width in (40, 80, 120):
             outer('resize-window', '-t', 'one', '-x', str(width), '-y', '24')
-            label = long_name[:min(width // 4, 30) - 3]
+            label = long_name[:min(width // 4, 30) - 4]
             lines = self.await_screen(outer, 'one', lambda rows:
                 len(rows) > 1 and label + ' ' in rows[1] and '0:window' in rows[1]
                 and long_name[:len(label)+1] not in rows[1])
@@ -539,21 +719,21 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                       [f'pts/{11000+i}' for i in range(30)])
         outer('resize-window', '-t', 'one', '-x', '40', '-y', '24')
         lines = self.await_screen(outer, 'one', lambda rows:
-            len(rows) > 1 and ' 31 ' in rows[1] and '80%' in rows[0] and ('<' in rows[1] or '>' in rows[1]))
+            len(rows) > 1 and ' 31:fixtu ' in rows[1] and '80%' in rows[0] and ('<' in rows[1] or '>' in rows[1]))
         self.assertLessEqual(len(self.plain(lines[0])), 40)
         # Both independent selections survive simultaneous number/window overflow.
         for index in range(1, 8):
             inner('new-window', '-d', '-t', f'fixture:{index}', '-n', f'window{index}', 'sleep 120')
         inner('select-window', '-t', 'fixture:7')
         lines = self.await_screen(outer, 'one', lambda rows:
-            len(rows) > 1 and ' 31 ' in rows[1] and '7:window7' in rows[1]
+            len(rows) > 1 and ' 31:fixtu ' in rows[1] and '7:window7' in rows[1]
             and ('<' in rows[1] or '>' in rows[1]))
         for index in range(7, 0, -1):
             inner('kill-window', '-t', f'fixture:{index}')
         self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and '0:window' in rows[1])
         # Theme-only refresh changes the full top-row background without replacing rows.
         inner('source-file', str(self.write_theme(background='#334455')))
-        self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' 31 ' in rows[1])
+        self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' 31:fixtu ' in rows[1])
         deadline = time.monotonic() + 3
         while time.monotonic() < deadline:
             colored = outer('capture-pane', '-p', '-e', '-t', 'one').splitlines()[0]
@@ -569,7 +749,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         for width in [40, 80, 120]:
             outer('resize-window', '-t', 'one', '-x', str(width), '-y', '24')
             lines = self.await_screen(outer, 'one', lambda rows:
-                len(rows) > 1 and len(rows[0]) >= width - 2 and ' 31 ' in rows[1]
+                len(rows) > 1 and len(rows[0]) >= width - 2 and ' 31:fixt' in rows[1]
                 and stale in rows[0] and '80%' in rows[0]
                 and rows[0].index(ANDROID_ICONS['wifi']) == positions[ANDROID_ICONS['wifi']] + width - 40)
             top = self.plain(lines[0])
@@ -592,7 +772,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             inner('set-option', '-g', 'status-interval', '1')
             self.await_screen(outer, 'one', lambda rows:
                 len(rows) > 1 and stale in rows[0] and '0:window' in rows[1])
-        # The same slot changes from Wi-Fi to data; inactive/unknown hides both.
+        # The same slot changes from Wi-Fi to data; confirmed inactive hides both.
         for width in (40, 80, 120):
             outer('resize-window', '-t', 'one', '-x', str(width), '-y', '24')
             for network in ('wifi', 'cell', None):
@@ -616,22 +796,22 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.android_snapshot('wifi', connected=False)
         self.android_snapshot('cell', data_enabled=None, data_state=None)
         lines = self.await_screen(outer, 'one', lambda rows:
-            bool(rows) and ANDROID_ICONS['cell'] + '?' in rows[0])
-        self.assertEqual(self.colors_at(lines[0], ANDROID_ICONS['cell'])['fg'], (136, 136, 136))
+            bool(rows) and '?  ' in rows[0])
+        self.assertEqual(self.colors_at(lines[0], '?')['fg'], (136, 136, 136))
         self.android_snapshot('cell')
         self.android_scripts['wifi'].unlink()
         self.await_screen(outer, 'one', lambda rows: bool(rows) and '80%' in rows[0]
-                          and all(ANDROID_ICONS[m] not in rows[0] for m in ('wifi', 'cell')))
+                          and '?  ' in rows[0] and all(ANDROID_ICONS[m] not in rows[0] for m in ('wifi', 'cell')))
         (self.home / 'sessions.json').write_text('broken')
         self.await_screen(outer, 'one', lambda rows:
-            len(rows) > 1 and not re.search(r' 3[12] ', rows[1]) and '80%' in rows[0])
+            len(rows) > 1 and not re.search(r' 3[12]:', rows[1]) and '80%' in rows[0])
         self.snapshot([terminals[0]])
-        self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' 1 ' in rows[1] and '80%' in rows[0])
+        self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' 1:fixture ' in rows[1] and '80%' in rows[0])
         # Simulate an unavailable Python command: the status job still clears its cache.
         python_stub = self.tools / 'python3'
         python_stub.write_text('#!' + BASH + '\nexit 127\n')
         python_stub.chmod(0o700)
-        self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' 1 ' not in rows[1]
+        self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' 1:fixture ' not in rows[1]
                           and all(ANDROID_ICONS[m] not in rows[0] for m in ('wifi', 'cell')) and '80%' in rows[0])
         # Outside Termux the only visible row is the tmux session/window row.
         inner('set-environment', '-gu', 'TERMUX_VERSION')
