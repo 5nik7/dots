@@ -30,6 +30,9 @@ environment colors described in the [template contract](themes.md#flat-themes-an
 `theme set`/`refresh` also render the Pi theme and connect an existing agent themes
 directory through the same journal; dry-run previews include that target. See
 [Pi setup](themes.md#pi) for selection, custom paths and automatic reload.
+The same commands connect the shared syntax theme to an existing Codex themes
+directory; dry runs include `dots.tmTheme`. Codex configuration remains unchanged
+by publication. See [Codex setup](themes.md#codex-and-codex-termux).
 
 ## Implemented Git and managed-file operations
 
@@ -594,3 +597,11 @@ Anodize-specific `--logo=text|auto|kitty|chafa` and `--logo-layout=auto|horizont
 ## Shared interactive shell commands
 
 Bash and Zsh share the [interactive helper contract](shared-shells.md#commands-and-compatibility). `ff` opens FZF in both shells; `findfiles` preserves Bash's former filename search. `rl`, `rlc` and `rlcs` select native reload/completion implementations. These are shell helpers, not new `dots` command routes.
+
+### Termux default-session launcher
+
+**Implemented.** `androidots/bin/termux-bar [--auto]` creates or reattaches the current Termux tab's default session on the ordinary tmux server. It is a standalone Androidots executable, not a new `dots` route. `--auto` is the guarded Bash/Zsh startup mode; `-h`/`--help` prints plain help without session discovery or tmux. There are no positional arguments. Exit status is 0 for an automatic skip, 1 for launcher failures, 2 for invalid arguments and 130 for interrupted setup; after attachment, 0 means detach or successful manual completion and 1 means attachment failure. Automatic normal session exit returns internal status 20 to the Dots startup hook, which exits the outer shell. This status is not used for skipped startup. Diagnostics go to stderr, and successful attachment hands the terminal to tmux. See [startup and opt-out behavior](shell-init.md#termux-tmux-startup).
+
+### Android status scripts
+
+Androidots provides `termux-wifi-status`, `termux-cell-status`, `termux-notification-status`, `termux-location-status` and `termux-volume-status`, independently of the Dots command dispatcher. Volume is read-only, defaults to media (`music`) and accepts `--stream music|ring|notification|alarm|system|call`. All five support icons, text, JSON, getters, templates, cache controls and static Bash/Zsh/Fish completions. See the [status command contract](../androidots/docs/termux-status.md).

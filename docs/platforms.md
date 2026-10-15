@@ -16,7 +16,13 @@ This coverage is separate from the Go platform matrix below.
 
 The [tmux keybinding reference](commands.md#tmux-keybinding-reference) requires Bash 4.4+ and tmux's formatted key listing (`list-keys -F` with `q|a` quoting). Optional less provides paging; missing less falls back to printed output. Native Termux checks use tmux 3.7c, a disposable popup, and controlling-terminal less tests. Linux/WSL remain compatible design targets without new native evidence; native Windows is not supported by this Bash/tmux command. No paths are translated or dependencies installed.
 
+The tmux system status row is enabled only when the tmux server inherits a nonempty `TERMUX_VERSION`; other environments show the tmux session/window row alone. Termux numbers remain ordered on the lower row; the current number is followed by its optional tmux badge and windows before later numbers. Numbering requires Python 3, the optional Androidots `termux-sessions` script, readable procfs and inherited `TERMUX_APP__PID`. The adapter locates that script through the repository's directory-linked tmux configuration. It matches each client's terminal ID rather than the server's launch ancestry; unmatched clients have no highlighted Termux entry. Missing discovery dependencies clear the segment without affecting the clock or tmux row. Native tmux 3.8 terminal rendering is verified in isolated Termux fixtures; the non-Termux branch is simulated there, not new Linux/WSL or Windows certification. See [tmux themes](themes.md#tmux).
+
+The upper-row Android cluster requires Python 3 and the Androidots Wi-Fi/cellular scripts with their sibling `lib/termux_status` package. It invokes normal JSON reads, so the existing cache handles refresh work and permission gates. Connected Wi-Fi appears first; cellular appears only with explicitly disconnected Wi-Fi and enabled, connected mobile data. Missing or unknown Wi-Fi hides both. When Wi-Fi is disconnected but cellular state is unavailable, the bar shows a muted data icon with `?`; confirmed disabled or nonconnected data is hidden. Notification, volume and location are not polled. Cellular polling needs a successful explicit interactive refresh, and provider failure suspends further automatic requests. No status job requests explicit refresh or changes permissions. Native tmux tests use mocked scripts/providers at 40/80/120 columns; they establish terminal layout, not live API access, signal accuracy or font rendering. See [activation](themes.md#tmux) and the [Androidots contract](../androidots/docs/termux-status.md).
+
 ## Shell initialization coverage
+
+Termux Bash/Zsh startup can automatically attach a default tmux session through `androidots/bin/termux-bar`. This adapter requires Python 3, tmux, readable procfs, the sibling session-discovery script and a validated `TERMUX_APP__PID` parent/session-leader relationship. It uses root PID/start time for per-tab identity. Automatic attachments exit the outer shell when the final pane exits; deliberate detach and unexpected server loss retain the plain shell. Other platforms, Fish, SSH and child shells skip automatic entry; `DOTS_TERMUX_AUTOSTART=0` opts out. Native Bash/Zsh/tmux PTY tests use simulated app identity, so actual Android new-tab startup remains a manual gate. See [lifecycle and fallbacks](shell-init.md#termux-tmux-startup).
 
 The [initialization hook](shell-init.md) has native adapters for Bash, Zsh, Fish, Nushell, Xonsh, and PowerShell. Local Termux verification covers the first five installed interpreters; the Xonsh interactive fixture uses readline with a PTY. PowerShell is unavailable locally, so its native runtime tests are skipped and Windows startup remains unverified. The PowerShell adapter requires no Bash and does not translate Windows/WSL paths. Native startup files derive checkout paths through file and directory symlinks; PowerShell also resolves directory junctions. Native Windows link behavior remains unverified locally. Bash file-link resolution uses `readlink` without GNU-only options; Nushell uses parse-time `path self` with strict `path expand`. This does not extend support for the rest of the live Bash CLI on native Windows.
 
@@ -249,6 +255,13 @@ and leading `~/` are supported, while relative paths and dot components are refu
 It uses the existing POSIX symlink journal. Pi 0.99.1 theme loading and directory-watch
 reload have isolated native Termux coverage; desktop/WSL rendering and native Windows
 connectors are not verified. See [Pi setup](themes.md#pi).
+
+The Codex connector uses `${CODEX_HOME:-$HOME/.codex}/themes/dots.tmTheme`,
+independently of XDG config roots. An existing themes directory and an absolute
+home without control characters or dot components are required. Codex-Termux
+uses the same home. The connector uses the existing POSIX symlink journal;
+there is no native Windows connector or silent copy fallback. Native desktop/WSL
+appearance remains unverified. See [Codex setup](themes.md#codex-and-codex-termux).
 
 ## Bounded Git and file operations
 

@@ -25,5 +25,6 @@ source "$ZSH/integrations/fzf.zsh"
 _dots_widget_plugins
 
 [[ -n ${ZSH_DEBUGRC+1} ]] && zprof
+source "$DOTS/shells/shared/termux-tmux.sh"
 # Do not propagate an optional tool's absence as the startup status.
 true

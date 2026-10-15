@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 # Tmux-format data, not terminal ANSI. The battery checkout owns icons/thresholds.
 # An empty line (rather than no output) clears tmux's previous successful result.
-empty() { printf '\n'; exit 0; }
+empty() {
+  if [[ ${slot:-0} == 1 ]]; then printf '#[fg=%s]󰂑 ?%%  #[default]\n' "$muted"; else printf '\n'; fi
+  exit 0
+}
+slot=0 red=red yellow=yellow green=green muted=brightblack
+if [[ ${1:-} == --slot && $# == 5 ]]; then
+  for color in "${@:2}"; do
+    [[ $color =~ ^(\#[a-fA-F0-9]{6}|default|(bright)?(black|red|green|yellow|blue|magenta|cyan|white))$ ]] || empty
+  done
+  slot=1 red=$2 yellow=$3 green=$4 muted=$5
+elif (( $# )); then
+  empty
+fi
 
 [[ -n ${HOME:-} && -r $HOME/repos/battery/battery ]] || empty
 output=$(bash "$HOME/repos/battery/battery" \
@@ -20,8 +32,12 @@ if [[ ${#icon} -gt 4 ]] || (( 10#$percentage > 100 )); then
   empty
 fi
 case $color in
-  31) color=red ;;
-  32) color=green ;;
-  33) color=yellow ;;
+  31) color=$red ;;
+  32) color=$green ;;
+  33) color=$yellow ;;
 esac
-printf '#[fg=%s]%s %s%%#[default]\n' "$color" "$icon" "$percentage"
+if (( slot )); then
+  printf '#[fg=%s]%s %-4s#[default]\n' "$color" "$icon" "$((10#$percentage))%"
+else
+  printf '#[fg=%s]%s %s%%#[default]\n' "$color" "$icon" "$percentage"
+fi

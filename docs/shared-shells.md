@@ -28,6 +28,8 @@ Git/worktree, package, network and backup helpers remain explicit user commands.
 
 ## Interactive startup
 
+Original Termux app shells automatically enter a per-tab default tmux session after interactive initialization. Its name badge is hidden while the top bar and windows remain visible. Detaching returns to the outer shell, and `rl` does not immediately reattach. `termux-bar` provides manual reattachment; `DOTS_TERMUX_AUTOSTART=0` disables automatic entry. SSH, child shells and scripts skip it. See [requirements and lifecycle](shell-init.md#termux-tmux-startup).
+
 Both shells share XDG defaults, editor selection, public application settings, ordered runtime paths, FZF layout and palette settings. Zsh retains its compatibility environment arrays, explicit private/platform module list and local hook. Bash retains its personal `~/.bash_aliases` hook, loaded after shared aliases. Zsh-only private modules are not interpreted by Bash.
 
 Bash uses native Readline vi mode, quiet bells, supported insert/command cursor indicators, a 100,000-entry history limit, duplicate suppression and append/read synchronization at prompts. Bash and Zsh keep separate history files. No Bash editing plugin is installed: Zsh's syntax highlighting, autosuggestions and FZF-tab completion UI remain Zsh-specific.

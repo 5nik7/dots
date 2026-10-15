@@ -89,7 +89,9 @@ For new or changed human views, apply the [presentation acceptance gate](../../d
 
 ## Tmux status and named sessions
 
-For the status adapter/configuration, run `python3 -B tools/test_tmux_status.py` and the theme/workflow suites. The optional `DOTS_TEST_BATTERY_SOURCE` integration copies only upstream source into the fixture, mocks all battery API calls and never loads real battery configuration. For `t`, run `python3 -B tools/test_tmux_sessions.py`, the shared-shell regressions and applicable shell suites/PTY runners below. Keep tmux sockets, sessions, homes and configurations test-owned; never source into the live server. See [status testing](../../docs/testing.md#tmux-status-and-named-sessions).
+For automatic Termux attachment and exit/detach lifecycle changes, additionally run `python3 -B androidots/tests/test_termux_bar.py` and `python3 -B tools/test_termux_autostart.py`. Use owned procfs/session-discovery fixtures and private tmux servers; real app startup remains a manual gate. Syntax-check the shared startup hook with both Bash and Zsh and run ShellCheck in Bash mode.
+
+For the status adapter/configuration, run `python3 -B tools/test_tmux_status.py`, `python3 -B tools/test_android_status.py` and the theme/workflow suites. Run the Androidots status/session/launcher regressions as described in the testing reference. The Android integration fixture overrides the copied provider-command boundary, including the absolute location command; never depend on PATH mocks alone to prevent Android access. Assert Wi-Fi/data visibility, disabled-helper nonexecution, fixed network positions across transitions, stale markers and the single-space battery gap across percentage changes. For the lower row, verify grouping before/after the current number from one shared discovery job, independently clipped Termux numbers and windows, long badge limits, mouse window targets, per-client highlighting and COPY/PREFIX/ZOOM placement. Androidots regressions retain read-only volume/cache coverage. The status suite mocks Termux session discovery and uses owned inner/outer tmux servers for per-client and narrow-screen checks; never use the real session script or Android APIs as a test backend. The optional `DOTS_TEST_BATTERY_SOURCE` integration copies only upstream source into the fixture, mocks all battery API calls and never loads real battery configuration. For `t`, run `python3 -B tools/test_tmux_sessions.py`, the shared-shell regressions and applicable shell suites/PTY runners below. Keep tmux sockets, sessions, homes and configurations test-owned; never source into the live server. See [status testing](../../docs/testing.md#tmux-status-and-named-sessions).
 
 ## Tmux keybinding reference
 
@@ -134,7 +136,10 @@ review and Apply. Native Gum/FZF PTY checks must use disposable catalogs and hom
 
 For inventory/catalog or config-link migration changes, run
 `python3 -B tools/test_files.py`. For flat theme templates, connectors, imports and
-wallpaper adapters, also run `python3 -B tools/test_theme_workflow.py`. For Pi connector
+wallpaper adapters, also run `python3 -B tools/test_theme_workflow.py`. This includes
+Codex connector and shared syntax-theme coverage. Native Codex discovery checks
+require disposable homes and no real credentials or model requests; see the
+[testing reference](../../docs/testing.md#files-catalog-and-omarchy-style-themes). For Pi connector
 changes, enable its optional native loader/watcher check with `PI_THEME_MODULE` as
 described in [testing](../../docs/testing.md#files-catalog-and-omarchy-style-themes). These suites
 own their home/config/state/source roots; local Git fixtures and fake external

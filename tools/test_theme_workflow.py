@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import plistlib
 from pathlib import Path
 import shutil
 import subprocess
@@ -16,6 +17,145 @@ spec.loader.exec_module(old)
 
 class Workflow(old.Themes):
     # Only inherit the fixture, not the older suite's cases.
+    def test_codex_shared_theme_refresh_and_rollback(self):
+        themes = self.home / ".codex/themes"
+        themes.mkdir(parents=True)
+        target = themes / "dots.tmTheme"
+        target.write_text("original theme\n")
+        config = themes.parent / "config.toml"
+        config.write_text('[tui]\ntheme = "ansi"\n')
+        preview = self.dots("theme", "set", "nord", "--dry-run").stdout
+        self.assertIn(str(target), preview)
+        self.assertFalse(self.state.exists())
+        self.dots("theme", "set", "nord")
+        first = self.generation()
+        self.assertEqual(target.readlink(), self.home / "state/dots/current/theme/bat.tmTheme")
+        data = target.read_bytes()
+        self.assertEqual(data, (first / "yazi/tmtheme.xml").read_bytes())
+        self.assertEqual(plistlib.loads(data)["name"], "Dots")
+        inode = target.lstat().st_ino
+        self.dots("theme", "refresh")
+        self.assertEqual(self.generation(), first)
+        self.assertEqual(target.lstat().st_ino, inode)
+        self.dots("theme", "set", "catppuccin-latte")
+        second = self.generation()
+        self.assertNotEqual(target.read_bytes(), data)
+        self.assertEqual(target.lstat().st_ino, inode)
+        self.assertEqual(target.read_bytes(), (second / "bat.tmTheme").read_bytes())
+        self.engine('dt_restore "' + str(second) + '"')
+        self.assertEqual(target.read_bytes(), data)
+        self.engine('dt_restore "' + str(first) + '"')
+        self.assertFalse(target.is_symlink())
+        self.assertEqual(target.read_text(), "original theme\n")
+        self.assertEqual(config.read_text(), '[tui]\ntheme = "ansi"\n')
+
+    def test_codex_custom_home_template_overrides_and_refusal(self):
+        home = self.home / "-codex space ü"
+        themes = home / "themes"
+        themes.mkdir(parents=True)
+        self.env["CODEX_HOME"] = str(home)
+        target = themes / "dots.tmTheme"
+        # A broken symlink is backed up as a link, without touching its target.
+        prior = themes / "missing.tmTheme"
+        target.symlink_to(prior)
+        for color in ("never", "always"):
+            result = self.dots("theme", "set", "nord", "--dry-run",
+                               env=dict(self.env, DOTS_COLOR=color, DOTS_ICONS="never"))
+            self.assertIn("-codex space ü", result.stdout)
+            self.assertIn("dots.tmTheme", result.stdout)
+            self.assertFalse(self.state.exists())
+            self.assertEqual(target.readlink(), prior)
+        self.dots("theme", "set", "nord")
+        first = self.generation()
+        self.assertFalse((self.home / ".codex").exists())
+        user = self.home / "config/dots/themed"
+        user.mkdir(parents=True)
+        template = user / "bat.tmTheme.tpl"
+        template.write_text((self.repo / "default/themed/bat.tmTheme.tpl").read_text().replace(
+            "{{ muted }}", "{{ red }}"))
+        before = target.read_bytes()
+        self.dots("theme", "refresh")
+        self.assertNotEqual(target.read_bytes(), before)
+        override = self.repo / "themes/nord/bat.tmTheme"
+        data = plistlib.loads(target.read_bytes())
+        data["settings"][0]["settings"]["foreground"] = "#112233"
+        override.write_bytes(plistlib.dumps(data))
+        self.dots("theme", "refresh")
+        self.assertEqual(target.read_bytes(), override.read_bytes())
+        current = self.generation()
+        target.unlink()
+        target.mkdir()
+        self.dots("theme", "refresh", code=1)
+        self.assertEqual(self.generation(), current)
+        target.rmdir()
+        target.symlink_to(self.home / "state/dots/current/theme/bat.tmTheme")
+        # Restore the original broken link using the first connector journal.
+        self.engine('dt_apps_restore "' + str(first) + '"')
+        self.assertEqual(target.readlink(), prior)
+        self.assertFalse(prior.exists())
+
+    def test_codex_home_validation_and_optional_directory(self):
+        for value in ("relative", "~/codex", "/tmp/../codex", "/tmp/./codex", "/tmp/codex/..",
+                      "/tmp/codex\n", "/tmp/codex\t", "/tmp/codex\x1b", "/tmp/codex\x7f"):
+            with self.subTest(home=value):
+                result = self.dots("theme", "set", "nord", "--dry-run", code=1,
+                                   env=dict(self.env, CODEX_HOME=value))
+                self.assertIn("Codex home must be", result.stderr)
+                self.assertFalse(self.state.exists())
+        self.dots("theme", "set", "nord")
+        self.assertFalse((self.home / ".codex").exists())
+        home = self.home / "custom codex"
+        home.mkdir()
+        self.env["CODEX_HOME"] = str(home)
+        self.dots("theme", "refresh")
+        self.assertFalse((home / "themes").exists())
+
+    def test_codex_interrupted_connector_recovery_and_drift(self):
+        themes = self.home / ".codex/themes"
+        themes.mkdir(parents=True)
+        prior = themes / "personal.tmTheme"
+        prior.write_text("keep\n")
+        target = themes / "dots.tmTheme"
+        target.symlink_to(prior)
+        self.dots("theme", "set", "nord")
+        first = self.generation()
+        target.unlink()
+        target.symlink_to(prior)
+        staging = Path(str(target) + ".dots-theme-new")
+        staging.symlink_to(self.home / "state/dots/current/theme/bat.tmTheme")
+        (first / "status").write_text("prepared\n")
+        self.dots("theme", "set", "catppuccin-latte")
+        self.assertEqual((first / "status").read_text(), "rolled-back\n")
+        self.assertFalse(staging.is_symlink())
+        second = self.generation()
+        self.engine('dt_restore "' + str(second) + '"')
+        self.assertEqual(target.readlink(), prior)
+        self.assertEqual(prior.read_text(), "keep\n")
+        self.dots("theme", "set", "nord")
+        third = self.generation()
+        target.unlink()
+        target.write_text("user changed after publication\n")
+        self.engine('dt_restore "' + str(third) + '"', code=1)
+        self.assertEqual(target.read_text(), "user changed after publication\n")
+
+    def test_codex_shared_template_all_palettes(self):
+        self.wal_export()
+        for name in self.dots("theme", "list").stdout.splitlines():
+            with self.subTest(theme=name):
+                output = self.root / name
+                output.mkdir()
+                self.env.update(RENDER_OUTPUT=str(output), RENDER_THEME=name)
+                self.engine('dt_load "$RENDER_THEME" && dt_render "$RENDER_OUTPUT"')
+                raw = (output / "bat.tmTheme").read_bytes()
+                self.assertNotIn(b"{{", raw)
+                data = plistlib.loads(raw)
+                self.assertEqual(data["name"], "Dots")
+                self.assertEqual(raw, (output / "yazi/tmtheme.xml").read_bytes())
+                for rule in data["settings"]:
+                    for key, value in rule["settings"].items():
+                        if key != "fontStyle":
+                            self.assertRegex(value, r"^#[0-9a-fA-F]{6}$")
+
     @unittest.skipUnless(old.ZSH, "Zsh unavailable")
     def test_completion_colors_follow_prompt_refresh(self):
         completion = self.repo / "completions.zsh"
@@ -451,6 +591,14 @@ assert(require("anodize").get_palette().metadata.id == "nord")
         self.assertIn("color15=", original.read_text())
         # Themes publish colors, not the user's clock/battery status layout.
         self.assertNotIn("status-right", (active / "tmux.conf").read_text())
+        palette = json.loads((active / "palette.json").read_text())["colors"]
+        for option, semantic in (("bg", "background"), ("fg", "foreground"),
+                                 ("inactive-bg", "lighter_background"), ("inactive-fg", "hint"),
+                                 ("current-bg", "hint"), ("current-fg", "darker_background"),
+                                 ("lower-bg", "background"), ("window-bg", "dark_background"), ("muted", "muted"), ("hint", "hint"),
+                                 ("red", "red"), ("yellow", "yellow"), ("green", "green")):
+            self.assertIn(f'set -g @dots-termux-{option} "{palette[semantic]}"',
+                          (active / "tmux.conf").read_text())
         tmux = shutil.which("tmux")
         if tmux:
             socket = self.root / "owned-tmux.socket"
@@ -464,9 +612,12 @@ assert(require("anodize").get_palette().metadata.id == "nord")
                 self.run_command(command + ["source-file", str(cfg)])
                 self.assertEqual(self.run_command(command + ["show-options", "-gv", "status-right"]).stdout.strip(),
                                  "clock  battery")
-                style = self.run_command(command + ["show-options", "-gv", "status-style"]).stdout
+                style = self.run_command(command + ["display-message", "-p", "#{E:status-style}"]).stdout
                 self.assertIn("#d8dee9", style)
                 self.assertIn("bg=default", style)
+                self.run_command(command + ["set-environment", "-g", "TERMUX_VERSION", "fixture"])
+                style = self.run_command(command + ["display-message", "-p", "#{E:status-style}"]).stdout
+                self.assertIn("bg=" + palette["background"], style)
             finally:
                 self.run_command(command + ["kill-server"], code=None)
 

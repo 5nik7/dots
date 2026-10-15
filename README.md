@@ -57,11 +57,23 @@ The popup uses a blue border and bold cyan title from the terminal palette, with
 
 ## Tmux status and sessions
 
-The right status bar keeps the blue conditional COPY/PREFIX/ZOOM indicators, followed by the clock, two spaces, and a battery icon plus percentage. The adapter calls `~/repos/battery/battery`, preserving its charging icons and percentage thresholds while translating ANSI colors into tmux styles. Missing or invalid battery output hides that segment. A Nerd Font is needed for the icon. The main tmux configuration owns the layout; generated themes only supply styling.
+On Termux, tmux has two status rows at the top. The upper row starts with a bold 12-hour clock without a leading zero or AM/PM suffix (for example, `6:30`). The right side shows the active Wi-Fi or mobile-data indicator, followed by battery. Each attached tmux client highlights its own Termux session. Numbers follow `androidots/bin/termux-sessions` creation order and may change when sessions close; they are informational, not tab-switch buttons. The lower row keeps Termux numbers in order and expands the current number with its optional tmux session badge and windows: for example, `1 dots 1:dots 2` when Termux 1 is current. Later numbers follow the windows immediately; COPY/PREFIX/ZOOM indicators remain on the right. Colored blocks and spacing separate groups, without literal brackets or dividers. Outside Termux, the existing single tmux row is unchanged and has no Termux numbers.
+
+The upper row uses the current Dots `background`/`foreground` colors, and the lower row uses `background` with `dark_background` window labels. Inactive Termux entries use `lighter_background`/`hint`; the current entry uses `hint`/`darker_background`. Current tmux windows use `info` without underlining, and the active pane border uses `selection`. The battery adapter calls `~/repos/battery/battery`, retaining its percentage colors and charging icons; a Nerd Font is needed for the icon. Wi-Fi and data share a fixed-width icon/marker slot. Battery has one space between its icon and percentage, with padding after the percentage to keep its width stable. The main tmux configuration owns the layout; generated themes supply colors. See [tmux theme integration](docs/themes.md#tmux).
+
+Android indicators reuse the Androidots scripts' cache. Wi-Fi appears when connected; otherwise, confirmed active data appears when Wi-Fi is explicitly disconnected and mobile data is enabled and connected. If Wi-Fi is disconnected but cellular readings are missing or unavailable, a muted data icon with `?` marks the unknown state. Confirmed disabled or nonconnected data stays hidden. Unknown Wi-Fi hides both indicators. Valid stale cached values remain eligible and carry `~`; expired cellular values fall back to `?` while Wi-Fi remains explicitly disconnected. The Wi-Fi icon changes with signal strength; cellular uses a fixed glyph. Signal levels 0–1 use theme red, 2 yellow, and 3–4 green; unknown/stale signal is muted. Cellular signal does not establish internet routing. Notification, volume and location commands remain available independently but tmux does not poll them. Enable cellular polling with a successful interactive refresh:
+
+```sh
+"$HOME/dots/androidots/bin/termux-cell-status" --refresh --both
+```
+
+If Android requests permission, grant access and rerun the command. Later provider failures suspend automatic polling until another successful refresh. Run `dots theme refresh`, then tmux **prefix + q**, to activate the colors and upper-row integration. See [Android indicator behavior](androidots/docs/termux-status.md).
 
 In Bash and Zsh, plain `t` uses the current Git repository/worktree's directory name—even from a subdirectory—so running it in this repo opens **dots**. Missing automatically named sessions start at the repository root. Outside Git repositories (or without Git), it defaults to **Work** in the current directory. `t project` explicitly opens **project**, creating it in the current directory if needed. Existing sessions are reused; inside tmux, the function switches rather than nesting. Quote names containing spaces. See [shared shell commands](docs/shared-shells.md#commands-and-compatibility).
 
-After updating, use `rl` to load the function and tmux **prefix + q** to reload the status configuration. Neither happens automatically.
+New Termux tabs using the Dots Bash/Zsh configuration automatically enter their own default tmux session. Both status rows remain visible, but the default session's name badge is hidden; project sessions selected with `t` keep their badges. Exiting the final pane with `exit` or `q` closes the automatically started outer shell without switching to another tmux session. Detaching returns to a plain shell. Run `~/dots/androidots/bin/termux-bar` to reattach that tab's default session. Set `DOTS_TERMUX_AUTOSTART=0` before shell initialization to opt out. Fish, SSH, child shells and noninteractive commands do not autostart tmux. See [startup details](docs/shell-init.md#termux-tmux-startup).
+
+Open a new Termux tab to use automatic startup. In an existing tmux server, **prefix + q** reloads the status configuration; changing source files does not reload that server automatically.
 
 ## Shell initialization
 
@@ -94,7 +106,10 @@ dots theme bg next                 # Explicit wallpaper change
 
 The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dots.yazi/README.md), combining the Dotline header/status renderer, Git indicators, saved projects, folder rules, and pane toggles. File panes use inherited `LS_COLORS` styles, including backgrounds and text attributes; the `hover` header component defaults to the symlink’s own style before the arrow and the target basename’s actual style after it, with a separately styled target directory, with independent style sources, color/attribute overrides, and visibility options for each part. Its repository component shows the Git working tree folder name before branch details and hides outside repositories. Optional `git-it` adds a remote host icon and a configurable color for repositories matching its configured owners; the personal config uses green for owned repositories and blue otherwise.
 
-The shared palette supplies Bash, Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, Pi, FZF and Gum.
+The personal Yazi configuration uses square section edges and a status-line mode indicator: `N` for normal, `V` for visual selection, and `U` for unsetting selections.
+
+The shared palette supplies Bash, Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, Codex/Codex-Termux, Pi, FZF and Gum.
+The [mdcat configuration](config/mdcat/config.toml) uses automatic dark/light detection and ANSI colors, following the terminal palette when the Dots theme is applied there. Code-block highlighting uses mdcat's existing `BAT_THEME` integration.
 The FZF template supplies published shell colors; Bash and Zsh pick them up at the next
 prompt after `dots theme refresh`, preserving FZF layout and key bindings. Gum
 colors render as `gum_env.sh` and load automatically in interactive Bash/Zsh,
@@ -105,6 +120,10 @@ Pi uses `default/themed/pi.json.tpl`: with `~/.pi/agent/themes` present, run
 `dots theme refresh`, then `/reload` in Pi and select **dots** in `/settings` → **Theme**.
 Subsequent publications hot-reload that theme. See [Pi setup](docs/themes.md#pi)
 for custom agent directories and connector backups.
+Codex and Codex-Termux use the same generated syntax theme: create
+`${CODEX_HOME:-$HOME/.codex}/themes`, run `dots theme refresh`, and select **dots**
+in Codex’s `/theme` picker. New sessions use the latest published colors; see
+[Codex setup](docs/themes.md#codex-and-codex-termux).
 `dots theme switcher` offers fullscreen FZF selection with a live color-palette
 preview below the list, styled with the current theme's published FZF colors,
 then Back/Apply/Cancel review (using Gum when available).
@@ -114,7 +133,7 @@ File operations and Anodize also offer **Cancel / Apply**, and Git publishing
 uses **Cancel / Publish**, with Cancel selected by default. Existing text prompts
 remain available without Gum or suitable terminals. `--yes`, `--dry-run` and JSON
 keep their existing behavior.
-Bat and Yazi share the syntax rules in `default/themed/bat.tmTheme.tpl`, including
+Bat, Yazi and Codex share the syntax rules in `default/themed/bat.tmTheme.tpl`, including
 language-specific scopes and palette-based comments, selections, and diff colors.
 Selection journals and backs up fixed application theme connectors. Bash and Zsh refresh
 at the next prompt; Neovim uses the local Anodize.nvim plugin and refreshes on state changes, focus or `:DotsThemeReload`. Native palette

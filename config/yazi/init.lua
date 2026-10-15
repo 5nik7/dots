@@ -63,15 +63,9 @@ require("dots"):setup({
   },
 
   dotline = {
-
-    section_separator_open = "",
-    section_separator_close = "",
-
-    inverse_separator_open = "",
-    inverse_separator_close = "",
-
-    part_separator_open = "",
-    part_separator_close = "",
+    section_separator = { open = "", close = "" },
+    inverse_separator = { open = "", close = "" },
+    part_separator = { open = "", close = "" },
 
     padding = { inner = 1, outer = 1 },
 
@@ -82,7 +76,7 @@ require("dots"):setup({
       reversed = true,
       bg_mode = {
         normal = "blue",
-        select = "pink",
+        select = "magenta",
         un_set = "red",
       },
     },
@@ -135,7 +129,7 @@ require("dots"):setup({
     status_line = {
       left = {
         section_a = {
-          { type = "string", name = "date", params = { "%H:%M" } },
+          { type = "string", name = "mode_letter" },
         },
         section_b = {
 
@@ -258,3 +252,13 @@ require("dots"):setup({
     mode = "both", -- "host", "user", "both"
   },
 })
+
+function Dotline.string.get:mode_letter()
+  local mode = cx.active.mode
+  if mode.is_select then
+    return "V"
+  elseif mode.is_unset then
+    return "U"
+  end
+  return "N"
+end

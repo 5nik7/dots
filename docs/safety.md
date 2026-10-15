@@ -22,6 +22,8 @@ See [decision 0006](decisions/0006-bash-command-framework.md).
 
 ## Existing Shell Startup
 
+Termux's Bash/Zsh startup hook may create a marked default tmux session and attach its client. It retains the outer shell, never deletes detached sessions or adopts an unmarked name collision, and does not install dependencies or reload the server. Repeated initialization does not reattach after deliberate detachment. `DOTS_TERMUX_AUTOSTART=0` disables the hook; failures leave a plain shell. This bounded terminal-session behavior is separate from managed filesystem installation. See [startup guards](shell-init.md#termux-tmux-startup).
+
 The existing Zsh configuration uses user-local completion, Vivid, and Catppuccin caches independently of the proposed managed-file transaction engine. These are rebuildable generated data. Completion generation validates successful output before atomic publication; failed output is not evaluated. Ordinary startup retains its existing optional plugin bootstrap and private/local sourcing behavior. Tests use copied public dependencies and synthetic private modules under owned roots; they must never run the live startup chain against the developer's home. See the [Zsh guide](../shells/zsh/README.md).
 
 The default [Deja integration](../shells/zsh/README.md#deja-suggestions) is third-party executable shell code, not sandboxed or managed by Dots transactions. When its binary is installed and autosuggestions is not explicitly selected, startup permits its per-user background daemon and plaintext history database under `~/.local/share/deja`; history import is never automatic. Its history exclusions are not general secret redaction. Engine selection is fixed for the shell lifetime to avoid conflicting widget wrappers. Switching back leaves Deja data and its daemon intact; removal and process termination require separate, scoped action.
@@ -351,6 +353,10 @@ The Pi connector targets only `themes/dots.json` in an existing agent themes dir
 settings and other themes are untouched. Changed publication renews this link even
 when its text is unchanged, using the same backup and restore journal to notify Pi's
 directory watcher. Unchanged refresh remains a no-op. No Pi directory is created.
+The Codex connector targets only `themes/dots.tmTheme` in an existing Codex
+themes directory, using the same backup/restore journal and drift checks.
+Publication never creates Codex directories, edits settings/authentication, or
+restarts sessions. Unchanged connector links are retained across publications.
 No complete generation or backup is automatically pruned. Reload failures preserve
 the published theme and report a retry path; external app state is not rolled back.
 

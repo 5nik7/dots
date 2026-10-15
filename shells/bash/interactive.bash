@@ -19,4 +19,5 @@ source "$DOTS/shells/bash/core/completion.bash"
 source "$DOTS/shells/shared/aliases.sh"
 [[ ! -r $HOME/.bash_aliases || $HOME/.bash_aliases -ef $DOTS/shells/bash/aliases.bash ]] || source "$HOME/.bash_aliases"
 source "$DOTS/shells/bash/integrations/fzf.bash"
+source "$DOTS/shells/shared/termux-tmux.sh"
 true

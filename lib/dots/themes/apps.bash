@@ -16,6 +16,10 @@ dt_connector_staging_owned() {
 dt_apps_plan() {
   DT_CONNECT_TARGETS=() DT_CONNECT_SOURCES=()
   local config=${XDG_CONFIG_HOME:-$HOME/.config} path name
+  local codex_home=${CODEX_HOME:-$HOME/.codex}
+  [[ $codex_home == /* && ! $codex_home =~ [[:cntrl:]] && /$codex_home/ != */../* && /$codex_home/ != */./* ]] || {
+    dt_error 'Codex home must be an absolute path without control characters or dot components'; return 1;
+  }
   local pi_agent=${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}
   case $pi_agent in
     \~) pi_agent=$HOME ;;
@@ -43,6 +47,11 @@ dt_apps_plan() {
     path=$pi_agent/themes/dots.json
     [[ ! -e $path || -f $path || -L $path ]] || { dt_error "cannot connect theme target: $path"; return 1; }
     DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/pi.json")
+  fi
+  if [[ -d $codex_home/themes ]]; then
+    path=$codex_home/themes/dots.tmTheme
+    [[ ! -e $path || -f $path || -L $path ]] || { dt_error "cannot connect theme target: $path"; return 1; }
+    DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/bat.tmTheme")
   fi
   for path in "${DT_CONNECT_TARGETS[@]}"; do
     [[ $path != *$'\n'* && -w ${path%/*} ]] || { dt_error 'unsafe or unwritable connector'; return 1; }

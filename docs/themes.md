@@ -10,6 +10,34 @@ Omarchy reference while retaining Dots' shell and Neovim palette APIs; see
 
 Theme preparation, rendering, bat caches, publication, quiet reloads and installed-source validation use [terminal progress](presentation.md#operation-progress). Batch updates show processed checkout counts. Downloads, tmux reloads and wallpaper adapters use static phase messages to keep child output readable. `DOTS_PROGRESS=never` disables these displays. Raw queries, shell initialization and dry runs stay undecorated.
 
+## Tmux
+
+The linked tmux configuration has two top rows on Termux (detected from `TERMUX_VERSION`): the clock on the upper left with Android indicators and battery on the upper right; Termux numbers run in order along the lower row, with the current number expanded into its optional tmux session badge and windows before later numbers. Other environments show only the tmux row. `default/themed/tmux.conf.tpl` supplies color options, while the main config owns both layouts and prevents inherited current-window underlining. Theme refreshes preserve layouts.
+
+| Element | Background | Foreground |
+| --- | --- | --- |
+| Upper row and clock | `background` | `foreground` |
+| Lower tmux row on Termux | `background` | `foreground` |
+| Window labels on Termux | `dark_background` | `muted` / current `info`, bold |
+| Inactive Termux entry | `lighter_background` | `hint` |
+| Current Termux entry | `hint` | `darker_background` |
+
+The tmux session badge retains its `accent` background; the current tmux window uses `info`, and its active pane border uses `selection`. Default sessions created by `termux-bar` have a session-local `@dots-termux-default=1` marker that hides only their badge, including across theme refreshes; project badges remain visible. Battery thresholds and charging icons remain owned by the existing battery command; the adapter maps its red/yellow/green classifications to theme colors. Missing published colors use the config's terminal-color fallbacks until a theme is applied.
+
+The session adapter requires Python 3 and the optional `androidots/bin/termux-sessions` script in the same checkout. Keep the normal directory link for `config/tmux`: the adapter resolves that link to locate the script without relying on the working directory or scanning PATH. It performs one JSON query per job and matches `client_tty`, so different attached clients highlight their own Termux session. Unmatched clients show inactive entries; failed or unavailable queries clear the numbers. Numbers follow live creation order and may be renumbered after a session closes. The lower-row number strip uses at most one quarter of the client width, capped at 20 columns. The adapter keeps complete labels around the current entry and uses `<`/`>` for hidden entries; unmatched clients show the first entries without highlighting. Its internal `--split-current` mode divides that bounded result after the current number. Two format slices reuse the same asynchronous job result: the first precedes the tmux badge/window list, and the second follows the native window list before right-aligned modes. The width budget covers both slices together. No literal brackets or divider are printed. It emits no window-list directives in this mode, preserving independent native window scrolling and mouse ranges. Unmatched clients keep all visible numbers before tmux content; failed discovery clears both slices. The optional session badge uses at most one quarter of the client width, capped at 30 columns, truncating long names. Short segments are not padded.
+
+`config/tmux/android-status.py` is a separate upper-row adapter. It reads only Wi-Fi and cellular scripts with `--json`, concurrently with one-second helper deadlines and a 2 MiB response limit per helper. Paths resolve through the directory-linked config back to the checkout. Connected Wi-Fi takes precedence; cellular appears only when Wi-Fi is explicitly disconnected and mobile data is enabled with state `connected`. Missing, invalid or unknown Wi-Fi hides both; explicitly disabled data or a known nonconnected data state leaves the network slot empty. If Wi-Fi is disconnected and cellular readings are absent, incomplete, expired or invalid, a muted fixed data icon with `?` marks unavailable status, without claiming mobile data is active. Valid stale cached values remain eligible with `~`, including cellular selection based on stale disconnected Wi-Fi. Expired cellular data falls back to `?`; expired Wi-Fi data still hides both indicators. Notification, volume and location helpers are not invoked. The adapter emits validated private-use icons and controlled tmux styles. Wi-Fi and fixed-glyph cellular share an equal-width icon/marker slot, followed by one separator space when visible. Signal levels 0–1 use theme `red`, 2 `yellow`, and 3–4 `green`; unknown/stale signal is muted. Battery has exactly one space between icon and percentage, then pads the percentage to four cells on the right. Style resets retain the upper-row background.
+
+Normal reads reuse Androidots caching and bounded background refreshes; the adapter adds no cache or daemon. Never add `--refresh` to a recurring status job or switch it to cache-only reads without a separate refresher. Cellular requires successful explicit initialization and reinitialization after provider failure:
+
+```sh
+"$HOME/dots/androidots/bin/termux-cell-status" --refresh --both
+```
+
+Run this interactively using the same HOME/XDG cache location as the tmux server. If Android requests access, grant it and retry. Cellular signal does not establish internet routing. See [Androidots' status contract](../androidots/docs/termux-status.md). Icon rendering requires a Nerd Font; actual glyph appearance remains a device check.
+
+After updating these sources, run `dots theme refresh`, then tmux **prefix + q** to load the row configuration. Tests use disposable servers; live reload and font/color appearance remain separate manual checks.
+
 ## Local theme plugins
 
 `dots theme plugins list|enable|disable|run|doctor` adds explicitly enabled GTK 3,
@@ -44,7 +72,9 @@ RGB) are supported; unresolved variables refuse publication. Personal templates 
 A trusted bundled theme's explicit application file takes precedence over both.
 Downloaded themes contribute colors and backgrounds only. Templates never evaluate
 shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
-Yazi and Pi data; Zsh/Fish and Neovim data come from the palette generator.
+Yazi, Codex and Pi data; Zsh/Fish and Neovim data come from the palette generator.
+
+The [mdcat configuration](../config/mdcat/config.toml) uses `base = "auto"` for dark/light detection and ANSI color names for its overrides. Its colors follow the terminal palette, so the terminal must have the Dots theme applied; mdcat does not read the published Dots palette directly. Existing heading markers, alert labels and text styles are preserved. Code-block highlighting continues to use mdcat's `BAT_THEME` integration. Explicit `--theme` or `MDCAT_THEME` selections override the base, with config style overrides still applied on top.
 
 `fzf.sh.tpl` supplies FZF colors to published Bash/Zsh and Fish initialization.
 Bash and Zsh refresh them at the next prompt; Fish users can explicitly load
@@ -188,7 +218,8 @@ Existing app settings and Neovim transparency remain in their source configurati
 
 On selection, fixed connector links are created only for configured applications:
 Kitty/tmux `dots-theme.conf`, btop `themes/dots.theme`, Yazi `flavors/dots.yazi`, and
-Termux `~/.termux/colors.properties`, and Pi's `themes/dots.json` (see below). Existing regular files or symlinks are saved in
+Termux `~/.termux/colors.properties`, Pi's `themes/dots.json`, and Codex's
+`themes/dots.tmTheme` (see below). Existing regular files or symlinks are saved in
 the generation's connector journal before replacement; real directories are refused.
 Parent application directories must exist. If an application directory itself is
 linked into a repository, the connector lives in that source directory. It is
@@ -199,6 +230,40 @@ colors; Kitty remote control is used only when KITTY_LISTEN_ON is supplied. Relo
 failures report that colors were published and can be retried with `refresh`. Apps
 without a running reload adapter pick up the files through their normal startup.
 No terminal/editor process is restarted and no plugin or package is installed.
+
+### Codex and Codex-Termux
+
+Codex uses the shared `default/themed/bat.tmTheme.tpl`, including its normal
+personal-template and bundled-theme override precedence. No separate syntax
+palette or duplicate template is maintained. When
+`${CODEX_HOME:-$HOME/.codex}/themes` exists, publication links `dots.tmTheme` there
+to the stable active `bat.tmTheme`, also used by bat and Yazi. `CODEX_HOME` must be
+an absolute path without control characters or `.`/`..` components; a literal
+`~/` is not expanded. Supply the same home to Dots and Codex.
+
+For first-time setup:
+
+```bash
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/themes"
+dots theme refresh
+```
+
+Select **dots** in Codex's `/theme` picker, or set `theme = "dots"` under `[tui]`
+in that Codex home's `config.toml`. The publisher never edits this setting or
+creates Codex directories. It backs up existing connector files/links, refuses
+real directories, and retains the connector on unchanged refresh. Future theme
+publications change the shared artifact; open a new Codex session to load it.
+Automatic reload inside running Codex sessions is not guaranteed.
+Custom-theme discovery and selection were verified with Codex 0.162.1 in an
+isolated native Termux session; visual contrast across all palettes remains a
+manual check.
+
+Codex-Termux and Neovim's Codex launcher inherit the same Codex configuration;
+there is no wrapper-specific theme setting or launcher override. The existing
+Neovim OSC foreground/background adapter remains responsible for terminal color
+queries. Custom `.tmTheme` files control code-block and diff syntax highlighting,
+not every TUI widget or desktop-app appearance. See the
+[official Codex theme documentation](https://learn.chatgpt.com/docs/cli-customization).
 
 ### Pi
 

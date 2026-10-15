@@ -28,7 +28,11 @@ Run `python3 -B tools/test_shared_shells.py` for shared command, fallback, cance
 
 ## Tmux status and named sessions
 
-Run `python3 -B tools/test_tmux_status.py` for battery-to-tmux color translation, requested argument format, one invocation, charging glyph preservation, C-locale handling, malformed-output rejection and empty-result clearing. Native tmux checks copy the configuration into an owned XDG path with spaces/Unicode, use a disposable server/socket/PTY, and verify legacy-theme override, idempotent reload and asynchronous clock/battery rendering. They never reload the live server.
+Run `python3 -B tools/test_android_status.py` for the Android-cluster boundary: Wi-Fi/data precedence, strict connectivity fields and muted unknown-cellular fallback, equal network widths, disabled-helper nonexecution, theme signal colors, unknown/stale states, quoting, suppressed stderr, unsafe/oversized/invalid output, concurrent deadlines and helper-descendant cleanup. Its integration case copies the real scripts and library, overriding only the copied provider-command boundary to test cache freshness, cold reads, permission gates, failure suspension and explicit recovery. This also intercepts location's absolute `/system/bin/settings` path; PATH mocks alone are insufficient. All caches and provider processes are test-owned, and no Android permission API is accessed.
+
+The tmux status suite below also renders the cluster with stubbed helpers at 40/80/120 columns, including stable icon positions across Wi-Fi/data transitions and battery percentages, empty network states, single-space battery gaps, focused overflowing session lists, missing helpers, unknown states, theme/config reloads, style resets and missing Python. Run `python3 -B androidots/tests/test_termux_status.py`, `python3 -B androidots/tests/test_termux_sessions.py`, and `python3 -B androidots/tests/test_termux_bar.py` for Androidots regressions. Theme/workflow publication tests must preserve layout ownership and publish the requested upper/lower/inactive/current and indicator semantic color mappings. Androidots tests additionally cover read-only volume commands, stream selection, rounding, cache validation, stale/failure recovery and completion candidates.
+
+Run `python3 -B tools/test_tmux_status.py` for battery-to-tmux color translation and the Termux session adapter. Fixtures cover one JSON query per shared before/after job, grouping at the current Termux number, creation order, per-client highlighting, unmatched clients, session removal, malformed/unsafe data, missing tools and timeout clearing. Native checks use disposable servers and an outer tmux terminal to capture the actual rendered inner status rows at 40, 80 and 120 columns. They verify the Termux two-row/non-Termux one-row layouts, two independent clients, overflow around the current entry, clock/battery placement, both row colors and resets, bounded number strips and long project badges, window mouse targets, no current-window underline, legacy-theme overrides, idempotent reloads, and theme-only refreshes. Deterministic platform `strftime` checks cover midnight, morning, noon and evening; native rendering separately checks the current time. All homes, config paths, source-script stubs and sockets are test-owned. They never query real Termux sessions or reload the live server.
 
 Optionally run `DOTS_TEST_BATTERY_SOURCE="$HOME/repos/battery/battery" python3 -B tools/test_tmux_status.py` to copy that upstream script into the fixture and verify configured threshold boundaries and charging icons against a fake `termux-battery-status`. This opt-in reads source only; the test owns its battery configuration and Termux `PREFIX` as well as `PATH`, and mocks every API request. Adapter subprocess groups are terminated on timeout. Without the variable this integration is an explicit skip. No Android API call is made by tests.
 
@@ -432,6 +436,16 @@ dirty refusal and data nonexecution. Theme fixtures explicitly isolate TMUX_TMPD
 the native tmux test starts and stops only its own server. Android, Wayland and X11 wallpaper adapters are
 fake executables: their argument/failure contracts are tested, not actual rendering.
 
+The workflow suite checks Codex's shared plist across bundled palettes, byte
+identity with Yazi's syntax artifact, default/custom homes, absent directories,
+control-character/path refusal, personal/bundled overrides, unchanged refresh,
+connector backups, rollback, staged interruption and drift. Codex settings are
+asserted unchanged. Native Codex picker checks must use a disposable home without
+real credentials or model requests; an XML parse alone is not native loader proof.
+The existing Neovim `tests/codex_colors.lua` probe uses `nvim -u NONE -i NONE`
+and a test-owned PTY child rather than live LazyVim or Codex. See the
+[Codex theme plan](../plans/codex-theme.md) for native loader evidence and limits.
+
 The workflow suite also checks Pi JSON rendering, light/dark selection, custom agent
 paths, optional absent directories, template/override refresh, connector backups,
 rollback and directory refusal. Set `PI_THEME_MODULE` to an installed Pi package's
@@ -782,3 +796,9 @@ shared shell metadata boundaries and existing Zsh/FZF-tab checks when completion
 changes. Syntax/ShellCheck, Markdown links and `git diff --check` remain required.
 Report native Termux separately from simulated platform skips and desktop fixtures.
 Live GTK/Qt visual behavior and native Windows execution require separate evidence.
+
+### Termux automatic tmux startup
+
+Run `python3 -B androidots/tests/test_termux_bar.py` for mocked launcher identity, PID reuse, child-shell guards, discovery errors, missing tmux, timeout and collision/race cases. Run `python3 -B tools/test_termux_autostart.py` for native Bash/Zsh PTYs and a private tmux server: separate tabs, project switching without nesting, default reattachment, surviving detach, final-pane `exit`/`q` closing the outer shell, multiple panes and project switches, another tab surviving, server-loss fallback, reload idempotence, startup guards and launcher failure fallback. Identity/discovery in these PTYs is simulated with owned procfs files and a stub script; this is not proof of actual Android app startup. No real Termux process discovery, Android APIs, live shell initialization or live tmux changes are used.
+
+Also run the existing tmux status/session and shared-shell/init suites, Bash/Zsh syntax checks and ShellCheck for the shared startup hook. Status verification covers marker-dependent name visibility across config/theme reloads and narrow rendered terminals. Measure guarded shell-startup cost separately from first attachment and document the fixture boundary. Real new-tab startup and font appearance remain manual acceptance.
