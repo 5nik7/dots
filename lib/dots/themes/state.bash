@@ -54,7 +54,7 @@ dt_recover() {
     [[ -f $dir/status && ! -L $dir/status ]] || continue
     IFS= read -r status < "$dir/status" || return
     case $status in
-      committed|rolled-back) ;;
+      committed|rolled-back|staged) ;;
       prepared) dt_restore "$dir" || return ;;
       *) dt_error "unknown journal status: $dir"; return 1 ;;
     esac
@@ -92,6 +92,44 @@ dt_state_preflight() {
   fi
   dt_apps_plan || return
   for part in flock sync sha256sum mktemp awk cat mkdir mv rm cp ln readlink cmp; do command -v "$part" >/dev/null || { dt_error "theme switching requires $part"; return 1; }; done
+}
+# Prepare immutable theme/command payloads without publishing any pointer.
+# Caller holds both publication locks. Setup publishes through the file Store.
+dt_prepare_generation() {
+  local previous=$1 fingerprint=$2 dir file
+  dir=$(mktemp -d "$DT_STATE/generations/g.XXXXXXXX") || return 1
+  # Staging files are confined to a newly allocated transaction directory.
+  printf '%s\n' "$previous" > "$dir/previous" &&
+    printf '%s\n' "$fingerprint" > "$dir/fingerprint" &&
+    printf '%s-%s\n' "$DT_THEME" "$DT_FLAVOR" > "$dir/selection" &&
+    printf '%s\n' "$DT_ID" > "$dir/id" &&
+    dt_json > "$dir/palette.json" &&
+    dt_emit_shell_data > "$dir/shell.tsv" &&
+    dt_emit_init zsh > "$dir/init.zsh" &&
+    dt_emit_init fish > "$dir/init.fish" || return 1
+  if [[ -n ${DT_SEMANTIC[background]:-} ]]; then
+    dots::progress_update 'Rendering application themes'
+    dt_render "$dir" || return 1
+    dt_app_init "$dir" || return 1
+  fi
+  if [[ -f $dir/bat.tmTheme ]] && command -v bat >/dev/null; then
+    mkdir -p "$dir/bat-source/themes" "$dir/bat-cache" || return 1
+    cp -- "$dir/bat.tmTheme" "$dir/bat-source/themes/Dots.tmTheme" || return 1
+    dots::progress_update 'Building bat theme cache'
+    (cd -- "$dir/bat-source" && BAT_CONFIG_PATH=/dev/null BAT_THEME=ansi BAT_CONFIG_DIR="$dir/bat-source" BAT_CACHE_PATH="$dir/bat-cache" bat cache --build --source "$dir/bat-source" --target "$dir/bat-cache" >/dev/null) || { dt_error 'bat theme cache build failed'; return 1; }
+    printf 'export BAT_THEME=Dots BAT_CACHE_PATH=%q\n' "$dir/bat-cache" >> "$dir/init.zsh"
+    local fish_cache=$dir/bat-cache
+    fish_cache=${fish_cache//\\/\\\\}; fish_cache=${fish_cache//\'/\\\'}
+    printf "set -gx BAT_THEME Dots\nset -gx BAT_CACHE_PATH '%s'\n" "$fish_cache" >> "$dir/init.fish"
+  fi
+  if [[ -L $DT_ACTIVE ]]; then readlink -- "$DT_ACTIVE" > "$dir/previous-active"; else : > "$dir/previous-active"; fi
+  dt_commands_prepare "$dir" || return 1
+  dt_fingerprint || return 1
+  [[ $REPLY == "$fingerprint" ]] || { dt_error 'theme inputs changed during preparation; retry'; return 1; }
+  while IFS= read -r -d '' file; do dt_flush "$file" || return 1; done < <(find "$dir" -type f -print0)
+  dt_flush "$dir" && dt_flush "$DT_STATE/generations" || return 1
+  dt_record "$dir" staged || return
+  DT_PREPARED=$dir
 }
 dt_set() (
   [[ ! ${DOTS_THEME_PLUGIN_RUNNING:-} ]] || { dt_error "recursive theme publication from a plugin is refused"; exit 1; }
@@ -132,38 +170,8 @@ dt_set() (
       dots::success "Already using $selected"; exit 0
     fi
   fi
-  dir=$(mktemp -d "$DT_STATE/generations/g.XXXXXXXX") || exit 1
-  # Staging files are confined to a newly allocated transaction directory.
-  printf '%s\n' "$previous" > "$dir/previous" &&
-    printf '%s\n' "$fingerprint" > "$dir/fingerprint" &&
-    printf '%s-%s\n' "$DT_THEME" "$DT_FLAVOR" > "$dir/selection" &&
-    printf '%s\n' "$DT_ID" > "$dir/id" &&
-    dt_json > "$dir/palette.json" &&
-    dt_emit_shell_data > "$dir/shell.tsv" &&
-    dt_emit_init zsh > "$dir/init.zsh" &&
-    dt_emit_init fish > "$dir/init.fish" || exit 1
-  if [[ -n ${DT_SEMANTIC[background]:-} ]]; then
-    dots::progress_update 'Rendering application themes'
-    dt_render "$dir" || exit 1
-    dt_app_init "$dir" || exit 1
-  fi
-  if [[ -f $dir/bat.tmTheme ]] && command -v bat >/dev/null; then
-    mkdir -p "$dir/bat-source/themes" "$dir/bat-cache" || exit 1
-    cp -- "$dir/bat.tmTheme" "$dir/bat-source/themes/Dots.tmTheme" || exit 1
-    dots::progress_update 'Building bat theme cache'
-    (cd -- "$dir/bat-source" && BAT_CONFIG_PATH=/dev/null BAT_THEME=ansi BAT_CONFIG_DIR="$dir/bat-source" BAT_CACHE_PATH="$dir/bat-cache" bat cache --build --source "$dir/bat-source" --target "$dir/bat-cache" >/dev/null) || { dt_error 'bat theme cache build failed'; exit 1; }
-    printf 'export BAT_THEME=Dots BAT_CACHE_PATH=%q\n' "$dir/bat-cache" >> "$dir/init.zsh"
-    local fish_cache=$dir/bat-cache
-    fish_cache=${fish_cache//\\/\\\\}; fish_cache=${fish_cache//\'/\\\'}
-    printf "set -gx BAT_THEME Dots\nset -gx BAT_CACHE_PATH '%s'\n" "$fish_cache" >> "$dir/init.fish"
-  fi
-  if [[ -L $DT_ACTIVE ]]; then readlink -- "$DT_ACTIVE" > "$dir/previous-active"; else : > "$dir/previous-active"; fi
-  dt_commands_prepare "$dir" || exit 1
-  dt_fingerprint || exit 1
-  [[ $REPLY == "$fingerprint" ]] || { dt_error 'theme inputs changed during preparation; retry'; exit 1; }
-  local file
-  while IFS= read -r -d '' file; do dt_flush "$file" || exit 1; done < <(find "$dir" -type f -print0)
-  dt_flush "$dir" && dt_flush "$DT_STATE/generations" || exit 1
+  dt_prepare_generation "$previous" "$fingerprint" || exit 1
+  dir=$DT_PREPARED
   dt_record "$dir" prepared || exit 1
   trap 'rc=$?; dots::progress_stop; if (( ! complete )); then dt_restore "$dir" || dt_error "recovery required: $dir"; fi; exit "$rc"' EXIT
   trap 'exit 130' INT

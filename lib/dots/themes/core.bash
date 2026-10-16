@@ -191,7 +191,7 @@ dt_value() {
 }
 dt_fingerprint() {
   local sum input
-  local -a inputs=("$DT_LIB/"*.bash "$DT_LIB/"*.zsh "$DT_LIB/../shell/palette.bash" "$DT_LIB/file-colors.py" "${DT_LIB%/lib/dots/themes}/default/file-colors.toml")
+  local -a inputs=("$DT_LIB/"*.bash "$DT_LIB/"*.zsh "$DT_LIB/connectors.tsv" "$DT_LIB/../shell/palette.bash" "$DT_LIB/file-colors.py" "$DT_LIB/../resources.py" "${DT_LIB%/lib/dots/themes}/default/file-colors.toml")
   if [[ -f $DT_ROOT/$DT_THEME/theme.toml && -d $DT_ROOT/$DT_THEME/flavors ]]; then
     inputs+=("$DT_ROOT/$DT_THEME/theme.toml" "$DT_ROOT/$DT_THEME/flavors/"*.toml)
   fi

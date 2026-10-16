@@ -43,6 +43,14 @@ optional static comment headers and never execute extensions. See the
 [command authoring and completion contract](docs/commands.md#implemented-bash-command-framework)
 for header examples, shared output helpers, and standalone integration.
 
+## Install, update and uninstall
+
+From an existing checkout, run `./install.sh --dry-run`, then `./install.sh` to review and apply the platform's mapped configurations. Windows uses `./install.ps1 -DryRun` and `./install.ps1`. Setup creates missing parents, retains verified backups before replacement, installs the command entry and shell configs, and prepares supported POSIX theme connectors. Existing correct links remain unchanged.
+
+`dots init --setup` and `dots files install` use the same engine. Ordinary `dots init [shell]` continues to print shell code without installation work. Use `./install.sh --update` for an explicit clean fast-forward update followed by setup, or `--with-source nvim` (repeatable) to initialize a named applicable public source. Missing optional sources are otherwise skipped; secrets are never initialized.
+
+`./uninstall.sh` / `./uninstall.ps1` or `dots files uninstall` restores installer-owned targets to their original state, preserves user drift and retains the checkout and recovery records. Both workflows support preview, unattended approval, JSON and the existing color/progress controls. Native Windows initially covers PowerShell, Neovim and VS Code settings; its theme publication remains deferred. See [installation and recovery](docs/installation.md) for requirements, options and platform limits.
+
 ## Tmux keybinding reference
 
 `dots menu tmux keys` (or `dots-menu-tmux-keys`) shows described live tmux bindings, including defaults and plugins, grouped by key table with colorized keys and a prefix legend. Compact rows keep each key beside its description, including in narrow popups. The optional `less` pager provides `/` search, `n` next match, and `q` to close; bindings are never executed. Use `--print` to bypass paging. Redirected output defaults to plain text; the standard Dots color controls apply.
@@ -201,6 +209,10 @@ aliases remain for compatibility. The Neovim submodule now lives at `config/nvim
 dots files sources
 dots files browse
 dots files list --sort app
+dots files check --dry-run              # Preview missing-source catalog cleanup
+dots files check                        # Review each entry, then confirm removals
+dots files stash dots:example --dry-run # Preview disabling and unlinking
+dots files edit dots:example            # Review source/target mapping changes
 dots files list --repo androidots --platform termux
 dots files locate kitty
 dots files show dots:kitty
@@ -212,11 +224,23 @@ configs. Inspect paths and status, toggle retained backups for the session, and
 review Link or Stop managing before Apply. It does not display file contents or
 launch an editor. See the [browser guide](docs/files.md#interactive-tracked-config-browser).
 
+`dots files check` reviews missing source paths and removes approved catalog
+entries only; target files and links remain untouched. Use `--yes` to approve all
+eligible entries, `--dry-run` to preview, and list's filters to narrow the check.
+Broken source symlinks are retained for repair. Results include a journaled undo
+command. See [missing-source checks](docs/files.md#check-missing-sources).
+
+`dots files stash ID` keeps the source and catalog entry, disables installation
+and removes its matching link; `--restore` enables and relinks it. `dots files edit`
+edits or creates mappings, with `--apply` to reconcile live links. Both support
+interactive review, `--yes`, `--dry-run`, JSON and journaled undo. See
+[stash and edit](docs/files.md#stash-and-edit-mappings).
+
 The first files slice locates and classifies sources and destinations, and tracks
 intent in each repository's `.dots/files.json`. Androidots contributes Termux
 resources explicitly; unavailable/private sources are not initialized. `track`
 changes catalog metadata only. Bounded file operations use links by default;
-add/link/remove, adoption, undo and backups are available below. Editing and general
+add/link/remove, adoption, undo and backups are available below. Source-content editing and general
 profile installation remain future work. See the [catalog reference](docs/files.md)
 for tracking, filters, JSON and ownership rules. Python 3.9+ is required for this
 POSIX implementation; discovery additionally uses Git.
@@ -272,7 +296,7 @@ The existing [Zsh configuration](shells/zsh/README.md) now uses explicit modules
 
 Startup automatically repairs completion dumps containing unquoted names such as `_uu-[`, preventing the resulting startup and Tab-completion errors.
 
-[Deja](shells/zsh/README.md#deja-suggestions) is the default suggestion engine when its native binary is installed. Open a fresh shell to activate it, or use `DOTS_ZSH_SUGGESTIONS=autosuggestions zsh` for optional `zsh-autosuggestions`. A missing Deja binary falls back to autosuggestions; the two engines never load together through this selector. Tab stays with FZF-tab. History import is manual, and Deja keeps its own plaintext local database and background daemon.
+[Deja](shells/zsh/README.md#deja-suggestions) is the default suggestion engine. On Linux/WSL x86-64 and ARM64, Zinit automatically installs a missing executable from upstream releases and reuses it in later shells. Open a fresh shell to activate it, or use `DOTS_ZSH_SUGGESTIONS=autosuggestions zsh` for optional `zsh-autosuggestions`. An unavailable or unusable Deja executable falls back to autosuggestions; the two engines never load together through this selector. Tab stays with FZF-tab. History import is manual, and Deja keeps its own plaintext local database and background daemon.
 
 ## Optional Neovim Configuration
 
@@ -486,6 +510,8 @@ tables and swatches; `theme colors --theme catppuccin-mocha` previews saved
 configuration. File type, MIME and extension listings use readable style tables,
 including a plain layout when color is disabled.
 
+`theme colors git` lists the shared repository, branch and Git status styles used by `dots git status`, `sync` and `publish`. `theme colors set git untracked --fg cyan --apply` customizes a role and refreshes the current selection; filenames retain their type/MIME colors. See [Git styles](docs/file-colors.md#git-styles) for defaults and exports.
+
 `theme colors type dir hex` queries a directory color. Use
 `theme colors set type dir --fg blue` to save a shared rule and `theme refresh`
 to publish it; `--theme ID` stores a theme-specific override and `--apply` publishes
@@ -499,3 +525,5 @@ The bundled dots.yazi plugin follows published palettes while running, including
 file styles and mode colors. The standalone plugin's documented theme callback
 accepts `colors.red`, `colors.blue`, `colors.type.dir`, and complete style tables.
 Repository-local Codex workflows live in [.codex](.codex/README.md).
+
+Human CLI views share Git-style semantic colors, readable plain output and delayed progress. File/directory fields use published Dots type, extension and MIME styles with optional icons; theme previews and Anodize branding retain their custom appearance. Use the existing `--color=never`, `--icons=never` and `DOTS_PROGRESS=never` controls independently. See [presentation](docs/presentation.md#filesystem-resources).

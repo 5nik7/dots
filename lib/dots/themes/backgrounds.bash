@@ -39,7 +39,7 @@ dt_bg() (
       (($# == 0)) || return 2
       if dots::human; then
         dots::heading "Backgrounds / $DT_BG_ID"
-        for file in "${files[@]}"; do dots::path "$file"; dots::row "${file##*/}" "$REPLY"; done
+        for file in "${files[@]}"; do dots::resource_row "${file##*/}" "$file"; done
         printf '\n  %s backgrounds available\n' "${#files[@]}"
       else ((${#files[@]} == 0)) || printf '%s\n' "${files[@]}"; fi
       return ;;
@@ -109,8 +109,8 @@ dt_bg() (
   fi
   printf 'committed\n%s\n' "$file" > "$journal"; dt_flush "$journal" && dt_flush "$DT_STATE" || return
   if dots::human; then
-    dots::path "$file"
-    if ((locked)); then dots::success "Lock-screen background: $REPLY"
-    else dots::success "Background: $REPLY"; fi
+    dots::success 'Background applied'
+    if ((locked)); then dots::resource_row 'Lock screen' "$file"
+    else dots::resource_row 'Background' "$file"; fi
   fi
 )

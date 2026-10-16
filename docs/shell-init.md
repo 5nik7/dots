@@ -1,6 +1,6 @@
 # Shell initialization
 
-**Implemented.** `dots init [bash|zsh|fish|powershell|nu|xonsh]` prints native shell code. It initializes only Dots settings, paths, colors, completions and refresh hooks; it does not install files or packages. The live Bash dispatcher requires Bash 4.4 or newer. Native PowerShell initialization has a separate adapter.
+**Implemented.** `dots init [bash|zsh|fish|powershell|nu|xonsh]` prints native shell code. It initializes only Dots settings, paths, colors, completions and refresh hooks; it does not install files or packages. The separate explicit `dots init --setup` mode delegates to [checkout installation](installation.md); ordinary hook generation/evaluation remains unchanged. The live Bash dispatcher requires Bash 4.4 or newer. Native PowerShell initialization has a separate adapter.
 
 ## Using the hook
 
@@ -24,7 +24,7 @@ PowerShell uses its native adapter, including on Windows without Bash:
 & "$env:DOTS/bin/dots.ps1" init powershell | Out-String | Invoke-Expression
 ```
 
-Set `$env:DOTS` first when invoking that explicit path. The repository profile instead discovers its checkout from the resolved profile file, including symlinked parent directories and Windows junctions. After the repository's `bin` is on PATH, `dots.ps1 init powershell` is the explicit native spelling; `dots init powershell` also works when command lookup selects that adapter or the Bash executable. The native adapter only implements initialization and help. It does not make the rest of the Bash CLI available on native Windows.
+Set `$env:DOTS` first when invoking that explicit path. The repository profile instead discovers its checkout from the resolved profile file, including symlinked parent directories and Windows junctions. After the repository's `bin` is on PATH, `dots.ps1 init powershell` is the explicit native spelling; `dots init powershell` also works when command lookup selects that adapter or the Bash executable. The native adapter implements initialization and the bounded setup, file inspection and recovery routes described in [checkout installation](installation.md). It does not make the rest of the Bash CLI available on native Windows.
 
 Xonsh executes the code in its current context:
 

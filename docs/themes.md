@@ -687,3 +687,25 @@ Other terminal controls are sanitized; disabled color strips all styling.
 completion and init output never acquire decoration. Plain help remains usable
 if the palette is unavailable. See [file colors](file-colors.md) for the new
 `theme colors` commands, customization layers, full styles and portable exports.
+
+## Explicit checkout setup
+
+[Checkout installation](installation.md) reuses immutable theme and generated-command preparation, then publishes state pointers and fixed connectors through the shared file Store. Prepared generations carry `staged` status; normal theme recovery leaves them to the owning file journal. The current theme/default is preserved. Fixed app connector definitions are shared through `lib/dots/themes/connectors.tsv`; btop's generated connector is now ignored. Setup creates declared missing parents and suppresses application reloads, wallpaper actions and plugin hooks. Normal theme commands keep their existing publication behavior.
+
+### CLI file-style projection
+
+Theme publication now also writes internal `file-styles.tsv` beside `colors.json`,
+`colors.lua` and `ls_colors`. The header is `dots-file-styles<TAB>1`. Subsequent
+rows have four tab-separated fields: group, literal key, numeric SGR sequence and
+case mode (`-`, `exact`, `fold`). Groups are `type`, `extension`, `mime`, `suffix`
+and `default_mime`, in matching-priority order. Suffix case collisions are resolved
+by the existing file-style matching policy before publication. The projection is
+data, never executable shell source; it does not change export JSON/Lua schemas.
+Ordinary CLI views only read published artifacts. A normal refresh supplies the
+new projection; older publications remain usable through the documented fallback.
+
+### CLI Git-style projection
+
+Theme publication also writes `git-styles.tsv` atomically with the same generation. Its header is `dots-git-styles<TAB>1`; subsequent rows contain a lowercase role key and numeric SGR sequence separated by one tab. This output name is reserved against custom templates. Git styles use the existing fingerprinted rule inputs. `file-styles.tsv` and LS_COLORS remain independent.
+
+The shared Bash presentation layer lazily reads this bounded regular data file once per colored Git command. It rejects symlinked payloads, oversized data, malformed rows and duplicate keys, and never sources the contents or invokes Python/theme resolution to render a row. Missing roles use terminal defaults. The [Git styles reference](file-colors.md#git-styles) owns the role list and public export interface.

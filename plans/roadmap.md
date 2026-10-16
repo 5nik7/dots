@@ -255,3 +255,7 @@ On 2026-09-25 the owner authorized [Anodize core/CLI implementation](anodize.md)
 ## Recommended next work (proposed)
 
 [Anodize foundation hardening](anodize-next.md) is the recommended next bounded task: close verification gaps, review the versioned engine/recipe/consumer boundaries, and exercise a complete recoverable authoring workflow in fixtures. The Android app remains a long-term goal and a TUI an optional follow-up. Neither frontend, release publication, nor a live activation is authorized by listing it here.
+
+## Bounded checkout setup exception
+
+The owner-requested [checkout installation slice](installation.md) adds shared catalog-backed setup, explicit update and restoration through shell/PowerShell entry points. It does not resume the Go migration, general profiles, package installation or remote bootstrap. Native Windows initially covers Dots/PowerShell, Neovim and VS Code settings; further mappings and theme publication remain deferred.

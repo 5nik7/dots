@@ -1,11 +1,10 @@
-"""Journaled, bounded POSIX object replacement for dots files.
+"""Journaled, bounded native object replacement for dots files.
 
 No automatic force, pruning, or live-root defaults in this engine. Callers supply
 validated paths. Recovery payloads are independent of optional retained backups.
 """
 import contextlib
 from datetime import datetime, timezone
-import fcntl
 import hashlib
 import json
 import os
@@ -16,6 +15,7 @@ import stat
 import uuid
 
 from catalog import atomic_json, read_json
+from file_platform import sync_dir, lock, open_nofollow, check_object
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -24,14 +24,6 @@ from progress import tracked, report
 
 def exists(path):
     return os.path.lexists(path)
-
-
-def sync_dir(path):
-    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
-    try:
-        os.fsync(fd)
-    finally:
-        os.close(fd)
 
 
 def private_directory(path):
@@ -50,6 +42,7 @@ def private_directory(path):
 
 def parents_safe(path):
     for parent in Path(path).parents:
+        check_object(parent)
         if parent.is_symlink():
             raise ValueError(f"symlinked parent requires manual review: {parent}")
         if exists(parent) and not parent.is_dir():
@@ -59,17 +52,20 @@ def parents_safe(path):
 def digest(path):
     """Hash object identity/content, without following symlinks or special files."""
     path = Path(path)
-    if not exists(path):
+    try:
+        path.lstat()
+    except FileNotFoundError:
         return None
     h = hashlib.sha256()
     def visit(p, rel):
+        check_object(p)
         st = p.lstat()
         h.update(os.fsencode(rel) + b'\0' + str(stat.S_IMODE(st.st_mode)).encode() + b'\0')
         if stat.S_ISLNK(st.st_mode):
             h.update(b'L' + os.fsencode(os.readlink(p)))
         elif stat.S_ISREG(st.st_mode):
             h.update(b'F')
-            fd = os.open(p, os.O_RDONLY | os.O_NOFOLLOW)
+            fd = open_nofollow(p, os.O_RDONLY)
             with os.fdopen(fd, 'rb') as stream:
                 if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
                     raise ValueError('source type changed')
@@ -94,7 +90,7 @@ def copy_object(source, dest):
     if exists(dest):
         raise ValueError('copy destination already exists')
     if source.is_symlink():
-        dest.symlink_to(os.readlink(source))
+        dest.symlink_to(os.readlink(source), target_is_directory=source.is_dir() or bool(getattr(source.lstat(), 'st_file_attributes', 0) & 0x10))
     elif source.is_dir():
         shutil.copytree(source, dest, symlinks=True)
     else:
@@ -151,10 +147,10 @@ class Store:
             paths = [self.root.parent / '.lock'] + sorted(set(Path(p).with_suffix('.lock') for p in catalogs))
             for path in paths:
                 parents_safe(path)
-                fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+                fd = open_nofollow(path, os.O_RDWR | os.O_CREAT, 0o600)
                 handle = os.fdopen(fd, 'a')
                 handles.append(handle)
-                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                lock(handle)
             yield
         finally:
             for handle in reversed(handles):
@@ -163,12 +159,27 @@ class Store:
     def save(self, doc):
         atomic_json(self.root / doc['id'] / 'journal.json', doc)
 
+    @contextlib.contextmanager
+    def publication_locked(self, operations, enabled=True):
+        paths = {str(self.state / 'installation.json'), str(self.state / 'current/theme'),
+                 str(self.state / 'themes/current'), str(self.state / 'themes/commands/current')}
+        if not enabled or os.name == 'nt' or not any(op['path'] in paths for op in operations):
+            yield
+            return
+        with contextlib.ExitStack() as stack:
+            for path in (self.state / 'themes/commands/lock', self.state / 'themes/lock'):
+                parents_safe(path)
+                private_directory(path.parent)
+                handle = stack.enter_context(os.fdopen(open_nofollow(path, os.O_RDWR | os.O_CREAT), 'a'))
+                lock(handle)
+            yield
+
     @tracked('Checking file operation inputs')
-    def apply(self, action, operations, guards, retain=False, catalogs=()):
+    def apply(self, action, operations, guards, retain=False, catalogs=(), identity=None, publication_locked=False):
         """Operations are {path, source|link|data|delete}; guards bind preview inputs."""
         if not operations:
             return {'schema': 1, 'status': 'unchanged', 'operations': []}
-        with self.locked(catalogs):
+        with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs):
             for record in self.records():
                 if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
                     raise ValueError('unfinished transaction: run dots files recover ' + record['id'])
@@ -176,7 +187,9 @@ class Store:
                 parents_safe(path)
                 if digest(path) != expected:
                     raise ValueError(f'changed after preview: {path}')
-            identity = uuid.uuid4().hex
+            identity = identity or uuid.uuid4().hex
+            if len(identity) != 32 or any(c not in '0123456789abcdef' for c in identity):
+                raise ValueError('invalid transaction identity')
             directory = self.root / identity
             directory.mkdir(mode=0o700)
             sync_dir(self.root)
@@ -201,13 +214,21 @@ class Store:
                         copy_object(path, directory / f'{i}-before')
                         if path.is_symlink():
                             entry['before_link'] = os.readlink(path)
+                            entry['before_directory'] = path.is_dir() or bool(getattr(path.lstat(), 'st_file_attributes', 0) & 0x10)
                         elif 'data' in op:
                             entry['before_data'] = read_json(path)
                     after = directory / f'{i}-after'
                     if 'source' in op:
                         copy_object(op['source'], after)
                     elif 'link' in op:
-                        after.symlink_to(op['link'])
+                        after.symlink_to(op['link'], target_is_directory=op.get('directory', Path(op['link']).is_dir()))
+                    elif 'text' in op:
+                        with after.open('w', encoding='utf-8', newline='\n') as out:
+                            out.write(op['text'])
+                            out.flush()
+                            os.fsync(out.fileno())
+                        if path.exists() and not path.is_symlink():
+                            os.chmod(after, stat.S_IMODE(path.stat().st_mode))
                     elif 'data' in op:
                         atomic_json(after, op['data'])
                         if path.exists():
@@ -351,7 +372,7 @@ class Store:
     @tracked('Recovering files')
     def recover(self, identity):
         doc = self.load(identity)
-        with self.locked(doc['catalogs']):
+        with self.publication_locked(doc['operations']), self.locked(doc['catalogs']):
             doc = self.load(identity)
             if doc['status'] not in ('preparing', 'applying', 'rolling-back', 'recovery-required'):
                 raise ValueError('transaction does not need recovery')
@@ -373,6 +394,7 @@ class Store:
                 source = self.root / identity / f'{i}-before'
                 if 'before_link' in entry:
                     op['link'] = entry['before_link']
+                    op['directory'] = entry.get('before_directory', Path(entry['before_link']).is_dir())
                 elif 'before_data' in entry:
                     op['data'] = entry['before_data']
                 elif exists(source):

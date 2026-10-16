@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# dots:summary=Query, edit and export theme file styles
-# dots:usage=[type|mime|extension|match|parse|export|set|reset] [ARGS]
-# dots:argument=1|choice:type,mime,extension,match,parse,export,set,reset|Color operation
+# dots:summary=Query, edit and export theme file and Git styles
+# dots:usage=[type|mime|extension|git|match|parse|export|set|reset] [ARGS]
+# dots:argument=1|choice:type,mime,extension,git,match,parse,export,set,reset|Color operation
 # dots:argument=2|file-color-key|Style key or operation target
 # dots:argument=3|file-color-key|Style key
 # dots:option=--theme||theme-id|Inspect a theme or edit its overrides

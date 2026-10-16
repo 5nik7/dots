@@ -1,0 +1,3 @@
+[include]
+  path = gitconfig
+  path = ~/.config/git-termux/config

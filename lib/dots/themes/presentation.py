@@ -172,10 +172,25 @@ class ColorView:
 
     def fields(self, fields):
         for key, value in fields:
-            self.line(display(key) + ': ' + display(value))
+            path_field = key.lower() in ('path', 'source', 'target', 'file', 'directory', 'rule source')
+            self.line(display(key) + ': ' + (self.resource(value) if path_field and str(value).startswith('/') else display(value)))
+
+    def resource(self, path):
+        # Paths inside a palette panel retain that panel's foreground/background.
+        # Only the icon is shared; never read the active palette for these views.
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from resources import Resources
+        mode = os.environ.get('DOTS_ICONS', 'auto')
+        enabled = mode == 'always' or (mode == 'auto' and sys.stdout.isatty() and os.environ.get('TERM', 'dumb') != 'dumb')
+        if not enabled:
+            return display(path)
+        if not hasattr(self, '_resources'):
+            self._resources = Resources()
+        _, icon, _ = self._resources.describe(path, styled=False)
+        return icon + ' ' + display(path)
 
 
-STYLE_TITLES = {'type': 'File types', 'mime': 'MIME rules', 'extension': 'Extension rules'}
+STYLE_TITLES = {'type': 'File types', 'mime': 'MIME rules', 'extension': 'Extension rules', 'git': 'Git styles'}
 
 
 def render_colors(doc, source, action=None, result=None, context=None):
@@ -184,7 +199,10 @@ def render_colors(doc, source, action=None, result=None, context=None):
     if action is None:
         view.palette(doc['colors'])
         for group, title in STYLE_TITLES.items():
-            view.styles(title, sorted(doc['styles'][group].items()))
+            if group in doc['styles']:
+                view.styles(title, sorted(doc['styles'][group].items()))
+            elif group == 'git':
+                view.line('Git styles unavailable; run theme refresh to publish them.')
     elif action in STYLE_TITLES and not context:
         view.styles(STYLE_TITLES[action], sorted(result.items()))
     else:
@@ -196,7 +214,7 @@ def render_colors(doc, source, action=None, result=None, context=None):
         source = result.get('source', {})
         if isinstance(source, dict):
             view.section('Rule sources', len(source))
-            view.table(['Field', 'Source'], [[display(k), display(v)] for k, v in sorted(source.items())])
+            view.table(['Field', 'Source'], [[display(k), view.resource(v)] for k, v in sorted(source.items())])
         elif source:
             view.fields([('Rule source', source)])
 

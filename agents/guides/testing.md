@@ -105,6 +105,22 @@ For Vivid/FSH theme adapter changes, additionally run `python3 -B tools/test_fil
 with the theme/workflow and Zsh suites. Native plugin tests must copy installed FSH
 into an owned root and disable its optional secondary-theme download.
 
+## Missing-source catalog check
+
+For stash/edit and the Git overlay migration, run
+`python3 -B tools/test_file_mappings.py` with catalog, operation, installation,
+browser, confirmation, progress, resource, dispatcher and adapter regressions.
+Own every source/target/state root; verify disabled claims, original backup
+continuity, receipt undo, source permissions and interruption. Never use live Git
+configuration as a fixture. Report actual native adapter coverage separately.
+
+For `files check`, run `python3 -B tools/test_files_check.py` with catalog, file
+operation, confirmation, progress, resource and dispatcher regressions. Fixtures
+must own every catalog and target; test metadata-only undo, source reappearance,
+filesystem errors and multi-catalog interruption. Never exercise cleanup against
+the real tracked catalog. Native PowerShell cases require the adapter suite and
+must be reported as skipped when its runtime is absent.
+
 ## Existing Zsh Configuration
 
 For Zsh startup changes, run `python3 -B tools/test_zsh.py` plus the isolated startup and PTY runners described in [the Zsh guide](../../shells/zsh/README.md). Capture the baseline before editing and keep timing runs sequential. Never profile the live startup chain against the real home; private/platform modules use synthetic substitutes. Treat native Termux results and other-platform fixtures separately.
@@ -201,3 +217,12 @@ and forced-color scalar/JSON/export compatibility assertions.
 Yazi theme work additionally requires the plugin's `test-theme-native.py` with
 private DDS/runtime roots. Keep the standalone fixture runner independent of the
 main checkout and synchronize shared plugin sources deliberately.
+
+## Checkout setup
+
+For root installer, installation receipt or native file-adapter changes, run `python3 -B tools/test_installation.py` and `python3 -B tools/test_installation_adapters.py` (`python` on Windows), plus the affected existing file/theme/shell suites. Never invoke installer apply against the working home as a test. Native Windows capability refusals and skipped PowerShell cases must be reported separately from successful native execution.
+
+For shared file/path presentation, run `python3 -B tools/test_resources.py` and the
+owning command suites. Test forced-decoration data interfaces, old publications,
+resource matching parity and 40/80/120-column PTYs; never generate a live theme to
+validate a display-only change.

@@ -92,3 +92,11 @@ event. Exit codes: 0 complete/cancelled, 1 failed/incomplete, 2 syntax/configura
 Git commands require Bash 5, Git and ordinary POSIX utilities; publication also
 requires `sha256sum`. Basic dots help retains its existing lighter requirements.
 Tests and platform limits are in [testing](testing.md#git-and-managed-file-operations).
+
+## Theme colors
+
+Dots Git status, sync and publish use the shared [Git style roles](file-colors.md#git-styles). Repository names use `repo`; branches use `branch`, or `detached` for detached HEAD descriptions. Tracking counts use `ahead` and `behind`. Repository status uses its corresponding role. Successful operation events use `clean`, failed/blocked events use `blocked`, and missing/modified events use their named roles. Neutral information, planned operations and final summaries retain shared diagnostic colors.
+
+File status labels use conflict, untracked, deleted, renamed, copied, added, modified or staged colors, in that priority order when multiple states apply. A staged-only modification uses `staged`; a staged plus worktree modification uses `modified`. Full status wording is retained. Filenames and icons keep their independent type/MIME styles, including old paths in rename rows. The `ignored` style is available for consumers; status does not start listing ignored files.
+
+Styles come from the current published theme. Run `dots theme colors git` to inspect them, and use `dots theme colors set git ROLE --fg COLOR --apply` to save and refresh a customization. Older, missing or malformed publications have bounded terminal-color fallbacks. Color/icon settings and destination-stream TTY detection still apply; JSON and Git operation semantics are unchanged. Shell prompts, native Git configuration and editor Git displays are not changed by these roles.

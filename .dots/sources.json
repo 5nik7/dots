@@ -7,13 +7,15 @@
       "platforms": [
         "termux",
         "linux",
-        "wsl"
+        "wsl",
+        "windows"
       ],
       "roots": [
         "config",
         "shells",
         "scripts",
-        "bin"
+        "bin",
+        "ruby"
       ]
     },
     {

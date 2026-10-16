@@ -141,7 +141,7 @@ class ShellEnvironment(unittest.TestCase):
         env = {**self.env, 'XDG_STATE_HOME':state_root, 'DOTS_ICONS':'always', 'COLUMNS':'40'}
         output = self.env_command('env',env=env)
         lines = output.partition('  DOTS_STATE_DIR\n')[2].partition('    Source: resolved')[0]
-        self.assertEqual(''.join(line[4:] for line in lines.splitlines()), state_root + '/dots')
+        self.assertEqual(''.join(line[4:] for line in lines.splitlines()).split(' ', 1)[1], state_root + '/dots')
         env['XDG_STATE_HOME'] = str(self.home) + '/bad\x1b[2J\n\x9bcontrol'
         output = self.env_command('env',env=env)
         self.assertNotIn('\x1b', output)

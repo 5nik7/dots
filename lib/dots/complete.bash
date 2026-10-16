@@ -197,7 +197,18 @@ dots_complete() {
       if (( cursor == index+1 )); then
         dots_builtin_metadata init
         dots_value_candidates choice:bash,zsh,fish,powershell,nu,xonsh
+        (( help )) || dots_candidate --setup 'Install platform configurations'
         (( help )) || dots_candidate --help 'Show command help'
+      elif [[ ${words[index+1]} == --setup ]]; then
+        if [[ ${words[cursor-1]} == --with-source ]]; then
+          dots_value_candidates choice:androidots,windots,nvim
+        else
+          dots_builtin_metadata init
+          for row in "${DOTS_META_OPTIONS[@]}"; do
+            IFS='|' read -r long short type description <<< "$row"
+            [[ $long == --setup ]] || dots_candidate "$long" "$description"
+          done
+        fi
       fi
     elif [[ ${words[index]} == completion ]]; then
       if (( cursor == index+1 )); then for token in bash zsh fish; do dots_candidate "$token"; done; fi

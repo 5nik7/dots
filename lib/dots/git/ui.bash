@@ -11,6 +11,56 @@ colors() {
     ERR_BOLD=$DOTS_UI_BOLD ERR_RESET=$DOTS_UI_RESET
 }
 die() { display "$2"; dots::error "dots git: $REPLY"; exit "$1"; }
+# Labels retain their full porcelain meaning; color highlights the strongest state.
+file_status_style() {
+    local xy=$1 role=staged
+    if [[ $xy == *U* || $xy == AA || $xy == DD ]]; then role=conflict
+    elif [[ $xy == '??' ]]; then role=untracked
+    elif [[ $xy == '!!' ]]; then role=ignored
+    elif [[ $xy == *D* ]]; then role=deleted
+    elif [[ $xy == *R* ]]; then role=renamed
+    elif [[ $xy == *C* ]]; then role=copied
+    elif [[ $xy == *A* ]]; then role=added
+    elif [[ ${xy:1:1} != ' ' ]]; then role=modified
+    fi
+    dots::git_style "$role"
+}
+status_header() {
+    local label=$1 branch=$2 state=$3 columns=$4 repo_style branch_style state_style marker
+    dots::git_style repo; repo_style=$REPLY
+    if [[ $branch == 'detached '* ]]; then dots::git_style detached
+    else dots::git_style branch; fi
+    branch_style=$REPLY
+    dots::git_style "$state"; state_style=$REPLY
+    case $state in clean) marker=$DOTS_UI_OK ;; blocked|conflict) marker=$DOTS_UI_ERROR ;; *) marker=$DOTS_UI_WARN ;; esac
+    display "$branch"; branch=$REPLY
+    columns=$((10#$columns)); (( columns >= 20 )) || columns=20
+    if dots::human && { (( ${#label}+${#branch}+${#state}+12 > columns )) || [[ $label$branch == *[!\ -~]* ]]; }; then
+        printf '\n'
+        dots::line "$label" "$repo_style" 2 "$columns"
+        dots::line "$branch" "$branch_style" 4 "$columns"
+        dots::line "$marker $state" "$state_style" 4 "$columns"
+    elif (( columns < 60 )); then
+        printf '\n  %s%s%s %s%s%s\n' "$state_style" "$marker" "$DOTS_UI_RESET" "$repo_style" "$label" "$DOTS_UI_RESET"
+        printf '    %s%s%s  %s%s%s\n' "$branch_style" "$branch" "$DOTS_UI_RESET" "$state_style" "$state" "$DOTS_UI_RESET"
+    else
+        printf '\n  %s%s%s %s%s%s  %s%s%s  %s%s%s\n' "$state_style" "$marker" "$DOTS_UI_RESET" "$repo_style" "$label" "$DOTS_UI_RESET" "$branch_style" "$branch" "$DOTS_UI_RESET" "$state_style" "$state" "$DOTS_UI_RESET"
+    fi
+}
+tracking_row() {
+    local ahead=$1 behind=$2 columns=$3 ahead_style behind_style
+    dots::git_style ahead; ahead_style=$REPLY
+    dots::git_style behind; behind_style=$REPLY
+    if [[ ! $DOTS_UI_RESET ]]; then dots::row Tracking "$ahead ahead / $behind behind (cached)"; return; fi
+    columns=$((10#$columns)); (( columns >= 20 )) || columns=20
+    if (( columns < 60 || ${#ahead}+${#behind}+55 > columns )); then
+        dots::line Tracking "$DOTS_UI_BLUE" 2 "$columns"
+        dots::line "$ahead ahead /" "$ahead_style" 6 "$columns"
+        dots::line "$behind behind (cached)" "$behind_style" 6 "$columns"
+    else
+        printf '  %s%-26s%s %s%s ahead%s / %s%s behind%s (cached)\n' "$DOTS_UI_BLUE" Tracking "$DOTS_UI_RESET" "$ahead_style" "$ahead" "$DOTS_UI_RESET" "$behind_style" "$behind" "$DOTS_UI_RESET"
+    fi
+}
 repo_label() {
     local dir=$1 candidate other parent collision
     if ((FULL_PATHS)); then REPLY=$dir; return; fi
@@ -30,28 +80,44 @@ repo_label() {
 }
 render_event() {
     dots::progress_stop
-    local dir=$1 state=$2 detail=$3 file=${4:-} code=$DOTS_UI_CYAN marker='[i]' label
+    local dir=$1 state=$2 detail=$3 file=${4:-} code=$DOTS_UI_CYAN marker='[i]' label repo_style
     dots::style
+    dots::git_style repo; repo_style=$REPLY
     repo_label "$dir"; display "$REPLY"; label=$REPLY
     case $state in
-        blocked|failed) code=$DOTS_UI_RED; marker=$DOTS_UI_ERROR ;;
-        published|updated|clean|unchanged) code=$DOTS_UI_GREEN; marker=$DOTS_UI_OK ;;
-        modified|selected|planned|missing|cancelled) code=$DOTS_UI_YELLOW; marker=$DOTS_UI_WARN ;;
+        blocked|failed) dots::git_style blocked; code=$REPLY; marker=$DOTS_UI_ERROR ;;
+        published|updated|clean|unchanged) dots::git_style clean; code=$REPLY; marker=$DOTS_UI_OK ;;
+        modified|missing) dots::git_style "$state"; code=$REPLY; marker=$DOTS_UI_WARN ;;
+        selected|planned|cancelled) code=$DOTS_UI_YELLOW; marker=$DOTS_UI_WARN ;;
         *) code=$DOTS_UI_BLUE; marker=$DOTS_UI_INFO ;;
     esac
+    local columns=${COLUMNS:-80}
+    [[ $columns =~ ^[0-9]+$ ]] || columns=80
+    columns=$((10#$columns)); (( columns >= 20 )) || columns=20
+    if dots::human && [[ $state == unchanged && ( ${#label} -gt $((columns-15)) || $label == *[!\ -~]* ) ]]; then
+        dots::line "$label" "$repo_style" 2 "$columns"
+        dots::line unchanged "$code" 4 "$columns"
+        LAST_EVENT_REPO=''
+        return
+    fi
     if [[ $state == unchanged ]]; then
-        printf "  %s%s%s  %sunchanged%s\n" "$DOTS_UI_BOLD$DOTS_UI_BLUE" "$label" "$DOTS_UI_RESET" "$DOTS_UI_GREEN" "$DOTS_UI_RESET"
+        printf "  %s%s%s  %sunchanged%s\n" "$repo_style" "$label" "$DOTS_UI_RESET" "$code" "$DOTS_UI_RESET"
         LAST_EVENT_REPO=''
         return
     fi
     if [[ $LAST_EVENT_REPO != "$dir" ]]; then
-        printf '\n  %s%s%s\n' "$DOTS_UI_BOLD$DOTS_UI_BLUE" "$label" "$DOTS_UI_RESET"
+        if dots::human; then
+            printf '\n'; dots::line "$label" "$repo_style" 2 "$columns"
+        else printf '\n  %s%s%s\n' "$repo_style" "$label" "$DOTS_UI_RESET"; fi
         LAST_EVENT_REPO=$dir
     fi
     display "$state"; printf '    %s%s %s%s' "$code" "$marker" "$REPLY" "$DOTS_UI_RESET"
     if [[ -n $file ]]; then
+        local actual=$dir/$file
         ((FULL_PATHS)) && file=$dir/$file
-        display "$file"; printf '  %s\n' "$REPLY"
+        if dots::human; then
+            printf '\n'; dots::resource_row 'File' "$actual" "$file"
+        else display "$file"; printf '  %s\n' "$REPLY"; fi
     elif [[ $state == unchanged ]]; then printf '\n'
     else
         printf '\n'
@@ -66,6 +132,8 @@ event() {
     [[ $state != blocked && $state != failed ]] || RESULT=1
     if ((!JSON)); then
         if [[ $state == blocked || $state == failed ]]; then
+            # Cache styles in the parent; the subshell keeps grouping state isolated.
+            dots::git_style repo 2
             (render_event "$@") >&2
         else render_event "$@"; fi
     fi

@@ -17,9 +17,12 @@ The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday mai
 | [Gum confirmations](gum-confirmations.md) | Optional confirmations for file operations, Anodize and Git publish. |
 | [Tracked-config browser](files-browser.md) | Implemented Gum/FZF/plain browser with guarded operation review. |
 | [Files catalog](files-catalog.md) | Implemented catalog; later mutations belong to the Git/files slice. |
+| [Missing-source check](files-check.md) | Interactive catalog-only cleanup with journaled undo. |
+| [Stash and edit mappings](files-mappings.md) | Disabled resources, mapping edits and the bounded Git XDG migration. |
 | [Unified theme CLI](theme-cli.md) | Consolidation on `dots theme` with native palette queries. |
 | [Theme plugins](theme-plugins.md) | Explicit local hooks and journaled GTK 3/Qt6ct integrations. |
 | [Omarchy-style themes](omarchy-themes.md) | Implemented flat themes, fixed connectors and explicit wallpaper adapters. |
+| [Git theme colors](git-theme-colors.md) | Shared theme roles for Dots Git metadata and status output. |
 | [Shared themes](themes.md) | Completed original shared palette slice; historical editor evidence. |
 | [Additional theme families](theme-families.md) | Completed family expansion; historical editor evidence. |
 | [Configuration paths](config-path-migration.md) | Completed migration; compatibility aliases remain. |
@@ -52,3 +55,7 @@ Before implementing a human view, name its renderer, human/data modes and repres
 - Do not leave completed plans as the only documentation for implemented behavior.
 
 When a plan is complete, retain it if it explains migration or decision history. Mark it complete and link the resulting implementation/reference rather than rewriting its original goal.
+
+- [Checkout installation](installation.md): bounded catalog-backed setup, explicit source updates, retained-baseline uninstall and native adapters.
+
+- [Live CLI presentation](cli-presentation.md) — shared resource colors/icons, Git-style views and reusable project skill.

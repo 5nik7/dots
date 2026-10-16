@@ -148,5 +148,8 @@ dt_git_theme() (
   trap - EXIT
   [[ $action != remove ]] || rmdir -- "$stage" || return
   dots::success "$action: $name (selection unchanged)"
-  [[ $action == install ]] || printf 'Recovery copy: %s\n' "$backup"
+  if [[ $action != install ]]; then
+    if dots::human; then dots::resource_row 'Recovery copy' "$backup"
+    else printf 'Recovery copy: %s\n' "$backup"; fi
+  fi
 )

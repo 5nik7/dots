@@ -30,6 +30,9 @@ class GitOperations(unittest.TestCase):
                 self.env.pop(key)
         self.env.update(
             HOME=str(self.home), XDG_CONFIG_HOME=str(self.home / ".config"),
+            XDG_STATE_HOME=str(self.home / ".local/state"),
+            XDG_DATA_HOME=str(self.home / ".local/share"),
+            XDG_CACHE_HOME=str(self.home / ".cache"),
             GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
             GIT_AUTHOR_NAME="Git It Test", GIT_COMMITTER_NAME="Git It Test",
             GIT_AUTHOR_EMAIL="test@example.invalid", GIT_COMMITTER_EMAIL="test@example.invalid",

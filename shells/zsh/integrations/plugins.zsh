@@ -35,14 +35,51 @@ _dots_completion_plugins() {
   done
   _DOTS_PLUGIN_PATHS_READY=1
 }
+# Zinit owns this optional executable, independently of its source plugin.
+# An installed PATH executable always wins, including native Termux builds.
+_dots_deja_binary() {
+  (( $+commands[deja] )) && return 0
+  case ${DOTS_PLATFORM:-} in
+    linux|wsl) ;;
+    termux)
+      REPLY='deja is missing; Termux requires a native Go/CGO/Clang build'
+      return 1 ;;
+    *) REPLY='deja is missing; automatic installation supports Linux/WSL only'; return 1 ;;
+  esac
+  local arch
+  case $MACHTYPE in
+    x86_64|amd64) arch=amd64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *) REPLY="deja is missing; no Linux release for architecture $MACHTYPE"; return 1 ;;
+  esac
+  local -a previous_path=("${path[@]}")
+  # Cached releases load locally. Only an absent Zinit installation downloads.
+  # Do not use upstream install.sh: it imports history and edits .zshrc.
+  zinit ice lucid from'gh-r' as'command' id-as'dots-deja-binary' \
+    bpick"deja_*_linux_${arch}.tar.gz" pick'deja' nocompletions
+  if zinit light Giammarco-Ferranti/deja >&2; then
+    rehash
+    if (( $+commands[deja] )) && command deja --version >/dev/null 2>&1; then
+      return 0
+    fi
+    REPLY='the Zinit Deja executable is missing or cannot run; check zinit update dots-deja-binary'
+  else
+    REPLY='Zinit could not install Deja; check network access and Zinit download prerequisites'
+  fi
+  # A broken release must not remain on PATH after selecting the fallback.
+  path=("${previous_path[@]}")
+  rehash
+  return 1
+}
 # Select once per shell: switching engines requires a fresh shell, not rl.
 _dots_suggestion_plugin() {
   [[ -n ${_DOTS_SUGGESTION_ENGINE:-} ]] && return 0
   local engine=${DOTS_ZSH_SUGGESTIONS:-${dots_options[DOTS_ZSH_SUGGESTIONS]:-deja}}
   case $engine in
     deja)
-      if (( ! $+commands[deja] )); then
-        print -ru2 -- 'dots: deja is not installed; using zsh-autosuggestions'
+      local REPLY
+      if ! _dots_deja_binary; then
+        print -ru2 -- "dots: $REPLY; using zsh-autosuggestions"
         engine=autosuggestions
       fi
       ;;

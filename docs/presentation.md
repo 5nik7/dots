@@ -32,6 +32,8 @@ Automatic color requires a terminal on the destination stream, `TERM` other than
 | Resource path accent | Magenta | Distinguishes paths from blue repository names and labels |
 | Collection count accent | Cyan | Highlights quantities without implying success or failure |
 
+Dots Git metadata has a scoped [theme-role integration](file-colors.md#git-styles): repository identities, branches, file-status labels and tracking counts consume published Git styles through the shared Bash layer. Filenames retain their type/MIME resource styles. Generic headings, informational messages and final diagnostic summaries retain the shared treatment above.
+
 Keep status text alongside color; a green marker alone cannot explain whether an item is linked, tracked or selected. Use the shared marker vocabulary with an ASCII fallback. Palette previews may display their actual swatch colors, but diagnostic meanings remain consistent across selected themes. Color may emphasize facts; it must never imply success before an operation succeeds.
 
 ## Layout and Wording
@@ -107,7 +109,7 @@ Known operation counts use a bar with `completed/total` for the named phase. Unk
 
 Prompt-capable or directly outputting external commands use a static phase message instead of animation: Git fetch/init/commit/push, theme downloads, tmux reloads and wallpaper adapters. These messages appear immediately before the child starts so prompts and child output remain readable, even when a child takes a long time. Progress does not capture, reroute or replay child output. Existing timeout and exit-status behavior is retained.
 
-`--yes` retains progress but bypasses confirmation. JSON, raw paths, scalar queries, raw exports/app previews, generated shell code, initialization, completion, help, dry runs and redirected output bypass the progress UI, including static phase messages. Explicit color/icon settings never override this gate. Slow human read-only discovery is eligible and does not write progress files or application state.
+`--yes` retains progress but bypasses confirmation. JSON, raw paths, scalar queries, raw exports/app previews, generated shell code, ordinary shell initialization, completion, help, dry runs and redirected output bypass the progress UI, including static phase messages. Explicit color/icon settings never override this gate. Slow human read-only discovery is eligible and does not write progress files or application state.
 
 The existing color and icon policy applies. ASCII mode uses `|/-\` and `#` bars; disabled color removes ANSI color sequences while carriage returns and spaces update the line. Neither renderer hides the cursor or changes terminal input mode. Transient labels are sanitized and shortened to fit; final result and recovery text keeps complete paths. Bash escapes non-ASCII path characters for predictable cell widths, while Python measures combining and wide characters. Bash uses optional `stty` to read the initial terminal width and otherwise falls back to `COLUMNS` or 80 columns.
 
@@ -150,3 +152,43 @@ back to readable foreground when contrast is insufficient; swatches remain exact
 `--color=none` aliases `never`; spaced `--color NAME` remains a family color query.
 Data output bypasses panels even when decoration is forced. This scoped palette
 presentation does not change semantic status meanings in other command families.
+
+Explicit checkout setup (`dots init --setup`, files install/uninstall and root scripts) is a human managed-operation workflow, eligible for the same file/theme progress policy. Ordinary `dots init [shell]` remains an undecorated code stream. Setup uses the shared Python renderer through both native wrappers; Git child output stays visible on stderr.
+
+## Filesystem resources
+
+**Implemented.** Live first-party human views use published Dots type, extension
+and MIME colors for filesystem resource fields. Operation statuses and repository
+identities keep their semantic colors. Magenta is the fallback resource accent,
+not an override of a published file style. `--icons=never` omits resource glyphs;
+paths and status words remain readable without a Nerd Font. Colors and icons are
+independent. Explicitly forced decoration applies only to human views.
+
+Bash `dots::resource` and `dots::resource_row`, and Python
+`Presentation.resource` and `resource_detail`, separate actual paths from display
+labels. Known intended types may be supplied for missing/planned resources.
+Automatic classification covers ordinary files, directories, executables, links,
+broken links, FIFOs, sockets and devices. More specific metadata types can be
+supplied by the owning command. MIME comes from known metadata or the shared
+filename/suffix registry; presentation never reads file contents. Explicit
+extension rules precede custom MIME rules, published suffix rules, default MIME
+rules and the ordinary file fallback. Non-file types take precedence.
+
+The versioned `file-styles.tsv` publication is parsed as data and read lazily once
+per renderer. No subprocess per resource, implicit theme generation or startup
+scan is added. Older or malformed snapshots fall back to the published
+`ls_colors`, then shared terminal defaults. Escaped legacy LS_COLORS keys are
+ignored in this conservative fallback; a normal theme refresh publishes the full
+literal rules. Missing snapshots do not prevent output or require a refresh.
+
+The shared `lib/dots/resources.tsv` owns resource glyphs and common filename/MIME
+hints. Names, URLs, repository IDs, shell examples and scalar path responses are
+not automatically interpreted as paths. All display text is escaped; paths wrap
+without losing spaces or characters. Theme-panel paths use shared icons while
+retaining the addressed panel's foreground/background. Selectors keep their native
+widget styling and internal plain selection labels. Child streams remain intact.
+
+The live surface audit is in [the implementation plan](../plans/cli-presentation.md).
+Standalone scripts, nested-project tools and paused Go implementations are outside
+this rollout. Native bootstrap adapters follow the same semantic color controls
+without requiring Python or Bash merely to print a missing-dependency error.

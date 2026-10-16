@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# dots:summary=Disable resources and unlink matching targets while keeping sources
+# dots:usage=[RESOURCE...] [OPTIONS]
+# dots:option=--restore||flag|Enable and relink selected resources
+# dots:option=--dry-run||flag|Preview without changes or prompts
+# dots:option=--yes||flag|Apply without prompting; requires explicit IDs
+# dots:option=--json||flag|Emit versioned JSON; requires --yes or --dry-run
+# dots:option=--backup||flag|Approve occupied replacements when restoring
+# dots:option=--no-backup||flag|Refuse occupied replacements; retain required recovery data
+# dots:argument=*|file-resource|Qualified resource ID
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/mappings.py" stash "$@"

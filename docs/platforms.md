@@ -9,8 +9,7 @@
 The live Bash dispatcher requires Bash 4.4+ and a POSIX-like executable environment.
 Termux has native dispatch and Bash/Zsh/Fish completion tests, including interactive
 Tab acceptance. Linux/WSL and MSYS are design targets, not newly verified platforms.
-No PowerShell/native Windows dispatch, path translation, or Windows execution
-adapter is added. Ordinary unsymlinked invocation, help, and routing use Bash
+This Bash dispatcher does not provide general native Windows execution. A separate PowerShell adapter exposes bounded initialization, installation, inspection, catalog-only missing-source checks, stash/edit mappings and recovery; no Windows/WSL path translation occurs. Ordinary unsymlinked invocation, help, and routing use Bash
 builtins; resolving a symlinked launcher additionally requires `readlink`.
 This coverage is separate from the Go platform matrix below.
 
@@ -30,7 +29,7 @@ The [initialization hook](shell-init.md) has native adapters for Bash, Zsh, Fish
 
 The [existing shell configuration](../shells/zsh/README.md) has Termux-native checks and isolated Linux/WSL/MSYS detection fixtures. WSL uses Linux paths; MSYS has its own adapter boundary. Native Linux/WSL/MSYS interactive behavior remains unverified. These shell checks do not expand the Go core or production installation support claims below.
 
-The default [Deja integration](../shells/zsh/README.md#deja-suggestions) has native Termux Android/ARM64 build and isolated daemon/Zsh PTY acceptance. It needs a native CGO/Clang source build, not upstream's Linux release binaries. Its data is under `$HOME/.local/share/deja` regardless of XDG settings. No other native platform is verified for this integration.
+The default [Deja integration](../shells/zsh/README.md#deja-suggestions) has native Termux Android/ARM64 build and isolated daemon/Zsh PTY acceptance. It needs a native CGO/Clang source build, not upstream's Linux release binaries. Its data is under `$HOME/.local/share/deja` regardless of XDG settings. Linux/WSL x86-64 and ARM64 now have automatic GitHub release installation through Zinit, with executable validation and fallback to autosuggestions. Architecture selection, download failures and cached loading are tested in isolated fixtures, including real Zinit with synthetic release downloads. This is not native Linux/WSL executable or interactive acceptance. Termux and other platforms never receive Linux binaries automatically; no other native platform is verified for this integration.
 
 ## Permanent Development Core
 
@@ -301,3 +300,9 @@ Theme file-style publication and `theme colors` require Python 3.11+ (`tomllib`)
 Vivid is optional. Published JSON/Lua/LS_COLORS data remain platform-neutral. Native
 Termux Bash/Zsh/Fish/Nushell and Yazi checks cover this change; PowerShell and
 Xonsh adapter edits have no new native-runtime certification.
+
+## Bounded checkout installation
+
+The [checkout installer](installation.md) has POSIX shell and native PowerShell entry points sharing Python 3.9+ planning, receipt and transaction logic. Termux/Linux/WSL use their own HOME/XDG roots. Native Windows uses LOCALAPPDATA for state (unless XDG_STATE_HOME is explicit), PowerShell's current-host profile, Neovim's native configuration root and APPDATA/Code/User/settings.json. Unmapped Windots apps and native theme publication remain deferred. No WSL path translation, package provisioning, elevation or link-to-copy fallback occurs.
+
+Native Windows locking uses msvcrt; directory flushing has no POSIX-equivalent guarantee. Symlink capability is tested by approved staging before target replacement. Reparse-point ancestors are refused. Linux/Windows installation CI is defined separately from the Go gates; local Termux tests do not establish native Windows or WSL results.

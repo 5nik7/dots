@@ -10,9 +10,28 @@ The shared Bash/Zsh helper `mkcd <directory>` is separate from the `dots` comman
 
 The sourceable [shell utility functions](shell-utils.md) have their own documented argument, stream and status contracts; they do not add dispatcher routes or completion metadata.
 
-`dots init [bash|zsh|fish|powershell|nu|xonsh]` emits native initialization code. With no argument, the generated code selects Bash or Zsh in the calling shell. `init` is reserved and bypasses extension discovery. Help and shell-name completion use built-in metadata. Native `bin/dots.ps1` supports `init [powershell]` and help only. Evaluating a hook loads only Dots integration from `lib/dots/shell/`; personal shell configuration stays separate. Settings use data-only config.env, with explicit environment overrides. Repository rc files resolve symlinks and source their adjacent loaders directly. See [shell initialization](shell-init.md) for the full interface, bootstrap, error statuses and native invocation examples.
+`dots init [bash|zsh|fish|powershell|nu|xonsh]` emits native initialization code. With no argument, the generated code selects Bash or Zsh in the calling shell. `init` is reserved and bypasses extension discovery. Help and shell-name completion use built-in metadata. Native `bin/dots.ps1` supports shell-code initialization plus bounded setup, file inspection and installation recovery. Evaluating a hook loads only Dots integration from `lib/dots/shell/`; personal shell configuration stays separate. Settings use data-only config.env, with explicit environment overrides. Repository rc files resolve symlinks and source their adjacent loaders directly. See [shell initialization](shell-init.md) for the full interface, bootstrap, error statuses and native invocation examples.
+
+`dots init --setup [OPTIONS]` explicitly delegates to `dots files install`; `dots files uninstall` restores installer-owned targets. Install/uninstall accept `--dry-run`, `--yes`, `--json` and shared color/icon controls; install also accepts `--update` and repeatable `--with-source androidots|windots|nvim`. Root shell/PowerShell scripts use the same controller. Setup options are invalid on shell-code generation paths. See [checkout installation](installation.md) for ownership, updater stages, JSON results and recovery.
+
 
 ## Implemented Files and Theme Routes
+
+`dots files stash [RESOURCE...] [--restore]` disables resources and unlinks only
+matching destinations; restore enables and relinks. `dots files edit [RESOURCE |
+--new]` edits source/target mappings, metadata-only unless `--apply` is selected.
+Both offer selection/review, `--yes`, `--dry-run`, `--json`, `--backup` and
+`--no-backup`, static help/completion and native PowerShell routing. Edit supports
+new-record metadata, strategies and platform target overrides. See
+[mapping commands](files.md#stash-and-edit-mappings) for full semantics and JSON.
+
+`dots files check [--yes] [--dry-run] [--json]` reviews absent source paths and
+removes approved catalog entries only. It accepts list's platform/filter/sort
+options, defaults to per-entry review followed by batch confirmation, and uses
+journaled apply/undo. Broken source symlinks and all target objects are preserved.
+Dry-run never prompts or writes; JSON requires `--yes` or `--dry-run`. Native
+PowerShell routes to the same controller. See [check](files.md#check-missing-sources)
+for result fields, exit statuses and the distinction from `files remove`.
 
 The [files reference](files.md) defines `dots files sources|discover|list|locate|show|source|target|track`,
 filters, sorting and schema-1 JSON. `track` changes catalog metadata only; bounded
@@ -445,6 +464,10 @@ These routes are draft and should be reduced or adjusted before implementation r
 
 ### Files
 
+List/show/source/target and mapping `edit` are implemented by the live Bash/native
+adapters described above. `edit` manages source/target metadata; it does not launch
+a source-content editor. Other sketches below remain draft where unimplemented.
+
 ```text
 dots files list
 dots files show <resource>
@@ -639,9 +662,9 @@ The old standalone `current_theme` wrapper is removed; use `dots theme current`
 for the selected ID, `theme` for its palette preview, and `theme init` for shell
 color initialization.
 
-## File color operations
+## File and Git color operations
 
-`dots theme colors` / `theme colors` exposes `type`, `mime`, `extension`, `match`,
+`dots theme colors` / `theme colors` exposes `type`, `mime`, `extension`, `git`, `match`,
 `parse`, `export`, `set` and `reset`. Queries are read-only; edits save journaled
 shared or per-theme overrides, with optional `--apply` to refresh the current theme.
 See [file color syntax and data contracts](file-colors.md). Static metadata and
@@ -649,14 +672,25 @@ Bash/Zsh/Fish completion include operations, bundled/shared style keys, query
 formats and attribute flags. The `file-color-key` metadata provider reads those
 rule keys without executing a theme-family extension.
 
-Human `theme show ID` and `theme colors` use consistent, counted palette and file
+Human `theme show ID` and `theme colors` use consistent, counted palette, file and Git
 style sections, with swatches and narrow-terminal layouts. Group listings,
 `--style`, `match` and `parse` use tables or labeled details instead of nested
 dictionary dumps. Native family previews keep their original palette scope.
-Configured/published sources are labeled. Scalar, JSON and export formats and
+Configured/published sources are labeled. JSON/Lua exports add the Git namespace within schema 1. Scalar formats, existing file-style fields, LS_COLORS and
 unforced redirected `show` output remain unchanged; see
 [human color views](file-colors.md#human-color-views).
 
 Presentation adds `--color=none` as an alias for `never`. The global flag still
 precedes Dots routes; family commands also accept it anywhere in their arguments.
 The spaced family option `--color NAME` retains its palette-query meaning.
+
+### Human resource fields
+
+First-party human views render file/directory fields with published Dots file-type,
+extension and MIME styles plus optional resource icons. Existing `--color` and
+`--icons` controls apply; no new flags or routes are introduced. Raw path queries,
+JSON, exports, completion, initialization code and documented redirected formats
+remain undecorated. Theme panels retain their own palette. The sourceable Bash
+helpers `dots::resource PATH [DISPLAY [KIND [MIME]]]` and
+`dots::resource_row LABEL PATH [DISPLAY [KIND [MIME]]]` are presentation-only:
+they never resolve a theme or alter a resource. See [presentation](presentation.md#filesystem-resources).

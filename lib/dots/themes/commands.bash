@@ -105,8 +105,8 @@ dt_command() {
         if dots::human; then
           dots::heading 'Theme preview'
           dots::row 'Select' "$id"
-          dots::path "$DT_ACTIVE"; dots::row 'Publish' "$REPLY"
-          for name in "${DT_CONNECT_TARGETS[@]}"; do dots::path "$name"; dots::row 'Connect' "$REPLY"; done
+          dots::resource_row 'Publish' "$DT_ACTIVE"
+          for name in "${DT_CONNECT_TARGETS[@]}"; do dots::resource_row 'Connect' "$name"; done
           dots::row 'Reload' 'Available Termux, tmux and Kitty adapters'
           (( ! background )) || dots::row 'Background' 'Apply the selected theme background'
           printf '\n'; dots::info 'Preview only; no changes made'

@@ -1,4 +1,4 @@
 interface:
   display_name: "Dots CLI Presentation"
-  short_description: "Create consistent, readable Dots CLI views"
-  default_prompt: "Use $dots-cli-presentation to improve the requested Dots CLI output while preserving its data interfaces."
+  short_description: "Style Dots output, resource icons and progress"
+  default_prompt: "Use $dots-cli-presentation to format Dots CLI output using shared colors, resource icons and progress while preserving custom views and data interfaces."

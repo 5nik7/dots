@@ -2,7 +2,18 @@
 
 **Status: Implemented; promoted to the default at the owner's request after the trial.** Not a resumption of the Go roadmap.
 
-## Default adoption
+## Linux/WSL automatic installation
+
+**Implemented, 2026-10-16.** When Deja is selected but absent from PATH, Linux/WSL x86-64 and ARM64 load an upstream release through Zinit's separate `dots-deja-binary` command identity before loading the source plugin. Existing executables win; cached releases load without remote update checks. A run check guards managed executable activation. Failures restore the prior PATH and select autosuggestions for that shell. Updates are explicit Zinit operations. Termux keeps its native-build requirement; no automatic source builds, system-package installs, history import or startup-file edits were added.
+
+The presentation gate retains existing shell diagnostics and Zinit installation feedback. Ordinary startup remains excluded from Dots progress animations. Tests use disposable roots and synthetic downloads; native Linux/WSL release execution remains unverified.
+
+Verification: all seven new Deja installation tests passed, including real Zinit with synthetic downloads and a fresh-shell cache reuse check. The complete Zsh suite passed 28 of 29 tests; the unrelated theme-switch fixture failure (missing `default/file-colors.toml`) also reproduces with the original loader. All eight shell-environment tests passed. Native Termux Deja PTY acceptance passed for suggestion acceptance, Tab, vi mode and repeated reloads, with fixture-owned history and daemon. Evidence: `dots-zsh-610_zjic` under the reported temporary root. Linux/WSL tests simulate the platform and release payload; native release execution is still unverified.
+
+A three-sample alternating warm-start comparison with autosuggestions selected measured 1.966 s before and 2.023 s after (overlapping samples, advisory mobile timings), retained in `dots-zsh-zn9oee6p`. The existing-binary path performs no new executable probe; real Zinit fixture checks establish that cached release loading performs no download.
+
+## Default adoption (historical)
+
 
 Deja is now selected when `DOTS_ZSH_SUGGESTIONS` is unset or empty. `DOTS_ZSH_SUGGESTIONS=autosuggestions` keeps the original engine available; explicit `deja` still works. Missing-binary and invalid-selection fallbacks, Tab preservation, and fresh-shell switching remain unchanged. The owner accepted the measured startup tradeoff after trying Deja. General fixtures explicitly select autosuggestions; the native Deja runner tests unset-selector activation. No additional installation or live history import is required.
 

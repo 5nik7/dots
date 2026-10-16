@@ -99,3 +99,15 @@ Run `python3 -B tools/test_files.py`; scale checks use `tools/bench_files.py`.
 ## Bounded managed operations
 
 Read [files](../../docs/files.md) and [decision 0010](../../docs/decisions/0010-git-and-managed-file-operations.md) before changing adoption, linking, removal or backups. All routes use the shared Python engine and existing per-repository ownership. Keep optional retained snapshots separate from mandatory temporary rollback data. Remove preserves both a usable config and the repository source. Never use bak as an unverified replacement primitive. Run `python3 -B tools/test_file_operations.py` alongside catalog regressions; use only disposable homes and repositories.
+
+## Bounded checkout lifecycle
+
+Stash/edit mappings use the same installation receipt and Store. `enabled: false`
+must remain visible but excluded from active claims/install/link; never reset it
+in a track update. Retain original backup pointers for deliberately absent owned
+targets, validate candidate catalogs without writing them, and include receipt
+changes in undo/recovery. Run `tools/test_file_mappings.py` alongside catalog,
+file-operation and installation suites. Source content editing is separate from
+the public mapping editor.
+
+`dots files install/uninstall` and root setup scripts share the Store and native adapter. Preserve transactional installation receipts, first-install backups across updates, pre-existing-link nonownership and drift-preserving restoration. Keep `files remove` semantics separate. Native Windows support is bounded to mapped resources and recovery; see [installation](../../docs/installation.md). Theme setup prepares inactive generations and publishes through the Store without app side effects.

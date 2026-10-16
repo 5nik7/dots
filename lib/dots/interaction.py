@@ -36,7 +36,7 @@ class Selector:
         return result
 
 
-def gum_confirm(header, action='Apply'):
+def gum_confirm(header, action='Apply', cancel='Cancel'):
     """Return approval, or None when the caller should use its existing prompt.
 
     Capability checks happen only here, after caller-specific JSON/yes/dry-run
@@ -48,7 +48,7 @@ def gum_confirm(header, action='Apply'):
         return None
     try:
         return Selector('gum', sys.stderr).pick(
-            'choose', header, ['Cancel', action], 'Cancel') == action
+            'choose', header, [cancel, action], cancel) == action
     except SelectionEnded as exc:
         if exc.status == 130:
             raise KeyboardInterrupt from None

@@ -150,7 +150,7 @@ dt_render() {
     [[ -f $template && ! -L $template ]] || continue
     filename=${template##*/}; filename=${filename%.tpl}
     [[ $filename =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*$ ]] || { dt_error 'invalid template output name'; return 1; }
-    case $filename in id|commands-old|commands-new|selection|fingerprint|palette.json|shell.tsv|colors.json|colors.lua|ls_colors|init.*|previous|status|active.new|connectors|bat-cache) dt_error "reserved template output: $filename"; return 1 ;; esac
+    case $filename in id|commands-old|commands-new|selection|fingerprint|palette.json|shell.tsv|colors.json|colors.lua|git-styles.tsv|ls_colors|init.*|previous|status|active.new|connectors|bat-cache) dt_error "reserved template output: $filename"; return 1 ;; esac
     [[ ! ${rendered[$filename]:-} ]] || continue
     output=''
     while IFS= read -r line || [[ $line ]]; do

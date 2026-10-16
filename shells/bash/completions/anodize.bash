@@ -1,1 +1,1 @@
-/data/data/com.termux/files/home/repos/dots/shells/bash/completions/../../../lib/dots/anodize/completion/bash
+../../../lib/dots/anodize/completion/bash

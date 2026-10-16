@@ -48,7 +48,7 @@ color_caution = 'bright-yellow'
 color_os = 'red'
 color_username = 'red'
 color_hostname = 'red'
-color_directory = 'yellow'
+color_directory = 'blue'
 color_git = 'cyan'
 color_git_branch = 'purple'
 color_git_added = 'bright-green'
@@ -116,7 +116,7 @@ truncation_symbol = "…/"
 truncation_length = 0
 truncate_to_repo = true
 fish_style_pwd_dir_length = 0
-use_logical_path = true
+use_logical_path = false
 
 [git_branch]
 symbol = ""

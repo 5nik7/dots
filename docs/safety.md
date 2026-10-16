@@ -26,7 +26,7 @@ Termux's Bash/Zsh startup hook may create a marked default tmux session and atta
 
 The existing Zsh configuration uses user-local completion, Vivid, FSH, and Catppuccin caches independently of the proposed managed-file transaction engine. These are rebuildable generated data. FSH's native INI loader builds in a temporary Dots cache directory. The adapter atomically persists validated data as a regular `current_theme.zsh` in the existing `FAST_WORK_DIR`, retaining the last good startup theme on preparation failure. Before replacing a non-Dots selection it creates a unique private backup of the prior script and compiled companion, preserving symlink identity. Stale `.zwc` code is invalidated; directory conflicts are refused and backups are not automatically pruned. These are cache/selection writes outside the managed theme-publication journal. User overlays remain trusted executable shell code. Completion generation validates successful output before atomic publication; failed output is not evaluated. Ordinary startup retains its existing optional plugin bootstrap and private/local sourcing behavior. Tests use copied public dependencies and synthetic private modules under owned roots; they must never run the live startup chain against the developer's home. See the [Zsh guide](../shells/zsh/README.md).
 
-The default [Deja integration](../shells/zsh/README.md#deja-suggestions) is third-party executable shell code, not sandboxed or managed by Dots transactions. When its binary is installed and autosuggestions is not explicitly selected, startup permits its per-user background daemon and plaintext history database under `~/.local/share/deja`; history import is never automatic. Its history exclusions are not general secret redaction. Engine selection is fixed for the shell lifetime to avoid conflicting widget wrappers. Switching back leaves Deja data and its daemon intact; removal and process termination require separate, scoped action.
+The default [Deja integration](../shells/zsh/README.md#deja-suggestions) is third-party executable shell code, not sandboxed or managed by Dots transactions. On Linux/WSL x86-64 and ARM64, selecting Deja permits Zinit to download a missing executable from upstream GitHub releases into its own plugin directory. This uses Zinit's existing third-party installation lifecycle, outside Dots file journals; the executable run check is not publisher authentication or sandboxing. Existing PATH executables take precedence, cached releases are reused, and updates are explicit. No upstream installer, system package installation or startup-file edits are invoked. Explicit `autosuggestions` or `none` selections skip this bootstrap. When Deja is selected and its binary is available, startup permits its per-user background daemon and plaintext history database under `~/.local/share/deja`; history import is never automatic. Its history exclusions are not general secret redaction. Engine selection is fixed for the shell lifetime to avoid conflicting widget wrappers. Switching back leaves Deja data and its daemon intact; removal and process termination require separate, scoped action.
 
 ## Permanent Read-Only Core
 
@@ -400,8 +400,17 @@ switch does not imply wallpaper permission. Only explicit `bg` actions or
 
 ## Managed File Transactions
 
-The bounded POSIX engine under decision 0010 implements add, link, stop-managing
-remove, restore, undo and interrupted recovery. Before writes it validates the
+`files stash`/`files edit` submit complete guarded catalog/link/receipt batches to
+the same Store. Stash retains sources and removes only matching links; disabled
+resources stop claiming targets and cannot be silently reinstalled. Editing is
+metadata-only unless live apply is explicitly requested. Live apply refuses
+unrelated links, cross-owner sources, overlaps, unsafe parents, conflicting claims
+and receipt drift; occupied regular destinations require backup approval.
+Mandatory installation baselines survive `--no-backup`, relocation and temporary
+absence. Undo/recovery restore mappings, links and receipts together. Text updates
+to existing regular files retain their permission bits.
+
+The shared file engine under decision 0010 implements POSIX add, link and stop-managing remove, plus native-adapter restore, undo, interrupted recovery and bounded checkout installation. Before writes it validates the
 complete operation set, source/target overlap, ownership and path boundaries,
 then locks the state and affected catalogs. It stages and verifies object copies
 before live replacement and records durable per-object phases before renames.
@@ -436,6 +445,15 @@ repository content where possible and refuses unavailable original content.
 Retained snapshot payloads are not automatically pruned. Backup restore changes
 data objects; undo reverses catalog ownership too. No automatic force or pruning
 route is implemented. Standalone bak remains outside this managed contract.
+
+`files check` is a bounded, explicit catalog-pruning operation: only absent source
+paths qualify, never dangling source symlinks or filesystem errors. Unavailable
+repositories are skipped. Target objects and installation receipts are untouched.
+Per-entry review and final batch approval precede writes unless `--yes` is given;
+dry-run always remains read-only. Composition/catalog digests and source absence
+guard the approved batch. The transaction engine distinguishes ENOENT from other
+object-inspection errors when checking guards. One transaction journals all changed
+catalogs; prior catalog metadata supports undo without retained payload snapshots.
 
 Adoption uses registered roots, excludes known credentials and local/generated
 state, and rejects recognizable credential material without printing content.
@@ -494,3 +512,11 @@ Saved configuration and theme publication are separate transactions: a failed
 An optional two-second DDS broadcast follows publication; it carries only the
 state-root identity, never an executable or a path to load. Notification failure
 does not undo a published theme. Plugin snapshot errors retain previous colors.
+
+## Bounded checkout installation
+
+[Setup](installation.md) preflights catalog composition, source contents and target identities before replacement. It retains verified original backups and journals its installation record with the same operation batch. Correct pre-existing links are not claimed. Unrelated links and conflicts block the batch; ordinary occupied objects require the displayed backup/replacement approval. Update reconciliation preserves the first installation baseline.
+
+Uninstall restores only unchanged owned targets; drift remains visible and retained. Empty created-directory cleanup uses separate guarded file transactions. Catalogs, checkouts, generated payloads and recovery records are retained. The shared platform adapter refuses symlinked ancestors, unsupported Windows reparse points and unavailable link capability. Windows flushes payload/journal files, but lacks POSIX directory-fsync/power-loss guarantees; native evidence is required before claiming platform validation.
+
+Theme preparation creates inactive immutable payloads marked `staged`; it publishes nothing. Setup's file transaction owns pointer/connector publication and recovery. These payloads are not mistaken for interrupted normal theme journals. Git updates remain separate non-atomic stages, retain completed updates on later setup failure, and never discard dirty work or recursively initialize private sources. Dry-run performs no writes or network access.

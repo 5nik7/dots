@@ -99,6 +99,8 @@ class Browser:
                 self.ui.emit('  Resource no longer matches this view; returning to the list.')
                 return
             self.ui.render('show', [row], manager.catalog.platform)
+            if not row['enabled']:
+                self.ui.detail('Stashed', 'Use dots files stash ' + identity + ' --restore to enable and relink.')
             self.ui.emit('  Stop managing keeps the repository source and preserves a usable config;')
             self.ui.emit('  absent targets remain absent. Review the plan before applying.')
             toggle = 'Retained backups: ' + ('on' if self.backup else 'off')

@@ -595,6 +595,19 @@ ShellCheck, relative Markdown links and `git diff --check` also passed.
 
 Run `python3 -B tools/test_git_operations.py` and
 `python3 -B tools/test_file_operations.py`. Both use disposable owned roots.
+
+`python3 -B tools/test_files_check.py` covers catalog-only absent-source cleanup:
+selection/cancellation, dry-run/JSON, filters, preserved targets and broken source
+links, strict absence/error handling, drift, multi-catalog rollback, abrupt-exit
+recovery, undo and owned 40/80/120-column PTYs. Catalog tests verify the new route
+and Bash/Zsh/Fish completion; adapter tests cover native PowerShell when available.
+
+`python3 -B tools/test_file_mappings.py` covers stash/restore, mapping edits/new
+entries, disabled-state integration, backup/receipt continuity, drift, rollback,
+abrupt-exit recovery, undo, cancellation and owned terminal widths. Its Git
+migration fixtures validate common/alias/Android loading without a live home or
+credential-helper execution. Run catalog, operations, installation, browser,
+confirmation, progress, resource, dispatcher and adapter regressions sequentially.
 Git fixtures use local bare remotes with test-only SSH transport; no network or
 personal publication is required. File fixtures isolate HOME, config/state and
 source repositories, including actual abrupt process exit after a replacement
@@ -851,3 +864,22 @@ suites. Standalone dots.yazi adds `python3 -B test-theme-native.py` for private 
 notification, dark/light publication, N/V/U mode redraws, narrow layouts and
 last-good snapshot recovery. Its ordinary native runner accepts `--config-dir`
 and defaults to bundled fixture configs rather than assuming a parent checkout.
+
+## Checkout installation
+
+Run `python3 -B tools/test_installation.py` and `python3 -B tools/test_installation_adapters.py` (`python` on Windows). Fixtures own HOME/XDG/AppData/profile roots, configuration sources and local Git remotes. Coverage includes dry-run, retained baselines across updates, idempotence, preview drift, process interruption/recovery, link refusal, explicit optional-source initialization, actual POSIX theme generation and native entry-point/data interfaces. PowerShell runtime and native Windows cases skip when unavailable; skipped capability checks are not positive platform evidence. The installation CI workflow covers Linux and Windows without initializing project submodules. Run existing file/catalog, theme, shell-init, dispatcher and progress regressions for their affected shared components.
+
+### Shared resource presentation
+
+Run `python3 -B tools/test_resources.py` for isolated Bash/Python resource matching,
+published and legacy snapshots, case-colliding suffixes, invalid data, path safety,
+icon/color independence, narrow layout and theme-context preservation. The existing
+shell-environment, Git/file operations, theme/file-color, Anodize/logo, installation
+and progress suites cover their owning views and undecorated interfaces. Keep
+native PTY evidence distinct from platform-simulated tests; PowerShell changes
+require native verification where the runtime is available. See the
+[presentation rollout](../plans/cli-presentation.md) for results and baseline limits.
+
+## Git theme styles
+
+Run `python3 -B tools/test_git_styles.py -v` for published Git-role consumption, porcelain-state priority, old/malformed/unsafe projections, color policy, resource-style independence, native 40/80/120-column PTYs, tracking counts, and sync/publish success and failure output. All Git mutations and remotes are fixture-owned. `tools/test_file_colors.py` covers Git defaults, layered edits, publication, additive exports, older snapshots and Bash/Zsh/Fish completion. Run these with `tools/test_resources.py`, `tools/test_git_operations.py` and relevant theme publication cases sequentially on Termux. Native Termux acceptance does not establish native Windows console support.

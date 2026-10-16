@@ -67,3 +67,5 @@ bin-release/
 /shells/nushell/dots-init.nu
 
 /config/blastoff/backups/*
+
+/config/btop/themes/dots.theme

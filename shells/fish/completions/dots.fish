@@ -1,1 +1,1 @@
-/data/data/com.termux/files/home/repos/dots/shells/fish/completions/../../../lib/dots/completion/fish
+../../../lib/dots/completion/fish

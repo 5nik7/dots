@@ -52,12 +52,18 @@ _dots_env_line() {
 }
 
 _dots_env_row() {
-  local key=$1 kind=$2 value source color=$DOTS_UI_RESET length
+  local key=$1 kind=$2 value source color=$DOTS_UI_RESET length resource_kind=''
   _dots_env_text "${values[$key]}"; value=$REPLY
   _dots_env_text "${origins[$key]}"; source=$REPLY
   if [[ $kind == bool ]]; then
     if [[ $value == 1 ]]; then value+=' (enabled)'; else value+=' (disabled)'; fi
-  elif [[ $kind == path ]]; then color=$DOTS_UI_MAGENTA; fi
+  elif [[ $kind == path ]]; then
+    if [[ ! -e ${values[$key]} && ! -L ${values[$key]} ]]; then
+      resource_kind=dir; [[ $key != DOTS_CONFIG_FILE ]] || resource_kind=file
+    fi
+    dots::resource "${values[$key]}" "$value" "$resource_kind"
+    value=$DOTS_RESOURCE_TEXT; color=$DOTS_RESOURCE_STYLE
+  fi
   _dots_env_size "$value"; length=$REPLY
   if (( 2 + 26 + 2 + length + 2 + ${#source} + 2 <= _dots_env_columns )); then
     printf '  %s%-26s%s  %s%s%s  %s[%s]%s\n' "$DOTS_UI_BLUE" "$key" "$DOTS_UI_RESET" \

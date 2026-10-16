@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import tarfile
 import unittest
 
 REPO = Path(__file__).resolve().parents[1]
@@ -301,6 +302,144 @@ zinit() { return 0; }
 _dots_suggestion_plugin
 [[ $_DOTS_SUGGESTION_ENGINE == autosuggestions ]]
 ''')
+
+    def binary_shell(self, code, executable=True):
+        directory = self.root / 'release space ü'
+        directory.mkdir(exist_ok=True)
+        binary = directory / 'deja'
+        binary.write_text('#!' + ZSH + '\n[[ $1 == --version ]]\n')
+        binary.chmod(0o700 if executable else 0o600)
+        return self.shell('''source "$DOTS/shells/zsh/integrations/plugins.zsh"
+DOTS_PLATFORM=wsl
+MACHTYPE=x86_64
+typeset -a ice loaded release_ice
+integer downloads=0
+zinit() {
+  case $1 in
+    ice) ice=("${@:2}");;
+    light)
+      if (( ${ice[(Ie)id-asdots-deja-binary]} )); then
+        release_ice=("${ice[@]}")
+        ice=()
+        (( downloads += 1 ))
+        path=("$HOME/release space ü" $path)
+        (( ${fail_download:-0} )) && return 1
+      else
+        loaded+=("$2")
+      fi
+      ice=()
+      ;;
+  esac
+  return 0
+}
+''' + code)
+
+    def test_deja_installs_before_plugin_and_reload_is_quiet(self):
+        p = self.binary_shell('''_dots_suggestion_plugin
+[[ $_DOTS_SUGGESTION_ENGINE == deja && $downloads == 1 ]] || exit 1
+[[ $loaded == Giammarco-Ferranti/deja ]] || exit 2
+before=$PATH
+_dots_suggestion_plugin
+[[ $downloads == 1 && $PATH == $before ]] || exit 3
+''')
+        self.assertEqual(p.stdout + p.stderr, '')
+
+    def test_deja_binary_release_architecture_selection(self):
+        for platform in ('linux', 'wsl'):
+            for arch, release in (('x86_64', 'amd64'), ('aarch64', 'arm64')):
+                with self.subTest(platform=platform, arch=arch):
+                    self.binary_shell(f'''DOTS_PLATFORM={platform}
+MACHTYPE={arch}
+_dots_deja_binary || exit 1
+[[ $downloads == 1 && $release_ice == *bpickdeja_*_linux_{release}.tar.gz* ]]
+''')
+
+    def test_deja_download_failure_restores_path_and_locks_fallback(self):
+        p = self.binary_shell('''fail_download=1
+before=$PATH
+_dots_suggestion_plugin
+[[ $_DOTS_SUGGESTION_ENGINE == autosuggestions && $downloads == 1 ]] || exit 1
+[[ $loaded == zsh-users/zsh-autosuggestions && $PATH == $before ]] || exit 2
+(( ! $+commands[deja] )) || exit 3
+_dots_suggestion_plugin
+[[ $downloads == 1 ]]
+''')
+        self.assertIn('Zinit could not install Deja', p.stderr)
+
+    def test_deja_unusable_release_falls_back(self):
+        for executable in (True, False):
+            with self.subTest(executable=executable):
+                p = self.binary_shell('''if [[ -x "$HOME/release space ü/deja" ]]; then
+  print -r -- '#!'$commands[zsh]$'\nexit 1' > "$HOME/release space ü/deja"
+fi
+before=$PATH
+_dots_suggestion_plugin
+[[ $_DOTS_SUGGESTION_ENGINE == autosuggestions && $PATH == $before ]]
+''', executable=executable)
+                self.assertIn('cannot run', p.stderr)
+
+    def test_deja_no_download_for_overrides_platforms_or_architectures(self):
+        for setting in ('DOTS_ZSH_SUGGESTIONS=none',
+                        'DOTS_ZSH_SUGGESTIONS=autosuggestions',
+                        'DOTS_ZSH_SUGGESTIONS=invalid',
+                        'DOTS_PLATFORM=termux', 'DOTS_PLATFORM=msys',
+                        'MACHTYPE=riscv64'):
+            with self.subTest(setting=setting):
+                self.binary_shell(setting + '''
+_dots_suggestion_plugin
+[[ $downloads == 0 && $_DOTS_SUGGESTION_ENGINE != deja ]]
+''')
+
+    def test_deja_existing_binary_avoids_install_and_probe(self):
+        # A user's binary is trusted as before; even --version is not launched.
+        self.binary_shell('''print -r -- '#!'$commands[zsh]$'\nexit 99' > "$HOME/release space ü/deja"
+path=("$HOME/release space ü" $path)
+_dots_suggestion_plugin
+[[ $_DOTS_SUGGESTION_ENGINE == deja && $downloads == 0 ]]
+''')
+
+    def test_deja_real_zinit_download_and_cached_load(self):
+        manager = Path(os.environ['HOME']) / '.local/share/zinit/zinit.git'
+        if not (manager / 'zinit.zsh').is_file():
+            self.skipTest('public Zinit checkout unavailable')
+        shutil.copytree(manager, self.root / 'manager',
+                        ignore=shutil.ignore_patterns('.git', '*.zwc'))
+        binary = self.root / 'deja'
+        binary.write_text('#!' + ZSH + '\n[[ $1 == --version ]]\n')
+        binary.chmod(0o700)
+        with tarfile.open(self.root / 'release.tar.gz', 'w:gz') as archive:
+            archive.add(binary, arcname='deja')
+        plugin = self.root / 'zinit space ü/plugins/Giammarco-Ferranti---deja'
+        plugin.mkdir(parents=True)
+        (plugin / 'deja.plugin.zsh').write_text('typeset -g plugin_sourced=yes\n')
+        setup = '''typeset -gA ZINIT
+ZINIT[HOME_DIR]="$HOME/zinit space ü"
+source "$HOME/manager/zinit.zsh"
+source "$HOME/manager/zinit-install.zsh"
+source "$DOTS/shells/zsh/integrations/plugins.zsh"
+DOTS_PLATFORM=wsl
+MACHTYPE=x86_64
+.zinit-download-file-stdout() {
+  print -r -- "$1" >> "$HOME/requests"
+  case $1 in
+    */latest) print -r -- '<a href="/Giammarco-Ferranti/deja/releases/tag/v0.0.1">release</a>';;
+    */expanded_assets/*) print -r -- '<a href="/Giammarco-Ferranti/deja/releases/download/v0.0.1/deja_0.0.1_linux_amd64.tar.gz">archive</a>';;
+    *.tar.gz) command cat "$HOME/release.tar.gz";;
+    *) return 1;;
+  esac
+}
+_dots_suggestion_plugin || exit 1
+[[ $_DOTS_SUGGESTION_ENGINE == deja && $plugin_sourced == yes ]] || exit 5
+[[ $commands[deja] == "$ZINIT[PLUGINS_DIR]/dots-deja-binary/deja" ]] || exit 2
+before=$PATH
+_dots_deja_binary || exit 3
+[[ $PATH == $before ]] || exit 4
+'''
+        self.shell(setup)
+        requests = (self.root / 'requests').read_text()
+        self.assertIn('deja_0.0.1_linux_amd64.tar.gz', requests)
+        self.shell(setup)
+        self.assertEqual((self.root / 'requests').read_text(), requests)
 
     def test_plugin_paths_keep_prefix_and_appended_provider_order(self):
         self.shell('''source "$DOTS/shells/zsh/integrations/plugins.zsh"

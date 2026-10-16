@@ -28,25 +28,13 @@ dt_apps_plan() {
   [[ $pi_agent == /* && $pi_agent != *$'\n'* && /$pi_agent/ != */../* && /$pi_agent/ != */./* ]] || {
     dt_error 'Pi agent directory must be an absolute path without dot components'; return 1;
   }
-  for name in kitty tmux btop yazi; do
-    [[ -d $config/$name ]] || continue
-    case $name in
-      kitty|tmux) path=$config/$name/dots-theme.conf; name=$name.conf ;;
-      btop) path=$config/btop/themes/dots.theme; name=btop.theme ;;
-      yazi) path=$config/yazi/flavors/dots.yazi; name=yazi ;;
-    esac
-    [[ -d ${path%/*} && ( ! -e $path || -f $path || -L $path ) ]] || { dt_error "cannot connect theme target: $path"; return 1; }
-    DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/$name")
-  done
-  for name in vivid fsh; do
-    case $name in
-      vivid) path=$config/vivid/themes/dots.yml; name=vivid.yml ;;
-      fsh) path=$config/fsh/dots.ini; name=fsh.ini ;;
-    esac
+  local suffix artifact
+  while IFS=$'\t' read -r name suffix artifact; do
+    path=$config/$name/$suffix
     [[ -d ${path%/*} ]] || continue
     [[ ! -e $path || -f $path || -L $path ]] || { dt_error "cannot connect theme target: $path"; return 1; }
-    DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/$name")
-  done
+    DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/$artifact")
+  done < "$DT_LIB/connectors.tsv"
   if [[ -d $HOME/.termux ]]; then
     path=$HOME/.termux/colors.properties
     [[ ! -e $path || -f $path || -L $path ]] || return 1

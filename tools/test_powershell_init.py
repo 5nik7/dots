@@ -31,6 +31,7 @@ class PowerShellInitTests(unittest.TestCase):
                      'shells/powershell/Microsoft.PowerShell_profile.ps1'):
             shutil.copy2(REPO / name, self.repo / name)
         shutil.copytree(REPO / 'lib/dots/shell', self.repo / 'lib/dots/shell')
+        shutil.copy2(REPO / 'lib/dots/ui.ps1', self.repo / 'lib/dots/ui.ps1')
         # PATH deliberately contains no Bash or other external tools.
         self.env = {'HOME': str(self.home), 'USERPROFILE': str(self.home),
                     'DOTS': str(self.repo), 'PATH': str(self.repo / 'bin'),
@@ -58,6 +59,20 @@ class PowerShellInitTests(unittest.TestCase):
                     'if ($errors.Count) { $errors | Out-String | Write-Error; exit 1 }')
             p = self.run_ps('-Command', code)
             self.assertEqual(p.returncode, 0, str(file) + p.stderr)
+
+    def test_help_styles_and_undecorated_hook(self):
+        adapter = str(self.repo / 'bin/dots.ps1')
+        rich = self.run_ps('-File', adapter, '--color=always', '--icons=never', '--help')
+        self.assertEqual(rich.returncode, 0, rich.stderr)
+        self.assertIn('\x1b[1;96mDots', rich.stdout)
+        plain = self.run_ps('-File', adapter, '--color=never', '--icons=never', '--help')
+        self.assertEqual(plain.returncode, 0, plain.stderr)
+        self.assertNotIn('\x1b', plain.stdout + plain.stderr)
+        original = self.run_ps('-File', adapter, 'init', 'powershell')
+        forced = self.run_ps('-File', adapter, '--color=always', '--icons=always', 'init', 'powershell')
+        self.assertEqual(forced.returncode, 0, forced.stderr)
+        self.assertEqual(forced.stdout, original.stdout)
+        self.assertNotIn('\x1b', forced.stdout)
 
     def test_generator_and_environment_without_bash(self):
         # Prove noninteractive initialization never evaluates the interactive body.

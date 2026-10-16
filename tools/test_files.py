@@ -79,6 +79,18 @@ class Files(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             return proc.stdout
         call("commands", "--check")
+        self.assertIn('--dry-run', call('help', 'files', 'check'))
+        for shell in ('bash', 'zsh', 'fish'):
+            self.assertIn('check', call('__complete', shell, '2', '--', 'dots', 'files', 'ch'))
+            self.assertIn('--yes', call('__complete', shell, '3', '--', 'dots', 'files', 'check', '--'))
+            self.assertIn('dots', call('__complete', shell, '4', '--', 'dots', 'files', 'check', '--repo', 'd'))
+        self.assertEqual(json.loads(call('files', 'check', '--dry-run', '--json'))['action'], 'check')
+        for route in ('stash', 'edit'):
+            self.assertIn('--dry-run', call('help', 'files', route))
+            for shell in ('bash', 'zsh', 'fish'):
+                self.assertIn(route, call('__complete', shell, '2', '--', 'dots', 'files', route[:2]))
+                self.assertIn('--yes', call('__complete', shell, '3', '--', 'dots', 'files', route, '--'))
+                self.assertIn('dots:app', call('__complete', shell, '3', '--', 'dots', 'files', route, 'dots:'))
         self.assertIn("--strategy", call("help", "files", "track"))
         discovery_help = call("help", "files", "discover")
         for flag in ("--verbose", "--all"):

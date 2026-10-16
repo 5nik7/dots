@@ -1,10 +1,9 @@
 # File catalog
 
-**Status: Inventory, metadata, bounded adoption/link/remove and recovery implemented; general profile installation remains proposed.**
+**Status: Inventory, metadata, bounded adoption/link/remove, checkout installation and recovery implemented; general profile installation remains proposed.**
 
 `dots files` starts the managed-files workflow by locating sources, recording their
-intent, classifying targets, and listing them. It requires Python 3.9+ on a POSIX
-host; discovery additionally requires Git. Neither ordinary dispatch nor basic
+intent, classifying targets, and listing them. It requires Python 3.9+; discovery additionally requires Git. Native Windows supports the bounded install/uninstall, inspection and recovery routes described in [checkout installation](installation.md); adoption and the browser remain POSIX-only. Neither ordinary dispatch nor basic
 help requires Python or Git. Go development remains paused.
 
 Slow catalog/system discovery, browser loading, planning and file operations use [terminal progress](presentation.md#operation-progress). Preparation, apply and reverse recovery have separate item counts; final results retain transaction and recovery details. `DOTS_PROGRESS=never` disables the display. JSON, raw source/target queries and dry runs never animate.
@@ -56,8 +55,143 @@ The source must exist in its owning repository. Whole directories require
 `--update` is required to change an existing ID. Repeating the identical record is
 a no-op. `--replaces REPOSITORY:ID` is repeatable. Tracking does not install, move,
 link, copy, stage in Git, or read the contents of the source. The separate managed
-operations below implement add, link, remove/rm, undo and recovery. Editing and
+operations below implement add, link, remove/rm, undo and recovery. Source-content editing and
 general module/profile installation remain future work.
+
+## Stash and edit mappings
+
+`dots files stash` disables tracked resources repository-wide while keeping their
+source files and catalog entries. It unlinks only a matching current symlink,
+including a matching dangling link. Unrelated destination objects are preserved;
+receipt-owned drift or a link still claimed by another enabled resource blocks
+the batch. `--restore` enables and relinks the selected resources after validation.
+Stash also retires unchanged receipt-owned historical links left by metadata-only
+edits, with each removal shown in the preview; it never scans for arbitrary links.
+
+```bash
+dots files stash                         # Select resources, then review the batch
+dots files stash dots:example --dry-run
+dots files stash dots:example --yes
+dots files stash dots:example --restore
+dots files edit                         # Select an entry or choose New mapping
+dots files edit dots:example --target '${CONFIG}/example-new' --apply
+dots files edit --new --repo dots --id example --source config/example \
+  --target '${CONFIG}/example' --app example --category config \
+  --strategy directory-link
+```
+
+Stashed entries have `enabled: false` in their owning catalog and remain visible
+with status `stashed`. Omitted `enabled` means true; other types are invalid.
+Disabled entries do not claim destinations, replace active resources or participate
+in install/setup/direct linking. Track updates preserve disabled state. Discovery
+still recognizes their repository sources as tracked, but their destinations are
+not active claims. `files check` still checks actual source absence independently
+of displayed status. Stashing on one machine does not unlink another machine;
+repeat stash there to unlink a matching link, even if metadata is already disabled.
+All machines must use a CLI version that understands `enabled`.
+
+`edit` changes mappings, not source contents. It preserves unspecified fields,
+stable IDs and repository ownership. `--source` is relative to the owning repo;
+existing sources must be regular files or directories within that owner. Whole
+directories require `directory-link`. `--target` accepts existing destination
+templates or home/XDG paths normalized to portable templates. Other absolute
+destinations remain unsupported. `--strategy` accepts link/directory-link/copy,
+but live copy installation remains unsupported.
+
+With `--new`, specify an available `--repo`, unique `--id`, `--source`, `--target`,
+`--app` and `--category`; interactive mode collects missing values. New mappings
+inherit the repository's platforms unless `--platforms` is given. `--platform`
+updates only that target override; without it `--target` updates the common target.
+Unspecified overrides remain unchanged. Shared-field edits validate ownership
+conflicts across all applicable platforms. Live apply is for the current platform.
+
+By default edit only saves catalog metadata. It explicitly reports that existing
+links remain; use `--apply` during the edit to migrate the current old/new mapping.
+Live edits also reconcile unchanged historical targets recorded in the installation
+receipt, but never scan for arbitrary old links. Unrelated links, unsafe parents,
+source/target overlap and observed drift block application. Editing a stashed
+entry keeps it disabled; restore it before requesting live apply.
+
+Both commands default to interactive selection/review and final Cancel/Apply
+confirmation. Gum is optional, with text fallbacks including a native numbered
+selector when Bash is unavailable or on native Windows. Native mapping prompts
+never launch a WSL Bash bridge. `--yes` bypasses prompts and requires explicit
+IDs/fields. `--dry-run` takes precedence and writes no catalogs/state/locks; it
+does not prompt. `--json` requires `--yes` or `--dry-run` and emits an undecorated
+schema-1 object containing `action`, `status`, `dry_run`, `items` and, after apply,
+`transaction`. Items carry qualified IDs, source/target paths, action status/reason
+and old mapping paths for edits. Diagnostics go to stderr. Global presentation
+flags precede the route; human paths use shared type colors/icons and wrap fully.
+Delayed progress never runs in dry-run, JSON or redirected output.
+
+Occupied regular destinations require `--backup` (or the existing backup preference)
+for live replacement. `--no-backup` refuses them; it does not remove mandatory
+installation/recovery baselines. Live changes retain verified snapshots. Catalog,
+link and receipt edits share one transaction, preserving original installation
+backup references when an owned target becomes intentionally absent. Undo restores
+all three; ordinary uninstall can still restore a pre-install object at a suspended
+destination. Results show transaction and undo commands. Metadata-only edits use
+the same journal without creating an installation receipt.
+
+Success/no-op/cancel return 0, validation or operation errors 1, syntax/nonterminal
+usage errors 2, and interruption/EOF 130. These routes also use the native
+PowerShell adapter; link capability failures are explicit, never silent copies.
+
+## Check missing sources
+
+`dots files check` reviews the same tracked catalog as `list` and removes approved
+entries whose source paths are absent. It changes **catalog metadata only**:
+source objects, target files/directories/links and installation receipts remain
+untouched. It differs from `files remove`, which preserves usable local copies.
+
+```bash
+dots files check                         # Review entries, then confirm the batch
+dots files check --repo dots --dry-run   # Read-only preview, no prompts
+dots files check --yes                   # Remove every eligible entry in scope
+dots files check --dry-run --json        # Machine-readable preview
+```
+
+Default scope, filtering and sorting match `list`: `--repo`, `--app`, `--category`,
+`--status`, `--platform`, `--all-platforms`, and `--sort` have the same meanings.
+`--status` filters the observed catalog status, while eligibility checks source
+absence independently, including entries whose displayed status is a conflict.
+Unknown repository IDs fail. Unavailable/excluded repositories are reported and
+skipped without initialization. Missing sources in inactive platforms require
+`--all-platforms` or the appropriate explicit platform selection.
+
+Each candidate shows its ID, source, target and catalog-only action. Optional Gum
+offers Skip/Remove entry, with Skip selected; otherwise a plain yes/no prompt
+defaults to skip. The selected batch then requires Cancel/Apply confirmation.
+Cancelling the final review changes nothing. EOF or Ctrl-C interrupts with 130;
+UI errors never approve or fall through to another backend.
+
+`--yes` selects all eligible entries without prompts. `--dry-run` takes precedence
+and never writes catalogs, state, locks or journals. Nonterminal mutation requires
+`--yes`; `--json` requires `--yes` or `--dry-run`. Empty/all-skipped results create
+no transaction. Existing dangling source symlinks are reported for repair and
+retained. Permission errors, symlinked ancestors and other uncertain observations
+fail closed instead of being classified as missing.
+
+Apply guards the reviewed composition, catalogs and absent paths; reappearing
+sources or metadata drift require a new review. One journaled transaction covers
+all selected catalogs. Results provide the transaction ID and `dots files undo ID`;
+existing history/recover commands handle interruption. Undo uses prior catalog
+metadata retained in the journal, without an optional retained-backup flag. Other
+records, unknown metadata and replacement declarations retain their values/order.
+
+Human output uses shared resource colors/icons, complete wrapped paths, semantic
+statuses, counts and delayed progress. JSON and dry runs never animate. Redirected
+output is plain unless human decoration is explicitly forced. JSON is always
+undecorated: schema 1 contains `action`, `platform`, `dry_run`, `status`, `items`,
+`sources`, and `counts` (`checked`, `eligible`, `selected`, `removed`, `skipped`).
+Items retain catalog fields and add `source_state`, `eligible`, `reason`, and
+`outcome`; dry-run candidates use `would-remove`. Applied results also include
+the Store's `transaction` object. Preview `selected`/`removed` counts remain zero.
+Errors go to stderr. Success, no changes and explicit cancellation return 0;
+inspection/apply errors return 1 and invalid usage returns 2.
+
+The same controller is available through the native PowerShell adapter; optional
+Gum remains capability-checked and the text fallback does not require Bash.
 
 ## Interactive tracked-config browser
 
@@ -101,15 +235,14 @@ the [documented Escape/error ambiguity](presentation.md#optional-gum-interaction
 Other tool/validation/operation errors return 1; invalid CLI syntax returns 2.
 The chosen backend is fixed for the session, with no fallback after a UI failure.
 Inherited Gum colors and Dots presentation controls are respected without sourcing
-shell configuration. Native Windows managed operations remain unsupported.
+shell configuration. The browser and its adoption/stop-managing actions remain unsupported on native Windows; bounded setup/recovery uses the separate native adapter.
 
 ## Ownership and formats
 
 [.dots/sources.json](../.dots/sources.json) declares composition with schema 1 and
 `sources` containing `id`, repository-relative `path`, allowed `roots`, `platforms`
 and optional `excluded`. Dots owns common configurations; Androidots contributes
-Termux-specific sources. Windots is inventoried for Windows but has no native
-Windows target adapter. Neovim owns its catalog at `config/nvim/.dots/files.json`.
+Termux-specific sources. Windots supplies the native VS Code settings target; its other resources remain unmapped. Neovim owns its catalog at `config/nvim/.dots/files.json`.
 Missing optional catalogs are reported unavailable. Secrets are explicitly excluded;
 no private submodule is initialized and no source-file contents are printed. Third-party
 PowerShell and Rainmeter submodules are explicitly excluded from resource ownership.
@@ -297,6 +430,11 @@ After success, unneeded content payloads are removed; journals retain identity,
 hashes, link text and previous catalog metadata. Undo without a retained snapshot
 can use unchanged repository content and refuses when original data is unavailable.
 Content copied for a retained snapshot remains until a future explicit retention
-operation is implemented. Journals are outside Git and never contain file contents
-except catalog metadata. Filesystem operations are bounded POSIX operations; native
-Windows remains unsupported. See [safety](safety.md#managed-file-transactions).
+operation is implemented. Journals are outside Git and never contain configuration contents
+except catalog and installation metadata. The shared filesystem adapter also supports bounded native Windows installation/recovery; adoption and stop-managing remain POSIX-only. See [safety](safety.md#managed-file-transactions).
+
+## Checkout installation and restoration
+
+`dots files install` links all applicable mapped resources and retains verified backups before replacing regular objects. `dots files uninstall` restores installation-owned targets, preserves drift and does not remove source catalog entries. Both share the transaction Store and expose existing history/undo/recovery. This differs from `files remove`, which materializes configs and removes catalog entries. See [installation](installation.md) for all options, source updating and platform boundaries.
+
+Catalog resources may provide an optional `targets` object mapping platform names to target strings or null, overriding `target` only on that platform. Native mappings add `${APPDATA}`, `${LOCALAPPDATA}`, `${NVIM_CONFIG}` and `${POWERSHELL_PROFILE}`. NVIM_CONFIG honors XDG_CONFIG_HOME, otherwise LOCALAPPDATA; the PowerShell adapter passes the current host's profile path. A missing native profile path remains unmapped instead of guessing. Inventory uses the same resolution as installation.

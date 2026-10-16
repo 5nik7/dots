@@ -63,3 +63,7 @@ Test bootstrap in disposable environments with:
 
 Update `docs/platforms.md`, `docs/safety.md`, `README.md`, and the applicable plan whenever bootstrap capabilities change.
 
+
+## Implemented checkout-local entry points
+
+The root install/uninstall shell and PowerShell scripts are existing-checkout clients of [bounded installation](../../docs/installation.md), not hosted download/release bootstrap. They require installed runtimes and use the shared Python transaction engine. Preserve explicit source downloads, nonrecursive public-source selection and staged update/configuration approval. The remote checksum/channel requirements above still apply before introducing a remote bootstrap service.

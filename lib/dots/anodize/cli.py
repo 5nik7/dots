@@ -178,16 +178,16 @@ def present(result, use_json=False):
         code = '93' if result['status'] == 'preview' else '92'
         ui.emit('  ' + ui.paint(result['status'], code))
     if 'target' in result:
-        ui.detail('Target', ui.path(result['target']))
+        ui.resource_detail('Target', result['target'])
     for target in result.get('connectors', []):
-        ui.detail('Connector', ui.path(target))
+        ui.resource_detail('Connector', target)
     for name in result.get('files', []):
-        ui.detail('File', name)
+        ui.resource_detail('File', name, kind='file')
     if result.get('transaction'):
         ui.detail('Transaction', result['transaction'])
         ui.detail('Undo', 'dots files undo ' + result['transaction'])
     if result.get('wallpaper'):
-        ui.detail('Wallpaper', ui.path(result['wallpaper']))
+        ui.resource_detail('Wallpaper', result['wallpaper'])
     if 'contrast' in result:
         ui.detail('Contrast', f'{result["contrast"]:.2f}:1 foreground/background')
     if 'colors' in result:

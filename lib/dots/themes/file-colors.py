@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dots file styles: literal configuration, portable exports and journaled edits."""
+"""Dots file and Git styles: literal configuration, portable exports and journaled edits."""
 import argparse
 import copy
 import fnmatch
@@ -28,7 +28,7 @@ VIVID = dict(file='regular_file', dir='directory', symlink='symlink',
              block_device='block_device', character_device='character_device', setuid='setuid',
              setgid='setgid', capability='file_with_capability', sticky_other_writable='sticky_other_writable',
              other_writable='other_writable', sticky='sticky', executable='executable_file')
-GROUPS = ('type', 'extension', 'mime')
+GROUPS = ('type', 'extension', 'mime', 'git')
 HEX = re.compile(r'#[0-9a-fA-F]{6}\Z')
 IDENT = re.compile(r'[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*\Z')
 
@@ -63,8 +63,8 @@ def query(*args):
 def validate_rule(group, key, value):
     if not isinstance(key, str) or not key or len(key) > 256 or any(ord(c) < 32 or ord(c) == 127 for c in key):
         raise ValueError('invalid rule key')
-    if group == 'type' and not re.fullmatch(r'[a-z][a-z0-9_]*', key):
-        raise ValueError('invalid type name')
+    if group in ('type', 'git') and not re.fullmatch(r'[a-z][a-z0-9_]*', key):
+        raise ValueError('invalid ' + group + ' name')
     if group == 'extension' and (not key.startswith('.') or any(c in key for c in '/*?[]')):
         raise ValueError('extension must be a literal suffix beginning with a dot')
     if group == 'mime' and not re.fullmatch(r'[a-z0-9!#$&^_.+-]+/(?:[a-z0-9!#$&^_.+-]+|\*)', key):
@@ -311,6 +311,24 @@ def write_snapshot(doc, out):
     (out / 'colors.json').write_text(json.dumps(doc, sort_keys=True) + '\n')
     (out / 'colors.lua').write_text('return ' + lua(doc) + '\n')
     (out / 'ls_colors').write_text(doc['ls_colors'] + '\n')
+    git_rows = [key + '\t' + (sgr(style) or '0') + '\n'
+                for key, style in doc['styles'].get('git', {}).items()]
+    (out / 'git-styles.tsv').write_text('dots-git-styles\t1\n' + ''.join(git_rows))
+    # A validated data projection for shell consumers; never sourced as code.
+    sys.path.insert(0, str(ROOT / 'lib/dots'))
+    from resources import suffix_rows
+    rows = [('type', key, sgr(style) or '0', '-') for key, style in doc['styles']['type'].items()]
+    rows += suffix_rows([(key, sgr(style)) for key, style in doc['styles']['extension'].items()], 'extension')
+    mime = {'mime': [], 'default_mime': []}
+    for key in sorted(doc['styles']['mime'], key=lambda k: ('*' in k, k)):
+        custom = any(Path(s) != ROOT / 'default/file-colors.toml' for s in doc['provenance']['mime'][key].values())
+        group = 'mime' if custom else 'default_mime'
+        mime[group].append((group, key, sgr(doc['styles']['mime'][key]) or '0', '-'))
+    rows += mime['mime']
+    rows += suffix_rows([(e['key'][1:], e['sequence']) for e in doc['ls_rules']['suffixes']], 'suffix')
+    rows += mime['default_mime']
+    rows = [row for row in rows if row[1] and not any(ord(c) < 32 or ord(c) == 127 for c in row[1])]
+    (out / 'file-styles.tsv').write_text('dots-file-styles\t1\n' + ''.join('\t'.join(row) + '\n' for row in rows))
 
 
 def selected(theme=None, configured=False, generate_rules=True):
@@ -395,7 +413,7 @@ def match(doc, path, mime=None):
 
 
 def toml_dump(data):
-    lines = ['# Dots file-style overrides; edit directly or use theme colors set/reset.']
+    lines = ['# Dots file and Git style overrides; edit directly or use theme colors set/reset.']
     for group in GROUPS:
         for key, values in data.get(group, {}).items():
             lines += ['', '[' + group + '.' + json.dumps(key) + ']']
@@ -428,12 +446,12 @@ def edit(args):
         print(json.dumps(dict(status='preview', target=str(target), rules=data, resolved=doc['styles'][args.group].get(args.key)), sort_keys=True)); return
     view = ColorView(doc['colors'])
     if target.exists() and regular(target) == content:
-        view.title('File styles unchanged.')
+        view.title('Theme styles unchanged.')
     else:
         with tempfile.TemporaryDirectory(prefix='dots-color-edit-') as tmp:
             stage = Path(tmp) / 'rules.toml'; stage.write_bytes(content)
             receipt = Store(state).apply('theme-file-colors', [{'path': str(target), 'source': str(stage)}], {str(target): before}, retain=True)
-        view.title('Saved file styles')
+        view.title('Saved theme styles')
         view.fields([('Target', target), ('Journal', receipt.get('id', receipt.get('transaction', 'dots files history')))])
     if args.apply:
         p = subprocess.run([str(ROOT / 'bin/dots-theme-refresh')])
@@ -442,7 +460,7 @@ def edit(args):
 
 
 def parser():
-    p = argparse.ArgumentParser(description='Query, customize and export Dots palette and file styles.')
+    p = argparse.ArgumentParser(description='Query, customize and export Dots palette, file and Git styles.')
     sub = p.add_subparsers(dest='action')
     for group in GROUPS:
         q = sub.add_parser(group); q.add_argument('key', nargs='?'); q.add_argument('format', nargs='?', choices=['hex','rgb','ansi-24bit','esc'], default='hex')
@@ -512,6 +530,8 @@ def main(argv):
         if args.action == 'export':
             print('return ' + lua(doc) if args.format == 'lua' else doc['ls_colors'] if args.format == 'ls-colors' else json.dumps(doc, sort_keys=True)); return
         if args.action in GROUPS:
+            if args.action == 'git' and 'git' not in doc['styles']:
+                raise ValueError('published snapshot has no Git styles; run theme refresh or use --configured')
             entries = doc['styles'][args.action]
             if args.key:
                 key = args.key

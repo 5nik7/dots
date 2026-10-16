@@ -8,7 +8,7 @@ declare -A DOTS_BUILTIN_SUMMARY=(
   [help]='Show global or command help'
   [commands]='List or validate registered commands'
   [completion]='Print Bash, Zsh, or Fish integration'
-  [init]='Print native shell initialization'
+  [init]='Print native shell initialization or explicitly set up files'
 )
 DOTS_GLOBAL_OPTIONS=(
   '--help|-h|flag|Show help'
@@ -24,7 +24,8 @@ dots_builtin_metadata() {
   DOTS_META_OPTIONS=() DOTS_META_ARGUMENTS=() DOTS_META_EXAMPLES=()
   case $1 in
     init)
-      DOTS_META_USAGE='[bash|zsh|fish|powershell|nu|xonsh]'
+      DOTS_META_USAGE='[bash|zsh|fish|powershell|nu|xonsh] | --setup [OPTIONS]'
+      DOTS_META_OPTIONS=('--setup||flag|Install platform configurations with retained backups' '--dry-run||flag|Preview setup without writes' '--yes||flag|Approve setup without prompting' '--json||flag|Emit setup JSON' '--update||flag|Update clean sources before setup' '--with-source||choice:androidots,windots,nvim|Initialize a named public source')
       DOTS_META_ARGUMENTS=('1|choice:bash,zsh,fish,powershell,nu,xonsh|Shell adapter (default: Bash/Zsh)')
       # shellcheck disable=SC2016
       DOTS_META_EXAMPLES=('eval "$(dots init)"' 'dots init fish | source') ;;

@@ -16,17 +16,18 @@ from progress import Progress, configure, tracked
 
 from catalog import Catalog, Presentation, read_json, platform, relative, ID
 from transactions import Store, digest, exists, parents_safe
+from file_platform import state_root
 
 
 class Manager:
     def __init__(self):
         self.root = Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[3]).resolve()
         self.catalog = Catalog(self.root, platform())
-        home = Path(os.environ['HOME'])
+        home = Path(os.environ.get('HOME') or Path.home())
         state = Path(os.environ.get('XDG_STATE_HOME') or home / '.local/state')
         if not state.is_absolute():
             raise ValueError('state root must be absolute')
-        self.store = Store(state / 'dots')
+        self.store = Store(state_root())
         self.config = Path(os.environ.get('XDG_CONFIG_HOME') or home / '.config') / 'dots/files.json'
 
     def backup_default(self):
@@ -141,7 +142,7 @@ class Manager:
 
     @tracked('Discovering system configs')
     def system(self, repo=None):
-        claims = {r['target']: r for r in self.catalog.records() if r['target']}
+        claims = {r['target']: r for r in self.catalog.records() if r['target'] and r['enabled'] and r['applicable'] and r['status'] != 'replaced'}
         rows, seen = [], set()
         for loc in self.locations():
             if repo and loc['repository'] != repo:
@@ -237,6 +238,8 @@ class Manager:
                     if child != Path(owner['root']) and child.is_relative_to(owner['root']) and source.is_relative_to(child):
                         raise ValueError('select the owning submodule for this source')
                 for row in records:
+                    if not row['enabled']:
+                        continue
                     target_path = Path(row['target']) if row['target'] else None
                     if target_path and (path == target_path or (row['strategy'] == 'directory-link' and path.is_relative_to(target_path)) or (path.is_dir() and target_path.is_relative_to(path))):
                         raise ValueError('target is already claimed: ' + row['id'])
@@ -263,6 +266,8 @@ class Manager:
         else:
             for identity in dict.fromkeys(args.values):
                 row = next((r for r in records if r['id'] == identity), None)
+                if row and args.action == 'link' and not row['enabled']:
+                    raise ValueError('resource is stashed; use dots files stash --restore ' + identity)
                 if not row or not row['applicable'] or not row['target'] or row['status'] in ('conflict', 'replaced', 'replacement-unavailable'):
                     raise ValueError('select an applicable, unambiguous resource: ' + identity)
                 source, target = Path(row['source']), Path(row['target'])
@@ -308,15 +313,16 @@ def show(title, rows, stream=None):
     ui = Presentation(stream)
     ui.heading(title)
     for row in rows:
-        ui.emit('  ' + ui.paint(row.get('id') or ui.path(row.get('path', '')), '1;94') + '  ' + ui.status(row.get('status', 'available')))
+        identity = ui.paint(row['id'], '1;94') + '  ' if row.get('id') else ''
+        ui.emit('  ' + identity + ui.status(row.get('status', 'available')))
         if row.get('created'):
             ui.detail('Created', row['created'])
         if row.get('action'):
             ui.detail('Operation', row['action'])
         if row.get('source'):
-            ui.detail('Source', ui.path(row['source']))
+            ui.resource_detail('Source', row['source'])
         if row.get('path'):
-            ui.detail('Target', ui.path(row['path']))
+            ui.resource_detail('Target', row['path'])
     if not rows:
         ui.emit('  No matching items.')
 
@@ -341,10 +347,10 @@ def show_system(rows, locations, verbose=False, include_all=False):
                    ('candidate', 'existing-source', 'managed', 'excluded', 'unavailable') if counts[s]), '96')
     if verbose:
         for row in visible:
-            line(ui.path(row['path']), '95')
+            ui.resource_detail('Path', row['path'])
             ui.emit('    ' + ui.paint(row['repository'], '94') + '  ' + ui.status(row['status']))
             if row.get('source'):
-                ui.detail('Source', ui.path(row['source']))
+                ui.resource_detail('Source', row['source'])
     else:
         groups = {}
         for row in visible:
@@ -359,15 +365,14 @@ def show_system(rows, locations, verbose=False, include_all=False):
                     path = Path(loc['path']) / suffix.parts[0]
             groups.setdefault((str(path), row['repository']), []).append(row)
         for (path, repository), items in sorted(groups.items()):
-            label = ui.clean(ui.path(path))
             badges = ', '.join(ui.paint(str(n), '96') + ' ' + ui.status(s)
                                for s, n in sorted(Counter(x['status'] for x in items).items()))
-            rendered = ('  ' + ui.paint(label, '95') + '  ' +
+            rendered = ('  ' + ui.resource(path) + '  ' +
                         ui.paint(repository, '94') + ' / ' + badges)
             if len(re.sub(r'\x1b\[[0-9;]*m', '', rendered)) <= ui.width:
                 ui.emit(rendered)
                 continue
-            line(label, '95')
+            ui.resource_detail('Path', path)
             line(repository, '94', '    ')
             statuses(items)
     if not visible:
@@ -405,7 +410,7 @@ def main():
     if args.action in ('locations', 'system', 'history', 'backups-list') and args.values:
         parser.error('this inspection command takes no positional arguments')
     manager = Manager()
-    if manager.catalog.platform == 'windows':
+    if manager.catalog.platform == 'windows' and args.action not in ('history', 'backups-list', 'backups-show', 'undo', 'recover', 'backups-restore'):
         raise ValueError('native Windows managed operations are not implemented')
     if args.action in ('locations', 'system', 'history', 'backups-list', 'backups-show'):
         if args.action == 'locations':

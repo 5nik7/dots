@@ -27,7 +27,7 @@ collect_status() {
     done
 }
 status_main() {
-    local dir branch state row xy path old ahead behind pair comma='' filecomma index count changed=0 clean=0 branch_label marker columns=${COLUMNS:-80}
+    local dir branch state row xy path old ahead behind pair comma='' filecomma index count changed=0 clean=0 branch_label columns=${COLUMNS:-80}
     [[ $columns =~ ^[0-9]+$ ]] || columns=80
     local -a rows=() paths=() codes=() oldpaths=()
     declare -A STATUS_ERRORS=()
@@ -85,16 +85,8 @@ status_main() {
             printf ']}'
         else
             repo_label "$dir"; display "$REPLY"; branch_label=$REPLY
-            dots::style
-            case $state in clean) pair=$DOTS_UI_GREEN; marker=$DOTS_UI_OK ;; blocked|conflict) pair=$DOTS_UI_RED; marker=$DOTS_UI_ERROR ;; *) pair=$DOTS_UI_YELLOW; marker=$DOTS_UI_WARN ;; esac
-            display "$branch"
-            if ((10#$columns < 60)); then
-                printf '\n  %s%s%s %s%s%s\n' "$pair" "$marker" "$DOTS_UI_RESET" "$DOTS_UI_BOLD$DOTS_UI_BLUE" "$branch_label" "$DOTS_UI_RESET"
-                printf '    %s  %s%s%s\n' "$REPLY" "$pair" "$state" "$DOTS_UI_RESET"
-            else
-                printf '\n  %s%s%s %s%s%s  %s  %s%s%s\n' "$pair" "$marker" "$DOTS_UI_RESET" "$DOTS_UI_BOLD$DOTS_UI_BLUE" "$branch_label" "$DOTS_UI_RESET" "$REPLY" "$pair" "$state" "$DOTS_UI_RESET"
-            fi
-            [[ $ahead == null ]] || dots::row 'Tracking' "$ahead ahead / $behind behind (cached)"
+            status_header "$branch_label" "$branch" "$state" "$columns"
+            [[ $ahead == null ]] || tracking_row "$ahead" "$behind" "$columns"
             [[ ! -v STATUS_ERRORS[$dir] ]] || dots::row 'Reason' "${STATUS_ERRORS[$dir]}"
             for ((index=0;index<count;index++)); do
                 xy=${codes[index]}; path=${paths[index]}; pair=''
@@ -107,6 +99,15 @@ status_main() {
                     [[ $xy != *R* ]] || pair+=' renamed'
                 fi
                 ((FULL_PATHS)) && path=$dir/$path
+                if dots::human; then
+                    file_status_style "$xy"
+                    dots::resource_row "$pair" "$dir/${paths[index]}" "$path" '' '' "$REPLY"
+                    if [[ -n ${oldpaths[index]} ]]; then
+                        old=${oldpaths[index]}; ((FULL_PATHS)) && old=$dir/$old
+                        dots::resource_row 'From' "$dir/${oldpaths[index]}" "$old"
+                    fi
+                    continue
+                fi
                 if [[ -n ${oldpaths[index]} ]]; then
                     old=${oldpaths[index]}; ((FULL_PATHS)) && old=$dir/$old
                     path="$old -> $path"

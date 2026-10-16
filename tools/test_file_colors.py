@@ -42,6 +42,83 @@ class FileColors(unittest.TestCase):
         self.assertEqual(self.dots('theme','colors','type','dir','--configured').stdout.strip(),'#f38ba8')
         self.assertTrue(list((self.home/'state/dots').rglob('journal.json')) or list((self.home/'state/dots').rglob('*.json')))
 
+    def test_git_styles_overrides_exports_and_old_snapshots(self):
+        self.dots('theme', 'set', 'catppuccin-mocha')
+        original = self.generation()
+        before = json.loads(self.dots('theme', 'colors', 'export', 'json').stdout)
+        self.assertEqual(before['colors']['git']['repo'], before['colors']['blue'])
+        self.assertTrue(before['styles']['git']['repo']['bold'])
+        self.assertEqual(len(before['styles']['git']), 17)
+        self.assertIn('Git styles (17)', self.dots('theme', 'colors').stdout)
+        self.assertTrue((original / 'git-styles.tsv').read_text().startswith('dots-git-styles\t1\n'))
+        self.dots('theme', 'colors', 'set', 'git', 'untracked', '--fg', '#123456', '--bold', 'true')
+        self.assertEqual(self.generation(), original)
+        self.assertEqual(self.dots('theme', 'colors', 'git', 'untracked', '--configured').stdout, '#123456\n')
+        self.assertNotEqual(self.dots('theme', 'colors', 'git', 'untracked').stdout, '#123456\n')
+        self.dots('theme', 'colors', 'set', 'git', 'untracked', '--fg', '#abcdef', '--theme', 'catppuccin-mocha', '--apply')
+        after = json.loads(self.dots('theme', 'colors', 'export', 'json').stdout)
+        self.assertEqual(after['styles']['git']['untracked'], {'fg': '#abcdef', 'bold': True})
+        self.assertEqual(before['ls_colors'], after['ls_colors'])
+        for group in ('type', 'mime', 'extension'):
+            self.assertEqual(before['styles'][group], after['styles'][group])
+        for fmt, expected in [('hex', '#abcdef\n'), ('rgb', '171 205 239\n'),
+                              ('ansi-24bit', '38;2;171;205;239\n'), ('esc', '\x1b[38;2;171;205;239m\n')]:
+            self.assertEqual(self.dots('theme', 'colors', 'git', 'untracked', fmt, '--color=always').stdout, expected)
+        self.assertIn('git', self.dots('theme', 'colors', 'export', 'lua').stdout)
+        for shell in ('bash', 'zsh', 'fish'):
+            for words, target in [(('gi',), 'git'), (('git', 'un'), 'untracked'),
+                                  (('set', 'gi'), 'git'), (('set', 'git', 'un'), 'untracked')]:
+                self.assertIn('candidate\t' + target + '\t', self.dots('__complete', shell, str(2 + len(words)),
+                              '--', 'dots', 'theme', 'colors', *words).stdout)
+        self.dots('theme', 'colors', 'reset', 'git', 'untracked', '--theme', 'catppuccin-mocha')
+        self.assertEqual(self.dots('theme', 'colors', 'git', 'untracked', '--configured').stdout, '#123456\n')
+        for key in ('bad/name', 'bad-key', '$(touch forbidden)'):
+            self.dots('theme', 'colors', 'set', 'git', key, '--fg', 'red', code=1)
+        # Model an existing schema-1 generation without the additive namespace.
+        old = json.loads(json.dumps(before))
+        for field in ('styles', 'colors', 'rules', 'provenance'):
+            old[field].pop('git')
+        (self.generation() / 'colors.json').write_text(json.dumps(old))
+        self.assertIn('Git styles unavailable', self.dots('theme', 'colors').stdout)
+        self.assertIn('theme refresh', self.dots('theme', 'colors', 'git', 'repo', code=1).stderr)
+        self.assertEqual(self.dots('theme', 'colors', 'type', 'dir').stdout.strip(), before['colors']['type']['dir'])
+
+    @unittest.skipUnless(fc.shutil.which('git') and os.name != 'nt', 'Native Git/PTYS required')
+    def test_git_dark_light_publication_native_render(self):
+        import fcntl
+        import pty
+        import struct
+        import termios
+        repo = self.home / 'repository 界'
+        env = dict(self.env, GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1',
+                   DOTS_ICONS='never', DOTS_PROGRESS='never')
+        self.run_command(['git', 'init', '--initial-branch=main', str(repo)], env=env)
+        (repo / 'sample.png').write_text('fixture')
+        for theme in ('catppuccin-mocha', 'catppuccin-latte'):
+            self.dots('theme', 'set', theme)
+            doc = json.loads(self.dots('theme', 'colors', 'export', 'json').stdout)
+            for width in (40, 80, 120):
+                master, slave = pty.openpty()
+                try:
+                    fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, width, 0, 0))
+                    result = subprocess.run([BASH, str(self.repo / 'lib/dots/git/main.bash'), 'status', '-C', str(repo)],
+                        env=dict(env, DOTS_COLOR='auto', COLUMNS=str(width)), stdout=slave, stderr=subprocess.PIPE, timeout=20)
+                    os.close(slave); slave = None
+                    output = b''
+                    while True:
+                        try: chunk = os.read(master, 65536)
+                        except OSError: break
+                        if not chunk: break
+                        output += chunk
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    text = output.decode()
+                    for role in ('repo', 'branch', 'untracked'):
+                        self.assertIn('\x1b[' + fc.sgr(doc['styles']['git'][role]) + 'm', text)
+                    self.assertIn('sample.png', text)
+                finally:
+                    os.close(master)
+                    if slave is not None: os.close(slave)
+
     def test_matching_mime_suffix_and_unsafe_data(self):
         self.dots('theme','colors','set','mime','image/*','--fg','red')
         self.dots('theme','colors','set','extension','.png','--fg','blue','--bg','background','--italic','true')

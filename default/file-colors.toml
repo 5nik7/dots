@@ -1,4 +1,4 @@
-# Shared file styles. Named colors resolve against the addressed Dots palette.
+# Shared file and Git styles. Named colors resolve against the addressed Dots palette.
 [type.file]
 fg = "foreground"
 [type.dir]
@@ -92,3 +92,42 @@ use = "office"
 use = "archive"
 [mime."application/gzip"]
 use = "archive"
+
+# Git metadata and status labels; file paths keep their type/MIME styles.
+[git.repo]
+fg = "blue"
+bold = true
+[git.branch]
+fg = "magenta"
+[git.untracked]
+fg = "magenta"
+[git.modified]
+fg = "warning"
+[git.behind]
+fg = "warning"
+[git.detached]
+fg = "warning"
+[git.missing]
+fg = "warning"
+[git.staged]
+fg = "green"
+[git.added]
+fg = "green"
+[git.clean]
+fg = "green"
+[git.ahead]
+fg = "green"
+[git.deleted]
+fg = "error"
+[git.blocked]
+fg = "error"
+[git.conflict]
+fg = "error"
+bold = true
+[git.renamed]
+fg = "cyan"
+[git.copied]
+fg = "cyan"
+[git.ignored]
+fg = "muted"
+dim = true

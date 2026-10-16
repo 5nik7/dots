@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Install platform configurations with retained backups
+# dots:usage=[OPTIONS]
+# dots:option=--dry-run||flag|Preview without writes or network access
+# dots:option=--yes||flag|Approve the plan without prompting
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--update||flag|Fast-forward clean sources before setup
+# dots:option=--with-source||choice:androidots,windots,nvim|Initialize a named public source
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/install.py" install "$@"

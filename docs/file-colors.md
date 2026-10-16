@@ -1,4 +1,4 @@
-# Theme file colors
+# Theme file and Git colors
 
 The publisher and `theme colors` require Python 3.11+ for standard-library TOML parsing.
 Shells consume published data without Python.
@@ -39,7 +39,7 @@ Before the first publication, queries resolve the configured default.
 ## Human color views
 
 `theme colors` shows named colors, terminal colors (`color0` through `color15`),
-file types, MIME rules and configured extension rules in separate counted sections.
+file types, MIME rules, configured extension rules and Git styles in separate counted sections.
 Palette rows include exact swatches and hex values. Style tables show foreground,
 background and attributes; `unset` means no field is specified, while `reset`
 explicitly requests the terminal default. Explicit false attributes remain visible.
@@ -147,3 +147,31 @@ rules remain authoritative in the exported LS_COLORS.
 Run `python3 -B tools/test_file_colors.py -v` in owned roots. Existing publication,
 FSH, shell-environment and native plugin checks cover the connected paths. Tests
 must isolate DDS sockets as well as home/config/state/cache directories.
+
+## Git styles
+
+**Implemented.** The `git` group styles Dots-owned repository identities and Git status metadata. File paths retain their type/MIME styles. It shares the same four configuration layers, field merging, validation, journaled set/reset operations and explicit publication as file rules; `[git.repo]` lives alongside `[type.dir]` in `file-colors.toml`. `use` continues to inherit a named **type** style.
+
+| Roles | Default foreground | Attributes |
+| --- | --- | --- |
+| `repo` | `blue` | bold |
+| `branch`, `untracked` | `magenta` | none |
+| `modified`, `behind`, `detached`, `missing` | `warning` | none |
+| `staged`, `added`, `clean`, `ahead` | `green` | none |
+| `deleted`, `blocked` | `error` | none |
+| `conflict` | `error` | bold |
+| `renamed`, `copied` | `cyan` | none |
+| `ignored` | `muted` | dim |
+
+```sh
+dots theme colors git
+dots theme colors git branch
+dots theme colors git modified --style
+dots theme colors set git untracked --fg cyan
+dots theme colors reset git untracked
+dots theme refresh
+```
+
+Git role names use lowercase letters, digits and underscores, starting with a letter. Custom keys are supported for querying/export; the Dots Git renderer uses the roles above. Scalar formats, `--json`, `--theme`, `--configured`, `--dry-run` and `--apply` work as for file styles. Complete human overviews include a counted Git section; native palette previews retain their original scope. JSON/Lua exports add `colors.git`, `styles.git`, `rules.git` and `provenance.git` within schema 1. Git rules never affect file matching, Vivid or LS_COLORS.
+
+Older snapshots without Git data remain readable. Their overview explains that Git styles need a refresh; explicit Git queries fail with `theme refresh` / `--configured` guidance instead of mixing configured data into a published snapshot. Ordinary Git views use terminal-color defaults until refreshed. See [Git output](git.md#theme-colors) for role application.

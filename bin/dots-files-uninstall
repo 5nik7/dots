@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Restore installer-owned configurations
+# dots:usage=[OPTIONS]
+# dots:option=--dry-run||flag|Preview without writes or network access
+# dots:option=--yes||flag|Approve the plan without prompting
+# dots:option=--json||flag|Emit versioned JSON
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/install.py" uninstall "$@"

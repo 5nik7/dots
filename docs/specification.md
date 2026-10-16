@@ -328,7 +328,26 @@ strategy is intent only; future installation retains the default-link contract.
 
 ## Implemented location and operation data
 
+Catalog resources accept optional boolean `enabled` (default true). False is a
+repository-wide stash: the record/source remains, while active target claims,
+replacement precedence and installation exclude it. Existing mappings and unknown
+metadata survive `files edit`; `files track --update` preserves optional metadata
+including disabled state and platform targets. Catalog schema remains 1 with this
+additive field; older CLIs must be updated before relying on stashing.
+
+Mapping operations preserve the installation receipt's first-install baseline.
+An intentionally unlinked owned target uses `after: null` while retaining its
+original `before`, backup transaction and index. Reinstall/restore can then create
+the link without mistaking that absence for drift. Uninstall may restore the
+original pre-install object. New live destinations are recorded with their own
+baseline. Catalog-only edits do not create installation receipts.
+
 The [catalog/location formats](files.md) are the bounded JSON schema-1 model under decision 0010, separate from the draft module/profile format above. Per-repository `.dots/file-locations.json` describes platform-specific roots/exact paths, import destinations and exclusions. Existing catalog claims win over adoption; owner ambiguity and duplicate destinations are errors. Machine-local `dots/files.json` contains schema 1 and a boolean `backup`; CLI backup flags override it. Journals and snapshots have schema 1 and transaction IDs, object identities/hashes, phases and prior catalog/link metadata. They are machine state, not desired-state manifests. No arbitrary environment interpolation, hooks or private-source initialization is added.
+
+The catalog's `files check` operation removes only approved absent-source entries
+through the same journal model. It adds no catalog fields; unrelated record data,
+replacement declarations and installation receipts are preserved. Its versioned
+inspection/result JSON is documented in [files](files.md#check-missing-sources).
 
 ## Implemented Anodize recipe
 
@@ -359,3 +378,7 @@ The literal TOML style fields, precedence and exported schema are specified in
 [file colors](file-colors.md). These are implemented theme inputs, separate from
 the proposed general module manifest. `use` inherits a named type style; colors
 resolve per theme, and explicit false attributes override inherited true values.
+
+## Implemented checkout installation boundary
+
+The bounded [file catalog](files.md), separate from the draft module/profile model above, now drives [checkout installation](installation.md). Its optional resource `targets` map overrides `target` by platform. Native Windows tokens and the installation receipt are documented in those references. `.gitignore` is not a desired-state manifest. No general profile resolver, package installer or arbitrary installation hooks are introduced.

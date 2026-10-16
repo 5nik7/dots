@@ -8,4 +8,4 @@ selection, permission overrides, sessions or machine-local state.
 - [dots-theme-maintenance](skills/dots-theme-maintenance/SKILL.md)
 - [dots-shell-integration](skills/dots-shell-integration/SKILL.md)
 - [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md)
-- [dots-cli-presentation](skills/dots-cli-presentation/SKILL.md)
+- [dots-cli-presentation](skills/dots-cli-presentation/SKILL.md) — shared CLI layouts, resource colors/icons and progress; preserves custom views and data interfaces.

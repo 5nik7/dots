@@ -12,6 +12,10 @@
 # Ensure devcontainer files are always LF
 .devcontainer/** eol=lf
 
+# Checkout entry points must also run when a clone was made with autocrlf.
+/install.sh text eol=lf
+/uninstall.sh text eol=lf
+
 # Denote all files that are truly binary and should not be modified.
 *.png binary
 *.jpg binary

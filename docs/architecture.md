@@ -50,8 +50,7 @@ The Yazi `init.lua` owns personal options, while its keymap and fetcher rules ad
 `lib/dots/init.bash` emits integration-only hooks before extension discovery.
 `lib/dots/shell/` owns settings definitions, native adapters, derived paths,
 portable palette data, and prompt refresh. `shells/` owns personal preferences
-and minimal native startup wrappers. `bin/dots.ps1` remains a bounded native
-PowerShell generator. `dots env` reports resolved Dots values without inspecting
+and minimal native startup wrappers. `bin/dots.ps1` provides native PowerShell generation plus bounded setup, inspection and recovery. `dots env` reports resolved Dots values without inspecting
 private shell state. Its human layout lives in `lib/dots/shell/env-view.bash` and
 uses the shared Bash UI helpers; scalar, JSON and ordinary redirected output
 bypass that renderer. See [shell environment](shell-environment.md).
@@ -268,6 +267,13 @@ The [Zsh renderer](decisions/0005-static-zsh-completion.md) in `internal/cli/com
 
 ## File Catalog and Configuration Layout
 
+`lib/dots/files/mappings.py` owns stash/restore, interactive mapping edits and
+explicit new mappings. It validates candidate catalogs in memory, uses shared
+presentation/interaction adapters, and composes changes through Installation and
+Store. No source contents are exposed by these commands. Installation's shared
+apply accepts catalog locks and receipt-free metadata-only batches; original
+baseline ownership remains in its single installation receipt.
+
 `config/` is the canonical source directory; `configs -> config` is a temporary
 compatibility alias in the parent and platform repositories. The parent owns the
 Neovim gitlink at `config/nvim`; Neovim retains independent Git history.
@@ -279,6 +285,12 @@ its `.dots/files.json` resource metadata. `lib/dots/files/catalog.py` owns termi
 read-only observation/discovery, classification and atomic metadata tracking. Thin
 `bin/dots-files-*` commands expose this through the Bash dispatcher; completion uses
 the same data reader directly without extension execution. See [files](files.md).
+
+`lib/dots/files/check.py` owns absent-source inspection and interactive catalog-only
+removal. It consumes the same catalog, resource presentation and optional Gum
+confirmation helpers, and submits guarded metadata operations to the existing
+transaction Store. Bash and native PowerShell delegate to this controller; no
+target mutation or separate recovery engine is introduced.
 
 ## Shared Theme Engine
 
@@ -398,3 +410,25 @@ After publication, an optional bounded Yazi DDS notification requests refresh.
 The plugin reads its own configured state root, validates a complete snapshot and
 updates UI colors without re-running feature setup or doing redraw-time I/O.
 See [file colors](file-colors.md) for ownership and matching boundaries.
+
+## Checkout setup ownership
+
+`lib/dots/files/install.py` owns bounded installation planning, ownership receipts and source-update orchestration. Root shell/PowerShell scripts and `dots init --setup` delegate to it. `file_platform.py` supplies native locks, safe object checks, file/directory flushing and state roots to the existing catalog and transaction Store. Installation receipts are final operations in the same file transaction as target changes.
+
+The theme publisher shares its immutable generation preparation with the setup bridge. Setup holds theme/command publication locks and publishes generated pointers/connectors through the file Store; ordinary theme commands retain their existing publisher. Fixed config connectors share a TSV definition. Setup never runs app reloads, wallpaper actions or theme hooks. See [installation](installation.md).
+
+### Shared resource presentation
+
+`lib/dots/resources.py` and `resources.bash` implement lazy, read-only file-style
+matching for human renderers. `resources.tsv` is their shared icon and filename/MIME
+registry. Theme publication produces the data-only `file-styles.tsv` projection
+from resolved rules. The Bash UI loads its resource adapter only on first use;
+Python Presentation creates a lazy resolver. Help and data routes need no style
+snapshot or classifier process. Native PowerShell help/bootstrap uses `ui.ps1`;
+POSIX bootstrap dependency errors use `bootstrap-ui.sh` before Python is available.
+These adapters own presentation only; installation and transaction logic remain
+in their existing owners.
+
+### Git presentation roles
+
+The file-style resolver also owns the sibling `git` namespace and its existing override layers. Theme publication exports its full styles in JSON/Lua and a separate `git-styles.tsv` projection. `lib/dots/ui.bash` exposes lazy Git-role lookup backed by `lib/dots/git-styles.bash`; the Git renderer chooses roles without resolving a palette or spawning per-row tools. Resource rows accept an optional label style while keeping filename matching independent. See [Git styles](file-colors.md#git-styles) and [the projection contract](themes.md#cli-git-style-projection).

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# dots:summary=Review and remove catalog entries whose sources are absent
+# dots:usage=[OPTIONS]
+# dots:option=--yes||flag|Remove all eligible entries without prompting
+# dots:option=--dry-run||flag|Preview without changes or prompts
+# dots:option=--json||flag|Emit versioned JSON; requires --yes or --dry-run
+# dots:option=--repo||file-repository|Repository ID
+# dots:option=--app||string|Filter by application
+# dots:option=--category||string|Filter by category
+# dots:option=--status||string|Filter by observed catalog status
+# dots:option=--platform||choice:termux,linux,wsl,windows|Observe a platform
+# dots:option=--all-platforms||flag|Include inactive platforms
+# dots:option=--sort||choice:id,app,repository,source,status|Sort inspected records
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/check.py" "$@"

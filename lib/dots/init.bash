@@ -3,6 +3,11 @@
 # Generated code is deliberately expanded by the receiving shell.
 # shellcheck disable=SC2016
 dots_init() {
+  if [[ ${1:-} == --setup ]]; then
+    shift
+    python3 -B "$DOTS_LIB_DIR/files/install.py" install "$@"
+    return
+  fi
   local shell=${1-auto} root=$DOTS loader quoted
   if (($# > 1)) || { (($# == 1)) && [[ $1 == auto ]]; }; then dots_error 'Usage: dots init [bash|zsh|fish|powershell|nu|xonsh]'; return 2; fi
   case $shell in

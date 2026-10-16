@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """Versioned file metadata and read-only filesystem observation for dots."""
 import argparse
-import fcntl
 import json
 import os
 from pathlib import Path
 import re
 import shutil
-import stat
 import subprocess
 import sys
 import tempfile
@@ -15,7 +13,10 @@ import textwrap
 import unicodedata
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from progress import configure, tracked
+from resources import Resources, wrap as resource_wrap
+from file_platform import permissions, sync_dir, open_nofollow, lock as lock_file
 
 ID = re.compile(r"^[a-z][a-z0-9_-]*$")
 PLATFORMS = {"termux", "linux", "wsl", "windows"}
@@ -31,6 +32,7 @@ class Presentation:
         self.icons = icons == "always" or (icons == "auto" and terminal)
         self.human = self.stream.isatty() or mode == "always" or icons == "always"
         self.width = max(24, shutil.get_terminal_size((80, 24)).columns)
+        self.resources = Resources()
 
     @staticmethod
     def clean(value):
@@ -54,24 +56,46 @@ class Presentation:
         value = str(value)
         return "~" + value[len(home):] if home and (value == home or value.startswith(home + "/")) else value
 
-    def detail(self, label, value):
+    def detail(self, label, value, code=None):
         text = ", ".join(map(str, value)) if isinstance(value, list) else "yes" if value is True else "no" if value is False else "not mapped" if value is None else str(value)
         label = self.clean(label)
         prefix = f"    {label:<10} "
         # Wrap display lines without losing the full path, including on phones.
         lines = textwrap.wrap(self.clean(text), width=max(8, self.width-len(prefix)), break_on_hyphens=False, replace_whitespace=False) or [""]
-        self.emit(self.paint(prefix, "94") + lines[0])
+        self.emit(self.paint(prefix, "94") + (self.paint(lines[0], code) if code else lines[0]))
         for line in lines[1:]:
-            self.emit(" " * len(prefix) + line)
+            self.emit(" " * len(prefix) + (self.paint(line, code) if code else line))
+
+    def resource(self, path, display=None, kind=None, mime=None, code=None):
+        text = self.clean(self.path(path) if display is None else display)
+        if path is None or not self.human or not (self.color or self.icons):
+            return text
+        _, icon, style = self.resources.describe(path, kind, mime)
+        if self.icons:
+            text = icon + ' ' + text
+        return self.paint(text, code or style)
+
+    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None):
+        text = self.clean(self.path(path) if display is None else display)
+        style = code
+        if path is not None and self.human and (self.color or self.icons):
+            _, icon, resolved = self.resources.describe(path, kind, mime)
+            style = code or resolved
+            if self.icons:
+                text = icon + ' ' + text
+        prefix = f"    {self.clean(label):<10} "
+        for i, part in enumerate(resource_wrap(text, max(8, self.width-len(prefix)))):
+            self.emit((self.paint(prefix, '94') if i == 0 else ' ' * len(prefix)) +
+                      (self.paint(part, style) if style else part))
 
     def status(self, status):
-        if status in ("linked", "available", "tracked", "managed"):
+        if status in ("linked", "available", "tracked", "managed", "restored", "removed", "published", "unchanged"):
             code, icon = "92", "" if self.icons else "[+]"
-        elif status in ("candidate", "existing-source"):
+        elif status in ("candidate", "existing-source", "create", "prepare", "restore", "remove"):
             code, icon = "94", "󰋽" if self.icons else "[i]"
         elif status in ("conflict", "broken-link", "source-broken-link", "source-missing", "unavailable", "linked-elsewhere"):
             code, icon = "91", "" if self.icons else "[x]"
-        elif status in ("replaced", "excluded", "inactive-platform"):
+        elif status in ("replaced", "excluded", "inactive-platform", "stashed"):
             code, icon = "90", "󰋽" if self.icons else "[i]"
         else:
             code, icon = "93", "" if self.icons else "[!]"
@@ -97,12 +121,14 @@ class Presentation:
                 self.emit("  " + self.paint(identity, "1;94"))
                 self.emit("    " + self.status(status))
             if action == "sources":
-                self.detail("Root", self.path(row["root"]))
+                self.resource_detail("Root", row["root"], kind='dir')
                 self.detail("Platforms", row["platforms"])
             else:
-                self.detail("Source", self.path(row.get("source")))
-                self.detail("Target", self.path(row.get("target")))
+                self.resource_detail("Source", row.get("source"))
+                self.resource_detail("Target", row.get("target"))
                 if action in ("show", "track"):
+                    if 'enabled' in row:
+                        self.detail('Enabled', row['enabled'])
                     for key, label in (("app", "App"), ("category", "Category"), ("repository", "Repository"), ("platforms", "Platforms"), ("applicable", "Applicable"), ("tracked", "Tracked"), ("strategy", "Strategy"), ("target_spec", "Target spec"), ("replaces", "Replaces"), ("replaced_by", "Replaced by"), ("conflicts", "Conflicts"), ("replacement_unavailable", "Unavailable replacement")):
                         if key in row:
                             self.detail(label, row[key])
@@ -130,7 +156,7 @@ def relative(value):
     if not isinstance(value, str) or not value or any(ord(c) < 32 for c in value):
         raise ValueError("invalid relative path")
     p = Path(value)
-    if p.is_absolute() or ".." in p.parts:
+    if p.anchor or ".." in p.parts or (os.name == 'nt' and any(':' in part for part in p.parts)):
         raise ValueError(f"source path must stay in its repository: {value}")
     return p
 
@@ -148,26 +174,23 @@ def platform():
 def atomic_json(path, data):
     fd, name = tempfile.mkstemp(prefix=".files-", dir=path.parent)
     try:
-        os.fchmod(fd, stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o644)
+        permissions(fd, path)
         with os.fdopen(fd, "w") as out:
             json.dump(data, out, indent=2, ensure_ascii=False)
             out.write("\n")
             out.flush()
             os.fsync(out.fileno())
         os.replace(name, path)
-        fd = os.open(path.parent, os.O_RDONLY)
-        try:
-            os.fsync(fd)
-        finally:
-            os.close(fd)
+        sync_dir(path.parent)
     finally:
         if os.path.exists(name):
             os.unlink(name)
 
 
 class Catalog:
-    def __init__(self, root, selected):
+    def __init__(self, root, selected, manifests=None):
         self.root = root.resolve()
+        self.manifests = manifests or {}
         if (self.root / ".dots").is_symlink():
             raise ValueError("catalog directory must not be a symlink")
         self.platform = selected
@@ -195,7 +218,9 @@ class Catalog:
     def manifest(self, source):
         if (Path(source["root"]) / ".dots").is_symlink():
             raise ValueError("catalog directory must not be a symlink")
-        doc = read_json(Path(source["root"]) / ".dots/files.json")
+        doc = self.manifests.get(source['id'])
+        if doc is None:
+            doc = read_json(Path(source["root"]) / ".dots/files.json")
         if doc.get("repository") != source["id"] or not isinstance(doc.get("resources"), list):
             raise ValueError("catalog repository identity mismatch")
         seen = set()
@@ -203,6 +228,8 @@ class Catalog:
             if not ID.fullmatch(row.get("id", "")) or row["id"] in seen:
                 raise ValueError("duplicate or invalid resource ID")
             seen.add(row["id"])
+            if type(row.get('enabled', True)) is not bool:
+                raise ValueError('enabled must be a boolean')
             relative(row["source"])
             self.applicable(row["platforms"])
             if row.get("strategy") not in ("link", "directory-link", "copy"):
@@ -212,6 +239,13 @@ class Catalog:
                     raise ValueError(f"invalid {field}")
             if row.get("target") is not None:
                 self.target(row["target"])
+            if not isinstance(row.get('targets', {}), dict):
+                raise ValueError('targets must be a platform-to-target object')
+            for platform_name, target in row.get('targets', {}).items():
+                if platform_name not in PLATFORMS:
+                    raise ValueError('invalid target platform')
+                if target is not None:
+                    self.target(target)
             for key in row.get("replaces", []):
                 if not re.fullmatch(r"[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*", key):
                     raise ValueError("invalid replacement ID")
@@ -220,20 +254,28 @@ class Catalog:
     def target(self, value):
         if not isinstance(value, str) or any(ord(c) < 32 for c in value):
             raise ValueError("invalid target")
-        home = os.environ.get("HOME", "")
+        home = os.environ.get("HOME") or (str(Path.home()) if os.name == 'nt' else '')
         tokens = {"HOME": home, "CONFIG": os.environ.get("XDG_CONFIG_HOME") or home + "/.config",
                   "BIN": home + "/.local/bin", "TERMUX": home + "/.termux"}
-        match = re.fullmatch(r"\$\{(HOME|CONFIG|BIN|TERMUX)\}(?:/(.*))?", value)
+        tokens.update(APPDATA=os.environ.get('APPDATA', home + '/AppData/Roaming'),
+                      LOCALAPPDATA=os.environ.get('LOCALAPPDATA', home + '/AppData/Local'),
+                      NVIM_CONFIG=os.environ.get('XDG_CONFIG_HOME') or os.environ.get('LOCALAPPDATA', home + '/AppData/Local'),
+                      POWERSHELL_PROFILE=os.environ.get('DOTS_POWERSHELL_PROFILE', ''))
+        match = re.fullmatch(r"\$\{(HOME|CONFIG|BIN|TERMUX|APPDATA|LOCALAPPDATA|NVIM_CONFIG|POWERSHELL_PROFILE)\}(?:/(.*))?", value)
         if not match:
-            raise ValueError("target must start with ${HOME}, ${CONFIG}, ${BIN}, or ${TERMUX}")
+            raise ValueError("target must start with a supported destination token")
+        if match[1] == 'POWERSHELL_PROFILE' and match[2]:
+            raise ValueError('POWERSHELL_PROFILE names a file, not a directory')
         suffix = relative(match[2]) if match[2] else Path(".")
         base = tokens[match[1]]
+        if match[1] in ('APPDATA', 'LOCALAPPDATA', 'NVIM_CONFIG', 'POWERSHELL_PROFILE') and self.platform != 'windows':
+            return None
+        if match[1] == 'POWERSHELL_PROFILE' and not base:
+            return None
         if not home or not Path(base).is_absolute():
             raise ValueError("absolute HOME and target roots required")
         if match[1] == "TERMUX" and self.platform != "termux":
             return None
-        if self.platform == "windows":
-            return None  # No native Windows destination adapter yet.
         return str(Path(base) / suffix)
 
     @tracked('Inspecting file catalog')
@@ -244,20 +286,21 @@ class Catalog:
                 continue
             for item in self.manifest(source)["resources"]:
                 row = dict(item)
+                row.setdefault('enabled', True)
                 row.update(id=source["id"] + ":" + item["id"], repository=source["id"], tracked=True)
                 row["source"] = str(Path(source["root"]) / item["source"])
-                row["target_spec"] = item.get("target")
-                row["target"] = self.target(item["target"]) if item.get("target") else None
+                row["target_spec"] = item.get('targets', {}).get(self.platform, item.get('target'))
+                row["target"] = self.target(row['target_spec']) if row['target_spec'] else None
                 row["applicable"] = self.applicable(item["platforms"]) and self.applicable(source["platforms"])
                 row["status"] = self.observe(row)
                 result.append(row)
         by_id = {r["id"]: r for r in result}
         claims = {}
         for row in result:
-            if row["applicable"] and row["target"]:
+            if row['enabled'] and row["applicable"] and row["target"]:
                 # Normalize parent aliases but preserve final link identity.
                 target = Path(row["target"])
-                key = str(target.parent.resolve() / target.name)
+                key = os.path.normcase(str(target.parent.resolve() / target.name))
                 claims.setdefault(key, []).append(row)
         for rows in claims.values():
             if len(rows) < 2:
@@ -273,11 +316,11 @@ class Catalog:
                     row["status"] = "conflict"
                     row["conflicts"] = sorted(x["id"] for x in rows if x != row)
         for row in result:
-            if any(x not in by_id for x in row.get("replaces", [])):
+            if any(x not in by_id or not by_id[x]['enabled'] for x in row.get("replaces", [])):
                 row["replacement_unavailable"] = True
         # Directory ownership conflicts with nested targets, even if the
         # directory is already linked into the source repository.
-        active = [r for r in result if r["applicable"] and r["target"] and r["status"] != "replaced"]
+        active = [r for r in result if r['enabled'] and r["applicable"] and r["target"] and r["status"] != "replaced"]
         directories = {}
         for row in active:
             if row["strategy"] == "directory-link":
@@ -292,6 +335,8 @@ class Catalog:
 
     @staticmethod
     def observe(row):
+        if not row.get('enabled', True):
+            return 'stashed'
         src = Path(row["source"])
         if not src.exists():
             return "source-broken-link" if src.is_symlink() else "source-missing"
@@ -375,11 +420,15 @@ class Catalog:
             row["replaces"] = args.replaces
         file = root / ".dots/files.json"
         lock = file.with_suffix(".lock")
-        fd = os.open(lock, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+        fd = open_nofollow(lock, os.O_RDWR | os.O_CREAT, 0o600)
         with os.fdopen(fd, "a") as handle:
-            fcntl.flock(handle, fcntl.LOCK_EX)
+            lock_file(handle, blocking=True)
             doc = self.manifest(source)
             old = next((x for x in doc["resources"] if x["id"] == args.id), None)
+            if old:
+                # Tracking updates must not silently resume stashed resources or
+                # erase platform-specific mappings and extension metadata.
+                row = dict(old, **row)
             if old == row:
                 return row
             if old and not args.update:
