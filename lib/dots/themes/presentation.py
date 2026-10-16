@@ -14,12 +14,47 @@ import unicodedata
 SGR = re.compile(r'\x1b\[[0-9;:]*m')
 
 
-def clean(text):
-    return ''.join(c for c in SGR.sub('', text) if c in '\n\t' or ord(c) >= 32 and ord(c) != 127)
+def clean(text, keep_sgr=False):
+    def printable(part):
+        return ''.join(c for c in part if c in '\n\t' or ord(c) >= 32 and not 127 <= ord(c) < 160)
+    parts, start = [], 0
+    for match in SGR.finditer(text):
+        parts.append(printable(text[start:match.start()]))
+        if keep_sgr:
+            parts.append(match[0])
+        start = match.end()
+    parts.append(printable(text[start:]))
+    return ''.join(parts)
+
+
+def has_color(text):
+    for match in SGR.finditer(text):
+        fields = match[0][2:-1].split(';')
+        index = 0
+        while index < len(fields):
+            field = fields[index].split(':')
+            code = int(field[0] or 0)
+            if 30 <= code <= 37 or 40 <= code <= 47 or 90 <= code <= 97 or 100 <= code <= 107:
+                return True
+            if code in (38, 48, 58):
+                args = field[1:] if len(field) > 1 else fields[index + 1:]
+                if args and args[0] in ('2', '5'):
+                    if code in (38, 48):
+                        return True
+                    # Underline-color payload is not a foreground/background code.
+                    if len(field) == 1:
+                        index += 4 if args[0] == '2' else 2
+            index += 1
+    return False
+
+
+def print_authored_logo(logo, indent=''):
+    # Keep cross-line SGR state intact, isolating the whole block from the help.
+    print('\x1b[0m' + '\n'.join(indent + line for line in logo.rstrip('\n').split('\n')) + '\x1b[0m')
 
 
 def width(text):
-    return sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in 'WF' else 1 for c in text)
+    return sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in 'WF' else 1 for c in SGR.sub('', text))
 
 
 def escape(color, bg=False):
@@ -44,8 +79,9 @@ def main():
     text = sys.stdin.read()
     logo = ''
     if args.logo and not Path(args.logo).is_symlink():
-        try: logo = clean(Path(args.logo).read_text()[:65536])
+        try: logo = clean(Path(args.logo).read_text()[:65536], keep_sgr=True)
         except OSError: pass
+    authored = has_color(logo)
     palette = None
     if colored:
         try:
@@ -54,9 +90,11 @@ def main():
             if result.returncode: raise ValueError(result.stderr.strip())
             palette = json.loads(result.stdout)['colors']
         except (ValueError,OSError,subprocess.TimeoutExpired) as e:
-            print('dots theme: palette unavailable; showing plain output: ' + str(e), file=sys.stderr)
+            print('dots theme: palette unavailable; showing plain help text: ' + str(e), file=sys.stderr)
     if not palette:
-        if logo: print(logo.rstrip())
+        if logo:
+            if colored and authored: print_authored_logo(logo)
+            else: print(clean(logo).rstrip())
         print(clean(text).rstrip()); return
     fg, bg = palette['foreground'], palette['background']
     fg = readable(fg,bg,'#000000' if luminance(bg) > .179 else '#ffffff')
@@ -68,7 +106,9 @@ def main():
     body = clean(text).splitlines()
     lines = []
     if logo and max(map(width,logo.splitlines()),default=0) <= panel-4:
-        lines.extend((line,'logo') for line in logo.rstrip().splitlines()); lines.append(('', 'body'))
+        if authored: print_authored_logo(logo, indent='  ')
+        else: lines.extend((line,'logo') for line in clean(logo).rstrip().splitlines())
+        lines.append(('', 'body'))
     for index,line in enumerate(body):
         kind = 'heading' if index == 0 or line.endswith(':') else 'body'
         parts = textwrap.wrap(line, width=max(8,(panel-4)//(2 if any(width(c)>1 for c in line) else 1)), replace_whitespace=False, drop_whitespace=True, break_long_words=False, break_on_hyphens=False)

@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import shutil
 import unittest
+import re
 from test_themes import Themes, BASH, ZSH
 
 class ThemeCommands(unittest.TestCase):
@@ -80,15 +81,52 @@ class ThemeCommands(unittest.TestCase):
         self.palette('sample')
         (self.repo/'themes/sample/logo.txt').write_text('\x1b[31mSAMPLE ART\x1b[0m\n')
         self.assertTrue(self.dots('theme','sample','--help').stdout.startswith('SAMPLE ART\n'))
-        # Incomplete palettes keep readable help; valid palettes recolor artwork.
+        # The logo's own colors do not depend on a usable theme palette.
+        incomplete=self.dots('theme','sample','--help',env={**self.env,'DOTS_COLOR':'always'}).stdout
+        self.assertIn('\x1b[31mSAMPLE ART\x1b[0m',incomplete)
         (self.repo/'themes/sample/palette.toml').write_text('blue = "#123456"\nbackground = "#101010"\nforeground = "#eeeeee"\n')
         styled=self.dots('theme','sample','--help',env={**self.env,'DOTS_COLOR':'always'}).stdout
         self.assertIn('SAMPLE ART',styled)
         self.assertIn('\x1b[48;2;',styled)
-        self.assertNotIn('\x1b[31m',styled)
+        self.assertTrue(styled.startswith('\x1b[0m  \x1b[31mSAMPLE ART\x1b[0m\x1b[0m\n'))
         for args in [('show',),('blue','hex'),('--raw',),('--array',)]:
             self.assertNotIn('SAMPLE ART',self.dots('theme','sample',*args).stdout)
         self.assertEqual(self.dots('help','theme','sample').stdout,self.dots('theme','sample','--help').stdout)
+
+    def test_logo_colors_width_resets_and_plain_fallback(self):
+        path=self.palette('sample', 'background = "#101010"\nforeground = "#eeeeee"\nblue = "#123456"\n')
+        logo=path/'logo.txt'
+        env={**self.env,'DOTS_COLOR':'always','COLUMNS':'40'}
+        for code in ('\x1b[31m','\x1b[104m','\x1b[38;5;123m',
+                     '\x1b[38;2;123;45;67;48;2;20;30;40m','\x1b[38:2::123:45:67m'):
+            with self.subTest(code=repr(code)):
+                # Deliberately carry color across lines, with no authored final reset.
+                logo.write_text(code+'FIRST\nSECOND\x1b[2J\x07')
+                output=self.dots('theme','sample','--help',env=env).stdout
+                header=output.split('\n',2)[:2]
+                self.assertEqual(header,['\x1b[0m  '+code+'FIRST','  SECOND[2J\x1b[0m'])
+                self.assertNotIn('\x1b[2J',output)
+                self.assertNotIn('\x07',output)
+                plain=self.dots('theme','sample','--help','--color=none',env=env).stdout
+                self.assertNotIn('\x1b',plain)
+                self.assertTrue(plain.startswith('FIRST\nSECOND[2J\n'))
+        for text in ('PLAIN','\x1b[1mBOLD\x1b[0m'):
+            logo.write_text(text)
+            output=self.dots('theme','sample','--help',env=env).stdout
+            self.assertTrue(output.startswith('\x1b[48;2;16;16;16m\x1b[38;2;'))
+            self.assertIn(re.sub(r'\x1b\[[0-9;:]*m','',text),output.splitlines()[0])
+        logo.write_text('\x1b[31m'+'W'*50+'\x1b[0m')
+        self.assertNotIn('W'*50,self.dots('theme','sample','--help',env=env).stdout)
+        for mode in ({'DOTS_COLOR':'never'}, {'DOTS_COLOR':'auto','NO_COLOR':'1'}, {'DOTS_COLOR':'auto','TERM':'dumb'}):
+            self.assertNotIn('\x1b',self.dots('theme','sample','--help',env={**env,**mode}).stdout)
+
+    def test_catppuccin_logo_keeps_authored_truecolor(self):
+        logo=(self.repo/'themes/catppuccin/logo.txt').read_text()
+        output=self.dots('theme','catppuccin','--help',env={**self.env,'DOTS_COLOR':'always','COLUMNS':'120'}).stdout
+        for line in logo.rstrip('\n').split('\n'):
+            self.assertIn('  '+line,output)
+        self.assertTrue(output.startswith('\x1b[0m'))
+        self.assertNotIn('\x1b',self.dots('theme','catppuccin','--help','--color=none').stdout)
 
     def test_completion_shared_reader_and_native_shell_adapters(self):
         self.dots('theme','refresh','--commands-only')

@@ -139,8 +139,13 @@ Mark cases that do not apply with a reason. Existing [presentation tests](testin
 ## Theme-family panels
 
 Family help and native previews use the addressed palette, including explicit
-foreground and background. Recolor sanitized logo text with that palette, reset
-every line, wrap at narrow widths and retain usable full IDs. Text accents fall
+foreground and background. Preserve authored SGR colors and formatting for logo
+files containing ANSI foreground/background colors; apply the theme palette only
+to logos without embedded colors. Isolate authored logos with a reset before and
+after the entire block so multiline formatting survives without leaking into help.
+Strip styling in plain modes and sanitize other terminal controls. Measure visible
+logo width without SGR codes. Reset each themed help line, wrap at narrow widths
+and retain usable full IDs. Text accents fall
 back to readable foreground when contrast is insufficient; swatches remain exact.
 `--color=none` aliases `never`; spaced `--color NAME` remains a family color query.
 Data output bypasses panels even when decoration is forced. This scoped palette

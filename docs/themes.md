@@ -82,8 +82,9 @@ Fish reads them when its completion adapter loads.
 
 Optional regular `logo.txt` files appear only above human help/usage. Flavor help
 prefers the variant's file, then its family file. Catppuccin's artwork lives at
-`themes/catppuccin/logo.txt`. Artwork is sanitized and recolored using the addressed palette; plain output
-strips styling. Other terminal control sequences are not accepted as
+`themes/catppuccin/logo.txt`. Artwork with embedded ANSI foreground/background colors keeps its own SGR
+colors and formatting; only logos without embedded colors use the addressed
+palette. Plain output strips styling. Other terminal control sequences are not accepted as
 artwork. Scalar queries, previews, initialization and completion never include logos.
 
 `palette.toml` alone is enough for discovery, previews and native queries. Its
@@ -667,9 +668,13 @@ Family help and native palette previews use the addressed theme's explicit
 foreground/background. Bare family help follows the active flavor when it belongs
 to that family, otherwise the family's default. This changes presentation only;
 existing palette-query and activation defaults remain unchanged. Explicit flavors
-always choose their own palette. Theme panels reset each line, wrap on narrow
+always choose their own palette. Themed help lines reset styling, wrap on narrow
 terminals, and use readable text contrast while preserving actual swatch colors.
-`logo.txt` artwork is sanitized and recolored with that palette.
+`logo.txt` artwork retains its authored SGR colors when it contains ANSI
+foreground/background colors; otherwise it receives the theme color. Bold and
+reset codes alone do not count as embedded colors. Width checks ignore SGR codes,
+and authored multiline styling is isolated with a reset before and after the logo.
+Other terminal controls are sanitized; disabled color strips all styling.
 
 `--color=none` aliases `never`; family commands accept the equals form anywhere.
 `--color NAME` / `-c NAME` still query palette colors. Raw values, JSON, Lua,

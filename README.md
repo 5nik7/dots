@@ -483,8 +483,9 @@ recovery, JSON output, and desktop limitations. Downloaded themes remain data-on
 to publish it; `--theme ID` stores a theme-specific override and `--apply` publishes
 after saving. Full styles, MIME/suffix queries, match explanations, LS_COLORS
 inspection, and JSON/Lua exports are described in [file colors](docs/file-colors.md).
-Family help now uses its own palette with explicit foreground/background;
-`tokyonight day --help --color=none` prints plain usage.
+Family help uses its own palette with explicit foreground/background. Header
+logos retain embedded ANSI colors; logos without colors receive theme coloring.
+`tokyonight day --help --color=none` strips all styling and prints plain usage.
 
 The bundled dots.yazi plugin follows published palettes while running, including
 file styles and mode colors. The standalone plugin's documented theme callback
