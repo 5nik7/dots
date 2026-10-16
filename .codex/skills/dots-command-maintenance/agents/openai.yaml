@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dots Command Maintenance"
+  short_description: "Maintain routes, help and completions"
+  default_prompt: "Use $dots-command-maintenance to handle the requested repository change and its focused verification."

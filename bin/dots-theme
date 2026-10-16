@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Manage shared application themes
-# dots:usage=[SUBCOMMAND]
-exec "${BASH_SOURCE[0]%/*}/dots" help theme "$@"
+# dots:summary=Inspect and change the current theme
+# dots:usage=[SUBCOMMAND | FAMILY [FLAVOR] [ACTION | COLOR [FORMAT]]]
+DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
+source "$DT_LIB/commands.bash"

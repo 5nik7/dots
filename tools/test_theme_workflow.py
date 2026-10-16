@@ -162,7 +162,7 @@ class Workflow(old.Themes):
         shutil.copy2(old.REPO / "shells/zsh/completions.zsh", completion)
         self.dots("theme", "set", "nord")
         self.shell(r'''
-source "$DOTS/themes/bin/theme"
+source "$DOTS/lib/dots/themes/shell.bash"
 set_theme || exit 1
 source "$DOTS/completions.zsh"
 zstyle -a ':completion:*' list-colors before
@@ -194,7 +194,7 @@ zstyle -a ':completion:*' list-colors literal
                 continue
             result = self.shell(r'''
 FZF_DEFAULT_OPTS='--height=40% --layout=reverse'
-source "$DOTS/themes/bin/theme"
+source "$DOTS/lib/dots/themes/shell.bash"
 set_theme || exit 1
 [[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#81a1c1' ]] || exit 2
 [[ $_FZF_COLORS_ == *'preview-bg:#222730'* ]] || exit 3
@@ -543,7 +543,7 @@ assert(require("anodize").get_palette().metadata.id == "nord")
         self.assertIn("--dry-run", self.dots("help", "theme", "set").stdout)
 
     def test_unpublished_native_cache_tracks_semantic_edits(self):
-        command = [old.BASH, str(self.repo / "themes/bin/catppuccin"), "init"]
+        command = [old.BASH, str(self.repo / "bin/theme"), "catppuccin", "init"]
         before = self.run_command(command).stdout
         colors = self.repo / "themes/catppuccin-mocha/colors.toml"
         stamp = colors.stat()
@@ -676,7 +676,8 @@ assert(require("anodize").get_palette().metadata.id == "nord")
         self.dots("theme", "install", str(remote), "--name", "fixture", env=env)
         installed = self.home / "config/dots/themes/fixture"
         self.assertTrue(installed.is_dir())
-        self.assertFalse(self.state.exists())
+        self.assertFalse((self.state / "current").exists())
+        self.assertTrue((self.state / "commands/current/bin/fixture").is_file())
         (installed / "local-file").write_text("keep")
         self.dots("theme", "update", "fixture", env=env, code=1)
         self.assertEqual((installed / "local-file").read_text(), "keep")
@@ -691,6 +692,7 @@ assert(require("anodize").get_palette().metadata.id == "nord")
         self.dots("theme", "set", "nord")
         self.dots("theme", "remove", "fixture")
         self.assertFalse(installed.exists())
+        self.assertFalse((self.state / "commands/current/bin/fixture").exists())
         self.assertTrue(list((installed.parent / ".archives").iterdir()))
 
     def test_background_switcher_labels_preview_and_cancellation(self):

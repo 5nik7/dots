@@ -6,8 +6,8 @@ source "$DOTS/shells/shared/environment.sh"
 # Explicit compatibility order from the former recursive glob. Optional sources
 # stay optional. Extra modules are absolute paths, in the owner's chosen order.
 local module
-for module in androidots/termux.env dot.env ruby/ruby.env \
-    secrets/secrets.env shells/shells.env themes/themes.env windots/win.env; do
+for module in androidots/termux.env ruby/ruby.env \
+    secrets/secrets.env windots/win.env; do
   if [[ -r "$DOTS/$module" ]]; then
     source "$DOTS/$module"
   fi

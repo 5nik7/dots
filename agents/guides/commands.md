@@ -117,6 +117,6 @@ The implemented singular `theme` routes and `files` routes are documented in
 [themes](../../docs/themes.md) and [files](../../docs/files.md). Flat theme/resource
 completion uses core-owned readers (`theme-id`, `file-resource`, `file-repository`),
 never extension callbacks. Keep static headers, contextual help and completion
-cases synchronized. Theme selection uses full IDs under `dots theme`; palette discovery and native queries use the documented options. Do not restore plural routes or a second positional grammar.
+cases synchronized. Theme selection retains full-ID routes under `dots theme`; the shared handler also owns generated family/flavor palette commands. Keep the single parser, data-only help/completion and standalone `theme` forwarding equivalent. Collection routes now live under `dots themes`, with singular compatibility routes. Keep one palette parser; follow decision 0013.
 
 The [Git family](../../docs/git.md) uses static Bash headers and a dots-owned backend; it never requires the standalone git-it executable. Run `python3 -B tools/test_git_operations.py` for changes, including literal paths and recursive safety. Keep raw JSON separate from compact human views. File mutations use the shared engine described in the managed-files guide.

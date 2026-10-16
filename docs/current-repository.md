@@ -54,14 +54,17 @@ The additive `experiments/go-portability/` module now contains a separate Go exe
 
 The permanent root module now adds `cmd/dots`, private CLI/dispatch/platform packages, isolated process tests and `tools/verify_core.py`/`tools/ci_core.py`. Its binary remains in owned development artifacts and does not replace the live command. The independent experiment and the historical inventory above remain intact. See the [first-slice plan](../plans/phase-2-command-center.md).
 
-`dot.env` currently:
+`dot.env` at the historical baseline:
 
 - Uses Zsh-specific associative arrays.
 - Defaults the repository to `$HOME/dots`.
 - Exposes repository subdirectories through environment variables.
 - Adds several repository directories to `PATH` and `fpath` through surrounding shell helpers.
 
-This behavior is useful migration input but should not become the portable core interface directly. Future environment generation should produce shell-specific cached output from portable data.
+The [Dots shell environment](shell-environment.md) now owns derived paths,
+settings and native shell initialization. The owner-approved cleanup removed
+`dot.env` and the legacy shell/theme env files; the historical inventory and
+measurements above are retained.
 
 ## Submodules
 
@@ -107,8 +110,8 @@ Update this document when a migration materially changes the baseline. Preserve 
 ## Theme Migration
 
 The live Catppuccin implementation now stores four palettes as TOML data, with
-shared Bash libraries and command entry points. The `current_theme` symlink has
-become a selection-aware wrapper. Zsh refreshes shared selection at prompts; the
+shared Bash libraries and command entry points. The former `current_theme`
+wrapper has been removed; `dots theme current` supplies the scalar selection. Zsh refreshes shared selection at prompts; the
 Neovim submodule has a corresponding JSON reader and focus adapter. Existing app
 assets remain in place. See [Shared themes](themes.md) for the implemented scope.
 

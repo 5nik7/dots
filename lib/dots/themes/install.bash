@@ -1,5 +1,6 @@
 # Git themes are data imports. No hooks, submodules, or downloaded configs execute.
 source "$DT_LIB/../progress.bash"
+source "$DT_LIB/command-state.bash"
 dt_git() {
   GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 git \
     -c core.hooksPath=/dev/null -c protocol.allow=never -c protocol.https.allow=always \
@@ -11,7 +12,7 @@ dt_git_record() {
 }
 dt_git_validate() {
   local path=$1
-  [[ -f $path/colors.toml && ! -L $path/colors.toml ]] || { dt_error 'installed themes require colors.toml'; return 1; }
+  [[ -f $path/colors.toml || -f $path/palette.toml ]] || { dt_error 'installed themes require colors.toml or palette.toml'; return 1; }
   # Retain downloaded sources for Git updates, but the renderer only reads colors.
   # Background and palette symlinks must not smuggle external files into the import.
   while IFS= read -r -d '' _; do
@@ -19,7 +20,9 @@ dt_git_validate() {
   done < <(find "$path" -path "$path/.git" -prune -o -type l -print0)
   # shellcheck disable=SC2034
   local DT_THEME=import DT_FLAVOR=default
-  dt_colors "$path/colors.toml"
+  [[ ! -f $path/theme.toml ]] || dt_parse "$path/theme.toml" metadata || return
+  [[ ! -f $path/palette.toml ]] || dt_parse "$path/palette.toml" palette || return
+  [[ ! -f $path/colors.toml ]] || dt_colors "$path/colors.toml"
 }
 dt_git_recover() {
   local journal status target stage backup action
@@ -39,6 +42,7 @@ dt_git_recover() {
     elif [[ $action == install && -d $target && ! -e $stage ]]; then
       mv -- "$target" "$stage" || return
     fi
+    dt_commands_restore "$journal" || return
     dt_git_record "$journal" rolled-back || return
   done
 }
@@ -85,6 +89,7 @@ dt_git_theme() (
   done
   for parent in .archives .transactions; do [[ ! -L $DT_USER_THEMES/$parent && ( ! -e $DT_USER_THEMES/$parent || -d $DT_USER_THEMES/$parent ) ]] || return 1; done
   [[ ! -L $DT_USER_THEMES/.lock ]] || return 1
+  dt_commands_lock || return
   mkdir -p "$DT_USER_THEMES/.archives" "$DT_USER_THEMES/.transactions" || return
   exec 9>"$DT_USER_THEMES/.lock"; flock -n 9 || { dt_error 'another theme installation is running'; return 1; }
   dt_git_recover || return
@@ -125,11 +130,19 @@ dt_git_theme() (
   printf '%s\n' "$stage" > "$journal/stage"
   printf '%s\n' "$backup" > "$journal/backup"
   printf '%s\n' "$action" > "$journal/action"
+  # Passed dynamically to the shared data-only family reader.
+  # shellcheck disable=SC2034
+  local DT_INDEX_REPLACE_ID='' DT_INDEX_REPLACE_DIR='' DT_INDEX_REMOVE_ID=''
+  # shellcheck disable=SC2034
+  if [[ $action == remove ]]; then DT_INDEX_REMOVE_ID=$name
+  else DT_INDEX_REPLACE_ID=$name DT_INDEX_REPLACE_DIR=$stage; fi
+  dt_commands_prepare "$journal" || return
   dt_git_record "$journal" prepared || return
   trap 'dots::progress_stop; dt_git_recover' EXIT
   if [[ $action != install ]]; then mv -- "$target" "$backup" || return; fi
   if [[ $action != remove ]]; then mv -- "$stage" "$target" || return; fi
   sync -f "$DT_USER_THEMES" || return
+  dt_commands_publish "$journal" || return
   dt_git_record "$journal" committed || return
   dots::progress_stop
   trap - EXIT

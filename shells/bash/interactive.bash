@@ -8,9 +8,7 @@ source "$DOTS/shells/shared/paths.sh"
 source "$DOTS/shells/shared/functions.sh"
 source "$DOTS/shells/bash/core/options.bash"
 source "$DOTS/shells/shared/fzf.sh"
-source "$DOTS/lib/dots/themes/shell.bash"
-if [[ -r $DOTS/bin/dots-theme-init ]]; then set_theme 2>/dev/null
-else source "$DOTS/lib/dots/themes/gum-env.bash"; fi
+source "$DOTS/lib/dots/shell/init.bash"
 # Register before tool hooks so they can compose with the existing prompt.
 declare -gA _DOTS_BASH_TOOL_READY
 source "$DOTS/shells/bash/core/prompt.bash"

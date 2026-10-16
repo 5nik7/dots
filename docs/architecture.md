@@ -47,9 +47,14 @@ The Yazi `init.lua` owns personal options, while its keymap and fetcher rules ad
 
 ## Shell initialization ownership
 
-`lib/dots/init.bash` owns the live initialization code generator and runs before extension discovery. Native loaders and extracted interactive configuration belong to `shells/`; Bash and Zsh share `shells/environment.sh`, while the other shells implement the same checkout-derived variable contract in native syntax. `bin/dots.ps1` is a bounded native PowerShell generator, not a second command dispatcher. Generation never evaluates shell configuration; private modules remain caller-side sources. See [shell initialization](shell-init.md).
+`lib/dots/init.bash` emits integration-only hooks before extension discovery.
+`lib/dots/shell/` owns settings definitions, native adapters, derived paths,
+portable palette data, and prompt refresh. `shells/` owns personal preferences
+and minimal native startup wrappers. `bin/dots.ps1` remains a bounded native
+PowerShell generator. `dots env` reports resolved Dots values without inspecting
+private shell state. See [shell environment](shell-environment.md).
 
-`bin/lib/common.sh` owns shared sourceable Bash/Zsh utility, logging, formatting, spinner and color-array helpers. Loading only defines helpers; startup explicitly builds the arrays. The former `bin/colors.env` and its startup-created named globals are removed. Human helpers obtain styles lazily from the renderer; caller-owned variables remain untouched. Path operations, case conversion and quiet checks use builtins; human messages lazily reuse `lib/dots/ui.bash`, with a plain fallback for standalone copies. Optional eza formatting is confined to explicitly requested filename/icon helpers. See [shell utilities](shell-utils.md).
+`bin/lib/common.sh` owns shared sourceable Bash/Zsh utility, logging, formatting, spinner and color-array helpers. Loading only defines helpers; startup no longer allocates the legacy 256-color arrays. The former `bin/colors.env` and its startup-created named globals are removed. Human helpers obtain styles lazily from the renderer; caller-owned variables remain untouched. Path operations, case conversion and quiet checks use builtins; human messages lazily reuse `lib/dots/ui.bash`, with a plain fallback for standalone copies. Optional eza formatting is confined to explicitly requested filename/icon helpers. See [shell utilities](shell-utils.md).
 
 ## Existing Zsh Configuration
 
@@ -278,6 +283,7 @@ the same data reader directly without extension execution. See [files](files.md)
 `lib/dots/themes` owns native palette loading, semantic colors, literal template
 rendering, cached initialization, compatibility APIs, journaled publication, fixed
 application connectors, Git source lifecycle and explicit wallpaper adapters.
+Bash/Zsh color arrays project resolved Dots colors over native palette extras, with generation-time format calculations and explicit ownership for stale-name cleanup; the [shell API](themes.md#shell-and-neovim-behavior) defines compatibility and reserved names.
 Its `app-env.bash` adapter validates rendered FZF assignments as literal data
 and adds their colors to published Bash/Zsh and Fish initialization. The Gum shell
 template is rendered without execution during publication. The small `gum-env.bash`
@@ -285,7 +291,8 @@ adapter loads the published artifact in interactive Bash startup and the Bash/Zs
 `set_theme` published-palette path, including Bash/Zsh prompt refresh. Noninteractive
 startup and generated theme-init output remain independent.
 `bin/dots-theme-*` exposes the sole theme CLI, including native palette discovery and queries. The data-only `discovery.bash` module owns flat theme IDs, current-ID resolution and native family/flavor enumeration for commands, switcher, views and completion. Sourcing only defines helpers; scans remain on demand. Listing retains ID validation/deduplication, while completion preserves its existing literal hints; selection validation remains in the loader. Shared view/initialization helpers serve the CLI and palette helper APIs; there is no separate plural parser.
-`themes/bin/*` remains compatibility entry points, with shared shell logic in `lib`.
+Legacy `themes/bin` entry points have been removed; shell integration lives in
+`lib/dots/shell` and shared theme helpers in `lib/dots/themes`.
 
 Flat `themes/ID` variants own semantic `colors.toml`, optional native `palette.toml`
 and backgrounds. `default/themed` owns bundled templates; per-user `dots/themed`
@@ -294,6 +301,13 @@ overrides them. User-installed themes contribute data only. The stable XDG state
 Codex consumes the existing rendered bat syntax theme through a fixed
 `CODEX_HOME/themes/dots.tmTheme` connector; Codex-Termux shares that home. No
 additional renderer, wrapper integration or startup scan is needed.
+Vivid and FSH consume generated semantic templates through fixed XDG connectors.
+The Bash/Zsh adapter selects the published Vivid file; Zsh caches its data output.
+The Zsh-only FSH adapter runs after plugin loading and generation changes, using
+FSH's native INI loader in an isolated Dots cache and preserving user overlays.
+Validated data is also saved as the native FSH startup script in `FAST_WORK_DIR`,
+with non-Dots selection backups and stale compiled-code invalidation; subsequent
+shells can load the last good palette independently of the Dots build cache.
 Journals preserve previous pointers and fixed app connector objects. Application
 settings remain in `config`; generated palettes, bat caches, backups and wallpaper
 selection records belong in machine-local state. Connector paths beneath symlinked
@@ -333,7 +347,7 @@ operations and source/target/catalog guards in memory until Apply.
 
 ## Anodize authoring boundary
 
-`lib/dots/anodize/logo.py` owns bounded text, Kitty and optional Chafa branding for Python human views. The core-owned `logo.bash` adapter renders static Dots help from the same bundled ASCII assets without executing an extension; it invokes the Python logo-only helper for optional graphics. The catalog loads this adapter only for Anodize help, and completion normalizes Anodize logo prefixes before static route lookup. These presentation paths do not call the engine, authoring operations or transaction store.
+`lib/dots/anodize/logo.py` owns bounded text, Kitty and optional Chafa branding for Python human views. The core-owned `logo.bash` adapter renders static Dots help from the same bundled UTF-8 braille assets without executing an extension; it invokes the Python logo-only helper for optional graphics. The catalog loads this adapter only for Anodize help, and completion normalizes Anodize logo prefixes before static route lookup. These presentation paths do not call the engine, authoring operations or transaction store.
 
 The owner-authorized [Anodize slice](anodize.md) is an exception to the general Go pause. `anodize/` is an independent pure Go color engine; `lib/dots/anodize/` owns Python authoring and the private Bash publication bridge. It reuses `files/transactions.py` and existing theme rendering/publication. `bin/anodize` and static `dots-anodize-*` routes provide CLI access. No engine calls occur during shell startup. See [decision 0011](decisions/0011-anodize-authoring.md).
 
@@ -356,3 +370,25 @@ selection, runtime environment and retry behavior.
 ## Shared interactive shells
 
 `shells/shared/` owns portable public environment settings, platform detection, runtime paths, FZF settings and user-facing functions/aliases for Bash and Zsh. `bin/lib/common.sh` remains the script utility library. Native startup routing, completion engines, ZLE/Readline hooks and tool activation remain in shell adapters; old function/alias files delegate to the shared resources. Zsh private/platform modules remain native. See [shared shells](shared-shells.md) for precedence, compatibility, prompt refresh and supported integrations.
+
+## Unified theme command ownership
+
+`bin/theme` forwards to the live Dots dispatcher. The shared theme handler owns
+family queries as well as full-ID operations; generated wrappers contain no
+independent parsing or palette logic. Data-only family metadata readers serve
+help, completion and command generation. The theme publisher and Git importer
+share a journaled command-generation pointer under theme state. Shell startup
+loads published initialization and completion registrations directly, without
+scanning theme directories. Family logos live in `themes/FAMILY/logo.txt`;
+the Catppuccin PNG asset lives alongside its text logo. See [themes](themes.md#unified-commands-and-family-shortcuts).
+
+## Shared file styles and Yazi snapshots
+
+The theme file-color engine resolves declarative style layers and derives Vivid,
+LS_COLORS and versioned JSON/Lua snapshots from one palette. Publication owns the
+complete generation; shell adapters consume its LS_COLORS without regenerating it.
+Rule edits reuse the existing file Store rather than introducing another journal.
+After publication, an optional bounded Yazi DDS notification requests refresh.
+The plugin reads its own configured state root, validates a complete snapshot and
+updates UI colors without re-running feature setup or doing redraw-time I/O.
+See [file colors](file-colors.md) for ownership and matching boundaries.

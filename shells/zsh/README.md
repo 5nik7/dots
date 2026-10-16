@@ -42,11 +42,8 @@ The explicit compatibility list replaces the recursive repository scan:
 
 ```text
 androidots/termux.env
-dot.env
 ruby/ruby.env
 secrets/secrets.env
-shells/shells.env
-themes/themes.env
 windots/win.env
 ```
 
@@ -61,7 +58,7 @@ The existing `secrets.sh` and `zsh[local]` hooks remain supported and reapply on
 
 ## Paths and Platforms
 
-Zsh path insertion uses literal array membership and preserves existing precedence. Existing directories are retained in place; missing directories are not added. `fixpath` removes duplicate entries without sorting executable precedence. Bash and Zsh source `bin/lib/common.sh` for shared utilities; startup explicitly builds its color arrays. The retired colors environment file is no longer sourced, and startup does not create named color globals.
+Zsh path insertion uses literal array membership and preserves existing precedence. Existing directories are retained in place; missing directories are not added. `fixpath` removes duplicate entries without sorting executable precedence. Bash and Zsh source `bin/lib/common.sh` for shared utilities; startup leaves its legacy 256-color arrays unallocated. The explicit utility functions remain available to build `COLOR`/`FG`/`BG` on request. Named theme color arrays come from the theme initializer.
 
 Termux derives site-functions from its prefix. Linux and WSL retain the installed shell's native completion paths. WSL detection accepts its environment markers, kernel release, or distribution configuration; distribution names remain separate from execution context. MSYS/Cygwin detection selects the MSYS adapter. No adapter translates drive paths, imports Windows PATH, or enables cross-filesystem linking.
 
@@ -77,9 +74,18 @@ Metadata-preserving in-place executable edits can require an explicit refresh. `
 
 Completion dumps are normalized before loading and after generation so autoload declarations treat names such as Termux's `_uu-[` literally. Existing affected dumps are repaired automatically, with stale compiled copies invalidated. If an affected dump cannot be rewritten, completion initializes in memory without loading it. Normal shell globbing remains enabled; only the dump's autoload declarations use [Zsh's `noglob` modifier](https://zsh.sourceforge.io/Doc/Release/Shell-Grammar.html#Precommand-Modifiers).
 
-Vivid's `LS_COLORS` output is cached as data using the selected theme, executable, and metadata for [Vivid's documented custom theme/database locations](https://github.com/sharkdp/vivid#customization). Theme changes and changed inputs invalidate it. Catppuccin keeps its existing generated-palette cache. Theme application replaces FZF color options instead of appending duplicates. The completion `list-colors` style evaluates the current `LS_COLORS` on demand, so fzf-tab file colors follow prompt-driven theme switches without reloading completion.
+Vivid's `LS_COLORS` output is cached as data using the selected theme (including the resolved published Dots file), executable, and metadata for [Vivid's documented custom theme/database locations](https://github.com/sharkdp/vivid#customization). Theme changes and changed inputs invalidate it. Catppuccin keeps its existing generated-palette cache. Theme application replaces FZF color options instead of appending duplicates. The completion `list-colors` style evaluates the current `LS_COLORS` on demand, so fzf-tab file colors follow prompt-driven theme switches without reloading completion.
 
 Session-dependent activation remains immediate. Prompt modules, display formatting, and timeout settings are preserved. The Git-host icon uses a shell pattern instead of a separate grep process. The malformed `NVM_DIR` default and `ll` alias are corrected; an existing NVM installation can therefore initialize where the old typo prevented it.
+
+Published Dots themes also supply Fast Syntax Highlighting colors. The adapter runs
+after plugin loading and on published generation changes, reuses native-loader data
+in the Dots cache, and preserves explicit FSH overlays. It also saves the last good
+Dots theme to `$FAST_WORK_DIR/current_theme.zsh` for native plugin startup; both
+`fast-theme --show` lines report `dots`. Non-Dots selections are backed up before
+replacement, and stale compiled startup code is invalidated. Reload once after updating
+adapter code. See [Vivid and FSH](../../docs/themes.md#vivid-and-fast-syntax-highlighting)
+for palette mappings and fallback behavior.
 
 ## Verification
 
@@ -109,8 +115,7 @@ This opt-in runner copies both into the public fixture, leaves the selector unse
 
 ## Shared theme selection
 
-The [theme engine](../../docs/themes.md) preserves existing Catppuccin arrays and shell
-settings. `dots theme set catppuccin-FLAVOR` publishes a shared selection; the next
+The [theme engine](../../docs/themes.md#shell-and-neovim-behavior) supplies current-theme arrays such as `${blue[hex]}` and `${hint[esc]}`, preserving fixed Catppuccin flavor arrays for compatibility. `dots theme set ID` publishes a shared selection; the next
 prompt loads its initialization once. The unchanged prompt path uses builtins only
 and preserves command status. `set_theme ID` remains session-only; `change_theme ID`
 persists through the shared publisher.
@@ -118,3 +123,15 @@ persists through the shared publisher.
 ## Unified initialization
 
 Bash and Zsh can use `eval "$(dots init)"`; the repository wrapper bootstraps through the executable under `DOTS`. See the [shared hook contract](../../docs/shell-init.md). Noninteractive `zshenv` remains independent of the CLI.
+
+### Unified theme startup
+
+Startup sources `lib/dots/shell/init.zsh`, which owns the theme adapter and loads the published Dots
+generation. `theme` now runs the same CLI as `dots theme`; it is not the startup
+loader. Generated family commands and completions become available after
+`dots theme refresh` (or `--commands-only`). `catppuccin mocha` previews; append
+`set` to activate. The prompt hook reloads both palette data and generated command
+registrations when their generations change. Legacy Catppuccin startup snippets
+are replaced by Dots integrations.
+
+Dots settings and variables are documented in [the environment contract](../../docs/shell-environment.md).

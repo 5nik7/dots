@@ -37,4 +37,5 @@ $dotsInteractive = $dotsLaunchArgs -notcontains '-NonInteractive' -and
      -not ($dotsLaunchArgs | Where-Object { $_ -match '^-(Command|c|File|f|EncodedCommand|ec)$' }))
 if ($dotsInteractive) {
     . (Join-Path $env:DOTS 'shells/powershell/interactive.ps1')
+    . (Join-Path $env:DOTS 'lib/dots/shell/init.ps1')
 }

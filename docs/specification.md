@@ -312,6 +312,10 @@ The sole dynamic `source = "pywal16"` imports validated colors.sh literals; it i
 not an arbitrary source callback. Schema-1 published JSON includes additive resolved
 hex `roles`; the Neovim reader still accepts earlier Catppuccin snapshots without it.
 
+### Implemented shell color array projection
+
+Bash/Zsh initialization projects native palette colors plus resolved Dots template colors into named associative arrays. Resolved Dots values take precedence; mode metadata is excluded. Variable ownership, reserved names, supported fields and compatibility behavior are defined by the [shell color API](themes.md#shell-and-neovim-behavior). This does not change the native palette JSON or Fish scalar interfaces.
+
 ## Implemented Inventory Catalog Boundary
 
 The module/profile manifests above remain proposed. The separate schema-1 JSON
@@ -333,3 +337,25 @@ The [catalog/location formats](files.md) are the bounded JSON schema-1 model und
 ## Implemented shell path variables
 
 Native shell initialization is independent of the proposed module/profile resolver. Its [environment contract](shell-init.md#environment-and-execution) owns the checkout-derived `DOTS`, `SHELLS`, binary/script/config/secrets paths and shell-directory aliases. The resolved startup file or native loader determines the checkout; initialization replaces inherited Dots path values. Custom overrides can be applied after initialization. This does not change CLI manifest precedence or introduce general environment interpolation.
+
+## Implemented theme palette and command metadata
+
+Themes may provide `colors.toml`, `palette.toml`, or both. Palette-only themes are
+queryable without resolved application roles; activation requires resolvable
+background and foreground and applies existing semantic defaults. With both files,
+`colors.toml` wins for application colors; native queries retain `palette.toml`.
+Existing `family`, `flavor`, `default_flavor`, and `[roles]` metadata drive grouping
+and resolution. A sole flavor is the implicit default; ambiguous families require
+a flavor. `logo.txt` is optional usage artwork, not executable input. The exact
+implemented contract is in [shared themes](themes.md#unified-commands-and-family-shortcuts).
+
+## Dots shell environment
+
+Dots shell settings are implemented separately from proposed module manifests. Their data-only config.env grammar, override precedence, variable ownership and diagnostic JSON are defined in [the shell environment contract](shell-environment.md). Theme defaults are settings; active selections remain published state.
+
+## Implemented file-style overlays
+
+The literal TOML style fields, precedence and exported schema are specified in
+[file colors](file-colors.md). These are implemented theme inputs, separate from
+the proposed general module manifest. `use` inherits a named type style; colors
+resolve per theme, and explicit false attributes override inherited true values.

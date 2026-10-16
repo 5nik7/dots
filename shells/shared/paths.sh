@@ -1,7 +1,6 @@
 # shellcheck disable=SC1090,SC1091,SC2153
 # Preserve existing order and only insert directories that exist.
 prepath "$RUBYCOMP"
-prepath "$THEMESBIN"
 extpath "$HOME/.fzf/bin"
 [[ ! -r $XDG_DATA_HOME/bob/env/env.sh ]] || source "$XDG_DATA_HOME/bob/env/env.sh"
 prepath "$GOBIN"

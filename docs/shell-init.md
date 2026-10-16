@@ -1,6 +1,6 @@
 # Shell initialization
 
-**Implemented.** `dots init [bash|zsh|fish|powershell|nu|xonsh]` prints native shell code. It connects a shell to the existing Dots configuration; it does not install files or packages. The live Bash dispatcher requires Bash 4.4 or newer. Native PowerShell initialization has a separate adapter.
+**Implemented.** `dots init [bash|zsh|fish|powershell|nu|xonsh]` prints native shell code. It initializes only Dots settings, paths, colors, completions and refresh hooks; it does not install files or packages. The live Bash dispatcher requires Bash 4.4 or newer. Native PowerShell initialization has a separate adapter.
 
 ## Using the hook
 
@@ -49,11 +49,11 @@ The generated file pins the checkout's path. Regenerate it after moving that che
 
 ## Linked startup files and relocation
 
-Keep the complete checkout layout, including `shells/<shell>`, `bin`, and the existing shared modules. The checkout may have any name and live outside the home directory. Link the shell's normal startup file to its repository entry: Bash `.bashrc`, Zsh `zshenv`/`zshrc`, Fish `config.fish`, Nushell `config.nu`, Xonsh `.xonshrc`, or PowerShell `Microsoft.PowerShell_profile.ps1`. Linking the containing configuration directory is also supported. Existing `ZDOTDIR` and shell-specific configuration-directory settings retain their normal shell meaning.
+Keep the complete checkout layout, including `shells/<shell>`, `lib/dots/shell`, `bin`, and the existing shared modules. The checkout may have any name and live outside the home directory. Link the shell's normal startup file to its repository entry: Bash `.bashrc`, Zsh `zshenv`/`zshrc`, Fish `config.fish`, Nushell `config.nu`, Xonsh `.xonshrc`, or PowerShell `Microsoft.PowerShell_profile.ps1`. Linking the containing configuration directory is also supported. Existing `ZDOTDIR` and shell-specific configuration-directory settings retain their normal shell meaning.
 
 Startup resolves absolute and relative links, chained links, and symlinked parent directories before deriving paths. Relative link targets are relative to the link's directory. The caller's working directory is preserved. Bash requires `readlink` only for file symlinks; GNU `readlink -f` is not required. The other adapters use native path facilities. Missing checkout files and resolution failures report errors without falling back to another checkout. If a broken or cyclic rc link prevents the shell from reading the file at all, the shell handles that failure before Dots code runs.
 
-After moving the checkout, update links that still name its old location. No config-file edits are needed. Explicit generated hooks contain a fixed loader path and must be regenerated if that path changes. An individually copied rc file outside the checkout cannot discover its former location; use a symlink or an explicit hook instead. The shared POSIX profile snippets consume `DOTS` when available and do not independently discover a checkout.
+After moving the checkout, update links that still name its old location. No config-file edits are needed. Explicit generated hooks contain a fixed loader path and must be regenerated if that path changes. An individually copied rc file outside the checkout cannot discover its former location; use a symlink or an explicit hook instead. The shared profile, `shells/profile` (linked as `~/.profile`), consumes `DOTS` when available and does not independently discover a checkout.
 
 ## Environment and execution
 
@@ -71,15 +71,19 @@ Each native loader establishes the same checkout-derived environment:
 | `ZSH` | `SHELLS/zsh` |
 | `PWSH` | `SHELLS/powershell` |
 
-These values replace inherited values on every initialization, including evaluation of a generated hook. Set custom overrides after initialization. Bash retains its built-in `BASH` executable variable; its configuration directory is `SHELLS/bash`. Existing directories from `DOTBIN` and `DOTSCRIPTS` are prepended in that sequence unless already present; existing PATH entries retain their order. Native shells retain their own PATH representations. No Windows/WSL translation occurs.
+These values replace inherited values on every initialization, including evaluation of a generated hook. Set Dots customization through config.env or explicit environment overrides before initialization. Bash retains its built-in `BASH` executable variable; its configuration directory is `SHELLS/bash`. Existing directories from `DOTBIN` and `DOTSCRIPTS` are prepended in that sequence unless already present; existing PATH entries retain their order. Native shells retain their own PATH representations. No Windows/WSL translation occurs.
 
 Generation emits loader references only. It never sources environment files, reads private modules, captures the whole environment, scans extensions, installs plugins, publishes themes, or writes caches. Invalid arguments exit 2; unavailable loaders exit 1; both leave stdout empty. Help is human output; initialization is undecorated code even under forced color/icons. Diagnostics use stderr. As with other eval hooks, `eval "$(...)"` can obscure the generator's exit status; capture and check output first when scripting error-sensitive setup.
 
-Evaluating the hook loads common defaults, then the current shell's configuration in interactive sessions. Zsh retains its existing environment-module order, private/local hooks, themes, plugins, and tool activations. Bash shares portable interactive settings and commands with Zsh and uses native Readline, prompt and tool adapters; see [shared shells](shared-shells.md). Other shells retain their existing integrations; Zsh-only modules are not interpreted or exported through foreign shells. Zsh editor plugins and completion widgets remain native; no parity with Fish, PowerShell, Nushell or Xonsh is implied. Existing Zsh first-run plugin bootstrap remains part of evaluating interactive configuration, not generating the hook.
+Evaluating the hook loads the library-owned Dots environment. It does not load
+personal aliases, plugins, prompts or third-party tools. Repository startup files
+separately retain that configuration under `shells/`. Settings belong in the
+data-only user `config.env`; see [Dots shell environment](shell-environment.md)
+for options, precedence, native variables and diagnostics.
 
-Repeated evaluation reapplies ordinary configuration without duplicate Dots PATH entries or tool/plugin activation. Fish snippets use shell-local guards shared by native `conf.d` startup and manual initialization. Nushell FZF bindings replace their own named entries and its completer guard is scoped to the current process. Generated and third-party Fish snippet bodies retain their separate ownership. PowerShell's generated integration blocks are preserved and activated once per session.
+Repeated integration evaluation reapplies Dots settings without duplicate Dots PATH entries or refresh hooks. Personal shell loaders retain their separate tool/plugin guards. Fish snippets use shell-local guards shared by native `conf.d` startup and manual initialization. Nushell FZF bindings replace their own named entries and its completer guard is scoped to the current process. Generated and third-party Fish snippet bodies retain their separate ownership. PowerShell's generated integration blocks are preserved and activated once per session.
 
-Explicit noninteractive initialization loads only common paths. Zsh's `zshenv` also derives and exports the checkout paths and performs native platform detection without external commands. Native startup wrappers load their adjacent loaders without starting the CLI. Login-file behavior and existing local hooks remain in place. Repository source edits do not create or replace home-directory links.
+Explicit noninteractive initialization loads only Dots settings and common paths. Zsh's `zshenv` also derives and exports the checkout paths and performs native platform detection without external commands. Native startup wrappers load their adjacent loaders without starting the CLI. Login-file behavior and existing local hooks remain in place. Repository source edits do not create or replace home-directory links.
 
 Interactive Bash/Zsh startup also loads the published Gum environment from `${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/gum_env.sh` when it is a readable regular file. Missing artifacts are optional. The file is trusted shell configuration, including personal overrides; noninteractive initialization and hook generation do not execute it. Both Bash and Zsh reload Gum colors on published-generation changes and configuration reloads. See [theme environment loading](themes.md).
 

@@ -31,18 +31,23 @@ Control icons where supported.
 .B \-\-logo=text|auto|kitty|chafa
 Choose logo rendering (default: text). This Anodize option also works after
 COMMAND.
-Auto selects supported Kitty graphics, then optional Chafa symbols, then
-bundled ASCII.
-Missing tools or assets fall back to ASCII. Redirected or undecorated output
-uses text.
+Auto selects supported Kitty graphics, then optional foreground-only Chafa
+braille, then bundled text.
+UTF-8 braille text assets need no converter. Missing assets, ASCII-only or
+redirected output use a small ASCII mark.
+Disabled color retains monochrome braille. Disabled icons, dumb terminals and
+non-Unicode output skip Chafa.
 .TP
 .B \-\-logo\-layout=auto|horizontal|stacked|icon
 Choose a layout, always bounded to the destination terminal. Also accepted
 after COMMAND.
-Help prefers horizontal artwork at 80 columns; short or narrow views use a
-compact mark.
-Human results and diagnostics always include compact branding. Data output is
-unchanged.
+Text help tries horizontal, stacked, then the largest fitting numbered logo
+and the base symbol.
+Explicit horizontal or stacked layouts try that asset before icon fallbacks.
+Help uses at most half the terminal height and 16 rows. Routine text uses the
+six-row base symbol
+within one-third of terminal height, otherwise a tiny ASCII mark. Data output
+is unchanged.
 .TP
 .B \-h, \-\-help
 Show help without needing the engine.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dots Theme Maintenance"
+  short_description: "Maintain themes and published app colors"
+  default_prompt: "Use $dots-theme-maintenance to handle the requested repository change and its focused verification."

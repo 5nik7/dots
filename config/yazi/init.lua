@@ -1,4 +1,15 @@
 require("dots"):setup({
+  theme = {
+    source = "dots",
+    apply = function(colors)
+      return { dotline = {
+        style_a = { fg = colors.background, reversed = false,
+          bg_mode = { normal = colors.blue, select = colors.magenta, un_set = colors.red } },
+        style_b = { fg = colors.foreground, bg = colors.background },
+        style_c = { fg = colors.foreground, bg = colors.background },
+      } }
+    end,
+  },
   full_border = {
     -- Available values: ui.Border.PLAIN, ui.Border.ROUNDED
     type = ui.Border.PLAIN,

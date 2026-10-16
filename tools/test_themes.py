@@ -27,7 +27,7 @@ class Themes(unittest.TestCase):
         for name in ('lib/dots', 'themes', 'default'):
             copy_public_tree(REPO / name, self.repo / name, repo=REPO, fixture=self.repo)
         (self.repo / 'bin').mkdir()
-        for p in [REPO / 'bin/dots', *REPO.glob('bin/dots-theme*')]:
+        for p in [REPO / 'bin/dots', REPO / 'bin/theme', *REPO.glob('bin/dots-theme*')]:
             shutil.copy2(p, self.repo / 'bin' / p.name)
         self.home = self.root / 'home'
         self.home.mkdir()
@@ -38,6 +38,8 @@ class Themes(unittest.TestCase):
             self.env['XDG_' + kind + '_HOME'] = str(self.home / kind.lower())
         if os.environ.get('LD_PRELOAD'):
             self.env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
+        runtime = self.home / 'runtime'; runtime.mkdir(mode=0o700)
+        self.env['XDG_RUNTIME_DIR'] = str(runtime)
         self.state = self.home / 'state/dots/themes'
         self.lib = self.repo / 'lib/dots/themes'
 
@@ -80,24 +82,23 @@ class Themes(unittest.TestCase):
         self.assertFalse((self.home / 'cache').exists())
 
     def test_unified_routes_and_full_id_contract(self):
-        self.assertFalse(list((self.repo / 'bin').glob('dots-themes*')))
+        self.assertTrue(list((self.repo / 'bin').glob('dots-themes*')))
         self.assertFalse((self.lib / 'cli.bash').exists())
         for args in [('themes',), ('themes', 'list'), ('help', 'themes')]:
-            result = self.dots(*args, code=1)
-            self.assertIn('Unknown command', result.stderr)
-        self.assertNotIn('dots themes', self.dots('help').stdout)
-        self.assertNotIn('dots themes', self.dots('commands').stdout)
+            self.dots(*args)
+        self.assertIn('  themes ', self.dots('help').stdout)
+        self.assertIn('themes', self.dots('commands').stdout)
         for shell in ('bash', 'zsh', 'fish'):
             result = self.dots('__complete', shell, '1', '--', 'dots', 'them')
             self.assertIn('candidate\ttheme\t', result.stdout)
-            self.assertNotIn('candidate\tthemes\t', result.stdout)
+            self.assertIn('candidate\tthemes\t', result.stdout)
         for action in ('set', 'show'):
             self.dots('theme', action, 'catppuccin', code=1)
             self.dots('theme', action, 'catppuccin', 'mocha', code=2)
         self.dots('theme', 'color', 'blue', '--theme', 'catppuccin', code=1)
         self.dots('theme', 'color', '', '--theme', 'catppuccin-mocha', code=1)
         self.dots('theme', 'color', 'catppuccin', 'mocha', 'blue', code=2)
-        for args in [('color', 'blue', '--theme'), ('show', '--native'),
+        for args in [('color', 'blue', '--theme'),
                      ('color', 'blue', '--theme='), ('show', 'nord', '--bad')]:
             self.dots('theme', *args, code=2)
         self.assertFalse(self.state.exists())
@@ -216,24 +217,24 @@ class Themes(unittest.TestCase):
             self.assertEqual(self.dots('theme', 'color', key).stdout,
                              self.dots('theme', 'color', key, '--native').stdout)
         self.assertIn('background', self.dots('theme', 'show', 'nord', '--native').stdout)
-        self.assertIn('nord', self.run_command([BASH, str(self.repo / 'themes/bin/current_theme')]).stdout)
+        self.assertIn('nord', self.run_command([BASH, str(self.repo / 'bin/theme')]).stdout)
         for shell in ('bash', 'zsh', 'fish'):
             result = self.dots('__complete', shell, '3', '--', 'dots', 'theme', 'color', 'back')
             self.assertIn('candidate\tbackground\t', result.stdout)
 
     def test_malformed_data_is_not_executed(self):
-        p = self.repo / 'themes/catppuccin/flavors/mocha.toml'
+        p = self.repo / 'themes/catppuccin-mocha/palette.toml'
         original = p.read_text()
         for line in ['blue = "#ffffff"', 'x = "$(touch SENTINEL)"', '[table]',
                      'x = 12', 'x = "#fff"', 'x = "#ffffff" trailing', 'x = "a\\nb"']:
             p.write_text(original + '\n' + line + '\n')
             result = self.dots('theme', 'show', 'catppuccin-mocha', '--native', code=1)
-            self.assertIn('mocha.toml:', result.stderr)
+            self.assertIn('catppuccin-mocha/palette.toml:', result.stderr)
             self.assertFalse((self.home / 'SENTINEL').exists())
         p.write_text(original.replace('"#89b4fa"', "'#89b4fa' # literal color"))
         self.dots('theme', 'show', 'catppuccin-mocha', '--native')
         p.write_text('invalid palette\n')
-        result = self.shell('source "$DOTS/themes/bin/theme"; ! has_theme catppuccin')
+        result = self.shell('source "$DOTS/lib/dots/themes/shell.bash"; ! has_theme catppuccin')
         self.assertEqual((result.stdout, result.stderr), ('', ''))
 
     def test_roles_missing_colors_and_generic_palette(self):
@@ -255,24 +256,26 @@ class Themes(unittest.TestCase):
         self.assertIn('dots_palette', self.dots('theme', 'init', env=e).stdout)
 
     def test_preflight_validates_all_compatibility_palettes(self):
-        p = self.repo / 'themes/catppuccin/flavors/latte.toml'
+        p = self.repo / 'themes/catppuccin-latte/palette.toml'
         p.write_text('invalid syntax\n')
         self.dots('theme', 'set', 'catppuccin-mocha', code=1)
         self.assertFalse(self.state.exists())
 
     def test_selection_precedence_and_compatibility(self):
         (self.repo / 'themes/.theme').write_text('catppuccin-frappe\n')
-        self.assertEqual(self.dots('theme', 'current').stdout, 'catppuccin-frappe\n')
+        self.assertEqual(self.dots('theme', 'current').stdout, 'catppuccin-mocha\n')
         (self.home / '.theme').write_text('catppuccin-macchiato\n')
-        self.assertEqual(self.dots('theme', 'current').stdout, 'catppuccin-macchiato\n')
+        self.assertEqual(self.dots('theme', 'current').stdout, 'catppuccin-mocha\n')
+        self.dots('theme', 'refresh')
+        self.assertEqual(self.dots('theme', 'current').stdout, 'catppuccin-mocha\n')
         self.dots('theme', 'set', 'catppuccin-latte')
         self.assertEqual(self.dots('theme', 'current').stdout, 'catppuccin-latte\n')
-        result = self.run_command([BASH, str(self.repo / 'themes/bin/current_theme'), 'blue', 'hex'])
+        result = self.dots('theme', 'color', 'blue', 'hex', '--native')
         self.assertEqual(result.stdout, '#1e66f5\n')
         self.assertEqual((self.home / '.theme').read_text(), 'catppuccin-macchiato\n')
 
-    def test_init_legacy_digest_and_three_shell_syntax(self):
-        result = self.run_command([BASH, str(self.repo / 'themes/bin/catppuccin'), 'init'])
+    def test_family_init_compatibility_digest_and_three_shell_syntax(self):
+        result = self.run_command([BASH, str(self.repo / 'bin/theme'), 'catppuccin', 'init'])
         init = self.root / 'init.sh'
         init.write_text(result.stdout)
         script = '''source "$HOME/../init.sh"
@@ -298,17 +301,25 @@ done
 
     def test_cache_invalidation_same_size_and_timestamp(self):
         first = self.dots('theme', 'init').stdout
-        p = self.repo / 'themes/catppuccin/flavors/mocha.toml'
+        p = self.repo / 'themes/catppuccin-mocha/palette.toml'
         st = p.stat()
         p.write_text(p.read_text().replace('#89b4fa', '#123456'))
         os.utime(p, ns=(st.st_atime_ns, st.st_mtime_ns))
         second = self.dots('theme', 'init').stdout
         self.assertNotEqual(first, second)
         self.assertIn('123456', second)
+        # Fixed aliases include every Catppuccin flavor, not just the selected one.
+        other = self.repo / 'themes/catppuccin-latte/palette.toml'
+        other.write_text(other.read_text().replace('#1e66f5', '#fedcba'))
+        third = self.dots('theme', 'init').stdout
+        self.assertNotEqual(second, third)
+        self.assertIn('#fedcba', third)
 
     def test_atomic_generation_and_idempotence(self):
         self.dots('theme', 'set', 'catppuccin-mocha')
         first = self.generation()
+        self.assertIn('@theme\tid\tcatppuccin-mocha', (first / 'shell.tsv').read_text())
+        self.assertIn('blue\thex\t#89b4fa', (first / 'shell.tsv').read_text())
         before = {str(p): (p.stat().st_mtime_ns, p.read_bytes()) for p in self.state.rglob('*') if p.is_file()}
         self.dots('theme', 'set', 'catppuccin-mocha')
         after = {str(p): (p.stat().st_mtime_ns, p.read_bytes()) for p in self.state.rglob('*') if p.is_file()}
@@ -323,11 +334,11 @@ done
     def test_published_snapshot_survives_source_edits(self):
         self.dots('theme', 'set', 'catppuccin-mocha')
         before = {s: self.dots('theme', 'init', '--shell', s).stdout for s in ('bash','zsh','fish')}
-        (self.repo / 'themes/catppuccin/flavors/mocha.toml').write_text('temporarily invalid\n')
+        (self.repo / 'themes/catppuccin-mocha/palette.toml').write_text('temporarily invalid\n')
         self.assertEqual(self.dots('theme', 'current').stdout, 'catppuccin-mocha\n')
         for shell, output in before.items():
             self.assertEqual(self.dots('theme', 'init', '--shell', shell).stdout, output)
-        self.assertEqual(self.run_command([BASH, str(self.repo / 'themes/bin/current_theme'), 'init']).stdout, before['bash'])
+        self.assertEqual(self.run_command([BASH, str(self.repo / 'bin/theme'), 'init']).stdout, before['bash'])
         self.dots('theme', 'set', 'catppuccin-mocha', code=1)
         self.assertEqual(self.dots('theme', 'current').stdout, 'catppuccin-mocha\n')
 
@@ -412,9 +423,87 @@ dt_set catppuccin latte''', code=137)
             self.assertNotIn('candidate\tmode\t', complete('dots', 'theme', 'color', '--native', ''))
             self.assertIn('candidate\tmode\t', complete('dots', 'theme', 'color', ''))
 
+    def test_current_color_arrays_resolved_formats(self):
+        self.wal_export()
+        custom = self.home / 'config/dots/themes/custom'
+        custom.mkdir(parents=True)
+        (custom / 'colors.toml').write_text('background = "#101010"\nforeground = "#ffffff"\n'
+                                          'blue = "#123456"\nhint = "#654321"\nsparkle = "#abcdef"\n')
+        cases = {
+            'catppuccin-mocha': ('blue', '#89b4fa'),
+            'catppuccin-latte': ('blue', '#1e66f5'),
+            'tokyonight-night': ('cyan', '#449dab'),
+            'kanagawa-wave': ('sumiInk3', '#1F1F28'),
+            'rose-pine-dawn': ('_nc', '#f8f0e7'),
+            'custom': ('hint', '#654321'),
+            'pywal16-current': ('background', '#102030'),
+        }
+        for selected, (color, expected) in cases.items():
+            with self.subTest(theme=selected):
+                env = {**self.env, 'DOTS_THEME_SELECTION': selected}
+                init = self.root / 'arrays.sh'
+                init.write_text(self.dots('theme', 'init', env=env).stdout)
+                for executable in filter(None, (BASH, ZSH)):
+                    body = 'source "$HOME/../arrays.sh" || exit\n'
+                    body += 'printf "%s\\n" ' + ' '.join(
+                        '"${' + color + '[' + field + ']}"' for field in
+                        ('hex', 'rgb', 'r', 'g', 'b', 'ansi-24bit', 'esc', 'brightness', 'luminance', 'cmyk'))
+                    values = self.shell(body, executable).stdout.splitlines()
+                    r, g, b = (int(expected[i:i+2], 16) for i in (1, 3, 5))
+                    self.assertEqual(values[:7], [expected, f'{r} {g} {b}', str(r), str(g), str(b),
+                                                 f'38;2;{r};{g};{b}', f'\x1b[38;2;{r};{g};{b}m'])
+                    self.assertEqual(int(values[7]), int(.299*r + .587*g + .114*b + .5))
+                    linear = lambda v: v/255/12.92 if v/255 <= .04045 else ((v/255+.055)/1.055)**2.4
+                    self.assertAlmostEqual(float(values[8]), .2126*linear(r)+.7152*linear(g)+.0722*linear(b), places=6)
+                    self.assertEqual(len(values[9].split()), 4)
+                    self.shell('''source "$HOME/../arrays.sh"
+[[ ${hint[hex]} == "${dots_roles[hint]}" && ${info[hex]} == "${dots_roles[info]}" ]] || exit 1
+[[ ${error[hex]} == "${dots_roles[error]}" && ${background[hex]} == "${dots_roles[background]}" ]] || exit 2
+[[ -z ${mode+x} && ${color4[hex]} == "${blue[hex]}" ]] || exit 3
+[[ $rst == $'\\e[0m' && $RST == "$rst" ]] || exit 4
+readonly rst RST
+source "$HOME/../arrays.sh" || exit 5
+''', executable)
+                if selected == 'tokyonight-night':
+                    self.shell('''source "$HOME/../arrays.sh"
+[[ ${dots_palette[cyan]} == '#7dcfff' && ${cyan[hex]} == '#449dab' && ${blue1[hex]} == '#2ac3de' ]]
+''')
+
+    def test_current_color_array_switching_and_legacy_migration(self):
+        for selected in ('catppuccin-mocha', 'tokyonight-night', 'catppuccin-latte'):
+            (self.root / (selected + '.sh')).write_text(self.dots('theme', 'init', env={
+                **self.env, 'DOTS_THEME_SELECTION': selected}).stdout)
+        for executable in filter(None, (BASH, ZSH)):
+            self.shell('''declare -ga catppuccin_palette=(rosewater blue)
+declare -gA rosewater=([hex]=old) blue=([hex]=old) personal=([hex]=keep)
+source "$HOME/../tokyonight-night.sh" || exit 1
+[[ -z ${rosewater[hex]+x} && ${blue[hex]} == '#7aa2f7' && ${personal[hex]} == keep ]] || exit 2
+source "$HOME/../catppuccin-mocha.sh" || exit 3
+[[ -z ${blue1[hex]+x} && ${rosewater[hex]} == '#f5e0dc' && ${latte_blue[hex]} == '#1e66f5' ]] || exit 4
+source "$HOME/../tokyonight-night.sh" || exit 5
+[[ -z ${rosewater[hex]+x} && ${mocha_blue[hex]} == '#89b4fa' ]] || exit 6
+source "$HOME/../catppuccin-latte.sh" || exit 7
+source "$HOME/../catppuccin-latte.sh" || exit 8
+[[ ${blue[hex]} == '#1e66f5' && ${hint[hex]} == "${dots_roles[hint]}" && -z ${blue1[hex]+x} ]] || exit 9
+''', executable)
+
+    def test_current_color_array_rejects_reserved_names(self):
+        self.dots('theme', 'set', 'catppuccin-mocha')
+        previous = self.generation()
+        custom = self.home / 'config/dots/themes/unsafe'
+        custom.mkdir(parents=True)
+        for name in ('PATH', 'path', 'status', 'theme', 'dots_palette', 'mocha_blue', 'file', 'prompt', 'widgets'):
+            (custom / 'colors.toml').write_text('background = "#101010"\nforeground = "#eeeeee"\n' +
+                                               name + ' = "#123456"\n')
+            result = self.dots('theme', 'init', code=1, env={**self.env, 'DOTS_THEME_SELECTION': 'unsafe'})
+            self.assertEqual(result.stdout, '')
+            self.assertIn('reserved or unsafe shell color name', result.stderr)
+            self.dots('theme', 'set', 'unsafe', code=1)
+            self.assertEqual(self.generation(), previous)
+
     def test_sourceable_bash_compatibility(self):
         self.shell('''declare -A themes; themes[root]=$DOTS/themes
-source "$DOTS/themes/bin/theme"
+source "$DOTS/lib/dots/themes/shell.bash"
 set_theme catppuccin-latte
 [[ $FLAVOR == latte && ${blue[hex]} == "#1e66f5" ]] || exit 1
 set_theme catppuccin
@@ -425,8 +514,8 @@ has_theme catppuccin || exit 3
     @unittest.skipUnless(ZSH, 'Zsh unavailable')
     def test_zsh_refresh_status_and_hooks(self):
         self.dots('theme', 'set', 'catppuccin-mocha')
-        self.shell('''typeset -A themes; themes[root]=$DOTS/themes
-source "$DOTS/themes/bin/theme"
+        self.run_command([ZSH, '-dfi', '-c', '''typeset -A themes; themes[root]=$DOTS/themes
+source "$DOTS/lib/dots/shell/init.zsh"
 _dots_vivid_colors() { REPLY=colors:$1; }
 FZF_DEFAULT_OPTS='--height=40%'
 set_theme || exit 1
@@ -434,15 +523,16 @@ set_theme || exit 1
 [[ -n $GUM_CONFIRM_PROMPT_FOREGROUND ]] || exit 7
 "$DOTS/bin/dots-theme-set" catppuccin-latte >/dev/null || exit 3
 false
-_dots_theme_precmd
+_dots_shell_prompt
 [[ $? == 1 && $FLAVOR == latte && ${blue[hex]} == '#1e66f5' ]] || exit 4
 [[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#1e66f5' ]] || exit 8
 before=$FZF_DEFAULT_OPTS
 set_theme
 [[ $FZF_DEFAULT_OPTS == $before ]] || exit 5
-source "$DOTS/themes/bin/theme"
-[[ ${(M)#precmd_functions:#_dots_theme_precmd} == 1 ]] || exit 6
-''', ZSH)
+source "$DOTS/lib/dots/shell/init.zsh"
+[[ ${(M)#precmd_functions:#_dots_shell_prompt} == 1 ]] || exit 6
+[[ ${(M)#precmd_functions:#_dots_theme_precmd} == 0 ]] || exit 9
+'''])
 
     @unittest.skipUnless(NVIM, 'Neovim unavailable')
     def test_neovim_real_palette_and_focus_reload(self):
@@ -507,10 +597,10 @@ assert(not require("anodize").get_palette())
         self.assertEqual(self.dots('theme', 'color', 'sumiInk3', '--theme', 'kanagawa-wave', '--native').stdout, '#1F1F28\n')
         self.assertEqual(self.dots('theme', 'color', '_nc', '--theme', 'rose-pine-main', '--native').stdout, '#16141f\n')
         self.dots('theme', 'set', 'rose-pine-main')
-        p = self.run_command([BASH,str(self.repo/'themes/bin/current_theme'),'base','hex'])
+        p = self.dots('theme', 'color', 'base', 'hex', '--native')
         self.assertEqual(p.stdout, '#191724\n')
         self.dots('theme', 'set', 'kanagawa-wave')
-        p = self.run_command([BASH,str(self.repo/'themes/bin/current_theme'),'lotus','lotusWhite3','hex'])
+        p = self.dots('theme', 'kanagawa', 'lotus', 'lotusWhite3', 'hex')
         self.assertEqual(p.stdout, '#f2ecbc\n')
         self.dots('theme', 'set', 'rose-pine-main')
         self.dots('theme', 'set', 'rose-pine-invalid', code=1)
@@ -556,8 +646,13 @@ assert(not require("anodize").get_palette())
             self.assertIn('rose-pine',self.dots('__complete',shell,'4','--','dots','theme','list','--flavors','rose-').stdout)
             self.assertIn('sumiInk3',self.dots('__complete',shell,'5','--','dots','theme','color','--theme=kanagawa-wave','--native','sumi').stdout)
         if ZSH:
+            # This roundtrip covers optional-tool fallback. Published palettes
+            # now all use Vivid when available, not only Catppuccin.
+            vivid = self.repo / 'bin/vivid'
+            vivid.write_text('#!' + BASH + '\nexit 1\n')
+            vivid.chmod(0o700)
             self.shell(r'''typeset -A themes; themes[root]=$DOTS/themes
-source "$DOTS/themes/bin/theme"
+source "$DOTS/lib/dots/themes/shell.bash"
 LS_COLORS='*.custom=01;35'
 set_theme catppuccin-mocha
 change_theme rose-pine-dawn >/dev/null

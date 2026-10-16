@@ -1,7 +1,6 @@
 # This hook precedes existing prompt commands and returns their incoming status.
 _dots_bash_prompt() {
   local previous_status=$?
-  _dots_theme_precmd
   # Append only this session's pending commands, then read other sessions' entries.
   history -a
   history -n

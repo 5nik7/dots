@@ -235,3 +235,6 @@ A change is done only when:
 - Cross-platform effects were considered and documented.
 - Performance-sensitive paths were measured when affected.
 - Help, metadata, completions, examples, README, reference docs, and plans are synchronized where applicable.
+
+Repository-local workflow skills are indexed in [.codex/README.md](.codex/README.md);
+they supplement this contract and the task guides.

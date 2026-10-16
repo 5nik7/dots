@@ -73,7 +73,7 @@ dots_main() {
         return 0 ;;
       --color=*|--icons=*)
         option=${1%%=*} mode=${1#*=}
-        case $mode in auto|always|never) ;; *) dots_error "Expected $option=auto|always|never"; return 2 ;; esac
+        case $mode in none) [[ $option == --color ]] || { dots_error "Invalid icon mode"; return 2; }; mode=never ;; auto|always|never) ;; *) dots_error "Expected $option=auto|always|never"; return 2 ;; esac
         if [[ $option == --color ]]; then export DOTS_COLOR=$mode; else export DOTS_ICONS=$mode; fi
         shift ;;
       --command-dir)
@@ -155,6 +155,10 @@ dots_main() {
   dots_resolve "${help_args[@]}"; resolved=$?
   if (( resolved == 1 )); then return 1; fi
   if (( resolved == 0 )); then
+    if [[ $DOTS_ROUTE == theme && $# -gt 1 && $2 != -h && $2 != --help ]]; then
+      shift "$DOTS_CONSUMED"
+      exec "$DOTS_EXECUTABLE" "$@"
+    fi
     if (( want_help )); then
       source "$DOTS_LIB_DIR/catalog.bash"
       dots_metadata "$DOTS_EXECUTABLE" || return

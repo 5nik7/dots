@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# dots:summary=Select a theme with live palette preview (FZF; Gum or plain fallback)
+exec "${BASH_SOURCE[0]%/*}/dots-theme-switcher" "$@"

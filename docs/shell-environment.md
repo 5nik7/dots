@@ -1,0 +1,118 @@
+# Dots shell environment
+
+`dots init [bash|zsh|fish|nu|xonsh|powershell]` emits a hook for **Dots integration
+only**. The adapters under `lib/dots/shell/` own settings, derived paths, theme
+variables, Dots completions and prompt refresh. Personal aliases, prompt choice,
+plugins, editor settings and third-party tools remain under `shells/`. Repository
+startup files load both layers; an explicit hook in another rc loads only Dots.
+
+## Settings
+
+Edit `${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env`. Native Windows PowerShell
+uses `%APPDATA%/dots/config.env` unless XDG_CONFIG_HOME is set. DOTS_CONFIG_FILE
+selects an explicit file. A missing file uses defaults; initialization does not
+create it. For example:
+
+```ini
+DOTS_THEME_DEFAULT=catppuccin-mocha
+DOTS_INIT_THEME=1
+DOTS_THEME_AUTO_UPDATE=1
+DOTS_INIT_COLORS=1
+DOTS_INIT_COMMANDS=1
+DOTS_INIT_COMPLETION=1
+DOTS_TERMUX_AUTOSTART=0
+DOTS_ZSH_SUGGESTIONS=autosuggestions
+```
+
+This is data, not a shell script. Values are literal, optionally enclosed in
+matching single or double quotes. Blank lines and whole-line `#` comments are
+accepted. Expansion, command substitution, `export`, unknown keys and duplicate
+keys are not accepted. Invalid settings stop initialization before replacing the
+last resolved settings. Explicit nonempty environment overrides take precedence
+over the file, then built-in defaults apply. File-derived defaults are not
+exported into the override namespace, so subsequent reloads see edits correctly.
+
+Settings are defined in [settings.tsv](../lib/dots/shell/settings.tsv).
+Boolean options use `0` or `1`; all six integration switches default to `1`.
+The fallback theme is `catppuccin-mocha`. DOTS_COLOR and DOTS_ICONS accept
+`auto`, `always`, or `never` and default to `auto`. The personal Termux hook
+defaults on; the personal Zsh suggestions setting defaults to `deja` and also
+accepts `autosuggestions` or `none`. Initializing Dots alone does not activate
+those personal integrations.
+
+Settings apply when initialization runs again, including a new shell or the
+repository's `rl` helper. Theme changes follow published state at the next prompt
+when enabled. No settings watcher, background service, theme-directory scan or
+palette calculation runs on ordinary prompts. Shell/plugin activation preferences
+may still require a new shell.
+
+## Variables and diagnostics
+
+DOTS is the selected checkout. [paths.tsv](../lib/dots/shell/paths.tsv) defines
+the common path exports and shortcut keys for every native adapter. DOTBIN, DOTSCRIPTS, DOTFILES, DOTSHHHH, SHELLS,
+ZSH, PWSH and the theme command paths are derived from it. DOTCONFIG remains a
+compatibility alias of DOTFILES. These runtime paths are not config options.
+`dot` provides named paths including root, bin, scripts, files/configs, secrets,
+shells, themes, config and state; its theme entry follows the selected theme.
+
+| Shell | Paths | Color formats |
+| --- | --- | --- |
+| Bash | `${dot[root]}` | `${blue[hex]}` |
+| Zsh | `$dot[root]` | `$blue[hex]` |
+| Fish | `$dot_root` | `$dots_color_blue_hex` |
+| Nushell | `$env.dot.root` | `$env.dots_colors.blue.hex` |
+| Xonsh | `dot['root']` | `blue['hex']` |
+| PowerShell | `$dot.root` | `$dots_colors.blue.hex` |
+
+Native palette and semantic-role maps remain available. Named color shortcuts
+are optional; stale Dots-owned colors are removed when a new palette loads.
+`rst` and `RST` reset SGR colors and attributes; PowerShell's case-insensitive
+variable names make them the same variable. Shell maps/records are native runtime
+values, not portable exported arrays. Child processes use scalar exports or CLI
+queries. The old 256-entry COLOR/FG/BG maps are no longer allocated at startup;
+their explicit utility functions remain callable for compatibility.
+
+```sh
+dots env                         # resolved Dots values and provenance
+dots env DOTS_THEME_DEFAULT      # one undecorated value
+dots env --json                  # versioned values/source records
+theme current                   # selected full theme ID
+theme color blue hex            # selected resolved palette value
+```
+
+`dots env` reports configuration and published state, not arbitrary variables in
+the parent shell. It does not enumerate the whole environment, read secrets, or
+pretend to inspect parent-local arrays. JSON has `version: 1` and a `values`
+object whose entries contain `value` and `source` strings.
+
+## Theme state and native adapters
+
+Selection precedence is DOTS_THEME_SELECTION, the published generation, then
+DOTS_THEME_DEFAULT. Selection changes remain journaled; changing themes does not
+rewrite config.env. Repository `.default`/`.theme` files and `$HOME/.theme` are
+no longer selection inputs. The approved legacy repository files have been removed;
+`$HOME/.theme` is left untouched. See the [cleanup record](../plans/shell-environment.md#approved-cleanup).
+
+Publication includes `shell.tsv`, a data-only snapshot of identity, native colors,
+roles and color formats. Fish, Nushell, Xonsh and PowerShell read this snapshot;
+Bash/Zsh retain their generated sourceable initialization and FSH/Gum integration.
+All adapters read the published `ls_colors` artifact alongside their palette.
+Vivid runs during publication rather than shell startup for new generations. After upgrading from an older generation, run `theme refresh` to
+publish the new snapshot. Missing or malformed snapshots retain previous colors;
+a fresh native shell remains usable without theme colors until publication.
+
+Native Windows PowerShell initialization requires neither Bash nor Python.
+Theme publication and the remaining CLI still require the existing Bash runtime;
+initialization does not translate WSL paths or provide a Windows publisher.
+PowerShell command completion is enabled only when Bash is available. Native
+PowerShell and the normal Xonsh launcher must be verified where those runtimes
+are available; Termux evidence does not establish Windows support.
+
+## Verification
+
+`python3 -B tools/test_shell_environment.py -v` uses temporary home, config,
+state and cache roots and sources only the public library adapters. It checks
+literal settings, reload failure, diagnostics, native palette data and the
+integration-only boundary. Existing shell-init, theme publication, dispatcher
+and completion tests cover their respective contracts. Run focused cases
+sequentially on Termux rather than concurrent full suites.

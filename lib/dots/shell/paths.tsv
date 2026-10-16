@@ -1,0 +1,13 @@
+DOTS	root	.
+DOTBIN	bin	bin
+DOTSCRIPTS	scripts	scripts
+DOTFILES	files	config
+DOTCONFIG	configs	config
+DOTSHHHH	secrets	secrets
+SHELLS	shells	shells
+ZSH	-	shells/zsh
+PWSH	-	shells/powershell
+DOTHEMES	themes	themes
+THEMES	-	themes
+-	walls	walls
+-	fonts	fonts

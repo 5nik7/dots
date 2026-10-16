@@ -44,13 +44,13 @@ def main():
             shutil.copy2(args.baseline_script, baseline)
             env = {**fixture.env, 'XDG_CACHE_HOME': str(fixture.home / 'baseline-cache')}
             results['legacy_init'] = measure([BASH, str(baseline), 'init'], env)
-        command = [BASH, str(fixture.repo / 'themes/bin/catppuccin'), 'init']
+        command = [BASH, str(fixture.repo / 'bin/theme'), 'catppuccin', 'init']
         results['new_init'] = measure(command)
         fixture.dots('theme', 'set', 'catppuccin-mocha')
         results['selected_init'] = measure([BASH, str(fixture.repo / 'bin/dots-theme-init')])
         if ZSH:
             p = fixture.shell('''typeset -A themes; themes[root]=$DOTS/themes
-source "$DOTS/themes/bin/theme"
+source "$DOTS/lib/dots/themes/shell.bash"
 set_theme
 zmodload zsh/datetime
 local start=$EPOCHREALTIME

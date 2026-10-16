@@ -5,6 +5,21 @@ dots::anodize_logo_error() {
   dots_error "$*"
 }
 
+# Dynamic output variables asset_lines/asset_width belong to the caller.
+dots::anodize_text_asset() {
+  local file=$1 width=$2 height=$3 line visible='' cells='^[ -~⠀-⣿]*$'
+  asset_lines=() asset_width=0
+  [[ -r $file && -f $file ]] || return 1
+  while IFS='' read -r line || [[ -n $line ]]; do
+    [[ $line =~ $cells ]] || return 1
+    (( ${#line} <= width && ${#asset_lines[@]} < height )) || return 1
+    asset_lines+=("$line")
+    (( ${#line} <= asset_width )) || asset_width=${#line}
+    visible+=${line//[ ⠀]/}
+  done < "$file"
+  [[ -n $visible ]]
+}
+
 dots::anodize_logo() {
   local mode=${ANODIZE_LOGO:-text} layout=${ANODIZE_LOGO_LAYOUT:-auto} token value status
   while (($#)); do
@@ -27,7 +42,7 @@ dots::anodize_logo() {
   case $mode in text|auto|kitty|chafa) ;; *) mode=text ;; esac
   case $layout in auto|horizontal|stacked|icon) ;; *) layout=auto ;; esac
   dots::style
-  if [[ $mode != text && -t 1 && ${TERM:-dumb} != dumb && $DOTS_UI_RESET ]] && command -v python3 >/dev/null 2>&1; then
+  if [[ $mode != text && -t 1 && ${TERM:-dumb} != dumb && ${DOTS_ICONS:-auto} != never && $DOTS_UI_RESET ]] && command -v python3 >/dev/null 2>&1; then
     ANODIZE_LOGO=$mode ANODIZE_LOGO_LAYOUT=$layout python3 -B "$DOTS_LIB_DIR/anodize/logo.py"
     status=$?
     (( status != 0 )) || return 0
@@ -44,25 +59,36 @@ dots::anodize_logo() {
   fi
   [[ $columns =~ ^[0-9]{1,6}$ ]] && (( 10#$columns > 0 )) || columns=80
   [[ $rows =~ ^[0-9]{1,6}$ ]] && (( 10#$rows > 0 )) || rows=24
-  width=$((10#$columns - 1)) height=$((10#$rows / 3))
+  width=$((10#$columns - 1)) height=$((10#$rows / 2))
   (( width > 0 )) || width=1
   (( height > 0 )) || height=1
-  (( height <= 8 )) || height=8
-  if [[ ! -t 1 || ${TERM:-dumb} == dumb ]] || (( height < 6 || width < 19 )); then
-    layout=compact
-  elif [[ $layout == auto ]]; then
-    if (( 10#$columns >= 80 )); then layout=horizontal; else layout=stacked; fi
-  fi
-  [[ $layout != horizontal ]] || (( width >= 39 )) || layout=stacked
-  [[ $layout != stacked ]] || (( height >= 8 )) || layout=icon
-  local -a lines=()
-  file=$DOTS_LIB_DIR/anodize/assets/$layout.txt
-  if [[ $layout != compact && -r $file ]]; then
-    while IFS='' read -r line || [[ -n $line ]]; do lines+=("$line"); done < "$file"
-    ((${#lines[@]} <= height)) || lines=()
-    for line in "${lines[@]}"; do
-      if ((${#line} > width)); then lines=(); break; fi
+  (( height <= 16 )) || height=16
+  local -a lines=() asset_lines=() candidates=()
+  local asset_width best_width=-1 number sample='⣿' encoding=${PYTHONIOENCODING:-utf-8} unicode=1
+  encoding=${encoding%%:*}
+  case ${encoding,,} in utf8|utf-8) ;; *) unicode=0 ;; esac
+  if [[ -t 1 && ${TERM:-dumb} != dumb && ${DOTS_ICONS:-auto} != never && ${#sample} == 1 && $unicode == 1 ]]; then
+    case $layout in
+      auto) candidates=(horizontal stacked) ;;
+      horizontal|stacked) candidates=("$layout") ;;
+    esac
+    for file in "${candidates[@]}"; do
+      if dots::anodize_text_asset "$DOTS_LIB_DIR/anodize/assets/$file.txt" "$width" "$height"; then
+        lines=("${asset_lines[@]}"); break
+      fi
     done
+    if ((${#lines[@]} == 0)); then
+      for file in "$DOTS_LIB_DIR"/anodize/assets/logo-*.txt; do
+        number=${file##*/logo-}; number=${number%.txt}
+        [[ $number =~ ^[0-9]+$ && ! $number =~ ^0+$ ]] || continue
+        if dots::anodize_text_asset "$file" "$width" "$height" && (( asset_width > best_width )); then
+          lines=("${asset_lines[@]}"); best_width=$asset_width
+        fi
+      done
+    fi
+    if ((${#lines[@]} == 0)) && dots::anodize_text_asset "$DOTS_LIB_DIR/anodize/assets/logo.txt" "$width" "$height"; then
+      lines=("${asset_lines[@]}")
+    fi
   fi
   if ((${#lines[@]} == 0)); then
     if (( width >= 16 && height >= 3 )); then

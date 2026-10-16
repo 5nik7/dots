@@ -60,18 +60,63 @@ def layout_for(columns, rows, full, requested):
     return layout, width, height
 
 
-def text_lines(layout, width, height):
-    if layout == 'compact':
-        if width >= 16 and height >= 3:
-            return ['  /\\', ' /_ \\   ANODIZE', '/_/\\_\\']
-        return [(' /\\ ANODIZE' if width >= 11 else '/\\' if width >= 2 else 'A')]
+def ascii_lines(width, height):
+    if width >= 16 and height >= 3:
+        return ['  /\\', ' /_ \\   ANODIZE', '/_/\\_\\']
+    return [(' /\\ ANODIZE' if width >= 11 else '/\\' if width >= 2 else 'A')]
+
+
+def read_text_asset(path, width, height):
+    """ASCII and braille cells are one column each, including blank braille.
+
+    Reject controls and other character sets rather than guessing their width
+    or passing terminal escapes through. Keep the Bash reader equivalent.
+    """
     try:
-        lines = (ASSETS / (layout + '.txt')).read_text(encoding='ascii').splitlines()
-        if lines and len(lines) <= height and max(map(len, lines)) <= width:
+        lines = path.read_text(encoding='utf-8').split('\n')
+        if lines and lines[-1] == '':
+            lines.pop()
+        if (lines and len(lines) <= height and max(map(len, lines)) <= width
+                and all(32 <= ord(c) <= 126 or 0x2800 <= ord(c) <= 0x28ff for line in lines for c in line)
+                and any(c not in (' ', '\u2800') for line in lines for c in line)):
             return lines
     except (OSError, UnicodeError):
         pass
-    return text_lines('compact', width, height)
+    return None
+
+
+def text_lines(layout, width, height):
+    if layout in ('auto', 'horizontal'):
+        candidates = ['horizontal.txt', 'stacked.txt'] if layout == 'auto' else ['horizontal.txt']
+    elif layout == 'stacked':
+        candidates = ['stacked.txt']
+    else:
+        candidates = []
+    for name in candidates:
+        lines = read_text_asset(ASSETS / name, width, height)
+        if lines:
+            return lines
+    if layout != 'compact':
+        # Compare actual widths, not lexicographic filenames or claimed sizes.
+        best, best_width = None, -1
+        for path in sorted(ASSETS.glob('logo-*.txt')):
+            number = path.stem[5:]
+            if not number.isascii() or not number.isdecimal() or not number.strip('0'):
+                continue
+            lines = read_text_asset(path, width, height)
+            if lines and max(map(len, lines)) > best_width:
+                best, best_width = lines, max(map(len, lines))
+        if best:
+            return best
+    return read_text_asset(ASSETS / 'logo.txt', width, height) or ascii_lines(width, min(height, 3))
+
+
+def unicode_output(stream):
+    try:
+        '\u2800\u28ff'.encode(getattr(stream, 'encoding', None) or 'utf-8')
+        return True
+    except (UnicodeError, LookupError):
+        return False
 
 
 def kitty_supported():
@@ -123,14 +168,14 @@ def kitty_image(path, width, height):
     return output + f'\033[{rows}B\r'
 
 
-def chafa_image(path, width, height, color, icons):
+def chafa_image(path, width, height, color):
     executable = shutil.which('chafa')
     if not executable:
         return None
     result = subprocess.run([
         executable, '--probe=off', '--polite=on', '--format=symbols', '--animate=off',
         '--relative=off', '--optimize=0', '--fg-only', '--threads=1',
-        '--symbols=block' if icons else '--symbols=ascii',
+        '--symbols=braille',
         '--colors=full' if color else '--colors=none',
         f'--size={width}x{height}', str(path),
     ], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
@@ -144,16 +189,18 @@ def render(ui, full=False):
     columns, rows = dimensions(ui.stream)
     terminal = ui.stream.isatty() and os.environ.get('TERM', 'dumb') != 'dumb'
     requested = os.environ.get('ANODIZE_LOGO_LAYOUT', 'auto')
+    unicode_text = terminal and ui.icons and unicode_output(ui.stream)
+    # Preserve the existing graphics layout/size policy independently of text.
     layout, width, height = layout_for(columns, rows, full and terminal, requested)
     mode = os.environ.get('ANODIZE_LOGO', 'text')
     # Undecorated and redirected output always uses the portable text path.
-    if terminal and ui.color and width >= 16 and height >= 3 and mode in ('auto', 'kitty', 'chafa'):
+    if unicode_text and ui.color and width >= 16 and height >= 3 and mode in ('auto', 'kitty', 'chafa'):
         try:
             path = asset(layout, True)
             if mode in ('auto', 'kitty') and ui.icons and kitty_supported():
                 output = kitty_image(path, min(width, 64), height)
             elif mode in ('auto', 'chafa') and path.is_file():
-                output = chafa_image(path, min(width, 64), height, ui.color, ui.icons)
+                output = chafa_image(path, min(width, 64), height, ui.color)
             else:
                 output = None
             if output:
@@ -161,7 +208,13 @@ def render(ui, full=False):
                 return
         except (OSError, ValueError, struct.error, subprocess.SubprocessError):
             pass
-    for line in text_lines(layout, width, height):
+    height = max(1, min(16 if full else 6, rows // (2 if full else 3)))
+    if unicode_text:
+        layout = (requested if requested in LAYOUTS else 'auto') if full else 'compact'
+        lines = text_lines(layout, width, height)
+    else:
+        lines = ascii_lines(width, min(height, 3))
+    for line in lines:
         ui.emit(ui.paint(line, '95'))
 
 

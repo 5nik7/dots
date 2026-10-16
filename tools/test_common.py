@@ -387,19 +387,19 @@ setup_colors
 [[ $RED == red && $BLUE == blue && $BOLD == bold && $RST == reset && $COLORS == caller ]]
 ''', PATH='')
 
-    def test_compatibility_profiles_build_arrays_without_color_globals_or_tools(self):
+    def test_compatibility_profile_keeps_color_arrays_explicit(self):
         (self.repo / 'shells').mkdir()
-        for name in ('profile', '.profile'):
-            shutil.copy2(REPO / 'shells' / name, self.repo / 'shells' / name)
-            with self.subTest(profile=name):
-                self.both('''set -eu
-source "$DOTS/shells/$PROFILE"
+        shutil.copy2(REPO / 'shells/profile', self.repo / 'shells/profile')
+        self.both('''set -eu
+source "$DOTS/shells/profile"
+[[ ! ${FG+x} && ! ${BG+x} && ! ${COLOR+x} ]]
+build_color_arrays
 [[ ${#FG[@]} == 256 && ${#BG[@]} == 256 && ${#COLOR[@]} == 256 ]]
 [[ ! ${RED+x} && ! ${BLUE+x} && ! ${BOLD+x} && ! ${RST+x} && ! ${COLORS+x} ]]
 RED=red BLUE=blue BOLD=bold RST=reset COLORS=caller
-source "$DOTS/shells/$PROFILE"
+source "$DOTS/shells/profile"
 [[ $RED == red && $BLUE == blue && $BOLD == bold && $RST == reset && $COLORS == caller ]]
-''', PATH='', PROFILE=name)
+''', PATH='')
 
     def test_logging_and_formatting_share_policy_and_preserve_named_colors(self):
         self.both('''RED=red BLUE=blue BOLD=bold RESET=reset

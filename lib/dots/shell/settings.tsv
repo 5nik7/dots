@@ -1,0 +1,10 @@
+DOTS_THEME_DEFAULT	id	catppuccin-mocha	Fallback when no theme has been published
+DOTS_INIT_THEME	bool	1	Load the current Dots theme
+DOTS_THEME_AUTO_UPDATE	bool	1	Follow published themes at the next prompt
+DOTS_INIT_COLORS	bool	1	Expose named color shortcuts
+DOTS_INIT_COMMANDS	bool	1	Add generated theme commands to PATH
+DOTS_INIT_COMPLETION	bool	1	Register Dots completions
+DOTS_COLOR	style	auto	Human command colors
+DOTS_ICONS	style	auto	Human command icons
+DOTS_TERMUX_AUTOSTART	bool	1	Enable the personal Termux tmux startup hook
+DOTS_ZSH_SUGGESTIONS	suggestions	deja	Personal Zsh suggestion engine

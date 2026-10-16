@@ -15,7 +15,7 @@ DOTS_GLOBAL_OPTIONS=(
   '--dir|-d|flag|Print the repository directory'
   '--raw|-r|flag|Do not abbreviate home paths with --dir'
   '--command-dir||directory|Add an absolute extension directory'
-  '--color||choice:auto,always,never|Color mode (DOTS_COLOR)'
+  '--color||choice:auto,always,never,none|Color mode (DOTS_COLOR)'
   '--icons||choice:auto,always,never|Icon mode (DOTS_ICONS)'
 )
 dots_builtin_metadata() {
@@ -42,7 +42,7 @@ dots_type_valid() {
   local value
   case $1 in
     flag|string|file|directory) return 0 ;;
-    theme|flavor|palette-color|color-format|file-resource|file-repository|theme-id|theme-color|anodize-theme|theme-plugin) return 0 ;;
+    theme|flavor|palette-color|color-format|file-resource|file-repository|theme-id|file-color-key|theme-color|anodize-theme|theme-plugin|dots-setting) return 0 ;;
     choice:*)
       [[ ${1#choice:} && $1 != *, && $1 != *,,* ]] || return 1
       local -a values=()
@@ -181,7 +181,19 @@ dots_command_help() {
 }
 
 dots_help() {
-  local route='' word resolved line long short type description
+  if [[ ${1:-} == theme && -n ${2:-} && $2 != -* ]]; then
+    local DT_LIB=$DOTS_LIB_DIR/themes
+    source "$DT_LIB/core.bash"
+    source "$DT_LIB/families.bash"
+    if ! dt_family_reserved "$2"; then
+      source "$DT_LIB/views.bash"
+      source "$DT_LIB/palette-cli.bash"
+      shift
+      dt_palette_command "$@" --help
+      return
+    fi
+  fi
+  local route=''  word resolved line long short type description
   for word; do
     [[ $word == -h || $word == --help ]] && continue
     [[ $word =~ ^[a-z][a-z0-9]*$ ]] || { dots_error 'Unknown command or invalid help route'; return 1; }

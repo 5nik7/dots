@@ -1,9 +1,17 @@
 # Sourceable Bash presentation helpers. Static views use builtins; an active
 # progress worker is stopped before output. Never source shell configuration.
+typeset -gA dots_options
 # DOTS_COLOR / DOTS_ICONS: auto, always, never; dispatcher flags override them.
+dots::settings() {
+  if [[ -z ${_DOTS_CONFIG_PATH:-} && -n ${DOTS:-} && -r $DOTS/lib/dots/shell/config.bash ]]; then
+    source "$DOTS/lib/dots/shell/config.bash"
+    _dots_config_load || return
+  fi
+}
 dots::style() {
+  dots::settings || return
   [[ -z ${DOTS_PROGRESS_FD:-} ]] || dots::progress_stop
-  local fd=${1:-1} mode=${DOTS_COLOR:-auto} icons=${DOTS_ICONS:-auto}
+  local fd=${1:-1} mode=${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}} icons=${DOTS_ICONS:-${dots_options[DOTS_ICONS]:-auto}}
   DOTS_UI_RESET='' DOTS_UI_BOLD='' DOTS_UI_BLUE='' DOTS_UI_GREEN=''
   DOTS_UI_YELLOW='' DOTS_UI_RED='' DOTS_UI_CYAN=''
   DOTS_UI_INFO='[i]' DOTS_UI_OK='[+]' DOTS_UI_WARN='[!]' DOTS_UI_ERROR='[x]'
@@ -52,7 +60,7 @@ dots::error() { dots::style 2; printf '%s%s%s %s\n' "$DOTS_UI_RED" "$DOTS_UI_ERR
 
 # Rich listings in terminals, or when decoration is explicitly requested.
 # Value/path/JSON commands must bypass this regardless of presentation settings.
-dots::human() { [[ -t 1 || ${DOTS_COLOR:-auto} == always || ${DOTS_ICONS:-auto} == always ]]; }
+dots::human() { dots::settings || return; [[ -t 1 || ${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}} == always || ${DOTS_ICONS:-${dots_options[DOTS_ICONS]:-auto}} == always ]]; }
 dots::path() {
   REPLY=$1
   # A literal tilde is for display, not path resolution.

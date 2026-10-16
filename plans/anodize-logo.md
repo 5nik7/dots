@@ -2,7 +2,22 @@
 
 **Status: Implemented, 2026-10-13.**
 
-## Accepted behavior
+## Text asset update — 2026-10-16
+
+**Status: Implemented.** Both renderers use the owner's UTF-8 braille `horizontal.txt`, `stacked.txt`, `logo.txt` and numbered `logo-<width>.txt` assets without modifying their contents. Text help may use half the terminal height, capped at 16 rows; routine views use the six-row base logo within one-third of terminal height. Selection uses measured cell width and row count, retaining a tiny ASCII fallback for explicit ASCII mode, dumb/non-Unicode terminals, redirected output and missing/non-fitting assets. Chafa uses `--fg-only --symbols=braille` and is skipped in ASCII-only modes. Existing Kitty sizing/source policy and data output are preserved. Both renderers, documentation/manual and focused tests are synchronized.
+
+Validation on native Termux:
+
+- `verify_anodize.py check`: Go tests/vet, 18 isolated CLI tests and 11 logo tests passed. This includes unchanged JSON/raw exports/configuration and new supplied-asset selection cases.
+- `test_anodize_integration.py`: five tests passed, including three-shell completion and generated-manual checks. `test_bash_dots.py`: 24 tests passed.
+- Python/Bash syntax, ShellCheck for the logo adapter, generated-manual freshness, mandoc lint, changed-document relative links and `git diff --check` passed. The full docs audit still fails the pre-existing `docs/testing.md` link to the removed `dots-symlink.yazi/README.md`.
+- Native PTY review confirmed exact supplied artwork for horizontal 80×24, stacked 40×24 and numbered icon 80×32. Python/Bash parity covers layout overrides, future variants, malformed files, ASCII/Latin-1 output, explicit ASCII mode, dumb terminals and narrow/short dimensions. Chafa produced foreground-only braille with no non-SGR escape sequences. Actual Kitty display was not newly tested.
+- Hash comparisons preserved every supplied artwork file, the deleted `icon.txt`, and unrelated pre-existing changes. The shared README/architecture wording changes were separately verified by reversing only this task's replacements against their initial hashes.
+- Default redirected-help medians (10 samples after two warmups) were 258.27/157.86 ms before/after for standalone and 26.29/17.70 ms for Dots. Timing is noisy; no speedup is claimed. Current 40×24 PTY medians (five samples after two warmups) were 163.36 ms standalone and 41.20 ms Dots. No persistent cache or new renderer subprocess was added to default text help.
+
+Changes remain uncommitted. No live theme was applied and no tool was installed.
+
+## Original behavior (2026-10-13)
 
 Portable bundled ASCII branding is the default in both Anodize entry points. Help gets a responsive horizontal/stacked/icon header; routine human views and diagnostics get compact branding. JSON, raw exports/configuration, completion source and candidates stay unchanged. Optional `--logo=text|auto|kitty|chafa` and `--logo-layout=auto|horizontal|stacked|icon` override `ANODIZE_LOGO` and `ANODIZE_LOGO_LAYOUT`. Missing graphics capability, assets or tools falls back to text. No downloads, runtime builds, terminal queries or new required dependencies.
 

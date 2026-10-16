@@ -15,6 +15,7 @@ import struct
 import subprocess
 import sys
 import termios
+import tempfile
 import unittest
 from unittest import mock
 
@@ -49,7 +50,51 @@ class LogoPolicy(unittest.TestCase):
                         out = self.draw(COLUMNS=str(width), LINES=str(rows), DOTS_COLOR='never', ANODIZE_LOGO_LAYOUT=layout)
                         self.assertTrue(out.strip())
                         self.assertLessEqual(max(map(len, out.splitlines())), max(1, width-1))
-                        self.assertLessEqual(len(out.splitlines()), max(1, min(8, rows//3)))
+                        self.assertLessEqual(len(out.splitlines()), max(1, min(16, rows//2)))
+
+    def test_supplied_assets_and_actual_dimensions(self):
+        for layout, width, rows, name in [
+            ('auto', 80, 24, 'horizontal.txt'), ('auto', 43, 12, 'horizontal.txt'),
+            ('auto', 40, 24, 'stacked.txt'), ('auto', 25, 24, 'logo-20.txt'),
+            ('icon', 80, 32, 'logo-40.txt'), ('icon', 40, 28, 'logo-35.txt'),
+            ('icon', 40, 24, 'logo-30.txt'), ('icon', 40, 20, 'logo-25.txt'),
+            ('stacked', 40, 16, 'logo-20.txt'), ('icon', 20, 24, 'logo.txt'),
+        ]:
+            with self.subTest(layout=layout,width=width,rows=rows):
+                self.assertEqual(self.draw(COLUMNS=str(width),LINES=str(rows),ANODIZE_LOGO_LAYOUT=layout,DOTS_COLOR='never'), (logo.ASSETS/name).read_text())
+        self.assertEqual(self.draw(full=False,DOTS_COLOR='never'),(logo.ASSETS/'logo.txt').read_text())
+        self.assertTrue(self.draw(full=False,LINES='12',DOTS_COLOR='never').isascii())
+
+    def test_future_variants_invalid_files_and_missing_base(self):
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(logo,'ASSETS',Path(tmp)):
+            root=Path(tmp)
+            (root/'logo-45.txt').write_text('⣿'*45+'\n')
+            (root/'logo-999.txt').write_text('⣿'*10+'\n')  # Filename is not measured width.
+            (root/'logo-wide.txt').write_text('⣿'*60+'\n')
+            (root/'logo-90.txt').write_text('\x1b[31mcontrol\n')
+            (root/'logo-0.txt').write_text('⣿'*61+'\n')
+            (root/'logo-50.txt').write_bytes(b'\xff\xfe')
+            self.assertEqual(logo.text_lines('icon',70,16),['⣿'*45])
+            self.assertEqual(logo.text_lines('icon',44,16),['⣿'*10])
+            self.assertTrue(''.join(logo.text_lines('icon',8,3)).isascii())
+            (root/'logo.txt').write_text('⠀⣿⠀\n')
+            self.assertEqual(logo.text_lines('compact',8,6),['⠀⣿⠀'])
+
+    def test_unicode_and_color_are_independent(self):
+        for color in ({'NO_COLOR':'1'},{'DOTS_COLOR':'never'}):
+            self.assertEqual(self.draw(**color),(logo.ASSETS/'horizontal.txt').read_text())
+        with mock.patch.object(logo.subprocess,'run',side_effect=AssertionError('unexpected renderer')):
+            for settings in ({'DOTS_ICONS':'never'},{'TERM':'dumb'}):
+                self.assertTrue(self.draw(ANODIZE_LOGO='chafa',DOTS_COLOR='never',**settings).isascii())
+                self.assertNotIn('\u2800',self.draw(ANODIZE_LOGO='chafa',DOTS_COLOR='always',**settings))
+            class ASCIIStream(Stream):
+                @property
+                def encoding(self):
+                    return 'ascii'
+            stream=ASCIIStream()
+            with mock.patch.dict(os.environ,{'TERM':'xterm-kitty','ANODIZE_LOGO':'chafa'},clear=True):
+                logo.render(Presentation(stream),full=True)
+            self.assertTrue(stream.getvalue().isascii())
 
     def test_destination_dimensions_and_bad_environment(self):
         stream = Stream()
@@ -86,9 +131,10 @@ class LogoPolicy(unittest.TestCase):
     def test_chafa_bounded_failure_and_ascii_policy(self):
         with mock.patch.object(logo.shutil, 'which', return_value='/fixture/chafa'), mock.patch.object(logo.subprocess, 'run') as run:
             run.return_value = subprocess.CompletedProcess([], 0, b'RENDERED\n')
-            self.assertIn('RENDERED', self.draw(ANODIZE_LOGO='chafa', DOTS_ICONS='never'))
+            self.assertIn('RENDERED', self.draw(ANODIZE_LOGO='chafa'))
             args, kwargs = run.call_args
-            self.assertIn('--symbols=ascii', args[0])
+            self.assertIn('--symbols=braille', args[0])
+            self.assertIn('--fg-only', args[0])
             self.assertIn('--probe=off', args[0])
             self.assertIn('--polite=on', args[0])
             self.assertIn('--animate=off', args[0])
@@ -96,9 +142,9 @@ class LogoPolicy(unittest.TestCase):
             self.assertEqual(kwargs['timeout'], 1.0)
             for outcome in (subprocess.CompletedProcess([], 1, b'partial'), subprocess.CompletedProcess([], 0, b'')):
                 run.return_value = outcome
-                self.assertIn('A N O D I Z E', self.draw(ANODIZE_LOGO='chafa'))
+                self.assertIn((logo.ASSETS/'horizontal.txt').read_text().splitlines()[0], self.draw(ANODIZE_LOGO='chafa'))
             run.side_effect = subprocess.TimeoutExpired('chafa', 1)
-            self.assertIn('A N O D I Z E', self.draw(ANODIZE_LOGO='auto'))
+            self.assertIn((logo.ASSETS/'horizontal.txt').read_text().splitlines()[0], self.draw(ANODIZE_LOGO='auto'))
 
 
 class LogoCLI(unittest.TestCase):
@@ -144,10 +190,12 @@ class LogoCLI(unittest.TestCase):
     def test_help_static_no_extension_execution_and_size_parity(self):
         command = self.repo/'bin/dots-anodize'
         command.write_text(command.read_text().replace('exec python3', 'touch "$HOME/extension-ran"\nexec python3'))
-        for width, height in [(40,24),(80,24),(120,30),(10,3)]:
-            standalone = self.terminal([str(self.repo/'bin/anodize'), '--help'], width,height)
-            dots = self.terminal([str(self.repo/'bin/dots'), 'anodize', '--help'], width,height)
-            self.assertEqual(standalone.split('Anodize\n')[0], dots.split('dots anodize\n')[0])
+        for layout in ('auto','icon','stacked','horizontal'):
+            for width, height in [(40,24),(80,32),(120,30),(21,16),(43,12),(10,3)]:
+                args=['--logo-layout='+layout,'--help']
+                standalone = self.terminal([str(self.repo/'bin/anodize'), *args], width,height)
+                dots = self.terminal([str(self.repo/'bin/dots'), 'anodize', *args], width,height)
+                self.assertEqual(standalone.split('Anodize\n')[0], dots.split('dots anodize\n')[0])
         self.assertFalse((self.home/'extension-ran').exists())
         self.assertIn('ANODIZE', self.run_dots('help','anodize').stdout)
         prefixed = self.run_dots('anodize','--logo','text','--logo-layout=icon','preview','--help').stdout
@@ -174,6 +222,23 @@ class LogoCLI(unittest.TestCase):
         self.cli('--logo=bad','--help',code=2)
         self.assertIn('ANODIZE',self.run_dots('anodize','--logo=bad','--help',code=2).stderr)
         self.assertFalse((self.home/'state').exists())
+
+    def test_new_variants_and_plain_policy_match_static_help(self):
+        assets=self.repo/'lib/dots/anodize/assets'
+        future='⠀'+'⣿'*43+'⠀\n'
+        (assets/'logo-45.txt').write_text(future)
+        (assets/'logo-999.txt').write_text('⣿'*10+'\n')
+        (assets/'logo-60.txt').write_text('\x1b[31munsafe\n')
+        (assets/'logo-wide.txt').write_text('⣿'*60+'\n')
+        args=['--logo-layout=icon','--help']
+        for command, title in [(['anodize'],'Anodize\n'),(['dots','anodize'],'dots anodize\n')]:
+            argv=[str(self.repo/'bin'/command[0]),*command[1:],*args]
+            self.assertEqual(self.terminal(argv,80,32).split(title)[0],future)
+            for settings in ({'DOTS_ICONS':'never'},{'TERM':'dumb'},
+                             {'PYTHONIOENCODING':'ascii'},{'PYTHONIOENCODING':'latin-1'}):
+                out=self.terminal(argv,80,32,dict(self.env,**settings)).split(title)[0]
+                self.assertTrue(out.isascii(),settings)
+                self.assertIn('ANODIZE',out)
 
 
 if __name__ == '__main__':

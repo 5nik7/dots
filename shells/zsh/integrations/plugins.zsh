@@ -38,7 +38,7 @@ _dots_completion_plugins() {
 # Select once per shell: switching engines requires a fresh shell, not rl.
 _dots_suggestion_plugin() {
   [[ -n ${_DOTS_SUGGESTION_ENGINE:-} ]] && return 0
-  local engine=${DOTS_ZSH_SUGGESTIONS:-deja}
+  local engine=${DOTS_ZSH_SUGGESTIONS:-${dots_options[DOTS_ZSH_SUGGESTIONS]:-deja}}
   case $engine in
     deja)
       if (( ! $+commands[deja] )); then
@@ -46,6 +46,7 @@ _dots_suggestion_plugin() {
         engine=autosuggestions
       fi
       ;;
+    none) _DOTS_SUGGESTION_ENGINE=none; return 0 ;;
     autosuggestions) ;;
     *)
       print -ru2 -- 'dots: invalid DOTS_ZSH_SUGGESTIONS; using zsh-autosuggestions'
@@ -67,6 +68,9 @@ _dots_widget_plugins() {
   _dots_plugin_setup || return
   _dots_load_plugin Aloxaf/fzf-tab
   _dots_load_plugin zdharma-continuum/fast-syntax-highlighting
+  if (( ${+functions[_dots_fsh_theme]} )); then
+    _dots_fsh_theme || print -ru2 -- 'dots theme: could not load FSH theme; keeping previous syntax colors'
+  fi
   _dots_suggestion_plugin
   _dots_load_plugin zsh-users/zsh-history-substring-search
   autoload -Uz _zinit

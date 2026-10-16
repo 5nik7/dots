@@ -269,7 +269,7 @@ The live Git family requires Bash 5, Git, POSIX utilities and (for publish) sha2
 
 ## Anodize scope
 
-Terminal branding is capability-based, not platform-name based. Portable ASCII is the default. Optional Kitty rendering uses conservative environment hints and excludes unknown multiplexer passthrough; optional Chafa uses symbol output without probing. The [logo contract](anodize.md#terminal-logo) documents fallbacks and sizing assumptions. Native Termux PTY/text/Chafa checks and simulated Kitty protocol checks do not establish native Kitty, Linux/WSL graphics, or Windows support.
+Terminal branding is capability-based, not platform-name based. Bundled braille text is the default on Unicode terminals, with portable ASCII for explicit ASCII mode, dumb terminals and redirected output. Optional Kitty rendering uses conservative environment hints and excludes unknown multiplexer passthrough; optional Chafa uses foreground-only braille output without probing. The [logo contract](anodize.md#terminal-logo) documents fallbacks and sizing assumptions. Native Termux PTY/text/Chafa checks and simulated Kitty protocol checks do not establish native Kitty, Linux/WSL graphics, or Windows support.
 
 The pure Go Anodize library accepts bytes/data without platform paths. The current CLI requires Python 3.11+, Bash, POSIX file transactions and the existing theme adapter tools. Native Termux is verified; Linux/WSL integration and native Windows authoring are not newly verified. Wallpaper actions retain the existing fixed adapter support, including WSL refusal. No APK, Android language binding or TUI is shipped. See [Anodize](anodize.md).
 
@@ -286,3 +286,18 @@ stub apps do not establish live GTK/Qt appearance or desktop reload behavior.
 ## Shared Bash/Zsh interactive adapters
 
 The [shared shell configuration](shared-shells.md) uses builtin-only Termux/Linux/WSL/MSYS detection and native shell adapters. Bash retains the existing Bash 4.4+ requirement; cursor indicators are capability-gated by its bundled Readline version. Installed tools are optional, shell histories remain separate, and no paths are translated between Windows and WSL. Native interactive evidence is Termux-only; desktop and Windows support is not established by fixture detection checks.
+
+Generated theme commands use Bash/POSIX wrappers and atomic symlink publication
+under XDG state. Bash/Zsh startup and Bash/Zsh/Fish completion share Dots metadata.
+Native Termux verification does not establish native Windows execution or desktop
+appearance; no PowerShell wrapper or link-to-copy fallback is added. See
+[theme commands](themes.md#unified-commands-and-family-shortcuts).
+
+## Dots shell environment
+
+The library-owned Dots environment has Bash, Zsh, Fish, Nushell, Xonsh and native PowerShell adapters. Native PowerShell initialization uses no Bash/Python; theme publication still uses the Bash CLI. Windows defaults use APPDATA for settings and LOCALAPPDATA for state. No WSL path translation is introduced. See [shell environment](shell-environment.md) for native variable forms and validation limits.
+
+Theme file-style publication and `theme colors` require Python 3.11+ (`tomllib`);
+Vivid is optional. Published JSON/Lua/LS_COLORS data remain platform-neutral. Native
+Termux Bash/Zsh/Fish/Nushell and Yazi checks cover this change; PowerShell and
+Xonsh adapter edits have no new native-runtime certification.

@@ -30,6 +30,7 @@ class PowerShellInitTests(unittest.TestCase):
                      'shells/powershell/environment.ps1', 'shells/powershell/interactive.ps1',
                      'shells/powershell/Microsoft.PowerShell_profile.ps1'):
             shutil.copy2(REPO / name, self.repo / name)
+        shutil.copytree(REPO / 'lib/dots/shell', self.repo / 'lib/dots/shell')
         # PATH deliberately contains no Bash or other external tools.
         self.env = {'HOME': str(self.home), 'USERPROFILE': str(self.home),
                     'DOTS': str(self.repo), 'PATH': str(self.repo / 'bin'),
@@ -86,7 +87,7 @@ class PowerShellInitTests(unittest.TestCase):
             p = self.run_ps('-File', adapter, *args)
             self.assertEqual(p.returncode, 2, p.stderr)
             self.assertEqual(p.stdout, '')
-        (self.repo / 'shells/powershell/init.ps1').unlink()
+        (self.repo / 'lib/dots/shell/init.ps1').unlink()
         p = self.run_ps('-File', adapter, 'init')
         self.assertEqual(p.returncode, 1, p.stderr)
         self.assertEqual(p.stdout, '')

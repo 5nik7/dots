@@ -6,6 +6,8 @@ source "$DT_LIB/../progress.bash"
 source "$DT_LIB/app-env.bash"
 # shellcheck source=plugins.bash
 source "$DT_LIB/plugins.bash"
+source "$DT_LIB/command-state.bash"
+source "$DT_LIB/../shell/palette.bash"
 # flock releases the lock even after SIGKILL. sync -f is a required mutation capability.
 dt_flush() { sync -f "$1"; }
 dt_record() {
@@ -26,6 +28,7 @@ dt_restore() {
   elif [[ ${active:-none} != "$previous" ]]; then
     dt_error "selection changed during recovery; retained journal: $dir"; return 1
   fi
+  dt_commands_restore "$dir" || return
   dt_apps_restore "$dir" || return
   if [[ -L $DT_ACTIVE && $(readlink -- "$DT_ACTIVE") == "$dir" ]]; then
     if [[ -s $dir/previous-active ]]; then
@@ -111,6 +114,7 @@ dt_set() (
   fi
   dt_fingerprint || exit 1; fingerprint=$REPLY
   dt_state_preflight || exit 1
+  dt_commands_lock || exit 1
   mkdir -p -- "$DT_STATE/generations" "${DT_ACTIVE%/*}" || exit 1
   dt_flush "$DT_STATE" || { dt_error 'sync -f is required for durable theme switching'; exit 1; }
   exec 9>>"$DT_STATE/lock" || exit 1
@@ -123,6 +127,7 @@ dt_set() (
     local selected
     IFS= read -r selected < "$DT_STATE/generations/$DT_GENERATION/selection" || exit 1
     if [[ $stored == "$fingerprint" && $selected == "$DT_THEME-$DT_FLAVOR" ]] && dt_apps_current; then
+      dt_commands_refresh_locked || exit 1
       if [[ ${DOTS_THEME_REFRESH:-} == 1 ]]; then dt_apps_reload; dt_plugins_after_publish; fi
       dots::success "Already using $selected"; exit 0
     fi
@@ -132,7 +137,9 @@ dt_set() (
   printf '%s\n' "$previous" > "$dir/previous" &&
     printf '%s\n' "$fingerprint" > "$dir/fingerprint" &&
     printf '%s-%s\n' "$DT_THEME" "$DT_FLAVOR" > "$dir/selection" &&
+    printf '%s\n' "$DT_ID" > "$dir/id" &&
     dt_json > "$dir/palette.json" &&
+    dt_emit_shell_data > "$dir/shell.tsv" &&
     dt_emit_init zsh > "$dir/init.zsh" &&
     dt_emit_init fish > "$dir/init.fish" || exit 1
   if [[ -n ${DT_SEMANTIC[background]:-} ]]; then
@@ -151,6 +158,7 @@ dt_set() (
     printf "set -gx BAT_THEME Dots\nset -gx BAT_CACHE_PATH '%s'\n" "$fish_cache" >> "$dir/init.fish"
   fi
   if [[ -L $DT_ACTIVE ]]; then readlink -- "$DT_ACTIVE" > "$dir/previous-active"; else : > "$dir/previous-active"; fi
+  dt_commands_prepare "$dir" || exit 1
   dt_fingerprint || exit 1
   [[ $REPLY == "$fingerprint" ]] || { dt_error 'theme inputs changed during preparation; retry'; exit 1; }
   local file
@@ -167,6 +175,7 @@ dt_set() (
     ln -s -- "$dir" "$DT_ACTIVE.new" && mv -Tf -- "$DT_ACTIVE.new" "$DT_ACTIVE" && dt_flush "${DT_ACTIVE%/*}" || exit 1
     dt_apps_connect "$dir" || exit 1
   fi
+  dt_commands_publish "$dir" || exit 1
   dt_record "$dir" committed || exit 1
   # shellcheck disable=SC2034
   complete=1

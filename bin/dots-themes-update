@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=Update installed themes
+# dots:usage=ID | --all
+# dots:argument=1|theme-id|Theme identifier
+# dots:option=--all||flag|Update every managed Git theme
+exec "${BASH_SOURCE[0]%/*}/dots-theme-update" "$@"

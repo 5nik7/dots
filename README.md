@@ -79,15 +79,24 @@ Open a new Termux tab to use automatic startup. In an existing tmux server, **pr
 
 Bash and Zsh now share their [interactive functions and aliases](docs/shared-shells.md). Bash uses Readline vi mode, the same Starship configuration, FZF/Gum theme colors and supported native tool integrations. `ff` is the shared FZF picker; Bash's former filename search is `findfiles`. Zsh-only editor plugins remain native.
 
-Bash and Zsh also share the sourceable [`bin/lib/common.sh` helpers](docs/shell-utils.md) for PATH edits, optional file loading, checks, messages, formatting, spinners and explicit color-array construction. Startup no longer creates named color globals; human output obtains styles lazily from the shared renderer. These helpers use builtins for path and case operations, preserve source failures, and need no optional display tools during startup.
+Bash and Zsh also share the sourceable [`bin/lib/common.sh` helpers](docs/shell-utils.md) for PATH edits, optional file loading, checks, messages, formatting, spinners and explicit color-array construction. The Dots theme adapter owns named color arrays and resets; human output obtains styles lazily from the shared renderer. These helpers use builtins for path and case operations, preserve source failures, and need no optional display tools during startup.
 
-**Implemented.** Load the existing Dots environment and shell configuration in Bash or Zsh with:
+**Implemented.** Load Dots integration in Bash or Zsh with:
 
 ```sh
 eval "$(dots init)"
 ```
 
-The repository startup files resolve their actual location through symlinks and load the adjacent native loader, so `dots` need not already be on PATH. Moving the complete checkout and updating its links is sufficient; inherited Dots path variables are replaced with paths from that checkout. Shared setup adds existing `DOTBIN` and `DOTSCRIPTS` directories to PATH. Fish, PowerShell, Nushell and Xonsh have native adapters; linked Nushell configs need no generated hook, and PowerShell initialization needs no Bash. See [shell initialization](docs/shell-init.md) for setup, post-initialization overrides, reload behavior and platform limits. No home-directory links or packages are installed by this command.
+The repository startup files resolve their actual location through symlinks and load the adjacent native loader, so `dots` need not already be on PATH. Moving the complete checkout and updating its links is sufficient; inherited Dots path variables are replaced with paths from that checkout. Shared setup adds existing `DOTBIN` and `DOTSCRIPTS` directories to PATH. Fish, PowerShell, Nushell and Xonsh have native adapters; linked Nushell configs need no generated hook, and PowerShell initialization needs no Bash. See [shell initialization](docs/shell-init.md) for setup, config.env settings, reload behavior and platform limits. No home-directory links or packages are installed by this command.
+
+Dots-specific settings and runtime variables now belong to `lib/dots/shell/`.
+Edit `${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env`, then reload your shell
+or initialize again. `dots init` loads only Dots integration; repository startup
+files separately load personal preferences. `dots env` explains resolved values.
+See [settings and native variable examples](docs/shell-environment.md).
+The old env files, repository theme-selection markers and `themes/bin` wrappers
+have been removed. Use `dots theme current` instead of `current_theme`; set the
+default through `DOTS_THEME_DEFAULT` in config.env.
 
 ## Shared Themes
 
@@ -101,6 +110,9 @@ dots theme show nord
 dots theme set catppuccin-mocha --dry-run
 dots theme set catppuccin-mocha
 dots theme refresh
+theme list                         # Equivalent standalone entry point
+catppuccin mocha blue hex           # Native palette query
+catppuccin mocha set                # Explicit activation
 dots theme bg next                 # Explicit wallpaper change
 ```
 
@@ -108,7 +120,8 @@ The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dot
 
 The personal Yazi configuration uses square section edges and a status-line mode indicator: `N` for normal, `V` for visual selection, and `U` for unsetting selections.
 
-The shared palette supplies Bash, Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, Codex/Codex-Termux, Pi, FZF and Gum.
+The shared palette supplies Bash, Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, Codex/Codex-Termux, Pi, FZF, Gum, Vivid and Fast Syntax Highlighting.
+Bash/Zsh color arrays such as `${blue[hex]}` and `${hint[esc]}` follow the current Dots theme, including semantic roles and native color names. Global `$rst` and `$RST` reset terminal colors and text attributes. Fixed Catppuccin flavor arrays remain available for compatibility; see the [shell color API](docs/themes.md#shell-and-neovim-behavior).
 The [mdcat configuration](config/mdcat/config.toml) uses automatic dark/light detection and ANSI colors, following the terminal palette when the Dots theme is applied there. Code-block highlighting uses mdcat's existing `BAT_THEME` integration.
 The FZF template supplies published shell colors; Bash and Zsh pick them up at the next
 prompt after `dots theme refresh`, preserving FZF layout and key bindings. Gum
@@ -116,6 +129,13 @@ colors render as `gum_env.sh` and load automatically in interactive Bash/Zsh,
 without Lua or Hilbish. Both shells refresh them with published theme changes; see the
 [loading instructions](docs/themes.md). Fzf-tab file colors now follow the current
 `LS_COLORS` at completion time; reload Zsh once to load this fix.
+Vivid and Fast Syntax Highlighting use generated **dots** themes, keeping file kinds
+and shell syntax on the same palette. Run `dots theme refresh`, then open a new
+shell or reload once; later theme changes follow automatically in Bash/Zsh.
+FSH saves the last good Dots theme for startup, so both `fast-theme --show` lines
+report `dots`.
+See [Vivid and FSH setup](docs/themes.md#vivid-and-fast-syntax-highlighting) for
+connectors, optional-tool fallbacks and overrides.
 Pi uses `default/themed/pi.json.tpl`: with `~/.pi/agent/themes` present, run
 `dots theme refresh`, then `/reload` in Pi and select **dots** in `/settings` → **Theme**.
 Subsequent publications hot-reload that theme. See [Pi setup](docs/themes.md#pi)
@@ -137,7 +157,7 @@ Bat, Yazi and Codex share the syntax rules in `default/themed/bat.tmTheme.tpl`, 
 language-specific scopes and palette-based comments, selections, and diff colors.
 Selection journals and backs up fixed application theme connectors. Bash and Zsh refresh
 at the next prompt; Neovim uses the local Anodize.nvim plugin and refreshes on state changes, focus or `:DotsThemeReload`. Native palette
-APIs, including `catppuccin` and `current_theme`, remain available. Theme management uses only `dots theme`; see the
+Family palette APIs such as `catppuccin` remain available; current queries use `theme color` and `theme current`. Dots generates commands for all theme families and standalone themes; a flavor alone previews its native palette. Optional `palette.toml` and usage-only `logo.txt` files are supported. Run `dots theme refresh --commands-only` to rebuild shortcuts without activating a theme. The equivalent `theme` and `dots theme` commands inspect and change the current theme; `dots themes` manages the collection; see the
 [plural-command migration table](docs/themes.md#migration-from-plural-commands) for script updates. The local editor plugin defaults to `~/repos/Anodize.nvim` (override with `ANODIZE_NVIM_DIR`); generic imported themes need no downloaded Lua. Git theme installation,
 updates, template overrides and wallpaper adapters are described in
 [Shared themes](docs/themes.md). Wallpaper changes are always explicit.
@@ -156,7 +176,7 @@ The [presentation contract](docs/presentation.md) makes this cohesive style a re
 
 ## Anodize palette authoring
 
-Anodize help and human results always include its logo, with portable ASCII by default and layouts that fit the terminal. Try `dots anodize --logo=auto --help` for detected graphics or `--logo=chafa` for optional Chafa character art; set `ANODIZE_LOGO` to keep a preference. JSON, raw configuration, exports and completions stay undecorated. See [logo controls and fallbacks](docs/anodize.md#terminal-logo).
+Anodize help and human results always include its logo, using your bundled braille text artwork, an ASCII fallback, and layouts that fit the terminal. Try `dots anodize --logo=auto --help` for detected graphics or `--logo=chafa` for optional Chafa character art; set `ANODIZE_LOGO` to keep a preference. JSON, raw configuration, exports and completions stay undecorated. See [logo controls and fallbacks](docs/anodize.md#terminal-logo).
 
 Anodize provides a reusable Go color engine and CLI for creating themes from images, seed colors, existing themes and local imports. Build the private engine explicitly, then preview a new theme:
 
@@ -455,3 +475,18 @@ Bundled app writes use retained backups and the file transaction engine; arbitra
 custom hook effects are not sandboxed or automatically reversible. See the
 [plugin guide](docs/theme-plugins.md) for Qt6ct, authoring, palette variables,
 recovery, JSON output, and desktop limitations. Downloaded themes remain data-only.
+
+## File colors and live Yazi themes
+
+`theme colors type dir hex` queries a directory color. Use
+`theme colors set type dir --fg blue` to save a shared rule and `theme refresh`
+to publish it; `--theme ID` stores a theme-specific override and `--apply` publishes
+after saving. Full styles, MIME/suffix queries, match explanations, LS_COLORS
+inspection, and JSON/Lua exports are described in [file colors](docs/file-colors.md).
+Family help now uses its own palette with explicit foreground/background;
+`tokyonight day --help --color=none` prints plain usage.
+
+The bundled dots.yazi plugin follows published palettes while running, including
+file styles and mode colors. The standalone plugin's documented theme callback
+accepts `colors.red`, `colors.blue`, `colors.type.dir`, and complete style tables.
+Repository-local Codex workflows live in [.codex](.codex/README.md).

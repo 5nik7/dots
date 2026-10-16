@@ -86,7 +86,7 @@ Default-engine Deja acceptance uses `python3 -B tools/test_deja.py --binary /pat
 
 ## Yazi Symlink Component
 
-From `config/yazi/plugins/dots-symlink.yazi`, run `lua test.lua` for isolated layout checks. The fixtures cover changing width budgets, whole-directory shortening, independent caps, colors, root separators, empty directories, and simulated Windows paths. The Lua text adapter approximates terminal widths; it does not establish native rendering or Windows support. See the [plugin guide](../config/yazi/plugins/dots-symlink.yazi/README.md).
+From `config/yazi/plugins/dots-symlink.yazi`, run `lua test.lua` for isolated layout checks. The fixtures cover changing width budgets, whole-directory shortening, independent caps, colors, root separators, empty directories, and simulated Windows paths. The Lua text adapter approximates terminal widths; it does not establish native rendering or Windows support. See the [plugin guide](../config/yazi/plugins/dots.yazi/README.md).
 
 ## Permanent Core Verification
 
@@ -370,6 +370,8 @@ The core `check` runner requires an installed Zsh on Termux/Linux and supplies i
 
 ## Shared Themes
 
+The shared-theme suite also verifies current-theme Bash/Zsh color arrays against resolved colors, derived RGB/ANSI/metrics, native extras, generic and pywal palettes, fixed-flavor compatibility, stale-name cleanup and reserved-name publication refusal.
+
 Run `python3 -B tools/test_themes.py` for palette validation, all-flavor legacy
 initialization compatibility, cache invalidation, command/completion contracts,
 publication idempotence, lock contention, injected durability failures, SIGKILL
@@ -435,6 +437,20 @@ include loading through an owned socket, staged-link interruption, local Git ins
 dirty refusal and data nonexecution. Theme fixtures explicitly isolate TMUX_TMPDIR;
 the native tmux test starts and stops only its own server. Android, Wayland and X11 wallpaper adapters are
 fake executables: their argument/failure contracts are tested, not actual rendering.
+
+`python3 -B tools/test_file_themes.py` covers generated Vivid/FSH connectors,
+backup/rollback, refusal, idempotence and override refresh; native Vivid colors
+across dark/light/generic palettes; Zsh cache invalidation and fallback; and real
+FSH highlighting, nested syntax, overlays and last-good session fallback. Native
+FSH startup checks cover saved `njen` migration, compiled-code invalidation,
+private backups (including symlinks), unchanged reloads, directory refusal and
+injected replacement failure. A fresh plugin-only shell must load Dots and report
+it on both `fast-theme --show` lines before any Dots hook. It uses
+owned roots and a copied installed FSH plugin with network bootstrap disabled.
+The public Zsh fixture excludes the live Vivid connector while retaining its refusal
+of other links escaping the public repository. Native dependency checks skip when
+unavailable. Run alongside the theme/workflow
+and Zsh suites, plus the isolated Zsh startup and PTY runners for adapter changes.
 
 The workflow suite checks Codex's shared plist across bundled palettes, byte
 identity with Yazi's syntax artifact, default/custom homes, absent directories,
@@ -802,3 +818,26 @@ Live GTK/Qt visual behavior and native Windows execution require separate eviden
 Run `python3 -B androidots/tests/test_termux_bar.py` for mocked launcher identity, PID reuse, child-shell guards, discovery errors, missing tmux, timeout and collision/race cases. Run `python3 -B tools/test_termux_autostart.py` for native Bash/Zsh PTYs and a private tmux server: separate tabs, project switching without nesting, default reattachment, surviving detach, final-pane `exit`/`q` closing the outer shell, multiple panes and project switches, another tab surviving, server-loss fallback, reload idempotence, startup guards and launcher failure fallback. Identity/discovery in these PTYs is simulated with owned procfs files and a stub script; this is not proof of actual Android app startup. No real Termux process discovery, Android APIs, live shell initialization or live tmux changes are used.
 
 Also run the existing tmux status/session and shared-shell/init suites, Bash/Zsh syntax checks and ShellCheck for the shared startup hook. Status verification covers marker-dependent name visibility across config/theme reloads and narrow rendered terminals. Measure guarded shell-startup cost separately from first attachment and document the fixture boundary. Real new-tab startup and font appearance remain manual acceptance.
+
+## Unified theme command acceptance
+
+Run `python3 -B tools/test_theme_commands.py` alongside the shared theme, workflow,
+Bash dispatcher, file-theme and Zsh suites. It uses disposable public fixtures to
+cover entry-point equivalence, native query compatibility, palette-only activation,
+metadata grouping, logos/data boundaries, generated completion registrations,
+idempotence, rollback, interrupted publication and drift refusal. Native Windows
+execution of the POSIX wrappers is not claimed.
+
+## Dots shell environment
+
+Run `python3 -B tools/test_shell_environment.py -v` for isolated settings, reload, diagnostic and native adapter contracts. Use small sequential cases on resource-constrained Termux hosts. Tests source library integration without personal rc files; unavailable native runtimes must be reported separately.
+
+## File styles and theme panels
+
+`python3 -B tools/test_file_colors.py -v` checks saved/published boundaries, journaled
+rules, full styles, MIME/suffix precedence, inert parsing, family panels and raw
+output. Run sequentially with the existing theme publication and shell-environment
+suites. Standalone dots.yazi adds `python3 -B test-theme-native.py` for private DDS
+notification, dark/light publication, N/V/U mode redraws, narrow layouts and
+last-good snapshot recovery. Its ordinary native runner accepts `--config-dir`
+and defaults to bundled fixture configs rather than assuming a parent checkout.

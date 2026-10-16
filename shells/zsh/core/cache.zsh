@@ -54,10 +54,12 @@ _dots_source_generated() {
 _dots_vivid_colors() {
   local selected=$1 executable=${commands[vivid]:-} candidate base first=''
   [[ -n $executable ]] || return 1
-  local -a inputs=("${executable:A}" "$selected")
+  local -a inputs=("${executable:A}")
+  [[ $selected != */* ]] || inputs+=("${selected:A}")
   for base in "$XDG_CONFIG_HOME/vivid" "$HOME/.config/vivid" \
       /usr/share/vivid "${PREFIX:-/usr}/share/vivid"; do
-    inputs+=("$base/themes/$selected.yml" "$base/filetypes.yml")
+    [[ $selected == */* ]] || inputs+=("$base/themes/$selected.yml")
+    inputs+=("$base/filetypes.yml")
   done
   local signature="${(q)selected}" directory="$XDG_CACHE_HOME/dots/zsh/${DOTS_PLATFORM:-linux}-$ZSH_VERSION"
   local -A info

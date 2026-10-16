@@ -101,6 +101,10 @@ For `dots menu tmux keys`, run `python3 -B tools/test_tmux_keys.py`, the Bash di
 
 For `config/yazi/plugins/dots.yazi` changes, run its Lua dispatcher, Git-head metadata, hover and LS_COLORS fixtures, GNU ls oracle comparisons, and isolated native PTY runner as documented in [Testing Strategy](../../docs/testing.md#yazi-plugin-bundle). The native runner needs Python, Git, git-it, and Yazi on a Unix PTY and owns all home/config/state/cache/runtime and DDS storage. Never test project saves, deletions, or merge events against the live configuration. Keep fixture results, native platform evidence, and visual review limits distinct.
 
+For Vivid/FSH theme adapter changes, additionally run `python3 -B tools/test_file_themes.py`
+with the theme/workflow and Zsh suites. Native plugin tests must copy installed FSH
+into an owned root and disable its optional secondary-theme download.
+
 ## Existing Zsh Configuration
 
 For Zsh startup changes, run `python3 -B tools/test_zsh.py` plus the isolated startup and PTY runners described in [the Zsh guide](../../shells/zsh/README.md). Capture the baseline before editing and keep timing runs sequential. Never profile the live startup chain against the real home; private/platform modules use synthetic substitutes. Treat native Termux results and other-platform fixtures separately.
@@ -117,7 +121,7 @@ For completion changes, follow [decision 0005](../../docs/decisions/0005-static-
 
 For shared palette, state publication, Zsh refresh, or Neovim theme adapter changes,
 run `python3 -B tools/test_themes.py`; use `python3 -B tools/bench_themes.py` for performance.
-The theme suite also covers the unified full-ID CLI, removed plural routes, native palette filtering/querying, and contextual color completion. Preserve these migration checks alongside publication/recovery tests. Shared discovery fixtures verify inert sourcing, cleared enumeration results, alternate inherited checkout roots, listing/completion eligibility and next-request freshness; keep enumeration in-process for completion and measure changes before adding subprocesses.
+The theme suite also covers the unified full-ID CLI, singular and plural routes, native palette filtering/querying, and contextual color completion. Preserve these migration checks alongside publication/recovery tests. Shared discovery fixtures verify inert sourcing, cleared enumeration results, alternate inherited checkout roots, listing/completion eligibility and next-request freshness; keep enumeration in-process for completion and measure changes before adding subprocesses.
 The editor tests copy public plugin sources and never start live LazyVim or download
 plugins. Missing sources report skipped tests; the optional source-map input for all
 families is documented in [Shared Themes](../../docs/testing.md#shared-themes).
@@ -179,3 +183,17 @@ For local theme plugins, run `python3 -B tools/test_theme_plugins.py` plus the e
 For `bin/lib/common.sh`, run `python3 -B tools/test_common.py`, Bash/Zsh syntax checks and `shellcheck -x bin/lib/common.sh`, then the shell-init, dispatcher and Zsh regressions. Use the isolated PTY runner for reload changes. Preserve a pre-change utility snapshot and run `tools/bench_common.py` sequentially for hot-path changes; see [utility verification](../../docs/testing.md#shared-shell-utilities). Keep package checks stubbed and all directory creation inside fixtures.
 
 For shared Bash/Zsh interactive configuration, run `python3 -B tools/test_shared_shells.py`, the shell-init/shared-utility/dispatcher/Zsh suites, affected theme suites, and both native PTY runners (`tools/bash_interactive.py` and `tools/zsh_interactive.py`). Use their owned public fixtures and synthetic private modules. Capture source/interface baselines before edits and measure comparable startup modes sequentially; report optional-tool and native-platform gaps. See [shared shells](../../docs/shared-shells.md) and the [focused plan](../../plans/shared-shells.md).
+
+For unified theme commands and generated family wrappers, also run
+`python3 -B tools/test_theme_commands.py`; retain isolated publication/recovery
+and native shell completion coverage alongside the existing theme suites.
+
+## Dots shell environment
+
+For Dots environment changes, run `python3 -B tools/test_shell_environment.py -v` and affected shell-init/theme tests in small sequential batches. Do not use the real home or personal shell startup to validate integration-only hooks.
+
+For file-style/publication and family presentation changes, run the focused
+`tools/test_file_colors.py` suite plus publication and shell-environment cases.
+Yazi theme work additionally requires the plugin's `test-theme-native.py` with
+private DDS/runtime roots. Keep the standalone fixture runner independent of the
+main checkout and synchronize shared plugin sources deliberately.

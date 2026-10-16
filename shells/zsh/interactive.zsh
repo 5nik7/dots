@@ -12,12 +12,12 @@ export CLICOLOR=1
 source "$ZSH/functions.zsh"
 source "$ZSH/options.zsh"
 source "$ZSH/fzf.zsh"
-source "${themes[cmd]}"
-set_theme 2>/dev/null
+source "$DOTS/lib/dots/shell/init.zsh"
 source "$ZSH/completions.zsh"
 source "$ZSH/integrations/plugins.zsh"
 _dots_completion_plugins
 source "$ZSH/core/completion.zsh"
+_dots_shell_prompt
 source "$ZSH/integrations/tools.zsh"
 source "$DOTS/shells/shared/aliases.sh"
 [[ -r "${zsh[local]}" ]] && source "${zsh[local]}"

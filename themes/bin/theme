@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# Compatibility entry point; source this file from Bash or Zsh.
-source "${DOTS:?DOTS must point to the dots repository}/lib/dots/themes/shell.bash"

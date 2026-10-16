@@ -1,0 +1,94 @@
+# Shared file styles. Named colors resolve against the addressed Dots palette.
+[type.file]
+fg = "foreground"
+[type.dir]
+fg = "blue"
+bold = true
+[type.symlink]
+fg = "cyan"
+[type.broken_symlink]
+fg = "error"
+bold = true
+[type.missing]
+fg = "error"
+bold = true
+[type.hardlink]
+fg = "foreground"
+[type.fifo]
+fg = "yellow"
+[type.socket]
+fg = "magenta"
+[type.door]
+fg = "magenta"
+[type.block_device]
+fg = "yellow"
+bold = true
+[type.character_device]
+fg = "orange"
+bold = true
+[type.setuid]
+fg = "background"
+bg = "error"
+bold = true
+[type.setgid]
+fg = "background"
+bg = "yellow"
+bold = true
+[type.capability]
+fg = "error"
+underline = true
+[type.sticky_other_writable]
+fg = "blue"
+bold = true
+underline = true
+[type.other_writable]
+fg = "blue"
+bold = true
+underline = true
+[type.sticky]
+fg = "blue"
+bold = true
+[type.executable]
+fg = "green"
+bold = true
+[type.text]
+fg = "foreground"
+[type.special]
+fg = "cyan"
+bold = true
+[type.todo]
+fg = "yellow"
+bold = true
+[type.license]
+fg = "muted"
+[type.configuration]
+fg = "orange"
+[type.markup]
+fg = "foreground"
+[type.programming]
+fg = "yellow"
+[type.tooling]
+fg = "cyan"
+[type.media]
+fg = "magenta"
+[type.office]
+fg = "magenta"
+[type.archive]
+fg = "yellow"
+bold = true
+[type.unimportant]
+fg = "muted"
+[mime."text/*"]
+use = "text"
+[mime."image/*"]
+use = "media"
+[mime."audio/*"]
+use = "media"
+[mime."video/*"]
+use = "media"
+[mime."application/pdf"]
+use = "office"
+[mime."application/zip"]
+use = "archive"
+[mime."application/gzip"]
+use = "archive"

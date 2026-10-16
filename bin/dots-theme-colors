@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# dots:summary=Query, edit and export theme file styles
+# dots:usage=[type|mime|extension|match|parse|export|set|reset] [ARGS]
+# dots:argument=1|choice:type,mime,extension,match,parse,export,set,reset|Color operation
+# dots:argument=2|file-color-key|Style key or operation target
+# dots:argument=3|file-color-key|Style key
+# dots:option=--theme||theme-id|Inspect a theme or edit its overrides
+# dots:option=--configured||flag|Preview saved unpublished rules
+# dots:option=--json||flag|Structured data
+# dots:option=--style||flag|Complete style instead of foreground
+# dots:option=--dry-run||flag|Preview a rule edit
+# dots:option=--apply||flag|Refresh current theme after saving
+# dots:option=--fg||theme-color|Foreground color
+# dots:option=--bg||theme-color|Background color
+# dots:option=--use||string|Named type style to inherit
+# dots:option=--mime||string|Known MIME type for file matching
+# dots:option=--stdin||flag|Read LS_COLORS from stdin
+# dots:option=--env||flag|Read inherited LS_COLORS
+# dots:option=--bold||choice:true,false|Set bold attribute
+# dots:option=--dim||choice:true,false|Set dim attribute
+# dots:option=--italic||choice:true,false|Set italic attribute
+# dots:option=--underline||choice:true,false|Set underline attribute
+# dots:option=--blink||choice:true,false|Set blink attribute
+# dots:option=--blink-rapid||choice:true,false|Set blink-rapid attribute
+# dots:option=--reversed||choice:true,false|Set reversed attribute
+# dots:option=--hidden||choice:true,false|Set hidden attribute
+# dots:option=--crossed||choice:true,false|Set crossed attribute
+root=$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd) || exit
+DOTS=${DOTS:-$root}
+source "$root/lib/dots/shell/config.bash"
+_dots_config_load || exit
+export DOTS_COLOR=${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}
+exec python3 -B "$root/lib/dots/themes/file-colors.py" "$@"

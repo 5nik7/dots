@@ -21,18 +21,26 @@ def fixture(source=REPO, plugins=True):
     repo = home / 'dots'
     repo.mkdir()
     for name in ('shells/zsh', 'themes', 'config/starship', 'config/vivid', 'default/themed'):
-        copy_public_tree(source / name, repo / name, repo=source, fixture=repo, aliases=(REPO,))
+        # A linked installation's generated theme belongs to live XDG state.
+        # Tests publish their own connector instead of copying that link.
+        excluded = ('themes/dots.yml',) if name == 'config/vivid' else ()
+        copy_public_tree(source / name, repo / name, repo=source, fixture=repo,
+                         aliases=(REPO,), exclude=excluded)
+    if (source / 'default/file-colors.toml').is_file():
+        shutil.copy2(source / 'default/file-colors.toml', repo / 'default/file-colors.toml')
     if (source / 'shells/shared').is_dir():
         copy_public_tree(source / 'shells/shared', repo / 'shells/shared', repo=source, fixture=repo, aliases=(REPO,))
     # The shared _dots adapter links into the public Bash dispatcher library.
     # Historical baseline snapshots may predate this component.
     if (source / 'lib/dots').is_dir():
         copy_public_tree(source / 'lib/dots', repo / 'lib/dots', repo=source, fixture=repo, aliases=(REPO,))
-    for name in ('bin/dots', 'bin/lib/common.sh', 'dot.env', 'ruby/ruby.env',
-                 'shells/shells.env', 'scripts/preview.zsh', 'scripts/batman', 'scripts/batpipe'):
+    for name in ('bin/dots', 'bin/theme', 'bin/lib/common.sh', 'ruby/ruby.env',
+                 'scripts/preview.zsh', 'scripts/batman', 'scripts/batpipe'):
         dest = repo / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         original = source / name
+        if name == 'bin/theme' and not original.is_file():
+            continue
         shutil.copy2(original, dest)
     if (source / 'shells/environment.sh').is_file():
         shutil.copy2(source / 'shells/environment.sh', repo / 'shells/environment.sh')
@@ -80,7 +88,9 @@ def fixture(source=REPO, plugins=True):
             shutil.copytree(installed / name, target / name,
                             ignore=shutil.ignore_patterns('.git', '*.zwc'), symlinks=False)
         (target / 'zinit.git/.git').mkdir()
+    (root / 'runtime').mkdir(mode=0o700)
     env = {
+        'XDG_RUNTIME_DIR': str(root / 'runtime'), 'TMUX_TMPDIR': str(root),
         # General fixtures need no Deja binary; test_deja exercises the default.
         'DOTS_ZSH_SUGGESTIONS': 'autosuggestions',
         'HOME': str(home), 'ZDOTDIR': str(home), 'DOTS': str(repo),

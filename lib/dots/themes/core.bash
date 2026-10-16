@@ -1,3 +1,5 @@
+source "${DT_LIB%/themes}/shell/config.bash"
+_dots_config_load || return
 # Shared Bash theme data engine. Palette input is never evaluated as shell code.
 DT_ROOT=${DOTHEMES:-${THEMES:-${DT_LIB%/lib/dots/themes}/themes}}
 DT_STATE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes
@@ -12,8 +14,8 @@ dt_theme_id() { [[ $1 =~ ^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$ ]]; }
 dt_key() { [[ $1 =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; }
 # Flavors do not contain hyphens; split persisted IDs at the final delimiter.
 dt_split() {
-  local id=$1
-  if [[ ${2:-} != persisted && -f $DT_ROOT/$id/theme.toml ]]; then DT_THEME=$id DT_FLAVOR=''
+  local id=$1 DT_THEME_DIR
+  if [[ ${2:-} != persisted ]] && { [[ -f $DT_ROOT/$id/theme.toml ]] || dt_find_theme "$id"; }; then DT_THEME=$id DT_FLAVOR=''
   else DT_THEME=${id%-*} DT_FLAVOR=${id##*-}; fi
   dt_theme_id "$DT_THEME" && { [[ -z $DT_FLAVOR ]] || dt_id "$DT_FLAVOR"; }
 }
@@ -68,7 +70,11 @@ dt_native_load() {
     [[ $theme == pywal16 && $flavor == current && ${DT_META[source]} == pywal16 ]] || { dt_error 'unsupported palette source'; return 1; }
     source "$DT_LIB/pywal.bash"
     dt_pywal_load || return
+  elif [[ -f $DT_ROOT/$theme-$flavor/palette.toml ]]; then
+    [[ ! -L $DT_ROOT/$theme-$flavor/palette.toml ]] || return 1
+    dt_parse "$DT_ROOT/$theme-$flavor/palette.toml" palette || return
   else dt_parse "$DT_ROOT/$theme/flavors/$flavor.toml" palette || return; fi
+  DT_ADAPTER=native
   # Resolve flavor-specific roles over the family defaults.
   for key in "${!DT_META[@]}"; do
     [[ $key == roles.$flavor.* ]] || continue
@@ -126,13 +132,18 @@ dt_selected() {
   dt_generation || return
   if [[ $DT_GENERATION ]]; then
     file=$DT_STATE/generations/$DT_GENERATION/selection
-  elif [[ -r $HOME/.theme ]]; then file=$HOME/.theme
-  elif [[ -r $DT_ROOT/.theme ]]; then file=$DT_ROOT/.theme
-  else file=$DT_ROOT/.default; fi
+  else
+    id=${dots_options[DOTS_THEME_DEFAULT]}
+    dt_split "$id" && dt_load "$DT_THEME" "$DT_FLAVOR"
+    return
+  fi
   IFS= read -r id < "$file" || [[ $id ]] || { dt_error 'no theme selection'; return 1; }
   dt_split "$id" "${DT_GENERATION:+persisted}" || { dt_error 'invalid selected identifier'; return 1; }
   if [[ ${1:-load} == selection && -n $DT_FLAVOR ]]; then
     dt_theme_id "$DT_THEME" && dt_id "$DT_FLAVOR" || { dt_error 'invalid selected identifier'; return 1; }
+  elif [[ $DT_GENERATION && -f $DT_STATE/generations/$DT_GENERATION/id ]]; then
+    IFS= read -r id < "$DT_STATE/generations/$DT_GENERATION/id" || return
+    dt_load "$id"
   else dt_load "$DT_THEME" "$DT_FLAVOR"; fi
 }
 dt_rgb() {
@@ -180,12 +191,21 @@ dt_value() {
 }
 dt_fingerprint() {
   local sum input
-  local -a inputs=("$DT_LIB/"*.bash)
-  if [[ ${DT_ADAPTER:-native} != generic ]]; then
+  local -a inputs=("$DT_LIB/"*.bash "$DT_LIB/"*.zsh "$DT_LIB/../shell/palette.bash" "$DT_LIB/file-colors.py" "${DT_LIB%/lib/dots/themes}/default/file-colors.toml")
+  if [[ -f $DT_ROOT/$DT_THEME/theme.toml && -d $DT_ROOT/$DT_THEME/flavors ]]; then
     inputs+=("$DT_ROOT/$DT_THEME/theme.toml" "$DT_ROOT/$DT_THEME/flavors/"*.toml)
   fi
+  # Catppuccin initialization carries fixed aliases for every native flavor.
+  if [[ $DT_THEME == catppuccin ]]; then
+    for input in "$DT_ROOT/$DT_THEME-"*/palette.toml; do
+      [[ ! -f $input ]] || inputs+=("$input")
+    done
+  fi
+  for input in "$DT_ROOT/$DT_THEME/theme.toml" "$DT_USER_THEMES/$DT_THEME/theme.toml"; do
+    [[ ! -f $input ]] || inputs+=("$input")
+  done
   if [[ -n ${DT_THEME_DIR:-} ]]; then
-    for input in "$DT_THEME_DIR/"*.toml "$DT_THEME_DIR/"*.conf "$DT_THEME_DIR/"*.theme "$DT_THEME_DIR/"*.properties "$DT_THEME_DIR/"*.tmTheme "$DT_THEME_DIR/fzf.sh" "$DT_THEME_DIR/gum_env.sh" "$DT_THEME_DIR/pi.json"; do
+    for input in "$DT_THEME_DIR/"*.toml "$DT_THEME_DIR/"*.conf "$DT_THEME_DIR/"*.theme "$DT_THEME_DIR/"*.properties "$DT_THEME_DIR/"*.tmTheme "$DT_THEME_DIR/fzf.sh" "$DT_THEME_DIR/gum_env.sh" "$DT_THEME_DIR/pi.json" "$DT_THEME_DIR/vivid.yml" "$DT_THEME_DIR/fsh.ini"; do
       [[ ! -f $input ]] || inputs+=("$input")
     done
   fi
@@ -195,6 +215,12 @@ dt_fingerprint() {
     [[ -f $DT_PYWAL_FILE && $(<"$DT_PYWAL_FILE") == "$DT_PYWAL_INPUT" ]] || { dt_error 'pywal16 input changed; retry the command'; return 1; }
     inputs+=("$DT_PYWAL_FILE")
   fi
+  for input in "${XDG_CONFIG_HOME:-$HOME/.config}/dots/file-colors.toml" "${XDG_CONFIG_HOME:-$HOME/.config}/dots/file-colors/$DT_ID/rules.toml"; do
+    [[ ! -e $input && ! -L $input ]] || inputs+=("$input")
+  done
+  if command -v vivid >/dev/null; then inputs+=("$(command -v vivid)"); fi
+  input=${XDG_CONFIG_HOME:-$HOME/.config}/vivid/filetypes.yml
+  [[ ! -f $input ]] || inputs+=("$input")
   # Batch hashing preserves filename/content identity without one process per file.
   sum=$(set -o pipefail; sha256sum -- "${inputs[@]}" | sha256sum) || return
   REPLY=${sum%% *}
@@ -208,15 +234,76 @@ dt_emit_array() {
   done
   printf ')\n'
 }
+# Direct color arrays share the shell namespace. Keep special parameters, adapter
+# locals and our compatibility/control names out of palette-controlled output.
+dt_shell_color_name() {
+  [[ $1 =~ ^_?[a-z][a-zA-Z0-9_]*$ ]] || return 1
+  case $1 in
+    _dots_*|dots_*|catppuccin_*|mocha_*|macchiato_*|frappe_*|latte_*|dot|shells|theme|themes|rst|\
+    argv|argzero|status|pipestatus|path|fpath|cdpath|manpath|mailpath|module_path|\
+    commands|functions|dis_functions|builtins|dis_builtins|reswords|dis_reswords|\
+    aliases|dis_aliases|galiases|dis_galiases|saliases|dis_saliases|\
+    parameters|options|signals|nameddirs|userdirs|usergroups|dirstack|\
+    funcstack|functrace|funcsourcetrace|funcfiletrace|zsh_eval_context|\
+    zsh_scheduled_events|zsh_loaded_plugins|zsh_patchlevel|\
+    history|historywords|histchars|psvar|watch|reply|\
+    keymaps|widgets|modules|terminfo|termcap|fignore|prompt|patchars|dis_patchars|\
+    functions_source|dis_functions_source|jobdirs|jobtexts|jobstates|\
+    requested|generation|output|file|colors|vivid_theme|previous_status) return 1 ;;
+  esac
+}
+dt_shell_colors() {
+  local name role
+  DT_SHELL_COLORS=()
+  for name in "${DT_NAMES[@]}"; do DT_SHELL_COLORS[$name]=${DT_COLORS[$name]}; done
+  for role in background foreground muted accent selection error warning info hint; do
+    DT_SHELL_COLORS[$role]=${DT_COLORS[${DT_META[roles.$role]}]}
+  done
+  for name in "${!DT_SEMANTIC[@]}"; do
+    [[ $name == mode ]] || DT_SHELL_COLORS[$name]=${DT_SEMANTIC[$name]}
+  done
+  for name in "${!DT_SHELL_COLORS[@]}"; do
+    dt_shell_color_name "$name" || { dt_error "reserved or unsafe shell color name: $name"; return 1; }
+  done
+}
+dt_emit_current_arrays() {
+  # Dynamic locals isolate format metrics from native palette/legacy emission.
+  local -A DT_COLORS=() DT_VALUES=()
+  local -a DT_NAMES=("${!DT_SHELL_COLORS[@]}")
+  local name
+  for name in "${DT_NAMES[@]}"; do DT_COLORS[$name]=${DT_SHELL_COLORS[$name]}; done
+  dt_metrics || return
+  for name in "${DT_NAMES[@]}"; do dt_emit_array "$name" "$name" || return; done
+  printf 'declare -ga _DOTS_THEME_COLOR_NAMES=('
+  printf ' %q' "${DT_NAMES[@]}"
+  printf ')\n'
+}
 dt_emit_init() {
   local shell=$1 theme=$DT_THEME selected=$DT_FLAVOR name file flavor role
   case $shell in bash|zsh|fish) ;; *) dt_error 'expected bash, zsh, or fish'; return 1 ;; esac
   if [[ $shell == fish ]]; then
+    printf 'set -gx DOTS_THEME_ID %s\n' "$DT_ID"
     printf 'set -gx THEME %s\nset -gx FLAVOR %s\n' "$theme" "$selected"
     for name in "${DT_NAMES[@]}"; do printf "set -g dots_color_%s '%s'\n" "$name" "${DT_COLORS[$name]}"; done
     for role in background foreground muted accent selection error warning info hint; do printf "set -g dots_role_%s '%s'\n" "$role" "${DT_SEMANTIC[$role]:-${DT_COLORS[${DT_META[roles.$role]}]}}"; done
     return
   fi
+  printf 'export DOTS_THEME_ID=%q\n' "$DT_ID"
+  local -A DT_SHELL_COLORS=()
+  dt_shell_colors || return
+  # Older init files only tracked Catppuccin names. Migrate once; later reloads
+  # clear exactly the unprefixed arrays emitted by this initializer.
+  cat <<'SHELL'
+if [[ ${_DOTS_THEME_COLOR_NAMES+x} ]]; then
+  for _DOTS_THEME_COLOR in "${_DOTS_THEME_COLOR_NAMES[@]-}"; do [[ -z $_DOTS_THEME_COLOR ]] || unset "$_DOTS_THEME_COLOR"; done
+else
+  for _DOTS_THEME_COLOR in "${catppuccin_palette[@]-}"; do [[ -z $_DOTS_THEME_COLOR ]] || unset "$_DOTS_THEME_COLOR"; done
+fi
+unset _DOTS_THEME_COLOR
+SHELL
+  # Keep an already-correct readonly reset from the legacy helper sourceable.
+  printf '[[ ${rst-} == %q ]] || declare -g rst=%q\n' $'\e[0m' $'\e[0m'
+  printf '[[ ${RST-} == %q ]] || declare -g RST=%q\n' $'\e[0m' $'\e[0m'
   printf 'export THEME=%q FLAVOR=%q\n' "$theme" "$selected"
   printf 'declare -gA dots_palette=(\n'
   for name in "${DT_NAMES[@]}"; do printf ' [%q]=%q\n' "$name" "${DT_COLORS[$name]}"; done
@@ -226,10 +313,10 @@ dt_emit_init() {
   local ls='' code kind
   for kind in di ln ex or mi pi so bd cd su sg tw ow st '*.tar' '*.gz' '*.zip' '*.png' '*.jpg'; do
     case $kind in
-      di) role=accent ;; ln|pi|so) role=info ;; or|mi|su|sg) role=error ;;
-      ex|tw|ow|st) role=hint ;; *) role=warning ;;
+      di|tw|ow|st) role=blue ;; ln) role=cyan ;; or|mi|su|sg) role=error ;;
+      ex) role=green ;; so|'*.png'|'*.jpg') role=magenta ;; cd) role=orange ;; *) role=yellow ;;
     esac
-    dt_rgb "${DT_SEMANTIC[$role]:-${DT_COLORS[${DT_META[roles.$role]}]}}"
+    dt_rgb "${DT_SEMANTIC[$role]:-${DT_COLORS[$role]:-${DT_COLORS[${DT_META[roles.$role]:-${DT_META[roles.accent]}}]}}}"
     code="38;2;$DT_R;$DT_G;$DT_B"
     ls+="${ls:+:}$kind=$code"
   done
@@ -239,12 +326,14 @@ dt_emit_init() {
     for flavor in mocha macchiato frappe latte; do
       dt_load "$theme" "$flavor" && dt_metrics || return
       for name in "${DT_NAMES[@]}"; do
-        if [[ $flavor == "$selected" ]]; then dt_emit_array "$name" "$name" || return; fi
         dt_emit_array "${flavor}_$name" "$name" || return
       done
     done
     dt_load "$theme" "$selected" || return
   fi
+  printf 'if [[ ${dots_options[DOTS_INIT_COLORS]:-1} == 1 ]]; then\n'
+  dt_emit_current_arrays
+  printf 'fi\n'
 }
 dt_cached_init() {
   local shell=$1 file cache=${XDG_CACHE_HOME:-$HOME/.cache}/dots/themes tmp
@@ -256,7 +345,9 @@ dt_cached_init() {
   file=$cache/$DT_THEME-$DT_FLAVOR-$REPLY.$shell
   if [[ -f $file && ! -L $file ]]; then cat "$file"; return; fi
   # A matching content fingerprint already proves this data was validated.
-  dt_load "$DT_THEME" "$DT_FLAVOR" || return
+  local selected_id=${DT_ID:-$DT_THEME}
+  [[ $DT_THEME_DIR ]] || selected_id=$DT_THEME
+  dt_load "$selected_id" "$DT_FLAVOR" || return
   mkdir -p -- "$cache" || return
   tmp=$(mktemp "$cache/.init.XXXXXXXX") || return
   if dt_emit_init "$shell" > "$tmp"; then

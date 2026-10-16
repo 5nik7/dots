@@ -24,7 +24,7 @@ See [decision 0006](decisions/0006-bash-command-framework.md).
 
 Termux's Bash/Zsh startup hook may create a marked default tmux session and attach its client. It retains the outer shell, never deletes detached sessions or adopts an unmarked name collision, and does not install dependencies or reload the server. Repeated initialization does not reattach after deliberate detachment. `DOTS_TERMUX_AUTOSTART=0` disables the hook; failures leave a plain shell. This bounded terminal-session behavior is separate from managed filesystem installation. See [startup guards](shell-init.md#termux-tmux-startup).
 
-The existing Zsh configuration uses user-local completion, Vivid, and Catppuccin caches independently of the proposed managed-file transaction engine. These are rebuildable generated data. Completion generation validates successful output before atomic publication; failed output is not evaluated. Ordinary startup retains its existing optional plugin bootstrap and private/local sourcing behavior. Tests use copied public dependencies and synthetic private modules under owned roots; they must never run the live startup chain against the developer's home. See the [Zsh guide](../shells/zsh/README.md).
+The existing Zsh configuration uses user-local completion, Vivid, FSH, and Catppuccin caches independently of the proposed managed-file transaction engine. These are rebuildable generated data. FSH's native INI loader builds in a temporary Dots cache directory. The adapter atomically persists validated data as a regular `current_theme.zsh` in the existing `FAST_WORK_DIR`, retaining the last good startup theme on preparation failure. Before replacing a non-Dots selection it creates a unique private backup of the prior script and compiled companion, preserving symlink identity. Stale `.zwc` code is invalidated; directory conflicts are refused and backups are not automatically pruned. These are cache/selection writes outside the managed theme-publication journal. User overlays remain trusted executable shell code. Completion generation validates successful output before atomic publication; failed output is not evaluated. Ordinary startup retains its existing optional plugin bootstrap and private/local sourcing behavior. Tests use copied public dependencies and synthetic private modules under owned roots; they must never run the live startup chain against the developer's home. See the [Zsh guide](../shells/zsh/README.md).
 
 The default [Deja integration](../shells/zsh/README.md#deja-suggestions) is third-party executable shell code, not sandboxed or managed by Dots transactions. When its binary is installed and autosuggestions is not explicitly selected, startup permits its per-user background daemon and plaintext history database under `~/.local/share/deja`; history import is never automatic. Its history exclusions are not general secret redaction. Engine selection is fixed for the shell lifetime to avoid conflicting widget wrappers. Switching back leaves Deja data and its daemon intact; removal and process termination require separate, scoped action.
 
@@ -357,6 +357,9 @@ The Codex connector targets only `themes/dots.tmTheme` in an existing Codex
 themes directory, using the same backup/restore journal and drift checks.
 Publication never creates Codex directories, edits settings/authentication, or
 restarts sessions. Unchanged connector links are retained across publications.
+Vivid and FSH connectors target only `vivid/themes/dots.yml` and `fsh/dots.ini`
+under the configured XDG root when their parents exist. They use the same journal,
+backup, conflict refusal and drift checks; publication does not create app directories.
 No complete generation or backup is automatically pruned. Reload failures preserve
 the published theme and report a retry path; external app state is not rolled back.
 
@@ -464,3 +467,30 @@ operations against live repositories or external services.
 ## Anodize authoring and apply
 
 Create/import/edit and export-to-file use the existing file transaction Store with retained snapshots. Existing IDs/export destinations, generated-file drift and unsafe theme objects are refused. Complete staging and digest guards protect saves; existing file history, undo and recovery routes apply. Saves do not activate themes. [Anodize](anodize.md) documents confirmation, copied versus referenced wallpaper, and bounded input formats. Apply uses the existing theme publisher after template/target preflight. Explicit wallpaper changes are journaled post-publication adapter actions; a wallpaper failure leaves the app theme published and returns an error. Read-only previews only use disposable temporary rendering directories.
+
+## Generated theme commands
+
+Theme command wrappers and completion registrations are generated only from trusted
+Dots templates and validated names. Imported theme code is never executed. Owned
+immutable command generations carry checksums; drift blocks replacement and
+rollback. Publication records previous/new command pointers in the owning theme
+or import journal before switching. Failed parent operations restore both theme
+and command state. Command-only refresh has its own durable journal. Incomplete
+parent transactions must be recovered before an unrelated command publication.
+Unmanaged state paths and symlinked ancestors are refused. Existing PATH commands
+keep precedence, and reserved names remain accessible through full-ID routes.
+
+## Dots shell environment
+
+Dots config.env is parsed as literal data, never sourced. Invalid settings preserve previously resolved values. Initialization does not create settings files or publish themes. Portable shell.tsv snapshots are part of the existing theme transaction and are read without evaluation. The legacy repository cleanup was explicitly approved and retained a recovery copy of the removed source files; no home-directory legacy selection files were removed.
+
+## File-style edits and refresh notifications
+
+`theme colors set/reset` uses the existing file Store with retained backups,
+complete-file guards and atomic replacement. Dry-run creates no state. Publication
+validates all style references before committing generated JSON/Lua/LS_COLORS.
+Saved configuration and theme publication are separate transactions: a failed
+`--apply` keeps the saved rules and reports that publication needs retrying.
+An optional two-second DDS broadcast follows publication; it carries only the
+state-root identity, never an executable or a path to load. Notification failure
+does not undo a published theme. Plugin snapshot errors retain previous colors.

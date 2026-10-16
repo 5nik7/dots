@@ -35,7 +35,11 @@ See [utility verification](testing.md#shared-shell-utilities) for isolated tests
 
 Source common and call `build_color_arrays` to initialize the global associative arrays `COLOR`, `FG`, and `BG`. The individual builders `color_array`, `fg_array`, and `bg_array` rebuild only their corresponding array. Every array has keys 0 through 255; repeated construction replaces its contents without leaking loop counters. FG contains `ESC[38;5;Nm`, BG contains `ESC[48;5;Nm`, and COLOR contains `ESC[38;5;Nmcolor N`, where ESC is the literal escape byte and N is the key. These are raw color values, independent of `DOTS_COLOR`, icons, and terminal detection.
 
-`bin/colors.env` has been removed without a forwarding file. Bash/Zsh startup and the compatibility profiles explicitly build arrays after sourcing common. Startup no longer initializes named palette/terminal globals such as RED, BLUE, BOLD, RST or rst, and Bash no longer exports a COLORS path. Existing caller variables are neither unset nor overwritten; a fresh shell simply omits these Dots-provided values. Independently defined colors in other scripts remain local to those scripts. Merely sourcing common does not initialize arrays or colors, launch tools, change traps, or print output.
+`bin/colors.env` has been removed. Startup no longer allocates COLOR/FG/BG;
+call their utility builders explicitly when needed. Named colors and rst/RST
+belong to the [Dots shell environment](shell-environment.md), which derives them
+from the current theme. Merely sourcing common does not initialize colors,
+launch tools, change traps, or print output.
 
 ## Logging, formatting and spinners
 

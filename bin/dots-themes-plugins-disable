@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# dots:summary=Disable future runs of a theme plugin
+# dots:usage=NAME
+# dots:argument=1|theme-plugin|Plugin name
+exec "${BASH_SOURCE[0]%/*}/dots-theme-plugins-disable" "$@"

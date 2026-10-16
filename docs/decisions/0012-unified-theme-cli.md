@@ -1,6 +1,6 @@
 # 0012: One theme command family
 
-**Status: Accepted, 2026-09-29.**
+**Status: Theme route ownership superseded by [decision 0013](0013-shell-environment-and-theme-collection.md); data and publication contracts retained.**
 
 ## Decision
 

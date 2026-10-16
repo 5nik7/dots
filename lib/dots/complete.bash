@@ -11,6 +11,12 @@ dots_value_candidates() {
   local type=$1 lead=${2:-} value
   local -a values=()
   case $type in
+    dots-setting)
+      local kind default description
+      while IFS=$'\t' read -r value kind default description; do dots_candidate "$value" "$description"; done < "$DOTS_LIB_DIR/shell/settings.tsv"
+      while IFS=$'\t' read -r value kind default; do [[ $value == - ]] || dots_candidate "$value"; done < "$DOTS_LIB_DIR/shell/paths.tsv"
+      for value in DOTS_CONFIG_FILE DOTS_STATE_DIR DOTS_THEME_ID; do dots_candidate "$value"; done
+      ;;
     theme-plugin)
       local output
       output=$(python3 -B "$DOTS_LIB_DIR/themes/plugins.py" __names 2>/dev/null) || return 0
@@ -37,6 +43,11 @@ dots_value_candidates() {
       local output
       output=$(DOTS_COLOR=never DOTS_ICONS=never python3 -B "$DOTS_LIB_DIR/files/catalog.py" "$action" --all-platforms 2>/dev/null) || return 0
       while IFS=$'\t' read -r value _; do dots_candidate "$lead$value"; done <<< "$output"
+      ;;
+    file-color-key)
+      local output
+      output=$(python3 -B "$DOTS_LIB_DIR/themes/file-colors.py" _complete "${DOTS_POSITIONALS[@]}" 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
     theme-color)
       local DT_LIB=$DOTS_LIB_DIR/themes name id=${DOTS_OPTION_VALUES[--theme]:-}
@@ -114,6 +125,14 @@ dots_complete() {
   local -a DOTS_POSITIONALS=() words=("$@") DOTS_SUGGESTIONS=() DOTS_EXTRA_ROOTS=() DOTS_ROOTS=()
   local -A DOTS_OPTION_VALUES=()
   (( cursor >= 1 && cursor < ${#words[@]} )) || return 2
+  # Standalone wrappers share this same completion protocol.
+  local command_name=${words[0]##*/}
+  if [[ $command_name == theme ]]; then
+    words=(dots theme "${words[@]:1}"); ((cursor+=1))
+  elif [[ $command_name != dots ]]; then
+    local family_target=$command_name
+    words=(dots theme "$family_target" "${words[@]:1}"); ((cursor+=2))
+  fi
   local DOTS_CURRENT=${words[cursor]} index=1 token prefix='' help=0 resolved start
   local expected='' expected_option='' positional=1 options=1 long short type description row position lead=''
   # Only words before the cursor affect context; words after it are ignored.
@@ -135,7 +154,8 @@ dots_complete() {
   dots_roots
   if (( index == cursor )); then
     if [[ $DOTS_CURRENT == --color=* || $DOTS_CURRENT == --icons=* ]]; then
-      dots_value_candidates choice:auto,always,never "${DOTS_CURRENT%%=*}="
+      if [[ $DOTS_CURRENT == --color=* ]]; then dots_value_candidates choice:auto,always,never,none "${DOTS_CURRENT%%=*}="
+      else dots_value_candidates choice:auto,always,never "${DOTS_CURRENT%%=*}="; fi
     else
       for row in "${DOTS_GLOBAL_OPTIONS[@]}"; do
         IFS='|' read -r long short type description <<< "$row"
@@ -192,6 +212,20 @@ dots_complete() {
     else
       start=$index
       local -a args=("${words[@]:start:cursor-start}")
+      if [[ ${args[0]:-} == theme ]]; then
+        local DT_LIB=$DOTS_LIB_DIR/themes
+        source "$DT_LIB/core.bash"
+        source "$DT_LIB/families.bash"
+        if ((${#args[@]} == 1)); then
+          dt_family_index || return
+          for token in "${DT_FAMILIES[@]}"; do dt_family_reserved "$token" || dots_candidate "$token" 'Theme palette'; done
+        elif ! dt_family_reserved "${args[1]}"; then
+          source "$DT_LIB/complete.bash"
+          dt_palette_candidates "${args[@]:1}" || return
+          ((${#DOTS_SUGGESTIONS[@]} == 0)) || printf '%s\n' "${DOTS_SUGGESTIONS[@]}"
+          return 0
+        fi
+      fi
       dots_resolve "${args[@]}"; resolved=$?
       (( resolved != 1 )) || return 1
       if (( resolved == 3 )); then

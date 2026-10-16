@@ -24,4 +24,14 @@ function __dots_complete_fish
         end
     end
 end
-complete -c dots -f -a '(__dots_complete_fish)'
+for name in dots theme
+    complete -c $name -f -a '(__dots_complete_fish)'
+end
+set -l theme_state "$HOME/.local/state"
+if set -q XDG_STATE_HOME; and test -n "$XDG_STATE_HOME"
+    set theme_state "$XDG_STATE_HOME"
+end
+set -l theme_completion "$theme_state/dots/themes/commands/current/init.fish"
+if test -r "$theme_completion"
+    source "$theme_completion"
+end

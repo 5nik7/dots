@@ -10,11 +10,11 @@ DT_USER_TEMPLATES=${XDG_CONFIG_HOME:-$HOME/.config}/dots/themed
 dt_find_theme() {
   dt_theme_id "$1" || return 1
   DT_THEME_DIR=$DT_ROOT/$1
-  if [[ -f $DT_THEME_DIR/colors.toml && -d $DT_USER_THEMES/$1 ]]; then
+  if [[ ( -f $DT_THEME_DIR/colors.toml || -f $DT_THEME_DIR/palette.toml ) && -d $DT_USER_THEMES/$1 ]]; then
     dt_error "duplicate bundled and user theme: $1"; return 1
   fi
   if [[ -d $DT_USER_THEMES/$1 ]]; then DT_THEME_DIR=$DT_USER_THEMES/$1; fi
-  [[ -f $DT_THEME_DIR/colors.toml || $1 == pywal16-current ]]
+  [[ -f $DT_THEME_DIR/colors.toml || -f $DT_THEME_DIR/palette.toml || $1 == pywal16-current ]]
 }
 dt_colors() {
   local file=$1 line key value n=0
@@ -40,6 +40,10 @@ dt_colors() {
       DT_SEMANTIC[$key]=$value
     done < "$file"
   fi
+  dt_resolve_colors
+}
+dt_resolve_colors() {
+  local key n
   local -a names=(background red green yellow blue magenta cyan foreground muted bright_red bright_green bright_yellow bright_blue bright_magenta bright_cyan bright_foreground)
   for ((n=0;n<16;n++)); do
     key=${names[n]}
@@ -68,15 +72,15 @@ dt_colors() {
   DT_MODE=${DT_SEMANTIC[mode]:-$DT_MODE}
   DT_SEMANTIC[mode]=$DT_MODE
 }
+# Native-only views may inspect incomplete palettes without activating them.
+dt_load_native() { local DT_NATIVE_ONLY=1; dt_load "$@"; }
 dt_load() {
-  local name=$1 flavor=${2:-} key family
-  DT_ID='' DT_THEME_DIR='' DT_SEMANTIC=() DT_ADAPTER=native
+  local name=$1 flavor=${2:-} key family metadata_file role
+  DT_ID='' DT_THEME_DIR='' DT_SEMANTIC=() DT_COLORS=() DT_NAMES=() DT_META=() DT_VALUES=() DT_MODE=dark DT_ADAPTER=generic
   if [[ -d $DT_ROOT/$name/flavors ]]; then
     dt_native_load "$name" "$flavor" || return
     DT_ID=$DT_THEME-$DT_FLAVOR
-    if [[ -d $DT_ROOT/$DT_ID || -d $DT_USER_THEMES/$DT_ID ]]; then
-      dt_find_theme "$DT_ID" && dt_colors "$DT_THEME_DIR/colors.toml" || return
-    fi
+    dt_find_theme "$DT_ID" || DT_THEME_DIR=''
   elif dt_find_theme "$name"; then
     DT_ID=$name
     family=$name flavor=default
@@ -84,21 +88,50 @@ dt_load() {
       dt_parse "$DT_THEME_DIR/theme.toml" metadata || return
       family=${DT_DATA[family]:-$name} flavor=${DT_DATA[flavor]:-default}
     fi
+    dt_theme_id "$family" && dt_id "$flavor" || { dt_error 'invalid family or flavor'; return 1; }
     if [[ -d $DT_ROOT/$family/flavors ]]; then
       dt_native_load "$family" "$flavor" || return
       dt_find_theme "$name" || return
-      dt_colors "$DT_THEME_DIR/colors.toml" || return
     else
-      DT_THEME=$name DT_FLAVOR=default DT_ADAPTER=generic
-      dt_colors "$DT_THEME_DIR/colors.toml" || return
-      DT_COLORS=() DT_NAMES=() DT_META=() DT_VALUES=()
-      for key in "${!DT_SEMANTIC[@]}"; do
-        [[ $key != mode ]] || continue
-        DT_COLORS[$key]=${DT_SEMANTIC[$key]}; DT_NAMES+=("$key")
+      DT_THEME=$family DT_FLAVOR=$flavor
+      for metadata_file in "$DT_ROOT/$family/theme.toml" "$DT_USER_THEMES/$family/theme.toml" "$DT_THEME_DIR/theme.toml"; do
+        [[ -f $metadata_file && ! -L $metadata_file ]] || continue
+        dt_parse "$metadata_file" metadata || return
+        for key in "${DT_KEYS[@]}"; do DT_META[$key]=${DT_DATA[$key]}; done
       done
-      for key in background foreground muted accent selection error warning info hint; do DT_META["roles.$key"]=$key; done
+      for key in "${!DT_META[@]}"; do
+        [[ $key != roles.$flavor.* ]] || DT_META[roles.${key##*.}]=${DT_META[$key]}
+      done
     fi
   else dt_error "unknown theme: $name"; return 1; fi
+  # Pywal is an explicitly declared dynamic source, never its placeholder file.
+  if [[ $DT_THEME != pywal16 && -n $DT_THEME_DIR && -e $DT_THEME_DIR/palette.toml ]]; then
+    [[ -f $DT_THEME_DIR/palette.toml && ! -L $DT_THEME_DIR/palette.toml ]] || { dt_error 'palette must be a regular file'; return 1; }
+    dt_parse "$DT_THEME_DIR/palette.toml" palette || return
+    DT_COLORS=() DT_NAMES=("${DT_KEYS[@]}")
+    for key in "${DT_NAMES[@]}"; do DT_COLORS[$key]=${DT_DATA[$key]}; done
+  fi
+  if [[ -f $DT_THEME_DIR/colors.toml || $DT_THEME == pywal16 ]]; then
+    dt_colors "$DT_THEME_DIR/colors.toml" || return
+  elif [[ ${DT_NATIVE_ONLY:-0} != 1 ]]; then
+    for key in "${DT_NAMES[@]}"; do DT_SEMANTIC[$key]=${DT_COLORS[$key]}; done
+    for key in "${!DT_META[@]}"; do
+      [[ $key == roles.* && ${key#roles.} != *.* ]] || continue
+      role=${DT_META[$key]}
+      [[ ${DT_COLORS[$role]+yes} ]] || { dt_error "role $key references missing color $role"; return 1; }
+      DT_SEMANTIC[${key#roles.}]=${DT_COLORS[$role]}
+    done
+    dt_resolve_colors || return
+  fi
+  if ((${#DT_NAMES[@]} == 0)); then
+    for key in "${!DT_SEMANTIC[@]}"; do
+      [[ $key != mode ]] || continue
+      DT_COLORS[$key]=${DT_SEMANTIC[$key]}; DT_NAMES+=("$key")
+    done
+  fi
+  for key in background foreground muted accent selection error warning info hint; do
+    [[ ${DT_META[roles.$key]:-} ]] || DT_META[roles.$key]=$key
+  done
 }
 dt_render() {
   local dir=$1 template filename line rest key value prefix output
@@ -106,7 +139,7 @@ dt_render() {
   local -A rendered=()
   # Only bundled app overrides are trusted. Installed repositories supply colors/images only.
   if [[ $DT_THEME_DIR == "$DT_ROOT/"* ]]; then
-    for filename in kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json; do
+    for filename in kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini; do
       if [[ -f $DT_THEME_DIR/$filename && ! -L $DT_THEME_DIR/$filename ]]; then
         cp -- "$DT_THEME_DIR/$filename" "$dir/$filename" || return
         rendered[$filename]=1
@@ -117,7 +150,7 @@ dt_render() {
     [[ -f $template && ! -L $template ]] || continue
     filename=${template##*/}; filename=${filename%.tpl}
     [[ $filename =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*$ ]] || { dt_error 'invalid template output name'; return 1; }
-    case $filename in selection|fingerprint|palette.json|init.*|previous|status|active.new|connectors|bat-cache) dt_error "reserved template output: $filename"; return 1 ;; esac
+    case $filename in id|commands-old|commands-new|selection|fingerprint|palette.json|shell.tsv|colors.json|colors.lua|ls_colors|init.*|previous|status|active.new|connectors|bat-cache) dt_error "reserved template output: $filename"; return 1 ;; esac
     [[ ! ${rendered[$filename]:-} ]] || continue
     output=''
     while IFS= read -r line || [[ $line ]]; do
@@ -126,6 +159,7 @@ dt_render() {
         key=${BASH_REMATCH[1]}; prefix=${rest%%"${BASH_REMATCH[0]}"*}
         rest=${rest#*"${BASH_REMATCH[0]}"}
         case $key in
+          file_styles_vivid) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _vivid "$DT_THEME_DIR") || return ;;
           *_strip) key=${key%_strip}; value=${DT_SEMANTIC[$key]:-}; value=${value#\#} ;;
           *_rgb) key=${key%_rgb}; [[ ${DT_SEMANTIC[$key]:-} ]] || return 1; dt_rgb "${DT_SEMANTIC[$key]}"; value="$DT_R,$DT_G,$DT_B" ;;
           *) value=${DT_SEMANTIC[$key]:-} ;;
@@ -140,6 +174,7 @@ dt_render() {
     printf '%s' "$output" > "$dir/$filename" || return
     rendered[$filename]=1
   done
+  dt_json | python3 -B "$DT_LIB/file-colors.py" _build "$DT_THEME_DIR" "$dir" || return
   mkdir -p "$dir/yazi" || return
   cp -- "$dir/yazi.toml" "$dir/yazi/flavor.toml" && cp -- "$dir/bat.tmTheme" "$dir/yazi/tmtheme.xml" || return
 }

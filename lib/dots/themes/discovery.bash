@@ -1,6 +1,17 @@
 # Data-only theme discovery. Sourcing defines helpers; enumeration is on demand.
 # Callers supply roots; core.bash supplies validation and selection loading.
 dt_current_id() {
+  if [[ ${DOTS_THEME_SELECTION:-} ]]; then
+    dt_selected || return
+    REPLY=$DT_ID
+    return
+  fi
+  dt_generation || return
+  if [[ $DT_GENERATION && -f $DT_STATE/generations/$DT_GENERATION/id ]]; then
+    IFS= read -r REPLY < "$DT_STATE/generations/$DT_GENERATION/id" || return
+    dt_theme_id "$REPLY"
+    return
+  fi
   dt_selected selection || return
   REPLY=$DT_THEME-$DT_FLAVOR
   [[ -d $DT_ROOT/$REPLY || -d $DT_USER_THEMES/$REPLY ]] || REPLY=$DT_THEME
@@ -15,9 +26,10 @@ dt_discover_ids() {
       local mode=${value:-selectable}
       local -A seen=()
       [[ $mode == selectable || $mode == completion ]] || return 2
-      for path in "$DT_ROOT/"*/colors.toml "$DT_USER_THEMES/"*/colors.toml; do
+      for path in "$DT_ROOT/"*/colors.toml "$DT_USER_THEMES/"*/colors.toml "$DT_ROOT/"*/palette.toml "$DT_USER_THEMES/"*/palette.toml; do
         [[ -f $path && ! -L $path ]] || continue
-        name=${path%/colors.toml}; name=${name##*/}
+        name=${path%/*}; name=${name##*/}
+        [[ ${path##*/} != palette.toml || ! -f ${path%/*}/colors.toml ]] || continue
         # Preserve literal completion hints, including invalid names and
         # repeated roots. Selection remains validated by the theme loader.
         if [[ $mode == selectable ]]; then
@@ -27,7 +39,7 @@ dt_discover_ids() {
         fi
         DT_DISCOVERY_IDS+=("$name")
       done
-      [[ ! -d $DT_ROOT/pywal16-current ]] || DT_DISCOVERY_IDS+=(pywal16-current) ;;
+      [[ ! -d $DT_ROOT/pywal16-current || -f $DT_ROOT/pywal16-current/palette.toml || -f $DT_ROOT/pywal16-current/colors.toml ]] || DT_DISCOVERY_IDS+=(pywal16-current) ;;
     families)
       for path in "$DT_ROOT/"*/theme.toml; do
         [[ -f $path && -d ${path%/theme.toml}/flavors ]] || continue

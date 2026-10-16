@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=Install a Git theme
+# dots:usage=URL [--name ID]
+# dots:argument=1|string|HTTPS or SSH Git URL
+# dots:option=--name||string|Local theme identifier
+exec "${BASH_SOURCE[0]%/*}/dots-theme-install" "$@"

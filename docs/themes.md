@@ -2,11 +2,9 @@
 
 **Status: Implemented flat themes, application templates, Git theme sources, explicit wallpapers and opt-in local theme plugins.**
 
-The sole theme CLI is `dots theme`, using `bin/dots-theme-*` commands.
-Standalone palette helpers remain available; the plural CLI was removed under
-[decision 0012](decisions/0012-unified-theme-cli.md). The layout follows the local
-Omarchy reference while retaining Dots' shell and Neovim palette APIs; see
-[decision 0008](decisions/0008-config-catalog-and-theme-apps.md).
+`theme` and `dots theme` inspect and change the current theme. `dots themes`
+manages the collection; singular collection routes remain aliases. Both use one
+engine. See [decision 0013](decisions/0013-shell-environment-and-theme-collection.md).
 
 Theme preparation, rendering, bat caches, publication, quiet reloads and installed-source validation use [terminal progress](presentation.md#operation-progress). Batch updates show processed checkout counts. Downloads, tmux reloads and wallpaper adapters use static phase messages to keep child output readable. `DOTS_PROGRESS=never` disables these displays. Raw queries, shell initialization and dry runs stay undecorated.
 
@@ -50,6 +48,60 @@ only persist selection. Bundled app writes use journaled copies; arbitrary local
 hook effects are outside publication rollback. See [plugin authoring and safety](theme-plugins.md).
 Downloaded themes remain data-only and never provide executable hooks.
 
+## Unified commands and family shortcuts
+
+`theme` forwards to `dots theme`, including help, exit statuses and existing full-ID
+routes. Generated family and standalone commands use that same Dots handler:
+
+```sh
+theme list
+catppuccin                         # Usage, logo and flavors
+catppuccin mocha                   # Native palette preview
+catppuccin mocha blue hex          # Native scalar query
+catppuccin mocha set               # Journaled activation
+rose-pine dawn set --dry-run
+nord show
+dots theme catppuccin mocha set    # Equivalent family route
+```
+
+No flavor-specific executables are generated. Family/flavor membership comes from
+`theme.toml`; names are not split heuristically. A declared `default_flavor` wins;
+a sole flavor is the default, while multiple flavors without a default require
+an explicit choice. A bare family or standalone command shows usage. Explicit
+`set` is required to activate. Native queries use `palette.toml`; ordinary
+`dots theme color` and application templates use resolved colors.
+
+Set/refresh and successful theme install/update/remove reconcile thin executable
+wrappers under `${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands`.
+`dots theme refresh --commands-only` rebuilds wrappers without selecting a theme.
+Shells append the stable `commands/current/bin` path, preserving unrelated command
+precedence. Reserved Dots/action names do not get wrappers; explicit full-ID
+routes remain available. Startup reads generated completion registrations rather
+than discovering palettes. Bash/Zsh refresh registrations at the next prompt;
+Fish reads them when its completion adapter loads.
+
+Optional regular `logo.txt` files appear only above human help/usage. Flavor help
+prefers the variant's file, then its family file. Catppuccin's artwork lives at
+`themes/catppuccin/logo.txt`. Artwork is sanitized and recolored using the addressed palette; plain output
+strips styling. Other terminal control sequences are not accepted as
+artwork. Scalar queries, previews, initialization and completion never include logos.
+
+`palette.toml` alone is enough for discovery, previews and native queries. Its
+supported syntax is flat named `#RRGGBB` assignments with quoted strings and
+comments; duplicate keys, unsupported TOML and invalid colors fail validation.
+For activation, recognized semantic names and `[roles]` mappings in metadata
+must resolve background and foreground; existing Dots defaults fill other roles.
+If `colors.toml` exists it remains authoritative for application colors. Both
+bundled and installed palettes use these rules. Pywal retains its explicit export
+reader. Legacy family flavor links remain readable as a fallback when a variant
+has no native palette file.
+
+Zsh and Bash source the Dots shell adapter directly and load the published theme.
+`set_theme`, `change_theme` and `has_theme` remain compatibility helpers.
+`theme` is an executable command; use `theme init --shell zsh` for generated shell
+code. The old `themes/bin` wrappers have been removed; generated family commands
+use the published command directory. Catppuccin-specific startup snippets are no longer sourced.
+
 ## Flat themes and templates
 
 Selectable variants live at `themes/ID/`, normally with `colors.toml`, `theme.toml`,
@@ -75,7 +127,7 @@ RGB) are supported; unresolved variables refuse publication. Personal templates 
 A trusted bundled theme's explicit application file takes precedence over both.
 Downloaded themes contribute colors and backgrounds only. Templates never evaluate
 shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
-Yazi, Codex and Pi data; Zsh/Fish and Neovim data come from the palette generator.
+Yazi, Codex, Pi, Vivid and FSH data; Zsh/Fish and Neovim data come from the palette generator.
 
 The [mdcat configuration](../config/mdcat/config.toml) uses `base = "auto"` for dark/light detection and ANSI color names for its overrides. Its colors follow the terminal palette, so the terminal must have the Dots theme applied; mdcat does not read the published Dots palette directly. Existing heading markers, alert labels and text styles are preserved. Code-block highlighting continues to use mdcat's `BAT_THEME` integration. Explicit `--theme` or `MDCAT_THEME` selections override the base, with config style overrides still applied on top.
 
@@ -98,8 +150,8 @@ values refuse publication. Dots parses this file as data; it never sources it.
 
 Shell initialization preserves the original FZF options and replaces its generated
 color option on repeat loads. Dots' Bash/Zsh adapters also preserve configured bindings
-and preview settings. Published template colors supersede the legacy Catppuccin
-FZF adapter; other legacy adapters remain. Older generations and session-only
+and preview settings. Published template colors and the Dots shell adapter replace the Catppuccin
+startup snippets; mdcat follows its terminal-palette configuration. Older generations and session-only
 `set_theme ID` retain the existing FZF behavior. FZF needs no app connector. Bash/Zsh use their native prompt hooks; Fish remains explicit.
 
 `gum_env.sh.tpl` renders to `gum_env.sh` under the active theme path. It exports
@@ -222,7 +274,7 @@ Existing app settings and Neovim transparency remain in their source configurati
 On selection, fixed connector links are created only for configured applications:
 Kitty/tmux `dots-theme.conf`, btop `themes/dots.theme`, Yazi `flavors/dots.yazi`, and
 Termux `~/.termux/colors.properties`, Pi's `themes/dots.json`, and Codex's
-`themes/dots.tmTheme` (see below). Existing regular files or symlinks are saved in
+`themes/dots.tmTheme`, Vivid `themes/dots.yml`, and FSH `dots.ini` (see below). Existing regular files or symlinks are saved in
 the generation's connector journal before replacement; real directories are refused.
 Parent application directories must exist. If an application directory itself is
 linked into a repository, the connector lives in that source directory. It is
@@ -233,6 +285,58 @@ colors; Kitty remote control is used only when KITTY_LISTEN_ON is supplied. Relo
 failures report that colors were published and can be retried with `refresh`. Apps
 without a running reload adapter pick up the files through their normal startup.
 No terminal/editor process is restarted and no plugin or package is installed.
+
+### Vivid and Fast Syntax Highlighting
+
+`default/themed/vivid.yml.tpl` and `default/themed/fsh.ini.tpl` generate `vivid.yml`
+and `fsh.ini` in each published generation. Both follow the shared palette and the
+normal template/override precedence. With the existing config directories present,
+publication connects `${XDG_CONFIG_HOME:-$HOME/.config}/vivid/themes/dots.yml` and
+`${XDG_CONFIG_HOME:-$HOME/.config}/fsh/dots.ini` through the same backup journal.
+These machine-local links are ignored when config directories link into this repository.
+
+Directories use blue, executables and shell commands green, links/options/escapes
+cyan, ordinary files and paths foreground, comments and unimportant files muted,
+source files and archives yellow, configuration files and numeric syntax orange,
+and media and shell keywords magenta. Broken links and syntax errors use `error`.
+FSH strings use `bright_green`, matching the shared bat syntax template. Special
+permissions and devices have separate styles using the same palette. Vivid's
+filetype database supplies extension and filename coverage; a custom database
+continues to control classification.
+
+After `dots theme refresh`, open a new shell or reload the shell configuration once
+to load the updated adapters. All shell adapters read the published `ls_colors`
+artifact; Bash/Zsh update it at the next prompt after publication. Completion and
+fzf-tab consume that value. Vivid generation happens during publication, so shell
+startup does not run Vivid for new generations. `vivid generate dots` remains
+available through the connector. Without Vivid, publication supplies basic file
+types and explicit suffixes. A present but failing Vivid aborts publication and
+retains the previous generation. Older generations and session-only selections
+retain their compatibility fallback. FSH is a Zsh-only integration.
+
+FSH's native INI loader builds validated theme data in the Dots Zsh cache. The
+adapter saves a regular copy to `$FAST_WORK_DIR/current_theme.zsh`, so FSH loads
+Dots directly at the next startup, before the Dots hook. Both lines from
+`fast-theme --show` report `dots`. After plugin initialization and on published
+theme changes, the adapter checks for updated colors and saves them atomically;
+identical copies are left untouched. The configured `FAST_WORK_DIR` is retained.
+
+Before replacing a non-Dots startup selection, the adapter preserves its script
+and compiled companion (including symlink identity) in a private
+`$FAST_WORK_DIR/.dots-theme-backup.XXXXXXXX` directory. It invalidates stale
+`current_theme.zsh.zwc` code so an older compiled selection cannot override the
+new source. Directory conflicts and preparation failures refuse replacement.
+Backups are retained; restoring one requires disabling automatic Dots FSH loading
+first, otherwise a later successful theme load will save Dots again.
+
+Explicit FSH overlays remain in the work directory and are reapplied. Secondary
+theme styles are included in the saved script; the default empty `secondary`
+keeps nested command substitutions and `eval` expressions on the same palette.
+Malformed input keeps the previous theme and reports an error. Missing current
+artifacts and session-only palette selections retain the last successfully saved
+Dots colors without overwriting the startup file. The saved script works even if
+the separate Dots build cache has been removed. Neither integration installs
+dependencies.
 
 ### Codex and Codex-Termux
 
@@ -373,19 +477,18 @@ and upstream license text beside its metadata. Pywal16 has no fixed palette: see
 
 ## Migration from plural commands
 
-The `dots themes` and `dots-themes-*` commands have been removed without aliases. Update scripts using these replacements:
+`dots themes` now owns collection management: `list`, `switcher`, `install`,
+`update`, `remove`, and `plugins`. Existing `dots theme` collection routes still
+work. Bare `dots themes` shows collection help without opening a picker.
 
-| Removed syntax | Replacement |
-| --- | --- |
-| `dots themes list` | `dots theme list --families` |
-| `dots themes list catppuccin` | `dots theme list --flavors catppuccin` |
-| `dots themes set catppuccin mocha` | `dots theme set catppuccin-mocha` |
-| `dots themes show catppuccin mocha` | `dots theme show catppuccin-mocha --native` |
-| `dots themes color catppuccin mocha blue rgb` | `dots theme color blue rgb --theme catppuccin-mocha --native` |
-| `dots themes current` | `dots theme current` |
-| `dots themes init --shell zsh` | `dots theme init --shell zsh` |
-
-Use full selectable IDs for `set`, `show`, and `color --theme`; family-only shortcuts and separate family/flavor arguments are rejected. `current` returns the selectable full ID, including generic names such as `nord`. Direct executables use `dots-theme-*`. Shell palette helpers (`catppuccin`, `current_theme`, `set_theme`, and `change_theme`) retain their APIs; their implementation uses the unified engine and routes. Existing state paths, generation schemas, and active selections need no migration.
+Use `theme` for a current-theme summary, `theme current` for the plain full ID,
+and `theme color`, `show`, `set`, `refresh`, or `bg` for current-theme operations.
+`theme show` defaults to the selected theme; an explicit ID previews another.
+`theme list` and `dots themes list` list the same selectable IDs; `--families`
+and `--flavors FAMILY` provide the corresponding filters. Full IDs remain the
+selection interface. Family commands retain native flavor queries and explicit
+`set`. Internal callers use `dots-theme-current`; the old `current_theme`
+wrapper has been removed.
 
 Exit statuses remain 0 for success, 1 for data/publication errors, and 2 for invalid arguments. Diagnostics use stderr. Initialization defaults to Zsh and remains sourceable with `--shell bash|zsh|fish`.
 
@@ -433,10 +536,10 @@ variant has different native names. Querying, previewing and initialization disc
 theme files without hardcoded family lists. Native families use their matching Neovim adapter. Other flat variants use the
 built-in generic highlight adapter without executing downloaded code. Adding another app integration is an
 explicit adapter change; metadata cannot run commands. `vivid` records the integration
-identity; Catppuccin retains its Vivid path with a semantic-color fallback when
-unavailable. Other families generate basic
-RGB directory/file rules directly from roles, retaining original custom LS_COLORS
-entries without requiring Vivid.
+identity for compatibility. Published generations use the shared Vivid Dots template
+for every palette. Old generations and session-only Catppuccin selections retain
+their named Vivid theme and inherited-entry fallback. New generations follow the
+[file-color publication contract](file-colors.md).
 
 The supported TOML subset includes bare keys, double-quoted strings without
 escapes, single-quoted literal strings, blank lines, full-line/trailing comments,
@@ -473,10 +576,10 @@ flavor without an export; color completion requires valid input.
 
 ## Selection and generated data
 
-Read-only selection uses the active shared generation if present, otherwise
-`$HOME/.theme`, the theme root's `.theme`, then `.default`. These legacy files
-are never automatically rewritten or imported. `DOTS_THEME_SELECTION=theme-flavor`
-is an explicit session-only override used by the existing `set_theme ID` function.
+Read-only selection and startup use the published generation, otherwise
+`DOTS_THEME_DEFAULT` from [Dots settings](shell-environment.md). Legacy `.default`
+and `.theme` files are not read or imported. `DOTS_THEME_SELECTION` remains an
+explicit session-only override used by `set_theme ID`.
 `change_theme ID` persists through `dots theme set`, then updates the calling Zsh.
 
 State lives in `${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes`. Its legacy `current`
@@ -507,17 +610,25 @@ file utilities. Dependencies are required only on the paths using them.
 
 ## Shell and Neovim behavior
 
-`catppuccin` retains its positional/flag interface, format ordering, raw/array
-output, Bash/Zsh completion generators, and all flavor-prefixed initialization
-arrays. `current_theme` resolves the selected family. For non-Catppuccin families,
-it supports native color/flavor/format positional arguments, `-c`/`-f`/`-F`, raw/array
-output and initialization; the Catppuccin-specific all-flavor and completion-generator
-options remain on `catppuccin`. Generic initialization exposes
+Generated family commands retain the positional/flag query interface, formats,
+raw/array output and completion generators for Bash, Zsh and Fish. Current-theme
+queries use `theme color`; the bare command previews the selected palette. `--all` queries every flavor;
+`init` emits the selected palette's initialization. Catppuccin's fixed
+flavor-prefixed arrays remain available. Generic initialization exposes
 `dots_palette` and `dots_roles` associative arrays in Bash/Zsh; Fish receives
 `dots_color_NAME` and `dots_role_NAME` variables plus `THEME` and `FLAVOR`.
-The Catppuccin Bash/Zsh initialization also includes the legacy color arrays.
+Bash/Zsh initialization also exposes a global associative array for every current-theme color: `${blue[hex]}`, `${hint[esc]}`, `${background[rgb]}`, and so on. It combines native palette names with the resolved Dots template colors and roles; resolved values win on overlap. This includes terminal aliases (`color0` through `color15`) and native extras such as `rosewater` or `blue1`, but excludes `mode`. Thus `${cyan[hex]}` can differ from `${dots_palette[cyan]}`: the former follows the template palette, while the latter retains the native palette API.
 
-Bash and Zsh load generated initialization at startup. Their prompt hooks check the
+Each color array contains `name`, `hex`, `rgb`, `r`, `g`, `b`, `luminance`, `brightness`, `cmyk`, `ansi-8bit`, `ansi-8bit-value`, `ansi-8bit-escapecode`, `ansi-24bit`, `ansi-24bit-escapecode`, and `esc`. Escape fields contain actual terminal foreground sequences. Global Bash/Zsh scalars `$rst` and `$RST` both contain the SGR reset sequence `ESC[0m`, restoring terminal colors and text attributes. For example: `printf '%sHello%s\n' "${blue[esc]}" "$rst"`. The values are calculated during initialization generation and cached, not recalculated on each prompt. Bash requires `${blue[hex]}`; Zsh also accepts `$blue[hex]`.
+
+Switching removes obsolete unprefixed arrays owned by Dots. The first reload from the older Catppuccin initializer uses its palette-name list to remove stale colors. Catppuccin initialization still supplies fixed-flavor arrays such as `${mocha_blue[hex]}` and `${latte_blue[hex]}` with their original values; switching away does not remove them. Fish retains its scalar initialization interface.
+
+Direct array names must start with a lowercase ASCII letter (optionally preceded by one underscore) and contain only ASCII letters, digits, or underscores. Shell special parameters, Dots control names, adapter locals, `rst`, and the `_dots_`, `dots_`, `catppuccin_`, `mocha_`, `macchiato_`, `frappe_`, and `latte_` prefixes are reserved. A conflicting color name fails Bash/Zsh initialization and publication before replacing the active generation; rename that palette key. Existing shared color names intentionally occupy global shell variables.
+
+The library-owned shell adapters load published initialization at startup. Native
+Fish, Nushell, Xonsh and PowerShell also consume the published `shell.tsv` data;
+see [the shell environment contract](shell-environment.md). Bash and Zsh retain
+their sourceable initialization. Their prompt hooks check the
 published generation with builtins on the unchanged path and reload only when it
 changes. Bash compares the active link with the loaded generation directory;
 resolving a changed link may invoke readlink once. The hooks preserve the previous
@@ -543,8 +654,25 @@ See [Neovim integration](anodize.md#neovim-integration) and the nested configura
 README. No downloaded theme code is executed and no plugin is installed by the
 reader or CLI.
 
-The sourceable compatibility `themes/bin/theme` delegates to `lib/dots/themes/shell.bash`.
+Shared sourceable theme helpers live in `lib/dots/themes/shell.bash`; shell
+configuration normally loads them through `dots init`.
 
 ## Anodize authoring and consumer colors
 
 [Anodize](anodize.md) creates editable themes using the existing flat theme layout and publisher. Saving and applying are separate operations. Published schema-1 `palette.json` includes an additive `colors` object containing normalized named hex colors and ANSI aliases; existing `palette`, `roles`, and `adapter` fields remain available. The publisher fingerprint includes engine source changes, so a subsequent explicit apply creates an updated generation when necessary. No automatic live theme switch is performed by this source update.
+
+## Theme-owned usage colors and file styles
+
+Family help and native palette previews use the addressed theme's explicit
+foreground/background. Bare family help follows the active flavor when it belongs
+to that family, otherwise the family's default. This changes presentation only;
+existing palette-query and activation defaults remain unchanged. Explicit flavors
+always choose their own palette. Theme panels reset each line, wrap on narrow
+terminals, and use readable text contrast while preserving actual swatch colors.
+`logo.txt` artwork is sanitized and recolored with that palette.
+
+`--color=none` aliases `never`; family commands accept the equals form anywhere.
+`--color NAME` / `-c NAME` still query palette colors. Raw values, JSON, Lua,
+completion and init output never acquire decoration. Plain help remains usable
+if the palette is unavailable. See [file colors](file-colors.md) for the new
+`theme colors` commands, customization layers, full styles and portable exports.

@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../../lib/dots/themes" && pwd) || exit
-source "$DT_LIB/legacy.bash"

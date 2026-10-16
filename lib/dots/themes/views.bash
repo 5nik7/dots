@@ -14,26 +14,34 @@ dt_init() {
   else dt_cached_init "$shell"; fi
 }
 
-# Retain the standalone current_theme palette preview format as well.
+# Shared native palette preview for current and explicit theme queries.
 dt_native_preview() {
   local name
-  dots::heading "$DT_THEME — $DT_FLAVOR"
-  dots::style
-  for name in "${DT_NAMES[@]}"; do
-    if [[ $DOTS_UI_RESET ]]; then dt_value "$name" esc "${DT_COLORS[$name]}"; printf '%s██%s ' "$REPLY" "$DOTS_UI_RESET"; fi
-    dots::row "$name" "${DT_COLORS[$name]}"
-  done
+  dots::settings || return
+  {
+    printf '%s — %s\n\n' "$DT_THEME" "$DT_FLAVOR"
+    for name in "${DT_NAMES[@]}"; do printf '%-20s %s\n' "$name" "${DT_COLORS[$name]}"; done
+  } | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/presentation.py" --theme "${DT_ID:-$DT_THEME-$DT_FLAVOR}" --palette
 }
 
 dt_palette_list() {
   local kind=$1 family=${2:-} name
   local -a names=()
   if [[ $kind == flavors ]]; then
-    dt_theme_id "$family" && [[ -d $DT_ROOT/$family/flavors ]] || { dt_error 'unknown palette family'; return 1; }
-    dt_parse "$DT_ROOT/$family/theme.toml" metadata || return
+    source "$DT_LIB/families.bash"
+    dt_theme_id "$family" && dt_family_index && [[ ${DT_FAMILY_DIRS[$family]:-} ]] || { dt_error 'unknown palette family'; return 1; }
+    dt_family_flavors "$family"
+    [[ ${#DT_FAMILY_FLAVORS[@]} != 1 || ${DT_FAMILY_FLAVORS[0]} != default ]] || { dt_error 'theme has no named flavors'; return 1; }
   fi
-  dt_discover_ids "$kind" "$family" || return
-  names=("${DT_DISCOVERY_IDS[@]}")
+  if [[ $kind == flavors ]]; then names=("${DT_FAMILY_FLAVORS[@]}")
+  else
+    source "$DT_LIB/families.bash"
+    dt_family_index || return
+    for name in "${DT_FAMILIES[@]}"; do
+      dt_family_flavors "$name"
+      [[ ${#DT_FAMILY_FLAVORS[@]} == 1 && ${DT_FAMILY_FLAVORS[0]} == default ]] || names+=("$name")
+    done
+  fi
   if dots::human; then
     if [[ $kind == flavors ]]; then dots::heading "$family flavors"; else dots::heading 'Palette families'; fi
     for name in "${names[@]}"; do dots::row "$name"; done

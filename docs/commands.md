@@ -10,7 +10,7 @@ The shared Bash/Zsh helper `mkcd <directory>` is separate from the `dots` comman
 
 The sourceable [shell utility functions](shell-utils.md) have their own documented argument, stream and status contracts; they do not add dispatcher routes or completion metadata.
 
-`dots init [bash|zsh|fish|powershell|nu|xonsh]` emits native initialization code. With no argument, the generated code selects Bash or Zsh in the calling shell. `init` is reserved and bypasses extension discovery. Help and shell-name completion use built-in metadata. Native `bin/dots.ps1` supports `init [powershell]` and help only. Evaluating a hook derives Dots path variables from the physical loader location, replacing inherited path values; custom overrides belong after initialization. Repository rc files resolve symlinks and source their adjacent loaders directly. See [shell initialization](shell-init.md) for the full interface, bootstrap, error statuses and native invocation examples.
+`dots init [bash|zsh|fish|powershell|nu|xonsh]` emits native initialization code. With no argument, the generated code selects Bash or Zsh in the calling shell. `init` is reserved and bypasses extension discovery. Help and shell-name completion use built-in metadata. Native `bin/dots.ps1` supports `init [powershell]` and help only. Evaluating a hook loads only Dots integration from `lib/dots/shell/`; personal shell configuration stays separate. Settings use data-only config.env, with explicit environment overrides. Repository rc files resolve symlinks and source their adjacent loaders directly. See [shell initialization](shell-init.md) for the full interface, bootstrap, error statuses and native invocation examples.
 
 ## Implemented Files and Theme Routes
 
@@ -27,12 +27,16 @@ queries use `list --families`, `list --flavors FAMILY`, and `show`/`color --nati
 static route metadata and core-owned data providers; it never executes extensions.
 Published `theme init --shell bash|zsh|fish` output includes the FZF
 environment colors described in the [template contract](themes.md#flat-themes-and-templates).
+Bash/Zsh initialization also emits current-theme color arrays such as `${hint[hex]}`, using resolved Dots values over native palette values, while retaining fixed Catppuccin flavor arrays. Formats, reserved names and switch cleanup are defined in the [shell color API](themes.md#shell-and-neovim-behavior).
 `theme set`/`refresh` also render the Pi theme and connect an existing agent themes
 directory through the same journal; dry-run previews include that target. See
 [Pi setup](themes.md#pi) for selection, custom paths and automatic reload.
 The same commands connect the shared syntax theme to an existing Codex themes
 directory; dry runs include `dots.tmTheme`. Codex configuration remains unchanged
 by publication. See [Codex setup](themes.md#codex-and-codex-termux).
+They also render Vivid/FSH templates and journal connectors in existing app config
+directories; dry runs include `dots.yml` and `dots.ini`. The Bash/Zsh adapters use
+the published colors. See [Vivid and FSH](themes.md#vivid-and-fast-syntax-highlighting).
 
 ## Implemented Git and managed-file operations
 
@@ -94,7 +98,7 @@ unimplemented routes remain unavailable. Reservations do not add features.
   including hidden commands, and reports success only after complete validation.
 - `dots completion bash|zsh|fish`: print the native adapter, without installation.
 - `dots [-r|--raw] -d|--dir`: repository path, abbreviated beneath HOME unless raw.
-- Prefix `--color=auto|always|never` and `--icons=auto|always|never`: presentation.
+- Prefix `--color=auto|always|never|none` and `--icons=auto|always|never`: presentation.
   Flags after the route belong to the extension, except intercepted help.
 
 Success is 0. Unknown routes, collisions, malformed metadata, and access errors
@@ -488,7 +492,7 @@ Automatic transaction backups and explicit snapshots may share storage infrastru
 
 ## Proposed Global Options
 
-The exact spelling remains draft. Apply the same semantics consistently rather than allowing each command to reinterpret them. These options are not additions to the live Bash interface; it already uses prefix `--color=auto|always|never` and `--icons=auto|always|never`. Future human views must follow the [presentation contract](presentation.md).
+The exact spelling remains draft. Apply the same semantics consistently rather than allowing each command to reinterpret them. These options are not additions to the live Bash interface; it already uses prefix `--color=auto|always|never|none` and `--icons=auto|always|never`. Future human views must follow the [presentation contract](presentation.md).
 
 | Option | Meaning |
 | --- | --- |
@@ -605,3 +609,41 @@ Bash and Zsh share the [interactive helper contract](shared-shells.md#commands-a
 ### Android status scripts
 
 Androidots provides `termux-wifi-status`, `termux-cell-status`, `termux-notification-status`, `termux-location-status` and `termux-volume-status`, independently of the Dots command dispatcher. Volume is read-only, defaults to media (`music`) and accepts `--stream music|ring|notification|alarm|system|call`. All five support icons, text, JSON, getters, templates, cache controls and static Bash/Zsh/Fish completions. See the [status command contract](../androidots/docs/termux-status.md).
+
+## Unified theme entry points
+
+`theme` is equivalent to `dots theme`. In addition to existing full-ID routes,
+`dots theme FAMILY [FLAVOR] [show | set | COLOR [FORMAT]]` is implemented. Generated
+`FAMILY` commands forward to this route; bare commands show usage and bare flavors
+preview native palettes. `set` is always explicit. `refresh --commands-only`
+rebuilds generated commands without activating a palette. Help and completion
+read the same theme metadata without executing generated wrappers. See
+[family shortcuts](themes.md#unified-commands-and-family-shortcuts) for compatibility
+flags, defaults, collision handling and logo behavior.
+
+## Dots environment and theme collection
+
+`dots env [NAME] [--json]` reports resolved Dots settings and paths with provenance.
+A named query is a plain scalar; JSON has version 1 and values/source records.
+`theme` and `dots theme` without arguments show the selected palette; `current`
+remains scalar. `dots themes` provides collection help and `list`, `switcher`,
+`install`, `update`, `remove`, and `plugins` routes. Existing singular routes
+remain aliases. See [shell environment](shell-environment.md) and
+[decision 0013](decisions/0013-shell-environment-and-theme-collection.md).
+The old standalone `current_theme` wrapper is removed; use `dots theme current`
+for the selected ID, `theme` for its palette preview, and `theme init` for shell
+color initialization.
+
+## File color operations
+
+`dots theme colors` / `theme colors` exposes `type`, `mime`, `extension`, `match`,
+`parse`, `export`, `set` and `reset`. Queries are read-only; edits save journaled
+shared or per-theme overrides, with optional `--apply` to refresh the current theme.
+See [file color syntax and data contracts](file-colors.md). Static metadata and
+Bash/Zsh/Fish completion include operations, bundled/shared style keys, query
+formats and attribute flags. The `file-color-key` metadata provider reads those
+rule keys without executing a theme-family extension.
+
+Presentation adds `--color=none` as an alias for `never`. The global flag still
+precedes Dots routes; family commands also accept it anywhere in their arguments.
+The spaced family option `--color NAME` retains its palette-query meaning.

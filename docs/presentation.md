@@ -115,13 +115,13 @@ Clear and stop the display before results, diagnostics, confirmation or selectio
 
 ## Ownership and Compatibility
 
-Anodize has an owner-requested [branding exception](anodize.md#terminal-logo): its human views always include the supplied mark, including compact plain branding when redirected. Large headers are limited to help and bounded by terminal size; routine output remains compact. Logo artwork uses magenta or the original purple/magenta colors while diagnostics retain shared semantic colors. Disabled icons select ASCII rather than removing branding. Data output remains strictly undecorated. The Anodize renderer and static-help Bash adapter share bundled text assets; optional graphics never become a requirement for help.
+Anodize has an owner-requested [branding exception](anodize.md#terminal-logo): its human views always include the supplied mark, including compact plain branding when redirected. Text help headers may use half the terminal height, capped at 16 rows; routine text views use the six-row base mark within one-third of terminal height, then a tiny ASCII fallback. Braille text is independent of color, so `NO_COLOR` retains monochrome artwork on suitable terminals. Logo artwork uses magenta or the original purple/magenta colors while diagnostics retain shared semantic colors. Disabled icons select ASCII rather than removing branding. Data output remains strictly undecorated. The Anodize renderer and static-help Bash adapter share bundled text assets; optional graphics never become a requirement for help. Chafa uses `--fg-only --symbols=braille` and is skipped in ASCII-only modes.
 
 `lib/dots/ui.bash` owns the shared Bash helpers. The lazy `lib/dots/interactive.bash` adapter owns optional UI selection, Gum invocation policy and numbered prompts; interactive callers reserve fd 3 for the visible terminal before capturing selector output. The Python file catalog's `Presentation` renderer mirrors the policy; it is not a generated binding. New Bash commands must reuse the helpers. Other first-party implementations must match this contract through an equivalent renderer and policy tests rather than inventing per-command colors or message conventions. See [architecture](architecture.md#live-bash-framework).
 
 The dispatcher forwards extension streams unchanged. First-party extensions, including relevant Androidots and other submodule commands, follow this contract when added or changed, respecting their local guides. User and third-party extensions are encouraged to use the helpers; the dispatcher does not restyle arbitrary output. Generated app configuration and application UIs retain their own formats and theme contracts.
 
-Preserve the unified theme data interfaces and palette helper APIs. The plural CLI removal is explicitly authorized in [decision 0012](decisions/0012-unified-theme-cli.md); styling changes do not independently authorize API removal. Styling work must not add shell-startup scans, load live user configuration, require optional UI dependencies, or change command semantics. The paused Go core and historical experiments retain their current behavior until separately authorized work applies this contract.
+Preserve the unified theme data interfaces and palette helper APIs. The singular/plural theme split is defined by [decision 0013](decisions/0013-shell-environment-and-theme-collection.md); styling changes do not independently authorize API removal. Styling work must not add shell-startup scans, load live user configuration, require optional UI dependencies, or change command semantics. The paused Go core and historical experiments retain their current behavior until separately authorized work applies this contract.
 
 ## Acceptance Gate
 
@@ -135,3 +135,13 @@ For each new or changed human view, the focused plan must identify:
 6. Focused automated evidence plus a visual review of representative terminal output. Record native platforms separately from simulated fixtures and disclose remaining gaps.
 
 Mark cases that do not apply with a reason. Existing [presentation tests](testing.md#terminal-presentation) establish the initial coverage, not completion of this entire matrix across all commands and platforms. Use existing runners where appropriate; add missing cases with the corresponding implementation change. A documentation review alone does not establish runtime conformance.
+
+## Theme-family panels
+
+Family help and native previews use the addressed palette, including explicit
+foreground and background. Recolor sanitized logo text with that palette, reset
+every line, wrap at narrow widths and retain usable full IDs. Text accents fall
+back to readable foreground when contrast is insufficient; swatches remain exact.
+`--color=none` aliases `never`; spaced `--color NAME` remains a family color query.
+Data output bypasses panels even when decoration is forced. This scoped palette
+presentation does not change semantic status meanings in other command families.

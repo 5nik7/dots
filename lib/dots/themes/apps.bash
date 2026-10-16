@@ -38,6 +38,15 @@ dt_apps_plan() {
     [[ -d ${path%/*} && ( ! -e $path || -f $path || -L $path ) ]] || { dt_error "cannot connect theme target: $path"; return 1; }
     DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/$name")
   done
+  for name in vivid fsh; do
+    case $name in
+      vivid) path=$config/vivid/themes/dots.yml; name=vivid.yml ;;
+      fsh) path=$config/fsh/dots.ini; name=fsh.ini ;;
+    esac
+    [[ -d ${path%/*} ]] || continue
+    [[ ! -e $path || -f $path || -L $path ]] || { dt_error "cannot connect theme target: $path"; return 1; }
+    DT_CONNECT_TARGETS+=("$path") DT_CONNECT_SOURCES+=("$DT_ACTIVE/$name")
+  done
   if [[ -d $HOME/.termux ]]; then
     path=$HOME/.termux/colors.properties
     [[ ! -e $path || -f $path || -L $path ]] || return 1
@@ -131,6 +140,9 @@ dt_apps_reload() {
   if [[ ${KITTY_LISTEN_ON:-} ]] && command -v kitty >/dev/null; then
     dots::progress_start 'Reloading Kitty colors'
     kitty @ --to "$KITTY_LISTEN_ON" set-colors --all --configured "$DT_ACTIVE/kitty.conf" >/dev/null 2>&1 || { dt_error 'Kitty reload failed'; failures=1; }
+  fi
+  if command -v ya >/dev/null && command -v timeout >/dev/null; then
+    timeout 2 ya pub-to 0 dots-theme-changed --str "${XDG_STATE_HOME:-$HOME/.local/state}/dots" >/dev/null 2>&1 || :
   fi
   dots::progress_stop
   (( ! failures )) || printf 'Theme is published; retry app reloads with dots theme refresh.\n' >&2

@@ -71,6 +71,8 @@ _dots_zsh_reload_completions() {
   autoload -Uz compinit
   _dots_compinit || return
   _dots_completion_compat
+  _DOTS_COMPLETION_READY=''
+  (( ! ${+functions[_dots_shell_prompt]} )) || _dots_shell_prompt
   _dots_tool_completions
   # compinit redefines completion widgets; explicitly reconnect fzf-tab.
   (( ${+functions[enable-fzf-tab]} )) && enable-fzf-tab

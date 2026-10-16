@@ -3,7 +3,7 @@
 if [[ $- != *i* || ${DOTS_PLATFORM:-} != termux || -n ${TMUX:-} ||
       -z ${TERMUX_APP__PID:-} ||
       -n ${SSH_CONNECTION:-}${SSH_CLIENT:-}${SSH_TTY:-} ||
-      ${DOTS_TERMUX_AUTOSTART:-1} == 0 || -n ${_DOTS_TERMUX_AUTOSTART_ATTEMPTED:-} ||
+      ${DOTS_TERMUX_AUTOSTART:-${dots_options[DOTS_TERMUX_AUTOSTART]:-1}} == 0 || -n ${_DOTS_TERMUX_AUTOSTART_ATTEMPTED:-} ||
       ! -t 0 || ! -t 1 ]]; then
   return 0
 fi

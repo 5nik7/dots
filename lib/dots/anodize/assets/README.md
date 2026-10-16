@@ -2,7 +2,7 @@
 
 Original PNGs copied without modification from the owner-supplied `anodize-logo-pack` (brand version 1.0, 2026-09-25, concept 02). The separate `anodize-favicons` pack contains the same icon family; desktop/web wrappers and opaque app tiles are not needed for terminal output.
 
-The ASCII files are terminal approximations of the angular symbol with readable lettering; they require no runtime converter. The small inline fallback is embedded in the Python and Bash adapters so a missing asset never removes branding.
+The owner supplied new UTF-8 braille text artwork on 2026-10-16. `horizontal.txt` and `stacked.txt` contain complete layouts; `logo.txt` is the six-row base symbol; `logo-<width>.txt` files are alternate symbol sizes selected by actual width and row count. Their contents and braille spacing are preserved, and they require no runtime converter. `wordmark.txt` and `logo.png` are retained as supplied; the renderer does not use them as additional fallback layouts or replace the original PNG sources. Text assets contain printable ASCII and Unicode braille cells only (one column each); controls, tabs, malformed UTF-8 and other character sets are rejected instead of guessing display widths. The small inline fallback is embedded in the Python and Bash adapters so a missing asset never removes branding.
 
 | Bundled file | Original pack path | SHA-256 |
 | --- | --- | --- |

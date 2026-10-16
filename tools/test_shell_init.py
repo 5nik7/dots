@@ -59,6 +59,12 @@ class InitTests(unittest.TestCase):
         exe = shutil.which('pwsh' if name == 'powershell' else name)
         if not exe:
             self.skipTest(name + ' is unavailable; no native verification')
+        with open(exe, 'rb') as launcher:
+            header = launcher.read(256).split(b'\n', 1)[0]
+        if header.startswith(b'#!'):
+            interpreter = header[2:].strip().split(b' ', 1)[0].decode()
+            if not os.access(interpreter, os.X_OK):
+                self.skipTest(name + ' launcher interpreter is unavailable; no native verification')
         flags = {'bash': ['--noprofile', '--norc'], 'zsh': ['-df'],
                  'fish': ['--no-config'], 'nu': ['--no-config-file'],
                  'xonsh': ['--no-rc', '--shell-type', 'readline'], 'powershell': ['-NoProfile', '-NonInteractive']}[name]
@@ -100,7 +106,7 @@ class InitTests(unittest.TestCase):
             p = self.dots(*args)
             self.assertEqual(p.returncode, 2, (args, p.stderr))
             self.assertEqual(p.stdout, '')
-        (self.repo / 'shells/zsh/init.zsh').unlink()
+        (self.repo / 'lib/dots/shell/init.zsh').unlink()
         for args in [('init',), ('init', 'zsh')]:
             p = self.dots(*args)
             self.assertEqual(p.returncode, 1)
@@ -183,32 +189,24 @@ class InitTests(unittest.TestCase):
 
     def test_bash_interactive_reload(self):
         self.minimal_tools()
-        p = self.shell('bash', self.generated() + '''
-[[ ! ${RED+x} && ! ${BLUE+x} && ! ${BOLD+x} && ! ${RST+x} && ! ${COLORS+x} ]] || exit 13
-RED=red BLUE=blue BOLD=bold RST=reset COLORS=caller
-a=$LS_COLORS
-''' + self.generated() +
-                       '''
-[[ $a == "$LS_COLORS" ]] || exit 9
-[[ $RED == red && $BLUE == blue && $BOLD == bold && $RST == reset && $COLORS == caller ]] || exit 14
-[[ $UTIL == "$DOTS/bin/lib/common.sh" ]] || exit 10
-[[ ${#FG[@]} == 256 && ${#BG[@]} == 256 && ${#COLOR[@]} == 256 ]] || exit 11
-# Common remains authoritative after startup and repeated initialization.
-awk() { return 99; }
-[[ $(upper 'a B') == 'A B' && $(lower 'A b') == 'a b' ]] || exit 12
-type mkcd; alias rl''', interactive=True)
+        p = self.shell('bash', self.generated() + self.generated() + r'''
+[[ $rst == $'\e[0m' && $RST == "$rst" ]] || exit 13
+[[ ! ${FG+x} && ! ${BG+x} && ! ${COLOR+x} ]] || exit 11
+! alias q 2>/dev/null || exit 12
+[[ $PROMPT_COMMAND != *_dots_shell_prompt*'_dots_shell_prompt'* ]]
+''', interactive=True)
         self.assertNotIn('command not found', p.stderr)
 
     def test_fish_interactive_reload_and_native_snippets(self):
         self.minimal_tools()
         source = 'source "$DOTS/shells/fish/conf.d/autopair.fish"\n'
         p = self.shell('fish', source + self.generated('fish') + self.generated('fish') +
-                       '\nfunctions -q d; or exit 9; functions -q _autopair_fish_key_bindings; or exit 10; contains -- "$DOTS/shells/fish/completions" $fish_complete_path; or exit 11', interactive=True)
+                       '\nnot functions -q d; or exit 9; functions -q _autopair_fish_key_bindings; or exit 10; not contains -- "$DOTS/shells/fish/completions" $fish_complete_path; or exit 11', interactive=True)
         self.assertNotIn('Unknown command', p.stderr)
 
     def test_nu_interactive_reload(self):
         p = self.shell('nu', self.generated('nu') + self.generated('nu') + '\nscope aliases | where name == d | length | print', interactive=True)
-        self.assertEqual(p.stdout.strip(), '1')
+        self.assertEqual(p.stdout.strip(), '0')
 
     def test_xonsh_interactive_wrapper(self):
         code = 'source @(' + repr(str(self.repo / 'shells/xonsh/.xonshrc')) + ')\n'

@@ -1,5 +1,5 @@
-# Unified theme CLI. Public theme arguments use selectable full IDs.
-source "$DT_LIB/core.bash"
+# Unified theme CLI. Existing full-ID routes and data-driven family queries.
+source "$DT_LIB/core.bash" || return
 source "$DT_LIB/views.bash"
 dt_error() { dots::error "dots theme: $*"; return 1; }
 # backgrounds.bash also calls this helper with the bg route argument.
@@ -20,10 +20,15 @@ dt_list() {
   printf '\n  %s themes available\n' "$count"
 }
 dt_command() {
-  local action=${1:-help} name key value id dry=0 background=0 native=0
+  local action=${1:-summary} name key value id dry=0 background=0 native=0
   (($# == 0)) || shift
   case $action in
     help) dt_help ;;
+    summary)
+      dt_current_id || return
+      dots::heading "Current theme: $REPLY"
+      dt_load_native "$REPLY" && dt_native_preview || return
+      printf '\nUse theme color NAME, theme set ID, or dots themes list.\n' ;;
     list)
       if (($# == 0)); then dt_list
       elif [[ $# == 1 && $1 == --families ]]; then dt_palette_list families
@@ -46,10 +51,10 @@ dt_command() {
         esac
         shift
       done
-      [[ $id ]] || return 2
+      if [[ ! $id ]]; then dt_current_id || return; id=$REPLY; fi
       dt_find_theme "$id" || { dt_error 'unknown selectable theme ID'; return 1; }
+      if ((native)); then dt_load_native "$id" && dt_native_preview; return; fi
       dt_load "$id" || return
-      if ((native)); then dt_native_preview; return; fi
       dots::heading "$DT_ID ($DT_MODE)"
       if dots::human; then
         while IFS= read -r key; do
@@ -77,7 +82,7 @@ dt_command() {
       ((${#args[@]} >= 1 && ${#args[@]} <= 2)) || return 2
       if [[ ! $id ]]; then dt_current_id || return; id=$REPLY; fi
       dt_find_theme "$id" || { dt_error 'unknown selectable theme ID'; return 1; }
-      dt_load "$id" || return
+      if ((native)); then dt_load_native "$id" || return; else dt_load "$id" || return; fi
       key=${args[0]}
       dt_key "$key" || { dt_error 'invalid color name'; return 1; }
       value=${DT_SEMANTIC[$key]:-${DT_COLORS[$key]:-}}
@@ -87,6 +92,11 @@ dt_command() {
       else dt_value "$key" "${args[1]:-hex}" "$value" && printf '%s\n' "$REPLY"; fi ;;
     init) dt_init "$@" ;;
     set|refresh)
+      if [[ $action == refresh && $# == 1 && $1 == --commands-only ]]; then
+        source "$DT_LIB/command-state.bash"
+        dt_commands_refresh
+        return
+      fi
       if [[ $action == refresh ]]; then (($# == 0)) || return 2; dt_current_id || return; id=$REPLY; export DOTS_THEME_REFRESH=1
       else (($# >= 1)) || return 2; id=$1; shift; fi
       while (($#)); do
@@ -122,7 +132,7 @@ dt_command() {
       dt_switcher ;;
     install|update|remove) source "$DT_LIB/install.bash"; dt_git_theme "$action" "$@" ;;
     bg) source "$DT_LIB/backgrounds.bash"; dt_bg "$@" ;;
-    *) return 2 ;;
+    *) source "$DT_LIB/palette-cli.bash"; dt_palette_command "$action" "$@" ;;
   esac
 }
 if dt_command "$@"; then return 0

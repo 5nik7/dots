@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dots Shell Integration"
+  short_description: "Maintain native Dots shell integration"
+  default_prompt: "Use $dots-shell-integration to handle the requested repository change and its focused verification."

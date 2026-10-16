@@ -14,7 +14,10 @@ if ($Arguments[0] -ne 'init' -or $Arguments.Count -gt 2 -or
 }
 $root = if ($env:DOTS) { $env:DOTS } else { Split-Path -Parent $PSScriptRoot }
 $root = [IO.Path]::GetFullPath($root)
-$loader = Join-Path $root 'shells/powershell/init.ps1'
+. (Join-Path $root 'lib/dots/shell/path.ps1')
+try { $root = Resolve-DotsStartupPath $root }
+finally { Remove-Item Function:\Resolve-DotsStartupPath }
+$loader = Join-Path $root 'lib/dots/shell/init.ps1'
 if (-not (Test-Path -LiteralPath $loader -PathType Leaf)) {
     [Console]::Error.WriteLine('dots: cannot read PowerShell loader: ' + $loader)
     exit 1
@@ -22,4 +25,4 @@ if (-not (Test-Path -LiteralPath $loader -PathType Leaf)) {
 try { $stream = [IO.File]::OpenRead($loader); $stream.Dispose() }
 catch { [Console]::Error.WriteLine('dots: cannot read PowerShell loader: ' + $loader); exit 1 }
 "`$env:DOTS = '" + $root.Replace("'", "''") + "'"
-". (Join-Path `$env:DOTS 'shells/powershell/init.ps1')"
+". (Join-Path `$env:DOTS 'lib/dots/shell/init.ps1')"

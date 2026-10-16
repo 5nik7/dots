@@ -10,16 +10,4 @@ if not test -r "$_dots_fish_directory/environment.fish"; or not test -r "$_dots_
     return 1
 end
 set -gx DOTS (path resolve -- "$_dots_fish_directory/../..")
-set -gx DOTBIN "$DOTS/bin"
-set -gx DOTSCRIPTS "$DOTS/scripts"
-set -gx DOTFILES "$DOTS/config"
-set -gx DOTCONFIG "$DOTFILES"
-set -gx DOTSHHHH "$DOTS/secrets"
-set -gx SHELLS "$DOTS/shells"
-set -gx ZSH "$SHELLS/zsh"
-set -gx PWSH "$SHELLS/powershell"
-for directory in "$DOTBIN" "$DOTSCRIPTS"
-    if test -d "$directory"; and not contains -- "$directory" $PATH
-        set -gx PATH "$directory" $PATH
-    end
-end
+source "$DOTS/lib/dots/shell/init.fish"

@@ -25,6 +25,7 @@ class ZshTests(unittest.TestCase):
         for name in ('bin/lib/common.sh', 'bin/dots', 'shells/environment.sh'):
             (self.repo / name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(REPO / name, self.repo / name)
+        shutil.copytree(REPO / 'lib/dots/shell', self.repo / 'lib/dots/shell')
         self.env = {'HOME': str(self.root), 'ZDOTDIR': str(self.root),
                     'DOTS': str(self.repo), 'XDG_CACHE_HOME': str(self.root / 'cache'),
                     'XDG_CONFIG_HOME': str(self.root / 'config'),
@@ -315,23 +316,19 @@ _dots_completion_plugins
 ''')
 
     def test_theme_switch_and_repeat_preserve_palette_and_fzf_options(self):
-        shutil.copytree(REPO / 'lib/dots', self.repo / 'lib/dots')
+        shutil.copytree(REPO / 'lib/dots', self.repo / 'lib/dots', dirs_exist_ok=True)
         for command in (REPO / 'bin').glob('dots-theme*'):
             shutil.copy2(command, self.repo / 'bin' / command.name)
         shutil.copytree(REPO / 'themes/catppuccin/flavors', self.repo / 'themes/catppuccin/flavors')
         shutil.copy2(REPO / 'themes/catppuccin/theme.toml', self.repo / 'themes/catppuccin/theme.toml')
-        (self.repo / 'themes/bin').mkdir()
-        shutil.copy2(REPO / 'themes/bin/theme', self.repo / 'themes/bin/theme')
         src = self.repo / 'themes/catppuccin/src'
         src.mkdir(parents=True)
         (src / 'fzf.zsh').write_text('FZF_DEFAULT_OPTS+=" --color=$FLAVOR"\n')
-        (self.repo / 'themes/.default').write_text('catppuccin-mocha\n')
         self.shell('''source "$DOTS/bin/lib/common.sh"
 typeset -A themes
 themes[root]="$DOTS/themes"
-source "$DOTS/themes/bin/theme"
+source "$DOTS/lib/dots/themes/shell.bash"
 source "$DOTS/shells/zsh/fzf.zsh"
-current_theme() { print -r -- "typeset -g PALETTE_FLAVOR=$FLAVOR"; }
 _dots_vivid_colors() { REPLY="colors:$1"; }
 ok() { :; }
 set_theme
@@ -341,7 +338,7 @@ set_theme
 [[ $FZF_DEFAULT_OPTS == $before ]] || exit 2
 set_theme catppuccin-latte
 [[ $catppuccin_flavor == latte && $LS_COLORS == colors:catppuccin-latte ]] || exit 3
-[[ $FZF_DEFAULT_OPTS != *mocha* && $FZF_DEFAULT_OPTS == *latte* ]]
+[[ $FZF_DEFAULT_OPTS != *--color=mocha* && $FZF_DEFAULT_OPTS != *--color=latte* && $FZF_DEFAULT_OPTS == *${dots_roles[accent]}* && $FZF_DEFAULT_OPTS != $before ]]
 ''')
 
     def test_syntax(self):
