@@ -55,16 +55,10 @@ dt_command() {
       dt_find_theme "$id" || { dt_error 'unknown selectable theme ID'; return 1; }
       if ((native)); then dt_load_native "$id" && dt_native_preview; return; fi
       dt_load "$id" || return
-      dots::heading "$DT_ID ($DT_MODE)"
       if dots::human; then
-        while IFS= read -r key; do
-          value=${DT_SEMANTIC[$key]}
-          dots::style
-          printf '  %s%-24s%s ' "$DOTS_UI_BLUE" "$key" "$DOTS_UI_RESET"
-          dots::swatch "$value"
-          printf '%s\n' "$value"
-        done < <(printf '%s\n' "${!DT_SEMANTIC[@]}" | LC_ALL=C sort)
+        dt_json | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/file-colors.py" _show "$DT_THEME_DIR"
       else
+        dots::heading "$DT_ID ($DT_MODE)"
         for key in "${!DT_SEMANTIC[@]}"; do printf '%s\t%s\n' "$key" "${DT_SEMANTIC[$key]}"; done | LC_ALL=C sort
       fi ;;
     color)

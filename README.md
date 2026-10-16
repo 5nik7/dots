@@ -92,7 +92,9 @@ The repository startup files resolve their actual location through symlinks and 
 Dots-specific settings and runtime variables now belong to `lib/dots/shell/`.
 Edit `${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env`, then reload your shell
 or initialize again. `dots init` loads only Dots integration; repository startup
-files separately load personal preferences. `dots env` explains resolved values.
+files separately load personal preferences. `dots env` groups the current theme,
+settings and paths into a readable terminal view with colored labels and value
+sources. `dots env NAME` remains a plain scalar and `dots env --json` returns data.
 See [settings and native variable examples](docs/shell-environment.md).
 The old env files, repository theme-selection markers and `themes/bin` wrappers
 have been removed. Use `dots theme current` instead of `current_theme`; set the
@@ -477,6 +479,12 @@ custom hook effects are not sandboxed or automatically reversible. See the
 recovery, JSON output, and desktop limitations. Downloaded themes remain data-only.
 
 ## File colors and live Yazi themes
+
+`dots theme show catppuccin-mocha` previews all resolved colors and file styles
+in a terminal. `theme colors` shows the published colors using the same grouped
+tables and swatches; `theme colors --theme catppuccin-mocha` previews saved
+configuration. File type, MIME and extension listings use readable style tables,
+including a plain layout when color is disabled.
 
 `theme colors type dir hex` queries a directory color. Use
 `theme colors set type dir --fg blue` to save a shared rule and `theme refresh`

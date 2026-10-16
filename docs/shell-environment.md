@@ -85,6 +85,20 @@ the parent shell. It does not enumerate the whole environment, read secrets, or
 pretend to inspect parent-local arrays. JSON has `version: 1` and a `values`
 object whose entries contain `value` and `source` strings.
 
+In a terminal, `dots env` groups the current theme, settings and paths with shared
+Dots colors. Boolean settings retain `0`/`1` alongside disabled/enabled labels;
+each value includes its source. Short rows align, while long values and narrow
+terminals use stacked fields and wrapped complete paths. Display-only control
+characters are escaped. Non-ASCII widths are conservatively budgeted without a
+new runtime dependency; byte-oriented locales may show escaped Unicode.
+
+Use `dots --color=none env` for the same human layout without styling, or
+`dots --color=always env` to force colored human output when redirected. Automatic
+color honors `NO_COLOR` and the destination terminal. An ordinary unforced pipe
+retains the original `NAME=value [source]` lines. Scalar and JSON queries bypass
+all decoration and preserve their exact values. The view uses the terminal palette
+and does not load a theme or change shell settings.
+
 ## Theme state and native adapters
 
 Selection precedence is DOTS_THEME_SELECTION, the published generation, then

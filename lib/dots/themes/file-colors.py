@@ -313,7 +313,7 @@ def write_snapshot(doc, out):
     (out / 'ls_colors').write_text(doc['ls_colors'] + '\n')
 
 
-def selected(theme=None, configured=False):
+def selected(theme=None, configured=False, generate_rules=True):
     _, state = roots()
     if theme is None and not configured:
         path = state / 'current/theme/colors.json'
@@ -324,7 +324,13 @@ def selected(theme=None, configured=False):
     identity = theme or query('current').strip()
     palette = json.loads(query(identity))
     directory = query('dir', identity).strip()
-    return generate(resolve(palette, directory))
+    doc = resolve(palette, directory)
+    return generate(doc) if generate_rules else doc
+
+
+def selection_source(theme=None, configured=False):
+    _, state = roots()
+    return 'Published snapshot' if theme is None and not configured and (state / 'current/theme/colors.json').exists() else 'Configured sources'
 
 
 def suffix_match(entries, name):
@@ -398,6 +404,7 @@ def toml_dump(data):
 
 
 def edit(args):
+    from presentation import ColorView
     config, state = roots()
     if args.theme and not IDENT.fullmatch(args.theme): raise ValueError('invalid theme ID')
     target = config / 'file-colors' / args.theme / 'rules.toml' if args.theme else config / 'file-colors.toml'
@@ -419,18 +426,19 @@ def edit(args):
     content = toml_dump(data).encode()
     if args.dry_run:
         print(json.dumps(dict(status='preview', target=str(target), rules=data, resolved=doc['styles'][args.group].get(args.key)), sort_keys=True)); return
+    view = ColorView(doc['colors'])
     if target.exists() and regular(target) == content:
-        print('File styles unchanged.')
+        view.title('File styles unchanged.')
     else:
         with tempfile.TemporaryDirectory(prefix='dots-color-edit-') as tmp:
             stage = Path(tmp) / 'rules.toml'; stage.write_bytes(content)
             receipt = Store(state).apply('theme-file-colors', [{'path': str(target), 'source': str(stage)}], {str(target): before}, retain=True)
-        print('Saved file styles: ' + str(target))
-        print('Journal: ' + str(receipt.get('id', receipt.get('transaction', 'dots files history'))))
+        view.title('Saved file styles')
+        view.fields([('Target', target), ('Journal', receipt.get('id', receipt.get('transaction', 'dots files history')))])
     if args.apply:
         p = subprocess.run([str(ROOT / 'bin/dots-theme-refresh')])
         if p.returncode: raise ValueError('styles saved but not published; retry theme refresh')
-    else: print('Run theme refresh to publish saved styles.')
+    else: view.line('Run theme refresh to publish saved styles.')
 
 
 def parser():
@@ -454,6 +462,10 @@ def parser():
 
 
 def main(argv):
+    if argv and argv[0] == '_show':
+        from presentation import render_colors
+        render_colors(resolve(json.load(sys.stdin), argv[1]), 'Configured sources')
+        return
     if argv and argv[0] == '_complete':
         words = argv[1:]
         action = words[0] if words else ''
@@ -496,7 +508,7 @@ def main(argv):
         raw = sys.stdin.read(LIMIT + 1) if args.stdin else os.environ.get('LS_COLORS', '')
         result = parse_ls(raw)
     else:
-        doc = selected(args.theme, args.configured)
+        doc = selected(args.theme, args.configured, generate_rules=args.action in ('export', 'match'))
         if args.action == 'export':
             print('return ' + lua(doc) if args.format == 'lua' else doc['ls_colors'] if args.format == 'ls-colors' else json.dumps(doc, sort_keys=True)); return
         if args.action in GROUPS:
@@ -522,10 +534,17 @@ def main(argv):
         else: result = doc['colors']
     if args.json: print(json.dumps(result, sort_keys=True))
     else:
-        body = '\n'.join(f'{key:24} {json.dumps(value, sort_keys=True) if isinstance(value,(dict,list)) else value}' for key,value in result.items())
-        if args.action == 'parse': print(body)
+        from presentation import render_colors, render_parsed, color_enabled
+        if args.action == 'parse':
+            colors = None
+            if color_enabled():
+                # Parsing arbitrary LS_COLORS still works without an installed theme.
+                try: colors = json.loads(query(args.theme or query('current').strip()))['colors']
+                except (ValueError, OSError, KeyError, subprocess.TimeoutExpired): pass
+            render_parsed(result, colors)
         else:
-            subprocess.run([sys.executable, str(Path(__file__).with_name('presentation.py')), '--theme', doc['id']], input=body, text=True, check=True)
+            context = {'Path': args.path} if args.action == 'match' else {'Requested rule': args.key} if args.action in GROUPS and args.key else None
+            render_colors(doc, selection_source(args.theme, args.configured), args.action, result, context)
 
 
 if __name__ == '__main__':

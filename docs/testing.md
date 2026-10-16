@@ -832,11 +832,21 @@ execution of the POSIX wrappers is not claimed.
 
 Run `python3 -B tools/test_shell_environment.py -v` for isolated settings, reload, diagnostic and native adapter contracts. Use small sequential cases on resource-constrained Termux hosts. Tests source library integration without personal rc files; unavailable native runtimes must be reported separately.
 
+Environment presentation cases use owned native PTYs at 40/80/120 columns and
+cover automatic/plain/forced colors, value sources, long Unicode paths, inert
+control-character display, unchanged redirected lines and undecorated scalar/JSON
+queries. They verify inspection creates no state or cache. Run the Bash dispatcher
+suite as well when shared UI helpers change.
+
 ## File styles and theme panels
 
 `python3 -B tools/test_file_colors.py -v` checks saved/published boundaries, journaled
 rules, full styles, MIME/suffix precedence, inert parsing, family panels and raw
-output. Run sequentially with the existing theme publication and shell-environment
+output. It also compares full `show`/`colors` overviews, preserves native scope,
+checks JSON/scalar/export bytes under forced color, and renders dark/light full
+overviews through owned native PTYs at 40/80/120 columns. Configured overviews
+are tested with a failing Vivid stub to prove generation is unnecessary. Run
+sequentially with the existing theme publication and shell-environment
 suites. Standalone dots.yazi adds `python3 -B test-theme-native.py` for private DDS
 notification, dark/light publication, N/V/U mode redraws, narrow layouts and
 last-good snapshot recovery. Its ordinary native runner accepts `--config-dir`

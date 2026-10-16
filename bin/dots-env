@@ -59,5 +59,11 @@ if ((json)); then
   printf '}}\n'
 elif [[ $name ]]; then printf '%s\n' "${values[$name]}"
 else
-  for key in "${keys[@]}"; do printf '%s=%s [%s]\n' "$key" "${values[$key]}" "${origins[$key]}"; done
+  source "$DOTS/lib/dots/ui.bash"
+  if dots::human; then
+    source "$DOTS/lib/dots/shell/env-view.bash"
+    _dots_env_render
+  else
+    for key in "${keys[@]}"; do printf '%s=%s [%s]\n' "$key" "${values[$key]}" "${origins[$key]}"; done
+  fi
 fi

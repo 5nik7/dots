@@ -71,11 +71,153 @@ def readable(color, bg, fallback):
     return color if (b + .05) / (a + .05) >= 4.5 else fallback
 
 
-def main():
-    p = argparse.ArgumentParser(); p.add_argument('--theme', required=True); p.add_argument('--logo'); p.add_argument('--palette', action='store_true')
-    args = p.parse_args()
+def color_enabled():
     mode = os.environ.get('DOTS_COLOR', 'auto')
-    colored = mode == 'always' or mode == 'auto' and sys.stdout.isatty() and os.environ.get('TERM','dumb') != 'dumb' and not os.environ.get('NO_COLOR')
+    return mode == 'always' or mode == 'auto' and sys.stdout.isatty() and os.environ.get('TERM', 'dumb') != 'dumb' and not os.environ.get('NO_COLOR')
+
+
+def display(value):
+    """One inert table cell; data APIs never pass through this function."""
+    return clean(str(value)).replace('\n', '\\n').replace('\t', '\\t')
+
+
+class ColorView:
+    """Shared palette/style tables, sized in terminal cells, with plain fallbacks."""
+
+    def __init__(self, colors=None):
+        colors = colors or {}
+        self.columns = max(12, min(120, shutil.get_terminal_size((80, 24)).columns))
+        self.available = self.columns - 4
+        self.base = self.accent = self.normal = self.reset = ''
+        fg, bg = colors.get('foreground'), colors.get('background')
+        if color_enabled() and all(isinstance(c, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', c) for c in (fg, bg)):
+            fg = readable(fg, bg, '#000000' if luminance(bg) > .179 else '#ffffff')
+            self.base = escape(bg, True)
+            self.normal = escape(fg)
+            self.accent = escape(readable(colors.get('accent', fg), bg, fg))
+            self.reset = '\x1b[0m'
+
+    def line(self, text='', heading=False, indent=0):
+        # Wrap by visible cells, including wide/combining Unicode and SGR swatches.
+        prefix = self.base + (self.accent + '\x1b[1m' if heading and self.base else self.normal)
+        room = max(1, self.available - indent)
+        parts, part, cells = [], '', 0
+        for token in re.findall(r'\x1b\[[0-9;:]*m|[^\x1b]', text):
+            size = width(token)
+            if cells + size > room and cells:
+                parts.append(part); part, cells = '', 0
+            part += token; cells += size
+        parts.append(part)
+        for part in parts:
+            content = ' ' * indent + part
+            padding = ' ' * max(0, self.available - width(content)) if self.base else ''
+            print(prefix + '  ' + content + padding + ('  ' if self.base else '') + self.reset)
+
+    def title(self, title, source=None):
+        self.line(display(title), heading=True)
+        if source:
+            self.line('Source: ' + display(source))
+
+    def section(self, title, count):
+        self.line()
+        self.line(f'{title} ({count})', heading=True)
+
+    def color(self, value):
+        if value is None:
+            return 'unset'
+        label = f'index {value}' if isinstance(value, int) else display(value)
+        code = ''
+        if self.base:
+            if isinstance(value, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', value):
+                code = escape(value, True)
+            elif isinstance(value, int) and 0 <= value <= 255:
+                code = f'\x1b[48;5;{value}m'
+        return code + '  ' + self.base + self.normal + ' ' + label if code else label
+
+    def table(self, headers, rows):
+        if not rows:
+            self.line('No entries.')
+            return
+        sizes = [max(width(row[i]) for row in [headers, *rows]) for i in range(len(headers))]
+        if sum(sizes) + 2 * (len(sizes) - 1) <= self.available:
+            for row in [headers, *rows]:
+                text = '  '.join(cell + ' ' * (size - width(cell)) for cell, size in zip(row, sizes)).rstrip()
+                self.line(text, heading=row is headers)
+        else:
+            for row in rows:
+                self.line(row[0], heading=True)
+                for name, value in zip(headers[1:], row[1:]):
+                    self.line(name + ': ' + value, indent=2)
+
+    def palette(self, colors, native=False):
+        terminal = {f'color{i}' for i in range(16)}
+        groups = [('Native colors', sorted(colors))] if native else [
+            ('Named colors', sorted(k for k, v in colors.items() if isinstance(v, str) and k not in terminal)),
+            ('Terminal colors', [f'color{i}' for i in range(16) if f'color{i}' in colors])]
+        for title, keys in groups:
+            self.section(title, len(keys))
+            self.table(['Name', 'Color'], [[display(k), self.color(colors[k])] for k in keys])
+
+    def styles(self, title, entries, sequences=None):
+        # Lists preserve parser suffix priority, including duplicate rules.
+        self.section(title, len(entries))
+        rows = []
+        for index, (key, style) in enumerate(entries):
+            attrs = ', '.join(display(k) + ('=false' if v is False else '')
+                              for k, v in sorted(style.items()) if k not in ('fg', 'bg')) or 'none'
+            rows.append([display(key), self.color(style.get('fg')), self.color(style.get('bg')), attrs])
+            if sequences is not None:
+                rows[-1].append(display(sequences[index]) or '(empty)')
+        self.table(['Name', 'Foreground', 'Background', 'Attributes'] + (['Sequence'] if sequences is not None else []), rows)
+
+    def fields(self, fields):
+        for key, value in fields:
+            self.line(display(key) + ': ' + display(value))
+
+
+STYLE_TITLES = {'type': 'File types', 'mime': 'MIME rules', 'extension': 'Extension rules'}
+
+
+def render_colors(doc, source, action=None, result=None, context=None):
+    view = ColorView(doc['colors'])
+    view.title(f"{doc['id']} ({doc['mode']})", source)
+    if action is None:
+        view.palette(doc['colors'])
+        for group, title in STYLE_TITLES.items():
+            view.styles(title, sorted(doc['styles'][group].items()))
+    elif action in STYLE_TITLES and not context:
+        view.styles(STYLE_TITLES[action], sorted(result.items()))
+    else:
+        if context:
+            view.fields(context.items())
+        if result.get('group'):
+            view.fields([('Group', result['group'])])
+        view.styles('Style', [(result['key'], result['style'])])
+        source = result.get('source', {})
+        if isinstance(source, dict):
+            view.section('Rule sources', len(source))
+            view.table(['Field', 'Source'], [[display(k), display(v)] for k, v in sorted(source.items())])
+        elif source:
+            view.fields([('Rule source', source)])
+
+
+def render_parsed(result, colors=None):
+    view = ColorView(colors)
+    view.title('LS_COLORS')
+    for title, entries in [('Filesystem rules', list(result['types'].values())), ('Suffix rules', result['suffixes'])]:
+        view.styles(title, [(entry['key'], entry['style']) for entry in entries], [entry['sequence'] for entry in entries])
+    view.section('Invalid entries', len(result['invalid']))
+    if result['invalid']:
+        for error in result['invalid']:
+            view.line(display(error))
+    else:
+        view.line('None.')
+
+
+def main():
+    p = argparse.ArgumentParser(); p.add_argument('--theme', required=True); p.add_argument('--logo'); p.add_argument('--palette', action='store_true'); p.add_argument('--native-table', action='store_true')
+    args = p.parse_args()
+    colored = color_enabled()
     text = sys.stdin.read()
     logo = ''
     if args.logo and not Path(args.logo).is_symlink():
@@ -90,7 +232,13 @@ def main():
             if result.returncode: raise ValueError(result.stderr.strip())
             palette = json.loads(result.stdout)['colors']
         except (ValueError,OSError,subprocess.TimeoutExpired) as e:
-            print('dots theme: palette unavailable; showing plain help text: ' + str(e), file=sys.stderr)
+            print('dots theme: palette unavailable; showing plain output: ' + str(e), file=sys.stderr)
+    if args.native_table:
+        data = json.loads(text)
+        view = ColorView(palette)
+        view.title(data['title'], 'Native palette')
+        view.palette(data['colors'], native=True)
+        return
     if not palette:
         if logo:
             if colored and authored: print_authored_logo(logo)

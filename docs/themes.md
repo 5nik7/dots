@@ -485,6 +485,12 @@ work. Bare `dots themes` shows collection help without opening a picker.
 Use `theme` for a current-theme summary, `theme current` for the plain full ID,
 and `theme color`, `show`, `set`, `refresh`, or `bg` for current-theme operations.
 `theme show` defaults to the selected theme; an explicit ID previews another.
+Its human view shows all resolved named and terminal colors, file types, MIME
+rules and configured extension rules using the shared `theme colors` tables.
+The source is labeled because `show` reads configured sources while `colors`
+defaults to the published snapshot. Native previews retain their native-only
+scope. See [human color views](file-colors.md#human-color-views) for details and
+redirected-output compatibility.
 `theme list` and `dots themes list` list the same selectable IDs; `--families`
 and `--flavors FAMILY` provide the corresponding filters. Full IDs remain the
 selection interface. Family commands retain native flavor queries and explicit

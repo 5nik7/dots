@@ -191,9 +191,13 @@ and native shell completion coverage alongside the existing theme suites.
 ## Dots shell environment
 
 For Dots environment changes, run `python3 -B tools/test_shell_environment.py -v` and affected shell-init/theme tests in small sequential batches. Do not use the real home or personal shell startup to validate integration-only hooks.
+For `dots env` presentation, retain the owned PTY, control-character and exact
+scalar/JSON/redirected-output cases; run the dispatcher suite for shared UI changes.
 
 For file-style/publication and family presentation changes, run the focused
 `tools/test_file_colors.py` suite plus publication and shell-environment cases.
+Human color-view changes also retain that suite's owned native PTY width checks
+and forced-color scalar/JSON/export compatibility assertions.
 Yazi theme work additionally requires the plugin's `test-theme-native.py` with
 private DDS/runtime roots. Keep the standalone fixture runner independent of the
 main checkout and synchronize shared plugin sources deliberately.

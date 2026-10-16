@@ -625,6 +625,11 @@ flags, defaults, collision handling and logo behavior.
 
 `dots env [NAME] [--json]` reports resolved Dots settings and paths with provenance.
 A named query is a plain scalar; JSON has version 1 and values/source records.
+The human view groups current theme, settings and paths, with semantic colors,
+boolean explanations and source labels. Narrow terminals stack fields and wrap
+complete values. Unforced redirected listings retain `NAME=value [source]`;
+color controls never decorate named scalar or JSON results. See
+[environment views](shell-environment.md) for presentation details.
 `theme` and `dots theme` without arguments show the selected palette; `current`
 remains scalar. `dots themes` provides collection help and `list`, `switcher`,
 `install`, `update`, `remove`, and `plugins` routes. Existing singular routes
@@ -643,6 +648,14 @@ See [file color syntax and data contracts](file-colors.md). Static metadata and
 Bash/Zsh/Fish completion include operations, bundled/shared style keys, query
 formats and attribute flags. The `file-color-key` metadata provider reads those
 rule keys without executing a theme-family extension.
+
+Human `theme show ID` and `theme colors` use consistent, counted palette and file
+style sections, with swatches and narrow-terminal layouts. Group listings,
+`--style`, `match` and `parse` use tables or labeled details instead of nested
+dictionary dumps. Native family previews keep their original palette scope.
+Configured/published sources are labeled. Scalar, JSON and export formats and
+unforced redirected `show` output remain unchanged; see
+[human color views](file-colors.md#human-color-views).
 
 Presentation adds `--color=none` as an alias for `never`. The global flag still
 precedes Dots routes; family commands also accept it anywhere in their arguments.

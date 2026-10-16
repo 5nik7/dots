@@ -13,12 +13,15 @@ dots::style() {
   [[ -z ${DOTS_PROGRESS_FD:-} ]] || dots::progress_stop
   local fd=${1:-1} mode=${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}} icons=${DOTS_ICONS:-${dots_options[DOTS_ICONS]:-auto}}
   DOTS_UI_RESET='' DOTS_UI_BOLD='' DOTS_UI_BLUE='' DOTS_UI_GREEN=''
-  DOTS_UI_YELLOW='' DOTS_UI_RED='' DOTS_UI_CYAN=''
+  DOTS_UI_YELLOW='' DOTS_UI_RED='' DOTS_UI_CYAN='' DOTS_UI_MAGENTA='' DOTS_UI_DIM=''
   DOTS_UI_INFO='[i]' DOTS_UI_OK='[+]' DOTS_UI_WARN='[!]' DOTS_UI_ERROR='[x]'
   if [[ $mode == always ]] || [[ $mode == auto && -t $fd && ${TERM:-dumb} != dumb && -z ${NO_COLOR:-} ]]; then
     DOTS_UI_RESET=$'\e[0m' DOTS_UI_BOLD=$'\e[1m'
     DOTS_UI_BLUE=$'\e[94m' DOTS_UI_CYAN=$'\e[96m' DOTS_UI_GREEN=$'\e[92m'
     DOTS_UI_YELLOW=$'\e[93m' DOTS_UI_RED=$'\e[91m'
+    # Shared tokens consumed by command-specific library renderers.
+    # shellcheck disable=SC2034
+    DOTS_UI_MAGENTA=$'\e[95m' DOTS_UI_DIM=$'\e[2m'
   fi
   if [[ $icons == always ]] || [[ $icons == auto && -t $fd && ${TERM:-dumb} != dumb ]]; then
     DOTS_UI_INFO='󰋽' DOTS_UI_OK='' DOTS_UI_WARN='' DOTS_UI_ERROR=''

@@ -2,6 +2,7 @@
 """Small native integration cases; never load the owner's shell configuration."""
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -38,6 +39,118 @@ class ShellEnvironment(unittest.TestCase):
             flags += ['-i']
         return subprocess.run([exe, *flags, '-c', script], cwd=self.home, env=self.env,
                               text=True, capture_output=True, timeout=15)
+
+    def env_command(self, *args, env=None):
+        result = subprocess.run([str(REPO / 'bin/dots'), *args], env=env or self.env,
+                                cwd=self.home, text=True, capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def env_terminal(self, columns, env):
+        import errno
+        import fcntl
+        import pty
+        import select
+        import struct
+        import termios
+        import time
+        master, slave = pty.openpty()
+        try:
+            fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, columns, 0, 0))
+            with subprocess.Popen([str(REPO / 'bin/dots'), 'env'], env=env, cwd=self.home,
+                                  stdout=slave, stderr=subprocess.PIPE) as process:
+                os.close(slave); slave = None
+                output = b''; deadline = time.monotonic() + 15
+                while True:
+                    if not select.select([master], [], [], max(0, deadline - time.monotonic()))[0]:
+                        process.kill(); process.communicate()
+                        self.fail('Timed out waiting for dots env PTY')
+                    try: chunk = os.read(master, 65536)
+                    except OSError as error:
+                        if error.errno == errno.EIO: break
+                        raise
+                    if not chunk: break
+                    output += chunk
+                _, error = process.communicate(timeout=15)
+                self.assertEqual(process.returncode, 0, error)
+                return output.decode().replace('\r\n', '\n')
+        finally:
+            os.close(master)
+            if slave is not None: os.close(slave)
+
+    def test_environment_presentation_and_data_contracts(self):
+        data = json.loads(self.env_command('env', '--json'))
+        self.assertEqual(data['version'], 1)
+        expected = ''.join(f"{key}={entry['value']} [{entry['source']}]\n" for key, entry in data['values'].items())
+        self.assertEqual(self.env_command('env'), expected)
+        forced = {**self.env, 'DOTS_COLOR':'always', 'DOTS_ICONS':'always', 'COLUMNS':'120', 'PRIVATE_SENTINEL':'not-for-display'}
+        output = self.env_command('env', env=forced)
+        for heading in ('Dots environment', 'Current theme', 'Settings', 'Paths'):
+            self.assertIn(heading, output)
+        self.assertIn('0 (disabled)', output)
+        self.assertIn('1 (enabled)', output)
+        self.assertIn('\x1b[95m', output)
+        self.assertIn('\x1b[2m', output)
+        self.assertNotIn('not-for-display', output)
+        raw = self.env_command('env', '--json', env=forced)
+        self.assertNotIn('\x1b', raw)
+        forced_data = json.loads(raw)
+        for key, entry in forced_data['values'].items():
+            self.assertEqual(self.env_command('env',key,env=forced), entry['value'] + '\n')
+            if key not in ('DOTS_COLOR', 'DOTS_ICONS'):
+                self.assertEqual(entry, data['values'][key])
+        one = json.loads(self.env_command('env','DOTS_THEME_DEFAULT','--json',env=forced))
+        self.assertEqual(one, {'version':1, 'values':{'DOTS_THEME_DEFAULT':data['values']['DOTS_THEME_DEFAULT']}})
+        for controls in ({'DOTS_COLOR':'never'}, {'DOTS_COLOR':'auto','NO_COLOR':'1'}, {'DOTS_COLOR':'auto','TERM':'dumb'}):
+            plain = self.env_command('env',env={**forced,**controls})
+            self.assertNotIn('\x1b', plain)
+            self.assertIn('Dots environment', plain)
+        self.assertNotIn('\x1b', self.env_command('--color=none','env',env=forced))
+        self.assertIn('\x1b', self.env_command('--color=always','env',env={**forced,'NO_COLOR':'1'}))
+        invalid = subprocess.run([str(REPO/'bin/dots'),'env','UNKNOWN'],env=forced,text=True,capture_output=True)
+        self.assertEqual(invalid.returncode, 2)
+        self.assertEqual(invalid.stdout, '')
+        self.assertIn('unknown name', invalid.stderr)
+        self.assertFalse((self.home/'state').exists())
+        self.assertFalse((self.home/'cache').exists())
+
+    def test_environment_terminal_widths_and_sources(self):
+        import unicodedata
+        env = {**self.env, 'TERM':'xterm-256color', 'DOTS_COLOR':'auto', 'DOTS_THEME_DEFAULT':'nord'}
+        for columns in (40, 80, 120):
+            for controls in ({}, {'NO_COLOR':'1'}):
+                with self.subTest(columns=columns, controls=controls):
+                    output = self.env_terminal(columns, {**env,**controls})
+                    self.assertEqual('\x1b' in output, not controls)
+                    plain = re.sub(r'\x1b\[[0-9;]*m', '', output)
+                    for line in plain.splitlines():
+                        self.assertLessEqual(sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in 'WF' else 1 for c in line), columns)
+                    for source in ('default', 'config', 'environment', 'resolved', 'checkout'):
+                        self.assertIn(source, plain)
+                    self.assertIn('ü', plain)
+                    self.assertIn('Dots environment', plain)
+        published = self.home/'state/dots/current/theme/id'
+        published.parent.mkdir(parents=True)
+        published.write_text('tokyonight-day\n')
+        plain = self.env_terminal(80, {**env,'DOTS_COLOR':'never'})
+        self.assertIn('tokyonight-day', plain)
+        self.assertIn('[published]', plain)
+
+    def test_environment_long_values_and_safe_display(self):
+        state_root = str(self.home / ('界e\u0301' * 30))
+        env = {**self.env, 'XDG_STATE_HOME':state_root, 'DOTS_ICONS':'always', 'COLUMNS':'40'}
+        output = self.env_command('env',env=env)
+        lines = output.partition('  DOTS_STATE_DIR\n')[2].partition('    Source: resolved')[0]
+        self.assertEqual(''.join(line[4:] for line in lines.splitlines()), state_root + '/dots')
+        env['XDG_STATE_HOME'] = str(self.home) + '/bad\x1b[2J\n\x9bcontrol'
+        output = self.env_command('env',env=env)
+        self.assertNotIn('\x1b', output)
+        self.assertNotIn('\x9b', output)
+        self.assertIn('\\u001b', output)
+        self.assertIn('\\u009b', output)
+        raw = self.env_command('env','DOTS_STATE_DIR',env=env)
+        self.assertEqual(raw, env['XDG_STATE_HOME'] + '/dots\n')
+        self.assertEqual(json.loads(self.env_command('env','--json',env=env))['values']['DOTS_STATE_DIR']['value'], raw[:-1])
 
     def test_native_config_and_integration_only(self):
         scripts = {

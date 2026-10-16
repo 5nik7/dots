@@ -52,7 +52,9 @@ The Yazi `init.lua` owns personal options, while its keymap and fetcher rules ad
 portable palette data, and prompt refresh. `shells/` owns personal preferences
 and minimal native startup wrappers. `bin/dots.ps1` remains a bounded native
 PowerShell generator. `dots env` reports resolved Dots values without inspecting
-private shell state. See [shell environment](shell-environment.md).
+private shell state. Its human layout lives in `lib/dots/shell/env-view.bash` and
+uses the shared Bash UI helpers; scalar, JSON and ordinary redirected output
+bypass that renderer. See [shell environment](shell-environment.md).
 
 `bin/lib/common.sh` owns shared sourceable Bash/Zsh utility, logging, formatting, spinner and color-array helpers. Loading only defines helpers; startup no longer allocates the legacy 256-color arrays. The former `bin/colors.env` and its startup-created named globals are removed. Human helpers obtain styles lazily from the renderer; caller-owned variables remain untouched. Path operations, case conversion and quiet checks use builtins; human messages lazily reuse `lib/dots/ui.bash`, with a plain fallback for standalone copies. Optional eza formatting is confined to explicitly requested filename/icon helpers. See [shell utilities](shell-utils.md).
 
@@ -388,6 +390,10 @@ The theme file-color engine resolves declarative style layers and derives Vivid,
 LS_COLORS and versioned JSON/Lua snapshots from one palette. Publication owns the
 complete generation; shell adapters consume its LS_COLORS without regenerating it.
 Rule edits reuse the existing file Store rather than introducing another journal.
+The shared theme presentation module renders structured palette/style tables for
+human queries and native previews. It consumes the resolved or published palette
+directly for full views; it does not regenerate Vivid suffixes to display them.
+Machine interfaces bypass that renderer.
 After publication, an optional bounded Yazi DDS notification requests refresh.
 The plugin reads its own configured state root, validates a complete snapshot and
 updates UI colors without re-running feature setup or doing redraw-time I/O.

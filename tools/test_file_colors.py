@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import unittest
 from unittest.mock import patch
@@ -25,6 +26,8 @@ class FileColors(unittest.TestCase):
         self.assertEqual(self.generation(), original)
         self.assertEqual(self.dots('theme','colors','type','dir','hex').stdout.strip(),'#89b4fa')
         self.assertEqual(self.dots('theme','colors','type','dir','hex','--configured').stdout.strip(),'#f38ba8')
+        self.assertIn('Source: Published snapshot', self.dots('theme','colors','type').stdout)
+        self.assertIn('Source: Configured sources', self.dots('theme','colors','type','--configured').stdout)
         self.dots('theme','colors','set','type','dir','--fg','green','--theme','catppuccin-mocha','--apply')
         doc=json.loads(self.dots('theme','colors','export','json').stdout)
         self.assertEqual(doc['colors']['type']['dir'],'#a6e3a1')
@@ -96,6 +99,151 @@ class FileColors(unittest.TestCase):
             self.assertIn('candidate\tdir\t', self.dots('__complete',shell,'4','--','dots','theme','colors','type','di').stdout)
             self.assertIn('candidate\thex\t', self.dots('__complete',shell,'5','--','dots','theme','colors','type','dir','h').stdout)
         self.dots('commands','--check')
+
+    def test_complete_overview_native_scope_and_no_vivid_dependency(self):
+        env = {**self.env, 'DOTS_COLOR': 'always', 'COLUMNS': '120'}
+        # Read-only overview queries must not launch the optional suffix generator.
+        vivid = self.repo / 'bin/vivid'
+        vivid.write_text('#!/bin/sh\necho unexpected-vivid >&2\nexit 77\n')
+        vivid.chmod(0o755)
+        args = ('--theme', 'catppuccin-mocha')
+        data = json.loads(self.dots('theme','colors',*args,'--json',env=env).stdout)
+        overview = self.dots('theme','colors',*args,env=env).stdout
+        shown = self.dots('theme','show','catppuccin-mocha',env=env).stdout
+        self.assertEqual(overview, shown)
+        plain = re.sub(r'\x1b\[[0-9;:]*m', '', shown)
+        for group in ('Named colors', 'Terminal colors', 'File types', 'MIME rules', 'Extension rules'):
+            self.assertIn(group, plain)
+        for name, value in data.items():
+            if isinstance(value, str):
+                self.assertRegex(plain, r'(?m)^  ' + re.escape(name) + r'\s+' + re.escape(value))
+            else:
+                for key in value:
+                    self.assertIn(key, plain)
+        self.assertLess(plain.index('color2 '), plain.index('color10 '))
+        self.assertIn('Extension rules (0)', plain)
+        self.assertIn('No entries.', plain)
+        self.assertNotIn('{', plain)
+        native = self.dots('theme','catppuccin','mocha','show',env=env).stdout
+        self.assertIn('Native colors (26)', native)
+        self.assertIn('rosewater', native)
+        self.assertNotIn('File types', native)
+        self.assertNotIn('Terminal colors', native)
+        redirected = self.dots('theme','show','catppuccin-mocha').stdout
+        self.assertIn('blue\t#89b4fa\n', redirected)
+        self.assertNotIn('File types', redirected)
+        self.assertNotIn('\x1b', redirected)
+
+    def test_style_details_parse_and_machine_boundaries(self):
+        env = {**self.env, 'DOTS_COLOR':'always', 'COLUMNS':'120'}
+        args = ('--theme','catppuccin-mocha')
+        rules = self.home / 'config/dots/file-colors.toml'
+        rules.parent.mkdir(parents=True)
+        rules.write_text('[extension.".lua"]\nfg="blue"\nbg="reset"\nbold=false\nhidden=true\n')
+        style = self.dots('theme','colors','extension','.lua','--style',*args,env=env).stdout
+        for text in ('Requested rule: .lua','Foreground','Background','reset','bold=false','hidden','Rule sources'):
+            self.assertIn(text, style)
+        self.assertNotIn('\x1b[8m', style)
+        self.assertNotIn('{', style)
+        path = self.home / 'test.lua'; path.write_text('')
+        matched = self.dots('theme','colors','match',str(path),*args,env=env).stdout
+        self.assertIn('Group: extension', matched)
+        self.assertIn('Path: ', matched)
+        for action in ((), ('type',), ('mime',), ('extension',), ('extension','.lua'), ('match',str(path))):
+            uncolored = self.dots('theme','colors',*action,*args,'--json').stdout
+            colored = self.dots('theme','colors',*action,*args,'--json',env=env).stdout
+            self.assertEqual(uncolored, colored)
+            json.loads(colored)
+        for fmt in ('hex','rgb','ansi-24bit','esc'):
+            self.assertEqual(self.dots('theme','colors','type','dir',fmt,*args).stdout,
+                             self.dots('theme','colors','type','dir',fmt,*args,env=env).stdout)
+        for fmt in ('lua','json','ls-colors'):
+            self.assertEqual(self.dots('theme','colors','export',fmt,*args).stdout,
+                             self.dots('theme','colors','export',fmt,*args,env=env).stdout)
+        dry = ('theme','colors','set','type','dir','--fg','blue','--dry-run',*args)
+        self.assertEqual(self.dots(*dry).stdout, self.dots(*dry,env=env).stdout)
+        parsed_env = {**env,'LS_COLORS':'di=38;5;123:*.txt=31:*.txt=0:*.hide=8;5:bad=oops:*.界=38;2;1;2;3'}
+        parsed = self.dots('theme','colors','parse','--env',*args,env=parsed_env).stdout
+        for text in ('Filesystem rules','Suffix rules (4)','Invalid entries (1)','invalid SGR','index 123','Sequence'):
+            self.assertIn(text, parsed)
+        self.assertLess(parsed.index('31'), parsed.index('*.hide'))
+        self.assertNotIn('\x1b[8m', parsed)
+        self.assertNotIn('\x1b[5m', parsed)
+        self.assertNotIn('{', parsed)
+        raw = self.dots('theme','colors','parse','--env','--json',env=parsed_env).stdout
+        self.assertEqual([r['sequence'] for r in json.loads(raw)['suffixes']], ['31','0','8;5','38;2;1;2;3'])
+        self.assertNotIn('\x1b', raw)
+
+    def test_color_views_terminal_widths_and_plain_policy(self):
+        import errno
+        import fcntl
+        import pty
+        import select
+        import struct
+        import termios
+        import time
+        import unicodedata
+        for theme in ('catppuccin-mocha', 'catppuccin-latte'):
+            for columns in (40, 80, 120):
+                with self.subTest(theme=theme, columns=columns):
+                    master, slave = pty.openpty()
+                    try:
+                        fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, columns, 0, 0))
+                        env = {**self.env, 'DOTS_COLOR':'auto'}
+                        with subprocess.Popen([BASH,str(self.repo/'bin/dots'),'theme','show',theme],
+                                              env=env, cwd=self.home, stdout=slave, stderr=subprocess.PIPE) as process:
+                            os.close(slave); slave = None
+                            output = b''
+                            deadline = time.monotonic() + 30
+                            while True:
+                                if not select.select([master], [], [], max(0, deadline - time.monotonic()))[0]:
+                                    process.kill()
+                                    process.communicate()
+                                    self.fail('Timed out waiting for theme preview PTY')
+                                try: chunk = os.read(master, 65536)
+                                except OSError as error:
+                                    if error.errno == errno.EIO: break
+                                    raise
+                                if not chunk: break
+                                output += chunk
+                            _, errors = process.communicate(timeout=30)
+                            self.assertEqual(process.returncode, 0, errors)
+                    finally:
+                        os.close(master)
+                        if slave is not None: os.close(slave)
+                    output = output.decode().replace('\r\n','\n')
+                    self.assertIn('\x1b[48;2;', output)
+                    self.assertIn('File types', output)
+                    for line in output.splitlines():
+                        self.assertTrue(line.endswith('\x1b[0m'))
+                        text = re.sub(r'\x1b\[[0-9;:]*m','',line)
+                        self.assertLessEqual(sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in 'WF' else 1 for c in text), columns)
+        for controls in ({'DOTS_COLOR':'never'}, {'DOTS_COLOR':'auto'},
+                         {'DOTS_COLOR':'auto','NO_COLOR':'1'}, {'DOTS_COLOR':'auto','TERM':'dumb'}):
+            output = self.dots('theme','colors','--theme','catppuccin-mocha',env={**self.env,**controls}).stdout
+            self.assertNotIn('\x1b', output)
+            self.assertIn('Named colors', output)
+        output = self.dots('theme','colors','--theme','catppuccin-latte','--color=none',env={**self.env,'DOTS_COLOR':'always'}).stdout
+        self.assertNotIn('\x1b', output)
+        forced = self.dots('theme','colors','--theme','catppuccin-latte',env={**self.env,'DOTS_COLOR':'always','NO_COLOR':'1'}).stdout
+        self.assertIn('\x1b[48;2;', forced)
+
+    def test_long_unicode_rule_and_theme_independent_parse(self):
+        name = '.' + '界e\u0301' * 25
+        rules = self.home / 'config/dots/file-colors.toml'
+        rules.parent.mkdir(parents=True)
+        rules.write_text('[extension."' + name + '"]\nfg="blue"\n')
+        env = {**self.env, 'COLUMNS':'40'}
+        output = self.dots('theme','colors','extension','--theme','catppuccin-mocha',env=env).stdout
+        name_lines = output.partition('Extension rules (1)')[2].partition('Foreground:')[0]
+        self.assertEqual(''.join(line.strip() for line in name_lines.splitlines()), name)
+        self.assertIn('Background: unset', output)
+        # No selected/valid theme is required to inspect an arbitrary environment.
+        env.update(DOTS_COLOR='always', LS_COLORS='di=31:*.bad=8:*.control\\e=32')
+        output = self.dots('theme','colors','parse','--env','--theme','missing-theme',env=env).stdout
+        self.assertIn('Filesystem rules (1)', output)
+        self.assertIn('Suffix rules (2)', output)
+        self.assertNotIn('\x1b', output)
 
 def load_tests(loader, tests, pattern):
     return loader.loadTestsFromTestCase(FileColors)

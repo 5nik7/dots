@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Preview a theme palette
+# dots:summary=Preview theme colors and file styles
 # dots:usage=[ID] [--native]
 # dots:argument=1|theme-id|Theme identifier
 # dots:option=--native||flag|Show upstream palette colors

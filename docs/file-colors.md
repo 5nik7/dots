@@ -36,6 +36,39 @@ Queries use the current published snapshot when available. `--configured` reads
 saved rules instead. `--theme ID` resolves another theme without selecting it.
 Before the first publication, queries resolve the configured default.
 
+## Human color views
+
+`theme colors` shows named colors, terminal colors (`color0` through `color15`),
+file types, MIME rules and configured extension rules in separate counted sections.
+Palette rows include exact swatches and hex values. Style tables show foreground,
+background and attributes; `unset` means no field is specified, while `reset`
+explicitly requests the terminal default. Explicit false attributes remain visible.
+Empty groups are labeled. Narrow terminals stack fields and wrap long names.
+
+`dots theme show ID` uses the same complete overview in a terminal or with forced
+human presentation. It reads configured sources; `theme colors` retains its
+published-snapshot default. Both views label their source. For a configured overview
+when redirecting output, use `theme colors --theme ID` or `theme colors --configured`.
+Redirected, unforced `show` retains its existing heading and
+semantic-color TSV rows. Family previews and `show --native` share the table
+layout but display only native palette values.
+
+`type`, `mime` and `extension` list full styles as tables. `--style` and `match`
+show labeled details and available rule sources. `parse` lists filesystem and
+suffix rules, including literal SGR sequences, indexed colors and invalid-entry
+diagnostics; suffix order and duplicates remain visible. Attributes such as blink
+and hidden are described without being activated. Parsing remains usable without
+a configured theme. Generated Vivid suffixes are not expanded in the overview;
+use `parse` to inspect them.
+
+Colored views use the addressed theme's foreground/background with readable text
+and exact swatches. `--color=none` retains the readable layout without styling.
+JSON, scalar queries, exports and edit dry-run JSON keep their existing bytes and
+schemas regardless of presentation settings. Configured overviews and style
+queries do not require Vivid generation. All views are read-only.
+
+## Save and publish
+
 ```sh
 theme colors set type dir --fg blue --bold true
 theme colors set extension .lua --fg yellow --italic true

@@ -16,12 +16,16 @@ dt_init() {
 
 # Shared native palette preview for current and explicit theme queries.
 dt_native_preview() {
-  local name
+  local name sep=''
   dots::settings || return
   {
-    printf '%s — %s\n\n' "$DT_THEME" "$DT_FLAVOR"
-    for name in "${DT_NAMES[@]}"; do printf '%-20s %s\n' "$name" "${DT_COLORS[$name]}"; done
-  } | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/presentation.py" --theme "${DT_ID:-$DT_THEME-$DT_FLAVOR}" --palette
+    # Identifiers and hex values have already passed the palette reader's validation.
+    printf '{"title":"%s — %s","colors":{' "$DT_THEME" "$DT_FLAVOR"
+    for name in "${DT_NAMES[@]}"; do
+      printf '%s"%s":"%s"' "$sep" "$name" "${DT_COLORS[$name]}"; sep=,
+    done
+    printf '}}\n'
+  } | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/presentation.py" --theme "${DT_ID:-$DT_THEME-$DT_FLAVOR}" --native-table
 }
 
 dt_palette_list() {
