@@ -867,6 +867,21 @@ and defaults to bundled fixture configs rather than assuming a parent checkout.
 
 ## Checkout installation
 
+The installation suite also exports versioned public source paths into an owned
+checkout, excluding ignored connectors and optional submodule contents (with
+explicit new-source additions before their first commit). It simulates WSL
+detection and verifies all enabled fixed connectors, template outputs, FSH
+catalog retention, reinstall and uninstall. Recovery cases remove outputs and
+the active pointer, reject incomplete preparation and foreign pointers, and
+inject failure after pointer publication to verify rollback of the receipt and
+selection. These fixtures do not establish native WSL runtime support.
+
+`python3 -B tools/test_file_themes.py` additionally covers missing-output refresh,
+custom template outputs, unsafe artifact links, cold native FSH caches and
+actionable, deduplicated failures. Native FSH cases copy the installed public
+plugin into owned roots and skip when unavailable; cold-cache tests disable
+network helpers explicitly.
+
 Run `python3 -B tools/test_installation.py` and `python3 -B tools/test_installation_adapters.py` (`python` on Windows). Fixtures own HOME/XDG/AppData/profile roots, configuration sources and local Git remotes. Coverage includes dry-run, retained baselines across updates, idempotence, preview drift, process interruption/recovery, link refusal, explicit optional-source initialization, actual POSIX theme generation and native entry-point/data interfaces. PowerShell runtime and native Windows cases skip when unavailable; skipped capability checks are not positive platform evidence. The installation CI workflow covers Linux and Windows without initializing project submodules. Run existing file/catalog, theme, shell-init, dispatcher and progress regressions for their affected shared components.
 
 ### Shared resource presentation

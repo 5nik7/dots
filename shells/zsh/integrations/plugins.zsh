@@ -105,8 +105,8 @@ _dots_widget_plugins() {
   _dots_plugin_setup || return
   _dots_load_plugin Aloxaf/fzf-tab
   _dots_load_plugin zdharma-continuum/fast-syntax-highlighting
-  if (( ${+functions[_dots_fsh_theme]} )); then
-    _dots_fsh_theme || print -ru2 -- 'dots theme: could not load FSH theme; keeping previous syntax colors'
+  if (( ${+functions[_dots_fsh_apply]} )); then
+    _dots_fsh_apply || :
   fi
   _dots_suggestion_plugin
   _dots_load_plugin zsh-users/zsh-history-substring-search

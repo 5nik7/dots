@@ -14,6 +14,13 @@ The sourceable [shell utility functions](shell-utils.md) have their own document
 
 `dots init --setup [OPTIONS]` explicitly delegates to `dots files install`; `dots files uninstall` restores installer-owned targets. Install/uninstall accept `--dry-run`, `--yes`, `--json` and shared color/icon controls; install also accepts `--update` and repeatable `--with-source androidots|windots|nvim`. Root shell/PowerShell scripts use the same controller. Setup options are invalid on shell-code generation paths. See [checkout installation](installation.md) for ownership, updater stages, JSON results and recovery.
 
+POSIX setup and `dots theme refresh` check required generated outputs before
+reporting an unchanged theme. Setup previews identify an incomplete artifact or
+publication pointer in the existing item's target/reason fields. Repair prepares
+a new generation; setup additionally installs missing catalog links, including
+the FSH directory and connector in fresh checkouts. JSON schemas and flags are
+unchanged, and shell-code initialization does not perform repairs.
+
 
 ## Implemented Files and Theme Routes
 

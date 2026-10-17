@@ -10,6 +10,15 @@ Ordinary task-relevant edits to repository source files, including live dotfiles
 
 The transaction guarantees below govern managed installation, target replacement, backup, and undo operations. Permission to edit their source code does not authorize executing those operations against the live machine.
 
+Theme setup and refresh validate required generated output types/readability
+before reusing or publishing a generation. Missing outputs are rebuilt into new
+state directories; existing payloads are retained. Setup repairs missing managed
+publication pointers through its file transaction and preserves the original
+installation baseline. Completeness is not content authentication: normal
+fingerprints detect source changes, and foreign/unsafe pointers still refuse
+automatic replacement. Shell startup only reads publication state and maintains
+its existing rebuildable caches; it does not perform this repair.
+
 ## Bash Command Framework
 
 The Bash dispatcher reads trusted command directories and optional static metadata.

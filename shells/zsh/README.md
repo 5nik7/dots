@@ -89,6 +89,12 @@ replacement, and stale compiled startup code is invalidated. Reload once after u
 adapter code. See [Vivid and FSH](../../docs/themes.md#vivid-and-fast-syntax-highlighting)
 for palette mappings and fallback behavior.
 
+Missing generated FSH data and loader/cache failures report the affected path
+and a repair step once per generation/failure in a shell. Use `dots init --setup`
+for missing installation links, or `dots theme refresh` for missing generated
+outputs. Open a new shell after repair. Startup never publishes themes itself;
+saved colors and explicit session-only selections retain their fallback behavior.
+
 ## Verification
 
 Run from the repository root:

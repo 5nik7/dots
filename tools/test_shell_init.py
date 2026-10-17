@@ -160,8 +160,8 @@ class InitTests(unittest.TestCase):
 
     def test_default_selects_running_shell_and_initializes_children(self):
         # Synthetic loaders isolate selection from optional interactive tools.
-        for shell, (directory, filename) in list(SHELLS.items())[:2]:
-            (self.repo / 'shells' / directory / filename).write_text(f'export LOADED={shell}\n')
+        for shell in ('bash', 'zsh'):
+            (self.repo / 'lib/dots/shell' / ('init.' + shell)).write_text(f'export LOADED={shell}\n')
         for current, other in [('bash', 'zsh'), ('zsh', 'bash')]:
             self.env['SHELL'] = '/bin/' + other
             p = self.shell(current, 'eval "$(dots init)"; printf "%s\\n" "$LOADED"; ' +

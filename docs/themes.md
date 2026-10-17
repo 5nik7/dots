@@ -296,6 +296,13 @@ publication connects `${XDG_CONFIG_HOME:-$HOME/.config}/vivid/themes/dots.yml` a
 `${XDG_CONFIG_HOME:-$HOME/.config}/fsh/dots.ini` through the same backup journal.
 These machine-local links are ignored when config directories link into this repository.
 
+Checkout setup installs the FSH directory and connector even on a fresh clone;
+the tracked `config/fsh/README.md` preserves its source directory. Theme refresh
+keeps the existing-directory opt-in rule for standalone app connectors. Both
+setup and refresh verify required generated outputs before reusing a matching
+input fingerprint, and validate new outputs before publication. Missing or
+nonregular artifacts trigger a new generation without editing the old payload.
+
 Directories use blue, executables and shell commands green, links/options/escapes
 cyan, ordinary files and paths foreground, comments and unimportant files muted,
 source files and archives yellow, configuration files and numeric syntax orange,
@@ -321,6 +328,13 @@ Dots directly at the next startup, before the Dots hook. Both lines from
 `fast-theme --show` report `dots`. After plugin initialization and on published
 theme changes, the adapter checks for updated colors and saves them atomically;
 identical copies are left untouched. The configured `FAST_WORK_DIR` is retained.
+
+FSH failures identify unavailable generated data, loader/cache compilation or
+startup-cache persistence, and show the relevant path and repair action. The
+same failure is reported once per generation in a shell; success resets that
+suppression. A missing artifact retains last-good saved colors when available.
+Explicit session-only palettes retain their fallback without a setup warning.
+No theme generation or installation runs during startup or prompt refresh.
 
 Before replacing a non-Dots startup selection, the adapter preserves its script
 and compiled companion (including symlink identity) in a private

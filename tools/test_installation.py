@@ -305,6 +305,180 @@ p.apply('install')
         self.cli('install','--with-source','nvim','--yes')
         self.assertEqual((self.home/'.config/optional').read_text(),'optional config')
 
+    def theme_fixture(self):
+        for name in ('lib', 'themes', 'default'):
+            shutil.copytree(ROOT/name, self.repo/name, symlinks=True)
+        (self.repo/'config/fsh').mkdir()
+        shutil.copy2(ROOT/'config/fsh/README.md', self.repo/'config/fsh/README.md')
+        doc=json.loads((self.repo/'.dots/files.json').read_text())
+        doc['resources'].append(dict(id='fsh',source='config/fsh',target='${CONFIG}/fsh',strategy='directory-link',app='fsh',category='config',platforms=['termux','linux','wsl']))
+        self.write('.dots/files.json',doc)
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX fresh-checkout publication')
+    @unittest.skipUnless(shutil.which('git'), 'Git required to enumerate tracked sources')
+    def test_fresh_checkout_wsl_setup_connectors_check_and_restore(self):
+        # Copy only versioned public inputs, never ignored connectors or local
+        # submodule contents. Include this change's new source files before commit.
+        names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','-z','--',
+            '.dots','bin','lib','default','themes','config','shells','ruby',
+            'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
+        names.update(('config/fsh/README.md','lib/dots/themes/generation.bash'))
+        shutil.rmtree(self.repo)
+        self.repo.mkdir()
+        for name in sorted(names):
+            source=ROOT/name
+            if source.is_dir() and not source.is_symlink():
+                continue  # An uninitialized optional submodule is not a source.
+            if not source.exists() and not source.is_symlink():
+                continue
+            target=self.repo/name
+            target.parent.mkdir(parents=True,exist_ok=True)
+            if source.is_symlink():
+                link=os.readlink(source)
+                self.assertFalse(os.path.isabs(link),name)
+                self.assertTrue(Path(os.path.abspath(target.parent/link)).is_relative_to(self.repo),name)
+                target.symlink_to(link)
+            else:
+                shutil.copy2(source,target)
+        self.env={k:v for k,v in self.env.items() if k in (
+            'PATH','PREFIX','LD_PRELOAD','LD_LIBRARY_PATH','TMPDIR','HOME','USERPROFILE',
+            'DOTS','XDG_CONFIG_HOME','XDG_STATE_HOME','XDG_DATA_HOME','XDG_CACHE_HOME',
+            'CODEX_HOME','PI_CODING_AGENT_DIR','GIT_CONFIG_GLOBAL','GIT_CONFIG_NOSYSTEM',
+            'GIT_TERMINAL_PROMPT','DOTS_COLOR','DOTS_ICONS','TERM','PYTHONDONTWRITEBYTECODE')}
+        self.env['WSL_DISTRO_NAME']='Fixture'
+        self.env['DOTS_PROGRESS']='never'
+        self.assertEqual(list((self.repo/'config/fsh').iterdir()),[self.repo/'config/fsh/README.md'])
+        def run(script,*args):
+            result=subprocess.run(['sh',str(self.repo/script),*args,'--json'],env=self.env,
+                                  capture_output=True,text=True,timeout=120)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertNotIn('\x1b',result.stdout)
+            return json.loads(result.stdout)
+        preview=run('install.sh','--dry-run')
+        self.assertEqual(preview['platform'],'wsl')
+        self.assertEqual(list(self.home.iterdir()),[])
+        fsh=next(row for row in preview['items'] if row['id']=='dots:fsh')
+        self.assertEqual(fsh['status'],'create')
+        result=run('install.sh','--yes')
+        active=self.home/'.state/dots/current/theme'
+        self.assertTrue((self.home/'.config/fsh').is_symlink())
+        self.assertTrue((self.home/'.config/fsh/dots.ini').is_file())
+        for line in (self.repo/'lib/dots/themes/connectors.tsv').read_text().splitlines():
+            app,suffix,artifact=line.split('\t')
+            row=next((r for r in result['items'] if r['id']=='theme:'+app),None)
+            if row:
+                self.assertTrue(Path(row['target']).is_symlink(),app)
+                self.assertTrue(Path(row['target']).exists(),app)
+                self.assertTrue((active/artifact).exists(),app)
+        for template in (self.repo/'default/themed').glob('*.tpl'):
+            self.assertTrue((active/template.name[:-4]).is_file(),template.name)
+        self.assertFalse((self.repo/'config/btop/themes/dots.theme').exists())  # Stashed.
+        self.assertFalse((self.repo/'config/nvim/.git').exists())
+        check=subprocess.run([sys.executable,'-B',str(self.repo/'lib/dots/files/check.py'),
+                              '--dry-run','--json','--app','fsh'],env=self.env,capture_output=True,text=True)
+        self.assertEqual(check.returncode,0,check.stderr)
+        self.assertNotIn('"eligible": true',check.stdout)
+        self.assertIn('dots:fsh',check.stdout)
+        self.assertEqual(run('install.sh','--yes')['status'],'unchanged')
+        run('uninstall.sh','--yes')
+        self.assertFalse((self.home/'.config/fsh').is_symlink())
+        self.assertFalse((self.repo/'config/fsh/dots.ini').is_symlink())
+        self.assertTrue((self.repo/'config/fsh/README.md').is_file())
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
+    def test_theme_output_and_pointer_repair_retains_baseline(self):
+        self.theme_fixture()
+        self.cli('install','--yes')
+        active=self.home/'.state/dots/current/theme'
+        initial=active.resolve()
+        baseline=self.receipt()['entries'][str(active)]['before']
+        for relative in ('fsh.ini', 'colors.json', 'yazi/tmtheme.xml'):
+            with self.subTest(artifact=relative):
+                old=active.resolve()
+                (old/relative).unlink()
+                preview=json.loads(self.cli('install','--dry-run','--json').stdout)
+                row=next(r for r in preview['items'] if r['id']=='theme:catppuccin-mocha')
+                self.assertEqual(row['status'],'prepare')
+                self.assertIn(relative,row['target'])
+                self.assertEqual(active.resolve(),old)
+                self.assertFalse((old/relative).exists())
+                self.cli('install','--yes')
+                self.assertNotEqual(active.resolve(),old)
+                self.assertTrue((active/relative).is_file())
+        active.unlink()
+        self.cli('install','--yes')
+        self.assertTrue(active.is_symlink())
+        self.assertEqual(self.receipt()['entries'][str(active)]['before'],baseline)
+        self.assertEqual(json.loads(self.cli('install','--yes','--json').stdout)['status'],'unchanged')
+        self.cli('uninstall','--yes')
+        self.assertFalse(active.exists())
+        self.assertTrue(initial.is_dir())
+        self.assertFalse((self.home/'.config/fsh').is_symlink())
+        self.assertFalse((self.repo/'config/fsh/dots.ini').is_symlink())
+        self.assertTrue((self.repo/'config/fsh/README.md').is_file())
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
+    def test_failed_theme_repair_does_not_publish_or_change_receipt(self):
+        self.theme_fixture()
+        self.cli('install','--yes')
+        active=self.home/'.state/dots/current/theme'
+        old=active.resolve(); receipt=self.receipt()
+        (old/'fsh.ini').unlink()
+        (self.repo/'default/themed/fsh.ini.tpl').write_text('{{ unknown_fsh_color }}')
+        result=self.cli('install','--yes',ok=False)
+        self.assertIn('unknown template color',result.stderr)
+        self.assertEqual(active.resolve(),old)
+        self.assertEqual(self.receipt(),receipt)
+        self.assertFalse((old/'fsh.ini').exists())
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
+    def test_theme_repair_publication_failure_rolls_back(self):
+        self.theme_fixture()
+        self.cli('install','--yes')
+        active=self.home/'.state/dots/current/theme'
+        old=active.resolve(); receipt=self.receipt()
+        (old/'fsh.ini').unlink()
+        with mock.patch.dict(os.environ,self.env,clear=True):
+            install=Installation(self.repo)
+            install.plan_install()
+            save=install.store.save
+            failed=False
+            def fail(doc):
+                nonlocal failed
+                save(doc)
+                if not failed and doc['status']=='applying' and any(
+                        row['path']==str(active) and row['phase']=='done' for row in doc['operations']):
+                    failed=True
+                    raise OSError('injected theme publication failure')
+            with mock.patch.object(install.store,'save',side_effect=fail):
+                with self.assertRaisesRegex(OSError,'injected theme publication failure'):
+                    install.apply('install')
+        self.assertTrue(failed)
+        self.assertEqual(active.resolve(),old)
+        self.assertEqual(self.receipt(),receipt)
+        self.assertFalse((old/'fsh.ini').exists())
+        self.cli('install','--yes')
+        self.assertTrue((active/'fsh.ini').is_file())
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
+    def test_incomplete_preparation_and_foreign_pointer_are_refused(self):
+        self.theme_fixture()
+        render=self.repo/'lib/dots/themes/render.bash'
+        with render.open('a') as stream:
+            stream.write("\neval \"$(declare -f dt_render | sed '1s/dt_render/dt_original_render/')\"\n"
+                         'dt_render() { dt_original_render "$1" && rm "$1/fsh.ini"; }\n')
+        result=self.cli('install','--yes',ok=False)
+        self.assertIn('incomplete prepared theme',result.stderr)
+        self.assertFalse(self.target.exists())
+        self.assertFalse((self.home/'.state/dots/installation.json').exists())
+        shutil.copy2(ROOT/'lib/dots/themes/render.bash',render)
+        self.cli('install','--yes')
+        active=self.home/'.state/dots/current/theme'
+        active.unlink(); active.symlink_to(self.home)
+        result=self.cli('install','--yes',ok=False)
+        self.assertIn('invalid active theme',result.stderr)
+        self.assertEqual(active.readlink(),self.home)
+
     @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
     def test_real_theme_install_repeat_and_restore(self):
         shutil.copytree(ROOT/'lib',self.repo/'lib',symlinks=True)

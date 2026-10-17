@@ -44,6 +44,12 @@ Catalog omissions found in the audit are now explicit: Fish, Nushell, Zsh's logi
 
 On POSIX, setup prepares the selected theme (or `DOTS_THEME_DEFAULT`) using the normal renderer and command generator. It publishes pointers and fixed connectors through the file transaction, without app reloads, wallpaper changes or theme hooks. Required connector parents are created. Codex/Pi retain their existing-directory opt-in boundary. Immutable generated payloads remain in state for recovery; no pruning is automatic.
 
+Fresh checkouts retain `config/fsh` through tracked documentation. Setup links it to `${XDG_CONFIG_HOME:-$HOME/.config}/fsh` and creates its ignored `dots.ini` connector; installing the FSH plugin is not a prerequisite for rendering. Stashed catalog resources remain excluded.
+
+Setup checks generated output completeness as well as input fingerprints. Missing or nonregular required palette, shell, template or connector artifacts cause a new generation to be prepared. A missing managed active pointer is also repaired. The preview names the first incomplete path; dry-run performs no repairs. Existing generations are retained, and failed preparation or publication preserves the prior pointers and installation receipt through the existing rollback mechanism. Foreign pointers and unsafe state still require inspection rather than automatic replacement.
+
+After pulling a repair, run `./install.sh --dry-run`, then `./install.sh` (or `dots init --setup`) and open a new shell. `dots theme refresh` repairs incomplete generated theme data; checkout setup also installs missing catalog links. Plain `dots init` does neither.
+
 ## Update and optional sources
 
 Ordinary install is local. `--update` requires a clean attached checkout with an explicit upstream and a fast-forward history. It fetches that branch without recursive submodule downloads, refuses changed submodule topology, and never stashes, resets, cleans, rebases or pushes. Initialized applicable public sources advance only to the parent repository's recorded commits; local changes or commits that would be abandoned are refused.

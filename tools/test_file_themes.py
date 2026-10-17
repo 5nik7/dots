@@ -13,6 +13,89 @@ FSH = Path(os.environ['HOME']) / '.local/share/zinit/plugins/zdharma-continuum--
 
 
 class FileThemes(old.Themes):
+    def test_refresh_repairs_missing_outputs_and_active_pointer(self):
+        user=self.home/'config/dots/themed'
+        user.mkdir(parents=True)
+        (user/'extra.conf.tpl').write_text('accent={{ accent }}\n')
+        self.dots('theme','set','nord')
+        for relative in ('fsh.ini','colors.json','yazi/tmtheme.xml','extra.conf','fingerprint'):
+            with self.subTest(artifact=relative):
+                previous=self.generation()
+                (previous/relative).unlink()
+                self.dots('theme','refresh')
+                current=self.generation()
+                self.assertNotEqual(previous,current)
+                self.assertTrue((current/relative).is_file())
+                self.assertTrue(previous.is_dir())
+                self.assertFalse((previous/relative).exists())
+        active=self.home/'state/dots/current/theme'
+        active.unlink()
+        self.dots('theme','refresh')
+        self.assertTrue(active.is_symlink())
+        self.assertEqual(active.resolve(),self.generation())
+        current=self.generation()
+        self.dots('theme','refresh')
+        self.assertEqual(current,self.generation())
+
+    def test_refresh_replaces_generation_with_symlinked_artifact(self):
+        self.dots('theme','set','nord')
+        previous=self.generation()
+        foreign=self.home/'foreign.ini'; foreign.write_text('retain me\n')
+        artifact=previous/'fsh.ini'; artifact.unlink(); artifact.symlink_to(foreign)
+        self.dots('theme','refresh')
+        self.assertNotEqual(previous,self.generation())
+        self.assertFalse((self.generation()/'fsh.ini').is_symlink())
+        self.assertEqual(foreign.read_text(),'retain me\n')
+        self.assertTrue(artifact.is_symlink())
+
+    @unittest.skipUnless(old.ZSH and FSH.is_dir(), 'Installed FSH and Zsh required')
+    def test_native_fsh_cold_cache_and_actionable_failure_messages(self):
+        self.install_fsh()
+        self.env.pop('FAST_WORK_DIR')
+        shutil.rmtree(self.home/'cache/fsh')
+        self.dots('theme','set','nord')
+        setup='''curl() { return 1; }; wget() { return 1; }
+source "$HOME/fsh-plugin/fast-syntax-highlighting.plugin.zsh"
+source "$DOTS/lib/dots/themes/shell.bash"
+'''
+        cold=self.shell(setup+'''set_theme || exit 1
+[[ $FAST_THEME_NAME == dots && -s $FAST_WORK_DIR/current_theme.zsh ]] || exit 2
+fast-theme --show
+''',old.ZSH)
+        self.assertEqual(cold.stderr,'')
+        self.assertEqual(cold.stdout.count('dots'),2)
+        missing=self.shell(setup+'''set_theme || exit 1
+before=${FAST_HIGHLIGHT_STYLES[dotscommand]}
+rm "$_DOTS_THEME_FSH_FILE"
+set_theme
+set_theme
+[[ ${FAST_HIGHLIGHT_STYLES[dotscommand]} == "$before" ]] || exit 2
+''',old.ZSH)
+        self.assertEqual(missing.stdout,'')
+        self.assertEqual(missing.stderr.count('generated FSH theme is unavailable'),1)
+        self.assertIn('fsh.ini',missing.stderr)
+        self.assertIn('dots init --setup',missing.stderr)
+        self.assertNotIn('\x1b',missing.stderr)
+        self.dots('theme','refresh')
+        failed=self.shell(setup+'''set_theme || exit 1
+before=${FAST_HIGHLIGHT_STYLES[dotscommand]}
+saved=$(<"$FAST_WORK_DIR/current_theme.zsh")
+print '[base]\\nunknown-token = not-a-color' > "$HOME/bad.ini"
+_DOTS_THEME_FSH_FILE=$HOME/bad.ini
+_dots_fsh_apply && exit 2
+[[ $(<"$FAST_WORK_DIR/current_theme.zsh") == "$saved" ]] || exit 3
+[[ ${FAST_HIGHLIGHT_STYLES[dotscommand]} == "$before" ]] || exit 4
+_DOTS_THEME_FSH_FILE=$_DOTS_THEME_LOADED_DIR/fsh.ini
+rm "$FAST_WORK_DIR/current_theme.zsh"
+mkdir "$FAST_WORK_DIR/current_theme.zsh"
+_dots_fsh_apply && exit 5
+true
+''',old.ZSH)
+        self.assertIn('could not compile the FSH theme',failed.stderr)
+        self.assertIn('dots theme refresh',failed.stderr)
+        self.assertIn('could not save the FSH startup theme',failed.stderr)
+        self.assertIn('FAST_WORK_DIR',failed.stderr)
+
     def test_fixture_excludes_generated_connector_without_following_it(self):
         source = self.repo / 'config/vivid'
         (source / 'themes').mkdir(parents=True)
@@ -68,7 +151,9 @@ source "$DOTS/lib/dots/themes/shell.bash"
         user.mkdir(parents=True)
         for name in ('vivid.yml', 'fsh.ini'):
             template = (self.repo / 'default/themed' / (name + '.tpl')).read_text()
-            (user / (name + '.tpl')).write_text(template.replace('{{ blue', '{{ magenta'))
+            override = (template + '# user Vivid override\n' if name == 'vivid.yml'
+                        else template.replace('{{ blue', '{{ magenta'))
+            (user / (name + '.tpl')).write_text(override)
         self.dots('theme', 'refresh')
         second = self.generation()
         for name in ('vivid.yml', 'fsh.ini'):
@@ -247,7 +332,8 @@ _dots_fsh_theme && exit 3
     @unittest.skipUnless(old.ZSH and FSH.is_dir(), 'Installed FSH and Zsh required')
     def test_native_fsh_saved_startup_and_backups(self):
         setup = self.install_fsh()
-        shutil.copy2(old.REPO / 'config/fsh/njen.ini', self.home / 'njen.ini')
+        # A foreign theme is test data, not a retired personal config dependency.
+        (self.home / 'njen.ini').write_text('[base]\ndefault = white\n[command-point]\ncommand = green\n')
         self.dots('theme', 'set', 'nord')
         self.shell(setup + '''fast-theme -q "$HOME/njen.ini" || exit 1
 [[ $FAST_THEME_NAME == njen && -f $FAST_WORK_DIR/current_theme.zsh.zwc ]] || exit 2
@@ -280,7 +366,7 @@ fast-theme --show
         self.assertIn('Main theme (loaded at startup of a session): dots', plain)
         saved = (work / 'current_theme.zsh').read_bytes()
         self.shell(setup + '''_DOTS_THEME_FSH_FILE=$HOME/missing.ini
-_dots_fsh_theme || exit 1
+_dots_fsh_theme && exit 1
 [[ $FAST_THEME_NAME == dots ]] || exit 2
 ''', old.ZSH)
         self.assertEqual((work / 'current_theme.zsh').read_bytes(), saved)

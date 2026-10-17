@@ -47,6 +47,13 @@ for header examples, shared output helpers, and standalone integration.
 
 From an existing checkout, run `./install.sh --dry-run`, then `./install.sh` to review and apply the platform's mapped configurations. Windows uses `./install.ps1 -DryRun` and `./install.ps1`. Setup creates missing parents, retains verified backups before replacement, installs the command entry and shell configs, and prepares supported POSIX theme connectors. Existing correct links remain unchanged.
 
+Fresh POSIX installs include the FSH config directory and its generated theme link.
+Setup and `dots theme refresh` rebuild missing required theme outputs even when
+the source fingerprint has not changed. To repair an existing checkout after
+updating, review `./install.sh --dry-run`, run `./install.sh`, then open a new shell.
+FSH failures now identify the affected path and repair step while retaining
+last-good colors when available. See [theme recovery](docs/installation.md#declared-ownership).
+
 `dots init --setup` and `dots files install` use the same engine. Ordinary `dots init [shell]` continues to print shell code without installation work. Use `./install.sh --update` for an explicit clean fast-forward update followed by setup, or `--with-source nvim` (repeatable) to initialize a named applicable public source. Missing optional sources are otherwise skipped; secrets are never initialized.
 
 `./uninstall.sh` / `./uninstall.ps1` or `dots files uninstall` restores installer-owned targets to their original state, preserves user drift and retains the checkout and recovery records. Both workflows support preview, unattended approval, JSON and the existing color/progress controls. Native Windows initially covers PowerShell, Neovim and VS Code settings; its theme publication remains deferred. See [installation and recovery](docs/installation.md) for requirements, options and platform limits.

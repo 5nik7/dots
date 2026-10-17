@@ -43,27 +43,36 @@ _dots_fsh_load() {
 
 _dots_fsh_theme() {
   emulate -L zsh
+  _DOTS_FSH_FAILURE='' _DOTS_FSH_FAILURE_PATH='' _DOTS_FSH_REPAIR=''
   (( ${+functions[fast-theme]} && ${+FAST_HIGHLIGHT_STYLES} )) || return 0
   local file=${_DOTS_THEME_FSH_FILE:-} saved=${FAST_WORK_DIR:-}/current_theme.zsh first=''
-  if [[ -z $file || ! -r $file ]]; then
+  if [[ -z $file || ! -f $file || ! -r $file ]]; then
     # Session-only selections and unavailable artifacts keep the last published
     # Dots colors, without rewriting the saved startup selection.
     if [[ -f $saved ]]; then
       IFS= read -r first < "$saved"
       if [[ $first == '# dots-fsh-cache-v2 '* ]]; then
-        _dots_fsh_load "$saved"
-        return $?
+        _DOTS_FSH_FAILURE='could not load the saved FSH theme or overlay'
+        _DOTS_FSH_FAILURE_PATH=$saved
+        _DOTS_FSH_REPAIR='Check the saved theme and theme_overlay.zsh in FAST_WORK_DIR, then reload the shell.'
+        _dots_fsh_load "$saved" || return
       fi
     fi
-    [[ -z $file ]]
-    return $?
+    [[ -n $file ]] || return 0
+    _DOTS_FSH_FAILURE='generated FSH theme is unavailable; retaining existing syntax colors'
+    _DOTS_FSH_FAILURE_PATH=$file
+    _DOTS_FSH_REPAIR='Run dots init --setup to prepare the theme and links, then open a new shell.'
+    return 1
   fi
+  _DOTS_FSH_FAILURE='could not initialize the native FSH loader'
+  _DOTS_FSH_REPAIR='Check the Zsh/FSH installation, then reload the shell.'
   zmodload zsh/stat || return
   zmodload -F zsh/files b:zf_mkdir b:zf_mv b:zf_rm || return
   local candidate signature='' temporary key
   local -A info
   for candidate in "$file" "$FAST_BASE_DIR/fast-theme" "$FAST_BASE_DIR/.fast-read-ini-file"; do
     candidate=${candidate:A}
+    _DOTS_FSH_FAILURE_PATH=$candidate
     zstat -H info -- "$candidate" 2>/dev/null || return 1
     signature+="${(q)candidate}:${info[device]}:${info[inode]}:${info[size]}:${info[mtime]}:${info[ctime]}:"
   done
@@ -71,8 +80,14 @@ _dots_fsh_theme() {
   local target=$directory/theme.zsh
   [[ ! -r $target ]] || IFS= read -r first < "$target"
   if [[ $first != "# dots-fsh-cache-v2 $signature" ]]; then
+    _DOTS_FSH_FAILURE='could not create the FSH theme cache'
+    _DOTS_FSH_FAILURE_PATH=$directory
+    _DOTS_FSH_REPAIR='Check the cache directory permissions and free space, then reload the shell.'
     zf_mkdir -p -- "$directory" || return
     temporary=$directory/build.$$.${RANDOM}
+    _DOTS_FSH_FAILURE='could not compile the FSH theme into its cache; retaining existing syntax colors'
+    _DOTS_FSH_FAILURE_PATH=$file
+    _DOTS_FSH_REPAIR='Check the FSH template and cache permissions; run dots theme refresh after correcting the template, then reload the shell.'
     # The upstream loader writes/compiles current_theme.zsh. Its work directory
     # and input basename belong to this build, never to the plugin or config.
     if ! (
@@ -100,6 +115,30 @@ _dots_fsh_theme() {
       zf_mv -f -- "$temporary/theme.zsh" "$target"
     ); then return 1; fi
   fi
+  _DOTS_FSH_FAILURE='could not save the FSH startup theme; retaining existing syntax colors'
+  _DOTS_FSH_FAILURE_PATH=$saved
+  _DOTS_FSH_REPAIR='Check FAST_WORK_DIR for conflicting paths or write failures, then reload the shell.'
   _dots_fsh_save "$target" || return
+  _DOTS_FSH_FAILURE='could not load the FSH theme or overlay'
+  _DOTS_FSH_FAILURE_PATH=$target
+  _DOTS_FSH_REPAIR='Check the saved theme and theme_overlay.zsh in FAST_WORK_DIR, then reload the shell.'
   _dots_fsh_load "$target"
+}
+
+# Only failures start a renderer. Healthy shell startup remains native and quiet.
+_dots_fsh_apply() {
+  if _dots_fsh_theme; then
+    _DOTS_FSH_WARNING_KEY=''
+    return 0
+  fi
+  local key="${_DOTS_THEME_GENERATION:-}:${_DOTS_FSH_FAILURE}:${_DOTS_FSH_FAILURE_PATH}"
+  [[ ${_DOTS_FSH_WARNING_KEY:-} != "$key" ]] || return 1
+  _DOTS_FSH_WARNING_KEY=$key
+  command bash -c '
+    source "$1/ui.bash"
+    dots::warning "dots theme: $2"
+    dots::resource_row Path "$3"
+    dots::info "$4"
+  ' -- "$DOTS/lib/dots" "$_DOTS_FSH_FAILURE" "$_DOTS_FSH_FAILURE_PATH" "$_DOTS_FSH_REPAIR" >&2
+  return 1
 }

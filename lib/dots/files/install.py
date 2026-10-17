@@ -165,7 +165,7 @@ class Installation:
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode:
             raise ValueError('theme preparation failed: ' + result.stderr.decode(errors='replace').strip())
-        return result.stdout.decode().rstrip('\0').split('\0')
+        return result.stdout.decode().split('\0')[:-1]
 
     def plan_install(self):
         catalog = Catalog(self.root, self.platform)
@@ -184,9 +184,9 @@ class Installation:
         connectors = []
         if self.platform != 'windows' and (self.root / 'lib/dots/themes/setup.bash').is_file():
             with Progress('Inspecting theme inputs'):
-                identity, fingerprint, *generation = self.theme_bridge('inspect')
-            current = generation[0] if generation else ''
-            self.theme = dict(id=identity, fingerprint=fingerprint, generation=current)
+                identity, fingerprint, current, incomplete = self.theme_bridge('inspect')
+            self.theme = dict(id=identity, fingerprint=fingerprint, generation=current,
+                              incomplete=incomplete)
             themes = self.state / 'themes'
             for p in (themes / 'current', self.state / 'current/theme', themes / 'commands/current'):
                 self.guard(p)
@@ -248,10 +248,13 @@ class Installation:
         if self.theme:
             generation = self.state / 'themes/generations' / self.theme['generation']
             stored = generation / 'fingerprint'
-            self.theme['refresh'] = (not stored.is_file() or stored.read_text().strip() != self.theme['fingerprint'])
+            self.theme['refresh'] = (bool(self.theme['incomplete']) or not stored.is_file()
+                                     or stored.read_text().strip() != self.theme['fingerprint'])
             self.theme['refresh'] |= not (self.state / 'themes/commands/current').is_symlink()
             self.item('theme:' + self.theme['id'], 'prepare' if self.theme['refresh'] else 'unchanged',
-                      reason='publish generated theme data without app reloads or hooks')
+                      target=self.theme['incomplete'] or None,
+                      reason='rebuild incomplete theme data or restore its publication pointer' if self.theme['incomplete'] else
+                             'publish generated theme data without app reloads or hooks')
             if self.theme['refresh']:
                 for identity, path in (('selection', self.state/'themes/current'),
                                        ('active', self.state/'current/theme'),

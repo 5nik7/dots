@@ -73,6 +73,9 @@ set_theme() {
   # Role-based rules also provide a fallback when Vivid is unavailable.
   export LS_COLORS="${_DOTS_THEME_LS_BASE:+$_DOTS_THEME_LS_BASE:}${DOTS_THEME_LS_COLORS:-}"
   _DOTS_THEME_FSH_FILE=''
+  # Retain the expected path when absent so the FSH adapter can explain setup
+  # failures. Explicit session-only palettes still use the last-good selection.
+  [[ -n $requested ]] || _DOTS_THEME_FSH_FILE=$_DOTS_THEME_ACTIVE/fsh.ini
   if [[ -z $requested && -n $generation ]]; then
     [[ ! -r $_DOTS_THEME_LOADED_DIR/vivid.yml ]] || vivid_theme=$_DOTS_THEME_LOADED_DIR/vivid.yml
     [[ ! -r $_DOTS_THEME_LOADED_DIR/fsh.ini ]] || _DOTS_THEME_FSH_FILE=$_DOTS_THEME_LOADED_DIR/fsh.ini
@@ -88,8 +91,8 @@ set_theme() {
       colors=$(command vivid generate "$vivid_theme" 2>/dev/null) && [[ -n $colors ]] && export LS_COLORS=$colors
     fi
   fi
-  if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_fsh_theme]} )); then
-    _dots_fsh_theme || printf '%s\n' 'dots theme: could not load FSH theme; keeping previous syntax colors' >&2
+  if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_fsh_apply]} )); then
+    _dots_fsh_apply || :
   fi
   if [[ -n ${_FZF_OPTS_:-} ]]; then
     export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"

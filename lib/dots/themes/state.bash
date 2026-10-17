@@ -127,6 +127,7 @@ dt_prepare_generation() {
     printf "set -gx BAT_THEME Dots\nset -gx BAT_CACHE_PATH '%s'\n" "$fish_cache" >> "$dir/init.fish"
   fi
   if [[ -L $DT_ACTIVE ]]; then readlink -- "$DT_ACTIVE" > "$dir/previous-active"; else : > "$dir/previous-active"; fi
+  dt_generation_complete "$dir" || { dt_error "incomplete prepared theme: $REPLY"; return 1; }
   dt_commands_prepare "$dir" || return 1
   dt_fingerprint || return 1
   [[ $REPLY == "$fingerprint" ]] || { dt_error 'theme inputs changed during preparation; retry'; return 1; }
@@ -164,7 +165,7 @@ dt_set() (
   dt_recover || exit 1
   dt_generation || exit 1
   previous=${DT_GENERATION:-none}
-  if [[ $DT_GENERATION ]]; then
+  if [[ $DT_GENERATION ]] && dt_generation_current "$DT_STATE/generations/$DT_GENERATION"; then
     IFS= read -r stored < "$DT_STATE/generations/$DT_GENERATION/fingerprint" || exit 1
     local selected
     IFS= read -r selected < "$DT_STATE/generations/$DT_GENERATION/selection" || exit 1

@@ -24,7 +24,11 @@ for tool in flock sync sha256sum mktemp awk cat mkdir mv rm cp ln readlink cmp f
 done
 case ${1:-} in
   inspect)
-    printf '%s\0%s\0%s\0' "$id" "$fingerprint" "$DT_GENERATION" ;;
+    incomplete=''
+    if [[ $DT_GENERATION ]]; then
+      dt_generation_current "$DT_STATE/generations/$DT_GENERATION" || incomplete=$REPLY
+    fi
+    printf '%s\0%s\0%s\0%s\0' "$id" "$fingerprint" "$DT_GENERATION" "$incomplete" ;;
   prepare)
     # The Python coordinator holds themes/lock and commands/lock. No live
     # connectors, pointers, hooks, reloads or wallpaper actions run here.
