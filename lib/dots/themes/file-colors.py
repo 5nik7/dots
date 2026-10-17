@@ -498,11 +498,28 @@ def main(argv):
         else: values = ()
         print('\n'.join(sorted(set(values))))
         return
-    if argv and argv[0] in ('_vivid', '_build'):
+    if argv and argv[0] in ('_vivid', '_build', '_starship_git', '_template_colors'):
         action, directory = argv[:2]
         palette = json.load(sys.stdin)
         doc = resolve(palette, directory)
         if action == '_vivid': print(json.dumps(vivid_theme(doc), indent=2))
+        elif action == '_template_colors':
+            colors = {k: v for k, v in doc['colors'].items() if isinstance(v, str) and HEX.fullmatch(v)}
+            aliases = {'git_' + k: v for k, v in doc['colors']['git'].items()}
+            for key, value in aliases.items():
+                print(key + '\t' + value)
+                print(key + '_delta\t' + ('normal' if value == 'reset' else value))
+            colors.update(aliases)
+            background = doc['colors']['background']
+            for key, value in colors.items():
+                if value == 'reset':
+                    value = background
+                for percent in (10, 25):
+                    mixed = '#' + ''.join(f'{(int(value[i:i+2], 16)*percent + int(background[i:i+2], 16)*(100-percent) + 50)//100:02x}' for i in (1, 3, 5))
+                    print(f'{key}_blend_{percent}\t{mixed}')
+        elif action == '_starship_git':
+            for key, value in doc['colors']['git'].items():
+                print('git_' + key + ' = ' + json.dumps(value))
         else:
             out = Path(argv[2]); write_snapshot(generate(doc, out / 'vivid.yml'), out)
         return

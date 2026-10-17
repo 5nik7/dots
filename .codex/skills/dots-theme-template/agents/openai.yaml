@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dots Theme Templates"
+  short_description: "Create shared-color application theme templates"
+  default_prompt: "Use $dots-theme-template to create the requested Dots default template and verify its generated application colors."

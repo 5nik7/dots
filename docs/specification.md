@@ -382,3 +382,9 @@ resolve per theme, and explicit false attributes override inherited true values.
 ## Implemented checkout installation boundary
 
 The bounded [file catalog](files.md), separate from the draft module/profile model above, now drives [checkout installation](installation.md). Its optional resource `targets` map overrides `target` by platform. Native Windows tokens and the installation receipt are documented in those references. `.gitignore` is not a desired-state manifest. No general profile resolver, package installer or arbitrary installation hooks are introduced.
+
+The implemented catalog schema is unchanged by the consolidated Git layout.
+For the fixed `dots:git` directory resource whose entry point includes
+`gitplatform`, install/link and live mapping apply/restore additionally plan the
+bounded platform selector. It is an installation companion, not an independently
+claimable nested catalog target. See [managed Git selection](files.md#consolidated-git-platform-selector).

@@ -1,15 +1,6 @@
-require("dots"):setup({
-  theme = {
-    source = "dots",
-    apply = function(colors)
-      return { dotline = {
-        style_a = { fg = colors.background, reversed = false,
-          bg_mode = { normal = colors.blue, select = colors.magenta, un_set = colors.red } },
-        style_b = { fg = colors.foreground, bg = colors.background },
-        style_c = { fg = colors.foreground, bg = colors.background },
-      } }
-    end,
-  },
+local dots = require("dots")
+dots:setup({
+  theme = { source = "dots" },
   full_border = {
     -- Available values: ui.Border.PLAIN, ui.Border.ROUNDED
     type = ui.Border.PLAIN,
@@ -81,37 +72,37 @@ require("dots"):setup({
     padding = { inner = 1, outer = 1 },
 
     style_a = {
-      fg = "black",
+      fg = dots.colors.background,
       bold = true,
       underline = false,
-      reversed = true,
+      reversed = false,
       bg_mode = {
-        normal = "blue",
-        select = "magenta",
-        un_set = "red",
+        normal = dots.colors.blue,
+        select = dots.colors.magenta,
+        un_set = dots.colors.red,
       },
     },
-    style_b = { bg = "black", fg = "white" },
-    style_c = { bg = "black", fg = "white" },
+    style_b = { bg = dots.colors.background, fg = dots.colors.foreground },
+    style_c = { bg = dots.colors.background, fg = dots.colors.foreground },
 
-    permissions_t_fg = "black",
-    permissions_r_fg = "yellow",
-    permissions_w_fg = "red",
-    permissions_x_fg = "green",
-    permissions_s_fg = "black",
+    permissions_t_fg = dots.colors.background,
+    permissions_r_fg = dots.colors.yellow,
+    permissions_w_fg = dots.colors.red,
+    permissions_x_fg = dots.colors.green,
+    permissions_s_fg = dots.colors.background,
 
     tab_width = 0,
 
-    selected = { icon = "󰻭", fg = "yellow" },
-    copied = { icon = "", fg = "green" },
-    cut = { icon = "", fg = "red" },
+    selected = { icon = "󰻭", fg = dots.colors.yellow },
+    copied = { icon = "", fg = dots.colors.green },
+    cut = { icon = "", fg = dots.colors.red },
 
-    files = { icon = "", fg = "blue" },
-    filtereds = { icon = "", fg = "magenta" },
+    files = { icon = "", fg = dots.colors.blue },
+    filtereds = { icon = "", fg = dots.colors.magenta },
 
-    total = { icon = "󰮍", fg = "yellow" },
-    success = { icon = "", fg = "green" },
-    failed = { icon = "", fg = "red" },
+    total = { icon = "󰮍", fg = dots.colors.yellow },
+    success = { icon = "", fg = dots.colors.green },
+    failed = { icon = "", fg = dots.colors.red },
 
     show_background = true,
 
@@ -170,7 +161,7 @@ require("dots"):setup({
       path = { source = "directory" },
       name = { source = "file" },
       icon = { source = "name" },
-      arrow = { source = "custom", fg = "darkgray" },
+      arrow = { source = "custom", fg = dots.colors.muted },
       link_dir = { source = "directory" },
       link = { source = "target" },
       -- Add fg/bg or attributes to any part, e.g. name = { source = "file", bg = "reset", bold = false }.
@@ -189,8 +180,8 @@ require("dots"):setup({
 
   githead = {
     show_remote_icon = true,
-    repo_color = "blue",
-    repo_owned_color = "yellow",
+    repo_color = dots.colors.git.repo,
+    repo_owned_color = dots.colors.git.repo_owned,
     repo_prefix = "", -- Literal text; include any desired trailing space.
     repo_symbol = "", -- Optional icon; i
     order = {
@@ -210,7 +201,7 @@ require("dots"):setup({
 
     show_branch = true,
     branch_prefix = "",
-    branch_color = "magenta",
+    branch_color = dots.colors.git.branch,
     branch_symbol = "",
     branch_borders = "",
 
@@ -218,48 +209,48 @@ require("dots"):setup({
     always_show_remote_branch = false, -- always show remote branch even if it the same as local branch
     always_show_remote_repo = false, -- Adds `origin/` if `always_show_remote_branch` is enabled
     remote_branch_prefix = ":",
-    remote_branch_color = "magenta",
+    remote_branch_color = dots.colors.git.branch,
 
     show_tag = true, -- only shown if branch is not available
     always_show_tag = false,
-    tag_color = "magenta",
+    tag_color = dots.colors.magenta,
     tag_symbol = "#",
 
     show_commit = true, -- only shown if branch AND tag are not available
     always_show_commit = false,
-    commit_color = "magenta",
+    commit_color = dots.colors.magenta,
     commit_symbol = "@",
 
     show_behind_ahead_remote = true,
-    behind_remote_color = "magenta",
+    behind_remote_color = dots.colors.git.behind,
     behind_remote_symbol = "⇣",
-    ahead_remote_color = "magenta",
+    ahead_remote_color = dots.colors.git.ahead,
     ahead_remote_symbol = "⇡",
 
     show_stashes = true,
-    stashes_color = "darkgray",
+    stashes_color = dots.colors.muted,
     stashes_symbol = "$",
 
     show_state = true,
     show_state_prefix = true,
-    state_color = "red",
+    state_color = dots.colors.git.conflict,
     state_symbol = "~",
 
     show_staged = true,
-    staged_color = "cyan",
+    staged_color = dots.colors.git.staged,
     staged_symbol = "+",
 
     show_unstaged = true,
-    unstaged_color = "cyan",
+    unstaged_color = dots.colors.git.modified,
     unstaged_symbol = "!",
 
     show_untracked = true,
-    untracked_color = "cyan",
+    untracked_color = dots.colors.git.untracked,
     untracked_symbol = "?",
   },
 
   hostname_username = {
-    color = "red",
+    color = dots.colors.red,
     mode = "both", -- "host", "user", "both"
   },
 })

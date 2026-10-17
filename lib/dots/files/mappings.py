@@ -154,10 +154,14 @@ class MappingPlan:
             raise ValueError('unrelated link is protected: ' + str(target))
         if exists(target) and not target.is_symlink() and not self.backup:
             raise ValueError('occupied target requires --backup: ' + str(target))
+        from git_platform import plan as plan_git_platform
+        start = len(self.install.items)
+        plan_git_platform(self.install, row)
+        self.rows.extend(self.install.items[start:])
         self.install.add(row['id'], target, link=source, directory=source.is_dir(), managed=known_old)
         if self.install.blocked:
             raise ValueError('installation plan contains conflicts')
-        self.live = self.live or any(op['path'] == str(target) for op in self.install.operations)
+        self.live = self.live or bool(self.install.operations)
 
     def retire_receipts(self, identity, keep=None):
         """Retire verified owned links left by metadata-only mapping edits."""

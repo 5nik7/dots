@@ -79,7 +79,7 @@ class Plugins(unittest.TestCase):
         self.hook('20-custom.sh', 'touch "$HOME/executed"\n')
         before = self.snapshot()
         rows = json.loads(self.plugins('list', '--json').stdout)['plugins']
-        self.assertEqual({r['name'] for r in rows}, {'gtk', 'qt6ct', 'custom'})
+        self.assertEqual({r['name'] for r in rows}, {'gtk', 'qt6ct', 'starship', 'custom'})
         self.assertFalse(any(r['enabled'] for r in rows))
         self.plugins('doctor', '--json')
         self.plugins()
@@ -91,6 +91,41 @@ class Plugins(unittest.TestCase):
                 self.assertIn(action, self.dots('help', 'theme', 'plugins', action).stdout)
         self.dots('theme', 'set', 'nord', '--dry-run')
         self.assertEqual(before, self.snapshot())
+
+    def test_starship_publication_and_palette_only_refresh(self):
+        import tomllib
+        active = self.home / 'active starship.toml'
+        storage = self.home / 'blastoff'; (storage / 'themes').mkdir(parents=True)
+        saved = storage / 'themes/dots.toml'
+        self.env.update(STARSHIP_CONFIG=str(active), BLASTOFF_HOME=str(storage))
+        original = 'palette="dots"\n[palettes.dots]\nblue="#123456"\ncustom="red"\n[directory]\nstyle="blue"\ntruncation_length=9\n'
+        active.write_text(original); saved.write_text(original)
+        self.stub('starship')
+        self.plugins('enable', 'starship')
+        self.publish()
+        doc = tomllib.loads(active.read_text())
+        palette = tomllib.loads((self.generation() / 'blastoff.toml').read_text())['palettes']['dots']
+        self.assertEqual(doc['palettes']['dots']['blue'], palette['blue'])
+        self.assertEqual(doc['palettes']['dots']['custom'], 'red')
+        self.assertEqual(doc['directory']['truncation_length'], 9)
+        self.assertEqual(active.read_bytes(), saved.read_bytes())
+        before = active.stat().st_mtime_ns
+        self.dots('theme', 'refresh')
+        self.assertEqual(active.stat().st_mtime_ns, before)
+        active.write_text(active.read_text().replace('truncation_length=9', 'truncation_length=17'))
+        self.dots('theme', 'set', 'catppuccin-latte')
+        light = tomllib.loads(active.read_text())
+        self.assertEqual(light['directory']['truncation_length'], 17)
+        self.assertNotEqual(light['palettes']['dots']['blue'], doc['palettes']['dots']['blue'])
+        export = json.loads((self.generation()/'colors.json').read_text())
+        self.assertEqual(light['palettes']['dots']['git_branch'], export['colors']['git']['branch'])
+        self.assertEqual(light['palettes']['dots']['background'], export['colors']['background'])
+        active.write_text(active.read_text().replace('palette="dots"', 'palette="other"'))
+        other = active.read_bytes()
+        self.publish()
+        self.assertEqual(active.read_bytes(), other)
+        self.assertEqual(tomllib.loads(saved.read_text())['palettes']['dots']['blue'], palette['blue'])
+        self.plugins('doctor', 'starship', '--json')
 
     def test_selection_order_refresh_and_disabled_output(self):
         for filename in ('100-late.sh', '2-first.sh', '10-middle.sh'):

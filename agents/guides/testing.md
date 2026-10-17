@@ -226,3 +226,11 @@ For shared file/path presentation, run `python3 -B tools/test_resources.py` and 
 owning command suites. Test forced-decoration data interfaces, old publications,
 resource matching parity and 40/80/120-column PTYs; never generate a live theme to
 validate a display-only change.
+
+For Starship/Blastoff palette-only integration, additionally run `python3 -B tools/test_starship_palette.py` and the theme-plugin suite. Preserve byte-exact non-palette content, user palette extensions, lock/link drift guards and transaction rollback. Native rendering must use test-owned configs and synthetic repositories with no custom commands or language version probes.
+
+For Git default templates and consolidated platform selection, run the focused
+Git consumer and selector suites described in [testing](../../docs/testing.md#git-template-and-platform-selector),
+plus affected publication and managed-file suites. Keep credential helpers and
+Git hooks inert, and verify actual syntax-cache loading rather than config parsing
+alone.

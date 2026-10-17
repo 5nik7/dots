@@ -154,7 +154,8 @@ must isolate DDS sockets as well as home/config/state/cache directories.
 
 | Roles | Default foreground | Attributes |
 | --- | --- | --- |
-| `repo` | `blue` | bold |
+| `repo` | `magenta` | bold |
+| `repo_owned` | `yellow` | bold |
 | `branch`, `untracked` | `magenta` | none |
 | `modified`, `behind`, `detached`, `missing` | `warning` | none |
 | `staged`, `added`, `clean`, `ahead` | `green` | none |

@@ -184,6 +184,7 @@ class Manager:
 
     @tracked('Planning file operations')
     def plan(self, args):
+        self.link_installation = None
         ops, guards, docs, views = [], {}, {}, []
         records = self.catalog.records()
         owners = {x['id']: x for x in self.catalog.sources if x['status'] == 'available'}
@@ -281,6 +282,15 @@ class Manager:
                 if args.action == 'link':
                     if row['strategy'] == 'copy':
                         raise ValueError('resource requests copy; change metadata explicitly before linking')
+                    if row['id'] == 'dots:git':
+                        from install import Installation
+                        from git_platform import plan as plan_git_platform
+                        installation = Installation(self.root)
+                        if plan_git_platform(installation, row):
+                            self.link_installation = installation
+                            ops.extend(installation.operations)
+                            guards.update(installation.guards)
+                            views.extend(dict(item, path=item.get('target')) for item in installation.items)
                     if target.is_symlink():
                         views.append({'path': str(target), 'status': 'unchanged'})
                         continue
@@ -306,6 +316,9 @@ class Manager:
                 a, b = Path(left['path']), Path(right['path'])
                 if a.is_relative_to(b) or b.is_relative_to(a):
                     raise ValueError('overlapping batch operations')
+        if getattr(self, 'link_installation', None):
+            self.link_installation.operations = ops
+            self.link_installation.guards.update(guards)
         return ops, guards, list(docs), views
 
 
@@ -481,6 +494,9 @@ def main():
             if not args.values and not (args.action == 'add' and args.scan):
                 parser.error('select paths or qualified resource IDs')
             ops, guards, catalogs, views = manager.plan(args)
+            if getattr(manager, 'link_installation', None):
+                # Installation baselines must survive for a later uninstall.
+                args.backup = True
     preview = {'schema': 1, 'action': args.action, 'dry_run': args.dry_run, 'backup': args.backup, 'items': views}
     if args.dry_run:
         if args.json:
@@ -507,6 +523,10 @@ def main():
             return
     if args.action == 'recover':
         result = manager.store.recover(args.values[0])
+    elif getattr(manager, 'link_installation', None):
+        result = manager.link_installation.apply(args.action, catalogs=catalogs, retain=args.backup)
+        if result['status'] == 'unchanged':
+            result = dict(schema=1, status='unchanged', operations=[])
     else:
         result = manager.store.apply(args.action, ops, guards, args.backup, catalogs)
     if args.json:

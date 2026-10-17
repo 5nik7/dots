@@ -484,7 +484,7 @@ Contributors work directly in the existing checkout on `main` by default. Task-r
 ## Local theme plugins
 
 `dots theme plugins` manages explicitly enabled integrations shared by ordinary
-Dots themes and Anodize application. GTK 3 and Qt6ct are bundled and disabled by
+Dots themes and Anodize application. GTK 3, Qt6ct and Starship/Blastoff are bundled and disabled by
 default; trusted custom Bash hooks can be enabled separately.
 
 ```bash
@@ -499,7 +499,7 @@ Enable/disable only persist selection. Successful theme publication runs enabled
 plugins, and explicit refresh retries them. Disabling keeps existing output.
 Bundled app writes use retained backups and the file transaction engine; arbitrary
 custom hook effects are not sandboxed or automatically reversible. See the
-[plugin guide](docs/theme-plugins.md) for Qt6ct, authoring, palette variables,
+[plugin guide](docs/theme-plugins.md) for Starship/Blastoff, Qt6ct, authoring, palette variables,
 recovery, JSON output, and desktop limitations. Downloaded themes remain data-only.
 
 ## File colors and live Yazi themes
@@ -510,7 +510,7 @@ tables and swatches; `theme colors --theme catppuccin-mocha` previews saved
 configuration. File type, MIME and extension listings use readable style tables,
 including a plain layout when color is disabled.
 
-`theme colors git` lists the shared repository, branch and Git status styles used by `dots git status`, `sync` and `publish`. `theme colors set git untracked --fg cyan --apply` customizes a role and refreshes the current selection; filenames retain their type/MIME colors. See [Git styles](docs/file-colors.md#git-styles) for defaults and exports.
+`theme colors git` lists the shared repository (`repo`, magenta; `repo_owned`, yellow), branch and Git status styles used by `dots git status`, `sync` and `publish`. `theme colors set git untracked --fg cyan --apply` customizes a role and refreshes the current selection; filenames retain their type/MIME colors. Yazi follows these roles through live `dots.colors.git.repo` references and shared Git indicator styles. See [Git styles](docs/file-colors.md#git-styles) for defaults and exports.
 
 `theme colors type dir hex` queries a directory color. Use
 `theme colors set type dir --fg blue` to save a shared rule and `theme refresh`
@@ -527,3 +527,7 @@ accepts `colors.red`, `colors.blue`, `colors.type.dir`, and complete style table
 Repository-local Codex workflows live in [.codex](.codex/README.md).
 
 Human CLI views share Git-style semantic colors, readable plain output and delayed progress. File/directory fields use published Dots type, extension and MIME styles with optional icons; theme previews and Anodize branding retain their custom appearance. Use the existing `--color=never`, `--icons=never` and `DOTS_PROGRESS=never` controls independently. See [presentation](docs/presentation.md#filesystem-resources).
+
+The [Git configuration](config/git/README.md) follows shared Dots colors in native Git and Delta through a generated theme include. Git's Delta pager/filter also uses the generated Dots syntax cache without replacing the normal bat cache. Managed Git installation/linking selects the ignored platform overlay automatically; the consolidated files live in the parent Dots checkout.
+
+The saved [Blastoff `dots` theme](config/blastoff/themes/dots.toml) uses shared color names and Git roles while retaining the personal prompt layout. It includes styles for supported inactive Starship modules. With `dots theme plugins enable starship`, publication/refresh updates only `[palettes.dots]` in the active Starship config and saved `dots` theme. Other selected palettes are skipped; module edits and extra palette names remain intact. See [Starship integration](docs/theme-plugins.md#starship-and-blastoff-starship).

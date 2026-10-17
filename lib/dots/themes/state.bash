@@ -117,6 +117,10 @@ dt_prepare_generation() {
     cp -- "$dir/bat.tmTheme" "$dir/bat-source/themes/Dots.tmTheme" || return 1
     dots::progress_update 'Building bat theme cache'
     (cd -- "$dir/bat-source" && BAT_CONFIG_PATH=/dev/null BAT_THEME=ansi BAT_CONFIG_DIR="$dir/bat-source" BAT_CACHE_PATH="$dir/bat-cache" bat cache --build --source "$dir/bat-source" --target "$dir/bat-cache" >/dev/null) || { dt_error 'bat theme cache build failed'; return 1; }
+    # Delta reads XDG_CACHE_HOME/bat rather than BAT_CACHE_PATH. Git redirects
+    # only its Delta processes here, leaving the normal bat cache untouched.
+    mkdir "$dir/delta-cache" && ln -s ../bat-cache "$dir/delta-cache/bat" || return 1
+    dt_flush "$dir/delta-cache" || return 1
     printf 'export BAT_THEME=Dots BAT_CACHE_PATH=%q\n' "$dir/bat-cache" >> "$dir/init.zsh"
     local fish_cache=$dir/bat-cache
     fish_cache=${fish_cache//\\/\\\\}; fish_cache=${fish_cache//\'/\\\'}

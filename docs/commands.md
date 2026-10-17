@@ -694,3 +694,12 @@ remain undecorated. Theme panels retain their own palette. The sourceable Bash
 helpers `dots::resource PATH [DISPLAY [KIND [MIME]]]` and
 `dots::resource_row LABEL PATH [DISPLAY [KIND [MIME]]]` are presentation-only:
 they never resolve a theme or alter a resource. See [presentation](presentation.md#filesystem-resources).
+
+Git human output distinguishes owned repositories with the shared `git.repo_owned` role using local fetch-remote ownership metadata; see [Git theme colors](git.md#theme-colors). This does not add fields to JSON output or change publish/sync policy.
+
+The bundled `starship` integration is available through existing `dots theme plugins` routes and completion. Enabling it permits palette-only updates on publication/refresh; it does not activate a Blastoff theme. See the [Starship/Blastoff adapter](theme-plugins.md#starship-and-blastoff-starship).
+
+The existing `dots files link dots:git`, installation, mapping apply and stash
+restore paths also preview/select the fixed Git platform companion. Direct Git
+linking retains its installation baseline for uninstall even when optional backup
+snapshots are disabled. No new public route or catalog field is introduced.

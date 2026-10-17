@@ -82,6 +82,9 @@ def qt_registration(original, previous, path):
 
 
 def prepare(name, config, state, generation):
+    if name == 'starship':
+        from starship import prepare as starship_prepare
+        return starship_prepare(config, state, generation)
     receipt_path = state / 'theme-plugins' / (name + '.json')
     old_receipt_bytes = content(receipt_path)
     old = read_json(receipt_path) if old_receipt_bytes is not None else None
@@ -134,6 +137,9 @@ def prepare(name, config, state, generation):
 
 
 def apply(name, config, state, generation):
+    if name == 'starship':
+        from starship import apply as starship_apply
+        return starship_apply(config, state, generation)
     changed, receipt_path, receipt, old, guards = prepare(name, config, state, generation)
     if not changed and receipt == old:
         return {'status': 'success', 'detail': 'unchanged'}

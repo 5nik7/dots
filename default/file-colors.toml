@@ -95,7 +95,10 @@ use = "archive"
 
 # Git metadata and status labels; file paths keep their type/MIME styles.
 [git.repo]
-fg = "blue"
+fg = "magenta"
+bold = true
+[git.repo_owned]
+fg = "yellow"
 bold = true
 [git.branch]
 fg = "magenta"

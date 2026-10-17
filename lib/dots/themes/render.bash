@@ -134,9 +134,14 @@ dt_load() {
   done
 }
 dt_render() {
-  local dir=$1 template filename line rest key value prefix output
+  local dir=$1 template filename line rest key value prefix output token_data
   local pattern='\{\{[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\}\}'
   local -A rendered=()
+  local -A template_colors=()
+  token_data=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _template_colors "$DT_THEME_DIR") || return
+  while IFS=$'\t' read -r key value; do
+    [[ ! $key ]] || template_colors[$key]=$value
+  done <<< "$token_data"
   # Only bundled app overrides are trusted. Installed repositories supply colors/images only.
   if [[ $DT_THEME_DIR == "$DT_ROOT/"* ]]; then
     for filename in kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini; do
@@ -159,10 +164,11 @@ dt_render() {
         key=${BASH_REMATCH[1]}; prefix=${rest%%"${BASH_REMATCH[0]}"*}
         rest=${rest#*"${BASH_REMATCH[0]}"}
         case $key in
+          git_colors_starship) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _starship_git "$DT_THEME_DIR") || return ;;
           file_styles_vivid) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _vivid "$DT_THEME_DIR") || return ;;
           *_strip) key=${key%_strip}; value=${DT_SEMANTIC[$key]:-}; value=${value#\#} ;;
           *_rgb) key=${key%_rgb}; [[ ${DT_SEMANTIC[$key]:-} ]] || return 1; dt_rgb "${DT_SEMANTIC[$key]}"; value="$DT_R,$DT_G,$DT_B" ;;
-          *) value=${DT_SEMANTIC[$key]:-} ;;
+          *) value=${template_colors[$key]:-${DT_SEMANTIC[$key]:-}} ;;
         esac
         [[ $value ]] || { dt_error "unknown template color: $key"; return 1; }
         line+=$prefix$value

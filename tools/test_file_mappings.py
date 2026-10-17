@@ -363,6 +363,8 @@ class GitMigration(unittest.TestCase):
         self.common.mkdir()
         (self.common/'gitconfig').write_text('[fixture]\n common = yes\n[include]\n path = aliases\n')
         (self.common/'aliases').write_text('[fixture]\n aliases = yes\n')
+        (self.common/'config').write_text('[include]\n  path = gitconfig\n  path = ~/.config/git-termux/config\n')
+        (self.common/'termux').write_text('[fixture]\n android = yes\n[credential]\n helper = !false\n')
         self.android=self.repo/'androidots'
         (self.android/'.dots').mkdir(parents=True)
         (self.android/'config/git').mkdir(parents=True)
@@ -376,6 +378,7 @@ class GitMigration(unittest.TestCase):
         row=dict(id='git',source='config/git',target='${CONFIG}/git',strategy='directory-link',app='git',category='config',platforms=['termux','linux','wsl'])
         self.f.write('.dots/files.json',dict(schema=1,repository='dots',resources=[row]))
         (self.android/'.dots/files.json').write_text(json.dumps(dict(schema=1,repository='androidots',resources=[dict(row,source='config/git/gitconfig',target='${HOME}/.gitconfig',strategy='link',platforms=['termux'])])))
+        (self.android/'.dots/file-locations.json').write_text(json.dumps(dict(schema=1,repository='androidots',locations=[dict(id='git',kind='file',source='config/git/gitconfig',target='${HOME}/.gitconfig',platforms=['termux'])])))
         (self.home/'.gitconfig').symlink_to(self.android_source)
 
     def test_migration_loading_idempotence_and_undo(self):
@@ -386,7 +389,10 @@ class GitMigration(unittest.TestCase):
         result=plan.apply('git-config-migration')
         self.assertFalse((self.home/'.gitconfig').is_symlink())
         self.assertEqual((self.home/'.config/git').resolve(),self.common)
-        self.assertEqual((self.home/'.config/git-termux/config').resolve(),self.android_source)
+        self.assertFalse((self.home/'.config/git-termux/config').is_symlink())
+        self.assertEqual((self.common/'gitplatform').readlink(),Path('termux'))
+        self.assertFalse(any(r['id']=='git' for r in json.loads((self.android/'.dots/files.json').read_text())['resources']))
+        self.assertEqual(json.loads((self.android/'.dots/file-locations.json').read_text())['locations'],[])
         env=dict(self.env)
         for key in list(env):
             if key.startswith('GIT_CONFIG'):del env[key]
@@ -395,17 +401,18 @@ class GitMigration(unittest.TestCase):
             proc=subprocess.run(['git','config','--global','--includes','--get','fixture.'+key],env=env,cwd=self.home,capture_output=True,text=True)
             self.assertEqual(proc.returncode,0,proc.stderr)
             self.assertEqual(proc.stdout.strip(),'yes')
-        self.assertEqual(self.android_source.read_text(),migration.without_common_include(self.old))
+        self.assertEqual(self.android_source.read_text(),self.old)
         self.assertEqual(self.android_source.stat().st_mode & 0o777,0o600)
         expected=migration.settings('--file',str(self.common/'gitconfig'),'--includes')
-        expected+=migration.settings('--file',str(self.android_source),'--no-includes')
+        expected+=migration.settings('--file',str(self.common/'termux'),'--no-includes')
         self.assertEqual(migration.settings('--global','--includes'),expected)
         self.assertEqual(migration.migration_plan().apply('git-config-migration')['status'],'unchanged')
         store=Store(self.home/'.state/dots');ops,guards,catalogs=store.inverse(result['id'])
         store.apply('undo',ops,guards,catalogs=catalogs)
         self.assertTrue((self.home/'.gitconfig').is_symlink())
         self.assertEqual(self.android_source.read_text(),self.old)
-        self.assertFalse((self.common/'config').exists())
+        self.assertEqual((self.common/'config').read_text(),migration.OLD_ENTRY)
+        self.assertEqual(json.loads((self.android/'.dots/file-locations.json').read_text())['locations'][0]['id'],'git')
 
     def test_unrelated_old_link_refuses_complete_plan(self):
         import migrate_git_config as migration
@@ -414,7 +421,36 @@ class GitMigration(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'old target'):
             migration.migration_plan()
         self.assertEqual(self.android_source.read_text(),self.old)
-        self.assertFalse((self.common/'config').exists())
+        self.assertEqual((self.common/'config').read_text(),migration.OLD_ENTRY)
+
+    def test_consolidated_layout_retires_owned_dangling_overlay(self):
+        import migrate_git_config as migration
+        (self.home/'.gitconfig').unlink()
+        legacy=self.home/'.config/git-termux/config';legacy.parent.mkdir(parents=True)
+        legacy.symlink_to(self.android_source)
+        self.android_source.unlink()
+        (self.common/'config').write_text(migration.ENTRY)
+        (self.common/'gitplatform').symlink_to('termux')
+        state=self.home/'.state/dots';state.mkdir(parents=True)
+        receipt=dict(schema=1,root=str(self.repo),platform='termux',transactions=[],entries={str(legacy):dict(id='androidots:git',before=None,after=digest(legacy),backup='unused',index=0)})
+        (state/'installation.json').write_text(json.dumps(receipt))
+        plan=migration.migration_plan();result=plan.apply('git-config-migration')
+        self.assertFalse(legacy.is_symlink())
+        current=json.loads((state/'installation.json').read_text())
+        self.assertIsNone(current['entries'][str(legacy)]['after'])
+        self.assertTrue((self.common/'gitplatform').is_symlink())
+        self.assertEqual(migration.migration_plan().apply('git-config-migration')['status'],'unchanged')
+        ops,guards,catalogs=plan.install.store.inverse(result['id'])
+        plan.install.store.apply('undo',ops,guards,retain=True,catalogs=catalogs)
+        self.assertTrue(legacy.is_symlink())
+        self.assertFalse(self.android_source.exists())
+
+    def test_retired_catalog_does_not_reappear(self):
+        import migrate_git_config as migration
+        plan=migration.migration_plan();plan.apply('git-config-migration')
+        self.assertFalse(any(r['id']=='androidots:git' for r in Catalog(self.repo,'termux').records()))
+        install=Installation(self.repo);install.plan_install()
+        self.assertFalse(any('git-termux' in op['path'] or op['path']==str(self.home/'.gitconfig') for op in install.operations))
 
     def test_failed_global_verification_undoes_migration(self):
         import migrate_git_config as migration
@@ -424,7 +460,7 @@ class GitMigration(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError,'was undone'):migration.main()
         self.assertTrue((self.home/'.gitconfig').is_symlink())
         self.assertEqual(self.android_source.read_text(),self.old)
-        self.assertFalse((self.common/'config').exists())
+        self.assertEqual((self.common/'config').read_text(),migration.OLD_ENTRY)
 
 
 if __name__ == '__main__':

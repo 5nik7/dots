@@ -33,7 +33,8 @@ dots::git_style() {
   [[ $DOTS_UI_RESET ]] || return 0
   dots::_git_styles_load
   case $role in
-    repo) code='1;94' ;;
+    repo) code='1;95' ;;
+    repo_owned) code='1;93' ;;
     branch|untracked) code=95 ;;
     modified|behind|detached|missing) code=93 ;;
     staged|added|clean|ahead) code=92 ;;

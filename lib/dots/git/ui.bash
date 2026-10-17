@@ -25,9 +25,47 @@ file_status_style() {
     fi
     dots::git_style "$role"
 }
+# Presentation ownership is local-only and cached independently of publish policy.
+declare -A PRESENTATION_REPOS=()
+PRESENTATION_CONFIG_READY=0
+PRESENTATION_OWNERS=() PRESENTATION_ALIASES=()
+repo_presentation_style() {
+    local dir=${1:-} fd=${2:-1} role=repo
+    dots::style "$fd"
+    if [[ $DOTS_UI_RESET && -n $dir ]]; then
+        if [[ ! ${PRESENTATION_REPOS[$dir]+yes} ]]; then
+            local REMOTE URL PROTOCOL HOST OWNER REPO OWNED HOST_ICON SAFE_URL REMOTE_ARG=''
+            local -a OWNERS=() HOST_ALIASES=() RECORDS=()
+            local row key value valid=1
+            if ((!PRESENTATION_CONFIG_READY)); then
+                PRESENTATION_CONFIG_READY=1
+                if [[ ${NO_CONFIG:-0} == 0 && -f ${CONFIG:-} && ! -L $CONFIG && -r $CONFIG ]] &&
+                    records_cmd git config --no-includes --null --file "$CONFIG" --list 2>/dev/null; then
+                    for row in "${RECORDS[@]}"; do
+                        key=${row%%$'\n'*}; value=${row#*$'\n'}
+                        case $key in
+                            dots-git.owner) [[ $value == */* && $value != *$'\n'* ]] || valid=0; OWNERS+=("$value") ;;
+                            dots-git.hostalias) [[ $value == *=* ]] || valid=0; HOST_ALIASES+=("$value") ;;
+                            *) valid=0 ;;
+                        esac
+                    done
+                    if ((valid)); then PRESENTATION_OWNERS=("${OWNERS[@]}"); PRESENTATION_ALIASES=("${HOST_ALIASES[@]}"); fi
+                fi
+            fi
+            OWNERS=("${PRESENTATION_OWNERS[@]}"); HOST_ALIASES=("${PRESENTATION_ALIASES[@]}")
+            if ((${#OWNERS[@]})) && select_remote "$dir"; then
+                parse_url "$URL"
+                [[ $OWNED != true ]] || role=repo_owned
+            fi
+            PRESENTATION_REPOS[$dir]=$role
+        fi
+        role=${PRESENTATION_REPOS[$dir]}
+    fi
+    dots::git_style "$role" "$fd"
+}
 status_header() {
     local label=$1 branch=$2 state=$3 columns=$4 repo_style branch_style state_style marker
-    dots::git_style repo; repo_style=$REPLY
+    repo_presentation_style "${5:-}"; repo_style=$REPLY
     if [[ $branch == 'detached '* ]]; then dots::git_style detached
     else dots::git_style branch; fi
     branch_style=$REPLY
@@ -71,6 +109,8 @@ repo_label() {
             if [[ $other != "$dir" && $other == */"$candidate" ]]; then collision=1; break; fi
         done
         ((collision)) || break
+        # ROOT is initialized by main.bash before rendering.
+        # shellcheck disable=SC2153
         if [[ $dir == "$ROOT" ]]; then candidate+=" (root)"; break; fi
         parent=${dir%/"$candidate"}
         candidate=${parent##*/}/$candidate
@@ -82,7 +122,7 @@ render_event() {
     dots::progress_stop
     local dir=$1 state=$2 detail=$3 file=${4:-} code=$DOTS_UI_CYAN marker='[i]' label repo_style
     dots::style
-    dots::git_style repo; repo_style=$REPLY
+    repo_presentation_style "$dir"; repo_style=$REPLY
     repo_label "$dir"; display "$REPLY"; label=$REPLY
     case $state in
         blocked|failed) dots::git_style blocked; code=$REPLY; marker=$DOTS_UI_ERROR ;;
@@ -133,7 +173,7 @@ event() {
     if ((!JSON)); then
         if [[ $state == blocked || $state == failed ]]; then
             # Cache styles in the parent; the subshell keeps grouping state isolated.
-            dots::git_style repo 2
+            repo_presentation_style "$dir" 2
             (render_event "$@") >&2
         else render_event "$@"; fi
     fi

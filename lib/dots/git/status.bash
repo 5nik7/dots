@@ -85,7 +85,7 @@ status_main() {
             printf ']}'
         else
             repo_label "$dir"; display "$REPLY"; branch_label=$REPLY
-            status_header "$branch_label" "$branch" "$state" "$columns"
+            status_header "$branch_label" "$branch" "$state" "$columns" "$dir"
             [[ $ahead == null ]] || tracking_row "$ahead" "$behind" "$columns"
             [[ ! -v STATUS_ERRORS[$dir] ]] || dots::row 'Reason' "${STATUS_ERRORS[$dir]}"
             for ((index=0;index<count;index++)); do

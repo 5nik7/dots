@@ -6,32 +6,12 @@ scan_timeout = 10000
 command_timeout = 10000
 
 format = """
-$os\
-$username\
-$hostname\
 $directory\
-$git_branch\
+($git_branch\
 $git_commit\
 $git_status\
 $git_metrics\
-$git_state\
-$c\
-$rust\
-$golang\
-$nodejs\
-$php\
-$java\
-$kotlin\
-$haskell\
-$python\
-$package\
-$docker_context\
-$kubernetes\
-$shell\
-$container\
-$jobs\
-$time\
-$cmd_duration\
+$git_state)\
 $status\
 $line_break\
 $character\
@@ -48,8 +28,9 @@ color_caution = 'bright-yellow'
 color_os = 'red'
 color_username = 'red'
 color_hostname = 'red'
-color_directory = 'yellow'
+color_directory = 'blue'
 color_git = 'cyan'
+color_git_repo = 'yellow'
 color_git_branch = 'purple'
 color_git_added = 'bright-green'
 color_git_deleted = 'bright-red'
@@ -67,7 +48,7 @@ color_vimcmd_replace = 'purple'
 color_vimcmd_visual = 'yellow'
 
 [os]
-disabled = false
+disabled = true
 style = "fg:color_os"
 format = '[$symbol]($style)'
 
@@ -95,33 +76,30 @@ RedHatEnterprise = "󱄛"
 Pop = ""
 
 [username]
-show_always = true
+disabled = true
+show_always = false
 style_user = "fg:color_username"
 style_root = "bold fg:color_danger"
-format = '[ $user]($style)'
+format = '[$user]($style)'
 
 [hostname]
-ssh_only = false
+disabled = true
+ssh_only = true
 style = "fg:color_hostname"
-format = '[@$hostname ]($style)'
+format = '[@$hostname]($style)'
 
 [directory]
 style = "fg:color_directory"
-read_only_style = "fg:color_directory"
-repo_root_style = "bold fg:color_directory"
-format = "[ $path ]($style)"
-read_only = " "
-home_symbol = "~"
-truncation_symbol = "…/"
+format = "[$path]($style) "
 truncation_length = 0
-truncate_to_repo = true
+truncate_to_repo = false
 fish_style_pwd_dir_length = 0
 use_logical_path = true
 
 [git_branch]
 symbol = ""
 style = "fg:color_git_branch"
-format = '( [$symbol$branch]($style) )'
+format = '([$symbol$branch]($style) )'
 only_attached = true
 ignore_branches = []
 truncation_length = 25
@@ -131,7 +109,7 @@ disabled = false
 
 [git_commit]
 style = "fg:color_git"
-format = "( [($tag)(@$hash)]($style) )"
+format = "[($tag)(@$hash)]($style)"
 commit_hash_length = 7
 only_detached = true
 tag_symbol = "󰓼 "
@@ -190,6 +168,7 @@ style = "fg:color_env"
 format = '( [$symbol( $version)]($style) )'
 
 [golang]
+disabled = true
 symbol = "󰟓"
 style = "fg:color_env"
 format = '( [$symbol( $version)]($style) )'
@@ -279,8 +258,8 @@ show_milliseconds = false
 disabled = true
 
 [status]
-disabled = false
-format = '( [$symbol( $common_meaning)( $signal_name)]($style) )'
+disabled = true
+format = '([$symbol( $common_meaning)( $signal_name)]($style) )'
 map_symbol = true
 pipestatus = true
 symbol = '󰅙'
@@ -300,6 +279,6 @@ disabled = false
 success_symbol = '[](bold fg:color_ok)'
 error_symbol = '[](bold fg:color_danger)'
 vimcmd_symbol = '[▎](bold fg:color_vimcmd_ok)'
-vimcmd_replace_one_symbol = '[❮](bold fg:color_vimcmd_replace)'
-vimcmd_replace_symbol = '[❮](bold fg:color_vimcmd_replace)'
-vimcmd_visual_symbol = '[❮](bold fg:color_vimcmd_visual)'
+vimcmd_replace_one_symbol = '[▎](bold fg:color_vimcmd_replace)'
+vimcmd_replace_symbol = '[▎](bold fg:color_vimcmd_replace)'
+vimcmd_visual_symbol = '[▎](bold fg:color_vimcmd_visual)'

@@ -438,3 +438,18 @@ except catalog and installation metadata. The shared filesystem adapter also sup
 `dots files install` links all applicable mapped resources and retains verified backups before replacing regular objects. `dots files uninstall` restores installation-owned targets, preserves drift and does not remove source catalog entries. Both share the transaction Store and expose existing history/undo/recovery. This differs from `files remove`, which materializes configs and removes catalog entries. See [installation](installation.md) for all options, source updating and platform boundaries.
 
 Catalog resources may provide an optional `targets` object mapping platform names to target strings or null, overriding `target` only on that platform. Native mappings add `${APPDATA}`, `${LOCALAPPDATA}`, `${NVIM_CONFIG}` and `${POWERSHELL_PROFILE}`. NVIM_CONFIG honors XDG_CONFIG_HOME, otherwise LOCALAPPDATA; the PowerShell adapter passes the current host's profile path. A missing native profile path remains unmapped instead of guessing. Inventory uses the same resolution as installation.
+
+### Consolidated Git platform selector
+
+The fixed `dots:git` directory mapping also plans its ignored `gitplatform`
+selector when its entry point includes that filename. Install, link, mapping
+apply and stash restoration select the native `termux`, `linux`, `wsl` or
+`windows` regular overlay. Previews expose this companion separately. This
+bounded source-directory operation adds no general nested-target permission or
+catalog schema. Stash keeps repository sources and the selector. Correct
+pre-existing links are not claimed; changed companions use installation receipts
+and retained baselines for undo/uninstall. Direct Git linking therefore retains
+its installation baseline even with optional snapshots disabled.
+
+See the [Git config guide](../config/git/README.md) for the guarded migration from
+the retired Androidots Git catalog/import mappings and obsolete home overlay.

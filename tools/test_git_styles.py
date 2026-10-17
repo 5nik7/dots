@@ -17,7 +17,7 @@ if os.name != 'nt':
 
 REPO = Path(__file__).resolve().parents[1]
 SGR = re.compile(r'\x1b\[[0-9;]*m')
-ROLES = 'repo branch untracked modified behind detached missing staged added clean ahead deleted blocked conflict renamed copied ignored'.split()
+ROLES = 'repo repo_owned branch untracked modified behind detached missing staged added clean ahead deleted blocked conflict renamed copied ignored'.split()
 
 
 @unittest.skipUnless(shutil.which('bash') and shutil.which('git') and os.name != 'nt', 'Native Bash/Git required')
@@ -49,6 +49,24 @@ class GitStyles(unittest.TestCase):
     def shell(self, body, *args, env=None):
         return self.run_cmd(['bash', '--noprofile', '--norc', '-c',
                              'source "$DOTS_LIB_DIR/ui.bash"; ' + body, 'test', *args], env=env)
+
+    def test_owned_repository_uses_selected_fetch_remote(self):
+        repo = self.repo('owned repository')
+        self.git(repo, 'remote', 'add', 'origin', 'git@github.com:mine/project.git')
+        config = self.home / 'config/dots/git.conf'
+        config.parent.mkdir(parents=True)
+        config.write_text('[dots-git]\nowner = github.com/mine\nhostAlias = work=github.com\n')
+        self.assertIn(self.esc('repo_owned') + 'owned repository', self.cli(repo, 'status').stdout)
+        self.git(repo, 'remote', 'set-url', '--push', 'origin', 'git@github.com:other/project.git')
+        self.assertIn(self.esc('repo_owned') + 'owned repository', self.cli(repo, 'status').stdout)
+        self.git(repo, 'remote', 'add', 'upstream', 'https://github.com/other/project.git')
+        self.git(repo, 'config', 'branch.main.remote', 'upstream')
+        self.assertIn(self.esc('repo') + 'owned repository', self.cli(repo, 'status').stdout)
+        self.git(repo, 'remote', 'set-url', 'upstream', 'git@work:mine/project.git')
+        self.assertIn(self.esc('repo_owned') + 'owned repository', self.cli(repo, 'status').stdout)
+        config.write_text('[broken')
+        self.assertIn(self.esc('repo') + 'owned repository', self.cli(repo, 'status').stdout)
+        self.assertNotIn('\x1b', self.cli(repo, 'status', '--json').stdout)
 
     def test_status_and_resource_colors_are_independent(self):
         repo = self.repo('repository')
@@ -112,7 +130,7 @@ class GitStyles(unittest.TestCase):
                      'dots-git-styles\t1\nrepo\t31\nrepo\t32\n', 'dots-git-styles\t1\n\t31\n',
                      'dots-git-styles\t1\nrepo\t31\textra\n', 'x' * (2 * 1024 * 1024 + 1)]:
             self.table.write_text(data)
-            self.assertEqual(self.shell('dots::git_style repo; printf %s "$REPLY"').stdout, '\x1b[1;94m')
+            self.assertEqual(self.shell('dots::git_style repo; printf %s "$REPLY"').stdout, '\x1b[1;95m')
         self.assertFalse((self.base / 'forbidden').exists())
         self.table.write_text('dots-git-styles\t1\nrepo\t0\n')
         self.assertEqual(self.shell('dots::git_style repo; printf %s "$REPLY"').stdout, '\x1b[0m')
@@ -121,7 +139,7 @@ class GitStyles(unittest.TestCase):
         self.assertEqual(self.shell('dots::git_style branch; printf %s "$REPLY"').stdout, '\x1b[95m')
         self.table.unlink()
         self.table.symlink_to(self.config)
-        self.assertEqual(self.shell('dots::git_style repo; printf %s "$REPLY"').stdout, '\x1b[1;94m')
+        self.assertEqual(self.shell('dots::git_style repo; printf %s "$REPLY"').stdout, '\x1b[1;95m')
 
     def test_plain_does_not_load_and_table_is_cached(self):
         for env in [dict(self.env, DOTS_COLOR='never'), dict(self.env, DOTS_COLOR='auto', NO_COLOR='1'),

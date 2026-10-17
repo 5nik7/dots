@@ -144,7 +144,8 @@
       "platforms": [
         "termux",
         "linux",
-        "wsl"
+        "wsl",
+        "windows"
       ],
       "target": "${CONFIG}/git",
       "strategy": "directory-link"

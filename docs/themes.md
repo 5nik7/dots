@@ -709,3 +709,28 @@ new projection; older publications remain usable through the documented fallback
 Theme publication also writes `git-styles.tsv` atomically with the same generation. Its header is `dots-git-styles<TAB>1`; subsequent rows contain a lowercase role key and numeric SGR sequence separated by one tab. This output name is reserved against custom templates. Git styles use the existing fingerprinted rule inputs. `file-styles.tsv` and LS_COLORS remain independent.
 
 The shared Bash presentation layer lazily reads this bounded regular data file once per colored Git command. It rejects symlinked payloads, oversized data, malformed rows and duplicate keys, and never sources the contents or invokes Python/theme resolution to render a row. Missing roles use terminal defaults. The [Git styles reference](file-colors.md#git-styles) owns the role list and public export interface.
+
+The Dots Yazi plugin exposes live Lua references such as `dots.colors.background`, `dots.colors.git.repo`, `dots.colors.type.dir`, and `dots.colors.mime["image/*"]`. These resolve from the existing `colors.json` publication at setup and refresh; no second Lua template is needed. The existing `colors.lua` export remains available to other Lua consumers. `dots.colors()` and `dots:colors()` still return the loaded palette. Header defaults and per-file Git indicators use shared Git roles; explicit configuration and `th.git` overrides retain precedence. Update remote-installed plugin runtime through `ya pkg`, so its revision and hash remain package-manager owned.
+
+The default `blastoff.toml.tpl` publishes a Starship-compatible Dots palette. `{{ git_colors_starship }}` is a data-only expansion of resolved Git foreground shortcuts into flat `git_*` entries; palette names otherwise match the semantic theme names. The optional [Starship plugin](theme-plugins.md#starship-and-blastoff-starship) merges the palette into existing configuration after publication, including explicit unchanged-theme refreshes. It never replaces module configuration with the template.
+
+### Git and Delta default template
+
+`default/themed/gitconfig.tpl` publishes a theme-only Git include, connected as
+`${CONFIG}/git/dots-theme.gitconfig` when the Git config directory exists. The
+common Git config includes it after fallback colors; the platform overlay remains
+last. Personal settings are not regenerated. See the [Git config guide](../config/git/README.md).
+
+Literal `{{ git_<role> }}` tokens resolve configured Git foregrounds. Their
+`_delta` variants translate `reset` to Delta's `normal`. For semantic colors and
+Git foregrounds, `<name>_blend_10` and `<name>_blend_25` blend that percentage into
+`background`, rounding each RGB channel with integer half-up rounding. A reset
+foreground blends as background. These template-only expansions do not change
+exported palette namespaces and do not execute expressions. Normal attributes
+remain explicit in the template. Unknown tokens still fail preparation.
+
+Prepared generations expose the existing bat cache at `delta-cache/bat`; Git's
+Delta commands set a process-local XDG cache root and request Dots syntax. Missing
+cache uses the normal Delta invocation. The standard bat cache is never replaced.
+Use the [template skill](../.codex/skills/dots-theme-template/SKILL.md) when adding
+other default consumers.

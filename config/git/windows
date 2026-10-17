@@ -1,0 +1,8 @@
+[credential "https://github.com"]
+	helper =
+	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+  helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+
+# vim: set noet ft=gitconfig ts=4 sw=4 tw=0 ff=unix:

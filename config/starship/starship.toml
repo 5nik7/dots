@@ -1,3 +1,5 @@
+# Dots palette; module styles and layout remain editable.
+# Theme refresh updates only [palettes.dots].
 "$schema" = 'https://starship.rs/config-schema.json'
 
 add_newline = true
@@ -6,69 +8,22 @@ scan_timeout = 10000
 command_timeout = 10000
 
 format = """
-$os\
-$username\
-$hostname\
 $directory\
-$git_branch\
+($git_branch\
 $git_commit\
 $git_status\
 $git_metrics\
-$git_state\
-$c\
-$rust\
-$golang\
-$nodejs\
-$php\
-$java\
-$kotlin\
-$haskell\
-$python\
-$package\
-$docker_context\
-$kubernetes\
-$shell\
-$container\
-$jobs\
-$time\
-$cmd_duration\
+$git_state)\
 $status\
 $line_break\
 $character\
 """
 
-palette = 'default'
-
-[palettes.default]
-
-color_ok = 'bright-green'
-color_danger = 'bright-red'
-color_caution = 'bright-yellow'
-
-color_os = 'red'
-color_username = 'red'
-color_hostname = 'red'
-color_directory = 'blue'
-color_git = 'cyan'
-color_git_branch = 'purple'
-color_git_added = 'bright-green'
-color_git_deleted = 'bright-red'
-color_env = 'blue'
-color_kubernetes = 'purple'
-color_docker = 'blue'
-color_shell = ''
-color_container = ''
-color_other = ''
-color_time = ''
-color_duration = ''
-
-color_vimcmd_ok = 'bright-black'
-color_vimcmd_replace = 'purple'
-color_vimcmd_visual = 'yellow'
+palette = 'dots'
 
 [os]
-disabled = false
-style = "fg:color_os"
+disabled = true
+style = "fg:red"
 format = '[$symbol]($style)'
 
 [os.symbols]
@@ -95,33 +50,34 @@ RedHatEnterprise = "󱄛"
 Pop = ""
 
 [username]
-show_always = true
-style_user = "fg:color_username"
-style_root = "bold fg:color_danger"
-format = '[ $user]($style)'
+disabled = true
+show_always = false
+style_user = "fg:red"
+style_root = "bold fg:error"
+format = '[$user]($style)'
 
 [hostname]
-ssh_only = false
-style = "fg:color_hostname"
-format = '[@$hostname ]($style)'
+disabled = true
+ssh_only = true
+style = "fg:red"
+format = '[@$hostname]($style)'
 
 [directory]
-style = "fg:color_directory"
-read_only_style = "fg:color_directory"
-repo_root_style = "bold fg:color_directory"
-format = "[ $path ]($style)"
-read_only = " "
-home_symbol = "~"
-truncation_symbol = "…/"
+repo_root_format = "[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style) "
+repo_root_style = "fg:git_repo"
+before_repo_root_style = "fg:blue"
+read_only_style = "fg:error"
+style = "fg:blue"
+format = "[$path]($style) "
 truncation_length = 0
-truncate_to_repo = true
+truncate_to_repo = false
 fish_style_pwd_dir_length = 0
-use_logical_path = false
+use_logical_path = true
 
 [git_branch]
 symbol = ""
-style = "fg:color_git_branch"
-format = '( [$symbol$branch]($style) )'
+style = "fg:git_branch"
+format = '([$symbol$branch]($style) )'
 only_attached = true
 ignore_branches = []
 truncation_length = 25
@@ -130,8 +86,8 @@ always_show_remote = false
 disabled = false
 
 [git_commit]
-style = "fg:color_git"
-format = "( [($tag)(@$hash)]($style) )"
+style = "fg:magenta"
+format = "[($tag)(@$hash)]($style)"
 commit_hash_length = 7
 only_detached = true
 tag_symbol = "󰓼 "
@@ -139,31 +95,31 @@ tag_disabled = false
 disabled = false
 
 [git_status]
-style = "fg:color_git"
+style = "fg:cyan"
 format = '([$ahead_behind]($style) )([$all_status]($style) )'
-stashed = "*${count}"
-ahead = "⇡${count}"
-behind = "⇣${count}"
+stashed = "[*${count}](fg:muted)"
+ahead = "[⇡${count}](fg:git_ahead)"
+behind = "[⇣${count}](fg:git_behind)"
 up_to_date = ""
-diverged = "⇡${ahead_count}⇣${behind_count}"
-conflicted = "=${count}"
-deleted = "×${count}"
-renamed = "»${count}"
-modified = "!${count}"
-staged = "+${count}"
-untracked = "?${count}"
+diverged = "[⇡${ahead_count}⇣${behind_count}](fg:git_conflict)"
+conflicted = "[=${count}](fg:git_conflict)"
+deleted = "[×${count}](fg:git_deleted)"
+renamed = "[»${count}](fg:git_renamed)"
+modified = "[!${count}](fg:git_modified)"
+staged = "[+${count}](fg:git_staged)"
+untracked = "[?${count}](fg:git_untracked)"
 ignore_submodules = false
 disabled = false
 
 [git_metrics]
-format = '([([+$added]($added_style))([-$deleted]($deleted_style))](fg:color_git) )'
-added_style = "fg:color_git_added"
-deleted_style = "fg:color_git_deleted"
+format = '([([+$added]($added_style))([-$deleted]($deleted_style))](fg:cyan) )'
+added_style = "fg:git_added"
+deleted_style = "fg:git_deleted"
 only_nonzero_diffs = true
 disabled = false
 
 [git_state]
-style = "fg:color_danger"
+style = "fg:git_conflict"
 format = '([$state( $progress_current/$progress_total)]($style bold) )'
 rebase = "REBASING"
 merge = "MERGING"
@@ -175,65 +131,68 @@ am_or_rebase = "AM/REBASE"
 disabled = false
 
 [nodejs]
+not_capable_style = "bold fg:error"
 symbol = ""
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [c]
 symbol = ""
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [rust]
 symbol = "󱘗"
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [golang]
+not_capable_style = "bold fg:error"
+disabled = true
 symbol = "󰟓"
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [php]
 symbol = ""
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [java]
 symbol = ""
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [kotlin]
 symbol = ""
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [haskell]
 symbol = ""
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [python]
 symbol = ""
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)( $virtualenv)]($style) )'
 version_format = '${raw}'
 
 [package]
 disabled = false
 symbol = "󰏗"
-style = "fg:color_env"
+style = "fg:blue"
 format = '( [$symbol( $version)]($style) )'
 
 [docker_context]
 symbol = ""
-style = "fg:color_docker"
+style = "fg:blue"
 format = '( [$symbol( $context)]($style) )'
 
 [kubernetes]
 symbol = "󱃾"
-style = "fg:color_kubernetes"
+style = "fg:magenta"
 format = '( [($symbol( $cluster))]($style) )'
 disabled = false
 
@@ -252,15 +211,15 @@ xonsh_indicator = "xonsh"
 cmd_indicator = "cmd"
 nu_indicator = "nu"
 unknown_indicator = ""
-style = "fg:color_shell"
+style = "fg:muted"
 
 [container]
-style = "fg:color_container"
+style = "fg:cyan"
 format = '( [$symbol $name]($style) )'
 
 [jobs]
 symbol = "󰒋"
-style = "fg:color_other"
+style = "fg:accent"
 format = '( [$symbol( $number)]($style) )'
 symbol_threshold = 1
 number_threshold = 1
@@ -268,19 +227,21 @@ number_threshold = 1
 [time]
 disabled = true
 time_format = "%R"
-style = "fg:color_time"
+style = "fg:muted"
 format = '( [󰔛 $time]($style) )'
 
 [cmd_duration]
 min_time = 2000
 format = '( [󱫑 $duration]($style) )'
-style = 'fg:color_duration'
+style = 'fg:muted'
 show_milliseconds = false
 disabled = true
 
 [status]
-disabled = false
-format = '( [$symbol( $common_meaning)( $signal_name)]($style) )'
+success_style = "bold fg:green"
+failure_style = "bold fg:error"
+disabled = true
+format = '([$symbol( $common_meaning)( $signal_name)]($style) )'
 map_symbol = true
 pipestatus = true
 symbol = '󰅙'
@@ -289,7 +250,7 @@ not_executable_symbol = '󰂭'
 not_found_symbol = '󰍉'
 sigint_symbol = '󰐊'
 signal_symbol = '󱐋'
-style = 'bold fg:color_danger'
+style = 'bold fg:error'
 recognize_signal_code = true
 
 [line_break]
@@ -297,9 +258,336 @@ disabled = false
 
 [character]
 disabled = false
-success_symbol = '[](bold fg:color_ok)'
-error_symbol = '[](bold fg:color_danger)'
-vimcmd_symbol = '[▎](bold fg:color_vimcmd_ok)'
-vimcmd_replace_one_symbol = '[❮](bold fg:color_vimcmd_replace)'
-vimcmd_replace_symbol = '[❮](bold fg:color_vimcmd_replace)'
-vimcmd_visual_symbol = '[❮](bold fg:color_vimcmd_visual)'
+success_symbol = '[](bold fg:green)'
+error_symbol = '[](bold fg:error)'
+vimcmd_symbol = '[▎](bold fg:muted)'
+vimcmd_replace_one_symbol = '[▎](bold fg:magenta)'
+vimcmd_replace_symbol = '[▎](bold fg:magenta)'
+vimcmd_visual_symbol = '[▎](bold fg:yellow)'
+
+[aws]
+style = "bold fg:cyan"
+
+[azure]
+style = "bold fg:cyan"
+
+# Battery support is not compiled into this Starship build.
+# Uncomment this preset when using a build with the battery module.
+# [battery]
+# [[battery.display]]
+# threshold = 10
+# style = "bold fg:error"
+
+[buf]
+style = "bold fg:blue"
+
+[bun]
+style = "bold fg:blue"
+
+[claude_context]
+[[claude_context.display]]
+threshold = 0.0
+style = "bold fg:green"
+hidden = true
+
+[[claude_context.display]]
+threshold = 30.0
+style = "bold fg:green"
+hidden = false
+
+[[claude_context.display]]
+threshold = 60.0
+style = "bold fg:warning"
+hidden = false
+
+[[claude_context.display]]
+threshold = 80.0
+style = "bold fg:error"
+hidden = false
+
+[claude_cost]
+[[claude_cost.display]]
+threshold = 0.0
+style = "bold fg:green"
+hidden = true
+
+[[claude_cost.display]]
+threshold = 1.0
+style = "bold fg:warning"
+hidden = false
+
+[[claude_cost.display]]
+threshold = 5.0
+style = "bold fg:error"
+hidden = false
+
+[claude_model]
+style = "bold fg:accent"
+
+[cmake]
+style = "bold fg:blue"
+
+[cobol]
+style = "bold fg:blue"
+
+[conda]
+style = "bold fg:blue"
+
+[cpp]
+style = "bold fg:blue"
+
+[crystal]
+style = "bold fg:blue"
+
+[daml]
+style = "bold fg:blue"
+
+[dart]
+style = "bold fg:blue"
+
+[deno]
+style = "bold fg:blue"
+
+[direnv]
+style = "bold fg:blue"
+
+[dotnet]
+style = "bold fg:blue"
+
+[elixir]
+style = "bold fg:blue"
+
+[elm]
+style = "bold fg:blue"
+
+[erlang]
+style = "bold fg:blue"
+
+[fennel]
+style = "bold fg:blue"
+
+[fill]
+style = "bold fg:muted"
+
+[fortran]
+style = "bold fg:blue"
+
+[fossil_branch]
+style = "bold fg:magenta"
+
+[fossil_metrics]
+added_style = "bold fg:git_added"
+deleted_style = "bold fg:git_deleted"
+
+[gcloud]
+style = "bold fg:cyan"
+
+[gleam]
+style = "bold fg:blue"
+
+[gradle]
+style = "bold fg:blue"
+
+[guix_shell]
+style = "bold fg:blue"
+
+[haxe]
+style = "bold fg:blue"
+
+[helm]
+style = "bold fg:magenta"
+
+[hg_branch]
+style = "bold fg:magenta"
+
+[hg_state]
+style = "bold fg:git_conflict"
+
+[julia]
+style = "bold fg:blue"
+
+[localip]
+style = "bold fg:cyan"
+
+[lua]
+style = "bold fg:blue"
+
+[maven]
+style = "bold fg:blue"
+
+[memory_usage]
+style = "bold dimmed fg:cyan"
+
+[meson]
+style = "bold fg:blue"
+
+[mise]
+style = "bold fg:blue"
+
+[mojo]
+style = "bold fg:blue"
+
+[nats]
+style = "bold fg:magenta"
+
+[netns]
+style = "bold dimmed fg:cyan"
+
+[nim]
+style = "bold fg:blue"
+
+[nix_shell]
+style = "bold fg:blue"
+
+[ocaml]
+style = "bold fg:blue"
+
+[odin]
+style = "bold fg:blue"
+
+[opa]
+style = "bold fg:blue"
+
+[openstack]
+style = "bold fg:cyan"
+
+[perl]
+style = "bold fg:blue"
+
+[pijul_channel]
+style = "bold fg:magenta"
+
+[pixi]
+style = "bold fg:blue"
+
+[pulumi]
+style = "bold fg:magenta"
+
+[purescript]
+style = "bold fg:blue"
+
+[quarto]
+style = "bold fg:blue"
+
+[raku]
+style = "bold fg:blue"
+
+[red]
+style = "bold fg:blue"
+
+[rlang]
+style = "bold fg:blue"
+
+[ruby]
+style = "bold fg:blue"
+
+[scala]
+style = "bold fg:blue"
+
+[shlvl]
+style = "bold fg:muted"
+
+[singularity]
+style = "bold dimmed fg:cyan"
+
+[solidity]
+style = "bold fg:blue"
+
+[spack]
+style = "bold fg:blue"
+
+[sudo]
+style = "bold fg:warning"
+
+[swift]
+style = "bold fg:blue"
+
+[terraform]
+style = "bold fg:magenta"
+
+[typst]
+style = "bold fg:blue"
+
+[vagrant]
+style = "bold fg:magenta"
+
+[vcsh]
+style = "bold fg:magenta"
+
+[vlang]
+style = "bold fg:blue"
+
+[xmake]
+style = "bold fg:blue"
+
+[zig]
+style = "bold fg:blue"
+
+[palettes.dots]
+"background" = "#1e1e2e"
+"foreground" = "#cdd6f4"
+"accent" = "#cba6f7"
+"muted" = "#585b70"
+"red" = "#f38ba8"
+"green" = "#a6e3a1"
+"yellow" = "#f9e2af"
+"blue" = "#89b4fa"
+"magenta" = "#f5c2e7"
+"cyan" = "#94e2d5"
+"bright_red" = "#f38ba8"
+"bright_green" = "#a6e3a1"
+"bright_yellow" = "#f9e2af"
+"bright_blue" = "#89b4fa"
+"bright_magenta" = "#f5c2e7"
+"bright_cyan" = "#94e2d5"
+"bright_foreground" = "#cdd6f4"
+"dark_background" = "#161622"
+"darker_background" = "#101019"
+"lighter_background" = "#313244"
+"dark_foreground" = "#6c7086"
+"light_foreground" = "#bac2de"
+"cursor" = "#cdd6f4"
+"selection" = "#45475a"
+"selection_background" = "#45475a"
+"selection_foreground" = "#cdd6f4"
+"orange" = "#f6b6ab"
+"brown" = "#7b5b55"
+"error" = "#f38ba8"
+"warning" = "#f9e2af"
+"info" = "#89b4fa"
+"hint" = "#94e2d5"
+"color0" = "#1e1e2e"
+"color1" = "#f38ba8"
+"color2" = "#a6e3a1"
+"color3" = "#f9e2af"
+"color4" = "#89b4fa"
+"color5" = "#f5c2e7"
+"color6" = "#94e2d5"
+"color7" = "#cdd6f4"
+"color8" = "#585b70"
+"color9" = "#f38ba8"
+"color10" = "#a6e3a1"
+"color11" = "#f9e2af"
+"color12" = "#89b4fa"
+"color13" = "#f5c2e7"
+"color14" = "#94e2d5"
+"color15" = "#cdd6f4"
+"git_added" = "#a6e3a1"
+"git_ahead" = "#a6e3a1"
+"git_behind" = "#f9e2af"
+"git_blocked" = "#f38ba8"
+"git_branch" = "#cba6f7"
+"git_clean" = "#a6e3a1"
+"git_conflict" = "#f38ba8"
+"git_copied" = "#94e2d5"
+"git_deleted" = "#f38ba8"
+"git_detached" = "#f9e2af"
+"git_ignored" = "#585b70"
+"git_missing" = "#f9e2af"
+"git_modified" = "#f9e2af"
+"git_renamed" = "#94e2d5"
+"git_repo" = "#89b4fa"
+"git_repo_owned" = "#94e2d5"
+"git_staged" = "#a6e3a1"
+"git_untracked" = "#f5c2e7"
+

@@ -1,5 +1,7 @@
 # Stash and edit file mappings
 
+The earlier Git XDG overlay rollout below is historical. The [consolidated Git follow-up](git-theme-template.md) supersedes its Androidots mapping and home-overlay layout.
+
 **Status: Implemented and verified, 2026-10-16.**
 
 Owner-approved scope: repository-wide `enabled` state; stash unlinks only matching

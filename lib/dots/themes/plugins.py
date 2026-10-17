@@ -21,7 +21,7 @@ from transactions import exists, parents_safe, private_directory
 from progress import Progress, configure
 
 PATTERN = re.compile(r'([0-9]+)-([a-z][a-z0-9-]*)\.sh\Z')
-BUNDLED = {'gtk': ('gtk-launch', 'gtk-3.0'), 'qt6ct': ('qt6ct', 'qt6ct')}
+BUNDLED = {'gtk': ('gtk-launch', 'gtk-3.0'), 'qt6ct': ('qt6ct', 'qt6ct'), 'starship': ('starship', None)}
 
 
 def roots():
@@ -99,7 +99,15 @@ def availability(row, config):
         command, directory = BUNDLED[row['name']]
         if not shutil.which(command):
             return 'unavailable', 'missing optional app: ' + command
-        if not (config / directory).is_dir():
+        if row['name'] == 'starship':
+            try:
+                from starship import paths
+                active, saved, _ = paths({})
+                if not active.is_file() and not saved.is_file():
+                    return 'unavailable', 'no Starship configuration or saved dots theme'
+            except (ValueError, OSError) as error:
+                return 'unavailable', str(error)
+        elif not (config / directory).is_dir():
             return 'unavailable', 'app configuration directory is absent: ' + directory
     return 'available', ''
 

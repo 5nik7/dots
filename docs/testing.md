@@ -883,3 +883,19 @@ require native verification where the runtime is available. See the
 ## Git theme styles
 
 Run `python3 -B tools/test_git_styles.py -v` for published Git-role consumption, porcelain-state priority, old/malformed/unsafe projections, color policy, resource-style independence, native 40/80/120-column PTYs, tracking counts, and sync/publish success and failure output. All Git mutations and remotes are fixture-owned. `tools/test_file_colors.py` covers Git defaults, layered edits, publication, additive exports, older snapshots and Bash/Zsh/Fish completion. Run these with `tools/test_resources.py`, `tools/test_git_operations.py` and relevant theme publication cases sequentially on Termux. Native Termux acceptance does not establish native Windows console support.
+
+The standalone Yazi color-reference and Git-indicator fixtures (`test-color-refs.lua` and `test-git-colors.lua`) cover token resolution, complete style attributes, fallback and refresh. Its package regression validates dirty-upgrade refusal and clean upgrades in an offline test-owned repository. The native theme runner exercises references and optional Git-group validation; see the [plugin README](../config/yazi/plugins/dots.yazi/README.md).
+
+For the Starship palette adapter, run `python3 -B tools/test_starship_palette.py` and `python3 -B tools/test_theme_plugins.py`, plus affected theme-workflow tests. The focused runner owns all HOME/XDG/Starship/Blastoff paths, exercises section scanning, separate module edits, symlinks, locks, concurrent changes and injected rollback, and validates installed-module coverage and native Starship output in a synthetic repository. The plugin suite verifies dark/light publication, resolved Git aliases, opt-in discovery, unchanged refresh and skipping other active palettes. `python3 -B tools/test_theme_workflow.py Workflow.test_codex_shared_template_all_palettes` also checks the Starship palette against exported shared colors for every selectable theme. No live prompt, custom module command or version detector is executed as a validation step.
+
+### Git template and platform selector
+
+Run `python3 -B tools/test_git_theme.py` for native Git/Delta dark/light rendering,
+custom syntax-cache loading, reset/override colors, fallback and refresh
+idempotence. It isolates HOME/XDG/Git roots and does not execute credentials or
+user hooks. The all-palette workflow case also parses every generated Git include.
+Run `python3 -B tools/test_git_platform.py` with the file-mapping, file-operation,
+catalog and installation suites for companion selection, protected objects,
+receipts, stash/restore, rollback and uninstall. The Git migration cases in
+`tools/test_file_mappings.py` exercise legacy and consolidated layouts. Platform
+selection fixtures are not native Windows/WSL execution evidence.

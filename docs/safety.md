@@ -520,3 +520,24 @@ does not undo a published theme. Plugin snapshot errors retain previous colors.
 Uninstall restores only unchanged owned targets; drift remains visible and retained. Empty created-directory cleanup uses separate guarded file transactions. Catalogs, checkouts, generated payloads and recovery records are retained. The shared platform adapter refuses symlinked ancestors, unsupported Windows reparse points and unavailable link capability. Windows flushes payload/journal files, but lacks POSIX directory-fsync/power-loss guarantees; native evidence is required before claiming platform validation.
 
 Theme preparation creates inactive immutable payloads marked `staged`; it publishes nothing. Setup's file transaction owns pointer/connector publication and recovery. These payloads are not mistaken for interrupted normal theme journals. Git updates remain separate non-atomic stages, retain completed updates on later setup failure, and never discard dirty work or recursively initialize private sources. Dry-run performs no writes or network access.
+
+## Starship palette updates
+
+The explicitly enabled Starship theme plugin updates only Dots-selected palettes in the active config and saved Blastoff `dots` theme. It validates TOML, preserves unrelated values/bytes and extra colors, acquires Blastoff operation locks, and records both changed targets in a retained-backup file transaction. Existing configured symlinks are resolved with identity guards and preserved, rather than replaced. Missing files stay absent. Concurrent edits, malformed representations and special files are refused. Plugin failures leave the published theme selected; transaction recovery and drift-aware undo follow the normal file-operation contract. Blastoff provenance is not rewritten to hide external palette edits.
+
+## Git platform companion
+
+The fixed consolidated `dots:git` mapping may select only `config/git/gitplatform`
+inside its source directory, pointing at one of four regular sibling platform
+files. This does not relax arbitrary source/target overlap or symlink-parent
+checks. Known platform-link replacements are previewed, guarded and journaled
+with retained installation baselines; unrelated objects and owned-target drift
+are refused. Correct pre-existing selectors remain unowned, stash preserves
+source content, and uninstall preserves drift. Direct link operations involving
+this companion retain receipt recovery data even when optional snapshots are off.
+
+The bounded Termux consolidation migration retires only recognized Androidots
+Git catalog/import mappings and verified legacy links, including matching dangling links. It
+retains historical receipt baselines, verifies effective configuration without
+printing values or executing credential helpers, and undoes failed verification.
+It never removes moved platform source files.

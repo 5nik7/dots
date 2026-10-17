@@ -146,6 +146,20 @@ class Workflow(old.Themes):
                 output.mkdir()
                 self.env.update(RENDER_OUTPUT=str(output), RENDER_THEME=name)
                 self.engine('dt_load "$RENDER_THEME" && dt_render "$RENDER_OUTPUT"')
+                git_raw = (output / "gitconfig").read_text()
+                self.assertNotIn("{{", git_raw)
+                self.run_command(['git', 'config', '--file', str(output / 'gitconfig'), '--no-includes', '--list'])
+                palette_raw = (output / "blastoff.toml").read_text()
+                self.assertNotIn("{{", palette_raw)
+                palette_doc = tomllib.loads(palette_raw)
+                self.assertEqual(palette_doc["palette"], "dots")
+                palette = palette_doc["palettes"]["dots"]
+                exported = json.loads((output / "colors.json").read_text())["colors"]
+                for key, value in palette.items():
+                    if not key.startswith("git_"):
+                        self.assertEqual(value, exported[key])
+                for key, value in exported["git"].items():
+                    self.assertEqual(palette["git_" + key], value)
                 raw = (output / "bat.tmTheme").read_bytes()
                 self.assertNotIn(b"{{", raw)
                 data = plistlib.loads(raw)

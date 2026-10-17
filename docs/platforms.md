@@ -306,3 +306,12 @@ Xonsh adapter edits have no new native-runtime certification.
 The [checkout installer](installation.md) has POSIX shell and native PowerShell entry points sharing Python 3.9+ planning, receipt and transaction logic. Termux/Linux/WSL use their own HOME/XDG roots. Native Windows uses LOCALAPPDATA for state (unless XDG_STATE_HOME is explicit), PowerShell's current-host profile, Neovim's native configuration root and APPDATA/Code/User/settings.json. Unmapped Windots apps and native theme publication remain deferred. No WSL path translation, package provisioning, elevation or link-to-copy fallback occurs.
 
 Native Windows locking uses msvcrt; directory flushing has no POSIX-equivalent guarantee. Symlink capability is tested by approved staging before target replacement. Reparse-point ancestors are refused. Linux/Windows installation CI is defined separately from the Go gates; local Termux tests do not establish native Windows or WSL results.
+
+The optional Starship/Blastoff theme adapter follows the existing POSIX theme-plugin boundary (Termux, Linux and WSL; native Windows unavailable). It uses `STARSHIP_CONFIG`/`BLASTOFF_HOME` or those apps' standard home-relative paths, preserves configured symlinks through guarded physical targets, and does not translate Windows paths. Native verification currently covers Termux with Starship 1.26.0.
+
+The consolidated Git directory resource is mapped for Termux, Linux, WSL and
+native Windows installation. Its selector chooses the matching regular overlay;
+plain Linux has an empty override. Native Windows still requires link capability
+and does not gain POSIX managed-operation commands or theme publication. Git/Delta
+colors and selector lifecycle have native Termux tests and platform-selection
+fixtures; native Windows/WSL consumer execution is not established.

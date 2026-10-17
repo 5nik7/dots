@@ -27,11 +27,11 @@
   autoSquash = true
 [core]
   editor = nvim
-  pager = delta
+  pager = "c=\"${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/delta-cache\"; if test -r \"$c/bat/themes.bin\"; then XDG_CACHE_HOME=\"$c\" delta --syntax-theme=Dots; else delta; fi"
   autocrlf = input
   whitespace = trailing-space,space-before-tab
 [interactive]
-  diffFilter = delta --color-only
+  diffFilter = "c=\"${XDG_STATE_HOME:-$HOME/.local/state}/dots/current/theme/delta-cache\"; if test -r \"$c/bat/themes.bin\"; then XDG_CACHE_HOME=\"$c\" delta --color-only --syntax-theme=Dots; else delta --color-only; fi"
 [help]
   autocorrect = prompt
 [log]
@@ -60,7 +60,10 @@
   navigate = true
   side-by-side = false
   line-numbers = true
-  true-colors = always
+  true-color = always
   features = catppuccin-mocha
+
+[include]
+  path = dots-theme.gitconfig
 
 # vim: set noet ft=gitconfig ts=2 sw=2 tw=0 ff=unix:

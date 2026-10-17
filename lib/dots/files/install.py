@@ -225,6 +225,8 @@ class Installation:
             if target == source or target in source.parents or source in target.parents:
                 raise ValueError('overlapping source and target: ' + str(target))
             self.guard(source)
+            from git_platform import plan as plan_git_platform
+            plan_git_platform(self, row)
             # Link identity is the installed object; later source edits remain
             # editable. During this apply, sources are bound to the preview.
             self.add(row['id'], target, link=source, directory=source.is_dir())
