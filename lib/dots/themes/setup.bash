@@ -38,6 +38,6 @@ case ${1:-} in
     dt_prepare_generation "${DT_GENERATION:-none}" "$fingerprint" >&2 || exit 1
     printf '%s\0' "$DT_PREPARED"
     if [[ -f $DT_PREPARED/commands-new ]]; then cat "$DT_PREPARED/commands-new" | tr -d '\n'; fi
-    printf '\0' ;;
+    printf '\0%s\0' "${DT_VIVID_NOTICE:-}" ;;
   *) exit 2 ;;
 esac

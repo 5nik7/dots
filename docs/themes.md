@@ -322,6 +322,13 @@ types and explicit suffixes. A present but failing Vivid aborts publication and
 retains the previous generation. Older generations and session-only selections
 retain their compatibility fallback. FSH is a Zsh-only integration.
 
+Generated font styles support older Vivid parsers through scalar compatibility
+mode; Vivid 0.10+ retains combined category attributes. Setup/publication emits
+one compatibility notice on stderr, while exact core and explicit suffix styles
+remain intact in the final LS_COLORS. Custom templates retain precedence and are
+not rewritten. See [Vivid compatibility](file-colors.md#vivid-compatibility) for
+the selection order, diagnostics and recovery commands.
+
 FSH's native INI loader builds validated theme data in the Dots Zsh cache. The
 adapter saves a regular copy to `$FAST_WORK_DIR/current_theme.zsh`, so FSH loads
 Dots directly at the next startup, before the Dots hook. Both lines from

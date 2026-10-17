@@ -452,6 +452,16 @@ of other links escaping the public repository. Native dependency checks skip whe
 unavailable. Run alongside the theme/workflow
 and Zsh suites, plus the isolated Zsh startup and PTY runners for adapter changes.
 
+The Vivid tests also use `tools/vivid_fixture.py` to enforce the older scalar-only
+font-style grammar and exercise unknown-version compatibility. These fixtures
+cover complete core/explicit-suffix attributes, modern combined categories,
+custom-template refusal and unchanged publications. Installation tests cover
+fresh FSH publication with legacy Vivid behavior, the captured compatibility
+notice, plain JSON diagnostics under forced color, repeat setup and receipt
+preservation after a template failure. Version-probe and absent-tool cases live
+in `tools/test_file_colors.py`. Fixture evidence is separate from tests using an
+installed Vivid binary and does not establish native WSL execution.
+
 The workflow suite checks Codex's shared plist across bundled palettes, byte
 identity with Yazi's syntax artifact, default/custom homes, absent directories,
 control-character/path refusal, personal/bundled overrides, unchanged refresh,

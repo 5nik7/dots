@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from unittest import mock
+from vivid_fixture import install_vivid
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'lib/dots/files'))
@@ -314,6 +315,55 @@ p.apply('install')
         doc['resources'].append(dict(id='fsh',source='config/fsh',target='${CONFIG}/fsh',strategy='directory-link',app='fsh',category='config',platforms=['termux','linux','wsl']))
         self.write('.dots/files.json',doc)
 
+    @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
+    def test_legacy_vivid_setup_notice_json_and_repeat(self):
+        self.theme_fixture()
+        install_vivid(self.repo/'bin')
+        self.env['PATH'] = str(self.repo/'bin') + os.pathsep + self.env['PATH']
+        self.env['DOTS_COLOR'] = self.env['DOTS_ICONS'] = 'always'
+        preview = self.cli('install', '--dry-run', '--json')
+        self.assertEqual(json.loads(preview.stdout)['status'], 'preview')
+        self.assertNotIn('compatibility mode', preview.stderr)
+        self.assertFalse((self.home/'.state').exists())
+        result = self.cli('install', '--yes', '--json')
+        self.assertEqual(json.loads(result.stdout)['status'], 'complete')
+        self.assertEqual(result.stderr.count('Vivid compatibility mode'), 1)
+        self.assertNotIn('\x1b', result.stderr + result.stdout)
+        active = self.home/'.state/dots/current/theme'
+        self.assertEqual((self.home/'.config/fsh/dots.ini').resolve(), active.resolve()/'fsh.ini')
+        self.assertTrue((active/'fsh.ini').is_file())
+        doc = json.loads((active/'colors.json').read_text())
+        for kind in ('tw', 'ow'):
+            style = doc['ls_rules']['types'][kind]['style']
+            self.assertTrue(style['bold'] and style['underline'])
+        receipt = self.receipt()
+        repeated = self.cli('install', '--yes', '--json')
+        self.assertEqual(json.loads(repeated.stdout)['status'], 'unchanged')
+        self.assertNotIn('compatibility mode', repeated.stderr)
+        self.assertEqual(self.receipt(), receipt)
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
+    def test_legacy_vivid_setup_human_notice_and_custom_failure(self):
+        self.theme_fixture()
+        install_vivid(self.repo/'bin')
+        self.env['PATH'] = str(self.repo/'bin') + os.pathsep + self.env['PATH']
+        self.env['DOTS_COLOR'] = 'always'
+        result = self.cli('install', '--yes')
+        self.assertEqual(result.stderr.count('Vivid compatibility mode'), 1)
+        self.assertIn('\x1b[93m', result.stderr)
+        active = self.home/'.state/dots/current/theme'
+        previous = active.resolve(); receipt = self.receipt()
+        template = self.home/'.config/dots/themed/vivid.yml.tpl'
+        template.parent.mkdir(parents=True)
+        theme = json.loads((active/'vivid.yml').read_text())
+        theme['archives']['font-style'] = ['bold', 'underline']
+        template.write_text(json.dumps(theme, indent=2))
+        result = self.cli('install', '--yes', ok=False)
+        self.assertIn(str(template), result.stderr)
+        self.assertIn('Vivid 0.9.0', result.stderr)
+        self.assertEqual(active.resolve(), previous)
+        self.assertEqual(self.receipt(), receipt)
+
     @unittest.skipIf(os.name == 'nt', 'POSIX fresh-checkout publication')
     @unittest.skipUnless(shutil.which('git'), 'Git required to enumerate tracked sources')
     def test_fresh_checkout_wsl_setup_connectors_check_and_restore(self):
@@ -347,6 +397,10 @@ p.apply('install')
             'GIT_TERMINAL_PROMPT','DOTS_COLOR','DOTS_ICONS','TERM','PYTHONDONTWRITEBYTECODE')}
         self.env['WSL_DISTRO_NAME']='Fixture'
         self.env['DOTS_PROGRESS']='never'
+        legacy_bin = self.base/'legacy-bin'
+        legacy_bin.mkdir()
+        install_vivid(legacy_bin)
+        self.env['PATH'] = str(legacy_bin) + os.pathsep + self.env['PATH']
         self.assertEqual(list((self.repo/'config/fsh').iterdir()),[self.repo/'config/fsh/README.md'])
         def run(script,*args):
             result=subprocess.run(['sh',str(self.repo/script),*args,'--json'],env=self.env,

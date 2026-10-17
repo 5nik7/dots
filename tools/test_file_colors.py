@@ -18,6 +18,26 @@ class FileColors(unittest.TestCase):
     dots = Themes.dots
     generation = Themes.generation
 
+    def test_vivid_version_detection_and_absent_fallback(self):
+        with patch.object(fc.shutil, 'which', return_value='/fixture/vivid'):
+            for output, supported in [('vivid 0.9.0', False), ('vivid 0.10.0', True),
+                                      ('vivid 0.11.1-vendor', True), ('vivid vendor-build', False)]:
+                with self.subTest(output=output), patch.object(fc.subprocess, 'run', return_value=
+                        subprocess.CompletedProcess([], 0, output + '\n', '')):
+                    self.assertEqual(fc.vivid_runtime()[2], supported)
+            with patch.object(fc.subprocess, 'run', side_effect=subprocess.TimeoutExpired('vivid', 5)):
+                self.assertEqual(fc.vivid_runtime(), ('/fixture/vivid', 'unknown version', False))
+            with patch.object(fc.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, 'vivid 0.11.1', '')):
+                self.assertFalse(fc.vivid_runtime()[2])
+        doc = {'styles': {'type': {key: {'fg': '#123456', 'bold': True, 'underline': True}
+                                  for key in fc.CORE}, 'extension': {'.fixture': {'italic': True}}}}
+        with patch.object(fc.shutil, 'which', return_value=None), patch.object(fc.subprocess, 'run') as run:
+            result = fc.generate(doc)
+            run.assert_not_called()
+        self.assertEqual(result['coverage'], 'basic')
+        self.assertTrue(result['ls_rules']['types']['di']['style']['underline'])
+        self.assertIn('*.fixture=0;3', result['ls_colors'])
+
     def test_save_preview_publish_and_reset(self):
         self.dots('theme','set','catppuccin-mocha')
         original = self.generation()
@@ -35,8 +55,14 @@ class FileColors(unittest.TestCase):
         self.assertEqual(fc.parse_ls(doc['ls_colors'])['types']['di']['style']['fg'],'#a6e3a1')
         self.assertTrue((self.generation()/'colors.lua').is_file())
         if fc.shutil.which('lua'):
-            code = 'local t=assert(loadfile(arg[1]))(); local v=assert(loadfile(arg[2]))(); v.validate(t); assert(t.colors.type.dir == "#a6e3a1"); assert(t.styles.type.dir.bold == false)'
-            result=subprocess.run(['lua','-',str(self.generation()/'colors.lua'),str(REPO/'config/yazi/plugins/dots.yazi/theme.lua')], input=code, text=True, capture_output=True, env=self.env)
+            # Yazi supplies plugin-relative requires; standalone Lua must load
+            # the real validator dependency explicitly, without starting Yazi.
+            plugin = REPO/'config/yazi/plugins/dots.yazi'
+            code = '''package.preload['.color-refs'] = assert(loadfile(arg[3]))
+local t=assert(loadfile(arg[1]))(); local v=assert(loadfile(arg[2]))()
+v.validate(t); assert(t.colors.type.dir == "#a6e3a1"); assert(t.styles.type.dir.bold == false)
+'''
+            result=subprocess.run(['lua','-',str(self.generation()/'colors.lua'),str(plugin/'theme.lua'),str(plugin/'color-refs.lua')], input=code, text=True, capture_output=True, env=self.env)
             self.assertEqual(result.returncode,0,result.stderr)
         self.dots('theme','colors','reset','type','dir','--theme','catppuccin-mocha')
         self.assertEqual(self.dots('theme','colors','type','dir','--configured').stdout.strip(),'#f38ba8')

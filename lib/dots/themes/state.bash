@@ -97,6 +97,7 @@ dt_state_preflight() {
 # Caller holds both publication locks. Setup publishes through the file Store.
 dt_prepare_generation() {
   local previous=$1 fingerprint=$2 dir file
+  DT_VIVID_NOTICE=''
   dir=$(mktemp -d "$DT_STATE/generations/g.XXXXXXXX") || return 1
   # Staging files are confined to a newly allocated transaction directory.
   printf '%s\n' "$previous" > "$dir/previous" &&
@@ -194,5 +195,9 @@ dt_set() (
   complete=1
   dt_apps_reload
   dt_plugins_after_publish
+  if [[ ${DT_VIVID_NOTICE:-} ]]; then
+    dots::warning 'Vivid compatibility mode'
+    dots::row Detail "$DT_VIVID_NOTICE" >&2
+  fi
   dots::success "Selected $DT_THEME-$DT_FLAVOR (Zsh: next prompt; Neovim: next focus)"
 )

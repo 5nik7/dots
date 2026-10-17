@@ -50,6 +50,8 @@ Setup checks generated output completeness as well as input fingerprints. Missin
 
 After pulling a repair, run `./install.sh --dry-run`, then `./install.sh` (or `dots init --setup`) and open a new shell. `dots theme refresh` repairs incomplete generated theme data; checkout setup also installs missing catalog links. Plain `dots init` does neither.
 
+Older Vivid releases use [scalar compatibility mode](file-colors.md#vivid-compatibility) during preparation, avoiding the `Color value should be a string` panic from generated font-style lists. Setup displays the compatibility notice once on stderr, including with `--json` (plain diagnostics, unchanged JSON stdout). Failed custom templates identify their source and Vivid version and still block publication without changing the installation receipt. Dry-run does not render themes or execute Vivid version/generation probes.
+
 ## Update and optional sources
 
 Ordinary install is local. `--update` requires a clean attached checkout with an explicit upstream and a fast-forward history. It fetches that branch without recursive submodule downloads, refuses changed submodule topology, and never stashes, resets, cleans, rebases or pushes. Initialized applicable public sources advance only to the parent repository's recorded commits; local changes or commits that would be abandoned are refused.

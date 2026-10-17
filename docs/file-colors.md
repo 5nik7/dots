@@ -142,6 +142,14 @@ template expands the shared style model; explicit custom templates keep their
 existing precedence for extension categories, while Dots core and explicit suffix
 rules remain authoritative in the exported LS_COLORS.
 
+### Vivid compatibility
+
+Single font attributes are emitted as strings, which both older and newer Vivid parsers accept. During preparation, Dots checks `vivid --version`; Vivid 0.10+ receives lists for combined attributes. Older releases and unrecognized or unavailable version responses use scalar compatibility mode. Among enabled attributes, the first in this order is emitted: bold, faint, italic, underline, blink, rapid-blink. This check never runs during ordinary shell startup.
+
+Compatibility mode retains complete styles in JSON/Lua exports and reapplies exact core and explicit suffix styles to the final LS_COLORS. Thus the bundled writable-directory styles retain bold and underline. Vivid-derived category suffixes and direct `vivid generate dots` output can have only one attribute in compatibility mode. Upgrade Vivid to 0.10+ for combined category attributes. Setup and theme publication report this limitation once on stderr after preparation; unchanged repetitions do not repeat the notice. Configured raw/JSON/Lua exports stay undecorated and do not emit compatibility notices.
+
+Personal templates and bundled application overrides keep their existing precedence and are never rewritten. A custom template that supplies lists to an older Vivid must use scalar `font-style` values or be used with Vivid 0.10+. Failed generation identifies the selected template and detected Vivid version and preserves the prior publication. A failing installed Vivid is not treated as an absent optional dependency. With no Vivid executable, the existing basic filesystem-type and explicit-suffix fallback remains available. After updating Dots or Vivid, run `dots init --setup` to retry a failed installation, or `dots theme refresh` to regenerate an existing installation's theme data.
+
 ## Validation
 
 Run `python3 -B tools/test_file_colors.py -v` in owned roots. Existing publication,

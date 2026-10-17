@@ -54,6 +54,11 @@ updating, review `./install.sh --dry-run`, run `./install.sh`, then open a new s
 FSH failures now identify the affected path and repair step while retaining
 last-good colors when available. See [theme recovery](docs/installation.md#declared-ownership).
 
+Older Vivid installations use compatible scalar font styles during theme preparation,
+so setup can generate the FSH theme without a font-style parser panic. Dots retains
+full core and explicit suffix styles; combined category styles need Vivid 0.10+.
+See [Vivid compatibility](docs/file-colors.md#vivid-compatibility) for custom templates.
+
 `dots init --setup` and `dots files install` use the same engine. Ordinary `dots init [shell]` continues to print shell code without installation work. Use `./install.sh --update` for an explicit clean fast-forward update followed by setup, or `--with-source nvim` (repeatable) to initialize a named applicable public source. Missing optional sources are otherwise skipped; secrets are never initialized.
 
 `./uninstall.sh` / `./uninstall.ps1` or `dots files uninstall` restores installer-owned targets to their original state, preserves user drift and retains the checkout and recovery records. Both workflows support preview, unattended approval, JSON and the existing color/progress controls. Native Windows initially covers PowerShell, Neovim and VS Code settings; its theme publication remains deferred. See [installation and recovery](docs/installation.md) for requirements, options and platform limits.

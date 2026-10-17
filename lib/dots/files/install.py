@@ -97,6 +97,7 @@ class Installation:
         self.guards = {str(self.receipt_path): receipt_before}
         self.operations = []
         self.items = []
+        self.theme_notice = ''
         self.entries = copy.deepcopy(self.receipt['entries'])
         self.theme = None
         self.blocked = False
@@ -290,6 +291,7 @@ class Installation:
             return
         with Progress('Preparing theme generation'):
             values = self.theme_bridge('prepare', self.theme['fingerprint'])
+        self.theme_notice = values[2] if len(values) > 2 else ''
         generation = Path(values[0])
         base = self.state / 'themes'
         if generation.parent != base / 'generations' or not generation.name.startswith('g.'):
@@ -526,6 +528,12 @@ def main(argv=None):
         display(dict(doc, status='cancelled', items=[], message='No changes made.'), args, True)
         return 0
     result = installation.apply(args.action)
+    if installation.theme_notice:
+        ui = Presentation(sys.stderr)
+        if args.json:
+            ui.color = ui.icons = False
+        ui.emit(ui.paint('Vivid compatibility mode', '93'))
+        ui.detail('Detail', installation.theme_notice)
     if args.action == 'uninstall':
         installation.prune_empty_parents()
     incomplete = any(x['status'] == 'preserved' for x in installation.items)

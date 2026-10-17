@@ -21,6 +21,12 @@ a new generation; setup additionally installs missing catalog links, including
 the FSH directory and connector in fresh checkouts. JSON schemas and flags are
 unchanged, and shell-code initialization does not perform repairs.
 
+Theme preparation supports older Vivid releases using [scalar compatibility
+mode](file-colors.md#vivid-compatibility). Setup and theme publication emit one
+shared-style compatibility warning on stderr when rendering with an older or
+unrecognized Vivid version. JSON setup diagnostics remain plain even with forced
+color; stdout schemas, raw exports, flags and completion behavior are unchanged.
+
 
 ## Implemented Files and Theme Routes
 

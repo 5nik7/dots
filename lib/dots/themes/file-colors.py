@@ -144,7 +144,26 @@ def resolve(palette, directory, replacement=None):
                 provenance=origins, rules=rules)
 
 
-def vivid_theme(doc):
+def vivid_runtime():
+    """Probe only while rendering/generating, never during shell startup."""
+    executable = shutil.which('vivid')
+    if not executable:
+        return None, 'unavailable', True
+    try:
+        result = subprocess.run([executable, '--version'], capture_output=True,
+                                text=True, timeout=5)
+        match = re.fullmatch(r'vivid (\d+)\.(\d+)\.(\d+)(?:[-+][\w.-]+)?', result.stdout.strip())
+        if result.returncode == 0 and match:
+            version = tuple(map(int, match.groups()))
+            return executable, '.'.join(match.groups()), version >= (0, 10, 0)
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    # Unknown vendor builds get the conservative grammar, not a failed-tool
+    # fallback: generate must still succeed before anything can be published.
+    return executable, 'unknown version', False
+
+
+def vivid_theme(doc, multiple_styles=True):
     result = {'colors': {}}
     styles = doc['styles']['type']
 
@@ -163,7 +182,7 @@ def vivid_theme(doc):
                  'blink':'blink', 'blink_rapid':'rapid-blink'}
         attrs = [value for key,value in names.items() if style.get(key)]
         if attrs:
-            value['font-style'] = attrs
+            value['font-style'] = attrs if multiple_styles and len(attrs) > 1 else attrs[0]
         return value
 
     result['core'] = {VIVID[k]: item(k) for k in CORE}
@@ -273,17 +292,27 @@ def parse_ls(value):
     return result
 
 
-def generate(doc, vivid_file=None):
+def generate(doc, vivid_file=None, runtime=None, template_source=None):
     raw = ''
     doc['coverage'] = 'basic'
-    if shutil.which('vivid'):
+    runtime = runtime or vivid_runtime()
+    executable, version, multiple_styles = runtime
+    if executable:
         if vivid_file is None:
             with tempfile.TemporaryDirectory(prefix='dots-file-colors-') as tmp:
                 path = Path(tmp) / 'theme.yml'
-                path.write_text(json.dumps(vivid_theme(doc)))
-                return generate(doc, path)
-        p = subprocess.run(['vivid', 'generate', str(vivid_file)], capture_output=True, text=True, timeout=20)
-        if p.returncode: raise ValueError('Vivid could not generate file colors: ' + p.stderr.strip())
+                path.write_text(json.dumps(vivid_theme(doc, multiple_styles)))
+                return generate(doc, path, runtime, 'shared file styles')
+        try:
+            p = subprocess.run([executable, 'generate', str(vivid_file)], capture_output=True, text=True, timeout=20)
+            failure = p.stderr.strip() if p.returncode else None
+        except (OSError, subprocess.TimeoutExpired) as error:
+            failure = str(error)
+        if failure is not None:
+            hint = (' Use scalar font-style values in this template or upgrade Vivid to 0.10+.'
+                    if not multiple_styles else ' Check this template and the Vivid diagnostic.')
+            raise ValueError(f'Vivid {version} could not generate file colors from '
+                             f'{template_source or vivid_file}.{hint}\n{failure}')
         raw = p.stdout.strip()
         doc['coverage'] = 'vivid'
     else:
@@ -502,7 +531,7 @@ def main(argv):
         action, directory = argv[:2]
         palette = json.load(sys.stdin)
         doc = resolve(palette, directory)
-        if action == '_vivid': print(json.dumps(vivid_theme(doc), indent=2))
+        if action == '_vivid': print(json.dumps(vivid_theme(doc, vivid_runtime()[2]), indent=2))
         elif action == '_template_colors':
             colors = {k: v for k, v in doc['colors'].items() if isinstance(v, str) and HEX.fullmatch(v)}
             aliases = {'git_' + k: v for k, v in doc['colors']['git'].items()}
@@ -521,7 +550,17 @@ def main(argv):
             for key, value in doc['colors']['git'].items():
                 print('git_' + key + ' = ' + json.dumps(value))
         else:
-            out = Path(argv[2]); write_snapshot(generate(doc, out / 'vivid.yml'), out)
+            out = Path(argv[2])
+            runtime = vivid_runtime()
+            source = argv[3] if len(argv) > 3 else None
+            write_snapshot(generate(doc, out / 'vivid.yml', runtime, source), out)
+            # Private result channel; the owning human view renders the notice
+            # after stopping progress. JSON/raw exports never print it.
+            if runtime[0] and not runtime[2]:
+                print(f'Vivid {runtime[1]}: generated category styles and direct '
+                      'vivid generate dots output use one font attribute. Dots '
+                      'preserves full core and explicit suffix styles in LS_COLORS. '
+                      'Vivid 0.10+ supports combined category attributes.')
         return
     shared, rest = [], []
     i = 0

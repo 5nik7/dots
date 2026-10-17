@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Vivid and native FSH acceptance in disposable home/config/state/cache roots."""
+import json
 import os
 import re
 from pathlib import Path
@@ -7,12 +8,98 @@ import shutil
 import unittest
 
 import test_themes as old
+from vivid_fixture import install_vivid
 
 VIVID = shutil.which('vivid')
 FSH = Path(os.environ['HOME']) / '.local/share/zinit/plugins/zdharma-continuum---fast-syntax-highlighting'
 
 
 class FileThemes(old.Themes):
+    def test_legacy_and_unknown_vivid_preserve_exact_styles(self):
+        rules = self.home / 'config/dots/file-colors.toml'
+        rules.parent.mkdir(parents=True)
+        rules.write_text('[type.archive]\nunderline=true\n'
+                         '[extension.".fixture"]\nfg="blue"\nbold=true\nunderline=true\n')
+        for version in ('0.9.0', 'vendor-build'):
+            with self.subTest(version=version):
+                install_vivid(self.repo / 'bin', version, native=VIVID)
+                result = self.dots('theme', 'set', 'nord')
+                self.assertEqual(result.stderr.count('Vivid compatibility mode'), 1)
+                self.assertNotIn('\x1b', result.stderr)
+                generation = self.generation()
+                vivid = json.loads((generation / 'vivid.yml').read_text())
+                self.assertEqual(vivid['core']['other_writable']['font-style'], 'bold')
+                self.assertEqual(vivid['archives']['font-style'], 'bold')
+                doc = json.loads((generation / 'colors.json').read_text())
+                self.assertEqual(doc['coverage'], 'vivid')
+                for kind in ('tw', 'ow'):
+                    style = doc['ls_rules']['types'][kind]['style']
+                    self.assertTrue(style['bold'] and style['underline'])
+                suffix = next(rule for rule in doc['ls_rules']['suffixes'] if rule['key'] == '*.fixture')
+                self.assertTrue(suffix['style']['bold'] and suffix['style']['underline'])
+                self.assertTrue(doc['styles']['type']['archive']['underline'])
+                self.assertTrue((generation / 'fsh.ini').is_file())
+                repeated = self.dots('theme', 'refresh')
+                self.assertEqual(self.generation(), generation)
+                self.assertNotIn('compatibility mode', repeated.stderr)
+                for fmt in ('json', 'lua', 'ls-colors'):
+                    result = self.dots('theme', 'colors', 'export', fmt, '--configured', '--color=always')
+                    self.assertEqual(result.stderr, '')
+                    self.assertNotIn('\x1b', result.stdout)
+                    self.assertNotIn('compatibility mode', result.stdout)
+
+    def test_modern_vivid_combined_categories_and_custom_failure(self):
+        install_vivid(self.repo / 'bin', '0.10.0', modern=True, native=VIVID)
+        rules = self.home / 'config/dots/file-colors.toml'
+        rules.parent.mkdir(parents=True)
+        rules.write_text('[type.archive]\nunderline=true\n')
+        result = self.dots('theme', 'set', 'nord')
+        self.assertNotIn('compatibility mode', result.stderr)
+        previous = self.generation()
+        vivid = json.loads((previous / 'vivid.yml').read_text())
+        self.assertEqual(vivid['archives']['font-style'], ['bold', 'underline'])
+        self.assertEqual(vivid['core']['directory']['font-style'], 'bold')
+        install_vivid(self.repo / 'bin', native=VIVID)
+        override = self.home / 'config/dots/themed/vivid.yml.tpl'
+        override.parent.mkdir(parents=True)
+        # A literal user template must not be rewritten by compatibility mode.
+        override.write_text(json.dumps(vivid, indent=2))
+        result = self.dots('theme', 'refresh', code=1)
+        self.assertIn('Vivid 0.9.0 could not generate', result.stderr)
+        self.assertIn(str(override), result.stderr)
+        self.assertIn('scalar font-style', result.stderr)
+        self.assertEqual(self.generation(), previous)
+        self.assertEqual(json.loads(override.read_text()), vivid)
+
+    @unittest.skipIf(os.name == 'nt', 'Native POSIX PTY required')
+    def test_legacy_vivid_notice_terminal_layout(self):
+        from test_progress import ProgressTests, ANSI
+        terminal = ProgressTests('runTest')
+        terminal.home = self.home
+        install_vivid(self.repo / 'bin')
+        for width in (40, 80, 120):
+            for color in ('auto', 'never'):
+                with self.subTest(width=width, color=color):
+                    # Changing a source input guarantees preparation each time.
+                    rules = self.repo / 'default/file-colors.toml'
+                    rules.write_text(rules.read_text() + f'\n# terminal {width} {color}\n')
+                    env = dict(self.env, DOTS_COLOR=color, DOTS_ICONS='never',
+                               DOTS_PROGRESS='auto', COLUMNS=str(width))
+                    code, data = terminal.terminal([old.BASH, str(self.repo/'bin/dots'),
+                                                    'theme', 'set', 'nord'], env=env, width=width)
+                    self.assertEqual(code, 0, data)
+                    self.assertEqual(data.count(b'Vivid compatibility mode'), 1)
+                    notice = data[data.index(b'[!]'):]
+                    self.assertNotIn(b'\r', notice.replace(b'\r\n', b'\n'))
+                    text = ANSI.sub(b'', notice).decode()
+                    detail = text.partition('Vivid compatibility mode')[2].partition('[+]')[0]
+                    self.assertIn('Vivid 0.10+ supports combined category attributes.', ' '.join(detail.split()))
+                    self.assertTrue(all(len(line) <= width for line in detail.splitlines()))
+                    if color == 'auto':
+                        self.assertIn(b'\x1b[93m', data)
+                    else:
+                        self.assertNotIn(b'\x1b', data)
+
     def test_refresh_repairs_missing_outputs_and_active_pointer(self):
         user=self.home/'config/dots/themed'
         user.mkdir(parents=True)
@@ -235,7 +322,8 @@ source "$DOTS/lib/dots/themes/shell.bash"
     def test_vivid_cache_tracks_published_file_and_failures(self):
         self.install_zsh()
         exe = self.repo / 'bin/vivid'
-        exe.write_text('#!' + old.BASH + '\nprintf "run\\n" >> "$HOME/vivid.calls"\n'
+        exe.write_text('#!' + old.BASH + '\nif [[ $1 == --version ]]; then echo "vivid 0.11.1"; exit; fi\n'
+                       'printf "run\\n" >> "$HOME/vivid.calls"\n'
                        '[[ ! -e $HOME/fail ]] || exit 1\nprintf "di=38;2;1;2;3"\n')
         exe.chmod(0o700)
         self.dots('theme','set','nord')

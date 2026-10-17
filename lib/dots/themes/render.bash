@@ -134,7 +134,7 @@ dt_load() {
   done
 }
 dt_render() {
-  local dir=$1 template filename line rest key value prefix output token_data
+  local dir=$1 template filename line rest key value prefix output token_data vivid_source=''
   local pattern='\{\{[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\}\}'
   local -A rendered=()
   local -A template_colors=()
@@ -147,6 +147,7 @@ dt_render() {
     for filename in kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini; do
       if [[ -f $DT_THEME_DIR/$filename && ! -L $DT_THEME_DIR/$filename ]]; then
         cp -- "$DT_THEME_DIR/$filename" "$dir/$filename" || return
+        [[ $filename != vivid.yml ]] || vivid_source=$DT_THEME_DIR/$filename
         rendered[$filename]=1
       fi
     done
@@ -178,9 +179,10 @@ dt_render() {
       output+=$line$'\n'
     done < "$template"
     printf '%s' "$output" > "$dir/$filename" || return
+    [[ $filename != vivid.yml ]] || vivid_source=$template
     rendered[$filename]=1
   done
-  dt_json | python3 -B "$DT_LIB/file-colors.py" _build "$DT_THEME_DIR" "$dir" || return
+  DT_VIVID_NOTICE=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _build "$DT_THEME_DIR" "$dir" "$vivid_source") || return
   mkdir -p "$dir/yazi" || return
   cp -- "$dir/yazi.toml" "$dir/yazi/flavor.toml" && cp -- "$dir/bat.tmTheme" "$dir/yazi/tmtheme.xml" || return
 }
