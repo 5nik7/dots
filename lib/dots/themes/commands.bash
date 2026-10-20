@@ -1,6 +1,8 @@
 # Unified theme CLI. Existing full-ID routes and data-driven family queries.
 source "$DT_LIB/core.bash" || return
 source "$DT_LIB/views.bash"
+source "$DT_LIB/../verbose.bash"
+DOTS_OPERATION_VERBOSE=0
 dt_error() { dots::error "dots theme: $*"; return 1; }
 # backgrounds.bash also calls this helper with the bg route argument.
 # shellcheck disable=SC2120
@@ -21,6 +23,7 @@ dt_list() {
 }
 dt_command() {
   local action=${1:-summary} name key value id dry=0 background=0 native=0
+  local DOTS_OPERATION_VERBOSE=${DOTS_OPERATION_VERBOSE:-0}
   (($# == 0)) || shift
   case $action in
     help) dt_help ;;
@@ -86,7 +89,18 @@ dt_command() {
       else dt_value "$key" "${args[1]:-hex}" "$value" && printf '%s\n' "$REPLY"; fi ;;
     init) dt_init "$@" ;;
     set|refresh)
-      if [[ $action == refresh && $# == 1 && $1 == --commands-only ]]; then
+      local commands_only=0
+      local -a operation_args=()
+      for value in "$@"; do
+        case $value in
+          -v|--verbose) DOTS_OPERATION_VERBOSE=1 ;;
+          --commands-only) [[ $action == refresh ]] || return 2; commands_only=1 ;;
+          *) operation_args+=("$value") ;;
+        esac
+      done
+      set -- "${operation_args[@]}"
+      if ((commands_only)); then
+        (($# == 0)) || return 2
         source "$DT_LIB/command-state.bash"
         dt_commands_refresh
         return
@@ -102,6 +116,10 @@ dt_command() {
       source "$DT_LIB/state.bash"
       dt_state_preflight || return
       if ((dry)); then
+        dots::operation 'Would publish' '' '' "Select theme $id"
+        for ((name=0;name<${#DT_CONNECT_TARGETS[@]};name++)); do
+          dots::operation 'Would link' "${DT_CONNECT_SOURCES[name]}" "${DT_CONNECT_TARGETS[name]}" '' file symlink
+        done
         if dots::human; then
           dots::heading 'Theme preview'
           dots::row 'Select' "$id"
@@ -121,7 +139,9 @@ dt_command() {
       dt_set "$id" || return
       if ((background)); then source "$DT_LIB/backgrounds.bash"; dt_bg select; fi ;;
     switcher)
-      (($# == 0)) || return 2
+      for value in "$@"; do
+        case $value in -v|--verbose) DOTS_OPERATION_VERBOSE=1 ;; *) return 2 ;; esac
+      done
       source "$DT_LIB/switcher.bash"
       dt_switcher ;;
     install|update|remove) source "$DT_LIB/install.bash"; dt_git_theme "$action" "$@" ;;

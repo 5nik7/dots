@@ -1,6 +1,7 @@
 # Generated family executables are immutable, owned state. Parent transactions
 # record both pointer identities before publication and call restore on rollback.
 source "$DT_LIB/families.bash"
+source "$DT_LIB/../verbose.bash"
 DT_COMMANDS=$DT_STATE/commands
 dt_commands_record() {
   printf '%s\n' "$2" > "$1/.status.new" && sync -f "$1/.status.new" &&
@@ -136,10 +137,16 @@ dt_commands_publish() {
   [[ ! -L $DT_COMMANDS/current ]] || current=$(readlink -- "$DT_COMMANDS/current")
   [[ $current == "$old" && ( ! -e $DT_COMMANDS/current || -L $DT_COMMANDS/current ) ]] || { dt_error 'generated command pointer changed'; return 1; }
   dt_commands_verify "$new" || return
-  ln -s -- "$new" "$DT_COMMANDS/.current.new" && mv -Tf -- "$DT_COMMANDS/.current.new" "$DT_COMMANDS/current" && sync -f "$DT_COMMANDS"
+  ln -s -- "$new" "$DT_COMMANDS/.current.new" && mv -Tf -- "$DT_COMMANDS/.current.new" "$DT_COMMANDS/current" && sync -f "$DT_COMMANDS" || return
+  dots::operation Linked "$new" "$DT_COMMANDS/current" 'Generated theme commands' dir symlink
 }
 dt_commands_refresh() (
   umask 077
+  # Read by the shared progress helpers.
+  # shellcheck disable=SC2034
+  local DOTS_PROGRESS_HUMAN=${DOTS_OPERATION_VERBOSE:-0} DOTS_PROGRESS_STARTED=''
+  trap 'dots::progress_stop' EXIT
+  dots::progress_start 'Refreshing theme commands'
   dt_commands_lock && dt_commands_refresh_locked
 )
 dt_commands_refresh_locked() (
@@ -148,11 +155,16 @@ dt_commands_refresh_locked() (
   local journal
   journal=$(mktemp -d "$DT_COMMANDS/generations/c.XXXXXXXX") || exit
   dt_commands_prepare "$journal" || exit
-  if [[ ! -f $journal/commands-new ]]; then rmdir -- "$journal"; exit; fi
+  if [[ ! -f $journal/commands-new ]]; then
+    rmdir -- "$journal" || exit
+    dots::operation Unchanged "$DT_COMMANDS/current" '' 'Generated commands already match'
+    exit 0
+  fi
   dt_commands_record "$journal" prepared || exit
   trap 'dt_commands_restore "$journal"' EXIT
   trap 'exit 130' INT
   trap 'exit 143' TERM
   dt_commands_publish "$journal" && dt_commands_record "$journal" committed || exit
+  dots::operation Published "$DT_COMMANDS/current" '' 'Theme commands'
   trap - EXIT
 )

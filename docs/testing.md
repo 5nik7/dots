@@ -924,3 +924,21 @@ catalog and installation suites for companion selection, protected objects,
 receipts, stash/restore, rollback and uninstall. The Git migration cases in
 `tools/test_file_mappings.py` exercise legacy and consolidated layouts. Platform
 selection fixtures are not native Windows/WSL execution evidence.
+
+## Verbose operation verification
+
+Run `python3 -B tools/test_verbose_operations.py` for isolated file/setup/theme action notifications, backup retention and cleanup, rollback and observer failure, metadata-only operations, JSON compatibility, option completion, switcher Apply/Cancel, and native PTY rows with progress at 40/80/120 columns. Fixtures own home/config/state roots; no live installation or theme refresh is used. Pair it with the existing progress/resources, file operation/installation/mapping/check and theme workflow/picker suites for changes to shared presentation. Native PowerShell wrappers remain a separate platform gate.
+
+## File workflow pickers
+
+Run `python3 -B tools/test_file_pickers.py` for automatic/explicit selection,
+argument conflicts, exact token/path round trips, discovery subsets, enabled and
+disabled resource filters, bounded credential-safe previews and read-only dry runs.
+The suite includes native FZF PTYs at 40/80/120 columns, preview cycling, selection
+keys, cancellation, color/icon controls, inherited-option isolation and temporary
+snapshot cleanup. Missing native FZF is reported as a skip.
+
+Also run the browser, file-mapping, catalog, file-operation and installation suites,
+plus shared interaction/confirmation, resource, progress and verbose regressions.
+The browser suite covers native Gum and numbered-menu fallbacks and guarded Apply.
+Run sequentially with owned roots; native Termux evidence is not Windows evidence.

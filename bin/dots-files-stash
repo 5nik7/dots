@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # dots:summary=Disable resources and unlink matching targets while keeping sources
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
 # dots:usage=[RESOURCE...] [OPTIONS]
+# dots:option=--pick||flag|Select interactively; combine with --dry-run to preview
 # dots:option=--restore||flag|Enable and relink selected resources
-# dots:option=--dry-run||flag|Preview without changes or prompts
+# dots:option=--dry-run||flag|Preview without changes; --pick explicitly selects
 # dots:option=--yes||flag|Apply without prompting; requires explicit IDs
 # dots:option=--json||flag|Emit versioned JSON; requires --yes or --dry-run
 # dots:option=--backup||flag|Approve occupied replacements when restoring

@@ -13,8 +13,10 @@ The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday mai
 | [Anodize terminal branding](anodize-logo.md) | Responsive portable logos and optional Kitty/Chafa rendering. |
 | [Anodize next steps](anodize-next.md) | Proposed foundation hardening, then separately scoped frontend work. |
 | [Git and managed files](git-and-file-operations.md) | Implemented bounded operations and quieter discovery. |
+| [Verbose operations](verbose-operations.md) | File/setup/theme action details with shared resource styling and progress. |
 | [Operation progress](progress.md) | Delayed terminal spinners and phase bars across core commands. |
 | [Gum confirmations](gum-confirmations.md) | Optional confirmations for file operations, Anodize and Git publish. |
+| [File workflow pickers](file-pickers.md) | Shared FZF selection and bounded previews for everyday file commands. |
 | [Tracked-config browser](files-browser.md) | Implemented Gum/FZF/plain browser with guarded operation review. |
 | [Files catalog](files-catalog.md) | Implemented catalog; later mutations belong to the Git/files slice. |
 | [Missing-source check](files-check.md) | Interactive catalog-only cleanup with journaled undo. |

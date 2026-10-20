@@ -80,16 +80,11 @@ class Browser:
             if not rows:
                 self.ui.emit('  No matching tracked configs. Use dots files list to inspect filters.')
                 return
-            labels = {}
-            for row in rows:
-                label = ' | '.join(self.ui.clean(x) for x in (
-                    row['id'], row['app'], row['status'],
-                    self.ui.path(row['source']), self.ui.path(row['target'])))
-                labels[label] = row['id']
-            selected = self.pick('Select a config to inspect', [*labels, 'Exit'], 'filter')
-            if selected not in labels:
-                raise ValueError('selector returned an unknown resource')
-            self.resource(labels[selected])
+            from picker import select
+            chosen = select(rows, 'browse', owners=manager.catalog.sources)
+            if not chosen:
+                return
+            self.resource(chosen[0]['id'])
 
     def resource(self, identity):
         while True:
@@ -149,7 +144,7 @@ def main():
     for flag in ('repo', 'app', 'category', 'status'):
         parser.add_argument('--' + flag, help='Filter by ' + flag)
     args = parser.parse_args()
-    if not sys.stdin.isatty() or not sys.stdout.isatty():
+    if not all(s.isatty() for s in (sys.stdin, sys.stdout, sys.stderr)):
         raise ValueError('browser needs terminal input and output; use dots files list/show and link/remove for scripts')
     configure()
     Browser(args).run()

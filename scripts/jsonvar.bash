@@ -131,7 +131,7 @@ _jv-validate-utf8() {
 
 		# check for utf-16 surrogate pair domain
 		# U+D800 and U+DFFF
-		((cp >= 0xd800 && cp <= 0xdff)) && return 1
+		((cp >= 0xd800 && cp <= 0xdfff)) && return 1
 	done
 
 	return 0

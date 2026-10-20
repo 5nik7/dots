@@ -79,7 +79,7 @@ implied by this convention.
 The [theme switcher](themes.md#interactive-theme-switcher) prefers FZF for live
 palette previews, then Gum, then a numbered menu. This scoped exception preserves
 Gum-first Back/Apply/Cancel review; shared backend precedence is unchanged. The [tracked-config browser](files.md#interactive-tracked-config-browser)
-uses the same adapters and requires operation review before Apply.
+and [file pickers](files.md#interactive-file-pickers) also prefer FZF for live file previews, then Gum and numbered menus. This is scoped to selection; operation review and confirmation retain their existing adapters.
 
 Managed-file operations and Anodize offer **Cancel / Apply**; Git publish offers
 **Cancel / Publish**. Cancel is selected by default. These confirmations use Gum
@@ -114,6 +114,16 @@ Prompt-capable or directly outputting external commands use a static phase messa
 The existing color and icon policy applies. ASCII mode uses `|/-\` and `#` bars; disabled color removes ANSI color sequences while carriage returns and spaces update the line. Neither renderer hides the cursor or changes terminal input mode. Transient labels are sanitized and shortened to fit; final result and recovery text keeps complete paths. Bash escapes non-ASCII path characters for predictable cell widths, while Python measures combining and wide characters. Bash uses optional `stty` to read the initial terminal width and otherwise falls back to `COLUMNS` or 80 columns.
 
 Clear and stop the display before results, diagnostics, confirmation or selection. Nested work shares the active renderer; captured private bridges disable their own progress. Renderer errors disable presentation without approving, cancelling or retrying work. File notifications run at existing journal boundaries and never alter transaction ordering or schemas. Rendering workers must release inherited locks, terminate on completion/interruption, and preserve the operation's result.
+
+## Verbose operations
+
+File-changing commands, checkout setup, and theme set/refresh/switcher accept `-v`/`--verbose`. Default previews and summaries remain unchanged. Verbose output adds permanent action rows on stderr while preserving delayed progress: clear and join the active renderer before each row, then resume the same phase/count without resetting its delay. Prompts and outputting children retain exclusive terminal access.
+
+Rows distinguish planned actions (`Would …`), completed writes, unchanged/skipped reasons, rollback, and cleanup. Link/copy arrows read `source -> destination`; backup arrows read `original -> recovery copy`. Paths use the shared resource icons and published type/MIME colors, separately from semantic action colors. Only the current home prefix is abbreviated to `~`; escaped complete paths wrap at narrow widths. No content or raw internal trace is printed. Redirected verbose output remains static and honors explicit color/icon controls.
+
+Temporary verified recovery copies are reported when prepared. After successful finalization, rows identify retained payloads and their backup ID, or temporary-copy cleanup. Theme connector copies belong to generation journals and are labeled accordingly; they are not file-backup registry entries. A completed individual action does not imply transaction success: subsequent rollback rows and the final result remain authoritative.
+
+`--json` suppresses added verbose output on both streams, preserving existing JSON and diagnostics. Dry-run details describe intended actions without animation or claims of completed writes. Private theme bridges, scalar queries, generated shell code and previews inside selectors receive no operation trace. Verbosity is per invocation, not a persistent environment setting. File observers are optional and cannot change mutation ordering, journal schemas, approval or recovery behavior; display failures disable optional details.
 
 ## Ownership and Compatibility
 

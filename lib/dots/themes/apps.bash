@@ -64,7 +64,10 @@ dt_apps_connect() {
     target=${DT_CONNECT_TARGETS[index]} source=${DT_CONNECT_SOURCES[index]}
     # Pi watches its themes directory, not the active generation link. Renew its
     # connector on publication to notify that watcher, using the same journal.
-    if [[ $source != "$DT_ACTIVE/pi.json" && -L $target && $(readlink -- "$target") == "$source" ]]; then continue; fi
+    if [[ $source != "$DT_ACTIVE/pi.json" && -L $target && $(readlink -- "$target") == "$source" ]]; then
+      dots::operation Unchanged "$target" '' 'Already linked'
+      continue
+    fi
     entry=$dir/connectors/$index; mkdir "$entry" || return
     printf '%s\n' "$target" > "$entry/target"
     printf '%s\n' "$source" > "$entry/source"
@@ -83,8 +86,12 @@ dt_apps_connect() {
     else
       [[ ! -e $target && ! -L $target ]] || { dt_error 'connector appeared during preparation'; return 1; }
     fi
+    if [[ -e $entry/old || -L $entry/old ]]; then
+      dots::operation 'Recovery copy' "$target" "$entry/old" 'Retained in the theme generation journal'
+    fi
     ln -s -- "$source" "$target.dots-theme-new" || return
     mv -Tf -- "$target.dots-theme-new" "$target" && dt_flush "${target%/*}" || return
+    dots::operation Linked "$source" "$target" '' file symlink
   done
 }
 dt_apps_current() {
@@ -107,6 +114,7 @@ dt_apps_restore() {
       if [[ $prior == absent ]]; then rm -- "$target" || return
       else cp -a -- "$entry/old" "$target.dots-theme-new" && mv -Tf -- "$target.dots-theme-new" "$target" || return; fi
       dt_flush "${target%/*}" || return
+      dots::operation 'Rolled back' "$target" '' 'Original connector state restored'
     elif [[ $prior == present ]]; then
       if [[ -L $entry/old ]]; then [[ -L $target && $(readlink -- "$target") == "$(readlink -- "$entry/old")" ]] || { dt_error "connector drift during rollback: $target"; return 1; }
       else cmp -s -- "$target" "$entry/old" || { dt_error "connector drift during rollback: $target"; return 1; }; fi
@@ -119,18 +127,31 @@ dt_apps_reload() {
   local failures=0
   if [[ ${TERMUX_VERSION:-} && ${PREFIX:-} == */usr && -d $HOME/.termux ]] && command -v termux-reload-settings >/dev/null; then
     dots::progress_update 'Reloading Termux settings'
-    termux-reload-settings >/dev/null 2>&1 || { dt_error 'Termux reload failed'; failures=1; }
+    if termux-reload-settings >/dev/null 2>&1; then dots::operation Reloaded '' '' 'Termux settings'
+    else dt_error 'Termux reload failed'; failures=1; fi
+  else
+    dots::operation Skipped '' '' 'Termux reload: adapter unavailable'
   fi
   if command -v tmux >/dev/null && tmux list-sessions >/dev/null 2>&1; then
     dots::progress_external 'Reloading tmux configuration'
-    tmux source-file "$DT_ACTIVE/tmux.conf" || { dt_error 'tmux reload failed'; failures=1; }
+    if tmux source-file "$DT_ACTIVE/tmux.conf"; then dots::operation Reloaded '' '' 'tmux configuration'
+    else dt_error 'tmux reload failed'; failures=1; fi
+  else
+    dots::operation Skipped '' '' 'tmux reload: no executable or running server'
   fi
   if [[ ${KITTY_LISTEN_ON:-} ]] && command -v kitty >/dev/null; then
     dots::progress_start 'Reloading Kitty colors'
-    kitty @ --to "$KITTY_LISTEN_ON" set-colors --all --configured "$DT_ACTIVE/kitty.conf" >/dev/null 2>&1 || { dt_error 'Kitty reload failed'; failures=1; }
+    if kitty @ --to "$KITTY_LISTEN_ON" set-colors --all --configured "$DT_ACTIVE/kitty.conf" >/dev/null 2>&1; then dots::operation Reloaded '' '' 'Kitty colors'
+    else dt_error 'Kitty reload failed'; failures=1; fi
+  else
+    dots::operation Skipped '' '' 'Kitty reload: executable or listening address unavailable'
   fi
   if command -v ya >/dev/null && command -v timeout >/dev/null; then
-    timeout 2 ya pub-to 0 dots-theme-changed --str "${XDG_STATE_HOME:-$HOME/.local/state}/dots" >/dev/null 2>&1 || :
+    if timeout 2 ya pub-to 0 dots-theme-changed --str "${XDG_STATE_HOME:-$HOME/.local/state}/dots" >/dev/null 2>&1; then
+      dots::operation Notified '' '' 'Yazi theme event sent'
+    else dots::operation Skipped '' '' 'Yazi theme notification unavailable'; fi
+  else
+    dots::operation Skipped '' '' 'Yazi notification: ya or timeout unavailable'
   fi
   dots::progress_stop
   (( ! failures )) || printf 'Theme is published; retry app reloads with dots theme refresh.\n' >&2

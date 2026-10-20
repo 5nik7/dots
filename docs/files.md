@@ -199,11 +199,11 @@ Gum remains capability-checked and the text fallback does not require Bash.
 one resource at a time. Optional `--repo`, `--app`, `--category` and `--status`
 filters use the existing catalog fields. Search includes qualified ID, app, status
 and source/target paths. Details show the full paths, strategy, platform and
-ownership metadata without displaying file contents. Unavailable/excluded sources
+ownership metadata. The picker starts with metadata; Alt-C explicitly requests a bounded content preview. Unavailable/excluded sources
 are reported without initialization. Empty filtered results exit successfully.
 
-The browser prefers Gum, falls back to FZF, then uses a numbered menu; `TERM=dumb`
-uses the plain menu. It requires terminal input and output. Help/completion never
+The browser prefers FZF with live previews, falls back to Gum, then uses a numbered menu; `TERM=dumb`
+uses the plain menu. It requires terminal input, output and diagnostics. Help/completion never
 launch a UI, and existing list/show JSON and path interfaces are unchanged.
 For scripts use the existing list/show and link/remove commands. The browser has
 no `--json`, `--yes`, discovery, platform override, editor or batch mode.
@@ -228,7 +228,7 @@ list or Exit; the catalog is refreshed before returning. Failures stop browsing
 and preserve the transaction engine's rollback/recovery behavior. Browsing,
 details, backup toggles, preview, Back and Exit create no state directories, locks
 or journals. Operation planning may hash contents for drift protection but does
-not display them.
+not display them unless content preview is explicitly selected.
 
 Explicit Exit returns 0; Ctrl-C and plain-menu Escape/EOF return 130. Gum retains
 the [documented Escape/error ambiguity](presentation.md#optional-gum-interactions).
@@ -398,6 +398,18 @@ repository; these require manual review. Removal does not delete the
 repository source, so repository discovery can find it again as an untracked
 resource. Nothing stages or commits Git changes.
 
+### Verbose action details
+
+Use `-v`/`--verbose` with `install`, `uninstall`, `add`, `link`, `remove`/`rm`, `undo`, `recover`, `backups restore`, `stash`, `edit`, or `check` to see actions and unchanged/skipped reasons. For example:
+
+```bash
+dots files add ~/.config/example --backup --verbose
+dots files install -v
+dots files undo TRANSACTION_ID --dry-run -v
+```
+
+Existing previews and summaries remain. Additional stderr rows show verified recovery copies, completed links/copies/metadata updates, retained backup locations and IDs, cleanup, and rollback. File links read `repository source -> installed target`. Colors and icons follow file-type/MIME rules; progress resumes between rows. `edit` without `--apply` and `check` still change only catalog metadata as documented, even with verbose enabled. `--json` suppresses the additional trace; dry runs label intentions rather than reporting completed writes. See the [verbose presentation contract](presentation.md#verbose-operations). The existing `discover --system --verbose` option continues to expand discovery listings.
+
 ## Backups, history and recovery
 
 Retained backups default off. `--backup` enables them per operation; `--no-backup`
@@ -453,3 +465,57 @@ its installation baseline even with optional snapshots disabled.
 
 See the [Git config guide](../config/git/README.md) for the guarded migration from
 the retired Androidots Git catalog/import mappings and obsolete home overlay.
+
+## Interactive file pickers
+
+`add`, `link`, `stash` (including `--restore`), `edit`, `remove`/`rm` and `show`
+open a picker when operands are omitted in a terminal. `browse` uses the same
+rich resource selector. FZF is preferred, then Gum, then a numbered menu;
+`TERM=dumb` uses the plain menu. Optional tools are never installed automatically.
+
+```sh
+dots files add                         # Choose eligible registered configurations
+dots files add --pick ~/.config/nvim  # Choose a subset under an explicit path
+dots files add --scan --pick          # Choose a subset of registered discoveries
+dots files link --pick --dry-run      # Select, then preview without applying
+dots files stash                     # Multi-select enabled resources
+dots files stash --restore           # Multi-select disabled resources
+dots files edit                      # Choose a mapping or New mapping
+dots files show                      # Select one resource to inspect
+dots files remove                    # Select resources to stop managing
+```
+
+Explicit operands without `--pick` retain their behavior. Only add accepts
+operands together with `--pick`; supplied paths narrow its eligible discovery
+inventory. `add --scan` without `--pick` still selects all eligible discoveries.
+Directory-link adoption requires explicit paths without a picker. Link lists
+active-platform enabled mappings, stash lists enabled mappings, restore lists
+disabled mappings, and remove lists active-platform mappings. Conflicts remain
+visible and the planner decides whether the complete selection can proceed.
+Existing command filters constrain selection; empty inventories exit without changes.
+
+Batch selectors support Tab/Shift-Tab to mark and move, Ctrl-A to select matching
+rows, and Ctrl-D to clear selection. Enter accepts marked rows, or the highlighted
+row when nothing is marked. Edit, show and browse select one resource. Enter
+advances to the existing detail/plan flow; it never grants approval to mutate.
+Alt-P hides/shows the preview, Alt-C cycles details/source/target content, and
+Alt-J/K scroll it. FZF/plain-menu Esc and Ctrl-C cancel with status 130. Gum retains
+its [Escape/error ambiguity](presentation.md#optional-gum-interactions).
+Other selector failures stop without retrying another backend. Fallbacks offer equivalent selection and
+subsequent detail/plan review without a live content pane.
+
+Previews show full paths, owner, status, strategy and intended semantics. Content
+is read only after Alt-C, capped at 64 KiB/200 lines; directories show up to 200
+immediate entries. Excluded paths, detected credentials, binary/special files and
+unsafe links have no content preview. Control characters are escaped. Detection
+is conservative, not a guarantee that an arbitrary config contains no secrets.
+Source and target content are inspected independently. Preview metadata is
+informational; the guarded operation plan and existing backup approval follow.
+
+`--pick --dry-run` explicitly permits selection followed by a read-only plan.
+Plain `--dry-run` never prompts. `edit --pick --dry-run` requires explicit edit
+fields; source/target text entry remains available during ordinary interactive
+editing, with searchable repository/strategy choices. `--pick --new` is invalid:
+use `edit --new` for direct mapping creation. `--pick` rejects `--yes`, `--json`
+and nonterminal streams. Help/completion and explicit data/path interfaces never
+open a selector. Recovery commands continue to require explicit IDs.

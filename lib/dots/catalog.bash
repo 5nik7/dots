@@ -25,7 +25,7 @@ dots_builtin_metadata() {
   case $1 in
     init)
       DOTS_META_USAGE='[bash|zsh|fish|powershell|nu|xonsh] | --setup [OPTIONS]'
-      DOTS_META_OPTIONS=('--setup||flag|Install platform configurations with retained backups' '--dry-run||flag|Preview setup without writes' '--yes||flag|Approve setup without prompting' '--json||flag|Emit setup JSON' '--update||flag|Update clean sources before setup' '--with-source||choice:androidots,windots,nvim|Initialize a named public source')
+      DOTS_META_OPTIONS=('--verbose|-v|flag|Show setup actions and backups' '--setup||flag|Install platform configurations with retained backups' '--dry-run||flag|Preview setup without writes' '--yes||flag|Approve setup without prompting' '--json||flag|Emit setup JSON' '--update||flag|Update clean sources before setup' '--with-source||choice:androidots,windots,nvim|Initialize a named public source')
       DOTS_META_ARGUMENTS=('1|choice:bash,zsh,fish,powershell,nu,xonsh|Shell adapter (default: Bash/Zsh)')
       # shellcheck disable=SC2016
       DOTS_META_EXAMPLES=('eval "$(dots init)"' 'dots init fish | source') ;;

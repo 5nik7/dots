@@ -122,10 +122,19 @@ def discard(path):
 
 
 class Store:
-    def __init__(self, state):
+    def __init__(self, state, observer=None):
         self.state = Path(state)
         self.root = self.state / 'files' / 'transactions'
         self.backups = self.state / 'backups'
+        self.observer = observer
+
+    def notify(self, label, source=None, target=None, **details):
+        if self.observer is not None:
+            try:
+                self.observer(label, source, target, **details)
+            except Exception:
+                # Observers are optional; they cannot change transaction outcomes.
+                pass
 
     @tracked('Reading transaction history')
     def records(self):
@@ -236,6 +245,9 @@ class Store:
                     entry['after'] = digest(after)
                     doc['operations'].append(entry)
                     self.save(doc)
+                    if before is not None:
+                        self.notify('Recovery copy', path, directory / f'{i}-before',
+                                    reason='temporary until transaction finalization')
                     report('Preparing files', i + 1, len(operations))
                 report('Verifying prepared files')
                 # All copies and metadata are ready before the first live replacement.
@@ -275,6 +287,16 @@ class Store:
                         sync_dir(path.parent)
                     entry['phase'] = 'done'
                     self.save(doc)
+                    op = operations[i]
+                    if 'link' in op:
+                        source = op['link'] if os.path.isabs(op['link']) else os.path.abspath(path.parent / op['link'])
+                        self.notify('Linked', source, path, target_kind='symlink')
+                    elif 'source' in op:
+                        self.notify('Restored' if action in ('uninstall', 'undo', 'backups-restore') else 'Copied',
+                                    op['source'], path)
+                    else:
+                        self.notify('Removed' if entry['after'] is None else 'Updated', path,
+                                    reason='metadata' if 'data' in op else '')
                     report('Applying files', i + 1, len(doc['operations']))
                 report('Finalizing file transaction')
                 if retain:
@@ -292,6 +314,10 @@ class Store:
                     self.save(doc)
                 raise
             self.cleanup(doc)
+            if retain:
+                for i, entry in enumerate(doc['operations']):
+                    if entry['before'] is not None:
+                        self.notify('Backup kept', directory / f'{i}-before', reason='backup ID ' + identity)
             return doc
 
     def cleanup(self, doc):
@@ -312,6 +338,8 @@ class Store:
                 discard(directory / f'{i}-after')
                 if not doc['retain_backup'] or doc['status'] == 'rolled-back':
                     discard(directory / f'{i}-before')
+                    if entry['before'] is not None:
+                        self.notify('Cleaned', directory / f'{i}-before', reason='temporary recovery copy removed')
         if doc['status'] == 'rolled-back':
             backup = self.backups / (doc['id'] + '.json')
             if exists(backup):
@@ -357,6 +385,7 @@ class Store:
             sync_dir(path.parent)
             entry['phase'] = 'rolled-back'
             self.save(doc)
+            self.notify('Rolled back', path, reason='original restored' if entry['before'] is not None else 'created object removed')
         report('Finalizing file recovery')
         for parent in reversed(doc['created_parents']):
             if not parent['created']:

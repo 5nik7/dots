@@ -8,6 +8,7 @@ import stat
 import sys
 
 from catalog import Catalog, PLATFORMS, Presentation, platform
+from events import OperationOutput
 from manage import Manager
 from transactions import digest, parents_safe
 from interaction import gum_confirm
@@ -145,6 +146,7 @@ def summary(ui, result):
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('-v', '--verbose', action='store_true')
     for flag in ('yes', 'dry-run', 'json', 'all-platforms'):
         p.add_argument('--' + flag, action='store_true')
     for flag in ('repo', 'app', 'category', 'status'):
@@ -161,6 +163,8 @@ def main(argv=None):
         p.error('--json requires --dry-run or --yes')
     configure(not args.json and not args.dry_run)
     check = Check(args)
+    output = OperationOutput.for_args(args)
+    check.manager.store.observer = output
     with Progress('Inspecting file catalog'):
         items = check.inspect()
     candidates = [r for r in items if r['eligible']]
@@ -217,6 +221,11 @@ def main(argv=None):
                     if row['id'] in selected:
                         row['outcome'] = 'cancelled'
         result['counts']['skipped'] = len(candidates) - result['counts']['removed']
+    for row in items:
+        outcome = row.get('outcome', '')
+        if args.dry_run or outcome in ('skipped', 'removed') or not row['eligible']:
+            output('Would remove catalog entry' if outcome == 'would-remove' else 'Removed catalog entry' if outcome == 'removed' else 'Skipped',
+                   row.get('source'), reason=row['id'] + ': ' + row['reason'])
     if args.json:
         print(json.dumps(result, ensure_ascii=True))
     else:

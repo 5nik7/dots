@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from progress import configure, tracked
 from resources import Resources, wrap as resource_wrap
 from file_platform import permissions, sync_dir, open_nofollow, lock as lock_file
+from interaction import SelectionEnded
 
 ID = re.compile(r"^[a-z][a-z0-9_-]*$")
 PLATFORMS = {"termux", "linux", "wsl", "windows"}
@@ -87,6 +88,51 @@ class Presentation:
         for i, part in enumerate(resource_wrap(text, max(8, self.width-len(prefix)))):
             self.emit((self.paint(prefix, '94') if i == 0 else ' ' * len(prefix)) +
                       (self.paint(part, style) if style else part))
+
+    def operation_row(self, label, source=None, target=None, reason='', kind=None, target_kind=None):
+        """Wrap an action with independently styled filesystem resource spans."""
+        ui = self
+        code = '92'
+        if label in ('Failed', 'Conflict'):
+            code = '91'
+        elif label in ('Unchanged', 'Skipped', 'Excluded', 'Cleaned'):
+            code = '90'
+        elif label in ('Preserved', 'Recovery copy', 'Rolled back'):
+            code = '93'
+        elif label.startswith('Would ') or label == 'Preparing':
+            code = '94'
+        spans = [(ui.clean(label), code), ('  ', None)]
+        for index, (path, intended) in enumerate(((source, kind), (target, target_kind))):
+            if path is None:
+                continue
+            if index and source is not None:
+                spans.append((' -> ', None))
+            text = ui.clean(ui.path(path))
+            style = None
+            if ui.human and (ui.color or ui.icons):
+                _, icon, style = ui.resources.describe(path, intended)
+                if ui.icons:
+                    text = icon + ' ' + text
+            spans.append((text, style))
+        if reason:
+            spans.append(((' — ' if source is not None else '') + ui.clean(reason), '90'))
+        # Use shared path-aware wrapping on inert text, then restore span styles.
+        # Every character survives; ANSI sequences are never sliced or measured.
+        index, offset = 0, 0
+        for number, part in enumerate(resource_wrap(''.join(text for text, _ in spans), ui.width - 7)):
+            line = '  ' if number == 0 else '      '
+            remaining = len(part)
+            while remaining:
+                text, style = spans[index]
+                count = min(remaining, len(text) - offset)
+                piece = text[offset:offset + count]
+                line += ui.paint(piece, style) if style else piece
+                remaining -= count
+                offset += count
+                if offset == len(text):
+                    index += 1
+                    offset = 0
+            ui.emit(line)
 
     def status(self, status):
         if status in ("linked", "available", "tracked", "managed", "restored", "removed", "published", "unchanged"):
@@ -458,6 +504,7 @@ def main(argv=None):
     parser.add_argument("--all-platforms", action="store_true")
     parser.add_argument("--sort", choices=["id", "app", "repository", "source", "status"], default="id")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--pick", action="store_true")
     parser.add_argument("--id")
     parser.add_argument("--target")
     parser.add_argument("--platforms", nargs="+", choices=sorted(PLATFORMS))
@@ -465,8 +512,20 @@ def main(argv=None):
     parser.add_argument("--replaces", action="append")
     parser.add_argument("--update", action="store_true")
     args = parser.parse_args(argv)
+    from interaction import selection_requested as requested
+    picking = requested(parser, args, [args.value] if args.value else [], args.action == 'show')
     configure(not args.json and args.action not in ('source', 'target'))
     cat = Catalog(Path(os.environ.get("DOTS") or Path(__file__).resolve().parents[3]), args.platform)
+    if picking:
+        from picker import select
+        candidates = [r for r in cat.records() if args.all_platforms or r['applicable']]
+        for option, field in ((args.repo, "repository"), (args.app, "app"), (args.category, "category"), (args.status, "status")):
+            if option:
+                candidates = [r for r in candidates if r.get(field) == option]
+        chosen = select(candidates, 'show', owners=cat.sources)
+        if not chosen:
+            return 0
+        args.value = chosen[0]['id']
     if args.action in ("locate", "show", "source", "target", "track") and not args.value:
         parser.error("this action requires a query, resource ID, or source")
     if args.action in ("sources", "list", "discover") and args.value:
@@ -517,6 +576,10 @@ def main(argv=None):
 if __name__ == "__main__":
     try:
         sys.exit(main())
+    except SelectionEnded as end:
+        sys.exit(end.status)
+    except (KeyboardInterrupt, EOFError):
+        sys.exit(130)
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         ui = Presentation(sys.stderr)
         ui.emit(ui.paint(f"dots files: {exc}", "91"))

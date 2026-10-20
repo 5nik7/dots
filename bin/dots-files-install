@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # dots:summary=Install platform configurations with retained backups
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
 # dots:usage=[OPTIONS]
 # dots:option=--dry-run||flag|Preview without writes or network access
 # dots:option=--yes||flag|Approve the plan without prompting

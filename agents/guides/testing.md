@@ -234,3 +234,13 @@ Git consumer and selector suites described in [testing](../../docs/testing.md#gi
 plus affected publication and managed-file suites. Keep credential helpers and
 Git hooks inert, and verify actual syntax-cache loading rather than config parsing
 alone.
+
+For verbose file/setup/theme action changes, run `python3 -B tools/test_verbose_operations.py`
+alongside the affected existing lifecycle and presentation suites. Preserve JSON,
+private bridge bytes, default output, observer failure isolation and progress cleanup.
+
+For interactive file selection or previews, run `python3 -B tools/test_file_pickers.py`
+and the affected file/browser/interaction suites as described in
+[testing](../../docs/testing.md#file-workflow-pickers). Exercise native FZF keys and
+40/80/120-column layouts, exact literal path selection, credential/special-file
+preview refusal, noninteractive/data bypass and cancellation without managed state.

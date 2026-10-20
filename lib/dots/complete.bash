@@ -207,6 +207,7 @@ dots_complete() {
           for row in "${DOTS_META_OPTIONS[@]}"; do
             IFS='|' read -r long short type description <<< "$row"
             [[ $long == --setup ]] || dots_candidate "$long" "$description"
+            [[ ! $short ]] || dots_candidate "$short" "$description"
           done
         fi
       fi

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # dots:summary=Select a theme with live palette preview (FZF; Gum or plain fallback)
+# dots:usage=[-v|--verbose]
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 set -- switcher "$@"
 source "$DT_LIB/commands.bash"

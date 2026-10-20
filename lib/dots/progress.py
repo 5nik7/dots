@@ -1,11 +1,12 @@
 """Transient progress for human CLI work; never owns operations or approval."""
-from contextlib import ContextDecorator
+from contextlib import ContextDecorator, contextmanager
 from functools import wraps
 import os
 import shutil
 import signal
 import sys
 import threading
+import time
 import unicodedata
 
 _enabled = False
@@ -55,6 +56,7 @@ class Progress(ContextDecorator):
         self.term_handler = None
         self.parent = None
         self.previous_state = None
+        self.started = 0.0
 
     def __enter__(self):
         global _current
@@ -65,6 +67,7 @@ class Progress(ContextDecorator):
             self.previous_state = _current.state
             return _current
         self.owner = True
+        self.started = time.monotonic()
         _current = self
         try:
             self.worker = threading.Thread(target=self._run, name='dots-progress', daemon=True)
@@ -96,7 +99,7 @@ class Progress(ContextDecorator):
 
     def _run(self):
         try:
-            if self.done.wait(DELAY):
+            if self.done.wait(max(0, DELAY - (time.monotonic() - self.started))):
                 return
             frame = 0
             while not self.done.is_set():
@@ -159,6 +162,28 @@ class Progress(ContextDecorator):
 def report(label, completed=0, total=0):
     if _current is not None:
         _current.update(label, completed, total)
+
+
+@contextmanager
+def permanent_output():
+    """Join the renderer before printing; resume the same phase without a delay reset."""
+    current = _current
+    running = current is not None and current.worker is not None
+    if running:
+        current._stop()
+    try:
+        yield
+    except BaseException:
+        # In particular, do not restart a worker while unwinding an interruption.
+        raise
+    else:
+        if running and _current is current:
+            current.done = threading.Event()
+            try:
+                current.worker = threading.Thread(target=current._run, name='dots-progress', daemon=True)
+                current.worker.start()
+            except (RuntimeError, OSError):
+                current.worker = None
 
 
 def tracked(label):

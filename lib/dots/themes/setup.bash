@@ -2,6 +2,9 @@
 # Private preparation bridge. stdout is a NUL-delimited data stream.
 # shellcheck source-path=SCRIPTDIR
 set -o pipefail
+# Private bridge output never inherits human operation tracing.
+# shellcheck disable=SC2034
+DOTS_OPERATION_VERBOSE=0
 DT_LIB=${BASH_SOURCE[0]%/*}
 source "$DT_LIB/core.bash" || exit 1
 source "$DT_LIB/views.bash" || exit 1

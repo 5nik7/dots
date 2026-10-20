@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # dots:summary=Link catalogued configuration sources
-# dots:usage=RESOURCE... [OPTIONS]
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
+# dots:usage=[RESOURCE...] [OPTIONS]
+# dots:option=--pick||flag|Select interactively; combine with --dry-run to preview
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--dry-run||flag|Preview without changes
 # dots:option=--yes||flag|Apply the displayed plan without prompting

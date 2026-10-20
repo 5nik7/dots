@@ -16,6 +16,7 @@ if sys.version_info < (3, 9):
     raise SystemExit('dots setup requires Python 3.9 or newer')
 
 from catalog import Catalog, Presentation, platform, read_json
+from events import OperationOutput
 from file_platform import lock, open_nofollow, state_root
 from transactions import Store, digest, exists, parents_safe, private_directory
 
@@ -289,6 +290,7 @@ class Installation:
     def prepare_theme(self):
         if not self.theme or not self.theme['refresh']:
             return
+        self.store.notify('Preparing', reason='theme rendering and cache generation')
         with Progress('Preparing theme generation'):
             values = self.theme_bridge('prepare', self.theme['fingerprint'])
         self.theme_notice = values[2] if len(values) > 2 else ''
@@ -296,6 +298,7 @@ class Installation:
         base = self.state / 'themes'
         if generation.parent != base / 'generations' or not generation.name.startswith('g.'):
             raise ValueError('invalid prepared theme generation')
+        self.store.notify('Prepared', generation, reason='inactive theme generation', kind='dir')
         displayed = len(self.items)
         self.add('theme:selection', base / 'current', text=generation.name + '\n', managed=True)
         self.add('theme:active', self.state / 'current/theme', link=generation, directory=True, managed=True)
@@ -470,6 +473,7 @@ def main(argv=None):
     parser.add_argument('-h', '--help', action='store_true', help='show setup help')
     parser.add_argument('action', choices=('install', 'uninstall'))
     parser.add_argument('--dry-run', action='store_true', help='preview without writes or network access')
+    parser.add_argument('-v', '--verbose', action='store_true', help='show actions, backups and unchanged/skipped reasons')
     parser.add_argument('--yes', action='store_true', help='approve the displayed plan without prompting')
     parser.add_argument('--json', action='store_true', help='emit a schema-1 result')
     parser.add_argument('--update', action='store_true', help='fast-forward the clean checkout before planning setup')
@@ -507,11 +511,13 @@ def main(argv=None):
         update_sources(root, rows)
         # Load the newly checked-out implementation before planning file writes.
         forwarded = [args.action]
-        for flag in ('yes', 'json'):
+        for flag in ('yes', 'json', 'verbose'):
             if getattr(args, flag):
                 forwarded.append('--' + flag)
         os.execv(sys.executable, [sys.executable, '-B', str(root / 'lib/dots/files/install.py'), *forwarded])
     installation = Installation(root)
+    output = OperationOutput.for_args(args)
+    installation.store.observer = output
     with Progress('Planning ' + args.action):
         if args.action == 'install':
             installation.plan_install()
@@ -520,6 +526,7 @@ def main(argv=None):
     doc = dict(schema=1, action=args.action, status='blocked' if installation.blocked else 'preview',
                platform=installation.platform, items=installation.items)
     display(doc, args)
+    output.plan(installation.items, args.dry_run)
     if args.dry_run:
         return int(installation.blocked)
     if installation.blocked:

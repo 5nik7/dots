@@ -2,6 +2,7 @@
 # shellcheck source=apps.bash
 source "$DT_LIB/apps.bash"
 source "$DT_LIB/../progress.bash"
+source "$DT_LIB/../verbose.bash"
 # shellcheck source=app-env.bash
 source "$DT_LIB/app-env.bash"
 # shellcheck source=plugins.bash
@@ -44,7 +45,8 @@ dt_restore() {
       [[ ! -e $DT_ACTIVE && ! -L $DT_ACTIVE ]] || { dt_error 'active theme appeared during recovery'; return 1; }
     fi
   fi
-  dt_record "$dir" rolled-back
+  dt_record "$dir" rolled-back || return
+  dots::operation 'Rolled back' "$dir" '' 'Theme publication restored'
 }
 dt_recover() {
   local dir status
@@ -110,6 +112,7 @@ dt_prepare_generation() {
     dt_emit_init fish > "$dir/init.fish" || return 1
   if [[ -n ${DT_SEMANTIC[background]:-} ]]; then
     dots::progress_update 'Rendering application themes'
+    dots::operation Preparing '' '' 'Rendering application themes'
     dt_render "$dir" || return 1
     dt_app_init "$dir" || return 1
   fi
@@ -117,6 +120,7 @@ dt_prepare_generation() {
     mkdir -p "$dir/bat-source/themes" "$dir/bat-cache" || return 1
     cp -- "$dir/bat.tmTheme" "$dir/bat-source/themes/Dots.tmTheme" || return 1
     dots::progress_update 'Building bat theme cache'
+    dots::operation Preparing '' '' 'Building bat theme cache'
     (cd -- "$dir/bat-source" && BAT_CONFIG_PATH=/dev/null BAT_THEME=ansi BAT_CONFIG_DIR="$dir/bat-source" BAT_CACHE_PATH="$dir/bat-cache" bat cache --build --source "$dir/bat-source" --target "$dir/bat-cache" >/dev/null) || { dt_error 'bat theme cache build failed'; return 1; }
     # Delta reads XDG_CACHE_HOME/bat rather than BAT_CACHE_PATH. Git redirects
     # only its Delta processes here, leaving the normal bat cache untouched.
@@ -126,6 +130,8 @@ dt_prepare_generation() {
     local fish_cache=$dir/bat-cache
     fish_cache=${fish_cache//\\/\\\\}; fish_cache=${fish_cache//\'/\\\'}
     printf "set -gx BAT_THEME Dots\nset -gx BAT_CACHE_PATH '%s'\n" "$fish_cache" >> "$dir/init.fish"
+  else
+    dots::operation Skipped '' '' 'bat cache: artifact or optional bat executable unavailable'
   fi
   if [[ -L $DT_ACTIVE ]]; then readlink -- "$DT_ACTIVE" > "$dir/previous-active"; else : > "$dir/previous-active"; fi
   dt_generation_complete "$dir" || { dt_error "incomplete prepared theme: $REPLY"; return 1; }
@@ -135,6 +141,7 @@ dt_prepare_generation() {
   while IFS= read -r -d '' file; do dt_flush "$file" || return 1; done < <(find "$dir" -type f -print0)
   dt_flush "$dir" && dt_flush "$DT_STATE/generations" || return 1
   dt_record "$dir" staged || return
+  dots::operation Prepared "$dir" '' 'Inactive theme generation' dir
   DT_PREPARED=$dir
 }
 dt_set() (
@@ -171,8 +178,10 @@ dt_set() (
     local selected
     IFS= read -r selected < "$DT_STATE/generations/$DT_GENERATION/selection" || exit 1
     if [[ $stored == "$fingerprint" && $selected == "$DT_THEME-$DT_FLAVOR" ]] && dt_apps_current; then
+      dots::operation Unchanged "$DT_ACTIVE" '' 'Theme inputs and application links already match'
       dt_commands_refresh_locked || exit 1
       if [[ ${DOTS_THEME_REFRESH:-} == 1 ]]; then dt_apps_reload; dt_plugins_after_publish; fi
+      dots::progress_stop
       dots::success "Already using $selected"; exit 0
     fi
   fi
@@ -187,12 +196,14 @@ dt_set() (
     mv -f -- "$dir/active.new" "$DT_STATE/current" && dt_flush "$DT_STATE" || exit 1
   if [[ -f $dir/kitty.conf ]]; then
     ln -s -- "$dir" "$DT_ACTIVE.new" && mv -Tf -- "$DT_ACTIVE.new" "$DT_ACTIVE" && dt_flush "${DT_ACTIVE%/*}" || exit 1
+    dots::operation Linked "$dir" "$DT_ACTIVE" '' dir symlink
     dt_apps_connect "$dir" || exit 1
   fi
   dt_commands_publish "$dir" || exit 1
   dt_record "$dir" committed || exit 1
   # shellcheck disable=SC2034
   complete=1
+  dots::operation Published "$dir" '' "$DT_ID" dir
   dt_apps_reload
   dt_plugins_after_publish
   if [[ ${DT_VIVID_NOTICE:-} ]]; then

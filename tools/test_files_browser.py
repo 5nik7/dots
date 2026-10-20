@@ -69,7 +69,17 @@ class Browser(operations.Operations):
     def run_browser(self, choices):
         scripted = Scripted(choices)
         output = io.StringIO()
-        with redirect_stdout(output):
+        def selected(rows, action, **kwargs):
+            ui = browser.Presentation()
+            labels = {' | '.join(ui.clean(x) for x in
+                      (r['id'], r['app'], r['status'], ui.path(r['source']), ui.path(r['target']))): r for r in rows}
+            value = scripted.pick('filter', 'Select a config to inspect', [*labels, 'Exit'])
+            if value == 'Exit':
+                raise browser.EndBrowser()
+            if value not in labels:
+                raise ValueError('selector returned an unknown resource')
+            return [labels[value]]
+        with redirect_stdout(output), patch('picker.select', side_effect=selected):
             try:
                 browser.Browser(self.args, scripted).run()
             except browser.EndBrowser as end:
@@ -145,7 +155,7 @@ class Browser(operations.Operations):
     def test_invalid_result_and_cancel_before_apply(self):
         for choices in (['nonsense'], ['RESOURCE:dots:app', 'nonsense'],
                         ['RESOURCE:dots:app', 'Retained backups: off', 'Link', 'nonsense']):
-            with self.subTest(choices=choices), self.assertRaisesRegex(ValueError, 'unknown choice'):
+            with self.subTest(choices=choices), self.assertRaisesRegex(ValueError, 'unknown (choice|resource)'):
                 self.run_browser(choices)
         self.run_browser(['RESOURCE:dots:app', 'Retained backups: off', 'Link', 'Exit'])
         self.assertFalse(self.state.exists())
@@ -261,11 +271,11 @@ class Terminal(picker.Picker):
         self.state=self.home/'state/dots'
 
     def test_plain_details_exit_and_input_refusal(self):
-        out=self.terminal(steps=((b'Number (',b'1\r'),(b'Number [1]',b'5\r')))
+        out=self.terminal(steps=((b'Number [1]',b'2\r'),(b'Number [1]',b'5\r')))
         self.assertIn(b'File details',out)
         self.assertNotIn(b'do not print file contents',out)
         self.assertFalse(self.state.exists())
-        self.terminal(steps=((b'Number (',b'\x04'),),code=130)
+        self.terminal(steps=((b'Number [1]',b'\x04'),),code=130)
         result=self.dots('files','browse',code=1)
         self.assertEqual(result.stdout,'')
         self.assertIn('terminal input and output',result.stderr)
@@ -286,12 +296,16 @@ class Terminal(picker.Picker):
         completion=self.dots('__complete','bash','2','--','dots','files','').stdout
         self.assertIn('browse',completion)
         self.assertIn('--repo',self.dots('__complete','bash','3','--','dots','files','browse','--').stdout)
+        for action in ('add', 'link', 'stash', 'edit', 'remove', 'rm', 'show'):
+            self.assertIn('--pick', self.dots('__complete', 'bash', '3', '--', 'dots', 'files', action, '--').stdout)
+            self.assertIn('--pick', self.dots('files', action, '--help').stdout)
+        self.assertFalse(self.calls.exists())
 
     @unittest.skipUnless(picker.NATIVE_GUM,'native Gum unavailable')
     def test_native_gum_details_and_exit(self):
         (self.fake/'gum').symlink_to(picker.NATIVE_GUM)
         for width in (40,80,120):
-            out=self.terminal(steps=((b'Type to filter',b'\r'),(b'Config action',b'jjjj\r')),width=width)
+            out=self.terminal(steps=((b'Type to filter',b'dots:app\r'),(b'Config action',b'jjjj\r')),width=width)
             self.assertIn(b'File details',out)
             self.assertNotIn(b'do not print file contents',out)
         self.assertFalse(self.state.exists())
@@ -299,7 +313,7 @@ class Terminal(picker.Picker):
     @unittest.skipUnless(picker.NATIVE_GUM,'native Gum unavailable')
     def test_native_gum_link_apply(self):
         (self.fake/'gum').symlink_to(picker.NATIVE_GUM)
-        out=self.terminal(steps=((b'Type to filter',b'\r'),(b'Config action',b'j\r'),
+        out=self.terminal(steps=((b'Type to filter',b'dots:app\r'),(b'Config action',b'j\r'),
                                  (b'Review operation',b'j\r'),(b'Operation finished',b'j\r')))
         self.assertIn(b'File operation complete',out)
         self.assertTrue((self.home/'config/example').is_symlink())
@@ -308,7 +322,7 @@ class Terminal(picker.Picker):
     @unittest.skipUnless(picker.NATIVE_FZF,'native FZF unavailable')
     def test_native_fzf_details_and_exit(self):
         (self.fake/'fzf').symlink_to(picker.NATIVE_FZF)
-        out=self.terminal(steps=((b'Filter:',b'\r'),(b'Number [1]',b'5\r')))
+        out=self.terminal(steps=((b'Details',b'\r'),(b'Number [1]',b'5\r')))
         self.assertIn(b'File details',out)
         self.assertFalse(self.state.exists())
 

@@ -5,14 +5,14 @@ import copy
 import json
 import os
 from pathlib import Path
-import shutil
 import sys
 
 from catalog import Catalog, ID, PLATFORMS, Presentation, platform, relative
+from events import OperationOutput
 from install import Installation
 from manage import Manager
 from transactions import digest, exists, parents_safe
-from interaction import Selector, SelectionEnded, gum_confirm
+from interaction import SelectionEnded, gum_confirm
 from progress import Progress, configure
 
 
@@ -306,16 +306,8 @@ def terminal():
 def pick(title, choices):
     if not terminal():
         raise ValueError('selection requires a terminal; supply explicit IDs/options')
-    if os.name != 'nt' and shutil.which('bash'):
-        return Selector().pick('choose', title, choices, choices[0])
-    ui = Presentation()
-    ui.heading(title)
-    for index, choice in enumerate(choices, 1):
-        ui.detail(str(index), choice)
-    answer = input('Choice [1]: ').strip() or '1'
-    if not answer.isdecimal() or not 1 <= int(answer) <= len(choices):
-        raise ValueError('invalid selection')
-    return choices[int(answer)-1]
+    from picker import choice
+    return choice(title, choices)
 
 
 def prompt(label, default=None):
@@ -330,6 +322,8 @@ def prompt(label, default=None):
 
 def arguments(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('-v', '--verbose', action='store_true')
+    p.add_argument('--pick', action='store_true')
     p.add_argument('action', choices=['stash', 'edit'])
     p.add_argument('values', nargs='*')
     for flag in ('restore', 'new', 'apply', 'yes', 'dry-run', 'json'):
@@ -377,29 +371,32 @@ def render(doc, final=False):
 
 def main(argv=None):
     p, args = arguments(argv)
+    from interaction import selection_requested as requested
+    picking = requested(p, args, args.values)
+    if args.pick and args.dry_run and args.action == 'edit' and not any((args.source, args.target, args.strategy)):
+        p.error('--pick --dry-run edit requires explicit --source, --target or --strategy')
     configure(not args.json and not args.dry_run)
     with Progress('Loading file mappings'):
         plan = MappingPlan(args.backup if args.backup is not None else Manager().backup_default())
+    output = OperationOutput.for_args(args)
+    plan.install.store.observer = output
     interactive = not (args.json or args.yes or args.dry_run)
-    if not args.values and not args.new:
-        if not interactive:
-            p.error('supply resource IDs or explicit --new options')
-        choices = ['Cancel']
-        if args.action == 'edit': choices.append('New mapping')
-        choices += [r['id'] for r in plan.original_rows]
-        selected = pick('Select a resource', choices)
-        if selected == 'Cancel': return 0
-        if selected == 'New mapping':
+    if picking:
+        from picker import select
+        rows = plan.original_rows
+        if args.action == 'stash':
+            rows = [r for r in rows if r['enabled'] != args.restore]
+        selected = select(rows, 'restore' if args.restore else args.action,
+                          multi=args.action == 'stash', new=args.action == 'edit' and interactive and bool(plan.documents),
+                          owners=plan.catalog.sources)
+        if not selected:
+            return 0
+        if selected[0]['id'] == '__new__':
             args.new = True
         else:
-            args.values = [selected]
-        if args.action == 'stash':
-            while True:
-                more = pick('Select more resources or review', ['Review selected', 'Cancel'] +
-                            [r['id'] for r in plan.original_rows if r['id'] not in args.values])
-                if more == 'Cancel': return 0
-                if more == 'Review selected': break
-                args.values.append(more)
+            args.values = [r['id'] for r in selected]
+    if not args.values and not args.new:
+        p.error('supply resource IDs or explicit --new options')
     if args.action == 'edit' and interactive:
         if args.new:
             if not args.repo:
@@ -420,6 +417,7 @@ def main(argv=None):
         else:
             plan.edit(args)
         plan.finish()
+    output.plan(plan.rows, args.dry_run)
     doc = dict(schema=1, action='restore' if args.restore else args.action, status='preview', dry_run=args.dry_run, items=plan.rows)
     if args.dry_run:
         print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc)
@@ -428,6 +426,9 @@ def main(argv=None):
         render(doc)
     if not plan.install.operations:
         doc['status'] = 'unchanged'
+        for row in plan.rows:
+            output('Unchanged', row.get('target') or row.get('source'),
+                   reason=row['id'] + ': mapping and live state already match')
     else:
         if not args.yes:
             if not terminal(): p.error('use --yes or --dry-run without terminal input/output')

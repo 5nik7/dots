@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # dots:summary=Undo a file transaction without discarding drift
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
 # dots:usage=TRANSACTION [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--dry-run||flag|Preview without changes

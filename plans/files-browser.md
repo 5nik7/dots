@@ -33,3 +33,7 @@ not native Linux evidence. A separate 40-column forced-color/icon transcript was
 reviewed. Syntax, focused ShellCheck, relative Markdown links and whitespace checks
 passed. No live configuration, state, wallpaper, editor or repository history was
 changed. Native Linux/WSL/Windows interaction remains unverified.
+
+The [file-picker follow-up](file-pickers.md) supersedes the original selector
+precedence and metadata-only pane: browse now shares FZF-first selection with an
+explicit bounded content toggle. Its action review and transaction guards remain.

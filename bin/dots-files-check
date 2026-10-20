@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # dots:summary=Review and remove catalog entries whose sources are absent
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
 # dots:usage=[OPTIONS]
 # dots:option=--yes||flag|Remove all eligible entries without prompting
 # dots:option=--dry-run||flag|Preview without changes or prompts

@@ -18,7 +18,7 @@ dt_palette_help() {
     printf 'Usage: %s [FLAVOR] [ACTION | COLOR [FORMAT]]\n\n' "$family"
     printf '%s\n' 'Actions:' '  FLAVOR / show   Preview the native palette' '  set             Activate through Dots' '  init            Export shell color arrays' '  --help          Show this usage' '' 'Examples:'
     printf '  %s %s\n  %s %s blue hex\n  %s %s set --dry-run\n' "$family" "${flavor:-${DT_FAMILY_DEFAULTS[$family]:-FLAVOR}}" "$family" "${flavor:-${DT_FAMILY_DEFAULTS[$family]:-FLAVOR}}" "$family" "${flavor:-${DT_FAMILY_DEFAULTS[$family]:-FLAVOR}}"
-    printf '\n%s\n' 'Options:' '  --color=auto|always|never|none   Output decoration' '  -c / --color NAME              Query a palette color' '  -f / --flavor, -F / --format, -r / --raw, -a / --array' '  --all, --dry-run, --background, --completion bash|zsh|fish' '' 'Flavors:'
+    printf '\n%s\n' 'Options:' '  --color=auto|always|never|none   Output decoration' '  -c / --color NAME              Query a palette color' '  -f / --flavor, -F / --format, -r / --raw, -a / --array' '  --all, --dry-run, --background, -v / --verbose (set), --completion bash|zsh|fish' '' 'Flavors:'
     dt_family_flavors "$family"; printf '  %s\n' "${DT_FAMILY_FLAVORS[@]}"
     printf '\nFormats:'; printf ' %s' "${DT_FORMATS[@]}"; printf '\n'
   } | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/presentation.py" --theme "${id:-$family}" "${artwork[@]}"
@@ -59,7 +59,7 @@ dt_palette_command() {
     case $token in
       -h|--help|help) dt_palette_help "$family" "$flavor"; return ;;
       -r|--raw) raw=1 ;; -a|--array) raw=1 array=1 ;; --all) all=1 ;;
-      --dry-run|--background) flags+=("$token") ;;
+      --dry-run|--background|-v|--verbose) flags+=("$token") ;;
       show|set|init|--init) action=${token#--} ;;
       color) action=show ;;
       --completion|completion) (($# == 1)) || return 2; dt_palette_completion_script "$family" "$1"; return ;;

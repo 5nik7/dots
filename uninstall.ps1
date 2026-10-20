@@ -5,9 +5,10 @@ param(
     [Parameter(ValueFromRemainingArguments = $true)][string[]] $Arguments = @()
 )
 $ErrorActionPreference = 'Stop'
+$cli = @('uninstall')
+if ($PSBoundParameters['Verbose']) { $cli += '--verbose' }
 . (Join-Path $PSScriptRoot 'lib/dots/files/entry.ps1')
 . (Join-Path $PSScriptRoot 'lib/dots/ui.ps1')
-$cli = @('uninstall')
 if ($DryRun) { $cli += '--dry-run' }
 if ($Yes) { $cli += '--yes' }
 if ($Json) { $cli += '--json' }

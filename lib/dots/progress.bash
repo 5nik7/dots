@@ -72,6 +72,7 @@ dots::progress_worker() (
 
 dots::progress_start() {
   local parent=$BASHPID
+  DOTS_PROGRESS_LABEL=$1 DOTS_PROGRESS_COMPLETED=${2:-0} DOTS_PROGRESS_TOTAL=${3:-0}
   dots::progress_enabled || return 0
   if [[ -n ${DOTS_PROGRESS_FD:-} ]]; then dots::progress_update "$@"; return 0; fi
   dots::progress_clean "$1"
@@ -84,6 +85,7 @@ dots::progress_start() {
 }
 
 dots::progress_update() {
+  DOTS_PROGRESS_LABEL=$1 DOTS_PROGRESS_COMPLETED=${2:-0} DOTS_PROGRESS_TOTAL=${3:-0}
   [[ -n ${DOTS_PROGRESS_FD:-} ]] || return 0
   dots::progress_clean "$1"
   # A failed renderer cannot SIGPIPE the operation's shell.
@@ -98,6 +100,16 @@ dots::progress_stop() {
   wait "${DOTS_PROGRESS_PID:-}" 2>/dev/null || :
   DOTS_PROGRESS_FD='' DOTS_PROGRESS_PID=''
   return 0
+}
+
+# Permanent rows share the terminal with the worker, never race its output.
+dots::progress_print() {
+  local active=${DOTS_PROGRESS_FD:-} label=${DOTS_PROGRESS_LABEL:-} completed=${DOTS_PROGRESS_COMPLETED:-0} total=${DOTS_PROGRESS_TOTAL:-0}
+  local status=0
+  dots::progress_stop
+  "$@" >&2 || status=$?
+  [[ ! $active ]] || dots::progress_start "$label" "$completed" "$total"
+  return "$status"
 }
 
 dots::progress_run() {

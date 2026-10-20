@@ -279,7 +279,7 @@ p.apply('stash')
             with redirect_stdout(io.StringIO()):mappings.main(['stash','dots:example'])
         self.assertTrue(self.target.is_symlink())
         self.assertFalse((self.home/'.state').exists())
-        with patch.object(mappings,'terminal',return_value=True),patch.object(mappings.shutil,'which',return_value=None),patch('builtins.input',return_value='2'):
+        with patch.object(mappings,'terminal',return_value=True),patch('interaction.terminal',return_value=True),patch('interaction.shutil.which',return_value=None),patch('builtins.input',return_value='2'):
             with redirect_stdout(io.StringIO()):self.assertEqual(mappings.pick('Test',['Cancel','choice']),'choice')
 
     def test_source_ownership_and_symlink_parent_refused(self):

@@ -28,11 +28,13 @@ The scripts require Python 3.9+. POSIX Dots and theme preparation require Bash 4
 
 ## Options and output
 
-Install/uninstall accept `--dry-run`, `--yes`, `--json`, `--color=auto|always|never`, `--icons=auto|always|never`, and `--help`. Install additionally accepts `--update` and repeatable `--with-source androidots|windots|nvim`. The PowerShell equivalents are `-DryRun`, `-Yes`, `-Json`, `-Color`, `-Icons`, `-Update`, and `-WithSource`. Remaining arguments allow the long-option forms as well.
+Install/uninstall accept `-v`/`--verbose`, `--dry-run`, `--yes`, `--json`, `--color=auto|always|never`, `--icons=auto|always|never`, and `--help`. Install additionally accepts `--update` and repeatable `--with-source androidots|windots|nvim`. The PowerShell equivalents are `-Verbose`, `-DryRun`, `-Yes`, `-Json`, `-Color`, `-Icons`, `-Update`, and `-WithSource`. Remaining arguments allow the long-option forms as well.
 
 Normal execution displays a plan and requests approval. `--yes` approves that plan without prompting; nonterminal execution otherwise refuses mutation. Dry-run creates no directories, locks, caches, journals or capability probes, and performs no downloads or fetches. Link capability is therefore verified during approved preparation, before live replacement.
 
 Human views use the shared semantic colors, full wrapped paths and explicit statuses. The PowerShell bridge enables terminal presentation when its host advertises virtual-terminal support and no TERM override is set. Delayed spinners and counted phases follow the [presentation contract](presentation.md#operation-progress), including `DOTS_PROGRESS=never`. Git runs with visible stderr so credentials and diagnostics retain the terminal. JSON, dry-run, redirected output and shell-code generation never animate. `--json` produces a schema-1 result containing `action`, `status`, `items`, and, for file setup, `platform` and a completed `transaction` ID when applicable. Diagnostics remain on stderr. Items distinguish planned actions, unchanged/skipped resources, installed/restored targets and preserved drift. Exit 0 means complete/unchanged/cancelled, 1 means failed/blocked/incomplete, and 2 means invalid arguments.
+
+`./install.sh --verbose`, `dots files install -v`, and `dots init --setup -v` show live file actions, recovery copies, retained backup locations/IDs, and unchanged/skipped reasons alongside existing progress. Uninstall supports the same option, as do `./install.ps1 -Verbose` and `./uninstall.ps1 -Verbose`. Verbosity survives `--update` restarting setup. JSON suppresses the extra trace; dry-run uses planned-action labels. See [verbose output](presentation.md#verbose-operations).
 
 ## Declared ownership
 

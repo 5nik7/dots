@@ -11,10 +11,11 @@ import sys
 import textwrap
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from interaction import gum_confirm
+from interaction import gum_confirm, SelectionEnded
 from progress import Progress, configure, tracked
 
 from catalog import Catalog, Presentation, read_json, platform, relative, ID
+from events import OperationOutput
 from transactions import Store, digest, exists, parents_safe
 from file_platform import state_root
 
@@ -403,26 +404,35 @@ def main():
     parser.add_argument('values', nargs='*')
     parser.add_argument('--repo')
     parser.add_argument('--scan', action='store_true')
+    parser.add_argument('--pick', action='store_true')
     parser.add_argument('--directory-link', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--yes', action='store_true')
     parser.add_argument('--json', action='store_true')
-    parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('--all', dest='include_all', action='store_true')
     backups = parser.add_mutually_exclusive_group()
     backups.add_argument('--backup', action='store_true', default=None)
     backups.add_argument('--no-backup', dest='backup', action='store_false')
     args = parser.parse_args()
+    from interaction import selection_requested as requested
+    picking = requested(parser, args, args.values, args.action in ('add', 'link', 'remove'))
     configure(not args.json and not args.dry_run)
-    if args.action != 'system' and (args.verbose or args.include_all):
-        parser.error('--verbose and --all require discover --system')
+    if args.include_all and args.action != 'system':
+        parser.error('--all requires discover --system')
+    if args.verbose and args.action not in ('system', 'add', 'link', 'remove', 'undo', 'recover', 'backups-restore'):
+        parser.error('--verbose requires discover --system or a file-changing operation')
     if args.action != 'add' and (args.scan or args.directory_link):
         parser.error('--scan and --directory-link require add')
     if args.scan and args.directory_link:
         parser.error('--directory-link requires explicit directory paths')
+    if args.pick and args.scan and args.values:
+        parser.error('choose paths or --scan')
     if args.action in ('locations', 'system', 'history', 'backups-list') and args.values:
         parser.error('this inspection command takes no positional arguments')
     manager = Manager()
+    output = OperationOutput.for_args(args)
+    manager.store.observer = output
     if manager.catalog.platform == 'windows' and args.action not in ('history', 'backups-list', 'backups-show', 'undo', 'recover', 'backups-restore'):
         raise ValueError('native Windows managed operations are not implemented')
     if args.action in ('locations', 'system', 'history', 'backups-list', 'backups-show'):
@@ -451,6 +461,15 @@ def main():
         return
     if args.backup is None:
         args.backup = manager.backup_default()
+    if picking:
+        from picker import candidates, select
+        with Progress('Loading file choices'):
+            rows = candidates(manager, args.action, args.values, args.repo)
+        chosen = select(rows, args.action, multi=True, owners=manager.catalog.sources)
+        if not chosen:
+            return
+        args.values = [r['candidate'] if args.action == 'add' else r['id'] for r in chosen]
+        args.scan = False
     with Progress('Planning file operations'):
         if args.action in ('undo', 'recover', 'backups-restore'):
             if len(args.values) != 1:
@@ -497,6 +516,9 @@ def main():
             if getattr(manager, 'link_installation', None):
                 # Installation baselines must survive for a later uninstall.
                 args.backup = True
+    if getattr(manager, 'link_installation', None):
+        manager.link_installation.store.observer = output
+    output.plan(views, args.dry_run)
     preview = {'schema': 1, 'action': args.action, 'dry_run': args.dry_run, 'backup': args.backup, 'items': views}
     if args.dry_run:
         if args.json:
@@ -543,7 +565,9 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except KeyboardInterrupt:
+    except SelectionEnded as end:
+        sys.exit(end.status)
+    except (KeyboardInterrupt, EOFError):
         ui = Presentation(sys.stderr)
         ui.emit(ui.paint('Interrupted; inspect dots files history for recovery status.', '93'))
         sys.exit(130)

@@ -755,3 +755,9 @@ Delta commands set a process-local XDG cache root and request Dots syntax. Missi
 cache uses the normal Delta invocation. The standard bat cache is never replaced.
 Use the [template skill](../.codex/skills/dots-theme-template/SKILL.md) when adding
 other default consumers.
+
+## Verbose application output
+
+`dots theme set ID -v`, `dots theme refresh --verbose`, `dots theme refresh --commands-only -v`, and `dots theme switcher -v` add action details on stderr. The plural `dots themes switcher` alias, standalone `theme` forwarding, and family/flavor `set` helpers preserve the flag. The switcher passes it into Apply; selection previews and cancellation remain read-only.
+
+Verbose output shows preparation/render/cache phases, source -> destination links, connector recovery copies retained in generation journals, publication, reload/plugin outcomes and concise unchanged/skipped reasons. Already-current generations are explained without claiming new backups or links. Rollback is reported separately from completed writes. Default output, selector styling, approvals and mutation behavior remain unchanged. Resource colors/icons and progress use the [shared contract](presentation.md#verbose-operations). `set --dry-run -v` describes planned connections without writes; this does not add dry-run support to refresh or switcher. Theme collection downloads/removal, background selection and data-query routes do not gain verbosity.

@@ -197,7 +197,8 @@ class InstallationTests(unittest.TestCase):
         self.cli('install','--update','--dry-run')
         self.assertEqual(oldfetch,(self.repo/'.git/FETCH_HEAD').read_bytes())
         self.assertEqual(oldhead,self.git(self.repo,'rev-parse','HEAD'))
-        self.cli('install','--update','--yes')
+        result=self.cli('install','--update','--yes','--verbose')
+        self.assertIn('Unchanged',result.stderr)  # Survives the updated Python process.
         self.assertEqual(self.target.read_text(),'remote update')
         self.cli('uninstall','--yes')
         self.assertEqual(self.target.read_text(),'pre-install')
@@ -372,7 +373,8 @@ p.apply('install')
         names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','-z','--',
             '.dots','bin','lib','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
-        names.update(('config/fsh/README.md','lib/dots/themes/generation.bash'))
+        names.update(('config/fsh/README.md','lib/dots/themes/generation.bash',
+                      'lib/dots/files/events.py', 'lib/dots/verbose.bash'))
         shutil.rmtree(self.repo)
         self.repo.mkdir()
         for name in sorted(names):

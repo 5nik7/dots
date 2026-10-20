@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # dots:summary=Inspect a tracked file
-# dots:usage=ID [OPTIONS]
+# dots:usage=[ID] [OPTIONS]
+# dots:option=--pick||flag|Select a resource interactively
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--all-platforms||flag|Include inactive platforms
 # dots:option=--repo||file-repository|Repository ID

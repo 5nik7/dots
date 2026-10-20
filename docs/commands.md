@@ -716,3 +716,18 @@ The existing `dots files link dots:git`, installation, mapping apply and stash
 restore paths also preview/select the fixed Git platform companion. Direct Git
 linking retains its installation baseline for uninstall even when optional backup
 snapshots are disabled. No new public route or catalog field is introduced.
+
+## Implemented verbose operation flags
+
+`-v`/`--verbose` adds human action details to file install/uninstall/add/link/remove (including `rm`), undo/recover/backups restore, stash/edit/check, and explicit `init --setup`. Root setup/restore scripts forward it; PowerShell also accepts `-Verbose`. See [file operations](files.md#verbose-action-details) and [setup](installation.md#options-and-output).
+
+Theme set/refresh (including `--commands-only`) and switcher accept the same flag; `themes switcher` is equivalent. These flags do not apply to scalar/query routes or ordinary shell initialization. Existing discovery verbosity retains its listing semantics. Default output and structured schemas are unchanged; JSON suppresses additional details. [Presentation](presentation.md#verbose-operations) defines streams, progress and resource styling.
+
+## Implemented file selection flags
+
+The implemented `files add`, `link`, `stash`, `edit`, `remove`/`rm` and `show` routes
+accept `--pick` and automatically select missing operands in a terminal. The
+[interactive file picker contract](files.md#interactive-file-pickers) defines
+candidate filtering, multi-selection, previews, `--pick --dry-run`, flag conflicts
+and fallbacks. `files browse` shares this selector. Existing explicit-operand and
+machine-output routes retain their contracts; recovery still requires IDs.

@@ -550,3 +550,17 @@ Git catalog/import mappings and verified legacy links, including matching dangli
 retains historical receipt baselines, verifies effective configuration without
 printing values or executing credential helpers, and undoes failed verification.
 It never removes moved platform source files.
+
+## File-picker previews
+
+The [file selectors](files.md#interactive-file-pickers) obtain operands, never
+approval. A complete guarded plan and the existing confirmation are still required.
+Picker snapshots contain metadata only in private temporary directories and are
+removed on normal completion/cancellation. They create no managed state or journals.
+Preview helpers receive validated opaque tokens, never shell-interpolated paths.
+Content preview is an explicit Alt-C action with bounded reads and escaped control
+characters. It refuses excluded/credential-like content, special objects and
+unrelated links; a target link may resolve only to its recorded regular source.
+These checks are conservative and do not promise exhaustive secret detection.
+No editor, arbitrary preview plugin, shell startup or previewed configuration is
+executed. Selection does not change backup, rollback or drift protection.

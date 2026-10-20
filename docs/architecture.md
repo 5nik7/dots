@@ -357,7 +357,7 @@ operations and source/target/catalog guards in memory until Apply.
 
 ## Progress rendering
 
-`lib/dots/progress.bash` and `lib/dots/progress.py` own equivalent [progress policy](presentation.md#operation-progress). Controllers opt in after excluding data and preview-only modes. Bash uses a private control pipe and rendering child; Python uses a scoped rendering thread. Actual work stays in its original calling context, and no progress files or persistent state are created. Existing human renderers stop the Bash display before messages; Python contexts finish before controller output. The file engine reports phases after durable boundaries without changing its journal schema. Prompt-capable/direct-output children run with animation stopped; private Anodize bridges suppress nested progress. The Bash dispatcher and shell startup do not load the rendering backend. Help, completion and data paths never start rendering workers or probe optional progress tools.
+`lib/dots/progress.bash` and `lib/dots/progress.py` own equivalent [progress policy](presentation.md#operation-progress). Controllers opt in after excluding data and preview-only modes. Bash uses a private control pipe and rendering child; Python uses a scoped rendering thread. Actual work stays in its original calling context, and no progress files or persistent state are created. Existing human renderers stop the Bash display before messages; Python contexts suspend rendering around verbose action rows and finish before ordinary controller output. The file engine reports phases after durable boundaries without changing its journal schema. Prompt-capable/direct-output children run with animation stopped; private Anodize bridges suppress nested progress. The Bash dispatcher and shell startup do not load the rendering backend. Help, completion and data paths never start rendering workers or probe optional progress tools.
 
 ## Anodize authoring boundary
 
@@ -443,3 +443,16 @@ cache root. The file manager's `git_platform.py` owns the bounded platform-selec
 plan shared by install, direct link and mapping apply/restore; generic catalog
 overlap rules remain unchanged. The consolidation migration uses existing mapping
 transactions/receipts rather than a separate mutation engine.
+
+Verbose file-operation output uses an optional Store observer with a human renderer in
+`lib/dots/files/events.py`. Bash theme operations use `lib/dots/verbose.bash`.
+Both reuse existing resource styling and progress suspension; observers carry no
+persistent state and do not own transaction decisions. See [verbose output](presentation.md#verbose-operations).
+
+### Interactive file selection
+
+The Python interaction adapter owns scoped FZF-first rich selection. The files
+picker owns candidate metadata and bounded content previews, shared by file
+controllers and the browser. Selection returns exact catalog IDs or paths to the
+existing planners; it never applies transactions or grants approval. Private
+transient snapshots carry opaque selection tokens and metadata, not file contents.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # dots:option=--system||flag|Search registered user config locations
-# dots:option=--verbose||flag|With --system, show individual files and source mappings
+# dots:option=--verbose|-v|flag|With --system, show individual files and source mappings
 # dots:option=--all||flag|With --system, include managed and excluded entries
 # dots:summary=Find sources not yet tracked
 # dots:usage=[OPTIONS]

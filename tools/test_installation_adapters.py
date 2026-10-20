@@ -54,11 +54,13 @@ class Adapters(unittest.TestCase):
     @unittest.skipIf(os.name=='nt','POSIX shell entry points')
     def test_shell_entry_points_and_setup_routing(self):
         for cmd in ([self.repo/'install.sh'],[self.repo/'bin/dots','init','--setup'],[self.repo/'bin/dots','files','install']):
-            doc=json.loads(self.run_command([*cmd,'--dry-run','--json']).stdout)
+            doc=json.loads(self.run_command([*cmd,'--dry-run','--json','-v']).stdout)
             self.assertEqual(doc['action'],'install')
         self.assertFalse(list(self.home.iterdir()))
-        self.run_command([self.repo/'install.sh','--yes'])
-        self.run_command([self.repo/'uninstall.sh','--yes'])
+        result=self.run_command([self.repo/'install.sh','--yes','--verbose'])
+        self.assertIn('Linked',result.stderr)
+        result=self.run_command([self.repo/'uninstall.sh','--yes','-v'])
+        self.assertIn('Removed',result.stderr)
         self.assertFalse((self.home/'.config/example/settings').exists())
 
     @unittest.skipIf(os.name=='nt','Bash hook generation')
@@ -71,6 +73,8 @@ class Adapters(unittest.TestCase):
         out=self.run_command([*cmd,'__complete','bash','3','--','dots','init','--setup','']).stdout
         self.assertIn('--dry-run',out)
         self.assertIn('--with-source',out)
+        self.assertIn('candidate\t--verbose\t',out)
+        self.assertIn('candidate\t-v\t',out)
         self.assertFalse(list(self.home.iterdir()))
 
     def test_help_json_and_plain_presentation(self):
@@ -111,7 +115,7 @@ class Adapters(unittest.TestCase):
     def test_native_catalog_check(self):
         (self.repo/'settings').unlink()
         cmd=[PWSH,'-NoProfile','-File',str(self.repo/'bin/dots.ps1'),'files','check']
-        preview=json.loads(self.run_command([*cmd,'--dry-run','--json']).stdout)
+        preview=json.loads(self.run_command([*cmd,'--dry-run','--json','-v']).stdout)
         self.assertEqual(preview['counts']['eligible'],1)
         result=json.loads(self.run_command([*cmd,'--yes','--json']).stdout)
         self.assertEqual(result['counts']['removed'],1)
@@ -177,9 +181,11 @@ sys.exit(install.main(['install','--yes']))
         def quote(path):return "'"+str(path).replace("'","''")+"'"
         # Override the host profile explicitly; never inspect the runner's profile.
         prefix="$PROFILE = "+quote(self.home/'profile.ps1')+"; $PROFILE | Add-Member -NotePropertyName CurrentUserCurrentHost -NotePropertyValue $PROFILE -Force; "
-        for script,args in [('install.ps1','-DryRun -Json'),('uninstall.ps1','-DryRun -Json'),('bin/dots.ps1','init --setup --dry-run --json')]:
+        for script,args in [('install.ps1','-DryRun -Json -Verbose'),('uninstall.ps1','-DryRun -Json -Verbose'),('bin/dots.ps1','init --setup --dry-run --json')]:
             out=self.run_command([PWSH,'-NoProfile','-NonInteractive','-Command',prefix+'& '+quote(self.repo/script)+' '+args+'; exit $LASTEXITCODE'])
             json.loads(out.stdout)
+        out=self.run_command([PWSH,'-NoProfile','-NonInteractive','-Command',prefix+'& '+quote(self.repo/'install.ps1')+' -DryRun -Verbose; exit $LASTEXITCODE'])
+        self.assertIn('Would create',out.stderr)
         self.assertFalse(list(self.home.iterdir()))
 
     @unittest.skipUnless(os.name=='nt','Native Windows capability check')

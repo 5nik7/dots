@@ -16,7 +16,7 @@ dt_palette_candidates() {
     case $token in
       -f|--flavor|-c|--color|-F|--format|--completion|completion) previous=$token ;;
       set|init|--init) action=$token ;;
-      --color=*|show|--raw|-r|--array|-a|--all|color) ;;
+      --color=*|show|--raw|-r|--array|-a|--all|color|-v|--verbose|--dry-run|--background) ;;
       *) if [[ ${DT_FAMILY_VARIANTS[$family:$token]:-} ]]; then flavor=$token; else color=$token; fi ;;
     esac
   done
@@ -26,7 +26,7 @@ dt_palette_candidates() {
     -f|--flavor) dt_family_flavors "$family"; for name in "${DT_FAMILY_FLAVORS[@]}"; do dots_candidate "$name"; done; return ;;
   esac
   if [[ $action == set ]]; then
-    for name in --dry-run --background --help; do dots_candidate "$name"; done; return
+    for name in --dry-run --background --verbose -v --help; do dots_candidate "$name"; done; return
   elif [[ $action ]]; then return; fi
   if [[ $color && ! $previous ]]; then
     for name in "${DT_FORMATS[@]}"; do dots_candidate "$name"; done; return

@@ -231,10 +231,10 @@ dots files show dots:kitty
 dots files list --all-platforms --json
 ```
 
-`dots files browse` provides a searchable Gum/FZF/plain-menu view of tracked
+`dots files browse` provides a searchable FZF/Gum/plain-menu view of tracked
 configs. Inspect paths and status, toggle retained backups for the session, and
-review Link or Stop managing before Apply. It does not display file contents or
-launch an editor. See the [browser guide](docs/files.md#interactive-tracked-config-browser).
+review Link or Stop managing before Apply. The picker starts with metadata;
+Alt-C explicitly requests a bounded content preview. See the [browser guide](docs/files.md#interactive-tracked-config-browser).
 
 `dots files check` reviews missing source paths and removes approved catalog
 entries only; target files and links remain untouched. Use `--yes` to approve all
@@ -256,6 +256,16 @@ add/link/remove, adoption, undo and backups are available below. Source-content 
 profile installation remain future work. See the [catalog reference](docs/files.md)
 for tracking, filters, JSON and ownership rules. Python 3.9+ is required for this
 POSIX implementation; discovery additionally uses Git.
+
+### Interactive file selection
+
+Run `dots files add`, `link`, `stash`, `edit`, `remove` or `show` without operands
+in a terminal to select configurations. FZF provides live details, optional content
+previews and multi-selection; Gum and numbered menus remain available fallbacks.
+Use `dots files link --pick --dry-run` to select and preview, or
+`dots files add --pick ~/.config/nvim` to choose files inside a registered location.
+See [file pickers](docs/files.md#interactive-file-pickers) for keys and safety details.
+
 
 ## Git and Managed Configurations
 
@@ -285,6 +295,15 @@ resource; `files remove ID` (or `rm`) stops managing it while preserving a regul
 local config and the repository source. Commands preview before confirmation;
 `--yes` is explicit unattended approval. Nothing automatically stages or publishes
 imports.
+
+Add `-v`/`--verbose` to file-changing commands and setup (`./install.sh -v` or
+`dots files install -v`) for live backup, copy and source -> destination link
+rows. Theme application supports it too: `dots theme set nord -v`,
+`dots theme refresh -v`, and `dots theme switcher -v`. Details retain progress,
+file-type/MIME colors and icons; unchanged/skipped reasons and rollback remain
+visible. Defaults stay unchanged, dry runs describe plans, and JSON suppresses
+the added trace. See [verbose output](docs/presentation.md#verbose-operations).
+
 
 System discovery defaults to compact config-directory groups with colored counts
 and paths. Use `--verbose` for individual files and source mappings, or `--all` to

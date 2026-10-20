@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # dots:summary=Switch application themes
-# dots:usage=ID [--background] [--dry-run]
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
+# dots:usage=ID [--background] [--dry-run] [-v|--verbose]
 # dots:argument=1|theme-id|Theme identifier
 # dots:option=--dry-run||flag|Preview changes
 # dots:option=--background||flag|Apply a theme background
