@@ -91,3 +91,5 @@ presentation/progress and command suites, and actual 40/80/120-column PTYs.
 Compare published rules, malformed/older snapshots, color/icon independence,
 control-character safety, and machine-output bytes under forced decoration.
 Measure representative listings; preserve the dependency-free help/dispatch path.
+
+Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.

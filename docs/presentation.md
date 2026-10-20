@@ -202,3 +202,7 @@ The live surface audit is in [the implementation plan](../plans/cli-presentation
 Standalone scripts, nested-project tools and paused Go implementations are outside
 this rollout. Native bootstrap adapters follow the same semantic color controls
 without requiring Python or Bash merely to print a missing-dependency error.
+
+## Bash and native PowerShell acceptance
+
+Every future human-view change must preserve matching semantic colors, file/MIME icons, verbose backup/link events, progress and optional picker interactions in Bash and native Windows PowerShell 5.1/7. Reuse the Python renderers/resource/progress adapters where available; keep machine outputs undecorated. Verify quoted/Unicode paths, NO_COLOR, redirected output, cancellation and narrow layouts on each actual host. Fixture parity and successful Python execution do not establish native Windows terminal rendering. See [PowerShell acceptance](powershell.md#acceptance-and-remaining-limits).

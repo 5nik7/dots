@@ -244,3 +244,7 @@ and the affected file/browser/interaction suites as described in
 [testing](../../docs/testing.md#file-workflow-pickers). Exercise native FZF keys and
 40/80/120-column layouts, exact literal path selection, credential/special-file
 preview refusal, noninteractive/data bypass and cancellation without managed state.
+
+## Dual-shell maintenance
+
+Every first-party change must cover Bash on Termux/Linux/WSL and native Windows PowerShell 5.1/7: routes, flags, aliases, contextual completion, exact data output, styled human output, progress and optional pickers. Keep native filesystem/app differences in adapters and reuse transactions. Read [native PowerShell](../../docs/powershell.md); update its capability limits and the [parity plan](../../plans/powershell-parity.md) when affected. Run focused isolated tests for both controller paths, require actual PowerShell engines in Windows CI, and report missing native/desktop evidence explicitly.

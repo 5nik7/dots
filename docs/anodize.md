@@ -8,7 +8,7 @@ Both `dots anodize` and standalone `anodize` use [terminal progress](presentatio
 
 ## Build and first use
 
-Use installed Go 1.27.1, Python 3.11 or newer, Bash and the existing POSIX theme tools. From the Dots checkout:
+Use installed Go 1.27.1 and Python 3.11 or newer. Bash and existing POSIX theme tools apply to the Bash frontend; native Windows uses PowerShell and the Python publication adapter. From the Dots checkout:
 
 ```sh
 python3 -B tools/verify_anodize.py check
@@ -20,7 +20,7 @@ bin/anodize preview dusk
 bin/anodize apply dusk --dry-run
 ```
 
-`dots anodize` exposes the same commands when Dots is on PATH. Building explicitly replaces the ignored `anodize/.build/anodize-engine` artifact. There are no runtime builds, downloads or shell-startup engine calls. `ANODIZE_ENGINE` can point to a prebuilt executable for testing. Help works without the engine; palette operations explain how to build it if missing. Run `anodize` or `anodize --help` for a compact command list and examples, and `anodize COMMAND --help` for described arguments and options. Help adapts to terminal width and uses shared Dots colors, including plain output with `NO_COLOR` or `--color=never`.
+`dots anodize` exposes the same commands when Dots is on PATH. Building explicitly replaces the ignored `anodize/.build/anodize-engine` artifact (`anodize-engine.exe` on Windows). Use `python -B tools/verify_anodize.py build` from PowerShell. There are no runtime builds, downloads or shell-startup engine calls. `ANODIZE_ENGINE` can point to a prebuilt executable for testing. Help works without the engine; palette operations explain how to build it if missing. Run `anodize` or `anodize --help` for a compact command list and examples, and `anodize COMMAND --help` for described arguments and options. Help adapts to terminal width and uses shared Dots colors, including plain output with `NO_COLOR` or `--color=never`.
 
 Saving a theme does not select or activate it. Review `anodize apply dusk --dry-run`, then use `anodize apply dusk --yes` to publish. Mutating commands prompt on interactive input; without a terminal or with `--json`, omission of `--yes` returns the preview. `--dry-run` takes precedence over `--yes` and creates no persistent state.
 
@@ -156,7 +156,7 @@ Apply preflights the current publisher's target set and renders templates into d
 
 ## Portability and provenance
 
-Native Termux is the tested CLI target. Linux/WSL use the existing POSIX adapter boundaries but are not newly certified by these tests; WSL wallpaper changes remain unavailable. Native Windows authoring, an Android APK and a TUI are future work. The pure Go library has no desktop dependencies; Android packaging and language bindings are not implemented.
+Native Termux is the tested CLI target. Linux/WSL use the existing POSIX adapter boundaries but are not newly certified by these tests; WSL wallpaper changes remain unavailable. Native PowerShell authoring and publication adapters are implemented with Windows runtime acceptance pending; see [native PowerShell](powershell.md). An Android APK and a TUI remain future work. The pure Go library has no desktop dependencies; Android packaging and language bindings are not implemented.
 
 Color math and generation are adapted from the pinned local Aether source. See [provenance](../anodize/PROVENANCE.md) for revision, attribution and the upstream README's license declaration. Standard-library image sampling differs from Aether's desktop resampling, so exact image results can differ. No desktop UI, network services or arbitrary theme hooks are included. The separate `~/repos/Anodize.nvim` project owns plugin development; Dots integrates its tested local runtime.
 

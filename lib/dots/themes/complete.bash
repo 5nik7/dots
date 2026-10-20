@@ -21,7 +21,7 @@ dt_palette_candidates() {
     esac
   done
   case $previous in
-    --completion|completion) for name in bash zsh fish; do dots_candidate "$name"; done; return ;;
+    --completion|completion) for name in bash zsh fish powershell; do dots_candidate "$name"; done; return ;;
     -F|--format) for name in "${DT_FORMATS[@]}"; do dots_candidate "$name"; done; return ;;
     -f|--flavor) dt_family_flavors "$family"; for name in "${DT_FAMILY_FLAVORS[@]}"; do dots_candidate "$name"; done; return ;;
   esac

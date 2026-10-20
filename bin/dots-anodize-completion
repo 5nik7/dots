@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # dots:summary=Print shell completion source
-# dots:usage=bash|zsh|fish
-# dots:argument=1|choice:bash,zsh,fish|Shell adapter to print
+# dots:usage=bash|zsh|fish|powershell
+# dots:argument=1|choice:bash,zsh,fish,powershell|Shell adapter to print
 # dots:option=--logo||choice:text,auto,kitty,chafa|Logo renderer (default: text)
 # dots:option=--logo-layout||choice:auto,horizontal,stacked,icon|Logo layout, bounded to fit
 ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit

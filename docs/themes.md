@@ -466,7 +466,7 @@ Cancellation or an invalid selection makes no wallpaper/state changes. Raw
 PNG, JPEG, WebP and BMP are supported. Android uses `termux-wallpaper` (Termux:API),
 Wayland uses `swww img`, and X11 uses `feh`; adapters are capability-checked and have
 a 15-second timeout. `--lock-screen` is Android-only and does not replace the stored
-home-wallpaper selection. WSL/native Windows and video wallpapers are unsupported.
+home-wallpaper selection. WSL and video wallpapers are unsupported. Native PowerShell provides a Windows desktop wallpaper adapter; see [native PowerShell](powershell.md).
 A failed adapter preserves the previous successful record, but an external API may
 have changed the device before failing; prior wallpapers are not backed up. Actions
 are explicit and journaled, never automatic consequences of ordinary palette set.
@@ -761,3 +761,7 @@ other default consumers.
 `dots theme set ID -v`, `dots theme refresh --verbose`, `dots theme refresh --commands-only -v`, and `dots theme switcher -v` add action details on stderr. The plural `dots themes switcher` alias, standalone `theme` forwarding, and family/flavor `set` helpers preserve the flag. The switcher passes it into Apply; selection previews and cancellation remain read-only.
 
 Verbose output shows preparation/render/cache phases, source -> destination links, connector recovery copies retained in generation journals, publication, reload/plugin outcomes and concise unchanged/skipped reasons. Already-current generations are explained without claiming new backups or links. Rollback is reported separately from completed writes. Default output, selector styling, approvals and mutation behavior remain unchanged. Resource colors/icons and progress use the [shared contract](presentation.md#verbose-operations). `set --dry-run -v` describes planned connections without writes; this does not add dry-run support to refresh or switcher. Theme collection downloads/removal, background selection and data-query routes do not gain verbosity.
+
+## Native PowerShell publication
+
+The native frontend provides literal palette queries, theme/family commands, generated `.ps1` commands, native initialization, selection/refresh, source operations and background selection. It shares file-color rendering, semantic presentation, progress, FZF snapshot previews and the guarded file transaction engine. Setup renders without desktop effects; explicit publication may run enabled native hooks and supported app notifications. Windows wallpaper uses its desktop API; Android lock-screen, GTK/Qt and tmux actions retain explicit platform limits. User `.ps1` hooks are native Windows-only; downloaded themes remain inert. See [native PowerShell](powershell.md) for implementation status, state paths and native acceptance requirements.

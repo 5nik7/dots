@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 REPO = Path(__file__).resolve().parents[1]
-PWSH = shutil.which('pwsh')
+PWSH = shutil.which(os.environ.get('DOTS_TEST_POWERSHELL') or 'pwsh')
 
 
 def literal(value):
@@ -32,6 +32,10 @@ class PowerShellInitTests(unittest.TestCase):
             shutil.copy2(REPO / name, self.repo / name)
         shutil.copytree(REPO / 'lib/dots/shell', self.repo / 'lib/dots/shell')
         shutil.copy2(REPO / 'lib/dots/ui.ps1', self.repo / 'lib/dots/ui.ps1')
+        shutil.copy2(REPO / 'lib/dots/help.ps1', self.repo / 'lib/dots/help.ps1')
+        shutil.copytree(REPO / 'lib/dots/metadata', self.repo / 'lib/dots/metadata')
+        (self.repo / 'lib/dots/completion').mkdir()
+        shutil.copy2(REPO / 'lib/dots/completion/powershell', self.repo / 'lib/dots/completion/powershell')
         # PATH deliberately contains no Bash or other external tools.
         self.env = {'HOME': str(self.home), 'USERPROFILE': str(self.home),
                     'DOTS': str(self.repo), 'PATH': str(self.repo / 'bin'),

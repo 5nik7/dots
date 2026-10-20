@@ -76,7 +76,7 @@ See `docs/principles.md` for the consequences of each principle.
 
 ## Working Architecture
 
-Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent read-only core now lives beside the preserved independent experiment. The development external protocol now uses explicit roots, strict sidecars and native adapters. POSIX shell/PowerShell bootstrap and production installation remain unimplemented.
+Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent read-only core now lives beside the preserved independent experiment. The development external protocol now uses explicit roots, strict sidecars and native adapters. Go-owned POSIX shell/PowerShell bootstrap and production installation remain unimplemented; the live bounded installer is separate.
 
 The core owns operations that require consistent safety or state:
 
@@ -147,6 +147,9 @@ Read `docs/safety.md` before changing any mutating path.
 - Any meaningful startup or planning regression requires an explanation and updated measurements.
 
 ## Cross-Platform Rules
+
+- Maintain every first-party route, option, alias, completion, preview, verbose event and data contract for Bash (Termux, native Linux, WSL) and native Windows PowerShell 5.1/7 in the same change. Use shared Python controllers and explicit platform adapters; no Bash dependency on native Windows. Record an explicit platform exception where an operation has no native equivalent.
+- Every focused plan must include both shell surfaces, Windows app destinations, isolated tests and actual native evidence or a named pending acceptance check. Follow [native PowerShell](docs/powershell.md) and the [parity plan](plans/powershell-parity.md). Future work must not silently extend only one shell.
 
 - Do not assume `$HOME`, XDG directories, `sudo`, executable permission bits, GNU utilities, or POSIX symlink behavior in portable core code.
 - Centralize path, privilege, link, shell, and package-manager differences in platform adapters.

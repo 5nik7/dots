@@ -103,6 +103,23 @@ class Resources:
         self._rows = None
         self._icons = None
 
+    def git_style(self, role):
+        defaults = dict(repo='1;95', repo_owned='1;93', branch='95', untracked='95',
+                        modified='93', behind='93', detached='93', missing='93', staged='92',
+                        added='92', clean='92', ahead='92', deleted='91', blocked='91',
+                        conflict='1;91', renamed='96', copied='96', ignored='2;90')
+        if not hasattr(self, '_git_styles'):
+            self._git_styles = {}
+            lines = read_data(self.root / 'git-styles.tsv').splitlines()
+            if lines and lines[0] == 'dots-git-styles\t1':
+                for line in lines[1:]:
+                    fields = line.split('\t')
+                    if (len(fields) != 2 or not re.fullmatch(r'[a-z][a-z0-9_]*', fields[0])
+                            or not SGR.fullmatch(fields[1]) or fields[0] in self._git_styles):
+                        self._git_styles = {}; break
+                    self._git_styles[fields[0]] = fields[1]
+        return self._git_styles.get(role, defaults.get(role, '94'))
+
     @property
     def rows(self):
         if self._rows is None:

@@ -432,7 +432,7 @@ def main(argv=None):
     else:
         if not args.yes:
             if not terminal(): p.error('use --yes or --dry-run without terminal input/output')
-            approved = None if os.name == 'nt' else gum_confirm('Apply these file mapping changes?')
+            approved = gum_confirm('Apply these file mapping changes?')
             if approved is None:
                 approved = prompt('Apply these changes? [y/N]', 'n').lower() in ('y', 'yes')
             if not approved:

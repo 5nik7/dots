@@ -1,0 +1,1 @@
+. (Join-Path $env:DOTS 'lib/dots/completion/powershell')

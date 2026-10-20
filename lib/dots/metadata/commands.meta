@@ -1,0 +1,3 @@
+# dots:summary=List or validate registered commands
+# dots:usage=[--check]
+# dots:option=--check||flag|Validate command definitions without executing them

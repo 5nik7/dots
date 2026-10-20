@@ -24,7 +24,7 @@ PowerShell uses its native adapter, including on Windows without Bash:
 & "$env:DOTS/bin/dots.ps1" init powershell | Out-String | Invoke-Expression
 ```
 
-Set `$env:DOTS` first when invoking that explicit path. The repository profile instead discovers its checkout from the resolved profile file, including symlinked parent directories and Windows junctions. After the repository's `bin` is on PATH, `dots.ps1 init powershell` is the explicit native spelling; `dots init powershell` also works when command lookup selects that adapter or the Bash executable. The native adapter implements initialization and the bounded setup, file inspection and recovery routes described in [checkout installation](installation.md). It does not make the rest of the Bash CLI available on native Windows.
+Set `$env:DOTS` first when invoking that explicit path. The repository profile instead discovers its checkout from the resolved profile file, including symlinked parent directories and Windows junctions. After the repository's `bin` is on PATH, `dots.ps1 init powershell` is the explicit native spelling; `dots init powershell` also works when command lookup selects that adapter or the Bash executable. The native adapter also dispatches the first-party command families described in [native PowerShell](powershell.md). Completion uses static metadata and native readers without Bash; Windows runtime acceptance remains separate from implementation.
 
 Xonsh executes the code in its current context:
 

@@ -125,7 +125,7 @@ def resolve_path(value, guards):
 
 
 def paths(guards):
-    home = Path(os.environ['HOME'])
+    home = Path(os.environ.get('HOME') or Path.home())
     active = resolve_path(os.environ.get('STARSHIP_CONFIG') or home / '.config/starship.toml', guards)
     storage = resolve_path(os.environ.get('BLASTOFF_HOME') or home / '.config/blastoff', guards)
     saved = resolve_path(storage / 'themes/dots.toml', guards)

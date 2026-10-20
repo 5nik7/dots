@@ -53,9 +53,9 @@ class Presentation:
     def path(self, value):
         if value is None:
             return "not mapped"
-        home = os.environ.get("HOME", "").rstrip("/")
+        home = str(os.environ.get("HOME") or Path.home()).rstrip("/\\")
         value = str(value)
-        return "~" + value[len(home):] if home and (value == home or value.startswith(home + "/")) else value
+        return "~" + value[len(home):] if home and (value == home or os.path.normcase(value).startswith(os.path.normcase(home + os.sep))) else value
 
     def detail(self, label, value, code=None):
         text = ", ".join(map(str, value)) if isinstance(value, list) else "yes" if value is True else "no" if value is False else "not mapped" if value is None else str(value)
@@ -76,7 +76,7 @@ class Presentation:
             text = icon + ' ' + text
         return self.paint(text, code or style)
 
-    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None):
+    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None):
         text = self.clean(self.path(path) if display is None else display)
         style = code
         if path is not None and self.human and (self.color or self.icons):
@@ -85,8 +85,9 @@ class Presentation:
             if self.icons:
                 text = icon + ' ' + text
         prefix = f"    {self.clean(label):<10} "
+        colored_prefix = self.paint(prefix, '94') if label_code is None else '    ' + self.paint(f'{self.clean(label):<10}', label_code) + ' '
         for i, part in enumerate(resource_wrap(text, max(8, self.width-len(prefix)))):
-            self.emit((self.paint(prefix, '94') if i == 0 else ' ' * len(prefix)) +
+            self.emit((colored_prefix if i == 0 else ' ' * len(prefix)) +
                       (self.paint(part, style) if style else part))
 
     def operation_row(self, label, source=None, target=None, reason='', kind=None, target_kind=None):
@@ -300,6 +301,18 @@ class Catalog:
     def target(self, value):
         if not isinstance(value, str) or any(ord(c) < 32 for c in value):
             raise ValueError("invalid target")
+        application = re.fullmatch(r'\$\{APP_CONFIG:([a-z][a-z0-9-]*)\}(?:/(.*))?', value)
+        if application:
+            from app_paths import config_directory
+            suffix = relative(application[2]) if application[2] else Path('.')
+            if self.platform != 'windows':
+                return None
+            base = config_directory(application[1])
+            if base is None:
+                return None
+            if not base.is_absolute():
+                raise ValueError('app configuration root must be absolute')
+            return str(base / suffix)
         home = os.environ.get("HOME") or (str(Path.home()) if os.name == 'nt' else '')
         tokens = {"HOME": home, "CONFIG": os.environ.get("XDG_CONFIG_HOME") or home + "/.config",
                   "BIN": home + "/.local/bin", "TERMUX": home + "/.termux"}

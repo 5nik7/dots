@@ -245,10 +245,14 @@ def main():
     palette = None
     if colored:
         try:
-            bridge = Path(__file__).with_name('colors-query.bash')
-            result = subprocess.run(['bash',str(bridge),args.theme],capture_output=True,text=True,timeout=15)
-            if result.returncode: raise ValueError(result.stderr.strip())
-            palette = json.loads(result.stdout)['colors']
+            if os.name == 'nt':
+                from palette_native import Themes
+                palette = Themes().load(args.theme)['colors']
+            else:
+                bridge = Path(__file__).with_name('colors-query.bash')
+                result = subprocess.run(['bash',str(bridge),args.theme],capture_output=True,text=True,timeout=15)
+                if result.returncode: raise ValueError(result.stderr.strip())
+                palette = json.loads(result.stdout)['colors']
         except (ValueError,OSError,subprocess.TimeoutExpired) as e:
             print('dots theme: palette unavailable; showing plain output: ' + str(e), file=sys.stderr)
     if args.native_table:

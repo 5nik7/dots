@@ -8,6 +8,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import tomllib
 
@@ -89,7 +90,7 @@ class Author:
         self.code = Path(__file__).resolve().parents[3]
         self.root = Path(os.environ.get('DOTS') or self.code).resolve()
         self.themes = self.root / 'themes'
-        self.engine = Path(os.environ.get('ANODIZE_ENGINE') or self.code / 'anodize/.build/anodize-engine')
+        self.engine = Path(os.environ.get('ANODIZE_ENGINE') or self.code / ('anodize/.build/anodize-engine.exe' if os.name == 'nt' else 'anodize/.build/anodize-engine'))
         self.bridge = self.code / 'lib/dots/anodize/themes.bash'
 
     def call(self, action, **kwargs):
@@ -109,7 +110,8 @@ class Author:
         if not ID.fullmatch(identity):
             raise ValueError('invalid theme ID')
         env = dict(os.environ, DOTHEMES=str(self.themes), THEMES=str(self.themes), DOTS_PROGRESS='never')
-        proc = subprocess.run(['bash', str(self.bridge), action, identity, *map(str, args)], env=env,
+        command = [sys.executable, '-B', str(self.code / 'lib/dots/themes/bridge.py')] if os.name == 'nt' else ['bash', str(self.bridge)]
+        proc = subprocess.run([*command, action, identity, *map(str, args)], env=env,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120)
         if proc.returncode:
             raise ValueError(proc.stderr.decode(errors='replace').strip() or 'theme operation failed')
@@ -239,19 +241,16 @@ class Author:
         raise ValueError('unsupported import format')
 
     def store(self):
-        if os.name != 'posix':
-            raise ValueError('journaled theme authoring currently requires POSIX')
-        state = Path(os.environ.get('XDG_STATE_HOME') or Path.home() / '.local/state')
-        if not state.is_absolute():
-            raise ValueError('state root must be absolute')
-        return Store(state / 'dots')
+        from file_platform import state_root
+        return Store(state_root())
 
     @tracked('Preparing theme files')
     def prepare(self, doc, edit=False, reference=False, wallpaper=None):
         path = self.target(doc['id'])
         if exists(path) and not edit:
             raise ValueError('theme ID already exists')
-        user_themes = Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'dots/themes'
+        from file_platform import config_root
+        user_themes = config_root() / 'dots/themes'
         if exists(user_themes / doc['id']):
             raise ValueError('theme ID conflicts with an installed user theme')
         old = self.load(doc['id'], owned=True) if edit else None

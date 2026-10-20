@@ -116,7 +116,18 @@ def discard(path):
     if not exists(path):
         return
     if Path(path).is_dir() and not Path(path).is_symlink():
-        shutil.rmtree(path)
+        def readonly_retry(function, name, error):
+            item = Path(name)
+            check_object(item)
+            info = item.lstat()
+            if (not isinstance(error[1], PermissionError) or not stat.S_ISREG(info.st_mode)
+                    or item.is_symlink() or not getattr(info, 'st_file_attributes', 0) & 1):
+                raise error[1]
+            # Only an already-authorized discarded object is changed here;
+            # retained recovery copies keep the original read-only attribute.
+            os.chmod(item, info.st_mode | stat.S_IWRITE)
+            function(name)
+        shutil.rmtree(path, onerror=readonly_retry if os.name == 'nt' else None)
     else:
         Path(path).unlink()
 
@@ -172,7 +183,7 @@ class Store:
     def publication_locked(self, operations, enabled=True):
         paths = {str(self.state / 'installation.json'), str(self.state / 'current/theme'),
                  str(self.state / 'themes/current'), str(self.state / 'themes/commands/current')}
-        if not enabled or os.name == 'nt' or not any(op['path'] in paths for op in operations):
+        if not enabled or not any(op['path'] in paths for op in operations):
             yield
             return
         with contextlib.ExitStack() as stack:
@@ -188,6 +199,9 @@ class Store:
         """Operations are {path, source|link|data|delete}; guards bind preview inputs."""
         if not operations:
             return {'schema': 1, 'status': 'unchanged', 'operations': []}
+        identities = [os.path.normcase(os.path.abspath(op['path'])) for op in operations]
+        if len(identities) != len(set(identities)):
+            raise ValueError('duplicate or case-colliding operation targets')
         with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs):
             for record in self.records():
                 if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
@@ -230,7 +244,12 @@ class Store:
                     if 'source' in op:
                         copy_object(op['source'], after)
                     elif 'link' in op:
-                        after.symlink_to(op['link'], target_is_directory=op.get('directory', Path(op['link']).is_dir()))
+                        try:
+                            after.symlink_to(op['link'], target_is_directory=op.get('directory', Path(op['link']).is_dir()))
+                        except OSError as error:
+                            if os.name == 'nt' and getattr(error, 'winerror', None) == 1314:
+                                raise ValueError('Windows refused symbolic-link creation. Enable link capability yourself or explicitly select a supported copy strategy; Dots will not elevate or silently copy.') from error
+                            raise
                     elif 'text' in op:
                         with after.open('w', encoding='utf-8', newline='\n') as out:
                             out.write(op['text'])

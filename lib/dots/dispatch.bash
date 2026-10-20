@@ -109,8 +109,8 @@ dots_main() {
         dots_help completion
         return
       fi
-      if (($# != 2)); then dots_error 'Usage: dots completion bash|zsh|fish'; return 2; fi
-      case $2 in bash|zsh|fish) ;; *) dots_error 'Unknown completion shell'; return 2 ;; esac
+      if (($# != 2)); then dots_error 'Usage: dots completion bash|zsh|fish|powershell'; return 2; fi
+      case $2 in bash|zsh|fish|powershell) ;; *) dots_error 'Unknown completion shell'; return 2 ;; esac
       local line
       while IFS='' read -r line || [[ -n $line ]]; do printf '%s\n' "$line"; done < "$DOTS_LIB_DIR/completion/$2"
       return ;;

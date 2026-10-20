@@ -456,3 +456,9 @@ picker owns candidate metadata and bounded content previews, shared by file
 controllers and the browser. Selection returns exact catalog IDs or paths to the
 existing planners; it never applies transactions or grants approval. Private
 transient snapshots carry opaque selection tokens and metadata, not file contents.
+
+## Native PowerShell command adapter
+
+`bin/dots.ps1` owns dependency-free native help/init and transports literal argument arrays through `lib/dots/native.py` to `lib/dots/cli.py`. Shared built-in headers live in `lib/dots/metadata/`; `command_metadata.py` reads extension headers without executing them. The native CLI reuses the existing file controllers, `Store`, presentation/resources, progress and interaction adapters. `files/app_paths.py` owns Windows app destinations. `git/cli.py` invokes Git with explicit argument vectors. `themes/palette_native.py`, `theme_cli.py`, `setup.py` and `bridge.py` supply native theme data, publication, inactive setup preparation and Anodize integration. Native generated commands have verified manifests; filesystem replacement stays in the existing transaction engine.
+
+Bash's established Git/theme frontends remain during native acceptance. Do not maintain competing catalogs, transaction implementations or shell-specific flag semantics. The [PowerShell reference](powershell.md) records actual capabilities and pending native checks; the [parity plan](../plans/powershell-parity.md) owns rollout status. General Go migration stays paused.

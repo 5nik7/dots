@@ -115,7 +115,7 @@ def parser():
         q = sub.add_parser(action, help=description, description=description)
         add_options(q)
         if action == 'completion':
-            q.add_argument('shell', choices=['bash', 'zsh', 'fish'], help='Shell adapter to print')
+            q.add_argument('shell', choices=['bash', 'zsh', 'fish', 'powershell'], help='Shell adapter to print')
             continue
         q.add_argument('--json', action='store_true', help='Emit versioned JSON')
         if action in ('extract', 'import'):

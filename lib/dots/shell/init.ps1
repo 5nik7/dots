@@ -56,7 +56,7 @@ foreach ($line in [IO.File]::ReadAllLines((Join-Path $env:DOTS 'lib/dots/shell/p
 $global:dot.config = $dotsConfigFile
 $stateRoot = if ($env:XDG_STATE_HOME) { $env:XDG_STATE_HOME } elseif ($IsWindows -or $env:OS -eq 'Windows_NT') { $env:LOCALAPPDATA } else { Join-Path $HOME '.local/state' }
 $global:dot.state = Join-Path $stateRoot 'dots'
-$env:THEMESCMD = Join-Path $dot.bin 'theme'
+$env:THEMESCMD = Join-Path $dot.bin 'theme.ps1'
 $env:THEMESBIN = Join-Path $dot.state 'themes/commands/current/bin'
 $entries = @($env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $_ -cne $env:THEMESBIN -and $_ -cne (Join-Path $env:DOTS 'themes/bin') })
 foreach ($directory in @($env:DOTBIN, $env:DOTSCRIPTS)) {
@@ -95,6 +95,11 @@ if ($dotsInteractive) {
         $global:dot.theme = $env:DOTS_THEME_ID
         $lsFile = Join-Path $dot.state "themes/generations/$generation/ls_colors"
         if (Test-Path -LiteralPath $lsFile -PathType Leaf) { $env:LS_COLORS = [IO.File]::ReadAllText($lsFile).TrimEnd("`r", "`n") }
+        $batCache = Join-Path $dot.state "themes/generations/$generation/bat-cache"
+        if (Test-Path -LiteralPath $batCache -PathType Container) {
+            $env:BAT_THEME = 'Dots'
+            $env:BAT_CACHE_PATH = $batCache
+        }
         $global:_DotsThemeGeneration = $generation
     }
     $global:_DotsThemeGeneration = $null
@@ -105,21 +110,7 @@ if ($dotsInteractive) {
         $token = if (Test-Path -LiteralPath $fingerprintFile -PathType Leaf) { [IO.File]::ReadAllText($fingerprintFile).Trim() } else { 'none' }
         if ($token -eq $global:_DotsCommandFingerprint) { return }
         $global:_DotsCommandFingerprint = $token
-        if (-not (Get-Command bash -ErrorAction SilentlyContinue)) { return }
-        $dotsNames = @('dots', 'theme')
-        $namesFile = Join-Path $dot.state 'themes/commands/current/names'
-        if (Test-Path -LiteralPath $namesFile -PathType Leaf) { $dotsNames += [IO.File]::ReadAllLines($namesFile) }
-        Register-ArgumentCompleter -Native -CommandName $dotsNames -ScriptBlock {
-            param($wordToComplete, $commandAst, $cursorPosition)
-            if ($dots_options.DOTS_INIT_COMPLETION -ne '1') { return }
-            $words = @($commandAst.CommandElements | Where-Object { $_.Extent.StartOffset -lt $cursorPosition } | ForEach-Object { $_.Extent.Text.Trim([char[]]@('"', "'")) })
-            if (-not $wordToComplete) { $words += '' }
-            $index = $words.Count - 1
-            foreach ($line in (& bash (Join-Path $env:DOTS 'bin/dots') __complete bash $index -- @words 2>$null)) {
-                $fields = $line.Split("`t")
-                if ($fields[0] -eq 'candidate') { [System.Management.Automation.CompletionResult]::new($fields[1], $fields[1], 'ParameterValue', $fields[1]) }
-            }
-        }
+        . (Join-Path $env:DOTS 'lib/dots/completion/powershell')
     }
     $global:_DotsCommandFingerprint = $null
     Update-DotsCompletion

@@ -17,7 +17,7 @@ from progress import Progress, configure, tracked
 from catalog import Catalog, Presentation, read_json, platform, relative, ID
 from events import OperationOutput
 from transactions import Store, digest, exists, parents_safe
-from file_platform import state_root
+from file_platform import state_root, config_root
 
 
 class Manager:
@@ -29,7 +29,7 @@ class Manager:
         if not state.is_absolute():
             raise ValueError('state root must be absolute')
         self.store = Store(state_root())
-        self.config = Path(os.environ.get('XDG_CONFIG_HOME') or home / '.config') / 'dots/files.json'
+        self.config = config_root() / 'dots/files.json'
 
     def backup_default(self):
         if not exists(self.config):
@@ -433,8 +433,6 @@ def main():
     manager = Manager()
     output = OperationOutput.for_args(args)
     manager.store.observer = output
-    if manager.catalog.platform == 'windows' and args.action not in ('history', 'backups-list', 'backups-show', 'undo', 'recover', 'backups-restore'):
-        raise ValueError('native Windows managed operations are not implemented')
     if args.action in ('locations', 'system', 'history', 'backups-list', 'backups-show'):
         if args.action == 'locations':
             rows = [dict(x, status='available' if exists(x['path']) else 'missing') for x in manager.locations()]

@@ -2,9 +2,10 @@
 """Explicit local theme plugins. Downloaded themes are never executable roots."""
 import argparse
 from contextlib import contextmanager
-import fcntl
 import json
 import os
+if os.name == 'posix':
+    import fcntl
 from pathlib import Path
 import re
 import shutil
@@ -18,16 +19,17 @@ sys.path.insert(0, str(LIB.parent))
 sys.path.insert(0, str(LIB.parent / 'files'))
 from catalog import Presentation, atomic_json, read_json
 from transactions import exists, parents_safe, private_directory
+from file_platform import config_root, state_root, open_nofollow, lock as file_lock
 from progress import Progress, configure
 
-PATTERN = re.compile(r'([0-9]+)-([a-z][a-z0-9-]*)\.sh\Z')
+PATTERN = re.compile(r'([0-9]+)-([a-z][a-z0-9-]*)\.(?:sh|ps1)\Z')
 BUNDLED = {'gtk': ('gtk-launch', 'gtk-3.0'), 'qt6ct': ('qt6ct', 'qt6ct'), 'starship': ('starship', None)}
 
 
 def roots():
-    home = Path(os.environ['HOME'])
-    config = Path(os.environ.get('XDG_CONFIG_HOME') or home / '.config')
-    state = Path(os.environ.get('XDG_STATE_HOME') or home / '.local/state')
+    home = Path(os.environ.get('HOME') or Path.home())
+    config = config_root()
+    state = state_root().parent
     for path in (home, config, state):
         if not path.is_absolute() or any(ord(c) < 32 for c in str(path)):
             raise ValueError('HOME and XDG roots must be absolute paths without control characters')
@@ -91,10 +93,18 @@ def discover(config, selected):
 def availability(row, config):
     if row['problems']:
         return 'invalid', '; '.join(row['problems'])
-    if os.name != 'posix' or sys.platform not in ('linux', 'android'):
+    native_bundled = os.name == 'nt' and row['origin'] == 'bundled' and row['name'] == 'starship'
+    native_hook = row.get('file', '').endswith('.ps1')
+    if os.name == 'nt' and not native_bundled and not native_hook:
+        return 'unavailable', 'this hook requires Linux, WSL, or Termux; use a native .ps1 hook on Windows'
+    if os.name != 'nt' and native_hook:
+        return 'unavailable', 'this hook requires native Windows PowerShell'
+    if os.name != 'nt' and (os.name != 'posix' or sys.platform not in ('linux', 'android')):
         return 'unavailable', 'execution requires Linux, WSL, or Termux'
-    if not shutil.which('bash'):
+    if os.name != 'nt' and not shutil.which('bash'):
         return 'unavailable', 'missing dependency: bash'
+    if native_hook and not (os.environ.get('DOTS_POWERSHELL') or shutil.which('pwsh') or shutil.which('powershell')):
+        return 'unavailable', 'missing dependency: PowerShell'
     if row['origin'] == 'bundled':
         command, directory = BUNDLED[row['name']]
         if not shutil.which(command):
@@ -116,17 +126,18 @@ def availability(row, config):
 def locked(path):
     safe_file(path, optional=True)
     private_directory(path.parent)
-    fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    fd = open_nofollow(path, os.O_RDWR | os.O_CREAT, 0o600)
+    handle = os.fdopen(fd, 'a')
     try:
         if not stat.S_ISREG(os.fstat(fd).st_mode):
             raise ValueError('invalid lock file')
         try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            file_lock(handle)
         except BlockingIOError:
             raise ValueError('another theme or plugin operation is running; retry when it finishes') from None
         yield
     finally:
-        os.close(fd)
+        handle.close()
 
 
 def published(state):
@@ -191,11 +202,13 @@ def child(argv, env, cwd):
     finally:
         process.stdout.close()
         if process.poll() is None:
-            os.killpg(process.pid, signal.SIGTERM)
+            if os.name == 'nt': process.terminate()
+            else: os.killpg(process.pid, signal.SIGTERM)
             try:
                 process.wait(timeout=2)
             except subprocess.TimeoutExpired:
-                os.killpg(process.pid, signal.SIGKILL)
+                if os.name == 'nt': process.kill()
+                else: os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
 
 
@@ -215,7 +228,13 @@ def run(rows, config, state, reason):
                 safe_file(Path(row['path']))
                 with Progress('Running theme plugin ' + row['name']) as progress:
                     progress.update('Running theme plugin ' + row['name'])
-                    code, output = child([shutil.which('bash'), '--noprofile', '--norc', '--', row['path']],
+                    if os.name == 'nt' and row['origin'] == 'bundled':
+                        command = [sys.executable, '-B', str(LIB / 'plugins.py'), '__app', row['name']]
+                    elif row['file'].endswith('.ps1'):
+                        command = [os.environ.get('DOTS_POWERSHELL') or shutil.which('pwsh') or shutil.which('powershell'), '-NoLogo', '-NoProfile', '-NonInteractive', '-File', row['path']]
+                    else:
+                        command = [shutil.which('bash'), '--noprofile', '--norc', '--', row['path']]
+                    code, output = child(command,
                                          dict(env, DOTS_THEME_PLUGIN=row['name']), roots()[0])
                 result.update(status='success' if code == 0 else 'skipped' if code == 77 else 'failure', exit_code=code)
                 if row['origin'] == 'bundled' and code in (0, 77):
@@ -247,7 +266,7 @@ def inspect(rows, config, state):
         if not row['problems']:
             env = {k: v for k, v in os.environ.items() if k not in ('BASH_ENV', 'ENV') and not k.startswith('BASH_FUNC_')}
             bash = shutil.which('bash')
-            if bash:
+            if bash and row['file'].endswith('.sh') and os.name != 'nt':
                 code, _ = child([bash, '--noprofile', '--norc', '-n', '--', row['path']], env, roots()[0])
                 if code:
                     row['problems'].append('Bash syntax check failed')
@@ -284,7 +303,7 @@ def emit(action, rows, as_json):
             ui.detail('Transaction', row['transaction'])
 
 
-def main(argv=None):
+def main(argv=None, reason=None):
     args = list(sys.argv[1:] if argv is None else argv)
     action = args.pop(0) if args else 'list'
     parser = argparse.ArgumentParser(prog='dots theme plugins ' + action, add_help=False)
@@ -360,7 +379,7 @@ def main(argv=None):
                 raise ValueError('plugin is disabled; use dots theme plugins enable ' + opt.name)
             configure(not opt.json)
             with Progress('Running theme plugins'):
-                results = run(targets, config, state, os.environ.get('DOTS_THEME_PLUGIN_REASON', 'set') if automatic else 'manual')
+                results = run(targets, config, state, reason or (os.environ.get('DOTS_THEME_PLUGIN_REASON', 'set') if automatic else 'manual'))
             for result in results:
                 diagnostics = result.pop('_diagnostics', '')
                 if diagnostics:
@@ -368,6 +387,7 @@ def main(argv=None):
             emit('run', results, opt.json)
             return int(any(row['status'] == 'failure' for row in results))
     if automatic:
+        if os.name == 'nt': raise ValueError('POSIX publisher descriptor is unavailable on Windows')
         # Only the shared publisher supplies FD 9. Verify and retain its lock.
         lock = state / 'themes/lock'
         safe_file(lock)

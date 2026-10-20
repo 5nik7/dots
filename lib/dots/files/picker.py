@@ -96,8 +96,12 @@ def select(rows, action, multi=False, new=False, selector=None, owners=()):
         snapshot.write_text(json.dumps(dict(rows=rows, action=action, color=ui.color, icons=ui.icons)))
         snapshot.chmod(0o600)
         prefix = '"$DOTS_PICKER_PYTHON" -B "$DOTS_PICKER_HELPER"'
-        preview = (prefix + ' preview "$DOTS_PICKER_SNAPSHOT" {1}',
-                   prefix + ' cycle "$DOTS_PICKER_SNAPSHOT"',
+        snapshot_argument = '"$DOTS_PICKER_SNAPSHOT"'
+        if os.name == 'nt':
+            prefix = '& $env:DOTS_PICKER_PYTHON -B $env:DOTS_PICKER_HELPER'
+            snapshot_argument = '$env:DOTS_PICKER_SNAPSHOT'
+        preview = (prefix + ' preview ' + snapshot_argument + ' {1}',
+                   prefix + ' cycle ' + snapshot_argument,
                    dict(DOTS_PICKER_PYTHON=sys.executable, DOTS_PICKER_HELPER=str(Path(__file__).resolve()),
                         DOTS_PICKER_SNAPSHOT=str(snapshot), DOTS_PROGRESS='never', DOTS_OPERATION_VERBOSE='0'))
         indexes = selector.pick('Files ' + action, labels, multi, preview, ui.color, ui.icons, fzf_colors(ui))

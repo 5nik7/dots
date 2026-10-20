@@ -9,7 +9,7 @@
 The live Bash dispatcher requires Bash 4.4+ and a POSIX-like executable environment.
 Termux has native dispatch and Bash/Zsh/Fish completion tests, including interactive
 Tab acceptance. Linux/WSL and MSYS are design targets, not newly verified platforms.
-This Bash dispatcher does not provide general native Windows execution. A separate PowerShell adapter exposes bounded initialization, installation, inspection, catalog-only missing-source checks, stash/edit mappings and recovery; no Windows/WSL path translation occurs. Ordinary unsymlinked invocation, help, and routing use Bash
+This Bash dispatcher does not provide general native Windows execution. A separate native PowerShell frontend dispatches file, Git, environment, theme and Anodize commands; see [native PowerShell](powershell.md) for implementation limits and pending Windows acceptance; no Windows/WSL path translation occurs. Ordinary unsymlinked invocation, help, and routing use Bash
 builtins; resolving a symlinked launcher additionally requires `readlink`.
 This coverage is separate from the Go platform matrix below.
 
@@ -23,7 +23,7 @@ The upper-row Android cluster requires Python 3 and the Androidots Wi-Fi/cellula
 
 Termux Bash/Zsh startup can automatically attach a default tmux session through `androidots/bin/termux-bar`. This adapter requires Python 3, tmux, readable procfs, the sibling session-discovery script and a validated `TERMUX_APP__PID` parent/session-leader relationship. It uses root PID/start time for per-tab identity. Automatic attachments exit the outer shell when the final pane exits; deliberate detach and unexpected server loss retain the plain shell. Other platforms, Fish, SSH and child shells skip automatic entry; `DOTS_TERMUX_AUTOSTART=0` opts out. Native Bash/Zsh/tmux PTY tests use simulated app identity, so actual Android new-tab startup remains a manual gate. See [lifecycle and fallbacks](shell-init.md#termux-tmux-startup).
 
-The [initialization hook](shell-init.md) has native adapters for Bash, Zsh, Fish, Nushell, Xonsh, and PowerShell. Local Termux verification covers the first five installed interpreters; the Xonsh interactive fixture uses readline with a PTY. PowerShell is unavailable locally, so its native runtime tests are skipped and Windows startup remains unverified. The PowerShell adapter requires no Bash and does not translate Windows/WSL paths. Native startup files derive checkout paths through file and directory symlinks; PowerShell also resolves directory junctions. Native Windows link behavior remains unverified locally. Bash file-link resolution uses `readlink` without GNU-only options; Nushell uses parse-time `path self` with strict `path expand`. This does not extend support for the rest of the live Bash CLI on native Windows.
+The [initialization hook](shell-init.md) has native adapters for Bash, Zsh, Fish, Nushell, Xonsh, and PowerShell. Local Termux verification covers the first five installed interpreters; the Xonsh interactive fixture uses readline with a PTY. PowerShell is unavailable locally, so its native runtime tests are skipped and Windows startup remains unverified. The PowerShell adapter requires no Bash and does not translate Windows/WSL paths. Native startup files derive checkout paths through file and directory symlinks; PowerShell also resolves directory junctions. Native Windows link behavior remains unverified locally. Bash file-link resolution uses `readlink` without GNU-only options; Nushell uses parse-time `path self` with strict `path expand`. The separate native CLI adapters are described in [native PowerShell](powershell.md); their Windows runtime acceptance remains pending.
 
 ## Existing Zsh Configuration
 
@@ -132,7 +132,7 @@ All detection can be overridden explicitly for fixtures and advanced testing, bu
 | Repository default | `~/dots` initially | `%USERPROFILE%\dots` initially |
 | Config | `$XDG_CONFIG_HOME/dots` or `~/.config/dots` | `%APPDATA%\dots` |
 | Data | `$XDG_DATA_HOME/dots` or `~/.local/share/dots` | `%LOCALAPPDATA%\dots\data` |
-| State | `$XDG_STATE_HOME/dots` or `~/.local/state/dots` | `%LOCALAPPDATA%\dots\state` |
+| State | `$XDG_STATE_HOME/dots` or `~/.local/state/dots` | `%LOCALAPPDATA%\dots` (existing live state root) |
 | Cache | `$XDG_CACHE_HOME/dots` or `~/.cache/dots` | `%LOCALAPPDATA%\dots\cache` |
 | User executable | Adapter-selected path on `PATH` | User-owned application/bin path on `PATH` |
 
@@ -303,7 +303,7 @@ Xonsh adapter edits have no new native-runtime certification.
 
 ## Bounded checkout installation
 
-The [checkout installer](installation.md) has POSIX shell and native PowerShell entry points sharing Python 3.9+ planning, receipt and transaction logic. Termux/Linux/WSL use their own HOME/XDG roots. Native Windows uses LOCALAPPDATA for state (unless XDG_STATE_HOME is explicit), PowerShell's current-host profile, Neovim's native configuration root and APPDATA/Code/User/settings.json. Unmapped Windots apps and native theme publication remain deferred. No WSL path translation, package provisioning, elevation or link-to-copy fallback occurs.
+The [checkout installer](installation.md) has POSIX shell and native PowerShell entry points sharing Python 3.9+ planning, receipt and transaction logic. Termux/Linux/WSL use their own HOME/XDG roots. Native Windows uses LOCALAPPDATA for state (unless XDG_STATE_HOME is explicit), PowerShell's current-host profile, Neovim's native configuration root and APPDATA/Code/User/settings.json. The [native PowerShell implementation](powershell.md) adds app-specific root/Windots destinations and native theme preparation/publication; Windows runtime and desktop acceptance remain pending. Full theme setup requires Python 3.11+. No WSL path translation, package provisioning, elevation or link-to-copy fallback occurs.
 
 Native Windows locking uses msvcrt; directory flushing has no POSIX-equivalent guarantee. Symlink capability is tested by approved staging before target replacement. Reparse-point ancestors are refused. Linux/Windows installation CI is defined separately from the Go gates; local Termux tests do not establish native Windows or WSL results.
 

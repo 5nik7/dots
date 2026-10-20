@@ -731,3 +731,9 @@ accept `--pick` and automatically select missing operands in a terminal. The
 candidate filtering, multi-selection, previews, `--pick --dry-run`, flag conflicts
 and fallbacks. `files browse` shares this selector. Existing explicit-operand and
 machine-output routes retain their contracts; recovery still requires IDs.
+
+## Native PowerShell command surface
+
+`bin/dots.ps1` dispatches the first-party file, Git, environment, theme and Anodize families through native Python controllers. `theme.ps1` and `anodize.ps1` are standalone aliases. `dots completion powershell` emits the native completer; static built-in headers are shared under `lib/dots/metadata/`. First-party flags retain their CLI spellings, including `-v`/`--verbose`, `--pick`, `--json` and presentation switches. `dots theme init --shell powershell` emits native palette initialization. See [native PowerShell](powershell.md) for dependencies, platform exceptions and pending acceptance; these additions do not change the separate Go extension protocol.
+
+Live-framework native extensions may be `.ps1` or `.exe`; `.exe` metadata is read from a sibling `.meta`. Help and completion never execute extension code. Duplicate routes remain errors and direct dispatch resolves the longest prefix. Native Windows refuses extensionless POSIX scripts with an explicit diagnostic. Every future first-party route/flag change must update both native and Bash dispatch/completion tests.

@@ -26,3 +26,39 @@ jobs:
         run: python -B tools/test_installation.py
       - name: Native adapters and presentation
         run: python -B tools/test_installation_adapters.py
+
+  native-cli:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            engine: powershell
+          - os: windows-2025
+            engine: pwsh
+          - os: ubuntu-24.04
+            engine: pwsh
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      DOTS_TEST_POWERSHELL: ${{ matrix.engine }}
+      DOTS_TEST_ANODIZE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          submodules: false
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Build existing native Anodize engine
+        run: python -B tools/verify_anodize.py build
+      - name: Native Anodize authoring and publication
+        run: python -B tools/test_native_anodize.py
+      - name: Native CLI and PowerShell contracts
+        run: python -B tools/test_native_cli.py
+      - name: Native startup without Bash or Python
+        run: python -B tools/test_powershell_init.py
+      - name: Native Git safety
+        run: python -B tools/test_native_git.py

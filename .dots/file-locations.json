@@ -81,6 +81,110 @@
         "linux",
         "wsl"
       ]
+    },
+    {
+      "id": "windows-bat",
+      "kind": "root",
+      "target": "${APP_CONFIG:bat}",
+      "source": "config/bat",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-blastoff",
+      "kind": "root",
+      "target": "${HOME}/.config/blastoff",
+      "source": "config/blastoff",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-gemrc",
+      "kind": "file",
+      "target": "${HOME}/.gemrc",
+      "source": "ruby/gemrc.symlink",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-irbrc",
+      "kind": "file",
+      "target": "${HOME}/.irbrc",
+      "source": "ruby/irbrc.symlink",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-mpv",
+      "kind": "root",
+      "target": "${APP_CONFIG:mpv}",
+      "source": "config/mpv",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-nushell",
+      "kind": "root",
+      "target": "${APP_CONFIG:nushell}",
+      "source": "shells/nushell",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-starship",
+      "kind": "file",
+      "target": "${HOME}/.config/starship.toml",
+      "source": "config/starship/starship.toml",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-xonshrc",
+      "kind": "file",
+      "target": "${HOME}/.xonshrc",
+      "source": "shells/xonsh/.xonshrc",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-yazi",
+      "kind": "root",
+      "target": "${APP_CONFIG:yazi}",
+      "source": "config/yazi",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": []
+    },
+    {
+      "id": "windows-lsd",
+      "kind": "root",
+      "target": "${APP_CONFIG:lsd}",
+      "source": "config/lsd",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.bak",
+        "*.log",
+        "cache/*"
+      ]
     }
   ]
 }

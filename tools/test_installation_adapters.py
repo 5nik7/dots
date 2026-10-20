@@ -25,9 +25,12 @@ class Adapters(unittest.TestCase):
         shutil.copytree(ROOT/'lib/dots/files',self.repo/'lib/dots/files')
         for name in ('progress.py','interaction.py','ui.bash','ui.ps1','bootstrap-ui.sh',
                      'resources.py','resources.bash','resources.tsv',
-                     'dispatch.bash','catalog.bash','complete.bash','init.bash'):
+                     'dispatch.bash','catalog.bash','complete.bash','init.bash','native.py',
+                     'cli.py','command_metadata.py','help.ps1','environment.py'):
             shutil.copy2(ROOT/'lib/dots'/name,self.repo/'lib/dots'/name)
         shutil.copytree(ROOT/'lib/dots/shell',self.repo/'lib/dots/shell')
+        shutil.copytree(ROOT/'lib/dots/metadata',self.repo/'lib/dots/metadata')
+        shutil.copytree(ROOT/'lib/dots/completion',self.repo/'lib/dots/completion')
         (self.repo/'bin').mkdir()
         for name in ('dots','dots.ps1','dots-files-install','dots-files-uninstall','dots-files-check','dots-files-stash','dots-files-edit'):
             shutil.copy2(ROOT/'bin'/name,self.repo/'bin'/name)

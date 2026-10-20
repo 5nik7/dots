@@ -519,3 +519,7 @@ editing, with searchable repository/strategy choices. `--pick --new` is invalid:
 use `edit --new` for direct mapping creation. `--pick` rejects `--yes`, `--json`
 and nonterminal streams. Help/completion and explicit data/path interfaces never
 open a selector. Recovery commands continue to require explicit IDs.
+
+## Native Windows commands
+
+The PowerShell dispatcher reaches the shared catalog, adoption, mapping, linking, browser, installation and recovery controllers. File pickers use native FZF PowerShell previews, with Gum/numbered fallbacks; selection still requires a later reviewed operation. The catalog resolves app destinations individually rather than assuming `~/.config` for Windows apps. See [native PowerShell](powershell.md) for destinations, link capability rules, supported engines and pending native acceptance. Both shell frontends must remain synchronized in future file changes.

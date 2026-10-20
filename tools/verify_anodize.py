@@ -24,20 +24,24 @@ def main():
         env, _ = environments(root, go)
         source = root / 'module'
         shutil.copytree(REPO / 'anodize', source, ignore=shutil.ignore_patterns('.build'))
-        binary = root / 'bin/anodize-engine'
+        name = 'anodize-engine.exe' if os.name == 'nt' else 'anodize-engine'
+        binary = root / 'bin' / name
         def run(command):
             subprocess.run(command, cwd=source, env=env, check=True, timeout=600)
         run([go, 'build', '-trimpath', '-o', str(binary), './cmd/anodize-engine'])
         if args.action == 'build':
             output = REPO / 'anodize/.build'
             output.mkdir(exist_ok=True)
-            staged = output / 'anodize-engine.new'
+            staged = output / (name + '.new')
             shutil.copy2(binary, staged)
-            staged.replace(output / 'anodize-engine')
-            print('Built', output / 'anodize-engine')
+            staged.replace(output / name)
+            print('Built', output / name)
             return
         if args.action == 'bench':
             run([go, 'test', '-run=^$', '-bench=.', '-benchmem', '-count=3', './...'])
+            if os.name == 'nt':
+                print('Native engine benchmarks complete; Bash frontend timings apply only to POSIX hosts.')
+                return
             # Reuse the integration fixture, including isolated CLI state and paths.
             os.environ['ANODIZE_ENGINE'] = str(binary)
             from test_anodize import Anodize, BASH
@@ -65,8 +69,9 @@ def main():
         env.update(PATH=os.environ.get('PATH', ''), ANODIZE_ENGINE=str(binary))
         if os.environ.get('LD_PRELOAD'):
             env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
-        subprocess.run([sys.executable, '-B', str(REPO / 'tools/test_anodize.py')], env=env, check=True, cwd=REPO)
-        subprocess.run([sys.executable, '-B', str(REPO / 'tools/test_anodize_logo.py')], env=env, check=True, cwd=REPO)
+        tests = ['test_native_anodize.py'] if os.name == 'nt' else ['test_anodize.py', 'test_anodize_logo.py']
+        for test in tests:
+            subprocess.run([sys.executable, '-B', str(REPO / 'tools' / test)], env=env, check=True, cwd=REPO)
 
 if __name__ == '__main__':
     main()

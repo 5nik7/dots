@@ -159,7 +159,8 @@ class Installation:
         self.item(identity, 'replace-with-backup' if current is not None else 'create', path, link)
 
     def theme_bridge(self, mode, fingerprint=None):
-        cmd = ['bash', str(self.root / 'lib/dots/themes/setup.bash'), mode]
+        cmd = ([sys.executable, '-B', str(self.root / 'lib/dots/themes/setup.py'), mode]
+               if self.platform == 'windows' else ['bash', str(self.root / 'lib/dots/themes/setup.bash'), mode])
         if fingerprint:
             cmd.append(fingerprint)
         result = subprocess.run(cmd, env=dict(os.environ, DOTS=str(self.root), DOTS_PROGRESS='never',
@@ -184,7 +185,7 @@ class Installation:
                 self.item(row['id'], 'skipped', row['target'], reason='stashed')
         records = [r for r in observed if r['enabled'] and r['applicable'] and r['status'] != 'replaced']
         connectors = []
-        if self.platform != 'windows' and (self.root / 'lib/dots/themes/setup.bash').is_file():
+        if (self.root / 'lib/dots/themes' / ('setup.py' if self.platform == 'windows' else 'setup.bash')).is_file():
             with Progress('Inspecting theme inputs'):
                 identity, fingerprint, current, incomplete = self.theme_bridge('inspect')
             self.theme = dict(id=identity, fingerprint=fingerprint, generation=current,
@@ -199,6 +200,8 @@ class Installation:
                             raise ValueError('unfinished theme publication; recover with dots theme refresh first')
             for line in (self.root / 'lib/dots/themes/connectors.tsv').read_text().splitlines():
                 app, suffix, artifact = line.split('\t')
+                if self.platform == 'windows' and app not in ('yazi', 'git', 'vivid'):
+                    continue
                 owner = next((r for r in records if r['app'] == app and r['strategy'] == 'directory-link' and r['target']), None)
                 if owner and Path(owner['source']).is_dir():
                     connectors.append((app, Path(owner['source']) / suffix, artifact))
@@ -266,7 +269,7 @@ class Installation:
                     self.item('theme:' + identity, 'prepare', path,
                               reason='reconcile the validated current theme selection; retain original baseline' if drift else 'publish prepared generation; retain previous pointer for restoration')
         else:
-            self.item('themes', 'skipped', reason='native Windows theme publication is not implemented')
+            self.item('themes', 'skipped', reason='theme preparation adapter is unavailable')
 
     def plan_uninstall(self):
         for path, entry in list(self.entries.items())[::-1]:

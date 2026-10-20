@@ -2,6 +2,26 @@
 import os
 from pathlib import Path
 import stat
+import re
+from pathlib import PureWindowsPath
+
+
+def validate_windows_path(path):
+    value = PureWindowsPath(path)
+    if not value.is_absolute() or str(value).lower().startswith(('\\\\wsl$', '\\\\wsl.localhost', '\\\\?\\', '\\\\.\\')):
+        raise ValueError('managed Windows paths must be absolute native paths, not WSL or device paths')
+    for part in value.parts[1:]:
+        if part in ('.', '..') or part.rstrip(' .') != part or any(c in ':*?"<>|' or ord(c) < 32 for c in part) or re.fullmatch(r'(?:CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\..*)?', part, re.I):
+            raise ValueError('unsupported Windows path component')
+
+
+def config_root():
+    home = Path(os.environ.get('HOME') or Path.home())
+    base = Path(os.environ.get('XDG_CONFIG_HOME') or
+                (os.environ.get('APPDATA', home / 'AppData/Roaming') if os.name == 'nt' else home / '.config'))
+    if not base.is_absolute():
+        raise ValueError('config root must be absolute')
+    return base
 
 
 def reparse(path):
@@ -12,6 +32,8 @@ def reparse(path):
 
 
 def check_object(path):
+    if os.name == 'nt':
+        validate_windows_path(path)
     if reparse(path) and not Path(path).is_symlink():
         raise ValueError('unsupported reparse point: ' + str(path))
 

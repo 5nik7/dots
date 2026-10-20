@@ -12,3 +12,5 @@ Dots integration lives in lib/dots/shell; personal prompts/plugins stay in shell
 Check every affected native adapter and old published snapshot fallback. Use tools/test_shell_environment.py plus focused tools/test_shell_init.py or tools/test_zsh.py cases, with owned roots and no private modules. Test repeated initialization, prompt exit status and hook duplication. Measure startup sequentially if its work changes; do not introduce scans or theme publication into startup.
 
 Report absent PowerShell/Xonsh native verification explicitly. Do not replace launchers or install interpreters merely to make a check pass.
+
+Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.

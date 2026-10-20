@@ -13,3 +13,5 @@ Keep ordinary dispatch targeted. Static help/completion must not execute extensi
 Use tools/test_bash_dots.py cases for dispatch and nonexecution. Use the relevant theme suite for family grammar: --color=MODE decorates output, while --color NAME queries a palette color. Force decoration around scalar/JSON/init outputs to verify their byte contracts. Review 40/80/120-column views and light/dark backgrounds.
 
 Reuse the renderer and optional-interaction adapters. Keep filesystem mutation in its existing transaction engine; a new command must not invent an unjournaled shortcut. Preserve unrelated dirty commands and avoid full concurrent Termux suites.
+
+Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.

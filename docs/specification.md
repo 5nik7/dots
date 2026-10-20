@@ -388,3 +388,7 @@ For the fixed `dots:git` directory resource whose entry point includes
 `gitplatform`, install/link and live mapping apply/restore additionally plan the
 bounded platform selector. It is an installation companion, not an independently
 claimable nested catalog target. See [managed Git selection](files.md#consolidated-git-platform-selector).
+
+## Implemented Windows catalog destination token
+
+The existing bounded file catalog accepts `${APP_CONFIG:app}` with an optional relative suffix. This is separate from the proposed module manifest model. On Windows, `files/app_paths.py` resolves the named application's directory and explicit `DOTS_APP_<APP>_CONFIG` override; unsupported or ambiguous locations yield an unmapped target. On other platforms the token is inapplicable. Catalog `targets.windows` can override a POSIX default. App-specific destinations do not redefine `${CONFIG}` globally. See [Windows app destinations](powershell.md#windows-app-destinations).

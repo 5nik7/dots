@@ -34,8 +34,9 @@ IDENT = re.compile(r'[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*\Z')
 
 
 def roots():
-    config = Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'dots'
-    state = Path(os.environ.get('XDG_STATE_HOME') or Path.home() / '.local/state') / 'dots'
+    sys.path.insert(0, str(ROOT / 'lib/dots/files'))
+    from file_platform import config_root, state_root
+    config, state = config_root() / 'dots', state_root()
     if not config.is_absolute() or not state.is_absolute():
         raise ValueError('Dots config and state roots must be absolute')
     return config, state
@@ -53,6 +54,12 @@ def regular(path):
 
 
 def query(*args):
+    if os.name == 'nt':
+        from palette_native import Themes
+        themes = Themes()
+        if args[0] == 'current': return themes.current() + '\n'
+        if args[0] == 'dir': return str(themes.directory(args[1])) + '\n'
+        return json.dumps(themes.load(args[0])) + '\n'
     p = subprocess.run(['bash', str(ROOT / 'lib/dots/themes/colors-query.bash'), *args],
                        capture_output=True, text=True, timeout=30)
     if p.returncode:
@@ -483,7 +490,8 @@ def edit(args):
         view.title('Saved theme styles')
         view.fields([('Target', target), ('Journal', receipt.get('id', receipt.get('transaction', 'dots files history')))])
     if args.apply:
-        p = subprocess.run([str(ROOT / 'bin/dots-theme-refresh')])
+        command = [sys.executable, '-B', str(ROOT / 'lib/dots/cli.py'), 'theme', 'refresh'] if os.name == 'nt' else [str(ROOT / 'bin/dots-theme-refresh')]
+        p = subprocess.run(command)
         if p.returncode: raise ValueError('styles saved but not published; retry theme refresh')
     else: view.line('Run theme refresh to publish saved styles.')
 

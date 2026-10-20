@@ -1,0 +1,52 @@
+# Native completion; data comes from trusted Dots readers, never an extension.
+$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1')
+$dotsCompletionState = if ($global:dot -and $global:dot.state) { $global:dot.state } elseif ($env:DOTS_STATE_DIR) { $env:DOTS_STATE_DIR } elseif ($env:XDG_STATE_HOME) { Join-Path $env:XDG_STATE_HOME 'dots' } elseif ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'dots' } else { Join-Path $HOME '.local/state/dots' }
+$dotsNamesPath = Join-Path $dotsCompletionState 'themes/commands/current/names'
+if (Test-Path -LiteralPath $dotsNamesPath -PathType Leaf) {
+    $dotsCompletionNames += @([IO.File]::ReadAllLines($dotsNamesPath) | Where-Object { $_ -cmatch '^[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*$' } | ForEach-Object { $_; $_ + '.ps1' })
+}
+Register-ArgumentCompleter -Native -CommandName $dotsCompletionNames -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    $words = @()
+    foreach ($element in @($commandAst.CommandElements | Select-Object -Skip 1)) {
+        if ($element.Extent.StartOffset -ge $cursorPosition) { break }
+        if ($element -is [System.Management.Automation.Language.StringConstantExpressionAst]) {
+            $words += $element.Value
+        } else {
+            # Completion must never evaluate arbitrary AST expressions.
+            $words += $element.Extent.Text
+        }
+    }
+    if ($commandAst.Extent.Text.Substring(0, [Math]::Min($commandAst.Extent.Text.Length,
+        $cursorPosition - $commandAst.Extent.StartOffset)) -match '\s$') { $words += '' }
+    $commandName = [IO.Path]::GetFileNameWithoutExtension($commandAst.CommandElements[0].Extent.Text)
+    if ($commandName -eq 'theme') { $words = @('theme') + $words }
+    elseif ($commandName -eq 'anodize') { $words = @('anodize') + $words }
+    elseif ($commandName -ne 'dots') { $words = @('theme', $commandName) + $words }
+    $savedExit = $global:LASTEXITCODE
+    try {
+        $rows = & (Join-Path $env:DOTS 'bin/dots.ps1') __complete @words 2>$null
+        foreach ($row in $rows) {
+            $fields = $row -split "`t", 3
+            if ($fields.Count -lt 2) { continue }
+            if ($fields[0] -in @('file', 'directory')) {
+                $prefix = if ($wordToComplete) { $wordToComplete.Trim("'", '"') } else { '.' }
+                $parent = Split-Path -Parent $prefix
+                if (-not $parent) { $parent = '.' }
+                $leaf = if ($wordToComplete) { Split-Path -Leaf $prefix } else { '' }
+                Get-ChildItem -LiteralPath $parent -ErrorAction SilentlyContinue | Where-Object {
+                    $_.Name.StartsWith($leaf, [StringComparison]::OrdinalIgnoreCase) -and
+                    ($fields[0] -eq 'file' -or $_.PSIsContainer)
+                } | ForEach-Object {
+                    $value = $_.FullName
+                    [System.Management.Automation.CompletionResult]::new("'" + $value.Replace("'", "''") + "'", $_.Name, 'ParameterValue', $value)
+                }
+            } elseif ($fields[0] -eq 'candidate') {
+                $value = $fields[1]
+                $insert = if ($value -match '[\s\x27"`$;&|()]') { "'" + $value.Replace("'", "''") + "'" } else { $value }
+                $description = if ($fields.Count -eq 3 -and $fields[2]) { $fields[2] } else { $value }
+                [System.Management.Automation.CompletionResult]::new($insert, $value, 'ParameterValue', $description)
+            }
+        }
+    } finally { $global:LASTEXITCODE = $savedExit }
+}

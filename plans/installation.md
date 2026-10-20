@@ -11,7 +11,7 @@
 
 The [presentation acceptance gate](../docs/presentation.md#acceptance-gate) applies to help, preview, unchanged/empty results, conflicts, successful setup, drift-preserving uninstall and recovery. Review 40/80/120-column terminals, forced/disabled colors, ASCII icons, JSON, dry-run and redirected output. Reuse the existing delayed progress renderers and optional Gum confirmation with a plain fallback.
 
-Native Windows initially maps the current PowerShell profile, Neovim and VS Code settings. Unmapped Windots applications and native theme publication are explicitly deferred. WSL and Windows retain separate paths and state. Runtime dependencies must already be installed. No live activation, commit or publication is included in implementation verification.
+This initial slice mapped the current PowerShell profile, Neovim and VS Code settings. The subsequent [PowerShell parity implementation](powershell-parity.md) adds app-specific root/Windots destinations and native theme preparation/publication; Windows runtime acceptance remains pending. WSL and Windows retain separate paths and state. Runtime dependencies must already be installed. No live activation, commit or publication is included in implementation verification.
 
 ## Verification evidence
 

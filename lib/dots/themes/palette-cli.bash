@@ -18,7 +18,7 @@ dt_palette_help() {
     printf 'Usage: %s [FLAVOR] [ACTION | COLOR [FORMAT]]\n\n' "$family"
     printf '%s\n' 'Actions:' '  FLAVOR / show   Preview the native palette' '  set             Activate through Dots' '  init            Export shell color arrays' '  --help          Show this usage' '' 'Examples:'
     printf '  %s %s\n  %s %s blue hex\n  %s %s set --dry-run\n' "$family" "${flavor:-${DT_FAMILY_DEFAULTS[$family]:-FLAVOR}}" "$family" "${flavor:-${DT_FAMILY_DEFAULTS[$family]:-FLAVOR}}" "$family" "${flavor:-${DT_FAMILY_DEFAULTS[$family]:-FLAVOR}}"
-    printf '\n%s\n' 'Options:' '  --color=auto|always|never|none   Output decoration' '  -c / --color NAME              Query a palette color' '  -f / --flavor, -F / --format, -r / --raw, -a / --array' '  --all, --dry-run, --background, -v / --verbose (set), --completion bash|zsh|fish' '' 'Flavors:'
+    printf '\n%s\n' 'Options:' '  --color=auto|always|never|none   Output decoration' '  -c / --color NAME              Query a palette color' '  -f / --flavor, -F / --format, -r / --raw, -a / --array' '  --all, --dry-run, --background, -v / --verbose (set), --completion bash|zsh|fish|powershell' '' 'Flavors:'
     dt_family_flavors "$family"; printf '  %s\n' "${DT_FAMILY_FLAVORS[@]}"
     printf '\nFormats:'; printf ' %s' "${DT_FORMATS[@]}"; printf '\n'
   } | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/presentation.py" --theme "${id:-$family}" "${artwork[@]}"
@@ -27,6 +27,7 @@ dt_palette_completion_script() {
   local family=$1 shell=$2 fish_path=${DT_LIB%/themes}/completion/fish
   fish_path=${fish_path//\\/\\\\}; fish_path=${fish_path//\'/\\\'}
   case $shell in
+    powershell) cat "${DT_LIB%/themes}/completion/powershell" ;;
     bash) printf 'source %q\ncomplete -F _dots_complete_bash -- %q\n' "${DT_LIB%/themes}/completion/bash" "$family" ;;
     zsh) printf '#compdef %s\nsource %q\ncompdef _dots %q\n' "$family" "${DT_LIB%/themes}/completion/zsh" "$family" ;;
     fish) printf "source '%s'\ncomplete -c '%s' -f -a '(__dots_complete_fish)'\n" "$fish_path" "$family" ;;

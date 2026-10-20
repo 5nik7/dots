@@ -120,3 +120,7 @@ never extension callbacks. Keep static headers, contextual help and completion
 cases synchronized. Theme selection retains full-ID routes under `dots theme`; the shared handler also owns generated family/flavor palette commands. Keep the single parser, data-only help/completion and standalone `theme` forwarding equivalent. Collection routes now live under `dots themes`, with singular compatibility routes. Keep one palette parser; follow decision 0013.
 
 The [Git family](../../docs/git.md) uses static Bash headers and a dots-owned backend; it never requires the standalone git-it executable. Run `python3 -B tools/test_git_operations.py` for changes, including literal paths and recursive safety. Keep raw JSON separate from compact human views. File mutations use the shared engine described in the managed-files guide.
+
+## Dual-shell maintenance
+
+Every first-party change must cover Bash on Termux/Linux/WSL and native Windows PowerShell 5.1/7: routes, flags, aliases, contextual completion, exact data output, styled human output, progress and optional pickers. Keep native filesystem/app differences in adapters and reuse transactions. Read [native PowerShell](../../docs/powershell.md); update its capability limits and the [parity plan](../../plans/powershell-parity.md) when affected. Run focused isolated tests for both controller paths, require actual PowerShell engines in Windows CI, and report missing native/desktop evidence explicitly.

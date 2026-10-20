@@ -405,7 +405,7 @@ Wallpaper actions record attempted/successful paths, preserve the successful rec
 on adapter failure, and use a timeout. An external Android/desktop API may mutate
 before failing; there is no promise to recover an unknown prior wallpaper. A palette
 switch does not imply wallpaper permission. Only explicit `bg` actions or
-`set --background` invoke an adapter. Native Windows/WSL wallpaper is unsupported.
+`set --background` invoke an adapter. WSL wallpaper is unsupported. Native PowerShell has a separate Windows desktop adapter; see [native PowerShell](powershell.md).
 
 ## Managed File Transactions
 
@@ -564,3 +564,9 @@ unrelated links; a target link may resolve only to its recorded regular source.
 These checks are conservative and do not promise exhaustive secret detection.
 No editor, arbitrary preview plugin, shell startup or previewed configuration is
 executed. Selection does not change backup, rollback or drift protection.
+
+## Native PowerShell publication
+
+Native Windows file operations and theme publication use the shared `Store` guards, preparation, journals, reverse-order rollback, retained backups and drift-aware undo. Publication and recovery use the same theme locks on Windows and POSIX. Native setup renders inactive payloads before its transaction publishes pointers; it never invokes desktop effects or hooks. Unknown reparse points, WSL/device paths, reserved Windows path components and duplicate operation targets are refused. Link privilege failures never enable elevation, Developer Mode or an automatic copy fallback.
+
+Native command generations carry a manifest and are checked before replacement. Unrelated active pointers and modified commands require review. Legacy unfinished Bash theme publication journals are refused on the native path; Windows and WSL installations must remain separate. Explicit wallpaper effects have a recorded attempt and result, but changing an external application's desktop state is not filesystem rollback. See [native PowerShell](powershell.md) for current limits.

@@ -11,6 +11,25 @@ def terminal():
     return all(stream.isatty() for stream in (sys.stdin, sys.stdout, sys.stderr))
 
 
+def native_shell():
+    return os.environ.get('DOTS_POWERSHELL') or shutil.which('pwsh') or shutil.which('powershell')
+
+
+def rich_fzf_available():
+    if not shutil.which('fzf'):
+        return False
+    if os.name != 'nt':
+        return bool(shutil.which('bash'))
+    if not native_shell():
+        return False
+    # Old fzf Windows versions only support cmd previews. Do not interpolate
+    # paths into cmd syntax or start a UI whose previews cannot work.
+    try:
+        return b'--with-shell' in subprocess.run(['fzf', '--help'], capture_output=True, timeout=5).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
 def selection_requested(parser, args, operands, supported=True):
     """Validate explicit selection before inventory reads or any terminal UI."""
     explicit = getattr(args, 'pick', False)
@@ -45,7 +64,10 @@ class Selector:
     def __init__(self, backend=None, stream=None):
         self.stream = stream if stream is not None else sys.stdout
         self.bridge = Path(__file__).with_name('interactive-select.bash')
-        self.backend = backend if backend is not None else self.run('detect')
+        if os.name == 'nt':
+            self.backend = backend or ('gum' if shutil.which('gum') else 'fzf' if shutil.which('fzf') else 'plain')
+        else:
+            self.backend = backend if backend is not None else self.run('detect')
         if self.backend not in ('gum', 'fzf', 'plain'):
             raise ValueError('unknown interactive backend')
 
@@ -60,18 +82,59 @@ class Selector:
         return result.stdout.rstrip('\n')
 
     def pick(self, kind, header, choices, initial=''):
-        result = self.run(self.backend, kind, header, initial, *choices)
+        result = self.native_pick(kind, header, choices, initial) if os.name == 'nt' else self.run(self.backend, kind, header, initial, *choices)
         if result not in choices:
             raise ValueError('selector returned an unknown choice')
         return result
+
+    def native_pick(self, kind, header, choices, initial):
+        if not terminal():
+            raise ValueError('selection requires terminal input and output')
+        if self.backend == 'plain' or (self.backend == 'fzf' and kind == 'choose'):
+            print(header, file=self.stream)
+            for number, choice in enumerate(choices, 1):
+                print(f'  {number}) {choice}', file=self.stream)
+            answer = input('Number [1]: ').strip() or '1'
+            if answer == '\x1b':
+                raise SelectionEnded(130)
+            if not answer.isdecimal() or not 1 <= int(answer) <= len(choices):
+                raise ValueError('invalid selection')
+            return choices[int(answer) - 1]
+        env = dict(os.environ, FZF_DEFAULT_OPTS='', FZF_DEFAULT_OPTS_FILE='')
+        from resources import Resources, read_data
+        mode = env.get('DOTS_COLOR', 'auto')
+        colored = mode == 'always' or (mode == 'auto' and terminal() and not env.get('NO_COLOR'))
+        if colored:
+            env.pop('NO_COLOR', None)
+            env.update(CLICOLOR='1', CLICOLOR_FORCE='1', FORCE_COLOR='1')
+            for line in read_data(Resources().root / 'gum_env.sh').splitlines():
+                match = re.fullmatch(r"export ((?:GUM_[A-Z_]+|FOREGROUND|BACKGROUND|BORDER_FOREGROUND|BORDER_BACKGROUND))='(#[a-fA-F0-9]{6})'", line)
+                if match: env[match[1]] = match[2]
+        else: env.update(NO_COLOR='1', CLICOLOR='0', CLICOLOR_FORCE='0', FORCE_COLOR='0')
+        if env.get('DOTS_ICONS') == 'never':
+            env.update(GUM_CHOOSE_CURSOR='>', GUM_FILTER_INDICATOR='>',
+                       GUM_FILTER_SELECTED_PREFIX='* ', GUM_FILTER_UNSELECTED_PREFIX='  ')
+        if self.backend == 'gum':
+            flags = ['gum', 'filter' if kind == 'filter' else 'choose', '--header=' + header]
+            if kind == 'choose' and initial:
+                flags += ['--selected=' + initial]
+        else:
+            flags = ['fzf', '--no-multi', '--header=' + header, '--bind=esc:abort,ctrl-c:abort']
+            if not colored: flags += ['--color=bw']
+            if env.get('DOTS_ICONS') == 'never': flags += ['--no-unicode']
+        result = subprocess.run(flags, input=('\n'.join(choices) + '\n').encode('utf-8'),
+                                stdout=subprocess.PIPE, stderr=self.stream, env=env)
+        if result.returncode:
+            raise SelectionEnded(130 if result.returncode in (-2, 130) else 1)
+        return result.stdout.decode('utf-8').rstrip('\r\n')
 
 
 class RichSelector:
     """Scoped FZF-first, token-based selection; never approves an operation."""
     def __init__(self):
-        if os.environ.get('TERM', 'dumb') != 'dumb' and shutil.which('fzf') and shutil.which('bash'):
+        if (os.name == 'nt' or os.environ.get('TERM', 'dumb') != 'dumb') and rich_fzf_available():
             self.backend = 'fzf'
-        elif os.environ.get('TERM', 'dumb') != 'dumb' and shutil.which('gum') and shutil.which('bash'):
+        elif (os.name == 'nt' or os.environ.get('TERM', 'dumb') != 'dumb') and shutil.which('gum') and (os.name == 'nt' or shutil.which('bash')):
             self.backend = 'gum'
         else:
             self.backend = 'plain'
@@ -111,7 +174,11 @@ class RichSelector:
         if not icons:
             flags += ['--no-unicode']
         env = dict(os.environ, FZF_DEFAULT_OPTS='', FZF_DEFAULT_OPTS_FILE='',
-                   FZF_DEFAULT_COMMAND='', SHELL=shutil.which('bash'), BASH_ENV='', ENV='')
+                   FZF_DEFAULT_COMMAND='', BASH_ENV='', ENV='')
+        if os.name == 'nt':
+            flags += ['--with-shell=' + subprocess.list2cmdline([native_shell(), '-NoLogo', '-NoProfile', '-NonInteractive', '-Command'])]
+        else:
+            env['SHELL'] = shutil.which('bash')
         if color:
             env.pop('NO_COLOR', None)
             env.update(CLICOLOR='1', CLICOLOR_FORCE='1', FORCE_COLOR='1')
@@ -160,7 +227,7 @@ class RichSelector:
                     mapping[name] = i
             if self.backend == 'gum':
                 choice = Selector('gum').pick('filter', title, choices)
-            elif shutil.which('bash'):
+            elif os.name != 'nt' and shutil.which('bash'):
                 choice = Selector('plain').pick('choose', title, choices, choices[0])
             else:
                 print(title)
@@ -187,9 +254,9 @@ def gum_confirm(header, action='Apply', cancel='Cancel'):
     Capability checks happen only here, after caller-specific JSON/yes/dry-run
     handling. A failed or interrupted selector never falls through to a prompt.
     """
-    if (os.environ.get('TERM', 'dumb') == 'dumb'
+    if ((os.name != 'nt' and os.environ.get('TERM', 'dumb') == 'dumb')
             or not all(stream.isatty() for stream in (sys.stdin, sys.stdout, sys.stderr))
-            or not shutil.which('bash') or not shutil.which('gum')):
+            or (os.name != 'nt' and not shutil.which('bash')) or not shutil.which('gum')):
         return None
     try:
         return Selector('gum', sys.stderr).pick(

@@ -942,3 +942,13 @@ Also run the browser, file-mapping, catalog, file-operation and installation sui
 plus shared interaction/confirmation, resource, progress and verbose regressions.
 The browser suite covers native Gum and numbered-menu fallbacks and guarded Apply.
 Run sequentially with owned roots; native Termux evidence is not Windows evidence.
+
+## Native PowerShell parity
+
+`python3 -B tools/test_native_cli.py` covers static route coverage, encoded literal arguments, file preview/completion, Windows path validation and app variants, palette comparison with Bash, native publication idempotence/drift/undo, setup inspection and available PowerShell engines. Set `DOTS_TEST_POWERSHELL=powershell` or `pwsh` to require an engine; absence becomes a failure. Otherwise unavailable engines are explicitly skipped. Use `python` on Windows. All roots and mutation targets are disposable fixtures.
+
+`python3 -B tools/test_native_git.py` runs the existing portable Git safety cases against `lib/dots/git/cli.py`. It excludes three tests that explicitly launch Bash/PTYS; it does not claim native terminal cancellation coverage. The existing Bash Git runner remains unchanged by default. Run these suites sequentially on Termux.
+
+The checkout-installation workflow includes a native CLI job with required Windows PowerShell 5.1 and PowerShell 7 entries, plus Linux controller coverage. A configured workflow is not a completed CI run. Record its actual result before promoting Windows support claims. Owner-run desktop, link privilege, FZF interaction and terminal checks are listed in [native PowerShell](powershell.md#acceptance-and-remaining-limits).
+
+`python -B tools/test_native_anodize.py` exercises native authoring, raw export, the native read-only bridge and publication with desktop reloads stubbed. It uses a prebuilt native engine; `DOTS_TEST_ANODIZE=1` makes a missing engine a failure. The native CI job builds the existing engine with `tools/verify_anodize.py build`, whose Windows output has the `.exe` suffix. On Windows, `verify_anodize.py check` runs Go tests/vet and the native authoring suite; `bench` reports engine benchmarks only. POSIX verification retains the Bash frontend suites and timings. No Go engine behavior changes are involved.

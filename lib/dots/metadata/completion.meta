@@ -1,0 +1,3 @@
+# dots:summary=Print Bash, Zsh, Fish, or PowerShell integration
+# dots:usage=bash|zsh|fish|powershell
+# dots:argument=1|choice:bash,zsh,fish,powershell|Shell adapter to print

@@ -82,3 +82,5 @@ Do not edit an accepted record to make an old decision appear different. Add a n
 - [0012: One theme command family](0012-unified-theme-cli.md) — Accepted; supersedes plural CLI compatibility.
 
 - [0013: Dots environment and theme collection ownership](0013-shell-environment-and-theme-collection.md).
+
+- [0014: Native PowerShell parity](0014-native-powershell-parity.md) — native adapter/shared-controller direction, Windows paths and permanent dual-shell maintenance; native acceptance pending.

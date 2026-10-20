@@ -2,7 +2,8 @@
 function Invoke-DotsFiles {
     param([string] $Root, [string] $Controller, [string[]] $CliArguments, [hashtable] $Presentation = @{})
     $python = Get-Command py, python3, python -CommandType Application -ErrorAction SilentlyContinue |
-        Where-Object { $_.Source -notlike '*\Microsoft\WindowsApps\*' } |
+        Where-Object { $_.Source -notlike '*\Microsoft\WindowsApps\*' -and
+            ([IO.Path]::GetExtension($_.Source) -eq '.exe' -or $env:OS -ne 'Windows_NT') } |
         Select-Object -First 1
     if (-not $python) { throw 'dots setup requires Python 3.9 or newer' }
     $prefix = @()
@@ -10,13 +11,27 @@ function Invoke-DotsFiles {
     $oldDots, $oldProfile = $env:DOTS, $env:DOTS_POWERSHELL_PROFILE
     $oldColor, $oldIcons = $env:DOTS_COLOR, $env:DOTS_ICONS
     $oldTerm = $env:TERM
+    $oldEncoding = $env:PYTHONIOENCODING
+    $oldUtf8 = $env:PYTHONUTF8
+    $oldShell = $env:DOTS_POWERSHELL
+    $oldConsoleEncoding = [Console]::OutputEncoding
+    $oldOutputEncoding = $OutputEncoding
     try {
         $env:DOTS = $Root
         $env:DOTS_POWERSHELL_PROFILE = $PROFILE.CurrentUserCurrentHost
         if ($Presentation.ContainsKey('color')) { $env:DOTS_COLOR = $Presentation['color'] }
         if ($Presentation.ContainsKey('icons')) { $env:DOTS_ICONS = $Presentation['icons'] }
         if (-not $env:TERM -and $Host.UI.SupportsVirtualTerminal) { $env:TERM = 'xterm-256color' }
-        & $python.Source @prefix -B (Join-Path $Root "lib/dots/files/$Controller.py") @CliArguments
+        $env:PYTHONIOENCODING = 'utf-8'
+        $env:PYTHONUTF8 = '1'
+        [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false)
+        $OutputEncoding = New-Object Text.UTF8Encoding($false)
+        $env:DOTS_POWERSHELL = (Get-Process -Id $PID).Path
+        # Only ASCII base64 crosses PowerShell's version-dependent native argv
+        # conversion. Do not use stdin: selectors and confirmations own it.
+        $json = ConvertTo-Json -InputObject @($CliArguments) -Compress
+        $encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($json))
+        & $python.Source @prefix -B (Join-Path $Root 'lib/dots/native.py') $Controller $encoded
         $script:DotsFilesExitCode = $LASTEXITCODE
     }
     finally {
@@ -25,5 +40,10 @@ function Invoke-DotsFiles {
         $env:DOTS_COLOR = $oldColor
         $env:DOTS_ICONS = $oldIcons
         $env:TERM = $oldTerm
+        $env:PYTHONIOENCODING = $oldEncoding
+        $env:PYTHONUTF8 = $oldUtf8
+        $env:DOTS_POWERSHELL = $oldShell
+        [Console]::OutputEncoding = $oldConsoleEncoding
+        $OutputEncoding = $oldOutputEncoding
     }
 }

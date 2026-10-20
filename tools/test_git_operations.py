@@ -2,12 +2,16 @@
 import json
 import os
 from pathlib import Path
-import pty
+try:
+    import pty
+except ImportError:
+    pty = None
 import select
 import shlex
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -63,7 +67,9 @@ class GitOperations(unittest.TestCase):
         command, *options = args
         if command == 'publish':
             options += ['--config', str(self.config)]
-        return self.run_cmd(['bash', str(CLI), 'git', command, '-C', str(repo), *options], ok=ok, env=env)
+        prefix = ([sys.executable, '-B', str(PROJECT / 'lib/dots/git/cli.py')]
+                  if os.environ.get('DOTS_TEST_GIT_FRONTEND') == 'native' else ['bash', str(CLI), 'git'])
+        return self.run_cmd([*prefix, command, '-C', str(repo), *options], ok=ok, env=env)
 
     def repo(self, name):
         repo = self.base / name

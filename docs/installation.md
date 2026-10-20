@@ -24,7 +24,7 @@ PowerShell provides native parameters and a native adapter:
 ./uninstall.ps1
 ```
 
-The scripts require Python 3.9+. POSIX Dots and theme preparation require Bash 4.4+ and the theme publisher's existing utilities; explicit source operations additionally require Git. The Windows scripts use Python directly, without WSL or Git Bash. Their initial supported resources are the Dots command entry, the current PowerShell host's profile, Neovim, and VS Code's user settings file when the corresponding source catalogs are available. Other Windots resources remain visibly unmapped. Native Windows theme publication is not implemented.
+The file controllers require Python 3.9+; complete setup with theme preparation requires Python 3.11+. POSIX setup additionally requires Bash 4.4+ and the existing publisher utilities. Explicit source operations require Git. Native Windows invokes Python directly and prepares themes without Bash. Root and Windots catalogs map app-specific Windows paths; ambiguous and unsupported destinations remain unmapped. See [native PowerShell](powershell.md) for the app inventory, requirements and pending native acceptance.
 
 ## Options and output
 
@@ -44,7 +44,7 @@ Setup links mapped configurations and creates their missing parents. Existing re
 
 Catalog omissions found in the audit are now explicit: Fish, Nushell, Zsh's login profile, Ruby dotfiles, Blastoff, Git prompt configuration and Starship's file-level destination. Internal completion, palette and Rofi links are relative to their containing directories. Fixed generated connectors are listed in `lib/dots/themes/connectors.tsv`; btop's `dots.theme` is now generated and ignored alongside the existing connectors.
 
-On POSIX, setup prepares the selected theme (or `DOTS_THEME_DEFAULT`) using the normal renderer and command generator. It publishes pointers and fixed connectors through the file transaction, without app reloads, wallpaper changes or theme hooks. Required connector parents are created. Codex/Pi retain their existing-directory opt-in boundary. Immutable generated payloads remain in state for recovery; no pruning is automatic.
+On each platform, setup prepares the selected theme (or `DOTS_THEME_DEFAULT`) using the normal renderer and command generator. It publishes pointers and fixed connectors through the file transaction, without app reloads, wallpaper changes or theme hooks. Required connector parents are created. Codex/Pi retain their existing-directory opt-in boundary. Immutable generated payloads remain in state for recovery; no pruning is automatic.
 
 Fresh checkouts retain `config/fsh` through tracked documentation. Setup links it to `${XDG_CONFIG_HOME:-$HOME/.config}/fsh` and creates its ignored `dots.ini` connector; installing the FSH plugin is not a prerequisite for rendering. Stashed catalog resources remain excluded.
 

@@ -258,4 +258,8 @@ On 2026-09-25 the owner authorized [Anodize core/CLI implementation](anodize.md)
 
 ## Bounded checkout setup exception
 
-The owner-requested [checkout installation slice](installation.md) adds shared catalog-backed setup, explicit update and restoration through shell/PowerShell entry points. It does not resume the Go migration, general profiles, package installation or remote bootstrap. Native Windows initially covers Dots/PowerShell, Neovim and VS Code settings; further mappings and theme publication remain deferred.
+The owner-requested [checkout installation slice](installation.md) adds shared catalog-backed setup, explicit update and restoration through shell/PowerShell entry points. It does not resume the Go migration, general profiles, package installation or remote bootstrap. Its initial Windows scope covered Dots/PowerShell, Neovim and VS Code settings. The subsequent [PowerShell parity implementation](powershell-parity.md) adds app-specific mappings and native theme publication, with native runtime acceptance pending.
+
+## Native PowerShell parity maintenance
+
+The owner-authorized [PowerShell parity plan](powershell-parity.md) extends the current command surface through native adapters and shared Python controllers. It includes Windows PowerShell 5.1/7, Windows application destinations, literal argument transport, completions, verbose/progress output and optional pickers. General Go migration remains paused. Windows runtime and desktop acceptance are pending; future command changes must maintain both shells and all four target platforms.

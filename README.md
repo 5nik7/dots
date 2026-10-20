@@ -45,7 +45,7 @@ for header examples, shared output helpers, and standalone integration.
 
 ## Install, update and uninstall
 
-From an existing checkout, run `./install.sh --dry-run`, then `./install.sh` to review and apply the platform's mapped configurations. Windows uses `./install.ps1 -DryRun` and `./install.ps1`. Setup creates missing parents, retains verified backups before replacement, installs the command entry and shell configs, and prepares supported POSIX theme connectors. Existing correct links remain unchanged.
+From an existing checkout, run `./install.sh --dry-run`, then `./install.sh` to review and apply the platform's mapped configurations. Windows uses `./install.ps1 -DryRun` and `./install.ps1`. Setup creates missing parents, retains verified backups before replacement, installs the command entry and shell configs, and prepares supported platform theme connectors. Existing correct links remain unchanged.
 
 Fresh POSIX installs include the FSH config directory and its generated theme link.
 Setup and `dots theme refresh` rebuild missing required theme outputs even when
@@ -61,7 +61,7 @@ See [Vivid compatibility](docs/file-colors.md#vivid-compatibility) for custom te
 
 `dots init --setup` and `dots files install` use the same engine. Ordinary `dots init [shell]` continues to print shell code without installation work. Use `./install.sh --update` for an explicit clean fast-forward update followed by setup, or `--with-source nvim` (repeatable) to initialize a named applicable public source. Missing optional sources are otherwise skipped; secrets are never initialized.
 
-`./uninstall.sh` / `./uninstall.ps1` or `dots files uninstall` restores installer-owned targets to their original state, preserves user drift and retains the checkout and recovery records. Both workflows support preview, unattended approval, JSON and the existing color/progress controls. Native Windows initially covers PowerShell, Neovim and VS Code settings; its theme publication remains deferred. See [installation and recovery](docs/installation.md) for requirements, options and platform limits.
+`./uninstall.sh` / `./uninstall.ps1` or `dots files uninstall` restores installer-owned targets to their original state, preserves user drift and retains the checkout and recovery records. Both workflows support preview, unattended approval, JSON and the existing color/progress controls. The native PowerShell frontend now routes file, Git, environment, theme and Anodize commands without Bash, with app-specific Windows destinations and native completion. Windows runtime and desktop acceptance remain pending; see [native PowerShell](docs/powershell.md) for requirements and limits. See [installation and recovery](docs/installation.md) for requirements, options and platform limits.
 
 ## Tmux keybinding reference
 

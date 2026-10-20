@@ -4,6 +4,7 @@ source "$DT_LIB/../ui.bash"
 dt_init() {
   local shell=zsh file
   if (($#)); then [[ $# == 2 && $1 == --shell ]] || return 2; shell=$2; fi
+  if [[ $shell == powershell ]]; then python3 -B "$DT_LIB/theme_cli.py" init --shell powershell; return; fi
   [[ $shell == bash || $shell == zsh || $shell == fish ]] || return 2
   dt_selected selection || return
   if [[ $DT_GENERATION ]]; then

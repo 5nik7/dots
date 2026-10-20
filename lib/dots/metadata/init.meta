@@ -1,0 +1,12 @@
+# dots:summary=Print native shell initialization or explicitly set up files
+# dots:usage=[bash|zsh|fish|powershell|nu|xonsh] | --setup [OPTIONS]
+# dots:option=--verbose|-v|flag|Show setup actions and backups
+# dots:option=--setup||flag|Install platform configurations with retained backups
+# dots:option=--dry-run||flag|Preview setup without writes
+# dots:option=--yes||flag|Approve setup without prompting
+# dots:option=--json||flag|Emit setup JSON
+# dots:option=--update||flag|Update clean sources before setup
+# dots:option=--with-source||choice:androidots,windots,nvim|Initialize a named public source
+# dots:argument=1|choice:bash,zsh,fish,powershell,nu,xonsh|Shell adapter (default: Bash/Zsh)
+# dots:example=eval "$(dots init)"
+# dots:example=dots init fish | source

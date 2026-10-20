@@ -20,8 +20,6 @@ def planned_operation(identity, action, backup):
     parents_safe(composition)
     metadata = {str(composition): digest(composition)}
     manager = Manager()
-    if manager.catalog.platform == 'windows':
-        raise ValueError('native Windows managed operations are not implemented')
     for owner in manager.catalog.sources:
         if owner['status'] == 'excluded':
             continue

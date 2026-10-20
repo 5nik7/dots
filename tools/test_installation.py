@@ -374,7 +374,8 @@ p.apply('install')
             '.dots','bin','lib','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
         names.update(('config/fsh/README.md','lib/dots/themes/generation.bash',
-                      'lib/dots/files/events.py', 'lib/dots/verbose.bash'))
+                      'lib/dots/files/events.py', 'lib/dots/verbose.bash', 'lib/dots/files/app_paths.py'))
+        names.update(str(p.relative_to(ROOT)) for p in (ROOT/'lib/dots/metadata').glob('*.meta'))
         shutil.rmtree(self.repo)
         self.repo.mkdir()
         for name in sorted(names):

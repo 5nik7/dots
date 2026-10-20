@@ -212,7 +212,7 @@ dots_complete() {
         fi
       fi
     elif [[ ${words[index]} == completion ]]; then
-      if (( cursor == index+1 )); then for token in bash zsh fish; do dots_candidate "$token"; done; fi
+      if (( cursor == index+1 )); then for token in bash zsh fish powershell; do dots_candidate "$token"; done; fi
     elif [[ ${words[index]} == commands ]]; then
       if (( ! help )); then
         dots_builtin_metadata commands
