@@ -33,7 +33,8 @@ double-paren      = {{ magenta }}
 
 [paths]
 path          = {{ foreground }}
-pathseparator = {{ muted }}
+; Empty separators inherit the surrounding file or directory style.
+pathseparator =
 path-to-dir   = {{ blue }},bold
 globbing      = {{ cyan }}
 globbing-ext  = {{ cyan }}

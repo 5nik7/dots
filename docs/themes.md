@@ -307,7 +307,7 @@ Directories use blue, executables and shell commands green, links/options/escape
 cyan, ordinary files and paths foreground, comments and unimportant files muted,
 source files and archives yellow, configuration files and numeric syntax orange,
 and media and shell keywords magenta. Broken links and syntax errors use `error`.
-FSH strings use `bright_green`, matching the shared bat syntax template. Special
+FSH path separators inherit the surrounding path style, including blue and bold for directories; the default template leaves `pathseparator` empty. FSH strings use `bright_green`, matching the shared bat syntax template. Special
 permissions and devices have separate styles using the same palette. Vivid's
 filetype database supplies extension and filename coverage; a custom database
 continues to control classification.

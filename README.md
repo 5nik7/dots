@@ -156,6 +156,7 @@ without Lua or Hilbish. Both shells refresh them with published theme changes; s
 Vivid and Fast Syntax Highlighting use generated **dots** themes, keeping file kinds
 and shell syntax on the same palette. Run `dots theme refresh`, then open a new
 shell or reload once; later theme changes follow automatically in Bash/Zsh.
+FSH path separators inherit the surrounding file or directory color and attributes.
 FSH saves the last good Dots theme for startup, so both `fast-theme --show` lines
 report `dots`.
 See [Vivid and FSH setup](docs/themes.md#vivid-and-fast-syntax-highlighting) for
