@@ -127,9 +127,8 @@ publish the new snapshot. Missing or malformed snapshots retain previous colors;
 a fresh native shell remains usable without theme colors until publication.
 
 Native Windows PowerShell initialization requires neither Bash nor Python.
-Theme publication and the remaining CLI still require the existing Bash runtime;
-initialization does not translate WSL paths or provide a Windows publisher.
-PowerShell command completion is enabled only when Bash is available. Native
+The [native PowerShell adapter](powershell.md) now provides the CLI and Windows theme publication through Python; initialization itself does not require Python or translate WSL paths.
+PowerShell completion uses native readers without Bash. Native
 PowerShell and the normal Xonsh launcher must be verified where those runtimes
 are available; Termux evidence does not establish Windows support.
 
@@ -141,3 +140,5 @@ literal settings, reload failure, diagnostics, native palette data and the
 integration-only boundary. Existing shell-init, theme publication, dispatcher
 and completion tests cover their respective contracts. Run focused cases
 sequentially on Termux rather than concurrent full suites.
+
+The personal PowerShell profile defaults `BLASTOFF_HOME` to `DOTCONFIG/blastoff` when unset. This is a personal tool setting, outside the shared Dots settings schema; an explicit override is preserved. Starship and Blastoff continue to honor `STARSHIP_CONFIG`. See [PowerShell startup](shell-init.md#powershell-profile).

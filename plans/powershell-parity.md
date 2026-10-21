@@ -89,3 +89,9 @@ on Windows. `--builtin` and `promote` target the selected native checkout. Both
 frontends share the authoring/picker controller and journal; Windows application
 connector destinations are unchanged. Native PowerShell 5.1/7 FZF keyboard,
 preview and interruption acceptance remains pending where engines are unavailable.
+
+## Lean profile acceptance (2026-10-21)
+
+Native PowerShell 7 and Windows PowerShell 5.1 profile fixtures now pass, including linked startup and prompt refresh. See the [focused profile plan](powershell-profile.md) for exact tests, timings and pending terminal/desktop checks. This supersedes earlier engine-unavailable notes only for these profile checks; full CLI/app parity acceptance remains separate.
+
+The same follow-up now links Core/Desktop all-host profiles to the shared source, enables Starship and the respective terminal integration, and resolves Core Blastoff storage to repository themes. See the [profile follow-up](powershell-profile.md#coredesktop-starship-and-blastoff-follow-up) for native evidence and keyboard limits. App destinations and broader CLI parity claims are unchanged.

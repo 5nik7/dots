@@ -1,5 +1,6 @@
+﻿# Compatibility entry point for existing installer links.
 # Native filesystem resolution, including symlinked parents and junctions.
-# Kept self-contained in both entry points: helpers cannot be located yet.
+# Startup files must find the checkout before shared helpers can be located.
 function Resolve-DotsStartupPath {
     param([string] $Path, [int] $Links = 0)
     if ($Links -gt 40) { throw 'dots: PowerShell startup symlink loop' }
@@ -28,4 +29,4 @@ try {
         throw 'dots: PowerShell startup requires the Dots checkout layout'
     }
 } finally { Remove-Item Function:\Resolve-DotsStartupPath }
-. (Join-Path $dotsStartupDirectory 'init.ps1')
+. (Join-Path $dotsStartupDirectory 'profile.ps1')

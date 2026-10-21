@@ -73,7 +73,9 @@ if ($dotsInteractive) {
     function global:Update-DotsTheme {
         if ($dots_options.DOTS_INIT_THEME -ne '1') { return }
         try {
-            $generation = [IO.File]::ReadAllText((Join-Path $dot.state 'themes/current')).Trim()
+            $currentFile = Join-Path $dot.state 'themes/current'
+            if (-not [IO.File]::Exists($currentFile)) { return }
+            $generation = [IO.File]::ReadAllText($currentFile).Trim()
             if ($generation -eq $global:_DotsThemeGeneration -or $generation -cnotmatch '^g\.[a-zA-Z0-9]+$') { return }
             $data = @{}
             foreach ($line in [IO.File]::ReadAllLines((Join-Path $dot.state "themes/generations/$generation/shell.tsv"))) {
@@ -110,20 +112,34 @@ if ($dotsInteractive) {
         $token = if (Test-Path -LiteralPath $fingerprintFile -PathType Leaf) { [IO.File]::ReadAllText($fingerprintFile).Trim() } else { 'none' }
         if ($token -eq $global:_DotsCommandFingerprint) { return }
         $global:_DotsCommandFingerprint = $token
-        . (Join-Path $env:DOTS 'lib/dots/completion/powershell')
+        # The shared completion source has no .ps1 suffix. Windows cannot
+        # dot-source extensionless files as scripts; evaluate its trusted text.
+        . ([scriptblock]::Create([IO.File]::ReadAllText((Join-Path $env:DOTS 'lib/dots/completion/powershell'))))
     }
     $global:_DotsCommandFingerprint = $null
     Update-DotsCompletion
-    if (-not $global:_DotsPromptInstalled -or (Get-Item Function:prompt).ScriptBlock.ToString() -notmatch 'Update-DotsTheme') {
-        $global:_DotsPreviousPrompt = (Get-Item Function:prompt).ScriptBlock
-        function global:prompt {
-            $previousExit = $global:LASTEXITCODE
-            Update-DotsCompletion
-            if ($dots_options.DOTS_THEME_AUTO_UPDATE -eq '1') { Update-DotsTheme }
-            $global:LASTEXITCODE = $previousExit
-            & $global:_DotsPreviousPrompt
+    function global:Install-DotsPrompt {
+        param([scriptblock] $Renderer)
+        if ($Renderer) { $global:_DotsPreviousPrompt = $Renderer }
+        if (-not $global:_DotsPromptWrapper) {
+            $global:_DotsPromptWrapper = {
+                $previousSuccess = $?
+                $previousExit = $global:LASTEXITCODE
+                Update-DotsCompletion
+                if ($dots_options.DOTS_THEME_AUTO_UPDATE -eq '1') { Update-DotsTheme }
+                $global:LASTEXITCODE = $previousExit
+                if ($previousSuccess) { $null = $true }
+                else { Get-Variable '__Dots_NoSuchVariable__' -ErrorAction Ignore }
+                & $global:_DotsPreviousPrompt
+            }
         }
+        Set-Item Function:\global:prompt $global:_DotsPromptWrapper
         $global:_DotsPromptInstalled = $true
+    }
+    # Terminal integration can wrap us. Refresh data without wrapping the outer
+    # prompt again, which would create a cycle through our own renderer.
+    if (-not $global:_DotsPromptInstalled) {
+        Install-DotsPrompt -Renderer (Get-Item Function:prompt).ScriptBlock
     }
 }
 

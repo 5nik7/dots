@@ -109,6 +109,8 @@ eval "$(dots init)"
 
 The repository startup files resolve their actual location through symlinks and load the adjacent native loader, so `dots` need not already be on PATH. Moving the complete checkout and updating its links is sufficient; inherited Dots path variables are replaced with paths from that checkout. Shared setup adds existing `DOTBIN` and `DOTSCRIPTS` directories to PATH. Fish, PowerShell, Nushell and Xonsh have native adapters; linked Nushell configs need no generated hook, and PowerShell initialization needs no Bash. See [shell initialization](docs/shell-init.md) for setup, config.env settings, reload behavior and platform limits. No home-directory links or packages are installed by this command.
 
+PowerShell Core and Desktop share a Starship profile with their own terminal integration, Vi keys and native Tab completion; Alt+F loads fuzzy completion on demand. Blastoff in Core lists repository themes. Other runtime managers and extra modules remain [explicit session opt-ins](docs/shell-init.md#powershell-profile).
+
 Dots-specific settings and runtime variables now belong to `lib/dots/shell/`.
 Edit `${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env`, then reload your shell
 or initialize again. `dots init` loads only Dots integration; repository startup

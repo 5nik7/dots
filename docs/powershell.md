@@ -17,6 +17,8 @@
 
 Setup installs the current host's `$PROFILE.CurrentUserCurrentHost`. Run setup from each desired PowerShell host to install that host's profile; do not guess its Documents path. Redirected Documents folders and engine-specific profiles are reasons to use the host's own path. See [Microsoft's profile documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles).
 
+The personal profile now uses [shared Starship startup](shell-init.md#powershell-profile). Native PowerShell 7 and Windows PowerShell 5.1 profile checks are recorded in the [profile repair plan](../plans/powershell-profile.md); this bounded evidence does not establish full native CLI or desktop acceptance. Windows app destinations and installation targets are unchanged.
+
 ## Commands and interaction
 
 The native dispatcher reads the same static first-party headers as Bash. Built-in metadata lives in `lib/dots/metadata/`. It forwards file commands to the existing catalog, mapping, browser, installer and transaction controllers. Git uses the native Python Git controller. Themes use a literal palette reader, renderer and guarded file transactions; Anodize uses its existing engine and a native publication bridge. Bash retains its established theme/Git frontends while native behavior is validated; this is not a general Go migration.

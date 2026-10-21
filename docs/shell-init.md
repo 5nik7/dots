@@ -55,7 +55,27 @@ Startup resolves absolute and relative links, chained links, and symlinked paren
 
 After moving the checkout, update links that still name its old location. No config-file edits are needed. Explicit generated hooks contain a fixed loader path and must be regenerated if that path changes. An individually copied rc file outside the checkout cannot discover its former location; use a symlink or an explicit hook instead. The shared profile, `shells/profile` (linked as `~/.profile`), consumes `DOTS` when available and does not independently discover a checkout.
 
+## PowerShell profile
+
+The personal PowerShell entry is `shells/powershell/profile.ps1`; `Microsoft.PowerShell_profile.ps1` remains a compatibility entry for existing installer links. Both discover the linked checkout. Link each engine's `$PROFILE.CurrentUserAllHosts` to the shared entry to use it in Core and Desktop. Dots settings, published colors and completion load once; only interactive sessions load personal helpers. Re-sourcing preserves the prompt chain and avoids duplicate personal setup.
+
+Interactive Core and Desktop sessions initialize Starship automatically, using the existing `STARSHIP_CONFIG` or Starship default. Missing or failed Starship initialization leaves a plain directory prompt. After Starship and Dots refresh setup, startup sources `shell-integration_v7.ps1` beside that engine's `$PROFILE.CurrentUserAllHosts` when present. Existing host-specific integration hooks remain safe because the vendor wrapper is idempotent; the vendor files are not rewritten. Console sessions use PSReadLine Vi mode, native Tab completion and **Alt+F** for fuzzy completion. Alt+F imports PSFzf on demand; absent FZF or PSFzf falls back to native completion. Redirected input skips line-editor setup. The `ls` helper uses eza without Git-status scans when available, otherwise `Get-ChildItem`. Editor selection is deferred until `edit`/`e`/`ep` is used and respects an existing `EDITOR`; otherwise it prefers nvim, code, vim, vi, then notepad. `ep` edits the repository profile source.
+
+Other integrations remain disabled by default. Dot-source the optional loader in the current session, for example:
+
+```powershell
+. "$env:PWSH/optional.ps1" starship
+. "$env:PWSH/optional.ps1" completions
+. "$env:PWSH/optional.ps1" mise
+```
+
+Available feature names are `starship`, `blastoff`, `icons`, `catppuccin`, `pscompletions`, `fzf`, `completions`, `zoxide`, `mise`, `vfox`, `chocolatey`, `command-not-found`, `terminal` and `coreutils`. Each successful opt-in runs once per session; failed loads remain retryable. Choose the runtime manager you actually use. The loader uses installed tools only, checks generated-code exit status, and restores Dots refresh hooks after Starship activation. The coreutils vendor block is preserved in a separate opt-in file. Default startup runs Starship initialization, its continuation prompt, and the configured terminal integration; unrelated completion generators, module inventory, runtime managers and theme publication stay off. Starship prompt cost depends on the active configuration. Blastoff defaults `BLASTOFF_HOME` to the resolved checkout's `config/blastoff`, preserving an explicit override. Blastoff is available through installed-module autoloading in Core only (7+); the optional loader refuses it on Desktop. WinGet CommandNotFound requires Core 7.4+. Neither module is eagerly imported by the profile.
+
+Personal helpers remain explicit operations: `touch` creates or updates timestamps without truncating contents; `New-Backup` preserves literal paths, supports `-WhatIf`, uses unique destinations and defaults to moving the source (`-Copy` retains it). Yazi's `y`/`d` helper always removes its temporary cwd file. These personal helpers are separate from managed installation and its journals.
+
 ## Environment and execution
+
+PowerShell prompt and completion generators select the first executable in PATH order. Multiple installations of the same tool do not get combined into a command name.
 
 Personal startup also retires recognized old Dots `STARSHIP_CONFIG` values; it
 leaves custom overrides intact. Starship uses its default home-relative config

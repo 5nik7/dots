@@ -57,6 +57,8 @@ bypass that renderer. See [shell environment](shell-environment.md).
 
 `bin/lib/common.sh` owns shared sourceable Bash/Zsh utility, logging, formatting, spinner and color-array helpers. Loading only defines helpers; startup no longer allocates the legacy 256-color arrays. The former `bin/colors.env` and its startup-created named globals are removed. Human helpers obtain styles lazily from the renderer; caller-owned variables remain untouched. Path operations, case conversion and quiet checks use builtins; human messages lazily reuse `lib/dots/ui.bash`, with a plain fallback for standalone copies. Optional eza formatting is confined to explicitly requested filename/icon helpers. See [shell utilities](shell-utils.md).
 
+PowerShell personal startup uses `profile.ps1` (with the installer-compatible host entry), `init.ps1` and a guarded `interactive.ps1`. Helper definitions live separately from explicitly dot-sourced optional integrations; the shared native adapter remains responsible for settings, paths, published colors and prompt refresh. See [PowerShell startup](shell-init.md#powershell-profile).
+
 ## Existing Zsh Configuration
 
 The live shell configuration is maintained independently of the paused Go core. `shells/zsh/zshrc` resolves its own file through symlinks and sources the adjacent `init.zsh` directly; `interactive.zsh` owns startup order; its `core/`, `integrations/`, and `platforms/` modules separate shared setup, tool activation, and execution-environment detection. Existing public module entry points remain available. Generated shell data belongs in user cache directories, not the repository. See the [Zsh guide](../shells/zsh/README.md).

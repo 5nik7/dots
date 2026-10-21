@@ -194,6 +194,8 @@ For shared progress or its integrations, run `python3 -B tools/test_progress.py`
 
 ## Shell initialization
 
+The PowerShell suite also executes the lean interactive profile with redirected input and stubbed optional integrations. Run it with `DOTS_TEST_POWERSHELL=pwsh` and `powershell` on Windows. Use `tools/bench_powershell_profile.py` sequentially for isolated load/first-prompt measurements; record native PSReadLine keyboard evidence separately.
+
 For `dots init` or native startup-loader changes, run `python3 -B tools/test_shell_init.py` on Unix and `python3 -B tools/test_powershell_init.py` for portable native PowerShell acceptance, the Bash dispatcher and Zsh suites, affected theme tests, and native syntax checks. Use the isolated PTY and timing fixtures for interactive/startup changes. Use `tools/public_fixture.py` when copying these public trees so absolute symlinks cannot write through to the live checkout. Preserve synthetic private modules and distinguish unavailable PowerShell/Windows evidence from verified native Termux shells. See [initialization testing](../../docs/testing.md#shell-initialization).
 
 For local theme plugins, run `python3 -B tools/test_theme_plugins.py` plus the existing theme/workflow, file-operation, Bash-framework and Anodize suites described in [testing](../../docs/testing.md#theme-plugins). Preserve test-owned roots, stub desktop apps, non-execution in read-only paths, and explicit desktop/native-Windows limitations.
