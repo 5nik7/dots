@@ -307,6 +307,12 @@ The [checkout installer](installation.md) has POSIX shell and native PowerShell 
 
 Native Windows locking uses msvcrt; directory flushing has no POSIX-equivalent guarantee. Symlink capability is tested by approved staging before target replacement. Reparse-point ancestors are refused. Linux/Windows installation CI is defined separately from the Go gates; local Termux tests do not establish native Windows or WSL results.
 
+The managed Starship config destination is home-relative `.config/starship.toml`
+on POSIX and native Windows, independently of XDG_CONFIG_HOME. Personal startup
+clears recognized old Dots overrides without setting STARSHIP_CONFIG. Native
+Bash/Zsh/Fish/Nushell checks cover Termux; PowerShell/Clink Windows runtime and
+Xonsh startup acceptance remain pending.
+
 The optional Starship/Blastoff theme adapter follows the existing POSIX theme-plugin boundary (Termux, Linux and WSL; native Windows unavailable). It uses `STARSHIP_CONFIG`/`BLASTOFF_HOME` or those apps' standard home-relative paths, preserves configured symlinks through guarded physical targets, and does not translate Windows paths. Native verification currently covers Termux with Starship 1.26.0.
 
 The consolidated Git directory resource is mapped for Termux, Linux, WSL and
@@ -315,3 +321,10 @@ plain Linux has an empty override. Native Windows still requires link capability
 and does not gain POSIX managed-operation commands or theme publication. Git/Delta
 colors and selector lifecycle have native Termux tests and platform-selection
 fixtures; native Windows/WSL consumer execution is not established.
+
+Anodize user saves use the existing platform configuration adapter: XDG when
+explicit, otherwise `~/.config/dots/themes` on POSIX and `%APPDATA%/dots/themes`
+on Windows. `--builtin` and `promote` target the selected native checkout. Both
+frontends share the authoring/picker controller and journal; Windows application
+connector destinations are unchanged. Native PowerShell 5.1/7 FZF keyboard,
+preview and interruption acceptance remains pending where engines are unavailable.

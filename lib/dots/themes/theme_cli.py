@@ -30,9 +30,9 @@ def preview(themes, identity, native=False):
         result = subprocess.run([sys.executable, '-B', str(LIB / 'presentation.py'), '--theme', identity, '--native-table'],
                                 input=json.dumps(dict(title=palette['theme'] + ' — ' + palette['flavor'], colors=palette['palette'])).encode())
         if result.returncode: raise ValueError('palette preview failed')
-    elif sys.stdout.isatty():
+    elif sys.stdout.isatty() or os.environ.get('FZF_PREVIEW_COLUMNS'):
         from presentation import render_colors
-        render_colors(styles().resolve(palette, themes.directory(identity)), 'Configured sources')
+        render_colors(styles().resolve(palette, themes.directory(identity)), 'Configured sources', preview=True)
     else:
         print(identity + ' (' + palette['mode'] + ')')
         for key, value in sorted({**palette['colors'], 'mode': palette['mode']}.items()): print(key + '\t' + value)

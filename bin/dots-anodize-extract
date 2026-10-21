@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# dots:option=--interactive||flag|Guide inputs and preview choices
 # dots:summary=Inspect an image palette
 # dots:usage=IMAGE [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON

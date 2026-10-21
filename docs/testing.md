@@ -675,7 +675,7 @@ inspection per repository; no persistent cache or startup scan was introduced.
 
 ## Anodize verification
 
-`python3 -B tools/test_anodize_logo.py` runs engine-free logo policy and native PTY checks in disposable roots, and is included in `python3 -B tools/verify_anodize.py check`. It covers narrow/wide/tiny layouts, destination sizing, Bash/Python parity, metadata help without extension execution, optional-renderer failures, ASCII/color policies, Kitty transmission fixtures and data-output bypass. Integration tests cover logo completions and manual freshness; the engine suite checks unchanged raw exports/app configuration. Kitty protocol fixtures do not establish native graphics rendering. See [branding verification](../plans/anodize-logo.md#verification).
+`python3 -B tools/test_anodize_logo.py` runs engine-free logo policy and native PTY checks in disposable roots, and is included in `python3 -B tools/verify_anodize.py check`. It covers narrow/wide/tiny layouts, destination sizing, usage/result/error and Bash/Python parity, exact width-fitted preview artwork through captured output (including panes below 12 rows), completion layout/icon options, metadata help without extension execution, optional-renderer failures, ASCII/color policies, Kitty transmission fixtures and data-output bypass. Integration tests cover logo completions and manual freshness; the engine suite checks unchanged raw exports/app configuration. The interactive suite checks native Zsh/FZF-tab artwork, preview scrolling and cancellation in short terminals with the configured FZF defaults; it requires a local FZF-tab plugin source. Kitty protocol fixtures do not establish native graphics rendering. See [branding verification](../plans/anodize-logo.md#verification).
 
 Run `python3 -B tools/verify_anodize.py check` for an isolated offline Go build, package tests, vet and `tools/test_anodize.py` integration tests. `build` explicitly replaces the ignored private engine artifact; `bench` runs repeated engine benchmarks in temporary build/cache roots. The verifier retains Termux executable compatibility while isolating HOME/XDG/config/cache/temp roots. No network downloads or live publication occurs.
 
@@ -853,6 +853,13 @@ execution of the POSIX wrappers is not claimed.
 
 ## Dots shell environment
 
+`python3 -B tools/test_starship_defaults.py` tests default config discovery,
+recognized legacy override cleanup, custom overrides and repeated initialization
+in disposable homes. It checks the managed HOME-relative destination and runs
+Clink cleanup against a stubbed Windows environment. Unavailable native shell
+runtimes are skipped; stubs do not certify native Windows. The Starship palette
+suite below also covers a default-path link with a nondefault XDG config root.
+
 Run `python3 -B tools/test_shell_environment.py -v` for isolated settings, reload, diagnostic and native adapter contracts. Use small sequential cases on resource-constrained Termux hosts. Tests source library integration without personal rc files; unavailable native runtimes must be reported separately.
 
 Environment presentation cases use owned native PTYs at 40/80/120 columns and
@@ -952,3 +959,14 @@ Run sequentially with owned roots; native Termux evidence is not Windows evidenc
 The checkout-installation workflow includes a native CLI job with required Windows PowerShell 5.1 and PowerShell 7 entries, plus Linux controller coverage. A configured workflow is not a completed CI run. Record its actual result before promoting Windows support claims. Owner-run desktop, link privilege, FZF interaction and terminal checks are listed in [native PowerShell](powershell.md#acceptance-and-remaining-limits).
 
 `python -B tools/test_native_anodize.py` exercises native authoring, raw export, the native read-only bridge and publication with desktop reloads stubbed. It uses a prebuilt native engine; `DOTS_TEST_ANODIZE=1` makes a missing engine a failure. The native CI job builds the existing engine with `tools/verify_anodize.py build`, whose Windows output has the `.exe` suffix. On Windows, `verify_anodize.py check` runs Go tests/vet and the native authoring suite; `bench` reports engine benchmarks only. POSIX verification retains the Bash frontend suites and timings. No Go engine behavior changes are involved.
+
+### Anodize interactive authoring
+
+`python3 -B tools/verify_anodize.py check` also runs
+`tools/test_anodize_interactive.py` with its isolated engine. It covers user/built-in
+storage, promotion and renamed copies, rollback/recovery/undo, all mode candidates,
+completion cache reuse, temporary cleanup, exact preview colors/dimensions, and
+native FZF cancellation at 40/80/120 columns. Set `DOTS_TEST_FZF_TAB` to an installed FZF-tab source directory to require its copied-source Zsh preview check; this does not initialize or download plugins. All roots are disposable. Run the
+Anodize integration, theme-picker, theme-command, file-color, Bash dispatcher and
+Zsh suites for shared surface changes. PowerShell controller fixtures are distinct
+from native Windows PowerShell 5.1/7 terminal acceptance.

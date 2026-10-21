@@ -70,3 +70,10 @@ The [parity plan](../plans/powershell-parity.md) records implementation and veri
 Owner acceptance must exercise both real profiles, Unicode and quoted paths, denied link privileges, repeat setup/uninstall, occupied targets and retained backups, interrupted apply/recover, theme switching and undo, FZF previews/keybinds, Ctrl-C/Ctrl-Break, and 40/80/120-column light/dark terminal views. Check actual app config locations and wallpaper separately from fixtures. Linux and WSL likewise need native runtime/terminal evidence; Termux fixtures do not establish those platforms.
 
 Native Git and theme panels share semantic/rendering primitives but have not received visual equivalence acceptance. The native publisher builds an isolated bat cache when bat is available and the PowerShell theme hook exposes it. Native Delta/bat consumer acceptance is pending. Known-folder resolution relies on the host profile and app environment/default paths, not a general Windows Known Folder API. Do not describe those outstanding checks as completed parity.
+
+Anodize user saves use the existing platform configuration adapter: XDG when
+explicit, otherwise `~/.config/dots/themes` on POSIX and `%APPDATA%/dots/themes`
+on Windows. `--builtin` and `promote` target the selected native checkout. Both
+frontends share the authoring/picker controller and journal; Windows application
+connector destinations are unchanged. Native PowerShell 5.1/7 FZF keyboard,
+preview and interruption acceptance remains pending where engines are unavailable.

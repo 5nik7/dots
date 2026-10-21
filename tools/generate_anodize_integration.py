@@ -30,6 +30,10 @@ def manual():
              r'\fB\-\-json\fR, omission of \fB\-\-yes\fR returns a preview.',
              r'\fB\-\-dry\-run\fR always takes precedence over \fB\-\-yes\fR.',
              'Read-only operations create no persistent state.',
+             'New themes use the user configuration theme directory; --builtin selects repository themes.',
+             'promote moves a user theme into repository themes; --copy requires --name with a new ID.',
+             '--interactive opens guided selection and draft editing. Missing terminal inputs use selectors.',
+             'FZF previews show theme backgrounds and syntax samples; mode choices use temporary generated palettes.',
              '.SH PRESENTATION OPTIONS',
              'These options precede COMMAND and use the equals form.',
              '.TP', r'.B \-\-color=auto|always|never',
@@ -43,11 +47,12 @@ def manual():
              'UTF-8 braille text assets need no converter. Missing assets, ASCII-only or redirected output use a small ASCII mark.',
              'Disabled color retains monochrome braille. Disabled icons, dumb terminals and non-Unicode output skip Chafa.',
              '.TP', r'.B \-\-logo\-layout=auto|horizontal|stacked|icon',
-             'Choose a layout, always bounded to the destination terminal. Also accepted after COMMAND.',
-             'Text help tries horizontal, stacked, then the largest fitting numbered logo and the base symbol.',
+             'Choose a layout fitted to the destination width. Also accepted after COMMAND.',
+             'All text banners use the usage artwork: horizontal, stacked, then the largest fitting numbered logo and the base symbol.',
              'Explicit horizontal or stacked layouts try that asset before icon fallbacks.',
-             'Help uses at most half the terminal height and 16 rows. Routine text uses the six-row base symbol',
-             'within one-third of terminal height, otherwise a tiny ASCII mark. Data output is unchanged.',
+             'Ordinary text banners use at most half the available height, capped at 16 rows.',
+             'Interactive and completion previews fit pane width with a 16-row artwork budget and preserve artwork spacing. Short panes scroll vertically.',
+             'Preview capture pipes do not force ASCII. Data output is unchanged.',
              '.TP', r'.B \-h, \-\-help', 'Show help without needing the engine.',
              '.SH COMMANDS']
     actions = next(a for a in parser()._actions if isinstance(a, argparse._SubParsersAction))
@@ -95,7 +100,8 @@ def manual():
               'requires an output file. Raw exports and app previews never contain ANSI.',
               'JSON cannot be combined with app preview or colors-format export.',
               '.SH SAFETY AND RECOVERY',
-              'Theme sources live under DOTS/themes/ID. Edits refuse changed generated',
+              'Theme sources default to the platform user config root under dots/themes/ID.',
+              'Explicit --builtin saves use DOTS/themes/ID. Edits refuse changed generated',
               'files and unsafe filesystem objects. Wallpaper images are copied by default;',
               'reference-wallpaper keeps an external absolute dependency. Exports are not',
               'self-contained wallpaper archives.',
@@ -108,7 +114,7 @@ def manual():
               'background flag preflights session support and wallpaper availability.',
               'Wallpaper activation runs after publication; if it fails, the app theme',
               'remains published and the command reports failure. GIF wallpapers cannot',
-              'be activated. Native Windows authoring, Android APK and TUI are deferred.',
+              'be activated. Native Windows authoring is implemented with native acceptance pending; Android APK and TUI remain deferred.',
               '.SH SHELL COMPLETION',
               'Bash, Zsh and Fish adapters are emitted as plain shell source, without the',
               'Go engine. Loading them performs no discovery. Tab completion reads static',
@@ -158,6 +164,19 @@ def manual():
 def artifacts():
     for shell in ('bash', 'zsh', 'fish'):
         source = (REPO/'lib/dots/completion'/shell).read_text()
+        # The shared adapter's generated theme-command registrations belong to
+        # Dots. Standalone Anodize must register only its own command.
+        if shell == 'bash':
+            source = source[:source.index('complete -F _dots_complete_bash')] + 'complete -F _dots_complete_bash dots\n'
+        elif shell == 'fish':
+            source = source[:source.index('for name in dots theme')] + "complete -c dots -f -a '(__dots_complete_fish)'\n"
+        else:
+            source = source[:source.index('if [[ $ZSH_EVAL_CONTEXT')] + '''if [[ $ZSH_EVAL_CONTEXT == *:file ]]; then
+  (( ${+functions[compdef]} )) && compdef _dots dots
+else
+  _dots "$@"
+fi
+'''
         source = re.sub(r'\bdots\b', 'anodize', source).replace('_dots', '_anodize').replace('DOTS_BASH', 'ANODIZE_BASH')
         yield REPO/'lib/dots/anodize/completion'/shell, source
     yield REPO/'man/anodize.1', manual()

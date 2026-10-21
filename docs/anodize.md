@@ -28,7 +28,7 @@ Interactive human confirmations prefer Gum's **Cancel / Apply** menu with Cancel
 
 ## Terminal logo
 
-**Implemented, 2026-10-13.** Both entry points display the Anodize mark at the start of every human view. Usage/help gets a larger header; results, previews, confirmations, empty lists and diagnostics get compact branding. JSON, raw exports, app configuration, completion source and completion candidates never contain a logo. Redirected human output retains a compact text mark.
+**Implemented, 2026-10-13.** Both entry points display the Anodize mark at the start of every human view. Usage/help, results, previews, confirmations, empty lists and diagnostics use the same responsive text artwork. JSON, raw exports, app configuration, completion source and completion candidates never contain a logo. Redirected human output retains a compact text mark.
 
 The default is the owner's bundled UTF-8 braille text artwork, with no image tool or engine requirement. A Unicode-capable terminal/font displays the braille cells; a small ASCII mark remains available for compatibility. Original transparent PNGs and the supplied text assets are bundled with [asset provenance](../lib/dots/anodize/assets/README.md); the downloads directories are not runtime dependencies.
 
@@ -42,7 +42,7 @@ The default is the owner's bundled UTF-8 braille text artwork, with no image too
 
 Both `--option=value` and `--option value` work before or after the Anodize subcommand. Put options before `--help` for standalone help. These are Anodize options, not global Dots options:
 
-Invoking Anodize with only logo options displays its usage. A forwarded publication diagnostic block receives one compact stderr header, independently of the successful result on stdout.
+Invoking Anodize with only logo options displays its usage. A forwarded publication diagnostic block receives one responsive stderr header, independently of the successful result on stdout.
 
 ```sh
 anodize --logo=auto --help
@@ -53,7 +53,7 @@ ANODIZE_LOGO=chafa anodize --help
 
 `ANODIZE_LOGO` and `ANODIZE_LOGO_LAYOUT` set persistent defaults; explicit options win. Invalid environment values use `text` and `auto`; invalid command options are usage errors. There is no logo-off mode for human views. `--color=never` and `NO_COLOR` use monochrome braille text on suitable terminals; explicit `--color=always` retains the shared override of `NO_COLOR`. `--icons=never`, `TERM=dumb`, non-Unicode output and redirected human output select the small ASCII fallback and skip Kitty/Chafa. Color/icon controls retain their existing prefix placement and do not disable the mark.
 
-Sizing reads the destination terminal, then valid `COLUMNS`/`LINES`, then 80×24, with a one-column right margin. Text help uses at most half the terminal height, capped at 16 rows. Automatic text layout tries `horizontal.txt`, then `stacked.txt`, then the largest fitting numbered `logo-<width>.txt`, then `logo.txt`, then a tiny ASCII mark. Explicit horizontal/stacked layouts try that asset before the icon fallbacks; explicit icon layout starts with numbered logos. Selection measures actual cell width and row count, preserving all artwork spacing rather than cropping or reflowing. Additional numbered `.txt` variants are discovered automatically. Routine text views use the six-row `logo.txt` within one-third of terminal height, otherwise the tiny ASCII fallback. Redirected human output retains the compact ASCII mark.
+Sizing reads the destination terminal, then valid `COLUMNS`/`LINES`, then 80×24, with a one-column right margin. Ordinary text banners use at most half the available height, capped at 16 rows. Automatic text layout tries `horizontal.txt`, then `stacked.txt`, then the largest fitting numbered `logo-<width>.txt`, then `logo.txt`, then a tiny ASCII mark. Explicit horizontal/stacked layouts try that asset before the icon fallbacks; explicit icon layout starts with numbered logos. Selection measures actual cell width and row count, preserving all artwork spacing rather than cropping or reflowing. Additional numbered `.txt` variants are discovered automatically. Routine views use the same selection and sizing policy as usage. Interactive and completion previews use the FZF pane width, reserving the panel padding, with a 16-row artwork budget independent of pane height. Short panes retain the supplied artwork and scroll vertically; their captured output is a terminal-display context, so the pipe alone does not force ASCII. Preview text keeps the theme background/foreground and honors layout/icon preferences. Redirected human output retains the compact ASCII mark.
 
 For the supplied assets, 80×24 help uses `horizontal.txt`, 40×24 help uses `stacked.txt`, and explicit icon layout at 80×32 uses `logo-40.txt`. Graphics retain their original eight-row help/three-row routine limits and estimated 1:2 character-cell aspect ratio. PNG wordmarks default to the dark-background variant; a light-background `COLORFGBG` hint selects dark lettering. No PNG source is replaced by the text-asset update.
 
@@ -67,25 +67,26 @@ Authoring commands accept `--json` for a schema-1 response unless they return a 
 
 | Route | Inputs and behavior |
 | --- | --- |
-| `completion SHELL` | Print Bash, Zsh or Fish completion source; no engine required. |
+| `completion SHELL` | Print Bash, Zsh, Fish or PowerShell completion source; no engine required. |
 | `modes` | List the 23 supported extraction modes. |
 | `extract IMAGE` | Inspect colors and foreground/background contrast without saving. Supports `--mode`, `--light`, `--dark`. |
 | `create ID` | Exactly one of `--image FILE`, `--color '#RRGGBB'`, `--from THEME`. Supports generation flags, `--adjust NAME=VALUE`, `--set COLOR=HEX`, and `--reference-wallpaper`. |
 | `import FILE --name ID --format FORMAT` | Import `anodize`, `aether`, `base16`, or `colors`. Supports generation flags and `--reference-wallpaper`. |
-| `list` | List authored themes in the repository. |
+| `list` | List authored themes in both user and repository storage. Human output and the additive JSON `storage` field identify `user` or `builtin`. |
 | `show ID` | Inspect an authored or existing Dots theme. |
 | `edit ID` | Edit an Anodize-owned theme. Supports generation flags, adjustments, overrides, `--reset-adjustments`, `--reextract`, and `--reference-wallpaper`. Derive other themes with `create --from`. |
 | `preview ID` | Show colors, or use `--app kitty|tmux|btop|termux|bat|yazi` for raw generated configuration. `--app` cannot combine with `--json`. |
 | `export ID` | Raw stdout by default; `--format anodize|aether|colors`. `--output FILE` saves through a journal and refuses existing targets. |
+| `promote ID` | Move an authored user theme into repository `themes/ID`; `--copy --name NEW_ID` retains the user version under its original ID. Accepts `--dry-run`, `--yes`, `--json`, and `--interactive`. |
 | `apply ID` | Preview/publish with the existing Dots publisher; optional `--background` explicitly requests a subsequent wallpaper action. |
 
-Create, import, edit, export-to-file and apply accept `--dry-run` and `--yes`. Raw stdout export is already read-only; `--dry-run` requires `--output`. Raw exports and app previews never receive ANSI decoration. Diagnostics go to stderr. Exit status is 0 for success/preview, 2 for argument usage errors, and 1 for validation or operational failures.
+Create, import, edit, promote, export-to-file and apply accept `--dry-run` and `--yes`. Raw stdout export is already read-only; `--dry-run` requires `--output`. Raw exports and app previews never receive ANSI decoration. Diagnostics go to stderr. Exit status is 0 for success/preview, 2 for argument usage errors, and 1 for validation or operational failures.
 
 IDs start with a lowercase letter and contain lowercase letters, digits, `_` or `-`. New IDs refuse repository and installed-user-theme collisions. PNG, JPEG and GIF input is limited to 32 MiB and 20 million pixels; transparent images without sufficiently opaque pixels are rejected. Extraction defaults to normal/dark. `--light` and `--dark` are mutually exclusive. Use `modes` as the authoritative list of modes.
 
 ## Shell completion and manual
 
-All three supported shells complete commands, flags, extraction modes, adjustment names, built-in named color keys, theme IDs, formats, app names and file paths. Both `--option value` and `--option=value` work. `edit` suggests only repository themes with an Anodize recipe. New theme IDs and arbitrary hex/numeric values are entered manually. `--color=always` before the command controls presentation; `create --color HEX` remains a seed color.
+Bash, Zsh, Fish and native PowerShell complete commands, flags, extraction modes, adjustment names, built-in named color keys, theme IDs, formats, app names and file paths. Both `--option value` and `--option=value` work. `edit` suggests themes with an Anodize recipe in either storage root. New theme IDs and arbitrary hex/numeric values are entered manually. `--color=always` before the command controls presentation; `create --color HEX` remains a seed color.
 
 The repository shell completion trees include `anodize` alongside `dots`. To load completion in an existing shell session:
 
@@ -118,6 +119,60 @@ To make `man anodize` available, install that file as `anodize.1` in a `man1` di
 
 The adapters are generated from the shared Dots shell adapters; the manual's command/option reference is generated from the CLI parser. After changing either source, run `python3 -B tools/generate_anodize_integration.py`; `--check` verifies checked-in artifacts without writing. Static wrapper headers remain the completion metadata source, with tests checking parser and engine vocabulary consistency.
 
+## Interactive authoring and previews
+
+Run `anodize --interactive` for an action menu, or append `--interactive` to
+`create`, `extract`, `edit`, `show`, `preview`, `apply`, `import`, `export` or
+`promote`. Missing required inputs open selectors automatically when all terminal
+streams are available; complete commands retain their existing defaults. JSON,
+redirected output, `--yes` and `--dry-run` never auto-open selectors. Explicit
+`--interactive --dry-run` can collect inputs and show a plan. Explicit interactive
+mode refuses `--json`, `--yes` and nonterminal streams.
+
+Selectors prefer FZF, then Gum, then numbered menus. Enter selects for review;
+Escape/Ctrl-C cancels. Alt-P toggles the FZF pane and Alt-J/K scroll it. Selecting
+an item does not approve saving or applying. Image browsing starts in the current
+directory, with parent navigation and typed paths. Creation offers image, seed
+color or existing-theme sources and user/built-in storage. Guided editing holds
+an in-memory draft with mode/lightness, adjustments, color overrides, reset and
+re-extraction; Review save leads to the existing confirmation.
+
+Human show/preview output includes a syntax sample painted with the theme's exact
+foreground/background, followed by palette details. Dots theme show and switcher
+previews use the same renderer. Printed rows reset terminal styling afterward;
+FZF panes use their own dimensions and fill unused rows with the theme background.
+Plain mode remains readable. Raw app previews, exports, JSON and scalar interfaces
+retain their formats. This sample illustrates the default syntax color mapping;
+individual applications can have additional highlighting rules.
+
+Mode pickers temporarily generate all supported modes for the chosen source and
+lightness, retaining adjustments and overrides. Hovering renders cached candidates;
+the selected candidate becomes the draft. Temporary directories are removed when
+the picker exits, including cancellation. Source drift during review refuses a save.
+
+The repository's Zsh FZF-tab integration previews Anodize and Dots theme IDs and
+Anodize `--mode` choices. Mode previews require a usable source earlier on the
+command line. The displayed completion menu owns its temporary cache; ordinary
+completion and shell startup never call the engine. Completing a value only
+inserts it into the command line.
+
+```sh
+anodize create --interactive
+anodize edit dusk --interactive
+anodize extract ./picture.jpg --interactive
+anodize create dawn --image ./picture.jpg --builtin --dry-run
+anodize promote dusk --dry-run
+anodize promote dusk --yes
+anodize promote dusk --copy --name dusk-bundled --yes
+```
+
+Promotion uses a retained file transaction: it stages the repository copy before
+removing the user directory and supports rollback, recovery and undo. It preserves
+backgrounds and unrelated regular files. Copies require a distinct unused ID and
+update recipe/metadata receipts. Duplicate user/built-in IDs, occupied targets,
+generated-file drift and unsafe trees are refused. Built-in storage does not select
+the theme or commit it to Git.
+
 ## Repeatable editing
 
 ```sh
@@ -133,7 +188,7 @@ Changing mode or light/dark regenerates from the saved wallpaper or seed when av
 
 ## Recipe and ownership
 
-An authored theme is `$DOTS/themes/ID/` containing `colors.toml`, `theme.toml`, `anodize.json`, and an optional `backgrounds/wallpaper.ext`. Without `DOTS`, the CLI uses its own checkout. The schema-1 recipe contains:
+A new authored theme defaults to `${XDG_CONFIG_HOME:-$HOME/.config}/dots/themes/ID/`, containing `colors.toml`, `theme.toml`, `anodize.json`, and an optional `backgrounds/wallpaper.ext`. `create --builtin` and `import --builtin` instead save into `$DOTS/themes/ID/`; without `DOTS`, the CLI uses its own checkout. Native Windows uses `%APPDATA%/dots/themes` unless XDG is explicit. Existing themes stay where they are and edits update their current location. The schema-1 recipe contains:
 
 - `id`, `schema`, and `options` (`mode`, boolean `light`).
 - `baseline`: unadjusted named colors; `adjustments`: numeric settings; `overrides`: explicit named hex colors.

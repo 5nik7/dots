@@ -84,14 +84,21 @@ def display(value):
 class ColorView:
     """Shared palette/style tables, sized in terminal cells, with plain fallbacks."""
 
-    def __init__(self, colors=None):
+    def __init__(self, colors=None, preview=False):
         colors = colors or {}
         self.columns = max(12, min(120, shutil.get_terminal_size((80, 24)).columns))
+        self.lines = 0
+        self.pane_height = 0
+        if preview and os.environ.get('FZF_PREVIEW_COLUMNS', '').isdigit():
+            self.columns = max(8, min(1000, int(os.environ['FZF_PREVIEW_COLUMNS'])))
+            height = os.environ.get('FZF_PREVIEW_LINES', '')
+            self.pane_height = min(1000, int(height)) if height.isdecimal() else 0
         self.available = self.columns - 4
         self.base = self.accent = self.normal = self.reset = ''
         fg, bg = colors.get('foreground'), colors.get('background')
         if color_enabled() and all(isinstance(c, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', c) for c in (fg, bg)):
-            fg = readable(fg, bg, '#000000' if luminance(bg) > .179 else '#ffffff')
+            if not preview:
+                fg = readable(fg, bg, '#000000' if luminance(bg) > .179 else '#ffffff')
             self.base = escape(bg, True)
             self.normal = escape(fg)
             self.accent = escape(readable(colors.get('accent', fg), bg, fg))
@@ -112,6 +119,11 @@ class ColorView:
             content = ' ' * indent + part
             padding = ' ' * max(0, self.available - width(content)) if self.base else ''
             print(prefix + '  ' + content + padding + ('  ' if self.base else '') + self.reset)
+            self.lines += 1
+
+    def fill(self):
+        while self.lines < self.pane_height:
+            self.line()
 
     def title(self, title, source=None):
         self.line(display(title), heading=True)
@@ -193,9 +205,42 @@ class ColorView:
 STYLE_TITLES = {'type': 'File types', 'mime': 'MIME rules', 'extension': 'Extension rules', 'git': 'Git styles'}
 
 
-def render_colors(doc, source, action=None, result=None, context=None):
-    view = ColorView(doc['colors'])
+def syntax_sample(view, colors):
+    """Fixed inert sample, using the default bat theme's token roles."""
+    view.line()
+    view.line('Syntax preview', heading=True)
+    def row(*tokens):
+        text = ''
+        for role, value in tokens:
+            color = colors.get(role, colors['foreground'])
+            text += (escape(color) if view.base else '') + value
+        view.line(text + view.normal)
+    row(('muted', '# A small theme preview'))
+    row(('bright_yellow', 'def '), ('bright_blue', 'greet'), ('foreground', '(name):'))
+    row(('foreground', '    count = '), ('yellow', '3'))
+    row(('foreground', '    message = '), ('bright_green', '"Hello, "'), ('foreground', ' + name'))
+    row(('foreground', '    '), ('bright_yellow', 'return '), ('foreground', 'message, count'))
+    view.line()
+    row(('green', 'Success  '), ('warning', 'Warning  '), ('error', 'Error  '), ('info', 'Info'))
+
+
+def render_preview(identity, colors, mode='', palette=True, logo=()):
+    view = ColorView(colors, preview=True)
+    for line in logo:
+        view.line(display(line))
+    view.title(display(identity) + (' (' + display(mode) + ')' if mode else ''))
+    syntax_sample(view, colors)
+    if palette:
+        view.palette(colors)
+    view.fill()
+    return view
+
+
+def render_colors(doc, source, action=None, result=None, context=None, preview=False):
+    view = ColorView(doc['colors'], preview=preview)
     view.title(f"{doc['id']} ({doc['mode']})", source)
+    if preview:
+        syntax_sample(view, doc['colors'])
     if action is None:
         view.palette(doc['colors'])
         for group, title in STYLE_TITLES.items():
@@ -217,6 +262,7 @@ def render_colors(doc, source, action=None, result=None, context=None):
             view.table(['Field', 'Source'], [[display(k), view.resource(v)] for k, v in sorted(source.items())])
         elif source:
             view.fields([('Rule source', source)])
+    view.fill()
 
 
 def render_parsed(result, colors=None):
@@ -257,9 +303,11 @@ def main():
             print('dots theme: palette unavailable; showing plain output: ' + str(e), file=sys.stderr)
     if args.native_table:
         data = json.loads(text)
-        view = ColorView(palette)
+        view = ColorView(palette, preview=True)
         view.title(data['title'], 'Native palette')
+        syntax_sample(view, palette or {'foreground': '#ffffff'})
         view.palette(data['colors'], native=True)
+        view.fill()
         return
     if not palette:
         if logo:

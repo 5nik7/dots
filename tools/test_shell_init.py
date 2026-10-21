@@ -284,7 +284,7 @@ source "$DOTS/lib/dots/themes/gum-env.bash"
         code = '''
 [[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#123456' ]] || exit 9
 printf "export GUM_CONFIRM_PROMPT_FOREGROUND='#654321'\\n" >| "$XDG_STATE_HOME/dots/current/theme/gum_env.sh"
-[[ $STARSHIP_CONFIG == "$HOME/custom config/starship/starship.toml" ]] || exit 11
+[[ ! ${STARSHIP_CONFIG+x} ]] || exit 11
 [[ $PRIVATE_COUNT == 1 && $_DOTS_COMPINIT_READY == 1 ]] || exit 1
 [[ $DOTCONFIG == "$DOTS/config" && $SHELLS == "$DOTS/shells" ]] || exit 5
 [[ ! ${RED+x} && ! ${BLUE+x} && ! ${BOLD+x} && ! ${RST+x} && ! ${COLORS+x} ]] || exit 7

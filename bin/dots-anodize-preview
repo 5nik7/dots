@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+# dots:option=--interactive||flag|Guide inputs and preview choices
 # dots:summary=Preview colors or app configuration
-# dots:usage=ID [OPTIONS]
+# dots:usage=[ID] [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--app||choice:kitty,tmux,btop,termux,bat,yazi|Application preview
 # dots:argument=1|theme-id|Theme identifier

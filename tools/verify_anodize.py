@@ -69,7 +69,9 @@ def main():
         env.update(PATH=os.environ.get('PATH', ''), ANODIZE_ENGINE=str(binary))
         if os.environ.get('LD_PRELOAD'):
             env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
-        tests = ['test_native_anodize.py'] if os.name == 'nt' else ['test_anodize.py', 'test_anodize_logo.py']
+        if os.environ.get('DOTS_TEST_FZF_TAB'):
+            env['DOTS_TEST_FZF_TAB'] = os.environ['DOTS_TEST_FZF_TAB']
+        tests = ['test_native_anodize.py'] if os.name == 'nt' else ['test_anodize.py', 'test_anodize_interactive.py', 'test_anodize_logo.py']
         for test in tests:
             subprocess.run([sys.executable, '-B', str(REPO / 'tools' / test)], env=env, check=True, cwd=REPO)
 

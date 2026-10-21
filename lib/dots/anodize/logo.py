@@ -119,6 +119,21 @@ def unicode_output(stream):
         return False
 
 
+def text_banner(width, rows, *, unicode_text=True, requested=None, scrollable=False):
+    """Usage artwork policy for an already measured content area.
+
+    Callers reserve their own margins. Preview workers explicitly supply their
+    pane capability because FZF captures stdout through a pipe. Scrollable
+    previews retain the artwork even when the viewport is shorter than it.
+    """
+    width = max(1, width)
+    height = 16 if scrollable else max(1, min(16, rows // 2))
+    requested = requested or os.environ.get('ANODIZE_LOGO_LAYOUT', 'auto')
+    if unicode_text:
+        return text_lines(requested if requested in LAYOUTS else 'auto', width, height)
+    return ascii_lines(width, min(height, 3))
+
+
 def kitty_supported():
     # Be conservative. TERM propagated through an unknown multiplexer is not
     # evidence of passthrough support. No queries may consume the user's input.
@@ -208,13 +223,7 @@ def render(ui, full=False):
                 return
         except (OSError, ValueError, struct.error, subprocess.SubprocessError):
             pass
-    height = max(1, min(16 if full else 6, rows // (2 if full else 3)))
-    if unicode_text:
-        layout = (requested if requested in LAYOUTS else 'auto') if full else 'compact'
-        lines = text_lines(layout, width, height)
-    else:
-        lines = ascii_lines(width, min(height, 3))
-    for line in lines:
+    for line in text_banner(width, rows, unicode_text=unicode_text, requested=requested):
         ui.emit(ui.paint(line, '95'))
 
 

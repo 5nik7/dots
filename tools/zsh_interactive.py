@@ -133,7 +133,10 @@ add-zle-hook-widget line-init _dots_test_ready
             label_cases = [('dots fixture\t', f"{'fixture':<12} -- Fixture completion probe"),
                            ('dots --\t', f"{'--color=':<13} -- Color mode (DOTS_COLOR)")]
             if (repo / 'bin/anodize').is_file():
-                label_cases.append(('anodize --\t', f"{'--color=':<8} -- Color mode (DOTS_COLOR)"))
+                records = subprocess.run([str(repo / 'bin/anodize'), '__complete', 'zsh', '1', '--', 'anodize', '--'],
+                                         env=env, capture_output=True, text=True, check=True).stdout
+                widths = [len(row.split('\t')[1]) for row in records.splitlines() if row.startswith('candidate\t')]
+                label_cases.append(('anodize --\t', f"{'--color=':<{max(widths)}} -- Color mode (DOTS_COLOR)"))
             for typed, label in label_cases:
                 session.send(typed)
                 shown = session.wait(marker=label.split(' -- ')[-1].encode(), timeout=30)

@@ -176,6 +176,8 @@ For logo changes, use `python3 -B tools/test_anodize_logo.py` for engine-free po
 
 Use `python3 -B tools/verify_anodize.py check` for the isolated core/CLI suite and `bench` for engine measurements. `build` writes only the ignored private executable. Keep all integration roots disposable and retain Termux LD_PRELOAD compatibility in spawned environments. Run existing theme/file/dispatcher suites for shared changes. Do not run the real Neovim startup or apply a live theme as a test.
 
+The Anodize check includes `tools/test_anodize_interactive.py` for user-theme storage, promotion/recovery and transient mode/FZF previews; keep engine-free completion assertions in the separate integration suite.
+
 For the Dots Neovim bridge, run `python3 -B tools/test_anodize_nvim.py` plus the existing theme suites. Set `ANODIZE_NVIM_DIR` to a completed local plugin checkout when needed. The shared helper copies public runtime files; do not replace it with a normal editor startup. Preserve dashboard timing and test manual colorscheme inactivity explicitly.
 
 For Anodize completions or manual changes, run `python3 -B tools/test_anodize_integration.py` (Bash, Zsh, Fish and mandoc required), generated-artifact freshness, and the shared Bash/Zsh/FZF-tab checks when their integration changes. Completion must work without the private Go engine.

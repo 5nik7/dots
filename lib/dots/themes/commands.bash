@@ -58,7 +58,7 @@ dt_command() {
       dt_find_theme "$id" || { dt_error 'unknown selectable theme ID'; return 1; }
       if ((native)); then dt_load_native "$id" && dt_native_preview; return; fi
       dt_load "$id" || return
-      if dots::human; then
+      if dots::human || [[ ${FZF_PREVIEW_COLUMNS:-} ]]; then
         dt_json | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/file-colors.py" _show "$DT_THEME_DIR"
       else
         dots::heading "$DT_ID ($DT_MODE)"

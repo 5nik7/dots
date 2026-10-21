@@ -61,3 +61,7 @@ When a plan is complete, retain it if it explains migration or decision history.
 - [Checkout installation](installation.md): bounded catalog-backed setup, explicit source updates, retained-baseline uninstall and native adapters.
 
 - [Live CLI presentation](cli-presentation.md) — shared resource colors/icons, Git-style views and reusable project skill.
+
+- [Anodize user themes and interactive previews](anodize-interactive.md) — implementation and acceptance for user-default saves, built-in promotion and FZF-assisted authoring.
+
+- [Starship default configuration](starship-default-config.md): approved default-path cleanup and Blastoff link-preserving upgrade.

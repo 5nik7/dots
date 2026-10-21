@@ -62,8 +62,60 @@ class LogoPolicy(unittest.TestCase):
         ]:
             with self.subTest(layout=layout,width=width,rows=rows):
                 self.assertEqual(self.draw(COLUMNS=str(width),LINES=str(rows),ANODIZE_LOGO_LAYOUT=layout,DOTS_COLOR='never'), (logo.ASSETS/name).read_text())
-        self.assertEqual(self.draw(full=False,DOTS_COLOR='never'),(logo.ASSETS/'logo.txt').read_text())
-        self.assertTrue(self.draw(full=False,LINES='12',DOTS_COLOR='never').isascii())
+        self.assertEqual(self.draw(full=False,DOTS_COLOR='never'), self.draw(DOTS_COLOR='never'))
+        self.assertEqual(self.draw(full=False,LINES='12',DOTS_COLOR='never'), self.draw(LINES='12',DOTS_COLOR='never'))
+
+    def test_usage_and_routine_text_match_for_all_layouts(self):
+        for columns, rows in [(1,1), (20,9), (40,24), (80,24), (120,32)]:
+            for layout in logo.LAYOUTS:
+                for terminal in (True, False):
+                    settings = dict(COLUMNS=str(columns), LINES=str(rows),
+                                    ANODIZE_LOGO_LAYOUT=layout, DOTS_COLOR='never')
+                    self.assertEqual(self.draw(full=False,terminal=terminal,**settings),
+                                     self.draw(full=True,terminal=terminal,**settings))
+
+    def test_preview_pipe_uses_usage_art_and_pane_dimensions(self):
+        import interactive
+        for columns, rows, asset in [(columns, rows, asset)
+                for columns, asset in [(40,'stacked.txt'), (80,'horizontal.txt'),
+                                       (120,'horizontal.txt'), (25,'logo-20.txt')]
+                for rows in (1,6,8,10,11,12,24)]:
+            with self.subTest(columns=columns,rows=rows), mock.patch.dict(os.environ,
+                    dict(TERM='xterm-256color', DOTS_COLOR='never',
+                         FZF_PREVIEW_COLUMNS=str(columns), FZF_PREVIEW_LINES=str(rows)),clear=True):
+                self.assertEqual(interactive.preview_logo(), (logo.ASSETS/asset).read_text().splitlines())
+                self.assertLessEqual(max(map(len,interactive.preview_logo())), columns-4)
+                self.assertLessEqual(len(interactive.preview_logo()), 16)
+                for key,value in [('DOTS_ICONS','never'), ('TERM','dumb')]:
+                    with mock.patch.dict(os.environ,{key:value}):
+                        self.assertTrue(''.join(interactive.preview_logo()).isascii())
+        with mock.patch.dict(os.environ,dict(TERM='xterm-256color', FZF_PREVIEW_COLUMNS='8',
+                                            FZF_PREVIEW_LINES='bad'),clear=True):
+            self.assertLessEqual(max(map(len,interactive.preview_logo())),4)
+
+    def test_preview_worker_preserves_art_and_options_without_graphics(self):
+        import interactive
+        import completion_preview
+        with tempfile.TemporaryDirectory() as tmp:
+            snapshot=Path(tmp)/'preview.json'
+            snapshot.write_text(json.dumps(dict(color=False,rows=[dict(id='fixture',mode='dark',
+                colors={'background':'#101010','foreground':'#dddddd'})])))
+            before=snapshot.read_bytes()
+            env=dict(TERM='xterm-256color', FZF_PREVIEW_COLUMNS='80',FZF_PREVIEW_LINES='6',
+                     ANODIZE_LOGO='chafa',DOTS_ICONS='auto')
+            with mock.patch.dict(os.environ,env,clear=True), mock.patch.object(logo.subprocess,'run',side_effect=AssertionError('graphics in preview')):
+                with mock.patch('sys.stdout',new_callable=io.StringIO) as output:
+                    interactive.preview(str(snapshot),'0')
+                expected=''.join('  '+line+'\n' for line in (logo.ASSETS/'horizontal.txt').read_text().splitlines())
+                self.assertTrue(output.getvalue().startswith(expected))
+                self.assertIn('Syntax preview',output.getvalue())
+                completion_preview.preview_options(['anodize','--logo-layout=horizontal','show','--logo-layout','stacked','fixture'])
+                self.assertEqual(interactive.preview_logo(),(logo.ASSETS/'stacked.txt').read_text().splitlines())
+                completion_preview.preview_options(['dots','--icons=never','anodize','show','fixture'])
+                self.assertTrue(''.join(interactive.preview_logo()).isascii())
+                completion_preview.preview_options(['anodize','--logo-layout','unfinished','--','--logo-layout=icon'])
+                self.assertEqual(os.environ['ANODIZE_LOGO_LAYOUT'],'stacked')
+            self.assertEqual(snapshot.read_bytes(),before)
 
     def test_future_variants_invalid_files_and_missing_base(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(logo,'ASSETS',Path(tmp)):
@@ -162,7 +214,7 @@ class LogoCLI(unittest.TestCase):
         self.assertEqual(result.returncode, code, result.stderr)
         return result
 
-    def terminal(self, argv, width=80, height=24, env=None):
+    def terminal(self, argv, width=80, height=24, env=None, code=0):
         master, slave = pty.openpty()
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', height, width, 0, 0))
         output = bytearray()
@@ -180,7 +232,7 @@ class LogoCLI(unittest.TestCase):
                 if not chunk:
                     break
                 output.extend(chunk)
-            self.assertEqual(proc.wait(timeout=3), 0, output)
+            self.assertEqual(proc.wait(timeout=3), code, output)
         finally:
             if proc.poll() is None:
                 proc.kill(); proc.wait()
@@ -206,6 +258,17 @@ class LogoCLI(unittest.TestCase):
         result = subprocess.run([fixture.BASH, str(self.repo/'bin/dots'), 'anodize','--help'], env=self.env, capture_output=True, text=True)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertIn('ANODIZE',result.stdout)
+
+    def test_results_and_errors_match_usage_in_native_terminal(self):
+        for width in (40,80,120):
+            command=str(self.repo/'bin/anodize')
+            banner=self.terminal([command,'--help'],width).split('Anodize\n')[0]
+            self.assertTrue(self.terminal([command,'list'],width).startswith(banner))
+            self.assertTrue(self.terminal([command,'invalid'],width,code=2).startswith(banner))
+            self.assertTrue(self.terminal([command,'modes'],width,code=1).startswith(banner))
+            self.assertTrue(self.terminal([str(self.repo/'bin/dots'),'anodize','--logo=bad','--help'],width,code=2).startswith(banner))
+        banner=self.terminal([command,'--logo-layout=icon','--help']).split('Anodize\n')[0]
+        self.assertTrue(self.terminal([str(self.repo/'bin/dots'),'anodize','--logo-layout=icon','--logo=bad','--help'],code=2).startswith(banner))
 
     def test_option_positions_errors_and_data(self):
         for mode in logo.MODES:

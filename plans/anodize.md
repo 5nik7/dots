@@ -8,7 +8,7 @@
 - [x] Additive normalized colors in published palette JSON.
 - [x] Isolated tests, startup/extraction measurements, documentation.
 
-The CLI adapter reuses Python Presentation and Store rather than duplicating their policies in Go. The Go core accepts image bytes and palette data, and does not access user paths or execute processes. The private engine executable exchanges bounded JSON with the adapter. New themes live in themes/ID; wallpaper copies are the default. Preview and save never activate themes. Read-only commands create no persistent state.
+The CLI adapter reuses Python Presentation and Store rather than duplicating their policies in Go. The Go core accepts image bytes and palette data, and does not access user paths or execute processes. The private engine executable exchanges bounded JSON with the adapter. New themes now default to the user configuration theme root; explicit built-in saves use repository themes/ID; wallpaper copies are the default. Preview and save never activate themes. Read-only commands create no persistent state.
 
 Anodize.nvim lives in the separate `~/repos/Anodize.nvim` repository. Its agent finished the handoff, and Dots-owned configuration now integrates it. This Dots slice does not authorize edits to that separate repository; follow its local guide and obtain task scope before extending it. Preserve DotsThemeReload, personal highlights and dashboard animation in future integration changes. Android APK, TUI, online sources and arbitrary hooks remain deferred.
 
@@ -35,3 +35,7 @@ Verification on native Termux: four engine-free integration cases (including rea
 The implemented slice is complete within its recorded fixture scope. [Next steps](anodize-next.md) proposes foundation hardening before a new frontend. Normal LazyVim visual acceptance, real wallpaper APIs, desktop platforms, distribution/release work and frontend selection remain distinct gates. The Anodize.nvim plan predates the additive `colors` field; Dots now publishes it while retaining existing schema-1 fields and role authority. No plugin protocol redesign is implied.
 
 The separately authorized [theme plugin slice](theme-plugins.md) now covers explicitly enabled local post-publication hooks. Earlier arbitrary-hook exclusions remain applicable to downloaded-theme execution and broader hook systems. This does not expand the Go or Anodize.nvim scope.
+
+The owner-approved [interactive authoring slice](anodize-interactive.md) extends
+storage and CLI selection without resuming the deferred application/TUI or general
+Go migration work.

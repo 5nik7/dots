@@ -215,8 +215,12 @@ v.validate(t); assert(t.colors.type.dir == "#a6e3a1"); assert(t.styles.type.dir.
         data = json.loads(self.dots('theme','colors',*args,'--json',env=env).stdout)
         overview = self.dots('theme','colors',*args,env=env).stdout
         shown = self.dots('theme','show','catppuccin-mocha',env=env).stdout
-        self.assertEqual(overview, shown)
         plain = re.sub(r'\x1b\[[0-9;:]*m', '', shown)
+        overview_plain = re.sub(r'\x1b\[[0-9;:]*m', '', overview)
+        self.assertIn('Syntax preview', plain)
+        self.assertNotIn('Syntax preview', overview_plain)
+        self.assertEqual(overview_plain[overview_plain.index('Named colors'):],
+                         plain[plain.index('Named colors'):])
         for group in ('Named colors', 'Terminal colors', 'File types', 'MIME rules', 'Extension rules'):
             self.assertIn(group, plain)
         for name, value in data.items():

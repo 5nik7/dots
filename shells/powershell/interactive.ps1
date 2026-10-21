@@ -4,8 +4,7 @@ $Global:DOTSBIN = $env:DOTBIN
 $env:DOTSBIN = $env:DOTBIN
 $Global:DOTSCRIPTS = $env:DOTSCRIPTS
 
-$env:STARSHIP_CONFIG = "$env:DOTFILES\starship\starship.toml"
-$env:STARSHIP_DIR = [System.IO.Path]::GetDirectoryName($env:STARSHIP_CONFIG)
+$env:STARSHIP_DIR = "$env:DOTFILES\starship"
 $env:STARSHIP_THEMES = "$env:DOTFILES\starship\themes"
 
 function Test-CommandExists {

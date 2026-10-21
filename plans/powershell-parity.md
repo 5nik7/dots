@@ -82,3 +82,10 @@ FZF cancellation and previews, and 40/80/120-column light/dark views.
   focused rerun passed.
 - PowerShell 5.1/7 are unavailable on this host. CI jobs now require each engine;
   no Windows run or owner desktop acceptance is claimed.
+
+Anodize user saves use the existing platform configuration adapter: XDG when
+explicit, otherwise `~/.config/dots/themes` on POSIX and `%APPDATA%/dots/themes`
+on Windows. `--builtin` and `promote` target the selected native checkout. Both
+frontends share the authoring/picker controller and journal; Windows application
+connector destinations are unchanged. Native PowerShell 5.1/7 FZF keyboard,
+preview and interruption acceptance remains pending where engines are unavailable.

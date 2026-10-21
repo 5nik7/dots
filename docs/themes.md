@@ -217,7 +217,7 @@ prints sourceable initialization. Theme IDs complete from local data on Tab.
 `dots theme switcher` requires terminal input and output. It prefers fullscreen
 FZF with the prompt/list at the top and a visible live palette preview below,
 occupying 70% of the height. Hovering shows the theme's semantic colors and hex
-values via `theme show`, with swatches when terminal color policy allows them.
+values via `theme show`, with a syntax sample and exact theme foreground/background when terminal color policy allows them. FZF preview rows fill the pane width and unused height; terminal-global colors are unchanged.
 Browsing never applies a theme. Without FZF it uses `gum filter`, or a numbered
 menu when neither tool is available or `TERM=dumb`; these fallbacks show the palette
 after selection. Backends are chosen once per invocation; selector failures never
@@ -765,3 +765,8 @@ Verbose output shows preparation/render/cache phases, source -> destination link
 ## Native PowerShell publication
 
 The native frontend provides literal palette queries, theme/family commands, generated `.ps1` commands, native initialization, selection/refresh, source operations and background selection. It shares file-color rendering, semantic presentation, progress, FZF snapshot previews and the guarded file transaction engine. Setup renders without desktop effects; explicit publication may run enabled native hooks and supported app notifications. Windows wallpaper uses its desktop API; Android lock-screen, GTK/Qt and tmux actions retain explicit platform limits. User `.ps1` hooks are native Windows-only; downloaded themes remain inert. See [native PowerShell](powershell.md) for implementation status, state paths and native acceptance requirements.
+
+Anodize-created user themes share the normal user theme root and discovery rules.
+Explicit built-in saves and promotion are described in [Anodize](anodize.md#interactive-authoring-and-previews).
+Duplicate bundled/user IDs remain errors; promotion moves by default and copies
+require a different ID. Saving or promoting does not activate a theme.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# dots:option=--interactive||flag|Guide inputs and preview choices
 # dots:summary=Author palettes and recoverable themes
 # dots:usage=[OPTIONS] COMMAND [OPTIONS]
 # dots:option=--logo||choice:text,auto,kitty,chafa|Logo renderer (default: text)

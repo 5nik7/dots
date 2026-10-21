@@ -42,6 +42,18 @@ class Palette(unittest.TestCase):
         self.active.write_bytes(self.original);self.saved.write_bytes(self.original)
         self.generation.joinpath('blastoff.toml').write_text('palette="dots"\n[palettes.dots]\nblue="#abcdef"\ngit_branch="#112233"\n')
 
+    def test_home_default_link_ignores_xdg_and_preserves_target(self):
+        os.environ.pop('STARSHIP_CONFIG', None)
+        default = self.home/'.config/starship.toml'
+        default.parent.mkdir()
+        default.symlink_to(self.active)
+        guards = {}
+        active, _, _ = starship.paths(guards)
+        self.assertEqual(active, self.active)
+        self.assertIn(str(default), guards)
+        self.assertEqual(default.read_bytes(), self.original)
+        self.assertFalse((self.config/'starship.toml').exists())
+
     def test_surgery_multiline_quotes_arrays_and_bytes(self):
         prefix='\ufeffpalette="dots"\nformat="""\n[palettes.dots]\nnot a real table\n"""\ntext=\'\'\'\n[another.table]\n\'\'\'\n# prefix\n'
         suffix='  [directory]\nstyle="blue" # comment\n[[battery.display]]\nthreshold=10\nstyle="red"\n[palettes.other]\nblue="green"\n'

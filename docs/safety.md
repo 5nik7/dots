@@ -570,3 +570,11 @@ executed. Selection does not change backup, rollback or drift protection.
 Native Windows file operations and theme publication use the shared `Store` guards, preparation, journals, reverse-order rollback, retained backups and drift-aware undo. Publication and recovery use the same theme locks on Windows and POSIX. Native setup renders inactive payloads before its transaction publishes pointers; it never invokes desktop effects or hooks. Unknown reparse points, WSL/device paths, reserved Windows path components and duplicate operation targets are refused. Link privilege failures never enable elevation, Developer Mode or an automatic copy fallback.
 
 Native command generations carry a manifest and are checked before replacement. Unrelated active pointers and modified commands require review. Legacy unfinished Bash theme publication journals are refused on the native path; Windows and WSL installations must remain separate. Explicit wallpaper effects have a recorded attempt and result, but changing an external application's desktop state is not filesystem rollback. See [native PowerShell](powershell.md) for current limits.
+
+Anodize promotion stages a complete destination and removes the source only as a
+second operation in the same retained transaction. Copy mode keeps the source and
+requires a distinct unused ID. Both roots are collision-checked; source/destination
+and authoring-input digests bind review to apply. Receipt drift and unsafe trees
+are refused. Interactive selection and mode generation use disposable storage,
+never approve an operation, and never publish themes or invoke hooks. Source image
+copying preserves the original image.

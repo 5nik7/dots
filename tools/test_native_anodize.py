@@ -34,7 +34,7 @@ class NativeAnodize(unittest.TestCase):
         self.command('anodize','create','native-fixture','--color','#725ac1','--dry-run','--json')
         self.assertFalse(list(self.home.iterdir()))
         self.create()
-        self.assertTrue((self.repo / 'themes/native-fixture/anodize.json').is_file())
+        self.assertTrue((self.home / 'config/dots/themes/native-fixture/anodize.json').is_file())
         result = self.command('anodize','export','native-fixture','--format','colors')
         self.assertIn('background', result.stdout)
         self.assertNotIn('\x1b', result.stdout)

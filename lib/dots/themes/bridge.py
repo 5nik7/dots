@@ -13,6 +13,9 @@ from theme_cli import publication, connectors, backgrounds, validate_pointers
 def main():
     action, identity, *args = sys.argv[1:]
     themes = Themes()
+    if action == 'list':
+        print('\n'.join(themes.ids()))
+        return
     palette = themes.load(identity)
     if action == 'resolve': print(json.dumps(palette))
     elif action == 'render': themes.render(identity, Path(args[0]))

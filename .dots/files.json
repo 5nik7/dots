@@ -412,11 +412,8 @@
         "wsl",
         "windows"
       ],
-      "target": "${CONFIG}/starship.toml",
-      "strategy": "link",
-      "targets": {
-        "windows": "${HOME}/.config/starship.toml"
-      }
+      "target": "${HOME}/.config/starship.toml",
+      "strategy": "link"
     },
     {
       "id": "stylua",

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+# dots:option=--interactive||flag|Guide inputs and preview choices
 # dots:summary=Inspect an authored theme
-# dots:usage=ID [OPTIONS]
+# dots:usage=[ID] [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:argument=1|theme-id|Theme identifier
 # dots:option=--logo||choice:text,auto,kitty,chafa|Logo renderer (default: text)

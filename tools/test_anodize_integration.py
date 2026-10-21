@@ -83,7 +83,7 @@ class Integration(unittest.TestCase):
             self.assertEqual(source, (REPO/'lib/dots/anodize/completion'/shell).read_text())
             self.assertEqual(source, self.run_dots('anodize', 'completion', shell).stdout)
             self.assertNotIn('\x1b', source)
-        self.cli('completion', 'powershell', code=2)
+        self.assertIn('completion/powershell', self.cli('completion', 'powershell'))
         self.assertFalse((self.home/'engine-ran').exists())
         Path(self.env['ANODIZE_ENGINE']).unlink()
         self.assertIn('candidate\tnormal\t', self.candidates('extract', 'image', '--mode', 'nor'))
@@ -101,6 +101,9 @@ class Integration(unittest.TestCase):
             (('--color=a',), '--color=always'),
             (('--color=always', '--icons=never', 'cr'), 'create'),
             (('completion', 'z'), 'zsh'),
+            (('--interactive', 'cr'), 'create'),
+            (('create', 'new', '--b'), '--builtin'),
+            (('promote', '--c'), '--copy'),
             (('create', 'new', '--from', 'du'), 'dusk'),
             (('show', '--json', 'du'), 'dusk'),
             (('preview', 'dusk', '--app=k'), '--app=kitty'),
@@ -127,6 +130,7 @@ class Integration(unittest.TestCase):
         for shell in ('bash','zsh','fish'):
             for words, value in [
                 (('anodize','--logo=a'), '--logo=auto'),
+                (('anodize','--interactive','cr'), 'create'),
                 (('anodize','--logo','auto','pr'), 'preview'),
                 (('anodize','--logo=auto','preview','dusk','--app=k'), '--app=kitty'),
                 (('anodize','preview','dusk','--logo-layout','h'), 'horizontal'),

@@ -361,7 +361,7 @@ operations and source/target/catalog guards in memory until Apply.
 
 ## Anodize authoring boundary
 
-`lib/dots/anodize/logo.py` owns bounded text, Kitty and optional Chafa branding for Python human views. The core-owned `logo.bash` adapter renders static Dots help from the same bundled UTF-8 braille assets without executing an extension; it invokes the Python logo-only helper for optional graphics. The catalog loads this adapter only for Anodize help, and completion normalizes Anodize logo prefixes before static route lookup. These presentation paths do not call the engine, authoring operations or transaction store.
+`lib/dots/anodize/logo.py` owns bounded text, Kitty and optional Chafa branding for Python human views. Its text-banner selector supplies the same usage artwork to routine views and Anodize interactive/completion previews; preview workers provide pane width and explicit display capabilities, with a fixed 16-row artwork budget for scrollable output. The core-owned `logo.bash` adapter renders static Dots help from the same bundled UTF-8 braille assets without executing an extension; it invokes the Python logo-only helper for optional graphics. The catalog loads this adapter only for Anodize help, and completion normalizes Anodize logo prefixes before static route lookup. These presentation paths do not call the engine, authoring operations or transaction store.
 
 The owner-authorized [Anodize slice](anodize.md) is an exception to the general Go pause. `anodize/` is an independent pure Go color engine; `lib/dots/anodize/` owns Python authoring and the private Bash publication bridge. It reuses `files/transactions.py` and existing theme rendering/publication. `bin/anodize` and static `dots-anodize-*` routes provide CLI access. No engine calls occur during shell startup. See [decision 0011](decisions/0011-anodize-authoring.md).
 
@@ -462,3 +462,11 @@ transient snapshots carry opaque selection tokens and metadata, not file content
 `bin/dots.ps1` owns dependency-free native help/init and transports literal argument arrays through `lib/dots/native.py` to `lib/dots/cli.py`. Shared built-in headers live in `lib/dots/metadata/`; `command_metadata.py` reads extension headers without executing them. The native CLI reuses the existing file controllers, `Store`, presentation/resources, progress and interaction adapters. `files/app_paths.py` owns Windows app destinations. `git/cli.py` invokes Git with explicit argument vectors. `themes/palette_native.py`, `theme_cli.py`, `setup.py` and `bridge.py` supply native theme data, publication, inactive setup preparation and Anodize integration. Native generated commands have verified manifests; filesystem replacement stays in the existing transaction engine.
 
 Bash's established Git/theme frontends remain during native acceptance. Do not maintain competing catalogs, transaction implementations or shell-specific flag semantics. The [PowerShell reference](powershell.md) records actual capabilities and pending native checks; the [parity plan](../plans/powershell-parity.md) owns rollout status. General Go migration stays paused.
+
+Anodize authoring resolves both user and repository theme roots; explicit built-in
+saves and journaled promotion remain in its Python controller and the shared Store.
+`anodize/interactive.py` owns transient drafts and token-based preview snapshots.
+`anodize/completion_preview.py` serves explicitly displayed Zsh FZF-tab previews,
+with cache lifetime owned by the FZF invocation. Ordinary static completion remains
+engine-free. Both Dots and Anodize call `themes/presentation.py` for palette syntax
+previews; unsaved drafts pass resolved colors without publishing a theme.

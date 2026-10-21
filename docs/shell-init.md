@@ -57,6 +57,10 @@ After moving the checkout, update links that still name its old location. No con
 
 ## Environment and execution
 
+Personal startup also retires recognized old Dots `STARSHIP_CONFIG` values; it
+leaves custom overrides intact. Starship uses its default home-relative config
+link. See [Starship configuration](shell-environment.md#starship-configuration).
+
 Each native loader establishes the same checkout-derived environment:
 
 | Variable | Derived value |

@@ -5,6 +5,7 @@ DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../themes" && pwd)
 source "$DT_LIB/core.bash"
 action=$1
 shift
+if [[ $action == list ]]; then dt_theme_ids | LC_ALL=C sort -u; exit; fi
 dt_load "$1"
 case $action in
   resolve) dt_json ;;

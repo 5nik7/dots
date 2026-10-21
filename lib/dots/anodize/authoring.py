@@ -1,5 +1,6 @@
 """Data-only imports and journaled Anodize source storage."""
 import base64
+import copy
 import hashlib
 import json
 import os
@@ -90,6 +91,8 @@ class Author:
         self.code = Path(__file__).resolve().parents[3]
         self.root = Path(os.environ.get('DOTS') or self.code).resolve()
         self.themes = self.root / 'themes'
+        from file_platform import config_root
+        self.user_themes = config_root() / 'dots/themes'
         self.engine = Path(os.environ.get('ANODIZE_ENGINE') or self.code / ('anodize/.build/anodize-engine.exe' if os.name == 'nt' else 'anodize/.build/anodize-engine'))
         self.bridge = self.code / 'lib/dots/anodize/themes.bash'
 
@@ -140,14 +143,35 @@ class Author:
             kwargs['color'] = seed
         return self.call('generate', **kwargs)['colors']
 
-    def target(self, identity):
+    def target(self, identity, builtin=None):
         if not ID.fullmatch(identity):
             raise ValueError('invalid theme ID')
-        path = self.themes / identity
+        if builtin is None:
+            matches = [root / identity for root in (self.user_themes, self.themes) if exists(root / identity)]
+            if len(matches) > 1:
+                raise ValueError('duplicate bundled and user theme: ' + identity)
+            path = matches[0] if matches else self.user_themes / identity
+        else:
+            path = (self.themes if builtin else self.user_themes) / identity
         parents_safe(path)
         if path.is_symlink():
             raise ValueError('theme directory must not be a symlink')
         return path
+
+    def authored(self, user_only=False):
+        roots = (self.user_themes,) if user_only else (self.user_themes, self.themes)
+        return sorted({p.parent.name for root in roots for p in root.glob('*/anodize.json')})
+
+    def identities(self):
+        raw, _ = self.theme_bridge('list', 'preview')
+        return raw.decode().splitlines()
+
+    def unused(self, identity):
+        for root in (self.user_themes, self.themes):
+            if exists(root / identity):
+                raise ValueError('theme ID already exists: ' + identity)
+        if identity in self.identities():
+            raise ValueError('theme ID conflicts with a built-in theme: ' + identity)
 
     @tracked('Loading theme')
     def load(self, identity, owned=False):
@@ -245,14 +269,10 @@ class Author:
         return Store(state_root())
 
     @tracked('Preparing theme files')
-    def prepare(self, doc, edit=False, reference=False, wallpaper=None):
-        path = self.target(doc['id'])
-        if exists(path) and not edit:
-            raise ValueError('theme ID already exists')
-        from file_platform import config_root
-        user_themes = config_root() / 'dots/themes'
-        if exists(user_themes / doc['id']):
-            raise ValueError('theme ID conflicts with an installed user theme')
+    def prepare(self, doc, edit=False, reference=False, wallpaper=None, builtin=False):
+        path = self.target(doc['id'], None if edit else builtin)
+        if not edit:
+            self.unused(doc['id'])
         old = self.load(doc['id'], owned=True) if edit else None
         if old:
             self.verify_generated(path, old)
@@ -288,6 +308,8 @@ class Author:
         doc['generated'] = {k: hashlib.sha256(v).hexdigest() for k, v in files.items()}
         files['anodize.json'] = encode(doc)
         guards = {str(path): before}
+        other = (self.user_themes if path.parent == self.themes else self.themes) / doc['id']
+        guards[str(other)] = None
         if external_guard:
             # A copied wallpaper inside the replaced directory is guarded by the tree digest.
             if not Path(external_guard[0]).is_relative_to(path):
@@ -296,6 +318,38 @@ class Author:
         return dict(schema=1, status='unchanged' if unchanged else 'preview', action='edit' if edit else 'create',
                     target=str(path), files=files, guards=guards, document=doc)
 
+    def promote(self, identity, name=None, keep=False):
+        source = self.target(identity)
+        if source.parent != self.user_themes:
+            raise ValueError('promote requires an authored user theme')
+        doc = copy.deepcopy(self.load(identity, owned=True))
+        self.verify_generated(source, doc)
+        for node in source.rglob('*'):
+            if node.is_symlink() or not (node.is_dir() or node.is_file()):
+                raise ValueError('theme contains a symlink or special object')
+        if keep and (not name or name == identity):
+            raise ValueError('--copy requires --name with a different unused theme ID')
+        name = name or identity
+        target = self.target(name, True)
+        if name != identity:
+            self.unused(name)
+        elif exists(target):
+            raise ValueError('theme ID already exists: ' + name)
+        files = {}
+        if name != identity:
+            doc['id'] = name
+            content = regular_bytes(source / 'theme.toml').decode()
+            content = re.sub(r'^name = .*$', 'name = "' + name + '"', content, flags=re.M)
+            files['theme.toml'] = content.encode()
+            doc['generated']['theme.toml'] = hashlib.sha256(files['theme.toml']).hexdigest()
+            files['anodize.json'] = encode(doc)
+        guards = {str(source): digest(source), str(target): None}
+        if name != identity:
+            guards[str(self.user_themes / name)] = None
+        return dict(schema=1, status='preview', action='promote', target=str(target),
+                    source=str(source), keep=keep, files=files, document=doc,
+                    guards=guards)
+
     @tracked('Saving theme files')
     def save(self, plan):
         if plan['status'] == 'unchanged':
@@ -303,8 +357,9 @@ class Author:
         path = Path(plan['target'])
         with tempfile.TemporaryDirectory(prefix='anodize-stage-') as tmp:
             stage = Path(tmp) / 'theme'
-            if exists(path):
-                shutil.copytree(path, stage, symlinks=True)
+            source = Path(plan.get('source', path))
+            if exists(source):
+                shutil.copytree(source, stage, symlinks=True)
             else:
                 stage.mkdir()
             # Refuse links/special objects before touching the staged copy.
@@ -315,4 +370,7 @@ class Author:
                 dest = stage / name
                 dest.parent.mkdir(exist_ok=True, parents=True)
                 dest.write_bytes(content)
-            return self.store().apply('anodize-' + plan['action'], [{'path': str(path), 'source': str(stage)}], plan['guards'], retain=True)
+            operations = [{'path': str(path), 'source': str(stage)}]
+            if plan['action'] == 'promote' and not plan['keep']:
+                operations.append({'path': plan['source'], 'delete': True})
+            return self.store().apply('anodize-' + plan['action'], operations, plan['guards'], retain=True)

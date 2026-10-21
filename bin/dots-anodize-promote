@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# dots:summary=Move or copy a user theme into built-in themes
+# dots:usage=[ID] [OPTIONS]
+# dots:option=--interactive||flag|Guide inputs and preview choices
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--dry-run||flag|Preview without changes
+# dots:option=--yes||flag|Apply the displayed plan
+# dots:option=--copy||flag|Keep user theme; requires a different name
+# dots:option=--name||string|New built-in theme identifier
+# dots:argument=1|anodize-user-theme|Authored user theme identifier
+# dots:option=--logo||choice:text,auto,kitty,chafa|Logo renderer (default: text)
+# dots:option=--logo-layout||choice:auto,horizontal,stacked,icon|Logo layout, bounded to fit
+ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
+exec python3 -B "$ANODIZE_LIB/cli.py" promote "$@"

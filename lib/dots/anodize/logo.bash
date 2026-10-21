@@ -1,7 +1,10 @@
 # Core-owned metadata-help branding; does not execute the Anodize extension.
 # Default text uses Bash builtins, plus optional stty for actual terminal size.
 dots::anodize_logo_error() {
-  printf '/\\ ANODIZE\n' >&2
+  # Valid options avoid reentering the error path; no graphics for diagnostics.
+  local error_layout=${layout:-${ANODIZE_LOGO_LAYOUT:-auto}}
+  case $error_layout in auto|horizontal|stacked|icon) ;; *) error_layout=auto ;; esac
+  dots::anodize_logo --logo=text --logo-layout="$error_layout" >&2
   dots_error "$*"
 }
 

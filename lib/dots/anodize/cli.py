@@ -11,7 +11,7 @@ import tempfile
 import textwrap
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from interaction import gum_confirm
+from interaction import gum_confirm, SelectionEnded
 from progress import configure
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'files'))
@@ -105,11 +105,13 @@ class UsageError(ValueError):
 def parser():
     p = Parser(prog='anodize', description='Author palettes and save recoverable Dots themes.')
     add_options(p)
+    p.add_argument('--interactive', action='store_true', help='Open guided authoring and selection')
     sub = p.add_subparsers(dest='action', parser_class=Parser)
     descriptions = {'modes': 'List extraction modes', 'extract': 'Inspect an image palette', 'create': 'Create an authored theme',
                     'import': 'Import a local blueprint or palette', 'list': 'List authored themes', 'show': 'Inspect an authored theme',
                     'edit': 'Edit an authored theme', 'preview': 'Preview colors or app configuration', 'export': 'Export a theme',
                     'apply': 'Publish through Dots'}
+    descriptions['promote'] = 'Move or copy a user theme into built-in themes'
     descriptions['completion'] = 'Print shell completion source'
     for action, description in descriptions.items():
         q = sub.add_parser(action, help=description, description=description)
@@ -117,11 +119,13 @@ def parser():
         if action == 'completion':
             q.add_argument('shell', choices=['bash', 'zsh', 'fish', 'powershell'], help='Shell adapter to print')
             continue
+        if action not in ('modes', 'list'):
+            q.add_argument('--interactive', action='store_true', default=argparse.SUPPRESS, help='Guide inputs and preview choices')
         q.add_argument('--json', action='store_true', help='Emit versioned JSON')
         if action in ('extract', 'import'):
-            q.add_argument('file', help='Local image file' if action == 'extract' else 'Local blueprint or palette file')
+            q.add_argument('file', nargs='?', help='Local image file' if action == 'extract' else 'Local blueprint or palette file')
         elif action not in ('modes', 'list'):
-            q.add_argument('id', help='Theme identifier')
+            q.add_argument('id', nargs='?', help='Theme identifier')
         if action in ('create', 'extract', 'edit', 'import'):
             q.add_argument('--mode', help='Extraction mode (default: normal)')
             mode = q.add_mutually_exclusive_group()
@@ -131,7 +135,7 @@ def parser():
             q.add_argument('--adjust', action='append', default=[], metavar='NAME=VALUE', help='Set an absolute adjustment; repeat for multiple values')
             q.add_argument('--set', action='append', default=[], metavar='COLOR=HEX', help='Override a named color; repeat for multiple colors')
         if action == 'create':
-            src = q.add_mutually_exclusive_group(required=True)
+            src = q.add_mutually_exclusive_group()
             src.add_argument('--image', metavar='FILE', help='Extract colors from a local image')
             src.add_argument('--color', metavar='HEX', help='Generate from a seed color, such as #725ac1')
             src.add_argument('--from', dest='from_theme', metavar='THEME', help='Derive from an existing Dots theme')
@@ -140,12 +144,17 @@ def parser():
             q.add_argument('--reextract', action='store_true', help='Regenerate from the saved wallpaper or seed')
         if action in ('create', 'import', 'edit'):
             q.add_argument('--reference-wallpaper', action='store_true', help='Keep an absolute external wallpaper reference')
-        if action in ('create', 'import', 'edit', 'export', 'apply'):
+        if action in ('create', 'import', 'edit', 'export', 'apply', 'promote'):
             q.add_argument('--dry-run', action='store_true', help='Preview without changes; takes precedence over --yes')
             q.add_argument('--yes', action='store_true', help='Apply the preview without prompting')
         if action == 'import':
-            q.add_argument('--name', required=True, metavar='ID', help='Save under this new theme identifier')
-            q.add_argument('--format', choices=['anodize', 'aether', 'base16', 'colors'], required=True, help='Input format')
+            q.add_argument('--name', metavar='ID', help='Save under this new theme identifier')
+            q.add_argument('--format', choices=['anodize', 'aether', 'base16', 'colors'], help='Input format')
+        if action in ('create', 'import'):
+            q.add_argument('--builtin', action='store_true', help='Save into the Dots checkout themes directory')
+        if action == 'promote':
+            q.add_argument('--copy', action='store_true', help='Keep the user theme; requires a different --name')
+            q.add_argument('--name', metavar='ID', help='New theme identifier for the repository copy')
         if action == 'export':
             q.add_argument('--format', choices=['anodize', 'aether', 'colors'], default='anodize', help='Output format (default: anodize)')
             q.add_argument('--output', metavar='FILE', help='Save to a new file; otherwise emit raw stdout')
@@ -169,7 +178,7 @@ def present(result, use_json=False):
     if 'items' in result:
         ui.emit('  ' + ui.paint(str(len(result['items'])), '96') + ' authored themes')
         for row in result['items']:
-            ui.emit('  ' + ui.paint(row['id'], '94') + '  ' + ui.paint(row['mode'], '90'))
+            ui.emit('  ' + ui.paint(row['id'], '94') + '  ' + ui.paint(row['mode'] + '  ' + row.get('storage', ''), '90'))
         if not result['items']:
             ui.emit('  No authored themes. Use anodize create to make one.')
     if 'id' in result:
@@ -191,15 +200,14 @@ def present(result, use_json=False):
     if 'contrast' in result:
         ui.detail('Contrast', f'{result["contrast"]:.2f}:1 foreground/background')
     if 'colors' in result:
-        for key, value in sorted(result['colors'].items()):
-            if key.startswith('color') and key[5:].isdigit():
-                continue
-            if ui.color:
-                rgb = ';'.join(str(int(value[i:i+2], 16)) for i in (1, 3, 5))
-                swatch = f'\033[48;2;{rgb}m  \033[0m '
-            else:
-                swatch = ''
-            ui.emit('  ' + swatch + ui.paint(f'{key:<22}', '94') + ' ' + value)
+        if sys.stdout.isatty() or os.environ.get('FZF_PREVIEW_COLUMNS') or ui.color:
+            sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'themes'))
+            from presentation import render_preview
+            render_preview(result.get('id', 'Preview'), result['colors'], result.get('mode', ''))
+        else:
+            for key, value in sorted(result['colors'].items()):
+                if not (key.startswith('color') and key[5:].isdigit()):
+                    ui.emit(f'  {key:<22} {value}')
     for note in result.get('notes', []):
         ui.detail('Note', note)
     if result.get('status') == 'preview':
@@ -232,6 +240,53 @@ def pairs(values, numeric=False):
     return result
 
 
+def build_document(author, args):
+    action = args.action
+    notes = []
+    wallpaper = None
+    if action == 'import':
+        doc, notes = author.imported(args.file, args.name, args.format)
+    elif action == 'edit':
+        doc = copy.deepcopy(author.load(args.id, owned=True))
+        if args.reset_adjustments:
+            doc['adjustments'] = {}
+    elif args.from_theme:
+        original = author.load(args.from_theme)
+        doc = new_document(args.id, author.render(original)['colors'], original['options']['light'], original['options']['mode'])
+        if original.get('wallpaper'):
+            wallpaper = Path(original['wallpaper'])
+            if not wallpaper.is_absolute():
+                wallpaper = author.target(args.from_theme) / wallpaper
+            wallpaper = str(wallpaper)
+    else:
+        opts = dict(mode=args.mode or 'normal', light=args.light)
+        doc = new_document(args.id, author.generate(args.image, args.color, opts), **dict(light=opts['light'], mode=opts['mode']))
+        if args.image:
+            wallpaper = str(Path(args.image).absolute())
+        if args.color:
+            doc['seed'] = args.color
+    changed_generation = bool(args.mode and args.mode != doc['options']['mode']) or (args.light and not doc['options']['light']) or (args.dark and doc['options']['light'])
+    doc['options']['mode'] = args.mode or doc['options']['mode']
+    if args.light or args.dark:
+        doc['options']['light'] = args.light
+    if changed_generation or (action == 'edit' and args.reextract):
+        wall = doc.get('wallpaper')
+        if wall and not Path(wall).is_absolute():
+            wall = str(author.target(doc['id']) / wall)
+        if wallpaper:
+            wall = wallpaper
+        if wall or doc.get('seed'):
+            doc['baseline'] = author.generate(wall, None if wall else doc.get('seed'), doc['options'])
+        elif action == 'edit' and args.reextract:
+            raise ValueError('re-extraction requires a saved wallpaper or seed')
+        else:
+            doc['baseline'] = author.call('variant', document={k: v for k, v in doc.items() if k != 'generated'})['colors']
+    if action != 'import':
+        doc['adjustments'].update(pairs(args.adjust, numeric=True))
+        doc['overrides'].update(pairs(args.set))
+    return doc, notes, wallpaper
+
+
 def main(argv=None):
     p = parser()
     values = list(sys.argv[1:] if argv is None else argv)
@@ -249,76 +304,64 @@ def main(argv=None):
         return
     args = p.parse_args(values)
     if args.action is None:
-        p.print_help()
-        return
+        if not args.interactive:
+            p.print_help()
+            return
+        from interactive import action_menu
+        args = p.parse_args([action_menu(), '--interactive'])
     if args.action == 'completion':
         source = Path(__file__).with_name('completion') / args.shell
         sys.stdout.write(source.read_text())
         return
+    args._provided = {v.split('=', 1)[0] for v in values if v.startswith('--')}
     configure(not getattr(args, 'json', False) and not getattr(args, 'dry_run', False)
               and not (args.action == 'export' and not args.output)
               and not (args.action == 'preview' and args.app))
     author = Author()
+    from interactive import fill_inputs
+    fill_inputs(p, args, author)
     action = args.action
     if action == 'modes':
         present(author.call('modes'), args.json)
         return
     if action == 'list':
         rows = []
-        for path in sorted(author.themes.glob('*/anodize.json')):
-            doc = author.load(path.parent.name, owned=True)
-            rows.append(dict(id=doc['id'], mode='light' if doc['options']['light'] else 'dark'))
+        for identity in author.authored():
+            doc = author.load(identity, owned=True)
+            rows.append(dict(id=doc['id'], mode='light' if doc['options']['light'] else 'dark',
+                             storage='builtin' if author.target(identity).parent == author.themes else 'user'))
         present(dict(schema=1, items=rows), args.json)
         return
     if action == 'extract':
         opts = dict(mode=args.mode or 'normal', light=args.light)
         doc = new_document('preview', author.generate(args.file, options=opts), **dict(light=opts['light'], mode=opts['mode']))
+        if args.interactive and not args.mode:
+            from interactive import select_mode
+            doc = select_mode(author, doc, args.file)
         present(dict(author.render(doc), id='preview'), args.json)
         return
     if action in ('create', 'import', 'edit'):
-        notes = []
-        wallpaper = None
-        if action == 'import':
-            doc, notes = author.imported(args.file, args.name, args.format)
-        elif action == 'edit':
-            doc = copy.deepcopy(author.load(args.id, owned=True))
-            if args.reset_adjustments:
-                doc['adjustments'] = {}
-        elif args.from_theme:
-            original = author.load(args.from_theme)
-            doc = new_document(args.id, author.render(original)['colors'], original['options']['light'], original['options']['mode'])
-            if original.get('wallpaper'):
-                wallpaper = Path(original['wallpaper'])
-                if not wallpaper.is_absolute():
-                    wallpaper = author.target(args.from_theme) / wallpaper
-                wallpaper = str(wallpaper)
-        else:
-            opts = dict(mode=args.mode or 'normal', light=args.light)
-            doc = new_document(args.id, author.generate(args.image, args.color, opts), **dict(light=opts['light'], mode=opts['mode']))
-            if args.image:
-                wallpaper = str(Path(args.image).absolute())
-            if args.color:
-                doc['seed'] = args.color
-        changed_generation = bool(args.mode and args.mode != doc['options']['mode']) or (args.light and not doc['options']['light']) or (args.dark and doc['options']['light'])
-        doc['options']['mode'] = args.mode or doc['options']['mode']
-        if args.light or args.dark:
-            doc['options']['light'] = args.light
-        if changed_generation or (action == 'edit' and args.reextract):
-            wall = doc.get('wallpaper')
-            if wall and not Path(wall).is_absolute():
-                wall = str(author.target(doc['id']) / wall)
-            if wallpaper:
-                wall = wallpaper
-            if wall or doc.get('seed'):
-                doc['baseline'] = author.generate(wall, None if wall else doc.get('seed'), doc['options'])
-            elif action == 'edit' and args.reextract:
-                raise ValueError('re-extraction requires a saved wallpaper or seed')
-            else:
-                doc['baseline'] = author.call('variant', document={k: v for k, v in doc.items() if k != 'generated'})['colors']
-        if action != 'import':
-            doc['adjustments'].update(pairs(args.adjust, numeric=True))
-            doc['overrides'].update(pairs(args.set))
-        plan = author.prepare(doc, edit=action == 'edit', reference=args.reference_wallpaper, wallpaper=wallpaper)
+        inputs = []
+        if action == 'edit': inputs.append(author.target(args.id))
+        if action == 'import': inputs.append(Path(args.file).absolute())
+        if action == 'create':
+            if args.image: inputs.append(Path(args.image).absolute())
+            if args.from_theme: inputs.append(author.target(args.from_theme))
+        input_guards = {str(path): digest(path) for path in inputs}
+        doc, notes, wallpaper = build_document(author, args)
+        wall = wallpaper or doc.get('wallpaper')
+        if wall:
+            path = Path(wall)
+            if not path.is_absolute(): path = author.target(doc['id']) / path
+            input_guards.setdefault(str(path), digest(path))
+        if args.interactive:
+            from interactive import edit_draft
+            doc = edit_draft(author, args, doc, wallpaper)
+        plan = author.prepare(doc, edit=action == 'edit', reference=args.reference_wallpaper, wallpaper=wallpaper, builtin=getattr(args, 'builtin', False))
+        for path, before in input_guards.items():
+            if digest(path) != before:
+                raise ValueError('source changed during preview: ' + path)
+        plan['guards'].update(input_guards)
         view = dict(schema=1, id=doc['id'], target=plan['target'], status=plan['status'], notes=notes,
                     files=sorted(plan['files']))
         if doc.get('wallpaper'):
@@ -328,6 +371,14 @@ def main(argv=None):
         if plan['status'] == 'unchanged':
             present(view, args.json)
         elif confirm(args, view):
+            result = author.save(plan)
+            present(dict(view, status=result['status'], transaction=result.get('id')), args.json)
+        return
+    if action == 'promote':
+        plan = author.promote(args.id, args.name, args.copy)
+        view = dict(schema=1, id=plan['document']['id'], status='preview', target=plan['target'],
+                    notes=[('Copy' if args.copy else 'Move') + ' from ' + plan['source']])
+        if confirm(args, view):
             result = author.save(plan)
             present(dict(view, status=result['status'], transaction=result.get('id')), args.json)
         return
@@ -406,7 +457,9 @@ def main(argv=None):
 if __name__ == '__main__':
     try:
         main()
-    except KeyboardInterrupt:
+    except SelectionEnded as exc:
+        sys.exit(exc.status or 130)
+    except (KeyboardInterrupt, EOFError):
         ui = Presentation(sys.stderr)
         render_logo(ui)
         ui.emit(ui.paint('anodize: interrupted.', '93'))

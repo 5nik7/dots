@@ -67,6 +67,9 @@ def complete(root, directories, words):
         index = 1
         while index < len(previous):
             flag = previous[index].split('=')[0]
+            if flag == '--interactive':
+                index += 1
+                continue
             if flag not in ('--logo', '--logo-layout'): break
             count = 1 if '=' in previous[index] else 2
             if index + count > len(previous): break
@@ -103,9 +106,11 @@ def complete(root, directories, words):
                     key = line.split('\t')[0]
                     if key != '-': add(key)
             for key in ('DOTS_CONFIG_FILE', 'DOTS_STATE_DIR', 'DOTS_THEME_ID'): add(key)
-        elif kind == 'anodize-theme':
+        elif kind in ('anodize-theme', 'anodize-user-theme'):
+            from file_platform import config_root
             base = Path(os.environ.get('DOTHEMES') or os.environ.get('THEMES') or root / 'themes')
-            for item in sorted(base.glob('*/anodize.json')):
+            if kind == 'anodize-user-theme': base = config_root() / 'dots/themes'
+            for item in sorted(set([*base.glob('*/anodize.json'), *(config_root() / 'dots/themes').glob('*/anodize.json')])):
                 if not item.is_symlink(): add(item.parent.name)
         elif kind == 'theme-plugin':
             sys.path.insert(0, str(LIB / 'themes'))

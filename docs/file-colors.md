@@ -45,13 +45,14 @@ background and attributes; `unset` means no field is specified, while `reset`
 explicitly requests the terminal default. Explicit false attributes remain visible.
 Empty groups are labeled. Narrow terminals stack fields and wrap long names.
 
-`dots theme show ID` uses the same complete overview in a terminal or with forced
-human presentation. It reads configured sources; `theme colors` retains its
+`dots theme show ID` shows a syntax sample followed by the same complete overview
+in a terminal or with forced human presentation. Its preview uses the exact theme
+foreground/background; the colors-only overview keeps its existing layout. It reads configured sources; `theme colors` retains its
 published-snapshot default. Both views label their source. For a configured overview
 when redirecting output, use `theme colors --theme ID` or `theme colors --configured`.
 Redirected, unforced `show` retains its existing heading and
 semantic-color TSV rows. Family previews and `show --native` share the table
-layout but display only native palette values.
+layout and syntax sample but list only native palette values.
 
 `type`, `mime` and `extension` list full styles as tables. `--style` and `match`
 show labeled details and available rule sources. `parse` lists filesystem and

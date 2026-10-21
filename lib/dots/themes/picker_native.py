@@ -56,14 +56,8 @@ def main(args):
         ui.detail('Unavailable', row['error'])
     elif 'palette' in row:
         palette = row['palette']
-        ui.heading(row['id'])
-        ui.detail('Mode', palette['mode'])
-        colors = palette['palette'] if mode == 0 else palette['roles']
-        # The shared renderer's CLI keeps this private preview independent of
-        # its Python function signature and uses inert JSON on stdin.
-        result = subprocess.run([sys.executable, '-B', str(LIB / 'presentation.py'), '--theme', row['id'], '--native-table'],
-                                input=json.dumps(dict(title='Palette' if mode == 0 else 'Roles', colors=colors)).encode())
-        if result.returncode: raise ValueError('palette preview failed')
+        from presentation import render_preview
+        render_preview(row['id'], palette['colors'], palette['mode'], palette=mode == 0)
     else:
         image = Path(row['path'])
         ui.resource_detail('Background', image)

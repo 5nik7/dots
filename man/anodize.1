@@ -17,6 +17,14 @@ Mutating commands prompt on interactive input. Without a terminal or with
 \fB\-\-json\fR, omission of \fB\-\-yes\fR returns a preview.
 \fB\-\-dry\-run\fR always takes precedence over \fB\-\-yes\fR.
 Read-only operations create no persistent state.
+New themes use the user configuration theme directory; --builtin selects
+repository themes.
+promote moves a user theme into repository themes; --copy requires --name with
+a new ID.
+--interactive opens guided selection and draft editing. Missing terminal
+inputs use selectors.
+FZF previews show theme backgrounds and syntax samples; mode choices use
+temporary generated palettes.
 .SH PRESENTATION OPTIONS
 These options precede COMMAND and use the equals form.
 .TP
@@ -39,15 +47,15 @@ Disabled color retains monochrome braille. Disabled icons, dumb terminals and
 non-Unicode output skip Chafa.
 .TP
 .B \-\-logo\-layout=auto|horizontal|stacked|icon
-Choose a layout, always bounded to the destination terminal. Also accepted
-after COMMAND.
-Text help tries horizontal, stacked, then the largest fitting numbered logo
-and the base symbol.
+Choose a layout fitted to the destination width. Also accepted after COMMAND.
+All text banners use the usage artwork: horizontal, stacked, then the largest
+fitting numbered logo and the base symbol.
 Explicit horizontal or stacked layouts try that asset before icon fallbacks.
-Help uses at most half the terminal height and 16 rows. Routine text uses the
-six-row base symbol
-within one-third of terminal height, otherwise a tiny ASCII mark. Data output
-is unchanged.
+Ordinary text banners use at most half the available height, capped at 16
+rows.
+Interactive and completion previews fit pane width with a 16-row artwork
+budget and preserve artwork spacing. Short panes scroll vertically.
+Preview capture pipes do not force ASCII. Data output is unchanged.
 .TP
 .B \-h, \-\-help
 Show help without needing the engine.
@@ -80,11 +88,14 @@ Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
 .B "FILE"
-Local image file (required).
+Local image file.
 .TP
 .B "\-\-mode MODE"
 Extraction mode (default: normal).
@@ -107,11 +118,14 @@ Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
 .B "ID"
-Theme identifier (required).
+Theme identifier.
 .TP
 .B "\-\-mode MODE"
 Extraction mode (default: normal).
@@ -145,6 +159,9 @@ Preview without changes; takes precedence over \-\-yes.
 .TP
 .B "\-\-yes"
 Apply the preview without prompting.
+.TP
+.B "\-\-builtin"
+Save into the Dots checkout themes directory.
 .SS "anodize import FILE [OPTIONS]"
 Import a local blueprint or palette.
 .TP
@@ -158,11 +175,14 @@ Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
 .B "FILE"
-Local blueprint or palette file (required).
+Local blueprint or palette file.
 .TP
 .B "\-\-mode MODE"
 Extraction mode (default: normal).
@@ -183,10 +203,13 @@ Preview without changes; takes precedence over \-\-yes.
 Apply the preview without prompting.
 .TP
 .B "\-\-name ID"
-Save under this new theme identifier (required).
+Save under this new theme identifier.
 .TP
 .B "\-\-format FORMAT"
-Input format (required): anodize, aether, base16, colors.
+Input format: anodize, aether, base16, colors.
+.TP
+.B "\-\-builtin"
+Save into the Dots checkout themes directory.
 .SS "anodize list [OPTIONS]"
 List authored themes.
 .TP
@@ -215,11 +238,14 @@ Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
 .B "ID"
-Theme identifier (required).
+Theme identifier.
 .SS "anodize edit ID [OPTIONS]"
 Edit an authored theme.
 .TP
@@ -233,11 +259,14 @@ Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
 .B "ID"
-Theme identifier (required).
+Theme identifier.
 .TP
 .B "\-\-mode MODE"
 Extraction mode (default: normal).
@@ -281,11 +310,14 @@ Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
 .B "ID"
-Theme identifier (required).
+Theme identifier.
 .TP
 .B "\-\-app APP"
 Emit raw app configuration instead of colors: kitty, tmux, btop, termux, bat,
@@ -303,11 +335,14 @@ Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
 .B "ID"
-Theme identifier (required).
+Theme identifier.
 .TP
 .B "\-\-dry\-run"
 Preview without changes; takes precedence over \-\-yes.
@@ -333,11 +368,14 @@ Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
 .B "\-\-json"
 Emit versioned JSON.
 .TP
 .B "ID"
-Theme identifier (required).
+Theme identifier.
 .TP
 .B "\-\-dry\-run"
 Preview without changes; takes precedence over \-\-yes.
@@ -347,6 +385,39 @@ Apply the preview without prompting.
 .TP
 .B "\-\-background"
 Also activate the wallpaper after publishing the theme.
+.SS "anodize promote ID [OPTIONS]"
+Move or copy a user theme into built\-in themes.
+.TP
+.B "\-h, \-\-help"
+show this help message and exit.
+.TP
+.B "\-\-logo LOGO"
+Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
+.TP
+.B "\-\-logo\-layout LOGO_LAYOUT"
+Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
+icon.
+.TP
+.B "\-\-interactive"
+Guide inputs and preview choices.
+.TP
+.B "\-\-json"
+Emit versioned JSON.
+.TP
+.B "ID"
+Theme identifier.
+.TP
+.B "\-\-dry\-run"
+Preview without changes; takes precedence over \-\-yes.
+.TP
+.B "\-\-yes"
+Apply the preview without prompting.
+.TP
+.B "\-\-copy"
+Keep the user theme; requires a different \-\-name.
+.TP
+.B "\-\-name ID"
+New theme identifier for the repository copy.
 .SS "anodize completion SHELL [OPTIONS]"
 Print shell completion source.
 .TP
@@ -361,7 +432,7 @@ Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
 icon.
 .TP
 .B "SHELL"
-Shell adapter to print (required): bash, zsh, fish.
+Shell adapter to print (required): bash, zsh, fish, powershell.
 .SH INPUTS AND EDITING
 Create requires exactly one of \fB\-\-image FILE\fR, \fB\-\-color HEX\fR,
 or \fB\-\-from THEME\fR. Quote hex values, for example \(aq#725ac1\(aq.
@@ -392,7 +463,8 @@ use a recoverable transaction and must not already exist. Dry-run export
 requires an output file. Raw exports and app previews never contain ANSI.
 JSON cannot be combined with app preview or colors-format export.
 .SH SAFETY AND RECOVERY
-Theme sources live under DOTS/themes/ID. Edits refuse changed generated
+Theme sources default to the platform user config root under dots/themes/ID.
+Explicit --builtin saves use DOTS/themes/ID. Edits refuse changed generated
 files and unsafe filesystem objects. Wallpaper images are copied by default;
 reference-wallpaper keeps an external absolute dependency. Exports are not
 self-contained wallpaper archives.
@@ -405,7 +477,8 @@ Apply uses the existing Dots publisher and app connectors. The optional
 background flag preflights session support and wallpaper availability.
 Wallpaper activation runs after publication; if it fails, the app theme
 remains published and the command reports failure. GIF wallpapers cannot
-be activated. Native Windows authoring, Android APK and TUI are deferred.
+be activated. Native Windows authoring is implemented with native acceptance
+pending; Android APK and TUI remain deferred.
 .SH SHELL COMPLETION
 Bash, Zsh and Fish adapters are emitted as plain shell source, without the
 Go engine. Loading them performs no discovery. Tab completion reads static

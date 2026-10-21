@@ -20,6 +20,9 @@ def complete(argv, parser):
     prefixes = {'--color': ('auto', 'always', 'never'), '--icons': ('auto', 'always', 'never'),
                 '--logo': MODES, '--logo-layout': LAYOUTS}
     while len(words) > 1:
+        if words[0] == '--interactive':
+            words.pop(0)
+            continue
         flag, equals, value = words[0].partition('=')
         if flag not in prefixes:
             break
@@ -38,6 +41,7 @@ def complete(argv, parser):
     current = words[-1]
     if len(words) == 1:
         candidates = [('--help', 'Show help'), ('-h', 'Show help'),
+                      ('--interactive', 'Open guided authoring and selection'),
                       ('--color=', 'Color mode (DOTS_COLOR)'),
                       ('--icons=', 'Icon mode (DOTS_ICONS)'),
                       ('--logo=', 'Logo renderer (ANODIZE_LOGO)'),

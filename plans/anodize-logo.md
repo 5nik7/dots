@@ -1,6 +1,8 @@
 # Anodize terminal branding
 
-**Status: Implemented, 2026-10-13.**
+**Status: Implemented; unified usage-artwork follow-up on 2026-10-21.**
+
+The follow-up at the end of this plan supersedes the historical compact-text policy below.
 
 ## Text asset update — 2026-10-16
 
@@ -48,3 +50,74 @@ Native Termux verification:
 Alternating unchanged-HEAD/current help measurements in disposable roots (12 samples each, three warmups) were 358.42/318.27 ms for standalone help and 20.77/30.79 ms for Dots static help. Treat the standalone difference as noise, not a speed claim. Static branding adds text rendering, option validation and two metadata options, costing about 10 ms in this run without launching an image renderer. No cache was added. The shared dispatch benchmark (five samples) retained repository-size-independent direct lookup: 23.40/26.55/24.78 ms at 0/100/1000 fixture extensions. Linux/WSL/native Windows and actual Kitty graphics were not newly verified.
 
 Source and assets are left uncommitted; no live theme was applied and no tool was installed.
+
+
+## Unified usage artwork — 2026-10-21
+
+Owner-approved follow-up: all text banners use usage’s responsive asset selection
+and half-height budget capped at 16 rows. Ordinary results/diagnostics no longer
+force the base symbol; interactive and completion previews no longer draw a
+separate ASCII triangle. Preview workers use pane geometry, preserve panel colors,
+and carry layout/icon preferences across captured output. Static Bash error help
+uses the same renderer with validated text options. Supplied assets, graphics
+policies and machine-output boundaries remain unchanged.
+
+Acceptance: exact artwork parity across help/results/errors/drafts and previews,
+40/80/120-column native PTYs, narrow/short panes, layout/icon/encoding fallbacks,
+no wrapping of artwork, no renderer process for preview text, static-help
+nonexecution and unchanged data bytes. Native PowerShell uses shared Python;
+Windows runtime acceptance remains pending on this Termux host. Preserve all
+existing work, with no theme activation, installation or Git publication.
+
+Verification on native Termux:
+
+- `python3 -B tools/verify_anodize.py check`: Go tests/vet passed; 18 authoring/CLI
+  checks passed (257.015s), 11 interactive checks completed with one FZF-tab skip
+  (63.367s), and all 15 logo policy/PTY checks passed (51.905s).
+- The interactive suite verifies supplied braille artwork in native FZF panes at
+  40/80/120 columns, plus cancellation without publication. The verifier's isolated
+  home cannot discover the host FZF-tab plugin. A separate owned-home native
+  Zsh/FZF-tab run, using a copied local plugin and the existing private engine,
+  passed all five theme/mode preview scenarios (42.565s).
+- All five Anodize integration checks passed (70.827s), including completion and
+  generated-manual freshness; all 24 Bash dispatcher checks passed (32.069s).
+- Exact usage/result/error artwork parity includes valid layout options preceding
+  an invalid option. Captured preview tests cover pane geometry, theme text,
+  layout/icon controls, malformed height fallback and absence of graphics calls.
+- Bash syntax, ShellCheck for the changed adapter, Python compilation without
+  bytecode, manual lint, generated-artifact freshness, changed Markdown link
+  targets and `git diff --check` passed. Supplied artwork has no changes.
+- Native Windows/PowerShell and actual Kitty graphics remain unverified. Windows
+  uses the shared Python text selector; graphics-backend policies are unchanged. No live theme was
+  applied, no installation performed and no commit/push made.
+
+## Short FZF preview follow-up — 2026-10-21
+
+The prior half-pane-height budget still selected the ASCII triangle below 12
+preview rows. Owner-approved correction: interactive and FZF-tab previews select
+the supplied usage artwork by available width, with the existing 16-row maximum
+artwork budget independent of pane height. Short previews scroll vertically.
+Ordinary usage sizing, explicit layout/icon preferences, capability fallbacks,
+artwork spacing, theme colors and data interfaces retain their existing behavior.
+
+Acceptance includes exact artwork at 40/80/120 columns and preview heights below
+12 rows, native Zsh/FZF-tab mode and theme completion with configured FZF defaults,
+preview scrolling and cancellation without publication. Shared Python covers
+POSIX and PowerShell preview consumers; native Windows visual acceptance remains
+pending. No installation, activation or Git publication is required.
+
+Implemented and verified on native Termux:
+
+- All 15 engine-free logo checks passed (25.336s), including exact supplied
+  artwork at preview heights 1/6/8/10/11/12/24 and unchanged ordinary usage sizing.
+- Native Zsh/FZF-tab passed seven mode/theme completion scenarios (42.126s)
+  at 40/80/120 columns in 24-row terminals. Tests source the configured FZF
+  defaults, reveal the initially hidden preview with Ctrl-X, check supplied
+  artwork rows, scroll with Shift-Down and cancel without saving or activation.
+- The other ten interactive checks passed (39.633s), including native FZF
+  cancellation. These tests reuse the existing private engine in isolated roots;
+  no engine source changed and no new Go build was required.
+- All five integration checks passed (46.701s). Generated-manual freshness,
+  mandoc lint, Python syntax, all 235 relative links in the affected Markdown
+  files and git diff --check passed. Supplied assets and generated completion
+  adapters have no changes. Native Windows visual verification remains pending.

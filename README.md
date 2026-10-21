@@ -198,7 +198,9 @@ The [presentation contract](docs/presentation.md) makes this cohesive style a re
 
 ## Anodize palette authoring
 
-Anodize help and human results always include its logo, using your bundled braille text artwork, an ASCII fallback, and layouts that fit the terminal. Try `dots anodize --logo=auto --help` for detected graphics or `--logo=chafa` for optional Chafa character art; set `ANODIZE_LOGO` to keep a preference. JSON, raw configuration, exports and completions stay undecorated. See [logo controls and fallbacks](docs/anodize.md#terminal-logo).
+Anodize help, human results, diagnostics, interactive screens and completion previews use the same responsive logo selection from your bundled braille artwork. Layouts fit the terminal or preview width; short FZF panes keep the supplied artwork and scroll vertically. Plain terminals retain the ASCII fallback. Try `dots anodize --logo=auto --help` for detected graphics or `--logo=chafa` for optional Chafa character art; set `ANODIZE_LOGO` to keep a preference. JSON, raw configuration, exports and completions stay undecorated. See [logo controls and fallbacks](docs/anodize.md#terminal-logo).
+
+New Anodize themes save to `~/.config/dots/themes/ID/` by default, including a copy of source images under `backgrounds/`. Use `--builtin` on create/import to save into repository themes, or `anodize promote ID` to move a user theme there. `anodize --interactive` offers guided FZF selection and editing; theme and mode previews include syntax samples on the candidate background. See [interactive authoring](docs/anodize.md#interactive-authoring-and-previews).
 
 Anodize provides a reusable Go color engine and CLI for creating themes from images, seed colors, existing themes and local imports. Build the private engine explicitly, then preview a new theme:
 
@@ -560,5 +562,10 @@ Repository-local Codex workflows live in [.codex](.codex/README.md).
 Human CLI views share Git-style semantic colors, readable plain output and delayed progress. File/directory fields use published Dots type, extension and MIME styles with optional icons; theme previews and Anodize branding retain their custom appearance. Use the existing `--color=never`, `--icons=never` and `DOTS_PROGRESS=never` controls independently. See [presentation](docs/presentation.md#filesystem-resources).
 
 The [Git configuration](config/git/README.md) follows shared Dots colors in native Git and Delta through a generated theme include. Git's Delta pager/filter also uses the generated Dots syntax cache without replacing the normal bat cache. Managed Git installation/linking selects the ignored platform overlay automatically; the consolidated files live in the parent Dots checkout.
+
+Starship uses `~/.config/starship.toml`, linked to the repository config. Personal
+shell startup no longer exports `STARSHIP_CONFIG`; it clears recognized legacy
+Dots values while preserving explicit custom overrides. Blastoff 0.1.12 safely
+updates the file behind that link. See [the configuration contract](docs/shell-environment.md#starship-configuration).
 
 The saved [Blastoff `dots` theme](config/blastoff/themes/dots.toml) uses shared color names and Git roles while retaining the personal prompt layout. It includes styles for supported inactive Starship modules. With `dots theme plugins enable starship`, publication/refresh updates only `[palettes.dots]` in the active Starship config and saved `dots` theme. Other selected palettes are skipped; module edits and extra palette names remain intact. See [Starship integration](docs/theme-plugins.md#starship-and-blastoff-starship).

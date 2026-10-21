@@ -22,11 +22,15 @@ dots_value_candidates() {
       output=$(python3 -B "$DOTS_LIB_DIR/themes/plugins.py" __names 2>/dev/null) || return 0
       while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
-    anodize-theme)
+    anodize-theme|anodize-user-theme)
       local path name root=${DOTHEMES:-${THEMES:-$DOTS/themes}}
-      for path in "$root/"*/anodize.json; do
-        [[ -f $path && ! -L $path ]] || continue
-        name=${path%/anodize.json}; dots_candidate "$lead${name##*/}"
+      local -a authored_roots=("${XDG_CONFIG_HOME:-$HOME/.config}/dots/themes")
+      [[ $type != anodize-theme || $root == "${authored_roots[0]}" ]] || authored_roots+=("$root")
+      for root in "${authored_roots[@]}"; do
+        for path in "$root/"*/anodize.json; do
+          [[ -f $path && ! -L $path ]] || continue
+          name=${path%/anodize.json}; dots_candidate "$lead${name##*/}"
+        done
       done
       ;;
     theme-id)
@@ -175,6 +179,11 @@ dots_complete() {
       while (( prefix_end < cursor )); do
         token=${words[prefix_end]}
         prefix_flag=${token%%=*}
+        if [[ $prefix_flag == --interactive ]]; then
+          words=("${words[@]:0:prefix_end}" "${words[@]:prefix_end+1}")
+          (( --cursor ))
+          continue
+        fi
         case $prefix_flag in --logo|--logo-layout) ;; *) break ;; esac
         if [[ $token == *=* ]]; then prefix_value=${token#*=}; prefix_count=1
         else

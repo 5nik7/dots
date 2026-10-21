@@ -6,6 +6,17 @@ variables, Dots completions and prompt refresh. Personal aliases, prompt choice,
 plugins, editor settings and third-party tools remain under `shells/`. Repository
 startup files load both layers; an explicit hook in another rc loads only Dots.
 
+## Starship configuration
+
+Dots personal startup no longer sets `STARSHIP_CONFIG`. Starship discovers
+`~/.config/starship.toml` (including on Windows); the managed resource links that
+home-relative path to `config/starship/starship.toml`, independently of
+`XDG_CONFIG_HOME`. On startup/reload, native adapters remove only recognized old
+Dots-generated overrides. Deliberate custom values remain supported. Windots
+Clink follows the same rule. Existing links and prompt contents are retained.
+Blastoff 0.1.12 preserves this active-file link during normal writes and tracks
+the resolved repository file; explicit `--replace-link` still converts the link.
+
 ## Settings
 
 Edit `${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env`. Native Windows PowerShell

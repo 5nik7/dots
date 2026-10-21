@@ -49,7 +49,7 @@ class Anodize(unittest.TestCase):
         return json.loads(self.cli('create', name, '--color', '#725ac1', '--yes', '--json', *args).stdout)
 
     def recipe(self, name='example'):
-        return json.loads((self.repo / 'themes' / name / 'anodize.json').read_text())
+        return json.loads((self.home / 'config/dots/themes' / name / 'anodize.json').read_text())
 
     def test_local_plugins_share_publication_and_keep_authoring_inert(self):
         hooks = self.home / 'config/dots/hooks/theme-set.d'
@@ -95,11 +95,11 @@ class Anodize(unittest.TestCase):
                 out = self.terminal(code=code)
                 self.assertNotIn(b'[y/N]', out)
                 self.assertNotIn(b'Traceback', out)
-                self.assertFalse((self.repo / 'themes/approval').exists())
+                self.assertFalse((self.home / 'config/dots/themes/approval').exists())
                 self.assertFalse((self.home / 'state').exists())
         self.env['GUM_CHOICE'] = 'Apply'
         self.terminal()
-        self.assertTrue((self.repo / 'themes/approval/anodize.json').is_file())
+        self.assertTrue((self.home / 'config/dots/themes/approval/anodize.json').is_file())
         self.assertFalse(self.active.exists())  # Saving never activates a theme.
 
     def test_confirmation_bypass_and_plain_fallback(self):
@@ -114,9 +114,9 @@ class Anodize(unittest.TestCase):
         self.terminal(self.script + ' > ' + shlex.quote(str(captured)),
                       steps=((b'', b'n\r'),))
         self.assertIn('[y/N]', captured.read_text())
-        self.assertFalse((self.repo / 'themes/approval').exists())
+        self.assertFalse((self.home / 'config/dots/themes/approval').exists())
         self.terminal(self.script + ' --yes')
-        self.assertTrue((self.repo / 'themes/approval/anodize.json').is_file())
+        self.assertTrue((self.home / 'config/dots/themes/approval/anodize.json').is_file())
         self.assertFalse((self.home / 'gum-calls').exists())
 
     def test_modes_help_metadata_and_completion(self):
@@ -151,7 +151,7 @@ class Anodize(unittest.TestCase):
         args=('create','example','--color','#725ac1','--json')
         preview=json.loads(self.cli(*args,'--dry-run','--yes').stdout)
         self.assertEqual(preview['status'],'preview')
-        self.assertFalse((self.repo/'themes/example').exists())
+        self.assertFalse((self.home/'config/dots/themes/example').exists())
         self.assertFalse(self.state.exists())
         saved=self.create()
         self.assertEqual(saved['status'],'complete')
@@ -164,7 +164,7 @@ class Anodize(unittest.TestCase):
         with self.author() as author:
             store=author.store();ops,guards,catalogs=store.inverse(saved['transaction'])
             store.apply('undo',ops,guards,retain=True,catalogs=catalogs)
-        self.assertFalse((self.repo/'themes/example').exists())
+        self.assertFalse((self.home/'config/dots/themes/example').exists())
 
     def test_adjustment_reset_and_retained_edit(self):
         self.create()
@@ -198,7 +198,7 @@ class Anodize(unittest.TestCase):
         self.cli('extract',self.image,'--json')
         self.assertFalse(self.state.exists())
         self.cli('create','image','--image',self.image,'--yes')
-        p=self.repo/'themes/image'
+        p=self.home/'config/dots/themes/image'
         self.assertEqual(self.recipe('image')['wallpaper'],'backgrounds/wallpaper.png')
         self.assertEqual((p/'backgrounds/wallpaper.png').read_bytes(),PNG)
         self.cli('edit','image','--reextract','--yes')
@@ -206,7 +206,7 @@ class Anodize(unittest.TestCase):
         self.assertEqual(self.recipe('reference')['wallpaper'],str(self.image))
         self.cli('edit','reference','--adjust','saturation=1','--yes')
         self.assertEqual(self.recipe('reference')['wallpaper'],str(self.image))
-        self.assertFalse((self.repo/'themes/reference/backgrounds').exists())
+        self.assertFalse((self.home/'config/dots/themes/reference/backgrounds').exists())
 
     def test_import_export_roundtrips_and_aether_adjustments(self):
         self.create()
@@ -250,13 +250,13 @@ class Anodize(unittest.TestCase):
     def test_collisions_drift_symlinks_and_invalid_input(self):
         self.create()
         self.cli('create','example','--color','#ffffff','--yes',code=1)
-        colors=self.repo/'themes/example/colors.toml';colors.write_text(colors.read_text()+'# manual change\n')
+        colors=self.home/'config/dots/themes/example/colors.toml';colors.write_text(colors.read_text()+'# manual change\n')
         self.cli('edit','example','--adjust','gamma=2','--yes',code=1)
         self.assertTrue(colors.read_text().endswith('# manual change\n'))
         self.cli('create','../escape','--color','#ffffff','--yes',code=1)
         self.cli('create','invalid','--color','#ffffff','--adjust','gamma=nan','--yes',code=1)
         self.cli('create','invalid','--color','#ffffff','--set','red=bad','--yes',code=1)
-        (self.repo/'themes/link').symlink_to(self.repo/'themes/example')
+        (self.home/'config/dots/themes/link').symlink_to(self.home/'config/dots/themes/example')
         self.cli('create','link','--color','#ffffff','--yes',code=1)
         user=self.home/'config/dots/themes/duplicate';user.mkdir(parents=True)
         self.cli('create','duplicate','--color','#ffffff','--yes',code=1)
@@ -314,7 +314,7 @@ class Anodize(unittest.TestCase):
             self.assertNotIn('\x1b',self.cli('show','example',DOTS_COLOR='auto',TERM='dumb').stdout)
             data=self.cli('--color=always','show','example','--json',COLUMNS=width).stdout
             self.assertEqual(json.loads(data)['schema'],1);self.assertNotIn('\x1b',data)
-        self.assertIn('No authored themes',self.cli('list',DOTS=str(self.root/'empty')).stdout)
+        self.assertIn('No authored themes',self.cli('list',DOTS=str(self.root/'empty'),XDG_CONFIG_HOME=str(self.root/'empty-config')).stdout)
 
     def test_save_failure_rollback_and_guard(self):
         self.create()
@@ -335,7 +335,7 @@ class Anodize(unittest.TestCase):
 
     def test_abrupt_save_recovery(self):
         self.create()
-        before=digest(self.repo/'themes/example')
+        before=digest(self.home/'config/dots/themes/example')
         script='''import os,sys
 sys.path[:0]=sys.argv[1:3]
 from authoring import Author
@@ -353,7 +353,7 @@ a.save(p)
             pending=[d for d in author.store().records() if d['status']=='applying']
             self.assertEqual(len(pending),1)
             author.store().recover(pending[0]['id'])
-        self.assertEqual(digest(self.repo/'themes/example'),before)
+        self.assertEqual(digest(self.home/'config/dots/themes/example'),before)
 
 if __name__=='__main__':
     unittest.main()

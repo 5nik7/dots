@@ -519,7 +519,7 @@ def parser():
 def main(argv):
     if argv and argv[0] == '_show':
         from presentation import render_colors
-        render_colors(resolve(json.load(sys.stdin), argv[1]), 'Configured sources')
+        render_colors(resolve(json.load(sys.stdin), argv[1]), 'Configured sources', preview=True)
         return
     if argv and argv[0] == '_complete':
         words = argv[1:]

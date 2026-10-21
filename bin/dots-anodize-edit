@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+# dots:option=--interactive||flag|Guide inputs and preview choices
 # dots:summary=Edit an authored theme
-# dots:usage=ID [OPTIONS]
+# dots:usage=[ID] [OPTIONS]
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--dry-run||flag|Preview without changes
 # dots:option=--yes||flag|Apply the displayed plan

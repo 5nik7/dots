@@ -163,9 +163,11 @@ class RichSelector:
             # Preview commands contain only environment references and a numeric token.
             flags += ['--preview=' + preview[0],
                       '--preview-window=' + ('down,55%' if shutil.get_terminal_size().columns < 100 else 'right,55%'),
-                      '--bind=alt-p:toggle-preview,alt-j:preview-down,alt-k:preview-up',
-                      '--bind=alt-c:execute-silent(' + preview[1] + ')+refresh-preview']
-            keys += '\nAlt-C: details/source/target\nAlt-P: pane  Alt-J/K: scroll'
+                      '--bind=alt-p:toggle-preview,alt-j:preview-down,alt-k:preview-up']
+            if preview[1]:
+                flags += ['--bind=alt-c:execute-silent(' + preview[1] + ')+refresh-preview']
+                keys += '\nAlt-C: change preview view'
+            keys += '\nAlt-P: pane  Alt-J/K: scroll'
         flags = [f for f in flags if not f.startswith('--header=')] + ['--header=' + keys]
         if not color:
             flags += ['--color=bw']
@@ -194,7 +196,7 @@ class RichSelector:
         if result.returncode:
             if result.returncode in (-2, 130):
                 raise SelectionEnded(130)
-            raise ValueError('File selector failed; no selection was accepted.')
+            raise ValueError('Interactive selector failed; no selection was accepted.')
         selected = []
         for line in result.stdout.split(b'\0'):
             if not line:
