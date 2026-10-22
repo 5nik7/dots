@@ -45,3 +45,7 @@ Both shells load the published theme and Gum environment at startup and follow g
 Open a fresh shell after this migration to initialize the full integration stack. Subsequent `rl` calls reapply ordinary shared settings, commands, aliases and themes without duplicate paths, hooks or key bindings. Personal overrides belong after the shared setup. Running child processes retain their inherited environment.
 
 See [shell initialization](shell-init.md), [testing](testing.md#shell-initialization) and the [migration evidence](../plans/shared-shells.md). Native acceptance is on Termux; Linux/WSL/MSYS platform fixtures do not establish native desktop or Windows behavior. No tools, home-directory links or themes are installed by this migration.
+
+## Termux local completions
+
+Shell-native completion adapters also discover Androidots-local files on interactive Termux startup, preserving existing search paths and avoiding duplicate entries. Zsh registers before compinit; Bash uses bash-completion user bases; Fish uses fish_complete_path. See [the path contract](shell-init.md#termux-local-completion-directories) and [termux-geo installation](../androidots/docs/termux-geo.md#shell-completions).

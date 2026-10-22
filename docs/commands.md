@@ -743,3 +743,11 @@ into repository themes; `promote ID` moves there, or `--copy --name NEW_ID` copi
 under a distinct ID. Missing terminal inputs and explicit `--interactive` use
 FZF-first selectors with separate operation approval. See the
 [interactive contract](anodize.md#interactive-authoring-and-previews).
+
+## Androidots location helper
+
+`androidots/bin/termux-geo` is a standalone Android/Termux command, not a new `dots` dispatcher route. It provides device or supplied-coordinate reverse lookup, versioned JSON, scalar/template queries, cache-only reads, and static Bash/Zsh/Fish completion generation and explicit local installation. Its authoritative [command and completion reference](../androidots/docs/termux-geo.md) owns flags, fields, exit statuses, destinations, and service restrictions. Coordinate-only queries bypass geocoding; help/completion never acquire location.
+
+Timeout diagnostics identify device acquisition, address lookup, stdin reading, or cache locking. Overall deadlines and HTTP connection/request timeouts return status 124 with empty stdout in machine modes.
+
+Usage/help colors headings, command syntax, options and examples through the shared Dots presentation tokens. Existing color controls apply; redirected help is plain by default and generated completions remain undecorated.

@@ -328,3 +328,9 @@ on Windows. `--builtin` and `promote` target the selected native checkout. Both
 frontends share the authoring/picker controller and journal; Windows application
 connector destinations are unchanged. Native PowerShell 5.1/7 FZF keyboard,
 preview and interruption acceptance remains pending where engines are unavailable.
+
+## Androidots location adapter exception
+
+`termux-geo` device acquisition requires Android/Termux and Termux:API. There is no corresponding native Windows PowerShell 5.1/7, Linux, or WSL acquisition adapter in this scope, and no Windows app destination changes. Personal Androidots completion paths are added only for interactive Termux shells; other platform paths remain unchanged. Mock-provider tests and native Termux Bash/Zsh/Fish completion checks do not establish native GPS/network-provider, Android permission, or service-cancellation acceptance. See [location requirements and limits](../androidots/docs/termux-geo.md#verification-and-platform-limits).
+
+Separate owner-device checks verified network acquisition and cache reuse after removing an incompatible file-size resource limit from the API wrapper. GPS, permission denial/recovery and Android service cancellation remain pending; see the [native repair evidence](../plans/termux-geo.md#native-timeout-repair).

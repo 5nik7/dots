@@ -95,3 +95,7 @@ preview and interruption acceptance remains pending where engines are unavailabl
 Native PowerShell 7 and Windows PowerShell 5.1 profile fixtures now pass, including linked startup and prompt refresh. See the [focused profile plan](powershell-profile.md) for exact tests, timings and pending terminal/desktop checks. This supersedes earlier engine-unavailable notes only for these profile checks; full CLI/app parity acceptance remains separate.
 
 The same follow-up now links Core/Desktop all-host profiles to the shared source, enables Starship and the respective terminal integration, and resolves Core Blastoff storage to repository themes. See the [profile follow-up](powershell-profile.md#coredesktop-starship-and-blastoff-follow-up) for native evidence and keyboard limits. App destinations and broader CLI parity claims are unchanged.
+
+### Termux location exception
+
+The Androidots `termux-geo` helper and its personal Bash/Zsh/Fish completion-path additions are explicitly Android/Termux-specific. Native Windows PowerShell has no Termux:API acquisition equivalent in this slice; Windows app destinations and completion behavior are unchanged. See [the focused plan](termux-geo.md) and [platform exception](../docs/platforms.md#androidots-location-adapter-exception).

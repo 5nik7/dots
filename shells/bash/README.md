@@ -7,3 +7,5 @@ The startup wrapper resolves file and parent-directory symlinks and loads its ad
 Optional integrations activate once after successful generation and can retry on reload. Start a fresh shell after changing activation code for an already active tool. Zsh syntax highlighting, autosuggestions and FZF-tab remain Zsh-only; Bash uses installed native completion and FZF bindings without a new editor plugin.
 
 See [initialization](../../docs/shell-init.md), [shared commands](../../docs/shared-shells.md#commands-and-compatibility), and [isolated verification](../../docs/testing.md#shell-initialization). No live startup or real user state is used by the tests.
+
+On Termux, interactive startup adds the Androidots `shells/bash` base to `BASH_COMPLETION_USER_DIR` before loading bash-completion, retaining custom bases and the normal fallback. See [local completion paths](../../docs/shell-init.md#termux-local-completion-directories).

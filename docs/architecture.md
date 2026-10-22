@@ -472,3 +472,9 @@ saves and journaled promotion remain in its Python controller and the shared Sto
 with cache lifetime owned by the FZF invocation. Ordinary static completion remains
 engine-free. Both Dots and Anodize call `themes/presentation.py` for palette syntax
 previews; unsaved drafts pass resolved colors without publishing a theme.
+
+## Androidots location and local completions
+
+Androidots owns `termux-geo`, its Bash acquisition/cache/controller code, jq normalization, static completion templates, installer, and command tests. It reuses the parent Dots Bash UI/progress/resource helpers when available, with plain standalone output. Device coordinates remain separate from reverse-geocoder object positions. Its private disposable cache is independent of the status-indicator caches and managed-file transactions.
+
+Personal Termux shell adapters register fixed Androidots-local completion paths: Zsh before compinit, Bash through the native bash-completion user-base list, and Fish through fish_complete_path. Generic `dots init` remains integration-only. The installer writes only explicit completion targets, preserving differing originals as sibling backups; it does not modify shell configuration. See the [helper reference](../androidots/docs/termux-geo.md).

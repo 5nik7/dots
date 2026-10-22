@@ -972,3 +972,9 @@ native FZF cancellation at 40/80/120 columns. Set `DOTS_TEST_FZF_TAB` to an inst
 Anodize integration, theme-picker, theme-command, file-color, Bash dispatcher and
 Zsh suites for shared surface changes. PowerShell controller fixtures are distinct
 from native Windows PowerShell 5.1/7 terminal acceptance.
+
+## Termux location helper and completion paths
+
+Run `python3 -B androidots/tests/test_termux_geo.py` and then `python3 -B tools/test_termux_geo_shells.py` from the parent checkout. The first suite mocks device/HTTP providers and exercises normalized output, cache freshness, strict failures, deadlines, rate limits, concurrent calls, cancellation, guarded completion installation, and native 40/80/120-column PTYs. The second uses disposable public-shell fixtures for native Bash/Zsh/Fish local discovery, autoloading, repeated initialization, preserved paths, and platform/noninteractive exclusions. All HOME/config/state/cache/install paths are test-owned. Neither suite performs live GPS/network lookups or loads owner shell configuration. Also run affected shell-init, shared-shell, and Zsh regressions for startup edits. Actual Android permission/provider/service-cancellation acceptance remains separate.
+
+Acquisition regressions check the inherited file-size resource limit, the 64 KiB device-output boundary, phase-specific deadline errors, HTTP timeout status, pipeline cleanup, and cache-lock release. Separate native Android acceptance must preserve the Android process environment while redirecting mutable roots; mock-only environments do not establish native API compatibility. Do not print device coordinates in acceptance reports.

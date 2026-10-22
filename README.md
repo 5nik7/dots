@@ -572,3 +572,7 @@ Dots values while preserving explicit custom overrides. Blastoff 0.1.12 safely
 updates the file behind that link. See [the configuration contract](docs/shell-environment.md#starship-configuration).
 
 The saved [Blastoff `dots` theme](config/blastoff/themes/dots.toml) uses shared color names and Git roles while retaining the personal prompt layout. It includes styles for supported inactive Starship modules. With `dots theme plugins enable starship`, publication/refresh updates only `[palettes.dots]` in the active Starship config and saved `dots` theme. Other selected palettes are skipped; module edits and extra palette names remain intact. See [Starship integration](docs/theme-plugins.md#starship-and-blastoff-starship).
+
+## Termux location lookup
+
+Androidots provides `termux-geo` for device coordinates and Nominatim city/state/postal information, with Dots human output, delayed progress, JSON in pipes, scalar getters and cache-only reads. `termux-geo completion --all --install` installs static completions into Androidots-local Bash/Zsh/Fish directories recognized by personal Termux startup. See the [location command reference](androidots/docs/termux-geo.md) for dependencies, service restrictions, flags, and completion activation.
