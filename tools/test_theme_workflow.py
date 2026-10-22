@@ -635,6 +635,18 @@ assert(require("anodize").get_palette().metadata.id == "nord")
                 self.run_command(command + ["set-environment", "-g", "TERMUX_VERSION", "fixture"])
                 style = self.run_command(command + ["display-message", "-p", "#{E:status-style}"]).stdout
                 self.assertIn("bg=" + palette["background"], style)
+                for theme in ("nord", "catppuccin-latte"):
+                    with self.subTest(popup_theme=theme):
+                        self.dots("theme", "set", theme)
+                        colors = json.loads((active / "palette.json").read_text())["colors"]
+                        self.run_command(command + ["source-file", str(cfg)])
+                        popup = self.run_command(command + ["show-options", "-gv", "popup-style"]).stdout.strip()
+                        self.assertEqual(popup, f'bg={colors["background"]},fg={colors["foreground"]}')
+                        border = self.run_command(command + ["show-options", "-gv", "popup-border-style"]).stdout.strip()
+                        self.assertEqual(border, f'fg={colors["lighter_background"]},bg={colors["background"]}')
+                        for option, role in (("fg", "darker_background"), ("bg", "accent")):
+                            value = self.run_command(command + ["show-options", "-gv", "@dots-indicator-" + option]).stdout.strip()
+                            self.assertEqual(value, colors[role])
             finally:
                 self.run_command(command + ["kill-server"], code=None)
 

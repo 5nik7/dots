@@ -14,6 +14,9 @@ The linked tmux configuration has two top rows on Termux (detected from `TERMUX_
 
 | Element | Background | Foreground |
 | --- | --- | --- |
+| Popup content | `background` | `foreground` |
+| Popup border | `background` | `lighter_background` |
+| COPY/PREFIX/ZOOM indicators (one space on each side of each active label) | `accent` | Bold `darker_background` |
 | Upper row | `background` | `foreground` |
 | Clock | `dark_background` | Bold `yellow` by day, `blue` at night, `foreground` when unknown |
 | Lower tmux row on Termux | `background` | `foreground` |

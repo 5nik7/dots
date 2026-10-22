@@ -1,11 +1,11 @@
 # Tmux keybinding reference
 
-**Status: Implemented and verified on Termux, 2026-09-30; existing repository-wide documentation-link failure retained.**
+**Status: Implemented and verified on Termux, including popup theme colors on 2026-10-22.**
 
 ## Scope and decisions
 
 - Ship `dots-menu-tmux-keys` and the automatically discovered `dots menu tmux keys` route. Show described live bindings, including tmux defaults/plugins, in a searchable, read-only less pager; `--print` bypasses paging. No action selector, raw-command fallback, JSON, Go changes, installation, server reload, or state writes.
-- Use Dots headings/styles and controls; retain the user's replacement of the Omarchy call in `config/tmux/tmux.conf`. The requested follow-up adds a per-popup blue border and bold cyan title through tmux's `-S` and styled `-T`, without changing global popup options. The new command must be on tmux's PATH.
+- Use Dots headings/styles and controls; retain the user's replacement of the Omarchy call in `config/tmux/tmux.conf`. The current binding inherits the shared popup border and retains its bold yellow icon title through tmux's styled `-T`. The 2026-10-22 follow-up gives all popups the shared theme’s `background` and `foreground`, with `lighter_background` borders and terminal-color fallbacks before publication. The new command must be on tmux's PATH.
 - Keep less optional, with warning plus complete printed fallback. Normal exit/empty results succeed, invalid syntax returns 2, operational failures return 1, and pager interruption returns 130. Static help/completion never contact tmux.
 - Prefix legend uses the current pane's session when available. Group notes by table: prefix, root, copy-mode-vi, copy-mode, then custom tables; omit empty sections. Preserve tmux key spelling and within-table order.
 
@@ -29,8 +29,18 @@ The less child clears inherited options and preprocessor hooks, enables secure m
 - [x] Bash dispatcher/metadata/three-shell completion suite: `python3 -B tools/test_bash_dots.py` — 24 tests passed, including native Bash/Zsh/Fish Tab acceptance.
 - [x] Final Bash syntax, ShellCheck and `git diff --check` passed.
 - [x] Full relative-link audit: 567 links across 76 Markdown files, no newly broken links.
-- [ ] Repository-wide `python3 -B tools/verify_core.py docs` remains blocked by the pre-existing `docs/testing.md` link to removed `config/yazi/plugins/dots-symlink.yazi/README.md`. This unrelated failure was already documented before this change and is not masked or repaired here.
+- The original repository-wide documentation check was blocked by a missing Yazi README link. The 2026-10-22 rerun passes all 818 links across 110 files.
 
 Independent review follow-ups: the popup test now explicitly starts its session in the owned home and asserts the popup's working directory. The sanitizer preserves valid UTF-8 sequences under byte-oriented C locales while escaping C1 controls; added C/C.UTF-8 arrow, emoji, combining-character and C1 regressions. Termux still uses codepoint iteration in C, so this does not establish native Linux byte-locale evidence.
 
 Tests own their homes/config/state/cache/repositories, tmux sockets and terminals. Preserve Termux's inherited `LD_PRELOAD` when running through a sanitized tool environment. Native Linux/WSL/Windows verification and graphical visual review are not claimed; terminal captures provide the current layout evidence. No dependency installation, commits or pushes are part of this task.
+
+## Popup theme follow-up (2026-10-22)
+
+Use the shared tmux template for popup content colors, preserving border/title overrides and geometry. Verify dark/light publication and the actual keybinding popup in owned tmux servers, then refresh the selected live theme and apply its popup style to the existing server. Native Windows PowerShell has no tmux equivalent; no Windows destination or shell interface changes. Native Linux/WSL acceptance remains pending.
+
+Verified on Termux with tmux 3.8: all 19 keybinding tests pass, including the actual popup's RGB background, current border/title colors and dismissal. The isolated application connector test passes with Nord and Catppuccin Latte popup colors loaded into a private tmux server. Documentation links and whitespace checks pass. Live refresh retains Catppuccin Mocha and publishes the popup colors through the normal journaled publisher; the running server reports `bg=#1e1e2e,fg=#cdd6f4`.
+
+The border follow-up removes the binding’s hardcoded `-S` override and publishes `popup-border-style` with `lighter_background` foreground on `background`. Acceptance covers dark/light publication, native popup RGB border rendering, and selective live binding reload after theme publication.
+
+Border verification passed on Termux/tmux 3.8: all 19 keybinding tests, the isolated dark/light application connector case, documentation links and whitespace checks. Live publication and selective binding reload completed; `popup-border-style` reports `fg=#313244,bg=#1e1e2e`, and the active keybindings binding has no border override.

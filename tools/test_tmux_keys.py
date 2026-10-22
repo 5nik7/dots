@@ -308,10 +308,15 @@ exit "${PAGER_STATUS:-0}"
         binding = next(line for line in (REPO / 'config/tmux/tmux.conf').read_text().splitlines()
                        if 'Show Tmux keybindings' in line)
         self.assertIn('"dots-menu-tmux-keys"', binding)
-        self.assertIn('-S "fg=blue"', binding)
-        self.assertIn('#[fg=cyan,bold]Tmux keybindings#[default]', binding)
+        self.assertNotIn(' -S ', binding)
+        self.assertIn('#[fg=yellow,bold]󰌆#[default]', binding)
+        popup_style = '\n'.join(line for line in (REPO / 'default/themed/tmux.conf.tpl').read_text().splitlines()
+                                if line.startswith(('set -g popup-style ', 'set -g popup-border-style ')))
+        popup_style = popup_style.replace('{{ background }}', '#123456').replace('{{ foreground }}', '#abcdef')
+        popup_style = popup_style.replace('{{ lighter_background }}', '#456789')
         cfg = self.root / 'tmux.conf'
         cfg.write_text('set -g default-shell ' + shlex.quote(BASH) + '\n' + binding +
+                       '\nset -as terminal-features ",*:RGB"\n' + popup_style +
                        '\nbind D display-message -d 1000 DOTS_POPUP_CLOSED\n')
         socket = self.root / 'popup.socket'
         (self.fake / 'less').unlink()
@@ -347,10 +352,10 @@ exit "${PAGER_STATUS:-0}"
             os.write(master, b'\x02?')
             receive_until(b'Tmux keybindings')
             receive_until(b'/ search')
-            # Viewer rows use bright ANSI colors; these ordinary blue/cyan
-            # colors come from the tmux-owned border and title respectively.
-            self.assertRegex(bytes(output), rb'\x1b\[(?:[0-9;]*;)?34m')
-            self.assertRegex(bytes(output), rb'\x1b\[(?:[0-9;]*;)?36m')
+            self.assertIn(b'38;2;69;103;137', output)
+            self.assertRegex(bytes(output), rb'\x1b\[(?:[0-9;]*;)?33m')
+            # Verify the popup paints its theme background in the real terminal.
+            self.assertIn(b'48;2;18;52;86', output)
             self.assertEqual((self.home / 'popup-cwd').read_text().strip(), str(self.home))
             os.write(master, b'q')
             # A prefix binding can run only after the popup has closed.

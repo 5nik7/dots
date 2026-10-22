@@ -18,7 +18,7 @@ import unittest
 REPO = Path(__file__).resolve().parents[1]
 BASH = shutil.which('bash')
 TMUX = shutil.which('tmux')
-INDICATORS = '#[fg=blue]#{?pane_in_mode,COPY ,}#{?client_prefix,PREFIX ,}#{?window_zoomed_flag,ZOOM ,}'
+INDICATORS = '#[fg=#{@dots-indicator-fg},bg=#{@dots-indicator-bg},bold]#{?pane_in_mode, COPY ,}#{?client_prefix, PREFIX ,}#{?window_zoomed_flag, ZOOM ,}'
 ANDROID_ICONS = dict(notification='\U000f009a', volume='\U000f0580', location='\U000f0f08', wifi='\U000f0928', cell='\U000f08fa')
 
 
@@ -373,6 +373,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         tmux, _ = self.server('layout')
         tmux('source-file', str(config))
         self.assertEqual(tmux('show-option', '-gqv', 'status'), '2')
+        self.assertIn('#[fg=black,bg=blue,bold]', tmux('display-message', '-p', '#{E:status-right}'))
         rows = tmux('show-option', '-g', 'status-format')
         self.assertIn('termux-status.py', tmux('show-option', '-gqv', '@dots-termux-numbers'))
         self.assertNotIn('OLD_LAYOUT', tmux('display-message', '-p', '#{E:@dots-tmux-row}'))
@@ -391,6 +392,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.assertIn('fixture', tmux('display-message', '-p', '#{E:status-left}'))
         for accent in ['#abcdef', '#fedcba']:
             tmux('source-file', str(self.write_theme(accent)))
+            self.assertIn(f'#[fg=#010203,bg={accent},bold]', tmux('display-message', '-p', '#{E:status-right}'))
             self.assertEqual(tmux('show-option', '-g', 'status-format'), rows)
             self.assertIn('bg=#aabbcc', tmux('display-message', '-p', '#{E:status-left}'))
             self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-current-bg'), '#aabbcc')
@@ -416,6 +418,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         other, _ = self.server('nontermux', termux=False)
         other('source-file', str(config))
         self.assertEqual(other('show-option', '-gqv', 'status'), 'on')
+        self.assertIn('#[fg=#010203,bg=#abcdef,bold]', other('display-message', '-p', '#{E:status-right}'))
         other('set-option', '-gw', 'automatic-rename', 'off')
         other('rename-window', 'fixture')
         self.assertIn(' 0:fixture ', other('display-message', '-p', '#{E:window-status-current-format}'))
@@ -611,6 +614,26 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             time.sleep(.1)
         self.fail('status did not render: ' + repr(screen))
 
+    @staticmethod
+    def bold_at(text, needle):
+        bold = False
+        for match in re.finditer(r'\x1b\[([0-9;]*)m', text[:text.index(needle)]):
+            codes = [int(code or '0') for code in match[1].split(';')]
+            index = 0
+            while index < len(codes):
+                code = codes[index]
+                if code in (0, 22):
+                    bold = False
+                elif code == 1:
+                    bold = True
+                elif code in (38, 48):
+                    if codes[index + 1:index + 2] == [2]:
+                        index += 4
+                    elif codes[index + 1:index + 2] == [5]:
+                        index += 2
+                index += 1
+        return bold
+
     @unittest.skipUnless(TMUX, 'native tmux unavailable')
     def test_native_two_clients_widths_colors_and_failure_clearing(self):
         config = self.write_config()
@@ -706,21 +729,37 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 and long_name[:len(label)+1] not in rows[1])
             self.assertLessEqual(len(self.plain(lines[1])), width)
         inner('rename-session', '-t', long_name, 'fixture')
-        # Mode indicators remain on the second row with the row background.
+        # Mode indicators use bold darker_background text on accent.
+        original_right = inner('show-option', '-gqv', 'status-right')
+        inner('set-option', '-g', 'status-right', original_right + 'DOTS_RESET')
+        def assert_indicator(lines, label):
+            self.assertNotIn(label, self.plain(lines[0]))
+            padded = ' ' + label + ' '
+            self.assertIn(padded, self.plain(lines[1]))
+            self.assertEqual(self.colors_at(lines[1], padded),
+                             {'fg': (1, 2, 3), 'bg': (171, 205, 239)})
+            self.assertEqual(self.colors_at(lines[1], label),
+                             {'fg': (1, 2, 3), 'bg': (171, 205, 239)})
+            self.assertTrue(self.bold_at(lines[1], label))
+            self.assertEqual(self.colors_at(lines[1], 'DOTS_RESET')['bg'], (17, 34, 51))
+            self.assertFalse(self.bold_at(lines[1], 'DOTS_RESET'))
+
         main_pane = inner('display-message', '-p', '-t', 'fixture:0', '#{pane_id}')
         inner('copy-mode', '-t', main_pane)
         lines = self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and 'COPY' in rows[1])
-        self.assertNotIn('COPY', self.plain(lines[0]))
-        self.assertEqual(self.colors_at(lines[1], 'COPY')['bg'], (17, 34, 51))
+        assert_indicator(lines, 'COPY')
         inner('send-keys', '-X', '-t', main_pane, 'cancel')
         outer('send-keys', '-t', 'one', 'C-Space')
-        self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and 'PREFIX' in rows[1])
+        lines = self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and 'PREFIX' in rows[1])
+        assert_indicator(lines, 'PREFIX')
         outer('send-keys', '-t', 'one', 'Escape')
         extra_pane = inner('split-window', '-d', '-P', '-F', '#{pane_id}', '-t', 'fixture:0', 'sleep 120')
         inner('resize-pane', '-Z', '-t', main_pane)
-        self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and 'ZOOM' in rows[1])
+        lines = self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and 'ZOOM' in rows[1])
+        assert_indicator(lines, 'ZOOM')
         inner('resize-pane', '-Z', '-t', main_pane)
         inner('kill-pane', '-t', extra_pane)
+        inner('set-option', '-g', 'status-right', original_right)
         # A larger list scrolls around each client's current Termux entry.
         self.snapshot([f'pts/{10000+i}' for i in range(30)] + terminals +
                       [f'pts/{11000+i}' for i in range(30)])
