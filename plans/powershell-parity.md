@@ -99,3 +99,7 @@ The same follow-up now links Core/Desktop all-host profiles to the shared source
 ### Termux location exception
 
 The Androidots `termux-geo` helper and its personal Bash/Zsh/Fish completion-path additions are explicitly Android/Termux-specific. Native Windows PowerShell has no Termux:API acquisition equivalent in this slice; Windows app destinations and completion behavior are unchanged. See [the focused plan](termux-geo.md) and [platform exception](../docs/platforms.md#androidots-location-adapter-exception).
+
+### wttr acceptance
+
+The standalone native `bin/wttr.ps1` entry shares weather options, stock request syntax, formatting, cache logic, progress and completion metadata with Bash. Stock requests require native curl.exe and bypass PowerShell aliases. The managed configuration has an APPDATA/wttr destination. Termux device acquisition and tmux daylight styling are explicit platform exceptions; manual/default weather is shared. Native Windows PowerShell 5.1/7 argv/completion/PTY, cache locking and ACL checks remain pending on this Termux implementation host; see [the focused plan](wttr.md).

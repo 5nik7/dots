@@ -611,9 +611,9 @@ assert(require("anodize").get_palette().metadata.id == "nord")
                                  ("current-bg", "hint"), ("current-fg", "darker_background"),
                                  ("lower-bg", "background"), ("window-bg", "dark_background"),
                                  ("window-fg", "light_foreground"), ("selected-bg", "selection"),
-                                 ("clock-bg", "dark_background"), ("clock-fg", "info"),
+                                 ("clock-bg", "dark_background"), ("clock-fg", "foreground"),
                                  ("muted", "muted"), ("hint", "hint"),
-                                 ("red", "red"), ("yellow", "yellow"), ("green", "green")):
+                                 ("red", "red"), ("yellow", "yellow"), ("green", "green"), ("blue", "blue")):
             self.assertIn(f'set -g @dots-termux-{option} "{palette[semantic]}"',
                           (active / "tmux.conf").read_text())
         tmux = shutil.which("tmux")

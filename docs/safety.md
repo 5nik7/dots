@@ -578,3 +578,7 @@ and authoring-input digests bind review to apply. Receipt drift and unsafe trees
 are refused. Interactive selection and mode generation use disposable storage,
 never approve an operation, and never publish themes or invoke hooks. Source image
 copying preserves the original image.
+
+## wttr cache and completion
+
+Weather refresh writes only a private disposable cache containing the requested location (including coordinates), bounded upstream data and retry/reservation metadata. Background views may spawn a bounded HTTP refresh but use a configured location or read cached geo city/address data only; strict `--cached` never spawns or writes. Foreground automatic refresh may invoke the existing Termux location helper and its reverse-geocoding service. Stock requests use bounded native curl, disable curlrc/globbing, preserve successful response bytes and never populate the weather cache; service pages and moon routes skip location. It does not change permissions, install dependencies or modify Android provider gates. Completion installation is explicit, preflights all targets and uses the shared Store transaction/backup/drift/undo contracts. It never changes shell profiles automatically. See [weather recovery](wttr.md#cache-and-recovery).

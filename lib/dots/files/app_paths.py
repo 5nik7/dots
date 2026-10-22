@@ -11,6 +11,7 @@ def config_directory(app):
     defaults = {
         'lsd': (home / '.config/lsd', None),
         'bat': (roaming / 'bat', 'BAT_CONFIG_DIR'),
+        'wttr': (xdg / 'wttr' if os.environ.get('XDG_CONFIG_HOME') else roaming / 'wttr', None),
         'alacritty': (roaming / 'alacritty', None),
         'clink': (local / 'clink', 'CLINK_PROFILE'),
         'fastfetch': (xdg / 'fastfetch', None),

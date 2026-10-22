@@ -570,6 +570,23 @@
       ],
       "target": "${HOME}/.zshrc",
       "strategy": "link"
+    },
+    {
+      "id": "wttr",
+      "source": "config/wttr",
+      "app": "wttr",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "target": "${CONFIG}/wttr",
+      "strategy": "directory-link",
+      "targets": {
+        "windows": "${APP_CONFIG:wttr}"
+      }
     }
   ]
 }

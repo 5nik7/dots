@@ -82,6 +82,17 @@ print((home / (module + '.json')).read_text())
 ''')
             self.android_snapshot(module)
 
+        weather_source = source.with_name('weather-status.py')
+        shutil.copyfile(REPO / 'config/tmux/weather-status.py', weather_source)
+        (self.tmux_config / weather_source.name).symlink_to(weather_source)
+        self.weather_script = self.repo / 'lib/dots/wttr/cli.py'
+        self.weather_script.parent.mkdir(parents=True)
+        self.weather_script.write_text("import os, pathlib, sys, time\nassert sys.argv[1:] == ['--daylight']\nhome = pathlib.Path(os.environ['HOME'])\nwith (home / 'weather-calls').open('a') as stream: stream.write('call\\n')\nprint('PRIVATE weather stderr', file=sys.stderr)\nif (home / 'weather-delay').exists(): time.sleep(10)\nif (home / 'weather-fail').exists(): sys.exit(1)\nprint((home / 'daylight').read_text())\n")
+        self.weather_stub()
+
+    def weather_stub(self, value='day'):
+        (self.home / 'daylight').write_text(value)
+
     def android_snapshot(self, module, icon=None, stale=False, count=3, connected=True,
                          data_enabled=True, data_state="connected", device_stale=None):
         icon = (icon or ANDROID_ICONS[module]) + ('~' if stale else '')
@@ -326,11 +337,32 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         palette = dict(background=background, foreground='#eeeeee', accent=accent,
                        muted='#888888', light_foreground='#ccddee', info='#123456', selection='#654321',
                        dark_background=dark_background, lighter_background='#445566', dark_foreground='#778899',
-                       hint='#aabbcc', darker_background='#010203', red='#ff0000', yellow='#ffff00', green='#00ff00')
+                       blue='#0000ff', hint='#aabbcc', darker_background='#010203', red='#ff0000', yellow='#ffff00', green='#00ff00')
         template = (REPO / 'default/themed/tmux.conf.tpl').read_text()
         path = self.tmux_config / 'dots-theme.conf'
         path.write_text(re.sub(r'\{\{ (\w+) \}\}', lambda m: palette[m[1]], template))
         return path
+
+    def test_weather_adapter_bounds_and_recovery(self):
+        adapter=self.tmux_config / 'weather-status.py'
+        def read():
+            started=time.monotonic()
+            result=subprocess.run([sys.executable,'-B',str(adapter)],env=self.env,capture_output=True,text=True,timeout=3)
+            self.assertLess(time.monotonic()-started,2)
+            self.assertEqual((result.returncode,result.stderr),(0,''))
+            return result.stdout
+        for value,expected in [('day','day'),('night','night'),('unknown','unknown'),
+                               ('#[fg=red]BAD','unknown'),('x'*100000,'unknown')]:
+            self.weather_stub(value)
+            self.assertEqual(read(),expected+'\n')
+        self.weather_stub('day')
+        for failure in ('weather-fail','weather-delay'):
+            (self.home/failure).touch()
+            self.assertEqual(read(),'unknown\n')
+            (self.home/failure).unlink()
+            self.assertEqual(read(),'day\n')
+        self.weather_script.unlink()
+        self.assertEqual(read(),'unknown\n')
 
     @unittest.skipUnless(TMUX, 'native tmux unavailable')
     def test_native_layout_reload_theme_and_platform_gate(self):
@@ -389,81 +421,58 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.assertIn(' 0:fixture ', other('display-message', '-p', '#{E:window-status-current-format}'))
 
     @unittest.skipUnless(TMUX, 'native tmux unavailable')
-    def test_native_network_uncertainty_and_recovery(self):
+    def test_native_daylight_and_recovery(self):
         config = self.write_config()
         self.write_theme()
-        inner, base = self.server('network')
+        inner, base = self.server('weather')
         inner('source-file', str(config))
         inner('set-option', '-g', 'status-interval', '1')
-        outer, _ = self.server('network-view', termux=False)
+        outer, _ = self.server('weather-view', termux=False)
         outer('set-option', '-g', 'status', 'off')
         outer('set-option', '-g', 'default-terminal', 'tmux-256color')
         attach = shlex.join(['env', '-u', 'TMUX', '-u', 'TMUX_PANE', *base, 'attach-session', '-t', 'fixture'])
         outer('new-session', '-d', '-s', 'view', '-x', '80', '-y', '24', attach)
         deadline = time.monotonic() + 5
         while not inner('list-clients', '-F', '#{client_tty}'):
-            self.assertLess(time.monotonic(), deadline, 'network fixture client must finish attaching')
+            self.assertLess(time.monotonic(), deadline)
             time.sleep(.05)
-        # Every transition uses a real attached client's rendered upper row.
-        cases = [
-            (True, True, False, False, self.android_text(), (0, 255, 0)),
-            (False, False, False, False, '', None),
-            (None, True, False, False, '? ', (136, 136, 136)),
-            (None, False, False, False, '? ', (136, 136, 136)),
-            (None, None, False, False, '? ', (136, 136, 136)),
-            (False, None, False, False, '? ', (136, 136, 136)),
-            (False, False, True, False, '?~', (136, 136, 136)),
-            (False, False, False, True, '?~', (136, 136, 136)),
-            (False, True, True, False, self.android_text(stale=True, network='cell'), (136, 136, 136)),
-            (False, True, False, False, self.android_text(network='cell'), (0, 255, 0)),
-            (True, True, False, False, self.android_text(), (0, 255, 0)),
-        ]
         for width in (40, 80, 120):
             outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
-            battery_position = None
-            for connected, enabled, wifi_stale, cell_stale, expected, color in cases:
-                with self.subTest(width=width, connected=connected, enabled=enabled,
-                                  wifi_stale=wifi_stale, cell_stale=cell_stale):
-                    calls = self.home / 'cell-calls'
-                    count = calls.read_text().count('call') if calls.exists() else 0
-                    self.android_snapshot('wifi', connected=connected, stale=wifi_stale)
-                    self.android_snapshot('cell', data_enabled=enabled, stale=cell_stale,
-                                          data_state='connected' if enabled is not None else None)
-                    def ready(rows):
-                        if len(rows) < 2 or not calls.exists() or calls.read_text().count('call') <= count:
-                            return False
-                        top = self.plain(rows[0])
-                        if '󰁹 80%' not in top:
-                            return False
-                        if expected:
-                            return expected + ' 󰁹 80%' in top
-                        return '?' not in top and all(ANDROID_ICONS[m] not in top for m in ('wifi', 'cell'))
-                    inner('refresh-client', '-S')
-                    rows = self.await_screen(outer, 'view', ready)
-                    top = self.plain(rows[0])
-                    self.assertRegex(top, r'^ (?:[1-9]|1[0-2]):[0-5][0-9] ')
-                    position = top.index('󰁹')
-                    if battery_position is None:
-                        battery_position = position
-                    self.assertEqual(position, battery_position)
-                    if expected:
-                        self.assertEqual(top.index(expected), position - 3)
-                        self.assertEqual(self.colors_at(rows[0], expected[0]),
-                                         {'fg': color, 'bg': (17, 34, 51)})
-                    self.assertNotIn('PRIVATE', '\n'.join(rows))
-            # Reload while uncertain, twice at each width, then observe recovery.
-            self.android_snapshot('wifi', connected=None)
-            self.await_screen(outer, 'view', lambda rows: bool(rows) and '?  󰁹 80%' in self.plain(rows[0]))
+            for value, color in [('day', (255,255,0)), ('night', (0,0,255)),
+                                 ('unknown', (238,238,238)), ('#[fg=red]BAD', (238,238,238)),
+                                 ('day', (255,255,0))]:
+                self.weather_stub(value)
+                deadline = time.monotonic() + 6
+                inner('refresh-client', '-S')
+                while True:
+                    rows = outer('capture-pane', '-p', '-e', '-t', 'view').splitlines()
+                    if rows and '80%' in rows[0] and self.colors_at(rows[0], ':').get('fg') == color:
+                        break
+                    self.assertLess(time.monotonic(), deadline, rows)
+                    time.sleep(.1)
+                top = self.plain(rows[0])
+                self.assertRegex(top, r'^ (?:[1-9]|1[0-2]):[0-5][0-9] ')
+                self.assertEqual(self.colors_at(rows[0], ':')['bg'], (34,51,68))
+                self.assertLessEqual(len(top), width)
+                self.assertNotIn('PRIVATE', '\n'.join(rows))
+                self.assertNotIn('BAD', top)
+                for icon in ANDROID_ICONS.values(): self.assertNotIn(icon, top)
             for _ in range(2):
                 inner('source-file', str(config))
                 inner('set-option', '-g', 'status-interval', '1')
-                rows = self.await_screen(outer, 'view', lambda rows:
-                    bool(rows) and '?  󰁹 80%' in self.plain(rows[0]))
-                self.assertEqual(self.plain(rows[0]).index('󰁹'), battery_position)
-            self.android_snapshot('wifi')
-            self.await_screen(outer, 'view', lambda rows: bool(rows) and self.android_text() in rows[0])
-        self.assertTrue(inner('list-clients', '-F', '#{client_tty}'))
-        for module in ('notification', 'volume', 'location'):
+                self.await_screen(outer, 'view', lambda rows: bool(rows) and '80%' in rows[0])
+        # Actual helper failure, deadline and disappearance all clear day color.
+        for failure in ('weather-fail', 'weather-delay', 'missing'):
+            if failure == 'missing': self.weather_script.unlink()
+            else: (self.home / failure).touch()
+            deadline = time.monotonic() + 6
+            while True:
+                rows = outer('capture-pane', '-p', '-e', '-t', 'view').splitlines()
+                if rows and self.colors_at(rows[0], ':').get('fg') == (238,238,238): break
+                self.assertLess(time.monotonic(), deadline)
+                time.sleep(.1)
+            (self.home / failure).unlink(missing_ok=True)
+        for module in ANDROID_ICONS:
             self.assertFalse((self.home / (module + '-calls')).exists())
 
     @unittest.skipUnless(TMUX, 'native tmux unavailable')
@@ -533,7 +542,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                              {'fg': (170, 187, 204), 'bg': (17, 34, 51)})
             clock = re.search(r'[0-9]+:[0-9]{2}', self.plain(rows[0]))[0]
             self.assertEqual(self.colors_at(rows[0], clock),
-                             {'fg': (18, 52, 86), 'bg': (34, 51, 68)})
+                             {'fg': (255, 255, 0), 'bg': (34, 51, 68)})
             self.assertNotIn('\x1b[4m', rows[1])
             inner('select-window', '-t', 'dots:1')
             row_equals(' 1:dots  0  1:shell  2 ')
@@ -631,7 +640,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 inner('refresh-client', '-S')
                 lines = self.await_screen(outer, name, lambda rows:
                     len(rows) > 1 and f' {index}:{badge_name} ' in rows[1] and '80%' in rows[0]
-                    and self.android_text() in rows[0] and badge_name in rows[1])
+                    and badge_name in rows[1])
                 top, bottom = map(self.plain, lines[:2])
                 self.assertRegex(top, r'^ (?:[1-9]|1[0-2]):[0-5][0-9] ')
                 self.assertRegex(top, r' (?:[1-9]|1[0-2]):[0-5][0-9] ')
@@ -643,7 +652,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                     self.assertLess(bottom.index(' 2 '), bottom.index(' 3:'))
                 self.assertNotIn('|', bottom)
                 self.assertNotIn('80%', bottom)
-                self.assertLess(top.index(self.android_text()), top.index('80%'))
+                self.assertNotIn(self.android_text(), top)
                 self.assertNotIn(self.android_text(), bottom)
                 self.assertIn('0:window', bottom)
                 self.assertEqual(self.colors_at(lines[1], '0:window')['bg'], (101, 67, 33))
@@ -651,8 +660,6 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 self.assertIn('48;2;101;67;33', lines[1])
                 self.assertIn('48;2;17;34;51', lines[0])
                 self.assertIn('38;2;170;187;204', lines[1])
-                self.assertEqual(self.colors_at(lines[0], ANDROID_ICONS['wifi']),
-                                 {'fg': (0, 255, 0), 'bg': (17, 34, 51)})
                 self.assertEqual(self.colors_at(lines[0], '80%'),
                                  {'fg': (0, 255, 0), 'bg': (17, 34, 51)})
                 self.assertIn('38;2;1;2;3', lines[1])
@@ -741,21 +748,13 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 break
             time.sleep(.1)
         self.assertIn('48;2;51;68;85', colored)
-        positions = {ANDROID_ICONS['wifi']: self.plain(colored).index(ANDROID_ICONS['wifi'])}
-        # Stale network markers coexist with focused overflow at a stable position.
-        for module in ANDROID_ICONS:
-            self.android_snapshot(module, stale=True)
-        stale = self.android_text(stale=True)
         for width in [40, 80, 120]:
             outer('resize-window', '-t', 'one', '-x', str(width), '-y', '24')
             lines = self.await_screen(outer, 'one', lambda rows:
-                len(rows) > 1 and len(rows[0]) >= width - 2 and ' 31:fixt' in rows[1]
-                and stale in rows[0] and '80%' in rows[0]
-                and rows[0].index(ANDROID_ICONS['wifi']) == positions[ANDROID_ICONS['wifi']] + width - 40)
+                len(rows) > 1 and ' 31:fixt' in rows[1] and '󰁹 80%' in rows[0]
+                and rows[0].index('󰁹') == width - 7)
             top = self.plain(lines[0])
-            for glyph, position in positions.items():
-                self.assertEqual(top.index(glyph), position + width - 40, (width, positions, top))
-            self.assertEqual(self.colors_at(lines[0], ANDROID_ICONS['wifi'])['fg'], (136, 136, 136))
+            self.assertTrue(all(icon not in top for icon in ANDROID_ICONS.values()))
         battery_position = top.index('󰁹')
         for percent in (1, 100, 80):
             inner('set-environment', '-g', 'BATTERY_OUTPUT', f'\x1b[32m󰁹 {percent}%\x1b[0m')
@@ -771,37 +770,9 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             inner('source-file', str(config))
             inner('set-option', '-g', 'status-interval', '1')
             self.await_screen(outer, 'one', lambda rows:
-                len(rows) > 1 and stale in rows[0] and '0:window' in rows[1])
-        # The same slot changes from Wi-Fi to data; confirmed inactive hides both.
-        for width in (40, 80, 120):
-            outer('resize-window', '-t', 'one', '-x', str(width), '-y', '24')
-            for network in ('wifi', 'cell', None):
-                self.android_snapshot('wifi', connected=network == 'wifi')
-                self.android_snapshot('cell', data_enabled=network is not None)
-                def ready(rows):
-                    if len(rows) < 2 or '80%' not in rows[0]:
-                        return False
-                    top = rows[0]
-                    if network is None:
-                        return all(ANDROID_ICONS[m] not in top for m in ('wifi', 'cell'))
-                    glyph = ANDROID_ICONS[network]
-                    return glyph in top and top.index(glyph) == positions[ANDROID_ICONS['wifi']] + width - 40
-                lines = self.await_screen(outer, 'one', ready)
-                top = self.plain(lines[0])
-                for module in ('notification', 'volume', 'location'):
-                    self.assertNotIn(ANDROID_ICONS[module], top)
-                    self.assertFalse((self.home / (module + '-calls')).exists())
-                self.assertFalse(all(ANDROID_ICONS[m] in top for m in ('wifi', 'cell')))
-                self.assertIn('󰁹 80%', top)
-        self.android_snapshot('wifi', connected=False)
-        self.android_snapshot('cell', data_enabled=None, data_state=None)
-        lines = self.await_screen(outer, 'one', lambda rows:
-            bool(rows) and '?  ' in rows[0])
-        self.assertEqual(self.colors_at(lines[0], '?')['fg'], (136, 136, 136))
-        self.android_snapshot('cell')
-        self.android_scripts['wifi'].unlink()
-        self.await_screen(outer, 'one', lambda rows: bool(rows) and '80%' in rows[0]
-                          and '?  ' in rows[0] and all(ANDROID_ICONS[m] not in rows[0] for m in ('wifi', 'cell')))
+                len(rows) > 1 and '80%' in rows[0] and '0:window' in rows[1])
+        for module in ANDROID_ICONS:
+            self.assertFalse((self.home / (module + '-calls')).exists())
         (self.home / 'sessions.json').write_text('broken')
         self.await_screen(outer, 'one', lambda rows:
             len(rows) > 1 and not re.search(r' 3[12]:', rows[1]) and '80%' in rows[0])

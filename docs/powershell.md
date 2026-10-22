@@ -79,3 +79,7 @@ on Windows. `--builtin` and `promote` target the selected native checkout. Both
 frontends share the authoring/picker controller and journal; Windows application
 connector destinations are unchanged. Native PowerShell 5.1/7 FZF keyboard,
 preview and interruption acceptance remains pending where engines are unavailable.
+
+## Standalone weather
+
+`bin/wttr.ps1` uses the literal native argument bridge and shared Python 3.11+ weather controller; Bash is not required. It supports the same views/flags/progress/data, stock request syntax and generated PowerShell completion as the Unix entry. Temperature/icon styling and widget formats use the shared renderer, and completion tooltips use case-sensitive stock metadata. Stock requests execute native `curl.exe` directly, bypassing the PowerShell `curl` alias; JSON-backed views do not require curl. Configuration maps to APPDATA/wttr (XDG override supported). Manual/default locations are supported; Android acquisition and tmux have no native Windows equivalent here. Native Windows PowerShell 5.1/7 weather/completion terminal validation remains pending; shared controller/bridge fixtures do not establish it. See [wttr](wttr.md).

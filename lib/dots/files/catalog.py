@@ -15,7 +15,7 @@ import unicodedata
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from progress import configure, tracked
-from resources import Resources, wrap as resource_wrap
+from resources import Resources, wrap as resource_wrap, cells as resource_cells
 from file_platform import permissions, sync_dir, open_nofollow, lock as lock_file
 from interaction import SelectionEnded
 
@@ -75,6 +75,27 @@ class Presentation:
         if self.icons:
             text = icon + ' ' + text
         return self.paint(text, code or style)
+
+    def detail_spans(self, label, spans):
+        """Wrap inert text first, then color independently styled value spans."""
+        spans = [(self.clean(text), code) for text, code in spans if str(text)]
+        prefix = f"    {self.clean(label):<10} "
+        index, offset = 0, 0
+        width = max(8, self.width - resource_cells(prefix))
+        for number, part in enumerate(resource_wrap(''.join(text for text, _ in spans), width)):
+            line = self.paint(prefix, '94') if number == 0 else ' ' * resource_cells(prefix)
+            remaining = len(part)
+            while remaining:
+                text, code = spans[index]
+                count = min(remaining, len(text) - offset)
+                piece = text[offset:offset + count]
+                line += self.paint(piece, code) if code else piece
+                remaining -= count
+                offset += count
+                if offset == len(text):
+                    index += 1
+                    offset = 0
+            self.emit(line)
 
     def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None):
         text = self.clean(self.path(path) if display is None else display)

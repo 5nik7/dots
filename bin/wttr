@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Standalone weather command; shared Python controller also serves native Windows.
+set -e
+source_path=${BASH_SOURCE[0]}
+while [[ -L $source_path ]]; do
+  source_dir=$(cd -P -- "$(dirname -- "$source_path")" && pwd)
+  source_path=$(readlink -- "$source_path")
+  [[ $source_path == /* ]] || source_path=$source_dir/$source_path
+done
+wttr_root=$(cd -P -- "$(dirname -- "$source_path")/.." && pwd)
+exec python3 -B "$wttr_root/lib/dots/wttr/cli.py" "$@"

@@ -63,6 +63,26 @@ class ResourcesTests(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr)
         return p.stdout.split('\0')
 
+    def test_detail_spans_wrap_before_paint_and_sanitize(self):
+        with patch.dict(os.environ,self.env,clear=True):
+            for width in (40,80,120):
+                stream=io.StringIO();ui=Presentation(stream);ui.width=width
+                ui.detail_spans('Weather',[('雲 weather ' * 8,'38;2;1;2;3'),('72°F', '32'),('\x1b[31m injected', None)])
+                text=stream.getvalue()
+                plain=re.sub(r'\x1b\[[0-9;]*m','',text)
+                self.assertTrue(all(cells(line)<=width for line in plain.splitlines()))
+                self.assertIn('72°F',plain)
+                self.assertIn(r'\x1b[31m',plain)
+                self.assertNotIn('\x1b[31m',text)
+                self.assertIn('\x1b[38;2;1;2;3m',text)
+                ui.color=False;stream.seek(0);stream.truncate()
+                ui.detail_spans('Plain',[('12', '31'),(' / ', None),('20', '32')])
+                self.assertEqual(stream.getvalue(),'    Plain      12 / 20\n')
+                ui.detail_spans('Empty',[('', None)])
+                stream.seek(0);stream.truncate()
+                ui.detail_spans('Now', [('53°F', '31')])
+                self.assertEqual(stream.getvalue(), '    Now        53°F\n')
+
     def test_published_rules_and_native_kind_parity(self):
         paths = [('file.special','file',''), ('file.png','file','image/png'),
                  ('file.txt','file','text/plain'), ('file.zz','file','text/plain'),
