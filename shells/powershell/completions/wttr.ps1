@@ -5,22 +5,30 @@ Register-ArgumentCompleter -Native -CommandName wttr,wttr.ps1 -ScriptBlock {
     $index = $parts.Count - 1
     if ($wordToComplete -and $index -ge 0 -and $parts[$index] -eq $wordToComplete) { $index-- }
     $prev = if ($index -ge 0) { $parts[$index] } else { '' }
-    $items = @('--location','--current','--days','--hourly','--units','--language','--widget','--format','--get','--fields','--json','--daylight','--refresh','--cached','--allow-stale','--config','--timeout','--color','--icons','--verbose','--help','--version','get','completion','m','u','M','0','1','2','A','d','F','n','q','Q','T','format=','moon','moon@',':help',':bash.function',':translation')
-    if ($parts.Count -gt 1 -and $parts[1] -eq 'completion') { $items = @('bash','zsh','fish','powershell','--all','--install','--dir','--help') }
-    switch ($prev) {
+    $items = @('-l','--location','-c','--current','-d','--days','-H','--hourly','-u','--units','-L','--language','-w','--widget','-f','--format','-g','--get','-F','--fields','-j','--json','--daylight','-r','--refresh','--cached','--allow-stale','-C','--config','-t','--timeout','--color','--icons','-v','--verbose','-h','--help','-V','--version','get','completion','m','u','M','0','1','2','A','d','F','n','q','Q','T','format=','moon','moon@',':help',':bash.function',':translation')
+    if ($parts.Count -gt 1 -and $parts[1] -eq 'completion') { $items = @('bash','zsh','fish','powershell','--all','--install','--dir','-h','--help') }
+    switch -CaseSensitive ($prev) {
+        '-l' { $items = @(); break }
         '--location' { $items = @(); break }
+        '-d' { $items = @('1','2','3'); break }
         '--days' { $items = @('1','2','3'); break }
+        '-u' { $items = @('us','metric'); break }
         '--units' { $items = @('us','metric'); break }
+        '-L' { $items = @(); break }
         '--language' { $items = @(); break }
+        '-f' { $items = @(); break }
         '--format' { $items = @(); break }
-        '--get' { $items = @('location','attribution','condition','code','icon','temperature','unit','feels_like','humidity','wind','wind_unit','wind_direction','precipitation','precipitation_unit','sunrise','sunset','daylight','age','stale','stale_marker'); break }
+        '-g' { $items = @('location','attribution','condition','code','icon','temperature','unit','feels_like','humidity','wind','wind_unit','wind_direction','precipitation','precipitation_unit','sunrise','sunset','daylight','age','stale','stale_marker','wind_icon','sunrise_icon','sunset_icon','humidity_icon','precip_icon','location_icon'); break }
+        '--get' { $items = @('location','attribution','condition','code','icon','temperature','unit','feels_like','humidity','wind','wind_unit','wind_direction','precipitation','precipitation_unit','sunrise','sunset','daylight','age','stale','stale_marker','wind_icon','sunrise_icon','sunset_icon','humidity_icon','precip_icon','location_icon'); break }
+        '-C' { $items = @(); break }
         '--config' { $items = @(); break }
+        '-t' { $items = @(); break }
         '--timeout' { $items = @(); break }
         '--color' { $items = @('auto','always','never'); break }
         '--icons' { $items = @('auto','always','never'); break }
-        'get' { $items = @('location','attribution','condition','code','icon','temperature','unit','feels_like','humidity','wind','wind_unit','wind_direction','precipitation','precipitation_unit','sunrise','sunset','daylight','age','stale','stale_marker'); break }
+        'get' { $items = @('location','attribution','condition','code','icon','temperature','unit','feels_like','humidity','wind','wind_unit','wind_direction','precipitation','precipitation_unit','sunrise','sunset','daylight','age','stale','stale_marker','wind_icon','sunrise_icon','sunset_icon','humidity_icon','precip_icon','location_icon'); break }
     }
-    if ($prev -in @('--config','--dir')) {
+    if ($prev -cin @('-C','--config','--dir')) {
         [System.Management.Automation.CompletionCompleters]::CompleteFilename($wordToComplete)
         return
     }
@@ -44,29 +52,46 @@ Register-ArgumentCompleter -Native -CommandName wttr,wttr.ps1 -ScriptBlock {
     $descriptions.Add(':help', 'Show upstream usage')
     $descriptions.Add(':bash.function', 'Show the recommended Bash function')
     $descriptions.Add(':translation', 'Show translation and contributor information')
+    $descriptions.Add('-l', 'Override configured location or automatic city')
     $descriptions.Add('--location', 'Override configured location or automatic city')
+    $descriptions.Add('-c', 'Show current conditions only')
     $descriptions.Add('--current', 'Show current conditions only')
+    $descriptions.Add('-d', 'Number of forecast days (default: 3)')
     $descriptions.Add('--days', 'Number of forecast days (default: 3)')
+    $descriptions.Add('-H', 'Include three-hourly forecast rows')
     $descriptions.Add('--hourly', 'Include three-hourly forecast rows')
+    $descriptions.Add('-u', 'Temperature, wind and precipitation units')
     $descriptions.Add('--units', 'Temperature, wind and precipitation units')
+    $descriptions.Add('-L', 'Weather description language (default: en)')
     $descriptions.Add('--language', 'Weather description language (default: en)')
+    $descriptions.Add('-w', 'Print a compact cached widget; refresh in background')
     $descriptions.Add('--widget', 'Print a compact cached widget; refresh in background')
-    $descriptions.Add('--format', 'Widget template with literal {field} placeholders')
+    $descriptions.Add('-f', 'Widget template with fields and style directives')
+    $descriptions.Add('--format', 'Widget template with fields and style directives')
+    $descriptions.Add('-g', 'Print one field; also: wttr get FIELD')
     $descriptions.Add('--get', 'Print one field; also: wttr get FIELD')
+    $descriptions.Add('-F', 'List available template and scalar fields')
     $descriptions.Add('--fields', 'List available template and scalar fields')
+    $descriptions.Add('-j', 'Print the original wttr.in j1 object')
     $descriptions.Add('--json', 'Print the original wttr.in j1 object')
     $descriptions.Add('--daylight', 'Print day, night or unknown; refresh in background')
+    $descriptions.Add('-r', 'Refresh now, overriding freshness and cooldown')
     $descriptions.Add('--refresh', 'Refresh now, overriding freshness and cooldown')
     $descriptions.Add('--cached', 'Read only; never spawn, locate, lock or write')
     $descriptions.Add('--allow-stale', 'Allow marked weather up to max_stale age')
+    $descriptions.Add('-C', 'Use this TOML configuration file')
     $descriptions.Add('--config', 'Use this TOML configuration file')
+    $descriptions.Add('-t', 'Total refresh deadline (1–60 seconds)')
     $descriptions.Add('--timeout', 'Total refresh deadline (1–60 seconds)')
     $descriptions.Add('--color', 'Human and widget output colors')
     $descriptions.Add('--icons', 'Weather icons (widget auto uses icons)')
+    $descriptions.Add('-v', 'Show cache provenance and age in human output')
     $descriptions.Add('--verbose', 'Show cache provenance and age in human output')
+    $descriptions.Add('-h', 'Show usage without querying providers')
     $descriptions.Add('--help', 'Show usage without querying providers')
+    $descriptions.Add('-V', 'Print version')
     $descriptions.Add('--version', 'Print version')
-    $items | Where-Object { $_.StartsWith($wordToComplete, [StringComparison]::OrdinalIgnoreCase) } | ForEach-Object {
+    $items | Where-Object { $_.StartsWith($wordToComplete, [StringComparison]::Ordinal) } | ForEach-Object {
         $tip = if ($descriptions.ContainsKey($_)) { $descriptions[$_] } else { $_ }
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $tip)
     }

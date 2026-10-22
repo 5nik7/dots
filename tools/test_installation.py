@@ -40,6 +40,8 @@ class InstallationTests(unittest.TestCase):
                         GIT_CONFIG_NOSYSTEM='1', GIT_TERMINAL_PROMPT='0')
         self.env.update(CODEX_HOME=str(self.home/'.codex'), PI_CODING_AGENT_DIR=str(self.home/'.pi/agent'),
                         XDG_CACHE_HOME=str(self.home/'.cache'), XDG_DATA_HOME=str(self.home/'.data'))
+        for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG', 'TELEVISION_CONFIG', 'DOTS_APP_TELEVISION_CONFIG'):
+            self.env.pop(key, None)
         self.write('.dots/sources.json', {'schema':1,'sources':[dict(id='dots',path='.',roots=['config','bin'],platforms=['termux','linux','wsl','windows'])]})
         self.write('.dots/files.json', {'schema':1,'repository':'dots','resources':[dict(id='example',source='config/example/settings',target='${CONFIG}/example/settings',strategy='link',app='example',category='config',platforms=['termux','linux','wsl','windows'])]})
         # Native Windows positive cases require explicit link capability.
@@ -316,6 +318,30 @@ p.apply('install')
         doc['resources'].append(dict(id='fsh',source='config/fsh',target='${CONFIG}/fsh',strategy='directory-link',app='fsh',category='config',platforms=['termux','linux','wsl']))
         self.write('.dots/files.json',doc)
 
+    def test_eza_setup_respects_destination_and_restore(self):
+        self.theme_fixture()
+        source = self.repo / 'config/eza'
+        source.mkdir()
+        (source / 'reference.yml').write_text('colourful: true\n')
+        doc = json.loads((self.repo / '.dots/files.json').read_text())
+        doc['resources'].append(dict(id='eza', source='config/eza',
+            target='${APP_CONFIG:eza}' if os.name == 'nt' else '${CONFIG}/eza',
+            strategy='directory-link', app='eza', category='config',
+            platforms=['termux','linux','wsl','windows']))
+        self.write('.dots/files.json', doc)
+        if os.name != 'nt':
+            self.env['EZA_CONFIG_DIR'] = str(self.home / 'other eza')
+            preview = self.cli('install', '--dry-run', '--json').stdout
+            self.assertNotIn(str(source / 'theme.yml'), preview)
+            self.env.pop('EZA_CONFIG_DIR')
+        self.cli('install', '--yes')
+        target = source / 'theme.yml'
+        self.assertTrue(target.is_symlink())
+        self.assertIn('colourful: true', target.read_text())
+        self.cli('uninstall', '--yes')
+        self.assertFalse(target.is_symlink())
+        self.assertEqual((source / 'reference.yml').read_text(), 'colourful: true\n')
+
     @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
     def test_legacy_vivid_setup_notice_json_and_repeat(self):
         self.theme_fixture()
@@ -373,7 +399,7 @@ p.apply('install')
         names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','-z','--',
             '.dots','bin','lib','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
-        names.update(('config/fsh/README.md','lib/dots/themes/generation.bash',
+        names.update(('config/fsh/README.md','default/themed/eza.yml.tpl','default/themed/television.toml.tpl','lib/dots/themes/generation.bash',
                       'lib/dots/files/events.py', 'lib/dots/verbose.bash', 'lib/dots/files/app_paths.py'))
         names.update(str(p.relative_to(ROOT)) for p in (ROOT/'lib/dots/metadata').glob('*.meta'))
         shutil.rmtree(self.repo)

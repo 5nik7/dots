@@ -262,6 +262,8 @@ uses the same home. The connector uses the existing POSIX symlink journal;
 there is no native Windows connector or silent copy fallback. Native desktop/WSL
 appearance remains unverified. See [Codex setup](themes.md#codex-and-codex-termux).
 
+The eza connector is implemented in both the Bash and native Python publishers. The [eza destination rules](themes.md#eza) use XDG on Termux/Linux/WSL and APPDATA on Windows, with shared explicit overrides and no cross-platform path translation. Normal refresh requires an existing app directory. Native Termux eza is tested; Windows PowerShell 5.1/7, Linux and WSL runtime/visual acceptance remain pending.
+
 ## Bounded Git and file operations
 
 The live Git family requires Bash 5, Git, POSIX utilities and (for publish) sha256sum. It rejects native Windows shell environments; Linux/WSL use the POSIX boundary with native validation reported separately. File operations use the existing Python POSIX adapter, no privilege elevation, and XDG config/state roots. There is no native Windows mutation adapter, link-to-copy fallback, or cross-Windows/WSL translation. Termux-owned discovery rules live in Androidots. See [Git](git.md), [files](files.md) and [verification](testing.md#git-and-managed-file-operations).
@@ -338,3 +340,5 @@ Separate owner-device checks verified network acquisition and cache reuse after 
 ## wttr weather
 
 The shared Python 3.11+ weather controller has Bash and native PowerShell entries. Unix config/cache use XDG defaults; Windows configuration uses APPDATA/wttr and cache uses LOCALAPPDATA/cache/wttr unless XDG overrides are explicit. The catalog Windows app destination is `${APP_CONFIG:wttr}`. Manual/default weather is portable. Stock wttr.in requests require native `curl` on Unix or `curl.exe` on Windows; JSON-backed views retain their Python standard-library transport. Android acquisition and tmux daylight styling are Termux-only; there is no native Windows location provider in this slice. Native Windows PowerShell 5.1/7, Windows locks/ACLs and completion runtime acceptance remain pending on this Termux host. See [weather behavior and verification limits](wttr.md).
+
+The Television connector is implemented in both publishers. Its [destination rules](themes.md#television) match Television 0.15.9, including native Windows LOCALAPPDATA and explicit overrides. An existing app directory is required; its missing `themes` child is journaled. Native Windows PowerShell 5.1/7, Linux and WSL acceptance remains pending; Termux and fixture evidence is recorded in [testing](testing.md#television-theme).

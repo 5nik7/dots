@@ -122,7 +122,7 @@ RGB) are supported; unresolved variables refuse publication. Personal templates 
 A trusted bundled theme's explicit application file takes precedence over both.
 Downloaded themes contribute colors and backgrounds only. Templates never evaluate
 shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
-Yazi, Codex, Pi, Vivid and FSH data; Zsh/Fish and Neovim data come from the palette generator.
+Yazi, Codex, Pi, Vivid, FSH, eza and Television data; Zsh/Fish and Neovim data come from the palette generator.
 
 The [mdcat configuration](../config/mdcat/config.toml) uses `base = "auto"` for dark/light detection and ANSI color names for its overrides. Its colors follow the terminal palette, so the terminal must have the Dots theme applied; mdcat does not read the published Dots palette directly. Existing heading markers, alert labels and text styles are preserved. Code-block highlighting continues to use mdcat's `BAT_THEME` integration. Explicit `--theme` or `MDCAT_THEME` selections override the base, with config style overrides still applied on top.
 
@@ -269,7 +269,7 @@ Existing app settings and Neovim transparency remain in their source configurati
 On selection, fixed connector links are created only for configured applications:
 Kitty/tmux `dots-theme.conf`, btop `themes/dots.theme`, Yazi `flavors/dots.yazi`, and
 Termux `~/.termux/colors.properties`, Pi's `themes/dots.json`, and Codex's
-`themes/dots.tmTheme`, Vivid `themes/dots.yml`, and FSH `dots.ini` (see below). Existing regular files or symlinks are saved in
+`themes/dots.tmTheme`, Vivid `themes/dots.yml`, FSH `dots.ini`, eza `theme.yml`, and Television `themes/dots.toml` (see below). Existing regular files or symlinks are saved in
 the generation's connector journal before replacement; real directories are refused.
 Parent application directories must exist. If an application directory itself is
 linked into a repository, the connector lives in that source directory. It is
@@ -280,6 +280,16 @@ colors; Kitty remote control is used only when KITTY_LISTEN_ON is supplied. Relo
 failures report that colors were published and can be retried with `refresh`. Apps
 without a running reload adapter pick up the files through their normal startup.
 No terminal/editor process is restarted and no plugin or package is installed.
+
+### eza
+
+`default/themed/eza.yml.tpl` generates `eza.yml`, adapting the categories and bold permission attributes from `config/eza/themes/catppuccin-mocha-mauve.yml` to the selected semantic palette. SELinux colors use `security_context.selinux`. Git states use resolved shared Git roles, including user `file-colors.toml` overrides; `git_<role>_eza` tokens translate `reset` to eza's `default` foreground. Both branch categories use the branch role, and type changes use the modified role. The supplied reference remains available as a separate theme.
+
+Publication connects an existing eza directory's `theme.yml` to the active generation's `eza.yml`. Directory resolution is `DOTS_APP_EZA_CONFIG`, then `EZA_CONFIG_DIR`, then `${XDG_CONFIG_HOME:-$HOME/.config}/eza` on Termux/Linux/WSL or `%APPDATA%/eza` on native Windows. The fallback when APPDATA is absent is `~/AppData/Roaming/eza`. Paths must be absolute without control characters or `.`/`..` components; no tilde expansion is performed. `DOTS_APP_EZA_CONFIG` changes Dots' destination only: set eza's `EZA_CONFIG_DIR` to the same location when using that override.
+
+Existing files and symlinks are backed up through the publisher journal; real directories at `theme.yml` are refused. Normal publication creates no eza directory, requires no eza executable, and does not restart a process. Subsequent eza commands read the theme. The generated repository connector is ignored by Git. A trusted bundled `eza.yml` override takes precedence over personal `${XDG_CONFIG_HOME:-$HOME/.config}/dots/themed/eza.yml.tpl` and the default template, matching other app artifacts; native Dots configuration uses its platform config root.
+
+Dots leaves LS_COLORS, EZA_COLORS and aliases unchanged. As described in the [upstream theme guide](https://github.com/eza-community/eza-themes#readme), these environment colors override theme file colors, with EZA_COLORS taking precedence over LS_COLORS. Native Termux eza acceptance and pending Windows checks are recorded in [testing](testing.md#eza-theme).
 
 ### Vivid and Fast Syntax Highlighting
 
@@ -764,3 +774,21 @@ Anodize-created user themes share the normal user theme root and discovery rules
 Explicit built-in saves and promotion are described in [Anodize](anodize.md#interactive-authoring-and-previews).
 Duplicate bundled/user IDs remain errors; promotion moves by default and copies
 require a different ID. Saving or promoting does not activate a theme.
+
+
+### Television
+
+`default/themed/television.toml.tpl` generates `television.toml` with all 19 color fields from the [upstream Catppuccin reference](https://github.com/alexpasmantier/television/blob/main/themes/catppuccin.toml). It uses the selected Dots semantic palette: normal background/foreground, muted borders, accent input/count/matches, blue/yellow/bright-blue results, the shared selection pair, orange preview title, and magenta/green/blue mode badges with background-colored text. `orange` falls back to `yellow` where the palette omits it. Layout, keybindings, channels and preview commands remain editable Television configuration.
+
+Select the generated theme in Television's config:
+
+```toml
+[ui]
+theme = "dots"
+```
+
+Publication links `themes/dots.toml` to the stable active generation's `television.toml`. Both publishers resolve `DOTS_APP_TELEVISION_CONFIG`, then `TELEVISION_CONFIG`, then an absolute `XDG_CONFIG_HOME/television`, then `~/.config/television` on Termux/Linux/WSL or `%LOCALAPPDATA%/television/config` on native Windows (fallback `~/AppData/Local/television/config`). This Windows default follows [Television 0.15.9's implementation](https://github.com/alexpasmantier/television/blob/0.15.9/television/config/mod.rs), rather than the older APPDATA comment in its example config. Explicit destinations must be absolute with no control characters or dot components; tilde expansion is not performed. Dots' override affects only its connector: set Television's `TELEVISION_CONFIG` to the same directory when using it.
+
+The app config directory must already exist. Publication may create its missing `themes` child through the journal, backs up existing `dots.toml` files or links, and refuses real-directory targets and unsafe parents. Rollback removes transaction-created parents only when safe and empty, preserving new user content. The Bash journal records directory identity; interruption before identity is recorded requires manual inspection instead of guessing ownership. The native publisher uses the shared Store's parent journal. No Television executable is required for publication, and no running Television process is restarted. New launches read the generated theme; `[ui.theme_overrides]` retains Television's normal precedence.
+
+Personal `dots/themed/television.toml.tpl` templates override the default; trusted bundled `television.toml` files override both. These inputs participate in generation fingerprints. Use `dots theme set ID --dry-run` to preview and `dots theme refresh` to publish the current selection. Native consumer evidence and outstanding platform checks are recorded in [testing](testing.md#television-theme).

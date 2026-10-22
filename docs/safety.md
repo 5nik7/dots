@@ -369,6 +369,7 @@ restarts sessions. Unchanged connector links are retained across publications.
 Vivid and FSH connectors target only `vivid/themes/dots.yml` and `fsh/dots.ini`
 under the configured XDG root when their parents exist. They use the same journal,
 backup, conflict refusal and drift checks; publication does not create app directories.
+The eza connector targets only `theme.yml` in an existing resolved eza directory, using the same backup, rollback and drift checks. Both publishers validate the absolute destination before connecting; native Windows uses the native link adapter without silent copying. No eza process or directory is created by refresh.
 No complete generation or backup is automatically pruned. Reload failures preserve
 the published theme and report a retry path; external app state is not rolled back.
 
@@ -582,3 +583,5 @@ copying preserves the original image.
 ## wttr cache and completion
 
 Weather refresh writes only a private disposable cache containing the requested location (including coordinates), bounded upstream data and retry/reservation metadata. Background views may spawn a bounded HTTP refresh but use a configured location or read cached geo city/address data only; strict `--cached` never spawns or writes. Foreground automatic refresh may invoke the existing Termux location helper and its reverse-geocoding service. Stock requests use bounded native curl, disable curlrc/globbing, preserve successful response bytes and never populate the weather cache; service pages and moon routes skip location. It does not change permissions, install dependencies or modify Android provider gates. Completion installation is explicit, preflights all targets and uses the shared Store transaction/backup/drift/undo contracts. It never changes shell profiles automatically. See [weather recovery](wttr.md#cache-and-recovery).
+
+The Television connector targets only `themes/dots.toml` in an existing resolved app directory. Its missing `themes` child may be created with a durable journal. Bash records creation intent and directory identity, refuses ambiguous recovery or replacement-directory drift, and removes only an empty owned directory; interruption between creation and recording identity requires manual recovery. Native publication uses Store parent creation and rollback. Existing theme files/links retain the usual backup and drift safeguards. No Television process is started by publication.

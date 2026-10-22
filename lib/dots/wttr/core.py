@@ -26,7 +26,9 @@ LIMIT = 4 * 1024 * 1024
 VERSION = '1.2.0'
 FIELDS = ('location', 'attribution', 'condition', 'code', 'icon', 'temperature', 'unit', 'feels_like',
           'humidity', 'wind', 'wind_unit', 'wind_direction', 'precipitation', 'precipitation_unit',
-          'sunrise', 'sunset', 'daylight', 'age', 'stale', 'stale_marker')
+          'sunrise', 'sunset', 'daylight', 'age', 'stale', 'stale_marker',
+          'wind_icon', 'sunrise_icon', 'sunset_icon', 'humidity_icon', 'precip_icon', 'location_icon')
+DETAIL_ICONS = dict(sunrise_icon='', sunset_icon='󰖚', humidity_icon='', precip_icon='', location_icon='')
 
 
 class Unavailable(ValueError):
@@ -342,6 +344,23 @@ def first_value(values):
     return clean(values[0].get('value', '')) if isinstance(values, list) and values and isinstance(values[0], dict) else ''
 
 
+def wind_icon(current):
+    """Eight arrows pointing downwind; provider bearings describe the source."""
+    raw = current.get('winddirDegree')
+    try:
+        bearing = float(raw) if not isinstance(raw, bool) else math.nan
+    except (TypeError, ValueError, OverflowError):
+        bearing = math.nan
+    if not math.isfinite(bearing) or not 0 <= bearing <= 360:
+        compass = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+                   'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW')
+        direction = str(current.get('winddir16Point', '')).strip().upper()
+        if direction not in compass:
+            return ''
+        bearing = compass.index(direction) * 22.5
+    return '↓↙←↖↑↗→↘'[int((bearing + 22.5) // 45) % 8]
+
+
 def fields(row, cfg, age=0, icons=True, now=None):
     data = row.get('data') or {}
     current = (data.get('current_condition') or [{}])[0]
@@ -360,15 +379,14 @@ def fields(row, cfg, age=0, icons=True, now=None):
                 humidity=clean(current.get('humidity', '?')), wind=clean(current.get('windspeedMiles' if us else 'windspeedKmph', '?')),
                 wind_unit='mph' if us else 'km/h', wind_direction=clean(current.get('winddir16Point', '')),
                 precipitation=clean(current.get('precipInches' if us else 'precipMM', '?')), precipitation_unit='in' if us else 'mm',
-                sunrise=sunrise, sunset=sunset, daylight=daylight, age=str(int(age)) if math.isfinite(age) else '',
-                stale=str(stale).lower(), stale_marker='~' if stale else '')
+                sunrise=sunrise.removeprefix('0'), sunset=sunset.removeprefix('0'),
+                daylight=daylight, age=str(int(age)) if math.isfinite(age) else '',
+                stale=str(stale).lower(), stale_marker='~' if stale else '',
+                wind_icon=wind_icon(current) if icons else '',
+                **{key: cfg['icons'].get(key.removesuffix('_icon'), glyph).strip() if icons else ''
+                   for key, glyph in DETAIL_ICONS.items()})
 
 
 def format_widget(template, values):
-    import string
-    if len(template) > 1024 or clean(template) != template:
-        raise ValueError('template must be one line of at most 1024 characters')
-    for _, field, spec, conversion in string.Formatter().parse(template):
-        if field is not None and (field not in FIELDS or spec or conversion):
-            raise ValueError('template accepts only literal {field} placeholders; see --fields')
-    return template.format_map(values)
+    from styling import parse_widget, plain_widget
+    return plain_widget(parse_widget(template), values)

@@ -14,8 +14,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from core import (ROOT, VERSION, FIELDS, Cache, Unavailable, config, clean, fields,
-                  format_widget, http_fetch, validate_location, validate_language)
-from metadata import OPTIONS, COMPLETION_OPTIONS, SHELLS, STOCK_FLAGS, STOCK_DESCRIPTIONS
+                  http_fetch, validate_location, validate_language)
+from metadata import OPTIONS, COMPLETION_OPTIONS, SHELLS, STOCK_FLAGS, STOCK_DESCRIPTIONS, spellings
 sys.path.insert(0, str(ROOT / 'lib/dots'))
 from files.catalog import Presentation
 from progress import configure, Progress
@@ -34,23 +34,26 @@ def parser():
             settings['action'] = 'store_true'
         elif '|' in value:
             settings['choices'] = value.split('|')
-        result.add_argument(flag, **settings)
-    result.add_argument('-h', dest='help', action='store_true')
+        result.add_argument(*spellings(flag), **settings)
     result.add_argument('positional', nargs='*')
     return result
 
 
 def help_view(completion=False):
+    from styling import help_banner
     ui = Presentation()
-    ui.heading('wttr — weather from wttr.in')
+    help_banner(ui)
+    ui.emit()
+    ui.heading((' ' if ui.icons else '') + 'wttr — weather from wttr.in')
     ui.detail('Usage', 'wttr completion SHELL [--install] [--dir DIRECTORY]' if completion else 'wttr [LOCATION] [options]')
     if not completion:
         ui.detail('Queries', 'wttr get FIELD | wttr --fields | wttr completion SHELL')
         ui.detail('Location', 'Explicit input, configured default, then termux-geo city. No IP fallback.')
     ui.emit()
     ui.heading('Options')
-    for flag, value, description in COMPLETION_OPTIONS if completion else OPTIONS:
-        ui.detail(flag + (' ' + value if value else ''), description)
+    options = [*COMPLETION_OPTIONS, next(row for row in OPTIONS if row[0] == '--help')] if completion else OPTIONS
+    for flag, value, description in options:
+        ui.detail(', '.join(spellings(flag)) + (' ' + value if value else ''), description)
     ui.emit()
     ui.detail('Examples', "wttr --location London --days 2; wttr --widget; wttr get sunrise")
     if completion:
@@ -63,6 +66,10 @@ def help_view(completion=False):
         ui.detail('Formats', 'format=VALUE uses wttr.in; --format TEMPLATE uses local {fields}.')
         ui.detail('Background', 'Widget/daylight use cached city only. --cached never refreshes.')
         ui.detail('Appearance', 'Config controls attribution, temperature ranges, icon colors and widget color format.')
+        ui.detail('Styles', 'bold (b), italic (i), underline (u), dim (d), reverse; bright blue selects bright_blue.')
+        ui.detail('Widget', '{icon_color}, {temp_color}, {feel_color}, {bold white}, {b}, {reset}; directives select manual styling.')
+        ui.detail('Icons', '{location_icon}, {wind_icon}, {sunrise_icon}, {sunset_icon}, {humidity_icon}, {precip_icon}; wind arrows point downwind.')
+        ui.detail('Icon styles', '{location_color}, {wind_color}, {sunrise_color}, {sunset_color}, {humidity_color}, {precip_color}.')
         ui.emit()
         ui.heading('Stock wttr.in options')
         for word, description in STOCK_DESCRIPTIONS.items():
@@ -75,7 +82,7 @@ def complete(argv):
     p.add_argument('shell', choices=SHELLS, nargs='?')
     for flag, value, _ in COMPLETION_OPTIONS:
         p.add_argument(flag, **({} if value else {'action': 'store_true'}))
-    p.add_argument('--help', action='store_true')
+    p.add_argument(*spellings('--help'), action='store_true')
     for key in ('color', 'icons'):
         p.add_argument('--' + key, choices=('auto', 'always', 'never'))
     args = p.parse_args(argv)
@@ -110,7 +117,7 @@ def complete(argv):
 
 
 def render(row, cfg, args, age):
-    from styling import condition, temperature_color, Colors, forecast_night
+    from styling import condition, temperature_color, Colors, forecast_night, detail_color
     ui = Presentation()
     colors = Colors(enabled=ui.color)
     values = fields(row, cfg, age, icons=ui.icons)
@@ -120,29 +127,38 @@ def render(row, cfg, args, age):
         glyph, shade = condition(code, cfg, night)
         glyph = glyph.strip()
         return (glyph + ' ' if ui.icons and glyph else '', colors.sgr(shade) if ui.icons and glyph else None)
-    ui.heading('Weather — ' + values['location'])
-    ui.detail_spans('Now', [icon(values['code'], values['daylight'] == 'night'),
-                           (values['condition'].strip() + ' ', None), temp(values['temperature'], values['unit'])])
-    ui.detail_spans('Feels like', [temp(values['feels_like'], values['unit'])])
-    ui.detail('Humidity', values['humidity'] + '%')
-    ui.detail('Wind', values['wind'] + ' ' + values['wind_unit'] + ' ' + values['wind_direction'])
-    ui.detail('Precip', values['precipitation'] + ' ' + values['precipitation_unit'])
-    ui.detail('Sunrise', values['sunrise'] or 'unavailable')
-    ui.detail('Sunset', values['sunset'] or 'unavailable')
-    if cfg['show_location_attribution'] and values['attribution']:
-        ui.detail('Location data', values['attribution'])
+    attribution = cfg['show_location_attribution'] and values['attribution']
+    label_width = 12 if attribution else 10
+    def detail(label, spans):
+        ui.detail_spans(label, spans, label_width=label_width, label_gap=cfg['label_gap'])
+    def named_icon(name, *, suffix=False):
+        glyph = values[name + '_icon']
+        text = (' ' + glyph if suffix else glyph + ' ') if glyph else ''
+        return (text, colors.sgr(detail_color(name, cfg)) if glyph else None)
+    ui.heading_spans([('Weather — ', '1;96'), named_icon('location'), (values['location'], '1;96')])
+    detail('Now', [icon(values['code'], values['daylight'] == 'night'),
+                   temp(values['temperature'], values['unit'])])
+    detail('Condition', [(values['condition'].strip(), None)])
+    detail('Feels like', [temp(values['feels_like'], values['unit'])])
+    detail('Humidity', [(values['humidity'] + '%', None), named_icon('humidity', suffix=True)])
+    detail('Wind', [((values['wind'] + ' ' + values['wind_unit'] + ' ' + values['wind_direction']).rstrip(), None), named_icon('wind', suffix=True)])
+    detail('Precip', [(values['precipitation'] + ' ' + values['precipitation_unit'], None), named_icon('precip', suffix=True)])
+    detail('Sunrise', [(values['sunrise'] or 'unavailable', None), named_icon('sunrise', suffix=True)])
+    detail('Sunset', [(values['sunset'] or 'unavailable', None), named_icon('sunset', suffix=True)])
+    if attribution:
+        detail('Location data', [(values['attribution'], None)])
     if values['stale'] == 'true':
-        ui.detail('Cache', 'Stale (~), ' + values['age'] + ' seconds old', '93')
+        detail('Cache', [('Stale (~), ' + values['age'] + ' seconds old', '93')])
     if args.verbose:
-        ui.detail('Source', row.get('source', 'cache'))
-        ui.detail('Age', values['age'] + ' seconds')
+        detail('Source', [(row.get('source', 'cache'), None)])
+        detail('Age', [(values['age'] + ' seconds', None)])
     if args.current:
         return
     unit = 'F' if cfg['units'] == 'us' else 'C'
     for day in row['data']['weather'][:cfg['days']]:
         ui.emit()
         ui.heading(clean(day.get('date', 'Forecast')))
-        ui.detail_spans('Low / High', [temp(clean(day.get('mintemp' + unit, '?'))),
+        detail('Low / High', [temp(clean(day.get('mintemp' + unit, '?'))),
                                       (' / ', None), temp(clean(day.get('maxtemp' + unit, '?')), '°' + unit)])
         hourly = day.get('hourly', [])
         if not isinstance(hourly, list):
@@ -150,7 +166,7 @@ def render(row, cfg, args, age):
         if not args.hourly:
             midday = next((h for h in hourly if isinstance(h, dict) and str(h.get('time')) == '1200'), {})
             from core import first_value
-            ui.detail_spans('Midday', [icon(midday.get('weatherCode'), forecast_night(row['data'], day, 1200)),
+            detail('Midday', [icon(midday.get('weatherCode'), forecast_night(row['data'], day, 1200)),
                                       ((first_value(midday.get('weatherDesc')) or 'unavailable').strip(), None)])
         else:
             from core import first_value
@@ -158,7 +174,7 @@ def render(row, cfg, args, age):
                 if not isinstance(hour, dict): continue
                 raw_time = str(hour.get('time', ''))
                 if not raw_time.isdigit() or not 0 <= int(raw_time) <= 2300: continue
-                ui.detail_spans(f'{int(raw_time) // 100:02d}:{int(raw_time) % 100:02d}',
+                detail(f'{int(raw_time) // 100:02d}:{int(raw_time) % 100:02d}',
                                 [temp(clean(hour.get('temp' + unit, '?')), '°' + unit), (' ', None),
                                  icon(hour.get('weatherCode'), forecast_night(row['data'], day, raw_time)),
                                  (first_value(hour.get('weatherDesc')).strip(), None)])
@@ -258,8 +274,10 @@ def main(argv=None):
     background = args.widget or args.format is not None or args.daylight
     data_mode = background or args.json or args.get
     configure(human=not data_mode)
+    widget_tokens = None
     if args.widget or args.format is not None:
-        format_widget(args.format if args.format is not None else cfg['widget'], dict.fromkeys(FIELDS, ''))
+        from styling import parse_widget
+        widget_tokens = parse_widget(args.format if args.format is not None else cfg['widget'])
     cache = Cache(cfg, explicit)
     row = cache.read()
     failure = None
@@ -291,7 +309,7 @@ def main(argv=None):
     elif background:
         from styling import widget
         values = fields(row, cfg, cache.age(row), icons=args.icons != 'never' and os.environ.get('DOTS_ICONS') != 'never')
-        print(widget(args.format if args.format is not None else cfg['widget'], values, cfg, Presentation()))
+        print(widget(args.format if args.format is not None else cfg['widget'], values, cfg, Presentation(), tokens=widget_tokens))
     else:
         render(row, cfg, args, cache.age(row))
     return 0

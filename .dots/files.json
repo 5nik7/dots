@@ -106,6 +106,32 @@
       "strategy": "directory-link"
     },
     {
+      "id": "file-config-eza-themes-catppuccin-mocha-mauve-yml",
+      "source": "config/eza/themes/catppuccin-mocha-mauve.yml",
+      "target": "${CONFIG}/eza/themes/catppuccin-mocha-mauve.yml",
+      "app": "config",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "strategy": "link"
+    },
+    {
+      "id": "file-config-television-config-toml",
+      "source": "config/television/config.toml",
+      "target": "${CONFIG}/television/config.toml",
+      "app": "config",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "strategy": "link"
+    },
+    {
       "id": "fish",
       "source": "shells/fish",
       "target": "${CONFIG}/fish",
@@ -499,6 +525,23 @@
       "enabled": false
     },
     {
+      "id": "wttr",
+      "source": "config/wttr",
+      "app": "wttr",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "target": "${CONFIG}/wttr",
+      "strategy": "directory-link",
+      "targets": {
+        "windows": "${APP_CONFIG:wttr}"
+      }
+    },
+    {
       "id": "xonshrc",
       "source": "shells/xonsh/.xonshrc",
       "app": "xonsh",
@@ -570,23 +613,6 @@
       ],
       "target": "${HOME}/.zshrc",
       "strategy": "link"
-    },
-    {
-      "id": "wttr",
-      "source": "config/wttr",
-      "app": "wttr",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "target": "${CONFIG}/wttr",
-      "strategy": "directory-link",
-      "targets": {
-        "windows": "${APP_CONFIG:wttr}"
-      }
     }
   ]
 }

@@ -27,6 +27,7 @@ import cli
 import completion
 import stock
 import styling
+from metadata import SHORT_FLAGS
 
 
 def sample():
@@ -57,6 +58,26 @@ class Weather(unittest.TestCase):
         self.path = self.home / 'config/wttr/config.toml'
         self.path.parent.mkdir(parents=True)
         shutil.copy2(ROOT / 'config/wttr/config.toml', self.path)
+        # Temperature expectations belong to this fixture, not the owner's editable bands.
+        fixture_scale = ('[temperature_scale]\nunit = "F"\nthresholds = [32, 60, 75, 85, 95]\n'
+                         'colors = ["cyan", "blue", "green", "yellow", "orange", "red"]\n\n')
+        self.path.write_text(re.sub(r'(?ms)^\[temperature_scale\].*?(?=^\[|\Z)',
+                                    fixture_scale, self.path.read_text()))
+        # Presentation expectations also belong to fixtures, not owner overrides.
+        text=self.path.read_text()
+        text=re.sub(r'(?m)^label_gap\s*=.*\n','',text)
+        text='label_gap = 3\n'+text
+        for table, entries in {
+                'icons':dict(location='',sunrise='',sunset='󰖚',humidity='',precip=''),
+                'icon_colors':dict(location='magenta',sunrise='yellow',sunset='orange',humidity='cyan',precip='blue',wind='cyan')}.items():
+            pattern=r'(?ms)^\['+table+r'\]\n(.*?)(?=^\[|\Z)'
+            match=re.search(pattern,text)
+            body=match[1] if match else ''
+            for key in entries:
+                body=re.sub(r'(?m)^'+key+r'\s*=.*\n','',body)
+            replacement='['+table+']\n'+''.join(key+' = '+json.dumps(value,ensure_ascii=False)+'\n' for key,value in entries.items())+body
+            text=text[:match.start()]+replacement+text[match.end():] if match else text+'\n'+replacement
+        self.path.write_text(text)
         _, self.cfg = core.config()
         self.cache = core.Cache(self.cfg)
         self.data = sample()
@@ -82,8 +103,9 @@ class Weather(unittest.TestCase):
     def test_defaults_icons_and_config_errors(self):
         self.assertEqual(self.cfg['units'], 'us')
         self.assertEqual(self.cfg['default_location'], '')
-        self.assertEqual(len(self.cfg['icons']), 49)
-        self.assertTrue(all(0xe000 <= ord(v) <= 0xf8ff for v in self.cfg['icons'].values()))
+        condition_icons={k:v for k,v in self.cfg['icons'].items() if k=='unknown' or k.isdigit()}
+        self.assertEqual(len(condition_icons), 49)
+        self.assertTrue(all(0xe000 <= ord(v) <= 0xf8ff for v in condition_icons.values()))
         self.path.write_text('units = "bad"')
         with self.assertRaises(ValueError): core.config()
         self.path.write_text('[broken')
@@ -143,6 +165,255 @@ class Weather(unittest.TestCase):
             target = self.root / 'palette-target.json'
             path.rename(target); path.symlink_to(target)
             self.assertEqual(styling.Colors().resolve('blue'), 4)
+
+    def test_style_expressions_bright_aliases_and_invalid_tokens(self):
+        self.palette(dict(bright_blue='#123456', color15='#abcdef'))
+        colors = styling.Colors()
+        self.assertEqual(colors.sgr('underline bold bright blue'), '1;4;38;2;18;52;86')
+        self.assertEqual(colors.sgr('blue bold bright underline'), '1;4;38;2;18;52;86')
+        self.assertEqual(colors.sgr('b b i u d reverse 33'), '1;2;3;4;7;38;5;33')
+        self.assertEqual(colors.sgr('italic #010203'), '3;38;2;1;2;3')
+        self.assertEqual(colors.sgr('bold'), '1')
+        self.assertEqual(colors.sgr('bold default'), '1')
+        self.assertEqual(colors.sgr('bright white'), '38;2;171;205;239')
+        self.assertEqual(colors.sgr('bright red'), '38;5;9')
+        self.assertEqual(styling.Colors(enabled=False).sgr('bold blue'), None)
+        for value in ('', '   ', True, 1.0, 'red blue', 'bright', 'bright orange', 'bright muted',
+                      'bright #123456', 'bright 33', 'bold\nred', 'blink red', 'bold #{pid}', 'reset'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                styling.parse_style(value)
+        cfg = copy.deepcopy(self.cfg)
+        cfg['temperature_scale']['colors'] = ['bold cyan', 'bold bright blue', 'bright green',
+                                              'bold yellow', 'orange', 'underline bold bright red']
+        cfg['icon_colors']['113'] = 'bright yellow'
+        cfg['night_icon_colors']['113'] = 'i blue'
+        styling.validate_config(cfg)
+
+    def test_variable_temperature_bands_and_boundary_conversion(self):
+        for thresholds, styles, cases in [
+            ([], ['bold'], [(-100,0),(0,0),(200,0)]),
+            ([32], ['blue','red'], [(31,0),(32,0),(32.01,1),(100,1)]),
+            ([0,10,20,30,40,50,60], list(range(8)), [(-1,0),(0,0),(0.1,1),(10,2),(59,6),(60,7)]),
+            ([0.5,1.5], ['cyan','green','red'], [(0.5,0),(1,1),(1.5,2)])]:
+            cfg = copy.deepcopy(self.cfg)
+            cfg['temperature_scale'] = dict(unit='F', thresholds=thresholds, colors=styles)
+            styling.validate_config(cfg)
+            for value, index in cases:
+                self.assertEqual(styling.temperature_color(value,cfg),styles[index])
+                metric = copy.deepcopy(cfg);metric['units']='metric'
+                self.assertEqual(styling.temperature_color((value-32)*5/9,metric),styles[index])
+            self.assertEqual(styling.temperature_color('?',cfg),'default')
+        for thresholds, styles in [([],[]),([],[1,2]),([0],[1]),([0],[1,2,3]),
+                                   ([1,1],[1,2,3]),([2,1],[1,2,3]),([True],[1,2]),
+                                   ([float('nan')],[1,2]),([float('inf')],[1,2])]:
+            cfg = copy.deepcopy(self.cfg)
+            cfg['temperature_scale'] = dict(unit='F',thresholds=thresholds,colors=styles)
+            with self.subTest(thresholds=thresholds), self.assertRaises(ValueError):
+                styling.validate_config(cfg)
+
+    def test_widget_directives_accumulate_reset_and_manual_mode(self):
+        self.palette(dict(blue='#123456', bright_red='#fedcba'))
+        cfg = copy.deepcopy(self.cfg)
+        cfg['widget_color']='always'
+        cfg['icon_colors']['113']='italic blue'
+        cfg['night_icon_colors']['113']='dim 33'
+        cfg['temperature_scale']['colors'][2]='underline bright red'
+        values=core.fields(self.seed(),cfg);values['daylight']='day'
+        ui=cli.Presentation(io.StringIO())
+        text=styling.widget('{b}{icon_color}ICON {temp_color}TEMP{reset} plain',values,cfg,ui)
+        self.assertEqual(text,'\x1b[1;3;38;2;18;52;86mICON \x1b[0m'
+                             '\x1b[1;3;4;38;2;254;220;186mTEMP\x1b[0m plain')
+        values['daylight']='night'
+        self.assertEqual(styling.widget('{icon_color}N{reset}',values,cfg,ui),
+                         '\x1b[2;38;5;33mN\x1b[0m')
+        self.assertEqual(styling.widget('{bold}{white}X{default}Y{reset}Z',values,cfg,ui),
+                         '\x1b[1;38;5;7mX\x1b[0m\x1b[1mY\x1b[0mZ')
+        # A directive anywhere selects manual mode for the entire template.
+        self.assertEqual(styling.widget('{temperature}{unit}{reset}',values,cfg,ui),'72°F')
+        auto=styling.widget('{temperature}{unit}!',values,cfg,ui)
+        self.assertIn('\x1b[4;38;2;254;220;186m72\x1b[0m',auto)
+        self.assertIn('\x1b[4;38;2;254;220;186m°F\x1b[0m!',auto)
+        # Escaped style-looking text does not enable manual mode.
+        self.assertIn('\x1b[4;',styling.widget('{{bold}}{temperature}',values,cfg,ui))
+        values['condition']='{bold} literal'
+        self.assertEqual(styling.widget('{reset}{condition}',values,cfg,ui),'{bold} literal')
+        template='{icon_color}{icon}{reset} {temp_color}{temperature}{unit}{reset}'
+        expected=values['icon']+' 72°F'
+        with patch.object(core,'read_regular',side_effect=AssertionError('plain palette read')):
+            for change in (dict(widget_color_format='plain'),dict(widget_color='never')):
+                self.assertEqual(styling.widget(template,values,dict(cfg,**change),ui),expected)
+            with patch.dict(os.environ,NO_COLOR='1'):
+                self.assertEqual(styling.widget(template,values,dict(cfg,widget_color='auto'),ui),expected)
+        tmux=styling.widget('{bold italic underline dim reverse 33}X{reset}Y',values,
+                            dict(cfg,widget_color_format='tmux'),ui)
+        self.assertEqual(tmux,'#[push-default]#[default]#[fg=colour33,bold,dim,italics,underscore,reverse]X'
+                              '#[default]Y#[default]#[pop-default]')
+        self.assertEqual(core.format_widget('{b}X{reset} {{i}}',values),'X {i}')
+
+    def test_feel_color_uses_feels_like_scale_and_style(self):
+        cfg=copy.deepcopy(self.cfg)
+        cfg.update(widget_color='always')
+        cfg['temperature_scale']=dict(unit='F',thresholds=[32,60],colors=['dim 33','italic 34','underline 35'])
+        values=core.fields(self.seed(),cfg)
+        values.update(temperature='72',feels_like='32')
+        ui=cli.Presentation(io.StringIO())
+        template='{b}{temp_color}T{reset}{feel_color}F{reset}!'
+        self.assertEqual(styling.widget(template,values,cfg,ui),
+                         '\x1b[1;4;38;5;35mT\x1b[0m\x1b[2;38;5;33mF\x1b[0m!')
+        for value, expected in [('32','2;38;5;33'),('32.1','3;38;5;34'),('59.9','3;38;5;34'),('60','4;38;5;35')]:
+            values['feels_like']=value
+            self.assertEqual(styling.widget('{feel_color}F',values,cfg,ui),'\x1b['+expected+'mF\x1b[0m')
+        cfg['units']='metric';values['feels_like']='0'
+        self.assertEqual(styling.widget('{feel_color}F',values,cfg,ui),'\x1b[2;38;5;33mF\x1b[0m')
+        self.assertEqual(styling.widget('{b}{feel_color}F{reset}!',values,dict(cfg,widget_color_format='tmux'),ui),
+                         '#[push-default]#[default]#[fg=colour33,bold,dim]F#[default]!#[default]#[pop-default]')
+        with patch.object(styling,'Colors',side_effect=AssertionError('plain palette read')):
+            self.assertEqual(styling.widget(template,values,dict(cfg,widget_color_format='plain'),ui),'TF!')
+        for missing in ('?','','nan','inf'):
+            values['feels_like']=missing
+            self.assertEqual(styling.widget('{feel_color}F',values,cfg,ui),'F')
+        self.assertEqual(core.format_widget('{{feel_color}}{feel_color}F',values),'{feel_color}F')
+
+    def test_wind_arrows_and_detail_icon_fields(self):
+        compass='N NNE NE ENE E ESE SE SSE S SSW SW WSW W WNW NW NNW'.split()
+        for direction,expected in zip(compass,'↓↙↙←←↖↖↑↑↗↗→→↘↘↓'):
+            self.assertEqual(core.wind_icon(dict(winddir16Point=direction)),expected)
+        for degree,expected in [(0,'↓'),(22.499,'↓'),(22.5,'↙'),(45,'↙'),(90,'←'),
+                                (135,'↖'),(180,'↑'),(225,'↗'),(270,'→'),(315,'↘'),(337.5,'↓'),(360,'↓')]:
+            self.assertEqual(core.wind_icon(dict(winddirDegree=str(degree),winddir16Point='S')),expected)
+        for invalid in (None,True,[],{},'bad','nan','inf',-1,361):
+            self.assertEqual(core.wind_icon(dict(winddirDegree=invalid,winddir16Point=' nw ')),'↘')
+            self.assertEqual(core.wind_icon(dict(winddirDegree=invalid,winddir16Point='bad')),'')
+        expected=dict(wind_icon='↘',sunrise_icon='',sunset_icon='󰖚',humidity_icon='',precip_icon='',location_icon='')
+        row=self.seed()
+        values=core.fields(row,self.cfg)
+        for name,glyph in expected.items():
+            self.assertEqual(values[name],glyph)
+            self.assertEqual(core.fields(row,self.cfg,icons=False)[name],'')
+            result=self.run_cli('-g',name,'--cached','--color','always','--icons','always')
+            self.assertEqual((result.returncode,result.stdout),(0,glyph+'\n'))
+            self.assertEqual(self.run_cli('-g',name,'--cached','--icons','never').stdout,'\n')
+        listing=self.run_cli('--fields','--color','always').stdout.splitlines()
+        self.assertTrue(set(expected)<=set(listing))
+        template=' '.join('{'+name+'}' for name in expected)
+        self.assertEqual(self.run_cli('--format',template,'--cached','--color','never').stdout,' '.join(expected.values())+'\n')
+        row['data']['weather'][0]['astronomy']=[]
+        for icons in ('always','never'):
+            with patch.dict(os.environ,DOTS_ICONS=icons,DOTS_COLOR='never'),redirect_stdout(io.StringIO()) as out:
+                cli.render(row,self.cfg,cli.parser().parse_args(['--current']),0)
+            text=out.getvalue()
+            self.assertIn('    Sunrise      '+'unavailable'+(' ' if icons=='always' else ''),text)
+            self.assertIn('    Sunset       '+'unavailable'+(' 󰖚' if icons=='always' else ''),text)
+            if icons=='never':
+                for glyph in expected.values():self.assertNotIn(glyph,text)
+
+    def test_detail_icon_configuration_styles_and_spacing(self):
+        row=self.seed()
+        self.palette(dict(magenta='#123456',cyan='#abcdef',yellow='#112233',orange='#445566',blue='#778899'))
+        cfg=copy.deepcopy(self.cfg)
+        cfg['widget_color']='always'
+        cfg['icons']['location']=' L '
+        values=core.fields(row,cfg)
+        self.assertEqual(values['location_icon'],'L')
+        ui=cli.Presentation(io.StringIO())
+        for role in styling.DETAIL_COLORS:
+            field=role+'_icon'
+            cfg['icon_colors'][role]='bold italic 33'
+            automatic=styling.widget('{'+field+'}!',values,cfg,ui)
+            self.assertEqual(automatic,'\x1b[1;3;38;5;33m'+values[field]+'\x1b[0m!')
+            manual='{u}{'+role+'_color}{'+field+'}{reset}!'
+            self.assertEqual(styling.widget(manual,values,cfg,ui),
+                             '\x1b[1;3;4;38;5;33m'+values[field]+'\x1b[0m!')
+            self.assertEqual(styling.widget('{reset}{'+field+'}',values,cfg,ui),values[field])
+            self.assertEqual(styling.widget(manual,values,dict(cfg,widget_color_format='tmux'),ui),
+                             '#[push-default]#[default]#[fg=colour33,bold,italics,underscore]'+values[field]+
+                             '#[default]!#[default]#[pop-default]')
+            with patch.object(styling,'Colors',side_effect=AssertionError('plain palette read')):
+                self.assertEqual(styling.widget(manual,values,dict(cfg,widget_color_format='plain'),ui),values[field]+'!')
+        for style in ('cyan','#123456',33,'underline bright blue','default'):
+            cfg['icon_colors']['wind']=style
+            styling.validate_config(cfg)
+        for invalid in (0,9,True,3.0,'3',None):
+            with self.subTest(gap=invalid),self.assertRaises(ValueError):
+                styling.validate_config(dict(cfg,label_gap=invalid))
+        for invalid in ('bogus','red blue','\x1b[31m'):
+            cfg['icon_colors']['wind']=invalid
+            with self.assertRaises(ValueError):styling.validate_config(cfg)
+        cfg=copy.deepcopy(self.cfg)
+        row['attribution']='Provider '+('雲 place ' * 12)
+        row['location']='雲 town ' * 20
+        cfg['show_location_attribution']=True
+        from resources import cells
+        for gap in (1,3,8):
+            cfg['label_gap']=gap
+            for width in (40,80,120):
+                with patch.dict(os.environ,DOTS_COLOR='never',DOTS_ICONS='always',COLUMNS=str(width)),redirect_stdout(io.StringIO()) as out:
+                    cli.render(row,cfg,cli.parser().parse_args(['--verbose']),0)
+                text=out.getvalue()
+                self.assertTrue(all(cells(line)<=width for line in text.splitlines()),text)
+                for label in ('Now','Location data','Low / High','Source','Midday'):
+                    self.assertIn('    '+label.ljust(12)+' '*gap,text)
+        cfg['icons'].update(location='',sunrise='',sunset='',humidity='',precip='')
+        cfg['show_location_attribution']=False
+        row['location']='Test Town'
+        cfg['label_gap']=3
+        with patch.dict(os.environ,DOTS_COLOR='never',DOTS_ICONS='always'),redirect_stdout(io.StringIO()) as out:
+            cli.render(row,cfg,cli.parser().parse_args(['--current']),0)
+        self.assertTrue(out.getvalue().startswith('Weather — Test Town\n'))
+        self.assertIn('    Humidity     60%\n',out.getvalue())
+        # Older configurations receive defaults without altering query data.
+        self.path.write_text('')
+        _,defaults=core.config()
+        self.assertEqual(defaults['label_gap'],3)
+        self.assertEqual(core.fields(row,defaults)['location_icon'],'')
+        self.assertEqual(styling.detail_color('location',defaults),'magenta')
+        self.assertEqual(core.fields(row,defaults)['location'],'Test Town')
+
+    def test_named_icon_theme_snapshot_and_resets(self):
+        row=self.seed();self.palette(dict(magenta='#123456',cyan='#abcdef'))
+        with patch.dict(os.environ,DOTS_COLOR='always',DOTS_ICONS='always'),redirect_stdout(io.StringIO()) as out:
+            with patch.object(core,'read_regular',wraps=core.read_regular) as read:
+                cli.render(row,self.cfg,cli.parser().parse_args(['--current']),0)
+            self.assertEqual(read.call_count,1)
+        self.assertIn('\x1b[38;2;18;52;86m \x1b[0m\x1b[1;96mTest Town',out.getvalue())
+        self.assertIn('60%\x1b[38;2;171;205;239m \x1b[0m',out.getvalue())
+        values=core.fields(row,self.cfg)
+        ui=cli.Presentation(io.StringIO());cfg=dict(self.cfg,widget_color='always')
+        self.palette(dict(cyan='#010203'))
+        self.assertIn('38;2;1;2;3',styling.widget('{humidity_icon}',values,cfg,ui))
+        self.palette({})
+        self.assertIn('38;5;6',styling.widget('{humidity_icon}',values,cfg,ui))
+
+    def test_widget_invalid_directives_preflight_before_cache_or_provider(self):
+        for template in ('{blink}','{bright}','{red blue}','{temperature.__class__}',
+                         '{temperature:}','{icon!r}','{icon:>8}','{bold!s}','{bold:{icon}}',
+                         '{','}','{}','{temp_color:}','{reset extra}','\x1b[1m', 'x'*1025):
+            with self.subTest(template=template):
+                with (patch.object(core.Cache,'read',side_effect=AssertionError('invalid template read cache')),
+                      patch.object(core.Cache,'schedule',side_effect=AssertionError('invalid template scheduled'))):
+                    with self.assertRaises(ValueError):cli.main(['--format',template])
+        self.seed()
+        result=self.run_cli('--format','{bold}X{reset}', '--cached','--color','always')
+        self.assertEqual((result.returncode,result.stdout),(0,'\x1b[1mX\x1b[0m\n'))
+        for field in ('bold','icon_color','temp_color','feel_color','location_color','wind_color','sunrise_color','sunset_color','humidity_color','precip_color','reset'):
+            self.assertNotIn(field,core.FIELDS)
+            self.assertEqual(self.run_cli('get',field,'--cached').returncode,2)
+
+    def test_human_style_spans_end_before_following_details(self):
+        cfg=copy.deepcopy(self.cfg)
+        cfg['temperature_scale']['colors'][2]='bold underline 33'
+        cfg['icon_colors']['113']=cfg['night_icon_colors']['113']='italic 34'
+        with patch.dict(os.environ,DOTS_COLOR='always',DOTS_ICONS='always'),redirect_stdout(io.StringIO()) as out:
+            cli.render(self.seed(),cfg,cli.parser().parse_args(['--current']),0)
+        text=out.getvalue()
+        self.assertIn('\x1b[1;4;38;5;33m72°F\x1b[0m\n',text)
+        self.assertRegex(text,r'\x1b\[3;38;5;34m[^\x1b]+\x1b\[0m\x1b\[1;4;38;5;33m72°F')
+        condition=next(line for line in text.splitlines() if 'Condition' in line)
+        self.assertIn('Sunny',condition)
+        self.assertNotIn('38;5;',condition)
+        humidity=next(line for line in text.splitlines() if 'Humidity' in line)
+        self.assertNotIn('1;4;',humidity)
+        self.assertRegex(humidity,r'\x1b\[0m60%\x1b\[[0-9;]+m \x1b\[0m$')
 
     def test_palette_fallbacks_and_invalid_config_colors(self):
         self.assertEqual(styling.Colors().resolve('foreground'), 'default')
@@ -212,18 +483,18 @@ class Weather(unittest.TestCase):
             return re.sub(r'\x1b\[[0-9;]*m', '', out.getvalue())
         for width in (40,80,120):
             plain = view(width)
-            self.assertIn('    Now        \ue32b Clear 53°F\n', plain)
-            self.assertIn('    Midday     \ue312 Overcast\n', plain)
+            self.assertIn('    Now          \ue32b 53°F\n    Condition    Clear\n', plain)
+            self.assertIn('    Midday       \ue312 Overcast\n', plain)
             self.assertEqual(view(width, color='always'), plain)
-            self.assertIn('    Now        Clear 53°F\n', view(width, icons='never'))
-            self.assertIn('    Midday     Overcast\n', view(width, icons='never'))
+            self.assertIn('    Now          53°F\n    Condition    Clear\n', view(width, icons='never'))
+            self.assertIn('    Midday       Overcast\n', view(width, icons='never'))
             args.hourly = True
             self.assertIn('72°F \ue312 Overcast', view(width))
             args.hourly = False
         cfg['icons']['113'] = cfg['night_icons']['113'] = ''
         cfg['icons']['122'] = ''
-        self.assertIn('    Now        Clear 53°F\n', view(80))
-        self.assertIn('    Midday     Overcast\n', view(80))
+        self.assertIn('    Now          53°F\n', view(80))
+        self.assertIn('    Midday       Overcast\n', view(80))
         row['data']['current_condition'][0]['weatherDesc'] = [{'value':'雲 long weather ' * 12}]
         for width in (40,80,120):
             text = view(width)
@@ -320,6 +591,8 @@ class Weather(unittest.TestCase):
         inner,base=fixture.server('widget');outer,_=fixture.server('widget-view',termux=False)
         inner('set-option','-g','status-position','top')
         inner('set-option','-g','status-interval','1')
+        # The screen-256color default maps italics to standout; test a capable terminal.
+        inner('set-option','-g','default-terminal','tmux-256color')
         outer('set-option','-g','status','off')
         outer('set-option','-g','default-terminal','tmux-256color')
         attach=shlex.join(['env','-u','TMUX','-u','TMUX_PANE',*base,'attach-session','-t','fixture'])
@@ -340,6 +613,35 @@ class Weather(unittest.TestCase):
                 self.assertEqual(fixture.colors_at(lines[0],'after')['fg'],(171,205,239))
                 self.assertEqual(fixture.colors_at(lines[0],'after')['bg'],(17,34,51))
         self.assertFalse((fixture.home/'BAD').exists())
+        def attributes_at(text, needle):
+            active=set()
+            enable={1:'bold',2:'dim',3:'italic',4:'underline',7:'reverse'}
+            disable={22:{'bold','dim'},23:{'italic'},24:{'underline'},27:{'reverse'}}
+            for match in re.finditer(r'\x1b\[([0-9;]*)m',text[:text.index(needle)]):
+                codes=[int(c or 0) for c in match[1].split(';')]
+                index=0
+                while index<len(codes):
+                    code=codes[index]
+                    if code in (38,48) and codes[index+1:index+2] in ([2],[5]):
+                        index += 5 if codes[index+1]==2 else 3
+                        continue
+                    if code==0:active.clear()
+                    elif code in enable:active.add(enable[code])
+                    elif code in disable:active-=disable[code]
+                    index+=1
+            return active
+        for width in (40,80,120):
+            outer('resize-window','-t','view','-x',str(width),'-y','24')
+            target.write_text(styling.widget('{italic underline dim reverse 33}STYLED{reset} RESET',
+                                            values,cfg,cli.Presentation(io.StringIO())))
+            inner('set-option','-g','status-format[0]',
+                  '#[fg=#abcdef,bg=#112233,bold]before #('+shlex.join(['cat',str(target)])+') after')
+            inner('refresh-client','-S')
+            lines=fixture.await_screen(outer,'view',lambda rows: bool(rows) and 'STYLED RESET after' in rows[0])
+            self.assertEqual(attributes_at(lines[0],'STYLED'),{'bold','italic','underline','dim','reverse'},repr(lines[0]))
+            self.assertEqual(attributes_at(lines[0],'RESET'),{'bold'})
+            self.assertEqual(attributes_at(lines[0],'after'),{'bold'})
+            self.assertEqual(fixture.colors_at(lines[0],'after'),dict(fg=(171,205,239),bg=(17,34,51)))
 
     def test_strict_cached_missing_is_read_only(self):
         cache_root = core.cache_root()
@@ -361,6 +663,40 @@ class Weather(unittest.TestCase):
         self.assertEqual(self.cache.read(), {})
         self.cache.path.write_text('[' * 2000)
         self.assertEqual(self.cache.read(), {})
+
+    def test_solar_display_hours_and_provider_bytes(self):
+        for rise,setting,want_rise,want_set in [
+                ('07:30 AM','06:05 PM','7:30 AM','6:05 PM'),
+                ('7:30 AM','6:05 PM','7:30 AM','6:05 PM'),
+                ('12:00 AM','12:00 PM','12:00 AM','12:00 PM'),
+                ('10:09 AM','11:09 PM','10:09 AM','11:09 PM')]:
+            with self.subTest(rise=rise,setting=setting):
+                self.data['weather'][0]['astronomy'][0].update(sunrise=rise,sunset=setting)
+                row=self.seed();before=copy.deepcopy(row)
+                values=core.fields(row,self.cfg)
+                self.assertEqual((values['sunrise'],values['sunset']),(want_rise,want_set))
+                self.assertEqual(core.format_widget('{sunrise} | {sunset}',values),want_rise+' | '+want_set)
+                for field,expected in [('sunrise',want_rise),('sunset',want_set)]:
+                    result=self.run_cli('-g',field,'--cached','--color','always')
+                    self.assertEqual((result.returncode,result.stdout),(0,expected+'\n'))
+                self.assertEqual(self.run_cli('--format','{sunrise} | {sunset}','--cached','--color','never').stdout,
+                                 want_rise+' | '+want_set+'\n')
+                self.assertEqual(json.loads(self.run_cli('--json','--cached').stdout),self.data)
+                self.assertEqual(row,before)
+                self.assertEqual(self.cache.read()['data'],self.data)
+        for invalid in ('No sunrise','',None,'25:30 AM'):
+            self.data['weather'][0]['astronomy'][0]['sunrise']=invalid
+            values=core.fields(self.seed(),self.cfg)
+            self.assertEqual((values['sunrise'],values['sunset'],values['daylight']),('','','unknown'))
+
+    def test_trailing_wind_icon_without_compass_text(self):
+        row=self.seed()
+        row['data']['current_condition'][0].update(winddirDegree='315',winddir16Point='')
+        for icons in ('always','never'):
+            with patch.dict(os.environ,DOTS_COLOR='never',DOTS_ICONS=icons),redirect_stdout(io.StringIO()) as out:
+                cli.render(row,self.cfg,cli.parser().parse_args(['--current']),0)
+            expected='    Wind         5 mph'+(' ↘' if icons=='always' else '')+'\n'
+            self.assertIn(expected,out.getvalue())
 
     def test_daylight_boundaries_and_bad_astronomy(self):
         date=datetime.now()
@@ -623,6 +959,91 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
             self.assertNotEqual(self.run_cli(*args).returncode,0)
         self.assertFalse(core.cache_root().exists())
 
+    def test_help_banner_theme_gradient_fallback_and_plain_controls(self):
+        self.palette(dict(blue='#0000ff',cyan='#00ffff'))
+        with patch.dict(os.environ,DOTS_COLOR='always'):
+            stream=io.StringIO();ui=cli.Presentation(stream)
+            with patch.object(core,'read_regular',wraps=core.read_regular) as read:
+                styling.help_banner(ui)
+            self.assertEqual(read.call_count,1)
+            rows=stream.getvalue().splitlines()
+            self.assertEqual(len(rows),2)
+            for actual,expected in zip(rows,styling.HELP_ART):
+                self.assertEqual(re.sub(r'\x1b\[[0-9;]*m','',actual),expected)
+                self.assertTrue(actual.startswith('\x1b[38;2;0;0;255m'))
+                self.assertIn('\x1b[38;2;0;128;255m',actual)
+                self.assertTrue(actual.endswith('\x1b[38;2;0;255;255m'+expected[-1]+'\x1b[0m'))
+            self.palette({})
+            stream.seek(0);stream.truncate();styling.help_banner(ui)
+            self.assertTrue(stream.getvalue().startswith('\x1b[38;2;59;130;246m'))
+            self.assertIn('\x1b[38;2;6;182;212m',stream.getvalue())
+        for args in (['-h'],['completion','-h']):
+            with (patch.dict(os.environ,DOTS_COLOR='never',DOTS_ICONS='never'),
+                  patch.object(cli,'config',side_effect=AssertionError('help read weather config')),
+                  patch.object(styling.Colors,'resolve',side_effect=AssertionError('plain palette read')),
+                  patch.object(core.Cache,'read',side_effect=AssertionError('help read cache')),
+                  redirect_stdout(io.StringIO()) as out):
+                self.assertEqual(cli.main(args),0)
+            self.assertTrue(out.getvalue().startswith('\n'.join(styling.HELP_ART)+'\n\nwttr — weather from wttr.in\n'))
+            self.assertNotIn('',out.getvalue())
+            self.assertNotIn('\x1b',out.getvalue())
+        for color in ('always','never'):
+            result=self.run_cli('-h','--color',color,'--icons','always')
+            plain=re.sub(r'\x1b\[[0-9;]*m','',result.stdout)
+            self.assertIn('\n wttr — weather from wttr.in\n',plain)
+        with patch.dict(os.environ,NO_COLOR='1'):
+            self.assertNotIn('\x1b',self.run_cli('-h').stdout)
+            self.assertIn('\x1b',self.run_cli('-h','--color','always').stdout)
+        with patch.dict(os.environ,TERM='dumb'):
+            self.assertNotIn('\x1b',self.run_cli('-h').stdout)
+
+    def test_short_alias_parsing_and_long_form_equivalence(self):
+        row=self.seed()
+        samples={'--location':'London', '--days':'2', '--units':'metric', '--language':'fr',
+                 '--format':'{bold white}{temperature}{unit}{reset}', '--get':'temperature',
+                 '--config':str(self.path), '--timeout':'10'}
+        self.assertEqual(len(set(SHORT_FLAGS.values())),len(SHORT_FLAGS))
+        for flag,short in SHORT_FLAGS.items():
+            tail=[samples[flag]] if flag in samples else []
+            with self.subTest(flag=flag):
+                self.assertEqual(vars(cli.parser().parse_args([flag,*tail])),
+                                 vars(cli.parser().parse_args([short,*tail])))
+                outputs=[]
+                for spelling in (flag,short):
+                    with (patch.object(core.Cache,'read',return_value=row),
+                          patch.object(core.Cache,'refresh',return_value=row),
+                          patch.object(core.Cache,'schedule'),
+                          patch.object(core.Cache,'age',return_value=0),
+                          redirect_stdout(io.StringIO()) as out):
+                        self.assertEqual(cli.main([spelling,*tail]),0)
+                    outputs.append(out.getvalue())
+                self.assertEqual(*outputs)
+        args=cli.parser().parse_args(['-vj','-d2','-lLondon','-gtemperature'])
+        self.assertTrue(args.verbose and args.json)
+        self.assertEqual((args.days,args.location,args.get),('2','London','temperature'))
+        literal='-Town $(touch BAD) ü'
+        self.assertEqual(cli.parser().parse_args(['-l='+literal]).location,literal)
+        self.assertEqual(cli.parser().parse_args(['-f{bold}x{reset}']).format,'{bold}x{reset}')
+        for flag in samples:
+            with self.subTest(missing=flag),self.assertRaises(ValueError):
+                cli.parser().parse_args([SHORT_FLAGS[flag]])
+        for flag in ('-V','-F','-j','-g'):
+            args=[flag]+(['temperature'] if flag=='-g' else [])+['--cached','--color','always','--icons','always']
+            result=self.run_cli(*args)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertNotIn('\x1b',result.stdout)
+            self.assertNotIn(styling.HELP_ART[0],result.stdout)
+        for args in (['m','-j'],['F','-F'],['m','-u','metric']):
+            with self.assertRaises(ValueError):cli.main(args)
+        self.assertEqual(cli.parser().parse_args(['F']).positional,['F'])
+        self.assertFalse(cli.parser().parse_args(['F']).fields)
+        for args in (['-V'],['-g','temperature','--cached']):
+            encoded=base64.b64encode(json.dumps(args).encode()).decode()
+            result=subprocess.run([sys.executable,'-B',str(ROOT/'lib/dots/native.py'),'wttr',encoded],
+                                  capture_output=True,text=True,timeout=5)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual(result.stdout,(core.VERSION if args==['-V'] else '72')+'\n')
+
     def test_completion_install_backup_undo_and_idempotence(self):
         directory=self.home/'completion space ü'
         directory.mkdir();target=directory/'wttr.bash';target.write_text('old content\n')
@@ -654,9 +1075,13 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
             self.assertEqual(result.returncode,0,(shell,result.stderr))
             self.assertIn('metric',result.stdout)
             if shell in ('bash','fish'):
-                for prefix, expected in [('wttr :trans',':translation'),('wttr m2 for','format=')]:
+                for prefix, expected in [('wttr :trans',':translation'),('wttr m2 for','format='),
+                                         ('wttr -u m','metric'),('wttr -g temp','temperature'),
+                                         ('wttr -g wind_i','wind_icon'),('wttr -g location_i','location_icon'),('wttr get sunrise_i','sunrise_icon'),
+                                         ('wttr -d ','2'),('wttr -','-V'),('wttr completion -','-h')]:
                     if shell=='bash':
                         words=prefix.split()
+                        if prefix.endswith(' '):words.append('')
                         if words[-1].startswith(':'):
                             words[-1:]=[':',words[-1][1:]]
                             expected=expected[1:]
@@ -671,8 +1096,15 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
             text=completion.generate(shell)
             for flag,_,_ in cli.OPTIONS:self.assertIn(flag[2:],text)
             for word in stock.STOCK_ROUTES:self.assertIn(word,text)
+            for field in core.FIELDS:self.assertIn(field,text)
             self.assertIn('format=',text)
             self.assertNotIn('\x1b',text)
+            for short in SHORT_FLAGS.values():
+                self.assertIn(' -s '+short[1:] if shell=='fish' else short,text)
+        powershell=completion.generate('powershell')
+        self.assertIn('switch -CaseSensitive ($prev)',powershell)
+        self.assertIn("$prev -cin @('-C','--config','--dir')",powershell)
+        self.assertNotIn('OrdinalIgnoreCase',powershell)
 
     @unittest.skipUnless(os.name == 'posix', 'native Unix PTYs')
     def test_native_pty_help_views_and_progress(self):
@@ -705,29 +1137,46 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
             plain=re.sub(r'\x1b\[[0-9;]*m','',output)
             self.assertTrue(all(len(line)<=width for line in plain.splitlines()), plain)
             self.assertNotIn('Fetching weather',output)
+            self.assertTrue(plain.startswith('\n'.join(styling.HELP_ART).replace('\n','\r\n')+'\r\n\r\nwttr'))
+            for args in (['-h'],['completion','-h']):
+                header=terminal([sys.executable,'-B',str(ROOT/'lib/dots/wttr/cli.py'),*args,'--icons','always'],width)
+                unstyled=re.sub(r'\x1b\[[0-9;]*m','',header)
+                self.assertIn(' wttr — weather from wttr.in',unstyled)
+                self.assertTrue(all(len(line)<=width for line in unstyled.splitlines()),unstyled)
             self.seed()
             view=terminal([sys.executable,'-B',str(ROOT/'lib/dots/wttr/cli.py'),'--cached','--hourly'],width)
             self.assertIn('Test Town',view)
             self.assertIn('12:00',view)
-            for extra in ([], ['--hourly']):
+            for extra in ([], ['--hourly'], ['--current']):
                 view=terminal([sys.executable,'-B',str(ROOT/'lib/dots/wttr/cli.py'),
                                '--cached','--icons','always',*extra],width)
                 plain=re.sub(r'\x1b\[[0-9;]*m','',view)
-                self.assertRegex(plain, r'    Now        [\ue000-\uf8ff] Sunny 72°F\r?\n')
-                if extra:
+                self.assertIn('Weather —  Test Town',plain)
+                self.assertIn('\x1b[38;2;',view)
+                self.assertRegex(plain, r'    Now          [\ue000-\uf8ff] 72°F\r?\n    Condition    Sunny\r?\n')
+                for label, value in [('Humidity','60% '),('Wind','5 mph NW ↘'),
+                                     ('Precip','0.0 in '),('Sunrise','6:30 AM '),('Sunset','6:30 PM 󰖚')]:
+                    self.assertIn('    '+label.ljust(13)+value,plain)
+                if extra == ['--hourly']:
                     self.assertIn('72°F '+self.cfg['icons']['113']+' Sunny',plain)
-                else:
-                    self.assertIn('    Midday     '+self.cfg['icons']['113']+' Sunny',plain)
+                elif not extra:
+                    self.assertIn('    Midday       '+self.cfg['icons']['113']+' Sunny',plain)
                 self.assertTrue(all(cli.Presentation.clean(line) == line for line in plain.splitlines()))
                 from resources import cells
                 self.assertTrue(all(cells(line)<=width for line in plain.splitlines()),plain)
             widget=terminal([sys.executable,'-B',str(ROOT/'lib/dots/wttr/cli.py'),'--widget','--cached','--icons','always'],width)
             self.assertIn('\x1b[38;2;',widget)
+            command=[sys.executable,'-B',str(ROOT/'lib/dots/wttr/cli.py'),'--cached','--format',
+                     '{b i u d reverse bright blue}{temperature}{unit}{reset}!']
+            styled=terminal(command,width)
+            self.assertIn('\x1b[1;2;3;4;7;38;5;12m72\x1b[0m',styled)
+            self.assertTrue(styled.endswith('°F\x1b[0m!\r\n'),repr(styled))
+            self.assertEqual(terminal(command+['--color','never'],width),'72°F!\r\n')
         script="import sys,time; sys.path.insert(0,"+repr(str(ROOT/'lib/dots/wttr'))+"); import cli,core; "
         script+="core.resolve_location=lambda *a: ('Test Town','fixture',''); core.fetch=lambda *a: (time.sleep(.8),"+repr(self.data)+")[1]; "
         human=terminal([sys.executable,'-B','-c',script+"sys.exit(cli.main(['--refresh','--current']))"],80)
         self.assertIn('Fetching weather',human)
-        self.assertIn('Weather — Test Town',human)
+        self.assertIn('Weather — Test Town',re.sub(r'\x1b\[[0-9;]*m','',human))
         data=terminal([sys.executable,'-B','-c',script+"sys.exit(cli.main(['--refresh','--json','--color','always']))"],80)
         self.assertNotIn('Fetching weather',data)
         self.assertNotIn('\x1b',data)
@@ -847,7 +1296,8 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
         cases=[(width,'wttr m','Metric','Metric (SI) units','wttr m') for width in (40,80,120)]
         cases += [(80,'wttr :','upstream','Show upstream usage','wttr :help'),
                   (80,'wttr m2 ','Upstream format','Upstream format preset','wttr m2 format='),
-                  (80,'wttr ',"'Quiet:",'Quiet: hide the Weather report','wttr q')]
+                  (80,'wttr ',"'Quiet:",'Quiet: hide the Weather report','wttr q'),
+                  (80,'wttr -g ','temperature','temperature','wttr -g temperature')]
         for width,typed,query,description,expected in cases:
             target=self.home/'buffer';target.unlink(missing_ok=True)
             terminal=Terminal(shutil.which('zsh'),dict(os.environ),self.home)
@@ -889,6 +1339,13 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
         result=subprocess.run([engine,'-NoProfile','-NonInteractive','-Command',code],capture_output=True,text=True,timeout=10)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertIn(':translation',result.stdout);self.assertIn('format=',result.stdout)
+        for prefix,expected,absent in [('wttr -g temp','temperature',''),('wttr -u m','metric',''),
+                                       ('wttr -v','-v','-V'),('wttr -F','-F','-f')]:
+            code='. '+quote(source)+'; (TabExpansion2 '+quote(prefix)+' '+str(len(prefix))+').CompletionMatches.CompletionText'
+            result=subprocess.run([engine,'-NoProfile','-NonInteractive','-Command',code],capture_output=True,text=True,timeout=10)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertIn(expected,result.stdout.splitlines())
+            if absent:self.assertNotIn(absent,result.stdout.splitlines())
 
 
 if __name__=='__main__':unittest.main()

@@ -38,19 +38,46 @@ wttr --fields
 wttr --help --color always
 ```
 
+Main help (`wttr -h` / `--help`) and completion help (`wttr completion -h`) begin with the supplied two-line artwork and a title:
+
+```text
+█ █ █ ▀█▀ ▀█▀ █▀█
+▀▄▀▄▀  █   █  █▀▄
+
+ wttr — weather from wttr.in
+```
+
+The artwork uses a horizontal gradient from the published Dots theme's blue to cyan, with `#3B82F6` / `#06B6D4` fallbacks for unavailable endpoints. Plain help retains the artwork without ANSI. The title icon follows the icon controls independently; `--icons never` removes it. Help never reads weather configuration or queries providers, and reads at most one palette snapshot when colored. The banner appears only in help, never weather results, errors, stock responses, widgets, or data output.
+
+Short flags are case-sensitive aliases with the same arguments and behavior as their long forms:
+
+| Short | Long | Short | Long |
+| --- | --- | --- | --- |
+| `-h` | `--help` | `-V` | `--version` |
+| `-v` | `--verbose` | `-f` | `--format` |
+| `-j` | `--json` | `-F` | `--fields` |
+| `-g` | `--get` | `-l` | `--location` |
+| `-c` | `--current` | `-d` | `--days` |
+| `-H` | `--hourly` | `-u` | `--units` |
+| `-L` | `--language` | `-w` | `--widget` |
+| `-r` | `--refresh` | `-C` | `--config` |
+| `-t` | `--timeout` | | |
+
+Boolean short flags may be grouped (`-vj`), and argument-taking flags accept attached values (`-d2`, `-lLondon`) or separate values. Quote templates, for example `wttr -f '{temp_color}{temperature}{unit}{reset}'`. Use `-l=-value` for a location starting with a dash. Bare stock letters remain distinct: `F` is an upstream option; `-F` lists local fields. Other options remain long-only. Completion provides the same separate-value contexts for aliases and long forms across Bash, Zsh, Fish, and PowerShell.
+
 PowerShell uses the same options with `& "$env:DOTS/bin/wttr.ps1" ...` (or `wttr.ps1` on PATH). Use `--location` to pass a literal place called `get`, `completion`, `moon`, `m2`, or another reserved stock token; quote spaces and use `--location=-value` for a location starting with a dash.
 
 `--days` accepts 1–3, matching j1's forecast horizon; hourly rows are the supplied three-hour forecast periods, not minute forecasts. `--current` omits forecast rows. `--units us|metric` affects rendered and scalar values; `--json` retains the original units/fields exactly as supplied upstream. `--language CODE` requests translated weather descriptions. `--timeout SECONDS` accepts integers 1–60 and limits a complete refresh, including location and HTTP. `--verbose` adds source and age to the human view.
 
 `--color auto|always|never` and `--icons auto|always|never` honor the shared Dots presentation policy. Auto help is colored in a capable terminal; redirected output is plain. Progress is delayed, human-TTY-only and controlled by `DOTS_PROGRESS`. JSON, field, daylight, version and completion output never include progress or ANSI, even under forced color. Widgets never animate; their explicit color policy is described below. Widgets use configured icons in auto mode; `--icons never` or `DOTS_ICONS=never` removes them. Errors go to stderr; providers' stderr is never forwarded.
 
-`--fields` lists the shared vocabulary: `location`, `attribution`, `condition`, `code`, `icon`, `temperature`, `unit`, `feels_like`, `humidity`, `wind`, `wind_unit`, `wind_direction`, `precipitation`, `precipitation_unit`, `sunrise`, `sunset`, `daylight`, `age`, `stale`, `stale_marker`. Age is seconds since acquisition. Templates accept literal `{field}` placeholders and doubled braces; attribute access, expressions, conversions and format specifiers are rejected. Widget values are single-line control-free text. Plain and ANSI widgets are **not tmux output**; use the explicit `tmux` widget format for escaped literal text and generated color styles. The shipped clock adapter accepts only three fixed tokens.
+`--fields` lists the shared vocabulary: `location`, `attribution`, `condition`, `code`, `icon`, `temperature`, `unit`, `feels_like`, `humidity`, `wind`, `wind_unit`, `wind_direction`, `precipitation`, `precipitation_unit`, `sunrise`, `sunset`, `daylight`, `age`, `stale`, `stale_marker`, `wind_icon`, `sunrise_icon`, `sunset_icon`, `humidity_icon`, `precip_icon`, `location_icon`. Age is seconds since acquisition. Templates accept literal `{field}` placeholders, [style directives](#widget-style-directives), and doubled braces; attribute access, expressions, conversions and format specifiers are rejected. Widget values are single-line control-free text. Plain and ANSI widgets are **not tmux output**; use the explicit `tmux` widget format for escaped literal text and generated color styles. The shipped clock adapter accepts only three fixed tokens.
 
 Missing widget data prints `?`. Missing daylight prints `unknown`. Ordinary weather/JSON/field requests without usable data return status 1 and a diagnostic; invalid arguments/configuration return status 2. Interruptions return 130. No-error views return 0.
 
 ## Temperature, icon and widget colors
 
-The custom current, feels-like, daily low/high and hourly temperatures use six configurable bands. Forecast descriptions now include their own condition icons: midday uses that forecast's noon condition; hourly icons use that date's sunrise/sunset when available. Missing astronomy uses the normal day glyph. Current night overrides and icon-disable controls remain supported.
+The custom current, feels-like, daily low/high and hourly temperatures use any number of configurable bands (six in the shipped configuration). Forecast descriptions now include their own condition icons: midday uses that forecast's noon condition; hourly icons use that date's sunrise/sunset when available. Missing astronomy uses the normal day glyph. Current night overrides and icon-disable controls remain supported.
 
 ```toml
 show_location_attribution = false
@@ -59,15 +86,15 @@ widget_color_format = "ansi" # ansi, plain, tmux
 
 [temperature_scale]
 unit = "F"                  # F or C, independent of --units
-thresholds = [32, 60, 75, 85, 95]
+thresholds = [32, 45, 65, 80, 95]
 colors = ["cyan", "blue", "green", "yellow", "orange", "red"]
 ```
 
-The first boundary is inclusive: at or below 32°F is cyan. Above 32°F and below 60°F is blue; 60–<75°F green; 75–<85°F yellow; 85–<95°F orange; 95°F and above red. Thresholds are five finite increasing numbers; six colors map from coldest to hottest. Values are converted from the displayed unit into the configured scale before comparison. Missing/non-numeric temperatures remain uncolored. These colors express temperature, not operation success/error states.
+The first boundary is inclusive: in this example, at or below 32°F is cyan. Above 32°F and below 45°F is blue; 45–<65°F green; 65–<80°F yellow; 80–<95°F orange; 95°F and above red. Use **N thresholds and N+1 color/style values**, ordered coldest to hottest. Thresholds must be finite, strictly increasing integers or decimals. An empty threshold list with one style applies that style to all numeric temperatures. The existing configuration-size limit applies; there is no separate band-count limit. A count mismatch is a configuration error. Omitting the scale retains the built-in five-cutoff defaults (32, 60, 75, 85, 95°F), while the shipped editable config supplies the example above. Values are converted from the displayed unit into the configured scale before comparison. Missing/non-numeric temperatures remain uncolored. These colors express temperature, not operation success/error states.
 
 `[icon_colors]` maps each existing condition code, plus `unknown`, to a color. `[night_icon_colors]` supplies night overrides. The shipped table uses the current Dots theme: sun/partly cloudy yellow, cloud/fog/mist muted, rain blue, snow/ice/sleet cyan, thunder magenta and clear/partly cloudy nights blue. Glyphs remain separately editable in `[icons]` and `[night_icons]`.
 
-All temperature and icon color fields accept the same values, including mixed arrays:
+All temperature and day/night icon color fields accept the same values, including mixed arrays:
 
 | Configuration value | Meaning |
 | --- | --- |
@@ -78,15 +105,102 @@ All temperature and icon color fields accept the same values, including mixed ar
 
 Supported lowercase names are `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, their `bright_` forms, and `orange`, `foreground`, `background`, `muted`, `accent`. Aliases are `gray`/`grey` → `muted`, `purple` → `magenta`, and `indigo` → `blue`. Black/white use published `color0`/`color7`; their bright variants use `color8`/`color15`. Hex must contain six digits; indices must be integers from 0 through 255. Invalid values produce a configuration error (status 2).
 
+Style expressions can add `bold`, `italic`, `underline`, `dim`, and `reverse` to at most one foreground. Shorthands `b`, `i`, `u`, and `d` work in both config expressions and widget directives. Attribute order does not matter and repeated attributes are harmless. Attribute-only styles, such as `"bold"`, retain the surrounding foreground. Hex/index overrides also accept attributes, for example `"italic #89b4fa"` and `"underline 33"`. Unknown tokens and multiple foregrounds are errors.
+
+`bright blue` means the theme's `bright_blue`; it does not imply bold. The separated `bright` modifier requires one of `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, or `white`. Bare `bright`, `bright orange`, and bright modifiers on hex/index values are invalid; the existing `bright_*` names remain valid.
+
+```toml
+[temperature_scale]
+unit = "F"
+thresholds = [32, 45, 65, 80, 95]
+colors = ["bold cyan", "bold bright blue", "bright green", "bold yellow", "orange", "underline bold bright red"]
+
+[icon_colors]
+"113" = "bright yellow"
+```
+
+Human weather rows isolate each styled value so its attributes do not leak into the next field. The shipped styles remain color-only; the example above is an optional customization. Attribute appearance depends on the terminal and font.
+
 Colored renders read at most one bounded snapshot from Dots' published `current/theme/palette.json` under its platform state directory (Unix `${XDG_STATE_HOME:-$HOME/.local/state}/dots`; native Windows `%LOCALAPPDATA%/dots`, with `XDG_STATE_HOME` overriding the base). The next invocation sees newly published theme colors; no theme command, publication, or weather-cache refresh is required. Explicit hex/index settings remain literal. Missing, malformed, or incomplete snapshots use terminal ANSI slots 0–15, orange index 208, muted index 8, accent blue, background index 0, and the surrounding foreground. No snapshot is needed for plain, JSON, scalar, daylight, or stock output.
 
-Current and midday rows use the same ten-character aligned label column as other details, one space after a nonempty condition icon, and one space between the current condition and temperature. Hourly rows use the same icon gap while preserving their time/temperature layout. Disabling icons, or configuring an empty glyph, removes the icon gap. Other detail labels stay aligned; custom widget templates retain their own spacing.
+Human weather output (default, `--current`, `--cached`, forecasts and hourly views) uses a minimum ten-character aligned label column followed by three spaces. Set top-level `label_gap = 3` to choose a gap from 1–8 spaces; booleans and non-integers are invalid. When an enabled label such as `Location data` is longer, the whole view uses that wider column. Wrapped continuation lines align with the values. Help and widget-template spacing are independent of this setting. `Now` contains the condition icon and temperature, with the condition description in a separate `Condition` row immediately below it. Midday and hourly rows retain their condition descriptions and one-space icon gap. Disabling icons, or configuring an empty condition glyph, removes the icon gap. Custom widget templates retain their own spacing.
 
-Widget styling applies to `--widget` and local `--format`, including `{temperature}`, `{feels_like}`, adjacent `{unit}` placeholders and `{icon}`. Color policy is explicit `--color`, then `DOTS_COLOR`, then `widget_color`. ANSI-auto colors a capable terminal and keeps pipes plain; `NO_COLOR` suppresses automatic colors. `always` forces them even in pipes, while `never` suppresses them. The `plain` format always emits plain text.
+```text
+Weather —  London
+    Now           53°F
+    Condition    Clear
+    Feels like   50°F
+    Humidity     60% 
+    Wind         5 mph NW ↘
+    Precip       0.0 in 
+    Sunrise      6:30 AM 
+    Sunset       6:30 PM 󰖚
+```
+
+The fields `location_icon` (``), `sunrise_icon` (``), `sunset_icon` (`󰖚`), `humidity_icon` (``) and `precip_icon` (``) supply configurable glyphs without surrounding spaces. The location icon precedes the city in the heading; humidity, wind, precipitation, sunrise and sunset icons follow their row values with one space, including unavailable values. All icon fields follow the existing icon controls and become empty when icons are disabled. An empty glyph setting hides that icon and its human separator.
+
+Add these named entries to the existing tables to customize the defaults; retain any condition-code entries already present. Older configurations receive these defaults automatically. Detail colors accept the same theme names, hex/index overrides, text attributes and `default` as condition colors. Wind arrows remain fixed, with a configurable style.
+
+```toml
+# Top-level, before any table:
+label_gap = 3
+
+[icons]
+location = ""
+sunrise = ""
+sunset = "󰖚"
+humidity = ""
+precip = ""
+
+[icon_colors]
+location = "magenta"
+sunrise = "yellow"
+sunset = "orange"
+humidity = "cyan"
+precip = "blue"
+wind = "cyan"
+```
+
+Human detail colors apply only to the glyph and separator, leaving values unchanged; the city retains the heading style. Widget templates without directives automatically style these icon fields. Manual templates use the named color directives below, for example `{humidity_color}{humidity_icon}{reset} {humidity}%`.
+
+`wind_icon` uses eight Unicode arrows pointing **where the wind blows**: a north wind gives `↓`, and a northwest wind gives `↘`. Valid provider degrees (0–360, with 360 equivalent to north) take precedence over the 16-point compass value. Missing/invalid degrees fall back to the compass value; no usable direction yields an empty icon. Bearings round to the nearest 45° sector, with midpoint ties clockwise. The Wind row shows speed, units and the original compass text followed by the arrow, such as `2 mph NW ↘`. Icon positions in widgets remain controlled by the template.
+
+Widget styling applies to `--widget` and local `--format`, including `{temperature}`, `{feels_like}`, adjacent `{unit}` placeholders and all icon fields. Color policy is explicit `--color`, then `DOTS_COLOR`, then `widget_color`. ANSI-auto colors a capable terminal and keeps pipes plain; `NO_COLOR` suppresses automatic colors. `always` forces them even in pipes, while `never` suppresses them. The `plain` format always emits plain text.
 
 The explicit `tmux` format emits status styles through pipes in auto mode unless `NO_COLOR` is set. It escapes `#` in literal/template/provider text, saves the incoming style once, and restores it afterward. With colors disabled it still escapes literal text for tmux. Consume this as the output of a tmux status job; it is not a shell command or a format to evaluate recursively. It uses tmux's single saved-default slot, so do not nest it inside another `push-default`/`pop-default` block. ANSI and plain widgets remain suitable for their respective terminal/text consumers. No widget is enabled in the shipped bar.
 
-JSON, scalar fields, daylight tokens and stock curl responses retain their existing byte contracts. Color customization does not change provider polling, cache identity, freshness or the daylight clock.
+Sunrise/sunset display fields omit a leading hour zero: `07:30 AM` becomes `7:30 AM`. This applies to human rows, widgets and scalar queries; minute padding and AM/PM are preserved, and noon/midnight remain `12:00 PM` / `12:00 AM`. Raw JSON and cached provider data remain unchanged, as do astronomy validation and daylight boundaries.
+
+Other scalar fields, daylight tokens and stock curl responses retain their existing byte contracts. Color customization does not change provider polling, cache identity, freshness or the daylight clock.
+
+## Widget style directives
+
+Both the `widget` config and local `--format` support these zero-width directives. They do not become scalar fields and are not added to `get` or `--fields`.
+
+| Directive | Effect |
+| --- | --- |
+| `{icon_color}` | Add the current condition's configured day/night icon style. |
+| `{temp_color}` | Add the current temperature-band style. |
+| `{feel_color}` | Add the same scale’s style for the feels-like temperature, including unit conversion and text attributes. |
+| `{location_color}`, `{sunrise_color}`, `{sunset_color}`, `{humidity_color}`, `{precip_color}`, `{wind_color}` | Add the matching named `[icon_colors]` style. |
+| `{bold white}` or `{bright green}` | Add any supported style expression. |
+| `{b}`, `{i}`, `{u}`, `{d}` | Add bold, italic, underline, or dim. |
+| `{reset}` | Clear widget-applied styling and return to the starting style. |
+
+Missing or nonnumeric feels-like values select the default style, just as missing current temperatures do. `{feel_color}` is consumed without styling in plain output and is not a queryable field.
+
+Attributes accumulate; a later foreground replaces the earlier foreground. Thus `{bold}{white}` means bold white, and `{icon_color}{temp_color}` retains attributes from both while the temperature foreground wins. Use `{reset}` between sections when those attributes should not carry forward. `{default}` restores the starting foreground while retaining added attributes.
+
+```toml
+# Top-level setting, before any [table]:
+widget = "{icon_color}{icon}{reset} {temp_color}{temperature}{unit}{reset} feels {feel_color}{feels_like}{unit}{reset} {wind_icon} {wind}{wind_unit}{stale_marker}"
+```
+
+A template containing any actual directive uses **manual styling throughout**, including text before its first directive. Templates with no directives retain automatic styling of icon/temperature/feels-like fields and adjacent units. `{{bold}}` prints literal `{bold}` and does not enable manual styling. Inserted field values are never parsed again, so provider text cannot inject directives.
+
+Disabled color and `plain` output consume directives without ANSI, tmux styling, or palette reads. Template validation still applies before any cache/provider work. Invalid braces, unknown placeholders, Python expressions, attribute access, conversions, and format specifiers are errors. Existing single-line and 1024-character limits remain.
+
+ANSI spans reset to terminal defaults after each styled span and at the end of styled text. Tmux spans restore the incoming consumer style before applying each span's foreground/attributes, and restore the original foreground, background, and attributes on `{reset}` and at the widget boundary. Directives never create nested tmux saved-default blocks; literal text remains escaped. Background configuration is not part of this style syntax.
 
 ## Stock wttr.in requests
 

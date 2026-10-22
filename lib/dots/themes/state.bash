@@ -93,7 +93,7 @@ dt_state_preflight() {
     [[ $status == prepared ]] || { dt_error 'unknown active staging journal'; return 1; }
   fi
   dt_apps_plan || return
-  for part in flock sync sha256sum mktemp awk cat mkdir mv rm cp ln readlink cmp; do command -v "$part" >/dev/null || { dt_error "theme switching requires $part"; return 1; }; done
+  for part in flock sync sha256sum mktemp awk cat mkdir mv rm cp ln readlink cmp stat rmdir; do command -v "$part" >/dev/null || { dt_error "theme switching requires $part"; return 1; }; done
 }
 # Prepare immutable theme/command payloads without publishing any pointer.
 # Caller holds both publication locks. Setup publishes through the file Store.
@@ -171,6 +171,9 @@ dt_set() (
   exec 9>>"$DT_STATE/lock" || exit 1
   flock -n 9 || { dt_error 'another theme switch is running'; exit 1; }
   dt_recover || exit 1
+  # Recovery may remove a Television themes directory created by the interrupted
+  # generation. Reclassify connectors before preparing the replacement.
+  dt_apps_plan || exit 1
   dt_generation || exit 1
   previous=${DT_GENERATION:-none}
   if [[ $DT_GENERATION ]] && dt_generation_current "$DT_STATE/generations/$DT_GENERATION"; then

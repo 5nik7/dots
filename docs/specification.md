@@ -392,3 +392,6 @@ claimable nested catalog target. See [managed Git selection](files.md#consolidat
 ## Implemented Windows catalog destination token
 
 The existing bounded file catalog accepts `${APP_CONFIG:app}` with an optional relative suffix. This is separate from the proposed module manifest model. On Windows, `files/app_paths.py` resolves the named application's directory and explicit `DOTS_APP_<APP>_CONFIG` override; unsupported or ambiguous locations yield an unmapped target. On other platforms the token is inapplicable. Catalog `targets.windows` can override a POSIX default. App-specific destinations do not redefine `${CONFIG}` globally. See [Windows app destinations](powershell.md#windows-app-destinations).
+
+
+The implemented eza theme connector resolves `DOTS_APP_EZA_CONFIG` before `EZA_CONFIG_DIR` and the platform default; the authoritative [destination and template contract](themes.md#eza) defines validation and override precedence. This adds no module/profile manifest field.

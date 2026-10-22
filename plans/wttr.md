@@ -120,3 +120,99 @@ Native Windows PowerShell 5.1/7 terminal acceptance remains pending. No weather/
 - Whitespace checks passed for tracked changes and touched untracked sources; all 185 relative file-link targets in this follow-up's changed documentation resolve. Read-only fixture output confirmed the restored layout.
 
 Existing unrelated work was preserved. No live provider requests, installation, theme refresh, tmux reload, commit or push occurred. Native Windows PowerShell and actual font appearance remain pending acceptance.
+
+
+## Text styles, variable bands and widget directives
+
+**Status: Implemented and verified with isolated fixtures and native Termux terminals.** Owner approved shared style expressions, N thresholds with N+1 styles, and manual widget styling whenever directives are present.
+
+- Parse one foreground plus bold, italic, underline, dim and reverse attributes; support b/i/u/d aliases and standard bright color variants independently of bold. Preserve current owner thresholds, config formatting and aligned output.
+- Permit any count of finite increasing thresholds with one additional style, including zero cutoffs/one style. Retain unit conversion and existing cutoff inclusivity. Make test scales explicit rather than inheriting owner-edited bands; the prior boundary test was confirmed failing against the owner's custom thresholds before this change.
+- Parse inert widget tokens once before cache/provider work. Add icon_color, temp_color, reset and style expressions. Accumulate attributes and replace foregrounds; directives select manual mode, while directive-free templates retain automatic field styling. Keep escaped braces, data fields and provider literals inert.
+- Share normalized styles across ANSI and tmux rendering; keep plain/data paths undecorated, lazy palette reads, tmux literal escaping and incoming style restoration. Both Bash and native PowerShell use the same implementation; destinations remain unchanged.
+- Synchronize help, four-shell completion descriptions, configuration examples and documentation. Verify focused suites, private tmux attribute/reset rendering and native Termux PTYs at 40/80/120 columns. Native Windows PowerShell and actual font attribute appearance remain pending acceptance.
+
+
+### Text-style verification
+
+- Weather suite: 41 tests, 40 passed and the unavailable native PowerShell case skipped. Coverage includes style expressions/aliases/bright variants, invalid tokens, zero/one/many cutoffs, integer/decimal boundaries and conversion, widget preflight before cache/provider access, accumulation/reset, manual-versus-automatic mode, escaped braces, inert provider text, plain/data bypass and human span isolation.
+- Native private tmux clients at 40/80/120 columns verified bold, dim, italic, underline and reverse plus restoration of incoming foreground/background/attributes. The test server explicitly uses tmux-256color: its prior screen-256color default rendered italics as standout. No live server configuration changed.
+- Shared resource/presentation suite: 12 tests passed. After expanding the native PTY case, its focused rerun passed at 40/80/120 columns with all text attributes, bright numeric fallback, manual reset and disabled-color output, alongside existing help/views/progress checks.
+- All four completion artifacts match their generators; Bash/Zsh/Fish syntax checks passed. Changed Zsh/Fish/PowerShell descriptions were regenerated after verifying existing artifacts against the prior generator. Bash required no content change. Native PowerShell engine/terminal acceptance remains pending.
+- All 217 relative file-link targets in changed documentation resolve, and Git whitespace checks passed. Read-only inspection confirms the owner's thresholds [32, 45, 65, 80, 95], color-only styles and original widget remain selected; changes to the config are explanatory comments only beyond the pre-existing owner edits.
+
+No live weather/location providers, installation, theme refresh, live tmux reload, commit or push occurred. The concurrent Yazi edit was preserved. Actual terminal/font rasterization and native Windows PowerShell 5.1/7 remain separate acceptance checks.
+
+
+## Help banner and short flags
+
+**Status: Implemented and verified with isolated fixtures and native Termux terminals.** Owner approved the exact two-line artwork, theme blue-to-cyan gradient, icon-prefixed help title and expanded short aliases.
+
+- Render the authored artwork only for main/completion help. Use the published blue/cyan endpoints and fixed RGB fallbacks, with one lazy palette snapshot per colored help render. Plain help preserves artwork, title icons obey icon controls, and help bypasses weather config/providers.
+- Centralize all 17 aliases beside the option metadata; use them for parsing, help labels and Bash/Zsh/Fish/PowerShell completions. Preserve grouped/attached argparse behavior, bare stock tokens, data bytes and native wrappers. Completion help accepts -h.
+- Make PowerShell completion contexts and prefix matching case-sensitive; keep filename/value completion equivalent for aliases. Regenerate the four artifacts only after checking their prior-generator agreement and saved fingerprints.
+- Update the weather guide, README, command/platform references and testing guidance. Check exact help at 40/80/120 columns, gradient/control behavior, every alias, mocked stock/data modes, available native completions and actual Zsh/FZF-tab insertion. Native Windows PowerShell remains pending where unavailable.
+- Preserve prior work and owner config edits. No live provider calls, completion installation, shell reload, theme publication or live tmux changes.
+
+### Help and alias verification
+
+- Weather suite: 43 tests, 42 passed and native PowerShell skipped because unavailable. Exact artwork, theme gradient endpoints and interpolation, fallback colors, one palette read, plain/icon controls and help bypassing weather config/providers passed. Every alias matches its long form, including grouped/attached arguments and case-sensitive pairs; machine outputs remain undecorated.
+- Native Termux PTYs passed at 40/80/120 columns, including main and completion help. Bash/Fish value completions and actual Zsh/FZF-tab insertion passed, including `-g temperature`. PowerShell completion generation includes case-sensitive contexts and prefixes; native Windows PowerShell 5.1/7 acceptance remains pending.
+- Shared resource/presentation suite: all 12 tests passed. All four completion artifacts match their generators, Bash/Zsh/Fish syntax checks passed, all 217 relative Markdown file-link targets resolve, and Git whitespace checks passed. Provider-free help inspection confirmed the exact artwork and icon-prefixed title.
+
+Prior work and concurrent Yazi edits were preserved. No live weather/location requests, completion installation, shell reload, theme publication, live tmux changes, commit or push occurred. Actual font rasterization remains owner acceptance.
+
+
+## Feels-like styling, detail icons and current layout
+
+**Status: Implemented and verified with isolated fixtures and native Termux terminals.** Owner approved `{feel_color}`, five icon fields, downwind arrows in widgets and human rows, and separate Now/Condition rows.
+
+- Use the existing temperature-scale style resolver for `{feel_color}`, preserving unit conversion, thresholds, attributes, manual-mode accumulation/reset, plain bypass and ANSI/tmux restoration.
+- Add wind_icon, sunrise_icon, sunset_icon, humidity_icon and precip_icon to the shared field vocabulary and four-shell completions. Fixed glyphs contain no spacing; human rows insert one space, respect icon controls and retain textual values. Wind uses valid degrees first, compass fallback and eight downwind arrows; unknown direction is empty.
+- Keep ten-character alignment; Now contains icon and temperature, followed by Condition. Preserve forecast layout, owner configuration and unrelated edits. Update help and current documentation; regenerate completions only after checking their existing content.
+- Verify style bands/boundaries/conversion, missing data, arrow sectors/fallbacks, exact glyphs, query/completion surfaces and native Termux PTYs at 40/80/120 columns. Run weather/resource suites sequentially with isolated roots. Native Windows PowerShell and actual font rendering remain pending acceptance.
+- No live provider requests, installation, shell reload, theme publication, commit or push.
+
+### Detail-icon and feels-like verification
+
+- Weather suite: 45 tests, 44 passed and native PowerShell skipped because unavailable. Feels-like band selection, boundaries, conversion, missing values, style accumulation/reset and plain/ANSI/tmux output passed. Arrow tests cover all compass points, degree precedence, rounding boundaries and invalid-direction fallback. Exact glyph fields, scalar output, icon disabling and missing astronomy passed.
+- Native Termux PTYs verified default/current/hourly views and the new icon rows at 40/80/120 columns. Long Unicode conditions use the existing display-cell-aware span renderer after a focused check caught character-count wrapping overflow. Forecast layout remains unchanged.
+- Shared resource/presentation suite: all 12 tests passed. Four completion artifacts match their generator; Bash/Zsh/Fish syntax and native completion checks passed. All 217 relative Markdown file-link targets resolve, and Git whitespace checks passed.
+- The owner's wttr configuration hash is unchanged from the start of this task. Prior and unrelated changes remain preserved. No provider requests, completion installation, live reload or publication occurred. Native Windows PowerShell 5.1/7 and actual font rasterization remain pending acceptance.
+
+
+## Configurable row spacing and named icon styles
+
+**Status: Implemented and verified with isolated fixtures and native Termux terminals.** Owner approved a default three-space label gap, configurable named detail glyphs/styles and a location icon beside the city heading.
+
+- Add label_gap (integer 1–8, default 3), retaining a ten-character minimum column widened for enabled longer labels across the weather view. Reuse shared span wrapping with optional label-width/gap arguments and heading spans; other commands retain their existing defaults.
+- Add named location/sunrise/sunset/humidity/precip glyph entries and location/sunrise/sunset/humidity/precip/wind style entries to existing icons/icon_colors tables. Use current theme defaults, existing style syntax and older-config fallbacks. Preserve the owner's widget, temperature scale and condition settings.
+- Add location_icon to shared fields/completions; automatically style named widget icons unless manual mode is selected. Add six named color directives with existing accumulation/reset and plain/ANSI/tmux behavior. Human icons reset before values; the city retains heading style.
+- Verify configurable spacing, optional longer labels, wide Unicode wrapping, empty/disabled icons, glyph/style overrides, one palette snapshot, theme replacement/fallbacks, scalar/completion behavior and 40/80/120-column native Termux views. Run weather/shared-renderer suites sequentially; preserve native Windows pending acceptance.
+- Synchronize help/config/docs and regenerate completions after verifying prior contents. No providers, installation, live reload, theme publication, commit or push.
+
+### Spacing and named-style verification
+
+- Weather suite: 47 tests, 46 passed and unavailable native PowerShell skipped. Named glyph/style overrides, automatic/manual widgets, six named directives, plain/ANSI/tmux rendering, reset isolation, palette replacement/fallbacks and one snapshot per render passed. Query/completion checks include location_icon and unchanged location text.
+- Native Termux PTYs passed at 40/80/120 columns for current/default/hourly output, including the colored location heading and wider aligned rows. Isolated checks cover custom gaps 1/3/8, optional longer attribution labels, Unicode heading/value wrapping, empty/disabled icons, old config defaults and invalid gaps/styles.
+- Shared resource/presentation suite: all 13 tests passed, including unchanged default detail spacing, custom cell-width columns, continuation alignment and sanitized independently styled headings.
+- Four completion artifacts match their generators; Bash/Zsh/Fish syntax checks passed. All 229 relative Markdown file-link targets resolve, and Git whitespace checks passed. Configuration additions preserve the owner's widget template, temperature thresholds/styles and condition mappings.
+- No live provider requests, completion installation, shell reload, theme publication, commit or push occurred. Concurrent unrelated checkout edits remain preserved. Actual font rasterization and native Windows PowerShell 5.1/7 remain pending acceptance.
+
+
+## Unpadded solar hours and trailing detail icons
+
+**Status: Implemented and verified with isolated fixtures and native Termux terminals.** Owner approved removing leading solar-hour zeros everywhere in display fields and moving the five detail icons after human row values.
+
+- Strip the leading hour zero only from validated sunrise/sunset display fields. Preserve minutes, AM/PM, noon/midnight, raw JSON, cached data, astronomy validation and daylight boundaries. Widgets and scalar queries use the same normalized fields.
+- Place humidity/wind/precipitation/sunrise/sunset icons after values with one separating space. Preserve configured glyphs/styles, label alignment, heading location icon and condition-icon placement. Empty/disabled icons add no separator; unavailable solar values retain their trailing icons. Widget templates retain their authored placement.
+- Update current documentation and exact layout/reset assertions; test padded/unpadded hours, noon/midnight, missing/invalid astronomy, query/widget values, raw/cache preservation and direction arrows without compass text. Run weather/resource suites sequentially with isolated fixtures and native Termux layouts at 40/80/120 columns. Native Windows acceptance remains pending where unavailable.
+- Preserve configuration and unrelated work; no provider calls, installation, live reload, commit or push.
+
+### Solar-hour and trailing-icon verification
+
+- Weather suite: 49 tests, 48 passed and unavailable native PowerShell skipped. Padded/unpadded solar hours, noon/midnight, minute preservation, invalid/missing astronomy, widget/scalar values, unchanged raw JSON/cache data and daylight boundaries passed. Trailing icons retain configured styles and reset correctly; disabled/empty icons and wind bearings without compass text have no extra separator.
+- Native Termux terminal views passed at 40/80/120 columns with the updated icon order and solar-hour formatting. Location and condition icons retain their positions; widget templates retain their authored icon placement.
+- Shared resource/presentation suite: all 13 tests passed. All four unchanged completion artifacts match their generators, 229 relative Markdown file-link targets resolve, and Git whitespace checks passed.
+- Focused checks initially exposed owner-edited glyph/style values inherited by fixtures. Named detail icons/styles and label gaps now use explicit temporary fixture values, like the existing temperature-scale fixtures. The live owner configuration was preserved.
+- No live providers, installation, reload, commit or push occurred. Native Windows PowerShell 5.1/7 and actual font rasterization remain separate pending acceptance checks.

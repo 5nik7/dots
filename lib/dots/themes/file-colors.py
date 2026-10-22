@@ -546,6 +546,7 @@ def main(argv):
             for key, value in aliases.items():
                 print(key + '\t' + value)
                 print(key + '_delta\t' + ('normal' if value == 'reset' else value))
+                print(key + '_eza\t' + ('default' if value == 'reset' else value))
             colors.update(aliases)
             background = doc['colors']['background']
             for key, value in colors.items():

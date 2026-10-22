@@ -79,13 +79,19 @@ def connectors(themes):
     themes.connector_guards = {}
     for line in (LIB / 'connectors.tsv').read_text().splitlines():
         app, suffix, artifact = line.split('\t')
-        if os.name == 'nt':
+        if app == 'eza':
+            from app_paths import eza_config_directory
+            base = eza_config_directory()
+        elif app == 'television':
+            from app_paths import television_config_directory
+            base = television_config_directory()
+        elif os.name == 'nt':
             if app not in ('yazi', 'git', 'vivid'): continue
             from app_paths import config_directory
             base = config_directory('yazi') if app == 'yazi' else config / app
         else: base = config / app
         target = base / suffix
-        if target.parent.is_dir():
+        if target.parent.is_dir() or (app == 'television' and base.is_dir()):
             if base.is_symlink():
                 from catalog import Catalog, platform
                 owners = Catalog(themes.checkout, platform()).records()

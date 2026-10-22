@@ -5,3 +5,5 @@ yazi	flavors/dots.yazi	yazi
 vivid	themes/dots.yml	vivid.yml
 fsh	dots.ini	fsh.ini
 git	dots-theme.gitconfig	gitconfig
+eza	theme.yml	eza.yml
+television	themes/dots.toml	television.toml

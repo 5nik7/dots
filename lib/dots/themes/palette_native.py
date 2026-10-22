@@ -149,8 +149,9 @@ class Themes:
         if family_meta.exists(): meta = {**literal(family_meta, 'metadata'), **meta}
         for key, value in list(meta.items()):
             if key.startswith('roles.' + flavor + '.'): meta['roles.' + key.rsplit('.', 1)[1]] = value
-        palette = literal(directory / 'palette.toml', 'palette') if (directory / 'palette.toml').exists() else {}
-        if not palette and (self.root / family / 'flavors' / (flavor + '.toml')).is_file():
+        # Pywal's bundled file is a placeholder; its palette comes from the export.
+        palette = literal(directory / 'palette.toml', 'palette') if family != 'pywal16' and (directory / 'palette.toml').exists() else {}
+        if family != 'pywal16' and not palette and (self.root / family / 'flavors' / (flavor + '.toml')).is_file():
             palette = literal(self.root / family / 'flavors' / (flavor + '.toml'), 'palette')
         if family == 'pywal16':
             cache = Path(os.environ.get('XDG_CACHE_HOME') or Path.home() / '.cache') / 'wal/colors.json'
@@ -185,8 +186,11 @@ class Themes:
 
     def fingerprint(self, identity):
         digest = hashlib.sha256()
+        digest.update(regular(LIB.parent / "files/app_paths.py"))
         digest.update(str(shutil.which('bat')).encode())
         family = self.load(identity)['theme']
+        if family == 'pywal16':
+            digest.update(regular(Path(os.environ.get('XDG_CACHE_HOME') or Path.home() / '.cache') / 'wal/colors.json'))
         for base in (LIB, LIB.parent / 'shell', self.checkout / 'default', self.directory(identity), self.root / family, self.config / 'themed', self.templates):
             if not base.exists(): continue
             for path in sorted(base.rglob('*')):
@@ -208,6 +212,8 @@ class Themes:
         tokens.update({'git_' + key: value for key, value in doc['colors']['git'].items()})
         for key, value in list(tokens.items()):
             tokens[key + '_delta'] = 'normal' if value == 'reset' else value
+            if key.startswith('git_'):
+                tokens[key + '_eza'] = 'default' if value == 'reset' else value
             value = palette['colors']['background'] if value == 'reset' else value
             for percent in (10, 25):
                 bg = palette['colors']['background']
@@ -219,7 +225,7 @@ class Themes:
         tokens['git_colors_starship'] = '\n'.join('git_' + key + ' = ' + json.dumps(value) for key, value in doc['colors']['git'].items())
         rendered = set()
         trusted = directory.is_relative_to(self.root)
-        overrides = 'kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini'.split()
+        overrides = 'kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini eza.yml television.toml'.split()
         for name in overrides if trusted else ():
             if (directory / name).is_file() and not (directory / name).is_symlink():
                 (out / name).write_bytes(regular(directory / name)); rendered.add(name)

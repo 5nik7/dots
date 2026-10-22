@@ -83,6 +83,22 @@ class ResourcesTests(unittest.TestCase):
                 ui.detail_spans('Now', [('53°F', '31')])
                 self.assertEqual(stream.getvalue(), '    Now        53°F\n')
 
+    def test_custom_detail_spacing_and_heading_spans(self):
+        with patch.dict(os.environ,self.env,clear=True):
+            for width in (40,80,120):
+                stream=io.StringIO();ui=Presentation(stream);ui.width=width
+                ui.detail_spans('雲', [('long value ' * 12, '32')], label_width=12, label_gap=3)
+                plain=re.sub(r'\x1b\[[0-9;]*m','',stream.getvalue())
+                self.assertTrue(plain.startswith('    雲'+' '*13+'long value'))
+                self.assertTrue(all(cells(line)<=width for line in plain.splitlines()))
+                self.assertTrue(all(line.startswith(' '*19) for line in plain.splitlines()[1:]))
+                stream.seek(0);stream.truncate()
+                ui.heading_spans([('Weather — ', '1;96'), (' ', '35'), ('雲 town ' * 20, '1;96'), ('\x1b[31m', None)])
+                text=stream.getvalue();plain=re.sub(r'\x1b\[[0-9;]*m','',text)
+                self.assertTrue(all(cells(line)<=width for line in plain.splitlines()))
+                self.assertIn('\x1b[35m \x1b[0m',text)
+                self.assertIn(r'\x1b[31m',plain)
+
     def test_published_rules_and_native_kind_parity(self):
         paths = [('file.special','file',''), ('file.png','file','image/png'),
                  ('file.txt','file','text/plain'), ('file.zz','file','text/plain'),

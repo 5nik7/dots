@@ -71,3 +71,5 @@ bin-release/
 /config/btop/themes/dots.theme
 /config/git/gitplatform
 /config/git/dots-theme.gitconfig
+/config/eza/theme.yml
+/config/television/themes/dots.toml

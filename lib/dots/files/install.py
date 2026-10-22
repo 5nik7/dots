@@ -200,9 +200,14 @@ class Installation:
                             raise ValueError('unfinished theme publication; recover with dots theme refresh first')
             for line in (self.root / 'lib/dots/themes/connectors.tsv').read_text().splitlines():
                 app, suffix, artifact = line.split('\t')
-                if self.platform == 'windows' and app not in ('yazi', 'git', 'vivid'):
+                if self.platform == 'windows' and app not in ('yazi', 'git', 'vivid', 'eza'):
                     continue
                 owner = next((r for r in records if r['app'] == app and r['strategy'] == 'directory-link' and r['target']), None)
+                if app == 'eza':
+                    from app_paths import eza_config_directory
+                    base = eza_config_directory(windows=self.platform == 'windows')
+                    if not owner or Path(owner['target']) != base:
+                        continue
                 if owner and Path(owner['source']).is_dir():
                     connectors.append((app, Path(owner['source']) / suffix, artifact))
             if self.platform == 'termux':

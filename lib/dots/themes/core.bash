@@ -191,7 +191,7 @@ dt_value() {
 }
 dt_fingerprint() {
   local sum input
-  local -a inputs=("$DT_LIB/"*.bash "$DT_LIB/"*.zsh "$DT_LIB/connectors.tsv" "$DT_LIB/../shell/palette.bash" "$DT_LIB/file-colors.py" "$DT_LIB/../resources.py" "${DT_LIB%/lib/dots/themes}/default/file-colors.toml")
+  local -a inputs=("$DT_LIB/"*.bash "$DT_LIB/"*.zsh "$DT_LIB/connectors.tsv" "$DT_LIB/../shell/palette.bash" "$DT_LIB/file-colors.py" "$DT_LIB/../resources.py" "$DT_LIB/../files/app_paths.py" "${DT_LIB%/lib/dots/themes}/default/file-colors.toml")
   if [[ -f $DT_ROOT/$DT_THEME/theme.toml && -d $DT_ROOT/$DT_THEME/flavors ]]; then
     inputs+=("$DT_ROOT/$DT_THEME/theme.toml" "$DT_ROOT/$DT_THEME/flavors/"*.toml)
   fi
@@ -205,7 +205,7 @@ dt_fingerprint() {
     [[ ! -f $input ]] || inputs+=("$input")
   done
   if [[ -n ${DT_THEME_DIR:-} ]]; then
-    for input in "$DT_THEME_DIR/"*.toml "$DT_THEME_DIR/"*.conf "$DT_THEME_DIR/"*.theme "$DT_THEME_DIR/"*.properties "$DT_THEME_DIR/"*.tmTheme "$DT_THEME_DIR/fzf.sh" "$DT_THEME_DIR/gum_env.sh" "$DT_THEME_DIR/pi.json" "$DT_THEME_DIR/vivid.yml" "$DT_THEME_DIR/fsh.ini"; do
+    for input in "$DT_THEME_DIR/"*.toml "$DT_THEME_DIR/"*.conf "$DT_THEME_DIR/"*.theme "$DT_THEME_DIR/"*.properties "$DT_THEME_DIR/"*.tmTheme "$DT_THEME_DIR/fzf.sh" "$DT_THEME_DIR/gum_env.sh" "$DT_THEME_DIR/pi.json" "$DT_THEME_DIR/vivid.yml" "$DT_THEME_DIR/fsh.ini" "$DT_THEME_DIR/eza.yml"; do
       [[ ! -f $input ]] || inputs+=("$input")
     done
   fi

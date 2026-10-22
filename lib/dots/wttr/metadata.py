@@ -7,7 +7,7 @@ OPTIONS = [
     ('--units', 'us|metric', 'Temperature, wind and precipitation units'),
     ('--language', 'CODE', 'Weather description language (default: en)'),
     ('--widget', None, 'Print a compact cached widget; refresh in background'),
-    ('--format', 'TEMPLATE', 'Widget template with literal {field} placeholders'),
+    ('--format', 'TEMPLATE', 'Widget template with fields and style directives'),
     ('--get', 'FIELD', 'Print one field; also: wttr get FIELD'),
     ('--fields', None, 'List available template and scalar fields'),
     ('--json', None, 'Print the original wttr.in j1 object'),
@@ -23,6 +23,19 @@ OPTIONS = [
     ('--help', None, 'Show usage without querying providers'),
     ('--version', None, 'Print version'),
 ]
+SHORT_FLAGS = {
+    '--help': '-h', '--version': '-V', '--verbose': '-v', '--format': '-f',
+    '--json': '-j', '--fields': '-F', '--get': '-g', '--location': '-l',
+    '--current': '-c', '--days': '-d', '--hourly': '-H', '--units': '-u',
+    '--language': '-L', '--widget': '-w', '--refresh': '-r', '--config': '-C',
+    '--timeout': '-t',
+}
+
+
+def spellings(flag):
+    return (SHORT_FLAGS[flag], flag) if flag in SHORT_FLAGS else (flag,)
+
+
 SHELLS = ('bash', 'zsh', 'fish', 'powershell')
 STOCK_FLAG_DESCRIPTIONS = {
     'm': 'Metric (SI) units',

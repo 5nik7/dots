@@ -4,35 +4,52 @@ _wttr() {
   local context state state_descr line
   typeset -A opt_args
   if [[ $words[2] == completion ]]; then
-    _arguments '--all[All shells]' '--install[Install with backup]' '--dir[Destination]:directory:_files -/' '*:shell:(bash zsh fish powershell)'
+    _arguments '--all[All shells]' '--install[Install with backup]' '--dir[Destination]:directory:_files -/' '(-h --help)-h[Show help]' '(-h --help)--help[Show help]' '*:shell:(bash zsh fish powershell)'
   else
     _arguments -s \
-  '--location[Override configured location or automatic city]:value:' \
-  '--current[Show current conditions only]' \
-  '--days[Number of forecast days (default: 3)]:value:(1 2 3)' \
-  '--hourly[Include three-hourly forecast rows]' \
-  '--units[Temperature, wind and precipitation units]:value:(us metric)' \
-  '--language[Weather description language (default: en)]:value:' \
-  '--widget[Print a compact cached widget; refresh in background]' \
-  '--format[Widget template with literal {field} placeholders]:value:' \
-  '--get[Print one field; also: wttr get FIELD]:value:(location attribution condition code icon temperature unit feels_like humidity wind wind_unit wind_direction precipitation precipitation_unit sunrise sunset daylight age stale stale_marker)' \
-  '--fields[List available template and scalar fields]' \
-  '--json[Print the original wttr.in j1 object]' \
+  '(-l --location)-l[Override configured location or automatic city]:value:' \
+  '(-l --location)--location[Override configured location or automatic city]:value:' \
+  '(-c --current)-c[Show current conditions only]' \
+  '(-c --current)--current[Show current conditions only]' \
+  '(-d --days)-d[Number of forecast days (default: 3)]:value:(1 2 3)' \
+  '(-d --days)--days[Number of forecast days (default: 3)]:value:(1 2 3)' \
+  '(-H --hourly)-H[Include three-hourly forecast rows]' \
+  '(-H --hourly)--hourly[Include three-hourly forecast rows]' \
+  '(-u --units)-u[Temperature, wind and precipitation units]:value:(us metric)' \
+  '(-u --units)--units[Temperature, wind and precipitation units]:value:(us metric)' \
+  '(-L --language)-L[Weather description language (default: en)]:value:' \
+  '(-L --language)--language[Weather description language (default: en)]:value:' \
+  '(-w --widget)-w[Print a compact cached widget; refresh in background]' \
+  '(-w --widget)--widget[Print a compact cached widget; refresh in background]' \
+  '(-f --format)-f[Widget template with fields and style directives]:value:' \
+  '(-f --format)--format[Widget template with fields and style directives]:value:' \
+  '(-g --get)-g[Print one field; also: wttr get FIELD]:value:(location attribution condition code icon temperature unit feels_like humidity wind wind_unit wind_direction precipitation precipitation_unit sunrise sunset daylight age stale stale_marker wind_icon sunrise_icon sunset_icon humidity_icon precip_icon location_icon)' \
+  '(-g --get)--get[Print one field; also: wttr get FIELD]:value:(location attribution condition code icon temperature unit feels_like humidity wind wind_unit wind_direction precipitation precipitation_unit sunrise sunset daylight age stale stale_marker wind_icon sunrise_icon sunset_icon humidity_icon precip_icon location_icon)' \
+  '(-F --fields)-F[List available template and scalar fields]' \
+  '(-F --fields)--fields[List available template and scalar fields]' \
+  '(-j --json)-j[Print the original wttr.in j1 object]' \
+  '(-j --json)--json[Print the original wttr.in j1 object]' \
   '--daylight[Print day, night or unknown; refresh in background]' \
-  '--refresh[Refresh now, overriding freshness and cooldown]' \
+  '(-r --refresh)-r[Refresh now, overriding freshness and cooldown]' \
+  '(-r --refresh)--refresh[Refresh now, overriding freshness and cooldown]' \
   '--cached[Read only; never spawn, locate, lock or write]' \
   '--allow-stale[Allow marked weather up to max_stale age]' \
-  '--config[Use this TOML configuration file]:value:_files' \
-  '--timeout[Total refresh deadline (1–60 seconds)]:value:' \
+  '(-C --config)-C[Use this TOML configuration file]:value:_files' \
+  '(-C --config)--config[Use this TOML configuration file]:value:_files' \
+  '(-t --timeout)-t[Total refresh deadline (1–60 seconds)]:value:' \
+  '(-t --timeout)--timeout[Total refresh deadline (1–60 seconds)]:value:' \
   '--color[Human and widget output colors]:value:(auto always never)' \
   '--icons[Weather icons (widget auto uses icons)]:value:(auto always never)' \
-  '--verbose[Show cache provenance and age in human output]' \
-  '--help[Show usage without querying providers]' \
-  '--version[Print version]' \
+  '(-v --verbose)-v[Show cache provenance and age in human output]' \
+  '(-v --verbose)--verbose[Show cache provenance and age in human output]' \
+  '(-h --help)-h[Show usage without querying providers]' \
+  '(-h --help)--help[Show usage without querying providers]' \
+  '(-V --version)-V[Print version]' \
+  '(-V --version)--version[Print version]' \
   '*:argument:->argument'
     if [[ $state == argument ]]; then
       if [[ $words[2] == get ]]; then
-        compadd -- location attribution condition code icon temperature unit feels_like humidity wind wind_unit wind_direction precipitation precipitation_unit sunrise sunset daylight age stale stale_marker
+        compadd -- location attribution condition code icon temperature unit feels_like humidity wind wind_unit wind_direction precipitation precipitation_unit sunrise sunset daylight age stale stale_marker wind_icon sunrise_icon sunset_icon humidity_icon precip_icon location_icon
       else
         local -a stock_options
         stock_options=('m:Metric (SI) units' 'u:US customary units' 'M:Wind speed in meters per second' '0:Current weather only' '1:Current weather and today forecast' '2:Current weather, today and tomorrow forecasts' 'A:Ignore User-Agent and force ANSI terminal output' 'd:Restrict output to standard console font glyphs' 'F:Hide the Follow line' 'n:Narrow view with only day and night' 'q:Quiet\: hide the Weather report heading' 'Q:Superquiet\: hide heading and city name' 'T:Disable terminal sequences and colors' 'format=:Upstream format preset or percent template' 'moon:Current Moon phase' 'moon@:Moon phase for YYYY-MM-DD' '\:help:Show upstream usage' '\:bash.function:Show the recommended Bash function' '\:translation:Show translation and contributor information' 'get:Query a weather field' 'completion:Generate or install completions')

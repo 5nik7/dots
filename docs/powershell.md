@@ -37,6 +37,8 @@ The catalog token `${APP_CONFIG:app}` resolves app-specific directories in `lib/
 | --- | --- |
 | lsd | `~/.config/lsd` (preferred Windows location) |
 | bat | `%APPDATA%/bat`; `BAT_CONFIG_DIR` override |
+| Television | `%LOCALAPPDATA%/television/config`; `TELEVISION_CONFIG` or absolute `XDG_CONFIG_HOME/television` override |
+| eza | `%APPDATA%/eza`; `EZA_CONFIG_DIR` override |
 | Yazi | `%APPDATA%/yazi/config`; `YAZI_CONFIG_HOME` override |
 | Nushell | `%APPDATA%/nushell`, or `$XDG_CONFIG_HOME/nushell` |
 | mpv | `%APPDATA%/mpv`; `MPV_HOME` override |
@@ -71,7 +73,7 @@ The [parity plan](../plans/powershell-parity.md) records implementation and veri
 
 Owner acceptance must exercise both real profiles, Unicode and quoted paths, denied link privileges, repeat setup/uninstall, occupied targets and retained backups, interrupted apply/recover, theme switching and undo, FZF previews/keybinds, Ctrl-C/Ctrl-Break, and 40/80/120-column light/dark terminal views. Check actual app config locations and wallpaper separately from fixtures. Linux and WSL likewise need native runtime/terminal evidence; Termux fixtures do not establish those platforms.
 
-Native Git and theme panels share semantic/rendering primitives but have not received visual equivalence acceptance. The native publisher builds an isolated bat cache when bat is available and the PowerShell theme hook exposes it. Native Delta/bat consumer acceptance is pending. Known-folder resolution relies on the host profile and app environment/default paths, not a general Windows Known Folder API. Do not describe those outstanding checks as completed parity.
+Native Git and theme panels share semantic/rendering primitives but have not received visual equivalence acceptance. The native publisher builds an isolated bat cache when bat is available and the PowerShell theme hook exposes it. Native Delta/bat and eza consumer acceptance is pending. The eza connector and renderer use the shared destination resolver and native transaction engine; Termux controller fixtures do not establish Windows PowerShell 5.1/7 link or rendering acceptance. Known-folder resolution relies on the host profile and app environment/default paths, not a general Windows Known Folder API. Do not describe those outstanding checks as completed parity.
 
 Anodize user saves use the existing platform configuration adapter: XDG when
 explicit, otherwise `~/.config/dots/themes` on POSIX and `%APPDATA%/dots/themes`
@@ -82,4 +84,4 @@ preview and interruption acceptance remains pending where engines are unavailabl
 
 ## Standalone weather
 
-`bin/wttr.ps1` uses the literal native argument bridge and shared Python 3.11+ weather controller; Bash is not required. It supports the same views/flags/progress/data, stock request syntax and generated PowerShell completion as the Unix entry. Temperature/icon styling and widget formats use the shared renderer, and completion tooltips use case-sensitive stock metadata. Stock requests execute native `curl.exe` directly, bypassing the PowerShell `curl` alias; JSON-backed views do not require curl. Configuration maps to APPDATA/wttr (XDG override supported). Manual/default locations are supported; Android acquisition and tmux have no native Windows equivalent here. Native Windows PowerShell 5.1/7 weather/completion terminal validation remains pending; shared controller/bridge fixtures do not establish it. See [wttr](wttr.md).
+`bin/wttr.ps1` uses the literal native argument bridge and shared Python 3.11+ weather controller; Bash is not required. It supports the same views/flags/progress/data, case-sensitive short aliases and theme-gradient help, stock request syntax and generated PowerShell completion as the Unix entry. Temperature/icon attributes, variable temperature bands and widget style directives use the shared renderer, and completion tooltips use case-sensitive stock metadata. Stock requests execute native `curl.exe` directly, bypassing the PowerShell `curl` alias; JSON-backed views do not require curl. Configuration maps to APPDATA/wttr (XDG override supported). Manual/default locations are supported; Android acquisition and tmux have no native Windows equivalent here. Native Windows PowerShell 5.1/7 weather/completion terminal validation remains pending; shared controller/bridge fixtures do not establish it. See [wttr](wttr.md).

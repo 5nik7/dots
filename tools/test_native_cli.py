@@ -27,7 +27,7 @@ class NativeCLI(unittest.TestCase):
         self.home.mkdir(); self.repo.mkdir()
         self.env = dict(os.environ)
         for key in list(self.env):
-            if key.startswith(('DOTS_', 'GIT_')) or key in ('TMUX','KITTY_LISTEN_ON','WAYLAND_DISPLAY','DISPLAY','DOTHEMES','THEMES','TERMUX_VERSION'): self.env.pop(key)
+            if key.startswith(('DOTS_', 'GIT_')) or key in ('TMUX','KITTY_LISTEN_ON','WAYLAND_DISPLAY','DISPLAY','DOTHEMES','THEMES','TERMUX_VERSION','EZA_CONFIG_DIR','TELEVISION_CONFIG','TELEVISION_DATA'): self.env.pop(key)
         self.env.update(DOTS=str(self.repo), HOME=str(self.home), USERPROFILE=str(self.home),
                         XDG_CONFIG_HOME=str(self.home/'config'), XDG_STATE_HOME=str(self.home/'state'),
                         XDG_CACHE_HOME=str(self.home/'cache'), XDG_DATA_HOME=str(self.home/'data'),
@@ -112,6 +112,9 @@ class NativeCLI(unittest.TestCase):
         from app_paths import config_directory
         with patch.dict(os.environ, self.env, clear=True):
             self.assertEqual(config_directory('yazi'), self.home / 'Roaming/yazi/config')
+            self.assertEqual(config_directory('eza'), self.home / 'Roaming/eza')
+            with patch.dict(os.environ, EZA_CONFIG_DIR=str(self.home / 'custom eza')):
+                self.assertEqual(config_directory('eza'), self.home / 'custom eza')
             self.assertEqual(config_directory('glaze-wm'), self.home / '.glzr/glazewm')
             self.assertIsNone(config_directory('wt'))
             stable = self.home / 'Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState'
@@ -129,12 +132,17 @@ class NativeCLI(unittest.TestCase):
         from palette_native import Themes
         import theme_cli
         from transactions import Store
+        eza = self.home / 'eza ü/theme.yml'
+        eza.parent.mkdir(); eza.write_text('original eza theme\n')
+        self.env['EZA_CONFIG_DIR'] = str(eza.parent)
         with patch.dict(os.environ, dict(self.env, DOTS=str(ROOT)), clear=True), patch.object(theme_cli, 'reload_apps') as reload:
             themes = Themes()
             identity = 'catppuccin-mocha'
             theme_cli.publication(themes, identity, dry=True)
             self.assertFalse(themes.state.exists())
             first = theme_cli.publication(themes, identity)
+            self.assertTrue(eza.is_symlink())
+            self.assertIn('colourful: true', eza.read_text())
             records = Store(themes.state).records()
             self.assertEqual(len(records), 1)
             self.assertEqual(theme_cli.publication(themes, identity), first)
@@ -150,17 +158,22 @@ class NativeCLI(unittest.TestCase):
             operations, guards, _ = store.inverse(records[0]['id'])
             store.apply('test-undo', operations, guards, retain=True)
             self.assertFalse((themes.state / 'current/theme').exists())
+            self.assertEqual(eza.read_text(), 'original eza theme\n')
+            self.assertFalse(eza.is_symlink())
 
     def test_native_publication_rolls_back_after_live_replacement(self):
         sys.path.insert(0, str(LIB / 'themes'))
         import theme_cli
         from palette_native import Themes
         from transactions import Store
+        eza = self.home / 'eza/theme.yml'
+        eza.parent.mkdir(); eza.write_text('original eza theme\n')
+        self.env['EZA_CONFIG_DIR'] = str(eza.parent)
         save = Store.save
         injected = []
         def fail_after_generation(store, doc):
             save(store, doc)
-            if doc['status'] == 'applying' and any(r.get('phase') == 'done' for r in doc['operations']) and not injected:
+            if doc['status'] == 'applying' and eza.is_symlink() and not injected:
                 injected.append(True)
                 raise OSError('fixture interruption after replacement')
         with patch.dict(os.environ, dict(self.env, DOTS=str(ROOT)), clear=True), patch.object(theme_cli, 'reload_apps'):
@@ -168,6 +181,8 @@ class NativeCLI(unittest.TestCase):
             with patch.object(Store, 'save', fail_after_generation), self.assertRaisesRegex(OSError, 'fixture interruption'):
                 theme_cli.publication(themes, 'catppuccin-mocha')
             self.assertTrue(injected)
+            self.assertEqual(eza.read_text(), 'original eza theme\n')
+            self.assertFalse(eza.is_symlink())
             self.assertFalse((themes.state / 'current/theme').exists())
             self.assertFalse((themes.state / 'themes/current').exists())
             self.assertTrue(all(r['status'] == 'rolled-back' for r in Store(themes.state).records()))

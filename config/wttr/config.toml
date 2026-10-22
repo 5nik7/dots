@@ -1,77 +1,96 @@
 # wttr uses this file when no user config exists. No location is sent implicitly.
-default_location = ""               # nonempty overrides auto city; --location wins
-units = "us"                         # us (Fahrenheit/mph/in) or metric
+default_location = ""    # nonempty overrides auto city; --location wins
+units = "us"             # us (Fahrenheit/mph/in) or metric
 language = "en"
-days = 3                             # wttr.in j1 provides up to three days
-timeout = 20                         # total foreground refresh deadline, seconds
-ttl = 900                            # weather freshness, seconds
-max_stale = 21600                     # maximum retained weather age, seconds
-location_max_age = 86400              # background cached city fix, seconds
-widget = "{icon} {temperature}{unit}{stale_marker}"
-show_location_attribution = false    # hide the wrapper's Location data row
-widget_color = "auto"               # auto (TTY), always, never; CLI/env override
-widget_color_format = "ansi"         # ansi, plain, tmux (explicit status markup)
+days = 3                 # wttr.in j1 provides up to three days
+timeout = 20             # total foreground refresh deadline, seconds
+ttl = 900                # weather freshness, seconds
+max_stale = 21600        # maximum retained weather age, seconds
+location_max_age = 86400 # background cached city fix, seconds
+# Optional manual styling: "{icon_color}{icon}{reset} {temp_color}{temperature}{unit}{reset}"
+widget = "{icon_color}{icon}{reset} {temp_color}{temperature}{unit}{stale_marker}"
+show_location_attribution = false                                                  # hide the wrapper's Location data row
+widget_color = "auto"                                                              # auto (TTY), always, never; CLI/env override
+widget_color_format = "ansi"                                                       # ansi, plain, tmux (explicit status markup)
+
+label_gap = 3 # spaces after the aligned label column in human weather output (1–8)
 
 [temperature_scale]
-unit = "F"                          # thresholds can use F or C, independent of display
+unit = "F" # thresholds can use F or C, independent of display
 # First bound is inclusive; subsequent bounds begin the next warmer band.
-# <=32 cyan, <60 blue, <75 green, <85 yellow, <95 orange, >=95 red.
-thresholds = [32, 60, 75, 85, 95]
+# N increasing thresholds need N+1 styles; [] with one style covers all temperatures.
+# <=32 cyan, <45 blue, <65 green, <80 yellow, <95 orange, >=95 red.
+thresholds = [32, 55, 70, 85, 95]
 # Names follow the current theme; literal overrides can be mixed, e.g. "#89b4fa", 33.
-colors = ["cyan", "blue", "green", "yellow", "orange", "red"]
+# Add bold/b, italic/i, underline/u, dim/d, reverse: "underline bold bright red".
+# bright selects a standard color variant (bright blue = bright_blue), not bold.
+colors = [
+  "bold 51",
+  "bold bright cyan",
+  "bold green",
+  "bright bold yellow",
+  "bold 216",
+  "bright bold red",
+]
 
 # Nerd Fonts Weather glyphs. Keys are World Weather Online condition codes.
 # Customize any condition independently. Unknown codes use unknown.
 [icons]
-unknown = "" # weather-na
-"113" = "" # sunny / clear
-"116" = "" # partly cloudy
-"119" = "" # cloudy
-"122" = "" # overcast
-"143" = "" # mist
-"176" = "" # patchy rain
-"179" = "" # patchy snow
-"182" = "" # patchy sleet
-"185" = "" # freezing drizzle
-"200" = "" # thundery
-"227" = "" # blowing snow
-"230" = "" # blizzard
-"248" = "" # fog
-"260" = "" # freezing fog
-"263" = "" # patchy light drizzle
-"266" = "" # light drizzle
-"281" = "" # freezing drizzle
-"284" = "" # heavy freezing drizzle
-"293" = "" # patchy light rain
-"296" = "" # light rain
-"299" = "" # occasional moderate rain
-"302" = "" # moderate rain
-"305" = "" # occasional heavy rain
-"308" = "" # heavy rain
-"311" = "" # light freezing rain
-"314" = "" # moderate/heavy freezing rain
-"317" = "" # light sleet
-"320" = "" # moderate/heavy sleet
-"323" = "" # patchy light snow
-"326" = "" # light snow
-"329" = "" # patchy moderate snow
-"332" = "" # moderate snow
-"335" = "" # patchy heavy snow
-"338" = "" # heavy snow
-"350" = "" # ice pellets
-"353" = "" # light rain shower
-"356" = "" # moderate/heavy rain shower
-"359" = "" # torrential rain shower
-"362" = "" # light sleet showers
-"365" = "" # moderate/heavy sleet showers
-"368" = "" # light snow showers
-"371" = "" # moderate/heavy snow showers
-"374" = "" # light ice-pellet showers
-"377" = "" # moderate/heavy ice-pellet showers
-"386" = "" # light rain with thunder
-"389" = "" # moderate/heavy rain with thunder
-"392" = "" # light snow with thunder
-"395" = "" # moderate/heavy snow with thunder
+# Detail glyphs; empty strings hide icons. Wind arrows remain directional.
+location = ""
+sunrise = ""
+sunset = "󰖚"
+humidity = ""
+precip = ""
+unknown = ""  # weather-na
+"113" = ""    # sunny / clear
+"116" = ""    # partly cloudy
+"119" = ""    # cloudy
+"122" = ""    # overcast
+"143" = ""    # mist
+"176" = ""    # patchy rain
+"179" = ""    # patchy snow
+"182" = ""    # patchy sleet
+"185" = ""    # freezing drizzle
+"200" = ""    # thundery
+"227" = ""    # blowing snow
+"230" = ""    # blizzard
+"248" = ""    # fog
+"260" = ""    # freezing fog
+"263" = ""    # patchy light drizzle
+"266" = ""    # light drizzle
+"281" = ""    # freezing drizzle
+"284" = ""    # heavy freezing drizzle
+"293" = ""    # patchy light rain
+"296" = ""    # light rain
+"299" = ""    # occasional moderate rain
+"302" = ""    # moderate rain
+"305" = ""    # occasional heavy rain
+"308" = ""    # heavy rain
+"311" = ""    # light freezing rain
+"314" = ""    # moderate/heavy freezing rain
+"317" = ""    # light sleet
+"320" = ""    # moderate/heavy sleet
+"323" = ""    # patchy light snow
+"326" = ""    # light snow
+"329" = ""    # patchy moderate snow
+"332" = ""    # moderate snow
+"335" = ""    # patchy heavy snow
+"338" = ""    # heavy snow
+"350" = ""    # ice pellets
+"353" = ""    # light rain shower
+"356" = ""    # moderate/heavy rain shower
+"359" = ""    # torrential rain shower
+"362" = ""    # light sleet showers
+"365" = ""    # moderate/heavy sleet showers
+"368" = ""    # light snow showers
+"371" = ""    # moderate/heavy snow showers
+"374" = ""    # light ice-pellet showers
+"377" = ""    # moderate/heavy ice-pellet showers
+"386" = ""    # light rain with thunder
+"389" = ""    # moderate/heavy rain with thunder
+"392" = ""    # light snow with thunder
+"395" = ""    # moderate/heavy snow with thunder
 
 [night_icons]
 "113" = "" # clear night
@@ -82,11 +101,18 @@ unknown = "" # weather-na
 # Colors follow the published Dots theme. Also accept #RRGGBB, 0–255 (number or
 # string), or default (no override). Glyph mappings above remain independent.
 [icon_colors]
+# Detail icon styles also apply to automatic widgets and named *_color directives.
+location = "cyan"
+sunrise = "yellow"
+sunset = "orange"
+humidity = "muted"
+precip = "blue"
+wind = "cyan"
 "unknown" = "default"
 "113" = "yellow"
 "116" = "yellow"
 "119" = "muted"
-"122" = "muted"
+"122" = "103"
 "143" = "muted"
 "176" = "blue"
 "179" = "cyan"

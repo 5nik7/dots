@@ -63,6 +63,8 @@ FZF cancellation and previews, and 40/80/120-column light/dark views.
 
 ## Verification notes
 
+- eza uses the same semantic template in Bash and the native Python renderer, a shared destination resolver, and the existing native connector transaction. Native Windows PowerShell 5.1/7 link and eza rendering acceptance remains pending; see the [eza plan](eza-theme.md).
+
 - Existing file operations: 21 passed; file picker contracts: 19 passed.
 - Bash dispatcher: all 24 cases passed after the completion additions.
 - Installation lifecycle: 22/23 passed initially. The fresh-checkout fixture lacked
@@ -103,3 +105,5 @@ The Androidots `termux-geo` helper and its personal Bash/Zsh/Fish completion-pat
 ### wttr acceptance
 
 The standalone native `bin/wttr.ps1` entry shares weather options, stock request syntax, formatting, cache logic, progress and completion metadata with Bash. Stock requests require native curl.exe and bypass PowerShell aliases. The managed configuration has an APPDATA/wttr destination. Termux device acquisition and tmux daylight styling are explicit platform exceptions; manual/default weather is shared. Native Windows PowerShell 5.1/7 argv/completion/PTY, cache locking and ACL checks remain pending on this Termux implementation host; see [the focused plan](wttr.md).
+
+Television integration uses the shared native renderer, destination resolver and Store connector transaction. The LOCALAPPDATA default and explicit overrides have fixture coverage; native PowerShell 5.1/7 publication, rollback, link-capability refusal and Television visual acceptance remain pending. See the [focused plan](television-theme.md).

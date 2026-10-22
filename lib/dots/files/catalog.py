@@ -76,14 +76,22 @@ class Presentation:
             text = icon + ' ' + text
         return self.paint(text, code or style)
 
-    def detail_spans(self, label, spans):
+    def heading_spans(self, spans):
+        """Render a heading with independently styled, inert text spans."""
+        self._spans(spans)
+
+    def detail_spans(self, label, spans, *, label_width=10, label_gap=1):
+        label = self.clean(label)
+        prefix = '    ' + label + ' ' * max(0, label_width - resource_cells(label)) + ' ' * label_gap
+        self._spans(spans, prefix, '94')
+
+    def _spans(self, spans, prefix='', prefix_code=None):
         """Wrap inert text first, then color independently styled value spans."""
         spans = [(self.clean(text), code) for text, code in spans if str(text)]
-        prefix = f"    {self.clean(label):<10} "
         index, offset = 0, 0
-        width = max(8, self.width - resource_cells(prefix))
+        width = max(1, self.width - resource_cells(prefix))
         for number, part in enumerate(resource_wrap(''.join(text for text, _ in spans), width)):
-            line = self.paint(prefix, '94') if number == 0 else ' ' * resource_cells(prefix)
+            line = (self.paint(prefix, prefix_code) if prefix_code else prefix) if number == 0 else ' ' * resource_cells(prefix)
             remaining = len(part)
             while remaining:
                 text, code = spans[index]
