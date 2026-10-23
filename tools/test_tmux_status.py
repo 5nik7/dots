@@ -18,7 +18,7 @@ import unittest
 REPO = Path(__file__).resolve().parents[1]
 BASH = shutil.which('bash')
 TMUX = shutil.which('tmux')
-INDICATORS = '#[fg=#{@dots-indicator-fg},bg=#{@dots-indicator-bg},bold]#{?pane_in_mode, COPY ,}#{?client_prefix, PREFIX ,}#{?window_zoomed_flag, ZOOM ,}'
+INDICATORS = '#[fg=#{@dots-indicator-fg},bg=#{@dots-indicator-bg},bold]#{?pane_in_mode, COPY ,}#[default]#[fg=#{@dots-prefix-fg},bg=#{@dots-prefix-bg},bold]#{?client_prefix, PREFIX ,}#[default]#[fg=#{@dots-indicator-fg},bg=#{@dots-indicator-bg},bold]#{?window_zoomed_flag, ZOOM ,}'
 ANDROID_ICONS = dict(notification='\U000f009a', volume='\U000f0580', location='\U000f0f08', wifi='\U000f0928', cell='\U000f08fa')
 
 
@@ -373,7 +373,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         tmux, _ = self.server('layout')
         tmux('source-file', str(config))
         self.assertEqual(tmux('show-option', '-gqv', 'status'), '2')
-        self.assertIn('#[fg=black,bg=blue,bold]', tmux('display-message', '-p', '#{E:status-right}'))
+        self.assertIn('#[fg=black,bg=green,bold]', tmux('display-message', '-p', '#{E:status-right}'))
         rows = tmux('show-option', '-g', 'status-format')
         self.assertIn('termux-status.py', tmux('show-option', '-gqv', '@dots-termux-numbers'))
         self.assertNotIn('OLD_LAYOUT', tmux('display-message', '-p', '#{E:@dots-tmux-row}'))
@@ -392,7 +392,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.assertIn('fixture', tmux('display-message', '-p', '#{E:status-left}'))
         for accent in ['#abcdef', '#fedcba']:
             tmux('source-file', str(self.write_theme(accent)))
-            self.assertIn(f'#[fg=#010203,bg={accent},bold]', tmux('display-message', '-p', '#{E:status-right}'))
+            self.assertIn(f'#[fg={accent},bg=#223344,bold]', tmux('display-message', '-p', '#{E:status-right}'))
             self.assertEqual(tmux('show-option', '-g', 'status-format'), rows)
             self.assertIn('bg=#aabbcc', tmux('display-message', '-p', '#{E:status-left}'))
             self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-current-bg'), '#aabbcc')
@@ -403,6 +403,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                           tmux('show-option', '-gqv', 'window-status-current-format'))
             self.assertEqual(tmux('show-option', '-gwqv', 'window-status-current-style'), 'nounderscore')
             self.assertEqual(tmux('show-option', '-gqv', 'pane-active-border-style'), 'fg=#654321')
+            self.assertIn('bg=#445566', tmux('display-message', '-p', '#{E:window-status-current-format}'))
         tmux('set-option', '-t', '=fixture:', '@dots-termux-default', '1')
         tmux('source-file', str(self.write_theme()))
         self.assertEqual(re.sub(r'#\[[^]]*\]', '', tmux('display-message', '-p', '#{E:status-left}')), '')
@@ -418,7 +419,8 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         other, _ = self.server('nontermux', termux=False)
         other('source-file', str(config))
         self.assertEqual(other('show-option', '-gqv', 'status'), 'on')
-        self.assertIn('#[fg=#010203,bg=#abcdef,bold]', other('display-message', '-p', '#{E:status-right}'))
+        self.assertIn('#[fg=#abcdef,bg=#223344,bold]', other('display-message', '-p', '#{E:status-right}'))
+        self.assertIn('bg=#445566', other('display-message', '-p', '#{E:window-status-current-format}'))
         other('set-option', '-gw', 'automatic-rename', 'off')
         other('rename-window', 'fixture')
         self.assertIn(' 0:fixture ', other('display-message', '-p', '#{E:window-status-current-format}'))
@@ -538,7 +540,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             self.assertEqual(self.colors_at(rows[1], '1:dots'),
                              {'fg': (1, 2, 3), 'bg': (170, 187, 204)})
             self.assertEqual(self.colors_at(rows[1], ' 0 '),
-                             {'fg': (18, 52, 86), 'bg': (101, 67, 33)})
+                             {'fg': (18, 52, 86), 'bg': (68, 85, 102)})
             self.assertEqual(self.colors_at(rows[1], '1:shell'),
                              {'fg': (204, 221, 238), 'bg': (34, 51, 68)})
             self.assertEqual(self.colors_at(rows[1], ' 2 '),
@@ -678,9 +680,9 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 self.assertNotIn(self.android_text(), top)
                 self.assertNotIn(self.android_text(), bottom)
                 self.assertIn('0:window', bottom)
-                self.assertEqual(self.colors_at(lines[1], '0:window')['bg'], (101, 67, 33))
+                self.assertEqual(self.colors_at(lines[1], '0:window')['bg'], (68, 85, 102))
                 # Capture through an outer fixture tmux: real rendered cells and attributes.
-                self.assertIn('48;2;101;67;33', lines[1])
+                self.assertIn('48;2;68;85;102', lines[1])
                 self.assertIn('48;2;17;34;51', lines[0])
                 self.assertIn('38;2;170;187;204', lines[1])
                 self.assertEqual(self.colors_at(lines[0], '80%'),
@@ -706,7 +708,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             lines = self.await_screen(outer, 'one', lambda rows:
                 len(rows) > 1 and '0:window' in rows[1] and '1:other' in rows[1])
             self.assertEqual(self.colors_at(lines[1], '0:window'),
-                             {'fg': (18, 52, 86), 'bg': (101, 67, 33)})
+                             {'fg': (18, 52, 86), 'bg': (68, 85, 102)})
             self.assertEqual(self.colors_at(lines[1], '1:other'),
                              {'fg': (204, 221, 238), 'bg': (34, 51, 68)})
             x = self.plain(lines[1]).index('1:other') + 1
@@ -729,17 +731,19 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 and long_name[:len(label)+1] not in rows[1])
             self.assertLessEqual(len(self.plain(lines[1])), width)
         inner('rename-session', '-t', long_name, 'fixture')
-        # Mode indicators use bold darker_background text on accent.
+        # COPY/ZOOM use green; PREFIX independently uses accent on dark_background.
         original_right = inner('show-option', '-gqv', 'status-right')
         inner('set-option', '-g', 'status-right', original_right + 'DOTS_RESET')
         def assert_indicator(lines, label):
             self.assertNotIn(label, self.plain(lines[0]))
+            expected = ({'fg': (171, 205, 239), 'bg': (34, 51, 68)} if label == 'PREFIX'
+                        else {'fg': (1, 2, 3), 'bg': (0, 255, 0)})
             padded = ' ' + label + ' '
             self.assertIn(padded, self.plain(lines[1]))
             self.assertEqual(self.colors_at(lines[1], padded),
-                             {'fg': (1, 2, 3), 'bg': (171, 205, 239)})
+                             expected)
             self.assertEqual(self.colors_at(lines[1], label),
-                             {'fg': (1, 2, 3), 'bg': (171, 205, 239)})
+                             expected)
             self.assertTrue(self.bold_at(lines[1], label))
             self.assertEqual(self.colors_at(lines[1], 'DOTS_RESET')['bg'], (17, 34, 51))
             self.assertFalse(self.bold_at(lines[1], 'DOTS_RESET'))
@@ -757,6 +761,15 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         inner('resize-pane', '-Z', '-t', main_pane)
         lines = self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and 'ZOOM' in rows[1])
         assert_indicator(lines, 'ZOOM')
+        # All three may be active together; PREFIX must not recolor its neighbors.
+        inner('copy-mode', '-t', main_pane)
+        outer('send-keys', '-t', 'one', 'C-Space')
+        lines = self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and
+                                  all(label in rows[1] for label in ('COPY', 'PREFIX', 'ZOOM')))
+        for label in ('COPY', 'PREFIX', 'ZOOM'):
+            assert_indicator(lines, label)
+        outer('send-keys', '-t', 'one', 'Escape')
+        inner('send-keys', '-X', '-t', main_pane, 'cancel')
         inner('resize-pane', '-Z', '-t', main_pane)
         inner('kill-pane', '-t', extra_pane)
         inner('set-option', '-g', 'status-right', original_right)

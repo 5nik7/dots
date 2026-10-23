@@ -610,7 +610,7 @@ assert(require("anodize").get_palette().metadata.id == "nord")
                                  ("inactive-bg", "background"), ("inactive-fg", "hint"),
                                  ("current-bg", "hint"), ("current-fg", "darker_background"),
                                  ("lower-bg", "background"), ("window-bg", "dark_background"),
-                                 ("window-fg", "light_foreground"), ("selected-bg", "selection"),
+                                 ("window-fg", "light_foreground"), ("selected-bg", "lighter_background"),
                                  ("clock-bg", "dark_background"), ("clock-fg", "foreground"),
                                  ("muted", "muted"), ("hint", "hint"),
                                  ("red", "red"), ("yellow", "yellow"), ("green", "green"), ("blue", "blue")):
@@ -644,9 +644,16 @@ assert(require("anodize").get_palette().metadata.id == "nord")
                         self.assertEqual(popup, f'bg={colors["background"]},fg={colors["foreground"]}')
                         border = self.run_command(command + ["show-options", "-gv", "popup-border-style"]).stdout.strip()
                         self.assertEqual(border, f'fg={colors["lighter_background"]},bg={colors["background"]}')
-                        for option, role in (("fg", "darker_background"), ("bg", "accent")):
-                            value = self.run_command(command + ["show-options", "-gv", "@dots-indicator-" + option]).stdout.strip()
+                        for option, role in (("indicator-fg", "darker_background"), ("indicator-bg", "green"),
+                                             ("prefix-fg", "accent"), ("prefix-bg", "dark_background")):
+                            value = self.run_command(command + ["show-options", "-gv", "@dots-" + option]).stdout.strip()
                             self.assertEqual(value, colors[role])
+                        for termux in (False, True):
+                            self.run_command(command + (["set-environment", "-g", "TERMUX_VERSION", "fixture"] if termux
+                                                        else ["set-environment", "-gu", "TERMUX_VERSION"]))
+                            window = self.run_command(command + ["display-message", "-p", "#{E:window-status-current-format}"]).stdout
+                            self.assertIn("bg=" + colors["lighter_background"], window)
+                            self.assertIn("fg=" + colors["info"], window)
             finally:
                 self.run_command(command + ["kill-server"], code=None)
 

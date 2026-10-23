@@ -16,12 +16,13 @@ The linked tmux configuration has two top rows on Termux (detected from `TERMUX_
 | --- | --- | --- |
 | Popup content | `background` | `foreground` |
 | Popup border | `background` | `lighter_background` |
-| COPY/PREFIX/ZOOM indicators (one space on each side of each active label) | `accent` | Bold `darker_background` |
+| COPY/ZOOM indicators (one space on each side) | `green` | Bold `darker_background` |
+| PREFIX indicator (one space on each side) | `dark_background` | Bold `accent` |
 | Upper row | `background` | `foreground` |
 | Clock | `dark_background` | Bold `yellow` by day, `blue` at night, `foreground` when unknown |
 | Lower tmux row on Termux | `background` | `foreground` |
 | Other windows on Termux | `dark_background` | `light_foreground` |
-| Current window on Termux | `selection` | Bold `info`, no underline |
+| Current window on all tmux platforms | `lighter_background` | Bold `info`, no underline |
 | Inactive Termux entry | `background` | Bold `hint` |
 | Current Termux number and project | `hint` | Bold `darker_background` |
 
