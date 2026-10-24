@@ -3,7 +3,7 @@
 `dots init [bash|zsh|fish|nu|xonsh|powershell]` emits a hook for **Dots integration
 only**. The adapters under `lib/dots/shell/` own settings, derived paths, theme
 variables, Dots completions and prompt refresh. Personal aliases, prompt choice,
-plugins, editor settings and third-party tools remain under `shells/`. Repository
+plugins and third-party tools remain under `shells/`; shared application/editor defaults belong to the environment registry. Repository
 startup files load both layers; an explicit hook in another rc loads only Dots.
 
 ## Starship configuration
@@ -128,8 +128,8 @@ Vivid runs during publication rather than shell startup for new generations. Aft
 publish the new snapshot. Missing or malformed snapshots retain previous colors;
 a fresh native shell remains usable without theme colors until publication.
 
-Native Windows PowerShell initialization requires neither Bash nor Python.
-The [native PowerShell adapter](powershell.md) now provides the CLI and Windows theme publication through Python; initialization itself does not require Python or translate WSL paths.
+Native Windows PowerShell initialization needs no Bash. Profile environment preparation uses Python on a cold load; warm loads use the prepared native adapter.
+The [native PowerShell adapter](powershell.md) now provides the CLI and Windows theme publication through Python; warm initialization uses native prepared code and never translates WSL paths.
 PowerShell completion uses native readers without Bash. Native
 PowerShell and the normal Xonsh launcher must be verified where those runtimes
 are available; Termux evidence does not establish Windows support.
@@ -144,3 +144,14 @@ and completion tests cover their respective contracts. Run focused cases
 sequentially on Termux rather than concurrent full suites.
 
 The personal PowerShell profile defaults `BLASTOFF_HOME` to `DOTCONFIG/blastoff` when unset. This is a personal tool setting, outside the shared Dots settings schema; an explicit override is preserved. Starship and Blastoff continue to honor `STARSHIP_CONFIG`. See [PowerShell startup](shell-init.md#powershell-profile).
+
+## Shared profile environment
+
+Application defaults now live in `lib/dots/shell/environment.json`, overlaid by
+active literal profile definitions. `dots env` includes these defaults and
+exported hook evidence, with private-value redaction. See the authoritative
+[profile/environment contract](profiles.md).
+
+## Retired Ruby environment
+
+`DOTRUBY` and `RUBYCOMP` are removed from the environment registry and completion. Initialization/reload unsets inherited values and removes their provenance records. Profile definitions cannot redeclare them. Only the obsolete `ruby/completion` entry under the current checkout, previous `DOTS_PROFILE_CHECKOUT`, or default `~/dots` is removed from PATH, including a trailing slash. Unrelated Ruby paths remain. This applies to Bash, Zsh, Fish, PowerShell, Nushell and Xonsh adapters; a child CLI cannot alter an already-running parent shell. Open a new shell or reload Dots initialization to apply the cleanup. `config/ruby` is independent and remains supported.

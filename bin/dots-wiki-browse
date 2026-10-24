@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# dots:summary=Choose and read a wiki page
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki.py" browse "$@"

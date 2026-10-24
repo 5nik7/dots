@@ -26,7 +26,7 @@ dots_type_valid() {
   local value
   case $1 in
     flag|string|file|directory) return 0 ;;
-    theme|flavor|palette-color|color-format|file-resource|file-repository|git-submodule|theme-id|file-color-key|theme-color|anodize-theme|anodize-user-theme|theme-plugin|dots-setting) return 0 ;;
+    theme|flavor|palette-color|color-format|file-resource|file-repository|git-submodule|theme-id|file-color-key|theme-color|anodize-theme|anodize-user-theme|theme-plugin|theme-file|theme-app|dots-setting|profile-id|wiki-page|wiki-section) return 0 ;;
     choice:*)
       [[ ${1#choice:} && $1 != *, && $1 != *,,* ]] || return 1
       local -a values=()
@@ -107,7 +107,10 @@ dots_catalog_load() {
         dots_error "Invalid or reserved command filename: $file"; return 1
       fi
       if [[ ! -f $file || ! -x $file ]]; then dots_error "Command is not executable: $file"; return 1; fi
-      if [[ ${DOTS_CATALOG_FILE[$stem]:-} ]]; then dots_error "Duplicate command route: ${stem//-/ }"; return 1; fi
+      if [[ ${DOTS_CATALOG_FILE[$stem]:-} ]]; then
+        if python3 -B "$DOTS_LIB_DIR/profiles.py" __replaces "${DOTS_CATALOG_FILE[$stem]}" "$stem"; then continue; fi
+        dots_error "Duplicate command route: ${stem//-/ }"; return 1
+      fi
       dots_metadata "$file" || return
       DOTS_CATALOG+=("$stem")
       DOTS_CATALOG_FILE[$stem]=$file

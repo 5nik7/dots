@@ -1,0 +1,149 @@
+#!/data/data/com.termux/files/usr/bin/env python3
+"""Enter a per-Termux-tab tmux session and report its exit to the startup shell."""
+
+import argparse
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+
+MARKER = "@dots-termux-default"
+# Private handshake with shells/shared/termux-tmux.sh; never returned for skips.
+SESSION_EXIT = 20
+
+
+class BarError(Exception):
+    """An actionable launcher failure, with no process data in diagnostics."""
+
+
+def process_identity(pid, proc_root):
+    record = (proc_root / str(pid) / "stat").read_text()
+    # comm is parenthesized and can itself contain spaces and parentheses.
+    fields = record[record.rindex(")") + 2:].split()
+    return int(fields[1]), int(fields[3]), int(fields[19])
+
+
+def default_session(auto, env, caller, proc_root):
+    app = env.get("TERMUX_APP__PID", "")
+    if not app.isascii() or not app.isdecimal() or int(app) <= 0:
+        if auto:
+            return None
+        raise BarError("run from a Termux app tab with TERMUX_APP__PID available")
+    if auto:
+        parent, sid, _ = process_identity(caller, proc_root)
+        if parent != int(app) or sid != caller:
+            return None
+    discovery = Path(__file__).resolve().with_name("termux-sessions")
+    result = subprocess.run(
+        [sys.executable, "-B", str(discovery), "--get", "pid", "--pid", str(caller)],
+        capture_output=True, text=True, timeout=2, check=False,
+    )
+    value = result.stdout.strip()
+    if result.returncode or not value.isascii() or not value.isdecimal() or int(value) <= 0:
+        raise BarError("cannot identify this Termux tab; check termux-sessions")
+    root = int(value)
+    parent, sid, started = process_identity(root, proc_root)
+    if parent != int(app) or sid != root or (auto and root != caller):
+        raise BarError("Termux tab identity changed; try again")
+    return f"termux-{root}-{started}"
+
+
+def ensure_session(tmux, name):
+    target = "=" + name
+    # Option commands resolve window targets too: ':' makes this an exact session.
+    option_target = target + ":"
+
+    def marker():
+        return subprocess.run(
+            [tmux, "show-options", "-qv", "-t", option_target, MARKER],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+
+    exists = subprocess.run([tmux, "has-session", "-t", target],
+                            capture_output=True, text=True, timeout=5, check=False)
+    if exists.returncode:
+        created = subprocess.run(
+            [tmux, "new-session", "-d", "-s", name, "-c", os.getcwd(),
+             ";", "set-option", "-t", option_target, MARKER, "1"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+        # A concurrent launcher can win creation. Never adopt an unmarked session.
+        existing = marker()
+        if created.returncode and existing.returncode:
+            raise BarError("could not create the default tmux session")
+    else:
+        existing = marker()
+    if existing.returncode or existing.stdout.strip() != "1":
+        raise BarError("default session name is occupied by an unmarked session")
+    return target
+
+
+def attach(tmux, target, auto):
+    # Tmux renders directly to the client's tty. Its stdout contains completion
+    # messages, separate from pane output; both normal exit and detach return 0.
+    process = subprocess.Popen([tmux, "attach-session", "-t", target], stdout=subprocess.PIPE)
+    output = b""
+    try:
+        while chunk := process.stdout.read(4096):
+            output = (output + chunk)[-4096:]
+        status = process.wait()
+    finally:
+        process.stdout.close()
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+    if auto and status == 0 and output == b"[exited]\n":
+        return SESSION_EXIT
+    sys.stdout.write(output.decode("utf-8", errors="replace"))
+    # Do not let an unexpected tmux exit code impersonate the shell handshake.
+    return 0 if status == 0 else 1
+
+
+def main(argv=None, *, proc_root=Path("/proc")):
+    parser = argparse.ArgumentParser(
+        description="Create or reattach this Termux tab's default tmux session.",
+        epilog="Detach to return to your shell; exiting the final pane closes an automatic tab. "
+               "Set DOTS_TERMUX_AUTOSTART=0 to disable "
+               "Bash/Zsh automatic startup. Requires tmux and sibling termux-sessions.",
+    )
+    parser.add_argument("--auto", action="store_true",
+                        help="start only from the original Termux tab shell; otherwise skip")
+    args = parser.parse_args(argv)
+    env = os.environ
+    if env.get("TMUX") or env.get("SSH_CONNECTION") or env.get("SSH_CLIENT") or env.get("SSH_TTY"):
+        if args.auto:
+            return 0
+        print("termux-bar: run outside tmux and SSH in a Termux app tab", file=sys.stderr)
+        return 1
+    if args.auto and env.get("DOTS_TERMUX_AUTOSTART") == "0":
+        return 0
+    if not os.isatty(0) or not os.isatty(1):
+        if args.auto:
+            return 0
+        print("termux-bar: an interactive terminal is required", file=sys.stderr)
+        return 1
+    try:
+        name = default_session(args.auto, env, os.getppid(), proc_root)
+        if name is None:
+            return 0
+        tmux = shutil.which("tmux")
+        if not tmux:
+            raise BarError("tmux not found; continuing in the plain shell")
+        target = ensure_session(tmux, name)
+        return attach(tmux, target, args.auto)
+    except (BarError, OSError, ValueError, IndexError, subprocess.SubprocessError) as error:
+        message = str(error) if isinstance(error, BarError) else "cannot start tmux; continuing in the plain shell"
+        print("termux-bar: " + message, file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        return 130
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

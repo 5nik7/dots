@@ -1,5 +1,42 @@
 & {
-# Native Windows adapter: neither Bash nor Python is required.
+Remove-Item Env:DOTRUBY, Env:RUBYCOMP -ErrorAction Ignore
+$dotsRetiredRoots = @($env:DOTS, $env:DOTS_PROFILE_CHECKOUT, (Join-Path $HOME 'dots')) | Where-Object { $_ }
+$dotsRetiredPaths = @($dotsRetiredRoots | ForEach-Object { Join-Path $_ 'ruby/completion' })
+$dotsWindowsPaths = [IO.Path]::DirectorySeparatorChar -eq '\'
+$dotsPathComparison = if ($dotsWindowsPaths) { [StringComparison]::OrdinalIgnoreCase } else { [StringComparison]::Ordinal }
+$dotsRetainedPaths = foreach ($entry in ($env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator))) {
+    $retired = $false
+    $normalizedEntry = if ($dotsWindowsPaths) { $entry.Replace('\', '/').TrimEnd('/') } else { $entry.TrimEnd('/') }
+    foreach ($path in $dotsRetiredPaths) {
+        $normalizedPath = if ($dotsWindowsPaths) { $path.Replace('\', '/').TrimEnd('/') } else { $path.TrimEnd('/') }
+        if ([string]::Equals($normalizedEntry, $normalizedPath, $dotsPathComparison)) { $retired = $true }
+    }
+    if (-not $retired) { $entry }
+}
+$env:PATH = $dotsRetainedPaths -join [IO.Path]::PathSeparator
+foreach ($name in @('DOTS_ENV_HOOKS','DOTS_ENV_ORIGINS')) {
+    $value = [Environment]::GetEnvironmentVariable($name)
+    if ($null -ne $value) { [Environment]::SetEnvironmentVariable($name, (($value -split ';' | Where-Object { $_ -and $_ -notmatch '^(DOTRUBY|RUBYCOMP)[:|]' }) -join ';'), 'Process') }
+}
+if (Get-Variable DotsEnvironmentApplied -Scope Global -ErrorAction Ignore) {
+    [void]$global:DotsEnvironmentApplied.Remove('DOTRUBY'); [void]$global:DotsEnvironmentApplied.Remove('RUBYCOMP')
+}
+
+. (Join-Path $env:DOTS 'lib/dots/shell/debug.ps1')
+Write-DotsDebugEvent begin 'lib/dots/shell/init.ps1' module
+# Native Windows adapter. Shared profile/environment resolution uses Python.
+$dotsEnvironmentCacheRoot = if ($env:XDG_CACHE_HOME) { $env:XDG_CACHE_HOME } elseif ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'cache' } else { Join-Path $HOME '.cache' }
+$dotsEnvironmentCache = Join-Path $dotsEnvironmentCacheRoot 'dots/startup/environment.ps1'
+$dotsEnvironmentReady = $false
+if (Test-Path -LiteralPath $dotsEnvironmentCache -PathType Leaf) { $dotsEnvironmentReady = . $dotsEnvironmentCache }
+if (-not $dotsEnvironmentReady) {
+    $dotsEnvironmentPython = Get-Command python3, python -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($dotsEnvironmentPython) {
+        & $dotsEnvironmentPython.Source -B (Join-Path $env:DOTS 'lib/dots/native_startup.py') powershell $dotsEnvironmentCache
+        if ($LASTEXITCODE -eq 0) { $dotsEnvironmentReady = . $dotsEnvironmentCache }
+    }
+    if (-not $dotsEnvironmentReady) { Write-Warning 'dots: profile environment preparation unavailable; retaining minimal integration' }
+}
 $dotsSchema = @{}
 $dotsValues = @{}
 $dotsOrigins = @{}
@@ -63,7 +100,8 @@ foreach ($directory in @($env:DOTBIN, $env:DOTSCRIPTS)) {
     if ((Test-Path -LiteralPath $directory -PathType Container) -and $entries -cnotcontains $directory) { $entries = @($directory) + $entries }
 }
 if ($dots_options.DOTS_INIT_COMMANDS -eq '1') { $entries += $env:THEMESBIN }
-$env:PATH = $entries -join [IO.Path]::PathSeparator
+$profileEntries = @($env:DOTS_PROFILE_PATHS -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $_ })
+$env:PATH = (@($profileEntries + $entries | Select-Object -Unique) -join [IO.Path]::PathSeparator)
 $dotsArgs = [Environment]::GetCommandLineArgs()
 $dotsInteractive = $dotsArgs -notcontains '-NonInteractive' -and ($dotsArgs -contains '-NoExit' -or -not ($dotsArgs | Where-Object { $_ -match '^-(Command|c|File|f|EncodedCommand|ec)$' }))
 if ($dotsInteractive) {
@@ -142,5 +180,7 @@ if ($dotsInteractive) {
         Install-DotsPrompt -Renderer (Get-Item Function:prompt).ScriptBlock
     }
 }
+
+Write-DotsDebugEvent end 'lib/dots/shell/init.ps1' module ([int](-not $?))
 
 }

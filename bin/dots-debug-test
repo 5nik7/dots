@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Run isolated diagnostic self-tests
+# dots:usage=[SUITE] [--list] [--json]
+# dots:option=--json||flag|Print versioned JSON
+# dots:option=--list||flag|List the curated isolated suites
+# dots:argument=1|choice:profiles,environment,dispatch,startup|Isolated suite; defaults to all
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" test "$@"

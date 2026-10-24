@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dots Documentation Maintenance"
+  short_description: "Keep source documentation aligned with behavior"
+  default_prompt: "Use $dots-documentation-maintenance to maintain the requested Dots documentation and verify the result."

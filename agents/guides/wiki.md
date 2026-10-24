@@ -1,0 +1,13 @@
+# Wiki Work Guide
+
+Canonical prose and examples live in Dots. The separate wiki checkout contains generated projections and its own Git history. Follow the root agent contract and [documentation guide](documentation.md), plus the `dots-documentation-maintenance` and `dots-wiki-maintenance` skills as applicable.
+
+Read the page mapping in `.dots/wiki.json` before changing navigation. Each top-level document must be mapped or explicitly excluded. Keep stable page IDs, human titles and ordered sections; Home and the sidebar must remain useful without a huge nested tree. Modify source links rather than generated Markdown. The command reference reads first-party static headers only.
+
+For behavior changes, inspect implementation, static metadata and tests before writing examples or support claims. Distinguish implemented behavior, proposals and actual native evidence. Checks can detect structural drift but cannot establish semantic correctness. Update the relevant authoritative docs, then preview `dots wiki build --dry-run`, build and run `dots wiki check`. If the checkout is absent, use `dots wiki check --source-only` and report synchronization pending. Never clone automatically to complete a read-only check.
+
+Before a build, inspect both Git working trees. Generated-page edits must be reconciled into their source; do not discard them or weaken ownership checks. Unknown wiki files remain untouched. Builds use retained transactions; report the transaction when recovery is relevant. Initial acquisition and generation do not authorize commits or pushes.
+
+When publication is requested, use existing ownership/refspec checks and explicitly selected scope. Ordinary Dots publication includes the wiki unless excluded, with source-before-wiki ordering. Wiki-only publication requires matching published source inputs. Preview the selected index or explicit --all content, not merely the working tree. Describe partial failures honestly: Git operations are incremental, and a successful source push cannot be rolled back by a later wiki failure.
+
+Run `python3 -B tools/test_wiki.py` and `python3 -B tools/test_wiki_git.py`, then affected Git/submodule, metadata/completion, native-controller and transaction regressions sequentially. Fixtures must own repositories, homes, state, caches, browser/editor substitutes and local bare remotes. Never fetch or publish the live repositories for testing. Include narrow terminals, literal/Unicode paths, raw/JSON data, cancellation, selected-index drift, rollback and missing dependencies. Follow the [presentation contract](../../docs/presentation.md). Native PowerShell 5.1/7 and hosted GitHub rendering require separate acceptance evidence.

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Inspect startup cache validity without rebuilding
+# dots:usage=[--shell SHELL] [--json]
+# dots:option=--json||flag|Print versioned JSON
+# dots:option=--shell||choice:bash,zsh,powershell,fish|Select startup cache
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" cache "$@"

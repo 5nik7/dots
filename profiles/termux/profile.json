@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "termux",
+  "description": "Android and Termux defaults",
+  "environment": {
+    "DROIDOTS": "${PROFILE}",
+    "DOTERMUX": "${PROFILE}/termux",
+    "DROIDBIN": "${PROFILE}/bin",
+    "DROIDCONFIGS": "${PROFILE}/config",
+    "DROIDSHELLS": "${PROFILE}/shells",
+    "DROIDZSH": "${PROFILE}/shells/zsh"
+  }
+}

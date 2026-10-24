@@ -1,3 +1,27 @@
+hide-env --ignore-errors DOTRUBY RUBYCOMP
+let dots_retired_roots = ([$env.DOTS ($env.DOTS_PROFILE_CHECKOUT? | default '') (($env.HOME? | default $env.USERPROFILE?) | path join 'dots')] | where {|root| $root != ''})
+let dots_normalize_path = {|entry|
+    let path = if $nu.os-info.name == 'windows' { $entry | str replace --all '\' '/' | str lowercase } else { $entry }
+    $path | str replace --regex '/+$' ''
+}
+let dots_retired_paths = ($dots_retired_roots | each {|root| do $dots_normalize_path ($root | path join 'ruby' 'completion')})
+$env.PATH = ($env.PATH | where {|entry| (do $dots_normalize_path $entry) not-in $dots_retired_paths})
+for name in ['DOTS_ENV_HOOKS' 'DOTS_ENV_ORIGINS'] {
+    let value = ($env | get -o $name)
+    if $value != null {
+        load-env {($name): ($value | split row ';' | where {|record| $record != '' and $record !~ '^(DOTRUBY|RUBYCOMP)[:|]'} | str join ';')}
+    }
+}
+# Shared profile and application environment, transferred as inert JSON.
+if (which python3 | is-not-empty) {
+    let resolved = (^python3 -B ($env.DOTS | path join 'lib/dots/native_environment.py') | complete)
+    if $resolved.exit_code == 0 {
+        let data = ($resolved.stdout | from json)
+        load-env ($data | reject PATH)
+        $env.PATH = ($data.PATH | split row (char esep))
+    }
+}
+
 # Native Nu environment records are retained by Nu, not exported as shell code.
 def _dots-valid [kind: string, value: string] {
     match $kind {
@@ -124,3 +148,7 @@ if $nu.is-interactive {
         $env._DOTS_COMPLETION_READY = true
     }
 }
+
+
+let profile_paths = ($env.DOTS_PROFILE_PATHS? | default "" | split row (char esep) | where {|entry| $entry != ""})
+$env.PATH = ($profile_paths | append $env.PATH | uniq)

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Check wiki sources, links and freshness
+# dots:usage=[--source-only] [--json]
+# dots:option=--source-only||flag|Validate generation without a wiki checkout
+# dots:option=--json||flag|Emit versioned JSON
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki.py" check "$@"

@@ -74,3 +74,5 @@ For bounded Git/file operations, synchronize `docs/git.md`, `docs/files.md`, `do
 ## Dual-shell maintenance
 
 Every first-party change must cover Bash on Termux/Linux/WSL and native Windows PowerShell 5.1/7: routes, flags, aliases, contextual completion, exact data output, styled human output, progress and optional pickers. Keep native filesystem/app differences in adapters and reuse transactions. Read [native PowerShell](../../docs/powershell.md); update its capability limits and the [parity plan](../../plans/powershell-parity.md) when affected. Run focused isolated tests for both controller paths, require actual PowerShell engines in Windows CI, and report missing native/desktop evidence explicitly.
+
+Wiki documentation is generated from canonical Dots sources. For behavior/documentation changes, update source docs, then rebuild and check the wiki when its checkout is available; otherwise run source-only validation and report synchronization pending. Use the `dots-documentation-maintenance` and `dots-wiki-maintenance` skills and follow [the wiki guide](wiki.md). Documentation work does not authorize commits or pushes.

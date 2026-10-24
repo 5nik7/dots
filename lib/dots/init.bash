@@ -3,6 +3,11 @@
 # Generated code is deliberately expanded by the receiving shell.
 # shellcheck disable=SC2016
 dots_init() {
+  if [[ ${1:-} == --bootstrap ]]; then
+    [[ $# == 2 && ( $2 == bash || $2 == zsh || $2 == powershell ) ]] || { dots_error 'Usage: dots init --bootstrap bash|zsh|powershell'; return 2; }
+    python3 -B "$DOTS_LIB_DIR/bootstrap_snippet.py" "$2"
+    return
+  fi
   if [[ ${1:-} == --setup ]]; then
     shift
     python3 -B "$DOTS_LIB_DIR/files/install.py" install "$@"

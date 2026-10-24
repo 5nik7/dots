@@ -14,3 +14,5 @@ Use tools/test_file_colors.py for rules and panels, then selected publication/ro
 Refresh live state only when the task authorizes it. Source changes alone do not imply permission to switch selections or prune old generations. Record what was published and which native checks actually ran.
 
 Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.
+
+When this change affects documentation, follow [documentation maintenance](../dots-documentation-maintenance/SKILL.md), including the generated wiki check.

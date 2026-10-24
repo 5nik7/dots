@@ -27,6 +27,7 @@ dt_command() {
   (($# == 0)) || shift
   case $action in
     help) dt_help ;;
+    files) python3 -B "$DT_LIB/inspection.py" "$@" ;;
     summary)
       dt_current_id || return
       dots::heading "Current theme: $REPLY"

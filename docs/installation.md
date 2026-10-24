@@ -19,16 +19,16 @@ PowerShell provides native parameters and a native adapter:
 ./install.ps1 -DryRun
 ./install.ps1 -Yes
 ./install.ps1 -Update -Yes
-./install.ps1 -WithSource nvim,windots
+./install.ps1 -WithSource nvim,windows
 ./uninstall.ps1 -DryRun
 ./uninstall.ps1
 ```
 
-The file controllers require Python 3.9+; complete setup with theme preparation requires Python 3.11+. POSIX setup additionally requires Bash 4.4+ and the existing publisher utilities. Explicit source operations require Git. Native Windows invokes Python directly and prepares themes without Bash. Root and Windots catalogs map app-specific Windows paths; ambiguous and unsupported destinations remain unmapped. See [native PowerShell](powershell.md) for the app inventory, requirements and pending native acceptance.
+The file controllers require Python 3.9+; complete setup with theme preparation requires Python 3.11+. POSIX setup additionally requires Bash 4.4+ and the existing publisher utilities. Updating or acquiring external sources requires Git; selecting bundled Termux/Windows resources does not. Native Windows invokes Python directly and prepares themes without Bash. Universal and bundled Windows catalogs map app-specific Windows paths; ambiguous and unsupported destinations remain unmapped. See [native PowerShell](powershell.md) for the app inventory, requirements and pending native acceptance.
 
 ## Options and output
 
-Install/uninstall accept `-v`/`--verbose`, `--dry-run`, `--yes`, `--json`, `--color=auto|always|never`, `--icons=auto|always|never`, and `--help`. Install additionally accepts `--update` and repeatable `--with-source androidots|windots|nvim`. The PowerShell equivalents are `-Verbose`, `-DryRun`, `-Yes`, `-Json`, `-Color`, `-Icons`, `-Update`, and `-WithSource`. Remaining arguments allow the long-option forms as well.
+Install/uninstall accept `-v`/`--verbose`, `--dry-run`, `--yes`, `--json`, `--color=auto|always|never`, `--icons=auto|always|never`, and `--help`. Install additionally accepts `--update` and repeatable `--with-source termux|windows|nvim`. The PowerShell equivalents are `-Verbose`, `-DryRun`, `-Yes`, `-Json`, `-Color`, `-Icons`, `-Update`, and `-WithSource`. Remaining arguments allow the long-option forms as well.
 
 Normal execution displays a plan and requests approval. `--yes` approves that plan without prompting; nonterminal execution otherwise refuses mutation. Dry-run creates no directories, locks, caches, journals or capability probes, and performs no downloads or fetches. Link capability is therefore verified during approved preparation, before live replacement.
 
@@ -78,3 +78,11 @@ receipts and target objects; it does not uninstall or restore anything. See
 `python3 -B tools/test_file_platform.py` covers native file flushing, read-only backup metadata, flush-error refusal before replacement, permission-sensitive undo and text preparation under different POSIX umasks. This suite runs in both Linux and Windows installation CI. Machine-local `config/bat/themes/Dots.tmTheme` is ignored rather than shipped as an absolute link; the fresh-checkout test continues to reject escaping links.
 
 `python3 -B tools/test_installation.py` owns all home/config/state/cache roots and local Git remotes. It covers backup/restore, no-op reconciliation, drift, crash recovery, theme preparation, updates and optional-source boundaries. `python3 -B tools/test_installation_adapters.py` covers entry points and native adapter boundaries. On Windows use `python -B`. Linux/Windows CI runs these tests; Windows positive link cases explicitly skip when the runner lacks link capability. Native Termux evidence, Windows CI results and owner-run WSL verification must be reported separately.
+
+## Bundled platform sources
+
+Androidots and Windots are bundled under `profiles/termux` and `profiles/windows`.
+Their catalog IDs and legacy `--with-source` selections remain compatible, but
+source acquisition no longer fetches either repository. Application installation
+still uses managed-file previews, backups and receipts. See
+[migration compatibility](profiles.md#androidots-and-windots-migration).

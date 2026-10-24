@@ -38,11 +38,16 @@ if (-not $StartupDirectory) {
 }
 $env:DOTS = $dotsStartupRoot
 Remove-Variable dotsStartupFile, dotsStartupDirectory, dotsStartupRoot, StartupDirectory -ErrorAction Ignore
+. (Join-Path $env:DOTS 'lib/dots/shell/debug.ps1')
+Write-DotsDebugEvent begin 'shells/powershell/environment.ps1' module
 . (Join-Path $env:DOTS 'shells/powershell/environment.ps1')
+Write-DotsDebugEvent end 'shells/powershell/environment.ps1' module ([int](-not $?))
 $dotsLaunchArgs = [Environment]::GetCommandLineArgs()
 $dotsInteractive = $dotsLaunchArgs -notcontains '-NonInteractive' -and
     ($dotsLaunchArgs -contains '-NoExit' -or
      -not ($dotsLaunchArgs | Where-Object { $_ -match '^-(Command|c|File|f|EncodedCommand|ec)$' }))
 if ($dotsInteractive) {
+    Write-DotsDebugEvent begin 'shells/powershell/interactive.ps1' module
     . (Join-Path $env:DOTS 'shells/powershell/interactive.ps1')
+    Write-DotsDebugEvent end 'shells/powershell/interactive.ps1' module ([int](-not $?))
 }

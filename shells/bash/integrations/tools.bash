@@ -11,7 +11,10 @@ declare -gA _DOTS_BASH_TOOL_READY
 [[ ! -r $HOME/.atuin/bin/env ]] || source "$HOME/.atuin/bin/env"
 [[ ! -r $HOME/.pythonrc ]] || export PYTHONSTARTUP="$HOME/.pythonrc"
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-if [[ -d $HOME/.bun ]]; then export BUN_INSTALL="$HOME/.bun"; prepath "$BUN_INSTALL/bin"; fi
+if [[ -d $HOME/.bun ]]; then
+  export BUN_INSTALL="$HOME/.bun"
+  prepath "$BUN_INSTALL/bin"
+fi
 if [[ -r $NVM_DIR/nvm.sh && -z ${_DOTS_BASH_TOOL_READY[nvm]:-} ]]; then
   if source "$NVM_DIR/nvm.sh"; then
     [[ ! -r $NVM_DIR/bash_completion ]] || source "$NVM_DIR/bash_completion"
@@ -31,22 +34,21 @@ for _dots_bash_tool in zoxide direnv batpipe usage batman atuin tv mise rbenv st
         printf -v _dots_bash_batpipe_path '%q' "$(command -v batpipe)"
         printf -v REPLY 'export LESSOPEN=%q LESS=%q BATPIPE=color; unset LESSCLOSE' \
           "|$_dots_bash_batpipe_path %s" "${LESS:-} -R"
-      else false; fi ;;
+      else false; fi
+      ;;
     usage) _dots_bash_generated usage g completion-init bash ;;
     batman) _dots_bash_generated batman --export-env ;;
     atuin) _dots_bash_generated atuin init bash ;;
     tv) _dots_bash_generated tv init bash ;;
     mise) _dots_bash_generated mise activate bash ;;
-    rbenv) _dots_bash_generated "$HOME/.rbenv/bin/rbenv" init - --no-rehash bash ;;
     starship) _dots_bash_generated starship init bash ;;
-  esac
-  then
+  esac then
     if eval "$REPLY"; then
       _DOTS_BASH_TOOL_READY[$_dots_bash_tool]=1
       # A newly available history/search tool may replace Readline bindings.
-      case $_dots_bash_tool in atuin|tv) unset _DOTS_BASH_FZF_READY ;; esac
+      case $_dots_bash_tool in atuin | tv) unset _DOTS_BASH_FZF_READY ;; esac
     fi
   fi
- done
+done
 unset _dots_bash_tool _dots_bash_batpipe_path
 export DIRENV_LOG_FORMAT=$'\033[0;90mdirenv: %s\033[0m'

@@ -42,7 +42,7 @@
       "target": "${CONFIG}/bat",
       "strategy": "directory-link",
       "replaces": [
-        "androidots:bat"
+        "termux:bat"
       ],
       "targets": {
         "windows": "${APP_CONFIG:bat}"
@@ -159,7 +159,7 @@
     },
     {
       "id": "gemrc",
-      "source": "ruby/gemrc.symlink",
+      "source": "config/ruby/gemrc",
       "target": "${HOME}/.gemrc",
       "strategy": "link",
       "app": "ruby",
@@ -269,7 +269,7 @@
     },
     {
       "id": "irbrc",
-      "source": "ruby/irbrc.symlink",
+      "source": "config/ruby/irbrc",
       "target": "${HOME}/.irbrc",
       "strategy": "link",
       "app": "ruby",
@@ -432,20 +432,6 @@
       "enabled": false
     },
     {
-      "id": "starship",
-      "source": "config/starship/starship.toml",
-      "app": "starship",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "target": "${HOME}/.config/starship.toml",
-      "strategy": "link"
-    },
-    {
       "id": "stylua",
       "source": "config/stylua",
       "app": "stylua",
@@ -485,7 +471,7 @@
       "target": "${CONFIG}/tmux",
       "strategy": "directory-link",
       "replaces": [
-        "androidots:tmux"
+        "termux:tmux"
       ]
     },
     {
@@ -529,23 +515,6 @@
       "enabled": false
     },
     {
-      "id": "wttr",
-      "source": "config/wttr",
-      "app": "wttr",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "target": "${CONFIG}/wttr",
-      "strategy": "directory-link",
-      "targets": {
-        "windows": "${APP_CONFIG:wttr}"
-      }
-    },
-    {
       "id": "xonshrc",
       "source": "shells/xonsh/.xonshrc",
       "app": "xonsh",
@@ -578,19 +547,6 @@
       "targets": {
         "windows": "${APP_CONFIG:yazi}"
       }
-    },
-    {
-      "id": "zprofile",
-      "source": "shells/zsh/zprofile",
-      "target": "${HOME}/.zprofile",
-      "strategy": "link",
-      "app": "zsh",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ]
     },
     {
       "id": "zshenv",

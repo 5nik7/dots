@@ -5,8 +5,9 @@
 `dots git` shows static help for `info`, `submodule`, `submodules`, `status`, `publish`, and `sync`. These commands
 start at the dots repository regardless of cwd. `-C DIR` / `--directory DIR`
 selects the repository containing another directory, without climbing to its
-outermost parent. Only registered submodules are traversed, independently of the
-file catalog and its platform/private exclusions. Missing repositories are never
+outermost parent. Registered submodules are traversed independently of the file catalog and its
+platform/private exclusions. A declared wiki is included as a separate associated
+repository; `--no-wiki` excludes it from top-level info/status/sync/publish. Missing repositories are never
 initialized by inspection or publication.
 
 [Terminal progress](presentation.md#operation-progress) covers recursive inspection and local operation phases, with repository counts when known. Fetch, initialization, commit and push use static phase messages so credentials, hooks and signing retain terminal access. `DOTS_PROGRESS=never` disables both displays; JSON and dry runs bypass them. Completion counts do not imply that every repository was successfully published.
@@ -136,14 +137,14 @@ undiscovered descendants remain unknown. Ambiguous selectors are identified.
 dots git submodule nvim                        # defaults to info
 dots git submodule nvim status --dirty
 dots git submodule nvim publish --dry-run
-dots git submodule windots:5ui7e info
-dots git submodule windots submodule 5ui7e info
-dots git submodule windots submodules info --depth 1
-dots git submodule windots submodules publish --all-submodules --dry-run
+dots git submodule 5ui7e info
+dots git submodule 5ui7e submodules info --depth 1
+dots git submodules publish profiles/windows/rainmeter/5ui7e --dry-run
 ```
 
 NAME is a direct child's path basename: `nvim` selects `config/nvim`, and
-`windots:5ui7e` crosses `windots` to its registered `rainmeter/5ui7e` child.
+`5ui7e` selects the registered `profiles/windows/rainmeter/5ui7e` child. For nested
+submodules, `parent:child` traverses explicit registration edges.
 Registration subsection names and remote repository names are not aliases.
 There is no recursive search for a matching basename. Duplicate sibling names
 are refused with exact-path alternatives; use `git info -C DIR` for their info
@@ -254,3 +255,9 @@ The new info/tree/submodule-status routes share `inspection.py` between Bash and
 PowerShell. Scoped publication reuses each established engine. Windows app
 destinations are unchanged; see the [focused plan](../plans/git-submodules.md)
 for verification and remaining native acceptance.
+
+## Associated wiki repository
+
+`dots git wiki` defaults to wiki info; `info`, `status`, `sync` and `publish` select only the associated checkout. Ordinary top-level Git operations include it when declared, with `--no-wiki` as an exclusion. It has no parent gitlink: its branch/upstream and index remain independent. Missing checkouts are visibly skipped; `dots wiki init` is the explicit acquisition route. Submodule-only routes retain their existing scopes.
+
+Source/submodule synchronization precedes wiki synchronization; source publication precedes dependent wiki publication. A source failure blocks that dependent operation. Publication checks the selected index (or explicit `--all` working-tree content) against generated documentation for the selected/published source tree, and never builds or stages pages automatically. Wiki-only publication requires published source inputs. See [wiki commands](wiki.md) for generation, provenance, recovery and maintenance.

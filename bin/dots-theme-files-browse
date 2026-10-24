@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# dots:summary=Browse generated theme files without changing them
+# dots:usage=[--app APP]
+# dots:option=--app||theme-app|Filter by application
+root=$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd) || exit
+export DOTS=${DOTS:-$root}
+source "$root/lib/dots/shell/config.bash"
+_dots_config_load || exit
+export DOTS_COLOR=${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}
+export DOTS_ICONS=${DOTS_ICONS:-${dots_options[DOTS_ICONS]:-auto}}
+exec python3 -B "$root/lib/dots/themes/inspection.py" browse "$@"

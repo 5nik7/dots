@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Review absent sources and transactionally prune catalog metadata only."""
+from identities import validate_cli
 import argparse
 import copy
 import json
@@ -159,6 +160,7 @@ def parser():
 def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
+    validate_cli(args, p)
     if args.json and not (args.yes or args.dry_run):
         p.error('--json requires --dry-run or --yes')
     configure(not args.json and not args.dry_run)

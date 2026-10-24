@@ -1,0 +1,259 @@
+{
+  "schema": 1,
+  "repository": "windows",
+  "resources": [
+    {
+      "id": "filepilot",
+      "source": "config/FilePilot",
+      "app": "filepilot",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:filepilot}",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "alacritty",
+      "source": "config/alacritty",
+      "app": "alacritty",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:alacritty}",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "bat",
+      "source": "config/bat",
+      "app": "bat",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": null,
+      "strategy": "directory-link"
+    },
+    {
+      "id": "clink",
+      "source": "config/clink/clink_settings",
+      "app": "clink",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:clink}/clink_settings",
+      "strategy": "link"
+    },
+    {
+      "id": "fastfetch",
+      "source": "config/fastfetch",
+      "app": "fastfetch",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:fastfetch}",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "glaze-wm",
+      "source": "config/glaze-wm",
+      "app": "glaze-wm",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:glaze-wm}",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "komorebi",
+      "source": "config/komorebi/komorebi.json",
+      "app": "komorebi",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:komorebi}/komorebi.json",
+      "strategy": "link"
+    },
+    {
+      "id": "tacky-borders",
+      "source": "config/tacky-borders",
+      "app": "tacky-borders",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:tacky-borders}",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "vscode",
+      "source": "config/vscode/settings.json",
+      "app": "vscode",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:vscode}/settings.json",
+      "strategy": "link"
+    },
+    {
+      "id": "wezterm",
+      "source": "config/wezterm",
+      "app": "wezterm",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:wezterm}",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "whkd",
+      "source": "config/whkd/whkdrc",
+      "app": "whkd",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:whkd}/whkdrc",
+      "strategy": "link"
+    },
+    {
+      "id": "windhawk",
+      "source": "config/windhawk",
+      "app": "windhawk",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": null,
+      "strategy": "directory-link"
+    },
+    {
+      "id": "winget",
+      "source": "config/winget/settings.json",
+      "app": "winget",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:winget}/settings.json",
+      "strategy": "link"
+    },
+    {
+      "id": "wsl",
+      "source": "config/wsl/.wslconfig",
+      "app": "wsl",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${HOME}/.wslconfig",
+      "strategy": "link"
+    },
+    {
+      "id": "wt",
+      "source": "config/wt/settings.json",
+      "app": "wt",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:wt}/settings.json",
+      "strategy": "link"
+    },
+    {
+      "id": "yasb",
+      "source": "config/yasb",
+      "app": "yasb",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:yasb}",
+      "strategy": "directory-link"
+    },
+    {
+      "id": "komorebi-bar",
+      "source": "config/komorebi/komorebi.bar.json",
+      "app": "komorebi",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:komorebi}/komorebi.bar.json",
+      "strategy": "link"
+    },
+    {
+      "id": "wsl-guest",
+      "source": "config/wsl/wsl.conf",
+      "app": "wsl",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": null,
+      "strategy": "link"
+    },
+    {
+      "id": "clink-starship",
+      "source": "config/clink/starship.lua",
+      "app": "clink",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:clink}/starship.lua",
+      "strategy": "link"
+    },
+    {
+      "id": "clink-scoop",
+      "source": "config/clink/scoop.lua",
+      "app": "clink",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:clink}/scoop.lua",
+      "strategy": "link"
+    },
+    {
+      "id": "clink-clink-vfox",
+      "source": "config/clink/clink_vfox.lua",
+      "app": "clink",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:clink}/clink_vfox.lua",
+      "strategy": "link"
+    },
+    {
+      "id": "clink-fzf",
+      "source": "config/clink/fzf.lua",
+      "app": "clink",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:clink}/fzf.lua",
+      "strategy": "link"
+    },
+    {
+      "id": "clink-themes",
+      "source": "config/clink/themes",
+      "app": "clink",
+      "category": "config",
+      "platforms": [
+        "windows"
+      ],
+      "target": "${APP_CONFIG:clink}/themes",
+      "strategy": "directory-link"
+    }
+  ]
+}

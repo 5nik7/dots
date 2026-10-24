@@ -377,6 +377,7 @@ def main(argv=None, info_edge=None):
     parser.add_argument('--details', action='store_true')
     parser.add_argument('--dirty', action='store_true')
     parser.add_argument('--all-submodules', action='store_true')
+    parser.add_argument('--no-wiki', action='store_true')
     parser.add_argument('path', nargs='?')
     args = parser.parse_intermixed_args(argv)
     if args.command not in ('submodules', 'submodules-info') and args.depth is not None:
@@ -442,6 +443,15 @@ def main(argv=None, info_edge=None):
     data = dict(schema=1, command='submodules status' if args.command == 'status' else args.command.replace('-', ' '),
                 base=str(base), selection=selected['path'] if selected else None, remote_state='cached', complete=complete,
                 depth_limit=args.depth, depth_limited=bool(limited), submodules=counts, errors=errors, repositories=inspected)
+    companion_rows=[]
+    if args.command=='info' and info_edge is None and not args.no_wiki:
+        from wiki_git import association
+        companion=association(base)
+        if companion:
+            companion_rows.append(companion)
+            if companion['availability']=='available':
+                companion['repository']=view.inspect(dict(path=companion['path'],parent=None,relative_path='wiki',depth=0,recorded_commit=None,availability='available',reason=''))
+        data['companions']=companion_rows
     if args.json:
         print(json.dumps(data, ensure_ascii=True))
         return int(not complete)
@@ -449,6 +459,11 @@ def main(argv=None, info_edge=None):
     ui.heading('Git info' if args.command == 'info' else 'Git submodule info' if args.command == 'submodules-info' else 'Git submodule status' if args.command == 'status' else 'Git submodules')
     if args.command == 'info':
         view.info(inspected[0], args.full_paths)
+        for companion in companion_rows:
+            ui.emit();ui.detail('Companion','wiki ('+companion['availability']+')')
+            ui.resource_detail('Path',companion['path'],kind='dir')
+            if companion.get('repository'): view.info(companion['repository'],args.full_paths)
+            else: ui.detail('Hint',companion['reason'])
     else:
         tree = Tree(view, inspected) if args.command == 'submodules' and ui.human and inspected else None
         if tree:

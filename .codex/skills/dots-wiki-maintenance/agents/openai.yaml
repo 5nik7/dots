@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dots Wiki Maintenance"
+  short_description: "Maintain generated wiki pages and navigation"
+  default_prompt: "Use $dots-wiki-maintenance to maintain the requested Dots documentation and verify the result."

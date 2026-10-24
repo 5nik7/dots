@@ -14,13 +14,12 @@
         "config",
         "shells",
         "scripts",
-        "bin",
-        "ruby"
+        "bin"
       ]
     },
     {
-      "id": "androidots",
-      "path": "androidots",
+      "id": "termux",
+      "path": "profiles/termux",
       "platforms": [
         "termux"
       ],
@@ -28,17 +27,19 @@
         "config",
         "termux",
         "bin"
-      ]
+      ],
+      "bundled": true
     },
     {
-      "id": "windots",
-      "path": "windots",
+      "id": "windows",
+      "path": "profiles/windows",
       "platforms": [
         "windows"
       ],
       "roots": [
         "config"
-      ]
+      ],
+      "bundled": true
     },
     {
       "id": "nvim",
@@ -79,7 +80,7 @@
     },
     {
       "id": "rainmeter-suite",
-      "path": "windots/rainmeter/5ui7e",
+      "path": "profiles/windows/rainmeter/5ui7e",
       "platforms": [
         "windows"
       ],

@@ -11,6 +11,8 @@ source "$LIB/common.bash"
 source "$LIB/ui.bash"
 ((BASH_VERSINFO[0] >= 5)) || die 3 'requires Bash 5 or newer'
 CMD=$1; shift
+WIKI_ARGS=("$@")
+NO_WIKI=0
 SCOPED_PUBLISH=0 SCOPE_PATH='' ALL_SUBMODULES=0
 [[ $CMD != submodules-publish ]] || { SCOPED_PUBLISH=1; CMD=publish; }
 OUTPUT_COMMAND=$CMD
@@ -30,6 +32,7 @@ while (($#)); do
             ((SCOPED_PUBLISH && $# == 1)) && [[ ! $SCOPE_PATH ]] || die 2 'expected one submodule PATH after --'
             SCOPE_PATH=$1; shift ;;
         --no-config) NO_CONFIG=1 ;;
+        --no-wiki) NO_WIKI=1 ;;
         --json) JSON=1 ;;
         --full-paths) FULL_PATHS=1 ;;
         --dry-run) DRY_RUN=1 ;;
@@ -72,6 +75,10 @@ source "$LIB/inspect.bash"
 text_cmd canonical_dir "$TARGET" 2>/dev/null || die 3 'target must be an existing directory'
 repo_root "$REPLY" || die 3 'not inside a Git worktree'
 ROOT=$REPLY
+if (( ! SCOPED_PUBLISH && ! NO_WIKI )) && [[ -f $ROOT/.dots/wiki.json ]]; then
+    command -v python3 >/dev/null 2>&1 || die 3 'Python 3 is required for associated wiki operations'
+    exec python3 -B "$LIB/cli.py" "$CMD" "${WIKI_ARGS[@]}"
+fi
 colors
 source "$LIB/../progress.bash"
 DOTS_PROGRESS_HUMAN=0

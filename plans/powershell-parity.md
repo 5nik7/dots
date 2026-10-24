@@ -115,3 +115,31 @@ Git without Bash. `--all-submodules` selects child trees; `--all` selects unstag
 files. Windows app destinations are unchanged. Native Windows PowerShell 5.1/7
 runtime, confirmation/interruption, completion and 40/80/120-column light/dark
 visual acceptance remain pending; portable controller tests are not that evidence.
+
+Generated theme-file inspection shares the Python controller, metadata, data outputs and completion providers across both frontends. Native destination adapters are reused. Windows PowerShell 5.1/7 runtime, app-link behavior and browser/40/80/120-column terminal acceptance remain pending; see [the focused plan](theme-files.md).
+
+The theme-file refinement adds shared directory/highlighted previews and read-only consumer evidence with explicit `check --consumers`. Native Windows bat/PowerShell terminal and app-configuration acceptance remains pending; controller and native-path fixtures are reported separately.
+
+
+## Platform profiles and bootstrap (2026-10-24)
+
+`dots profile`, `dots profiles`, expanded `dots env`, profile command/catalog
+resolution and `dots init --bootstrap powershell` use shared controllers and
+metadata. PowerShell prepares a native environment adapter on cold startup;
+warm startup validates metadata and loads native code. Windows configuration
+and state remain APPDATA/LOCALAPPDATA-based unless explicitly overridden, with
+Windows app destinations separate from WSL. Bash is not a native prerequisite.
+Portable controller/installation fixtures pass; this slice has no new native
+PowerShell 5.1/7 evidence. Native missing-checkout acquisition, startup/reload,
+profile inheritance, PATH order, literal arguments, completions, and terminal
+presentation acceptance remain pending. See the [profile plan](platform-profiles.md).
+
+## Profile and debug diagnostics
+
+Profile subcommands and `debug check|startup|path|command|cache|test` have shared
+native routing, metadata and completions. PowerShell has native phase events and
+Windows child ownership; no Bash dependency. PowerShell 5.1/7 live profile chains,
+Job Object cleanup, redirected/terminal behavior and visual checks remain pending.
+See the [focused plan](profile-debug.md).
+
+Wiki commands and associated repository operations share Python controllers across Bash and native PowerShell. Native Windows PowerShell 5.1/7 acceptance remains pending; fixtures must not be reported as native evidence. See [wiki implementation](wiki.md).

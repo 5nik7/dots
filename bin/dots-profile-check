@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Validate a profile and its dependencies
+# dots:usage=[ID] [OPTIONS]
+# dots:option=--json||flag|Print versioned JSON
+# dots:option=--verbose|-v|flag|Show additional resolution evidence
+# dots:argument=1|profile-id|Profile ID; defaults to the current profile
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/profiles.py" profile check "$@"

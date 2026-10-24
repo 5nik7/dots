@@ -121,7 +121,7 @@ def read_snapshot(script):
 
 def snapshot(module):
     try:
-        script = Path(__file__).resolve().parents[2] / "androidots/bin" / f"termux-{module}-status"
+        script = Path(__file__).resolve().parents[2] / "profiles/termux/bin" / f"termux-{module}-status"
         result = read_snapshot(script)
         render(module, result)  # Validate before using connectivity or showing icons.
         return result

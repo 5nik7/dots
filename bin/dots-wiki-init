@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Clone a missing wiki checkout explicitly
+# dots:usage=[--dry-run] [--yes] [--json]
+# dots:option=--dry-run||flag|Preview without writes or network
+# dots:option=--yes||flag|Approve acquisition
+# dots:option=--json||flag|Emit versioned JSON
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki.py" init "$@"

@@ -77,7 +77,7 @@ Popup borders use the selected Dots theme’s `lighter_background` on `backgroun
 
 ## Tmux status and sessions
 
-On Termux, tmux has two status rows at the top. The upper row starts with a bold 12-hour clock without a leading zero or AM/PM suffix (for example, `6:30`). The right side shows battery. Each attached tmux client highlights its own Termux session. Numbers follow `androidots/bin/termux-sessions` creation order and may change when sessions close; they are informational, not tab-switch buttons. The lower row keeps Termux numbers in order and joins the current number and optional tmux session name into one badge: for example, ` 1:dots  1  2:shell  2 ` when Termux 1 is current. Windows matching the full tmux session name exactly (case-sensitive) show only their number; other windows show `number:name`. Each badge/window owns one leading and one trailing space, including when the project name is hidden. Later numbers follow the windows immediately; COPY/PREFIX/ZOOM indicators remain on the right. COPY and ZOOM use bold `darker_background` text on `green`; PREFIX uses bold `accent` text on `dark_background`. Each active label has one colored space on each side. Colored blocks and spacing separate groups, without literal brackets or dividers. Outside Termux, the single tmux row has no Termux numbers.
+On Termux, tmux has two status rows at the top. The upper row starts with a bold 12-hour clock without a leading zero or AM/PM suffix (for example, `6:30`). The right side shows battery. Each attached tmux client highlights its own Termux session. Numbers follow `profiles/termux/bin/termux-sessions` creation order and may change when sessions close; they are informational, not tab-switch buttons. The lower row keeps Termux numbers in order and joins the current number and optional tmux session name into one badge: for example, ` 1:dots  1  2:shell  2 ` when Termux 1 is current. Windows matching the full tmux session name exactly (case-sensitive) show only their number; other windows show `number:name`. Each badge/window owns one leading and one trailing space, including when the project name is hidden. Later numbers follow the windows immediately; COPY/PREFIX/ZOOM indicators remain on the right. COPY and ZOOM use bold `darker_background` text on `green`; PREFIX uses bold `accent` text on `dark_background`. Each active label has one colored space on each side. Colored blocks and spacing separate groups, without literal brackets or dividers. Outside Termux, the single tmux row has no Termux numbers.
 
 Both rows use the current Dots `background`/`foreground` colors. The clock uses bold daylight-dependent text on `dark_background`. Inactive Termux numbers use bold `hint` on the row background; the joined current number/project badge uses bold `darker_background` on `hint`. Current windows on all tmux platforms use bold `info` on `lighter_background`, without underlining; other windows on Termux use `light_foreground` on `dark_background`. The active pane border uses `selection`. The battery adapter calls `~/repos/battery/battery`, retaining its percentage colors and charging icons; a Nerd Font is needed for the icon. Battery has one space between its icon and percentage, with padding after the percentage to keep its width stable. The main tmux configuration owns the layout; generated themes supply colors. See [tmux theme integration](docs/themes.md#tmux).
 
@@ -87,7 +87,7 @@ The standalone [`wttr`](docs/wttr.md) command supports current weather, up to th
 
 In Bash and Zsh, plain `t` uses the current Git repository/worktree's directory name—even from a subdirectory—so running it in this repo opens **dots**. Missing automatically named sessions start at the repository root. Outside Git repositories (or without Git), it defaults to **Work** in the current directory. `t project` explicitly opens **project**, creating it in the current directory if needed. Existing sessions are reused; inside tmux, the function switches rather than nesting. Quote names containing spaces. See [shared shell commands](docs/shared-shells.md#commands-and-compatibility).
 
-New Termux tabs using the Dots Bash/Zsh configuration automatically enter their own default tmux session. Both status rows remain visible, but the default session's name badge is hidden; project sessions selected with `t` keep their badges. Exiting the final pane with `exit` or `q` closes the automatically started outer shell without switching to another tmux session. Detaching returns to a plain shell. Run `~/dots/androidots/bin/termux-bar` to reattach that tab's default session. Set `DOTS_TERMUX_AUTOSTART=0` before shell initialization to opt out. Fish, SSH, child shells and noninteractive commands do not autostart tmux. See [startup details](docs/shell-init.md#termux-tmux-startup).
+New Termux tabs using the Dots Bash/Zsh configuration automatically enter their own default tmux session. Both status rows remain visible, but the default session's name badge is hidden; project sessions selected with `t` keep their badges. Exiting the final pane with `exit` or `q` closes the automatically started outer shell without switching to another tmux session. Detaching returns to a plain shell. Run `~/dots/profiles/termux/bin/termux-bar` to reattach that tab's default session. Set `DOTS_TERMUX_AUTOSTART=0` before shell initialization to opt out. Fish, SSH, child shells and noninteractive commands do not autostart tmux. See [startup details](docs/shell-init.md#termux-tmux-startup).
 
 Open a new Termux tab to use automatic startup. In an existing tmux server, **prefix + q** reloads the status configuration; changing source files does not reload that server automatically.
 
@@ -131,6 +131,9 @@ dots theme show nord
 dots theme set catppuccin-mocha --dry-run
 dots theme set catppuccin-mocha
 dots theme refresh
+dots theme files
+dots theme files info bat.tmTheme
+dots theme files check
 theme list                         # Equivalent standalone entry point
 catppuccin mocha blue hex           # Native palette query
 catppuccin mocha set                # Explicit activation
@@ -182,9 +185,13 @@ uses **Cancel / Publish**, with Cancel selected by default. Existing text prompt
 remain available without Gum or suitable terminals. `--yes`, `--dry-run` and JSON
 keep their existing behavior.
 Bat, Yazi and Codex share the syntax rules in `default/themed/bat.tmTheme.tpl`, including
-language-specific scopes and palette-based comments, selections, and diff colors.
+the expanded Catppuccin-derived language scopes, dynamic Dots palette colors, and
+configured Git diff colors. Leaf and bat-backed previews use the same syntax theme.
 Selection journals and backs up fixed application theme connectors. Bash and Zsh refresh
-at the next prompt; Neovim uses the local Anodize.nvim plugin and refreshes on state changes, focus or `:DotsThemeReload`. Native palette
+at the next prompt; Neovim uses the local Anodize.nvim plugin and refreshes on state changes, focus or `:DotsThemeReload`.
+
+Browse generated artifacts and their application destinations with `dots theme files`. Use `info FILE` to trace sources and links, `show FILE` for highlighted terminal text or directory contents, `path FILE` for an exact path, or `browse` for an optional read-only picker. `check --consumers` adds read-only checks of supported environment/configuration evidence. Sources describe the next refresh; inspection never publishes changes. See [generated theme files](docs/themes.md#generated-theme-files).
+
 Family palette APIs such as `catppuccin` remain available; current queries use `theme color` and `theme current`. Dots generates commands for all theme families and standalone themes; a flavor alone previews its native palette. Optional `palette.toml` and usage-only `logo.txt` files are supported. Run `dots theme refresh --commands-only` to rebuild shortcuts without activating a theme. The equivalent `theme` and `dots theme` commands inspect and change the current theme; `dots themes` manages the collection; see the
 [plural-command migration table](docs/themes.md#migration-from-plural-commands) for script updates. The local editor plugin defaults to `~/repos/Anodize.nvim` (override with `ANODIZE_NVIM_DIR`); generic imported themes need no downloaded Lua. Git theme installation,
 updates, template overrides and wallpaper adapters are described in
@@ -222,11 +229,14 @@ bin/anodize apply dusk --dry-run
 
 ## Files and Configuration Layout
 
-`config/` is canonical in Dots, Androidots and Windots. Temporary `configs -> config`
+`config/` is canonical in Dots and its bundled Termux/Windows profiles. Temporary `configs -> config`
 aliases remain for compatibility. The Neovim submodule now lives at `config/nvim`.
+
+Dots no longer exports `DOTRUBY` or `RUBYCOMP`. Reload Dots initialization or open a new shell to clear inherited values and obsolete checkout `ruby/completion` PATH entries. Ruby configuration under `config/ruby` remains available. File resources use `termux:*` and `windows:*`; old CLI names return a replacement hint. See [profile migration](docs/profiles.md#androidots-and-windots-migration).
 
 ```bash
 dots files sources
+dots files list --repo termux          # windows selects the Windows source
 dots files browse
 dots files list --sort app
 dots files check --dry-run              # Preview missing-source catalog cleanup
@@ -257,11 +267,10 @@ interactive review, `--yes`, `--dry-run`, JSON and journaled undo. See
 [stash and edit](docs/files.md#stash-and-edit-mappings).
 
 The first files slice locates and classifies sources and destinations, and tracks
-intent in each repository's `.dots/files.json`. Androidots contributes Termux
+intent in each source's `.dots/files.json`. The bundled Termux profile contributes
 resources explicitly; unavailable/private sources are not initialized. `track`
 changes catalog metadata only. Bounded file operations use links by default;
-add/link/remove, adoption, undo and backups are available below. Source-content editing and general
-profile installation remain future work. See the [catalog reference](docs/files.md)
+add/link/remove, adoption, undo and backups are available below. Profile installation uses explicit catalog mappings; directories are not merged automatically. See the [catalog reference](docs/files.md)
 for tracking, filters, JSON and ownership rules. Python 3.9+ is required for this
 POSIX implementation; discovery additionally uses Git.
 
@@ -288,8 +297,8 @@ Inspect the Dots repository with `dots git info`, browse registered descendants
 with `dots git submodules --details`, or show their full info blocks with
 `dots git submodules info --depth 2`. Use `dots git submodule nvim` for one
 repository, `dots git submodule nvim status --dirty` for its subtree, or
-`dots git submodule windots:5ui7e info` for a nested child. Named navigation uses
-direct-child path basenames; `submodule windots submodule 5ui7e` is equivalent.
+`dots git submodule 5ui7e info` for the optional Rainmeter source. Named navigation uses
+direct-child path basenames; the Rainmeter source is registered at `profiles/windows/rainmeter/5ui7e`.
 Preview publication with `dots git submodule nvim publish --dry-run` or the exact
 path form `dots git submodules publish config/nvim --dry-run`. Both exclude the
 outer repository. Use plural `publish --all-submodules` to select every direct
@@ -313,7 +322,7 @@ dots files add ~/.config/example --backup
 
 File adoption copies and verifies configs into their owning repository, then links
 individual files at their original locations. Search locations are versioned;
-Termux-specific mappings belong to Androidots. `files link ID` installs a known
+Termux-specific mappings belong to `profiles/termux`. `files link ID` installs a known
 resource; `files remove ID` (or `rm`) stops managing it while preserving a regular
 local config and the repository source. Commands preview before confirmation;
 `--yes` is explicit unattended approval. Nothing automatically stages or publishes
@@ -460,3 +469,26 @@ The saved [Blastoff `dots` theme](config/blastoff/themes/dots.toml) uses shared 
 ## Termux location lookup
 
 Androidots provides `termux-geo` for device coordinates and Nominatim city/state/postal information, with Dots human output, delayed progress, JSON in pipes, scalar getters and cache-only reads. `termux-geo completion --all --install` installs static completions into Androidots-local Bash/Zsh/Fish directories recognized by personal Termux startup. See the [location command reference](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md) for dependencies, service restrictions, flags, and completion activation.
+
+## Platform profiles and environment
+
+Use `dots profile` for the detected platform and active layers, `dots profiles`
+for available definitions, and `dots env` for managed settings, app environment,
+PATH contributions and hook provenance. Platform resources live under `profiles`;
+root config, scripts and shell trees stay universal. Bash/Zsh prepare native
+startup bundles. `dots init --bootstrap bash|zsh|powershell` prints a standalone
+missing-checkout bootstrap snippet. See [profiles and startup](docs/profiles.md)
+for installation boundaries, compatibility paths and native acceptance limits.
+
+Profile inspection now includes `dots profile layers`, `paths`, `env`, `files`,
+`commands`, and `check`; `dots profiles check` validates every definition.
+`dots debug` provides health/PATH/command/cache inspection, explicit startup
+traces and isolated self-tests. Start with `dots debug startup --shell zsh`,
+then add `--isolated` or explicitly `--live`. See [debugging](docs/debug.md)
+and [profile inspection](docs/profiles.md#profile-inspection-subcommands).
+
+## Wiki
+
+`dots wiki` provides grouped terminal navigation for the [project wiki](https://github.com/5nik7/dots/wiki). Use `list`, `show PAGE`, `search QUERY`, `browse`, `open PAGE`, or `edit PAGE` to read and maintain documentation. Canonical pages live in this repository; `dots wiki build --dry-run` previews the generated export and sidebar, and `dots wiki check` verifies freshness. The default checkout is `~/repos/dots.wiki`, overridden by `DOTS_WIKI_DIR`.
+
+Normal Git operations include the associated wiki; use `--no-wiki` to exclude it or `dots git wiki status|sync|publish` for wiki-only work. Builds never stage or publish changes. See [wiki maintenance](docs/wiki.md).

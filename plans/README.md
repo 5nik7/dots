@@ -21,6 +21,8 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Missing-source check](files-check.md) | Interactive catalog-only cleanup with journaled undo. |
 | [Stash and edit mappings](files-mappings.md) | Disabled resources, mapping edits and the bounded Git XDG migration. |
 | [Unified theme CLI](theme-cli.md) | Consolidation on `dots theme` with native palette queries. |
+| [Generated theme files](theme-files.md) | Active-generation inspection, connection checks and read-only browsing. |
+| [Shared syntax theme](syntax-theme.md) | Catppuccin reference adaptation, dynamic colors and shared consumer verification. |
 | [Theme plugins](theme-plugins.md) | Explicit local hooks and journaled GTK 3/Qt6ct integrations. |
 | [Omarchy-style themes](omarchy-themes.md) | Implemented flat themes, fixed connectors and explicit wallpaper adapters. |
 | [Git theme colors](git-theme-colors.md) | Shared theme roles for Dots Git metadata and status output. |
@@ -28,6 +30,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Shared themes](themes.md) | Completed original shared palette slice; historical editor evidence. |
 | [Additional theme families](theme-families.md) | Completed family expansion; historical editor evidence. |
 | [Configuration paths](config-path-migration.md) | Completed migration; compatibility aliases remain. |
+| [Platform identity cleanup](platform-file-identities.md) | Retired Ruby environment and canonical platform file IDs with legacy recovery. |
 | [Shell initialization](shell-init.md) | Unified native shell hooks and startup migration. |
 | [User-local shell completions](local-shell-completions.md) | Native directory discovery and user-local precedence in Bash, Zsh and Fish. |
 | [Bash dispatcher](bash-dispatcher.md) | Implemented live command framework and three-shell completion. |
@@ -67,3 +70,10 @@ When a plan is complete, retain it if it explains migration or decision history.
 - [Git info and submodule workflows](git-submodules.md): shared inspection, recursive tree/status and publication scoped to selected child trees.
 
 - [Git identities and named navigation](git-identities-and-navigation.md): shared human identity glyphs, recursive info and contextual submodule actions.
+
+- [Platform profiles and consolidated startup](platform-profiles.md) — active implementation and acceptance.
+
+- [Profile inspection and debug toolkit](profile-debug.md): read-only profile
+  routes, source/timing diagnostics and isolated self-tests.
+
+- [Dots wiki](wiki.md) — generated documentation, sidebar, maintenance skills and associated Git operations.

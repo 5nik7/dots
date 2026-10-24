@@ -126,6 +126,7 @@ class Workflow:
         self.owners, self.aliases = set(), {}
         self.failed = False
         self.scope_rows = None
+        self.wiki = None
         if getattr(args, 'scoped_publish', False):
             from inspection import selection, selection_hash
             try:
@@ -268,7 +269,15 @@ class Workflow:
                 except (GitError, ValueError):
                     rows.append(dict(path=str(child), branch='', status='blocked', ahead=None, behind=None, files=[])); self.failed = True; continue
                 visit(child)
-        with Progress('Inspecting repositories'): visit(self.root)
+        with Progress('Inspecting repositories'):
+            visit(self.root)
+            if self.wiki and self.wiki.only:
+                rows[0]['kind']='wiki'
+            if self.wiki and self.wiki.row and not self.wiki.only:
+                if self.wiki.row['availability']=='available': visit(self.wiki.path)
+                else: rows.append(dict(path=str(self.wiki.path),branch='',status='missing',ahead=None,behind=None,files=[]))
+                next(row for row in rows if row['path']==str(self.wiki.path))['kind']='wiki'
+                reasons[str(self.wiki.path)]='Associated wiki repository' if self.wiki.row['availability']=='available' else 'Wiki unavailable; skipped. Use dots wiki init.'
         if self.args.json:
             print(json.dumps(dict(schema=1, remote_state='cached', repositories=rows, complete=not self.failed), ensure_ascii=True))
         else:
@@ -277,7 +286,7 @@ class Workflow:
                 path = Path(row['path'])
                 label = str(path) if self.args.full_paths else path.name
                 if not self.args.full_paths and sum(Path(r['path']).name == path.name for r in rows) > 1:
-                    label = str(path.relative_to(self.root)) if path != self.root else path.name + ' (root)'
+                    label = (str(path.relative_to(self.root)) if path.is_relative_to(self.root) else str(path)) if path != self.root else path.name + ' (root)'
                 self.ui.emit()
                 self.ui.repository_detail('Repository', path, label, self.role('repo_owned' if self.owned(path) else 'repo'))
                 self.ui.detail('Branch', self.ui.branch_label(row['branch']), self.role('detached' if row['branch'].startswith('detached ') else 'branch'))
@@ -480,6 +489,7 @@ class Workflow:
                 self.ui.detail('Scope', 'Only selected subtrees will publish; excluded parent indexes remain unchanged.')
                 if not self.scope_rows:
                     self.ui.detail('Result', 'No registered submodules.')
+        if self.wiki: self.wiki.collect()
         expected = set()
         for path in self.order:
             parent = self.parents[path]
@@ -521,6 +531,7 @@ class Workflow:
                 if in_progress(path): raise GitError('Git operation in progress')
                 if not self.needed(path):
                     self.event(path, 'unchanged', 'no selected changes or known ahead commits'); continue
+                if self.wiki and path==self.wiki.path: self.wiki.validate(True)
                 dest = self.destination(path)
                 if dest != self.destinations.get(path): raise GitError('branch or destination changed after preview')
                 branch, remote, ref, tracking, url, _ = dest
@@ -558,7 +569,17 @@ class Workflow:
             else:
                 command = 'submodules publish' if getattr(self.args, 'scoped_publish', False) else self.args.command
                 if not self.args.json: self.ui.heading('Git ' + command)
-                if self.args.command == 'sync': self.sync(self.root)
+                if self.args.command == 'sync':
+                    self.sync(self.root)
+                    if self.wiki and self.wiki.row and not self.wiki.only:
+                        if self.wiki.row['availability']=='available':
+                            if any(e['path']==str(self.root) and e['status'] in ('blocked','failed') for e in self.events):
+                                self.event(self.wiki.path,'blocked','Source synchronization failed; wiki skipped')
+                            else:
+                                try:self.wiki.recheck()
+                                except (ValueError,OSError) as error:self.event(self.wiki.path,'blocked',str(error))
+                                else:self.sync(self.wiki.path)
+                        else: self.event(self.wiki.path,'skipped','Wiki unavailable; use dots wiki init')
                 else: self.publish()
                 if self.args.json:
                     data = dict(schema=1, command=command, complete=not self.failed, dry_run=self.args.dry_run, events=self.events)
@@ -581,6 +602,8 @@ def main():
     parser.add_argument('-C', '--directory', default=os.environ.get('DOTS') or str(LIB.parents[1]))
     parser.add_argument('--config')
     parser.add_argument('--no-config', action='store_true')
+    parser.add_argument('--no-wiki', action='store_true')
+    parser.add_argument('--wiki-only', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('-m', '--message')
     for flag in ('json', 'full-paths', 'dry-run', 'all', 'yes', 'remote', 'init'): parser.add_argument('--' + flag, action='store_true')
     args = parser.parse_intermixed_args()
@@ -600,7 +623,12 @@ def main():
         raise SystemExit(128 + signum)
     signal.signal(signal.SIGTERM, interrupted)
     if hasattr(signal, 'SIGBREAK'): signal.signal(signal.SIGBREAK, interrupted)
-    return Workflow(args).run()
+    workflow=Workflow(args)
+    if args.wiki_only and (args.no_wiki or args.scoped_publish): parser.error('wiki-only scope conflicts with submodule/exclusion scope')
+    if not args.no_wiki and not args.scoped_publish and (args.wiki_only or (workflow.root/'.dots/wiki.json').is_file()):
+        from wiki_git import Companion
+        workflow.wiki=Companion(workflow)
+    return workflow.run()
 
 
 if __name__ == '__main__':

@@ -1,0 +1,7 @@
+#!/data/data/com.termux/files/usr/bin/env bash
+# Androidots device location and reverse geocoding. No shell startup files loaded.
+# shellcheck disable=SC1091
+geo_script=$(readlink -f -- "${BASH_SOURCE[0]}") || exit 1
+GEO_ROOT=${geo_script%/bin/*}
+source "$GEO_ROOT/lib/termux_geo/main.bash"
+geo_main "$@"

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Check Dots platform, profiles, commands and startup
+# dots:usage=[--only GROUP] [--json]
+# dots:option=--json||flag|Print versioned JSON
+# dots:option=--only||choice:platform,profiles,commands,startup,environment|Select check group
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" check "$@"

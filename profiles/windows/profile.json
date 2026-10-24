@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "id": "windows",
+  "description": "Native Windows defaults",
+  "environment": {
+    "WINDOTS": "${PROFILE}",
+    "WINDOTFILES": "${PROFILE}/config",
+    "WINDOWCONFIG": "${PROFILE}/config",
+    "RAINMETER": "${PROFILE}/rainmeter"
+  }
+}

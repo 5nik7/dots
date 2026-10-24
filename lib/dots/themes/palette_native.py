@@ -221,6 +221,7 @@ class Themes:
             tokens[key + '_strip'] = value.lstrip('#')
             tokens[key + '_rgb'] = metric(key, value, 'rgb').replace(' ', ',')
         tokens.update(color.leaf_template_tokens(palette))
+        tokens.update(color.tmtheme_template_tokens(doc))
         tokens['mode'] = palette['mode']
         tokens['file_styles_vivid'] = json.dumps(color.vivid_theme(doc, color.vivid_runtime()[2]), indent=2)
         tokens['git_colors_starship'] = '\n'.join('git_' + key + ' = ' + json.dumps(value) for key, value in doc['colors']['git'].items())

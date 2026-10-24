@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Interactive metadata browser over the existing guarded file-operation engine."""
+from identities import validate_cli
 import argparse
 import os
 from pathlib import Path
@@ -143,6 +144,7 @@ def main():
     for flag in ('repo', 'app', 'category', 'status'):
         parser.add_argument('--' + flag, help='Filter by ' + flag)
     args = parser.parse_args()
+    validate_cli(args, parser)
     if not all(s.isatty() for s in (sys.stdin, sys.stdout, sys.stderr)):
         raise ValueError('browser needs terminal input and output; use dots files list/show and link/remove for scripts')
     configure()

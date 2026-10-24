@@ -27,4 +27,8 @@ if [[ ! -r $_dots_bash_directory/../environment.sh || ! -r $_dots_bash_directory
   printf 'dots: Bash startup requires the Dots checkout layout\n' >&2
   return 1
 fi
-source "$_dots_bash_directory/init.bash"
+export DOTS="${_dots_bash_directory%/*/*}"
+unset _dots_bash_directory
+_DOTS_STARTUP_MODE=full
+source "$DOTS/lib/dots/shell/startup.bash" || { unset _DOTS_STARTUP_MODE; return 1; }
+unset _DOTS_STARTUP_MODE

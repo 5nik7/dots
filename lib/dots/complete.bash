@@ -11,11 +11,26 @@ dots_value_candidates() {
   local type=$1 lead=${2:-} value
   local -a values=()
   case $type in
+    wiki-page|wiki-section)
+      local output
+      output=$(python3 -B "$DOTS_LIB_DIR/wiki.py" __names "$type" 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
+      ;;
+    profile-id)
+      local output
+      output=$(python3 -B "$DOTS_LIB_DIR/profiles.py" __names 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
+      ;;
     dots-setting)
-      local kind default description
-      while IFS=$'\t' read -r value kind default description; do dots_candidate "$value" "$description"; done < "$DOTS_LIB_DIR/shell/settings.tsv"
-      while IFS=$'\t' read -r value kind default; do [[ $value == - ]] || dots_candidate "$value"; done < "$DOTS_LIB_DIR/shell/paths.tsv"
-      for value in DOTS_CONFIG_FILE DOTS_STATE_DIR DOTS_THEME_ID; do dots_candidate "$value"; done
+      local output
+      output=$(python3 -B "$DOTS_LIB_DIR/environment.py" __names 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$value"; done <<< "$output"
+      ;;
+    theme-file|theme-app)
+      local output operation=__files
+      [[ $type != theme-app ]] || operation=__apps
+      output=$(python3 -B "$DOTS_LIB_DIR/themes/inspection.py" "$operation" 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
     theme-plugin)
       local output
@@ -219,11 +234,14 @@ dots_complete() {
       if (( cursor == index+1 )); then
         dots_builtin_metadata init
         dots_value_candidates choice:bash,zsh,fish,powershell,nu,xonsh
+        (( help )) || dots_candidate --bootstrap 'Print missing-checkout bootstrap'
         (( help )) || dots_candidate --setup 'Install platform configurations'
         (( help )) || dots_candidate --help 'Show command help'
+      elif [[ ${words[index+1]} == --bootstrap ]]; then
+        dots_value_candidates choice:bash,zsh,powershell
       elif [[ ${words[index+1]} == --setup ]]; then
         if [[ ${words[cursor-1]} == --with-source ]]; then
-          dots_value_candidates choice:androidots,windots,nvim
+          dots_value_candidates choice:termux,windows,nvim
         else
           dots_builtin_metadata init
           for row in "${DOTS_META_OPTIONS[@]}"; do

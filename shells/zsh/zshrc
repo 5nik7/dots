@@ -5,4 +5,8 @@ if [[ ! -r $_dots_zsh_file || ! -r ${_dots_zsh_file:h}/../environment.sh || ! -r
   print -ru2 -- 'dots: Zsh startup requires a resolvable Dots checkout'
   return 1
 fi
-source "${_dots_zsh_file:h}/init.zsh"
+export DOTS="${_dots_zsh_file:h:h:h}"
+unset _dots_zsh_file
+_DOTS_STARTUP_MODE=full
+source "$DOTS/lib/dots/shell/startup.bash" || { unset _DOTS_STARTUP_MODE; return 1; }
+unset _DOTS_STARTUP_MODE

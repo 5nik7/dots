@@ -167,7 +167,7 @@ class InstallationTests(unittest.TestCase):
 
     def git_fixture(self):
         shutil.copytree(ROOT/'lib/dots/files',self.repo/'lib/dots/files')
-        for name in ('progress.py','interaction.py','resources.py','resources.tsv'):
+        for name in ('progress.py','interaction.py','resources.py','resources.tsv','platform_info.py','profiles.py'):
             shutil.copy2(ROOT/'lib/dots'/name,self.repo/'lib/dots'/name)
         self.git(self.repo,'init','--initial-branch=main')
         self.git(self.repo,'config','user.email','fixture@example.invalid')
@@ -425,7 +425,7 @@ p.apply('install')
     def test_fresh_checkout_wsl_setup_connectors_check_and_restore(self):
         # Copy only versioned public inputs, never ignored connectors or local
         # submodule contents. Include this change's new source files before commit.
-        names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','-z','--',
+        names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','--cached','--others','--exclude-standard','-z','--',
             '.dots','bin','lib','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
         names.update(('config/fsh/README.md','default/themed/eza.yml.tpl','default/themed/television.toml.tpl','default/themed/leaf.toml.tpl','lib/dots/themes/generation.bash',
@@ -453,6 +453,8 @@ p.apply('install')
             'DOTS','XDG_CONFIG_HOME','XDG_STATE_HOME','XDG_DATA_HOME','XDG_CACHE_HOME',
             'CODEX_HOME','PI_CODING_AGENT_DIR','GIT_CONFIG_GLOBAL','GIT_CONFIG_NOSYSTEM',
             'GIT_TERMINAL_PROMPT','DOTS_COLOR','DOTS_ICONS','TERM','PYTHONDONTWRITEBYTECODE')}
+        self.env.pop('PREFIX', None)
+        self.env.pop('TERMUX_VERSION', None)
         self.env['WSL_DISTRO_NAME']='Fixture'
         self.env['DOTS_PROGRESS']='never'
         legacy_bin = self.base/'legacy-bin'
@@ -463,7 +465,7 @@ p.apply('install')
         def run(script,*args):
             result=subprocess.run(['sh',str(self.repo/script),*args,'--json'],env=self.env,
                                   capture_output=True,text=True,timeout=120)
-            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual(result.returncode,0,result.stderr + result.stdout)
             self.assertNotIn('\x1b',result.stdout)
             return json.loads(result.stdout)
         preview=run('install.sh','--dry-run')

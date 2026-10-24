@@ -33,6 +33,13 @@ HEX = re.compile(r'#[0-9a-fA-F]{6}\Z')
 IDENT = re.compile(r'[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*\Z')
 
 
+def tmtheme_template_tokens(doc):
+    """tmTheme foregrounds require RGB; terminal reset means normal theme text."""
+    colors = doc['colors']
+    return {'git_' + role + '_tmtheme': colors['foreground'] if colors['git'][role] == 'reset' else colors['git'][role]
+            for role in ('added', 'deleted', 'modified')}
+
+
 def leaf_template_tokens(palette):
     """Literal Leaf metadata and readable text on colored status badges."""
     light = palette['mode'] == 'light'
@@ -549,6 +556,8 @@ def main(argv):
         if action == '_vivid': print(json.dumps(vivid_theme(doc, vivid_runtime()[2]), indent=2))
         elif action == '_template_colors':
             for key, value in leaf_template_tokens(palette).items():
+                print(key + '\t' + value)
+            for key, value in tmtheme_template_tokens(doc).items():
                 print(key + '\t' + value)
             colors = {k: v for k, v in doc['colors'].items() if isinstance(v, str) and HEX.fullmatch(v)}
             aliases = {'git_' + k: v for k, v in doc['colors']['git'].items()}

@@ -17,8 +17,20 @@ dots_reserved() {
 
 dots_roots() {
   DOTS_ROOTS=()
-  local directory previous duplicate
-  for directory in "$DOTS/bin" "$DOTS/local/bin" "${DOTS_EXTRA_ROOTS[@]}"; do
+  local directory previous duplicate profile_output
+  local -a profile_roots=()
+  if [[ ${DOTS_PROFILE_CHECKOUT:-} == "$DOTS" ]]; then
+    IFS=: read -r -a profile_roots <<< "${DOTS_PROFILE_BIN_PATHS:-}"
+  elif [[ -d $DOTS/profiles ]] && command -v python3 >/dev/null 2>&1; then
+    profile_output=$(python3 -B "$DOTS_LIB_DIR/profiles.py" __roots) || return
+    while IFS= read -r directory; do [[ ! $directory ]] || profile_roots+=("$directory"); done <<< "$profile_output"
+  elif [[ -d $DOTS/profiles ]]; then
+    # Basic help/dispatch stays available before the preparation runtime exists.
+    source "$DOTS_LIB_DIR/shell/platform.bash"
+    profile_roots+=("$DOTS/profiles/$DOTS_PLATFORM/bin")
+    [[ $DOTS_PLATFORM != wsl ]] || profile_roots+=("$DOTS/profiles/linux/bin")
+  fi
+  for directory in "${profile_roots[@]}" "$DOTS/bin" "$DOTS/local/bin" "${DOTS_EXTRA_ROOTS[@]}"; do
     [[ -d $directory ]] || continue
     duplicate=0
     for previous in "${DOTS_ROOTS[@]}"; do
@@ -44,7 +56,10 @@ dots_resolve() {
     for directory in "${DOTS_ROOTS[@]}"; do
       if [[ -e $directory/dots-$candidate || -L $directory/dots-$candidate ]]; then
         (( ++matches ))
-        found=$directory/dots-$candidate
+        if [[ ! $found ]]; then found=$directory/dots-$candidate
+        elif python3 -B "$DOTS_LIB_DIR/profiles.py" __replaces "$found" "$candidate"; then
+          (( --matches )); continue
+        fi
         if [[ ! -f $found || ! -x $found ]]; then
           dots_error "Command is not an executable regular file: $found"
           return 1
@@ -115,7 +130,7 @@ dots_main() {
       while IFS='' read -r line || [[ -n $line ]]; do printf '%s\n' "$line"; done < "$DOTS_LIB_DIR/completion/$2"
       return ;;
   esac
-  dots_roots
+  dots_roots || return
   case ${1:-help} in
     help|-h|--help)
       (($#)) && shift

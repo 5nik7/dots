@@ -9,18 +9,20 @@ colors
 export CLICOLOR=1
 
 # Compatibility modules remain sourceable at their original locations.
-source "$ZSH/functions.zsh"
+source "$DOTS/shells/shared/functions.sh"
 source "$ZSH/options.zsh"
-source "$ZSH/fzf.zsh"
+source "$DOTS/shells/shared/fzf.sh"
 source "$DOTS/lib/dots/shell/init.zsh"
 source "$ZSH/completions.zsh"
 source "$ZSH/integrations/plugins.zsh"
 _dots_completion_plugins
 source "$ZSH/core/completion.zsh"
 _dots_shell_prompt
+_dots_hook_snapshot
 source "$ZSH/integrations/tools.zsh"
+_dots_hook_record tools
 source "$DOTS/shells/shared/aliases.sh"
-[[ -r "${zsh[local]}" ]] && source "${zsh[local]}"
+[[ -r "${zsh[local]}" ]] && _dots_hook_source "${zsh[local]}" private-local 1
 source "$ZSH/integrations/fzf.zsh"
 _dots_widget_plugins
 

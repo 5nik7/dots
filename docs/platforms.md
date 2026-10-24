@@ -22,7 +22,7 @@ The upper-row Android cluster requires Python 3 and the Androidots Wi-Fi/cellula
 
 ## Shell initialization coverage
 
-Termux Bash/Zsh startup can automatically attach a default tmux session through `androidots/bin/termux-bar`. This adapter requires Python 3, tmux, readable procfs, the sibling session-discovery script and a validated `TERMUX_APP__PID` parent/session-leader relationship. It uses root PID/start time for per-tab identity. Automatic attachments exit the outer shell when the final pane exits; deliberate detach and unexpected server loss retain the plain shell. Other platforms, Fish, SSH and child shells skip automatic entry; `DOTS_TERMUX_AUTOSTART=0` opts out. Native Bash/Zsh/tmux PTY tests use simulated app identity, so actual Android new-tab startup remains a manual gate. See [lifecycle and fallbacks](shell-init.md#termux-tmux-startup).
+Termux Bash/Zsh startup can automatically attach a default tmux session through `profiles/termux/bin/termux-bar`. This adapter requires Python 3, tmux, readable procfs, the sibling session-discovery script and a validated `TERMUX_APP__PID` parent/session-leader relationship. It uses root PID/start time for per-tab identity. Automatic attachments exit the outer shell when the final pane exits; deliberate detach and unexpected server loss retain the plain shell. Other platforms, Fish, SSH and child shells skip automatic entry; `DOTS_TERMUX_AUTOSTART=0` opts out. Native Bash/Zsh/tmux PTY tests use simulated app identity, so actual Android new-tab startup remains a manual gate. See [lifecycle and fallbacks](shell-init.md#termux-tmux-startup).
 
 The [initialization hook](shell-init.md) has native adapters for Bash, Zsh, Fish, Nushell, Xonsh, and PowerShell. Local Termux verification covers the first five installed interpreters; the Xonsh interactive fixture uses readline with a PTY. PowerShell is unavailable locally, so its native runtime tests are skipped and Windows startup remains unverified. The PowerShell adapter requires no Bash and does not translate Windows/WSL paths. Native startup files derive checkout paths through file and directory symlinks; PowerShell also resolves directory junctions. Native Windows link behavior remains unverified locally. Bash file-link resolution uses `readlink` without GNU-only options; Nushell uses parse-time `path self` with strict `path expand`. The separate native CLI adapters are described in [native PowerShell](powershell.md); their Windows runtime acceptance remains pending.
 
@@ -99,11 +99,12 @@ prompt theming are outside this version. See [Shared themes](themes.md).
 
 ## Implemented Files and Theme Adapters
 
-File catalog
-commands use Python 3.9+ and POSIX flock, with read-only platform overrides for
-inventory. Termux combines common and Androidots catalogs; Windots remains
-inventory-only without a native Windows destination adapter. Discovery uses Git
-and does not initialize submodules. `config/` is canonical in all three repositories.
+File catalog commands use shared Python 3.9+ controllers and native POSIX/Windows
+filesystem adapters, with read-only platform overrides for inventory. Termux and
+Windows combine universal resources with their bundled profile catalogs. Windows
+app-specific destinations are mapped explicitly; ambiguous destinations remain
+unmapped. Discovery does not initialize submodules. `config/` remains canonical
+in the universal and platform trees.
 
 Themes honor XDG config/state/cache roots. Fixed application connectors include
 Termux colors; TERMUX_VERSION plus the Termux PREFIX boundary enables its reload and
@@ -140,7 +141,7 @@ separately from Termux/controller fixtures. File operations use the shared Pytho
 engine with POSIX and native Windows adapters; Windows acceptance remains pending.
 There is no privilege elevation, silent link-to-copy fallback or cross-Windows/WSL
 translation. Windows app destinations are unchanged by the Git extensions.
-Termux-owned discovery rules live in Androidots. See [Git](git.md),
+Termux-owned discovery rules live in `profiles/termux`. See [Git](git.md),
 [files](files.md), [native PowerShell](powershell.md) and
 [verification](testing.md#git-and-managed-file-operations).
 
@@ -172,7 +173,7 @@ appearance; no PowerShell wrapper or link-to-copy fallback is added. See
 
 ## Dots shell environment
 
-The library-owned Dots environment has Bash, Zsh, Fish, Nushell, Xonsh and native PowerShell adapters. Native PowerShell initialization uses no Bash/Python; theme publication still uses the Bash CLI. Windows defaults use APPDATA for settings and LOCALAPPDATA for state. No WSL path translation is introduced. See [shell environment](shell-environment.md) for native variable forms and validation limits.
+The library-owned Dots environment has Bash, Zsh, Fish, Nushell, Xonsh and native PowerShell adapters. Native PowerShell initialization uses no Bash; Python prepares its profile environment on a cold load and the native adapter handles warm loads. Theme publication uses the shared native controller. Windows defaults use APPDATA for settings and LOCALAPPDATA for state. No WSL path translation is introduced. See [shell environment](shell-environment.md) for native variable forms and validation limits.
 
 Theme file-style publication and `theme colors` require Python 3.11+ (`tomllib`);
 Vivid is optional. Published JSON/Lua/LS_COLORS data remain platform-neutral. Native
@@ -220,3 +221,23 @@ The shared Python 3.11+ weather controller has Bash and native PowerShell entrie
 The Television connector is implemented in both publishers. Its [destination rules](themes.md#television) match Television 0.15.9, including native Windows LOCALAPPDATA and explicit overrides. An existing app directory is required; its missing `themes` child is journaled. Native Windows PowerShell 5.1/7, Linux and WSL acceptance remains pending; Termux and fixture evidence is recorded in [testing](testing.md#television-theme).
 
 Leaf UI and syntax connectors use both publishers and the shared [destination rules](themes.md#leaf). Native Windows uses APPDATA/leaf and the existing link adapter; a missing APPDATA leaves it unmapped. Leaf external syntax support is a separate portable Rust patch. Termux native evidence does not establish Windows PowerShell 5.1/7, Linux or WSL runtime/visual acceptance; those remain pending.
+
+## Profiles and distro facts
+
+The profile resolver distinguishes execution platform from distro and shell
+runtime. WSL inherits Linux profile layers but retains separate native paths and
+state. Termux and Windows have independent layers. Distro directories are added
+only for actual overrides. See [profile detection](profiles.md). Native Linux,
+WSL and Windows PowerShell 5.1/7 startup acceptance remains pending where only
+Termux and injected-platform fixtures have been run.
+
+Profile/debug routes share controllers across Bash and native PowerShell. Startup
+measurement uses native adapters: Zsh additionally provides filename-only source
+entry discovery; Bash/PowerShell cover instrumented Dots phases and modules.
+PowerShell rejects POSIX `--login`. Native Windows uses Job Objects for child
+ownership and requires separate PowerShell 5.1/7 acceptance; no Bash dependency
+is introduced. See [debugging](debug.md).
+
+File catalog identities now match their platform names: `termux` and `windows`. This rename does not change Windows application destinations or combine Windows/WSL state. All native shell adapters clear retired Dots Ruby exports and completion PATH entries; native Windows PowerShell 5.1/7 and Xonsh execution remain pending on this Termux host. See [retired environment](shell-environment.md#retired-ruby-environment).
+
+The wiki uses shared Python controllers for Bash and native PowerShell. Native Windows has its own checkout path via HOME/USERPROFILE or `DOTS_WIKI_DIR`; no WSL path translation is performed. Atomic acquisition uses Windows no-replace rename or Linux/Termux renameat2. Unsupported acquisition platforms refuse publication of the clone; read/generate operations remain portable. Native Windows PowerShell 5.1/7 and hosted wiki rendering remain separate acceptance gates.

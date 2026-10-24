@@ -118,7 +118,7 @@ def connectors(themes):
 def generated_commands(themes, out):
     directory = out / 'commands'
     (directory / 'bin').mkdir(parents=True)
-    reserved = set('themes env theme dots anodize current_theme help list current dir show color colors init set refresh switcher install update remove bg plugin plugins summary'.split())
+    reserved = set('themes env theme dots anodize current_theme help list current dir show color colors init set refresh switcher install update remove bg plugin plugins files summary'.split())
     names = sorted((set(themes.families()) | set(themes.ids())) - reserved)
     for name in names:
         if not ID.fullmatch(name): raise ValueError('unsafe generated command name')
@@ -419,8 +419,11 @@ def family(themes, name, args):
 
 def main(argv=None):
     args = list(sys.argv[1:] if argv is None else argv)
-    themes = Themes()
     action = args.pop(0) if args else 'summary'
+    if action == 'files':
+        from inspection import main as inspect_files
+        return inspect_files(args)
+    themes = Themes()
     verbose = any(a in ('-v','--verbose') for a in args)
     if action in ('set','refresh','switcher'):
         args = [a for a in args if a not in ('-v','--verbose')]

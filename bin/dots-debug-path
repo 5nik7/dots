@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Explain PATH order and executable shadowing
+# dots:usage=[COMMAND] [--json]
+# dots:option=--json||flag|Print versioned JSON
+# dots:argument=1|string|Executable name to locate
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" path "$@"

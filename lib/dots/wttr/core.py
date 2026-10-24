@@ -149,7 +149,7 @@ def geo_helper():
     if not (os.environ.get('TERMUX_VERSION') or 'com.termux' in os.environ.get('PREFIX', '')):
         return None
     found = shutil.which('termux-geo')
-    adjacent = ROOT / 'androidots/bin/termux-geo'
+    adjacent = ROOT / 'profiles/termux/bin/termux-geo'
     return found or (str(adjacent) if adjacent.is_file() else None)
 
 

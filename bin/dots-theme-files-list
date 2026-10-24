@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# dots:summary=List generated theme files and their consumers
+# dots:usage=[--app APP] [--json]
+# dots:option=--app||theme-app|Filter by application
+# dots:option=--json||flag|Emit versioned JSON
+root=$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd) || exit
+export DOTS=${DOTS:-$root}
+source "$root/lib/dots/shell/config.bash"
+_dots_config_load || exit
+export DOTS_COLOR=${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}
+export DOTS_ICONS=${DOTS_ICONS:-${dots_options[DOTS_ICONS]:-auto}}
+exec python3 -B "$root/lib/dots/themes/inspection.py" list "$@"

@@ -19,10 +19,10 @@ class LocalCompletions(unittest.TestCase):
             getattr(self.fixture, n) for n in ('root', 'repo', 'home', 'env'))
         self.env['DOTS_TERMUX_AUTOSTART'] = '0'
         self.env['TERMUX_VERSION'] = 'fixture'
-        android = self.repo / 'androidots'
+        android = self.repo / 'profiles/termux'
         (android / 'bin').mkdir(parents=True)
-        shutil.copy2(REPO / 'androidots/bin/termux-geo', android / 'bin/termux-geo')
-        shutil.copytree(REPO / 'androidots/lib/termux_geo', android / 'lib/termux_geo')
+        shutil.copy2(REPO / 'profiles/termux/bin/termux-geo', android / 'bin/termux-geo')
+        shutil.copytree(REPO / 'profiles/termux/lib/termux_geo', android / 'lib/termux_geo')
         p = subprocess.run([str(android / 'bin/termux-geo'), 'completion', '--all', '--install'],
                            env=self.env, capture_output=True, text=True, timeout=10)
         self.assertEqual(p.returncode, 0, p.stderr)
@@ -45,7 +45,7 @@ declare -A dots_options
 BASH_COMPLETION_USER_DIR="$HOME/custom one:$HOME/custom two"
 source "$DOTS/shells/bash/core/completion.bash"
 source "$DOTS/shells/bash/core/completion.bash"
-[[ $BASH_COMPLETION_USER_DIR == "$HOME/custom one:$HOME/custom two:$DOTS/androidots/shells/bash" ]] || exit 1
+[[ $BASH_COMPLETION_USER_DIR == "$HOME/custom one:$HOME/custom two:$DOTS/profiles/termux/shells/bash" ]] || exit 1
 _dots_bash_tool_completion termux-geo || exit 2
 complete -p termux-geo || exit 3
 COMP_WORDS=(termux-geo --provider g); COMP_CWORD=2
@@ -60,7 +60,7 @@ DOTS_PLATFORM=termux
 source "$DOTS/bin/lib/common.sh"
 declare -A dots_options
 source "$DOTS/shells/bash/core/completion.bash"
-[[ $BASH_COMPLETION_USER_DIR == "$XDG_DATA_HOME/bash-completion:$DOTS/androidots/shells/bash" ]] || exit 1
+[[ $BASH_COMPLETION_USER_DIR == "$XDG_DATA_HOME/bash-completion:$DOTS/profiles/termux/shells/bash" ]] || exit 1
 DOTS_PLATFORM=linux
 BASH_COMPLETION_USER_DIR="$HOME/custom"
 _dots_bash_local_completion_path
@@ -79,8 +79,8 @@ source "$DOTS/shells/bash/core/completion.bash"
         self.shell('zsh', r'''
 source "$DOTS/shells/zsh/platforms/termux.zsh"
 source "$DOTS/shells/zsh/platforms/termux.zsh"
-[[ ${fpath[1]} == "$DOTS/androidots/shells/zsh/completions" ]] || exit 1
-local -a matches=("${(@M)fpath:#$DOTS/androidots/shells/zsh/completions}")
+[[ ${fpath[1]} == "$DOTS/profiles/termux/shells/zsh/completions" ]] || exit 1
+local -a matches=("${(@M)fpath:#$DOTS/profiles/termux/shells/zsh/completions}")
 (( ${#matches} == 1 )) || exit 2
 autoload -Uz compinit
 compinit -D
@@ -92,10 +92,10 @@ autoload +X _termux-geo || exit 4
         p = self.shell('fish', r'''
 source "$DOTS/shells/fish/init.fish"
 source "$DOTS/shells/fish/init.fish"
-set -l android_index (contains -i -- "$DOTS/androidots/shells/fish/completions" $fish_complete_path)
+set -l android_index (contains -i -- "$DOTS/profiles/termux/shells/fish/completions" $fish_complete_path)
 set -l repo_index (contains -i -- "$DOTS/shells/fish/completions" $fish_complete_path)
 test -n "$android_index"; and test "$android_index" -lt "$repo_index"; or exit 1
-test (count (string match -- "$DOTS/androidots/shells/fish/completions" $fish_complete_path)) -eq 1; or exit 2
+test (count (string match -- "$DOTS/profiles/termux/shells/fish/completions" $fish_complete_path)) -eq 1; or exit 2
 complete -C 'termux-geo get post'
 ''')
         self.assertIn('postcode', p.stdout)
@@ -107,18 +107,18 @@ complete -C 'termux-geo get post'
         for interactive in (True, False):
             self.shell('fish', r'''
 source "$DOTS/shells/fish/init.fish"
-not contains -- "$DOTS/androidots/shells/fish/completions" $fish_complete_path
+not contains -- "$DOTS/profiles/termux/shells/fish/completions" $fish_complete_path
 ''', interactive=interactive)
 
     def test_missing_androidots_does_not_register_paths(self):
-        shutil.rmtree(self.repo / 'androidots')
+        shutil.rmtree(self.repo / 'profiles/termux')
         self.shell('zsh', r'''
 source "$DOTS/shells/zsh/platforms/termux.zsh"
-[[ ${fpath[(Ie)$DOTS/androidots/shells/zsh/completions]} == 0 ]]
+[[ ${fpath[(Ie)$DOTS/profiles/termux/shells/zsh/completions]} == 0 ]]
 ''')
         self.shell('fish', r'''
 source "$DOTS/shells/fish/init.fish"
-not contains -- "$DOTS/androidots/shells/fish/completions" $fish_complete_path
+not contains -- "$DOTS/profiles/termux/shells/fish/completions" $fish_complete_path
 ''')
 
 

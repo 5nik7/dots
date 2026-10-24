@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Inspect available platform profiles
+# dots:usage=[SUBCOMMAND] [OPTIONS]
+# dots:option=--json||flag|Print structured profile information
+# dots:option=--verbose|-v|flag|Show additional resolution evidence
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/profiles.py" profiles "$@"

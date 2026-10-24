@@ -103,6 +103,10 @@ def complete(root, directories, words):
             for value in kind[7:].split(','): add(value)
         elif kind in ('file', 'directory'):
             suggestions.append((kind, '', ''))
+        elif kind in ('wiki-page','wiki-section'):
+            from wiki import Reader, manifest
+            pages=manifest(Reader(root))['pages']
+            for value in dict.fromkeys(row['id' if kind=='wiki-page' else 'section'] for row in pages): add(value)
         elif kind in ('file-resource', 'file-repository'):
             sys.path.insert(0, str(LIB / 'files'))
             from catalog import Catalog, platform
@@ -114,18 +118,28 @@ def complete(root, directories, words):
                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
             if result.returncode == 0:
                 for value in result.stdout.splitlines(): add(value)
+        elif kind == 'profile-id':
+            from profiles import available
+            for row in available(root): add(row['id'])
         elif kind == 'dots-setting':
-            for filename in ('settings.tsv', 'paths.tsv'):
-                for line in (LIB / 'shell' / filename).read_text().splitlines():
-                    key = line.split('\t')[0]
-                    if key != '-': add(key)
-            for key in ('DOTS_CONFIG_FILE', 'DOTS_STATE_DIR', 'DOTS_THEME_ID'): add(key)
+            from environment import inspect
+            for key in inspect(root)['values']: add(key)
         elif kind in ('anodize-theme', 'anodize-user-theme'):
             from file_platform import config_root
             base = Path(os.environ.get('DOTHEMES') or os.environ.get('THEMES') or root / 'themes')
             if kind == 'anodize-user-theme': base = config_root() / 'dots/themes'
             for item in sorted(set([*base.glob('*/anodize.json'), *(config_root() / 'dots/themes').glob('*/anodize.json')])):
                 if not item.is_symlink(): add(item.parent.name)
+        elif kind in ('theme-file', 'theme-app'):
+            sys.path.insert(0, str(LIB / 'themes'))
+            import inspection
+            if kind == 'theme-file':
+                names = [r['id'] for r in inspection.Inspection().inventory(connections=False)['artifacts']]
+            else:
+                names = {r[0] for r in inspection.registry()} | {'codex', 'pi', 'termux', 'managed'}
+                names.update(a for values in inspection.CONSUMERS.values() for a, _, _ in values)
+            for name in sorted(names):
+                if not any(ord(c) < 32 or ord(c) == 127 for c in name): add(name)
         elif kind == 'theme-plugin':
             sys.path.insert(0, str(LIB / 'themes'))
             import plugins
@@ -293,6 +307,11 @@ def main(argv=None):
             raise ValueError('Usage: dots completion bash|zsh|fish|powershell')
         print((LIB / 'completion' / args[1]).read_text(), end='')
         return 0
+    if args[:2] == ['init', '--bootstrap']:
+        if len(args) != 3: raise ValueError('Usage: dots init --bootstrap bash|zsh|powershell')
+        from bootstrap_snippet import snippet
+        print(snippet(args[2]), end='')
+        return 0
     if args[:2] == ['init', '--setup']:
         return controller('files/install.py', ['install', *args[2:]])
     if args[0] == 'init':
@@ -355,6 +374,10 @@ def main(argv=None):
     if parts[0] in ('anodize', 'theme', 'themes') and sys.version_info < (3, 11):
         raise ValueError('theme and Anodize commands require Python 3.11 or newer')
     if parts[0] == 'anodize': return controller('anodize/cli.py', [*parts[1:], *rest])
+    if parts[0] in ('profile', 'profiles'): return controller('profiles.py', [*parts, *rest])
+    if parts[0] == 'wiki': return controller('wiki.py', [*parts[1:], *rest])
+    if parts[:2] == ['git','wiki']: return controller('wiki_git.py', [*parts[2:], *rest])
+    if parts[0] == 'debug': return controller('debug_cli.py', [*parts[1:], *rest])
     if parts[0] == 'env': return controller('environment.py', rest)
     if parts[0] == 'git':
         if parts[1:] == ['submodule']:
@@ -366,6 +389,7 @@ def main(argv=None):
             return controller('git/cli.py', ['submodules-publish', *rest])
         return controller('git/cli.py', [*parts[1:], *rest])
     if parts[0] in ('theme', 'themes'):
+        if parts[1:2] == ['files']: return controller('themes/inspection.py', [*parts[2:], *rest])
         if parts[1:2] == ['colors']: return controller('themes/file-colors.py', [*parts[2:], *rest])
         if parts[1:2] == ['plugins'] and len(parts) > 2: return controller('themes/plugins.py', [*parts[2:], *rest])
         return controller('themes/theme_cli.py', [*parts[1:], *rest])

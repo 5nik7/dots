@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# dots:summary=Synchronize only the wiki repository
+# dots:usage=[OPTIONS]
+# dots:option=--directory|-C|directory|Repository or subtree directory
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--full-paths||flag|Show absolute human paths
+# dots:option=--dry-run||flag|Local preview without changes or network
+# dots:option=--remote||flag|Advance to configured submodule branches
+# dots:option=--init||flag|Permit initializing missing submodules
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki_git.py" sync "$@"

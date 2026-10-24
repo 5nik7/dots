@@ -18,6 +18,7 @@ from progress import configure, tracked
 from resources import Resources, wrap as resource_wrap, cells as resource_cells
 from file_platform import permissions, sync_dir, open_nofollow, lock as lock_file
 from interaction import SelectionEnded
+from identities import canonical, document as canonical_document, validate_cli
 
 ID = re.compile(r"^[a-z][a-z0-9_-]*$")
 PLATFORMS = {"termux", "linux", "wsl", "windows"}
@@ -271,13 +272,8 @@ def relative(value):
 
 
 def platform():
-    if os.name == "nt":
-        return "windows"
-    if os.environ.get("TERMUX_VERSION") and os.environ.get("PREFIX", "").endswith("/usr"):
-        return "termux"
-    if os.environ.get("WSL_DISTRO_NAME") or "microsoft" in os.uname().release.lower():
-        return "wsl"
-    return "linux"
+    from platform_info import detect
+    return detect()['platform']
 
 
 def atomic_json(path, data):
@@ -305,7 +301,20 @@ class Catalog:
         self.platform = selected
         self.sources = []
         seen = set()
-        for row in read_json(self.root / ".dots/sources.json").get("sources", []):
+        source_rows = read_json(self.root / ".dots/sources.json").get("sources", [])
+        from profiles import resolve
+        from platform_info import detect
+        facts = detect()
+        if facts['platform'] != selected:
+            facts = dict(facts, platform=selected, distro=selected, family=[])
+        known_paths = {(self.root / row['path']).resolve() for row in source_rows}
+        for layer in resolve(self.root, facts)['layers']:
+            path = Path(layer['root'])
+            if path.resolve() not in known_paths and (path / '.dots/files.json').is_file():
+                doc = read_json(path / '.dots/files.json')
+                source_rows.append(dict(id=doc.get('repository'), path=str(path.relative_to(self.root)), platforms=[selected], roots=['config','bin','scripts','shells'], bundled=True, profile=layer['id']))
+        for row in source_rows:
+            row = dict(row, id=canonical(row['id']))
             if not ID.fullmatch(row["id"]) or row["id"] in seen:
                 raise ValueError("duplicate or invalid repository ID")
             seen.add(row["id"])
@@ -330,8 +339,9 @@ class Catalog:
         doc = self.manifests.get(source['id'])
         if doc is None:
             doc = read_json(Path(source["root"]) / ".dots/files.json")
-        if doc.get("repository") != source["id"] or not isinstance(doc.get("resources"), list):
+        if canonical(doc.get("repository")) != canonical(source["id"]) or not isinstance(doc.get("resources"), list):
             raise ValueError("catalog repository identity mismatch")
+        doc = canonical_document(doc)
         seen = set()
         for row in doc["resources"]:
             if not ID.fullmatch(row.get("id", "")) or row["id"] in seen:
@@ -407,12 +417,15 @@ class Catalog:
                 continue
             for item in self.manifest(source)["resources"]:
                 row = dict(item)
+                inherited_linux = self.platform == 'wsl' and source.get('profile', '').split('/')[0] == 'linux'
+                if inherited_linux and 'linux' in row['platforms']:
+                    row['platforms'] = list(dict.fromkeys([*row['platforms'], 'wsl']))
                 row.setdefault('enabled', True)
                 row.update(id=source["id"] + ":" + item["id"], repository=source["id"], tracked=True)
                 row["source"] = str(Path(source["root"]) / item["source"])
-                row["target_spec"] = item.get('targets', {}).get(self.platform, item.get('target'))
+                row["target_spec"] = item.get('targets', {}).get(self.platform, item.get('targets', {}).get('linux', item.get('target')) if inherited_linux else item.get('target'))
                 row["target"] = self.target(row['target_spec']) if row['target_spec'] else None
-                row["applicable"] = self.applicable(item["platforms"]) and self.applicable(source["platforms"])
+                row["applicable"] = self.applicable(row["platforms"]) and self.applicable(source["platforms"])
                 row["status"] = self.observe(row)
                 result.append(row)
         by_id = {r["id"]: r for r in result}
@@ -587,6 +600,7 @@ def main(argv=None):
     parser.add_argument("--replaces", action="append")
     parser.add_argument("--update", action="store_true")
     args = parser.parse_args(argv)
+    validate_cli(args, parser)
     from interaction import selection_requested as requested
     picking = requested(parser, args, [args.value] if args.value else [], args.action == 'show')
     configure(not args.json and args.action not in ('source', 'target'))

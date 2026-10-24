@@ -1,0 +1,8 @@
+[wsl2]
+guiApplications=true
+nestedVirtualization=false
+debugConsole=false
+
+[experimental]
+autoMemoryReclaim=gradual
+sparseVhd=true

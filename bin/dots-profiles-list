@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# dots:summary=List available profile definitions
+# dots:usage=[OPTIONS]
+# dots:option=--json||flag|Print versioned JSON
+# dots:option=--verbose|-v|flag|Show additional resolution evidence
+# dots:option=--platform||choice:termux,linux,wsl,windows|Filter by platform
+# dots:option=--active||flag|Only active definitions
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/profiles.py" profiles list "$@"

@@ -6,6 +6,6 @@
 # dots:option=--yes||flag|Approve the plan without prompting
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--update||flag|Fast-forward clean sources before setup
-# dots:option=--with-source||choice:androidots,windots,nvim|Initialize a named public source
+# dots:option=--with-source||choice:termux,windows,nvim|Select a bundled platform source or initialize nvim
 FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
 exec python3 -B "$FILES_LIB/install.py" install "$@"

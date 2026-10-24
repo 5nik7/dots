@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=List wiki pages and navigation sections
+# dots:usage=[--section NAME] [--json]
+# dots:option=--section||wiki-section|Navigation section
+# dots:option=--json||flag|Emit versioned JSON
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki.py" list "$@"

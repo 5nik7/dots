@@ -1187,7 +1187,7 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
         shutil.copytree(ROOT/'lib/dots',fixture/'lib/dots',ignore=shutil.ignore_patterns('__pycache__'))
         (fixture/'config/wttr').mkdir(parents=True)
         shutil.copy2(self.path,fixture/'config/wttr/config.toml')
-        provider=fixture/'androidots/bin/termux-geo';provider.parent.mkdir(parents=True)
+        provider=fixture/'profiles/termux/bin/termux-geo';provider.parent.mkdir(parents=True)
         provider.write_text('#!'+sys.executable+'\nimport sys\nassert sys.argv[1:]==["--json","--max-age","86400","--cached"]\nprint(\'{"version":1,"city":"Test Town"}\')\n')
         provider.chmod(0o700)
         calls=self.home/'fetch-calls'

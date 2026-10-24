@@ -1,15 +1,15 @@
 _dots_tool_completions() {
-  (( $+commands[uv] )) && _dots_source_generated uv uv generate-shell-completion zsh
-  (( $+commands[uvx] )) && _dots_source_generated uvx uvx --generate-shell-completion zsh
-  (( $+commands[starship] )) && _dots_source_generated starship starship completions zsh
-  (( $+commands[pip] )) && eval "$(pip completion --zsh)"
+  (($+commands[uv])) && _dots_source_generated uv uv generate-shell-completion zsh
+  (($+commands[uvx])) && _dots_source_generated uvx uvx --generate-shell-completion zsh
+  (($+commands[starship])) && _dots_source_generated starship starship completions zsh
+  (($+commands[pip])) && eval "$(pip completion --zsh)"
   return 0
 }
 
 # Reapply ordinary environment/local files on reload. Stateful activations run
 # once when their tool is available; newly installed tools can activate on rl.
 so "$HOME/.cargo/env"
-so "$DOTSHHHH/secrets.sh"
+_dots_hook_source "$DOTSHHHH/secrets.sh" private-tools 1
 PYTHONSTARTUP="$HOME/.pythonrc"
 [[ -r $PYTHONSTARTUP ]] && export PYTHONSTARTUP
 typeset -gA _DOTS_TOOL_READY
@@ -42,10 +42,6 @@ if has tv && [[ -z ${_DOTS_TOOL_READY[tv]:-} ]]; then
   eval "$(tv init zsh)"
   _DOTS_TOOL_READY[tv]=1
 fi
-if has mise && [[ -z ${_DOTS_TOOL_READY[mise]:-} ]]; then
-  eval "$(mise activate zsh)"
-  _DOTS_TOOL_READY[mise]=1
-fi
 if [[ -d "$HOME/.bun" && -z ${_DOTS_TOOL_READY[bun]:-} ]]; then
   export BUN_INSTALL="$HOME/.bun"
   prepath "$BUN_INSTALL/bin"
@@ -58,10 +54,9 @@ if [[ -d $NVM_DIR && -z ${_DOTS_TOOL_READY[nvm]:-} ]]; then
   so "$NVM_DIR/bash_completion"
   _DOTS_TOOL_READY[nvm]=1
 fi
-RBENV="$HOME/.rbenv/bin/rbenv"
-if [[ -x $RBENV && -z ${_DOTS_TOOL_READY[rbenv]:-} ]]; then
-  eval "$("$RBENV" init - --no-rehash zsh)"
-  _DOTS_TOOL_READY[rbenv]=1
+if has mise && [[ -z ${_DOTS_TOOL_READY[mise]:-} ]]; then
+  eval "$(mise activate zsh)"
+  _DOTS_TOOL_READY[mise]=1
 fi
 _dots_tool_completions
 has ipinfo && complete -o default -C "${commands[ipinfo]}" ipinfo

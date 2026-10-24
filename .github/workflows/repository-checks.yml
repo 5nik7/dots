@@ -3,10 +3,10 @@ name: Repository checks
 on:
   push:
     branches: [main]
-    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.github/workflows/repository-checks.yml']
+    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.dots/wiki.json', 'bin/dots*', 'lib/dots/wiki*.py', 'lib/dots/command_metadata.py', 'tools/test_wiki*.py', '.github/workflows/repository-checks.yml']
   pull_request:
     branches: [main]
-    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.github/workflows/repository-checks.yml']
+    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.dots/wiki.json', 'bin/dots*', 'lib/dots/wiki*.py', 'lib/dots/command_metadata.py', 'tools/test_wiki*.py', '.github/workflows/repository-checks.yml']
 
 permissions:
   contents: read
@@ -29,6 +29,10 @@ jobs:
           persist-credentials: false
       - name: Documentation checker regressions
         run: python -B tools/test_verify_docs.py
+      - name: Wiki generation regressions
+        run: python -B tools/test_wiki.py
+      - name: Wiki source consistency
+        run: python -B lib/dots/wiki.py check --source-only
       - name: Documentation links
         run: python -B tools/verify_docs.py
       - name: Whitespace

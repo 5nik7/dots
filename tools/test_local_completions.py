@@ -13,6 +13,7 @@ class LocalCompletions(unittest.TestCase):
         self.fixture.minimal_tools()
         self.repo, self.home, self.env = (
             getattr(self.fixture, name) for name in ('repo', 'home', 'env'))
+        (self.home / '.local/bin').mkdir(parents=True, exist_ok=True)
         self.env['DOTS_TERMUX_AUTOSTART'] = '0'
         self.env['DOTS_ZSH_SUGGESTIONS'] = 'none'
         self.env['XDG_DATA_HOME'] = str(self.home / '-data space ü [1]')
@@ -82,7 +83,7 @@ source "$DOTS/shells/bash/core/completion.bash"
 
     def test_bash_custom_local_android_order_and_lazy_loading(self):
         local = Path(self.env['XDG_DATA_HOME']) / 'bash-completion'
-        android = self.repo / 'androidots/shells/bash'
+        android = self.repo / 'profiles/termux/shells/bash'
         custom = self.home / 'custom space ü [1]'
         for directory, value in ((custom, 'custom'), (local, 'local'), (android, 'android')):
             self.write(directory / 'completions/dots-local-probe.bash',
@@ -90,11 +91,11 @@ source "$DOTS/shells/bash/core/completion.bash"
                        'complete -F _dots_local_probe dots-local-probe\n')
         self.shell('bash', r'''
 DOTS_PLATFORM=termux
-BASH_COMPLETION_USER_DIR="$DOTS/androidots/shells/bash:$HOME/custom space ü [1]:$HOME/custom space ü [1]"
+BASH_COMPLETION_USER_DIR="$DOTS/profiles/termux/shells/bash:$HOME/custom space ü [1]:$HOME/custom space ü [1]"
 ''' + self.bash_setup() + r'''
 before=$BASH_COMPLETION_USER_DIR
 source "$DOTS/shells/bash/core/completion.bash"
-[[ $BASH_COMPLETION_USER_DIR == "$HOME/custom space ü [1]:$XDG_DATA_HOME/bash-completion:$DOTS/androidots/shells/bash" ]] || exit 1
+[[ $BASH_COMPLETION_USER_DIR == "$HOME/custom space ü [1]:$XDG_DATA_HOME/bash-completion:$DOTS/profiles/termux/shells/bash" ]] || exit 1
 [[ $BASH_COMPLETION_USER_DIR == "$before" ]] || exit 2
 _dots_bash_tool_completion dots-local-probe || exit 3
 _dots_local_probe; [[ ${COMPREPLY[*]} == custom ]] || exit 4
@@ -124,7 +125,7 @@ _dots_bash_completion_base || exit 1
     def test_fish_discovery_user_config_vendor_repository_order(self):
         config = Path(self.env['XDG_CONFIG_HOME']) / 'fish/completions'
         vendor = Path(self.env['XDG_DATA_HOME']) / 'fish/vendor_completions.d'
-        android = self.repo / 'androidots/shells/fish/completions'
+        android = self.repo / 'profiles/termux/shells/fish/completions'
         repo = self.repo / 'shells/fish/completions'
         for directory, value in ((config, 'config'), (vendor, 'vendor'),
                                  (android, 'android'), (repo, 'repository')):
@@ -146,7 +147,7 @@ source "$DOTS/shells/fish/init.fish"
 test (count $fish_complete_path) -eq 5; or exit 1
 test "$fish_complete_path[1]" = "$XDG_CONFIG_HOME/fish/completions"; or exit 2
 test "$fish_complete_path[2]" = "$XDG_DATA_HOME/fish/vendor_completions.d"; or exit 3
-test "$fish_complete_path[3]" = "$DOTS/androidots/shells/fish/completions"; or exit 4
+test "$fish_complete_path[3]" = "$DOTS/profiles/termux/shells/fish/completions"; or exit 4
 test "$fish_complete_path[4]" = "$DOTS/shells/fish/completions"; or exit 5
 test "$fish_complete_path[5]" = "$HOME/system completions"; or exit 6
 test (string join : -- $fish_complete_path) = (string join : -- $before); or exit 7

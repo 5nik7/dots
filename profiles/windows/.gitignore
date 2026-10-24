@@ -1,0 +1,54 @@
+### AL ###
+#Template for AL projects for Dynamics 365 Business Central
+#launch.json folder
+.vscode/
+#Cache folder
+.alcache/
+#Symbols folder
+.alpackages/
+#Snapshots folder
+.snapshots/
+#Testing Output folder
+.output/
+#Extension App-file
+*.app
+#Rapid Application Development File
+rad.json
+#Translation Base-file
+*.g.xlf
+#License-file
+*.flf
+#pslab
+lab/
+#clinky
+**/clink_errorlevel*
+**/clink_history*
+#backup files
+*.bak
+#log
+*.log
+
+**/yasb.log*
+
+#llazy-lock.json
+**/lazy-lock.json
+
+# Build and Release Folders
+bin-debug/
+bin-release/
+[Oo]bj/
+[Bb]in/
+
+# Other files and folders
+.settings/
+
+# Executables
+*.swf
+*.air
+*.ipa
+*.apk
+
+**/FPilot-UserData.json
+
+# File catalog write locks
+.dots/*.lock

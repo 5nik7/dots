@@ -104,7 +104,7 @@ def main(argv=None):
             raise ValueError("invalid arguments")
         # Directory-linked configs resolve back to the checkout. No PATH search,
         # import of private script internals, or submodule initialization.
-        script = Path(__file__).resolve().parents[2] / "androidots/bin/termux-sessions"
+        script = Path(__file__).resolve().parents[2] / "profiles/termux/bin/termux-sessions"
         result = subprocess.run(
             [sys.executable, "-B", str(script), "--json"],
             capture_output=True, text=True, timeout=1, check=True,

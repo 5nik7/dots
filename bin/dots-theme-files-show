@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# dots:summary=Preview highlighted theme text, directory contents or current source
+# dots:usage=FILE [--source] [--raw]
+# dots:argument=1|theme-file|Generated file identifier
+# dots:option=--source||flag|Read the source for next refresh
+# dots:option=--raw||flag|Emit exact accepted regular-file text bytes
+root=$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd) || exit
+export DOTS=${DOTS:-$root}
+source "$root/lib/dots/shell/config.bash"
+_dots_config_load || exit
+export DOTS_COLOR=${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}
+export DOTS_ICONS=${DOTS_ICONS:-${dots_options[DOTS_ICONS]:-auto}}
+exec python3 -B "$root/lib/dots/themes/inspection.py" show "$@"

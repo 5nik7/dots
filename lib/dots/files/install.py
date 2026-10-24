@@ -24,7 +24,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from interaction import gum_confirm
 from progress import Progress, configure
 
-PUBLIC_SOURCES = ('androidots', 'windots', 'nvim')
+from identities import canonical, current_source
+
+PUBLIC_SOURCES = ('termux', 'windows', 'nvim')
 
 
 @contextmanager
@@ -81,6 +83,10 @@ class Installation:
     def __init__(self, root):
         self.root = Path(root).resolve()
         self.platform = platform()
+        from platform_info import detect
+        context = detect()
+        if context['platform'] == 'windows' and context['runtime'] != 'native':
+            raise ValueError('Windows setup requires native Windows Python; MSYS/Cygwin supports inspection only')
         self.state = state_root()
         self.store = Store(self.state)
         self.receipt_path = self.state / 'installation.json'
@@ -100,6 +106,7 @@ class Installation:
         self.items = []
         self.theme_notice = ''
         self.entries = copy.deepcopy(self.receipt['entries'])
+        for entry in self.entries.values(): entry['id'] = canonical(entry['id'])
         self.theme = None
         self.blocked = False
         self.transaction = uuid.uuid4().hex
@@ -402,9 +409,10 @@ def protect_ignored(root, target):
 def source_plan(root, args):
     if not args.update and not args.with_source:
         return []
-    if not shutil.which('git'):
-        raise ValueError('Git is required for --update and --with-source')
     catalog = Catalog(root, platform())
+    bundled = {row['id'] for row in catalog.sources if row.get('bundled')}
+    if (args.update or set(args.with_source) - bundled) and not shutil.which('git'):
+        raise ValueError('Git is required to update or acquire sources')
     result = []
     if args.update:
         if git(root, 'status', '--porcelain', '--untracked-files=normal'):
@@ -418,6 +426,10 @@ def source_plan(root, args):
                            head=git(root, 'rev-parse', 'HEAD')))
     for source in catalog.sources:
         if source['id'] not in PUBLIC_SOURCES or platform() not in source['platforms']:
+            continue
+        if source.get('bundled'):
+            if source['id'] in args.with_source:
+                result.append(dict(id=source['id'], root=source['root'], status='bundled'))
             continue
         path = Path(source['root'])
         initialized = (path / '.git').exists()
@@ -437,6 +449,7 @@ def source_plan(root, args):
 
 def update_sources(root, rows):
     for row in rows:
+        if row.get('status') == 'bundled': continue
         path = Path(row['root'])
         if row['id'] == 'dots':
             gitdir = Path(git(root, 'rev-parse', '--absolute-git-dir'))
@@ -485,7 +498,7 @@ def main(argv=None):
     parser.add_argument('--yes', action='store_true', help='approve the displayed plan without prompting')
     parser.add_argument('--json', action='store_true', help='emit a schema-1 result')
     parser.add_argument('--update', action='store_true', help='fast-forward the clean checkout before planning setup')
-    parser.add_argument('--with-source', action='append', default=[], choices=PUBLIC_SOURCES)
+    parser.add_argument('--with-source', action='append', default=[], type=current_source, choices=PUBLIC_SOURCES)
     parser.add_argument('--color', choices=('auto', 'always', 'never'))
     parser.add_argument('--icons', choices=('auto', 'always', 'never'))
     raw = list(sys.argv[1:] if argv is None else argv)

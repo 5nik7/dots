@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib/dots/files'))
 from mappings import MappingPlan, render
 from catalog import platform
+from identities import canonical
 from progress import Progress, configure
 
 OLD_ENTRY = '[include]\n  path = gitconfig\n  path = ~/.config/git-termux/config\n'
@@ -50,7 +51,7 @@ def migration_plan():
     if overlay.is_symlink() or not overlay.is_file():
         raise ValueError('move the Termux settings into config/git/termux before migrating')
     # Catalog retirement is part of the same transaction as historical links.
-    android = plan.documents.get('androidots')
+    android = plan.documents.get('termux')
     if android:
         rows = [r for r in android['resources'] if r['id'] == 'git']
         if rows and (rows[0]['source'] not in ('config/git/gitconfig', 'config/git/termux')
@@ -58,9 +59,10 @@ def migration_plan():
             raise ValueError('Android Git mapping changed; review manually')
         android['resources'] = [r for r in android['resources'] if r['id'] != 'git']
         if rows:
-            plan.rows.append(dict(id='androidots:git', status='retire', target=str(plan.paths['androidots']),
+            plan.rows.append(dict(id='termux:git', status='retire', target=str(plan.paths['termux']),
                                   reason='Remove the obsolete Androidots Git resource mapping'))
-    locations = plan.root / 'androidots/.dots/file-locations.json'
+    locations = (plan.paths['termux'].with_name('file-locations.json') if 'termux' in plan.paths
+                 else plan.root / 'androidots/.dots/file-locations.json')
     plan.install.guard(locations)
     location_changed = False
     if locations.exists():
@@ -72,17 +74,18 @@ def migration_plan():
                             or r['source'] not in ('config/git/gitconfig', 'config/git/termux') for r in obsolete):
             raise ValueError('Android Git import mapping changed; review manually')
         if obsolete:
+            doc['repository'] = canonical(doc['repository'])
             doc['locations'] = [r for r in doc['locations'] if r['id'] != 'git']
             plan.operation(locations, data=doc)
             location_changed = True
-            plan.rows.append(dict(id='androidots:git', status='retire', target=str(locations),
+            plan.rows.append(dict(id='termux:git', status='retire', target=str(locations),
                                   reason='Remove the obsolete Git import mapping'))
     legacy = (home / '.gitconfig', home / '.config/git-termux/config')
     known_sources = (plan.root / 'androidots/config/git/gitconfig', plan.root / 'androidots/config/git/termux')
     for target in legacy:
         plan.install.guard(target)
         owned = plan.install.entries.get(str(target))
-        if owned and (owned['id'] != 'androidots:git' or plan.install.guards[str(target)] != owned['after']):
+        if owned and (owned['id'] != 'termux:git' or plan.install.guards[str(target)] != owned['after']):
             raise ValueError('historical Git target changed; preserve and review it')
         if target.exists() or target.is_symlink():
             if not target.is_symlink() or target.resolve() not in [p.resolve() for p in known_sources]:
@@ -91,9 +94,9 @@ def migration_plan():
             plan.live = True
             if owned:
                 owned['after'] = None  # Retain its original recovery baseline.
-            plan.rows.append(dict(id='androidots:git', status='unlink', target=str(target),
+            plan.rows.append(dict(id='termux:git', status='unlink', target=str(target),
                                   reason='Retire the verified legacy Git link'))
-    if any(e['id'] == 'androidots:git' and Path(p) not in legacy for p,e in plan.install.entries.items()):
+    if any(e['id'] == 'termux:git' and Path(p) not in legacy for p,e in plan.install.entries.items()):
         raise ValueError('unknown historical Android Git destination; review manually')
     plan.link(common)
     if entry.read_text() != ENTRY:

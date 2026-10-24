@@ -69,6 +69,8 @@ Read-only means no:
 
 A disposable in-memory representation or rebuildable cache read is acceptable. Cache writes must be designed and described separately so `plan` remains suitable for auditing.
 
+Generated theme-file inspection captures the active generation and observes known application destinations without recovery, publication, application activation or persistent state writes. Verification never launches applications or hooks; terminal text previews may run the optional bounded bat renderer with paging/configuration disabled and the existing captured cache. Supplementary-link discovery reads bounded transaction metadata, never retained backup bodies. Explicit content views use regular-file, symlink, UTF-8, size and possible-credential checks before emitting any bytes; raw output does not bypass these checks. See [theme inspection](themes.md#generated-theme-files).
+
 ## Hooks and External Side Effects
 
 Arbitrary hooks weaken dry-run and rollback guarantees.
@@ -439,3 +441,35 @@ copying preserves the original image.
 Weather refresh writes only a private disposable cache containing the requested location (including coordinates), bounded upstream data and retry/reservation metadata. Background views may spawn a bounded HTTP refresh but use a configured location or read cached geo city/address data only; strict `--cached` never spawns or writes. Foreground automatic refresh may invoke the existing Termux location helper and its reverse-geocoding service. Stock requests use bounded native curl, disable curlrc/globbing, preserve successful response bytes and never populate the weather cache; service pages and moon routes skip location. It does not change permissions, install dependencies or modify Android provider gates. Completion installation is explicit, preflights all targets and uses the shared Store transaction/backup/drift/undo contracts. It never changes shell profiles automatically. See [weather recovery](wttr.md#cache-and-recovery).
 
 The Television connector targets only `themes/dots.toml` in an existing resolved app directory. Its missing `themes` child may be created with a durable journal. Bash records creation intent and directory identity, refuses ambiguous recovery or replacement-directory drift, and removes only an empty owned directory; interruption between creation and recording identity requires manual recovery. Native publication uses Store parent creation and rollback. Existing theme files/links retain the usual backup and drift safeguards. No Television process is started by publication.
+
+## Startup preparation and checkout acquisition
+
+Native startup bundles are rebuildable private caches, not managed app files.
+Preparation validates shell syntax and atomically publishes complete generations;
+cache metadata contains no caller environment values. Hook diagnostics store only
+names, provenance and sensitivity, redacting private values at display time.
+
+An explicitly installed bootstrap snippet may acquire a missing checkout through
+a bounded noninteractive clone, sibling staging, process locking, durable status
+journaling and atomic no-replace publication. It never updates an existing
+checkout or installs packages/application configurations. Failed staging is
+retained for inspection. See [bootstrap recovery](profiles.md#missing-checkout-bootstrap).
+
+## Explicit startup diagnostics
+
+`dots debug startup` is read-only unless `--live` or `--isolated` is supplied.
+`--live` explicitly authorizes the child shell's normal startup hooks and their
+usual side effects; it does not promise rollback or sandboxing. `--isolated` and
+curated self-tests use disposable public sources and owned runtime roots. Trace
+channels contain source/timing/status metadata, never expanded commands, private
+contents or environment values. Arbitrary child output is discarded. Diagnostics
+do not source cached guards, rebuild caches during inspection, or execute routes
+to explain resolution. See [debugging](debug.md).
+
+Platform file-ID normalization is an in-memory read step. It must not rewrite receipts or historical journals during inspection or unchanged installation. When an authorized transaction updates a receipt, original backups and drift guards survive the canonical ID change; undo/recovery continue to use the original journal data. See [identity contracts](specification.md#canonical-platform-file-identities).
+
+## Wiki generation and publication
+
+Wiki inspection/source-only checks never acquire repositories or write exports. Explicit builds preflight all source/target guards, refuse generated-file drift, preserve unknown files and use retained common transactions for replacement, removal, rollback and undo. Initial acquisition uses a staging directory, lock and durable journal, with atomic no-replace publication.
+
+Wiki Git operations preserve ordinary ownership/upstream/refspec/lock checks. The associated wiki follows successful source publication and must match the selected source content; wiki-only publication verifies published source evidence. No automatic generation, staging, commit or push is installed. Completed Git work is retained after partial failure.

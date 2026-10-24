@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Explain Dots route resolution without execution
+# dots:usage=[--json] -- ROUTE [ARG ...]
+# dots:option=--json||flag|Print versioned JSON
+# dots:argument=*|string|Dots route after --; never executed
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" command "$@"

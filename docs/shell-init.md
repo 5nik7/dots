@@ -119,13 +119,13 @@ Run the Bash dispatcher and Zsh suites for shared behavior. Startup measurements
 
 ## Termux tmux startup
 
-At the end of Dots Bash/Zsh interactive initialization, `shells/shared/termux-tmux.sh` invokes `androidots/bin/termux-bar --auto` once per outer shell. The hook requires the Termux platform, inherited `TERMUX_APP__PID`, terminal stdin/stdout, and no tmux or SSH context. The launcher verifies that its calling shell is the terminal session leader directly beneath the Termux app process; child shells do not attach. Scripts, redirected shells, Fish and other platforms are unaffected. Reloading configuration after detaching does not reattach.
+At the end of Dots Bash/Zsh interactive initialization, `shells/shared/termux-tmux.sh` invokes `profiles/termux/bin/termux-bar --auto` once per outer shell. The hook requires the Termux platform, inherited `TERMUX_APP__PID`, terminal stdin/stdout, and no tmux or SSH context. The launcher verifies that its calling shell is the terminal session leader directly beneath the Termux app process; child shells do not attach. Scripts, redirected shells, Fish and other platforms are unaffected. Reloading configuration after detaching does not reattach.
 
 Each tab gets a session named internally as `termux-<root-pid>-<start-ticks>`, starting in the caller's directory. A fresh `termux-sessions --get pid --pid ...` query identifies the tab; procfs start time prevents PID reuse from attaching a later tab to an older session. Existing marked sessions are reused without changing their directory or windows. An unmarked name collision is refused. No registry, cache or automatic session cleanup is added.
 
 The launcher uses the existing default tmux server. The session-local `@dots-termux-default=1` option suppresses only the status name badge; the clock/network/battery row and lower-row Termux numbers, windows and mode indicators remain. Other sessions, including projects selected through `t`, keep their names. The internal default name remains visible in tmux's session chooser. Existing session-navigation bindings can return from a project to a default session.
 
-Detaching resumes the outer shell; its bar disappears until reattachment. Run `~/dots/androidots/bin/termux-bar` (or `termux-bar` when androidots/bin is on PATH) to reattach this tab's default session manually. Manual invocation also works in a child shell outside tmux. During automatic attachment, `exit` (including the `q` alias) closes only the current pane until the final pane/window exits. Closing that session then exits the outer shell, even after switching into a project. Termux enables `detach-on-destroy on`, so the client does not switch to another session. Manual `termux-bar` invocation returns to its caller. The launcher captures tmux completion output separately from terminal rendering: only a successful exact `[exited]` response produces internal exit status 20, consumed by the startup hook. Deliberate detach, unknown responses and server failure retain the shell. Detached sessions and their processes are retained, even after a Termux tab closes.
+Detaching resumes the outer shell; its bar disappears until reattachment. Run `~/dots/profiles/termux/bin/termux-bar` (or `termux-bar` when profiles/termux/bin is on PATH) to reattach this tab's default session manually. Manual invocation also works in a child shell outside tmux. During automatic attachment, `exit` (including the `q` alias) closes only the current pane until the final pane/window exits. Closing that session then exits the outer shell, even after switching into a project. Termux enables `detach-on-destroy on`, so the client does not switch to another session. Manual `termux-bar` invocation returns to its caller. The launcher captures tmux completion output separately from terminal rendering: only a successful exact `[exited]` response produces internal exit status 20, consumed by the startup hook. Deliberate detach, unknown responses and server failure retain the shell. Detached sessions and their processes are retained, even after a Termux tab closes.
 
 Set `DOTS_TERMUX_AUTOSTART=0` before initialization to disable automatic startup; manual `termux-bar` still works. Missing dependencies, identity errors or attachment failures leave a usable shell. Python 3, tmux, the sibling `termux-sessions` script and readable procfs are required; no dependency is installed automatically. New tabs load startup changes; existing tmux servers need their normal configuration reload for the layout and session-destruction behavior.
 
@@ -147,6 +147,21 @@ Generic `dots init` hooks retain their integration-only contract, and noninterac
 
 ## Termux local completion directories
 
-Interactive personal Bash/Zsh/Fish startup registers Androidots-local completion directories when the Androidots checkout exists. Zsh adds `$DOTS/androidots/shells/zsh/completions` before its single compinit, with the user-local site-functions directory taking priority. Bash appends the `$DOTS/androidots/shells/bash` base after user bases in `BASH_COMPLETION_USER_DIR` before loading bash-completion. Fish places `$DOTS/androidots/shells/fish/completions` after user-local directories and before repository completions. Repeated startup does not duplicate these entries.
+Interactive personal Bash/Zsh/Fish startup registers Androidots-local completion directories when the bundled Termux profile exists. Zsh adds `$DOTS/profiles/termux/shells/zsh/completions` before its single compinit, with the user-local site-functions directory taking priority. Bash appends the `$DOTS/profiles/termux/shells/bash` base after user bases in `BASH_COMPLETION_USER_DIR` before loading bash-completion. Fish places `$DOTS/profiles/termux/shells/fish/completions` after user-local directories and before repository completions. Repeated startup does not duplicate these entries.
 
 These fixed-path additions neither scan/generate completions nor create directories, execute Android APIs, or install packages. Other platforms and noninteractive startup do not add them. Generic `dots init` hooks retain their integration-only contract. `termux-geo completion --all --install` explicitly creates its files at these locations; see [installation and shell activation](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md#shell-completions). Existing other-command completions remain in place.
+
+## Bundles and missing-checkout bootstrap
+
+Bash/Zsh startup uses prepared native bundles, with lightweight integration and
+full repository-rc modes. PowerShell/Fish prepare native environment adapters.
+`dots init --bootstrap bash|zsh|powershell` prints a standalone bootstrap snippet;
+ordinary `dots init` remains lightweight and its output generation is read-only.
+See [startup preparation](profiles.md#native-startup-bundles) and
+[bootstrap](profiles.md#missing-checkout-bootstrap).
+
+Startup now has opt-in metadata markers for [debug traces](debug.md). Normal
+startup does not open a trace channel or start a tracing process. Generated
+Bash/Zsh bundles preserve original module labels for instrumentation; private
+hooks are observed only at source boundaries. Diagnostic traces do not enable
+command xtrace or persist expanded arguments.

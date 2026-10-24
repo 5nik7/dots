@@ -14,3 +14,5 @@ Check every affected native adapter and old published snapshot fallback. Use too
 Report absent PowerShell/Xonsh native verification explicitly. Do not replace launchers or install interpreters merely to make a check pass.
 
 Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.
+
+When this change affects documentation, follow [documentation maintenance](../dots-documentation-maintenance/SKILL.md), including the generated wiki check.

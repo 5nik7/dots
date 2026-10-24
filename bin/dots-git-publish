@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # dots:summary=Preview and publish children before parents
 # dots:usage=[OPTIONS]
+# dots:option=--no-wiki||flag|Exclude the associated wiki repository
 # dots:option=--directory|-C|directory|Repository or subtree directory
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--full-paths||flag|Show absolute human paths

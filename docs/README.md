@@ -40,3 +40,5 @@ Agents and contributors must begin with [`../AGENTS.md`](../AGENTS.md), then rea
 When implementation changes a documented behavior, update the authoritative document in the same change. When a proposed design becomes real, replace its status label and remove stale caveats.
 
 - [Anodize](anodize.md) — implemented palette authoring, recipe, CLI and publication boundaries.
+
+- [Wiki](wiki.md) — canonical source projection, navigation and associated Git workflow.

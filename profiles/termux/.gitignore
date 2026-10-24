@@ -1,0 +1,9 @@
+#lazyvim
+**/lazy-lock.json
+# log
+*.lgg
+#backup files
+*.bak
+
+# File catalog write locks
+.dots/*.lock

@@ -28,9 +28,9 @@ for directory in "$_dots_fish_config/fish/completions" "$_dots_fish_data/fish/ve
     test ! -d "$directory"; or set -a _dots_completion_paths "$directory"
 end
 # Androidots is optional. Fixed native paths only; never generate on startup.
-if test -d "$DOTS/androidots"
+if test -d "$DOTS/profiles/termux"
     if test -n "$TERMUX_VERSION$TERMUX__PREFIX"; or string match -q '*/com.termux/files/usr' -- "$PREFIX"
-        contains -- "$DOTS/androidots/shells/fish/completions" $_dots_completion_paths; or set -a _dots_completion_paths "$DOTS/androidots/shells/fish/completions"
+        contains -- "$DOTS/profiles/termux/shells/fish/completions" $_dots_completion_paths; or set -a _dots_completion_paths "$DOTS/profiles/termux/shells/fish/completions"
     end
 end
 contains -- "$DOTS/shells/fish/completions" $_dots_completion_paths; or set -a _dots_completion_paths "$DOTS/shells/fish/completions"

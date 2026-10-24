@@ -1,7 +1,7 @@
 # shellcheck disable=SC2034
 # Data-only family index. Built on demand, never during shell startup.
 dt_family_reserved() {
-  case $1 in themes|env|theme|dots|anodize|current_theme|help|list|current|dir|show|color|colors|init|set|refresh|switcher|install|update|remove|bg|plugin|plugins|summary) return 0 ;; *) return 1 ;; esac
+  case $1 in themes|env|theme|dots|anodize|current_theme|help|list|current|dir|show|color|colors|init|set|refresh|switcher|install|update|remove|bg|plugin|plugins|files|summary) return 0 ;; *) return 1 ;; esac
 }
 dt_family_index() {
   local id dir family flavor file key DT_THEME_DIR

@@ -40,7 +40,7 @@ def read(path):
                         if flag:
                             seen.add(flag)
                 kind = fields[2] if key == 'option' else fields[1]
-                allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-repository','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','dots-setting'}
+                allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-repository','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','theme-file','theme-app','dots-setting','profile-id','wiki-page','wiki-section'}
                 if kind not in allowed and not (kind.startswith('choice:') and all(kind[7:].split(','))):
                     raise ValueError('invalid metadata type: ' + kind)
                 if not fields[-1]: raise ValueError('empty metadata description')
@@ -64,7 +64,8 @@ def read(path):
 
 def roots(root, extras=()):
     result = []
-    for path in (Path(root) / 'bin', Path(root) / 'local/bin', *map(Path, extras)):
+    from profiles import command_roots
+    for path in (*command_roots(root), Path(root) / 'bin', Path(root) / 'local/bin', *map(Path, extras)):
         if path.is_dir() and path.resolve() not in [p.resolve() for p in result]:
             result.append(path)
     return result
@@ -90,6 +91,9 @@ def resolve(directories, words):
         stem = '-'.join(prefix[:count])
         found = [p for d in directories for p in candidates(d, stem)]
         if len(found) > 1:
+            from profiles import replaces
+            if replaces(found[0], stem): found = found[:1]
+        if len(found) > 1:
             raise ValueError('duplicate command route: ' + stem.replace('-', ' '))
         if found:
             return stem, found[0], count
@@ -105,6 +109,9 @@ def catalog(directories):
                 stem = stem[:-len(path.suffix)]
             if not ROUTE.fullmatch(stem):
                 continue
+            if stem in rows:
+                from profiles import replaces
+                if replaces(rows[stem]['path'], stem): continue
             if stem.split('-')[0] in RESERVED or stem in rows:
                 raise ValueError('reserved or duplicate command route: ' + stem)
             if not path.is_file():

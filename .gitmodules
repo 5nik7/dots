@@ -1,16 +1,13 @@
-[submodule "androidots"]
-	path = androidots
-	url = https://github.com/5nik7/androidots.git
 [submodule "secrets"]
 	path = secrets
 	url = https://github.com/5nik7/secrets.git
 [submodule "shells/powershell/Modules/catppuccin"]
 	path = shells/powershell/Modules/catppuccin
 	url = https://github.com/catppuccin/powershell.git
-[submodule "windots"]
-	path = windots
-  url = https://github.com/5nik7/windots.git
 [submodule "configs/nvim"]
 	path = config/nvim
 	url = https://github.com/5nik7/nvim.git
 	branch = main
+[submodule "profiles/windows/rainmeter/5ui7e"]
+	path = profiles/windows/rainmeter/5ui7e
+	url = https://github.com/5nik7/5ui7e.git

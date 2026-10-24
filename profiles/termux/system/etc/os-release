@@ -1,0 +1,13 @@
+NAME="Termux"
+PRETTY_NAME="Termux"
+ID=termux
+ID_LIKE=termux
+VERSION="0.119.0-beta.3"
+VERSION_ID="0.119.0-beta.3"
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://termux.dev/"
+DOCUMENTATION_URL="https://wiki.termux.com/"
+SUPPORT_URL="https://github.com/termux/termux-app"
+BUG_REPORT_URL="https://github.com/termux/termux-app"
+LOGO=termux-logo

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "repository": "termux",
+  "locations": [
+    {
+      "id": "termux",
+      "kind": "root",
+      "target": "${TERMUX}",
+      "source": "termux",
+      "platforms": [
+        "termux"
+      ],
+      "exclusions": [
+        "boot/*",
+        "tasker/*"
+      ]
+    }
+  ]
+}

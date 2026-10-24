@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Read a wiki page or canonical source
+# dots:usage=PAGE [--source] [--raw]
+# dots:option=--source||flag|Read the canonical source document
+# dots:option=--raw||flag|Print exact Markdown bytes
+# dots:argument=1|wiki-page|Wiki page ID
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki.py" show "$@"

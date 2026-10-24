@@ -414,6 +414,21 @@ class GitMigration(unittest.TestCase):
         self.assertEqual((self.common/'config').read_text(),migration.OLD_ENTRY)
         self.assertEqual(json.loads((self.android/'.dots/file-locations.json').read_text())['locations'][0]['id'],'git')
 
+    def test_bundled_profile_catalog_with_legacy_compatibility_link(self):
+        import migrate_git_config as migration
+        bundled=self.repo/'profiles/termux';bundled.parent.mkdir()
+        self.android.rename(bundled);self.android.symlink_to(bundled, target_is_directory=True)
+        sources=json.loads((self.repo/'.dots/sources.json').read_text())
+        sources['sources'][-1].update(id='termux',path='profiles/termux',bundled=True)
+        self.f.write('.dots/sources.json',sources)
+        plan=migration.migration_plan();result=plan.apply('git-config-migration')
+        self.assertEqual(json.loads((bundled/'.dots/file-locations.json').read_text())['repository'],'termux')
+        self.assertTrue(self.android.is_symlink())
+        store=Store(self.home/'.state/dots');ops,guards,catalogs=store.inverse(result['id'])
+        store.apply('undo',ops,guards,catalogs=catalogs)
+        self.assertEqual(json.loads((bundled/'.dots/file-locations.json').read_text())['repository'],'androidots')
+        self.assertTrue((self.home/'.gitconfig').is_symlink())
+
     def test_unrelated_old_link_refuses_complete_plan(self):
         import migrate_git_config as migration
         (self.home/'.gitconfig').unlink()
@@ -448,7 +463,7 @@ class GitMigration(unittest.TestCase):
     def test_retired_catalog_does_not_reappear(self):
         import migrate_git_config as migration
         plan=migration.migration_plan();plan.apply('git-config-migration')
-        self.assertFalse(any(r['id']=='androidots:git' for r in Catalog(self.repo,'termux').records()))
+        self.assertFalse(any(r['id']=='termux:git' for r in Catalog(self.repo,'termux').records()))
         install=Installation(self.repo);install.plan_install()
         self.assertFalse(any('git-termux' in op['path'] or op['path']==str(self.home/'.gitconfig') for op in install.operations))
 

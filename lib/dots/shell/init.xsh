@@ -1,9 +1,21 @@
+__xonsh__.env.pop('DOTRUBY', None)
+__xonsh__.env.pop('RUBYCOMP', None)
 # Dots integration only; Xonsh's own rc retains personal configuration.
 from pathlib import Path as _DotsPath
 import importlib.util as _dots_import
 _dots_spec = _dots_import.spec_from_file_location('_dots_runtime', str(_DotsPath($DOTS) / 'lib/dots/shell/runtime.py'))
 _dots_runtime = _dots_import.module_from_spec(_dots_spec)
 exec(compile((_DotsPath($DOTS) / 'lib/dots/shell/runtime.py').read_text(), _dots_spec.origin, 'exec'), _dots_runtime.__dict__)
+# Use Xonsh's Python runtime; no subprocess or shell-code evaluation.
+import sys as _dots_sys
+_dots_sys.path.insert(0, str(_DotsPath($DOTS) / 'lib/dots'))
+from native_environment import exports as _dots_exports
+_dots_profile_environment = _dots_exports(_DotsPath($DOTS), __xonsh__.env.detype())
+__xonsh__.env['PATH'] = _dots_profile_environment['PATH'].split(__import__('os').pathsep)
+for _dots_key, _dots_value in _dots_profile_environment.items():
+    if _dots_key != 'PATH' and (_dots_key.startswith('DOTS_') or not __xonsh__.env.get(_dots_key)):
+        __xonsh__.env[_dots_key] = _dots_value
+
 dots_options, dots_option_sources, _dots_config = _dots_runtime.settings($DOTS, __xonsh__.env)
 dot = {}
 for _dots_line in (_DotsPath($DOTS) / 'lib/dots/shell/paths.tsv').read_text().splitlines():
@@ -86,3 +98,7 @@ if $XONSH_INTERACTIVE:
         return {line.split('\t')[1] for line in result.stdout.splitlines() if line.startswith('candidate\t')}
     __xonsh__.completers.pop('dots', None)
     _dots_add_completer('dots', _dots_complete, 'start')
+
+
+_dots_profile_paths = [p for p in _dots_profile_environment['DOTS_PROFILE_PATHS'].split(__import__('os').pathsep) if p]
+__xonsh__.env['PATH'] = list(dict.fromkeys(_dots_profile_paths + list(__xonsh__.env['PATH'])))

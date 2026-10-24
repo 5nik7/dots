@@ -178,9 +178,21 @@ or bundled Lua overrides are not converted. Move custom color assignments to
 `gum_env.sh.tpl` or `gum_env.sh` using `export NAME='#RRGGBB'` syntax.
 This consumer targets Bash/Zsh; Fish and PowerShell need their own export syntax.
 
-The bundled `bat.tmTheme.tpl` provides 70 syntax rules, including language-specific,
-Markdown and diff scopes. Comments and brackets use `muted`, selection and line
-highlights use `selection`, and diff headers use `blue`. Its rendered `bat.tmTheme`
+The bundled `bat.tmTheme.tpl` adapts 186 Catppuccin reference rules and adds seven
+generic diagnostic/diff fallbacks, covering language-specific, Markdown and diff
+scopes. It preserves reference ordering, explicit style resets and font styles,
+while colors follow the selected Dots palette.
+Comments and punctuation use `muted`, selection and line highlights use opaque
+`selection`, and diff headers use `blue`. Inserted/deleted/changed diff text follows
+resolved Git colors, including overrides; `reset` uses the theme foreground.
+Mauve maps to `accent`, pink to `magenta`, peach to `orange`, green to `bright_green`,
+maroon/flamingo to `bright_red`, rosewater to `bright_foreground`, sky to `bright_cyan`,
+sapphire/blue to `blue`, and lavender to `bright_blue`; remaining hues use their named
+Dots counterparts. Subtext uses `light_foreground`. Some reference shades therefore
+share a Dots color. Font attributes depend on consumer support; a stored declaration
+does not establish that every application renders it. Bat disables italic output by
+default; `bat --italic-text=always` enables it when supported by the terminal.
+Its rendered `bat.tmTheme`
 is also copied to `yazi/tmtheme.xml` in the same generation; `yazi.toml` becomes
 `yazi/flavor.toml`. The Yazi `flavors/dots.yazi` connector points to that generated
 `yazi` directory, so both applications share the syntax theme. Edit the template
@@ -812,3 +824,67 @@ Both publishers resolve `DOTS_APP_LEAF_CONFIG`, then `${XDG_CONFIG_HOME:-$HOME/.
 Refresh requires an existing Leaf config root. It may create only its missing `themes` child, recording directory identity and both links in the publisher journal. Existing files and broken links are backed up; directory conflicts and post-write drift refuse replacement or recovery. Both artifacts participate in setup/uninstall and normal publication. No Leaf executable is needed for generation and no running Leaf session is restarted. Open Leaf again to read a refreshed theme; selected external syntax loads once per process.
 
 Personal `dots/themed/leaf.toml.tpl` templates override the default; trusted bundled `leaf.toml` overrides both. These files and shared syntax inputs participate in fingerprints. Preview with `dots theme set ID --dry-run`, then publish with `dots theme refresh`. See [verification and platform limits](testing.md#leaf-theme).
+
+## Generated theme files
+
+`dots theme files` inspects the active published generation without generating a theme, refreshing, recovering, editing or reloading anything. It defaults to `list`; standalone `theme files` and native PowerShell expose the same interface.
+
+```bash
+dots theme files
+dots theme files list --app yazi
+dots theme files info bat.tmTheme
+dots theme files show yazi/tmtheme.xml
+dots theme files show bat-cache
+dots theme files show bat.tmTheme --source
+dots theme files path bat.tmTheme
+dots theme files path bat.tmTheme --resolved
+dots theme files check --json
+dots theme files check --consumers
+dots theme files browse
+```
+
+| Action | Arguments and behavior |
+| --- | --- |
+| `list` | `[--app APP] [--json]`: artifacts, consumers and connection status. The bare group accepts the same filters. |
+| `info` | `FILE [--json]`: source resolution, stable and generation paths, consumers, configured destinations, their actual locations through linked directories, and link values. |
+| `show` | `FILE [--source] [--raw]`: highlighted terminal text, directory entries, or the current template/override. Regular-file `--raw` and redirected output preserve accepted UTF-8 bytes. |
+| `path` | `[FILE] [--source\|--resolved]`: one absolute path; defaults to the stable active directory. `--resolved` returns the captured generation location. `--source` requires a file and cannot combine with `--resolved`. |
+| `check` | `[--app APP] [--consumers] [--json]`: inspect artifacts and connections; opt into confirmed consumer failures with `--consumers`. Exit 1 when applicable checks fail; no repair is performed. |
+| `browse` | `[--app APP]`: optional shared Gum/FZF/numbered selector with details, highlighted generated/source text or directory entries, Back and Exit. Unavailable source actions are omitted. Requires terminal input/output; re-observes the active generation after interactions. |
+
+`FILE` is a listed generation-relative identifier, including `yazi/flavor.toml` and `yazi/tmtheme.xml`. Completion supplies file and app names without rendering or executing extensions. Application outputs, custom template outputs, shared palette/shell data and derived files are listed. Cache directories are aggregate entries; publication bookkeeping, generated command wrappers, journals and backups are excluded. Missing outputs expected by the current templates or fixed connector definitions remain visible for diagnosis.
+
+Sources are labeled **Source for next refresh**, not historical provenance: retained generations have no source manifest. Current resolution follows trusted bundled overrides, personal templates and default templates. Derived files identify their parent artifact. Generated shared data and caches have no single editable template. Missing source files do not prevent inspecting the published artifact. Direct changes to generated files are replaced on publication; this interface never opens an editor or refreshes automatically.
+
+Fixed connector inspection uses the publisher's platform paths and directory eligibility. `linked` means the destination follows the stable active path; relative links are resolved from their actual parent. `pinned` means a link resolves to the captured generation directly and will not follow future switches. Other statuses are `missing`, `broken`, `points-elsewhere`, `regular-file`, `unavailable` and `not-configured`. Missing optional app directories and unsupported native-platform connectors are informational. Eligible unhealthy connections, missing/unreadable generated artifacts, an app filter matching no artifacts and incomplete inspection make `check` fail. Checks do not compare arbitrary regular-file contents or prove that a running application loaded its theme.
+
+Supplementary connections are discovered only at destinations recorded by completed managed file transactions, when their existing links still refer to a listed active artifact. This finds links such as a separately repaired bat theme without scanning the home directory. Finalized journals do not retain the intended link value, so a removed or redirected supplementary link cannot be reconstructed from those records. Fixed connectors remain independently diagnosable. Discovery is bounded to 512 transaction entries and 4096 operations per record; oversized, unreadable or malformed metadata reports incomplete inspection. No retained file contents are read.
+
+Listings separate artifacts with blank lines, combine each application's connection and evidence, and show destinations underneath. Configuration and inherited-environment evidence appears beside consumer names; detailed reasons and checked paths live in `info`. Unsupported checks retain their integration kind in the listing and an unknown reason in `info`. Runtime scope is explained once rather than repeated on every row. App filters select matching artifacts; details retain other consumers of shared artifacts. An absent generation gives an empty listing, a failed check, and unavailable file-specific queries. Invalid active pointers are reported without following foreign paths. Each request captures one generation; browser actions capture again after user interaction.
+
+Text previews accept only safe regular UTF-8 files up to 64 KiB, refuse binary/possible credential content and special files, and never evaluate generated shell code. Source directory links may resolve to managed sources; source leaf symlinks are refused. JSON and paths are always undecorated; redirected listings are plain even when decoration is forced. JSON schema and exit behavior are defined in [data contracts](specification.md#generated-theme-file-inspection). Native acceptance limits are in [PowerShell](powershell.md).
+
+### Directory and highlighted previews
+
+`show bat-cache`, `show bat-source` and `show delta-cache` list up to 200 immediate children, sorted within the bounded observation, with types and literal link targets. Child links are never followed and binary cache contents are not opened. Empty and truncated results are explicit. When a directory has no editable source, `show DIRECTORY --source` explicitly falls back to the generated directory listing. `--raw` remains a regular-file interface and rejects directories. Redirected directory views are plain, control-escaped listings.
+
+Terminal text previews use optional `bat` (or `batcat`) when Dots color policy enables color and the captured generation has a usable Dots syntax cache. Language detection uses the filename without a final `.tpl`; shared tmTheme/XML files explicitly select XML. The renderer receives sanitized text through stdin, has user configuration and paging disabled, uses the existing captured cache, and is bounded to five seconds of execution and 1 MiB of output. It never builds caches. Missing tools/cache, unsupported syntax, errors or timeouts fall back to plain text. Browser text previews share this behavior. Disabled color stays plain; regular-file `--raw` and redirected output bypass highlighting and remain byte-exact.
+
+### Consumer evidence
+
+Verification reads known, bounded configuration files and values inherited by the inspector; it does not execute applications or hooks. Config reads are limited to 256 KiB, cached only for the current request, and checked for observed changes during reading. It reports selected keys and concise reasons, never unrelated environment or configuration contents.
+
+| Consumer | Evidence inspected |
+| --- | --- |
+| bat | Inherited `BAT_THEME` and `BAT_CACHE_PATH`, resolving the cache to the captured generation. |
+| FZF | Supported literal generated colors and effective literal color options in `FZF_DEFAULT_OPTS`; an options-file override remains unknown. |
+| LS_COLORS | Inherited `LS_COLORS` against the generated value. |
+| Gum | Supported published literal color assignments against exported values. |
+| Kitty / tmux | Supported direct literal includes; dynamic or indirect includes remain unknown. |
+| btop / Yazi / Television / Leaf | Explicit theme selections in known config locations; Yazi mode-dependent differences remain unknown, and inherited `LEAF_THEME` takes precedence. Leaf syntax references are checked separately. |
+| GTK / Qt6ct | Installed content, registration and any available ownership receipt against the current generated file. |
+| Starship / Blastoff | The selected active Starship Dots palette, including a linked configuration, compared with published colors while allowing user palette extensions. |
+
+Results distinguish `matches` (shown as environment/installed-content matches), `configured`, `different`, `stale`, `not-configured` and `unknown`. Only a recorded publication ancestor establishes an older generation and a stale result; a different arbitrary location is simply different. Plugin automatic-update selection is separate from installed content: disabled automation can leave matching files in use. Unexported shell values and unsupported consumers, including Neovim/general Lua runtime loading, remain unknown. No result proves that a running application has loaded the theme or that command-line overrides are absent.
+
+Ordinary `check` still checks generated artifacts and connections. `check --consumers` additionally fails on confirmed `different` or `stale` evidence for the selected app/artifacts; unknown, unavailable and disabled-plugin automation remain informational. `list` and `info` show evidence without requiring the flag. No persistent receipts or activation acknowledgements are created by inspection.

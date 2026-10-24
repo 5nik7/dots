@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Journaled resource stashing and source/target mapping edits."""
+from identities import validate_cli
 import argparse
 import copy
 import json
@@ -337,6 +338,7 @@ def arguments(argv=None):
     group.add_argument('--backup', action='store_true', default=None)
     group.add_argument('--no-backup', dest='backup', action='store_false')
     args = p.parse_args(argv)
+    validate_cli(args, p)
     if args.json and not (args.yes or args.dry_run):
         p.error('--json requires --yes or --dry-run')
     if args.action == 'stash' and any((args.new, args.apply, args.repo, args.id, args.source, args.target, args.app, args.category, args.strategy, args.platform, args.platforms)):

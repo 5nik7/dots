@@ -97,3 +97,24 @@ preview and interruption acceptance remains pending where engines are unavailabl
 Named `git submodule NAME ...` navigation and `git submodules info` use the same Python parser, inspection and static completion metadata as Bash. Publication delegates to the native Git controller; no Bash is required on Windows. Native PowerShell terminal acceptance for these additions remains pending.
 
 Leaf publishes UI and shared bat syntax through the native Python transaction engine and is included in native setup. The separate [Leaf build](leaf-build.md) requires platform-native Rust compilation. Native Windows publication, undo, symlink privilege refusal and dark/light rendering acceptance remain pending.
+
+`theme files` now uses the shared read-only inspector for list/info/show/path/check/browse and contextual file/app completion. It honors native state/config roots and existing publisher destination adapters; no Bash execution is needed for inspection or the native selector. Current source resolution is distinct from historical provenance. Windows PowerShell 5.1/7 runtime, native link/destination behavior and browser terminal acceptance remain pending where native engines are unavailable; shared controller tests do not establish those checks.
+
+Theme-file directory previews, optional bat highlighting, spaced listings and `check --consumers` share the same Python implementation. Native bat rendering uses literal argv and bounded pipes, with no Bash or pager dependency. The native app path adapters and inherited environment scope remain explicit; actual Windows renderer/PowerShell terminal acceptance is pending.
+
+## Platform profiles
+
+The native controller exposes `profile`, `profiles`, expanded `env`, and
+`init --bootstrap powershell` through the same static metadata as Bash.
+PowerShell prepares a native environment adapter with Python on a cold load;
+warm loads validate and apply it natively. No Bash invocation or Windows/WSL path
+translation is introduced. Actual Windows PowerShell 5.1/7 acceptance is pending.
+See [profiles](profiles.md).
+
+The profile inspection and debug command families use the shared Python
+controllers and metadata. Native startup emits opt-in source/phase events;
+normal-profile tracing requires `--live`, while `--isolated` uses owned profile
+paths. Job Object ownership and PowerShell 5.1/7 terminal acceptance are pending
+on Windows. See [debugging](debug.md).
+
+Wiki routes and associated Git operations use the shared controllers, including page completion, `--json`, `--no-wiki` and selected-content publication checks. Browser/editor launching uses native processes without Bash. Native Windows PowerShell 5.1/7 terminal and acquisition acceptance remain pending where that runtime is unavailable. See [wiki](wiki.md).

@@ -520,3 +520,7 @@ open a selector. Recovery commands continue to require explicit IDs.
 ## Native Windows commands
 
 The PowerShell dispatcher reaches the shared catalog, adoption, mapping, linking, browser, installation and recovery controllers. File pickers use native FZF PowerShell previews, with Gum/numbered fallbacks; selection still requires a later reviewed operation. The catalog resolves app destinations individually rather than assuming `~/.config` for Windows apps. See [native PowerShell](powershell.md) for destinations, link capability rules, supported engines and pending native acceptance. Both shell frontends must remain synchronized in future file changes.
+
+## Platform source names
+
+Use `termux:NAME` and `windows:NAME` for platform resources and `--repo termux` or `--repo windows` for filters. `androidots` and `windots` are rejected as CLI source names with a replacement hint. Legacy catalog/receipt IDs are recognized internally without rewriting history or changing backup ownership. See [identity compatibility](specification.md#canonical-platform-file-identities).

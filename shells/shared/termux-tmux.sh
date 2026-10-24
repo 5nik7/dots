@@ -9,12 +9,12 @@ if [[ $- != *i* || ${DOTS_PLATFORM:-} != termux || -n ${TMUX:-} ||
 fi
 # Shell-local: reloads must not reattach after the user deliberately detaches.
 _DOTS_TERMUX_AUTOSTART_ATTEMPTED=1
-if [[ ! -r $DOTS/androidots/bin/termux-bar ]]; then
+if [[ ! -r $DOTS/profiles/termux/bin/termux-bar ]]; then
   printf 'termux-bar: launcher unavailable; continuing in the plain shell\n' >&2
 elif ! command -v python3 >/dev/null 2>&1; then
   printf 'termux-bar: python3 not found; continuing in the plain shell\n' >&2
 else
-  if command python3 -B "$DOTS/androidots/bin/termux-bar" --auto; then
+  if command python3 -B "$DOTS/profiles/termux/bin/termux-bar" --auto; then
     :
   else
     # Only the launcher's confirmed normal session exit closes this outer shell.

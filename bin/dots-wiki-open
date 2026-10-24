@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Open a web wiki page
+# dots:usage=[PAGE] [--print-url]
+# dots:option=--print-url||flag|Print the URL without launching a browser
+# dots:argument=1|wiki-page|Wiki page ID
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki.py" open "$@"

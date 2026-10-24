@@ -1,6 +1,45 @@
+for name in DOTRUBY RUBYCOMP _dots_applied_DOTRUBY _dots_applied_RUBYCOMP
+    set -e $name
+end
+set -l _dots_retired_paths "$DOTS/ruby/completion" "$HOME/dots/ruby/completion"
+if set -q DOTS_PROFILE_CHECKOUT; and test -n "$DOTS_PROFILE_CHECKOUT"
+    set -a _dots_retired_paths "$DOTS_PROFILE_CHECKOUT/ruby/completion"
+end
+set -l _dots_retained_path
+for entry in $PATH
+    set -l normalized (string replace -r '/+$' '' -- "$entry")
+    contains -- "$normalized" $_dots_retired_paths; or set -a _dots_retained_path "$entry"
+end
+set -gx PATH $_dots_retained_path
+for name in DOTS_ENV_HOOKS DOTS_ENV_ORIGINS
+    if set -q $name
+        set -l retained
+        for record in (string split ';' -- $$name)
+            if test -n "$record"; and not string match -rq '^(DOTRUBY|RUBYCOMP)[:|]' -- "$record"
+                set -a retained "$record"
+            end
+        end
+        set -gx $name (string join ';' -- $retained)
+    end
+end
+set -l _dots_cache_root "$HOME/.cache"
+set -q XDG_CACHE_HOME; and set _dots_cache_root "$XDG_CACHE_HOME"
+set -l _dots_environment_cache "$_dots_cache_root/dots/startup/environment.fish"
+set -l _dots_environment_ready 0
+if test -f "$_dots_environment_cache"
+    source "$_dots_environment_cache"; and set _dots_environment_ready 1
+end
+if test $_dots_environment_ready = 0; and command -q python3
+    if command python3 -B "$DOTS/lib/dots/native_startup.py" fish "$_dots_environment_cache"
+        source "$_dots_environment_cache"; and set _dots_environment_ready 1
+    end
+end
+if test $_dots_environment_ready = 0
+    printf 'dots: profile environment preparation unavailable; retaining minimal integration\n' >&2
+end
 source "$DOTS/lib/dots/shell/config.fish"
 _dots_config_load; or begin
-    printf 'dots: invalid settings; previous environment retained\n' >&2
+    printf 'dots: invalid settings; initialization stopped\n' >&2
     return 1
 end
 while read -l line
@@ -32,6 +71,12 @@ end
 if test $_dots_option_DOTS_INIT_COMMANDS = 1
     set -gx PATH $PATH "$THEMESBIN"
 end
+set -l profile_entries (string split : -- "$DOTS_PROFILE_PATHS" | string match -rv '^$')
+set -l ordered_path
+for entry in $profile_entries $PATH
+    contains -- "$entry" $ordered_path; or set -a ordered_path "$entry"
+end
+set -gx PATH $ordered_path
 status is-interactive; or return 0
 set -g rst (printf '\033[0m')
 set -g RST "$rst"

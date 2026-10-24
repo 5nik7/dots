@@ -181,7 +181,7 @@ class InitTests(unittest.TestCase):
     def minimal_tools(self):
         directory = self.root / 'tools'
         directory.mkdir()
-        for name in ('bash', 'zsh', 'fish', 'nu', 'readlink', 'mkdir', 'rm', 'mv', 'tput', 'awk', 'tr', 'uname', 'id', 'stty', 'hostname', 'which', 'sed', 'cat', 'sort', 'cut'):
+        for name in ('python3', 'stat', 'bash', 'zsh', 'fish', 'nu', 'readlink', 'mkdir', 'rm', 'mv', 'tput', 'awk', 'tr', 'uname', 'id', 'stty', 'hostname', 'which', 'sed', 'cat', 'sort', 'cut'):
             exe = shutil.which(name)
             if exe:
                 (directory / name).symlink_to(exe)

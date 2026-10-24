@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# dots:summary=Explain startup or explicitly run a native trace
+# dots:usage=[--shell SHELL] [--live|--isolated] [OPTIONS]
+# dots:option=--json||flag|Print versioned JSON
+# dots:option=--shell||choice:bash,zsh,powershell|Select native shell
+# dots:option=--live||flag|Execute normal startup with its usual side effects
+# dots:option=--isolated||flag|Execute a disposable public fixture
+# dots:option=--login||flag|Include login startup (not PowerShell)
+# dots:option=--view||choice:sequence,slowest,summary|Select trace layout
+# dots:option=--runs||string|Sequential runs (1–20; default 1)
+# dots:option=--timeout||string|Seconds per run (1–300; default 30)
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" startup "$@"

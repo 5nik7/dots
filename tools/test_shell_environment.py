@@ -217,9 +217,11 @@ source "$DOTS/lib/dots/shell/init.bash" && exit 4
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         data = json.loads(result.stdout)
-        self.assertEqual(data['values']['DOTS_THEME_DEFAULT'], {'value': 'nord', 'source': 'environment'})
+        self.assertEqual({key: data['values']['DOTS_THEME_DEFAULT'][key] for key in ('value', 'source')}, {'value': 'nord', 'source': 'environment'})
         self.assertEqual(data['values']['DOTS_INIT_THEME']['source'], 'config')
-        self.assertNotIn('PATH', data['values'])
+        self.assertIn('PATH', data['values'])
+        self.assertIn('platform', data)
+        self.assertIn('profile', data)
 
     def test_current_theme_default_and_read_only_completion(self):
         self.config.write_text('DOTS_THEME_DEFAULT=nord\n')

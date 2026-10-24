@@ -62,7 +62,7 @@ For the local symlink header component, use the isolated Lua checks described in
 
 Run `python3 -B tools/verify_docs.py` and `git diff --check` for documentation changes. The checker validates relative Markdown targets in README, AGENTS, guides, docs and plans without Go or optional submodules. Its fixture regressions run with `python3 -B tools/test_verify_docs.py`.
 
-The [repository checks workflow](../../.github/workflows/repository-checks.yml) runs the documentation regressions, link checker and latest-commit whitespace check on Linux and Windows for pushes and pull requests targeting `main` that change Markdown, either documentation-checker script or that workflow. The separate [worktree lifecycle workflow](../../.github/workflows/worktree-lifecycle.yml) runs helper tests and the whitespace check only when the helper, its test script or its workflow changes; documentation-only changes do not run helper tests.
+The [repository checks workflow](../../.github/workflows/repository-checks.yml) runs documentation and wiki-generation regressions, source-only wiki validation, the link checker and latest-commit whitespace check on Linux and Windows. Its path filters cover Markdown, documentation checkers, wiki inputs/controllers/tests, command metadata and the workflow. The separate [worktree lifecycle workflow](../../.github/workflows/worktree-lifecycle.yml) runs helper tests and the whitespace check only when the helper, its test script or its workflow changes; documentation-only changes do not run helper tests.
 
 The test commands in `docs/testing.md` must exist before they are presented as runnable. Keep support claims limited to actual native results and distinguish skipped cases and simulated platform fixtures.
 
@@ -259,3 +259,20 @@ For Television templates/connectors, run `python3 -B tools/test_television_theme
 For user-local completion directory discovery or precedence, run `python3 -B tools/test_local_completions.py` with the affected startup/environment suites. Use synthetic colliding providers to verify actual loading, preserving XDG overrides, native fallback paths and noninteractive boundaries. See [local completion checks](../../docs/testing.md#user-local-completion-paths).
 
 For Leaf templates/connectors, run `python3 -B tools/test_leaf_theme.py -v`; set `LEAF_TEST_BIN` to the tested custom executable for actual syntax and PTY checks. Follow [Leaf verification](../../docs/testing.md#leaf-theme) and keep Rust and Python test/build batches sequential on Termux.
+
+For generated theme-file inspection, run `python3 -B tools/test_theme_files.py` and affected Bash dispatcher, theme-command, native CLI and resource tests sequentially. Keep source resolution distinct from historical provenance, read only known destinations/transaction metadata, and verify inspection and cancellation create no persistent state. Follow [the test contract](../../docs/testing.md#generated-theme-file-inspection); do not refresh the live theme to test inspection.
+
+For theme-file directory/highlighted previews and consumer evidence, also run `python3 -B tools/test_theme_file_views.py`, plus relevant plugin/Starship pure-parser and presentation regressions. The only permitted inspection subprocess is the bounded optional text renderer; configuration/environment verification must remain inert. Preserve ordinary `check` status separately from explicit `--consumers`.
+
+For shared tmTheme reference or color-token changes, run `python3 -B tools/test_syntax_theme.py` and the explicitly selected regressions in [shared syntax verification](../../docs/testing.md#shared-syntax-reference). Preserve pinned source attribution, dynamic colors, all-palette renderer parity and isolated real-consumer evidence. Font declarations alone are not proof of rendered attributes.
+
+For profile, environment bundle or bootstrap changes, run `python3 -B tools/test_profiles.py` and the focused shell/environment/installation regressions. Use only local bootstrap repositories and owned caches. See [profile verification](../../docs/testing.md#platform-profiles-and-startup-bundles).
+
+For profile/debug changes, run `python3 -B tools/test_profile_debug.py` with
+owned roots. `dots debug startup --live` is not an automated acceptance test;
+use disposable fixtures. Record diagnostic overhead separately from ordinary
+startup, and native PowerShell evidence separately from controller fixtures.
+
+For retired environment variables or platform file-ID compatibility, run `python3 -B tools/test_platform_retirement.py` and the affected shell/file suites sequentially. Follow the [retirement checks](../../docs/testing.md#retired-environment-and-platform-file-ids); never use live receipts as fixtures.
+
+For wiki changes, follow [the wiki guide](wiki.md) and run its isolated generation/Git suites sequentially. Use `dots wiki check --source-only` for source-only CI; never publish or fetch live repositories as a test.

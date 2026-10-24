@@ -1,2 +1,2 @@
-# Compatibility entry point for shared builtin-only detection.
-source "$DOTS/shells/shared/platform.sh"
+# Compatibility entry point for native platform detection.
+source "$DOTS/lib/dots/shell/platform.bash"

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=Browse the local Dots wiki
+# dots:usage=[--json]
+# dots:option=--json||flag|Emit versioned JSON
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki.py" "$@"

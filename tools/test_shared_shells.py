@@ -345,11 +345,11 @@ before=${PROMPT_COMMAND[*]}
         for shell in ('bash', 'zsh'):
             self.shell(shell, '''PATH=''
 TERMUX_VERSION=fixture
-source "$DOTS/shells/shared/platform.sh"
+source "$DOTS/lib/dots/shell/platform.bash"
 [[ $DOTS_PLATFORM == termux && $(is_termux -v) == true ]] || exit 1
 unset TERMUX_VERSION PREFIX TERMUX__PREFIX
 _dots_detect_platform msys "$HOME/missing" "$HOME/missing" "$HOME/missing"
-[[ $DOTS_PLATFORM == msys && $is_wsl == false ]] || exit 2
+[[ $DOTS_PLATFORM == windows && $DOTS_RUNTIME == msys && $is_wsl == false ]] || exit 2
 WSL_INTEROP=fixture
 _dots_detect_platform linux "$HOME/missing" "$HOME/missing" "$HOME/missing"
 [[ $DOTS_PLATFORM == wsl && $(is_wsl -v) == true ]]

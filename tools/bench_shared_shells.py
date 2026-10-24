@@ -31,8 +31,9 @@ def benchmark(baseline, samples):
             cases[('bash_native_tools', version)] = bash
             t=InitTests();t.setUp();t.minimal_tools();minimal.append(t)
             if version == 'before':
-                shutil.rmtree(t.repo / 'shells/bash')
-                copy_public_tree(source / 'shells/bash', t.repo / 'shells/bash', repo=source, fixture=t.repo, aliases=(REPO,))
+                for name in ('shells', 'lib/dots'):
+                    shutil.rmtree(t.repo / name)
+                    copy_public_tree(source / name, t.repo / name, repo=source, fixture=t.repo, aliases=(REPO,))
             code=t.generated('bash')
             cases[('bash_minimal_tools',version)] = lambda t=t, code=code: t.shell('bash', code, interactive=True)
         timings={key:[] for key in cases}

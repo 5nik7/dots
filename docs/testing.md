@@ -122,7 +122,7 @@ Do not upgrade a support-matrix status based on an undocumented one-off success.
 
 ## Development Worktree Lifecycle Tests
 
-`python3 -B tools/test_worktree_lifecycle.py` runs isolated development-helper tests without package changes, network requests or live-home mutations. It covers eligible removal, preview/fetch refusal, staged/modified/untracked/ignored/empty local content, unmerged and freshly merged heads, registration/identity/capacity, active/uncertain use, original/session/helper/live paths and Git refusal. Portable removal tests inject an idle process snapshot; native Unix tests check a disposable live child and eligible removal when process inspection is available. Native Windows process inspection/removal is deferred and fails closed; Windows symlink privilege is never enabled for tests. The [worktree lifecycle workflow](../.github/workflows/worktree-lifecycle.yml) runs this suite and a latest-commit whitespace check on Linux and Windows for pushes and pull requests targeting `main` that change the helper, its test script or its workflow. The separate [repository checks workflow](../.github/workflows/repository-checks.yml) runs documentation-checker regressions, relative-link validation and the same whitespace check on both platforms when Markdown, either documentation-checker script or that workflow changes. Documentation-only changes do not run lifecycle tests; existing native CLI gates are unchanged. See [the lifecycle guide](../agents/guides/worktrees.md) for optional use, metadata and deliberate cleanup triggers.
+`python3 -B tools/test_worktree_lifecycle.py` runs isolated development-helper tests without package changes, network requests or live-home mutations. It covers eligible removal, preview/fetch refusal, staged/modified/untracked/ignored/empty local content, unmerged and freshly merged heads, registration/identity/capacity, active/uncertain use, original/session/helper/live paths and Git refusal. Portable removal tests inject an idle process snapshot; native Unix tests check a disposable live child and eligible removal when process inspection is available. Native Windows process inspection/removal is deferred and fails closed; Windows symlink privilege is never enabled for tests. The [worktree lifecycle workflow](../.github/workflows/worktree-lifecycle.yml) runs this suite and a latest-commit whitespace check on Linux and Windows for pushes and pull requests targeting `main` that change the helper, its test script or its workflow. The separate [repository checks workflow](../.github/workflows/repository-checks.yml) runs documentation and wiki-generation regressions, source-only wiki validation, relative-link validation and the same whitespace check on both platforms. Its path filters cover Markdown, documentation checkers, wiki inputs/controllers/tests, command metadata and the workflow. Documentation-only changes do not run lifecycle tests; existing native CLI gates are unchanged. See [the lifecycle guide](../agents/guides/worktrees.md) for optional use, metadata and deliberate cleanup triggers.
 
 Lifecycle review regressions verify preview/apply retain native FIFO and filesystem socket fixtures where supported, and that a fresh remote-main fetch ignores an additional configured recovery-branch mapping while preserving every local branch. Device/unknown modes and metadata denial use injected `lstat` results; they do not establish native device-node coverage. Native Windows FIFO/socket fixtures are unavailable and skipped. Positive portable removal still injects an idle process snapshot; native process coverage remains separate.
 
@@ -790,3 +790,46 @@ The native consumer case targets Television 0.15.9. Native Windows PowerShell 5.
 Run `python3 -B tools/test_leaf_theme.py -v` for all-palette Bash/Python TOML equivalence, semantic contrast, shared syntax destinations, personal/bundled overrides, missing optional apps, fingerprints, two-connector recovery, directory creation, backup and drift checks. Set `LEAF_TEST_BIN` to an absolute custom Leaf executable to enable actual inline token-color assertions and dark/light Termux PTY checks at 40/80/120 columns, including theme-picker preview/cancel, resize and document reload. Missing consumer checks are explicit skips. Every mutable home/config/state/cache/repository path is disposable. Run the native-controller, installation, file-color and Television regressions sequentially after shared publisher changes.
 
 The [custom Leaf build](leaf-build.md) has Rust tests for relative/absolute syntax paths, embedded themes, missing/malformed files, noncolliding ThemeSet keys, symlink-relative resolution and picker cancellation. Native Windows PowerShell 5.1/7 publication/undo, missing symlink privileges and native Leaf dark/light rendering remain pending, as do Linux and WSL acceptance. Controller fixtures on Termux do not establish those claims.
+
+### Generated theme file inspection
+
+Run `python3 -B tools/test_theme_files.py` for isolated active-generation inventory, source precedence, derived outputs, fixed/supplementary connectors, linked parents, literal operands, exact data bytes, unsafe content, missing/foreign pointers, browser refresh/cancellation and frontend/completion parity. Every source and home/config/state/cache root is test-owned; no live publication or reload is needed. Run affected Bash dispatcher, theme-command, native CLI and resource suites sequentially. PTY checks cover 40/80/120-column content and status views. Native Windows PowerShell 5.1/7 engines, native app destinations, link privileges and visual/key handling remain separate pending acceptance when unavailable.
+
+Run `python3 -B tools/test_theme_file_views.py` for directory listing/fallback, renderer timeout/output limits, actual optional bat highlighting against a private published cache, consumer evidence, disabled plugin automation, config drift, opt-in exit status and no-write/no-subprocess verification. The existing inspection suite also covers the new presentation at 40/80/120 columns. Use `tools/test_theme_plugins.py` and `tools/test_starship_palette.py` for affected shared pure-parser regressions. Actual Windows bat/PowerShell and optional Gum/FZF key acceptance remain distinct from local fixtures and the tested numbered browser.
+
+### Shared syntax reference
+
+Run `python3 -B tools/test_syntax_theme.py` for the pinned reference scope/style contract, all-palette Bash/native byte parity, Yazi copy equivalence, resolved Git overrides/reset, template fingerprint invalidation and refresh idempotence. Optional real bat checks use private caches and truecolor output to assert token colors across eight languages/formats on dark and light palettes, plus bold/italic behavior and explicit style resets. A direct Delta check verifies syntax colors from the generation cache without Git configuration or the legacy Git integration fixture. Source/generated raw previews stay within the existing 64 KiB limit. Tests do not depend on a network download. Native Windows consumers and unsupported font attributes require separate acceptance.
+
+Run selected `Workflow.test_codex_shared_theme_refresh_and_rollback` and `Workflow.test_codex_custom_home_template_overrides_and_refusal` cases from `tools/test_theme_workflow.py`, relevant `FileColors` cases from `tools/test_file_colors.py`, and `NativeHighlight` from `tools/test_theme_file_views.py` for connector/override, shared-token and terminal-preview regressions. Select classes or methods explicitly: loading an entire module can also collect imported base suites. All mutable roots must remain disposable; do not refresh the live theme for these tests.
+
+## Platform profiles and startup bundles
+
+Run `python3 -B tools/test_profiles.py` for owned-fixture detection, inheritance,
+path/cycle refusal, bundle invalidation, nested private-hook redaction and local
+bootstrap acquisition. Follow with shell environment, dispatcher, shell-init,
+shared-shell, local-completion and installation regressions. Run
+`tools/bench_shared_shells.py --baseline PATH --samples 3` sequentially against a
+public pre-change snapshot. No test may source real private hooks or acquire a
+remote checkout. Record actual Windows PowerShell 5.1/7, Linux and WSL evidence
+separately from Termux and injected-platform results.
+
+## Profile/debug diagnostics
+
+Run `python3 -B tools/test_profile_debug.py` for profile views, read-only plans,
+cache invalidation, PATH/command resolution, trace attribution, secret sentinels,
+interruption/timeout and presentation boundaries. `dots debug test --list` lists
+the smaller runtime-owned isolated suites. No automated diagnostic test uses
+the developer's live startup. Native acceptance remains separate.
+
+`python3 -B tools/bench_debug_startup.py --samples 7` measures the same isolated
+public startup with diagnostic calls removed and with tracing disabled. Runs are
+sequential and alternating; keep other suites stopped during measurements.
+
+## Retired environment and platform file IDs
+
+Run `python3 -B tools/test_platform_retirement.py` with the environment, profile, catalog, operation, mapping and installation suites. Fixtures own homes, checkout copies, caches, receipts and backups. Verify inherited Ruby exports/PATH removal, read-only legacy recognition, no-op receipt preservation, canonical mutations, drift protection and undo/recovery. Native Bash/Zsh/Fish/Nushell tests run when installed; Windows PowerShell 5.1/7 and Xonsh runtime acceptance remain separate when unavailable.
+
+## Wiki
+
+Run `python3 -B tools/test_wiki.py` for generation, navigation, data output, drift refusal, clone, interrupted-build recovery, rollback and undo. Run `python3 -B tools/test_wiki_git.py` for associated scopes, source-before-wiki publication, selected-index freshness, local-remote sync and partial failure. Follow with affected Git, submodule, command, native-controller and profile/bootstrap suites sequentially. All repositories, transports, homes, state and browser/editor substitutes must be test-owned. `dots wiki check --source-only` validates the actual source manifest without needing a wiki clone or credentials; CI runs it with generation regressions. Native Windows runtime and live GitHub rendering evidence are separate.

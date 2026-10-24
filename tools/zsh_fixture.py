@@ -41,7 +41,7 @@ def fixture(source=REPO, plugins=True):
         original = source / name
         if name == 'bin/theme' and not original.is_file():
             continue
-        shutil.copy2(original, dest)
+        if original.is_file(): shutil.copy2(original, dest)
     if (source / 'shells/environment.sh').is_file():
         shutil.copy2(source / 'shells/environment.sh', repo / 'shells/environment.sh')
     for original in (source / 'bin').glob('dots-theme*'):
@@ -49,6 +49,15 @@ def fixture(source=REPO, plugins=True):
     for original in [source / 'bin/anodize', *(source / 'bin').glob('dots-anodize*')]:
         if original.is_file():
             shutil.copy2(original, repo / 'bin' / original.name)
+    if (source / 'profiles').is_dir():
+        for original in (source / 'profiles').glob('*/profile.json'):
+            dest = repo / original.relative_to(source)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(original, dest)
+    for name in ('profiles/termux/termux.env', 'profiles/windows/win.env'):
+        dest = repo / name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text('# synthetic profile module\n')
     # Preserve module presence/order, without reading private or platform-local values.
     for name in ('androidots/termux.env', 'windots/win.env', 'secrets/secrets.env', 'secrets/secrets.sh'):
         dest = repo / name

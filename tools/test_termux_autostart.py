@@ -20,9 +20,9 @@ class TermuxAutostart(unittest.TestCase):
         self.fx = test_tmux_sessions.TmuxSessions()
         self.fx.setUp()
         self.addCleanup(self.fx.doCleanups)
-        self.bin = self.fx.repo / 'androidots/bin'
+        self.bin = self.fx.repo / 'profiles/termux/bin'
         self.bin.mkdir(parents=True)
-        shutil.copy2(REPO / 'androidots/bin/termux-bar', self.bin / 'bar-source')
+        shutil.copy2(REPO / 'profiles/termux/bin/termux-bar', self.bin / 'bar-source')
         # Run the real launcher with fixture procfs. No real Termux discovery.
         (self.bin / 'termux-bar').write_text('''import os, pathlib, runpy
 root = pathlib.Path(os.environ['HOME']) / 'proc'
@@ -38,7 +38,8 @@ raise SystemExit(namespace['main'](proc_root=root))
 assert sys.argv[1:4] == ['--get', 'pid', '--pid']
 print(sys.argv[4])
 ''')
-        (self.fx.root / 'tools/python3').symlink_to(sys.executable)
+        if not (self.fx.root / 'tools/python3').exists():
+            (self.fx.root / 'tools/python3').symlink_to(sys.executable)
         self.fx.env.update(DOTS_PLATFORM='termux', TERMUX_APP__PID='123')
         self.hook = self.fx.repo / 'shells/shared/termux-tmux.sh'
 

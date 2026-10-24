@@ -1,0 +1,314 @@
+{
+  "schema": 1,
+  "repository": "windows",
+  "locations": [
+    {
+      "id": "filepilot",
+      "kind": "root",
+      "target": "${APP_CONFIG:filepilot}",
+      "source": "config/FilePilot",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "alacritty",
+      "kind": "root",
+      "target": "${APP_CONFIG:alacritty}",
+      "source": "config/alacritty",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "fastfetch",
+      "kind": "root",
+      "target": "${APP_CONFIG:fastfetch}",
+      "source": "config/fastfetch",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "glaze-wm",
+      "kind": "root",
+      "target": "${APP_CONFIG:glaze-wm}",
+      "source": "config/glaze-wm",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "komorebi",
+      "kind": "file",
+      "target": "${APP_CONFIG:komorebi}/komorebi.json",
+      "source": "config/komorebi/komorebi.json",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "tacky-borders",
+      "kind": "root",
+      "target": "${APP_CONFIG:tacky-borders}",
+      "source": "config/tacky-borders",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "vscode",
+      "kind": "file",
+      "target": "${APP_CONFIG:vscode}/settings.json",
+      "source": "config/vscode/settings.json",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "wezterm",
+      "kind": "root",
+      "target": "${APP_CONFIG:wezterm}",
+      "source": "config/wezterm",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "whkd",
+      "kind": "file",
+      "target": "${APP_CONFIG:whkd}/whkdrc",
+      "source": "config/whkd/whkdrc",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "winget",
+      "kind": "file",
+      "target": "${APP_CONFIG:winget}/settings.json",
+      "source": "config/winget/settings.json",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "wsl",
+      "kind": "file",
+      "target": "${HOME}/.wslconfig",
+      "source": "config/wsl/.wslconfig",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "wt",
+      "kind": "file",
+      "target": "${APP_CONFIG:wt}/settings.json",
+      "source": "config/wt/settings.json",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "yasb",
+      "kind": "root",
+      "target": "${APP_CONFIG:yasb}",
+      "source": "config/yasb",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "komorebi-bar",
+      "kind": "file",
+      "target": "${APP_CONFIG:komorebi}/komorebi.bar.json",
+      "source": "config/komorebi/komorebi.bar.json",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.backup",
+        "*.bak",
+        "*.log",
+        "cache/*",
+        "history*"
+      ]
+    },
+    {
+      "id": "clink-clink-settings",
+      "kind": "file",
+      "target": "${APP_CONFIG:clink}/clink_settings",
+      "source": "config/clink/clink_settings",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.log",
+        "*.bak",
+        "history*"
+      ]
+    },
+    {
+      "id": "clink-starship",
+      "kind": "file",
+      "target": "${APP_CONFIG:clink}/starship.lua",
+      "source": "config/clink/starship.lua",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.log",
+        "*.bak",
+        "history*"
+      ]
+    },
+    {
+      "id": "clink-scoop",
+      "kind": "file",
+      "target": "${APP_CONFIG:clink}/scoop.lua",
+      "source": "config/clink/scoop.lua",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.log",
+        "*.bak",
+        "history*"
+      ]
+    },
+    {
+      "id": "clink-clink-vfox",
+      "kind": "file",
+      "target": "${APP_CONFIG:clink}/clink_vfox.lua",
+      "source": "config/clink/clink_vfox.lua",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.log",
+        "*.bak",
+        "history*"
+      ]
+    },
+    {
+      "id": "clink-fzf",
+      "kind": "file",
+      "target": "${APP_CONFIG:clink}/fzf.lua",
+      "source": "config/clink/fzf.lua",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.log",
+        "*.bak",
+        "history*"
+      ]
+    },
+    {
+      "id": "clink-themes",
+      "kind": "root",
+      "target": "${APP_CONFIG:clink}/themes",
+      "source": "config/clink/themes",
+      "platforms": [
+        "windows"
+      ],
+      "exclusions": [
+        "*.log",
+        "*.bak",
+        "history*"
+      ]
+    }
+  ]
+}

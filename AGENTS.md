@@ -15,6 +15,7 @@ Maintain the existing dotfiles, scripts, configurations and command framework. T
 - `dots files` provides catalog inspection and journaled adoption, linking, removal, checkout installation/uninstallation and recovery. See [checkout installation](docs/installation.md).
 - `dots git` provides recursive status/publish/sync under [decision 0010](docs/decisions/0010-git-and-managed-file-operations.md).
 - Themes use bounded publication and fixed app connectors under [decision 0008](docs/decisions/0008-config-catalog-and-theme-apps.md).
+- Platform resources live under `profiles/{termux,linux,wsl,windows}`; Androidots/Windots IDs and root compatibility paths remain during migration. See [profiles](docs/profiles.md).
 - `config/` is canonical; retain temporary `configs -> config` aliases until a separately reviewed cleanup.
 - Termux is the primary local development target. Preserve native Linux, WSL and Windows boundaries and distinguish local fixtures from native evidence.
 
@@ -223,3 +224,5 @@ A change is done only when:
 
 Repository-local workflow skills are indexed in [.codex/README.md](.codex/README.md);
 they supplement this contract and the task guides.
+
+Wiki documentation is generated from canonical Dots sources. For behavior/documentation changes, update source docs, then rebuild and check the wiki when its checkout is available; otherwise run source-only validation and report synchronization pending. Use the `dots-documentation-maintenance` and `dots-wiki-maintenance` skills and follow [the wiki guide](agents/guides/wiki.md). Documentation work does not authorize commits or pushes.

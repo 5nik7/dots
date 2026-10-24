@@ -12,7 +12,7 @@ The sourceable [shell utility functions](shell-utils.md) have their own document
 
 `dots init [bash|zsh|fish|powershell|nu|xonsh]` emits native initialization code. With no argument, the generated code selects Bash or Zsh in the calling shell. `init` is reserved and bypasses extension discovery. Help and shell-name completion use built-in metadata. Native `bin/dots.ps1` supports shell-code initialization plus bounded setup, file inspection and installation recovery. Evaluating a hook loads only Dots integration from `lib/dots/shell/`; personal shell configuration stays separate. Settings use data-only config.env, with explicit environment overrides. Repository rc files resolve symlinks and source their adjacent loaders directly. See [shell initialization](shell-init.md) for the full interface, bootstrap, error statuses and native invocation examples.
 
-`dots init --setup [OPTIONS]` explicitly delegates to `dots files install`; `dots files uninstall` restores installer-owned targets. Install/uninstall accept `--dry-run`, `--yes`, `--json` and shared color/icon controls; install also accepts `--update` and repeatable `--with-source androidots|windots|nvim`. Root shell/PowerShell scripts use the same controller. Setup options are invalid on shell-code generation paths. See [checkout installation](installation.md) for ownership, updater stages, JSON results and recovery.
+`dots init --setup [OPTIONS]` explicitly delegates to `dots files install`; `dots files uninstall` restores installer-owned targets. Install/uninstall accept `--dry-run`, `--yes`, `--json` and shared color/icon controls; install also accepts `--update` and repeatable `--with-source termux|windows|nvim`. Root shell/PowerShell scripts use the same controller. Setup options are invalid on shell-code generation paths. See [checkout installation](installation.md) for ownership, updater stages, JSON results and recovery.
 
 POSIX setup and `dots theme refresh` check required generated outputs before
 reporting an unchanged theme. Setup previews identify an incomplete artifact or
@@ -307,7 +307,7 @@ versioned public API. Failed queries produce no candidates or diagnostics.
 ## Implemented Bash Theme Commands
 
 The route, argument, format, compatibility and exit-status contract is maintained
-in [Shared themes](themes.md#commands). Static headers on the official
+in [Shared themes](themes.md#unified-commands-and-family-shortcuts). Static headers on the official
 `dots-theme-*` entry points drive dispatcher help and completion. The closed
 palette providers augment that metadata with current theme files; they do not
 introduce extension callbacks. `theme set` delegates
@@ -446,3 +446,34 @@ Usage/help colors headings, command syntax, options and examples through the sha
 ## Standalone wttr
 
 **Implemented:** `bin/wttr` (Bash) and `bin/wttr.ps1` (native PowerShell) are standalone weather commands, not dispatcher extensions. They share static option metadata in `lib/dots/wttr/metadata.py`, a Python 3.11+ controller, colored help/progress, j1 JSON, scalar fields, widget templates, daylight/cache modes and transactional Bash/Zsh/Fish/PowerShell completion installation. See [the authoritative command/flag reference](wttr.md#commands-and-output) and `wttr -h`; the shared option metadata supplies case-sensitive short aliases to parsing, help and all four completions. Main/completion help has the authored blue-to-cyan theme-gradient banner and an icon-controlled title; completion never queries providers. Stock option groups, `format=VALUE`, moon and canonical single-slash service-page requests use bounded native curl and preserve upstream output. Stock descriptions drive Zsh/FZF-tab menus and other supported completion tooltips. Custom views and widgets support theme-based named temperature/icon colors, literal hex or ANSI 256-color overrides, combinable text attributes and attribution visibility. Temperature scales accept N cutoffs and N+1 styles. Widget/`--format` templates support accumulating style directives, dynamic icon/current-temperature/feels-like styles and reset; templates without directives retain automatic field styling. Human weather labels are aligned with configurable `label_gap` (three spaces by default); `Now` shows icon and temperature with a separate `Condition` row. Wind arrows point downwind, and location/wind/sunrise/sunset/humidity/precipitation icons are shared fields used in human views and templates. Named `[icons]`/`[icon_colors]` entries customize glyphs/styles, and matching widget color directives preserve manual styling. The location icon appears beside the city heading; humidity/wind/precipitation/sunrise/sunset icons follow their values with one separating space. Sunrise/sunset display fields omit leading hour zeros in human rows, widgets and scalar queries without changing raw JSON or daylight calculations; JSON/scalar/daylight output remains free of styling. Explicit location overrides configured `default_location`, then automatic termux-geo city. Android acquisition is Termux-only; manual/default weather works through the shared controller on other platforms.
+
+### Generated theme file inspection
+
+`dots theme files` defaults to `list [--app APP] [--json]`. Its read-only actions are `info FILE [--json]`, `show FILE [--source] [--raw]`, `path [FILE] [--source|--resolved]`, `check [--app APP] [--consumers] [--json]`, and `browse [--app APP]`. Standalone `theme files` and native PowerShell use the same controller. Artifact/app completion is data-only across Bash, Zsh, Fish and PowerShell. See [generated theme files](themes.md#generated-theme-files) for sources, destinations, status meanings and content limits, and [schema 1](specification.md#generated-theme-file-inspection) for machine contracts. The family command name `files` is reserved to keep this route unambiguous.
+
+
+Theme-file `show` now supports directory entries and optional terminal syntax highlighting through the captured Dots bat cache. `check --consumers` opts into failures for confirmed read-only consumer differences; ordinary `check` retains file/link health behavior. Runtime activation is distinct from configuration evidence. Raw regular-file output is unchanged; see [previews and evidence](themes.md#directory-and-highlighted-previews).
+
+## Platform profile and bootstrap commands
+
+`dots profile [--json]` inspects current platform facts and resolved inheritance.
+`dots profiles [--json]` lists available definitions and active layers. Both are
+read-only. `dots env [NAME] [--json]` now includes application defaults, context,
+PATH contributions and observed hook provenance in addition to settings/paths.
+`dots init --bootstrap bash|zsh|powershell` emits a standalone startup snippet;
+printing it does not clone or install anything. See [profiles](profiles.md).
+
+## Profile and debug diagnostics
+
+The implemented `profile show|layers|paths|env|files|commands|check [ID]` and
+`profiles list|check` routes provide read-only inspection. Their flags and
+selection semantics are described in [profiles](profiles.md#profile-inspection-subcommands).
+`debug check|startup|path|command|cache|test` uses the shared native controller,
+static command headers and contextual completions; see [debug commands](debug.md).
+Bare `debug` shows group help. No diagnostic silently activates or repairs state.
+
+File selectors use `termux:NAME` and `windows:NAME`, with `--repo termux|windows` for source filters. Legacy `androidots`/`windots` CLI names are rejected with a replacement hint; historical receipts remain recoverable. See [platform file identities](specification.md#canonical-platform-file-identities).
+
+## Wiki commands
+
+`dots wiki` shows navigation and checkout freshness. Its routes are `list`, `show`, `search`, `browse`, `open`, `edit`, `path`, `check`, `build` and `init`; exact options, data modes and examples are in [wiki maintenance](wiki.md). Page/section completion reads the static page manifest. `dots git wiki info|status|sync|publish` selects the separate wiki repository; top-level Git info/status/sync/publish accepts `--no-wiki`. No command runs extensions merely to generate the command reference.

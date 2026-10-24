@@ -49,3 +49,5 @@ See [shell initialization](shell-init.md), [testing](testing.md#shell-initializa
 ## Termux local completions
 
 Shell-native completion adapters also discover Androidots-local files on interactive Termux startup, preserving existing search paths and avoiding duplicate entries. Zsh registers before compinit; Bash uses bash-completion user bases; Fish uses fish_complete_path. See [the path contract](shell-init.md#termux-local-completion-directories) and [termux-geo installation](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md#shell-completions).
+
+Platform modules now load only for their active profile. See [profiles](profiles.md).

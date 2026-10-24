@@ -2,7 +2,7 @@
 # Native completion only; never source Zsh completion functions in Bash.
 _dots_bash_local_completion_path() {
   [[ $- == *i* ]] || return 0
-  local entry base="$DOTS/androidots/shells/bash" result=''
+  local entry base="$DOTS/profiles/termux/shells/bash" result=''
   local user_base="${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion"
   local -a entries
   IFS=: read -r -a entries <<< "${BASH_COMPLETION_USER_DIR:-$user_base}"
@@ -12,7 +12,7 @@ _dots_bash_local_completion_path() {
     case :$result: in *:"$entry":*) continue ;; esac
     result+=${result:+:}$entry
   done
-  if [[ ${DOTS_PLATFORM:-} == termux && -d $DOTS/androidots ]]; then
+  if [[ ${DOTS_PLATFORM:-} == termux && -d $DOTS/profiles/termux ]]; then
     result+=${result:+:}$base
   fi
   export BASH_COMPLETION_USER_DIR=$result

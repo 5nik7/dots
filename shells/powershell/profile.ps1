@@ -28,4 +28,7 @@ try {
         throw 'dots: PowerShell startup requires the Dots checkout layout'
     }
 } finally { Remove-Item Function:\Resolve-DotsStartupPath }
+. (Join-Path $dotsStartupRoot 'lib/dots/shell/debug.ps1')
+Write-DotsDebugEvent begin 'shells/powershell/profile.ps1' phase
 . (Join-Path $dotsStartupDirectory 'init.ps1') -StartupDirectory $dotsStartupDirectory
+Write-DotsDebugEvent end 'shells/powershell/profile.ps1' phase ([int](-not $?))

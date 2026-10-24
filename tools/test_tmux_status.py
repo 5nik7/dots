@@ -53,7 +53,7 @@ class TmuxStatus(unittest.TestCase):
         shutil.copyfile(REPO / 'config/tmux/termux-status.py', source)
         self.termux_adapter = self.tmux_config / 'termux-status.py'
         self.termux_adapter.symlink_to(source)
-        self.sessions_script = self.repo / 'androidots/bin/termux-sessions'
+        self.sessions_script = self.repo / 'profiles/termux/bin/termux-sessions'
         self.sessions_script.parent.mkdir(parents=True)
         self.sessions_script.write_text("""import os, pathlib, sys, time
 assert sys.argv[1:] == ['--json']

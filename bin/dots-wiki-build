@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Regenerate wiki pages and sidebar with backups
+# dots:usage=[--dry-run] [--yes] [--json]
+# dots:option=--dry-run||flag|Preview without writing files
+# dots:option=--yes||flag|Approve the build
+# dots:option=--json||flag|Emit versioned JSON
+WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
+exec python3 -B "$WIKI_LIB/wiki.py" build "$@"

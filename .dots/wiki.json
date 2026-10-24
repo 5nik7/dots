@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "checkout": "${HOME}/repos/dots.wiki",
+  "clone_url": "https://github.com/5nik7/dots.wiki.git",
+  "web_url": "https://github.com/5nik7/dots/wiki",
+  "source_url": "https://github.com/5nik7/dots",
+  "source_branch": "main",
+  "exclude_docs": [
+    "docs/README.md"
+  ],
+  "pages": [
+    {
+      "id": "Home",
+      "title": "Home",
+      "section": "Start here",
+      "source": "docs/wiki-home.md"
+    },
+    {
+      "id": "Installation",
+      "title": "Installation",
+      "section": "Start here",
+      "source": "docs/installation.md"
+    },
+    {
+      "id": "Commands",
+      "title": "Commands",
+      "section": "Start here",
+      "source": "docs/commands.md"
+    },
+    {
+      "id": "Command-reference",
+      "title": "Command reference",
+      "section": "Start here",
+      "generated": "commands"
+    },
+    {
+      "id": "Platforms",
+      "title": "Platforms",
+      "section": "Start here",
+      "source": "docs/platforms.md"
+    },
+    {
+      "id": "Shell-startup",
+      "title": "Shell startup",
+      "section": "Shells and environment",
+      "source": "docs/shell-init.md"
+    },
+    {
+      "id": "Shared-shells",
+      "title": "Shared shells",
+      "section": "Shells and environment",
+      "source": "docs/shared-shells.md"
+    },
+    {
+      "id": "Environment",
+      "title": "Environment",
+      "section": "Shells and environment",
+      "source": "docs/shell-environment.md"
+    },
+    {
+      "id": "Profiles",
+      "title": "Profiles",
+      "section": "Shells and environment",
+      "source": "docs/profiles.md"
+    },
+    {
+      "id": "Shell-utilities",
+      "title": "Shell utilities",
+      "section": "Shells and environment",
+      "source": "docs/shell-utils.md"
+    },
+    {
+      "id": "Files",
+      "title": "Managed files",
+      "section": "Managing Dots",
+      "source": "docs/files.md"
+    },
+    {
+      "id": "Git",
+      "title": "Git workflows",
+      "section": "Managing Dots",
+      "source": "docs/git.md"
+    },
+    {
+      "id": "Wiki",
+      "title": "Wiki maintenance",
+      "section": "Managing Dots",
+      "source": "docs/wiki.md"
+    },
+    {
+      "id": "Themes",
+      "title": "Themes",
+      "section": "Themes",
+      "source": "docs/themes.md"
+    },
+    {
+      "id": "File-colors",
+      "title": "File colors",
+      "section": "Themes",
+      "source": "docs/file-colors.md"
+    },
+    {
+      "id": "Theme-plugins",
+      "title": "Theme plugins",
+      "section": "Themes",
+      "source": "docs/theme-plugins.md"
+    },
+    {
+      "id": "Anodize",
+      "title": "Anodize",
+      "section": "Themes",
+      "source": "docs/anodize.md"
+    },
+    {
+      "id": "Leaf-setup",
+      "title": "Leaf setup",
+      "section": "Themes",
+      "source": "docs/leaf-build.md"
+    },
+    {
+      "id": "Debug",
+      "title": "Debugging",
+      "section": "Tools and troubleshooting",
+      "source": "docs/debug.md"
+    },
+    {
+      "id": "Weather",
+      "title": "Weather",
+      "section": "Tools and troubleshooting",
+      "source": "docs/wttr.md"
+    },
+    {
+      "id": "PowerShell",
+      "title": "Native PowerShell",
+      "section": "Reference",
+      "source": "docs/powershell.md"
+    },
+    {
+      "id": "Safety",
+      "title": "Safety and recovery",
+      "section": "Reference",
+      "source": "docs/safety.md"
+    },
+    {
+      "id": "Data-contracts",
+      "title": "Data contracts",
+      "section": "Reference",
+      "source": "docs/specification.md"
+    },
+    {
+      "id": "Principles",
+      "title": "Principles",
+      "section": "Contributing",
+      "source": "docs/principles.md"
+    },
+    {
+      "id": "Architecture",
+      "title": "Architecture",
+      "section": "Contributing",
+      "source": "docs/architecture.md"
+    },
+    {
+      "id": "Presentation",
+      "title": "CLI presentation",
+      "section": "Contributing",
+      "source": "docs/presentation.md"
+    },
+    {
+      "id": "Testing",
+      "title": "Testing",
+      "section": "Contributing",
+      "source": "docs/testing.md"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Config discovery, adoption and reversible catalog-backed file operations."""
+from identities import canonical, validate_cli
 import argparse
 from collections import Counter
 import json
@@ -48,7 +49,7 @@ class Manager:
             if not exists(path):
                 continue
             doc = read_json(path)
-            if doc.get('repository') != owner['id'] or not isinstance(doc.get('locations'), list):
+            if canonical(doc.get('repository')) != owner['id'] or not isinstance(doc.get('locations'), list):
                 raise ValueError('invalid location registry')
             identities = set()
             for item in doc['locations']:
@@ -416,6 +417,7 @@ def main():
     backups.add_argument('--backup', action='store_true', default=None)
     backups.add_argument('--no-backup', dest='backup', action='store_false')
     args = parser.parse_args()
+    validate_cli(args, parser)
     from interaction import selection_requested as requested
     picking = requested(parser, args, args.values, args.action in ('add', 'link', 'remove'))
     configure(not args.json and not args.dry_run)
