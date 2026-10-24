@@ -41,6 +41,11 @@ dots_value_candidates() {
       dt_discover_ids theme-id completion || return
       for name in "${DT_DISCOVERY_IDS[@]}"; do dots_candidate "$lead$name"; done
       ;;
+    git-submodule)
+      local output base=${DOTS_OPTION_VALUES[--directory]:-${DOTS_OPTION_VALUES[-C]:-$DOTS}}
+      output=$(python3 -B "$DOTS_LIB_DIR/git/inspection.py" _complete -C "$base" 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
+      ;;
     file-resource|file-repository)
       local action=list
       [[ $type != file-repository ]] || action=sources
@@ -199,6 +204,14 @@ dots_complete() {
       done
     fi
     if [[ ${words[index]} == help ]]; then help=1; (( ++index )); fi
+    if [[ ${words[index]} == git && ${words[index+1]:-} == submodule ]] && (( cursor >= index+2 )); then
+      dots_resolve "${words[@]:index:cursor-index}"; resolved=$?
+      (( resolved != 1 )) || return 1
+      if [[ $DOTS_ROUTE == "git submodule" && $DOTS_EXECUTABLE == "$DOTS/bin/dots-git-submodule" ]]; then
+        python3 -B "$DOTS_LIB_DIR/git/submodule.py" --complete "${words[@]:index+2:cursor-index-1}"
+        return
+      fi
+    fi
     if (( index == cursor )); then
       for token in "${DOTS_BUILTIN_NAMES[@]}"; do dots_candidate "$token" "${DOTS_BUILTIN_SUMMARY[$token]}"; done
       dots_completion_children '' || return

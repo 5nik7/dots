@@ -61,6 +61,7 @@ class Browser:
     @tracked('Loading file browser')
     def catalog(self):
         manager = Manager()
+        self.ui.repository_roots(manager.catalog.sources)
         rows = manager.catalog.records()
         rows = [r for r in rows if r['applicable'] and all(
             getattr(self.args, field) is None or r[key] == getattr(self.args, field)
@@ -74,7 +75,7 @@ class Browser:
             self.ui.heading('Browse tracked configs')
             for source in manager.catalog.sources:
                 if source['status'] != 'available':
-                    self.ui.detail('Repository', source['id'] + ': ' + source['status'])
+                    self.ui.repository_detail('Repository', source['root'], source['id'] + ': ' + source['status'])
             if not rows:
                 self.ui.emit('  No matching tracked configs. Use dots files list to inspect filters.')
                 return

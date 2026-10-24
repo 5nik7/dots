@@ -1,8 +1,8 @@
 # Git commands
 
-**Status: Implemented in the live Bash command family; native Windows is unsupported.**
+**Status: Implemented in Bash and the native Python/PowerShell controller; native Windows runtime and visual acceptance remain pending.**
 
-`dots git` shows static help for `status`, `publish`, and `sync`. These commands
+`dots git` shows static help for `info`, `submodule`, `submodules`, `status`, `publish`, and `sync`. These commands
 start at the dots repository regardless of cwd. `-C DIR` / `--directory DIR`
 selects the repository containing another directory, without climbing to its
 outermost parent. Only registered submodules are traversed, independently of the
@@ -93,6 +93,149 @@ Git commands require Bash 5, Git and ordinary POSIX utilities; publication also
 requires `sha256sum`. Basic dots help retains its existing lighter requirements.
 Tests and platform limits are in [testing](testing.md#git-and-managed-file-operations).
 
+## Repository info and submodules
+
+```bash
+dots git info
+dots git submodules
+dots git submodules --details --depth 2
+dots git submodules status
+dots git submodules status config/nvim --dirty
+dots git submodules publish config/nvim --dry-run
+dots git submodules publish config/nvim --yes -m 'Update editor'
+dots git submodules publish --all-submodules --all --dry-run
+```
+
+`info` shows repository identity/path, selected fetch remote and URL, owner
+namespace, configured ownership match, branch/HEAD/upstream, local-change counts,
+cached tracking counts and submodule availability counts. It does not list file
+contents or include the full tree. `Owner` is the account/namespace in the remote
+URL; `Owned` is an exact match against the configured owner rules, independent of
+color settings. Missing or malformed ownership configuration is identified.
+Credentials, query strings and URL fragments are removed from human and JSON
+output. Remote selection uses the attached branch's remote, falling back to
+`origin`; local-only upstream `.` also falls back to `origin`.
+
+`submodules` shows registered descendants in a tree: paths relative to the selected
+repository, branches, working-tree states, and HEAD differences from parent index
+pointers. `--details` adds remote/owner and full recorded/current commit IDs.
+`--depth N` limits discovery to N submodule levels (`1` means immediate children).
+Counts cover that traversal; the output explicitly identifies the depth limit.
+The limit deliberately avoids inspecting deeper registrations, so it does not
+claim that a displayed boundary node has no children.
+
+`submodules info [--depth N]` shows the same info fields for every discovered
+descendant, excluding the outer root. Each block adds its named selector and
+counts of discovered descendants from the same traversal. Depth-limited counts
+are explicitly scoped; missing children have an unavailable block and their
+undiscovered descendants remain unknown. Ambiguous selectors are identified.
+
+### Named submodule navigation
+
+```sh
+dots git submodule nvim                        # defaults to info
+dots git submodule nvim status --dirty
+dots git submodule nvim publish --dry-run
+dots git submodule windots:5ui7e info
+dots git submodule windots submodule 5ui7e info
+dots git submodule windots submodules info --depth 1
+dots git submodule windots submodules publish --all-submodules --dry-run
+```
+
+NAME is a direct child's path basename: `nvim` selects `config/nvim`, and
+`windots:5ui7e` crosses `windots` to its registered `rainmeter/5ui7e` child.
+Registration subsection names and remote repository names are not aliases.
+There is no recursive search for a matching basename. Duplicate sibling names
+are refused with exact-path alternatives; use `git info -C DIR` for their info
+or `git submodules status|publish PATH` for an exact registered path. Literal
+colons cannot be addressed by the short-name grammar. Use `--` before a
+leading-dash name, with options before the separator.
+
+`-C` selects the initial base even when placed after an action. Repeated singular
+navigation and colon chains are equivalent. `info` inspects the selected repo;
+`status` includes it and its descendants; `publish` resolves it to a registered
+path and uses guarded, child-first scoped publication. The excluded parent's
+index, commit and remote remain untouched. It may have a pending pointer update.
+Named `publish --all` includes unstaged files; it rejects `--all-submodules`.
+`NAME submodules` browses only descendants, and its `info`, `status [PATH]` and
+`publish PATH|--all-submodules` actions use the selected repo as their base.
+Missing nodes can be inspected but cannot be traversed or published.
+
+Contextual help reads static action headers without querying Git or executing
+extensions. Completion discovers only registered names/paths when requested,
+honors `-C`, and offers leaf-specific options in Bash, Zsh, Fish and PowerShell.
+Named JSON delegates to the existing action schema, with exact paths rather than
+display selectors in operation records. No executable is generated per name.
+
+### Path-based submodule actions
+
+`submodules status [PATH]` shows detailed Git status for descendants, or the named
+submodule and its descendants. `--dirty` retains staged, unstaged, untracked,
+conflicted and changed-pointer entries, plus missing/blocked entries. Clean
+repositories that are only ahead/behind or have unknown tracking are omitted.
+Discovery errors remain visible even when no ordinary status rows match.
+
+All these routes accept `-C DIR` / `--directory DIR`, `--json` and `--full-paths`.
+The base defaults to the Dots checkout, not cwd. PATH names a registered submodule
+relative to that base, including nested paths such as `middle/leaf`; it is not an
+arbitrary directory, basename alias or path outside the base. Use forward slashes
+on both platforms. Use `--` before a leading-dash PATH (put options before `--`).
+Completion suggests registered paths relative to the selected base, lazily and
+without executing extensions. No inspection initializes missing children or
+fetches remote information. Unavailable descendants remain unknown.
+
+Scoped publication requires PATH or `--all-submodules`, exclusively. The latter
+selects every direct child's subtree, excluding the outer repository. Existing
+publish options retain their meaning: `--all` selects ordinary unstaged/untracked
+files; it does **not** select all submodules. One combined preview and approval
+covers the forest. Children publish first; dependent parents are blocked after
+failure and safe siblings can continue. Selected roots have no mutable parent
+outside their selection: excluded ancestors are never staged, committed or pushed.
+A successful child publish can therefore leave an excluded parent's gitlink
+outdated; a `pending` event identifies this follow-up. Record that pointer later
+through an explicitly selected parent publication. Existing staged pointer intent
+inside selected subtrees is preserved. Selection registrations are rechecked
+before publication and after fetch, alongside the usual snapshot checks.
+
+Info/tree/status JSON emits one schema-1 object containing `command`, `base`,
+`selection` (selected path or null), `remote_state: "cached"`, `complete`,
+`depth_limit`, `depth_limited`, `submodules` availability counts, `errors`, and
+`repositories`. Info has one root record; tree/status contain descendant records.
+Records contain absolute `path`/`parent`, base-relative `relative_path`, `depth`,
+`availability`, `reason`, `recorded_commit`, `head`, `pointer_changed`, `branch`,
+`detached`, `status`, nullable `upstream`/`ahead`/`behind`, existing `files` records,
+and nullable `remote` metadata (`name`, sanitized `url`, `host`, `owner`, nullable
+`owned`, and `ownership`: configured/unconfigured/unavailable). Missing information
+is null rather than an invented value. A deliberately limited traversal can be
+complete within its depth; unavailable requested traversal sets `complete: false`.
+Empty collections and dirty state alone succeed.
+
+Collection info uses schema 1 with `command: "submodules info"` and the same
+discovery envelope. Each repository adds `selector` (null when ambiguous or not
+representable), `submodules` descendant availability counts and `depth_limited`.
+Counts describe discovered nodes only. Named info/status/publication retain the
+underlying action's JSON schema and values.
+
+Scoped publication retains the operation event schema with `command: "submodules
+publish"` and adds absolute `base` and a `selection` array of selected roots. The
+existing status/publish/sync JSON contracts are unchanged. Existing exit codes
+apply. New views and Bash submodule selection require Python 3.9+ in addition to
+Git; named contextual help also requires Python but never queries Git.
+Basic group help remains dependency-light.
+
+Human tree connectors are muted and remain connected through header rows,
+separators, nested entries, wrapped names/status, reasons and `--details` fields.
+Intermediate siblings use `├──`, final siblings use `└──`, and `│` continues only
+while that branch remains open. Icon-disabled human views use ASCII equivalents.
+Empty trees have no dangling guides; summary rows sit outside the tree. Ordinary
+redirected text retains its established layout.
+
+Repository/branch/status fields use published Git roles and identity icons.
+Git info `Path` fields use the shared folder icon and directory color, including
+collection and named info. `--full-paths` changes the displayed path, not its
+styling. Narrow views wrap complete values; icons and colors remain independent.
+Shared progress is disabled for redirected/JSON/dry-run output.
+
 ## Theme colors
 
 Dots Git status, sync and publish use the shared [Git style roles](file-colors.md#git-styles). Repository names use `repo_owned` when the selected fetch remote matches a configured owner, otherwise `repo`; branches use `branch`, or `detached` for detached HEAD descriptions. Tracking counts use `ahead` and `behind`. Repository status uses its corresponding role. Successful operation events use `clean`, failed/blocked events use `blocked`, and missing/modified events use their named roles. Neutral information, planned operations and final summaries retain shared diagnostic colors.
@@ -105,4 +248,9 @@ Ownership highlighting uses the branch remote (falling back to `origin`) and exa
 
 ## Native PowerShell
 
-`dots.ps1 git status|sync|publish` invokes `lib/dots/git/cli.py` directly with native Git. It preserves cached status, dry-run, ownership checks, recursive child-before-parent publication, explicit remote/ref arguments and refusal to discard local state. `tools/test_native_git.py` runs the portable safety cases against that controller. Bash PTY cases are excluded from that runner and remain separate; native Windows Ctrl-C/Ctrl-Break, lock cleanup and visual equivalence still require acceptance. See [native PowerShell](powershell.md).
+`dots.ps1 git status|sync|publish` and `git submodules publish` invoke `lib/dots/git/cli.py` directly with native Git. It preserves cached status, dry-run, ownership checks, recursive child-before-parent publication, explicit remote/ref arguments and refusal to discard local state. `tools/test_native_git.py` runs the portable safety cases against that controller. Bash PTY cases are excluded from that runner and remain separate; native Windows Ctrl-C/Ctrl-Break, lock cleanup and visual equivalence still require acceptance. See [native PowerShell](powershell.md).
+
+The new info/tree/submodule-status routes share `inspection.py` between Bash and
+PowerShell. Scoped publication reuses each established engine. Windows app
+destinations are unchanged; see the [focused plan](../plans/git-submodules.md)
+for verification and remaining native acceptance.

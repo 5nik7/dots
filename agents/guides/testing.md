@@ -99,6 +99,8 @@ For `dots menu tmux keys`, run `python3 -B tools/test_tmux_keys.py`, the Bash di
 
 ## Existing Yazi Configuration
 
+For preview changes, run the standalone source repository's `lua test-preview.lua` and `python3 -B test-preview-native.py`, including `--config-dir` against a staged personal config. Keep its image cache and TMPDIR/DDS roots explicit and private; native Glow/Rich checks remain unavailable unless those tools work. Run the existing regression/package suites and Dots bundle consistency checker after package upgrade.
+
 For `config/yazi/plugins/dots.yazi` changes, run its Lua dispatcher, Git-head metadata, hover and LS_COLORS fixtures, GNU ls oracle comparisons, and isolated native PTY runner as documented in [Testing Strategy](../../docs/testing.md#yazi-plugin-bundle). The native runner needs Python, Git, git-it, and Yazi on a Unix PTY and owns all home/config/state/cache/runtime and DDS storage. Never test project saves, deletions, or merge events against the live configuration. Keep fixture results, native platform evidence, and visual review limits distinct.
 
 For Vivid/FSH theme adapter changes, additionally run `python3 -B tools/test_file_themes.py`
@@ -167,6 +169,10 @@ adapters require no network or live app changes. Use `python3 -B tools/bench_fil
 for inventory scaling, sequentially with other benchmarks.
 
 ## Git and managed file operations
+
+For Git info/submodule routes, also run `python3 -B tools/test_git_submodules.py`;
+keep publication in disposable repositories and local bare remotes. Record native
+PowerShell terminal/engine acceptance separately from shared-controller tests.
 
 Use `python3 -B tools/test_git_operations.py` and `python3 -B tools/test_file_operations.py` for the bounded operation engines. Fixtures own configuration/state/Git roots; publication uses local bare remotes through a test-only transport. Include abrupt interruption, snapshot drift, partial failure and optional backup cases. Run existing file and Bash suites for shared contracts and completion; never test sync, publish, import or restore against live repositories or configs.
 
@@ -261,3 +267,5 @@ For standalone wttr and the Termux daylight clock, use `tools/test_wttr.py`, the
 For default eza templates/connectors, run `python3 -B tools/test_eza_theme.py -v` and the affected file-color, theme/workflow, native-controller and installation suites sequentially. Keep actual eza ANSI acceptance separate from YAML parsing and simulated Windows destination checks; see [eza verification](../../docs/testing.md#eza-theme).
 
 For Television templates/connectors, run `python3 -B tools/test_television_theme.py -v`, followed by affected theme/workflow and native-controller tests sequentially. Keep synthetic PTY inputs and all home/config/data/state/cache roots isolated; see [Television verification](../../docs/testing.md#television-theme).
+
+For user-local completion directory discovery or precedence, run `python3 -B tools/test_local_completions.py` with the affected startup/environment suites. Use synthetic colliding providers to verify actual loading, preserving XDG overrides, native fallback paths and noninteractive boundaries. See [local completion checks](../../docs/testing.md#user-local-completion-paths).

@@ -1,5 +1,19 @@
 local dots = require("dots")
 dots:setup({
+  preview = {
+    image = {
+      renderer = "default",
+      symbols = "quad",
+      args = { chafa = {} },
+      platforms = { termux = { renderer = "chafa" } },
+    },
+    markdown = {
+      renderer = "mdcat",
+      source = "bat",
+      args = { mdcat = {}, glow = {}, rich = {}, bat = {}, cat = {} },
+      platforms = {},
+    },
+  },
   theme = { source = "dots" },
   full_border = {
     -- Available values: ui.Border.PLAIN, ui.Border.ROUNDED

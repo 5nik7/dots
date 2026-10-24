@@ -1,4 +1,12 @@
 typeset -gU fpath
+_dots_zsh_local_completion_path() {
+  [[ -o interactive ]] || return 0
+  local directory="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions"
+  [[ ! -d $directory ]] || fpath=("$directory" "${fpath[@]}")
+  export FPATH
+}
+# Plugins have registered their paths; user-local providers take priority.
+_dots_zsh_local_completion_path
 local directory="$XDG_CACHE_HOME/dots/zsh/${DOTS_PLATFORM:-linux}-$ZSH_VERSION"
 mkdir -p -- "$directory"
 : ${ZSH_COMPDUMP:="$directory/zcompdump"}
@@ -23,6 +31,7 @@ _dots_literal_completion_dump() {
   fi
 }
 _dots_compinit() {
+  _dots_zsh_local_completion_path
   # Repair existing dumps before loading them. With read-only cache storage,
   # rebuild in memory instead of sourcing a dump that could abort autoloading.
   if ! _dots_literal_completion_dump; then

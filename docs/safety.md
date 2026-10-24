@@ -478,7 +478,8 @@ and a regular usable config; it is not destructive repository deletion.
 ## Recursive Git Operations
 
 The [Git family](git.md) is a separate bounded Git workflow, not a managed-file
-transaction. Status and previews are local and read-only. Actual sync/publish use
+transaction. Status, info, submodule inspection/completion and previews are local
+and read-only. Actual sync/publish use
 per-repository common-directory locks, observed-state rechecks, explicit branch
 choices and conservative refusal policies. Git hooks/signing and credential
 helpers remain active during explicitly requested real operations. Only sync
@@ -491,6 +492,17 @@ ignored new files. A staging failure may leave partial index changes for review.
 Completed work
 is retained; no multi-repository rollback is promised. Tests never perform these
 operations against live repositories or external services.
+
+Scoped `git submodules publish` applies the same Git checks to a selected forest.
+It requires PATH or explicit `--all-submodules`, previews once and confirms once.
+Excluded parent indexes, HEADs and remotes are never modified by the engine;
+changed child pointers are reported for later recording. Registration/selection
+checks repeat before a selected repository is published and after fetching.
+Missing or unsafe children remain blocked, and safe siblings may continue.
+This remains an incremental Git workflow, not a rollback transaction. Inspection
+and completion never initialize children, fetch, acquire mutation locks or reveal
+URL credentials/query strings/fragments. Hooks remain trusted user code and can
+have their own external effects.
 
 ## Anodize authoring and apply
 

@@ -45,7 +45,7 @@ declare -A dots_options
 BASH_COMPLETION_USER_DIR="$HOME/custom one:$HOME/custom two"
 source "$DOTS/shells/bash/core/completion.bash"
 source "$DOTS/shells/bash/core/completion.bash"
-[[ $BASH_COMPLETION_USER_DIR == "$DOTS/androidots/shells/bash:$HOME/custom one:$HOME/custom two" ]] || exit 1
+[[ $BASH_COMPLETION_USER_DIR == "$HOME/custom one:$HOME/custom two:$DOTS/androidots/shells/bash" ]] || exit 1
 _dots_bash_tool_completion termux-geo || exit 2
 complete -p termux-geo || exit 3
 COMP_WORDS=(termux-geo --provider g); COMP_CWORD=2
@@ -60,7 +60,7 @@ DOTS_PLATFORM=termux
 source "$DOTS/bin/lib/common.sh"
 declare -A dots_options
 source "$DOTS/shells/bash/core/completion.bash"
-[[ $BASH_COMPLETION_USER_DIR == "$DOTS/androidots/shells/bash:$XDG_DATA_HOME/bash-completion" ]] || exit 1
+[[ $BASH_COMPLETION_USER_DIR == "$XDG_DATA_HOME/bash-completion:$DOTS/androidots/shells/bash" ]] || exit 1
 DOTS_PLATFORM=linux
 BASH_COMPLETION_USER_DIR="$HOME/custom"
 _dots_bash_local_completion_path
@@ -92,7 +92,9 @@ autoload +X _termux-geo || exit 4
         p = self.shell('fish', r'''
 source "$DOTS/shells/fish/init.fish"
 source "$DOTS/shells/fish/init.fish"
-test "$fish_complete_path[1]" = "$DOTS/androidots/shells/fish/completions"; or exit 1
+set -l android_index (contains -i -- "$DOTS/androidots/shells/fish/completions" $fish_complete_path)
+set -l repo_index (contains -i -- "$DOTS/shells/fish/completions" $fish_complete_path)
+test -n "$android_index"; and test "$android_index" -lt "$repo_index"; or exit 1
 test (count (string match -- "$DOTS/androidots/shells/fish/completions" $fish_complete_path)) -eq 1; or exit 2
 complete -C 'termux-geo get post'
 ''')

@@ -43,6 +43,8 @@ optional static comment headers and never execute extensions. See the
 [command authoring and completion contract](docs/commands.md#implemented-bash-command-framework)
 for header examples, shared output helpers, and standalone integration.
 
+Personal Bash, Zsh and Fish startup discovers [user-local completions](docs/shell-init.md#user-local-completion-directories) with priority over repository providers. This includes Zsh's `${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions`, Bash's user completion bases and Fish's native user directories. Start a new shell after configuration changes; Zsh's `rlcs` also refreshes local completion discovery.
+
 ## Install, update and uninstall
 
 From an existing checkout, run `./install.sh --dry-run`, then `./install.sh` to review and apply the platform's mapped configurations. Windows uses `./install.ps1 -DryRun` and `./install.ps1`. Setup creates missing parents, retains verified backups before replacement, installs the command entry and shell configs, and prepares supported platform theme connectors. Existing correct links remain unchanged.
@@ -112,7 +114,8 @@ Edit `${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env`, then reload your shell
 or initialize again. `dots init` loads only Dots integration; repository startup
 files separately load personal preferences. `dots env` groups the current theme,
 settings and paths into a readable terminal view with colored labels and value
-sources. `dots env NAME` remains a plain scalar and `dots env --json` returns data.
+sources. Human path fields show `~` for the home directory. `dots env NAME`,
+`dots env --json` and ordinary redirected listings retain full paths.
 See [settings and native variable examples](docs/shell-environment.md).
 The old env files, repository theme-selection markers and `themes/bin` wrappers
 have been removed. Use `dots theme current` instead of `current_theme`; set the
@@ -138,7 +141,7 @@ dots theme bg next                 # Explicit wallpaper change
 
 The Yazi configuration uses the local [dots.yazi plugin](config/yazi/plugins/dots.yazi/README.md), combining the Dotline header/status renderer, Git indicators, saved projects, folder rules, and pane toggles. File panes use inherited `LS_COLORS` styles, including backgrounds and text attributes; the `hover` header component defaults to the symlink’s own style before the arrow and the target basename’s actual style after it, with a separately styled target directory, with independent style sources, color/attribute overrides, and visibility options for each part. Its repository component shows the Git working tree folder name before branch details and hides outside repositories. Optional `git-it` adds a remote host icon and a configurable color for repositories matching its configured owners; the personal config uses green for owned repositories and blue otherwise.
 
-The personal Yazi configuration uses square section edges and a status-line mode indicator: `N` for normal, `V` for visual selection, and `U` for unsetting selections.
+The personal Yazi configuration uses square section edges and a status-line mode indicator: `N` for normal, `V` for visual selection, and `U` for unsetting selections. The bundled [dots.preview component](config/yazi/README.md) uses Chafa's `vhalf` image rendering on Termux and mdcat for Markdown, with Alt+m toggling Bat source view per tab. Image/Markdown renderers, extra arguments and platform overrides live in `init.lua`.
 
 The shared palette supplies Bash, Zsh, Neovim, Termux, Kitty, tmux, btop, bat, Yazi, Codex/Codex-Termux, Pi, FZF, Gum, Vivid and Fast Syntax Highlighting.
 Bash/Zsh color arrays such as `${blue[hex]}` and `${hint[esc]}` follow the current Dots theme, including semantic roles and native color names. Global `$rst` and `$RST` reset terminal colors and text attributes. Fixed Catppuccin flavor arrays remain available for compatibility; see the [shell color API](docs/themes.md#shell-and-neovim-behavior).
@@ -282,7 +285,23 @@ directories. Synchronization keeps recorded child commits unless
 explicitly asked to advance them. Configure allowed publication owners using the
 [Git guide](docs/git.md).
 
+Inspect the Dots repository with `dots git info`, browse registered descendants
+with `dots git submodules --details`, or show their full info blocks with
+`dots git submodules info --depth 2`. Use `dots git submodule nvim` for one
+repository, `dots git submodule nvim status --dirty` for its subtree, or
+`dots git submodule windots:5ui7e info` for a nested child. Named navigation uses
+direct-child path basenames; `submodule windots submodule 5ui7e` is equivalent.
+Preview publication with `dots git submodule nvim publish --dry-run` or the exact
+path form `dots git submodules publish config/nvim --dry-run`. Both exclude the
+outer repository. Use plural `publish --all-submodules` to select every direct
+child subtree. Human identities use host icons and `main`, following your icon
+and color settings; Git info `Path` fields use normal folder styling. Human
+submodule trees keep vertical guides connected through spacing and details.
+JSON and scalar output keep their original values.
+
 ```bash
+dots git info
+dots git submodules
 dots git status
 dots git publish --dry-run
 dots git sync --dry-run

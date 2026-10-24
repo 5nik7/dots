@@ -49,7 +49,7 @@ sync_children() {
 
 sync_node() {
     local dir=$1 pinned=${2:-} parent=${3:-} path=${4:-} before target name branch remote ref tracking attached=0
-    dots::progress_start "Inspecting repository: ${dir##*/}"
+    dots::progress_start 'Inspecting repository'
     [[ ! -v VISITED[$dir] ]] || { event "$dir" blocked 'repeated repository in traversal'; return 1; }
     VISITED[$dir]=1
     lock_repo "$dir" || return 1
@@ -85,13 +85,13 @@ sync_node() {
         target=$pinned
         if ! git -C "$dir" cat-file -e "$target^{commit}" 2>/dev/null; then
             select_remote "$dir" || return 1; remote=${REMOTE:-origin}
-            dots::progress_external "Fetching recorded commit: ${dir##*/}"
+            dots::progress_external 'Fetching recorded commit'
             if ! git -C "$dir" fetch --quiet --no-tags --no-recurse-submodules -- "$remote" "$target" >/dev/null 2>&1; then
                 event "$dir" failed 'recorded commit could not be fetched'; return 1
             fi
         fi
     fi
-    dots::progress_start "Updating repository: ${dir##*/}"
+    dots::progress_start 'Updating repository'
     # Fetch can invoke credential helpers; recheck worktree state afterwards.
     if ! clean_own_files "$dir" || ! text_cmd git -C "$dir" rev-parse HEAD || [[ $REPLY != "$before" ]]; then
         event "$dir" blocked 'repository changed during fetch'; return 1
@@ -142,7 +142,7 @@ fingerprint() {
 collect_publish() {
     local dir=$1 parent=${2:-} path child
     local -a paths=()
-    dots::progress_start "Collecting publish inputs: ${dir##*/}"
+    dots::progress_start 'Collecting publish inputs'
     [[ ! -v VISITED[$dir] ]] || { event "$dir" blocked 'repeated repository'; return 1; }
     VISITED[$dir]=1; PARENT[$dir]=$parent
     lock_repo "$dir" || { BLOCKED[$dir]=1; return 1; }
@@ -258,16 +258,19 @@ publish_node() {
        [[ $PUSH_URL != "$destination" || $UP_REF != "$ref" || $UP_REMOTE != "$remote" || $BRANCH != "${PREVIEW_BRANCH[$dir]}" ]]; then
         event "$dir" blocked 'inputs or destination changed during preflight'; return 1
     fi
+    if ((${SCOPED_PUBLISH:-0})) && ! recheck_publish_scope; then
+        event "$dir" blocked 'submodule selection changed during preflight'; return 1
+    fi
     if ((ALL)); then
         stage_own_files "$dir" || { event "$dir" failed 'staging failed; staged changes retained (inspect git status)'; return 1; }
     fi
     if ! git -C "$dir" diff --cached --quiet --ignore-submodules=none --; then
-        dots::progress_external "Committing selected changes: ${dir##*/}"
+        dots::progress_external 'Committing selected changes'
         if ! git -C "$dir" commit -m "$MESSAGE" >/dev/null 2>&1; then
             event "$dir" failed 'commit failed; staged changes retained (check identity and hooks)'; return 1
         fi
     fi
-    dots::progress_external "Pushing selected changes: ${dir##*/}"
+    dots::progress_external 'Pushing selected changes'
     if ! git -C "$dir" -c push.followTags=false push --porcelain --recurse-submodules=check -- "$destination" "HEAD:$ref" >/dev/null 2>&1; then
         event "$dir" failed 'push failed; local commit retained and parent publication blocked'; return 1
     fi
@@ -298,8 +301,30 @@ publish_node() {
     fi
 }
 
+# The shared selector emits a digest followed by NUL-delimited edge records.
+select_publish_scope() {
+    local -a args=(_select -C "$ROOT")
+    if ((ALL_SUBMODULES)); then args+=(--all-submodules); else args+=(-- "$SCOPE_PATH"); fi
+    records_cmd python3 -B "$LIB/inspection.py" "${args[@]}"
+}
+recheck_publish_scope() {
+    select_publish_scope && [[ ${RECORDS[0]:-} == "$SCOPE_HASH" ]]
+}
+report_parent_pointers() {
+    local dir parent head i
+    for ((i=0;i<${#SCOPE_ROOTS[@]};i++)); do
+        dir=${SCOPE_ROOTS[i]}; parent=${SCOPE_PARENTS[i]}
+        repo_root "$dir" && [[ $REPLY == "$dir" ]] || continue
+        text_cmd git -C "$dir" rev-parse --verify HEAD 2>/dev/null || continue
+        head=$REPLY
+        if [[ $head != "${SCOPE_OIDS[i]}" ]]; then
+            event "$parent" pending "Submodule ${dir#"$parent/"} differs from the parent index; record its pointer separately. Parent index was not changed by this command."
+        fi
+    done
+}
 operations_main() {
     local DOTS_PROGRESS_STARTED='' progress_count=0
+    SCOPE_ROOTS=(); SCOPE_PARENTS=(); SCOPE_OIDS=(); SCOPE_HASH=''
     EVENT_DIRS=(); EVENT_STATES=(); EVENT_REASONS=(); EVENT_FILES=(); EVENT_CODES=(); LAST_EVENT_REPO=''; LOCKS=(); PUB_DIRS=(); RESULT=0; PUBLISH_CANDIDATES=0
     declare -gA HELD=() VISITED=() BLOCKED=() SNAPSHOTS=() PARENT=() EXPECTED=()
     declare -gA PREVIEW_DEST=() PREVIEW_REF=() PREVIEW_REMOTE=() PREVIEW_BRANCH=()
@@ -313,7 +338,26 @@ operations_main() {
         if [[ -z $MESSAGE ]]; then
             text_cmd date -u '+%Y-%m-%d %H:%M UTC'; MESSAGE="Sync via ${HOSTNAME:-unknown} on $REPLY"
         fi
-        dots::progress_run 'Collecting publish inputs' collect_publish "$ROOT" || RESULT=1
+        if ((SCOPED_PUBLISH)); then
+            select_publish_scope || return $?
+            local -a selected_edges=("${RECORDS[@]}")
+            local scope_i
+            SCOPE_HASH=${selected_edges[0]}
+            for ((scope_i=1;scope_i<${#selected_edges[@]};scope_i+=5)); do
+                SCOPE_ROOTS+=("${selected_edges[scope_i]}")
+                SCOPE_PARENTS+=("${selected_edges[scope_i+1]}")
+                SCOPE_OIDS+=("${selected_edges[scope_i+2]}")
+                if [[ ${selected_edges[scope_i+3]} != available ]]; then
+                    event "${selected_edges[scope_i]}" blocked "${selected_edges[scope_i+4]}"; RESULT=1
+                else
+                    dots::progress_run 'Collecting publish inputs' collect_publish "${selected_edges[scope_i]}" || RESULT=1
+                fi
+            done
+            if ((!JSON)); then dots::info 'Only selected subtrees will publish; excluded parent indexes remain unchanged.'; fi
+            if ((!JSON && ${#SCOPE_ROOTS[@]} == 0)); then dots::info 'No registered submodules.'; fi
+        else
+            dots::progress_run 'Collecting publish inputs' collect_publish "$ROOT" || RESULT=1
+        fi
         local dir parent answer
         ((!JSON)) && dots::heading "Publish preview"
         for dir in "${PUB_DIRS[@]}"; do publish_preview "$dir"; done
@@ -343,8 +387,11 @@ operations_main() {
             fi
             if ((!JSON)); then dots::heading "Publishing selected repositories"; LAST_EVENT_REPO=''; fi
             for dir in "${PUB_DIRS[@]}"; do
-                dots::progress_start "Publishing repositories: ${dir##*/}" "$progress_count" "${#PUB_DIRS[@]}"
+                dots::progress_start 'Publishing repositories' "$progress_count" "${#PUB_DIRS[@]}"
                 parent=${PARENT[$dir]}
+                if ((SCOPED_PUBLISH)) && ! recheck_publish_scope; then
+                    event "$dir" blocked 'submodule selection changed after preview'; RESULT=1; break
+                fi
                 # Validate parent BEFORE permitting the known child-induced change.
                 if [[ -n $parent ]]; then
                     if ! fingerprint "$parent" || [[ $REPLY != "${SNAPSHOTS[$parent]}" ]]; then
@@ -361,6 +408,7 @@ operations_main() {
         fi
     fi
     dots::progress_stop
+    if ((SCOPED_PUBLISH && !DRY_RUN)); then report_parent_pointers; fi
     operations_report
     return "$RESULT"
 }

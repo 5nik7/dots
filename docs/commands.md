@@ -72,10 +72,32 @@ the published colors. See [Vivid and FSH](themes.md#vivid-and-fast-syntax-highli
 
 ## Implemented Git and managed-file operations
 
-The [Git reference](git.md) defines `dots git status|publish|sync`, recursive
+The [Git reference](git.md) defines `dots git info|submodule|submodules|status|publish|sync`, recursive
 semantics, configuration, compact views and JSON. Git synchronization now belongs
 to `dots git sync`; the former proposed `dots repo pull` spelling is superseded.
 This remains distinct from future bootstrap and optional-source resolution.
+
+Implemented routes: `dots git info`, `dots git submodules`,
+`dots git submodules info`,
+`dots git submodules status [PATH]`, and
+`dots git submodules publish PATH|--all-submodules`.
+All accept `-C`/`--directory`, `--json`, and `--full-paths`. The tree accepts
+`--details` and positive `--depth N`; collection info also accepts `--depth N`.
+Submodule status accepts `--dirty`.
+`dots git submodule NAME [info|status|publish|submodules|submodule CHILD]`
+provides named navigation; bare NAME defaults to info. Names are direct-child
+path basenames and colon-separated names cross registered edges. Its leaf options
+and help reuse the canonical action headers. Contextual name, action and option
+completion is shared across all four shells; name discovery runs on demand.
+Scoped publication retains the existing publish options and one combined approval;
+`--all` selects unstaged files, while `--all-submodules` selects child subtrees.
+Registered PATH operands are relative to the selected repository and complete in
+Bash, Zsh, Fish and PowerShell through the core-owned `git-submodule` provider.
+Human info `Path` fields use folder styling; human submodule trees maintain
+connected guides through spacing, nesting, wrapping and details. Redirected
+text and JSON keep their established formats.
+See [Git commands](git.md#repository-info-and-submodules) for schemas, safety,
+presentation, dependencies and examples. No new sync route is introduced.
 
 The [files reference](files.md) also defines `locations`, `discover --system`,
 `add`, `link`, `remove`/`rm`, `history`, `undo`, `recover` and
@@ -212,8 +234,10 @@ preceded by `-`. Option names must be unique. Positional records are
 `POSITION|TYPE|DESCRIPTION`: positions start at 1 and are contiguous; a final `*`
 applies to remaining positions. Types are `flag` (options only), `string`, `file`,
 `directory`, `choice:VALUE,VALUE`, or the core-owned theme data types
-`theme`, `flavor`, `palette-color`, `color-format`, `theme-id`, `theme-color`, `theme-plugin`, `file-resource`, and
-`file-repository`. `theme-plugin` reads local plugin names without executing hooks;
+`theme`, `flavor`, `palette-color`, `color-format`, `theme-id`, `theme-color`, `theme-plugin`, `file-resource`,
+`file-repository`, and `git-submodule`. The latter reads registered descendant paths
+relative to Dots or a preceding `-C`/`--directory`, without initialization or network.
+`theme-plugin` reads local plugin names without executing hooks;
 `theme-id`, `file-resource`, and `file-repository` read flat theme IDs and qualified catalog IDs. Theme ID and native family/flavor enumeration use the data-only shared theme discovery module; current-ID reconstruction is shared with theme queries. Flat completion retains literal filename hints (including duplicates and invalid names); listing validates/deduplicates IDs and selection still validates them. `theme` lists native families for `list --flavors`. `theme-color` reads the selected theme or a preceding `--theme ID`/`--theme=ID`, honoring a preceding `--native`; it suggests native names alone in native mode and semantic/native names otherwise. The retained generic `flavor`/`palette-color` metadata providers use preceding positional family/flavor arguments. All providers read data and never execute
 extensions. Fields cannot contain `|`; choice values
 cannot contain commas. Descriptions are required. No code callbacks, aliases,
@@ -665,7 +689,8 @@ flags, defaults, collision handling and logo behavior.
 A named query is a plain scalar; JSON has version 1 and values/source records.
 The human view groups current theme, settings and paths, with semantic colors,
 boolean explanations and source labels. Narrow terminals stack fields and wrap
-complete values. Unforced redirected listings retain `NAME=value [source]`;
+complete values, abbreviating the home directory as `~` in human path fields.
+Unforced redirected listings retain full paths in `NAME=value [source]`;
 color controls never decorate named scalar or JSON results. See
 [environment views](shell-environment.md) for presentation details.
 `theme` and `dots theme` without arguments show the selected palette; `current`

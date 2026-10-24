@@ -14,6 +14,8 @@ margin = true
 # Render typographic punctuation: curly quotes, en/em dashes, an ellipsis (same as
 # --smart-punctuation).
 smart_punctuation = true
+emoji = true
+frontmatter = true
 # Maximum number of columns to wrap output to (same as --columns). Omit to use the terminal
 # width, capped at 80.
 # columns = 100

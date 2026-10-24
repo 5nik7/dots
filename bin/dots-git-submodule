@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Navigate a registered submodule by name
+# dots:usage=NAME [info|status|publish|submodules|submodule CHILD] [OPTIONS]
+# dots:option=--directory|-C|directory|Initial repository directory
+# dots:example=dots git submodule nvim info
+# dots:example=dots git submodule windots:5ui7e status
+GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3
+exec python3 -B "$GIT_LIB/submodule.py" "$@"

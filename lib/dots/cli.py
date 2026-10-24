@@ -22,6 +22,10 @@ def controller(relative, args):
 
 
 def help_view(directories, words):
+    if words[:2] == ['git', 'submodule']:
+        stem, path, _ = resolve(directories, words)
+        if stem == 'git-submodule' and path.parent.resolve() == (LIB.parents[1] / 'bin').resolve():
+            return controller('git/submodule.py', ['--help-context', *words[2:]])
     sys.path.insert(0, str(LIB / 'files'))
     from catalog import Presentation
     ui = Presentation()
@@ -79,6 +83,10 @@ def complete(root, directories, words):
         print('directory\t\t'); return 0
     help_context = previous[:1] == ['help']
     if help_context: previous = previous[1:]
+    if previous[:2] == ['git', 'submodule']:
+        stem, path, _ = resolve(directories, previous)
+        if stem == 'git-submodule' and path.parent.resolve() == (LIB.parents[1] / 'bin').resolve():
+            return controller('git/submodule.py', ['--complete', *previous[2:], current])
     rows = catalog(directories)
     stem, path, consumed = resolve(directories, previous)
     metadata = read(path.with_suffix('.meta') if path.suffix == '.exe' else path) if path else None
@@ -100,6 +108,12 @@ def complete(root, directories, words):
             from catalog import Catalog, platform
             source = Catalog(root, platform())
             for row in source.sources if kind == 'file-repository' else source.records(): add(row['id'])
+        elif kind == 'git-submodule':
+            base = option_values.get('--directory') or option_values.get('-C') or root
+            result = subprocess.run([sys.executable, '-B', str(LIB / 'git/inspection.py'), '_complete', '-C', str(base)],
+                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+            if result.returncode == 0:
+                for value in result.stdout.splitlines(): add(value)
         elif kind == 'dots-setting':
             for filename in ('settings.tsv', 'paths.tsv'):
                 for line in (LIB / 'shell' / filename).read_text().splitlines():
@@ -298,6 +312,8 @@ def main(argv=None):
     if not path:
         return help_view(directories, args)
     if any(a in ('--help', '-h') for a in args[:args.index('--') if '--' in args else len(args)]):
+        if stem == 'git-submodule' and path.parent.resolve() == (root / 'bin').resolve():
+            return controller('git/submodule.py', args[count:])
         if stem == 'theme' and len(args) > count and not args[count].startswith('-'):
             return controller('themes/theme_cli.py', args[count:])
         return help_view(directories, stem.split('-'))
@@ -340,7 +356,15 @@ def main(argv=None):
         raise ValueError('theme and Anodize commands require Python 3.11 or newer')
     if parts[0] == 'anodize': return controller('anodize/cli.py', [*parts[1:], *rest])
     if parts[0] == 'env': return controller('environment.py', rest)
-    if parts[0] == 'git': return controller('git/cli.py', [*parts[1:], *rest])
+    if parts[0] == 'git':
+        if parts[1:] == ['submodule']:
+            return controller('git/submodule.py', ['--frontend=native', *rest])
+        if parts[1:] in (['info'], ['submodules'], ['submodules', 'status'], ['submodules', 'info']):
+            action = 'status' if parts[1:] == ['submodules', 'status'] else 'submodules-info' if parts[1:] == ['submodules', 'info'] else parts[1]
+            return controller('git/inspection.py', [action, *rest])
+        if parts[1:] == ['submodules', 'publish']:
+            return controller('git/cli.py', ['submodules-publish', *rest])
+        return controller('git/cli.py', [*parts[1:], *rest])
     if parts[0] in ('theme', 'themes'):
         if parts[1:2] == ['colors']: return controller('themes/file-colors.py', [*parts[2:], *rest])
         if parts[1:2] == ['plugins'] and len(parts) > 2: return controller('themes/plugins.py', [*parts[2:], *rest])

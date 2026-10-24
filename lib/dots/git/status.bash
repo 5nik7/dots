@@ -40,7 +40,7 @@ status_main() {
     if ((JSON)); then printf '{"schema":1,"remote_state":"cached","repositories":['
     else dots::heading 'Git status'; fi
     for dir in "${STATUS_DIRS[@]}"; do
-        dots::progress_start "Inspecting repositories: ${dir##*/}" "$progress_count" "${#STATUS_DIRS[@]}"
+        dots::progress_start 'Inspecting repositories' "$progress_count" "${#STATUS_DIRS[@]}"
         branch='' ahead=null behind=null state=clean paths=() codes=() oldpaths=()
         if [[ -v STATUS_ERRORS[$dir] ]]; then state=blocked
         elif ! repo_root "$dir" || [[ $REPLY != "$dir" ]]; then state=missing; RESULT=1

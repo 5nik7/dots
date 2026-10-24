@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# dots:summary=Inspect changes in registered submodule subtrees
+# dots:usage=[PATH] [OPTIONS]
+# dots:option=--directory|-C|directory|Repository or subtree directory
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--full-paths||flag|Show absolute human paths
+# dots:argument=1|git-submodule|Registered submodule path relative to the selected repository
+# dots:option=--dirty||flag|Show local changes, pointer differences and blockers
+GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3
+command -v python3 >/dev/null 2>&1 || { printf 'dots git: Python 3 is required\n' >&2; exit 3; }
+exec python3 -B "$GIT_LIB/inspection.py" status "$@"

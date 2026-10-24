@@ -1,0 +1,15 @@
+# Yazi image and Markdown previews
+
+Status: Implemented and activated. Standalone commit `2d1a4bc` is published; `ya pkg upgrade 5nik7/dots` deployed it and owns the updated package revision/hash. All 18 runtime modules match source. Personal setup/rules/Alt+m are activated; restart Yazi to load them.
+
+The standalone `dots.yazi` repository owns `dots.preview`. The personal configuration selects Chafa/vhalf only on Termux, mdcat for Markdown, and Bat for source view. Alt+m toggles the current tab's Markdown mode; new tabs start rendered. Both components accept platform overrides and literal renderer argument lists. No shell wrappers or dependency installation are introduced.
+
+The source package includes configuration validation, bounded subprocess adapters, per-tab state, asynchronous image/Markdown rendering and source toggling. Existing image preloaders/cache/fallback remain in place. Markdown renderers include mdcat, Glow, Rich CLI, Bat and built-in code; source choices include Bat, plain text and built-in code. See the installed plugin README after upgrade for configuration and limits.
+
+Acceptance uses standalone Lua fixtures and private native Yazi sessions, including a staged copy of the personal configuration. All test HOME/XDG/TMPDIR/DDS/image-cache paths are owned fixtures. Cover tab identity/reordering, stale results, scrolling/resizing, malformed configuration, renderer fallback/deadlines/output limits, literal paths, and 40/80/120 columns. Preserve the existing theme/Git/project/pane suites and package materialization checks.
+
+Publication is explicitly authorized: commit/push only the standalone feature, upgrade `5nik7/dots` through Yazi, then activate the reviewed personal configuration and remove the superseded task-created `chafa-vhalf.yazi` plugin after a drift check. Do not manually patch package files or rewrite hashes. Parent Dots changes remain uncommitted and unrelated edits remain intact.
+
+Native acceptance is Termux. Windows/WSL/macOS remain pending; native Glow is unavailable and the installed Rich launcher has a missing Python module, so those adapters use fixtures. Bash and PowerShell both use the same native-command Lua adapters; plain source reading needs no Unix `cat` executable. Tool themes remain owned by their existing configurations; no fixed theme palette is added.
+
+Verification completed: standalone Lua suites, 350 GNU ls comparisons, native general UI and theme suites, offline package materialization/upgrade tests, and native preview acceptance against both fixture and staged personal configurations. The general runner now verifies restoration of the supplied pane ratio instead of hardcoding the former `[2, 4, 5]`. Native hard-link creation was unavailable and remains fixture-covered. Native Glow/Rich and non-Termux rendering remain unverified. Installed preview Lua checks, live-versus-tested config equality, TOML parsing, runtime consistency and whitespace checks passed. HTTPS package fetch was blocked by the environment proxy; a per-command repository-specific SSH URL rewrite completed the normal upgrade without persistent Git configuration changes.

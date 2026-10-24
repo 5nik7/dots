@@ -1,0 +1,119 @@
+%YAML 1.2
+---
+# This repo: https://github.com/ElectricRCAircraftGuy/sublime_gcode
+# Sublime Text syntax highlighting documentation: http://www.sublimetext.com/docs/syntax.html
+name: gcode
+# File extensions references:
+# 1. https://www.mekanika.io/blog/learn-1/our-guide-to-familiarize-yourself-with-cnc-file-formats-20
+#    - under the section "Machining Files (G-Code files)", contains:
+#    .nc, .cnc, .ngc, .gcode, .tap
+# 1. https://en.wikipedia.org/wiki/G-code - in box at top-right of article, under "extensions":
+#    .gcode, .mpt, .mpf, .nc
+# 1. https://forums.autodesk.com/t5/powerinspect-forum/trying-to-create-probe-path-g-code-eia-file-for-mazak-vcu500-5ax/td-p/7760654
+#    .eia
+file_extensions:
+  - cnc
+  - eia
+  - gcode
+  - mpf
+  - mpt
+  - nc
+  - ngc
+  - prg
+  - tap
+scope: source.gcode
+contexts:
+  main:
+    # Notes:
+    # 1. It appears that matches are done in order, from top to bottom. If a higher up regex matches
+    # first, subsequent (lower) regexes will be shadowed and NOT match. So, place more- specific
+    # matches, such as `G28`, BEFORE more-general matches, such as `G\d+`!
+    # 1. If you specify multiple scope strings, each separated by a space, after the `scope:` key,
+    # all of the scopes specified will be applied to a match pattern. Ex: This applies both bold
+    # AND italic to this matching pattern:
+    #         comment: bold AND italic
+    #         match: G28
+    #         scope: markup.bold.gcode markup.italic.gcode
+    # 1. Marlin-type gcode definitions are here, so you can see what each command/code does:
+    # https://marlinfw.org/meta/gcode/
+    # 1. Use https://regex101.com/ to verify, check, and understand the `match` regular expressions.
+
+    - comment: inline comments
+      match: \(.*\)
+      scope: comment.inline.gcode
+    - comment: line comments (whole line, or end of line)
+      match: ;.*$
+      scope: comment.line.gcode
+    - comment: G28 "Home" cmd
+      match: G28
+      scope: support.function.gcode markup.bold.gcode markup.italic.gcode
+    - comment: Other G commands
+      match: G\d+
+      scope: support.function.gcode markup.bold.gcode
+    - comment: M commands
+      match: M\d+
+      scope: entity.name.gcode
+    - comment: O program name
+      # See here: https://en.wikipedia.org/wiki/G-code#Letter_addresses
+      match: O\d+
+      scope: string.gcode markup.bold.gcode
+    - comment: N line numbers
+      # See here: https://en.wikipedia.org/wiki/G-code#Letter_addresses
+      match: N\d+
+      scope: string.gcode
+    - comment: (flow control + location) operators
+      # Italicize the numbers after `DO` and `GOTO`.
+      match: (?i)(GOTO|DO) ?(\d*)
+      # Specify the proper scope for each capture group; see:
+      # http://www.sublimetext.com/docs/syntax.html
+      captures:
+        1: keyword.control.gcode
+        2: constant.numeric.value.gcode markup.italic.gcode
+    - comment: flow control and condition operators
+      # See: https://www.cnccookbook.com/cnc-g-code-macro-conditions-looping/
+      match: (?i)(IF|THEN|AND|OR|WHILE|END|REPEAT)
+      scope: keyword.control.gcode
+    - comment: functions
+      match: (?i)(ABS|ACOS|ASIN|ATAN|COS|LN|EXP|FIX|FUP|MOD|ROUND|SQRT|SIN|TAN)
+      scope: entity.name.gcode
+    - comment: comparison operators
+      # Ex: https://www.machsupport.com/forum/index.php?topic=18453.0
+      match: (?i)(GT|LT|GE|LE|NE|EQ)
+      scope: keyword.operator.gcode
+    - comment: variables
+      # For examples of variables in gcode, see:
+      # https://gcodetutor.com/cnc-macro-programming/cnc-variables.html
+      match: (#\d+)
+      scope: variable.other.gcode markup.bold.gcode
+    - comment: assignment
+      match: =
+      scope: keyword.operator.assignment.gcode
+    - comment: positions
+      # - See XYZ (and EF) here: https://marlinfw.org/docs/gcode/G000-G001.html.
+      # - ABC are *rotational positions* around the XYZ axes, respectively. See here:
+      #   https://en.wikipedia.org/wiki/G-code.
+      # - IJK are arc center positions; see Wikipedia article above.
+      match: ([XYZABCIJK])
+      scope: entity.name.gcode
+    - comment: parameters, such as feeds and speeds
+      # Including E Extruder feed position (E) and rate (F).
+      # See EF here: https://marlinfw.org/docs/gcode/G000-G001.html
+      # Other g-codes may use S for something? Add any parameters here.
+      match: ([EFS])
+      scope: variable.parameter.gcode
+    - comment: Numbers, including those with decimals in them.
+      # NB: this will scan and match the same number **twice**, but two different parts of the same
+      # number each time, in order to match the whole thing if it has a decimal in it. Ex:
+      # `-0.1576`. The 1st match will be `-0.` and the 2nd match will be `1576`. This strange
+      # technique allows it to also match difficult and non-standard numbers like `-7.`, `-.7`,
+      # etc.
+      match: (-?\.?\d+\.?)
+      scope: constant.numeric.value.gcode
+    - comment: arithmetic operators
+      match: ([\+\-\/\*])
+      scope: keyword.operator.arithmetic.gcode markup.bold.gcode
+    - comment: brackets
+      match: ([\[\]])
+      # Alternative scope (is white in Monokai color scheme):
+      # scope: text.gcode punctuation.section.brackets.gcode
+      scope: string.brackets.gcode

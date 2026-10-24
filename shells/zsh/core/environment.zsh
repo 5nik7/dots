@@ -19,7 +19,6 @@ done
 source "$DOTS/shells/shared/app-env.sh"
 source "$DOTS/shells/shared/paths.sh"
 # Native completion paths and public compatibility arrays remain Zsh-owned.
-prepath "$ZSHCOMP"
 typeset -gU fpath
 fpath=("$ZSHCOMP" $fpath)
 [[ -r "$ZSH/platforms/${DOTS_PLATFORM:-linux}.zsh" ]] && source "$ZSH/platforms/${DOTS_PLATFORM:-linux}.zsh"

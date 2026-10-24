@@ -107,3 +107,13 @@ The Androidots `termux-geo` helper and its personal Bash/Zsh/Fish completion-pat
 The standalone native `bin/wttr.ps1` entry shares weather options, stock request syntax, formatting, cache logic, progress and completion metadata with Bash. Stock requests require native curl.exe and bypass PowerShell aliases. The managed configuration has an APPDATA/wttr destination. Termux device acquisition and tmux daylight styling are explicit platform exceptions; manual/default weather is shared. Native Windows PowerShell 5.1/7 argv/completion/PTY, cache locking and ACL checks remain pending on this Termux implementation host; see [the focused plan](wttr.md).
 
 Television integration uses the shared native renderer, destination resolver and Store connector transaction. The LOCALAPPDATA default and explicit overrides have fixture coverage; native PowerShell 5.1/7 publication, rollback, link-capability refusal and Television visual acceptance remain pending. See the [focused plan](television-theme.md).
+
+
+## Git submodule extension
+
+Git info, submodule tree/status and scoped publication now have matching native
+routes and static completion metadata. Shared inspection/selection uses native
+Git without Bash. `--all-submodules` selects child trees; `--all` selects unstaged
+files. Windows app destinations are unchanged. Native Windows PowerShell 5.1/7
+runtime, confirmation/interruption, completion and 40/80/120-column light/dark
+visual acceptance remain pending; portable controller tests are not that evidence.

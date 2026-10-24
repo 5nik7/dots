@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# dots:summary=Show repository info for registered descendants
+# dots:usage=[OPTIONS]
+# dots:option=--directory|-C|directory|Repository or subtree directory
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--full-paths||flag|Show absolute human paths
+# dots:option=--depth||string|Maximum submodule levels (positive integer)
+GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3
+exec python3 -B "$GIT_LIB/inspection.py" submodules-info "$@"

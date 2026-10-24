@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# dots:summary=Preview and publish selected submodule subtrees
+# dots:usage=PATH|--all-submodules [OPTIONS]
+# dots:option=--directory|-C|directory|Repository or subtree directory
+# dots:option=--json||flag|Emit versioned JSON
+# dots:option=--full-paths||flag|Show absolute human paths
+# dots:argument=1|git-submodule|Registered submodule path relative to the selected repository
+# dots:option=--all-submodules||flag|Select every direct child subtree, excluding the outer repository
+# dots:option=--dry-run||flag|Local preview without changes or network
+# dots:option=--all||flag|Include unstaged ordinary files
+# dots:option=--yes||flag|Accept the publication preview
+# dots:option=--message|-m|string|Commit message
+# dots:option=--config||file|Owner configuration file
+# dots:option=--no-config||flag|Ignore owner configuration
+GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3
+exec bash "$GIT_LIB/main.bash" submodules-publish "$@"

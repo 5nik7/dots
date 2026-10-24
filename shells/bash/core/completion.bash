@@ -1,14 +1,20 @@
 # shellcheck disable=SC1090,SC1091,SC2153
 # Native completion only; never source Zsh completion functions in Bash.
 _dots_bash_local_completion_path() {
-  [[ $- == *i* && ${DOTS_PLATFORM:-} == termux && -d $DOTS/androidots ]] || return 0
-  local entry base="$DOTS/androidots/shells/bash" result
+  [[ $- == *i* ]] || return 0
+  local entry base="$DOTS/androidots/shells/bash" result=''
+  local user_base="${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion"
   local -a entries
-  result=$base
-  IFS=: read -r -a entries <<< "${BASH_COMPLETION_USER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion}"
+  IFS=: read -r -a entries <<< "${BASH_COMPLETION_USER_DIR:-$user_base}"
+  [[ ! -d $user_base ]] || entries+=("$user_base")
   for entry in "${entries[@]}"; do
-    [[ ! $entry || $entry == "$base" ]] || result+=:$entry
+    [[ $entry && $entry != "$base" ]] || continue
+    case :$result: in *:"$entry":*) continue ;; esac
+    result+=${result:+:}$entry
   done
+  if [[ ${DOTS_PLATFORM:-} == termux && -d $DOTS/androidots ]]; then
+    result+=${result:+:}$base
+  fi
   export BASH_COMPLETION_USER_DIR=$result
 }
 _dots_bash_local_completion_path

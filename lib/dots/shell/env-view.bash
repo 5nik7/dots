@@ -52,8 +52,12 @@ _dots_env_line() {
 }
 
 _dots_env_row() {
-  local key=$1 kind=$2 value source color=$DOTS_UI_RESET length resource_kind=''
-  _dots_env_text "${values[$key]}"; value=$REPLY
+  local key=$1 kind=$2 value source color=$DOTS_UI_RESET length resource_kind='' home_prefix=${HOME%/}
+  value=${values[$key]}
+  if [[ $kind == path && $home_prefix && ( $value == "$home_prefix" || $value == "$home_prefix/"* ) ]]; then
+    value="~${value#"$home_prefix"}"
+  fi
+  _dots_env_text "$value"; value=$REPLY
   _dots_env_text "${origins[$key]}"; source=$REPLY
   if [[ $kind == bool ]]; then
     if [[ $value == 1 ]]; then value+=' (enabled)'; else value+=' (disabled)'; fi

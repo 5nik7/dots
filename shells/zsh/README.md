@@ -144,4 +144,4 @@ are replaced by Dots integrations.
 
 Dots settings and variables are documented in [the environment contract](../../docs/shell-environment.md).
 
-Interactive Termux startup also prepends `$DOTS/androidots/shells/zsh/completions` before compinit when Androidots is present. Existing package paths remain available. Start a new shell after path changes; `rlcs` refreshes discovery once the new path is loaded. See [local completion paths](../../docs/shell-init.md#termux-local-completion-directories).
+Interactive startup puts the existing `${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions` directory first in `fpath` after plugin setup, before compinit, and exports `FPATH`. Termux also registers `$DOTS/androidots/shells/zsh/completions` when Androidots is present. Repository, plugin and package fallbacks remain available; the repository Zsh completion directory is no longer added to executable `PATH`. Start a new shell or reload configuration after changes; `rlcs` re-registers the local directory and rebuilds discovery. See [user-local completion paths](../../docs/shell-init.md#user-local-completion-directories).

@@ -34,6 +34,19 @@ Automatic color requires a terminal on the destination stream, `TERM` other than
 
 Dots Git metadata has a scoped [theme-role integration](file-colors.md#git-styles): repository identities, branches, file-status labels and tracking counts consume published Git styles through the shared Bash layer. Filenames retain their type/MIME resource styles. Generic headings, informational messages and final diagnostic summaries retain the shared treatment above.
 
+Human Git identities add `` directly before named branches (including upstreams)
+and a host glyph plus one space before repository names/paths: `󰊤 dots` for
+GitHub, `` for GitLab, `` for Bitbucket, and `` for local/unknown hosts.
+Each glyph shares its adjacent identity's style. Detached HEAD, commit hashes and
+unavailable values have no branch glyph. These rules cover Git views/events and
+repository labels in file sources, details, discovery, browser and picker previews.
+Filesystem `Path` fields in Git info use the shared directory-resource icon and
+color, including collection and named info. Repository identities retain host
+icons. Ordinary resource paths and resource IDs retain their own styling. Icon and color
+controls remain independent; cached local host lookup is optional outside Git
+commands. JSON, scalars, completion records and ordinary redirected output remain
+undecorated. Forwarded third-party output is unchanged.
+
 Keep status text alongside color; a green marker alone cannot explain whether an item is linked, tracked or selected. Use the shared marker vocabulary with an ASCII fallback. Palette previews may display their actual swatch colors, but diagnostic meanings remain consistent across selected themes. Color may emphasize facts; it must never imply success before an operation succeeds.
 
 ## Layout and Wording

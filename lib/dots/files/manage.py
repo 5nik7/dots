@@ -344,6 +344,7 @@ def show(title, rows, stream=None):
 def show_system(rows, locations, verbose=False, include_all=False):
     """Compact human projection only; discovery records stay complete for JSON."""
     ui = Presentation()
+    ui.repository_roots([dict(id=loc['repository'], root=loc.get('root')) for loc in locations])
     counts = Counter(row['status'] for row in rows)
     visible = [r for r in rows if include_all or r['status'] not in ('managed', 'excluded')]
 
@@ -362,7 +363,7 @@ def show_system(rows, locations, verbose=False, include_all=False):
     if verbose:
         for row in visible:
             ui.resource_detail('Path', row['path'])
-            ui.emit('    ' + ui.paint(row['repository'], '94') + '  ' + ui.status(row['status']))
+            ui.emit('    ' + ui.paint(ui.owner_label(row['repository']), '94') + '  ' + ui.status(row['status']))
             if row.get('source'):
                 ui.resource_detail('Source', row['source'])
     else:
@@ -382,12 +383,12 @@ def show_system(rows, locations, verbose=False, include_all=False):
             badges = ', '.join(ui.paint(str(n), '96') + ' ' + ui.status(s)
                                for s, n in sorted(Counter(x['status'] for x in items).items()))
             rendered = ('  ' + ui.resource(path) + '  ' +
-                        ui.paint(repository, '94') + ' / ' + badges)
+                        ui.paint(ui.owner_label(repository), '94') + ' / ' + badges)
             if len(re.sub(r'\x1b\[[0-9;]*m', '', rendered)) <= ui.width:
                 ui.emit(rendered)
                 continue
             ui.resource_detail('Path', path)
-            line(repository, '94', '    ')
+            line(ui.owner_label(repository), '94', '    ')
             statuses(items)
     if not visible:
         line('No config candidates found.' if not include_all else 'No matching items.', '94')

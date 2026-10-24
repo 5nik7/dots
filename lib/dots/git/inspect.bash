@@ -55,7 +55,13 @@ parse_url() {
     HOST=${HOST,,}
     REPO=${path##*/}; REPO=${REPO%.git}
     [[ $path == */* ]] && OWNER=${path%/*}
-    case $HOST in github.com) HOST_ICON='󰊤' ;; gitlab.com) HOST_ICON='' ;; bitbucket.org) HOST_ICON='' ;; esac
+    if [[ ${GIT_HOST_ICONS_READY:-0} == 0 ]]; then
+        declare -gA GIT_HOST_ICONS=()
+        local icon_host icon_value
+        while IFS=$'\t' read -r icon_host icon_value; do GIT_HOST_ICONS[$icon_host]=$icon_value; done < "${BASH_SOURCE[0]%/*}/hosts.tsv"
+        GIT_HOST_ICONS_READY=1
+    fi
+    [[ ! $HOST ]] || HOST_ICON=${GIT_HOST_ICONS[$HOST]:-}
     if [[ -n $HOST && -n $OWNER && $PROTOCOL != file ]]; then
         for identity in "${OWNERS[@]}"; do
             if [[ ${identity%%/*} == "$HOST" && ${identity#*/} == "$OWNER" ]]; then OWNED=true; break; fi
@@ -174,7 +180,7 @@ upstream() {
 }
 
 fetch_branch() {
-    dots::progress_external "Fetching upstream: ${1##*/}"
+    dots::progress_external 'Fetching upstream'
     git -C "$1" -c fetch.recurseSubmodules=false fetch --quiet --no-tags --no-recurse-submodules \
         --refmap= -- "$2" "$3:$4" >/dev/null 2>&1
 }

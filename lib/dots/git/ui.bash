@@ -26,13 +26,13 @@ file_status_style() {
     dots::git_style "$role"
 }
 # Presentation ownership is local-only and cached independently of publish policy.
-declare -A PRESENTATION_REPOS=()
+declare -A PRESENTATION_REPOS=() PRESENTATION_HOSTS=()
 PRESENTATION_CONFIG_READY=0
 PRESENTATION_OWNERS=() PRESENTATION_ALIASES=()
 repo_presentation_style() {
     local dir=${1:-} fd=${2:-1} role=repo
     dots::style "$fd"
-    if [[ $DOTS_UI_RESET && -n $dir ]]; then
+    if [[ ( $DOTS_UI_RESET || $DOTS_UI_INFO != '[i]' ) && -n $dir ]]; then
         if [[ ! ${PRESENTATION_REPOS[$dir]+yes} ]]; then
             local REMOTE URL PROTOCOL HOST OWNER REPO OWNED HOST_ICON SAFE_URL REMOTE_ARG=''
             local -a OWNERS=() HOST_ALIASES=() RECORDS=()
@@ -53,8 +53,10 @@ repo_presentation_style() {
                 fi
             fi
             OWNERS=("${PRESENTATION_OWNERS[@]}"); HOST_ALIASES=("${PRESENTATION_ALIASES[@]}")
-            if ((${#OWNERS[@]})) && select_remote "$dir"; then
+            PRESENTATION_HOSTS[$dir]=''
+            if repo_root "$dir" && [[ $REPLY == "$dir" ]] && select_remote "$dir"; then
                 parse_url "$URL"
+                [[ $PROTOCOL == file ]] || PRESENTATION_HOSTS[$dir]=$HOST_ICON
                 [[ $OWNED != true ]] || role=repo_owned
             fi
             PRESENTATION_REPOS[$dir]=$role
@@ -63,17 +65,31 @@ repo_presentation_style() {
     fi
     dots::git_style "$role" "$fd"
 }
+repo_identity_label() {
+    REPLY=$2
+    if [[ $DOTS_UI_INFO != '[i]' ]]; then
+        local icon=
+        [[ ! $1 ]] || icon=${PRESENTATION_HOSTS[$1]:-}
+        REPLY="$icon $2"
+    fi
+}
+branch_identity_label() {
+    REPLY=$1
+    if [[ $DOTS_UI_INFO != '[i]' && -n $1 && $1 != 'detached '* ]]; then REPLY="$1"; fi
+}
 status_header() {
     local label=$1 branch=$2 state=$3 columns=$4 repo_style branch_style state_style marker
+    local raw_label=$label raw_branch=$branch
     repo_presentation_style "${5:-}"; repo_style=$REPLY
+    repo_identity_label "${5:-}" "$label"; label=$REPLY
     if [[ $branch == 'detached '* ]]; then dots::git_style detached
     else dots::git_style branch; fi
     branch_style=$REPLY
     dots::git_style "$state"; state_style=$REPLY
     case $state in clean) marker=$DOTS_UI_OK ;; blocked|conflict) marker=$DOTS_UI_ERROR ;; *) marker=$DOTS_UI_WARN ;; esac
-    display "$branch"; branch=$REPLY
+    branch_identity_label "$branch"; display "$REPLY"; branch=$REPLY
     columns=$((10#$columns)); (( columns >= 20 )) || columns=20
-    if dots::human && { (( ${#label}+${#branch}+${#state}+12 > columns )) || [[ $label$branch == *[!\ -~]* ]]; }; then
+    if dots::human && { (( ${#label}+${#branch}+${#state}+12 > columns )) || [[ $raw_label$raw_branch == *[!\ -~]* ]]; }; then
         printf '\n'
         dots::line "$label" "$repo_style" 2 "$columns"
         dots::line "$branch" "$branch_style" 4 "$columns"
@@ -123,11 +139,12 @@ render_event() {
     local dir=$1 state=$2 detail=$3 file=${4:-} code=$DOTS_UI_CYAN marker='[i]' label repo_style
     dots::style
     repo_presentation_style "$dir"; repo_style=$REPLY
-    repo_label "$dir"; display "$REPLY"; label=$REPLY
+    repo_label "$dir"; repo_identity_label "$dir" "$REPLY"; display "$REPLY"; label=$REPLY
     case $state in
         blocked|failed) dots::git_style blocked; code=$REPLY; marker=$DOTS_UI_ERROR ;;
         published|updated|clean|unchanged) dots::git_style clean; code=$REPLY; marker=$DOTS_UI_OK ;;
         modified|missing) dots::git_style "$state"; code=$REPLY; marker=$DOTS_UI_WARN ;;
+        pending) dots::git_style modified; code=$REPLY; marker=$DOTS_UI_WARN ;;
         selected|planned|cancelled) code=$DOTS_UI_YELLOW; marker=$DOTS_UI_WARN ;;
         *) code=$DOTS_UI_BLUE; marker=$DOTS_UI_INFO ;;
     esac
@@ -161,7 +178,42 @@ render_event() {
     elif [[ $state == unchanged ]]; then printf '\n'
     else
         printf '\n'
-        display "$detail"; dots::row 'Details' "$REPLY"
+        if dots::human && [[ $state == planned && ${CMD:-} == publish && $detail == 'branch '* ]]; then
+            local branch_value=${detail#branch } tail branch_code
+            branch_value=${branch_value%%: publish to *}; tail=${detail#"branch $branch_value"}
+            branch_identity_label "$branch_value"; local branch_text=$REPLY
+            dots::git_style branch; branch_code=$REPLY
+            dots::line Branch "$DOTS_UI_BLUE" 2 "$columns"
+            dots::line "$branch_text" "$branch_code" 4 "$columns"
+            # Ref is also a named branch identity, separate from the literal URL/message.
+            local ref=${PREVIEW_REF[$dir]:-}
+            if [[ $ref ]]; then
+                tail=${tail/" → $ref"/}
+                dots::line 'Target branch' "$DOTS_UI_BLUE" 2 "$columns"
+                branch_identity_label "$ref"; dots::line "$REPLY" "$branch_code" 4 "$columns"
+            fi
+            display "${tail#: }"; dots::row Details "$REPLY"
+        elif dots::human && [[ $state == planned && ${CMD:-} == sync && $detail == 'fetch and fast-forward/check out '* ]]; then
+            local tracking=${detail#fetch and fast-forward/check out }
+            tracking=${tracking%; remote state not checked}
+            branch_identity_label "$tracking"; local tracking_text=$REPLY
+            dots::git_style branch
+            dots::row Details 'Fetch and fast-forward/check out'
+            dots::line "$tracking_text" "$REPLY" 4 "$columns"
+            dots::row Remote 'Remote state not checked'
+        elif dots::human && [[ $state == pending && $detail == 'Submodule '* ]]; then
+            local suffix=' differs from the parent index; record its pointer separately. Parent index was not changed by this command.'
+            local child_value=${detail#Submodule } child_code
+            child_value=${child_value%"$suffix"}
+            repo_presentation_style "$dir/$child_value"; child_code=$REPLY
+            repo_identity_label "$dir/$child_value" "$child_value"
+            local child_text=$REPLY
+            dots::line Submodule "$DOTS_UI_BLUE" 2 "$columns"
+            dots::line "$child_text" "$child_code" 4 "$columns"
+            dots::row Details "${suffix# }"
+        else
+            display "$detail"; dots::row 'Details' "$REPLY"
+        fi
     fi
 }
 event() {
@@ -181,9 +233,15 @@ event() {
 operations_report() {
     local i comma=''
     if ((JSON)); then
-        printf '{"schema":1,"command":"%s","complete":' "$CMD"
+        printf '{"schema":1,"command":"%s","complete":' "${OUTPUT_COMMAND:-$CMD}"
         if ((RESULT)); then printf false; else printf true; fi
         printf ',"dry_run":'; if ((DRY_RUN)); then printf true; else printf false; fi
+        if ((${SCOPED_PUBLISH:-0})); then
+            json_string "$ROOT"; printf ',"base":%s,"selection":[' "$REPLY"
+            local scope_index scope_comma=''
+            for scope_index in "${SCOPE_ROOTS[@]}"; do json_string "$scope_index"; printf '%s%s' "$scope_comma" "$REPLY"; scope_comma=,; done
+            printf ']'
+        fi
         printf ',"events":['
         for ((i=0;i<${#EVENT_DIRS[@]};i++)); do
             printf '%s{' "$comma"; comma=,

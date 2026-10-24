@@ -35,6 +35,32 @@ class Presentation:
         self.width = max(24, shutil.get_terminal_size((80, 24)).columns)
         self.resources = Resources()
 
+    def branch_label(self, value, detached=False):
+        text = str(value or 'unavailable')
+        if self.icons and value and not detached and not text.startswith('detached '):
+            from git_identity import BRANCH
+            return BRANCH + text
+        return text
+
+    def repository_label(self, path, label, host=...):
+        if not self.icons:
+            return str(label)
+        from git_identity import Identities, host_icon
+        if host is ...:
+            if not hasattr(self, '_git_identities'):
+                self._git_identities = Identities()
+            host = self._git_identities.host(path)
+        return host_icon(host) + ' ' + str(label)
+
+    def repository_detail(self, label, path, value, code='94', host=...):
+        self.detail_spans(label, [(self.repository_label(path, value, host), code)])
+
+    def repository_roots(self, sources):
+        self._repository_roots = {row['id']: row['root'] for row in sources}
+
+    def owner_label(self, value):
+        return self.repository_label(getattr(self, '_repository_roots', {}).get(value), value)
+
     @staticmethod
     def clean(value):
         # Show path controls literally; never let a discovered filename issue ANSI.
@@ -85,13 +111,15 @@ class Presentation:
         prefix = '    ' + label + ' ' * max(0, label_width - resource_cells(label)) + ' ' * label_gap
         self._spans(spans, prefix, '94')
 
-    def _spans(self, spans, prefix='', prefix_code=None):
+    def _spans(self, spans, prefix='', prefix_code=None, *, continuation_prefix=None):
         """Wrap inert text first, then color independently styled value spans."""
         spans = [(self.clean(text), code) for text, code in spans if str(text)]
         index, offset = 0, 0
-        width = max(1, self.width - resource_cells(prefix))
+        continuation = ' ' * resource_cells(prefix) if continuation_prefix is None else self.clean(continuation_prefix)
+        width = max(1, self.width - max(resource_cells(prefix), resource_cells(continuation)))
         for number, part in enumerate(resource_wrap(''.join(text for text, _ in spans), width)):
-            line = (self.paint(prefix, prefix_code) if prefix_code else prefix) if number == 0 else ' ' * resource_cells(prefix)
+            lead = prefix if number == 0 else continuation
+            line = self.paint(lead, prefix_code) if prefix_code and (number == 0 or continuation_prefix is not None) else lead
             remaining = len(part)
             while remaining:
                 text, code = spans[index]
@@ -188,6 +216,8 @@ class Presentation:
         for row in rows:
             self.emit()
             identity = row["id"] if action != "track" else f"{repository}:{row['id']}"
+            if action == 'sources':
+                identity = self.repository_label(row['root'], identity)
             identity = self.clean(identity)
             status = row.get("status", "tracked")
             if len(identity) + len(status) + 10 <= self.width:
@@ -197,7 +227,7 @@ class Presentation:
                 self.emit("  " + self.paint(identity, "1;94"))
                 self.emit("    " + self.status(status))
             if action == "sources":
-                self.resource_detail("Root", row["root"], kind='dir')
+                self.repository_detail("Root", row["root"], self.path(row["root"]))
                 self.detail("Platforms", row["platforms"])
             else:
                 self.resource_detail("Source", row.get("source"))
@@ -207,7 +237,10 @@ class Presentation:
                         self.detail('Enabled', row['enabled'])
                     for key, label in (("app", "App"), ("category", "Category"), ("repository", "Repository"), ("platforms", "Platforms"), ("applicable", "Applicable"), ("tracked", "Tracked"), ("strategy", "Strategy"), ("target_spec", "Target spec"), ("replaces", "Replaces"), ("replaced_by", "Replaced by"), ("conflicts", "Conflicts"), ("replacement_unavailable", "Unavailable replacement")):
                         if key in row:
-                            self.detail(label, row[key])
+                            if key == 'repository':
+                                self.detail_spans(label, [(self.owner_label(row[key]), '94')])
+                            else:
+                                self.detail(label, row[key])
         if action == "track":
             self.emit("\n  Catalog metadata saved; no files installed.")
 
@@ -602,7 +635,9 @@ def main(argv=None):
             raise ValueError("resource has no resolved target")
         print(value)
     elif Presentation().human:
-        Presentation().render(args.action, rows, args.platform, args.repo)
+        ui = Presentation()
+        ui.repository_roots(cat.sources)
+        ui.render(args.action, rows, args.platform, args.repo)
     elif args.action == "show":
         for key, value in rows[0].items():
             print(f"{key}: {value}")

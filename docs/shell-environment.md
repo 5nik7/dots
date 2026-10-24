@@ -99,7 +99,9 @@ object whose entries contain `value` and `source` strings.
 In a terminal, `dots env` groups the current theme, settings and paths with shared
 Dots colors. Boolean settings retain `0`/`1` alongside disabled/enabled labels;
 each value includes its source. Short rows align, while long values and narrow
-terminals use stacked fields and wrapped complete paths. Display-only control
+terminals use stacked fields and wrapped complete paths. Human path fields abbreviate
+the home directory as `~` and its descendants as `~/…` (using native separators on
+Windows); unrelated path prefixes remain absolute. Display-only control
 characters are escaped. Non-ASCII widths are conservatively budgeted without a
 new runtime dependency; byte-oriented locales may show escaped Unicode.
 

@@ -63,6 +63,34 @@ class ResourcesTests(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr)
         return p.stdout.split('\0')
 
+    def test_git_identities_cache_and_style_boundaries(self):
+        from git_identity import Identities
+        repository = self.home / 'repo'
+        repository.mkdir()
+        def facts(path, *args):
+            if args[0] == 'rev-parse': return str(repository)
+            if args[0] == 'symbolic-ref': return 'main'
+            if args[0] == 'config': return 'origin'
+            if args[0] == 'remote': return 'https://user:secret@github.com/mine/repo.git'
+            return ''
+        with patch.dict(os.environ, self.env, clear=True), patch.object(Identities, 'read', side_effect=facts) as read:
+            stream = io.StringIO(); ui = Presentation(stream)
+            for _ in range(4): ui.repository_detail('Repository', repository, 'repo', '35')
+            self.assertEqual(read.call_count, 4)  # One local host resolution per root.
+            self.assertIn('\x1b[35m󰊤 repo\x1b[0m', stream.getvalue())
+            self.assertNotIn('secret', stream.getvalue())
+            ui.icons = False
+            self.assertEqual(ui.repository_label(repository, 'repo'), 'repo')
+            self.assertEqual(read.call_count, 4)
+            self.assertEqual(ui.branch_label('main'), 'main')
+            ui.icons = True
+            self.assertEqual(ui.branch_label('main'), 'main')
+            self.assertEqual(ui.branch_label('origin/main'), 'origin/main')
+            self.assertEqual(ui.branch_label('detached abc123'), 'detached abc123')
+            self.assertEqual(ui.branch_label(None), 'unavailable')
+        with patch.dict(os.environ, self.env, clear=True), patch('git_identity.shutil.which', return_value=None):
+            self.assertEqual(Presentation(io.StringIO()).repository_label(repository, 'repo'), ' repo')
+
     def test_detail_spans_wrap_before_paint_and_sanitize(self):
         with patch.dict(os.environ,self.env,clear=True):
             for width in (40,80,120):
@@ -82,6 +110,21 @@ class ResourcesTests(unittest.TestCase):
                 stream.seek(0);stream.truncate()
                 ui.detail_spans('Now', [('53°F', '31')])
                 self.assertEqual(stream.getvalue(), '    Now        53°F\n')
+
+    def test_span_continuation_gutters(self):
+        with patch.dict(os.environ, self.env, clear=True):
+            for width in (40, 80, 120):
+                stream = io.StringIO(); ui = Presentation(stream); ui.width = width
+                value = 'long 雲 path with spaces ' * 12
+                ui._spans([(value, '35')], '├── ', '2', continuation_prefix='│   ')
+                text = stream.getvalue()
+                plain = re.sub(r'\x1b\[[0-9;]*m', '', text).splitlines()
+                self.assertTrue(plain[0].startswith('├── '))
+                self.assertTrue(all(line.startswith('│   ') for line in plain[1:]))
+                self.assertTrue(all(cells(line) <= width for line in plain))
+                self.assertEqual(''.join(line[4:] for line in plain), value)
+                self.assertIn('\x1b[2m│   \x1b[0m', text)
+                self.assertIn('\x1b[35m', text)
 
     def test_custom_detail_spacing_and_heading_spans(self):
         with patch.dict(os.environ,self.env,clear=True):

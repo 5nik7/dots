@@ -177,7 +177,7 @@ def main(argv=None):
         ui.heading('Check tracked files')
         for source in sources:
             if source['status'] != 'available':
-                ui.detail('Repository', source['id'] + ': ' + source['status'], '93')
+                ui.repository_detail('Repository', source['root'], source['id'] + ': ' + source['status'], '93')
         for row in items:
             if row['source_state'] == 'broken-source-link':
                 show_item(ui, row)

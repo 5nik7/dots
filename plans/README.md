@@ -29,6 +29,7 @@ The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday mai
 | [Additional theme families](theme-families.md) | Completed family expansion; historical editor evidence. |
 | [Configuration paths](config-path-migration.md) | Completed migration; compatibility aliases remain. |
 | [Shell initialization](shell-init.md) | Unified native shell hooks and startup migration. |
+| [User-local shell completions](local-shell-completions.md) | Native directory discovery and user-local precedence in Bash, Zsh and Fish. |
 | [Bash dispatcher](bash-dispatcher.md) | Implemented live command framework and three-shell completion. |
 | [Common helpers](common-helpers.md) | Consolidated Bash/Zsh helpers, explicit color arrays and migrated callers. |
 | [Shared shell utilities](util.md) | Historical utility optimization before consolidation. |
@@ -65,3 +66,7 @@ When a plan is complete, retain it if it explains migration or decision history.
 - [Anodize user themes and interactive previews](anodize-interactive.md) — implementation and acceptance for user-default saves, built-in promotion and FZF-assisted authoring.
 
 - [Starship default configuration](starship-default-config.md): approved default-path cleanup and Blastoff link-preserving upgrade.
+
+- [Git info and submodule workflows](git-submodules.md): shared inspection, recursive tree/status and publication scoped to selected child trees.
+
+- [Git identities and named navigation](git-identities-and-navigation.md): shared human identity glyphs, recursive info and contextual submodule actions.

@@ -11,6 +11,10 @@ source "$LIB/common.bash"
 source "$LIB/ui.bash"
 ((BASH_VERSINFO[0] >= 5)) || die 3 'requires Bash 5 or newer'
 CMD=$1; shift
+SCOPED_PUBLISH=0 SCOPE_PATH='' ALL_SUBMODULES=0
+[[ $CMD != submodules-publish ]] || { SCOPED_PUBLISH=1; CMD=publish; }
+OUTPUT_COMMAND=$CMD
+((SCOPED_PUBLISH == 0)) || OUTPUT_COMMAND='submodules publish'
 TARGET=${DOTS:-${LIB%/lib/dots/git}} CONFIG=${XDG_CONFIG_HOME:-$HOME/.config}/dots/git.conf
 NO_CONFIG=0 EXPLICIT_CONFIG=0 REMOTE_ARG='' OUTERMOST=0 DRY_RUN=0 ADVANCE=0 ALL=0 YES=0 INIT=0 MESSAGE='' JSON=0 FULL_PATHS=0
 OWNERS=() HOST_ALIASES=() STATUS_DIRS=() PUB_DIRS=()
@@ -21,6 +25,10 @@ while (($#)); do
             (($#)) || die 2 "$arg requires a value"
             case $arg in -C|--directory) TARGET=$1 ;; --config) CONFIG=$1; EXPLICIT_CONFIG=1 ;; *) MESSAGE=$1 ;; esac
             shift ;;
+        --all-submodules) ALL_SUBMODULES=1 ;;
+        --)
+            ((SCOPED_PUBLISH && $# == 1)) && [[ ! $SCOPE_PATH ]] || die 2 'expected one submodule PATH after --'
+            SCOPE_PATH=$1; shift ;;
         --no-config) NO_CONFIG=1 ;;
         --json) JSON=1 ;;
         --full-paths) FULL_PATHS=1 ;;
@@ -29,9 +37,17 @@ while (($#)); do
         --yes) YES=1 ;;
         --remote) ADVANCE=1 ;;
         --init) INIT=1 ;;
-        *) die 2 "unknown argument: $arg" ;;
+        *)
+            if ((SCOPED_PUBLISH)) && [[ $arg != -* && ! $SCOPE_PATH ]]; then SCOPE_PATH=$arg
+            else die 2 "unknown argument: $arg"; fi ;;
     esac
 done
+if ((SCOPED_PUBLISH)); then
+    if { [[ ! $SCOPE_PATH ]] && ((ALL_SUBMODULES == 0)); } || { [[ $SCOPE_PATH ]] && ((ALL_SUBMODULES)); }; then
+        die 2 'select one registered PATH or --all-submodules'
+    fi
+    command -v python3 >/dev/null 2>&1 || die 3 'submodule selection requires Python 3'
+elif ((ALL_SUBMODULES)); then die 2 '--all-submodules requires git submodules publish'; fi
 if [[ $CMD != publish ]] && ((ALL || YES || EXPLICIT_CONFIG || NO_CONFIG)) || [[ $CMD != publish && -n $MESSAGE ]]; then die 2 'publish options require publish'; fi
 if [[ $CMD != sync ]] && ((ADVANCE || INIT)); then die 2 'sync options require sync'; fi
 [[ $CMD != status || $DRY_RUN == 0 ]] || die 2 'status is already read-only'
@@ -65,6 +81,6 @@ if [[ $CMD == status ]]; then
     status_main
 else
     source "$LIB/operations.bash"
-    ((!JSON)) && dots::heading "Git $CMD"
+    ((!JSON)) && dots::heading "Git $OUTPUT_COMMAND"
     operations_main
 fi

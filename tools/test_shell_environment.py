@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -40,13 +41,15 @@ class ShellEnvironment(unittest.TestCase):
         return subprocess.run([exe, *flags, '-c', script], cwd=self.home, env=self.env,
                               text=True, capture_output=True, timeout=15)
 
-    def env_command(self, *args, env=None):
-        result = subprocess.run([str(REPO / 'bin/dots'), *args], env=env or self.env,
+    def env_command(self, *args, env=None, native=False):
+        command = ([sys.executable, '-B', str(REPO / 'lib/dots/environment.py'), *args[1:]] if native
+                   else [str(REPO / 'bin/dots'), *args])
+        result = subprocess.run(command, env=env or self.env,
                                 cwd=self.home, text=True, capture_output=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
         return result.stdout
 
-    def env_terminal(self, columns, env):
+    def env_terminal(self, columns, env, native=False):
         import errno
         import fcntl
         import pty
@@ -57,7 +60,9 @@ class ShellEnvironment(unittest.TestCase):
         master, slave = pty.openpty()
         try:
             fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, columns, 0, 0))
-            with subprocess.Popen([str(REPO / 'bin/dots'), 'env'], env=env, cwd=self.home,
+            command = ([sys.executable, '-B', str(REPO / 'lib/dots/environment.py')] if native
+                       else [str(REPO / 'bin/dots'), 'env'])
+            with subprocess.Popen(command, env=env, cwd=self.home,
                                   stdout=slave, stderr=subprocess.PIPE) as process:
                 os.close(slave); slave = None
                 output = b''; deadline = time.monotonic() + 15
@@ -114,9 +119,33 @@ class ShellEnvironment(unittest.TestCase):
         self.assertFalse((self.home/'state').exists())
         self.assertFalse((self.home/'cache').exists())
 
+    def test_home_abbreviation_is_display_only_in_both_controllers(self):
+        cases = [
+            (str(self.home), str(self.home / 'state ü'), '~/state ü/dots'),
+            (str(self.home), str(self.home) + '-other', str(self.home) + '-other/dots'),
+            (str(self.root / 'state/dots'), str(self.root / 'state'), '~'),
+        ]
+        for native in (False, True):
+            for home, state, expected in cases:
+                with self.subTest(native=native, home=home, state=state):
+                    Path(home).mkdir(parents=True, exist_ok=True)
+                    env = {**self.env, 'HOME':home, 'XDG_STATE_HOME':state,
+                           'DOTS_COLOR':'never', 'DOTS_ICONS':'never', 'COLUMNS':'300'}
+                    raw = self.env_command('env', '--json', env=env, native=native)
+                    output = self.env_terminal(300, env, native=native)
+                    row = next(line for line in output.splitlines() if 'DOTS_STATE_DIR' in line)
+                    self.assertEqual(row.split('DOTS_STATE_DIR', 1)[1].removesuffix('[resolved]').strip(), expected)
+                    self.assertEqual(self.env_command('env', '--json', env=env, native=native), raw)
+                    values = json.loads(raw)['values']
+                    self.assertEqual(values['DOTS_STATE_DIR']['value'], state + '/dots')
+                    self.assertEqual(self.env_command('env', 'DOTS_STATE_DIR', env=env, native=native), state + '/dots\n')
+                    listing = ''.join(f"{key}={item['value']} [{item['source']}]\n" for key, item in values.items())
+                    self.assertEqual(self.env_command('env', env=env, native=native), listing)
+
     def test_environment_terminal_widths_and_sources(self):
         import unicodedata
-        env = {**self.env, 'TERM':'xterm-256color', 'DOTS_COLOR':'auto', 'DOTS_THEME_DEFAULT':'nord'}
+        env = {**self.env, 'TERM':'xterm-256color', 'DOTS_COLOR':'auto', 'DOTS_THEME_DEFAULT':'nord',
+               'XDG_STATE_HOME':str(self.home / 'state ü')}
         for columns in (40, 80, 120):
             for controls in ({}, {'NO_COLOR':'1'}):
                 with self.subTest(columns=columns, controls=controls):
@@ -128,8 +157,9 @@ class ShellEnvironment(unittest.TestCase):
                     for source in ('default', 'config', 'environment', 'resolved', 'checkout'):
                         self.assertIn(source, plain)
                     self.assertIn('ü', plain)
+                    self.assertIn('~/config/dots/config.env', plain)
                     self.assertIn('Dots environment', plain)
-        published = self.home/'state/dots/current/theme/id'
+        published = Path(env['XDG_STATE_HOME'])/'dots/current/theme/id'
         published.parent.mkdir(parents=True)
         published.write_text('tokyonight-day\n')
         plain = self.env_terminal(80, {**env,'DOTS_COLOR':'never'})
@@ -141,7 +171,7 @@ class ShellEnvironment(unittest.TestCase):
         env = {**self.env, 'XDG_STATE_HOME':state_root, 'DOTS_ICONS':'always', 'COLUMNS':'40'}
         output = self.env_command('env',env=env)
         lines = output.partition('  DOTS_STATE_DIR\n')[2].partition('    Source: resolved')[0]
-        self.assertEqual(''.join(line[4:] for line in lines.splitlines()).split(' ', 1)[1], state_root + '/dots')
+        self.assertEqual(''.join(line[4:] for line in lines.splitlines()).split(' ', 1)[1], '~/' + Path(state_root).name + '/dots')
         env['XDG_STATE_HOME'] = str(self.home) + '/bad\x1b[2J\n\x9bcontrol'
         output = self.env_command('env',env=env)
         self.assertNotIn('\x1b', output)

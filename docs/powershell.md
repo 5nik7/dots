@@ -29,6 +29,13 @@ The shared presentation and operation-event helpers own file icons, type/MIME co
 
 File pickers keep Enter to review, Esc/Ctrl-C to cancel, Tab/Shift-Tab to mark, Ctrl-A to select matches, Ctrl-D to clear, Alt-P to toggle previews, Alt-J/K to scroll and Alt-C to change preview views. FZF previews pass numeric snapshot tokens, never interpolated filenames. Native rich previews require an FZF build with `--with-shell` and an available native PowerShell. Gum or numbered prompts remain usable fallbacks. Theme selection has a separate Apply/Back/Cancel step. Native terminal rendering, key handling and cancellation still need the acceptance below.
 
+Git info, submodule tree/status and scoped publication now have matching native
+routes and static completion metadata. Shared inspection/selection uses native
+Git without Bash. `--all-submodules` selects child trees; `--all` selects unstaged
+files. Windows app destinations are unchanged. Native Windows PowerShell 5.1/7
+runtime, confirmation/interruption, completion and 40/80/120-column light/dark
+visual acceptance remain pending; portable controller tests are not that evidence.
+
 ## Windows app destinations
 
 The catalog token `${APP_CONFIG:app}` resolves app-specific directories in `lib/dots/files/app_paths.py`. `DOTS_APP_<APP>_CONFIG` selects an absolute directory, replacing hyphens with underscores in the variable name. App-native overrides are also honored where listed in that module. Missing or ambiguous destinations remain unmapped. Overrides select locations; they do not override link or backup safety.
@@ -85,3 +92,5 @@ preview and interruption acceptance remains pending where engines are unavailabl
 ## Standalone weather
 
 `bin/wttr.ps1` uses the literal native argument bridge and shared Python 3.11+ weather controller; Bash is not required. It supports the same views/flags/progress/data, case-sensitive short aliases and theme-gradient help, stock request syntax and generated PowerShell completion as the Unix entry. Temperature/icon attributes, variable temperature bands and widget style directives use the shared renderer, and completion tooltips use case-sensitive stock metadata. Stock requests execute native `curl.exe` directly, bypassing the PowerShell `curl` alias; JSON-backed views do not require curl. Configuration maps to APPDATA/wttr (XDG override supported). Manual/default locations are supported; Android acquisition and tmux have no native Windows equivalent here. Native Windows PowerShell 5.1/7 weather/completion terminal validation remains pending; shared controller/bridge fixtures do not establish it. See [wttr](wttr.md).
+
+Named `git submodule NAME ...` navigation and `git submodules info` use the same Python parser, inspection and static completion metadata as Bash. Publication delegates to the native Git controller; no Bash is required on Windows. Native PowerShell terminal acceptance for these additions remains pending.

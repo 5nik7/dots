@@ -121,7 +121,13 @@ dots_main() {
       (($#)) && shift
       # shellcheck source=catalog.bash
       source "$DOTS_LIB_DIR/catalog.bash"
-      dots_help "$@"; return ;;
+      if [[ ${1:-} == git && ${2:-} == submodule ]]; then
+        dots_resolve "$@"; resolved=$?
+        (( resolved != 1 )) || return 1
+        if [[ $DOTS_ROUTE != "git submodule" || $DOTS_EXECUTABLE != "$DOTS/bin/dots-git-submodule" ]]; then dots_help "$@"; return; fi
+        python3 -B "$DOTS_LIB_DIR/git/submodule.py" --help-context "${@:3}"
+      else dots_help "$@"; fi
+      return ;;
     commands)
       shift
       source "$DOTS_LIB_DIR/catalog.bash"
@@ -158,6 +164,10 @@ dots_main() {
     if [[ $DOTS_ROUTE == theme && $# -gt 1 && $2 != -h && $2 != --help ]]; then
       shift "$DOTS_CONSUMED"
       exec "$DOTS_EXECUTABLE" "$@"
+    fi
+    if (( want_help )) && [[ $DOTS_ROUTE == "git submodule" && $DOTS_EXECUTABLE == "$DOTS/bin/dots-git-submodule" ]]; then
+      python3 -B "$DOTS_LIB_DIR/git/submodule.py" "${@:3}"
+      return
     fi
     if (( want_help )); then
       source "$DOTS_LIB_DIR/catalog.bash"

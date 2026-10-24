@@ -20,7 +20,7 @@ unit = "F" # thresholds can use F or C, independent of display
 # First bound is inclusive; subsequent bounds begin the next warmer band.
 # N increasing thresholds need N+1 styles; [] with one style covers all temperatures.
 # <=32 cyan, <45 blue, <65 green, <80 yellow, <95 orange, >=95 red.
-thresholds = [32, 55, 70, 85, 95]
+thresholds = [32, 49, 75, 85, 95]
 # Names follow the current theme; literal overrides can be mixed, e.g. "#89b4fa", 33.
 # Add bold/b, italic/i, underline/u, dim/d, reverse: "underline bold bright red".
 # bright selects a standard color variant (bright blue = bright_blue), not bold.
@@ -43,7 +43,7 @@ sunset = "󰖚"
 humidity = ""
 precip = ""
 unknown = ""  # weather-na
-"113" = ""    # sunny / clear
+"113" = ""    # sunny / clear
 "116" = ""    # partly cloudy
 "119" = ""    # cloudy
 "122" = ""    # overcast

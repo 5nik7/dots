@@ -13,6 +13,8 @@ This Bash dispatcher does not provide general native Windows execution. A separa
 builtins; resolving a symlinked launcher additionally requires `readlink`.
 This coverage is separate from the Go platform matrix below.
 
+Personal Bash/Zsh/Fish startup uses [user-local completion directories](shell-init.md#user-local-completion-directories) with XDG-aware paths and priority over repository providers. Native discovery checks run in isolated Termux roots; Linux/WSL remain pending native acceptance for this change. PowerShell, Nushell and Xonsh retain their existing integrations. There is no native Windows equivalent of Zsh fpath registration, and Windows app destinations are unchanged; Windows PowerShell 5.1/7 startup acceptance remains pending.
+
 The [tmux keybinding reference](commands.md#tmux-keybinding-reference) requires Bash 4.4+ and tmux's formatted key listing (`list-keys -F` with `q|a` quoting). Optional less provides paging; missing less falls back to printed output. Native Termux checks use tmux 3.7c, a disposable popup, and controlling-terminal less tests. Linux/WSL remain compatible design targets without new native evidence; native Windows is not supported by this Bash/tmux command. No paths are translated or dependencies installed.
 
 The tmux system status row is enabled only when the tmux server inherits a nonempty `TERMUX_VERSION`; other environments show the tmux session/window row alone. Termux numbers remain ordered on the lower row; the current number and optional tmux name share one ` number:project ` badge, followed by windows before later numbers. Window labels omit names exactly matching the full tmux session name. Each badge/window has one space at each end. Numbering requires Python 3, the optional Androidots `termux-sessions` script, readable procfs and inherited `TERMUX_APP__PID`. The adapter locates that script through the repository's directory-linked tmux configuration. It matches each client's terminal ID rather than the server's launch ancestry; unmatched clients have no highlighted Termux entry. Missing discovery dependencies clear the segment without affecting the clock or tmux row. Native tmux 3.8 terminal rendering is verified in isolated Termux fixtures; the non-Termux branch is simulated there, not new Linux/WSL or Windows certification. See [tmux themes](themes.md#tmux).
@@ -266,7 +268,18 @@ The eza connector is implemented in both the Bash and native Python publishers. 
 
 ## Bounded Git and file operations
 
-The live Git family requires Bash 5, Git, POSIX utilities and (for publish) sha256sum. It rejects native Windows shell environments; Linux/WSL use the POSIX boundary with native validation reported separately. File operations use the existing Python POSIX adapter, no privilege elevation, and XDG config/state roots. There is no native Windows mutation adapter, link-to-copy fallback, or cross-Windows/WSL translation. Termux-owned discovery rules live in Androidots. See [Git](git.md), [files](files.md) and [verification](testing.md#git-and-managed-file-operations).
+The Bash Git engine requires Bash 5, Git, POSIX utilities and (for publish)
+sha256sum; it rejects native Windows shell environments. New info/submodule views
+and Bash submodule selection also require Python 3.9+. Native PowerShell invokes
+Python and native Git directly, including scoped submodule publication, without
+Bash. Linux/WSL and Windows native runtime/terminal acceptance are reported
+separately from Termux/controller fixtures. File operations use the shared Python
+engine with POSIX and native Windows adapters; Windows acceptance remains pending.
+There is no privilege elevation, silent link-to-copy fallback or cross-Windows/WSL
+translation. Windows app destinations are unchanged by the Git extensions.
+Termux-owned discovery rules live in Androidots. See [Git](git.md),
+[files](files.md), [native PowerShell](powershell.md) and
+[verification](testing.md#git-and-managed-file-operations).
 
 ## Anodize scope
 

@@ -85,7 +85,7 @@ def select(rows, action, multi=False, new=False, selector=None, owners=()):
         if row.get('label'):
             labels.append(ui.clean(row['label']))
             continue
-        identity = row.get('id') or row.get('repository', '')
+        identity = row.get('id') or ui.repository_label(row.get('_source_root'), row.get('repository', ''))
         paths = [ui.resource(row[k]) for k in ('source', 'target') if row.get(k)]
         labels.append(' | '.join([ui.paint(identity, '94'), ui.clean(row.get('app', '')),
                                  ui.status(row.get('status', 'available')), ' -> '.join(paths)]))
@@ -191,7 +191,9 @@ def preview(snapshot, token):
         return
     for key in ('id', 'repository', 'app', 'status', 'strategy', 'enabled', 'platforms', 'applicable'):
         if key in row:
-            ui.detail(key.title(), row[key])
+            if key == 'repository':
+                ui.repository_detail('Repository', row.get('_source_root'), row[key])
+            else: ui.detail(key.title(), row[key])
     for key in ('source', 'target'):
         if row.get(key):
             ui.resource_detail(key.title(), row[key])

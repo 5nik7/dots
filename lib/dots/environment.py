@@ -78,8 +78,11 @@ def main():
         from catalog import Presentation
         ui = Presentation()
         ui.heading('Dots environment')
+        path_names = {line.split('\t', 1)[0] for line in (LIB / 'shell/paths.tsv').read_text().splitlines()}
+        path_names.update(('DOTS_CONFIG_FILE', 'DOTS_STATE_DIR'))
         for key, item in values.items():
-            ui.detail(key, item['value'] + ' [' + item['source'] + ']')
+            value = ui.path(item['value']) if key in path_names else item['value']
+            ui.detail(key, value + ' [' + item['source'] + ']')
 
 
 if __name__ == '__main__':

@@ -8,4 +8,4 @@ Optional integrations activate once after successful generation and can retry on
 
 See [initialization](../../docs/shell-init.md), [shared commands](../../docs/shared-shells.md#commands-and-compatibility), and [isolated verification](../../docs/testing.md#shell-initialization). No live startup or real user state is used by the tests.
 
-On Termux, interactive startup adds the Androidots `shells/bash` base to `BASH_COMPLETION_USER_DIR` before loading bash-completion, retaining custom bases and the normal fallback. See [local completion paths](../../docs/shell-init.md#termux-local-completion-directories).
+Interactive startup preserves custom `BASH_COMPLETION_USER_DIR` bases, adds the existing XDG user base if absent, and places optional Termux Androidots after them. bash-completion loads files lazily from each base's `completions` subdirectory. See [user-local completion paths](../../docs/shell-init.md#user-local-completion-directories).

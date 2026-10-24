@@ -129,8 +129,24 @@ Detaching resumes the outer shell; its bar disappears until reattachment. Run `~
 
 Set `DOTS_TERMUX_AUTOSTART=0` before initialization to disable automatic startup; manual `termux-bar` still works. Missing dependencies, identity errors or attachment failures leave a usable shell. Python 3, tmux, the sibling `termux-sessions` script and readable procfs are required; no dependency is installed automatically. New tabs load startup changes; existing tmux servers need their normal configuration reload for the layout and session-destruction behavior.
 
+## User-local completion directories
+
+Interactive personal startup gives user-local completion directories priority over repository providers. Paths follow XDG overrides, with `$HOME/.local/share` and `$HOME/.config` as the data and config fallbacks. Registration does not create directories or install completion files.
+
+| Shell | User-local lookup |
+| --- | --- |
+| Zsh | Existing `$XDG_DATA_HOME/zsh/site-functions` is first in `fpath`, after plugin path setup and before compinit. The tied `FPATH` scalar is exported for child tools. |
+| Bash | Caller-supplied `BASH_COMPLETION_USER_DIR` bases retain their order; the existing `$XDG_DATA_HOME/bash-completion` base is appended if absent. With no override, that base is the default even before it exists. bash-completion loads files from each base's `completions` subdirectory on demand. |
+| Fish | Existing `$XDG_CONFIG_HOME/fish/completions` precedes `$XDG_DATA_HOME/fish/vendor_completions.d`, followed by Androidots, repository and remaining native paths. |
+
+Repeated initialization deduplicates these entries. Zsh completion directories belong in `fpath`; Dots no longer adds its repository completion directory to executable `PATH`. Executable directories such as `~/.local/bin` keep their existing handling. Explicit tool-generated completion registrations retain their existing behavior; this ordering governs directory providers.
+
+Start a new shell or reload personal configuration to pick up path changes. In Zsh, `rlcs` re-registers the local path and rebuilds discovery, retaining normal compinit ownership checks. A file must be a valid completion for its shell: directory registration neither restores backups nor establishes that a completion is installed.
+
+Generic `dots init` hooks retain their integration-only contract, and noninteractive personal startup does not add these completion paths. PowerShell, Nushell and Xonsh retain their existing native integrations; no arbitrary-script directory loader is added. Native Windows has no equivalent Zsh fpath addition, and Windows application destinations are unchanged. Native Windows PowerShell 5.1/7 startup acceptance for this maintenance pass remains pending.
+
 ## Termux local completion directories
 
-Interactive personal Bash/Zsh/Fish startup registers Androidots-local completion directories when the Androidots checkout exists. Zsh prepends `$DOTS/androidots/shells/zsh/completions` before its single compinit. Bash prepends the `$DOTS/androidots/shells/bash` base to `BASH_COMPLETION_USER_DIR` before loading bash-completion; existing bases retain their order, with the normal XDG user base retained when previously unset. Fish prepends `$DOTS/androidots/shells/fish/completions` to `fish_complete_path`. Repeated startup does not duplicate these entries.
+Interactive personal Bash/Zsh/Fish startup registers Androidots-local completion directories when the Androidots checkout exists. Zsh adds `$DOTS/androidots/shells/zsh/completions` before its single compinit, with the user-local site-functions directory taking priority. Bash appends the `$DOTS/androidots/shells/bash` base after user bases in `BASH_COMPLETION_USER_DIR` before loading bash-completion. Fish places `$DOTS/androidots/shells/fish/completions` after user-local directories and before repository completions. Repeated startup does not duplicate these entries.
 
 These fixed-path additions neither scan/generate completions nor create directories, execute Android APIs, or install packages. Other platforms and noninteractive startup do not add them. Generic `dots init` hooks retain their integration-only contract. `termux-geo completion --all --install` explicitly creates its files at these locations; see [installation and shell activation](../androidots/docs/termux-geo.md#shell-completions). Existing other-command completions remain in place.
