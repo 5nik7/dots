@@ -62,6 +62,8 @@ For the local symlink header component, use the isolated Lua checks described in
 
 Run `python3 -B tools/verify_docs.py` and `git diff --check` for documentation changes. The checker validates relative Markdown targets in README, AGENTS, guides, docs and plans without Go or optional submodules. Its fixture regressions run with `python3 -B tools/test_verify_docs.py`.
 
+The [repository checks workflow](../../.github/workflows/repository-checks.yml) runs the documentation regressions, link checker and latest-commit whitespace check on Linux and Windows for pushes and pull requests targeting `main` that change Markdown, either documentation-checker script or that workflow. The separate [worktree lifecycle workflow](../../.github/workflows/worktree-lifecycle.yml) runs helper tests and the whitespace check only when the helper, its test script or its workflow changes; documentation-only changes do not run helper tests.
+
 The test commands in `docs/testing.md` must exist before they are presented as runnable. Keep support claims limited to actual native results and distinguish skipped cases and simulated platform fixtures.
 
 ## Bash Command Framework
