@@ -8,9 +8,9 @@ dots:setup({
       platforms = { termux = { renderer = "chafa" } },
     },
     markdown = {
-      renderer = "mdcat",
+      renderer = "leaf",
       source = "bat",
-      args = { mdcat = {}, glow = {}, rich = {}, bat = {}, cat = {} },
+      args = { leaf = {}, mdcat = {}, glow = {}, rich = {}, bat = {}, cat = {} },
       platforms = {},
     },
   },
