@@ -4,7 +4,7 @@
 
 The owner approved self-contained Git status/publish/sync plus file discovery,
 adoption, linking, removal and optional backups. Extend the current Bash/Python
-implementation without resuming Go or implementing general module/profile apply.
+implementation using the shared file transaction engine.
 
 Git commands port the relevant MIT-licensed git-it engine into dots. They default
 to the dots root, use separate owner configuration, preserve child-first publish

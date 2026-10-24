@@ -7,7 +7,7 @@
 - [x] Test preview/apply/rollback using disposable links.
 - [x] Apply reviewed home-link migration with durable recovery evidence.
 
-Go implementation remains paused. No commits, pushes, package installation or live theme/wallpaper activation are included. Existing user changes and independent submodule histories are preserved.
+No commits, pushes, package installation or live theme/wallpaper activation are included. Existing user changes and independent submodule histories are preserved.
 
 Fourteen links were migrated and verified against their recorded new targets.
 Recovery journal: `~/.local/state/dots/migrations/config-paths-20260923.json`.

@@ -1,6 +1,6 @@
 # Anodize next steps
 
-**Status: Proposed.** Recommended follow-up to the [implemented slice](anodize.md), not authorization to build a frontend or activate live configuration. General Go migration remains paused; Anodize is a scoped exception.
+**Status: Proposed.** Recommended follow-up to the [implemented slice](anodize.md), not authorization to build a frontend or activate live configuration.
 
 ## Recommendation
 
@@ -21,7 +21,7 @@ The immediate concrete issue is the two existing Zsh alias failures recorded in 
 
 Dots owns the core/CLI, publisher and its editor configuration. The finished plugin handoff is in `~/repos/Anodize.nvim/docs/dots-integration.md`; inspect it read-only for this scope. A necessary plugin change needs a clearly identified separate scope and its repository's instructions. Preserve personal editor highlights, transparency, lualine layout and dashboard animation behavior.
 
-Do not resume general Go migration, create another transaction engine, introduce arbitrary hooks, build an APK/TUI, fetch online theme sources, install packages or publish releases in this task. `man/anodize.1` is available for local viewing; that does not mean it is installed in the system manual path. Source provenance remains in [PROVENANCE.md](../anodize/PROVENANCE.md). The recorded absence of a standalone upstream license file is a release question, not permission to invent notices or a claim of legal clearance.
+Do not create another transaction engine, introduce arbitrary hooks, build an APK/TUI, fetch online theme sources, install packages or publish releases in this task. `man/anodize.1` is available for local viewing; that does not mean it is installed in the system manual path. Source provenance remains in [PROVENANCE.md](../anodize/PROVENANCE.md). The recorded absence of a standalone upstream license file is a release question, not permission to invent notices or a claim of legal clearance.
 
 ## Verification and acceptance
 
@@ -31,7 +31,7 @@ Use the existing entry points documented in [testing](../docs/testing.md); inspe
 - `python3 -B tools/test_anodize_integration.py` and `python3 -B tools/test_anodize_nvim.py` cover shell/manual and editor boundaries.
 - `python3 -B tools/test_zsh.py` and `python3 -B tools/zsh_interactive.py --samples 3` verify the shell repair and real Zsh/FZF-tab behavior.
 - Run the relevant existing theme, workflow, file and dispatcher suites when those boundaries change; do not expand unrelated testing without a reason.
-- `python3 -B tools/generate_anodize_integration.py --check`, `mandoc -T lint man/anodize.1`, `python3 -B tools/verify_core.py docs` and `git diff --check` verify generated artifacts and documentation.
+- `python3 -B tools/generate_anodize_integration.py --check`, `mandoc -T lint man/anodize.1`, `python3 -B tools/verify_docs.py` and `git diff --check` verify generated artifacts and documentation.
 
 Acceptance requires corrected or explicitly explained reproduced failures, consistent consumer contracts, successful relevant isolated workflows, preserved human/data output boundaries and truthful documentation. Report native Termux, simulated platform, fixture/editor and unverified live behavior separately. Measure affected startup paths before adding caches or complexity. Do not turn unavailable optional tools into claims of successful coverage.
 
@@ -45,4 +45,4 @@ After this foundation is accepted, choose a separately scoped frontend task. The
 
 The [next-agent prompt](prompts/anodize-hardening.md) carries the immediate task and recorded working preferences.
 
-The separately authorized [theme plugin slice](theme-plugins.md) now covers explicitly enabled local post-publication hooks. Earlier arbitrary-hook exclusions remain applicable to downloaded-theme execution and broader hook systems. This does not expand the Go or Anodize.nvim scope.
+The separately authorized [theme plugin slice](theme-plugins.md) now covers explicitly enabled local post-publication hooks. Earlier arbitrary-hook exclusions remain applicable to downloaded-theme execution and broader hook systems. This does not expand the Anodize.nvim scope.

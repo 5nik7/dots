@@ -1,6 +1,6 @@
 # Deja Zsh trial
 
-**Status: Implemented; promoted to the default at the owner's request after the trial.** Not a resumption of the Go roadmap.
+**Status: Implemented; promoted to the default at the owner's request after the trial.**
 
 ## Linux/WSL automatic installation
 
@@ -13,7 +13,6 @@ Verification: all seven new Deja installation tests passed, including real Zinit
 A three-sample alternating warm-start comparison with autosuggestions selected measured 1.966 s before and 2.023 s after (overlapping samples, advisory mobile timings), retained in `dots-zsh-zn9oee6p`. The existing-binary path performs no new executable probe; real Zinit fixture checks establish that cached release loading performs no download.
 
 ## Default adoption (historical)
-
 
 Deja is now selected when `DOTS_ZSH_SUGGESTIONS` is unset or empty. `DOTS_ZSH_SUGGESTIONS=autosuggestions` keeps the original engine available; explicit `deja` still works. Missing-binary and invalid-selection fallbacks, Tab preservation, and fresh-shell switching remain unchanged. The owner accepted the measured startup tradeoff after trying Deja. General fixtures explicitly select autosuggestions; the native Deja runner tests unset-selector activation. No additional installation or live history import is required.
 

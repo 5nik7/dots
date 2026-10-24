@@ -10,7 +10,7 @@ The theme CLI is now consolidated under `dots theme`; see the [migration plan](t
 - [x] Preserve legacy APIs; add singular routes, Git lifecycle and explicit wallpapers.
 - [x] Validate publication recovery, application outputs and compatibility.
 
-Go implementation remains paused. No commits, pushes, package installation or live theme/wallpaper activation are included. Existing user changes and independent submodule histories are preserved.
+No commits, pushes, package installation or live theme/wallpaper activation are included. Existing user changes and independent submodule histories are preserved.
 
 The contract is in [docs/themes.md](../docs/themes.md) and decision 0008. Native
 Termux fixture checks cover all 33 selections, compatibility, state recovery and
@@ -31,7 +31,7 @@ Future theme and wallpaper changes must meet the [presentation contract](../docs
 
 ## FZF and Gum templates (2026-09-28)
 
-Scope: connect `fzf.sh.tpl` to published shell initialization, and retain `gum_env.lua.tpl` for explicit loading in Hilbish. Preserve palette mappings and template filenames. Read FZF assignments as restricted literal data; render Gum with Hilbish's `os.setenv` API without executing Lua during publication. Keep existing template precedence and transaction boundaries. No live activation, Hilbish configuration installation, package installation or Go work is included.
+Scope: connect `fzf.sh.tpl` to published shell initialization, and retain `gum_env.lua.tpl` for explicit loading in Hilbish. Preserve palette mappings and template filenames. Read FZF assignments as restricted literal data; render Gum with Hilbish's `os.setenv` API without executing Lua during publication. Keep existing template precedence and transaction boundaries. No live activation, Hilbish configuration installation, or package installation is included.
 
 - [x] Validate FZF assignments before publication; emit Bash/Zsh and Fish initialization. Render the Gum Lua consumer separately.
 - [x] Use the generated FZF palette during shell refresh, preserve non-color options and prevent duplicate color flags. Keep the legacy fallback for unpublished/session-only themes.
@@ -52,7 +52,7 @@ Verification: all three focused workflow checks and all 23 shared-theme tests pa
 
 ## Gum-first theme picker (2026-09-28)
 
-Owner-approved scope: establish Gum as the preferred optional interaction tool and implement `dots theme switcher` with Gum, FZF and numbered-menu backends. Selection leads to palette review and Back/Apply/Cancel; only Apply calls the existing publisher. Preserve explicit Gum environment loading, scripting interfaces, the earlier shell-template work and the paused Go boundary. The presentation acceptance gate above applies at 40/80/120 columns, with plain/color/icon modes and native versus fixture evidence distinguished.
+Owner-approved scope: establish Gum as the preferred optional interaction tool and implement `dots theme switcher` with Gum, FZF and numbered-menu backends. Selection leads to palette review and Back/Apply/Cancel; only Apply calls the existing publisher. Preserve explicit Gum environment loading, scripting interfaces and the earlier shell-template work. The presentation acceptance gate above applies at 40/80/120 columns, with plain/color/icon modes and native versus fixture evidence distinguished.
 
 - [x] Add a lazy shared interaction adapter and the theme review loop.
 - [x] Test backend preference, review/apply, cancellation, errors, noninteractive refusal and presentation controls in owned roots; exercise installed Gum in a native PTY.

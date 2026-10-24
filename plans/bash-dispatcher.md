@@ -2,7 +2,7 @@
 
 **Status: Implemented; native Termux verification complete**
 
-Implement the approved Bash framework in the existing checkout. Go remains paused.
+Implement the approved Bash framework in the existing checkout.
 The first slice includes direct longest-prefix dispatch, repository/local/explicit
 command roots, optional static comment metadata, shared color/icon helpers, and
 on-demand Bash/Zsh/Fish completion. No functional theme commands or installer.
@@ -48,7 +48,7 @@ on shell startup. No real management extensions ship in this slice.
   The final adapter also passed a focused cached-session FZF-tab recheck in
   `dots-final-pty.log` there, after the cursor-position regression was added.
 - Bash/Zsh/Fish syntax checks, ShellCheck, Markdown links, and whitespace checks
-  passed. No Go implementation, tests, or CI were changed or invoked.
+  passed.
 
 ## Performance Evidence
 
@@ -90,7 +90,7 @@ be removed by ordinary temporary-directory cleanup.
 
 The implementation is in the existing checkout without commits, pushes, a new
 worktree, package changes, or live-home installation. Start a fresh configured
-shell to load its new adapter. Go development remains paused.
+shell to load its new adapter.
 
 Final runtime source SHA-256: `80a9b6e9769e426781dc6747568c0a52255f30d4887bbe7898507cf8ca0e8910`.
 This hashes sorted paths and contents, NUL-delimited, for `bin/dots` and files
@@ -106,4 +106,4 @@ The authorized [Omarchy theme expansion](omarchy-themes.md) and [files catalog](
 
 Future dispatcher/help changes must meet the [presentation contract](../docs/presentation.md) and its acceptance gate. Keep the shared Bash helpers authoritative, evaluate stdout/stderr independently, and preserve extension forwarding and generated completion data. Initial theme/file presentation evidence is recorded in [testing](../docs/testing.md#terminal-presentation).
 
-The [Git and managed-file expansion](git-and-file-operations.md) adds static route metadata and shared presentation without changing direct-dispatch lookup or resuming Go development.
+The [Git and managed-file expansion](git-and-file-operations.md) adds static route metadata and shared presentation without changing direct-dispatch lookup.

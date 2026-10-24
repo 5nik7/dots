@@ -10,7 +10,7 @@ Implement the bounded foundation-hardening task in `plans/anodize-next.md`. Revi
 
 I am building **Anodize**, my adaptation of Aether, as a core part of Dots' theme system. Core and CLI come first. I eventually want an Android APK and possibly a TUI with a workflow inspired by Aether's desktop app. The TUI is optional and is not a required step before Android. Do not start either frontend in this task.
 
-The implemented foundation includes the pure Go core, Python authoring adapter, existing journaled publisher, standalone `anodize` and `dots anodize`, local Neovim integration, Bash/Zsh/Fish completions and a generated manual. Do not recreate completed functionality. General Dots Go migration remains paused; focused Anodize work is the authorized exception.
+The implemented foundation includes the pure Go core, Python authoring adapter, existing journaled publisher, standalone `anodize` and `dots anodize`, local Neovim integration, Bash/Zsh/Fish completions and a generated manual. Do not recreate completed functionality.
 
 Paths:
 
@@ -56,6 +56,6 @@ Inspect Git state before editing. There is substantial in-progress work across t
 
 Inspect current runners before using them. `python3 -B tools/verify_anodize.py check` builds a temporary engine and runs Go tests/vet plus CLI checks. Use `tools/test_anodize_integration.py` and `tools/test_anodize_nvim.py` for their boundaries, `tools/test_zsh.py` for the shell repair, and `python3 -B tools/zsh_interactive.py --samples 3` for the interactive shell checks. Run relevant existing theme/workflow/file/dispatcher suites when affected. Use Python's `-B` option to avoid bytecode artifacts.
 
-Check generated artifacts with `python3 -B tools/generate_anodize_integration.py --check`, lint `man/anodize.1` with `mandoc -T lint`, verify Markdown links with `python3 -B tools/verify_core.py docs`, and run `git diff --check`. Report unavailable optional tools accurately; do not silently install them. Measure affected startup paths if behavior changes.
+Check generated artifacts with `python3 -B tools/generate_anodize_integration.py --check`, lint `man/anodize.1` with `mandoc -T lint`, verify Markdown links with `python3 -B tools/verify_docs.py`, and run `git diff --check`. Report unavailable optional tools accurately; do not silently install them. Measure affected startup paths if behavior changes.
 
 Finish with what changed and why, the actual verification results, remaining risks or unverified behavior, and the next bounded step toward the APK or optional TUI. Separate native Termux tests, simulated tests, isolated Neovim evidence and live visual checks. Leave the changes uncommitted and preserve all unrelated work.

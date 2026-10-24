@@ -1,6 +1,6 @@
 # Bounded checkout installation
 
-**Status: Implemented and verified in isolated native Termux fixtures; Linux/Windows CI added, native Windows and WSL execution not yet verified.** This owner-requested slice adds checkout-local setup, update and restore without resuming the Go migration or general module/profile installation. The behavioral source of truth is [checkout installation](../docs/installation.md).
+**Status: Implemented and verified in isolated native Termux fixtures; Linux/Windows CI added, native Windows and WSL execution not yet verified.** This owner-requested slice adds checkout-local setup, update and restore. The behavioral source of truth is [checkout installation](../docs/installation.md).
 
 - [x] Audit tracked/ignored links and catalog omissions; repair absolute internal links.
 - [x] Add explicit `dots init --setup`, `dots files install/uninstall`, and root shell/PowerShell entry points.

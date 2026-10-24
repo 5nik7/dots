@@ -4,7 +4,7 @@
 
 `dots files` starts the managed-files workflow by locating sources, recording their
 intent, classifying targets, and listing them. It requires Python 3.9+; discovery additionally requires Git. Native Windows supports the bounded install/uninstall, inspection and recovery routes described in [checkout installation](installation.md); adoption and the browser remain POSIX-only. Neither ordinary dispatch nor basic
-help requires Python or Git. Go development remains paused.
+help requires Python or Git.
 
 Slow catalog/system discovery, browser loading, planning and file operations use [terminal progress](presentation.md#operation-progress). Preparation, apply and reverse recovery have separate item counts; final results retain transaction and recovery details. `DOTS_PROGRESS=never` disables the display. JSON, raw source/target queries and dry runs never animate.
 
@@ -51,12 +51,11 @@ dots files track config/example/settings --repo dots --id example-settings \
 ```
 
 The source must exist in its owning repository. Whole directories require
-`--strategy directory-link`; `copy` records a future explicit copy preference.
+`--strategy directory-link`; `copy` records an explicit copy strategy for managed installation.
 `--update` is required to change an existing ID. Repeating the identical record is
 a no-op. `--replaces REPOSITORY:ID` is repeatable. Tracking does not install, move,
 link, copy, stage in Git, or read the contents of the source. The separate managed
-operations below implement add, link, remove/rm, undo and recovery. Source-content editing and
-general module/profile installation remain future work.
+operations below implement add, link, remove/rm, undo and recovery. Source-content editing remains separate from mapping edits.
 
 ## Stash and edit mappings
 
@@ -281,9 +280,7 @@ platforms, unmapped targets, unsupported destinations and conflicts are distinct
 statuses. `replaced_by`, `conflicts` and `replacement_unavailable` explain composition.
 There is no content hashing or claim that an existing copy matches its source.
 
-The JSON catalog is a small implemented inventory model, separate from the proposed
-module/profile manifests in [specification.md](specification.md). Bounded file operations consume explicit ownership and the transaction rules in
-[safety.md](safety.md); they do not implement the proposed module/profile resolver.
+The JSON catalog defines resource ownership and target mappings in [data contracts](specification.md). Managed file operations consume that ownership and follow the transaction rules in [safety](safety.md).
 
 Theme publication may deliberately connect Termux colors to generated state instead
 of the catalogued baseline source. Inventory reports that link as `linked-elsewhere`;

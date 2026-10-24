@@ -47,7 +47,7 @@ class Adapters(unittest.TestCase):
                       APPDATA=str(self.home/'Roaming'),LOCALAPPDATA=str(self.home/'Local'),
                       CODEX_HOME=str(self.home/'.codex'),PI_CODING_AGENT_DIR=str(self.home/'.pi'),
                       DOTS_COLOR='never',DOTS_ICONS='never',TERM='xterm-256color')
-        for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG'):
+        for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG', 'DOTS_APP_LEAF_CONFIG'):
             self.env.pop(key, None)
 
     def run_command(self, argv, ok=True, **env):

@@ -2,7 +2,7 @@
 
 **Status: Optimization implemented; original verification retained; two current alias regression failures noted below**
 
-Optimize the existing Zsh configuration in the main checkout while preserving immediate integration readiness, prompt details, aliases, completion, theme switching, and reloads. Go development remains paused.
+Optimize the existing Zsh configuration in the main checkout while preserving immediate integration readiness, prompt details, aliases, completion, theme switching, and reloads.
 
 - [x] Capture isolated baseline with public plugins and synthetic private/platform modules.
 - [x] Replace recursive environment discovery with an explicit compatibility list.
@@ -43,7 +43,7 @@ Validation:
 - 16 isolated regression tests passed, including syntax, platform fixtures, literal PATH order, exact color/terminfo values, generator failures and replacement, cache storage failure, theme switching, missing optional tools, relocated roots with spaces/Unicode, and plugin path precedence.
 - Native PTY checks passed for Tab/FZF completion, Ctrl-R history, preview toggling, vi-mode cursor changes, and immediately rendered prompts in ordinary and Git fixture directories.
 - Repeated `rl` preserves hooks, keymaps, FZF options, and fpath exactly. `rlcs` rebuilds completion and leaves FZF-tab operational. A separate final refresh acceptance run passed after those runner checks were added.
-- Starship TOML parsed successfully. Relative Markdown links and whitespace checks passed. Go tests and runtime code are outside this change.
+- Starship TOML parsed successfully. Relative Markdown links and whitespace checks passed.
 
 Temporary raw evidence (subject to normal temporary-directory cleanup):
 

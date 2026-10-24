@@ -21,7 +21,7 @@ The personal profile now uses [shared Starship startup](shell-init.md#powershell
 
 ## Commands and interaction
 
-The native dispatcher reads the same static first-party headers as Bash. Built-in metadata lives in `lib/dots/metadata/`. It forwards file commands to the existing catalog, mapping, browser, installer and transaction controllers. Git uses the native Python Git controller. Themes use a literal palette reader, renderer and guarded file transactions; Anodize uses its existing engine and a native publication bridge. Bash retains its established theme/Git frontends while native behavior is validated; this is not a general Go migration.
+The native dispatcher reads the same static first-party headers as Bash. Built-in metadata lives in `lib/dots/metadata/`. It forwards file commands to the existing catalog, mapping, browser, installer and transaction controllers. Git uses the native Python Git controller. Themes use a literal palette reader, renderer and guarded file transactions; Anodize uses its existing engine and a native publication bridge. Bash retains its established theme/Git frontends while native behavior is validated.
 
 PowerShell arguments cross the Python boundary as a base64-encoded JSON array. Empty strings, quotes, Unicode and shell metacharacters remain literal; stdin remains available for confirmations. This avoids depending on the different native argument rules in [PowerShell versions](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_parsing). Completion inspects literal AST values without evaluating expressions or executing extensions. Palette `init` and `--array` emit PowerShell syntax on Windows; scalar color values keep the same formats. Native `.ps1` and `.exe` external commands need their own native implementation; an arbitrary external Bash script is not converted.
 
@@ -45,6 +45,7 @@ The catalog token `${APP_CONFIG:app}` resolves app-specific directories in `lib/
 | lsd | `~/.config/lsd` (preferred Windows location) |
 | bat | `%APPDATA%/bat`; `BAT_CONFIG_DIR` override |
 | Television | `%LOCALAPPDATA%/television/config`; `TELEVISION_CONFIG` or absolute `XDG_CONFIG_HOME/television` override |
+| Leaf | `%APPDATA%/leaf`; unmapped without APPDATA unless explicitly overridden |
 | eza | `%APPDATA%/eza`; `EZA_CONFIG_DIR` override |
 | Yazi | `%APPDATA%/yazi/config`; `YAZI_CONFIG_HOME` override |
 | Nushell | `%APPDATA%/nushell`, or `$XDG_CONFIG_HOME/nushell` |
@@ -94,3 +95,5 @@ preview and interruption acceptance remains pending where engines are unavailabl
 `bin/wttr.ps1` uses the literal native argument bridge and shared Python 3.11+ weather controller; Bash is not required. It supports the same views/flags/progress/data, case-sensitive short aliases and theme-gradient help, stock request syntax and generated PowerShell completion as the Unix entry. Temperature/icon attributes, variable temperature bands and widget style directives use the shared renderer, and completion tooltips use case-sensitive stock metadata. Stock requests execute native `curl.exe` directly, bypassing the PowerShell `curl` alias; JSON-backed views do not require curl. Configuration maps to APPDATA/wttr (XDG override supported). Manual/default locations are supported; Android acquisition and tmux have no native Windows equivalent here. Native Windows PowerShell 5.1/7 weather/completion terminal validation remains pending; shared controller/bridge fixtures do not establish it. See [wttr](wttr.md).
 
 Named `git submodule NAME ...` navigation and `git submodules info` use the same Python parser, inspection and static completion metadata as Bash. Publication delegates to the native Git controller; no Bash is required on Windows. Native PowerShell terminal acceptance for these additions remains pending.
+
+Leaf publishes UI and shared bat syntax through the native Python transaction engine and is included in native setup. The separate [Leaf build](leaf-build.md) requires platform-native Rust compilation. Native Windows publication, undo, symlink privilege refusal and dark/light rendering acceptance remain pending.

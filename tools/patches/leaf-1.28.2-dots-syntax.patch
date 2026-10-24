@@ -1,0 +1,434 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index a0b8863..f205f14 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -1047,7 +1047,7 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
+ 
+ [[package]]
+ name = "leaf-markdown-viewer"
+-version = "1.28.2"
++version = "1.28.2+dots.1"
+ dependencies = [
+  "anyhow",
+  "crossterm",
+@@ -1507,6 +1507,19 @@ version = "0.3.32"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
+ 
++[[package]]
++name = "plist"
++version = "1.10.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "7da1d65da6dd5d1e44199ac0f58712d241c0f439f80adea8924d832384087f85"
++dependencies = [
++ "base64",
++ "indexmap",
++ "quick-xml",
++ "serde",
++ "time",
++]
++
+ [[package]]
+ name = "portable-atomic"
+ version = "1.13.1"
+@@ -1575,6 +1588,15 @@ version = "0.11.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "007d8adb5ddab6f8e3f491ac63566a7d5002cc7ed73901f72057943fa71ae1ae"
+ 
++[[package]]
++name = "quick-xml"
++version = "0.41.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1"
++dependencies = [
++ "memchr",
++]
++
+ [[package]]
+ name = "quinn"
+ version = "0.11.9"
+@@ -2237,9 +2259,11 @@ dependencies = [
+  "fnv",
+  "once_cell",
+  "onig",
++ "plist",
+  "regex-syntax",
+  "serde",
+  "serde_derive",
++ "serde_json",
+  "thiserror 2.0.18",
+  "walkdir",
+ ]
+@@ -2376,12 +2400,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "743bd48c283afc0388f9b8827b976905fb217ad9e647fae3a379a9283c4def2c"
+ dependencies = [
+  "deranged",
++ "itoa",
+  "libc",
+  "num-conv",
+  "num_threads",
+  "powerfmt",
+  "serde_core",
+  "time-core",
++ "time-macros",
+ ]
+ 
+ [[package]]
+@@ -2390,6 +2416,16 @@ version = "0.1.8"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca"
+ 
++[[package]]
++name = "time-macros"
++version = "0.2.27"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "2e70e4c5a0e0a8a4823ad65dfe1a6930e4f4d756dcd9dd7939022b5e8c501215"
++dependencies = [
++ "num-conv",
++ "time-core",
++]
++
+ [[package]]
+ name = "tinystr"
+ version = "0.8.3"
+diff --git a/Cargo.toml b/Cargo.toml
+index b4f57d8..37fed1b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "leaf-markdown-viewer"
+-version = "1.28.2"
++version = "1.28.2+dots.1"
+ edition = "2021"
+ description = "Terminal Markdown previewer with a GUI-like experience"
+ license = "MIT"
+@@ -19,7 +19,7 @@ path = "src/main.rs"
+ ratatui       = "0.30"
+ crossterm     = "0.29"
+ pulldown-cmark = "0.12"
+-syntect       = { version = "5.2", default-features = false, features = ["default-syntaxes", "default-themes", "regex-onig"] }
++syntect       = { version = "5.2", default-features = false, features = ["default-syntaxes", "default-themes", "regex-onig", "plist-load"] }
+ anyhow        = "1.0"
+ unicode-width = "0.2"
+ reqwest       = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+diff --git a/README.md b/README.md
+index be1206c..58b8a92 100644
+--- a/README.md
++++ b/README.md
+@@ -484,3 +484,10 @@ If you like **leaf**, consider giving the project a star ⭐
+ This project is licensed under the MIT License.
+ 
+ See the [LICENSE](LICENSE) file for details.
++
++
++### Dots custom build: external syntax themes
++
++This 1.28.2+dots.1 build also accepts a `.tmTheme` file in a custom theme's `syntax` field, for example `syntax = "dots.tmTheme"`. Relative paths are resolved beside the external theme TOML, or beside config.toml for embedded named themes (including names selected by CLI/environment). Absolute paths and symlinked files are supported. Built-in syntax names retain their existing behavior.
++
++A selected unreadable or malformed syntax file stops startup with an error in both TUI and inline modes. Unselected files are not loaded. Syntax colors are loaded once per launch and retained across document reload, resize and theme-picker cancellation; start a new Leaf process after publishing new colors.
+diff --git a/src/main.rs b/src/main.rs
+index 0d3246f..e7e3984 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -33,8 +33,8 @@ use markdown::{hash_str, parse_markdown, parse_markdown_with_width, read_file_st
+ use runtime::run;
+ use terminal::{finish_with_restore, TerminalSession};
+ use theme::{
+-    app_theme, current_syntect_theme, resolve_theme_selection, set_theme_selection,
+-    validate_theme_syntax,
++    app_theme, current_syntect_theme, load_external_syntax, resolve_theme_selection,
++    set_theme_selection, validate_theme_syntax,
+ };
+ use update::run_update;
+ 
+@@ -256,15 +256,30 @@ fn main() -> Result<()> {
+     };
+     let (user_config, mut config_warning) = config::load_config(&overrides);
+ 
+-    let theme_selection = if let Some(theme_name) = cli_theme.as_deref() {
+-        resolve_theme_selection(theme_name, &user_config.themes, None)
+-            .map_err(|message| anyhow::anyhow!("{message}"))?
++    let mut theme_selection = if let Some(theme_name) = cli_theme.as_deref() {
++        resolve_theme_selection(
++            theme_name,
++            &user_config.themes,
++            user_config
++                .config_dir
++                .as_deref()
++                .filter(|_| user_config.themes.contains_key(theme_name.trim())),
++        )
++        .map_err(|message| anyhow::anyhow!("{message}"))?
+     } else if let Some(theme_name) = std::env::var("LEAF_THEME")
+         .ok()
+         .filter(|s| !s.is_empty())
+         .as_deref()
+     {
+-        resolve_theme_selection(theme_name, &user_config.themes, None).unwrap_or_default()
++        resolve_theme_selection(
++            theme_name,
++            &user_config.themes,
++            user_config
++                .config_dir
++                .as_deref()
++                .filter(|_| user_config.themes.contains_key(theme_name.trim())),
++        )
++        .unwrap_or_default()
+     } else if let Some(theme_name) = user_config.theme.as_deref() {
+         resolve_theme_selection(
+             theme_name,
+@@ -389,7 +404,8 @@ fn main() -> Result<()> {
+     let watch = watch_from_cli || (watch_from_config && is_file_input);
+ 
+     let ss = SyntaxSet::load_defaults_newlines();
+-    let ts = ThemeSet::load_defaults();
++    let mut ts = ThemeSet::load_defaults();
++    load_external_syntax(&mut theme_selection, &mut ts).map_err(anyhow::Error::msg)?;
+     append_config_warning(
+         &mut config_warning,
+         validate_theme_syntax(&theme_selection, &ts),
+diff --git a/src/tests/theme.rs b/src/tests/theme.rs
+index 33b123d..fbe09eb 100644
+--- a/src/tests/theme.rs
++++ b/src/tests/theme.rs
+@@ -246,3 +246,131 @@ heading_1 = "#010203"
+     assert_eq!(app_theme().markdown.heading_1, Color::Rgb(1, 2, 3));
+     set_theme_selection(original);
+ }
++
++const EXTERNAL_SYNTAX: &str = r##"<?xml version="1.0"?><plist version="1.0"><dict>
++<key>name</key><string>Fixture</string><key>settings</key><array><dict><key>settings</key><dict>
++<key>foreground</key><string>#123456</string><key>background</key><string>#010203</string>
++</dict></dict></array></dict></plist>"##;
++
++struct SyntaxFixture(std::path::PathBuf);
++impl SyntaxFixture {
++    fn new() -> Self {
++        let path = super::unique_temp_dir("leaf syntax ü space");
++        std::fs::create_dir_all(&path).unwrap();
++        std::fs::write(path.join("dots.tmTheme"), EXTERNAL_SYNTAX).unwrap();
++        std::fs::write(path.join("dots.toml"), "syntax = 'dots.tmTheme'\n").unwrap();
++        Self(path)
++    }
++}
++impl Drop for SyntaxFixture {
++    fn drop(&mut self) {
++        let _ = std::fs::remove_dir_all(&self.0);
++    }
++}
++
++#[test]
++fn external_syntax_resolves_beside_theme_and_survives_picker_cancel() {
++    let _guard = lock_theme_test_state();
++    let original = current_theme_selection();
++    let fixture = SyntaxFixture::new();
++    let mut selected =
++        resolve_theme_selection("dots.toml", &BTreeMap::new(), Some(&fixture.0)).unwrap();
++    let mut themes = ThemeSet::load_defaults();
++    // Loading external data must not replace an existing collection entry.
++    themes.themes.insert(
++        "__leaf_external_syntax__".into(),
++        themes.themes["base16-ocean.dark"].clone(),
++    );
++    crate::theme::load_external_syntax(&mut selected, &mut themes).unwrap();
++    assert_ne!(selected.syntax_theme_name(), "__leaf_external_syntax__");
++    assert!(validate_theme_syntax(&selected, &themes).is_none());
++    set_theme_selection(selected.clone());
++    let expected = syntect::highlighting::Color {
++        r: 18,
++        g: 52,
++        b: 86,
++        a: 255,
++    };
++    assert_eq!(
++        current_syntect_theme(&themes).settings.foreground,
++        Some(expected)
++    );
++    let (ss, _) = test_assets();
++    let mut app = App::new(
++        Vec::new(),
++        Vec::new(),
++        "fixture.md".into(),
++        false,
++        false,
++        None,
++        None,
++    );
++    app.open_theme_picker();
++    app.preview_theme_preset(ThemePreset::Forest, &ss, &themes);
++    app.restore_theme_picker_preview(&ss, &themes);
++    assert_eq!(current_theme_selection(), selected);
++    assert_eq!(
++        current_syntect_theme(&themes).settings.foreground,
++        Some(expected)
++    );
++    set_theme_selection(original);
++}
++
++#[test]
++fn external_syntax_embedded_absolute_and_unselected_files() {
++    let fixture = SyntaxFixture::new();
++    let mut custom = BTreeMap::new();
++    custom.insert(
++        "embedded".into(),
++        toml::from_str("syntax = 'dots.tmTheme'").unwrap(),
++    );
++    custom.insert(
++        "unused".into(),
++        toml::from_str("syntax = 'missing.tmTheme'").unwrap(),
++    );
++    let mut selected = resolve_theme_selection("embedded", &custom, Some(&fixture.0)).unwrap();
++    crate::theme::load_external_syntax(&mut selected, &mut ThemeSet::load_defaults()).unwrap();
++    let syntax_path = fixture.0.join("dots.tmTheme");
++    let source = format!("syntax = '{}'", syntax_path.display());
++    std::fs::write(fixture.0.join("dots.toml"), source).unwrap();
++    let mut selected = resolve_theme_selection("dots.toml", &custom, Some(&fixture.0)).unwrap();
++    crate::theme::load_external_syntax(&mut selected, &mut ThemeSet::load_defaults()).unwrap();
++    let mut preset = resolve_theme_selection("ocean", &custom, None).unwrap();
++    crate::theme::load_external_syntax(&mut preset, &mut ThemeSet::load_defaults()).unwrap();
++}
++
++#[test]
++fn external_syntax_missing_and_malformed_are_errors() {
++    let fixture = SyntaxFixture::new();
++    for contents in [None, Some("not a plist")] {
++        let path = fixture.0.join("dots.tmTheme");
++        if let Some(data) = contents {
++            std::fs::write(&path, data).unwrap();
++        } else {
++            std::fs::remove_file(&path).unwrap();
++        }
++        let mut selected =
++            resolve_theme_selection("dots.toml", &BTreeMap::new(), Some(&fixture.0)).unwrap();
++        let error =
++            crate::theme::load_external_syntax(&mut selected, &mut ThemeSet::load_defaults())
++                .unwrap_err();
++        assert!(error.contains("Cannot load syntax theme file"));
++    }
++}
++
++#[cfg(unix)]
++#[test]
++fn external_syntax_follows_symlinks_using_logical_theme_directory() {
++    let fixture = SyntaxFixture::new();
++    let other = fixture.0.join("other");
++    std::fs::create_dir(&other).unwrap();
++    std::fs::write(other.join("source.toml"), "syntax = 'dots.tmTheme'").unwrap();
++    std::fs::remove_file(fixture.0.join("dots.toml")).unwrap();
++    std::os::unix::fs::symlink(other.join("source.toml"), fixture.0.join("dots.toml")).unwrap();
++    std::fs::rename(fixture.0.join("dots.tmTheme"), other.join("source.tmTheme")).unwrap();
++    std::os::unix::fs::symlink(other.join("source.tmTheme"), fixture.0.join("dots.tmTheme"))
++        .unwrap();
++    let mut selected =
++        resolve_theme_selection("dots.toml", &BTreeMap::new(), Some(&fixture.0)).unwrap();
++    crate::theme::load_external_syntax(&mut selected, &mut ThemeSet::load_defaults()).unwrap();
++}
+diff --git a/src/theme/mod.rs b/src/theme/mod.rs
+index 434506d..b03d66b 100644
+--- a/src/theme/mod.rs
++++ b/src/theme/mod.rs
+@@ -11,7 +11,7 @@ use presets::{ARCTIC_THEME, FOREST_THEME, OCEAN_DARK_THEME, SOLARIZED_DARK_THEME
+ pub(crate) use self::serde::CustomThemeConfig;
+ #[cfg(test)]
+ pub(crate) use resolution::parse_theme_color;
+-pub(crate) use resolution::{resolve_theme_selection, validate_theme_syntax};
++pub(crate) use resolution::{load_external_syntax, resolve_theme_selection, validate_theme_syntax};
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+ #[repr(u8)]
+@@ -137,6 +137,7 @@ pub(crate) struct CustomTheme {
+     pub(crate) name: String,
+     pub(crate) base_preset: ThemePreset,
+     pub(crate) theme: AppTheme,
++    pub(crate) syntax_file: Option<std::path::PathBuf>,
+ }
+ 
+ #[derive(Clone, Debug, PartialEq, Eq)]
+diff --git a/src/theme/resolution.rs b/src/theme/resolution.rs
+index 806ca82..040606f 100644
+--- a/src/theme/resolution.rs
++++ b/src/theme/resolution.rs
+@@ -77,7 +77,7 @@ pub(crate) fn resolve_theme_selection(
+     }
+ 
+     if let Some(custom_config) = custom_themes.get(name) {
+-        return custom_theme_selection(name, custom_config);
++        return custom_theme_selection(name, custom_config, theme_file_base_dir);
+     }
+ 
+     if looks_like_theme_file(name) {
+@@ -90,6 +90,7 @@ pub(crate) fn resolve_theme_selection(
+ pub(super) fn custom_theme_selection(
+     name: &str,
+     custom_config: &CustomThemeConfig,
++    syntax_base_dir: Option<&Path>,
+ ) -> Result<ThemeSelection, String> {
+     let base_preset = match custom_config.base.as_deref() {
+         Some(base) => parse_theme_preset(base)
+@@ -98,11 +99,18 @@ pub(super) fn custom_theme_selection(
+     };
+ 
+     let mut theme = theme_by_preset(base_preset).clone();
++    let mut syntax_file = None;
+     if let Some(syntax) = custom_config.syntax.as_deref() {
+         let syntax = syntax.trim();
+         if syntax.is_empty() {
+             return Err(format!("Empty syntax theme for custom theme \"{name}\""));
+         }
++        if syntax.to_ascii_lowercase().ends_with(".tmtheme")
++            || syntax.contains('/')
++            || syntax.contains('\\')
++        {
++            syntax_file = Some(resolve_theme_file_path(syntax, syntax_base_dir));
++        }
+         theme.syntax_theme_name = Cow::Owned(syntax.to_string());
+     }
+     custom_config.ui.apply_to(&mut theme.ui);
+@@ -112,6 +120,7 @@ pub(super) fn custom_theme_selection(
+         name: name.to_string(),
+         base_preset,
+         theme,
++        syntax_file,
+     })))
+ }
+ 
+@@ -133,7 +142,7 @@ pub(super) fn resolve_theme_file_selection(
+         .and_then(|stem| stem.to_str())
+         .filter(|stem| !stem.is_empty())
+         .unwrap_or(name);
+-    custom_theme_selection(theme_name, &custom_config)
++    custom_theme_selection(theme_name, &custom_config, path.parent())
+ }
+ 
+ pub(super) fn resolve_theme_file_path(name: &str, theme_file_base_dir: Option<&Path>) -> PathBuf {
+@@ -155,3 +164,30 @@ pub(crate) fn validate_theme_syntax(
+         format!("Unknown syntax theme \"{syntax_theme_name}\", using default syntax colors")
+     })
+ }
++
++/// Load only the selected external syntax file. Keep it in the session's theme
++/// collection so document reloads, resize and picker cancellation use it too.
++pub(crate) fn load_external_syntax(
++    selection: &mut ThemeSelection,
++    themes: &mut ThemeSet,
++) -> Result<(), String> {
++    let ThemeSelection::Custom(custom) = selection else {
++        return Ok(());
++    };
++    let Some(path) = custom.syntax_file.as_ref() else {
++        return Ok(());
++    };
++    let syntax = ThemeSet::get_theme(path).map_err(|err| {
++        format!(
++            "Cannot load syntax theme file \"{}\": {err}",
++            path.display()
++        )
++    })?;
++    let mut key = "__leaf_external_syntax__".to_string();
++    while themes.themes.contains_key(&key) {
++        key.push('_');
++    }
++    themes.themes.insert(key.clone(), syntax);
++    custom.theme.syntax_theme_name = Cow::Owned(key);
++    Ok(())
++}

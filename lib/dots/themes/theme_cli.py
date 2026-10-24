@@ -82,6 +82,10 @@ def connectors(themes):
         if app == 'eza':
             from app_paths import eza_config_directory
             base = eza_config_directory()
+        elif app == 'leaf':
+            from app_paths import leaf_config_directory
+            base = leaf_config_directory()
+            if base is None: continue
         elif app == 'television':
             from app_paths import television_config_directory
             base = television_config_directory()
@@ -91,7 +95,7 @@ def connectors(themes):
             base = config_directory('yazi') if app == 'yazi' else config / app
         else: base = config / app
         target = base / suffix
-        if target.parent.is_dir() or (app == 'television' and base.is_dir()):
+        if target.parent.is_dir() or (app in ('television', 'leaf') and base.is_dir()):
             if base.is_symlink():
                 from catalog import Catalog, platform
                 owners = Catalog(themes.checkout, platform()).records()

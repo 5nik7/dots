@@ -1,6 +1,6 @@
 # Checkout installation
 
-**Implemented: bounded catalog-backed setup and restore.** Run these entry points from an existing public checkout. They do not bootstrap Python, Bash, Git, applications, or a remote release. General module/profile installation and the Go migration remain paused.
+**Implemented: bounded catalog-backed setup and restore.** Run these entry points from an existing public checkout. They do not bootstrap Python, Bash, Git, applications, or a remote release.
 
 ```sh
 ./install.sh --dry-run
@@ -62,7 +62,7 @@ Missing public sources are initialized only with `--with-source`. Secrets and un
 
 ## Restore and recovery
 
-The installation record is `${XDG_STATE_HOME:-$HOME/.local/state}/dots/installation.json` on POSIX, or `%LOCALAPPDATA%/dots/installation.json` on Windows unless `XDG_STATE_HOME` is set. It is written in the same transaction as the target changes. The first installation baseline and retained backup references survive later reconciliation. A second checkout cannot silently take over the same installation record.
+The installation record is `${XDG_STATE_HOME:-$HOME/.local/state}/dots/installation.json` on POSIX, or `%LOCALAPPDATA%/dots/installation.json` on Windows unless `XDG_STATE_HOME` is set. It is written in the same transaction as the target changes. The first installation baseline and retained backup references survive later reconciliation. Text receipts use the same UTF-8/LF preparation and preserved target permissions as publication, so theme reconciliation remains restorable across different process umasks. A second checkout cannot silently take over the same installation record.
 
 Uninstall restores unchanged installer-owned targets to their pre-install objects, removes links created where no target existed, and prunes only empty installer-created directories. Changed targets are preserved and reported as incomplete. Source edits made through a managed link remain in the checkout. Pre-existing matching links, source repositories, catalogs, generated payloads and recovery records are retained. Uninstall is distinct from `dots files remove`, which still materializes a config copy and removes its catalog entry.
 
@@ -74,5 +74,7 @@ receipts and target objects; it does not uninstall or restore anything. See
 [missing-source checks](files.md#check-missing-sources) for review and dry-run options.
 
 ## Validation
+
+`python3 -B tools/test_file_platform.py` covers native file flushing, read-only backup metadata, flush-error refusal before replacement, permission-sensitive undo and text preparation under different POSIX umasks. This suite runs in both Linux and Windows installation CI. Machine-local `config/bat/themes/Dots.tmTheme` is ignored rather than shipped as an absolute link; the fresh-checkout test continues to reject escaping links.
 
 `python3 -B tools/test_installation.py` owns all home/config/state/cache roots and local Git remotes. It covers backup/restore, no-op reconciliation, drift, crash recovery, theme preparation, updates and optional-source boundaries. `python3 -B tools/test_installation_adapters.py` covers entry points and native adapter boundaries. On Windows use `python -B`. Linux/Windows CI runs these tests; Windows positive link cases explicitly skip when the runner lacks link capability. Native Termux evidence, Windows CI results and owner-run WSL verification must be reported separately.

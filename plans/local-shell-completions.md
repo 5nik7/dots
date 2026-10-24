@@ -1,6 +1,6 @@
 # User-local shell completions
 
-**Completed, with native-platform and pre-existing regression limits recorded below.** The owner selected user-local directory precedence on 2026-10-23. This is bounded personal shell maintenance; general migration remains paused.
+**Completed, with native-platform and pre-existing regression limits recorded below.** The owner selected user-local directory precedence on 2026-10-23. This is bounded personal shell maintenance.
 
 ## Scope and behavior
 

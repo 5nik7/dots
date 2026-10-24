@@ -45,12 +45,11 @@ Native Termux verification:
 - `python3 -B tools/test_bash_dots.py`: 24 tests passed. Changed Bash/Python syntax, ShellCheck (existing SC1091/SC2034 exclusions for shared dynamic-source files), manual freshness/lint and `git diff --check` passed. The new Bash logo adapter passes ShellCheck without exclusions.
 - Native PTY review covered 40-column stacked text, 80-column horizontal text, 120-column parity and tiny fallback. Chafa 1.18.3 produced the supplied horizontal mark/wordmark; polite mode suppresses cursor hiding and probing. Kitty tests validate chunking, decoded PNG bytes, sizing and conservative fallback, but actual Kitty display remains unverified.
 - The wider `python3 -B tools/zsh_interactive.py --samples 3` check reached reload and then stopped at FZF-tab because `fzf` is absent (`command not found: fzf`). Ordinary three-shell completion acceptance passed; FZF-tab remains unverified in this environment.
-- Repository-wide `python3 -B tools/verify_core.py docs` still fails the pre-existing `docs/testing.md` link to `config/yazi/plugins/dots-symlink.yazi/README.md`, also present in `HEAD`. A changed-document relative-link audit found no newly broken links. No unrelated link repair was made.
+- At this checkpoint, repository-wide documentation checks failed the pre-existing `docs/testing.md` link to `config/yazi/plugins/dots-symlink.yazi/README.md`, also present in `HEAD`. A changed-document relative-link audit found no newly broken links. No unrelated link repair was made.
 
 Alternating unchanged-HEAD/current help measurements in disposable roots (12 samples each, three warmups) were 358.42/318.27 ms for standalone help and 20.77/30.79 ms for Dots static help. Treat the standalone difference as noise, not a speed claim. Static branding adds text rendering, option validation and two metadata options, costing about 10 ms in this run without launching an image renderer. No cache was added. The shared dispatch benchmark (five samples) retained repository-size-independent direct lookup: 23.40/26.55/24.78 ms at 0/100/1000 fixture extensions. Linux/WSL/native Windows and actual Kitty graphics were not newly verified.
 
 Source and assets are left uncommitted; no live theme was applied and no tool was installed.
-
 
 ## Unified usage artwork — 2026-10-21
 

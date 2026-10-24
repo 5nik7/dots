@@ -188,6 +188,9 @@ class LifecycleTests(unittest.TestCase):
         self.git(self.candidate, 'commit', '-m', 'advance fixture remote main')
         fresh = self.git(self.candidate, 'rev-parse', 'HEAD')
         self.git(self.candidate, 'push', str(self.remote), 'HEAD:refs/heads/main')
+        # Some Git versions recognize the URL as origin and update its tracking
+        # ref during push. Establish the stale-cache scenario explicitly.
+        self.git(self.original, 'update-ref', 'refs/remotes/origin/main', cached)
         self.git(self.original, 'config', '--add', 'remote.origin.fetch',
                  'refs/heads/main:refs/heads/recovery/fixture')
         self.refs = self.git(self.original, 'for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads')
@@ -202,7 +205,7 @@ class LifecycleTests(unittest.TestCase):
         self.git(self.candidate, 'add', 'tracked')
         self.git(self.candidate, 'commit', '-m', 'unmerged')
         self.assertEqual(self.result()['reason'], 'HEAD not contained in origin/main')
-        # Push to the local fixture remote without updating cached origin/main.
+        # Advance the disposable remote; the helper must fetch before removal.
         self.git(self.candidate, 'push', str(self.remote), 'HEAD:refs/heads/main')
         self.assertEqual(self.result()['status'], 'removed')
 

@@ -144,7 +144,7 @@ dt_render() {
   done <<< "$token_data"
   # Only bundled app overrides are trusted. Installed repositories supply colors/images only.
   if [[ $DT_THEME_DIR == "$DT_ROOT/"* ]]; then
-    for filename in kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini eza.yml television.toml; do
+    for filename in kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini eza.yml television.toml leaf.toml; do
       if [[ -f $DT_THEME_DIR/$filename && ! -L $DT_THEME_DIR/$filename ]]; then
         cp -- "$DT_THEME_DIR/$filename" "$dir/$filename" || return
         [[ $filename != vivid.yml ]] || vivid_source=$DT_THEME_DIR/$filename

@@ -4,7 +4,7 @@
 
 Implement the approved recursive Git status/publish/sync commands independently of
 the file adoption workflow. Port the bounded Git engine with attribution; keep
-git-it and bak unchanged. Go remains paused.
+git-it and bak unchanged.
 
 File work adds versioned search locations, individual-file adoption by default,
 explicit directory links, link and remove/rm, history, undo/recovery, and optional
@@ -63,7 +63,6 @@ lint/docs checks and a repeatable status timing fixture. Nested symlinks/Git
 metadata require manual whole-directory materialization; source collisions,
 protected theme connectors and drift are refused. No automatic pruning, live
 imports, Git commits/pushes or native Windows mutation support was added.
-
 
 ### Publish staging correction, 2026-09-28
 

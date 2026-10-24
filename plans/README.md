@@ -4,11 +4,10 @@ Plans describe active, paused, proposed, or completed work. Durable architecture
 
 ## Planning Documents
 
-The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday maintenance is active; general Go implementation/migration is paused. The implemented [Anodize slice](anodize.md) is an owner-authorized exception, not a resumption of the general roadmap. A proposed next task is a recommendation until the owner requests implementation.
+Everyday maintenance and focused feature work are tracked below. A proposed next task is a recommendation until the owner requests implementation.
 
 | Plan | Current role |
 | --- | --- |
-| [Roadmap](roadmap.md) | Current priorities and retained, paused Go phases. |
 | [Anodize](anodize.md) | Implemented core/CLI, local Neovim integration, completions and manual. |
 | [Anodize terminal branding](anodize-logo.md) | Responsive portable logos and optional Kitty/Chafa rendering. |
 | [Anodize next steps](anodize-next.md) | Proposed foundation hardening, then separately scoped frontend work. |
@@ -25,6 +24,7 @@ The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday mai
 | [Theme plugins](theme-plugins.md) | Explicit local hooks and journaled GTK 3/Qt6ct integrations. |
 | [Omarchy-style themes](omarchy-themes.md) | Implemented flat themes, fixed connectors and explicit wallpaper adapters. |
 | [Git theme colors](git-theme-colors.md) | Shared theme roles for Dots Git metadata and status output. |
+| [Leaf UI and syntax](leaf-theme.md) | Semantic template, journaled connectors and local external syntax support. |
 | [Shared themes](themes.md) | Completed original shared palette slice; historical editor evidence. |
 | [Additional theme families](theme-families.md) | Completed family expansion; historical editor evidence. |
 | [Configuration paths](config-path-migration.md) | Completed migration; compatibility aliases remain. |
@@ -35,10 +35,7 @@ The [roadmap](roadmap.md#current-priority) owns current priorities. Everyday mai
 | [Shared shell utilities](util.md) | Historical utility optimization before consolidation. |
 | [Zsh startup](zsh-startup.md) | Completed optimization; current regression limits recorded separately. |
 | [Worktree lifecycle](worktree-lifecycle.md) | Implemented optional helper; older workflow rules are historical. |
-| [Phase 1 portability](phase-1-portability.md) | Completed experiments and historical evidence; remaining gates deferred. |
-| [Phase 2 command center](phase-2-command-center.md) | Implemented development Go slices; further implementation paused. |
-| [Termux MVP](termux-mvp.md) | Bounded operations exist; general profiles and live MVP drill deferred. |
-| [Planning review](planning-review-2026-09-25.md) | Completed consistency review and evidence limits. |
+| [GitHub workflow repairs](ci-repairs.md) | Installation durability, receipt modes and portable CI fixtures; native acceptance tracked separately. |
 
 [Copyable next-agent prompt](prompts/anodize-hardening.md) includes the recommended scope and the owner's recorded working preferences. It does not authorize the current agent to start that future task.
 

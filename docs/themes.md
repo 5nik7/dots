@@ -123,7 +123,7 @@ RGB) are supported; unresolved variables refuse publication. Personal templates 
 A trusted bundled theme's explicit application file takes precedence over both.
 Downloaded themes contribute colors and backgrounds only. Templates never evaluate
 shell substitutions, Lua or hooks. Outputs include Kitty, Termux, tmux, btop, bat,
-Yazi, Codex, Pi, Vivid, FSH, eza and Television data; Zsh/Fish and Neovim data come from the palette generator.
+Yazi, Codex, Pi, Vivid, FSH, eza, Leaf and Television data; Zsh/Fish and Neovim data come from the palette generator.
 
 The [mdcat configuration](../config/mdcat/config.toml) uses `base = "auto"` for dark/light detection and ANSI color names for its overrides. Its colors follow the terminal palette, so the terminal must have the Dots theme applied; mdcat does not read the published Dots palette directly. Existing heading markers, alert labels and text styles are preserved. Code-block highlighting continues to use mdcat's `BAT_THEME` integration. Explicit `--theme` or `MDCAT_THEME` selections override the base, with config style overrides still applied on top.
 
@@ -270,7 +270,7 @@ Existing app settings and Neovim transparency remain in their source configurati
 On selection, fixed connector links are created only for configured applications:
 Kitty/tmux `dots-theme.conf`, btop `themes/dots.theme`, Yazi `flavors/dots.yazi`, and
 Termux `~/.termux/colors.properties`, Pi's `themes/dots.json`, and Codex's
-`themes/dots.tmTheme`, Vivid `themes/dots.yml`, FSH `dots.ini`, eza `theme.yml`, and Television `themes/dots.toml` (see below). Existing regular files or symlinks are saved in
+`themes/dots.tmTheme`, Vivid `themes/dots.yml`, FSH `dots.ini`, eza `theme.yml`, Television `themes/dots.toml`, and Leaf `themes/dots.toml` plus `themes/dots.tmTheme` (see below). Existing regular files or symlinks are saved in
 the generation's connector journal before replacement; real directories are refused.
 Parent application directories must exist. If an application directory itself is
 linked into a repository, the connector lives in that source directory. It is
@@ -793,3 +793,22 @@ Publication links `themes/dots.toml` to the stable active generation's `televisi
 The app config directory must already exist. Publication may create its missing `themes` child through the journal, backs up existing `dots.toml` files or links, and refuses real-directory targets and unsafe parents. Rollback removes transaction-created parents only when safe and empty, preserving new user content. The Bash journal records directory identity; interruption before identity is recorded requires manual inspection instead of guessing ownership. The native publisher uses the shared Store's parent journal. No Television executable is required for publication, and no running Television process is restarted. New launches read the generated theme; `[ui.theme_overrides]` retains Television's normal precedence.
 
 Personal `dots/themed/television.toml.tpl` templates override the default; trusted bundled `television.toml` files override both. These inputs participate in generation fingerprints. Use `dots theme set ID --dry-run` to preview and `dots theme refresh` to publish the current selection. Native consumer evidence and outstanding platform checks are recorded in [testing](testing.md#television-theme).
+
+
+## Leaf
+
+`default/themed/leaf.toml.tpl` adapts every UI and Markdown color field from `config/leaf/themes/catppuccin-mocha.toml` to the selected Dots semantic palette. It uses `ocean` as the dark base and `arctic` as the light base; `leaf_base` and `leaf_badge_foreground` are literal renderer tokens shared by Bash and Python. Surfaces use background variants, ordinary text uses foreground variants, highlights use selection/accent, and dark/light status badges retain contrasting foregrounds. Layout, editor and watch settings stay in Leaf's editable config. The reference theme is preserved.
+
+The generated `leaf.toml` selects `syntax = "dots.tmTheme"`. Publication links both `leaf/themes/dots.toml` to the active `leaf.toml` and `leaf/themes/dots.tmTheme` to the existing active `bat.tmTheme`, sharing syntax scopes with bat, Yazi and Codex. Stock Leaf 1.28.2 only supports bundled syntax names and silently falls back for a file path. Use the [custom Leaf build](leaf-build.md) before selecting this template for matching code colors.
+
+Select the generated theme in Leaf's `config.toml`:
+
+```toml
+theme = "themes/dots.toml"
+```
+
+Both publishers resolve `DOTS_APP_LEAF_CONFIG`, then `${XDG_CONFIG_HOME:-$HOME/.config}/leaf` on Termux/Linux/WSL or `%APPDATA%/leaf` on Windows. Missing APPDATA leaves the Windows destination unmapped, matching Leaf. Explicit paths must be absolute with no control characters or dot components; no tilde expansion is performed. The Dots override changes the publication destination only; arrange for Leaf to read that location separately. The catalog uses `${APP_CONFIG:leaf}` on Windows.
+
+Refresh requires an existing Leaf config root. It may create only its missing `themes` child, recording directory identity and both links in the publisher journal. Existing files and broken links are backed up; directory conflicts and post-write drift refuse replacement or recovery. Both artifacts participate in setup/uninstall and normal publication. No Leaf executable is needed for generation and no running Leaf session is restarted. Open Leaf again to read a refreshed theme; selected external syntax loads once per process.
+
+Personal `dots/themed/leaf.toml.tpl` templates override the default; trusted bundled `leaf.toml` overrides both. These files and shared syntax inputs participate in fingerprints. Preview with `dots theme set ID --dry-run`, then publish with `dots theme refresh`. See [verification and platform limits](testing.md#leaf-theme).

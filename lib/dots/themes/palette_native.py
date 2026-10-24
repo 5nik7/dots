@@ -220,12 +220,13 @@ class Themes:
                 tokens[key + '_blend_' + str(percent)] = '#' + ''.join(f'{(int(value[i:i+2],16)*percent + int(bg[i:i+2],16)*(100-percent)+50)//100:02x}' for i in (1,3,5))
             tokens[key + '_strip'] = value.lstrip('#')
             tokens[key + '_rgb'] = metric(key, value, 'rgb').replace(' ', ',')
+        tokens.update(color.leaf_template_tokens(palette))
         tokens['mode'] = palette['mode']
         tokens['file_styles_vivid'] = json.dumps(color.vivid_theme(doc, color.vivid_runtime()[2]), indent=2)
         tokens['git_colors_starship'] = '\n'.join('git_' + key + ' = ' + json.dumps(value) for key, value in doc['colors']['git'].items())
         rendered = set()
         trusted = directory.is_relative_to(self.root)
-        overrides = 'kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini eza.yml television.toml'.split()
+        overrides = 'kitty.conf tmux.conf btop.theme termux.properties bat.tmTheme yazi.toml fzf.sh gum_env.sh pi.json vivid.yml fsh.ini eza.yml television.toml leaf.toml'.split()
         for name in overrides if trusted else ():
             if (directory / name).is_file() and not (directory / name).is_symlink():
                 (out / name).write_bytes(regular(directory / name)); rendered.add(name)

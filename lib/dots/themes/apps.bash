@@ -30,18 +30,21 @@ dt_apps_plan() {
   [[ $pi_agent == /* && $pi_agent != *$'\n'* && /$pi_agent/ != */../* && /$pi_agent/ != */./* ]] || {
     dt_error 'Pi agent directory must be an absolute path without dot components'; return 1;
   }
-  local eza_config television_config parent
+  local eza_config television_config leaf_config app_config parent
   eza_config=$(python3 -B "$DT_LIB/../files/app_paths.py" eza) || return
   television_config=$(python3 -B "$DT_LIB/../files/app_paths.py" television) || return
+  leaf_config=$(python3 -B "$DT_LIB/../files/app_paths.py" leaf) || return
   local suffix artifact
   while IFS=$'\t' read -r name suffix artifact; do
     path=$config/$name/$suffix
     [[ $name != eza ]] || path=$eza_config/$suffix
-    if [[ $name == television ]]; then
-      path=$television_config/$suffix
-      [[ -d $television_config ]] || continue
+    if [[ $name == television || $name == leaf ]]; then
+      app_config=$television_config
+      [[ $name != leaf ]] || app_config=$leaf_config
+      [[ -n $app_config && -d $app_config ]] || continue
+      path=$app_config/$suffix
       parent=${path%/*}
-      [[ ! -L $parent && ( ! -e $parent || -d $parent ) ]] || { dt_error 'unsafe Television themes directory'; return 1; }
+      [[ ! -L $parent && ( ! -e $parent || -d $parent ) ]] || { dt_error "unsafe $name themes directory"; return 1; }
       if [[ ! -d $parent ]]; then DT_CONNECT_CREATE_DIRS[$parent]=1; fi
     fi
     [[ -d ${path%/*} || ${DT_CONNECT_CREATE_DIRS[${path%/*}]:-} ]] || continue
@@ -102,6 +105,8 @@ dt_apps_connect() {
       mkdir -- "$parent" || return
       stat -c '%d:%i' -- "$parent" > "$entry/parent-identity" || return
       dt_flush "$entry/parent-identity" && dt_flush "$entry" && dt_flush "${parent%/*}" || return
+      # Several artifacts may share this newly created application directory.
+      unset 'DT_CONNECT_CREATE_DIRS[$parent]'
     fi
     if [[ -L $entry/old ]]; then
       [[ -L $target && $(readlink -- "$target") == "$(readlink -- "$entry/old")" ]] || { dt_error 'connector changed during preparation'; return 1; }

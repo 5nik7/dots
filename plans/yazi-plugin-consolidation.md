@@ -4,7 +4,7 @@
 
 ## Accepted design
 
-Bundle the nine plugins initialized by `config/yazi/init.lua` plus the keymap's pane toggles into `config/yazi/plugins/dots.yazi`. Rename the bundled Yatline renderer and extension global to Dotline. Keep one setup table in `init.lua`, retaining current options. Preserve original plugin folders inactive for reference, unrelated package dependencies, existing user edits, and project data/events. No commits, publication, package installation, or changes to the paused Go scope are included.
+Bundle the nine plugins initialized by `config/yazi/init.lua` plus the keymap's pane toggles into `config/yazi/plugins/dots.yazi`. Rename the bundled Yatline renderer and extension global to Dotline. Keep one setup table in `init.lua`, retaining current options. Preserve original plugin folders inactive for reference, unrelated package dependencies, existing user edits, and project data/events. No commits, publication or package installation are included.
 
 The [plugin README](../config/yazi/plugins/dots.yazi/README.md) owns the feature inventory and interfaces. The bundle uses Yazi-relative module imports and independent module state; its dispatcher forwards project, pane, and internal refresh actions, while its fetch entry forwards Git jobs. Pane updates use a UI synchronization block. Personal configuration, shortcuts, and fetcher rules address `dots`.
 

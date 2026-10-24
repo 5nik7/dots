@@ -2,12 +2,11 @@
 
 Plural CLI compatibility is superseded by [decision 0012](0012-unified-theme-cli.md). The original decision below records its historical scope.
 
-
 **Status: Accepted and implemented, 2026-09-23.**
 
 The owner requested an Omarchy-like command and theme layout, completion of the
 existing `configs` to `config` moves, and a first practical files-management slice,
-including Androidots. Further Go development remains paused.
+including Androidots.
 
 Keep the Bash dispatcher from decision 0006. Implement file inspection and metadata
 tracking with a Python standard-library backend, explicit source composition and
@@ -26,7 +25,7 @@ Lua, scripts and application configuration never execute or override generated d
 
 Bounded theme publication may back up and connect fixed application theme files and
 reload available adapters. These operations have durable journals and reverse-order
-rollback, independently of the proposed general Go transaction engine. Repository
+rollback. Repository
 source edits and metadata tracking remain ordinary Git-managed edits. Explicit Git
 theme install/update/remove use staging, clean-tree checks and retained archives.
 Wallpaper operations are separate, explicit, journaled adapter calls and cannot

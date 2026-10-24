@@ -1,6 +1,6 @@
 # Dots Documentation
 
-The `dots` CLI is in the design and incremental-migration phase, with an isolated [portability experiment](../plans/phase-1-portability.md) verified natively on Termux and Linux/Windows CI, including bounded bundle packaging, verification, extraction, and execution. [Decision 0002](decisions/0002-phase-1-go-adoption.md) accepts Go and the bounded core task, implemented for read-only built-ins. [Decision 0003](decisions/0003-trusted-external-command-protocol.md) accepts the implemented development external protocol; broader production commands remain deferred. These documents distinguish accepted design, experimental evidence, and unimplemented production behavior.
+The live CLI combines Bash and native PowerShell entry points with shared Python controllers. These references describe current commands, configuration ownership, managed operations, platform limits and Anodize palette authoring.
 
 ## Start Here
 
@@ -8,13 +8,12 @@ The `dots` CLI is in the design and incremental-migration phase, with an isolate
 
 - [`principles.md`](principles.md) — priorities and engineering invariants.
 - [`architecture.md`](architecture.md) — system boundaries, execution flow, and target repository shape.
-- [`commands.md`](commands.md) — proposed CLI vocabulary and external command model.
+- [`commands.md`](commands.md) — implemented CLI vocabulary and external command model.
 - [`presentation.md`](presentation.md) — required human output style, color/icon policy, data-interface boundaries and acceptance gate for new or changed commands.
-- [`specification.md`](specification.md) — draft modules, profiles, hosts, manifests, and resolution rules.
+- [`specification.md`](specification.md) — implemented theme, catalog, shell and installation schemas.
 - [`safety.md`](safety.md) — plan, apply, backup, transaction, rollback, undo, and secret handling.
 - [`platforms.md`](platforms.md) — Termux, Linux, WSL, and Windows behavior.
 - [`testing.md`](testing.md) — isolation, test layers, safety cases, and performance measurement.
-- [`current-repository.md`](current-repository.md) — baseline inventory and migration constraints.
 - [`decisions/`](decisions/) — architectural decision records.
 
 Active sequencing and acceptance criteria live under [`../plans/`](../plans/).

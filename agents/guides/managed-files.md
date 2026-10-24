@@ -1,10 +1,10 @@
 # Managed Files Work Guide
 
-Read this guide before changing module manifests, profile resolution, file adoption, links, copies, templates, planning, apply, backups, state journals, history, or undo.
+Read this guide before changing catalogs, mapping resolution, file adoption, links, copies, templates, planning, apply, backups, state journals, history, or undo.
 
 ## Boundary
 
-The shared transaction engine owns managed filesystem mutations. For the implemented catalog-backed POSIX slice, this is `lib/dots/files/transactions.py` under decision 0010; the general Go engine remains paused. A platform adapter may perform a primitive selected by the engine, but an extension must not independently replace files in a user's home directory and claim the operation is managed by `dots`.
+The shared `lib/dots/files/transactions.py` engine owns managed filesystem mutations under decision 0010, with explicit POSIX and Windows adapters. A platform adapter may perform a primitive selected by the engine, but an extension must not independently replace files in a user's home directory and claim the operation is managed by `dots`.
 
 ## Before Editing
 
@@ -16,12 +16,11 @@ The shared transaction engine owns managed filesystem mutations. For the impleme
 
 ## File Ownership
 
-- Source files belong in a declared module.
-- A convention such as `modules/<name>/home/` may map files relative to the target home directory.
-- Exceptional destinations must be explicit in the module manifest.
-- File-level linking is the default because it preserves unrelated files in shared directories.
-- A directory link is allowed only when a module explicitly owns the complete destination directory.
-- Two selected modules may not claim the same destination unless an explicit, validated replacement relationship exists.
+- Source files belong to their catalog repository; resources declare explicit source and destination mappings.
+- Preserve unrelated files and nested repository ownership.
+- Directory mappings must declare ownership of the complete destination.
+- Reject conflicting active claims unless the catalog supplies a valid explicit replacement.
+- Link by default; copying is an explicit strategy, never a silent fallback.
 
 ## Planning
 
@@ -29,7 +28,7 @@ Planning is read-only and deterministic for the same specification and observed 
 
 Every planned operation should expose at least:
 
-- Resource or module identifier.
+- Resource identifier.
 - Source and destination.
 - Observed destination type and ownership.
 - Requested strategy, such as link or copy.
@@ -59,7 +58,7 @@ A safe adoption flow should:
 
 1. Resolve and validate the destination.
 2. Refuse secrets or suspicious credential material by default.
-3. Copy the existing content into a new module-owned source path.
+3. Copy the existing content into a new repository-owned source path.
 4. Verify the copy before replacing the original.
 5. Plan the replacement as a normal managed link or copy transaction.
 6. Leave an auditable record of where the content came from.
@@ -83,7 +82,6 @@ Cover at least:
 - Paths with spaces, Unicode, and leading dashes.
 
 Any change to classification, force behavior, backup contents, journal fields, or undo semantics requires corresponding updates to `docs/safety.md` and `docs/specification.md`.
-
 
 ## Implemented Catalog and Config Migration
 

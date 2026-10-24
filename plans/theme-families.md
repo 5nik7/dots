@@ -28,7 +28,7 @@ PTY acceptance, lint/format/docs checks and sequential benchmarks. Baseline:
 
 The [theme reference](../docs/themes.md) owns the available flavors, input format,
 shared shell/editor behavior and dependencies. All requested families are present;
-Go development remains paused. Native palettes and license/provenance files stay in
+Native palettes and license/provenance files stay in
 the existing theme tree. Neovim changes are in the separate `config/nvim` repository.
 No live selection or installed plugin directory was changed.
 

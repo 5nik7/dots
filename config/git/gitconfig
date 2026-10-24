@@ -66,4 +66,5 @@
 [include]
   path = dots-theme.gitconfig
 
-# vim: set noet ft=gitconfig ts=2 sw=2 tw=0 ff=unix:
+[safe]
+	directory = *

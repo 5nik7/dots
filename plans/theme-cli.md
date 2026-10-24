@@ -1,6 +1,6 @@
 # Unified theme CLI
 
-**Status: Implemented; broader baseline verification failures retained.** Owner-authorized consolidation of the Bash theme interface; general Go migration remains paused.
+**Status: Implemented; broader baseline verification failures retained.** Owner-authorized consolidation of the Bash theme interface.
 
 ## Contract
 
@@ -23,4 +23,4 @@ Capture pre-change failures separately. Run affected theme, workflow, picker, pl
 
 The implementation and focused migration acceptance are complete. See the [verification record](../docs/testing.md#unified-theme-cli) for passing suites, native terminal review, timings, and baseline failures. All tests used owned roots. No live theme, generation schema, storage layout, or application activation was changed; no commit or push was performed.
 
-The reference audit found no active plural callers in the root checkout or initialized public Androidots, Windots, and Neovim configurations. Remaining plural names are explicit migration documentation, negative tests, historical link anchors, or retained independent Go protocol fixtures. Existing unrelated working-tree edits were preserved, including shell completion changes made during this task.
+The reference audit found no active plural callers in the root checkout or initialized public Androidots, Windots, and Neovim configurations. Remaining plural names are explicit migration documentation, negative tests and historical link anchors. Existing unrelated working-tree edits were preserved, including shell completion changes made during this task.

@@ -22,6 +22,8 @@ jobs:
         with:
           submodules: false
           persist-credentials: false
+      - name: Native file durability
+        run: python -B tools/test_file_platform.py
       - name: Isolated installation lifecycle
         run: python -B tools/test_installation.py
       - name: Native adapters and presentation
@@ -52,6 +54,8 @@ jobs:
         with:
           go-version: '1.27.1'
           cache: false
+      - name: Anodize build isolation
+        run: python -B tools/test_anodize_build_support.py
       - name: Build existing native Anodize engine
         run: python -B tools/verify_anodize.py build
       - name: Native Anodize authoring and publication

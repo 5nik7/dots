@@ -4,21 +4,21 @@ This file is the project-wide operating contract for agents and contributors wor
 
 ## Mission
 
-`dots` is a fast, safe, intuitive, modular, and extensible command center for managing dotfiles, scripts, shells, themes, packages, and environment setup across Termux, Linux, WSL, and native Windows.
+`dots` is a fast, safe, intuitive, modular, and extensible command center for managing dotfiles, scripts, shells, themes and environment setup across Termux, Linux, WSL, and native Windows.
 
 The intended experience is one command family with discoverable routes such as `dots files`, backed by built-in commands and optional executables named `dots-*`. Managed source files remain in the repository and are linked by default. Copying is an explicit alternative. Existing machine state must be planned, backed up, recorded, and reversible.
 
-## Current Phase
+## Current Focus
 
-The current focus is everyday maintenance of the existing dotfiles, scripts, configurations, and documentation. Further Go implementation and migration work is paused indefinitely as of 2026-09-22; see the [roadmap](plans/roadmap.md#current-priority). Preserve the existing Go code, tests, and CI. Resume the Go roadmap only when the owner requests it; specifically requested Go fixes remain allowed. The owner-authorized [Anodize core/CLI slice](plans/anodize.md) is a scoped exception; it does not resume general migration.
+Maintain the existing dotfiles, scripts, configurations and command framework. The live entry points are `bin/dots` (Bash) and `bin/dots.ps1` (native PowerShell), backed by shared Python controllers. The independent Anodize engine provides palette authoring.
 
-- The live `bin/dots` is the modular Bash command framework under [decision 0006](docs/decisions/0006-bash-command-framework.md). It does not implement general managed installation; bounded theme publication began under [decision 0007](docs/decisions/0007-data-driven-themes.md) and now includes fixed app connectors under [decision 0008](docs/decisions/0008-config-catalog-and-theme-apps.md). `dots files` now also provides bounded journaled adoption, linking, removal, checkout installation/uninstallation and recovery (see [checkout installation](docs/installation.md)); `dots git` provides recursive status/publish/sync under [decision 0010](docs/decisions/0010-git-and-managed-file-operations.md). General module/profile installation remains deferred.
-- The existing dotfiles tree remains live. `config/` is canonical; retain temporary `configs -> config` aliases until a separately reviewed cleanup. Further reorganization needs a focused migration plan.
-- Commands and manifests described in `docs/` may be proposed rather than implemented. Never document a proposed command as currently usable.
-- Termux is the first implementation target. Cross-platform boundaries must still be preserved from the first change.
-- Go adoption and the bounded next core slice are accepted in [decision 0002](docs/decisions/0002-phase-1-go-adoption.md). The first permanent read-only core/registry slice is implemented; the development-only external protocol is accepted in [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) and implemented alongside it. Broader command-center features remain deferred. Untested platform and release capabilities stay deferred.
+- `dots files` provides catalog inspection and journaled adoption, linking, removal, checkout installation/uninstallation and recovery. See [checkout installation](docs/installation.md).
+- `dots git` provides recursive status/publish/sync under [decision 0010](docs/decisions/0010-git-and-managed-file-operations.md).
+- Themes use bounded publication and fixed app connectors under [decision 0008](docs/decisions/0008-config-catalog-and-theme-apps.md).
+- `config/` is canonical; retain temporary `configs -> config` aliases until a separately reviewed cleanup.
+- Termux is the primary local development target. Preserve native Linux, WSL and Windows boundaries and distinguish local fixtures from native evidence.
 
-Track phase status in [`plans/roadmap.md`](plans/roadmap.md) and Termux scope in [`plans/termux-mvp.md`](plans/termux-mvp.md).
+Focused work and acceptance criteria are indexed in [plans](plans/README.md). Never present a proposed feature as currently usable.
 
 ## Required Reading
 
@@ -26,8 +26,8 @@ Read the guide matching the work before changing files:
 
 - [`agents/guides/worktrees.md`](agents/guides/worktrees.md) — default checkout workflow and optional worktree creation, enrollment, preview, and cleanup.
 - [`agents/guides/commands.md`](agents/guides/commands.md) — dispatcher behavior, command naming, metadata, help, and completions.
-- [`agents/guides/managed-files.md`](agents/guides/managed-files.md) — modules, manifests, link/copy behavior, adoption, planning, and rollback.
-- [`agents/guides/bootstrap.md`](agents/guides/bootstrap.md) — remote installers, repository cloning, first-run setup, and private sources.
+- [`agents/guides/managed-files.md`](agents/guides/managed-files.md) — catalogs, link/copy behavior, adoption, planning, and rollback.
+- [`agents/guides/bootstrap.md`](agents/guides/bootstrap.md) — checkout-local setup, prerequisites, source selection and recovery.
 - [`agents/guides/platforms.md`](agents/guides/platforms.md) — Termux, Linux, WSL, and Windows-specific work.
 - [`agents/guides/testing.md`](agents/guides/testing.md) — test isolation, safety tests, integration tests, and benchmarks.
 - [`agents/guides/documentation.md`](agents/guides/documentation.md) — documentation ownership and synchronization requirements.
@@ -36,12 +36,11 @@ Reference documents:
 
 - [`docs/principles.md`](docs/principles.md) — product and engineering priorities.
 - [`docs/architecture.md`](docs/architecture.md) — component boundaries and execution flow.
-- [`docs/commands.md`](docs/commands.md) — proposed CLI vocabulary and extension protocol.
-- [`docs/specification.md`](docs/specification.md) — draft module/profile manifest model.
+- [`docs/commands.md`](docs/commands.md) — implemented CLI vocabulary and extension protocol.
+- [`docs/specification.md`](docs/specification.md) — implemented theme, catalog and installation data contracts.
 - [`docs/safety.md`](docs/safety.md) — mutation, backup, transaction, undo, and secrets rules.
-- [`docs/platforms.md`](docs/platforms.md) — platform model, paths, capabilities, and support matrix.
+- [`docs/platforms.md`](docs/platforms.md) — platform model, paths, capabilities and acceptance limits.
 - [`docs/testing.md`](docs/testing.md) — test strategy and performance verification.
-- [`docs/current-repository.md`](docs/current-repository.md) — baseline inventory and migration constraints.
 
 ## Sources of Truth
 
@@ -49,12 +48,12 @@ Do not maintain competing exhaustive lists.
 
 - Product priorities: `docs/principles.md`.
 - Architecture and component ownership: `docs/architecture.md`.
-- Command routes and semantics: eventually the command registry; until implemented, `docs/commands.md` is the design source.
+- Command routes and semantics: static command metadata and `docs/commands.md`.
 - Human output style and acceptance: `docs/presentation.md`.
-- Manifest semantics and precedence: `docs/specification.md`.
+- Data schemas and precedence: `docs/specification.md`.
 - Destructive-operation rules: `docs/safety.md`.
 - Platform support claims: `docs/platforms.md`.
-- Active scope and sequencing: `plans/roadmap.md` and focused plans under `plans/`.
+- Active scope and sequencing: focused plans indexed in `plans/README.md`.
 - End-user capabilities that actually exist: `README.md`.
 
 When documents disagree, follow the latest explicit user direction, then this file, then the specialized guide, then the reference docs. Resolve the disagreement in the same change instead of choosing silently.
@@ -76,24 +75,13 @@ See `docs/principles.md` for the consequences of each principle.
 
 ## Working Architecture
 
-Go is the accepted core language under [decision 0002](docs/decisions/0002-phase-1-go-adoption.md), which owns the initial toolchain/development targets, performance policy, release-trust direction, and remaining gates. The permanent read-only core now lives beside the preserved independent experiment. The development external protocol now uses explicit roots, strict sidecars and native adapters. Go-owned POSIX shell/PowerShell bootstrap and production installation remain unimplemented; the live bounded installer is separate.
+Shell entry points own native invocation and initialization. Shared Python controllers under `lib/dots/` own file catalogs, configuration, Git operations, themes and checkout setup. `lib/dots/files/transactions.py` owns managed file preflight, journals, backups, rollback and recovery; platform adapters own filesystem primitives. The independent `anodize/` Go module owns palette extraction and color transformations.
 
-The core owns operations that require consistent safety or state:
-
-- Platform and capability detection.
-- Configuration and manifest loading.
-- Profile resolution and collision detection.
-- Current-state inspection and plan generation.
-- Transactional apply, backup journals, history, and undo.
-- Command discovery, validation, structured output, and completion data.
-
-External `dots-*` commands may add cohesive features. They must not replace or circumvent the transaction engine for managed filesystem changes.
+External `dots-*` commands may add cohesive features. They must not circumvent the transaction engine for managed filesystem changes. See [architecture](docs/architecture.md) for component ownership.
 
 ## Command Contract
 
-For the live Bash executable, follow [decision 0006](docs/decisions/0006-bash-command-framework.md): repository/local roots plus explicit extras, executable symlinks, optional static comment headers, shared presentation helpers, and on-demand Bash/Zsh/Fish completion. These intentional differences do not change the Go development protocol below. No catalog scans during shell startup or ordinary direct dispatch; no extension execution for help or completion.
-
-Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md) for development extensions: no implicit roots, protected namespaces, mandatory static JSON, targeted direct lookup, native execution only, and no claim of sandboxing or protection from concurrent trusted-file replacement. Tests use disposable fixture commands only. Follow [decision 0004](docs/decisions/0004-versioned-command-discovery.md) for the versioned static command catalog; Zsh generation follows [decision 0005](docs/decisions/0005-static-zsh-completion.md).
+For the live Bash executable, follow [decision 0006](docs/decisions/0006-bash-command-framework.md): repository/local roots plus explicit extras, executable symlinks, optional static comment headers, shared presentation helpers, and on-demand Bash/Zsh/Fish completion. No catalog scans during shell startup or ordinary direct dispatch; no extension execution for help or completion.
 
 - User-facing routes use spaces: `dots files list`.
 - External command filenames use hyphens: `dots-files` or `dots-files-list`.
@@ -108,19 +96,13 @@ Follow [decision 0003](docs/decisions/0003-trusted-external-command-protocol.md)
 
 Do not add a new command or rename an existing route without updating `docs/commands.md`, completion behavior, command metadata tests, and user-facing documentation when applicable.
 
-## Platform, Profile, and Host
+## Platform Boundaries
 
-Use these terms precisely:
-
-- A **platform** is detected execution context, such as `termux`, `linux`, `wsl`, or `windows`.
-- A **profile** is a selected collection of desired modules, such as `personal`, `minimal`, or `work`.
-- A **host** is an optional device-specific layer.
-
-Do not encode a platform as an ordinary profile internally, even if a temporary compatibility alias presents it that way to a user. Resolution order and collision behavior are defined in `docs/specification.md`.
+A platform is the execution context: `termux`, `linux`, `wsl` or `windows`. Keep native Windows and WSL destinations and state separate. Catalog locations identify source repositories and explicitly mapped resources; their implemented schemas are defined in [data contracts](docs/specification.md).
 
 ## Safety Invariants
 
-The transaction requirements below govern managed installation, replacement, backup, and undo operations. Ordinary edits to repository source files, including live dotfiles, do not require the proposed Go transaction engine; preserve unrelated work and use Git history for committed source recovery.
+The transaction requirements below govern managed installation, replacement, backup, and undo operations. Ordinary edits to repository source files, including live dotfiles, use ordinary repository editing safeguards; preserve unrelated work and use Git history for committed source recovery.
 
 - Read-only inspection and planning must not mutate the target machine, repository, package database, or state store.
 - Every managed filesystem mutation must belong to a transaction with a durable journal.
@@ -140,7 +122,7 @@ Read `docs/safety.md` before changing any mutating path.
 
 - Measure before adding caches or complexity, and retain benchmark baselines once established.
 - Keep dispatch independent of repository size for direct routes.
-- Load only the selected profile and its dependency graph.
+- Load only the selected route’s inputs.
 - Avoid content hashing when metadata or symlink identity is sufficient; hash when correctness requires it.
 - Generate or cache shell initialization and completion data instead of invoking expensive resolution during every shell startup.
 - Keep large optional assets and vendored dependencies out of the minimum bootstrap path.
@@ -160,10 +142,10 @@ Read `docs/safety.md` before changing any mutating path.
 
 ## Repository and Migration Discipline
 
-- Any repository file may be edited when relevant to the requested task, including `bin/dots`, live configurations, scripts, documentation, and Go sources. File restrictions in earlier implementation slices are historical task boundaries, not a permanent allowlist.
+- Any repository file may be edited when relevant to the requested task, including `bin/dots`, live configurations, scripts, documentation and Anodize sources. File restrictions in earlier implementation slices are historical task boundaries, not a permanent allowlist.
 - Preserve unrelated existing files and user changes; inspect Git status before editing.
 - For task-relevant submodule edits, follow the submodule's local instructions and separate Git history. Editing permission does not authorize unrelated submodule initialization, updates, commits, or pushes.
-- Migrate incrementally by module, beginning with a deliberately small Termux slice.
+- Keep configuration migrations bounded and reversible.
 - Do not initialize private or optional submodules merely to run general tests or documentation checks.
 - Do not add generated caches, bytecode, build outputs, downloaded archives, or machine-local state to Git.
 - Prefer dependency manifests or lazily fetched optional sources over vendoring large third-party trees.
@@ -199,7 +181,7 @@ A behavior change without matching documentation is incomplete.
 - Architecture or directory ownership changed: update `docs/architecture.md`.
 - Product priority or invariant changed: update `docs/principles.md` and record the decision.
 - Command, flag, output, or metadata changed: update `docs/commands.md` and applicable user docs.
-- Manifest field, precedence, variable, or collision behavior changed: update `docs/specification.md`.
+- Data schema, precedence, variable, or collision behavior changed: update `docs/specification.md`.
 - Mutation, backup, rollback, force, package, or secret behavior changed: update `docs/safety.md`.
 - Platform detection, paths, link strategies, or support changed: update `docs/platforms.md`.
 - Test entry points or guarantees changed: update `docs/testing.md` and the relevant agent guide.

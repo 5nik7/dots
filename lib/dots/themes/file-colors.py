@@ -33,6 +33,13 @@ HEX = re.compile(r'#[0-9a-fA-F]{6}\Z')
 IDENT = re.compile(r'[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*\Z')
 
 
+def leaf_template_tokens(palette):
+    """Literal Leaf metadata and readable text on colored status badges."""
+    light = palette['mode'] == 'light'
+    return {'leaf_base': 'arctic' if light else 'ocean',
+            'leaf_badge_foreground': palette['colors']['foreground' if light else 'background']}
+
+
 def roots():
     sys.path.insert(0, str(ROOT / 'lib/dots/files'))
     from file_platform import config_root, state_root
@@ -541,6 +548,8 @@ def main(argv):
         doc = resolve(palette, directory)
         if action == '_vivid': print(json.dumps(vivid_theme(doc, vivid_runtime()[2]), indent=2))
         elif action == '_template_colors':
+            for key, value in leaf_template_tokens(palette).items():
+                print(key + '\t' + value)
             colors = {k: v for k, v in doc['colors'].items() if isinstance(v, str) and HEX.fullmatch(v)}
             aliases = {'git_' + k: v for k, v in doc['colors']['git'].items()}
             for key, value in aliases.items():

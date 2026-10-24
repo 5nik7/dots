@@ -10,4 +10,4 @@ Remove `dots themes` and `dots-themes-*` without compatibility aliases. Selectio
 
 ## Consequences
 
-All first-party callers migrate together. External scripts using the removed routes must adopt the [unified syntax](../themes.md#migration-from-plural-commands). Existing generation paths, schemas, palette data, and shell palette helper APIs remain valid. No active theme change or state migration accompanies this CLI change. General Go development remains paused; independent protocol fixtures do not define supported live theme commands.
+All first-party callers migrate together. External scripts using the removed routes must adopt the [unified syntax](../themes.md#migration-from-plural-commands). Existing generation paths, schemas, palette data, and shell palette helper APIs remain valid. No active theme change or state migration accompanies this CLI change.

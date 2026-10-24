@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import stat
 import re
+import shutil
 from pathlib import PureWindowsPath
 
 
@@ -65,6 +66,35 @@ def sync_dir(path):
         os.fsync(fd)
     finally:
         os.close(fd)
+
+
+def sync_file(path):
+    """Flush an owned regular file; Windows requires a writable handle."""
+    flags = os.O_RDWR if os.name == 'nt' else os.O_RDONLY
+    with os.fdopen(open_nofollow(path, flags), 'r+b' if os.name == 'nt' else 'rb') as stream:
+        os.fsync(stream.fileno())
+
+
+def copy_file(source, dest):
+    """Copy and flush a new payload without changing the source's metadata."""
+    shutil.copyfile(source, dest, follow_symlinks=False)
+    # Acquire write access before copystat restores a read-only attribute. Keep
+    # that handle through the flush instead of reopening a read-only copy.
+    with os.fdopen(open_nofollow(dest, os.O_RDWR), 'r+b') as stream:
+        shutil.copystat(source, dest, follow_symlinks=False)
+        os.fsync(stream.fileno())
+    return dest
+
+
+def prepare_text(dest, text, previous):
+    """Prepare the same text object for receipt prediction and publication."""
+    previous = Path(previous)
+    with Path(dest).open('x', encoding='utf-8', newline='\n') as stream:
+        stream.write(text)
+        stream.flush()
+        if previous.exists() and not previous.is_symlink():
+            os.chmod(dest, stat.S_IMODE(previous.stat().st_mode))
+        os.fsync(stream.fileno())
 
 
 def permissions(fd, path=None):

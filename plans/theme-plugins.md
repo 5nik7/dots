@@ -1,6 +1,6 @@
 # Theme plugins
 
-**Status: Implemented and verified in native Termux fixtures; live desktop appearance remains unverified.** Owner-authorized local-hook exception; broader Go work and Anodize.nvim changes remain out of scope.
+**Status: Implemented and verified in native Termux fixtures; live desktop appearance remains unverified.** Owner-authorized local-hook exception; Anodize.nvim changes remain out of scope.
 
 ## Design
 

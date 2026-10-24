@@ -44,7 +44,28 @@ def television_config_directory(*, windows=None):
     return path
 
 
+def leaf_config_directory(*, windows=None):
+    """Leaf uses XDG/HOME on Unix and APPDATA on native Windows."""
+    windows = os.name == 'nt' if windows is None else windows
+    root = os.environ.get('APPDATA') if windows else (
+        os.environ.get('XDG_CONFIG_HOME') or str(Path(os.environ.get('HOME') or Path.home()) / '.config'))
+    value = os.environ.get('DOTS_APP_LEAF_CONFIG') or (root + '/leaf' if root else None)
+    if value is None:
+        return None
+    components = value.replace('\\', '/').split('/') if windows else value.split('/')
+    path = Path(value)
+    if (not path.is_absolute() or any(ord(c) < 32 or ord(c) == 127 for c in value)
+            or any(c in ('.', '..') for c in components)):
+        raise ValueError('leaf configuration must be an absolute directory without control characters or dot components')
+    if os.name == 'nt':
+        from file_platform import validate_windows_path
+        validate_windows_path(path)
+    return path
+
+
 def config_directory(app):
+    if app == 'leaf':
+        return leaf_config_directory(windows=True)
     if app == 'television':
         return television_config_directory(windows=True)
     if app == 'eza':
@@ -100,10 +121,12 @@ def config_directory(app):
 if __name__ == '__main__':
     import sys
     try:
-        resolvers = {'eza': eza_config_directory, 'television': television_config_directory}
+        resolvers = {'eza': eza_config_directory, 'television': television_config_directory,
+                     'leaf': leaf_config_directory}
         if len(sys.argv) != 2 or sys.argv[1] not in resolvers:
-            raise ValueError('expected application: eza or television')
-        print(resolvers[sys.argv[1]]())
+            raise ValueError('expected application: eza, television or leaf')
+        result = resolvers[sys.argv[1]]()
+        print(result if result is not None else '')
     except ValueError as exc:
         print('dots theme: ' + str(exc), file=sys.stderr)
         sys.exit(1)

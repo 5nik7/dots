@@ -1,6 +1,6 @@
 # Shared theme discovery
 
-**Status: Implemented; pre-existing verification limitations retained.** Owner-authorized behavior-preserving Bash refactor; general Go migration remains paused.
+**Status: Implemented; pre-existing verification limitations retained.** Owner-authorized behavior-preserving Bash refactor.
 
 ## Scope
 
@@ -32,7 +32,7 @@ Native Termux results, 2026-09-30, all in owned roots:
 - Workflow 14/14, picker 14/14, dispatcher 23/23, Zsh 17/17 and theme plugins 20/20 passed. Shell-init passed 27 cases with three unavailable optional-interpreter cases skipped (30 total).
 - Two new discovery tests cover inert sourcing, native/current-ID parity, result reset, literal completion eligibility, duplicate refusal, next-request freshness and alternate inherited checkout roots. Dispatcher tests exercised real Bash/Zsh/Fish Tab. Native Zsh/FZF-tab PTY acceptance passed with unchanged hooks, FZF, fpath and key bindings (`dots-zsh-zl918a4y`).
 - Bash syntax and focused ShellCheck passed, excluding existing SC2015/SC2031 diagnostics and using explicit source search paths. Diff whitespace checks passed. All links in changed documents resolve; the repository-wide gate still fails the pre-existing `docs/testing.md` link to the removed Yazi symlink-plugin README. That unrelated link is not changed.
-- Existing renderer tests and picker PTYs cover 40/80/120-column views and output controls. Human layouts are unchanged; no new pixel-level visual review, desktop Linux/WSL/native Windows claim, Go build or live theme activation is included.
+- Existing renderer tests and picker PTYs cover 40/80/120-column views and output controls. Human layouts are unchanged; no new pixel-level visual review, desktop Linux/WSL/native Windows claim, or live theme activation is included.
 
 Final 20-sample sequential HEAD/working-tree discovery measurement: `/data/data/com.termux/files/usr/tmp/dots-theme-discovery-bench-kb476l68/results.json`. Warm medians in milliseconds: list 81.68/75.90, flat-ID completion 41.79/42.18, family completion 41.73/41.52, core sourcing 30.71/30.57. These advisory samples show no material completion regression; they do not establish a speed improvement.
 

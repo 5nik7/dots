@@ -10,7 +10,7 @@ import tempfile
 import statistics
 import time
 
-from verify_core import environments, tool
+from anodize_build_support import environment, tool
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -21,7 +21,7 @@ def main():
     go = tool('go')
     with tempfile.TemporaryDirectory(prefix='anodize-verify-') as tmp:
         root = Path(tmp)
-        env, _ = environments(root, go)
+        env = environment(root, go)
         source = root / 'module'
         shutil.copytree(REPO / 'anodize', source, ignore=shutil.ignore_patterns('.build'))
         name = 'anodize-engine.exe' if os.name == 'nt' else 'anodize-engine'

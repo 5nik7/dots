@@ -7,3 +7,5 @@ fsh	dots.ini	fsh.ini
 git	dots-theme.gitconfig	gitconfig
 eza	theme.yml	eza.yml
 television	themes/dots.toml	television.toml
+leaf	themes/dots.toml	leaf.toml
+leaf	themes/dots.tmTheme	bat.tmTheme

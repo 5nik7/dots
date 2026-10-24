@@ -21,8 +21,8 @@ Convenience does not justify an untracked overwrite.
 `dots` should feel like a native utility, including on Termux and during shell startup.
 
 - Direct command dispatch must not depend on repository size.
-- Basic help and version output must not invoke Git, a package manager, or the profile resolver.
-- Load only the selected profile and dependency graph.
+- Basic help and version output must not invoke Git or a package manager.
+- Load only the selected command’s inputs.
 - Avoid mandatory subprocesses for work the core can perform directly.
 - Generate or cache shell initialization and completion data when dynamic execution would affect startup.
 - Keep optional assets and third-party payloads outside the minimum bootstrap path.
@@ -47,7 +47,7 @@ Defaults should reduce repetition without obscuring ownership or precedence.
 
 - Conventions may infer ordinary home-relative destinations.
 - Exceptional destinations and overrides must be explicit.
-- Conflicting modules fail unless a replacement relationship is declared.
+- Conflicting catalog claims fail unless a replacement relationship is declared.
 - Link failure does not silently become a copy.
 - Platform detection reports its evidence and can be overridden for testing.
 
@@ -55,7 +55,7 @@ A user should be able to explain why a file is managed and which layer selected 
 
 ## 5. Separate Portable Policy from Platform Mechanics
 
-The core defines desired state, planning, transactions, and normalized operations. Platform adapters implement paths, link capabilities, package managers, privilege behavior, and shell locations.
+The core defines desired state, planning, transactions, and normalized operations. Platform adapters implement paths, link capabilities, privilege behavior and shell locations.
 
 Native Windows and WSL are separate execution environments. Termux is Android-hosted and must not inherit conventional Linux assumptions accidentally.
 
@@ -64,8 +64,8 @@ Native Windows and WSL are separate execution environments. Termux is Android-ho
 The core experience must not require optional interactive tools, a specific shell, all submodules, or access to private repositories.
 
 - `fzf` may enhance selection but cannot be necessary for non-interactive operation.
-- Private sources are synchronized after public bootstrap and authentication checks.
-- Large fonts, wallpapers, and third-party bundles are optional modules or sources.
+- Private sources require explicit selection and authentication.
+- Large fonts, wallpapers, and third-party bundles are optional sources.
 - Structured output must remain usable without color or a terminal.
 
 ## 7. Extend at Clear Boundaries
@@ -80,7 +80,7 @@ The Omarchy-inspired `dots-*` protocol makes new commands discoverable without e
 
 ## 8. Be Reproducible Without Pretending Every Operation Is Reversible
 
-The resolved specification should identify selected modules, sources, platform, profile, host, CLI version, schema version, and repository revision.
+Operation records identify affected resources, source repositories, destinations, expected state and recovery information. See the [data contracts](specification.md) for each schema.
 
 Filesystem changes can generally be backed up and undone. Package-manager upgrades, arbitrary hooks, and external services may not be fully reversible. Plans and journals must state that distinction instead of implying transactional guarantees that do not exist.
 
@@ -88,8 +88,8 @@ Filesystem changes can generally be backed up and undone. Package-manager upgrad
 
 Users and automation should be able to inspect:
 
-- The selected platform, profile, and host.
-- The fully resolved desired specification.
+- The selected platform and source repositories.
+- Catalog ownership and configured destinations.
 - Current drift and broken links.
 - The next operation plan.
 - Prior transactions and backups.
@@ -97,7 +97,7 @@ Users and automation should be able to inspect:
 
 Human output can be concise; structured output must be stable and complete enough for tooling.
 
-Polished, cohesive human output is a required part of the interface. Commands must share visual hierarchy, terminology, semantic colors and readable plain fallbacks, including empty and failure states. Respect terminal capabilities and explicit color/icon preferences; preserve script-facing data formats. The [presentation contract](presentation.md) and [decision 0009](decisions/0009-cohesive-command-presentation.md) make this an acceptance requirement for new and changed human views without resuming paused implementation.
+Polished, cohesive human output is a required part of the interface. Commands must share visual hierarchy, terminology, semantic colors and readable plain fallbacks, including empty and failure states. Respect terminal capabilities and explicit color/icon preferences; preserve script-facing data formats. The [presentation contract](presentation.md) and [decision 0009](decisions/0009-cohesive-command-presentation.md) make this an acceptance requirement for new and changed human views.
 
 ## 10. Treat Documentation and Tests as Part of the Interface
 
@@ -109,23 +109,6 @@ Behavior, help, examples, completions, schemas, tests, and plans must not evolve
 - Safety invariants receive failure-path tests.
 - Material architectural decisions are recorded under `docs/decisions/`.
 
-## Non-Goals for the Initial MVP
+## Scope Boundaries
 
-The first Termux milestone does not need to:
-
-- Replace every current script or configuration.
-- Support every Linux distribution or Windows package manager.
-- Manage arbitrary system configuration outside user-owned paths.
-- Automatically synchronize secrets.
-- Roll back operating-system upgrades.
-- Provide a full-screen TUI.
-- Implement templates, remote sources, and hooks before safe file planning and transactions work.
-
-Keeping these out of the first milestone protects the foundations that later features depend on.
-
-
-The implemented files catalog keeps source ownership explicit, especially Androidots'
-Termux resources, while general installation remains deferred. Omarchy-style theme
-selection is a bounded exception with fixed, journaled connectors; downloaded theme
-content remains data. These choices apply the existing priorities without changing
-their order; see [decision 0008](decisions/0008-config-catalog-and-theme-apps.md).
+Managed configuration uses explicit catalog ownership and journaled file operations. Theme publication uses fixed connectors, and downloaded theme content remains data. Package-manager upgrades, system configuration and secret synchronization do not become managed merely because an external command can invoke them. See [decision 0008](decisions/0008-config-catalog-and-theme-apps.md) and [safety](safety.md).

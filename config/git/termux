@@ -1,11 +1,6 @@
-# Preserve the existing Termux GitHub CLI credential integration.
 [credential "https://github.com"]
   helper =
   helper = !/data/data/com.termux/files/usr/bin/gh auth git-credential
-
 [credential "https://gist.github.com"]
   helper =
   helper = !/data/data/com.termux/files/usr/bin/gh auth git-credential
-[safe]
-	directory = /storage/emulated/0/repos/Notes
-	directory = /storage/emulated/0/repos/Notes/docs

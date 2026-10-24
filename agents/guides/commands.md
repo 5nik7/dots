@@ -4,9 +4,9 @@ Read this guide before adding or changing the `dots` dispatcher, a built-in rout
 
 ## Live Bash Framework
 
-The live `bin/dots` follows [decision 0006](../../docs/decisions/0006-bash-command-framework.md) and the [Bash command contract](../../docs/commands.md#implemented-bash-command-framework). Its executable-relative libraries are independent of user startup. Default repository/local roots, executable symlinks, optional `# dots:` headers, and on-demand three-shell completion are deliberate exceptions to the Go-specific rules below. Preserve byte-for-byte argument/stream forwarding and keep catalog parsing off direct dispatch. Update the shared built-in metadata and shell adapters together when changing their interfaces.
+The live `bin/dots` follows [decision 0006](../../docs/decisions/0006-bash-command-framework.md) and the [Bash command contract](../../docs/commands.md#implemented-bash-command-framework). Its executable-relative libraries are independent of user startup. Default repository/local roots, executable symlinks, optional `# dots:` headers, and on-demand three-shell completion define the live extension contract. Preserve byte-for-byte argument/stream forwarding and keep catalog parsing off direct dispatch. Update the shared built-in metadata and shell adapters together when changing their interfaces.
 
-Run `python3 -B tools/test_bash_dots.py`, shell syntax checks and ShellCheck for Bash changes; use `python3 -B tools/bench_bash_dots.py` for measured lookup changes. Shell-completion work also requires the existing Zsh/FZF-tab acceptance. See the testing guide. Do not retrofit the Bash protocol into Go while its development is paused.
+Run `python3 -B tools/test_bash_dots.py`, shell syntax checks and ShellCheck for Bash changes; use `python3 -B tools/bench_bash_dots.py` for measured lookup changes. Shell-completion work also requires the existing Zsh/FZF-tab acceptance. See the testing guide.
 
 ## Design Goal
 
@@ -32,45 +32,11 @@ The external-command protocol is an extension mechanism. Safety-critical operati
 
 - The main command is `dots`.
 - External command basenames start with `dots-`.
-- Filename hyphens map to route spaces; schema 1 sidecars must match the basename exactly.
-- Use plural nouns for browsable collections when that is the established group: `files`, `links`, `scripts`, `shells`, `packages`, `profiles`, `commands`, and `sources`.
-- Use verbs for lifecycle actions: `plan`, `apply`, `undo`, and `bootstrap`.
+- Filename hyphens map to route spaces; optional static comment headers provide help and completion metadata.
+- Use plural nouns for browsable collections when that is the established group: `files`, `themes` and `commands`.
+- Follow existing action names within each family, such as `install`, `uninstall`, `add` and `undo`.
 - Avoid synonyms and aliases for new commands. Add an alias only to preserve an established name.
-- Keep `self update`, `repo pull`, `packages install`, and `apply` distinct; do not create one ambiguous command that performs all of them.
-
-## Go Development Resolution
-
-Given `dots example apply tokyonight`, resolution should try candidates from longest to shortest:
-
-1. `dots-example-apply-tokyonight`
-2. `dots-example-apply`
-3. `dots-example`
-
-If `dots-example-apply` exists, execute it with `tokyonight` as the remaining argument.
-
-Resolution requirements:
-
-- Built-in routes have explicit precedence and cannot be shadowed silently.
-- Development roots are explicitly repeated prefix `--command-dir` options only; duplicates fail instead of selecting a winner.
-- Duplicate canonical routes are errors surfaced by command validation.
-- Platform-incompatible commands may be discoverable as unavailable, but must not fail with a misleading "unknown command" result.
-- Native Windows accepts `.exe` only, with the argument convention and NTFS root restrictions in decision 0003. Do not infer an interpreter or Unix permission semantics.
-
-## Go Development Metadata
-
-The mandatory JSON sidecar is accepted in [decision 0003](../../docs/decisions/0003-trusted-external-command-protocol.md). Read it before changing roots, routes, metadata, discovery/help or execution. Its exact keys, limits, reservations and failure categories are normative. Richer future metadata must preserve:
-
-- Canonical route.
-- Short summary.
-- Argument synopsis.
-- Examples.
-- Hidden/internal status.
-- Supported platforms or capability requirements.
-- Aliases retained for compatibility.
-- Structured-output support.
-- Mutation classification, when useful for help and policy checks.
-
-Do not add comment-header parsing or runtime metadata handshakes. Static help/discovery must not execute extensions; schema-1 discovery follows [decision 0004](../../docs/decisions/0004-versioned-command-discovery.md). Zsh generation follows [decision 0005](../../docs/decisions/0005-static-zsh-completion.md).
+- Keep checkout updates, Git synchronization and configuration installation explicit and independently reviewable.
 
 ## Output
 
@@ -106,9 +72,6 @@ A command change normally requires all of the following:
 - Relevant focused plan status.
 
 Before finishing, verify that proposed commands are not presented as implemented and that generated documentation, once introduced, is regenerated rather than edited by hand.
-
-
-Catalog changes must preserve the public schema separately from private metadata structs, non-null arrays, typed availability codes, hidden/unavailable records, deterministic ordering and complete validation before stdout. Keep prefix syntax/root-count errors at 2 and discovery validation/resource-limit failures at 1. Test the global-only version representation and catalog self-description. Do not add completion generation merely to update this catalog.
 
 Theme metadata providers and command behavior follow [Shared themes](../../docs/themes.md).
 They read palette data without extension execution; test with `python3 -B tools/test_themes.py`.

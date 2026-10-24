@@ -17,7 +17,7 @@ if sys.version_info < (3, 9):
 
 from catalog import Catalog, Presentation, platform, read_json
 from events import OperationOutput
-from file_platform import lock, open_nofollow, state_root
+from file_platform import lock, open_nofollow, state_root, prepare_text
 from transactions import Store, digest, exists, parents_safe, private_directory
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -200,12 +200,13 @@ class Installation:
                             raise ValueError('unfinished theme publication; recover with dots theme refresh first')
             for line in (self.root / 'lib/dots/themes/connectors.tsv').read_text().splitlines():
                 app, suffix, artifact = line.split('\t')
-                if self.platform == 'windows' and app not in ('yazi', 'git', 'vivid', 'eza'):
+                if self.platform == 'windows' and app not in ('yazi', 'git', 'vivid', 'eza', 'leaf'):
                     continue
                 owner = next((r for r in records if r['app'] == app and r['strategy'] == 'directory-link' and r['target']), None)
-                if app == 'eza':
-                    from app_paths import eza_config_directory
-                    base = eza_config_directory(windows=self.platform == 'windows')
+                if app in ('eza', 'leaf'):
+                    from app_paths import eza_config_directory, leaf_config_directory
+                    resolver = leaf_config_directory if app == 'leaf' else eza_config_directory
+                    base = resolver(windows=self.platform == 'windows')
                     if not owner or Path(owner['target']) != base:
                         continue
                 if owner and Path(owner['source']).is_dir():
@@ -254,7 +255,7 @@ class Installation:
             # A fixed connector may repair a relocated generated-state link,
             # but an arbitrary link is never treated as installer ownership.
             managed = old.endswith('/dots/current/theme/' + artifact)
-            self.add('theme:' + app, path, link=desired, directory=artifact == 'yazi', managed=managed)
+            self.add('theme:' + app + (':' + artifact if app == 'leaf' else ''), path, link=desired, directory=artifact == 'yazi', managed=managed)
         if self.theme:
             generation = self.state / 'themes/generations' / self.theme['generation']
             stored = generation / 'fingerprint'
@@ -349,8 +350,7 @@ class Installation:
                         except OSError as error:
                             raise ValueError('symbolic links unavailable; enable link capability explicitly before retrying') from error
                     elif 'text' in op:
-                        with prepared.open('w', encoding='utf-8', newline='\n') as stream:
-                            stream.write(op['text'])
+                        prepare_text(prepared, op['text'], op['path'])
                     self.entries[op['path']]['after'] = digest(prepared)
                     self.entries[op['path']].pop('desired', None)
             receipt = dict(self.receipt, entries=self.entries,

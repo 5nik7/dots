@@ -36,6 +36,10 @@ class NativeCLI(unittest.TestCase):
                         DOTS_COLOR='never', DOTS_ICONS='never', DOTS_PROGRESS='never',
                         PYTHONUTF8='1', PYTHONIOENCODING='utf-8',
                         GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull)
+        engine_cache = self.base / 'powershell-cache'
+        engine_cache.mkdir()
+        self.env.update(PSModuleAnalysisCachePath=str(engine_cache / 'ModuleAnalysisCache'),
+                        POWERSHELL_TELEMETRY_OPTOUT='1', POWERSHELL_UPDATECHECK='Off')
         shutil.copytree(LIB, self.repo / 'lib/dots', ignore=shutil.ignore_patterns('__pycache__'))
         shutil.copytree(ROOT / 'bin', self.repo / 'bin', symlinks=True)
         (self.repo / '.dots').mkdir()
@@ -213,6 +217,23 @@ class NativeCLI(unittest.TestCase):
         self.assertEqual(len(result.stdout.split(b'\0')), 5)
         self.assertFalse(list(self.home.iterdir()))
 
+    def test_native_setup_preparation_flushes_without_publication(self):
+        env = dict(self.env, DOTS=str(ROOT))
+        command = [sys.executable, '-B', str(LIB / 'themes/setup.py')]
+        inspection = subprocess.run([*command, 'inspect'], env=env, capture_output=True, timeout=30)
+        self.assertEqual(inspection.returncode, 0, inspection.stderr.decode())
+        fingerprint = inspection.stdout.decode().split('\0')[1]
+        prepared = subprocess.run([*command, 'prepare', fingerprint], env=env,
+                                  capture_output=True, timeout=60)
+        self.assertEqual(prepared.returncode, 0, prepared.stderr.decode())
+        generation = Path(prepared.stdout.decode().split('\0')[0])
+        state = self.home / 'state/dots'
+        self.assertEqual(generation.parent, state / 'themes/generations')
+        self.assertEqual((generation / 'status').read_text(), 'committed\n')
+        self.assertTrue((generation / 'palette.json').is_file())
+        for name in ('themes/current', 'current/theme', 'themes/commands/current'):
+            self.assertFalse(os.path.lexists(state / name), name)
+
     @unittest.skipUnless(shutil.which('git'), 'Git unavailable')
     def test_native_theme_source_lifecycle_preserves_local_changes(self):
         sys.path.insert(0, str(LIB / 'themes'))
@@ -249,6 +270,38 @@ class NativeCLI(unittest.TestCase):
             self.assertFalse(target.exists())
             self.assertEqual(len(Store(themes.state).records()), 3)
 
+    def assert_read_only_home(self):
+        # PowerShell's runtime can write its startup profile even with -NoProfile.
+        # Permit only its known files and ancestors, never arbitrary cache writes.
+        roots = [self.home / name for name in ('cache/powershell',
+                 'Local/Microsoft/Windows/PowerShell', 'Local/Microsoft/PowerShell')]
+        for path in self.home.rglob('*'):
+            self.assertFalse(path.is_symlink(), str(path))
+            if path.is_dir():
+                self.assertTrue(any(path == root or path in root.parents for root in roots), str(path))
+            else:
+                self.assertIn(path.parent, roots, str(path))
+                self.assertRegex(path.name, r'^StartupProfileData-(?:NonInteractive|Interactive)$')
+        for path in (self.base / 'powershell-cache').iterdir():
+            self.assertFalse(path.is_symlink(), str(path))
+            self.assertTrue(path.is_file(), str(path))
+            self.assertRegex(path.name, r'^ModuleAnalysisCache(?:-[0-9a-fA-F]+)?$')
+
+    def test_read_only_home_rejects_unrelated_cache_writes(self):
+        startup = self.home / 'cache/powershell/StartupProfileData-NonInteractive'
+        startup.parent.mkdir(parents=True)
+        startup.write_bytes(b'engine fixture')
+        self.assert_read_only_home()
+        unexpected = startup.parent / 'dots'
+        unexpected.mkdir()
+        with self.assertRaises(AssertionError):
+            self.assert_read_only_home()
+        unexpected.rmdir()
+        unexpected = self.home / 'state'
+        unexpected.mkdir()
+        with self.assertRaises(AssertionError):
+            self.assert_read_only_home()
+
     def test_native_powershell_engines(self):
         requested = os.environ.get('DOTS_TEST_POWERSHELL')
         names = [requested] if requested else (['powershell','pwsh'] if os.name == 'nt' else ['pwsh'])
@@ -270,7 +323,7 @@ class NativeCLI(unittest.TestCase):
                     result=subprocess.run([engine,'-NoLogo','-NoProfile','-File',str(self.repo/'bin/dots.ps1'),*args],env=self.env,capture_output=True,text=True,timeout=30)
                     self.assertEqual(result.returncode,0,result.stdout+result.stderr)
                     if '--json' in args: json.loads(result.stdout)
-                self.assertFalse(list(self.home.iterdir()))
+                self.assert_read_only_home()
                 probe = self.repo / 'local/bin/dots-probe.ps1'
                 probe.parent.mkdir(parents=True, exist_ok=True)
                 probe.write_text('# dots:summary=Literal argument fixture\n[Console]::WriteLine((ConvertTo-Json -InputObject @($args) -Compress))\nexit 7\n', encoding='utf-8')

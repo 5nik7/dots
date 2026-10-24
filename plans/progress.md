@@ -4,7 +4,7 @@
 
 ## Accepted scope
 
-Cover useful waits in the existing Git, theme, file and Anodize command families, including slow human read-only scans. Start animation after 500 ms. Use phase item counts when known and spinners otherwise. `DOTS_PROGRESS=auto|never` is the only new public control; `--yes` retains progress. Preserve data/dry-run output, transaction guards, rollback, command streams and exit statuses. No dispatcher, submodule, standalone-script, live-installation or paused Go migration work.
+Cover useful waits in the existing Git, theme, file and Anodize command families, including slow human read-only scans. Start animation after 500 ms. Use phase item counts when known and spinners otherwise. `DOTS_PROGRESS=auto|never` is the only new public control; `--yes` retains progress. Preserve data/dry-run output, transaction guards, rollback, command streams and exit statuses. No dispatcher, submodule, standalone-script, live-installation or unrelated work.
 
 The [presentation contract](../docs/presentation.md#operation-progress) owns policy and the coverage table. Bash and Python share behavior through their scoped adapters; there is no required Gum dependency. Native Gum's command-owning spinner cannot update in-process transaction counts. Prompt-capable/direct-output external phases use immediate static messages, including Git network/signing/hook commands, theme downloads, tmux reloads and wallpaper adapters. Quiet phases animate without capturing or rerouting child output.
 
@@ -29,7 +29,6 @@ Two theme-workflow tests currently fail because their expected 33 themes differs
 
 Linux/WSL and native Windows terminal behavior, live credential/signing helpers, desktop wallpaper rendering and abrupt power loss are not established by fixture or native Termux PTY evidence.
 
-
 Follow-up unpaired runs were noisy: Git 1/5/10 repository medians were 212.2/2815.6/6939.3 ms (the 10-repository samples ranged from 3031 to 11622 ms); file medians were 290.4/756.0/4903.1 ms. An alternating comparison then used identical disposable data, unchanged `HEAD` implementation copies, and five warm samples per version, with other verification stopped:
 
 | Disabled-progress JSON case | HEAD median | Current median |
@@ -40,7 +39,6 @@ Follow-up unpaired runs were noisy: Git 1/5/10 repository medians were 212.2/281
 The broad slowdown was also present in the baseline. The paired file median was about 6% higher, with overlapping individual samples; this is advisory evidence under variable host conditions, not proof of an improvement or a stable regression. No dispatch lookup, startup scans or persistent caches were added. Disabled progress starts no rendering workers.
 
 The full documentation checker encounters the existing `docs/testing.md` link to the removed `config/yazi/plugins/dots-symlink.yazi/README.md`. The same target is in `HEAD`; a separate check of touched documents found 182 valid relative links, that one existing broken link, and no introduced broken links.
-
 
 Native Termux verification passed: progress 11 tests; Bash dispatcher 23; Git operations 27; file operations 21; file catalog 9; browser 17; theme picker 14; confirmations 8; shared themes 23; and the isolated Anodize verifier (Go checks plus 16 CLI tests). The theme-workflow suite passed 12 of 14 cases, with only the two baseline count failures above; the affected lifecycle, wallpaper and connector cases were also rerun successfully. Changed Bash syntax and ShellCheck passed (excluding existing dynamic-source SC1091 and established SC2015 idioms); Python syntax and `git diff --check` passed. The final fixture-environment tightening was rechecked in the three affected progress integration cases.
 

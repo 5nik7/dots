@@ -10,7 +10,7 @@ remains undecorated. Existing full-ID routes remain supported.
 Generated commands live in owned state generations and publish through journaled
 pointers. Set/refresh and imports reconcile them; `refresh --commands-only` does
 not activate a palette. Preserve collisions, current selection, existing arrays,
-Vivid/FSH integration and unrelated source work. No Go migration or Git publication.
+Vivid/FSH integration and unrelated source work. No Git publication.
 
 Acceptance: isolated query/dispatch/completion, palette-only resolution, logo
 presentation, publication/rollback/drift/idempotence, imports and native startup.

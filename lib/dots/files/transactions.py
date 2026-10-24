@@ -15,7 +15,7 @@ import stat
 import uuid
 
 from catalog import atomic_json, read_json
-from file_platform import sync_dir, lock, open_nofollow, check_object
+from file_platform import sync_dir, lock, open_nofollow, check_object, copy_file, prepare_text
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -92,24 +92,22 @@ def copy_object(source, dest):
     if source.is_symlink():
         dest.symlink_to(os.readlink(source), target_is_directory=source.is_dir() or bool(getattr(source.lstat(), 'st_file_attributes', 0) & 0x10))
     elif source.is_dir():
-        shutil.copytree(source, dest, symlinks=True)
+        shutil.copytree(source, dest, symlinks=True, copy_function=copy_file)
     else:
-        shutil.copy2(source, dest, follow_symlinks=False)
+        copy_file(source, dest)
     if digest(dest) != before or digest(source) != before:
         raise ValueError('copy verification failed or source changed')
-    flush_tree(dest)
+    sync_directories(dest)
 
 
-def flush_tree(path):
+def sync_directories(path):
+    # File payloads were already flushed through the writable copy handle.
     if path.is_symlink():
         return
     if path.is_dir():
         for child in path.iterdir():
-            flush_tree(child)
+            sync_directories(child)
         sync_dir(path)
-    else:
-        with path.open('rb') as stream:
-            os.fsync(stream.fileno())
 
 
 def discard(path):
@@ -251,12 +249,7 @@ class Store:
                                 raise ValueError('Windows refused symbolic-link creation. Enable link capability yourself or explicitly select a supported copy strategy; Dots will not elevate or silently copy.') from error
                             raise
                     elif 'text' in op:
-                        with after.open('w', encoding='utf-8', newline='\n') as out:
-                            out.write(op['text'])
-                            out.flush()
-                            os.fsync(out.fileno())
-                        if path.exists() and not path.is_symlink():
-                            os.chmod(after, stat.S_IMODE(path.stat().st_mode))
+                        prepare_text(after, op['text'], path)
                     elif 'data' in op:
                         atomic_json(after, op['data'])
                         if path.exists():

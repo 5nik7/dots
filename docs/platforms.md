@@ -1,6 +1,6 @@
 # Platform Model
 
-**Status: Permanent read-only core and independent experiment verified on native Termux and Linux/Windows CI; broader platform model proposed**
+**Status: Live platform adapters; native evidence and pending acceptance recorded by subsystem**
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
 
@@ -11,7 +11,6 @@ Termux has native dispatch and Bash/Zsh/Fish completion tests, including interac
 Tab acceptance. Linux/WSL and MSYS are design targets, not newly verified platforms.
 This Bash dispatcher does not provide general native Windows execution. A separate native PowerShell frontend dispatches file, Git, environment, theme and Anodize commands; see [native PowerShell](powershell.md) for implementation limits and pending Windows acceptance; no Windows/WSL path translation occurs. Ordinary unsymlinked invocation, help, and routing use Bash
 builtins; resolving a symlinked launcher additionally requires `readlink`.
-This coverage is separate from the Go platform matrix below.
 
 Personal Bash/Zsh/Fish startup uses [user-local completion directories](shell-init.md#user-local-completion-directories) with XDG-aware paths and priority over repository providers. Native discovery checks run in isolated Termux roots; Linux/WSL remain pending native acceptance for this change. PowerShell, Nushell and Xonsh retain their existing integrations. There is no native Windows equivalent of Zsh fpath registration, and Windows app destinations are unchanged; Windows PowerShell 5.1/7 startup acceptance remains pending.
 
@@ -19,7 +18,7 @@ The [tmux keybinding reference](commands.md#tmux-keybinding-reference) requires 
 
 The tmux system status row is enabled only when the tmux server inherits a nonempty `TERMUX_VERSION`; other environments show the tmux session/window row alone. Termux numbers remain ordered on the lower row; the current number and optional tmux name share one ` number:project ` badge, followed by windows before later numbers. Window labels omit names exactly matching the full tmux session name. Each badge/window has one space at each end. Numbering requires Python 3, the optional Androidots `termux-sessions` script, readable procfs and inherited `TERMUX_APP__PID`. The adapter locates that script through the repository's directory-linked tmux configuration. It matches each client's terminal ID rather than the server's launch ancestry; unmatched clients have no highlighted Termux entry. Missing discovery dependencies clear the segment without affecting the clock or tmux row. Native tmux 3.8 terminal rendering is verified in isolated Termux fixtures; the non-Termux branch is simulated there, not new Linux/WSL or Windows certification. See [tmux themes](themes.md#tmux).
 
-The upper-row Android cluster requires Python 3 and the Androidots Wi-Fi/cellular scripts with their sibling `lib/termux_status` package. It invokes normal JSON reads, so the existing cache handles refresh work and permission gates. Connected Wi-Fi appears first; cellular appears only with explicitly disconnected Wi-Fi and enabled, connected mobile data. Missing, failed, expired or unknown Wi-Fi shows a neutral muted `?`, as does disconnected Wi-Fi with unavailable cellular activity. Only fresh disconnected Wi-Fi plus fresh confirmed inactive telephony data hides the segment. Retained stale connections keep `~`; uncertain decisions involving stale evidence show `?~`. Registered-cell signal alone does not establish active data or internet access. Notification, volume and location are not polled. Cellular polling needs a successful explicit interactive refresh, and provider failure suspends further automatic requests. No status job requests explicit refresh or changes permissions. Native tmux tests use mocked scripts/providers at 40/80/120 columns; they establish terminal layout, not live API access, signal accuracy or font rendering. See [activation](themes.md#tmux) and the [Androidots contract](../androidots/docs/termux-status.md).
+The upper-row Android cluster requires Python 3 and the Androidots Wi-Fi/cellular scripts with their sibling `lib/termux_status` package. It invokes normal JSON reads, so the existing cache handles refresh work and permission gates. Connected Wi-Fi appears first; cellular appears only with explicitly disconnected Wi-Fi and enabled, connected mobile data. Missing, failed, expired or unknown Wi-Fi shows a neutral muted `?`, as does disconnected Wi-Fi with unavailable cellular activity. Only fresh disconnected Wi-Fi plus fresh confirmed inactive telephony data hides the segment. Retained stale connections keep `~`; uncertain decisions involving stale evidence show `?~`. Registered-cell signal alone does not establish active data or internet access. Notification, volume and location are not polled. Cellular polling needs a successful explicit interactive refresh, and provider failure suspends further automatic requests. No status job requests explicit refresh or changes permissions. Native tmux tests use mocked scripts/providers at 40/80/120 columns; they establish terminal layout, not live API access, signal accuracy or font rendering. See [activation](themes.md#tmux) and the [Androidots contract](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-status.md).
 
 ## Shell initialization coverage
 
@@ -29,61 +28,9 @@ The [initialization hook](shell-init.md) has native adapters for Bash, Zsh, Fish
 
 ## Existing Zsh Configuration
 
-The [existing shell configuration](../shells/zsh/README.md) has Termux-native checks and isolated Linux/WSL/MSYS detection fixtures. WSL uses Linux paths; MSYS has its own adapter boundary. Native Linux/WSL/MSYS interactive behavior remains unverified. These shell checks do not expand the Go core or production installation support claims below.
+The [existing shell configuration](../shells/zsh/README.md) has Termux-native checks and isolated Linux/WSL/MSYS detection fixtures. WSL uses Linux paths; MSYS has its own adapter boundary. Native Linux/WSL/MSYS interactive behavior remains unverified.
 
 The default [Deja integration](../shells/zsh/README.md#deja-suggestions) has native Termux Android/ARM64 build and isolated daemon/Zsh PTY acceptance. It needs a native CGO/Clang source build, not upstream's Linux release binaries. Its data is under `$HOME/.local/share/deja` regardless of XDG settings. Linux/WSL x86-64 and ARM64 now have automatic GitHub release installation through Zinit, with executable validation and fallback to autosuggestions. Architecture selection, download failures and cached loading are tested in isolated fixtures, including real Zinit with synthetic release downloads. This is not native Linux/WSL executable or interactive acceptance. Termux and other platforms never receive Linux binaries automatically; no other native platform is verified for this integration.
-
-## Permanent Development Core
-
-The root core ports the experimental read-only platform adapter and optional-logo opening unchanged, including schema 1, marker heuristics, candidate Unix paths, missing Windows path warnings and `not_probed` capabilities. Its registry uses injected availability metadata and does not perform capability probes. Root-core checks and fresh benchmarks passed on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in CI; this is development coverage of the read-only surface. The native root-core verification and fresh timing results are tracked separately in the [first-slice plan](../plans/phase-2-command-center.md); the historical observations below retain their original executable identities. Native Windows known folders/restricted ACLs, WSL execution, other architectures, broader filesystems and production OS floors remain deferred. No apply/package/bootstrap/shell support follows from core startup.
-
-The [schema-1 catalog](decisions/0004-versioned-command-discovery.md) reports existing static availability without new capability probes or executable launches. Foreign-platform and WSL definitions remain discoverable as unavailable; catalog support does not enable WSL execution or expand native filesystem support.
-
-### Development External Execution
-
-[Decision 0003](decisions/0003-trusted-external-command-protocol.md) adds native execution behind explicit trusted roots. Termux/Linux require regular executable files and use direct process replacement; shebang resolution belongs to the OS, with no shell retry or Termux rewriting. Windows accepts `.exe` with Go's CommandLineToArgvW-compatible quoting, inherited standard handles and the same console. Root policy requires local fixed-drive NTFS and disabled per-directory case sensitivity; UNC/device/ADS/drive-relative paths and immediate reparse entries are refused. Resolved root aliases are deduplicated by object identity. No POSIX permission assumption is applied on Windows.
-
-Native interruption acceptance requires Unix signal/PID checks and actual Windows console broadcasts for Ctrl+C and Ctrl+Break. Results are tracked in the [external slice](../plans/phase-2-command-center.md#authorized-external-command-slice). A .exe extension using a custom shell parser is outside the argument contract. WSL execution remains explicitly unavailable even with matching metadata. These restrictions do not establish production OS floors, known-folder resolution, restricted ACL policy, cross-volume/network filesystems, other architectures, or descendant cleanup.
-
-## Implemented Phase 1 Observations
-
-The separate `dots-spike` executable has been built and run natively with Go 1.27.1 on Termux 0.119.0-beta.3, Android API 35, ARM64, kernel `5.4.274-qgki-30957850-abG996USQSJHZB1`. Test-owned directories under the Termux temporary directory report f2fs. Successful file/directory symlinks and explicit regular-file copies apply only to these fixtures, not Android shared storage or every possible destination.
-
-The Android/ARM64 build uses `CGO_ENABLED=0`, the default Android PIE mode, `-trimpath`, `-buildvcs=false`, and no third-party modules. ELF inspection reports `/system/bin/linker64` as interpreter and no `DT_NEEDED` shared-library entries. Thus the executable still requires the Android runtime/loader; it does not require an installed Go runtime, Python, shell helpers, or additional declared shared libraries. It starts with an empty `PATH`. Rebuilding the same source from another directory with the same toolchain produced identical bytes; this is not a multi-toolchain or release reproducibility claim.
-
-Linux/AMD64 and Windows/AMD64 executables and test binaries were cross-compiled using the installed Termux toolchain. They were not executed. Windows/WSL detector fixtures ran on Termux, not on those systems. Native Linux and Windows CI execution is recorded separately below. WSL execution, Windows policy/filesystem variations beyond these fixtures, Android shared storage, other Android architectures, public release delivery, and installation remain unverified. See the [focused results](../plans/phase-1-portability.md).
-
-### Native Linux Validation Status
-
-The shared harness built and executed the Linux/AMD64 executable and all 13 Go tests in [GitHub Actions run 34416309614](https://github.com/5nik7/dots/actions/runs/34416309614) on 2026-09-09. The runner reported Ubuntu 24.04.5 LTS, image `20260907.300.1`, kernel `6.17.0-1022-azure`, and `stat -f` filesystem type `ext2/ext3` (an ext-family magic label, not a precise mounted-filesystem claim). Four Python tests, empty-PATH CLI checks, read-only snapshots, logo replacement cases, file/directory symlinks, exclusive copies, and relocated identical rebuild all passed in owned roots. The 3,991,208-byte Go 1.27.1 binary has no ELF interpreter or `DT_NEEDED` entries. Startup measurements are Linux CI observations, not controlled cold-cache or physical desktop-hardware results. Windows execution and bounded distribution validation are recorded below; public release delivery and installation remain pending. See [testing.md](testing.md#native-linux-and-windows-ci) for tool provisioning, telemetry isolation, and artifact retention.
-
-### Native Windows Validation Status
-
-[Run 34421915915](https://github.com/5nik7/dots/actions/runs/34421915915), at `fe0e5d722a322bca9d97c48aaa1dac688752e17a` on 2026-09-10, built and executed the Windows/AMD64 executable, 14 top-level Go tests, and six Python regressions. The `windows-2025` runner reported Windows build 26100, image `win25-vs2026` / `20260907.229.1`, four logical CPUs, and NTFS. Empty-PATH help/version/human and JSON diagnostics, optional logos, unchanged fixture snapshots, independent copies, file/directory links, existing-target refusal, spaces/Unicode/leading dashes, missing parents, and traversal/link escape checks passed. Both symlink types were available; no permission denial was observed. Windows directory-rooted operations refused existing directories with `EISDIR`, and tests verified preservation after that refusal.
-
-The Go 1.27.1 `CGO_ENABLED=0` executable is 4,207,104 bytes, with SHA-256 `8850624e20a07a8f983b851fd0427f41a0d0e896b1c07b857ff3993afd5a909a`. LLVM 20.1.8 identified an AMD64 PE/COFF image with `kernel32.dll` in its static import table. Native execution with an empty PATH passed, but static imports do not enumerate dynamic/transitive Windows DLL dependencies. Relocated rebuild and check/benchmark binaries matched byte-for-byte.
-
-These results apply to this hosted runner and its disposable NTFS fixtures. Developer Mode, registry, elevation, and security policy were not changed by verification. A machine that denies links is not represented by this success: refusal classification is separately regression-tested with mocked errors 5, 50, and 1314. Windows ACL-denied logos, UNC/network paths, junctions, long-path policy, cross-volume behavior, and ordinary unelevated desktop policy variations remain untested. Native Windows known-folder resolution remains unimplemented; `doctor` reports capabilities as `not_probed`. See the [focused results](../plans/phase-1-portability.md#bounded-native-windows-follow-up) for startup and artifact provenance.
-
-### Experimental Read-Only File Opening
-
-Help uses a platform adapter for read-only file opening. Unix builds, including Termux and Linux/WSL, use `O_NONBLOCK` so opening a logo replaced with a FIFO does not wait for a writer. The CLI validates the actual opened handle before reading and omits non-regular, empty, or oversized objects. Valid symlinks to regular logo files remain supported. Non-Unix builds retain native `os.Open` semantics and use the same handle validation; this does not provide a Unix FIFO guarantee on Windows or a general filesystem I/O deadline.
-
-The deterministic replacement tests passed natively on Termux and Linux CI. Windows execution is recorded separately; Unix FIFO behavior is unavailable on Windows, Windows ACL-denied logos are untested, and shared-storage behavior remains unverified.
-
-### Experimental Detector and Paths
-
-The collector reads only `HOME`, `PREFIX`, `TERMUX_VERSION`, `DOTS`, the four XDG home variables, `TMPDIR`, `WSL_INTEROP`, and `WSL_DISTRO_NAME`. It also observes Go runtime/executable identity; on Android/Linux it checks the prefix's `bin` directory and Android linker metadata; on Linux it reads at most 4096 bytes of `/proc/sys/kernel/osrelease`. It does not read dotfile contents, enumerate the full environment, query packages, or invoke a shell. Environment evidence reports marker presence rather than arbitrary values.
-
-Native Windows runtime identity takes precedence. Termux classification requires Android evidence (the Android Go runtime or an Android linker), a nonempty Termux version marker, and an absolute prefix ending in `usr` with an existing `bin` directory. Android without sufficient Termux evidence reports `unknown`. A conventional Linux runtime checks WSL environment or case-insensitive Microsoft kernel markers before reporting `linux`. These markers are heuristic observations, not authentication; manually forged environments can mislead classification. There is no public override flag in the spike; unit tests inject inputs directly.
-
-For Termux/Linux/WSL, diagnostics reports the Unix path candidates in the table below. Relative environment paths are rejected with a warning and use a valid default candidate where available. Missing/invalid `HOME` does not trigger account-database lookup or invent home-relative candidates. The repository candidate uses `$DOTS` or `<home>/dots`; `temp` uses an absolute `$TMPDIR`, otherwise `<prefix>/tmp` on Termux or `/tmp` on Linux/WSL. These are candidates, not a claim that directories exist, are owned, or are writable. `executable` is the observed binary path; it is not an installation recommendation.
-
-Windows and unknown platforms report runtime identity, executable path when available, and a warning that path resolution is unimplemented. Native Windows known-folder resolution remains proposed. No platform has a live capability probe in `doctor`: `file_symlink`, `directory_symlink`, and `copy` always report `not_probed`.
-
-### Experimental Distribution Validation
-
-The harness implements native experimental `.tar.gz` bundles for Termux Android/ARM64 and Linux/AMD64, and `.zip` bundles for Windows/AMD64. Native distribution validation passed on Termux and in [Linux and Windows run 34423939448](https://github.com/5nik7/dots/actions/runs/34423939448) at `613e64c7de8fd16a858554fd26f3a451f316e764`. All three targets rejected a corrupt archive before extraction/execution and ran help with the bundled logo, version, and JSON diagnostics from fresh paths containing spaces and Unicode. Runtime snapshots were unchanged; Unix modes and identical extracted executable bytes were verified. Windows POSIX execute bits are not applicable. Each bundle uses executable-relative logo discovery and contains the committed public logo, never the owner’s unrelated working-tree edit. The extracted binary is checked against the build, then executed with empty PATH and isolated roots after the original copied build inputs are removed. Unix execute permissions are verified; Windows proves process execution without assigning POSIX permission semantics. Format regressions cover both archive types on each host; they do not establish foreign-target execution. See [testing.md](testing.md#experimental-distribution-check) for layout, checksum/path guarantees, and bounded-extractor limitations. Permanent releases, publisher authentication/signing, authenticated download transport, and installation remain undecided or untested.
 
 ## Terminology
 
@@ -91,40 +38,6 @@ The harness implements native experimental `.tar.gz` bundles for Termux Android/
 - Distribution identifies a Linux-family package and system environment where relevant.
 - Architecture identifies the release artifact and binary behavior.
 - Capability describes what can actually be done at a particular destination.
-- Profile selects desired modules independently of platform.
-
-## Initial Platform IDs
-
-The [accepted Phase 1 adoption decision](decisions/0002-phase-1-go-adoption.md#initial-targets-and-toolchain) defines initial development targets and distinguishes observed environments from production OS floors. Its [gap classifications](decisions/0002-phase-1-go-adoption.md#remaining-gaps-and-gates) are accepted; this support matrix is not upgraded by language adoption.
-
-| ID | Meaning | First priority |
-| --- | --- | --- |
-| `termux` | Termux userland hosted on Android | Primary MVP |
-| `linux` | Conventional native Linux userland | After Termux foundation |
-| `wsl` | Linux distribution running under Windows Subsystem for Linux | After Linux |
-| `windows` | Native Windows process and filesystem APIs | After WSL |
-
-## Detection Evidence
-
-Detection should collect evidence rather than use one fragile variable.
-
-### Termux
-
-Potential evidence includes Termux-specific environment variables, prefix layout, Android runtime/kernel information, and Termux filesystem locations. The final detector must be tested in a real supported Termux installation and must not classify an arbitrary Android shell as Termux without required capabilities.
-
-### WSL
-
-Potential evidence includes WSL-specific environment variables and kernel/runtime markers. WSL detection occurs before generic Linux classification.
-
-### Linux
-
-Use operating-system runtime evidence, then read `/etc/os-release` or its documented fallback for distribution details when available. Do not treat distribution name as package-manager proof.
-
-### Windows
-
-Native runtime identity is authoritative. PowerShell availability, Developer Mode, elevation, package managers, and link types are separate capabilities.
-
-All detection can be overridden explicitly for fixtures and advanced testing, but the override must appear in diagnostics and plans.
 
 ## Standard Paths
 
@@ -140,40 +53,13 @@ All detection can be overridden explicitly for fixtures and advanced testing, bu
 
 The repository path is configurable. Runtime state must not depend on the repository remaining at its default path.
 
-## Filesystem Capabilities
-
-Capability checks may depend on destination filesystem and volume.
-
-| Capability | Termux | Linux | WSL filesystem | Native Windows |
-| --- | --- | --- | --- | --- |
-| File symbolic link | Verified in disposable f2fs fixtures only | Verified in disposable Linux CI fixtures only | Expected inside distribution | Verified in disposable NTFS CI fixtures only; other policies untested |
-| Directory symbolic link | Verified in disposable f2fs fixtures only | Verified in disposable Linux CI fixtures only | Expected inside distribution | Verified in disposable NTFS CI fixtures only; other policies untested |
-| Hardlink | Later capability | Same-filesystem only | Same-filesystem only | Same-volume file only |
-| Junction | Not applicable | Not applicable | Not Linux-native | Directory option |
-| Cross Windows/WSL link | Block by default | Not applicable | Block by default | Block by default |
-
-The planner reports the requested strategy and effective capability. It never silently copies because a link failed.
-
-## Package Adapters
-
-Initial candidates, subject to capability detection:
-
-| Platform | Candidate managers |
-| --- | --- |
-| Termux | `pkg`, Termux `apt`, optional Termux `pacman` environments |
-| Linux | `apt`, `pacman`, and later explicitly supported managers |
-| WSL | Manager provided by the selected Linux distribution |
-| Windows | `winget`, with Scoop or Chocolatey considered later if deliberately supported |
-
-Manager discovery is not permission to install. Package operations remain explicit planned stages.
-
 ## Privilege
 
 - Termux does not use `sudo` for its ordinary userland package and configuration paths.
 - Linux and WSL may or may not provide `sudo`; query the required operation and available mechanism.
 - Native Windows elevation is distinct from Developer Mode and link capability.
 - User-owned dotfile operations should not request elevation merely for convenience.
-- A future privileged/system mode requires a separate safety design and is outside the initial MVP.
+- A future privileged/system mode requires a separate safety design and is outside the current managed operations.
 
 ## Shell Integration
 
@@ -181,14 +67,14 @@ Manager discovery is not permission to install. Package operations remain explic
 | --- | --- | --- |
 | Bash | Supported target | Only when explicitly installed; not a native requirement |
 | Zsh | Supported target | Only when explicitly installed in a compatible environment |
-| Fish | Later supported target | Only when explicitly installed |
+| Fish | Supported target | Only when explicitly installed |
 | PowerShell | Optional where installed | Primary native shell integration |
 
 Environment data should generate correctly quoted shell-specific files. Shell startup should source generated static content instead of performing full CLI resolution every time.
 
 ## Windows and WSL Boundary
 
-Native Windows and WSL may share the same remote Git repository and common modules, but they must use:
+Native Windows and WSL may share the same remote Git repository and source configuration, but they must use:
 
 - Separate machine configuration.
 - Separate transaction journals and backups.
@@ -197,29 +83,6 @@ Native Windows and WSL may share the same remote Git repository and common modul
 - Explicit interop operations if one side needs to reference the other.
 
 Do not place the WSL state database on a mounted Windows path by default. Do not assume a symlink created on one side has safe or equivalent behavior on the other.
-
-## Support Matrix
-
-Update this matrix only with verified results.
-
-| Subsystem | Termux | Linux | WSL | Windows |
-| --- | --- | --- | --- | --- |
-| Core starts | Experimental: native Android/ARM64 | Experimental: native AMD64 on Ubuntu CI | Not run | Experimental: native AMD64 on Windows CI |
-| Platform diagnostics | Experimental: native evidence and candidate paths | Experimental: native Linux identity with owned path fixtures | Detector fixtures only | Experimental: native Windows identity; known-folder paths deferred |
-| Spec resolution | Planned | Planned | Planned | Planned |
-| Read-only plan | Planned MVP | Planned | Planned | Planned |
-| Link/copy apply | Planned MVP | Planned | Planned | Planned |
-| Backup/rollback/undo | Planned MVP | Planned | Planned | Planned |
-| Package install | Planned after file MVP | Planned | Planned | Planned |
-| Bootstrap | Planned after file MVP | Planned | Planned | Planned |
-| Shell integration | Planned Zsh/Bash | Planned | Planned | Planned PowerShell |
-| Hosted CI | To decide | Experimental: native Phase 1 check and bench | To decide | Experimental: native Phase 1 check and bench |
-
-`Planned` is not a support claim. Replace it with explicit experimental or supported labels only after acceptance criteria and tests are documented.
-
-## Development Zsh Completion
-
-The portable development CLI can generate Zsh source without a Zsh dependency. Native Zsh runtime acceptance targets Termux and Linux only; native Windows tests verify CLI generation, not shell execution. Other shells, WSL runtime and completion installation remain deferred. See [decision 0005](decisions/0005-static-zsh-completion.md) and [Phase 2 evidence](../plans/phase-2-command-center.md#authorized-zsh-completion-slice).
 
 ## Bash Theme Integration
 
@@ -236,7 +99,7 @@ prompt theming are outside this version. See [Shared themes](themes.md).
 
 ## Implemented Files and Theme Adapters
 
-The live Bash framework remains distinct from portable Go development. File catalog
+File catalog
 commands use Python 3.9+ and POSIX flock, with read-only platform overrides for
 inventory. Termux combines common and Androidots catalogs; Windots remains
 inventory-only without a native Windows destination adapter. Discovery uses Git
@@ -285,7 +148,7 @@ Termux-owned discovery rules live in Androidots. See [Git](git.md),
 
 Terminal branding is capability-based, not platform-name based. Bundled braille text is the default on Unicode terminals, with portable ASCII for explicit ASCII mode, dumb terminals and redirected output. Optional Kitty rendering uses conservative environment hints and excludes unknown multiplexer passthrough; optional Chafa uses foreground-only braille output without probing. The [logo contract](anodize.md#terminal-logo) documents fallbacks and sizing assumptions. Native Termux PTY/text/Chafa checks and simulated Kitty protocol checks do not establish native Kitty, Linux/WSL graphics, or Windows support.
 
-The pure Go Anodize library accepts bytes/data without platform paths. The current CLI requires Python 3.11+, Bash, POSIX file transactions and the existing theme adapter tools. Native Termux is verified; Linux/WSL integration and native Windows authoring are not newly verified. Wallpaper actions retain the existing fixed adapter support, including WSL refusal. No APK, Android language binding or TUI is shipped. See [Anodize](anodize.md).
+The pure Go Anodize library accepts bytes/data without platform paths. The CLI requires Python 3.11+ and a built engine, with Bash on POSIX hosts or native PowerShell on Windows. Publication uses shared file transactions and the platform theme adapters. Native Termux is verified; Linux/WSL integration and native Windows authoring are not newly verified. Wallpaper actions retain the existing fixed adapter support, including WSL refusal. No APK, Android language binding or TUI is shipped. See [Anodize](anodize.md).
 
 ## Theme plugin boundary
 
@@ -320,7 +183,7 @@ Xonsh adapter edits have no new native-runtime certification.
 
 The [checkout installer](installation.md) has POSIX shell and native PowerShell entry points sharing Python 3.9+ planning, receipt and transaction logic. Termux/Linux/WSL use their own HOME/XDG roots. Native Windows uses LOCALAPPDATA for state (unless XDG_STATE_HOME is explicit), PowerShell's current-host profile, Neovim's native configuration root and APPDATA/Code/User/settings.json. The [native PowerShell implementation](powershell.md) adds app-specific root/Windots destinations and native theme preparation/publication; Windows runtime and desktop acceptance remain pending. Full theme setup requires Python 3.11+. No WSL path translation, package provisioning, elevation or link-to-copy fallback occurs.
 
-Native Windows locking uses msvcrt; directory flushing has no POSIX-equivalent guarantee. Symlink capability is tested by approved staging before target replacement. Reparse-point ancestors are refused. Linux/Windows installation CI is defined separately from the Go gates; local Termux tests do not establish native Windows or WSL results.
+Native Windows locking uses msvcrt; directory flushing has no POSIX-equivalent guarantee. Symlink capability is tested by approved staging before target replacement. Reparse-point ancestors are refused. Linux/Windows installation CI is defined; local Termux tests do not establish native Windows or WSL results.
 
 The managed Starship config destination is home-relative `.config/starship.toml`
 on POSIX and native Windows, independently of XDG_CONFIG_HOME. Personal startup
@@ -346,7 +209,7 @@ preview and interruption acceptance remains pending where engines are unavailabl
 
 ## Androidots location adapter exception
 
-`termux-geo` device acquisition requires Android/Termux and Termux:API. There is no corresponding native Windows PowerShell 5.1/7, Linux, or WSL acquisition adapter in this scope, and no Windows app destination changes. Personal Androidots completion paths are added only for interactive Termux shells; other platform paths remain unchanged. Mock-provider tests and native Termux Bash/Zsh/Fish completion checks do not establish native GPS/network-provider, Android permission, or service-cancellation acceptance. See [location requirements and limits](../androidots/docs/termux-geo.md#verification-and-platform-limits).
+`termux-geo` device acquisition requires Android/Termux and Termux:API. There is no corresponding native Windows PowerShell 5.1/7, Linux, or WSL acquisition adapter in this scope, and no Windows app destination changes. Personal Androidots completion paths are added only for interactive Termux shells; other platform paths remain unchanged. Mock-provider tests and native Termux Bash/Zsh/Fish completion checks do not establish native GPS/network-provider, Android permission, or service-cancellation acceptance. See [location requirements and limits](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md#verification-and-platform-limits).
 
 Separate owner-device checks verified network acquisition and cache reuse after removing an incompatible file-size resource limit from the API wrapper. GPS, permission denial/recovery and Android service cancellation remain pending; see the [native repair evidence](../plans/termux-geo.md#native-timeout-repair).
 
@@ -355,3 +218,5 @@ Separate owner-device checks verified network acquisition and cache reuse after 
 The shared Python 3.11+ weather controller has Bash and native PowerShell entries. Unix config/cache use XDG defaults; Windows configuration uses APPDATA/wttr and cache uses LOCALAPPDATA/cache/wttr unless XDG overrides are explicit. The catalog Windows app destination is `${APP_CONFIG:wttr}`. Manual/default weather is portable. Stock wttr.in requests require native `curl` on Unix or `curl.exe` on Windows; JSON-backed views retain their Python standard-library transport. Android acquisition and tmux daylight styling are Termux-only; there is no native Windows location provider in this slice. Native Windows PowerShell 5.1/7, Windows locks/ACLs and completion runtime acceptance remain pending on this Termux host. See [weather behavior and verification limits](wttr.md).
 
 The Television connector is implemented in both publishers. Its [destination rules](themes.md#television) match Television 0.15.9, including native Windows LOCALAPPDATA and explicit overrides. An existing app directory is required; its missing `themes` child is journaled. Native Windows PowerShell 5.1/7, Linux and WSL acceptance remains pending; Termux and fixture evidence is recorded in [testing](testing.md#television-theme).
+
+Leaf UI and syntax connectors use both publishers and the shared [destination rules](themes.md#leaf). Native Windows uses APPDATA/leaf and the existing link adapter; a missing APPDATA leaves it unmapped. Leaf external syntax support is a separate portable Rust patch. Termux native evidence does not establish Windows PowerShell 5.1/7, Linux or WSL runtime/visual acceptance; those remain pending.

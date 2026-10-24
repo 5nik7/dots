@@ -4,7 +4,7 @@
 
 ## Context
 
-The owner requested an independent Aether-derived theme engine named Anodize, first as a Dots core component and CLI, with a future Android application and possible TUI. A separate repository owns Anodize.nvim. General Go migration remains paused; this is an explicit scoped exception.
+The owner requested an independent Aether-derived theme engine named Anodize, first as a Dots core component and CLI, with a future Android application and possible TUI. A separate repository owns Anodize.nvim.
 
 ## Decision
 
@@ -16,7 +16,7 @@ Add normalized `colors` to published palette JSON without removing existing sche
 
 ## Consequences and alternatives
 
-The reusable color engine can support future frontends without importing CLI filesystem policy. The CLI requires the existing Bash/Python environment plus a built engine. A monolithic Go rewrite would duplicate mature safety and publication behavior and expand the paused migration. Reusing Aether's desktop backend would couple the core to Wails, platform paths and side effects. Neither is needed for this slice. The local Theme Hook Plugin Manager reference manages Omarchy theme-set.d scripts that can rewrite application configuration and run reload commands. It informed the separation between color data and app integration; importing its arbitrary hook execution would bypass this bounded publisher, so hooks remain deferred.
+The reusable color engine can support future frontends without importing CLI filesystem policy. The CLI requires the existing Bash/Python environment plus a built engine. Reusing Aether's desktop backend would couple the core to Wails, platform paths and side effects. That coupling is unnecessary for palette authoring. The local Theme Hook Plugin Manager reference manages Omarchy theme-set.d scripts that can rewrite application configuration and run reload commands. It informed the separation between color data and app integration; importing its arbitrary hook execution would bypass this bounded publisher, so hooks remain deferred.
 
 ## Validation
 

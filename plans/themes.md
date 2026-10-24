@@ -10,7 +10,7 @@ Approved scope: four Catppuccin TOML palettes; native color names and semantic r
 shared Bash query/conversion engine; compatible catppuccin/current_theme entry points;
 Zsh prompt refresh; Neovim startup/focus refresh; Bash/Zsh/Fish command completion.
 Preserve Mocha highlights, adapt other flavors. Use the existing checkout and preserve
-uncommitted dispatcher work. Go, other application integrations, commits and publication
+uncommitted dispatcher work. Other application integrations, commits and publication
 remain out of scope.
 
 Implementation sequence: extract palettes and capture compatibility baseline; implement
@@ -24,7 +24,7 @@ The command and data contract is documented in [Shared themes](../docs/themes.md
 Four separate palettes, role metadata, compatibility wrappers, three-shell completion,
 journaled snapshot publication, Zsh prompt refresh, and the Neovim adapter are in place.
 Published initialization remains readable when source palettes are temporarily invalid.
-General Go work, other application adapters, native Windows support, commits and pushes
+Other application adapters, native Windows support, commits and pushes
 remain outside this change.
 
 ## Verification

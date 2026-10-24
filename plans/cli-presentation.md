@@ -2,7 +2,7 @@
 
 **Status: Implemented, 2026-10-16.** Scope: all live first-party Dots routes,
 Anodize aliases and root setup adapters. Preserve the installation and Deja work.
-Standalone scripts, nested repositories and paused Go tools are excluded.
+Standalone scripts and nested repositories are excluded.
 
 ## Audit and ownership
 

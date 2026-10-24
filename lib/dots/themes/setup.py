@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Inactive native setup preparation; caller owns publication locks and journal."""
-import os
 from pathlib import Path
 import sys
 import uuid
@@ -8,7 +7,7 @@ import uuid
 from palette_native import Themes, regular
 from theme_cli import generated_commands, shell_init, validate_pointers, generation_complete
 from transactions import private_directory
-from file_platform import sync_dir
+from file_platform import sync_dir, sync_file
 
 
 def main(args):
@@ -39,7 +38,7 @@ def main(args):
         # Preparation never changes live pointers or invokes app reloads/plugins.
         for path in directory.rglob('*'):
             if path.is_file():
-                with path.open('rb') as stream: os.fsync(stream.fileno())
+                sync_file(path)
         sync_dir(directory)
         values = [str(directory), str(directory / 'commands'), '']
     else: raise ValueError('invalid native setup operation')

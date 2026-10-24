@@ -1,12 +1,12 @@
 # Safety and Recovery Model
 
-**Status: Implemented bounded workflows below; general installation transactions remain draft**
+**Status: Implemented managed file, theme, Git and checkout workflows**
 
 Safety is a core product feature of `dots`, not a wrapper around destructive file operations. This document is authoritative for planning, mutation, backup, rollback, undo, package, hook, repository, and secret behavior.
 
 ## Repository Editing Boundary
 
-Ordinary task-relevant edits to repository source files, including live dotfiles and scripts, are allowed in the existing checkout under [AGENTS.md](../AGENTS.md). They do not require the proposed Go transaction engine. Inspect Git status and preserve unrelated, uncommitted, and untracked work. Git history provides recovery for committed repository edits; reverting a commit does not recover uncommitted work or reverse external machine effects.
+Ordinary task-relevant edits to repository source files, including live dotfiles and scripts, are allowed in the existing checkout under [AGENTS.md](../AGENTS.md). Inspect Git status and preserve unrelated, uncommitted, and untracked work. Git history provides recovery for committed repository edits; reverting a commit does not recover uncommitted work or reverse external machine effects.
 
 The transaction guarantees below govern managed installation, target replacement, backup, and undo operations. Permission to edit their source code does not authorize executing those operations against the live machine.
 
@@ -33,33 +33,13 @@ See [decision 0006](decisions/0006-bash-command-framework.md).
 
 Termux's Bash/Zsh startup hook may create a marked default tmux session and attach its client. It retains the outer shell, never deletes detached sessions or adopts an unmarked name collision, and does not install dependencies or reload the server. Repeated initialization does not reattach after deliberate detachment. `DOTS_TERMUX_AUTOSTART=0` disables the hook; failures leave a plain shell. This bounded terminal-session behavior is separate from managed filesystem installation. See [startup guards](shell-init.md#termux-tmux-startup).
 
-The existing Zsh configuration uses user-local completion, Vivid, FSH, and Catppuccin caches independently of the proposed managed-file transaction engine. These are rebuildable generated data. FSH's native INI loader builds in a temporary Dots cache directory. The adapter atomically persists validated data as a regular `current_theme.zsh` in the existing `FAST_WORK_DIR`, retaining the last good startup theme on preparation failure. Before replacing a non-Dots selection it creates a unique private backup of the prior script and compiled companion, preserving symlink identity. Stale `.zwc` code is invalidated; directory conflicts are refused and backups are not automatically pruned. These are cache/selection writes outside the managed theme-publication journal. User overlays remain trusted executable shell code. Completion generation validates successful output before atomic publication; failed output is not evaluated. Ordinary startup retains its existing optional plugin bootstrap and private/local sourcing behavior. Tests use copied public dependencies and synthetic private modules under owned roots; they must never run the live startup chain against the developer's home. See the [Zsh guide](../shells/zsh/README.md).
+The existing Zsh configuration uses user-local completion, Vivid, FSH, and Catppuccin caches outside managed-file transactions. These are rebuildable generated data. FSH's native INI loader builds in a temporary Dots cache directory. The adapter atomically persists validated data as a regular `current_theme.zsh` in the existing `FAST_WORK_DIR`, retaining the last good startup theme on preparation failure. Before replacing a non-Dots selection it creates a unique private backup of the prior script and compiled companion, preserving symlink identity. Stale `.zwc` code is invalidated; directory conflicts are refused and backups are not automatically pruned. These are cache/selection writes outside the managed theme-publication journal. User overlays remain trusted executable shell code. Completion generation validates successful output before atomic publication; failed output is not evaluated. Ordinary startup retains its existing optional plugin bootstrap and private/local sourcing behavior. Tests use copied public dependencies and synthetic private modules under owned roots; they must never run the live startup chain against the developer's home. See the [Zsh guide](../shells/zsh/README.md).
 
 The default [Deja integration](../shells/zsh/README.md#deja-suggestions) is third-party executable shell code, not sandboxed or managed by Dots transactions. On Linux/WSL x86-64 and ARM64, selecting Deja permits Zinit to download a missing executable from upstream GitHub releases into its own plugin directory. This uses Zinit's existing third-party installation lifecycle, outside Dots file journals; the executable run check is not publisher authentication or sandboxing. Existing PATH executables take precedence, cached releases are reused, and updates are explicit. No upstream installer, system package installation or startup-file edits are invoked. Explicit `autosuggestions` or `none` selections skip this bootstrap. When Deja is selected and its binary is available, startup permits its per-user background daemon and plaintext history database under `~/.local/share/deja`; history import is never automatic. Its history exclusions are not general secret redaction. Engine selection is fixed for the shell lifetime to avoid conflicting widget wrappers. Switching back leaves Deja data and its daemon intact; removal and process termination require separate, scoped action.
 
-## Permanent Read-Only Core
-
-The root development executable implements help/version/doctor/commands through a validated built-in registry, plus the bounded external protocol below. It preserves the experiment's bounded optional-logo handle checks, explicit missing-platform-path warnings, unprobed diagnostics and argument redaction. Built-in startup loads no manifests, configuration contents, transaction state or external code. Only explicitly requested external resolution reads sidecars, and only direct external dispatch executes a selected extension. There is no persistent cache or installation surface. Test-only filesystem mutation primitives remain in the independent experiment. The [core verifier](testing.md#permanent-core-verification) owns all build/cache/fixture writes and proves unchanged runtime roots; it never replaces the active `bin/dots` or edits shell configuration.
-
-## Development Extension Trust
-
-The [accepted protocol](decisions/0003-trusted-external-command-protocol.md) permits execution only from explicit trusted `--command-dir` roots, with mandatory bounded static metadata and protected core namespaces. Help/discovery never execute extensions. No real management command ships; fixture execution belongs only to disposable test roots. A `read-only` sidecar is an author assertion, not an enforced sandbox: an invoked extension has the user's environment, working directory and streams and can exercise user privileges. Do not infer safety or publisher authentication from JSON, filename or executable validation.
-
-Root identity and opened-handle metadata checks reject accidental malformed objects. They do not prevent an adversary replacing trusted files or parent directories between checks and execution. No execute-by-handle, ownership/ACL enforcement, credential isolation or process-tree cleanup guarantee is made. Future managed writes still require core transaction APIs; this slice does not implement or exempt them.
-
-## Implemented Experiment Boundary
-
-The [Phase 1 experiment](../plans/phase-1-portability.md) exposes no managed filesystem mutation command. Help may read the optional public logo. It validates the opened handle before reading; Unix opens are nonblocking to avoid waiting for a writer if a regular logo is replaced with a FIFO. This does not impose a general filesystem I/O deadline. Diagnostics reads allowlisted path/environment inputs and limited runtime metadata, without opening dotfile contents or creating capability probes. Version output does not inspect the repository. Unknown arguments are not echoed into diagnostics.
-
-Symlink/copy operations exist only in disposable tests, using directory-rooted filesystem APIs and exclusive creation to exercise refusal on existing targets. Build caches, fixture setup, and retained development artifacts belong to harness-owned temporary roots. Native Windows tests retain required OS environment paths but isolate user/config/temp roots. Copy and traversal cases do not depend on link privileges. Recognized Windows link permission/capability failures are reported as unavailable, never as successful links or silent copy fallback. Tests do not change Developer Mode, registry, elevation, or security policy; Windows ACL-denied-logo cases remain untested. CI may provision development tools before verification; verification-time toolchain/module downloads are disabled, including `GOVCS=*:off`. These tests do not implement backup, apply, rollback, undo, or a journal and provide no exception to the managed-mutation transaction rules below. Read-only CLI process checks compare controlled fixture roots before and after execution; they are not a system-wide syscall audit.
-
-The distribution experiment creates/extracts only fixed-layout bundles under fresh harness-owned roots. It verifies the external SHA-256 manifest and the complete allowed regular-file member set before destination creation, then uses exclusive writes. It rejects existing destinations and unsafe paths/types; no archive-selected links, permissions, or ownership are applied. These bounded fixture writes are not managed installation or a transaction API. Checksums are integrity agreements with the supplied manifest, not publisher authentication. See [testing.md](testing.md#experimental-distribution-check) for exact limits and regression guarantees.
-
-The [accepted packaging and release-trust direction](decisions/0002-phase-1-go-adoption.md#packaging-and-release-trust) separates checksum integrity from publisher authentication and lists gates before public release or remote bootstrap. Its implementation remains pending; acceptance does not authorize installation or weaken the transaction rules below.
-
 ## Guarantees
 
-The intended guarantees are:
+Managed file and theme workflows enforce these invariants:
 
 - Read-only commands do not change managed targets or external systems.
 - A complete plan exists before apply starts.
@@ -74,7 +54,7 @@ No command should imply stronger rollback guarantees than its operations can pro
 
 ## Read-Only Boundary
 
-`status`, `spec`, `plan`, discovery, validation, and diagnostic operations are read-only unless their help explicitly describes a separate cache-refresh action.
+Read-only status, dry-run previews, discovery, validation and diagnostic operations are read-only unless their help explicitly describes a separate cache-refresh action.
 
 Read-only means no:
 
@@ -89,143 +69,6 @@ Read-only means no:
 
 A disposable in-memory representation or rebuildable cache read is acceptable. Cache writes must be designed and described separately so `plan` remains suitable for auditing.
 
-## Target Classification
-
-Before planning a mutation, classify the destination using link-aware filesystem inspection.
-
-| Observed target | Typical plan result |
-| --- | --- |
-| Missing | Create parent as needed, then install resource |
-| Correct managed link | No-op |
-| Broken managed link | Repair through a transaction |
-| Link to another source | Conflict or backup-and-replace under explicit policy |
-| Matching managed copy | No-op |
-| Modified managed copy | Drift; require normal replacement/backup policy |
-| Unmanaged regular file | Back up, then replace only after approval |
-| Unmanaged directory | Conflict unless the resource safely manages compatible children |
-| Platform-specific link object | Compare through the platform adapter |
-| Inaccessible or ambiguous | Block before mutation |
-
-Classification must not follow a link in a way that causes the engine to back up or delete the link's external target accidentally.
-
-## Plan Contract
-
-A plan contains ordered operations and enough information for review and execution.
-
-Each operation should include:
-
-- Stable operation and resource identifiers.
-- Source and canonical destination.
-- Observed target classification.
-- Requested and effective strategy.
-- Action, no-op reason, warning, conflict, or blocked reason.
-- Backup action and expected location.
-- Required capabilities and privileges.
-- Reversibility class.
-- Sensitive-field redaction markers.
-
-Apply consumes the plan representation. It must validate that critical observations have not changed between planning and mutation.
-
-Implemented file, Anodize and Git approval prompts may use optional Gum after the
-existing preview. The interaction layer neither replans nor applies operations;
-only an exact affirmative choice reaches the existing operation path. Default
-Cancel, selector failure and interruption grant no approval. Tool failure never
-falls through to a second prompt. Existing JSON and explicit approval flags retain
-their semantics; see [presentation](presentation.md#optional-gum-interactions).
-
-## Transaction Lifecycle
-
-1. Validate specification and complete plan.
-2. Obtain explicit approval or a valid non-interactive approval flag.
-3. Acquire an exclusive state lock.
-4. Revalidate mutable preconditions.
-5. Allocate a transaction ID and backup directory.
-6. Write and durably initialize the journal.
-7. Apply each operation, recording its start and completion boundary.
-8. On failure, stop forward progress and roll back completed reversible operations in reverse order.
-9. Record success, successful rollback, partial rollback, or recovery-required state.
-10. Release the lock after durable final status.
-
-An interrupted process must be detectable on the next invocation. Recovery must use journal evidence rather than guessing how far apply progressed.
-
-## Journal
-
-The eventual journal schema should record:
-
-- Transaction ID, schema version, timestamps, and status.
-- CLI build/version and repository revision.
-- Platform, profile, host, and resolved-spec digest.
-- Approved plan or a stable reference to it.
-- Operation order and per-operation status.
-- Previous object metadata, backup path, and integrity digest where applicable.
-- Installed object identity or digest for drift checks.
-- Errors, rollback attempts, and recovery instructions.
-- Explicit force or policy overrides used.
-
-Journal writes must use atomic replacement and appropriate durability for the platform. Secrets are represented by redacted metadata or opaque references.
-
-## Backups
-
-- Transaction backups live in the machine state root, not solely in the repository.
-- Preserve the object itself rather than accidentally dereferencing a link.
-- Preserve relevant permissions and timestamps when the platform supports them.
-- Verify a backup before deleting or replacing the source object it protects.
-- Use collision-resistant transaction-owned paths rather than ad hoc `.bak` siblings.
-- Retention and pruning must never remove a backup needed by an incomplete or recovery-required transaction.
-- Explicit snapshots and automatic transaction backups need distinguishable metadata.
-
-Pruning is a destructive operation with a plan, retention explanation, and narrowly scoped confirmation.
-
-## Atomicity
-
-Use temporary siblings and atomic rename/replace where supported. Filesystem-level atomicity may not span volumes, package managers, repositories, or hooks.
-
-The engine should preflight cross-volume or unsupported replacement behavior and report reduced guarantees. Never describe a multi-system transaction as fully atomic when only its journal is coordinated.
-
-## Rollback
-
-Automatic rollback handles failure during apply.
-
-- Reverse only operations confirmed complete by the journal.
-- Execute inverse operations in reverse order.
-- Do not continue normal apply after rollback begins.
-- Record rollback failures without destroying their backups.
-- Finish in a clearly queryable `rolled-back` or `recovery-required` status.
-- Provide specific recovery instructions and paths without exposing secret content.
-
-Rollback must itself be resumable or manually recoverable.
-
-## Undo
-
-Undo is a later deliberate reversal of a completed transaction.
-
-- Compare each current target with the object installed by the transaction.
-- If the target has changed, report drift and refuse replacement by default.
-- Scope any force option to the named transaction/resource.
-- Preserve the drifted target before forced restoration when possible.
-- Record undo as its own transaction instead of deleting history.
-- Do not infer that packages added by the original transaction are safe to remove.
-
-## Link and Copy Policy
-
-- Symbolic link is the repository default.
-- Copy is selected explicitly by resource or machine policy.
-- A directory link requires declared ownership of the whole destination directory.
-- Unavailable link capability blocks the plan unless an explicit fallback is configured.
-- Fallback choice appears in the plan and journal.
-- Copies record an installed digest so status and undo can detect drift.
-- Repository relocation should produce broken-source diagnostics and a repair plan, not automatic unjournaled rewrites.
-
-## Packages
-
-The package adapter records whether each requirement was already satisfied and whether `dots` installed it.
-
-- Package database refresh, install, upgrade, and removal are distinct planned actions.
-- Do not upgrade all packages as an implicit prerequisite for applying dotfiles.
-- Do not automatically remove packages during ordinary filesystem rollback or undo.
-- A future package removal command may propose packages added solely by `dots`, but must query current reverse dependencies and require explicit approval.
-- Package-manager output and failure belong in the journal without leaking repository credentials or environment secrets.
-
 ## Hooks and External Side Effects
 
 Arbitrary hooks weaken dry-run and rollback guarantees.
@@ -238,8 +81,7 @@ Arbitrary hooks weaken dry-run and rollback guarantees.
 - Capture exit status and bounded, redacted logs.
 - Do not claim that transaction rollback reversed a hook without a verified inverse protocol.
 
-General hooks remain outside the initial Termux MVP. The specifically authorized
-[local theme plugin manager](theme-plugins.md) is a bounded exception: explicit
+The [local theme plugin manager](theme-plugins.md) uses explicit
 per-file enablement, post-commit execution, separate Bash children, nonblocking
 locks and recursion refusal. No hooks are discovered in downloaded themes.
 Custom hooks run with user privileges, are not sandboxed and have no automatic
@@ -254,7 +96,7 @@ a retry path; malformed/ambiguous plugin configuration prevents execution.
 
 ## Secrets
 
-- Public bootstrap does not initialize the secrets source.
+- Checkout setup does not initialize private sources.
 - Repository URLs never embed credentials.
 - Plans, specs, logs, diagnostics, errors, command history suggestions, and JSON redact secret values.
 - A secret reference may expose provider and identifier only when that metadata is not itself sensitive.
@@ -269,7 +111,6 @@ a retry path; malformed/ambiguous plugin configuration prevents execution.
 - Record the repository revision used by every apply.
 - Do not automatically initialize all submodules.
 - Optional source updates are independent from main repository updates.
-- A moving remote bootstrap channel must allow a pinned alternative.
 
 ## Protected Boundaries
 
@@ -279,19 +120,11 @@ Path validation occurs after variable expansion and normalization. Reject traver
 
 No recursive destructive action may use an unresolved environment variable, broad home directory, repository root, or filesystem root as its target.
 
-## Static Command Catalog
-
-The [versioned catalog](decisions/0004-versioned-command-discovery.md) reads only explicit command roots and metadata, validates the complete discovery result before stdout, and executes no extensions. It includes hidden/unavailable records; hidden is presentation metadata, not a confidentiality boundary. No resolved paths or environment values are added, but author-provided descriptions are reproduced. Availability and read-only declarations do not authenticate, sandbox or protect against concurrent replacement of trusted files.
-
 ## Authorized Development Worktree Cleanup
 
 Local repository maintenance is separate from managed dotfile transactions. The [worktree lifecycle](../agents/guides/worktrees.md) permits automatic cleanup only of explicitly enrolled, merged, unused, clean linked development worktrees during deliberately selected worktree maintenance. Ordinary repository edits do not trigger cleanup. Read-only planning cannot remove worktrees. Original/session/helper roots, live references, local content, branch/recovery refs and review evidence are protected; uncertain checks skip and Git removal never uses force. This does not authorize a general-purpose recursive deletion API or relaxed managed-file safety.
 
 Lifecycle cleanup supplements Git status with metadata-only entry classification and refuses special or uncertain filesystem objects. Its fresh-main fetch uses an empty `--refmap=` and an explicit destination, preventing configured fetch mappings from updating local branch/recovery refs. The trusted-filesystem and concurrent-change limitations in the worktree guide still apply.
-
-## Static Completion Boundary
-
-[Zsh generation](decisions/0005-static-zsh-completion.md) validates all metadata before stdout and never executes extensions. Generated scripts omit descriptions, safely quote explicit root strings, and use only embedded route data at completion time. Ordered literal context matching is a conservative presentation filter, not filesystem identity or a trust guarantee. Root paths occur only in explicitly generated script context, not the JSON catalog. No installation, startup edit, persistent cache or implicit discovery is performed.
 
 ## Theme Selection Publication
 
@@ -370,6 +203,7 @@ Vivid and FSH connectors target only `vivid/themes/dots.yml` and `fsh/dots.ini`
 under the configured XDG root when their parents exist. They use the same journal,
 backup, conflict refusal and drift checks; publication does not create app directories.
 The eza connector targets only `theme.yml` in an existing resolved eza directory, using the same backup, rollback and drift checks. Both publishers validate the absolute destination before connecting; native Windows uses the native link adapter without silent copying. No eza process or directory is created by refresh.
+Leaf publishes two links in an existing config root and may journal creation of only its missing `themes` child. Shared-parent creation is recorded once; recovery checks directory identity before removing it. Both connectors retain the usual backup and drift guards. Publication does not replace the Leaf binary or edit its config selector; those require separately authorized changes.
 No complete generation or backup is automatically pruned. Reload failures preserve
 the published theme and report a retry path; external app state is not rolled back.
 
@@ -536,6 +370,14 @@ state-root identity, never an executable or a path to load. Notification failure
 does not undo a published theme. Plugin snapshot errors retain previous colors.
 
 ## Bounded checkout installation
+
+File copies are flushed through writable handles before they close, retaining
+source permissions and Windows read-only attributes on the copy without changing
+the source. Flush errors remain fatal. Native theme preparation flushes owned
+generated files through the platform adapter. Windows directory flushing and
+power-loss guarantees remain outside the supported contract. Installation receipt
+fingerprints and published text share permission-preserving preparation; actual
+post-install permission drift still blocks restoration.
 
 [Setup](installation.md) preflights catalog composition, source contents and target identities before replacement. It retains verified original backups and journals its installation record with the same operation batch. Correct pre-existing links are not claimed. Unrelated links and conflicts block the batch; ordinary occupied objects require the displayed backup/replacement approval. Update reconciliation preserves the first installation baseline.
 

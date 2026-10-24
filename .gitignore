@@ -56,6 +56,7 @@ bin-release/
 !/bin/dots*
 
 # Machine-local theme connectors (colors are generated in XDG state).
+/config/bat/themes/Dots.tmTheme
 /config/kitty/dots-theme.conf
 /config/tmux/dots-theme.conf
 /config/vivid/themes/dots.yml
@@ -73,3 +74,6 @@ bin-release/
 /config/git/dots-theme.gitconfig
 /config/eza/theme.yml
 /config/television/themes/dots.toml
+
+/config/leaf/themes/dots.toml
+/config/leaf/themes/dots.tmTheme

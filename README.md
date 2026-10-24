@@ -1,14 +1,8 @@
 # dots
 
-`dots` is becoming a fast, safe, modular command center for managing dotfiles, scripts, shells, themes, packages, and environment setup across Termux, Linux, WSL, and native Windows.
+`dots` manages dotfiles, scripts, shells, themes and checkout setup across Termux, Linux, WSL and native Windows.
 
-## Status
-
-General Go implementation and migration are **paused** as of 2026-09-22. Current work focuses on maintaining the existing dotfiles, scripts, configurations, and documentation directly in the main checkout. Existing Go code, tests, and CI remain in place; the [roadmap](plans/roadmap.md#current-priority) tracks resumption.
-
-The repository contains the existing dotfiles collection, the modular Bash `bin/dots` command framework, and an isolated experimental Go core under `experiments/go-portability/`. The Go command architecture remains partially implemented, with general Go development paused except the owner-authorized Anodize slice. [Go adoption is accepted](docs/decisions/0002-phase-1-go-adoption.md), with Go 1.27.1 as the initial build/test baseline. The first permanent-core slice now adds a development executable and validated read-only built-in registry; a [bounded development external protocol](docs/decisions/0003-trusted-external-command-protocol.md) adds explicit-root discovery and dispatch. The broader command center remains deferred.
-
-There is not yet a supported remote installer or a production-ready `dots apply` workflow. Installation examples will be added only after the planner, transaction engine, backup/rollback behavior, and first Termux profile have been verified.
+The live CLI uses Bash and native PowerShell adapters with shared Python controllers for managed files, Git operations and themes. Anodize is an independent Go palette-authoring engine. See [installation](docs/installation.md) for existing-checkout setup, runtime requirements and platform limits.
 
 ## Bash Command Framework
 
@@ -62,6 +56,10 @@ full core and explicit suffix styles; combined category styles need Vivid 0.10+.
 See [Vivid compatibility](docs/file-colors.md#vivid-compatibility) for custom templates.
 
 `dots init --setup` and `dots files install` use the same engine. Ordinary `dots init [shell]` continues to print shell code without installation work. Use `./install.sh --update` for an explicit clean fast-forward update followed by setup, or `--with-source nvim` (repeatable) to initialize a named applicable public source. Missing optional sources are otherwise skipped; secrets are never initialized.
+
+Setup preserves existing text-file permissions and records those same permissions
+for restoration, including after theme changes and reconciliation. Generated
+machine-local theme links are excluded from the portable checkout.
 
 `./uninstall.sh` / `./uninstall.ps1` or `dots files uninstall` restores installer-owned targets to their original state, preserves user drift and retains the checkout and recovery records. Both workflows support preview, unattended approval, JSON and the existing color/progress controls. The native PowerShell frontend now routes file, Git, environment, theme and Anodize commands without Bash, with app-specific Windows destinations and native completion. Windows runtime and desktop acceptance remain pending; see [native PowerShell](docs/powershell.md) for requirements and limits. See [installation and recovery](docs/installation.md) for requirements, options and platform limits.
 
@@ -171,6 +169,8 @@ in Codex’s `/theme` picker. New sessions use the latest published colors; see
 
 eza also follows the selected palette through a generated `theme.yml` in an existing eza config directory. The default template adapts the supplied Catppuccin Mocha Mauve theme and shared Git roles. `EZA_CONFIG_DIR` and Windows APPDATA destinations are supported; existing LS_COLORS/EZA_COLORS overrides remain effective. See [eza setup](docs/themes.md#eza).
 
+Leaf can use Dots colors for both its interface and code highlighting with the [local Leaf build and setup](docs/themes.md#leaf). Select `theme = "themes/dots.toml"`; publication maintains the UI theme and its shared syntax file together.
+
 Television follows the selected palette through its generated `themes/dots.toml`. Select `[ui] theme = "dots"` in Television’s config; Dots refreshes the theme using a journaled connector. See [Television setup](docs/themes.md#television).
 `dots theme switcher` offers fullscreen FZF selection with a live color-palette
 preview below the list, styled with the current theme's published FZF colors,
@@ -218,7 +218,7 @@ bin/anodize preview dusk
 bin/anodize apply dusk --dry-run
 ```
 
-`dots anodize` provides the same routes. Run `anodize --help` for commands and examples, or `anodize create --help` for source and save options. Bash, Zsh and Fish completion is available through `anodize completion SHELL`; read the manual with `man -l man/anodize.1` from the checkout. See [shell setup](docs/anodize.md#shell-completion-and-manual) for loading completions and installing the manual. Saves use recoverable file transactions and do not activate themes. Apply separately with `--yes` after reviewing its preview. See [Anodize](docs/anodize.md) for image extraction, repeatable adjustments, imports/exports, dependencies and limitations. Dots Neovim integration uses the separate local Anodize.nvim checkout. Android APK and TUI remain follow-up work. This is a scoped exception to the general Go pause.
+`dots anodize` provides the same routes. Run `anodize --help` for commands and examples, or `anodize create --help` for source and save options. Bash, Zsh and Fish completion is available through `anodize completion SHELL`; read the manual with `man -l man/anodize.1` from the checkout. See [shell setup](docs/anodize.md#shell-completion-and-manual) for loading completions and installing the manual. Saves use recoverable file transactions and do not activate themes. Apply separately with `--yes` after reviewing its preview. See [Anodize](docs/anodize.md) for image extraction, repeatable adjustments, imports/exports, dependencies and limitations. Dots Neovim integration uses the separate local Anodize.nvim checkout. Android APK and TUI remain follow-up work.
 
 ## Files and Configuration Layout
 
@@ -274,7 +274,6 @@ Use `dots files link --pick --dry-run` to select and preview, or
 `dots files add --pick ~/.config/nvim` to choose files inside a registered location.
 See [file pickers](docs/files.md#interactive-file-pickers) for keys and safety details.
 
-
 ## Git and Managed Configurations
 
 `dots git` manages the dots repository and registered nested submodules. Status
@@ -328,7 +327,6 @@ file-type/MIME colors and icons; unchanged/skipped reasons and rollback remain
 visible. Defaults stay unchanged, dry runs describe plans, and JSON suppresses
 the added trace. See [verbose output](docs/presentation.md#verbose-operations).
 
-
 System discovery defaults to compact config-directory groups with colored counts
 and paths. Use `--verbose` for individual files and source mappings, or `--all` to
 include managed/excluded entries. `--json` always retains the full observed list.
@@ -372,139 +370,13 @@ After review, stage `config/nvim` and commit its new reference in `dots`. Config
 
 Initialization only retrieves source; it does not activate the configuration, install plugins or packages, or change the existing Neovim configuration. Follow the submodule's [installation instructions](https://github.com/5nik7/nvim#install-as-the-default-config) when deliberately activating it, preserving the existing config first. Keep platform-specific plugin, data, and cache directories separate. This source addition does not establish new `dots` platform or installation support.
 
-## Try the Permanent Development Core
-
-With Go 1.27.1 and Python 3 already installed, run from the existing checkout:
-
-```bash
-DOTS_DEV_BIN="$(python3 -B tools/verify_core.py build)"
-"$DOTS_DEV_BIN" --help
-"$DOTS_DEV_BIN" --version
-"$DOTS_DEV_BIN" doctor
-"$DOTS_DEV_BIN" doctor --json
-"$DOTS_DEV_BIN" commands
-"$DOTS_DEV_BIN" commands --check
-"$DOTS_DEV_BIN" commands --json
-```
-
-The verifier creates test-owned build/config/cache/output roots, disables Go downloads and telemetry, and prints only the resulting binary path on stdout. Nothing is installed or added to PATH. The artifact includes `bin/dots`, the optional public logo and sanitized build evidence; it may be removed with temporary storage. A configured `$DOTS` still controls optional-logo lookup. The active `bin/dots` and its directory flags are unchanged.
-
-PowerShell uses `python -B tools/verify_core.py build` to obtain the separate `.exe` path:
-
-```powershell
-$dev = python -B tools/verify_core.py build
-if ($LASTEXITCODE -ne 0) { throw "Development build failed" }
-& $dev --help
-& $dev --version
-& $dev doctor --json
-& $dev commands --json
-```
-
-Run `python3 -B tools/verify_core.py check` for isolated validation and `python3 -B tools/verify_core.py bench` for warm startup and registry measurements (`python` on Windows). Checks additionally need installed gofmt/readelf or LLVM, plus Zsh on Termux/Linux; benchmarks need hyperfine. Missing tools are reported without installation. See [testing](docs/testing.md#permanent-core-verification) and [the first-slice results](plans/phase-2-command-center.md). The development extension mechanism is opt-in per invocation: repeat prefix `--command-dir <absolute-trusted-directory>` to select roots. Each executable requires a strict JSON sidecar; use `commands`, `commands --json`, `commands --check`, or `<route> --help` for static inspection without execution. See the [exact protocol and example metadata](docs/commands.md#development-external-protocol). `commands --json` emits the [schema-1 catalog](docs/commands.md#machine-readable-command-catalog), including hidden and unavailable definitions with explicit attributes; no roots yields built-ins only. It cannot be combined with `--check`. No real dotfile extension ships. Unix executes native files; Windows supports `.exe` only in local case-insensitive NTFS roots. Selecting a root trusts its code; this is not a sandbox or publisher authentication. WSL execution, other completion renderers, installation, manifests, transactions, bootstrap and releases remain deferred.
-
-### Disposable Zsh completion demo
-
-The permanent Go development binary supports its own static `completion zsh` generator, separate from the live Bash framework’s on-demand three-shell adapters. The Go generator prints a static script and installs nothing. With an already built development binary in `DOTS_DEV_BIN` (from the build example above), run the following in a separate disposable Zsh process. `mktemp` creates only a new demo directory; retain or remove that exact directory after inspection. The demo uses temporary HOME and ZDOTDIR directories and does not edit live startup files. Zsh still reads its system zshenv, if present.
-
-```bash
-demo_root="$(mktemp -d "${TMPDIR:-/tmp}/dots-zsh-demo.XXXXXXXX")"
-mkdir "$demo_root/bin"
-ln -s "$DOTS_DEV_BIN" "$demo_root/bin/dots"
-"$DOTS_DEV_BIN" completion zsh > "$demo_root/completion.zsh"
-env -i HOME="$demo_root" ZDOTDIR="$demo_root" XDG_CONFIG_HOME="$demo_root" \
-  XDG_DATA_HOME="$demo_root" XDG_STATE_HOME="$demo_root" XDG_CACHE_HOME="$demo_root" \
-  TMPDIR="$demo_root" TERM=xterm PATH="$demo_root/bin" \
-  "$(command -v zsh)" -f
-```
-
-Inside that disposable shell, initialize its completion system without a dump file and source the generated script:
-
-```zsh
-autoload -Uz compinit
-compinit -i -D
-source "$HOME/completion.zsh"
-```
-
-Type `dots do` and press Tab to complete `doctor`. The disposable PATH resolves `dots` to the development binary; `dots --version` demonstrates that binding. Exit when finished.
-
-Routes and represented global spellings are completed; command flags and argument values are not inferred. To include external routes, generate with explicit prefix `--command-dir` roots and use that identical ordered root spelling in the completed invocation. The script performs no runtime discovery or extension execution. See the [completion contract](docs/commands.md#static-zsh-completion). Native Windows generation is distinct from Termux/Linux Zsh runtime verification.
-
-
-## Try the Portability Experiment
-
-**Implemented, experimental:** help, version output, and read-only platform diagnostics, verified natively on Termux Android/ARM64 and on Linux/AMD64 and Windows/AMD64 in GitHub Actions. The live `dots` command and dotfiles are unchanged. Linux and Windows CI results establish execution on the recorded runners; bounded distribution bundles have also been packaged, verified, extracted, and executed natively on all three targets. The minimal bundle direction and publisher-authentication requirement are accepted, but permanent release tooling, the signing mechanism, and production support remain pending.
-
-From the repository root, using the verified Go 1.27.1 toolchain and Python 3 without optimization (`PYTHONOPTIMIZE` unset or `0`; no `-O`/`-OO`). The verifier rejects optimized Python before invoking tools or creating build artifacts:
-
-```bash
-DOTS_SPIKE_BIN="$(python3 experiments/go-portability/tools/verify.py build)"
-DOTS="$PWD" "$DOTS_SPIKE_BIN" --help
-"$DOTS_SPIKE_BIN" --version
-"$DOTS_SPIKE_BIN" doctor
-"$DOTS_SPIKE_BIN" doctor --json
-```
-
-The build command prints the executable path on stdout and progress on stderr. It retains the binary, a public logo copy, and `evidence.json` in a unique directory under the temporary directory. Tool caches and build work are disposable; nothing is installed or added to `PATH`, and no dependencies are downloaded. Temporary artifacts may be removed by the system; rebuild when needed.
-
-The preserved experimental help still says “Go remains provisional”; that historical banner does not reflect the later adoption decision. It is unchanged to preserve the verified executable and evidence.
-
-Help loads the optional `logo.txt` from `$DOTS` or, when unset, beside the executable's parent `bin/` directory. Missing or unusable logos are omitted, and valid file symlinks are supported. Version and diagnostic output contain no logo. Diagnostics reports candidate paths and `not_probed` filesystem capabilities; it does not create files, load configuration contents, or apply changes.
-
-Run focused checks or startup measurements with:
-
-```bash
-python3 experiments/go-portability/tools/verify.py check
-python3 experiments/go-portability/tools/verify.py bench
-```
-
-Checks additionally use installed `gofmt` and `readelf` on Unix or `llvm-readobj` on Windows; measurements use installed `hyperfine`. Missing prerequisites are reported without installation. See the [experiment plan and results](plans/phase-1-portability.md), [testing instructions](docs/testing.md), and [platform evidence](docs/platforms.md). Linux/Windows compilation does not establish that those artifacts run on their target platforms.
-
-The Windows harness accepts native Windows/AMD64. With Go and Python already installed, PowerShell can build and try the separate executable:
-
-```powershell
-$spike = python experiments/go-portability/tools/verify.py build
-if ($LASTEXITCODE -ne 0) { throw "Experimental build failed" }
-& $spike --help
-& $spike --version
-& $spike doctor --json
-python experiments/go-portability/tools/verify.py check
-```
-
-Windows diagnostics explicitly leave known-folder resolution unimplemented and filesystem capabilities unprobed. Link tests report actual availability without changing security policy; copy checks run independently.
-
-The experimental distribution check builds, packages, verifies, extracts, and runs the native executable in disposable directories:
-
-```bash
-python3 experiments/go-portability/tools/verify.py dist
-```
-
-In PowerShell use `python experiments/go-portability/tools/verify.py dist`. This additionally needs installed Git. It uses the **committed** public logo, preserving and excluding any local logo edit. Go source inputs must match the recorded commit. Bundles contain the executable under `bin/`, the logo, and `bundle.json`; an external `SHA256SUMS` covers the `.tar.gz` (Termux/Linux) or `.zip` (Windows). The printed executable path belongs to the retained temporary artifact; bundles, checksums, and CLI logs are under its sibling `distribution/` directory. Nothing is installed. Checksums establish agreement with the supplied manifest, not publisher authentication. See the [distribution guarantees and limitations](docs/testing.md#experimental-distribution-check).
-
-## Intended Experience
-
-The proposed CLI uses discoverable command groups:
-
-```text
-dots status
-dots spec
-dots plan
-dots apply
-dots files list
-dots links check
-dots example apply <name>
-```
-
-External commands named `dots-*` with matching sidecars can be available through explicitly selected trusted roots. For example, `dots-example-apply` can provide `dots example apply` without adding routing code to the dispatcher.
-
-These examples describe the intended interface and are not yet implemented.
-
 ## Design Priorities
 
 1. Protect existing files and preserve a reliable path back.
 2. Keep command dispatch, planning, and shell startup fast.
 3. Show a complete plan before changing a machine.
 4. Use symbolic links by default and copy only when explicitly selected.
-5. Compose shared files with platform-, profile-, and host-specific modules.
+5. Keep repository ownership and platform-specific destinations explicit.
 6. Keep private sources and large optional assets out of the minimum bootstrap path.
 7. Keep behavior, tests, help, completions, and documentation synchronized.
 
@@ -512,25 +384,18 @@ These examples describe the intended interface and are not yet implemented.
 
 - [`AGENTS.md`](AGENTS.md) — authoritative instructions for agents and contributors.
 - [`docs/principles.md`](docs/principles.md) — product and engineering priorities.
-- [`docs/architecture.md`](docs/architecture.md) — proposed system boundaries and repository structure.
-- [`docs/commands.md`](docs/commands.md) — proposed command family and extension model.
-- [`docs/specification.md`](docs/specification.md) — draft modules, profiles, hosts, and manifests.
+- [`docs/architecture.md`](docs/architecture.md) — implemented component boundaries and repository ownership.
+- [`docs/commands.md`](docs/commands.md) — implemented command families and extension model.
+- [`docs/specification.md`](docs/specification.md) — theme, catalog, shell and installation data contracts.
 - [`docs/safety.md`](docs/safety.md) — planning, transactions, backups, rollback, and undo.
 - [`docs/platforms.md`](docs/platforms.md) — Termux, Linux, WSL, and Windows model.
 - [`docs/testing.md`](docs/testing.md) — test isolation, failure cases, and performance measurement.
-- [`docs/current-repository.md`](docs/current-repository.md) — baseline inventory and migration constraints.
-- [`plans/roadmap.md`](plans/roadmap.md) — phased implementation roadmap.
-- [`plans/termux-mvp.md`](plans/termux-mvp.md) — first end-to-end implementation target.
 
 The complete documentation index is in [`docs/README.md`](docs/README.md).
 
 ## Contributing With an Agent
 
 Agents must read [`AGENTS.md`](AGENTS.md) before changing the project and then read the task-specific guide under [`agents/guides/`](agents/guides/). A behavior change is incomplete until the corresponding tests, plans, and source-of-truth documentation are updated in the same change.
-
-## Migration Approach
-
-The current dotfiles remain available for ordinary maintenance while migration is paused. When resumed, migration will proceed one module at a time, beginning with a small Termux profile. Existing submodules, platform repositories, large assets, and actively used scripts will not be removed or reorganized without a focused plan and recovery path.
 
 ## Development Worktrees
 
@@ -594,4 +459,4 @@ The saved [Blastoff `dots` theme](config/blastoff/themes/dots.toml) uses shared 
 
 ## Termux location lookup
 
-Androidots provides `termux-geo` for device coordinates and Nominatim city/state/postal information, with Dots human output, delayed progress, JSON in pipes, scalar getters and cache-only reads. `termux-geo completion --all --install` installs static completions into Androidots-local Bash/Zsh/Fish directories recognized by personal Termux startup. See the [location command reference](androidots/docs/termux-geo.md) for dependencies, service restrictions, flags, and completion activation.
+Androidots provides `termux-geo` for device coordinates and Nominatim city/state/postal information, with Dots human output, delayed progress, JSON in pipes, scalar getters and cache-only reads. `termux-geo completion --all --install` installs static completions into Androidots-local Bash/Zsh/Fish directories recognized by personal Termux startup. See the [location command reference](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md) for dependencies, service restrictions, flags, and completion activation.

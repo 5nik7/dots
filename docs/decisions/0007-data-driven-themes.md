@@ -2,7 +2,6 @@
 
 Plural CLI compatibility is superseded by [decision 0012](0012-unified-theme-cli.md). The original decision below records its historical scope.
 
-
 Status: Accepted
 Date: 2026-09-22
 
@@ -12,7 +11,7 @@ The original slice below is preserved as decision history. [Decision 0008](0008-
 
 The owner approved extracting Catppuccin's four palettes into TOML, preserving
 legacy script APIs, adding theme commands and completion, and synchronizing Zsh
-and Neovim while further Go implementation remains paused.
+and Neovim.
 
 ## Decision
 
@@ -31,7 +30,7 @@ exception allowing arbitrary extensions to overwrite application configs.
 
 Completion adds four closed core-owned data types to Bash metadata: `theme`,
 `flavor`, `palette-color`, and `color-format`. They read palette data without
-executing extensions. The separate Go protocol remains unchanged.
+executing extensions.
 
 ## Consequences
 

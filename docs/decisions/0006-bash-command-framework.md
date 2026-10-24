@@ -5,7 +5,7 @@ Date: 2026-09-22
 
 ## Context and Decision
 
-The owner approved developing the live Bash command while Go work is paused:
+The live Bash command supports
 repository/local discovery, optional comment metadata, colored Nerd Font output,
 and on-demand Bash/Zsh/Fish completion. This implements the command framework,
 not actual theme, package, installation, or transaction features.
@@ -27,13 +27,6 @@ environment variables select auto/always/never modes. Extensions opt into shared
 Bash helpers. The dispatcher does not intercept their output or claim to enforce
 an extension's behavior. There is no automatic elevation or installer.
 
-## Relationship to Earlier Decisions
-
-This is the authoritative protocol for the live Bash executable. It supersedes
-applying decisions 0003–0005's explicit-roots-only, mandatory-JSON, no-symlink,
-and static-Zsh-only restrictions to this Bash surface. Those decisions remain
-unchanged for the separate Go development executable. The Go language decision,
-existing source, tests, and CI are preserved; further Go development stays paused.
 The reserved core namespaces remain protected in Bash.
 
 ## Alternatives

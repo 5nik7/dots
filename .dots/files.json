@@ -305,10 +305,14 @@
       "platforms": [
         "termux",
         "linux",
-        "wsl"
+        "wsl",
+        "windows"
       ],
       "target": "${CONFIG}/leaf",
-      "strategy": "directory-link"
+      "strategy": "directory-link",
+      "targets": {
+        "windows": "${APP_CONFIG:leaf}"
+      }
     },
     {
       "id": "lsd",

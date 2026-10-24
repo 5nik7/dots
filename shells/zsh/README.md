@@ -103,7 +103,7 @@ Run from the repository root:
 python3 -B tools/test_zsh.py
 python3 -B tools/zsh_fixture.py --samples 10
 python3 -B tools/zsh_interactive.py --samples 5
-python3 -B tools/verify_core.py docs
+python3 -B tools/verify_docs.py
 git diff --check
 ```
 

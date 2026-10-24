@@ -1,5 +1,0 @@
-# The harness writes outside the checkout. Ignore accidental local tool output too.
-/dots-spike
-*.test
-*.exe
-__pycache__/

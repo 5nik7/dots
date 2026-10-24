@@ -1,6 +1,6 @@
 # Unified shell initialization
 
-**Implemented, 2026-09-29.** This owner-authorized maintenance change adds `dots init` for Bash, Zsh, Fish, PowerShell, Nushell, and Xonsh. General Go migration remains paused.
+**Implemented, 2026-09-29.** This owner-authorized maintenance change adds `dots init` for Bash, Zsh, Fish, PowerShell, Nushell, and Xonsh.
 
 ## Contract and migration
 

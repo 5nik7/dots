@@ -40,7 +40,7 @@ class InstallationTests(unittest.TestCase):
                         GIT_CONFIG_NOSYSTEM='1', GIT_TERMINAL_PROMPT='0')
         self.env.update(CODEX_HOME=str(self.home/'.codex'), PI_CODING_AGENT_DIR=str(self.home/'.pi/agent'),
                         XDG_CACHE_HOME=str(self.home/'.cache'), XDG_DATA_HOME=str(self.home/'.data'))
-        for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG', 'TELEVISION_CONFIG', 'DOTS_APP_TELEVISION_CONFIG'):
+        for key in ('EZA_CONFIG_DIR', 'DOTS_APP_EZA_CONFIG', 'TELEVISION_CONFIG', 'DOTS_APP_TELEVISION_CONFIG', 'DOTS_APP_LEAF_CONFIG'):
             self.env.pop(key, None)
         self.write('.dots/sources.json', {'schema':1,'sources':[dict(id='dots',path='.',roots=['config','bin'],platforms=['termux','linux','wsl','windows'])]})
         self.write('.dots/files.json', {'schema':1,'repository':'dots','resources':[dict(id='example',source='config/example/settings',target='${CONFIG}/example/settings',strategy='link',app='example',category='config',platforms=['termux','linux','wsl','windows'])]})
@@ -342,6 +342,35 @@ p.apply('install')
         self.assertFalse(target.is_symlink())
         self.assertEqual((source / 'reference.yml').read_text(), 'colourful: true\n')
 
+    def test_leaf_setup_two_connectors_and_restore(self):
+        self.theme_fixture()
+        source = self.repo / 'config/leaf'
+        source.mkdir()
+        (source / 'config.toml').write_text('theme = "themes/dots.toml"\n')
+        doc = json.loads((self.repo / '.dots/files.json').read_text())
+        doc['resources'].append(dict(id='leaf', source='config/leaf',
+            target='${APP_CONFIG:leaf}' if os.name == 'nt' else '${CONFIG}/leaf',
+            strategy='directory-link', app='leaf', category='config',
+            platforms=['termux','linux','wsl','windows']))
+        self.write('.dots/files.json', doc)
+        self.env['DOTS_APP_LEAF_CONFIG'] = str(self.home / 'other leaf')
+        preview = self.cli('install', '--dry-run', '--json').stdout
+        if os.name != 'nt':
+            self.assertNotIn(str(source / 'themes/dots.toml'), preview)
+        self.env.pop('DOTS_APP_LEAF_CONFIG')
+        self.cli('install', '--yes')
+        ui = source / 'themes/dots.toml'
+        syntax = source / 'themes/dots.tmTheme'
+        self.assertTrue(ui.is_symlink())
+        self.assertTrue(syntax.is_symlink())
+        self.assertIn('syntax = "dots.tmTheme"', ui.read_text())
+        self.assertIn('<plist', syntax.read_text())
+        self.assertEqual(json.loads(self.cli('install','--yes','--json').stdout)['status'], 'unchanged')
+        self.cli('uninstall', '--yes')
+        self.assertFalse(ui.is_symlink())
+        self.assertFalse(syntax.is_symlink())
+        self.assertEqual((source / 'config.toml').read_text(), 'theme = "themes/dots.toml"\n')
+
     @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
     def test_legacy_vivid_setup_notice_json_and_repeat(self):
         self.theme_fixture()
@@ -399,7 +428,7 @@ p.apply('install')
         names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','-z','--',
             '.dots','bin','lib','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
-        names.update(('config/fsh/README.md','default/themed/eza.yml.tpl','default/themed/television.toml.tpl','lib/dots/themes/generation.bash',
+        names.update(('config/fsh/README.md','default/themed/eza.yml.tpl','default/themed/television.toml.tpl','default/themed/leaf.toml.tpl','lib/dots/themes/generation.bash',
                       'lib/dots/files/events.py', 'lib/dots/verbose.bash', 'lib/dots/files/app_paths.py'))
         names.update(str(p.relative_to(ROOT)) for p in (ROOT/'lib/dots/metadata').glob('*.meta'))
         shutil.rmtree(self.repo)
@@ -564,6 +593,18 @@ p.apply('install')
 
     @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
     def test_real_theme_install_repeat_and_restore(self):
+        for mask in (0o22, 0o77):
+            with self.subTest(umask=oct(mask)):
+                previous = os.umask(mask)
+                fixture = type(self)()
+                try:
+                    fixture.setUp()
+                    fixture.check_real_theme_install_repeat_and_restore()
+                finally:
+                    fixture.doCleanups()
+                    os.umask(previous)
+
+    def check_real_theme_install_repeat_and_restore(self):
         shutil.copytree(ROOT/'lib',self.repo/'lib',symlinks=True)
         shutil.copytree(ROOT/'themes',self.repo/'themes',symlinks=True)
         shutil.copytree(ROOT/'default',self.repo/'default',symlinks=True)
@@ -600,6 +641,8 @@ dt_set rose-pine-dawn
         self.cli('install','--yes')
         self.assertEqual((active/'id').read_text().strip(),'rose-pine-dawn')
         self.assertEqual(self.receipt()['entries'][str(active)]['before'],receipt['entries'][str(active)]['before'])
+        for path, entry in self.receipt()['entries'].items():
+            self.assertEqual(digest(path), entry['after'], path)
         self.cli('uninstall','--yes')
         self.assertFalse(active.is_symlink())
         self.assertFalse(connector.is_symlink())

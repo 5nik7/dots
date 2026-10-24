@@ -4,7 +4,7 @@
 
 ## Scope and decisions
 
-- Ship `dots-menu-tmux-keys` and the automatically discovered `dots menu tmux keys` route. Show described live bindings, including tmux defaults/plugins, in a searchable, read-only less pager; `--print` bypasses paging. No action selector, raw-command fallback, JSON, Go changes, installation, server reload, or state writes.
+- Ship `dots-menu-tmux-keys` and the automatically discovered `dots menu tmux keys` route. Show described live bindings, including tmux defaults/plugins, in a searchable, read-only less pager; `--print` bypasses paging. No action selector, raw-command fallback, JSON, installation, server reload, or state writes.
 - Use Dots headings/styles and controls; retain the user's replacement of the Omarchy call in `config/tmux/tmux.conf`. The current binding inherits the shared popup border and retains its bold yellow icon title through tmux's styled `-T`. The 2026-10-22 follow-up gives all popups the shared theme’s `background` and `foreground`, with `lighter_background` borders and terminal-color fallbacks before publication. The new command must be on tmux's PATH.
 - Keep less optional, with warning plus complete printed fallback. Normal exit/empty results succeed, invalid syntax returns 2, operational failures return 1, and pager interruption returns 130. Static help/completion never contact tmux.
 - Prefix legend uses the current pane's session when available. Group notes by table: prefix, root, copy-mode-vi, copy-mode, then custom tables; omit empty sections. Preserve tmux key spelling and within-table order.

@@ -146,7 +146,7 @@ Anodize has an owner-requested [branding exception](anodize.md#terminal-logo): i
 
 The dispatcher forwards extension streams unchanged. First-party extensions, including relevant Androidots and other submodule commands, follow this contract when added or changed, respecting their local guides. User and third-party extensions are encouraged to use the helpers; the dispatcher does not restyle arbitrary output. Generated app configuration and application UIs retain their own formats and theme contracts.
 
-Preserve the unified theme data interfaces and palette helper APIs. The singular/plural theme split is defined by [decision 0013](decisions/0013-shell-environment-and-theme-collection.md); styling changes do not independently authorize API removal. Styling work must not add shell-startup scans, load live user configuration, require optional UI dependencies, or change command semantics. The paused Go core and historical experiments retain their current behavior until separately authorized work applies this contract.
+Preserve the unified theme data interfaces and palette helper APIs. The singular/plural theme split is defined by [decision 0013](decisions/0013-shell-environment-and-theme-collection.md); styling changes do not independently authorize API removal. Styling work must not add shell-startup scans, load live user configuration, require optional UI dependencies, or change command semantics.
 
 ## Acceptance Gate
 
@@ -212,7 +212,7 @@ retaining the addressed panel's foreground/background. Selectors keep their nati
 widget styling and internal plain selection labels. Child streams remain intact.
 
 The live surface audit is in [the implementation plan](../plans/cli-presentation.md).
-Standalone scripts, nested-project tools and paused Go implementations are outside
+Standalone scripts, nested-project tools are outside
 this rollout. Native bootstrap adapters follow the same semantic color controls
 without requiring Python or Bash merely to print a missing-dependency error.
 

@@ -4,5 +4,3 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !/usr/bin/gh auth git-credential
-
-# vim: set noet ft=gitconfig ts=4 sw=4 tw=0 ff=unix:
