@@ -147,3 +147,7 @@ Dots settings and variables are documented in [the environment contract](../../d
 Interactive startup puts the existing `${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions` directory first in `fpath` after plugin setup, before compinit, and exports `FPATH`. Termux also registers `$DOTS/androidots/shells/zsh/completions` when Androidots is present. Repository, plugin and package fallbacks remain available; the repository Zsh completion directory is no longer added to executable `PATH`. Start a new shell or reload configuration after changes; `rlcs` re-registers the local directory and rebuilds discovery. See [user-local completion paths](../../docs/shell-init.md#user-local-completion-directories).
 
 Platform modules now load only for their active profile. See [profiles](../../docs/profiles.md).
+
+## Keybinding reference
+
+`dots keys zsh` captures the current shell's maps through the Dots integration adapter. Use `--mode viins` or `--mode vicmd` to focus the reference. No keymap scans occur during startup. The Termux local vi-mode hook normalizes both Backspace encodings after initialization and transitions. See [keybindings](../../docs/keys.md).

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# dots:summary=Choose a category and browse readable keybindings
+# dots:usage=[APP] [OPTIONS]
+# dots:argument=1|choice:all,apps,bash,fzf,kitty,nvim,powershell,television,tmux,yazi,zsh|Browse all bindings, choose an app, or filter by application
+# dots:option=--query||string|Initial search text
+# dots:option=--mode||string|Filter by exact keymap or mode
+# dots:option=--source||choice:live,configured,all|Select binding evidence
+# dots:option=--no-defaults||flag|Exclude identified installed defaults
+# dots:option=--print||flag|Print without opening FZF
+# dots:option=--json||flag|Print versioned binding data
+# dots:option=--browse||flag|Open the picker explicitly
+# dots:example=dots keys
+# dots:example=dots keys all
+# dots:example=dots keys zsh --mode viins
+# dots:example=dots keys yazi --print
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/keys_cli.py" "$@"

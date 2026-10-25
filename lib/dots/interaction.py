@@ -150,25 +150,32 @@ class RichSelector:
                 return self.fzf(title, labels, multi, preview, color, icons, colors)
             return self.fallback(title, labels, multi)
 
-    def fzf(self, title, labels, multi, preview, color, icons, colors):
+    def fzf(self, title, labels, multi, preview, color, icons, colors, popup=False, query='',
+            height=None, preview_size=55, header=None):
         flags = ['fzf', '--read0', '--print0', '--ansi', '--delimiter=\t',
                  '--with-nth=2..', '--layout=reverse', '--no-height',
                  '--multi' if multi else '--no-multi', '--prompt=' + title + ': ',
                  '--bind=esc:abort,ctrl-c:abort', '--header=Enter: review  Esc: cancel']
         keys = 'Enter: review  Esc: cancel'
+        if popup:
+            flags += ['--popup', popup if isinstance(popup, str) else 'center,90%']
+        elif height is not None:
+            flags += ['--height=' + str(height)]
+        if query:
+            flags += ['--query=' + query]
         if multi:
             flags += ['--bind=tab:toggle+down,btab:toggle+up,ctrl-a:select-all,ctrl-d:deselect-all']
             keys += '\nTab: mark  Shift-Tab: mark/up\nCtrl-A: all matches  Ctrl-D: clear'
         if preview:
             # Preview commands contain only environment references and a numeric token.
             flags += ['--preview=' + preview[0],
-                      '--preview-window=' + ('down,55%' if shutil.get_terminal_size().columns < 100 else 'right,55%'),
+                      '--preview-window=' + ('down,' if shutil.get_terminal_size().columns < 100 else 'right,') + str(preview_size) + '%',
                       '--bind=alt-p:toggle-preview,alt-j:preview-down,alt-k:preview-up']
             if preview[1]:
                 flags += ['--bind=alt-c:execute-silent(' + preview[1] + ')+refresh-preview']
                 keys += '\nAlt-C: change preview view'
             keys += '\nAlt-P: pane  Alt-J/K: scroll'
-        flags = [f for f in flags if not f.startswith('--header=')] + ['--header=' + keys]
+        flags = [f for f in flags if not f.startswith('--header=')] + ['--header=' + (keys if header is None else header)]
         if not color:
             flags += ['--color=bw']
         elif colors:

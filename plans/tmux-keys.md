@@ -1,5 +1,7 @@
 # Tmux keybinding reference
 
+Current follow-up: the shared [keybinding browser](keys.md) supersedes the less viewer and popup wrapper below; earlier verification remains historical.
+
 **Status: Implemented and verified on Termux, including popup theme colors on 2026-10-22.**
 
 ## Scope and decisions

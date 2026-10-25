@@ -118,6 +118,12 @@
       "source": "docs/leaf-build.md"
     },
     {
+      "id": "Keybindings",
+      "title": "Keybinding reference",
+      "section": "Tools and troubleshooting",
+      "source": "docs/keys.md"
+    },
+    {
       "id": "Debug",
       "title": "Debugging",
       "section": "Tools and troubleshooting",

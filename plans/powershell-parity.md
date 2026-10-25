@@ -146,3 +146,5 @@ Wiki commands and associated repository operations share Python controllers acro
 
 
 Detailed debug trees, state capture and current-session PATH recording now have shared routes and a native PowerShell adapter. Actual PowerShell 5.1/7 breakpoint behavior, private-file ACLs, process identity and normal-exit cleanup remain pending native acceptance; portable fixtures do not establish these claims.
+
+Keybinding browser: shared routes/options and PSReadLine on-demand JSON capture are implemented. Native PowerShell 5.1/7 caller capture, UTF-8 pipeline and FZF terminal acceptance remain pending where engines are unavailable. No Bash bridge is used on Windows.

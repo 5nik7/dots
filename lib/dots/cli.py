@@ -377,6 +377,7 @@ def main(argv=None):
     if parts[0] in ('profile', 'profiles'): return controller('profiles.py', [*parts, *rest])
     if parts[0] == 'wiki': return controller('wiki.py', [*parts[1:], *rest])
     if parts[:2] == ['git','wiki']: return controller('wiki_git.py', [*parts[2:], *rest])
+    if parts[0] == 'keys': return controller('keys_cli.py', [*parts[1:], *rest])
     if parts[0] == 'debug': return controller('debug_cli.py', [*parts[1:], *rest])
     if parts[0] == 'env': return controller('environment.py', rest)
     if parts[0] == 'git':
@@ -393,8 +394,7 @@ def main(argv=None):
         if parts[1:2] == ['colors']: return controller('themes/file-colors.py', [*parts[2:], *rest])
         if parts[1:2] == ['plugins'] and len(parts) > 2: return controller('themes/plugins.py', [*parts[2:], *rest])
         return controller('themes/theme_cli.py', [*parts[1:], *rest])
-    if stem == 'menu-tmux-keys' and os.name != 'nt':
-        return subprocess.call(['bash', str(path), *rest])
+    if stem == 'menu-tmux-keys': return controller('keys_cli.py', ['tmux', *rest])
     raise ValueError('command requires a POSIX/tmux session: ' + stem.replace('-', ' '))
 
 

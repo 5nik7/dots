@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# dots:summary=Browse described live tmux keybindings in a searchable pager
-# dots:usage=[--print]
-# dots:option=--print||flag|Print without opening a pager
+# dots:summary=Browse readable live tmux keybindings with FZF
+# dots:usage=[--print|--json|--browse] [OPTIONS]
+# dots:option=--print||flag|Print without opening FZF
+# dots:option=--json||flag|Print versioned binding data
+# dots:option=--browse||flag|Open FZF explicitly, including from a tmux binding
+# dots:option=--query||string|Initial search text
+# dots:option=--mode||string|Filter a tmux key table
 # dots:example=dots menu tmux keys
-# dots:example=dots --color=always menu tmux keys --print
-DT_KEYS_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
-# shellcheck source-path=SCRIPTDIR
-# shellcheck source=../lib/dots/tmux-keys.bash
-source "$DT_KEYS_LIB/tmux-keys.bash"
-dots_tmux::main "$@"
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/keys_cli.py" tmux "$@"

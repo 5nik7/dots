@@ -121,3 +121,7 @@ Wiki routes and associated Git operations use the shared controllers, including 
 
 
 Detailed debug options share the common command metadata. Native changes use in-memory comparisons; registered script breakpoints supply line observations where available. PATH recording uses explicitly dot-sourced start/stop code and native breakpoint callbacks. Existing breakpoints prevent conflicting activation. No Bash dependency is introduced. Native Windows PowerShell 5.1/7 debugger, recording cleanup and terminal checks remain pending.
+
+## Keybinding inspection
+
+The native controller supports all `dots keys` options and the category/app menus without Bash. Redirected, print and JSON modes retain their data/report behavior. Interactive integration adds an on-demand PSReadLine adapter that exports bound-handler names/descriptions as JSON. Existing user `dots` functions remain untouched. FZF runs in the ordinary terminal on native Windows; tmux is an explicit optional platform capability. Actual PowerShell 5.1/7 encoding, input and terminal acceptance remains pending when those engines are unavailable.

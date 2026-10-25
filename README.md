@@ -63,17 +63,13 @@ machine-local theme links are excluded from the portable checkout.
 
 `./uninstall.sh` / `./uninstall.ps1` or `dots files uninstall` restores installer-owned targets to their original state, preserves user drift and retains the checkout and recovery records. Both workflows support preview, unattended approval, JSON and the existing color/progress controls. The native PowerShell frontend now routes file, Git, environment, theme and Anodize commands without Bash, with app-specific Windows destinations and native completion. Windows runtime and desktop acceptance remain pending; see [native PowerShell](docs/powershell.md) for requirements and limits. See [installation and recovery](docs/installation.md) for requirements, options and platform limits.
 
+## Keybinding browser
+
+`dots keys` opens a compact FZF category menu with Nerd Font icons. All opens the combined reference; Apps offers provider counts and availability before opening a provider. Use `dots keys all` or `dots keys zsh --mode viins` to browse directly, `dots keys yazi --print` for text, or `dots keys apps --print` for coverage. Binding browsers show readable keys such as `Ctrl+G` in bold bright magenta, muted modes/metadata, descriptions and live/configured evidence. Inside tmux the browser uses `fzf --popup center,99%` with a 45% preview; outside tmux it uses ordinary FZF. Missing FZF prints a readable list. `--json` stays undecorated. Neovim's `:DotsKeys` captures effective global and buffer mappings. See [keybinding browsing](docs/keys.md).
+
 ## Tmux keybinding reference
 
-`dots menu tmux keys` (or `dots-menu-tmux-keys`) shows described live tmux bindings, including defaults and plugins, grouped by key table with colorized keys and a prefix legend. Compact rows keep each key beside its description, including in narrow popups. The optional `less` pager provides `/` search, `n` next match, and `q` to close; bindings are never executed. Use `--print` to bypass paging. Redirected output defaults to plain text; the standard Dots color controls apply.
-
-The repository tmux config uses:
-
-```tmux
-bind -N "Show Tmux keybindings" ? display-popup -E -w 85% -h 85% -T "#[fg=yellow,bold]󰌆#[default]" "dots-menu-tmux-keys"
-```
-
-Popup borders use the selected Dots theme’s `lighter_background` on `background`. The keybindings popup retains its bold yellow icon title from the terminal palette. All popups use the selected Dots theme’s `background` and `foreground`, with terminal defaults before a theme is published; explicit per-popup styles can override these colors. Keep the repository `bin` directory on tmux's PATH. This requires a running tmux server with `list-keys -F` and `q|a` formats (verified on Termux with tmux 3.7c); unsupported versions report an error. No server is started or reloaded. Without `less`, the command warns and prints instead. See the [command reference](docs/commands.md#tmux-keybinding-reference).
+`dots menu tmux keys` and `dots-menu-tmux-keys` remain compatibility entries for `dots keys tmux`. Prefix → ? invokes `dots keys --browse` through `run-shell -b`, opening the compact category menu before the binding browser. FZF owns each popup. Escape/Ctrl-C closes the shortcut quietly; genuine failures remain visible. Direct CLI cancellation still returns 130. `--print` bypasses the picker. No binding is executed and no tmux server is started or reloaded. Existing shared tmux popup styling remains available to other popups; this picker uses the published FZF theme. See [tmux compatibility](docs/keys.md#tmux-compatibility).
 
 ## Tmux status and sessions
 

@@ -79,3 +79,5 @@ When a plan is complete, retain it if it explains migration or decision history.
 - [Dots wiki](wiki.md) — generated documentation, sidebar, maintenance skills and associated Git operations.
 
 - [Detailed debug tracing](debug-tracing.md) — nested reports, state changes, source maps and opt-in PATH history.
+
+- [Keybinding browser](keys.md) — readable live/configured shortcuts and vi-mode Backspace consistency.

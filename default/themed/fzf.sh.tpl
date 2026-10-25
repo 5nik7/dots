@@ -1,7 +1,7 @@
 export _FZF_COLORS_="\
 bg+:-1,\
 bg:-1,\
-preview-bg:{{ dark_background }},\
+preview-bg:{{ background }},\
 fg+:strip:{{ accent }}:bold,\
 fg:regular,\
 hl:{{ selection_foreground }}:underline,\
@@ -25,7 +25,7 @@ preview-label:{{ lighter_background }},\
 separator:{{ background }},\
 border:{{ lighter_background }},\
 list-border:{{ lighter_background }},\
-preview-border:{{ dark_background }},\
+preview-border:{{ lighter_background }},\
 input-border:{{ lighter_background }},\
 nomatch:strip:{{ dark_foreground }}:italic"
 

@@ -1,6 +1,3 @@
-prepath "${droid[bin]}"
-fpath=(${droid[bin]} $fpath)
-
 [ -z $USER ] && export USER="$(whoami)"
 
 export ZSH_SYSTEM_CLIPBOARD_METHOD="termux"
@@ -10,21 +7,34 @@ zvm_config() {
   ZVM_CLIPBOARD_COPY_CMD='termux-clipboard-set'
   ZVM_CLIPBOARD_PASTE_CMD='termux-clipboard-get'
 
-  ZVM_OPEN_CMD='open'
-  ZVM_OPEN_URL_CMD='open'
+  ZVM_OPEN_CMD='termux-open'
+  ZVM_OPEN_URL_CMD='termux-open-url'
   ZVM_OPEN_FILE_CMD='nvim'
-  ZVM_VI_HIGHLIGHT_FOREGROUND="${crust[hex]}"
-  ZVM_VI_HIGHLIGHT_BACKGROUND="${flamingo[hex]}"
+  ZVM_VI_HIGHLIGHT_FOREGROUND="${selection_foreground[hex]}"
+  ZVM_VI_HIGHLIGHT_BACKGROUND="${selection_background[hex]}"
   ZVM_VI_HIGHLIGHT_EXTRASTYLE=bold
 
 }
+
+# Normalize both terminal Backspace encodings after vi-mode installs its maps.
+_dots_termux_zvm_insert_bindings() {
+  bindkey -M viins '^H' backward-delete-char
+  bindkey -M viins '^?' backward-delete-char
+}
+typeset -ga zvm_after_init_commands zvm_after_select_vi_mode_commands
+(( ${zvm_after_init_commands[(Ie)_dots_termux_zvm_insert_bindings]} )) ||
+  zvm_after_init_commands+=(_dots_termux_zvm_insert_bindings)
+(( ${zvm_after_select_vi_mode_commands[(Ie)_dots_termux_zvm_insert_bindings]} )) ||
+  zvm_after_select_vi_mode_commands+=(_dots_termux_zvm_insert_bindings)
+_dots_termux_zvm_insert_bindings
+
+zinit ice depth=1
+zinit light jeffreytse/zsh-vi-mode
 
 zinit light kutsan/zsh-system-clipboard
 
 bindkey -M vicmd Y zsh-system-clipboard-vicmd-vi-yank-eol
 bindkey "^V" zsh-system-clipboard-vicmd-vi-put-after
-
-zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
 export LYNX_CFG="${dot[configs]}/lynx/lynx.cfg"
 export LYNX_LSS="${dot[configs]}/lynx/lynx.lss"

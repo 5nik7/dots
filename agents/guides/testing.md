@@ -85,7 +85,7 @@ For the status adapter/configuration, run `python3 -B tools/test_tmux_status.py`
 
 ## Tmux keybinding reference
 
-For `dots menu tmux keys`, run `python3 -B tools/test_tmux_keys.py`, the Bash dispatcher suite, and the syntax/ShellCheck commands in the [testing reference](../../docs/testing.md#tmux-keybinding-reference). Keep native tmux sockets, sessions, configs and PTYs test-owned; never load the user's config or modify the live server. Preserve Termux's inherited `LD_PRELOAD`. Record missing tmux/less native checks as skips and retain static-help/completion nonexecution coverage.
+For `dots keys` and `dots menu tmux keys`, run `python3 -B tools/test_keys.py`, `python3 -B tools/test_tmux_keys.py`, the Bash dispatcher suite, and the syntax/ShellCheck commands in the [testing reference](../../docs/testing.md#keybinding-browser-and-tmux-reference). Cover category/app navigation, content-sized menus, 99% binding popups, 45% previews, field colors and cancellation. Keep native tmux sockets, sessions, configs and PTYs test-owned; tests must never load the user's config or modify the live server. Preserve Termux's inherited `LD_PRELOAD`. Record missing tmux/FZF native checks as skips and retain static-help/completion nonexecution coverage.
 
 ## Existing Yazi Configuration
 
@@ -279,3 +279,5 @@ For wiki changes, follow [the wiki guide](wiki.md) and run its isolated generati
 
 
 For detailed startup/PATH recording, run `python3 -B tools/test_debug_tracing.py` and the affected suites in the debugging section of the testing reference. Use owned native shells and temporary record files; never activate a recorder in the developer shell. Preserve interval/coverage distinctions, selected-value redaction and terminal/data-output checks.
+
+For keybinding browser changes, run `tools/test_keys.py`, `tools/test_tmux_keys.py` and `tools/test_keys_zle.py` sequentially with Python. Use caller-owned native maps, public plugin copies and private tmux sockets. Keep configured/live coverage separate and never inspect by starting personal app profiles. Follow [keybinding verification](../../docs/testing.md#keybinding-browser-and-tmux-reference).

@@ -473,3 +473,7 @@ Opt-in PATH recording installs native hooks only when generated start code is ex
 Wiki inspection/source-only checks never acquire repositories or write exports. Explicit builds preflight all source/target guards, refuse generated-file drift, preserve unknown files and use retained common transactions for replacement, removal, rollback and undo. Initial acquisition uses a staging directory, lock and durable journal, with atomic no-replace publication.
 
 Wiki Git operations preserve ordinary ownership/upstream/refspec/lock checks. The associated wiki follows successful source publication and must match the selected source content; wiki-only publication verifies published source evidence. No automatic generation, staging, commit or push is installed. Completed Git work is retained after partial failure.
+
+## Keybinding inspection
+
+Key browsing never executes binding actions, shell/Lua configuration or returned code. Caller adapters export mapping metadata on demand, omitting shell macro/command bodies and Lua function bodies. Temporary preview/Neovim snapshots are inert data; the picker clears inherited FZF action/preview options and uses numeric selection identities. Application queries never start a tmux server or initialize missing plugins. Configured binding identifiers and source paths remain visible; no environment-value dump is performed.

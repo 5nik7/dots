@@ -26,13 +26,13 @@ PLATFORMS = {"termux", "linux", "wsl", "windows"}
 
 class Presentation:
     """Python rendering of the same terminal/color/icon policy as ui.bash."""
-    def __init__(self, stream=None):
+    def __init__(self, stream=None, *, terminal=None):
         self.stream = stream if stream is not None else sys.stdout
-        terminal = self.stream.isatty() and os.environ.get("TERM", "dumb") != "dumb"
+        terminal = (self.stream.isatty() if terminal is None else terminal) and os.environ.get("TERM", "dumb") != "dumb"
         mode, icons = os.environ.get("DOTS_COLOR", "auto"), os.environ.get("DOTS_ICONS", "auto")
         self.color = mode == "always" or (mode == "auto" and terminal and not os.environ.get("NO_COLOR"))
         self.icons = icons == "always" or (icons == "auto" and terminal)
-        self.human = self.stream.isatty() or mode == "always" or icons == "always"
+        self.human = self.stream.isatty() or terminal or mode == "always" or icons == "always"
         self.width = max(24, shutil.get_terminal_size((80, 24)).columns)
         self.resources = Resources()
 

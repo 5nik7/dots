@@ -24,7 +24,7 @@ The theme switcher locally prefers FZF for live palette browsing while retaining
 the shared backend for review actions. Its review loop validates selection and
 previews through the existing theme engine before delegating Apply to its unchanged publisher.
 
-`bin/dots-menu-tmux-keys` delegates to `lib/dots/tmux-keys.bash`, which owns the read-only tmux binding snapshot, non-evaluating quoted-field parser, table ordering, and optional secure less pager. It reuses `ui.bash` without changing shared presentation policy or loading shell startup. Help and completion use static metadata; no general menu framework or dispatcher changes are introduced. See the [command contract](commands.md#tmux-keybinding-reference).
+`keys_cli.py` and `keys/` own shared keybinding records, inert configuration readers, live evidence reconciliation and presentation. Interactive shell adapters supply caller maps on demand through a pipe; the Neovim configuration exports inert JSON for its current buffer. FZF selection reuses the shared selector and published colors. `dots-menu-tmux-keys` delegates to the same controller. No startup scans or persistent binding caches are introduced. See [keybindings](keys.md).
 
 ## Existing tmux configuration
 

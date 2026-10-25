@@ -108,6 +108,7 @@ if ($dotsInteractive) {
     if ($dots_options.DOTS_INIT_COLORS -eq '0') { $global:dots_colors = @{} }
     # PowerShell identifiers are case insensitive: rst and RST are one value.
     if ($global:rst -cne ([string][char]27 + '[0m')) { $global:rst = [string][char]27 + '[0m' }
+    . (Join-Path $env:DOTS 'lib/dots/shell/keys.ps1')
     function global:Update-DotsTheme {
         if ($dots_options.DOTS_INIT_THEME -ne '1') { return }
         try {

@@ -244,3 +244,5 @@ The wiki uses shared Python controllers for Bash and native PowerShell. Native W
 
 
 Detailed debug views share a controller across Bash/Zsh and PowerShell. Bash/Zsh use native debug hooks with observation-interval attribution. PowerShell uses supported global primitive/environment snapshots, preferences and non-stopping breakpoints for registered script files; opaque objects, local scopes and arbitrary dynamic sources are outside its claimed coverage. Actual Windows PowerShell 5.1/7 acceptance remains pending where unavailable.
+
+The keybinding browser uses native shell capture and a shared controller. Zsh/Bash maps are available through the interactive adapter; native Windows uses PSReadLine and PowerShell rather than Bash. Application config roots honor native/XDG paths; live tmux requires an existing server. Providers report missing installed defaults and dynamic coverage explicitly. See [keybindings](keys.md).

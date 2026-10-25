@@ -6,6 +6,7 @@ _dots_config_load || return
 source "$DOTS/lib/dots/shell/environment.bash"
 source "$DOTS/lib/dots/shell/platform.bash"
 [[ $- == *i* ]] || return 0
+source "$DOTS/lib/dots/shell/keys.bash"
 [[ ${rst-} == $'\e[0m' ]] || typeset -g rst=$'\e[0m'
 [[ ${RST-} == $'\e[0m' ]] || typeset -g RST=$'\e[0m'
 if [[ ${dots_options[DOTS_INIT_COLORS]} == 0 ]]; then
