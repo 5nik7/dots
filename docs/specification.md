@@ -141,6 +141,10 @@ input metadata and original module identities for read-only cache inspection.
 Native adapters have an inert metadata sidecar with an adapter digest.
 See [the diagnostic contract](debug.md#output-and-self-tests).
 
+### Detailed trace additions
+
+Debug version-1 reports retain existing fields and add stable event `id`/`parent_id`, optional `self_ms`/`precision`, per-run `changes`, capture `detail`, `initial_path`/`final_path`, and adapter `capabilities`. Changes carry category, name, action, source/line, observation endpoint, process, offset and attribution precision. Selected variable values are bounded native representations; sensitive and non-scalar values are omitted. PATH reports retain ordered rows and add `raw_path`, provenance and history. `DOTS_DEBUG_RECORD=path` opts into native session recording; `DOTS_DEBUG_SESSION` points to its private temporary metadata file. Neither is a globally installed default. Recording start/stop code is an undecorated interface. Compiled startup manifests add `source_map` entries mapping generated line ranges to authored files/lines; they remain inert data.
+
 ## Canonical platform file identities
 
 The source IDs `termux` and `windows` replace `androidots` and `windots`. Current selectors and `--with-source` reject the old names with replacement hints. Internal readers canonicalize legacy source/catalog identities, replacement references and installation entry IDs before matching. Duplicate old/new declarations for the same owner are errors. Raw receipt guards, original backup pointers and historical journals remain unchanged. Read-only inspection and no-op installation do not rewrite receipts. Authorized mutations write canonical entry IDs through the existing transaction engine, and undo restores the original receipt data.

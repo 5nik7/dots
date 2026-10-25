@@ -226,5 +226,20 @@ class Diagnostics(unittest.TestCase):
         result=command_report(self.root,['profile','show','PRIVATE_ARGUMENT_VALUE'])
         self.assertNotIn('PRIVATE_ARGUMENT_VALUE',json.dumps(result))
 
+    def test_debug_detail_and_record_completion_parity(self):
+        env=dict(self.env,PATH=self.env['PATH']+os.pathsep+str(Path(sys.executable).parent))
+        native=[sys.executable,'-B',str(self.root/'lib/dots/cli.py')]
+        for words,expected in ((['debug','startup','--detail',''],{'files','changes','deep'}),
+                               (['debug','startup','--view',''],{'tree','sequence','summary','slowest'}),
+                               (['debug','record',''],{'start','stop','status'}),
+                               (['debug','startup','--'],{'--changes','--file','--name','--show-values','--depth','--limit','--min-ms'})):
+            commands=[[*native,'__complete',*words]]
+            if os.name!='nt':commands.append([str(self.root/'bin/dots'),'__complete','bash',str(len(words)),'--','dots',*words])
+            for command in commands:
+                result=subprocess.run(command,env=env,text=True,capture_output=True)
+                self.assertEqual(result.returncode,0,result.stderr)
+                candidates={line.split('\t')[1] if line.startswith('candidate\t') else line for line in result.stdout.splitlines()}
+                self.assertTrue(expected<=candidates,result.stdout)
+
 
 if __name__=='__main__':unittest.main()

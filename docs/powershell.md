@@ -118,3 +118,6 @@ paths. Job Object ownership and PowerShell 5.1/7 terminal acceptance are pending
 on Windows. See [debugging](debug.md).
 
 Wiki routes and associated Git operations use the shared controllers, including page completion, `--json`, `--no-wiki` and selected-content publication checks. Browser/editor launching uses native processes without Bash. Native Windows PowerShell 5.1/7 terminal and acquisition acceptance remain pending where that runtime is unavailable. See [wiki](wiki.md).
+
+
+Detailed debug options share the common command metadata. Native changes use in-memory comparisons; registered script breakpoints supply line observations where available. PATH recording uses explicitly dot-sourced start/stop code and native breakpoint callbacks. Existing breakpoints prevent conflicting activation. No Bash dependency is introduced. Native Windows PowerShell 5.1/7 debugger, recording cleanup and terminal checks remain pending.

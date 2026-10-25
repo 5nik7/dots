@@ -6,8 +6,16 @@
 # dots:option=--live||flag|Execute normal startup with its usual side effects
 # dots:option=--isolated||flag|Execute a disposable public fixture
 # dots:option=--login||flag|Include login startup (not PowerShell)
-# dots:option=--view||choice:sequence,slowest,summary|Select trace layout
+# dots:option=--view||choice:tree,sequence,slowest,summary|Select trace layout
 # dots:option=--runs||string|Sequential runs (1–20; default 1)
 # dots:option=--timeout||string|Seconds per run (1–300; default 30)
+# dots:option=--detail||choice:files,changes,deep|Select source timings, boundary changes or deep observations
+# dots:option=--changes||string|Comma-separated path,variables,functions,aliases,options
+# dots:option=--file||string|Filter source paths by glob (repeatable)
+# dots:option=--name||string|Filter names by glob (repeatable)
+# dots:option=--show-values||string|Capture a selected non-sensitive variable (repeatable)
+# dots:option=--depth||string|Maximum displayed nesting depth
+# dots:option=--limit||string|Maximum displayed rows (1–10000)
+# dots:option=--min-ms||string|Minimum displayed source duration
 DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
 exec python3 -B "$DOTS/lib/dots/debug_cli.py" startup "$@"

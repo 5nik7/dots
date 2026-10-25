@@ -143,3 +143,6 @@ Job Object cleanup, redirected/terminal behavior and visual checks remain pendin
 See the [focused plan](profile-debug.md).
 
 Wiki commands and associated repository operations share Python controllers across Bash and native PowerShell. Native Windows PowerShell 5.1/7 acceptance remains pending; fixtures must not be reported as native evidence. See [wiki implementation](wiki.md).
+
+
+Detailed debug trees, state capture and current-session PATH recording now have shared routes and a native PowerShell adapter. Actual PowerShell 5.1/7 breakpoint behavior, private-file ACLs, process identity and normal-exit cleanup remain pending native acceptance; portable fixtures do not establish these claims.

@@ -15,12 +15,13 @@ sys.path.insert(0,str(ROOT/'lib/dots'))
 from debug.fixtures import fixture
 
 
-def benchmark(samples):
+def benchmark(samples, recording=False):
     results={}
     with ExitStack() as stack:
         cases={}
-        for label in ('without_calls','disabled_tracing'):
+        for label in (('disabled_tracing','path_recording') if recording else ('without_calls','disabled_tracing')):
             root,env,_=stack.enter_context(fixture(ROOT))
+            if label=='path_recording':env['DOTS_DEBUG_RECORD']='path'
             if label=='without_calls':
                 for name in ('startup.bash','environment_runtime.bash'):
                     p=root/'lib/dots/shell'/name
@@ -47,6 +48,8 @@ def benchmark(samples):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--samples',type=int,default=7);args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--samples',type=int,default=7)
+    parser.add_argument('--recording',action='store_true',help='Compare disabled tracing with opted-in PATH recording')
+    args=parser.parse_args()
     if not 3<=args.samples<=30: parser.error('--samples must be 3–30')
-    print(json.dumps(benchmark(args.samples),indent=2))
+    print(json.dumps(benchmark(args.samples,args.recording),indent=2))

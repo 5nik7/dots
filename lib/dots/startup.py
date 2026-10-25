@@ -36,6 +36,7 @@ class Compiler:
         self.stack = set()
         self.observed = {}
         self.modules = []
+        self.source_text = {}
 
     def read(self, relative):
         path = self.root / relative
@@ -47,7 +48,32 @@ class Compiler:
         identity = lambda st: (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
         if identity(before) != identity(after): raise ValueError('startup input changed during preparation')
         self.observed[path] = identity(after)
+        self.source_text[relative] = text
         return text
+
+    def source_map(self, body):
+        """Map unchanged authored lines within their own compiled module scope."""
+        import difflib
+        stack, groups = [], []
+        for number, line in enumerate(body.splitlines(), 1):
+            if line.startswith('_dots_debug_event begin '):
+                parts = shlex.split(line)
+                group = dict(name=parts[2], kind=parts[3], lines=[])
+                groups.append(group); stack.append(group)
+            elif line.startswith('_dots_debug_event end '):
+                if stack: stack.pop()
+            elif stack: stack[-1]['lines'].append((number, line))
+        result = []
+        for group in groups:
+            if group['kind'] != 'inlined' or group['name'] not in self.source_text: continue
+            source = self.source_text[group['name']].splitlines()
+            generated = group['lines']
+            for block in difflib.SequenceMatcher(None, source, [line for _,line in generated], autojunk=False).get_matching_blocks():
+                for offset in range(block.size):
+                    number = generated[block.b+offset][0]
+                    result.append(dict(generated_start=number, generated_end=number,
+                                       file=str(self.root/group['name']), line=block.a+offset+1))
+        return result
 
     def module(self, relative, body, kind="inlined"):
         self.modules.append(relative)
@@ -165,7 +191,7 @@ def prepare(root, shell, destination):
             try:
                 (temporary/'bundle').write_text(body)
                 (temporary/'guard').write_text(guard)
-                (temporary/'manifest.json').write_text(json.dumps(dict(version=1,root=str(root),shell=shell,profile=profile['current'],inputs=list(map(str,inputs)), modules=compiler.modules, signature=signature, shell_version=os.environ.get('DOTS_BUILD_SHELL_VERSION',''), metadata=[dict(path=str(p),size=p.stat().st_size,mtime_ns=p.stat().st_mtime_ns,ctime_ns=p.stat().st_ctime_ns) for p in inputs]),indent=2)+'\n')
+                (temporary/'manifest.json').write_text(json.dumps(dict(version=1,root=str(root),shell=shell,profile=profile['current'],inputs=list(map(str,inputs)), modules=compiler.modules, source_map=compiler.source_map(body), signature=signature, shell_version=os.environ.get('DOTS_BUILD_SHELL_VERSION',''), metadata=[dict(path=str(p),size=p.stat().st_size,mtime_ns=p.stat().st_mtime_ns,ctime_ns=p.stat().st_ctime_ns) for p in inputs]),indent=2)+'\n')
                 for p in temporary.iterdir(): p.chmod(0o600)
                 temporary.rename(generation)
             finally:

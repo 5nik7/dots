@@ -13,6 +13,7 @@ import threading
 import time
 from contextlib import nullcontext
 from .fixtures import fixture
+from .changes import Snapshots, source_location
 
 LIMIT=10000
 
@@ -56,8 +57,9 @@ def finish_events(records, start):
         except ValueError: continue
         if not (0<=when<10**12): continue
         offset=max(0,(when-start)*1000) if when>start-10 else None
+        stream=pid+(':observed' if kind=='observed-source' else '')
         if event=='end':
-            stack=stacks.setdefault(pid,[])
+            stack=stacks.setdefault(stream,[])
             matched=next((i for i in reversed(stack) if events[i]['name']==label),None)
             if matched is not None:
                 row=events[matched]
@@ -67,8 +69,8 @@ def finish_events(records, start):
                 row['exit_status']=int(status) if status.isdigit() else None
                 stack.remove(matched)
             continue
-        stack=stacks.setdefault(pid,[])
-        row=dict(name=label,kind=kind,offset_ms=round(offset,3) if offset is not None else None,duration_ms=None,
+        stack=stacks.setdefault(stream,[])
+        row=dict(id=len(events)+1,parent_id=events[stack[-1]]['id'] if stack else None,name=label,kind=kind,offset_ms=round(offset,3) if offset is not None else None,duration_ms=None,
                  depth=len(stack),timestamp='observer' if event=='source' else 'shell',status='incomplete' if event=='begin' else 'observed',pid=pid,_start=when)
         events.append(row)
         if event=='begin': stack.append(len(events)-1)
@@ -88,19 +90,33 @@ def stop(process):
         except ProcessLookupError: pass
 
 
-def one_run(root,env,shell,login,timeout,isolated,base):
+def one_run(root,env,shell,login,timeout,isolated,base,detail='files',changes='path,variables,functions,aliases,options',show_values=()):
     executable=shutil.which('pwsh') or shutil.which('powershell') if shell=='powershell' else shutil.which(shell)
     if not executable: return dict(status='unavailable',exit_code=1,events=[],shell=shell)
     records=[]; lock=threading.Lock();truncated=[False];ready=[None];retained=[0];start=time.time(); clock=time.perf_counter()
+    budget=[0,0]
+    snapshots=Snapshots(show_values, ';' if shell=='powershell' and os.name=='nt' else ':',budget=budget)
     def save(record):
         with lock:
+            if record[0]=='change':
+                try:
+                    change=json.loads(record[4])
+                    if change['category'] not in ('variables','functions','aliases','options'): return
+                    change.update(time=float(record[1]),pid=record[5])
+                    snapshots.keep_change(change)
+                except (ValueError,KeyError,TypeError):pass
+                return
+            if snapshots.accept(record): return
             size=sum(len(value.encode('utf8')) for value in record)
-            if len(records)<LIMIT and retained[0]+size<=8*1024*1024:
+            if snapshots.reserve(size):
                 retained[0]+=size
                 records.append(record)
                 if record[0]=='ready': ready[0]=(time.perf_counter()-clock)*1000
             else: truncated[0]=True
     env=dict(env)
+    env.update(DOTS_DEBUG_DETAIL=detail,DOTS_DEBUG_CHANGES=changes,DOTS_DEBUG_VALUES=','.join(show_values))
+    env.pop('DOTS_DEBUG_RECORD',None)
+    env.pop('DOTS_DEBUG_SESSION',None)
     threads=[];read_fd=write_fd=None
     if shell=='powershell':
         event_file=base/'events.jsonl';event_file.touch(mode=0o600)
@@ -117,13 +133,19 @@ def one_run(root,env,shell,login,timeout,isolated,base):
         env['PS4']='DOTS_SOURCE:%x:%I> '
         code="if typeset -f _dots_debug_event >/dev/null; then _dots_debug_event ready startup phase 0; else printf '%s\\0' ready \"${EPOCHREALTIME:-0}\" startup phase 0 \"$$\" >&\"$DOTS_DEBUG_FD\"; fi"
         if shell=='zsh': code += '; if [[ ! -o sourcetrace || $PS4 != DOTS_SOURCE:* ]]; then typeset -f _dots_debug_event >/dev/null && _dots_debug_event coverage source-tracing-disabled phase; fi'
+        if detail=='deep':
+            condition='[[ ${functions[TRAPDEBUG]:-} == *_dots_trace_debug* ]]' if shell=='zsh' else '[[ $(trap -p DEBUG) == *_dots_trace_debug* ]]'
+            code+='; if ! '+condition+'; then typeset -f _dots_debug_event >/dev/null && _dots_debug_event coverage "Deep trace unavailable: observer absent or replaced" phase; fi'
         command=[executable]
+        if shell=='bash' and detail=='deep':
+            env['DOTS_DEBUG_FUNCTRACE']='1'
         if shell=='zsh': command+=(['-d'] if isolated else [])+['-o','SOURCE_TRACE']
         elif isolated:
             if login:
                 command+=['--noprofile','--norc']
                 code='source "$HOME/.bash_profile"; '+code
             else: command+=['--noprofile','--rcfile',str(Path(env['HOME'])/'.bashrc')]
+        if shell=='bash' and detail=='deep':command+=['-T']
         if login: command+=['-l']
         command+=['-i','-c',code]
         kwargs=dict(pass_fds=(write_fd,),start_new_session=True)
@@ -152,18 +174,25 @@ def one_run(root,env,shell,login,timeout,isolated,base):
     thread=threading.Thread(target=stderr_reader,daemon=True);thread.start();threads.append(thread)
     if read_fd is not None:
         def event_reader():
-            buffer=b'';fields=[]
+            buffer=bytearray();fields=[];discard=False;bad=False
             with os.fdopen(read_fd,'rb') as stream:
                 while True:
                     chunk=os.read(stream.fileno(),4096)
                     if not chunk: break
-                    buffer+=chunk
-                    while b'\0' in buffer:
-                        value,buffer=buffer.split(b'\0',1);fields.append(value.decode('utf8','replace'))
-                        if len(fields)==6:
-                            if all(len(v)<=8192 for v in fields): save(tuple(fields))
-                            fields=[]
-                    if len(buffer)>16384: buffer=b'';fields=[];truncated[0]=True
+                    pieces=chunk.split(b'\0')
+                    for index,piece in enumerate(pieces):
+                        if not discard:
+                            if len(buffer)+len(piece)>8*1024*1024:
+                                buffer.clear();discard=True;bad=True;truncated[0]=True
+                            else:buffer.extend(piece)
+                        if index<len(pieces)-1:
+                            fields.append(buffer.decode('utf8','replace'));buffer.clear();discard=False
+                            if len(fields)==6:
+                                if not bad:save(tuple(fields))
+                                else:
+                                    with lock:
+                                        snapshots.pending.pop(fields[5],None);snapshots.previous.pop(fields[5],None)
+                                fields=[];bad=False
         thread=threading.Thread(target=event_reader,daemon=True);thread.start();threads.append(thread)
     status='completed'
     try:
@@ -193,11 +222,39 @@ def one_run(root,env,shell,login,timeout,isolated,base):
                 except (ValueError,KeyError,TypeError): continue
     exit_code=124 if status=='timeout' else 130 if status=='interrupted' else (0 if process.returncode==0 else 1)
     if exit_code and status=='completed': status='failed'
-    events=finish_events(records,start)
+    snapshots.close(time.time())
+    events=finish_events(sorted([*records,*snapshots.observed],key=lambda r:float(r[1]) if r[1].replace('.','',1).isdigit() else 0),start)
+    if any(row['name']=='Trace limit reached' for row in events):truncated[0]=True
+    children_by_parent={};events_by_name={}
+    for event in events:
+        children_by_parent.setdefault(event.get('parent_id'),[]).append(event)
+        events_by_name.setdefault(event['name'],[]).append(event)
+    for event in events:
+        if event['kind']=='observed-source':event['precision']='observed-interval'
+        children=children_by_parent.get(event['id'],[])
+        if event['duration_ms'] is not None and children and all(c['duration_ms'] is not None for c in children):
+            own=event['duration_ms']-sum(c['duration_ms'] for c in children)
+            if own>=0:event['self_ms']=round(own,3)
+    maps={}
+    for row in snapshots.changes:
+        row['timestamp']=row.pop('time')
+        row['offset_ms']=round(max(0,(row['timestamp']-start)*1000),3)
+        original=(row['file'],row['line'])
+        row['file'],row['line']=source_location(*original,maps)
+        if original!=(row['file'],row['line']): row['generated_file'],row['generated_line']=original
+        if row.get('observed_at_file'):
+            row['observed_at_file'],row['observed_at_line']=source_location(row['observed_at_file'],row.get('observed_at_line'),maps)
+        if detail=='changes':row['precision']='file-boundary'
+        candidates=[e for e in events_by_name.get(row['file'],[]) if e['offset_ms'] is not None and e['offset_ms']<=row['offset_ms'] and (e['duration_ms'] is None or row['offset_ms']<=e['offset_ms']+e['duration_ms']+1)]
+        row['parent_id']=candidates[-1]['id'] if candidates else None
+    if any('unavailable:' in row['name'] for row in events if row['kind']=='phase'): exit_code=1;status='incomplete'
     measured=any(row['kind'] in ('inlined','module') for row in events)
     startup_ready=next((r['offset_ms'] for r in events if r['name']=='startup' and r['status']=='observed' and r['kind']=='phase'),None)
     return dict(status=status,exit_code=exit_code,checkout=str(root),events=events,startup_ms=startup_ready if startup_ready is not None else ready[0],process_ms=round((time.perf_counter()-clock)*1000,3),
-                truncated=truncated[0],dots_instrumented=measured,coverage='Zsh source entries and Dots measured modules' if shell=='zsh' else 'Dots measured modules only',
+                truncated=truncated[0] or snapshots.truncated,dots_instrumented=measured,changes=snapshots.changes,
+                initial_path=next(iter(snapshots.initial_paths.values()),None),final_path=next(iter(snapshots.final_paths.values()),None),detail=detail,
+                capabilities=dict(files=True,boundary_changes=True,line_observations=snapshots.observed_lines),
+                coverage=('State changes from the first Dots observer; line attribution is an observation interval. ' if detail!='files' else '')+('Zsh source entries and Dots measured modules' if shell=='zsh' else 'Dots measured modules only'),
                 note=('No Dots module markers observed. ' if not measured else '')+'Inclusive instrumented timings; no prompt rendering. Child input/output is redirected; terminal-dependent startup may differ.')
 
 
@@ -210,7 +267,7 @@ def run(root,args):
         with tempfile.TemporaryDirectory(prefix='dots-trace-') as temp:
             for index in range(args.runs):
                 runbase=Path(temp)/str(index);runbase.mkdir()
-                sample=one_run(checkout,env,shell,args.login,args.timeout,args.isolated,runbase)
+                sample=one_run(checkout,env,shell,args.login,args.timeout,args.isolated,runbase,getattr(args,'detail','files'),getattr(args,'changes','path,variables,functions,aliases,options'),getattr(args,'show_values',()))
                 samples.append(sample)
                 if sample['exit_code']: break
     values=[s['startup_ms'] for s in samples if s.get('startup_ms') is not None]

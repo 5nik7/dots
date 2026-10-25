@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# dots:summary=Print native shell code to stop PATH recording
+# dots:usage=[--shell SHELL]
+# dots:option=--shell||choice:bash,zsh,powershell|Native shell for generated code
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" record stop "$@"

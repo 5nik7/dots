@@ -468,11 +468,15 @@ printing it does not clone or install anything. See [profiles](profiles.md).
 The implemented `profile show|layers|paths|env|files|commands|check [ID]` and
 `profiles list|check` routes provide read-only inspection. Their flags and
 selection semantics are described in [profiles](profiles.md#profile-inspection-subcommands).
-`debug check|startup|path|command|cache|test` uses the shared native controller,
+`debug check|startup|path|command|cache|test|record` uses the shared native controller,
 static command headers and contextual completions; see [debug commands](debug.md).
 Bare `debug` shows group help. No diagnostic silently activates or repairs state.
 
 File selectors use `termux:NAME` and `windows:NAME`, with `--repo termux|windows` for source filters. Legacy `androidots`/`windots` CLI names are rejected with a replacement hint; historical receipts remain recoverable. See [platform file identities](specification.md#canonical-platform-file-identities).
+
+### Detailed debug and PATH recording
+
+Debug human reports use nested trees. `startup` adds `--view tree` (with `sequence` as a compatibility alias), `--detail files|changes|deep`, `--changes LIST`, repeated `--file`/`--name` filters, `--depth`, `--limit`, `--min-ms`, and explicit `--show-values NAME`. Display filters preserve the full JSON capture. `path` adds `--history`, `--entry PATH`, bounded display depth/rows, and explicit `--live|--isolated` startup reconstruction with shell/login/run/timeout options. `record start|stop --shell SHELL` emits native code for explicit evaluation; `record status [--json]` reads existing session evidence. See [debugging](debug.md) for coverage and sensitivity limits.
 
 ## Wiki commands
 

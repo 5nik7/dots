@@ -276,3 +276,6 @@ startup, and native PowerShell evidence separately from controller fixtures.
 For retired environment variables or platform file-ID compatibility, run `python3 -B tools/test_platform_retirement.py` and the affected shell/file suites sequentially. Follow the [retirement checks](../../docs/testing.md#retired-environment-and-platform-file-ids); never use live receipts as fixtures.
 
 For wiki changes, follow [the wiki guide](wiki.md) and run its isolated generation/Git suites sequentially. Use `dots wiki check --source-only` for source-only CI; never publish or fetch live repositories as a test.
+
+
+For detailed startup/PATH recording, run `python3 -B tools/test_debug_tracing.py` and the affected suites in the debugging section of the testing reference. Use owned native shells and temporary record files; never activate a recorder in the developer shell. Preserve interval/coverage distinctions, selected-value redaction and terminal/data-output checks.

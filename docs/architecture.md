@@ -325,6 +325,8 @@ original module identities. See [debugging](debug.md).
 
 `lib/dots/files/identities.py` owns canonical platform file-source names. Catalog and installation readers use it for legacy persisted IDs; CLI parsers reject the retired names. The transaction store continues to preserve historical journal data unchanged.
 
+The debug subsystem now separates native observation, bounded in-memory state comparisons, session PATH evidence and shared tree presentation. Startup bundle source maps connect observed generated locations to unchanged authored lines. Current-session recording is installed through explicitly evaluated native code; an external CLI only reads its metadata. PowerShell sanitizes native state deltas before persistent transport, while Bash/Zsh use an anonymous in-memory snapshot channel.
+
 ## Wiki projection and repository association
 
 The shared wiki controller reads canonical source documents plus first-party static metadata and a page/navigation manifest. It generates a deterministic, independently versioned wiki projection and sidebar; the source repository remains authoritative. The shared Git association adapter adds the external wiki without treating it as a submodule or changing parent indexes. Bash and native entry points delegate associated operations to the existing Python workflow. Ordinary standalone/submodule engines retain their contracts. Builds use the common transaction store; Git operations remain incremental. See [wiki](wiki.md).

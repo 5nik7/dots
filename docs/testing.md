@@ -826,6 +826,8 @@ the developer's live startup. Native acceptance remains separate.
 public startup with diagnostic calls removed and with tracing disabled. Runs are
 sequential and alternating; keep other suites stopped during measurements.
 
+For detailed debug changes, run `python3 -B tools/test_debug_tracing.py`, then existing profile-debug, profiles/startup, shell-environment, dispatcher, native-controller and resource suites sequentially. Fixtures cover state categories, private/selected-value boundaries, nested source intervals, source maps, session isolation/cleanup, hook conflicts and data interfaces. Use `python3 -B tools/bench_debug_startup.py` for the existing disabled-instrumentation baseline; use `--recording` to compare disabled tracing with opted-in PATH recording, and report deep capture costs separately. No automated test runs a live personal startup chain.
+
 ## Retired environment and platform file IDs
 
 Run `python3 -B tools/test_platform_retirement.py` with the environment, profile, catalog, operation, mapping and installation suites. Fixtures own homes, checkout copies, caches, receipts and backups. Verify inherited Ruby exports/PATH removal, read-only legacy recognition, no-op receipt preservation, canonical mutations, drift protection and undo/recovery. Native Bash/Zsh/Fish/Nushell tests run when installed; Windows PowerShell 5.1/7 and Xonsh runtime acceptance remain separate when unavailable.

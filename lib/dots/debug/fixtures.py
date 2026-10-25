@@ -40,7 +40,7 @@ def fixture(root):
             (p/'profile.json').write_text(json.dumps(dict(schema=1,id=platform)))
         (checkout/'.dots').mkdir();(checkout/'.dots/sources.json').write_text('{"schema":1,"sources":[]}')
         tools=base/'commands';tools.mkdir()
-        names=('bash','zsh','sh','pwsh','powershell','python3','stat','dirname','readlink','uname','mkdir','cat','date','sleep','tr','sed','sort','cut','head','tail','locale','wc','rm','mv','chmod','touch','cksum','mktemp')
+        names=('bash','zsh','sh','pwsh','powershell','python3','stat','dirname','readlink','uname','mkdir','cat','date','sleep','tr','sed','sort','cut','head','tail','locale','wc','rm','mv','chmod','touch','cksum','mktemp','rmdir')
         for name in names:
             executable=shutil.which(name)
             if executable and os.name!='nt': (tools/name).symlink_to(executable)

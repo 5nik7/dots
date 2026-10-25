@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Inspect or configure opt-in PATH recording
+# dots:usage=[--json]
+# dots:option=--shell||choice:bash,zsh,powershell|Native shell for generated code
+# dots:option=--json||flag|Print versioned JSON
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" record "$@"

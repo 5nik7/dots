@@ -484,7 +484,7 @@ Profile inspection now includes `dots profile layers`, `paths`, `env`, `files`,
 `commands`, and `check`; `dots profiles check` validates every definition.
 `dots debug` provides health/PATH/command/cache inspection, explicit startup
 traces and isolated self-tests. Start with `dots debug startup --shell zsh`,
-then add `--isolated` or explicitly `--live`. See [debugging](docs/debug.md)
+then add `--isolated` or explicitly `--live`. Reports use nested trees; `--detail changes` adds per-boundary state differences, and `--detail deep --changes path,aliases,options` adds native observations. Opt-in `dots debug record start --shell zsh` emits code to evaluate in the current shell; `dots debug path --history` then explains recorded PATH edits. See [debugging](docs/debug.md)
 and [profile inspection](docs/profiles.md#profile-inspection-subcommands).
 
 ## Wiki

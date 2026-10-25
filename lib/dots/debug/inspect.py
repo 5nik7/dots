@@ -10,19 +10,19 @@ from profiles import resolve as profile
 from profile_views import validate, identities
 
 
-def path_report(root, command=None):
+def path_report(root, command=None, value=None):
     active=profile(root)
     owners={str(Path(r['root'])/part):'profile:'+r['id'] for r in active['layers'] for part in r.get('path',['bin','scripts'])}
     owners.update({str(root/p):'checkout' for p in ('bin','scripts')})
     seen=set();rows=[];winner=None
-    for index,text in enumerate(os.environ.get('PATH','').split(os.pathsep),1):
+    for index,text in enumerate((os.environ.get('PATH','') if value is None else value).split(os.pathsep),1):
         path=Path(text or '.')
         candidate=None
         if command:
             candidate=shutil.which(command,path=str(path))
             if candidate and winner is None: winner=candidate
         key=os.path.normcase(os.path.abspath(path))
-        rows.append(dict(order=index,path=str(path.absolute()),source=owners.get(text,'inherited'),exists=path.is_dir(),duplicate=key in seen,
+        rows.append(dict(order=index,path=str(path.absolute()),raw_path=text,source=owners.get(text,'inherited'),exists=path.is_dir(),duplicate=key in seen,
                          command=candidate,selected=bool(candidate and candidate==winner and not any(r['selected'] for r in rows))))
         seen.add(key)
     return dict(version=1,command=command,selected=winner,rows=rows)

@@ -460,13 +460,13 @@ retained for inspection. See [bootstrap recovery](profiles.md#missing-checkout-b
 `dots debug startup` is read-only unless `--live` or `--isolated` is supplied.
 `--live` explicitly authorizes the child shell's normal startup hooks and their
 usual side effects; it does not promise rollback or sandboxing. `--isolated` and
-curated self-tests use disposable public sources and owned runtime roots. Trace
-channels contain source/timing/status metadata, never expanded commands, private
-contents or environment values. Arbitrary child output is discarded. Diagnostics
+curated self-tests use disposable public sources and owned runtime roots. Trace reports contain source/timing/status metadata and sanitized changes. They never contain expanded commands, function bodies or alias expansions. Explicit `--show-values NAME` may include a bounded non-sensitive scalar representation; sensitive names/private-hook values remain redacted. Raw Bash/Zsh state comparisons use an anonymous pipe and bounded memory, never a persisted dump; PowerShell sanitizes changes before writing its event file. Arbitrary child output is discarded. Diagnostics
 do not source cached guards, rebuild caches during inspection, or execute routes
 to explain resolution. See [debugging](debug.md).
 
 Platform file-ID normalization is an in-memory read step. It must not rewrite receipts or historical journals during inspection or unchanged installation. When an authorized transaction updates a receipt, original backups and drift guards survive the canonical ID change; undo/recovery continue to use the original journal data. See [identity contracts](specification.md#canonical-platform-file-identities).
+
+Opt-in PATH recording installs native hooks only when generated start code is explicitly evaluated or `DOTS_DEBUG_RECORD=path` is supplied before startup. It writes only PATH/location metadata to private bounded temporary storage, preserves conflicting hooks by refusing activation, keeps subshell changes separate, and removes its own recording on normal exit. It does not promise to reconstruct history before activation. A stopped recorder retains evidence until shell exit; abrupt termination can leave disposable temporary files. Ordinary PATH/status inspection does not install hooks or run startup.
 
 ## Wiki generation and publication
 

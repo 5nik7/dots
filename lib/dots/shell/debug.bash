@@ -10,10 +10,22 @@ _dots_debug_event() {
   if [[ $kind == inlined || ( $kind == source && $label == */* && $label != /* ) ]]; then label="$DOTS/$label"; fi
   now=${EPOCHREALTIME:-${SECONDS:-0}}
   printf '%s\0%s\0%s\0%s\0%s\0%s\0' "$event" "$now" "$label" "$kind" "$event_status" "$debug_pid" 2>/dev/null 1>&"$DOTS_DEBUG_FD" || :
+  if [[ ${DOTS_DEBUG_DETAIL:-files} == changes ]] && typeset -f _dots_trace_snapshot >/dev/null; then
+    _dots_trace_snapshot "$label" 0 "$event:$kind"
+  fi
   return "$result"
 }
 
 # Ordinary startup pays only a native no-op call at each compiled boundary.
 if [[ ! ${DOTS_DEBUG_FD:-} =~ ^[0-9]+$ ]]; then
   _dots_debug_event() { return $?; }
+fi
+
+if [[ ${DOTS_DEBUG_FD:-} =~ ^[0-9]+$ && ${DOTS_DEBUG_DETAIL:-files} != files && -z ${_dots_trace_loaded:-} ]]; then
+  _dots_trace_loaded=1
+  source "$DOTS/lib/dots/shell/trace.bash"
+fi
+if [[ ${DOTS_DEBUG_RECORD:-} == path && -z ${_dots_record_owner:-} ]]; then
+  source "$DOTS/lib/dots/shell/record.bash"
+  _dots_record_start
 fi

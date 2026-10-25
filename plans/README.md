@@ -77,3 +77,5 @@ When a plan is complete, retain it if it explains migration or decision history.
   routes, source/timing diagnostics and isolated self-tests.
 
 - [Dots wiki](wiki.md) — generated documentation, sidebar, maintenance skills and associated Git operations.
+
+- [Detailed debug tracing](debug-tracing.md) — nested reports, state changes, source maps and opt-in PATH history.
