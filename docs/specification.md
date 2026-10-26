@@ -39,13 +39,15 @@ worktrees are included). Explicit projects may be ordinary directories. Missing
 or unreadable roots and missing project directories are skipped. Canonical paths
 deduplicate symlink aliases; no recursive search, Git invocation, cloning or
 initialization occurs. Project labels use basenames and disambiguating abbreviated
-paths; the preview abbreviates the home prefix with `~` without truncating paths.
+paths; the preview abbreviates the home prefix with `~`. Preview data retains
+complete paths and session names, while the display clips overflow at the right
+edge so each logical line occupies one row.
 
 Managed sessions use `@dots-workspace-data`, a private schema-1 JSON object with immutable `id`, optional startup `origin`, boolean `auto`, last controller-written `expected` name and canonical `projects` roots. Startup IDs preserve `PID-START`; Prefix C and popup creation use fresh 12-digit hexadecimal IDs. `@dots-workspace-auto` and `@dots-workspace-label` supply inexpensive status fields; `@dots-workspace-expected` lets the rename hook ignore controller-owned renames; session-local `@dots-session-number` is a dense creation-order index, empty for a singleton. These options are internal and do not extend session-menu JSON.
 
 Reconciliation examines all live pane directories without scanning project discovery roots. Git/worktree roots anywhere and explicit `projects` (including Dots) qualify; deepest containing root wins, canonical paths collapse aliases and different paths with the same basename remain distinct. Outside-project panes contribute nothing. Zero/one/multiple roots produce `termux-ID`, `projectname-ID` or `multi-ID`; the bar hides IDs and the default label. Periods/colons in actual session prefixes become hyphens, while display labels keep their safe literal spelling. Unknown or failed observations preserve prior state. If the actual name differs from `expected`, automatic naming is disabled; the manual name remains while observed projects still update. An occupied target name is refused, never merged. Reattachment uses stored startup origin.
 
-The browser associates managed sessions from their live `projects` snapshot, including Git roots outside configured discovery paths; zero or multiple roots remain generic. Unmanaged legacy `@dots-termux-default=1` sessions remain generic until explicitly adopted. Other unmanaged sessions prefer a matching session-local `@dots-project-root`, then the deepest project containing `session_path`, then a single distinct project among current panes. Names alone do not classify sessions. All popup actions retain native tmux IDs and previews show full unique names.
+The browser associates managed sessions from their live `projects` snapshot, including Git roots outside configured discovery paths; zero or multiple roots remain generic. Unmanaged legacy `@dots-termux-default=1` sessions remain generic until explicitly adopted. Other unmanaged sessions prefer a matching session-local `@dots-project-root`, then the deepest project containing `session_path`, then a single distinct project among current panes. Names alone do not classify sessions. All popup actions retain native tmux IDs and preview data retains full unique names independently of display clipping.
 
 The shared selector optionally carries a validated numeric `index` (or `None`
 when no row matches) and query in `SelectionEvent`, and can restore focus using

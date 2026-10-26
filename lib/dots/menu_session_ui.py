@@ -96,24 +96,10 @@ def preview_text(row, ui, codes):
     return '\n'.join(lines) + '\n'
 
 
-def preview_height(previews, width, lines):
-    """Stable per-view height, counting wrapped cells and two preview borders."""
+def preview_height(previews, lines):
+    """Stable per-view height for clipped lines and two preview borders."""
     maximum = min(8, max(1, lines - 11))  # Leave room for chrome and choices.
-    largest = 0
-    for text in previews:
-        rows = 0
-        for line in ANSI.sub('', text).splitlines():
-            rows += 1
-            column = 0
-            for char in line:
-                cell_width = cells(char)
-                if cell_width and column + cell_width > max(1, width):
-                    rows += 1
-                    column = 0
-                column += cell_width
-        largest = max(largest, rows)
-        if largest + 2 >= maximum:
-            return maximum
+    largest = max((len(ANSI.sub('', text).splitlines()) for text in previews), default=0)
     return min(maximum, max(3, largest + 2))
 
 
@@ -187,7 +173,7 @@ def pick(rows, *, context=None, frame=None, termux=False, prompt='dots·tmux·se
         return None
     keys = {key: action for key, _, _, action in controls(termux, intent) if action is not None}
     header = KEY_HINT
-    preview_lines = preview_height(previews, width - 8, lines)
+    preview_lines = preview_height(previews, lines)
     height = min(max(10, len(rows) + 6 + preview_lines), max(1, lines - 2))
     focus = next((i for i, row in enumerate(rows) if row.id == frame.get('selected')), None)
     with request_file(dict(schema=1, previews=previews)) as path:
@@ -199,7 +185,7 @@ def pick(rows, *, context=None, frame=None, termux=False, prompt='dots·tmux·se
                 selection = RichSelector(backend='fzf').fzf(clean(prompt), labels, False, preview,
                     ui.color, ui.icons, picker_colors(fzf_colors(ui)),
                     popup=f'center,{width},{height}' if context else False, height=height,
-                    preview_position='down', preview_lines=preview_lines, preview_wrap=True, query=frame.get('query', ''),
+                    preview_position='down', preview_lines=preview_lines, preview_wrap=False, query=frame.get('query', ''),
                     header=header, environment=environment, info='inline-right', hscroll=False,
                     navigation=frame, navigation_keys=keys, event_selection=True,
                     focus_index=focus)

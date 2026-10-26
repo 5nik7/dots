@@ -6,6 +6,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import time
 import unittest
@@ -88,12 +89,11 @@ class Projects(MenuFixture):
         self.assertEqual(text, 'battery · [1 session]\nProject: ~/repos/battery\n  1 window · 0 attached\n')
         self.assertEqual(ui.short_path(self.home), '~')
         self.assertEqual(ui.short_path(self.base / 'elsewhere'), str(self.base / 'elsewhere'))
-        for width in (34,74,114):
-            self.assertEqual(ui.preview_height([text], width, 30), 5)
-            self.assertEqual(ui.preview_height(['line\n'*20], width, 30), 8)
-        self.assertEqual(ui.preview_height(['界'*20], 20, 30), 4)
-        self.assertEqual(ui.preview_height(['e\u0301'*20], 20, 30), 3)
-        self.assertLessEqual(ui.preview_height([text], 10, 14), 3)
+        self.assertEqual(ui.preview_height([text], 30), 5)
+        self.assertEqual(ui.preview_height(['line\n'*20], 30), 8)
+        self.assertEqual(ui.preview_height(['界'*20], 30), 3)
+        self.assertEqual(ui.preview_height(['e\u0301'*20], 30), 3)
+        self.assertLessEqual(ui.preview_height([text], 14), 3)
         renamed = ui.render((replace(row, sessions=(replace(record, name='other'),)),), Presentation(terminal=True), 76)[1][0]
         self.assertIn('  other: 1 window', renamed)
         inactive = ui.render((replace(row, sessions=()),), Presentation(terminal=True), 76)[1][0]
@@ -264,7 +264,7 @@ class Projects(MenuFixture):
             self.assertEqual(run.call_args.kwargs['navigation_keys']['alt-h'],'keys')
             self.assertEqual(run.call_args.kwargs['header'],'Alt-H: keys')
             self.assertEqual(run.call_args.kwargs['preview_position'],'down')
-            self.assertTrue(run.call_args.kwargs['preview_wrap'])
+            self.assertFalse(run.call_args.kwargs['preview_wrap'])
 
     def test_key_reference_filters_termux_and_ignores_enter(self):
         for termux in (False, True):
@@ -536,25 +536,37 @@ def measured(self,title,labels,multi,preview,*args,**kwargs):
 RichSelector.fzf=measured
 project=Project(Path.home()/'repos/battery','battery')
 many=os.environ['MANY']=='1'
-items=tuple(Session('$'+str(i),'session-%02d'%i,1,0,False,12) for i in range(10)) if many else (Session('$99','battery',1,0,False,12),)
+names=['dots-22129-208387696','dots-23650-210903334'] + ['session-%02d'%i for i in range(2,10)]
+items=tuple(Session('$'+str(i),name,1,0,False,12) for i,name in enumerate(names)) if many else (Session('$99','battery',1,0,False,12),)
 row=Row('project','battery',project,items)
 try:
     pick((row,),context=TmuxContext.capture(client=os.environ['CLIENT'],cwd=str(Path.home())))
 except SelectionEnded as error:
     sys.exit(error.status)
 '''
-        for width,many in ((40,False),(80,False),(120,False),(40,True),(80,True),(120,True)):
+        for width,many in ((40,False),(80,False),(120,False),(53,True),(40,True),(80,True),(120,True)):
             self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',30,width,0,0))
             for _ in range(30):
                 if self.context().verify()==(width,30): break
                 time.sleep(.05)
             path=self.base/('geometry-'+str(width)+'-'+str(many))
-            p=self.worker(code,DOTS_TEST_GEOMETRY=str(path),MANY=str(int(many)),DOTS_ICONS='always')
-            self.receive(self.first[1],b'Project:')
+            p=self.worker(code,DOTS_TEST_GEOMETRY=str(path),MANY=str(int(many)),DOTS_ICONS='always',DOTS_COLOR='always')
+            seen=self.receive(self.first[1],b'Project:')
             height,columns=map(int,path.read_text().split())
             self.assertEqual(height,6 if many else 3)
             self.assertEqual(columns,width-10)
             if many:
+                if b'dots-23650-210903334' not in seen:
+                    seen+=self.receive(self.first[1],b'dots-23650-210903334')
+                # Inspect actual tmux cursor placement, not only preview text:
+                # wrapping used to place these names two screen rows apart.
+                positioned=re.split(rb'\x1b\[(\d+);(\d+)H',seen)
+                rows=[]
+                for name in (b'dots-22129-208387696',b'dots-23650-210903334'):
+                    positions=[int(positioned[i]) for i in range(1,len(positioned),3) if name in positioned[i+2]]
+                    self.assertTrue(positions,repr(seen))
+                    rows.append(positions[-1])
+                self.assertEqual(rows[1],rows[0]+1)
                 os.write(self.first[1],b'\x1bj'*30)
                 self.receive(self.first[1],b'12/12')
             os.write(self.first[1],b'\x03'); out,err=p.communicate(timeout=15)

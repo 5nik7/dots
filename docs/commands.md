@@ -256,8 +256,10 @@ uses bold theme `bright_green`. The path line uses `Project: 󰉋 ~/path`, with 
 directory style and following icon preferences. Current state remains readable
 without color or icons. The colored inert preview
 sits below the list, normally five rows including borders, capped at eight and
-bounded by the terminal. Its stable height fits the largest wrapped preview in
-the current view. Alt-P toggles it and Alt-J/K scroll it. Paths use `~` for home;
+bounded by the terminal. Its stable height fits the largest preview line count in
+the current view. Each session occupies one row; long lines, including project
+paths, clip at the right edge instead of wrapping. Alt-P toggles it and Alt-J/K
+scroll it vertically. Paths use `~` for home;
 counts use singular/plural wording and a matching single-session name is not
 repeated. Search and selection survive returning from actions.
 
@@ -266,7 +268,7 @@ shortcut popup, including when no rows match. Escape or Alt-H restores the
 search, selected row and any pending project action; Ctrl-C exits the browser.
 Enter in the reference executes nothing. F1 remains the contextual action menu.
 
-The browser discovers Git checkouts immediately under `~/repos`, includes Dots, and reads optional [additional project paths](specification.md#session-browser-projects). Active projects come first, inactive projects next, then generic sessions. Managed workspaces use their live all-pane project snapshot; a single root may be outside those discovery directories, while zero/multiple roots remain generic. Legacy unadopted startup sessions stay generic. Other sessions retain explicit-tag/start-directory/pane-directory association. Every session appears once and duplicate project basenames include disambiguating paths. The preview displays full unique session names.
+The browser discovers Git checkouts immediately under `~/repos`, includes Dots, and reads optional [additional project paths](specification.md#session-browser-projects). Active projects come first, inactive projects next, then generic sessions. Managed workspaces use their live all-pane project snapshot; a single root may be outside those discovery directories, while zero/multiple roots remain generic. Legacy unadopted startup sessions stay generic. Other sessions retain explicit-tag/start-directory/pane-directory association. Every session appears once and duplicate project basenames include disambiguating paths. The preview retains full unique session names internally; the visible text clips to its width.
 
 | Key | Action |
 | --- | --- |

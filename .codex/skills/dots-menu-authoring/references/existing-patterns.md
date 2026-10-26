@@ -121,13 +121,14 @@ still returns selected indices and Ctrl-C raises `SelectionEnded(130)`.
 uses FZF's inert filter ordering before opening the UI. Do not assume the raw
 inventory position equals the fuzzy match position.
 
-For a compact bottom preview, opt into `preview_position="down"`,
-`preview_lines=N` and `preview_wrap=True`. The absolute height includes preview
-borders; budget actual content width after the outer border, padding and preview
-border/padding. Count wrapped display cells after stripping trusted ANSI, keep a
-stable height for the view, and cap it against the terminal. Session previews
-normally use five rows and cap at eight. Default percentage sizing and wrapping
-for other callers are unchanged. FZF's `~N` syntax fixes header lines; it does not
+For a compact bottom preview, opt into `preview_position="down"` and
+`preview_lines=N`. The absolute height includes preview borders. Session previews
+use `preview_wrap=False` to keep each session on one row, clip overflow at the
+right edge and size by logical line count; they normally use five rows and cap
+at eight. Callers that need wrapping can use `preview_wrap=True`, budget content
+width after borders/padding and count wrapped display cells after stripping
+trusted ANSI. Keep a stable height for the view and cap it against the terminal.
+Default percentage sizing and wrapping for other callers are unchanged. FZF's `~N` syntax fixes header lines; it does not
 size a preview to its contents.
 
 The [session browser](../../../../lib/dots/menu_sessions.py) refreshes project
