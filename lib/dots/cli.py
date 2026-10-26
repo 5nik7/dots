@@ -363,7 +363,7 @@ def main(argv=None):
         if not action or action == 'backups': return help_view(directories, parts)
         if action in ('install', 'uninstall'): target = 'install'
         elif action in ('stash', 'edit'): target = 'mappings'
-        elif action in ('browse', 'check'): return controller('files/' + action.replace('browse', 'browser') + '.py', rest)
+        elif action in ('browse', 'check', 'repair'): return controller('files/' + action.replace('browse', 'browser') + '.py', rest)
         elif action in ('list', 'sources', 'source', 'target', 'show', 'track', 'locate', 'discover'): target = 'catalog'
         else: target = 'manage'
         if action == 'rm': action = 'remove'
@@ -394,7 +394,9 @@ def main(argv=None):
         if parts[1:2] == ['colors']: return controller('themes/file-colors.py', [*parts[2:], *rest])
         if parts[1:2] == ['plugins'] and len(parts) > 2: return controller('themes/plugins.py', [*parts[2:], *rest])
         return controller('themes/theme_cli.py', [*parts[1:], *rest])
+    if stem == 'menu': return controller('menu_cli.py', rest)
     if stem == 'menu-tmux-keys': return controller('keys_cli.py', ['tmux', *rest])
+    if stem == 'menu-tmux-sessions': return controller('menu_sessions.py', rest)
     raise ValueError('command requires a POSIX/tmux session: ' + stem.replace('-', ' '))
 
 

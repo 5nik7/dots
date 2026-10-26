@@ -8,10 +8,10 @@ ttl = 900                # weather freshness, seconds
 max_stale = 21600        # maximum retained weather age, seconds
 location_max_age = 86400 # background cached city fix, seconds
 # Optional manual styling: "{icon_color}{icon}{reset} {temp_color}{temperature}{unit}{reset}"
-widget = "{icon_color}{icon}{reset} {temp_color}{temperature}{unit}{stale_marker}"
-show_location_attribution = false                                                  # hide the wrapper's Location data row
-widget_color = "auto"                                                              # auto (TTY), always, never; CLI/env override
-widget_color_format = "ansi"                                                       # ansi, plain, tmux (explicit status markup)
+widget = "{icon_color}{icon}{reset} {temp_color}{temperature}{reset}{dim}({reset}{feel_color}{feels_like}{reset}{dim}){reset}{unit}{stale_marker}"
+show_location_attribution = false                                                                                                                  # hide the wrapper's Location data row
+widget_color = "auto"                                                                                                                              # auto (TTY), always, never; CLI/env override
+widget_color_format = "ansi"                                                                                                                       # ansi, plain, tmux (explicit status markup)
 
 label_gap = 3 # spaces after the aligned label column in human weather output (1–8)
 

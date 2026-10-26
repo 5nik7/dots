@@ -27,12 +27,13 @@ class NativeCLI(unittest.TestCase):
         self.home.mkdir(); self.repo.mkdir()
         self.env = dict(os.environ)
         for key in list(self.env):
-            if key.startswith(('DOTS_', 'GIT_')) or key in ('TMUX','KITTY_LISTEN_ON','WAYLAND_DISPLAY','DISPLAY','DOTHEMES','THEMES','TERMUX_VERSION','EZA_CONFIG_DIR','TELEVISION_CONFIG','TELEVISION_DATA'): self.env.pop(key)
+            if key.startswith(('DOTS_', 'GIT_', 'BAT_')) or key in ('TMUX','KITTY_LISTEN_ON','WAYLAND_DISPLAY','DISPLAY','DOTHEMES','THEMES','TERMUX_VERSION','EZA_CONFIG_DIR','TELEVISION_CONFIG','TELEVISION_DATA','YAZI_CONFIG_HOME'): self.env.pop(key)
         self.env.update(DOTS=str(self.repo), HOME=str(self.home), USERPROFILE=str(self.home),
                         XDG_CONFIG_HOME=str(self.home/'config'), XDG_STATE_HOME=str(self.home/'state'),
                         XDG_CACHE_HOME=str(self.home/'cache'), XDG_DATA_HOME=str(self.home/'data'),
                         APPDATA=str(self.home/'Roaming'), LOCALAPPDATA=str(self.home/'Local'),
                         CODEX_HOME=str(self.home/'codex'), PI_CODING_AGENT_DIR=str(self.home/'pi'),
+                        BAT_CONFIG_DIR=str(self.home/'config/bat'),
                         DOTS_COLOR='never', DOTS_ICONS='never', DOTS_PROGRESS='never',
                         PYTHONUTF8='1', PYTHONIOENCODING='utf-8',
                         GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull)
@@ -72,6 +73,9 @@ class NativeCLI(unittest.TestCase):
         self.assertIn('dots:example',self.command('__complete','files','link','dots:').stdout)
         self.assertIn('--verbose',self.command('__complete','init','--setup','--v').stdout)
         self.command('files','link','dots:example','--dry-run','--json')
+        self.assertIn('--yes', self.command('__complete','files','repair','--y').stdout)
+        self.assertIn('dots:example', self.command('__complete','files','repair','dots:').stdout)
+        self.assertEqual(json.loads(self.command('files','repair','--dry-run','--json').stdout)['action'], 'repair')
         self.assertFalse(list(self.home.iterdir()))
 
     def test_literal_argument_bridge(self):
@@ -145,6 +149,11 @@ class NativeCLI(unittest.TestCase):
             theme_cli.publication(themes, identity, dry=True)
             self.assertFalse(themes.state.exists())
             first = theme_cli.publication(themes, identity)
+            palette = themes.load(identity)
+            snapshot = (themes.state / 'current/theme/shell.tsv').read_text()
+            for name in ('foreground', 'background', 'lighter_background'):
+                self.assertIn(name + '\thex\t' + palette['colors'][name] + '\n', snapshot)
+                self.assertIn("'" + name + "' = @{", theme_cli.shell_init(palette, 'powershell'))
             self.assertTrue(eza.is_symlink())
             self.assertIn('colourful: true', eza.read_text())
             records = Store(themes.state).records()
@@ -319,7 +328,7 @@ class NativeCLI(unittest.TestCase):
                                          base64.b64encode(code.encode('utf-16-le')).decode()],
                                         env=self.env, capture_output=True, text=True, timeout=30)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                for args in (['--help'],['files','list','--json'],['files','link','dots:example','--dry-run','--json'],['completion','powershell']):
+                for args in (['--help'],['files','list','--json'],['files','link','dots:example','--dry-run','--json'],['files','repair','--dry-run','--json'],['completion','powershell']):
                     result=subprocess.run([engine,'-NoLogo','-NoProfile','-File',str(self.repo/'bin/dots.ps1'),*args],env=self.env,capture_output=True,text=True,timeout=30)
                     self.assertEqual(result.returncode,0,result.stdout+result.stderr)
                     if '--json' in args: json.loads(result.stdout)

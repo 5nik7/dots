@@ -191,7 +191,7 @@ dt_value() {
 }
 dt_fingerprint() {
   local sum input
-  local -a inputs=("$DT_LIB/"*.bash "$DT_LIB/"*.zsh "$DT_LIB/connectors.tsv" "$DT_LIB/../shell/palette.bash" "$DT_LIB/file-colors.py" "$DT_LIB/../resources.py" "$DT_LIB/../files/app_paths.py" "${DT_LIB%/lib/dots/themes}/default/file-colors.toml")
+  local -a inputs=("$DT_LIB/"*.bash "$DT_LIB/"*.zsh "$DT_LIB/connectors.tsv" "$DT_LIB/../shell/palette.bash" "$DT_LIB/file-colors.py" "$DT_LIB/bat_cache.py" "$DT_LIB/../resources.py" "$DT_LIB/../files/app_paths.py" "${DT_LIB%/lib/dots/themes}/default/file-colors.toml")
   if [[ -f $DT_ROOT/$DT_THEME/theme.toml && -d $DT_ROOT/$DT_THEME/flavors ]]; then
     inputs+=("$DT_ROOT/$DT_THEME/theme.toml" "$DT_ROOT/$DT_THEME/flavors/"*.toml)
   fi
@@ -223,6 +223,15 @@ dt_fingerprint() {
   [[ ! -f $input ]] || inputs+=("$input")
   # Batch hashing preserves filename/content identity without one process per file.
   sum=$(set -o pipefail; sha256sum -- "${inputs[@]}" | sha256sum) || return
+  REPLY=${sum%% *}
+}
+# Compiled asset inputs belong to explicit publication/setup, never shell init.
+dt_publication_fingerprint() {
+  local theme sum
+  dt_fingerprint || return
+  theme=$REPLY
+  DT_BAT_FINGERPRINT=$(python3 -B "$DT_LIB/bat_cache.py" fingerprint) || return
+  sum=$(printf '%s\n%s\n' "$theme" "$DT_BAT_FINGERPRINT" | sha256sum) || return
   REPLY=${sum%% *}
 }
 dt_emit_array() {
@@ -305,6 +314,10 @@ SHELL
   printf '[[ ${rst-} == %q ]] || declare -g rst=%q\n' $'\e[0m' $'\e[0m'
   printf '[[ ${RST-} == %q ]] || declare -g RST=%q\n' $'\e[0m' $'\e[0m'
   printf 'export THEME=%q FLAVOR=%q\n' "$theme" "$selected"
+  # App styling remains available when named shell color shortcuts are disabled.
+  printf '_DOTS_LESS_FOREGROUND_HEX=%q\n_DOTS_LESS_BACKGROUND_HEX=%q\n' \
+    "${DT_SEMANTIC[foreground]:-${DT_COLORS[${DT_META[roles.foreground]}]}}" \
+    "${DT_SEMANTIC[lighter_background]:-${DT_SEMANTIC[background]:-${DT_COLORS[${DT_META[roles.background]}]}}}"
   printf 'declare -gA dots_palette=(\n'
   for name in "${DT_NAMES[@]}"; do printf ' [%q]=%q\n' "$name" "${DT_COLORS[$name]}"; done
   printf ')\ndeclare -gA dots_roles=(\n'

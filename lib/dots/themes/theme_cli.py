@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+import bat_cache
 
 from palette_native import Themes, LIB, FORMATS, ID, metric, regular, styles
 from catalog import Presentation, atomic_json
@@ -46,7 +47,7 @@ def shell_init(palette, shell):
             lines += ["  '" + k + "' = '" + v + "'" for k, v in data.items()]
             lines.append('}')
         lines.append('$global:dots_colors = @{')
-        for name, value in {**palette['palette'], **palette['roles']}.items():
+        for name, value in palette['colors'].items():
             lines.append("  '" + name + "' = @{")
             for format in FORMATS:
                 result = metric(name, value, format)
@@ -217,7 +218,8 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
         parents_safe(path)
         if path.is_dir() and not path.is_symlink(): raise ValueError('cannot replace a real theme connector directory: ' + str(path))
         guards[str(path)] = digest(path)
-    fingerprint = themes.fingerprint(identity)
+    bat_inputs = bat_cache.inputs()
+    fingerprint = themes.publication_fingerprint(identity, bat_inputs)
     if token.is_file() and not token.is_symlink():
         current = token.read_text().strip()
         if not re.fullmatch(r'g\.[a-zA-Z0-9]+', current): raise ValueError('invalid theme generation')
@@ -244,12 +246,12 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
     with tempfile.TemporaryDirectory(prefix='dots-theme-') as tmp:
         out = Path(tmp)
         with Progress('Rendering application themes'):
-            palette = themes.render(identity, out, build_cache=True)
+            palette = themes.render(identity, out, build_cache=True, bat_inputs=bat_inputs)
             for shell in ('powershell', 'zsh', 'fish'):
                 (out / ('init.' + ('ps1' if shell == 'powershell' else shell))).write_text(shell_init(palette, shell), encoding='utf-8')
             generated_commands(themes, out)
             (out / 'status').write_text('committed\n')
-            if themes.fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
+            if themes.publication_fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
         operations = [dict(path=str(destination), source=str(out))]
         for target, artifact in links:
             if not (out / artifact).exists(): raise ValueError('missing connector artifact: ' + artifact)

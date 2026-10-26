@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# dots:summary=Repair managed links and review destination conflicts
+# dots:usage=[RESOURCE...] [OPTIONS]
+# dots:option=--yes||flag|Apply automatic repairs only; leave conflicts for interactive review
+# dots:option=--dry-run||flag|Preview without changes or prompts
+# dots:option=--json||flag|Emit versioned JSON; requires --yes or --dry-run
+# dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
+# dots:option=--repo||file-repository|Filter by repository ID
+# dots:option=--app||string|Filter by application
+# dots:option=--category||string|Filter by category
+# dots:argument=*|file-resource|Qualified resource ID
+FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
+exec python3 -B "$FILES_LIB/repair.py" "$@"

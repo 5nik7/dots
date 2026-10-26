@@ -20,7 +20,7 @@ def current_source(value):
 def validate_cli(args, parser):
     values = [getattr(args, 'repo', None)]
     resources = list(getattr(args, 'replaces', None) or [])
-    if getattr(args, 'action', None) in ('source','target','show','link','remove','stash','edit'):
+    if getattr(args, 'action', None) in ('source','target','show','link','remove','stash','edit','repair'):
         resources.extend(getattr(args, 'values', None) or [])
         resources.append(getattr(args, 'value', None))
     values.extend(value for value in resources if isinstance(value,str) and ':' in value)

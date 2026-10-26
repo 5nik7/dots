@@ -17,6 +17,10 @@ Clink follows the same rule. Existing links and prompt contents are retained.
 Blastoff 0.1.12 preserves this active-file link during normal writes and tracks
 the resolved repository file; explicit `--replace-link` still converts the link.
 
+The bundled prompt groups `git_branch`, `git_commit`, `git_status`, `git_metrics` and `git_state` behind `${custom.tmux}` on Unix and `${custom.tmux_windows}` on Windows. A nonempty `TMUX` hides the whole group and skips its child Git renderer; unset or empty `TMUX` shows it normally. This condition does not query the tmux server or depend on Gitmux. Existing Git module settings and the selected palette control its appearance, with one trailing separator when the group is populated and no padding when it is empty.
+
+Custom module formats cannot expand built-in modules directly, so the wrappers call `starship module vcs` with a Git-only module list. This requires Starship's `vcs` module, verified locally with 1.27.0. The Unix wrapper uses `sh`; the Windows wrapper uses native Windows PowerShell without profiles and with UTF-8 output. The child clears `STARSHIP_SHELL` so the parent handles prompt escaping once; custom-output escaping stays enabled. Native Windows PowerShell 5.1/7 checks for tmux visibility, Unicode, colors and prompt escaping remain pending; Termux rendering fixtures do not establish native Windows acceptance.
+
 ## Settings
 
 Edit `${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env`. Native Windows PowerShell
@@ -155,3 +159,15 @@ exported hook evidence, with private-value redaction. See the authoritative
 ## Retired Ruby environment
 
 `DOTRUBY` and `RUBYCOMP` are removed from the environment registry and completion. Initialization/reload unsets inherited values and removes their provenance records. Profile definitions cannot redeclare them. Only the obsolete `ruby/completion` entry under the current checkout, previous `DOTS_PROFILE_CHECKOUT`, or default `~/dots` is removed from PATH, including a trailing slash. Unrelated Ruby paths remain. This applies to Bash, Zsh, Fish, PowerShell, Nushell and Xonsh adapters; a child CLI cannot alter an already-running parent shell. Open a new shell or reload Dots initialization to apply the cleanup. `config/ruby` is independent and remains supported.
+
+## Global less colors
+
+Dots styles less's standout text with the current theme's `foreground` on `lighter_background`, at normal weight. This includes the bottom-left prompt, ordinary search highlights and messages using that style. The standard `LESS_TERMCAP_so` and `LESS_TERMCAP_se` exports apply to less and child programs using it; prompt wording, pager selection, `LESS`, `LESSOPEN` and other options remain under their existing owners. Explicit less color options can override terminal capabilities.
+
+Bash, Zsh, Fish, Nushell and Xonsh update these exports at initialization and existing theme-refresh boundaries. The PowerShell adapter supplies the same behavior on POSIX. No less invocation or new external process runs on an ordinary prompt. Shell snapshots retain the needed colors even with `DOTS_INIT_COLORS=0`; older snapshots without `lighter_background` use the normal theme background. Missing or invalid colors retain an existing valid style; a fresh shell keeps stock styling.
+
+Explicit `LESS_TERMCAP_so`/`LESS_TERMCAP_se` values, including empty values, and the corresponding `LESS_TERMINFO_smso`/`LESS_TERMINFO_rmso` overrides take precedence. Dots exports the internal `_DOTS_LESS_STYLE` ownership marker so nested shells can refresh inherited Dots colors. A changed pair is treated as user-owned and left intact. `DOTS_COLOR=never`, automatic mode with nonempty `NO_COLOR` or a dumb terminal, and `DOTS_INIT_THEME=0` remove only the Dots-owned pair. `DOTS_COLOR=always` takes precedence over `NO_COLOR`. Reload shell configuration after changing these controls.
+
+Dots popup readers resolve the same colors from the current published palette before opening less, including background tmux launches with an older environment. They retain explicit overrides and their existing secure reader configuration. Reopen the popup to see current colors; for ordinary commands, start a new shell or use the shell's existing reload command (`rl` in the personal Zsh configuration). Already running readers retain their launch environment.
+
+Exact RGB styling requires a termcap-based less and a truecolor terminal, supported locally on Termux and applicable to Linux/WSL. Native Windows less uses a console rendering path without the equivalent RGB terminal override; it retains stock colors. The native PowerShell implementation does not invoke Bash or WSL. No application destinations, system-wide files or package settings change.

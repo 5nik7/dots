@@ -1,7 +1,7 @@
 """Lossless binding identity with readable, non-executable display labels."""
 import re
 
-APPS = ('zsh', 'bash', 'powershell', 'tmux', 'nvim', 'yazi', 'fzf', 'kitty', 'television')
+APPS = ('zsh', 'bash', 'powershell', 'tmux', 'nvim', 'yazi', 'codex', 'fzf', 'kitty', 'television')
 ACTIONS = {
     'backward-delete-char': 'Delete the character before the cursor',
     'vi-backward-delete-char': 'Delete backward within the current vi insertion',
@@ -37,7 +37,7 @@ ANSI = {'\x1b[A':'Up', '\x1b[B':'Down', '\x1b[C':'Right', '\x1b[D':'Left',
 
 
 def chord(value):
-    value=value.strip('<>')
+    if value.startswith('<') and value.endswith('>') and len(value)>2:value=value[1:-1]
     parts=re.split(r'[-+]',value)
     mods=[]
     while len(parts)>1 and parts[0].lower() in ('c','ctrl','control','m','a','alt','meta','s','shift','super','d','cmd','kitty_mod'):
@@ -56,7 +56,7 @@ def readable(raw):
         return chord(raw)
     if re.fullmatch(r'(?:Mouse|Wheel|DoubleClick|TripleClick)[A-Za-z0-9]+',raw):
         return re.sub(r'(?<=[a-z])(?=[A-Z0-9])',' ',raw)
-    if raw.startswith('<'):
+    if raw.startswith('<') and '>' in raw[1:]:
         return ' → '.join(chord(t) if t.startswith('<') else readable(t) for t in re.findall(r'<[^>]+>|[^<]+',raw))
     raw=re.sub(r'\\C-(.)',lambda m:chr(ord(m[1].upper())&31),raw)
     raw=raw.replace('\\M-','\x1b').replace('\\e','\x1b').replace('\\E','\x1b')
@@ -106,7 +106,7 @@ def merge(rows):
         if r['evidence']=='configured':configured[identity(r)]=min(configured.get(identity(r),4),priority(r))
     seen={};result=[]
     for row in rows:
-        row['status']='active' if row['evidence']=='live' else 'shadowed' if identity(row) in live or priority(row)>configured.get(identity(row),4) else 'configured; activation unverified'
+        row['status']='active' if row['evidence']=='live' else 'shadowed' if identity(row) in live else row.get('status') or ('shadowed' if priority(row)>configured.get(identity(row),4) else 'configured; activation unverified')
         exact=(*identity(row),row['evidence'],row.get('scope',''),row.get('source'),row['action'])
         if exact in seen:continue
         seen[exact]=1;result.append(row)

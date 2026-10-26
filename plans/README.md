@@ -8,6 +8,10 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Global less colors](less-style.md) | Implemented: exact theme colors for less standout text through shell and popup readers; native runtime acceptance recorded. |
+| [Popup menus](popup-menus.md) | G1–G6 complete, including project-aware session actions. G6 corrections add compact previews, Alt-H help, generic automatic Termux sessions and a verified device launch fallback. Native Linux/WSL/Windows and human visual checks remain pending. |
+| [Bat custom syntaxes](bat-syntax-cache.md) | Implemented shared syntax snapshots and cache invalidation; Termux checks and live refresh complete, native Windows acceptance pending. |
+| [Zsh personal keys](zsh-keys.md) | Implemented centralized ZLE configuration and themed substring-history search; native Termux verification. |
 | [Anodize](anodize.md) | Implemented core/CLI, local Neovim integration, completions and manual. |
 | [Anodize terminal branding](anodize-logo.md) | Responsive portable logos and optional Kitty/Chafa rendering. |
 | [Anodize next steps](anodize-next.md) | Proposed foundation hardening, then separately scoped frontend work. |
@@ -19,6 +23,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Tracked-config browser](files-browser.md) | Implemented Gum/FZF/plain browser with guarded operation review. |
 | [Files catalog](files-catalog.md) | Implemented catalog; later mutations belong to the Git/files slice. |
 | [Missing-source check](files-check.md) | Interactive catalog-only cleanup with journaled undo. |
+| [Managed file repair](files-repair.md) | Automatic link repair, interactive issue resolution and journaled recovery. |
 | [Stash and edit mappings](files-mappings.md) | Disabled resources, mapping edits and the bounded Git XDG migration. |
 | [Unified theme CLI](theme-cli.md) | Consolidation on `dots theme` with native palette queries. |
 | [Generated theme files](theme-files.md) | Active-generation inspection, connection checks and read-only browsing. |

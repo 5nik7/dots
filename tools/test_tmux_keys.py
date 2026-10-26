@@ -12,6 +12,7 @@ import shutil
 import signal
 import struct
 import subprocess
+import tempfile
 import termios
 import time
 import unittest
@@ -19,7 +20,7 @@ from unittest.mock import patch
 import test_keys
 
 ROOT=test_keys.ROOT
-TMUX=shutil.which('tmux');FZF=shutil.which('fzf');BASH=shutil.which('bash')
+TMUX=shutil.which('tmux');FZF=shutil.which('fzf');BASH=shutil.which('bash');ZSH=shutil.which('zsh')
 
 
 class TmuxKeys(unittest.TestCase):
@@ -43,7 +44,7 @@ class TmuxKeys(unittest.TestCase):
                 self.assertEqual(p.returncode,0,p.stderr);self.assertIn('--print',p.stdout)
             completion=[*prefix,'__complete',*(['keys',''] if native else ['bash','2','--','dots','keys',''])]
             p=subprocess.run(completion,env=self.env,capture_output=True,text=True)
-            self.assertEqual(p.returncode,0,p.stderr);self.assertIn('nvim',p.stdout);self.assertIn('zsh',p.stdout)
+            self.assertEqual(p.returncode,0,p.stderr);self.assertIn('nvim',p.stdout);self.assertIn('zsh',p.stdout);self.assertIn('codex',p.stdout)
 
     @unittest.skipUnless(TMUX,'tmux unavailable')
     def test_native_notes_and_prefixes_without_starting_server(self):
@@ -112,7 +113,7 @@ class TmuxKeys(unittest.TestCase):
         cfg=self.base/'tmux.conf';cfg.write_text('set -g default-shell '+shlex.quote(BASH)+'\n'+binding+'\nbind D display-message -d 1500 DOTS_PICKER_CLOSED\n')
         socket=self.base/'popup.socket';self.native(socket,'-f',str(cfg),'new-session','-d','-s','fixture',BASH+' --noprofile --norc')
         pid,master=pty.fork()
-        if pid==0:os.execve(TMUX,[TMUX,'-S',str(socket),'attach','-t','fixture'],self.env)
+        if pid==0:os.execve(TMUX,[TMUX,'-u','-S',str(socket),'attach','-t','fixture'],self.env)
         output=bytearray();reaped=False
         def receive(needle):
             deadline=time.monotonic()+20
@@ -125,13 +126,11 @@ class TmuxKeys(unittest.TestCase):
             fcntl.ioctl(master,termios.TIOCSWINSZ,struct.pack('HHHH',30,100,0,0))
             receive(b'fixture')
             for cancel in (b'\x1b',b'\x03'):
-                for stage in ('categories','apps','bindings'):
+                for stage in ('categories','bindings'):
                     with self.subTest(cancel=cancel,stage=stage):
-                        output.clear();os.write(master,b'\x02?');receive(b'Keybinding categories')
-                        if stage!='categories':
-                            os.write(master,b'Apps');time.sleep(.4);os.write(master,b'\r');receive(b'Keybinding apps')
+                        output.clear();os.write(master,b'\x02?');receive(b'Enter: open')
                         if stage=='bindings':
-                            os.write(master,b'tmux');time.sleep(.4);os.write(master,b'\r');receive(b'Keybindings')
+                            os.write(master,b'tmux');time.sleep(.4);os.write(master,b'\r');receive(b'tmux:')
                         output.clear();os.write(master,cancel)
                         deadline=time.monotonic()+1
                         while time.monotonic()<deadline:
@@ -139,8 +138,8 @@ class TmuxKeys(unittest.TestCase):
                         self.assertNotIn(b'returned 130',output)
                         self.assertNotIn('returned 130',self.native(socket,'show-messages'))
                         os.write(master,b'\x02D');receive(b'DOTS_PICKER_CLOSED')
-            output.clear();os.write(master,b'\x02?');receive(b'Keybinding categories')
-            os.write(master,b'All');time.sleep(.4);os.write(master,b'\r');output.clear();receive(b'Keybindings')
+            output.clear();os.write(master,b'\x02?');receive(b'Enter: open')
+            os.write(master,b'All');time.sleep(.4);os.write(master,b'\r');output.clear();receive(b'Alt-M: mode')
             os.write(master,b'\x03');time.sleep(.3);output.clear();os.write(master,b'\x02D');receive(b'DOTS_PICKER_CLOSED')
             self.native(socket,'detach-client','-s','fixture')
             os.waitpid(pid,0);reaped=True
@@ -161,6 +160,79 @@ class TmuxKeys(unittest.TestCase):
                 result=subprocess.run([shell,'-c',launcher],env=env,cwd=self.home,capture_output=True,text=True,timeout=10)
                 self.assertEqual(result.returncode,0 if status==130 else status)
                 self.assertEqual(result.stderr,'fixture-diagnostic')
+
+    @unittest.skipUnless(TMUX and FZF and ZSH,'tmux/FZF/Zsh unavailable')
+    def test_popup_captures_source_zsh_without_changing_typed_command(self):
+        runtime=tempfile.TemporaryDirectory(prefix='dk-');self.addCleanup(runtime.cleanup)
+        self.env['TMPDIR']=runtime.name
+        for name,source in (('tmux',TMUX),('fzf',FZF)):
+            path=self.base/'commands'/name
+            if path.exists():path.unlink()
+            path.symlink_to(source)
+        for name in ('.zshenv','.zshrc'):
+            path=self.home/name
+            if path.is_symlink():path.unlink()
+            path.write_text('')
+        (self.home/'.zshrc').write_text('''
+PS1='IPC_READY> '
+HISTFILE=''
+bindkey -v
+source "$DOTS/lib/dots/shell/keys.bash"
+functions[_fixture_snapshot]=${functions[_dots_keys_snapshot]}
+_dots_keys_snapshot() { print called >> "$HOME/captures"; _fixture_snapshot; }
+_fixture_widget() { :; }
+zle -N fixture-live-key _fixture_widget
+bindkey -M viins '^X^G' fixture-live-key
+_capture_buffer() { print -r -- "$BUFFER" >| "$HOME/preserved"; BUFFER=''; zle accept-line; }
+zle -N _capture_buffer
+bindkey -M viins '^G' _capture_buffer
+''')
+        binding=next(l for l in (ROOT/'config/tmux/tmux.conf').read_text().splitlines() if 'Browse keybinding categories' in l)
+        cfg=self.base/'ipc-tmux.conf';cfg.write_text('set -g default-shell '+shlex.quote(ZSH)+'\n'+binding+'\n')
+        socket=self.base/'ipc.socket'
+        self.native(socket,'-f',str(cfg),'new-session','-d','-s','fixture',shlex.quote(ZSH)+' -d')
+        pid,master=pty.fork()
+        if pid==0:os.execve(TMUX,[TMUX,'-u','-S',str(socket),'attach','-t','fixture'],self.env)
+        output=bytearray();reaped=False
+        def receive(needle):
+            deadline=time.monotonic()+15
+            while needle not in output and time.monotonic()<deadline:
+                if select.select([master],[],[],.1)[0]:
+                    try:output.extend(os.read(master,65536))
+                    except OSError:break
+            self.assertIn(needle,output[-16000:])
+        try:
+            fcntl.ioctl(master,termios.TIOCSWINSZ,struct.pack('HHHH',30,100,0,0))
+            receive(b'IPC_READY> ')
+            os.write(master,b'keep this partial command');time.sleep(.2)
+            output.clear();os.write(master,b'\x02?');receive(b'Enter: open')
+            os.write(master,b'Zsh');time.sleep(.3);os.write(master,b'\r')
+            output.clear();receive(b'zsh:')
+            os.write(master,b'fixture live key');receive(b'fixture live key')
+            directory=next(Path(runtime.name).glob('dots-keys-*'))
+            records=json.loads((directory/'bindings.json').read_text())
+            self.assertTrue(any(row['mode']=='viins' and row['action']=='fixture-live-key' and row['evidence']=='live' for row in records))
+            output.clear();os.write(master,b'\x1bm');receive(b'modes:')
+            time.sleep(.2);os.write(master,b'viins');time.sleep(.2);os.write(master,b'\r')
+            output.clear();receive('zsh·viins:'.encode())
+            self.assertNotIn(b'Zsh: live shell bindings',output)
+            self.assertEqual((self.home/'captures').read_text().splitlines(),['called'])
+            time.sleep(.2);os.write(master,b'\x1b')
+            deadline=time.monotonic()+1
+            while time.monotonic()<deadline:
+                if select.select([master],[],[],.05)[0]:output.extend(os.read(master,65536))
+            os.write(master,b'\x07')
+            deadline=time.monotonic()+5
+            while not (self.home/'preserved').exists() and time.monotonic()<deadline:
+                if select.select([master],[],[],.05)[0]:output.extend(os.read(master,65536))
+            self.assertTrue((self.home/'preserved').exists(),self.native(socket,'capture-pane','-p'))
+            self.assertEqual((self.home/'preserved').read_text().strip(),'keep this partial command')
+            self.assertNotIn('returned 130',self.native(socket,'show-messages'))
+            self.native(socket,'detach-client','-s','fixture');os.waitpid(pid,0);reaped=True
+        finally:
+            if not reaped:os.kill(pid,signal.SIGKILL);os.waitpid(pid,0)
+            os.close(master)
+            subprocess.run([TMUX,'-S',str(socket),'kill-server'],env=self.env,capture_output=True,timeout=10)
 
     def test_direct_cli_keeps_cancellation_status(self):
         directory=self.root/'config/yazi';directory.mkdir(parents=True)

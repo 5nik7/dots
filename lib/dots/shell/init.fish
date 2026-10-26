@@ -78,6 +78,7 @@ for entry in $profile_entries $PATH
 end
 set -gx PATH $ordered_path
 status is-interactive; or return 0
+source "$DOTS/lib/dots/shell/less.fish"
 set -g rst (printf '\033[0m')
 set -g RST "$rst"
 if test $_dots_option_DOTS_INIT_COLORS = 0
@@ -87,7 +88,10 @@ if test $_dots_option_DOTS_INIT_COLORS = 0
     set -g _DOTS_COLOR_SHORTCUTS
 end
 function _dots_fish_theme
-    test $_dots_option_DOTS_INIT_THEME = 1; or return 0
+    if test $_dots_option_DOTS_INIT_THEME != 1
+        _dots_less_style '' '' auto 0
+        return 0
+    end
     set -l generation
     test -r "$_DOTS_STATE/themes/current"; or return 0
     read -l generation < "$_DOTS_STATE/themes/current"
@@ -97,17 +101,32 @@ function _dots_fish_theme
     test -f "$file"; and test -r "$file"; or return 1
     set -l records
     set -l id
+    set -l less_fg ''
+    set -l less_bg ''
+    set -l less_lighter ''
     while read -l line
         set -l fields (string split \t -- "$line")
         test (count $fields) -eq 3; or return 1
         string match -rq '^(@theme|@palette|@role|[a-z_][a-zA-Z0-9_]*)$' -- "$fields[1]"; or return 1
         string match -rq '^[a-zA-Z0-9_-]+$' -- "$fields[2]"; or return 1
         set -a records "$line"
+        if test "$fields[2]" = hex
+            switch "$fields[1]"
+                case foreground
+                    set less_fg "$fields[3]"
+                case background
+                    set less_bg "$fields[3]"
+                case lighter_background
+                    set less_lighter "$fields[3]"
+            end
+        end
         if test "$fields[1]" = @theme; and test "$fields[2]" = id
             set id "$fields[3]"
         end
     end < "$file"
     test -n "$id"; or return 1
+    test -n "$less_lighter"; or set less_lighter "$less_bg"
+    _dots_less_style "$less_fg" "$less_lighter" "$_dots_option_DOTS_COLOR" 1
     for name in $_DOTS_COLOR_VARIABLES
         set -e $name
     end

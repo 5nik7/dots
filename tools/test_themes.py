@@ -320,6 +320,11 @@ done
         first = self.generation()
         self.assertIn('@theme\tid\tcatppuccin-mocha', (first / 'shell.tsv').read_text())
         self.assertIn('blue\thex\t#89b4fa', (first / 'shell.tsv').read_text())
+        palette = json.loads((first / 'palette.json').read_text())['colors']
+        for shell in (BASH, ZSH):
+            if shell:
+                result = self.shell('declare -gA dots_options=([DOTS_INIT_COLORS]=0)\nsource "'+str(first/'init.zsh')+'"\nprintf "%s\\n" "$_DOTS_LESS_FOREGROUND_HEX" "$_DOTS_LESS_BACKGROUND_HEX"', shell)
+                self.assertEqual(result.stdout.splitlines(), [palette['foreground'], palette['lighter_background']])
         before = {str(p): (p.stat().st_mtime_ns, p.read_bytes()) for p in self.state.rglob('*') if p.is_file()}
         self.dots('theme', 'set', 'catppuccin-mocha')
         after = {str(p): (p.stat().st_mtime_ns, p.read_bytes()) for p in self.state.rglob('*') if p.is_file()}

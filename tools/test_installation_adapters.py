@@ -26,13 +26,13 @@ class Adapters(unittest.TestCase):
         for name in ('progress.py','interaction.py','ui.bash','ui.ps1','bootstrap-ui.sh',
                      'resources.py','resources.bash','resources.tsv',
                      'dispatch.bash','catalog.bash','complete.bash','init.bash','native.py',
-                     'cli.py','command_metadata.py','help.ps1','environment.py'):
+                     'cli.py','command_metadata.py','help.ps1','environment.py','platform_info.py','profiles.py'):
             shutil.copy2(ROOT/'lib/dots'/name,self.repo/'lib/dots'/name)
         shutil.copytree(ROOT/'lib/dots/shell',self.repo/'lib/dots/shell')
         shutil.copytree(ROOT/'lib/dots/metadata',self.repo/'lib/dots/metadata')
         shutil.copytree(ROOT/'lib/dots/completion',self.repo/'lib/dots/completion')
         (self.repo/'bin').mkdir()
-        for name in ('dots','dots.ps1','dots-files-install','dots-files-uninstall','dots-files-check','dots-files-stash','dots-files-edit'):
+        for name in ('dots','dots.ps1','dots-files-install','dots-files-uninstall','dots-files-check','dots-files-stash','dots-files-edit','dots-files-repair'):
             shutil.copy2(ROOT/'bin'/name,self.repo/'bin'/name)
         for name in ('install.sh','uninstall.sh','install.ps1','uninstall.ps1'):
             shutil.copy2(ROOT/name,self.repo/name)
@@ -136,6 +136,28 @@ class Adapters(unittest.TestCase):
         row=json.loads((self.repo/'.dots/files.json').read_text())['resources'][0]
         self.assertFalse(row['enabled'])
         self.assertEqual(row['target'],'${CONFIG}/new')
+
+    @unittest.skipUnless(PWSH, 'PowerShell unavailable; native repair acceptance pending')
+    def test_native_repair_route(self):
+        cmd = [PWSH, '-NoProfile', '-File', str(self.repo/'bin/dots.ps1'), 'files', 'repair']
+        preview = json.loads(self.run_command([*cmd, '--dry-run', '--json']).stdout)
+        self.assertEqual(preview['counts']['eligible'], 1)
+        self.assertFalse(list(self.home.iterdir()))
+        result = self.run_command([*cmd, '--yes', '--json'], ok=False) if os.name == 'nt' and not self.link_capability() else self.run_command([*cmd, '--yes', '--json'])
+        if result.returncode:
+            self.assertIn('symbolic links unavailable', result.stderr)
+        else:
+            self.assertEqual(json.loads(result.stdout)['counts']['repaired'], 1)
+            self.assertEqual(json.loads(self.run_command([*cmd, '--yes', '--json']).stdout)['status'], 'unchanged')
+
+    def link_capability(self):
+        path = self.base/'repair-link-probe'
+        try:
+            path.symlink_to(self.repo/'settings')
+            path.unlink()
+            return True
+        except OSError:
+            return False
 
     @unittest.skipIf(os.name=='nt','POSIX owned terminal')
     def test_owned_terminal_progress_and_widths(self):

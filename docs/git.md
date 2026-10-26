@@ -10,6 +10,8 @@ platform/private exclusions. A declared wiki is included as a separate associate
 repository; `--no-wiki` excludes it from top-level info/status/sync/publish. Missing repositories are never
 initialized by inspection or publication.
 
+`dots menu` includes a Git family with report and submodule/wiki inspection choices, plus publish and sync. The Git and Git → Wiki publish choices pass `--all` to their respective commands and retain the existing terminal review and confirmation. Direct CLI publication remains staged-only by default. Menu sync first shows the local `--dry-run` report; a successful, normally dismissed preview opens a Cancel/Sync confirmation with Cancel selected. Only explicit Sync runs the existing command. Menu sync adds no flags or repository scope and does not change direct CLI sync behavior. See the [launcher mapping](commands.md#dots-workflow-menu).
+
 [Terminal progress](presentation.md#operation-progress) covers recursive inspection and local operation phases, with repository counts when known. Fetch, initialization, commit and push use static phase messages so credentials, hooks and signing retain terminal access. `DOTS_PROGRESS=never` disables both displays; JSON and dry runs bypass them. Completion counts do not imply that every repository was successfully published.
 
 ```bash
@@ -32,7 +34,7 @@ state stay distinguishable. Repository labels use basenames with disambiguation;
 `--full-paths` expands human repository/file paths. Shared dots color/icon controls
 and plain fallbacks apply; no fetch occurs during status.
 
-Publish is staged-only by default, also publishing existing ahead commits. `--all`
+Direct CLI publish is staged-only by default, also publishing existing ahead commits. `--all`
 stages ordinary tracked and untracked files, respecting ignore rules; gitlinks are
 handled separately so deliberately staged pointers are preserved. Tracked files
 remain eligible even beneath ignored directories; ignored new files stay excluded.

@@ -10,6 +10,7 @@ exec(compile((_DotsPath($DOTS) / 'lib/dots/shell/runtime.py').read_text(), _dots
 import sys as _dots_sys
 _dots_sys.path.insert(0, str(_DotsPath($DOTS) / 'lib/dots'))
 from native_environment import exports as _dots_exports
+from less_style import apply as _dots_less_style
 _dots_profile_environment = _dots_exports(_DotsPath($DOTS), __xonsh__.env.detype())
 __xonsh__.env['PATH'] = _dots_profile_environment['PATH'].split(__import__('os').pathsep)
 for _dots_key, _dots_value in _dots_profile_environment.items():
@@ -45,6 +46,7 @@ if $XONSH_INTERACTIVE:
     def _dots_refresh_theme(**kwargs):
         global _dots_generation
         if dots_options['DOTS_INIT_THEME'] != '1':
+            _dots_less_style(__xonsh__.env, {}, enabled=False)
             return
         try:
             marker = _DotsPath(dot['state']) / 'themes/current'
@@ -57,6 +59,7 @@ if $XONSH_INTERACTIVE:
         except (OSError, ValueError):
             return
         ctx = __xonsh__.ctx
+        _dots_less_style(__xonsh__.env, {name: value['hex'] for name, value in data.items() if 'hex' in value}, mode=dots_options['DOTS_COLOR'])
         for name in ctx.get('_dots_color_names', []):
             ctx.pop(name, None)
         names = []

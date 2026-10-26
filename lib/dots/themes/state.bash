@@ -117,11 +117,9 @@ dt_prepare_generation() {
     dt_app_init "$dir" || return 1
   fi
   if [[ -f $dir/bat.tmTheme ]] && command -v bat >/dev/null; then
-    mkdir -p "$dir/bat-source/themes" "$dir/bat-cache" || return 1
-    cp -- "$dir/bat.tmTheme" "$dir/bat-source/themes/Dots.tmTheme" || return 1
     dots::progress_update 'Building bat theme cache'
     dots::operation Preparing '' '' 'Building bat theme cache'
-    (cd -- "$dir/bat-source" && BAT_CONFIG_PATH=/dev/null BAT_THEME=ansi BAT_CONFIG_DIR="$dir/bat-source" BAT_CACHE_PATH="$dir/bat-cache" bat cache --build --source "$dir/bat-source" --target "$dir/bat-cache" >/dev/null) || { dt_error 'bat theme cache build failed'; return 1; }
+    python3 -B "$DT_LIB/bat_cache.py" build "$dir" "$DT_BAT_FINGERPRINT" || return 1
     # Delta reads XDG_CACHE_HOME/bat rather than BAT_CACHE_PATH. Git redirects
     # only its Delta processes here, leaving the normal bat cache untouched.
     mkdir "$dir/delta-cache" && ln -s ../bat-cache "$dir/delta-cache/bat" || return 1
@@ -136,7 +134,7 @@ dt_prepare_generation() {
   if [[ -L $DT_ACTIVE ]]; then readlink -- "$DT_ACTIVE" > "$dir/previous-active"; else : > "$dir/previous-active"; fi
   dt_generation_complete "$dir" || { dt_error "incomplete prepared theme: $REPLY"; return 1; }
   dt_commands_prepare "$dir" || return 1
-  dt_fingerprint || return 1
+  dt_publication_fingerprint || return 1
   [[ $REPLY == "$fingerprint" ]] || { dt_error 'theme inputs changed during preparation; retry'; return 1; }
   while IFS= read -r -d '' file; do dt_flush "$file" || return 1; done < <(find "$dir" -type f -print0)
   dt_flush "$dir" && dt_flush "$DT_STATE/generations" || return 1
@@ -163,7 +161,7 @@ dt_set() (
     for candidate in mocha macchiato frappe latte; do dt_load "$family" "$candidate" || exit 1; done
     dt_load "$theme" "$flavor" || exit 1
   fi
-  dt_fingerprint || exit 1; fingerprint=$REPLY
+  dt_publication_fingerprint || exit 1; fingerprint=$REPLY
   dt_state_preflight || exit 1
   dt_commands_lock || exit 1
   mkdir -p -- "$DT_STATE/generations" "${DT_ACTIVE%/*}" || exit 1

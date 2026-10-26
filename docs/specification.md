@@ -2,6 +2,56 @@
 
 This reference describes the data consumed and produced by the live theme, file catalog, shell and checkout installation controllers. Command-specific behavior is documented in [commands](commands.md), [files](files.md) and [installation](installation.md).
 
+## Shared menu records
+
+`dots menu --json` uses `menu: "dots"` and `title: "Dots menu"`, with exactly the base item fields below. Its ordered IDs are `keys`, `tmux`, `files`, `git`, `theme`, `themes`, `anodize`, `debug`, `profile`, `profiles`, `wiki`, `env`; the schema-1 envelope and base item fields remain unchanged. Action meanings are documented in [launcher commands](commands.md#dots-workflow-menu). Availability reflects static command presence, required tmux/Git executables and platform/Python limits; it does not assert that a child inventory contains results. Data views never probe FZF or run those tools. They exclude icons, action arrays, environment and private transport even when decoration is forced.
+
+**Implemented shared library, launcher and session-menu contract.** `Menu.document(query)` in `lib/dots/menus.py` returns schema 1 with `schema` (integer 1), `menu` (stable string ID), `title` (string), and ordered `items` (array). Each base item contains exactly `id`, `label`, `description`, `available` (boolean), and `reason` (string, empty when no reason is needed). IDs must be unique within a menu; unavailable entries require a reason. Icons, executable arguments, callbacks, transport paths and environment are excluded. The shared JSON view uses escaped JSON strings and emits no ANSI, even with decoration forced.
+
+`dots menu tmux sessions --json` uses `menu: "tmux-sessions"` and `title: "Tmux sessions"`. Its items extend the base fields with `name` (literal session-name string), `windows` (nonnegative integer), `attached_clients` (nonnegative integer) and `current` (boolean). `id` is tmux's stable `$N` session ID; `label` equals `name`, and the readable description summarizes counts and current state. All observed sessions have `available: true` and an empty `reason`. `current` refers to the inherited originating pane's session; outside tmux it is false. Socket paths, server/client PIDs and session creation times are private revalidation details, excluded from the document. No server or no sessions produces an empty `items` array; inspection failures and native Windows unavailability produce an error status and stderr diagnostic, not a misleading empty document.
+
+Listing filters use case-insensitive whitespace-separated terms matched against each item's ID, label, description and reason; every term must match. An empty query preserves registry order. The interactive query seeds FZF without filtering the source records first. Printed/JSON and redirected default views never select or execute actions and do not probe FZF. Session views still require read-only tmux observations. `add_arguments` provides `--query` and mutually exclusive `--browse`, `--print`, `--json` parser fields for menu routes; it does not register a route itself.
+
+`Entry`/`Menu` are immutable library records. Actions remain controller-owned literal argument arrays outside the display document. `choose` returns one `Entry`, returns `None` after a listing/empty/missing-tool fallback, or raises `SelectionEnded(130)` for cancellation. Without navigation state, failed or unavailable selection raises an error without retrying or invoking an action. The launcher opts into compact labels and a private per-frame query dictionary: `SelectionEvent` distinguishes Back and contextual help from `SelectionEnded(130)` (Ctrl-C). Unavailable entries return to the controller for a visible reason. These internal frame fields do not enter public JSON. The session controller also provides a private selected/code/message outcome so an empty inventory cannot be mistaken for completed session navigation. `run_action` preserves the selected child's exit status and requires terminal input/output or an explicit validated tmux context. Output actions capture complete stdout/stderr once, then page it. Capture presentation resolves the caller's color/icon policy and terminal dimensions; progress is disabled while capturing. Interactive commands retain their terminal. Internally, `review_output` returns `OutputResult(code, reviewed)` so command success cannot be confused with canceled reading. `run_action(kind='output')` still returns the original command status. The Git sync menu requires both success and normal reader dismissal before offering its separate confirmation. The persistent launcher displays workflow errors and returns to its menu; direct session-command statuses are unchanged.
+
+`DOTS_MENU_CONTEXT` is a private, transient request-file reference passed only to popup-owning child workflows. Consumers must use `TmuxContext.from_environment()` before opening their own chooser. It is not a user setting or a cross-platform tmux bridge. The captured socket, exact client name/PID, pane/session and cwd are revalidated; native Windows refuses tmux context. Hosted terminal workflows receive the caller environment through private mode-0600 transport, never through the public menu document or command-line environment values. `DOTS_MENU_SPOOL_DIR` is a private host-to-child reference for temporary reader captures under that request directory, not a user setting. Output hosts capture and prepare the report, then close before a separately sized reader opens; completion receipts retain the command status independently of reader cancellation. `DOTS_MENU_READER_HANDOFF` is a private request reference set only for cooperating `document` actions. Interactive wiki browsing uses `page_text(..., defer=True)` to prepare its selected document and mark it ready before the selection host exits. Neither variable is a public option, and ordinary terminal reading stays inline. These files are removed after normal completion, cancellation or an exception; no startup cleanup, persistent registry or crash-recovery guarantee is introduced. See [ownership](architecture.md#shared-menu-support).
+
+## Session browser projects
+
+Interactive `dots menu tmux sessions` and managed-workspace reconciliation read this optional file:
+`${XDG_CONFIG_HOME:-$HOME/.config}/dots/projects.json`. It is user-authored data;
+Dots does not create or migrate it. Missing files use defaults; malformed files
+fail with a diagnostic. The schema is integer `1`, with optional `roots` and
+`projects` arrays. Unknown fields are rejected. Paths must be absolute or begin
+with `~/`; environment variable expansion is not performed.
+
+```json
+{
+  "schema": 1,
+  "roots": ["~/work"],
+  "projects": ["~/notes", "~/src/special-project"]
+}
+```
+
+These arrays add to `~/repos` and the current Dots checkout. Each root contributes
+only immediate directory children with an existing `.git` file/directory (linked
+worktrees are included). Explicit projects may be ordinary directories. Missing
+or unreadable roots and missing project directories are skipped. Canonical paths
+deduplicate symlink aliases; no recursive search, Git invocation, cloning or
+initialization occurs. Project labels use basenames and disambiguating abbreviated
+paths; the preview abbreviates the home prefix with `~` without truncating paths.
+
+Managed sessions use `@dots-workspace-data`, a private schema-1 JSON object with immutable `id`, optional startup `origin`, boolean `auto`, last controller-written `expected` name and canonical `projects` roots. Startup IDs preserve `PID-START`; Prefix C and popup creation use fresh 12-digit hexadecimal IDs. `@dots-workspace-auto` and `@dots-workspace-label` supply inexpensive status fields; `@dots-workspace-expected` lets the rename hook ignore controller-owned renames; session-local `@dots-session-number` is a dense creation-order index, empty for a singleton. These options are internal and do not extend session-menu JSON.
+
+Reconciliation examines all live pane directories without scanning project discovery roots. Git/worktree roots anywhere and explicit `projects` (including Dots) qualify; deepest containing root wins, canonical paths collapse aliases and different paths with the same basename remain distinct. Outside-project panes contribute nothing. Zero/one/multiple roots produce `termux-ID`, `projectname-ID` or `multi-ID`; the bar hides IDs and the default label. Periods/colons in actual session prefixes become hyphens, while display labels keep their safe literal spelling. Unknown or failed observations preserve prior state. If the actual name differs from `expected`, automatic naming is disabled; the manual name remains while observed projects still update. An occupied target name is refused, never merged. Reattachment uses stored startup origin.
+
+The browser associates managed sessions from their live `projects` snapshot, including Git roots outside configured discovery paths; zero or multiple roots remain generic. Unmanaged legacy `@dots-termux-default=1` sessions remain generic until explicitly adopted. Other unmanaged sessions prefer a matching session-local `@dots-project-root`, then the deepest project containing `session_path`, then a single distinct project among current panes. Names alone do not classify sessions. All popup actions retain native tmux IDs and previews show full unique names.
+
+The shared selector optionally carries a validated numeric `index` (or `None`
+when no row matches) and query in `SelectionEvent`, and can restore focus using
+FZF's inert filter ordering. Existing navigation callers keep their original
+contract unless they opt in. Labels and previews cannot supply executable actions.
+
 ## Implemented Theme Data Boundary
 
 The [theme format and selection rules](themes.md) use a deliberately restricted palette TOML string/table format. Runtime selection uses per-user immutable generations with legacy read-only fallback.
@@ -18,6 +68,20 @@ Bash/Zsh initialization projects native palette colors plus resolved Dots templa
 ### Shared syntax template colors
 
 Both template renderers expose derived `git_added_tmtheme`, `git_deleted_tmtheme` and `git_modified_tmtheme` values from the resolved Git foreground roles. Hex colors pass through; `reset` becomes the resolved theme foreground because tmTheme foreground properties require a concrete RGB color. These are template-only tokens, not new palette fields or exported Git roles. The existing Git tokens retain their meanings. See [the shared syntax template](themes.md).
+
+### Compiled Bat inputs
+
+Publication and inactive setup use a separate fingerprint combining theme inputs
+with Bat's executable identity/version, logical and resolved configuration paths,
+and relative custom syntax names/content hashes. Source discovery uses Bat's
+native `--config-dir`, honoring `BAT_CONFIG_DIR` independently of
+`BAT_CONFIG_PATH`. Recursive `.sublime-syntax` inputs are captured as bounded
+ordinary file snapshots alongside the generated Dots theme before compilation;
+link cycles, broken inputs and preparation drift are refused before activation.
+Bat's absence is an explicit fingerprint state and remains supported. The
+shell-initialization fingerprint excludes syntax discovery and compiler queries.
+See [custom Bat syntaxes](themes.md#custom-bat-syntaxes) for limits and refresh
+behavior. Existing cache/export paths and the palette schema are unchanged.
 
 ## Implemented Inventory Catalog Boundary
 
@@ -48,6 +112,8 @@ The catalog's `files check` operation removes only approved absent-source entrie
 through the same journal model. It adds no catalog fields; unrelated record data,
 replacement declarations and installation receipts are preserved. Its versioned
 inspection/result JSON is documented in [files](files.md#check-missing-sources).
+
+`files repair` uses existing schema-1 catalogs, transaction journals and installation receipts without migrating historical data. It preserves first-install `before`/`backup`/`index` values and updates `after` for repaired destinations in the same transaction, including explicitly approved same-resource drift. Newly repaired destinations receive a pre-repair baseline; correct pre-existing links remain unowned. Receipt evidence takes precedence over transaction evidence, which uses only the latest completed operation at the destination. `replacement_unavailable` alone is informational; only actual conflicting catalog claims block repair. Interactive issue/action identities and queued decisions stay internal and introduce no new catalog, receipt or JSON fields. The schema-1 command result is specified in [repair results](files.md#repair-managed-destinations).
 
 ## Implemented Anodize recipe
 
@@ -159,4 +225,24 @@ The wiki inventory `.dots-wiki.json` schema 1 records relative source `inputs` a
 
 ## Keybinding records
 
-`dots keys --json` uses version 1 with `rows` and `coverage`. Records retain `app`, `mode`, raw `key` (string or sequence), readable `display`, action identifier, `description`/`description_source`, `evidence` (`live` or `configured`), nullable source/line, known-default flag, optional scope/layer, and status. Live matches shadow configured evidence; separate modes remain distinct. Coverage reports counts, live availability and limitations. Display normalization never replaces raw notation. Private bridge transport is bounded native metadata or JSON; it is not a command-execution interface.
+`dots keys --json` uses version 1 with `rows` and `coverage`. Records retain `app`, `mode`, raw `key` (string or sequence), readable `display`, action identifier, `description`/`description_source`, `evidence` (`live` or `configured`), nullable source/line, known-default flag, optional scope/layer, and status. Live matches shadow configured evidence; separate modes remain distinct. Coverage reports counts, live availability and limitations. Display normalization never replaces raw notation. Bundled Yazi/Codex defaults use `evidence: configured` and `default: true`. Yazi table replacement can shadow an entire context; Codex remaps shadow all default alternatives for the same context/action. Explicit Codex unbinding uses `key: []`, `display: Unbound`, `default: false` and `status: disabled`; the version-1 field shape is unchanged. Codex raw chord strings remain intact, with resolved leader/sequence labels in `display`. Provider-specific static precedence does not establish live activation. Private bridge transport is bounded native metadata or JSON; it is not a command-execution interface.
+
+Personal Zsh keyboard preferences are executable configuration in `shells/zsh/keys.zsh`, outside the shared literal settings schema. The environment registry attributes `KEYTIMEOUT` and `VI_MODE_SET_CURSOR` to that file. Plugin settings and lifecycle precedence are documented in the [Zsh keyboard reference](../shells/zsh/README.md#personal-keybindings-and-history-search).
+
+The private tmux bridge passes `DOTS_KEYS_TARGET_PANE` for the originating pane;
+it is transport context, not a public setting. An existing Zsh caller snapshot
+wins, and configured-only queries skip IPC. Successful IPC maps use the existing
+`live` evidence and merge rules; unavailable or ambiguous capture adds coverage
+notes without changing the version-1 schema. The client waits at most one second
+for transport and the worker has a two-second lifetime. Frames contain the
+existing NUL-delimited shell snapshot with a 16 MiB limit. Runtime discovery is
+limited to 256 entries and 16 matching responders; unsafe directories, stale
+processes and malformed data are refused. See [live capture](keys.md#live-zsh-bindings-from-the-tmux-shortcut).
+
+## Yazi plugin configuration
+
+Yazi component settings live in the setup table in `config/yazi/init.lua`; the [plugin README](../config/yazi/plugins/dots.yazi/README.md) owns their complete interface. `githead.hide_in_tmux` is a boolean defaulting to `false`. When true, a nonempty `TMUX` environment variable at setup suppresses both Githead getters and their refresh queries, while per-file Git indicators remain active. The personal configuration enables it. Theme refreshes preserve the setup decision; changing the option or launch environment requires restarting Yazi.
+
+### Less style environment
+
+Interactive theme integration exports `LESS_TERMCAP_so` as an SGR reset plus truecolor foreground/background and `LESS_TERMCAP_se` as `ESC[0m`. The internal exported `_DOTS_LESS_STYLE` stores the last managed start sequence; ownership requires both the current start and reset to match. Explicit values are preserved, including empty overrides. Bash/Zsh initializers retain private foreground/background hex values independently of optional named shortcuts; native `shell.tsv` snapshots include the resolved semantic color records. Missing older records fall back to background. Existing snapshot record grammar and raw/JSON palette schemas are unchanged. See [less colors](shell-environment.md#global-less-colors) for policy and platform limits.

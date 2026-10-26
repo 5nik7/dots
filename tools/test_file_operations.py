@@ -79,6 +79,33 @@ class Operations(unittest.TestCase):
         self.assertFalse(self.path.is_symlink())
         self.assertEqual(self.records(),[])
 
+    def test_gitmux_home_mapping_adoption_backup_and_idempotence(self):
+        registry = json.loads((PROJECT / '.dots/file-locations.json').read_text())
+        location = next(item for item in registry['locations'] if item['id'] == 'gitmux')
+        self.assertEqual(location['platforms'], ['termux', 'linux', 'wsl'])
+        self.write('.dots/file-locations.json', dict(schema=1, repository='dots', locations=[location]))
+        target = self.home / '.gitmux.conf'
+        original = 'tmux:\n  layout: [branch, divergence, flags]\n'
+        target.write_text(original)
+        self.run_cli('add', target, '--dry-run', '--json')
+        self.assertFalse(target.is_symlink())
+        self.assertFalse((self.home / '.state').exists())
+        result = json.loads(self.run_cli('add', target, '--backup', '--yes', '--json').stdout)
+        record, = self.records()
+        self.assertEqual(record['source'], 'config/gitmux/gitmux.conf')
+        self.assertEqual(record['target'], '${HOME}/.gitmux.conf')
+        self.assertEqual(record['id'], 'file-config-gitmux-gitmux-conf')
+        self.assertEqual(target.resolve(), self.repo / record['source'])
+        self.assertEqual(target.read_text(), original)
+        inode = target.lstat().st_ino
+        self.run_cli('link', 'dots:' + record['id'], '--yes', '--json')
+        self.assertEqual(target.lstat().st_ino, inode)
+        self.assertEqual(len(json.loads(self.run_cli('backups-list', '--json').stdout)['items']), 1)
+        self.run_cli('undo', result['id'], '--yes')
+        self.assertFalse(target.is_symlink())
+        self.assertEqual(target.read_text(), original)
+        self.assertEqual(self.records(), [])
+
     def test_undo_refuses_source_drift(self):
         result=json.loads(self.run_cli('add',self.path,'--yes','--json').stdout)
         self.path.write_text('user edits')

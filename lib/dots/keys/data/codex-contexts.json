@@ -1,0 +1,1581 @@
+{
+  "version": "0.164.0",
+  "revision": "6aaac694803004a63c6f393d153c96d22521a6b9",
+  "bindings": [
+    {
+      "mode": "chat",
+      "action": "interrupt_or_quit",
+      "keys": [
+        "ctrl-c"
+      ],
+      "description": "Cancel the focused interaction or interrupt work; when idle, quit (some builds require a second press).",
+      "source": "codex-rs/tui/src/chatwidget/interaction.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "quit",
+      "keys": [
+        "ctrl-d"
+      ],
+      "description": "Quit when the composer is empty and no popup is focused; otherwise route to text editing.",
+      "source": "codex-rs/tui/src/chatwidget/interaction.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "paste",
+      "keys": [
+        "ctrl-v",
+        "alt-v",
+        "ctrl-alt-v"
+      ],
+      "description": "Attach a clipboard image when supported; native Windows Ctrl+V can fall back to clipboard text.",
+      "source": "codex-rs/tui/src/chatwidget/interaction.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "paste_windows",
+      "keys": [
+        "shift-insert"
+      ],
+      "description": "Paste on native Windows; requires clipboard support.",
+      "source": "codex-rs/tui/src/chatwidget/interaction.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "cycle_mode",
+      "keys": [
+        "shift-tab"
+      ],
+      "description": "Cycle available collaboration modes when no popup owns input.",
+      "source": "codex-rs/tui/src/chatwidget/interaction.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "slash_popup",
+      "keys": [
+        "/"
+      ],
+      "description": "Open slash-command completion at the start of the composer.",
+      "source": "codex-rs/tui/src/keymap.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "shell_mode",
+      "keys": [
+        "!"
+      ],
+      "description": "Enter shell-command mode at the start of the composer, when enabled.",
+      "source": "codex-rs/tui/src/keymap.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "file_popup",
+      "keys": [
+        "@"
+      ],
+      "description": "Search workspace file paths from the composer.",
+      "source": "codex-rs/tui/src/keymap.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "mention_popup",
+      "keys": [
+        "$"
+      ],
+      "description": "Open skill/app mentions from the composer.",
+      "source": "codex-rs/tui/src/keymap.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "backtrack",
+      "keys": [
+        "esc esc"
+      ],
+      "description": "With an empty composer, browse previous prompts for editing and forking.",
+      "source": "codex-rs/tui/src/app/input.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "previous_agent",
+      "keys": [
+        "alt-left"
+      ],
+      "description": "Switch to the previous agent thread when navigation is available.",
+      "source": "codex-rs/tui/src/app/input.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "next_agent",
+      "keys": [
+        "alt-right"
+      ],
+      "description": "Switch to the next agent thread when navigation is available.",
+      "source": "codex-rs/tui/src/app/input.rs"
+    },
+    {
+      "mode": "chat",
+      "action": "side_terminal_alias",
+      "keys": [
+        "ctrl-7"
+      ],
+      "description": "Terminal alias for Ctrl+/ when the default side-conversation binding is retained.",
+      "source": "codex-rs/tui/src/app/input.rs"
+    },
+    {
+      "mode": "terminal",
+      "action": "suspend",
+      "keys": [
+        "ctrl-z"
+      ],
+      "description": "Suspend Codex on Unix; resume with the shell job-control command. Not available on native Windows.",
+      "source": "codex-rs/tui/src/tui/job_control.rs"
+    },
+    {
+      "mode": "transcript_edit",
+      "action": "previous_prompt",
+      "keys": [
+        "esc",
+        "left"
+      ],
+      "description": "Browse the previous user prompt while transcript backtracking is open.",
+      "source": "codex-rs/tui/src/keymap.rs"
+    },
+    {
+      "mode": "transcript_edit",
+      "action": "next_prompt",
+      "keys": [
+        "right"
+      ],
+      "description": "Browse the next user prompt while transcript backtracking is open.",
+      "source": "codex-rs/tui/src/keymap.rs"
+    },
+    {
+      "mode": "transcript_edit",
+      "action": "confirm_edit",
+      "keys": [
+        "enter"
+      ],
+      "description": "Load the selected user prompt for editing and forking.",
+      "source": "codex-rs/tui/src/keymap.rs"
+    },
+    {
+      "mode": "history",
+      "action": "previous",
+      "binding_from": [
+        "editor",
+        "move_up"
+      ],
+      "description": "Recall earlier prompt history at the composer navigation boundary.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "history",
+      "action": "next",
+      "binding_from": [
+        "editor",
+        "move_down"
+      ],
+      "description": "Recall later prompt history at the composer navigation boundary.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "history",
+      "action": "vim_previous",
+      "binding_from": [
+        "vim_normal",
+        "move_up"
+      ],
+      "description": "Recall earlier prompt history in Vim normal mode at the navigation boundary.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "history",
+      "action": "vim_next",
+      "binding_from": [
+        "vim_normal",
+        "move_down"
+      ],
+      "description": "Recall later prompt history in Vim normal mode at the navigation boundary.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "history_search",
+      "action": "older",
+      "keys": [
+        "up"
+      ],
+      "description": "Find an older match in prompt history.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs"
+    },
+    {
+      "mode": "history_search",
+      "action": "newer",
+      "keys": [
+        "down"
+      ],
+      "description": "Find a newer match in prompt history.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs"
+    },
+    {
+      "mode": "history_search",
+      "action": "cancel",
+      "keys": [
+        "esc",
+        "ctrl-c"
+      ],
+      "description": "Cancel history search and restore the original draft.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs"
+    },
+    {
+      "mode": "history_search",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the matching prompt into the composer without sending it.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs"
+    },
+    {
+      "mode": "history_search",
+      "action": "delete_query",
+      "keys": [
+        "backspace",
+        "ctrl-h"
+      ],
+      "description": "Delete the last character of the history query.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs"
+    },
+    {
+      "mode": "history_search",
+      "action": "clear_query",
+      "keys": [
+        "ctrl-u"
+      ],
+      "description": "Clear the history query.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs"
+    },
+    {
+      "mode": "history_search",
+      "action": "previous",
+      "binding_from": [
+        "composer",
+        "history_search_previous"
+      ],
+      "description": "Move to the previous prompt-history match.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs"
+    },
+    {
+      "mode": "history_search",
+      "action": "next",
+      "binding_from": [
+        "composer",
+        "history_search_next"
+      ],
+      "description": "Move to the next prompt-history match.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/history_search.rs"
+    },
+    {
+      "mode": "file_popup",
+      "action": "previous",
+      "keys": [
+        "up",
+        "ctrl-p"
+      ],
+      "description": "Select the previous completion.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "file_popup",
+      "action": "next",
+      "keys": [
+        "down",
+        "ctrl-n"
+      ],
+      "description": "Select the next completion.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "file_popup",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Dismiss this completion popup.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "file_popup",
+      "action": "complete",
+      "keys": [
+        "tab"
+      ],
+      "description": "Complete the selected item into the composer.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "file_popup",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the selected completion; slash commands may run immediately.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "skill_popup",
+      "action": "previous",
+      "keys": [
+        "up",
+        "ctrl-p"
+      ],
+      "description": "Select the previous completion.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "skill_popup",
+      "action": "next",
+      "keys": [
+        "down",
+        "ctrl-n"
+      ],
+      "description": "Select the next completion.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "skill_popup",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Dismiss this completion popup.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "skill_popup",
+      "action": "complete",
+      "keys": [
+        "tab"
+      ],
+      "description": "Complete the selected item into the composer.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "skill_popup",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the selected completion; slash commands may run immediately.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "mention_popup",
+      "action": "previous",
+      "keys": [
+        "up",
+        "ctrl-p"
+      ],
+      "description": "Select the previous completion.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "mention_popup",
+      "action": "next",
+      "keys": [
+        "down",
+        "ctrl-n"
+      ],
+      "description": "Select the next completion.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "mention_popup",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Dismiss this completion popup.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "mention_popup",
+      "action": "complete",
+      "keys": [
+        "tab"
+      ],
+      "description": "Complete the selected item into the composer.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "mention_popup",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the selected completion; slash commands may run immediately.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "slash_popup",
+      "action": "previous",
+      "keys": [
+        "up",
+        "ctrl-p"
+      ],
+      "description": "Select the previous completion.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/slash_input.rs"
+    },
+    {
+      "mode": "slash_popup",
+      "action": "next",
+      "keys": [
+        "down",
+        "ctrl-n"
+      ],
+      "description": "Select the next completion.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/slash_input.rs"
+    },
+    {
+      "mode": "slash_popup",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Dismiss this completion popup.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/slash_input.rs"
+    },
+    {
+      "mode": "slash_popup",
+      "action": "complete",
+      "keys": [
+        "tab"
+      ],
+      "description": "Complete the selected item into the composer.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/slash_input.rs"
+    },
+    {
+      "mode": "slash_popup",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the selected completion; slash commands may run immediately.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/slash_input.rs"
+    },
+    {
+      "mode": "mention_popup",
+      "action": "parent",
+      "keys": [
+        "left"
+      ],
+      "description": "Return from nested mention choices.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "mention_popup",
+      "action": "child",
+      "keys": [
+        "right"
+      ],
+      "description": "Open nested mention choices when available.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "composer",
+      "action": "dismiss_shortcuts",
+      "keys": [
+        "esc"
+      ],
+      "description": "Close the shortcut overlay when it is visible.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "composer",
+      "action": "leave_shell_mode",
+      "keys": [
+        "esc"
+      ],
+      "description": "Leave shell-command mode when its composer is empty.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer.rs"
+    },
+    {
+      "mode": "attachments",
+      "action": "previous_image",
+      "keys": [
+        "up"
+      ],
+      "description": "Select the previous attached image at the composer boundary.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/attachment_state.rs"
+    },
+    {
+      "mode": "attachments",
+      "action": "next_image",
+      "keys": [
+        "down"
+      ],
+      "description": "Select the next attached image or return to the composer.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/attachment_state.rs"
+    },
+    {
+      "mode": "attachments",
+      "action": "remove_image",
+      "keys": [
+        "delete",
+        "backspace"
+      ],
+      "description": "Remove the selected attached image.",
+      "source": "codex-rs/tui/src/bottom_pane/chat_composer/attachment_state.rs"
+    },
+    {
+      "mode": "vim_insert",
+      "action": "normal_mode",
+      "keys": [
+        "esc"
+      ],
+      "description": "Leave Vim insert or replace mode and return to normal mode.",
+      "source": "codex-rs/tui/src/bottom_pane/textarea.rs"
+    },
+    {
+      "mode": "vim_search_input",
+      "action": "cancel",
+      "keys": [
+        "esc",
+        "ctrl-c"
+      ],
+      "description": "Cancel Vim search input.",
+      "source": "codex-rs/tui/src/bottom_pane/textarea/vim_search.rs"
+    },
+    {
+      "mode": "vim_search_input",
+      "action": "cancel_empty",
+      "keys": [
+        "backspace"
+      ],
+      "description": "Cancel Vim search when the query is empty.",
+      "source": "codex-rs/tui/src/bottom_pane/textarea/vim_search.rs"
+    },
+    {
+      "mode": "vim_search_input",
+      "action": "confirm",
+      "keys": [
+        "enter"
+      ],
+      "description": "Confirm the Vim search query.",
+      "source": "codex-rs/tui/src/bottom_pane/textarea/vim_search.rs"
+    },
+    {
+      "mode": "approval",
+      "action": "strict_review",
+      "keys": [
+        "r"
+      ],
+      "description": "Grant permissions for this turn with strict automatic review when offered.",
+      "source": "codex-rs/tui/src/bottom_pane/approval_overlay.rs"
+    },
+    {
+      "mode": "approval",
+      "action": "cancel_elicitation",
+      "keys": [
+        "esc"
+      ],
+      "description": "Cancel an MCP elicitation approval, even if approval.cancel is remapped.",
+      "source": "codex-rs/tui/src/bottom_pane/approval_overlay.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "previous_question",
+      "keys": [
+        "ctrl-p",
+        "page-up"
+      ],
+      "description": "Go to the previous question/field.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "next_question",
+      "keys": [
+        "ctrl-n",
+        "page-down"
+      ],
+      "description": "Go to the next question/field.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "previous_option_question",
+      "keys": [
+        "h",
+        "left"
+      ],
+      "description": "Go to the previous question/field while options have focus.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "next_option_question",
+      "keys": [
+        "l",
+        "right"
+      ],
+      "description": "Go to the next question/field while options have focus.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "previous_option",
+      "keys": [
+        "up",
+        "k"
+      ],
+      "description": "Select the previous option while options have focus.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "next_option",
+      "keys": [
+        "down",
+        "j"
+      ],
+      "description": "Select the next option while options have focus.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "select",
+      "keys": [
+        "space"
+      ],
+      "description": "Commit the highlighted option.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "clear",
+      "keys": [
+        "backspace",
+        "delete"
+      ],
+      "description": "Clear the current option selection.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the answer and advance or submit the form.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "numbered_option",
+      "keys": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "description": "Choose the corresponding option when it is present.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "previous_question",
+      "keys": [
+        "ctrl-p",
+        "page-up"
+      ],
+      "description": "Go to the previous question/field.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "next_question",
+      "keys": [
+        "ctrl-n",
+        "page-down"
+      ],
+      "description": "Go to the next question/field.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "previous_option_question",
+      "keys": [
+        "h",
+        "left"
+      ],
+      "description": "Go to the previous question/field while options have focus.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "next_option_question",
+      "keys": [
+        "l",
+        "right"
+      ],
+      "description": "Go to the next question/field while options have focus.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "previous_option",
+      "keys": [
+        "up",
+        "k"
+      ],
+      "description": "Select the previous option while options have focus.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "next_option",
+      "keys": [
+        "down",
+        "j"
+      ],
+      "description": "Select the next option while options have focus.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "select",
+      "keys": [
+        "space"
+      ],
+      "description": "Commit the highlighted option.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "clear",
+      "keys": [
+        "backspace",
+        "delete"
+      ],
+      "description": "Clear the current option selection.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the answer and advance or submit the form.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "mcp_form",
+      "action": "numbered_option",
+      "keys": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "description": "Choose the corresponding option when it is present.",
+      "source": "codex-rs/tui/src/bottom_pane/mcp_server_elicitation.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "toggle_notes",
+      "keys": [
+        "tab"
+      ],
+      "description": "Switch between the selected option and its free-text notes.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "cancel_notes",
+      "keys": [
+        "esc"
+      ],
+      "description": "Clear notes and return to options when notes are visible; otherwise interrupt the request.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "leave_empty_notes",
+      "keys": [
+        "backspace"
+      ],
+      "description": "Return to options when the notes field is empty.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions",
+      "action": "interrupt",
+      "keys": [
+        "ctrl-c"
+      ],
+      "description": "Interrupt the active question request.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions_confirm",
+      "action": "back",
+      "keys": [
+        "esc",
+        "backspace"
+      ],
+      "description": "Return from the unanswered-question confirmation.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions_confirm",
+      "action": "previous",
+      "keys": [
+        "up",
+        "k"
+      ],
+      "description": "Select the previous confirmation choice.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions_confirm",
+      "action": "next",
+      "keys": [
+        "down",
+        "j"
+      ],
+      "description": "Select the next confirmation choice.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions_confirm",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Confirm the selected choice.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "questions_confirm",
+      "action": "choice",
+      "keys": [
+        "1",
+        "2"
+      ],
+      "description": "Choose the numbered confirmation action.",
+      "source": "codex-rs/tui/src/bottom_pane/request_user_input/mod.rs"
+    },
+    {
+      "mode": "multi_select",
+      "action": "toggle",
+      "keys": [
+        "space"
+      ],
+      "description": "Toggle the highlighted option in this settings view.",
+      "source": "codex-rs/tui/src/bottom_pane/multi_select_picker.rs"
+    },
+    {
+      "mode": "skills",
+      "action": "toggle",
+      "keys": [
+        "space"
+      ],
+      "description": "Toggle the highlighted option in this settings view.",
+      "source": "codex-rs/tui/src/bottom_pane/skills_toggle_view.rs"
+    },
+    {
+      "mode": "experimental",
+      "action": "toggle",
+      "keys": [
+        "space"
+      ],
+      "description": "Toggle the highlighted option in this settings view.",
+      "source": "codex-rs/tui/src/bottom_pane/experimental_features_view.rs"
+    },
+    {
+      "mode": "memories",
+      "action": "toggle",
+      "keys": [
+        "space"
+      ],
+      "description": "Toggle the highlighted option in this settings view.",
+      "source": "codex-rs/tui/src/bottom_pane/memories_settings_view.rs"
+    },
+    {
+      "mode": "list_search",
+      "action": "cancel_search",
+      "keys": [
+        "esc"
+      ],
+      "description": "Leave on-demand search.",
+      "source": "codex-rs/tui/src/bottom_pane/list_selection_view.rs"
+    },
+    {
+      "mode": "list_search",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the highlighted result while searching.",
+      "source": "codex-rs/tui/src/bottom_pane/list_selection_view.rs"
+    },
+    {
+      "mode": "list_search",
+      "action": "delete_query",
+      "keys": [
+        "backspace"
+      ],
+      "description": "Remove the last search character.",
+      "source": "codex-rs/tui/src/bottom_pane/list_selection_view.rs"
+    },
+    {
+      "mode": "list_search",
+      "action": "toggle",
+      "keys": [
+        "space"
+      ],
+      "description": "Toggle an eligible selected item when search is empty.",
+      "source": "codex-rs/tui/src/bottom_pane/list_selection_view.rs"
+    },
+    {
+      "mode": "keymap_capture",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Cancel capture of a new shortcut or chord.",
+      "source": "codex-rs/tui/src/keymap_setup/capture.rs"
+    },
+    {
+      "mode": "warnings",
+      "action": "previous",
+      "keys": [
+        "k"
+      ],
+      "description": "Move to the previous retained warning.",
+      "source": "codex-rs/tui/src/bottom_pane/warnings_view.rs"
+    },
+    {
+      "mode": "hooks",
+      "action": "toggle",
+      "keys": [
+        "space"
+      ],
+      "description": "Toggle the selected hook in the handlers page.",
+      "source": "codex-rs/tui/src/bottom_pane/hooks_browser_view.rs"
+    },
+    {
+      "mode": "hooks",
+      "action": "trust",
+      "keys": [
+        "t"
+      ],
+      "description": "Trust the selected hook, or all hooks from the events page.",
+      "source": "codex-rs/tui/src/bottom_pane/hooks_browser_view.rs"
+    },
+    {
+      "mode": "feedback",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Close this input form (Vim editing may handle Escape first).",
+      "source": "codex-rs/tui/src/bottom_pane/feedback_note_view.rs"
+    },
+    {
+      "mode": "feedback",
+      "action": "submit",
+      "keys": [
+        "enter"
+      ],
+      "description": "Submit this input form.",
+      "source": "codex-rs/tui/src/bottom_pane/feedback_note_view.rs"
+    },
+    {
+      "mode": "feedback",
+      "action": "next_field",
+      "keys": [
+        "tab"
+      ],
+      "description": "Advance the form field or option.",
+      "source": "codex-rs/tui/src/bottom_pane/feedback_note_view.rs"
+    },
+    {
+      "mode": "custom_prompt",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Close this input form (Vim editing may handle Escape first).",
+      "source": "codex-rs/tui/src/bottom_pane/custom_prompt_view.rs"
+    },
+    {
+      "mode": "custom_prompt",
+      "action": "submit",
+      "keys": [
+        "enter"
+      ],
+      "description": "Submit this input form.",
+      "source": "codex-rs/tui/src/bottom_pane/custom_prompt_view.rs"
+    },
+    {
+      "mode": "custom_prompt",
+      "action": "next_field",
+      "keys": [
+        "tab"
+      ],
+      "description": "Advance the form field or option.",
+      "source": "codex-rs/tui/src/bottom_pane/custom_prompt_view.rs"
+    },
+    {
+      "mode": "feedback",
+      "action": "scroll_up",
+      "keys": [
+        "page-up"
+      ],
+      "description": "Scroll the feedback preview upward.",
+      "source": "codex-rs/tui/src/bottom_pane/feedback_note_view.rs"
+    },
+    {
+      "mode": "feedback",
+      "action": "scroll_down",
+      "keys": [
+        "page-down"
+      ],
+      "description": "Scroll the feedback preview downward.",
+      "source": "codex-rs/tui/src/bottom_pane/feedback_note_view.rs"
+    },
+    {
+      "mode": "app_link",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Close the app connection choices.",
+      "source": "codex-rs/tui/src/bottom_pane/app_link_view.rs"
+    },
+    {
+      "mode": "app_link",
+      "action": "previous",
+      "keys": [
+        "up",
+        "shift-tab",
+        "k"
+      ],
+      "description": "Select the previous connection action.",
+      "source": "codex-rs/tui/src/bottom_pane/app_link_view.rs"
+    },
+    {
+      "mode": "app_link",
+      "action": "next",
+      "keys": [
+        "down",
+        "tab",
+        "j"
+      ],
+      "description": "Select the next connection action.",
+      "source": "codex-rs/tui/src/bottom_pane/app_link_view.rs"
+    },
+    {
+      "mode": "app_link",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Run the selected connection action.",
+      "source": "codex-rs/tui/src/bottom_pane/app_link_view.rs"
+    },
+    {
+      "mode": "app_link",
+      "action": "numbered_action",
+      "keys": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "description": "Select a numbered connection action when it exists.",
+      "source": "codex-rs/tui/src/bottom_pane/app_link_view.rs"
+    },
+    {
+      "mode": "resume",
+      "action": "exit",
+      "keys": [
+        "ctrl-c"
+      ],
+      "description": "Exit the resume/fork picker.",
+      "source": "codex-rs/tui/src/resume_picker.rs"
+    },
+    {
+      "mode": "resume",
+      "action": "transcript",
+      "keys": [
+        "ctrl-t"
+      ],
+      "description": "Open the selected session transcript.",
+      "source": "codex-rs/tui/src/resume_picker.rs"
+    },
+    {
+      "mode": "resume",
+      "action": "expand",
+      "keys": [
+        "ctrl-e"
+      ],
+      "description": "Expand or collapse the selected session.",
+      "source": "codex-rs/tui/src/resume_picker.rs"
+    },
+    {
+      "mode": "resume",
+      "action": "density",
+      "keys": [
+        "ctrl-o"
+      ],
+      "description": "Toggle session-picker display density.",
+      "source": "codex-rs/tui/src/resume_picker.rs"
+    },
+    {
+      "mode": "resume",
+      "action": "toolbar_focus",
+      "keys": [
+        "tab",
+        "shift-tab"
+      ],
+      "description": "Focus the next/previous session-picker toolbar control; Left/Right change its value.",
+      "source": "codex-rs/tui/src/resume_picker.rs"
+    },
+    {
+      "mode": "resume",
+      "action": "delete_query",
+      "keys": [
+        "backspace"
+      ],
+      "description": "Remove the last search character.",
+      "source": "codex-rs/tui/src/resume_picker.rs"
+    },
+    {
+      "mode": "resume",
+      "action": "archive",
+      "keys": [
+        "ctrl-a"
+      ],
+      "description": "Archive the selected active session when archiving is available.",
+      "source": "codex-rs/tui/src/resume_picker.rs"
+    },
+    {
+      "mode": "external_writer",
+      "action": "quit",
+      "keys": [
+        "q",
+        "Q",
+        "ctrl-c"
+      ],
+      "description": "Exit the external-writer view.",
+      "source": "codex-rs/tui/src/app/input.rs"
+    },
+    {
+      "mode": "external_writer",
+      "action": "back",
+      "keys": [
+        "esc",
+        "left"
+      ],
+      "description": "Return to agent overview on a connected server; Escape quits an embedded view.",
+      "source": "codex-rs/tui/src/app/input.rs"
+    },
+    {
+      "mode": "external_writer",
+      "action": "fork",
+      "keys": [
+        "f",
+        "F"
+      ],
+      "description": "Fork the displayed thread.",
+      "source": "codex-rs/tui/src/app/input.rs"
+    },
+    {
+      "mode": "external_writer",
+      "action": "resume",
+      "keys": [
+        "r",
+        "R"
+      ],
+      "description": "Resume the displayed thread when available.",
+      "source": "codex-rs/tui/src/app/input.rs"
+    },
+    {
+      "mode": "transcript",
+      "action": "select",
+      "keys": [
+        "ctrl-space"
+      ],
+      "description": "Begin selecting transcript text.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript",
+      "action": "beginning",
+      "keys": [
+        "ctrl-home",
+        "alt-<",
+        "alt-shift-<",
+        "alt-shift-,"
+      ],
+      "description": "Jump to the beginning of the transcript; Alt variants support different terminal encodings.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript",
+      "action": "latest",
+      "keys": [
+        "ctrl-end",
+        "alt->",
+        "alt-shift->",
+        "alt-shift-."
+      ],
+      "description": "Jump to the latest transcript output; Alt variants support different terminal encodings.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript",
+      "action": "follow",
+      "keys": [
+        "esc"
+      ],
+      "description": "Return to the latest output when viewing older transcript content.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript",
+      "action": "page",
+      "keys": [
+        "page-up",
+        "page-down"
+      ],
+      "description": "Scroll transcript pages according to the configured pager page-key actions.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript_selection",
+      "action": "copy",
+      "keys": [
+        "ctrl-c",
+        "ctrl-shift-c",
+        "super-c",
+        "ctrl-insert"
+      ],
+      "description": "Copy selected transcript text; availability depends on terminal delivery.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript_selection",
+      "action": "copy_follow",
+      "keys": [
+        "enter"
+      ],
+      "description": "Copy selected text and return to following output.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript_selection",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Clear selection; in select mode, clear its mark first and then leave the mode.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript_selection",
+      "action": "move",
+      "keys": [
+        "left",
+        "right",
+        "up",
+        "down",
+        "shift-left",
+        "shift-right",
+        "shift-up",
+        "shift-down"
+      ],
+      "description": "Move the transcript selection endpoint; shifted arrows start a mark in select mode.",
+      "source": "codex-rs/tui/src/transcript_view/input.rs"
+    },
+    {
+      "mode": "transcript_select_mode",
+      "action": "copy",
+      "keys": [
+        "ctrl-c",
+        "ctrl-shift-c",
+        "super-c",
+        "ctrl-insert"
+      ],
+      "description": "Copy selected transcript text; availability depends on terminal delivery.",
+      "source": "codex-rs/tui/src/transcript_view/select_mode.rs"
+    },
+    {
+      "mode": "transcript_select_mode",
+      "action": "copy_follow",
+      "keys": [
+        "enter"
+      ],
+      "description": "Copy selected text and return to following output.",
+      "source": "codex-rs/tui/src/transcript_view/select_mode.rs"
+    },
+    {
+      "mode": "transcript_select_mode",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Clear selection; in select mode, clear its mark first and then leave the mode.",
+      "source": "codex-rs/tui/src/transcript_view/select_mode.rs"
+    },
+    {
+      "mode": "transcript_select_mode",
+      "action": "move",
+      "keys": [
+        "left",
+        "right",
+        "up",
+        "down",
+        "shift-left",
+        "shift-right",
+        "shift-up",
+        "shift-down"
+      ],
+      "description": "Move the transcript selection endpoint; shifted arrows start a mark in select mode.",
+      "source": "codex-rs/tui/src/transcript_view/select_mode.rs"
+    },
+    {
+      "mode": "transcript_select_mode",
+      "action": "copy_vim",
+      "keys": [
+        "y"
+      ],
+      "description": "Copy the selected text in transcript select mode.",
+      "source": "codex-rs/tui/src/transcript_view/select_mode.rs"
+    },
+    {
+      "mode": "transcript_select_mode",
+      "action": "quit",
+      "keys": [
+        "q"
+      ],
+      "description": "Exit transcript select mode.",
+      "source": "codex-rs/tui/src/transcript_view/select_mode.rs"
+    },
+    {
+      "mode": "transcript_select_mode",
+      "action": "mark",
+      "keys": [
+        "v",
+        "space"
+      ],
+      "description": "Start the transcript selection mark.",
+      "source": "codex-rs/tui/src/transcript_view/select_mode.rs"
+    },
+    {
+      "mode": "transcript_select_mode",
+      "action": "move_vim",
+      "keys": [
+        "h",
+        "j",
+        "k",
+        "l"
+      ],
+      "description": "Move the selection cursor left, down, up or right.",
+      "source": "codex-rs/tui/src/transcript_view/select_mode.rs"
+    },
+    {
+      "mode": "transcript_copy_mode",
+      "action": "target",
+      "keys": [
+        "up",
+        "down",
+        "home",
+        "end",
+        "k",
+        "j",
+        "g",
+        "shift-g"
+      ],
+      "description": "Navigate copy targets; Home/g selects the first target, End/Shift+G selects the latest response.",
+      "source": "codex-rs/tui/src/transcript_view/copy_mode.rs"
+    },
+    {
+      "mode": "transcript_copy_mode",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Leave transcript copy mode and return to the latest output.",
+      "source": "codex-rs/tui/src/transcript_view/copy_mode.rs"
+    },
+    {
+      "mode": "transcript_copy_mode",
+      "action": "copy",
+      "keys": [
+        "enter",
+        "ctrl-c",
+        "ctrl-shift-c",
+        "super-c",
+        "ctrl-insert"
+      ],
+      "description": "Copy the selected response and return to following output.",
+      "source": "codex-rs/tui/src/transcript_view/copy_mode.rs"
+    },
+    {
+      "mode": "transcript_search",
+      "action": "cancel",
+      "keys": [
+        "esc",
+        "ctrl-c"
+      ],
+      "description": "Cancel Find; Escape from reading a match returns to latest output.",
+      "source": "codex-rs/tui/src/transcript_view/search.rs"
+    },
+    {
+      "mode": "transcript_search",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept the displayed search match for reading; does not send the composer.",
+      "source": "codex-rs/tui/src/transcript_view/search.rs"
+    },
+    {
+      "mode": "transcript_search",
+      "action": "next",
+      "keys": [
+        "ctrl-n"
+      ],
+      "description": "Find a newer transcript match.",
+      "source": "codex-rs/tui/src/transcript_view/search.rs"
+    },
+    {
+      "mode": "transcript_search",
+      "action": "previous",
+      "keys": [
+        "ctrl-p"
+      ],
+      "description": "Find an older transcript match.",
+      "source": "codex-rs/tui/src/transcript_view/search.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "cancel",
+      "binding_from": [
+        "list",
+        "cancel"
+      ],
+      "description": "Leave activity focus.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "accept",
+      "binding_from": [
+        "list",
+        "accept"
+      ],
+      "description": "Expand or collapse the focused activity group.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "move_left",
+      "binding_from": [
+        "list",
+        "move_left"
+      ],
+      "description": "Collapse the focused activity group.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "move_right",
+      "binding_from": [
+        "list",
+        "move_right"
+      ],
+      "description": "Expand the focused activity group.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "move_up",
+      "binding_from": [
+        "list",
+        "move_up"
+      ],
+      "description": "Focus the previous activity group.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "move_down",
+      "binding_from": [
+        "list",
+        "move_down"
+      ],
+      "description": "Focus the next activity group.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "page_up",
+      "binding_from": [
+        "list",
+        "page_up"
+      ],
+      "description": "Move back five activity groups.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "page_down",
+      "binding_from": [
+        "list",
+        "page_down"
+      ],
+      "description": "Move forward five activity groups.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "jump_top",
+      "binding_from": [
+        "list",
+        "jump_top"
+      ],
+      "description": "Focus the first activity group.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    },
+    {
+      "mode": "activity",
+      "action": "jump_bottom",
+      "binding_from": [
+        "list",
+        "jump_bottom"
+      ],
+      "description": "Focus the last activity group.",
+      "source": "codex-rs/tui/src/transcript_view/disclosure.rs"
+    }
+  ]
+}

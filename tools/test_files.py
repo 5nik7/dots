@@ -34,7 +34,8 @@ class Files(unittest.TestCase):
         (self.home / ".config").mkdir()
         self.link = self.home / ".config/app"
         self.link.symlink_to(self.repo / "configs/app")
-        self.env = patch.dict(os.environ, {"HOME": str(self.home), "DOTS": str(self.repo), "XDG_CONFIG_HOME": str(self.home / ".config")})
+        self.env = patch.dict(os.environ, {"HOME": str(self.home), "DOTS": str(self.repo), "XDG_CONFIG_HOME": str(self.home / ".config"),
+                                          "XDG_STATE_HOME": str(self.home / ".state"), "XDG_CACHE_HOME": str(self.home / ".cache")})
         self.env.start()
         self.addCleanup(self.env.stop)
         subprocess.run(["git", "init", "-q", str(self.repo)], check=True)
@@ -85,12 +86,13 @@ class Files(unittest.TestCase):
             self.assertIn('--yes', call('__complete', shell, '3', '--', 'dots', 'files', 'check', '--'))
             self.assertIn('dots', call('__complete', shell, '4', '--', 'dots', 'files', 'check', '--repo', 'd'))
         self.assertEqual(json.loads(call('files', 'check', '--dry-run', '--json'))['action'], 'check')
-        for route in ('stash', 'edit'):
+        for route in ('stash', 'edit', 'repair'):
             self.assertIn('--dry-run', call('help', 'files', route))
             for shell in ('bash', 'zsh', 'fish'):
                 self.assertIn(route, call('__complete', shell, '2', '--', 'dots', 'files', route[:2]))
                 self.assertIn('--yes', call('__complete', shell, '3', '--', 'dots', 'files', route, '--'))
                 self.assertIn('dots:app', call('__complete', shell, '3', '--', 'dots', 'files', route, 'dots:'))
+        self.assertEqual(json.loads(call('files', 'repair', '--dry-run', '--json'))['action'], 'repair')
         self.assertIn("--strategy", call("help", "files", "track"))
         discovery_help = call("help", "files", "discover")
         for flag in ("--verbose", "--all"):

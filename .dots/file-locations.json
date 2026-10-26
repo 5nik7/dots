@@ -3,6 +3,17 @@
   "repository": "dots",
   "locations": [
     {
+      "id": "gitmux",
+      "kind": "file",
+      "target": "${HOME}/.gitmux.conf",
+      "source": "config/gitmux/gitmux.conf",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
       "id": "xdg-config",
       "kind": "root",
       "target": "${CONFIG}",

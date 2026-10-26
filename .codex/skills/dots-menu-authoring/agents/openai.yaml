@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dots Menu Authoring"
+  short_description: "Create Dots FZF menus with shared popup patterns"
+  default_prompt: "Use $dots-menu-authoring to plan or implement the requested Dots menu with shared selection, safe terminal handoff and native shell parity."

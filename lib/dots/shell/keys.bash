@@ -44,7 +44,7 @@ if ! typeset -f dots >/dev/null || [[ ${_DOTS_KEYS_WRAPPER:-0} == 1 ]]; then
       fi
       case $_dots_keys_arg in
         --query|--mode|--source) _dots_keys_value=$_dots_keys_arg ;;
-        --source=configured|--snapshot|--snapshot=*|-h|--help|tmux|nvim|yazi|fzf|kitty|television|powershell) _dots_keys_capture=0 ;;
+        --source=configured|--snapshot|--snapshot=*|-h|--help|tmux|nvim|yazi|codex|fzf|kitty|television|powershell) _dots_keys_capture=0 ;;
         zsh) [[ -n ${ZSH_VERSION:-} ]] || _dots_keys_capture=0 ;;
         bash) [[ -z ${ZSH_VERSION:-} ]] || _dots_keys_capture=0 ;;
       esac
@@ -56,4 +56,7 @@ if ! typeset -f dots >/dev/null || [[ ${_DOTS_KEYS_WRAPPER:-0} == 1 ]]; then
     fi
   }
   _DOTS_KEYS_WRAPPER=1
+fi
+if [[ -n ${ZSH_VERSION:-} ]]; then
+  source "$DOTS/lib/dots/shell/keys-ipc.zsh"
 fi

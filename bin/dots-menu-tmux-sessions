@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# dots:summary=Browse projects and manage tmux sessions
+# dots:usage=[--print|--json|--browse] [--query TEXT] [--client CLIENT]
+# dots:option=--print||flag|List sessions without opening FZF
+# dots:option=--json||flag|Print versioned session menu data
+# dots:option=--browse||flag|Open FZF explicitly, including from a tmux binding
+# dots:option=--query||string|Initial search text or listing filter
+# dots:option=--client||string|Exact invoking tmux client
+# dots:example=dots menu tmux sessions
+# dots:example=dots menu tmux sessions --json
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/menu_sessions.py" "$@"

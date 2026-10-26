@@ -193,6 +193,7 @@ dots:setup({
   },
 
   githead = {
+    hide_in_tmux = true,
     show_remote_icon = true,
     repo_color = dots.colors.git.repo,
     repo_owned_color = dots.colors.git.repo_owned,

@@ -10,6 +10,7 @@ selection, permission overrides, sessions or machine-local state.
 - [dots-shell-integration](skills/dots-shell-integration/SKILL.md)
 - [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md)
 - [dots-cli-presentation](skills/dots-cli-presentation/SKILL.md) — shared CLI layouts, resource colors/icons and progress; preserves custom views and data interfaces.
+- [dots-menu-authoring](skills/dots-menu-authoring/SKILL.md) — plan or implement FZF menus using existing selection patterns, a worked example and a copyable plan template; the implemented launcher/session patterns and remaining acceptance work are indexed in the [menu plan](../plans/popup-menus.md).
 
 - [dots-documentation-maintenance](skills/dots-documentation-maintenance/SKILL.md) — align canonical docs with implementation and wiki exports.
 - [dots-wiki-maintenance](skills/dots-wiki-maintenance/SKILL.md) — generated pages, sidebar and associated Git workflows.

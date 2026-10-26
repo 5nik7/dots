@@ -9,14 +9,28 @@ The shared configuration supports the existing Termux workflow with explicit sta
 `zshrc` resolves its own source file and loads the adjacent `init.zsh` directly; that loader establishes the shared paths, and `interactive.zsh` loads these stages synchronously:
 
 1. `core/environment.zsh`: XDG defaults, shared utilities, environment modules, editor selection, and paths.
-2. `core/cache.zsh`, shared functions/options/FZF settings, and the selected theme.
+2. `core/cache.zsh`, shared functions/options, early `keys.zsh` preferences, FZF settings, and the selected theme.
 3. Installed completion providers, followed by `core/completion.zsh` and one `compinit` with its normal ownership checks.
 4. `integrations/tools.zsh`: immediately available runtime managers, directory hooks, history integration, generated completions, Starship, then shared aliases.
-5. The existing local configuration hook, FZF shell bindings, then FZF-tab and widget-wrapping plugins.
+5. The existing local configuration hook, FZF shell bindings, then FZF-tab and widget-wrapping plugins, followed by the final personal keybindings.
 
 User-facing functions and aliases are maintained in the [shared shell resources](../../docs/shared-shells.md). Existing `functions.zsh`, `aliases.zsh`, `options.zsh`, `fzf.zsh`, `completions.zsh`, and `plugins.zsh` entry points remain available. Tool activation and plugin/widget wrapping happen once per shell; start a new shell after changing their activation code. `rl` reloads ordinary configuration and reapplies the theme without duplicating hooks or FZF options.
 
 The first-run Zinit/plugin download behavior is retained. Installed plugins are reused. Missing optional tools do not prevent basic shell use; this is not an installer or a claim that every optional integration works without its dependencies.
+
+## Personal keybindings and history search
+
+[`keys.zsh`](keys.zsh) owns personal ZLE settings and bindings. It selects vi editing once per shell, retains `KEYTIMEOUT=1`, and keeps beam/block cursor handling with the vi-mode plugin or additive native ZLE hooks. History storage options remain in `options.zsh`; the Termux local hook owns platform clipboard/open commands and plugin loading.
+
+Up/Down search command history in insert and normal mode; normal-mode `k`/`j` search backward/forward. Both ordinary and application-mode arrow sequences and available terminfo sequences are supported. Searches match a contiguous substring anywhere in the command, ignore case, and return unique results. `HISTORY_SUBSTRING_SEARCH_GLOBBING_FLAGS='i'` and `HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1` select these preferences; `HISTORY_SUBSTRING_SEARCH_FUZZY=''` and `HISTORY_SUBSTRING_SEARCH_PREFIXED=''` disable fuzzy/prefix-only matching. These switches treat any nonempty value as enabled, including `0`. The highlight timeout remains one second. Empty queries browse history; multiline results retain the plugin's within-command navigation.
+
+Matches use the current Dots selection foreground/background; unsuccessful searches use its error foreground. A builtin-only prompt hook reads refreshed palette arrays after the existing theme hook, with standout/red fallbacks when no palette is loaded. No theme publication or plugin update is needed. Edit the settings and theme helper in `keys.zsh` to change these preferences; later local-hook assignments can override ordinary search settings.
+
+Both Ctrl-H and DEL delete backward in insert mode. When clipboard widgets are installed, normal-mode `Y` retains yank-to-end and insert-mode Ctrl-V pastes from the system clipboard. FZF Ctrl-R retains priority, and Tab remains owned by FZF-tab. Plugin-specific bindings are installed only when their widgets exist; without optional plugins, native editing remains usable.
+
+The file loads before plugins and applies bindings after widget registration. Deduplicated vi-mode callbacks reapply them after initialization, first normal-mode lazy installation, and mode changes. It does not repeatedly reset the vi maps or wrap plugin widgets. Open a fresh Zsh session after the initial migration; subsequent `rl` reloads reapply edits without duplicating hooks. `dots keys zsh` from the integrated shell captures these effective bindings, including Zsh's abbreviated `bindkey -a` normal-mode declarations. The tmux shortcut can request the source pane's live maps while Zsh is at its prompt; unavailable capture is labeled configuration only. See [live Zsh capture](../../docs/keys.md#live-zsh-bindings-from-the-tmux-shortcut) for targeted activation in an existing session.
+
+These preferences are specific to personal Zsh startup on Termux/Linux/WSL; the integration-only `dots init` hook does not load them. Bash and native PowerShell keyboard settings and Windows destinations are unchanged. Native Termux tests are distinct from other-platform fixtures and actual keyboard acceptance.
 
 ## Deja suggestions
 

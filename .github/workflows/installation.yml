@@ -26,6 +26,8 @@ jobs:
         run: python -B tools/test_file_platform.py
       - name: Isolated installation lifecycle
         run: python -B tools/test_installation.py
+      - name: Isolated managed file repair
+        run: python -B tools/test_files_repair.py
       - name: Native adapters and presentation
         run: python -B tools/test_installation_adapters.py
 

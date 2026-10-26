@@ -29,6 +29,8 @@ color; stdout schemas, raw exports, flags and completion behavior are unchanged.
 
 ## Implemented Files and Theme Routes
 
+`dots files repair [RESOURCE...] [--repo ID] [--app APP] [--category CATEGORY]` scans catalog destinations on the current platform. It queues missing links and verified broken managed links. Bare terminal use opens a helper for unresolved issues, allowing explicit relink or backed-up replacement of ordinary destinations, queue review and one final Cancel/Apply confirmation. `--yes` applies automatic repairs only; `--dry-run`, `--json` and `--verbose`/`-v` are supported. JSON requires `--yes` or `--dry-run`; data/preview/nonterminal modes never open the helper. Generated-theme connections and conflicting ownership remain protected. Bash and native PowerShell use the same controller, static help and contextual completion. See [repair](files.md#repair-managed-destinations) for ownership, recovery and exit statuses.
+
 `dots files stash [RESOURCE...] [--restore]` disables resources and unlinks only
 matching destinations; restore enables and relinks. `dots files edit [RESOURCE |
 --new]` edits source/target mappings, metadata-only unless `--apply` is selected.
@@ -194,9 +196,153 @@ route/flag completion and repository-ID completion without invoking the browser.
 
 `dots menu tmux keys` and the direct `dots-menu-tmux-keys` executable delegate to `dots keys tmux`. They retain `--print` and add the shared picker/data/filter options. The running tmux server supplies tables, descriptions and prefix settings without starting a server. The FZF popup replaces the old less pager. See [keybindings](keys.md#tmux-compatibility).
 
+### Dots workflow menu
+
+`dots menu [--print|--json|--browse] [--query TEXT] [--client CLIENT]` opens the curated launcher. Bash and native PowerShell share its controller, static help, flags and completion. Interactive default invocation requires terminal input/output and a usable `TERM`; `--browse` also supports a validated background tmux context. Printed, JSON and redirected default views only list choices. Their query matches all whitespace-separated terms, case-insensitively; interactive queries seed FZF. Missing FZF or popup support produces a filtered listing and a stderr explanation without dispatching an action.
+
+The fixed registry in `lib/dots/menu_cli.py` owns entry order, labels, icons, command arrays and terminal behavior. Descriptions come from the selected first-party static headers. The launcher checks command-file/tool presence and platform limits without running extensions, collecting session/file/theme/Git inventories or reading pane contents. Unavailable entries remain visible with a reason; selection rechecks availability and refuses unavailable actions. There is no automatic extension enrollment or user-defined menu schema.
+
+Interactive rows show just an icon and lowercase name, in the order below. Launcher prompts use `dots: ` at the root and middle-dot breadcrumbs such as `dots·files: ` and `dots·themes·plugins: `, with one space after the colon. This applies only to launcher menus; delegated pickers keep their prompts. Printed headings and JSON titles are unchanged. Descriptions remain in printed/JSON views and static help. Family submenus show common workflows; each also ends with `help`. These are internal navigation choices, with no extra public routes or flags.
+
+| Root ID and label | Selection and submenu actions |
+| --- | --- |
+| `keys` | `dots keys --browse` opens the existing category/binding browser. |
+| `tmux` | `sessions` opens the existing session picker; `keys` opens `dots menu tmux keys --browse`; help uses `dots help menu tmux`. |
+| `files` | `browse`, `list`, `history`, `sources` use the corresponding `dots files` workflows. |
+| `git` | `status`, `info`, `submodules`, `wiki`, `publish`, `sync`; see the nested choices and approval rules below. |
+| `theme` | `show`, `switcher`, `files` (`dots theme files browse`), `backgrounds` (`dots theme bg switcher`). |
+| `themes` | `list`, `switcher`, `plugins`; the plugins submenu contains `list`, `doctor`, `help`. |
+| `anodize` | `create`, `edit`, `preview`, `apply` use `--interactive`; `list` shows authored palettes. |
+| `debug` | `check`, `startup`, `path`, `cache`; no live tracing is enabled. |
+| `profile` | `show`, `paths`, `layers`, `files`, `commands`, `env`, `check` use the detected profile. |
+| `profiles` | `list`, `check`. |
+| `wiki` | `browse`, `list`, `check`. |
+| `env` | Opens the existing environment report. |
+
+The Git submodules menu contains `list` (runs `dots git submodules`), `info`, `status` and `help`. Git wiki contains `status`, `info`, `publish`, `sync` and `help`. Reports use the reader. The Git and Git wiki publish choices run `dots git publish --all` and `dots git wiki publish --all`, respectively, retaining the existing terminal review and confirmation. They include ordinary unstaged and untracked files under the existing ignore and gitlink rules; direct CLI publication remains staged-only by default. Each sync first runs its existing `--dry-run` command in the reader. Only a successful preview dismissed normally (q in less or Enter in FZF) opens a Cancel/Sync confirmation with Cancel selected; only explicit Sync runs the normal command. Closing the preview popup, Escape/Ctrl-C in FZF, failed previews or canceled confirmation never sync. Sync adds no `--all`, `--init`, `--remote` or `--yes`; publish adds only `--all`. Repository selection and direct CLI semantics are unchanged.
+
+Enter opens a choice. Escape goes back one menu level; Escape at the root closes with 130. Ctrl-C at any menu closes the launcher with 130. F1 opens contextual help (general help at the root). Returning preserves that menu's search query; a newly opened submenu starts empty. Completed or canceled workflows return to their launching menu. Completed session selection, including selecting the current session, closes the launcher successfully; cancellation, empty inventories and failures return to the tmux submenu.
+
+The chooser closes before the selected workflow starts. Actions preserve the caller's working directory and pass literal arguments. Normal terminal invocation inherits the terminal; background tmux invocation targets the exact originating client. `--client CLIENT` disambiguates clients sharing the originating session; it requires inherited server/pane context when browsing and is ignored by data views. File/theme/Anodize workflows retain their existing review, confirmation and transaction paths.
+
+Help, reports and other output actions execute once, then open a scrollable reader containing their complete stdout and stderr. Less supports arrows, Page Up/Down, mouse scrolling, `/` search and `q` to return, including for short output. A read-only FZF line browser provides scrolling and search when less is missing or fails; Enter/Escape returns from that fallback. The reader renders Nerd Font private-use glyphs directly while continuing to escape control characters. Less prompts and standout text follow the [global less color policy](shell-environment.md#global-less-colors), including background tmux launches. Failures show their exit status. Reader dismissal does not replace the command's result. In tmux, output commands run once in a compact cancellable loading window, then open a fitted reader after capture finishes. Readers retain 90% client width; height counts displayed rows, wrapping, title/status, controls and borders, with a six-row minimum and 90% height cap (clamped on tiny clients). Long content remains fully scrollable. Already prepared messages open directly. Private captures are removed after use. Interactive `wiki browse` closes its selection host before opening the fitted document reader; direct `wiki show`, raw/JSON and redirected data output retain their contracts.
+
+The repository tmux configuration binds Prefix m to `dots menu --browse` and Prefix s to the session picker. Each `run-shell -b` binding passes explicit server, pane, client and cwd context, quotes shell-bound format values and maps only status 130 to success. Other statuses and diagnostics remain visible. These replace stock mark-pane and session-tree bindings; Prefix ? is unchanged. Configuration activation requires loading the configuration in the running server; source edits alone do not activate it.
+
+Listings and successful session navigation return 0; invalid invocations and unrecoverable context/selector errors return 2. Launcher cancellation returns 130. Workflow failures display their status before returning to the menu; they do not become a successful workflow or close the launcher. Native Windows uses ordinary terminal FZF and keeps the unavailable tmux entry visible; it never invokes WSL. The JSON envelope is the shared [schema-1 menu record](specification.md#shared-menu-records), with no command arrays or private transport fields.
+
+### Tmux session menu
+
+`dots menu tmux sessions [--print|--json|--browse] [--query TEXT] [--client CLIENT]`
+browses projects and manages sessions. The direct executable is
+`dots-menu-tmux-sessions`; Bash and native PowerShell metadata/help/completion
+share this route. Native Windows returns status 2 without invoking tmux or WSL.
+
+With terminal input/output and a usable `TERM`, the default opens FZF. `--browse`
+also accepts an explicit background tmux context. The prompt is
+`dots·tmux·sessions:` with a project breadcrumb in its submenu. Rows use the same
+semantic palette and aligned names as the key browser. Projects use ``,
+with icons matching the adjacent name color. Non-current project names with sessions
+use bold theme accent in both the list and preview; non-project session names
+use bold theme blue. Current names retain their magenta emphasis.
+Empty-project names use `light_foreground`, normal-weight in the list and bold
+in the preview. The preview header reads `battery · [1 session]`, with a muted
+dot. Totals use theme orange for positive counts in both current and non-current projects
+(including menu `[N]`/expanded counts),
+and red for preview `[0 sessions]`; menu `no session` stays muted. Window counts
+are green and client counts read `N attached`, yellow when positive and muted
+when zero. Counts use normal weight; the full `·  current` / `· current` marker
+uses bold theme `bright_green`. The path line uses `Project: 󰉋 ~/path`, with the icon matching its
+directory style and following icon preferences. Current state remains readable
+without color or icons. The colored inert preview
+sits below the list, normally five rows including borders, capped at eight and
+bounded by the terminal. Its stable height fits the largest wrapped preview in
+the current view. Alt-P toggles it and Alt-J/K scroll it. Paths use `~` for home;
+counts use singular/plural wording and a matching single-session name is not
+repeated. Search and selection survive returning from actions.
+
+The header shows only `Alt-H: keys`. Alt-H opens a separate fitted, read-only
+shortcut popup, including when no rows match. Escape or Alt-H restores the
+search, selected row and any pending project action; Ctrl-C exits the browser.
+Enter in the reference executes nothing. F1 remains the contextual action menu.
+
+The browser discovers Git checkouts immediately under `~/repos`, includes Dots, and reads optional [additional project paths](specification.md#session-browser-projects). Active projects come first, inactive projects next, then generic sessions. Managed workspaces use their live all-pane project snapshot; a single root may be outside those discovery directories, while zero/multiple roots remain generic. Legacy unadopted startup sessions stay generic. Other sessions retain explicit-tag/start-directory/pane-directory association. Every session appears once and duplicate project basenames include disambiguating paths. The preview displays full unique session names.
+
+| Key | Action |
+| --- | --- |
+| Enter | Switch/open a session. A project with several sessions opens its session submenu; an inactive project creates a fresh workspace at its root. |
+| Alt-N | Create and enter a new session in the project, selected generic session's directory, or invoking directory when no row matches. |
+| Alt-R | Rename the selected session. |
+| Alt-D | Show Cancel/Delete with the name, windows and attached clients. Delete terminates that session and its processes. |
+| Alt-T | Termux only: open a new Termux terminal tab attached to the selection, creating a session for an inactive project first. |
+| F1 | Open the contextual action menu, including Switch/Open. |
+| Alt-H | Show the shortcut reference; Escape or Alt-H returns. |
+| Escape / Ctrl-C | Back / exit. |
+
+Session-specific actions on a multi-session project first select a session.
+New sessions use a fresh immutable ID: `projectname-ID` in a project or
+`termux-ID` outside projects, without a name prompt. Prefix C uses the same
+creation rule in the invoking pane directory and switches only that client.
+Automatic names follow all live pane projects; manual rename opts out.
+Rename starts with the existing name. Optional Gum provides editable input, with
+plain terminal input otherwise. Empty/blank names, periods, colons, control
+characters and existing names are refused. Rename, canceled actions and deleting
+another session refresh the browser. Switching, creation/opening, new Termux and
+deleting the invoking session close the launcher. Last-session deletion follows
+tmux's normal detach/exit behavior; it can close a Termux tab using automatic
+startup. Deletion does not remove project directories or registration.
+
+Inspection never starts a server; explicit creation may start the default one.
+Existing-server actions retain the pinned socket/server PID, session ID/creation
+time and exact invoking client identity. Stale or ambiguous identities fail
+without substituting another target. Selecting the current session is a no-op.
+`--client CLIENT` disambiguates clients on the originating session and requires
+inherited `TMUX`/`TMUX_PANE`. Outside tmux, attachment uses the caller's terminal
+without detaching other clients. New Termux first probes `termux-am --am-help`,
+then the Termux-installed legacy `am --help` if needed (never system `am`). These
+bounded read-only probes run only for that action, before creating an inactive
+project session. One launch request invokes the fixed attach helper without shell
+startup; it is never retried after failure or timeout. Diagnostics identify the
+adapter and status with bounded, sanitized detail. Unavailable transport or Android launch failure
+reports an error, leaves any created session available and never changes app
+permissions/settings. A successful launch request is not proof of attachment.
+
+`--print`, `--json` and redirected defaults remain read-only **live-session**
+listings: no project discovery, actions, FZF probes or client capture. Their
+query matches all whitespace-separated terms case-insensitively; interactive
+queries use FZF syntax. The [schema-1 JSON](specification.md#shared-menu-records)
+remains unchanged. Missing FZF/popup support prints interactive choices and an
+explanation without executing an action. Empty interactive inventories still
+support Alt-N/F1/Alt-H; empty data listings succeed. Errors return 2; Escape at the
+root and Ctrl-C return 130. Attachment preserves tmux's exit status. Prefix s
+normalizes cancellation quietly. Existing key routes and Prefix ? are unchanged.
+
 ### Keybinding browser
 
-`dots keys [APP]` supports `--query TEXT`, `--mode MODE`, `--source live|configured|all`, `--no-defaults` and mutually exclusive `--print|--json|--browse`. Interactive `dots keys` opens the category menu; `dots keys all` and `dots keys APP` open bindings directly. Interactive `dots keys apps` offers an app chooser with counts and availability; `--print`, redirected output and `--json` preserve the provider coverage report. Menus fit their contents; tmux binding browsers use a 99% popup and 45% preview. Bash/Zsh and native PowerShell share the controller and static metadata; on-demand native shell adapters supply caller keymaps. `:DotsKeys` is the separate Neovim bridge. Defaults and coverage are described in [the keybinding reference](keys.md). Success and empty results return 0; invalid invocations or failed inspection/picker operations return 2, and cancellation returns 130. Missing providers are recorded as coverage notes.
+`dots keys [APP]` supports `--query TEXT`, `--mode MODE`, `--source live|configured|all`, `--no-defaults` and mutually exclusive `--print|--json|--browse`. Interactive `dots keys` opens the category menu; `dots keys all` and `dots keys APP` open bindings directly. Interactive `dots keys apps` offers an app chooser with counts for nonempty apps; `--print`, redirected output and `--json` preserve the provider coverage report. Menus fit their contents; tmux binding browsers use a 99% popup and 45% preview. Bash/Zsh and native PowerShell share the controller and static metadata; on-demand native shell adapters supply caller keymaps. `:DotsKeys` is the separate Neovim bridge. Defaults and coverage are described in [the keybinding reference](keys.md). Success and empty results return 0; invalid invocations or failed inspection/picker operations return 2, and cancellation returns 130. Missing providers are recorded as coverage notes.
+
+Key pickers put match counts inline on the right. The main menu shows All and
+nonempty apps as `app · [47]`, using muted counts from one captured snapshot;
+selecting an app reuses that snapshot. Apps is retained as an explicit route,
+with no redundant main-menu entry. Main/All prompts are `󰌆 :`; specific apps use
+`󰌆 APP:`. A selected mode uses `󰌆 APP·MODE:` (or `󰌆 all·MODE:` across apps).
+App-specific lists omit the app column; a selected mode hides the mode column.
+Visible app/mode/key columns align within 12/18/16-cell caps and shorten with `…`.
+Modes use orange in lists and previews. The preview starts at the left edge with
+Keys, Action, Mode and no heading. Alt-M opens a compact mode chooser; selecting
+or cancelling returns to the binding list with its search preserved. Ctrl-C
+cancels browsing. Provider and mode banners are omitted from picker headers.
+`--mode MODE` selects the initial interactive mode; print/JSON keep exact mode
+filtering. See [picker controls](keys.md#browsing-and-notation).
+
+The keybinding app choices include `codex`. `dots keys yazi` includes the complete pinned shipped defaults; `dots keys codex` includes CLI defaults and user `tui.keymap` overrides. Both work offline and honor the same filters and output options. `--no-defaults` excludes bundled as well as installed reference rows. See [provider coverage](keys.md#live-versus-configured-evidence).
+
+The tmux shortcut requests live Zsh maps from its originating pane before opening
+the counted main menu; direct Zsh, All and Apps routes also request them.
+This requires an integrated Zsh prompt; unavailable capture
+uses configured rows with explanatory print/JSON coverage notes. Existing caller snapshots
+take precedence, and `--source configured` bypasses the request. No new public
+flag or JSON version is introduced. See [live Zsh capture](keys.md#live-zsh-bindings-from-the-tmux-shortcut).
 
 ### Optional Metadata
 
@@ -326,7 +472,7 @@ Bash and Zsh share the [interactive helper contract](shared-shells.md#commands-a
 
 ### Termux default-session launcher
 
-**Implemented.** `androidots/bin/termux-bar [--auto]` creates or reattaches the current Termux tab's default session on the ordinary tmux server. It is a standalone Androidots executable, not a new `dots` route. `--auto` is the guarded Bash/Zsh startup mode; `-h`/`--help` prints plain help without session discovery or tmux. There are no positional arguments. Exit status is 0 for an automatic skip, 1 for launcher failures, 2 for invalid arguments and 130 for interrupted setup; after attachment, 0 means detach or successful manual completion and 1 means attachment failure. Automatic normal session exit returns internal status 20 to the Dots startup hook, which exits the outer shell. This status is not used for skipped startup. Diagnostics go to stderr, and successful attachment hands the terminal to tmux. See [startup and opt-out behavior](shell-init.md#termux-tmux-startup).
+**Implemented.** `profiles/termux/bin/termux-bar [--auto]` creates or reattaches the current Termux tab’s managed workspace on the ordinary tmux server, finding its stored origin even after renaming. It is a standalone Termux executable, not a new `dots` route. `--auto` is the guarded Bash/Zsh startup mode; `-h`/`--help` prints plain help without session discovery or tmux. There are no positional arguments. Exit status is 0 for an automatic skip, 1 for launcher failures, 2 for invalid arguments and 130 for interrupted setup; after attachment, 0 means detach or successful manual completion and 1 means attachment failure. Automatic normal session exit returns internal status 20 to the Dots startup hook, which exits the outer shell. This status is not used for skipped startup. Diagnostics go to stderr, and successful attachment hands the terminal to tmux. See [startup and opt-out behavior](shell-init.md#termux-tmux-startup).
 
 ### Android status scripts
 

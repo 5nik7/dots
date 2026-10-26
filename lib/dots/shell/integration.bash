@@ -19,6 +19,9 @@ if [[ ${dots_options[DOTS_INIT_THEME]} == 1 ]]; then
   source "$DOTS/lib/dots/themes/shell.bash"
   set_theme 2>/dev/null || printf 'dots: could not initialize theme; previous colors retained\n' >&2
   _dots_hook_record theme
+else
+  source "$DOTS/lib/dots/shell/less.bash"
+  _dots_less_style '' '' auto 0
 fi
 _dots_shell_completion_off() {
   local name specification

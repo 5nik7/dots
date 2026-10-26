@@ -9,6 +9,8 @@ Read the [presentation contract](../../../docs/presentation.md) and inspect the
 command's renderer and nearby commands before choosing a layout. For route,
 metadata or completion changes, also follow
 [command maintenance](../dots-command-maintenance/SKILL.md).
+For a Dots launcher or picker, [menu authoring](../dots-menu-authoring/SKILL.md)
+provides existing selection patterns and a focused plan template.
 
 ## Choose the view
 

@@ -1,0 +1,1491 @@
+{
+  "version": "0.164.0",
+  "revision": "6aaac694803004a63c6f393d153c96d22521a6b9",
+  "sources": {
+    "tui/src/keymap.rs": "1744ca713a656325bdfab61635d2111347917a301bfce06e3afee73fc3cd8cdd",
+    "tui/src/keymap/bindings.rs": "492f9ff4d19b1a9a433e353ed2edbc07772515e3124b4b82dbb8f0145b1e2b3c",
+    "config/src/tui_keymap.rs": "32be812493df49841551a2c8f2b38b0b22794a4c3d9f9bc9a91022a0e386d6fe",
+    "tui/src/keymap/vim_search.rs": "53ab93f56589dd212439d0f4134133b841f9313bed091d388952ff2965f1897a",
+    "tui/src/keymap/chords.rs": "d34279bdf7d169b032a901b81a25b7edddd7f66e01103dde538fc9df14a134aa",
+    "tui/src/keymap/leader.rs": "3ff4d6275d5354390a507f21482b8535990ba59909de08c5230536ec45809f6c",
+    "tui/src/keymap/chords/quick_dial_defaults.rs": "bf8ca6ce2c0033c0ac4fbae7c23c4f63f7b511b1db35ba00ba156db8e426dbcd"
+  },
+  "actions": [
+    {
+      "mode": "global",
+      "action": "open_agents",
+      "keys": [],
+      "description": "Open the shared agent-session overview.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "open_transcript",
+      "keys": [
+        "ctrl-t"
+      ],
+      "description": "Open the transcript overlay.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "find_transcript",
+      "keys": [
+        "f3"
+      ],
+      "description": "Find text in the full transcript.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "focus_activity",
+      "keys": [
+        "f4"
+      ],
+      "description": "Focus activity groups in the owned transcript to inspect their details.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "open_warnings",
+      "keys": [
+        "f2"
+      ],
+      "description": "Open retained warnings without replacing the composer.",
+      "configurable": false
+    },
+    {
+      "mode": "global",
+      "action": "open_external_editor",
+      "keys": [
+        "ctrl-g"
+      ],
+      "description": "Open the external editor for the current draft.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "copy",
+      "keys": [
+        "ctrl-o"
+      ],
+      "description": "Copy the last agent response to the clipboard.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "clear_terminal",
+      "keys": [
+        "ctrl-l"
+      ],
+      "description": "Clear the terminal UI.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "toggle_vim_mode",
+      "keys": [],
+      "description": "Toggle Vim mode for the composer input.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "toggle_fast_mode",
+      "keys": [],
+      "description": "Toggle Fast mode.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "toggle_raw_output",
+      "keys": [
+        "alt-r"
+      ],
+      "description": "Toggle raw scrollback mode for copy-friendly transcript selection.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "toggle_side_conversation",
+      "keys": [
+        "ctrl-/"
+      ],
+      "description": "Switch between a side conversation and its parent without closing either.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "open_presets",
+      "keys": [
+        "leader p"
+      ],
+      "description": "Open saved prompts and slash commands.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "toggle_voice",
+      "keys": [
+        "f8"
+      ],
+      "description": "Start or stop a voice conversation.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "interrupt_turn",
+      "keys": [
+        "esc"
+      ],
+      "description": "Interrupt the active turn.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "decrease_reasoning_effort",
+      "keys": [
+        "alt-,",
+        "shift-down"
+      ],
+      "description": "Decrease the active reasoning effort.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "increase_reasoning_effort",
+      "keys": [
+        "alt-.",
+        "shift-up"
+      ],
+      "description": "Increase the active reasoning effort.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "previous_permission_mode",
+      "keys": [],
+      "description": "Switch to the previous available permission mode.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "next_permission_mode",
+      "keys": [],
+      "description": "Switch to the next available permission mode.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "edit_queued_message",
+      "keys": [
+        "shift-left",
+        "alt-up"
+      ],
+      "description": "Move up through pending async questions, then edit the most recently queued message.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "prompt_stack_back",
+      "keys": [
+        "shift-right",
+        "alt-down"
+      ],
+      "description": "Move back through pending async questions toward the composer.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "skip_question",
+      "keys": [
+        "ctrl-]"
+      ],
+      "description": "Skip the focused question.",
+      "configurable": true
+    },
+    {
+      "mode": "chat",
+      "action": "toggle_voice_mute",
+      "keys": [
+        "f9"
+      ],
+      "description": "Toggle the microphone in an active voice conversation.",
+      "configurable": true
+    },
+    {
+      "mode": "composer",
+      "action": "submit",
+      "keys": [
+        "enter"
+      ],
+      "description": "Submit the current composer draft.",
+      "configurable": true
+    },
+    {
+      "mode": "composer",
+      "action": "queue",
+      "keys": [
+        "tab"
+      ],
+      "description": "Queue the current composer draft while a task is running.",
+      "configurable": true
+    },
+    {
+      "mode": "composer",
+      "action": "toggle_shortcuts",
+      "keys": [
+        "?",
+        "shift-?"
+      ],
+      "description": "Toggle the composer shortcut overlay.",
+      "configurable": true
+    },
+    {
+      "mode": "composer",
+      "action": "history_search_previous",
+      "keys": [
+        "ctrl-r"
+      ],
+      "description": "Open reverse history search or move to the previous match.",
+      "configurable": true
+    },
+    {
+      "mode": "composer",
+      "action": "history_search_next",
+      "keys": [
+        "ctrl-s"
+      ],
+      "description": "Move to the next match in reverse history search.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "insert_newline",
+      "keys": [
+        "ctrl-j",
+        "ctrl-m",
+        "enter",
+        "shift-enter",
+        "alt-enter"
+      ],
+      "description": "Insert a newline in the editor.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "move_left",
+      "keys": [
+        "left",
+        "ctrl-b"
+      ],
+      "description": "Move cursor left by one grapheme.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "move_right",
+      "keys": [
+        "right",
+        "ctrl-f"
+      ],
+      "description": "Move cursor right by one grapheme.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "move_up",
+      "keys": [
+        "up",
+        "ctrl-p"
+      ],
+      "description": "Move cursor up one visual line.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "move_down",
+      "keys": [
+        "down",
+        "ctrl-n"
+      ],
+      "description": "Move cursor down one visual line.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "move_word_left",
+      "keys": [
+        "alt-b",
+        "alt-left",
+        "ctrl-left"
+      ],
+      "description": "Move cursor to beginning of previous word.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "move_word_right",
+      "keys": [
+        "alt-f",
+        "alt-right",
+        "ctrl-right"
+      ],
+      "description": "Move cursor to end of next word.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "move_line_start",
+      "keys": [
+        "home",
+        "ctrl-a",
+        "super-left"
+      ],
+      "description": "Move cursor to beginning of line.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "move_line_end",
+      "keys": [
+        "end",
+        "ctrl-e",
+        "super-right"
+      ],
+      "description": "Move cursor to end of line.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "delete_backward",
+      "keys": [
+        "backspace",
+        "shift-backspace",
+        "ctrl-h"
+      ],
+      "description": "Delete one grapheme to the left.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "delete_forward",
+      "keys": [
+        "delete",
+        "shift-delete",
+        "ctrl-d"
+      ],
+      "description": "Delete one grapheme to the right.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "delete_backward_word",
+      "keys": [
+        "alt-backspace",
+        "ctrl-backspace",
+        "ctrl-shift-backspace",
+        "ctrl-w",
+        "ctrl-alt-h"
+      ],
+      "description": "Delete the previous word.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "delete_forward_word",
+      "keys": [
+        "alt-delete",
+        "ctrl-delete",
+        "ctrl-shift-delete",
+        "alt-d"
+      ],
+      "description": "Delete the next word.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "kill_line_start",
+      "keys": [
+        "ctrl-u",
+        "super-backspace"
+      ],
+      "description": "Kill text from cursor to line start.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "kill_whole_line",
+      "keys": [],
+      "description": "Kill the current line.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "kill_line_end",
+      "keys": [
+        "ctrl-k"
+      ],
+      "description": "Kill text from cursor to line end.",
+      "configurable": true
+    },
+    {
+      "mode": "editor",
+      "action": "yank",
+      "keys": [
+        "ctrl-y"
+      ],
+      "description": "Yank the kill buffer.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "enter_insert",
+      "keys": [
+        "i",
+        "insert"
+      ],
+      "description": "Enter insert mode at cursor (`i`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "append_after_cursor",
+      "keys": [
+        "a"
+      ],
+      "description": "Enter insert mode after cursor (`a`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "append_line_end",
+      "keys": [
+        "shift-a",
+        "A"
+      ],
+      "description": "Enter insert mode at end of line (`A`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "insert_line_start",
+      "keys": [
+        "shift-i",
+        "I"
+      ],
+      "description": "Enter insert mode at first non-blank of line (`I`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "open_line_below",
+      "keys": [
+        "o"
+      ],
+      "description": "Open a new line below and enter insert mode (`o`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "open_line_above",
+      "keys": [
+        "shift-o",
+        "O"
+      ],
+      "description": "Open a new line above and enter insert mode (`O`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "enter_replace_mode",
+      "keys": [
+        "shift-r",
+        "R"
+      ],
+      "description": "Enter replace mode and overwrite characters under the cursor (`R`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_left",
+      "keys": [
+        "h",
+        "left"
+      ],
+      "description": "Move cursor left (`h`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_right",
+      "keys": [
+        "l",
+        "right"
+      ],
+      "description": "Move cursor right (`l`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_up",
+      "keys": [
+        "k",
+        "up"
+      ],
+      "description": "Move cursor up (`k`), or recall older composer history at history boundaries.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_down",
+      "keys": [
+        "j",
+        "down"
+      ],
+      "description": "Move cursor down (`j`), or recall newer composer history at history boundaries.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_word_forward",
+      "keys": [
+        "w"
+      ],
+      "description": "Move cursor to start of next word (`w`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_word_backward",
+      "keys": [
+        "b"
+      ],
+      "description": "Move cursor to start of previous word (`b`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_word_end",
+      "keys": [
+        "e"
+      ],
+      "description": "Move cursor to end of current/next word (`e`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_line_start",
+      "keys": [
+        "0"
+      ],
+      "description": "Move cursor to start of line (`0`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "move_line_end",
+      "keys": [
+        "$",
+        "shift-$"
+      ],
+      "description": "Move cursor to end of line (`$`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "find_forward",
+      "keys": [
+        "f"
+      ],
+      "description": "Find the next character on the current line (`f`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "find_backward",
+      "keys": [
+        "shift-f"
+      ],
+      "description": "Find the previous character on the current line (`F`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "till_forward",
+      "keys": [
+        "t"
+      ],
+      "description": "Stop before the next character on the current line (`t`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "till_backward",
+      "keys": [
+        "shift-t"
+      ],
+      "description": "Stop after the previous character on the current line (`T`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "jump_top",
+      "keys": [
+        "g g"
+      ],
+      "description": "Begin a jump to the first buffer line (`gg`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "jump_bottom",
+      "keys": [
+        "shift-g",
+        "G"
+      ],
+      "description": "Jump to the last buffer line (`G`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "delete_char",
+      "keys": [
+        "x"
+      ],
+      "description": "Delete character under cursor (`x`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "replace_char",
+      "keys": [
+        "r"
+      ],
+      "description": "Replace the character under the cursor (`r`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "repeat_last_change",
+      "keys": [
+        "."
+      ],
+      "description": "Repeat the last complete edit (`.`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "substitute_char",
+      "keys": [
+        "s"
+      ],
+      "description": "Delete character under cursor and enter insert mode (`s`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "delete_to_line_end",
+      "keys": [
+        "shift-d",
+        "D"
+      ],
+      "description": "Delete from cursor to end of line (`D`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "change_to_line_end",
+      "keys": [
+        "shift-c",
+        "C"
+      ],
+      "description": "Change from cursor to end of line and enter insert mode (`C`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "yank_line",
+      "keys": [
+        "shift-y",
+        "Y"
+      ],
+      "description": "Yank the entire line (`Y`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "paste_after",
+      "keys": [
+        "p"
+      ],
+      "description": "Paste after cursor (`p`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "start_delete_operator",
+      "keys": [
+        "d"
+      ],
+      "description": "Begin delete operator; next key selects motion (`d`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "start_yank_operator",
+      "keys": [
+        "y"
+      ],
+      "description": "Begin yank operator; next key selects motion (`y`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "start_change_operator",
+      "keys": [
+        "c"
+      ],
+      "description": "Begin change operator; next keys select a text object.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "undo",
+      "keys": [
+        "u"
+      ],
+      "description": "Undo the last complete edit (`u`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "redo",
+      "keys": [
+        "ctrl-r"
+      ],
+      "description": "Redo the last undone edit (`ctrl-r`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_normal",
+      "action": "cancel_operator",
+      "keys": [
+        "esc"
+      ],
+      "description": "Cancel a pending operator and return to normal mode.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_search",
+      "action": "forward",
+      "keys": [
+        "/"
+      ],
+      "description": "Search forward in the active buffer (`/`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_search",
+      "action": "backward",
+      "keys": [
+        "?",
+        "shift-?"
+      ],
+      "description": "Search backward in the active buffer (`?`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_search",
+      "action": "next",
+      "keys": [
+        "n"
+      ],
+      "description": "Repeat the accepted search (`n`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_search",
+      "action": "previous",
+      "keys": [
+        "N",
+        "shift-n"
+      ],
+      "description": "Repeat in the opposite direction (`N`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "delete_line",
+      "keys": [
+        "d"
+      ],
+      "description": "Repeat delete operator to delete the whole line (`dd`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "yank_line",
+      "keys": [
+        "y"
+      ],
+      "description": "Repeat yank operator to yank the whole line (`yy`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_left",
+      "keys": [
+        "h"
+      ],
+      "description": "Motion: left (`h`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_right",
+      "keys": [
+        "l"
+      ],
+      "description": "Motion: right (`l`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_up",
+      "keys": [
+        "k"
+      ],
+      "description": "Motion: up one line (`k`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_down",
+      "keys": [
+        "j"
+      ],
+      "description": "Motion: down one line (`j`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_word_forward",
+      "keys": [
+        "w"
+      ],
+      "description": "Motion: to start of next word (`w`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_word_backward",
+      "keys": [
+        "b"
+      ],
+      "description": "Motion: to start of previous word (`b`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_word_end",
+      "keys": [
+        "e"
+      ],
+      "description": "Motion: to end of current/next word (`e`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_line_start",
+      "keys": [
+        "0"
+      ],
+      "description": "Motion: to start of line (`0`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_line_end",
+      "keys": [
+        "$",
+        "shift-$"
+      ],
+      "description": "Motion: to end of line (`$`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_find_forward",
+      "keys": [
+        "f"
+      ],
+      "description": "Motion: find the next character on the current line (`f`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_find_backward",
+      "keys": [
+        "shift-f"
+      ],
+      "description": "Motion: find the previous character on the current line (`F`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_till_forward",
+      "keys": [
+        "t"
+      ],
+      "description": "Motion: stop before the next character on the current line (`t`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_till_backward",
+      "keys": [
+        "shift-t"
+      ],
+      "description": "Motion: stop after the previous character on the current line (`T`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_jump_top",
+      "keys": [
+        "g g"
+      ],
+      "description": "Motion: begin a jump to the first buffer line (`gg`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "motion_jump_bottom",
+      "keys": [
+        "shift-g",
+        "G"
+      ],
+      "description": "Motion: jump to the last buffer line (`G`).",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "select_inner_text_object",
+      "keys": [
+        "i"
+      ],
+      "description": "Select an inner text object after an operator.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "select_around_text_object",
+      "keys": [
+        "a"
+      ],
+      "description": "Select an around text object after an operator.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_operator",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Cancel the pending operator and return to normal mode.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "word",
+      "keys": [
+        "w"
+      ],
+      "description": "Text object: word.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "big_word",
+      "keys": [
+        "shift-w",
+        "W"
+      ],
+      "description": "Text object: whitespace-delimited WORD.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "parentheses",
+      "keys": [
+        "(",
+        "shift-(",
+        ")",
+        "shift-)",
+        "b"
+      ],
+      "description": "Text object: parentheses.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "brackets",
+      "keys": [
+        "[",
+        "]"
+      ],
+      "description": "Text object: brackets.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "braces",
+      "keys": [
+        "{",
+        "shift-{",
+        "}",
+        "shift-}",
+        "shift-b",
+        "B"
+      ],
+      "description": "Text object: braces.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "double_quote",
+      "keys": [
+        "\"",
+        "shift-\""
+      ],
+      "description": "Text object: double quotes.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "single_quote",
+      "keys": [
+        "'"
+      ],
+      "description": "Text object: single quotes.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "backtick",
+      "keys": [
+        "`"
+      ],
+      "description": "Text object: backticks.",
+      "configurable": true
+    },
+    {
+      "mode": "vim_text_object",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Cancel the pending text-object command.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "scroll_up",
+      "keys": [
+        "up",
+        "k"
+      ],
+      "description": "Scroll up by one row.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "scroll_down",
+      "keys": [
+        "down",
+        "j"
+      ],
+      "description": "Scroll down by one row.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "page_up",
+      "keys": [
+        "page-up",
+        "shift-space",
+        "ctrl-b"
+      ],
+      "description": "Scroll up by one page.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "page_down",
+      "keys": [
+        "page-down",
+        "space",
+        "ctrl-f"
+      ],
+      "description": "Scroll down by one page.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "half_page_up",
+      "keys": [
+        "ctrl-u"
+      ],
+      "description": "Scroll up by half a page.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "half_page_down",
+      "keys": [
+        "ctrl-d"
+      ],
+      "description": "Scroll down by half a page.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "jump_top",
+      "keys": [
+        "home"
+      ],
+      "description": "Jump to the beginning.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "jump_bottom",
+      "keys": [
+        "end"
+      ],
+      "description": "Jump to the end.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "close",
+      "keys": [
+        "q",
+        "ctrl-c"
+      ],
+      "description": "Close the pager overlay.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "close_transcript",
+      "keys": [
+        "ctrl-t"
+      ],
+      "description": "Close the transcript overlay via its dedicated toggle key.",
+      "configurable": true
+    },
+    {
+      "mode": "pager",
+      "action": "find",
+      "keys": [
+        "f3",
+        "/"
+      ],
+      "description": "Find text in a transcript pager.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "move_up",
+      "keys": [
+        "up",
+        "ctrl-p",
+        "ctrl-k",
+        "k"
+      ],
+      "description": "Move list selection up.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "move_down",
+      "keys": [
+        "down",
+        "ctrl-n",
+        "ctrl-j",
+        "j"
+      ],
+      "description": "Move list selection down.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "move_left",
+      "keys": [
+        "left",
+        "ctrl-h"
+      ],
+      "description": "Move horizontally left in list pickers that support horizontal actions.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "move_right",
+      "keys": [
+        "right",
+        "ctrl-l"
+      ],
+      "description": "Move horizontally right in list pickers that support horizontal actions.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "page_up",
+      "keys": [
+        "page-up",
+        "ctrl-b"
+      ],
+      "description": "Move list selection up by one page.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "page_down",
+      "keys": [
+        "page-down",
+        "ctrl-f"
+      ],
+      "description": "Move list selection down by one page.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "jump_top",
+      "keys": [
+        "home"
+      ],
+      "description": "Jump to the first list item.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "jump_bottom",
+      "keys": [
+        "end"
+      ],
+      "description": "Jump to the last list item.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "accept",
+      "keys": [
+        "enter"
+      ],
+      "description": "Accept current selection.",
+      "configurable": true
+    },
+    {
+      "mode": "list",
+      "action": "cancel",
+      "keys": [
+        "esc"
+      ],
+      "description": "Cancel and close selection view.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "resume",
+      "keys": [
+        "o"
+      ],
+      "description": "Open the session resume picker.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "search",
+      "keys": [
+        "f3",
+        "/"
+      ],
+      "description": "Search the available agent tasks.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "new_task",
+      "keys": [
+        "n"
+      ],
+      "description": "Open a new session in the selected checkout.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "new_worktree",
+      "keys": [
+        "w"
+      ],
+      "description": "Open a new session in a worktree from the project default branch.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "fork",
+      "keys": [
+        "f"
+      ],
+      "description": "Fork the selected conversation and open the new session.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "rename",
+      "keys": [
+        "r"
+      ],
+      "description": "Rename the selected task.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "stop",
+      "keys": [
+        "x"
+      ],
+      "description": "Stop the selected running task.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "archive",
+      "keys": [
+        "a"
+      ],
+      "description": "Archive the selected task and its child agents after confirmation.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "delete",
+      "keys": [
+        "backspace"
+      ],
+      "description": "Permanently delete the selected task and its child agents after confirmation.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "hide",
+      "keys": [
+        "h"
+      ],
+      "description": "Hide the selected task until explicitly resumed or the TUI restarts.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "toggle_pin",
+      "keys": [
+        "p"
+      ],
+      "description": "Pin or unpin the selected task in the shared sidebar section.",
+      "configurable": true
+    },
+    {
+      "mode": "agents",
+      "action": "toggle_grouping",
+      "keys": [
+        "g"
+      ],
+      "description": "Toggle grouping tasks by status or project.",
+      "configurable": true
+    },
+    {
+      "mode": "approval",
+      "action": "open_fullscreen",
+      "keys": [
+        "ctrl-a",
+        "ctrl-shift-a"
+      ],
+      "description": "Open the full-screen approval details view.",
+      "configurable": true
+    },
+    {
+      "mode": "approval",
+      "action": "open_thread",
+      "keys": [
+        "o"
+      ],
+      "description": "Open the thread that requested approval when shown from another thread.",
+      "configurable": true
+    },
+    {
+      "mode": "approval",
+      "action": "approve",
+      "keys": [
+        "y"
+      ],
+      "description": "Approve the primary option.",
+      "configurable": true
+    },
+    {
+      "mode": "approval",
+      "action": "approve_for_session",
+      "keys": [
+        "a"
+      ],
+      "description": "Approve for session when that option exists.",
+      "configurable": true
+    },
+    {
+      "mode": "approval",
+      "action": "approve_for_prefix",
+      "keys": [
+        "p"
+      ],
+      "description": "Approve with exec-policy prefix when that option exists.",
+      "configurable": true
+    },
+    {
+      "mode": "approval",
+      "action": "deny",
+      "keys": [
+        "d"
+      ],
+      "description": "Deny without providing follow-up guidance.",
+      "configurable": true
+    },
+    {
+      "mode": "approval",
+      "action": "decline",
+      "keys": [
+        "esc",
+        "n"
+      ],
+      "description": "Decline and provide corrective guidance.",
+      "configurable": true
+    },
+    {
+      "mode": "approval",
+      "action": "cancel",
+      "keys": [
+        "c"
+      ],
+      "description": "Cancel an elicitation request.",
+      "configurable": true
+    },
+    {
+      "mode": "global",
+      "action": "leader",
+      "keys": [
+        "ctrl-x"
+      ],
+      "description": "Prefix for shared shortcut chords.",
+      "configurable": true
+    }
+  ]
+}

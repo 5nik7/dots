@@ -11,7 +11,7 @@ source "$DT_LIB/views.bash" || exit 1
 source "$DT_LIB/state.bash" || exit 1
 dt_current_id || exit 1
 id=$REPLY
-dt_load "$id" && dt_supported && dt_fingerprint || exit 1
+dt_load "$id" && dt_supported && dt_publication_fingerprint || exit 1
 fingerprint=$REPLY
 dt_generation || exit 1
 dt_state_preflight || exit 1

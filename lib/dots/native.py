@@ -15,7 +15,7 @@ def main(argv=None):
         raise ValueError('native bridge requires a controller and encoded argument array')
     controller, encoded = argv
     allowed = {'cli': 'cli.py', 'wttr': 'wttr/cli.py', **{name: 'files/' + name + '.py' for name in
-               ('catalog', 'check', 'manage', 'mappings', 'install', 'browser')}}
+               ('catalog', 'check', 'repair', 'manage', 'mappings', 'install', 'browser')}}
     if controller not in allowed:
         raise ValueError('unknown native controller')
     args = json.loads(base64.b64decode(encoded, validate=True).decode('utf-8'))

@@ -107,6 +107,14 @@ operation plan is rebuilt by the interaction layer.
 The background switcher and other existing prompts retain their documented
 behavior until scoped follow-up work changes them.
 
+## Shared menu selection
+
+**Implemented shared support, launcher and session picker.** `lib/dots/menus.py` uses the existing Python `Presentation` renderer and scoped FZF adapter. Choosers fit their labels, title and header within the invoking terminal; tmux sizing uses a verified exact client. FZF colors come from the published literal palette adapter. Icons remain optional, and control characters in titles/labels are displayed literally. Listing rows wrap by display cells; JSON bypasses rendering entirely. Session choices show names, window/attached-client counts and a current marker; empty inventories use the shared empty-choice view.
+
+The shared parser supports auto/browse/print/JSON modes for menu controllers. Auto requires terminal streams and a usable terminal; explicit browse can use a validated background tmux context. Missing FZF or popup capability lists choices with a stderr explanation; a failed running selector never falls back or chooses another action. CLI cancellation remains 130, and shortcut-specific normalization belongs to the Prefix m/s wrappers.
+
+After selection has returned, `run_action` either inherits a normal terminal, opens a targeted terminal host for an interactive workflow/static output, or forwards context to a cooperating popup-owning browser. It never opens a nested selector itself. Launcher prompts use lowercase, unspaced middle-dot breadcrumbs (`dots:`, `dots·files:`, `dots·themes·plugins:`), followed by one space. The shared chooser accepts an optional interactive `prompt` override, uses it for sizing, and retains the menu title for printed/JSON views. Delegated pickers retain their own prompts. Family menu rows use lowercase names and optional icons without descriptions; printed/JSON views retain descriptions. Back, contextual help and per-frame queries are owned by the launcher. Reader popups retain 90% client width and fit displayed rows, including title/status, blank lines, wrapped text, tabs, Unicode cell widths, reader controls and borders. Height has a six-row minimum and a 90% client-height cap, clamped to the available size. ANSI styling does not count as text. Commands capture once in a compact cancellable loading popup; it closes before the fitted reader opens. Prepared messages skip loading, and wiki selection closes its host before handing back the document for reading. Interactive workflow hosts and their confirmations retain normal sizing. Static results in ordinary and hosted terminals use the scrollable less reader, with a read-only FZF fallback, and remain until dismissed. The less subprocess uses UTF-8 and marks the three Unicode private-use ranges printable (`LESSUTFCHARDEF=E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p`) so Nerd Font glyphs render directly. These settings are reader-local; captured bytes, safe control-character display, caller icon preferences and global less configuration are preserved. Reader status is separate from the command's result; failures from interactive hosted commands remain visible too. Closing a host before a result exists is cancellation. The selected page in interactive wiki browsing uses the same reader. Direct output/data paths and unrelated picker defaults remain unchanged. See the [menu plan](../plans/popup-menus.md) and [shared-menu checks](testing.md#shared-menu-support).
+
 ## Operation progress
 
 **Implemented, 2026-09-29.** Slow human views in the Git, theme, file and Anodize command families use a shared transient display on stderr. Animation starts after 500 ms; fast work remains quiet. Both stdout and stderr must be terminals, and `TERM` must not be `dumb`. `DOTS_PROGRESS=auto|never` controls progress independently of colors and icons; unset means `auto`, and an unrecognized value disables it. There is no progress CLI flag or required optional tool.
@@ -142,7 +150,7 @@ Temporary verified recovery copies are reported when prepared. After successful 
 
 Anodize has an owner-requested [branding exception](anodize.md#terminal-logo): its human views always include the supplied mark, including compact plain branding when redirected. All text banners use usage’s responsive artwork selection. Ordinary banners use half the available height, capped at 16 rows. FZF and completion previews reserve panel padding and select by pane width with a 16-row artwork budget; short panes scroll vertically instead of substituting the ASCII mark. Their capture pipes do not force ASCII. Braille text is independent of color, so `NO_COLOR` retains monochrome artwork on suitable terminals. Standalone logo artwork uses magenta or the original purple/magenta colors while diagnostics retain shared semantic colors; pane-embedded text inherits the preview foreground/background. Disabled icons select ASCII rather than removing branding. Data output remains strictly undecorated. The Anodize renderer and static-help Bash adapter share bundled text assets; optional graphics never become a requirement for help. Chafa uses `--fg-only --symbols=braille` and is skipped in ASCII-only modes.
 
-`lib/dots/ui.bash` owns the shared Bash helpers. The lazy `lib/dots/interactive.bash` adapter owns optional UI selection, Gum invocation policy and numbered prompts; interactive callers reserve fd 3 for the visible terminal before capturing selector output. The Python file catalog's `Presentation` renderer mirrors the policy; it is not a generated binding. New Bash commands must reuse the helpers. Other first-party implementations must match this contract through an equivalent renderer and policy tests rather than inventing per-command colors or message conventions. See [architecture](architecture.md#live-bash-framework). The Python renderer provides `heading_spans` for independently styled heading parts and `detail_spans(..., label_width=10, label_gap=1)` for aligned details. Both sanitize text and wrap by display cells before styling; command-specific spacing overrides leave the shared defaults unchanged.
+`lib/dots/ui.bash` owns the shared Bash helpers. The lazy `lib/dots/interactive.bash` adapter owns optional UI selection, Gum invocation policy and numbered prompts; interactive callers reserve fd 3 for the visible terminal before capturing selector output. The Python file catalog's `Presentation` renderer mirrors the policy; it is not a generated binding. New Bash commands must reuse the helpers. Other first-party implementations must match this contract through an equivalent renderer and policy tests rather than inventing per-command colors or message conventions. See [architecture](architecture.md#live-bash-framework). The Python renderer provides `heading_spans` for independently styled heading parts and `detail_spans(..., label_width=10, label_gap=1, indent=4)` for aligned details. Both sanitize text and wrap by display cells before styling; command-specific spacing overrides leave the shared defaults unchanged. Key previews use `indent=0` and matching list colors, including orange modes, as a scoped keybrowser presentation.
 
 The dispatcher forwards extension streams unchanged. First-party extensions, including relevant Androidots and other submodule commands, follow this contract when added or changed, respecting their local guides. User and third-party extensions are encouraged to use the helpers; the dispatcher does not restyle arbitrary output. Generated app configuration and application UIs retain their own formats and theme contracts.
 
@@ -226,3 +234,41 @@ the shared renderer with exact candidate foreground/background and the default
 syntax mapping, preserving low contrast for faithful review. Preview rows reset
 SGR styling; FZF dimensions bound and fill the preview pane. No terminal-global
 color changes are made. Plain and existing data/redirected formats remain intact.
+
+
+The project/session browser shares `picker_style.py` semantic field colors and
+cell fitting with the keys popup. Project rows use ``; generic sessions retain
+their tmux icon. Each icon shares its adjacent name style. Non-current project
+names with at least one session use bold theme `accent` in the list and preview;
+non-project session names use bold theme `blue`. Current names retain magenta emphasis. A project
+containing the current session uses emphasis, while each individual preview
+name follows its own session state. Empty-project preview titles use bold
+`light_foreground`; their menu icon/name use normal-weight `light_foreground`,
+while the `no session` label remains muted.
+Positive project counts use theme orange in both list forms (compact `[N]` and
+expanded counts), including projects containing the invoking session.
+Counts use normal weight. The complete `·  current` / `· current` marker uses
+bold theme `bright_green`, separately styled from its preceding count and any following
+path. Selected rows retain their field colors. At narrow widths the count
+uses compact numeric notation; full session counts, names, paths and window/client
+counts remain in the inert preview. Its project header uses a muted separator,
+for example `battery · [1 session]`. Preview totals use theme orange for all
+positive totals, including projects containing the current session, and red
+for `[0 sessions]`. Window counts stay green. Client counts read `N attached`,
+with yellow for positive counts and muted zero. Other separators and labels stay
+muted. The path line reads `Project: 󰉋 ~/path`, with the folder icon and path
+sharing the published directory style; icon-disabled views omit the folder
+without extra spacing. Home paths use `~`; a matching single-session name is
+not repeated. Palette roles use bounded terminal fallbacks; missing
+`light_foreground` falls back to resolved foreground. The preview stays below
+the list. Its stable per-view height fits wrapped display cells,
+normally five rows including borders, capped at eight and terminal bounds.
+Alt-J/K scroll longer content and Alt-P toggles it. Prompts use
+`dots·tmux·sessions:` breadcrumbs. The sole header hint is `Alt-H: keys`; a
+separate fitted read-only reference styles the key labels. Escape/Alt-H returns
+with search and focus intact. Color/icon policy and plain fallbacks remain
+independent; JSON and existing session data are unchanged.
+
+### Less standout text
+
+The shared less style uses exact theme `foreground` on `lighter_background` at normal weight, with an explicit reset. It applies to prompts, search highlights and other standout messages. Shell refresh and popup readers preserve user overrides and existing color controls; redirected content is unchanged. See [global less colors](shell-environment.md#global-less-colors) for ownership, reload behavior and the native Windows exception.

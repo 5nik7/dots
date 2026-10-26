@@ -1,3 +1,4 @@
+use less.nu _dots-less-style
 hide-env --ignore-errors DOTRUBY RUBYCOMP
 let dots_retired_roots = ([$env.DOTS ($env.DOTS_PROFILE_CHECKOUT? | default '') (($env.HOME? | default $env.USERPROFILE?) | path join 'dots')] | where {|root| $root != ''})
 let dots_normalize_path = {|entry|
@@ -88,7 +89,10 @@ def --env _dots-load [] {
     if $env.dots_options.DOTS_INIT_COMMANDS == '1' { $env.PATH = ($env.PATH | append $env.THEMESBIN) }
 }
 def --env _dots-refresh-theme [] {
-    if $env.dots_options.DOTS_INIT_THEME != '1' { return }
+    if $env.dots_options.DOTS_INIT_THEME != '1' {
+        _dots-less-style '' '' auto '0'
+        return
+    }
     let marker = ($env.dot.state | path join 'themes/current')
     if not ($marker | path exists) { return }
     let generation = (open --raw $marker | str trim)
@@ -114,6 +118,7 @@ def --env _dots-refresh-theme [] {
     $env.dot = ($env.dot | upsert theme $identity.id)
     let ls_file = ($env.dot.state | path join themes generations $generation ls_colors)
     if ($ls_file | path exists) { $env.LS_COLORS = (open --raw $ls_file | str trim --right) }
+    _dots-less-style ($data | get -o foreground.hex | default '') ($data | get -o lighter_background.hex | default ($data | get -o background.hex | default '')) $env.dots_options.DOTS_COLOR '1'
     $env._DOTS_THEME_GENERATION = $generation
 }
 _dots-load

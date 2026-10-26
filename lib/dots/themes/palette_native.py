@@ -7,7 +7,6 @@ from pathlib import Path
 import re
 import shlex
 import shutil
-import subprocess
 import sys
 
 LIB = Path(__file__).resolve().parent
@@ -16,6 +15,7 @@ sys.path.insert(0, str(LIB.parent / 'files'))
 from environment import settings
 from file_platform import config_root, state_root
 from transactions import parents_safe
+import bat_cache
 
 ID = re.compile(r'[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*\Z')
 KEY = re.compile(r'[a-zA-Z_][a-zA-Z0-9_]*\Z')
@@ -203,7 +203,13 @@ class Themes:
             if path.exists(): digest.update(regular(path))
         return digest.hexdigest()
 
-    def render(self, identity, out, build_cache=False):
+    def publication_fingerprint(self, identity, bat_inputs=None):
+        snapshot = bat_cache.inputs() if bat_inputs is None else bat_inputs
+        return hashlib.sha256((self.fingerprint(identity) + '\n' + snapshot.fingerprint()).encode()).hexdigest()
+
+    def render(self, identity, out, build_cache=False, bat_inputs=None):
+        if build_cache and bat_inputs is None:
+            bat_inputs = bat_cache.inputs()
         palette = self.load(identity)
         directory = self.directory(identity)
         color = styles()
@@ -246,16 +252,7 @@ class Themes:
                 if '{{' in text or '}}' in text: raise ValueError('unresolved template expression')
                 (out / name).write_text(text, encoding='utf-8', newline='\n'); rendered.add(name)
         color.write_snapshot(color.generate(doc, out / 'vivid.yml'), out)
-        if build_cache and shutil.which('bat') and (out / 'bat.tmTheme').is_file():
-            source, cache = out / 'bat-source', out / 'bat-cache'
-            (source / 'themes').mkdir(parents=True)
-            cache.mkdir()
-            (source / 'themes/Dots.tmTheme').write_bytes(regular(out / 'bat.tmTheme'))
-            env = dict(os.environ, BAT_CONFIG_PATH=os.devnull, BAT_THEME='ansi',
-                       BAT_CONFIG_DIR=str(source), BAT_CACHE_PATH=str(cache))
-            result = subprocess.run(['bat', 'cache', '--build', '--source', str(source), '--target', str(cache)],
-                                    env=env, cwd=source, capture_output=True, timeout=120)
-            if result.returncode: raise ValueError('bat theme cache build failed')
+        if build_cache and (out / 'bat.tmTheme').is_file() and bat_cache.build(out, bat_inputs):
             (out / 'delta-cache').mkdir()
             (out / 'delta-cache/bat').symlink_to('../bat-cache', target_is_directory=True)
         (out / 'yazi').mkdir()
@@ -264,11 +261,12 @@ class Themes:
         (out / 'palette.json').write_text(json.dumps(palette) + '\n', encoding='utf-8')
         (out / 'id').write_text(identity + '\n')
         (out / 'selection').write_text(palette['theme'] + '-' + palette['flavor'] + '\n')
-        (out / 'fingerprint').write_text(self.fingerprint(identity) + '\n')
+        fingerprint = self.publication_fingerprint(identity, bat_inputs) if build_cache else self.fingerprint(identity)
+        (out / 'fingerprint').write_text(fingerprint + '\n')
         rows = [('@theme', 'id', identity), ('@theme', 'family', palette['theme']), ('@theme', 'flavor', palette['flavor'])]
         for name, value in palette['palette'].items():
             rows.append(('@palette', name, value))
-        for name, value in {**palette['palette'], **palette['roles']}.items():
+        for name, value in palette['colors'].items():
             for format in FORMATS: rows.append((name, format, metric(name, value, format)))
         rows += [('@role', name, value) for name, value in palette['roles'].items()]
         (out / 'shell.tsv').write_text(''.join('\t'.join(row) + '\n' for row in rows), encoding='utf-8')

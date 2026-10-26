@@ -7,11 +7,8 @@ command_timeout = 10000
 
 format = """
 $directory\
-($git_branch\
-$git_commit\
-$git_status\
-$git_metrics\
-$git_state)\
+${custom.tmux}\
+${custom.tmux_windows}\
 $status\
 $line_break\
 $character\
@@ -95,6 +92,39 @@ truncation_length = 0
 truncate_to_repo = false
 fish_style_pwd_dir_length = 0
 use_logical_path = true
+
+# Custom formats cannot expand built-in modules; render this group once via vcs.
+[vcs]
+order = ["git"]
+git_modules = """
+($git_branch\
+$git_commit\
+$git_status\
+$git_metrics\
+$git_state)\
+"""
+
+[custom.tmux]
+description = "Git information outside tmux"
+os = "unix"
+shell = ["sh"]
+when = 'test -z "$TMUX"'
+# Let the parent Starship escape the child output for the current prompt shell.
+command = 'STARSHIP_SHELL= starship module vcs'
+format = '($output )'
+
+[custom.tmux_windows]
+description = "Git information outside tmux (Windows)"
+os = "windows"
+shell = ["powershell", "-NoProfile", "-NonInteractive", "-Command", "-"]
+when = 'if ([string]::IsNullOrEmpty($env:TMUX)) { exit 0 } else { exit 1 }'
+command = '''
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+$OutputEncoding = [Console]::OutputEncoding
+$env:STARSHIP_SHELL = ''
+starship module vcs
+'''
+format = '($output )'
 
 [git_branch]
 symbol = ""

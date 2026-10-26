@@ -10,7 +10,9 @@ Theme preparation, rendering, bat caches, publication, quiet reloads and install
 
 ## Tmux
 
-The linked tmux configuration has two top rows on Termux (detected from `TERMUX_VERSION`): the clock on the upper left with battery on the upper right; Termux numbers run in order along the lower row, with the current number joined to its optional tmux session name (` 1:dots `), followed by windows and then later numbers. Matching window/session names render only the window number; differing names render ` number:name `. Equality uses full, case-sensitive names before display clipping, including when the default session name is hidden. Every badge and window owns one space at each end, with no additional separator. Other environments show only the tmux row. `default/themed/tmux.conf.tpl` supplies color options, while the main config owns both layouts and prevents inherited current-window underlining. Theme refreshes preserve layouts.
+The linked tmux configuration has two top rows on Termux (detected from `TERMUX_VERSION`): the clock followed by Termux tab numbers on the upper left, battery on the upper right, and the current tmux session followed by its windows below. Outside Termux only the tmux row appears. The main configuration owns layout and conditional formatting after the generated include; `default/themed/tmux.conf.tpl` supplies semantic colors. Theme refreshes preserve the layout.
+
+Termux tab numbers appear above only when more than one tab exists. The lower row has independent server-wide tmux session numbers in creation order, showing only the current session’s number and hiding it for a singleton. Two tabs viewing the same tmux session have the same lower number. Window indexes independently depend on that session’s window count. Useful names remain when numbers disappear; matching singleton window names disappear. Full labels are compared case-sensitively before clipping. Managed labels hide immutable ID suffixes; project/multi names remain and the default termux label stays hidden. Manual names remain literal. Legacy `@dots-termux-default=1` sessions retain name hiding until adopted. Session labels and all windows without alerts have one outer space per side. Bracketed alerts have none; adjacent sections use one `│` without orphan dividers.
 
 | Element | Background | Foreground |
 | --- | --- | --- |
@@ -20,19 +22,63 @@ The linked tmux configuration has two top rows on Termux (detected from `TERMUX_
 | PREFIX indicator (one space on each side) | `dark_background` | Bold `accent` |
 | Upper row | `background` | `foreground` |
 | Clock | `dark_background` | Bold `yellow` by day, `blue` at night, `foreground` when unknown |
+| Current Termux tab number | `selection_background` | Bold `bright_cyan`, no underline |
+| Other Termux tab numbers | `lighter_background` | Bold dim `cyan`, no underline |
 | Lower tmux row on Termux | `background` | `foreground` |
-| Other windows on Termux | `dark_background` | `light_foreground` |
-| Current window on all tmux platforms | `lighter_background` | Bold `info`, no underline |
-| Inactive Termux entry | `background` | Bold `hint` |
-| Current Termux number and project | `hint` | Bold `darker_background` |
+| Inactive window numbers without Codex | Existing inactive background | Bold `dark_foreground` |
+| Inactive Codex window numbers (idle, Working or waiting) | Existing inactive background | Bold `accent` |
+| Inactive Working marker | Existing inactive background | Bold `accent`, `•` |
+| Inactive waiting marker | Existing inactive background | Normal `accent`, `·` |
+| Current window numbers/markers on all tmux platforms | `selection_background` | Bold `bright_green`, no underline |
+| Current window name | `selection_background` | Normal `foreground` |
+| Inactive window name | Existing inactive background | `dark_foreground`; bold while Working, normal otherwise |
+| Current session, including its number when shown | `selection_background` | Bold `bright_cyan`; underline name only, not number, icon or spaces |
+| Window with a bell, activity or silence alert, including its name | `darker_background` | Bold `bright_red`, no underline or reverse video |
+| Divider between sections `│` | `dark_background` | Normal `background` |
+| Number/name space | Containing section’s background | Plain spacer |
 
-Outside Termux, the tmux session badge retains its `accent` background and window labels keep their names. On Termux, the project name extends the current number's teal badge with a colon, and the active pane border uses `selection`. Default sessions created by `termux-bar` have a session-local `@dots-termux-default=1` marker that hides the project-name suffix while retaining the Termux number, including across theme refreshes; project sessions keep their joined labels. Battery thresholds and charging icons remain owned by the existing battery command; the adapter maps its red/yellow/green classifications to theme colors. Missing published colors use the config's terminal-color fallbacks until a theme is applied.
+Generated number/name separators are single spaces. Session sections and both current and inactive windows retain one outer padding space on both sides; alerted windows omit it. Adjacent windows render as `│ 1• │ 2• │`, or `│ 1• editor │ 2· shell │` with names. Selecting a window preserves its padding. The session number and remote icon use the session style without underlining; only its name is underlined. Current window names switch to normal-weight `foreground` on `selection_background`; inactive names use `dark_foreground` with the state weight. After each name, number/marker styling is restored for padding and closing warning brackets. Literal punctuation and whitespace inside names stay unchanged. Section-boundary `│` bars use `background` on `dark_background` without bold, underline, dim or reverse attributes.
 
-The session adapter requires Python 3 and the optional `androidots/bin/termux-sessions` script in the same checkout. Keep the normal directory link for `config/tmux`: the adapter resolves that link to locate the script without relying on the working directory or scanning PATH. It performs one JSON query per job and matches `client_tty`, so different attached clients highlight their own Termux session. Unmatched clients show inactive entries; failed or unavailable queries clear the numbers. Numbers follow live creation order and may be renumbered after a session closes. The lower-row number strip uses at most one quarter of the client width, capped at 20 columns. The adapter keeps complete labels around the current entry and uses `<`/`>` for hidden entries; unmatched clients show the first entries without highlighting. Its internal `--split-badge` mode returns three controlled fields: styled numbers before the current entry, the plain current number, and styled numbers after it. The config reuses the same asynchronous job for all three fields, joins the number and optional name in tmux's formatting layer, and places later numbers after the native window list but before right-aligned modes. Names never cross the helper's delimiter or shell boundary. The numeric width budget still includes the current number and its two padding spaces. No literal brackets or divider are printed, and independent native window scrolling and mouse ranges are preserved. Unmatched clients keep all visible numbers before a standalone project badge/windows; failed discovery clears the numbers. The complete joined badge uses at most one quarter of client width, capped at 30 columns, including the number, colon and padding. If no name fits, only the number is shown, without a dangling colon. The older `--split-current` and unsplit modes remain compatible with configurations not yet reloaded. Labels have one space at each end, but no fixed-width fill.
+Alerts surround the complete window label with square brackets: `[2]`, `[2 shell]`, or `[shell]` when its number is hidden. These brackets have no outer padding: ` dots │[2]`. Alert styling takes precedence over current-window and Codex styling. A normally omitted duplicate singleton window shows its bracketed name while alerted, or its state marker alone when Working/waiting. Tmux's existing alert acknowledgement restores normal formatting; monitoring and notification settings are unchanged. Outside Termux the named session uses the same cyan style and windows use the same conditional numbering and separate number/name styles. The active pane border uses `selection`. Missing published colors use terminal-color fallbacks until a theme is applied.
+
+Inactive window numbers stay bold: theme `accent` when foreground Codex is detected in idle, Working or waiting states, and `dark_foreground` otherwise. Inactive Codex markers use theme `accent`, bold while Working; their names use `dark_foreground` with the same state weight. Working windows append `•` to their number; an explicit input/approval wait appends `·`: `1•`, `1• shell`, `1·` or `1· shell`. Without a number, show `• shell` or `· shell`; without a name either, show only the marker. Idle, Ready and unknown states have no marker. Current window names use normal-weight `foreground` on `selection_background` while numbers/markers retain bold bright green on `selection_background`. Alerts retain bold bright red on `darker_background` across the complete label, including names and markers. Brackets enclose the full label, such as `[1• shell]` or `[·]`. All panes count, including unselected panes; the window priority is Working, then explicit waiting, then idle. Waiting/idle inactive names and markers use normal weight, and all inactive states keep their existing background.
+
+The Python 3 `codex-status.py` helper shares one asynchronous inventory job across window labels in each client status context. It checks local same-user procfs process metadata for a foreground process named `codex` on the pane’s terminal, including launches through shell/Node wrappers. Suspended, background, exited and retained dead panes do not count. A title field exactly matching `Working`, with optional trailing dots or an ellipsis, marks work. An exact `[ ! ] Action Required` or `[ . ] Action Required` title field marks an explicit input/approval wait and overrides a lingering Working field within the same pane. Ready, absent or unrecognized titles remain idle, with no marker. Codex must include `activity` and `run-state` in its configured [terminal title](https://learn.chatgpt.com/docs/config-file/config-reference) to expose these signals. This is a local title heuristic, not a Codex API or session-log integration.
+
+The job uses the existing five-second status interval and a one-second total deadline. Missing tmux/Python/procfs, denied access, invalid data or a deadline failure clears Codex markers and coloring to ordinary inactive styling. It reads no process arguments, environment, credentials or conversation history, sends no network requests and persists no state. Termux/Linux/WSL procfs is supported; other systems fall back to ordinary colors and native Windows has no tmux consumer.
+
+The Termux tab adapter requires Python 3 and `profiles/termux/bin/termux-sessions` in the same checkout. Keep the directory link for `config/tmux`: the adapter resolves it without scanning PATH. One JSON query per job matches `client_tty` and emits `--tabs`, a bounded numeric strip immediately after the clock. A singleton produces nothing. It keeps nearby entries and the current tab visible, with overflow arrows when needed, reserving 18 columns for the clock/battery and capping the strip at 30 columns. Unmatched clients show an unselected strip; failed queries clear the strip. Tab discovery never controls lower-row visibility or numbering.
+
+The older `--compact-badge`, unsplit, `--split-current` and `--split-badge` outputs retain their contracts. The shipped lower row instead uses session-local tmux numbering maintained on creation/closure. Its current-session label uses at most one quarter of client width, capped at 30 columns; names shorten first to leave room for the number and remote icon. The icon is omitted only if the fixed prefix cannot fit. Hidden names leave no dangling separator. Native window scrolling and mouse ranges remain intact. Visibility checks use plain fields instead of recursively expanding complete styled sections. Workspace renaming is event-driven and does not run during status rendering; see [workspace metadata](specification.md#session-browser-projects).
+
+The current session's optional remote icon follows the active pane directory. Like `dots.yazi`, it uses `git-it info --json`, including that tool's configured host aliases and branch-remote/origin selection. GitHub uses `󰊤`, GitLab ``, Bitbucket ``, and other remotes ``; a repository without a remote has no icon. The label reads `󰊤 dots` or `1 󰊤 dots`; a hidden default name retains `󰊤` or `1 󰊤`. The icon inherits current-session colors and boldness without underlining, and uses display cells in the badge budget. Missing or invalid metadata clears it without hiding the session name or Gitmux status. A Nerd Font is required for the glyphs.
 
 The upper row no longer invokes Wi-Fi or cellular status helpers; notification, volume and location status modules also remain disabled. The independent `android-status.py` adapter and Androidots permission/cache contracts remain available to other consumers. Battery retains its existing thresholds, icon/percentage spacing and colors.
 
 `config/tmux/weather-status.py` reads the shared wttr daylight interface with a one-second/16-byte bound and suppressed stderr. It accepts only day/night/unknown tokens. The clock uses theme yellow between today's sunrise and sunset, blue at night, and foreground for missing, failed, stale or invalid astronomy. Geometry and background are unchanged. The recurring job can schedule a bounded weather refresh using cached coordinates or configured fallback; it cannot acquire Android location. No weather widget is enabled. See [weather configuration, timezone limits and owner-run activation](wttr.md#termux-upper-row).
+
+### Gitmux
+
+When [gitmux](https://github.com/arl/gitmux) is installed on the tmux server's PATH and its managed `~/.gitmux.conf` is present, Git status follows the last session/window label. Its Starship-style appearance is `main !68 ?45 +1849-340`, using the shared Dots Git colors. It appears on Termux's lower row and the single tmux row on Linux/WSL. COPY/PREFIX/ZOOM stay on the right. A non-repository directory, unavailable executable/configuration or failed/timed-out query hides the entire Git segment, including its divider and padding. The upper row is unchanged.
+
+The editable [gitmux configuration](../config/gitmux/gitmux.conf) shows branch/divergence/flags/statistics. Symbols touch their counts, with one space between populated groups; positive and negative line totals touch each other. The clean checkmark and remote branch names are hidden, and zero line totals are omitted. Gitmux owns counts, status order, special-state labels and detached/unborn representations; this matches Starship's appearance for supported fields rather than adding its separate deleted/renamed file counters. Gitmux's line statistics describe the unstaged diff. Branch names remain limited to 24 characters, and Git text is clipped to half the client's width, capped at 48 cells including an ellipsis, with one space on each side. Native window scrolling/mouse ranges and the five-second status interval are retained.
+
+| Field | Appearance | Dots foreground | Weight |
+| --- | --- | --- | --- |
+| Branch | `main` | `git_branch` | Normal |
+| Modified files | `!68` | `git_modified` | Bold |
+| Untracked files | `?45` | `git_untracked` | Bold |
+| Staged files | `+3` | `git_staged` | Normal |
+| Conflicts | `=2` | `git_conflict` | Normal |
+| Stashes | `*1` | `muted` | Normal |
+| Added/deleted lines | `+1849-340` | `git_added` / `git_deleted` | Normal |
+| Ahead / behind | `⇡2` / `⇣1` | `git_ahead` / `git_behind` | Normal |
+| Diverged | `⇡2⇣1` | `git_conflict` | Normal |
+| Special state | `[merge]`, `[rebase]`, etc. | `git_conflict` | Bold |
+
+The existing generated tmux include supplies semantic options, with terminal-color fallbacks in the main config. YAML styles reference these options directly, including resolved [Git foreground overrides](file-colors.md#git-styles). Palette refreshes do not rewrite gitmux layout. Font attributes are fixed by the editable YAML rather than inherited from Git role attributes. `reset` foregrounds become tmux `default`, and resets prevent style leakage. No separate theme connector or generated gitmux file is needed.
+
+The small `config/tmux/gitmux-status.py` adapter invokes gitmux for the safely quoted active pane directory with `-cfg "$HOME/.gitmux.conf" -timeout 1s`, enforcing a one-second deadline and 16 KiB output limit. It joins only adjacent Dots-styled positive/negative metric totals and recolors an adjacent Dots-styled ahead/behind pair as diverged. It rejects controls and escapes hashes in ordinary text while preserving configured styles, since tmux otherwise expands format-like Git branch names. Its opt-in `--snapshot DIRECTORY` mode also runs optional `git-it info --json` in that directory, concurrently under the same one-second deadline with a separate 64 KiB limit. Only a validated remote-present host icon is retained; URLs and other metadata are discarded. The internal result is `icon|gitmux-output`, split only at the first delimiter so Git names may contain pipes. Both consumers reuse one tmux job; each provider can succeed independently, and directory changes cannot retain the preceding directory’s icon. The existing one-directory interface still returns only Gitmux output. No cache, network request or tracker is added. Python 3 is required, like the other Dots status adapters. Native Windows has no tmux consumer or gitmux destination in Dots.
 
 ## Local theme plugins
 
@@ -199,6 +245,34 @@ is also copied to `yazi/tmtheme.xml` in the same generation; `yazi.toml` becomes
 and run `dots theme refresh` to publish changes; generated files are replaced on
 publication. Personal templates and bundled application overrides retain the
 precedence described above.
+
+### Custom Bat syntaxes
+
+When Bat is installed, theme publication and setup build a private cache containing
+the generated Dots theme, Bat's built-in languages and your custom
+`.sublime-syntax` files. Dots asks Bat for its `--config-dir` before staging the
+build, so `BAT_CONFIG_DIR` takes precedence and Bat's native platform default is
+used otherwise. `BAT_CONFIG_PATH` selects the configuration file independently;
+it does not select the syntax directory.
+
+Put custom definitions beneath that directory's `syntaxes/` and run
+`dots theme refresh` after adding, editing or removing them. Nested directories
+and linked configuration/syntax directories or files are supported. Dots stores
+ordinary file snapshots under the new generation's `bat-source/syntaxes/` and
+compiles them into its `bat-cache/`. Existing generations keep their snapshots;
+the normal Bat configuration and cache remain intact. Bat and the Git Delta
+integration use this generated cache through the existing shell exports and
+pager configuration. Other apps sharing the tmTheme do not automatically gain
+Bat's custom language definitions.
+
+Explicit publication/setup detects syntax content changes even when file size
+and modification time stay the same, as well as additions, removals, source-path
+changes and Bat compiler changes. Startup and prompt refresh do not scan syntaxes
+or invoke Bat. An unchanged explicit refresh reuses the complete generation.
+Broken links, directory cycles, unreadable or invalid syntax definitions, failed
+compilation and input changes during preparation prevent activation and retain
+the previous generation. Reads are limited to 2 MiB per syntax, 64 MiB total,
+16,384 directory entries and 64 directory levels; `.git` contents are excluded.
 
 ```bash
 dots theme list
@@ -888,3 +962,5 @@ Verification reads known, bounded configuration files and values inherited by th
 Results distinguish `matches` (shown as environment/installed-content matches), `configured`, `different`, `stale`, `not-configured` and `unknown`. Only a recorded publication ancestor establishes an older generation and a stale result; a different arbitrary location is simply different. Plugin automatic-update selection is separate from installed content: disabled automation can leave matching files in use. Unexported shell values and unsupported consumers, including Neovim/general Lua runtime loading, remain unknown. No result proves that a running application has loaded the theme or that command-line overrides are absent.
 
 Ordinary `check` still checks generated artifacts and connections. `check --consumers` additionally fails on confirmed `different` or `stale` evidence for the selected app/artifacts; unknown, unavailable and disabled-plugin automation remain informational. `list` and `info` show evidence without requiring the flag. No persistent receipts or activation acknowledgements are created by inspection.
+
+The published `foreground` and `lighter_background` colors also supply [global less standout styling](shell-environment.md#global-less-colors). Shell refresh and Dots readers consume them without requiring a less connector or changing pager selection.

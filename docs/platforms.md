@@ -14,7 +14,7 @@ builtins; resolving a symlinked launcher additionally requires `readlink`.
 
 Personal Bash/Zsh/Fish startup uses [user-local completion directories](shell-init.md#user-local-completion-directories) with XDG-aware paths and priority over repository providers. Native discovery checks run in isolated Termux roots; Linux/WSL remain pending native acceptance for this change. PowerShell, Nushell and Xonsh retain their existing integrations. There is no native Windows equivalent of Zsh fpath registration, and Windows app destinations are unchanged; Windows PowerShell 5.1/7 startup acceptance remains pending.
 
-The [tmux keybinding reference](commands.md#tmux-keybinding-reference) requires Bash 4.4+ and tmux's formatted key listing (`list-keys -F` with `q|a` quoting). Optional less provides paging; missing less falls back to printed output. Native Termux checks use tmux 3.7c, a disposable popup, and controlling-terminal less tests. Linux/WSL remain compatible design targets without new native evidence; native Windows is not supported by this Bash/tmux command. No paths are translated or dependencies installed.
+The [tmux keybinding reference](commands.md#tmux-keybinding-reference) uses the shared `dots keys tmux` controller and an existing tmux server with formatted key listing (`list-keys -F` with `q|a` quoting). Optional FZF provides browsing; missing FZF falls back to printed output. Native Termux checks use private servers and disposable FZF popups. Linux/WSL and native Windows terminal acceptance remain separate; tmux is an optional capability on Windows. No paths are translated or dependencies installed.
 
 The tmux system status row is enabled only when the tmux server inherits a nonempty `TERMUX_VERSION`; other environments show the tmux session/window row alone. Termux numbers remain ordered on the lower row; the current number and optional tmux name share one ` number:project ` badge, followed by windows before later numbers. Window labels omit names exactly matching the full tmux session name. Each badge/window has one space at each end. Numbering requires Python 3, the optional Androidots `termux-sessions` script, readable procfs and inherited `TERMUX_APP__PID`. The adapter locates that script through the repository's directory-linked tmux configuration. It matches each client's terminal ID rather than the server's launch ancestry; unmatched clients have no highlighted Termux entry. Missing discovery dependencies clear the segment without affecting the clock or tmux row. Native tmux 3.8 terminal rendering is verified in isolated Termux fixtures; the non-Termux branch is simulated there, not new Linux/WSL or Windows certification. See [tmux themes](themes.md#tmux).
 
@@ -98,6 +98,8 @@ must retain separate state stores. Other applications and automatic Bash/Fish
 prompt theming are outside this version. See [Shared themes](themes.md).
 
 ## Implemented Files and Theme Adapters
+
+`files repair` uses the detected platform's catalog and native application destination resolver on both Bash and PowerShell. The issue helper shares terminal FZF/Gum and numbered fallbacks; selection and confirmation require no Bash on native Windows. It never applies a foreign platform mapping or translates Windows/WSL paths. Native link-capability refusal is explicit, with no elevation or copy fallback. Termux fixture checks cover portable repair logic; Windows PowerShell 5.1/7 link, recovery and terminal acceptance remain pending until run natively.
 
 File catalog commands use shared Python 3.9+ controllers and native POSIX/Windows
 filesystem adapters, with read-only platform overrides for inventory. Termux and
@@ -245,4 +247,29 @@ The wiki uses shared Python controllers for Bash and native PowerShell. Native W
 
 Detailed debug views share a controller across Bash/Zsh and PowerShell. Bash/Zsh use native debug hooks with observation-interval attribution. PowerShell uses supported global primitive/environment snapshots, preferences and non-stopping breakpoints for registered script files; opaque objects, local scopes and arbitrary dynamic sources are outside its claimed coverage. Actual Windows PowerShell 5.1/7 acceptance remains pending where unavailable.
 
-The keybinding browser uses native shell capture and a shared controller. Zsh/Bash maps are available through the interactive adapter; native Windows uses PSReadLine and PowerShell rather than Bash. Application config roots honor native/XDG paths; live tmux requires an existing server. Providers report missing installed defaults and dynamic coverage explicitly. See [keybindings](keys.md).
+The keybinding browser uses native shell capture and a shared controller. Zsh/Bash maps are available through the interactive adapter; native Windows uses PSReadLine and PowerShell rather than Bash. Application config roots honor native/XDG paths; live tmux requires an existing server. Yazi and Codex include bundled versioned default references and require neither application installation nor network access for those rows. Yazi keeps its selected native/XDG config location, including `%APPDATA%/yazi/config` on Windows. Codex reads `CODEX_HOME/config.toml` or the native user home’s `.codex/config.toml` on every platform; it does not use XDG or APPDATA. Providers report version and dynamic coverage limits explicitly. See [keybindings](keys.md).
+
+The tmux shortcut can request live Zsh maps from its originating pane through a
+private Unix socket on Termux/Linux/WSL. It requires Zsh's socket, filesystem and
+stat modules plus Python 3; missing capabilities use explicitly labeled configured
+coverage. Native Windows does not install this ZLE transport or translate WSL
+paths; its existing PSReadLine caller capture remains the native route. Termux
+PTY/controller checks do not establish native Linux/WSL or Windows acceptance.
+
+The shared menu library supports ordinary terminal selection and literal frontend dispatch on both POSIX and native Windows. Tmux context capture and terminal popups are POSIX-only and never invoke WSL implicitly. The shared output reader uses optional native less or a read-only native FZF fallback, with the same menu navigation and command-status contract. The Git family and its preview/confirmation gate use the shared controller on both frontends. Fitted reader popups apply only to tmux; native Windows retains the ordinary terminal reader and existing Git controller. No Bash pager pipeline is required. No Windows app destination changes are introduced. `dots menu tmux sessions` is implemented on both dispatchers but reports unavailability on native Windows, without probing tmux or launching WSL. `dots menu` uses ordinary terminal FZF on native Windows and keeps the unavailable tmux entry visible. Termux private-server and portable native-shell argument tests do not establish Windows PowerShell 5.1/7, Linux or WSL terminal acceptance. See [shared menu support](architecture.md#shared-menu-support).
+
+
+The tmux session browser's project and create/rename/delete actions share the
+POSIX controller on Termux, Linux and WSL. Only shared platform detection of
+Termux exposes New Termux (a terminal tab in the existing app, not a separate
+Android window). It probes `termux-am` and falls back to the Termux-installed
+legacy `am` when the socket adapter is unavailable. Working app access is still
+required; Dots does not change settings or permissions. A fixed Python helper
+attaches without shell startup or client detachment. Automated suites mock the
+Android boundary; separate device evidence is recorded in the
+[popup-menu plan](../plans/popup-menus.md). Windows retains status-2 tmux refusal,
+without WSL bridging or destination changes.
+
+### Less terminal colors
+
+[Global less styling](shell-environment.md#global-less-colors) uses termcap RGB overrides on Termux, Linux and WSL. Native Windows less has no equivalent termcap RGB rendering path and retains stock colors; this is an explicit platform exception, not a WSL fallback. Native shell adapters preserve the same override/ownership rules, with the PowerShell POSIX path supported in code. Native Windows PowerShell 5.1/7 and non-Termux visual acceptance require their own checks.

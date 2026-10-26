@@ -49,6 +49,10 @@ class Keys(unittest.TestCase):
         rows=shell_dump('zsh','viins','bindkey -M viins "^H" vi-backward-delete-char\nbindkey -M viins -s "^X" "secret body"')
         self.assertEqual(rows[0]['display'],'Ctrl+H (Backspace)')
         self.assertNotIn('secret',json.dumps(rows));self.assertEqual(len(rows),2)
+        rows=shell_dump('zsh','vicmd','bindkey -a "k" history-substring-search-up\nbindkey -a -s "x" "secret body"\nbindkey -a -R "0-9" digit-argument')
+        self.assertEqual([r['mode'] for r in rows],['vicmd']*3)
+        self.assertEqual([r['kind'] for r in rows],['widget','macro','range'])
+        self.assertNotIn('secret',json.dumps(rows))
         rows=shell_dump('bash','emacs-standard','"\\C-g": abort\n"\\C-x": "secret body"')
         self.assertEqual(rows[0]['display'],'Ctrl+G');self.assertNotIn('secret',json.dumps(rows))
 
@@ -118,7 +122,7 @@ class Keys(unittest.TestCase):
         directory=self.root/'config/yazi';directory.mkdir(parents=True)
         (directory/'keymap.toml').write_text('[[mgr.prepend_keymap]]\non="<C-g>"\nrun="help"\ndesc="Open help"\n')
         self.env.update(DOTS_COLOR='always',DOTS_ICONS='always')
-        data=json.loads(self.cli('yazi','--json','--query','help','--mode','mgr').stdout)
+        data=json.loads(self.cli('yazi','--json','--query','help','--mode','mgr','--no-defaults').stdout)
         self.assertEqual(len(data['rows']),1)
         self.assertEqual(json.loads(self.cli('yazi','--json','--source','live').stdout)['rows'],[])
         self.assertIn('coverage',json.loads(self.cli('apps','--json').stdout))
@@ -150,18 +154,28 @@ class Keys(unittest.TestCase):
         from files.catalog import Presentation
         from keys.presentation import menu_rows,menu_dimensions,styles,binding_label,picker_colors
         ui=Presentation(stream=io.StringIO());ui.color=True;ui.icons=True
-        categories=menu_rows(ui)
-        self.assertEqual([row[0] for row in categories],['all','apps','bash','fzf','kitty','nvim','powershell','television','tmux','yazi','zsh'])
+        from keys.model import APPS
+        coverage=[dict(app=app,count=1) for app in APPS]
+        categories=menu_rows(ui,coverage)
+        self.assertEqual([row[0] for row in categories],['all','bash','codex','fzf','kitty','nvim','powershell','television','tmux','yazi','zsh'])
         self.assertTrue(all(any(ord(c)>0xe000 for c in label) for _,label in categories))
-        ui.icons=False;self.assertEqual(menu_rows(ui)[0],('all','All'))
-        apps=menu_rows(ui,[dict(app='zsh',count=2,live=True)])
-        self.assertIn('2 bindings · live',apps[-1][1]);self.assertIn('unavailable',apps[0][1])
+        ui.icons=False;ui.color=False;self.assertEqual(menu_rows(ui,coverage)[0],('all','All · [10]'))
+        apps=menu_rows(ui,[dict(app='zsh',count=2,live=True),dict(app='tmux',count=0)],include_all=False)
+        self.assertEqual(apps,[('zsh','Zsh · [2]')])
+        self.assertEqual(menu_rows(ui,[]),[])
         for width,height in ((40,10),(80,24),(120,40)):
             with patch('keys.presentation.shutil.get_terminal_size',return_value=(width,height)):
                 w,h=menu_dimensions([label for _,label in categories])
                 self.assertLessEqual(w,width-2);self.assertEqual(h,min(17,height-2))
         ui.resources.root=self.base/'palette';ui.resources.root.mkdir()
         (ui.resources.root/'palette.json').write_text(json.dumps({'colors':{'muted':'#667788','bright_magenta':'#ff88cc'}}))
+        ui.color=True
+        colored=menu_rows(ui,coverage)
+        self.assertIn('\x1b[38;2;102;119;136m · [10]\x1b[0m',colored[0][1])
+        ui.color=False
+        plain=menu_rows(ui,coverage)
+        self.assertEqual(menu_dimensions([r[1] for r in colored]),menu_dimensions([r[1] for r in plain]))
+        ui.color=True
         codes=styles(ui);row=record('zsh','viins','^G','help',description='Description')
         label=binding_label(ui,row,codes)
         self.assertIn('\x1b[1;38;2;255;136;204mCtrl+G\x1b[0m',label)
@@ -170,7 +184,7 @@ class Keys(unittest.TestCase):
         ui.color=False;self.assertNotIn('\x1b',binding_label(ui,row,codes))
         self.assertEqual(picker_colors('bg:#000000,fg+:strip:#ffffff:bold'),'bg:#000000,fg+:-1:regular')
         (ui.resources.root/'palette.json').write_text('broken')
-        self.assertEqual(styles(ui),('2;37','1;95'))
+        self.assertEqual(styles(ui),('2;37','1;95','38;5;208'))
 
     def test_key_picker_layout_overrides_leave_other_pickers_unchanged(self):
         from interaction import RichSelector
@@ -195,19 +209,24 @@ class Keys(unittest.TestCase):
         stream=io.TextIOWrapper(io.BytesIO(b'zsh\0viins\0bindkey -M viins "^G" fixture-widget\n\0'))
         with patch.dict(os.environ,dict(self.env,DOTS_KEYS_CAPTURE='shell'),clear=True),patch('sys.stdin',stream),patch('sys.stdout',io.StringIO()), \
              patch('keys_cli.shutil.which',return_value='/fixture/fzf'),patch('keys_cli.picker_ui',side_effect=lambda ui:ui), \
-             patch('keys_cli.choose_category',side_effect=['apps','zsh']) as choose,patch('keys_cli.browse') as browse:
+             patch('keys_cli.choose_category',return_value='zsh') as choose,patch('keys_cli.browse') as browse, \
+             patch('keys_cli.collect',wraps=keys_cli.collect) as collection:
             self.assertEqual(keys_cli.main(['--browse','--source','live','--mode','viins']),0)
-            self.assertEqual(choose.call_count,2)
+            self.assertEqual(choose.call_count,1);collection.assert_called_once()
+            self.assertEqual(choose.call_args.kwargs,dict(include_all=True))
+            self.assertEqual(next(c['count'] for c in choose.call_args.args[1] if c['app']=='zsh'),1)
             self.assertEqual([r['action'] for r in browse.call_args.args[1]['rows']],['fixture-widget'])
         self.assertEqual(json.loads(self.cli('all','--json').stdout),json.loads(self.cli('--json').stdout))
 
-    def test_category_cancellation_never_collects_or_browses(self):
+    def test_category_cancellation_collects_once_without_browsing(self):
         import keys_cli
         from interaction import SelectionEnded
+        data=dict(rows=[record('zsh','viins','^G','fixture')],coverage=[dict(app='zsh',count=1,notes=[])])
         with patch('keys_cli.shutil.which',return_value='/fixture/fzf'),patch('keys_cli.picker_ui',side_effect=lambda ui:ui), \
-             patch('keys_cli.choose_category',side_effect=SelectionEnded(130)),patch('keys_cli.collect') as collect_mock:
+             patch('keys_cli.choose_category',side_effect=SelectionEnded(130)),patch('keys_cli.collect',return_value=data) as collect_mock, \
+             patch('keys_cli.browse') as browse:
             self.assertRaises(SelectionEnded,keys_cli.main,['--browse'])
-            collect_mock.assert_not_called()
+            collect_mock.assert_called_once();browse.assert_not_called()
 
     def test_fzf_installed_defaults_and_override(self):
         directory=self.base/'fzf';(directory/'bin').mkdir(parents=True);(directory/'man/man1').mkdir(parents=True)
@@ -238,11 +257,10 @@ class Keys(unittest.TestCase):
 
     def test_backspace_callback_is_idempotent(self):
         if not shutil.which('zsh'):self.skipTest('Zsh unavailable')
-        text=(ROOT/'profiles/termux/shells/zsh/local.zsh').read_text()
-        block=text[text.index('_dots_termux_zvm_insert_bindings()'):text.index('zinit ice depth=1')]
-        code='zvm_after_init_commands=(existing)\nzvm_after_select_vi_mode_commands=(existing)\n'+block+'\n'+block+'''
-[[ ${#zvm_after_init_commands} == 2 && ${#zvm_after_select_vi_mode_commands} == 2 ]] || exit 7
-_dots_termux_zvm_insert_bindings
+        block=(ROOT/'shells/zsh/keys.zsh').read_text()
+        code='zvm_after_init_commands=(existing)\nzvm_after_select_vi_mode_commands=(existing)\nzvm_after_lazy_keybindings_commands=(existing)\n'+block+'\n'+block+'''
+[[ ${#zvm_after_init_commands} == 2 && ${#zvm_after_select_vi_mode_commands} == 2 && ${#zvm_after_lazy_keybindings_commands} == 2 ]] || exit 7
+_dots_zsh_keys_apply
 bindkey -M viins '^H'
 bindkey -M viins '^?'
 '''

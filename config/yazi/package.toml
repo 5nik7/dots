@@ -1,7 +1,7 @@
 [[plugin.deps]]
 use = "5nik7/dots"
-rev = "2d1a4bc"
-hash = "ae30747bab9bc8f12a191f690b13ec6b"
+rev = "637f869"
+hash = "e341f461cda61498e76b457577f7b769"
 
 [flavor]
 deps = []

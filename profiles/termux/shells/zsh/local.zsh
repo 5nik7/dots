@@ -16,25 +16,11 @@ zvm_config() {
 
 }
 
-# Normalize both terminal Backspace encodings after vi-mode installs its maps.
-_dots_termux_zvm_insert_bindings() {
-  bindkey -M viins '^H' backward-delete-char
-  bindkey -M viins '^?' backward-delete-char
-}
-typeset -ga zvm_after_init_commands zvm_after_select_vi_mode_commands
-(( ${zvm_after_init_commands[(Ie)_dots_termux_zvm_insert_bindings]} )) ||
-  zvm_after_init_commands+=(_dots_termux_zvm_insert_bindings)
-(( ${zvm_after_select_vi_mode_commands[(Ie)_dots_termux_zvm_insert_bindings]} )) ||
-  zvm_after_select_vi_mode_commands+=(_dots_termux_zvm_insert_bindings)
-_dots_termux_zvm_insert_bindings
-
+# Bindings and vi-mode lifecycle callbacks are owned by shells/zsh/keys.zsh.
 zinit ice depth=1
 zinit light jeffreytse/zsh-vi-mode
 
 zinit light kutsan/zsh-system-clipboard
-
-bindkey -M vicmd Y zsh-system-clipboard-vicmd-vi-yank-eol
-bindkey "^V" zsh-system-clipboard-vicmd-vi-put-after
 
 export LYNX_CFG="${dot[configs]}/lynx/lynx.cfg"
 export LYNX_LSS="${dot[configs]}/lynx/lynx.lss"

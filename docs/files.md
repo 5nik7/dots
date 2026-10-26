@@ -1,6 +1,6 @@
 # File catalog
 
-**Status: Inventory, metadata, bounded adoption/link/remove, checkout installation and recovery implemented; general profile installation remains proposed.**
+**Status: Inventory, metadata, bounded adoption/link/remove/repair, checkout installation and recovery implemented; general profile installation remains proposed.**
 
 `dots files` starts the managed-files workflow by locating sources, recording their
 intent, classifying targets, and listing them. It requires Python 3.9+; discovery additionally requires Git. Native Windows supports the bounded install/uninstall, inspection and recovery routes described in [checkout installation](installation.md); adoption and the browser remain POSIX-only. Neither ordinary dispatch nor basic
@@ -192,6 +192,37 @@ inspection/apply errors return 1 and invalid usage returns 2.
 The same controller is available through the native PowerShell adapter; optional
 Gum remains capability-checked and the text fallback does not require Bash.
 
+## Repair managed destinations
+
+`dots files repair` scans catalog mappings on the current platform and reviews destination repairs. It automatically queues missing file/directory links when the catalogued source exists and broken links with verified Dots ownership. In a terminal, it also helps resolve unverified broken links and occupied destinations through explicit choices. Unlike `files check`, it retains entries whose sources are missing. It does not recover source contents, check configuration syntax, discover nested broken files, relocate a checkout, install the launcher, acquire repositories or regenerate themes.
+
+```bash
+dots files repair                         # Resolve issues, review the queue, then Cancel/Apply
+dots files repair --dry-run               # Inspect without writes or prompts
+dots files repair --yes                   # Apply automatic repairs only; preserve unresolved issues
+dots files repair --dry-run --json        # Machine-readable inspection
+dots files repair dots:kitty --yes        # Limit to named resources
+dots files repair --repo dots --app kitty # Filter the scan
+```
+
+Optional qualified resource IDs and `--repo`, `--app`, `--category` filters intersect. Unknown IDs/repositories fail; results are sorted by ID. Disabled, inactive, replaced and unmapped resources are skipped. Inactive resources appear only when named explicitly. Unavailable/excluded repositories remain visible without acquisition. Live repair is restricted to the detected platform, using its existing app destination adapters; there is no platform override.
+
+Correct working links are unchanged and never adopted into installation ownership. A `replaces` declaration naming an absent or inactive mapping does not by itself block repair or turn a healthy link into a conflict; actual competing catalog claims do. Regular files, directories, working links pointing elsewhere and unverified broken links require an explicit helper choice. Sources must be regular files or owned directories matching the link strategy; copy mappings are reported unsupported. Special objects, ownership conflicts, unsafe parents and overlapping source/repository/state destinations remain blocked. No source or catalog edits occur.
+
+For automatic relinking, a broken link needs either a same-resource installation receipt whose `after` digest still matches the link, or matching evidence from the latest completed transaction touching its destination. Only catalog file actions (`add`, `link`, `install`, `edit`, `restore`, `repair`) establish transaction evidence, and a receiptless historical link must remain within its owning source repository. A later undo/theme/other action supersedes older evidence; receipt-owned drift cannot fall back to history. The helper can explicitly authorize an ordinary unverified link, including a retired Androidots path, or same-resource drift. Generated-state links and destinations owned by another resource, including a theme receipt for a missing target, remain protected. Use `dots theme files check` to inspect theme connections.
+
+Bare terminal invocation opens the issue helper when findings are unresolved. It prefers terminal FZF with metadata previews, then Gum, then a numbered fallback, including native Windows without Bash. Details show the catalog source, destination, current object/link, reason and backup policy. Choose **Relink to catalog source** or **Back up and replace with catalog link** where available; **Back** and **Skip for this run** preserve the object. Decisions only change the queue. Automatic repairs start queued and can also be skipped. Blocked issues show a next-step command. No file contents are previewed.
+
+Choose **Review queued repairs** to see the complete batch, then confirm once with Cancel selected by default. With no unresolved findings, the command goes directly to its ordinary batch confirmation. **Cancel repairs** and final Cancel exit 0 and discard every queued decision; selector Escape/Ctrl-C/EOF interrupts with 130. Failed selectors never approve a repair. Optional Gum confirmation has a plain yes/no fallback.
+
+`--yes` applies automatic repairs only: it does not answer ownership or replacement questions. Run the bare command to resolve those issues. JSON, dry-run and redirected execution never open the helper or infer choices. Nonterminal mutation requires `--yes`. `--dry-run` overrides `--yes`, never prompts, and writes no state, locks, catalogs or journals. Cancellation and an unchanged run likewise create no managed state. `--verbose`/`-v` shows unchanged/skipped reasons and transaction events. JSON and dry runs never animate; human views reuse shared resource styling and wrap full paths.
+
+Queued repairs can be applied while other entries remain unresolved. Invalid shared metadata, an unfinished transaction, or source/target/catalog/receipt/evidence drift blocks apply and requires a new review; approval never triggers a fresh plan. Occupied directories and source trees are hashed for drift protection when preparing a choice. The complete batch is preflighted and applied through one retained transaction. Links and installation receipt updates roll back together, and existing first-install backup references survive repair, including explicitly approved same-resource drift. Newly managed repaired destinations retain their pre-repair baseline. Results provide the transaction ID and `dots files undo ID`; undo restores the immediate pre-repair object, while uninstall retains its original-backup semantics. History/recover handle interrupted work.
+
+`--json` requires `--yes` or `--dry-run`. Its undecorated schema-1 result contains `action: "repair"`, `platform`, `dry_run`, `status`, `items`, `sources`, and `counts` (`checked`, `eligible`, `repaired`, `unchanged`, `skipped`, `unresolved`). Items retain catalog fields and add `repair_action` (`link`, `relink`, `unchanged`, `skipped`, `unresolved`), `reason`, and `outcome`. Preview candidates use `would-link`/`would-relink`; applied candidates use `repaired`. Interactive replacement adds the human action `replace-with-backup`; helper decisions are not accepted through JSON. An applied result includes the Store `transaction` object. Status is `preview`, `unchanged`, `complete`, `partial`, `unresolved` or `cancelled`. Skipped helper issues remain counted as unresolved. Diagnostics go to stderr.
+
+Exit 0 means no unresolved findings, a repairable preview, completed repairs or explicit cancellation. Exit 1 means unresolved findings or an inspection/apply failure, including when some safe repairs succeeded; inspect the JSON counts/status. Usage errors return 2 and interruption returns 130. Read-only preview may therefore return 1 while still producing a useful report.
+
 ## Interactive tracked-config browser
 
 `dots files browse` searches tracked configs applicable to the detected platform,
@@ -346,6 +377,8 @@ directories. Ordinary settings, keybindings, snippets and custom theme assets
 remain eligible. Excluded directories produce one metadata record without walking
 their contents; totals count observed entries, not every descendant of a pruned
 directory. The same exclusions protect `add --scan` and explicit adoption.
+
+The explicit gitmux home-file mapping imports `~/.gitmux.conf` into `config/gitmux/gitmux.conf` on Termux, Linux and WSL. The catalog resource is `dots:file-config-gitmux-gitmux-conf`, application `gitmux`, with the ordinary file-link strategy. It has no native Windows destination. Use `dots files show dots:file-config-gitmux-gitmux-conf` to inspect it, or `dots files link dots:file-config-gitmux-gitmux-conf --backup` to link a checkout's source with the normal conflict/backup policy. Gitmux reads this file through the tmux integration's explicit `-cfg` argument; see [status configuration](themes.md#gitmux).
 
 ## Import, link and stop managing
 

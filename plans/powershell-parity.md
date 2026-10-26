@@ -48,6 +48,7 @@ must cover both engines, actual profiles/app locations, FZF keys/previews,
 | Theme publication | Guarded `Store` transaction, command manifests, locks, native wrappers, cache preparation, connectors | Isolated dry-run/idempotence/drift/undo and injected rollback checks; Windows app rendering pending |
 | Theme interactions/plugins/background | Token-only FZF previews, Apply/Back/Cancel, `.ps1` hooks, Windows desktop wallpaper adapter | Native preview contract fixtures; desktop/interactive acceptance pending |
 | Anodize | Existing engine `.exe` selection, shared authoring Store and native theme bridge | Existing engine unchanged; native Windows executable acceptance pending |
+| Workflow menus | Shared launcher/family navigation, Git review gate, ordinary terminal FZF and less/FZF readers; native tmux/project-session actions unavailable, no WSL bridge | Shared-controller/argv fixtures and Termux popup tests; Windows PowerShell 5.1/7 keyboard, UTF-8, cancellation and reader acceptance pending. See the [menu acceptance record](popup-menus.md#g5-final-documentation-and-acceptance). |
 | Future maintenance | AGENTS/guides/skills require both shell surfaces; platform/source-of-truth docs synchronized | Documentation checks and CI configuration; no new remote run claimed |
 
 Bash's existing theme/Git frontends remain in place to preserve their established
@@ -61,6 +62,10 @@ JSON/scalar/init outputs, verbose links/backups without interrupted progress,
 FZF cancellation and previews, and 40/80/120-column light/dark views.
 
 ## Verification notes
+
+- Global less styling uses a native PowerShell adapter on POSIX. Native Windows less retains stock colors because its console renderer has no equivalent termcap RGB path; no Bash/WSL bridge or app destination changes are introduced. Shared policy and publication fixtures pass on Termux; actual PowerShell engine checks remain pending. See the [less styling acceptance record](less-style.md).
+
+- Managed-file repair and its interactive issue helper use the shared controller with native destination adapters and static completion. Isolated controller/adapter cases cover preview, JSON, queued relink/replacement, cancellation, numbered fallback and link-capability refusal. Windows PowerShell 5.1/7 repair/recovery and terminal acceptance remain pending; see [repair acceptance](files-repair.md).
 
 - eza uses the same semantic template in Bash and the native Python renderer, a shared destination resolver, and the existing native connector transaction. Native Windows PowerShell 5.1/7 link and eza rendering acceptance remains pending; see the [eza plan](eza-theme.md).
 

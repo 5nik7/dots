@@ -3,7 +3,18 @@ if (-not (Test-Path Function:\dots) -or $global:_DotsKeysWrapper) {
     function global:dots {
         $forward = @($args)
         $route = @($forward | Where-Object { $_ -notmatch '^--(?:color|icons)=' })
-        if ($route.Count -and $route[0] -eq 'keys' -and $route -notcontains '--help' -and $route -notcontains '-h') {
+        $capture = $true
+        for ($i = 1; $i -lt $route.Count; $i++) {
+            if ($route[$i] -in @('--query', '--mode', '--source')) {
+                if ($route[$i] -eq '--source' -and $i + 1 -lt $route.Count -and $route[$i + 1] -eq 'configured') { $capture = $false }
+                $i++
+            } elseif ($route[$i] -in @('--source=configured', '--snapshot', '--help', '-h') -or $route[$i] -like '--snapshot=*') {
+                $capture = $false
+            } elseif ($route[$i] -in @('bash', 'zsh', 'tmux', 'nvim', 'yazi', 'codex', 'fzf', 'kitty', 'television')) {
+                $capture = $false
+            }
+        }
+        if ($route.Count -and $route[0] -eq 'keys' -and $capture) {
             $rows = @()
             if (Get-Command Get-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
                 foreach ($binding in Get-PSReadLineKeyHandler -Bound) {

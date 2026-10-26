@@ -5,7 +5,7 @@
 # dots:option=--json||flag|Print versioned binding data
 # dots:option=--browse||flag|Open FZF explicitly, including from a tmux binding
 # dots:option=--query||string|Initial search text
-# dots:option=--mode||string|Filter a tmux key table
+# dots:option=--mode||string|Starting picker table or exact print/JSON table filter
 # dots:example=dots menu tmux keys
 DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
 exec python3 -B "$DOTS/lib/dots/keys_cli.py" tmux "$@"

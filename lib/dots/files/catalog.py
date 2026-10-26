@@ -107,9 +107,9 @@ class Presentation:
         """Render a heading with independently styled, inert text spans."""
         self._spans(spans)
 
-    def detail_spans(self, label, spans, *, label_width=10, label_gap=1):
+    def detail_spans(self, label, spans, *, label_width=10, label_gap=1, indent=4):
         label = self.clean(label)
-        prefix = '    ' + label + ' ' * max(0, label_width - resource_cells(label)) + ' ' * label_gap
+        prefix = ' ' * indent + label + ' ' * max(0, label_width - resource_cells(label)) + ' ' * label_gap
         self._spans(spans, prefix, '94')
 
     def _spans(self, spans, prefix='', prefix_code=None, *, continuation_prefix=None):

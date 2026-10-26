@@ -119,6 +119,19 @@
       "strategy": "link"
     },
     {
+      "id": "file-config-gitmux-gitmux-conf",
+      "source": "config/gitmux/gitmux.conf",
+      "target": "${HOME}/.gitmux.conf",
+      "app": "gitmux",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "strategy": "link"
+    },
+    {
       "id": "file-config-television-config-toml",
       "source": "config/television/config.toml",
       "target": "${CONFIG}/television/config.toml",

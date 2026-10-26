@@ -100,6 +100,8 @@ Read [files](../../docs/files.md) and [decision 0010](../../docs/decisions/0010-
 
 ## Bounded checkout lifecycle
 
+`dots files repair` owns current-platform destination repair. Reuse its receipt/latest-transaction evidence checks and retained installation baselines; do not broaden automatic eligibility or infer ownership from a catalog path alone. Ordinary occupied destinations and unverified links require an explicit helper choice plus final batch approval. Keep theme/other-owner/catalog-conflict/unsafe-path blocks, bind review to captured guards and never rebuild after approval. Run `tools/test_files_repair.py` with file-platform, picker, installation and mapping regressions. Source restoration, recursive repair and theme publication remain separate workflows.
+
 Stash/edit mappings use the same installation receipt and Store. `enabled: false`
 must remain visible but excluded from active claims/install/link; never reset it
 in a track update. Retain original backup pointers for deliberately absent owned

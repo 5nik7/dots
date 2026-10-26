@@ -11,6 +11,7 @@ export CLICOLOR=1
 # Compatibility modules remain sourceable at their original locations.
 source "$DOTS/shells/shared/functions.sh"
 source "$ZSH/options.zsh"
+source "$ZSH/keys.zsh"
 source "$DOTS/shells/shared/fzf.sh"
 source "$DOTS/lib/dots/shell/init.zsh"
 source "$ZSH/completions.zsh"
@@ -25,8 +26,10 @@ source "$DOTS/shells/shared/aliases.sh"
 [[ -r "${zsh[local]}" ]] && _dots_hook_source "${zsh[local]}" private-local 1
 source "$ZSH/integrations/fzf.zsh"
 _dots_widget_plugins
+_dots_zsh_keys_finish
 
 [[ -n ${ZSH_DEBUGRC+1} ]] && zprof
+source "$DOTS/shells/shared/tmux-workspaces.sh"
 source "$DOTS/shells/shared/termux-tmux.sh"
 # Do not propagate an optional tool's absence as the startup status.
 true

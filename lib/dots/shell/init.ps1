@@ -105,12 +105,16 @@ $env:PATH = (@($profileEntries + $entries | Select-Object -Unique) -join [IO.Pat
 $dotsArgs = [Environment]::GetCommandLineArgs()
 $dotsInteractive = $dotsArgs -notcontains '-NonInteractive' -and ($dotsArgs -contains '-NoExit' -or -not ($dotsArgs | Where-Object { $_ -match '^-(Command|c|File|f|EncodedCommand|ec)$' }))
 if ($dotsInteractive) {
+    . (Join-Path $env:DOTS 'lib/dots/shell/less.ps1')
     if ($dots_options.DOTS_INIT_COLORS -eq '0') { $global:dots_colors = @{} }
     # PowerShell identifiers are case insensitive: rst and RST are one value.
     if ($global:rst -cne ([string][char]27 + '[0m')) { $global:rst = [string][char]27 + '[0m' }
     . (Join-Path $env:DOTS 'lib/dots/shell/keys.ps1')
     function global:Update-DotsTheme {
-        if ($dots_options.DOTS_INIT_THEME -ne '1') { return }
+        if ($dots_options.DOTS_INIT_THEME -ne '1') {
+            Update-DotsLessStyle '' '' 'auto' '0'
+            return
+        }
         try {
             $currentFile = Join-Path $dot.state 'themes/current'
             if (-not [IO.File]::Exists($currentFile)) { return }
@@ -125,6 +129,9 @@ if ($dotsInteractive) {
             }
             if (-not $data['@theme']['id']) { return }
         } catch { return }
+        $lessForeground = if ($data['foreground']) { $data['foreground']['hex'] } else { $data['@role']['foreground'] }
+        $lessBackground = if ($data['lighter_background']) { $data['lighter_background']['hex'] } elseif ($data['background']) { $data['background']['hex'] } else { $data['@role']['background'] }
+        Update-DotsLessStyle $lessForeground $lessBackground $dots_options.DOTS_COLOR '1'
         $global:dots_colors = @{}
         if ($dots_options.DOTS_INIT_COLORS -eq '1') {
             foreach ($name in $data.Keys) {

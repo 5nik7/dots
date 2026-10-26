@@ -39,10 +39,14 @@ def shell_dump(app, mode, text, evidence='live', source=None):
         except ValueError:continue
         if app=='zsh' and len(parts)>=3 and parts[0]=='bindkey':
             args=parts[1:];kind='widget';m=mode or 'main'
-            if args and args[0]=='-R':kind='range';args=args[1:]
-            if args and args[0]=='-s':kind='macro';args=args[1:]
-            if args[:1]==['-M'] and len(args)>2:m=args[1];args=args[2:]
-            if args[:1]==['-s']:kind='macro';args=args[1:]
+            while args and args[0] in ('-R','-s','-M','-a'):
+                option=args.pop(0)
+                if option=='-M':
+                    if not args:break
+                    m=args.pop(0)
+                elif option=='-a':m='vicmd'  # bindkey -L abbreviates -M vicmd.
+                elif option=='-s':kind='macro'
+                else:kind='range'
             if len(args)!=2:continue
             if args[-1] in ('undefined-key','self-insert') or evidence=='configured' and any('$' in p or '`' in p for p in args):continue
             rows.append(record(app,m,args[0],args[1] if kind=='widget' else 'Keyboard macro' if kind=='macro' else args[1],
@@ -100,20 +104,64 @@ def config_root(root, app, windows=None):
 def toml_rows(path,app,default=False):
     data=tomllib.loads(read_file(path));rows=[]
     if app=='yazi':
-        for mode,section in data.items():
-            if not isinstance(section,dict):continue
-            for name in ('prepend_keymap','keymap','append_keymap'):
-                for item in section.get(name,[]):
-                    key=item.get('on');action=item.get('run','')
-                    if not isinstance(key,(str,list)) or isinstance(key,list) and not all(isinstance(k,str) for k in key):continue
-                    rows.append(record(app,mode,key,'; '.join(action) if isinstance(action,list) else action,
-                                       item.get('desc',''),source=path,default=default,layer=name))
+        return yazi_declarations(data,path,default)
     else:
         sections=[('picker',data.get('keybindings',{})),('shell integration',data.get('shell_integration',{}).get('keybindings',{}))]
         for mode,bindings in sections:
             for key,action in bindings.items():
                 rows.append(record(app,mode,key,json.dumps(action) if not isinstance(action,str) else action,source=path,default=default))
     return rows
+
+
+def yazi_declarations(data,path,default=False):
+    rows=[]
+    for mode,section in data.items():
+        if not isinstance(section,dict):continue
+        for name in ('prepend_keymap','keymap','append_keymap'):
+            entries=section.get(name,[])
+            if not isinstance(entries,list):raise ValueError('Yazi keymap table must be an array')
+            for item in entries:
+                if not isinstance(item,dict):raise ValueError('Invalid Yazi keymap entry')
+                key=item.get('on');action=item.get('run','');description=item.get('desc','')
+                if not isinstance(key,(str,list)) or isinstance(key,list) and (not key or not all(isinstance(k,str) for k in key)):
+                    raise ValueError('Invalid Yazi binding notation')
+                if not isinstance(action,(str,list)) or isinstance(action,list) and not all(isinstance(a,str) for a in action) or not isinstance(description,str):
+                    raise ValueError('Invalid Yazi binding action or description')
+                rows.append(record('yazi',mode,key,'; '.join(action) if isinstance(action,list) else action,
+                                   description,source=path,default=default,layer=name))
+    return rows
+
+
+def yazi_rows(root,notes,defaults=True):
+    baseline=Path(__file__).parent/'data/yazi-default.toml'
+    rows=toml_rows(baseline,'yazi',True)
+    if defaults:notes.append('Bundled Yazi shipped defaults: 8dd895c695a5950330c2623eb43debf323b60654; installed-version compatibility is unverified.')
+    path=config_root(root,'yazi')/'keymap.toml'
+    data={}
+    try:
+        if path.is_file():
+            data=tomllib.loads(read_file(path))
+            custom=yazi_declarations(data,path)
+            rows+=custom
+        else:notes.append('No readable configuration at '+str(path))
+    except (ValueError,OSError,UnicodeError):
+        notes.append('Yazi configuration could not be read; bundled defaults remain available.')
+        data={}
+    replaced={mode for mode,section in data.items() if isinstance(section,dict) and 'keymap' in section}
+    # Yazi compares the first two strokes when combining its three tables.
+    def identity(row):
+        key=row['key'] if isinstance(row['key'],list) else [row['key']]
+        return row['mode'],tuple(readable(k) for k in key[:2])
+    prepended={identity(r) for r in rows if r['layer']=='prepend_keymap'}
+    base={identity(r) for r in rows if r['layer']=='keymap' and not (r['default'] and r['mode'] in replaced)}
+    for row in rows:
+        key=identity(row)
+        shadowed=(row['default'] and row['mode'] in replaced or
+                  row['layer']=='keymap' and key in prepended or
+                  row['layer']=='append_keymap' and key in base)
+        row['status']='shadowed' if shadowed else 'configured; activation unverified'
+    notes.append('Prepend/replacement/append tables are compared statically; conditional and running-app activation is unverified.')
+    return rows if defaults else [r for r in rows if not r['default']]
 
 
 def kitty_rows(path,notes,seen=None,default=False):
@@ -311,8 +359,7 @@ def installed_defaults(app,notes):
     roots=[Path(os.environ.get('PREFIX','/usr'))/'share',Path('/usr/local/share')]
     rows=[]
     for base in roots:
-        candidates={'yazi':[base/'yazi/preset/keymap.toml',base/'yazi/keymap.toml'],
-                    'television':[base/'television/config.toml'],
+        candidates={'television':[base/'television/config.toml'],
                     'kitty':[base/'kitty/kitty.conf']} .get(app,[])
         for path in candidates:
             if path.is_file():
@@ -340,14 +387,20 @@ def collect(root,app=None,live_rows=(),live_apps=(),defaults=True):
             elif name=='nvim':
                 rows+=nvim_rows(config_root(root,name),notes)
                 notes.append('Unmapped built-in editor commands are not keymap records; live capture covers mappings installed so far.')
+            elif name=='yazi':
+                rows+=yazi_rows(root,notes,defaults)
+            elif name=='codex':
+                from .codex import codex_rows
+                rows+=codex_rows(notes,defaults)
             else:
                 if defaults:rows+=installed_defaults(name,notes)
                 directory=config_root(root,name)
-                path=directory/('keymap.toml' if name=='yazi' else 'kitty.conf' if name=='kitty' else 'config.toml')
+                path=directory/('kitty.conf' if name=='kitty' else 'config.toml')
                 if path.is_file():rows+=kitty_rows(path,notes) if name=='kitty' else toml_rows(path,name)
                 else:notes.append('No readable configuration at '+str(path))
-                if name=='yazi':notes.append('Configured declarations include prepend, replacement and append tables; full-table replacement and conditional activation are not evaluated.')
         except (ValueError,OSError,UnicodeError,subprocess.TimeoutExpired) as error:notes.append('Partial coverage: '+str(error))
         count=len([r for r in rows if r['app']==name])
         coverage.append(dict(app=name,count=count,live=any(r['app']==name and r['evidence']=='live' for r in rows),notes=notes))
-    return dict(version=1,rows=merge(rows),coverage=coverage)
+    rows=merge(rows)
+    for item in coverage:item['count']=sum(r['app']==item['app'] for r in rows)
+    return dict(version=1,rows=rows,coverage=coverage)

@@ -433,7 +433,10 @@ def main(argv=None):
             from themes.file_preview import run_renderer
             bat=shutil.which('bat') or shutil.which('batcat')
             rendered=run_renderer([bat,'--no-config','--paging=never','--style=plain','--language=markdown','--color='+('always' if ui.color else 'never')],data,os.environ) if bat else None
-            if rendered is not None:sys.stdout.buffer.write(rendered)
+            if action=='browse':
+                from menu_pager import page_text
+                page_text(rendered if rendered is not None else ui.clean(data.decode()).replace('\\n','\n'), title=row['title'], defer=True)
+            elif rendered is not None:sys.stdout.buffer.write(rendered)
             else:print(ui.clean(data.decode()).replace('\\n','\n'))
         else:sys.stdout.buffer.write(data)
     elif action=='list':

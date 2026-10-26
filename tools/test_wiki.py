@@ -188,6 +188,15 @@ store.apply('wiki-build',ops,guards,retain=True)
             self.assertEqual(wiki.main(['browse']),130)
             pick.assert_called_once_with('filter','Wiki pages',['Home','Guide','Commands'])
 
+    def test_only_interactive_browse_pages_selected_document(self):
+        self.build()
+        with patch.object(sys.stdin,'isatty',return_value=True), patch.object(sys.stdout,'isatty',return_value=True), patch('shutil.which',return_value='available'), patch.dict(os.environ,TERM='xterm-256color'), patch('interaction.Selector.pick',return_value='Guide'), patch('themes.file_preview.run_renderer',return_value=b'Entire highlighted document'), patch('menu_pager.page_text') as page:
+            self.assertEqual(wiki.main(['browse']),0)
+            page.assert_called_once_with(b'Entire highlighted document',title='A guide',defer=True)
+        with patch('menu_pager.page_text',side_effect=AssertionError('data path paged')):
+            self.assertEqual(self.cli('show','Guide','--raw').stdout,(self.target/'Guide.md').read_text())
+            self.assertEqual(self.cli('show','Guide').stdout,(self.target/'Guide.md').read_text())
+
     def test_frontend_help_completion_and_native_routes(self):
         shutil.copytree(ROOT/'lib/dots',self.root/'lib/dots',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
         for path in [ROOT/'bin/dots',*ROOT.glob('bin/dots-wiki*')]:shutil.copy2(path,self.root/'bin'/path.name)

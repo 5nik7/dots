@@ -4,6 +4,7 @@
 # Sourceable Bash/Zsh theme helpers; lib/dots/shell owns prompt registration.
 # Fast Zsh prompt checks use only builtins.
 declare -gA theme themes dot
+source "$DOTS/lib/dots/shell/less.bash"
 themes[root]=${DOTHEMES:-$DOTS/themes}
 unset 'themes[default]' 'themes[global]' 'themes[local]'
 _DOTS_THEME_STATE=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes
@@ -43,6 +44,7 @@ set_theme() {
   fi
   # Older generations and session-only palettes retain the role-based fallback.
   unset DOTS_THEME_FZF_COLORS
+  unset _DOTS_LESS_FOREGROUND_HEX _DOTS_LESS_BACKGROUND_HEX
   if [[ -L $_DOTS_THEME_ACTIVE ]]; then
     if [[ -n ${ZSH_VERSION:-} ]]; then generation=${${_DOTS_THEME_ACTIVE:A}:t}
     else generation=$(readlink -- "$_DOTS_THEME_ACTIVE"); generation=${generation##*/}; fi
@@ -61,6 +63,9 @@ set_theme() {
     eval "$output" || return
   fi
   [[ -n ${_DOTS_THEME_LS_BASE+x} ]] || _DOTS_THEME_LS_BASE=${LS_COLORS:-}
+  _dots_less_style "${_DOTS_LESS_FOREGROUND_HEX:-${foreground[hex]:-${dots_roles[foreground]}}}" \
+    "${_DOTS_LESS_BACKGROUND_HEX:-${lighter_background[hex]:-${background[hex]:-${dots_roles[background]}}}}" \
+    "${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}"
   if [[ ${dots_options[DOTS_INIT_COLORS]:-1} != 1 ]]; then
     for colors in "${_DOTS_THEME_COLOR_NAMES[@]-}"; do [[ ! $colors ]] || unset "$colors"; done
     _DOTS_THEME_COLOR_NAMES=()

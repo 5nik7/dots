@@ -8,13 +8,15 @@ from palette_native import Themes, regular
 from theme_cli import generated_commands, shell_init, validate_pointers, generation_complete
 from transactions import private_directory
 from file_platform import sync_dir, sync_file
+import bat_cache
 
 
 def main(args):
     if sys.version_info < (3, 11): raise ValueError('theme preparation requires Python 3.11 or newer')
     themes = Themes()
     identity = themes.current()
-    fingerprint = themes.fingerprint(identity)
+    bat_inputs = bat_cache.inputs()
+    fingerprint = themes.publication_fingerprint(identity, bat_inputs)
     validate_pointers(themes)
     token = themes.state / 'themes/current'
     current = regular(token).decode().strip() if token.exists() else ''
@@ -29,12 +31,12 @@ def main(args):
         if args[1] != fingerprint: raise ValueError('theme inputs changed after preview')
         directory = themes.state / 'themes/generations' / ('g.' + uuid.uuid4().hex)
         private_directory(directory)
-        palette = themes.render(identity, directory, build_cache=True)
+        palette = themes.render(identity, directory, build_cache=True, bat_inputs=bat_inputs)
         for shell, suffix in (('powershell', 'ps1'), ('zsh', 'zsh'), ('fish', 'fish')):
             (directory / ('init.' + suffix)).write_text(shell_init(palette, shell), encoding='utf-8')
         generated_commands(themes, directory)
         (directory / 'status').write_text('committed\n')
-        if themes.fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
+        if themes.publication_fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
         # Preparation never changes live pointers or invokes app reloads/plugins.
         for path in directory.rglob('*'):
             if path.is_file():

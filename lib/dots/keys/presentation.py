@@ -1,16 +1,16 @@
 """Inert keybrowser labels and content-sized category menus."""
-import json
 import os
 import re
 import shutil
 import subprocess
 
-from resources import cells, read_data
+from resources import cells
+from picker_style import styles, fit, picker_colors
 
 
 CATEGORIES = (
-    ('all', 'All', '󰌌'), ('apps', 'Apps', '󰀻'),
-    ('bash', 'Bash', ''), ('fzf', 'FZF', '󰍉'),
+    ('all', 'All', '󰌌'),
+    ('bash', 'Bash', ''), ('codex', 'Codex CLI', '󰚩'), ('fzf', 'FZF', '󰍉'),
     ('kitty', 'Kitty', '󰄛'), ('nvim', 'Neovim', ''),
     ('powershell', 'PowerShell', ''), ('television', 'Television', '󰔂'),
     ('tmux', 'tmux', ''), ('yazi', 'Yazi', '󰉋'), ('zsh', 'Zsh', ''),
@@ -18,52 +18,56 @@ CATEGORIES = (
 MENU_HEADER = 'Enter: open  Esc: cancel'
 
 
-def styles(ui):
-    """Use only the published snapshot, with terminal-palette fallbacks."""
-    try:
-        palette = json.loads(read_data(ui.resources.root / 'palette.json'))
-        colors = palette.get('colors', {})
-        if not isinstance(colors, dict):
-            colors = {}
-    except (ValueError, AttributeError):
-        colors = {}
-
-    def sgr(name, fallback, bold=False):
-        value = colors.get(name)
-        if not isinstance(value, str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', value):
-            return fallback
-        rgb = ';'.join(str(int(value[i:i+2], 16)) for i in (1, 3, 5))
-        return ('1;' if bold else '') + '38;2;' + rgb
-
-    return sgr('muted', '2;37'), sgr('bright_magenta', '1;95', True)
+def column_widths(ui, rows, width, show_app=True, show_mode=True):
+    limits = ([('app', 12)] if show_app else []) + ([('mode', 18)] if show_mode else []) + [('display', 16)]
+    widths = {field: max(1, min(cap, max((cells(ui.clean(row[field])) for row in rows), default=0)))
+              for field, cap in limits}
+    # Reserve separators and twelve cells of description. On small screens,
+    # shrink the widest column first (keys, then mode, then app on ties).
+    budget = max(len(widths), width - 12 - 3 * len(widths))
+    order = list(widths)
+    while sum(widths.values()) > budget:
+        field = max(order, key=lambda name: (widths[name], order.index(name)))
+        widths[field] -= 1
+    return widths
 
 
-def binding_label(ui, row, codes):
-    muted, key = codes
+def binding_label(ui, row, codes, show_app=True, show_mode=True, widths=None):
+    muted, key, mode = codes
+    def field(name, code):
+        text = ui.clean(row[name])
+        return ui.paint(fit(text, widths[name]) if widths is not None else text, code)
     separator = ui.paint(' · ', muted)
-    return separator.join((ui.paint(row['app'], muted), ui.paint(row['mode'], muted),
-                           ui.paint(row['display'], key), ui.clean(row['description']),
-                           ui.paint(row['evidence'], muted)))
+    fields = [field('app', muted)] if show_app else []
+    if show_mode:
+        fields.append(field('mode', mode))
+    fields.extend((field('display', key), ui.clean(row['description']),
+                   ui.paint(row['evidence'], muted)))
+    return separator.join(fields)
 
 
-def menu_rows(ui, coverage=None):
-    """Keep identity separate from labels, including unavailable providers."""
+def binding_prompt(ui, app=None, mode=None):
+    return ('󰌆 ' if ui.icons else '') + ui.clean((app or 'all') + '·' + mode if mode is not None else app or '')
+
+
+def menu_rows(ui, coverage, *, include_all=True):
+    """Render nonempty categories from the same filtered snapshot as the browser."""
     rows = []
+    counts = {item['app']: item['count'] for item in coverage}
+    muted = styles(ui)[0]
     for identity, title, icon in CATEGORIES:
-        if coverage is not None and identity in ('all', 'apps'):
+        if identity == 'all' and not include_all:
             continue
-        label = (icon + ' ' if ui.icons else '') + title
-        if coverage is not None:
-            item = next((c for c in coverage if c['app'] == identity), {})
-            count = item.get('count', 0)
-            status = 'live' if item.get('live') else 'configured' if count else 'unavailable'
-            label += f' · {count} bindings · {status}'
-        rows.append((identity, ui.clean(label)))
+        count = sum(counts.values()) if identity == 'all' else counts.get(identity, 0)
+        if not count:
+            continue
+        label = ui.clean((icon + ' ' if ui.icons else '') + title)
+        rows.append((identity, label + ui.paint(f' · [{count}]', muted)))
     return rows
 
 
-def menu_dimensions(labels):
-    """Fit chrome and rows, clamped to the attached client rather than run-shell's TTY."""
+def terminal_dimensions():
+    """Use the attached client rather than run-shell's nonexistent terminal."""
     columns, lines = shutil.get_terminal_size((80, 24))
     if os.environ.get('TMUX') and shutil.which('tmux'):
         try:
@@ -78,12 +82,12 @@ def menu_dimensions(labels):
                     columns, lines = width, height
         except (OSError, ValueError, subprocess.TimeoutExpired):
             pass
-    width = max(32, max((cells(label) for label in labels), default=0) + 6,
-                cells(MENU_HEADER) + 4)
-    return min(width, max(1, columns - 2)), min(len(labels) + 6, max(1, lines - 2))
+    return columns, lines
 
 
-def picker_colors(colors):
-    # The shared theme's fg+:strip discards row ANSI. Keep field styling when selected.
-    entries = [entry for entry in colors.split(',') if entry and not entry.startswith('fg+:')]
-    return ','.join([*entries, 'fg+:-1:regular'])
+def menu_dimensions(labels, *, size=None, header=MENU_HEADER):
+    """Fit chrome and rows within the caller's terminal."""
+    columns, lines = size or terminal_dimensions()
+    width = max(32, max((cells(re.sub(r'\x1b\[[0-9;]*m', '', label)) for label in labels), default=0) + 6,
+                max((cells(line) for line in header.splitlines()), default=0) + 4)
+    return min(width, max(1, columns - 2)), min(len(labels) + len(header.splitlines()) + 5, max(1, lines - 2))
