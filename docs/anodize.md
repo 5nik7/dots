@@ -28,38 +28,57 @@ Interactive human confirmations prefer Gum's **Cancel / Apply** menu with Cancel
 
 ## Terminal logo
 
-**Implemented, 2026-10-13.** Both entry points display the Anodize mark at the start of every human view. Usage/help, results, previews, confirmations, empty lists and diagnostics use the same responsive text artwork. JSON, raw exports, app configuration, completion source and completion candidates never contain a logo. Redirected human output retains a compact text mark.
+**Authoritative branding contract, updated 2026-10-27.** Every default human Anodize view uses exactly one of the following owner-supplied UTF-8 artworks. Their characters, braille spacing and six rows must be preserved. This rule applies to standalone Anodize, Bash/native Dots help, results, diagnostics, interactive menus, popup readers and completion previews. JSON, raw app configuration, exports and completion data remain undecorated.
 
-The default is the owner's bundled UTF-8 braille text artwork, with no image tool or engine requirement. A Unicode-capable terminal/font displays the braille cells; a small ASCII mark remains available for compatibility. Original transparent PNGs and the supplied text assets are bundled with [asset provenance](../lib/dots/anodize/assets/README.md); the downloads directories are not runtime dependencies.
+### LOGO1: default symbol
+
+```text
+⠀⠀⠀⠀⠀⠀⠀⣰⡄⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢀⣼⣿⣿⣄⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠠⢾⡿⠃⠘⣿⣆⠀⠀⠀⠀
+⠀⠀⠀⣰⣷⣦⣤⣀⠀⠘⣿⣦⠀⠀⠀
+⠀⠀⣴⣿⡟⠙⠻⢿⣿⣶⣾⣿⣧⡀⠀
+⢀⣾⣿⠏⠀⠀⠀⠀⠀⠉⠛⠿⣿⣷⡀
+```
+
+LOGO1 is `logo.txt` (15 columns). It is the default for results, diagnostics, Preview, Extract and their embedded previews. An exact embedded copy is the final fallback when assets are missing or invalid.
+
+### LOGO2: optional wide help
+
+```text
+⠀⠀⠀⠀⠀⠀⠀⣰⡄⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢀⣼⣿⣿⣄⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠠⢾⡿⠃⠘⣿⣆⠀⠀⠀⠀⠀⣠⠟⢧⡀⠀⡟⢦⣸⠀⣾⠉⠉⡇⢸⡏⠉⣧⠀⡇⠈⣩⠝⠃⢸⡯⠭
+⠀⠀⠀⣰⣷⣦⣤⣀⠀⠘⣿⣦⠀⠀⠀⠀⠁⠀⠈⠁⠀⠁⠀⠉⠀⠈⠉⠉⠁⠈⠉⠉⠁⠀⠁⠈⠉⠉⠁⠈⠉⠉
+⠀⠀⣴⣿⡟⠙⠻⢿⣿⣶⣾⣿⣧⡀⠀
+⢀⣾⣿⠏⠀⠀⠀⠀⠀⠉⠛⠿⣿⣷⡀
+```
+
+LOGO2 is `horizontal.txt` (42 columns). Help uses it when the content width fits, otherwise LOGO1. Default selection never chooses other artwork. Viewport height, a capture pipe, redirected human output, `TERM=dumb`, disabled icons, color settings or legacy Python output encoding must never replace these marks. Human logo output uses UTF-8; rendering the cells requires a font that contains them. Short panes scroll vertically; even a tiny viewport receives the intact artwork.
+
+### Explicit choices
 
 | Option | Behavior |
 | --- | --- |
-| `--logo=text` | Bundled portable character art; the default. |
-| `--logo=auto` | Recognized Kitty graphics, otherwise optional Chafa character art, otherwise bundled text. |
-| `--logo=kitty` | Request Kitty graphics; fall back to bundled text when unavailable. |
-| `--logo=chafa` | Request Chafa character art; fall back to bundled text when unavailable. |
-| `--logo-layout=auto\|horizontal\|stacked\|icon` | Request a layout, always reduced to fit the available space. |
+| `--logo=text` | Supplied text artwork; the default. |
+| `--logo=auto` | Explicitly request supported Kitty graphics, then optional Chafa, then supplied text. |
+| `--logo=kitty` / `--logo=chafa` | Explicit graphics choice; unavailable rendering falls back to supplied text. |
+| `--logo-layout=auto` | LOGO2 for wide help, LOGO1 otherwise. |
+| `--logo-layout=base` | Exact LOGO1 at every width. |
+| `--logo-layout=horizontal` | LOGO2 when it fits, otherwise LOGO1. |
+| `--logo-layout=stacked` / `--logo-layout=icon` | Explicit access to the retained larger braille layouts; fallback is LOGO1. |
 
-Both `--option=value` and `--option value` work before or after the Anodize subcommand. Put options before `--help` for standalone help. These are Anodize options, not global Dots options:
+`ANODIZE_LOGO` and `ANODIZE_LOGO_LAYOUT` retain explicit persistent preferences. Command options override them and accept both equals and separate-value forms before or after the subcommand. Invalid environment values use the defaults; invalid options are usage errors. Dots menu Help pins text/horizontal, and Preview/Extract pin text/base, overriding inherited preferences for those popup flows.
 
-Invoking Anodize with only logo options displays its usage. A forwarded publication diagnostic block receives one responsive stderr header, independently of the successful result on stdout.
+Text artwork uses a diagonal gradient from **hint at the bottom left**, through **info at the midpoint**, to **accent at the top right**. Each symbol and wordmark receives its own full gradient: LOGO2 restarts the gradient for the ANODIZE wordmark, as does the explicit stacked layout. Blank cells preserve spacing but do not determine the endpoints. Help, lists and diagnostics read the active published theme; palette results, Extract, guided previews and completion previews use the palette being shown. The selected background starts on the first logo row and continues through the heading, Theme/Contrast details, preview body and any result notes. Headings use the panel accent style; details use the selected foreground and statuses use selected semantic colors. Subsequent text returns to the panel foreground. This changes color only, never the supplied artwork.
 
-```sh
-anodize --logo=auto --help
-dots anodize --logo=chafa --logo-layout=horizontal --help
-dots anodize preview dusk --logo=auto
-ANODIZE_LOGO=chafa anodize --help
-```
+All three stops must be valid theme colors. If any is unavailable, banners retain solid magenta and embedded previews retain their foreground; a candidate preview never borrows active-theme colors. Three equal stops produce a solid logo; equal outer stops can still blend through a distinct info color. Optional graphics retain their original colors.
 
-`ANODIZE_LOGO` and `ANODIZE_LOGO_LAYOUT` set persistent defaults; explicit options win. Invalid environment values use `text` and `auto`; invalid command options are usage errors. There is no logo-off mode for human views. `--color=never` and `NO_COLOR` use monochrome braille text on suitable terminals; explicit `--color=always` retains the shared override of `NO_COLOR`. `--icons=never`, `TERM=dumb`, non-Unicode output and redirected human output select the small ASCII fallback and skip Kitty/Chafa. Color/icon controls retain their existing prefix placement and do not disable the mark.
+`NO_COLOR` and `--color=never` retain monochrome artwork. Icon preferences affect ordinary UI icons and optional graphics eligibility, not the supplied text logo. Optional graphics remain capability-checked: Kitty excludes unverified multiplexer passthrough, and Chafa uses bounded `--fg-only --symbols=braille` output without probing, animation or installation. Graphics capability failures never affect the operation's exit status.
 
-Sizing reads the destination terminal, then valid `COLUMNS`/`LINES`, then 80×24, with a one-column right margin. Ordinary text banners use at most half the available height, capped at 16 rows. Automatic text layout tries `horizontal.txt`, then `stacked.txt`, then the largest fitting numbered `logo-<width>.txt`, then `logo.txt`, then a tiny ASCII mark. Explicit horizontal/stacked layouts try that asset before the icon fallbacks; explicit icon layout starts with numbered logos. Selection measures actual cell width and row count, preserving all artwork spacing rather than cropping or reflowing. Additional numbered `.txt` variants are discovered automatically. Routine views use the same selection and sizing policy as usage. Interactive and completion previews use the FZF pane width, reserving the panel padding, with a 16-row artwork budget independent of pane height. Short panes retain the supplied artwork and scroll vertically; their captured output is a terminal-display context, so the pipe alone does not force ASCII. Preview text keeps the theme background/foreground and honors layout/icon preferences. Redirected human output retains the compact ASCII mark.
+Text width uses the destination terminal, then valid `COLUMNS`/`LINES`, then 80×24, reserving the caller's margin. Explicit larger text layouts have a 16-row asset budget independent of viewport height. PNG graphics keep their existing size limits. [Asset provenance](../lib/dots/anodize/assets/README.md) records the retained sources.
 
-For the supplied assets, 80×24 help uses `horizontal.txt`, 40×24 help uses `stacked.txt`, and explicit icon layout at 80×32 uses `logo-40.txt`. Graphics retain their original eight-row help/three-row routine limits and estimated 1:2 character-cell aspect ratio. PNG wordmarks default to the dark-background variant; a light-background `COLORFGBG` hint selects dark lettering. No PNG source is replaced by the text-asset update.
-
-Kitty support is conservatively inferred from `TERM=xterm-kitty` or Kitty window identification with an xterm terminal, excluding tmux, screen and Zellij. No terminal queries read input, and unknown graphics terminals fall back. Chafa runs only when requested by `auto` or `chafa`, always with `--fg-only --symbols=braille`, bounded symbol output, probing/animation/cursor hiding disabled and a one-second timeout. Failed or empty rendering falls back to the supplied text assets, then ASCII if needed. Neither backend installs tools or changes the operation's exit status. These heuristics are not a guarantee for stale or manually overridden terminal variables.
-
-Dots metadata help remains static: it never executes the Anodize extension or engine. Its default header uses Bash and the same text assets, with optional `stty` for terminal size; optional graphics call only the core-owned logo renderer. `dots help anodize` uses the environment defaults.
+Static Dots help uses only core-owned renderers and metadata; it never executes the Anodize extension or engine. Bash help retains its builtin text path without a Python requirement; colored Anodize help reads only the bounded published `shell.tsv` snapshot. Python banners read the corresponding `palette.json`. Neither path resolves themes or runs shell initialization, and plain/data paths do not load logo colors. Native help uses the same Python logo policy without Bash.
 
 ## Commands and flags
 
@@ -120,6 +139,8 @@ To make `man anodize` available, install that file as `anodize.1` in a `man1` di
 The adapters are generated from the shared Dots shell adapters; the manual's command/option reference is generated from the CLI parser. After changing either source, run `python3 -B tools/generate_anodize_integration.py`; `--check` verifies checked-in artifacts without writing. Static wrapper headers remain the completion metadata source, with tests checking parser and engine vocabulary consistency.
 
 ## Interactive authoring and previews
+
+The Dots Anodize menu includes **extract** after **create**. Extract browses images from the current directory (or an entered path), asks for dark/light and an extraction mode, then shows a scrollable palette result with LOGO1. Interactive Preview and Extract keep results in the shared reader until dismissed; inside tmux the picker host closes before the fitted reader opens. Returning restores the parent menu search. Extraction never saves or applies a theme. Raw app preview bytes remain undecorated, including when an interactive result reader displays them.
 
 Run `anodize --interactive` for an action menu, or append `--interactive` to
 `create`, `extract`, `edit`, `show`, `preview`, `apply`, `import`, `export` or

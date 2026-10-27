@@ -95,6 +95,8 @@ class Integration(unittest.TestCase):
         cases = [
             (('--logo=a',), '--logo=auto'),
             (('--logo-layout', 'h'), 'horizontal'),
+            (('--logo-layout', 'b'), 'base'),
+            (('--logo-layout=base', 'pr'), 'preview'),
             (('--logo', 'auto', '--logo-layout=icon', 'pr'), 'preview'),
             (('--logo=auto', 'preview', 'dusk', '--app=k'), '--app=kitty'),
             (('preview', 'dusk', '--logo=c'), '--logo=chafa'),
@@ -127,15 +129,24 @@ class Integration(unittest.TestCase):
         self.assertFalse((self.home/'engine-ran').exists())
 
     def test_dots_logo_prefix_completions(self):
-        for shell in ('bash','zsh','fish'):
+        for shell in ('bash','zsh','fish','native'):
             for words, value in [
                 (('anodize','--logo=a'), '--logo=auto'),
+                (('anodize','--logo-layout=b'), '--logo-layout=base'),
+                (('anodize','--logo-layout=base','pr'), 'preview'),
+                (('anodize','--logo-layout','base','preview','dusk','--app=k'), '--app=kitty'),
                 (('anodize','--interactive','cr'), 'create'),
                 (('anodize','--logo','auto','pr'), 'preview'),
                 (('anodize','--logo=auto','preview','dusk','--app=k'), '--app=kitty'),
                 (('anodize','preview','dusk','--logo-layout','h'), 'horizontal'),
             ]:
-                out=self.run_dots('__complete',shell,str(len(words)),'--','dots',*words).stdout
+                if shell == 'native':
+                    result=subprocess.run([sys.executable,'-B',str(self.repo/'lib/dots/cli.py'),'__complete',*words],
+                                          env=self.env,cwd=self.home,capture_output=True,text=True,timeout=15)
+                    self.assertEqual(result.returncode,0,result.stderr)
+                    out=result.stdout
+                else:
+                    out=self.run_dots('__complete',shell,str(len(words)),'--','dots',*words).stdout
                 self.assertIn('candidate\t'+value+'\t',out)
         self.assertFalse((self.home/'state').exists())
 
@@ -193,6 +204,8 @@ printf 'EXECUTED\\n'
                         ('anodize --color=al\t', b'always', '--color=always'),
                         ('anodize --logo=ch\t', b'chafa', '--logo=chafa'),
                         ('anodize --logo=text preview dusk --logo-layout=hor\t', b'horizontal', '--logo-layout=horizontal'),
+                        ('anodize --logo-layout=ba\t', b'base', '--logo-layout=base'),
+                        ('anodize --logo-layout=base pre\t', b'preview', 'preview'),
                     ):
                         terminal.send(typed)
                         terminal.wait(marker)

@@ -272,6 +272,8 @@ class Menus(MenuFixture):
 
 
 class NativeMenuFixture(MenuFixture):
+    terminal_features = ''
+
     def setUp(self):
         super().setUp()
         if os.name == 'nt' or not shutil.which('tmux') or not shutil.which('fzf'):
@@ -285,6 +287,8 @@ class NativeMenuFixture(MenuFixture):
         self.control('new-session', '-d', '-s', 'fixture', shell, '--noprofile', '--norc')
         self.control('set-option', '-g', 'default-shell', shell)
         self.control('set-option', '-g', 'status', 'off')
+        if self.terminal_features:
+            self.control('set-option', '-as', 'terminal-features', ',' + self.terminal_features)
         self.pane = self.control('display-message', '-p', '-t', 'fixture', '#{pane_id}').strip()
         self.first = self.attach(); self.second = self.attach(columns=120)
         os.environ.update(TMUX=str(self.socket) + ',0,0', TMUX_PANE=self.pane)

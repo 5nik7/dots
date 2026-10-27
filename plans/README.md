@@ -13,7 +13,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Bat custom syntaxes](bat-syntax-cache.md) | Implemented shared syntax snapshots and cache invalidation; Termux checks and live refresh complete, native Windows acceptance pending. |
 | [Zsh personal keys](zsh-keys.md) | Implemented centralized ZLE configuration and themed substring-history search; native Termux verification. |
 | [Anodize](anodize.md) | Implemented core/CLI, local Neovim integration, completions and manual. |
-| [Anodize terminal branding](anodize-logo.md) | Responsive portable logos and optional Kitty/Chafa rendering. |
+| [Anodize terminal branding](anodize-logo.md) | Exact LOGO1/LOGO2 defaults, three-stop theme gradients, complete palette panels, explicit alternative rendering and Extract popup. |
 | [Anodize next steps](anodize-next.md) | Proposed foundation hardening, then separately scoped frontend work. |
 | [Git and managed files](git-and-file-operations.md) | Implemented bounded operations and quieter discovery. |
 | [Verbose operations](verbose-operations.md) | File/setup/theme action details with shared resource styling and progress. |

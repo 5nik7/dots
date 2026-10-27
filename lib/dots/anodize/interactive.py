@@ -188,8 +188,10 @@ def edit_draft(author, args, doc, wallpaper=None):
         doc = select_mode(author, doc, wallpaper)
     while True:
         from logo import render as render_logo
-        render_logo(Presentation())
-        render_preview(doc['id'], author.render(doc)['colors'], 'light' if doc['options']['light'] else 'dark')
+        colors = author.render(doc)['colors']
+        view = ColorView(colors, preview=True)
+        render_logo(Presentation(), colors=colors, view=view)
+        render_preview(doc['id'], colors, 'light' if doc['options']['light'] else 'dark', view=view)
         selected = choice('Draft', ['Review save', 'Mode', 'Light/dark', 'Adjustment', 'Color override',
                                     'Reset adjustments', 'Re-extract', 'Cancel'])
         if selected == 'Cancel': raise SelectionEnded(130)
@@ -216,13 +218,11 @@ def edit_draft(author, args, doc, wallpaper=None):
 
 
 def preview_logo():
-    from logo import dimensions, text_banner, unicode_output
+    from logo import dimensions, text_banner, utf8_output
+    utf8_output(sys.stdout)
     view = ColorView(preview=True)
     rows = view.pane_height or dimensions(sys.stdout)[1]
-    unicode_text = (os.environ.get('TERM', 'dumb') != 'dumb'
-                    and os.environ.get('DOTS_ICONS', 'auto') != 'never'
-                    and unicode_output(sys.stdout))
-    return text_banner(view.available, rows, unicode_text=unicode_text, scrollable=True)
+    return text_banner(view.available, rows)
 
 
 def preview(snapshot, token):

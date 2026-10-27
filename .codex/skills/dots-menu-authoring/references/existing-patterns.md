@@ -160,3 +160,5 @@ and inert previews in their own controller, as demonstrated by
 [session presentation](../../../../lib/dots/menu_session_ui.py).
 
 The session controller accepts `create_session(server, None, directory, project, context)` for managed creation with an immutable ID and automatic project naming. Explicit names retain manual creation semantics. Popup New uses the managed form without a name prompt; all subsequent actions retain the returned native session ID. See `lib/dots/tmux_workspaces.py` and the workspace plan for lifecycle ownership.
+
+Anodize Help pins text/horizontal (LOGO2 when wide, otherwise LOGO1); Preview and Extract pin text/base (LOGO1). Both read-only interactive results cooperate with `page_text(..., defer=True)` using the document action kind. Follow the [logo contract](../../../../docs/anodize.md#terminal-logo) and assert actual captured artwork; terminal/capture capabilities must not change the default mark. Logo gradients use published colors for Help and candidate colors for Preview/Extract, with independent hint/info/accent symbol/wordmark gradients and selected backgrounds covering logos, headers and details.

@@ -21,7 +21,20 @@ def controller(relative, args):
     return 0
 
 
+def anodize_options(values):
+    from anodize.logo import configure_options, render
+    try:
+        return configure_options(values)
+    except ValueError as error:
+        from files.catalog import Presentation
+        render(Presentation(sys.stderr))
+        print('dots: ' + str(error), file=sys.stderr)
+        raise SystemExit(2) from None
+
+
 def help_view(directories, words):
+    if words[:1] == ['anodize']:
+        words = ['anodize', *anodize_options(words[1:])]
     if words[:2] == ['git', 'submodule']:
         stem, path, _ = resolve(directories, words)
         if stem == 'git-submodule' and path.parent.resolve() == (LIB.parents[1] / 'bin').resolve():
@@ -32,6 +45,9 @@ def help_view(directories, words):
     stem = '-'.join(words)
     rows = catalog(directories)
     metadata = read(LIB / 'metadata' / (stem + '.meta')) if stem in BUILTINS else rows.get(stem)
+    if words[:1] == ['anodize']:
+        from anodize.logo import render
+        render(ui, full=True)
     ui.heading('Dots' if not stem else 'dots ' + ' '.join(words))
     if metadata:
         ui.emit('  ' + metadata['summary'])
@@ -327,6 +343,8 @@ def main(argv=None):
         elif shell == 'nu': print('$env.DOTS = ' + json.dumps(str(root)) + '\nsource ' + json.dumps(str(loader)))
         else: print('$DOTS = ' + repr(str(root)) + '\nexecx(open(' + repr(str(loader)) + ').read())')
         return 0
+    if args[:1] == ['anodize']:
+        args = ['anodize', *anodize_options(args[1:])]
     stem, path, count = resolve(directories, args)
     if not path:
         return help_view(directories, args)

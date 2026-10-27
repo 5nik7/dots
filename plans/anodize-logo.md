@@ -1,122 +1,47 @@
-# Anodize terminal branding
+# Anodize supplied logos and Extract popup
 
-**Status: Implemented; unified usage-artwork follow-up on 2026-10-21.**
+**Implemented, 2026-10-27.** Implements the [authoritative LOGO1/LOGO2 contract](../docs/anodize.md#terminal-logo). This replaces earlier branding selection instructions in this plan. The supplied six-row assets are the only defaults: LOGO2 for wide help, LOGO1 for narrow help, other human views and previews, independent of pipes, icon/color settings and viewport height. Explicit larger/graphics choices remain supported. Missing assets use exact embedded LOGO1.
 
-The follow-up at the end of this plan supersedes the historical compact-text policy below.
+Add `--logo-layout=base`, synchronize metadata/completion and both static-help frontends without executing extensions or the engine. Pin popup Help to text/horizontal and Preview/Extract to text/base. Add Extract after Create, reuse its guided read-only image/lightness/mode flow, and retain interactive Preview/Extract results via the existing document handoff and reader. Raw app and machine output stay undecorated. Reuse the shared palette renderer and [presentation acceptance gate](../docs/presentation.md#acceptance-gate).
 
-## Text asset update — 2026-10-16
+Audit all Anodize documentation, asset notes, manual generation, plans and relevant skills for conflicting branding instructions. Update canonical sources and rebuild/check the local wiki. Preserve original assets and unrelated changes. No theme saving, publication, live reload, commit or push is required.
 
-**Status: Implemented.** Both renderers use the owner's UTF-8 braille `horizontal.txt`, `stacked.txt`, `logo.txt` and numbered `logo-<width>.txt` assets without modifying their contents. Text help may use half the terminal height, capped at 16 rows; routine views use the six-row base logo within one-third of terminal height. Selection uses measured cell width and row count, retaining a tiny ASCII fallback for explicit ASCII mode, dumb/non-Unicode terminals, redirected output and missing/non-fitting assets. Chafa uses `--fg-only --symbols=braille` and is skipped in ASCII-only modes. Existing Kitty sizing/source policy and data output are preserved. Both renderers, documentation/manual and focused tests are synchronized.
+## Acceptance
 
-Validation on native Termux:
-
-- `verify_anodize.py check`: Go tests/vet, 18 isolated CLI tests and 11 logo tests passed. This includes unchanged JSON/raw exports/configuration and new supplied-asset selection cases.
-- `test_anodize_integration.py`: five tests passed, including three-shell completion and generated-manual checks. `test_bash_dots.py`: 24 tests passed.
-- Python/Bash syntax, ShellCheck for the logo adapter, generated-manual freshness, mandoc lint, changed-document relative links and `git diff --check` passed. The full docs audit still fails the pre-existing `docs/testing.md` link to the removed `dots-symlink.yazi/README.md`.
-- Native PTY review confirmed exact supplied artwork for horizontal 80×24, stacked 40×24 and numbered icon 80×32. Python/Bash parity covers layout overrides, future variants, malformed files, ASCII/Latin-1 output, explicit ASCII mode, dumb terminals and narrow/short dimensions. Chafa produced foreground-only braille with no non-SGR escape sequences. Actual Kitty display was not newly tested.
-- Hash comparisons preserved every supplied artwork file, the deleted `icon.txt`, and unrelated pre-existing changes. The shared README/architecture wording changes were separately verified by reversing only this task's replacements against their initial hashes.
-- Default redirected-help medians (10 samples after two warmups) were 258.27/157.86 ms before/after for standalone and 26.29/17.70 ms for Dots. Timing is noisy; no speedup is claimed. Current 40×24 PTY medians (five samples after two warmups) were 163.36 ms standalone and 41.20 ms Dots. No persistent cache or new renderer subprocess was added to default text help.
-
-Changes remain uncommitted. No live theme was applied and no tool was installed.
-
-## Original behavior (2026-10-13)
-
-Portable bundled ASCII branding is the default in both Anodize entry points. Help gets a responsive horizontal/stacked/icon header; routine human views and diagnostics get compact branding. JSON, raw exports/configuration, completion source and candidates stay unchanged. Optional `--logo=text|auto|kitty|chafa` and `--logo-layout=auto|horizontal|stacked|icon` override `ANODIZE_LOGO` and `ANODIZE_LOGO_LAYOUT`. Missing graphics capability, assets or tools falls back to text. No downloads, runtime builds, terminal queries or new required dependencies.
-
-## Implementation
-
-- [x] Bundle eight original PNGs (163,936 bytes total) with provenance and ASCII derivatives.
-- [x] Add stream-aware sizing, bounded Kitty/Chafa rendering, help/result/error integration and metadata-only Dots help branding. Default Bash help does not launch Python or Chafa; optional `stty` supplies terminal dimensions.
-- [x] Synchronize options, completion, generated manual and user/reference documentation.
-- [x] Validate isolated CLI, metadata, presentation, data-output and failure cases; record measurements and visual limitations.
-
-## Presentation acceptance
-
-Follow the [presentation gate](../docs/presentation.md#acceptance-gate). Cover help, list/detail, empty, preview, success, error and interruption; retain semantic colors and complete recovery details. Test 40/80/120 columns, tiny/short terminals, destination-stream sizing, redirected output, color/icon policies and renderer failures. Verify data bytes under forced decoration and keep default help free of renderer subprocesses. Existing transaction tests cover conflict, partial failure and recovery; branding does not change transaction behavior. Review native Termux text/Chafa separately from simulated Kitty protocol checks.
+Verify exact asset content in Python/Bash/native static help, errors/results, captured popup Help, guided previews, Extract results and real FZF-tab paths. Cover 40/53/80/120 columns, short/tiny panes, plain/color/icon settings, pipes, legacy encodings, missing/malformed assets and explicit alternatives. Test menu Back/cancellation, result scrolling, no persistent Extract state, metadata/completion and byte-identical data paths. Native Windows PowerShell 5.1/7, Linux/WSL and real graphics acceptance remain distinct from Termux/shared-controller evidence; Windows app destinations do not change.
 
 ## Verification
 
-Before-change isolated redirected help medians (12 samples after 3 warmups, native Termux): standalone 215.26 ms; Dots static help 14.21 ms. Timing is advisory.
+Native Termux checks use owned homes, configuration/state roots, PTYs and private tmux servers. Exact captured popup Help passed at 40/53/80/120 columns, including narrow LOGO1 fallback and inherited alternative renderer preferences. Guided Extract/Preview, retained readers, scrolling, query restoration, cancellation and no persistent Extract state passed. Real short-pane Zsh/FZF-tab previews showed all six LOGO1 rows. Data/raw-output, optional-renderer failure and explicit layout checks retain their separate contracts.
 
-Native Termux verification:
+An isolated offline Go build, package tests and vet passed. Across the logo (16), launcher (19), interactive (12), integration (5), authoring (18), reader (15), Bash dispatcher (24), native Anodize (3), native CLI (14), wiki (18) and wiki Git (10) suites, 153 tests passed and one native PowerShell engine test was skipped because PowerShell is unavailable. Added native completion and exact supplied LOGO2 checks also passed on targeted reruns. Python parsing, Bash/Zsh/Fish syntax, manual freshness/lint and 910 relative links across 128 files passed. Both documented artwork blocks match their supplied assets exactly, and the source audit found no old triangle artwork or conflicting default policy. The logo adapter passed ShellCheck. Standalone completion lint matches its baseline diagnostics; recursive ShellCheck was stopped after excessive resource use, so it is not claimed as complete.
 
-- `python3 -B tools/verify_anodize.py check`: Go tests/vet and 18 isolated authoring/CLI tests passed, followed by seven logo tests. Raw JSON, exports and app previews remain identical under every renderer setting.
-- `python3 -B tools/test_anodize_integration.py`: five tests passed, including static metadata, generated manual, Bash/Zsh/Fish candidates and real Tab insertion for the new flags.
-- `python3 -B tools/test_bash_dots.py`: 24 tests passed. Changed Bash/Python syntax, ShellCheck (existing SC1091/SC2034 exclusions for shared dynamic-source files), manual freshness/lint and `git diff --check` passed. The new Bash logo adapter passes ShellCheck without exclusions.
-- Native PTY review covered 40-column stacked text, 80-column horizontal text, 120-column parity and tiny fallback. Chafa 1.18.3 produced the supplied horizontal mark/wordmark; polite mode suppresses cursor hiding and probing. Kitty tests validate chunking, decoded PNG bytes, sizing and conservative fallback, but actual Kitty display remains unverified.
-- The wider `python3 -B tools/zsh_interactive.py --samples 3` check reached reload and then stopped at FZF-tab because `fzf` is absent (`command not found: fzf`). Ordinary three-shell completion acceptance passed; FZF-tab remains unverified in this environment.
-- At this checkpoint, repository-wide documentation checks failed the pre-existing `docs/testing.md` link to `config/yazi/plugins/dots-symlink.yazi/README.md`, also present in `HEAD`. A changed-document relative-link audit found no newly broken links. No unrelated link repair was made.
+Native Windows PowerShell 5.1/7 UTF-8, keyboard/reader behavior, native Linux/WSL and actual Kitty rendering remain pending platform acceptance. Shared controller fixtures and protocol tests do not establish those native results.
 
-Alternating unchanged-HEAD/current help measurements in disposable roots (12 samples each, three warmups) were 358.42/318.27 ms for standalone help and 20.77/30.79 ms for Dots static help. Treat the standalone difference as noise, not a speed claim. Static branding adds text rendering, option validation and two metadata options, costing about 10 ms in this run without launching an image renderer. No cache was added. The shared dispatch benchmark (five samples) retained repository-size-independent direct lookup: 23.40/26.55/24.78 ms at 0/100/1000 fixture extensions. Linux/WSL/native Windows and actual Kitty graphics were not newly verified.
+Canonical docs, relevant skills, static command metadata and the generated manual are synchronized. The local wiki was rebuilt in retained transaction `f1e59144466c44c8b9ce43fbeab3b107`; `dots wiki check` reports healthy. No live theme publication, configuration reload, commit or push was performed. Reopening the menu loads the source changes.
 
-Source and assets are left uncommitted; no live theme was applied and no tool was installed.
+## Theme-gradient follow-up
 
-## Unified usage artwork — 2026-10-21
+**Superseded by the three-stop follow-up below, 2026-10-27.** Initially applied a diagonal accent-to-bright-magenta foreground gradient to supplied text artwork, preserving every character and layout. Normalize horizontal and upward positions equally over visible cells, then interpolate RGB with integer half-up rounding. LOGO2's symbol and wordmark restart independently; the optional stacked layout likewise separates the two parts. Blank spaces and blank braille cells preserve their bytes without defining endpoints.
 
-Owner-approved follow-up: all text banners use usage’s responsive asset selection
-and half-height budget capped at 16 rows. Ordinary results/diagnostics no longer
-force the base symbol; interactive and completion previews no longer draw a
-separate ASCII triangle. Preview workers use pane geometry, preserve panel colors,
-and carry layout/icon preferences across captured output. Static Bash error help
-uses the same renderer with validated text options. Supplied assets, graphics
-policies and machine-output boundaries remain unchanged.
+Use bounded published palette data for help/list/diagnostic banners, and explicit addressed colors for palette results, interactive and completion previews. Keep equivalent Python/shared-panel and builtin Bash rendering, existing color controls and solid-color fallback for missing/invalid endpoints. Restore panel foreground before padding and preserve its background. Optional graphics, data interfaces, menu behavior, routes, schemas and Windows app destinations do not change.
 
-Acceptance: exact artwork parity across help/results/errors/drafts and previews,
-40/80/120-column native PTYs, narrow/short panes, layout/icon/encoding fallbacks,
-no wrapping of artwork, no renderer process for preview text, static-help
-nonexecution and unchanged data bytes. Native PowerShell uses shared Python;
-Windows runtime acceptance remains pending on this Termux host. Preserve all
-existing work, with no theme activation, installation or Git publication.
+Verify endpoint/direction/rounding/region and exact-art parity, missing/malformed snapshots, equal colors, independent stdout/stderr modes, legacy locales, and Python-free Bash help. Exercise real Help/Preview/Extract readers and short Zsh/FZF-tab panes with active and candidate palettes deliberately different. Run affected suites in owned roots, update canonical docs/manual/skills and rebuild/check the wiki. Native PowerShell 5.1/7 and Linux/WSL visual acceptance remain separate from Termux/shared-controller fixtures.
 
-Verification on native Termux:
+Gradient verification: 196 tests passed across logo (20), interactive (12), launcher (19), shared menus (24), reader (15), integration (5), authoring (18), Bash (24), native Anodize (3), native CLI (14), resources (15), wiki (18) and wiki Git (10); one native PowerShell case was skipped because the runtime is unavailable. Strengthened FZF-tab artwork-color and palette-fallback cases passed on targeted reruns. FZF fixtures use distinct synthetic endpoints because some bundled themes correctly have identical accent/bright-magenta values. Real RGB popup clients, candidate-versus-active palettes, separate component endpoints, data contracts and background/foreground restoration passed. Python parsing, logo ShellCheck/Bash syntax, manual generation/lint, whitespace and 911 relative Markdown links passed.
 
-- `python3 -B tools/verify_anodize.py check`: Go tests/vet passed; 18 authoring/CLI
-  checks passed (257.015s), 11 interactive checks completed with one FZF-tab skip
-  (63.367s), and all 15 logo policy/PTY checks passed (51.905s).
-- The interactive suite verifies supplied braille artwork in native FZF panes at
-  40/80/120 columns, plus cancellation without publication. The verifier's isolated
-  home cannot discover the host FZF-tab plugin. A separate owned-home native
-  Zsh/FZF-tab run, using a copied local plugin and the existing private engine,
-  passed all five theme/mode preview scenarios (42.565s).
-- All five Anodize integration checks passed (70.827s), including completion and
-  generated-manual freshness; all 24 Bash dispatcher checks passed (32.069s).
-- Exact usage/result/error artwork parity includes valid layout options preceding
-  an invalid option. Captured preview tests cover pane geometry, theme text,
-  layout/icon controls, malformed height fallback and absence of graphics calls.
-- Bash syntax, ShellCheck for the changed adapter, Python compilation without
-  bytecode, manual lint, generated-artifact freshness, changed Markdown link
-  targets and `git diff --check` passed. Supplied artwork has no changes.
-- Native Windows/PowerShell and actual Kitty graphics remain unverified. Windows
-  uses the shared Python text selector; graphics-backend policies are unchanged. No live theme was
-  applied, no installation performed and no commit/push made.
+The local wiki was rebuilt in retained transaction `14b3d0783f2846ad962758bb6e85eb13`. Reopening a menu/preview loads the gradient; no live theme publication or shell/tmux reload is needed. Native platform acceptance limits above remain in force.
 
-## Short FZF preview follow-up — 2026-10-21
+## Three-stop gradient and complete palette panels
 
-The prior half-pane-height budget still selected the ASCII triangle below 12
-preview rows. Owner-approved correction: interactive and FZF-tab previews select
-the supplied usage artwork by available width, with the existing 16-row maximum
-artwork budget independent of pane height. Short previews scroll vertically.
-Ordinary usage sizing, explicit layout/icon preferences, capability fallbacks,
-artwork spacing, theme colors and data interfaces retain their existing behavior.
+**Implemented, 2026-10-27.** Supersedes the two-stop gradient above: all text-logo paths use hint at bottom left, info at the midpoint, and accent at top right. Keep exact artwork, independent symbol/wordmark regions and equivalent integer interpolation in Python/Bash. Published banners use active colors; results, guided draft review and completion previews use addressed colors.
 
-Acceptance includes exact artwork at 40/80/120 columns and preview heights below
-12 rows, native Zsh/FZF-tab mode and theme completion with configured FZF defaults,
-preview scrolling and cancellation without publication. Shared Python covers
-POSIX and PowerShell preview consumers; native Windows visual acceptance remains
-pending. No installation, activation or Git publication is required.
+Compose palette-bearing results through one shared ColorView from the first logo row through headings, metadata, body and notes. Preserve selected background, foreground restoration, wrapping, color controls and explicit graphic options. Data interfaces, command flags, Windows destinations and publication state do not change. Update docs, manual and skills, then rebuild/check the local wiki.
 
-Implemented and verified on native Termux:
+Acceptance: three stops and both interpolation halves, malformed/missing roles, exact artwork, Bash/native-controller parity, selected-versus-active colors, full-row backgrounds including header/status/footer, plain/data contracts, real popup and FZF-tab paths. Use owned Termux fixtures; native Windows PowerShell 5.1/7 and Linux/WSL terminal acceptance remain pending.
 
-- All 15 engine-free logo checks passed (25.336s), including exact supplied
-  artwork at preview heights 1/6/8/10/11/12/24 and unchanged ordinary usage sizing.
-- Native Zsh/FZF-tab passed seven mode/theme completion scenarios (42.126s)
-  at 40/80/120 columns in 24-row terminals. Tests source the configured FZF
-  defaults, reveal the initially hidden preview with Ctrl-X, check supplied
-  artwork rows, scroll with Shift-Down and cancel without saving or activation.
-- The other ten interactive checks passed (39.633s), including native FZF
-  cancellation. These tests reuse the existing private engine in isolated roots;
-  no engine source changed and no new Go build was required.
-- All five integration checks passed (46.701s). Generated-manual freshness,
-  mandoc lint, Python syntax, all 235 relative links in the affected Markdown
-  files and git diff --check passed. Supplied assets and generated completion
-  adapters have no changes. Native Windows visual verification remains pending.
+The focused logo suite passed 22 cases, including three-stop interpolation, selected headers/notes/status colors and draft-review palette ownership. Thirteen interactive cases passed, including standalone/Dots Show with Kanagawa Wave at 40/80/120 columns, real short-pane Zsh/FZF-tab previews, and Preview/Extract readers. Popup Help passed at 40/53/80/120 columns. Shared theme picker (16), resource (15), authoring (18), integration (5), launcher (19), native authoring (3) and native CLI (14, one unavailable PowerShell runtime skip) checks passed. The final interpolation edge cases passed a targeted rerun.
+
+Python parsing, logo ShellCheck/Bash syntax, manual generation/freshness/lint, whitespace and 911 Markdown links passed. The local wiki was rebuilt in retained transaction `472a1f3dfac0415fa5d2cc4841f1153c`; its check reports healthy. Existing native Windows PowerShell 5.1/7 and Linux/WSL terminal acceptance limits remain. Reopening a menu or running Show loads the changes without theme publication or a live reload.
+
+Final gates also passed: Bash dispatcher (24), wiki (18) and wiki Git (10). Across the twelve suites, 176 tests passed and one native PowerShell runtime case was skipped; the targeted interpolation rerun also passed. Final wiki freshness, documentation links and whitespace checks remain clean.

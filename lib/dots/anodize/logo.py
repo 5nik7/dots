@@ -1,6 +1,7 @@
 """Bounded Anodize branding. No engine, terminal queries, or persistent state."""
 import argparse
 import base64
+import json
 import math
 import os
 from pathlib import Path
@@ -11,8 +12,29 @@ import sys
 
 ASSETS = Path(__file__).with_name('assets')
 MODES = ('text', 'auto', 'kitty', 'chafa')
-LAYOUTS = ('auto', 'horizontal', 'stacked', 'icon')
+LAYOUTS = ('auto', 'base', 'horizontal', 'stacked', 'icon')
 TIMEOUT = 1.0
+# Exact owner-supplied LOGO1, also used when assets are missing or invalid.
+BASE_LOGO = (
+    '⠀⠀⠀⠀⠀⠀⠀⣰⡄⠀⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠀⢀⣼⣿⣿⣄⠀⠀⠀⠀⠀',
+    '⠀⠀⠀⠀⠠⢾⡿⠃⠘⣿⣆⠀⠀⠀⠀',
+    '⠀⠀⠀⣰⣷⣦⣤⣀⠀⠘⣿⣦⠀⠀⠀',
+    '⠀⠀⣴⣿⡟⠙⠻⢿⣿⣶⣾⣿⣧⡀⠀',
+    '⢀⣾⣿⠏⠀⠀⠀⠀⠀⠉⠛⠿⣿⣷⡀',
+)
+
+
+class TextLogo(list):
+    """Plain artwork with region identity retained through layout fallback."""
+    def __init__(self, lines, layout='base'):
+        super().__init__(lines)
+        width, height = max(map(len, self), default=0), len(self)
+        self.regions = ()
+        if layout == 'horizontal':
+            self.regions = ((0, 0, 16, height), (16, 0, width, height))
+        elif layout == 'stacked':
+            self.regions = ((0, 0, width, 8), (0, 9, width, height))
 
 
 class LogoOption(argparse.Action):
@@ -26,7 +48,28 @@ def add_options(parser):
     parser.add_argument('--logo', choices=MODES, action=LogoOption,
                         help='Logo renderer (default: text; ANODIZE_LOGO)')
     parser.add_argument('--logo-layout', choices=LAYOUTS, action=LogoOption,
-                        help='Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT)')
+                        help='Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT)')
+
+
+def configure_options(values):
+    """Core-owned native help/dispatch options; never load the extension."""
+    remaining = []
+    values = iter(values)
+    for token in values:
+        if token == '--':
+            remaining.extend([token, *values])
+            break
+        key, separator, value = token.partition('=')
+        if key not in ('--logo', '--logo-layout'):
+            remaining.append(token)
+            continue
+        if not separator:
+            value = next(values, '')
+        choices = MODES if key == '--logo' else LAYOUTS
+        if value not in choices:
+            raise ValueError('Expected ' + key + '=' + '|'.join(choices))
+        os.environ['ANODIZE_' + key[2:].replace('-', '_').upper()] = value
+    return remaining
 
 
 def dimensions(stream):
@@ -60,12 +103,6 @@ def layout_for(columns, rows, full, requested):
     return layout, width, height
 
 
-def ascii_lines(width, height):
-    if width >= 16 and height >= 3:
-        return ['  /\\', ' /_ \\   ANODIZE', '/_/\\_\\']
-    return [(' /\\ ANODIZE' if width >= 11 else '/\\' if width >= 2 else 'A')]
-
-
 def read_text_asset(path, width, height):
     """ASCII and braille cells are one column each, including blank braille.
 
@@ -87,7 +124,7 @@ def read_text_asset(path, width, height):
 
 def text_lines(layout, width, height):
     if layout in ('auto', 'horizontal'):
-        candidates = ['horizontal.txt', 'stacked.txt'] if layout == 'auto' else ['horizontal.txt']
+        candidates = ['horizontal.txt']
     elif layout == 'stacked':
         candidates = ['stacked.txt']
     else:
@@ -95,8 +132,8 @@ def text_lines(layout, width, height):
     for name in candidates:
         lines = read_text_asset(ASSETS / name, width, height)
         if lines:
-            return lines
-    if layout != 'compact':
+            return TextLogo(lines, Path(name).stem)
+    if layout in ('icon', 'stacked'):
         # Compare actual widths, not lexicographic filenames or claimed sizes.
         best, best_width = None, -1
         for path in sorted(ASSETS.glob('logo-*.txt')):
@@ -107,8 +144,8 @@ def text_lines(layout, width, height):
             if lines and max(map(len, lines)) > best_width:
                 best, best_width = lines, max(map(len, lines))
         if best:
-            return best
-    return read_text_asset(ASSETS / 'logo.txt', width, height) or ascii_lines(width, min(height, 3))
+            return TextLogo(best, 'icon')
+    return TextLogo(BASE_LOGO)
 
 
 def unicode_output(stream):
@@ -119,19 +156,19 @@ def unicode_output(stream):
         return False
 
 
-def text_banner(width, rows, *, unicode_text=True, requested=None, scrollable=False):
-    """Usage artwork policy for an already measured content area.
-
-    Callers reserve their own margins. Preview workers explicitly supply their
-    pane capability because FZF captures stdout through a pipe. Scrollable
-    previews retain the artwork even when the viewport is shorter than it.
-    """
+def text_banner(width, rows, *, requested=None, full=False):
+    """Exact default artwork; viewport height never substitutes another mark."""
     width = max(1, width)
-    height = 16 if scrollable else max(1, min(16, rows // 2))
     requested = requested or os.environ.get('ANODIZE_LOGO_LAYOUT', 'auto')
-    if unicode_text:
-        return text_lines(requested if requested in LAYOUTS else 'auto', width, height)
-    return ascii_lines(width, min(height, 3))
+    if requested not in LAYOUTS or requested == 'auto':
+        requested = 'horizontal' if full else 'base'
+    return text_lines(requested, width, 16)
+
+
+def utf8_output(stream):
+    """Human branding must survive legacy Python output encodings intact."""
+    if not unicode_output(stream) and hasattr(stream, 'reconfigure'):
+        stream.reconfigure(encoding='utf-8')
 
 
 def kitty_supported():
@@ -143,7 +180,7 @@ def kitty_supported():
 
 
 def asset(layout, color):
-    layout = 'icon' if layout == 'compact' else layout
+    layout = 'icon' if layout in ('compact', 'base') else layout
     variant = 'white'
     if color:
         variant = 'color'
@@ -200,7 +237,17 @@ def chafa_image(path, width, height, color):
     return result.stdout.decode('utf-8').rstrip('\n') + '\n'
 
 
-def render(ui, full=False):
+def published_colors(root):
+    from resources import read_data
+    try:
+        colors = json.loads(read_data(root / 'palette.json')).get('colors', {})
+        return colors if isinstance(colors, dict) else {}
+    except (ValueError, AttributeError):
+        return {}
+
+
+def render(ui, full=False, colors=None, *, view=None):
+    utf8_output(ui.stream)
     columns, rows = dimensions(ui.stream)
     terminal = ui.stream.isatty() and os.environ.get('TERM', 'dumb') != 'dumb'
     requested = os.environ.get('ANODIZE_LOGO_LAYOUT', 'auto')
@@ -219,11 +266,23 @@ def render(ui, full=False):
             else:
                 output = None
             if output:
-                ui.stream.write(output)
+                ui.stream.write((view.base if view else '') + output + (view.reset if view else ''))
                 return
         except (OSError, ValueError, struct.error, subprocess.SubprocessError):
             pass
-    for line in text_banner(width, rows, unicode_text=unicode_text, requested=requested):
+    lines = text_banner(view.available if view else width, rows, requested=requested, full=full)
+    if view is not None:
+        view.artwork(lines)
+        return
+    if ui.color:
+        from text_gradient import endpoints, gradient
+        if colors is None:
+            colors = published_colors(ui.resources.root)
+        if endpoints(colors):
+            for line in gradient(lines, colors, regions=lines.regions, restore='\x1b[0m'):
+                ui.emit(line)
+            return
+    for line in lines:
         ui.emit(ui.paint(line, '95'))
 
 

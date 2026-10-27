@@ -149,7 +149,7 @@ Termux-owned discovery rules live in `profiles/termux`. See [Git](git.md),
 
 ## Anodize scope
 
-Terminal branding is capability-based, not platform-name based. Bundled braille text is the default on Unicode terminals, with portable ASCII for explicit ASCII mode, dumb terminals and redirected output. Optional Kitty rendering uses conservative environment hints and excludes unknown multiplexer passthrough; optional Chafa uses foreground-only braille output without probing. The [logo contract](anodize.md#terminal-logo) documents fallbacks and sizing assumptions. Native Termux PTY/text/Chafa checks and simulated Kitty protocol checks do not establish native Kitty, Linux/WSL graphics, or Windows support.
+Anodize default branding uses exact UTF-8 LOGO1/LOGO2 on every platform, including pipes, disabled icons and dumb terminals; it is independent of graphics capability. Explicit Kitty/Chafa choices retain capability checks and fall back to the supplied text artwork. See the [authoritative logo contract](anodize.md#terminal-logo). Native Termux PTY/text/Chafa and shared native-controller fixtures do not establish Linux/WSL, native Kitty or Windows rendering acceptance.
 
 The pure Go Anodize library accepts bytes/data without platform paths. The CLI requires Python 3.11+ and a built engine, with Bash on POSIX hosts or native PowerShell on Windows. Publication uses shared file transactions and the platform theme adapters. Native Termux is verified; Linux/WSL integration and native Windows authoring are not newly verified. Wallpaper actions retain the existing fixed adapter support, including WSL refusal. No APK, Android language binding or TUI is shipped. See [Anodize](anodize.md).
 

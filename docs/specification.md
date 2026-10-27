@@ -117,6 +117,8 @@ inspection/result JSON is documented in [files](files.md#check-missing-sources).
 
 `files repair` uses existing schema-1 catalogs, transaction journals and installation receipts without migrating historical data. It preserves first-install `before`/`backup`/`index` values and updates `after` for repaired destinations in the same transaction, including explicitly approved same-resource drift. Newly repaired destinations receive a pre-repair baseline; correct pre-existing links remain unowned. Receipt evidence takes precedence over transaction evidence, which uses only the latest completed operation at the destination. `replacement_unavailable` alone is informational; only actual conflicting catalog claims block repair. Interactive issue/action identities and queued decisions stay internal and introduce no new catalog, receipt or JSON fields. The schema-1 command result is specified in [repair results](files.md#repair-managed-destinations).
 
+Anodize presentation options and LOGO1/LOGO2 precedence are defined by the [logo contract](anodize.md#terminal-logo). The `base` layout selects exact LOGO1; data schemas and recipe bytes do not change.
+
 ## Implemented Anodize recipe
 
 `themes/ID/anodize.json` is a schema-1 authoring document. [Its recipe contract](anodize.md#recipe-and-ownership) owns baseline colors, absolute adjustments, overrides, generation options, source references and local generated-file receipts. Generated `colors.toml` uses the existing flat-theme contract.

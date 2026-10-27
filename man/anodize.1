@@ -41,21 +41,35 @@ Choose logo rendering (default: text). This Anodize option also works after
 COMMAND.
 Auto selects supported Kitty graphics, then optional foreground-only Chafa
 braille, then bundled text.
-UTF-8 braille text assets need no converter. Missing assets, ASCII-only or
-redirected output use a small ASCII mark.
-Disabled color retains monochrome braille. Disabled icons, dumb terminals and
-non-Unicode output skip Chafa.
+Default human branding uses only exact six-row LOGO1 and LOGO2, including
+pipes,
+disabled icons, dumb terminals and legacy output encodings. Missing assets use
+exact LOGO1.
+Colored text blends from bottom-left theme hint through midpoint info to
+top-right accent.
+The symbol and wordmark each receive a full gradient. Palette results and
+previews use
+their addressed palette; other banners use the active published theme.
+Palette views use the selected background from the logo through the heading,
+details and notes.
+Missing gradient stops retain solid magenta for banners or the preview
+foreground.
+Disabled color retains monochrome artwork. Explicit graphics retain their
+original colors.
 .TP
-.B \-\-logo\-layout=auto|horizontal|stacked|icon
-Choose a layout fitted to the destination width. Also accepted after COMMAND.
-All text banners use the usage artwork: horizontal, stacked, then the largest
-fitting numbered logo and the base symbol.
-Explicit horizontal or stacked layouts try that asset before icon fallbacks.
-Ordinary text banners use at most half the available height, capped at 16
-rows.
-Interactive and completion previews fit pane width with a 16-row artwork
-budget and preserve artwork spacing. Short panes scroll vertically.
-Preview capture pipes do not force ASCII. Data output is unchanged.
+.B \-\-logo\-layout=auto|base|horizontal|stacked|icon
+Auto uses LOGO2 for wide help and LOGO1 for other default human views.
+Base always selects exact LOGO1. Horizontal selects LOGO2 when it fits,
+otherwise LOGO1.
+Stacked and icon explicitly select retained larger braille layouts with LOGO1
+fallback.
+Short panes preserve the supplied artwork and scroll vertically; data output
+is unchanged.
+The Dots menu pins Help to text/horizontal and Preview/Extract to text/base.
+Extract follows Create in the menu and guides image, lightness and mode
+selection.
+Interactive Preview/Extract retain results in a scrollable reader without
+saving or applying themes.
 .TP
 .B \-h, \-\-help
 Show help without needing the engine.
@@ -70,8 +84,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-json"
 Emit versioned JSON.
@@ -85,8 +99,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -115,8 +129,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -172,8 +186,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -220,8 +234,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-json"
 Emit versioned JSON.
@@ -235,8 +249,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -256,8 +270,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -307,8 +321,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -332,8 +346,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -365,8 +379,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -395,8 +409,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "\-\-interactive"
 Guide inputs and preview choices.
@@ -428,8 +442,8 @@ show this help message and exit.
 Logo renderer (default: text; ANODIZE_LOGO): text, auto, kitty, chafa.
 .TP
 .B "\-\-logo\-layout LOGO_LAYOUT"
-Logo layout, bounded to fit (ANODIZE_LOGO_LAYOUT): auto, horizontal, stacked,
-icon.
+Logo layout; base selects LOGO1 (ANODIZE_LOGO_LAYOUT): auto, base, horizontal,
+stacked, icon.
 .TP
 .B "SHELL"
 Shell adapter to print (required): bash, zsh, fish, powershell.

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Anodize CLI: presentation and journal adapter around the pure Go engine."""
 import argparse
+from contextlib import redirect_stdout
 import copy
+import io
 import json
 import os
 from pathlib import Path
@@ -170,48 +172,89 @@ def present(result, use_json=False):
         sys.stdout.buffer.write(encode(result))
         return
     ui = Presentation()
-    render_logo(ui)
-    ui.heading('Anodize')
+    view = None
+    if 'colors' in result and (sys.stdout.isatty() or os.environ.get('FZF_PREVIEW_COLUMNS') or ui.color):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'themes'))
+        from presentation import ColorView, display, render_preview
+        view = ColorView(result['colors'], preview=True)
+
+    def emit(text=''):
+        (view.line if view is not None else ui.emit)(text)
+
+    def paint(value, code, role):
+        return view.paint(value, role) if view is not None else ui.paint(value, code)
+
+    def detail(label, value):
+        if view is not None:
+            view.line(display(label) + ' ' + display(value))
+        else:
+            ui.detail(label, value)
+
+    def resource(label, value, **kwargs):
+        if view is not None:
+            view.line(display(label) + ' ' + view.resource(value))
+        else:
+            ui.resource_detail(label, value, **kwargs)
+
+    render_logo(ui, colors=result.get('colors'), view=view)
+    (view.title if view is not None else ui.heading)('Anodize')
     if 'modes' in result:
         for mode in result['modes']:
-            ui.emit('  ' + ui.paint(mode, '94'))
+            emit('  ' + paint(mode, '94', 'info'))
     if 'items' in result:
-        ui.emit('  ' + ui.paint(str(len(result['items'])), '96') + ' authored themes')
+        emit('  ' + paint(str(len(result['items'])), '96', 'hint') + ' authored themes')
         for row in result['items']:
-            ui.emit('  ' + ui.paint(row['id'], '94') + '  ' + ui.paint(row['mode'] + '  ' + row.get('storage', ''), '90'))
+            emit('  ' + paint(row['id'], '94', 'info') + '  ' + paint(row['mode'] + '  ' + row.get('storage', ''), '90', 'muted'))
         if not result['items']:
-            ui.emit('  No authored themes. Use anodize create to make one.')
+            emit('  No authored themes. Use anodize create to make one.')
     if 'id' in result:
-        ui.detail('Theme', result['id'])
+        detail('Theme', result['id'])
     if 'status' in result:
         code = '93' if result['status'] == 'preview' else '92'
-        ui.emit('  ' + ui.paint(result['status'], code))
+        emit('  ' + paint(result['status'], code, 'warning' if result['status'] == 'preview' else 'green'))
     if 'target' in result:
-        ui.resource_detail('Target', result['target'])
+        resource('Target', result['target'])
     for target in result.get('connectors', []):
-        ui.resource_detail('Connector', target)
+        resource('Connector', target)
     for name in result.get('files', []):
-        ui.resource_detail('File', name, kind='file')
+        resource('File', name, kind='file')
     if result.get('transaction'):
-        ui.detail('Transaction', result['transaction'])
-        ui.detail('Undo', 'dots files undo ' + result['transaction'])
+        detail('Transaction', result['transaction'])
+        detail('Undo', 'dots files undo ' + result['transaction'])
     if result.get('wallpaper'):
-        ui.resource_detail('Wallpaper', result['wallpaper'])
+        resource('Wallpaper', result['wallpaper'])
     if 'contrast' in result:
-        ui.detail('Contrast', f'{result["contrast"]:.2f}:1 foreground/background')
+        detail('Contrast', f'{result["contrast"]:.2f}:1 foreground/background')
     if 'colors' in result:
-        if sys.stdout.isatty() or os.environ.get('FZF_PREVIEW_COLUMNS') or ui.color:
-            sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'themes'))
-            from presentation import render_preview
-            render_preview(result.get('id', 'Preview'), result['colors'], result.get('mode', ''))
+        if view is not None:
+            render_preview(result.get('id', 'Preview'), result['colors'], result.get('mode', ''), view=view, fill=False)
         else:
             for key, value in sorted(result['colors'].items()):
                 if not (key.startswith('color') and key[5:].isdigit()):
-                    ui.emit(f'  {key:<22} {value}')
+                    emit(f'  {key:<22} {value}')
     for note in result.get('notes', []):
-        ui.detail('Note', note)
+        detail('Note', note)
     if result.get('status') == 'preview':
-        ui.emit('  Preview only; no changes made. Use --yes to apply.')
+        emit('  Preview only; no changes made. Use --yes to apply.')
+    if view is not None:
+        view.fill()
+
+
+def present_result(result, args):
+    """Keep interactive read-only results visible after their picker exits."""
+    if not args.interactive:
+        return present(result, args.json)
+    from menu_pager import page_text
+    target = sys.stdout
+    class RenderBuffer(io.StringIO):
+        def isatty(self):
+            return target.isatty()
+        def fileno(self):
+            return target.fileno()
+    with RenderBuffer() as output:
+        with redirect_stdout(output):
+            present(result)
+        page_text(output.getvalue(), title='Anodize ' + args.action, defer=True)
 
 
 def confirm(args, view):
@@ -338,7 +381,7 @@ def main(argv=None):
         if args.interactive and not args.mode:
             from interactive import select_mode
             doc = select_mode(author, doc, args.file)
-        present(dict(author.render(doc), id='preview'), args.json)
+        present_result(dict(author.render(doc), id='preview'), args)
         return
     if action in ('create', 'import', 'edit'):
         inputs = []
@@ -391,10 +434,19 @@ def main(argv=None):
             names = dict(kitty='kitty.conf', tmux='tmux.conf', btop='btop.theme', termux='termux.properties', bat='bat.tmTheme', yazi='yazi.toml')
             with tempfile.TemporaryDirectory(prefix='anodize-preview-') as tmp:
                 author.theme_bridge('render', args.id, tmp)
-                sys.stdout.buffer.write(regular_bytes(Path(tmp) / names[args.app]))
+                content = regular_bytes(Path(tmp) / names[args.app])
+                if args.interactive:
+                    from menu_pager import page_text
+                    page_text(content, title='Anodize ' + args.app + ' configuration', defer=True)
+                else:
+                    sys.stdout.buffer.write(content)
             return
         if action in ('show', 'preview'):
-            present(dict(rendered, id=doc['id'], wallpaper=doc.get('wallpaper')), args.json)
+            result = dict(rendered, id=doc['id'], wallpaper=doc.get('wallpaper'))
+            if action == 'preview':
+                present_result(result, args)
+            else:
+                present(result, args.json)
             return
         if args.format == 'colors':
             content = toml_colors(rendered['colors'], doc['options']['light'])

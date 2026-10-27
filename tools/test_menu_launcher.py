@@ -58,7 +58,7 @@ class LauncherContracts(MenuFixture):
             'theme': [('show','theme show','','output'),('switcher','theme switcher','','terminal'),('files','theme files browse','','terminal'),('backgrounds','theme bg switcher','','terminal')],
             'themes': [('list','themes list','','output'),('switcher','themes switcher','','terminal'),('plugins','themes plugins','','submenu')],
             'themes/plugins': [(n,'themes plugins '+n,'','output') for n in ('list','doctor')],
-            'anodize': [(n,'anodize '+n,'--interactive','terminal') for n in ('create','edit','preview','apply')]+[('list','anodize list','','output')],
+            'anodize': [(n,'anodize '+n,'--interactive --logo=text --logo-layout=base' if n in ('preview','extract') else '--interactive','document' if n in ('preview','extract') else 'terminal') for n in ('create','extract','edit','preview','apply')]+[('list','anodize list','','output')],
             'debug': [(n,'debug '+n,'','output') for n in ('check','startup','path','cache')],
             'profile': [(n,'profile '+n,'','output') for n in ('show','paths','layers','files','commands','env','check')],
             'profiles': [(n,'profiles '+n,'','output') for n in ('list','check')],
@@ -187,6 +187,8 @@ class LauncherContracts(MenuFixture):
 
 
 class NativeLauncher(NativeMenuFixture):
+    terminal_features = 'xterm*:RGB'
+
     def setUp(self):
         super().setUp(); self.root=checkout(self.base)
         self.env['DOTS']=str(self.root)
@@ -209,6 +211,33 @@ class NativeLauncher(NativeMenuFixture):
 
     def choose(self, text):
         os.write(self.first[1],text.encode());time.sleep(.3);os.write(self.first[1],b'\r')
+
+    def test_anodize_help_popup_uses_exact_art_after_pipe_capture(self):
+        from menu_tmux import TmuxContext
+        from menu_pager import ANSI
+        palette = Path(self.env['XDG_STATE_HOME'])/'dots/current/theme'
+        palette.mkdir(parents=True)
+        colors = dict(hint='#102030', info='#e01080', accent='#90a0b0')
+        (palette/'palette.json').write_text(json.dumps(dict(colors=colors)))
+        (palette/'shell.tsv').write_text(''.join(f'{k}\thex\t{v}\n' for k,v in colors.items()))
+        code = "import os;from pathlib import Path;from menu_cli import invoke,help_action;from menu_tmux import TmuxContext;invoke(Path(os.environ['DOTS']),help_action('anodize'),TmuxContext.capture(client=os.environ['CLIENT']))"
+        for width in (40,53,80,120):
+            self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',30,width,0,0))
+            for _ in range(30):
+                if TmuxContext.capture(client=self.first[2]).verify()==(width,30): break
+                time.sleep(.05)
+            p=self.worker(code,ANODIZE_LOGO='chafa',ANODIZE_LOGO_LAYOUT='stacked',DOTS_ICONS='never',DOTS_COLOR='always')
+            data=self.receive(self.first[1],b'Back q')
+            text=ANSI.sub('',data.decode(errors='replace'))
+            asset='logo.txt' if width==40 else 'horizontal.txt'
+            for line in (ROOT/'lib/dots/anodize/assets'/asset).read_text().splitlines():
+                self.assertIn(line.strip(' \u2800'),text)
+            self.assertIn(b'38;2;16;32;48', data)
+            self.assertIn(b'38;2;144;160;176', data)
+            self.assertNotIn(b'dots anodize',self.drain(self.second[1]))
+            self.assertIsNone(p.poll())
+            os.write(self.first[1],b'q');out,err=p.communicate(timeout=15)
+            self.assertEqual(p.returncode,0,err)
 
     def test_real_shortcuts_open_exact_client_cancel_quietly_and_preserve_cwd(self):
         for key,prompt in ((b'm',b'dots:'),(b's','dots·tmux·sessions'.encode())):

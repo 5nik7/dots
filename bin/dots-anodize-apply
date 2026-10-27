@@ -8,6 +8,6 @@
 # dots:option=--background||flag|Also apply wallpaper
 # dots:argument=1|theme-id|Theme identifier
 # dots:option=--logo||choice:text,auto,kitty,chafa|Logo renderer (default: text)
-# dots:option=--logo-layout||choice:auto,horizontal,stacked,icon|Logo layout, bounded to fit
+# dots:option=--logo-layout||choice:auto,base,horizontal,stacked,icon|Logo layout; base selects LOGO1
 ANODIZE_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/anodize" && pwd) || exit
 exec python3 -B "$ANODIZE_LIB/cli.py" apply "$@"

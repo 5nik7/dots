@@ -86,6 +86,7 @@ class ColorView:
 
     def __init__(self, colors=None, preview=False):
         colors = colors or {}
+        self.colors = colors
         self.columns = max(12, min(120, shutil.get_terminal_size((80, 24)).columns))
         self.lines = 0
         self.pane_height = 0
@@ -104,14 +105,14 @@ class ColorView:
             self.accent = escape(readable(colors.get('accent', fg), bg, fg))
             self.reset = '\x1b[0m'
 
-    def line(self, text='', heading=False, indent=0):
+    def line(self, text='', heading=False, indent=0, *, wrap=True):
         # Wrap by visible cells, including wide/combining Unicode and SGR swatches.
         prefix = self.base + (self.accent + '\x1b[1m' if heading and self.base else self.normal)
         room = max(1, self.available - indent)
         parts, part, cells = [], '', 0
         for token in re.findall(r'\x1b\[[0-9;:]*m|[^\x1b]', text):
             size = width(token)
-            if cells + size > room and cells:
+            if wrap and cells + size > room and cells:
                 parts.append(part); part, cells = '', 0
             part += token; cells += size
         parts.append(part)
@@ -129,6 +130,22 @@ class ColorView:
         self.line(display(title), heading=True)
         if source:
             self.line('Source: ' + display(source))
+
+    def paint(self, text, role):
+        """An addressed-palette span, restoring this panel's foreground."""
+        color = self.colors.get(role)
+        text = display(text)
+        if self.base and isinstance(color, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', color):
+            return escape(color) + text + self.normal
+        return text
+
+    def artwork(self, logo):
+        lines = [display(line) for line in logo]
+        if self.base and lines:
+            from text_gradient import gradient
+            lines = gradient(lines, self.colors, regions=getattr(logo, 'regions', ()), restore=self.normal)
+        for line in lines:
+            self.line(line, wrap=False)
 
     def section(self, title, count):
         self.line()
@@ -224,15 +241,15 @@ def syntax_sample(view, colors):
     row(('green', 'Success  '), ('warning', 'Warning  '), ('error', 'Error  '), ('info', 'Info'))
 
 
-def render_preview(identity, colors, mode='', palette=True, logo=()):
-    view = ColorView(colors, preview=True)
-    for line in logo:
-        view.line(display(line))
+def render_preview(identity, colors, mode='', palette=True, logo=(), *, view=None, fill=True):
+    view = view if view is not None else ColorView(colors, preview=True)
+    view.artwork(logo)
     view.title(display(identity) + (' (' + display(mode) + ')' if mode else ''))
     syntax_sample(view, colors)
     if palette:
         view.palette(colors)
-    view.fill()
+    if fill:
+        view.fill()
     return view
 
 

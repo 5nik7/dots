@@ -153,3 +153,7 @@ Wiki commands and associated repository operations share Python controllers acro
 Detailed debug trees, state capture and current-session PATH recording now have shared routes and a native PowerShell adapter. Actual PowerShell 5.1/7 breakpoint behavior, private-file ACLs, process identity and normal-exit cleanup remain pending native acceptance; portable fixtures do not establish these claims.
 
 Keybinding browser: shared routes/options and PSReadLine on-demand JSON capture are implemented. Native PowerShell 5.1/7 caller capture, UTF-8 pipeline and FZF terminal acceptance remain pending where engines are unavailable. No Bash bridge is used on Windows.
+
+Anodize LOGO1/LOGO2 static-help parity and Preview/Extract reader handling use shared native controllers. Engine-free help/metadata/completion fixtures and native-controller authoring checks passed on Termux; native PowerShell 5.1/7 UTF-8, keyboard and reader acceptance remains pending. See [logo acceptance](anodize-logo.md). Windows app destinations are unchanged.
+
+Anodize hint/info/accent text gradients use the shared Python helper on native Windows and a builtin Bash counterpart on POSIX. Colors come from bounded published data or explicit candidate palettes. Palette result headers and draft review share the selected background/foreground from the logo onward. No native Windows destinations or shell startup paths change; native PowerShell rendering acceptance remains pending.

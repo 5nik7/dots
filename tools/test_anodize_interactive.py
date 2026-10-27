@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import select
 import shlex
 import shutil
 import sys
@@ -25,6 +26,21 @@ from cli import parser, build_document
 import completion_preview
 
 
+def wait_artwork(terminal, lines):
+    deadline = time.monotonic() + 40
+    while True:
+        text = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', terminal.output.decode(errors='replace'))
+        if all(line.strip(' \u2800') in text for line in lines):
+            return text
+        if time.monotonic() >= deadline:
+            raise AssertionError('Artwork timeout: ' + text[-3000:])
+        if select.select([terminal.master], [], [], .1)[0]:
+            chunk = os.read(terminal.master, 65536)
+            terminal.output.extend(chunk)
+            if b'\x1b[6n' in chunk:
+                os.write(terminal.master, b'\x1b[1;1R')
+
+
 class Interactive(unittest.TestCase):
     setUpFixture = old.Anodize.setUpFixture
     setUp = old.Anodize.setUp
@@ -35,6 +51,32 @@ class Interactive(unittest.TestCase):
     terminal = old.Anodize.terminal
     run_command = old.Anodize.run_command
     dots = old.Anodize.dots
+
+    def test_show_panel_starts_at_logo_in_native_terminals(self):
+        from presentation import escape
+        self.active.mkdir(parents=True)
+        (self.active/'palette.json').write_text(json.dumps(dict(colors=dict(
+            hint='#010203', info='#040506', accent='#070809'))))
+        plain = self.cli('show', 'kanagawa-wave', '--json').stdout
+        colors = json.loads(plain)['colors']
+        self.assertEqual(plain, self.cli('show', 'kanagawa-wave', '--json', DOTS_COLOR='always').stdout)
+        before = digest(self.home/'state')
+        for entry in ([str(self.repo/'bin/anodize')], [str(self.repo/'bin/dots'), 'anodize']):
+            for columns in (40, 80, 120):
+                out = self.terminal(shlex.join([*entry, 'show', 'kanagawa-wave']), width=columns,
+                                    env=dict(self.env, DOTS_COLOR='always', DOTS_ICONS='never'))
+                rows = out.decode().replace('\r\n', '\n').splitlines()
+                self.assertTrue(rows[0].startswith(escape(colors['background'], True)))
+                for row in rows:
+                    self.assertTrue(row.startswith(escape(colors['background'], True)), repr(row))
+                for label in ('Theme', 'Contrast'):
+                    row = next(row for row in rows if label in row)
+                    self.assertTrue(row.startswith(escape(colors['background'], True) + escape(colors['foreground'])))
+                logo_cells = '\n'.join(rows[:6])
+                self.assertIn(escape(colors['hint']), logo_cells)
+                self.assertIn(escape(colors['accent']), logo_cells)
+                self.assertNotIn(escape('#010203'), logo_cells)
+        self.assertEqual(digest(self.home/'state'), before)
 
     def test_default_roots_discovery_and_builtin(self):
         result = self.create()
@@ -266,6 +308,14 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
         integration = self.root / 'completion-preview.zsh'
         shutil.copy2(old.REPO / 'shells/zsh/completions.zsh', integration)
         self.env['DOTS_COLOR'] = 'always'
+        # Some bundled themes intentionally have equal endpoints. Give this
+        # interpolation check distinct colors in its owned palette copies.
+        for palette in (self.repo/'themes').glob('catppuccin-*/colors.toml'):
+            text = palette.read_text()
+            for key, value in (('cyan','#102030'), ('blue','#e01080'), ('accent','#90a0b0')):
+                text, count = re.subn(r'(?m)^'+key+r'\s*=.*$', key+' = "'+value+'"', text)
+                self.assertEqual(count,1)
+            palette.write_text(text)
         cases = [(width, "anodize create draft --color '#725ac1' --mode ") for width in (40, 80, 120)]
         cases += [(80, "dots anodize create draft --color '#725ac1' --mode "),
                   (80, 'anodize show catppuccin-'), (80, 'dots anodize show catppuccin-'),
@@ -286,13 +336,17 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
                 terminal.wait(b'\x1b[?1000h')
                 terminal.send('\x18')
                 if not command.startswith('dots theme '):
-                    asset = 'stacked.txt' if columns == 40 else 'horizontal.txt'
+                    asset = 'logo.txt'
                     lines = (old.REPO / 'lib/dots/anodize/assets' / asset).read_text().splitlines()
                     # The top six artwork rows fit; the rest remains scrollable.
-                    terminal.wait(lines[5].strip(' \u2800').encode(), timeout=40)
-                    output = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', terminal.output.decode(errors='replace'))
+                    output = wait_artwork(terminal, lines)
                     for line in lines[:6]:
                         self.assertIn(line.strip(' \u2800'), output)
+                    artwork = terminal.output.decode(errors='replace')
+                    painted = re.search(r'⣰.*?⢀(?:\x1b\[[0-?]*[ -/]*[@-~])*⣾', artwork, re.S)
+                    self.assertIsNotNone(painted)
+                    self.assertGreater(len(set(re.findall(r'38;2;\d+;\d+;\d+', painted[0]))), 3,
+                                       command + ': ' + repr(painted[0]))
                     # Shift-Down scrolls the preview without changing selection.
                     terminal.send('\x1b[1;2B' * 8)
                 terminal.wait(b'Syntax preview', timeout=40)
@@ -307,6 +361,74 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
                 terminal.close()
         self.assertFalse((self.home / 'config/dots/themes').exists())
         self.assertFalse(self.active.exists())
+
+
+from test_menus import NativeMenuFixture
+
+
+class NativeAnodizeMenus(NativeMenuFixture):
+    terminal_features = 'xterm*:RGB'
+
+    def setUp(self):
+        engine=os.environ.get('ANODIZE_ENGINE')
+        super().setUp()
+        self.assertTrue(engine and Path(engine).is_file(), 'isolated prebuilt test engine required')
+        from test_menu_launcher import checkout
+        self.repo=checkout(self.base)
+        self.image=self.home/'-wall ü.png'; self.image.write_bytes(old.PNG)
+        self.env.update(DOTS=str(self.repo),ANODIZE_ENGINE=engine,DOTS_COLOR='always')
+        active = self.home/'state/dots/current/theme'
+        active.mkdir(parents=True)
+        (active/'palette.json').write_text(json.dumps(dict(colors=dict(hint='#010203',info='#040506',accent='#070809'))))
+        os.environ.update(self.env)
+
+    def test_guided_extract_and_preview_handoff_back_and_no_extract_state(self):
+        import subprocess
+        from menu_pager import ANSI
+        for action in ('extract','preview'):
+            if action=='preview':
+                result=subprocess.run([str(self.repo/'bin/anodize'),'create','sample','--image',str(self.image),'--yes','--json'],
+                                      env=self.env,cwd=self.home,capture_output=True,timeout=30)
+                self.assertEqual(result.returncode,0,result.stderr)
+            before=digest(self.home/'config/dots/themes')
+            before_state=digest(self.home/'state')
+            result=subprocess.run([str(self.repo/'bin/anodize'), *(['extract',str(self.image)] if action=='extract' else ['show','sample']), '--json'],
+                                  env=self.env,cwd=self.home,capture_output=True,timeout=30)
+            self.assertEqual(result.returncode,0,result.stderr)
+            colors=json.loads(result.stdout)['colors']
+            p=self.worker("import os,sys;from menu_cli import main;sys.exit(main(['--browse','--client',os.environ['CLIENT'],'--query','anodize']))",
+                          ANODIZE_LOGO='chafa',ANODIZE_LOGO_LAYOUT='stacked')
+            self.receive(self.first[1],b'dots:');time.sleep(.15);os.write(self.first[1],b'\r')
+            self.receive(self.first[1],'dots·anodize:'.encode());os.write(self.first[1],('^'+action+'$').encode());time.sleep(.15);os.write(self.first[1],b'\r')
+            if action=='extract':
+                self.receive(self.first[1],b'Enter a path');os.write(self.first[1],b'wall');time.sleep(.15);os.write(self.first[1],b'\r')
+                self.receive(self.first[1],b'Lightness:');time.sleep(.15);os.write(self.first[1],b'\r')
+                self.receive(self.first[1],b'Extraction mode:');time.sleep(.15);os.write(self.first[1],b'\r')
+            else:
+                self.receive(self.first[1],b'sample');time.sleep(.15);os.write(self.first[1],b'\r')
+                self.receive(self.first[1],b'Preview:');time.sleep(.15);os.write(self.first[1],b'\r')
+            data=self.receive(self.first[1],b'Back q');text=ANSI.sub('',data.decode(errors='replace'))
+            for key in ('hint','accent'):
+                rgb='38;2;'+';'.join(str(int(colors[key][i:i+2],16)) for i in (1,3,5))
+                self.assertIn(rgb.encode(),data)
+            for line in (old.REPO/'lib/dots/anodize/assets/logo.txt').read_text().splitlines():
+                self.assertIn(line.strip(' \u2800'),text)
+            self.assertNotIn('⣠⠟⢧⡀',text)
+            self.assertIsNone(p.poll())
+            os.write(self.first[1],b'G');time.sleep(.1);self.drain(self.first[1])
+            os.write(self.first[1],b'q');seen=self.receive(self.first[1],'dots·anodize:'.encode())
+            self.assertIn(('^'+action+'$').encode(),seen)
+            os.write(self.first[1],b'\x03');out,err=p.communicate(timeout=15)
+            self.assertEqual(p.returncode,130,err)
+            self.assertEqual(digest(self.home/'config/dots/themes'),before)
+            self.assertEqual(digest(self.home/'state'),before_state)
+        # Cancelling image selection returns to the menu without a result page.
+        p=self.worker("import os,sys;from menu_cli import main;sys.exit(main(['--browse','--client',os.environ['CLIENT'],'--query','anodize']))")
+        self.receive(self.first[1],b'dots:');time.sleep(.15);os.write(self.first[1],b'\r')
+        self.receive(self.first[1],'dots·anodize:'.encode());os.write(self.first[1],b'^extract$');time.sleep(.15);os.write(self.first[1],b'\r')
+        self.receive(self.first[1],b'Enter a path');os.write(self.first[1],b'\x1b')
+        self.receive(self.first[1],'dots·anodize:'.encode());os.write(self.first[1],b'\x03')
+        out,err=p.communicate(timeout=15);self.assertEqual(p.returncode,130,err)
 
 
 if __name__ == '__main__': unittest.main()

@@ -42,6 +42,7 @@ overrides. Use headings, label accents, path accents and secondary text consiste
 reserve success/warning/error colors for those meanings. Plain views must explain
 the same facts. Sanitize display values without changing machine-output bytes.
 Authored theme-logo colors have an existing scoped exception; preserve it.
+For Anodize, follow the [authoritative LOGO1/LOGO2 contract](../../../docs/anodize.md#terminal-logo): default human branding never changes because of pipes, disabled icons or short panes. Use its hint-to-info-to-accent text gradient, independently for symbol and wordmark, with published colors for ordinary banners and addressed colors for previews. Use the selected background from the first logo row through header, metadata and notes; restore foreground after artwork. Validate exact supplied artwork and its gradient in the real display path.
 
 ## Apply and verify
 

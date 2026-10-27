@@ -211,7 +211,7 @@ dots_complete() {
           prefix_value=${words[prefix_end+1]}; prefix_count=2
         fi
         case $prefix_flag:$prefix_value in
-          --logo:text|--logo:auto|--logo:kitty|--logo:chafa|--logo-layout:auto|--logo-layout:horizontal|--logo-layout:stacked|--logo-layout:icon) ;;
+          --logo:text|--logo:auto|--logo:kitty|--logo:chafa|--logo-layout:auto|--logo-layout:base|--logo-layout:horizontal|--logo-layout:stacked|--logo-layout:icon) ;;
           *) return 0 ;;
         esac
         words=("${words[@]:0:prefix_end}" "${words[@]:prefix_end+prefix_count}")

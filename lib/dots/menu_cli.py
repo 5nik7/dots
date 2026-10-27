@@ -31,6 +31,9 @@ def group(name, icon, *, route=None, tool=''):
 
 
 def help_action(family=''):
+    if family == 'anodize':
+        return Action('help', 'help', ('anodize',),
+                      ('--logo=text', '--logo-layout=horizontal', '--help'), icon='󰋖')
     route = ('menu', 'tmux') if family == 'tmux' else tuple(family.split('/')) if family else ()
     return Action('help', 'help', ('help', *route), icon='󰋖')
 
@@ -72,8 +75,10 @@ FAMILIES = {
                Action('switcher', 'switcher', ('themes', 'switcher'), kind='terminal', icon='󰏘'),
                Action('plugins', 'plugins', ('themes', 'plugins'), kind='submenu', submenu='themes/plugins')),
     'themes/plugins': leaves('themes/plugins', 'list doctor'),
-    'anodize': (*tuple(Action(name, name, ('anodize', name), ('--interactive',), 'terminal', '󰏘')
-                       for name in ('create', 'edit', 'preview', 'apply')),
+    'anodize': (*tuple(Action(name, name, ('anodize', name),
+                       ('--interactive', '--logo=text', '--logo-layout=base') if name in ('preview', 'extract') else ('--interactive',),
+                       'document' if name in ('preview', 'extract') else 'terminal', '󰏘')
+                       for name in ('create', 'extract', 'edit', 'preview', 'apply')),
                 Action('list', 'list', ('anodize', 'list'))),
     'debug': leaves('debug', 'check startup path cache'),
     'profile': leaves('profile', 'show paths layers files commands env check'),

@@ -526,3 +526,10 @@ The former wrapped continuation of `attached` looked like a blank separator at a
 Bash and native PowerShell retain the shared controller and existing native Windows tmux unavailability; no routes, data schemas or Windows app destinations change. Termux PTY evidence is separate from native Linux/WSL/Windows acceptance. Reopening the popup loads the source change; no live reload, commit or publication is required.
 
 Acceptance: all 85 tests passed sequentially (project/session actions 37, session contracts 20, wiki generation 18 and wiki Git 10). The native geometry case first failed on the old wrapped display, then passed with adjacent rows at 40/53/80/120 columns, compact short previews, capped scrolling and cancellation. Existing color, Unicode and data checks passed. Python parsing, 920 relative links across 129 files and source/wiki whitespace checks passed. The local wiki was rebuilt in retained transaction `74c51162ff884d74b8b3c1e247b8a51f` and `dots wiki check` reports healthy. Native platform acceptance limits above still apply.
+
+
+### Anodize branding and Extract
+
+**Implemented, 2026-10-27.** The [logo and Extract plan](anodize-logo.md) records the implementation and verification: Help pins text/horizontal with LOGO1 fallback, Preview/Extract pin text/base, Extract follows Create and both read-only result flows use the shared document handoff/reader. Existing query restoration, cancellation and mutation approvals remain in force.
+
+Anodize text logos now use independent hint-to-info-to-accent gradients for symbol and wordmark. Help follows the published theme; Preview/Extract follow the addressed palette. Actual RGB popup and FZF-tab verification is recorded in the [branding plan](anodize-logo.md#three-stop-gradient-and-complete-palette-panels).
