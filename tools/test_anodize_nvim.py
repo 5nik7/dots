@@ -161,11 +161,11 @@ assert(require("lazy.core.config").plugins.anodize._.loaded)
 ''')
 
     def test_authored_theme_publication_to_editor(self):
-        engine = Path(os.environ.get('ANODIZE_ENGINE') or test_themes.REPO/'anodize/.build/anodize-engine')
+        engine = Path(os.environ.get('ANODIZE_ENGINE') or test_themes.REPO/'plugins/anodize/engine/.build/anodize-engine')
         if not engine.is_file():
             self.skipTest('Build the Anodize engine before authoring integration tests')
         env = dict(self.env, ANODIZE_ENGINE=str(engine))
-        cli = [sys.executable,'-B',str(self.repo/'lib/dots/anodize/cli.py')]
+        cli = [sys.executable,'-B',str(self.repo/'plugins/anodize/cli.py')]
         self.run_command(cli+['create','fixture_theme','--color','#725ac1','--yes','--json'],env=env)
         self.run_command(cli+['apply','fixture_theme','--yes','--json'],env=env)
         run(self, r'''

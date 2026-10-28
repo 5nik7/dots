@@ -21,7 +21,7 @@ from unittest import mock
 
 import test_bash_dots as fixture
 
-sys.path.insert(0, str(fixture.REPO / 'lib/dots/anodize'))
+sys.path.insert(0, str(fixture.REPO / 'plugins/anodize'))
 from cli import Presentation
 import logo
 from text_gradient import gradient
@@ -421,6 +421,7 @@ class LogoCLI(unittest.TestCase):
 
     def setUp(self):
         fixture.DotsFixture.setUp(self)
+        shutil.copytree(fixture.REPO/'plugins/anodize', self.repo/'plugins/anodize', ignore=shutil.ignore_patterns('__pycache__', '.build'))
         for source in [fixture.REPO/'bin/anodize', *fixture.REPO.glob('bin/dots-anodize*')]:
             shutil.copy2(source, self.repo/'bin'/source.name)
         self.env.update(ANODIZE_ENGINE=str(self.root/'missing'), DOTS_COLOR='never')
@@ -494,7 +495,7 @@ class LogoCLI(unittest.TestCase):
             self.assertEqual(result.returncode,2,result.stderr)
             self.assertEqual(result.stdout,b'')
             self.assertTrue(result.stderr.startswith(('\n'.join(logo.BASE_LOGO)+'\n').encode()))
-        assets=self.repo/'lib/dots/anodize/assets'
+        assets=self.repo/'plugins/anodize/assets'
         for path in assets.glob('*.txt'): path.write_bytes(b'\xff')
         for argv in ([str(self.repo/'bin/dots'),'help','anodize'],
                      [sys.executable,'-B',str(self.repo/'lib/dots/cli.py'),'help','anodize']):
@@ -521,7 +522,7 @@ class LogoCLI(unittest.TestCase):
             result=self.cli('list','--logo='+mode,'--json')
             self.assertEqual(json.loads(result.stdout), {'items':[], 'schema':1})
             self.assertEqual(result.stderr,'')
-            self.assertEqual(self.cli('completion','bash','--logo='+mode).stdout, (self.repo/'lib/dots/anodize/completion/bash').read_text())
+            self.assertEqual(self.cli('completion','bash','--logo='+mode).stdout, (self.repo/'plugins/anodize/completion/bash').read_text())
         self.assertIn('⣰⡄', self.cli('list').stdout)
         self.assertIn('⣰⡄', self.cli('invalid',code=2).stderr)
         self.assertIn('⣰⡄', self.cli('modes',code=1).stderr)
@@ -530,7 +531,7 @@ class LogoCLI(unittest.TestCase):
         self.assertFalse((self.home/'state').exists())
 
     def test_new_variants_and_plain_policy_match_static_help(self):
-        assets=self.repo/'lib/dots/anodize/assets'
+        assets=self.repo/'plugins/anodize/assets'
         future='⠀'+'⣿'*43+'⠀\n'
         (assets/'logo-45.txt').write_text(future)
         (assets/'logo-999.txt').write_text('⣿'*10+'\n')

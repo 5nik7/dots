@@ -1,0 +1,6 @@
+# Persistent pager behavior, independent of generated themes and shell startup.
+# Keep inherited flags and terminate any prompt with less's option delimiter ($).
+# Set features explicitly: repeating --mouse toggles them off in less 702+.
+# Older builds retain the shell default. Use --emouse=- on the command line to opt out.
+#env
+#version >= 702 LESS = ${LESS}$ --emouse=vmove,click

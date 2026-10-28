@@ -550,3 +550,4 @@ style = "bold fg:blue"
 "git_repo_owned" = "#94e2d5"
 "git_staged" = "#a6e3a1"
 "git_untracked" = "#f5c2e7"
+

@@ -42,3 +42,7 @@ When implementation changes a documented behavior, update the authoritative docu
 - [Anodize](anodize.md) — implemented palette authoring, recipe, CLI and publication boundaries.
 
 - [Wiki](wiki.md) — canonical source projection, navigation and associated Git workflow.
+
+- [Blastoff and pkgs](bundled-applications.md) — bundled applications, command forms and combined installation.
+
+- [Application plugins](plugins.md): portable layout, legacy migration and application menus.

@@ -1,0 +1,29 @@
+{
+  "host": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "python": "3.12.14",
+  "results": {
+    "bash-help": {
+      "max_ms": 38.373,
+      "p50_ms": 20.709,
+      "p95_ms": 24.811
+    },
+    "bash-version": {
+      "max_ms": 27.792,
+      "p50_ms": 20.878,
+      "p95_ms": 24.558
+    },
+    "python-help": {
+      "max_ms": 33.911,
+      "p50_ms": 19.511,
+      "p95_ms": 25.491
+    },
+    "python-version": {
+      "max_ms": 34.409,
+      "p50_ms": 20.149,
+      "p95_ms": 29.702
+    }
+  },
+  "samples": 60,
+  "warmups": 5
+}

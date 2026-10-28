@@ -26,6 +26,10 @@ jobs:
         run: python -B tools/test_file_platform.py
       - name: Isolated installation lifecycle
         run: python -B tools/test_installation.py
+      - name: Bundled applications and combined installation
+        run: python -B tools/test_bundled_apps.py
+      - name: Legacy application migration
+        run: python -B tools/test_app_migration.py
       - name: Isolated managed file repair
         run: python -B tools/test_files_repair.py
       - name: Native adapters and presentation
@@ -64,6 +68,8 @@ jobs:
         run: python -B tools/test_native_anodize.py
       - name: Native CLI and PowerShell contracts
         run: python -B tools/test_native_cli.py
+      - name: Bundled native application entrypoints
+        run: python -B tools/test_bundled_apps.py
       - name: Native startup without Bash or Python
         run: python -B tools/test_powershell_init.py
       - name: Native Git safety

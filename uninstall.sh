@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run from an existing checkout. No downloads or machine changes before planning.
+# Sets up Dots, Blastoff and pkgs together from an existing checkout. No downloads or machine changes before planning.
 set -eu
 setup_root=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
 . "$setup_root/lib/dots/bootstrap-ui.sh"

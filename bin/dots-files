@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 # dots:summary=Discover, import, link and manage configuration files
 # dots:usage=[SUBCOMMAND]
+# dots:argument=1|choice:migrate-apps|Preview legacy application migration (alias for migrate apps)
 exec "${BASH_SOURCE[0]%/*}/dots" help files

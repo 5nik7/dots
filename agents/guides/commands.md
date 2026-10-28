@@ -27,6 +27,7 @@ The external-command protocol is an extension mechanism. Safety-critical operati
 3. Search existing routes, aliases, and proposed commands for collisions.
 4. Decide whether the change affects the stable interface, structured output, or completion data.
 5. Update or create a focused plan if dispatcher semantics or command metadata are changing.
+6. Assess menu suitability for every new or changed command. Record add/update/no-menu and its reason in the focused plan or change notes; check existing family entries and use the menu-authoring skill when appropriate.
 
 ## Naming
 

@@ -5,6 +5,8 @@ AGENTS.md remains the operating contract; skills point to maintained project doc
 This directory is not a replacement CODEX_HOME and contains no credentials, model
 selection, permission overrides, sessions or machine-local state.
 
+Codex/tmux attention preferences and their maintenance procedure are recorded in the [Codex notification guide](../agents/guides/codex-notifications.md). Preserve that documented user contract when changing notification, title, status or focus handling.
+
 - [dots-theme-maintenance](skills/dots-theme-maintenance/SKILL.md)
 - [dots-theme-template](skills/dots-theme-template/SKILL.md) — create default application templates and verify their generated colors in the consumer.
 - [dots-shell-integration](skills/dots-shell-integration/SKILL.md)
@@ -14,3 +16,5 @@ selection, permission overrides, sessions or machine-local state.
 
 - [dots-documentation-maintenance](skills/dots-documentation-maintenance/SKILL.md) — align canonical docs with implementation and wiki exports.
 - [dots-wiki-maintenance](skills/dots-wiki-maintenance/SKILL.md) — generated pages, sidebar and associated Git workflows.
+
+- [dots-plugin-maintenance](skills/dots-plugin-maintenance/SKILL.md) — portable application plugins, combined installation and receipt-led legacy migration.

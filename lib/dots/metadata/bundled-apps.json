@@ -1,0 +1,2811 @@
+{
+  "blastoff": {
+    "summary": "Starship themes and stored modules",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--version",
+        "",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-list": {
+    "summary": "List local themes and presets with current/modified origin markers",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-current": {
+    "summary": "Manage current",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-doctor": {
+    "summary": "Manage doctor",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-pick": {
+    "summary": "Fancy Unicode fzf by default, then gum/numbered fallback",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ],
+      [
+        "--fancy",
+        "",
+        "choice:unicode,ascii",
+        "Blastoff styling (default: Unicode, automatic ASCII fallback)"
+      ],
+      [
+        "--fzf",
+        "",
+        "flag",
+        "basic fzf with compatible user settings; requires fzf"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "choice:fancy,fzf",
+        "presentation alias"
+      ]
+    ]
+  },
+  "blastoff-theme": {
+    "summary": "Manage theme",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-theme-list": {
+    "summary": "List local themes and presets with current/modified origin markers",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-theme-apply": {
+    "summary": "Apply NAME (local first), local:NAME or preset:NAME to the active config",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-theme-save": {
+    "summary": "Save active edits",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-theme-edit": {
+    "summary": "Edit a private working copy of the active config, then validate and atomically publish",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-theme-copy": {
+    "summary": "Copy NAME, local:NAME or preset:NAME to a local theme without applying it",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "source"
+      ],
+      [
+        "2",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-theme-import": {
+    "summary": "Import valid UTF-8 TOML from an absolute file path without applying it",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "file",
+        "path"
+      ],
+      [
+        "2",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-theme-delete": {
+    "summary": "Delete a stored theme with --force after backing it up",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-preset": {
+    "summary": "Manage preset",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-preset-list": {
+    "summary": "Manage list",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-preset-apply": {
+    "summary": "Generate a Starship preset and apply it, backing up changed active content",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-preset-save": {
+    "summary": "Generate a Starship preset into a local theme without applying it",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "source"
+      ],
+      [
+        "2",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-module": {
+    "summary": "Manage module",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-module-list": {
+    "summary": "Manage list",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-module-show": {
+    "summary": "Show a saved module without loading it",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ],
+      [
+        "--fancy",
+        "",
+        "choice:unicode,ascii",
+        "Blastoff styling (default: Unicode, automatic ASCII fallback)"
+      ],
+      [
+        "--fzf",
+        "",
+        "flag",
+        "basic fzf with compatible user settings; requires fzf"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-module-save": {
+    "summary": "Store an explicit TOML table and descendants, e.g",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "module"
+      ],
+      [
+        "2",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-module-load": {
+    "summary": "Replace the saved module table and descendants in the active config, preserving unrelated settings",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-module-delete": {
+    "summary": "Delete a stored snippet with --force after backing it up",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "name"
+      ]
+    ]
+  },
+  "blastoff-backup": {
+    "summary": "Manage backup",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-backup-create": {
+    "summary": "Snapshot active config bytes, including invalid TOML for recovery.",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-backup-list": {
+    "summary": "Readable backup ID/time/kind/source/size by default",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": []
+  },
+  "blastoff-backup-restore": {
+    "summary": "Restore a config backup ID after checksum and TOML validation; back up current content first",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "id"
+      ]
+    ]
+  },
+  "blastoff-backup-delete": {
+    "summary": "Permanently delete config/stored backups",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ],
+      [
+        "--fancy",
+        "",
+        "choice:unicode,ascii",
+        "Blastoff styling (default: Unicode, automatic ASCII fallback)"
+      ],
+      [
+        "--fzf",
+        "",
+        "flag",
+        "basic fzf with compatible user settings; requires fzf"
+      ],
+      [
+        "--pick",
+        "",
+        "flag",
+        "fzf multi-selection with Tab/Shift-Tab"
+      ],
+      [
+        "--all",
+        "",
+        "flag",
+        "freeze all eligible backups before confirmation"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "affirm deletion of the explicit selection"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "string",
+        "ids"
+      ]
+    ]
+  },
+  "blastoff-migrate": {
+    "summary": "Manage migrate",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "directory",
+        "path"
+      ]
+    ]
+  },
+  "blastoff-completion": {
+    "summary": "Print offline positional shell completion",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help message and exit"
+      ],
+      [
+        "--verbose",
+        "-v",
+        "flag",
+        "diagnostics on stderr; JSON records with --json"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "report intended actions without writes, prompts, pickers or editors"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable output (no decoration)"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color policy; overrides DOTS_COLOR; always forces report color"
+      ],
+      [
+        "--force",
+        "",
+        "flag",
+        "back up and replace an existing stored file; required for theme/module deletion"
+      ],
+      [
+        "--replace-link",
+        "",
+        "flag",
+        "back up and replace an active symlink; leave its target unchanged"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "choice:bash,zsh,fish",
+        "shell"
+      ]
+    ]
+  },
+  "pkgs": {
+    "summary": "Manage packages on Termux, Linux and WSL",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-install": {
+    "summary": "Install exact names or open a picker",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-uninstall": {
+    "summary": "Remove installed packages",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-remove": {
+    "summary": "Alias for uninstall",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-search": {
+    "summary": "Read-only search picker",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-list": {
+    "summary": "Print package inventory",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-info": {
+    "summary": "Readable package details",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-upgrade": {
+    "summary": "Upgrade packages",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-refresh": {
+    "summary": "Refresh repository metadata",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-managers": {
+    "summary": "Detected managers and capabilities",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-doctor": {
+    "summary": "Detection and completion diagnostics",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-completion": {
+    "summary": "Generate or install shell completions",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "choice:bash,zsh,fish",
+        "Shell"
+      ],
+      [
+        "2",
+        "choice:install,update,status,uninstall",
+        "Completion action"
+      ]
+    ]
+  },
+  "pkgs-cache": {
+    "summary": "Clear cached catalogs",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "choice:clear",
+        "Cache action"
+      ]
+    ]
+  },
+  "pkgs-help": {
+    "summary": "Show usage",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "help"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
+        "manager"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "query"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "installed"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "report color; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "dry run"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "yes"
+      ]
+    ],
+    "argument": []
+  }
+}

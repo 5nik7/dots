@@ -13,7 +13,7 @@ import test_bash_dots as fixture
 from bash_dots_pty import Terminal
 
 REPO = fixture.REPO
-sys.path.insert(0, str(REPO/'lib/dots/anodize'))
+sys.path.insert(0, str(REPO/'plugins/anodize'))
 from cli import parser
 
 
@@ -23,6 +23,7 @@ class Integration(unittest.TestCase):
 
     def setUp(self):
         fixture.DotsFixture.setUp(self)
+        shutil.copytree(REPO/'plugins/anodize', self.repo/'plugins/anodize', ignore=shutil.ignore_patterns('__pycache__', '.build'))
         for source in [REPO/'bin/anodize', *REPO.glob('bin/dots-anodize*')]:
             shutil.copy2(source, self.repo/'bin'/source.name)
         self.env['PYTHONDONTWRITEBYTECODE'] = '1'
@@ -49,7 +50,7 @@ class Integration(unittest.TestCase):
                        env=self.env, check=True, capture_output=True)
         man = shutil.which('mandoc')
         self.assertIsNotNone(man, 'mandoc is required to validate the manual')
-        lint = subprocess.run([man, '-Tlint', str(REPO/'man/anodize.1')],
+        lint = subprocess.run([man, '-Tlint', str(REPO/'plugins/anodize/man/anodize.1')],
                               env=self.env, text=True, capture_output=True)
         self.assertEqual((lint.returncode, lint.stdout, lint.stderr), (0, '', ''))
         self.run_dots('commands', '--check')
@@ -64,7 +65,7 @@ class Integration(unittest.TestCase):
                 if action.choices:
                     self.assertIn('choice:'+','.join(action.choices), header)
         # Static suggestions stay synchronized with the pure core without running it.
-        core = (REPO/'anodize/anodize.go').read_text()
+        core = (REPO/'plugins/anodize/engine/anodize.go').read_text()
         modes = re.findall(r'"([^"]+)"', re.search(r'var modes = \[\]string\{([^}]+)\}', core)[1])
         actual = [line.split('\t')[1] for line in self.candidates('extract', 'wall.png', '--mode', '').splitlines()]
         self.assertEqual(actual, modes)
@@ -80,7 +81,7 @@ class Integration(unittest.TestCase):
                 self.assertEqual(actual, [name+'=' for name in names])
         for shell in ('bash', 'zsh', 'fish'):
             source = self.cli('completion', shell)
-            self.assertEqual(source, (REPO/'lib/dots/anodize/completion'/shell).read_text())
+            self.assertEqual(source, (REPO/'plugins/anodize/completion'/shell).read_text())
             self.assertEqual(source, self.run_dots('anodize', 'completion', shell).stdout)
             self.assertNotIn('\x1b', source)
         self.assertIn('completion/powershell', self.cli('completion', 'powershell'))
@@ -154,21 +155,21 @@ class Integration(unittest.TestCase):
         for executable in (fixture.BASH, fixture.ZSH, fixture.FISH):
             self.assertIsNotNone(executable, 'Bash, Zsh and Fish are required')
         (self.home/'wall ü space.png').touch()
-        bash = self.shell(fixture.BASH, '''source "$DOTS/lib/dots/anodize/completion/bash"
+        bash = self.shell(fixture.BASH, '''source "$DOTS/plugins/anodize/completion/bash"
 COMP_WORDS=(anodize create dusk --mode = nor); COMP_CWORD=5
 _anodize_complete_bash; printf '<%s>\\n' "${COMPREPLY[@]}"
 COMP_WORDS=(anodize create dusk --image wall); COMP_CWORD=4
 _anodize_complete_bash; printf '<%s>\\n' "${COMPREPLY[@]}"
 ''')
         self.assertEqual(bash.stdout, '<normal>\n<wall ü space.png>\n')
-        fish = self.shell(fixture.FISH, '''source "$DOTS/lib/dots/anodize/completion/fish"
+        fish = self.shell(fixture.FISH, '''source "$DOTS/plugins/anodize/completion/fish"
 complete -C 'anodize create dusk --mode nor'
 complete -C 'anodize extract wall'
 ''')
         self.assertIn('normal', fish.stdout)
         self.assertIn('wall', fish.stdout)
         zsh = self.shell(fixture.ZSH, '''autoload -Uz compinit; compinit -D
-source "$DOTS/lib/dots/anodize/completion/zsh"
+source "$DOTS/plugins/anodize/completion/zsh"
 [[ $_comps[anodize] == _anodize ]] || exit 1
 compadd() { print -rl -- "${candidates[@]}"; print -rl -- "${descriptions[@]}"; }
 words=(anodize create dusk --m); CURRENT=4; _anodize
@@ -183,7 +184,7 @@ words=(anodize create dusk --mode nor); CURRENT=5; _anodize
         # calls the real adapter. No authoring/apply operation runs in the PTY.
         (self.repo/'bin/anodize').write_text('#!'+fixture.BASH+'''
 if [[ $1 == __complete ]]; then
-  exec python3 -B "$DOTS/lib/dots/anodize/cli.py" "$@"
+  exec python3 -B "$DOTS/plugins/anodize/cli.py" "$@"
 fi
 printf '%s\\n' "$@" > "$HOME/args"
 printf 'EXECUTED\\n'
@@ -194,7 +195,7 @@ printf 'EXECUTED\\n'
                 terminal = Terminal(executable, self.env, self.home)
                 try:
                     init = 'autoload -Uz compinit; compinit -D; ' if name == 'zsh' else ''
-                    terminal.send(init+'source "$DOTS/lib/dots/anodize/completion/'+name+'"; printf "\\nINITIALIZED\\n"\r')
+                    terminal.send(init+'source "$DOTS/plugins/anodize/completion/'+name+'"; printf "\\nINITIALIZED\\n"\r')
                     terminal.wait(b'INITIALIZED\r\n')
                     for typed, marker, expected in (
                         ('anodize cr\t', b'create', 'create'),

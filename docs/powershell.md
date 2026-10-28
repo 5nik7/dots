@@ -48,6 +48,7 @@ The catalog token `${APP_CONFIG:app}` resolves app-specific directories in `lib/
 | bat | `%APPDATA%/bat`; `BAT_CONFIG_DIR` override |
 | Television | `%LOCALAPPDATA%/television/config`; `TELEVISION_CONFIG` or absolute `XDG_CONFIG_HOME/television` override |
 | Leaf | `%APPDATA%/leaf`; unmapped without APPDATA unless explicitly overridden |
+| less | `${HOME}/_lesskey` through `dots:less`; persistent mouse features require less 702+ |
 | eza | `%APPDATA%/eza`; `EZA_CONFIG_DIR` override |
 | Yazi | `%APPDATA%/yazi/config`; `YAZI_CONFIG_HOME` override |
 | Nushell | `%APPDATA%/nushell`, or `$XDG_CONFIG_HOME/nushell` |
@@ -139,3 +140,11 @@ coverage; it does not connect to WSL sockets or require Bash/Zsh startup.
 The native shell theme hook includes the shared [less override policy](shell-environment.md#global-less-colors). PowerShell on POSIX exports the themed standout/reset pair; native Windows less retains stock colors because its console renderer does not use termcap RGB overrides. No Windows application destinations or WSL bridge are added.
 
 Anodize static help uses the core Python logo renderer with the [same LOGO1/LOGO2 contract](anodize.md#terminal-logo), including `--logo-layout=base`, without invoking Bash or the engine. Hint/info/accent logo gradients and complete selected-theme panels use the shared Python renderer. Preview/Extract use the shared reader; native PowerShell runtime/terminal acceptance remains pending on the Termux implementation host.
+
+## Bundled applications
+
+`dots.ps1 blastoff ...` and `blastoff.ps1 ...` invoke the bundled Blastoff Python core. `dots.ps1 pkgs ...` and `pkgs.ps1 ...` provide native help/version; application commands other than help/version return status 3 because pkgs' native Windows backends are not implemented. No route invokes Bash or WSL. The existing JSON argument bridge preserves empty, quoted and Unicode arguments, and standalone wrappers return `$LASTEXITCODE`. Blastoff also receives its original native transport envelope for compatibility aliases, host validation and picker shell context. Dots completion registers both standalone names and their `.ps1` variants.
+
+Combined setup installs the launchers in `~/.local/bin` through the shared installation receipt. Application configuration paths remain unchanged; see [bundled applications](bundled-applications.md). Native PowerShell 5.1/7 acceptance remains a named pending gate.
+
+The [Codex attention bridge](themes.md#codex-attention-notifications) has no native Windows tmux or Android destination. Its setup helper refuses that platform explicitly; portable event/configuration tests may run with Python from PowerShell. WSL uses its own Linux configuration and state and must not reuse native Windows Codex files.

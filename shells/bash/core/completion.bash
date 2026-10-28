@@ -34,7 +34,7 @@ _dots_bash_tool_completion() {
   local name=$1
   case $name in
     dots) [[ ${dots_options[DOTS_INIT_COMPLETION]:-1} == 1 ]] || return 0; source "$DOTS/lib/dots/completion/bash" ;;
-    anodize) source "$DOTS/lib/dots/anodize/completion/bash" ;;
+    anodize) source "$DOTS/plugins/anodize/completion/bash" ;;
     uv) _dots_bash_generated uv generate-shell-completion bash && eval "$REPLY" ;;
     uvx) _dots_bash_generated uvx --generate-shell-completion bash && eval "$REPLY" ;;
     starship) _dots_bash_generated starship completions bash && eval "$REPLY" ;;

@@ -219,7 +219,8 @@ def capture(argv, spool, *, cwd=None, environment=None, render_size=None):
     color, icons = environment.get('DOTS_COLOR', 'auto'), environment.get('DOTS_ICONS', 'auto')
     environment.update(DOTS_COLOR='always' if color == 'always' or color == 'auto' and terminal and not environment.get('NO_COLOR') else 'never',
                        DOTS_ICONS='always' if icons == 'always' or icons == 'auto' and terminal else 'never',
-                       DOTS_PROGRESS='never', COLUMNS=str(columns), LINES=str(lines))
+                       DOTS_PROGRESS='never', DOTS_MENU_CAPTURE='1',
+                       COLUMNS=str(columns), LINES=str(lines))
     source = spool / 'output.txt'
     with private_file(source) as stream:
         try:

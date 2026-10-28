@@ -504,3 +504,21 @@ code or inject terminal input. Workers have a two-second deadline; clients have
 a one-second transport deadline. Busy, mismatched, ambiguous or unsafe endpoints
 produce configured-only coverage. Abrupt termination may leave a stale endpoint;
 inspection ignores it and does not prune another session's files.
+
+## Bundled application ownership
+
+Blastoff/pkgs installation and removal use the shared Dots file transaction and receipt for command links, Bash/Zsh completion and manuals; Fish completion follows the existing Fish catalog mapping. All targets preflight together. Modified owned targets and foreign symlinks remain protected, and uninstall restores unchanged targets to their retained baseline. No source repositories, application data or host packages are deleted by combined uninstall. The former standalone installers are not invoked.
+
+`dots blastoff` forwards explicit application actions to Blastoff's existing validated TOML, guarded symlink, lock and backup implementation; `dots pkgs` forwards explicit package operations to pkgs' native-manager confirmation/execution boundary. These application operations are not Dots managed-file transactions, and package-manager effects have no Dots filesystem rollback. See [application boundaries](bundled-applications.md).
+
+## Legacy application migration
+
+`dots files migrate-apps` is read-only unless `--yes` is supplied; `--dry-run` takes precedence. Known receipt paths are constrained before hash verification and all planned inputs are guarded. Replacement and retirement share retained backups, rollback and the installation baseline. Unsupported/edited ownership blocks apply; unknown payloads and existing recovery data are retained. No old uninstaller, package manager, theme publication or unrelated catalog installation runs. See [migration boundaries](plugins.md#legacy-application-migration).
+
+## Codex attention bridge
+
+The [Codex attention integration](themes.md#codex-attention-notifications) is explicitly installed through the existing Store: complete preflight, retained backups, reverse-order rollback and drift-checked undo cover the three personal configuration files. Preview creates no state and prints paths only, never configuration bodies or prior notification arguments. Existing hook handlers and downstream notify commands are preserved; linked personal configurations require source-owner maintenance. Setup never trusts hooks, changes approval policy, restarts Codex or installs Android packages.
+
+Observational callbacks accept bounded JSON, store only event identifiers and sanitized message excerpts in an owner-only runtime directory, and return no model context or permission decision. The worker uses local process metadata and bounded tmux queries, never process argv/environment dumps or conversation history. Excerpts are erased on delivery/dismissal (SQLite secure deletion enabled); unmatched candidates expire after ten minutes. Queue/snapshot state is disposable runtime data rather than a managed configuration transaction. Existing foreign/insecure runtime objects are refused.
+
+The user explicitly enabled message excerpts in local Android toasts. Fixed argv and option termination keep message text out of shell evaluation. Device calls and a preserved downstream notifier have bounded lifetimes, suppressed output and independent failure handling. Automated tests substitute Android commands and own all homes, state roots and tmux sockets. Actual device appearance and hook trust remain manual acceptance; no trust bypass is installed.

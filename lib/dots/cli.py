@@ -10,6 +10,7 @@ import sys
 
 LIB = Path(__file__).resolve().parent
 sys.path.insert(0, str(LIB))
+sys.path.insert(0, str(LIB.parents[1] / 'plugins'))
 from command_metadata import BUILTINS, RESERVED, catalog, read, resolve, roots
 
 
@@ -83,6 +84,9 @@ def complete(root, directories, words):
             if extra.is_absolute() and extra.is_dir(): directories = [*directories, extra]
             previous = previous[2:]
         else: break
+    if previous[:1] in (['blastoff'], ['pkgs']):
+        from bundled_apps import complete as bundled_complete
+        return bundled_complete(root, [*previous, current])
     if previous[:1] == ['anodize']:
         index = 1
         while index < len(previous):
@@ -300,6 +304,8 @@ def main(argv=None):
             break
         args.pop(0)
     directories = roots(root, extras)
+    if args[:2] == ['files', 'migrate-apps']:
+        args = ['files', 'migrate', 'apps', *args[2:]]
     if not args or args[0] in ('help', '--help', '-h'):
         return help_view(directories, args[1:])
     from environment import settings
@@ -348,6 +354,9 @@ def main(argv=None):
     stem, path, count = resolve(directories, args)
     if not path:
         return help_view(directories, args)
+    if stem.split('-')[0] in ('blastoff', 'pkgs') and path.parent.resolve() == (root / 'bin').resolve():
+        from bundled_apps import run
+        return run(root, args[0], args[1:])
     if any(a in ('--help', '-h') for a in args[:args.index('--') if '--' in args else len(args)]):
         if stem == 'git-submodule' and path.parent.resolve() == (root / 'bin').resolve():
             return controller('git/submodule.py', args[count:])
@@ -377,6 +386,8 @@ def main(argv=None):
     if parts in (['git'], ['themes'], ['theme', 'plugins'], ['themes', 'plugins']):
         return help_view(directories, parts)
     if parts[0] == 'files':
+        if stem == 'files-migrate-apps':
+            return controller('files/install.py', ['migrate-apps', *rest])
         action = '-'.join(parts[1:])
         if not action or action == 'backups': return help_view(directories, parts)
         if action in ('install', 'uninstall'): target = 'install'
@@ -391,7 +402,7 @@ def main(argv=None):
         return controller('files/' + target + '.py', [action, *rest])
     if parts[0] in ('anodize', 'theme', 'themes') and sys.version_info < (3, 11):
         raise ValueError('theme and Anodize commands require Python 3.11 or newer')
-    if parts[0] == 'anodize': return controller('anodize/cli.py', [*parts[1:], *rest])
+    if parts[0] == 'anodize': return controller('../../plugins/anodize/cli.py', [*parts[1:], *rest])
     if parts[0] in ('profile', 'profiles'): return controller('profiles.py', [*parts, *rest])
     if parts[0] == 'wiki': return controller('wiki.py', [*parts[1:], *rest])
     if parts[:2] == ['git','wiki']: return controller('wiki_git.py', [*parts[2:], *rest])
@@ -412,7 +423,8 @@ def main(argv=None):
         if parts[1:2] == ['colors']: return controller('themes/file-colors.py', [*parts[2:], *rest])
         if parts[1:2] == ['plugins'] and len(parts) > 2: return controller('themes/plugins.py', [*parts[2:], *rest])
         return controller('themes/theme_cli.py', [*parts[1:], *rest])
-    if stem == 'menu': return controller('menu_cli.py', rest)
+    if stem in ('menu', 'menu-blastoff', 'menu-pkgs'):
+        return controller('menu_cli.py', [*parts[1:], *rest])
     if stem == 'menu-tmux-keys': return controller('keys_cli.py', ['tmux', *rest])
     if stem == 'menu-tmux-sessions': return controller('menu_sessions.py', rest)
     raise ValueError('command requires a POSIX/tmux session: ' + stem.replace('-', ' '))

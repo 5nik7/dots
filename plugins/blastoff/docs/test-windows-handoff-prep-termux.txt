@@ -1,0 +1,20 @@
+test_windows_does_not_discover_or_generate_posix_launcher (test_windows_handoff.WindowsPayloadSelection.test_windows_does_not_discover_or_generate_posix_launcher) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.014s
+
+OK
+test_install_dry_run_install_uninstall_and_tamper (test_blastoff.Lifecycle.test_install_dry_run_install_uninstall_and_tamper) ... ok
+test_install_refuses_corrupt_source_before_writes (test_blastoff.Lifecycle.test_install_refuses_corrupt_source_before_writes) ... ok
+test_install_refuses_unowned_destination (test_blastoff.Lifecycle.test_install_refuses_unowned_destination) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 2.095s
+
+OK
+test_empty_overrides_and_tilde_paths (test_native.Native.test_empty_overrides_and_tilde_paths) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.438s
+
+OK

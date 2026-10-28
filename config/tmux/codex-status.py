@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Read local foreground Codex presence and emit bounded window/state tokens."""
 import os
+import hashlib
+import json
 from pathlib import Path
 import re
 import selectors
@@ -30,9 +32,9 @@ def remaining(deadline):
     return value
 
 
-def inventory(socket, deadline):
+def inventory(socket, deadline, fmt=INVENTORY, parser=None):
     process = subprocess.Popen(['tmux', '-S', socket, 'list-panes', '-a',
-                                '-f', '#{==:#{pane_dead},0}', '-F', INVENTORY],
+                                '-f', '#{==:#{pane_dead},0}', '-F', fmt],
                                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                stderr=subprocess.DEVNULL, start_new_session=True)
     try:
@@ -50,7 +52,7 @@ def inventory(socket, deadline):
                     raise ValueError('oversized inventory')
         if process.wait(timeout=remaining(deadline)):
             raise ValueError('inventory unavailable')
-        return parse_inventory(bytes(output))
+        return (parser or parse_inventory)(bytes(output))
     finally:
         try:
             os.killpg(process.pid, signal.SIGKILL)
@@ -135,6 +137,37 @@ def render(panes, records):
     return '|' + '|'.join(tokens) + '|' if tokens else ''
 
 
+def alert_root():
+    root = Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'dots/codex-alerts'
+    if not root.is_absolute():
+        raise ValueError('state root must be absolute')
+    return root
+
+
+def socket_key(socket):
+    # A replaced server at the same pathname must not inherit old attention.
+    info = Path(socket).stat()
+    return hashlib.sha256(f'{socket}:{info.st_dev}:{info.st_ino}'.encode()).hexdigest()
+
+
+def attention(socket, result):
+    """Read only a small worker snapshot; never start workers or send alerts."""
+    try:
+        path = alert_root() / (socket_key(socket) + '.json')
+        with path.open('rb') as stream:
+            raw = stream.read(32769)
+        if len(raw) > 32768:
+            return ''
+        doc = json.loads(raw)
+        if not 0 <= time.time() - doc['time'] <= 15:
+            return ''
+        windows = {token.split(':')[0] for token in result.split('|') if token}
+        return ''.join(window + ':attention|' for window in doc['windows']
+                       if isinstance(window, str) and window in windows)
+    except (OSError, ValueError, KeyError, TypeError):
+        return ''
+
+
 def status(socket, proc_root=Path('/proc')):
     try:
         deadline = time.monotonic() + TIMEOUT
@@ -143,7 +176,7 @@ def status(socket, proc_root=Path('/proc')):
             return ''
         result = render(panes, processes(proc_root, deadline))
         remaining(deadline)
-        return result
+        return result + attention(socket, result) if result else ''
     except (OSError, ValueError, IndexError, subprocess.SubprocessError):
         return ''
 

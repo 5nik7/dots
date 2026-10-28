@@ -1,0 +1,49 @@
+{
+  "host": "Android-15-aarch64-64bit-ELF",
+  "machine": "aarch64",
+  "python": "3.14.6",
+  "results": {
+    "bash-current": {
+      "max_ms": 293.968,
+      "p50_ms": 229.075,
+      "p95_ms": 270.129
+    },
+    "bash-help": {
+      "max_ms": 303.49,
+      "p50_ms": 201.286,
+      "p95_ms": 271.412
+    },
+    "bash-module-list": {
+      "max_ms": 279.436,
+      "p50_ms": 231.259,
+      "p95_ms": 269.812
+    },
+    "bash-version": {
+      "max_ms": 116.974,
+      "p50_ms": 94.801,
+      "p95_ms": 109.623
+    },
+    "python-current": {
+      "max_ms": 261.55,
+      "p50_ms": 214.052,
+      "p95_ms": 243.33
+    },
+    "python-help": {
+      "max_ms": 239.742,
+      "p50_ms": 187.244,
+      "p95_ms": 218.978
+    },
+    "python-module-list": {
+      "max_ms": 291.591,
+      "p50_ms": 216.035,
+      "p95_ms": 259.491
+    },
+    "python-version": {
+      "max_ms": 85.966,
+      "p50_ms": 79.72,
+      "p95_ms": 84.185
+    }
+  },
+  "samples": 60,
+  "warmups": 5
+}

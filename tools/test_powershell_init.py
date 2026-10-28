@@ -213,9 +213,20 @@ class PowerShellInitTests(unittest.TestCase):
         p = self.run_ps('-Command',
             "if ($PSEdition -eq 'Core') { exit 0 }; "
             "function Import-Module { throw 'IMPORT MUST NOT RUN' }; "
-            f"foreach ($feature in 'blastoff','command-not-found') {{ try {{ . {optional} $feature; exit 1 }} "
+            f"foreach ($feature in 'command-not-found') {{ try {{ . {optional} $feature; exit 1 }} "
             "catch { if ($_.Exception.Message -notlike '*requires PowerShell Core*') { exit 2 } } }; exit 0")
         self.assertEqual(p.returncode, 0, p.stderr)
+
+    def test_optional_blastoff_uses_bundled_launcher_without_module_import(self):
+        optional = literal(self.repo / 'shells/powershell/optional.ps1')
+        launcher = self.repo / 'bin/blastoff.ps1'
+        launcher.parent.mkdir(exist_ok=True)
+        launcher.write_text("$args | ConvertTo-Json -Compress; exit 23\n")
+        p = self.run_ps('-Command',
+            "function Import-Module { throw 'IMPORT MUST NOT RUN' }; "
+            f". {optional} blastoff; blastoff 'two words' ''; if ($LASTEXITCODE -ne 23) {{ exit 1 }}; exit 0")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(json.loads(p.stdout), ['two words', ''])
 
     def test_automatic_starship_failure_keeps_plain_prompt(self):
         entry = literal(self.repo / 'shells/powershell/profile.ps1')

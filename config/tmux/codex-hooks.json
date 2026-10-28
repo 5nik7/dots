@@ -1,0 +1,11 @@
+{
+  "description": "Dots Codex attention notifications; observational only",
+  "hooks": {
+    "PreToolUse": [{"matcher": "(^|[.])request_user_input(_async)?$", "hooks": [{"type": "command", "command": "@DOTS_CODEX_ALERT_COMMAND@", "timeout": 3}]}],
+    "PostToolUse": [{"hooks": [{"type": "command", "command": "@DOTS_CODEX_ALERT_COMMAND@", "timeout": 3}]}],
+    "PermissionRequest": [{"hooks": [{"type": "command", "command": "@DOTS_CODEX_ALERT_COMMAND@", "timeout": 3}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "@DOTS_CODEX_ALERT_COMMAND@", "timeout": 3}]}],
+    "Interrupt": [{"hooks": [{"type": "command", "command": "@DOTS_CODEX_ALERT_COMMAND@", "timeout": 3}]}],
+    "SessionEnd": [{"hooks": [{"type": "command", "command": "@DOTS_CODEX_ALERT_COMMAND@", "timeout": 3}]}]
+  }
+}

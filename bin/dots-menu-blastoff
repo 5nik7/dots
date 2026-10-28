@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# dots:summary=Browse blastoff workflows in a compact FZF menu
+# dots:usage=[--print|--json|--browse] [--query TEXT] [--client CLIENT]
+# dots:option=--print||flag|List workflows without opening FZF
+# dots:option=--json||flag|Print versioned launcher menu data
+# dots:option=--browse||flag|Open FZF explicitly, including from a tmux binding
+# dots:option=--query||string|Initial search text or listing filter
+# dots:option=--client||string|Exact invoking tmux client
+# dots:example=dots menu blastoff
+# dots:example=dots menu blastoff --print
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/menu_cli.py" blastoff "$@"

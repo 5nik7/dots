@@ -1,0 +1,6 @@
+test_installed_lifecycle (test_installed_package.InstalledPackage.test_installed_lifecycle) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 5.032s
+
+OK

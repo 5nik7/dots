@@ -625,3 +625,17 @@ Debug human reports use nested trees. `startup` adds `--view tree` (with `sequen
 ## Wiki commands
 
 `dots wiki` shows navigation and checkout freshness. Its routes are `list`, `show`, `search`, `browse`, `open`, `edit`, `path`, `check`, `build` and `init`; exact options, data modes and examples are in [wiki maintenance](wiki.md). Page/section completion reads the static page manifest. `dots git wiki info|status|sync|publish` selects the separate wiki repository; top-level Git info/status/sync/publish accepts `--no-wiki`. No command runs extensions merely to generate the command reference.
+
+## Blastoff and pkgs
+
+`dots blastoff [ARGUMENTS...]` and `dots pkgs [ARGUMENTS...]` expose every bundled application subcommand, with equivalent standalone `blastoff` and `pkgs` entry points. Both routes preserve argument boundaries, stdout/stderr and application exit codes; application help works at any supported position. `dots help blastoff` and `dots help pkgs` expose static Dots metadata without executing the applications. Metadata, the generated command reference and contextual Dots completion derive from the bundled grammars through `tools/generate_bundled_apps.py`.
+
+Examples: `dots blastoff theme list`, `dots blastoff --dry-run theme apply local:dots`, `dots pkgs install --manager npm --global typescript --dry-run`. Application color flags follow the route; raw and JSON output are forwarded without decoration. See [application commands and platform boundaries](bundled-applications.md). Native Windows pkgs commands other than help/version explicitly return status 3; help/version and metadata remain available.
+
+Current/theme-list/save/backup-list/doctor views in Blastoff and list/managers/doctor views in pkgs share [Dots report formatting](presentation.md#application-reports) in terminals and popup readers. Use `dots --color=always blastoff current` or `blastoff current --color always` to force report colors; a route-local application flag takes precedence over the Dots prefix setting. `DOTS_ICONS` controls resource icons independently. Ordinary redirected text, JSON, raw TOML and completion output retain their existing formats.
+
+## Application plugin migration and menus
+
+`dots files migrate apps` (also `dots files migrate-apps`) previews supported legacy application installations. `--yes` applies through the installation receipt and Store; `--dry-run` always wins and `--json` uses schema 1. It installs only application assets, retains backups and leaves unrelated configuration/themes untouched. `dots menu blastoff` and `dots menu pkgs` open common workflow families with the existing menu modes, terminal handoff and native availability rules. See [plugins](plugins.md).
+
+Codex attention setup is an explicit repository maintenance helper, documented under [tmux notifications](themes.md#codex-attention-notifications); it adds no public `dots` route or completion entry. Menu review: no menu is added because installing trusted lifecycle hooks requires the documented configuration preview and Codex's own `/hooks` review.

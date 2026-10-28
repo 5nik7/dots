@@ -23,14 +23,14 @@ def main():
         root = Path(tmp)
         env = environment(root, go)
         source = root / 'module'
-        shutil.copytree(REPO / 'anodize', source, ignore=shutil.ignore_patterns('.build'))
+        shutil.copytree(REPO / 'plugins/anodize/engine', source, ignore=shutil.ignore_patterns('.build'))
         name = 'anodize-engine.exe' if os.name == 'nt' else 'anodize-engine'
         binary = root / 'bin' / name
         def run(command):
             subprocess.run(command, cwd=source, env=env, check=True, timeout=600)
         run([go, 'build', '-trimpath', '-o', str(binary), './cmd/anodize-engine'])
         if args.action == 'build':
-            output = REPO / 'anodize/.build'
+            output = REPO / 'plugins/anodize/engine/.build'
             output.mkdir(exist_ok=True)
             staged = output / (name + '.new')
             shutil.copy2(binary, staged)

@@ -1,5 +1,5 @@
 # Native completion; data comes from trusted Dots readers, never an extension.
-$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1')
+$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1', 'blastoff', 'blastoff.ps1', 'pkgs', 'pkgs.ps1')
 $dotsCompletionState = if ($global:dot -and $global:dot.state) { $global:dot.state } elseif ($env:DOTS_STATE_DIR) { $env:DOTS_STATE_DIR } elseif ($env:XDG_STATE_HOME) { Join-Path $env:XDG_STATE_HOME 'dots' } elseif ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'dots' } else { Join-Path $HOME '.local/state/dots' }
 $dotsNamesPath = Join-Path $dotsCompletionState 'themes/commands/current/names'
 if (Test-Path -LiteralPath $dotsNamesPath -PathType Leaf) {
@@ -22,6 +22,7 @@ Register-ArgumentCompleter -Native -CommandName $dotsCompletionNames -ScriptBloc
     $commandName = [IO.Path]::GetFileNameWithoutExtension($commandAst.CommandElements[0].Extent.Text)
     if ($commandName -eq 'theme') { $words = @('theme') + $words }
     elseif ($commandName -eq 'anodize') { $words = @('anodize') + $words }
+    elseif ($commandName -in @('blastoff', 'pkgs')) { $words = @($commandName) + $words }
     elseif ($commandName -ne 'dots') { $words = @('theme', $commandName) + $words }
     $savedExit = $global:LASTEXITCODE
     try {

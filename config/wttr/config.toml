@@ -93,8 +93,8 @@ unknown = ""  # weather-na
 "395" = ""    # moderate/heavy snow with thunder
 
 [night_icons]
-"113" = "" # clear night
-"116" = "" # partly cloudy night
+"113" = "󰖔" # clear night
+"116" = "󰼱" # partly cloudy night
 "392" = "" # snow with thunder at night
 "395" = "" # heavy snow with thunder at night
 

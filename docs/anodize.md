@@ -20,7 +20,7 @@ bin/anodize preview dusk
 bin/anodize apply dusk --dry-run
 ```
 
-`dots anodize` exposes the same commands when Dots is on PATH. Building explicitly replaces the ignored `anodize/.build/anodize-engine` artifact (`anodize-engine.exe` on Windows). Use `python -B tools/verify_anodize.py build` from PowerShell. There are no runtime builds, downloads or shell-startup engine calls. `ANODIZE_ENGINE` can point to a prebuilt executable for testing. Help works without the engine; palette operations explain how to build it if missing. Run `anodize` or `anodize --help` for a compact command list and examples, and `anodize COMMAND --help` for described arguments and options. Help adapts to terminal width and uses shared Dots colors, including plain output with `NO_COLOR` or `--color=never`.
+`dots anodize` exposes the same commands when Dots is on PATH. Building explicitly replaces the ignored `plugins/anodize/engine/.build/anodize-engine` artifact (`anodize-engine.exe` on Windows). Use `python -B tools/verify_anodize.py build` from PowerShell. There are no runtime builds, downloads or shell-startup engine calls. `ANODIZE_ENGINE` can point to a prebuilt executable for testing. Help works without the engine; palette operations explain how to build it if missing. Run `anodize` or `anodize --help` for a compact command list and examples, and `anodize COMMAND --help` for described arguments and options. Help adapts to terminal width and uses shared Dots colors, including plain output with `NO_COLOR` or `--color=never`.
 
 Saving a theme does not select or activate it. Review `anodize apply dusk --dry-run`, then use `anodize apply dusk --yes` to publish. Mutating commands prompt on interactive input; without a terminal or with `--json`, omission of `--yes` returns the preview. `--dry-run` takes precedence over `--yes` and creates no persistent state.
 
@@ -76,7 +76,7 @@ All three stops must be valid theme colors. If any is unavailable, banners retai
 
 `NO_COLOR` and `--color=never` retain monochrome artwork. Icon preferences affect ordinary UI icons and optional graphics eligibility, not the supplied text logo. Optional graphics remain capability-checked: Kitty excludes unverified multiplexer passthrough, and Chafa uses bounded `--fg-only --symbols=braille` output without probing, animation or installation. Graphics capability failures never affect the operation's exit status.
 
-Text width uses the destination terminal, then valid `COLUMNS`/`LINES`, then 80×24, reserving the caller's margin. Explicit larger text layouts have a 16-row asset budget independent of viewport height. PNG graphics keep their existing size limits. [Asset provenance](../lib/dots/anodize/assets/README.md) records the retained sources.
+Text width uses the destination terminal, then valid `COLUMNS`/`LINES`, then 80×24, reserving the caller's margin. Explicit larger text layouts have a 16-row asset budget independent of viewport height. PNG graphics keep their existing size limits. [Asset provenance](../plugins/anodize/assets/README.md) records the retained sources.
 
 Static Dots help uses only core-owned renderers and metadata; it never executes the Anodize extension or engine. Bash help retains its builtin text path without a Python requirement; colored Anodize help reads only the bounded published `shell.tsv` snapshot. Python banners read the corresponding `palette.json`. Neither path resolves themes or runs shell initialization, and plain/data paths do not load logo colors. Native help uses the same Python logo policy without Bash.
 
@@ -128,13 +128,13 @@ anodize completion fish | source
 
 For persistent use outside Dots shell configuration, save the emitted source in your shell's completion directory: `anodize` under Bash's `bash-completion/completions`, `_anodize` in a Zsh `fpath` directory, or `anodize.fish` under Fish's `completions`. Loading these files does no discovery; queries read static Dots metadata and theme names only. No engine, theme activation, network access or extension execution is needed. The Zsh adapter preserves values and descriptions for FZF-tab.
 
-The section-1 manual is [man/anodize.1](../man/anodize.1). From the checkout, read it without installation:
+The section-1 manual is [man/anodize.1](../plugins/anodize/man/anodize.1). From the checkout, read it without installation:
 
 ```sh
-man -l man/anodize.1
+man -l plugins/anodize/man/anodize.1
 ```
 
-To make `man anodize` available, install that file as `anodize.1` in a `man1` directory on your manual search path (for example `$PREFIX/share/man/man1` on Termux or `~/.local/share/man/man1` with a configured user manpath). This change does not install system files automatically.
+Combined Dots setup installs `anodize.1` under `~/.local/share/man/man1`. Configure the user manpath if needed, or use `man -M ~/.local/share/man anodize`. No system manual directory is changed.
 
 The adapters are generated from the shared Dots shell adapters; the manual's command/option reference is generated from the CLI parser. After changing either source, run `python3 -B tools/generate_anodize_integration.py`; `--check` verifies checked-in artifacts without writing. Static wrapper headers remain the completion metadata source, with tests checking parser and engine vocabulary consistency.
 
@@ -234,7 +234,7 @@ Apply preflights the current publisher's target set and renders templates into d
 
 Native Termux is the tested CLI target. Linux/WSL use the existing POSIX adapter boundaries but are not newly certified by these tests; WSL wallpaper changes remain unavailable. Native PowerShell authoring and publication adapters are implemented with Windows runtime acceptance pending; see [native PowerShell](powershell.md). An Android APK and a TUI remain future work. The pure Go library has no desktop dependencies; Android packaging and language bindings are not implemented.
 
-Color math and generation are adapted from the pinned local Aether source. See [provenance](../anodize/PROVENANCE.md) for revision, attribution and the upstream README's license declaration. Standard-library image sampling differs from Aether's desktop resampling, so exact image results can differ. No desktop UI, network services or arbitrary theme hooks are included. The separate `~/repos/Anodize.nvim` project owns plugin development; Dots integrates its tested local runtime.
+Color math and generation are adapted from the pinned local Aether source. See [provenance](../plugins/anodize/engine/PROVENANCE.md) for revision, attribution and the upstream README's license declaration. Standard-library image sampling differs from Aether's desktop resampling, so exact image results can differ. No desktop UI, network services or arbitrary theme hooks are included. The separate `~/repos/Anodize.nvim` project owns plugin development; Dots integrates its tested local runtime.
 
 ## Neovim integration
 

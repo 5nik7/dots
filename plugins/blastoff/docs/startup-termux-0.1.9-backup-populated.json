@@ -1,0 +1,25 @@
+{
+  "host": "Android-15-aarch64-64bit-ELF",
+  "machine": "aarch64",
+  "python": "3.14.6",
+  "samples": 60,
+  "warmups": 5,
+  "records": 20,
+  "payload_bytes_each": 6056,
+  "color": "always",
+  "columns": 80,
+  "method": "alternating order each sample; Python entry; isolated fixture; no concurrent tests",
+  "fixture_unchanged": true,
+  "results": {
+    "0.1.8": {
+      "p50_ms": 243.976,
+      "p95_ms": 279.065,
+      "max_ms": 325.251
+    },
+    "0.1.9": {
+      "p50_ms": 247.723,
+      "p95_ms": 270.157,
+      "max_ms": 327.028
+    }
+  }
+}

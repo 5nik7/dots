@@ -1,0 +1,33 @@
+{
+  "comparison_results": {
+    "bash-list-human": {
+      "max_ms": 314.455,
+      "p50_ms": 264.266,
+      "p95_ms": 298.313
+    },
+    "python-list-human": {
+      "max_ms": 314.788,
+      "p50_ms": 247.956,
+      "p95_ms": 294.924
+    }
+  },
+  "comparison_root": "/data/data/com.termux/files/usr/tmp/blastoff-0110-5ejamxqs/baseline",
+  "feature_library_size": 0,
+  "host": "Android-15-aarch64-64bit-ELF",
+  "machine": "aarch64",
+  "python": "3.14.6",
+  "results": {
+    "bash-list-human": {
+      "max_ms": 319.435,
+      "p50_ms": 277.127,
+      "p95_ms": 313.952
+    },
+    "python-list-human": {
+      "max_ms": 309.094,
+      "p50_ms": 252.281,
+      "p95_ms": 279.513
+    }
+  },
+  "samples": 60,
+  "warmups": 5
+}

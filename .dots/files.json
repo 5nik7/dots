@@ -328,6 +328,23 @@
       }
     },
     {
+      "id": "less",
+      "source": "config/less/lesskey",
+      "app": "less",
+      "category": "config",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "target": "${CONFIG}/lesskey",
+      "strategy": "link",
+      "targets": {
+        "windows": "${HOME}/_lesskey"
+      }
+    },
+    {
       "id": "lsd",
       "source": "config/lsd",
       "app": "lsd",

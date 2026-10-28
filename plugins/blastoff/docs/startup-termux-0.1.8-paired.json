@@ -1,0 +1,113 @@
+{
+  "comparison_results": {
+    "bash-backup-list-human": {
+      "max_ms": 317.5,
+      "p50_ms": 249.62,
+      "p95_ms": 292.931
+    },
+    "bash-current": {
+      "max_ms": 369.896,
+      "p50_ms": 258.859,
+      "p95_ms": 310.83
+    },
+    "bash-help": {
+      "max_ms": 508.34,
+      "p50_ms": 271.424,
+      "p95_ms": 348.479
+    },
+    "bash-module-list": {
+      "max_ms": 313.929,
+      "p50_ms": 246.365,
+      "p95_ms": 303.592
+    },
+    "bash-version": {
+      "max_ms": 146.095,
+      "p50_ms": 115.199,
+      "p95_ms": 129.532
+    },
+    "python-backup-list-human": {
+      "max_ms": 398.318,
+      "p50_ms": 298.552,
+      "p95_ms": 376.763
+    },
+    "python-current": {
+      "max_ms": 789.205,
+      "p50_ms": 298.294,
+      "p95_ms": 540.447
+    },
+    "python-help": {
+      "max_ms": 611.677,
+      "p50_ms": 222.653,
+      "p95_ms": 465.358
+    },
+    "python-module-list": {
+      "max_ms": 445.098,
+      "p50_ms": 287.27,
+      "p95_ms": 380.806
+    },
+    "python-version": {
+      "max_ms": 292.694,
+      "p50_ms": 105.643,
+      "p95_ms": 185.133
+    }
+  },
+  "comparison_root": "/data/data/com.termux/files/usr/tmp/blastoff-018-baseline-upzi2a2q/source",
+  "feature_library_size": 0,
+  "host": "Android-15-aarch64-64bit-ELF",
+  "machine": "aarch64",
+  "python": "3.14.6",
+  "results": {
+    "bash-backup-list-human": {
+      "max_ms": 316.358,
+      "p50_ms": 255.696,
+      "p95_ms": 289.685
+    },
+    "bash-current": {
+      "max_ms": 358.064,
+      "p50_ms": 256.892,
+      "p95_ms": 323.303
+    },
+    "bash-help": {
+      "max_ms": 391.605,
+      "p50_ms": 272.497,
+      "p95_ms": 342.697
+    },
+    "bash-module-list": {
+      "max_ms": 316.74,
+      "p50_ms": 244.592,
+      "p95_ms": 303.478
+    },
+    "bash-version": {
+      "max_ms": 134.008,
+      "p50_ms": 114.144,
+      "p95_ms": 128.703
+    },
+    "python-backup-list-human": {
+      "max_ms": 389.429,
+      "p50_ms": 295.972,
+      "p95_ms": 358.172
+    },
+    "python-current": {
+      "max_ms": 843.314,
+      "p50_ms": 297.716,
+      "p95_ms": 561.375
+    },
+    "python-help": {
+      "max_ms": 1072.168,
+      "p50_ms": 230.684,
+      "p95_ms": 509.652
+    },
+    "python-module-list": {
+      "max_ms": 503.088,
+      "p50_ms": 295.716,
+      "p95_ms": 394.453
+    },
+    "python-version": {
+      "max_ms": 333.575,
+      "p50_ms": 110.504,
+      "p95_ms": 298.246
+    }
+  },
+  "samples": 60,
+  "warmups": 5
+}

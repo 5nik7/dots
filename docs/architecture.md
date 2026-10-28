@@ -4,7 +4,7 @@
 
 The repository owns live configuration under `config/`, shell adapters under `shells/`, executable entry points under `bin/`, and shared controllers under `lib/dots/`. Keep the temporary `configs -> config` aliases until a separately reviewed cleanup. Optional repositories retain their own Git histories and are never initialized merely to run general checks.
 
-Bash and PowerShell dispatch to shared Python controllers for managed file operations, installation, Git and theme publication. Platform adapters own filesystem and shell differences. The independent `anodize/` engine authors palettes; the theme controller owns their publication and recovery. See [data contracts](specification.md) and [safety](safety.md) for state ownership.
+Bash and PowerShell dispatch to shared Python controllers for managed file operations, installation, Git and theme publication. Platform adapters own filesystem and shell differences. The independent `plugins/anodize/engine/` engine authors palettes; the theme controller owns their publication and recovery. See [data contracts](specification.md) and [safety](safety.md) for state ownership.
 
 ## Live Bash Framework
 
@@ -16,6 +16,8 @@ and the shared built-in/help model; `ui.bash` is a sourceable presentation libra
 Only help/discovery/completion load the catalog. The dispatcher has no persistent catalog cache. Managed mutations belong to the shared Python transaction engine. See [decision 0006](decisions/0006-bash-command-framework.md).
 
 The [presentation contract](presentation.md) owns human output policy. `ui.bash` implements the shared Bash renderer; the file catalog's Python `Presentation` class mirrors it and requires policy parity checks when changed. Domain commands own their result data and choose human or data views explicitly. The dispatcher preserves extension streams; it does not decorate arbitrary output.
+
+`lib/dots/plugin_presentation.py` adapts the existing Python renderer for application reports, resolving human/capture context and report color precedence without loading the renderer for data or ordinary redirected output. Blastoff and pkgs own their report layouts inside their plugins and pass already-collected data. Shared code resolves from the executing checkout, including isolated Python entry points. Presentation adds no backend discovery or per-row subprocesses.
 
 The optional `lib/dots/interactive.bash` adapter is loaded only by interactive
 command paths. It owns Gum/FZF capability selection, child-only presentation
@@ -206,9 +208,9 @@ operations and source/target/catalog guards in memory until Apply.
 
 ## Anodize authoring boundary
 
-`lib/dots/anodize/logo.py` owns the [LOGO1/LOGO2 contract](anodize.md#terminal-logo), exact fallback artwork and explicit alternative graphics/layout choices. Routine and embedded previews default to LOGO1; help uses LOGO2 when it fits. The pure shared `text_gradient.py` helper interpolates hint/info/accent stops within independently identified artwork regions; the builtin Bash renderer follows the same integer formula. Colored banners read bounded published palette snapshots, while addressed palette colors flow directly into results and the shared preview renderer. Palette-bearing results and draft review compose branding, metadata, body and notes in one ColorView, including its background from the first row. No theme resolution or startup work is added. Core-owned `logo.bash` supplies equivalent static Bash help without Python or extension execution; native help imports the core Python renderer. Only Anodize help/dispatch loads its logo options. Interactive Preview/Extract render their result once into the shared document handoff/reader after selection, preserving terminal styling while closing the picker host before the fitted reader opens. Branding and static help do not call the engine, authoring operations or transaction store.
+`plugins/anodize/logo.py` owns the [LOGO1/LOGO2 contract](anodize.md#terminal-logo), exact fallback artwork and explicit alternative graphics/layout choices. Routine and embedded previews default to LOGO1; help uses LOGO2 when it fits. The pure shared `text_gradient.py` helper interpolates hint/info/accent stops within independently identified artwork regions; the builtin Bash renderer follows the same integer formula. Colored banners read bounded published palette snapshots, while addressed palette colors flow directly into results and the shared preview renderer. Palette-bearing results and draft review compose branding, metadata, body and notes in one ColorView, including its background from the first row. No theme resolution or startup work is added. Core-owned `logo.bash` supplies equivalent static Bash help without Python or extension execution; native help imports the core Python renderer. Only Anodize help/dispatch loads its logo options. Interactive Preview/Extract render their result once into the shared document handoff/reader after selection, preserving terminal styling while closing the picker host before the fitted reader opens. Branding and static help do not call the engine, authoring operations or transaction store.
 
-`anodize/` is an independent pure Go color engine; `lib/dots/anodize/` owns Python authoring and the private Bash publication bridge. It reuses `files/transactions.py` and existing theme rendering/publication. `bin/anodize` and static `dots-anodize-*` routes provide CLI access. No engine calls occur during shell startup. See [decision 0011](decisions/0011-anodize-authoring.md).
+`plugins/anodize/engine/` is an independent pure Go color engine; `plugins/anodize/` owns Python authoring and the private Bash publication bridge. It reuses `files/transactions.py` and existing theme rendering/publication. `bin/anodize` and static `dots-anodize-*` routes provide CLI access. No engine calls occur during shell startup. See [decision 0011](decisions/0011-anodize-authoring.md).
 
 Anodize standalone completion reuses generated copies of the shared Bash/Zsh/Fish adapters. Its private query bridge translates the standalone command line into the Dots completion protocol, reading bundled static headers and the selected theme repository without executing leaf commands or the Go engine. `tools/generate_anodize_integration.py` owns reproducible adapter generation and `man/anodize.1`; command and option text in the manual comes from the Python parser.
 
@@ -310,7 +312,7 @@ Bash's established Git/theme frontends remain during native acceptance. Do not m
 
 Anodize authoring resolves both user and repository theme roots; explicit built-in
 saves and journaled promotion remain in its Python controller and the shared Store.
-`anodize/interactive.py` owns transient drafts and token-based preview snapshots.
+`plugins/anodize/interactive.py` owns transient drafts and token-based preview snapshots.
 `anodize/completion_preview.py` serves explicitly displayed Zsh FZF-tab previews,
 with cache lifetime owned by the FZF invocation. Ordinary static completion remains
 engine-free. Both Dots and Anodize call `themes/presentation.py` for palette syntax
@@ -366,3 +368,17 @@ The debug subsystem now separates native observation, bounded in-memory state co
 The shared wiki controller reads canonical source documents plus first-party static metadata and a page/navigation manifest. It generates a deterministic, independently versioned wiki projection and sidebar; the source repository remains authoritative. The shared Git association adapter adds the external wiki without treating it as a submodule or changing parent indexes. Bash and native entry points delegate associated operations to the existing Python workflow. Ordinary standalone/submodule engines retain their contracts. Builds use the common transaction store; Git operations remain incremental. See [wiki](wiki.md).
 
 The optional less standout style is owned by `lib/dots/less_style.py` for Python consumers and builtin-only adapters under `lib/dots/shell/less.*` for native shells. Existing shell theme-refresh boundaries consume published color records. Popup readers resolve the published palette at invocation, without extending command discovery, shell startup scans or theme publication. See [global less colors](shell-environment.md#global-less-colors).
+
+## Bundled applications
+
+`plugins/blastoff/` and `plugins/pkgs/` contain first-party application sources absorbed from their standalone repositories; `plugins/manifest.json` records import provenance. Their runtime cores remain independent of Dots controller imports. `bin/blastoff` and `bin/pkgs` resolve the owning checkout and execute those cores; Dots-prefixed routes forward the same argument vector. Native PowerShell reaches them through the shared Python dispatcher and `lib/dots/bundled_apps.py`, without Bash.
+
+`tools/generate_bundled_apps.py` reads pure application grammars to generate static route headers and completion metadata. Help/discovery never execute an extension or package backend. The shared checkout installer owns command/completion/manual publication and removal; imported standalone lifecycle helpers are retained historical tooling and are never used by Dots setup. Application actions retain their own established backup or package-manager semantics. See [bundled applications](bundled-applications.md).
+
+## Application plugin ownership
+
+The three first-party application source trees live under `plugins/`, declared by its manifest. Anodize owns its Python adapters and independent Go engine there; shared Dots services remain in `lib/dots`. Static launchers resolve one selected plugin without discovery. The installation controller owns combined assets and receipt-led legacy migration through the existing Store. See [application plugins](plugins.md).
+
+### Codex attention bridge
+
+`config/tmux/codex-alerts.py` owns observational hook ingestion, event deduplication, foreground thread/pane association, focus acknowledgement and optional Termux delivery. Its one-per-server worker publishes bounded expiring attention snapshots; `codex-status.py` remains a read-only renderer. `tools/configure_codex_notifications.py` owns the explicit setup preview and delegates all personal-file writes/undo to the existing Store. Repository preferences and hook templates are source; private queue/snapshot and personal Codex files are not. See [notification behavior](themes.md#codex-attention-notifications) and the [maintenance guide](../agents/guides/codex-notifications.md).

@@ -1,0 +1,23 @@
+# User preferences: preserve these when maintaining Codex/tmux integration.
+# Brackets cover the whole label; tmux's shared alert style supplies bold
+# bright_red on darker_background. There is no separate hard-coded palette.
+schema = 1
+enabled = true
+poll_seconds = 5
+unfocused_only = true
+clear_on_view = true
+
+[events]
+choices = true
+approvals = true
+completion = true
+
+[termux]
+enabled = true
+vibration_ms = 300
+force_vibration = true
+toast_background = "dark_background"
+toast_foreground = "warning"
+toast_gravity = "middle"
+toast_short = true
+excerpt_chars = 240

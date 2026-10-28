@@ -16,7 +16,7 @@ class NativeAnodize(unittest.TestCase):
     command = fixtures.NativeCLI.command
 
     def setUp(self):
-        engine = Path(os.environ.get('ANODIZE_ENGINE') or fixtures.ROOT / 'anodize/.build' /
+        engine = Path(os.environ.get('ANODIZE_ENGINE') or fixtures.ROOT / 'plugins/anodize/engine/.build' /
                       ('anodize-engine.exe' if os.name == 'nt' else 'anodize-engine'))
         if not engine.is_file():
             if os.environ.get('DOTS_TEST_ANODIZE'): self.fail('required native Anodize engine missing')

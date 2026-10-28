@@ -46,11 +46,29 @@ ACTIONS = (
     Action('keys', 'keys', ('keys',), ('--browse',), 'popup', '󰌆'),
     group('tmux', '', route=('menu', 'tmux'), tool='tmux'),
     group('files', '󰉋'), group('git', '', tool='git'), group('theme', '󰏘'), group('themes', '󰏘'),
-    group('anodize', '󰏘'), group('debug', '󰃤'), group('profile', '󰀵'),
+    group('anodize', '󰏘'), group('blastoff', '󱓞'), group('pkgs', '󰏖'),
+    group('debug', '󰃤'), group('profile', '󰀵'),
     group('profiles', '󰀵'), group('wiki', '󰈙'),
     Action('env', 'env', ('env',), icon='󰒓'),
 )
 FAMILIES = {
+    'blastoff': (
+        Action('pick', 'choose theme', ('blastoff', 'pick'), kind='terminal'),
+        Action('current', 'current theme', ('blastoff', 'current')),
+        Action('list', 'themes', ('blastoff', 'theme', 'list')),
+        Action('edit', 'edit active configuration', ('blastoff', 'theme', 'edit'), kind='terminal'),
+        Action('save', 'save active theme', ('blastoff', 'theme', 'save'), kind='terminal'),
+        Action('modules', 'browse modules', ('blastoff', 'module', 'show'), kind='terminal'),
+        Action('backups', 'backups', ('blastoff', 'backup', 'list')),
+        Action('doctor', 'doctor', ('blastoff', 'doctor')),
+    ),
+    'pkgs': (
+        *tuple(Action(name, name, ('pkgs', name), kind='terminal')
+               for name in ('search', 'install', 'uninstall')),
+        Action('list', 'installed packages', ('pkgs', 'list'), ('--installed',)),
+        *tuple(Action(name, name, ('pkgs', name), kind='terminal') for name in ('upgrade', 'refresh')),
+        *leaves('pkgs', 'managers doctor'),
+    ),
     'tmux': (
         Action('sessions', 'sessions', ('menu', 'tmux', 'sessions'), kind='session', icon='', tool='tmux'),
         Action('keys', 'keys', ('menu', 'tmux', 'keys'), ('--browse',), 'popup', '󰌆', 'tmux'),
@@ -105,6 +123,8 @@ def entry(root, action, *, windows=None):
     tool = action.tool or ('git' if action.route[0] == 'git' else '')
     if windows and tool == 'tmux':
         reason = 'Tmux menus are unavailable on native Windows'
+    elif windows and action.route[0] == 'pkgs' and not action.submenu:
+        reason = 'Package operations require a separate Termux, Linux or WSL installation'
     elif tool and not shutil.which(tool):
         reason = tool + ' is unavailable'
     if action.route[0] in ('theme', 'themes', 'anodize') and sys.version_info < (3, 11):
@@ -163,7 +183,7 @@ def run(args):
         raise ValueError('menu checkout root must be absolute')
     interactive = args.menu_mode == 'browse' or (args.menu_mode == 'auto' and terminal() and os.environ.get('TERM') != 'dumb')
     if not interactive:
-        choose(launcher(root), mode=args.menu_mode, query=args.query)
+        choose(launcher(root, family=getattr(args, 'family', '')), mode=args.menu_mode, query=args.query)
         return 0
     context = None
     if os.name != 'nt' and os.environ.get('DOTS_MENU_CONTEXT'):
@@ -174,7 +194,7 @@ def run(args):
         context = TmuxContext.capture(client=args.client)
     elif args.client:
         raise ValueError('--client requires an inherited tmux server and pane')
-    stack = [dict(family='', query=args.query)]
+    stack = [dict(family=getattr(args, 'family', ''), query=args.query)]
     while stack:
         frame = stack[-1]
         family = frame['family']
@@ -211,6 +231,8 @@ def run(args):
 def main(argv=None):
     parser = argparse.ArgumentParser(prog='dots menu', description='Browse Dots command families')
     add_arguments(parser)
+    parser.add_argument('family', nargs='?', choices=('blastoff', 'pkgs'), default='',
+                        help='Open an application family directly')
     parser.add_argument('--client', help='Exact invoking tmux client (requires an inherited server and pane)')
     args = parser.parse_args(argv)
     try:

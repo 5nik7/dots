@@ -32,6 +32,7 @@ Read the guide matching the work before changing files:
 - [`agents/guides/platforms.md`](agents/guides/platforms.md) — Termux, Linux, WSL, and Windows-specific work.
 - [`agents/guides/testing.md`](agents/guides/testing.md) — test isolation, safety tests, integration tests, and benchmarks.
 - [`agents/guides/documentation.md`](agents/guides/documentation.md) — documentation ownership and synchronization requirements.
+- [`agents/guides/codex-notifications.md`](agents/guides/codex-notifications.md) — Codex attention preferences, observational hooks, tmux acknowledgement and Termux alerts.
 
 Reference documents:
 
@@ -76,7 +77,7 @@ See `docs/principles.md` for the consequences of each principle.
 
 ## Working Architecture
 
-Shell entry points own native invocation and initialization. Shared Python controllers under `lib/dots/` own file catalogs, configuration, Git operations, themes and checkout setup. `lib/dots/files/transactions.py` owns managed file preflight, journals, backups, rollback and recovery; platform adapters own filesystem primitives. The independent `anodize/` Go module owns palette extraction and color transformations.
+Shell entry points own native invocation and initialization. Shared Python controllers under `lib/dots/` own file catalogs, configuration, Git operations, themes and checkout setup. `lib/dots/files/transactions.py` owns managed file preflight, journals, backups, rollback and recovery; platform adapters own filesystem primitives. The independent `plugins/anodize/engine/` Go module owns palette extraction and color transformations.
 
 External `dots-*` commands may add cohesive features. They must not circumvent the transaction engine for managed filesystem changes. See [architecture](docs/architecture.md) for component ownership.
 
@@ -96,6 +97,8 @@ For the live Bash executable, follow [decision 0006](docs/decisions/0006-bash-co
 - Prefer optional Gum for suitable new or changed interactive workflows, following [the presentation contract](docs/presentation.md#optional-gum-interactions). Use shared adapters, capability checks and useful fallbacks; preserve scripts, cancellation and explicit approval semantics.
 
 Do not add a new command or rename an existing route without updating `docs/commands.md`, completion behavior, command metadata tests, and user-facing documentation when applicable.
+
+For every new or changed command, record whether a Dots menu should be added, updated or left unchanged, with a reason. Follow command maintenance and menu authoring; this is a development review, not runtime discovery or automatic approval of menu actions.
 
 ## Platform Boundaries
 

@@ -1,0 +1,18 @@
+{
+  "host": "Android-15-aarch64-64bit-ELF",
+  "python": "3.14.6",
+  "version": "0.1.2",
+  "samples": 20,
+  "warmups": 3,
+  "note": "Isolated HOME/config/storage, stdout redirected, NO_COLOR set. Focused tests may overlap; not an idle-machine comparison or a speedup claim. Help now derives from the parser rather than a cached argparse string.",
+  "commands": {
+    "python_welcome": "python3 -I lib/blastoff.py",
+    "python_help": "python3 -I lib/blastoff.py --help",
+    "bash_help": "bash bin/blastoff -h"
+  },
+  "results": {
+    "python_welcome": {"p50_ms": 104.927, "p95_ms": 126.455},
+    "python_help": {"p50_ms": 154.885, "p95_ms": 162.335},
+    "bash_help": {"p50_ms": 170.177, "p95_ms": 224.972}
+  }
+}

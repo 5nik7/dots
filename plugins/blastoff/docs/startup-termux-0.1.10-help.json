@@ -1,0 +1,53 @@
+{
+  "comparison_results": {
+    "bash-bare": {
+      "max_ms": 189.689,
+      "p50_ms": 135.171,
+      "p95_ms": 159.595
+    },
+    "bash-help": {
+      "max_ms": 327.608,
+      "p50_ms": 204.425,
+      "p95_ms": 264.013
+    },
+    "python-bare": {
+      "max_ms": 158.58,
+      "p50_ms": 122.065,
+      "p95_ms": 148.742
+    },
+    "python-help": {
+      "max_ms": 270.148,
+      "p50_ms": 196.735,
+      "p95_ms": 255.18
+    }
+  },
+  "comparison_root": "/data/data/com.termux/files/usr/tmp/blastoff-help-review-j93am4ac/baseline",
+  "feature_library_size": 0,
+  "host": "Android-15-aarch64-64bit-ELF",
+  "machine": "aarch64",
+  "python": "3.14.6",
+  "results": {
+    "bash-bare": {
+      "max_ms": 364.131,
+      "p50_ms": 207.522,
+      "p95_ms": 262.243
+    },
+    "bash-help": {
+      "max_ms": 364.712,
+      "p50_ms": 206.697,
+      "p95_ms": 284.382
+    },
+    "python-bare": {
+      "max_ms": 266.798,
+      "p50_ms": 194.41,
+      "p95_ms": 247.473
+    },
+    "python-help": {
+      "max_ms": 384.509,
+      "p50_ms": 193.513,
+      "p95_ms": 253.66
+    }
+  },
+  "samples": 60,
+  "warmups": 5
+}

@@ -140,7 +140,7 @@ dots_command_help() {
   shift
   if [[ $route == anodize || $route == anodize\ * ]]; then
     # Shared core renderer only: help must never execute the resolved extension.
-    source "$DOTS_LIB_DIR/anodize/logo.bash"
+    source "$DOTS_LIB_DIR/../../plugins/anodize/logo.bash"
     dots::anodize_logo "$@" || return
   fi
   dots::heading "dots $route"

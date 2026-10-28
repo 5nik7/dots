@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Resolve installed links without Git or the caller's DOTS setting.
+source_path=${BASH_SOURCE[0]}
+[[ $source_path == */* ]] || source_path=./$source_path
+while [[ -L $source_path ]]; do
+  source_dir=$(CDPATH='' cd -P -- "${source_path%/*}" && pwd) || exit 1
+  source_path=$(readlink -- "$source_path") || exit 1
+  [[ $source_path = /* ]] || source_path=$source_dir/$source_path
+done
+source_dir=$(CDPATH='' cd -P -- "${source_path%/*}/.." && pwd) || exit 1
+case ${1-} in
+  --version|-V)
+    IFS= read -r version < "$source_dir/plugins/pkgs/VERSION" || exit 1
+    printf 'pkgs %s\n' "$version"
+    exit 0 ;;
+esac
+runtime=python3
+command -v -- "$runtime" >/dev/null 2>&1 || { printf 'pkgs: Python runtime unavailable: %s\n' "$runtime" >&2; exit 3; }
+exec "$runtime" -B "$source_dir/plugins/pkgs/main.py" "$@"

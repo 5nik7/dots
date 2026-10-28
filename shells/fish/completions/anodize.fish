@@ -1,1 +1,1 @@
-../../../lib/dots/anodize/completion/fish
+../../../plugins/anodize/completion/fish

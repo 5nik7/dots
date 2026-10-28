@@ -1,1 +1,1 @@
-../../../lib/dots/anodize/completion/bash
+../../../plugins/anodize/completion/bash

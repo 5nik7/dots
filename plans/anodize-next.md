@@ -21,7 +21,7 @@ The immediate concrete issue is the two existing Zsh alias failures recorded in 
 
 Dots owns the core/CLI, publisher and its editor configuration. The finished plugin handoff is in `~/repos/Anodize.nvim/docs/dots-integration.md`; inspect it read-only for this scope. A necessary plugin change needs a clearly identified separate scope and its repository's instructions. Preserve personal editor highlights, transparency, lualine layout and dashboard animation behavior.
 
-Do not create another transaction engine, introduce arbitrary hooks, build an APK/TUI, fetch online theme sources, install packages or publish releases in this task. `man/anodize.1` is available for local viewing; that does not mean it is installed in the system manual path. Source provenance remains in [PROVENANCE.md](../anodize/PROVENANCE.md). The recorded absence of a standalone upstream license file is a release question, not permission to invent notices or a claim of legal clearance.
+Do not create another transaction engine, introduce arbitrary hooks, build an APK/TUI, fetch online theme sources, install packages or publish releases in this task. `man/anodize.1` is available for local viewing; that does not mean it is installed in the system manual path. Source provenance remains in [PROVENANCE.md](../plugins/anodize/engine/PROVENANCE.md). The recorded absence of a standalone upstream license file is a release question, not permission to invent notices or a claim of legal clearance.
 
 ## Verification and acceptance
 

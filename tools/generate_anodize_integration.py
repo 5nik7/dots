@@ -7,7 +7,7 @@ import sys
 import textwrap
 
 REPO = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO / 'lib/dots/anodize'))
+sys.path.insert(0, str(REPO / 'plugins/anodize'))
 from cli import parser
 
 
@@ -185,8 +185,8 @@ else
 fi
 '''
         source = re.sub(r'\bdots\b', 'anodize', source).replace('_dots', '_anodize').replace('DOTS_BASH', 'ANODIZE_BASH')
-        yield REPO/'lib/dots/anodize/completion'/shell, source
-    yield REPO/'man/anodize.1', manual()
+        yield REPO/'plugins/anodize/completion'/shell, source
+    yield REPO/'plugins/anodize/man/anodize.1', manual()
 
 
 if __name__ == '__main__':

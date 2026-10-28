@@ -86,3 +86,13 @@ Their catalog IDs and legacy `--with-source` selections remain compatible, but
 source acquisition no longer fetches either repository. Application installation
 still uses managed-file previews, backups and receipts. See
 [migration compatibility](profiles.md#androidots-and-windots-migration).
+
+## Bundled application setup
+
+The same root setup scripts and `dots files install/uninstall` manage Anodize, Blastoff and pkgs. Their public scripts inside the bundled directories delegate to this combined lifecycle. The installation receipt includes standalone launchers, POSIX Bash/Zsh completion files and manuals; Fish completion is part of the managed Fish configuration. Native Windows installs PowerShell launchers and uses Dots' native completion adapter. Missing declared payload files block the complete plan.
+
+No old standalone installer or package manager runs during setup/removal. Foreign command links remain protected; replaced regular files retain their first-install baseline. Uninstall preserves application data and drift while restoring unchanged owned targets. See [destinations and migration](bundled-applications.md#one-installation-and-removal).
+
+## Previous application installations
+
+Combined setup installs Anodize, Blastoff and pkgs from `plugins/`. Protected legacy links can be reconciled with `dots files migrate-apps`, which previews by default and applies only with `--yes`. This bounded operation installs application assets without reinstalling other configurations or publishing themes. Backups and original baselines remain available to normal uninstall/undo. See [supported migration layouts](plugins.md#legacy-application-migration).

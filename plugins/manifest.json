@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "plugins": {
+    "anodize": {
+      "runtime": "cli.py",
+      "manual": "man/anodize.1",
+      "completions": {
+        "bash": "completion/bash",
+        "zsh": "completion/zsh",
+        "fish": "completion/fish"
+      },
+      "python": "3.11",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "source": {
+        "provenance": "engine/PROVENANCE.md"
+      }
+    },
+    "blastoff": {
+      "runtime": "lib/blastoff.py",
+      "manual": "man/blastoff.1",
+      "completions": {
+        "bash": "completions/blastoff.bash",
+        "zsh": "completions/blastoff.zsh",
+        "fish": "completions/blastoff.fish"
+      },
+      "python": "3.11",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "source": {
+        "repository": "https://github.com/5nik7/blastoff",
+        "commit": "33f3bf697dd38716d727e4927373e46df87fbc14",
+        "version": "0.1.12",
+        "files": 177,
+        "excluded": [
+          ".git (history and local state)",
+          "untracked and ignored machine-local files"
+        ]
+      }
+    },
+    "pkgs": {
+      "runtime": "main.py",
+      "manual": "docs/pkgs.1",
+      "completions": {
+        "bash": "completions/pkgs.bash",
+        "zsh": "completions/pkgs.zsh",
+        "fish": "completions/pkgs.fish"
+      },
+      "python": "3.9",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ],
+      "source": {
+        "repository": "https://github.com/5nik7/pkgs",
+        "commit": "a68f99cc2825e970e05a060d47a92a6d9d73b603",
+        "version": "0.1.1",
+        "files": 31,
+        "excluded": [
+          ".git (history and local state)",
+          "untracked and ignored machine-local files"
+        ]
+      }
+    }
+  }
+}

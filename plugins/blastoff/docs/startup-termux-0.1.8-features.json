@@ -1,0 +1,85 @@
+{
+  "feature_library_size": 1000,
+  "host": "Android-15-aarch64-64bit-ELF",
+  "machine": "aarch64",
+  "python": "3.14.6",
+  "results": {
+    "bash-backup-list-human": {
+      "max_ms": 330.283,
+      "p50_ms": 255.223,
+      "p95_ms": 317.729
+    },
+    "bash-help": {
+      "max_ms": 271.703,
+      "p50_ms": 184.274,
+      "p95_ms": 265.104
+    },
+    "bash-module-list": {
+      "max_ms": 318.064,
+      "p50_ms": 238.421,
+      "p95_ms": 313.06
+    },
+    "bash-module-show": {
+      "max_ms": 422.007,
+      "p50_ms": 323.341,
+      "p95_ms": 416.25
+    },
+    "bash-save-dry-run-1000": {
+      "max_ms": 695.53,
+      "p50_ms": 301.099,
+      "p95_ms": 457.976
+    },
+    "bash-version": {
+      "max_ms": 103.352,
+      "p50_ms": 85.127,
+      "p95_ms": 101.588
+    },
+    "picker-options-in-process": {
+      "max_ms": 0.235,
+      "p50_ms": 0.152,
+      "p95_ms": 0.183
+    },
+    "preview-cached-in-process": {
+      "max_ms": 0.13,
+      "p50_ms": 0.098,
+      "p95_ms": 0.104
+    },
+    "preview-first-plain-in-process": {
+      "max_ms": 62.782,
+      "p50_ms": 43.619,
+      "p95_ms": 50.051
+    },
+    "python-backup-list-human": {
+      "max_ms": 311.049,
+      "p50_ms": 204.081,
+      "p95_ms": 302.291
+    },
+    "python-help": {
+      "max_ms": 301.648,
+      "p50_ms": 165.026,
+      "p95_ms": 252.019
+    },
+    "python-module-list": {
+      "max_ms": 301.323,
+      "p50_ms": 201.613,
+      "p95_ms": 294.369
+    },
+    "python-module-show": {
+      "max_ms": 327.922,
+      "p50_ms": 239.75,
+      "p95_ms": 315.399
+    },
+    "python-save-dry-run-1000": {
+      "max_ms": 574.383,
+      "p50_ms": 249.094,
+      "p95_ms": 404.33
+    },
+    "python-version": {
+      "max_ms": 142.591,
+      "p50_ms": 70.59,
+      "p95_ms": 92.658
+    }
+  },
+  "samples": 60,
+  "warmups": 5
+}

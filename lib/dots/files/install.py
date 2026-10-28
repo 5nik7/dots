@@ -133,6 +133,8 @@ class Installation:
         if any(op['path'] == key for op in self.operations):
             raise ValueError('duplicate installation target: ' + key)
         owned = self.entries.get(key)
+        if not owned and key in getattr(self, 'legacy_verified', set()):
+            managed = True
         current = self.guards[key]
         same = (link is not None and path.is_symlink() and os.readlink(path) == str(link))
         if text is not None:
@@ -148,7 +150,7 @@ class Installation:
             if link is not None and path.resolve() == Path(link).resolve():
                 self.item(identity, 'unchanged', path, link)
                 return
-            self.item(identity, 'conflict', path, reason='unrelated link is protected')
+            self.item(identity, 'conflict', path, reason='unrelated link is protected; inspect dots files migrate-apps for a legacy application installation')
             return
         if link is not None and path.is_dir() and path.resolve() == Path(link).resolve():
             raise ValueError('source and target overlap: ' + key)
@@ -164,6 +166,60 @@ class Installation:
             self.entries[key] = owned
         owned['desired'] = {k: v for k, v in op.items() if k != 'path'}
         self.item(identity, 'replace-with-backup' if current is not None else 'create', path, link)
+
+    def retire(self, identity, path):
+        """Retire a caller-verified legacy object, retaining its original baseline."""
+        path = Path(path)
+        key = str(path)
+        self.guard(path)
+        if not exists(path):
+            return
+        if key in self.entries:
+            self.item(identity, 'conflict', path, reason='legacy artifact already has Dots ownership')
+            return
+        self.entries[key] = dict(id=identity, before=self.guards[key], backup=self.transaction,
+                                 index=len(self.operations))
+        self.operations.append(dict(path=key, delete=True))
+        self.item(identity, 'remove', path, reason='verified legacy artifact; retain recovery copy')
+
+    def plan_bundled_apps(self, home):
+        # Minimal controller fixtures may omit bundled apps. A declared bundle
+        # must be complete; missing runtime assets block the whole transaction.
+        manifest = self.root / 'plugins/manifest.json'
+        if not manifest.is_file():
+            if (self.root / 'plugins').exists():
+                raise ValueError('application plugin manifest is missing')
+            return
+        self.guard(manifest)
+        data = Path(os.environ.get('XDG_DATA_HOME') or home / '.local/share')
+        from plugin_paths import definitions
+        for name, definition in definitions(self.root).items():
+            source = self.root / 'plugins' / name
+            manual = definition['manual']
+            required = [source / definition['runtime'], source / manual,
+                        *(source / value for value in definition['completions'].values()),
+                        self.root / 'bin' / name, self.root / 'bin' / (name + '.ps1')]
+            missing = next((path for path in required if not path.is_file()), None)
+            if missing:
+                self.item('dots:' + name, 'conflict', missing, reason='bundled application is incomplete')
+                continue
+            for path in required:
+                self.guard(path)
+            if self.platform == 'windows':
+                quoted = str(self.root / 'bin' / (name + '.ps1')).replace("'", "''")
+                self.add('dots:' + name + ':command', home / '.local/bin' / (name + '.ps1'),
+                         text="& '" + quoted + "' @args\nexit $LASTEXITCODE\n")
+            else:
+                self.add('dots:' + name + ':command', home / '.local/bin' / name,
+                         link=self.root / 'bin' / name)
+                for shell, relative in (
+                    ('bash', 'bash-completion/completions/' + name),
+                    ('zsh', 'zsh/site-functions/_' + name),
+                ):
+                    self.add('dots:' + name + ':completion:' + shell, data / relative,
+                             link=source / definition['completions'][shell])
+                self.add('dots:' + name + ':manual', home / '.local/share/man/man1' / (name + '.1'),
+                         link=source / manual)
 
     def theme_bridge(self, mode, fingerprint=None):
         cmd = ([sys.executable, '-B', str(self.root / 'lib/dots/themes/setup.py'), mode]
@@ -256,6 +312,7 @@ class Installation:
                      text="& '" + quoted + "' @args\nexit $LASTEXITCODE\n")
         else:
             self.add('dots:command', home / '.local/bin' / launcher, link=self.root / 'bin' / launcher)
+        self.plan_bundled_apps(home)
         for app, path, artifact in connectors:
             desired = self.state / 'current/theme' / artifact
             old = os.readlink(path) if path.is_symlink() else ''
@@ -492,7 +549,7 @@ def main(argv=None):
                                     description='Install or restore catalogued Dots configurations with retained backups.',
                                     epilog='Setup is also available through dots init --setup and the root install/uninstall shell and PowerShell scripts.')
     parser.add_argument('-h', '--help', action='store_true', help='show setup help')
-    parser.add_argument('action', choices=('install', 'uninstall'))
+    parser.add_argument('action', choices=('install', 'uninstall', 'migrate-apps'))
     parser.add_argument('--dry-run', action='store_true', help='preview without writes or network access')
     parser.add_argument('-v', '--verbose', action='store_true', help='show actions, backups and unchanged/skipped reasons')
     parser.add_argument('--yes', action='store_true', help='approve the displayed plan without prompting')
@@ -512,7 +569,7 @@ def main(argv=None):
         ui.emit(parser.format_help())
         return 0
     args = parser.parse_args(raw)
-    if args.action == 'uninstall' and (args.update or args.with_source):
+    if args.action != 'install' and (args.update or args.with_source):
         parser.error('--update and --with-source require install')
     for key in ('color', 'icons'):
         if getattr(args, key):
@@ -542,13 +599,16 @@ def main(argv=None):
     with Progress('Planning ' + args.action):
         if args.action == 'install':
             installation.plan_install()
+        elif args.action == 'migrate-apps':
+            from app_migration import plan
+            plan(installation)
         else:
             installation.plan_uninstall()
     doc = dict(schema=1, action=args.action, status='blocked' if installation.blocked else 'preview',
                platform=installation.platform, items=installation.items)
-    display(doc, args)
+    display(doc, args, final=args.action == 'migrate-apps' and not args.yes)
     output.plan(installation.items, args.dry_run)
-    if args.dry_run:
+    if args.dry_run or (args.action == 'migrate-apps' and not args.yes):
         return int(installation.blocked)
     if installation.blocked:
         raise ValueError('resolve the displayed conflicts before applying setup')

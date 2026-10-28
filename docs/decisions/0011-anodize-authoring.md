@@ -8,7 +8,7 @@ The owner requested an independent Aether-derived theme engine named Anodize, fi
 
 ## Decision
 
-Keep a standard-library-only Go module in `anodize/`. Its exported package accepts image bytes, seed colors and recipes, and returns colors; it performs no filesystem writes or subprocess execution. A private executable exchanges bounded JSON with the CLI. Adapt the selected upstream color algorithms with [recorded provenance](../../anodize/PROVENANCE.md), excluding the desktop application, caches, downloads and app writers.
+Keep a standard-library-only Go module in `plugins/anodize/engine/`. Its exported package accepts image bytes, seed colors and recipes, and returns colors; it performs no filesystem writes or subprocess execution. A private executable exchanges bounded JSON with the CLI. Adapt the selected upstream color algorithms with [recorded provenance](../../plugins/anodize/engine/PROVENANCE.md), excluding the desktop application, caches, downloads and app writers.
 
 Expose `anodize` and `dots anodize` through the live command framework. Python owns authoring orchestration and shares the existing Presentation and transaction Store. Bash retains theme rendering, publication and fixed wallpaper adapters. Saved themes use the established theme directory layout plus an editable baseline/adjustment/override recipe. Mutation requires preview/confirmation or explicit `--yes`; read-only actions create no persistent state.
 

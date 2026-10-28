@@ -1,3 +1,4 @@
+# Shared Dots, Blastoff and pkgs lifecycle.
 param(
     [switch] $DryRun, [switch] $Yes, [switch] $Json,
     [ValidateSet('auto', 'always', 'never')][string] $Color,

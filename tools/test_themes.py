@@ -24,7 +24,7 @@ class Themes(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.repo = self.root / 'repo space ü -dash'
         self.repo.mkdir()
-        for name in ('lib/dots', 'themes', 'default'):
+        for name in ('lib/dots', 'plugins', 'themes', 'default'):
             copy_public_tree(REPO / name, self.repo / name, repo=REPO, fixture=self.repo)
         (self.repo / 'bin').mkdir()
         for p in [REPO / 'bin/dots', REPO / 'bin/theme', *REPO.glob('bin/dots-theme*')]:

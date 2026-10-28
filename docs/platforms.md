@@ -4,6 +4,8 @@
 
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
 
+The managed `dots:less` configuration targets `${CONFIG}/lesskey` on Termux/Linux/WSL and `${HOME}/_lesskey` on native Windows. Less 702+ reads its persistent mouse settings directly, without Bash or a theme connector. Termux less 710 mouse behavior is verified in private terminals; Linux/WSL and native Windows runtime acceptance remains pending. See [less mouse support](shell-environment.md#global-less-mouse-support) for overrides and older-version fallback.
+
 ## Bash Framework Coverage
 
 The live Bash dispatcher requires Bash 4.4+ and a POSIX-like executable environment.
@@ -273,3 +275,15 @@ without WSL bridging or destination changes.
 ### Less terminal colors
 
 [Global less styling](shell-environment.md#global-less-colors) uses termcap RGB overrides on Termux, Linux and WSL. Native Windows less has no equivalent termcap RGB rendering path and retains stock colors; this is an explicit platform exception, not a WSL fallback. Native shell adapters preserve the same override/ownership rules, with the PowerShell POSIX path supported in code. Native Windows PowerShell 5.1/7 and non-Termux visual acceptance require their own checks.
+
+## Bundled application platforms
+
+[Blastoff and pkgs](bundled-applications.md) ship with both Bash and native PowerShell routes. Blastoff invokes its Python 3.11+ core on all Dots platforms and retains `STARSHIP_CONFIG` / `BLASTOFF_HOME` with their existing home-relative defaults. pkgs retains Python 3.9+ POSIX package backends on Termux/Linux/WSL. Native Windows supports pkgs help/version and static discovery; commands other than help/version refuse with status 3 before importing POSIX-only modules. WSL remains a separate installation.
+
+Standalone native launchers use `~/.local/bin/*.ps1`, with no registry or system PATH changes. Native Windows PowerShell 5.1/7 and WSL runtime acceptance for absorption remains pending; injected adapter tests do not establish it.
+
+Application plugins share native launchers and the combined installer. Legacy receipt migration supports known POSIX user-local and Termux layouts; former native PowerShell modules/profile edits require manual reconciliation. Native Windows pkgs remains limited to help/version. Relocation and popup changes require separate native Windows/WSL acceptance. See [plugins](plugins.md).
+
+### Codex attention notifications
+
+The optional [Codex attention bridge](themes.md#codex-attention-notifications) uses the same Python implementation with Bash/Zsh/Fish-launched tmux on Termux, Linux and WSL. It requires Python 3.11+, tmux and same-user procfs observation; setup additionally capability-checks tomlkit. Android toast/vibration is enabled only in Termux and each executable is checked independently. Native Windows has neither a tmux destination nor a Termux API adapter: the setup helper explicitly refuses there, while pure event/configuration tests remain portable to PowerShell's Python invocation. Native Termux fixture results do not establish Linux/WSL visuals, terminal-emulator focus reporting, real Android delivery or Codex hook trust/reload behavior.

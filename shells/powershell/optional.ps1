@@ -9,14 +9,11 @@ param(
 
 if (-not $global:_DotsOptionalFeatures) { $global:_DotsOptionalFeatures = @{} }
 if ($global:_DotsOptionalFeatures[$Feature]) { return }
-if ($Feature -eq 'blastoff' -and ($PSEdition -ne 'Core' -or $PSVersionTable.PSVersion.Major -lt 7)) {
-  throw 'Blastoff requires PowerShell Core 7 or newer. Run blastoff in pwsh.'
-}
 if ($Feature -eq 'command-not-found' -and ($PSEdition -ne 'Core' -or $PSVersionTable.PSVersion -lt [version]'7.4')) {
   throw 'WinGet CommandNotFound requires PowerShell Core 7.4 or newer.'
 }
 $dotsOptionalModules = @{
-  blastoff = 'blastoff'; icons = 'Terminal-Icons'; catppuccin = 'Catppuccin'
+  icons = 'Terminal-Icons'; catppuccin = 'Catppuccin'
   pscompletions = 'PSCompletions'; fzf = 'PSFzf'
   'command-not-found' = 'Microsoft.WinGet.CommandNotFound'
 }
@@ -25,6 +22,15 @@ try {
     Import-Module $dotsOptionalModules[$Feature] -Global -ErrorAction Stop
   } else {
     switch ($Feature) {
+      blastoff {
+        if (-not (Test-Path -LiteralPath (Join-Path $env:DOTS 'bin/blastoff.ps1') -PathType Leaf)) {
+          throw 'The bundled Blastoff launcher is missing from this Dots checkout.'
+        }
+        function global:blastoff {
+          & (Join-Path $env:DOTS 'bin/blastoff.ps1') @args
+          $global:LASTEXITCODE = $LASTEXITCODE
+        }
+      }
       completions {
         foreach ($spec in @(
           @('starship', 'completions', 'powershell'),

@@ -1,0 +1,1 @@
+../../../plugins/blastoff/completions/blastoff.fish

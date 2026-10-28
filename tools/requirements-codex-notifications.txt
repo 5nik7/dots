@@ -1,0 +1,2 @@
+# Optional maintenance-time parser; the running notification bridge is stdlib-only.
+tomlkit>=0.13,<1

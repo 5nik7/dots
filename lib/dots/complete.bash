@@ -176,6 +176,10 @@ dots_complete() {
     (( ++index ))
   done
   dots_roots
+  if (( index < cursor )) && [[ ${words[index]} == blastoff || ${words[index]} == pkgs ]]; then
+    python3 -B "$DOTS_LIB_DIR/bundled_apps.py" "${words[@]:index:cursor-index+1}"
+    return
+  fi
   if (( index == cursor )); then
     if [[ $DOTS_CURRENT == --color=* || $DOTS_CURRENT == --icons=* ]]; then
       if [[ $DOTS_CURRENT == --color=* ]]; then dots_value_candidates choice:auto,always,never,none "${DOTS_CURRENT%%=*}="

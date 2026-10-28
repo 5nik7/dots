@@ -7,7 +7,7 @@ Dots manages dotfiles, shells, themes, platform profiles and repository workflow
 1. Read [installation](installation.md) for checkout setup, previews and recovery.
 2. Browse [commands](commands.md), [managed files](files.md) and [Git workflows](git.md).
 3. Configure [shell startup](shell-init.md), inspect [environment values](shell-environment.md) and understand [profiles](profiles.md).
-4. Explore [themes](themes.md) and [Anodize](anodize.md).
+4. Explore [themes](themes.md), [Anodize](anodize.md) and [Blastoff/pkgs](bundled-applications.md). Their shared [application plugin layout, menus and migration](plugins.md) keep installation together.
 5. Use [debugging](debug.md) and [testing](testing.md) when diagnosing behavior.
 
 ## Find your way around

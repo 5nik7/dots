@@ -423,10 +423,17 @@ p.apply('install')
     @unittest.skipIf(os.name == 'nt', 'POSIX fresh-checkout publication')
     @unittest.skipUnless(shutil.which('git'), 'Git required to enumerate tracked sources')
     def test_fresh_checkout_wsl_setup_connectors_check_and_restore(self):
+        self.full_checkout_lifecycle()
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX complete-checkout lifecycle')
+    def test_full_checkout_bundled_install_repeat_and_restore(self):
+        self.full_checkout_lifecycle(bundled_only=True)
+
+    def full_checkout_lifecycle(self, bundled_only=False):
         # Copy only versioned public inputs, never ignored connectors or local
         # submodule contents. Include this change's new source files before commit.
         names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','--cached','--others','--exclude-standard','-z','--',
-            '.dots','bin','lib','default','themes','config','shells','ruby',
+            '.dots','bin','lib','plugins','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
         names.update(('config/fsh/README.md','default/themed/eza.yml.tpl','default/themed/television.toml.tpl','default/themed/leaf.toml.tpl','lib/dots/themes/generation.bash',
                       'lib/dots/files/events.py', 'lib/dots/verbose.bash', 'lib/dots/files/app_paths.py'))
@@ -493,11 +500,25 @@ p.apply('install')
         self.assertEqual(check.returncode,0,check.stderr)
         self.assertNotIn('"eligible": true',check.stdout)
         self.assertIn('dots:fsh',check.stdout)
-        self.assertEqual(run('install.sh','--yes')['status'],'unchanged')
+        repeated = run('install.sh','--yes')
+        changes = [row for row in repeated['items'] if row['status'] not in ('unchanged', 'skipped')]
+        if bundled_only:
+            # Keep the strict whole-theme check above. Its baseline fingerprint
+            # failure must not prevent verifying the new applications' removal.
+            self.assertTrue(all(row['id'].startswith('theme:') for row in changes), changes)
+            for app in ('blastoff', 'pkgs'):
+                assets = [row for row in repeated['items'] if row['id'].startswith('dots:'+app+':')]
+                self.assertEqual(len(assets), 4)
+                self.assertTrue(all(row['status'] == 'unchanged' for row in assets), assets)
+        else:
+            self.assertEqual(repeated['status'], 'unchanged', json.dumps(changes, indent=2))
         run('uninstall.sh','--yes')
         self.assertFalse((self.home/'.config/fsh').is_symlink())
         self.assertFalse((self.repo/'config/fsh/dots.ini').is_symlink())
         self.assertTrue((self.repo/'config/fsh/README.md').is_file())
+        for app in ('blastoff', 'pkgs'):
+            self.assertFalse((self.home/'.local/bin'/app).exists())
+            self.assertTrue((self.repo/'bin'/app).is_file())
 
     @unittest.skipIf(os.name == 'nt', 'POSIX theme publication')
     def test_theme_output_and_pointer_repair_retains_baseline(self):

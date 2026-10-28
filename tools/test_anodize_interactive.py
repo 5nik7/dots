@@ -149,7 +149,7 @@ def crash(self, record):
  if record['status']=='applying' and record['operations'][0]['phase']=='done': os._exit(77)
 a=Author();p=a.promote('example');Store.save=crash;a.save(p)
 '''
-        self.run_command([sys.executable, '-B', '-c', script, str(old.REPO/'lib/dots/anodize'), str(old.REPO/'lib/dots/files')], code=77)
+        self.run_command([sys.executable, '-B', '-c', script, str(old.REPO/'plugins/anodize'), str(old.REPO/'lib/dots/files')], code=77)
         with self.author() as author:
             store = author.store()
             record = next(r for r in store.records() if r['status'] == 'applying')
@@ -328,7 +328,7 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
                 # FZF-tab caps its menu at 2/3 of the terminal height. This
                 # produces a preview shorter than 12 rows, the old failure case.
                 fcntl.ioctl(terminal.master, termios.TIOCSWINSZ, struct.pack('HHHH', 24, columns, 0, 0))
-                terminal.send('autoload -Uz compinit; compinit -D; source "$DOTS/lib/dots/completion/zsh"; source "$DOTS/lib/dots/anodize/completion/zsh"; has() { command -v "$1" >/dev/null; }; source ' + shlex.quote(str(old.REPO / 'shells/shared/fzf.sh')) + '; source ' + shlex.quote(str(copied / 'fzf-tab.plugin.zsh')) + '; source ' + shlex.quote(str(integration)) + '; PROMPT="READY> "; print INITIALIZED\r')
+                terminal.send('autoload -Uz compinit; compinit -D; source "$DOTS/lib/dots/completion/zsh"; source "$DOTS/plugins/anodize/completion/zsh"; has() { command -v "$1" >/dev/null; }; source ' + shlex.quote(str(old.REPO / 'shells/shared/fzf.sh')) + '; source ' + shlex.quote(str(copied / 'fzf-tab.plugin.zsh')) + '; source ' + shlex.quote(str(integration)) + '; PROMPT="READY> "; print INITIALIZED\r')
                 terminal.wait(b'INITIALIZED\r\n')
                 terminal.send(command + '\t')
                 # The configured defaults start previews hidden; use the real
@@ -337,7 +337,7 @@ sys.stdout.buffer.write(rows[0] + b'\\0')
                 terminal.send('\x18')
                 if not command.startswith('dots theme '):
                     asset = 'logo.txt'
-                    lines = (old.REPO / 'lib/dots/anodize/assets' / asset).read_text().splitlines()
+                    lines = (old.REPO / 'plugins/anodize/assets' / asset).read_text().splitlines()
                     # The top six artwork rows fit; the rest remains scrollable.
                     output = wait_artwork(terminal, lines)
                     for line in lines[:6]:
@@ -411,7 +411,7 @@ class NativeAnodizeMenus(NativeMenuFixture):
             for key in ('hint','accent'):
                 rgb='38;2;'+';'.join(str(int(colors[key][i:i+2],16)) for i in (1,3,5))
                 self.assertIn(rgb.encode(),data)
-            for line in (old.REPO/'lib/dots/anodize/assets/logo.txt').read_text().splitlines():
+            for line in (old.REPO/'plugins/anodize/assets/logo.txt').read_text().splitlines():
                 self.assertIn(line.strip(' \u2800'),text)
             self.assertNotIn('⣠⠟⢧⡀',text)
             self.assertIsNone(p.poll())

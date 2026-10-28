@@ -12,6 +12,8 @@ Copy this template into `plans/`, replace the `{{...}}` fields, remove inapplica
 
 ## Route and entries
 
+Menu assessment: {{add, update, or no menu, with a short reason for each affected command family.}}
+
 Proposed route: `{{ROUTE}}`. Existing implementation to reuse: `{{CURRENT_CONTROLLER_OR_WORKFLOW}}`.
 
 | Stable identity | Display label | Data source | Explicit action and arguments | Availability |

@@ -42,6 +42,7 @@ class NativeCLI(unittest.TestCase):
         self.env.update(PSModuleAnalysisCachePath=str(engine_cache / 'ModuleAnalysisCache'),
                         POWERSHELL_TELEMETRY_OPTOUT='1', POWERSHELL_UPDATECHECK='Off')
         shutil.copytree(LIB, self.repo / 'lib/dots', ignore=shutil.ignore_patterns('__pycache__'))
+        shutil.copytree(ROOT / 'plugins', self.repo / 'plugins', ignore=shutil.ignore_patterns('__pycache__', '.build'))
         shutil.copytree(ROOT / 'bin', self.repo / 'bin', symlinks=True)
         (self.repo / '.dots').mkdir()
         all_platforms = ['termux','linux','wsl','windows']

@@ -41,7 +41,7 @@ for _dots_preview_command in anodize theme; do
   zstyle ":fzf-tab:complete:${_dots_preview_command}:*" fzf-min-height 20
   zstyle ":fzf-tab:complete:${_dots_preview_command}:*" fzf-flags --preview-window=down,70%
   zstyle ":fzf-tab:complete:${_dots_preview_command}:*" fzf-preview '
-    python3 -B "$DOTS/lib/dots/anodize/completion_preview.py" "$DOTS_COMPLETION_PREVIEW_DIR" "$word" "${(@Q)words}"
+    python3 -B "$DOTS/plugins/anodize/completion_preview.py" "$DOTS_COMPLETION_PREVIEW_DIR" "$word" "${(@Q)words}"
     if (( $? == 3 )) && [[ -n ${realpath:-} && -n ${_PREVIEW_:-} ]]; then
       "$_PREVIEW_" "$realpath"
     fi'

@@ -176,6 +176,18 @@
       "title": "Testing",
       "section": "Contributing",
       "source": "docs/testing.md"
+    },
+    {
+      "id": "Bundled-applications",
+      "title": "Blastoff and pkgs",
+      "section": "Tools",
+      "source": "docs/bundled-applications.md"
+    },
+    {
+      "id": "Application-plugins",
+      "title": "Application plugins",
+      "source": "docs/plugins.md",
+      "section": "Tools"
     }
   ]
 }

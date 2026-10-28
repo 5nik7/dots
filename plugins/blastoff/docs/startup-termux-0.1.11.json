@@ -1,0 +1,153 @@
+{
+  "comparison_results": {
+    "bash-backup-list-human": {
+      "max_ms": 396.258,
+      "p50_ms": 259.758,
+      "p95_ms": 358.082
+    },
+    "bash-bare": {
+      "max_ms": 519.283,
+      "p50_ms": 184.674,
+      "p95_ms": 318.5
+    },
+    "bash-current": {
+      "max_ms": 668.354,
+      "p50_ms": 252.855,
+      "p95_ms": 398.375
+    },
+    "bash-help": {
+      "max_ms": 423.596,
+      "p50_ms": 212.237,
+      "p95_ms": 305.421
+    },
+    "bash-list-human": {
+      "max_ms": 528.047,
+      "p50_ms": 264.901,
+      "p95_ms": 436.224
+    },
+    "bash-module-list": {
+      "max_ms": 565.989,
+      "p50_ms": 245.177,
+      "p95_ms": 384.822
+    },
+    "bash-version": {
+      "max_ms": 202.338,
+      "p50_ms": 92.828,
+      "p95_ms": 119.05
+    },
+    "python-backup-list-human": {
+      "max_ms": 323.356,
+      "p50_ms": 208.918,
+      "p95_ms": 297.582
+    },
+    "python-bare": {
+      "max_ms": 495.125,
+      "p50_ms": 199.547,
+      "p95_ms": 300.078
+    },
+    "python-current": {
+      "max_ms": 404.039,
+      "p50_ms": 208.952,
+      "p95_ms": 322.699
+    },
+    "python-help": {
+      "max_ms": 357.461,
+      "p50_ms": 199.252,
+      "p95_ms": 261.672
+    },
+    "python-list-human": {
+      "max_ms": 528.845,
+      "p50_ms": 235.65,
+      "p95_ms": 437.98
+    },
+    "python-module-list": {
+      "max_ms": 493.826,
+      "p50_ms": 206.085,
+      "p95_ms": 327.399
+    },
+    "python-version": {
+      "max_ms": 257.021,
+      "p50_ms": 79.358,
+      "p95_ms": 109.227
+    }
+  },
+  "comparison_root": "/data/data/com.termux/files/usr/tmp/blastoff-0.1.11-review-nwi_26sw/baseline",
+  "feature_library_size": 0,
+  "host": "Android-15-aarch64-64bit-ELF",
+  "machine": "aarch64",
+  "python": "3.14.6",
+  "results": {
+    "bash-backup-list-human": {
+      "max_ms": 400.422,
+      "p50_ms": 254.782,
+      "p95_ms": 350.627
+    },
+    "bash-bare": {
+      "max_ms": 475.181,
+      "p50_ms": 211.628,
+      "p95_ms": 401.905
+    },
+    "bash-current": {
+      "max_ms": 523.608,
+      "p50_ms": 249.65,
+      "p95_ms": 412.879
+    },
+    "bash-help": {
+      "max_ms": 472.083,
+      "p50_ms": 216.213,
+      "p95_ms": 314.041
+    },
+    "bash-list-human": {
+      "max_ms": 610.24,
+      "p50_ms": 273.454,
+      "p95_ms": 387.733
+    },
+    "bash-module-list": {
+      "max_ms": 572.149,
+      "p50_ms": 247.443,
+      "p95_ms": 383.546
+    },
+    "bash-version": {
+      "max_ms": 226.63,
+      "p50_ms": 91.616,
+      "p95_ms": 129.107
+    },
+    "python-backup-list-human": {
+      "max_ms": 496.308,
+      "p50_ms": 210.121,
+      "p95_ms": 353.649
+    },
+    "python-bare": {
+      "max_ms": 419.39,
+      "p50_ms": 199.319,
+      "p95_ms": 257.733
+    },
+    "python-current": {
+      "max_ms": 417.923,
+      "p50_ms": 209.106,
+      "p95_ms": 321.725
+    },
+    "python-help": {
+      "max_ms": 330.198,
+      "p50_ms": 198.978,
+      "p95_ms": 279.946
+    },
+    "python-list-human": {
+      "max_ms": 537.121,
+      "p50_ms": 246.875,
+      "p95_ms": 409.412
+    },
+    "python-module-list": {
+      "max_ms": 398.243,
+      "p50_ms": 203.827,
+      "p95_ms": 271.046
+    },
+    "python-version": {
+      "max_ms": 166.106,
+      "p50_ms": 80.959,
+      "p95_ms": 114.614
+    }
+  },
+  "samples": 60,
+  "warmups": 5
+}

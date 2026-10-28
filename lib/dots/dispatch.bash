@@ -131,6 +131,9 @@ dots_main() {
       return ;;
   esac
   dots_roots || return
+  if [[ ${1-} == files && ${2-} == migrate-apps ]]; then
+    set -- files migrate apps "${@:3}"
+  fi
   case ${1:-help} in
     help|-h|--help)
       (($#)) && shift
@@ -176,6 +179,11 @@ dots_main() {
   dots_resolve "${help_args[@]}"; resolved=$?
   if (( resolved == 1 )); then return 1; fi
   if (( resolved == 0 )); then
+    if [[ $DOTS_EXECUTABLE == "$DOTS/bin/dots-blastoff"* && $1 == blastoff || $DOTS_EXECUTABLE == "$DOTS/bin/dots-pkgs"* && $1 == pkgs ]]; then
+      # Preserve the application's grammar and help at every argument position.
+      shift "$DOTS_CONSUMED"
+      exec "$DOTS_EXECUTABLE" "$@"
+    fi
     if [[ $DOTS_ROUTE == theme && $# -gt 1 && $2 != -h && $2 != --help ]]; then
       shift "$DOTS_CONSUMED"
       exec "$DOTS_EXECUTABLE" "$@"

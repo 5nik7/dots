@@ -1,0 +1,29 @@
+SOURCE: /data/data/com.termux/files/usr/tmp/blastoff-0.1.11-review-nwi_26sw/baseline
+test_real_process_wrapper_and_tty (test_discovery.Discovery.test_real_process_wrapper_and_tty) ... ok
+test_real_process_wrapper_and_tty (test_discovery.Discovery.test_real_process_wrapper_and_tty) ... FAIL
+test_real_process_wrapper_and_tty (test_discovery.Discovery.test_real_process_wrapper_and_tty) ... ok
+
+======================================================================
+FAIL: test_real_process_wrapper_and_tty (test_discovery.Discovery.test_real_process_wrapper_and_tty)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/repos/blastoff/tests/test_discovery.py", line 178, in test_real_process_wrapper_and_tty
+    code,out=terminal(command+['pick'],env,b'\x03',b'Theme number',columns=40)
+             ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/home/repos/blastoff/tests/pty_support.py", line 71, in terminal
+    raise AssertionError('PTY timeout; tail=' + repr(bytes(output[-1500:])))
+AssertionError: PTY timeout; tail=b'blastoff: warning: presets unavailable: starship preset failed (exit 9)\r\nblastoff: warning: fzf unavailable; using numbered fallback\r\nBLASTOFF | local: stored / preset: Starship\r\nNumber + Enter applies; empty cancels.\r\n  1  local:local-one\r\nTheme number (empty cancels): ^C'
+
+----------------------------------------------------------------------
+Ran 3 tests in 14.887s
+
+FAILED (failures=1)
+SOURCE: /data/data/com.termux/files/home/repos/blastoff
+test_real_process_wrapper_and_tty (test_discovery.Discovery.test_real_process_wrapper_and_tty) ... ok
+test_real_process_wrapper_and_tty (test_discovery.Discovery.test_real_process_wrapper_and_tty) ... ok
+test_real_process_wrapper_and_tty (test_discovery.Discovery.test_real_process_wrapper_and_tty) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 3.568s
+
+OK

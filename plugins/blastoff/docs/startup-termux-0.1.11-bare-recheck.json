@@ -1,0 +1,23 @@
+{
+  "comparison_results": {
+    "bash-bare": {
+      "max_ms": 381.696,
+      "p50_ms": 213.814,
+      "p95_ms": 283.836
+    }
+  },
+  "comparison_root": "/data/data/com.termux/files/usr/tmp/blastoff-0.1.11-review-nwi_26sw/baseline",
+  "feature_library_size": 0,
+  "host": "Android-15-aarch64-64bit-ELF",
+  "machine": "aarch64",
+  "python": "3.14.6",
+  "results": {
+    "bash-bare": {
+      "max_ms": 496.647,
+      "p50_ms": 211.356,
+      "p95_ms": 277.682
+    }
+  },
+  "samples": 60,
+  "warmups": 5
+}

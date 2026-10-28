@@ -17,7 +17,7 @@ import test_theme_picker
 from test_themes import REPO, BASH
 
 sys.path.insert(0, str(REPO / 'lib/dots/files'))
-sys.path.insert(0, str(REPO / 'lib/dots/anodize'))
+sys.path.insert(0, str(REPO / 'plugins/anodize'))
 from authoring import Author
 from transactions import Store, digest
 
@@ -348,7 +348,7 @@ a=Author();d=a.load('example',owned=True);d['overrides']['accent']='#abcdef';p=a
 transactions.os.rename=crash
 a.save(p)
 '''
-        self.run_command([sys.executable,'-B','-c',script,str(REPO/'lib/dots/anodize'),str(REPO/'lib/dots/files')],code=77)
+        self.run_command([sys.executable,'-B','-c',script,str(REPO/'plugins/anodize'),str(REPO/'lib/dots/files')],code=77)
         with self.author() as author:
             pending=[d for d in author.store().records() if d['status']=='applying']
             self.assertEqual(len(pending),1)

@@ -1,0 +1,50 @@
+test_apply_backup_and_noop (test_blastoff.Contract.test_apply_backup_and_noop) ... ok
+test_apply_preserves_existing_file_mode (test_blastoff.Contract.test_apply_preserves_existing_file_mode) ... ok
+test_atomic_replace_failure_leaves_original (test_blastoff.Contract.test_atomic_replace_failure_leaves_original) ... ok
+test_backup_restore_checksum_and_preserve_current (test_blastoff.Contract.test_backup_restore_checksum_and_preserve_current) ... ok
+test_bash_completion_reads_names_without_runtime (test_blastoff.Contract.test_bash_completion_reads_names_without_runtime) ... ok
+test_bash_entry_point_matches_core (test_blastoff.Contract.test_bash_entry_point_matches_core) ... ok
+test_collision_and_force_backup (test_blastoff.Contract.test_collision_and_force_backup) ... ok
+test_custom_module_and_missing_active_config (test_blastoff.Contract.test_custom_module_and_missing_active_config) ... ok
+test_delete_active_symlink_target_refused (test_blastoff.Contract.test_delete_active_symlink_target_refused) ... ok
+test_delete_refuses_symlinked_storage_children (test_blastoff.Contract.test_delete_refuses_symlinked_storage_children) ... ok
+test_fifo_input_fails_without_hanging (test_blastoff.Contract.test_fifo_input_fails_without_hanging) ... ok
+test_header_marker_name_is_not_confused_with_the_marker (test_blastoff.Contract.test_header_marker_name_is_not_confused_with_the_marker) ... ok
+test_inline_module_refused_without_change (test_blastoff.Contract.test_inline_module_refused_without_change) ... ok
+test_invalid_theme_leaves_config_and_backups_unchanged (test_blastoff.Contract.test_invalid_theme_leaves_config_and_backups_unchanged) ... ok
+test_json_errors_are_parseable (test_blastoff.Contract.test_json_errors_are_parseable) ... ok
+test_list_never_changes_theme_or_generates_presets (test_blastoff.Contract.test_list_never_changes_theme_or_generates_presets) ... ok
+test_migrate_collision_preflight_and_preserve_sources (test_blastoff.Contract.test_migrate_collision_preflight_and_preserve_sources) ... ok
+test_module_handles_multiline_strings_arrays_and_quoted_headers (test_blastoff.Contract.test_module_handles_multiline_strings_arrays_and_quoted_headers) ... ok
+test_module_load_detects_edits_during_merge (test_blastoff.Contract.test_module_load_detects_edits_during_merge) ... ok
+test_module_save_load_preserves_unrelated_values_and_text (test_blastoff.Contract.test_module_save_load_preserves_unrelated_values_and_text) ... ok
+test_new_custom_config_path_honored (test_blastoff.Contract.test_new_custom_config_path_honored) ... ok
+test_no_color_and_pipeline_clean (test_blastoff.Contract.test_no_color_and_pipeline_clean) ... ok
+test_parent_redirection_refused (test_blastoff.Contract.test_parent_redirection_refused) ... ok
+test_path_traversal_and_device_names (test_blastoff.Contract.test_path_traversal_and_device_names) ... ok
+test_permissions_under_restrictive_umask (test_blastoff.Contract.test_permissions_under_restrictive_umask) ... ok
+test_picker_noninteractive_refused (test_blastoff.Contract.test_picker_noninteractive_refused) ... ok
+test_presets_dont_hide_colliding_local_theme (test_blastoff.Contract.test_presets_dont_hide_colliding_local_theme) ... ok
+test_read_only_missing_dependencies (test_blastoff.Contract.test_read_only_missing_dependencies) ... ok
+test_save_copy_delete_and_recover (test_blastoff.Contract.test_save_copy_delete_and_recover) ... ok
+test_staging_detects_external_edit (test_blastoff.Contract.test_staging_detects_external_edit) ... ok
+test_stale_lock_never_broken (test_blastoff.Contract.test_stale_lock_never_broken) ... ok
+test_stored_module_cannot_change_unrelated_root (test_blastoff.Contract.test_stored_module_cannot_change_unrelated_root) ... ok
+test_symlink_config_explicit_replace_preserves_target (test_blastoff.Contract.test_symlink_config_explicit_replace_preserves_target) ... ok
+test_version_consistency (test_blastoff.Contract.test_version_consistency) ... ok
+test_install_dry_run_install_uninstall_and_tamper (test_blastoff.Lifecycle.test_install_dry_run_install_uninstall_and_tamper) ... ok
+test_install_refuses_corrupt_source_before_writes (test_blastoff.Lifecycle.test_install_refuses_corrupt_source_before_writes) ... ok
+test_install_refuses_unowned_destination (test_blastoff.Lifecycle.test_install_refuses_unowned_destination) ... ok
+test_bash_completion_without_runtime (test_native.Native.test_bash_completion_without_runtime) ... ok
+test_bash_literal_arguments_and_environment (test_native.Native.test_bash_literal_arguments_and_environment) ... ok
+test_empty_overrides_and_tilde_paths (test_native.Native.test_empty_overrides_and_tilde_paths) ... ok
+test_fish_completion_noninteractive (test_native.Native.test_fish_completion_noninteractive) ... ok
+test_real_starship_presets (test_native.Native.test_real_starship_presets) ... ok
+test_zsh_completion_function_without_runtime (test_native.Native.test_zsh_completion_function_without_runtime) ... ok
+test_inventory_excludes_runtime_and_ambient_files (test_packaging.Packaging.test_inventory_excludes_runtime_and_ambient_files) ... ok
+test_inventory_refuses_symlinks (test_packaging.Packaging.test_inventory_refuses_symlinks) ... ok
+
+----------------------------------------------------------------------
+Ran 45 tests in 34.398s
+
+OK

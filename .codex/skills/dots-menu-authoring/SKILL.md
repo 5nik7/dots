@@ -9,6 +9,8 @@ Start with the requested menu's purpose and the current checkout. Follow [comman
 
 ## Define the menu
 
+Every command change needs a recorded menu assessment through command maintenance, even when no popup is appropriate. Reuse or update an existing family before introducing another launcher. Keep application-plugin paths and installation ownership aligned through [plugin maintenance](../dots-plugin-maintenance/SKILL.md).
+
 Use [the copyable menu-plan template](assets/menu-plan.md) when a new menu needs a focused plan. Record the route, stable entry identities, explicit action mappings, data source, terminal ownership, output modes and applicable platform limits. Reuse an existing workflow for actions that already exist. Selection may open its review; it never substitutes for the workflow's approval or journal.
 
 Choose the smallest requested menu. The launcher/session plan's entries and bindings are specific to that feature, not mandatory additions to every menu. Add registry or configuration mechanisms only when the task needs them. Keep missing-information questions limited to choices that change behavior and cannot be resolved from the checkout.

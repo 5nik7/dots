@@ -23,6 +23,7 @@ def checkout(base):
     root = base / 'repo'; root.mkdir(exist_ok=True)
     shutil.copytree(ROOT / 'bin', root / 'bin', symlinks=True)
     shutil.copytree(ROOT / 'lib/dots', root / 'lib/dots', ignore=shutil.ignore_patterns('__pycache__'))
+    shutil.copytree(ROOT / 'plugins', root / 'plugins', ignore=shutil.ignore_patterns('__pycache__', '.build'))
     return root
 
 
@@ -36,6 +37,16 @@ class LauncherContracts(MenuFixture):
             code = menu_cli.main(list(args))
         return code, output.getvalue(), error.getvalue()
 
+    def test_plugin_family_data_and_native_availability(self):
+        with patch('subprocess.run', side_effect=AssertionError('provider executed')):
+            for family in ('blastoff', 'pkgs'):
+                code, out, err = self.invoke(family, '--json')
+                self.assertEqual((code, err), (0, ''))
+                self.assertEqual(json.loads(out)['menu'], 'dots:'+family)
+        native = menu_cli.launcher(self.root, family='pkgs', windows=True)
+        self.assertTrue(next(e for e in native.entries if e.id == 'help').available)
+        self.assertTrue(all(not e.available for e in native.entries if e.id != 'help'))
+
     def test_data_is_fixed_static_and_never_executes_providers_or_fzf(self):
         with patch('subprocess.run', side_effect=AssertionError('provider executed')), patch('menu_cli.terminal', return_value=False):
             for mode in ([], ['--print'], ['--json']):
@@ -43,7 +54,7 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual((code, err), (0, '')); self.assertIn('keys', out)
             doc = json.loads(self.invoke('--json')[1])
             self.assertEqual((doc['schema'], doc['menu'], doc['title']), (1, 'dots', 'Dots menu'))
-            self.assertEqual([r['id'] for r in doc['items']], 'keys tmux files git theme themes anodize debug profile profiles wiki env'.split())
+            self.assertEqual([r['id'] for r in doc['items']], 'keys tmux files git theme themes anodize blastoff pkgs debug profile profiles wiki env'.split())
             for item in doc['items']:
                 self.assertEqual(set(item), {'id','label','description','available','reason'})
             self.assertEqual([r['id'] for r in json.loads(self.invoke('--json','--query','anodize')[1])['items']], ['anodize'])
@@ -64,6 +75,13 @@ class LauncherContracts(MenuFixture):
             'profiles': [(n,'profiles '+n,'','output') for n in ('list','check')],
             'wiki': [('browse','wiki browse','','document'),('list','wiki list','','output'),('check','wiki check','','output')],
         }
+        expected['blastoff'] = [('pick','blastoff pick','','terminal'),('current','blastoff current','','output'),
+            ('list','blastoff theme list','','output'),('edit','blastoff theme edit','','terminal'),
+            ('save','blastoff theme save','','terminal'),('modules','blastoff module show','','terminal'),
+            ('backups','blastoff backup list','','output'),('doctor','blastoff doctor','','output')]
+        expected['pkgs'] = [(n,'pkgs '+n,'','terminal') for n in ('search','install','uninstall')]+[
+            ('list','pkgs list','--installed','output')]+[(n,'pkgs '+n,'','terminal') for n in ('upgrade','refresh')]+[
+            (n,'pkgs '+n,'','output') for n in ('managers','doctor')]
         for family, rows in expected.items():
             self.assertEqual([(a.id,' '.join(a.route),' '.join(a.options),a.kind) for a in menu_cli.actions(family)[:-1]], rows)
             self.assertEqual(menu_cli.actions(family)[-1].id, 'help')
@@ -167,7 +185,7 @@ class LauncherContracts(MenuFixture):
                 p=subprocess.run([*front,*args],env=env,capture_output=True,text=True,timeout=20)
                 self.assertEqual(p.returncode,0,p.stderr);return p.stdout
             self.assertIn('--client',call('menu','--help'))
-            self.assertEqual(len(json.loads(call('menu','--json'))['items']),12)
+            self.assertEqual(len(json.loads(call('menu','--json'))['items']),14)
             complete=['__complete','bash','2','--','dots'] if len(front)==1 else ['__complete']
             self.assertIn('--query',call(*complete,'menu','--q'))
             self.assertIn('menu tmux sessions',call('help','menu'))
@@ -230,7 +248,7 @@ class NativeLauncher(NativeMenuFixture):
             data=self.receive(self.first[1],b'Back q')
             text=ANSI.sub('',data.decode(errors='replace'))
             asset='logo.txt' if width==40 else 'horizontal.txt'
-            for line in (ROOT/'lib/dots/anodize/assets'/asset).read_text().splitlines():
+            for line in (ROOT/'plugins/anodize/assets'/asset).read_text().splitlines():
                 self.assertIn(line.strip(' \u2800'),text)
             self.assertIn(b'38;2;16;32;48', data)
             self.assertIn(b'38;2;144;160;176', data)
@@ -238,6 +256,26 @@ class NativeLauncher(NativeMenuFixture):
             self.assertIsNone(p.poll())
             os.write(self.first[1],b'q');out,err=p.communicate(timeout=15)
             self.assertEqual(p.returncode,0,err)
+
+    def test_application_family_handoff_uses_exact_client_and_returns_after_cancel(self):
+        for family, runtime, action, query in (
+                ('blastoff', 'lib/blastoff.py', 'pick', 'choose theme'),
+                ('pkgs', 'main.py', 'install', '^install$')):
+            record = self.base / (family+'-handoff.json')
+            child = self.root/'plugins'/family/runtime
+            child.write_text('import os,json,sys\nfrom pathlib import Path\n'
+                             'Path('+repr(str(record))+').write_text(json.dumps(dict(argv=sys.argv[1:],cwd=os.getcwd(),tty=os.isatty(0))))\n'
+                             'print("PLUGIN HANDOFF",flush=True)\ninput()\nsys.exit(130)\n')
+            code = "import os,sys;os.chdir(os.environ['WORKDIR']);from menu_cli import main;sys.exit(main([os.environ['FAMILY'],'--browse','--client',os.environ['CLIENT'],'--query',os.environ['QUERY']]))"
+            p = self.worker(code, FAMILY=family, QUERY=query, WORKDIR=str(self.cwd))
+            prompt=('dots·'+family+':').encode()
+            self.receive(self.first[1],prompt);os.write(self.first[1],b'\r')
+            self.receive(self.first[1],b'PLUGIN HANDOFF')
+            self.assertNotIn(b'PLUGIN HANDOFF',self.drain(self.second[1]))
+            self.assertEqual(json.loads(record.read_text()),dict(argv=[action],cwd=str(self.cwd),tty=True))
+            os.write(self.first[1],b'\r');self.receive(self.first[1],prompt)
+            os.write(self.first[1],b'\x03');_,err=p.communicate(timeout=15)
+            self.assertEqual(p.returncode,130,err)
 
     def test_real_shortcuts_open_exact_client_cancel_quietly_and_preserve_cwd(self):
         for key,prompt in ((b'm',b'dots:'),(b's','dots·tmux·sessions'.encode())):

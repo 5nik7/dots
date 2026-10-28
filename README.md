@@ -4,6 +4,12 @@
 
 The live CLI uses Bash and native PowerShell adapters with shared Python controllers for managed files, Git operations and themes. Anodize is an independent Go palette-authoring engine. See [installation](docs/installation.md) for existing-checkout setup, runtime requirements and platform limits.
 
+## Blastoff and pkgs
+
+Dots includes [Blastoff and pkgs](docs/bundled-applications.md) as first-party source. Use `blastoff …` or `dots blastoff …` for Starship themes/modules, and `pkgs …` or `dots pkgs …` for package management. All existing subcommands pass through to their bundled application cores.
+
+`./install.sh` / `./uninstall.sh` and their PowerShell equivalents manage Dots and both applications together, including command entry points and shell completion. Review `--dry-run` first. Blastoff requires Python 3.11+; pkgs requires Python 3.9+ and Termux/Linux/WSL for package operations. Native Windows provides pkgs help/version and an explicit unsupported-operation diagnostic. See [installation and migration](docs/bundled-applications.md#one-installation-and-removal).
+
 ## Bash Command Framework
 
 The live `dots` command discovers executable `dots-*` commands in `$DOTS/bin` and
@@ -71,7 +77,7 @@ machine-local theme links are excluded from the portable checkout.
 
 `dots menu` opens a compact FZF menu with icons: `keys`, `tmux`, `files`, `git`, `theme`, `themes`, `anodize`, `debug`, `profile`, `profiles`, `wiki`, `env`. Select a family for its common workflows. Prompts show `dots:`, `dots·files:` and nested breadcrumbs such as `dots·themes·plugins:`. Escape goes back, Ctrl-C closes the menu, and F1 opens help. Workflows return to their menu with its search preserved; successful tmux session selection closes the launcher. The Git menu includes status, info, submodules, wiki, publish and sync. Both Git and Git → Wiki publish choices pass `--all` and retain the existing review and confirmation; sync previews changes and asks for confirmation. Help and reports open in a scrollable reader: arrows/Page Up/Down or mouse to scroll, `/` to search, `q` to return. Reader popups fit short reports and grow to a 90% height cap for long output. The reader displays Nerd Font symbols directly; a read-only FZF viewer is the fallback when less is unavailable. `wiki browse` also pages the selected document. Use `--query TEXT` to search or `--print`/`--json` to inspect root choices without running them. Existing file/theme/Anodize confirmations still apply. See [launcher commands](docs/commands.md#dots-workflow-menu).
 
-Less supports mouse clicking and scrolling by default in Dots-initialized shells and popup readers. Prompts and standout highlights use theme foreground on lighter_background. See [less mouse support](docs/shell-environment.md#global-less-mouse-support) and [less colors and overrides](docs/shell-environment.md#global-less-colors) for reload behavior and platform support.
+Less supports mouse clicking and scrolling by default in Dots-initialized shells and popup readers. The managed `dots:less` configuration also enables it at each less 702+ launch, including older tmux environments, independently of theme changes or shell reloads. Prompts and standout highlights use theme foreground on lighter_background. See [less mouse support](docs/shell-environment.md#global-less-mouse-support) and [less colors and overrides](docs/shell-environment.md#global-less-colors) for installation and platform support.
 
 The repository tmux configuration binds Prefix m to the launcher and Prefix s to the session picker, replacing the stock mark-pane and session-tree shortcuts. These take effect when that configuration is loaded; implementation does not reload a running server. Both shortcuts target the invoking client and close quietly on Escape/Ctrl-C. Prefix ? keeps its existing keybinding browser.
 
@@ -525,8 +531,16 @@ traces and isolated self-tests. Start with `dots debug startup --shell zsh`,
 then add `--isolated` or explicitly `--live`. Reports use nested trees; `--detail changes` adds per-boundary state differences, and `--detail deep --changes path,aliases,options` adds native observations. Opt-in `dots debug record start --shell zsh` emits code to evaluate in the current shell; `dots debug path --history` then explains recorded PATH edits. See [debugging](docs/debug.md)
 and [profile inspection](docs/profiles.md#profile-inspection-subcommands).
 
+## Application plugins
+
+Anodize, Blastoff and pkgs live together under `plugins/`. Use `dots menu blastoff` or `dots menu pkgs` for common workflows, and `dots files migrate-apps` to preview migration of supported old installations. See [application plugins](docs/plugins.md).
+
+Blastoff's current theme, theme list, save, backups and doctor views, and pkgs' installed packages, managers and doctor views use [Dots report formatting](docs/presentation.md#application-reports) in both popup windows and direct terminals: semantic colors, labeled details, resource styles and readable narrow layouts. Color/icon controls remain independent, and JSON/raw output stays undecorated.
+
 ## Wiki
 
 `dots wiki` provides grouped terminal navigation for the [project wiki](https://github.com/5nik7/dots/wiki). Use `list`, `show PAGE`, `search QUERY`, `browse`, `open PAGE`, or `edit PAGE` to read and maintain documentation. Canonical pages live in this repository; `dots wiki build --dry-run` previews the generated export and sidebar, and `dots wiki check` verifies freshness. The default checkout is `~/repos/dots.wiki`, overridden by `DOTS_WIKI_DIR`.
 
 Normal Git operations include the associated wiki; use `--no-wiki` to exclude it or `dots git wiki status|sync|publish` for wiki-only work. Builds never stage or publish changes. See [wiki maintenance](docs/wiki.md).
+
+Codex sessions in tmux can opt into [attention alerts](docs/themes.md#codex-attention-notifications): unfocused input requests and completed turns use bold red bracketed labels, with one themed toast and 300 ms vibration on Termux. Viewing the pane acknowledges the event. Preferences are repository-owned; explicit setup and Codex `/hooks` trust are required.
