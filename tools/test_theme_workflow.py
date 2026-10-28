@@ -607,7 +607,7 @@ assert(require("anodize").get_palette().metadata.id == "nord")
         self.assertNotIn("status-right", (active / "tmux.conf").read_text())
         palette = json.loads((active / "palette.json").read_text())["colors"]
         for option, semantic in (("bg", "background"), ("fg", "foreground"),
-                                 ("inactive-bg", "lighter_background"), ("inactive-fg", "cyan"),
+                                 ("inactive-bg", "dark_background"), ("inactive-fg", "dark_foreground"), ("tab-current-fg", "orange"),
                                  ("current-bg", "selection_background"), ("current-fg", "bright_cyan"),
                                  ("lower-bg", "background"), ("window-bg", "dark_background"),
                                  ("window-fg", "light_foreground"), ("selected-bg", "selection_background"),
@@ -652,8 +652,8 @@ assert(require("anodize").get_palette().metadata.id == "nord")
                         for option, role in (("indicator-fg", "darker_background"), ("indicator-bg", "green"),
                                              ("prefix-fg", "accent"), ("prefix-bg", "dark_background"),
                                              ("window-selected-fg", "bright_green"), ("window-alert-fg", "bright_red"),
-                                             ("window-name-current-fg", "foreground"), ("window-name-inactive-fg", "dark_foreground"),
-                                             ("window-name-current-bg", "selection_background"), ("window-number-inactive-fg", "dark_foreground"),
+                                             ("window-name-current-fg", "bright_foreground"), ("window-name-inactive-fg", "dark_foreground"), ("window-name-codex-fg", "foreground"),
+                                             ("window-name-current-bg", "selection_background"), ("window-number-inactive-fg", "dark_foreground"), ("window-number-codex-fg", "magenta"),
                                              ("window-codex-fg", "accent"), ("window-codex-working-fg", "accent"),
                                              ("window-alert-bg", "darker_background"), ("separator-fg", "background"),
                                              ("separator-bg", "dark_background"), ("label-separator-fg", "dark_background")):

@@ -144,10 +144,10 @@ class Gitmux(unittest.TestCase):
     def text_output(self):
         return re.sub(r'#\[[^\]]*\]', '', self.output()).strip()
 
-    def view(self, termux=True):
+    def view(self, termux=True, workspace_hooks=True):
         inner, base = self.fixture.server('git-inner', termux=termux)
         self.fixture.write_theme()
-        cfg = self.fixture.write_config()
+        cfg = self.fixture.write_config(workspace_hooks=workspace_hooks)
         inner('source-file', str(cfg))
         inner('respawn-pane', '-k', '-c', str(self.repo), 'sleep 120')
         inner('set-option', '-gw', 'automatic-rename', 'off')
@@ -246,7 +246,7 @@ class Gitmux(unittest.TestCase):
     @unittest.skipUnless(GIT_IT, 'optional git-it unavailable')
     def test_native_session_icons_widths_attributes_and_directory_changes(self):
         self.git('remote', 'add', 'origin', 'https://github.com/example/repo.git')
-        self.view()
+        self.view(workspace_hooks=False)
         self.inner('rename-session', 'dots')
         self.inner('rename-window', 'dots')
         row = self.await_row(lambda row: '󰊤 dots │ main' in row)
@@ -254,11 +254,12 @@ class Gitmux(unittest.TestCase):
                          {'fg': (85, 255, 255), 'bg': (85, 102, 119)})
         self.assertTrue(self.fixture.bold_at(row, '󰊤'))
         self.assertFalse(self.fixture.underline_at(row, '󰊤'))
-        self.assertTrue(self.fixture.underline_at(row, 'dots'))
+        self.assertFalse(self.fixture.underline_at(row, 'dots'))
         self.assertFalse(self.fixture.underline_at(row, '󰊤', -1))
         tty = self.inner('list-clients', '-F', '#{client_tty}').splitlines()[0]
         self.fixture.snapshot([tty, 'pts/99999'])
         other = self.inner('new-session', '-d', '-P', '-F', '#{session_id}', '-s', 'other', 'sleep 120')
+        self.inner('set-option', '-t', 'dots', '@dots-session-number', '1')
         row = self.await_row(lambda row: '1 󰊤 dots │ main' in row)
         self.assertFalse(self.fixture.dim_at(row, '1 󰊤', 1))
         self.assertFalse(self.fixture.bold_at(row, '1 󰊤', 1))
@@ -267,7 +268,7 @@ class Gitmux(unittest.TestCase):
         self.assertFalse(self.fixture.dim_at(row, 'main'))
         self.assertFalse(self.fixture.underline_at(row, '1 󰊤'))
         self.assertFalse(self.fixture.underline_at(row, '󰊤'))
-        self.assertTrue(self.fixture.underline_at(row, 'dots'))
+        self.assertFalse(self.fixture.underline_at(row, 'dots'))
         self.assertEqual(self.fixture.colors_at(row, '│')['bg'], (34, 51, 68))
         for width in (40, 80, 120):
             self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
@@ -284,6 +285,7 @@ class Gitmux(unittest.TestCase):
             self.inner('set-option', '-gu', '@dots-termux-default')
         self.fixture.snapshot([tty])
         self.inner('kill-session', '-t', other)
+        self.inner('set-option', '-t', 'dots', '@dots-session-number', '')
         self.inner('set-option', '-g', '@dots-termux-default', '1')
         self.await_row(lambda row: '󰊤 │ main' in row and '1 ' not in row)
         self.inner('set-option', '-gu', '@dots-termux-default')
@@ -294,9 +296,9 @@ class Gitmux(unittest.TestCase):
         self.assertEqual(self.fixture.colors_at(row, '1 name:colon', 1),
                          {'fg': (34, 51, 68), 'bg': (85, 102, 119)})
         self.assertFalse(self.fixture.dim_at(row, '1 name:colon', 6))
-        self.assertFalse(self.fixture.bold_at(row, 'name:colon'))
+        self.assertTrue(self.fixture.bold_at(row, 'name:colon'))
         self.assertEqual(self.fixture.colors_at(row, 'name:colon'),
-                         {'fg': (238, 238, 238), 'bg': (85, 102, 119)})
+                         {'fg': (255, 238, 221), 'bg': (85, 102, 119)})
         self.assertEqual(self.fixture.colors_at(row, '1 name:colon'),
                          {'fg': (85, 255, 85), 'bg': (85, 102, 119)})
         # The same split preserves a pipe inside Git text.
@@ -315,7 +317,7 @@ class Gitmux(unittest.TestCase):
         self.await_row(lambda row: '󰊤 dots' in row and '1 󰊤' not in row)
 
     def test_inline_colors_widths_and_empty_labels(self):
-        self.view()
+        self.view(workspace_hooks=False)
         for width in (40, 80, 120):
             with self.subTest(width=width):
                 self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
@@ -335,6 +337,8 @@ class Gitmux(unittest.TestCase):
         tty = self.inner('list-clients', '-F', '#{client_tty}').splitlines()[0]
         self.fixture.snapshot([tty, 'pts/9999'])
         self.inner('new-session', '-d', '-s', 'other', 'sleep 120')
+        # Pin the formatting input; project-group numbering has its own suite.
+        self.inner('set-option', '-t', 'fixture', '@dots-session-number', '1')
         row = self.await_row(lambda row: ' 1 │ main' in row)
         # Long content clips by visible cells, never the bytes of its style directives.
         self.git('branch', '-m', 'very-long-feature-' + 'x' * 40)
@@ -490,9 +494,9 @@ class GitmuxThemes(unittest.TestCase):
                 self.assertEqual(raw, (native / 'tmux.conf').read_text())
                 self.assertNotIn('{{', raw)
                 colors = json.loads((out / 'colors.json').read_text())['colors']
-                for option, role in (('current', 'foreground'), ('inactive', 'dark_foreground')):
+                for option, role in (('current', 'bright_foreground'), ('inactive', 'dark_foreground'), ('codex', 'foreground')):
                     self.assertIn(f'set -g @dots-window-name-{option}-fg "{colors[role]}"', raw)
-                for option, role in (('window-name-current-bg', 'selection_background'), ('window-number-inactive-fg', 'dark_foreground'), ('separator-bg', 'dark_background')):
+                for option, role in (('window-name-current-bg', 'selection_background'), ('window-number-inactive-fg', 'dark_foreground'), ('separator-bg', 'dark_background'), ('termux-tab-current-fg', 'orange'), ('termux-inactive-bg', 'dark_background'), ('termux-inactive-fg', 'dark_foreground'), ('window-number-codex-fg', 'magenta')):
                     self.assertIn(f'set -g @dots-{option} "{colors[role]}"', raw)
                 for role in ('branch', 'staged', 'modified', 'untracked', 'conflict', 'clean', 'added', 'deleted', 'ahead', 'behind'):
                     self.assertIn(f'set -g @dots-gitmux-{role} "{colors["git"][role]}"', raw)

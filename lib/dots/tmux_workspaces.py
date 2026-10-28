@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from types import SimpleNamespace
 import unicodedata
 import uuid
 
@@ -145,7 +146,8 @@ class Workspaces:
             info = os.fstat(fd)
             if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
                 raise ValueError('unsafe workspace lock')
-            deadline = time.monotonic() + self.remaining(3)
+            # Queue time must not consume the later observation/work budget.
+            deadline = time.monotonic() + self.remaining(15)
             while True:
                 try:
                     fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -211,20 +213,38 @@ class Workspaces:
         return data
 
     def renumber(self):
+        from menu_projects import discover, number_group
         sessions = self.sessions()
+        projects = discover()
+        groups = {}
+        for session in sessions:
+            record = SimpleNamespace(id=session, name=self.name(session))
+            groups.setdefault(number_group(self, record, projects), []).append(session)
+        # Observe every group and previous value before changing any numbers.
         commands = []
-        for index, session in enumerate(sessions, 1):
-            number = str(index) if len(sessions) > 1 else ''
-            if self.option(session, '@dots-session-number') != number:
-                commands.append(['set-option', '-t', session + ':', '@dots-session-number', number])
+        for members in groups.values():
+            for index, session in enumerate(members, 1):
+                number = str(index) if len(members) > 1 else ''
+                if self.option(session, '@dots-session-number') != number:
+                    commands.append(['set-option', '-t', session + ':', '@dots-session-number', number])
         self.batch(commands)
+
+    def refresh_numbers(self):
+        # A bad unrelated observation must not abort creation or a completed
+        # project reconciliation. Explicit `numbers` still reports the error.
+        try:
+            with self.bounded(15):
+                self.renumber()
+        except (ValueError, OSError, subprocess.SubprocessError):
+            print('dots: session numbers retained after an incomplete group inventory', file=sys.stderr)
 
     def reconcile_one(self, session, configured):
         data = self.metadata(session)
         if data is None:
-            return
+            return True  # Unmanaged picker associations can follow pane paths.
         actual = self.name(session)
-        if data.get('auto') and actual != data['expected']:
+        renamed = actual != data['expected']
+        if renamed:
             data['auto'] = False
             data['expected'] = actual
             self.store(session, data)
@@ -246,15 +266,16 @@ class Workspaces:
         label = '' if not projects else display_name(projects[0]) if len(projects) == 1 else 'multi'
         expected = name_prefix(label or 'termux') + '-' + data['id'] if data['auto'] else actual
         if projects == data.get('projects') and expected == actual and self.option(session, PREFIX + 'label') == label:
-            return
+            return renamed
         # A collision with an unrelated manual name must never merge workspaces.
         if expected != actual and any(self.name(other) == expected for other in self.sessions() if other != session):
             raise ValueError('workspace name is occupied by another session')
         data.update(projects=projects, expected=expected)
         self.store(session, data, label, expected if expected != actual else None)
+        return True
 
     def reconcile(self, pane=None, adopt=False, session=None):
-        with self.bounded(15 if adopt else 3), self.locked():
+        with self.locked(), self.bounded(15 if adopt else 3):
             sessions = self.sessions()
             if session is not None and (not SESSION.fullmatch(session) or session not in sessions):
                 raise ValueError('workspace session is unavailable')
@@ -264,8 +285,6 @@ class Workspaces:
                         match = re.fullmatch(r'termux-([0-9]+-[0-9]+)', self.name(target))
                         if match:
                             self.register(target, match[1], match[1])
-            if adopt:
-                self.renumber()
             targets = sessions
             if pane:
                 if not re.fullmatch(r'%[0-9]+', pane):
@@ -280,13 +299,16 @@ class Workspaces:
                 windows = {window for owner, window in rows if owner == session}
                 targets = {owner for owner, window in rows if window in windows} | {session}
             configured = configured_projects()
+            changed = adopt
             for session in targets:
-                self.reconcile_one(session, configured)
+                changed = self.reconcile_one(session, configured) or changed
+            if changed:
+                self.refresh_numbers()
 
     def create(self, directory, identity=None, origin=None):
         if not Path(directory).is_dir():
             raise ValueError('workspace directory is unavailable')
-        with self.locked():
+        with self.locked(), self.bounded(15):
             identity = identity or uuid.uuid4().hex[:12]
             if not IDENTITY.fullmatch(identity):
                 raise ValueError('invalid workspace identity')
@@ -307,7 +329,7 @@ class Workspaces:
             if origin:
                 self.read('set-option', '-t', session + ':', '@dots-termux-default', '1')
             self.reconcile_one(session, configured_projects())
-            self.renumber()
+            self.refresh_numbers()
             return session
 
 
@@ -322,7 +344,7 @@ def main(argv=None):
     try:
         server = Workspaces(socket=args.socket)
         if args.action == 'numbers':
-            with server.locked():
+            with server.locked(), server.bounded(15):
                 server.renumber()
         elif args.action in ('reconcile', 'adopt'):
             server.reconcile(args.pane, args.action == 'adopt', args.session)

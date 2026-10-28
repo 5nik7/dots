@@ -98,6 +98,7 @@ class WorkspacesTest(unittest.TestCase):
         self.assertEqual(len(clients()), 2)
 
     def test_sustained_two_client_rows_and_independent_numbering(self):
+        self.inner('respawn-pane', '-k', '-t', '$0:', 'sleep 300')
         self.config()
         # A deterministic asynchronous provider isolates rendering from Git I/O.
         (self.fx.tmux_config / 'gitmux-status.py').write_text(
@@ -107,8 +108,21 @@ class WorkspacesTest(unittest.TestCase):
         self.inner('rename-window', '-t', first + ':', 'alpha')
         self.inner('rename-window', '-t', second + ':', 'beta')
         for name in ('editor', 'agent', 'tools'):
-            self.inner('new-window', '-d', '-t', first, '-c', str(self.alpha), '-n', name, 'sleep 120')
+            self.inner('new-window', '-d', '-t', first, '-c', str(self.alpha), '-n', name, 'sleep 300')
         outer, terminals = self.viewers((first, second))
+        def frame(index):
+            # A nested terminal can be captured midway through a redraw. Wait
+            # for two identical observations, independent of expected content:
+            # a stable empty/missing row still fails the assertions below.
+            previous = None
+            deadline = time.monotonic() + 3
+            while True:
+                rows = self.fx.plain(outer('capture-pane', '-p', '-t', 'view' + str(index))).splitlines()
+                if rows[:2] == previous:
+                    return rows
+                self.assertLess(time.monotonic(), deadline, 'status never settled')
+                previous = rows[:2]
+                time.sleep(.1)
         for width in (40, 80, 120):
             for index in range(2):
                 outer('resize-window', '-t', 'view' + str(index), '-x', str(width), '-y', '24')
@@ -117,18 +131,21 @@ class WorkspacesTest(unittest.TestCase):
                     len(rows) > 1 and f' {index + 1} ' in rows[0] and 'main' in rows[1])
             for sample in range(45):
                 for index in range(2):
-                    rows = self.fx.plain(outer('capture-pane', '-p', '-t', 'view' + str(index))).splitlines()
+                    rows = frame(index)
                     self.assertGreater(len(rows), 1)
                     self.assertIn('80%', rows[0])
                     self.assertIn('main', rows[1])
-                    self.assertTrue(rows[1].startswith(' ' + str(index + 2) + ' '), repr(rows[1]))
+                    self.assertTrue(rows[1].startswith(' 󰊤 ' + ('alpha', 'beta')[index] + ' '), repr(rows[1]))
                     self.assertNotIn(self.w.metadata((first, second)[index])['id'], rows[1])
                 time.sleep(.04)
+        # A second alpha workspace adds a group-local number only to alpha.
+        duplicate = self.w.create(str(self.alpha))
+        self.fx.await_screen(outer, 'view0', lambda rows: len(rows) > 1 and rows[1].startswith(' 1 󰊤 alpha '))
         # Both tabs view the same tmux workspace: top highlights differ, lower numbers agree.
         self.inner('switch-client', '-c', terminals[1], '-t', first)
         for index in range(2):
             self.fx.await_screen(outer, 'view' + str(index), lambda rows:
-                len(rows) > 1 and rows[1].startswith(' 2 ') and 'main' in rows[1])
+                len(rows) > 1 and rows[1].startswith(' 1 ') and 'main' in rows[1])
         # Slow provider refreshes retain the last successful result in each client.
         provider = self.fx.tmux_config / 'gitmux-status.py'
         observed = self.fx.home / 'slow-provider'
@@ -138,18 +155,103 @@ class WorkspacesTest(unittest.TestCase):
         self.wait(observed.exists)
         for _ in range(30):
             for index in range(2):
-                rows = self.fx.plain(outer('capture-pane', '-p', '-t', 'view' + str(index))).splitlines()
+                rows = frame(index)
                 self.assertIn('main', rows[1])
-                self.assertTrue(rows[1].startswith(' 2 '))
+                self.assertTrue(rows[1].startswith(' 1 '))
             time.sleep(.04)
         provider.write_text('print("|")\n')
         for index in range(2):
             self.fx.await_screen(outer, 'view' + str(index), lambda rows:
-                len(rows) > 1 and rows[1].startswith(' 2 ') and 'alpha' in rows[1] and '' not in rows[1])
+                len(rows) > 1 and rows[1].startswith(' 1 ') and 'alpha' in rows[1] and '' not in rows[1])
+        self.inner('kill-session', '-t', duplicate)
+        self.fx.await_screen(outer, 'view0', lambda rows: len(rows) > 1 and rows[1].startswith(' alpha '))
         outer('kill-session', '-t', 'view1')
         self.fx.snapshot([terminals[0]])
         self.fx.await_screen(outer, 'view0', lambda rows:
-            len(rows) > 1 and rows[1].startswith(' 2 ') and 'alpha' in rows[1] and '│' not in rows[0])
+            len(rows) > 1 and rows[1].startswith(' alpha ') and '│' not in rows[0])
+        # Failed background hooks open a tmux output pager; even a readable
+        # status row must not hide that lifecycle failure.
+        self.assertEqual(set(self.inner('list-panes', '-a', '-F', '#{pane_in_mode}').splitlines()), {'0'})
+
+    def test_group_numbers_match_picker_and_preserve_failed_inventory(self):
+        from menu_projects import associate, discover
+        from types import SimpleNamespace
+        first = self.w.create(str(self.alpha))
+        second = self.w.create(str(self.alpha))
+        beta = self.w.create(str(self.beta))
+        same_name = self.w.create(str(self.repo('nested/alpha')))
+        alias = self.fx.home / 'alias'; alias.symlink_to(self.alpha, target_is_directory=True)
+        third = self.w.create(str(alias))
+        def numbers():
+            return [self.w.option(x, '@dots-session-number') for x in (first, second, third, beta, same_name)]
+        self.assertEqual(numbers(), ['1', '2', '3', '', ''])
+        groups = [associate(self.w, SimpleNamespace(id=x), discover()).root
+                  for x in (first, second, third, beta, same_name)]
+        self.assertEqual(groups[:3], [self.alpha] * 3)
+        self.assertNotEqual(groups[0], groups[4])
+        with patch.object(self.w, 'batch', wraps=self.w.batch) as batch:
+            self.w.renumber()
+        self.assertEqual(batch.call_args.args[0], [])
+        # A detached session still counts; project moves update both groups.
+        self.assertEqual(self.inner('display-message', '-p', '-t', second, '#{session_attached}'), '0')
+        self.cd(self.pane(second), self.beta)
+        self.assertEqual(numbers(), ['1', '1', '2', '2', ''])
+        previous = numbers()
+        saved = self.w.option(same_name, '@dots-workspace-data')
+        self.inner('set-option', '-t', same_name + ':', '@dots-workspace-data', 'broken')
+        with self.assertRaises(ValueError):
+            self.w.renumber()
+        self.assertEqual(numbers(), previous)
+        self.inner('set-option', '-t', same_name + ':', '@dots-workspace-data', saved)
+        self.inner('kill-session', '-t', third)
+        self.w.renumber()
+        self.assertEqual(self.w.option(first, '@dots-session-number'), '')
+
+    def test_queued_number_worker_keeps_its_observation_budget(self):
+        import fcntl
+        import hashlib
+        first = self.w.create(str(self.alpha)); second = self.w.create(str(self.alpha))
+        key = hashlib.sha256(f'{self.w.socket}:{self.w.pid}'.encode()).hexdigest()
+        lock = self.fx.root / 'run' / f'dots-tmux-workspaces-{os.getuid()}' / key
+        with lock.open('r+') as stream:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+            worker = subprocess.Popen([sys.executable, '-B', str(self.fx.tmux_config / 'workspace-control.py'),
+                                       'numbers', '--socket', self.w.socket], env=self.fx.env,
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            try:
+                # A legitimate queued event can outlast the former entire budget.
+                time.sleep(3.2)
+                self.assertIsNone(worker.poll())
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+                output, error = worker.communicate(timeout=15)
+                self.assertEqual((worker.returncode, output, error), (0, '', ''))
+            finally:
+                if worker.poll() is None:
+                    worker.kill(); worker.communicate()
+        self.assertEqual(self.w.option(first, '@dots-session-number'), '1')
+        self.assertEqual(self.w.option(second, '@dots-session-number'), '2')
+
+    def test_default_multi_and_manual_label_groups(self):
+        first = self.w.create(str(self.fx.home)); second = self.w.create(str(self.fx.home))
+        def numbers():
+            return [self.w.option(x, '@dots-session-number') for x in (first, second)]
+        self.assertEqual(numbers(), ['1', '2'])
+        for target in (first, second):
+            self.cd(self.pane(target), self.alpha)
+            self.inner('split-window', '-d', '-t', target, '-c', str(self.beta), 'sleep 120')
+            self.w.reconcile(session=target)
+        self.assertEqual(numbers(), ['1', '2'])
+        self.assertEqual(self.w.option(first, '@dots-workspace-label'), 'multi')
+        self.inner('rename-session', '-t', first, 'personal')
+        self.w.reconcile(session=first)
+        self.assertEqual(numbers(), ['', ''])
+        # Manual multi matches the logical auto label, but case is literal.
+        self.inner('rename-session', '-t', first, 'multi')
+        self.w.reconcile(session=first)
+        self.assertEqual(numbers(), ['1', '2'])
+        self.inner('rename-session', '-t', first, 'Multi')
+        self.w.reconcile(session=first)
+        self.assertEqual(numbers(), ['', ''])
 
     def test_all_panes_transitions_keep_identity_and_manual_override(self):
         ident = self.w.create(str(self.fx.home))
@@ -196,6 +298,10 @@ class WorkspacesTest(unittest.TestCase):
         subprocess.run(['git', '-C', str(self.alpha), 'worktree', 'add', '-qb', 'other', str(worktree)],
                        env=self.fx.env, check=True, capture_output=True)
         self.assertEqual(project_root(worktree), worktree)
+        main_session = self.w.create(str(self.alpha))
+        linked_session = self.w.create(str(worktree))
+        self.assertEqual(self.w.option(main_session, '@dots-session-number'), '')
+        self.assertEqual(self.w.option(linked_session, '@dots-session-number'), '')
 
     def test_literal_names_noop_updates_and_observation_failures(self):
         root = self.repo('-café #{@literal};')
@@ -273,7 +379,7 @@ class WorkspacesTest(unittest.TestCase):
         self.wait(lambda: self.w.name(ident) == 'alpha-' + suffix)
         self.inner('rename-session', '-t', ident, 'personal')
         self.wait(lambda: not self.w.metadata(ident)['auto'])
-        self.assertEqual(self.w.option(ident, '@dots-session-number'), '2')
+        self.assertEqual(self.w.option(ident, '@dots-session-number'), '')
         self.inner('kill-session', '-t', '$0')
         self.wait(lambda: self.w.option(ident, '@dots-session-number') == '')
         self.assertEqual(self.w.name(ident), 'personal')

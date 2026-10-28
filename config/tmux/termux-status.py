@@ -13,7 +13,7 @@ TTY = re.compile(r"pts/[0-9]+\Z")
 
 
 def render(snapshot, tty, colors, width=None, split_current=False, split_badge=False,
-           compact_badge=False, separator_fg=None, separator_bg=None):
+           compact_badge=False, separator_fg=None, separator_bg=None, dim_inactive=True):
     """Preserve discovery order; never forward process names or arbitrary styles."""
     if len(colors) != 4 or not all(COLOR.fullmatch(color) for color in colors):
         raise ValueError("invalid colors")
@@ -47,7 +47,7 @@ def render(snapshot, tty, colors, width=None, split_current=False, split_badge=F
         bg, fg = colors[2:] if current else colors[:2]
         focus = "focus" if current else "on"
         directive = f"list={focus}," if width is None and not split else ""
-        weight = "bold,noreverse,dim" if compact_badge else "bold" if split_badge else "nobold"
+        weight = ("bold,noreverse," + ("dim" if dim_inactive else "nodim")) if compact_badge else "bold" if split_badge else "nobold"
         entries.append((f"#[{directive}bg={bg},fg={fg},{weight},nounderscore] {number} ",
                         len(str(number)) + 2, current))
     if compact_badge:
@@ -137,7 +137,7 @@ def compact(entries, background, foreground, width):
 def render_tabs(snapshot, tty, colors, width, separator_fg, separator_bg):
     """Independent upper-row tab strip; singleton tabs emit no style or padding."""
     before, current, after = render(snapshot, tty, colors, width, compact_badge=True,
-                                   separator_fg=separator_fg, separator_bg=separator_bg).split('|')
+                                   separator_fg=separator_fg, separator_bg=separator_bg, dim_inactive=False).split('|')
     divider = f'#[bg={separator_bg},fg={separator_fg},nobold,nounderscore,noreverse,nodim]│#[default]'
     selected = (f'#[bg={colors[2]},fg={colors[3]},bold,nounderscore,noreverse,nodim] {current} #[default]'
                 if current else '')

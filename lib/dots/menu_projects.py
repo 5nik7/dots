@@ -127,3 +127,22 @@ def inventory(server, sessions, projects):
     if server:
         server.verify()
     return tuple([*rows, *generic])
+
+
+def number_group(server, session, projects):
+    """Status numbering shares picker association, without loading any menu UI."""
+    project = associate(server, session, projects)
+    if project:
+        return ('project', str(project.root))
+    managed = server.read('show-options', '-qv', '-t', session.id + ':', '@dots-workspace-data').strip()
+    if managed:
+        data = json.loads(managed)
+        if not isinstance(data, dict):
+            raise ValueError('invalid workspace project metadata')
+        if data.get('auto') is True and session.name == data.get('expected'):
+            label = server.read('show-options', '-qv', '-t', session.id + ':',
+                                '@dots-workspace-label').removesuffix('\n')
+            return ('label', label or 'termux')
+    elif server.read('show-options', '-qv', '-t', session.id + ':', '@dots-termux-default').strip() == '1':
+        return ('label', 'termux')
+    return ('label', session.name)

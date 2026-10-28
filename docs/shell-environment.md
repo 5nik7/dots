@@ -160,9 +160,15 @@ exported hook evidence, with private-value redaction. See the authoritative
 
 `DOTRUBY` and `RUBYCOMP` are removed from the environment registry and completion. Initialization/reload unsets inherited values and removes their provenance records. Profile definitions cannot redeclare them. Only the obsolete `ruby/completion` entry under the current checkout, previous `DOTS_PROFILE_CHECKOUT`, or default `~/dots` is removed from PATH, including a trailing slash. Unrelated Ruby paths remain. This applies to Bash, Zsh, Fish, PowerShell, Nushell and Xonsh adapters; a child CLI cannot alter an already-running parent shell. Open a new shell or reload Dots initialization to apply the cleanup. `config/ruby` is independent and remains supported.
 
+## Global less mouse support
+
+The shared application environment defaults `LESS` to `--mouse`, enabling mouse clicking and vertical scrolling in ordinary less readers. Bash, Zsh, Fish, Nushell, Xonsh and PowerShell receive this through the existing environment adapters. Initialization and reload prepend `--mouse` to inherited options when no `--mouse` or `--MOUSE` option is present, preserving options such as batpipe's `-R` and custom prompts. Repeated initialization does not duplicate the mouse option. A different profile declaration for `LESS` uses ordinary environment precedence instead of this mouse default. Dots popup readers already pass `--mouse` directly.
+
+Open a new shell or reload Dots initialization (`rl` in the personal Zsh configuration), then reopen less. Mouse interaction requires a less build and terminal that support mouse reporting; it was verified locally with Termux less 710. Native Windows terminal acceptance remains pending.
+
 ## Global less colors
 
-Dots styles less's standout text with the current theme's `foreground` on `lighter_background`, at normal weight. This includes the bottom-left prompt, ordinary search highlights and messages using that style. The standard `LESS_TERMCAP_so` and `LESS_TERMCAP_se` exports apply to less and child programs using it; prompt wording, pager selection, `LESS`, `LESSOPEN` and other options remain under their existing owners. Explicit less color options can override terminal capabilities.
+Dots styles less's standout text with the current theme's `foreground` on `lighter_background`, at normal weight. This includes the bottom-left prompt, ordinary search highlights and messages using that style. The standard `LESS_TERMCAP_so` and `LESS_TERMCAP_se` exports apply to less and child programs using it; prompt wording, pager selection, `LESSOPEN` and other options remain under their existing owners. The shared `LESS` default is described above. Explicit less color options can override terminal capabilities.
 
 Bash, Zsh, Fish, Nushell and Xonsh update these exports at initialization and existing theme-refresh boundaries. The PowerShell adapter supplies the same behavior on POSIX. No less invocation or new external process runs on an ordinary prompt. Shell snapshots retain the needed colors even with `DOTS_INIT_COLORS=0`; older snapshots without `lighter_background` use the normal theme background. Missing or invalid colors retain an existing valid style; a fresh shell keeps stock styling.
 

@@ -60,7 +60,7 @@ class TmuxStatus(unittest.TestCase):
         shutil.copyfile(REPO / 'config/tmux/workspace-control.py', control)
         (self.tmux_config / control.name).symlink_to(control)
         (self.repo / 'lib/dots').mkdir(parents=True)
-        for name in ('tmux_workspaces.py', 'menu_tmux.py', 'resources.py'):
+        for name in ('tmux_workspaces.py', 'menu_projects.py', 'menu_tmux.py', 'resources.py'):
             shutil.copyfile(REPO / 'lib/dots' / name, self.repo / 'lib/dots' / name)
         self.sessions_script = self.repo / 'profiles/termux/bin/termux-sessions'
         self.sessions_script.parent.mkdir(parents=True)
@@ -388,17 +388,22 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                                                capture_output=True, timeout=10))
         return tmux, base
 
-    def write_config(self):
+    def write_config(self, workspace_hooks=True):
         config = self.tmux_config / 'tmux.conf'
-        shutil.copyfile(REPO / 'config/tmux/tmux.conf', config)
+        source = (REPO / 'config/tmux/tmux.conf').read_text()
+        if not workspace_hooks:
+            source = '\n'.join(line for line in source.splitlines()
+                               if not (line.startswith('set-hook ') and '[80]' in line)
+                               and not (line.startswith('run-shell ') and 'workspace-control.py' in line)) + '\n'
+        config.write_text(source)
         return config
 
     def write_theme(self, accent='#abcdef', background='#112233', dark_background='#223344'):
-        palette = dict(background=background, foreground='#eeeeee', accent=accent,
+        palette = dict(background=background, foreground='#eeeeee', bright_foreground='#ffeedd', accent=accent,
                        muted='#888888', light_foreground='#ccddee', info='#123456', selection='#654321', selection_background='#556677',
                        dark_background=dark_background, lighter_background='#445566', dark_foreground='#778899',
                        cyan='#00ffff', bright_cyan='#55ffff', bright_blue='#5555ff', bright_green='#55ff55', bright_red='#ff5555',
-                       blue='#0000ff', hint='#aabbcc', darker_background='#010203', red='#ff0000', yellow='#ffff00', green='#00ff00', orange='#ff8800')
+                       blue='#0000ff', magenta='#dd66cc', hint='#aabbcc', darker_background='#010203', red='#ff0000', yellow='#ffff00', green='#00ff00', orange='#ff8800')
         palette.update(git_branch='#bb00bb', git_staged='#00aa00', git_modified='#aaaa00',
                        git_untracked='#aa00aa', git_conflict='#aa0000', git_clean='#00bb00',
                        git_added='#00cc00', git_deleted='#cc0000', git_ahead='#00dd00',
@@ -439,9 +444,11 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         tmux('source-file', str(config))
         self.assertEqual(tmux('show-option', '-gqv', 'status'), '2')
         self.assertEqual(tmux('show-option', '-gqv', '@dots-label-separator-fg'), 'black')
-        self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-current-fg'), 'white')
+        self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-current-fg'), 'brightwhite')
         self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-current-bg'), 'brightblack')
         self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-inactive-fg'), 'brightblack')
+        self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-codex-fg'), 'white')
+        self.assertEqual(tmux('show-option', '-gqv', '@dots-window-number-codex-fg'), 'magenta')
         self.assertEqual(tmux('show-option', '-gqv', '@dots-window-number-inactive-fg'), 'brightblack')
         self.assertIn('#[fg=black,bg=green,bold]', tmux('display-message', '-p', '#{E:status-right}'))
         rows = tmux('show-option', '-g', 'status-format')
@@ -467,12 +474,14 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             self.assertIn('bg=#556677', tmux('display-message', '-p', '#{E:status-left}'))
             self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-current-bg'), '#556677')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-bg'), '#112233')
-            self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-inactive-bg'), '#445566')
-            self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-inactive-fg'), '#00ffff')
+            self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-inactive-bg'), '#223344')
+            self.assertEqual(tmux('show-option', '-gqv', '@dots-termux-inactive-fg'), '#778899')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-label-separator-fg'), '#223344')
-            self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-current-fg'), '#eeeeee')
+            self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-current-fg'), '#ffeedd')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-current-bg'), '#556677')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-inactive-fg'), '#778899')
+            self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-codex-fg'), '#eeeeee')
+            self.assertEqual(tmux('show-option', '-gqv', '@dots-window-number-codex-fg'), '#dd66cc')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-window-number-inactive-fg'), '#778899')
             self.assertIn('fg=#55ff55',
                           tmux('display-message', '-p', '#{E:window-status-current-format}'))
@@ -579,7 +588,11 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.assertNotIn(' 1 ', self.plain(lines[1]))
         self.assertNotIn(' 2 ', self.plain(lines[1]))
         self.assertFalse(self.underline_at(lines[0], ' 1 '))
-        self.assertTrue(self.underline_at(lines[1], 'fixture'))
+        self.assertEqual(self.colors_at(lines[0], ' 1 '), {'fg': (255, 136, 0), 'bg': (85, 102, 119)})
+        self.assertEqual(self.colors_at(lines[0], ' 2 '), {'fg': (119, 136, 153), 'bg': (34, 51, 68)})
+        self.assertTrue(self.bold_at(lines[0], ' 2 '))
+        self.assertFalse(self.dim_at(lines[0], ' 2 '))
+        self.assertFalse(self.underline_at(lines[1], 'fixture'))
 
     @staticmethod
     def plain(text):
@@ -589,7 +602,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
     def test_native_compact_badges_names_and_padding(self):
         self.write_theme()
         inner, base = self.server('compact')
-        config = self.write_config()
+        config = self.write_config(workspace_hooks=False)
         inner('source-file', str(config))
         inner('set-option', '-g', 'status-interval', '1')
         inner('set-option', '-gw', 'automatic-rename', 'off')
@@ -603,7 +616,8 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         outer('new-session', '-d', '-s', 'view', '-x', '80', '-y', '24', attach)
         tty = outer('display-message', '-p', '-t', 'view', '#{pane_tty}')
         self.snapshot([tty, 'pts/99999'])
-        inner('new-session', '-d', '-s', 'other-workspace', 'sleep 120')
+        # Pin formatting independently of project grouping (workspace suite).
+        inner('set-option', '-t', 'dots', '@dots-session-number', '1')
 
         def row_equals(expected):
             return self.await_screen(outer, 'view', lambda rows:
@@ -626,13 +640,16 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             self.assertEqual(self.colors_at(rows[1], '1 shell'),
                              {'fg': (119, 136, 153), 'bg': (34, 51, 68)})
             self.assertTrue(self.bold_at(rows[1], '1 shell'))
-            self.assertFalse(self.bold_at(rows[1], 'shell'))
+            self.assertTrue(self.bold_at(rows[1], 'shell'))
+            self.assertTrue(self.dim_at(rows[1], 'shell'))
+            self.assertEqual(self.colors_at(rows[1], 'shell')['fg'], (119, 136, 153))
+            self.assertFalse(self.dim_at(rows[1], 'shell', len('shell')))
             clock = re.search(r'[0-9]+:[0-9]{2}', self.plain(rows[0]))[0]
             self.assertEqual(self.colors_at(rows[0], clock),
                              {'fg': (255, 255, 0), 'bg': (34, 51, 68)})
             for offset in (-1, 0, 1, len('1 dots')):
                 self.assertFalse(self.underline_at(rows[1], '1 dots', offset))
-            self.assertTrue(self.underline_at(rows[1], 'dots'))
+            self.assertFalse(self.underline_at(rows[1], 'dots'))
             self.assertTrue(self.bold_at(rows[1], 'dots'))
             for label in ('1 dots', '1 shell'):
                 self.assertFalse(self.bold_at(rows[1], label, 1))
@@ -656,8 +673,9 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             inner('select-window', '-t', 'dots:1')
             rows = row_equals(' 1 dots │ 0 │ 1 shell ')
             self.assertEqual(self.colors_at(rows[1], 'shell'),
-                             {'fg': (238, 238, 238), 'bg': (85, 102, 119)})
-            self.assertFalse(self.bold_at(rows[1], 'shell'))
+                             {'fg': (255, 238, 221), 'bg': (85, 102, 119)})
+            self.assertFalse(self.dim_at(rows[1], 'shell'))
+            self.assertTrue(self.bold_at(rows[1], 'shell'))
             inner('rename-window', '-t', 'dots:0', 'Dots')
             row_equals(' 1 dots │ 0 Dots │ 1 shell ')
             inner('set-option', '-t', 'dots', '@dots-termux-default', '1')
@@ -913,7 +931,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 self.assertRegex(top, r' (?:[1-9]|1[0-2]):[0-5][0-9] ')
                 self.assertIn(f' {index} ', top)
                 self.assertEqual(self.colors_at(lines[0], f' {index} '),
-                                 {'fg': (85, 255, 255), 'bg': (85, 102, 119)})
+                                 {'fg': (255, 136, 0), 'bg': (85, 102, 119)})
                 first_divider = top.index('│')
                 for match in re.finditer('│', top):
                     self.assertEqual(self.colors_at(lines[0], '│', match.start() - first_divider),
@@ -922,14 +940,14 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 self.assertNotIn(self.android_text(), top)
                 self.assertNotIn(self.android_text(), bottom)
                 self.assertEqual(self.colors_at(lines[1], 'window'),
-                                 {'fg': (238, 238, 238), 'bg': (85, 102, 119)})
-                self.assertFalse(self.bold_at(lines[1], 'window'))
+                                 {'fg': (255, 238, 221), 'bg': (85, 102, 119)})
+                self.assertTrue(self.bold_at(lines[1], 'window'))
                 self.assertEqual(self.colors_at(lines[0], '80%'),
                                  {'fg': (0, 255, 0), 'bg': (17, 34, 51)})
                 self.assertEqual(self.colors_at(lines[1], badge_name),
                                  {'fg': (85, 255, 255), 'bg': (85, 102, 119)})
                 self.assertFalse(self.underline_at(lines[0], str(index)))
-                self.assertTrue(self.underline_at(lines[1], badge_name))
+                self.assertFalse(self.underline_at(lines[1], badge_name))
                 self.assertFalse(self.underline_at(lines[1], 'window'))
                 inner('set-option', '-t', '=fixture:', '@dots-termux-default', '1')
                 self.await_screen(outer, name, lambda rows:
@@ -951,7 +969,9 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                              {'fg': (119, 136, 153), 'bg': (34, 51, 68)})
             self.assertEqual(self.colors_at(lines[1], 'other'),
                              {'fg': (119, 136, 153), 'bg': (34, 51, 68)})
-            self.assertFalse(self.bold_at(lines[1], 'other'))
+            self.assertTrue(self.bold_at(lines[1], 'other'))
+            self.assertTrue(self.dim_at(lines[1], 'other'))
+            self.assertFalse(self.dim_at(lines[1], other_label))
             x = self.plain(lines[1]).index(other_label) + 1
             time.sleep(.5)  # Separate clicks, not double/triple-click gestures.
             outer('send-keys', '-t', 'one', '-l', f'\x1b[<0;{x};2M\x1b[<0;{x};2m')

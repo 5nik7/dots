@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import sys
 import shutil
-from environment import declarations, TOKEN, retired_paths, clean_metadata
+from environment import declarations, TOKEN, retired_paths, clean_metadata, application_value
 from platform_info import detect
 from profiles import resolve, SENSITIVE
 
@@ -22,7 +22,7 @@ def exports(root, env=None):
             raise ValueError('sensitive defaults must reference an environment variable')
         default = (next((name for name in ('nvim','vim','vi','code','nano') if shutil.which(name, path=env.get('PATH',''))), 'vi')
                    if template == '@editor' else TOKEN.sub(lambda match: context.get(match[1], ''), template))
-        data[key] = context[key] = context.get(key) or default
+        data[key] = context[key] = application_value(key, context.get(key), default)
     facts = profile['facts']
     data.update(DOTS_PLATFORM=facts['platform'], DOTS_DISTRO=facts['distro'], DOTS_ARCH=facts['architecture'], DOTS_RUNTIME=facts['runtime'],
                 DOTS_PROFILE=profile['current'], DOTS_PROFILE_LAYERS=' '.join(row['id'] for row in profile['layers']))

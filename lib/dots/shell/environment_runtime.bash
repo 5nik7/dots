@@ -3,6 +3,13 @@ typeset -gA _DOTS_ENV_APPLIED _DOTS_ENV_ORIGINS _DOTS_HOOK_BEFORE _DOTS_HOOK_REC
 _dots_env_default() {
   local key=$1 value=$2 origin=${3:-default} current
   if [[ -n ${ZSH_VERSION:-} ]]; then current=${(P)key}; else current=${!key-}; fi
+  # batpipe can supply -R before this shell starts. Keep those flags and add
+  # mouse support once, before prompt options that may consume the remainder.
+  local mouse_pattern='(^|[[:space:]])--(mouse|MOUSE)([=[:space:]]|$)'
+  if [[ $key == LESS && $value == --mouse && -n $current && ! $current =~ $mouse_pattern ]]; then
+    current="--mouse $current"
+    export "LESS=$current"
+  fi
   if [[ -n $current && ( -z ${_DOTS_ENV_APPLIED[$key]+yes} || $current != "${_DOTS_ENV_APPLIED[$key]}" ) ]]; then
     _DOTS_ENV_ORIGINS[$key]=environment
   else

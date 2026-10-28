@@ -81,6 +81,14 @@ def settings(root):
 TOKEN = re.compile(r'\$\{([A-Z][A-Z0-9_]*)\}')
 
 
+def application_value(key, current, default):
+    """Keep inherited pager flags while adding the configured mouse default."""
+    if (key == 'LESS' and default == '--mouse' and current
+            and not re.search(r'(^|\s)--(mouse|MOUSE)([=\s]|$)', current)):
+        return '--mouse ' + current
+    return current or default
+
+
 def declarations(root, profile=None):
     profile = resolve(root) if profile is None else profile
     rows = {key: (value, 'default') for key, value in json.loads((LIB / 'shell/environment.json').read_text())['defaults'].items()}
@@ -105,7 +113,7 @@ def inspect(root):
         if template == '@editor':
             default = next((name for name in ('nvim', 'vim', 'vi', 'code', 'nano') if shutil.which(name)), 'vi')
         else: default = TOKEN.sub(lambda m: context.get(m[1], ''), template)
-        value = context.get(key) or default
+        value = application_value(key, context.get(key), default)
         values[key] = dict(value=value, source='environment' if context.get(key) else origin, group='Applications', default=default, sensitive=bool(SENSITIVE.search(key) or any(SENSITIVE.search(m[1]) for m in TOKEN.finditer(template))))
         context[key] = value
     for entry in os.environ.get('DOTS_ENV_ORIGINS', '').split(';'):

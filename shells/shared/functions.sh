@@ -19,15 +19,15 @@ fi
 # Inside tmux switch the current client instead of nesting another client.
 t() {
   local name=${1-Work} directory=$PWD project result
-  if (( $# > 1 )) || [[ -z $name || $name == *[[:cntrl:].:]* ]]; then
+  if (($# > 1)) || [[ -z $name || $name == *[[:cntrl:].:]* ]]; then
     printf 'Usage: t [session-name] (nonempty; no control characters, colon or dot)\n' >&2
     return 2
   fi
-  command -v tmux >/dev/null 2>&1 || {
+  command -v tmux > /dev/null 2>&1 || {
     printf 't: tmux not found\n' >&2
     return 127
   }
-  if (( $# == 0 )) && project=$(command git rev-parse --show-toplevel 2>/dev/null) && [[ -d $project ]]; then
+  if (($# == 0)) && project=$(command git rev-parse --show-toplevel 2> /dev/null) && [[ -d $project ]]; then
     directory=$project
     name=${project##*/}
     # Only inferred names are normalized: tmux forbids dots/colons in names.
@@ -39,14 +39,14 @@ t() {
     return $?
   fi
   # '=' prevents tmux's prefix/glob target matching, including for dash names.
-  if ! command tmux has-session -t "=$name" 2>/dev/null; then
+  if ! command tmux has-session -t "=$name" 2> /dev/null; then
     if command tmux new-session -d -s "$name" -c "$directory"; then
       :
     else
       result=$?
       # Another client may have created it since our first check. Keep the
       # creation diagnostic, and its failure status unless that exact name exists.
-      command tmux has-session -t "=$name" 2>/dev/null || return "$result"
+      command tmux has-session -t "=$name" 2> /dev/null || return "$result"
     fi
   fi
   command tmux switch-client -t "=$name"
@@ -54,7 +54,7 @@ t() {
 
 # Create a new worktree and branch from within current git directory.
 ga() {
-  if [[ -z "$1" ]]; then
+  if [[ -z $1 ]]; then
     echo "Usage: ga [branch name]"
     return 1
   fi
@@ -82,7 +82,7 @@ gd() {
     branch="${worktree#*--}"
 
     # Protect against accidentally nuking a non-worktree directory
-    if [[ "$root" != "$worktree" ]]; then
+    if [[ $root != "$worktree" ]]; then
       builtin cd -- "../$root" || return
       git worktree remove "$cwd" --force || return 1
       git branch -D "$branch"
@@ -100,13 +100,13 @@ ls_repos() {
 
 gethost() {
   local host current_host=${HOST:-${HOSTNAME:-}}
-  if [[ -n "$current_host" ]]; then
-    if [[ "$current_host" == "localhost" ]]; then
-      if [[ -n "$distro" ]]; then
+  if [[ -n $current_host ]]; then
+    if [[ $current_host == "localhost" ]]; then
+      if [[ -n $distro ]]; then
         host="$distro"
       fi
     else
-      if [[ "${is_wsl:-false}" == true ]]; then
+      if [[ ${is_wsl:-false} == true ]]; then
         host="$current_host (WSL)"
       else
         host="$current_host"
@@ -117,7 +117,7 @@ gethost() {
 }
 
 in_git() {
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1
+  git rev-parse --is-inside-work-tree > /dev/null 2>&1
 }
 
 gitcheck() {
@@ -129,7 +129,7 @@ gitcheck() {
   if mygit; then
     local changed
     changed=$(git status -s | awk '{print $2}')
-    if [[ -n "$changed" ]]; then
+    if [[ -n $changed ]]; then
       if ((verbose)); then
         echo "$changed"
       fi
@@ -144,7 +144,7 @@ gitmodified() {
   if mygit; then
     local modified
     modified=$(git status -s | grep -E '^\s*M\s' | awk '{print $2}')
-    if [[ -n "$modified" ]]; then
+    if [[ -n $modified ]]; then
       echo "$modified"
       return 0
     else
@@ -157,7 +157,7 @@ gitdeleted() {
   if mygit; then
     local deleted
     deleted=$(git status -s | grep -E '^\s*D\s' | awk '{print $2}')
-    if [[ -n "$deleted" ]]; then
+    if [[ -n $deleted ]]; then
       echo "$deleted"
       return 0
     else
@@ -170,7 +170,7 @@ gituntracked() {
   if mygit; then
     local untracked
     untracked=$(git status -s | grep '??' | awk '{print $2}')
-    if [[ -n "$untracked" ]]; then
+    if [[ -n $untracked ]]; then
       echo "$untracked"
       return 0
     else
@@ -183,7 +183,7 @@ gitsubmodule() {
   if mygit; then
     local deleted
     deleted=$(git status -s | grep -E '^\s*m\s' | awk '{print $2}')
-    if [[ -n "$deleted" ]]; then
+    if [[ -n $deleted ]]; then
       echo "$deleted"
       return 0
     else
@@ -212,13 +212,13 @@ submodules() {
 # print a colorized diff
 colordiff() {
   local _diff_red
-  _diff_red=$(tput setaf 1 2>/dev/null)
+  _diff_red=$(tput setaf 1 2> /dev/null)
   local _diff_green
-  _diff_green=$(tput setaf 2 2>/dev/null)
+  _diff_green=$(tput setaf 2 2> /dev/null)
   local _diff_cyan
-  _diff_cyan=$(tput setaf 6 2>/dev/null)
+  _diff_cyan=$(tput setaf 6 2> /dev/null)
   local _diff_reset
-  _diff_reset=$(tput sgr0 2>/dev/null)
+  _diff_reset=$(tput sgr0 2> /dev/null)
 
   diff -u "$@" | awk "
 	/^\-/ {
@@ -250,14 +250,10 @@ ls_colors() {
 
 palette() {
   local i
-  for ((i=0; i<256; i++)); do
+  for ((i = 0; i < 256; i++)); do
     printf '\033[38;5;%dm%03d\033[0m ' "$i" "$i"
-    (( (i+1) % 16 )) || printf '\n'
+    (((i + 1) % 16)) || printf '\n'
   done
-}
-
-aptget_check() {
-  apt-get -s upgrade | grep -P "\d\K upgraded"
 }
 
 fzpi() {
@@ -296,7 +292,7 @@ showcolors256() {
 
   echo -e "Set foreground color: \\\\033[38;5;${white}NNN${reset}m"
   echo -e "Set background color: \\\\033[48;5;${white}NNN${reset}m"
-  echo -e "Reset color & style:  \\\\033[0m"
+  echo -e 'Reset color & style:  \\033[0m'
   echo
 
   echo 16 standard color codes:
@@ -384,10 +380,15 @@ fixpath() {
     entry=${remaining%%:*}
     duplicate=0
     for found in "${entries[@]}"; do
-      if [[ $found == "$entry" ]]; then duplicate=1; break; fi
+      if [[ $found == "$entry" ]]; then
+        duplicate=1
+        break
+      fi
     done
-    if (( ! duplicate )); then
-      entries+=("$entry"); result+="$separator$entry"; separator=:
+    if ((! duplicate)); then
+      entries+=("$entry")
+      result+="$separator$entry"
+      separator=:
     fi
     [[ $remaining == *:* ]] || break
     remaining=${remaining#*:}
@@ -405,7 +406,7 @@ cleanvim() {
 ssl-download-certificate() {
   local host=$1
   local port=${2:-443}
-  openssl s_client -showcerts -connect "${host}:${port}" </dev/null 2>/dev/null | openssl 'x509' -outform 'PEM' >"${host}:${port}.pem"
+  openssl s_client -showcerts -connect "${host}:${port}" < /dev/null 2> /dev/null | openssl 'x509' -outform 'PEM' > "${host}:${port}.pem"
 }
 
 ssh-key-set() {
@@ -433,7 +434,7 @@ dat() {
 
 # Platform-independent interfaces
 interfaces() {
-  node <<-EOF
+  node <<- EOF
 	var os = require('os');
 	var i = os.networkInterfaces();
 	Object.keys(i).forEach(function(name) {
@@ -448,7 +449,7 @@ interfaces() {
 
 # Calculate CPU load / Core Count
 load() {
-  node -p <<-EOF
+  node -p <<- EOF
 	var os = require('os');
 	var c = os.cpus().length;
 	os.loadavg().map(function(l) {
@@ -459,7 +460,7 @@ load() {
 
 # Platform-independent memory usage
 meminfo() {
-  node <<-EOF
+  node <<- EOF
 	var os = require('os');
 	var free = os.freemem();
 	var total = os.totalmem();
@@ -490,7 +491,7 @@ findfiles() { find . -type f -iname "*${*}*"; }
 gsend() { git commit -am "$1" && git push; }
 gst() { git status; }
 decToBin() { echo "ibase=10; obase=2; $1" | bc; }
-decTohex() { bc <<<"obase=16; $1"; }
+decTohex() { bc <<< "obase=16; $1"; }
 biggest() { du -k -- ./* | sort -nr | cut -f2 | head -20 | xargs -d "\n" du -sh; }
 top10() { history | awk '{print $2}' | sort | uniq -c | sort -rn | head; }
 beep() { echo -e -n \\a; }
@@ -504,7 +505,10 @@ getextension() {
 
 geturls() {
   # source: http://stackoverflow.com/questions/2804467/spider-a-website-and-return-urls-only
-  [[ $# == 1 ]] || { printf 'Usage: geturls <url>\n' >&2; return 2; }
+  [[ $# == 1 ]] || {
+    printf 'Usage: geturls <url>\n' >&2
+    return 2
+  }
   wget -q "$1" -O - |
     tr "\t\r\n'" '   "' |
     grep -i -o '<a[^>]\+href[ ]*=[ \t]*"\(ht\|f\)tps\?:[^"]\+"' |
@@ -512,7 +516,10 @@ geturls() {
 }
 
 backup() {
-  [[ $# == 1 && -n $1 ]] || { printf 'Usage: backup <file>\n' >&2; return 2; }
+  [[ $# == 1 && -n $1 ]] || {
+    printf 'Usage: backup <file>\n' >&2
+    return 2
+  }
   local file=$1 timestamp backupdir=$HOME/backups
   timestamp=$(date '+%Y-%m-%d-%H:%M:%S') || return
   command mkdir -p -- "$backupdir" || return
@@ -534,15 +541,21 @@ rlp() {
 mkcd() { source "$DOTS/scripts/mkcd" "$@"; }
 gup() {
   local msg='Sync repository tree'
-  (( $# == 0 )) || msg="$*"
+  (($# == 0)) || msg="$*"
   command git-it publish --all --yes -m "$msg"
 }
 zd() {
-  if (( $# == 0 )); then builtin cd -- "$HOME" || return
-  elif [[ -d $1 ]]; then builtin cd -- "$1" || return
+  if (($# == 0)); then
+    builtin cd -- "$HOME" || return
+  elif [[ -d $1 ]]; then
+    builtin cd -- "$1" || return
   else
-    z "$@" || { printf 'Error: Directory not found\n' >&2; return 1; }
-    printf '\U000F17A9 '; pwd
+    z "$@" || {
+      printf 'Error: Directory not found\n' >&2
+      return 1
+    }
+    printf '\U000F17A9 '
+    pwd
   fi
 }
 y() {
@@ -558,25 +571,36 @@ y() {
   return "$result"
 }
 yap() {
-  (( $# )) || { printf 'ERROR: The first argument must be a project\n' >&2; return 64; }
+  (($#)) || {
+    printf 'ERROR: The first argument must be a project\n' >&2
+    return 64
+  }
   local yaziProject=$1 yaziId=$RANDOM
   shift
-  ( (sleep 0.1; YAZI_ID=$yaziId ya emit plugin projects "load $yaziProject") &)
+  ( (
+    sleep 0.1
+    YAZI_ID=$yaziId ya emit plugin projects "load $yaziProject"
+  ) &)
   y --client-id "$yaziId" "$@"
 }
 sff() {
-  (( $# == 1 )) || { printf 'Usage: sff <destination> (e.g. sff host:/tmp/)\n' >&2; return 1; }
+  (($# == 1)) || {
+    printf 'Usage: sff <destination> (e.g. sff host:/tmp/)\n' >&2
+    return 1
+  }
   local file
   file=$(find . -type f -printf '%T@\t%p\n' | sort -rn | cut -f2- | _dots_file_picker) &&
     [[ -n $file ]] && scp -- "$file" "$1"
 }
-n() { if (( $# == 0 )); then command nvim .; else command nvim "$@"; fi; }
+n() { if (($# == 0)); then command nvim .; else command nvim "$@"; fi; }
 reload-completion() {
-  if [[ -n ${ZSH_VERSION:-} ]]; then _dots_zsh_reload_completion "$@"
+  if [[ -n ${ZSH_VERSION:-} ]]; then
+    _dots_zsh_reload_completion "$@"
   else _dots_bash_reload_completion "$@"; fi
 }
 reload-completions() {
-  if [[ -n ${ZSH_VERSION:-} ]]; then _dots_zsh_reload_completions "$@"
+  if [[ -n ${ZSH_VERSION:-} ]]; then
+    _dots_zsh_reload_completions "$@"
   else _dots_bash_reload_completions "$@"; fi
 }
 eff() {

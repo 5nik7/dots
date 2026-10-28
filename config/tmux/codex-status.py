@@ -18,7 +18,7 @@ MAX_STAT = 4096
 # Reduce untrusted titles to flags inside tmux; never transport their text.
 INVENTORY = ('#{window_id} #{pane_id} #{pane_pid} '
              '#{m/r:(^|[|] *)Working([.]*|…)( *[|]|$),#{pane_title}} '
-             '#{m/r:(^|[|] *)[[] [!.] []] Action Required( *[|]|$),#{pane_title}}')
+             '#{m/r:(^|[|] *)(Waiting([.]*|…)|[[] [!.] []] Action Required)( *[|]|$),#{pane_title}}')
 ROW = re.compile(r'(@[0-9]+) (%[0-9]+) ([1-9][0-9]*) ([01]) ([01])\Z')
 STATE_PRIORITY = {'idle': 0, 'waiting': 1, 'working': 2}
 
@@ -72,7 +72,7 @@ def parse_inventory(raw):
         if not match:
             raise ValueError('invalid inventory')
         window, pane, pid, working, waiting = match.groups()
-        # A blocked pane can retain a Working field; explicit input wins here.
+        # A blocked pane can retain a Working field; explicit waiting wins here.
         state = 'waiting' if waiting == '1' else 'working' if working == '1' else 'idle'
         record = (window, int(pid), state)
         if pane in panes and panes[pane] != record:

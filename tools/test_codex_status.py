@@ -148,7 +148,9 @@ class Native(unittest.TestCase):
                              'time.sleep(120)\n')
         self.inner, self.base = self.fixture.server('codex-inner')
         self.fixture.write_theme()
-        self.config = self.fixture.write_config()
+        # These fixtures supply display metadata directly; workspace mutation
+        # hooks are covered separately and must not race the status assertions.
+        self.config = self.fixture.write_config(workspace_hooks=False)
         self.inner('source-file', str(self.config))
         self.inner('set-option', '-g', 'status-interval', '1')
         self.inner('set-option', '-g', '@dots-termux-default', '1')
@@ -162,10 +164,12 @@ class Native(unittest.TestCase):
     def pid(self, name):
         path = self.root / (name + '.pid')
         deadline = time.monotonic() + 3
-        while not path.exists():
+        while True:
+            value = path.read_text() if path.exists() else ''
+            if value:
+                return int(value)
             self.assertLess(time.monotonic(), deadline)
             time.sleep(.03)
-        return int(path.read_text())
 
     def view(self):
         self.outer, _ = self.fixture.server('codex-view', termux=False)
@@ -179,14 +183,15 @@ class Native(unittest.TestCase):
             self.assertLess(time.monotonic(), deadline)
             time.sleep(.03)
 
-    def color(self, label, expected, text=None):
+    def color(self, label, expected, text=None, check=None):
         self.inner('refresh-client', '-S')
         deadline, row = time.monotonic() + 8, ''
         while time.monotonic() < deadline:
             rows = self.outer('capture-pane', '-p', '-e', '-t', 'view').splitlines()
             row = rows[self.row] if len(rows) > self.row else ''
             plain = self.fixture.plain(row)
-            if label in plain and (text is None or plain.rstrip() == text.rstrip()):
+            if (label in plain and (text is None or plain.rstrip() == text.rstrip())
+                    and (check is None or check(plain))):
                 if self.fixture.colors_at(row, label)['fg'] == expected:
                     return row
             time.sleep(.08)
@@ -198,47 +203,54 @@ class Native(unittest.TestCase):
         self.pid('wrapped')
         self.assertNotEqual(self.inner('display-message', '-p', '-t', pane, '#{pane_current_command}'), 'codex')
         # An unrelated pane's title must not produce a Codex marker.
-        self.inner('select-pane', '-t', ':0', '-T', '[ ! ] Action Required | Working')
+        self.inner('select-pane', '-t', ':0', '-T', 'Waiting | Working')
         self.view()
         accent, green, red = (171, 205, 239), (85, 255, 85), (255, 85, 85)
-        foreground, dark_foreground = (238, 238, 238), (119, 136, 153)
-        self.color('1 agent', accent)
-        cases = [('project | Working | cwd', '•'), ('project | Working. | cwd', '•'),
-                 ('project | Working… | cwd', '•'), ('project | Not Working | cwd', ''),
+        foreground, inactive_foreground = (255, 238, 221), (238, 238, 238)
+        dark_foreground = (119, 136, 153)
+        magenta = (221, 102, 204)
+        self.color('1 agent', magenta, ' 0 shell │ 1 agent ')
+        cases = [('project | Working | cwd', ''), ('project | Working. | cwd', ''),
+                 ('project | Working… | cwd', ''), ('project | Not Working | cwd', ''),
                  ('Working directory', ''), ('', ''), ('project | Ready | cwd', ''),
-                 ('[ ! ] Action Required | project | Working | cwd', '·'),
-                 ('project | [ . ] Action Required | cwd', '·'), ('[ ! ] Action Required', '·'),
+                 ('Waiting', ''), ('project | Waiting | cwd', ''),
+                 ('project | Waiting... | cwd', ''), ('Waiting…', ''),
+                 ('Waiting | Working', ''), ('Working | Waiting', ''),
+                 ('Not Waiting', ''), ('Waiting for input', ''), ('waiting', ''),
+                 ('[ ! ] Action Required | project | Working | cwd', ''),
+                 ('project | [ . ] Action Required | cwd', ''), ('[ ! ] Action Required', ''),
                  ('project | [ ! ] Action Required extra | cwd', ''),
                  ('project | Not [ ! ] Action Required | cwd', ''),
                  ('Action Required', ''), ('[ ? ] Action Required', ''),
-                 ('#{@bad}#(touch BAD) | Working | cwd', '•')]
+                 ('#{@bad}#(touch BAD) | Working | cwd', '')]
         for title, marker in cases:
             self.inner('select-pane', '-t', pane, '-T', title)
-            label = '1' + marker + ' agent'
-            row = self.color(label, accent)
+            label = '1 agent' + (' ' + marker if marker else '')
+            row = self.color(label, magenta, ' 0 shell │ ' + label + ' ')
             self.assertTrue(self.fixture.bold_at(row, label))
-            self.assertEqual(self.fixture.bold_at(row, 'agent'), marker == '•')
-            self.assertEqual(self.fixture.colors_at(row, 'agent')['fg'], dark_foreground)
-            self.assertFalse(self.fixture.bold_at(row, label, 1 + len(marker)))
+            self.assertTrue(self.fixture.bold_at(row, 'agent'))
+            self.assertEqual(self.fixture.colors_at(row, 'agent')['fg'], inactive_foreground)
+            self.assertTrue(self.fixture.dim_at(row, 'agent'))
+            self.assertFalse(self.fixture.bold_at(row, label, 1))
             if marker:
                 self.assertEqual(self.fixture.colors_at(row, marker)['fg'], accent)
-                self.assertEqual(self.fixture.bold_at(row, marker), marker == '•')
+                self.assertEqual(self.fixture.bold_at(row, marker), marker == '')
         for width in (40, 80, 120):
             self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
-            for title, marker in (('project | Working | cwd', '•'),
-                                  ('[ ! ] Action Required | project | Working | cwd', '·')):
+            for title, marker in (('project | Working | cwd', ''),
+                                  ('project | Waiting | cwd', '')):
                 self.inner('select-pane', '-t', pane, '-T', title)
-                label = '1' + marker + ' agent'
-                row = self.color(label, accent, ' 0 shell │ ' + label + ' ')
+                label = '1 agent' + (' ' + marker if marker else '')
+                row = self.color(label, magenta, ' 0 shell │ ' + label + ' ')
                 style = {'fg': accent, 'bg': (34, 51, 68)}
                 for part in (label, marker, 'agent'):
                     self.assertEqual(self.fixture.colors_at(row, part),
-                                     dict(style, fg=dark_foreground) if part == 'agent' else style)
-                    self.assertEqual(self.fixture.bold_at(row, part), True if part == label else marker == '•')
-                    self.assertFalse(self.fixture.dim_at(row, part))
+                                     dict(style, fg=inactive_foreground if part == 'agent' else magenta if part == label else accent))
+                    self.assertEqual(self.fixture.bold_at(row, part), True if part in (label, 'agent') else marker == '')
+                    self.assertEqual(self.fixture.dim_at(row, part), part == 'agent')
                     self.assertFalse(self.fixture.underline_at(row, part))
-                self.assertEqual(self.fixture.colors_at(row, label, 2)['fg'], (34, 51, 68))
-                self.assertFalse(self.fixture.bold_at(row, label, 2))
+                self.assertEqual(self.fixture.colors_at(row, label, 1)['fg'], (34, 51, 68))
+                self.assertFalse(self.fixture.bold_at(row, label, 1))
                 self.assertFalse(self.fixture.bold_at(row, '│ ' + label))
                 self.inner('set-option', '-w', '-t', pane, '@dots-window-alert', '1')
                 row = self.color('[' + label + ']', red, ' 0 shell │[' + label + ']')
@@ -246,31 +258,34 @@ class Native(unittest.TestCase):
                 self.assertEqual(self.fixture.colors_at(row, marker), {'fg': red, 'bg': (1, 2, 3)})
                 self.assertEqual(self.fixture.colors_at(row, 'agent'), {'fg': red, 'bg': (1, 2, 3)})
                 self.assertTrue(self.fixture.bold_at(row, 'agent'))
+                self.assertFalse(self.fixture.dim_at(row, 'agent'))
                 self.assertEqual(self.fixture.colors_at(row, ']')['fg'], red)
                 self.inner('select-window', '-t', pane)
                 self.color('[' + label + ']', red)
                 self.inner('set-option', '-uw', '-t', pane, '@dots-window-alert')
                 row = self.color(label, green)
                 self.assertTrue(self.fixture.bold_at(row, marker))
-                self.assertEqual(self.fixture.colors_at(row, marker), {'fg': green, 'bg': (85, 102, 119)})
+                self.assertEqual(self.fixture.colors_at(row, marker), {'fg': accent, 'bg': (85, 102, 119)})
                 self.assertEqual(self.fixture.colors_at(row, 'agent'),
                                  {'fg': foreground, 'bg': (85, 102, 119)})
-                self.assertFalse(self.fixture.bold_at(row, 'agent'))
+                self.assertTrue(self.fixture.bold_at(row, 'agent'))
+                self.assertFalse(self.fixture.dim_at(row, 'agent'))
+                self.assertFalse(self.fixture.dim_at(row, 'agent', len('agent')))
                 self.assertEqual(self.fixture.colors_at(row, 'agent', len('agent'))['fg'], green)
                 self.inner('rename-window', '-t', pane, 'fixture')
-                self.color('1' + marker, green, ' 0 shell │ 1' + marker + ' ')
+                self.color('1 ' + marker, green, ' 0 shell │ 1 ' + marker + ' ')
                 self.inner('set-option', '-w', '-t', pane, '@dots-window-alert', '1')
-                self.color('[1' + marker + ']', red, ' 0 shell │[1' + marker + ']')
+                self.color('[1 ' + marker + ']', red, ' 0 shell │[1 ' + marker + ']')
                 self.inner('set-option', '-uw', '-t', pane, '@dots-window-alert')
                 self.inner('rename-window', '-t', pane, 'agent')
                 self.inner('select-window', '-t', ':0')
                 self.inner('select-pane', '-t', pane, '-T', 'project | Ready | cwd')
-                row = self.color('1 agent', accent)
-                self.assertFalse(self.fixture.bold_at(row, 'agent'))
+                row = self.color('1 agent', magenta, ' 0 shell │ 1 agent ')
+                self.assertTrue(self.fixture.bold_at(row, 'agent'))
             self.inner('select-pane', '-t', pane, '-T', 'project | Working | cwd')
             self.inner('rename-window', '-t', pane, 'long-project-' * 12)
-            row = self.color('1• long-', accent)
-            self.assertTrue(self.fixture.bold_at(row, '•'))
+            row = self.color('1 long-', magenta)
+            # Trailing icons follow native clipping when a long name fills the row.
             self.assertLessEqual(len(self.fixture.plain(row)), width)
             self.inner('rename-window', '-t', pane, 'fixture')
             extra_name = 'adjacent-' + str(width)
@@ -278,19 +293,20 @@ class Native(unittest.TestCase):
                                '-n', 'fixture', self.command(extra_name))
             self.pid(extra_name)
             self.inner('select-pane', '-t', extra, '-T', 'Working')
-            row = self.color('2•', accent, ' 0 shell │ 1• │ 2• ')
-            for label in ('1•', '2•'):
-                self.assertTrue(self.fixture.bold_at(row, label, 1))
-                self.assertEqual(self.fixture.colors_at(row, label, 1)['fg'], accent)
-            self.assertFalse(self.fixture.bold_at(row, '│ 2•'))
+            row = self.color('2 ', magenta, ' 0 shell │ 1  │ 2  ')
+            for label in ('1 ', '2 '):
+                self.assertTrue(self.fixture.bold_at(row, label, 2))
+                self.assertEqual(self.fixture.colors_at(row, label, 2)['fg'], accent)
+                self.assertFalse(self.fixture.dim_at(row, label, 2))
+            self.assertFalse(self.fixture.bold_at(row, '│ 2 '))
             self.inner('select-pane', '-t', extra, '-T', '[ ! ] Action Required')
-            row = self.color('2·', accent, ' 0 shell │ 1• │ 2· ')
-            self.assertFalse(self.fixture.bold_at(row, '·'))
+            row = self.color('2 ', magenta, ' 0 shell │ 1  │ 2  ')
+            self.assertFalse(self.fixture.bold_at(row, ''))
             self.inner('select-window', '-t', pane)
-            row = self.color('1•', green, ' 0 shell │ 1• │ 2· ')
-            self.assertTrue(self.fixture.bold_at(row, '•'))
+            row = self.color('1 ', green, ' 0 shell │ 1  │ 2  ')
+            self.assertTrue(self.fixture.bold_at(row, ''))
             self.inner('set-option', '-w', '-t', extra, '@dots-window-alert', '1')
-            self.color('[2·]', red, ' 0 shell │ 1• │[2·]')
+            self.color('[2 ]', red, ' 0 shell │ 1  │[2 ]')
             self.inner('kill-window', '-t', extra)
             self.inner('select-window', '-t', ':0')
             self.inner('rename-window', '-t', pane, 'agent')
@@ -300,47 +316,51 @@ class Native(unittest.TestCase):
         for state in ('working', 'waiting'):
             self.inner('set-option', '-g', '@dots-codex-snapshot', '|' + window + '0:' + state + '|')
             row = self.color('1 agent', dark_foreground)
-            self.assertFalse(self.fixture.bold_at(row, 'agent'))
+            self.assertTrue(self.fixture.bold_at(row, 'agent'))
             self.assertEqual(self.fixture.colors_at(row, 'agent')['fg'], dark_foreground)
+            self.assertTrue(self.fixture.dim_at(row, 'agent'))
         self.inner('source-file', str(self.config))
         self.inner('set-option', '-g', 'status-interval', '1')
         self.inner('select-pane', '-t', pane, '-T', '[ . ] Action Required | project | Working | cwd')
-        self.color('1· agent', accent)
+        self.color('1 agent ', magenta)
         helper = self.fixture.tmux_config / 'codex-status.py'
         saved = helper.read_bytes()
         helper.unlink()
         row = self.color('1 agent', dark_foreground)
         self.assertTrue(self.fixture.bold_at(row, '1 agent'))
         helper.write_bytes(saved)
-        self.color('1· agent', accent)
+        self.color('1 agent ', magenta)
         self.inner('set-environment', '-gu', 'TERMUX_VERSION')
         self.inner('source-file', str(self.config))
         self.row = 0
-        for title, marker in (('project | Working | cwd', '•'), ('[ ! ] Action Required', '·')):
+        for title, marker in (('project | Working | cwd', ''), ('Waiting', '')):
             self.inner('select-pane', '-t', pane, '-T', title)
-            row = self.color('1' + marker + ' agent', accent, ' 0 shell │ 1' + marker + ' agent ')
-            self.assertTrue(self.fixture.bold_at(row, '1' + marker + ' agent'))
-            self.assertEqual(self.fixture.bold_at(row, marker), marker == '•')
-            self.assertEqual(self.fixture.colors_at(row, 'agent')['fg'], dark_foreground)
-            self.assertFalse(self.fixture.bold_at(row, '1' + marker + ' agent', 2))
+            row = self.color('1 agent ' + marker, magenta, ' 0 shell │ 1 agent ' + marker + ' ')
+            self.assertTrue(self.fixture.bold_at(row, '1 agent ' + marker))
+            self.assertEqual(self.fixture.bold_at(row, marker), marker == '')
+            self.assertEqual(self.fixture.colors_at(row, 'agent')['fg'], inactive_foreground)
+            self.assertTrue(self.fixture.dim_at(row, 'agent'))
+            self.assertFalse(self.fixture.bold_at(row, '1 agent ' + marker, 1))
 
     def test_native_singleton_markers_names_and_visibility(self):
         pane = self.inner('new-window', '-d', '-P', '-F', '#{pane_id}', '-n', 'agent', self.command('only'))
         self.pid('only')
         self.inner('kill-window', '-t', ':0')
         self.view()
-        green, red = (85, 255, 85), (255, 85, 85)
+        accent, red = (171, 205, 239), (255, 85, 85)
         for width in (40, 80, 120):
             self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
-            for title, marker in (('project | Working | cwd', '•'), ('[ ! ] Action Required', '·')):
+            for title, marker in (('project | Working | cwd', ''), ('Waiting', '')):
                 self.inner('select-pane', '-t', pane, '-T', title)
-                for name, label in (('agent', marker + ' agent'), ('fixture', marker)):
+                for name, label in (('agent', 'agent ' + marker), ('fixture', marker)):
                     self.inner('rename-window', '-t', pane, name)
-                    row = self.color(label, green, ' ' + label + ' ')
+                    row = self.color(label, (255, 238, 221) if name == 'agent' else accent, ' ' + label + ' ')
+                    self.assertEqual(self.fixture.colors_at(row, marker)['fg'], accent)
+                    self.assertFalse(self.fixture.dim_at(row, marker))
                     self.assertTrue(self.fixture.bold_at(row, marker))
                     if name == 'agent':
-                        self.assertEqual(self.fixture.colors_at(row, 'agent')['fg'], (238, 238, 238))
-                        self.assertFalse(self.fixture.bold_at(row, 'agent'))
+                        self.assertEqual(self.fixture.colors_at(row, 'agent')['fg'], (255, 238, 221))
+                        self.assertTrue(self.fixture.bold_at(row, 'agent'))
                         self.assertEqual(self.fixture.colors_at(row, 'agent')['bg'], (85, 102, 119))
                     self.inner('set-option', '-w', '-t', pane, '@dots-window-alert', '1')
                     self.color('[' + label + ']', red, '[' + label + ']')
@@ -349,13 +369,85 @@ class Native(unittest.TestCase):
             self.fixture.await_screen(self.outer, 'view', lambda rows: rows[1].rstrip() == '')
         # Neither marker nor a separator leaks when a hidden singleton is idle.
         self.inner('rename-window', '-t', pane, 'agent')
-        row = self.color('agent', (238, 238, 238), ' agent ')
-        self.assertFalse(self.fixture.bold_at(row, 'agent'))
+        row = self.color('agent', (255, 238, 221), ' agent ')
+        self.assertTrue(self.fixture.bold_at(row, 'agent'))
         self.assertEqual(self.fixture.colors_at(row, 'agent')['bg'], (85, 102, 119))
 
+    def test_native_session_markers_widths_transitions_and_failure(self):
+        pane = self.inner('new-window', '-d', '-P', '-F', '#{pane_id}', '-n', 'dots', self.command('session'))
+        pid = self.pid('session')
+        self.inner('kill-window', '-t', ':0')
+        self.inner('set-option', '-t', 'fixture', '@dots-workspace-data', '{"schema":1}')
+        self.inner('set-option', '-t', 'fixture', '@dots-workspace-auto', '1')
+        self.inner('set-option', '-t', 'fixture', '@dots-workspace-label', 'dots')
+        self.view()
+        accent, cyan, red = (171, 205, 239), (85, 255, 255), (255, 85, 85)
+        for termux in (True, False):
+            if not termux:
+                self.inner('set-environment', '-gu', 'TERMUX_VERSION')
+                self.inner('source-file', str(self.config))
+                self.inner('set-option', '-g', 'status-interval', '1')
+                self.row = 0
+            self.inner('set-option', '-g', '@dots-git-snapshot', '󰊤|')
+            for width in (40, 80, 120):
+                self.outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
+                for title, marker in (('Working', ''), ('Waiting | Working', '')):
+                    self.inner('select-pane', '-t', pane, '-T', title)
+                    row = self.color('dots', cyan, ' 󰊤 dots ' + marker + ' ')
+                    self.assertEqual(self.fixture.plain(row).count(marker), 1)
+                    self.assertEqual(self.fixture.colors_at(row, marker), {'fg': accent, 'bg': (85, 102, 119)})
+                    self.assertTrue(self.fixture.bold_at(row, marker))
+                    self.assertFalse(self.fixture.dim_at(row, marker))
+                    self.assertFalse(self.fixture.underline_at(row, marker))
+                    # The trailing padding restores the session's foreground.
+                    self.assertEqual(self.fixture.colors_at(row, marker, 1), {'fg': cyan, 'bg': (85, 102, 119)})
+                    self.inner('set-option', '-t', 'fixture', '@dots-session-number', '2')
+                    long_name = 'project-界-' * 10
+                    self.inner('set-option', '-t', 'fixture', '@dots-workspace-label', long_name)
+                    self.inner('rename-window', '-t', pane, long_name)
+                    row = self.color('2 󰊤 pr', cyan, check=lambda plain: plain.rstrip().endswith(' ' + marker))
+                    label = self.fixture.plain(row).rstrip() + ' '
+                    self.assertTrue(label.startswith(' 2 󰊤 '), label)
+                    self.assertTrue(label.endswith(' ' + marker + ' '), label)
+                    self.assertEqual(label.count(marker), 1)
+                    self.assertNotIn('│', label)
+                    self.inner('set-option', '-g', '@fixture-label', label)
+                    cells = int(self.inner('display-message', '-p', '#{w:@fixture-label}'))
+                    self.assertLessEqual(cells, min(width // 4, 30) if termux else 31)
+                    self.inner('set-option', '-t', 'fixture', '@dots-session-number', '')
+                    self.inner('set-option', '-t', 'fixture', '@dots-workspace-label', 'dots')
+                    self.inner('rename-window', '-t', pane, 'dots')
+            self.inner('rename-window', '-t', pane, 'editor')
+            self.color('dots', cyan, ' 󰊤 dots │ editor  ')
+            self.inner('rename-window', '-t', pane, 'dots')
+            self.inner('set-option', '-w', '-t', pane, '@dots-window-alert', '1')
+            self.color('[]', red, ' 󰊤 dots │[]')
+            self.inner('set-option', '-uw', '-t', pane, '@dots-window-alert')
+            self.color('dots', cyan, ' 󰊤 dots  ')
+            self.inner('set-option', '-g', '@dots-git-snapshot', '󰊤|branch')
+            self.color('dots', cyan, ' 󰊤 dots  │ branch ')
+            self.inner('set-option', '-g', '@dots-git-snapshot', '󰊤|')
+            self.inner('select-pane', '-t', pane, '-T', 'Ready')
+            self.color('dots', cyan, ' 󰊤 dots ')
+        self.inner('select-pane', '-t', pane, '-T', 'Waiting')
+        other = self.inner('split-window', '-t', pane, '-P', '-F', '#{pane_id}', self.command('session-other'))
+        self.pid('session-other')
+        self.inner('select-pane', '-t', other, '-T', 'Working')
+        self.color('dots', cyan, ' 󰊤 dots  ')
+        self.inner('kill-pane', '-t', other)
+        self.color('dots', cyan, ' 󰊤 dots  ')
+        helper = self.fixture.tmux_config / 'codex-status.py'
+        saved = helper.read_bytes()
+        helper.unlink()
+        self.color('dots', cyan, ' 󰊤 dots ')
+        helper.write_bytes(saved)
+        self.color('dots', cyan, ' 󰊤 dots  ')
+        self.inner('set-option', '-w', '-t', pane, 'remain-on-exit', 'on')
+        os.kill(pid, signal.SIGTERM)
+        self.color('dots', cyan, ' 󰊤 dots ')
+
     def test_any_pane_aggregation_foreground_stop_exit_and_dead_panes(self):
-        dark_foreground = (119, 136, 153)
-        accent = (171, 205, 239)
+        magenta, dark_foreground = (221, 102, 204), (119, 136, 153)
         # tmux resumes its direct child on SIGSTOP; suspend the wrapped child.
         first = self.inner('new-window', '-d', '-P', '-F', '#{pane_id}', '-n', 'agent', self.command('first', True))
         first_pid = self.pid('first')
@@ -363,25 +455,25 @@ class Native(unittest.TestCase):
         shell = self.inner('split-window', '-t', first, '-P', '-F', '#{pane_id}', 'sleep 120')
         self.inner('select-window', '-t', ':0')
         self.view()
-        self.color('1• agent', accent)  # Codex is in the unselected pane.
+        self.color('1 agent ', magenta)  # Codex is in the unselected pane.
         second = self.inner('split-window', '-t', shell, '-P', '-F', '#{pane_id}', self.command('second'))
         self.pid('second')
-        self.inner('select-pane', '-t', second, '-T', '[ ! ] Action Required | project | Working | cwd')
+        self.inner('select-pane', '-t', second, '-T', 'Waiting | project | Working | cwd')
         self.inner('select-window', '-t', ':0')
-        self.color('1• agent', accent)
+        self.color('1 agent ', magenta)
         self.inner('select-pane', '-t', first, '-T', 'project | Idle | cwd')
-        self.color('1· agent', accent)
+        self.color('1 agent ', magenta)
         self.inner('select-pane', '-t', second, '-T', 'project | Working | cwd')
-        self.color('1• agent', accent)
+        self.color('1 agent ', magenta)
         self.inner('kill-pane', '-t', second)
         self.inner('select-pane', '-t', first, '-T', '[ . ] Action Required | project | Working | cwd')
-        self.color('1· agent', accent)
+        self.color('1 agent ', magenta)
         try:
             os.kill(first_pid, signal.SIGSTOP)
             self.color('1 agent', dark_foreground)
         finally:
             os.kill(first_pid, signal.SIGCONT)
-        self.color('1· agent', accent)
+        self.color('1 agent ', magenta)
         self.inner('set-option', '-w', '-t', first, 'remain-on-exit', 'on')
         self.inner('select-pane', '-t', first, '-T', 'project | Working | cwd')
         os.kill(first_pid, signal.SIGTERM)

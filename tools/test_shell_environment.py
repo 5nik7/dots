@@ -49,6 +49,29 @@ class ShellEnvironment(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return result.stdout
 
+    def test_less_mouse_preserves_inherited_flags_on_initialization_and_reload(self):
+        scripts = {
+            shell: (f'source "$DOTS/lib/dots/shell/init.{shell}"; printf "%s\\n" "$LESS"; ' * 2)
+            for shell in ('bash', 'zsh', 'fish')
+        }
+        scripts['nu'] = (f'source "{REPO}/lib/dots/shell/init.nu"; print $env.LESS; ' * 2)
+        self.env.update(DOTS_TERMUX_AUTOSTART='0', PYTHONDONTWRITEBYTECODE='1')
+        cases = ((None, '--mouse'), (' -R', '--mouse  -R'),
+                 ('-R -i', '--mouse -R -i'), ('-R --mouse', '-R --mouse'),
+                 ('--MOUSE -R', '--MOUSE -R'),
+                 ('-R -Pcustom prompt', '--mouse -R -Pcustom prompt'))
+        for inherited, expected in cases:
+            self.env.pop('LESS', None)
+            if inherited is not None:
+                self.env['LESS'] = inherited
+            for native in (False, True):
+                self.assertEqual(self.env_command('env', 'LESS', native=native), expected + '\n')
+            for shell, script in scripts.items():
+                with self.subTest(shell=shell, inherited=inherited):
+                    result = self.run_shell(shell, script)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout.splitlines(), [expected, expected], result.stderr)
+
     def env_terminal(self, columns, env, native=False):
         import errno
         import fcntl

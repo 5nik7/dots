@@ -180,6 +180,61 @@ class LessStyle(MenuFixture):
                 self.assertEqual(result.stdout.splitlines(),[DARK_SGR,LIGHT_SGR],result.stderr)
 
     @unittest.skipIf(os.name == 'nt', 'POSIX PTY; native Windows less retains stock colors')
+    def test_inherited_mouse_options_scroll_through_tmux(self):
+        import fcntl
+        import pty
+        import select
+        import shlex
+        import signal
+        import struct
+        import termios
+        import time
+        if not all(shutil.which(name) for name in ('tmux', 'less', 'bash')):
+            self.skipTest('tmux, less and Bash required')
+        socket = self.base/'mouse.sock'
+        sample = self.base/'-mouse ü.txt'
+        sample.write_text(''.join(f'MOUSE LINE {i:03d}\n' for i in range(1,101)))
+        env = dict(self.env, LESS=' -R', DOTS_INIT_THEME='0', DOTS_INIT_COMMANDS='0',
+                   DOTS_TERMUX_AUTOSTART='0', LESSHISTFILE='-', LESSKEYIN=os.devnull,
+                   LESSKEYIN_SYSTEM=os.devnull)
+        def tmux(*args):
+            result = subprocess.run(['tmux','-S',str(socket),*args], env=env,
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout
+        self.addCleanup(lambda: subprocess.run(['tmux','-S',str(socket),'kill-server'],
+                        env=env, capture_output=True, timeout=10))
+        script = 'source "$DOTS/lib/dots/shell/init.bash"; exec less '+shlex.quote(str(sample))
+        tmux('-f',os.devnull,'new-session','-d','-s','mouse','-x','80','-y','20',
+             'bash','--noprofile','--norc','-c',script)
+        tmux('set-option','-g','status','off')
+        tmux('set-option','-g','mouse','on')
+        pane = tmux('list-panes','-t','mouse','-F','#{pane_id}').strip()
+        pid,master = pty.fork()
+        if pid == 0:
+            fcntl.ioctl(1,termios.TIOCSWINSZ,struct.pack('HHHH',20,80,0,0))
+            os.execvpe('tmux',['tmux','-S',str(socket),'attach-session','-t','mouse'],env)
+        def wait_screen(check):
+            deadline = time.monotonic()+5
+            while time.monotonic() < deadline:
+                if select.select([master],[],[],.05)[0]: os.read(master,65536)
+                screen = tmux('capture-pane','-p','-t',pane)
+                if check(screen): return screen
+            self.fail('private tmux reader did not reach expected view: '+screen)
+        try:
+            wait_screen(lambda screen: screen.startswith('MOUSE LINE 001'))
+            self.assertEqual(tmux('display-message','-p','-t',pane,'#{mouse_any_flag}').strip(),'1')
+            os.write(master,b'\x1b[<65;10;5M')
+            wait_screen(lambda screen: screen.startswith('MOUSE LINE ') and not screen.startswith('MOUSE LINE 001'))
+            self.assertEqual(tmux('display-message','-p','-t',pane,'#{pane_in_mode}').strip(),'0')
+            os.write(master,b'\x1b[<64;10;5M')
+            wait_screen(lambda screen: screen.startswith('MOUSE LINE 001'))
+        finally:
+            os.kill(pid,signal.SIGTERM)
+            os.waitpid(pid,0)
+            os.close(master)
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX PTY; native Windows less retains stock colors')
     def test_less_terminal_prompt_search_reset_unicode_and_scrolling(self):
         import fcntl
         import pty

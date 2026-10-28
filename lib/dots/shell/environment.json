@@ -12,6 +12,7 @@
     "BAT_CONFIG_DIR": "${DOTS}/config/bat",
     "BAT_CONFIG_PATH": "${BAT_CONFIG_DIR}/bat.conf",
     "YAZI_CONFIG_HOME": "${DOTS}/config/yazi",
+    "LESS": "--mouse",
     "EDITOR": "@editor",
     "VISUAL": "${EDITOR}",
     "SYSTEMD_EDITOR": "${EDITOR}",

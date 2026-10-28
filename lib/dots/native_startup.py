@@ -51,8 +51,12 @@ def generate(root,shell, metadata=None):
             lines.append("if (-not $item -or [math]::Floor(($item.LastWriteTimeUtc.Ticks - 621355968000000000) / 10000) -ne "+str(milliseconds)+") { return $false }")
         for key in ('TERMUX_VERSION','TERMUX__PREFIX','PREFIX','WSL_DISTRO_NAME','WSL_INTEROP','OS'):
             lines.append("if ([string]$env:"+key+" -cne "+q(os.environ.get(key,''))+") { return $false }")
-        lines += ["if (-not $global:DotsEnvironmentApplied) { $global:DotsEnvironmentApplied = @{} }",'''function Set-DotsEnvironmentDefault([string]$Name, [string]$Value) {
+        lines += ["if (-not $global:DotsEnvironmentApplied) { $global:DotsEnvironmentApplied = @{} }",r'''function Set-DotsEnvironmentDefault([string]$Name, [string]$Value) {
     $current = [Environment]::GetEnvironmentVariable($Name)
+    if ($Name -ceq 'LESS' -and $Value -ceq '--mouse' -and $current -and $current -cnotmatch '(^|\s)--(mouse|MOUSE)([=\s]|$)') {
+        $current = '--mouse ' + $current
+        [Environment]::SetEnvironmentVariable($Name, $current, 'Process')
+    }
     if (-not $current -or ($global:DotsEnvironmentApplied.ContainsKey($Name) -and $current -ceq $global:DotsEnvironmentApplied[$Name])) {
         [Environment]::SetEnvironmentVariable($Name, $Value, 'Process')
         $global:DotsEnvironmentApplied[$Name] = $Value
@@ -79,6 +83,9 @@ def generate(root,shell, metadata=None):
             if value=='@editor':
                 lines += ['set -l editor vi','for candidate in nvim vim vi code nano','  if command -q $candidate; set editor $candidate; break; end','end'];expr='$editor'
             else:expr=expression(value,shell)
+            if key == 'LESS' and value == '--mouse':
+                lines += ['if test -n "$LESS"; and not string match -rq '+q(r'(^|\s)--(mouse|MOUSE)([=\s]|$)')+' -- "$LESS"',
+                          '  set -gx LESS "--mouse $LESS"', 'end']
             lines += ['if not set -q '+key+'; or test -z "$'+key+'"; or test "$'+key+'" = "$_dots_applied_'+key+'"', '  set -gx '+key+' '+expr, '  set -g _dots_applied_'+key+' "$'+key+'"', 'end']
         lines.extend('set -gx '+key+' '+q(value) for key,value in identity.items())
         paths=[str(Path(row['root'])/p) for row in reversed(profile['layers']) for p in row.get('path',['bin','scripts'])]

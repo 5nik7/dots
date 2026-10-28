@@ -68,6 +68,8 @@ code. Explicit nonempty environment values win over defaults. Checkout identity
 paths remain owned by the selected checkout. Bash/Zsh track assignments so a
 reload can update a previous default without overwriting a later user override.
 
+The `LESS=--mouse` application default merges mouse support with inherited pager options, such as batpipe's `-R`, instead of replacing them or being suppressed by them. Existing mouse options are preserved. A different profile default for `LESS` retains the ordinary precedence rule; see [less mouse support](shell-environment.md#global-less-mouse-support).
+
 A profile's `.dots/files.json` uses the existing catalog schema and explicit
 resource `replaces` declarations. Replacing a whole application directory must
 use an explicit directory mapping; there is no automatic file-format or tree
