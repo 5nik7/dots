@@ -25,6 +25,8 @@ import tomllib
 import unicodedata
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parents[1] / 'lib/dots'))
+import codex_attention as attention
 SPEC = importlib.util.spec_from_file_location('codex_status', HERE / 'codex-status.py')
 status = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(status)
@@ -34,8 +36,8 @@ IDENTITY = re.compile(UUID + r'\Z')
 TMUX_UUID = '-'.join('[0-9a-f]' * count for count in (8, 4, 4, 4, 12))
 THREAD = ('#{?#{m/r:(^|[|] *)' + TMUX_UUID + ' *$,#{pane_title}},'
           '#{s/^.*(' + TMUX_UUID + ').*$/\\1/:pane_title},-}')
-INVENTORY = status.INVENTORY + ' ' + THREAD
-ROW = re.compile(r'(@[0-9]+) (%[0-9]+) ([1-9][0-9]*) ([01]) ([01]) (' + UUID + r'|-)\Z')
+INVENTORY = status.INVENTORY + ' ' + THREAD + ' #{session_id} #{session_created}'
+ROW = re.compile(r'(@[0-9]+) (%[0-9]+) ([1-9][0-9]*) ([01]) ([01]) (' + UUID + r'|-)(?: (\$[0-9]+) ([0-9]+))?\Z')
 MAX_INPUT = 262144
 MAX_EVENTS = 4096
 EXPIRE = 600  # Unmatched candidates are not replayed when a session opens later.
@@ -54,6 +56,8 @@ def preferences():
         if type(value) is not bool:
             raise ValueError('invalid preference')
     options = doc['termux']
+    if options.get('focus_policy', 'conservative') not in ('conservative', 'terminal'):
+        raise ValueError('invalid focus policy')
     if (type(options['vibration_ms']) is not int or not 1 <= options['vibration_ms'] <= 10000
             or type(options['excerpt_chars']) is not int or not 40 <= options['excerpt_chars'] <= 1000
             or options['toast_gravity'] not in ('top', 'middle', 'bottom')):
@@ -112,6 +116,7 @@ def database():
             CREATE TABLE IF NOT EXISTS panes (
                 socket TEXT, pane TEXT, window TEXT, thread TEXT, state TEXT, focused INTEGER,
                 PRIMARY KEY(socket,pane));
+            CREATE TABLE IF NOT EXISTS topology (socket TEXT PRIMARY KEY, payload TEXT);
         ''')
         db.execute('BEGIN IMMEDIATE')
         yield db
@@ -204,11 +209,15 @@ def focused_at_receipt(thread):
     return False
 
 
+def conservative(prefs):
+    return bool(os.environ.get('TERMUX_VERSION')) and prefs['termux'].get('focus_policy', 'conservative') == 'conservative'
+
+
 def record(payload, prefs):
     event = normalize(payload, prefs)
     if not event or not prefs['enabled']:
         return
-    viewed = (prefs['unfocused_only'] and event['kind'] in PREFIXES
+    viewed = (not conservative(prefs) and prefs['unfocused_only'] and event['kind'] in PREFIXES
               and focused_at_receipt(event['thread']))
     with database() as db:
         thread, turn, kind = event['thread'], event['turn'], event['kind']
@@ -278,39 +287,74 @@ def parse_inventory(raw):
         match = ROW.fullmatch(line)
         if not match or len(rows) >= status.MAX_PANES:
             raise ValueError('invalid pane inventory')
-        window, pane, pid, working, waiting, thread = match.groups()
+        window, pane, pid, working, waiting, thread, session, created = match.groups()
         row = dict(window=window, pane=pane, pid=int(pid), thread=thread,
                    state='waiting' if waiting == '1' else 'working' if working == '1' else 'idle')
-        if pane in rows and rows[pane] != row:
+        memberships = rows.get(pane, {}).get('sessions', [])
+        if pane in rows and {k: v for k, v in rows[pane].items() if k != 'sessions'} != row:
             raise ValueError('conflicting pane inventory')
+        if session and dict(id=session, created=int(created)) not in memberships:
+            memberships.append(dict(id=session, created=int(created)))
+        row['sessions'] = memberships
         rows[pane] = row
     return list(rows.values())
 
 
-def snapshot(socket, deadline=None):
+def snapshot(socket, deadline=None, topology=None):
     deadline = deadline or time.monotonic() + status.TIMEOUT
     panes = status.inventory(socket, deadline, INVENTORY, parse_inventory)
     records = status.processes(Path('/proc'), deadline) if panes else {}
     clients = bounded(['tmux', '-S', socket, 'list-clients', '-F',
-                       '#{client_control_mode} #{client_flags} #{pane_id}'],
+                       '#{client_control_mode} #{client_flags} #{pane_id} #{session_id} #{client_tty}'],
                       timeout=status.remaining(deadline)).decode('ascii').splitlines()
-    focused = set()
+    focused, attached = set(), []
     for line in clients:
         parts = line.split()
-        if len(parts) != 3 or parts[0] not in ('0', '1') or not re.fullmatch('%[0-9]+', parts[2]):
+        if parts and parts[0] == '1':
+            continue  # Control clients can have no tty or selected pane.
+        if len(parts) != 5 or parts[0] not in ('0', '1') or not re.fullmatch('%[0-9]+', parts[2]):
             raise ValueError('invalid client inventory')
         if parts[0] == '0' and 'focused' in parts[1].split(','):
             focused.add(parts[2])
+        tty = parts[4].removeprefix('/dev/')
+        if parts[0] == '0' and attention.ID.fullmatch(parts[3]) and attention.TTY.fullmatch(tty):
+            attached.append(dict(session=parts[3], tty=tty))
+    if conservative(preferences()):
+        focused.clear()
+    if topology is not None:
+        topology.update(clients=attached, tabs=[])
     return [dict(row, focused=row['pane'] in focused) for row in panes
-            if row['thread'] != '-' and status.render([(row['window'], row['pid'], row['state'])], records)]
+            if status.render([(row['window'], row['pid'], row['state'])], records)]
+
+
+def termux_tabs():
+    if not os.environ.get('TERMUX_VERSION'):
+        return []
+    script = HERE.parents[1] / 'profiles/termux/bin/termux-sessions'
+    try:
+        doc = json.loads(bounded([sys.executable, '-B', str(script), '--json'], timeout=2))
+        if len(doc['sessions']) > 256:
+            return []
+        tabs = []
+        for tab in doc['sessions']:
+            if type(tab['pid']) is not int or not attention.TTY.fullmatch(tab['tty']):
+                return []
+            tabs.append(dict(pid=tab['pid'], tty=tab['tty'], started=attention.tab_identity(tab['pid'])))
+        return tabs
+    except (OSError, ValueError, KeyError, TypeError, IndexError, subprocess.SubprocessError):
+        return []
 
 
 def atomic_snapshot(key, windows, now):
+    atomic_document(key, dict(time=now, windows=sorted(windows)))
+
+
+def atomic_document(key, document):
     root = status.alert_root()
     fd, name = tempfile.mkstemp(prefix='.snapshot-', dir=root)
     try:
         with os.fdopen(fd, 'w') as stream:
-            json.dump(dict(time=now, windows=sorted(windows)), stream)
+            json.dump(document, stream)
         os.replace(name, root / (key + '.json'))
     finally:
         Path(name).unlink(missing_ok=True)
@@ -320,11 +364,13 @@ def reconcile(db, prefs, now, deliver=True):
     """All claims and acknowledgements serialize across server workers."""
     db.execute('DELETE FROM panes WHERE socket IN (SELECT id FROM sockets WHERE updated<?)', (now - 15,))
     db.execute('DELETE FROM sockets WHERE updated<?', (now - 15,))
+    db.execute('DELETE FROM topology WHERE socket NOT IN (SELECT id FROM sockets)')
     views = list(db.execute('SELECT * FROM panes'))
+    topology = {r['socket']: json.loads(r['payload']) for r in db.execute('SELECT * FROM topology')}
     notifications = []
     for event in db.execute("SELECT * FROM events WHERE phase!='ack' ORDER BY created,id").fetchall():
         matches = [v for v in views if v['thread'] == event['thread']]
-        focused = any(v['focused'] for v in matches)
+        focused = not conservative(prefs) and any(v['focused'] for v in matches)
         waiting = any(v['state'] == 'waiting' for v in matches)
         if ((focused and (prefs['clear_on_view'] or (event['phase'] == 'candidate' and prefs['unfocused_only'])))
                 or (event['seen'] and not matches)
@@ -334,12 +380,26 @@ def reconcile(db, prefs, now, deliver=True):
             acknowledge(db, 'id=?', (event['id'],))
         elif matches and event['phase'] == 'candidate' and deliver and (event['kind'] == 'complete' or waiting):
             db.execute("UPDATE events SET phase='alert',message='',seen=1 WHERE id=?", (event['id'],))
-            notifications.append(event['message'])
+            location = ''
+            for match in matches:
+                graph = topology.get(match['socket'], {})
+                pane = next((p for p in graph.get('panes', []) if p['pane'] == match['pane']), None)
+                if pane and pane['sessions']:
+                    sid = pane['sessions'][0]['id']
+                    location = f"tmux {match['socket'][:6]}:{sid}/{match['window']}/{match['pane']}"
+                    owners = {c['tty'] for c in graph.get('clients', []) if c['session'] == sid}
+                    numbers = [str(i) for i, t in enumerate(graph.get('tabs', []), 1) if t['tty'] in owners]
+                    if numbers:
+                        location = 'Termux ' + ','.join(numbers) + ' · ' + location
+                    break
+            message = (location + ' · ' if location else '') + event['message']
+            limit = prefs['termux']['excerpt_chars']
+            notifications.append(message if len(message) <= limit else message[:limit - 1].rstrip() + '…')
         elif matches:
             db.execute('UPDATE events SET seen=1 WHERE id=?', (event['id'],))
     alerted = {row['thread'] for row in db.execute("SELECT thread FROM events WHERE phase='alert'")}
-    changed = []
-    for server in db.execute('SELECT * FROM sockets'):
+    changed, servers = [], []
+    for server in db.execute('SELECT * FROM sockets ORDER BY id'):
         windows = {v['window'] for v in views if v['socket'] == server['id'] and v['thread'] in alerted}
         path = status.alert_root() / (server['id'] + '.json')
         try:
@@ -349,6 +409,24 @@ def reconcile(db, prefs, now, deliver=True):
         atomic_snapshot(server['id'], windows, now)
         if set(previous) != windows:
             changed.append(server['path'])
+        graph = topology.get(server['id'])
+        if graph is not None:
+            for pane in graph['panes']:
+                pane['attention'] = pane['thread'] in alerted
+            servers.append(dict(graph, key=server['id'], socket=server['path'], updated=server['updated']))
+    # The aggregate's per-server timestamps prevent another worker from keeping
+    # stale observations alive. No excerpts are published to renderers.
+    document = dict(schema=1, time=now, servers=servers[:16])
+    path = status.alert_root() / 'overview.json'
+    try:
+        previous = json.loads(path.read_text())['servers']
+    except (OSError, ValueError, KeyError):
+        previous = []
+    def content(items):
+        return [dict(s, updated=0) for s in items]
+    atomic_document('overview', document)
+    if content(previous) != content(document['servers']):
+        changed = [s['path'] for s in db.execute('SELECT path FROM sockets')]
     return notifications, changed
 
 
@@ -378,20 +456,31 @@ def notify_device(message, prefs):
                  (['-f'] if options['force_vibration'] else [])),
                 (['termux-toast', '-b', background, '-c', foreground, '-g', options['toast_gravity']] +
                  (['-s'] if options['toast_short'] else []) + ['--', message])]
-    for command in commands:
-        if shutil.which(command[0]):
-            try:
-                bounded(command, timeout=2)
-            except (OSError, ValueError, subprocess.SubprocessError):
-                pass  # Independent, at-most-once attempts, never a retry storm.
+    def attempt(command):
+        try:
+            bounded(command, timeout=5)
+        except (OSError, ValueError, subprocess.SubprocessError):
+            pass  # Independent, at-most-once attempts, never a retry storm.
+    available = [command for command in commands if shutil.which(command[0])]
+    # Real Android IPC can exceed two seconds. Start both requests together so
+    # one slow API response neither delays the other nor doubles the wait bound.
+    if available:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=len(available)) as pool:
+            list(pool.map(attempt, available))
 
 
 def tick(socket, prefs, deliver=True):
     key, now = status.socket_key(socket), time.time()
-    panes = snapshot(socket)
+    graph = {}
+    panes = snapshot(socket, topology=graph)
+    graph['tabs'] = termux_tabs()
+    graph['panes'] = [dict(pane=p['pane'], window=p['window'], thread=p['thread'],
+                           state=p['state'], sessions=p['sessions']) for p in panes]
     with database() as db:
         db.execute('INSERT OR REPLACE INTO sockets VALUES (?,?,?)', (key, socket, now))
         db.execute('DELETE FROM panes WHERE socket=?', (key,))
+        db.execute('INSERT OR REPLACE INTO topology VALUES (?,?)', (key, json.dumps(graph)))
         db.executemany('INSERT INTO panes VALUES (?,?,?,?,?,?)',
                        [(key, p['pane'], p['window'], p['thread'], p['state'], int(p['focused'])) for p in panes])
         notifications, changed = reconcile(db, prefs, now, deliver)
@@ -405,6 +494,21 @@ def tick(socket, prefs, deliver=True):
             pass
     for message in notifications:
         notify_device(message, prefs)
+
+
+def acknowledge_pane(socket, pane, client=None, thread=None):
+    if not attention.PANE.fullmatch(pane or ''):
+        raise ValueError('invalid pane')
+    if client is not None:
+        rows = bounded(['tmux', '-S', socket, 'list-clients', '-F', '#{client_name}\t#{pane_id}']).decode().splitlines()
+        if f'{client}\t{pane}' not in rows or any(c in client for c in '\r\n\t'):
+            raise ValueError('invoking client changed')
+    row = next((p for p in snapshot(socket) if p['pane'] == pane), None)
+    if not row or row['thread'] == '-' or (thread is not None and row['thread'] != thread):
+        raise ValueError('Codex pane changed or thread identity unavailable')
+    with database() as db:
+        acknowledge(db, 'thread=?', (row['thread'],))
+    tick(socket, preferences(), deliver=False)
 
 
 def watch(socket):
@@ -427,7 +531,7 @@ def watch(socket):
                 tick(socket, prefs)
             except FileNotFoundError:
                 return
-            except (OSError, ValueError, KeyError, TypeError, sqlite3.Error, subprocess.SubprocessError):
+            except (OSError, ValueError, KeyError, TypeError, IndexError, sqlite3.Error, subprocess.SubprocessError):
                 # No fabricated completion/notification; the snapshot expires.
                 pass
             time.sleep(5)
@@ -435,9 +539,12 @@ def watch(socket):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=['hook', 'notify', 'start', 'watch', 'ack'])
+    parser.add_argument('mode', choices=['hook', 'notify', 'start', 'watch', 'ack', 'ack-pane'])
     parser.add_argument('payload', nargs='?')
     parser.add_argument('--socket')
+    parser.add_argument('--pane')
+    parser.add_argument('--client')
+    parser.add_argument('--thread')
     args = parser.parse_args()
     if os.name == 'nt':
         return  # Explicit platform exception: no native tmux/Android consumer.
@@ -467,7 +574,9 @@ def main():
             watch(args.socket)
         elif args.socket and args.mode == 'ack':
             tick(args.socket, prefs, deliver=False)
-    except (OSError, ValueError, KeyError, TypeError, AttributeError, sqlite3.Error, subprocess.SubprocessError):
+        elif args.socket and args.mode == 'ack-pane':
+            acknowledge_pane(args.socket, args.pane, args.client, args.thread)
+    except (OSError, ValueError, KeyError, TypeError, IndexError, AttributeError, sqlite3.Error, subprocess.SubprocessError):
         pass  # Hooks are observational and never print potentially private input.
 
 

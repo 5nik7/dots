@@ -25,7 +25,11 @@ def named_styles(ui):
     return dict(muted=sgr('muted', '2;37'), emphasis=sgr('bright_magenta', '1;95', True),
                 orange=sgr('orange', '38;5;208'), accent=sgr('accent', '1;35', True),
                 green=sgr('green', '32'), yellow=sgr('yellow', '33'), blue=sgr('blue', '34'),
-                bright_green=sgr('bright_green', '92'),
+                bright_green=sgr('bright_green', '92'), bright_red=sgr('bright_red', '91'),
+                bold_hint=sgr('hint', '1;36', True), bold_muted=sgr('muted', '1;37', True),
+                bold_bright_red=sgr('bright_red', '1;91', True),
+                bold_bright_green=sgr('bright_green', '1;92', True),
+                bold_warning=sgr('warning', '1;33', True),
                 foreground=foreground, light_foreground=sgr('light_foreground', foreground),
                 red=sgr('red', '31'))
 

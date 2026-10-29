@@ -1,0 +1,97 @@
+# Project-aware todo
+
+## Approved follow-up: two-space Todo layout (2026-10-29)
+
+**Implemented and locally validated.** Todo human views use a two-space base indent with flush-left headings. Printed lists put the alias (or short UUID) above the title at the same indent, wrap within that block, use single-space Project/Goals label gaps and retain one blank line between goals. Implicit/`--print` listings and the missing-FZF fallback share this layout. Other details retain aligned values; colors, status/priority/due information and full identifiers remain available.
+
+Add opt-in indentation/resource-label-width controls to shared presentation while preserving defaults for other commands. Opt Todo help, detail/result rows and previews into two spaces and recalculate full-UUID placement. Menu assessment: **update** previews/fallback output; keep compact selection rows and existing controls. JSON, Markdown, briefs, paths, completion and goal storage are unchanged. No new route/flag or Windows destination changes.
+
+Acceptance: empty/single/multiple lists, short/long aliases and UUID fallbacks, Unicode/wrapped titles and paths at 40/80/120 columns; exact colored/plain spans, help/results/notes/acceptance/previews, default shared-renderer compatibility and data bytes. Run isolated Todo/presentation/popup checks and actual Bash/native-controller terminal views, then synchronize canonical docs and the local wiki. Native PowerShell and Linux/WSL visual acceptance remain pending where unavailable.
+
+Validation: all 41 Todo cases and all 17 shared resource/presentation checks passed. The final focused rerun also covers native static root/leaf help, which now opts into the same two-space indent; Bash static help already uses a two-space base. All three private tmux/FZF/Gum tests passed. Actual PTYs verified lists, show and root/leaf help through standalone `todo`, Bash `dots todo` and the native controller at 40/80/120 columns, including exact theme spans, folder icons, wrapping and goal separation. Missing-FZF output matched normal lists at every width, and read-only fixture files remained unchanged. Full UUIDs fit inline from 45 columns and stack below their label at narrower widths. JSON/Markdown/brief/path byte comparisons and unchanged shared-renderer defaults passed. Native PowerShell engines are unavailable locally; Windows execution and Linux/WSL visual acceptance remain pending.
+
+Generated-adapter, relative-link (1,010 links) and whitespace checks passed. The local wiki was rebuilt through retained transaction `42382537afae4764b7dbc3bf7c472d0a` and checked healthy. No goal stores were modified by this presentation change.
+
+## Approved follow-up: required project-name tags (2026-10-29)
+
+**Implemented and locally validated.** Every project goal keeps the resolved project folder name as a tag, preserving case, spaces and Unicode; a filesystem-root project uses its anchor. Append the tag when absent, retaining custom order and exact-match deduplication. Tag replacement/clearing retains it. Global tags remain user-controlled; folder renames require the new name without deleting prior tags.
+
+Every successful goal-changing command backfills missing tags throughout its selected project, including completed/removed goals and subgoals, in the same guarded transaction. Report repaired records in preview/result output and update timestamps only for effective changes. Reads never backfill; unchanged updates remain no-ops after repair. Existing limits remain enforced with affected IDs reported before writes. Preview/apply the current Dots backfill through the guarded CLI and retain its recovery transaction; do not scan other projects.
+
+Menu assessment: **update** the existing popup help; creation and tag editing use the shared mutation path. Schema 2, command routes and Windows destinations remain unchanged. Refresh help/static adapters, Todo documentation, data/safety contracts, the Todo skill and local wiki.
+
+Acceptance: isolated project/global/configured/Git/worktree/root-name cases, exact deduplication and replacement/clear behavior, renamed projects, old schema/store backfills, read-only/dry-run byte preservation, invalid/overflow preflight, stale writes, rollback/undo and repeated no-op updates; filtering, completion, popup creation/tag editing and Bash/native-controller parity. Native Windows PowerShell 5.1/7 and Linux/WSL visual acceptance remain separately pending where unavailable.
+
+Validation: all 39 Todo tests passed in the final full run. All three private tmux/FZF/Gum tests passed, including creation, tag replacement with the required project tag retained, and previews at 40/80/120 columns. Real Bash/Zsh/Fish goal/project-tag insertion and Zsh/FZF-tab selection passed; the native PowerShell case was skipped because no engine is installed. Both command catalogs validate 202 routes, and generated-adapter, wrapper ShellCheck, skill, relative-link and whitespace checks passed. The CLI controller accepts an internal expected-digest argument for guarded reviewed updates; a focused test verifies preview/apply and rejection of stale reuse without a public flag.
+
+The current Dots file was previewed and backfilled through that guarded CLI path: all three goals gained `dots`, custom tags and every non-tag/non-update field were preserved, and a repeat preview was unchanged. Retained recovery transaction: `bbfe2e4222ed4b15bf4153ef81b24233`. No other project stores were scanned or changed. The local wiki was rebuilt through transaction `079b322d811a486a9d06f11b1afc4854` and checked healthy.
+
+## Approved follow-up: title, alias and high-priority colors (2026-10-29)
+
+**Implemented and locally validated.** Goal titles use bold theme `bright_magenta`, alias values use bold theme `accent`, and high priority uses bold theme `warning`. The shared emphasis/accent styles and bold warning fallback supply these colors. An optional label-color argument in the shared detail renderer retains its default treatment for existing callers. Alias styling covers short/long list identifiers, Alias values and available parent aliases; UUID identifiers retain their existing styling. Notes, acceptance text, open/normal/low styles and list spacing are unchanged.
+
+Menu assessment: **update** the existing popup through its shared rows/previews; retain actions and layout. Bash and native PowerShell share the controller. No routes, flags, completion metadata or Windows destinations change.
+
+Acceptance: exact independent title/alias/warning spans with light/dark/missing palettes; wrapped titles, short/long aliases, UUID fallbacks and parent aliases at 40/80/120 columns; plain/NO_COLOR output and unchanged exports; default shared-renderer regression checks and private popup/terminal checks. Update canonical docs and regenerate/check the local wiki. Native PowerShell 5.1/7 and Linux/WSL visual acceptance remain pending when unavailable.
+
+Validation: the full Todo suite passed all 32 cases and shared resource/presentation checks passed all 16. Private tmux/FZF previews and exact-client selection passed with an aliased high-priority goal at 40/80/120 columns. Actual PTYs verified exact title/alias/warning/open spans and existing list spacing through standalone `todo`, Bash `dots todo` and the native controller at all three widths. The fixture files remained unchanged. Generated-adapter, relative-link and whitespace checks passed. Native PowerShell engines are unavailable locally; Windows execution and Linux/WSL visual acceptance remain pending. The local wiki was rebuilt through transaction `cc16f959485f449f92d55682e07b8f30` and checked healthy.
+
+## Approved follow-up: open color and list spacing (2026-10-29)
+
+**Implemented and locally validated.** Open status uses bold theme `bright_green` with a bold ANSI bright-green fallback across human CLI output and popup rows/previews. Human lists separate complete goal blocks with one blank line, including implicit/`--print` lists and the missing-FZF fallback. Wrapped lines stay together; empty/single lists gain no blank lines. Detailed views, mutation layouts and data exports retain their existing structure.
+
+Menu assessment: **update** the existing popup's shared open-status style; retain compact rows and existing actions. No new routes, options or completion metadata. Both Bash and native PowerShell use the shared renderer; Windows destinations and storage are unaffected.
+
+Acceptance: isolated light/dark/missing-palette checks, exact bold spans and plain/`NO_COLOR` output; empty/single/multiple lists and wrapped Unicode titles at 40/80/120 columns; direct/standalone/native-controller parity; JSON/Markdown byte preservation; actual private terminal/popup review. Run focused Todo and shell checks, synchronize canonical docs and rebuild/check the local wiki. Native Linux/WSL visuals and Windows PowerShell 5.1/7 remain separate acceptance checks when unavailable.
+
+Validation: all 31 Todo cases passed across the full suite and corrected spacing-fixture rerun. Actual PTYs confirmed exact bold bright-green output and goal spacing at 40/80/120 columns; the missing-FZF listing matched ordinary list output and fixture data stayed unchanged. The private tmux/FZF preview and exact-client case passed at all three widths. Bash/Zsh/Fish insertion and Zsh/FZF-tab selection passed; the native PowerShell case was skipped because no engine is installed. Generated-adapter, relative-link and whitespace checks passed. The live goal document's hash remained unchanged. The local wiki was rebuilt through transaction `2d332ba58153466f91a1d440172b68f7` and checked healthy; native Linux/WSL visuals and Windows PowerShell 5.1/7 remain pending.
+
+## Approved follow-up: aliases, notes and readable output (2026-10-29)
+
+**Implemented and locally validated.** Python 3.14 help now renders plain usage definitions through Dots. Explicit scoped aliases and `note SELECTOR [TEXT]` are available, and `show` expands into title/fields/notes/UUID blocks. Titles use bold theme bright_magenta, aliases use bold accent, open uses bold bright_green, and priorities use bold warning / regular orange / bold muted. Shared presentation and the existing transaction engine are retained. Schema 2 adds nullable aliases; schema 1 reads normalize in memory, and only an effective mutation upgrades storage. Existing goal files and aliases are not modified automatically.
+
+Menu assessment: **update** the existing Todo popup with Add note and alias editing, shared field styles and expanded previews. Keep stable UUID selection, inert previews and separate terminal input. Maintain Bash/native PowerShell routes and all four completion adapters through shared definitions. Native PowerShell runtime and Linux/WSL visual acceptance remain pending where unavailable.
+
+Acceptance: owned Python 3.14 PTY help reproduction; aliases, collision/removal reservations, UUID selectors, schema migration/undo and scoped completion; multiline append, cancellation, byte preservation, limits and stale writes; exact light/dark styles and 40/80/120-column CLI/popup output. Run focused suites sequentially, update canonical docs and the Todo skill, then rebuild/check the local wiki. No commits or publication.
+
+Validation: all 29 Todo cases passed; all three private tmux/FZF cases passed across the full run and the corrected Gum-2 input-key rerun, including creation, alias editing, multiline paste/append and completion. Real Bash/Zsh/Fish alias and UUID insertion, note execution, and Zsh/FZF-tab selection passed; PowerShell runtime was explicitly skipped. Shared menus (24), Bash commands (24), and native-controller regressions passed. Both command catalogs validate 202 routes; generated-adapter checking, wrapper ShellCheck, Python syntax, skill validation, relative links and whitespace checks passed. A plain detail view was reviewed, and the existing live goal document's hash remained unchanged. The local wiki was rebuilt through transaction `d2cb9b07bcbd4082bfe5852858933ed4` and checked healthy. Native Linux/WSL visual acceptance and Windows PowerShell 5.1/7 execution remain separate pending checks.
+
+The store's `data` operation remains catalog-schema-specific. Goal writes use its existing UTF-8 `text` operation for schema-2 JSON, preserving the same digest guards, retained bytes, rollback and undo without broadening catalog validation. No new transaction implementation or unjournaled migration is introduced.
+
+## Initial implementation (2026-10-28)
+
+**Status: Implemented and locally validated.** Project-local goal tracking and global fallback share a CLI, popup and agent brief. Native Linux, WSL and Windows terminal acceptance remains separately pending; unrelated broad-suite failures are recorded below.
+
+`dots todo` always addresses the active Dots checkout. Standalone `todo` selects the deepest configured project or Git worktree, otherwise global state; explicit standalone `--project`/`--global` override discovery. Project data lives in `.dots/todo.json`, global data under the native Dots state root. Read-only paths never initialize storage. Goal updates use the existing guarded file transaction engine with retained recovery copies; removal is reversible.
+
+Menu assessment: **add** the goal browser and a Dots launcher entry because repeated selection, progress updates and brief preparation benefit from a popup. Reuse shared selector, exact-client context, reader, semantic styling and native handoff. No new tmux binding.
+
+| Goal | Status | Acceptance |
+| --- | --- | --- |
+| Storage and scope | Implemented | Isolated project/global, nested/worktree/configured scope, lifecycle, conflict and recovery tests |
+| CLI and completion | Implemented | Bash/native literal dispatch; real Bash/Zsh/Fish Tab and Zsh/FZF-tab insertion; native PowerShell execution pending |
+| Popup | Implemented | Stable goal identities, inert previews, actions, empty states and separate input/reader handoff |
+| Agent brief and skill | Implemented | Read-only brief; managed user-wide skill linked through the transaction engine |
+| Documentation and validation | Complete locally | Canonical docs, link checks and local wiki updated; native acceptance limits recorded |
+
+Follow the [presentation gate](../docs/presentation.md#acceptance-gate): 40/80/120 columns, short panes, light/dark palettes, plain colors/icons and exact data bytes. Tests own all home/config/state/project paths and tmux servers. Bash on Termux/Linux/WSL and native PowerShell share the controller; Windows uses its native state/config destinations, with no WSL translation. Native Linux, WSL and Windows PowerShell 5.1/7 terminal acceptance must be reported separately from local fixtures.
+
+The add/list/show/edit/start/done/reopen/remove/restore/next/brief/browse/path routes, filtering, nested goals, JSON/Markdown output and dry runs are implemented. Static adapters are generated from the shared command definitions and checked for drift. Completion reads only the selected scope on demand; shell startup and direct dispatch add no project/catalog scans. The standalone launcher is included in receipt-backed checkout installation, alongside the managed skill; uninstall preserves goal documents.
+
+The user-wide skill link was applied through `dots files link dots:todo-skill` after a dry run, transaction `98d2e64e38ee4fadbb6b53233de6b77b`. The standalone command already resolves through this checkout's `bin`; no real goal document was initialized during development.
+
+## Validation evidence (Termux, 2026-10-28)
+
+- All 22 Todo behavior cases passed in the final full run. These cover guarded transactions/rollback, project boundaries, hierarchy, data output, safe input, presentation controls, shared help, dispatch and completion.
+- All three private tmux/FZF cases passed, including actual 40/80/120-column previews, exact-client selection, empty search events, Gum creation, action-menu completion and cancellation. The interaction test waits for the next popup's actual screen before sending input.
+- Bash/Zsh/Fish Tab insertion and Zsh/FZF-tab selection passed. The PowerShell test was skipped because no native engine is installed; it can be required using `DOTS_TEST_POWERSHELL`.
+- Bash command (24), native controller (14, one native-engine skip), shared menu (24), launcher (21, including three corrected fixture reruns), and file-platform (5) checks passed. Todo command/skill backup, idempotence, uninstall and goal-data preservation passed, as did the complete-checkout bundled lifecycle with the skill source included.
+- The broader installation suite passed 26 of 27 cases. The strict whole-theme repeat-install case still republishes the theme, matching the already documented [baseline failure](bundled-applications.md#verification-evidence-2026-10-28). The Todo-specific installation case passes; the strict theme assertion remains intact.
+- Installation adapters passed all five locally runnable cases; five PowerShell/native-Windows capability cases were explicitly skipped.
+- The workspace closure/notification regressions passed after retaining the resolver's standalone default. The client-creation case passed on its isolated rerun. The sustained status-rendering case still fails and also fails with the original `HEAD` resolver substituted in both parent and fixture; it is a separate existing-workspace limitation.
+- Wiki generation (18) and wiki Git (10) tests passed. Canonical link checking, generated adapter checking, Python/Bash/Zsh/Fish syntax and new-wrapper ShellCheck passed. ShellCheck for the large existing completion script exceeded its 30-second bound; real completion tests and Bash syntax passed.
+- Local wiki pages were rebuilt through retained transactions, with initial generation `a826ddb199944cc6868480f3a63b6974` and final metadata/document refresh `d74d6ca800de4408944e1d5bd381034f`; the final wiki check passed. No wiki publication was performed.
+
+Remaining native acceptance: Linux and WSL terminal behavior; Windows PowerShell 5.1/7 launch, completion, FZF/Gum input, cancellation, platform paths and managed skill-link privileges. Local adapter fixtures do not establish those results.
+
+Automatic agent launches, recurring reminders, dependency graphs and cross-project aggregation are outside this release. Unrelated working-tree changes are preserved. No commits or publication are authorized.

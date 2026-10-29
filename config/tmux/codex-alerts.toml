@@ -14,6 +14,9 @@ completion = true
 
 [termux]
 enabled = true
+# Stock Termux does not send DECSET 1004 focus changes. Never treat the
+# attached client's default "focused" flag as proof that its pane was viewed.
+focus_policy = "conservative"
 vibration_ms = 300
 force_vibration = true
 toast_background = "dark_background"

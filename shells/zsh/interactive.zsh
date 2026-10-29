@@ -30,6 +30,5 @@ _dots_zsh_keys_finish
 
 [[ -n ${ZSH_DEBUGRC+1} ]] && zprof
 source "$DOTS/shells/shared/tmux-workspaces.sh"
-source "$DOTS/shells/shared/termux-tmux.sh"
 # Do not propagate an optional tool's absence as the startup status.
 true

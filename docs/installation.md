@@ -1,5 +1,7 @@
 # Checkout installation
 
+Setup includes the standalone `todo` command (`todo.ps1` on native Windows) and the catalog-managed `dots:todo-skill` resource. They use the existing backup, receipt, idempotence and uninstall rules. Project and global goal documents are user data, remain outside the installation receipt, and survive uninstall. See [todo](todo.md) for scopes and the separate goal transaction history.
+
 **Implemented: bounded catalog-backed setup and restore.** Run these entry points from an existing public checkout. They do not bootstrap Python, Bash, Git, applications, or a remote release.
 
 ```sh

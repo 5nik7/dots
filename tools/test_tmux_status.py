@@ -60,7 +60,7 @@ class TmuxStatus(unittest.TestCase):
         shutil.copyfile(REPO / 'config/tmux/workspace-control.py', control)
         (self.tmux_config / control.name).symlink_to(control)
         (self.repo / 'lib/dots').mkdir(parents=True)
-        for name in ('tmux_workspaces.py', 'menu_projects.py', 'menu_tmux.py', 'resources.py'):
+        for name in ('tmux_workspaces.py', 'menu_projects.py', 'menu_tmux.py', 'resources.py', 'codex_attention.py'):
             shutil.copyfile(REPO / 'lib/dots' / name, self.repo / 'lib/dots' / name)
         self.sessions_script = self.repo / 'profiles/termux/bin/termux-sessions'
         self.sessions_script.parent.mkdir(parents=True)
@@ -895,6 +895,39 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                         index += 2
                 index += 1
         return bold
+
+    @unittest.skipUnless(TMUX, 'native tmux unavailable')
+    def test_native_termux_attention_cells_widths_and_clearing(self):
+        config = self.write_config(workspace_hooks=False)
+        self.write_theme()
+        inner, base = self.server('attention-inner')
+        inner('source-file', str(config))
+        inner('set-option', '-g', 'status-interval', '1')
+        outer, _ = self.server('attention-view', termux=False)
+        outer('set-option', '-g', 'status', 'off')
+        outer('set-option', '-g', 'default-terminal', 'tmux-256color')
+        attach = shlex.join(['env', '-u', 'TMUX', '-u', 'TMUX_PANE', *base, 'attach-session', '-t', 'fixture'])
+        outer('new-session', '-d', '-s', 'view', '-x', '80', '-y', '24', attach)
+        tty = outer('display-message', '-p', '-t', 'view', '#{pane_tty}')
+        self.snapshot([tty, 'pts/9999'])
+        # Only topology discovery is replaced. Render the real adapter/config
+        # into a private tmux terminal; procfs identity has separate fixtures.
+        module = self.repo / 'lib/dots/codex_attention.py'
+        with module.open('a') as stream:
+            stream.write('\ndef tab_states(servers):\n'
+                         '    if (Path.home()/"attention-off").exists(): return {}, 0\n'
+                         '    return {(901,100,"pts/9999"):dict(state="waiting",attention=True)}, 1\n')
+        for width in (40, 80, 120):
+            outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
+            lines = self.await_screen(outer, 'view', lambda rows: rows and '[2 ]' in rows[0] and '[ 1]' in rows[0])
+            for label in ('[2 ]', '[ 1]'):
+                for offset in range(len(label)):
+                    self.assertEqual(self.colors_at(lines[0], label, offset), {'fg': (255,85,85), 'bg': (1,2,3)})
+                    self.assertTrue(self.bold_at(lines[0], label, offset))
+            self.assertIn('80%', self.plain(lines[0]))
+        (self.home / 'attention-off').touch()
+        lines = self.await_screen(outer, 'view', lambda rows: rows and '[2' not in rows[0] and '' not in rows[0] and ' 2 ' in rows[0])
+        self.assertNotEqual(self.colors_at(lines[0], ' 2 ')['fg'], (255,85,85))
 
     @unittest.skipUnless(TMUX, 'native tmux unavailable')
     def test_native_two_clients_widths_colors_and_failure_clearing(self):

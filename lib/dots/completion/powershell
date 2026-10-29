@@ -1,5 +1,5 @@
 # Native completion; data comes from trusted Dots readers, never an extension.
-$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1', 'blastoff', 'blastoff.ps1', 'pkgs', 'pkgs.ps1')
+$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1', 'blastoff', 'blastoff.ps1', 'pkgs', 'pkgs.ps1', 'todo', 'todo.ps1')
 $dotsCompletionState = if ($global:dot -and $global:dot.state) { $global:dot.state } elseif ($env:DOTS_STATE_DIR) { $env:DOTS_STATE_DIR } elseif ($env:XDG_STATE_HOME) { Join-Path $env:XDG_STATE_HOME 'dots' } elseif ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'dots' } else { Join-Path $HOME '.local/state/dots' }
 $dotsNamesPath = Join-Path $dotsCompletionState 'themes/commands/current/names'
 if (Test-Path -LiteralPath $dotsNamesPath -PathType Leaf) {
@@ -21,6 +21,7 @@ Register-ArgumentCompleter -Native -CommandName $dotsCompletionNames -ScriptBloc
         $cursorPosition - $commandAst.Extent.StartOffset)) -match '\s$') { $words += '' }
     $commandName = [IO.Path]::GetFileNameWithoutExtension($commandAst.CommandElements[0].Extent.Text)
     if ($commandName -eq 'theme') { $words = @('theme') + $words }
+    elseif ($commandName -eq 'todo') { $words = @('__todo_standalone') + $words }
     elseif ($commandName -eq 'anodize') { $words = @('anodize') + $words }
     elseif ($commandName -in @('blastoff', 'pkgs')) { $words = @($commandName) + $words }
     elseif ($commandName -ne 'dots') { $words = @('theme', $commandName) + $words }
@@ -31,7 +32,12 @@ Register-ArgumentCompleter -Native -CommandName $dotsCompletionNames -ScriptBloc
             $fields = $row -split "`t", 3
             if ($fields.Count -lt 2) { continue }
             if ($fields[0] -in @('file', 'directory')) {
+                $lead = $fields[1]
                 $prefix = if ($wordToComplete) { $wordToComplete.Trim("'", '"') } else { '.' }
+                if ($lead -and $prefix.StartsWith($lead, [StringComparison]::Ordinal)) {
+                    $prefix = $prefix.Substring($lead.Length)
+                    if (-not $prefix) { $prefix = '.' }
+                }
                 $parent = Split-Path -Parent $prefix
                 if (-not $parent) { $parent = '.' }
                 $leaf = if ($wordToComplete) { Split-Path -Leaf $prefix } else { '' }
@@ -39,7 +45,7 @@ Register-ArgumentCompleter -Native -CommandName $dotsCompletionNames -ScriptBloc
                     $_.Name.StartsWith($leaf, [StringComparison]::OrdinalIgnoreCase) -and
                     ($fields[0] -eq 'file' -or $_.PSIsContainer)
                 } | ForEach-Object {
-                    $value = $_.FullName
+                    $value = $lead + $_.FullName
                     [System.Management.Automation.CompletionResult]::new("'" + $value.Replace("'", "''") + "'", $_.Name, 'ParameterValue', $value)
                 }
             } elseif ($fields[0] -eq 'candidate') {

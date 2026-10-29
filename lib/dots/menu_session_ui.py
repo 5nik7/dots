@@ -93,6 +93,10 @@ def preview_text(row, ui, codes):
         clients = ui.paint(f'{session.attached_clients} attached', codes['yellow'] if session.attached_clients >= 1 else muted)
         current = ui.paint(' · current', '1;' + codes['bright_green']) if session.current else ''
         lines.append('  ' + name + windows + ui.paint(' · ', muted) + clients + current)
+        if session.attention:
+            lines.append(ui.paint(f'  Codex: {session.attention} unread', '1;' + codes['bright_red']))
+            for pane in session.attention_panes:
+                lines.append(ui.paint('    ' + pane['window'] + ' / ' + pane['pane'] + ' · ' + pane['state'], codes['bright_red']))
     return '\n'.join(lines) + '\n'
 
 
@@ -120,6 +124,8 @@ def render(rows, ui, width):
         if width < 52 and count:
             detail = f'[{count}]' if row.project else f'{row.sessions[0].windows}w'
         count_text = detail
+        alert_count = sum(s.attention for s in row.sessions)
+        alert_text = (' · ' + (' ' if ui.icons else 'Codex ') + str(alert_count)) if alert_count else ''
         current_text = ' · ' + (' ' if ui.icons else '') + 'current' if current else ''
         if current:
             detail += current_text
@@ -127,7 +133,7 @@ def render(rows, ui, width):
             detail = 'no session'
         if row.project and row.label in duplicates:
             detail += ' · ' + short_path(row.project.root)
-        detail = fit(clean(detail), max(1, width - cells(icon) - name_width - 3)).rstrip()
+        detail = fit(clean(detail), max(1, width - cells(icon) - name_width - 3 - cells(alert_text))).rstrip()
         if count and (row.project or current):
             # Clip first, then keep count, current marker and path styles separate.
             count_end = min(len(count_text), len(detail))
@@ -139,7 +145,7 @@ def render(rows, ui, width):
                 styled_detail += ui.paint(detail[marker_end:], muted)
         else:
             styled_detail = ui.paint(detail, muted)
-        labels.append(name + ui.paint(' · ', muted) + styled_detail)
+        labels.append(name + ui.paint(' · ', muted) + styled_detail + ui.paint(alert_text, '1;' + codes['bright_red']))
         previews.append(preview_text(row, ui, codes))
     return labels, previews
 

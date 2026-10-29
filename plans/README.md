@@ -8,10 +8,12 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Todo goals](todo.md) | Project/global goal tracking, contextual completion, popup and managed agent skill. |
 | [Bundled applications](bundled-applications.md) | Absorb Blastoff and pkgs with dual command forms and combined installation/removal. |
 | [Portable plugins](portable-plugins.md) | Consolidated application ownership, backed-up legacy migration, menus and maintenance skills. |
 | [Global less colors](less-style.md) | Implemented: exact theme colors for less standout text through shell and popup readers; native runtime acceptance recorded. |
 | [Popup menus](popup-menus.md) | G1–G6 complete, including project-aware session actions. G6 corrections add compact previews, Alt-H help, generic automatic Termux sessions and a verified device launch fallback. Native Linux/WSL/Windows and human visual checks remain pending. |
+| [Tmux status and sessions](tmux-status-and-sessions.md) | Implemented Termux startup ordering and cross-session Codex attention; selective activation and remaining owner/native acceptance recorded. |
 | [Bat custom syntaxes](bat-syntax-cache.md) | Implemented shared syntax snapshots and cache invalidation; Termux checks and live refresh complete, native Windows acceptance pending. |
 | [Zsh personal keys](zsh-keys.md) | Implemented centralized ZLE configuration and themed substring-history search; native Termux verification. |
 | [Anodize](anodize.md) | Implemented core/CLI, local Neovim integration, completions and manual. |

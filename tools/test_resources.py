@@ -126,6 +126,23 @@ class ResourcesTests(unittest.TestCase):
                 self.assertIn('\x1b[2m│   \x1b[0m', text)
                 self.assertIn('\x1b[35m', text)
 
+    def test_detail_label_color_is_optional_and_preserves_layout(self):
+        with patch.dict(os.environ,self.env,clear=True):
+            for width in (40,80,120):
+                outputs=[]
+                for options,code in [({},'94'),({'label_code':'1;35'},'1;35')]:
+                    stream=io.StringIO();ui=Presentation(stream);ui.width=width
+                    ui.detail_spans('Alias', [('Long value 界 ' * 12, '1;95')], **options)
+                    text=stream.getvalue()
+                    self.assertTrue(text.startswith('\x1b['+code+'m    Alias      \x1b[0m'))
+                    plain=re.sub(r'\x1b\[[0-9;]*m','',text)
+                    self.assertTrue(all(cells(line)<=width for line in plain.splitlines()))
+                    outputs.append(plain)
+                self.assertEqual(*outputs)
+                stream=io.StringIO();ui=Presentation(stream);ui.width=width;ui.color=False
+                ui.detail_spans('Alias', [('Long value 界 ' * 12, '1;95')], label_code='1;35')
+                self.assertEqual(stream.getvalue(),outputs[0])
+
     def test_custom_detail_spacing_and_heading_spans(self):
         with patch.dict(os.environ,self.env,clear=True):
             for width in (40,80,120):
@@ -147,6 +164,28 @@ class ResourcesTests(unittest.TestCase):
                 self.assertTrue(all(cells(line)<=width for line in plain.splitlines()))
                 self.assertIn('\x1b[35m \x1b[0m',text)
                 self.assertIn(r'\x1b[31m',plain)
+
+    def test_detail_indent_and_resource_label_width_are_opt_in(self):
+        with patch.dict(os.environ,self.env,clear=True):
+            for width in (40,80,120):
+                for indent in (None,2):
+                    stream=io.StringIO()
+                    ui=Presentation(stream,**({} if indent is None else dict(detail_indent=indent)))
+                    ui.width=width;ui.color=False;ui.icons=False
+                    prefix=' '*(4 if indent is None else indent)
+                    ui.detail('Label','value')
+                    ui.detail_spans('Label',[('value','35')])
+                    ui.resource_detail('Label',None,display='value')
+                    self.assertEqual(stream.getvalue(),(prefix+'Label      value\n')*3)
+                    stream.seek(0);stream.truncate()
+                    for label_code in (None,'1;35'):
+                        ui.resource_detail('Project',None,display='a long path 界 '*8,label_code=label_code,label_width=0)
+                    plain=stream.getvalue()
+                    self.assertTrue(plain.startswith(prefix+'Project a long path'))
+                    self.assertTrue(all(cells(line)<=width for line in plain.splitlines()))
+                    stream.seek(0);stream.truncate()
+                    ui.detail_spans('',[('flush left',None)],label_width=0,label_gap=0,indent=0)
+                    self.assertEqual(stream.getvalue(),'flush left\n')
 
     def test_published_rules_and_native_kind_parity(self):
         paths = [('file.special','file',''), ('file.png','file','image/png'),

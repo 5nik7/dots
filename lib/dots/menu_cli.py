@@ -43,6 +43,7 @@ def leaves(family, names):
 
 
 ACTIONS = (
+    Action('todo', 'todo', ('todo', 'browse'), kind='popup', icon='󰄬'),
     Action('keys', 'keys', ('keys',), ('--browse',), 'popup', '󰌆'),
     group('tmux', '', route=('menu', 'tmux'), tool='tmux'),
     group('files', '󰉋'), group('git', '', tool='git'), group('theme', '󰏘'), group('themes', '󰏘'),

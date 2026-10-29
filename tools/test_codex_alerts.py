@@ -66,6 +66,58 @@ class Queue(unittest.TestCase):
         self.environment.start()
         self.addCleanup(self.environment.stop)
         self.prefs = alerts.preferences()
+        # Existing focus cases exercise terminals that actually report focus.
+        # The stock Termux policy has its own conservative regressions below.
+        self.prefs['termux']['focus_policy'] = 'terminal'
+
+    def test_termux_unknown_focus_retains_alert_until_explicit_ack(self):
+        self.prefs['termux']['focus_policy'] = 'conservative'
+        self.panes(focused=True)
+        with patch.object(alerts, 'focused_at_receipt', return_value=True) as focus:
+            alerts.record(event(), self.prefs)
+            focus.assert_not_called()
+        self.assertEqual(len(self.run_events()), 1)
+        self.assertEqual(self.run_events(False), [])
+        self.assertEqual(self.phases()[0]['phase'], 'alert')
+        row = dict(pane='%2', thread=THREAD)
+        with patch.object(alerts, 'snapshot', return_value=[row]), patch.object(alerts, 'tick'), \
+                patch.object(alerts, 'bounded', return_value=b'/dev/pts/9\t%2\n'):
+            with self.assertRaises(ValueError):
+                alerts.acknowledge_pane('/unused/socket', '%2', client='/dev/pts/8')
+            with self.assertRaises(ValueError):
+                alerts.acknowledge_pane('/unused/socket', '%2', thread=OTHER)
+            self.assertEqual(self.phases()[0]['phase'], 'alert')
+            alerts.acknowledge_pane('/unused/socket', '%2', client='/dev/pts/9')
+        self.assertEqual(self.phases()[0]['phase'], 'ack')
+        self.assertEqual(self.run_events(), [])
+
+    def test_termux_policy_does_not_change_linux_focus(self):
+        self.prefs['termux']['focus_policy'] = 'conservative'
+        with patch.dict(os.environ, TERMUX_VERSION=''):
+            self.panes(focused=True)
+            alerts.record(event(), self.prefs)
+            self.assertEqual(self.run_events(), [])
+            self.assertEqual(self.phases()[0]['phase'], 'ack')
+
+    def test_linked_windows_and_location_snapshot(self):
+        rows = alerts.parse_inventory((f'@2 %2 123 1 1 {THREAD} $1 10\n'
+                                       f'@2 %2 123 1 1 {THREAD} $2 11\n').encode())
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['sessions'], [dict(id='$1', created=10), dict(id='$2', created=11)])
+        self.panes()
+        graph = dict(panes=rows, clients=[dict(session='$1', tty='pts/3')],
+                     tabs=[dict(pid=7, started=100, tty='pts/3')])
+        with alerts.database() as db:
+            db.execute('INSERT INTO topology VALUES (?,?)', ('socket-a', json.dumps(graph)))
+        alerts.record(complete(message='x' * 300), self.prefs)
+        messages = self.run_events()
+        self.assertEqual(len(messages), 1)
+        self.assertLessEqual(len(messages[0]), 240)
+        self.assertIn('Termux 1', messages[0])
+        self.assertIn('$1/@2/%2', messages[0])
+        document = json.loads((alerts.status.alert_root() / 'overview.json').read_text())
+        self.assertTrue(document['servers'][0]['panes'][0]['attention'])
+        self.assertNotIn('message', document['servers'][0]['panes'][0])
 
     def panes(self, focused=False, state='waiting', socket='socket-a', thread=THREAD, window='@2', pane='%2'):
         with alerts.database() as db:
@@ -218,7 +270,7 @@ class Queue(unittest.TestCase):
         message = alerts.excerpt('choice', '\x1b[31mWhich\noption? $(touch NEVER) #{x}\x00', 240)
         alerts.notify_device(message, self.prefs)
         calls = [json.loads(row) for row in log.read_text().splitlines()]
-        self.assertEqual(calls, [['-d', '300', '-f'],
+        self.assertCountEqual(calls, [['-d', '300', '-f'],
                                 ['-b', '#123456', '-c', '#abcdef', '-g', 'middle', '-s', '--', message]])
         self.assertNotIn('\x1b', message)
         self.assertNotIn('\n', message)
@@ -229,6 +281,21 @@ class Queue(unittest.TestCase):
         del os.environ['TERMUX_VERSION']
         alerts.notify_device('not Android', self.prefs)
         self.assertEqual(len(log.read_text().splitlines()), 2)
+
+    def test_android_requests_start_independently_and_remain_bounded(self):
+        import threading
+        ready = threading.Barrier(2)
+        calls = []
+        def request(command, timeout):
+            calls.append((command[0], timeout))
+            ready.wait(timeout=3)  # Neither tool waits for the other's response.
+            if command[0] == 'termux-vibrate':
+                raise TimeoutError('fixture slow API')
+            return b''
+        with patch.object(alerts.shutil, 'which', side_effect=lambda command: command), \
+                patch.object(alerts, 'bounded', side_effect=request):
+            alerts.notify_device('fixture', self.prefs)
+        self.assertCountEqual(calls, [('termux-vibrate', 5), ('termux-toast', 5)])
 
     def test_bounded_subprocess_and_unsafe_runtime(self):
         start = time.monotonic()

@@ -208,5 +208,52 @@ print(sys.argv[4])
                 self.assertFalse(calls.exists())
 
 
+class FullStartup(unittest.TestCase):
+    def test_cold_warm_fallback_and_integration_order(self):
+        sys.path.insert(0, str(REPO / 'lib/dots'))
+        from debug.fixtures import fixture
+        for shell in ('bash', 'zsh'):
+            if not shutil.which(shell):
+                continue
+            with self.subTest(shell=shell), fixture(REPO) as (repo, env, base):
+                env.update(DOTS_TERMUX_AUTOSTART='1', TERMUX_VERSION='fixture', TERMUX_APP__PID='123')
+                # Observe the real loader boundary without loading plugins or
+                # starting a tmux server. The launcher remains an owned stub.
+                debug = repo / 'lib/dots/shell/debug.bash'
+                with debug.open('a') as out:
+                    out.write('\n_dots_debug_event() { if [[ $1:$2:$3 == end:startup:phase ]]; then export FIXTURE_STARTUP_ENDED=1; fi; return 0; }\n')
+                hook = repo / 'shells/shared/termux-tmux.sh'
+                hook.write_text('[[ ${FIXTURE_STARTUP_ENDED:-} == 1 && -z ${_dots_startup_shell+x} ]] || return 33\n' + hook.read_text())
+                launcher = repo / 'profiles/termux/bin/termux-bar'
+                launcher.parent.mkdir(parents=True)
+                launcher.write_text('import os,pathlib\nassert os.environ["FIXTURE_STARTUP_ENDED"] == "1"\n'
+                                    'with pathlib.Path(os.environ["HOME"],"calls").open("a") as f:f.write("launch\\n")\n')
+                calls = Path(env['HOME']) / 'calls'
+                flags = ['--noprofile', '--norc'] if shell == 'bash' else ['-df']
+                code = '_DOTS_STARTUP_MODE=full; source "$DOTS/lib/dots/shell/startup.bash"; source "$DOTS/lib/dots/shell/startup.bash"'
+                def run(code):
+                    master, slave = pty.openpty()
+                    try:
+                        process = subprocess.Popen([shutil.which(shell), *flags, '-ic', code], env=env,
+                                                   stdin=slave, stdout=slave, stderr=subprocess.PIPE)
+                        _, err = process.communicate(timeout=30)
+                        self.assertEqual(process.returncode, 0, err.decode())
+                        return err
+                    finally:
+                        os.close(slave)
+                        os.close(master)
+                for count in (1, 2):
+                    error = run(code)
+                    self.assertNotIn(b'preparation unavailable', error)
+                    self.assertEqual(calls.read_text().splitlines(), ['launch'] * count)
+                # Preparation failure still reaches a guarded, usable shell.
+                (repo / 'lib/dots/startup.py').write_text('raise SystemExit(1)\n')
+                error = run(code)
+                self.assertIn(b'preparation unavailable', error)
+                self.assertEqual(calls.read_text().splitlines(), ['launch'] * 3)
+                run('source "$DOTS/lib/dots/shell/startup.bash"')
+                self.assertEqual(calls.read_text().splitlines(), ['launch'] * 3)
+
+
 if __name__ == '__main__':
     unittest.main()

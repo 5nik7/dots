@@ -17,5 +17,4 @@ source "$DOTS/shells/shared/aliases.sh"
 [[ ! -r $HOME/.bash_aliases || $HOME/.bash_aliases -ef $DOTS/shells/bash/aliases.bash ]] || _dots_hook_source "$HOME/.bash_aliases" private-aliases 1
 source "$DOTS/shells/bash/integrations/fzf.bash"
 source "$DOTS/shells/shared/tmux-workspaces.sh"
-source "$DOTS/shells/shared/termux-tmux.sh"
 true

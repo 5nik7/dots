@@ -42,7 +42,7 @@ def help_view(directories, words):
             return controller('git/submodule.py', ['--help-context', *words[2:]])
     sys.path.insert(0, str(LIB / 'files'))
     from catalog import Presentation
-    ui = Presentation()
+    ui = Presentation(detail_indent=2 if words[:1] == ['todo'] else 4)
     stem = '-'.join(words)
     rows = catalog(directories)
     metadata = read(LIB / 'metadata' / (stem + '.meta')) if stem in BUILTINS else rows.get(stem)
@@ -84,6 +84,10 @@ def complete(root, directories, words):
             if extra.is_absolute() and extra.is_dir(): directories = [*directories, extra]
             previous = previous[2:]
         else: break
+    if previous[:1] in (['todo'], ['__todo_standalone']):
+        from todo_completion import complete as todo_complete
+        todo_complete([*previous[1:], current], standalone=previous[0] == '__todo_standalone')
+        return 0
     if previous[:1] in (['blastoff'], ['pkgs']):
         from bundled_apps import complete as bundled_complete
         return bundled_complete(root, [*previous, current])
@@ -407,6 +411,7 @@ def main(argv=None):
     if parts[0] == 'wiki': return controller('wiki.py', [*parts[1:], *rest])
     if parts[:2] == ['git','wiki']: return controller('wiki_git.py', [*parts[2:], *rest])
     if parts[0] == 'keys': return controller('keys_cli.py', [*parts[1:], *rest])
+    if parts[0] == 'todo': return controller('todo_cli.py', [*parts[1:], *rest])
     if parts[0] == 'debug': return controller('debug_cli.py', [*parts[1:], *rest])
     if parts[0] == 'env': return controller('environment.py', rest)
     if parts[0] == 'git':

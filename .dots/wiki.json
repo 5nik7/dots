@@ -188,6 +188,12 @@
       "title": "Application plugins",
       "source": "docs/plugins.md",
       "section": "Tools"
+    },
+    {
+      "id": "Todo",
+      "title": "Todo goals",
+      "section": "Managing Dots",
+      "source": "docs/todo.md"
     }
   ]
 }

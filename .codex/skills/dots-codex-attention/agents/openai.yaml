@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dots Codex Attention"
+  short_description: "Maintain Codex alerts across tmux and Termux"
+  default_prompt: "Use $dots-codex-attention to maintain the Dots attention bridge and verify its focus, session identity and notification behavior."

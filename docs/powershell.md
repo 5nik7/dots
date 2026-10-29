@@ -148,3 +148,7 @@ Anodize static help uses the core Python logo renderer with the [same LOGO1/LOGO
 Combined setup installs the launchers in `~/.local/bin` through the shared installation receipt. Application configuration paths remain unchanged; see [bundled applications](bundled-applications.md). Native PowerShell 5.1/7 acceptance remains a named pending gate.
 
 The [Codex attention bridge](themes.md#codex-attention-notifications) has no native Windows tmux or Android destination. Its setup helper refuses that platform explicitly; portable event/configuration tests may run with Python from PowerShell. WSL uses its own Linux configuration and state and must not reuse native Windows Codex files.
+
+## Todo
+
+`todo.ps1` forwards literal arguments directly to the shared standalone controller. `dots.ps1 todo` pins the Dots checkout; standalone invocation detects a project or uses global scope. Native completion preserves this distinction and reads aliases, UUIDs and tags on demand. Alias editing, schema-2 JSON and the note append route use the same controller as Bash. The popup uses native terminal FZF and a PowerShell preview command, never Bash/WSL. The installer includes `todo.ps1`; skill links retain existing privilege/refusal rules. Native PowerShell 5.1/7 runtime, completion and terminal acceptance for todo is pending; Python bridge fixtures are separate evidence. See [todo](todo.md).

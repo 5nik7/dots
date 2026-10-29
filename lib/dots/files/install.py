@@ -313,6 +313,15 @@ class Installation:
         else:
             self.add('dots:command', home / '.local/bin' / launcher, link=self.root / 'bin' / launcher)
         self.plan_bundled_apps(home)
+        todo = self.root / 'bin' / ('todo.ps1' if self.platform == 'windows' else 'todo')
+        if todo.is_file():
+            self.guard(todo)
+            if self.platform == 'windows':
+                quoted = str(todo).replace("'", "''")
+                self.add('dots:todo:command', home / '.local/bin/todo.ps1',
+                         text="& '" + quoted + "' @args\nexit $LASTEXITCODE\n")
+            else:
+                self.add('dots:todo:command', home / '.local/bin/todo', link=todo)
         for app, path, artifact in connectors:
             desired = self.state / 'current/theme' / artifact
             old = os.readlink(path) if path.is_symlink() else ''

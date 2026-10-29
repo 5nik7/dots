@@ -1,10 +1,11 @@
 """Project-aware interactive tmux navigation; read-only live-session data modes."""
 import argparse
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import json
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
@@ -44,6 +45,8 @@ class Session:
     attached_clients: int
     current: bool
     created: int
+    attention: int = 0
+    attention_panes: tuple = ()
 
     def entry(self):
         unit = 'window' if self.windows == 1 else 'windows'
@@ -257,6 +260,7 @@ def action_menu(row, context, termux):
         entries.append(Entry('termux', 'new Termux', 'Attach in a new Termux tab', icon=''))
     if row is None:
         entries = [e for e in entries if e.id == 'new']
+    entries.append(Entry('alerts', 'Codex alerts', 'All registered tmux servers', icon=''))
     try:
         entry = choose(Menu('session-actions', 'Session actions', tuple(entries)), mode='browse', context=context,
                        navigation={}, prompt='dots·tmux·actions')
@@ -291,7 +295,7 @@ def browse(context=None, query=''):
     stack = [dict(project=None, frame=frame, action=None)]
     # Pin this server for the browser lifetime, including refresh after actions.
     while stack:
-        sessions = server.sessions() if server else ()
+        sessions = with_attention(server, server.sessions()) if server else ()
         rows = inventory(server, sessions, projects)
         view = stack[-1]
         project = view['project']
@@ -323,6 +327,11 @@ def browse(context=None, query=''):
         if action is None:
             continue
         view['action'] = None
+        if action == 'alerts':
+            outcome = browse_attention(context)
+            if outcome.selected:
+                return outcome
+            continue
         if selected is None and action != 'new':
             continue
         if selected and len(selected.sessions) > 1 and action != 'new':
@@ -372,6 +381,95 @@ def browse(context=None, query=''):
             if server:
                 server.verify()
     return SessionOutcome()
+
+
+def with_attention(server, items):
+    from codex_attention import load, sessions, socket_key
+    try:
+        key = socket_key(server.socket)
+    except OSError:
+        return items
+    records = {r['id']: r for r in sessions(load()) if r['key'] == key and r['attention']}
+    return tuple(replace(s, attention=records[s.id]['attention'],
+                         attention_panes=tuple(p for p in records[s.id]['panes'] if p['attention']))
+                 if s.id in records and s.created == records[s.id]['created'] else s for s in items)
+
+
+def browse_attention(context=None):
+    """Read-only overview; each explicit action pins and rechecks its target."""
+    from codex_attention import load, sessions, socket_key
+    from menu_session_host import is_termux, launch_termux, termux_transport
+    while True:
+        records = [(s, p) for s in sessions(load()) for p in s['panes'] if p['attention']]
+        entries = tuple(Entry(str(i), f"{Path(s['socket']).name} ({s['key'][:6]}) · {s['id']} / {p['window']} / {p['pane']}",
+                              p['state'] + ' · unread Codex alert', icon='')
+                        for i, (s, p) in enumerate(records))
+        try:
+            chosen = choose(Menu('codex-alerts', 'Codex alerts', entries), mode='browse', context=context,
+                            navigation={}, prompt='dots·tmux·alerts',
+                            header='Enter: actions  Esc: back\nCtrl-C: quit')
+        except SelectionEvent:
+            return SessionOutcome()
+        if chosen is None:
+            return SessionOutcome()
+        record, pane = records[int(chosen.id)]
+        actions = [Entry('ack', 'Acknowledge this alert', 'Leaves other threads unread')]
+        same = context is None or context.socket == record['socket']
+        if same:
+            actions.insert(0, Entry('open', 'Open this pane', icon=''))
+        if is_termux():
+            actions.insert(1 if same else 0, Entry('termux', 'New Termux tab', 'Attach to this tmux session', icon=''))
+        try:
+            action = choose(Menu('codex-alert-actions', 'Codex alert actions', tuple(actions)),
+                            mode='browse', context=context, navigation={}, prompt='dots·tmux·alert',
+                            header='Enter: choose  Esc: back\nCtrl-C: quit')
+        except SelectionEvent:
+            continue
+        if action is None:
+            continue
+        try:
+            if socket_key(record['socket']) != record['key']:
+                raise ValueError('alert server changed; reopen the alert list')
+            if context:
+                context.verify()
+            executable = shutil.which('tmux')
+            if not executable:
+                raise ValueError('tmux unavailable')
+            observed = observe([executable, '-N', '-S', record['socket'], 'display-message', '-p', '#{pid}'])
+            if observed.returncode or not observed.stdout.strip().isdecimal():
+                raise ValueError('alert server unavailable')
+            server = Server(executable, record['socket'], int(observed.stdout.strip()))
+            target = next((s for s in server.sessions() if s.id == record['id'] and s.created == record['created']), None)
+            if target is None or socket_key(record['socket']) != record['key']:
+                raise ValueError('alert session changed; reopen the alert list')
+            # Thread identity is checked again for acknowledgement, and pane
+            # membership is rechecked for navigation; labels never become code.
+            present = server.read('list-panes', '-s', '-t', target.id, '-F', '#{pane_id}').splitlines()
+            if pane['pane'] not in present:
+                raise ValueError('alert pane moved or closed; reopen the alert list')
+            if action.id == 'ack':
+                acknowledge_alert(server.socket, pane)
+            elif action.id == 'termux':
+                transport = termux_transport()
+                launch_termux(server, target, session_directory(server, target, os.getcwd()), transport=transport)
+                return SessionOutcome(selected=True)
+            else:
+                server.validate(target, context)
+                server.read('select-window', '-t', target.id + ':' + pane['window'])
+                server.read('select-pane', '-t', pane['pane'])
+                return SessionOutcome(selected=True, code=server.select(target, context))
+        except (OSError, ValueError, sqlite3.Error, subprocess.SubprocessError) as error:
+            show_message(clean(str(error)), context=context, title='Codex alerts', code=2)
+
+
+def acknowledge_alert(socket, pane):
+    import importlib.util
+    path = Path(__file__).resolve().parents[2] / 'config/tmux/codex-alerts.py'
+    spec = importlib.util.spec_from_file_location('dots_alert_bridge', path)
+    bridge = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bridge)
+    bridge.installation()
+    bridge.acknowledge_pane(socket, pane['pane'], thread=pane['thread'])
 
 
 def run(args):

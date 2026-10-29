@@ -233,6 +233,8 @@ Listings and successful session navigation return 0; invalid invocations and unr
 
 ### Tmux session menu
 
+With the optional attention bridge running, interactive rows/previews show unread Codex counts and window/pane locations. **F1 → Codex alerts** opens a bounded overview across registered servers. Select a pane, then choose Open this pane (same server), Acknowledge this alert, or New Termux tab (Termux only, also for other servers). Actions recheck socket/session/pane identity; opening the overview does not acknowledge anything. **Prefix a** acknowledges only the invoking Codex pane. Existing `--json`, `--print`, completion and redirected output contracts are unchanged.
+
 `dots menu tmux sessions [--print|--json|--browse] [--query TEXT] [--client CLIENT]`
 browses projects and manages sessions. The direct executable is
 `dots-menu-tmux-sessions`; Bash and native PowerShell metadata/help/completion
@@ -638,4 +640,10 @@ Current/theme-list/save/backup-list/doctor views in Blastoff and list/managers/d
 
 `dots files migrate apps` (also `dots files migrate-apps`) previews supported legacy application installations. `--yes` applies through the installation receipt and Store; `--dry-run` always wins and `--json` uses schema 1. It installs only application assets, retains backups and leaves unrelated configuration/themes untouched. `dots menu blastoff` and `dots menu pkgs` open common workflow families with the existing menu modes, terminal handoff and native availability rules. See [plugins](plugins.md).
 
-Codex attention setup is an explicit repository maintenance helper, documented under [tmux notifications](themes.md#codex-attention-notifications); it adds no public `dots` route or completion entry. Menu review: no menu is added because installing trusted lifecycle hooks requires the documented configuration preview and Codex's own `/hooks` review.
+Codex attention setup is an explicit repository maintenance helper, documented under [tmux notifications](themes.md#codex-attention-notifications); it adds no public `dots` route or completion entry. Menu review: setup stays a direct maintenance operation because installing lifecycle hooks requires its preview and Codex's `/hooks` review. The existing session picker is updated for everyday attention navigation and acknowledgement; it does not install or trust hooks.
+
+## Todo goals
+
+`dots todo` always selects the active Dots checkout. Standalone `todo` automatically selects the nearest Git/configured project or global goals; only standalone invocation accepts scope overrides. The command family provides add/list/show/edit/note/start/done/reopen/remove/restore/next/brief/browse/path. Bare terminal invocation browses, while redirected output lists active goals. Project mutations retain the project-name tag and backfill missing tags throughout only the selected project, including completed/removed records; reads never repair tags. Todo human views use a two-space base indent. Human lists put aliases (or short UUIDs) above titles, use compact Project/Goals fields and separate goals with a blank line. Titles, aliases and high priority use bold theme bright_magenta, accent and warning respectively; open status uses bold theme bright green throughout human views. See [todo](todo.md) for the authoritative workflow and options; static help/completion headers are generated from the shared todo command definitions.
+
+Menu review: **add** a cooperating goal popup and a Todo launcher entry. Stable IDs, inert previews, explicit removal confirmation, query/focus restoration and exact-client handoff use the shared menu adapters. No new tmux binding is installed. Bash, Zsh/FZF-tab, Fish and native PowerShell complete commands, fields, tags, goal aliases and UUIDs in the invocation's scope; help and static completion perform no project discovery.

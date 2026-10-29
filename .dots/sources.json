@@ -14,7 +14,8 @@
         "config",
         "shells",
         "scripts",
-        "bin"
+        "bin",
+        ".codex/skills/dots-todo"
       ]
     },
     {

@@ -162,6 +162,10 @@ The dispatcher forwards extension streams unchanged. First-party extensions, inc
 
 Preserve the unified theme data interfaces and palette helper APIs. The singular/plural theme split is defined by [decision 0013](decisions/0013-shell-environment-and-theme-collection.md); styling changes do not independently authorize API removal. Styling work must not add shell-startup scans, load live user configuration, require optional UI dependencies, or change command semantics.
 
+## Todo views
+
+Todo human views use a scoped semantic mapping: titles are bold theme `bright_magenta`, alias values are bold theme `accent` (including parent aliases), open status is bold `bright_green` (bold ANSI bright green when the palette role is unavailable), and high/normal/low priorities are respectively bold `warning`, regular `orange`, and bold `muted`. Missing warning roles fall back to bold ANSI yellow. Notes and acceptance text keep normal foreground. Other statuses retain their blue/green/yellow/muted roles. List rows, expanded details, mutation results, popup rows and previews share these spans; identifiers and separators remain independent. Todo uses a two-space base indent for help, detail/result fields, notes, acceptance items and popup previews, with flush-left headings. Human lists put the alias or short UUID above the title/status/priority summary at that same indent; Project/Goals fields have single label/value gaps. One blank line separates goal blocks, including implicit/`--print` lists and the missing-FZF fallback. Wrapped title/identifier lines retain the two-space base indent, other labeled views retain value alignment, and popup selection rows stay compact. Shared presentation defaults for other command families are unchanged. Alias labels fall back to short UUIDs, while detail views retain full UUID metadata and readable notes/acceptance blocks. Argparse coloring is disabled where available; Todo help renders plain usage definitions through Dots, avoiding nested ANSI sanitization. See [todo](todo.md).
+
 ## Acceptance Gate
 
 For each new or changed human view, the focused plan must identify:

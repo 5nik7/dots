@@ -1,0 +1,67 @@
+{
+  "schema": 2,
+  "goals": [
+    {
+      "id": "765a9e892a1547cd994aad89c7132f87",
+      "title": "Rework dots config system. locsl to dots repo. aeperate config for each profile",
+      "notes": "add 'dots config' command to edit config opts from the cli",
+      "status": "open",
+      "priority": "high",
+      "tags": [
+        "core",
+        "config",
+        "profile",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [],
+      "created": "2026-10-28T23:38:53.422616+00:00",
+      "updated": "2026-10-29T04:42:10.882331+00:00",
+      "completed": null,
+      "removed": null,
+      "alias": "profile-configs"
+    },
+    {
+      "id": "3ccf699e4d10499498d7198afbd1665f",
+      "title": "Rework dots config system. Portable and local",
+      "notes": "",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "font",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [],
+      "created": "2026-10-29T00:29:55.789876+00:00",
+      "updated": "2026-10-29T04:42:10.882331+00:00",
+      "completed": null,
+      "removed": "2026-10-29T00:30:43.815007+00:00",
+      "alias": null
+    },
+    {
+      "id": "1420613a8fb94c28a526104af9eba164",
+      "title": "Add 'dots fonts','fonts' command(s) to manage fonts. NerdFonts and Google fonts integration. Download, save, list, update/upgrade, set, Set termux system font, other dots files configs font options",
+      "notes": "",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "fonts",
+        "command",
+        "nerdfont",
+        "google",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [],
+      "created": "2026-10-29T00:39:19.780706+00:00",
+      "updated": "2026-10-29T04:42:10.882331+00:00",
+      "completed": null,
+      "removed": null,
+      "alias": "dots-fonts"
+    }
+  ]
+}

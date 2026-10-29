@@ -151,6 +151,18 @@ dots_complete() {
   (( cursor >= 1 && cursor < ${#words[@]} )) || return 2
   # Standalone wrappers share this same completion protocol.
   local command_name=${words[0]##*/}
+  if [[ $command_name == todo ]]; then
+    python3 -B "$DOTS_LIB_DIR/todo_completion.py" standalone "${words[@]:1:cursor}"
+    return
+  fi
+  local todo_index=1
+  while (( todo_index < cursor )); do
+    case ${words[todo_index]} in --color=*|--icons=*|-r|--raw) (( ++todo_index )) ;; *) break ;; esac
+  done
+  if [[ $command_name == dots && ${words[todo_index]} == todo && $todo_index -lt $cursor ]]; then
+    python3 -B "$DOTS_LIB_DIR/todo_completion.py" dots "${words[@]:todo_index+1:cursor-todo_index}"
+    return
+  fi
   if [[ $command_name == theme ]]; then
     words=(dots theme "${words[@]:1}"); ((cursor+=1))
   elif [[ $command_name != dots ]]; then

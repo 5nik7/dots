@@ -95,7 +95,6 @@ class Compiler:
                 return self.module('lib/dots/shell/integration.bash', self.read('lib/dots/shell/integration.bash').split('[[ $- == *i* ]] || return 0\n', 1)[1])
             if name in ('shells/shared/platform.sh', 'shells/shared/app-env.sh'): return ''
             if name.startswith(('shells/shared/', 'shells/bash/core/', 'shells/zsh/core/')) or name in ('shells/zsh/functions.zsh','shells/zsh/options.zsh','shells/zsh/fzf.zsh','shells/zsh/completions.zsh'):
-                if name == 'shells/shared/termux-tmux.sh': return match[0]
                 return '\n# ' + name + '\n' + self.expand(name)
             return self.module(name, match[0], "source")
         body = re.sub(r'^source "(\$(?:DOTS|ZSH)/[^"\n]+)"\s*$', replace, body, flags=re.M)

@@ -83,6 +83,50 @@ class InstallationTests(unittest.TestCase):
         self.assertTrue(self.source.exists())
         self.assertFalse(self.receipt()['entries'])
 
+    def test_todo_command_and_skill_lifecycle(self):
+        for name in ('todo', 'todo.ps1'):
+            shutil.copy2(ROOT/'bin'/name, self.repo/'bin'/name)
+        skill = self.repo/'.codex/skills/dots-todo'
+        skill.mkdir(parents=True)
+        (skill/'SKILL.md').write_text('Fixture todo skill\n')
+        sources = json.loads((self.repo/'.dots/sources.json').read_text())
+        sources['sources'][0]['roots'].append('.codex/skills/dots-todo')
+        self.write('.dots/sources.json', sources)
+        catalog = json.loads((self.repo/'.dots/files.json').read_text())
+        catalog['resources'].append(dict(id='todo-skill',source='.codex/skills/dots-todo',
+            target='${HOME}/.codex/skills/dots-todo',strategy='directory-link',app='codex',category='skill',
+            platforms=['termux','linux','wsl','windows']))
+        self.write('.dots/files.json', catalog)
+        project_goals = self.repo/'.dots/todo.json'
+        project_goals.write_text('{"schema": 1, "goals": []}\n')
+        global_goals = self.home/'.state/dots/todo/global.json'
+        global_goals.parent.mkdir(parents=True)
+        global_goals.write_text('{"schema": 1, "goals": []}\n')
+        with mock.patch.dict(os.environ, self.env), mock.patch('install.platform', return_value='windows'):
+            native = Installation(self.repo)
+            native.plan_install()
+            operation = next(op for op in native.operations if Path(op['path']).name == 'todo.ps1')
+            self.assertIn(str(self.repo/'bin/todo.ps1').replace("'", "''"), operation['text'])
+            self.assertNotIn('bash', operation['text'])
+        name = 'todo.ps1' if os.name == 'nt' else 'todo'
+        command = self.home/'.local/bin'/name
+        command.parent.mkdir(parents=True)
+        command.write_text('Original command\n')
+        skill_target = self.home/'.codex/skills/dots-todo'
+        before = list(self.home.rglob('*'))
+        self.cli('install', '--dry-run', '--json')
+        self.assertEqual(before, list(self.home.rglob('*')))
+        self.cli('install', '--yes')
+        self.assertEqual(skill_target.resolve(), skill)
+        if os.name != 'nt': self.assertEqual(command.resolve(), self.repo/'bin/todo')
+        self.assertEqual(json.loads(self.cli('install', '--yes', '--json').stdout)['status'], 'unchanged')
+        self.cli('uninstall', '--yes')
+        self.assertEqual(command.read_text(), 'Original command\n')
+        self.assertFalse(skill_target.exists())
+        self.assertTrue(skill.exists())
+        self.assertEqual(project_goals.read_text(), '{"schema": 1, "goals": []}\n')
+        self.assertEqual(global_goals.read_text(), '{"schema": 1, "goals": []}\n')
+
     def test_backup_survives_reconciliation(self):
         self.target.parent.mkdir(parents=True)
         self.target.write_text('before installation')
@@ -433,7 +477,7 @@ p.apply('install')
         # Copy only versioned public inputs, never ignored connectors or local
         # submodule contents. Include this change's new source files before commit.
         names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','--cached','--others','--exclude-standard','-z','--',
-            '.dots','bin','lib','plugins','default','themes','config','shells','ruby',
+            '.dots','.codex/skills/dots-todo','bin','lib','plugins','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
         names.update(('config/fsh/README.md','default/themed/eza.yml.tpl','default/themed/television.toml.tpl','default/themed/leaf.toml.tpl','lib/dots/themes/generation.bash',
                       'lib/dots/files/events.py', 'lib/dots/verbose.bash', 'lib/dots/files/app_paths.py'))

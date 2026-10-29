@@ -24,7 +24,7 @@ function __dots_complete_fish
         end
     end
 end
-for name in dots theme
+for name in dots theme todo
     complete -c $name -f -a '(__dots_complete_fish)'
 end
 set -l theme_state "$HOME/.local/state"

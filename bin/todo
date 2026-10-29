@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+_todo_source=${BASH_SOURCE[0]}
+[[ $_todo_source == /* ]] || _todo_source=$PWD/$_todo_source
+_todo_links=0
+while [[ -L $_todo_source ]]; do
+  (( ++_todo_links <= 40 )) || { printf 'todo: executable symlink loop\n' >&2; exit 1; }
+  _todo_target=$(readlink -- "$_todo_source") || exit 1
+  if [[ $_todo_target == /* ]]; then _todo_source=$_todo_target
+  else _todo_source=${_todo_source%/*}/$_todo_target; fi
+done
+DOTS=${DOTS:-$(cd -- "${_todo_source%/*}/.." && pwd -P)}
+export DOTS
+exec python3 -B "$DOTS/lib/dots/todo_standalone.py" "$@"

@@ -41,6 +41,7 @@ def read(path):
                             seen.add(flag)
                 kind = fields[2] if key == 'option' else fields[1]
                 allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-repository','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','theme-file','theme-app','dots-setting','profile-id','wiki-page','wiki-section'}
+                allowed.update(('todo-id', 'todo-tag'))
                 if kind not in allowed and not (kind.startswith('choice:') and all(kind[7:].split(','))):
                     raise ValueError('invalid metadata type: ' + kind)
                 if not fields[-1]: raise ValueError('empty metadata description')

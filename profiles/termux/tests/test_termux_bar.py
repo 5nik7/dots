@@ -62,13 +62,27 @@ class TermuxBar(unittest.TestCase):
                 G['default_session'](False, {'TERMUX_APP__PID': '10'}, 42, self.proc)
 
     def test_existing_session_collision_and_creation_race(self):
-        with patch('subprocess.run', return_value=result(out='')) as run:
+        import contextlib
+        import types
+        workspaces = unittest.mock.Mock()
+        workspaces.locked.side_effect = lambda: contextlib.nullcontext()
+        workspaces.sessions.return_value = ['$7']
+        workspaces.metadata.return_value = {'origin': '42-1234'}
+        workspaces.read.return_value = '$7'
+        factory = unittest.mock.Mock(side_effect=ValueError('no server running'))
+        module = types.SimpleNamespace(Workspaces=factory)
+        with patch.dict('sys.modules', tmux_workspaces=module), patch('subprocess.run', return_value=result(out='')) as run:
             with self.assertRaises(G['BarError']):
                 G['ensure_session']('tmux', 'termux-42-1234')
             self.assertEqual(run.call_count, 2)
-        with patch('subprocess.run', side_effect=[result(1), result(1), result(out='1\n')]):
-            self.assertEqual(G['ensure_session']('tmux', 'termux-42-1234'), '=termux-42-1234')
-        with patch('subprocess.run', side_effect=[result(1), result(1), result(1)]):
+        factory.side_effect = [ValueError('no server running'), workspaces]
+        with patch.dict('sys.modules', tmux_workspaces=module), \
+                patch('subprocess.run', side_effect=[result(1), result(1), result(out='1\n')]):
+            self.assertEqual(G['ensure_session']('tmux', 'termux-42-1234'), '$7')
+            workspaces.reconcile.assert_called_once_with(adopt=True, session='$7')
+        factory.side_effect = ValueError('no server running')
+        with patch.dict('sys.modules', tmux_workspaces=module), \
+                patch('subprocess.run', side_effect=[result(1), result(1), result(1)]):
             with self.assertRaises(G['BarError']):
                 G['ensure_session']('tmux', 'termux-42-1234')
 

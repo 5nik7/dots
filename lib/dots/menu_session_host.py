@@ -143,8 +143,11 @@ def launch_termux(server, session, cwd, *, transport=None):
         raise ValueError('New Termux is only available in Termux')
     executable = transport or termux_transport()
     server.validate(session)
+    # Attention is a transient display overlay, not part of the handoff identity.
+    identity = {key: getattr(session, key) for key in
+                ('id', 'name', 'windows', 'attached_clients', 'current', 'created')}
     payload = base64.urlsafe_b64encode(json.dumps(dict(schema=1, server=asdict(server),
-        session=asdict(session)), ensure_ascii=True).encode()).decode()
+        session=identity), ensure_ascii=True).encode()).decode()
     # Android's --esa uses comma-separated args (backslash escapes commas).
     # Base64 carries all observed strings as data, never interpolated shell code.
     args = ['-B', str(Path(__file__).resolve()), 'attach', payload]

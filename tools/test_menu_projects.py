@@ -406,7 +406,7 @@ class Projects(MenuFixture):
     def test_failed_launch_keeps_created_session_and_search(self):
         project=projects.Project(self.home,'home'); record=sessions.Session('$8','new-home',1,0,False,12)
         inactive=projects.Row('project','home',project)
-        active=replace(inactive,sessions=(record,)); server=Mock()
+        active=replace(inactive,sessions=(record,)); server=Mock(socket=str(self.home/'missing-socket'))
         def picker(rows, **kwargs):
             if rows==(inactive,):
                 kwargs['frame']['query']='home'

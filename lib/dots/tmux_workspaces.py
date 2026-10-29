@@ -40,9 +40,9 @@ def name_prefix(label):
     return re.sub(r'[.:\x00-\x1f\x7f]', '-', label).strip() or 'project'
 
 
-def configured_projects():
+def configured_projects(config=None):
     roots = [Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2])]
-    config = Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'dots/projects.json'
+    config = Path(config) if config is not None else Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'dots/projects.json'
     if config.exists():
         data = json.loads(config.read_text())
         if (not isinstance(data, dict) or type(data.get('schema')) is not int or data['schema'] != 1

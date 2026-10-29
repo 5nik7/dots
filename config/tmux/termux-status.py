@@ -7,6 +7,9 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'lib/dots'))
+import codex_attention
+
 
 COLOR = re.compile(r"(?:#[0-9a-fA-F]{6}|default|(?:bright)?(?:black|red|green|yellow|blue|magenta|cyan|white))\Z")
 TTY = re.compile(r"pts/[0-9]+\Z")
@@ -144,6 +147,72 @@ def render_tabs(snapshot, tty, colors, width, separator_fg, separator_bg):
     return divider.join(part for part in (before, selected, after) if part)
 
 
+def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_bg,
+                          states, undisplayed, alert_fg, alert_bg):
+    """Whole numeric labels, a reserved orphan badge, and alerted overflow."""
+    # Keep all legacy discovery/color validation and plain-strip behavior.
+    ordinary = render_tabs(snapshot, tty, colors, width, separator_fg, separator_bg)
+    if not states and not undisplayed:
+        return ordinary
+    if not all(COLOR.fullmatch(c) for c in (alert_fg, alert_bg)):
+        raise ValueError('invalid attention colors')
+    tty = tty.removeprefix('/dev/')
+    alert = f'#[bg={alert_bg},fg={alert_fg},bold,nounderscore,noreverse,nodim]'
+    divider = f'#[bg={separator_bg},fg={separator_fg},nobold,nounderscore,noreverse,nodim]│#[default]'
+    entries = []
+    for i, tab in enumerate(snapshot['sessions'], 1):
+        value = next((v for (pid, _, terminal), v in states.items()
+                      if pid == tab['pid'] and terminal == tab['tty']), {})
+        current = tab['tty'] == tty
+        active = value.get('attention', False)
+        marker = {'working': '', 'waiting': ''}.get(value.get('state'), '')
+        # Current activity is already visible in the lower row; attention must
+        # still be visible there and here under conservative focus handling.
+        marker = marker if not current or active else ''
+        if active and not marker:
+            marker = ''
+        label = str(i) + (' ' + marker if marker else '')
+        text = '[' + label + ']' if active else ' ' + label + ' '
+        bg, fg = colors[2:] if current else colors[:2]
+        style = alert if active else f'#[bg={bg},fg={fg},bold,nounderscore,noreverse,nodim]'
+        entries.append((style + text + '#[default]', len(text), active))
+    if len(entries) == 1 and not entries[0][2]:
+        entries = []
+    badge = f'[ {undisplayed}]' if undisplayed else ''
+    width = width if width is not None else 30
+    if width <= 0:
+        return ''
+    if badge and len(badge) > width:
+        return alert + ('!' if width < 3 else '[!]') + '#[default]'
+    budget = width - (len(badge) + int(bool(entries)) if badge else 0)
+    selected = next((i for i, tab in enumerate(snapshot['sessions']) if tab['tty'] == tty), 0)
+    if not entries or entries[selected][1] > budget:
+        # Keep a visible attention signal even when the tab label cannot fit.
+        parts = [alert + badge + '#[default]'] if badge else []
+        if not parts and any(e[2] for e in entries):
+            parts = [alert + ('[!]' if width >= 3 else '!') + '#[default]']
+        return ''.join(parts)
+    left, right = selected, selected + 1
+    def used(a, b):
+        return sum(e[1] for e in entries[a:b]) + b - a - 1 + 2 * (a > 0) + 2 * (b < len(entries))
+    while True:
+        candidates = [(a, b) for a, b in ((left - 1, right), (left, right + 1))
+                      if a >= 0 and b <= len(entries) and used(a, b) <= budget]
+        if not candidates:
+            break
+        left, right = min(candidates, key=lambda c: abs((selected - c[0]) - (c[1] - selected - 1)))
+    parts = [e[0] for e in entries[left:right]]
+    spare = budget - sum(e[1] for e in entries[left:right]) - len(parts) + 1
+    if left and spare >= 2:
+        parts.insert(0, (alert if any(e[2] for e in entries[:left]) else '#[default]') + '<#[default]')
+        spare -= 2
+    if right < len(entries) and spare >= 2:
+        parts.append((alert if any(e[2] for e in entries[right:]) else '#[default]') + '>#[default]')
+    if badge:
+        parts.append(alert + badge + '#[default]')
+    return divider.join(parts)
+
+
 def main(argv=None):
     args = list(sys.argv[1:] if argv is None else argv)
     output = ""
@@ -163,7 +232,7 @@ def main(argv=None):
             args.remove("--compact-badge")
         separator_colors = {}
         for arg in args[:]:
-            if arg.startswith(("--separator-fg=", "--separator-bg=")):
+            if arg.startswith(("--separator-fg=", "--separator-bg=", "--alert-fg=", "--alert-bg=")):
                 key, value = arg.split("=", 1)
                 if key in separator_colors:
                     raise ValueError("duplicate separator color")
@@ -185,8 +254,11 @@ def main(argv=None):
         if tabs:
             if split_current or split_badge or compact_badge:
                 raise ValueError('conflicting tab rendering modes')
-            output = render_tabs(json.loads(result.stdout), args[0][6:], args[1:], width,
-                                 separator_colors.get('--separator-fg'), separator_colors.get('--separator-bg'))
+            states, undisplayed = codex_attention.tab_states(codex_attention.load())
+            output = render_attention_tabs(json.loads(result.stdout), args[0][6:], args[1:], width,
+                                 separator_colors.get('--separator-fg'), separator_colors.get('--separator-bg'),
+                                 states, undisplayed, separator_colors.get('--alert-fg', 'brightred'),
+                                 separator_colors.get('--alert-bg', 'black'))
         else:
             output = render(json.loads(result.stdout), args[0][6:], args[1:], width,
                             split_current, split_badge, compact_badge,

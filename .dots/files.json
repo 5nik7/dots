@@ -603,6 +603,20 @@
       ],
       "target": "${HOME}/.zshrc",
       "strategy": "link"
+    },
+    {
+      "id": "todo-skill",
+      "source": ".codex/skills/dots-todo",
+      "target": "${HOME}/.codex/skills/dots-todo",
+      "strategy": "directory-link",
+      "app": "codex",
+      "category": "skill",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
     }
   ]
 }

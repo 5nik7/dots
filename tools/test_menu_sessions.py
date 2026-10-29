@@ -35,7 +35,7 @@ class SessionContracts(MenuFixture):
         return code, output.getvalue(), error.getvalue()
 
     def test_data_modes_filter_typed_records_without_selection(self):
-        server = Mock(); server.sessions.return_value = (self.record,)
+        server = Mock(socket=self.server.socket); server.sessions.return_value = (self.record,)
         with patch.object(sessions.Server, 'discover', return_value=server), \
                 patch('menus.shutil.which', side_effect=AssertionError('FZF probe')), \
                 patch.object(sessions.TmuxContext, 'capture', side_effect=AssertionError('client capture')), \
@@ -78,7 +78,7 @@ class SessionContracts(MenuFixture):
                 else: self.assertIn(error.strip(), err)
 
     def test_cancel_failure_and_missing_fzf_never_switch(self):
-        server = Mock(); server.sessions.return_value = (self.record,)
+        server = Mock(socket=self.server.socket); server.sessions.return_value = (self.record,)
         with patch.object(sessions.Server, 'discover', return_value=server), patch('menu_sessions.terminal', return_value=True), patch('menus.terminal', return_value=True), patch('menu_session_ui.terminal', return_value=True):
             for failure in (SelectionEnded(130), SelectionEnded(2)):
                 with patch('menu_session_ui.pick', side_effect=failure):
@@ -100,7 +100,7 @@ class SessionContracts(MenuFixture):
         self.assertEqual(call.call_args.args[0], ['/fixture/tmux', '-u', '-N', '-S', '/fixture/socket', 'attach-session', '-t', '$12'])
 
     def test_inherited_context_consumed_and_client_mismatch_refused(self):
-        server = Mock(); server.sessions.return_value = (self.record,)
+        server = Mock(socket=self.server.socket); server.sessions.return_value = (self.record,)
         context = TmuxContext('/fixture/tmux', '/fixture/socket', '/dev/pts/one', 12, '%1', '$1', str(self.home))
         server.select.return_value = 0
         with request_file(dict(schema=1, context=asdict(context))) as path, patch.dict(os.environ, DOTS_MENU_CONTEXT=str(path)), \

@@ -14,7 +14,7 @@ def main(argv=None):
     if len(argv) != 2:
         raise ValueError('native bridge requires a controller and encoded argument array')
     controller, encoded = argv
-    allowed = {'cli': 'cli.py', 'wttr': 'wttr/cli.py', **{name: 'files/' + name + '.py' for name in
+    allowed = {'cli': 'cli.py', 'wttr': 'wttr/cli.py', 'todo': 'todo_standalone.py', **{name: 'files/' + name + '.py' for name in
                ('catalog', 'check', 'repair', 'manage', 'mappings', 'install', 'browser')}}
     if controller not in allowed:
         raise ValueError('unknown native controller')

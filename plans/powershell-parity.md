@@ -161,3 +161,7 @@ Anodize hint/info/accent text gradients use the shared Python helper on native W
 Blastoff and pkgs absorption adds standalone PowerShell launchers and shared native routes/completion. The explicit Blastoff session opt-in forwards to the bundled launcher on 5.1/7 without importing an external module. pkgs package operations are an explicit native Windows exception (status 3), while help/version remain available. Native 5.1/7 and WSL acceptance remains pending; see [bundled application plan](bundled-applications.md).
 
 Codex attention notifications (2026-10-28): explicit native-Windows exception for the tmux/procfs worker and Termux device calls; no Windows destination or Bash invocation is added. Shared event/configuration logic remains Python-testable. Termux native fixtures do not establish native PowerShell execution or Linux/WSL visual acceptance. See the [focused notification plan](tmux-status-and-sessions.md#codex-attention-notifications-2026-10-28).
+
+## Todo follow-up
+
+The shared todo controller, native standalone literal bridge, scope-aware completion and terminal FZF/PowerShell previews are implemented. Explicit aliases, schema-2 JSON, note appends and semantic detail views share this controller; no native-only storage or Bash fallback is added. Native Windows PowerShell 5.1/7 execution, interactive editing/completion, cancellation and managed skill-link privilege acceptance remain pending. See [todo plan](todo.md) and [todo documentation](../docs/todo.md).

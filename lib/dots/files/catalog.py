@@ -26,7 +26,7 @@ PLATFORMS = {"termux", "linux", "wsl", "windows"}
 
 class Presentation:
     """Python rendering of the same terminal/color/icon policy as ui.bash."""
-    def __init__(self, stream=None, *, terminal=None):
+    def __init__(self, stream=None, *, terminal=None, detail_indent=4):
         self.stream = stream if stream is not None else sys.stdout
         terminal = (self.stream.isatty() if terminal is None else terminal) and os.environ.get("TERM", "dumb") != "dumb"
         mode, icons = os.environ.get("DOTS_COLOR", "auto"), os.environ.get("DOTS_ICONS", "auto")
@@ -34,6 +34,7 @@ class Presentation:
         self.icons = icons == "always" or (icons == "auto" and terminal)
         self.human = self.stream.isatty() or terminal or mode == "always" or icons == "always"
         self.width = max(24, shutil.get_terminal_size((80, 24)).columns)
+        self.detail_indent = detail_indent
         self.resources = Resources()
 
     def branch_label(self, value, detached=False):
@@ -87,7 +88,7 @@ class Presentation:
     def detail(self, label, value, code=None):
         text = ", ".join(map(str, value)) if isinstance(value, list) else "yes" if value is True else "no" if value is False else "not mapped" if value is None else str(value)
         label = self.clean(label)
-        prefix = f"    {label:<10} "
+        prefix = ' ' * self.detail_indent + f"{label:<10} "
         # Wrap display lines without losing the full path, including on phones.
         lines = textwrap.wrap(self.clean(text), width=max(8, self.width-len(prefix)), break_on_hyphens=False, replace_whitespace=False) or [""]
         self.emit(self.paint(prefix, "94") + (self.paint(lines[0], code) if code else lines[0]))
@@ -107,10 +108,11 @@ class Presentation:
         """Render a heading with independently styled, inert text spans."""
         self._spans(spans)
 
-    def detail_spans(self, label, spans, *, label_width=10, label_gap=1, indent=4):
+    def detail_spans(self, label, spans, *, label_width=10, label_gap=1, indent=None, label_code='94'):
         label = self.clean(label)
+        indent = self.detail_indent if indent is None else indent
         prefix = ' ' * indent + label + ' ' * max(0, label_width - resource_cells(label)) + ' ' * label_gap
-        self._spans(spans, prefix, '94')
+        self._spans(spans, prefix, label_code)
 
     def _spans(self, spans, prefix='', prefix_code=None, *, continuation_prefix=None):
         """Wrap inert text first, then color independently styled value spans."""
@@ -134,7 +136,7 @@ class Presentation:
                     offset = 0
             self.emit(line)
 
-    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None):
+    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None, *, label_width=10):
         text = self.clean(self.path(path) if display is None else display)
         style = code
         if path is not None and self.human and (self.color or self.icons):
@@ -142,8 +144,10 @@ class Presentation:
             style = code or resolved
             if self.icons:
                 text = icon + ' ' + text
-        prefix = f"    {self.clean(label):<10} "
-        colored_prefix = self.paint(prefix, '94') if label_code is None else '    ' + self.paint(f'{self.clean(label):<10}', label_code) + ' '
+        indent = ' ' * self.detail_indent
+        padded_label = f'{self.clean(label):<{label_width}}'
+        prefix = indent + padded_label + ' '
+        colored_prefix = self.paint(prefix, '94') if label_code is None else indent + self.paint(padded_label, label_code) + ' '
         for i, part in enumerate(resource_wrap(text, max(8, self.width-len(prefix)))):
             self.emit((colored_prefix if i == 0 else ' ' * len(prefix)) +
                       (self.paint(part, style) if style else part))
