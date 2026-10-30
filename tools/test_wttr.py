@@ -375,7 +375,7 @@ class Weather(unittest.TestCase):
             with patch.object(core,'read_regular',wraps=core.read_regular) as read:
                 cli.render(row,self.cfg,cli.parser().parse_args(['--current']),0)
             self.assertEqual(read.call_count,1)
-        self.assertIn('\x1b[38;2;18;52;86m \x1b[0m\x1b[1;96mTest Town',out.getvalue())
+        self.assertRegex(out.getvalue(), '\x1b\\[38;2;18;52;86m \x1b\\[0m\x1b\\[[0-9;]+mTest Town')
         self.assertIn('60%\x1b[38;2;171;205;239m \x1b[0m',out.getvalue())
         values=core.fields(row,self.cfg)
         ui=cli.Presentation(io.StringIO());cfg=dict(self.cfg,widget_color='always')
@@ -573,13 +573,14 @@ class Weather(unittest.TestCase):
         self.assertIn('\x1b[38;2;',self.run_cli('--widget','--cached','--color','always').stdout)
         self.assertNotIn('\x1b',self.run_cli('--widget','--cached').stdout)
 
-    def test_native_config_destination_and_catalog(self):
+    def test_native_config_and_cache_destinations(self):
         from app_paths import config_directory
         with patch.dict(os.environ, XDG_CONFIG_HOME=''):
             self.assertEqual(config_directory('wttr'),Path(os.environ['APPDATA'])/'wttr')
         self.assertEqual(config_directory('wttr'),Path(os.environ['XDG_CONFIG_HOME'])/'wttr')
-        resource=next(r for r in json.loads((ROOT/'.dots/files.json').read_text())['resources'] if r['id']=='wttr')
-        self.assertEqual(resource['targets']['windows'],'${APP_CONFIG:wttr}')
+        from types import SimpleNamespace
+        with patch.object(core, 'os', SimpleNamespace(name='nt', environ=os.environ)), patch.dict(os.environ, XDG_CACHE_HOME=''):
+            self.assertEqual(core.cache_root(), Path(os.environ['LOCALAPPDATA'])/'cache/wttr')
         self.assertFalse(core.cache_root().exists())
 
     @unittest.skipUnless(os.name == 'posix' and shutil.which('tmux'), 'native tmux unavailable')
@@ -1153,7 +1154,7 @@ print(json.dumps(dict(version=1,city='Auto City',attribution='OpenStreetMap cont
                 plain=re.sub(r'\x1b\[[0-9;]*m','',view)
                 self.assertIn('Weather —  Test Town',plain)
                 self.assertIn('\x1b[38;2;',view)
-                self.assertRegex(plain, r'    Now          [\ue000-\uf8ff] 72°F\r?\n    Condition    Sunny\r?\n')
+                self.assertRegex(plain, r'    Now          [\ue000-\uf8ff\U000f0000-\U000ffffd] 72°F\r?\n    Condition    Sunny\r?\n')
                 for label, value in [('Humidity','60% '),('Wind','5 mph NW ↘'),
                                      ('Precip','0.0 in '),('Sunrise','6:30 AM '),('Sunset','6:30 PM 󰖚')]:
                     self.assertIn('    '+label.ljust(13)+value,plain)

@@ -2,9 +2,53 @@
 
 This reference describes the data consumed and produced by the live theme, file catalog, shell and checkout installation controllers. Command-specific behavior is documented in [commands](commands.md), [files](files.md) and [installation](installation.md).
 
+## Font library and catalogs
+
+Fonts use schema-1 JSON. `<Dots state root>/fonts/collection.json` contains
+`families` keyed by `nerd:NAME`, `google:LICENSE_DIRECTORY/FAMILY` or content-derived
+`local:HASH`, plus `targets` keyed by app target and optional Windows Terminal GUID.
+Families retain name/provider, versions, preferred version, nullable pin and
+nullable installation. Version records contain filenames, SHA-256, family/style/
+full names, variant, monospace/variable metadata, axes, licenses, provenance,
+upstream fingerprint and payload-directory digest. Installations record one
+version/variant and expected destination digests. Targets record the version/face,
+configuration path/digest, explicit config path and optional profile GUID.
+
+Payloads use `<data>/dots/fonts/library/<identity hash>/<version hash>`. POSIX data
+uses XDG_DATA_HOME or `~/.local/share`; Windows uses LOCALAPPDATA. Catalogs use
+`<cache>/dots/fonts/catalog.json`, where cache is XDG_CACHE_HOME or `~/.cache` on
+POSIX, LOCALAPPDATA on Windows. Explicit XDG overrides take precedence. Both JSON
+documents are bounded to 32 MiB. Catalogs contain family/version specs, release-keyed
+glyph lists, last glyph version and refresh time. Nerd specs identify release tags,
+approved HTTPS assets and optional upstream SHA-256; Google specs identify exact
+commits, family paths and tree fingerprints. Imports record unknown upstream
+versions. External system inventory does not establish ownership.
+
+Command JSON uses `schema: 1` and `items`. Mutation results add `status` (`complete`,
+`unchanged`, or dry-run `preview`) and nullable `transaction`; previews enumerate
+operation paths/kinds. Post-commit refresh notices are separate from durable status.
+Exact path and single-icon formats are described in [fonts](fonts.md).
+
+The collection may additionally contain `directories`, keyed by the normalized absolute backend font-directory path (`abspath` plus native `normcase`). Each value is a schema-1 inventory with `families` and an empty `targets` object. Its version records add boolean `available`: uninstall sets it false while retaining the complete version metadata. Reinstallation validates the original payload digest. Directory payloads use `<directory>/.dots-fonts/library/<identity hash>/<version hash>`; loose files are never adopted. The inventory stays in local Dots state, not inside the checkout, and a moved/copied payload directory is not automatically owned.
+
+Version records may include `known_fonts` (the original face metadata) and boolean `partial`; `fonts` lists the actually retained faces. Compatible expansion unions available faces and licenses, preserves provider identity/fingerprint, and updates the payload digest. Filename, hash or metadata conflicts are refused. Legacy full records remain readable without migration. `adoptions` on the personal collection maps stable `installed:<normalized path hash>` IDs to owned external user lookup paths, with family ID, version, face and expected post-apply digest. These references protect retained payloads from removal.
+
+Active-profile `fonts.json` is schema 1 with an `applications` object keyed by target, optionally suffixed with `:<Windows Terminal GUID>`. Each entry records `id`, `version`, `face`, `variant`, `target`, nullable `config`/`app_profile`, `directory: "PROFILEFONTS"`, the selected `files` name-to-SHA256 map, display `name` and nullable exact `upstream` source specification. Reads never create it. Set, upgrade, rollback and explicit Restore update affected entries transactionally, preserving unrelated choices. Restore validates exact checksums; it does not select latest versions. This file neither establishes ownership of manually copied assets nor causes startup activation.
+
+Installed inventory returns stable path IDs, `ownership` (`managed`, `user`, `system`), `supported`, `migratable`, and nullable `reason`, plus path/display fields. Discovery failures appear in `notices`; unknown/protected ownership is copy-only. Downloaded browsing adds source store information. Multiple-family Install resolves exact versions before apply; `--from` controls source and `--directory` destination. Set's `--directory` remains source selection, while automatic retention and resulting app-origin references use the active profile.
+
+`DOTFONTS` is generated as `<checkout>/fonts` by the shared profile backend, alongside profile `*FONTS` names. `--directory` accepts only a backend-owned name or a matching absolute path; arbitrary environment values cannot redefine it. Aliases for the same path share an inventory. Directory install/update does not activate fonts. Explicit activation copies into the personal library and adds `directory` origin references to the top-level installed/target records. Directory `current` derives active selections from these references, including `selection: "user-fonts"` for registration. This allows a directory copy to be removed without breaking activation.
+
+Directory JSON adds `directory` to the response envelope. Directory family rows add `stored_versions` and `active`; version listing statuses are `stored`, `uninstalled` or `cataloged`. `directories` returns `name`, `aliases`, `path` and `status` for each destination. Directory journals use `fonts-directory-<path hash>-<action>`; scoped undo checks this prefix and retains the global collection drift guard. An unrelated later collection change can therefore block undo rather than overwrite another directory's inventory.
+
+Windows journal entries may add `font_registry: {name, before, after}`. Nullable
+native paths are constrained to the current-user Windows Fonts directory and a
+fixed HKCU font key. Mirror receipts use `<Dots state root>/fonts/registrations`.
+Registry preflight, reverse rollback and inverse transactions retain file guards.
+
 ## Shared menu records
 
-`dots menu --json` uses `menu: "dots"` and `title: "Dots menu"`, with exactly the base item fields below. Its ordered IDs are `todo`, `keys`, `tmux`, `files`, `git`, `theme`, `themes`, `anodize`, `blastoff`, `pkgs`, `debug`, `profile`, `profiles`, `wiki`, `env`; the schema-1 envelope and base item fields remain unchanged. Action meanings are documented in [launcher commands](commands.md#dots-workflow-menu). Availability reflects static command presence, required tmux/Git executables and platform/Python limits; it does not assert that a child inventory contains results. Data views never probe FZF or run those tools. They exclude icons, action arrays, environment and private transport even when decoration is forced.
+`dots menu --json` uses `menu: "dots"` and `title: "Dots menu"`, with exactly the base item fields below. Ordered IDs come from the fixed registry in `lib/dots/menu_cli.py`, including the Fonts submenu; the schema-1 envelope and base item fields remain unchanged. Action meanings are documented in [launcher commands](commands.md#dots-workflow-menu). Availability reflects static command presence, required tmux/Git executables and platform/Python limits; it does not assert that a child inventory contains results. Data views never probe FZF or run those tools. They exclude icons, action arrays, environment and private transport even when decoration is forced.
 
 **Implemented shared library, launcher and session-menu contract.** `Menu.document(query)` in `lib/dots/menus.py` returns schema 1 with `schema` (integer 1), `menu` (stable string ID), `title` (string), and ordered `items` (array). Each base item contains exactly `id`, `label`, `description`, `available` (boolean), and `reason` (string, empty when no reason is needed). IDs must be unique within a menu; unavailable entries require a reason. Icons, executable arguments, callbacks, transport paths and environment are excluded. The shared JSON view uses escaped JSON strings and emits no ANSI, even with decoration forced.
 
@@ -19,7 +63,7 @@ Listing filters use case-insensitive whitespace-separated terms matched against 
 ## Session browser projects
 
 Interactive `dots menu tmux sessions` and managed-workspace reconciliation read this optional file:
-`${XDG_CONFIG_HOME:-$HOME/.config}/dots/projects.json`. It is user-authored data;
+`projects.json` beside the active profile manifest (with legacy user-config fallback). It is user-authored data;
 Dots does not create or migrate it. Missing files use defaults; malformed files
 fail with a diagnostic. The schema is integer `1`, with optional `roots` and
 `projects` arrays. Unknown fields are rejected. Paths must be absolute or begin
@@ -67,6 +111,8 @@ hex `roles`; the Neovim reader still accepts earlier Catppuccin snapshots withou
 
 Bash/Zsh initialization projects native palette colors plus resolved Dots template colors into named associative arrays. Resolved Dots values take precedence; mode metadata is excluded. Variable ownership, reserved names, supported fields and compatibility behavior are defined by the [shell color API](themes.md#shell-and-neovim-behavior). This does not change the native palette JSON or Fish scalar interfaces.
 
+Interactive shell initialization supplies `esc`/`ESC` as the single escape character (`0x1B`) alongside `rst`/`RST` as `ESC[0m`, independently of theme and named-color switches. Generated Bash/Zsh theme initialization supplies the same scalars and reserves `esc` against direct color-array collisions. Scope and native spellings follow the [shell environment contract](shell-environment.md#variables-and-diagnostics); these are runtime values, not configuration settings or `dots env` query fields.
+
 ### Shared syntax template colors
 
 Both template renderers expose derived `git_added_tmtheme`, `git_deleted_tmtheme` and `git_modified_tmtheme` values from the resolved Git foreground roles. Hex colors pass through; `reset` becomes the resolved theme foreground because tmTheme foreground properties require a concrete RGB color. These are template-only tokens, not new palette fields or exported Git roles. The existing Git tokens retain their meanings. See [the shared syntax template](themes.md).
@@ -87,19 +133,16 @@ behavior. Existing cache/export paths and the palette schema are unchanged.
 
 ## Implemented Inventory Catalog Boundary
 
-The schema-1 JSON [file catalog](files.md) is implemented for locating, classifying and tracking
-source/target intent. It uses `.dots/sources.json` plus per-repository `.dots/files.json`,
-explicit platform applicability and qualified replacement IDs. Directory ownership
+The [file catalog](files.md#ownership-and-formats) joins the schema-2 core `.dots/files.json` registry (qualified IDs and platforms), schema-2 `.dots/sources.json` source ownership, and schema-1 profile implementation arrays. A registry entry without a profile mapping never installs. Legacy schema-1 catalogs remain readable. Public command JSON and transaction journals retain schema 1. Directory ownership
 conflicts with nested target claims. Catalog inspection and tracking are distinct from the managed operation routes. Installation, linking, copying, adoption and undo use the shared file transaction engine; linking is the default and copying is explicit.
 
 ## Implemented location and operation data
 
 Catalog resources accept optional boolean `enabled` (default true). False is a
-repository-wide stash: the record/source remains, while active target claims,
+profile-local stash: the record/source remains, while active target claims,
 replacement precedence and installation exclude it. Existing mappings and unknown
 metadata survive `files edit`; `files track --update` preserves optional metadata
-including disabled state and platform targets. Catalog schema remains 1 with this
-additive field; older CLIs must be updated before relying on stashing.
+including disabled state and extension metadata. Profile rows store one target; platform eligibility belongs to the core registry. Older schema-1 catalog target maps are compatibility inputs only.
 
 Mapping operations preserve the installation receipt's first-install baseline.
 An intentionally unlinked owned target uses `after: null` while retaining its
@@ -108,14 +151,14 @@ the link without mistaking that absence for drift. Uninstall may restore the
 original pre-install object. New live destinations are recorded with their own
 baseline. Catalog-only edits do not create installation receipts.
 
-The [catalog/location formats](files.md) are the bounded JSON schema-1 model under decision 0010. Per-repository `.dots/file-locations.json` describes platform-specific roots/exact paths, import destinations and exclusions. Existing catalog claims win over adoption; owner ambiguity and duplicate destinations are errors. Machine-local `dots/files.json` contains schema 1 and a boolean `backup`; CLI backup flags override it. Journals and snapshots have schema 1 and transaction IDs, object identities/hashes, phases and prior catalog/link metadata. They are machine state, not desired-state manifests. No arbitrary environment interpolation, hooks or private-source initialization is added.
+The [catalog/location formats](files.md) are the bounded JSON schema-1 model under decision 0010. Per-repository `.dots/file-locations.json` describes platform-specific roots/exact paths, import destinations and exclusions. Existing catalog claims win over adoption; owner ambiguity and duplicate destinations are errors. Profile `settings.files.backup` is a boolean; legacy `dots/files.json` supplies a schema-1 fallback. CLI backup flags override both. Journals and snapshots have schema 1 and transaction IDs, object identities/hashes, phases and prior catalog/link metadata. They are machine state, not desired-state manifests. No arbitrary environment interpolation, hooks or private-source initialization is added.
 
 The catalog's `files check` operation removes only approved absent-source entries
 through the same journal model. It adds no catalog fields; unrelated record data,
 replacement declarations and installation receipts are preserved. Its versioned
 inspection/result JSON is documented in [files](files.md#check-missing-sources).
 
-`files repair` uses existing schema-1 catalogs, transaction journals and installation receipts without migrating historical data. It preserves first-install `before`/`backup`/`index` values and updates `after` for repaired destinations in the same transaction, including explicitly approved same-resource drift. Newly repaired destinations receive a pre-repair baseline; correct pre-existing links remain unowned. Receipt evidence takes precedence over transaction evidence, which uses only the latest completed operation at the destination. `replacement_unavailable` alone is informational; only actual conflicting catalog claims block repair. Interactive issue/action identities and queued decisions stay internal and introduce no new catalog, receipt or JSON fields. The schema-1 command result is specified in [repair results](files.md#repair-managed-destinations).
+`files repair` uses the resolved registry/profile catalog plus existing schema-1 transaction journals and installation receipts without migrating historical data. It preserves first-install `before`/`backup`/`index` values and updates `after` for repaired destinations in the same transaction, including explicitly approved same-resource drift. Newly repaired destinations receive a pre-repair baseline; correct pre-existing links remain unowned. Receipt evidence takes precedence over transaction evidence, which uses only the latest completed operation at the destination. `replacement_unavailable` alone is informational; only actual conflicting catalog claims block repair. Interactive issue/action identities and queued decisions stay internal and introduce no new catalog, receipt or JSON fields. The schema-1 command result is specified in [repair results](files.md#repair-managed-destinations).
 
 Anodize presentation options and LOGO1/LOGO2 precedence are defined by the [logo contract](anodize.md#terminal-logo). The `base` layout selects exact LOGO1; data schemas and recipe bytes do not change.
 
@@ -138,9 +181,13 @@ and resolution. A sole flavor is the implicit default; ambiguous families requir
 a flavor. `logo.txt` is optional usage artwork, not executable input. The exact
 implemented contract is in [shared themes](themes.md#unified-commands-and-family-shortcuts).
 
+Generated command generations contain `names` (one actual executable basename per line) and `map.tsv` (one `executable<TAB>theme` pair per line, sorted by executable, with no header). Both columns use validated theme identifiers; mappings include unchanged names as identity pairs. Wrappers forward to the original theme, so the suffix changes neither family metadata nor explicit theme routes. The manifest and fingerprint cover both files, wrappers and existing completion artifacts. Old generations without `map.tsv` retain identity completion and remain valid for guarded replacement. Missing or modified manifest-covered files still trigger drift refusal.
+
+The shared allocator first reserves canonical theme names and Dots action names. Available canonical names are retained; external PATH collisions try exactly `name-theme`, then skip if it is also occupied or reserved by another canonical theme. Verified current generated command directories are excluded from executable probes. Naming is recomputed during publication, not shell startup; PATH changes alone do not immediately rename published commands. Windows lookup is case-insensitive and includes PATHEXT plus `.ps1`; POSIX lookup requires executable files. Parent-shell aliases and functions are not inspected. No command-name override setting is introduced.
+
 ## Dots shell environment
 
-Dots shell settings are literal data. Their data-only config.env grammar, override precedence, variable ownership and diagnostic JSON are defined in [the shell environment contract](shell-environment.md). Theme defaults are settings; active selections remain published state.
+Dots shell settings are literal data. Their profile fields, legacy data-only config.env grammar, override precedence, variable ownership and diagnostic JSON are defined in [the shell environment contract](shell-environment.md). Theme defaults are settings; active selections remain published state.
 
 ## Implemented file-style overlays
 
@@ -150,7 +197,7 @@ resolve per theme, and explicit false attributes override inherited true values.
 
 ## Implemented checkout installation boundary
 
-The bounded [file catalog](files.md) drives [checkout installation](installation.md). Its optional resource `targets` map overrides `target` by platform. Native Windows tokens and the installation receipt are documented in those references. `.gitignore` is not a desired-state manifest.
+The bounded [file catalog](files.md) drives [checkout installation](installation.md). Each selected profile supplies a single `target`; only legacy schema-1 catalog inputs use `targets` overrides. Native Windows tokens and the installation receipt are documented in those references. `.gitignore` is not a desired-state manifest.
 
 The implemented catalog schema is unchanged by the consolidated Git layout.
 For the fixed `dots:git` directory resource whose entry point includes
@@ -160,7 +207,7 @@ claimable nested catalog target. See [managed Git selection](files.md#consolidat
 
 ## Implemented Windows catalog destination token
 
-The existing bounded file catalog accepts `${APP_CONFIG:app}` with an optional relative suffix. On Windows, `files/app_paths.py` resolves the named application's directory and explicit `DOTS_APP_<APP>_CONFIG` override; unsupported or ambiguous locations yield an unmapped target. On other platforms the token is inapplicable. Catalog `targets.windows` can override a POSIX default. App-specific destinations do not redefine `${CONFIG}` globally. See [Windows app destinations](powershell.md#windows-app-destinations).
+The existing bounded file catalog accepts `${APP_CONFIG:app}` with an optional relative suffix. On Windows, `files/app_paths.py` resolves the named application's directory and explicit `DOTS_APP_<APP>_CONFIG` override; unsupported or ambiguous locations yield an unmapped target. On other platforms the token is inapplicable. The Windows profile supplies its native destination independently of POSIX profiles. App-specific destinations do not redefine `${CONFIG}` globally. See [Windows app destinations](powershell.md#windows-app-destinations).
 
 The implemented eza theme connector resolves `DOTS_APP_EZA_CONFIG` before `EZA_CONFIG_DIR` and the platform default; the authoritative [destination and template contract](themes.md#eza) defines validation and override precedence.
 
@@ -186,11 +233,12 @@ Directory `show` returns a bounded human/plain listing rather than file bytes. `
 
 ## Profile and expanded environment contracts
 
-Profile schema 1 uses `id`, optional `description`, `extends`, `environment`,
-`path` and `replaces_commands`; definitions and precedence are specified in
-[profiles](profiles.md#definitions-and-inheritance). Profile catalogs retain the
-existing explicit resource/replacement schema. The internal source flag `bundled`
+Profile schema 1 uses `id`, optional `description`, `alias`, `extends`, `environment`,
+`path`, `replaces_commands`, `settings` and `files`; definitions and precedence are specified in
+[profiles](profiles.md#definitions-and-inheritance). Profile mappings retain resource and replacement IDs; their platform eligibility comes from the core registry. The internal source flag `bundled`
 marks resources that no longer need optional-source acquisition.
+
+Profile `settings` maps registered shell names to validated strings and `files.backup` to a boolean. Profile `files` maps repository IDs to complete implementation arrays without `platforms` or `targets`. The most specific array replaces the inherited/default array for that repository; source ownership and installation receipts keep their existing identities. Profile edits and migration use Store transactions without introducing a new journal schema. See [profile configuration](profiles.md#profile-configuration).
 
 Environment JSON remains version 1 with `values.NAME.value` and `source`, adding
 `group`, inherited-match status, sensitivity, defaults and PATH contribution
@@ -269,9 +317,9 @@ Bundled command/completion/manual entries use the existing schema-1 installation
 
 ## Codex attention state
 
-The optional [attention bridge](themes.md#codex-attention-notifications) reads repository preferences from `config/tmux/codex-alerts.toml` (schema 1). Its event switches, unfocused-only/view-acknowledgement policy, Termux `focus_policy` (`conservative` by default, or explicitly verified `terminal`), vibration duration/force and toast semantic roles, gravity, short duration and excerpt limit are consumed directly. The polling interval is currently fixed at five seconds; unsupported schema/settings fail without notification. Full-label brackets and bold bright_red/darker_background use the existing tmux alert template rather than a competing palette.
+The optional [attention bridge](themes.md#codex-attention-notifications) reads repository preferences from `config/tmux/codex-alerts.toml` (schema 1). Its event switches, unfocused-only/view-acknowledgement policy, Termux `focus_policy` (`conservative` by default, or explicitly verified `terminal`), vibration duration/force and toast semantic roles, gravity, duration and excerpt limit are consumed directly. `toast_short = false` is the default and omits `termux-toast -s` for longer display; `true` selects short display. The polling interval is currently fixed at five seconds; unsupported schema/settings fail without notification. Full-label brackets and bold bright_red/darker_background use the existing tmux alert template rather than a competing palette.
 
-Explicit setup merges hooks into `${CODEX_HOME:-$HOME/.codex}/hooks.json`, edits only `notify`, `features.hooks`, `tui.notification_condition` and `tui.terminal_title` in personal TOML, and installs an owned `dots-notifications.json` record holding source paths and the previous notify argv. The final title field must be `thread-id`; missing/ambiguous IDs do not match a pane. These personal files belong to a retained Store transaction, not repository tracking or automatic checkout installation.
+Explicit setup merges hooks into `${CODEX_HOME:-$HOME/.codex}/hooks.json`, edits only `notify`, `features.hooks`, `tui.notification_condition` and `tui.terminal_title` in personal TOML, and installs an owned `dots-notifications.json` record holding source paths and the previous notify argv. The final title field must be `thread-id`: either a full lowercase UUID or Codex's 32-character form containing its first 29 characters followed by `...`. The latter resolves only against a unique full ID from the queue's event and lifecycle records, including acknowledged/stopped records; the incoming event ID participates during focus-at-receipt checks. The read-only identity query is capped at 4096 distinct IDs; an unavailable, unsafe, malformed or over-limit store leaves shortened fields unmatched. Missing/ambiguous IDs do not match a pane. Published snapshots and acknowledgement retain full UUIDs; raw titles and abbreviated IDs never enter the overview. These personal files belong to a retained Store transaction, not repository tracking or automatic checkout installation.
 
 Runtime state is private `${XDG_STATE_HOME:-$HOME/.local/state}/dots/codex-alerts/`: an SQLite queue, per-socket advisory locks, and atomic JSON attention snapshots. Events carry thread/turn/request identity, kind, timestamp, lifecycle phase and a bounded excerpt; acknowledgements retain IDs and erase excerpts. Socket keys include path, device and inode. Per-socket window snapshots retain their time/window-ID contract and are filtered against current foreground Codex presence before emitting private `@N:attention` tokens. An additional private schema-1 `overview.json` carries a bounded list of registered servers, original per-server observation timestamps, socket identities, pane/window IDs, thread identities, activity/attention, session IDs/creation times, attached-client TTYs and tab PID/start-time identities. Both snapshot types expire after 15 seconds; another worker cannot refresh a stale server observation. The overview reader limits input to 1 MiB, 16 servers, 2048 panes per server, 64 clients and 256 tabs; it rejects unsafe permissions, stale/replaced sockets and invalid records. No excerpts or raw titles enter the overview. An additive SQLite topology table preserves the existing event and deduplication tables. Rendering never writes this state. Cross-worker queue claims serialize; delivery is an at-most-once attempt and does not guarantee crash recovery of a claimed notification. There is no public command/data-schema change.
 
@@ -286,3 +334,11 @@ Titles allow 256 characters, notes 32,768, tags/criteria 1,024 per item and 256 
 Project mutations require a tag equal to the resolved root's basename (or anchor for a filesystem root), preserving its exact spelling. Append it when absent without changing custom tag order; replacement/clearing retains the required tag. Global tags are unrestricted by this rule. Every successful project mutation backfills all records, including completed and removed goals, in the same transaction. Schema/field shape is unchanged and reads expose stored tags without repair. Renaming a project adds the new name on its next mutation without deleting the old tag. Limits include the required tag; overflow reports the affected goal IDs and refuses the whole update. Mutation results include their normal target records, followed by any other repaired records once in document order. Only effective record changes update timestamps; missing-tag repair is an effective mutation, including for schema-1 storage, while repeat repairs are no-ops.
 
 List/show/next JSON is `{"schema": 2, "scope": {"kind": "project|global", "root": "absolute project path or null", "path": "absolute storage path"}, "goals": [...]}`. Mutation JSON adds `action`, `status` (`complete`, `planned`, `unchanged`) and `transaction` (ID or null). `note` appends to the existing notes string, inserting enough LF characters for a blank line between nonempty values while preserving both texts. It has no separate note IDs or timestamp fields. `--dry-run` returns proposed records without writing; an unchanged operation has no transaction. Goal ordering, filters, scope rules and lifecycle semantics are defined in [todo](todo.md). `path` emits the full storage path plus newline; Markdown and brief outputs are undecorated text.
+
+Brief exports begin with `/plan ` followed by an optional `$dots-todo-planning` reference, complete trusted interview/save/implementation instructions, exact scope, scoped command examples and the selected nonremoved subtree (including full notes, criteria and completed context). Missing skill availability does not remove the self-contained workflow. In execution mode, an explicit implementation request saves/reconciles the agreed tree and continues through the work with Todo status/note updates; a save-only request stops after saving. Interview-only mode instructions do not restart planning after approval. CLI print and popup print/copy use the same bytes; Codex's app-server receives the body with explicit Plan Mode instead of a slash command. The export is intentionally a Codex planning prompt; ordinary Markdown/JSON export contracts are unchanged.
+
+Private Codex associations use schema 1 under `<Dots state root>/todo/codex/<sha256>.json`; the key hashes the canonical goal-storage path, NUL separator and full goal UUID. Each record stores `schema`, `scope` (canonical storage path), `goal`, `thread`, `backend`, `cwd`, nullable `submission`, and optionally `previous_thread` after `--new`. A submission contains `key` (client message UUID), `state` (`sending` or `accepted`), `brief_hash` (SHA-256), and `turn` after acceptance. No prompt bodies or credentials are stored. `sending` is written before the RPC; uncertain delivery attaches without resending. Association files are bounded, validated and replaced atomically under a per-goal lock. They are machine-local integration state, not fields in portable goal JSON or a public JSON command contract.
+
+Visual preference literals and per-key precedence are defined in [profile visual preferences](profiles.md#icons-and-semantic-colors). `preferences.json` schema 1 contains flattened icon keys, resolved color-role fields and per-consumer projections. `colors.json` includes that document under `preferences`; native Lua is serialized as data. `resources.tsv` stores matcher kind, pattern, icon token, MIME and dependency-free fallback glyph. It does not own editable icon defaults.
+
+Generated profile variables and native maps come from `profile_environment.py`. Alias validation covers all declared profiles before assignments or config writes; aliases are not inherited. Application templates resolve after generated paths. Names, reserved-variable collision policy, immediate-directory discovery and shell representations are specified in [generated profile paths](profiles.md#generated-profile-paths).

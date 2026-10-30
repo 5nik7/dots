@@ -25,6 +25,8 @@ PREFIX = '@dots-workspace-'
 IDENTITY = re.compile(r'(?:[0-9]+-[0-9]+|[0-9a-f]{12})\Z')
 SESSION = re.compile(r'\$[0-9]+\Z')
 
+from profile_config import config_path
+
 
 def literal(value):
     value = str(value)
@@ -42,7 +44,7 @@ def name_prefix(label):
 
 def configured_projects(config=None):
     roots = [Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2])]
-    config = Path(config) if config is not None else Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'dots/projects.json'
+    config = Path(config) if config is not None else config_path('projects.json')
     if config.exists():
         data = json.loads(config.read_text())
         if (not isinstance(data, dict) or type(data.get('schema')) is not int or data['schema'] != 1

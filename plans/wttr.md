@@ -1,5 +1,39 @@
 # wttr and Termux daylight clock
 
+## Dots command and browser follow-up
+
+**Status: Implemented; native Windows/Linux/WSL terminal acceptance remains pending.** Approved on 2026-10-30. The existing standalone command stays in `bin`; its shared-style import ordering is repaired and the same controller is exposed as `dots wttr`, including `get`, `completion`, and explicit `browse` routes. Unrelated checkout work and existing provider, cache, rendering and data contracts are preserved.
+
+Menu assessment: **add** `wttr browse` / `dots wttr browse` and a Weather launcher entry for repeated report selection. Bare commands remain reports. Current, daily and hourly views open the shared fitted reader; location and units are session-only. Cached snapshots supply previews without providers. Report selection refreshes if needed; Refresh retries explicitly. Retain visibly aged stale data within configured `max_stale` after failures. Missing FZF/terminal support falls back to the ordinary report. No saved settings editor, scheduled refresh or new binding.
+
+Use shared menu/input/reader components, inert numeric preview identities and exact tmux client ownership; close selection before handoff and restore query/focus. Native Windows uses the native controller and terminal path with existing APPDATA/LOCALAPPDATA destinations, never WSL. Preserve literal arguments, plain/redirected/data output and all four completion surfaces. Browse accepts location, units, days, language, config, timeout, presentation, verbose, query and client options; incompatible output/stock modes fail before provider activity.
+
+Delivery order: startup repair; metadata/dispatch/completion; browser/launcher; integrated verification and canonical documentation/wiki synchronization. Apply the [presentation gate](../docs/presentation.md#acceptance-gate) at 40/80/120 columns and short heights, including light/dark and plain modes. Tests own homes/config/cache/state and use mocked weather/location and private tmux clients. Verify fresh/stale/expired/missing/error data, bounded requests, cancellation, fallback, literal inputs and unchanged data bytes. Native Windows PowerShell 5.1/7 and Linux/WSL terminal acceptance must be reported separately when unavailable. No Todo mutation, live activation, installation, commit or push is part of this implementation.
+
+### Follow-up evidence
+
+Verified sequentially on Termux using owned fixtures:
+
+| Check | Result |
+| --- | --- |
+| `python3 -B tools/test_wttr.py` | 49 cases: 48 passed; unavailable native PowerShell case skipped |
+| `python3 -B tools/test_wttr_browser.py` | All 17 passed |
+| `python3 -B tools/test_menu_launcher.py` | 19 cases passed initially; both remaining entry-list/count assertions passed after updating expectations for Weather and concurrent Fonts work |
+| `python3 -B tools/test_bash_dots.py` | All 24 passed |
+| `python3 -B tools/test_native_cli.py` | 17 cases: 16 passed; unavailable native PowerShell case skipped |
+| `python3 -B tools/test_menus.py` | All 24 passed |
+| `python3 -B tools/test_menu_pager.py` | All 15 passed |
+
+Browser checks exercise exact stock bytes and data/status parity through both dispatchers, four-shell metadata/artifact generation, literal location arguments, read-only previews, stale/expired failures, session-only controls, cancellation, fallback, help, and palette/plain rendering at 40/80/120 columns. Two attached private tmux clients verify popup ownership at those widths, including a 12-row terminal. An actual report/reader/unit-change/report/cancel round trip stays on its initiating client and preserves the configuration. Its PTY test waits for the final reader's prompt rather than sending input to the transient loading host.
+
+The restored weather suite also exposed outdated assumptions about a fixed heading ANSI code, BMP-only night glyphs, and a catalog resource absent from the current registry. Tests now retain reset/glyph coverage and verify the actual Windows config/cache destinations; canonical docs no longer advertise that absent managed resource. No mapping or installation was introduced.
+
+Generated weather artifacts, Bash/Zsh/Fish syntax, ShellCheck on the four Dots adapters, command metadata, relative Markdown links and whitespace checks passed. The local wiki was previewed and rebuilt through retained transaction `de65a1bac9a2459fac96dfe48e3b3119`; its check reported healthy. Shared-check logs and final browser/launcher rechecks are in `/data/data/com.termux/files/usr/tmp/dots-wttr-checks-jucc0t03`; the initial touched-source snapshot is `/data/data/com.termux/files/usr/tmp/dots-wttr-baseline-18ydglqa`.
+
+Native Windows PowerShell 5.1/7, Linux/WSL terminal behavior, real font appearance, public weather availability and real Android acquisition remain separate pending checks. No public providers, live tmux reload, completion/config installation, Todo mutation, commit or push occurred. Concurrent Fonts and pre-existing checkout changes were preserved.
+
+## Original weather and daylight implementation
+
 **Status: Implemented; native Windows and owner-device acceptance remain pending.** Owner approved this scope on 2026-10-22.
 
 - Add a standalone `wttr` command with a shared Python 3.11+ controller and Bash/native PowerShell entry points. Preserve the existing weather-script deletions and variants.

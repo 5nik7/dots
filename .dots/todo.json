@@ -3,22 +3,24 @@
   "goals": [
     {
       "id": "765a9e892a1547cd994aad89c7132f87",
-      "title": "Rework dots config system. locsl to dots repo. aeperate config for each profile",
-      "notes": "add 'dots config' command to edit config opts from the cli",
-      "status": "open",
+      "title": "Update/rework dots config system. locsl to dots repo saeperate config for each profile.",
+      "notes": "add 'dots config' command to edit config opts from the cli\n\nutilize the profile.json alreasly located in each profile dir. It will contain env vars, files, config setting. the files will be which dots files to links or copy(source and target). the dots core will interpret these files for instalation, update, save settings of dots(fipes,confifs,ect)i migrate files from ~/.config/dots/* file-colors.toml, git.conf, theme-plugins.json to the profile folder. keep the ~/.config/dots/themes intact.\n\nImplemented checkout-local profile settings, environment declarations and repository-scoped file mappings, plus dots config list/get/set/unset/path/check/migrate with shared Bash/native-controller metadata and completion. File editors save into the active profile; explicit regular-file copy installation supports update, drift refusal and uninstall restoration. Migrated all three legacy configuration files into profiles/termux through retained transaction 788862fbf9a64ab6994680b1419a783e; source/destination SHA-256 matched, themes tree metadata stayed unchanged, consumers resolve profile paths, and repeat migration has zero operations. Undo: dots files undo 788862fbf9a64ab6994680b1419a783e. Verification: configuration 10 tests; file platform 5, catalogs 9, operations 22, mappings 29, check 16, repair 48, profiles 13 plus added cache invalidation, shell environment 11, file colors 11, Git 27, native Git 24, Bash CLI 24; native CLI/profile-debug passed with runtime skips. PTYs at 40/80/120 columns and Python-free warm Bash/Zsh/Fish startup passed. Broader installation has the previously recorded WSL theme-repeat failure; two shell assertions reproduced against pre-task sources, and Xonsh/PowerShell runtimes are unavailable. Theme-plugin suite passed 20/21: its ten-second cold-publication limit fails both before and after this change; bounded lock/publication checks passed on both snapshots. Warm startup medians after the change: Bash 68.5 ms, Zsh 61.5 ms; no speed improvement claimed. All four profiles and 211 command definitions validate, 1036 documentation links pass, syntax and whitespace checks pass, and regenerated local wiki reports healthy. Native Windows/Linux/WSL/Nushell/Xonsh acceptance remains explicitly pending. Full evidence and the corrected legacy-test isolation incident are recorded in plans/profile-configs.md. Unrelated work preserved; no commit, push, reload or theme publication.\n\nImplemented profile presentation follow-up. Human config objects/resources now use shared Dots formatting; JSON remains --json and scalar/path output stays exact. Each base profile owns files.dots; arrays match the old catalog (42 Termux/Linux/WSL, 14 Windows). Added shared/default and inherited profile icons.toml/colors.toml, CLI edits/defaults/completion/check/undo, shared CLI and managed theme consumer bindings. Evidence: plans/profile-presentation.md and /data/data/com.termux/files/usr/tmp/dots-style-config-baseline-yusr89o8. Passes include config 10, style 7 (actual PTYs 40/80/120 and Python-free warm startup), profiles 14, resources 17, Bash CLI 24, native controller 17 with one skip, menu 21, publication rollback/idempotence 3, 35 Bash/native palette comparisons, Gitmux adapter 4, native private tmux reload/attention and Yazi Lua refresh checks. Native Windows/PowerShell and visible Yazi rendering remain named acceptance limits; existing Starship installed-module coverage fails on absent claude_context. Wiki rebuilt and healthy. No commit, push or live theme publication/reload.\n\nConfig popup follow-up implemented: terminal-default dots config, explicit browse route and launcher entry; profile/default scope, typed edits, guarded Save/Cancel, resets and retained undo. Evidence: plans/config-popup.md; 13 popup cases, shared menus/Todo/profile/style/Bash/native-controller suites passed, with one unavailable PowerShell runtime skip. Private two-client tmux checks at 40/80/120 columns and standalone input passed. Static metadata/docs checks and wiki check healthy.\n\nImplemented the approved core-registry/profile-backend follow-up. Permanent schema-2 core IDs/platform registry and source list; profiles own single-target implementations. Generated active/canonical/alias variables and native maps replace profile .env links. Added profile.alias CLI, popup and completion plus profile/file maintenance skills. Applicable inventory is unchanged on Termux/Linux/WSL/Windows (49/45/45/40). Latest 20-suite evidence: 359 tests, 309 passed, 49 skipped, one existing full-theme repeat/fingerprint failure; focused backend 13 passed including rollback, undo, adoption, alias collisions and cache/reload checks. Native Windows PowerShell and Xonsh execution remain pending. Paired warm startup: Bash 54.649 to 59.770 ms, Zsh 298.861 to 304.009 ms; no warm Python. Metadata 212 routes, syntax, links, config/profile checks and wiki checks passed. Wiki build transaction 026c942156f94c07b057ca983f1d9097. Details: plans/profile-backend.md; evidence: /data/data/com.termux/files/usr/tmp/dots-profile-backend-baseline-8ypn1z7o. No commit, push, live reload or installation performed.",
+      "status": "done",
       "priority": "high",
       "tags": [
         "core",
         "config",
         "profile",
+        "files",
+        "settinga",
         "dots"
       ],
       "due": null,
       "parent": null,
       "acceptance": [],
       "created": "2026-10-28T23:38:53.422616+00:00",
-      "updated": "2026-10-29T04:42:10.882331+00:00",
-      "completed": null,
+      "updated": "2026-10-30T03:27:38.063650+00:00",
+      "completed": "2026-10-29T22:47:21.665409+00:00",
       "removed": null,
       "alias": "profile-configs"
     },
@@ -44,8 +46,8 @@
     {
       "id": "1420613a8fb94c28a526104af9eba164",
       "title": "Add 'dots fonts','fonts' command(s) to manage fonts. NerdFonts and Google fonts integration. Download, save, list, update/upgrade, set, Set termux system font, other dots files configs font options",
-      "notes": "",
-      "status": "open",
+      "notes": "get fonts directly from source. add version control for nerd fonta.\n\nCompleted the approved installed-font, transfer, app-retention and saved-defaults follow-up. All nonremoved descendants are done. Focused verification and native/live acceptance limits are recorded in plans/fonts.md; no live fonts, commits or publication were changed.",
+      "status": "done",
       "priority": "normal",
       "tags": [
         "fonts",
@@ -58,10 +60,292 @@
       "parent": null,
       "acceptance": [],
       "created": "2026-10-29T00:39:19.780706+00:00",
-      "updated": "2026-10-29T04:42:10.882331+00:00",
-      "completed": null,
+      "updated": "2026-10-30T10:01:44.315789+00:00",
+      "completed": "2026-10-30T10:01:44.315789+00:00",
       "removed": null,
       "alias": "dots-fonts"
+    },
+    {
+      "id": "3b0fe81b73a641ddbce5f8cd96068860",
+      "alias": "pkgs-update",
+      "title": "Update dots pkgs/pkgs",
+      "notes": "pkgs upgrade output = ```pkgs: No controlling terminal. Use --yes for an intentional noninteractive transaction.``` should upgrade without an extra flag.",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "pkgs",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [],
+      "created": "2026-10-29T19:22:35.469882+00:00",
+      "updated": "2026-10-30T04:18:09.126032+00:00",
+      "completed": null,
+      "removed": null
+    },
+    {
+      "id": "e77312ba967e418b933de84d32d6abd4",
+      "alias": "tmux-codex",
+      "title": "fix tmux codex indicators and termux warning",
+      "notes": "when being asked for input by codex(ezample: during plan mode) it's showing waiting icon, what it should show is warning format.\n\ntermux-vibrate and termux-toast on codex alert not working\n\nIdentified the shared cause: Codex 0.165.0 truncates its final title UUID to 29 characters plus three dots, while the bridge required a full UUID. Added exact-format, unique resolution against received full event/lifecycle IDs, including collision guards and first-event focus handling. Both live panes resolve in a read-only probe. All 26 alert tests and 8 topology tests pass, including warning labels at 40/80/120 columns and mocked toast/vibration calls. The existing status suite has two unrelated magenta-number expectation failures against the already modified theme template. Live worker activation and actual Android appearance remain pending; do not mark complete yet.\n\nActivated with explicit approval by reloading only the owned Dots alert worker. Recovery: ~/.local/state/dots/tmux-recovery/codex-title-repair-onyamvja. Tmux identities and bindings are unchanged. Both live panes resolve canonical thread IDs, and a real asynchronous question reached alert phase with the status helper emitting attention for its pane. Two focused layout checks, five file-platform checks, 1017 documentation links, whitespace and the rebuilt wiki also pass. Awaiting user confirmation of actual toast/vibration appearance.\n\nLive acceptance passed: user confirmed Warning, toast, and vibration work for a real input request after activation. The input indicator child is complete. The requested issue is fixed and verified on Termux; remaining Linux/WSL and distinct real approval/completion acceptance are outside this reported input failure.\n\nFollow-up preference: toast_short is now false, omitting -s for longer display. Updated the default argv assertion and documentation; both focused notification tests, documentation links, whitespace and regenerated wiki checks pass. Sent the explicitly requested themed middle test toast without -s; the Termux command completed successfully.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "tmux",
+        "codex",
+        "termux",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [],
+      "created": "2026-10-29T19:27:36.265173+00:00",
+      "updated": "2026-10-29T20:07:14.738877+00:00",
+      "completed": "2026-10-29T20:02:54.070772+00:00",
+      "removed": null
+    },
+    {
+      "id": "39ae3f6c99d54b50bd774c8a20a064a0",
+      "alias": "codex-ask-fix",
+      "title": "fix codex asking for input being displayed as waiting icon",
+      "notes": "Implemented the title identity compatibility fix shared with parent tmux-codex. Isolated native fixtures now show full red/bold warning brackets for input and approvals with Codex-truncated titles at 40/80/120 columns. Live read-only identity resolution succeeds; worker activation remains pending. Kept existing notes and unrelated theme edits intact.\n\nActivated the repaired worker with approval. The real input request reached alert phase and the status helper emitted attention; the user confirmed the red bracketed warning, toast and vibration all work. Verification complete for the requested input indicator fix.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "e77312ba967e418b933de84d32d6abd4",
+      "acceptance": [],
+      "created": "2026-10-29T19:36:38.230122+00:00",
+      "updated": "2026-10-29T20:02:52.058256+00:00",
+      "completed": "2026-10-29T20:02:52.058256+00:00",
+      "removed": null
+    },
+    {
+      "id": "ac210c3301a8493fb6679bdd620958a4",
+      "alias": null,
+      "title": "create popup for nerdfonts icon searcher, keybinds to send to terminal, copy to clipboard",
+      "notes": "",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [],
+      "created": "2026-10-29T23:11:24.788248+00:00",
+      "updated": "2026-10-29T23:17:56.858136+00:00",
+      "completed": null,
+      "removed": "2026-10-29T23:17:56.858136+00:00"
+    },
+    {
+      "id": "4b1c5e43302e4c808e5b21f997429556",
+      "alias": null,
+      "title": "create 'fonts/dots fonts' command, subcommands, and opts/flags",
+      "notes": "Implemented dots fonts and standalone fonts, official Nerd Fonts/Google Fonts providers, versioned library, import/export, install/uninstall, pins, upgrade/rollback, app targets and guarded undo. Verification: 21 focused font tests; Bash/shared-controller, file-operation, completion and command metadata checks passed. See plans/fonts.md and docs/fonts.md. Native desktop and visible live Termux activation remain named acceptance limits; broader WSL theme-repeat and wiki publish-fixture failures are documented separately. Marked complete at the user's request for this implemented command scope.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [],
+      "created": "2026-10-29T23:13:28.774501+00:00",
+      "updated": "2026-10-30T07:38:11.971033+00:00",
+      "completed": "2026-10-30T07:38:11.971033+00:00",
+      "removed": null
+    },
+    {
+      "id": "6354e475e65c423dac97ada4eab5bc8b",
+      "alias": null,
+      "title": "create poopup for 'fonts/dots fonts'",
+      "notes": "Implemented the fonts browser and Fonts launcher submenu, version/variant/face actions, preserved search/selection, reviewed mutations and optional actual font previews. The private-tmux browser suite passed all 4 tests, including 40/80/120-column layouts and originating-client isolation. See plans/fonts.md for evidence and native-platform limits. Marked complete at the user's request.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [],
+      "created": "2026-10-29T23:20:00.156186+00:00",
+      "updated": "2026-10-30T07:38:14.354428+00:00",
+      "completed": "2026-10-30T07:38:14.354428+00:00",
+      "removed": null
+    },
+    {
+      "id": "12f70c56e0004280a1cf0cab259ede8a",
+      "alias": null,
+      "title": "create popup for nersfonts icon/symbol searcher. keybinds for send/insert to termina, and copy to clipboard.",
+      "notes": "Implemented release-matched Nerd Fonts glyph search. Enter/Alt-Y copies and closes, Alt-P prints the exact glyph, and Alt-I inserts literally into the verified originating tmux pane without Enter. Real private-tmux tests passed; clipboard effects used a test adapter. Outside tmux, copy/print remain available. See plans/fonts.md. Marked complete at the user's request.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [],
+      "created": "2026-10-29T23:23:04.414042+00:00",
+      "updated": "2026-10-30T07:38:17.427683+00:00",
+      "completed": "2026-10-30T07:38:17.427683+00:00",
+      "removed": null
+    },
+    {
+      "id": "b0a96f80edbf40f7b6953e68c033d412",
+      "alias": null,
+      "title": "golang support. pipe external package manager(s)(apt,pacman,npm,uv,pip,etc) standard out into pkgs and output preferential dots output style: colors, format, progress.",
+      "notes": "",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "3b0fe81b73a641ddbce5f8cd96068860",
+      "acceptance": [],
+      "created": "2026-10-30T04:50:53.378727+00:00",
+      "updated": "2026-10-30T07:52:04.114158+00:00",
+      "completed": null,
+      "removed": null
+    },
+    {
+      "id": "b26eda2e69e64981910161dbe5ca971a",
+      "alias": "dots-wttr",
+      "title": "fix wttr script and migrate script/command to be a dots command(dots wttr) + stand alone program(wttr, move to dots/bin). create popup.",
+      "notes": "",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [],
+      "created": "2026-10-30T05:48:41.810071+00:00",
+      "updated": "2026-10-30T07:16:29.517843+00:00",
+      "completed": "2026-10-30T07:16:29.517843+00:00",
+      "removed": null
+    },
+    {
+      "id": "2ad86387e0e74b998275dd3803aea3f4",
+      "alias": null,
+      "title": "Manage specific font versions in DOTFONTS and other Dots *FONTS directories",
+      "notes": "Requested follow-up: support installing, uninstalling, updating and using specific fonts and versions in the shared Dots fonts directory via SDOTSFONTS, or in another Dots-related *FONTS directory. Add SDOTSFONTS to the shared environment/profile backend and reuse its native shell adapters instead of defining independent shell-only paths. Current inspection found generated DOTSLINUXFONTS, DOTSWSLFONTS, DOTSTERMUXFONTS, DOTSWINDOWSFONTS, profile aliases and PROFILEFONTS, but no SDOTSFONTS.\n\nKeep track of every managed version, including retained versions and the active selection for each destination; updates or switching versions must not silently discard previous versions. Build on the existing versioned library and transaction/recovery engine, preserving existing fonts and unrelated destination contents.\n\nDependencies: completed fonts command goal 4b1c5e43302e4c808e5b21f997429556 and existing profile/backend work tracked by 765a9e892a1547cd994aad89c7132f87. Existing implementation context: docs/fonts.md, plans/fonts.md and lib/dots/profile_environment.py. This is a new open follow-up, not a claim that directory targeting is already implemented.\n\nUser correction: the shared font variable is DOTFONTS, not SDOTSFONTS. This supersedes the spelling in the original request notes. Directory installation stores versioned payloads only; explicit use/set activates them, as agreed. Implementation and isolated directory, popup, backend and command checks are in progress; final verification is running with the corrected name.\n\nImplemented DOTFONTS in the shared profile backend and --directory selection by backend name or path in fonts/dots fonts. Added directories and use, storage-only install/download/import/update/upgrade, exact-version uninstall with persistent history, independent per-directory inventories, provenance/checksums and activation origins. Explicit use/set copies into the personal library, so directory uninstall preserves active fonts and other copies. Pins, ownership checks, stale guards, journaled recovery and scoped undo remain enforced. The popup has an Alt-D directory chooser and keeps scope through reviewed handoffs. Help, completion, canonical docs and local wiki are synchronized.\n\nVerification: 168 passed and 19 existing platform/optional-fixture skips across 12 isolated suites, including 13 directory tests, 21 fonts tests, 5 real private-tmux/FZF browser tests and 14 backend tests. Generated adapters, 241-command metadata validation, Python/Bash syntax, 1105 relative Markdown links and whitespace checks pass. Local wiki build/check passed (transaction ee6b8d6f8abf43258b530fc0c257e0e5). Paired fixture timing runs and Python-free warm startup checks are recorded in plans/fonts.md.\n\nNative PowerShell 5.1/7, native Windows registration/locked-file recovery and visible desktop/device activation remain pending; fixture results do not establish those. No live fonts, app settings or shell session were activated/reloaded, and no commit or push was made. Preserved unrelated working-tree changes, including existing repository font deletions.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "fonts",
+        "versions",
+        "environment",
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [
+        "The shared Dots backend exposes DOTFONTS for the shared fonts directory and resolves existing Dots/profile *FONTS directories consistently across supported native shell adapters and platforms.",
+        "Both fonts and dots fonts can install, uninstall, update and use a specifically selected font/version in DOTFONTS or another explicitly selected Dots *FONTS directory.",
+        "Persistent inventory tracks every managed font version per destination, including source/release or revision, checksums, retained or installed state and the active selection; restarting the CLI preserves this information.",
+        "Updating or switching a font preserves other retained versions and permits selecting an earlier retained version; uninstall affects only the selected font/version and destination while keeping other versions, directories and version history intact.",
+        "Destination changes use reviewed, journaled operations with ownership checks, drift refusal and recovery; isolated tests and matching help, completion and documentation cover directory selection and version tracking."
+      ],
+      "created": "2026-10-30T07:39:31.069099+00:00",
+      "updated": "2026-10-30T08:38:50.541539+00:00",
+      "completed": "2026-10-30T08:38:50.541539+00:00",
+      "removed": null
+    },
+    {
+      "id": "022292f71f29492c8d9e1a3ddad7f556",
+      "alias": "installer-update",
+      "title": "update installer and uninstaller scripts with more options, fancy dots style preferences output, dots logo.txt header with gradient. interactive mode by default.",
+      "notes": "",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "install",
+        "uninstall",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [],
+      "created": "2026-10-30T09:11:40.887425+00:00",
+      "updated": "2026-10-30T09:12:39.167456+00:00",
+      "completed": null,
+      "removed": null
+    },
+    {
+      "id": "843b750136864c10a973e119aa4f4b9b",
+      "alias": null,
+      "title": "Installed-font inventory and partial-version retention",
+      "notes": "Dependencies: completed directory/version goal 2ad86387e0e74b998275dd3803aea3f4. Implement shared installed-font discovery, ownership classification and partial-version coverage. Keep source identities separate from display labels; never scan on shell startup/help/completion.\n\nImplemented installed discovery with stable path IDs, ownership/format reporting and additive partial-version retention. Compatible files accumulate without losing identity, history or prior faces. Old records remain readable. Isolated font, directory and workflow checks pass; reads and completion do not run installed discovery or migrate state. Evidence: plans/fonts.md.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [
+        "Installed inventory distinguishes managed, external user-owned and system/package-owned fonts with stable IDs and explicit unsupported-format reasons.",
+        "Partial directory retention accumulates compatible faces and family variants without overwriting prior files or changing provider version identity.",
+        "Old inventories remain readable; drift and conflicting content are refused, and reads do not migrate state."
+      ],
+      "created": "2026-10-30T09:27:35.730372+00:00",
+      "updated": "2026-10-30T10:01:36.744835+00:00",
+      "completed": "2026-10-30T10:01:36.744835+00:00",
+      "removed": null
+    },
+    {
+      "id": "66ce98cf1b284eae86600b89a8a945f2",
+      "alias": null,
+      "title": "Fonts action menu, copying, migration and batch installation",
+      "notes": "Dependencies: 843b750136864c10a973e119aa4f4b9b and completed popup goal 6354e475e65c423dac97ada4eab5bc8b. Agreed action menu, Copy and safe Migrate; downloaded-font destination chooser includes Dots stores and current-user OS installation. Use existing transaction/reader/context primitives; no implicit approval.\n\nImplemented the action-first Fonts popup and launcher entries, Installed/Downloaded workflows, reviewed Copy and safe Migrate, batch Install with independent --from/--directory scopes, no-op skipping, and cache refresh on migration undo. Private tmux/FZF at 40/80/120 columns verifies menu cancellation and originating-client isolation. Bash/native controller, completion and launcher checks pass. Native Windows desktop acceptance remains separately pending; registry lifecycle is tested with owned substitutes. Evidence: plans/fonts.md.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [
+        "The main Fonts popup and launcher expose Installed fonts, Set font, Downloaded fonts, catalogs, directories, current selections, saved defaults/restore and icons.",
+        "Copy preserves original installations; migration only adopts proven user-owned fonts with backups and functioning platform activation. Protected fonts are copy-only.",
+        "Batch installs use reviewed exact versions, support Dots directories and native user installation, skip identical content and preflight conflicts before mutation.",
+        "Cancellation, scope/query preservation, native command/completion parity and 40/80/120-column private-popup checks pass."
+      ],
+      "created": "2026-10-30T09:27:37.808294+00:00",
+      "updated": "2026-10-30T10:01:39.063376+00:00",
+      "completed": "2026-10-30T10:01:39.063376+00:00",
+      "removed": null
+    },
+    {
+      "id": "db437e53aa064cc3b585103cd8701bae",
+      "alias": null,
+      "title": "Automatic app-font retention, saved preferences and Restore",
+      "notes": "Dependencies: 843b750136864c10a973e119aa4f4b9b, 66ce98cf1b284eae86600b89a8a945f2 and completed CLI goal 4b1c5e43302e4c808e5b21f997429556. Store in active-profile fonts directory; Termux retains only selected TTF, desktop apps retain chosen variant styles. Preserve current custom Termux font before first replacement. Save profiles/<active-profile>/fonts.json and add explicit Restore, with missing catalog versions downloaded as needed. Do not adopt missing app configs or apply on startup. All accepted changes are one guarded transaction. No live activation, commit or publication during implementation verification.\n\nImplemented automatic active-profile retention on Set/use --target: one chosen TTF for Termux, selected-variant styles for desktop apps, prior custom Termux preservation, exact profile fonts.json preferences and explicit Restore. Missing cataloged versions stage before one guarded transaction; rollback includes preferences and archives. 17 workflow checks pass, including missing imports, failed downloads, exact remote restore, multi-app changes and preference-write failure rollback. Across focused/affected suites: 124 passed, 1 unavailable-runtime skip. Docs and local wiki synchronized (cf2e85aaf6704ba4ac13a183870c23c2); no live font activation, commit or publication. Native desktop/device acceptance limits remain in plans/fonts.md.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1420613a8fb94c28a526104af9eba164",
+      "acceptance": [
+        "Set and use --target retain fonts in the active profile: one TTF for Termux and all styles of the selected family variant for desktop applications; prior selections remain retained.",
+        "Missing selected catalog versions are downloaded and validated before a single transaction applies storage, installation, app settings, preferences and inventory.",
+        "Active-profile fonts.json records exact app choices and explicit Restore reapplies them without upgrading or mutating during shell startup.",
+        "Isolated tests cover current Termux-font preservation, partial-family expansion, stale state, missing local imports, failed downloads, rollback, idempotence and multi-app/batch changes.",
+        "Help, metadata, completion, canonical docs, focused plan and generated wiki match behavior, with native acceptance limits recorded."
+      ],
+      "created": "2026-10-30T09:27:39.845275+00:00",
+      "updated": "2026-10-30T10:01:41.916147+00:00",
+      "completed": "2026-10-30T10:01:41.916147+00:00",
+      "removed": null
     }
   ]
 }

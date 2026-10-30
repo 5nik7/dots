@@ -50,6 +50,9 @@ def settings(root):
             valid(key, value)
             values[key] = dict(value=value, source='config')
             seen.add(key)
+    from profile_config import settings as profile_settings
+    if not os.environ.get('DOTS_CONFIG_FILE'):
+        values.update({key: row for key, row in profile_settings(root).items() if key in kinds})
     for key in kinds:
         value = os.environ.get(key)
         if value:
@@ -60,7 +63,10 @@ def settings(root):
         if key != '-': values[key] = dict(value=str(root / relative), source='checkout')
     if os.name == 'nt': values['THEMESCMD'] = dict(value=str(root / 'bin/theme.ps1'), source='checkout')
     state = state_root()
-    values['DOTS_CONFIG_FILE'] = dict(value=str(config), source='resolved')
+    from profile_config import context
+    layers = context(root)['layers']
+    reported = Path(layers[-1]['root']) / 'profile.json' if layers and not os.environ.get('DOTS_CONFIG_FILE') else config
+    values['DOTS_CONFIG_FILE'] = dict(value=str(reported), source='resolved')
     values['DOTS_STATE_DIR'] = dict(value=str(state), source='resolved')
     selection = os.environ.get('DOTS_THEME_SELECTION')
     identity = dict(value=selection or values['DOTS_THEME_DEFAULT']['value'], source='environment' if selection else 'default')
@@ -98,7 +104,7 @@ def declarations(root, profile=None):
         rows['XDG_DATA_HOME'] = ('${LOCALAPPDATA}', 'platform:windows')
         rows['XDG_STATE_HOME'] = ('${LOCALAPPDATA}', 'platform:windows')
     for layer in profile['layers']:
-        rows.update({key: (value.replace('${PROFILE}', layer['root']), 'profile:' + layer['id']) for key, value in layer.get('environment', {}).items()})
+        rows.update({key: (value, 'profile:' + layer['id']) for key, value in layer.get('environment', {}).items()})
     return rows
 
 
@@ -106,6 +112,10 @@ def inspect(root):
     profile = resolve(root)
     values = settings(root)
     context = dict(os.environ, DOTS=str(root))
+    from profile_environment import Model
+    generated = Model(root, profile)
+    context.update(generated.scalars)
+    values.update({key: dict(value=value,source=generated.origins[key],group='Paths') for key,value in generated.scalars.items()})
     context.setdefault('HOME', str(Path.home()))
     context.setdefault('APPDATA', str(Path.home() / 'AppData/Roaming'))
     context.setdefault('LOCALAPPDATA', str(Path.home() / 'AppData/Local'))

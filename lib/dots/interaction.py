@@ -167,7 +167,7 @@ class RichSelector:
             height=None, preview_size=55, header=None, environment=None,
             info=None, bindings=(), initial_indices=None, navigation=None,
             navigation_keys=None, hscroll=True, preview_position=None, event_selection=False,
-            focus_index=None, preview_lines=None, preview_wrap=False):
+            focus_index=None, preview_lines=None, preview_wrap=False, wrap=False):
         # Optional bindings are trusted controller code, never selected labels.
         indices = range(len(labels)) if initial_indices is None else list(initial_indices)
         if initial_indices is not None and (any(type(i) is not int or not 0 <= i < len(labels) for i in indices)
@@ -192,6 +192,8 @@ class RichSelector:
                       '--print-query', '--expect=' + ','.join(events)]
         if not hscroll:
             flags += ['--no-hscroll']
+        if wrap:
+            flags += ['--wrap', '--wrap-sign=']
         if preview_position not in (None, 'down', 'right'):
             raise ValueError('invalid preview position')
         if preview_lines is not None and (type(preview_lines) is not int or preview_lines < 1):
@@ -206,7 +208,6 @@ class RichSelector:
             flags += ['--query=' + query]
         if info is not None:
             flags += ['--info=' + info]
-        flags += ['--bind=' + binding for binding in bindings]
         if multi:
             flags += ['--bind=tab:toggle+down,btab:toggle+up,ctrl-a:select-all,ctrl-d:deselect-all']
             keys += '\nTab: mark  Shift-Tab: mark/up\nCtrl-A: all matches  Ctrl-D: clear'
@@ -221,6 +222,8 @@ class RichSelector:
                 flags += ['--bind=alt-c:execute-silent(' + preview[1] + ')+refresh-preview']
                 keys += '\nAlt-C: change preview view'
             keys += '\nAlt-P: pane  Alt-J/K: scroll'
+        # Trusted caller bindings may override built-in preview keys.
+        flags += ['--bind=' + binding for binding in bindings]
         flags = [f for f in flags if not f.startswith('--header=')] + ['--header=' + (keys if header is None else header)]
         if not color:
             flags += ['--color=bw']

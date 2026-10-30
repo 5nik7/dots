@@ -13,6 +13,8 @@ from transactions import parents_safe
 
 FAILURES = {'different', 'stale'}
 
+from profile_config import config_path
+
 
 def result(status='unknown', basis='unsupported', reason='No bounded check is available for this consumer.', paths=(), automation=None):
     summary = {'matches': {'environment': 'environment matches', 'installed-content': 'installed content matches'}.get(basis, 'matches current'),
@@ -226,7 +228,7 @@ class Verifier:
 
     def automation(self, app):
         from plugins import PATTERN
-        data = self.optional(self.config / 'dots/theme-plugins.json')
+        data = self.optional(config_path('theme-plugins.json'))
         if data is None: return 'disabled'
         doc = json.loads(data)
         if doc.get('schema') != 1 or not isinstance(doc.get('enabled'), dict): return 'unknown'
@@ -243,7 +245,7 @@ class Verifier:
     def plugin(self, app):
         automation = self.automation(app)
         if app == 'starship':
-            from starship import update_palette
+            from starship import update_palette, update_symbols
             path = Path(self.env.get('STARSHIP_CONFIG') or self.inspection.home / '.config/starship.toml')
             data = self.bytes(path)
             doc = tomllib.loads(data.decode('utf-8-sig'))
@@ -253,7 +255,9 @@ class Verifier:
             colors = expected['palettes']['dots']
             if expected.get('palette') != 'dots' or not colors or any(not re.fullmatch(r'#[a-fA-F0-9]{6}|reset', v) for v in colors.values()):
                 raise ValueError('invalid generated palette')
-            matches = update_palette(data, colors) == data
+            preference_path = self.generation / 'preferences.json'
+            preferences = json.loads(self.text(preference_path)) if preference_path.is_file() else {}
+            matches = update_symbols(update_palette(data, colors), preferences) == data
             return result('matches' if matches else 'different', 'installed-content',
                           'Selected Starship Dots palette ' + ('matches.' if matches else 'differs from the generation.'), [path], automation)
         from plugin_apps import GTK_BLOCK, qt_registration

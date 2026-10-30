@@ -15,9 +15,19 @@ for name in ['DOTS_ENV_HOOKS' 'DOTS_ENV_ORIGINS'] {
 }
 # Shared profile and application environment, transferred as inert JSON.
 if (which python3 | is-not-empty) {
-    let resolved = (^python3 -B ($env.DOTS | path join 'lib/dots/native_environment.py') | complete)
+    let resolved = (^python3 -B ($env.DOTS | path join 'lib/dots/native_environment.py') --document | complete)
     if $resolved.exit_code == 0 {
-        let data = ($resolved.stdout | from json)
+        let document = ($resolved.stdout | from json)
+        let data = $document.exports
+        for name in $document.unset { hide-env --ignore-errors $name }
+        for name in ($env._dots_profile_map_names? | default []) { hide-env --ignore-errors $name }
+        mut names = []
+        for row in ($document.maps | transpose name paths) {
+            let name = $'($row.name)_map'
+            load-env {($name): $row.paths}
+            $names = ($names | append $name)
+        }
+        $env._dots_profile_map_names = $names
         load-env ($data | reject PATH)
         $env.PATH = ($data.PATH | split row (char esep))
     }
@@ -34,7 +44,7 @@ def _dots-valid [kind: string, value: string] {
     }
 }
 def --env _dots-load [] {
-    let config = ($env.DOTS_CONFIG_FILE? | default (($env.XDG_CONFIG_HOME? | default (($env.HOME? | default $env.USERPROFILE?) | path join '.config')) | path join 'dots/config.env'))
+    mut config = ($env.DOTS_CONFIG_FILE? | default (($env.XDG_CONFIG_HOME? | default (($env.HOME? | default $env.USERPROFILE?) | path join '.config')) | path join 'dots/config.env'))
     mut values = {}
     mut origins = {}
     mut kinds = {}
@@ -58,6 +68,17 @@ def --env _dots-load [] {
             $values = ($values | upsert $key $value)
             $origins = ($origins | upsert $key config)
             $seen = ($seen | append $key)
+        }
+    }
+    if ($env.DOTS_CONFIG_FILE? | default '' | is-empty) {
+        let profile_config = (^python3 -B ($env.DOTS | path join 'lib/dots/profile_config.py') __settings-json | from json)
+        let profile_settings = $profile_config.settings
+        $config = $profile_config.path
+        for key in ($profile_settings | columns) {
+            if $key in ($kinds | columns) {
+                $values = ($values | upsert $key ($profile_settings | get $key | get value))
+                $origins = ($origins | upsert $key ($profile_settings | get $key | get source))
+            }
         }
     }
     for key in ($kinds | columns) {
@@ -124,6 +145,8 @@ def --env _dots-refresh-theme [] {
 _dots-load
 if $nu.is-interactive {
     if $env.dots_options.DOTS_INIT_COLORS == '0' { $env.dots_colors = {} }
+    $env.esc = "\u{1b}"
+    $env.ESC = $env.esc
     $env.rst = (ansi reset)
     $env.RST = $env.rst
     $env._DOTS_THEME_GENERATION = ''

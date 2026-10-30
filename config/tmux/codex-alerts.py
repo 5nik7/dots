@@ -32,12 +32,17 @@ status = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(status)
 UUID = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 IDENTITY = re.compile(UUID + r'\Z')
-# Only a full pipe-delimited UUID field is transported; titles stay in tmux.
+SHORT_UUID = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{5}[.]{3}'
+SHORT_IDENTITY = re.compile(SHORT_UUID + r'\Z')
+# Codex clips title items to 32 characters: 29 UUID characters plus "...".
+# Transport only a validated final identity field, never the surrounding title.
 TMUX_UUID = '-'.join('[0-9a-f]' * count for count in (8, 4, 4, 4, 12))
-THREAD = ('#{?#{m/r:(^|[|] *)' + TMUX_UUID + ' *$,#{pane_title}},'
-          '#{s/^.*(' + TMUX_UUID + ').*$/\\1/:pane_title},-}')
+TMUX_SHORT_UUID = '-'.join('[0-9a-f]' * count for count in (8, 4, 4, 4, 5)) + '[.][.][.]'
+TMUX_IDENTITY = '(' + TMUX_UUID + '|' + TMUX_SHORT_UUID + ')'
+THREAD = ('#{?#{m/r:(^|[|] *)' + TMUX_IDENTITY + ' *$,#{pane_title}},'
+          '#{s/^.*' + TMUX_IDENTITY + ' *$/\\1/:pane_title},-}')
 INVENTORY = status.INVENTORY + ' ' + THREAD + ' #{session_id} #{session_created}'
-ROW = re.compile(r'(@[0-9]+) (%[0-9]+) ([1-9][0-9]*) ([01]) ([01]) (' + UUID + r'|-)(?: (\$[0-9]+) ([0-9]+))?\Z')
+ROW = re.compile(r'(@[0-9]+) (%[0-9]+) ([1-9][0-9]*) ([01]) ([01]) (' + UUID + '|' + SHORT_UUID + r'|-)(?: (\$[0-9]+) ([0-9]+))?\Z')
 MAX_INPUT = 262144
 MAX_EVENTS = 4096
 EXPIRE = 600  # Unmatched candidates are not replayed when a session opens later.
@@ -201,7 +206,7 @@ def focused_at_receipt(thread):
     deadline = time.monotonic() + 1
     for server in servers:
         try:
-            rows = snapshot(server['path'], deadline)
+            rows = snapshot(server['path'], deadline, incoming_thread=thread)
             if any(row['thread'] == thread and row['focused'] for row in rows):
                 return True
         except (OSError, ValueError, subprocess.SubprocessError):
@@ -300,7 +305,54 @@ def parse_inventory(raw):
     return list(rows.values())
 
 
-def snapshot(socket, deadline=None, topology=None):
+def known_threads():
+    """Read full event identities without creating or migrating runtime state.
+
+    Include acknowledged events and lifecycle records: filtering to deliverable
+    events could conceal a prefix collision. None means the inventory is unsafe
+    or exceeds the bound, so shortened titles must stay unmatched.
+    """
+    root = status.alert_root()
+    try:
+        private(root, True)
+        path = root / 'events.sqlite3'
+        private(path)
+    except FileNotFoundError:
+        return set()
+    except (OSError, ValueError):
+        return None
+    try:
+        deadline = time.monotonic() + .1
+        with contextlib.closing(sqlite3.connect(path.as_uri() + '?mode=ro', uri=True, timeout=.1)) as db:
+            db.set_progress_handler(lambda: time.monotonic() >= deadline, 1000)
+            rows = db.execute('SELECT thread FROM events UNION SELECT thread FROM turns LIMIT ?',
+                              (MAX_EVENTS + 1,)).fetchall()
+        if len(rows) > MAX_EVENTS or any(not isinstance(r[0], str) or not IDENTITY.fullmatch(r[0]) for r in rows):
+            return None
+        return {r[0] for r in rows}
+    except (OSError, ValueError, sqlite3.Error):
+        return None
+
+
+def resolve_threads(panes, incoming_thread=None):
+    if not any(SHORT_IDENTITY.fullmatch(p['thread']) for p in panes):
+        return panes
+    threads = known_threads()
+    if threads is not None and incoming_thread is not None and IDENTITY.fullmatch(incoming_thread):
+        # Focus is checked before inserting the first event for a thread.
+        threads.add(incoming_thread)
+    prefixes = {}
+    for thread in threads or ():
+        prefix = thread[:29]
+        prefixes[prefix] = '-' if prefix in prefixes else thread
+    for pane in panes:
+        if not SHORT_IDENTITY.fullmatch(pane['thread']):
+            continue
+        pane['thread'] = prefixes.get(pane['thread'][:-3], '-')
+    return panes
+
+
+def snapshot(socket, deadline=None, topology=None, incoming_thread=None):
     deadline = deadline or time.monotonic() + status.TIMEOUT
     panes = status.inventory(socket, deadline, INVENTORY, parse_inventory)
     records = status.processes(Path('/proc'), deadline) if panes else {}
@@ -323,8 +375,11 @@ def snapshot(socket, deadline=None, topology=None):
         focused.clear()
     if topology is not None:
         topology.update(clients=attached, tabs=[])
-    return [dict(row, focused=row['pane'] in focused) for row in panes
-            if status.render([(row['window'], row['pid'], row['state'])], records)]
+    detected = [dict(row, focused=row['pane'] in focused) for row in panes
+                if status.render([(row['window'], row['pid'], row['state'])], records)]
+    resolved = resolve_threads(detected, incoming_thread)
+    status.remaining(deadline)
+    return resolved
 
 
 def termux_tabs():

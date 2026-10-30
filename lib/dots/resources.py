@@ -144,9 +144,15 @@ class Resources:
     @property
     def icons(self):
         if self._icons is None:
-            self._icons = [tuple(line.split('\t')) for line in
-                           read_data(Path(__file__).with_suffix('.tsv')).splitlines()
-                           if not line.startswith('#') and len(line.split('\t')) == 4]
+            from style_config import icon
+            self._icons = []
+            for line in read_data(Path(__file__).with_suffix('.tsv')).splitlines():
+                fields = line.split('\t')
+                if line.startswith('#'): continue
+                if len(fields) == 5:
+                    group, key, token, mime, fallback = fields
+                    self._icons.append((group, key, icon(token, fallback), mime))
+                elif len(fields) == 4: self._icons.append(tuple(fields))
         return self._icons
 
     def describe(self, path, kind=None, mime=None, styled=True):
@@ -194,4 +200,4 @@ class Resources:
                 elif group in ('mime', 'default_mime') and mime and fnmatch.fnmatchcase(mime, key):
                     code = value
                     break
-        return kind, icon or '󰈔', code
+        return kind, icon, code

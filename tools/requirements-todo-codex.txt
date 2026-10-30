@@ -1,0 +1,2 @@
+# Optional, lazily loaded only for Todo planning through Termux's runit server.
+websockets>=15,<18

@@ -17,6 +17,8 @@ import cli as core
 from resources import cells
 from git_identity import host_icon
 
+from profile_config import config_path
+
 
 def context(directory):
     if not shutil.which('git'):
@@ -126,7 +128,7 @@ class Inspection:
         self.ui = core.Presentation()
         self.owners, self.aliases = set(), {}
         self.ownership = 'unconfigured'
-        config = core.config_root() / 'dots/git.conf'
+        config = config_path('git.conf')
         try:
             if config.exists():
                 if config.is_symlink() or not config.is_file():

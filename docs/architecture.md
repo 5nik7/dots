@@ -2,6 +2,23 @@
 
 **Status: Implemented system**
 
+## Font management
+
+`fonts_cli.py` owns the shared controller. `fonts/commands.py` defines static
+metadata, parsing and generated adapters; `model.py` loads the library and builds
+guarded plans. `providers.py` handles bounded official-source requests and archive
+validation; `operations.py` plans the lifecycle; `config.py` edits inert app settings.
+`workspace.py` combines personal and directory plans into one guarded collection transaction. `inventory.py` discovers installed fonts and verifies adoptable sources; `payloads.py` retains partial families and merges compatible additions. `actions.py` owns batch transfers. `defaults.py` coordinates app selection, active-profile retention and explicit preference restoration; low-level config editors remain independent. `menus.py` owns the action-first popup and installed/downloaded workflows.
+
+`destinations.py` resolves backend `*FONTS` names through `profile_environment.py`; `directories.py` plans independent directory storage and explicit activation. Each directory retains payloads in `.dots-fonts/library` while its inventory remains in the shared local collection. Activation copies into the personal library before registration or app changes, in the same guarded transaction.
+`browser.py` reuses shared context and numeric preview snapshots; `preview.py`
+optionally renders downloaded fonts. `legacy.py` implements getnf/chnf compatibility.
+All durable writes use `files/transactions.py`; its narrow `font_registry.py`
+adapter journals fixed-key HKCU registrations alongside files. Reload/notification
+occurs after commit with separate failure reporting. The checkout installer owns
+command adapters; uninstalling those does not remove the personal font collection.
+See [fonts](fonts.md).
+
 The repository owns live configuration under `config/`, shell adapters under `shells/`, executable entry points under `bin/`, and shared controllers under `lib/dots/`. Keep the temporary `configs -> config` aliases until a separately reviewed cleanup. Optional repositories retain their own Git histories and are never initialized merely to run general checks.
 
 Bash and PowerShell dispatch to shared Python controllers for managed file operations, installation, Git and theme publication. Platform adapters own filesystem and shell differences. The independent `plugins/anodize/engine/` engine authors palettes; the theme controller owns their publication and recovery. See [data contracts](specification.md) and [safety](safety.md) for state ownership.
@@ -113,8 +130,7 @@ Neovim gitlink at `config/nvim`; Neovim retains independent Git history.
 `tools/migrate_config_paths.py` previews and journals identity-preserving retargeting
 of existing home links. It is separate from a future general installation engine.
 
-`.dots/sources.json` owns repository composition and exclusions. Each repository owns
-its `.dots/files.json` resource metadata. `lib/dots/files/catalog.py` owns terminal presentation using the Bash UI color/icon policy, validation,
+`.dots/sources.json` owns repository composition and exclusions. Every base platform profile owns its complete `files.dots` inventory in `profile.json`, alongside bundled platform mappings. Independent repositories may retain `.dots/files.json` catalogs. `style_config.py` resolves shared/default and per-profile visual preferences; `theme_styles.py` produces inert native consumer data during explicit theme publication. `lib/dots/files/catalog.py` owns terminal presentation using the Bash UI color/icon policy, validation,
 read-only observation/discovery, classification and atomic metadata tracking. Thin
 `bin/dots-files-*` commands expose this through the Bash dispatcher; completion uses
 the same data reader directly without extension execution. See [files](files.md).
@@ -144,7 +160,7 @@ Legacy `themes/bin` entry points have been removed; shell integration lives in
 `lib/dots/shell` and shared theme helpers in `lib/dots/themes`.
 
 Flat `themes/ID` variants own semantic `colors.toml`, optional native `palette.toml`
-and backgrounds. `default/themed` owns bundled templates; per-user `dots/themed`
+and backgrounds. `default/themed` owns bundled templates; profile-local `themed`
 overrides them. User-installed themes contribute data only. The stable XDG state
 `dots/current/theme` symlink selects a generation under `dots/themes/generations`.
 Codex consumes the existing rendered bat syntax theme through a fixed
@@ -326,7 +342,7 @@ Personal Termux shell adapters register fixed Androidots-local completion paths:
 
 ## Weather command and daylight adapter
 
-`bin/wttr` and `bin/wttr.ps1` are thin native entries into `lib/dots/wttr/cli.py`. The weather package owns j1 HTTP transport, separate stock curl passthrough, configuration, format fields, cache locking/cooldowns and bounded on-demand workers; it reuses the existing Androidots termux-geo interface and never duplicates device providers. `metadata.py` supplies parser/help/completion options. Weather styling classifies temperature/condition colors and encodes explicit widget formats; shared Presentation styled spans wrap inert text before adding colors. The common Dots Presentation/progress modules render human views; completion installation uses the shared file transaction Store. The `wttr` catalog resource registers configuration without installing it.
+`bin/wttr`, `bin/wttr.ps1` and the `dots wttr` family are thin native entries into `lib/dots/wttr/cli.py`. Static Dots adapters and standalone completion artifacts are generated by `tools/generate_wttr_commands.py` from the weather vocabulary. The weather package owns j1 HTTP transport, separate stock curl passthrough, configuration, format fields, cache locking/cooldowns and bounded on-demand workers; it reuses the existing Androidots termux-geo interface and never duplicates device providers. `metadata.py` supplies parser/help/completion options. Weather styling classifies temperature/condition colors and encodes explicit widget formats; shared Presentation styled spans wrap inert text before adding colors. The common Dots Presentation/progress modules render human views; completion installation uses the shared file transaction Store. `wttr/browser.py` owns session-only location/units, inert cached preview snapshots and numeric action identities. It reuses shared selection, input, exact-client tmux context and fitted output capture. Report actions invoke the weather controller once; opening/filtering/previews never acquire weather or location.
 
 The Termux clock adapter accepts fixed daylight tokens only, leaving color mapping in tmux and palette values in the theme template. Network adapters are not invoked by the shipped layout. Battery and lower-row ownership are unchanged. Cache paths, timezone assumptions, background/foreground location boundaries and native Windows limits are defined in [the weather reference](wttr.md).
 
@@ -385,6 +401,16 @@ The three first-party application source trees live under `plugins/`, declared b
 
 ## Todo ownership
 
-`todo_core.py` owns scope, validation, aliases, goal lifecycle, note appends and guarded updates through the existing file transaction store. Versioned goal JSON is serialized through the store's UTF-8 text operation, independent of catalog schema validation, with retained byte-exact recovery copies. `todo_cli.py` owns command behavior and data views; `todo_presentation.py` shares inert semantic spans and expanded details with the popup. The standalone adapter selects automatic scope, while Dots dispatch pins its checkout. `todo_commands.py` defines parser/help/completion metadata and the checked static adapter generator. `todo_completion.py` is an inert, on-demand core reader. `todo_menu.py` and `todo_input.py` own goal-specific previews, field input and action handling using the shared selector, context, palette and reader. Goal selection never executes stored text.
+`todo_brief.py` owns the shared exported planning prompt. `todo_plan.py` owns explicit launch, private thread associations and exact-context window handoff with a configured Todo icon separate from the descriptive Codex thread name; `todo_codex.py` owns bounded app-server RPC and native/Termux connection adapters. They are loaded only by the selected planning route. `clipboard.py` owns native clipboard writes. The Todo browser returns an explicit handoff result for print/launch so its containing launcher closes. The shared pager's opt-in `action_page` uses the validated selector and fitted document geometry, returning action identities while retaining query/focused line; other read-only readers retain their existing behavior.
 
-Project discovery reuses the read-only workspace resolver, without requiring tmux. Project files remain in their owning checkout, global files use the native Dots state root, and no persistent registry or startup scan is added. The managed skill source stays under the repository's `.codex/skills`; only its narrow source root is added to the file catalog. See [todo](todo.md).
+`todo_core.py` owns scope, validation, aliases, goal lifecycle, note appends and guarded updates through the existing file transaction store. Versioned goal JSON is serialized through the store's UTF-8 text operation, independent of catalog schema validation, with retained byte-exact recovery copies. `todo_cli.py` owns command behavior and data views; `todo_presentation.py` shares inert semantic spans and expanded details with the popup. The standalone adapter selects automatic scope, while Dots dispatch pins its checkout. `todo_commands.py` defines parser/help/completion metadata and the checked static adapter generator. `todo_completion.py` is an inert, on-demand core reader. `todo_menu.py` and `todo_input.py` own goal-specific previews, field input and action handling using the shared selector, context, palette and reader. `todo_layout.py` owns read-only preview geometry from numeric FZF match counts and dimensions. Trusted result/resize bindings resize the existing selector without reading goal storage or rebuilding the popup; native adapters invoke the same lightweight Python helper. Goal selection never executes stored text.
+
+Project discovery reuses the read-only workspace resolver, without requiring tmux. Project files remain in their owning checkout, global files use the native Dots state root, and no persistent registry or startup scan is added. The general Todo, Todo planning and Todo maintenance skill sources stay under the repository's `.codex/skills`; only their three narrow source roots are added to the file catalog. Generated briefs optionally reference the planning skill while retaining complete standalone interview, save-only and save-and-implement instructions. Agent-driven progress uses the existing scoped Todo lifecycle; launching planning does not mutate goals or intercept the TUI's mode transition. The maintenance skill routes to the Todo guide in the resolved source checkout. See [todo](todo.md).
+
+`lib/dots/profile_config.py` owns configuration selection, settings validation and profile-aware paths. `config_cli.py` handles inert inspection, edits and legacy migration through the existing Store. `config_menu.py` owns interactive inventories, private preview snapshots and reviewed config plans. It uses the shared menu input adapter (`menu_input.py`, also exposed through the Todo compatibility entry point), exact-client tmux context and existing file workflow handoffs. The catalog resolves profile resource lists and serializes edits into the active manifest; all planning guards include the contributing manifests. Format-specific consumers retain their own parsers. Startup compilers project profile settings into native adapters; runtime state and user theme authoring remain outside the checkout. See [profile configuration](profiles.md#profile-configuration).
+
+## Profile backend ownership
+
+`files/registry.py` validates the permanent core identities/platform registry. `files/catalog.py` joins it with source ownership and selected profile implementations before existing file planners run. `Catalog.updates()` can produce both registry and profile writes; callers journal the complete set together. Legacy readers remain for older compositions and recovery.
+
+`profile_environment.py` generates active, canonical and alias path namespaces and native maps for all declared profiles. Startup compilers consume this model and its manifest/directory inputs; `native_environment.py` transfers inert data to Nu/Xonsh. Application declarations remain in `environment.py`. Shell adapters never source profile `.env` files or duplicate path definitions. See [generated paths](profiles.md#generated-profile-paths).

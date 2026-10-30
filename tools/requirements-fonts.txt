@@ -1,0 +1,2 @@
+# Feature-only font parsing; help, discovery and completion do not import this.
+fonttools>=4.50,<5

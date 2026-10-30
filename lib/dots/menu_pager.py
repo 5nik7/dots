@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import re
 import stat
 import unicodedata
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 import shutil
 import signal
@@ -42,6 +42,50 @@ def output_directory(parent=None):
 class OutputResult:
     code: int
     reviewed: bool = False
+
+
+def action_page(text, *, title, actions, frame, context=None, notice=''):
+    """Opt-in FZF document actions; return an action, never a selected text line.
+
+    Existing read-only less/FZF readers retain their own keys and return contract.
+    Query/focused line survive an action such as copying and reopening this page.
+    """
+    from interaction import RichSelector, SelectionEvent, rich_fzf_available
+    from files.catalog import Presentation
+    from files.picker import fzf_colors
+    from progress import permanent_output
+    if not rich_fzf_available():
+        raise ValueError('Brief actions require FZF; use todo brief ID to print the brief')
+    labels = text.splitlines() or ['']
+    ui = Presentation(terminal=True, detail_indent=2)
+    wrapped = 'fzf-wrap' in tuple(backends())
+    with output_directory() as directory:
+        path = directory / 'document.txt'
+        with private_file(path) as stream: stream.write(text.encode())
+        size = context.verify() if context else shutil.get_terminal_size((80, 24))
+        width, height = report_size(path, size, 'fzf-wrap' if wrapped else 'fzf')
+        chunks = ['Enter: actions', 'Esc: back', *[key.replace('alt-', 'Alt-').upper().replace('ALT-', 'Alt-') + ': ' + label
+                  for key, (_, label) in actions.items()], 'Ctrl-C: cancel']
+        lines, row = [], ''
+        for chunk in chunks:
+            if row and len(row) + len(chunk) + 2 > max(18, width - 8):
+                lines.append(row); row = ''
+            row += ('  ' if row else '') + chunk
+        if row: lines.append(row)
+        if notice: lines.append(notice)
+        header = '\n'.join(lines)
+        with permanent_output(), context.selector_environment() if context else nullcontext(None) as environment:
+            try:
+                selected = RichSelector(backend='fzf').fzf(title, labels, False, None,
+                    ui.color, ui.icons, fzf_colors(ui), popup=f'center,{width},{height}' if context else False,
+                    height=height, header=header, environment=environment, query=frame.get('query', ''),
+                    navigation=frame, navigation_keys={'esc': 'back', **{k: v[0] for k, v in actions.items()}},
+                    event_selection=True, focus_index=frame.get('line'), wrap=wrapped)
+                frame['line'] = selected[0]
+                return 'actions'
+            except SelectionEvent as event:
+                if event.index is not None: frame['line'] = event.index
+                return event.action
 
 
 def popup_bounds(size):

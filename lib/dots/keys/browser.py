@@ -31,7 +31,7 @@ def choose_mode(ui, rows, current):
     focus = modes.index(current) + 1 if current in modes else 1
     with context.selector_environment() if context else nullcontext(None) as environment:
         try:
-            selected = RichSelector().fzf(('󰌆 ' if ui.icons else '') + 'modes',
+            selected = RichSelector().fzf(((ui.icon('navigation.keys', '󰌆') + ' ') if ui.icons else '') + 'modes',
                 labels, False, None, ui.color, ui.icons, picker_colors(fzf_colors(ui)),
                 popup=f'center,{width},{height}' if os.environ.get('TMUX') else False,
                 height=height, header=header, info='inline-right', environment=environment,

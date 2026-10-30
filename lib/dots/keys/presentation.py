@@ -47,7 +47,7 @@ def binding_label(ui, row, codes, show_app=True, show_mode=True, widths=None):
 
 
 def binding_prompt(ui, app=None, mode=None):
-    return ('󰌆 ' if ui.icons else '') + ui.clean((app or 'all') + '·' + mode if mode is not None else app or '')
+    return ((ui.icon('navigation.keys', '󰌆') + ' ') if ui.icons else '') + ui.clean((app or 'all') + '·' + mode if mode is not None else app or '')
 
 
 def menu_rows(ui, coverage, *, include_all=True):
@@ -61,6 +61,7 @@ def menu_rows(ui, coverage, *, include_all=True):
         count = sum(counts.values()) if identity == 'all' else counts.get(identity, 0)
         if not count:
             continue
+        icon = ui.icon('applications.'+identity, icon)
         label = ui.clean((icon + ' ' if ui.icons else '') + title)
         rows.append((identity, label + ui.paint(f' · [{count}]', muted)))
     return rows

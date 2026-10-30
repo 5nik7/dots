@@ -124,6 +124,41 @@ def resolve_path(value, guards):
     return current
 
 
+def update_symbols(original, preferences):
+    """Update declared symbols in an opted-in prompt; preserve all other fields."""
+    text = original.decode('utf-8-sig')
+    doc = tomllib.loads(text)
+    if doc.get('palette') != 'dots' or not preferences: return original
+    icons = preferences.get('apps', {}).get('starship', {}).get('icons', {})
+    def icon(role):
+        # Status values are Starship format strings, not shell code.
+        return re.sub(r'([\\\[\]()$])', r'\\\1', icons['git.'+role])
+    fields = {'git_branch': {'symbol': icons.get('git.branch', '')}}
+    status = {}
+    for field, role in dict(stashed='stashed', ahead='ahead', behind='behind', conflicted='conflict', deleted='deleted', modified='modified', staged='staged', untracked='untracked').items():
+        if 'git.'+role in icons: status[field] = icon(role)+'${count}'
+    if all('git.'+key in icons for key in ('ahead','behind')):
+        status['diverged'] = icon('ahead')+'${ahead_count}'+icon('behind')+'${behind_count}'
+    fields['git_status'] = status
+    expected = copy.deepcopy(doc)
+    newline = '\r\n' if '\r\n' in text else '\n'
+    for start, end, stop, route in reversed(sections(text)):
+        if len(route) != 1 or route[0] not in fields: continue
+        name = route[0]
+        body = text[end:stop]
+        for key, value in fields[name].items():
+            if key not in doc[name]: continue
+            if doc[name][key] == value: continue
+            # Fail closed on unusual or multiline definitions.
+            pattern = r'(?m)^([ \t]*'+key+r'[ \t]*=[ \t]*)(?:"(?:[^"\\\r\n]|\\.)*"|\x27[^\x27\r\n]*\x27)([ \t]*(?:#[^\r\n]*)?)(\r?\n|$)'
+            body, count = re.subn(pattern, lambda m: m[1]+json.dumps(value,ensure_ascii=False)+m[2]+m[3], body)
+            if count != 1: raise ValueError('symbol requires a literal single-line value: '+name+'.'+key)
+            expected[name][key] = value
+        text = text[:end]+body+text[stop:]
+    if tomllib.loads(text) != expected: raise ValueError('symbol update would change unrelated Starship settings')
+    return (b'\xef\xbb\xbf' if original.startswith(b'\xef\xbb\xbf') else b'')+text.encode('utf-8')
+
+
 def paths(guards):
     home = Path(os.environ.get('HOME') or Path.home())
     active = resolve_path(os.environ.get('STARSHIP_CONFIG') or home / '.config/starship.toml', guards)
@@ -155,7 +190,9 @@ def prepare(config, state, generation):
             raise ValueError('Starship configuration changed during inspection')
         guards[str(path)] = before
         if original is not None:
-            updated = update_palette(original, colors)
+            preference_path = generation / 'preferences.json'
+            preferences = json.loads(content(preference_path)) if preference_path.is_file() else {}
+            updated = update_symbols(update_palette(original, colors), preferences)
             if updated != original:
                 changed[path] = updated
     return changed, None, None, None, guards
@@ -201,5 +238,5 @@ def apply(config, state, generation):
                 observed[str(stage)] = digest(stage)
                 operations.append({'path': str(path), 'source': str(stage)})
             result = Store(state).apply('theme-plugin-starship', operations, observed, retain=True)
-        return {'status': 'success', 'detail': 'Dots palettes updated; visible at the next prompt',
+        return {'status': 'success', 'detail': 'Dots palette and symbols updated; visible at the next prompt',
                 'transaction': result['id']}

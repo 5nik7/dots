@@ -7,16 +7,19 @@ import shutil
 from environment import declarations, TOKEN, retired_paths, clean_metadata, application_value
 from platform_info import detect
 from profiles import resolve, SENSITIVE
+from profile_environment import Model, RESERVED, IDENTIFIER
 
 
-def exports(root, env=None):
+def exports(root, env=None, generated=None):
     env = os.environ if env is None else env
     profile = resolve(root, detect(env=env))
+    generated = generated or Model(root, profile)
     context = dict(env, DOTS=str(root))
+    context.update(generated.scalars)
     context.setdefault('HOME', env.get('USERPROFILE') or str(Path.home()))
     context.setdefault('APPDATA', str(Path(context['HOME']) / 'AppData/Roaming'))
     context.setdefault('LOCALAPPDATA', str(Path(context['HOME']) / 'AppData/Local'))
-    data = {}
+    data = dict(generated.scalars)
     for key, (template, _) in declarations(root, profile).items():
         if SENSITIVE.search(key) and template and not TOKEN.fullmatch(template):
             raise ValueError('sensitive defaults must reference an environment variable')
@@ -37,12 +40,34 @@ def exports(root, env=None):
     data['PATH'] = os.pathsep.join(dict.fromkeys([*paths,*existing]))
     data['DOTS_PROFILE_CHECKOUT'] = str(root)
     data['DOTS_PROFILE_BIN_PATHS'] = os.pathsep.join(str(Path(row['root'])/'bin') for row in reversed(profile['layers']))
+    data['DOTS_GENERATED_PATHS'] = json.dumps(generated.scalars, ensure_ascii=True)
     return data
+
+
+def document(root, env=None):
+    env = os.environ if env is None else env
+    generated = Model(root, resolve(root, detect(env=env)))
+    unset = []
+    try: previous = json.loads(env.get('DOTS_GENERATED_PATHS', '{}'))
+    except (TypeError,ValueError): previous = {}
+    oldroot = env.get('DOTS_PROFILE_CHECKOUT')
+    if isinstance(previous,dict) and oldroot:
+        for name,value in previous.items():
+            if (IDENTIFIER.fullmatch(name) and name not in RESERVED and not name.startswith('DOTS_')
+                    and name not in generated.scalars and isinstance(value,str)
+                    and Path(value).is_relative_to(Path(oldroot)/'profiles') and env.get(name) == value):
+                unset.append(name)
+    return dict(exports=exports(root,env,generated), maps=generated.maps, unset=unset,
+                generated=list(generated.scalars))
 
 
 if __name__ == '__main__':
     try:
-        data=exports(Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2]).resolve())
+        root=Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2]).resolve()
+        result=document(root)
+        data=result['exports']
+        if sys.argv[1:] == ['--document']:
+            print(json.dumps(result,ensure_ascii=True));sys.exit(0)
         if sys.argv[1:] == ['--fish']:
             # Literal single-quoted strings, never inherited executable code.
             def quote(value): return "'" + value.replace('\\','\\\\').replace("'","\\'") + "'"

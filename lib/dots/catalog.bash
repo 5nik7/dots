@@ -26,7 +26,7 @@ dots_type_valid() {
   local value
   case $1 in
     flag|string|file|directory|todo-id|todo-tag) return 0 ;;
-    theme|flavor|palette-color|color-format|file-resource|file-repository|git-submodule|theme-id|file-color-key|theme-color|anodize-theme|anodize-user-theme|theme-plugin|theme-file|theme-app|dots-setting|profile-id|wiki-page|wiki-section) return 0 ;;
+    theme|flavor|palette-color|color-format|file-resource|file-repository|git-submodule|theme-id|file-color-key|theme-color|anodize-theme|anodize-user-theme|theme-plugin|theme-file|theme-app|dots-setting|config-key|profile-id|wiki-page|wiki-section) return 0 ;;
     choice:*)
       [[ ${1#choice:} && $1 != *, && $1 != *,,* ]] || return 1
       local -a values=()

@@ -53,7 +53,7 @@ repo_presentation_style() {
                 fi
             fi
             OWNERS=("${PRESENTATION_OWNERS[@]}"); HOST_ALIASES=("${PRESENTATION_ALIASES[@]}")
-            PRESENTATION_HOSTS[$dir]=''
+            dots::icon git.repository ''; PRESENTATION_HOSTS[$dir]=$REPLY
             if repo_root "$dir" && [[ $REPLY == "$dir" ]] && select_remote "$dir"; then
                 parse_url "$URL"
                 [[ $PROTOCOL == file ]] || PRESENTATION_HOSTS[$dir]=$HOST_ICON
@@ -68,14 +68,14 @@ repo_presentation_style() {
 repo_identity_label() {
     REPLY=$2
     if [[ $DOTS_UI_INFO != '[i]' ]]; then
-        local icon=
-        [[ ! $1 ]] || icon=${PRESENTATION_HOSTS[$1]:-}
+        dots::icon git.repository ""; local icon=$REPLY
+        [[ ! $1 ]] || icon=${PRESENTATION_HOSTS[$1]-$icon}
         REPLY="$icon $2"
     fi
 }
 branch_identity_label() {
     REPLY=$1
-    if [[ $DOTS_UI_INFO != '[i]' && -n $1 && $1 != 'detached '* ]]; then REPLY="$1"; fi
+    if [[ $DOTS_UI_INFO != '[i]' && -n $1 && $1 != 'detached '* ]]; then dots::icon git.branch ""; REPLY="$REPLY$1"; fi
 }
 status_header() {
     local label=$1 branch=$2 state=$3 columns=$4 repo_style branch_style state_style marker

@@ -136,6 +136,12 @@
       "source": "docs/wttr.md"
     },
     {
+      "id": "Fonts",
+      "title": "Personal fonts",
+      "section": "Tools and troubleshooting",
+      "source": "docs/fonts.md"
+    },
+    {
       "id": "PowerShell",
       "title": "Native PowerShell",
       "section": "Reference",

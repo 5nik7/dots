@@ -1,26 +1,26 @@
 export _FZF_COLORS_="\
-bg+:-1,\
+bg+:{{ fzf_ui_selection_bg }},\
 bg:-1,\
 preview-bg:{{ background }},\
-fg+:strip:{{ accent }}:bold,\
+fg+:strip:{{ fzf_ui_accent_fg }}:bold,\
 fg:regular,\
-hl:{{ selection_foreground }}:underline,\
-hl+:{{ bright_green }}:bold:underline,\
-info:{{ muted }},\
-query:{{ warning }},\
+hl:-1:bold:underline,\
+hl+:{{ bright_magenta }}:bold:underline,\
+info:{{ fzf_ui_muted_fg }},\
+query:{{ fzf_status_warning_fg }},\
 gutter:regular:{{ background }},\
-pointer:regular:{{ accent }}:bold,\
-marker:{{ warning }},\
-prompt:{{ accent }},\
+pointer:regular:{{ fzf_ui_accent_fg }}:bold,\
+marker:{{ fzf_status_warning_fg }},\
+prompt:{{ fzf_ui_accent_fg }},\
 spinner:{{ dark_foreground }},\
-header:{{ hint }},\
+header:{{ fzf_ui_heading_fg }},\
 header-label:{{ dark_foreground }},\
-footer:{{ info }},\
+footer:{{ fzf_status_info_fg }},\
 footer-label:{{ dark_foreground }},\
 input-label:{{ dark_foreground }},\
 list-label:{{ dark_foreground }},\
 preview-label:{{ dark_foreground }},\
-label:{{ muted }},\
+label:{{ fzf_ui_muted_fg }},\
 preview-label:{{ lighter_background }},\
 separator:{{ background }},\
 border:{{ lighter_background }},\

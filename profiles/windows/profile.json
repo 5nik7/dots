@@ -2,10 +2,342 @@
   "schema": 1,
   "id": "windows",
   "description": "Native Windows defaults",
-  "environment": {
-    "WINDOTS": "${PROFILE}",
-    "WINDOTFILES": "${PROFILE}/config",
-    "WINDOWCONFIG": "${PROFILE}/config",
-    "RAINMETER": "${PROFILE}/rainmeter"
-  }
+  "settings": {},
+  "files": {
+    "windows": [
+      {
+        "id": "filepilot",
+        "source": "config/FilePilot",
+        "app": "filepilot",
+        "category": "config",
+        "target": "${APP_CONFIG:filepilot}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "alacritty",
+        "source": "config/alacritty",
+        "app": "alacritty",
+        "category": "config",
+        "target": "${APP_CONFIG:alacritty}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "bat",
+        "source": "config/bat",
+        "app": "bat",
+        "category": "config",
+        "target": null,
+        "strategy": "directory-link"
+      },
+      {
+        "id": "clink",
+        "source": "config/clink/clink_settings",
+        "app": "clink",
+        "category": "config",
+        "target": "${APP_CONFIG:clink}/clink_settings",
+        "strategy": "link"
+      },
+      {
+        "id": "fastfetch",
+        "source": "config/fastfetch",
+        "app": "fastfetch",
+        "category": "config",
+        "target": "${APP_CONFIG:fastfetch}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "glaze-wm",
+        "source": "config/glaze-wm",
+        "app": "glaze-wm",
+        "category": "config",
+        "target": "${APP_CONFIG:glaze-wm}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "komorebi",
+        "source": "config/komorebi/komorebi.json",
+        "app": "komorebi",
+        "category": "config",
+        "target": "${APP_CONFIG:komorebi}/komorebi.json",
+        "strategy": "link"
+      },
+      {
+        "id": "tacky-borders",
+        "source": "config/tacky-borders",
+        "app": "tacky-borders",
+        "category": "config",
+        "target": "${APP_CONFIG:tacky-borders}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "vscode",
+        "source": "config/vscode/settings.json",
+        "app": "vscode",
+        "category": "config",
+        "target": "${APP_CONFIG:vscode}/settings.json",
+        "strategy": "link"
+      },
+      {
+        "id": "wezterm",
+        "source": "config/wezterm",
+        "app": "wezterm",
+        "category": "config",
+        "target": "${APP_CONFIG:wezterm}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "whkd",
+        "source": "config/whkd/whkdrc",
+        "app": "whkd",
+        "category": "config",
+        "target": "${APP_CONFIG:whkd}/whkdrc",
+        "strategy": "link"
+      },
+      {
+        "id": "windhawk",
+        "source": "config/windhawk",
+        "app": "windhawk",
+        "category": "config",
+        "target": null,
+        "strategy": "directory-link"
+      },
+      {
+        "id": "winget",
+        "source": "config/winget/settings.json",
+        "app": "winget",
+        "category": "config",
+        "target": "${APP_CONFIG:winget}/settings.json",
+        "strategy": "link"
+      },
+      {
+        "id": "wsl",
+        "source": "config/wsl/.wslconfig",
+        "app": "wsl",
+        "category": "config",
+        "target": "${HOME}/.wslconfig",
+        "strategy": "link"
+      },
+      {
+        "id": "wt",
+        "source": "config/wt/settings.json",
+        "app": "wt",
+        "category": "config",
+        "target": "${APP_CONFIG:wt}/settings.json",
+        "strategy": "link"
+      },
+      {
+        "id": "yasb",
+        "source": "config/yasb",
+        "app": "yasb",
+        "category": "config",
+        "target": "${APP_CONFIG:yasb}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "komorebi-bar",
+        "source": "config/komorebi/komorebi.bar.json",
+        "app": "komorebi",
+        "category": "config",
+        "target": "${APP_CONFIG:komorebi}/komorebi.bar.json",
+        "strategy": "link"
+      },
+      {
+        "id": "wsl-guest",
+        "source": "config/wsl/wsl.conf",
+        "app": "wsl",
+        "category": "config",
+        "target": null,
+        "strategy": "link"
+      },
+      {
+        "id": "clink-starship",
+        "source": "config/clink/starship.lua",
+        "app": "clink",
+        "category": "config",
+        "target": "${APP_CONFIG:clink}/starship.lua",
+        "strategy": "link"
+      },
+      {
+        "id": "clink-scoop",
+        "source": "config/clink/scoop.lua",
+        "app": "clink",
+        "category": "config",
+        "target": "${APP_CONFIG:clink}/scoop.lua",
+        "strategy": "link"
+      },
+      {
+        "id": "clink-clink-vfox",
+        "source": "config/clink/clink_vfox.lua",
+        "app": "clink",
+        "category": "config",
+        "target": "${APP_CONFIG:clink}/clink_vfox.lua",
+        "strategy": "link"
+      },
+      {
+        "id": "clink-fzf",
+        "source": "config/clink/fzf.lua",
+        "app": "clink",
+        "category": "config",
+        "target": "${APP_CONFIG:clink}/fzf.lua",
+        "strategy": "link"
+      },
+      {
+        "id": "clink-themes",
+        "source": "config/clink/themes",
+        "app": "clink",
+        "category": "config",
+        "target": "${APP_CONFIG:clink}/themes",
+        "strategy": "directory-link"
+      }
+    ],
+    "dots": [
+      {
+        "id": "bat",
+        "source": "config/bat",
+        "app": "bat",
+        "category": "config",
+        "target": "${APP_CONFIG:bat}",
+        "strategy": "directory-link",
+        "replaces": [
+          "termux:bat"
+        ]
+      },
+      {
+        "id": "blastoff",
+        "source": "config/blastoff",
+        "target": "${HOME}/.config/blastoff",
+        "strategy": "directory-link",
+        "app": "blastoff",
+        "category": "config"
+      },
+      {
+        "id": "gemrc",
+        "source": "config/ruby/gemrc",
+        "target": "${HOME}/.gemrc",
+        "strategy": "link",
+        "app": "ruby",
+        "category": "shell"
+      },
+      {
+        "id": "git",
+        "source": "config/git",
+        "app": "git",
+        "category": "config",
+        "target": "${CONFIG}/git",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "irbrc",
+        "source": "config/ruby/irbrc",
+        "target": "${HOME}/.irbrc",
+        "strategy": "link",
+        "app": "ruby",
+        "category": "shell"
+      },
+      {
+        "id": "leaf",
+        "source": "config/leaf",
+        "app": "leaf",
+        "category": "config",
+        "target": "${APP_CONFIG:leaf}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "less",
+        "source": "config/less/lesskey",
+        "app": "less",
+        "category": "config",
+        "target": "${HOME}/_lesskey",
+        "strategy": "link"
+      },
+      {
+        "id": "lsd",
+        "source": "config/lsd",
+        "app": "lsd",
+        "category": "config",
+        "target": "${APP_CONFIG:lsd}",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "mpv",
+        "source": "config/mpv",
+        "app": "mpv",
+        "category": "config",
+        "target": "${APP_CONFIG:mpv}",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "nushell",
+        "source": "shells/nushell",
+        "target": "${APP_CONFIG:nushell}",
+        "strategy": "directory-link",
+        "app": "nushell",
+        "category": "shell"
+      },
+      {
+        "id": "powershell-profile",
+        "source": "shells/powershell/Microsoft.PowerShell_profile.ps1",
+        "target": "${POWERSHELL_PROFILE}",
+        "strategy": "link",
+        "app": "powershell",
+        "category": "shell"
+      },
+      {
+        "id": "xonshrc",
+        "source": "shells/xonsh/.xonshrc",
+        "app": "xonsh",
+        "category": "shell",
+        "target": "${HOME}/.xonshrc",
+        "strategy": "link"
+      },
+      {
+        "id": "yazi",
+        "source": "config/yazi",
+        "app": "yazi",
+        "category": "config",
+        "target": "${APP_CONFIG:yazi}",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "todo-skill",
+        "source": ".codex/skills/dots-todo",
+        "target": "${HOME}/.codex/skills/dots-todo",
+        "strategy": "directory-link",
+        "app": "codex",
+        "category": "skill"
+      },
+      {
+        "id": "todo-planning-skill",
+        "source": ".codex/skills/dots-todo-planning",
+        "target": "${HOME}/.codex/skills/dots-todo-planning",
+        "strategy": "directory-link",
+        "app": "codex",
+        "category": "skill"
+      },
+      {
+        "id": "todo-maintenance-skill",
+        "source": ".codex/skills/dots-todo-maintenance",
+        "target": "${HOME}/.codex/skills/dots-todo-maintenance",
+        "strategy": "directory-link",
+        "app": "codex",
+        "category": "skill"
+      }
+    ],
+    "nvim": [
+      {
+        "id": "nvim",
+        "source": ".",
+        "app": "nvim",
+        "category": "config",
+        "target": "${NVIM_CONFIG}/nvim",
+        "strategy": "directory-link",
+        "replaces": [
+          "androidots:nvim"
+        ]
+      }
+    ]
+  },
+  "alias": "WINDOTS"
 }

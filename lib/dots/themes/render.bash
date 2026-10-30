@@ -6,7 +6,7 @@ declare -gA DT_META DT_VALUES DT_COLORS
 declare -gA DT_SEMANTIC=()
 DT_USER_THEMES=${XDG_CONFIG_HOME:-$HOME/.config}/dots/themes
 DT_TEMPLATES=${DOTS_THEME_TEMPLATES:-${DT_LIB%/lib/dots/themes}/default/themed}
-DT_USER_TEMPLATES=${XDG_CONFIG_HOME:-$HOME/.config}/dots/themed
+DT_USER_TEMPLATES=$(python3 -B "${DT_LIB%/themes}/profile_config.py" __path themed) || return
 dt_find_theme() {
   dt_theme_id "$1" || return 1
   DT_THEME_DIR=$DT_ROOT/$1
@@ -156,7 +156,7 @@ dt_render() {
     [[ -f $template && ! -L $template ]] || continue
     filename=${template##*/}; filename=${filename%.tpl}
     [[ $filename =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*$ ]] || { dt_error 'invalid template output name'; return 1; }
-    case $filename in id|commands-old|commands-new|selection|fingerprint|palette.json|shell.tsv|colors.json|colors.lua|git-styles.tsv|ls_colors|init.*|previous|status|active.new|connectors|bat-cache) dt_error "reserved template output: $filename"; return 1 ;; esac
+    case $filename in id|commands-old|commands-new|selection|fingerprint|palette.json|shell.tsv|colors.json|colors.lua|preferences.json|gitmux.conf|git-styles.tsv|ls_colors|init.*|previous|status|active.new|connectors|bat-cache) dt_error "reserved template output: $filename"; return 1 ;; esac
     [[ ! ${rendered[$filename]:-} ]] || continue
     output=''
     while IFS= read -r line || [[ $line ]]; do
@@ -165,6 +165,7 @@ dt_render() {
         key=${BASH_REMATCH[1]}; prefix=${rest%%"${BASH_REMATCH[0]}"*}
         rest=${rest#*"${BASH_REMATCH[0]}"}
         case $key in
+          file_icons_yazi) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _preference_icons "$DT_THEME_DIR") || return ;;
           git_colors_starship) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _starship_git "$DT_THEME_DIR") || return ;;
           file_styles_vivid) value=$(dt_json | python3 -B "$DT_LIB/file-colors.py" _vivid "$DT_THEME_DIR") || return ;;
           *_strip) key=${key%_strip}; value=${DT_SEMANTIC[$key]:-}; value=${value#\#} ;;

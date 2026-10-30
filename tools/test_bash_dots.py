@@ -200,8 +200,10 @@ dots::error 'Error'
 
     def test_all_completion_emission_and_builtin_help(self):
         for shell in ('bash', 'zsh', 'fish'):
+            prefix = (self.repo / 'lib/dots/completion/theme.bash').read_text() if shell in ('bash', 'zsh') else ''
+            if shell == 'zsh': prefix = '#compdef dots\n' + prefix
             self.assertEqual(self.run_dots('completion', shell).stdout,
-                             (self.repo / 'lib/dots/completion' / shell).read_text())
+                             prefix + (self.repo / 'lib/dots/completion' / shell).read_text())
         for route in ('commands', 'completion'):
             self.assertIn('Usage', self.run_dots(route, '--help').stdout)
 

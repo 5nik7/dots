@@ -16,3 +16,5 @@ Report absent PowerShell/Xonsh native verification explicitly. Do not replace la
 Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.
 
 When this change affects documentation, follow [documentation maintenance](../dots-documentation-maintenance/SKILL.md), including the generated wiki check.
+
+For generated profile paths, use [profile maintenance](../dots-profile-maintenance/SKILL.md). Keep path generation in `profile_environment.py`; preserve all native maps, inactive-profile cache inputs, aliases and stale-name cleanup.

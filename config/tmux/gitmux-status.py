@@ -13,14 +13,14 @@ import time
 
 def compact_fields(output):
     """Normalize only Dots-styled metrics/divergence, never arbitrary Git names."""
-    parts = re.split(r'(#\[[^\]]*\])', output)
+    parts = re.split(r'((?<!#)#\[[^\]]*\])', output)
     for index in range(1, len(parts) - 3, 2):
         style, text, next_style, next_text = parts[index:index + 4]
-        if ('@dots-gitmux-added}' in style and re.fullmatch(r'\+[0-9]+ ', text)
-                and '@dots-gitmux-deleted}' in next_style and re.fullmatch(r'-[0-9]+ ?', next_text)):
+        if ('@dots-gitmux-added}' in style and re.fullmatch(r'.*[0-9]+ ', text)
+                and '@dots-gitmux-deleted}' in next_style and re.fullmatch(r'.*[0-9]+ ?', next_text)):
             parts[index + 1] = text[:-1]
-        elif ('@dots-gitmux-ahead}' in style and re.fullmatch(r'⇡[0-9]+', text)
-              and '@dots-gitmux-behind}' in next_style and re.fullmatch(r'⇣[0-9]+ ?', next_text)):
+        elif ('@dots-gitmux-ahead}' in style and re.fullmatch(r'.*[0-9]+', text)
+              and '@dots-gitmux-behind}' in next_style and re.fullmatch(r'.*[0-9]+ ?', next_text)):
             parts[index] = style.replace('@dots-gitmux-ahead}', '@dots-gitmux-conflict}')
             parts[index + 2] = next_style.replace('@dots-gitmux-behind}', '@dots-gitmux-conflict}')
     return ''.join(parts)
@@ -31,7 +31,7 @@ def literal_names(output):
     output = output.rstrip('\n')
     if any(ord(char) < 32 or 127 <= ord(char) < 160 for char in output):
         raise ValueError('control character in gitmux output')
-    parts = re.split(r'(#\[[^\]]*\])', output)
+    parts = re.split(r'((?<!#)#\[[^\]]*\])', output)
     return ''.join(part if index % 2 else part.replace('#', '##')
                    for index, part in enumerate(parts))
 
@@ -41,7 +41,9 @@ def collect(directory, snapshot):
     # Both providers change cwd; keep a relative legacy argument from being
     # resolved a second time by gitmux. Joining preserves symlink/.. semantics.
     directory = os.path.join(os.getcwd(), directory)
-    commands = {'gitmux': (['gitmux', '-cfg', str(Path.home() / '.gitmux.conf'),
+    generated = Path(os.environ.get('XDG_STATE_HOME', str(Path.home()/'.local/state')))/'dots/current/theme/gitmux.conf'
+    config = generated if generated.is_file() else Path.home()/'.gitmux.conf'
+    commands = {'gitmux': (['gitmux', '-cfg', str(config),
                             '-timeout', '1s', directory], 16384)}
     if snapshot:
         commands['icon'] = (['git-it', 'info', '--json'], 65536)
@@ -100,7 +102,8 @@ def collect(directory, snapshot):
 def remote_icon(raw):
     info = json.loads(raw)
     if (isinstance(info, dict) and isinstance(info.get('remote'), str) and info['remote']
-            and info.get('icon') in ('󰊤', '', '', '')):
+            and isinstance(info.get('icon'), str) and len(info['icon']) <= 64
+            and all(ord(c)>=32 and not 127<=ord(c)<160 and c not in '#|' for c in info['icon'])):
         return info['icon']
     return ''
 

@@ -89,9 +89,7 @@ If refresh fails, the saved rule remains and the command reports it as unpublish
 ## Rule ownership
 
 Precedence is bundled `default/file-colors.toml`, theme-local `file-colors.toml`,
-`$XDG_CONFIG_HOME/dots/file-colors.toml`, then
-`$XDG_CONFIG_HOME/dots/file-colors/ID/rules.toml`. The config root defaults to
-`~/.config`. Fields merge independently; reset removes the selected override and
+`file-colors.toml` from the resolved profile, then `file-colors/ID/rules.toml`. Readers retain legacy user-config fallback; setters write the active profile. See [profile configuration](profiles.md#profile-configuration). Fields merge independently; reset removes the selected override and
 reveals lower-priority rules. The setter manages its entire override file and
 normalizes its formatting; edit comments outside that generated file if needed.
 

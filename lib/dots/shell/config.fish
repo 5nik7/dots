@@ -53,6 +53,17 @@ function _dots_config_load
             set -a seen $key
         end < "$config"
     end
+    if not set -q DOTS_CONFIG_FILE; or test -z "$DOTS_CONFIG_FILE"
+        for key in $_dots_profile_setting_keys
+            set -l index (contains -i -- "$key" $keys)
+            set -l name _dots_profile_setting_$key
+            set -l origin _dots_profile_source_$key
+            test -n "$index"; or return 1
+            _dots_config_valid "$kinds[$index]" "$$name"; or return 1
+            set values[$index] "$$name"
+            set origins[$index] "$$origin"
+        end
+    end
     for key in $keys
         set -l index (contains -i -- "$key" $keys)
         if set -q $key; and test -n "$$key"
@@ -67,4 +78,9 @@ function _dots_config_load
         set -g _dots_source_$keys[$index] "$origins[$index]"
     end
     set -g _DOTS_CONFIG_PATH "$config"
+    if not set -q DOTS_CONFIG_FILE; or test -z "$DOTS_CONFIG_FILE"
+        if test -n "$_dots_profile_config_path"
+            set -g _DOTS_CONFIG_PATH "$_dots_profile_config_path"
+        end
+    end
 end

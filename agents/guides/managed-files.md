@@ -111,3 +111,7 @@ file-operation and installation suites. Source content editing is separate from
 the public mapping editor.
 
 `dots files install/uninstall` and root setup scripts share the Store and native adapter. Preserve transactional installation receipts, first-install backups across updates, pre-existing-link nonownership and drift-preserving restoration. Keep `files remove` semantics separate. Native Windows support is bounded to mapped resources and recovery; see [installation](../../docs/installation.md). Theme setup prepares inactive generations and publishes through the Store without app side effects.
+
+Profile `files` arrays are effective catalog inputs. Use `Catalog.input_paths()` for preview guards and `Catalog.updates()` for metadata writes; do not hardcode `.dots/files.json` as the mutation destination. Preserve profile settings/environment fields and independent repository ownership. Run `tools/test_profile_config.py` alongside affected file lifecycle suites. See [profile configuration](../../docs/profiles.md#profile-configuration).
+
+The core schema-2 registry is permanent: IDs/platforms stay in `.dots/files.json`, sources in `.dots/sources.json`, and implementations in profile arrays without platforms/target maps. Always journal the full `Catalog.updates()` result, including tracking. Explicit mapping `--platform` selects a base profile; live apply requires the active leaf. See [file maintenance](../../.codex/skills/dots-files-maintenance/SKILL.md) and run `tools/test_profile_backend.py`.

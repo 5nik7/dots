@@ -3,6 +3,7 @@ import argparse
 from dataclasses import dataclass, replace
 import json
 import os
+from style_config import icon as style_icon
 import re
 import shutil
 import sqlite3
@@ -253,14 +254,14 @@ def delete_session(server, session, context=None):
 
 
 def action_menu(row, context, termux):
-    entries = [Entry('open', 'switch / open', icon=''), Entry('new', 'new session', icon='󰐕')]
+    entries = [Entry('open', 'switch / open', icon=style_icon('navigation.session', '')), Entry('new', 'new session', icon=style_icon('navigation.new', '󰐕'))]
     if row and row.sessions:
-        entries += [Entry('rename', 'rename', icon='󰏫'), Entry('delete', 'delete session', icon='󰆴')]
+        entries += [Entry('rename', 'rename', icon=style_icon('navigation.edit', '󰏫')), Entry('delete', 'delete session', icon=style_icon('navigation.delete', '󰆴'))]
     if termux and row:
-        entries.append(Entry('termux', 'new Termux', 'Attach in a new Termux tab', icon=''))
+        entries.append(Entry('termux', 'new Termux', 'Attach in a new Termux tab', icon=style_icon('files.shell', '')))
     if row is None:
         entries = [e for e in entries if e.id == 'new']
-    entries.append(Entry('alerts', 'Codex alerts', 'All registered tmux servers', icon=''))
+    entries.append(Entry('alerts', 'Codex alerts', 'All registered tmux servers', icon=style_icon('navigation.codex', '')))
     try:
         entry = choose(Menu('session-actions', 'Session actions', tuple(entries)), mode='browse', context=context,
                        navigation={}, prompt='dots·tmux·actions')
@@ -273,7 +274,7 @@ def confirm_delete(session, context):
     message = f'{session.windows} windows · {session.attached_clients} attached clients · stops their processes'
     menu = Menu('delete-session', 'Delete ' + clean(session.name), (
         Entry('cancel', 'Cancel', 'Keep this session'),
-        Entry('delete', 'Delete ' + clean(session.name), message, icon='󰆴')))
+        Entry('delete', 'Delete ' + clean(session.name), message, icon=style_icon('navigation.delete', '󰆴'))))
     try:
         entry = choose(menu, mode='browse', context=context, navigation={}, prompt='dots·tmux·delete',
                        header=f'{session.windows} windows · {session.attached_clients} attached\n'
@@ -402,7 +403,7 @@ def browse_attention(context=None):
     while True:
         records = [(s, p) for s in sessions(load()) for p in s['panes'] if p['attention']]
         entries = tuple(Entry(str(i), f"{Path(s['socket']).name} ({s['key'][:6]}) · {s['id']} / {p['window']} / {p['pane']}",
-                              p['state'] + ' · unread Codex alert', icon='')
+                              p['state'] + ' · unread Codex alert', icon=style_icon('navigation.codex', ''))
                         for i, (s, p) in enumerate(records))
         try:
             chosen = choose(Menu('codex-alerts', 'Codex alerts', entries), mode='browse', context=context,
@@ -416,9 +417,9 @@ def browse_attention(context=None):
         actions = [Entry('ack', 'Acknowledge this alert', 'Leaves other threads unread')]
         same = context is None or context.socket == record['socket']
         if same:
-            actions.insert(0, Entry('open', 'Open this pane', icon=''))
+            actions.insert(0, Entry('open', 'Open this pane', icon=style_icon('navigation.session', '')))
         if is_termux():
-            actions.insert(1 if same else 0, Entry('termux', 'New Termux tab', 'Attach to this tmux session', icon=''))
+            actions.insert(1 if same else 0, Entry('termux', 'New Termux tab', 'Attach to this tmux session', icon=style_icon('files.shell', '')))
         try:
             action = choose(Menu('codex-alert-actions', 'Codex alert actions', tuple(actions)),
                             mode='browse', context=context, navigation={}, prompt='dots·tmux·alert',

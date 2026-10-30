@@ -184,7 +184,7 @@ class Keys(unittest.TestCase):
         ui.color=False;self.assertNotIn('\x1b',binding_label(ui,row,codes))
         self.assertEqual(picker_colors('bg:#000000,fg+:strip:#ffffff:bold'),'bg:#000000,fg+:-1:regular')
         (ui.resources.root/'palette.json').write_text('broken')
-        self.assertEqual(styles(ui),('2;37','1;95','38;5;208'))
+        self.assertEqual(styles(ui),('90','1;95','38;5;208'))
 
     def test_key_picker_layout_overrides_leave_other_pickers_unchanged(self):
         from interaction import RichSelector

@@ -54,7 +54,7 @@ Changed detached/foreign dependencies are blocked; unchanged ones need not be
 owned. Hooks and signing remain enabled. Only the configured upstream branch is
 pushed using an explicit refspec, without tags or force.
 
-Owner configuration is `${XDG_CONFIG_HOME:-$HOME/.config}/dots/git.conf`:
+Owner configuration is `git.conf` beside the resolved profile manifest, with legacy user-config fallback (see [profile configuration](profiles.md#profile-configuration)):
 
 ```ini
 [dots-git]

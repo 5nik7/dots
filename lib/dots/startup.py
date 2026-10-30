@@ -106,9 +106,12 @@ class Compiler:
 
     def build(self):
         profile = resolve(self.root)
+        from profile_environment import Model
+        generated = Model(self.root, profile)
+        self.inputs.update(generated.inputs)
         release = Path(os.environ.get('TERMUX__PREFIX') or os.environ.get('PREFIX', '/usr')) / 'etc/os-release' if profile['facts']['platform'] == 'termux' else Path('/etc/os-release')
         if release.is_file(): self.inputs.add(release)
-        for name in ('startup.py', 'profiles.py', 'platform_info.py', 'environment.py', 'shell/environment.json', 'shell/settings.tsv', 'shell/paths.tsv'):
+        for name in ('startup.py', 'profile_config.py', 'profiles.py', 'platform_info.py', 'environment.py', 'shell/environment.json', 'shell/settings.tsv', 'shell/paths.tsv'):
             self.inputs.add(LIB / name)
         for layer in profile['layers']: self.inputs.add(Path(layer['root']) / 'profile.json')
         # Directory metadata makes adding a distro/manifest invalidate old bundles.
@@ -117,12 +120,22 @@ class Compiler:
             if (p / 'distros').is_dir():
                 self.inputs.add(p / 'distros')
                 self.inputs.update(child for child in (p / 'distros').iterdir() if child.is_dir())
-        body = self.module('lib/dots/shell/config.bash', self.read('lib/dots/shell/config.bash') + '\n_dots_config_load || return\n')
+        from profile_config import settings as profile_settings, directory as config_directory
+        setting_rows = ['__path\t' + str(config_directory(self.root)) + '\tprofile']
+        setting_rows += [key + '\t' + row['value'] + '\t' + row['source'] for key, row in profile_settings(self.root, profile).items() if key != 'files.backup']
+        from style_config import Styles
+        styles = Styles(self.root, profile)
+        self.inputs.update(styles.startup_inputs())
+        setting_rows += ['\t'.join(row) for row in styles.rows()]
+        body = 'typeset -g _DOTS_PROFILE_SETTINGS_CHECKOUT=' + shlex.quote(str(self.root)) + '\n'
+        body += 'typeset -ga _DOTS_PROFILE_SETTING_ROWS=(' + ' '.join(map(shlex.quote, setting_rows)) + ')\n'
+        body += self.module('lib/dots/shell/config.bash', self.read('lib/dots/shell/config.bash') + '\n_dots_config_load || return\n')
         body += self.module('lib/dots/shell/environment.bash', self.read('lib/dots/shell/environment.bash')) + '\n'
         body += self.module('lib/dots/shell/environment_runtime.bash', self.read('lib/dots/shell/environment_runtime.bash')) + '\n'
         body += 'export DOTS_PROFILE=' + shlex.quote(profile['current']) + '\n'
         body += 'export DOTS_PROFILE_LAYERS=' + shlex.quote(' '.join(row['id'] for row in profile['layers'])) + '\n'
         body += 'export DOTS_ARCH=' + shlex.quote(profile['facts']['architecture']) + '\n'
+        body += generated.shell(self.shell)
         for key, (value, origin) in declarations(self.root, profile).items():
             if SENSITIVE.search(key) and value and not TOKEN.fullmatch(value): raise ValueError('sensitive defaults must reference an environment variable')
             if value == '@editor':

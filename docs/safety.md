@@ -2,6 +2,32 @@
 
 **Status: Implemented managed file, theme, Git and checkout workflows**
 
+## Personal font transactions
+
+Font plans use the shared Store, retained backups and complete preflight for
+library payloads, registrations, app settings and metadata. Downloads stage before
+review; archive traversal, links, duplicate filenames, invalid fonts, missing
+upstream licenses and size overruns are refused. Imports preserve originals.
+Stale collection, payload, source, receipt or destination guards block apply.
+Removal requires ownership and refuses active/installed/pinned versions; undo
+refuses drift. Dry runs use no network and leave no persistent files.
+
+With `--directory`, install/update only stores payloads under a backend-owned font directory's `.dots-fonts` subtree. The resolver rejects arbitrary roots and linked directory roots; payload and collection guards protect storage. Use/Set explicitly copies the selected payload into the personal library before activation. Directory uninstall requires an exact version, refuses pins, ownership conflicts and drift, and retains version history. It may remove a directory copy of an active font because activation has an independent owned copy; personal-library active-font removal still refuses. Scoped undo cannot silently undo another directory's transaction or overwrite a later collection change.
+
+Installed-font Copy leaves originals unchanged. Migrate adopts only regular user-owned files in supported user-font roots or the current Termux font; system/package/uncertain files and symlinks are copy-only. POSIX lookup links and matching Windows HKCU registrations remain usable. Recorded aliases are drift-checked before consolidation/removal and protect their payloads. Batch transfers preflight every member before any apply; existing identical copies are no-ops.
+
+App Set and Restore include automatic active-profile retention and `fonts.json` preferences in the same transaction as native installation, app configuration and collection state. A valid previous custom Termux font is retained before replacement. Partial families grow only through compatible additions; conflicting bytes or metadata are refused. Missing remote payloads are validated in temporary staging before apply; dry runs do not download. Restore verifies exact saved hashes and does not upgrade. Shell startup never reads preferences to activate fonts, and missing/unowned app configurations are not automatically adopted.
+
+Native Windows also journals fixed HKCU font values constrained to the current
+user's Windows Fonts directory. Registration is checked before apply, before each
+write, during rollback and during undo. Foreign changes block destructive recovery.
+No elevation, HKLM writes, Android system-font changes or Windows/WSL translation
+occurs. Native consumers may lock a font file; close the app and retry after a
+guarded failure. App connectors change supported literal fields only, with managed
+source/copy/receipt updates in one transaction. Post-commit cache refresh and app
+notification failures are reported separately; recovery cannot establish that a
+running application has reloaded. See [fonts](fonts.md).
+
 Safety is a core product feature of `dots`, not a wrapper around destructive file operations. This document is authoritative for planning, mutation, backup, rollback, undo, package, hook, repository, and secret behavior.
 
 ## Repository Editing Boundary
@@ -72,6 +98,8 @@ A disposable in-memory representation or rebuildable cache read is acceptable. C
 Generated theme-file inspection captures the active generation and observes known application destinations without recovery, publication, application activation or persistent state writes. Verification never launches applications or hooks; terminal text previews may run the optional bounded bat renderer with paging/configuration disabled and the existing captured cache. Supplementary-link discovery reads bounded transaction metadata, never retained backup bodies. Explicit content views use regular-file, symlink, UTF-8, size and possible-credential checks before emitting any bytes; raw output does not bypass these checks. See [theme inspection](themes.md#generated-theme-files).
 
 ## Private menu handoff
+
+An explicit `todo plan ID` launch may create/resume/name a Codex conversation, submit its planning brief and start a native local Codex daemon (Termux uses its existing runit service). `--dry-run`, briefs and ordinary Todo reads remain read-only. Native credentials are kept out of arguments, receipts and diagnostics. Thread associations use private, validated, locked atomic local state and are outside goal-file journals. A pre-submission receipt prevents automatic resend after ambiguous delivery; previously created conversations remain available on failure. The popup starts a new process in a new window with private literal context, never by typing goal text into another process. Clipboard copying is an explicit external action. The brief's later save/implementation steps require an explicit user request in execution mode. An implementation request includes saving the agreed tree, starting work and recording verified completion; a save-only request stops after saving. Goal writes use the existing Todo transaction engine and cannot run while actual Plan Mode is active.
 
 The tmux session menu's data modes inspect without starting a server or discovering projects. Interactive discovery is read-only; selecting an explicit action may create, rename, switch/attach or delete a session. Each existing-server action rechecks the pinned socket/server PID, stable session ID/creation time and exact originating client PID/pane/session. Stale or ambiguous identities fail without a fallback target. Names and paths are literal arguments, never selected shell code. Delete requires a separate default-Cancel confirmation showing the session, windows and attached clients; it terminates processes without a rollback guarantee. Deleting the invoking session ends navigation before the kill; normal tmux detach/last-session exit applies. Project files and configuration are never removed. Creation and rename use tmux collision checks; popup-created sessions get immutable workspace IDs and live project metadata; manual renaming disables automatic naming. Outside attachment and the Termux tab helper omit detach flags. These explicit terminal-session operations are outside managed-file transactions and do not bypass file/theme journals.
 
@@ -374,7 +402,7 @@ keep precedence, and reserved names remain accessible through full-ID routes.
 
 ## Dots shell environment
 
-Dots config.env is parsed as literal data, never sourced. Invalid settings preserve previously resolved values. Initialization does not create settings files or publish themes. Portable shell.tsv snapshots are part of the existing theme transaction and are read without evaluation. The legacy repository cleanup was explicitly approved and retained a recovery copy of the removed source files; no home-directory legacy selection files were removed.
+Profile settings and legacy config.env are parsed as literal data, never sourced. Invalid settings preserve previously resolved values. Initialization does not create settings files or publish themes. Portable shell.tsv snapshots are part of the existing theme transaction and are read without evaluation. The legacy repository cleanup was explicitly approved and retained a recovery copy of the removed source files; no home-directory legacy selection files were removed.
 
 ## File-style edits and refresh notifications
 
@@ -532,3 +560,11 @@ Schema-1 goal documents normalize in memory and upgrade to schema 2 only alongsi
 Project mutations retain the project-name tag and backfill missing tags throughout only that selected goal file, including completed/removed records. Requested changes and repairs share one preflight, guarded write and retained transaction; dry-run/results include repaired records. Only effectively changed records receive new update timestamps. Read-only commands never repair tags. Tag/document limits refuse the complete operation before any write, naming goals whose tag lists are full; custom tags are not discarded. A project rename preserves prior tags while requiring the new name. Global goal tags remain user-controlled.
 
 Remove is a soft deletion requiring a separate interactive default-Cancel confirmation or explicit `--yes`; parent removal requires explicit subtree selection. Restore preserves previous fields/status apart from required project-tag repair and update timestamps. Existing file history/recover/undo controls apply to reported transaction IDs and retain their drift checks. A skill link uses the managed-file workflow and does not overwrite an unrelated existing skill. Briefs and stored goal text neither execute commands nor grant additional authorization. See [todo](todo.md).
+
+## Profile configuration migration
+
+`dots config set/unset` and explicit migration submit guarded batches to the existing Store with retained backups. Migration previews by default, excludes user themes and named runtime stores, refuses conflicting destinations, symlinks, special objects, oversized files and recognizable credentials, and does not execute migrated hooks. It verifies all copies before removal, rolls back completed replacements in reverse order, and uses normal drift-aware undo/recovery. Explicit setting values are validated before writing; sensitive environment declarations must be references and inspection redacts them. Saved configuration never installs mappings or reloads a shell automatically. These are conservative checks, not a general secret scanner or protection against hostile filesystem races. See [migration](profiles.md#migrate-existing-configuration).
+
+Explicit regular-file copy mappings use the same installation receipt and first-install backup as links. Source and destination digests bind the plan; identical copies are no-ops, modified installed copies block updates, and uninstall/undo preserve the original baseline. Directory copy installation remains refused. Stash retains copied content and its receipt while disabling the mapping.
+
+Core-registry and profile mapping changes form one Store transaction, including schema-2 tracking. Preflight guards cover the registry, source composition and profile manifests; failure restores both files, and undo refuses post-apply drift. Registry identities are retained when a profile removes a mapping. Legacy journals retain their existing schema and recovery payloads. Profile alias edits validate all profile namespaces and guard their manifests before saving.

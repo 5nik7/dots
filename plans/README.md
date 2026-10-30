@@ -8,7 +8,11 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
-| [Todo goals](todo.md) | Project/global goal tracking, contextual completion, popup and managed agent skill. |
+| [Personal fonts](fonts.md) | Official catalogs, retained versions, per-user registration, app connectors, font/glyph browsers and native acceptance. |
+| [Weather command and browser](wttr.md) | Shared standalone/Dots weather, cached-preview browser, session controls and platform acceptance. |
+| [Configuration popup](config-popup.md) | Profile/default browsing, typed edits, guarded review and per-change undo. |
+| [Profile configuration](profile-configs.md) | Checkout-local settings, file mappings and reversible migration into platform profiles. |
+| [Todo goals](todo.md) | Project/global goal tracking, contextual completion, popup, Codex planning handoff and managed general/planning/maintenance skills. |
 | [Bundled applications](bundled-applications.md) | Absorb Blastoff and pkgs with dual command forms and combined installation/removal. |
 | [Portable plugins](portable-plugins.md) | Consolidated application ownership, backed-up legacy migration, menus and maintenance skills. |
 | [Global less colors](less-style.md) | Implemented: exact theme colors for less standout text through shell and popup readers; native runtime acceptance recorded. |
@@ -30,6 +34,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Managed file repair](files-repair.md) | Automatic link repair, interactive issue resolution and journaled recovery. |
 | [Stash and edit mappings](files-mappings.md) | Disabled resources, mapping edits and the bounded Git XDG migration. |
 | [Unified theme CLI](theme-cli.md) | Consolidation on `dots theme` with native palette queries. |
+| [Theme shortcuts](theme-command-unification.md) | Generated family commands, collision suffixes and shared completion mappings. |
 | [Generated theme files](theme-files.md) | Active-generation inspection, connection checks and read-only browsing. |
 | [Shared syntax theme](syntax-theme.md) | Catppuccin reference adaptation, dynamic colors and shared consumer verification. |
 | [Theme plugins](theme-plugins.md) | Explicit local hooks and journaled GTK 3/Qt6ct integrations. |
@@ -90,3 +95,7 @@ When a plan is complete, retain it if it explains migration or decision history.
 - [Detailed debug tracing](debug-tracing.md) — nested reports, state changes, source maps and opt-in PATH history.
 
 - [Keybinding browser](keys.md) — readable live/configured shortcuts and vi-mode Backspace consistency.
+
+- [Profile presentation and complete inventories](profile-presentation.md): human configuration reports, profile-owned shared mappings and configurable visual roles.
+
+- [Core registry and profile environments](profile-backend.md) — preserve the core resource registry, put implementations in profiles, and generate native path namespaces.

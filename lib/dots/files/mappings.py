@@ -39,7 +39,7 @@ def matching(path, source):
 
 
 class MappingPlan:
-    def __init__(self, backup=False):
+    def __init__(self, backup=False, selected_platform=None):
         self.manager = Manager()
         self.root = self.manager.root
         self.install = Installation(self.root)
@@ -50,11 +50,15 @@ class MappingPlan:
         self.rows = []
         self.live = False
         self.install.guard(self.root / '.dots/sources.json')
-        self.catalog = Catalog(self.root, self.catalog.platform)
+        from profile_config import context
+        selected = context(self.root, selected_platform) if selected_platform and self.catalog.registry else self.catalog.profile
+        self.catalog = Catalog(self.root, selected_platform or self.catalog.platform, profile=selected)
+        for path in self.catalog.input_paths():
+            self.install.guard(path)
         for owner in self.catalog.sources:
             if owner['status'] == 'excluded':
                 continue
-            path = Path(owner['root']) / '.dots/files.json'
+            path = self.catalog.base_path(owner)
             self.install.guard(path)
             if owner['status'] == 'available':
                 self.paths[owner['id']] = path
@@ -72,7 +76,7 @@ class MappingPlan:
     def record(self, identity):
         row = next((r for r in self.original_rows if r['id'] == identity), None)
         if row is None:
-            raise ValueError('resource not found: ' + identity)
+            raise ValueError(('resource needs a mapping in the selected profile: ' if self.catalog.registry and identity in self.catalog.registry.entries else 'resource not found: ') + identity)
         return row
 
     def raw(self, identity):
@@ -80,11 +84,11 @@ class MappingPlan:
         return next(r for r in self.documents[owner]['resources'] if r['id'] == name)
 
     def source(self, owner, rel, strategy, require=True):
-        path = self.paths[owner].parent.parent / relative(rel)
+        path = Path(next(s['root'] for s in self.catalog.sources if s['id'] == owner)) / relative(rel)
         parents_safe(path)
         for other in self.catalog.sources:
             child = Path(other['root'])
-            root = self.paths[owner].parent.parent
+            root = Path(next(s['root'] for s in self.catalog.sources if s['id'] == owner))
             if child != root and child.is_relative_to(root) and path.is_relative_to(child):
                 raise ValueError('select the source in its owning repository')
         self.install.guard(path)
@@ -215,12 +219,19 @@ class MappingPlan:
                 if other and before['target'] and matching(Path(before['target']), before['source']):
                     raise ValueError('target is still claimed by another enabled resource')
                 reason = self.unlink(before)
-                self.retire_receipts(identity)
+                if before['strategy'] != 'copy':
+                    self.retire_receipts(identity)
             self.rows.append(dict(id=identity, status='restore' if restore else 'stash',
                                   source=after['source'], target=after['target'], reason=reason))
 
     def candidate(self, selected_platform=None):
-        return Catalog(self.root, selected_platform or self.catalog.platform, self.documents).records()
+        selected = selected_platform or self.catalog.platform
+        if self.catalog.registry and selected != self.catalog.platform:
+            from registry import Registry
+            candidate = Catalog(self.root, selected)
+            candidate.registry = Registry(self.catalog.registry.update(self.documents), candidate.sources)
+            return candidate.records()
+        return Catalog(self.root, selected, self.documents, profile=self.catalog.profile).records()
 
     def edit(self, args):
         if args.new:
@@ -232,7 +243,7 @@ class MappingPlan:
                 raise ValueError('resource ID exists; edit it without --new')
             owner = next(s for s in self.catalog.sources if s['id'] == args.repo)
             raw = dict(id=args.id, source=args.source, target=None, app=args.app, category=args.category,
-                       strategy=args.strategy or 'link', platforms=args.platforms or owner['platforms'])
+                       strategy=args.strategy or 'link', platforms=args.platforms or (self.catalog.registry.entries.get(args.repo+':'+args.id, owner['platforms']) if self.catalog.registry else owner['platforms']))
             self.documents[args.repo]['resources'].append(raw)
             identity = args.repo + ':' + args.id
             before = None
@@ -248,19 +259,20 @@ class MappingPlan:
         if args.target:
             selected_catalog = Catalog(self.root, args.platform or self.catalog.platform)
             spec = target_spec(selected_catalog, args.target)
-            if args.platform:
+            if args.platform and not self.catalog.registry:
                 raw.setdefault('targets', {})[args.platform] = spec
             else:
                 raw['target'] = spec
+        if args.platforms: raw['platforms'] = args.platforms
         self.source(owner_id, raw['source'], raw['strategy'])
         # Validate effective claims for every platform affected by shared fields.
         for selected in PLATFORMS:
-            row = next(r for r in self.candidate(selected) if r['id'] == identity)
-            if row['enabled'] and row['applicable'] and row['status'] == 'conflict':
+            row = next((r for r in self.candidate(selected) if r['id'] == identity), None)
+            if row and row['enabled'] and row['applicable'] and row['status'] == 'conflict':
                 raise ValueError('mapping conflicts on ' + selected + ': ' + identity)
         after = next(r for r in self.candidate() if r['id'] == identity)
         if args.apply:
-            if args.platform and args.platform != self.catalog.platform:
+            if self.catalog.profile['current'] != self.manager.catalog.profile['current'] or self.catalog.platform != self.manager.catalog.platform:
                 raise ValueError('--apply cannot reconcile another platform')
             if not after['enabled']:
                 raise ValueError('resource is stashed; restore it before --apply')
@@ -271,17 +283,19 @@ class MappingPlan:
             self.link(after, before)
         self.rows.append(dict(id=identity, status='edit-and-link' if args.apply else 'edit',
                               source=after['source'], target=after['target'],
+                              profile=self.catalog.profile['current'], platforms=after['platforms'],
+                              old_platforms=before['platforms'] if before else None,
                               old_source=before['source'] if before else None,
                               old_target=before['target'] if before else None,
                               reason='Reconcile live links' if args.apply else 'Metadata only; existing links remain unchanged'))
 
     def finish(self):
+        documents = {owner: doc for owner, doc in self.documents.items() if doc != self.original[owner]}
         catalogs = []
-        for owner, doc in self.documents.items():
-            if doc != self.original[owner]:
-                path = self.paths[owner]
-                self.operation(path, data=doc)
-                catalogs.append(str(path))
+        for operation in self.catalog.updates(documents):
+            path = operation.pop('path')
+            self.operation(path, **operation)
+            catalogs.append(path)
         operations = self.install.operations
         for i, op in enumerate(operations):
             path = Path(op['path'])
@@ -292,7 +306,7 @@ class MappingPlan:
                 if path.is_relative_to(right) or right.is_relative_to(path):
                     raise ValueError('overlapping operation paths')
         self.verify()
-        self.catalogs = catalogs
+        self.catalogs = [*self.catalog.lock_paths(), *catalogs]
 
     def apply(self, action):
         self.verify()
@@ -346,8 +360,8 @@ def arguments(argv=None):
     if args.action == 'edit':
         if args.restore or len(args.values) > 1 or (args.new and args.values):
             p.error('edit takes one resource or --new; --restore belongs to stash')
-        if not args.new and any((args.repo, args.id, args.app, args.category, args.platforms)):
-            p.error('--repo/--id/--app/--category/--platforms require --new')
+        if not args.new and any((args.repo, args.id, args.app, args.category)):
+            p.error('--repo/--id/--app/--category require --new')
     return p, args
 
 
@@ -359,6 +373,9 @@ def render(doc, final=False):
         for row in doc['items']:
             ui.emit()
             ui.detail('Resource', row['id'], '1;94')
+            if 'profile' in row: ui.detail('Profile', row['profile'])
+            if row.get('old_platforms') and row['old_platforms'] != row.get('platforms'): ui.detail('Old platforms', ', '.join(row['old_platforms']))
+            if 'platforms' in row: ui.detail('Platforms', ', '.join(row['platforms']))
             for key, label in (('old_source','Old source'), ('old_target','Old target'), ('source','Source'), ('target','Target')):
                 if row.get(key):
                     ui.resource_detail(label, row[key])
@@ -375,11 +392,11 @@ def main(argv=None):
     p, args = arguments(argv)
     from interaction import selection_requested as requested
     picking = requested(p, args, args.values)
-    if args.pick and args.dry_run and args.action == 'edit' and not any((args.source, args.target, args.strategy)):
-        p.error('--pick --dry-run edit requires explicit --source, --target or --strategy')
+    if args.pick and args.dry_run and args.action == 'edit' and not any((args.source, args.target, args.strategy, args.platforms)):
+        p.error('--pick --dry-run edit requires explicit --source, --target, --strategy or --platforms')
     configure(not args.json and not args.dry_run)
     with Progress('Loading file mappings'):
-        plan = MappingPlan(args.backup if args.backup is not None else Manager().backup_default())
+        plan = MappingPlan(args.backup if args.backup is not None else Manager().backup_default(), args.platform)
     output = OperationOutput.for_args(args)
     plan.install.store.observer = output
     interactive = not (args.json or args.yes or args.dry_run)
@@ -408,7 +425,7 @@ def main(argv=None):
                 if not getattr(args, field): setattr(args, field, prompt(field.title()))
             if not args.strategy:
                 args.strategy = pick('Link strategy', ['link', 'directory-link', 'copy'])
-        elif not any((args.source, args.target, args.strategy)):
+        elif not any((args.source, args.target, args.strategy, args.platforms)):
             row = plan.raw(args.values[0])
             args.source = prompt('Source', row['source'])
             args.target = prompt('Target', row.get('targets', {}).get(args.platform, row.get('target')) if args.platform else row.get('target'))

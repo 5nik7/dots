@@ -26,6 +26,14 @@ function M.validate(doc)
   for key,value in pairs(doc.colors) do
     if type(value) ~= 'table' then assert(color(value), 'invalid palette color') end
   end
+  if doc.preferences ~= nil then
+    assert(type(doc.preferences)=='table' and doc.preferences.schema==1 and type(doc.preferences.apps)=='table', 'invalid visual preferences')
+    local app = doc.preferences.apps.yazi
+    assert(type(app)=='table' and type(app.icons)=='table', 'invalid Yazi preferences')
+    for key, value in pairs(app.icons) do
+      assert(type(key)=='string' and type(value)=='string' and #value<=256 and not value:find('%c'), 'invalid icon literal')
+    end
+  end
   assert(type(doc.ls_colors) == 'string' and doc.ls_colors ~= '' and not doc.ls_colors:find('[\n\r\27]'), 'invalid LS_COLORS')
   assert(type(doc.styles)=='table' and type(doc.provenance)=='table', 'missing styles or provenance')
   local groups = {'type','mime','extension'}
@@ -84,6 +92,11 @@ local function overlay(doc, fallback)
     result[component] = map_colors(base[component] or {}, doc.colors)
   end
   if options.source == 'dots' then
+    local preferences = doc.preferences and doc.preferences.apps and doc.preferences.apps.yazi
+    if preferences and preferences.icons then
+      local symbols = {branch_symbol='branch', ahead_remote_symbol='ahead', behind_remote_symbol='behind', stashes_symbol='stashed', staged_symbol='staged', unstaged_symbol='modified', untracked_symbol='untracked'}
+      for key, role in pairs(symbols) do result.githead[key] = preferences.icons['git.' .. role] end
+    end
     local head = result.githead.theme or result.githead
     local namespace = refs.namespace()
     for key,role in pairs(head_roles) do

@@ -22,4 +22,8 @@ cmds=$(printf "%s" "$PATH" |
 }
 
 # Send to fzf
-printf "%s\n" "$cmds" | fzf --prompt="  cmd > "
+_dots_script_source=$(readlink -f -- "${BASH_SOURCE[0]}")
+DOTS=${DOTS:-$(cd -- "${_dots_script_source%/*}/.." && pwd -P)}
+source "$DOTS/lib/dots/script_style.bash"
+dots::icon files.shell ''; cmd_icon=$REPLY
+printf "%s\n" "$cmds" | fzf --prompt=" $cmd_icon cmd > "

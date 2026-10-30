@@ -24,6 +24,8 @@ FORMATS = 'name hex rgb r g b rgb-r rgb-g rgb-b luminance brightness cmyk ansi-8
 ROLES = 'background foreground muted accent selection error warning info hint'.split()
 ANSI = 'background red green yellow blue magenta cyan foreground muted bright_red bright_green bright_yellow bright_blue bright_magenta bright_cyan bright_foreground'.split()
 
+from profile_config import config_path
+
 
 def regular(path):
     if path.is_symlink() or not path.is_file(): raise ValueError('expected a regular theme data file: ' + str(path))
@@ -191,14 +193,16 @@ class Themes:
         family = self.load(identity)['theme']
         if family == 'pywal16':
             digest.update(regular(Path(os.environ.get('XDG_CACHE_HOME') or Path.home() / '.cache') / 'wal/colors.json'))
-        for base in (LIB, LIB.parent / 'shell', self.checkout / 'default', self.directory(identity), self.root / family, self.config / 'themed', self.templates):
+        for base in (LIB, LIB.parent / 'shell', self.checkout / 'default', self.directory(identity), self.root / family, config_path('themed'), self.templates):
             if not base.exists(): continue
             for path in sorted(base.rglob('*')):
                 if path.is_file() and not path.is_symlink() and '__pycache__' not in path.parts:
                     digest.update(str(path).encode())
                     with path.open('rb') as stream:
                         for chunk in iter(lambda: stream.read(65536), b''): digest.update(chunk)
-        for path in styles().input_paths(identity, self.directory(identity)):
+        from style_config import Styles
+        preference_inputs = [*Styles(self.checkout).paths, LIB.parent/'style_config.py', LIB.parent/'theme_styles.py', LIB.parent/'resources.tsv', self.checkout/'config/gitmux/gitmux.conf']
+        for path in [*styles().input_paths(identity, self.directory(identity)), *preference_inputs]:
             digest.update(str(path).encode())
             if path.exists(): digest.update(regular(path))
         return digest.hexdigest()
@@ -228,6 +232,8 @@ class Themes:
             tokens[key + '_rgb'] = metric(key, value, 'rgb').replace(' ', ',')
         tokens.update(color.leaf_template_tokens(palette))
         tokens.update(color.tmtheme_template_tokens(doc))
+        from theme_styles import tokens as preference_tokens
+        tokens.update(preference_tokens(palette['colors'], self.checkout))
         tokens['mode'] = palette['mode']
         tokens['file_styles_vivid'] = json.dumps(color.vivid_theme(doc, color.vivid_runtime()[2]), indent=2)
         tokens['git_colors_starship'] = '\n'.join('git_' + key + ' = ' + json.dumps(value) for key, value in doc['colors']['git'].items())
@@ -237,8 +243,8 @@ class Themes:
         for name in overrides if trusted else ():
             if (directory / name).is_file() and not (directory / name).is_symlink():
                 (out / name).write_bytes(regular(directory / name)); rendered.add(name)
-        reserved = {'id','selection','fingerprint','palette.json','shell.tsv','colors.json','colors.lua','git-styles.tsv','file-styles.tsv','ls_colors','previous','status','connectors','bat-cache','bat-source','delta-cache','commands','yazi'}
-        for base in (self.config / 'themed', self.templates):
+        reserved = {'id','selection','fingerprint','palette.json','shell.tsv','colors.json','colors.lua','preferences.json','gitmux.conf','git-styles.tsv','file-styles.tsv','ls_colors','previous','status','connectors','bat-cache','bat-source','delta-cache','commands','yazi'}
+        for base in (config_path('themed'), self.templates):
             for path in sorted(base.glob('*.tpl')):
                 name = path.stem
                 if name in rendered: continue

@@ -1,6 +1,7 @@
 # The publisher holds FD 9 through this post-commit step. Failures cannot roll it back.
 dt_plugins_after_publish() {
-  local config=${XDG_CONFIG_HOME:-$HOME/.config}/dots/theme-plugins.json
+  local config
+  config=$(python3 -B "${DT_LIB%/themes}/profile_config.py" __path theme-plugins.json) || return
   if [[ ! -e $config && ! -L $config ]]; then
     dots::operation Skipped '' '' 'No theme plugins configured'
     return 0

@@ -81,7 +81,7 @@ def compact(ui, goal, width, styles=None):
     label = fit(identity(goal), min(16, max(4, width // 4))).rstrip()
     suffix = tail(goal, styles, due=width >= 80)
     available = max(1, width - cells(label) - 1 - sum(cells(s) for s, _ in suffix))
-    title = fit(('󰄬 ' if ui.icons else '') + clean(goal['title']), available).rstrip()
+    title = fit(((ui.icon('status.todo', '󰄬') + ' ') if ui.icons else '') + clean(goal['title']), available).rstrip()
     spans = [(label + ' ', styles['accent'] if goal.get('alias') else styles['blue']),
              (title, styles['emphasis']), *suffix]
     result, remaining = [], width

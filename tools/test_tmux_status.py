@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[1]
 BASH = shutil.which('bash')
@@ -54,6 +55,7 @@ class TmuxStatus(unittest.TestCase):
         source = self.repo / 'config/tmux/termux-status.py'
         source.parent.mkdir(parents=True)
         shutil.copyfile(REPO / 'config/tmux/termux-status.py', source)
+        shutil.copyfile(REPO / 'config/tmux/style_preferences.py', source.with_name('style_preferences.py'))
         self.termux_adapter = self.tmux_config / 'termux-status.py'
         self.termux_adapter.symlink_to(source)
         control = source.with_name('workspace-control.py')
@@ -408,6 +410,10 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                        git_untracked='#aa00aa', git_conflict='#aa0000', git_clean='#00bb00',
                        git_added='#00cc00', git_deleted='#cc0000', git_ahead='#00dd00',
                        git_behind='#dddd00', warning='#bbbb00')
+        sys.path.insert(0,str(REPO/'lib/dots'))
+        from theme_styles import tokens
+        with patch.dict(os.environ,self.env,clear=True):
+            palette.update(tokens(palette,REPO))
         template = (REPO / 'default/themed/tmux.conf.tpl').read_text()
         path = self.tmux_config / 'dots-theme.conf'
         path.write_text(re.sub(r'\{\{ (\w+) \}\}', lambda m: palette[m[1]], template))

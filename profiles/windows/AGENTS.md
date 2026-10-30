@@ -4,7 +4,7 @@
 
 `windots` stores Windows dotfiles and desktop customization assets. Keep changes grouped by application under `config/`: terminal settings in `alacritty/`, `wezterm/`, and `wt/`; desktop tools in `komorebi/`, `glaze-wm/`, and `yasb/`; and other application settings in their named directories. Themes and images live beside their consumers, such as `config/bat/themes/` and `config/wt/icons/`.
 
-`win.env` and `zshrc.local.symlink` provide environment and shell integration. `notes.md` records configuration locations and setup snippets. `rainmeter/5ui7e` is a Git submodule; manage their revisions deliberately and avoid initializing them for unrelated work.
+`profile.json` and `shells/init.zsh` provide profile configuration and personal shell hooks; the shared backend generates paths. `notes.md` records configuration locations and setup snippets. `rainmeter/5ui7e` is a Git submodule; manage their revisions deliberately and avoid initializing them for unrelated work.
 
 ## Build, Test, and Development Commands
 
@@ -35,10 +35,12 @@ PR descriptions should identify affected applications, expected behavior, valida
 
 ## Dots Integration
 
-`config/` is canonical; retain `configs -> config` during migration. `.dots/files.json`
+`config/` is canonical; retain `configs -> config` during migration. `profile.json`
 owns Windows inventory metadata for the Dots catalog. The shared native Python adapter resolves app-specific Windows locations through `${APP_CONFIG:app}` and `.dots/file-locations.json`. Maintain Windows PowerShell 5.1/7 alongside Bash-facing parent catalog behavior. Unknown/ambiguous app destinations, Windhawk exports and guest wsl.conf stay explicitly unmapped; never guess a destination or translate WSL paths. See the parent `docs/powershell.md` for mappings and native acceptance status.
 Catalog observation must not initialize optional submodules or change desktop state.
 
 ## Bundled profile ownership
 
 This directory is now a Dots platform profile, not an independent Androidots or Windots checkout. Follow the root [agent guide](../../AGENTS.md). Catalog source IDs are `termux` and `windows`; legacy IDs are recognized internally for receipt recovery, while CLI selectors require the canonical names. Use the root managed-file transactions for installation and retain the optional Rainmeter submodule boundary on Windows. See [profiles](../../docs/profiles.md).
+
+Profile mappings contain implementation fields and one target; platform eligibility belongs in the root core registry. Generated paths, aliases and native maps belong in the shared backend, not profile `.env` files. Keep application environment declarations separate.

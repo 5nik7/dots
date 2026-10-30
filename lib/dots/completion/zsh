@@ -43,10 +43,11 @@ _dots() {
 }
 if [[ $ZSH_EVAL_CONTEXT == *:file ]]; then
   if (( ${+functions[compdef]} )); then
-    compdef _dots dots theme todo
-    _dots_theme_completion_file=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current/init.zsh
-    [[ ! -r $_dots_theme_completion_file ]] || source "$_dots_theme_completion_file"
-    unset _dots_theme_completion_file
+    compdef _dots dots theme todo fonts
+    if (( ! ${+functions[_dots_theme_completion_load]} )); then
+      source "${${(%):-%x}:h}/theme.bash"
+    fi
+    _dots_theme_completion_load "${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current"
   fi
 else
   _dots "$@"

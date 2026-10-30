@@ -26,7 +26,7 @@ class Adapters(unittest.TestCase):
         for name in ('progress.py','interaction.py','ui.bash','ui.ps1','bootstrap-ui.sh',
                      'resources.py','resources.bash','resources.tsv',
                      'dispatch.bash','catalog.bash','complete.bash','init.bash','native.py',
-                     'cli.py','command_metadata.py','help.ps1','environment.py','platform_info.py','profiles.py'):
+                     'cli.py','command_metadata.py','help.ps1','environment.py','platform_info.py','profiles.py','profile_config.py','profile_views.py','style_config.py'):
             shutil.copy2(ROOT/'lib/dots'/name,self.repo/'lib/dots'/name)
         shutil.copytree(ROOT/'lib/dots/shell',self.repo/'lib/dots/shell')
         shutil.copytree(ROOT/'lib/dots/metadata',self.repo/'lib/dots/metadata')

@@ -26,6 +26,9 @@ class NativeCLI(unittest.TestCase):
         self.home, self.repo = self.base / 'home', self.base / 'repo'
         self.home.mkdir(); self.repo.mkdir()
         self.env = dict(os.environ)
+        # Real generated shortcuts are user state, not fixture PATH inputs.
+        self.env['PATH'] = os.pathsep.join(p for p in self.env.get('PATH', '').split(os.pathsep)
+                                            if '/dots/themes/commands/' not in p.replace('\\', '/').lower())
         for key in list(self.env):
             if key.startswith(('DOTS_', 'GIT_', 'BAT_')) or key in ('TMUX','KITTY_LISTEN_ON','WAYLAND_DISPLAY','DISPLAY','DOTHEMES','THEMES','TERMUX_VERSION','EZA_CONFIG_DIR','TELEVISION_CONFIG','TELEVISION_DATA','YAZI_CONFIG_HOME'): self.env.pop(key)
         self.env.update(DOTS=str(self.repo), HOME=str(self.home), USERPROFILE=str(self.home),
@@ -135,6 +138,79 @@ class NativeCLI(unittest.TestCase):
             with patch.dict(os.environ, DOTS_APP_WT_CONFIG=str(stable)):
                 self.assertEqual(config_directory('wt'), stable)
             self.assertIsNone(config_directory('filepilot'))
+
+    def test_native_shortcut_collision_publication_and_drift(self):
+        from types import SimpleNamespace
+        sys.path.insert(0, str(LIB / 'themes'))
+        import theme_cli
+        commands = self.home/'state/dots/themes/commands/current'
+        themes = SimpleNamespace(state=self.home/'state/dots', families=lambda: {'fixturepalette': {'default': 'fixturepalette'}}, ids=lambda: ['fixturepalette'])
+        external = self.base/'external'; external.mkdir()
+        program = external/('FIXTUREPALETTE.EXE' if os.name == 'nt' else 'fixturepalette')
+        program.write_text('do not execute\n'); program.chmod(0o700)
+        env = dict(self.env, PATH=str(external) + os.pathsep + str(commands/'bin') + os.pathsep + self.env['PATH'])
+        with patch.dict(os.environ, env, clear=True):
+            theme_cli.commands_refresh(themes)
+            self.assertEqual((commands/'names').read_text(), 'fixturepalette-theme\n')
+            self.assertEqual((commands/'map.tsv').read_text(), 'fixturepalette-theme\tfixturepalette\n')
+            self.assertIn("theme 'fixturepalette' @args", (commands/'bin/fixturepalette-theme.ps1').read_text())
+            self.assertIn('theme fixturepalette "$@"', (commands/'bin/fixturepalette-theme').read_text())
+            prior = commands.resolve()
+            theme_cli.commands_refresh(themes)
+            self.assertEqual(commands.resolve(), prior)
+            other = external/('fixturepalette-theme.ps1' if os.name == 'nt' else 'fixturepalette-theme')
+            other.write_text('do not execute\n'); other.chmod(0o700)
+            theme_cli.commands_refresh(themes)
+            self.assertEqual((commands/'names').read_text(), '')
+            self.assertFalse((commands/'bin/fixturepalette-theme.ps1').exists())
+            program.unlink(); other.unlink()
+            theme_cli.commands_refresh(themes)
+            self.assertEqual((commands/'names').read_text(), 'fixturepalette\n')
+            mapping = commands/'map.tsv'; mapping.write_text('fixturepalette\tunowned\n')
+            with self.assertRaisesRegex(ValueError, 'drift'): theme_cli.commands_refresh(themes)
+
+    def test_native_unchanged_refresh_reconciles_command_collisions(self):
+        sys.path.insert(0, str(LIB / 'themes'))
+        from palette_native import Themes
+        import theme_cli
+        external = self.base/'external'; external.mkdir()
+        env = dict(self.env, DOTS=str(ROOT), PATH=str(external) + os.pathsep + self.env['PATH'])
+        with patch.dict(os.environ, env, clear=True), patch.object(theme_cli, 'reload_apps'):
+            themes = Themes()
+            first = theme_cli.publication(themes, 'catppuccin-mocha')
+            commands = themes.state/'themes/commands/current'
+            old = commands.resolve()
+            program = external/('CATPPUCCIN.EXE' if os.name == 'nt' else 'catppuccin')
+            program.write_text('do not execute\n'); program.chmod(0o700)
+            self.assertEqual(theme_cli.publication(themes, 'catppuccin-mocha', dry=True), first)
+            self.assertEqual(commands.resolve(), old)
+            self.assertEqual(theme_cli.publication(themes, 'catppuccin-mocha', refresh=True), first)
+            self.assertIn('catppuccin-theme\tcatppuccin\n', (commands/'map.tsv').read_text())
+            self.assertFalse((commands/'bin/catppuccin.ps1').exists())
+            self.assertEqual((themes.state/'current/theme').resolve().name, first)
+
+    def test_native_empty_legacy_commands_upgrade_even_with_same_fingerprint(self):
+        import hashlib
+        from types import SimpleNamespace
+        sys.path.insert(0, str(LIB / 'themes'))
+        import theme_cli
+        themes = SimpleNamespace(state=self.home/'state/dots', families=lambda: {}, ids=lambda: [])
+        with patch.dict(os.environ, self.env, clear=True):
+            theme_cli.commands_refresh(themes)
+            pointer = themes.state/'themes/commands/current'
+            old = pointer.resolve()
+            # Empty v1 generations used the same hash but lacked a map.
+            (old/'map.tsv').unlink()
+            (old/'names').write_text('\n')
+            manifest = {str(p.relative_to(old)): hashlib.sha256(p.read_bytes()).hexdigest()
+                        for p in old.rglob('*') if p.is_file() and p.name != 'manifest.json'}
+            (old/'manifest.json').write_text(json.dumps(manifest))
+            theme_cli.commands_refresh(themes)
+            self.assertNotEqual(pointer.resolve(), old)
+            self.assertEqual((pointer/'map.tsv').read_text(), '')
+            current = pointer.resolve()
+            theme_cli.commands_refresh(themes)
+            self.assertEqual(pointer.resolve(), current)
 
     def test_native_publication_undo_idempotence_and_drift(self):
         sys.path.insert(0, str(LIB / 'themes'))

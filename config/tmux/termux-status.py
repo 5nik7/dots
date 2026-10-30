@@ -6,6 +6,9 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from style_preferences import glyph
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'lib/dots'))
 import codex_attention
@@ -165,12 +168,12 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
                       if pid == tab['pid'] and terminal == tab['tty']), {})
         current = tab['tty'] == tty
         active = value.get('attention', False)
-        marker = {'working': '', 'waiting': ''}.get(value.get('state'), '')
+        marker = {'working': glyph('status.working',''), 'waiting': glyph('status.waiting','')}.get(value.get('state'), '')
         # Current activity is already visible in the lower row; attention must
         # still be visible there and here under conservative focus handling.
         marker = marker if not current or active else ''
         if active and not marker:
-            marker = ''
+            marker = glyph('navigation.codex','')
         label = str(i) + (' ' + marker if marker else '')
         text = '[' + label + ']' if active else ' ' + label + ' '
         bg, fg = colors[2:] if current else colors[:2]
@@ -178,7 +181,7 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
         entries.append((style + text + '#[default]', len(text), active))
     if len(entries) == 1 and not entries[0][2]:
         entries = []
-    badge = f'[ {undisplayed}]' if undisplayed else ''
+    badge = '[' + glyph('navigation.codex','') + f' {undisplayed}]' if undisplayed else ''
     width = width if width is not None else 30
     if width <= 0:
         return ''

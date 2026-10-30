@@ -10,7 +10,7 @@ dots_error() {
 
 dots_reserved() {
   case $1 in
-    init|help|doctor|commands|completion|version|status|spec|plan|apply|undo|history|backup|config|bootstrap|self|__complete) return 0 ;;
+    init|help|doctor|commands|completion|version|status|spec|plan|apply|undo|history|backup|bootstrap|self|__complete) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -127,6 +127,10 @@ dots_main() {
       if (($# != 2)); then dots_error 'Usage: dots completion bash|zsh|fish|powershell'; return 2; fi
       case $2 in bash|zsh|fish|powershell) ;; *) dots_error 'Unknown completion shell'; return 2 ;; esac
       local line
+      if [[ $2 == bash || $2 == zsh ]]; then
+        [[ $2 != zsh ]] || printf '#compdef dots\n'
+        while IFS='' read -r line || [[ -n $line ]]; do printf '%s\n' "$line"; done < "$DOTS_LIB_DIR/completion/theme.bash"
+      fi
       while IFS='' read -r line || [[ -n $line ]]; do printf '%s\n' "$line"; done < "$DOTS_LIB_DIR/completion/$2"
       return ;;
   esac

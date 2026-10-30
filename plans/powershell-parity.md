@@ -2,6 +2,15 @@
 
 **Status: Implementation complete; native Windows acceptance pending.**
 
+Fonts add shared-controller routes, flags, a standalone adapter, completion, JSON
+and popup actions. Fixed HKCU font values participate in file journals and inverse
+operations. Remaining native acceptance: PowerShell 5.1/7 invocation/completion;
+per-user install/removal/recovery with locked fonts; Windows Terminal GUID/default
+edits, VS Code/WezTerm visibility, clipboard and terminal FZF. Termux and mocked
+registry evidence is separate; see [the fonts plan](fonts.md).
+
+The directory follow-up adds shared `DOTFONTS`, literal backend `*FONTS` selection, per-directory version history, storage-only install/update, explicit Use/Set and the same directory chooser/completion on both frontends. The shared Windows activation planner and journal are covered with owned-path registry substitutes on Termux; actual PowerShell 5.1/7, native path handling, locked-file recovery and desktop visibility remain pending.
+
 The approved target is the existing first-party command surface on Bash
 (Termux, Linux, WSL) and native Windows PowerShell 5.1 / PowerShell 7, without
 Bash, MSYS2 or WSL dependencies on Windows.
@@ -108,7 +117,7 @@ The Androidots `termux-geo` helper and its personal Bash/Zsh/Fish completion-pat
 
 ### wttr acceptance
 
-The standalone native `bin/wttr.ps1` entry shares weather options, stock request syntax, formatting, cache logic, progress and completion metadata with Bash. Stock requests require native curl.exe and bypass PowerShell aliases. The managed configuration has an APPDATA/wttr destination. Termux device acquisition and tmux daylight styling are explicit platform exceptions; manual/default weather is shared. Native Windows PowerShell 5.1/7 argv/completion/PTY, cache locking and ACL checks remain pending on this Termux implementation host; see [the focused plan](wttr.md).
+The standalone native `bin/wttr.ps1` entry and `dots wttr` family share weather options, stock request syntax, formatting, cache logic, progress and completion metadata with Bash. Both explicit `browse` routes use cached previews, session-only controls and the shared reader in the native terminal; missing FZF/terminal support falls back to the ordinary report. Stock requests require native curl.exe and bypass PowerShell aliases. Configuration resolves to APPDATA/wttr with the existing XDG override. Termux device acquisition and tmux daylight styling are explicit platform exceptions; manual/default weather is shared. Native Windows PowerShell 5.1/7 argv/completion/browser/PTY, cache locking and ACL checks remain pending on this Termux implementation host; see [the focused plan](wttr.md).
 
 Television integration uses the shared native renderer, destination resolver and Store connector transaction. The LOCALAPPDATA default and explicit overrides have fixture coverage; native PowerShell 5.1/7 publication, rollback, link-capability refusal and Television visual acceptance remain pending. See the [focused plan](television-theme.md).
 
@@ -165,3 +174,7 @@ Codex attention notifications (2026-10-28): explicit native-Windows exception fo
 ## Todo follow-up
 
 The shared todo controller, native standalone literal bridge, scope-aware completion and terminal FZF/PowerShell previews are implemented. Explicit aliases, schema-2 JSON, note appends and semantic detail views share this controller; no native-only storage or Bash fallback is added. Native Windows PowerShell 5.1/7 execution, interactive editing/completion, cancellation and managed skill-link privilege acceptance remain pending. See [todo plan](todo.md) and [todo documentation](../docs/todo.md).
+
+Profile configuration adds shared native `config` routes, profile/key completion and manifest-backed settings/mappings. Native Windows PowerShell 5.1/7 migration, reload, link privilege and terminal acceptance remain pending; see [the focused plan](profile-configs.md). Windows app destinations and WSL separation are unchanged.
+
+Profile backend acceptance: shared registry/profile controllers and generated native hashtables implemented; native PowerShell 5.1/7 alias reload, `$PROFILE` preservation and Windows app-destination execution remain pending. Termux fixtures and renderer assertions are not native Windows evidence.

@@ -122,7 +122,8 @@ uses FZF's inert filter ordering before opening the UI. Do not assume the raw
 inventory position equals the fuzzy match position.
 
 For a compact bottom preview, opt into `preview_position="down"` and
-`preview_lines=N`. The absolute height includes preview borders. Session previews
+`preview_lines=N`. Budget preview borders separately from the content dimensions
+reported by `FZF_PREVIEW_LINES` and verify the installed FZF geometry. Session previews
 use `preview_wrap=False` to keep each session on one row, clip overflow at the
 right edge and size by logical line count; they normally use five rows and cap
 at eight. Callers that need wrapping can use `preview_wrap=True`, budget content
@@ -130,6 +131,12 @@ width after borders/padding and count wrapped display cells after stripping
 trusted ANSI. Keep a stable height for the view and cap it against the terminal.
 Default percentage sizing and wrapping for other callers are unchanged. FZF's `~N` syntax fixes header lines; it does not
 size a preview to its contents.
+
+Trusted `bindings` are applied after built-in preview keys, allowing an explicit
+caller override of Alt-P. Todo uses this for adaptive result/resize transforms
+and visibility-preserving toggling through its read-only numeric sizing helper.
+Keep query/goal text out of generated action syntax; unsupported capabilities
+retain the compact layout and native toggle. Other callers keep their defaults.
 
 The [session browser](../../../../lib/dots/menu_sessions.py) refreshes project
 and session snapshots after actions, leaves query/focus in each navigation frame,
@@ -162,3 +169,18 @@ and inert previews in their own controller, as demonstrated by
 The session controller accepts `create_session(server, None, directory, project, context)` for managed creation with an immutable ID and automatic project naming. Explicit names retain manual creation semantics. Popup New uses the managed form without a name prompt; all subsequent actions retain the returned native session ID. See `lib/dots/tmux_workspaces.py` and the workspace plan for lifecycle ownership.
 
 Anodize Help pins text/horizontal (LOGO2 when wide, otherwise LOGO1); Preview and Extract pin text/base (LOGO1). Both read-only interactive results cooperate with `page_text(..., defer=True)` using the document action kind. Follow the [logo contract](../../../../docs/anodize.md#terminal-logo) and assert actual captured artwork; terminal/capture capabilities must not change the default mark. Logo gradients use published colors for Help and candidate colors for Preview/Extract, with independent hint/info/accent symbol/wordmark gradients and selected backgrounds covering logos, headers and details.
+
+## Document action keys
+
+`menu_pager.action_page(text, title=..., actions=..., frame=..., context=..., notice=...)` is an opt-in fitted FZF reader. Pass trusted key-to-(action ID, label) pairs; it returns an action ID, `actions` for Enter, or `back`. Query and focused line stay in the caller-owned frame across copying or reopening. Execute actions after the selector closes, and export the original complete text rather than selected/search-filtered lines. Ordinary `page_text` and less/FZF read-only readers keep their existing contracts. Todo demonstrates full-brief copy/print/launch actions and returns a typed handoff so its containing launcher exits on print or Codex launch.
+
+
+### Shared text input and config review
+
+`menu_input.prompt(initial, title, context=None, multiline=False, back=False)`
+provides optional Gum input with a readline fallback and private exact-client
+terminal handoff. `back=True` reports Escape as `SelectionEvent('back')`; Ctrl-C
+remains `SelectionEnded(130)`. `todo_input` retains the original import entry point.
+The config browser keeps its transaction plan across input and review, uses numeric
+preview snapshots and default-Cancel Save, then applies the original guarded plan.
+It never rebuilds a plan after approval or adds approval flags to file handoffs.

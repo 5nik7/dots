@@ -129,7 +129,7 @@ class Cases:
         theme = Path(self.env.get('XDG_STATE_HOME', self.home / '.local/state')) / 'dots/current/theme'
         theme.mkdir(parents=True, exist_ok=True)
         theme.joinpath('file-styles.tsv').write_text('dots-file-styles\t1\ntype\tdir\t38;2;17;34;51\t-\n')
-        icon = next(line.split('\t')[2] for line in (PROJECT / 'lib/dots/resources.tsv').read_text().splitlines()
+        icon = next(line.split('\t')[4] for line in (PROJECT / 'lib/dots/resources.tsv').read_text().splitlines()
                     if line.startswith('kind\tdir\t'))
         for route in (('info',), ('submodules', 'info'), ('submodule', 'child', 'info')):
             text = self.call(top, *route, env=dict(rich, DOTS_COLOR='always')).stdout

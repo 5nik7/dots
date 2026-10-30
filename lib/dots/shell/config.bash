@@ -34,6 +34,31 @@ _dots_config_load() {
       values[$key]=$value origins[$key]=config seen[$key]=1
     done < "$config"
   fi
+  # Compiled startup provides these literals without Python on the warm path.
+  if [[ ${_DOTS_PROFILE_SETTINGS_CHECKOUT:-} != "$root" ]]; then
+    typeset -ga _DOTS_PROFILE_SETTING_ROWS=()
+    local rows=''
+    if command -v python3 >/dev/null 2>&1; then
+      rows=$(DOTS="$root" command python3 -B "$root/lib/dots/profile_config.py" __settings) || return
+    fi
+    while IFS= read -r line; do [[ -z $line ]] || _DOTS_PROFILE_SETTING_ROWS+=("$line"); done <<< "$rows"
+    typeset -g _DOTS_PROFILE_SETTINGS_CHECKOUT=$root
+  fi
+  typeset -gA _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS
+  _DOTS_STYLE_ICONS=() _DOTS_STYLE_COLORS=()
+  for line in "${_DOTS_PROFILE_SETTING_ROWS[@]}"; do
+    key=${line%%$'\t'*}
+    value=${line#*$'\t'}; value=${value%%$'\t'*}
+    case $key in
+      __icon.*) _DOTS_STYLE_ICONS[${key#__icon.}]=$value; continue ;;
+      __color.*) _DOTS_STYLE_COLORS[${key#__color.}]=$value; continue ;;
+    esac
+    IFS=$'\t' read -r key value source_value <<< "$line"
+    if [[ $key == __path ]]; then typeset -g _DOTS_PROFILE_CONFIG=$value; continue; fi
+    [[ -z ${DOTS_CONFIG_FILE:-} ]] || continue
+    [[ -n ${kinds[$key]:-} ]] && _dots_config_valid "${kinds[$key]}" "$value" || return 1
+    values[$key]=$value origins[$key]=$source_value
+  done
   while IFS=$'\t' read -r key kind value description; do
     if [[ -n ${ZSH_VERSION:-} ]]; then source_value=${(P)key}
     else source_value=${!key-}; fi
@@ -49,4 +74,5 @@ _dots_config_load() {
     dots_options[$key]=${values[$key]} dots_option_sources[$key]=${origins[$key]}
   done < "$root/lib/dots/shell/settings.tsv"
   typeset -g _DOTS_CONFIG_PATH=$config
+  if [[ -z ${DOTS_CONFIG_FILE:-} && -f ${_DOTS_PROFILE_CONFIG:-}/profile.json ]]; then _DOTS_CONFIG_PATH=$_DOTS_PROFILE_CONFIG/profile.json; fi
 }

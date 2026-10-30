@@ -80,7 +80,8 @@ _dots_complete_bash() {
     esac
   done < <(command dots __complete bash "$((${#words[@]}-1))" -- "${words[@]}" 2>/dev/null)
 }
-complete -F _dots_complete_bash dots theme todo
-_dots_theme_completion_file=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current/init.bash
-[[ ! -r $_dots_theme_completion_file ]] || source "$_dots_theme_completion_file"
-unset _dots_theme_completion_file
+complete -F _dots_complete_bash dots theme todo fonts
+if ! typeset -f _dots_theme_completion_load >/dev/null; then
+  source "${BASH_SOURCE[0]%/*}/theme.bash"
+fi
+_dots_theme_completion_load "${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current"

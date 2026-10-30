@@ -35,6 +35,7 @@ if (-not $dotsEnvironmentReady) {
         & $dotsEnvironmentPython.Source -B (Join-Path $env:DOTS 'lib/dots/native_startup.py') powershell $dotsEnvironmentCache
         if ($LASTEXITCODE -eq 0) { $dotsEnvironmentReady = . $dotsEnvironmentCache }
     }
+    if (-not $dotsEnvironmentReady -and $global:DotsGeneratedPaths) { Write-Warning 'dots: profile environment preparation failed; previous profile environment retained'; return }
     if (-not $dotsEnvironmentReady) { Write-Warning 'dots: profile environment preparation unavailable; retaining minimal integration' }
 }
 $dotsSchema = @{}
@@ -74,6 +75,12 @@ if (Test-Path -LiteralPath $dotsConfigFile) {
         $dotsSeen[$key] = $true
     }
 }
+if (-not $env:DOTS_CONFIG_FILE -and $dotsEnvironmentReady) {
+    foreach ($key in @($global:DotsProfileSettings.Keys)) {
+        $dotsValues[$key] = $global:DotsProfileSettings[$key]
+        $dotsOrigins[$key] = $global:DotsProfileSettingOrigins[$key]
+    }
+}
 foreach ($key in @($dotsSchema.Keys)) {
     $override = [Environment]::GetEnvironmentVariable($key)
     if ($override) { $dotsValues[$key] = $override; $dotsOrigins[$key] = 'environment' }
@@ -91,6 +98,9 @@ foreach ($line in [IO.File]::ReadAllLines((Join-Path $env:DOTS 'lib/dots/shell/p
     if ($fields[1] -ne '-') { $global:dot[$fields[1]] = $value }
 }
 $global:dot.config = $dotsConfigFile
+if (-not $env:DOTS_CONFIG_FILE -and $dotsEnvironmentReady -and $global:DotsProfileConfigPath) {
+    $global:dot.config = $global:DotsProfileConfigPath
+}
 $stateRoot = if ($env:XDG_STATE_HOME) { $env:XDG_STATE_HOME } elseif ($IsWindows -or $env:OS -eq 'Windows_NT') { $env:LOCALAPPDATA } else { Join-Path $HOME '.local/state' }
 $global:dot.state = Join-Path $stateRoot 'dots'
 $env:THEMESCMD = Join-Path $dot.bin 'theme.ps1'
@@ -107,7 +117,8 @@ $dotsInteractive = $dotsArgs -notcontains '-NonInteractive' -and ($dotsArgs -con
 if ($dotsInteractive) {
     . (Join-Path $env:DOTS 'lib/dots/shell/less.ps1')
     if ($dots_options.DOTS_INIT_COLORS -eq '0') { $global:dots_colors = @{} }
-    # PowerShell identifiers are case insensitive: rst and RST are one value.
+    # PowerShell identifiers are case insensitive: esc/ESC and rst/RST share values.
+    if ($global:esc -cne [string][char]27) { $global:esc = [string][char]27 }
     if ($global:rst -cne ([string][char]27 + '[0m')) { $global:rst = [string][char]27 + '[0m' }
     . (Join-Path $env:DOTS 'lib/dots/shell/keys.ps1')
     function global:Update-DotsTheme {

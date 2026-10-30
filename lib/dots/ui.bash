@@ -1,6 +1,6 @@
 # Sourceable Bash presentation helpers. Static views use builtins; an active
 # progress worker is stopped before output. Never source shell configuration.
-typeset -gA dots_options
+typeset -gA dots_options _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS
 # DOTS_COLOR / DOTS_ICONS: auto, always, never; dispatcher flags override them.
 dots::settings() {
   if [[ -z ${_DOTS_CONFIG_PATH:-} && -n ${DOTS:-} && -r $DOTS/lib/dots/shell/config.bash ]]; then
@@ -8,6 +8,7 @@ dots::settings() {
     _dots_config_load || return
   fi
 }
+dots::icon() { REPLY=${_DOTS_STYLE_ICONS[$1]-${2-}}; }
 dots::style() {
   dots::settings || return
   [[ -z ${DOTS_PROGRESS_FD:-} ]] || dots::progress_stop
@@ -22,9 +23,15 @@ dots::style() {
     # Shared tokens consumed by command-specific library renderers.
     # shellcheck disable=SC2034
     DOTS_UI_MAGENTA=$'\e[95m' DOTS_UI_DIM=$'\e[2m'
+    local token code
+    for token in BLUE:94 CYAN:96 GREEN:92 YELLOW:93 RED:91 MAGENTA:95 DIM:90; do
+      code=${token#*:}; token=${token%:*}
+      printf -v "DOTS_UI_$token" '\e[%sm' "${_DOTS_STYLE_COLORS[$code]:-$code}"
+    done
   fi
   if [[ $icons == always ]] || [[ $icons == auto && -t $fd && ${TERM:-dumb} != dumb ]]; then
-    DOTS_UI_INFO='󰋽' DOTS_UI_OK='' DOTS_UI_WARN='' DOTS_UI_ERROR=''
+    DOTS_UI_INFO=${_DOTS_STYLE_ICONS[status.info]-󰋽} DOTS_UI_OK=${_DOTS_STYLE_ICONS[status.success]-}
+    DOTS_UI_WARN=${_DOTS_STYLE_ICONS[status.warning]-} DOTS_UI_ERROR=${_DOTS_STYLE_ICONS[status.error]-}
   fi
 }
 # Render trusted logo text with a vertical blue-to-cyan gradient.

@@ -1,11 +1,28 @@
 # Native completion; data comes from trusted Dots readers, never an extension.
-$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1', 'blastoff', 'blastoff.ps1', 'pkgs', 'pkgs.ps1', 'todo', 'todo.ps1')
+$dotsCompletionNames = @('dots', 'dots.ps1', 'theme', 'theme.ps1', 'anodize', 'anodize.ps1', 'blastoff', 'blastoff.ps1', 'pkgs', 'pkgs.ps1', 'todo', 'todo.ps1', 'fonts', 'fonts.ps1')
 $dotsCompletionState = if ($global:dot -and $global:dot.state) { $global:dot.state } elseif ($env:DOTS_STATE_DIR) { $env:DOTS_STATE_DIR } elseif ($env:XDG_STATE_HOME) { Join-Path $env:XDG_STATE_HOME 'dots' } elseif ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'dots' } else { Join-Path $HOME '.local/state/dots' }
 $dotsNamesPath = Join-Path $dotsCompletionState 'themes/commands/current/names'
+$global:_DotsThemeCommandMap = @{}
 if (Test-Path -LiteralPath $dotsNamesPath -PathType Leaf) {
-    $dotsCompletionNames += @([IO.File]::ReadAllLines($dotsNamesPath) | Where-Object { $_ -cmatch '^[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*$' } | ForEach-Object { $_; $_ + '.ps1' })
+    foreach ($name in [IO.File]::ReadAllLines($dotsNamesPath)) {
+        if ($name -cmatch '^[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*$') { $global:_DotsThemeCommandMap[$name] = $name }
+    }
 }
-Register-ArgumentCompleter -Native -CommandName $dotsCompletionNames -ScriptBlock {
+$dotsMapPath = Join-Path $dotsCompletionState 'themes/commands/current/map.tsv'
+if (Test-Path -LiteralPath $dotsMapPath -PathType Leaf) {
+    $global:_DotsThemeCommandMap = @{}
+    foreach ($line in [IO.File]::ReadAllLines($dotsMapPath)) {
+        if ($line -cmatch '^([a-z][a-z0-9_]*(?:-[a-z0-9_]+)*)\t([a-z][a-z0-9_]*(?:-[a-z0-9_]+)*)$') {
+            $global:_DotsThemeCommandMap[$Matches[1]] = $Matches[2]
+        }
+    }
+}
+$dotsCompletionNames += @($global:_DotsThemeCommandMap.Keys | ForEach-Object { $_; $_ + '.ps1' })
+if (-not $global:_DotsRegisteredCompletionNames) { $global:_DotsRegisteredCompletionNames = @{} }
+# PowerShell has no public unregister API. Retired entries decline completion;
+# register each name once so reloads preserve providers installed after Dots.
+$dotsNewCompletionNames = @($dotsCompletionNames | Where-Object { -not $global:_DotsRegisteredCompletionNames.ContainsKey($_) })
+$dotsCompleter = {
     param($wordToComplete, $commandAst, $cursorPosition)
     $words = @()
     foreach ($element in @($commandAst.CommandElements | Select-Object -Skip 1)) {
@@ -22,9 +39,13 @@ Register-ArgumentCompleter -Native -CommandName $dotsCompletionNames -ScriptBloc
     $commandName = [IO.Path]::GetFileNameWithoutExtension($commandAst.CommandElements[0].Extent.Text)
     if ($commandName -eq 'theme') { $words = @('theme') + $words }
     elseif ($commandName -eq 'todo') { $words = @('__todo_standalone') + $words }
+    elseif ($commandName -eq 'fonts') { $words = @('fonts') + $words }
     elseif ($commandName -eq 'anodize') { $words = @('anodize') + $words }
     elseif ($commandName -in @('blastoff', 'pkgs')) { $words = @($commandName) + $words }
-    elseif ($commandName -ne 'dots') { $words = @('theme', $commandName) + $words }
+    elseif ($commandName -ne 'dots') {
+        if (-not $global:_DotsThemeCommandMap.ContainsKey($commandName)) { return }
+        $words = @('theme', $global:_DotsThemeCommandMap[$commandName]) + $words
+    }
     $savedExit = $global:LASTEXITCODE
     try {
         $rows = & (Join-Path $env:DOTS 'bin/dots.ps1') __complete @words 2>$null
@@ -56,4 +77,8 @@ Register-ArgumentCompleter -Native -CommandName $dotsCompletionNames -ScriptBloc
             }
         }
     } finally { $global:LASTEXITCODE = $savedExit }
+}
+if ($dotsNewCompletionNames.Count -gt 0) {
+    Register-ArgumentCompleter -Native -CommandName $dotsNewCompletionNames -ScriptBlock $dotsCompleter
+    foreach ($name in $dotsNewCompletionNames) { $global:_DotsRegisteredCompletionNames[$name] = $true }
 }

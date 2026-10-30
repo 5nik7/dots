@@ -18,7 +18,7 @@ if sys.version_info < (3, 9):
 from catalog import Catalog, Presentation, platform, read_json
 from events import OperationOutput
 from file_platform import lock, open_nofollow, state_root, prepare_text
-from transactions import Store, digest, exists, parents_safe, private_directory
+from transactions import Store, digest, exists, parents_safe, private_directory, copy_object
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from interaction import gum_confirm
@@ -70,7 +70,7 @@ def display(doc, args, final=False):
                 if is_path:
                     intended = 'dir' if field == 'root' else None
                     if field == 'target' and row['status'] == 'create' and not os.path.lexists(row[field]):
-                        intended = 'symlink' if row.get('source') else 'file'
+                        intended = 'symlink' if row.get('source') and row.get('strategy') != 'copy' else 'file'
                     ui.resource_detail(field.title(), row[field], kind=intended)
                 else:
                     ui.detail(field.title(), row[field])
@@ -114,9 +114,9 @@ class Installation:
             if record['status'] in ('preparing', 'applying', 'rolling-back', 'recovery-required'):
                 raise ValueError('unfinished transaction: run dots files recover ' + record['id'])
 
-    def item(self, identity, status, target=None, source=None, reason=None):
+    def item(self, identity, status, target=None, source=None, reason=None, strategy=None):
         row = dict(id=identity, status=status)
-        row.update({k: str(v) for k, v in dict(target=target, source=source, reason=reason).items() if v is not None})
+        row.update({k: str(v) for k, v in dict(target=target, source=source, reason=reason, strategy=strategy).items() if v is not None})
         self.items.append(row)
         if status == 'conflict':
             self.blocked = True
@@ -126,7 +126,7 @@ class Installation:
         parents_safe(path)
         self.guards.setdefault(path, digest(path))
 
-    def add(self, identity, path, *, link=None, text=None, directory=False, managed=False):
+    def add(self, identity, path, *, link=None, text=None, source=None, directory=False, managed=False):
         path = Path(path)
         self.guard(path)
         key = str(path)
@@ -137,13 +137,19 @@ class Installation:
             managed = True
         current = self.guards[key]
         same = (link is not None and path.is_symlink() and os.readlink(path) == str(link))
+        if source is not None:
+            source = Path(source)
+            if source.is_symlink() or not source.is_file():
+                raise ValueError('copy strategy requires a regular file source')
+            self.guard(source)
+            same = not path.is_symlink() and current == self.guards[str(source)]
         if text is not None:
             same = path.is_file() and not path.is_symlink() and path.read_text(encoding='utf-8') == text
         if owned and current != owned['after'] and not managed:
             self.item(identity, 'conflict', path, reason='installer-owned target changed; preserve and review it')
             return
         if same:
-            self.item(identity, 'unchanged', path, link)
+            self.item(identity, 'unchanged', path, link or source, strategy='copy' if source is not None else None)
             return
         if path.is_symlink() and not owned and not managed:
             # A matching relative link predating setup is observed, never owned.
@@ -157,6 +163,8 @@ class Installation:
         op = dict(path=key)
         if link is not None:
             op.update(link=str(link), directory=directory)
+        elif source is not None:
+            op['source'] = str(source)
         else:
             op['text'] = text
         self.operations.append(op)
@@ -165,7 +173,9 @@ class Installation:
                          index=len(self.operations)-1)
             self.entries[key] = owned
         owned['desired'] = {k: v for k, v in op.items() if k != 'path'}
-        self.item(identity, 'replace-with-backup' if current is not None else 'create', path, link)
+        self.item(identity, 'replace-with-backup' if current is not None else 'create', path, link or source,
+                  reason='copy regular file' if source is not None else None,
+                  strategy='copy' if source is not None else None)
 
     def retire(self, identity, path):
         """Retire a caller-verified legacy object, retaining its original baseline."""
@@ -235,11 +245,11 @@ class Installation:
 
     def plan_install(self):
         catalog = Catalog(self.root, self.platform)
-        self.guard(self.root / '.dots/sources.json')
+        for path in catalog.input_paths():
+            self.guard(path)
         for source in catalog.sources:
             if source['status'] == 'excluded':
                 continue
-            self.guard(Path(source['root']) / '.dots/files.json')
             if self.platform in source['platforms'] and source['status'] != 'available':
                 self.item(source['id'], 'skipped', reason='optional source unavailable; select --with-source ' + source['id'])
         observed = catalog.records()
@@ -289,8 +299,8 @@ class Installation:
             if row['status'] in ('unmapped', 'unsupported-platform', 'source-missing', 'source-broken-link'):
                 self.item(row['id'], 'skipped', row['target'], reason=row['status'])
                 continue
-            if row['status'] == 'conflict' or row['strategy'] == 'copy':
-                self.item(row['id'], 'conflict', row['target'], reason='catalog ownership conflict or unsupported copy preference')
+            if row['status'] == 'conflict':
+                self.item(row['id'], 'conflict', row['target'], reason='catalog ownership conflict')
                 continue
             source, target = Path(row['source']), Path(row['target'])
             if source.is_symlink():
@@ -299,6 +309,12 @@ class Installation:
             if target == source or target in source.parents or source in target.parents:
                 raise ValueError('overlapping source and target: ' + str(target))
             self.guard(source)
+            if row['strategy'] == 'copy':
+                if not source.is_file():
+                    self.item(row['id'], 'conflict', target, reason='copy strategy requires a regular file source')
+                    continue
+                self.add(row['id'], target, source=source)
+                continue
             from git_platform import plan as plan_git_platform
             plan_git_platform(self, row)
             # Link identity is the installed object; later source edits remain
@@ -322,6 +338,15 @@ class Installation:
                          text="& '" + quoted + "' @args\nexit $LASTEXITCODE\n")
             else:
                 self.add('dots:todo:command', home / '.local/bin/todo', link=todo)
+        fonts = self.root / 'bin' / ('fonts.ps1' if self.platform == 'windows' else 'fonts')
+        if fonts.is_file():
+            self.guard(fonts)
+            if self.platform == 'windows':
+                quoted = str(fonts).replace("'", "''")
+                self.add('dots:fonts:command', home / '.local/bin/fonts.ps1',
+                         text="& '" + quoted + "' @args\nexit $LASTEXITCODE\n")
+            else:
+                self.add('dots:fonts:command', home / '.local/bin/fonts', link=fonts)
         for app, path, artifact in connectors:
             desired = self.state / 'current/theme' / artifact
             old = os.readlink(path) if path.is_symlink() else ''
@@ -424,6 +449,8 @@ class Installation:
                             raise ValueError('symbolic links unavailable; enable link capability explicitly before retrying') from error
                     elif 'text' in op:
                         prepare_text(prepared, op['text'], op['path'])
+                    elif 'source' in op:
+                        copy_object(op['source'], prepared)
                     self.entries[op['path']]['after'] = digest(prepared)
                     self.entries[op['path']].pop('desired', None)
             receipt = dict(self.receipt, entries=self.entries,

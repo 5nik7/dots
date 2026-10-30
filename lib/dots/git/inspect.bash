@@ -62,6 +62,9 @@ parse_url() {
         GIT_HOST_ICONS_READY=1
     fi
     [[ ! $HOST ]] || HOST_ICON=${GIT_HOST_ICONS[$HOST]:-}
+    dots::settings
+    dots::icon "hosts.${HOST%%.*}" "$HOST_ICON"; HOST_ICON=$REPLY
+    if [[ ! $HOST ]]; then dots::icon git.repository ''; HOST_ICON=$REPLY; fi
     if [[ -n $HOST && -n $OWNER && $PROTOCOL != file ]]; then
         for identity in "${OWNERS[@]}"; do
             if [[ ${identity%%/*} == "$HOST" && ${identity#*/} == "$OWNER" ]]; then OWNED=true; break; fi

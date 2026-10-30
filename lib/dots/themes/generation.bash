@@ -6,7 +6,7 @@ dt_generation_complete() {
   REPLY=$dir
   [[ -d $dir && ! -L $dir ]] || return 1
   if [[ -n ${DT_SEMANTIC[background]:-} ]]; then
-    required+=(colors.json colors.lua ls_colors file-styles.tsv git-styles.tsv
+    required+=(colors.json colors.lua preferences.json ls_colors file-styles.tsv git-styles.tsv
                yazi/flavor.toml yazi/tmtheme.xml)
     # Use the same effective template roots and connector registry as rendering.
     for template in "$DT_USER_TEMPLATES/"*.tpl "$DT_TEMPLATES/"*.tpl; do

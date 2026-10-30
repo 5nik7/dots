@@ -136,6 +136,26 @@ class Profiles(unittest.TestCase):
             self.assertEqual(warm.returncode,0,warm.stderr);self.assertEqual(warm.stdout,cold.stdout)
             self.assertNotIn('PYTHON_WAS_CALLED',warm.stderr)
 
+    def test_profile_setting_invalidates_bundle_and_stays_python_free_when_warm(self):
+        self.public()
+        platform=detect(env=self.env)['platform']
+        for shell in ('bash','zsh'):
+            if not shutil.which(shell): continue
+            self.profile(platform,settings={'DOTS_INIT_COLORS':'0'})
+            code='source "$DOTS/lib/dots/shell/init.'+shell+'"; printf "%s|%s" "${dots_options[DOTS_INIT_COLORS]}" "${dots_option_sources[DOTS_INIT_COLORS]}"'
+            cold=self.run_shell(shell,code)
+            self.assertEqual(cold.returncode,0,cold.stderr)
+            self.assertEqual(cold.stdout,'0|profile:'+platform)
+            commands=self.home/('profile-settings-'+shell);commands.mkdir()
+            shim=commands/'python3';shim.write_text('#!'+shutil.which('sh')+'\nprintf PYTHON_WAS_CALLED >&2\nexit 99\n');shim.chmod(0o700)
+            warm=self.run_shell(shell,code,PATH=str(commands)+os.pathsep+self.env['PATH'])
+            self.assertEqual(warm.returncode,0,warm.stderr);self.assertEqual(warm.stdout,cold.stdout)
+            self.assertNotIn('PYTHON_WAS_CALLED',warm.stderr)
+            self.profile(platform,settings={'DOTS_INIT_COLORS':'1'})
+            changed=self.run_shell(shell,code)
+            self.assertEqual(changed.returncode,0,changed.stderr)
+            self.assertEqual(changed.stdout,'1|profile:'+platform)
+
     def test_failed_prepare_and_concurrent_startup(self):
         self.public()
         code='source "$DOTS/lib/dots/shell/init.bash"; printf "%s" "$DOTS_PROFILE"'

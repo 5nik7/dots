@@ -99,6 +99,39 @@ class Queue(unittest.TestCase):
             self.assertEqual(self.run_events(), [])
             self.assertEqual(self.phases()[0]['phase'], 'ack')
 
+    def test_short_identity_resolution_is_unique_bounded_and_read_only(self):
+        short = THREAD[:29] + '...'
+        def resolve(incoming=None):
+            return alerts.resolve_threads([dict(thread=short)], incoming)[0]['thread']
+        self.assertEqual(resolve(), '-')
+        self.assertEqual(resolve(THREAD), THREAD)
+        self.assertFalse(alerts.status.alert_root().exists())
+        alerts.record(event(), self.prefs)
+        self.assertEqual(resolve(), THREAD)
+        # An acknowledged collision must still prevent resolution, including at
+        # receipt of the first event for another thread with the same prefix.
+        self.assertEqual(short, OTHER[:29] + '...')
+        self.assertEqual(resolve(OTHER), '-')
+        alerts.record(complete(thread=OTHER), self.prefs)
+        with alerts.database() as db:
+            alerts.acknowledge(db, 'thread=?', (OTHER,))
+        self.assertEqual(resolve(), '-')
+        with alerts.database() as db:
+            db.execute('DELETE FROM events WHERE thread=?', (OTHER,))
+            db.execute('INSERT INTO turns VALUES (?,?,1)', (OTHER, 'old-turn'))
+        self.assertEqual(resolve(), '-')
+        self.assertEqual(alerts.resolve_threads([dict(thread=THREAD)])[0]['thread'], THREAD)
+        with patch.object(alerts, 'MAX_EVENTS', 1):
+            self.assertIsNone(alerts.known_threads())
+            self.assertEqual(resolve(), '-')
+        path = alerts.status.alert_root() / 'events.sqlite3'
+        before = path.read_bytes(), path.stat().st_mtime_ns
+        self.assertEqual(resolve(), '-')
+        self.assertEqual((path.read_bytes(), path.stat().st_mtime_ns), before)
+        path.chmod(0o644)
+        self.assertIsNone(alerts.known_threads())
+        self.assertEqual(resolve(THREAD), '-')
+
     def test_linked_windows_and_location_snapshot(self):
         rows = alerts.parse_inventory((f'@2 %2 123 1 1 {THREAD} $1 10\n'
                                        f'@2 %2 123 1 1 {THREAD} $2 11\n').encode())
@@ -271,7 +304,7 @@ class Queue(unittest.TestCase):
         alerts.notify_device(message, self.prefs)
         calls = [json.loads(row) for row in log.read_text().splitlines()]
         self.assertCountEqual(calls, [['-d', '300', '-f'],
-                                ['-b', '#123456', '-c', '#abcdef', '-g', 'middle', '-s', '--', message]])
+                                ['-b', '#123456', '-c', '#abcdef', '-g', 'middle', '--', message]])
         self.assertNotIn('\x1b', message)
         self.assertNotIn('\n', message)
         self.assertFalse((self.home / 'NEVER').exists())
@@ -382,15 +415,19 @@ class Native(unittest.TestCase):
     view = codex.Native.view
     color = codex.Native.color
 
+    def title_id(self):
+        return THREAD
+
     def test_real_inventory_attention_brackets_focus_and_expiry(self):
         pane = self.inner('new-window', '-d', '-P', '-F', '#{pane_id}', '-n', 'agent', self.command('alert'))
         self.pid('alert')
-        self.inner('select-pane', '-t', pane, '-T', f'Waiting | Working | {THREAD}')
+        self.inner('select-pane', '-t', pane, '-T', f'Waiting | Working | {self.title_id()}')
         self.view()
         self.inner('select-window', '-t', ':0')
         socket = self.base[self.base.index('-S') + 1]
         prefs = alerts.preferences()
         with patch.dict(os.environ, self.env, clear=True), patch.object(alerts, 'notify_device') as device:
+            alerts.record(event(), prefs)
             rows = alerts.snapshot(socket)
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]['thread'], THREAD)
@@ -420,7 +457,7 @@ class Native(unittest.TestCase):
             device.assert_called_once()
             alerts.atomic_snapshot(alerts.status.socket_key(socket), ['@1'], time.time() - 16)
             self.assertEqual(alerts.status.attention(socket, '|@1:waiting|'), '')
-            self.inner('select-pane', '-t', pane, '-T', f'Ready | {THREAD}')
+            self.inner('select-pane', '-t', pane, '-T', f'Ready | {self.title_id()}')
             alerts.record(complete(), prefs)
             alerts.tick(socket, prefs)
             self.color('[1 agent]', (255, 85, 85))
@@ -432,7 +469,7 @@ class Native(unittest.TestCase):
     def test_native_worker_exclusive_lock_callback_and_snapshot(self):
         pane = self.inner('new-window', '-d', '-P', '-F', '#{pane_id}', '-n', 'agent', self.command('worker'))
         self.pid('worker')
-        self.inner('select-pane', '-t', pane, '-T', f'Waiting | {THREAD}')
+        self.inner('select-pane', '-t', pane, '-T', f'Waiting | {self.title_id()}')
         socket = self.base[self.base.index('-S') + 1]
         env = dict(self.env, CODEX_HOME=str(self.fixture.home / '.codex'), TERMUX_VERSION='fixture')
         home = Path(env['CODEX_HOME'])
@@ -463,6 +500,55 @@ class Native(unittest.TestCase):
         self.assertEqual(duplicate.returncode, 0)
         with patch.dict(os.environ, env, clear=True):
             self.assertIn(':attention|', alerts.status.status(socket))
+
+
+class NativeShortTitles(Native):
+    def title_id(self):
+        return THREAD[:29] + '...'
+
+    def test_short_title_validation_focus_at_first_receipt_and_approval(self):
+        pane = self.inner('new-window', '-d', '-P', '-F', '#{pane_id}', '-n', 'agent', self.command('short'))
+        self.pid('short')
+        self.view()
+        socket = self.base[self.base.index('-S') + 1]
+        prefs = alerts.preferences()
+        short = self.title_id()
+        with patch.dict(os.environ, self.env, clear=True), patch.object(alerts, 'notify_device') as device:
+            # Only an exact final field is transported, even if earlier fields
+            # contain valid full IDs. No other title text reaches Python.
+            for title, expected in [(short, short), (f'Working | {short}  ', short),
+                                    (f'{THREAD} | Waiting | {short}', short),
+                                    (f'Waiting | {short} | extra', '-'),
+                                    (f'Waiting | {THREAD[:28]}...', '-'),
+                                    (f'Waiting | {THREAD[:29]}…', '-'),
+                                    (f'Waiting | prefix{short}', '-')]:
+                self.inner('select-pane', '-t', pane, '-T', title)
+                raw = alerts.status.inventory(socket, time.monotonic() + 1, alerts.INVENTORY, alerts.parse_inventory)
+                self.assertEqual(next(p for p in raw if p['pane'] == pane)['thread'], expected)
+            self.inner('select-pane', '-t', pane, '-T', f'Waiting | {short}')
+            self.inner('select-window', '-t', pane)
+            alerts.tick(socket, prefs)
+            self.assertEqual(alerts.snapshot(socket)[0]['thread'], '-')
+            alerts.record(event(), prefs)
+            with alerts.database() as db:
+                self.assertEqual(db.execute('SELECT phase FROM events').fetchone()[0], 'ack')
+            alerts.tick(socket, prefs)
+            device.assert_not_called()
+            self.inner('select-window', '-t', ':0')
+            approval = event('PermissionRequest') | {'tool_name': 'Bash', 'tool_input': {'description': 'Allow?'}}
+            alerts.record(approval, prefs)
+            alerts.tick(socket, prefs)
+            self.color('[1 agent ]', (255, 85, 85))
+            device.assert_called_once()
+            alerts.acknowledge_pane(socket, pane, thread=THREAD)
+            self.assertEqual(alerts.status.attention(socket, '|@1:waiting|'), '')
+            # Retired full IDs continue to make matching prefixes ambiguous.
+            alerts.record(complete(thread=OTHER), prefs)
+            self.assertEqual(alerts.snapshot(socket)[0]['thread'], '-')
+            with self.assertRaises(ValueError):
+                alerts.acknowledge_pane(socket, pane, thread=THREAD)
+            alerts.tick(socket, prefs)
+            device.assert_called_once()
 
 
 if __name__ == '__main__':

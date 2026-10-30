@@ -51,11 +51,11 @@ class Check:
         self.catalog = Catalog(self.manager.root, self.args.platform)
         if self.args.repo and not any(s['id'] == self.args.repo for s in self.catalog.sources):
             raise ValueError('unknown repository: ' + self.args.repo)
+        for path in self.catalog.input_paths():
+            self.guard(path)
         for owner in self.catalog.sources:
-            if owner['status'] != 'excluded':
-                self.guard(Path(owner['root']) / '.dots/files.json')
             if owner['status'] == 'available':
-                path = Path(owner['root']) / '.dots/files.json'
+                path = self.catalog.base_path(owner)
                 self.documents[owner['id']] = (str(path), self.catalog.manifest(owner))
         rows = self.catalog.records()
         rows = [r for r in rows if (self.args.all_platforms or r['applicable']) and all(
@@ -96,17 +96,18 @@ class Check:
                 raise ValueError('source changed after preview: ' + row['source'])
             guards[row['source']] = None
             path, original = self.documents[row['repository']]
-            if path not in documents:
-                documents[path] = copy.deepcopy(original)
-            documents[path]['resources'] = [r for r in documents[path]['resources']
+            owner = row['repository']
+            if owner not in documents:
+                documents[owner] = copy.deepcopy(original)
+            documents[owner]['resources'] = [r for r in documents[owner]['resources']
                                             if row['repository'] + ':' + r['id'] not in selected]
-        operations = [dict(path=p, data=doc) for p, doc in sorted(documents.items())]
+        operations = self.catalog.updates(documents)
         for operation in operations:
             path = Path(operation['path'])
             state = self.manager.store.state
             if path.is_relative_to(state) or state.is_relative_to(path):
                 raise ValueError('catalog overlaps the state store')
-        return operations, guards, sorted(documents)
+        return operations, guards, sorted(set(self.catalog.lock_paths()+[op['path'] for op in operations]))
 
     def apply(self, selected):
         operations, guards, catalogs = self.plan(selected)

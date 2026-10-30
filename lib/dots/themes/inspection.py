@@ -55,6 +55,8 @@ CONSUMERS = {
 }
 BAD = {'missing', 'broken', 'points-elsewhere', 'regular-file', 'unavailable', 'pinned'}
 
+from profile_config import config_path
+
 
 def bounded(path, limit=2 * 1024 * 1024):
     """No symlink parents, special-file opens, unbounded reads or evaluation."""
@@ -95,7 +97,7 @@ class Inspection:
         self.checkout = Path(os.environ.get('DOTS') or LIB.parents[2]).resolve()
         self.theme_root = Path(os.environ.get('DOTHEMES') or os.environ.get('THEMES') or self.checkout / 'themes')
         self.templates = Path(os.environ.get('DOTS_THEME_TEMPLATES') or self.checkout / 'default/themed')
-        self.personal = self.config / 'dots/themed'
+        self.personal = config_path('themed')
         self.active = self.state / 'current/theme'
         self.generation = None
         self.identity = None

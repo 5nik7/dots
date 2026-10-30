@@ -10,7 +10,7 @@ from platform_info import detect
 PLATFORMS = ('linux', 'wsl', 'termux', 'windows')
 IDENTITY = re.compile(r'(?:linux|wsl|termux|windows)(?:/[a-z0-9][a-z0-9_.-]*)?\Z')
 SENSITIVE = re.compile(r'(?:TOKEN|PASSWORD|PASSWD|SECRET|CREDENTIAL|PRIVATE_KEY|API_KEY)', re.I)
-DIRECTORIES = ('config', 'bin', 'scripts', 'lib', 'shells', 'docs', 'skills')
+DIRECTORIES = ('config', 'bin', 'scripts', 'lib', 'shells', 'docs', 'skills', 'fonts')
 
 
 def directory(root, identity):
@@ -23,15 +23,26 @@ def directory(root, identity):
     return path
 
 
-def definition(root, identity):
+def definition(root, identity, data=None):
     path = directory(root, identity) / 'profile.json'
     if not path.is_file(): return None
     if not path.resolve().is_relative_to(Path(root).resolve()): raise ValueError('profile manifest escapes checkout')
-    data = json.loads(path.read_text(encoding='utf-8'))
+    if data is None:
+        if path.is_symlink() or path.stat().st_size > 4 * 1024 * 1024:
+            raise ValueError('profile manifest must be a bounded regular file')
+        def unique(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result: raise ValueError('duplicate profile field: ' + key)
+                result[key] = value
+            return result
+        data = json.loads(path.read_text(encoding='utf-8'), object_pairs_hook=unique)
     if not isinstance(data, dict): raise ValueError('profile manifest must be an object')
     if data.get('schema') != 1 or data.get('id') != identity: raise ValueError('invalid profile manifest: ' + identity)
-    if set(data) - {'schema', 'id', 'description', 'extends', 'environment', 'path', 'replaces_commands'}:
+    if set(data) - {'schema', 'id', 'description', 'extends', 'environment', 'path', 'replaces_commands', 'settings', 'files', 'alias'}:
         raise ValueError('unknown profile field: ' + identity)
+    if 'alias' in data and (not isinstance(data['alias'], str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*', data['alias'])):
+        raise ValueError('profile alias must be a shell identifier')
     if not isinstance(data.get('description', ''), str): raise ValueError('profile description must be a string')
     if not isinstance(data.get('extends', []), list): raise ValueError('profile extends must be a list')
     for parent in data.get('extends', []):
@@ -39,6 +50,11 @@ def definition(root, identity):
         owner = identity.split('/')[0]
         if parent.split('/')[0] not in ({'wsl','linux'} if owner == 'wsl' else {owner}): raise ValueError('parent crosses platform boundary')
     if not isinstance(data.get('environment', {}), dict): raise ValueError('profile environment must be an object')
+    from profile_config import validate_settings
+    validate_settings(data.get('settings', {}))
+    files = data.get('files', {})
+    if not isinstance(files, dict) or any(not re.fullmatch(r'[a-z][a-z0-9_-]*', key) or not isinstance(rows, list) for key, rows in files.items()):
+        raise ValueError('profile files must map repository IDs to resource lists')
     for field in ('path', 'replaces_commands'):
         if field in data and (not isinstance(data[field], list) or any(not isinstance(v, str) for v in data[field])): raise ValueError('profile ' + field + ' must be a string list')
     for key, value in data.get('environment', {}).items():

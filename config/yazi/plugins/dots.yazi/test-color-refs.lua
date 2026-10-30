@@ -26,7 +26,9 @@ io.open=function(path)
 end
 local config={theme={source='dots'},dotline={style_a={fg=colors.background,reversed=false},custom=colors.type.dir},
  githead={branch_color='#010203',repo_color=colors.git.repo}}
+current.preferences={schema=1,apps={yazi={icons={['git.branch']='BR'}}}}
 local resolved=theme:setup(config.theme,config)
+assert(resolved.githead.branch_symbol=='BR')
 assert(resolved.dotline.style_a.fg=='#111111' and resolved.dotline.style_a.reversed==false)
 assert(resolved.dotline.custom=='#123456' and resolved.githead.repo_color=='#ab00cd')
 assert(resolved.githead.repo_owned_color=='yellow' and resolved.githead.branch_color=='#010203')

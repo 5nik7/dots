@@ -1,7 +1,9 @@
 # Wallpaper adapters are explicit post-publication actions, never palette hooks.
 dt_bg_files() {
   local dir=$1 file
-  for file in "$dir/backgrounds/"* "${XDG_CONFIG_HOME:-$HOME/.config}/dots/backgrounds/$DT_BG_ID/"*; do
+  local personal
+  personal=$(python3 -B "${DT_LIB%/themes}/profile_config.py" __path "backgrounds/$DT_BG_ID") || return
+  for file in "$dir/backgrounds/"* "$personal/"*; do
     [[ -f $file && ! -L $file ]] || continue
     case ${file,,} in *.png|*.jpg|*.jpeg|*.webp|*.bmp) printf '%s\0' "$file" ;; esac
   done

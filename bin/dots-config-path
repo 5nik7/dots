@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dots:summary=Print the profile configuration path
+# dots:usage=[NAME] [OPTIONS]
+# dots:option=--defaults||flag|Use shared color and icon defaults
+# dots:option=--profile||profile-id|Select a profile without activating it
+# dots:option=--json||flag|Print structured configuration data
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/config_cli.py" path "$@"

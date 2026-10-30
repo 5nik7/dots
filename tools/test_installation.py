@@ -83,19 +83,46 @@ class InstallationTests(unittest.TestCase):
         self.assertTrue(self.source.exists())
         self.assertFalse(self.receipt()['entries'])
 
+    def test_fonts_command_install_and_restore(self):
+        for name in ('fonts', 'fonts.ps1'):
+            shutil.copy2(ROOT/'bin'/name, self.repo/'bin'/name)
+        with mock.patch.dict(os.environ, self.env), mock.patch('install.platform', return_value='windows'):
+            native = Installation(self.repo)
+            native.plan_install()
+            operation = next(op for op in native.operations if Path(op['path']).name == 'fonts.ps1')
+            self.assertIn(str(self.repo/'bin/fonts.ps1').replace("'", "''"), operation['text'])
+            self.assertNotIn('bash', operation['text'])
+        name = 'fonts.ps1' if os.name == 'nt' else 'fonts'
+        command = self.home/'.local/bin'/name
+        command.parent.mkdir(parents=True)
+        command.write_text('Previous fonts command\n')
+        self.cli('install', '--yes')
+        if os.name != 'nt': self.assertEqual(command.resolve(), self.repo/'bin/fonts')
+        self.assertEqual(json.loads(self.cli('install','--yes','--json').stdout)['status'],'unchanged')
+        self.cli('uninstall','--yes')
+        self.assertEqual(command.read_text(),'Previous fonts command\n')
+
     def test_todo_command_and_skill_lifecycle(self):
         for name in ('todo', 'todo.ps1'):
             shutil.copy2(ROOT/'bin'/name, self.repo/'bin'/name)
-        skill = self.repo/'.codex/skills/dots-todo'
-        skill.mkdir(parents=True)
-        (skill/'SKILL.md').write_text('Fixture todo skill\n')
+        names = {'todo-skill': 'dots-todo', 'todo-planning-skill': 'dots-todo-planning',
+                 'todo-maintenance-skill': 'dots-todo-maintenance'}
+        definitions = []
+        for platform in ('termux', 'linux', 'wsl', 'windows'):
+            profile = json.loads((ROOT/'profiles'/platform/'profile.json').read_text())
+            resources = [r for r in profile['files']['dots'] if r['id'] in names]
+            self.assertEqual({r['id'] for r in resources}, set(names))
+            if definitions: self.assertEqual(resources, definitions)
+            definitions = resources
+        registry = {row['id']:row['platforms'] for row in json.loads((ROOT/'.dots/files.json').read_text())['resources']}
+        definitions = [dict(row,platforms=registry['dots:'+row['id']]) for row in definitions]
+        for name in names.values():
+            shutil.copytree(ROOT/'.codex/skills'/name, self.repo/'.codex/skills'/name)
         sources = json.loads((self.repo/'.dots/sources.json').read_text())
-        sources['sources'][0]['roots'].append('.codex/skills/dots-todo')
+        sources['sources'][0]['roots'].extend('.codex/skills/' + name for name in names.values())
         self.write('.dots/sources.json', sources)
         catalog = json.loads((self.repo/'.dots/files.json').read_text())
-        catalog['resources'].append(dict(id='todo-skill',source='.codex/skills/dots-todo',
-            target='${HOME}/.codex/skills/dots-todo',strategy='directory-link',app='codex',category='skill',
-            platforms=['termux','linux','wsl','windows']))
+        catalog['resources'].extend(definitions)
         self.write('.dots/files.json', catalog)
         project_goals = self.repo/'.dots/todo.json'
         project_goals.write_text('{"schema": 1, "goals": []}\n')
@@ -108,22 +135,30 @@ class InstallationTests(unittest.TestCase):
             operation = next(op for op in native.operations if Path(op['path']).name == 'todo.ps1')
             self.assertIn(str(self.repo/'bin/todo.ps1').replace("'", "''"), operation['text'])
             self.assertNotIn('bash', operation['text'])
+            for name in names.values():
+                self.assertTrue(any(Path(op['path']).name == name for op in native.operations))
         name = 'todo.ps1' if os.name == 'nt' else 'todo'
         command = self.home/'.local/bin'/name
         command.parent.mkdir(parents=True)
         command.write_text('Original command\n')
-        skill_target = self.home/'.codex/skills/dots-todo'
+        original = self.home/'.codex/skills/dots-todo-planning'
+        original.mkdir(parents=True)
+        (original/'SKILL.md').write_text('Original planning skill\n')
         before = list(self.home.rglob('*'))
         self.cli('install', '--dry-run', '--json')
         self.assertEqual(before, list(self.home.rglob('*')))
         self.cli('install', '--yes')
-        self.assertEqual(skill_target.resolve(), skill)
+        for name in names.values():
+            self.assertEqual((self.home/'.codex/skills'/name).resolve(), self.repo/'.codex/skills'/name)
         if os.name != 'nt': self.assertEqual(command.resolve(), self.repo/'bin/todo')
         self.assertEqual(json.loads(self.cli('install', '--yes', '--json').stdout)['status'], 'unchanged')
         self.cli('uninstall', '--yes')
         self.assertEqual(command.read_text(), 'Original command\n')
-        self.assertFalse(skill_target.exists())
-        self.assertTrue(skill.exists())
+        for name in names.values():
+            if name != 'dots-todo-planning': self.assertFalse((self.home/'.codex/skills'/name).exists())
+            self.assertTrue((self.repo/'.codex/skills'/name).exists())
+        self.assertFalse(original.is_symlink())
+        self.assertEqual((original/'SKILL.md').read_text(), 'Original planning skill\n')
         self.assertEqual(project_goals.read_text(), '{"schema": 1, "goals": []}\n')
         self.assertEqual(global_goals.read_text(), '{"schema": 1, "goals": []}\n')
 
@@ -211,7 +246,7 @@ class InstallationTests(unittest.TestCase):
 
     def git_fixture(self):
         shutil.copytree(ROOT/'lib/dots/files',self.repo/'lib/dots/files')
-        for name in ('progress.py','interaction.py','resources.py','resources.tsv','platform_info.py','profiles.py'):
+        for name in ('progress.py','interaction.py','resources.py','resources.tsv','platform_info.py','profiles.py','profile_config.py','profile_views.py','style_config.py'):
             shutil.copy2(ROOT/'lib/dots'/name,self.repo/'lib/dots'/name)
         self.git(self.repo,'init','--initial-branch=main')
         self.git(self.repo,'config','user.email','fixture@example.invalid')
@@ -450,7 +485,7 @@ p.apply('install')
         self.env['DOTS_COLOR'] = 'always'
         result = self.cli('install', '--yes')
         self.assertEqual(result.stderr.count('Vivid compatibility mode'), 1)
-        self.assertIn('\x1b[93m', result.stderr)
+        self.assertRegex(result.stderr, r'\x1b\[[0-9;]+mVivid compatibility mode\x1b\[0m')
         active = self.home/'.state/dots/current/theme'
         previous = active.resolve(); receipt = self.receipt()
         template = self.home/'.config/dots/themed/vivid.yml.tpl'
@@ -477,8 +512,12 @@ p.apply('install')
         # Copy only versioned public inputs, never ignored connectors or local
         # submodule contents. Include this change's new source files before commit.
         names=set(subprocess.check_output(['git','-C',str(ROOT),'ls-files','--cached','--others','--exclude-standard','-z','--',
-            '.dots','.codex/skills/dots-todo','bin','lib','plugins','default','themes','config','shells','ruby',
+            '.dots','.codex/skills/dots-todo','.codex/skills/dots-todo-planning',
+            '.codex/skills/dots-todo-maintenance','bin','lib','plugins','default','themes','config','shells','ruby',
             'install.sh','uninstall.sh']).decode().rstrip('\0').split('\0'))
+        # Profile implementations and visual inputs accompany the core registry.
+        for filename in ('profile.json','colors.toml','icons.toml'):
+            names.update(str(p.relative_to(ROOT)) for p in (ROOT/'profiles').glob('*/'+filename))
         names.update(('config/fsh/README.md','default/themed/eza.yml.tpl','default/themed/television.toml.tpl','default/themed/leaf.toml.tpl','lib/dots/themes/generation.bash',
                       'lib/dots/files/events.py', 'lib/dots/verbose.bash', 'lib/dots/files/app_paths.py'))
         names.update(str(p.relative_to(ROOT)) for p in (ROOT/'lib/dots/metadata').glob('*.meta'))

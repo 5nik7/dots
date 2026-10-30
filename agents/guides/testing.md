@@ -1,5 +1,11 @@
 # Testing Work Guide
 
+For fonts, run `tools/test_fonts.py` with `tools/requirements-fonts.txt` available,
+then `tools/test_font_directories.py`, `tools/test_fonts_browser.py` and the command generator's `--check`. Directory fixtures must set DOTS to a test-owned checkout before any storage mutation. Keep font,
+registry, clipboard and tmux effects in owned fixtures. Run file-platform checks
+before affected file/installation suites; follow [font testing](../../docs/testing.md#personal-fonts)
+for remaining command and native acceptance checks.
+
 Read this guide before adding tests, changing test runners, touching mutation code, or claiming platform support or a performance improvement.
 
 Run checks appropriate to the changed files from the existing checkout, using test-owned home, config, state and cache roots. Documentation changes require `python3 -B tools/verify_docs.py` and `git diff --check`.
@@ -24,6 +30,8 @@ Never let a test:
 - Delete a broad directory through an empty or unresolved variable.
 
 ## Test Layers
+
+For Todo-to-Codex changes, run `tools/test_todo_plan.py`, `tools/test_todo_menu.py` and affected Todo/command/completion/shared-menu suites sequentially. The opt-in `DOTS_TEST_CODEX_NATIVE=1 python3 -B tools/test_todo_codex_native.py` uses an owned Codex home, a local fake model and a private terminal; never substitute the developer's shared server or account as its fixture. Verify actual Plan Mode, reasoning, early question replay/answer, busy-thread deduplication and uncertain-submission recovery separately from prompt wording. Keep native Linux/WSL/Windows runtime and clipboard acceptance explicit.
 
 - Unit tests: route resolution, catalog parsing, precedence, path normalization, classification, and inverse-operation construction.
 - Golden tests: human plans, JSON plans, help, command discovery, and generated documentation.
@@ -224,6 +232,7 @@ For shared Bash/Zsh interactive configuration, run `python3 -B tools/test_shared
 For unified theme commands and generated family wrappers, also run
 `python3 -B tools/test_theme_commands.py`; retain isolated publication/recovery
 and native shell completion coverage alongside the existing theme suites.
+For shortcut naming, also run `tools/test_theme_command_names.py` with Python, the native-controller publication cases and PowerShell completion cases. Use test-owned collision executables; exclude live generated shortcut directories from fixture PATH. Preserve legacy-generation upgrade, exact forwarding, name restoration, double-conflict skipping and other completion providers. Distinguish Windows lookup fixtures from actual PowerShell 5.1/7 evidence.
 
 ## Dots shell environment
 
@@ -327,3 +336,9 @@ Application relocation and migration use `tools/test_bundled_apps.py` and `tools
 For Codex attention hooks, queue or activation changes, follow the [notification maintenance guide](codex-notifications.md), run `python3 -B tools/test_codex_alerts.py -v` and the existing Codex/status regressions, and validate setup/undo with the file-platform checks. Mock Android calls, use private sockets and all-owned HOME/CODEX_HOME/XDG roots, and keep real hook trust/device acceptance separate.
 
 For todo, use `tools/test_todo.py`, `tools/test_todo_menu.py` and the generated-adapter check described in [todo testing](../../docs/testing.md#todo-goals). Keep all goals, journals and project registrations inside owned roots. Test fixed Dots versus standalone scope, read-only noncreation, stale popup selections, rollback and exact data. Use private tmux clients; report native PowerShell/Linux/WSL acceptance separately.
+
+For profile configuration and legacy migration, run `python3 -B tools/test_profile_config.py` and affected profile, shell, file, Git and theme regressions. Isolate writable checkouts as well as HOME/XDG roots, because configuration now belongs to the selected profile. See [profile configuration tests](../../docs/testing.md#profile-configuration).
+
+For core registry/profile environment changes, run `tools/test_profile_backend.py` with Python and the affected profile, config/menu, file lifecycle and shell suites sequentially. Verify combined registry/profile recovery and all generated namespaces before marking complete. See [backend verification](../../docs/testing.md#core-registry-and-generated-profile-environment).
+
+Font workflow verification: `python3 -B tools/test_font_workflows.py` uses owned homes/checkouts and mocked registration for installed-font copying, migration, partial retention, preferences, exact Restore and failure rollback.

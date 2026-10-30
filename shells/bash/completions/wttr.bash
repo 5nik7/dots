@@ -5,7 +5,7 @@ _wttr() {
   # Readline splits :translation at ':' with its default word breaks.
   if [[ $prev == : ]]; then
     case "${COMP_WORDS[COMP_CWORD-2]}" in
-      -l|--location|-d|--days|-u|--units|-L|--language|-f|--format|-g|--get|-C|--config|-t|--timeout|--color|--icons|--dir|get) return ;;
+      -l|--location|-d|--days|-u|--units|-L|--language|-f|--format|-g|--get|-C|--config|-t|--timeout|--color|--icons|--query|--client|--dir|get) return ;;
     esac
     COMPREPLY=( $(compgen -W 'help bash.function translation' -- "$cur") )
     return
@@ -21,12 +21,14 @@ _wttr() {
     --icons) COMPREPLY=( $(compgen -W 'auto always never' -- "$cur") ); return ;;
     get) COMPREPLY=( $(compgen -W 'location attribution condition code icon temperature unit feels_like humidity wind wind_unit wind_direction precipitation precipitation_unit sunrise sunset daylight age stale stale_marker wind_icon sunrise_icon sunset_icon humidity_icon precip_icon location_icon' -- "$cur") ); return ;;
     -C|--config|--dir) compopt -o filenames 2>/dev/null; mapfile -t COMPREPLY < <(compgen -f -- "$cur"); return ;;
-    -l|--location|-d|--days|-u|--units|-L|--language|-f|--format|-g|--get|-C|--config|-t|--timeout|--color|--icons) return ;;
+    -l|--location|-d|--days|-u|--units|-L|--language|-f|--format|-g|--get|-C|--config|-t|--timeout|--color|--icons|--query|--client) return ;;
   esac
   if [[ ${COMP_WORDS[1]} == completion ]]; then
     COMPREPLY=( $(compgen -W 'bash zsh fish powershell --all --install --dir -h --help' -- "$cur") )
+  elif [[ ${COMP_WORDS[1]} == browse ]]; then
+    COMPREPLY=( $(compgen -W '-l --location -d --days -u --units -L --language -C --config -t --timeout --color --icons -v --verbose -h --help --query --client' -- "$cur") )
   else
-    COMPREPLY=( $(compgen -W '-l --location -c --current -d --days -H --hourly -u --units -L --language -w --widget -f --format -g --get -F --fields -j --json --daylight -r --refresh --cached --allow-stale -C --config -t --timeout --color --icons -v --verbose -h --help -V --version get completion m u M 0 1 2 A d F n q Q T format= moon moon@ :help :bash.function :translation' -- "$cur") )
+    COMPREPLY=( $(compgen -W '-l --location -c --current -d --days -H --hourly -u --units -L --language -w --widget -f --format -g --get -F --fields -j --json --daylight -r --refresh --cached --allow-stale -C --config -t --timeout --color --icons -v --verbose -h --help -V --version get completion browse m u M 0 1 2 A d F n q Q T format= moon moon@ :help :bash.function :translation' -- "$cur") )
   fi
   if [[ $cur == :* && $COMP_WORDBREAKS == *:* ]]; then
     COMPREPLY=( "${COMPREPLY[@]#:}" )

@@ -312,9 +312,8 @@ class Repair:
         self.catalog = Catalog(self.root, self.install.platform)
         if self.args.repo and not any(s['id'] == self.args.repo for s in self.catalog.sources):
             raise ValueError('unknown repository: ' + self.args.repo)
-        for owner in self.catalog.sources:
-            if owner['status'] != 'excluded':
-                self.install.guard(Path(owner['root']) / '.dots/files.json')
+        for path in self.catalog.input_paths():
+            self.install.guard(path)
         rows = self.catalog.records()
         ids = set(self.args.values)
         unknown = ids - {r['id'] for r in rows}

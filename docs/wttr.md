@@ -1,10 +1,10 @@
 # wttr weather and the Termux clock
 
-**Implemented:** `bin/wttr` and `bin/wttr.ps1` share the Python 3.11+ controller in `lib/dots/wttr`. Custom views request [wttr.in JSON](https://github.com/chubin/wttr.in#json-output) with `format=j1`. Stock requests use native curl. No Python packages are required. This standalone command does not add a `dots wttr` route. Older scripts under `scripts/` and Androidots are independent.
+**Implemented:** `bin/wttr` and `bin/wttr.ps1` share the Python 3.11+ controller in `lib/dots/wttr`. Custom views request [wttr.in JSON](https://github.com/chubin/wttr.in#json-output) with `format=j1`. Stock requests use native curl. No Python packages are required. The `dots wttr` family uses the same controller and options, including `get`, `completion` and `browse`. Bare invocations print the ordinary report. Older scripts under `scripts/` and Androidots are independent.
 
 ## Configuration and locations
 
-The configuration is selected from `--config PATH`, the user configuration directory's `wttr/config.toml`, then the checkout's [`config/wttr/config.toml`](../config/wttr/config.toml). Unix uses `${XDG_CONFIG_HOME:-$HOME/.config}`; native Windows uses `%APPDATA%` unless `XDG_CONFIG_HOME` is explicit. The catalog's `wttr` resource can be linked with the normal managed-file workflow; adding the catalog entry does not install it.
+The configuration is selected from `--config PATH`, the user configuration directory's `wttr/config.toml`, then the checkout's [`config/wttr/config.toml`](../config/wttr/config.toml). Unix uses `${XDG_CONFIG_HOME:-$HOME/.config}`; native Windows uses `%APPDATA%` unless `XDG_CONFIG_HOME` is explicit.
 
 Defaults are Fahrenheit/mph/inches (`units = "us"`), three days, and an **unset** `default_location`. To override automatic location, edit the chosen file, for example:
 
@@ -20,10 +20,26 @@ Normal foreground weather reads may acquire location when a refresh is needed. `
 
 The icon table maps all 48 [World Weather Online condition codes](https://www.worldweatheronline.com/weather-api/api/docs/weather-icons.aspx), plus `unknown`, to [Nerd Fonts Weather glyphs](https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh). Customize codes independently under `[icons]`; `[night_icons]` overrides clear, partly cloudy and snow-with-thunder conditions at night. Nerd Font appearance is a terminal/font setting, not something the command installs.
 
+## Weather browser
+
+Run `wttr browse` or `dots wttr browse`, or choose Weather in `dots menu`. Bare `wttr` and `dots wttr` continue to print their report. The browser offers Current conditions, Daily forecast, Hourly forecast, Change location, Change units, Refresh, Help and Back/Close. Enter opens the selected action; reports use the shared scrollable reader and return to the menu. Query, focus and session settings survive those handoffs. Escape goes back or closes; Ctrl-C returns status 130. F1 opens help, Alt-P toggles the preview, and Alt-J/K scroll it.
+
+Opening, filtering and previewing read existing cache snapshots without weather requests, location acquisition, locks or refresh workers. Opening a report refreshes missing/stale data according to the existing cooldown and timeout. Refresh explicitly retries, overriding freshness and cooldown. A failed refresh displays its error and keeps usable cached weather clearly marked with its age, up to configured `max_stale` (six hours by default). Missing, malformed or expired data shows unavailable; errors leave the menu usable. Reader navigation does not rerun the report.
+
+Location and units change only for this browser session. Location accepts literal city/coordinate text or an explicit return to configured/automatic location; cancel preserves the previous value. Automatic location retains the normal configured-default/Termux-city precedence and has no IP fallback. Daily/hourly reports use the configured day count or `--days` override.
+
+Browser options are `--location`/`-l`, `--units`/`-u`, `--days`/`-d`, `--language`/`-L`, `--config`/`-C`, `--timeout`/`-t`, `--color`, `--icons`, `--verbose`/`-v`, `--query`, `--client`, and `--help`/`-h`. A positional location is also accepted. Data modes, stock requests, `--cached`, `--refresh` and other report-only flags are rejected with status 2 before provider activity; use the ordinary command for these modes. `--client` identifies the initiating tmux client for background launchers. Inherited private launcher context also pins the exact client; stale/ambiguous context fails rather than targeting another client.
+
+FZF owns the tmux selector popup and closes before input or reader handoff. Outside tmux, including native Windows, the browser uses the invoking terminal. Missing FZF/preview/popup capability, `TERM=dumb`, or redirected invocation falls back to the ordinary report using supplied/default settings, with a short explanation on stderr and the report's exit status. That fallback follows ordinary report refresh behavior. No settings are saved or automatically installed.
+
 ## Commands and output
+
+Every example also accepts the `dots wttr` prefix. Use `--location browse` for a location literally named `browse`, since a leading `browse` selects the browser.
 
 ```sh
 wttr                            # current weather and up to three forecast days
+dots wttr --current              # same controller through Dots
+wttr browse                     # explicit session-only weather browser
 wttr --location 'New York' --days 2
 wttr '51.5,-0.1' --units metric --hourly
 wttr --current --language fr

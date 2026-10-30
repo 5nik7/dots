@@ -59,13 +59,14 @@ class Diagnostics(unittest.TestCase):
         for platform in ('linux','windows'):
             (self.root/'profiles'/platform/'profile.json').write_text('{bad')
         result=self.profiles('profiles','check','--json',code=1)
-        self.assertEqual({r['profile'] for r in result['checks'] if r['status']=='failed'},{'linux','windows','wsl'})
+        self.assertEqual({r['profile'] for r in result['checks'] if r['status']=='failed'},{'linux','windows','wsl','termux'})
 
     def test_profile_environment_is_declarations_and_redacted(self):
         p=self.root/'profiles/linux/profile.json'
         p.write_text(json.dumps(dict(schema=1,id='linux',environment=dict(EDITOR='declared',API_KEY='secret-marker'))))
         result=self.profiles('profile','env','linux','--json')
-        self.assertEqual(result['rows'][0]['template'],'declared')
+        self.assertEqual(next(row for row in result['rows'] if row['name']=='EDITOR')['template'],'declared')
+        self.assertEqual(next(row for row in result['rows'] if row['name']=='PROFILE')['template'],str(p.parent))
         self.assertNotIn('secret-marker',json.dumps(result))
 
     def test_path_scalar_and_existing_filters(self):

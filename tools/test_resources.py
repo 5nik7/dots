@@ -33,6 +33,9 @@ if os.name != 'nt':
 @unittest.skipUnless(BASH and os.name != 'nt', 'POSIX Bash resource acceptance')
 class ResourcesTests(unittest.TestCase):
     def setUp(self):
+        from style_config import current
+        current.cache_clear()
+        self.addCleanup(current.cache_clear)
         self.tmp = tempfile.TemporaryDirectory(prefix='dots-resources-')
         self.addCleanup(self.tmp.cleanup)
         self.home = Path(self.tmp.name) / 'home space ü'
@@ -130,7 +133,7 @@ class ResourcesTests(unittest.TestCase):
         with patch.dict(os.environ,self.env,clear=True):
             for width in (40,80,120):
                 outputs=[]
-                for options,code in [({},'94'),({'label_code':'1;35'},'1;35')]:
+                for options,code in [({},'34'),({'label_code':'1;35'},'1;35')]:
                     stream=io.StringIO();ui=Presentation(stream);ui.width=width
                     ui.detail_spans('Alias', [('Long value 界 ' * 12, '1;95')], **options)
                     text=stream.getvalue()

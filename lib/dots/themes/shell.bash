@@ -114,15 +114,14 @@ set_theme() {
   return 0
 }
 _dots_theme_commands() {
-  local _dots_cmd_directory=$_DOTS_THEME_STATE/commands/current _dots_cmd_token='' _dots_cmd_shell=bash
+  local _dots_cmd_directory=$_DOTS_THEME_STATE/commands/current _dots_cmd_token=''
   [[ -r $_dots_cmd_directory/fingerprint ]] || return 0
   IFS= read -r _dots_cmd_token < "$_dots_cmd_directory/fingerprint" || return
   [[ $_dots_cmd_token != "${_DOTS_THEME_COMMANDS_TOKEN:-}" ]] || return 0
   if [[ -n ${ZSH_VERSION:-} ]]; then
     (( ${+functions[compdef]} )) || return 0
-    _dots_cmd_shell=zsh
   else typeset -f _dots_complete_bash >/dev/null || return 0; fi
-  source "$_dots_cmd_directory/init.$_dots_cmd_shell" || return
+  _dots_theme_completion_load "$_dots_cmd_directory" || return
   _DOTS_THEME_COMMANDS_TOKEN=$_dots_cmd_token
 }
 _dots_theme_precmd() {

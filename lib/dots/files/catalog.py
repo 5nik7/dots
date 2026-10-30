@@ -41,7 +41,7 @@ class Presentation:
         text = str(value or 'unavailable')
         if self.icons and value and not detached and not text.startswith('detached '):
             from git_identity import BRANCH
-            return BRANCH + text
+            return self.icon('git.branch', BRANCH) + text
         return text
 
     def repository_label(self, path, label, host=...):
@@ -68,7 +68,13 @@ class Presentation:
         # Show path controls literally; never let a discovered filename issue ANSI.
         return "".join(c if c.isprintable() or unicodedata.category(c) == "Co" else repr(c)[1:-1] for c in str(value))
 
+    def icon(self, name, fallback):
+        from style_config import icon
+        return icon(name, fallback)
+
     def paint(self, value, code):
+        from style_config import code as style_code
+        if self.color: code = style_code(code)
         value = self.clean(value)
         return f"\033[{code}m{value}\033[0m" if self.color else value
 
@@ -199,15 +205,15 @@ class Presentation:
 
     def status(self, status):
         if status in ("linked", "available", "tracked", "managed", "restored", "removed", "published", "unchanged"):
-            code, icon = "92", "" if self.icons else "[+]"
+            code, icon = "92", self.icon("status.success", "") if self.icons else "[+]"
         elif status in ("candidate", "existing-source", "create", "prepare", "restore", "remove"):
-            code, icon = "94", "󰋽" if self.icons else "[i]"
+            code, icon = "94", self.icon("status.info", "󰋽") if self.icons else "[i]"
         elif status in ("conflict", "broken-link", "source-broken-link", "source-missing", "unavailable", "linked-elsewhere"):
-            code, icon = "91", "" if self.icons else "[x]"
+            code, icon = "91", self.icon("status.error", "") if self.icons else "[x]"
         elif status in ("replaced", "excluded", "inactive-platform", "stashed"):
-            code, icon = "90", "󰋽" if self.icons else "[i]"
+            code, icon = "90", self.icon("status.info", "󰋽") if self.icons else "[i]"
         else:
-            code, icon = "93", "" if self.icons else "[!]"
+            code, icon = "93", self.icon("status.warning", "") if self.icons else "[!]"
         return self.paint(f"{icon} {status.replace('-', ' ')}", code)
 
     def render(self, action, rows, platform, repository=None):
@@ -247,10 +253,13 @@ class Presentation:
                             else:
                                 self.detail(label, row[key])
         if action == "track":
+            if rows and rows[0].get('transaction'):
+                self.detail('Transaction', rows[0]['transaction'])
+                self.detail('Undo', 'dots files undo '+rows[0]['transaction'])
             self.emit("\n  Catalog metadata saved; no files installed.")
 
 
-def read_json(path):
+def read_json(path, schemas=(1,)):
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -261,7 +270,7 @@ def read_json(path):
     if path.is_symlink() or not path.is_file() or path.stat().st_size > 4 * 1024 * 1024:
         raise ValueError(f"invalid catalog file: {path}")
     result = json.loads(path.read_text(), object_pairs_hook=unique)
-    if not isinstance(result, dict) or type(result.get("schema")) is not int or result.get("schema") != 1:
+    if not isinstance(result, dict) or type(result.get("schema")) is not int or result.get("schema") not in schemas:
         raise ValueError(f"unsupported catalog schema: {path}")
     return result
 
@@ -297,7 +306,7 @@ def atomic_json(path, data):
 
 
 class Catalog:
-    def __init__(self, root, selected, manifests=None):
+    def __init__(self, root, selected, manifests=None, profile=None):
         self.root = root.resolve()
         self.manifests = manifests or {}
         if (self.root / ".dots").is_symlink():
@@ -305,14 +314,25 @@ class Catalog:
         self.platform = selected
         self.sources = []
         seen = set()
-        source_rows = read_json(self.root / ".dots/sources.json").get("sources", [])
+        composition = read_json(self.root / '.dots/sources.json', (1,2))
+        source_rows = composition.get('sources', [])
+        self.registry_path = self.root / '.dots/files.json'
+        self.registry = None
+        if self.registry_path.is_file():
+            registry_doc = read_json(self.registry_path, (1,2))
+            if registry_doc.get('schema') == 2:
+                from registry import Registry
+                self.registry = Registry(registry_doc, source_rows)
+        if composition.get('schema') == 2 and self.registry is None:
+            raise ValueError('core files registry is required: .dots/files.json (schema 2)')
         from profiles import resolve
         from platform_info import detect
         facts = detect()
         if facts['platform'] != selected:
             facts = dict(facts, platform=selected, distro=selected, family=[])
         known_paths = {(self.root / row['path']).resolve() for row in source_rows}
-        for layer in resolve(self.root, facts)['layers']:
+        self.profile = profile or resolve(self.root, facts)
+        for layer in self.profile['layers']:
             path = Path(layer['root'])
             if path.resolve() not in known_paths and (path / '.dots/files.json').is_file():
                 doc = read_json(path / '.dots/files.json')
@@ -328,9 +348,59 @@ class Catalog:
             row = dict(row, root=str(path), status="available")
             if row.get("excluded"):
                 row["status"] = "excluded"
-            elif not path.is_dir() or not (path / ".dots/files.json").is_file():
+            elif not path.is_dir() or (self.registry is None and self.override(row['id']) is None and not self.base_path(row).is_file()):
                 row["status"] = "unavailable"
+                if row['id'] == 'dots' and path == self.root and self.profile['layers']:
+                    raise ValueError('active profile requires a files.dots declaration')
             self.sources.append(row)
+        allowed = {row['id'] for row in self.sources if row['status'] != 'excluded'}
+        for layer in self.profile['layers']:
+            if set(layer.get('files', {})) - allowed:
+                raise ValueError('profile files refers to an unknown or excluded repository')
+
+    def override(self, identity):
+        for layer in reversed(self.profile['layers']):
+            if identity in layer.get('files', {}): return layer['files'][identity]
+        return None
+
+    def base_path(self, source):
+        path = Path(source['root'])
+        manifest = path / 'profile.json'
+        if manifest.is_file():
+            data = read_json(manifest)
+            if source['id'] in data.get('files', {}): return manifest
+        return path / '.dots/files.json'
+
+    def input_paths(self):
+        from profiles import available
+        return list(dict.fromkeys([self.root / '.dots/sources.json',
+            *([self.registry_path, *[Path(row['root'])/'profile.json' for row in available(self.root)]] if self.registry else []),
+            *[self.base_path(s) for s in self.sources if s['status'] != 'excluded'],
+            *[Path(r['root']) / 'profile.json' for r in self.profile['layers']]]))
+
+    def lock_paths(self):
+        # Serialize cross-profile validation even when eligibility is unchanged.
+        return [str(self.registry_path)] if self.registry else []
+
+    def updates(self, documents):
+        """Serialize catalog edits into one active profile or legacy source catalogs."""
+        if not documents: return []
+        if self.registry and not self.profile['layers']: raise ValueError('file mapping edits require a profile manifest')
+        if self.profile['layers']:
+            path = Path(self.profile['layers'][-1]['root']) / 'profile.json'
+            data = read_json(path)
+            operations = []
+            if self.registry:
+                from registry import implementation
+                registry = self.registry.update(documents)
+                if registry != read_json(self.registry_path, (1,2)): operations.append(dict(path=str(self.registry_path), data=registry))
+            for owner, doc in documents.items():
+                data.setdefault('files', {})[owner] = ([implementation(row,self.platform) for row in doc['resources']]
+                                                      if self.registry else doc['resources'])
+            if data != read_json(path): operations.append(dict(path=str(path), data=data))
+            return operations
+        return [dict(path=str(self.base_path(next(s for s in self.sources if s['id'] == owner))), data=doc)
+                for owner, doc in documents.items()]
 
     def applicable(self, platforms):
         if not isinstance(platforms, list) or not platforms or not set(platforms) <= PLATFORMS:
@@ -342,12 +412,28 @@ class Catalog:
             raise ValueError("catalog directory must not be a symlink")
         doc = self.manifests.get(source['id'])
         if doc is None:
-            doc = read_json(Path(source["root"]) / ".dots/files.json")
+            rows = self.override(source['id'])
+            if rows is not None:
+                if self.registry and any('platforms' in row or 'targets' in row for row in rows):
+                    raise ValueError('profile mappings use one target; platforms belong in the core registry')
+                doc = dict(schema=1, repository=source['id'], resources=rows)
+            elif self.registry and self.applicable(source['platforms']):
+                # A registry identity alone never supplies an installation.
+                doc = dict(schema=1, repository=source['id'], resources=[])
+            else:
+                path = self.base_path(source)
+                doc = read_json(path) if path.is_file() and (not self.registry or path.name == 'profile.json') else dict(schema=1,repository=source['id'],resources=[])
+                if path.name == 'profile.json':
+                    doc = dict(schema=1, repository=source['id'], resources=doc['files'][source['id']])
         if canonical(doc.get("repository")) != canonical(source["id"]) or not isinstance(doc.get("resources"), list):
             raise ValueError("catalog repository identity mismatch")
         doc = canonical_document(doc)
+        if self.registry:
+            doc = dict(doc, resources=self.registry.join(source['id'], doc['resources'], candidate=source['id'] in self.manifests))
         seen = set()
         for row in doc["resources"]:
+            if not isinstance(row, dict):
+                raise ValueError('resource must be an object')
             if not ID.fullmatch(row.get("id", "")) or row["id"] in seen:
                 raise ValueError("duplicate or invalid resource ID")
             seen.add(row["id"])
@@ -553,15 +639,36 @@ class Catalog:
         if path.is_dir() and args.strategy != "directory-link":
             raise ValueError("whole directories require --strategy directory-link")
         row = dict(id=args.id, source=str(rel), app=args.app, category=args.category,
-                   platforms=args.platforms or source["platforms"], target=args.target, strategy=args.strategy)
+                   platforms=args.platforms or (self.registry.entries.get(source["id"]+":"+args.id, source["platforms"]) if self.registry else source["platforms"]), target=args.target, strategy=args.strategy)
         if args.replaces:
             row["replaces"] = args.replaces
-        file = root / ".dots/files.json"
+        if self.registry:
+            from transactions import Store, digest, parents_safe
+            from file_platform import state_root
+            guards = {}
+            for guarded in self.input_paths():
+                parents_safe(guarded); guards[str(guarded)] = digest(guarded)
+            fresh = Catalog(self.root, self.platform)
+            doc = fresh.manifest(source)
+            old = next((item for item in doc['resources'] if item['id'] == args.id), None)
+            if old:
+                row = dict(old, **row)
+                if not args.platforms: row['platforms'] = old['platforms']
+            if old == row: return row
+            if old and not args.update: raise ValueError('record exists; use --update to change its metadata')
+            updated = dict(doc, resources=sorted([item for item in doc['resources'] if item['id'] != args.id]+[row],key=lambda item:item['id']))
+            Catalog(self.root, self.platform, {source['id']: updated}, profile=fresh.profile).records()
+            operations = fresh.updates({source['id']: updated})
+            result = Store(state_root()).apply('track',operations,guards,retain=True,catalogs=[*fresh.lock_paths(), *[op['path'] for op in operations]])
+            return dict(row, transaction=result.get('id'))
+        file = (Path(self.profile['layers'][-1]['root']) / 'profile.json'
+                if self.profile['layers'] else self.base_path(source))
         lock = file.with_suffix(".lock")
         fd = open_nofollow(lock, os.O_RDWR | os.O_CREAT, 0o600)
         with os.fdopen(fd, "a") as handle:
             lock_file(handle, blocking=True)
-            doc = self.manifest(source)
+            fresh = Catalog(self.root, self.platform)
+            doc = fresh.manifest(source)
             old = next((x for x in doc["resources"] if x["id"] == args.id), None)
             if old:
                 # Tracking updates must not silently resume stashed resources or
@@ -580,7 +687,8 @@ class Catalog:
                 self.target(args.target)
             if args.replaces and any(not re.fullmatch(r"[a-z][a-z0-9_-]*:[a-z][a-z0-9_-]*", x) for x in args.replaces):
                 raise ValueError("invalid replacement ID")
-            atomic_json(file, updated)
+            for operation in fresh.updates({source['id']: updated}):
+                atomic_json(Path(operation['path']), operation['data'])
         return row
 
 
@@ -636,7 +744,7 @@ def main(argv=None):
         if args.action in ("show", "source", "target"):
             rows = [r for r in rows if r["id"] == args.value]
             if len(rows) != 1:
-                raise ValueError("resource ID not found")
+                raise ValueError("resource needs a mapping in the selected profile" if cat.registry and args.value in cat.registry.entries else "resource ID not found")
         else:
             rows = [r for r in rows if args.all_platforms or r["applicable"]]
         for option, field in ((args.repo, "repository"), (args.app, "app"), (args.category, "category"), (args.status, "status")):

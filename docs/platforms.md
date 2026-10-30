@@ -2,6 +2,23 @@
 
 **Status: Live platform adapters; native evidence and pending acceptance recorded by subsystem**
 
+## Personal fonts
+
+Installed discovery uses optional fontconfig on Termux/Linux/WSL and HKCU/HKLM font registrations on Windows. Migration is limited to supported user-owned roots; system fonts are copy-only. App choices retain files in the active profile and save `fonts.json`, with explicit Restore on every shared frontend. Mocked Windows migration/registration fixtures do not establish native font visibility or file-lock behavior.
+
+Termux/Linux/WSL user-font links use `${XDG_DATA_HOME:-~/.local/share}/fonts/dots`
+with optional fontconfig refresh. Termux Set copies a TTF to that home's
+`.termux/font.ttf`, never Android fonts. Windows copies to
+`%LOCALAPPDATA%/Microsoft/Windows/Fonts`, journals HKCU registration and attempts
+a session notification without administrator access. Locked native files cause
+guarded failure. Windows Terminal settings require native Windows; Kitty has no
+native Windows target. Other desktop targets use managed mappings or explicit
+config files. WSL never translates host paths. Literal insertion needs verified
+POSIX tmux context; Windows offers copy/print and terminal FZF. See
+[fonts](fonts.md) and [native evidence limits](../plans/fonts.md#evidence).
+
+Directory mode stores versioned payloads under `DOTFONTS` or a backend profile `*FONTS` path without OS registration. The same shared controller resolves literal directory names on every platform; choosing another platform's profile directory does not change the execution platform. Explicit Use/Set copies into the current platform's personal library before activating through its existing adapter. Native Windows and WSL inventories remain separate. Directory, registration and application fixtures run in owned roots; actual native Windows/PowerShell and visible desktop activation remain pending.
+
 `dots` targets Termux, conventional Linux, WSL, and native Windows. Platform support is capability-based and tracked by subsystem rather than treated as a single yes/no label.
 
 The managed `dots:less` configuration targets `${CONFIG}/lesskey` on Termux/Linux/WSL and `${HOME}/_lesskey` on native Windows. Less 702+ reads its persistent mouse settings directly, without Bash or a theme connector. Termux less 710 mouse behavior is verified in private terminals; Linux/WSL and native Windows runtime acceptance remains pending. See [less mouse support](shell-environment.md#global-less-mouse-support) for overrides and older-version fallback.
@@ -220,7 +237,7 @@ Separate owner-device checks verified network acquisition and cache reuse after 
 
 ## wttr weather
 
-The shared Python 3.11+ weather controller has Bash and native PowerShell entries. Unix config/cache use XDG defaults; Windows configuration uses APPDATA/wttr and cache uses LOCALAPPDATA/cache/wttr unless XDG overrides are explicit. The catalog Windows app destination is `${APP_CONFIG:wttr}`. Manual/default weather is portable. Stock wttr.in requests require native `curl` on Unix or `curl.exe` on Windows; JSON-backed views retain their Python standard-library transport. Android acquisition and tmux daylight styling are Termux-only; there is no native Windows location provider in this slice. Native Windows PowerShell 5.1/7, Windows locks/ACLs and completion runtime acceptance remain pending on this Termux host. See [weather behavior and verification limits](wttr.md).
+The shared Python 3.11+ weather controller has Bash and native PowerShell entries for standalone `wttr` and `dots wttr`. Explicit `browse` routes use exact-client tmux popups on supported POSIX hosts and native terminal selection elsewhere, falling back to the ordinary report without FZF/terminal support. Unix config/cache use XDG defaults; Windows configuration uses APPDATA/wttr and cache uses LOCALAPPDATA/cache/wttr unless XDG overrides are explicit. The catalog Windows app destination is `${APP_CONFIG:wttr}`. Manual/default weather is portable. Stock wttr.in requests require native `curl` on Unix or `curl.exe` on Windows; JSON-backed views retain their Python standard-library transport. Android acquisition and tmux daylight styling are Termux-only; there is no native Windows location provider in this slice. Native Windows PowerShell 5.1/7, Windows locks/ACLs and completion runtime acceptance remain pending on this Termux host. See [weather behavior and verification limits](wttr.md).
 
 The Television connector is implemented in both publishers. Its [destination rules](themes.md#television) match Television 0.15.9, including native Windows LOCALAPPDATA and explicit overrides. An existing app directory is required; its missing `themes` child is journaled. Native Windows PowerShell 5.1/7, Linux and WSL acceptance remains pending; Termux and fixture evidence is recorded in [testing](testing.md#television-theme).
 
@@ -290,6 +307,12 @@ The optional [Codex attention bridge](themes.md#codex-attention-notifications) u
 
 ## Todo goals
 
-Both `dots todo` and standalone `todo` use the shared Python controller on Termux, Linux, WSL and native Windows. The native `todo.ps1` entry uses the existing literal argument bridge. Global data uses the native Dots state root; project registrations use the native configuration root. Project files live in the selected checkout without Windows/WSL translation. Setup includes a native standalone command adapter. The skill catalog target is the user's `.codex/skills/dots-todo`; custom skill destinations require an explicit managed override.
+Both `dots todo` and standalone `todo` use the shared Python controller on Termux, Linux, WSL and native Windows. The native `todo.ps1` entry uses the existing literal argument bridge. Global data uses the native Dots state root; project registrations use the native configuration root. Project files live in the selected checkout without Windows/WSL translation. Setup includes a native standalone command adapter. The three Todo skill resources target their respective directories under the user's `.codex/skills`; custom skill destinations require an explicit managed override. They share directory-link, backup and recovery behavior across the four platform profiles; native Windows link privileges still require separate runtime verification.
 
 Tmux popups apply only on POSIX; Windows uses terminal FZF with native PowerShell preview syntax and optional native Gum/plain input. No application configuration destinations change. Actual Linux/WSL and Windows PowerShell 5.1/7 terminal, completion and link-privilege acceptance remains pending where those hosts are unavailable. See [todo](todo.md).
+
+Dots configuration is checkout-local under the resolved platform profile: `profiles/termux`, `profiles/linux`, `profiles/wsl`, or `profiles/windows`, including inherited distro definitions. User themes and runtime state keep their platform user-directory locations. The explicit legacy migration uses the native config-root adapter and never translates Windows/WSL paths. Windows app destination tokens are unchanged. Native PowerShell 5.1/7 and native Linux/WSL acceptance of profile configuration remains separate from Termux and portable fixture evidence. See [profile configuration](profiles.md#profile-configuration).
+
+Todo planning shares `todo plan ID [--new] [--dry-run]`, brief export, completion and popup actions across Bash and native PowerShell. Termux uses the existing codex-termux runit connection; native Linux/WSL/Windows use native Codex daemon/proxy capabilities, with runtime acceptance pending outside the isolated Termux fixture. Windows uses the current terminal and native Set-Clipboard, with no tmux or WSL translation; app installation destinations are unchanged. See [Todo planning](todo.md#plan-a-goal-in-codex).
+
+Profile implementations use one target per profile. The permanent core registry owns platform eligibility; Windows app tokens remain native Windows destinations. Generated namespaces include inactive profiles without putting them on PATH or translating paths across Windows/WSL. Shell representations and the protected PowerShell `$PROFILE` are specified in [profiles](profiles.md#generated-profile-paths). Native Windows PowerShell 5.1/7 acceptance for generated maps remains pending on this Termux host.

@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "sources": [
     {
       "id": "dots",
@@ -15,7 +15,9 @@
         "shells",
         "scripts",
         "bin",
-        ".codex/skills/dots-todo"
+        ".codex/skills/dots-todo",
+        ".codex/skills/dots-todo-planning",
+        ".codex/skills/dots-todo-maintenance"
       ]
     },
     {

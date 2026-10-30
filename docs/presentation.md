@@ -282,3 +282,5 @@ independent; JSON and existing session data are unchanged.
 ### Less standout text
 
 The shared less style uses exact theme `foreground` on `lighter_background` at normal weight, with an explicit reset. It applies to prompts, search highlights and other standout messages. Shell refresh and popup readers preserve user overrides and existing color controls; redirected content is unchanged. See [global less colors](shell-environment.md#global-less-colors) for ownership, reload behavior and the native Windows exception.
+
+Shared visual defaults live in `default/icons.toml` and `default/colors.toml`, with per-key profile overrides. Python and Bash renderers consume the same named roles; resource matchers resolve icon tokens. See [visual preference bindings](profiles.md#icons-and-semantic-colors). Objects and resource arrays from `dots config get` use readable sections by default; explicit `--json`, scalar/path queries, completion, shell output and raw interfaces remain data contracts. Exact palette previews keep their own candidate colors.

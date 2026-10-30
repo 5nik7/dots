@@ -21,7 +21,8 @@ from events import OperationOutput
 from file_platform import lock, open_nofollow, sync_dir
 from transactions import Store, digest, exists, parents_safe, private_directory
 from interaction import RichSelector, Selector, SelectionEnded
-from progress import Progress, configure
+from progress import Progress, configure, permanent_output
+from command_names import allocate
 
 
 def preview(themes, identity, native=False):
@@ -116,21 +117,31 @@ def connectors(themes):
     return result
 
 
-def generated_commands(themes, out):
+def generated_commands(themes, out, verbose=False):
     directory = out / 'commands'
     (directory / 'bin').mkdir(parents=True)
-    reserved = set('themes env theme dots anodize current_theme help list current dir show color colors init set refresh switcher install update remove bg plugin plugins files summary'.split())
-    names = sorted((set(themes.families()) | set(themes.ids())) - reserved)
-    for name in names:
-        if not ID.fullmatch(name): raise ValueError('unsafe generated command name')
-        ps = "& (Join-Path $env:DOTS 'bin/dots.ps1') theme '" + name + "' @args\nexit $LASTEXITCODE\n"
+    mapping, skipped = allocate(set(themes.families()) | set(themes.ids()),
+                                themes.state / 'themes/commands/current/bin')
+    events = OperationOutput(verbose)
+    for name, target in mapping.items():
+        ps = "& (Join-Path $env:DOTS 'bin/dots.ps1') theme '" + target + "' @args\nexit $LASTEXITCODE\n"
         (directory / 'bin' / (name + '.ps1')).write_text(ps, encoding='utf-8')
-        bash = '#!/usr/bin/env bash\nexec "${DOTS:?}/bin/dots" theme ' + name + ' "$@"\n'
+        bash = '#!/usr/bin/env bash\nexec "${DOTS:?}/bin/dots" theme ' + target + ' "$@"\n'
         path = directory / 'bin' / name
         path.write_text(bash); path.chmod(0o755)
-    (directory / 'names').write_text('\n'.join(names) + '\n')
+        if name != target: events('Generated', reason=name + ' forwards to theme ' + target)
+    if skipped:
+        with permanent_output():
+            ui = Presentation(sys.stderr)
+            for name in skipped:
+                ui.detail('Skipped', 'theme shortcut: ' + name, '33')
+                ui.detail('Occupied', name + ', ' + name + '-theme')
+                ui.detail('Use', 'theme ' + name)
+    (directory / 'names').write_text(''.join(name + '\n' for name in mapping), encoding='utf-8')
+    (directory / 'map.tsv').write_text(''.join(name + '\t' + target + '\n' for name, target in mapping.items()), encoding='utf-8')
     fingerprint = hashlib.sha256(json.dumps(themes.families(), sort_keys=True).encode())
     for path in sorted((directory / 'bin').iterdir()): fingerprint.update(path.read_bytes())
+    for name in ('names', 'map.tsv'): fingerprint.update((directory / name).read_bytes())
     (directory / 'fingerprint').write_text(fingerprint.hexdigest() + '\n')
     files = {str(p.relative_to(directory)): hashlib.sha256(p.read_bytes()).hexdigest() for p in directory.rglob('*') if p.is_file()}
     (directory / 'manifest.json').write_text(json.dumps(files))
@@ -173,14 +184,14 @@ def validate_pointers(themes):
         if actual != manifest: raise ValueError('generated command drift; preserve and review')
 
 
-def commands_refresh(themes, verbose=False):
+def commands_refresh(themes, verbose=False, *, announce=True):
     validate_pointers(themes)
     pointer = themes.state / 'themes/commands/current'
     parents_safe(pointer)
     before = digest(pointer)
     with tempfile.TemporaryDirectory(prefix='dots-theme-commands-') as tmp:
         out = Path(tmp)
-        generated_commands(themes, out)
+        generated_commands(themes, out, verbose)
         stage = out / 'commands'
         if pointer.is_symlink():
             old = pointer.resolve()
@@ -191,7 +202,8 @@ def commands_refresh(themes, verbose=False):
                 manifest = json.loads(regular(manifest_path))
                 actual = {str(p.relative_to(old)): hashlib.sha256(regular(p)).hexdigest() for p in old.rglob('*') if p.is_file() and p != manifest_path}
                 if actual != manifest: raise ValueError('generated command drift; preserve and review')
-                if regular(old / 'fingerprint') == regular(stage / 'fingerprint'):
+                if (regular(old / 'fingerprint') == regular(stage / 'fingerprint')
+                        and actual == json.loads(regular(stage / 'manifest.json'))):
                     OperationOutput(verbose)('Unchanged', pointer, reason='generated commands match'); return
             else: raise ValueError('command generation lacks a native ownership manifest')
         elif exists(pointer): raise ValueError('unmanaged command pointer')
@@ -199,7 +211,7 @@ def commands_refresh(themes, verbose=False):
         Store(themes.state, OperationOutput(verbose)).apply('theme-commands',
             [dict(path=str(generation), source=str(stage)), dict(path=str(pointer), link=str(generation), directory=True)],
             {str(pointer):before, str(generation):None}, retain=True)
-    Presentation().emit('  Theme commands refreshed')
+    if announce: Presentation().emit('  Theme commands refreshed')
 
 
 def publication(themes, identity, dry=False, verbose=False, refresh=False):
@@ -226,6 +238,7 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
         prior = themes.state / 'themes/generations' / current
         if (prior / 'fingerprint').is_file() and (prior / 'id').is_file() and regular(prior / 'fingerprint').decode().strip() == fingerprint and regular(prior / 'id').decode().strip() == identity:
             if generation_complete(themes, prior) and active.is_symlink() and active.resolve() == prior and all(p.is_symlink() and p.resolve() == prior / artifact for p, artifact in links):
+                if not dry: commands_refresh(themes, verbose, announce=False)
                 events('Unchanged', prior, reason='theme and connectors match')
                 ui.emit('  Theme unchanged: ' + identity)
                 if refresh and not dry: reload_apps(themes, events)
@@ -249,7 +262,7 @@ def publication(themes, identity, dry=False, verbose=False, refresh=False):
             palette = themes.render(identity, out, build_cache=True, bat_inputs=bat_inputs)
             for shell in ('powershell', 'zsh', 'fish'):
                 (out / ('init.' + ('ps1' if shell == 'powershell' else shell))).write_text(shell_init(palette, shell), encoding='utf-8')
-            generated_commands(themes, out)
+            generated_commands(themes, out, verbose)
             (out / 'status').write_text('committed\n')
             if themes.publication_fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
         operations = [dict(path=str(destination), source=str(out))]

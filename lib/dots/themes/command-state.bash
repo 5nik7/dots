@@ -16,7 +16,7 @@ dt_commands_verify() {
   [[ -f $dir/manifest && ! -L $dir/manifest && -f $dir/fingerprint && ! -L $dir/fingerprint ]] || return 1
   while IFS=' ' read -r hash relative; do
     relative=${relative# }
-    [[ $hash =~ ^[a-f0-9]{64}$ && ( $relative =~ ^bin/[a-z][a-z0-9_-]*$ || $relative == names || $relative == init.bash || $relative == init.zsh || $relative == init.fish ) ]] || return 1
+    [[ $hash =~ ^[a-f0-9]{64}$ && ( $relative =~ ^bin/[a-z][a-z0-9_-]*$ || $relative == names || $relative == map.tsv || $relative == init.bash || $relative == init.zsh || $relative == init.fish ) ]] || return 1
     [[ -f $dir/$relative && ! -L $dir/$relative ]] || return 1
     [[ $relative != bin/* || -x $dir/$relative ]] || return 1
     ((++count))
@@ -83,7 +83,7 @@ dt_commands_lock() {
   done
 }
 dt_commands_prepare() {
-  local journal=$1 dir old=none family file signature existing pending status
+  local journal=$1 dir old=none family file signature pending status allocation command kind
   for pending in "$DT_STATE"/generations/g.* "$DT_USER_THEMES"/.transactions/t.*; do
     [[ $pending != "$journal" && -f $pending/status ]] || continue
     IFS= read -r status < "$pending/status" || return
@@ -96,27 +96,29 @@ dt_commands_prepare() {
     dt_commands_valid_target "$old" && dt_commands_verify "$old" || { dt_error 'generated commands changed; retained for inspection'; return 1; }
   fi
   dt_family_index || return
+  allocation=$(printf '%s\n' "${DT_FAMILIES[@]}" | python3 -B "$DT_LIB/command_names.py" "$DT_COMMANDS/current/bin") || return
   dir=$(mktemp -d "$DT_COMMANDS/generations/c.XXXXXXXX") || return
   mkdir "$dir/bin" || return
   : > "$dir/names"
+  : > "$dir/map.tsv"
   printf '# Generated Dots family completions.\n' | tee "$dir/init.bash" "$dir/init.zsh" > "$dir/init.fish"
-  while IFS= read -r family; do
-    [[ $family ]] || continue
-    if dt_family_reserved "$family"; then
-      printf 'dots theme: reserved command %s; use explicit full-ID routes\n' "$family" >&2
+  while IFS=$'\t' read -r kind command family; do
+    [[ $kind ]] || continue
+    if [[ $kind == skipped ]]; then
+      dots::progress_print dt_commands_skipped "$command" "$family"
       continue
     fi
-    existing=$(command -v -- "$family" || :)
-    case $existing in ''|"$DT_COMMANDS/current/bin/"*|"$DT_ROOT/bin/"*) ;; *) printf 'dots theme: existing command %s keeps PATH precedence\n' "$family" >&2 ;; esac
-    printf '%s\n' "$family" >> "$dir/names"
-    printf '#!/usr/bin/env bash\nexec %q theme %q "$@"\n' "${DT_LIB%/lib/dots/themes}/bin/dots" "$family" > "$dir/bin/$family" || return
-    chmod 700 "$dir/bin/$family" || return
-    printf 'complete -F _dots_complete_bash -- %q\n' "$family" >> "$dir/init.bash"
-    printf 'compdef _dots %q\n' "$family" >> "$dir/init.zsh"
-    printf "complete -c '%s' -f -a '(__dots_complete_fish)'\n" "$family" >> "$dir/init.fish"
-  done < <(printf '%s\n' "${DT_FAMILIES[@]}" | LC_ALL=C sort)
+    printf '%s\n' "$command" >> "$dir/names"
+    printf '%s\t%s\n' "$command" "$family" >> "$dir/map.tsv"
+    printf '#!/usr/bin/env bash\nexec %q theme %q "$@"\n' "${DT_LIB%/lib/dots/themes}/bin/dots" "$family" > "$dir/bin/$command" || return
+    chmod 700 "$dir/bin/$command" || return
+    printf 'complete -F _dots_complete_bash -- %q\n' "$command" >> "$dir/init.bash"
+    printf 'compdef _dots %q\n' "$command" >> "$dir/init.zsh"
+    printf "complete -c '%s' -f -a '(__dots_complete_fish)'\n" "$command" >> "$dir/init.fish"
+    [[ $command == "$family" ]] || dots::operation Generated '' '' "$command forwards to theme $family"
+  done <<< "$allocation"
   (cd -- "$dir" && find bin -type f -print | LC_ALL=C sort | while IFS= read -r file; do sha256sum -- "$file"; done
-   sha256sum -- names init.bash init.zsh init.fish) > "$dir/manifest" || return
+   sha256sum -- names map.tsv init.bash init.zsh init.fish) > "$dir/manifest" || return
   signature=$(sha256sum -- "$dir/manifest") || return
   printf '%s\n' "${signature%% *}" > "$dir/fingerprint"
   if [[ $old != none ]] && cmp -s -- "$old/manifest" "$dir/manifest"; then
@@ -129,6 +131,14 @@ dt_commands_prepare() {
   printf '%s\n' "$old" > "$journal/commands-old"
   printf '%s\n' "$dir" > "$journal/commands-new"
   sync -f "$journal/commands-old" && sync -f "$journal/commands-new" && sync -f "$journal"
+}
+dt_commands_skipped() {
+  local columns=${COLUMNS:-80}
+  [[ $columns =~ ^[0-9]{1,4}$ ]] || columns=80
+  dots::style 2
+  dots::line "Skipped theme shortcut: $1" "$DOTS_UI_YELLOW" 2 "$columns"
+  dots::line "Names occupied: $1, $2" "$DOTS_UI_DIM" 4 "$columns"
+  dots::line "Use: theme $1" "$DOTS_UI_BLUE" 4 "$columns"
 }
 dt_commands_publish() {
   local journal=$1 new old current=none

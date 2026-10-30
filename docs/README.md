@@ -5,6 +5,7 @@ The live CLI combines Bash and native PowerShell entry points with shared Python
 ## Start Here
 
 - [Git operations](git.md) and [managed files](files.md) — implemented bounded workflows.
+- [Personal fonts](fonts.md) — versioned downloads, app selections and glyph browsing.
 
 - [`principles.md`](principles.md) — priorities and engineering invariants.
 - [`architecture.md`](architecture.md) — system boundaries, execution flow, and target repository shape.

@@ -28,16 +28,25 @@ def expression(template, shell):
 
 def generate(root,shell, metadata=None):
     profile=resolve(root)
-    paths=[LIB/'native_startup.py',LIB/'profiles.py',LIB/'platform_info.py',LIB/'environment.py',LIB/'shell/environment.json']
+    from profile_environment import Model
+    generated = Model(root, profile)
+    paths=[LIB/'native_startup.py',LIB/'profile_config.py',LIB/'shell/settings.tsv',LIB/'profiles.py',LIB/'platform_info.py',LIB/'environment.py',LIB/'shell/environment.json']
+    from style_config import Styles
+    paths.extend(Styles(root, profile).startup_inputs())
     paths.extend(Path(row['root'])/'profile.json' for row in profile['layers'])
     for p in (root/'profiles', *[root/'profiles'/p for p in ('termux','linux','wsl','windows')]):
         if p.exists():paths.append(p)
         if (p/'distros').is_dir():
             paths.append(p/'distros');paths.extend(c for c in (p/'distros').iterdir() if c.is_dir())
+    paths.extend(generated.inputs)
+    paths = list(dict.fromkeys(paths))
     if Path('/etc/os-release').exists():paths.append(Path('/etc/os-release'))
     if metadata is not None:
         metadata.extend(dict(path=str(p),size=p.stat().st_size,mtime_ns=p.stat().st_mtime_ns) for p in paths)
     def q(value):return quote(str(value),shell)
+    from profile_config import settings as profile_settings
+    options = profile_settings(root, profile)
+    config_path = str(Path(profile['layers'][-1]['root']) / 'profile.json') if profile['layers'] else ''
     facts=profile['facts']
     identity=dict(DOTS_PLATFORM=facts['platform'],DOTS_DISTRO=facts['distro'],DOTS_ARCH=facts['architecture'],DOTS_RUNTIME=facts['runtime'],DOTS_PROFILE=profile['current'],DOTS_PROFILE_LAYERS=' '.join(r['id'] for r in profile['layers']),DOTS_PROFILE_CHECKOUT=str(root),DOTS_PROFILE_BIN_PATHS=os.pathsep.join(str(Path(r['root'])/'bin') for r in reversed(profile['layers'])))
     if shell=='powershell':
@@ -51,6 +60,10 @@ def generate(root,shell, metadata=None):
             lines.append("if (-not $item -or [math]::Floor(($item.LastWriteTimeUtc.Ticks - 621355968000000000) / 10000) -ne "+str(milliseconds)+") { return $false }")
         for key in ('TERMUX_VERSION','TERMUX__PREFIX','PREFIX','WSL_DISTRO_NAME','WSL_INTEROP','OS'):
             lines.append("if ([string]$env:"+key+" -cne "+q(os.environ.get(key,''))+") { return $false }")
+        lines += ["$global:DotsProfileSettings = @{}", "$global:DotsProfileSettingOrigins = @{}", "$global:DotsProfileConfigPath = "+q(config_path)]
+        for key, row in options.items():
+            if key == 'files.backup': continue
+            lines += ["$global:DotsProfileSettings["+q(key)+"] = "+q(row['value']), "$global:DotsProfileSettingOrigins["+q(key)+"] = "+q(row['source'])]
         lines += ["if (-not $global:DotsEnvironmentApplied) { $global:DotsEnvironmentApplied = @{} }",r'''function Set-DotsEnvironmentDefault([string]$Name, [string]$Value) {
     $current = [Environment]::GetEnvironmentVariable($Name)
     if ($Name -ceq 'LESS' -and $Value -ceq '--mouse' -and $current -and $current -cnotmatch '(^|\s)--(mouse|MOUSE)([=\s]|$)') {
@@ -62,6 +75,7 @@ def generate(root,shell, metadata=None):
         $global:DotsEnvironmentApplied[$Name] = $Value
     }
 }''']
+        lines += generated.shell(shell).splitlines()
         for key,(value,_) in declarations(root,profile).items():
             if SENSITIVE.search(key) and value and not TOKEN.fullmatch(value): raise ValueError('sensitive defaults must reference an environment variable')
             if value=='@editor':
@@ -78,6 +92,11 @@ def generate(root,shell, metadata=None):
         lines=['test "$DOTS" = '+q(root)+'; or return 1', 'set -l signature (command stat -c '+q('%d:%i:%s:%y:%z')+' -- '+' '.join(map(q,paths))+' 2>/dev/null | string collect)', 'test "$signature" = '+q(signature)+'; or return 1']
         for key in ('TERMUX_VERSION','TERMUX__PREFIX','PREFIX','WSL_DISTRO_NAME','WSL_INTEROP','OS'):
             lines.append('test "$'+key+'" = '+q(os.environ.get(key,''))+'; or return 1')
+        lines += ['set -g _dots_profile_setting_keys', 'set -g _dots_profile_config_path '+q(config_path)]
+        for key, row in options.items():
+            if key == 'files.backup': continue
+            lines += ['set -a _dots_profile_setting_keys '+q(key), 'set -g _dots_profile_setting_'+key+' '+q(row['value']), 'set -g _dots_profile_source_'+key+' '+q(row['source'])]
+        lines += generated.shell(shell).splitlines()
         for key,(value,_) in declarations(root,profile).items():
             if SENSITIVE.search(key) and value and not TOKEN.fullmatch(value): raise ValueError('sensitive defaults must reference an environment variable')
             if value=='@editor':

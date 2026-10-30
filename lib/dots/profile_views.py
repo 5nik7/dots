@@ -24,22 +24,32 @@ def selected(root, identity=None):
 
 def file_catalog(root, context):
     from files.catalog import Catalog, read_json, ID
-    reader = Catalog.__new__(Catalog)
-    reader.root, reader.platform, reader.manifests, reader.sources = root, context['facts']['platform'], {}, []
+    if (root / '.dots/sources.json').is_file():
+        reader = Catalog(root, context['facts']['platform'], profile=context)
+        active_roots = {str(root), *[r['root'] for r in context['layers']]}
+        overrides = {key for row in context['layers'] for key in row.get('files', {})}
+        reader.sources = [s for s in reader.sources if s['status'] == 'available' and (s['root'] in active_roots or s['id'] in overrides)]
+        for source in reader.sources:
+            source['profile'] = next((r['id'] for r in reversed(context['layers']) if source['id'] in r.get('files',{}) or r['root'] == source['root']), 'universal')
+    else:
+        # Minimal definitions can still be inspected without source composition.
+        reader = Catalog.__new__(Catalog)
+        reader.root, reader.platform, reader.manifests, reader.sources = root, context['facts']['platform'], {}, []
+        reader.profile = context
+        reader.registry = None
+        reader.registry_path = root/'.dots/files.json'
+        seen = set()
+        for owner, path in [('universal', root), *[(r['id'], Path(r['root'])) for r in context['layers']]]:
+            file = path / '.dots/files.json'
+            if not file.is_file(): continue
+            if not file.resolve().is_relative_to(root): raise ValueError('catalog escapes checkout')
+            doc = read_json(file)
+            from files.identities import canonical
+            identity = canonical(doc.get('repository'))
+            if not isinstance(identity, str) or not ID.fullmatch(identity) or identity in seen: raise ValueError('duplicate or invalid catalog repository')
+            seen.add(identity)
+            reader.sources.append(dict(id=identity, root=str(path), status='available', platforms=[reader.platform], profile=owner))
     reader.observe = lambda row: 'unobserved'
-    seen = set()
-    for owner, path in [('universal', root), *[(r['id'], Path(r['root'])) for r in context['layers']]]:
-        file = path / '.dots/files.json'
-        if not file.is_file(): continue
-        if not file.resolve().is_relative_to(root): raise ValueError('catalog escapes checkout')
-        doc = read_json(file)
-        from files.identities import canonical
-        identity = canonical(doc.get('repository'))
-        if not isinstance(identity,str) or not ID.fullmatch(identity) or identity in seen: raise ValueError('duplicate or invalid catalog repository')
-        seen.add(identity)
-        source = dict(id=identity, root=str(path), status='available', platforms=[reader.platform], profile=owner)
-        reader.sources.append(source)
-        reader.manifest(source)
     return reader
 
 
@@ -79,6 +89,8 @@ def validate(root, identities):
     for identity in identities:
         try:
             context = selected(root, identity)
+            from profile_environment import Model
+            Model(root, context)
             rows = manifests(root, context)
             conflicts=[r['id'] for r in file_catalog(root,context).records() if r['status']=='conflict']
             if conflicts: raise ValueError('conflicting resource mappings: '+', '.join(conflicts))
@@ -137,6 +149,9 @@ def report(root, args):
         for row in rows: row['path_order'] = ordered.index(row['path'])+1 if row['path'] in ordered else None
         if args.kind=='path': rows=sorted((r for r in rows if r['path_order'] is not None),key=lambda r:r['path_order'])
     elif operation == 'env':
+        from profile_environment import Model
+        generated = Model(root,context)
+        rows += [dict(name=key,template=value,layer=generated.origins[key][8:],selected=True,generated=True) for key,value in generated.scalars.items()]
         for layer in context['layers']:
             for key, value in public_report(layer).get('environment', {}).items():
                 rows.append(dict(name=key, template=value, layer=layer['id'], selected=True))
@@ -175,6 +190,13 @@ def render(result, operation, verbose=False):
             ui.detail('State',('available' if row['exists'] else 'missing')+' · '+row['layer']+((' · PATH '+str(row['path_order'])) if row['path_order'] is not None else ''))
             continue
         for key, value in row.items():
+            if key in ('files','settings'):
+                if key == 'files': ui.detail('Mappings', sum(len(items) for items in value.values()))
+                else: ui.detail('Saved settings', len(value))
+                continue
+            if key == 'generated': continue
+            if key == 'template' and row.get('generated'):
+                ui.resource_detail('Path', value, kind='dir'); continue
             if key=='schema' and not verbose: continue
             if key in ('schema','environment','extends','replaces_commands','path') and isinstance(value,(list,dict)) and not verbose: continue
             if key in ('platforms','targets','app','category','strategy','enabled') and not verbose: continue

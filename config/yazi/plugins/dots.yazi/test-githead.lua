@@ -91,6 +91,12 @@ for i = 2, #plain do assert(plain[i][1] == decorated[i][1] and plain[i][2] == de
 local text = {}
 for _, span in ipairs(decorated) do text[#text + 1] = span[1] end
 assert(table.concat(text) == "󰊤 dots main !2 ?1")
+local count_before = #calls
+head:recolor({branch_symbol='BR', unstaged_symbol='M'})
+text = {}
+for _, span in ipairs(Dotline.coloreds.get.githead()) do text[#text+1]=span[1] end
+assert(table.concat(text)=="󰊤 dots BRmain M2 ?1" and #calls==count_before)
+head:recolor({branch_symbol='', unstaged_symbol='!'})
 
 -- Every failure replaces previously valid metadata, without affecting Git status.
 local invalid = { "invalid json", "null", "true", "[]", "{}", '{"icon":5,"owned":true}',

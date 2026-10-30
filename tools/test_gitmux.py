@@ -496,7 +496,7 @@ class GitmuxThemes(unittest.TestCase):
                 colors = json.loads((out / 'colors.json').read_text())['colors']
                 for option, role in (('current', 'bright_foreground'), ('inactive', 'dark_foreground'), ('codex', 'foreground')):
                     self.assertIn(f'set -g @dots-window-name-{option}-fg "{colors[role]}"', raw)
-                for option, role in (('window-name-current-bg', 'selection_background'), ('window-number-inactive-fg', 'dark_foreground'), ('separator-bg', 'dark_background'), ('termux-tab-current-fg', 'orange'), ('termux-inactive-bg', 'dark_background'), ('termux-inactive-fg', 'dark_foreground'), ('window-number-codex-fg', 'magenta')):
+                for option, role in (('window-name-current-bg', 'selection_background'), ('window-number-inactive-fg', 'dark_foreground'), ('separator-bg', 'dark_background'), ('termux-tab-current-fg', 'bright_foreground'), ('termux-inactive-bg', 'dark_background'), ('termux-inactive-fg', 'dark_foreground'), ('window-number-codex-fg', 'dark_foreground')):
                     self.assertIn(f'set -g @dots-{option} "{colors[role]}"', raw)
                 for role in ('branch', 'staged', 'modified', 'untracked', 'conflict', 'clean', 'added', 'deleted', 'ahead', 'behind'):
                     self.assertIn(f'set -g @dots-gitmux-{role} "{colors["git"][role]}"', raw)

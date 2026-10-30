@@ -2,6 +2,17 @@
 
 **Implementation available; native Windows runtime and desktop acceptance pending.**
 
+`dots fonts` and `fonts.ps1` share routes, JSON, completion and lifecycle operations.
+Setup creates the standalone adapter without Bash. Per-user font files and HKCU
+values are journaled; Windows Terminal defaults/GUIDs, WezTerm and separate VS Code
+fields use managed mappings or explicit files. Termux activation and tmux insertion
+are unavailable here; copy/print and optional FZF remain available. Parsing requires
+Python 3.11+ and fontTools. Native 5.1/7 execution, registration/recovery, clipboard
+and visible desktop-font acceptance remain pending; POSIX controller/registry
+fixtures do not establish them. See [fonts](fonts.md).
+
+`fonts install FONT --directory DOTFONTS --version VERSION` only stores that version in the checkout; `fonts use FONT --directory DOTFONTS --version VERSION` explicitly registers it for the current user. Backend profile aliases and `$env:DOTFONTS` paths work through the shared resolver. Directory uninstall keeps history and other copies, and the Fonts picker exposes the same directory chooser on native FZF. Installed, Copy/Migrate, batch Install with `--from`, Set and explicit Restore use the same controller and active-profile preferences as Bash. Windows migration requires the existing matching HKCU user-font registration and keeps its lookup path; system fonts are copy-only. These routes need no Bash; native execution/desktop acceptance is still pending.
+
 `bin/dots.ps1` is the native entry point for Windows PowerShell 5.1 and PowerShell 7. It invokes Python directly; it does not route commands through Bash, Git Bash, MSYS or WSL. Basic help and shell startup do not require Python. Use Python 3.11+ for the complete CLI, including theme rendering and Anodize; the file-only controllers retain their Python 3.9 minimum. Git, FZF, Gum, Chafa and application executables are checked only by operations that need them. Anodize also requires the existing native `anodize-engine.exe` build or an explicit `ANODIZE_ENGINE` path.
 
 ```powershell
@@ -20,6 +31,14 @@ Setup installs the current host's `$PROFILE.CurrentUserCurrentHost`. Run setup f
 The personal profile now uses [shared Starship startup](shell-init.md#powershell-profile). Native PowerShell 7 and Windows PowerShell 5.1 profile checks are recorded in the [profile repair plan](../plans/powershell-profile.md); this bounded evidence does not establish full native CLI or desktop acceptance. Windows app destinations and installation targets are unchanged.
 
 ## Commands and interaction
+
+`dots.ps1 config` opens the shared configuration browser in a terminal;
+`config browse --profile ID`, `--defaults` and `--query TEXT` use the same Python
+controller and guarded Save/Cancel workflow as Bash. Native Windows uses its own
+terminal and PowerShell preview transport, without invoking Bash or WSL. Explicit
+reports and `--json` stay noninteractive. `--client` addresses a tmux client and
+has no native Windows equivalent. Native PowerShell 5.1/7 popup, input, save/undo
+and 40/80/120-column acceptance remain pending; see [configuration popup](profiles.md#configuration-popup).
 
 `dots.ps1 files repair` uses the same repair planner, issue helper, guarded queue, flags, JSON and completion as Bash, with native app destinations. FZF/Gum are optional; numbered selection and text confirmation work without Bash. `--yes` applies automatic repairs only. It does not silently substitute copies for links. Native Windows PowerShell 5.1/7 repair/recovery and 40/80/120-column interaction acceptance remain pending; see [repair](files.md#repair-managed-destinations).
 
@@ -72,7 +91,7 @@ Windots' bat entry remains unmapped because its source is absent; the root bat r
 
 ## State, publication and recovery
 
-Existing Windows state remains `%LOCALAPPDATA%/dots`, or `$XDG_STATE_HOME/dots` when set. There is no automatic migration to `dots/state`. Dots settings use `%APPDATA%/dots` unless XDG is explicit. Application paths are resolved independently. Native Windows and WSL must use separate checkouts/state; no Windows/WSL path translation or cross-boundary links occur.
+Existing Windows state remains `%LOCALAPPDATA%/dots`, or `$XDG_STATE_HOME/dots` when set. There is no automatic migration to `dots/state`. Dots settings use the Windows profile in the checkout; `%APPDATA%/dots` (or explicit XDG) remains the legacy migration source and user-theme location. Application paths are resolved independently. Native Windows and WSL must use separate checkouts/state; no Windows/WSL path translation or cross-boundary links occur.
 
 Links remain the default. Dots does not elevate, enable Developer Mode, silently copy, traverse unknown reparse points, or replace unrelated theme pointers. Missing link privileges fail during approved preparation before live replacement. File replacement, connectors and active theme pointers use retained journals; recovery and undo use `dots files history`, `recover` and `undo`. Modified generated commands and post-apply drift require review. Native Windows flushes files/journals, without claiming POSIX directory-fsync or power-loss guarantees.
 
@@ -95,7 +114,7 @@ preview and interruption acceptance remains pending where engines are unavailabl
 
 ## Standalone weather
 
-`bin/wttr.ps1` uses the literal native argument bridge and shared Python 3.11+ weather controller; Bash is not required. It supports the same views/flags/progress/data, case-sensitive short aliases and theme-gradient help, stock request syntax and generated PowerShell completion as the Unix entry. Temperature/icon attributes, variable temperature bands and widget style directives use the shared renderer, and completion tooltips use case-sensitive stock metadata. Stock requests execute native `curl.exe` directly, bypassing the PowerShell `curl` alias; JSON-backed views do not require curl. Configuration maps to APPDATA/wttr (XDG override supported). Manual/default locations are supported; Android acquisition and tmux have no native Windows equivalent here. Native Windows PowerShell 5.1/7 weather/completion terminal validation remains pending; shared controller/bridge fixtures do not establish it. See [wttr](wttr.md).
+`bin/wttr.ps1` and `dots wttr` use the literal native argument bridge and shared Python 3.11+ weather controller; Bash is not required. It supports the same views/flags/progress/data, case-sensitive short aliases and theme-gradient help, stock request syntax and generated PowerShell completion as the Unix entry. Temperature/icon attributes, variable temperature bands and widget style directives use the shared renderer, and completion tooltips use case-sensitive stock metadata. Stock requests execute native `curl.exe` directly, bypassing the PowerShell `curl` alias; JSON-backed views do not require curl. Configuration maps to APPDATA/wttr (XDG override supported). Manual/default locations are supported; Android acquisition and tmux have no native Windows equivalent here. `wttr browse` and `dots wttr browse` use the same session controls and cached previews in the native terminal, with an ordinary-report fallback when FZF/terminal support is missing. Native Windows PowerShell 5.1/7 weather/browser/completion terminal validation remains pending; shared controller/bridge fixtures do not establish it. See [wttr](wttr.md).
 
 Named `git submodule NAME ...` navigation and `git submodules info` use the same Python parser, inspection and static completion metadata as Bash. Publication delegates to the native Git controller; no Bash is required on Windows. Native PowerShell terminal acceptance for these additions remains pending.
 
@@ -152,3 +171,7 @@ The [Codex attention bridge](themes.md#codex-attention-notifications) has no nat
 ## Todo
 
 `todo.ps1` forwards literal arguments directly to the shared standalone controller. `dots.ps1 todo` pins the Dots checkout; standalone invocation detects a project or uses global scope. Native completion preserves this distinction and reads aliases, UUIDs and tags on demand. Alias editing, schema-2 JSON and the note append route use the same controller as Bash. The popup uses native terminal FZF and a PowerShell preview command, never Bash/WSL. The installer includes `todo.ps1`; skill links retain existing privilege/refusal rules. Native PowerShell 5.1/7 runtime, completion and terminal acceptance for todo is pending; Python bridge fixtures are separate evidence. See [todo](todo.md).
+
+Todo planning shares `todo plan ID [--new] [--dry-run]`, brief export, completion and popup actions across Bash and native PowerShell. Termux uses the existing codex-termux runit connection; native Linux/WSL/Windows use native Codex daemon/proxy capabilities, with runtime acceptance pending outside the isolated Termux fixture. Windows uses the current terminal and native Set-Clipboard, with no tmux or WSL translation; app installation destinations are unchanged. See [Todo planning](todo.md#plan-a-goal-in-codex).
+
+Generated profile paths are available as `$env:PROFILE`, `$env:PROFILEBIN`, canonical prefixes such as `$env:DOTSWINDOWS`, and configured aliases such as `$env:WINDOTSBIN`. Native hashtables use `$DotsProfile`, `$windows`, and `$windots`; the automatic `$PROFILE` variable is preserved. All definitions are compiled from the shared backend and validated before assignments. Termux tests cover generated adapter structure; actual PowerShell 5.1/7 reload and Windows filesystem acceptance remain pending.

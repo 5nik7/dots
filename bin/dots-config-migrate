@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Preview or migrate legacy Dots configuration into a profile
+# dots:usage=[OPTIONS]
+# dots:option=--profile||profile-id|Select a profile without activating it
+# dots:option=--json||flag|Print structured configuration data
+# dots:option=--dry-run||flag|Preview without writing files
+# dots:option=--apply||flag|Apply the reviewed migration
+# dots:option=--yes||flag|Confirm migration apply
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/config_cli.py" migrate "$@"

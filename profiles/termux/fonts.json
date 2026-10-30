@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "applications": {
+    "termux": {
+      "id": "nerd:JetBrainsMono",
+      "version": "v3.5.1",
+      "face": "JetBrainsMonoNerdFont-Regular.ttf",
+      "variant": "nerd",
+      "target": "termux",
+      "config": null,
+      "app_profile": null,
+      "directory": "PROFILEFONTS",
+      "files": {
+        "JetBrainsMonoNerdFont-Regular.ttf": "1c680e8cde9fcf8b88a5605ce8d1fb94dd3fb15841f7ca7bf4c55664855e5611"
+      },
+      "upstream": {
+        "version": "v3.5.1",
+        "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/JetBrainsMono.zip",
+        "fingerprint": "sha256:fab782a66f7d3019da64f6572db9fc5d3a4bcb19f9fa13e2d8a62e3693d6396e",
+        "size": 133975870,
+        "provider": "nerd"
+      },
+      "name": "JetBrainsMono"
+    }
+  }
+}

@@ -23,6 +23,7 @@ OPTIONS = {
     'dry-run': ('flag', 'Preview without changing storage'),
     'yes': ('flag', 'Confirm removal without prompting'),
     'recursive': ('flag', 'Remove or restore the complete subtree'),
+    'new': ('flag', 'Create a new linked Codex thread; retain the previous conversation'),
     'color': ('choice:auto,always,never,none', 'Color mode'),
     'icons': ('choice:auto,always,never', 'Icon mode'),
 }
@@ -45,7 +46,8 @@ COMMANDS = {
     'remove': ('Reversibly remove a goal', ('id', 'todo-id'), ('recursive', 'yes', *MUTATE)),
     'restore': ('Restore a removed goal', ('id', 'todo-id'), ('recursive', *MUTATE)),
     'next': ('Show the highest-ranked actionable goal', None, (*FILTERS, 'json')),
-    'brief': ('Prepare a read-only Markdown agent brief', ('id', 'todo-id'), ()),
+    'brief': ('Print a read-only /plan brief for the goal and its subtree', ('id', 'todo-id'), ()),
+    'plan': ('Open the goal and its subtree in Codex Plan Mode', ('id', 'todo-id'), ('new', 'dry-run')),
     'browse': ('Browse goals in the shared popup', None, (*FILTERS, 'print', 'json', 'markdown', 'client')),
     'path': ('Print the selected goal storage path', None, ()),
 }

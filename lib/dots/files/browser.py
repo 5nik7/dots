@@ -21,10 +21,7 @@ def planned_operation(identity, action, backup):
     parents_safe(composition)
     metadata = {str(composition): digest(composition)}
     manager = Manager()
-    for owner in manager.catalog.sources:
-        if owner['status'] == 'excluded':
-            continue
-        path = Path(owner['root']) / '.dots/files.json'
+    for path in manager.catalog.input_paths():
         parents_safe(path)
         metadata[str(path)] = digest(path)
     row = next((r for r in manager.catalog.records() if r['id'] == identity), None)

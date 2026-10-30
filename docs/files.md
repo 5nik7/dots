@@ -14,7 +14,7 @@ Slow catalog/system discovery, browser loading, planning and file operations use
 dots files sources
 dots files browse
 dots files list --sort app
-dots files list --repo androidots --platform termux
+dots files list --repo termux --platform termux
 dots files list --all-platforms --json
 dots files discover
 dots files locate kitty
@@ -41,8 +41,7 @@ are explicit. Piped lists retain tab-separated ID, status, source and target; pi
 sources retain ID, availability, repository root and platforms. Success is 0; validation/I/O
 errors are 1 and invalid command syntax is 2.
 
-Tracking writes only repository metadata, with an exclusive lock, flushed temporary
-file and atomic replacement. Quote destination tokens to leave them literal:
+Tracking writes the core registry and selected profile metadata in one guarded, retained transaction. The result includes an undo ID. Legacy schema-1 catalogs retain their compatible single-file writer. Quote destination tokens to leave them literal:
 
 ```bash
 dots files track config/example/settings --repo dots --id example-settings \
@@ -59,7 +58,7 @@ operations below implement add, link, remove/rm, undo and recovery. Source-conte
 
 ## Stash and edit mappings
 
-`dots files stash` disables tracked resources repository-wide while keeping their
+`dots files stash` disables tracked resources in the active profile while keeping their
 source files and catalog entries. It unlinks only a matching current symlink,
 including a matching dangling link. Unrelated destination objects are preserved;
 receipt-owned drift or a link still claimed by another enabled resource blocks
@@ -79,7 +78,7 @@ dots files edit --new --repo dots --id example --source config/example \
   --strategy directory-link
 ```
 
-Stashed entries have `enabled: false` in their owning catalog and remain visible
+Stashed entries have `enabled: false` in their profile mapping and remain visible
 with status `stashed`. Omitted `enabled` means true; other types are invalid.
 Disabled entries do not claim destinations, replace active resources or participate
 in install/setup/direct linking. Track updates preserve disabled state. Discovery
@@ -99,10 +98,12 @@ but live copy installation remains unsupported.
 
 With `--new`, specify an available `--repo`, unique `--id`, `--source`, `--target`,
 `--app` and `--category`; interactive mode collects missing values. New mappings
-inherit the repository's platforms unless `--platforms` is given. `--platform`
-updates only that target override; without it `--target` updates the common target.
-Unspecified overrides remain unchanged. Shared-field edits validate ownership
-conflicts across all applicable platforms. Live apply is for the current platform.
+inherit the source's platforms unless `--platforms` is given. `--platforms` also
+updates an existing resource's core registry eligibility. `--platform` selects that
+platform's base profile; without it the active leaf profile is edited. Each profile
+has one target per mapping. Eligibility changes validate other profiles, while
+implementation edits affect only the selected profile. Live apply requires the
+active profile. Legacy schema-1 catalogs retain their target-override semantics.
 
 By default edit only saves catalog metadata. It explicitly reports that existing
 links remain; use `--apply` during the edit to migrate the current old/new mapping.
@@ -269,31 +270,37 @@ shell configuration. The browser and its adoption/stop-managing actions remain u
 
 ## Ownership and formats
 
-[.dots/sources.json](../.dots/sources.json) declares composition with schema 1 and
+[.dots/sources.json](../.dots/sources.json) declares composition with schema 2 and
 `sources` containing `id`, repository-relative `path`, allowed `roots`, `platforms`
-and optional `excluded`. Dots owns common configurations; Androidots contributes
-Termux-specific sources. Windots supplies the native VS Code settings target; its other resources remain unmapped. Neovim owns its catalog at `config/nvim/.dots/files.json`.
-Missing optional catalogs are reported unavailable. Secrets are explicitly excluded;
-no private submodule is initialized and no source-file contents are printed. Third-party
-PowerShell and Rainmeter submodules are explicitly excluded from resource ownership.
+and optional `excluded`. Dots owns shared sources; `termux`, `windows` and `nvim`
+own their declared roots. Missing source directories are unavailable. Secrets and
+third-party PowerShell/Rainmeter ownership remain excluded; inspection never
+initializes private or optional sources.
 
-Every participating repository owns `.dots/files.json`:
+[.dots/files.json](../.dots/files.json) is the permanent core registry:
 
 ```json
-{
-  "schema": 1,
-  "repository": "dots",
-  "resources": [{
-    "id": "example",
-    "source": "config/example",
-    "app": "example",
-    "category": "config",
-    "platforms": ["termux", "linux", "wsl"],
-    "target": "${CONFIG}/example",
-    "strategy": "directory-link"
-  }]
-}
+{"schema": 2, "resources": [{"id": "dots:example", "platforms": ["linux", "wsl"]}]}
 ```
+
+Registry rows contain only a qualified ID and a nonempty unique platform list.
+The owner before `:` must name a non-excluded source. The selected profile joins
+that registry with its implementation array:
+
+```json
+{"schema": 1, "id": "linux", "files": {"dots": [{
+  "id": "example", "source": "config/example", "target": "${CONFIG}/example",
+  "app": "example", "category": "config", "strategy": "directory-link"
+}]}}
+```
+
+A profile row has no `platforms` or `targets`. Optional `enabled` and `replaces`
+retain their meanings. An unknown registry ID is invalid; a registered ID without
+an effective profile mapping never installs. Source and registry platform lists
+jointly determine eligibility. Whole-array profile inheritance is described in
+[profiles](profiles.md#profile-configuration). Older schema-1 compositions and
+source catalogs remain readable for compatibility and journal recovery; they do
+not replace the schema-2 core registry in this checkout.
 
 IDs, applications and categories use lowercase letters, digits, `_` and `-`,
 starting with a letter. Sources stay repository-relative without `..`. Targets

@@ -21,6 +21,11 @@ dots_value_candidates() {
       output=$(python3 -B "$DOTS_LIB_DIR/profiles.py" __names 2>/dev/null) || return 0
       while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
+    config-key)
+      local output
+      output=$(python3 -B "$DOTS_LIB_DIR/profile_config.py" __keys "${DOTS_OPTION_VALUES[--profile]:-}" 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
+      ;;
     dots-setting)
       local output
       output=$(python3 -B "$DOTS_LIB_DIR/environment.py" __names 2>/dev/null) || return 0
@@ -151,6 +156,10 @@ dots_complete() {
   (( cursor >= 1 && cursor < ${#words[@]} )) || return 2
   # Standalone wrappers share this same completion protocol.
   local command_name=${words[0]##*/}
+  if [[ $command_name == fonts ]]; then
+    python3 -B "$DOTS_LIB_DIR/fonts/completion.py" "${words[@]:1:cursor}"
+    return
+  fi
   if [[ $command_name == todo ]]; then
     python3 -B "$DOTS_LIB_DIR/todo_completion.py" standalone "${words[@]:1:cursor}"
     return
@@ -159,6 +168,10 @@ dots_complete() {
   while (( todo_index < cursor )); do
     case ${words[todo_index]} in --color=*|--icons=*|-r|--raw) (( ++todo_index )) ;; *) break ;; esac
   done
+  if [[ $command_name == dots && ${words[todo_index]} == fonts && $todo_index -lt $cursor ]]; then
+    python3 -B "$DOTS_LIB_DIR/fonts/completion.py" "${words[@]:todo_index+1:cursor-todo_index}"
+    return
+  fi
   if [[ $command_name == dots && ${words[todo_index]} == todo && $todo_index -lt $cursor ]]; then
     python3 -B "$DOTS_LIB_DIR/todo_completion.py" dots "${words[@]:todo_index+1:cursor-todo_index}"
     return
@@ -166,7 +179,16 @@ dots_complete() {
   if [[ $command_name == theme ]]; then
     words=(dots theme "${words[@]:1}"); ((cursor+=1))
   elif [[ $command_name != dots ]]; then
-    local family_target=$command_name
+    local family_target=$command_name alias_name target_name extra mapping=${XDG_STATE_HOME:-$HOME/.local/state}/dots/themes/commands/current/map.tsv
+    if [[ -f $mapping && ! -L $mapping ]]; then
+      family_target=''
+      while IFS=$'\t' read -r alias_name target_name extra; do
+        if [[ $alias_name == "$command_name" && $target_name =~ ^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$ && ! $extra ]]; then
+          family_target=$target_name; break
+        fi
+      done < "$mapping"
+      [[ $family_target ]] || return 0
+    fi
     words=(dots theme "$family_target" "${words[@]:1}"); ((cursor+=2))
   fi
   local DOTS_CURRENT=${words[cursor]} index=1 token prefix='' help=0 resolved start

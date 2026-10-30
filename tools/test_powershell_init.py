@@ -86,6 +86,41 @@ class PowerShellInitTests(unittest.TestCase):
         self.assertEqual(forced.stdout, original.stdout)
         self.assertNotIn('\x1b', forced.stdout)
 
+    def test_theme_shortcut_completion_mapping_and_retirement(self):
+        registry = self.home/'state/dots/themes/commands/current'
+        registry.mkdir(parents=True)
+        (registry/'names').write_text('fixturepalette-theme\n')
+        (registry/'map.tsv').write_text('fixturepalette-theme\tfixturepalette\n')
+        (self.repo/'bin/dots.ps1').write_text("$args | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $env:HOME 'completion.json')\n\"candidate`tblue`tBlue\"\n")
+        code = r'''
+$adapter = Join-Path $env:DOTS 'lib/dots/completion/powershell'
+. ([scriptblock]::Create([IO.File]::ReadAllText($adapter)))
+$line = 'fixturepalette-theme.ps1 bl'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseInput($line, [ref]$tokens, [ref]$errors)
+$commandAst = $ast.EndBlock.Statements[0].PipelineElements[0]
+$global:LASTEXITCODE = 17
+$rows = @(& $dotsCompleter 'bl' $commandAst $line.Length)
+if ($rows.Count -ne 1 -or $rows[0].CompletionText -ne 'blue' -or $global:LASTEXITCODE -ne 17) { exit 11 }
+$forwarded = Get-Content -Raw -LiteralPath (Join-Path $env:HOME 'completion.json') | ConvertFrom-Json
+if (($forwarded -join '|') -ne '__complete|theme|fixturepalette|bl') { exit 12 }
+$registry = Join-Path $env:XDG_STATE_HOME 'dots/themes/commands/current'
+[IO.File]::WriteAllText((Join-Path $registry 'map.tsv'), '')
+[IO.File]::WriteAllText((Join-Path $registry 'names'), '')
+. ([scriptblock]::Create([IO.File]::ReadAllText($adapter)))
+if (@(& $dotsCompleter 'bl' $commandAst $line.Length).Count -ne 0) { exit 13 }
+if ($dotsNewCompletionNames.Count -ne 0) { exit 14 }
+# Old generations without maps use exact identity names, including -theme.
+Remove-Item -LiteralPath (Join-Path $registry 'map.tsv')
+[IO.File]::WriteAllText((Join-Path $registry 'names'), "fixturepalette-theme`n")
+. ([scriptblock]::Create([IO.File]::ReadAllText($adapter)))
+$null = @(& $dotsCompleter 'bl' $commandAst $line.Length)
+$forwarded = Get-Content -Raw -LiteralPath (Join-Path $env:HOME 'completion.json') | ConvertFrom-Json
+if (($forwarded -join '|') -ne '__complete|theme|fixturepalette-theme|bl') { exit 15 }
+'''
+        result = self.run_ps('-Command', code)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_generator_and_environment_without_bash(self):
         # Prove noninteractive initialization never evaluates the interactive body.
         (self.repo / 'shells/powershell/interactive.ps1').write_text("throw 'interactive body ran'\n")
@@ -168,6 +203,21 @@ class PowerShellInitTests(unittest.TestCase):
             " } catch { [Console]::Error.WriteLine($_); exit 1 }; exit 0"],
             cwd=self.home, env=self.env, input='', text=True,
             capture_output=True, timeout=30)
+
+    def test_escape_variable_case_alias_and_readonly_reload(self):
+        self.env.update(DOTS=str(self.repo), DOTS_INIT_THEME='0', DOTS_INIT_COLORS='0',
+                        DOTS_INIT_COMMANDS='0', DOTS_INIT_COMPLETION='0')
+        entry = literal(self.repo / 'lib/dots/shell/init.ps1')
+        # Keep environment preparation inside this fixture without requiring Python.
+        cache = self.home / 'cache/dots/startup/environment.ps1'
+        cache.parent.mkdir(parents=True)
+        cache.write_text('$true\n')
+        p = self.run_interactive(
+            f". {entry}; [Console]::Write($esc + '|' + $ESC + '|'); "
+            "Set-Variable -Name esc -Scope Global -Option ReadOnly; "
+            f". {entry}; [Console]::Write($esc + '|' + $ESC + '|')")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(p.stdout.encode(), b'\x1b|' * 4)
 
     def test_lean_startup_and_repeat_preserve_prompt_exit_and_paths(self):
         entry = literal(self.repo / 'shells/powershell/profile.ps1')

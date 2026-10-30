@@ -33,6 +33,10 @@ if (( _dots_startup_valid )); then
   source "$_dots_startup_cache/$_dots_startup_generation/bundle" || return
 else
   _dots_debug_event cache fallback cache
+  if [[ ${_dots_profile_environment_ready:-0} == 1 ]]; then
+    printf 'dots: startup preparation failed; previous profile environment retained\n' >&2
+    return 1
+  fi
   printf 'dots: startup preparation unavailable; loading minimal integration\n' >&2
   source "$DOTS/lib/dots/shell/environment_runtime.bash"
   source "$DOTS/lib/dots/shell/integration.bash" || return

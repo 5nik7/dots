@@ -1,156 +1,8 @@
 {
-  "schema": 1,
-  "repository": "dots",
+  "schema": 2,
   "resources": [
     {
-      "id": "bash_profile",
-      "source": "shells/bash/.bash_profile",
-      "app": "bash",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${HOME}/.bash_profile",
-      "strategy": "link"
-    },
-    {
-      "id": "bashrc",
-      "source": "shells/bash/.bashrc",
-      "app": "bash",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${HOME}/.bashrc",
-      "strategy": "link"
-    },
-    {
-      "id": "bat",
-      "source": "config/bat",
-      "app": "bat",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "target": "${CONFIG}/bat",
-      "strategy": "directory-link",
-      "replaces": [
-        "termux:bat"
-      ],
-      "targets": {
-        "windows": "${APP_CONFIG:bat}"
-      }
-    },
-    {
-      "id": "blastoff",
-      "source": "config/blastoff",
-      "target": "${CONFIG}/blastoff",
-      "strategy": "directory-link",
-      "app": "blastoff",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "targets": {
-        "windows": "${HOME}/.config/blastoff"
-      }
-    },
-    {
-      "id": "boxes",
-      "source": "config/boxes",
-      "app": "boxes",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/boxes",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "btop",
-      "source": "config/btop",
-      "app": "btop",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/btop",
-      "strategy": "directory-link",
-      "enabled": false
-    },
-    {
-      "id": "fastfetch",
-      "source": "config/fastfetch",
-      "app": "fastfetch",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/fastfetch",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "file-config-eza-themes-catppuccin-mocha-mauve-yml",
-      "source": "config/eza/themes/catppuccin-mocha-mauve.yml",
-      "target": "${CONFIG}/eza/themes/catppuccin-mocha-mauve.yml",
-      "app": "config",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "strategy": "link"
-    },
-    {
-      "id": "file-config-gitmux-gitmux-conf",
-      "source": "config/gitmux/gitmux.conf",
-      "target": "${HOME}/.gitmux.conf",
-      "app": "gitmux",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "strategy": "link"
-    },
-    {
-      "id": "file-config-television-config-toml",
-      "source": "config/television/config.toml",
-      "target": "${CONFIG}/television/config.toml",
-      "app": "config",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "strategy": "link"
-    },
-    {
-      "id": "fish",
-      "source": "shells/fish",
-      "target": "${CONFIG}/fish",
-      "strategy": "directory-link",
-      "app": "fish",
-      "category": "shell",
+      "id": "dots:bash_profile",
       "platforms": [
         "termux",
         "linux",
@@ -158,69 +10,7 @@
       ]
     },
     {
-      "id": "fsh",
-      "source": "config/fsh",
-      "app": "fsh",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/fsh",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "gemrc",
-      "source": "config/ruby/gemrc",
-      "target": "${HOME}/.gemrc",
-      "strategy": "link",
-      "app": "ruby",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "targets": {
-        "windows": "${HOME}/.gemrc"
-      }
-    },
-    {
-      "id": "git",
-      "source": "config/git",
-      "app": "git",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "target": "${CONFIG}/git",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "git-it",
-      "source": "config/git-it",
-      "app": "git-it",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/git-it",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "git-prompt-string",
-      "source": "config/git-prompt-string",
-      "target": "${CONFIG}/git-prompt-string",
-      "strategy": "directory-link",
-      "app": "git-prompt-string",
-      "category": "config",
+      "id": "dots:bashrc",
       "platforms": [
         "termux",
         "linux",
@@ -228,393 +18,530 @@
       ]
     },
     {
-      "id": "glow",
-      "source": "config/glow",
-      "app": "glow",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/glow",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "htop",
-      "source": "config/htop",
-      "app": "htop",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/htop",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "imv",
-      "source": "config/imv",
-      "app": "imv",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/imv",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "inkscape",
-      "source": "config/inkscape",
-      "app": "inkscape",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/inkscape",
-      "strategy": "directory-link",
-      "enabled": false
-    },
-    {
-      "id": "irbrc",
-      "source": "config/ruby/irbrc",
-      "target": "${HOME}/.irbrc",
-      "strategy": "link",
-      "app": "ruby",
-      "category": "shell",
+      "id": "dots:bat",
       "platforms": [
         "termux",
         "linux",
         "wsl",
         "windows"
-      ],
-      "targets": {
-        "windows": "${HOME}/.irbrc"
-      }
+      ]
     },
     {
-      "id": "kitty",
-      "source": "config/kitty",
-      "app": "kitty",
-      "category": "config",
+      "id": "dots:blastoff",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:boxes",
       "platforms": [
         "termux",
         "linux",
         "wsl"
-      ],
-      "target": "${CONFIG}/kitty",
-      "strategy": "directory-link"
+      ]
     },
     {
-      "id": "leaf",
-      "source": "config/leaf",
-      "app": "leaf",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "target": "${CONFIG}/leaf",
-      "strategy": "directory-link",
-      "targets": {
-        "windows": "${APP_CONFIG:leaf}"
-      }
-    },
-    {
-      "id": "less",
-      "source": "config/less/lesskey",
-      "app": "less",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "target": "${CONFIG}/lesskey",
-      "strategy": "link",
-      "targets": {
-        "windows": "${HOME}/_lesskey"
-      }
-    },
-    {
-      "id": "lsd",
-      "source": "config/lsd",
-      "app": "lsd",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl",
-        "windows"
-      ],
-      "target": "${CONFIG}/lsd",
-      "strategy": "directory-link",
-      "enabled": false,
-      "targets": {
-        "windows": "${APP_CONFIG:lsd}"
-      }
-    },
-    {
-      "id": "lynx",
-      "source": "config/lynx",
-      "app": "lynx",
-      "category": "config",
+      "id": "dots:btop",
       "platforms": [
         "termux",
         "linux",
         "wsl"
-      ],
-      "target": "${HOME}/.lynx",
-      "strategy": "directory-link"
+      ]
     },
     {
-      "id": "mdcat",
-      "source": "config/mdcat",
-      "app": "mdcat",
-      "category": "config",
+      "id": "dots:fastfetch",
       "platforms": [
         "termux",
         "linux",
         "wsl"
-      ],
-      "target": "${CONFIG}/mdcat",
-      "strategy": "directory-link"
+      ]
     },
     {
-      "id": "mpv",
-      "source": "config/mpv",
-      "app": "mpv",
-      "category": "config",
+      "id": "dots:file-config-eza-themes-catppuccin-mocha-mauve-yml",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:file-config-gitmux-gitmux-conf",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:file-config-television-config-toml",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:fish",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:fsh",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:gemrc",
       "platforms": [
         "termux",
         "linux",
         "wsl",
         "windows"
-      ],
-      "target": "${CONFIG}/mpv",
-      "strategy": "directory-link",
-      "enabled": false,
-      "targets": {
-        "windows": "${APP_CONFIG:mpv}"
-      }
+      ]
     },
     {
-      "id": "nushell",
-      "source": "shells/nushell",
-      "target": "${CONFIG}/nushell",
-      "strategy": "directory-link",
-      "app": "nushell",
-      "category": "shell",
+      "id": "dots:git",
       "platforms": [
         "termux",
         "linux",
         "wsl",
         "windows"
-      ],
-      "targets": {
-        "windows": "${APP_CONFIG:nushell}"
-      }
+      ]
     },
     {
-      "id": "powershell-profile",
-      "source": "shells/powershell/Microsoft.PowerShell_profile.ps1",
-      "target": "${POWERSHELL_PROFILE}",
-      "strategy": "link",
-      "app": "powershell",
-      "category": "shell",
+      "id": "dots:git-it",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:git-prompt-string",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:glow",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:htop",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:imv",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:inkscape",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:irbrc",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:kitty",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:leaf",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:less",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:lsd",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:lynx",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:mdcat",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:mpv",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:nushell",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:powershell-profile",
       "platforms": [
         "windows"
       ]
     },
     {
-      "id": "profile",
-      "source": "shells/profile",
-      "app": "profile",
-      "category": "shell",
+      "id": "dots:profile",
       "platforms": [
         "termux",
         "linux",
         "wsl"
-      ],
-      "target": "${HOME}/.profile",
-      "strategy": "link"
-    },
-    {
-      "id": "rofi",
-      "source": "config/rofi",
-      "app": "rofi",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/rofi",
-      "strategy": "directory-link",
-      "enabled": false
-    },
-    {
-      "id": "stylua",
-      "source": "config/stylua",
-      "app": "stylua",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/stylua",
-      "strategy": "directory-link"
-    },
-    {
-      "id": "sway",
-      "source": "config/sway",
-      "app": "sway",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/sway",
-      "strategy": "directory-link",
-      "enabled": false
-    },
-    {
-      "id": "tmux",
-      "source": "config/tmux",
-      "app": "tmux",
-      "category": "config",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${CONFIG}/tmux",
-      "strategy": "directory-link",
-      "replaces": [
-        "termux:tmux"
       ]
     },
     {
-      "id": "vivid",
-      "source": "config/vivid",
-      "app": "vivid",
-      "category": "config",
+      "id": "dots:rofi",
       "platforms": [
         "termux",
         "linux",
         "wsl"
-      ],
-      "target": "${CONFIG}/vivid",
-      "strategy": "directory-link"
+      ]
     },
     {
-      "id": "wal",
-      "source": "config/wal",
-      "app": "wal",
-      "category": "config",
+      "id": "dots:stylua",
       "platforms": [
         "termux",
         "linux",
         "wsl"
-      ],
-      "target": "${CONFIG}/wal",
-      "strategy": "directory-link"
+      ]
     },
     {
-      "id": "waybar",
-      "source": "config/waybar",
-      "app": "waybar",
-      "category": "config",
+      "id": "dots:sway",
       "platforms": [
         "termux",
         "linux",
         "wsl"
-      ],
-      "target": "${CONFIG}/waybar",
-      "strategy": "directory-link",
-      "enabled": false
+      ]
     },
     {
-      "id": "xonshrc",
-      "source": "shells/xonsh/.xonshrc",
-      "app": "xonsh",
-      "category": "shell",
+      "id": "dots:tmux",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:todo-maintenance-skill",
       "platforms": [
         "termux",
         "linux",
         "wsl",
         "windows"
-      ],
-      "target": "${HOME}/.xonshrc",
-      "strategy": "link",
-      "targets": {
-        "windows": "${HOME}/.xonshrc"
-      }
+      ]
     },
     {
-      "id": "yazi",
-      "source": "config/yazi",
-      "app": "yazi",
-      "category": "config",
+      "id": "dots:todo-planning-skill",
       "platforms": [
         "termux",
         "linux",
         "wsl",
         "windows"
-      ],
-      "target": "${CONFIG}/yazi",
-      "strategy": "directory-link",
-      "targets": {
-        "windows": "${APP_CONFIG:yazi}"
-      }
+      ]
     },
     {
-      "id": "zshenv",
-      "source": "shells/zsh/zshenv",
-      "app": "zsh",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${HOME}/.zshenv",
-      "strategy": "link"
-    },
-    {
-      "id": "zshrc",
-      "source": "shells/zsh/zshrc",
-      "app": "zsh",
-      "category": "shell",
-      "platforms": [
-        "termux",
-        "linux",
-        "wsl"
-      ],
-      "target": "${HOME}/.zshrc",
-      "strategy": "link"
-    },
-    {
-      "id": "todo-skill",
-      "source": ".codex/skills/dots-todo",
-      "target": "${HOME}/.codex/skills/dots-todo",
-      "strategy": "directory-link",
-      "app": "codex",
-      "category": "skill",
+      "id": "dots:todo-skill",
       "platforms": [
         "termux",
         "linux",
         "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:vivid",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:wal",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:waybar",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:xonshrc",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:yazi",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "dots:zshenv",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "dots:zshrc",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ]
+    },
+    {
+      "id": "nvim:nvim",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl",
+        "windows"
+      ]
+    },
+    {
+      "id": "termux:fastfetch",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "termux:htop",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "termux:pip",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "termux:tmux",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "windows:alacritty",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:bat",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:clink",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:clink-clink-vfox",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:clink-fzf",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:clink-scoop",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:clink-starship",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:clink-themes",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:fastfetch",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:filepilot",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:glaze-wm",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:komorebi",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:komorebi-bar",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:tacky-borders",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:vscode",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:wezterm",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:whkd",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:windhawk",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:winget",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:wsl",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:wsl-guest",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:wt",
+      "platforms": [
+        "windows"
+      ]
+    },
+    {
+      "id": "windows:yasb",
+      "platforms": [
         "windows"
       ]
     }

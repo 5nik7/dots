@@ -466,7 +466,8 @@ dt_set catppuccin latte''', code=137)
 [[ ${error[hex]} == "${dots_roles[error]}" && ${background[hex]} == "${dots_roles[background]}" ]] || exit 2
 [[ -z ${mode+x} && ${color4[hex]} == "${blue[hex]}" ]] || exit 3
 [[ $rst == $'\\e[0m' && $RST == "$rst" ]] || exit 4
-readonly rst RST
+[[ $esc == $'\\033' && $ESC == "$esc" ]] || exit 6
+readonly esc ESC rst RST
 source "$HOME/../arrays.sh" || exit 5
 ''', executable)
                 if selected == 'tokyonight-night':
@@ -497,7 +498,7 @@ source "$HOME/../catppuccin-latte.sh" || exit 8
         previous = self.generation()
         custom = self.home / 'config/dots/themes/unsafe'
         custom.mkdir(parents=True)
-        for name in ('PATH', 'path', 'status', 'theme', 'dots_palette', 'mocha_blue', 'file', 'prompt', 'widgets'):
+        for name in ('PATH', 'path', 'status', 'theme', 'dots_palette', 'mocha_blue', 'file', 'prompt', 'widgets', 'esc', 'ESC'):
             (custom / 'colors.toml').write_text('background = "#101010"\nforeground = "#eeeeee"\n' +
                                                name + ' = "#123456"\n')
             result = self.dots('theme', 'init', code=1, env={**self.env, 'DOTS_THEME_SELECTION': 'unsafe'})

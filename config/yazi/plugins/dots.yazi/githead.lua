@@ -137,6 +137,9 @@ return {
 			untracked_color = options.untracked_color or "bright blue",
 		}
         this.recolor = function(_, value)
+          for _, key in ipairs({'branch_symbol','ahead_remote_symbol','behind_remote_symbol','stashes_symbol','staged_symbol','unstaged_symbol','untracked_symbol'}) do
+            if value[key] ~= nil then config[key] = value[key] end
+          end
           value = value.theme or value
           repo_color = value.repo_color or repo_color
           repo_owned_color = value.repo_owned_color or repo_owned_color

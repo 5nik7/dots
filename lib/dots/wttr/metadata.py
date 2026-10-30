@@ -1,4 +1,8 @@
 """One static option vocabulary for help, parser and completion. No providers."""
+FIELDS = ('location', 'attribution', 'condition', 'code', 'icon', 'temperature', 'unit', 'feels_like',
+          'humidity', 'wind', 'wind_unit', 'wind_direction', 'precipitation', 'precipitation_unit',
+          'sunrise', 'sunset', 'daylight', 'age', 'stale', 'stale_marker',
+          'wind_icon', 'sunrise_icon', 'sunset_icon', 'humidity_icon', 'precip_icon', 'location_icon')
 OPTIONS = [
     ('--location', 'LOCATION', 'Override configured location or automatic city'),
     ('--current', None, 'Show current conditions only'),
@@ -30,6 +34,12 @@ SHORT_FLAGS = {
     '--language': '-L', '--widget': '-w', '--refresh': '-r', '--config': '-C',
     '--timeout': '-t',
 }
+
+BROWSE_OPTIONS = [row for row in OPTIONS if row[0] in {
+    '--location', '--days', '--units', '--language', '--config', '--timeout',
+    '--color', '--icons', '--verbose', '--help',
+}] + [('--query', 'TEXT', 'Initial browser search'),
+      ('--client', 'CLIENT', 'Exact initiating tmux client')]
 
 
 def spellings(flag):

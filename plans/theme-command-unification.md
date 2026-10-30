@@ -20,6 +20,26 @@ and limitations here before completion.
 
 ## Verification and local publication
 
+### Command collisions (implemented, 2026-10-29; live activation deferred)
+
+Use one shared allocator for Bash and native generation: keep an available name, otherwise try `name-theme`, otherwise skip with an explicit route. Reserve canonical theme names and Dots action names; exclude verified owned commands from PATH probes. Recompute on set/refresh/import and native unchanged refresh. No numeric alternatives or parent-shell alias discovery.
+
+Publish a manifest-covered `map.tsv` alongside actual executable `names`; wrappers and completion address the original theme. Old generations without maps retain identity lookup until refreshed. Preserve transaction recovery, drift guards and current selection. Retire only Dots completion registrations; PowerShell lacks public unregistration, so retired registrations decline and subsequent reloads do not overwrite replacement providers. Fish preserves mixed positional registrations and the shared reader returns no palette candidates for retired names. Exported Bash/Zsh adapters include the shared registration loader and preserve the Zsh autoload header.
+
+Menu review: no menu change; existing menus address theme identities. Windows application destinations are unchanged. Native PowerShell 5.1/7 execution/completion and native Linux/WSL acceptance are pending where unavailable. Apply the presentation gate to skipped notices at 40/80/120 columns and preserve exact scalar/JSON/completion bytes. Verify isolated allocation, wrapper arguments, name transitions, completion, legacy upgrade, idempotence and rollback before documentation/wiki checks. No live activation, commit or push is part of this slice.
+
+Verification on Termux, with owned fixtures:
+
+- Allocation: 4 cases passed. Theme commands: 15-case suite passed, plus terminal-width and self-contained export cases (17 distinct cases); affected reload/export cases passed again after final loader changes. Actual Zsh Tab completion passed. Bash/Zsh/Fish registration checks preserve replacement providers.
+- Native controller: the 16-case suite passed with one unavailable-engine skip; the additional empty-legacy-generation upgrade case and affected publication/drift cases passed. The dedicated PowerShell mapping/retirement case was skipped because no engine is installed.
+- Dispatcher: 23 cases passed in the full run; its completion-export expectation was updated for the shared loader and that case passed separately. Six shell-init cases passed. Atomic publication, failed publication and first-selection drift cases passed; the 15-boundary durability test passed separately in 309.956 seconds after the combined safety batch exceeded its 240-second cap.
+- Python and Bash/Zsh/Fish syntax checks passed. Warning-level per-file ShellCheck with extended dataflow disabled passed for the changed publishers, loader, adapter and dispatcher. `lib/dots/complete.bash` exceeded the 30-second cap; its syntax/completion behavior checks passed, but full lint coverage remains pending. An earlier combined default-analysis run was stopped for resource use.
+- Documentation links, command metadata and whitespace checks passed. Wiki pages were rebuilt with retained transaction `e2eebbcbe4a0478baa92f6da4fa58136`; wiki check passed, preserving the pre-existing generated Environment changes.
+
+Completion-loading measurement: seven alternating baseline/current samples per shell, 24 synthetic shortcut names, owned HOME/XDG roots, no other Dots verification batch running. The baseline used HEAD adapters; measurements include process launch and Zsh compinit. Final medians in milliseconds were Bash 27.68/41.11, Zsh 1142.24/1044.88 and Fish 35.52/42.41. Ranges overlapped substantially (Bash 16.09–90.82/24.16–65.76; Zsh 807.52–1391.01/910.45–1806.47; Fish 25.53–71.21/17.30–75.05), so these are local observations, not a general speed claim. Initial Bash measurement exposed roughly 52 ms of per-name subprocess overhead; a single builtin registration snapshot replaced those subprocesses. The remaining bounded work validates published names and preserves other providers; startup performs no theme discovery or PATH allocation.
+
+### Original local publication
+
 - Published 23 generated family/standalone commands while retaining the local
   `catppuccin-mocha` selection. Verified generated Catppuccin and Rosé Pine queries,
   `theme current`, published Zsh arrays and reset variables. Existing `ristretto`

@@ -1,0 +1,44 @@
+# Semantic styles resolve against the addressed Dots theme.
+[status.error]
+fg = "error"
+
+[status.info]
+fg = "info"
+
+[status.success]
+fg = "green"
+
+[status.waiting]
+fg = "warning"
+
+[status.warning]
+fg = "warning"
+
+[status.working]
+bold = true
+fg = "accent"
+
+[ui.accent]
+fg = "magenta"
+
+[ui.foreground]
+fg = "foreground"
+
+[ui.heading]
+bold = true
+fg = "cyan"
+
+[ui.identity]
+bold = true
+fg = "blue"
+
+[ui.label]
+fg = "blue"
+
+[ui.muted]
+fg = "muted"
+
+[ui.selection]
+bg = "selection_background"
+bold = true
+fg = "bright_foreground"

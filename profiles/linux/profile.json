@@ -1,5 +1,388 @@
 {
   "schema": 1,
   "id": "linux",
-  "description": "Native Linux defaults"
+  "description": "Native Linux defaults",
+  "settings": {},
+  "files": {
+    "dots": [
+      {
+        "id": "bash_profile",
+        "source": "shells/bash/.bash_profile",
+        "app": "bash",
+        "category": "shell",
+        "target": "${HOME}/.bash_profile",
+        "strategy": "link"
+      },
+      {
+        "id": "bashrc",
+        "source": "shells/bash/.bashrc",
+        "app": "bash",
+        "category": "shell",
+        "target": "${HOME}/.bashrc",
+        "strategy": "link"
+      },
+      {
+        "id": "bat",
+        "source": "config/bat",
+        "app": "bat",
+        "category": "config",
+        "target": "${CONFIG}/bat",
+        "strategy": "directory-link",
+        "replaces": [
+          "termux:bat"
+        ]
+      },
+      {
+        "id": "blastoff",
+        "source": "config/blastoff",
+        "target": "${CONFIG}/blastoff",
+        "strategy": "directory-link",
+        "app": "blastoff",
+        "category": "config"
+      },
+      {
+        "id": "boxes",
+        "source": "config/boxes",
+        "app": "boxes",
+        "category": "config",
+        "target": "${CONFIG}/boxes",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "btop",
+        "source": "config/btop",
+        "app": "btop",
+        "category": "config",
+        "target": "${CONFIG}/btop",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "fastfetch",
+        "source": "config/fastfetch",
+        "app": "fastfetch",
+        "category": "config",
+        "target": "${CONFIG}/fastfetch",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "file-config-eza-themes-catppuccin-mocha-mauve-yml",
+        "source": "config/eza/themes/catppuccin-mocha-mauve.yml",
+        "target": "${CONFIG}/eza/themes/catppuccin-mocha-mauve.yml",
+        "app": "config",
+        "category": "config",
+        "strategy": "link"
+      },
+      {
+        "id": "file-config-gitmux-gitmux-conf",
+        "source": "config/gitmux/gitmux.conf",
+        "target": "${HOME}/.gitmux.conf",
+        "app": "gitmux",
+        "category": "config",
+        "strategy": "link"
+      },
+      {
+        "id": "file-config-television-config-toml",
+        "source": "config/television/config.toml",
+        "target": "${CONFIG}/television/config.toml",
+        "app": "config",
+        "category": "config",
+        "strategy": "link"
+      },
+      {
+        "id": "fish",
+        "source": "shells/fish",
+        "target": "${CONFIG}/fish",
+        "strategy": "directory-link",
+        "app": "fish",
+        "category": "shell"
+      },
+      {
+        "id": "fsh",
+        "source": "config/fsh",
+        "app": "fsh",
+        "category": "config",
+        "target": "${CONFIG}/fsh",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "gemrc",
+        "source": "config/ruby/gemrc",
+        "target": "${HOME}/.gemrc",
+        "strategy": "link",
+        "app": "ruby",
+        "category": "shell"
+      },
+      {
+        "id": "git",
+        "source": "config/git",
+        "app": "git",
+        "category": "config",
+        "target": "${CONFIG}/git",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "git-it",
+        "source": "config/git-it",
+        "app": "git-it",
+        "category": "config",
+        "target": "${CONFIG}/git-it",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "git-prompt-string",
+        "source": "config/git-prompt-string",
+        "target": "${CONFIG}/git-prompt-string",
+        "strategy": "directory-link",
+        "app": "git-prompt-string",
+        "category": "config"
+      },
+      {
+        "id": "glow",
+        "source": "config/glow",
+        "app": "glow",
+        "category": "config",
+        "target": "${CONFIG}/glow",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "htop",
+        "source": "config/htop",
+        "app": "htop",
+        "category": "config",
+        "target": "${CONFIG}/htop",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "imv",
+        "source": "config/imv",
+        "app": "imv",
+        "category": "config",
+        "target": "${CONFIG}/imv",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "inkscape",
+        "source": "config/inkscape",
+        "app": "inkscape",
+        "category": "config",
+        "target": "${CONFIG}/inkscape",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "irbrc",
+        "source": "config/ruby/irbrc",
+        "target": "${HOME}/.irbrc",
+        "strategy": "link",
+        "app": "ruby",
+        "category": "shell"
+      },
+      {
+        "id": "kitty",
+        "source": "config/kitty",
+        "app": "kitty",
+        "category": "config",
+        "target": "${CONFIG}/kitty",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "leaf",
+        "source": "config/leaf",
+        "app": "leaf",
+        "category": "config",
+        "target": "${CONFIG}/leaf",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "less",
+        "source": "config/less/lesskey",
+        "app": "less",
+        "category": "config",
+        "target": "${CONFIG}/lesskey",
+        "strategy": "link"
+      },
+      {
+        "id": "lsd",
+        "source": "config/lsd",
+        "app": "lsd",
+        "category": "config",
+        "target": "${CONFIG}/lsd",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "lynx",
+        "source": "config/lynx",
+        "app": "lynx",
+        "category": "config",
+        "target": "${HOME}/.lynx",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "mdcat",
+        "source": "config/mdcat",
+        "app": "mdcat",
+        "category": "config",
+        "target": "${CONFIG}/mdcat",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "mpv",
+        "source": "config/mpv",
+        "app": "mpv",
+        "category": "config",
+        "target": "${CONFIG}/mpv",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "nushell",
+        "source": "shells/nushell",
+        "target": "${CONFIG}/nushell",
+        "strategy": "directory-link",
+        "app": "nushell",
+        "category": "shell"
+      },
+      {
+        "id": "profile",
+        "source": "shells/profile",
+        "app": "profile",
+        "category": "shell",
+        "target": "${HOME}/.profile",
+        "strategy": "link"
+      },
+      {
+        "id": "rofi",
+        "source": "config/rofi",
+        "app": "rofi",
+        "category": "config",
+        "target": "${CONFIG}/rofi",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "stylua",
+        "source": "config/stylua",
+        "app": "stylua",
+        "category": "config",
+        "target": "${CONFIG}/stylua",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "sway",
+        "source": "config/sway",
+        "app": "sway",
+        "category": "config",
+        "target": "${CONFIG}/sway",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "tmux",
+        "source": "config/tmux",
+        "app": "tmux",
+        "category": "config",
+        "target": "${CONFIG}/tmux",
+        "strategy": "directory-link",
+        "replaces": [
+          "termux:tmux"
+        ]
+      },
+      {
+        "id": "vivid",
+        "source": "config/vivid",
+        "app": "vivid",
+        "category": "config",
+        "target": "${CONFIG}/vivid",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "wal",
+        "source": "config/wal",
+        "app": "wal",
+        "category": "config",
+        "target": "${CONFIG}/wal",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "waybar",
+        "source": "config/waybar",
+        "app": "waybar",
+        "category": "config",
+        "target": "${CONFIG}/waybar",
+        "strategy": "directory-link",
+        "enabled": false
+      },
+      {
+        "id": "xonshrc",
+        "source": "shells/xonsh/.xonshrc",
+        "app": "xonsh",
+        "category": "shell",
+        "target": "${HOME}/.xonshrc",
+        "strategy": "link"
+      },
+      {
+        "id": "yazi",
+        "source": "config/yazi",
+        "app": "yazi",
+        "category": "config",
+        "target": "${CONFIG}/yazi",
+        "strategy": "directory-link"
+      },
+      {
+        "id": "zshenv",
+        "source": "shells/zsh/zshenv",
+        "app": "zsh",
+        "category": "shell",
+        "target": "${HOME}/.zshenv",
+        "strategy": "link"
+      },
+      {
+        "id": "zshrc",
+        "source": "shells/zsh/zshrc",
+        "app": "zsh",
+        "category": "shell",
+        "target": "${HOME}/.zshrc",
+        "strategy": "link"
+      },
+      {
+        "id": "todo-skill",
+        "source": ".codex/skills/dots-todo",
+        "target": "${HOME}/.codex/skills/dots-todo",
+        "strategy": "directory-link",
+        "app": "codex",
+        "category": "skill"
+      },
+      {
+        "id": "todo-planning-skill",
+        "source": ".codex/skills/dots-todo-planning",
+        "target": "${HOME}/.codex/skills/dots-todo-planning",
+        "strategy": "directory-link",
+        "app": "codex",
+        "category": "skill"
+      },
+      {
+        "id": "todo-maintenance-skill",
+        "source": ".codex/skills/dots-todo-maintenance",
+        "target": "${HOME}/.codex/skills/dots-todo-maintenance",
+        "strategy": "directory-link",
+        "app": "codex",
+        "category": "skill"
+      }
+    ],
+    "nvim": [
+      {
+        "id": "nvim",
+        "source": ".",
+        "app": "nvim",
+        "category": "config",
+        "target": "${CONFIG}/nvim",
+        "strategy": "directory-link",
+        "replaces": [
+          "androidots:nvim"
+        ]
+      }
+    ]
+  }
 }

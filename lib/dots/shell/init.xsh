@@ -9,12 +9,19 @@ exec(compile((_DotsPath($DOTS) / 'lib/dots/shell/runtime.py').read_text(), _dots
 # Use Xonsh's Python runtime; no subprocess or shell-code evaluation.
 import sys as _dots_sys
 _dots_sys.path.insert(0, str(_DotsPath($DOTS) / 'lib/dots'))
-from native_environment import exports as _dots_exports
+from native_environment import document as _dots_document
 from less_style import apply as _dots_less_style
-_dots_profile_environment = _dots_exports(_DotsPath($DOTS), __xonsh__.env.detype())
+_dots_profile_document = _dots_document(_DotsPath($DOTS), __xonsh__.env.detype())
+_dots_profile_environment = _dots_profile_document['exports']
+for _dots_key in _dots_profile_document['unset']:
+    __xonsh__.env.pop(_dots_key, None)
+for _dots_key in __xonsh__.ctx.get('_dots_profile_map_names', []):
+    __xonsh__.ctx.pop(_dots_key, None)
+__xonsh__.ctx.update(_dots_profile_document['maps'])
+__xonsh__.ctx['_dots_profile_map_names'] = list(_dots_profile_document['maps'])
 __xonsh__.env['PATH'] = _dots_profile_environment['PATH'].split(__import__('os').pathsep)
 for _dots_key, _dots_value in _dots_profile_environment.items():
-    if _dots_key != 'PATH' and (_dots_key.startswith('DOTS_') or not __xonsh__.env.get(_dots_key)):
+    if _dots_key != 'PATH' and (_dots_key in _dots_profile_document['generated'] or _dots_key.startswith('DOTS_') or not __xonsh__.env.get(_dots_key)):
         __xonsh__.env[_dots_key] = _dots_value
 
 dots_options, dots_option_sources, _dots_config = _dots_runtime.settings($DOTS, __xonsh__.env)
@@ -37,6 +44,7 @@ for _dots_directory in ($DOTBIN, $DOTSCRIPTS):
 if dots_options['DOTS_INIT_COMMANDS'] == '1':
     $PATH.append($THEMESBIN)
 if $XONSH_INTERACTIVE:
+    esc = ESC = '\x1b'
     rst = RST = '\x1b[0m'
     if dots_options['DOTS_INIT_COLORS'] == '0':
         for _dots_name in __xonsh__.ctx.get('_dots_color_names', []):

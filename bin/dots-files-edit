@@ -11,8 +11,8 @@
 # dots:option=--app||string|Application for a new mapping
 # dots:option=--category||string|Category for a new mapping
 # dots:option=--strategy||choice:link,directory-link,copy|Source strategy; live copy is unsupported
-# dots:option=--platform||choice:termux,linux,wsl,windows|Edit this platform's target override
-# dots:option=--platforms||string|Applicable platforms for a new mapping
+# dots:option=--platform||choice:termux,linux,wsl,windows|Edit this platform's base profile (default: active profile)
+# dots:option=--platforms||string|Resource eligibility in the core registry
 # dots:option=--apply||flag|Also reconcile live links on this platform
 # dots:option=--dry-run||flag|Preview without changes; --pick explicitly selects
 # dots:option=--yes||flag|Apply without prompting; requires explicit selection and fields

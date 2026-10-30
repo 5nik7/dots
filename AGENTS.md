@@ -33,6 +33,7 @@ Read the guide matching the work before changing files:
 - [`agents/guides/testing.md`](agents/guides/testing.md) — test isolation, safety tests, integration tests, and benchmarks.
 - [`agents/guides/documentation.md`](agents/guides/documentation.md) — documentation ownership and synchronization requirements.
 - [`agents/guides/codex-notifications.md`](agents/guides/codex-notifications.md) — Codex attention preferences, observational hooks, tmux acknowledgement and Termux alerts.
+- [`agents/guides/todo.md`](agents/guides/todo.md) — Todo commands, storage, popup, planning handoffs and managed skills.
 
 Reference documents:
 

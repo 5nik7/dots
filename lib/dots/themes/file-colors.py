@@ -48,9 +48,11 @@ def leaf_template_tokens(palette):
 
 
 def roots():
+    sys.path.insert(0, str(ROOT / 'lib/dots'))
     sys.path.insert(0, str(ROOT / 'lib/dots/files'))
     from file_platform import config_root, state_root
-    config, state = config_root() / 'dots', state_root()
+    from profile_config import directory
+    config, state = directory(), state_root()
     if not config.is_absolute() or not state.is_absolute():
         raise ValueError('Dots config and state roots must be absolute')
     return config, state
@@ -117,8 +119,9 @@ def read_rules(path):
 
 def input_paths(identity, directory):
     config, _ = roots()
+    from profile_config import config_path
     return [ROOT / 'default/file-colors.toml', Path(directory) / 'file-colors.toml',
-            config / 'file-colors.toml', config / 'file-colors' / identity / 'rules.toml']
+            config_path('file-colors.toml'), config_path('file-colors/' + identity + '/rules.toml')]
 
 
 def resolve(palette, directory, replacement=None):
@@ -126,7 +129,11 @@ def resolve(palette, directory, replacement=None):
     colors = {**palette.get('palette', {}), **palette.get('roles', {}), **palette['colors']}
     rules = {g: {} for g in GROUPS}
     origins = {g: {} for g in GROUPS}
-    for path in input_paths(identity, directory):
+    paths = input_paths(identity, directory)
+    if replacement:
+        for index in (2, 3):
+            if paths[index].name == replacement[0].name: paths[index] = replacement[0]
+    for path in paths:
         data = replacement[1] if replacement and path == replacement[0] else read_rules(path)
         for group, entries in data.items():
             for key, value in entries.items():
@@ -358,6 +365,8 @@ def lua(value):
 
 
 def write_snapshot(doc, out):
+    from theme_styles import write
+    doc['preferences'] = write(out, doc['colors'], ROOT)
     (out / 'colors.json').write_text(json.dumps(doc, sort_keys=True) + '\n')
     (out / 'colors.lua').write_text('return ' + lua(doc) + '\n')
     (out / 'ls_colors').write_text(doc['ls_colors'] + '\n')
@@ -476,10 +485,14 @@ def edit(args):
     config, state = roots()
     if args.theme and not IDENT.fullmatch(args.theme): raise ValueError('invalid theme ID')
     target = config / 'file-colors' / args.theme / 'rules.toml' if args.theme else config / 'file-colors.toml'
+    sys.path.insert(0, str(ROOT / 'lib/dots'))
     sys.path.insert(0, str(ROOT / 'lib/dots/files'))
     from transactions import Store, digest
     before = digest(target)
-    data = read_rules(target)
+    from profile_config import config_path
+    inherited = config_path('file-colors/' + args.theme + '/rules.toml' if args.theme else 'file-colors.toml')
+    guards = {str(target): before, str(inherited): digest(inherited)}
+    data = read_rules(inherited)
     group = data.setdefault(args.group, {})
     if args.action == 'reset': group.pop(args.key, None)
     else:
@@ -500,7 +513,7 @@ def edit(args):
     else:
         with tempfile.TemporaryDirectory(prefix='dots-color-edit-') as tmp:
             stage = Path(tmp) / 'rules.toml'; stage.write_bytes(content)
-            receipt = Store(state).apply('theme-file-colors', [{'path': str(target), 'source': str(stage)}], {str(target): before}, retain=True)
+            receipt = Store(state).apply('theme-file-colors', [{'path': str(target), 'source': str(stage)}], guards, retain=True)
         view.title('Saved theme styles')
         view.fields([('Target', target), ('Journal', receipt.get('id', receipt.get('transaction', 'dots files history')))])
     if args.apply:
@@ -544,17 +557,24 @@ def main(argv):
         elif action == 'export': values = ('json','lua','ls-colors')
         elif group in GROUPS:
             values = list(read_rules(ROOT / 'default/file-colors.toml').get(group, {}))
-            config, _ = roots()
-            values += list(read_rules(config / 'file-colors.toml').get(group, {}))
+            roots()
+            from profile_config import config_path
+            values += list(read_rules(config_path('file-colors.toml')).get(group, {}))
         else: values = ()
         print('\n'.join(sorted(set(values))))
         return
-    if argv and argv[0] in ('_vivid', '_build', '_starship_git', '_template_colors'):
+    if argv and argv[0] in ('_vivid', '_build', '_starship_git', '_template_colors', '_preference_icons'):
         action, directory = argv[:2]
         palette = json.load(sys.stdin)
         doc = resolve(palette, directory)
-        if action == '_vivid': print(json.dumps(vivid_theme(doc, vivid_runtime()[2]), indent=2))
+        if action == '_preference_icons':
+            from theme_styles import tokens
+            print(tokens(palette['colors'], ROOT)['file_icons_yazi'])
+        elif action == '_vivid': print(json.dumps(vivid_theme(doc, vivid_runtime()[2]), indent=2))
         elif action == '_template_colors':
+            from theme_styles import tokens
+            for key, value in tokens(palette['colors'], ROOT).items():
+                if key != 'file_icons_yazi': print(key+'\t'+value)
             for key, value in leaf_template_tokens(palette).items():
                 print(key + '\t' + value)
             for key, value in tmtheme_template_tokens(doc).items():

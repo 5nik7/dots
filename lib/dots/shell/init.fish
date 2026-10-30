@@ -35,6 +35,10 @@ if test $_dots_environment_ready = 0; and command -q python3
     end
 end
 if test $_dots_environment_ready = 0
+    if set -q _dots_generated_names
+        printf 'dots: profile environment preparation failed; previous profile environment retained\n' >&2
+        return 1
+    end
     printf 'dots: profile environment preparation unavailable; retaining minimal integration\n' >&2
 end
 source "$DOTS/lib/dots/shell/config.fish"
@@ -79,6 +83,8 @@ end
 set -gx PATH $ordered_path
 status is-interactive; or return 0
 source "$DOTS/lib/dots/shell/less.fish"
+set -g esc (printf '\033')
+set -g ESC "$esc"
 set -g rst (printf '\033[0m')
 set -g RST "$rst"
 if test $_dots_option_DOTS_INIT_COLORS = 0

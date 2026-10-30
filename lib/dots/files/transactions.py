@@ -200,6 +200,12 @@ class Store:
         identities = [os.path.normcase(os.path.abspath(op['path'])) for op in operations]
         if len(identities) != len(set(identities)):
             raise ValueError('duplicate or case-colliding operation targets')
+        registrations = [op['font_registry'] for op in operations if 'font_registry' in op]
+        if registrations:
+            import font_registry
+            for spec in registrations: font_registry.verify(spec)
+            if len({spec['name'].casefold() for spec in registrations}) != len(registrations):
+                raise ValueError('duplicate font registration targets')
         with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs):
             for record in self.records():
                 if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
@@ -229,6 +235,8 @@ class Store:
                     entry = {'path': str(path), 'before': before, 'after': None, 'phase': 'prepared',
                              'old': str(path.with_name(path.name + '.dots-' + identity)),
                              'temp': str(path.with_name(path.name + '.dots-new-' + identity))}
+                    if 'font_registry' in op:
+                        entry['font_registry'] = op['font_registry']
                     if exists(entry['old']) or exists(entry['temp']):
                         raise ValueError('transaction sibling already exists')
                     if before is not None:
@@ -237,7 +245,7 @@ class Store:
                             entry['before_link'] = os.readlink(path)
                             entry['before_directory'] = path.is_dir() or bool(getattr(path.lstat(), 'st_file_attributes', 0) & 0x10)
                         elif 'data' in op:
-                            entry['before_data'] = read_json(path)
+                            entry['before_data'] = read_json(path, (1,2))
                     after = directory / f'{i}-after'
                     if 'source' in op:
                         copy_object(op['source'], after)
@@ -267,6 +275,7 @@ class Store:
                     if digest(path) != expected:
                         raise ValueError(f'changed during preflight: {path}')
                 doc['status'] = 'applying'
+                for spec in registrations: font_registry.verify(spec)
                 self.save(doc)
                 report('Applying files', 0, len(doc['operations']))
                 for i, entry in enumerate(doc['operations']):
@@ -297,6 +306,8 @@ class Store:
                     if entry['after'] is not None:
                         os.rename(entry['temp'], path)
                         sync_dir(path.parent)
+                    if 'font_registry' in entry:
+                        font_registry.apply(entry['font_registry'])
                     entry['phase'] = 'done'
                     self.save(doc)
                     op = operations[i]
@@ -373,6 +384,9 @@ class Store:
                 raise ValueError('retired object changed; manual recovery required: ' + entry['old'])
             if entry['phase'] == 'prepared':
                 continue
+            if 'font_registry' in entry:
+                import font_registry
+                font_registry.rollback(entry['font_registry'])
             if current == entry['before']:
                 entry['phase'] = 'rolled-back'
                 self.save(doc)
@@ -431,6 +445,12 @@ class Store:
             if digest(entry['path']) != entry['after']:
                 raise ValueError('drift blocks undo: ' + entry['path'])
             op = {'path': entry['path']}
+            if 'font_registry' in entry:
+                import font_registry
+                spec = entry['font_registry']
+                inverse = dict(name=spec['name'], before=spec['after'], after=spec['before'])
+                font_registry.verify(inverse)
+                op['font_registry'] = inverse
             if entry['before'] is not None:
                 source = self.root / identity / f'{i}-before'
                 if 'before_link' in entry:

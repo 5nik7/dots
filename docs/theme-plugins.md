@@ -37,13 +37,13 @@ cannot be inferred: the hook must check its own requirements.
 
 ## Selection and discovery
 
-- Selection: `${XDG_CONFIG_HOME:-$HOME/.config}/dots/theme-plugins.json`.
-- Custom hooks: `${XDG_CONFIG_HOME:-$HOME/.config}/dots/hooks/theme-set.d/`.
+- Selection: `theme-plugins.json` beside the active profile manifest.
+- Custom hooks: `hooks/theme-set.d/` inside the resolved profile.
 - Bundled scripts: `lib/dots/themes/plugins/` in the Dots source checkout.
 - Execution lock and app ownership receipts:
   `${XDG_STATE_HOME:-$HOME/.local/state}/dots/theme-plugins/`.
 
-The selection file is schema 1 with an `enabled` object mapping logical names to
+Selection/hook readers retain legacy user-config fallback until [configuration migration](profiles.md#migrate-existing-configuration). Enable/disable saves into the active profile. The selection file is schema 1 with an `enabled` object mapping logical names to
 `bundled/FILENAME` or `user/FILENAME`. Prefer enable/disable over hand editing.
 Those commands serialize updates and atomically publish the file. Scripts are
 never renamed, copied, or deleted by selection changes.
@@ -216,10 +216,10 @@ The bundled adapter requires Starship on PATH and an existing active configurati
 
 The active target is nonempty `STARSHIP_CONFIG`, otherwise `~/.config/starship.toml`. Saved theme storage is nonempty `BLASTOFF_HOME`, otherwise `~/.config/blastoff`; only `themes/dots.toml` is considered. These are Starship/Blastoff path conventions, independent of XDG_CONFIG_HOME. Missing targets are not created. Each existing file is updated only if its root selection is `palette = 'dots'`; the saved theme remains fresh even while another active palette is selected.
 
-Only generated palette entries are overwritten. Extra user-defined colors survive; other palettes and every byte outside the selected table remain intact. Supported input is an explicit `[palettes.dots]` table (including quoted table keys); when no Dots table exists it is appended. Existing inline/dotted-key representations are refused if a change is needed. The updater tokenizes table boundaries outside comments, multiline strings and arrays, validates TOML before/after, and verifies that no unrelated values changed. Matching colors cause no write.
+Generated palette entries and existing single-line Git symbol fields are updated. Extra user-defined colors survive; other palettes and unrelated module settings remain intact. Supported input is an explicit `[palettes.dots]` table (including quoted table keys); when no Dots table exists it is appended. Existing inline/dotted-key representations are refused if a change is needed. The updater tokenizes table boundaries outside comments, multiline strings and arrays, validates TOML before/after, and verifies that no unrelated values changed. Matching colors and symbols cause no write.
 
 Configured symlinks are preserved: their physical targets and every traversed link are guarded against drift. The adapter acquires Blastoff's storage and active-file lock directories, never removes someone else's lock, and applies both changed files through the retained-backup file transaction engine. Malformed input, unsafe objects or concurrent edits prevent application; interrupted transactions use `dots files recover`. A hard interruption can leave a Blastoff lock directory for manual inspection. Plugin failure does not roll back the published theme; retry after resolving the reported problem.
 
-The saved personal theme preserves layout, symbols and module enablement. Language/build styles use blue, cloud/container styles cyan, infrastructure/VCS styles magenta, secondary information muted, and success/warning/error green/yellow/red. Git status components use individual shared roles. All style-bearing built-ins supported by installed Starship 1.26.0 are covered; modules without style controls need no extra settings. The battery preset is commented because this Termux build lacks the battery module. `git_repo_owned` is available in the palette, but no custom ownership-detection command is added to Starship.
+The saved personal theme preserves layout and module enablement. Git branch/status symbols come from shared `icons.git.*` preferences, with optional `icons.apps.starship.git.*` overrides; symbols are escaped for native Starship format strings. Unusual multiline symbol definitions are refused before mutation. Language/build styles use blue, cloud/container styles cyan, infrastructure/VCS styles magenta, secondary information muted, and success/warning/error green/yellow/red. Git status components use individual shared roles. All style-bearing built-ins supported by installed Starship 1.26.0 are covered; modules without style controls need no extra settings. The battery preset is commented because this Termux build lacks the battery module. `git_repo_owned` is available in the palette, but no custom ownership-detection command is added to Starship.
 
 Use Blastoff normally to activate the saved theme; its backups/provenance remain authoritative. Later Dots palette writes are external edits and may produce Blastoff's modified/source-changed indicators. The adapter does not forge provenance hashes or overwrite the previous `blastoff` theme. No shell restart is needed; colors appear at the next prompt. Native validation covers Termux; Windows execution remains unavailable under the existing plugin-manager platform boundary.

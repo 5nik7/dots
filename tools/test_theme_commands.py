@@ -6,6 +6,8 @@ import subprocess
 import shutil
 import unittest
 import re
+import hashlib
+import json
 from test_themes import Themes, BASH, ZSH
 
 class ThemeCommands(unittest.TestCase):
@@ -26,6 +28,170 @@ class ThemeCommands(unittest.TestCase):
 
     def registry(self):
         return self.state / 'commands/current'
+
+    def external(self, name):
+        directory = self.root / 'external commands ü'; directory.mkdir(exist_ok=True)
+        if str(directory) not in self.env['PATH'].split(os.pathsep):
+            self.env['PATH'] = str(directory) + os.pathsep + self.env['PATH']
+        path = directory / name
+        path.write_text('#!' + BASH + '\nprintf "external\\n"\n')
+        path.chmod(0o700)
+        return path
+
+    def test_collision_suffix_skip_and_reclaim_with_exact_forwarding(self):
+        self.palette('fixturepalette')
+        external = self.external('fixturepalette')
+        original = external.read_bytes()
+        result = self.dots('theme', 'refresh', '--commands-only')
+        self.assertNotIn('PATH precedence', result.stderr)
+        self.assertNotIn('fixturepalette', result.stderr)
+        self.assertFalse((self.registry()/'bin/fixturepalette').exists())
+        self.assertIn('fixturepalette-theme\tfixturepalette\n', (self.registry()/'map.tsv').read_text())
+        wrapper = self.registry()/'bin/fixturepalette-theme'
+        self.assertEqual(self.run_command([str(wrapper), 'blue', 'hex']).stdout, '#123456\n')
+        self.assertEqual(self.run_command([str(external)]).stdout, 'external\n')
+        self.env['PATH'] += os.pathsep + str(self.registry()/'bin')
+        old = self.registry().readlink()
+        self.dots('theme', 'refresh', '--commands-only')
+        self.assertEqual(self.registry().readlink(), old)
+        for shell in ('bash', 'zsh', 'fish'):
+            rows = self.dots('__complete', shell, '1', '--', 'fixturepalette-theme', 'bl').stdout
+            self.assertIn('candidate\tblue\t', rows)
+            self.assertEqual(self.dots('__complete', shell, '1', '--', 'fixturepalette', 'bl').stdout, '')
+        occupied = self.external('fixturepalette-theme')
+        result = self.dots('theme', 'refresh', '--commands-only')
+        self.assertIn('Use: theme fixturepalette', result.stderr)
+        self.assertFalse(wrapper.exists())
+        self.assertNotIn('fixturepalette-theme-2', (self.registry()/'names').read_text())
+        self.assertEqual(self.dots('theme', 'fixturepalette', 'blue', 'hex').stdout, '#123456\n')
+        self.assertEqual(external.read_bytes(), original)
+        external.unlink(); occupied.unlink()
+        self.dots('theme', 'refresh', '--commands-only')
+        self.assertTrue((self.registry()/'bin/fixturepalette').exists())
+        self.assertFalse(wrapper.exists())
+        self.assertFalse((self.state/'current').exists())
+        # A harmless fixture dispatcher verifies literal argv and exit propagation.
+        (self.repo/'bin/dots').write_text('#!/usr/bin/env python3\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\nsys.exit(17)\n')
+        args = ['', '-leading', 'two words', 'ü', '$(never-run)', "single'quote"]
+        result = self.run_command([str(self.registry()/'bin/fixturepalette'), *args], code=17)
+        self.assertEqual(json.loads(result.stdout), ['theme', 'fixturepalette', *args])
+
+    def test_collision_upgrade_rollback_and_mapping_drift(self):
+        self.palette('fixturepalette')
+        self.dots('theme', 'refresh', '--commands-only')
+        directory = self.registry().resolve()
+        # Reconstruct an authentic legacy payload without the new optional map.
+        (directory/'map.tsv').unlink()
+        manifest = ''.join(line for line in (directory/'manifest').read_text().splitlines(keepends=True) if not line.endswith('  map.tsv\n'))
+        (directory/'manifest').write_text(manifest)
+        (directory/'fingerprint').write_text(hashlib.sha256(manifest.encode()).hexdigest() + '\n')
+        self.assertIn('candidate\tblue\t', self.dots('__complete', 'bash', '1', '--', 'fixturepalette', 'bl').stdout)
+        self.external('fixturepalette')
+        self.engine('dt_commands_lock; j=$(mktemp -d "$DT_COMMANDS/generations/c.XXXXXXXX"); dt_commands_prepare "$j"; dt_commands_record "$j" prepared; dt_commands_publish "$j"')
+        self.assertTrue((self.registry()/'bin/fixturepalette-theme').exists())
+        self.engine('dt_commands_lock')
+        self.assertEqual(self.registry().resolve(), directory)
+        self.dots('theme', 'refresh', '--commands-only')
+        self.assertTrue((self.registry()/'bin/fixturepalette-theme').exists())
+        mapping = self.registry()/'map.tsv'
+        mapping.write_text(mapping.read_text() + 'unowned\tfixturepalette\n')
+        result = self.dots('theme', 'refresh', '--commands-only', code=1)
+        self.assertIn('generated commands changed', result.stderr)
+
+    def test_completion_reload_retires_only_owned_registrations(self):
+        self.palette('fixturepalette')
+        self.dots('theme', 'refresh', '--commands-only')
+        for executable in (BASH, ZSH, shutil.which('fish')):
+            if not executable: continue
+            with self.subTest(shell=executable):
+                external = self.root/'external commands ü/fixturepalette'
+                external.parent.mkdir(exist_ok=True)
+                if external.exists(): external.unlink()
+                self.env['PATH'] = str(external.parent) + os.pathsep + self.env['PATH']
+                self.dots('theme', 'refresh', '--commands-only')
+                if executable == BASH:
+                    body = r'''source "$DOTS/lib/dots/completion/bash"
+complete -p fixturepalette >/dev/null || exit 11
+printf '#!/usr/bin/env bash\nexit 0\n' > "$TEST_EXTERNAL"; chmod +x "$TEST_EXTERNAL"
+dots theme refresh --commands-only || exit 12
+source "$DOTS/lib/dots/completion/bash"
+complete -p fixturepalette >/dev/null 2>&1 && exit 13
+complete -p fixturepalette-theme >/dev/null || exit 14
+complete -W external fixturepalette-theme
+rm "$TEST_EXTERNAL"; dots theme refresh --commands-only || exit 15
+source "$DOTS/lib/dots/completion/bash"
+[[ $(complete -p fixturepalette-theme) == "complete -W 'external' fixturepalette-theme" ]] || exit 16
+complete -p fixturepalette >/dev/null
+'''
+                elif executable == ZSH:
+                    body = r'''autoload -Uz compinit; compinit -D
+source "$DOTS/lib/dots/completion/zsh"
+[[ $_comps[fixturepalette] == _dots ]] || exit 11
+printf '#!/usr/bin/env bash\nexit 0\n' > "$TEST_EXTERNAL"; chmod +x "$TEST_EXTERNAL"
+dots theme refresh --commands-only || exit 12
+source "$DOTS/lib/dots/completion/zsh"
+[[ -z $_comps[fixturepalette] && $_comps[fixturepalette-theme] == _dots ]] || exit 13
+compdef _external fixturepalette-theme
+rm "$TEST_EXTERNAL"; dots theme refresh --commands-only || exit 15
+source "$DOTS/lib/dots/completion/zsh"
+[[ $_comps[fixturepalette-theme] == _external && $_comps[fixturepalette] == _dots ]] || exit 16
+'''
+                else:
+                    body = r'''source "$DOTS/lib/dots/completion/fish"
+complete -c fixturepalette | string match -q '*__dots_complete_fish*'; or exit 11
+printf '#!/usr/bin/env bash\nexit 0\n' > "$TEST_EXTERNAL"; chmod +x "$TEST_EXTERNAL"
+dots theme refresh --commands-only; or exit 12
+source "$DOTS/lib/dots/completion/fish"
+complete -c fixturepalette | string match -q '*__dots_complete_fish*'; and exit 13
+complete -c fixturepalette-theme | string match -q '*__dots_complete_fish*'; or exit 14
+complete -c fixturepalette-theme -a external
+rm "$TEST_EXTERNAL"; dots theme refresh --commands-only; or exit 15
+source "$DOTS/lib/dots/completion/fish"
+complete -c fixturepalette-theme | string match -q '*external*'; or exit 16
+complete -c fixturepalette | string match -q '*__dots_complete_fish*'; or exit 17
+'''
+                flags = ['--noprofile', '--norc'] if executable == BASH else ['-df'] if executable == ZSH else ['--no-config']
+                self.run_command([executable, *flags, '-c', body], env={**self.env, 'TEST_EXTERNAL': str(external)})
+
+    def test_skipped_notice_shares_progress_terminal_at_all_widths(self):
+        from test_progress import ProgressTests, ANSI
+        body = r'''source "$DOTS/lib/dots/ui.bash"
+DT_LIB=$DOTS/lib/dots/themes; DT_STATE=$XDG_STATE_HOME/dots/themes
+source "$DT_LIB/command-state.bash"
+DOTS_PROGRESS_HUMAN=1
+dots::progress_start 'Preparing theme'
+sleep 0.7
+dots::progress_print dt_commands_skipped fixturepalette fixturepalette-theme
+dots::progress_stop
+printf 'DONE\n'
+'''
+        for width in (40, 80, 120):
+            with self.subTest(width=width):
+                env = {**self.env, 'COLUMNS': str(width), 'DOTS_COLOR': 'always', 'DOTS_ICONS': 'never'}
+                code, data = ProgressTests.terminal(self, [BASH, '--noprofile', '--norc', '-c', body], env, width)
+                self.assertEqual(code, 0, data)
+                plain = ANSI.sub(b'', data).decode()
+                self.assertIn('Skipped theme shortcut:', plain)
+                self.assertIn('Use: theme fixturepalette', plain)
+                self.assertNotRegex(plain, r'Preparing theme[^\r\n]*Skipped')
+                self.assertLessEqual(max(map(len, plain.splitlines())), width)
+                self.assertTrue(plain.endswith('DONE\r\n'))
+
+    def test_exported_completion_without_dots_environment(self):
+        self.dots('theme', 'refresh', '--commands-only')
+        env = {key: value for key, value in self.env.items() if key != 'DOTS'}
+        for name, shell in (('bash', BASH), ('zsh', ZSH)):
+            if not shell: continue
+            output = self.dots('completion', name).stdout
+            native = self.run_command([shutil.which('python3'), '-B', str(self.repo/'lib/dots/cli.py'), 'completion', name]).stdout
+            self.assertEqual(native, output)
+            if name == 'zsh': self.assertTrue(output.startswith('#compdef dots\n'))
+            exported = self.root / ('completion.' + name)
+            exported.write_text(output)
+            body = ('autoload -Uz compinit; compinit -D\n' if name == 'zsh' else '') + 'set -u\nsource "$TEST_COMPLETION"\n'
+            body += '\ncomplete -p nord\n' if name == 'bash' else '\n[[ $_comps[nord] == _dots ]]\n'
+            flags = ['--noprofile', '--norc'] if name == 'bash' else ['-df']
+            self.run_command([shell, *flags, '-c', body], env={**env, 'TEST_COMPLETION': str(exported)})
 
     def test_equivalent_routes_native_queries_and_generated_wrappers(self):
         for args in [('list',), ('catppuccin','mocha','blue','hex'), ('catppuccin','--help'), ('rose-pine','moon','show')]:

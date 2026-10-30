@@ -88,6 +88,10 @@ def complete(root, directories, words):
         from todo_completion import complete as todo_complete
         todo_complete([*previous[1:], current], standalone=previous[0] == '__todo_standalone')
         return 0
+    if previous[:1] == ['fonts']:
+        from fonts.completion import complete as fonts_complete
+        fonts_complete([*previous[1:], current])
+        return 0
     if previous[:1] in (['blastoff'], ['pkgs']):
         from bundled_apps import complete as bundled_complete
         return bundled_complete(root, [*previous, current])
@@ -145,6 +149,9 @@ def complete(root, directories, words):
         elif kind == 'profile-id':
             from profiles import available
             for row in available(root): add(row['id'])
+        elif kind == 'config-key':
+            from profile_config import keys
+            for key in keys(root, option_values.get('--profile')): add(key)
         elif kind == 'dots-setting':
             from environment import inspect
             for key in inspect(root)['values']: add(key)
@@ -331,6 +338,9 @@ def main(argv=None):
     if args[0] == 'completion':
         if len(args) != 2 or args[1] not in ('bash', 'zsh', 'fish', 'powershell'):
             raise ValueError('Usage: dots completion bash|zsh|fish|powershell')
+        if args[1] in ('bash', 'zsh'):
+            if args[1] == 'zsh': print('#compdef dots')
+            print((LIB / 'completion/theme.bash').read_text(), end='')
         print((LIB / 'completion' / args[1]).read_text(), end='')
         return 0
     if args[:2] == ['init', '--bootstrap']:
@@ -407,6 +417,9 @@ def main(argv=None):
     if parts[0] in ('anodize', 'theme', 'themes') and sys.version_info < (3, 11):
         raise ValueError('theme and Anodize commands require Python 3.11 or newer')
     if parts[0] == 'anodize': return controller('../../plugins/anodize/cli.py', [*parts[1:], *rest])
+    if parts[0] == 'config': return controller('config_cli.py', [*parts[1:], *rest])
+    if parts[0] == 'fonts': return controller('fonts_cli.py', [*parts[1:], *rest])
+    if parts[0] == 'wttr': return controller('wttr/cli.py', [*parts[1:], *rest])
     if parts[0] in ('profile', 'profiles'): return controller('profiles.py', [*parts, *rest])
     if parts[0] == 'wiki': return controller('wiki.py', [*parts[1:], *rest])
     if parts[:2] == ['git','wiki']: return controller('wiki_git.py', [*parts[2:], *rest])

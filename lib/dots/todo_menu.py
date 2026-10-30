@@ -1,5 +1,6 @@
 """Goal popup: stable identities, inert snapshots and explicit actions."""
 from contextlib import nullcontext
+from dataclasses import dataclass
 import io
 import os
 from pathlib import Path
@@ -16,10 +17,39 @@ from resources import clean
 from todo_core import Goals, STATUSES, PRIORITIES
 
 HELP = ('Enter: goal actions\nAlt-N: new goal\nAlt-F: filters\nF1: this help\n'
+        'Alt-C: Plan in Codex\nAlt-O: print brief and close\nAlt-Y: copy brief\n'
         'Esc: back / close\nCtrl-C: cancel\nAlt-P: preview\nAlt-J/K: scroll preview\n\n'
         'Goal changes are journaled. Remove preserves goal contents; Restore recovers them.\n'
         'Project tags are required; tag edits keep them and goal changes backfill older goals.\n'
-        'Brief prepares instructions without launching an agent.')
+        'Brief includes /plan and the complete subtree. Plan in Codex launches or resumes its thread.\n'
+        'Planning is read-only; leave Plan Mode and request Save these goals to save the agreed tree.')
+
+
+@dataclass(frozen=True)
+class Handoff:
+    code: int = 0
+
+
+def brief_actions(store, goal, context):
+    from todo_cli import brief
+    from menu_pager import action_page
+    from clipboard import copy
+    frame, notice = {}, ''
+    content = brief(store, goal)
+    while True:
+        action = action_page(content, title='todo·agent brief', context=context, frame=frame, notice=notice,
+            actions={'alt-c': ('plan', 'Codex'), 'alt-o': ('print-brief', 'print'), 'alt-y': ('copy-brief', 'copy')})
+        if action == 'actions':
+            action = select('Brief', [('plan', 'Plan in Codex'), ('print-brief', 'Print brief'),
+                                    ('copy-brief', 'Copy brief'), ('back', 'Back')], context)
+        if action == 'copy-brief':
+            try:
+                copy(content)
+                notice = 'Copied complete brief'
+            except (ValueError, OSError, subprocess.SubprocessError) as error:
+                notice = clean(str(error))
+            continue
+        return action
 
 
 def select(title, items, context=None):
@@ -87,24 +117,30 @@ def pick(store, goals, frame, context):
     columns, lines = context.verify() if context else shutil.get_terminal_size((80, 24))
     width = max(1, columns - 2)
     labels, previews = rows(store, goals, ui, max(1, width - 4))
-    preview_lines = min(9, max(1, lines - 10))
-    height = min(max(12, len(goals) + 6 + preview_lines), max(1, lines - 2))
+    notice_lines = int(bool(frame.get('notice')))
+    preview_lines = min(4, max(1, lines - 12 - notice_lines))
+    height = max(1, lines - 2)
+    from todo_layout import bindings
+    layout_bindings, layout_environment = bindings(popup=context is not None, notice=notice_lines)
     label = Path(store.scope['root']).name if store.scope['root'] else 'global'
     with request_file(dict(schema=1, previews=previews)) as path:
         preview_command = ('& $env:DOTS_TODO_PYTHON -B $env:DOTS_TODO_MENU preview $env:DOTS_TODO_PREVIEW {1}'
                            if os.name == 'nt' else '"$DOTS_TODO_PYTHON" -B "$DOTS_TODO_MENU" preview "$DOTS_TODO_PREVIEW" {1}')
         preview = (preview_command, '',
                    dict(DOTS_TODO_PYTHON=sys.executable, DOTS_TODO_MENU=str(Path(__file__).resolve()),
-                        DOTS_TODO_PREVIEW=str(path)))
+                        DOTS_TODO_PREVIEW=str(path), **layout_environment))
         with permanent_output(), context.selector_environment() if context else nullcontext(None) as environment:
             try:
                 result = RichSelector(backend='fzf').fzf('todo·' + clean(label), labels, False, preview,
                     ui.color, ui.icons, picker_colors(fzf_colors(ui)), popup=f'center,{width},{height}' if context else False,
                     height=height, preview_position='down', preview_lines=preview_lines, preview_wrap=True,
-                    query=frame.get('query', ''), header='Alt-N: new  Alt-F: filters  F1: help',
+                    query=frame.get('query', ''), header='Alt-N: new  Alt-F: filters\nAlt-C: Codex  Alt-Y: copy\nAlt-O: print  F1: help' +
+                        ('\n' + frame['notice'] if frame.get('notice') else ''),
                     environment=environment, info='inline-right', hscroll=False, navigation=frame,
-                    navigation_keys={'esc': 'back', 'f1': 'help', 'alt-n': 'new', 'alt-f': 'filters'},
-                    event_selection=True, focus_index=next((i for i, g in enumerate(goals) if g['id'] == frame.get('selected')), None))
+                    navigation_keys={'esc': 'back', 'f1': 'help', 'alt-n': 'new', 'alt-f': 'filters',
+                                     'alt-c': 'plan', 'alt-o': 'print-brief', 'alt-y': 'copy-brief'},
+                    event_selection=True, bindings=layout_bindings,
+                    focus_index=next((i for i, g in enumerate(goals) if g['id'] == frame.get('selected')), None))
             except SelectionEvent as event:
                 if event.index is not None: frame['selected'] = goals[event.index]['id']
                 raise
@@ -120,15 +156,14 @@ def apply(store, action, identity=None, **changes):
     return current.mutate(action, identity, **changes)
 
 
-def browse(selected, args):
+def browse(selected, args, *, context=None):
     from menu_pager import page_text
     from todo_cli import brief, markdown
     from todo_input import prompt
     client = args.client
     if client and (os.name == 'nt' or not os.environ.get('TMUX')):
         raise ValueError('--client requires an originating tmux pane')
-    context = None
-    if os.name != 'nt' and (os.environ.get('TMUX') or os.environ.get('DOTS_MENU_CONTEXT')):
+    if context is None and os.name != 'nt' and (os.environ.get('TMUX') or os.environ.get('DOTS_MENU_CONTEXT')):
         context = TmuxContext.capture(client=client) if client else TmuxContext.from_environment()
     frame = dict(query='')
     while True:
@@ -139,16 +174,34 @@ def browse(selected, args):
                 goal = pick(store, goals, frame, context)
                 if goal is None: return 0
                 choices = [('show', 'details'), ('brief', 'agent brief')]
+                choices += [('print-brief', 'Print brief'), ('copy-brief', 'Copy brief')]
                 if goal['removed']:
                     choices += [('restore', 'restore'), ('restore-tree', 'restore subtree')]
                 else:
-                    choices += [('edit', 'edit'), ('note', 'add note'), ('start', 'start'),
+                    choices += [('plan', 'Plan in Codex'), ('edit', 'edit'), ('note', 'add note'), ('start', 'start'),
                                 ('reopen', 'reopen') if goal['status'] == 'done' else ('done', 'complete'),
                                 ('child', 'new subgoal'), ('remove', 'remove')]
                 action = select('Actions', choices, context)
             except SelectionEvent as event:
-                action, goal = event.action, None
+                action = event.action
+                goal = goals[event.index] if event.index is not None else None
             if action is None: continue
+            if action in ('plan', 'brief', 'print-brief', 'copy-brief'):
+                if goal is None: continue
+                if action == 'brief':
+                    action = brief_actions(store, goal, context)
+                if action == 'print-brief':
+                    print(brief(store, goal), end='')
+                    return Handoff()
+                if action == 'copy-brief':
+                    from clipboard import copy
+                    copy(brief(store, goal))
+                    frame['notice'] = 'Copied complete brief'
+                elif action == 'plan':
+                    from todo_plan import launch, window
+                    code = window(store, goal, context) if context else launch(store, goal)
+                    return Handoff(code)
+                continue
             if action == 'back': return 130
             if action == 'help':
                 page_text(HELP, title='Todo keys', context=context)
@@ -174,8 +227,8 @@ def browse(selected, args):
                 title = prompt('', 'New goal title', context)
                 result = apply(store, 'add', title=title, parent=goal['id'] if goal else None)
                 frame['selected'] = result['goals'][0]['id']
-            elif action in ('show', 'brief'):
-                content = brief(store, goal) if action == 'brief' else markdown(selected, [goal, *store.descendants(goal['id'])])
+            elif action == 'show':
+                content = markdown(selected, [goal, *store.descendants(goal['id'])])
                 page_text(content, title='Goal ' + goal['id'][:8], context=context)
             elif action == 'edit':
                 changes = edit_fields(goal, context)

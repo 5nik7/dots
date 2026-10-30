@@ -35,6 +35,14 @@ def settings(root, env):
                 raise ValueError(f'dots: invalid {key}')
             values[key], origins[key] = value, 'config'
             seen.add(key)
+    if not env.get('DOTS_CONFIG_FILE'):
+        from profile_config import settings as profile_settings
+        from platform_info import detect
+        from profiles import resolve
+        selected = resolve(root, detect(env=env))
+        if selected['layers']: config = Path(selected['layers'][-1]['root']) / 'profile.json'
+        for key, row in profile_settings(root, selected).items():
+            if key in schema: values[key], origins[key] = row['value'], row['source']
     for key, (kind, _) in schema.items():
         if env.get(key):
             values[key], origins[key] = str(env[key]), 'environment'

@@ -12,6 +12,7 @@ from interaction import SelectionEnded, SelectionEvent, terminal
 from menus import Entry, Menu, add_arguments, choose, dots_argv, run_action, review_output, show_message
 from menu_tmux import TmuxContext
 from resources import clean
+from style_config import icon as style_icon
 
 
 @dataclass(frozen=True)
@@ -43,7 +44,10 @@ def leaves(family, names):
 
 
 ACTIONS = (
+    Action('wttr', 'weather', ('wttr', 'browse'), kind='popup', icon=''),
     Action('todo', 'todo', ('todo', 'browse'), kind='popup', icon='󰄬'),
+    Action('config', 'config', ('config', 'browse'), kind='popup', icon='󰒓'),
+    group('fonts', '󰛖'),
     Action('keys', 'keys', ('keys',), ('--browse',), 'popup', '󰌆'),
     group('tmux', '', route=('menu', 'tmux'), tool='tmux'),
     group('files', '󰉋'), group('git', '', tool='git'), group('theme', '󰏘'), group('themes', '󰏘'),
@@ -53,6 +57,16 @@ ACTIONS = (
     Action('env', 'env', ('env',), icon='󰒓'),
 )
 FAMILIES = {
+    'fonts': (Action('installed', 'installed fonts', ('fonts', 'installed'), kind='popup'),
+              Action('set', 'set application font', ('fonts', 'set'), kind='popup'),
+              Action('downloaded', 'downloaded fonts', ('fonts', 'browse', '--downloaded'), kind='popup'),
+              Action('browse', 'browse fonts', ('fonts', 'browse'), kind='popup'),
+              Action('icons', 'icon search', ('fonts', 'icons'), kind='popup'),
+              Action('current', 'current fonts', ('fonts', 'current')),
+              Action('defaults', 'saved font defaults', ('fonts', 'defaults')),
+              Action('restore', 'restore saved font defaults', ('fonts', 'restore'), kind='terminal'),
+              Action('directories', 'font directories', ('fonts', 'directories')),
+              Action('targets', 'application targets', ('fonts', 'targets'))),
     'blastoff': (
         Action('pick', 'choose theme', ('blastoff', 'pick'), kind='terminal'),
         Action('current', 'current theme', ('blastoff', 'current')),
@@ -130,7 +144,10 @@ def entry(root, action, *, windows=None):
         reason = tool + ' is unavailable'
     if action.route[0] in ('theme', 'themes', 'anodize') and sys.version_info < (3, 11):
         reason = 'Theme commands require Python 3.11 or newer'
-    return Entry(action.id, action.label, description, not reason, reason, action.icon)
+    if action.route[0] == 'wttr' and sys.version_info < (3, 11):
+        reason = 'Weather commands require Python 3.11 or newer'
+    key = {'wttr':'weather.title', 'todo':'status.todo', 'config':'files.configuration', 'keys':'navigation.keys', 'tmux':'navigation.session', 'files':'files.directory', 'git':'git.repository', 'wiki':'files.text', 'help':'navigation.help'}.get(action.id, 'menu.'+action.id)
+    return Entry(action.id, action.label, description, not reason, reason, style_icon(key, action.icon))
 
 
 def launcher(root, *, family='', windows=None):
@@ -140,10 +157,18 @@ def launcher(root, *, family='', windows=None):
 
 
 def invoke(root, action, context):
-    """Return True only for completed session navigation; all other actions return."""
+    """Return True for session navigation, or a typed Todo terminal/output handoff."""
     current = entry(root, action)
     if not current.available:
         show_message(current.reason, context=context, title=action.label, code=2)
+        return False
+    if action.id == 'todo' and action.route == ('todo', 'browse'):
+        from todo_commands import parser
+        from todo_core import scope
+        from todo_menu import browse, Handoff
+        outcome = browse(scope(), parser().parse_args(['browse']), context=context)
+        if isinstance(outcome, Handoff):
+            return outcome
         return False
     if action.kind == 'session':
         from menu_sessions import browse
@@ -218,7 +243,11 @@ def run(args):
                 stack.append(dict(family=action.submenu, query=''))
                 continue
         try:
-            if invoke(root, action, context):
+            outcome = invoke(root, action, context)
+            if outcome:
+                if action.id == 'todo':
+                    from todo_menu import Handoff
+                    if isinstance(outcome, Handoff): return outcome.code
                 return 0
         except SelectionEnded:
             continue  # A delegated browser was canceled, not the launcher.

@@ -7,7 +7,7 @@
 - `bin/`: clipboard, battery, font, terminal-color, and X11 helper scripts.
 - `config/`: application settings; Neovim Lua modules live in `config/nvim/lua/config/` and `config/nvim/lua/plugins/`. Themes and artwork live under `config/bat/themes/` and `config/fastfetch/`.
 - `termux/`: terminal properties, colors, and font assets.
-- `system/`, `termux.env`, and `zshrc.local.symlink`: system metadata and shell integration.
+- `system/`, `profile.json`, and `shells/init.zsh`: system metadata, profile configuration and personal shell hooks.
 - `pkgs`, `pkgs_all`, and `pip`: package inventories; review changes separately from script edits.
 
 ## Build, Test, and Development Commands
@@ -40,7 +40,7 @@ Review account and host configuration changes for credentials and machine-specif
 ## Dots Integration
 
 `config/` is canonical; retain `configs -> config` during migration. The local
-`.dots/files.json` owns Termux resource metadata consumed by the Dots catalog.
+`profile.json` owns Termux resource metadata consumed by the Dots catalog.
 Tracking changes metadata only and must not install files. The parent's theme adapter
 connects generated colors to `~/.termux/colors.properties` with a backup journal;
 source termux settings remain here. Do not commit machine-specific connectors.
@@ -50,3 +50,5 @@ The parent now also implements bounded add/link/remove and recovery through one 
 ## Bundled profile ownership
 
 This directory is now a Dots platform profile, not an independent Androidots or Windots checkout. Follow the root [agent guide](../../AGENTS.md). Catalog source IDs are `termux` and `windows`; legacy IDs are recognized internally for receipt recovery, while CLI selectors require the canonical names. Use the root managed-file transactions for installation and retain the optional Rainmeter submodule boundary on Windows. See [profiles](../../docs/profiles.md).
+
+Profile mappings contain implementation fields and one target; platform eligibility belongs in the root core registry. Generated paths, aliases and native maps belong in the shared backend, not profile `.env` files. Keep application environment declarations separate.

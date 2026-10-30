@@ -33,24 +33,24 @@ open() (
   termux-open "$@" >/dev/null 2>&1 &
 )
 
-alias rlt='termux-reload-settings'
-
-alias upd="pkg update && pkg upgrade -y"
-
-alias path='echo -e ${PATH//:/\\n}'
-
-alias "p:"='echo $PATH | tr ":" "\n"'
-
 spath() {
   local args="$@"
 
   echo "${args[@]}" | sed "s|${HOME}|~|" | sed "s|${PREFIX}|/usr|"
 }
 
+alias rlt='termux-reload-settings'
+
+alias upd="pkg update && pkg upgrade -y"
+
+alias path='spath "$(echo -e ${PATH//:/\\n})"'
+
+alias "p:"='spath "$(echo $PATH | tr ":"  "\n")"'
+
 updpkg() {
-  local pipkgs="$DROIDOTS/pip"
-  local pkgs="$DROIDOTS/pkgs"
-  local pkgs_all="$DROIDOTS/pkgs_all"
+  local pipkgs="$DOTSTERMUX/pip"
+  local pkgs="$DOTSTERMUX/pkgs"
+  local pkgs_all="$DOTSTERMUX/pkgs_all"
   echo "$(pkg list-installed 2>/dev/null)" | sed '1d' | tr "/" " " | awk '{print $1}' >|"$pkgs_all"
   echo "$(pkg list-installed 2>/dev/null)" | sed '1d' | grep -v automatic | cut -d '/' -f 1 >|"$pkgs"
   echo "$(pip list --format=freeze)" >|"$pipkgs"

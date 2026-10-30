@@ -215,9 +215,13 @@ dt_fingerprint() {
     [[ -f $DT_PYWAL_FILE && $(<"$DT_PYWAL_FILE") == "$DT_PYWAL_INPUT" ]] || { dt_error 'pywal16 input changed; retry the command'; return 1; }
     inputs+=("$DT_PYWAL_FILE")
   fi
-  for input in "${XDG_CONFIG_HOME:-$HOME/.config}/dots/file-colors.toml" "${XDG_CONFIG_HOME:-$HOME/.config}/dots/file-colors/$DT_ID/rules.toml"; do
+  local configured_paths
+  configured_paths=$(python3 -B "${DT_LIB%/themes}/profile_config.py" __paths file-colors.toml "file-colors/$DT_ID/rules.toml") || return
+  while IFS= read -r input; do
     [[ ! -e $input && ! -L $input ]] || inputs+=("$input")
-  done
+  done <<< "$configured_paths"
+  configured_paths=$(python3 -B "${DT_LIB%/themes}/profile_config.py" __style-inputs) || return
+  while IFS= read -r input; do [[ ! $input ]] || inputs+=("$input"); done <<< "$configured_paths"
   if command -v vivid >/dev/null; then inputs+=("$(command -v vivid)"); fi
   input=${XDG_CONFIG_HOME:-$HOME/.config}/vivid/filetypes.yml
   [[ ! -f $input ]] || inputs+=("$input")
@@ -248,7 +252,7 @@ dt_emit_array() {
 dt_shell_color_name() {
   [[ $1 =~ ^_?[a-z][a-zA-Z0-9_]*$ ]] || return 1
   case $1 in
-    _dots_*|dots_*|catppuccin_*|mocha_*|macchiato_*|frappe_*|latte_*|dot|shells|theme|themes|rst|\
+    _dots_*|dots_*|catppuccin_*|mocha_*|macchiato_*|frappe_*|latte_*|dot|shells|theme|themes|esc|rst|\
     argv|argzero|status|pipestatus|path|fpath|cdpath|manpath|mailpath|module_path|\
     commands|functions|dis_functions|builtins|dis_builtins|reswords|dis_reswords|\
     aliases|dis_aliases|galiases|dis_galiases|saliases|dis_saliases|\
@@ -310,7 +314,9 @@ else
 fi
 unset _DOTS_THEME_COLOR
 SHELL
-  # Keep an already-correct readonly reset from the legacy helper sourceable.
+  # Keep already-correct readonly escape/reset values sourceable.
+  printf '[[ ${esc-} == %q ]] || declare -g esc=%q\n' $'\033' $'\033'
+  printf '[[ ${ESC-} == %q ]] || declare -g ESC=%q\n' $'\033' $'\033'
   printf '[[ ${rst-} == %q ]] || declare -g rst=%q\n' $'\e[0m' $'\e[0m'
   printf '[[ ${RST-} == %q ]] || declare -g RST=%q\n' $'\e[0m' $'\e[0m'
   printf 'export THEME=%q FLAVOR=%q\n' "$theme" "$selected"

@@ -84,7 +84,7 @@ def preview_text(row, ui, codes):
     lines = [title]
     if row.project:
         _, _, path_style = ui.resources.describe(row.project.root, 'dir')
-        path = ('󰉋 ' if ui.icons else '') + clean(short_path(row.project.root))
+        path = ((ui.icon('files.directory', '󰉋') + ' ') if ui.icons else '') + clean(short_path(row.project.root))
         lines.append(ui.paint('Project: ', muted) + ui.paint(path, path_style))
     for session in row.sessions:
         name_style = emphasis if session.current else noncurrent_style
@@ -116,7 +116,7 @@ def render(rows, ui, width):
     for row in rows:
         count = len(row.sessions)
         current = any(s.current for s in row.sessions)
-        icon = ('' if row.project else '') + ' ' if ui.icons else ''
+        icon = (ui.icon('navigation.project','') if row.project else ui.icon('navigation.session','')) + ' ' if ui.icons else ''
         noncurrent_style = codes['accent'] if row.project else '1;' + codes['blue']
         name_style = emphasis if current else noncurrent_style if count else codes['light_foreground']
         name = ui.paint(icon + fit(clean(row.label), name_width), name_style)
@@ -125,8 +125,8 @@ def render(rows, ui, width):
             detail = f'[{count}]' if row.project else f'{row.sessions[0].windows}w'
         count_text = detail
         alert_count = sum(s.attention for s in row.sessions)
-        alert_text = (' · ' + (' ' if ui.icons else 'Codex ') + str(alert_count)) if alert_count else ''
-        current_text = ' · ' + (' ' if ui.icons else '') + 'current' if current else ''
+        alert_text = (' · ' + ((ui.icon('navigation.codex', '') + ' ') if ui.icons else 'Codex ') + str(alert_count)) if alert_count else ''
+        current_text = ' · ' + ((ui.icon('status.success', '') + ' ') if ui.icons else '') + 'current' if current else ''
         if current:
             detail += current_text
         elif not count:

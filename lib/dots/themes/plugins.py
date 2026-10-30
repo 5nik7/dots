@@ -25,6 +25,8 @@ from progress import Progress, configure
 PATTERN = re.compile(r'([0-9]+)-([a-z][a-z0-9-]*)\.(?:sh|ps1)\Z')
 BUNDLED = {'gtk': ('gtk-launch', 'gtk-3.0'), 'qt6ct': ('qt6ct', 'qt6ct'), 'starship': ('starship', None)}
 
+from profile_config import config_path
+
 
 def roots():
     home = Path(os.environ.get('HOME') or Path.home())
@@ -45,7 +47,8 @@ def safe_file(path, optional=False):
 
 
 def selection(config):
-    path = config / 'dots/theme-plugins.json'
+    from profile_config import config_path
+    path = config_path('theme-plugins.json')
     safe_file(path, optional=True)
     data = read_json(path) if exists(path) else {'schema': 1, 'enabled': {}}
     if set(data) != {'schema', 'enabled'} or not isinstance(data['enabled'], dict):
@@ -61,7 +64,7 @@ def selection(config):
 
 def discover(config, selected):
     rows = []
-    for origin, directory in [('bundled', LIB / 'plugins'), ('user', config / 'dots/hooks/theme-set.d')]:
+    for origin, directory in [('bundled', LIB / 'plugins'), ('user', config_path('hooks/theme-set.d'))]:
         parents_safe(directory / 'placeholder')
         if not directory.exists():
             continue
@@ -354,6 +357,7 @@ def main(argv=None, reason=None):
             else:
                 data['enabled'].pop(opt.name, None)
             if previous != data['enabled']:
+                path = config_path('theme-plugins.json', write=True)
                 private_directory(path.parent)
                 safe_file(path, optional=True)
                 atomic_json(path, data)

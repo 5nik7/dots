@@ -26,9 +26,9 @@ class Parser(argparse.ArgumentParser):
         raise ValueError(message)
 
 
-def parser():
-    result = Parser(prog='wttr', add_help=False, allow_abbrev=False)
-    for flag, value, _ in OPTIONS:
+def parser(options=OPTIONS, prog='wttr'):
+    result = Parser(prog=prog, add_help=False, allow_abbrev=False)
+    for flag, value, _ in options:
         settings = {}
         if value is None:
             settings['action'] = 'store_true'
@@ -44,10 +44,12 @@ def help_view(completion=False):
     ui = Presentation()
     help_banner(ui)
     ui.emit()
-    ui.heading((' ' if ui.icons else '') + 'wttr — weather from wttr.in')
+    ui.heading(((ui.icon('weather.title', '') + ' ') if ui.icons else '') + 'wttr — weather from wttr.in')
     ui.detail('Usage', 'wttr completion SHELL [--install] [--dir DIRECTORY]' if completion else 'wttr [LOCATION] [options]')
     if not completion:
         ui.detail('Queries', 'wttr get FIELD | wttr --fields | wttr completion SHELL')
+        ui.detail('Browse', 'wttr browse | dots wttr browse; session location/units and cached previews')
+        ui.detail('Dots', 'dots wttr accepts the same commands, options and stock requests.')
         ui.detail('Location', 'Explicit input, configured default, then termux-geo city. No IP fallback.')
     ui.emit()
     ui.heading('Options')
@@ -116,9 +118,9 @@ def complete(argv):
     return 0
 
 
-def render(row, cfg, args, age):
+def render(row, cfg, args, age, ui=None):
     from styling import condition, temperature_color, Colors, forecast_night, detail_color
-    ui = Presentation()
+    ui = ui or Presentation()
     colors = Colors(enabled=ui.color)
     values = fields(row, cfg, age, icons=ui.icons)
     def temp(value, suffix=''):
@@ -204,6 +206,9 @@ def main(argv=None):
         except (OSError, ValueError, KeyError, IndexError):
             return 1
         return 0
+    browser_report = argv[:1] == ['--_browse-report']
+    if browser_report:
+        argv.pop(0)
     # Consume only leading presentation options; never reinterpret option values.
     while argv and argv[0].split('=')[0] in ('--color', '--icons'):
         flag, separator, value = argv.pop(0).partition('=')
@@ -212,6 +217,9 @@ def main(argv=None):
             value = argv.pop(0)
         if value not in ('auto', 'always', 'never'): raise ValueError('invalid ' + flag)
         os.environ['DOTS_' + flag[2:].upper()] = value
+    if argv[:1] == ['browse']:
+        from wttr.browser import main as browse
+        return browse(argv[1:])
     if 'completion' in argv and argv.index('completion') == 0:
         return complete(argv[1:])
     args = parser().parse_intermixed_args(argv)
@@ -291,7 +299,7 @@ def main(argv=None):
             except (OSError, ValueError) as error:
                 failure = error
                 row = cache.read()
-    if failure is not None and args.refresh and not background:
+    if failure is not None and args.refresh and not background and not browser_report:
         raise Unavailable(str(failure))
     usable = cache.usable(row, stale=args.allow_stale or bool(background))
     if args.daylight:
@@ -311,6 +319,8 @@ def main(argv=None):
         values = fields(row, cfg, cache.age(row), icons=args.icons != 'never' and os.environ.get('DOTS_ICONS') != 'never')
         print(widget(args.format if args.format is not None else cfg['widget'], values, cfg, Presentation(), tokens=widget_tokens))
     else:
+        if browser_report and (failure is not None or row.get('error')):
+            Presentation(sys.stderr).detail('Refresh', clean(str(failure) if failure is not None else row['error']), '93')
         render(row, cfg, args, cache.age(row))
     return 0
 

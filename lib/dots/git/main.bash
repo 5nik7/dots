@@ -17,7 +17,8 @@ SCOPED_PUBLISH=0 SCOPE_PATH='' ALL_SUBMODULES=0
 [[ $CMD != submodules-publish ]] || { SCOPED_PUBLISH=1; CMD=publish; }
 OUTPUT_COMMAND=$CMD
 ((SCOPED_PUBLISH == 0)) || OUTPUT_COMMAND='submodules publish'
-TARGET=${DOTS:-${LIB%/lib/dots/git}} CONFIG=${XDG_CONFIG_HOME:-$HOME/.config}/dots/git.conf
+TARGET=${DOTS:-${LIB%/lib/dots/git}}
+CONFIG=$(python3 -B "$DOTS_LIB_DIR/profile_config.py" __path git.conf) || exit 2
 NO_CONFIG=0 EXPLICIT_CONFIG=0 REMOTE_ARG='' OUTERMOST=0 DRY_RUN=0 ADVANCE=0 ALL=0 YES=0 INIT=0 MESSAGE='' JSON=0 FULL_PATHS=0
 OWNERS=() HOST_ALIASES=() STATUS_DIRS=() PUB_DIRS=()
 while (($#)); do

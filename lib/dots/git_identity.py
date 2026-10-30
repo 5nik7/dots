@@ -6,13 +6,16 @@ import shutil
 import subprocess
 from urllib.parse import urlsplit
 
+from style_config import icon
 GENERIC = ''
 BRANCH = ''
 HOSTS = dict(line.split('\t') for line in Path(__file__).with_name('git').joinpath('hosts.tsv').read_text(encoding='utf-8').splitlines())
 
+from profile_config import config_path
+
 
 def host_icon(host):
-    return HOSTS.get(host or '', GENERIC)
+    return icon('hosts.'+(host or '').split('.')[0], HOSTS.get(host or '', icon('git.repository', GENERIC)))
 
 
 def url_host(url):
@@ -57,7 +60,7 @@ class Identities:
                 self.aliases = {}
                 from files.file_platform import config_root
                 try:
-                    config = config_root() / 'dots/git.conf'
+                    config = config_path('git.conf')
                     if config.is_file() and not config.is_symlink():
                         values = self.read(path, 'config', '--no-includes', '--null', '--file', str(config), '--get-all', 'dots-git.hostAlias')
                         for entry in values.split('\0'):

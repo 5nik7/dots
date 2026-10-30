@@ -91,7 +91,8 @@ dots::_resource_load() {
   done
   if [[ -f $_dots_resource_lib/resources.tsv ]]; then
     while IFS=$'\t' read -r group key code mode extra; do
-      [[ $group != \#* && $key && $code && $mode && ! $extra ]] || continue
+      [[ $group != \#* && $key && $code && $mode ]] || continue
+      if [[ $extra ]]; then dots::icon "$code" "$extra"; code=$REPLY; fi
       _DOTS_RESOURCE_ICONS+=("$group" "$key" "$code" "$mode")
     done < "$_dots_resource_lib/resources.tsv"
   fi
@@ -160,7 +161,7 @@ dots::resource() {
     fi
   fi
   dots::text "$shown"; DOTS_RESOURCE_TEXT=$REPLY
-  if [[ $DOTS_UI_INFO != '[i]' ]]; then DOTS_RESOURCE_TEXT="${icon:-󰈔} $DOTS_RESOURCE_TEXT"; fi
+  if [[ $DOTS_UI_INFO != '[i]' ]]; then [[ ! $icon ]] || DOTS_RESOURCE_TEXT="$icon $DOTS_RESOURCE_TEXT"; fi
   DOTS_RESOURCE_STYLE=''
   [[ ! $DOTS_UI_RESET ]] || printf -v DOTS_RESOURCE_STYLE '\e[%sm' "$code"
   REPLY=$DOTS_RESOURCE_STYLE$DOTS_RESOURCE_TEXT$DOTS_UI_RESET

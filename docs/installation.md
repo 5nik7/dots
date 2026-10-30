@@ -1,6 +1,6 @@
 # Checkout installation
 
-Setup includes the standalone `todo` command (`todo.ps1` on native Windows) and the catalog-managed `dots:todo-skill` resource. They use the existing backup, receipt, idempotence and uninstall rules. Project and global goal documents are user data, remain outside the installation receipt, and survive uninstall. See [todo](todo.md) for scopes and the separate goal transaction history.
+Setup includes the standalone `todo` command (`todo.ps1` on native Windows) and the catalog-managed `dots:todo-skill`, `dots:todo-planning-skill` and `dots:todo-maintenance-skill` resources. They use the existing backup, receipt, idempotence and uninstall rules. Project and global goal documents are user data, remain outside the installation receipt, and survive uninstall. See [todo](todo.md) for scopes and the separate goal transaction history.
 
 **Implemented: bounded catalog-backed setup and restore.** Run these entry points from an existing public checkout. They do not bootstrap Python, Bash, Git, applications, or a remote release.
 
@@ -40,9 +40,9 @@ Human views use the shared semantic colors, full wrapped paths and explicit stat
 
 ## Declared ownership
 
-The existing [file catalog](files.md) is the installation inventory. Missing optional sources, missing resource files and unmapped targets are reported as skipped. No inference from `.gitignore` or arbitrary symlinks is used to choose installation targets. Catalog ownership conflicts, unsupported copy preferences, unrelated links and unsafe parent paths block installation.
+The existing [file catalog](files.md) is the installation inventory. Missing optional sources, missing resource files and unmapped targets are reported as skipped. No inference from `.gitignore` or arbitrary symlinks is used to choose installation targets. Catalog ownership conflicts, directory copy preferences, unrelated links and unsafe parent paths block installation. An explicit `strategy: "copy"` installs a regular file through the same receipts and retained backups; there is no silent link fallback.
 
-Setup links mapped configurations and creates their missing parents. Existing regular files/directories receive verified retained backups before replacement. A validated selection made through the normal theme publisher can be reconciled explicitly by setup; arbitrary changed configuration targets remain protected. Correct pre-existing links remain unchanged and are not claimed by the installer. Sources stay editable in the checkout. The managed command entry lives in the user's `.local/bin`; existing shell integration adds the checkout's command paths to PATH. Setup does not edit the Windows registry or system PATH.
+Setup links mapped configurations by default and creates their missing parents. Explicit regular-file copies update only when the installed copy still matches its receipt; changed copies are preserved as drift. Repeating an unchanged install is a no-op. Existing regular files/directories receive verified retained backups before replacement. A validated selection made through the normal theme publisher can be reconciled explicitly by setup; arbitrary changed configuration targets remain protected. Correct pre-existing links remain unchanged and are not claimed by the installer. Sources stay editable in the checkout. The managed command entry lives in the user's `.local/bin`; existing shell integration adds the checkout's command paths to PATH. Setup does not edit the Windows registry or system PATH.
 
 Catalog omissions found in the audit are now explicit: Fish, Nushell, Zsh's login profile, Ruby dotfiles, Blastoff, Git prompt configuration and Starship's file-level destination. Internal completion, palette and Rofi links are relative to their containing directories. Fixed generated connectors are listed in `lib/dots/themes/connectors.tsv`; btop's `dots.theme` is now generated and ignored alongside the existing connectors.
 

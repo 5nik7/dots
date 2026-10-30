@@ -23,29 +23,16 @@ Custom module formats cannot expand built-in modules directly, so the wrappers c
 
 ## Settings
 
-Edit `${XDG_CONFIG_HOME:-$HOME/.config}/dots/config.env`. Native Windows PowerShell
-uses `%APPDATA%/dots/config.env` unless XDG_CONFIG_HOME is set. DOTS_CONFIG_FILE
-selects an explicit file. A missing file uses defaults; initialization does not
-create it. For example:
+Use `dots config set NAME VALUE` to save settings in the active profile's `profile.json`. Native Windows uses its own `profiles/windows` definition. See [profile configuration](profiles.md#profile-configuration) for editing, inheritance and migration.
 
-```ini
-DOTS_THEME_DEFAULT=catppuccin-mocha
-DOTS_INIT_THEME=1
-DOTS_THEME_AUTO_UPDATE=1
-DOTS_INIT_COLORS=1
-DOTS_INIT_COMMANDS=1
-DOTS_INIT_COMPLETION=1
-DOTS_TERMUX_AUTOSTART=0
-DOTS_ZSH_SUGGESTIONS=autosuggestions
+```sh
+dots config set DOTS_THEME_DEFAULT catppuccin-mocha
+dots config set DOTS_INIT_THEME 1
+dots config set DOTS_TERMUX_AUTOSTART 0
+dots config set DOTS_ZSH_SUGGESTIONS autosuggestions
 ```
 
-This is data, not a shell script. Values are literal, optionally enclosed in
-matching single or double quotes. Blank lines and whole-line `#` comments are
-accepted. Expansion, command substitution, `export`, unknown keys and duplicate
-keys are not accepted. Invalid settings stop initialization before replacing the
-last resolved settings. Explicit nonempty environment overrides take precedence
-over the file, then built-in defaults apply. File-derived defaults are not
-exported into the override namespace, so subsequent reloads see edits correctly.
+Settings are literal data. Explicit nonempty environment overrides win, followed by profile settings (most specific layer first), legacy `config.env`, then built-in defaults. An explicit absolute `DOTS_CONFIG_FILE` selects the legacy-format settings file instead of profile settings. Legacy files use `KEY=VALUE`, optional matching single/double quotes, blank lines and whole-line comments; expansion, shell commands, unknown keys and duplicates are rejected. Missing files supply no overrides. Initialization never creates configuration. Invalid settings preserve the previous resolved options. Defaults are not exported into the override namespace, so reinitialization can see saved edits. Native startup bundles include profile settings with the existing manifest invalidation checks and retain Python-free warm Bash/Zsh/Fish startup.
 
 Settings are defined in [settings.tsv](../lib/dots/shell/settings.tsv).
 Boolean options use `0` or `1`; all six integration switches default to `1`.
@@ -81,8 +68,9 @@ shells, themes, config and state; its theme entry follows the selected theme.
 
 Native palette and semantic-role maps remain available. Named color shortcuts
 are optional; stale Dots-owned colors are removed when a new palette loads.
-`rst` and `RST` reset SGR colors and attributes; PowerShell's case-insensitive
-variable names make them the same variable. Shell maps/records are native runtime
+`esc` and `ESC` each contain the single escape character (byte `0x1B`, written as `$'\033'` in Bash/Zsh). `rst` and `RST` contain `ESC[0m` to reset SGR colors and attributes. These values are available in interactive initialization even when themes or named color shortcuts are disabled. They use shell variables in Bash, Zsh, Fish, Xonsh and PowerShell, and `$env.esc`/`$env.ESC` and `$env.rst`/`$env.RST` in Nushell. PowerShell's case-insensitive variable names make each lowercase/uppercase pair the same variable.
+
+Shell maps/records are native runtime
 values, not portable exported arrays. Child processes use scalar exports or CLI
 queries. The old 256-entry COLOR/FG/BG maps are no longer allocated at startup;
 their explicit utility functions remain callable for compatibility.
@@ -181,3 +169,9 @@ Explicit `LESS_TERMCAP_so`/`LESS_TERMCAP_se` values, including empty values, and
 Dots popup readers resolve the same colors from the current published palette before opening less, including background tmux launches with an older environment. They retain explicit overrides and their existing secure reader configuration. Reopen the popup to see current colors; for ordinary commands, start a new shell or use the shell's existing reload command (`rl` in the personal Zsh configuration). Already running readers retain their launch environment.
 
 Exact RGB styling requires a termcap-based less and a truecolor terminal, supported locally on Termux and applicable to Linux/WSL. Native Windows less uses a console rendering path without the equivalent RGB terminal override; it retains stock colors. The native PowerShell implementation does not invoke Bash or WSL. No application destinations, system-wide files or package settings change.
+
+## Generated profile namespaces
+
+`profile_environment.py` owns `DOTFONTS` (`<checkout>/fonts`), `PROFILE*`, every `DOTS<PROFILE>*` prefix, optional aliases and native profile maps. `PROFILE` selects the active leaf; `SHELLS` and `DOCS` retain shared meanings. Standard directory values remain available when absent, and other visible immediate directories add keys. No inactive paths enter PATH. Profile application templates can reference these generated names but cannot define them. See [names, maps, aliases and compatibility](profiles.md#generated-profile-paths).
+
+Bash/Zsh and Fish/PowerShell caches include all profile manifests and shallow directory inventories. Successful reloads replace generated maps and remove stale aliases; failed preparation retains the prior environment. Nu and Xonsh use the same model as inert data. PowerShell keeps its built-in `$PROFILE`, using `$env:PROFILE` for the scalar and `$DotsProfile` for the map.

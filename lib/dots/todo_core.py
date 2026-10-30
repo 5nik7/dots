@@ -22,6 +22,8 @@ LIMIT = 4 * 1024 * 1024
 SCHEMA = 2
 ALIAS = re.compile(r'[a-z][a-z0-9._-]{0,63}\Z')
 
+from profile_config import config_path
+
 
 def alias_selector(alias):
     """Keep hexadecimal names distinct from UUID selectors."""
@@ -45,7 +47,7 @@ def scope(*, standalone=False, project=None, global_=False, cwd=None):
                 raise ValueError('project must be an existing directory')
         else:
             from tmux_workspaces import configured_projects, project_root
-            root = project_root(cwd or Path.cwd(), configured=configured_projects(config_root() / 'dots/projects.json'))
+            root = project_root(cwd or Path.cwd(), configured=configured_projects(config_path('projects.json')))
     path = root / '.dots/todo.json' if root else state_root() / 'todo/global.json'
     return dict(kind='project' if root else 'global', root=str(root) if root else None, path=str(path))
 

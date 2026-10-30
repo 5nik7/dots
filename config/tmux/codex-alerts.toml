@@ -22,5 +22,5 @@ force_vibration = true
 toast_background = "dark_background"
 toast_foreground = "warning"
 toast_gravity = "middle"
-toast_short = true
+toast_short = false
 excerpt_chars = 240

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+_fonts_source=${BASH_SOURCE[0]}
+[[ $_fonts_source == /* ]] || _fonts_source=$PWD/$_fonts_source
+_fonts_links=0
+while [[ -L $_fonts_source ]]; do
+  (( ++_fonts_links <= 40 )) || { printf 'fonts: executable symlink loop\n' >&2; exit 1; }
+  _fonts_target=$(readlink -- "$_fonts_source") || exit 1
+  if [[ $_fonts_target == /* ]]; then _fonts_source=$_fonts_target
+  else _fonts_source=${_fonts_source%/*}/$_fonts_target; fi
+done
+DOTS=${DOTS:-$(cd -- "${_fonts_source%/*}/.." && pwd -P)}
+export DOTS
+exec python3 -B "$DOTS/lib/dots/fonts_cli.py" "$@"

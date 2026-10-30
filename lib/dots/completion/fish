@@ -24,14 +24,34 @@ function __dots_complete_fish
         end
     end
 end
-for name in dots theme todo
+for name in dots theme todo fonts
     complete -c $name -f -a '(__dots_complete_fish)'
 end
 set -l theme_state "$HOME/.local/state"
 if set -q XDG_STATE_HOME; and test -n "$XDG_STATE_HOME"
     set theme_state "$XDG_STATE_HOME"
 end
-set -l theme_completion "$theme_state/dots/themes/commands/current/init.fish"
-if test -r "$theme_completion"
-    source "$theme_completion"
+set -l names_file "$theme_state/dots/themes/commands/current/names"
+set -l next
+if test -f "$names_file"; and not test -L "$names_file"
+    while read -l name
+        if string match -qr '^[a-z][a-z0-9_]*(?:-[a-z0-9_]+)*$' -- "$name"
+            set -a next "$name"
+        end
+    end < "$names_file"
 end
+for name in $_DOTS_THEME_COMPLETION_NAMES
+    if not contains -- "$name" $next
+        # Fish erases all positional providers together. Preserve mixed entries;
+        # the shared reader returns no palette candidates for a retired name.
+        if not complete -c "$name" | string match -qvr -- '__dots_complete_fish'
+            complete -e -c "$name"
+        end
+    end
+end
+for name in $next
+    if not complete -c "$name" | string match -qvr -- '__dots_complete_fish'
+        complete -c "$name" -f -a '(__dots_complete_fish)'
+    end
+end
+set -g _DOTS_THEME_COMPLETION_NAMES $next

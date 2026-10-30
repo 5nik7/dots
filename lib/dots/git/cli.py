@@ -22,6 +22,8 @@ from file_platform import config_root, check_object
 from interaction import gum_confirm
 from progress import Progress, configure, eligible, permanent_output
 
+from profile_config import config_path
+
 
 class GitError(ValueError):
     pass
@@ -136,7 +138,7 @@ class Workflow:
             self.scope_hash = selection_hash(self.scope_rows)
         if not args.no_config and (args.command == 'publish' or self.ui.color or self.ui.icons):
             try:
-                config = Path(args.config or config_root() / 'dots/git.conf')
+                config = Path(args.config or config_path('git.conf'))
                 if config.exists():
                     if config.is_symlink() or not config.is_file(): raise GitError('configuration must be a regular file')
                     for row in records(self.root, 'config', '--no-includes', '--null', '--file', str(config), '--list'):

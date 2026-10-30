@@ -1,29 +1,17 @@
 #!/usr/bin/env bash
 
-declare -r esc=$'\033'
-declare -r rst="${esc}[0m"
-declare -r black="${esc}[30m"
-declare -r red="${esc}[31m"
-declare -r green="${esc}[32m"
-declare -r yellow="${esc}[33m"
-declare -r blue="${esc}[34m"
-declare -r magenta="${esc}[35m"
-declare -r cyan="${esc}[36m"
-declare -r white="${esc}[37m"
-declare -r bold="${esc}[1m"
-declare -r dim="${esc}[2m"
-declare -r italic="${esc}[3m"
-declare -r underline="${esc}[4m"
-declare -r rev="${esc}[7m"
-declare -r c21="${esc}[38;5;021m"
-declare -r c22="${esc}[38;5;022m"
+_dots_script_source=$(readlink -f -- "${BASH_SOURCE[0]}")
+DOTS=${DOTS:-$(cd -- "${_dots_script_source%/*}/.." && pwd -P)}
+source "$DOTS/lib/dots/script_style.bash"
 
 main() {
+  dots::icon navigation.environment '󰇁'; local prompt=$REPLY
+  dots::icon navigation.next '󰅂'; prompt+=$REPLY
+  local c21=$DOTS_UI_BLUE
   (env | sed "s/=/…/") | fzf --smart-case \
-    --prompt '󰇁󰅂 ' \
+    --prompt "$prompt " \
     --height '100%' \
     --ansi --cycle \
-    --color="preview-label:2,prompt:6,preview-bg:#181825,preview-border:#181825" \
     -d … \
     --with-nth '{1}' \
     --preview-window='default:50%:down:wrap-word:border-sharp' \

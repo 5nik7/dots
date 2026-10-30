@@ -18,16 +18,15 @@ import tomllib
 import urllib
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.append(str(ROOT / 'lib/dots'))
+from style_config import icon as style_icon
 sys.path.insert(0, str(ROOT / 'lib/dots/files'))
 from file_platform import config_root, open_nofollow, lock as lock_file
 from transactions import private_directory
 
 LIMIT = 4 * 1024 * 1024
 VERSION = '1.2.0'
-FIELDS = ('location', 'attribution', 'condition', 'code', 'icon', 'temperature', 'unit', 'feels_like',
-          'humidity', 'wind', 'wind_unit', 'wind_direction', 'precipitation', 'precipitation_unit',
-          'sunrise', 'sunset', 'daylight', 'age', 'stale', 'stale_marker',
-          'wind_icon', 'sunrise_icon', 'sunset_icon', 'humidity_icon', 'precip_icon', 'location_icon')
+from metadata import FIELDS
 DETAIL_ICONS = dict(sunrise_icon='', sunset_icon='󰖚', humidity_icon='', precip_icon='', location_icon='')
 
 
@@ -383,7 +382,7 @@ def fields(row, cfg, age=0, icons=True, now=None):
                 daylight=daylight, age=str(int(age)) if math.isfinite(age) else '',
                 stale=str(stale).lower(), stale_marker='~' if stale else '',
                 wind_icon=wind_icon(current) if icons else '',
-                **{key: cfg['icons'].get(key.removesuffix('_icon'), glyph).strip() if icons else ''
+                **{key: cfg['icons'].get(key.removesuffix('_icon'), style_icon('weather.'+key.removesuffix('_icon'), glyph)).strip() if icons else ''
                    for key, glyph in DETAIL_ICONS.items()})
 
 

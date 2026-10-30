@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "enabled": {
+    "starship": "bundled/30-starship.sh",
+    "gtk": "bundled/10-gtk.sh"
+  }
+}

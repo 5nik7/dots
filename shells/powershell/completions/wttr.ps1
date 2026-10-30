@@ -5,8 +5,9 @@ Register-ArgumentCompleter -Native -CommandName wttr,wttr.ps1 -ScriptBlock {
     $index = $parts.Count - 1
     if ($wordToComplete -and $index -ge 0 -and $parts[$index] -eq $wordToComplete) { $index-- }
     $prev = if ($index -ge 0) { $parts[$index] } else { '' }
-    $items = @('-l','--location','-c','--current','-d','--days','-H','--hourly','-u','--units','-L','--language','-w','--widget','-f','--format','-g','--get','-F','--fields','-j','--json','--daylight','-r','--refresh','--cached','--allow-stale','-C','--config','-t','--timeout','--color','--icons','-v','--verbose','-h','--help','-V','--version','get','completion','m','u','M','0','1','2','A','d','F','n','q','Q','T','format=','moon','moon@',':help',':bash.function',':translation')
+    $items = @('-l','--location','-c','--current','-d','--days','-H','--hourly','-u','--units','-L','--language','-w','--widget','-f','--format','-g','--get','-F','--fields','-j','--json','--daylight','-r','--refresh','--cached','--allow-stale','-C','--config','-t','--timeout','--color','--icons','-v','--verbose','-h','--help','-V','--version','get','completion','browse','m','u','M','0','1','2','A','d','F','n','q','Q','T','format=','moon','moon@',':help',':bash.function',':translation')
     if ($parts.Count -gt 1 -and $parts[1] -eq 'completion') { $items = @('bash','zsh','fish','powershell','--all','--install','--dir','-h','--help') }
+    if ($parts.Count -gt 1 -and $parts[1] -eq 'browse') { $items = @('-l','--location','-d','--days','-u','--units','-L','--language','-C','--config','-t','--timeout','--color','--icons','-v','--verbose','-h','--help','--query','--client') }
     switch -CaseSensitive ($prev) {
         '-l' { $items = @(); break }
         '--location' { $items = @(); break }
@@ -26,6 +27,8 @@ Register-ArgumentCompleter -Native -CommandName wttr,wttr.ps1 -ScriptBlock {
         '--timeout' { $items = @(); break }
         '--color' { $items = @('auto','always','never'); break }
         '--icons' { $items = @('auto','always','never'); break }
+        '--query' { $items = @(); break }
+        '--client' { $items = @(); break }
         'get' { $items = @('location','attribution','condition','code','icon','temperature','unit','feels_like','humidity','wind','wind_unit','wind_direction','precipitation','precipitation_unit','sunrise','sunset','daylight','age','stale','stale_marker','wind_icon','sunrise_icon','sunset_icon','humidity_icon','precip_icon','location_icon'); break }
     }
     if ($prev -cin @('-C','--config','--dir')) {
@@ -91,6 +94,8 @@ Register-ArgumentCompleter -Native -CommandName wttr,wttr.ps1 -ScriptBlock {
     $descriptions.Add('--help', 'Show usage without querying providers')
     $descriptions.Add('-V', 'Print version')
     $descriptions.Add('--version', 'Print version')
+    $descriptions.Add('--query', 'Initial browser search')
+    $descriptions.Add('--client', 'Exact initiating tmux client')
     $items | Where-Object { $_.StartsWith($wordToComplete, [StringComparison]::Ordinal) } | ForEach-Object {
         $tip = if ($descriptions.ContainsKey($_)) { $descriptions[$_] } else { $_ }
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $tip)

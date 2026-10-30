@@ -20,6 +20,8 @@ class Row:
     project: Project | None = None
     sessions: tuple = ()
 
+from profile_config import config_path
+
 
 def canonical(value):
     return Path(value).expanduser().resolve()
@@ -28,7 +30,7 @@ def canonical(value):
 def discover():
     """Defaults plus optional user paths; never invoke Git, clone or initialize."""
     home = Path.home()
-    config = Path(os.environ.get('XDG_CONFIG_HOME') or home / '.config') / 'dots/projects.json'
+    config = config_path('projects.json')
     roots, explicit = [home / 'repos'], [Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2])]
     if config.exists():
         try:

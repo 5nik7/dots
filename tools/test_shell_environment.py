@@ -27,6 +27,8 @@ class ShellEnvironment(unittest.TestCase):
         if os.environ.get('LD_PRELOAD'):
             self.env['LD_PRELOAD'] = os.environ['LD_PRELOAD']
         self.config = self.home / 'config/dots/config.env'
+        # These cases exercise legacy config.env and must never write a live profile.
+        self.env['DOTS_CONFIG_FILE'] = str(self.config)
         self.config.parent.mkdir(parents=True)
         self.config.write_text('DOTS_INIT_THEME=0\nDOTS_INIT_COMMANDS=0\n')
 
@@ -117,7 +119,7 @@ class ShellEnvironment(unittest.TestCase):
             self.assertIn(heading, output)
         self.assertIn('0 (disabled)', output)
         self.assertIn('1 (enabled)', output)
-        self.assertIn('\x1b[95m', output)
+        self.assertRegex(output, r'\x1b\[[0-9;]+mcatppuccin-mocha\x1b\[0m')
         self.assertIn('\x1b[2m', output)
         self.assertNotIn('not-for-display', output)
         raw = self.env_command('env', '--json', env=forced)
@@ -218,6 +220,24 @@ class ShellEnvironment(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(result.stdout, f'{REPO}|0|config', result.stderr)
         self.assertFalse((self.home / 'state').exists())
+
+    def test_escape_variables_without_theme_and_repeated_initialization(self):
+        scripts = {
+            shell: (f'source "$DOTS/lib/dots/shell/init.{shell}"\n'
+                    'printf "%s|%s|" "$esc" "$ESC"\n')
+            for shell in ('bash', 'zsh', 'fish')
+        }
+        scripts['nu'] = (f'source "{REPO}/lib/dots/shell/init.nu"\n'
+                         'print -n $env.esc "|" $env.ESC "|"\n')
+        for colors in ('0', '1'):
+            self.config.write_text('DOTS_INIT_THEME=0\nDOTS_INIT_COMMANDS=0\n'
+                                   f'DOTS_INIT_COLORS={colors}\n')
+            for shell, script in scripts.items():
+                with self.subTest(shell=shell, colors=colors):
+                    readonly = 'readonly esc ESC\n' if shell in ('bash', 'zsh') else ''
+                    result = self.run_shell(shell, script + readonly + script, True)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout.encode(), b'\x1b|' * 4, result.stderr)
 
     def test_config_reload_and_atomic_failure(self):
         for shell in ('bash', 'zsh'):

@@ -77,3 +77,14 @@ bin-release/
 
 /config/leaf/themes/dots.toml
 /config/leaf/themes/dots.tmTheme
+
+# Profile configuration mutation locks are local runtime state.
+/profiles/**/profile.lock
+
+# Transaction locks for repository style preferences
+/default/*.lock
+/profiles/**/icons.lock
+/profiles/**/colors.lock
+
+# Downloaded font versions in explicitly selected Dots font stores.
+**/.dots-fonts/

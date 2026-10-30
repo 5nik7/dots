@@ -4,7 +4,7 @@ import os
 import re
 
 BUILTINS = ('help', 'commands', 'completion', 'init')
-RESERVED = set(BUILTINS) | set('doctor version status spec plan apply undo history backup config bootstrap self __complete'.split())
+RESERVED = set(BUILTINS) | set('doctor version status spec plan apply undo history backup bootstrap self __complete'.split())
 LIB = Path(__file__).resolve().parent
 ROUTE = re.compile(r'[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)*\Z')
 
@@ -40,7 +40,7 @@ def read(path):
                         if flag:
                             seen.add(flag)
                 kind = fields[2] if key == 'option' else fields[1]
-                allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-repository','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','theme-file','theme-app','dots-setting','profile-id','wiki-page','wiki-section'}
+                allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-repository','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','theme-file','theme-app','dots-setting','config-key','profile-id','wiki-page','wiki-section'}
                 allowed.update(('todo-id', 'todo-tag'))
                 if kind not in allowed and not (kind.startswith('choice:') and all(kind[7:].split(','))):
                     raise ValueError('invalid metadata type: ' + kind)

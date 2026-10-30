@@ -17,6 +17,15 @@ SHELLS = {'bash': ('bash', 'init.bash'), 'zsh': ('zsh', 'init.zsh'),
           'xonsh': ('xonsh', 'init.xsh'), 'powershell': ('powershell', 'init.ps1')}
 
 
+def executable(name):
+    path = shutil.which(name)
+    if path and name == 'xonsh':
+        with open(path,'rb') as stream: header = stream.readline(256)
+        if header.startswith(b'#!') and not os.access(header[2:].strip().split(b' ',1)[0].decode(),os.X_OK):
+            return None
+    return path
+
+
 class InitTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='dots-init-test-')
@@ -191,6 +200,7 @@ class InitTests(unittest.TestCase):
         self.minimal_tools()
         p = self.shell('bash', self.generated() + self.generated() + r'''
 [[ $rst == $'\e[0m' && $RST == "$rst" ]] || exit 13
+[[ $esc == $'\033' && $ESC == "$esc" ]] || exit 14
 [[ ! ${FG+x} && ! ${BG+x} && ! ${COLOR+x} ]] || exit 11
 ! alias q 2>/dev/null || exit 12
 [[ $PROMPT_COMMAND != *_dots_shell_prompt*'_dots_shell_prompt'* ]]
@@ -212,6 +222,12 @@ class InitTests(unittest.TestCase):
         code = 'source @(' + repr(str(self.repo / 'shells/xonsh/.xonshrc')) + ')\n'
         p = self.shell('xonsh', code + code + '\nprint("d" in aliases)', interactive=True)
         self.assertEqual(p.stdout.strip(), 'True')
+
+    def test_xonsh_escape_variables_without_theme(self):
+        self.env.update(DOTS_INIT_THEME='0', DOTS_INIT_COLORS='0', DOTS_INIT_COMMANDS='0')
+        code = self.generated('xonsh') + '\nprint(esc + "|" + ESC + "|", end="")\n'
+        p = self.shell('xonsh', code + code, interactive=True)
+        self.assertEqual(p.stdout.encode(), b'\x1b|' * 4)
 
     def test_literal_control_characters_in_checkout_path(self):
         original = self.repo
@@ -257,14 +273,14 @@ source "$DOTS/lib/dots/themes/gum-env.bash"
 [[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#abcdef' ]]
 ''')
 
-    def test_bash_optional_activation_runs_once(self):
+    def test_bash_integration_does_not_activate_optional_tools(self):
         self.minimal_tools()
         tool = self.root / 'tools/mise'
         tool.write_text('#!' + shutil.which('bash') + '\n' +
                         "printf '%s\\n' 'MISE_COUNT=$(( ${MISE_COUNT:-0} + 1 ))'\n")
         tool.chmod(0o700)
         self.shell('bash', self.generated('bash') + self.generated('bash') +
-                   '\n[[ $MISE_COUNT == 1 ]]', interactive=True)
+                   '\n[[ ! ${MISE_COUNT+x} ]]', interactive=True)
 
     def test_zsh_full_startup_private_hook_and_reload(self):
         from zsh_fixture import fixture, run
@@ -287,15 +303,15 @@ printf "export GUM_CONFIRM_PROMPT_FOREGROUND='#654321'\\n" >| "$XDG_STATE_HOME/d
 [[ ! ${STARSHIP_CONFIG+x} ]] || exit 11
 [[ $PRIVATE_COUNT == 1 && $_DOTS_COMPINIT_READY == 1 ]] || exit 1
 [[ $DOTCONFIG == "$DOTS/config" && $SHELLS == "$DOTS/shells" ]] || exit 5
-[[ ! ${RED+x} && ! ${BLUE+x} && ! ${BOLD+x} && ! ${RST+x} && ! ${COLORS+x} ]] || exit 7
+[[ ! ${RED+x} && ! ${BLUE+x} && ! ${BOLD+x} && $RST == $'\\e[0m' && ! ${COLORS+x} ]] || exit 7
 RED=red BLUE=blue BOLD=bold RST=reset COLORS=caller
 before_path=$PATH
 before_hooks="${(j.:.)precmd_functions}"
 source "$DOTS/shells/zsh/zshrc"
 [[ $PRIVATE_COUNT == 2 && $_DOTS_COMPINIT_READY == 1 ]] || exit 2
 [[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#654321' ]] || exit 10
-[[ $RED == red && $BLUE == blue && $BOLD == bold && $RST == reset && $COLORS == caller ]] || exit 8
-[[ ${#FG} == 256 && ${#BG} == 256 && ${#COLOR} == 256 ]] || exit 6
+[[ $RED == red && $BLUE == blue && $BOLD == bold && $RST == $'\\e[0m' && $COLORS == caller ]] || exit 8
+[[ ! ${FG+x} && ! ${BG+x} && ! ${COLOR+x} ]] || exit 6
 [[ $PATH == "$before_path" && "${(j.:.)precmd_functions}" == "$before_hooks" ]] || exit 3
 [[ -n ${functions[reload-completions]} && -n ${functions[is_termux]} ]] || exit 4
 '''
@@ -408,7 +424,7 @@ source "$DOTS/shells/zsh/zshrc"
     def test_native_linked_startup(self):
         for shell in ('bash', 'zsh', 'fish', 'nu', 'xonsh'):
             with self.subTest(shell=shell):
-                exe = shutil.which(shell)
+                exe = executable(shell)
                 if not exe:
                     continue
                 folder = SHELLS[shell][0]
@@ -448,7 +464,7 @@ source "$DOTS/shells/zsh/zshrc"
         (self.repo / 'bin/dots').unlink()
         for shell in ('bash', 'zsh', 'fish', 'nu', 'xonsh'):
             with self.subTest(shell=shell):
-                exe = shutil.which(shell)
+                exe = executable(shell)
                 if not exe:
                     continue
                 rc = self.portable_entrypoints(shell)[0]
@@ -463,7 +479,7 @@ source "$DOTS/shells/zsh/zshrc"
 
     def test_unreadable_targets_and_symlink_loops(self):
         for shell in ('bash', 'zsh', 'fish', 'nu', 'xonsh'):
-            exe = shutil.which(shell)
+            exe = executable(shell)
             if not exe:
                 continue
             flags = {'bash': ['--noprofile', '--norc'], 'zsh': ['-df'], 'fish': ['--no-config'],

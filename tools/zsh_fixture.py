@@ -54,7 +54,7 @@ def fixture(source=REPO, plugins=True):
             dest = repo / original.relative_to(source)
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(original, dest)
-    for name in ('profiles/termux/termux.env', 'profiles/windows/win.env'):
+    for name in ('profiles/termux/shells/init.zsh', 'profiles/windows/shells/init.zsh'):
         dest = repo / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text('# synthetic profile module\n')

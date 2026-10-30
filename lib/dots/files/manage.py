@@ -30,9 +30,13 @@ class Manager:
         if not state.is_absolute():
             raise ValueError('state root must be absolute')
         self.store = Store(state_root())
-        self.config = config_root() / 'dots/files.json'
+        from profile_config import config_path
+        self.config = config_path('files.json', self.root)
 
     def backup_default(self):
+        from profile_config import settings
+        value = settings(self.root).get('files.backup')
+        if value is not None: return value['value']
         if not exists(self.config):
             return False
         data = read_json(self.config)
@@ -193,12 +197,12 @@ class Manager:
         def guard(path):
             parents_safe(path)
             guards[str(path)] = digest(path)
+        for path in self.catalog.input_paths():
+            guard(path)
         def document(owner):
-            path = Path(owner['root']) / '.dots/files.json'
-            if str(path) not in docs:
-                guard(path)
-                docs[str(path)] = self.catalog.manifest(owner)
-            return docs[str(path)]
+            if owner['id'] not in docs:
+                docs[owner['id']] = self.catalog.manifest(owner)
+            return docs[owner['id']]
         def operation(path, **kwargs):
             path = Path(path)
             if path.is_relative_to(self.store.state) or self.store.state.is_relative_to(path):
@@ -263,12 +267,14 @@ class Manager:
                 if any(x['id'] == identity or x['source'] == rel for x in doc['resources']):
                     raise ValueError('resource ID or source already tracked')
                 doc['resources'].append({'id': identity, 'source': rel, 'target': target,
-                    'app': 'config', 'category': 'config', 'platforms': loc['platforms'],
+                    'app': 'config', 'category': 'config', 'platforms': (self.catalog.registry.entries.get(owner['id']+':'+identity,loc['platforms']) if self.catalog.registry else loc['platforms']),
                     'strategy': 'directory-link' if path.is_dir() else 'link'})
                 views.append({'path': str(path), 'source': str(source), 'id': owner['id'] + ':' + identity, 'status': 'import-and-link'})
         else:
             for identity in dict.fromkeys(args.values):
                 row = next((r for r in records if r['id'] == identity), None)
+                if not row and self.catalog.registry and identity in self.catalog.registry.entries:
+                    raise ValueError('resource needs a mapping in the selected profile: '+identity)
                 if row and args.action == 'link' and not row['enabled']:
                     raise ValueError('resource is stashed; use dots files stash --restore ' + identity)
                 if not row or not row['applicable'] or not row['target'] or row['status'] in ('conflict', 'replaced', 'replacement-unavailable'):
@@ -309,9 +315,11 @@ class Manager:
                     doc = document(owners[row['repository']])
                     doc['resources'] = [x for x in doc['resources'] if x['id'] != identity.split(':', 1)[1]]
                 views.append({'path': str(target), 'source': str(source), 'id': identity, 'status': args.action})
-        for path, doc in docs.items():
+        for doc in docs.values():
             doc['resources'].sort(key=lambda x: x['id'])
-            operation(path, data=doc)
+        catalog_ops = self.catalog.updates(docs)
+        for op in catalog_ops:
+            operation(op['path'], data=op['data'])
         # Reject batch ancestor/descendant replacements, including directory imports.
         for i, left in enumerate(ops):
             for right in ops[i+1:]:
@@ -321,7 +329,7 @@ class Manager:
         if getattr(self, 'link_installation', None):
             self.link_installation.operations = ops
             self.link_installation.guards.update(guards)
-        return ops, guards, list(docs), views
+        return ops, guards, [*self.catalog.lock_paths(), *[op['path'] for op in catalog_ops]], views
 
 
 def show(title, rows, stream=None):
