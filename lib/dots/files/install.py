@@ -601,6 +601,7 @@ def main(argv=None):
     parser.add_argument('--json', action='store_true', help='emit a schema-1 result')
     parser.add_argument('--update', action='store_true', help='fast-forward the clean checkout before planning setup')
     parser.add_argument('--with-source', action='append', default=[], type=current_source, choices=PUBLIC_SOURCES)
+    parser.add_argument('--packages', metavar='FILE', help='restore declared packages before configuration setup')
     parser.add_argument('--color', choices=('auto', 'always', 'never'))
     parser.add_argument('--icons', choices=('auto', 'always', 'never'))
     raw = list(sys.argv[1:] if argv is None else argv)
@@ -614,8 +615,8 @@ def main(argv=None):
         ui.emit(parser.format_help())
         return 0
     args = parser.parse_args(raw)
-    if args.action != 'install' and (args.update or args.with_source):
-        parser.error('--update and --with-source require install')
+    if args.action != 'install' and (args.update or args.with_source or args.packages):
+        parser.error('--update, --with-source and --packages require install')
     for key in ('color', 'icons'):
         if getattr(args, key):
             os.environ['DOTS_' + key.upper()] = getattr(args, key)
@@ -637,6 +638,8 @@ def main(argv=None):
         for flag in ('yes', 'json', 'verbose'):
             if getattr(args, flag):
                 forwarded.append('--' + flag)
+        if args.packages:
+            forwarded.extend(['--packages', str(Path(args.packages).expanduser().absolute())])
         os.execv(sys.executable, [sys.executable, '-B', str(root / 'lib/dots/files/install.py'), *forwarded])
     installation = Installation(root)
     output = OperationOutput.for_args(args)
@@ -651,6 +654,15 @@ def main(argv=None):
             installation.plan_uninstall()
     doc = dict(schema=1, action=args.action, status='blocked' if installation.blocked else 'preview',
                platform=installation.platform, items=installation.items)
+    package_stage = None
+    if args.packages:
+        from package_setup import Stage
+        try:
+            package_stage = Stage(root, args.packages, json_output=args.json)
+        except Exception as error:
+            raise ValueError('package preflight: '+str(error)) from error
+        doc['packages'] = package_stage.document_preview()
+        if not args.json: package_stage.preview()
     display(doc, args, final=args.action == 'migrate-apps' and not args.yes)
     output.plan(installation.items, args.dry_run)
     if args.dry_run or (args.action == 'migrate-apps' and not args.yes):
@@ -660,7 +672,22 @@ def main(argv=None):
     if not approve(args):
         display(dict(doc, status='cancelled', items=[], message='No changes made.'), args, True)
         return 0
-    result = installation.apply(args.action)
+    if package_stage:
+        try:
+            doc['packages'] = package_stage.apply()
+        except Exception as error:
+            raise ValueError('package restoration: '+str(error)+'; configuration was not applied') from error
+        if doc['packages']['status'] != 'complete':
+            display(dict(doc, status='incomplete', message='Package restoration is incomplete; configuration was not applied. Completed package changes remain.'), args, True)
+            return 1
+        # Installation.apply rechecks all approved file/input guards before any
+        # configuration mutation. Newly available tools can prepare the theme.
+    try:
+        result = installation.apply(args.action)
+    except (OSError, ValueError) as error:
+        if package_stage:
+            raise ValueError('Configuration failed after package restoration; completed package changes remain: '+str(error)) from error
+        raise
     if installation.theme_notice:
         ui = Presentation(sys.stderr)
         if args.json:

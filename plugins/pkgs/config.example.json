@@ -4,6 +4,9 @@
   "color": "auto",
   "cache_seconds": 300,
   "external_detection": true,
+  "upgrade": {"managers": "auto"},
+  "output": "auto",
+  "policies": {},
   "commands": {
     "ripgrep": ["rg"],
     "fzf": ["fzf"]

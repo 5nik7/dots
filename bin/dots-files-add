@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Import configurations and link them into place
+# dots:summary=Register repository sources or import configurations and link them
 # dots:option=--verbose|-v|flag|Show actions, backups and unchanged/skipped reasons
 # dots:usage=[PATH... | --scan] [OPTIONS]
 # dots:option=--pick||flag|Select interactively; combine with --dry-run to preview
@@ -8,9 +8,10 @@
 # dots:option=--yes||flag|Apply the displayed plan without prompting
 # dots:option=--backup||flag|Retain verified backups
 # dots:option=--no-backup||flag|Disable optional retained backups
-# dots:option=--scan||flag|Import eligible registered configurations
+# dots:option=--scan||flag|Add ready repository sources and registered configurations
+# dots:option=--target||file|Destination for one explicit repository source
 # dots:option=--directory-link||flag|Own and link entire directories
 # dots:option=--repo||file-repository|Owning repository
-# dots:argument=*|file|Configuration path
+# dots:argument=*|file|Repository source or configuration path
 FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
 exec python3 -B "$FILES_LIB/manage.py" add "$@"

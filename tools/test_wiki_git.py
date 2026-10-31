@@ -35,6 +35,9 @@ class WikiGitTests(WikiFixture):
             command=['bash',str(ROOT/'bin/dots'),'git',*(['wiki'] if only else []),action]
         else:
             command=[sys.executable,'-B',str(ROOT/'lib/dots'/('wiki_git.py' if only else 'git/cli.py')),action]
+        # Bash resolves its implementation checkout's profile configuration.
+        # Publication must always use this fixture's owner rules, never live ones.
+        if action=='publish':command+=['--config',str(self.config)]
         result=subprocess.run([*command,'-C',str(self.root),*args],env=dict(self.env,DOTS=str(ROOT)) if bash else self.env,cwd=self.base,text=True,capture_output=True,timeout=40)
         self.assertEqual(result.returncode,code,result.stderr+'\n'+result.stdout)
         return json.loads(result.stdout) if '--json' in args and result.stdout else result.stdout
@@ -72,6 +75,31 @@ class WikiGitTests(WikiFixture):
         self.assertEqual(self.git(self.root,'rev-parse','HEAD'),self.git(self.source_remote,'rev-parse','main'))
         self.assertEqual(self.git(self.target,'rev-parse','HEAD'),self.git(self.wiki_remote,'rev-parse','master'))
         self.assertEqual(self.git(self.root,'status','--porcelain'),'')
+        self.cli('check','--json')
+
+    def test_package_manifest_refresh_precedes_source_and_wiki_publication(self):
+        import io
+        from contextlib import redirect_stdout
+        from wiki_git import core
+        sys.path.insert(0,str(ROOT/'plugins/pkgs'))
+        from pkgs_lib import manifests
+        for identity in ('termux','linux','wsl','windows'):
+            profile=self.root/'profiles'/identity;profile.mkdir(parents=True)
+            (profile/'profile.json').write_text(json.dumps({'schema':1,'id':identity}))
+        self.git(self.root,'add','profiles');self.stage_build()
+        snapshot={'schema':1,'groups':[{'manager':'npm','scope':'global','packages':[{'name':'fixture','observed_version':'2'}]}]}
+        output=io.StringIO()
+        with patch.object(manifests,'export',return_value=(snapshot,False)), \
+             patch.object(sys,'argv',['git','publish','-C',str(self.root),'--config',str(self.config),'--update-packages','--yes','--json']), \
+             redirect_stdout(output):
+            self.assertEqual(core().main(),0)
+        events=json.loads(output.getvalue())['events']
+        self.assertEqual([r['path'] for r in events if r['status']=='published'],[str(self.root),str(self.target)])
+        updated=next(i for i,r in enumerate(events) if r['status']=='updated' and r['file'].endswith('packages.json'))
+        published=next(i for i,r in enumerate(events) if r['status']=='published')
+        self.assertLess(updated,published)
+        path=manifests.default_path(self.root).relative_to(self.root).as_posix()
+        self.assertEqual(json.loads(self.git(self.source_remote,'show','main:'+path))['groups'][0]['packages'][0]['name'],'fixture')
         self.cli('check','--json')
 
     def test_stale_index_is_blocked_even_with_current_worktree(self):

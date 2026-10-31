@@ -246,7 +246,7 @@ class InstallationTests(unittest.TestCase):
 
     def git_fixture(self):
         shutil.copytree(ROOT/'lib/dots/files',self.repo/'lib/dots/files')
-        for name in ('progress.py','interaction.py','resources.py','resources.tsv','platform_info.py','profiles.py','profile_config.py','profile_views.py','style_config.py'):
+        for name in ('progress.py','interaction.py','resources.py','resources.tsv','platform_info.py','profiles.py','profile_config.py','profile_views.py','style_config.py','config_values.py','style_catalog.py','row_layout.py'):
             shutil.copy2(ROOT/'lib/dots'/name,self.repo/'lib/dots'/name)
         self.git(self.repo,'init','--initial-branch=main')
         self.git(self.repo,'config','user.email','fixture@example.invalid')

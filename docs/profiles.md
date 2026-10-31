@@ -58,6 +58,11 @@ Invalid identities, missing parents, cycles and paths escaping a profile fail
 validation. Unknown distros retain their detected identity and use available
 base definitions.
 
+The current leaf profile also owns the default `packages.json` used by the
+package export/update menu and `pkgs export --update`. This file contains package
+data, separate from the profile definition. `dots git publish --update-packages`
+can refresh and include it explicitly; see [package workflows](packages.md).
+
 Full Bash/Zsh startup sources existing `shells/init.bash` or `shells/init.zsh`
 from active profiles in inheritance order. These are trusted hooks whose exported
 changes are tracked; lightweight `dots init` does not execute them.

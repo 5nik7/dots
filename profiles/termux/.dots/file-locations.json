@@ -6,7 +6,7 @@
       "id": "termux",
       "kind": "root",
       "target": "${TERMUX}",
-      "source": "termux",
+      "source": "config/termux",
       "platforms": [
         "termux"
       ],

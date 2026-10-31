@@ -13,6 +13,7 @@ source "$LIB/ui.bash"
 CMD=$1; shift
 WIKI_ARGS=("$@")
 NO_WIKI=0
+UPDATE_PACKAGES=0
 SCOPED_PUBLISH=0 SCOPE_PATH='' ALL_SUBMODULES=0
 [[ $CMD != submodules-publish ]] || { SCOPED_PUBLISH=1; CMD=publish; }
 OUTPUT_COMMAND=$CMD
@@ -34,6 +35,7 @@ while (($#)); do
             SCOPE_PATH=$1; shift ;;
         --no-config) NO_CONFIG=1 ;;
         --no-wiki) NO_WIKI=1 ;;
+        --update-packages) UPDATE_PACKAGES=1 ;;
         --json) JSON=1 ;;
         --full-paths) FULL_PATHS=1 ;;
         --dry-run) DRY_RUN=1 ;;
@@ -46,6 +48,11 @@ while (($#)); do
             else die 2 "unknown argument: $arg"; fi ;;
     esac
 done
+if ((UPDATE_PACKAGES)); then
+    [[ $CMD == publish ]] && ((SCOPED_PUBLISH == 0)) || die 2 '--update-packages requires root git publish'
+    command -v python3 >/dev/null 2>&1 || die 3 'package manifest publication requires Python 3'
+    exec python3 -B "$LIB/cli.py" "$CMD" "${WIKI_ARGS[@]}"
+fi
 if ((SCOPED_PUBLISH)); then
     if { [[ ! $SCOPE_PATH ]] && ((ALL_SUBMODULES == 0)); } || { [[ $SCOPE_PATH ]] && ((ALL_SUBMODULES)); }; then
         die 2 'select one registered PATH or --all-submodules'

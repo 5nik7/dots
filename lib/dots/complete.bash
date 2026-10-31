@@ -285,6 +285,8 @@ dots_complete() {
       elif [[ ${words[index+1]} == --setup ]]; then
         if [[ ${words[cursor-1]} == --with-source ]]; then
           dots_value_candidates choice:termux,windows,nvim
+        elif [[ ${words[cursor-1]} == --packages ]]; then
+          dots_value_candidates file
         else
           dots_builtin_metadata init
           for row in "${DOTS_META_OPTIONS[@]}"; do

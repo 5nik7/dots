@@ -6,9 +6,9 @@ The live CLI uses Bash and native PowerShell adapters with shared Python control
 
 ## Blastoff and pkgs
 
-Dots includes [Blastoff and pkgs](docs/bundled-applications.md) as first-party source. Use `blastoff …` or `dots blastoff …` for Starship themes/modules, and `pkgs …` or `dots pkgs …` for package management. All existing subcommands pass through to their bundled application cores.
+Dots includes [Blastoff and pkgs](docs/bundled-applications.md) as first-party source. Use `blastoff …` or `dots blastoff …` for Starship themes/modules, and `pkgs …` or `dots pkgs …` for package management. All subcommands use their bundled application cores. `pkgs upgrade` updates supported user-wide scopes without an extra confirmation flag; `pkgs refresh` refreshes supported repository metadata the same way. [Package workflows](docs/packages.md) add Go tools, configurable recipes/skips, styled logs, editable JSON export/restore and optional `--packages FILE` setup. The export menu defaults to the current profile root. `pkgs export --update` preserves manifest edits while refreshing installed versions; `dots git publish --update-packages` can include that refresh explicitly.
 
-`./install.sh` / `./uninstall.sh` and their PowerShell equivalents manage Dots and both applications together, including command entry points and shell completion. Review `--dry-run` first. Blastoff requires Python 3.11+; pkgs requires Python 3.9+ and Termux/Linux/WSL for package operations. Native Windows provides pkgs help/version and an explicit unsupported-operation diagnostic. See [installation and migration](docs/bundled-applications.md#one-installation-and-removal).
+`./install.sh` / `./uninstall.sh` and their PowerShell equivalents manage Dots and both applications together, including command entry points and shell completion. Review `--dry-run` first. Blastoff requires Python 3.11+; pkgs requires Python 3.9+ and Termux/Linux/WSL for package operations. Native Windows provides pkgs help/version, stdin formatting and manifest inspection; package operations retain an explicit refusal. See [installation and migration](docs/bundled-applications.md#one-installation-and-removal).
 
 ## Bash Command Framework
 
@@ -381,6 +381,8 @@ dots files add ~/.config/example --dry-run
 dots files add ~/.config/example --backup
 ```
 
+Files already moved into the repository can be registered with `dots files add SOURCE` or by passing an existing link such as `dots files add ~/.termux`. Dots infers ownership, records the active-profile mapping, and links missing destinations after review. Correct existing links stay untouched; repository directories become one directory link. Use `--target DESTINATION` when no unique location mapping exists. Discovery, the Add picker and `add --scan` include these sources. Start with `--dry-run`; see [existing-source registration](docs/files.md#register-files-already-in-the-repository).
+
 File adoption copies and verifies configs into their owning repository, then links
 individual files at their original locations. Search locations are versioned;
 Termux-specific mappings belong to `profiles/termux`. `files link ID` installs a known
@@ -558,7 +560,7 @@ and [profile inspection](docs/profiles.md#profile-inspection-subcommands).
 
 Anodize, Blastoff and pkgs live together under `plugins/`. Use `dots menu blastoff` or `dots menu pkgs` for common workflows, and `dots files migrate-apps` to preview migration of supported old installations. See [application plugins](docs/plugins.md).
 
-Blastoff's current theme, theme list, save, backups and doctor views, and pkgs' installed packages, managers and doctor views use [Dots report formatting](docs/presentation.md#application-reports) in both popup windows and direct terminals: semantic colors, labeled details, resource styles and readable narrow layouts. Color/icon controls remain independent, and JSON/raw output stays undecorated.
+Blastoff's current theme, theme list, save, backups and doctor views, and pkgs' help, operation previews, installed packages, managers and doctor views use [Dots report formatting](docs/presentation.md#application-reports) in both popup windows and direct terminals: semantic colors, labeled details, resource styles and readable narrow layouts. Color/icon controls remain independent, and JSON/raw output stays undecorated.
 
 ## Wiki
 

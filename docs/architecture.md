@@ -387,7 +387,7 @@ The optional less standout style is owned by `lib/dots/less_style.py` for Python
 
 ## Bundled applications
 
-`plugins/blastoff/` and `plugins/pkgs/` contain first-party application sources absorbed from their standalone repositories; `plugins/manifest.json` records import provenance. Their runtime cores remain independent of Dots controller imports. `bin/blastoff` and `bin/pkgs` resolve the owning checkout and execute those cores; Dots-prefixed routes forward the same argument vector. Native PowerShell reaches them through the shared Python dispatcher and `lib/dots/bundled_apps.py`, without Bash.
+`plugins/blastoff/` and `plugins/pkgs/` contain first-party application sources absorbed from their standalone repositories; `plugins/manifest.json` records import provenance. Both command forms share their application cores; the cores reuse selected Dots services for presentation and guarded file writes. `bin/blastoff` and `bin/pkgs` resolve the owning checkout and execute those cores; Dots-prefixed routes forward the same argument vector. Native PowerShell reaches them through the shared Python dispatcher and `lib/dots/bundled_apps.py`, without Bash.
 
 `tools/generate_bundled_apps.py` reads pure application grammars to generate static route headers and completion metadata. Help/discovery never execute an extension or package backend. The shared checkout installer owns command/completion/manual publication and removal; imported standalone lifecycle helpers are retained historical tooling and are never used by Dots setup. Application actions retain their own established backup or package-manager semantics. See [bundled applications](bundled-applications.md).
 
@@ -431,3 +431,20 @@ Neovim's nested `util/dots_config.lua` consumes published literal preferences.
 `todo_tree.py` projects hierarchy and filters private snapshots without store
 access. The maintenance-only `tools/audit_config.py` scanner is never a startup,
 help, completion or ordinary dispatch dependency.
+
+## Existing-source registration controller
+
+`lib/dots/files/registration.py` classifies repository sources and existing links and supplies bounded candidates to catalog discovery, Add scans and the shared picker. It does not mutate files. The existing manage controller serializes catalog updates and uses Installation for new link receipts; Store retains exclusive transaction, rollback and recovery ownership. Native and Bash frontends share this controller.
+
+## Package workflow ownership
+
+Within `plugins/pkgs/pkgs_lib`, policies validates literal recipes, scopes selects
+user-wide ownership, go_tools reads binary metadata, workflows prepares/executes
+commands, streams owns concurrent output and process status, and manifests owns
+portable package data and desired-state restoration. `lib/dots/config_pkgs.py`
+edits authoritative native JSON through Store; `package_setup.py` supplies the
+optional package stage to the existing installer. `package_publish.py` supplies
+a guarded manifest snapshot to the shared Git publisher; explicit publication
+updates stage only that manifest in addition to the normal selection. Package effects are separate
+from managed-file rollback. Help/static completion load grammar only. See
+[package contracts](packages.md).

@@ -164,7 +164,7 @@ Anodize static help uses the core Python logo renderer with the [same LOGO1/LOGO
 
 ## Bundled applications
 
-`dots.ps1 blastoff ...` and `blastoff.ps1 ...` invoke the bundled Blastoff Python core. `dots.ps1 pkgs ...` and `pkgs.ps1 ...` provide native help/version; application commands other than help/version return status 3 because pkgs' native Windows backends are not implemented. No route invokes Bash or WSL. The existing JSON argument bridge preserves empty, quoted and Unicode arguments, and standalone wrappers return `$LASTEXITCODE`. Blastoff also receives its original native transport envelope for compatibility aliases, host validation and picker shell context. Dots completion registers both standalone names and their `.ps1` variants.
+`dots.ps1 blastoff ...` and `blastoff.ps1 ...` invoke the bundled Blastoff Python core. `dots.ps1 pkgs ...` and `pkgs.ps1 ...` provide native help/version, `format` and `manifest`; package operations return status 3 because native Windows backends are not implemented. `install.ps1 -Packages FILE` accepts the shared option but refuses the package stage on Windows before configuration writes. The native `apps.pkgs` Config editor uses APPDATA (or explicit XDG_CONFIG_HOME). `git publish --update-packages` is discoverable but also refuses native Windows with status 3; ordinary Git publication remains available. No route invokes Bash or WSL. The existing JSON argument bridge preserves empty, quoted and Unicode arguments, and standalone wrappers return `$LASTEXITCODE`. Blastoff also receives its original native transport envelope for compatibility aliases, host validation and picker shell context. Dots completion registers both standalone names and their `.ps1` variants.
 
 Combined setup installs the launchers in `~/.local/bin` through the shared installation receipt. Application configuration paths remain unchanged; see [bundled applications](bundled-applications.md). Native PowerShell 5.1/7 acceptance remains a named pending gate.
 
@@ -187,3 +187,7 @@ the Python registry/transaction implementation. Existing Windows app destination
 and the Windows/WSL state boundary remain unchanged. Native PowerShell 5.1/7
 rename/recovery, menu, completion and terminal acceptance remain pending;
 Termux and simulated Windows evidence are recorded in the [core plan](../plans/core-updates.md).
+
+## Existing-source registration acceptance
+
+Native `dots.ps1 files add` shares existing-source and existing-link registration, `--target`, scan and picker behavior with Bash through the Python controller. Windows app destinations remain adapter-owned. Registration preserves correct pre-existing links; new symbolic links require native capability, and unsupported reparse points fail explicitly. No Bash/WSL bridge is used. Native PowerShell 5.1/7 execution and visual acceptance remains pending when those engines are unavailable; ordinary adoption capability limits remain as documented.

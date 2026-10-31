@@ -22,9 +22,9 @@ from file_platform import state_root, config_root
 
 
 class Manager:
-    def __init__(self):
-        self.root = Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[3]).resolve()
-        self.catalog = Catalog(self.root, platform())
+    def __init__(self, catalog=None):
+        self.root = (catalog.root if catalog is not None else Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[3])).resolve()
+        self.catalog = catalog or Catalog(self.root, platform())
         home = Path(os.environ.get('HOME') or Path.home())
         state = Path(os.environ.get('XDG_STATE_HOME') or home / '.local/state')
         if not state.is_absolute():
@@ -148,11 +148,12 @@ class Manager:
 
     @tracked('Discovering system configs')
     def system(self, repo=None):
+        from registration import Registration
+        registration = Registration(self)
         claims = {r['target']: r for r in self.catalog.records() if r['target'] and r['enabled'] and r['applicable'] and r['status'] != 'replaced'}
         rows, seen = [], set()
         for loc in self.locations():
-            if repo and loc['repository'] != repo:
-                continue
+            imports_in_scope = not repo or loc['repository'] == repo
             base = Path(loc['path'])
             pending = [base]
             while pending:
@@ -161,15 +162,26 @@ class Manager:
                     continue
                 seen.add(str(path))
                 if str(path) in claims:
-                    rows.append({'path': str(path), 'status': 'managed', 'repository': claims[str(path)]['repository']})
+                    if not repo or claims[str(path)]['repository'] == repo:
+                        rows.append({'path': str(path), 'status': 'managed', 'repository': claims[str(path)]['repository']})
                     continue
                 try:
-                    self.mapping(path, repo)
+                    self.mapping(path, loc['repository'])
                 except ValueError:
-                    rows.append({'path': str(path), 'status': 'excluded', 'repository': loc['repository']})
+                    if imports_in_scope:
+                        rows.append({'path': str(path), 'status': 'excluded', 'repository': loc['repository']})
                     continue
-                if not self.allowed(path) or path.is_symlink():
-                    rows.append({'path': str(path), 'status': 'excluded', 'repository': loc['repository']})
+                if path.is_symlink():
+                    try:
+                        rows.append(registration.candidate(path, repo))
+                    except (OSError, ValueError) as error:
+                        if imports_in_scope:
+                            rows.append({'path': str(path), 'status': 'excluded', 'repository': loc['repository'],
+                                         'reason': str(error)})
+                    continue
+                if not self.allowed(path):
+                    if imports_in_scope:
+                        rows.append({'path': str(path), 'status': 'excluded', 'repository': loc['repository']})
                     continue
                 if path.is_dir():
                     try:
@@ -177,6 +189,8 @@ class Manager:
                     except OSError:
                         rows.append({'path': str(path), 'status': 'unavailable', 'repository': loc['repository']})
                 else:
+                    if not imports_in_scope:
+                        continue
                     try:
                         owner, source, target = self.mapping(path, repo)
                         status = 'existing-source' if exists(source) else 'candidate'
@@ -191,6 +205,7 @@ class Manager:
     @tracked('Planning file operations')
     def plan(self, args):
         self.link_installation = None
+        self.registration_receipt = False
         ops, guards, docs, views = [], {}, {}, []
         records = self.catalog.records()
         owners = {x['id']: x for x in self.catalog.sources if x['status'] == 'available'}
@@ -212,21 +227,37 @@ class Manager:
             guard(path)
             ops.append(dict(path=str(path), **kwargs))
         if args.action == 'add':
+            from registration import Registration, candidates
+            registration = Registration(self)
+            for owner in self.catalog.sources:
+                if owner['status'] == 'available':
+                    guard(Path(owner['root']) / '.dots/file-locations.json')
             paths = list(args.values)
             if args.scan:
                 if paths:
                     raise ValueError('choose paths or --scan')
-                paths = [x['path'] for x in self.system(args.repo) if x['status'] in ('candidate', 'existing-source')]
+                inventory = candidates(self, args.repo)
+                paths = [x['candidate'] for x in inventory if x['status'] not in ('needs-target', 'excluded')]
+                views.extend(dict(x, status='skipped', reason=x.get('reason', x['status']))
+                             for x in inventory if x['status'] in ('needs-target', 'excluded'))
             expanded = []
+            registrations = []
+            observed = None
             for value in paths:
-                path = Path(os.path.abspath(value))
+                path = Path(os.path.abspath(os.path.expanduser(value)))
                 parents_safe(path)
-                if path.is_symlink():
-                    match = next((r for r in records if r['target'] == str(path) and r['status'] == 'linked'), None)
-                    if match:
-                        views.append({'path': str(path), 'status': 'unchanged'})
-                        continue
-                    raise ValueError('refusing adoption of an unrelated symlink')
+                target = getattr(args, 'target', None) or getattr(args, 'target_map', {}).get(str(path))
+                if not path.is_symlink() and registration.owner(path, args.repo) is not None and observed is None:
+                    observed = self.system(args.repo)
+                row = registration.candidate(path, args.repo, target, observed or ())
+                if row:
+                    if not row['target']:
+                        if not args.dry_run:
+                            raise ValueError(row['reason'] + ' Source: ' + row['source'])
+                        views.append(row)
+                    else:
+                        registrations.append(row)
+                    continue
                 if path.is_dir() and not args.directory_link:
                     for current, directories, files in os.walk(path, followlinks=False):
                         if any((Path(current) / d).is_symlink() for d in directories):
@@ -270,6 +301,46 @@ class Manager:
                     'app': 'config', 'category': 'config', 'platforms': (self.catalog.registry.entries.get(owner['id']+':'+identity,loc['platforms']) if self.catalog.registry else loc['platforms']),
                     'strategy': 'directory-link' if path.is_dir() else 'link'})
                 views.append({'path': str(path), 'source': str(source), 'id': owner['id'] + ':' + identity, 'status': 'import-and-link'})
+            if registrations:
+                registrations = list({(r['source'], r['target']): r for r in registrations}.values())
+                from install import Installation
+                installation = Installation(self.root)
+                installation.operations = ops
+                installation.guards.update(guards)
+                for row in registrations:
+                    source, target = Path(row['source']), Path(row['target'])
+                    registration.validate_directory(source, row['repository'])
+                    guard(source)
+                    guard(target)
+                    previous = next((r for r in records if r['id'] == row['id']), None)
+                    if previous:
+                        if (not previous['enabled'] or not previous['applicable']
+                                or previous['source'] != row['source'] or previous['target'] != row['target']
+                                or previous['strategy'] != row['strategy']):
+                            raise ValueError('existing mapping differs or is stashed; use files edit/restore: ' + row['id'])
+                    else:
+                        document_row = document(owners[row['repository']])
+                        if any(r['id'] == row['id'].split(':', 1)[1] or r['source'] == str(source.relative_to(owners[row['repository']]['root']))
+                               for r in document_row['resources']):
+                            raise ValueError('resource ID or source already tracked')
+                        document_row['resources'].append(dict(id=row['id'].split(':', 1)[1],
+                            source=source.relative_to(owners[row['repository']]['root']).as_posix(),
+                            target=row['target_spec'], strategy=row['strategy'], app=row['app'],
+                            category=row['category'], platforms=row['platforms']))
+                    proposed = Catalog(self.root, self.catalog.platform, docs).records()
+                    current = next(r for r in proposed if r['id'] == row['id'])
+                    if current['status'] in ('conflict', 'replaced', 'replacement-unavailable') or not current['applicable']:
+                        raise ValueError('resource has conflicting or inactive ownership: ' + row['id'])
+                    if exists(target) and not target.is_symlink() and not args.backup:
+                        raise ValueError('existing target requires --backup: ' + str(target))
+                    before = len(ops)
+                    installation.add(row['id'], target, link=source, directory=source.is_dir())
+                    if installation.blocked:
+                        raise ValueError('unrelated link or drifted installation target is protected: ' + str(target))
+                    self.registration_receipt |= len(ops) != before
+                    views.append(dict(row, status='unchanged' if previous and len(ops) == before else row['status']))
+                installation.guards.update(guards)
+                self.link_installation = installation
         else:
             for identity in dict.fromkeys(args.values):
                 row = next((r for r in records if r['id'] == identity), None)
@@ -346,6 +417,12 @@ def show(title, rows, stream=None):
             ui.resource_detail('Source', row['source'])
         if row.get('path'):
             ui.resource_detail('Target', row['path'])
+        if row.get('reason'):
+            ui.detail('Reason', row['reason'])
+        if row.get('strategy'):
+            ui.detail('Strategy', row['strategy'])
+        if row.get('profile'):
+            ui.detail('Profile', row['profile'])
     if not rows:
         ui.emit('  No matching items.')
 
@@ -368,7 +445,7 @@ def show_system(rows, locations, verbose=False, include_all=False):
 
     ui.heading('System configs')
     line(' / '.join(f'{counts[s]} {s.replace("-", " ")}' for s in
-                   ('candidate', 'existing-source', 'managed', 'excluded', 'unavailable') if counts[s]), '96')
+                   ('candidate', 'existing-source', 'register-existing-link', 'managed', 'excluded', 'unavailable') if counts[s]), '96')
     if verbose:
         for row in visible:
             ui.resource_detail('Path', row['path'])
@@ -413,6 +490,7 @@ def main():
     parser.add_argument('action', choices=['locations', 'system', 'add', 'link', 'remove', 'history', 'undo', 'recover', 'backups-list', 'backups-show', 'backups-restore'])
     parser.add_argument('values', nargs='*')
     parser.add_argument('--repo')
+    parser.add_argument('--target')
     parser.add_argument('--scan', action='store_true')
     parser.add_argument('--pick', action='store_true')
     parser.add_argument('--directory-link', action='store_true')
@@ -435,6 +513,8 @@ def main():
         parser.error('--verbose requires discover --system or a file-changing operation')
     if args.action != 'add' and (args.scan or args.directory_link):
         parser.error('--scan and --directory-link require add')
+    if args.target and (args.action != 'add' or len(args.values) != 1 or args.scan or args.pick):
+        parser.error('--target requires one explicit add source without --scan/--pick')
     if args.scan and args.directory_link:
         parser.error('--directory-link requires explicit directory paths')
     if args.pick and args.scan and args.values:
@@ -479,6 +559,19 @@ def main():
             return
         args.values = [r['candidate'] if args.action == 'add' else r['id'] for r in chosen]
         args.scan = False
+    if args.action == 'add' and not args.scan and not args.yes and not args.json and not args.dry_run and sys.stdin.isatty():
+        from registration import Registration
+        from mappings import prompt
+        resolver = Registration(manager)
+        args.target_map = {}
+        observed = manager.system(args.repo)
+        for value in args.values:
+            row = resolver.candidate(value, args.repo, args.target, observed)
+            if row and not row['target']:
+                destination = prompt('Destination for ' + row['source'])
+                if not destination:
+                    raise SelectionEnded(130)
+                args.target_map[str(Path(os.path.abspath(os.path.expanduser(value))))] = destination
     with Progress('Planning file operations'):
         if args.action in ('undo', 'recover', 'backups-restore'):
             if len(args.values) != 1:
@@ -522,7 +615,7 @@ def main():
             if not args.values and not (args.action == 'add' and args.scan):
                 parser.error('select paths or qualified resource IDs')
             ops, guards, catalogs, views = manager.plan(args)
-            if getattr(manager, 'link_installation', None):
+            if getattr(manager, 'link_installation', None) and (args.action != 'add' or manager.registration_receipt):
                 # Installation baselines must survive for a later uninstall.
                 args.backup = True
     if getattr(manager, 'link_installation', None):
@@ -554,8 +647,9 @@ def main():
             return
     if args.action == 'recover':
         result = manager.store.recover(args.values[0])
-    elif getattr(manager, 'link_installation', None):
-        result = manager.link_installation.apply(args.action, catalogs=catalogs, retain=args.backup)
+    elif getattr(manager, 'link_installation', None) and (args.action != 'add' or manager.registration_receipt):
+        result = manager.link_installation.apply(args.action, catalogs=catalogs, retain=args.backup,
+                    write_receipt=args.action != 'add' or manager.registration_receipt)
         if result['status'] == 'unchanged':
             result = dict(schema=1, status='unchanged', operations=[])
     else:
@@ -567,6 +661,7 @@ def main():
         ui.heading('File operation ' + result['status'])
         if result.get('id'):
             ui.detail('Transaction', result['id'])
+            ui.detail('Undo', 'dots files undo ' + result['id'])
             if args.backup:
                 ui.detail('Backup', result['id'])
 

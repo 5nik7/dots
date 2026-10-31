@@ -1,2 +1,31 @@
+[todo.field.alias.label]
+fg = "blue"
+
 [todo.field.alias.value]
 bold = true
+fg = "blue"
+
+[todo.field.notes.value]
+fg = "light_foreground"
+
+[todo.field.tags.label]
+bg = "default"
+
+[todo.field.tags.value]
+dim = true
+fg = "default"
+
+[todo.field.title.value]
+bold = true
+
+[todo.priority.high]
+bold = true
+fg = "warning"
+underline = true
+
+[todo.priority.normal]
+dim = false
+fg = "orange"
+
+[todo.status.open]
+fg = "muted"

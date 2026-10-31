@@ -52,56 +52,8 @@ def choose_manager(args, cfg):
 
 
 def execute(backend, action, names, args, cfg):
-    names = validate_names(names, backend.name)
-    if action == 'uninstall':
-        with budget(45), phase('Reading installed packages'):
-            installed = {key(p.name, backend.name) for p in backend.installed()}
-        missing = [n for n in names if key(n, backend.name) not in installed and not
-                   (backend.name == 'apt' and any(x.partition(':')[0] == n for x in installed))]
-        if missing:
-            raise Error('Not installed in selected scope: ' + ', '.join(missing))
-    if backend.name == 'uv-tool' and action == 'install':
-        plans = [backend.transaction(action, [n], args.yes) for n in names]
-    else:
-        plans = [backend.transaction(action, names, args.yes)]
-    print(colored(f'{action.upper()} · {backend.name} · {backend.scope}', 'heading', cfg['color']))
-    for cmd in plans:
-        print('  ' + shlex.join(cmd))
-    if args.dry_run:
-        print('Dry run: no packages changed.')
-        return 0
-    if not args.yes:
-        try:
-            with open('/dev/tty', 'r+') as tty:
-                tty.write('Proceed? [y/N] ')
-                tty.flush()
-                confirmed = tty.readline().strip().lower() in ('y', 'yes')
-        except OSError:
-            raise Error('No controlling terminal. Use --yes for an intentional noninteractive transaction.')
-        if not confirmed:
-            print('Cancelled; no packages changed.')
-            return 0
-    sys.stdout.flush()
-    try:
-        for cmd in plans:
-            try:
-                tty = open('/dev/tty', 'r')
-            except OSError:
-                tty = None
-            try:
-                rc = subprocess.run(cmd, stdin=tty).returncode
-            finally:
-                if tty: tty.close()
-            if rc:
-                return rc if rc > 0 else 128 - rc
-    finally:
-        # A failed backend may still have made partial progress.
-        try:
-            Cache(backend.cache_key).clear()
-            invalidate_evidence(backend)
-        except OSError as e:
-            diagnostic(f'Cache invalidation failed: {e}', warning=True)
-    return 0
+    from .workflows import execute as run
+    return run(backend, action, names, args, cfg)
 
 
 def main(argv=None):
@@ -134,7 +86,7 @@ def _main(argv=None):
         # Accept completion SHELL --install as a spelling of the action.
         if 'completion' in argv:
             argv = ['install' if a == '--install' else a for a in argv]
-        p = parser()
+        p = parser(argv)
         args = p.parse_intermixed_args(argv)
         if not args.command or args.command == 'help':
             p.print_help()
@@ -144,11 +96,31 @@ def _main(argv=None):
             report_options = dict(explicit=args.color, data=args.json)
         cfg = config()
         cfg['debug'] = args.debug
+        cfg['_explicit_color'] = args.color
+        cfg['_manager'] = args.manager
+        cfg['_quiet_progress'] = args.dry_run or args.json
+        if args.raw: cfg['output'] = 'raw'
+        if args.output and args.command != 'export': raise Error('--output requires export')
+        if args.update and args.command != 'export': raise Error('--update requires export')
+        if (args.include_dependencies or args.pin_versions) and args.command != 'export':
+            raise Error('inventory and pin flags require export')
         if args.directory and args.command != 'completion':
             raise Error('--directory applies only to completion management.')
         if args.color: cfg['color'] = args.color
         if args.preview: cfg['preview'] = args.preview
         command = 'uninstall' if args.command == 'remove' else args.command
+        if command == 'format':
+            if args.names or args.json or args.dry_run: raise Error('format accepts stdin, --manager, --raw and color options')
+            from .streams import filter_stdin
+            return filter_stdin(cfg)
+        if command in ('export','manifest','restore'):
+            from .manifests import cli
+            return cli(args, cfg)
+        if command == 'upgrade' and not args.names and args.manager is None:
+            if args.json or args.query or args.global_scope:
+                raise Error('bulk upgrade does not accept --json, --query or --global; use --manager for an explicit scope')
+            from .workflows import upgrade
+            return upgrade(args, cfg)
         if command in ('list', 'managers', 'doctor'):
             report_options['fallback'] = cfg['color']
             ui = reports.report(**report_options)
@@ -174,9 +146,9 @@ def _main(argv=None):
             return 0
         if command == 'managers':
             rows = [{'manager': m, 'scope': Backend(m, args.global_scope and m == 'npm').scope,
-                     'catalog': 'query + cached candidates' if m in ('npm', 'gem', 'paru', 'yay') else
+                     'catalog': 'installed Go build metadata' if m == 'go' else 'query + cached candidates' if m in ('npm', 'gem', 'paru', 'yay') else
                                 'exact-name lookup + cached candidates' if m in ('pip', 'uv-tool') else 'local repository catalog',
-                     'actions': 'install, uninstall, info, upgrade, list, search'} for m in MANAGERS if available(m)]
+                     'actions': 'install, info, upgrade, list, export, restore' if m == 'go' else 'install, uninstall, info, upgrade, list, search, export, restore'} for m in MANAGERS if available(m)]
             if ui:
                 reports.managers(ui, rows)
             else:
@@ -222,6 +194,8 @@ def _main(argv=None):
         preparation_started = time.monotonic()
         with budget(45), phase('Detecting backend'):
             backend = choose_manager(args, cfg)
+        if backend.name == 'go' and command in ('uninstall','refresh','search'):
+            raise Error('Go supports installed inventory, info, install and upgrade; no registry search or removal')
         if command == 'info':
             names = validate_names(args.names, backend.name)
             with budget(45), phase('Reading installed packages'):

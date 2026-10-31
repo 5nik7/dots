@@ -81,7 +81,13 @@ FAMILIES = {
         *tuple(Action(name, name, ('pkgs', name), kind='terminal')
                for name in ('search', 'install', 'uninstall')),
         Action('list', 'installed packages', ('pkgs', 'list'), ('--installed',)),
-        *tuple(Action(name, name, ('pkgs', name), kind='terminal') for name in ('upgrade', 'refresh')),
+        Action('upgrade', 'upgrade user-wide packages', ('pkgs','upgrade'), kind='package'),
+        Action('refresh', 'refresh', ('pkgs','refresh'), kind='terminal'),
+        Action('export', 'export packages', ('pkgs','export'), kind='package'),
+        Action('update-manifest', 'update package manifest', ('pkgs','export'), ('--update',), kind='package'),
+        Action('manifest', 'inspect package manifest', ('pkgs','manifest'), kind='package'),
+        Action('restore', 'restore package manifest', ('pkgs','restore'), kind='package'),
+        Action('configuration', 'package configuration', ('config','browse'), ('--query','apps.pkgs'), kind='popup'),
         *leaves('pkgs', 'managers doctor'),
     ),
     'tmux': (
@@ -89,6 +95,7 @@ FAMILIES = {
         Action('keys', 'keys', ('menu', 'tmux', 'keys'), ('--browse',), 'popup', '󰌆', 'tmux'),
     ),
     'files': (Action('browse', 'browse', ('files', 'browse'), kind='terminal', icon='󰉋'),
+              Action('add', 'add', ('files', 'add'), kind='terminal', icon='󰉋'),
               *leaves('files', 'list history sources')),
     'git': (*leaves('git', 'status info'),
             Action('submodules', 'submodules', ('git', 'submodules'), kind='submenu', submenu='git/submodules', icon=''),
@@ -137,7 +144,7 @@ def entry(root, action, *, windows=None):
     tool = action.tool or ('git' if action.route[0] == 'git' else '')
     if windows and tool == 'tmux':
         reason = 'Tmux menus are unavailable on native Windows'
-    elif windows and action.route[0] == 'pkgs' and not action.submenu:
+    elif windows and action.route[0] == 'pkgs' and not action.submenu and action.id != 'manifest':
         reason = 'Package operations require a separate Termux, Linux or WSL installation'
     elif tool and not shutil.which(tool):
         reason = tool + ' is unavailable'
@@ -183,6 +190,31 @@ def invoke(root, action, context):
             show_message('Session attachment failed.', context=context, title='Tmux sessions', code=outcome.code)
         return False
     kind = action.kind
+    if kind == 'package':
+        from menu_input import prompt
+        sys.path.insert(0, str(root/'plugins/pkgs'))
+        from pkgs_lib.manifests import guards, default_path
+        from pkgs_lib.common import Error as PackageError
+        route = [*action.route, *action.options]
+        filename = None
+        if action.id != 'upgrade':
+            filename = prompt(str(default_path(root)), 'Package manifest file', context, back=True)
+            if not filename: return False
+            route += ['--output', filename] if action.route[-1] == 'export' else [filename]
+        if action.id == 'manifest':
+            run_action(dots_argv(route, root=root), kind='output', context=context, title='Package manifest')
+            return False
+        check = guards(filename)
+        result = review_output(dots_argv([*route, '--dry-run'], root=root), context=context, title='Preview: '+action.label)
+        if result.code or not result.reviewed: return False
+        selected = choose(Menu('pkgs-confirm', 'Run '+action.label+'?', (
+            Entry('cancel','Cancel'), Entry('apply','Run'))), mode='browse', context=context, compact=True)
+        if selected is None or selected.id == 'cancel': return False
+        if selected.id != 'apply': raise ValueError('invalid package confirmation')
+        try: check()
+        except PackageError as error: raise ValueError(str(error)) from None
+        run_action(dots_argv([*route, '--yes'], root=root), kind='terminal', context=context, title=action.label)
+        return False
     if kind == 'sync':
         result = review_output(dots_argv([*action.route, '--dry-run'], root=root),
                                context=context, title='Preview: dots ' + ' '.join(action.route))
@@ -251,7 +283,7 @@ def run(args):
                     from todo_menu import Handoff
                     if isinstance(outcome, Handoff): return outcome.code
                 return 0
-        except SelectionEnded:
+        except (SelectionEnded, SelectionEvent):
             continue  # A delegated browser was canceled, not the launcher.
         except (ValueError, OSError, subprocess.SubprocessError) as error:
             # Stale contexts also fail message hosting, leaving main to report

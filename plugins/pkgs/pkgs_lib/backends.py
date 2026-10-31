@@ -48,7 +48,7 @@ class Backend:
         self.bin = ('dnf5' if which('dnf5') else 'dnf') if name == 'dnf' else name
         if name == 'apt':
             self.bin = 'apt' if which('apt') else 'apt-get'
-        self.scope = ('global' if global_scope else str(Path.cwd())) if name == 'npm' else (
+        self.scope = 'Go installed tools' if name == 'go' else ('global' if global_scope else str(Path.cwd())) if name == 'npm' else (
             f'Python {sys.executable}; venv={os.environ.get("VIRTUAL_ENV", "none")}' if name == 'pip' else
             'uv isolated tools' if name == 'uv-tool' else
             'RubyGems ' + os.environ.get('GEM_HOME', 'active default environment') if name == 'gem' else
@@ -58,6 +58,10 @@ class Backend:
 
     def installed(self):
         n = self.name
+        if n == 'go':
+            from .go_tools import installed
+            self.go_rows = installed()
+            return self.go_rows
         if n == 'apt':
             text = run(['dpkg-query', '-W', '-f=${binary:Package}\t${Version}\t${db:Status-Status}\t${binary:Summary}\n'])
             rows = []
@@ -86,7 +90,9 @@ class Backend:
             data = json.loads(run(args, allowed=(0, 1)))
             if 'dependencies' not in data and data.get('error'):
                 raise Error(clean(data['error']))
-            return [Package(k, v.get('version', ''), installed=True, installed_version=v.get('version', ''))
+            return [Package(k, v.get('version', ''), installed=True, installed_version=v.get('version', ''),
+                            details={'disabled_reason': 'linked or source install; retain original source'}
+                                    if v.get('link') or str(v.get('resolved','')).startswith(('file:', 'git:', 'git+', 'github:')) else {})
                     for k, v in data.get('dependencies', {}).items() if not v.get('missing')]
         if n == 'pip':
             return [Package(p['name'], p['version'], installed=True, installed_version=p['version'])
@@ -99,8 +105,15 @@ class Backend:
                     rows.append(Package(m[1], m[2], installed=True, installed_version=m[2]))
             return rows
         if n == 'gem':
+            if getattr(self, 'operation_env', None):
+                code = ('specs = Gem::Specification.select { |s| s.base_dir == Gem.dir && !s.default_gem? }; '
+                        'puts JSON.generate(specs.group_by(&:name).map { |name, rows| '
+                        '{name: name, version: rows.map(&:version).max.to_s, versions: rows.map { |s| s.version.to_s }} })')
+                data = json.loads(run(['ruby', '-rjson', '-rrubygems', '-e', code], env=self.operation_env))
+                return [Package(p['name'], p['version'], installed=True, installed_version=p['version'],
+                                details={'versions':p['versions']}) for p in data]
             rows = []
-            for l in run(['gem', 'list', '--local']).splitlines():
+            for l in run(['gem', 'list', '--local'], env=getattr(self, 'operation_env', None)).splitlines():
                 m = re.match(r'^(\S+) \((.+)\)$', l)
                 if m:
                     rows.append(Package(m[1], m[2], installed=True, installed_version=m[2]))
@@ -109,6 +122,8 @@ class Backend:
 
     def inventory(self, query='', offline=False):
         n = self.name
+        if n == 'go':
+            return self.installed()
         if n == 'apt':
             rows = []
             for l in run(['apt-cache', 'search', '.']).splitlines():
@@ -166,6 +181,8 @@ class Backend:
 
     def info(self, p):
         n = self.name
+        if n == 'go':
+            return next((row for row in self.installed() if row.name == p.name), p)
         if n == 'apt':
             docs = paragraphs(run(['apt-cache', 'show', '--', p.name]))
             if not docs:
@@ -255,6 +272,33 @@ class Backend:
         diagnostic(self.ownership_error)
         return None
 
+    def owners(self, paths):
+        """Batch APT ownership scans; only exact, affirmative evidence is trusted."""
+        paths = list(dict.fromkeys(paths))
+        if self.name != 'apt':
+            return {path: self.owner(path) for path in paths}
+        owners = dict.fromkeys(paths)
+        # dpkg-query accepts patterns. Keep ambiguous/control-bearing paths unknown.
+        literal = [p for p in paths if Path(p).is_absolute() and
+                   not any(c in p for c in '*?[]\n\r\0')]
+        for start in range(0, len(literal), 128):
+            batch = literal[start:start + 128]
+            try:
+                result = query(['dpkg-query', '-S', '--', *batch], timeout=10)
+            except Error as error:
+                diagnostic(str(error))
+                break
+            if result.returncode not in (0, 1): continue
+            for line in result.stdout.splitlines():
+                owner, sep, path = line.partition(': ')
+                if sep and path in batch and owner and not owner.startswith(('diversion ', 'local diversion ')):
+                    owners[path] = owner
+            prefix = 'dpkg-query: no path found matching pattern '
+            for line in result.stderr.splitlines():
+                path = line[len(prefix):] if line.startswith(prefix) else None
+                if path in batch and owners[path] is None: owners[path] = ''
+        return owners
+
     def database_fingerprint(self):
         """Only persist ownership when a known local database can be identified."""
         prefix = Path(os.environ.get('PREFIX') or '/usr')
@@ -277,14 +321,17 @@ class Backend:
         if action == 'refresh' and n in ('pacman', 'paru', 'yay'):
             raise Error('Use pkgs upgrade with pacman to synchronize and upgrade together.')
         if self.termux and n in ('apt', 'pacman') and which('pkg'):
-            args = ['pkg', {'uninstall': 'uninstall', 'refresh': 'update'}.get(action, action)]
+            args = ['pkg', 'install' if action == 'upgrade' and names else {'uninstall': 'uninstall', 'refresh': 'update'}.get(action, action)]
+            if action == 'upgrade' and names and n == 'apt': args += ['--only-upgrade']
             if yes:
                 args += ['--noconfirm' if n == 'pacman' else '-y']
             args += names
         elif n == 'apt':
-            args = [self.bin, {'uninstall': 'remove', 'refresh': 'update'}.get(action, action)] + (['-y'] if yes else []) + ['--'] + names
+            args = [self.bin, 'install' if action == 'upgrade' and names else {'uninstall': 'remove', 'refresh': 'update'}.get(action, action)]
+            if action == 'upgrade' and names: args += ['--only-upgrade']
+            args += (['-y'] if yes else []) + ['--'] + names
         elif n in ('pacman', 'paru', 'yay'):
-            args = [n, {'install': '-S', 'uninstall': '-R', 'upgrade': '-Syu', 'refresh': '-Syy'}[action]] + (['--noconfirm'] if yes else []) + ['--'] + names
+            args = [n, '-S' if action == 'upgrade' and names else {'install': '-S', 'uninstall': '-R', 'upgrade': '-Syu', 'refresh': '-Syy'}[action]] + (['--noconfirm'] if yes else []) + ['--'] + names
             if action == 'refresh':
                 raise Error('Use pkgs upgrade on pacman to synchronize and upgrade together; standalone refresh can lead to partial upgrades.')
         elif n == 'dnf':

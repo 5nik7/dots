@@ -129,6 +129,8 @@ class Workflow:
         self.failed = False
         self.scope_rows = None
         self.wiki = None
+        self.package_update = None
+        self.package_selected = False
         if getattr(args, 'scoped_publish', False):
             from inspection import selection, selection_hash
             try:
@@ -212,9 +214,11 @@ class Workflow:
         marker = ('\uf00d' if ui.icons else '[x]') if role == 'blocked' else ('\uf00c' if ui.icons else '[+]') if role == 'clean' else ('\uf071' if ui.icons else '[!]')
         ui.repository_detail('Repository', path, str(path) if self.args.full_paths else path.name, self.role('repo_owned' if self.owned(path) else 'repo'))
         ui.detail('Status', marker + ' ' + state, self.role(role))
-        if file: ui.resource_detail(self.file_label(xy) if xy else 'File', path / file,
-                                    display=str(path / file) if self.args.full_paths else file,
-                                    label_code=self.role(self.file_role(xy)) if xy else None)
+        if file:
+            ui.resource_detail(self.file_label(xy) if xy else 'File', path / file,
+                               display=str(path / file) if self.args.full_paths else file,
+                               label_code=self.role(self.file_role(xy)) if xy else None)
+            if not xy: ui.detail('Details', detail)
         elif state == 'planned' and self.args.command == 'publish' and path in self.destinations:
             destination = self.destinations[path]
             ui.detail_spans('Details', [('branch ', None), (ui.branch_label(destination[0]), self.role('branch')),
@@ -431,6 +435,7 @@ class Workflow:
             self.blocked.add(path); self.event(path, 'blocked', str(error))
 
     def needed(self, path):
+        if path == self.root and self.package_selected: return True
         if git(path, 'diff', '--cached', '--quiet', '--ignore-submodules=none', '--', required=False).returncode: return True
         if self.args.all and status_files(path, 'all'): return True
         parent = self.parents[path]
@@ -478,6 +483,28 @@ class Workflow:
                            + ' differs from the parent index; record its pointer separately. Parent index was not changed by this command.')
 
     def publish(self):
+        if getattr(self.args, 'update_packages', False):
+            try:
+                from package_publish import Stage
+                self.package_update = Stage(self.root, quiet=self.args.json or self.args.dry_run)
+                path = self.package_update.path
+                if not path.resolve().is_relative_to(self.root) or root(path.parent) != self.root:
+                    raise GitError('package manifest must belong to the selected root worktree')
+                self.package_relative = path.relative_to(self.root).as_posix()
+                ignored = git(self.root, 'check-ignore', '--quiet', '--', self.package_relative, required=False).returncode
+                if ignored not in (0, 1): raise GitError('could not check package manifest ignore rules')
+                if ignored == 0:
+                    raise GitError('package manifest is ignored; adjust ignore rules before publishing')
+                changes = [row for row in status_files(self.root) if row['path'] == self.package_relative or row['old_path'] == self.package_relative]
+                if any(row['xy'][0] not in (' ', '?') and row['xy'][1] != ' ' or 'U' in row['xy'] or 'R' in row['xy'] for row in changes):
+                    raise GitError('package manifest has conflicting or partially staged edits; reconcile it before publishing')
+                indexed = git(self.root, 'show', ':'+self.package_relative, required=False)
+                content = self.package_update.content.encode('utf-8')
+                self.package_selected = (indexed.returncode != 0 or indexed.stdout != content or
+                                         not path.exists() or path.read_bytes() != content)
+                self.event(self.root, 'selected', 'Refresh and include the current profile package manifest; preserve edits', self.package_relative)
+            except (ValueError, OSError) as error:
+                self.event(self.root, 'blocked', str(error)); return
         if self.scope_rows is None:
             self.collect(self.root)
         else:
@@ -524,6 +551,10 @@ class Workflow:
                 approved = input().lower() == 'y'
             if not approved:
                 self.event(self.root, 'cancelled', 'nothing committed or pushed'); return
+        if self.package_update:
+            try: self.package_update.verify()
+            except (ValueError, OSError) as error:
+                self.event(self.root, 'blocked', str(error)); return
         for path in self.order:
             parent = self.parents[path]
             try:
@@ -541,6 +572,12 @@ class Workflow:
                 if git(path, 'merge-base', '--is-ancestor', tracking, 'HEAD', required=False).returncode: raise GitError('remote is ahead or diverged; sync or resolve manually before publishing')
                 if self.fingerprint(path) != self.snapshots[path] or self.destination(path) != dest: raise GitError('inputs or destination changed during preflight')
                 self.recheck_scope()
+                if path == self.root and self.package_update:
+                    self.package_update.apply()
+                    git(path, 'add', '--', ':(literal)' + self.package_relative)
+                    self.event(path, 'updated' if self.package_selected else 'unchanged',
+                               'Package manifest refreshed and staged' if self.package_selected else 'Package manifest already current',
+                               self.package_relative)
                 if self.args.all: git(path, 'add', '--all', '--', '.', *[':(top,exclude,literal)' + name for name, _ in children(path)])
                 if git(path, 'diff', '--cached', '--quiet', '--ignore-submodules=none', '--', required=False).returncode:
                     self.external_phase('Committing selected changes')
@@ -605,11 +642,16 @@ def main():
     parser.add_argument('--config')
     parser.add_argument('--no-config', action='store_true')
     parser.add_argument('--no-wiki', action='store_true')
+    parser.add_argument('--update-packages', action='store_true', help='refresh and include the current profile package manifest')
     parser.add_argument('--wiki-only', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('-m', '--message')
     for flag in ('json', 'full-paths', 'dry-run', 'all', 'yes', 'remote', 'init'): parser.add_argument('--' + flag, action='store_true')
     args = parser.parse_intermixed_args()
     args.scoped_publish = args.command == 'submodules-publish'
+    if args.update_packages and (args.command != 'publish' or args.wiki_only):
+        parser.error('--update-packages requires root git publish, not a submodule or wiki-only action')
+    if args.update_packages and os.name == 'nt':
+        raise GitError('--update-packages requires Termux, Linux or WSL; native Windows package backends are unavailable')
     if args.scoped_publish:
         args.command = 'publish'
         if bool(args.path is not None) == bool(args.all_submodules): parser.error('select one registered PATH or --all-submodules')

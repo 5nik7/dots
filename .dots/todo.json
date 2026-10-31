@@ -69,8 +69,8 @@
       "id": "3b0fe81b73a641ddbce5f8cd96068860",
       "alias": "pkgs-update",
       "title": "Update dots pkgs/pkgs",
-      "notes": "pkgs upgrade output = ```pkgs: No controlling terminal. Use --yes for an intentional noninteractive transaction.``` should upgrade without an extra flag.",
-      "status": "open",
+      "notes": "pkgs upgrade output = ```pkgs: No controlling terminal. Use --yes for an intentional noninteractive transaction.``` should upgrade without an extra flag.\n\nAgreed plan: plans/pkgs-workflows.md. Bare upgrade authorizes all supported user-wide managers; direct targets can be skipped with explicit override; retain full styled logs and raw output. Native config is authoritative with a Dots editor. JSON manifests default to explicit installs with uncertainty labelled, latest for missing packages and retained installed versions unless pinned. Optional setup restores declared system packages then rediscovers language managers before configuration. Continue independent manager failures; do not mutate host packages for verification. Preserve existing titles, aliases, notes and unrelated work.\n\nImplemented native policies/config, user-wide upgrade orchestration, Go metadata, concurrent stream formatting, editable manifests and package-first setup. Initial core regression: 106 passed; initial package integration: 7 passed. Additional source-export, interruption, undo and configuration-drift checks plus broader installation/Config/menu verification are in progress. No host packages were changed. Canonical guide: docs/packages.md.\n\nImplemented and verified the complete agreed subtree; all descendants are done. Usage and contracts: docs/packages.md. Final evidence and saved UUIDs: plans/pkgs-workflows.md. No host package mutations, live configuration activation, commits or pushes were performed. The existing WSL theme repeat-install failure and pending native-platform checks are recorded separately and are not claimed fixed.\n\nFollow-up requested by the user: refresh now authorizes repository metadata updates without --yes or a controlling terminal. Help and operation previews use shared Dots formatting; formatted streams suppress only the exact APT unstable-CLI advisory, retaining other warnings, raw bytes and status. Export filters Python roots before batched APT ownership checks and shows delayed manager progress on terminal stderr. Read-only Termux export improved from 55.35 seconds with ownership timeouts to 16.16 seconds, with six managers and no notices. Verified 116 core tests, final 31-test workflow rerun, 9 integration tests, 9 report tests and 17 bundled-entry tests; two native checks skipped. Metadata, 238 commands, docs and wiki pass. No host package transactions. Details: plans/pkgs-workflows.md. Existing completed statuses and criteria retained.\n\nImplemented the requested follow-up: Escape/Ctrl-C at the package filename prompt returns to the same menu/query without mutation or traceback; filename defaults come from the active leaf profile root. Added export --update and a reviewed update-manifest menu action. The user chose preservation of edits: retain pins, disabled entries, reasons and absent desired packages; refresh observed versions and append installed identities. Added explicit git publish --update-packages with read-only preview, guarded manifest write/staging, partial-staging/ignored-path refusal and ordinary publication safety. Verified 119 package core tests, 10 integration cases, 21 launcher cases, 5 package-publication cases, 16 Git regressions and 11 wiki cases across full/focused runs. Metadata/completion, docs and wiki pass. No host package changes or publication of this checkout. Full decisions/evidence: plans/pkgs-workflows.md.",
+      "status": "done",
       "priority": "normal",
       "tags": [
         "pkgs",
@@ -78,10 +78,12 @@
       ],
       "due": null,
       "parent": null,
-      "acceptance": [],
+      "acceptance": [
+        "All agreed unattended upgrades, Go tools, package rules, formatted streams, manifests and optional setup behavior are verified, and all nonremoved descendants are complete."
+      ],
       "created": "2026-10-29T19:22:35.469882+00:00",
-      "updated": "2026-10-30T04:18:09.126032+00:00",
-      "completed": null,
+      "updated": "2026-10-31T08:33:58.444067+00:00",
+      "completed": "2026-10-31T07:21:13.867150+00:00",
       "removed": null
     },
     {
@@ -199,18 +201,20 @@
       "id": "b0a96f80edbf40f7b6953e68c033d412",
       "alias": "pkgs-output",
       "title": "golang support. pipe external package manager(s)(apt,pacman,npm,uv,pip,etc) standard out into pkgs and output preferential dots output style: colors, format, progress.",
-      "notes": "add configuration  to specify custom install and/or update exec sequences, skip certain pakages(blacklist), or update or install with special flags",
-      "status": "open",
+      "notes": "add configuration  to specify custom install and/or update exec sequences, skip certain pakages(blacklist), or update or install with special flags\n\nAll linked Go, policy and output work is verified. Standalone and Dots-prefixed routes share the core. Native Windows retains its documented package-operation refusal while supporting portable format/manifest and Config.\n\nFollow-up verified: bare/help/-h/-H/--help share grammar-derived Dots terminal formatting, with 40/80/120-column plain and color coverage and no manager queries. Operation previews show manager, scope and commands. Exact APT script advisory filtering handles chunk boundaries while preserving other warnings, real failure statuses and --raw bytes. Refresh works without --yes in the fake no-TTY Termux integration. Configuration/menu assessments and native limits are recorded in plans/pkgs-workflows.md.",
+      "status": "done",
       "priority": "normal",
       "tags": [
         "dots"
       ],
       "due": null,
       "parent": "3b0fe81b73a641ddbce5f8cd96068860",
-      "acceptance": [],
+      "acceptance": [
+        "Go tools, package policies and guarded configuration, and styled owned/external streams satisfy the agreed acceptance criteria."
+      ],
       "created": "2026-10-30T04:50:53.378727+00:00",
-      "updated": "2026-10-30T20:36:42.552957+00:00",
-      "completed": null,
+      "updated": "2026-10-31T07:52:54.921240+00:00",
+      "completed": "2026-10-31T07:21:03.256999+00:00",
       "removed": null
     },
     {
@@ -262,9 +266,9 @@
       "id": "022292f71f29492c8d9e1a3ddad7f556",
       "alias": "installer-update",
       "title": "update installer and uninstaller scripts with more options, fancy dots style preferences output, dots logo.txt header with gradient. interactive mode by default.",
-      "notes": "",
+      "notes": "clear screen at start\n\ninstall support for dots core, files(linking, generating theme files) and plugins(anodize, pkgs), packages, fonts.\n\naudit install sequence to insure success\n\n```\n ./install.sh --dry-run\ndots setup: symlinked parent requires manual review: /data/data/com.termux/files/home/.termux\n```\n\ndont understand why this is happening\n\n",
       "status": "open",
-      "priority": "normal",
+      "priority": "high",
       "tags": [
         "install",
         "uninstall",
@@ -274,7 +278,7 @@
       "parent": null,
       "acceptance": [],
       "created": "2026-10-30T09:11:40.887425+00:00",
-      "updated": "2026-10-30T09:12:39.167456+00:00",
+      "updated": "2026-10-31T08:42:52.508496+00:00",
       "completed": null,
       "removed": null
     },
@@ -414,7 +418,7 @@
       "title": "docs update",
       "notes": "",
       "status": "open",
-      "priority": "low",
+      "priority": "normal",
       "tags": [
         "docs",
         "wiki",
@@ -424,7 +428,7 @@
       "parent": null,
       "acceptance": [],
       "created": "2026-10-30T19:00:32.966222+00:00",
-      "updated": "2026-10-30T20:06:49.375503+00:00",
+      "updated": "2026-10-31T08:44:31.587988+00:00",
       "completed": null,
       "removed": null
     },
@@ -555,18 +559,20 @@
       "id": "08a1bdbbf62c4d929a4b9065d73554e8",
       "alias": "export-installed-packages",
       "title": "export current installed packages for all managers to a files(s) that can be edited. file(s) can be source/parsed for installation during dots setup(dots core installers)",
-      "notes": "",
-      "status": "open",
+      "notes": "Editable manifest workflows and optional package-first setup are complete and verified. Existing package installations are retained when unpinned, requested pins are checked, and file rollback never removes successful packages.\n\nFollow-up verified: export no longer spends its Python budget on per-distribution APT ownership processes. Dependencies are filtered first and exact metadata paths use batched ownership queries; unknown ownership remains disabled. Delayed stderr progress works with redirected JSON stdout and query timeouts remain bounded. Live read-only terminal export completed in 16.16 seconds across six managers with no notices; isolated progress, timeout and ownership tests pass. No host package mutations; existing completed status and criteria retained.\n\nAgreed follow-up implemented: export --update defaults to packages.json beside the current leaf profile.json; --output overrides it. Merge preserves manual desired-state edits and absent entries, updates observations and adds new records. Dry-run is read-only; partial inventories and input drift refuse writes; updates retain Store backups and idempotence. Explicit git publish --update-packages includes only that manifest in addition to the existing staged/all selection, writes immediately before the root commit and preserves source-before-wiki order. Tests use fake managers and temporary local remotes. Existing goal IDs, relationships, acceptance and completed statuses are retained.",
+      "status": "done",
       "priority": "normal",
       "tags": [
         "dots"
       ],
       "due": null,
       "parent": "3b0fe81b73a641ddbce5f8cd96068860",
-      "acceptance": [],
+      "acceptance": [
+        "Editable exports restore with evidence and pins preserved, and all setup adapters implement the optional package-first stage."
+      ],
       "created": "2026-10-30T19:18:40.945315+00:00",
-      "updated": "2026-10-31T04:15:40.409355+00:00",
-      "completed": null,
+      "updated": "2026-10-31T08:33:59.948428+00:00",
+      "completed": "2026-10-31T07:21:06.623518+00:00",
       "removed": null
     },
     {
@@ -1114,6 +1120,285 @@
       "created": "2026-10-31T00:45:21.178450+00:00",
       "updated": "2026-10-31T01:49:30.561341+00:00",
       "completed": "2026-10-31T01:49:30.561341+00:00",
+      "removed": null
+    },
+    {
+      "id": "887b2a48bac6435d8f7842d433f54ce9",
+      "alias": "add-files",
+      "title": "update files",
+      "notes": "want to be able to move files/folders into dots repo manually and discover and/or add them to thr catalog, configs, dots files system. global dots files and/or profiles files. example: i moved contents of ~/.termux to ${PROFILE}/config/termux and symlinked it myself. i want to be able to point to it with dots files system jave it read thay its a symlink and have it add to catalig, config, and configure it automa5ically as a directory link\n\nApproved plan: support existing links and repository sources through files add, discover, picker and --scan. Register and link after review, save mappings in the active profile and identities in the core registry. Repository directories use directory-link and preserve nested links without dereferencing. Infer known destinations; otherwise require interactive input or single-source --target. Correct pre-existing links remain intact and unowned by uninstall. Bulk scans include ready sources and report unresolved candidates. Include managed registration of the current ~/.termux link after isolated checks, preserving contents and link identity. Owner: dots-files-maintenance. Menu: update existing Add workflow. Configuration: no new settings; reuse mappings, backup and presentation controls. Native Windows PowerShell and Linux/WSL acceptance may remain named pending checks. Implementation authorization includes saving this tree and proceeding directly; no commit, push, shell reload or theme activation.\n\nImplemented the complete agreed subtree. Existing links and repository sources register through files add/discover, the Add picker and ready-source --scan; --target resolves a single explicit source. Atomic active-profile/core-registry writes preserve correct links and use receipts for new links. Real ~/.termux registration is verified and repeat planning has zero operations. All five children are complete. Registration 16 and focused lifecycle/interface/UI checks pass; existing broad fixture/FZF and theme-repeat failures plus unavailable native acceptance are documented in plans/files-registration.md. Local wiki is rebuilt and healthy. No commit, push, shell reload or theme activation; unrelated Todo/profile work preserved.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "files, add, config",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "All five agreed work packages are verified, including shared/profile source registration, atomic recovery, shell/UI contracts, synchronized docs and real Termux registration, with native evidence gaps recorded."
+      ],
+      "created": "2026-10-31T05:00:29.645712+00:00",
+      "updated": "2026-10-31T05:43:51.308538+00:00",
+      "completed": "2026-10-31T05:43:51.308538+00:00",
+      "removed": null
+    },
+    {
+      "id": "47ef06369a53475ca3c1c541dd4cc8ac",
+      "alias": null,
+      "title": "Discover existing links and repository sources",
+      "notes": "Dependencies: none. Agreed implementation plan: plans/files-registration.md.\n\nImplemented shared registration classification, bounded source/link discovery and ready-source scans. Direct Termux link/source previews agree without mutation. Discovery measurement and final review remain in the integration package.\n\nVerified bounded discovery and inference, directory grouping, exclusions and source-owner filtering independent of location ownership. Fifteen registration tests pass; existing catalog nine and file operations twenty-two pass. Measured classification optimized using path-component comparisons; no persistent cache or startup scan.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "887b2a48bac6435d8f7842d433f54ce9",
+      "acceptance": [
+        "Explicit paths and bounded discovery classify sources correctly, infer ownership and destinations, preserve directory boundaries, and explain unresolved or excluded candidates."
+      ],
+      "created": "2026-10-31T05:16:13.669211+00:00",
+      "updated": "2026-10-31T05:36:44.532731+00:00",
+      "completed": "2026-10-31T05:36:44.532731+00:00",
+      "removed": null
+    },
+    {
+      "id": "88ea4cfc342a47a0936848e7ec41ae73",
+      "alias": null,
+      "title": "Register and link through managed transactions",
+      "notes": "Dependencies: 47ef06369a53475ca3c1c541dd4cc8ac. Agreed implementation plan: plans/files-registration.md.\n\nImplemented atomic registry/profile registration, guarded location/source/target inputs and installation receipts for newly created links. Twelve new isolated cases pass, including nested/relative links, uninstall preservation, stale previews, interruption recovery and rollback; existing operation/catalog/mapping/repair/backend regressions pass.\n\nVerified atomic registry/profile/link/receipt changes, relative and nested-link preservation, stale previews, backup replacement, reverse rollback and interruption recovery. Registration 15, mappings 29, repair 48, profile backend 14 and file platform 5 passed. Existing links stay unowned; new links uninstall correctly.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "887b2a48bac6435d8f7842d433f54ce9",
+      "acceptance": [
+        "Registry/profile/link changes form one guarded transaction; nested links remain intact; pre-existing links remain unowned; repeat registration is a no-op; rollback, recovery, and undo pass."
+      ],
+      "created": "2026-10-31T05:16:16.695852+00:00",
+      "updated": "2026-10-31T05:36:47.948169+00:00",
+      "completed": "2026-10-31T05:36:47.948169+00:00",
+      "removed": null
+    },
+    {
+      "id": "b32a2f6460c840b6bf9771b49a3c3e52",
+      "alias": null,
+      "title": "Integrate Add picker and both shell interfaces",
+      "notes": "Dependencies: 47ef06369a53475ca3c1c541dd4cc8ac, 88ea4cfc342a47a0936848e7ec41ae73. Agreed implementation plan: plans/files-registration.md.\n\nIntegrated --target metadata/native routing, shared Add picker and Files launcher entry. Bash 27 tests and native controller 23 tests pass (two unavailable-runtime skips). Registration-specific PTY and additional interface checks are running. Existing FZF search-marker timeout reproduced against original HEAD modules in an isolated fixture.\n\nVerified Bash/native identical undecorated JSON and --target completion, literal Unicode/leading-dash paths, Windows destination fixture, Add picker at 40/80/120 columns and cancellation. Picker focused 15 and launcher contracts 11 passed; Bash 27 and native controller 23 passed with 2 runtime skips. Existing FZF search test timeout reproduced on original modules; documented separately.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "887b2a48bac6435d8f7842d433f54ce9",
+      "acceptance": [
+        "Picker, --scan, --target, help, completion, human output, and JSON expose the agreed behavior through Bash and native controllers; cancellation makes no changes."
+      ],
+      "created": "2026-10-31T05:16:19.382584+00:00",
+      "updated": "2026-10-31T05:36:50.837698+00:00",
+      "completed": "2026-10-31T05:36:50.837698+00:00",
+      "removed": null
+    },
+    {
+      "id": "2205438c8f5340778da8eeb6e8dd0381",
+      "alias": null,
+      "title": "Verify behavior and synchronize documentation",
+      "notes": "Dependencies: 47ef06369a53475ca3c1c541dd4cc8ac, 88ea4cfc342a47a0936848e7ec41ae73, b32a2f6460c840b6bf9771b49a3c3e52. Agreed implementation plan: plans/files-registration.md.\n\nVerification complete: file-platform 5, registration 16, operations 22, catalog 9, profile backend 14, mappings 29, repair 48, Bash 27, native controller 23 (2 runtime skips), shared menus 24, focused pickers 15 and launcher contracts 11 passed. Registration PTYs cover 40/80/120 and cancellation. Broad installation 25/28 passed; known WSL theme-repeat failure and two missing-config_values fixtures remain. Three adapter fixture failures and FZF search-marker timeout reproduce on original modules; native host gaps remain named. Docs links, 234 command definitions, syntax, ShellCheck and whitespace pass. Local wiki rebuilt (a8c5f559724249b8845121ffc78440a4) and healthy. Full evidence: plans/files-registration.md.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "887b2a48bac6435d8f7842d433f54ce9",
+      "acceptance": [
+        "Focused isolated suites and presentation checks pass; canonical docs and local wiki agree; native acceptance gaps and unrelated failures are documented."
+      ],
+      "created": "2026-10-31T05:16:21.995663+00:00",
+      "updated": "2026-10-31T05:42:09.265591+00:00",
+      "completed": "2026-10-31T05:42:09.265591+00:00",
+      "removed": null
+    },
+    {
+      "id": "f29a638945044d0ab376132d6d199432",
+      "alias": null,
+      "title": "Register the existing Termux directory link",
+      "notes": "Dependencies: 47ef06369a53475ca3c1c541dd4cc8ac, 88ea4cfc342a47a0936848e7ec41ae73, b32a2f6460c840b6bf9771b49a3c3e52, 2205438c8f5340778da8eeb6e8dd0381. Agreed implementation plan: plans/files-registration.md.\n\nRegistered termux:file-config-termux through the managed CLI in transaction ef44023d4ea643eaba1d0722fa255893. Source config/termux, target ${TERMUX}, strategy directory-link; inventory reports linked. Before/after link inode/text, recursive non-dereferencing directory digest and nested links match. Installation receipt and all unrelated registry/profile fields are unchanged, including the pre-existing FZF edits. Repeated CLI preview is unchanged and direct planner reports zero operations. Evidence: /data/data/com.termux/files/usr/tmp/dots-files-registration-live-sldk0nyk/verification.json. Undo: dots files undo ef44023d4ea643eaba1d0722fa255893.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "887b2a48bac6435d8f7842d433f54ce9",
+      "acceptance": [
+        "Managed preview/apply registers the current link; inventory reports it linked; link identity and directory contents are preserved; repeated preview has no operations; transaction and undo command are recorded."
+      ],
+      "created": "2026-10-31T05:16:24.958364+00:00",
+      "updated": "2026-10-31T05:43:47.277835+00:00",
+      "completed": "2026-10-31T05:43:47.277835+00:00",
+      "removed": null
+    },
+    {
+      "id": "fd66b768350144999ab78a5e50318dba",
+      "alias": null,
+      "title": "Package rules, recipes and guarded configuration",
+      "notes": "Agreed implementation package R. Dependencies: none. See plans/pkgs-workflows.md for the agreed behavior, interfaces and acceptance.\n\nVerified native policy validation, literal recipes, direct-target skips/override and guarded apps.pkgs CLI/popup edits. Unknown fields survive edits; stale previews refuse. Core and package integration checks pass.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "b0a96f80edbf40f7b6953e68c033d412",
+      "acceptance": [
+        "Rules validate, preview literally, affect consumers, preserve unrelated config, and support guarded Config CLI/menu edits."
+      ],
+      "created": "2026-10-31T06:24:37.121464+00:00",
+      "updated": "2026-10-31T07:20:44.896726+00:00",
+      "completed": "2026-10-31T07:20:44.896726+00:00",
+      "removed": null
+    },
+    {
+      "id": "cd3f9659935444df82d1a94d6ed2391d",
+      "alias": null,
+      "title": "Go-tool inventory and upgrade integration",
+      "notes": "Agreed implementation package G. Dependencies: fd66b768350144999ab78a5e50318dba. See plans/pkgs-workflows.md for the agreed behavior, interfaces and acceptance.\n\nVerified read-only Go build metadata, helper preference/direct-install fallback, literal targets and disabled development/replaced/renamed/ambiguous builds. No helper or Go tool was installed for testing.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "b0a96f80edbf40f7b6953e68c033d412",
+      "acceptance": [
+        "Discover eligible Go identities; exercise helper and direct paths; preserve development builds; honour skips, flags and recipes."
+      ],
+      "created": "2026-10-31T06:24:39.110835+00:00",
+      "updated": "2026-10-31T07:20:48.046071+00:00",
+      "completed": "2026-10-31T07:20:48.046071+00:00",
+      "removed": null
+    },
+    {
+      "id": "95ae5e784c1a4cf6a13fb0802cec19a2",
+      "alias": null,
+      "title": "Unattended upgrades across user-wide manager scopes",
+      "notes": "Agreed implementation package A. Dependencies: fd66b768350144999ab78a5e50318dba, cd3f9659935444df82d1a94d6ed2391d. See plans/pkgs-workflows.md for the agreed behavior, interfaces and acceptance.\n\nVerified no-TTY upgrades without --yes, preserved install approval, user-wide scopes, Arch database deduplication/full-upgrade exclusions, pip metadata ownership and independent-manager continuation with nonzero failure status.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "3b0fe81b73a641ddbce5f8cd96068860",
+      "acceptance": [
+        "Bare upgrade works without a TTY or extra approval flag; scopes are correct and deduplicated; independent failures produce an accurate nonzero summary."
+      ],
+      "created": "2026-10-31T06:24:40.384791+00:00",
+      "updated": "2026-10-31T07:20:50.878407+00:00",
+      "completed": "2026-10-31T07:20:50.878407+00:00",
+      "removed": null
+    },
+    {
+      "id": "4e29d23c30f148daad0f0a72e1b2032a",
+      "alias": null,
+      "title": "Styled manager streams and stdin formatting",
+      "notes": "Agreed implementation package O. Dependencies: 95ae5e784c1a4cf6a13fb0802cec19a2. See plans/pkgs-workflows.md for the agreed behavior, interfaces and acceptance.\n\nVerified concurrent stdout/stderr, real child status, raw-byte passthrough, partial UTF-8/ANSI/prompts, CRLF/carriage returns, unknown messages, interruption cleanup and 40/80/120-column color/plain/NO_COLOR behavior. Shared report checks pass.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "b0a96f80edbf40f7b6953e68c033d412",
+      "acceptance": [
+        "Owned subprocesses and stdin share readable streaming output; unknown messages, prompts, raw bytes and failure statuses are preserved."
+      ],
+      "created": "2026-10-31T06:24:41.837184+00:00",
+      "updated": "2026-10-31T07:20:54.025297+00:00",
+      "completed": "2026-10-31T07:20:54.025297+00:00",
+      "removed": null
+    },
+    {
+      "id": "5585bc2094cf425e9088f34df1e9cc18",
+      "alias": null,
+      "title": "Editable manifest export, inspection and restore",
+      "notes": "Agreed implementation package E. Dependencies: fd66b768350144999ab78a5e50318dba, cd3f9659935444df82d1a94d6ed2391d, 95ae5e784c1a4cf6a13fb0802cec19a2, 4e29d23c30f148daad0f0a72e1b2032a. See plans/pkgs-workflows.md for the agreed behavior, interfaces and acceptance.\n\nVerified editable schema-1 export/inspection/restore, explicit/inferred evidence, supported pins, disabled source/duplicate entries, no-op satisfied restores, missing-manager failures and Store export undo/failure recovery/stale guards. Manifests never execute recipes.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "08a1bdbbf62c4d929a4b9065d73554e8",
+      "acceptance": [
+        "Export round-trips through editable JSON; evidence and pins remain explicit; restore is scope-correct and makes no changes when already satisfied."
+      ],
+      "created": "2026-10-31T06:24:43.495996+00:00",
+      "updated": "2026-10-31T07:20:57.338721+00:00",
+      "completed": "2026-10-31T07:20:57.338721+00:00",
+      "removed": null
+    },
+    {
+      "id": "f4c2343f419743bda02810c5e92712f0",
+      "alias": null,
+      "title": "Optional package restoration in Dots setup",
+      "notes": "Agreed implementation package S. Dependencies: 5585bc2094cf425e9088f34df1e9cc18. See plans/pkgs-workflows.md for the agreed behavior, interfaces and acceptance.\n\nVerified package-before-configuration ordering, missing prerequisites preventing file writes, manager rediscovery, retained package changes on configuration drift, repeated package restore no-op and source-update manifest forwarding. Nine integration tests pass; installer adapters pass with native-runtime skips.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "08a1bdbbf62c4d929a4b9065d73554e8",
+      "acceptance": [
+        "Every setup entry point supports the optional package stage, prerequisite rediscovery, failure boundaries and repeat-safe restoration."
+      ],
+      "created": "2026-10-31T06:24:44.950770+00:00",
+      "updated": "2026-10-31T07:21:00.538211+00:00",
+      "completed": "2026-10-31T07:21:00.538211+00:00",
+      "removed": null
+    },
+    {
+      "id": "30c32df65a2742f7add5182070136c35",
+      "alias": null,
+      "title": "Menu integration, parity, documentation and acceptance",
+      "notes": "Agreed implementation package V. Dependencies: fd66b768350144999ab78a5e50318dba, cd3f9659935444df82d1a94d6ed2391d, 95ae5e784c1a4cf6a13fb0802cec19a2, 4e29d23c30f148daad0f0a72e1b2032a, 5585bc2094cf425e9088f34df1e9cc18, f4c2343f419743bda02810c5e92712f0. See plans/pkgs-workflows.md for the agreed behavior, interfaces and acceptance.\n\nFinal verification: 110 pkgs core tests and 9 package integration tests passed; Config values/profile/popup 12/10/15 passed; bundled routing 17 passed/1 skipped; reports 9 passed/1 skipped; installer adapters 5 passed/5 skipped; all 21 launcher cases passed across focused runs. 238 command routes, metadata generator, Bash syntax, skill validation, relative links, whitespace and wiki checks passed. Corrected missing renderer dependencies and obsolete report ANSI expectations in fixtures. The broad installation suite retains the previously recorded WSL repeat-theme publication failure (27/28 pass); native Linux/WSL and PowerShell 5.1/7 acceptance is explicitly pending. Evidence and limits: plans/pkgs-workflows.md.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "3b0fe81b73a641ddbce5f8cd96068860",
+      "acceptance": [
+        "Menus, metadata, completion, documentation, wiki and required isolated checks are synchronized; native evidence limits are recorded."
+      ],
+      "created": "2026-10-31T06:24:46.544541+00:00",
+      "updated": "2026-10-31T07:21:09.535166+00:00",
+      "completed": "2026-10-31T07:21:09.535166+00:00",
+      "removed": null
+    },
+    {
+      "id": "b1e312730e5d4981b903a384ba6ee6d7",
+      "alias": null,
+      "title": "create dots man page",
+      "notes": "",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "7ddc1895c7ad48989b6591e9edd043fd",
+      "acceptance": [],
+      "created": "2026-10-31T07:16:45.093071+00:00",
+      "updated": "2026-10-31T08:06:26.779538+00:00",
+      "completed": null,
       "removed": null
     }
   ]

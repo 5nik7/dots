@@ -5,7 +5,8 @@ Follow ../../AGENTS.md first. This directory is first-party Dots source; the ori
 # Working on pkgs
 
 - The command name is pkgs. Termux's pkg is a backend frontend, not our alias.
-- Human-readable, colorized reporting is the default; JSON requires --json.
+- Human-readable, colorized reporting is the default; reporting JSON requires
+  --json, while export is always a JSON data interface.
 - Keep package identity separate from display text. Never evaluate package data.
 - Use subprocess argument arrays. Do not interpolate package names or URLs into shells.
 - Completion inserts names and cannot mutate packages or perform registry searches.

@@ -13,6 +13,9 @@ def main():
         if args.command in (None, 'help'):
             grammar.print_help()
             return 0
+        if args.command in ('format','manifest'):
+            from pkgs_lib.cli import main as run
+            return run()
         print('pkgs: package operations require Termux, Linux or WSL; native Windows backends are not implemented. Run pkgs in a separate WSL installation.', file=sys.stderr)
         return 3
     from pkgs_lib.cli import main as run

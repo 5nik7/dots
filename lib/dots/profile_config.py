@@ -110,6 +110,11 @@ def keys(root=None, identity=None):
         from config_wttr import Native
         try: result.update(Native(checkout(root),selected).keys())
         except (OSError,ValueError): pass  # Invalid optional weather input cannot hide core config keys.
+    try:
+        from config_pkgs import Native
+        result.update(Native(root or checkout(), selected).keys())
+    except (OSError, ValueError, ImportError):
+        pass
     return sorted(result)
 
 

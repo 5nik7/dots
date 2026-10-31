@@ -244,6 +244,10 @@ def constraint_details(spec):
 
 
 def candidates(root, key):
+    if key.startswith('apps.pkgs.'):
+        from config_pkgs import constraints as native_constraints
+        spec = native_constraints(key)
+        return [str(v) if isinstance(v,str) else json.dumps(v) for v in [*spec.get('choices', []), *spec.get('examples', [])]]
     try: spec = constraints(read_defaults(root), key)
     except (OSError, ValueError): return []
     return [str(v) if isinstance(v,str) else json.dumps(v) for v in [*spec.get('choices', []), *spec.get('examples', [])]]

@@ -18,6 +18,14 @@
         ]
       },
       {
+        "id": "file-config-termux",
+        "source": "config/termux",
+        "target": "${TERMUX}",
+        "strategy": "directory-link",
+        "app": "termux",
+        "category": "config"
+      },
+      {
         "id": "htop",
         "source": "config/htop",
         "app": "htop",
@@ -433,6 +441,12 @@
           "border": "lighter_background"
         },
         "width": "fit"
+      }
+    },
+    "fzf": {
+      "colors": {
+        "prompt": "accent",
+        "fg+": "accent"
       }
     }
   },

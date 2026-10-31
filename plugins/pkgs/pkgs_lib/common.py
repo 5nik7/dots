@@ -110,7 +110,7 @@ def _stop_query(proc, grouped):
     proc.communicate()
 
 
-def query(args, timeout=45):
+def query(args, timeout=45, env=None):
     """Read-only child, never the runner for interactive transactions."""
     seconds = remaining(timeout)
     grouped = not bool(os.environ.get('PKGS_SESSION'))
@@ -120,7 +120,7 @@ def query(args, timeout=45):
         proc = subprocess.Popen([str(x) for x in args], text=True, stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 start_new_session=grouped,
-                                env={**os.environ, 'LC_ALL': 'C', 'NO_COLOR': '1'})
+                                env={**os.environ, 'LC_ALL': 'C', 'NO_COLOR': '1', **(env or {})})
         try:
             stdout, stderr = proc.communicate(timeout=seconds)
         except BaseException:
@@ -133,8 +133,8 @@ def query(args, timeout=45):
         diagnostic(f'query {args[0]}: {time.monotonic() - start:.3f}s')
 
 
-def run(args, allowed=(0,), timeout=45):
-    p = query(args, timeout)
+def run(args, allowed=(0,), timeout=45, env=None):
+    p = query(args, timeout) if env is None else query(args, timeout, env=env)
     if p.returncode not in allowed:
         raise Error(f'{args[0]} exited {p.returncode}: {clean(p.stderr or p.stdout)[-1500:]}')
     return p.stdout
@@ -161,7 +161,7 @@ def atomic(path, text, mode=0o600):
             os.unlink(name)
 
 def config():
-    path = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')) / 'pkgs/config.json'
+    path = config_path()
     defaults = {'manager': 'auto', 'preview': 'bottom:55%:wrap', 'color': 'auto',
                 'cache_seconds': 300, 'external_detection': True,
                 'commands': {'ripgrep': ['rg'], 'fd-find': ['fdfind', 'fd'],
@@ -183,7 +183,13 @@ def config():
                 raise ValueError('commands must map package names to lists of command names')
         except (ValueError, TypeError) as e:
             raise Error(f'Invalid {path}: {e}') from e
-    return defaults
+    from .policies import validate
+    return validate(defaults)
+
+
+def config_path():
+    base = os.environ.get('APPDATA', str(Path.home() / 'AppData/Roaming')) if os.name == 'nt' else Path.home() / '.config'
+    return Path(os.environ.get('XDG_CONFIG_HOME', base)) / 'pkgs/config.json'
 
 class Cache:
     def __init__(self, scope):
@@ -209,7 +215,10 @@ class Cache:
 
 def validate_names(names, manager):
     for n in names:
-        pattern = r'(?:@[a-zA-Z0-9_.-]+/)?[a-zA-Z0-9][a-zA-Z0-9_.+-]*' if manager == 'npm' else r'[a-zA-Z0-9][a-zA-Z0-9_.+:-]*'
+        pattern = (r'[a-zA-Z0-9][a-zA-Z0-9_.+/~@-]*' if manager == 'go' else
+                   r'(?:@[a-zA-Z0-9_.-]+/)?[a-zA-Z0-9][a-zA-Z0-9_.+-]*' if manager == 'npm' else r'[a-zA-Z0-9][a-zA-Z0-9_.+:-]*')
         if not re.fullmatch(pattern, n):
             raise Error(f'Invalid package name: {n!r}. Use exact names, without flags, URLs or version expressions.')
+        if manager == 'go' and any(p in ('.','..','') for p in n.split('/')):
+            raise Error('Invalid Go package identity')
     return list(dict.fromkeys(names))

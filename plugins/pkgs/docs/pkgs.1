@@ -7,11 +7,15 @@ pkgs \- fuzzy package management for Termux and Linux
 .SH DESCRIPTION
 Bare invocation displays help. Install and uninstall open an fzf multi-select
 picker when package names are omitted. Exact names bypass the picker.
-Transactions show the manager, scope, and command and request confirmation.
-List, managers and doctor reports use shared Dots presentation in terminals and
+Transactions show manager, scope and commands. Upgrade and refresh authorize unattended
+execution; install/remove/restore retain confirmation.
+Help, transaction previews, list, managers and doctor use shared Dots presentation in terminals and
 menu readers: semantic headings/statuses, readable fields and resource paths.
 Doctor expands nested FZF/completion details into sections. Plain popup reports
 retain their layout. Ordinary redirected formats and JSON remain unchanged.
+Formatted APT output suppresses only the unstable-CLI advisory. Raw forwarding
+retains all bytes. Slow exports report manager progress on terminal stderr;
+stdout remains JSON. Python root ownership uses batched APT queries.
 .SH COMMANDS
 .TP
 .B install [NAMES...]
@@ -30,10 +34,36 @@ Show package inventory as readable text or JSON.
 Colorized package information, wrapped to fit the terminal preview.
 .TP
 .B upgrade [NAMES...]
-Use the selected backend upgrade workflow. pip requires explicit names.
+Without names or an explicit manager, upgrade supported user-wide scopes:
+one system database, global npm, uv tools, pip-owned base distributions,
+user RubyGems and Go tools. No extra --yes is required without a terminal.
+Explicit manager/names retain selected scope. Independent failures continue
+and return nonzero; completed package changes remain.
+.TP
+.B format [\-\-manager NAME]
+Format stdin with semantic colors and full unknown messages. --raw preserves
+bytes. Use shell pipeline status support to retain the producer's exit status.
+.TP
+.B export [\-\-output FILE] [\-\-update] [\-\-include-dependencies] [\-\-pin-versions]
+Export editable schema-1 JSON. Prefer explicit roots; label inferred inventories.
+Observed versions are separate from optional supported pins. File replacement
+uses guarded backups and confirmation. Partial export does not replace a file.
+--update defaults to packages.json beside the current profile.json. Refresh
+observed versions and add installed entries while preserving pins, disabled
+entries and absent desired packages. --dry-run prints the proposed JSON. Package
+menu prompts use this profile path and Escape returns without a write.
+Dots publication can include this update explicitly with git publish --update-packages.
+.TP
+.B manifest FILE [\-\-json]
+Inspect/validate a manifest without querying package managers.
+.TP
+.B restore FILE [\-\-dry-run] [\-\-yes] [\-\-json]
+Install missing packages, retain installed unpinned versions and enforce supported
+pins. Never remove unlisted packages. System groups precede languages.
 .TP
 .B refresh
-Refresh repository metadata for APT, DNF and XBPS. Use upgrade with pacman.
+Refresh repository metadata for APT, DNF and XBPS without an extra confirmation
+flag. Use upgrade with pacman.
 .TP
 .B managers, doctor
 Show detected managers or diagnose the environment.
@@ -52,7 +82,7 @@ Show help.
 Show version.
 .TP
 .B \-\-manager NAME
-Use apt, pacman, paru, yay, dnf, xbps, npm, uv-tool, pip, gem, or auto.
+Use apt, pacman, paru, yay, dnf, xbps, npm, uv-tool, pip, gem, go, or auto.
 .TP
 .B \-\-query TEXT
 Search/filter the picker. Do not combine with exact names.
@@ -80,6 +110,27 @@ Completion destination directory. Bash and Zsh installation is file-only.
 .TP
 .B \-\-debug
 Print read-only preparation phase timings to stderr.
+.TP
+.B \-\-raw
+Forward subprocess or formatter input bytes without styling.
+.TP
+.B \-\-ignore-skip
+Explicitly override direct-target exclusions in native policy.
+.SH PACKAGE POLICIES
+Native pkgs/config.json owns upgrade.managers (auto or ordered manager list),
+output (auto/styled/raw), and policies. Per-manager policies support skip,
+install/upgrade flags and before/replace/after argv sequences, plus package
+rules. Commands are literal arrays without implicit shell evaluation.
+Whole-token {packages} expands target names; {package} is per-package only.
+Recipes are trusted executable configuration and never run during dry-run.
+Dots Config exposes apps.pkgs with guarded native edits and retained undo.
+Skips are not dependency holds. See docs/packages.md in the Dots checkout.
+.SH PORTABILITY
+Native Windows supports help/version, format and manifest, with Config editing
+through Dots. Package operations return status 3 without launching WSL.
+Optional Dots setup --packages FILE restores declared packages before files;
+failed restoration prevents configuration writes. File rollback never removes
+successful packages. Native Windows refuses that optional package stage.
 .SH COMPLETION
 Install/update writes _pkgs for Zsh or pkgs for Bash without adding startup
 blocks, fpath changes, source statements, compinit, or compdef calls.

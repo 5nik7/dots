@@ -1,6 +1,9 @@
 """Offline candidates and repeatable, minimally invasive shell setup."""
 import os
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # Windows only exposes portable commands; completion writes refuse upstream.
 import hashlib
 import json
 import re
@@ -23,8 +26,12 @@ OPTIONS = {'--manager': 'Select manager', '--query': 'Filter/search the picker',
            '--installed': 'Installed inventory only', '--json': 'Machine-readable output', '--color': 'auto/always/never',
            '--preview': 'fzf preview-window layout', '--dry-run': 'Print transaction without executing',
            '--directory': 'Completion destination directory', '--debug': 'Phase diagnostics on stderr',
+           '--raw': 'Unchanged manager streams', '--ignore-skip': 'Override package skip rules',
+           '--output': 'Export destination file', '--include-dependencies': 'Export full inventory',
+           '--update': 'Update a package manifest while preserving edits',
+           '--pin-versions': 'Export exact pins',
            '--yes': 'Confirm transaction automatically', '--help': 'Show help', '-H': 'Show help', '--version': 'Show version'}
-VALUE_OPTIONS = ('--manager', '--query', '--color', '--preview', '-p', '--directory')
+VALUE_OPTIONS = ('--manager', '--query', '--color', '--preview', '-p', '--directory', '--output')
 
 
 def context(words, cfg):
@@ -64,6 +71,11 @@ def _complete(words, cfg, fuzzy=False):
         candidates = [(m, 'color mode') for m in ('auto', 'always', 'never')]
     elif before and before[-1] in ('--query', '--preview', '-p', '--directory'):
         return []
+    elif before and before[-1] == '--output' or command in ('manifest','restore'):
+        directory = Path(current).expanduser().parent
+        prefix = Path(current).name
+        candidates = [(str(p), 'directory' if p.is_dir() else 'manifest file') for p in directory.glob(prefix+'*')
+                      if p.is_dir() or p.suffix == '.json']
     elif current.startswith('-'):
         candidates = list(OPTIONS.items())
     elif not command:

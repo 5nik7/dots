@@ -32,7 +32,7 @@ def options(parser):
             continue
         short = next((s for s in action.option_strings if not s.startswith('--')), '')
         kind = ('flag' if action.nargs == 0 else 'choice:'+','.join(map(str, action.choices))
-                if action.choices else 'directory' if action.dest == 'directory' else 'string')
+                if action.choices else 'directory' if action.dest == 'directory' else 'file' if action.dest == 'output' else 'string')
         rows.append([long, short, kind, clean(action.help or action.dest.replace('_', ' '))])
     return rows
 
@@ -60,7 +60,7 @@ def records():
         if commands:
             yield name, dict(summary='Manage packages on Termux, Linux and WSL', option=common, argument=[])
             for command, summary in commands.items():
-                args = [['1', 'choice:bash,zsh,fish', 'Shell'], ['2', 'choice:install,update,status,uninstall', 'Completion action']] if command == 'completion' else [['1', 'choice:clear', 'Cache action']] if command == 'cache' else []
+                args = [['1', 'choice:bash,zsh,fish', 'Shell'], ['2', 'choice:install,update,status,uninstall', 'Completion action']] if command == 'completion' else [['1', 'choice:clear', 'Cache action']] if command == 'cache' else [['1','file','Package manifest']] if command in ('manifest','restore') else []
                 yield name+'-'+command, dict(summary=summary, option=common, argument=args)
         else:
             yield from walk(parser, [name])

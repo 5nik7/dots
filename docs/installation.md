@@ -30,7 +30,7 @@ The file controllers require Python 3.9+; complete setup with theme preparation 
 
 ## Options and output
 
-Install/uninstall accept `-v`/`--verbose`, `--dry-run`, `--yes`, `--json`, `--color=auto|always|never`, `--icons=auto|always|never`, and `--help`. Install additionally accepts `--update` and repeatable `--with-source termux|windows|nvim`. The PowerShell equivalents are `-Verbose`, `-DryRun`, `-Yes`, `-Json`, `-Color`, `-Icons`, `-Update`, and `-WithSource`. Remaining arguments allow the long-option forms as well.
+Install/uninstall accept `-v`/`--verbose`, `--dry-run`, `--yes`, `--json`, `--color=auto|always|never`, `--icons=auto|always|never`, and `--help`. Install additionally accepts `--update`, repeatable `--with-source termux|windows|nvim`, and optional `--packages FILE` for the [package-first stage](packages.md#optional-setup-stage). The PowerShell equivalents are `-Verbose`, `-DryRun`, `-Yes`, `-Json`, `-Color`, `-Icons`, `-Update`, `-WithSource`, and `-Packages FILE`. Remaining arguments allow the long-option forms as well.
 
 Normal execution displays a plan and requests approval. `--yes` approves that plan without prompting; nonterminal execution otherwise refuses mutation. Dry-run creates no directories, locks, caches, journals or capability probes, and performs no downloads or fetches. Link capability is therefore verified during approved preparation, before live replacement.
 
@@ -93,7 +93,7 @@ still uses managed-file previews, backups and receipts. See
 
 The same root setup scripts and `dots files install/uninstall` manage Anodize, Blastoff and pkgs. Their public scripts inside the bundled directories delegate to this combined lifecycle. The installation receipt includes standalone launchers, POSIX Bash/Zsh completion files and manuals; Fish completion is part of the managed Fish configuration. Native Windows installs PowerShell launchers and uses Dots' native completion adapter. Missing declared payload files block the complete plan.
 
-No old standalone installer or package manager runs during setup/removal. Foreign command links remain protected; replaced regular files retain their first-install baseline. Uninstall preserves application data and drift while restoring unchanged owned targets. See [destinations and migration](bundled-applications.md#one-installation-and-removal).
+No old standalone installer runs. Ordinary setup/removal runs no package manager; explicit `--packages FILE` installation previews and restores the declared packages before applying configuration. A failed package phase prevents configuration writes; completed package changes survive later failure or file rollback. Missing managers are reported, never silently bootstrapped. Native Windows refuses this optional package phase. Foreign command links remain protected; replaced regular files retain their first-install baseline. Uninstall preserves application data and drift while restoring unchanged owned targets. See [destinations and migration](bundled-applications.md#one-installation-and-removal).
 
 ## Previous application installations
 

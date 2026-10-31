@@ -96,6 +96,13 @@ class Inventory:
                 result=native.resolve(key)
                 self.rows.append(Row(key,result['value'],str(native.original),str(native.original),
                                      'Native wttr TOML; next invocation, no profile inheritance',True,'native'))
+        if not self.defaults and self.selected['current']==profile_context(self.root)['current'] and (self.root/'plugins/pkgs').is_dir():
+            from config_pkgs import Native, constraints as pkgs_constraints
+            native=Native(self.root,self.selected,guarded=True);self.guards.update(native.guards)
+            for key in native.keys():
+                result=native.resolve(key)
+                self.rows.append(Row(key,result['value'],str(native.original),str(native.original),
+                                     'Native pkgs JSON; next invocation, no profile inheritance',True,'pkgs',constraints=pkgs_constraints(key)))
         if not self.defaults:
             destination = str(Path(self.selected['layers'][-1]['root'])/'profile.json')
             leaf = self.selected['layers'][-1]
@@ -171,6 +178,9 @@ class Draft:
         if row.kind=='native':
             from config_wttr import NativePlan
             self.base=NativePlan(inventory.root,inventory.selected)
+        elif row.kind=='pkgs':
+            from config_pkgs import NativePlan
+            self.base=NativePlan(inventory.root,inventory.selected)
         inventory.check()
         self.base.guards.update(inventory.guards)
 
@@ -187,6 +197,10 @@ class Draft:
             from wttr.configuration import validate
             plan.edit(self.row.key,value,unset=reset)
             proposed=lookup(validate(copy.deepcopy(plan.data)),parts(self.row.key)[2:])
+        elif self.row.kind=='pkgs':
+            from config_values import lookup,parts
+            plan.edit(self.row.key,value,unset=reset)
+            proposed=lookup(plan.effective,parts(self.row.key)[2:])
         elif isinstance(plan,ControlPlan):
             from config_values import Controls,lookup,parts
             plan.edit(self.row.key,value,unset=reset)
@@ -381,7 +395,7 @@ def input_value(row, initial, context):
 def edit(inventory, row, context, *, reset=False):
     draft = Draft(inventory, row)
     # Never send a hidden legacy literal to a text editor or preview transport.
-    initial = json.dumps(row.value,ensure_ascii=False) if row.kind in ('json','native') else str(row.value) if row.value is not None else ''
+    initial = json.dumps(row.value,ensure_ascii=False) if row.kind in ('json','native','pkgs') else str(row.value) if row.value is not None else ''
     if display(row.key, row.value) == '[redacted]': initial = ''
     while True:
         try:

@@ -180,3 +180,7 @@ The shared todo controller, native standalone literal bridge, scope-aware comple
 Profile configuration adds shared native `config` routes, profile/key completion and manifest-backed settings/mappings. Native Windows PowerShell 5.1/7 migration, reload, link privilege and terminal acceptance remain pending; see [the focused plan](profile-configs.md). Windows app destinations and WSL separation are unchanged.
 
 Profile backend acceptance: shared registry/profile controllers and generated native hashtables implemented; native PowerShell 5.1/7 alias reload, `$PROFILE` preservation and Windows app-destination execution remain pending. Termux fixtures and renderer assertions are not native Windows evidence.
+
+## Package workflow follow-up
+
+Portable pkgs `format` and `manifest` use the shared controller on native Windows. Static routes/options/file completion cover export/update/restore, Git publication `--update-packages` and setup `--packages`/`-Packages`. Manifest-refresh publication explicitly refuses native Windows with status 3; normal Git publication is unchanged. Package operations remain an explicit Windows exception (status 3); the optional setup stage refuses before configuration writes. Native Config uses APPDATA or explicit XDG_CONFIG_HOME. Actual PowerShell 5.1/7 stream, Unicode-path, Config undo and refusal acceptance remains pending; see [package workflow acceptance](pkgs-workflows.md).

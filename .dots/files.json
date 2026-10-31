@@ -390,6 +390,12 @@
       ]
     },
     {
+      "id": "termux:file-config-termux",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
       "id": "termux:htop",
       "platforms": [
         "termux"

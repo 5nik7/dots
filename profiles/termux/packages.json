@@ -1,0 +1,3757 @@
+{
+  "schema": 1,
+  "groups": [
+    {
+      "manager": "apt",
+      "scope": "system",
+      "platforms": [
+        "termux"
+      ],
+      "packages": [
+        {
+          "name": "7zip",
+          "observed_version": "26.05",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "aalib",
+          "observed_version": "1.4rc5-13",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "aapt",
+          "observed_version": "16.0.0.4-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "aapt2",
+          "observed_version": "16.0.0.4-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "adwaita-icon-theme",
+          "observed_version": "51.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "aichat",
+          "observed_version": "0.30.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "aidl",
+          "observed_version": "16.0.0.4-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "android-tools",
+          "observed_version": "37.0.0p1-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "apkeep",
+          "observed_version": "1.1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "apt",
+          "observed_version": "2.8.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "aptitude",
+          "observed_version": "0.8.13-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "asciidoc",
+          "observed_version": "10.2.1-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "asciidoctor",
+          "observed_version": "2.0.26-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "at",
+          "observed_version": "3.2.5-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "atuin",
+          "observed_version": "18.24.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "autoconf",
+          "observed_version": "2.73",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "automake",
+          "observed_version": "1.19",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "awesome",
+          "observed_version": "2026.03.31-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "barcode",
+          "observed_version": "0.99-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bash",
+          "observed_version": "5.3.20",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bash-completion",
+          "observed_version": "2.18.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bat",
+          "observed_version": "0.26.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bc",
+          "observed_version": "1.08.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "beanshell",
+          "observed_version": "3.0.0b1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "binutils-libs-glibc",
+          "observed_version": "2.44",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bison",
+          "observed_version": "3.8.2-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bmon",
+          "observed_version": "5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "boxes",
+          "observed_version": "2.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bsdtar",
+          "observed_version": "3.8.11",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "build-essential",
+          "observed_version": "4.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bzip2",
+          "observed_version": "1.0.8-8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ca-certificates",
+          "observed_version": "1:2026.10.20-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "calc",
+          "observed_version": "2.17.0.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "calcurse",
+          "observed_version": "4.8.2-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "cargo-binstall",
+          "observed_version": "1.26.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "cava",
+          "observed_version": "1.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ccache",
+          "observed_version": "4.14.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "chafa",
+          "observed_version": "1.18.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "chromium-host-tools",
+          "observed_version": "156.0.8078.79",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "clang",
+          "observed_version": "21.1.8-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "clang-glibc",
+          "observed_version": "19.1.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "cmake",
+          "observed_version": "4.4.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "cmatrix",
+          "observed_version": "2.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "command-not-found",
+          "observed_version": "3.5.0-17",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "composer",
+          "observed_version": "2.11.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "coreutils",
+          "observed_version": "9.12",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "curl",
+          "observed_version": "8.23.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dash",
+          "observed_version": "0.5.13.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dbus",
+          "observed_version": "1.16.2-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "debianutils",
+          "observed_version": "5.24",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "deno",
+          "observed_version": "1:2.9.8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "desktop-file-utils",
+          "observed_version": "0.28-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dialog",
+          "observed_version": "1.3-20260721-0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "diffutils",
+          "observed_version": "3.12-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "direnv",
+          "observed_version": "2.38.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dmenu",
+          "observed_version": "5.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dnstop",
+          "observed_version": "2022.10.19-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dnsutils",
+          "observed_version": "9.20.30",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dos2unix",
+          "observed_version": "7.5.7",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dpkg",
+          "observed_version": "1.22.6-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dua",
+          "observed_version": "2.46.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dust",
+          "observed_version": "1.2.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dvtm",
+          "observed_version": "0.15-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "dwm",
+          "observed_version": "6.8-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ed",
+          "observed_version": "1.22.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "elinks",
+          "observed_version": "0.20.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "emojify",
+          "observed_version": "2.2.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "emscripten",
+          "observed_version": "6.0.13",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "erlang",
+          "observed_version": "29.1.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "exiftool",
+          "observed_version": "13.60",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "eza",
+          "observed_version": "0.23.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fakeroot",
+          "observed_version": "2.1.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fastfetch",
+          "observed_version": "2.70.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fd",
+          "observed_version": "10.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "feh",
+          "observed_version": "3.13.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ffmpeg",
+          "observed_version": "9.0.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "figlet",
+          "observed_version": "2.2.5-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "file",
+          "observed_version": "5.48-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "findutils",
+          "observed_version": "4.11.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fish",
+          "observed_version": "4.9.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "flex",
+          "observed_version": "2.6.4-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fluent-gtk-theme",
+          "observed_version": "2025.04.17",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fluent-icon-theme",
+          "observed_version": "2026.07.27",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fontconfig-utils",
+          "observed_version": "2.18.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fsmon",
+          "observed_version": "1.8.8-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fx",
+          "observed_version": "40.0.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fzf",
+          "observed_version": "0.74.5-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gawk",
+          "observed_version": "5.4.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gettext",
+          "observed_version": "1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gh",
+          "observed_version": "2.103.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ghostwriter",
+          "observed_version": "26.08.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "git",
+          "observed_version": "2.56.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "git-delta",
+          "observed_version": "0.20.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "git-extras",
+          "observed_version": "7.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gitui",
+          "observed_version": "0.28.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gleam",
+          "observed_version": "1.19.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "glibc-repo",
+          "observed_version": "1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "glibc-runner",
+          "observed_version": "2.0-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "glslang",
+          "observed_version": "16.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gnome-terminal",
+          "observed_version": "3.60.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gnome-themes-extra",
+          "observed_version": "3.28-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gnupg",
+          "observed_version": "2.5.24",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "go-task",
+          "observed_version": "3.54.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gojq",
+          "observed_version": "0.12.19-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "golang",
+          "observed_version": "3:1.27.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gopass",
+          "observed_version": "1.17.4-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gperf",
+          "observed_version": "3.3-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gpgv",
+          "observed_version": "2.5.24",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gradle",
+          "observed_version": "1:9.8.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "grep",
+          "observed_version": "3.12-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "grex",
+          "observed_version": "1.4.6-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gtk-update-icon-cache",
+          "observed_version": "3.24.52",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gtk2",
+          "observed_version": "2.24.33-8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gtk2-engines-murrine",
+          "observed_version": "0.98.2-6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gtk3",
+          "observed_version": "3.24.52",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gtk4",
+          "observed_version": "4.24.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gum",
+          "observed_version": "2.0.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "gzip",
+          "observed_version": "1.15",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "help2man",
+          "observed_version": "1.49.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "hexyl",
+          "observed_version": "0.17.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "hicolor-icon-theme",
+          "observed_version": "0.18",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "html2text",
+          "observed_version": "1:2.4.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "htop",
+          "observed_version": "3.5.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "httping",
+          "observed_version": "4.4.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "hyperfine",
+          "observed_version": "2.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "i3",
+          "observed_version": "4.25.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "imagemagick",
+          "observed_version": "7.1.2.34",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "inetutils",
+          "observed_version": "2.8-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "inkscape",
+          "observed_version": "1.4.4-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "jq",
+          "observed_version": "1.8.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "jq-lsp",
+          "observed_version": "0.1.19-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "jujutsu",
+          "observed_version": "0.46.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "just",
+          "observed_version": "1.59.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "kbd",
+          "observed_version": "2.10.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "kf6-kiconthemes",
+          "observed_version": "6.31.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "kitty",
+          "observed_version": "0.49.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "kotlin",
+          "observed_version": "2.4.21",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "kvantum",
+          "observed_version": "1.1.8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lazygit",
+          "observed_version": "0.66.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "leafpad",
+          "observed_version": "0.8.19-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "less",
+          "observed_version": "710",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libandroid-glob",
+          "observed_version": "0.6-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libandroid-support",
+          "observed_version": "29-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libassuan",
+          "observed_version": "3.0.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libbz2",
+          "observed_version": "1.0.8-8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libc++",
+          "observed_version": "30",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libcap-ng",
+          "observed_version": "2:0.9.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libcurl",
+          "observed_version": "8.23.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libevent",
+          "observed_version": "2.1.13",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libffi",
+          "observed_version": "3.8.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libgcrypt",
+          "observed_version": "1.12.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libgmp",
+          "observed_version": "6.3.0-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libgnutls",
+          "observed_version": "3.8.13-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libgpg-error",
+          "observed_version": "1.61",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libiconv",
+          "observed_version": "1.19",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libidn2",
+          "observed_version": "2.3.8-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "liblz4",
+          "observed_version": "1.10.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "liblzma",
+          "observed_version": "5.8.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libmd",
+          "observed_version": "1.3.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libmpfr",
+          "observed_version": "4.2.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libnettle",
+          "observed_version": "4.0+really3.10.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libnghttp2",
+          "observed_version": "1.70.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libnghttp3",
+          "observed_version": "1.18.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libnpth",
+          "observed_version": "1.8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libqtxdg",
+          "observed_version": "4.4.0-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "librsvg",
+          "observed_version": "2.63.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libsecret",
+          "observed_version": "0.21.8.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libsecret-glibc",
+          "observed_version": "0.21.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libsixel",
+          "observed_version": "1.10.5-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libsmartcols",
+          "observed_version": "2.42.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libssh2",
+          "observed_version": "1.11.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libt3highlight",
+          "observed_version": "0.5.0-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libtirpc",
+          "observed_version": "1.3.8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libtool",
+          "observed_version": "2.6.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libunbound",
+          "observed_version": "1.26.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libunistring",
+          "observed_version": "1.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libxcomposite",
+          "observed_version": "0.4.7",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libxcomposite-glibc",
+          "observed_version": "0.4.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libxcursor",
+          "observed_version": "1.2.3-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libxcursor-glibc",
+          "observed_version": "1.2.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libxdg-basedir",
+          "observed_version": "1.2.3-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "libxml2-utils",
+          "observed_version": "2.15.4-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "llvm-tools",
+          "observed_version": "21.1.8-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lsix",
+          "observed_version": "1.9.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lsof",
+          "observed_version": "4.99.7",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lua-language-server",
+          "observed_version": "3.19.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "luarocks",
+          "observed_version": "3.13.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lunasvg",
+          "observed_version": "3.5.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lxappearance",
+          "observed_version": "0.6.4-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lxde-icon-theme",
+          "observed_version": "0.5.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lynx",
+          "observed_version": "2.9.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lzip",
+          "observed_version": "1.26",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "m4",
+          "observed_version": "1.4.21",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "make",
+          "observed_version": "4.4.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "make-glibc",
+          "observed_version": "4.4.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mandoc",
+          "observed_version": "1.14.6-8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "manpages",
+          "observed_version": "6.20",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "marksman",
+          "observed_version": "2026.02.08",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mdcat",
+          "observed_version": "2.19.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mesa-zink",
+          "observed_version": "22.0.5-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mint-x-icon-theme",
+          "observed_version": "1.8.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mint-y-icon-theme",
+          "observed_version": "1.9.8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mise",
+          "observed_version": "2026.10.24",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mpc",
+          "observed_version": "0.35-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mpd",
+          "observed_version": "0.24.18",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mutt",
+          "observed_version": "2.4.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "nala",
+          "observed_version": "0.18.2-armbuntu-0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "nano",
+          "observed_version": "9.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ncmpcpp",
+          "observed_version": "0.10.1-10",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ncurses",
+          "observed_version": "6.6.20260307+really6.5.20250830",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ncurses-utils",
+          "observed_version": "6.6.20260307+really6.5.20250830",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ndk-multilib",
+          "observed_version": "30",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "neofetch",
+          "observed_version": "7.1.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "neovim",
+          "observed_version": "0.12.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "nerdfix",
+          "observed_version": "0.4.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "net-tools",
+          "observed_version": "2.10.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "nethack",
+          "observed_version": "5.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "nim",
+          "observed_version": "2.4.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ninja",
+          "observed_version": "1.13.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "nmap",
+          "observed_version": "7.993",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "nodejs",
+          "observed_version": "26.12.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "nushell",
+          "observed_version": "0.116.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "obconf",
+          "observed_version": "2.0.4-30",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "oh-my-posh",
+          "observed_version": "31.9.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ollama",
+          "observed_version": "0.40.13",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "onefetch",
+          "observed_version": "3.1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "openbox",
+          "observed_version": "3.6.1-62",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "openjdk-21",
+          "observed_version": "21.0.13",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "openjdk-26",
+          "observed_version": "26.0.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "openssh",
+          "observed_version": "10.6p1-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "openssl",
+          "observed_version": "1:3.6.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "openssl-tool",
+          "observed_version": "1:3.6.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "otter-browser",
+          "observed_version": "1.0.03-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pacman",
+          "observed_version": "7.1.0-9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pandoc",
+          "observed_version": "3.13",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "papirus-icon-theme",
+          "observed_version": "20260801",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pass",
+          "observed_version": "1.7.4-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pass-otp",
+          "observed_version": "1.2.0-p20250809-0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "passage",
+          "observed_version": "1.7.4a2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pastel",
+          "observed_version": "0.12.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "patch",
+          "observed_version": "2.8.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pcre2",
+          "observed_version": "10.49",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "perl",
+          "observed_version": "5.44.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "php",
+          "observed_version": "8.5.12-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "picom",
+          "observed_version": "13",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pkg-config",
+          "observed_version": "0.29.2-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pkgconf-glibc",
+          "observed_version": "3.0.7",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "polybar",
+          "observed_version": "3.7.2-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "poppler",
+          "observed_version": "26.10.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "procps",
+          "observed_version": "4.0.7-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "procs",
+          "observed_version": "0.14.12",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "proot",
+          "observed_version": "5.1.107.101",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "proot-distro",
+          "observed_version": "5.10.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "protobuf",
+          "observed_version": "2:36.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "psmisc",
+          "observed_version": "23.7-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pueue",
+          "observed_version": "4.0.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pulseaudio",
+          "observed_version": "17.0-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pwgen",
+          "observed_version": "2.08-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pwsafe",
+          "observed_version": "3.72.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pycairo",
+          "observed_version": "1.29.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python",
+          "observed_version": "3.14.8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-apt",
+          "observed_version": "3.1.0-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-cmake",
+          "observed_version": "4.4.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-glibc",
+          "observed_version": "3.12.9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-pillow",
+          "observed_version": "13.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-pip",
+          "observed_version": "26.2.2-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-pygame",
+          "observed_version": "2.6.1-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-ruff",
+          "observed_version": "0.17.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-scipy",
+          "observed_version": "1:1.18.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-trash-cli",
+          "observed_version": "0.26.9.29",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python2",
+          "observed_version": "2.7.18-15",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "qt6ct",
+          "observed_version": "0.11-7",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "qtxdg-tools",
+          "observed_version": "4.4.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ranger",
+          "observed_version": "1.9.4-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "re2c",
+          "observed_version": "4.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "readline",
+          "observed_version": "8.3.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "resolv-conf",
+          "observed_version": "1.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ripgrep",
+          "observed_version": "15.2.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rofi",
+          "observed_version": "2.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rsync",
+          "observed_version": "3.5.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ruby",
+          "observed_version": "4.0.9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ruff",
+          "observed_version": "0.17.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rumdl",
+          "observed_version": "0.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rust",
+          "observed_version": "1.99.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rust-analyzer",
+          "observed_version": "20261026",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rust-nightly-docs",
+          "observed_version": "1.100.0-2026.08.24-nightly-0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rustc-nightly",
+          "observed_version": "1.100.0-2026.08.24-nightly-0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rustscan",
+          "observed_version": "2.4.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "sassc",
+          "observed_version": "3.6.2-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "scdoc",
+          "observed_version": "1.11.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "screenfetch",
+          "observed_version": "3.9.9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "sed",
+          "observed_version": "4.10",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "selene",
+          "observed_version": "0.32.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "shellcheck",
+          "observed_version": "0.11.0-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "shfmt",
+          "observed_version": "3.14.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "spirv-tools",
+          "observed_version": "1.4.363.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "sqlite",
+          "observed_version": "3.54.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "sshpass",
+          "observed_version": "1.10-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "starship",
+          "observed_version": "1.27.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "startup-notification",
+          "observed_version": "0.12-29",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "steghide",
+          "observed_version": "0.5.1-8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "stow",
+          "observed_version": "2.4.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "strace",
+          "observed_version": "7.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "stylua",
+          "observed_version": "2.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "svgbob",
+          "observed_version": "0.5.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "svgpart",
+          "observed_version": "26.08.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "taplo",
+          "observed_version": "0.10.0-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tar",
+          "observed_version": "1.35-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tasksh",
+          "observed_version": "1.2.0-11",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "taskwarrior",
+          "observed_version": "3.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tealdeer",
+          "observed_version": "1.9.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "television",
+          "observed_version": "0.15.9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termimage",
+          "observed_version": "1.2.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-am",
+          "observed_version": "0.8.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-am-socket",
+          "observed_version": "1.5.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-api",
+          "observed_version": "0.60.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-api-static",
+          "observed_version": "0.60.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-apt-repo",
+          "observed_version": "0.5-5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-auth",
+          "observed_version": "1.5.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-core",
+          "observed_version": "0.4.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-core-static",
+          "observed_version": "0.4.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-create-package",
+          "observed_version": "0.12.0-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-elf-cleaner",
+          "observed_version": "3.0.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-exec",
+          "observed_version": "1:2.5.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-exec-static",
+          "observed_version": "1:2.5.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-gui-bash",
+          "observed_version": "0.1.2-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-gui-c",
+          "observed_version": "0.1.3-9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-gui-package",
+          "observed_version": "0.1.6-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-gui-pm",
+          "observed_version": "1.0.0-4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-keyring",
+          "observed_version": "3.14",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-licenses",
+          "observed_version": "2.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-services",
+          "observed_version": "0.13-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-shizuku-tools",
+          "observed_version": "4.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-tools",
+          "observed_version": "1.46.0+really1.45.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-x11-nightly",
+          "observed_version": "1.03.01-6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "texinfo",
+          "observed_version": "7.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "texlab",
+          "observed_version": "5.26.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "texlive-installer",
+          "observed_version": "20260301",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tmux",
+          "observed_version": "3.8",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "toilet",
+          "observed_version": "0.3-3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "translate-shell",
+          "observed_version": "0.9.7.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tree",
+          "observed_version": "2.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tree-sitter-lua",
+          "observed_version": "0.5.0-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tsu",
+          "observed_version": "8.6.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-cascadia-code-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-dejavu-glibc",
+          "observed_version": "2.37",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-fantasque-sans-mono-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-fira-code-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-hack-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-inconsolata-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-iosevka-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-jetbrains-mono",
+          "observed_version": "2.304",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-jetbrains-mono-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-meslo-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-nerd-fonts-symbols",
+          "observed_version": "3.5.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-roboto-mono-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-sourcecodepro-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ttf-victor-mono-nerd",
+          "observed_version": "3.5.1-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tty-clock",
+          "observed_version": "2.3-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tudo",
+          "observed_version": "1.3.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tur-repo",
+          "observed_version": "1.0.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "unzip",
+          "observed_version": "6.0-10",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "util-linux",
+          "observed_version": "2.42.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "uuid-utils",
+          "observed_version": "2.42.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "uutils-coreutils",
+          "observed_version": "0.12.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "uv",
+          "observed_version": "0.13.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "valac",
+          "observed_version": "0.56.19",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "vim",
+          "observed_version": "9.2.1250",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "virglrenderer-android",
+          "observed_version": "1.3.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "virglrenderer-mesa-zink",
+          "observed_version": "20220627",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "viu",
+          "observed_version": "1.6.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "vivid",
+          "observed_version": "0.11.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "w3m",
+          "observed_version": "0.5.6-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "w3m-img",
+          "observed_version": "0.5.6-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "wdiff",
+          "observed_version": "1.2.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "wget",
+          "observed_version": "1.25.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "which",
+          "observed_version": "2.25",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "x11-repo",
+          "observed_version": "8.4-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xapp-symbolic-icons",
+          "observed_version": "1.1.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xbitmaps",
+          "observed_version": "1.1.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xcompmgr",
+          "observed_version": "1.1.10-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xdotool",
+          "observed_version": "4.20260303.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xfce-theme-manager",
+          "observed_version": "1:0.3.9-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xfce4-battery-plugin",
+          "observed_version": "1.2.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xfce4-dev-tools",
+          "observed_version": "4.20.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xfce4-goodies",
+          "observed_version": "4.20.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xfce4-notifyd",
+          "observed_version": "0.9.7-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xfce4-session",
+          "observed_version": "4.20.4-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xfce4-taskmanager",
+          "observed_version": "1.6.0-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xh",
+          "observed_version": "0.26.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xmlstarlet",
+          "observed_version": "1.7.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xmlto",
+          "observed_version": "0.0.29-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xorg-font-util",
+          "observed_version": "1.4.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xorg-setxkbmap",
+          "observed_version": "1.3.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xorg-xlsfonts",
+          "observed_version": "1.0.9",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xorg-xrdb",
+          "observed_version": "1.2.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xwayland",
+          "observed_version": "24.1.14",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xxd",
+          "observed_version": "9.2.1250",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xxhash",
+          "observed_version": "0.8.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xz-utils",
+          "observed_version": "5.8.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "yarn",
+          "observed_version": "1.22.22",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "yazi",
+          "observed_version": "26.9.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zellij",
+          "observed_version": "0.45.1-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zig",
+          "observed_version": "0.17.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zip",
+          "observed_version": "3.0-7",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zlib",
+          "observed_version": "1.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zls",
+          "observed_version": "0.17.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zoxide",
+          "observed_version": "0.10.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zsh",
+          "observed_version": "5.9.2-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zsh-completions",
+          "observed_version": "0.36.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zstd",
+          "observed_version": "1.5.7-1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "manager": "npm",
+      "scope": "global",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": [
+        {
+          "name": "@biomejs/biome",
+          "observed_version": "2.6.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "@catppuccin/palette",
+          "observed_version": "1.8.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "@mmmbuto/gemini-cli-termux",
+          "observed_version": "0.46.0-termux",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "@openai/codex",
+          "observed_version": "0.166.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "@openai/codex-linux-arm64",
+          "observed_version": "0.166.0-linux-arm64",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "@thraize/acode-cli",
+          "observed_version": "1.0.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "basedpyright",
+          "observed_version": "1.40.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "bash-language-server",
+          "observed_version": "5.8.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "chalk-cli",
+          "observed_version": "6.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "colorthief",
+          "observed_version": "3.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "colorthief-cli",
+          "observed_version": "3.3.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "context-mode",
+          "observed_version": "1.0.169",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "emoji-toolkit",
+          "observed_version": "11.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "emojione",
+          "observed_version": "4.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "live-server",
+          "observed_version": "1.2.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "n",
+          "observed_version": "11.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "neovim",
+          "observed_version": "5.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "npm",
+          "observed_version": "12.2.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "npm-check-updates",
+          "observed_version": "23.1.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pi-completion",
+          "observed_version": "0.84.2-post1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "prettier",
+          "observed_version": "3.9.10",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "sharp",
+          "observed_version": "0.35.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "vscode-langservers-extracted",
+          "observed_version": "4.10.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "yaml-language-server",
+          "observed_version": "2.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "manager": "uv-tool",
+      "scope": "tools",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": [
+        {
+          "name": "distro",
+          "observed_version": "1.9.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "httpie",
+          "observed_version": "3.2.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pyfiglet",
+          "observed_version": "1.0.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pygments",
+          "observed_version": "2.21.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pynvim",
+          "observed_version": "0.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pywal16",
+          "observed_version": "3.8.15",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rich-cli",
+          "observed_version": "1.8.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "xonsh",
+          "observed_version": "0.25.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "manager": "pip",
+      "scope": "base",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": [
+        {
+          "name": "anyio",
+          "observed_version": "4.15.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "asciidoc",
+          "observed_version": "10.2.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "autopep8",
+          "observed_version": "2.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "black",
+          "observed_version": "26.10.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "CairoSVG",
+          "observed_version": "2.9.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "certifi",
+          "observed_version": "2026.10.23",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "charset-normalizer",
+          "observed_version": "3.5.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "click",
+          "observed_version": "8.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "cmake",
+          "observed_version": "4.4.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "cssselect",
+          "observed_version": "1.6.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "flake8",
+          "observed_version": "7.4.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "fonttools",
+          "observed_version": "4.68.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "harset-normalizer",
+          "observed_version": "0.0.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "idna",
+          "observed_version": "3.20",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "importlib_metadata",
+          "observed_version": "10.1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "isort",
+          "observed_version": "9.0.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "jedi",
+          "observed_version": "0.20.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "json-schema-for-humans",
+          "observed_version": "1.5.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "linkify-it-py",
+          "observed_version": "2.2.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "linode-cli",
+          "observed_version": "5.69.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "linode_metadata",
+          "observed_version": "0.4.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "lxml",
+          "observed_version": "6.1.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "MarkupSafe",
+          "observed_version": "3.0.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "marshmallow",
+          "observed_version": "4.3.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "maturin",
+          "observed_version": "1.15.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "numpy",
+          "observed_version": "2.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "parse",
+          "observed_version": "1.22.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pillow",
+          "observed_version": "13.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "pip",
+          "observed_version": "26.2.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "platformdirs",
+          "observed_version": "4.13.7",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pluggy",
+          "observed_version": "1.7.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "proot-distro",
+          "observed_version": "5.10.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "psutil",
+          "observed_version": "7.2.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "pycodestyle",
+          "observed_version": "2.15.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pycparser",
+          "observed_version": "3.12",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pyee",
+          "observed_version": "16.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pyflakes",
+          "observed_version": "4.0.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pygame",
+          "observed_version": "2.6.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "Pygments",
+          "observed_version": "2.21.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pylint",
+          "observed_version": "4.1.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-apt",
+          "observed_version": "3.1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "python-debian",
+          "observed_version": "1.1.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-lsp-server",
+          "observed_version": "1.15.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pytimeparse",
+          "observed_version": "1.1.10",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pytz",
+          "observed_version": "2026.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ranger-fm",
+          "observed_version": "1.9.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "rich",
+          "observed_version": "15.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ruff",
+          "observed_version": "0.17.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "scipy",
+          "observed_version": "1.18.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "scour",
+          "observed_version": "0.38.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "setuptools",
+          "observed_version": "84.2.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "shtab",
+          "observed_version": "1.13.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "six",
+          "observed_version": "1.17.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "soupsieve",
+          "observed_version": "3.0.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termux-apt-repo",
+          "observed_version": "0.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "termuxgui",
+          "observed_version": "0.1.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tomli",
+          "observed_version": "2.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "tomlkit",
+          "observed_version": "0.15.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "trash-cli",
+          "observed_version": "0.26.9.29",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source or editable install; retain original source"
+        },
+        {
+          "name": "tuipet",
+          "observed_version": "0.6.52",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "typer",
+          "observed_version": "0.27.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "urllib3",
+          "observed_version": "2.8.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "websockets",
+          "observed_version": "17.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "zipp",
+          "observed_version": "4.1.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "manager": "gem",
+      "scope": "user",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": []
+    },
+    {
+      "manager": "go",
+      "scope": "tools",
+      "platforms": [
+        "termux",
+        "linux",
+        "wsl"
+      ],
+      "packages": [
+        {
+          "name": "charm.land/gum/v2",
+          "observed_version": "v2.0.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/Gelio/go-global-update",
+          "observed_version": "v0.2.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/anthropics/anthropic-cli/cmd/ant",
+          "observed_version": "v1.35.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/arl/gitmux",
+          "observed_version": "v0.11.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/charmbracelet/glow",
+          "observed_version": "v1.5.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/danielmiessler/fabric/cmd/fabric",
+          "observed_version": "v1.4.455",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/ipinfo/cli/ipinfo",
+          "observed_version": "v0.0.0-20261020165622-1d8ba4708cb4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/maaslalani/fast",
+          "observed_version": "v0.0.0-20260701061742-26d8fc9c189b",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/maaslalani/glyphs",
+          "observed_version": "v0.0.0-20240208154946-b51340f85d93",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/maaslalani/sheets",
+          "observed_version": "v0.2.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/mandolyte/mdtopdf/cmd/md2pdf",
+          "observed_version": "v1.5.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/mikefarah/yq/v4",
+          "observed_version": "v4.54.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/mikesmithgh/git-prompt-string",
+          "observed_version": "v1.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/spf13/cobra-cli",
+          "observed_version": "v1.3.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/thefryscorer/schemer2",
+          "observed_version": "v0.0.0-20190406042248-89a66cbf4044",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/wader/jq-lsp",
+          "observed_version": "v0.1.19",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "github.com/wailsapp/wails/v2/cmd/wails",
+          "observed_version": "v2.16.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "golang.org/x/tools/gopls",
+          "observed_version": "v0.24.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        }
+      ]
+    }
+  ],
+  "notices": []
+}

@@ -19,7 +19,7 @@ LIMIT = 65536
 LINES = 200
 CREDENTIAL = re.compile(rb'(?i)(BEGIN [A-Z ]*PRIVATE KEY|(?:password|api[_-]?key|access[_-]?token)\s*[=:]\s*["\']?[^\s"\']{4,})')
 INTENT = {
-    'add': 'Import selected files and replace their originals with managed links.',
+    'add': 'Register repository sources or import configurations; review mappings and links before applying.',
     'link': 'Link repository sources; occupied targets require backup approval.',
     'stash': 'Disable management and remove matching links; keep repository sources.',
     'restore': 'Enable selected mappings and relink on this platform.',
@@ -32,15 +32,26 @@ INTENT = {
 
 def candidates(manager, action, values=(), repo=None, restore=False):
     if action == 'add':
+        from registration import Registration, candidates as registrations
+        resolver = Registration(manager)
         roots = [Path(os.path.abspath(os.path.expanduser(p))) for p in values]
+        explicit = []
         for root in roots:
             parents_safe(root)
-            if root.is_symlink() or not root.exists():
+            row = resolver.candidate(root, repo)
+            if row:
+                explicit.append(row)
+                continue
+            if not root.exists():
                 raise ValueError('picker input must be an existing regular file or directory: ' + str(root))
             manager.mapping(root, repo)
-        rows = [dict(r, target=r['path'], candidate=r['path'])
-                for r in manager.system(repo) if r['status'] in ('candidate', 'existing-source')]
-        return [r for r in rows if not roots or any(Path(r['path']) == p or Path(r['path']).is_relative_to(p) for p in roots)]
+        if roots and len(explicit) == len(roots):
+            return list({(r['source'], r.get('target')): r for r in explicit}.values())
+        rows = registrations(manager, repo)
+        return explicit + [r for r in rows if r['status'] != 'excluded'
+                           and not any(r.get('source') == e.get('source') for e in explicit)
+                           and (not roots or any(Path(r['candidate']) == p or Path(r['candidate']).is_relative_to(p) for p in roots
+                                                if str(p) not in {e['candidate'] for e in explicit}))]
     rows = manager.catalog.records()
     if action == 'link':
         rows = [r for r in rows if r['enabled'] and r['applicable']]
@@ -199,6 +210,10 @@ def preview(snapshot, token):
             if key == 'repository':
                 ui.repository_detail('Repository', row.get('_source_root'), row[key])
             else: ui.detail(key.title(), row[key])
+    if row.get('reason'):
+        ui.detail('Reason', row['reason'])
+    if row.get('profile'):
+        ui.detail('Profile', row['profile'])
     for key in ('source', 'target'):
         if row.get(key):
             ui.resource_detail(key.title(), row[key])

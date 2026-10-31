@@ -103,7 +103,12 @@ activation instructions and the [shell setup guidance](#completion) below.
 | `pkgs list --installed` | Installed packages |
 | `pkgs list --json` | Structured inventory |
 | `pkgs info git` | Formatted package details |
-| `pkgs upgrade` | Manager-specific upgrade |
+| `pkgs upgrade` | Unattended upgrades across supported user-wide managers |
+| `pkgs format [--manager NAME]` | Format stdin; `--raw` preserves bytes |
+| `pkgs export [--output FILE]` | Export editable installed-package JSON |
+| `pkgs export --update [--output FILE]` | Update a manifest while preserving edits; default to the current profile root |
+| `pkgs manifest FILE` | Inspect/validate without manager queries |
+| `pkgs restore FILE` | Restore missing packages and requested pins |
 | `pkgs refresh` | Refresh APT/DNF/XBPS repository metadata |
 | `pkgs managers` | Detected managers, scope and catalog capabilities |
 | `pkgs doctor` | Environment, Python, fzf, and completion diagnostics |
@@ -111,20 +116,27 @@ activation instructions and the [shell setup guidance](#completion) below.
 
 Options can go before or after the subcommand. Human-readable output is the
 default. JSON is opt-in for `list`, `info`, `managers`, `doctor`, and
-`completion SHELL status`.
+`completion SHELL status`, `manifest` and `restore`; export always emits JSON data.
 
 **Exact names and queries are separate.** `install git` installs `git`;
 `install --query git` opens a picker. Name arguments are validated and passed as
 separate subprocess arguments, never interpolated into shell commands.
-Version specifications, package URLs, local install paths, arbitrary backend
-options and shell aliases for managers are not supported in 0.1.1.
+Ordinary name operands exclude URLs/local paths and arbitrary backend options; Go additionally supports module versions. Use manifest pins for exact versions and native policy recipes for custom flags/commands. The [current Dots package guide](../../docs/packages.md) defines these contracts; 0.1.1 remains the imported release identifier.
 
-Transactions print the selected manager, scope, and command, then ask
-`Proceed? [y/N]`. The manager can also ask its own questions. `--yes` skips the
+Install/remove/restore print the selected scope and commands, then ask
+`Proceed? [y/N]`. Upgrade and refresh are explicit approval to proceed without an extra flag,
+including without a controlling terminal. The manager can also ask its own questions. `--yes` skips the
 pkgs prompt and supplies the backend's supported noninteractive flag where
 available; some managers can still prompt. `--dry-run` prints the transaction
 without running it, although preparation and previews may still query metadata.
 Passing names bypasses the picker, not confirmation.
+
+Terminal help and operation previews use the shared Dots layout and colors,
+with wrapped plain output when color is disabled. Formatted APT output omits
+the exact unstable-CLI advisory; other warnings remain visible and `--raw`
+retains all bytes. Slow exports report their current manager on terminal stderr
+while stdout remains JSON. Python roots are filtered before batched APT
+ownership queries. See [package output and export](../../docs/packages.md#output).
 
 ## Picker and preview
 
@@ -146,7 +158,7 @@ Use `--preview 'right:55%:wrap'` for a wide terminal or
 `--preview 'bottom:hidden:55%:wrap'` to start hidden. The preview uses terminal
 palette colors and does not require bat or change `BAT_THEME`.
 
-The `list`, `managers` and `doctor` reports use [Dots presentation](../../docs/presentation.md#application-reports) in terminals and popup readers. They share semantic headings/statuses, wrapped resource paths and independent `DOTS_ICONS` settings; doctor expands nested FZF/completion details into sections. Report color precedence is explicit `--color`, then `DOTS_COLOR`, then this application's configured `color`, then `auto`. Ordinary redirected formats and JSON remain unchanged. Picker styling and forwarded package-manager output retain their existing behavior.
+The `list`, `managers` and `doctor` reports use [Dots presentation](../../docs/presentation.md#application-reports) in terminals and popup readers. They share semantic headings/statuses, wrapped resource paths and independent `DOTS_ICONS` settings; doctor expands nested FZF/completion details into sections. Report color precedence is explicit `--color`, then `DOTS_COLOR`, then this application's configured `color`, then `auto`. Ordinary redirected formats and JSON remain unchanged. Picker styling retains its behavior. Package subprocesses use styled streams in terminals/menu readers, raw bytes on ordinary redirection, and explicit `--raw` passthrough; see [output](../../docs/packages.md#output).
 
 `--color auto` respects `NO_COLOR`; `--color never` disables pkgs colors;
 `--color always` explicitly enables them. Your fzf colors and compatible
@@ -196,7 +208,8 @@ database.** Detecting a source-built executable never makes it a removal target.
 | npm | Explicit registry search + cached candidates | Current project unless `--global` |
 | uv-tool | Exact PyPI name lookup + cached candidates | uv isolated tool environments |
 | pip | Exact PyPI name lookup + cached candidates | Python interpreter running pkgs |
-| gem | Explicit remote search + cached candidates | Active RubyGems environment |
+| gem | Explicit remote search + cached candidates | Active RubyGems environment; user scope in bulk upgrades |
+| go | Installed binary build metadata | GOBIN/first GOPATH bin; install/upgrade, no registry search or removal |
 
 Termux is detected before Linux distribution detection. Its configured package
 backend, official setup helper, and database paths are checked. The backend
@@ -228,8 +241,8 @@ without one, previously cached candidates or repository packages are shown.
 
 System catalogs use local metadata. Refresh repository metadata first if it
 is absent. DNF 4 may require its repoquery plugin. Use `pkgs upgrade` with
-pacman rather than refreshing its sync database separately. pip requires names
-for upgrade; pkgs does not bypass externally managed Python protections or use
+pacman rather than refreshing its sync database separately. Bulk pip upgrades
+require ownership evidence; pkgs does not bypass externally managed Python protections or use
 sudo for language managers. Activating a venv changes the Python resolved by
 the launcher, and therefore the pip environment. Check `pkgs doctor`.
 
@@ -343,6 +356,11 @@ Failed or slow queries return no candidates and a nonzero helper status;
 to stale candidates.
 
 ## Configuration
+
+The native JSON also owns `upgrade.managers`, `output` and `policies`. The Dots
+Config CLI/popup edits these controls with guards and undo. See [configuration and
+recipes](../../docs/packages.md#configuration-and-recipes) and `config.example.json`.
+
 
 Optional file: `${XDG_CONFIG_HOME:-$HOME/.config}/pkgs/config.json`.
 Copy [config.example.json](config.example.json) there and edit it. There are no

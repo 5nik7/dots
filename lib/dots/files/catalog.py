@@ -266,7 +266,7 @@ class Presentation:
     def status(self, status):
         if status in ("linked", "available", "tracked", "managed", "restored", "removed", "published", "unchanged"):
             code, icon = "92", self.icon("status.success", "") if self.icons else "[+]"
-        elif status in ("candidate", "existing-source", "create", "prepare", "restore", "remove"):
+        elif status in ("candidate", "existing-source", "create", "prepare", "restore", "remove", "register-existing-link", "register-and-link"):
             code, icon = "94", self.icon("status.info", "󰋽") if self.icons else "[i]"
         elif status in ("conflict", "broken-link", "source-broken-link", "source-missing", "unavailable", "linked-elsewhere"):
             code, icon = "91", self.icon("status.error", "") if self.icons else "[x]"
@@ -303,6 +303,11 @@ class Presentation:
             else:
                 self.resource_detail("Source", row.get("source"))
                 self.resource_detail("Target", row.get("target"))
+                if row.get('registration_status'):
+                    self.detail('Registration', row['registration_status'])
+                    self.detail('Strategy', row.get('strategy'))
+                    if row.get('reason'):
+                        self.detail('Reason', row['reason'])
                 if action in ("show", "track"):
                     if 'enabled' in row:
                         self.detail('Enabled', row['enabled'])
@@ -650,7 +655,7 @@ class Catalog:
         return "existing-directory" if target.is_dir() else "existing-file"
 
     @tracked('Discovering files')
-    def discover(self):
+    def discover(self, enrich=True, tolerate_unavailable=False):
         tracked = self.records()
         covered = [(Path(r["source"]), r["strategy"] == "directory-link") for r in tracked]
         result = []
@@ -660,8 +665,13 @@ class Catalog:
             root = Path(source["root"])
             child_roots = {Path(x["root"]) for x in self.sources if x != source}
             # Git supplies exclusions without executing hooks or traversing submodules.
-            git = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-                                 capture_output=True, check=True)
+            try:
+                git = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+                                     capture_output=True, check=True)
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                if not tolerate_unavailable:
+                    raise ValueError('repository discovery requires Git and an accessible checkout: ' + str(root))
+                continue
             candidates = set(os.fsdecode(x) for x in git.stdout.split(b"\0") if x)
             scopes = [relative(x) for x in source.get("roots", [])]
             for rel in sorted(candidates):
@@ -685,6 +695,14 @@ class Catalog:
                                    category="config" if parts[0] in ("config", "termux") else "script",
                                    platforms=source["platforms"], applicable=self.applicable(source["platforms"]),
                                    status="discovered", tracked=False))
+        if enrich:
+            from manage import Manager
+            from registration import Registration
+            manager = Manager(self)
+            rows = Registration(manager).repository(result, manager.system())
+            return [dict(row, registration_status=row['status'], status='discovered',
+                         tracked=False, applicable=self.applicable(row.get('platforms', [self.platform])))
+                    for row in rows]
         return result
 
     @tracked('Tracking file metadata')

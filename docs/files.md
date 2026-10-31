@@ -407,7 +407,7 @@ Each registry has `schema: 1`, `repository`, and `locations`. A location has `id
 relative `source`, `platforms`, and optional relative glob `exclusions`. More
 specific locations win; equal-specificity owner ambiguity requires `--repo`.
 Edit and version these files to update coverage. Common XDG configs map into Dots
-`config/`; Termux configs map into Androidots `termux/`; home dotfiles have explicit
+`config/`; Termux configs map into `profiles/termux/config/termux`; home dotfiles have explicit
 mappings. The existing catalog's ownership claims always block duplicate adoption.
 
 No directory symlinks are followed. Known credential locations, caches, databases,
@@ -422,6 +422,30 @@ their contents; totals count observed entries, not every descendant of a pruned
 directory. The same exclusions protect `add --scan` and explicit adoption.
 
 The explicit gitmux home-file mapping imports `~/.gitmux.conf` into `config/gitmux/gitmux.conf` on Termux, Linux and WSL. The catalog resource is `dots:file-config-gitmux-gitmux-conf`, application `gitmux`, with the ordinary file-link strategy. It has no native Windows destination. Use `dots files show dots:file-config-gitmux-gitmux-conf` to inspect it, or `dots files link dots:file-config-gitmux-gitmux-conf --backup` to link a checkout's source with the normal conflict/backup policy. Gitmux reads this file through the tmux integration's explicit `-cfg` argument; see [status configuration](themes.md#gitmux).
+
+## Register files already in the repository
+
+`files add` accepts an existing link into an eligible source repository or the repository source itself. It infers the owning repository and saves the resource identity in the core registry and its mapping in the active leaf profile. Repository directories use one `directory-link`; files use `link`. Registration does not copy or relocate source content. Nested links remain entries in the directory and their referents are never imported. Ordinary unmanaged-directory adoption keeps its file-by-file default and `--directory-link` option.
+
+```sh
+dots files add ~/.termux --dry-run
+dots files add ~/.termux                         # Register the existing directory link
+dots files add "$PROFILE/config/termux" --dry-run
+dots files add config/example --target '${CONFIG}/example' --dry-run
+dots files add --scan --dry-run                  # Ready sources and eligible imports
+```
+
+An existing link supplies its destination directly. For source operands, a unique existing mapping or observed link in registered user locations takes precedence over a reverse mapping from the location registry. Missing or ambiguous destinations require interactive input or `--target DESTINATION`. That option accepts one explicit repository source, without `--scan` or `--pick`. Dry-run never prompts and reports `needs-target`; noninteractive apply requires a resolved destination. Explicit `--repo` must match the inferred owner.
+
+Repository discovery groups known app directories, proposes destinations and strategies, and retains individual sources when no directory boundary is known. The Add picker combines repository sources, eligible imports and existing links. Explicit repository-directory picker operands select that directory as a whole. Scans include ready sources, report unresolved/excluded candidates as skipped, and preflight all selected conflicts before changing anything. Repository enumeration uses Git exclusions; user-location imports still work in fixtures/checkouts without Git enumeration. Neither discovery nor ordinary startup searches the whole home directory. Known private/generated exclusions and nested repository boundaries remain enforced.
+
+New identities use the existing `file-` plus normalized repository-relative source naming. Exact mappings are reused; conflicting IDs, retired IDs, stashed mappings and ambiguous claims require explicit editing or restoration. Existing eligibility is retained; new eligibility comes from the matching location or owning repository. Only the active profile receives a mapping.
+
+A correct pre-existing link keeps its original link text and object identity and is not claimed by installation. Registration undo restores metadata; uninstall leaves that link alone. Newly created links receive installation receipts and retained recovery baselines. Occupied ordinary targets require `--backup`; unrelated links, broken or chained source links, unsafe ancestors, unsupported objects and conflicting claims are refused. The complete metadata/link/receipt batch uses guarded transactions, rollback and normal drift-aware undo. Catalog, source, destination or location changes after preview require a fresh review.
+
+JSON keeps its existing envelopes. Registration candidates add `kind`, `candidate`, `target_spec`, `strategy` and `profile`; repository discovery retains `status: discovered` and adds `registration_status`. Readiness/action values include `register-existing-link`, `register-and-link`, `needs-target`, `excluded`, `skipped` and `unchanged`. Existing redirected catalog columns remain intact. Human views show the intended strategy, target, profile and unresolved reason using shared presentation controls.
+
+Bash and native PowerShell use the same controller and metadata. Native Windows uses its application destination tokens and native filesystem adapter; unsupported reparse points and missing symbolic-link capability fail explicitly. Native PowerShell 5.1/7 filesystem and terminal acceptance remains separate from portable controller tests.
 
 ## Import, link and stop managing
 
@@ -561,7 +585,7 @@ dots files remove                    # Select resources to stop managing
 Explicit operands without `--pick` retain their behavior. Only add accepts
 operands together with `--pick`; supplied paths narrow its eligible discovery
 inventory. `add --scan` without `--pick` still selects all eligible discoveries.
-Directory-link adoption requires explicit paths without a picker. Link lists
+Directory-link adoption of unmanaged directories requires explicit paths without a picker; repository directory registration is available in the picker. Link lists
 active-platform enabled mappings, stash lists enabled mappings, restore lists
 disabled mappings, and remove lists active-platform mappings. Conflicts remain
 visible and the planner decides whether the complete selection can proceed.

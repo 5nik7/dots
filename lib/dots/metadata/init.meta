@@ -8,6 +8,7 @@
 # dots:option=--json||flag|Emit setup JSON
 # dots:option=--update||flag|Update clean sources before setup
 # dots:option=--with-source||choice:termux,windows,nvim|Select a bundled platform source or initialize nvim
+# dots:option=--packages||file|Restore a package manifest during explicit setup
 # dots:argument=1|choice:bash,zsh,fish,powershell,nu,xonsh|Shell adapter (default: Bash/Zsh)
 # dots:example=eval "$(dots init)"
 # dots:example=dots init fish | source

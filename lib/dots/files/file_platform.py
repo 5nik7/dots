@@ -16,6 +16,22 @@ def validate_windows_path(path):
             raise ValueError('unsupported Windows path component')
 
 
+def native_link_text(value, windows=None):
+    """Normalize Windows readlink substitution paths for source lookup only.
+
+    Keep the actual link untouched. Device namespaces other than ordinary drive
+    and UNC substitutions stay intact so validate_windows_path refuses them.
+    """
+    if windows is None:
+        windows = os.name == 'nt'
+    if windows:
+        if value.startswith('\\\\?\\UNC\\'):
+            return '\\\\' + value[8:]
+        if re.match(r'^\\\\\?\\[A-Za-z]:\\', value):
+            return value[4:]
+    return value
+
+
 def config_root():
     home = Path(os.environ.get('HOME') or Path.home())
     base = Path(os.environ.get('XDG_CONFIG_HOME') or

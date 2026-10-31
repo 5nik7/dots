@@ -373,25 +373,37 @@ def main(argv=None):
     root = checkout()
     selected = context(root, args.profile)
     if not selected['layers'] and not args.defaults: raise ValueError('no profile definition in this checkout')
-    native_key=(args.key or '').startswith('apps.wttr.') or args.key=='apps.wttr'
+    native_app = next((app for app in ('wttr','pkgs') if args.key == 'apps.'+app or (args.key or '').startswith('apps.'+app+'.')), None)
+    native_key = native_app is not None
     if native_key:
-        if args.defaults:raise ValueError('wttr uses its active native TOML; --defaults does not apply')
-        from config_wttr import Native,NativePlan
+        if args.defaults:raise ValueError(native_app+' uses its active native file; --defaults does not apply')
+        if native_app == 'pkgs':
+            from config_pkgs import Native,NativePlan
+        else:
+            from config_wttr import Native,NativePlan
         native=Native(root,selected)
         result=dict(schema=1,profile=selected['current'],path=str(native.original))
         if args.action in ('get','explain'):
-            resolved=native.resolve(args.key) if args.key!='apps.wttr' else dict(value=native.values,source=str(native.original))
+            resolved=native.resolve(args.key) if args.key!='apps.'+native_app else dict(value=native.values,source=str(native.original))
+            if args.action == 'explain' and native_app == 'pkgs':
+                from config_pkgs import constraints
+                result.update(constraints=constraints(args.key), activation='next invocation')
             print_value(dict(result,source=resolved['source']),args.key,resolved['value'],args.json)
+            if args.action == 'explain' and native_app == 'pkgs' and not args.json:
+                from config_values import constraint_details
+                ui=Presentation()
+                for label,value in constraint_details(result['constraints']): ui.detail(label,value)
+                ui.detail('Source',str(native.original));ui.detail('Activation','next invocation')
         elif args.action=='path':print(json.dumps(result) if args.json else native.original)
         elif args.action in ('set','unset'):
             plan=NativePlan(root,selected);plan.edit(args.key,args.value,args.action=='unset',args.json_value)
             result.update(status='preview',items=plan.items)
             if not args.dry_run:
                 applied=plan.apply(args.action);result.update(status=applied['status'],transaction=applied.get('id'))
-                result['refresh']=dict(status='complete',reason='wttr reads this native file on its next invocation',consumers=[])
+                result['refresh']=dict(status='complete',reason=native_app+' reads this native file on its next invocation',consumers=[])
             if args.json:print(json.dumps(result))
             else:render(result)
-        else:raise ValueError('unsupported native weather configuration action')
+        else:raise ValueError('unsupported native application configuration action')
         return 0
     if not args.json and not args.dry_run and (automatic or args.action == 'browse' or guided):
         from interaction import terminal
@@ -510,6 +522,9 @@ def main(argv=None):
             if not args.defaults and selected['current']==context(root)['current'] and (root/'config/wttr/config.toml').is_file() and sys.version_info>=(3,11):
                 from config_wttr import Native
                 merged.setdefault('apps',{})['wttr']=Native(root,selected).values
+            if not args.defaults and selected['current']==context(root)['current'] and (root/'plugins/pkgs').is_dir():
+                from config_pkgs import Native
+                merged.setdefault('apps',{})['pkgs']=Native(root,selected).values
             if args.action == 'get':
                 if is_style:
                     value = style_value(styles,group,style_key)

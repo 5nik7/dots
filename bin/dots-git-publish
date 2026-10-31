@@ -7,6 +7,7 @@
 # dots:option=--full-paths||flag|Show absolute human paths
 # dots:option=--dry-run||flag|Local preview without changes or network
 # dots:option=--all||flag|Include unstaged ordinary files
+# dots:option=--update-packages||flag|Refresh and include the current profile package manifest
 # dots:option=--yes||flag|Accept the publication preview
 # dots:option=--message|-m|string|Commit message
 # dots:option=--config||file|Owner configuration file

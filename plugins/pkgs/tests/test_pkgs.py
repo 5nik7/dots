@@ -79,7 +79,7 @@ class Core(Isolated):
         c = Cache(b.cache_key)
         c.save([Package('git')])
         args = cli.parser().parse_intermixed_args(['install', 'git', '--yes'])
-        with patch.object(b, 'transaction', return_value=['fake', 'git']), patch('pkgs_lib.cli.subprocess.run', return_value=MagicMock(returncode=42)):
+        with patch.object(b, 'transaction', return_value=['fake', 'git']), patch('pkgs_lib.workflows.streams.run', return_value=42):
             with contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(cli.execute(b, 'install', ['git'], args, self.cfg), 42)
         self.assertIsNone(c.load())

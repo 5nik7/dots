@@ -399,3 +399,22 @@ See [controls and native weather](profiles.md#application-and-formatting-control
 `apps.menu.popup` declares dedicated Dots popup position, border style and nullable native color slots in the same typed defaults/profile objects. The shared selector applies these after generic FZF presentation preferences; shell border defaults cannot suppress a Dots frame. Position changes retain controller-owned dimensions. FZF selectors and native tmux terminal hosts read effective settings at invocation, without publication, global tmux option changes or a second configuration store. See [popup controls](profiles.md#dots-popup-appearance) for accepted fields and defaults.
 
 Popup `width`/`height` are string-or-integer controls: `auto`, `fit`, `fill`, integer percentages 1%–100%, or integer cells 1–10000. Both default to `auto`. Resolution uses the addressed client's viewport; explicit overrides are bounded, while inline width remains owned by its terminal. Typed explain data includes `constraints` (`type`, optional finite `choices`, `syntax`, `examples`) from the validation declarations. Choices are exhaustive only for finite enums; examples do not restrict custom syntax. Profile null/reset semantics and exact scalar get output are unchanged.
+
+## Existing-source registration inputs
+
+Registration retains the current core registry and profile mapping schemas. Resource IDs/platform eligibility stay central, while source, target, strategy, app and category stay in the active profile. Existing IDs retain eligibility; new IDs use matching location eligibility or the source owner. Inferred IDs use the existing file- normalized relative-path naming and never reuse retired IDs. A unique observed/mapped destination precedes reverse location inference; explicit single-source --target overrides inference. Existing-link operands retain their literal link text. Discovery adds registration readiness metadata inside its existing schema-1 envelope; redirected catalog columns and scalar APIs retain their contracts. See [registration](files.md#register-files-already-in-the-repository).
+
+## Package policy and manifest data
+
+[Package workflows](packages.md) defines the authoritative native JSON controls
+(`upgrade.managers`, `output`, `policies`), literal recipe expansion and schema-1
+manifest fields/scopes. `apps.pkgs` edits that native file with Store guards, not
+profile inheritance. Observed versions are evidence; only exact supported pins
+constrain restoration. Manifests contain no executable commands. Structured
+restore results report each group's status; stdout remains data-only with JSON.
+Manifest updates retain existing desired-state fields and absent entries, refresh
+observed versions and append new installed identities. The default path is the
+active leaf profile root's `packages.json`; it does not inherit a parent's file.
+`export --update --dry-run` emits the proposed schema-1 JSON. Publication opt-in
+uses existing schema-1 Git events to report manifest selection and update;
+ordinary export/restore and Git data schemas are unchanged.

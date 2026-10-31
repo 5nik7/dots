@@ -203,7 +203,7 @@ Xonsh adapter edits have no new native-runtime certification.
 
 ## Bounded checkout installation
 
-The [checkout installer](installation.md) has POSIX shell and native PowerShell entry points sharing Python 3.9+ planning, receipt and transaction logic. Termux/Linux/WSL use their own HOME/XDG roots. Native Windows uses LOCALAPPDATA for state (unless XDG_STATE_HOME is explicit), PowerShell's current-host profile, Neovim's native configuration root and APPDATA/Code/User/settings.json. The [native PowerShell implementation](powershell.md) adds app-specific root/Windots destinations and native theme preparation/publication; Windows runtime and desktop acceptance remain pending. Full theme setup requires Python 3.11+. No WSL path translation, package provisioning, elevation or link-to-copy fallback occurs.
+The [checkout installer](installation.md) has POSIX shell and native PowerShell entry points sharing Python 3.9+ planning, receipt and transaction logic. Termux/Linux/WSL use their own HOME/XDG roots. Native Windows uses LOCALAPPDATA for state (unless XDG_STATE_HOME is explicit), PowerShell's current-host profile, Neovim's native configuration root and APPDATA/Code/User/settings.json. The [native PowerShell implementation](powershell.md) adds app-specific root/Windots destinations and native theme preparation/publication; Windows runtime and desktop acceptance remain pending. Full theme setup requires Python 3.11+. No WSL path translation or silent link-to-copy fallback occurs. Ordinary setup does not provision packages; explicit `--packages FILE` uses the separate package stage on Termux/Linux/WSL, including native manager privilege rules.
 
 Native Windows locking uses msvcrt; directory flushing has no POSIX-equivalent guarantee. Symlink capability is tested by approved staging before target replacement. Reparse-point ancestors are refused. Linux/Windows installation CI is defined; local Termux tests do not establish native Windows or WSL results.
 
@@ -295,11 +295,11 @@ without WSL bridging or destination changes.
 
 ## Bundled application platforms
 
-[Blastoff and pkgs](bundled-applications.md) ship with both Bash and native PowerShell routes. Blastoff invokes its Python 3.11+ core on all Dots platforms and retains `STARSHIP_CONFIG` / `BLASTOFF_HOME` with their existing home-relative defaults. pkgs retains Python 3.9+ POSIX package backends on Termux/Linux/WSL. Native Windows supports pkgs help/version and static discovery; commands other than help/version refuse with status 3 before importing POSIX-only modules. WSL remains a separate installation.
+[Blastoff and pkgs](bundled-applications.md) ship with both Bash and native PowerShell routes. Blastoff invokes its Python 3.11+ core on all Dots platforms and retains `STARSHIP_CONFIG` / `BLASTOFF_HOME` with their existing home-relative defaults. pkgs retains Python 3.9+ POSIX package backends on Termux/Linux/WSL. Native Windows supports pkgs help/version, static discovery, formatting, manifest inspection and the native Config editor; package operations refuse with status 3. WSL remains a separate installation.
 
 Standalone native launchers use `~/.local/bin/*.ps1`, with no registry or system PATH changes. Native Windows PowerShell 5.1/7 and WSL runtime acceptance for absorption remains pending; injected adapter tests do not establish it.
 
-Application plugins share native launchers and the combined installer. Legacy receipt migration supports known POSIX user-local and Termux layouts; former native PowerShell modules/profile edits require manual reconciliation. Native Windows pkgs remains limited to help/version. Relocation and popup changes require separate native Windows/WSL acceptance. See [plugins](plugins.md).
+Application plugins share native launchers and the combined installer. Legacy receipt migration supports known POSIX user-local and Termux layouts; former native PowerShell modules/profile edits require manual reconciliation. Native Windows pkgs has portable format/manifest support but no package backend; `-Packages FILE` setup refuses before configuration writes. Relocation and popup changes require separate native Windows/WSL acceptance. See [plugins](plugins.md).
 
 ### Codex attention notifications
 
@@ -325,3 +325,7 @@ acceptance; see [core updates](../plans/core-updates.md).
 
 
 Visual config commands share the Python resolver/refresher between Bash and native PowerShell. Windows retains native state/config destinations and does not invoke WSL or tmux; unavailable consumers are reported. Bash/Zsh, Fish, Nushell, PowerShell and Xonsh follow generated literal visual data through their existing generation checks. Native Windows PowerShell 5.1/7 and Linux/WSL desktop acceptance remain separate from Termux fixtures.
+
+## Existing-source registration
+
+The shared file registration controller supports native source/destination paths through both shell surfaces. Windows destinations use the existing application adapters and HOME/APPDATA/LOCALAPPDATA templates; Windows and WSL stores remain separate. Existing native symbolic links can be registered without replacing them; creation requires actual link capability. Unsupported Windows reparse points are refused. Local Termux and portable adapter evidence does not establish native Linux/WSL or PowerShell 5.1/7 filesystem or terminal acceptance.

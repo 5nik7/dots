@@ -302,6 +302,27 @@ class Native(browser_tests.Terminal):
                 self.assertIn(b'do not print file contents', clean)
                 self.assertFalse(self.state.exists())
 
+    def test_registration_directory_picker_widths_and_cancel(self):
+        source = self.repo / 'config' / 'registration ü'
+        source.mkdir(); (source / 'settings').write_text('kept')
+        target = self.home / 'config' / 'registration ü'
+        target.parent.mkdir(parents=True, exist_ok=True); target.symlink_to(source)
+        self.env['REGISTRATION_SOURCE'] = str(source)
+        self.env['REGISTRATION_TARGET'] = str(target)
+        before = target.lstat().st_ino, os.readlink(target), digest(source)
+        for width in (40, 80, 120):
+            out = self.terminal('"$DOTS/bin/dots" files add --pick --dry-run "$REGISTRATION_TARGET"',
+                                steps=((b'Details', b'\r'),), width=width)
+            clean = browser_tests.picker.ANSI.sub(b'', out)
+            self.assertIn(b'Preview only', clean)
+            self.assertIn(b'directory-link', clean)
+            self.assertIn(b'register existing link', clean)
+            self.assertFalse(self.state.exists())
+        self.terminal('"$DOTS/bin/dots" files add --pick "$REGISTRATION_SOURCE"',
+                      steps=((b'Details', b'\x1b'),), code=130)
+        self.assertEqual(before,(target.lstat().st_ino,os.readlink(target),digest(source)))
+        self.assertFalse(self.state.exists())
+
     def test_multiselect_keys_dry_run_and_cancel(self):
         out = self.terminal('"$DOTS/bin/dots" files link --pick --dry-run',
                             steps=((b'Details', b'\x01\x04\t\r'),))

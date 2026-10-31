@@ -82,6 +82,12 @@
       "source": "docs/git.md"
     },
     {
+      "id": "Packages",
+      "title": "Package workflows",
+      "section": "Managing Dots",
+      "source": "docs/packages.md"
+    },
+    {
       "id": "Wiki",
       "title": "Wiki maintenance",
       "section": "Managing Dots",

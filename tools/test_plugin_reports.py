@@ -24,6 +24,8 @@ if os.name != 'nt':
     from pkgs_lib import cli as pkgs
     from pkgs_lib.common import Package, Error
 
+# The shared default roles resolve headings to bold cyan and success to green.
+# Keep exact report contracts while honoring configured semantic colors.
 ANSI = re.compile(r'\x1b\[[0-9;]*m')
 
 
@@ -112,7 +114,7 @@ class Reports(MenuFixture):
     def test_blastoff_frontends_aliases_and_capture_data_bytes(self):
         colored = dict(self.env, DOTS_COLOR='always', DOTS_ICONS='never')
         baseline = self.blastoff(['current'], env=colored)
-        self.assertIn(b'\x1b[1;96mCurrent configuration', baseline[0])
+        self.assertIn(b'\x1b[1;36mCurrent configuration', baseline[0])
         for frontend in ('native', *(() if os.name == 'nt' else ('standalone', 'dots'))):
             self.assertEqual(self.blastoff(['current'], env=colored, frontend=frontend), baseline)
         for alias in ('-t', '--theme'):
@@ -148,7 +150,7 @@ class Reports(MenuFixture):
             with patch.dict(os.environ, DOTS_MENU_CAPTURE='1', DOTS_COLOR='always', DOTS_ICONS='always'):
                 self.assertEqual(self.packages([*args, '--json', '--color', 'always']), baseline)
                 code, text, _ = self.packages(args)
-                self.assertEqual(code, 0); self.assertIn('\x1b[1;96m', text)
+                self.assertEqual(code, 0); self.assertIn('\x1b[1;36m', text)
                 self.assertNotIn('"supported":', text); self.assertNotIn('"shell":', text)
                 self.assertNotIn('\x1b[31m', text)
         with patch.dict(os.environ, DOTS_MENU_CAPTURE='1'):
@@ -210,9 +212,9 @@ class Reports(MenuFixture):
         for answer, expected in ((b'\n', 130), (b'new-theme\n', 0)):
             code, text = terminal(command, env, keys=answer, ready=b'(empty cancels):', columns=80)
             self.assertEqual(code, expected, text)
-            self.assertIn(b'\x1b[1;96mSave active theme', text)
+            self.assertIn(b'\x1b[1;36mSave active theme', text)
             self.assertEqual(Path(env['STARSHIP_CONFIG']).read_text(), 'x=1\n')
-        self.assertIn(b'\x1b[92mSaved', text)
+        self.assertIn(b'\x1b[32mSaved', text)
         self.assertEqual((Path(env['BLASTOFF_HOME'])/'themes/new-theme.toml').read_text(), 'x=1\n')
 
 

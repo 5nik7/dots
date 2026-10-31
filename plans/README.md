@@ -8,6 +8,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Package workflows](pkgs-workflows.md) | Unattended upgrades, Go tools, rules, streams, editable manifests and optional package-first setup. |
 | [Concise root help](usage-help.md) | Top-level root help across Bash/native frontends, preserved full discovery/completion and presentation acceptance. |
 | [Personal fonts](fonts.md) | Official catalogs, retained versions, per-user registration, app connectors, font/glyph browsers and native acceptance. |
 | [Weather command and browser](wttr.md) | Shared standalone/Dots weather, cached-preview browser, session controls and platform acceptance. |
@@ -32,6 +33,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Gum confirmations](gum-confirmations.md) | Optional confirmations for file operations, Anodize and Git publish. |
 | [File workflow pickers](file-pickers.md) | Shared FZF selection and bounded previews for everyday file commands. |
 | [Tracked-config browser](files-browser.md) | Implemented Gum/FZF/plain browser with guarded operation review. |
+| [Existing-source registration](files-registration.md) | Implemented: existing links and repository sources through Add/discovery, guarded profile registration and recovery. |
 | [Files catalog](files-catalog.md) | Implemented catalog; later mutations belong to the Git/files slice. |
 | [Missing-source check](files-check.md) | Interactive catalog-only cleanup with journaled undo. |
 | [Managed file repair](files-repair.md) | Automatic link repair, interactive issue resolution and journaled recovery. |

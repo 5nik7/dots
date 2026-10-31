@@ -19,6 +19,7 @@ dots git status
 dots git status --full-paths
 dots git status --json
 dots git publish --dry-run
+dots git publish --update-packages --dry-run
 dots git publish -m 'Update configuration'
 dots git publish --all --yes -m 'Update repository tree'
 dots git sync --dry-run
@@ -95,6 +96,37 @@ event. Exit codes: 0 complete/cancelled, 1 failed/incomplete, 2 syntax/configura
 Git commands require Bash 5, Git and ordinary POSIX utilities; publication also
 requires `sha256sum`. Basic dots help retains its existing lighter requirements.
 Tests and platform limits are in [testing](testing.md#git-and-managed-file-operations).
+
+## Package manifest before publication
+
+`dots git publish --update-packages` refreshes and includes `packages.json` in the
+current profile root of the repository selected by `-C` (the Dots checkout by
+default). It merges installed-package observations while preserving your pins,
+disabled entries, reasons and packages you want restored later. A missing manifest
+is created. See [manifest updates](packages.md#editable-manifests).
+
+The flag explicitly stages this one manifest in addition to the ordinary
+publication selection. Staged-only publication stays staged-only for other files;
+`--all` still explicitly broadens that selection. Existing partial staging of the
+manifest is refused, so staged and unstaged edits must be reconciled first.
+Ignored new manifests, unmerged/renamed entries, paths outside the selected root
+worktree, missing profiles and incomplete inventories also refuse publication.
+Submodule-only and wiki-only publication do not accept this flag.
+
+The inventory snapshot is prepared during preview; it is written through a
+guarded, backed-up Store transaction and staged immediately before the root commit.
+Manifest, package configuration and profile changes after preview require a new
+preview. Export failure stops before commits or pushes. Existing Git failure
+semantics still apply afterward: a later staging/commit/push failure can leave
+the refreshed manifest and completed Git work in place for inspection/retry.
+There is no package installation and no background update hook.
+
+`--dry-run` only queries local inventories and prints the planned manifest
+inclusion; it writes no file/index, fetches nothing and takes no Git locks.
+Normal publication approval covers the manifest write, with no second prompt.
+The associated wiki still publishes after source. Both frontends use the shared
+Python publisher for this option. Native Windows refuses `--update-packages`
+with status 3 because native package inventories are unavailable; it never launches WSL.
 
 ## Repository info and submodules
 

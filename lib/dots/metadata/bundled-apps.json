@@ -1622,7 +1622,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -1633,14 +1633,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -1652,7 +1652,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -1664,7 +1664,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -1688,13 +1688,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -1706,7 +1742,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -1717,14 +1753,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -1736,7 +1772,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -1748,7 +1784,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -1772,13 +1808,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -1790,7 +1862,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -1801,14 +1873,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -1820,7 +1892,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -1832,7 +1904,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -1856,13 +1928,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -1874,7 +1982,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -1885,14 +1993,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -1904,7 +2012,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -1916,7 +2024,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -1940,13 +2048,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -1958,7 +2102,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -1969,14 +2113,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -1988,7 +2132,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2000,7 +2144,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2024,13 +2168,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2042,7 +2222,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2053,14 +2233,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2072,7 +2252,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2084,7 +2264,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2108,13 +2288,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2126,7 +2342,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2137,14 +2353,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2156,7 +2372,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2168,7 +2384,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2192,25 +2408,61 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
   },
   "pkgs-upgrade": {
-    "summary": "Upgrade packages",
+    "summary": "Upgrade user-wide packages or a selected manager",
     "option": [
       [
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2221,14 +2473,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2240,7 +2492,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2252,7 +2504,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2276,13 +2528,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2294,7 +2582,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2305,14 +2593,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2324,7 +2612,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2336,7 +2624,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2360,13 +2648,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2378,7 +2702,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2389,14 +2713,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2408,7 +2732,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2420,7 +2744,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2444,13 +2768,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2462,7 +2822,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2473,14 +2833,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2492,7 +2852,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2504,7 +2864,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2528,13 +2888,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2546,7 +2942,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2557,14 +2953,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2576,7 +2972,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2588,7 +2984,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2612,13 +3008,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": [
@@ -2641,7 +3073,7 @@
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2652,14 +3084,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2671,7 +3103,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2683,7 +3115,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2707,13 +3139,49 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": [
@@ -2724,14 +3192,14 @@
       ]
     ]
   },
-  "pkgs-help": {
-    "summary": "Show usage",
+  "pkgs-format": {
+    "summary": "Format package-manager output from stdin",
     "option": [
       [
         "--help",
         "-h",
         "flag",
-        "help"
+        "show this help and exit"
       ],
       [
         "--version",
@@ -2742,14 +3210,14 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem",
-        "manager"
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
       ],
       [
         "--query",
         "",
         "string",
-        "query"
+        "initial picker search text"
       ],
       [
         "--global",
@@ -2761,7 +3229,7 @@
         "--installed",
         "",
         "flag",
-        "installed"
+        "show installed packages only"
       ],
       [
         "--json",
@@ -2773,7 +3241,7 @@
         "--color",
         "",
         "choice:auto,always,never",
-        "report color; overrides DOTS_COLOR and configured color"
+        "auto, always or never; overrides DOTS_COLOR and configured color"
       ],
       [
         "--preview",
@@ -2797,13 +3265,541 @@
         "--dry-run",
         "",
         "flag",
-        "dry run"
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
       ],
       [
         "--yes",
         "-y",
         "flag",
-        "yes"
+        "approve install, removal, restore or file replacement"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-export": {
+    "summary": "Export editable installed-package JSON",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve install, removal, restore or file replacement"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-manifest": {
+    "summary": "Validate and inspect a package manifest",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve install, removal, restore or file replacement"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "file",
+        "Package manifest"
+      ]
+    ]
+  },
+  "pkgs-restore": {
+    "summary": "Restore packages from a manifest",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve install, removal, restore or file replacement"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "file",
+        "Package manifest"
+      ]
+    ]
+  },
+  "pkgs-help": {
+    "summary": "Show usage",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export into a manifest; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve install, removal, restore or file replacement"
       ]
     ],
     "argument": []

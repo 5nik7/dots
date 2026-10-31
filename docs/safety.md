@@ -586,3 +586,32 @@ FZF defaults are literal data; owned pickers allow only compatible options and
 safe navigation bindings and retain their own identity/action protocol. Neovim
 loads bounded JSON, never evaluated Lua; status placement accepts named owned
 components. The static config audit never imports/executes inspected sources.
+
+## Registering existing repository sources
+
+Existing-source registration references already-present repository content; it does not copy, execute, or import nested link referents. Declared source roots, private exclusions, nested repository boundaries, unsupported objects, unsafe ancestors and target conflicts remain checked. A correct pre-existing destination link is guarded but neither replaced nor claimed by installation. Registry/profile changes and any newly created links/receipts share one Store transaction; location inputs also participate in preview guards. New link baselines survive uninstall/undo, while metadata-only undo preserves pre-existing links. Ordinary adoption retains its credential/content inspection and copy verification. See [registration](files.md#register-files-already-in-the-repository).
+
+## Package operations and optional setup
+
+`pkgs upgrade` is explicit approval for unattended supported user-wide updates;
+`pkgs refresh` likewise authorizes supported repository metadata refreshes without
+an extra confirmation flag. Native privileges and manager protections still apply. Install/remove/restore
+retain confirmation. Policies are trusted executable argv sequences, with no
+implicit shell. Read/preview/export never execute hooks. Direct-target skips
+are not dependency holds. Formatting cannot infer success from output text.
+
+Editable manifests are validated data, with disabled source entries and explicit
+pins. Export files and Config edits use guarded Store writes/backups; package
+changes themselves have no Dots rollback. Optional setup `--packages FILE` runs
+declared package groups before configuration and rechecks file guards. Package
+failure prevents configuration writes; packages already changed remain after
+any later failure or file undo. No undeclared runtime/manager bootstrap or
+package removal follows from setup rollback. See [package behavior](packages.md).
+
+`export --update` preserves manual pins, disabled entries and absent desired
+packages while refreshing inventory evidence. File writes retain Store guards
+and backups. `git publish --update-packages` explicitly includes the current
+profile manifest alongside the normal publication selection; it refuses partial
+staging of that file and never broadens staging to unrelated files. Incomplete
+inventory stops before publication. After approval, later failures can retain a
+refreshed/staged manifest and completed Git work; Git remains incremental.

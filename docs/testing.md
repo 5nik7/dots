@@ -1009,3 +1009,34 @@ protection. Run the affected existing config/live/menu, Todo, weather, theme and
 shell suites sequentially. `tools/test_todo_menu.py` includes native private
 popup checks at 40/80/120 columns. Fixtures are separate from actual Windows,
 Linux/WSL desktop and live-device activation evidence.
+
+## Existing-source registration
+
+Run `python3 -B tools/test_file_registration.py` after `tools/test_file_platform.py`, plus affected file operations, catalog, mappings, profile backend, picker, installation, repair, Bash and native-controller suites. The registration fixtures own their profiles/home/config/state and cover existing relative links, nested external links, registry/profile transactions, receipts/uninstall, stale previews, backup replacement, rollback, interrupted recovery, scan grouping and idempotence. Presentation acceptance uses owned terminals at 40/80/120 columns; actual PowerShell 5.1/7 and native Linux/WSL remain separate acceptance checks.
+
+## Package workflow acceptance
+
+Run `python3 -B tools/test_bundled_app_cores.py pkgs` for the package core, including
+`plugins/pkgs/tests/test_workflows.py`, then
+`python3 -B tools/test_pkgs_integration.py` for Config/popup/menu/setup boundaries.
+`python3 -B tools/test_pkgs_publish.py` exercises manifest updates in both Git
+frontends with fake managers and temporary local remotes. Wiki integration also
+covers manifest-before-source-before-wiki publication. Test profile defaults,
+Escape returning to the same menu/query, preserved pins/disabled/absent entries,
+repeat-safe updates, dry-run/cancel purity, inventory/drift failures and exact
+manifest-only staging in addition to the existing selection.
+All package transactions use fake managers and owned home/config/cache/state roots.
+Coverage includes no-TTY upgrades/refresh, manager-free styled help at 40/80/120
+columns, exact APT advisory filtering, batched Python ownership, delayed export
+stderr progress and query deadlines, scopes/skips/recipes, Go metadata/helper fallback,
+concurrent streams and cancellation, raw bytes, manifest pins/repeat restore, guarded
+exports/config, package-before-file ordering, source-update forwarding and Windows
+refusal. Existing bundled-app, report, Config/menu and installation suites provide
+regression checks. Run file-platform checks before installation suites; metadata
+generation uses `python3 -B tools/generate_bundled_apps.py --check`.
+
+Local Termux fixtures do not establish native Linux/WSL or PowerShell 5.1/7 behavior.
+Native pending acceptance covers portable Windows format/manifest/Config paths and
+package-stage refusal, Linux/WSL manager scopes/privileges, real manager updates,
+and terminal prompts/progress at 40/80/120 columns. No live package changes are
+needed to run these isolated suites. See [the focused plan](../plans/pkgs-workflows.md).

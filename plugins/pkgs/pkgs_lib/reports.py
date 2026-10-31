@@ -5,7 +5,51 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'lib/dots'))
 from plugin_presentation import report, color_mode
 from resources import cells
-from .grammar import MANAGERS
+from .grammar import COMMANDS, DESCRIPTION, MANAGERS
+
+
+def help_report(parser, argv, stream=None):
+    """Use the parser's option records without querying managers or optional UIs."""
+    explicit = None
+    for index, arg in enumerate(argv):
+        if arg == '--': break
+        if arg.startswith('--color='): explicit = arg.partition('=')[2]
+        elif arg == '--color' and index + 1 < len(argv): explicit = argv[index + 1]
+    from .common import config, Error
+    try: fallback = config()['color']
+    except (Error, OSError, ValueError): fallback = 'auto'
+    # Ordinary redirected help keeps argparse's text and avoids rendering.
+    stream = sys.stdout if stream is None else stream
+    ui = report(explicit, fallback=fallback, stream=stream)
+    if ui is None: return False
+    ui.heading('pkgs')
+    ui.text(DESCRIPTION.splitlines()[0])
+    ui.gap(); ui.heading('Usage')
+    ui.text('pkgs COMMAND [ARG ...] [OPTIONS]', 'identity')
+    ui.gap(); ui.heading('Commands')
+    for name, description in COMMANDS.items():
+        ui.ui.detail_spans(name, [(description, None)], label_width=12)
+    ui.gap(); ui.heading('Options')
+    for action in parser._actions:
+        if not action.option_strings: continue
+        label = ', '.join(action.option_strings)
+        if action.nargs != 0:
+            label += ' '+(action.metavar or {'manager':'NAME', 'color':'MODE'}.get(action.dest, action.dest.upper()))
+        description = action.help or ''
+        if ui.ui.width >= 80:
+            ui.ui.detail_spans(label, [(description, None)], label_width=27)
+        else:
+            ui.text(label, 'identity')
+            ui.row([(description, 'value')], indent=4)
+    ui.gap(); ui.heading('Managers')
+    ui.text(', '.join(MANAGERS))
+    ui.gap(); ui.heading('Examples')
+    examples = DESCRIPTION.split('Examples:\n', 1)[1].split('\n\n', 1)[0]
+    for example in examples.splitlines(): ui.text(example.strip(), 'identity')
+    ui.gap()
+    ui.text('Upgrade and refresh run without an extra confirmation flag.', 'muted')
+    ui.text('Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.', 'muted')
+    return True
 
 
 def label(key):

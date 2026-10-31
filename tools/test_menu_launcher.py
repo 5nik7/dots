@@ -45,7 +45,7 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual(json.loads(out)['menu'], 'dots:'+family)
         native = menu_cli.launcher(self.root, family='pkgs', windows=True)
         self.assertTrue(next(e for e in native.entries if e.id == 'help').available)
-        self.assertTrue(all(not e.available for e in native.entries if e.id != 'help'))
+        self.assertTrue(all(e.available == (e.id in ('help','manifest','configuration')) for e in native.entries))
 
     def test_data_is_fixed_static_and_never_executes_providers_or_fzf(self):
         with patch('subprocess.run', side_effect=AssertionError('provider executed')), patch('menu_cli.terminal', return_value=False):
@@ -62,7 +62,7 @@ class LauncherContracts(MenuFixture):
     def test_action_map_uses_existing_safe_routes(self):
         expected = {
             'tmux': [('sessions','menu tmux sessions','','session'),('keys','menu tmux keys','--browse','popup')],
-            'files': [('browse','files browse','','terminal'), *[(n,'files '+n,'','output') for n in ('list','history','sources')]],
+            'files': [('browse','files browse','','terminal'), ('add','files add','','terminal'), *[(n,'files '+n,'','output') for n in ('list','history','sources')]],
             'git': [('status','git status','','output'),('info','git info','','output'),('submodules','git submodules','','submenu'),('wiki','git wiki','','submenu'),('publish','git publish','--all','terminal'),('sync','git sync','','sync')],
             'git/submodules': [('list','git submodules','','output'),('info','git submodules info','','output'),('status','git submodules status','','output')],
             'git/wiki': [('status','git wiki status','','output'),('info','git wiki info','','output'),('publish','git wiki publish','--all','terminal'),('sync','git wiki sync','','sync')],
@@ -78,13 +78,18 @@ class LauncherContracts(MenuFixture):
             ('save','blastoff theme save','','terminal'),('modules','blastoff module show','','terminal'),
             ('backups','blastoff backup list','','output'),('doctor','blastoff doctor','','output')]
         expected['pkgs'] = [(n,'pkgs '+n,'','terminal') for n in ('search','install','uninstall')]+[
-            ('list','pkgs list','--installed','output')]+[(n,'pkgs '+n,'','terminal') for n in ('upgrade','refresh')]+[
+            ('list','pkgs list','--installed','output'),('upgrade','pkgs upgrade','','package'),
+            ('refresh','pkgs refresh','','terminal'),('export','pkgs export','','package'),
+            ('update-manifest','pkgs export','--update','package')]+[(n,'pkgs '+n,'','package') for n in ('manifest','restore')]+[
+            ('configuration','config browse','--query apps.pkgs','popup')]+[
             (n,'pkgs '+n,'','output') for n in ('managers','doctor')]
         for family, rows in expected.items():
             self.assertEqual([(a.id,' '.join(a.route),' '.join(a.options),a.kind) for a in menu_cli.actions(family)[:-1]], rows)
             self.assertEqual(menu_cli.actions(family)[-1].id, 'help')
             for action in menu_cli.actions(family):
-                if action.kind in ('submenu','session','sync'): continue
+                # Reviewed package flows have their own approval tests in
+                # test_pkgs_integration; they are not direct terminal actions.
+                if action.kind in ('submenu','session','sync','package'): continue
                 with patch('menu_cli.run_action', return_value=0) as run:
                     self.assertFalse(menu_cli.invoke(self.root,action,None))
                 self.assertEqual(run.call_args.args[0][-len(action.route+action.options):],list(action.route+action.options))
@@ -101,7 +106,7 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual([e.label for e in menu.entries],
                                  'anodize blastoff config debug env files fonts git keys pkgs profile theme tmux todo weather wiki'.split())
             else:
-                self.assertEqual([e.id for e in menu.entries], ['browse', 'list', 'history', 'sources', 'help'])
+                self.assertEqual([e.id for e in menu.entries], ['browse', 'add', 'list', 'history', 'sources', 'help'])
             step=len(visits)
             if step==1:
                 kwargs['navigation']['query']='fil'; return Entry(menu.entries[5].id,'inert $(touch sentinel)')

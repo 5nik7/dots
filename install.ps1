@@ -2,6 +2,7 @@
 param(
     [switch] $DryRun, [switch] $Yes, [switch] $Json, [switch] $Update,
     [string[]] $WithSource = @(),
+    [string] $Packages,
     [ValidateSet('auto', 'always', 'never')][string] $Color,
     [ValidateSet('auto', 'always', 'never')][string] $Icons,
     [Parameter(ValueFromRemainingArguments = $true)][string[]] $Arguments = @()
@@ -16,6 +17,7 @@ if ($Yes) { $cli += '--yes' }
 if ($Json) { $cli += '--json' }
 if ($Update) { $cli += '--update' }
 foreach ($source in $WithSource) { $cli += @('--with-source', $source) }
+if ($Packages) { $cli += @('--packages', $Packages) }
 if ($Color) { $cli += "--color=$Color" }
 if ($Icons) { $cli += "--icons=$Icons" }
 try {
