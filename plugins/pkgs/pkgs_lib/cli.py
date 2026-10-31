@@ -48,6 +48,10 @@ def choose_manager(args, cfg):
         raise Error(f'Manager {name!r} is unavailable. Run pkgs managers.')
     if args.global_scope and name != 'npm':
         raise Error('--global is supported only with --manager npm.')
+    if getattr(args, 'scope', None) and name != 'winget': raise Error('--scope requires --manager winget')
+    if name == 'winget':
+        from .scopes import make
+        return make(name, getattr(args, 'scope', None))
     return Backend(name, args.global_scope)
 
 
@@ -100,6 +104,8 @@ def _main(argv=None):
         cfg['_manager'] = args.manager
         cfg['_quiet_progress'] = args.dry_run or args.json
         if args.raw: cfg['output'] = 'raw'
+        if args.scope and args.manager != 'winget': raise Error('--scope requires --manager winget')
+        if args.list_upgrades and args.command != 'upgrade': raise Error('--list requires upgrade')
         if args.output and args.command != 'export': raise Error('--output requires export')
         if args.update and args.command != 'export': raise Error('--update requires export')
         if (args.include_dependencies or args.pin_versions) and args.command != 'export':
@@ -116,6 +122,12 @@ def _main(argv=None):
         if command in ('export','manifest','restore'):
             from .manifests import cli
             return cli(args, cfg)
+        if command == 'cleanup':
+            from .cleanup import cli as cleanup
+            return cleanup(args, cfg)
+        if command == 'upgrade' and args.list_upgrades:
+            from .outdated import cli as outdated
+            return outdated(args, cfg)
         if command == 'upgrade' and not args.names and args.manager is None:
             if args.json or args.query or args.global_scope:
                 raise Error('bulk upgrade does not accept --json, --query or --global; use --manager for an explicit scope')
@@ -130,6 +142,8 @@ def _main(argv=None):
         if command == 'completion':
             if not 1 <= len(args.names) <= 2:
                 raise Error('Usage: pkgs completion SHELL [install|update|status|uninstall]')
+            if os.name == 'nt' and len(args.names) > 1 and args.names[1] != 'status':
+                raise Error('Native PowerShell completion is provided by dots init powershell; standalone Bash/Zsh/Fish completion management requires POSIX')
             shell = args.names[0].lower()
             if shell not in ('bash', 'zsh', 'fish'): raise Error('Shell must be bash, zsh, or fish.')
             if len(args.names) == 1:
@@ -146,7 +160,7 @@ def _main(argv=None):
             return 0
         if command == 'managers':
             rows = [{'manager': m, 'scope': Backend(m, args.global_scope and m == 'npm').scope,
-                     'catalog': 'installed Go build metadata' if m == 'go' else 'query + cached candidates' if m in ('npm', 'gem', 'paru', 'yay') else
+                     'catalog': 'installed Go build metadata' if m == 'go' else 'query + cached candidates' if m in ('npm', 'gem', 'paru', 'yay', 'winget') else
                                 'exact-name lookup + cached candidates' if m in ('pip', 'uv-tool') else 'local repository catalog',
                      'actions': 'install, info, upgrade, list, export, restore' if m == 'go' else 'install, uninstall, info, upgrade, list, search, export, restore'} for m in MANAGERS if available(m)]
             if ui:
@@ -166,7 +180,12 @@ def _main(argv=None):
                     'launcher': str(ROOT / 'pkgs'), 'pkgs_on_path': which('pkgs') or 'missing',
                     'command_shadowed': bool(which('pkgs') and Path(which('pkgs')).resolve() not in {(ROOT / 'pkgs').resolve(), (ROOT.parent.parent / 'bin/pkgs').resolve()}),
                     'cwd': str(Path.cwd()), 'virtual_env': os.environ.get('VIRTUAL_ENV', 'none'),
-                    'completions': [manage(s, 'status') for s in ('bash', 'zsh', 'fish')]}
+                    'completions': [] if os.name == 'nt' else [manage(s, 'status') for s in ('bash', 'zsh', 'fish')]}
+            if os.name == 'nt':
+                from .winget import bridge
+                try: data['winget_module'] = bridge('capabilities')['module']
+                except (Error, ValueError) as error: data['winget_module'] = str(error)
+                data['native_completion'] = 'dots init powershell'
             if ui:
                 reports.doctor(ui, data)
             else:

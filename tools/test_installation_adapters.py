@@ -80,6 +80,12 @@ class Adapters(unittest.TestCase):
         self.assertIn('--with-source',out)
         self.assertIn('candidate\t--verbose\t',out)
         self.assertIn('candidate\t-v\t',out)
+        for route in (['init','--setup'],['files','install'],['files','uninstall']):
+            words=['dots',*route,'--component','l']
+            candidates=self.run_command([*cmd,'__complete','bash',str(len(words)-1),'--',*words]).stdout
+            self.assertIn('candidate\tleaf\t',candidates)
+            native=self.run_command([sys.executable,'-B',self.repo/'lib/dots/cli.py','__complete',*route,'--component','l']).stdout
+            self.assertIn('leaf',native)
         self.assertFalse(list(self.home.iterdir()))
 
     def test_help_json_and_plain_presentation(self):
@@ -170,8 +176,8 @@ class Adapters(unittest.TestCase):
 sys.path.insert(0,sys.argv[1])
 import install
 original=install.Installation.plan_install
-def slow(self):
-    original(self)
+def slow(self,*args,**kwargs):
+    original(self,*args,**kwargs)
     time.sleep(0.7)
 install.Installation.plan_install=slow
 sys.exit(install.main(['install','--yes']))

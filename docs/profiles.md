@@ -168,16 +168,24 @@ native Windows. An unavailable FZF or preview shell produces a report instead.
 `--client CLIENT` is for a launcher with explicit originating tmux context.
 
 The first screen offers List, Get and Set. List opens a searchable read-only
-inventory. Get and Set first choose All, Icons, Colors, Files, Profile, Settings
-or Environment; shared defaults offer only All, Icons and Colors. Enter in List
+inventory. Get and Set first choose All, Icons, Colors, Formatting, Apps, Files,
+Profile, Settings or Environment; shared defaults offer All, Icons, Colors,
+Formatting and Apps. Enter in List
 or Get opens details. Enter in Set opens Edit, Reset override and Details.
 Alt-G changes category, Alt-S changes profile/default scope, Alt-N adds an
 environment declaration in Set only, and F1 shows help. Each action/scope/category
 retains its search and selected row. Escape goes back;
-Ctrl-C exits with status 130. Colors offer palette roles or custom hex values;
+Ctrl-C exits with status 130. Colors offer every valid active-theme palette color
+with its hex value, standard palette roles, or custom input. Standard roles remain
+symbolic; other palette entries save their literal hex value. Without a published
+palette, standard roles and custom input remain available;
 booleans and enumerations use typed choices. Icons accept literal strings,
 including an empty string. Application overrides use the supported visual consumers.
 Text input uses optional Gum; its readline fallback also accepts `/cancel` to go back.
+
+Native palette names such as `rosewater` are included alongside semantic colors.
+When a native color differs from a role with the same name, its separate choice is
+marked `(native)` and saves the displayed hex value.
 
 The preview distinguishes the saved value and its source from process overrides.
 Built-in setting defaults appear in the browser (`files.backup` defaults to false); explicit `list`/`get` retain their
@@ -190,13 +198,28 @@ to the same row. Reset removes only the selected profile override and previews t
 inherited result. Shared defaults remain set-only. A file changed during review
 requires a fresh review. Visual saves refresh affected active consumers while preserving the selected theme; saving does not activate a different profile.
 
+The review reserves space for Cancel and Save together after applying the configured popup height. The preview uses the remaining space and supports Alt-J/K scrolling and Alt-P toggling. Very short popups compact their header and start with the preview hidden; Alt-P opens it without changing the saved popup size.
+
 File rows show source, destination template, strategy and ownership. The active
 profile in Set can open the mapping editor, Rename ID or file browser; those workflows keep
 their own review and approval. Other profiles expose mapping details only.
 `dots config browse --json` returns the same configuration document as `list --json`.
 Bare `dots config get` and `dots config set` enter their category chooser in a
-usable terminal. Fully specified CLI calls retain their existing behavior;
-incomplete operands, JSON and dry-run calls never launch a popup.
+usable terminal. `dots config set KEY` jumps directly to that option's picker or
+text editor and returns after reviewed Save or cancellation. For example:
+
+```sh
+dots config set colors.todo.field.acceptance.value.fg
+dots config set icons.git.branch
+dots config set apps.menu.popup.border
+```
+
+The direct editor preserves `--profile`, `--defaults` and `--no-refresh`. It skips
+the category, option and action menus; it keeps the existing default-Cancel review,
+guarded write and undo command. Escape cancels successfully and Ctrl-C returns 130.
+Missing FZF/popup support reports that an explicit value is required. Fully specified
+CLI calls retain their existing behavior. Noninteractive, JSON, dry-run and
+JSON-value calls still require explicit values and never launch a popup.
 
 ### Manifest fields
 
@@ -491,6 +514,8 @@ consumer activation is reported pending without selecting a theme.
 
 ## Application and formatting controls
 
+`apps.cli.logo_gradient` selects root usage artwork coloring: `classic` (the repository default) preserves vertical blue/cyan, while `installer` uses the horizontal published theme hint/info/accent gradient. Both values are available in Config editing and value completion. The setting follows profile inheritance and null/unset reset, activates on the next command invocation, and does not refresh the theme or applications.
+
 `default/config.json` declares typed `apps` and `formatting` defaults. The same
 sections in `profile.json` override individual fields. Resolution is selected
 profile, inherited parents, shared defaults, then null. A profile `null` or
@@ -520,6 +545,8 @@ the manifest or shared defaults. Only implemented controls are advertised; use t
 additional candidates without adding runtime scans.
 
 ### Dots popup appearance
+
+Wiki reports and selectors expose `apps.wiki` display controls, `formatting.apps.wiki.row_gap`, `colors.wiki.*` spans and `icons.menu.wiki`. They reuse the shared CLI/menu columns and popup controls. See [Wiki output preferences](wiki.md#output-preferences) for defaults, consumer boundaries and examples. Typed changes apply on the next invocation or popup; raw/data and ordinary redirected reports retain their existing output.
 
 `apps.menu.popup` owns the Dots selector frame independently of ordinary FZF defaults. `position` accepts `center` (default), `top`, `bottom`, `left` or `right`; it supplies FZF's `--popup` position while preserving each controller's bounded width and height. `border` accepts `rounded` (default), `sharp`, `double`, `bold` or `none`. Shell `apps.fzf.default_opts` such as `--border=none` no longer remove Dots menu borders.
 

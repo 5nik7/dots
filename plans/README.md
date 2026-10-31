@@ -1,5 +1,8 @@
 # Implementation Plans
 
+- [Documentation, topics and manual](docs-update.md) — implemented and locally verified: compact README, practical guides, offline topic discovery and generated dots(1).
+- [Wiki output and configuration](wiki-output.md) — implemented and locally verified: human report and submenu preferences, typed controls and exact data contracts.
+
 Plans describe active, paused, proposed, or completed work. Durable architecture and behavior belong in `docs/`; plans link to those references rather than redefining them.
 
 ## Planning Documents
@@ -8,6 +11,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Interactive checkout installation](installer-update.md) | Implemented: selective wizard, preparation, WinGet, fonts and pinned Leaf; final acceptance blocked on the actual Leaf build. |
 | [Package workflows](pkgs-workflows.md) | Unattended upgrades, Go tools, rules, streams, editable manifests and optional package-first setup. |
 | [Concise root help](usage-help.md) | Top-level root help across Bash/native frontends, preserved full discovery/completion and presentation acceptance. |
 | [Personal fonts](fonts.md) | Official catalogs, retained versions, per-user registration, app connectors, font/glyph browsers and native acceptance. |

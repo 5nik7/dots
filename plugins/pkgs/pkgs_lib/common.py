@@ -96,6 +96,10 @@ def phase(label):
 
 
 def _stop_query(proc, grouped):
+    if os.name == 'nt':
+        proc.kill()
+        proc.communicate()
+        return
     if grouped:
         try: os.killpg(proc.pid, signal.SIGKILL)
         except ProcessLookupError: pass
@@ -110,16 +114,18 @@ def _stop_query(proc, grouped):
     proc.communicate()
 
 
-def query(args, timeout=45, env=None):
+def query(args, timeout=45, env=None, cwd=None):
     """Read-only child, never the runner for interactive transactions."""
     seconds = remaining(timeout)
-    grouped = not bool(os.environ.get('PKGS_SESSION'))
+    grouped = os.name != 'nt' and not bool(os.environ.get('PKGS_SESSION'))
     start = time.monotonic()
     proc = None
     try:
         proc = subprocess.Popen([str(x) for x in args], text=True, stdin=subprocess.DEVNULL,
+                                encoding='utf-8' if os.name == 'nt' else None,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 start_new_session=grouped,
+                                cwd=cwd,
                                 env={**os.environ, 'LC_ALL': 'C', 'NO_COLOR': '1', **(env or {})})
         try:
             stdout, stderr = proc.communicate(timeout=seconds)

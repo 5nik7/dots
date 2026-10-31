@@ -12,3 +12,13 @@
 # dots:argument=1|choice:bash,zsh,fish,powershell,nu,xonsh|Shell adapter (default: Bash/Zsh)
 # dots:example=eval "$(dots init)"
 # dots:example=dots init fish | source
+# dots:option=--interactive||flag|Open the setup wizard
+# dots:option=--non-interactive||flag|Skip the wizard; writes require --yes
+# dots:option=--component||choice:core,files,themes,anodize,blastoff,pkgs,packages,fonts,leaf|Select components instead of defaults; repeat
+# dots:option=--resource||file-resource|Select enabled catalog IDs within Files; repeat
+# dots:option=--no-clear||flag|Retain the visible screen on wizard entry
+# dots:option=--no-logo||flag|Omit the wizard logo
+# dots:option=--with-dependencies||flag|Offer mapped missing prerequisites before preparation
+# dots:option=--save-choices||flag|Save successful choices in the active profile
+# dots:option=--fonts||file|Restore exact font preferences
+# dots:option=--font-target||choice:termux,kitty,wezterm,windows-terminal,vscode-editor,vscode-terminal|Select saved font targets; repeat

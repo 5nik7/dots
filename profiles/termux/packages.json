@@ -1599,7 +1599,7 @@
         },
         {
           "name": "openjdk-21",
-          "observed_version": "21.0.13",
+          "observed_version": "21.0.13-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2884,6 +2884,20 @@
           "pin": null,
           "selection": "explicit",
           "enabled": true
+        },
+        {
+          "name": "bun",
+          "observed_version": "1.4.4-2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-numpy",
+          "observed_version": "2.5.4",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
         }
       ]
     },
@@ -3130,6 +3144,13 @@
           "pin": null,
           "selection": "explicit",
           "enabled": true
+        },
+        {
+          "name": "ipython",
+          "observed_version": "9.18.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
         }
       ]
     },
@@ -3216,7 +3237,7 @@
         },
         {
           "name": "flake8",
-          "observed_version": "7.4.1",
+          "observed_version": "7.5.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3279,7 +3300,7 @@
         },
         {
           "name": "linode-cli",
-          "observed_version": "5.69.0",
+          "observed_version": "5.70.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3308,14 +3329,14 @@
         },
         {
           "name": "marshmallow",
-          "observed_version": "4.3.1",
+          "observed_version": "3.26.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "maturin",
-          "observed_version": "1.15.0",
+          "observed_version": "1.16.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3352,7 +3373,7 @@
         },
         {
           "name": "platformdirs",
-          "observed_version": "4.13.7",
+          "observed_version": "4.14.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3403,7 +3424,7 @@
         },
         {
           "name": "pyflakes",
-          "observed_version": "4.0.3",
+          "observed_version": "4.1.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3461,7 +3482,7 @@
         },
         {
           "name": "pytz",
-          "observed_version": "2026.5",
+          "observed_version": "2026.6",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3591,7 +3612,7 @@
         },
         {
           "name": "websockets",
-          "observed_version": "17.3",
+          "observed_version": "17.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3599,6 +3620,13 @@
         {
           "name": "zipp",
           "observed_version": "4.1.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pyppeteer",
+          "observed_version": "0.0.25",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3640,7 +3668,7 @@
         },
         {
           "name": "github.com/anthropics/anthropic-cli/cmd/ant",
-          "observed_version": "v1.35.0",
+          "observed_version": "v1.44.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3668,28 +3696,28 @@
         },
         {
           "name": "github.com/ipinfo/cli/ipinfo",
-          "observed_version": "v0.0.0-20261020165622-1d8ba4708cb4",
+          "observed_version": "v0.0.0-20261029164314-a16d8a7c23c0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "github.com/maaslalani/fast",
-          "observed_version": "v0.0.0-20260701061742-26d8fc9c189b",
+          "observed_version": "v0.1.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "github.com/maaslalani/glyphs",
-          "observed_version": "v0.0.0-20240208154946-b51340f85d93",
+          "observed_version": "v0.0.0-20261027003529-d7be14c777c6",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "github.com/maaslalani/sheets",
-          "observed_version": "v0.2.0",
+          "observed_version": "v0.3.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3738,7 +3766,7 @@
         },
         {
           "name": "github.com/wailsapp/wails/v2/cmd/wails",
-          "observed_version": "v2.16.0",
+          "observed_version": "v2.17.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true

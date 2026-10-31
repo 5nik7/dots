@@ -9,6 +9,7 @@ ACTIONS = ('install', 'upgrade')
 
 
 def identity(name, manager):
+    if manager == 'winget': return name.casefold()
     if manager == 'go': return name.partition('@')[0]
     return re.sub(r'[-_.]+', '-', name).lower() if manager in ('pip', 'uv-tool') else name
 
@@ -123,7 +124,7 @@ def commands(backend, action, names, cfg, yes=False):
         specific = [n for n in names if package_rules.get(identity(n, backend.name)) or n in getattr(backend,'pins',{})]
         ordinary = [n for n in names if n not in specific]
         groups = ([ordinary] if ordinary or not names else []) + [[n] for n in specific]
-        if backend.name == 'uv-tool' and names or backend.name == 'go' and action == 'install':
+        if backend.name in ('uv-tool', 'winget') and names or backend.name == 'go' and action == 'install':
             groups = [[n] for n in names]
         for group in groups:
             inner = package_rules.get(identity(group[0], backend.name), {}) if len(group) == 1 else {}
@@ -132,6 +133,8 @@ def commands(backend, action, names, cfg, yes=False):
                 result += expand(inner['replace'], group)
             else:
                 flags = outer.get('flags', []) + inner.get('flags', [])
+                if backend.name == 'winget' and flags:
+                    raise Error('WinGet recipe flags cannot override its exact source/scope contract; use explicit before/after/replace recipes')
                 pin = getattr(backend, 'pins', {}).get(group[0]) if len(group) == 1 else None
                 if backend.name == 'go':
                     from .go_tools import transactions

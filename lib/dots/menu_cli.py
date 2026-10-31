@@ -59,14 +59,15 @@ ACTIONS = (
 FAMILIES = {
     'fonts': (Action('installed', 'installed fonts', ('fonts', 'installed'), kind='popup'),
               Action('set', 'set application font', ('fonts', 'set'), kind='popup'),
-              Action('downloaded', 'downloaded fonts', ('fonts', 'browse', '--downloaded'), kind='popup'),
+              Action('downloaded', 'downloaded fonts', ('fonts', 'browse'), ('--downloaded',), kind='popup'),
               Action('browse', 'browse fonts', ('fonts', 'browse'), kind='popup'),
               Action('icons', 'icon search', ('fonts', 'icons'), kind='popup'),
               Action('current', 'current fonts', ('fonts', 'current')),
               Action('defaults', 'saved font defaults', ('fonts', 'defaults')),
               Action('restore', 'restore saved font defaults', ('fonts', 'restore'), kind='terminal'),
               Action('directories', 'font directories', ('fonts', 'directories')),
-              Action('targets', 'application targets', ('fonts', 'targets'))),
+              Action('targets', 'application targets', ('fonts', 'targets')),
+              Action('configuration', 'font configuration', ('config', 'browse'), ('--query','fonts'), kind='popup')),
     'blastoff': (
         Action('pick', 'choose theme', ('blastoff', 'pick'), kind='terminal'),
         Action('current', 'current theme', ('blastoff', 'current')),
@@ -82,6 +83,8 @@ FAMILIES = {
                for name in ('search', 'install', 'uninstall')),
         Action('list', 'installed packages', ('pkgs', 'list'), ('--installed',)),
         Action('upgrade', 'upgrade user-wide packages', ('pkgs','upgrade'), kind='package'),
+        Action('upgradable', 'upgradable packages', ('pkgs','upgrade'), ('--list',)),
+        Action('cleanup', 'review source installs for removal', ('pkgs','cleanup'), kind='terminal'),
         Action('refresh', 'refresh', ('pkgs','refresh'), kind='terminal'),
         Action('export', 'export packages', ('pkgs','export'), kind='package'),
         Action('update-manifest', 'update package manifest', ('pkgs','export'), ('--update',), kind='package'),
@@ -95,6 +98,8 @@ FAMILIES = {
         Action('keys', 'keys', ('menu', 'tmux', 'keys'), ('--browse',), 'popup', '󰌆', 'tmux'),
     ),
     'files': (Action('browse', 'browse', ('files', 'browse'), kind='terminal', icon='󰉋'),
+              Action('install', 'install components', ('files', 'install'), kind='terminal'),
+              Action('uninstall', 'uninstall components', ('files', 'uninstall'), kind='terminal'),
               Action('add', 'add', ('files', 'add'), kind='terminal', icon='󰉋'),
               *leaves('files', 'list history sources')),
     'git': (*leaves('git', 'status info'),
@@ -123,7 +128,9 @@ FAMILIES = {
     'profile': (*leaves('profile', 'show list paths layers files commands env check'),
                 Action('check-all', 'check all', ('profile','check'), ('--all',))),
     'wiki': (Action('browse', 'browse', ('wiki', 'browse'), kind='document', icon='󰈙'),
-             *leaves('wiki', 'list check')),
+             Action('search', 'search topics', ('wiki', 'browse'), kind='wiki-search', icon='󰈙'),
+             *leaves('wiki', 'list check'),
+             Action('configuration', 'wiki configuration', ('config', 'browse'), ('--query','wiki'), kind='popup')),
 }
 
 
@@ -144,15 +151,16 @@ def entry(root, action, *, windows=None):
     tool = action.tool or ('git' if action.route[0] == 'git' else '')
     if windows and tool == 'tmux':
         reason = 'Tmux menus are unavailable on native Windows'
-    elif windows and action.route[0] == 'pkgs' and not action.submenu and action.id != 'manifest':
-        reason = 'Package operations require a separate Termux, Linux or WSL installation'
+    elif windows and action.route[0] == 'pkgs' and not action.submenu and action.id != 'manifest' and not shutil.which('winget.exe'):
+        reason = 'WinGet is unavailable; install Windows App Installer explicitly'
     elif tool and not shutil.which(tool):
         reason = tool + ' is unavailable'
     if action.route[0] in ('theme', 'anodize') and sys.version_info < (3, 11):
         reason = 'Theme commands require Python 3.11 or newer'
     if action.route[0] == 'wttr' and sys.version_info < (3, 11):
         reason = 'Weather commands require Python 3.11 or newer'
-    key = {'wttr':'weather.title', 'todo':'status.todo', 'config':'files.configuration', 'keys':'navigation.keys', 'tmux':'navigation.session', 'files':'files.directory', 'git':'git.repository', 'wiki':'files.text', 'help':'navigation.help'}.get(action.id, 'menu.'+action.id)
+    key = {'wttr':'weather.title', 'todo':'status.todo', 'config':'files.configuration', 'keys':'navigation.keys', 'tmux':'navigation.session', 'files':'files.directory', 'git':'git.repository', 'wiki':'menu.wiki', 'help':'navigation.help'}.get(action.id, 'menu.'+action.id)
+    if action.route[0] == 'wiki': key = 'menu.wiki'
     return Entry(action.id, action.label, description, not reason, reason, style_icon(key, action.icon),key)
 
 
@@ -190,6 +198,13 @@ def invoke(root, action, context):
             show_message('Session attachment failed.', context=context, title='Tmux sessions', code=outcome.code)
         return False
     kind = action.kind
+    if kind == 'wiki-search':
+        from menu_input import prompt
+        query = prompt('', 'Search documentation topics', context, back=True)
+        if not query or not query.strip(): return False
+        run_action(dots_argv(['wiki', 'browse', '--query=' + query], root=root),
+                   kind='document', context=context, title='Wiki topics')
+        return False
     if kind == 'package':
         from menu_input import prompt
         sys.path.insert(0, str(root/'plugins/pkgs'))

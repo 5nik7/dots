@@ -87,14 +87,14 @@ class Presentation:
         from style_config import icon
         return icon(name, fallback)
 
-    def paint(self, value, code):
+    def paint(self, value, code, *, preferences=None):
         from style_config import code as style_code, current
-        if self.color: code = style_code(code)
+        if self.color: code = preferences.code(code) if preferences is not None else style_code(code)
         value = self.clean(value)
         # Apply independent icon styles only where a configured glyph occurs as
         # its own display token. Plain strings/data never carry embedded ANSI.
         if self.color and self.icons:
-            prefs=current()
+            prefs=preferences if preferences is not None else current()
             if prefs:
                 if not hasattr(self,'_icon_paints'):
                     if not hasattr(prefs,'_icon_paints'):

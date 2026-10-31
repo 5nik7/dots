@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Owned-root tests for the Bash dispatcher; never execute installed extensions."""
 import json
+import base64
 import os
 import pty
 import re
@@ -8,6 +9,7 @@ from pathlib import Path
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -291,6 +293,38 @@ dots::error 'Error'
             self.assertIn('Usage', output)
             if content == 'single':
                 self.assertTrue(output.startswith('\x1b[38;2;0;96;255msingle\x1b[0m\n\n'))
+
+    def test_configured_installer_logo_reaches_both_frontends(self):
+        shutil.copytree(REPO/'default',self.repo/'default')
+        for name in ('termux','linux','wsl','windows'):
+            directory=self.repo/'profiles'/name;directory.mkdir(parents=True)
+            (directory/'profile.json').write_text(json.dumps(dict(schema=1,id=name,apps=dict(cli=dict(logo_gradient='installer')))))
+        shutil.copy2(REPO/'bin/dots-config-set',self.repo/'bin/dots-config-set')
+        artwork=['ABC',' ABC','ABC']
+        (self.repo/'logo.txt').write_text('\n'.join(artwork)+'\n')
+        palette=dict(hint='#102030',info='#405060',accent='#708090')
+        published=self.home/'state/dots/current/theme';published.mkdir(parents=True)
+        (published/'palette.json').write_text(json.dumps(dict(colors=palette)))
+        sys.path.insert(0,str(REPO/'lib/dots'))
+        from text_gradient import gradient
+        expected='\n'.join(gradient(artwork,palette,horizontal=True,restore='\x1b[0m'))+'\n'
+        for width in ('40','80','120'):
+            env=dict(self.env,COLUMNS=width)
+            self.assertTrue(self.run_dots('--color=always',env=env).stdout.startswith(expected+'\n'))
+            result=subprocess.run([sys.executable,'-B',str(self.repo/'lib/dots/cli.py'),'--color=always','help'],env=env,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr);self.assertTrue(result.stdout.startswith(expected+'\n'))
+        result=subprocess.run([sys.executable,'-B',str(self.repo/'lib/dots/native.py'),'usage-logo',base64.b64encode(b'[]').decode()],env=dict(self.env,DOTS_COLOR='always'),capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout,expected)
+        plain='\n'.join(artwork)+'\n\n'
+        self.assertTrue(self.run_dots('help').stdout.startswith(plain))
+        self.assertTrue(self.run_dots('--color=never','help').stdout.startswith(plain))
+        self.assertEqual({row[1] for row in self.complete('config','set','apps.cli.logo_gradient','')},{'classic','installer'})
+        before=sorted(str(p) for p in self.home.rglob('*'))
+        self.assertEqual(self.run_dots('--color=always','--raw','--dir').stdout,str(self.repo)+'\n')
+        self.assertEqual(before,sorted(str(p) for p in self.home.rglob('*')))
+        fallback=subprocess.run([BASH,str(self.repo/'bin/dots'),'--color=always','help'],env=dict(self.env,PATH=str(self.repo/'bin')),capture_output=True,text=True)
+        self.assertEqual(fallback.returncode,0,fallback.stderr)
+        self.assertTrue(fallback.stdout.startswith('\x1b[38;2;0;96;255mABC\x1b[0m'))
 
     def test_automatic_styles_evaluate_stdout_and_stderr_independently(self):
         self.command('style', body='source "$DOTS_LIB_DIR/ui.bash"; dots::success Hello; dots::error Failure')

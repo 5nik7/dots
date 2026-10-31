@@ -186,11 +186,11 @@ store.apply('wiki-build',ops,guards,retain=True)
         from interaction import SelectionEnded
         with patch.object(sys.stdin,'isatty',return_value=True), patch.object(sys.stdout,'isatty',return_value=True), patch('shutil.which',return_value='available'), patch.dict(os.environ,TERM='xterm-256color'), patch('interaction.Selector.pick',side_effect=SelectionEnded(130)) as pick:
             self.assertEqual(wiki.main(['browse']),130)
-            pick.assert_called_once_with('filter','Wiki pages',['Home','Guide','Commands'])
+            pick.assert_called_once_with('filter','Wiki pages',['1.  Home · Start here','2.  A guide · Use Dots','3.  Commands · Reference'])
 
     def test_only_interactive_browse_pages_selected_document(self):
         self.build()
-        with patch.object(sys.stdin,'isatty',return_value=True), patch.object(sys.stdout,'isatty',return_value=True), patch('shutil.which',return_value='available'), patch.dict(os.environ,TERM='xterm-256color'), patch('interaction.Selector.pick',return_value='Guide'), patch('themes.file_preview.run_renderer',return_value=b'Entire highlighted document'), patch('menu_pager.page_text') as page:
+        with patch.object(sys.stdin,'isatty',return_value=True), patch.object(sys.stdout,'isatty',return_value=True), patch('shutil.which',return_value='available'), patch.dict(os.environ,TERM='xterm-256color'), patch('interaction.Selector.pick',side_effect=lambda kind,title,choices: choices[1 if title=='Wiki pages' else 0]), patch('themes.file_preview.run_renderer',return_value=b'Entire highlighted document'), patch('menu_pager.page_text') as page:
             self.assertEqual(wiki.main(['browse']),0)
             page.assert_called_once_with(b'Entire highlighted document',title='A guide',defer=True)
         with patch('menu_pager.page_text',side_effect=AssertionError('data path paged')):

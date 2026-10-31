@@ -49,6 +49,9 @@ def help_view(directories, words):
     if words[:1] == ['anodize']:
         from anodize.logo import render
         render(ui, full=True)
+    if not words:
+        from usage_logo import render
+        render(ui, LIB.parents[1])
     ui.heading('Dots' if not stem else 'dots ' + ' '.join(words))
     if metadata:
         ui.emit('  ' + metadata['summary'])

@@ -32,7 +32,7 @@ The personal profile now uses [shared Starship startup](shell-init.md#powershell
 
 ## Commands and interaction
 
-Root help (`dots`, `dots help`, `dots -h`, `dots --help`) shows only top-level commands/groups and a hint for detailed help and the full `dots commands` list. Deeper-only extensions contribute a group row; contextual help and completion retain deeper routes. The native static help path still works without Python. The owned-root regression covers all four forms, grouping and narrow footer wrapping with Python absent from PATH; actual Windows PowerShell 5.1/7 and terminal acceptance remain pending. Application destinations and installation behavior are unchanged.
+Root help (`dots`, `dots help`, `dots -h`, `dots --help`) shows only top-level commands/groups and a hint for detailed help and the full `dots commands` list. Deeper-only extensions contribute a group row; contextual help and completion retain deeper routes. Root artwork reads `apps.cli.logo_gradient` through the shared core renderer when Python is available; basic help retains the classic logo fallback without Python. The owned-root regression covers all four forms, grouping and narrow footer wrapping with Python absent from PATH; actual Windows PowerShell 5.1/7 and terminal acceptance remain pending. Application destinations and installation behavior are unchanged.
 
 `dots.ps1 config` opens the shared configuration browser in a terminal;
 `config browse --profile ID`, `--defaults` and `--query TEXT` use the same Python
@@ -191,3 +191,9 @@ Termux and simulated Windows evidence are recorded in the [core plan](../plans/c
 ## Existing-source registration acceptance
 
 Native `dots.ps1 files add` shares existing-source and existing-link registration, `--target`, scan and picker behavior with Bash through the Python controller. Windows app destinations remain adapter-owned. Registration preserves correct pre-existing links; new symbolic links require native capability, and unsupported reparse points fail explicitly. No Bash/WSL bridge is used. Native PowerShell 5.1/7 execution and visual acceptance remains pending when those engines are unavailable; ordinary adoption capability limits remain as documented.
+
+## Offline documentation topics
+
+Native `dots.ps1 wiki search 'config precedence' --topics` and `dots.ps1 wiki browse --query 'nvim themes'` use the same current-source topic controller as Bash. They require no exported wiki checkout or WSL process. Static metadata provides matching flag completion; literal search and structured/raw output keep their existing contracts. Popup selection uses available native tools and the supported inline reader fallback.
+
+Windows core setup does not install a POSIX man page. The wiki command reference and generated `man/dots.1` share the same public first-party metadata; the former is the native Windows reading surface. Shared-controller and adapter fixtures do not establish native PowerShell 5.1/7 keyboard or rendering acceptance, which remains a named pending check for this addition.

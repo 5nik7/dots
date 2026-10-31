@@ -19,8 +19,9 @@ def styled(cfg, stream):
 
 
 class Formatter:
-    def __init__(self, stream, cfg):
+    def __init__(self, stream, cfg, observer=None):
         self.stream, self.pending = stream, ''
+        self.observer = observer
         self.after_cr = False
         self.manager = cfg.get('_manager')
         self.decoder = codecs.getincrementaldecoder('utf-8')('replace')
@@ -34,6 +35,9 @@ class Formatter:
     def emit(self, text, ending=''):
         text = re.sub(r'[\x00-\x08\x0b-\x1f\x7f-\x9f]', '', ESCAPES.sub('', text)).replace('\t', '    ')
         if self.manager in (None, 'auto', 'apt') and text == APT_SCRIPT_WARNING: return
+        if self.observer is not None:
+            self.observer.line(text, ending, self.stream)
+            return
         role = ('error' if re.search(r'^(?:E:|ERR\b|error\b|fatal\b|failed\b)', text, re.I) else
                 'warning' if re.search(r'^(?:W:|warn|skip)', text, re.I) else
                 'success' if re.search(r'^(?:success|complete|installed\b|up.to.date)', text, re.I) else 'value')
@@ -46,7 +50,8 @@ class Formatter:
         if role == 'value' and any(re.search(pattern,text) for name,pattern in markers.items() if self.manager in (None,'auto',name)):
             role = 'identity'
         if self.ui and role != 'value': text = self.ui.ui.paint(text, __import__('plugin_presentation').STYLES[role])
-        self.stream.write(text + ending)
+        # A child may disable ONLCR on the controlling terminal while it runs.
+        self.stream.write(text + ('\r\n' if ending == '\n' and self.stream.isatty() else ending))
         self.stream.flush()
 
     def feed(self, chunk, final=False):
@@ -70,8 +75,12 @@ class Formatter:
     def flush_partial(self, final=False):
         # Do not emit an incomplete terminal escape sequence.
         if not final and self.manager in (None, 'auto', 'apt') and APT_SCRIPT_WARNING.startswith(self.pending): return
+        if self.observer is not None and not final and len(self.pending) <= 8192:
+            from .upgrade_output import PROMPT
+            self.observer.partial(self.pending)
+            if not PROMPT.search(self.pending): return
         if self.pending and '\x1b' not in ESCAPES.sub('', self.pending):
-            self.emit(self.pending)
+            self.emit(self.pending, '\n' if self.observer is not None and (final or len(self.pending)>8192) else '')
             self.pending = ''
         elif len(self.pending) > 8192:
             self.emit(self.pending.replace('\x1b', ''))
@@ -95,21 +104,53 @@ def filter_stdin(cfg):
     return 0
 
 
+def pip_progress_environment(command, environment):
+    """Only the native interpreter's pip install receives compact byte events."""
+    if command[:4] != [sys.executable, '-m', 'pip', 'install']: return
+    environment.setdefault('PYTHONUNBUFFERED', '1')
+    if 'PIP_PROGRESS_BAR' in environment: return
+    from importlib import metadata
+    try:
+        match = re.match(r'^(\d+)\.(\d+)', metadata.version('pip'))
+        if match and tuple(map(int, match.groups())) >= (25, 1): environment['PIP_PROGRESS_BAR'] = 'raw'
+    except (metadata.PackageNotFoundError, ValueError, OSError): pass
+
+
+def npm_progress_environment(command, environment):
+    """Request native activity only inside the compact upgrade observer."""
+    if os.path.basename(command[0]).lower() not in ('npm', 'npm.cmd', 'npm.exe'): return
+    if any(key.lower() == 'npm_config_loglevel' for key in environment): return
+    # Native CLI flags take precedence; do not rewrite literal recipe argv.
+    environment['npm_config_loglevel'] = 'info'
+
+
 def run(command, cfg, *, unattended=False, env=None, data=False):
     command = list(command)
     try: tty = open('/dev/tty', 'r')
     except OSError: tty = None
+    terminal_state = None
+    if tty is not None:
+        try:
+            import termios
+            try: terminal_state = termios.tcgetattr(tty)
+            except termios.error: pass
+        except (ImportError, OSError): pass
     if command[0] == 'sudo' and tty is None and '-n' not in command:
         command.insert(1, '-n')
     stdin = tty if tty else subprocess.DEVNULL
     stdout = sys.stderr if data else sys.stdout
     environment = dict(os.environ, **(env or {}))
     capture = styled(cfg, stdout) or styled(cfg, sys.stderr)
+    observer = cfg.get('_upgrade_output') if capture else None
     proc = None
     stopped = threading.Event()
     isolated = tty is None and os.name != 'nt'
     try:
         if capture: environment.update(LC_ALL='C', NO_COLOR='1')
+        if observer is not None:
+            pip_progress_environment(command, environment)
+            npm_progress_environment(command, environment)
+            observer.begin(command)
         proc = subprocess.Popen(command, stdin=stdin, stdout=subprocess.PIPE if capture else stdout,
                                 stderr=subprocess.PIPE if capture else sys.stderr, env=environment,
                                 start_new_session=isolated)
@@ -131,12 +172,14 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
         workers = [threading.Thread(target=pump, args=(i, pipe), daemon=True)
                    for i, pipe in enumerate((proc.stdout, proc.stderr))]
         for worker in workers: worker.start()
-        formatters = [Formatter(stdout, cfg), Formatter(sys.stderr, cfg)]
+        formatters = [Formatter(stdout, cfg, cfg.get('_upgrade_output')),
+                      Formatter(sys.stderr, cfg, cfg.get('_upgrade_output'))]
         finished = 0
         while finished < 2:
             try: index, chunk = events.get(timeout=0.1)
             except queue.Empty:
                 for formatter in formatters: formatter.flush_partial()
+                if observer is not None: observer.tick()
                 continue
             if chunk is None:
                 formatters[index].feed(b'', final=True)
@@ -158,4 +201,8 @@ def run(command, cfg, *, unattended=False, env=None, data=False):
         raise
     finally:
         stopped.set()
-        if tty: tty.close()
+        if tty:
+            if terminal_state is not None:
+                try: termios.tcsetattr(tty, termios.TCSANOW, terminal_state)
+                except (OSError, termios.error): pass
+            tty.close()

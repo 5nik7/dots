@@ -16,6 +16,12 @@
       "source": "docs/wiki-home.md"
     },
     {
+      "id": "Core",
+      "title": "Dots core",
+      "section": "Start here",
+      "source": "docs/core.md"
+    },
+    {
       "id": "Installation",
       "title": "Installation",
       "section": "Start here",
@@ -62,6 +68,12 @@
       "title": "Profiles",
       "section": "Shells and environment",
       "source": "docs/profiles.md"
+    },
+    {
+      "id": "Configuration",
+      "title": "Configuration",
+      "section": "Shells and environment",
+      "source": "docs/configuration.md"
     },
     {
       "id": "Shell-utilities",
@@ -128,6 +140,12 @@
       "title": "Keybinding reference",
       "section": "Tools and troubleshooting",
       "source": "docs/keys.md"
+    },
+    {
+      "id": "Tmux",
+      "title": "Tmux sessions and status",
+      "section": "Tools and troubleshooting",
+      "source": "docs/tmux.md"
     },
     {
       "id": "Debug",
@@ -200,6 +218,12 @@
       "title": "Application plugins",
       "source": "docs/plugins.md",
       "section": "Tools"
+    },
+    {
+      "id": "Neovim",
+      "title": "Neovim (nvim)",
+      "section": "Tools",
+      "source": "docs/neovim.md"
     },
     {
       "id": "Todo",

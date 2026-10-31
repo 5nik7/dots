@@ -288,7 +288,7 @@ class Completions(Isolated):
         script = 'source "$1"; COMP_WORDS=(pkgs in); COMP_CWORD=1; _pkgs_complete; printf "%s\\n" "${COMPREPLY[@]}"'
         p = subprocess.run(['bash', '-c', script, 'test', str(ROOT/'completions/pkgs.bash')], env=env, text=True, capture_output=True)
         self.assertEqual(p.returncode, 0, p.stderr)
-        self.assertEqual(p.stdout.splitlines(), ['install', 'info'])
+        self.assertEqual(p.stdout.splitlines(), ['install', 'info', 'in'])
 
     def test_zsh_native_candidates(self):
         if not __import__('shutil').which('zsh'): self.skipTest('zsh unavailable')
@@ -296,6 +296,6 @@ class Completions(Isolated):
         script = "function compadd() { print -l -- \"$@\"; }; function test_completion() { source \"$1\"; }; words=(pkgs in); CURRENT=2; test_completion \"$1\""
         p = subprocess.run(['zsh', '-f', '-c', script, 'test', str(ROOT/'completions/pkgs.zsh')], env=env, text=True, capture_output=True)
         self.assertEqual(p.returncode, 0, p.stderr)
-        self.assertEqual(p.stdout.splitlines()[-2:], ['install', 'info'])
+        self.assertEqual(p.stdout.splitlines()[-3:], ['install', 'info', 'in'])
 
 if __name__ == '__main__': unittest.main()

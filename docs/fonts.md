@@ -10,6 +10,58 @@ Python packages. Native Windows runtime and application acceptance remain pendin
 
 ## Find and save fonts
 
+The main Fonts popup includes **Configuration** for display, preview and shared
+layout controls. The catalog and glyph pickers also open it with **Alt-O**;
+`dots menu` → Fonts → Font configuration opens the matching Config entries.
+
+Human reports, help, reviews and errors use Dots CLI formatting and semantic
+styles. All Fonts selectors use shared menu field/icon styles and layout. Catalog
+previews wrap at the actual preview-pane width. JSON, exact `path`, single-glyph
+formats and ordinary redirected output retain their data/undecorated formats.
+
+### Output preferences
+
+```sh
+dots config browse --query apps.fonts
+dots config set apps.fonts.list_details full
+dots config set apps.fonts.preview.position right
+dots config set apps.fonts.preview.size 40
+dots config set apps.fonts.preview.sample false
+dots config unset apps.fonts.preview.position
+```
+
+These controls inherit shared defaults, parent profiles and the current profile.
+They apply on the next Fonts command or reopened picker, including after returning
+from its Configuration menu. They do not set a font or publish a theme.
+
+| Key under `apps.fonts` | Default | Human consumer |
+| --- | --- | --- |
+| `list_details` | `summary` | `summary` counts retained faces in list/search/installed/downloaded reports; `full` expands faces and provenance. `show` and previews retain details. |
+| `provenance` | `true` | Show provenance in detailed human reports and previews; JSON and redirected output always retain it. |
+| `menu_descriptions` | `true` | Show secondary text in nested choices and catalog/glyph rows; labels and selection identities remain available. |
+| `preview.enabled` | `true` | Show the catalog/glyph preview pane. |
+| `preview.sample` | `true` | Render actual downloaded font samples when optional ImageMagick and Chafa are available; `false` shows metadata only. |
+| `preview.position` | `down` | Place the preview below (`down`) or beside (`right`) the list. |
+| `preview.size` | `33` | Integer percentage from 10 through 80 of the picker height or width. |
+| `preview.wrap` | `true` | Wrap preview text in FZF. |
+
+Use existing `formatting.apps.cli` and `formatting.apps.menu` for indentation,
+tab stops, label width/gap and alignment; use `apps.menu.popup` for the shared popup
+frame, position, dimensions and colors. Font-specific report style roles are
+`colors.fonts.heading`, `label`, `identity`, `version`, `source`, `face` and `glyph`.
+Each supports foreground, background and text attributes, inheriting the shared
+semantic style until overridden. CLI-scoped overrides use
+`colors.apps.cli.fonts.<role>.<field>`. The font icon is `icons.menu.fonts`, with
+independent styling in `colors.icons.menu.fonts`. Null/unset resets an override.
+
+Nested choices use shared `colors.menu.*` roles and per-entry
+`formatting.apps.menu.entries["fonts:MENU:ENTRY"]` overrides. Examples are
+`fonts:Fonts:installed`, `fonts:Actions:show`, `fonts:catalog:nerd:JetBrainsMono`
+and `fonts:icons:ICON_NAME`; field suffixes such as `.label.fg` style only that
+entry. Display preferences never change the literal command arguments or glyphs.
+
+### Catalogs and downloads
+
 ```sh
 dots fonts update                       # Explicitly refresh both official catalogs
 fonts search JetBrains                  # Search the cached catalogs, offline
@@ -175,6 +227,8 @@ application cause a guarded failure; close the application and retry.
 
 ## Browser and icons
 
+The Dots launcher's Downloaded fonts entry opens `fonts browse --downloaded`. Its availability checks the browse command, independently of the number of retained fonts or network access.
+
 Plain interactive `fonts` opens an action menu: Installed fonts, Set application font, Downloaded fonts, Browse catalogs, Font directories, Current fonts, Saved defaults / Restore, and Icon search. The Dots launcher exposes these workflows too. `fonts set` with no operands opens an app-first chooser; noninteractive Set still requires explicit selection. `fonts --query TEXT` and `fonts browse` keep the catalog browser. `fonts installed --json` / `--print` are read-only inventories.
 
 The catalog browser offers details, version selection and reviewed actions. Use Alt-U to update catalogs, Alt-N to
@@ -223,3 +277,7 @@ into the library when selected. `-r` remains accepted; reload now occurs by defa
 and `--no-reload` skips it. Both wrappers support `--yes`/`--dry-run`; force never
 bypasses pins, ownership or confirmation. See [data contracts](specification.md#font-library-and-catalogs)
 and [platform acceptance](../plans/fonts.md#evidence).
+
+## Checkout setup integration
+
+The optional Fonts setup component restores exact saved versions, hashes, faces and application targets, or a reviewed retained face. It stages acquisition and combines library retention, native user registration, app edits and metadata with the installer's final transaction. It never reloads applications. Run-only choices retain payloads without replacing profile `fonts.json`; Save choices uses the normal Fonts preference owner. An expected catalog-managed `.termux` link uses a guarded physical destination; arbitrary links remain refused. Selective Fonts uninstall restores unchanged installer-owned app settings and previous selection metadata while retaining font libraries/registrations.

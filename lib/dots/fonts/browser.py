@@ -12,10 +12,17 @@ import sys
 from fonts.model import Library, sha
 from interaction import RichSelector, SelectionEnded, SelectionEvent, rich_fzf_available, terminal
 from menu_tmux import TmuxContext, request_file, read_request
-from menus import Menu, Entry, choose, dots_argv, run_action, show_message
+from menus import Menu, Entry, choose, dots_argv, run_action, show_message, styled_label
 from files.catalog import Presentation
 from files.picker import fzf_colors
 from resources import clean
+from fonts.presentation import preference
+
+
+def menu_entry(key, label, description='', *, role='menu.fonts'):
+    from style_config import icon
+    return Entry(key,label,description if preference('menu_descriptions',True) else '',
+                 icon=icon(role,''),icon_role=role)
 
 
 def context_for(args):
@@ -28,8 +35,8 @@ def context_for(args):
 def select(title, pairs, context=None, *, frame=None):
     frame={} if frame is None else frame
     try:
-        entry=choose(Menu('fonts:'+title,title,tuple(Entry(key,label) for key,label in pairs)),
-                     mode='browse',context=context,compact=True,navigation=frame,query=frame.get('query',''),prompt='fonts·'+title.lower())
+        entry=choose(Menu('fonts:'+title,title,tuple(menu_entry(*pair) for pair in pairs)),
+                     mode='browse',context=context,navigation=frame,query=frame.get('query',''),prompt='fonts·'+title.lower())
         return entry.id if entry else None
     except SelectionEvent: return None
 
@@ -42,26 +49,48 @@ def picker(rows, previews, frame, context, *, icons=False):
     ui=Presentation(terminal=True)
     columns,lines=context.verify() if context else shutil.get_terminal_size((80,24))
     width,height=max(1,columns-2),max(1,lines-2)
-    labels=[clean((r['glyph']+'  '+r['name']+'  '+r['codepoint']) if icons else
-                  r['id']+' · '+r.get('name','')+(' · installed '+r['installed']['version'] if r.get('installed') else '')) for r in rows]
-    keys={'esc':'back','f1':'help'}
+    from menu_popup import dimensions as popup_dimensions, preferences as popup_preferences
+    options=popup_preferences()
+    width,height=popup_dimensions(options,(width,height),(columns,lines)) if context else (columns,popup_dimensions(options,(columns,height),(columns,lines))[1])
+    ui.width=max(1,width-6)
+    from config_values import value
+    from style_config import current
+    prefs=current();formatting=value('formatting.apps.menu',{})
+    descriptions=preference('menu_descriptions',True)
+    glyph=prefs.icon('menu.fonts',app='cli') if prefs else ''
+    entries=tuple(Entry(r['name'],r['glyph']+' '+r['name'],r['codepoint'] if descriptions else '') if icons else
+                  Entry(r['id'],r['id'],(r.get('name','')+(' · installed '+r['installed']['version'] if r.get('installed') else '')) if descriptions else '',
+                        icon=glyph,icon_role='menu.fonts') for r in rows)
+    menu=Menu('fonts:icons' if icons else 'fonts:catalog','Fonts',entries)
+    labels=[styled_label(menu,entry,ui,preferences=prefs,formatting=formatting) for entry in entries]
+    keys={'esc':'back','f1':'help','alt-o':'configuration'}
     keys.update({'alt-y':'copy','alt-i':'insert','alt-p':'print'} if icons else
                 {'alt-u':'update','alt-n':'import','alt-t':'targets','alt-g':'icons','alt-l':'local','alt-s':'catalog','alt-d':'directory'})
     header=('Enter/Alt-Y: copy  Alt-I: insert  Alt-P: print' if icons else
             'Enter: actions  Alt-U: catalogs  Alt-N: import\nAlt-D: directory  Alt-L: local  Alt-S: catalog\nAlt-T: targets  Alt-G: icons')
-    header+='\nEsc: back  F1: help  Ctrl-C: cancel'
+    header+='\nAlt-O: config  Esc: back  F1: help  Ctrl-C: cancel'
     if frame.get('notice'): header+='\n'+frame['notice']
-    with request_file(dict(schema=1,previews=previews,color=ui.color)) as path:
+    preview_enabled=preference('preview.enabled',True)
+    if context and not preview_enabled and 'fit' in (options.get('width'),options.get('height')):
+        from menu_popup import content_size
+        automatic=(max(1,columns-2),max(1,lines-2))
+        content=content_size(labels,'fonts·icons' if icons else 'fonts',header,(columns,lines),options,automatic=automatic)
+        width,height=popup_dimensions(options,automatic,(columns,lines),content)
+        ui.width=max(1,width-6)
+        labels=[styled_label(menu,entry,ui,preferences=prefs,formatting=formatting) for entry in entries]
+    with request_file(dict(schema=1,previews=previews,color=ui.color,icons=ui.icons,sample=preference('preview.sample',True),wrap=preference('preview.wrap',True))) as path:
         command=('& $env:DOTS_FONTS_PYTHON -B $env:DOTS_FONTS_PREVIEW $env:DOTS_FONTS_REQUEST {1}' if os.name=='nt'
                  else '"$DOTS_FONTS_PYTHON" -B "$DOTS_FONTS_PREVIEW" "$DOTS_FONTS_REQUEST" {1}')
         preview=(command,'',dict(DOTS_FONTS_PYTHON=sys.executable,
             DOTS_FONTS_PREVIEW=str(Path(__file__).with_name('preview.py')),DOTS_FONTS_REQUEST=str(path)))
+        if not preview_enabled:preview=None
         from progress import permanent_output
         with permanent_output(), context.selector_environment() if context else nullcontext(None) as environment:
             try:
                 result=RichSelector(backend='fzf').fzf('fonts·icons' if icons else 'fonts',labels,False,preview,
                     ui.color,ui.icons,fzf_colors(ui),popup=f'center,{width},{height}' if context else False,
-                    height=height,preview_position='down',preview_lines=max(1,min(12,height//3)),preview_wrap=True,
+                    height=height,preview_position=preference('preview.position','down'),preview_size=preference('preview.size',33),
+                    preview_wrap=preference('preview.wrap',True),popup_resolved=context is not None,
                     query=frame.get('query',''),header=header,navigation=frame,navigation_keys=keys,event_selection=True,
                     environment=environment,focus_index=next((i for i,r in enumerate(rows) if (r.get('id') or r.get('name'))==frame.get('selected')),None))
             except SelectionEvent as event:
@@ -72,13 +101,21 @@ def picker(rows, previews, frame, context, *, icons=False):
 
 
 def previews(library,rows):
-    from fonts_cli import render
+    if not preference('preview.enabled',True):return []
+    sample=preference('preview.sample',True)
     result=[]
     for row in rows:
-        stream=io.StringIO();render(dict(items=[row]),stream)
-        entry=dict(text=stream.getvalue())
+        # Retain only displayed metadata, not provider manifests/download specs.
+        display={key:val for key,val in row.items() if key in (
+            'id','name','target','action','version','latest','variant','status','ownership','reason',
+            'face','source','provider','codepoint','glyph','pinned','selection','installed','pin',
+            'path','aliases','stored_versions','active')}
+        display['versions']={version:{key:val for key,val in record.items() if key in ('available','provenance')} |
+            dict(fonts=[{key:font[key] for key in ('file','family','variant')} for font in record.get('fonts',[])])
+            for version,record in row.get('versions',{}).items()}
+        entry=dict(report=dict(items=[display]))
         saved=library.families.get(row['id'])
-        if saved and any(r.get('available',True) for r in saved['versions'].values()):
+        if sample and saved and any(r.get('available',True) for r in saved['versions'].values()):
             version,record=library.version(row['id'])
             fonts=record['fonts'];font=next((f for f in fonts if f['style'].casefold()=='regular'),fonts[0])
             path=library.folder(row['id'],version)/font['file']
@@ -112,7 +149,7 @@ def family_actions(library,row,context):
         return set_menu(parser().parse_args(['set']),context=context,selected=row)
     if action=='show' and library.directory and not saved and identity not in library.catalog['families']:
         from fonts_cli import render
-        stream=io.StringIO();render(dict(status='Personal library copy available to store',items=[row]),stream)
+        stream=io.StringIO();render(dict(status='Personal library copy available to store',items=[row]),stream,human=True)
         show_message(stream.getvalue(),context=context,title='Font details');return
     argv=[action,identity]
     if action in ('download','install','use','set','rollback','pin','export','remove') or library.directory and action=='uninstall':
@@ -162,23 +199,27 @@ def browse(args):
         if args.source and args.source!='all':rows=[r for r in rows if r['provider']==args.source]
         try:
             if not rows:
-                action=select('Fonts',[('directory','Select directory'),('update','Update catalogs'),('import','Import existing fonts'),('icons','Icon search'),('targets','Application targets')],context)
+                action=select('Fonts',[('directory','Select directory'),('update','Update catalogs'),('import','Import existing fonts'),('icons','Icon search'),('targets','Application targets'),('configuration','Configuration')],context)
                 if action is None:return 0
             else:
                 try:
                     row=picker(rows,previews(library,rows),frame,context)
                     if row is None:
                         from fonts_cli import emit
-                        print('fonts: FZF unavailable; printing the collection',file=sys.stderr)
+                        from fonts.presentation import diagnostic
+                        diagnostic('FZF unavailable; printing the collection',sys.stderr)
                         emit(dict(schema=1,items=rows),args);return 0
                     family_actions(library,row,context);continue
                 except SelectionEvent as event: action=event.action
             if action=='back':return 0
+            if action=='configuration':
+                from fonts.menus import configuration
+                configuration(context);continue
             if action=='local':available=False;continue
             if action=='catalog':available=True;continue
             if action=='directory':
                 from fonts.destinations import Destinations
-                choice=select('Directory',[('personal','Personal library')]+[(r['path'],r['name']+' · '+r['path']) for r in Destinations().rows()],context)
+                choice=select('Directory',[('personal','Personal library')]+[(r['path'],r['name'],r['path']) for r in Destinations().rows()],context)
                 if choice is not None:directory=None if choice=='personal' else choice
                 continue
             if action=='help':
@@ -239,7 +280,7 @@ def icons(library,args,*,context=None):
         emit(dict(schema=1,version=version,items=filtered),args);return 0
     context=context or context_for(args)
     frame=dict(query=query,notice='Nerd Fonts '+str(version)+' · glyphs use the current terminal font')
-    preview=[dict(kind='glyph',text=r['glyph']+'\n'+r['name']+'\n'+r['codepoint']+'\nCollection: '+r['collection']+'\nVersion: '+str(version)) for r in rows]
+    preview=[dict(kind='glyph',report=dict(items=[dict(r,version=version)])) for r in rows]
     while True:
         try:
             try:
@@ -248,6 +289,9 @@ def icons(library,args,*,context=None):
             except SelectionEvent as event:
                 action=event.action
                 if action=='back':return 0
+                if action=='configuration':
+                    from fonts.menus import configuration
+                    configuration(context);continue
                 if action=='help':
                     show_message('Enter / Alt-Y: copy glyph and close\nAlt-I: insert in the originating tmux pane, without Enter\nAlt-P: print glyph and close\nOutside tmux use clipboard or stdout.',context=context,title='Icon search');continue
                 if event.index is None:continue

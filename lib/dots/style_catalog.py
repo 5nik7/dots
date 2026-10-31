@@ -8,6 +8,8 @@ ALIASES = {'navigation.codex': 'applications.codex'}
 TODO = ('status.open', 'status.doing', 'status.blocked', 'status.done', 'status.removed',
         'priority.high', 'priority.normal', 'priority.low')
 TODO_FIELDS=('id','alias','title','notes','tags','status','priority','due','parent','acceptance','subgoal_id','subgoal_title','subgoals','created','updated','completed','removed')
+FONTS = ('heading','label','identity','version','source','face','glyph')
+WIKI = ('heading','label','page','section','snippet','url')
 TMUX = ('window.active', 'window.inactive', 'window.attention', 'pane.active_border', 'pane.inactive_border')
 
 
@@ -34,6 +36,8 @@ def split(name):
 def fields(role, app):
     """Only fields actually consumed by each native adapter are editable."""
     if app == 'cli':
+        if role in ('wiki.'+name for name in WIKI): return ('fg','bg',*ATTRIBUTES)
+        if role in ('fonts.'+name for name in FONTS): return ('fg','bg',*ATTRIBUTES)
         if role.startswith('icons.') and role[6:] in icon_roles():return ('fg','bg',*ATTRIBUTES)
         if role in ('menu.icon','menu.label','menu.description','menu.shortcut','menu.state') or role in ('todo.field.'+name+'.'+kind for name in TODO_FIELDS for kind in ('label','value')):
             return ('fg','bg',*ATTRIBUTES)
@@ -85,6 +89,8 @@ def known_keys(group,styles):
     else:
         roles=({split(key)[1].rsplit('.',1)[0] for key in result}|{'icons.'+key for key in icon_roles()}|
                {'todo.field.'+name+'.'+kind for name in TODO_FIELDS for kind in ('label','value')}|
+               {'fonts.'+name for name in FONTS}|
+               {'wiki.'+name for name in WIKI}|
                {'menu.'+name for name in ('icon','label','description','shortcut','state')})
         bases={role+'.'+field for role in roles for app in APPS for field in fields(role,app)}
     result.update(bases)

@@ -295,7 +295,7 @@ without WSL bridging or destination changes.
 
 ## Bundled application platforms
 
-[Blastoff and pkgs](bundled-applications.md) ship with both Bash and native PowerShell routes. Blastoff invokes its Python 3.11+ core on all Dots platforms and retains `STARSHIP_CONFIG` / `BLASTOFF_HOME` with their existing home-relative defaults. pkgs retains Python 3.9+ POSIX package backends on Termux/Linux/WSL. Native Windows supports pkgs help/version, static discovery, formatting, manifest inspection and the native Config editor; package operations refuse with status 3. WSL remains a separate installation.
+[Blastoff and pkgs](bundled-applications.md) ship with both Bash and native PowerShell routes. Blastoff invokes its Python 3.11+ core on all Dots platforms and retains `STARSHIP_CONFIG` / `BLASTOFF_HOME` with their existing home-relative defaults. pkgs retains Python 3.9+ POSIX package backends on Termux/Linux/WSL. Native Windows supports the WinGet community backend through Microsoft.WinGet.Client and literal WinGet commands. User scope is the default; machine scope is explicit. Native PowerShell 5.1/7 acceptance remains pending. WSL remains a separate installation.
 
 Standalone native launchers use `~/.local/bin/*.ps1`, with no registry or system PATH changes. Native Windows PowerShell 5.1/7 and WSL runtime acceptance for absorption remains pending; injected adapter tests do not establish it.
 
@@ -329,3 +329,7 @@ Visual config commands share the Python resolver/refresher between Bash and nati
 ## Existing-source registration
 
 The shared file registration controller supports native source/destination paths through both shell surfaces. Windows destinations use the existing application adapters and HOME/APPDATA/LOCALAPPDATA templates; Windows and WSL stores remain separate. Existing native symbolic links can be registered without replacing them; creation requires actual link capability. Unsupported Windows reparse points are refused. Local Termux and portable adapter evidence does not establish native Linux/WSL or PowerShell 5.1/7 filesystem or terminal acceptance.
+
+## Command manual destinations
+
+The core `dots:manual` asset uses `<Termux prefix>/share/man/man1/dots.1` on Termux and `~/.local/share/man/man1/dots.1` on Linux/WSL. Windows has no POSIX manual destination; its wiki command reference is generated from the same first-party metadata. Explicit isolated prefixes/home roots cover path and lifecycle tests. Native Linux/WSL discovery by `man dots` and native PowerShell interaction require separate acceptance evidence.

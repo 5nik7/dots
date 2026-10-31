@@ -4,6 +4,13 @@ Blastoff and pkgs are first-party application plugins under `plugins/` in Dots. 
 
 ## Commands
 
+The shared pkgs grammar includes `in`, `un`, `up`, `xup` and `upls` aliases.
+`upgrade ls` / `upgrade --list` query available updates without installation.
+`cleanup [FILE]` reviews disabled source installs using current ownership,
+selection and confirmation. Both are in the package menu; see
+[package workflows](packages.md). Native Windows keeps its explicit package
+backend refusal for these operations while exposing their static help/completion.
+
 Both forms use the same application core and preserve arguments, output, exit status and subcommands:
 
 ```sh
@@ -24,9 +31,9 @@ Before installation, use `./bin/blastoff`, `./bin/pkgs` or `./bin/dots` from the
 
 Blastoff manages Starship themes, modules, backups and active configuration. It requires Python 3.11+; Starship and interactive picker tools are capability-checked when needed. Its [application command contract](../plugins/blastoff/docs/CLI-CONTRACT.md#commands-and-aliases) describes the existing subcommands. `STARSHIP_CONFIG` selects the active configuration, otherwise `~/.config/starship.toml`; `BLASTOFF_HOME` selects storage, otherwise `~/.config/blastoff`. Absorption does not move either location or apply a theme. Existing active-file and storage-root symlink safeguards remain in the application core.
 
-pkgs provides package browsing, install/remove, unattended user-wide upgrades, Go tools, configurable recipes/skips, stream formatting, manifest export/inspection/restore and diagnostics. It requires Python 3.9+ and Termux/Linux/WSL for package operations. Install/remove/restore retain approval; bare upgrade authorizes unattended execution. See [package workflows](packages.md) for scopes, output, configuration and manifests. Its [application guide](../plugins/pkgs/README.md) explains these workflows. `pkgs uninstall NAME` removes selected packages; Dots checkout uninstall removes the installed application entry points and restores managed configuration. These are separate operations.
+pkgs provides package browsing, install/remove, unattended user-wide upgrades, Go tools, configurable recipes/skips, stream formatting, manifest export/inspection/restore and diagnostics. It requires Python 3.9+ and Termux/Linux/WSL for package operations. Install (named targets or accepted picker selections), upgrade and refresh authorize unattended execution with supported native confirmation flags. Remove/restore retain approval. See [package workflows](packages.md) for scopes, output, configuration and manifests. Its [application guide](../plugins/pkgs/README.md) explains these workflows. `pkgs uninstall NAME` removes selected packages; Dots checkout uninstall removes the installed application entry points and restores managed configuration. These are separate operations.
 
-Native Windows has Blastoff dispatch through the shared Python core, without Bash. Dots reuses Blastoff's native argument transport, preserving its `-help`/`-list`/`-theme` compatibility aliases and picker shell context. pkgs help/version, static discovery, `format` and `manifest` are available, but package operations return status 3 with an explanation that native Windows backends are not implemented. Use a separate WSL installation for those operations; Dots never translates paths or launches WSL automatically. Native PowerShell 5.1/7 and WSL runtime acceptance for this integration remain pending.
+Native Windows has Blastoff dispatch through the shared Python core, without Bash. Dots reuses Blastoff's native argument transport, preserving its `-help`/`-list`/`-theme` compatibility aliases and picker shell context. pkgs uses the native WinGet community backend, structured PowerShell discovery and explicit user/machine scopes. Native package pickers use shared Gum or a numbered fallback without Bash. Dots never translates paths or launches WSL automatically. Native PowerShell 5.1/7 and WSL runtime acceptance for this integration remain pending.
 
 ## One installation and removal
 

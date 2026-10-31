@@ -6,9 +6,31 @@ from fonts.model import Library
 from fonts.workspace import Workspace
 from fonts.destinations import Destinations
 
-HOME_ACTIONS=(('installed','Installed fonts'),('set','Set application font'),('downloaded','Downloaded fonts'),
-    ('browse','Browse catalogs'),('directories','Font directories'),('current','Current fonts'),
-    ('defaults','Saved defaults / Restore'),('icons','Icon search'))
+HOME_ACTIONS=(('installed','Installed fonts','Inspect, copy or migrate local fonts'),
+    ('set','Set application font','Choose an application and exact face'),
+    ('downloaded','Downloaded fonts','Retained versions and installation destinations'),
+    ('browse','Browse catalogs','Search saved provider catalogs'),
+    ('directories','Font directories','Backend font storage paths'),
+    ('current','Current fonts','Tracked active selections'),
+    ('defaults','Saved defaults / Restore','Review and restore exact saved selections'),
+    ('icons','Icon search','Search, copy, insert or print glyphs'),
+    ('configuration','Configuration','Display, preview, field styles and shared layout'))
+
+
+def configuration(context):
+    from menus import run_action,dots_argv
+    groups=(('apps.fonts','Font display and previews'),('colors.fonts','Font field styles'),
+            ('icons.menu.fonts','Font icon'),('formatting.apps.cli','Command layout'),
+            ('formatting.apps.menu','Menu layout and entries'),('colors.menu','Menu field styles'),
+            ('colors.ui','Shared semantic styles'),('colors.status','Status styles'),
+            ('apps.menu.popup','Popup appearance'))
+    choice=select('Configuration',groups,context)
+    if choice is not None:
+        run_action(dots_argv(['config','browse','--query',choice]),kind='popup',context=context,title='fonts·configuration')
+        # The child saves through Config; the next parent popup reads its changes.
+        from config_values import current as controls
+        from style_config import current as styles
+        controls.cache_clear();styles.cache_clear()
 
 
 def downloaded_rows(library):
@@ -24,13 +46,21 @@ def downloaded_rows(library):
 
 
 def destination(context):
-    return select('Destination',[('personal','Native user installation')]+[(r['path'],r['name']+' · '+r['path']) for r in Destinations().rows()],context)
+    return select('Destination',[('personal','Native user installation')]+[(r['path'],r['name'],r['path']) for r in Destinations().rows()],context)
 
 
 def select_row(rows,args,context,title):
+    from collections import Counter
     if not hasattr(args,'_frames'):args._frames={}
     frame=args._frames.setdefault(title,dict(query=args.query or ''))
-    choice=select(title,[(str(i),r.get('name',r['id'])+' · '+r.get('ownership',r.get('source',''))+' · '+r.get('path',r['id'])) for i,r in enumerate(rows)],context,frame=frame)
+    names=Counter(r.get('name',r['id']) for r in rows)
+    pairs=[]
+    for i,row in enumerate(rows):
+        name=row.get('name',row['id'])
+        location=row.get('path',row['id'])
+        if names[name]>1:name+=' · '+row.get('source','')+' · '+location
+        pairs.append((str(i),name,row.get('ownership',row.get('source',''))+' · '+location))
+    choice=select(title,pairs,context,frame=frame)
     return rows[int(choice)] if choice is not None else None
 
 
@@ -50,7 +80,7 @@ def installed(args,*,context=None):
         action=select('Installed font actions',actions,context)
         if action=='set':set_menu(args,context=context,selected=row)
         elif action in ('copy','migrate'):
-            directory=select('Directory',[(r['path'],r['name']+' · '+r['path']) for r in Destinations().rows()],context)
+            directory=select('Directory',[(r['path'],r['name'],r['path']) for r in Destinations().rows()],context)
             if directory:invoke([action,row['id'],'--directory',directory],context,library)
 
 
@@ -103,7 +133,7 @@ def set_menu(args,*,context=None,selected=None):
         argv+=['--version',version]
         fonts=selected['versions'][version].get('fonts',[])
         if fonts:
-            face=select('Face',[(f['file'],f['family']+' · '+f['style']+' · '+f['variant']) for f in fonts
+            face=select('Face',[(f['file'],f['file'],f['family']+' · '+f['style']+' · '+f['variant']) for f in fonts
                                 if target!='termux' or f['file'].lower().endswith('.ttf')],context)
             if face is None:return 0
             chosen=next(f for f in fonts if f['file']==face)
@@ -123,10 +153,11 @@ def home(args):
             elif action=='set':set_menu(args,context=context)
             elif action=='downloaded':downloaded(args,context=context)
             elif action=='browse':browse(args)
+            elif action=='configuration':configuration(context)
             elif action=='defaults':
                 from fonts.defaults import rows
                 from fonts_cli import render
-                report=rows(Library());stream=io.StringIO();render(report,stream)
+                report=rows(Library());stream=io.StringIO();render(report,stream,human=True,action='defaults')
                 show_message(stream.getvalue(),context=context,title='Saved defaults')
                 selections=[('all','Restore all')]+[(r['selection'],'Restore '+r['selection']) for r in report['items']]
                 if report['items']:

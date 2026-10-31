@@ -25,6 +25,8 @@ from interaction import gum_confirm
 from progress import Progress, configure
 
 from identities import canonical, current_source
+from setup_components import DEFAULTS, component
+from managed_destination import physical
 
 PUBLIC_SOURCES = ('termux', 'windows', 'nvim')
 
@@ -41,7 +43,7 @@ def locked_file(path):
 def approve(args, label='Apply this plan?'):
     if args.yes:
         return True
-    if not sys.stdin.isatty():
+    if args.json or getattr(args, 'non_interactive', False) or not sys.stdin.isatty():
         raise ValueError('noninteractive installation requires --yes or --dry-run')
     choice = None if args.json else gum_confirm(label)
     if choice is not None:
@@ -117,6 +119,12 @@ class Installation:
         for entry in self.entries.values():
             entry['id'] = identities.resolve(entry['id']) if identities else canonical(entry['id'])
         self.theme = None
+        self.theme_environment = {}
+        self.theme_prepared = False
+        self.components = None
+        self.resources = None
+        self.catalog_records = []
+        self.receipt_changed = False
         self.blocked = False
         self.transaction = uuid.uuid4().hex
         for record in self.store.records():
@@ -134,6 +142,25 @@ class Installation:
         path = str(path)
         parents_safe(path)
         self.guards.setdefault(path, digest(path))
+
+    def merge_plan(self, operations, guards, *, label):
+        """Compose owner-produced operations without weakening their guards."""
+        for path, expected in guards.items():
+            if path in self.guards and self.guards[path] != expected:
+                raise ValueError('conflicting preview guards: ' + path)
+            self.guards[path] = expected
+        for operation in operations:
+            previous = next((op for op in self.operations if op['path'] == operation['path']), None)
+            if previous is not None:
+                if previous != operation:
+                    raise ValueError('conflicting setup writes: ' + operation['path'])
+                continue
+            if 'data' in operation:
+                path = Path(operation['path'])
+                if path.is_file() and not path.is_symlink() and read_json(path) == operation['data']:
+                    continue
+            self.operations.append(operation)
+            self.item(label, 'create' if guards.get(operation['path']) is None else 'replace-with-backup', operation['path'])
 
     def add(self, identity, path, *, link=None, text=None, source=None, directory=False, managed=False):
         path = Path(path)
@@ -201,6 +228,27 @@ class Installation:
         self.operations.append(dict(path=key, delete=True))
         self.item(identity, 'remove', path, reason='verified legacy artifact; retain recovery copy')
 
+    def plan_core_manual(self, home):
+        if 'core' not in self.components or self.platform == 'windows':
+            return
+        source = self.root / 'man/dots.1'
+        # Older/minimal source fixtures need not contain the new manual directory.
+        if not source.parent.exists():
+            return
+        if not source.is_file() or source.is_symlink():
+            self.item('dots:manual', 'conflict', source, reason='generated dots manual is missing or nonregular')
+            return
+        self.guard(source)
+        if self.platform == 'termux':
+            value = os.environ.get('TERMUX__PREFIX') or os.environ.get('PREFIX', '')
+            prefix = Path(value)
+            if not value or not prefix.is_absolute() or '..' in prefix.parts or prefix == Path(prefix.anchor):
+                raise ValueError('Termux manual requires an absolute native prefix')
+            destination = prefix / 'share/man/man1/dots.1'
+        else:
+            destination = home / '.local/share/man/man1/dots.1'
+        self.add('dots:manual', destination, link=source)
+
     def plan_bundled_apps(self, home):
         # Minimal controller fixtures may omit bundled apps. A declared bundle
         # must be complete; missing runtime assets block the whole transaction.
@@ -213,6 +261,8 @@ class Installation:
         data = Path(os.environ.get('XDG_DATA_HOME') or home / '.local/share')
         from plugin_paths import definitions
         for name, definition in definitions(self.root).items():
+            if self.components is not None and name not in self.components:
+                continue
             source = self.root / 'plugins' / name
             manual = definition['manual']
             required = [source / definition['runtime'], source / manual,
@@ -246,13 +296,29 @@ class Installation:
         if fingerprint:
             cmd.append(fingerprint)
         result = subprocess.run(cmd, env=dict(os.environ, DOTS=str(self.root), DOTS_PROGRESS='never',
-                                             DOTS_COLOR='never', DOTS_ICONS='never'),
+                                             DOTS_COLOR='never', DOTS_ICONS='never', **self.theme_environment),
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode:
             raise ValueError('theme preparation failed: ' + result.stderr.decode(errors='replace').strip())
         return result.stdout.decode().split('\0')[:-1]
 
-    def plan_install(self):
+    def reconcile_destinations(self, records, planned=()):
+        """Retain original recovery pointers when a directory mapping moved a child."""
+        for key, entry in list(self.entries.items()):
+            path = physical(key, records, self.guards, planned=planned)
+            if str(path) == key:
+                continue
+            if str(path) in self.entries:
+                raise ValueError('duplicate logical/physical installation ownership: ' + key)
+            if digest(path) != entry['after']:
+                raise ValueError('mapped installer-owned target changed; preserve and review: ' + key)
+            entry['logical_path'] = key
+            self.entries[str(path)] = self.entries.pop(key)
+            self.receipt_changed = True
+
+    def plan_install(self, components=None, resources=None, *, defer_theme=False):
+        self.components = set(DEFAULTS if components is None else components)
+        self.resources = None if resources is None else set(resources)
         catalog = Catalog(self.root, self.platform)
         for path in catalog.input_paths():
             self.guard(path)
@@ -262,12 +328,28 @@ class Installation:
             if self.platform in source['platforms'] and source['status'] != 'available':
                 self.item(source['id'], 'skipped', reason='optional source unavailable; select --with-source ' + source['id'])
         observed = catalog.records()
+        self.catalog_records = observed
         for row in observed:
             if row['applicable'] and not row['enabled']:
                 self.item(row['id'], 'skipped', row['target'], reason='stashed')
         records = [r for r in observed if r['enabled'] and r['applicable'] and r['status'] != 'replaced']
+        selected = [r for r in records if 'files' in self.components
+                    and (self.resources is None or r['id'] in self.resources)]
+        if self.resources is not None:
+            missing = self.resources - {r['id'] for r in selected}
+            if missing:
+                raise ValueError('setup resource is not enabled/applicable: ' + ', '.join(sorted(missing)))
+        planned = {r['target'] for r in selected if r['strategy'] == 'directory-link'}
+        self.reconcile_destinations(observed, planned)
+        # Render against the selected source even before its destination link
+        # exists. This keeps compiled syntax inputs stable across first/repeat
+        # setup and includes the real custom syntaxes on the first build.
+        bat = next((r for r in records if r['app'] == 'bat' and r['strategy'] == 'directory-link'
+                    and r['target'] and (r in selected or Path(r['target']).resolve() == Path(r['source']))), None)
+        if bat and not os.environ.get('BAT_CONFIG_DIR'):
+            self.theme_environment['BAT_CONFIG_DIR'] = bat['source']
         connectors = []
-        if (self.root / 'lib/dots/themes' / ('setup.py' if self.platform == 'windows' else 'setup.bash')).is_file():
+        if not defer_theme and 'themes' in self.components and (self.root / 'lib/dots/themes' / ('setup.py' if self.platform == 'windows' else 'setup.bash')).is_file():
             with Progress('Inspecting theme inputs'):
                 identity, fingerprint, current, incomplete = self.theme_bridge('inspect')
             self.theme = dict(id=identity, fingerprint=fingerprint, generation=current,
@@ -295,16 +377,16 @@ class Installation:
                     connectors.append((app, Path(owner['source']) / suffix, artifact))
             if self.platform == 'termux':
                 target = Path(os.environ['HOME']) / '.termux/colors.properties'
-                records = [r for r in records if r['target'] != str(target)]
+                selected = [r for r in selected if r['target'] != str(target)]
                 if not any(not r['enabled'] and r['target'] == str(target) for r in observed):
-                    connectors.append(('termux', target, 'termux.properties'))
+                    connectors.append(('termux', physical(target, observed, self.guards, planned=planned), 'termux.properties'))
             # Preserve the publisher's opt-in-by-existing-directory boundaries.
             for app, parent, filename, artifact in (
                 ('codex', Path(os.environ.get('CODEX_HOME') or Path.home()/'.codex')/'themes', 'dots.tmTheme', 'bat.tmTheme'),
                 ('pi', Path(os.environ.get('PI_CODING_AGENT_DIR') or Path.home()/'.pi/agent').expanduser()/'themes', 'dots.json', 'pi.json')):
                 if parent.is_dir():
                     connectors.append((app, parent / filename, artifact))
-        for row in records:
+        for row in selected:
             if row['status'] in ('unmapped', 'unsupported-platform', 'source-missing', 'source-broken-link'):
                 self.item(row['id'], 'skipped', row['target'], reason=row['status'])
                 continue
@@ -331,15 +413,18 @@ class Installation:
             self.add(row['id'], target, link=source, directory=source.is_dir())
         home = Path(os.environ.get('HOME') or Path.home())
         launcher = 'dots.ps1' if self.platform == 'windows' else 'dots'
-        if self.platform == 'windows':
+        if 'core' not in self.components:
+            pass
+        elif self.platform == 'windows':
             quoted = str(self.root / 'bin/dots.ps1').replace("'", "''")
             self.add('dots:command', home / '.local/bin' / launcher,
                      text="& '" + quoted + "' @args\nexit $LASTEXITCODE\n")
         else:
             self.add('dots:command', home / '.local/bin' / launcher, link=self.root / 'bin' / launcher)
+        self.plan_core_manual(home)
         self.plan_bundled_apps(home)
         todo = self.root / 'bin' / ('todo.ps1' if self.platform == 'windows' else 'todo')
-        if todo.is_file():
+        if 'core' in self.components and todo.is_file():
             self.guard(todo)
             if self.platform == 'windows':
                 quoted = str(todo).replace("'", "''")
@@ -348,7 +433,7 @@ class Installation:
             else:
                 self.add('dots:todo:command', home / '.local/bin/todo', link=todo)
         fonts = self.root / 'bin' / ('fonts.ps1' if self.platform == 'windows' else 'fonts')
-        if fonts.is_file():
+        if 'core' in self.components and fonts.is_file():
             self.guard(fonts)
             if self.platform == 'windows':
                 quoted = str(fonts).replace("'", "''")
@@ -381,11 +466,31 @@ class Installation:
                     drift = owned and self.guards[str(path)] != owned['after']
                     self.item('theme:' + identity, 'prepare', path,
                               reason='reconcile the validated current theme selection; retain original baseline' if drift else 'publish prepared generation; retain previous pointer for restoration')
-        else:
-            self.item('themes', 'skipped', reason='theme preparation adapter is unavailable')
+        elif 'themes' in self.components:
+            self.item('themes', 'prepare' if defer_theme else 'skipped', reason='prepare after prerequisites' if defer_theme else 'theme preparation adapter is unavailable')
 
-    def plan_uninstall(self):
+    def plan_uninstall(self, components=None, resources=None):
+        self.components = None if components is None else set(components)
+        self.resources = None if resources is None else set(resources)
+        # Old receipts can name a child through a subsequently installed
+        # catalog directory link. Only load catalog inputs for this bounded case.
+        if any(any(p.is_symlink() for p in Path(key).parents) for key in self.entries):
+            catalog = Catalog(self.root, self.platform)
+            for path in catalog.input_paths():
+                self.guard(path)
+            self.reconcile_destinations(catalog.records())
+        retained_files = any(component(e['id']) == 'files' and
+                             (self.components is not None and 'files' not in self.components
+                              or self.resources is not None and e['id'] not in self.resources)
+                             for e in self.entries.values())
+        if self.components is not None and 'themes' in self.components and retained_files:
+            raise ValueError('theme removal would break retained managed files; include those files or retain themes')
         for path, entry in list(self.entries.items())[::-1]:
+            owner = entry.get('component', component(entry['id']))
+            if self.components is not None and owner not in self.components:
+                continue
+            if owner == 'files' and self.resources is not None and entry['id'] not in self.resources:
+                continue
             self.guard(path)
             if self.guards[path] != entry['after']:
                 self.item(entry['id'], 'preserved', path, reason='target changed after installation')
@@ -404,11 +509,12 @@ class Installation:
             self.item(entry['id'], 'restore' if entry['before'] else 'remove', path)
 
     def prepare_theme(self):
-        if not self.theme or not self.theme['refresh']:
+        if self.theme_prepared or not self.theme or not self.theme['refresh']:
             return
         self.store.notify('Preparing', reason='theme rendering and cache generation')
         with Progress('Preparing theme generation'):
             values = self.theme_bridge('prepare', self.theme['fingerprint'])
+        self.theme_prepared = True
         self.theme_notice = values[2] if len(values) > 2 else ''
         generation = Path(values[0])
         base = self.state / 'themes'
@@ -428,6 +534,15 @@ class Installation:
         # Inactive immutable payloads are retained. The Store owns publication;
         # the theme publisher must not try to recover this independent journal.
 
+    def prepare(self):
+        if not self.theme: return
+        with ExitStack() as stack:
+            for path in (self.state/'themes/commands/lock', self.state/'themes/lock'):
+                stack.enter_context(locked_file(path))
+            from setup_stages import verify
+            verify(self.guards)
+            self.prepare_theme()
+
     def apply(self, action, catalogs=(), write_receipt=True, retain=True):
         with ExitStack() as stack:
             if self.theme or any(e['id'].startswith('theme:') for e in self.receipt['entries'].values()):
@@ -440,7 +555,7 @@ class Installation:
                 self.prepare_theme()
             if self.blocked:
                 raise ValueError('installation plan contains conflicts')
-            if not self.operations:
+            if not self.operations and not self.receipt_changed:
                 return {'status': 'unchanged'}
             # Compute link identity using temporary payloads in owned state only,
             # after approval. No live target is touched during preparation.
@@ -604,6 +719,8 @@ def main(argv=None):
     parser.add_argument('--packages', metavar='FILE', help='restore declared packages before configuration setup')
     parser.add_argument('--color', choices=('auto', 'always', 'never'))
     parser.add_argument('--icons', choices=('auto', 'always', 'never'))
+    import setup_wizard
+    setup_wizard.arguments(parser)
     raw = list(sys.argv[1:] if argv is None else argv)
     if '--help' in raw or '-h' in raw:
         for key in ('color', 'icons'):
@@ -615,8 +732,15 @@ def main(argv=None):
         ui.emit(parser.format_help())
         return 0
     args = parser.parse_args(raw)
-    if args.action != 'install' and (args.update or args.with_source or args.packages):
-        parser.error('--update, --with-source and --packages require install')
+    if args.action != 'install' and (args.update or args.with_source or args.packages or args.fonts
+                                    or args.font_target or args.with_dependencies or args.save_choices):
+        parser.error('source, package, font, dependency and saved-choice options require install')
+    if args.action == 'migrate-apps' and any((args.interactive,args.non_interactive,args.component is not None,args.resource is not None,args.no_clear,args.no_logo)):
+        parser.error('wizard and component selection options require install or uninstall')
+    if args.interactive and (args.yes or args.json or args.dry_run):
+        parser.error('--interactive cannot be combined with --yes, --json or --dry-run')
+    if args.interactive and not setup_wizard.terminal():
+        parser.error('--interactive requires terminal input and output')
     for key in ('color', 'icons'):
         if getattr(args, key):
             os.environ['DOTS_' + key.upper()] = getattr(args, key)
@@ -634,59 +758,128 @@ def main(argv=None):
             return 0
         update_sources(root, rows)
         # Load the newly checked-out implementation before planning file writes.
-        forwarded = [args.action]
-        for flag in ('yes', 'json', 'verbose'):
-            if getattr(args, flag):
-                forwarded.append('--' + flag)
-        if args.packages:
-            forwarded.extend(['--packages', str(Path(args.packages).expanduser().absolute())])
+        forwarded = []
+        skip = False
+        for word in raw:
+            if skip:
+                skip = False
+                continue
+            if word == '--with-source':
+                skip = True
+            elif word != '--update' and not word.startswith('--with-source='):
+                forwarded.append(word)
         os.execv(sys.executable, [sys.executable, '-B', str(root / 'lib/dots/files/install.py'), *forwarded])
     installation = Installation(root)
+    if args.action != 'migrate-apps':
+        setup_wizard.defaults(root, installation, args)
+        interactive = (args.interactive or not any((args.non_interactive, args.yes, args.json, args.dry_run))
+                       and setup_wizard.terminal())
+        if interactive:
+            try:
+                setup_wizard.run(root, installation, args)
+            except setup_wizard.SelectionEnded as error:
+                if error.status not in (0, 130):
+                    raise ValueError('setup selector failed; no approval received') from error
+                display(dict(action=args.action, status='cancelled', items=[], message='No changes made.'), args, True)
+                return error.status
+        setup_wizard.selected_inputs(installation, args)
+    with ExitStack() as cleanup:
+        return process_selection(root, installation, args, cleanup)
+
+
+def process_selection(root, installation, args, cleanup):
+    import setup_wizard
+    preparation = None
+    if args.action == 'install':
+        from setup_stages import Preparation
+        preparation = Preparation(installation, args)
+        cleanup.callback(preparation.close)
     output = OperationOutput.for_args(args)
     installation.store.observer = output
     with Progress('Planning ' + args.action):
         if args.action == 'install':
-            installation.plan_install()
+            installation.plan_install(args.component, args.resource, defer_theme=preparation.deferred_theme)
+            setup_wizard.save_plan(root, installation, args)
         elif args.action == 'migrate-apps':
             from app_migration import plan
             plan(installation)
         else:
-            installation.plan_uninstall()
+            installation.plan_uninstall(args.component, args.resource)
+            from setup_fonts import uninstall as uninstall_fonts
+            uninstall_fonts(installation)
     doc = dict(schema=1, action=args.action, status='blocked' if installation.blocked else 'preview',
                platform=installation.platform, items=installation.items)
-    package_stage = None
-    if args.packages:
-        from package_setup import Stage
-        try:
-            package_stage = Stage(root, args.packages, json_output=args.json)
-        except Exception as error:
-            raise ValueError('package preflight: '+str(error)) from error
-        doc['packages'] = package_stage.document_preview()
-        if not args.json: package_stage.preview()
+    if args.action != 'migrate-apps':
+        doc['components'] = args.component
+    if preparation:
+        doc['preparation'] = preparation.preview()
+        if 'packages' in args.component:
+            doc['packages'] = dict(schema=1,status='preview',groups=[dict(manager=g['manager'],scope=g['scope'],
+                status='deferred',reason='manager inspection follows preparation approval',plan=None,
+                desired=g['packages']) for g in preparation.packages['groups']])
+        if not args.json:
+            ui = Presentation()
+            for row in doc['preparation']:
+                ui.detail('Preparation', row['stage'])
+                for requirement in row.get('requirements', []):
+                    ui.detail('Missing', requirement['tool']+' — '+(requirement['package'] or requirement['reason']))
+                if row['stage'] == 'packages':
+                    for group in row['manifest']['groups']:
+                        targets = [p['name']+('='+p['pin'] if p['pin'] else '') for p in group['packages'] if p['enabled']]
+                        ui.detail(group['manager']+' / '+group['scope'], ', '.join(targets) or 'no enabled packages')
     display(doc, args, final=args.action == 'migrate-apps' and not args.yes)
     output.plan(installation.items, args.dry_run)
     if args.dry_run or (args.action == 'migrate-apps' and not args.yes):
         return int(installation.blocked)
     if installation.blocked:
         raise ValueError('resolve the displayed conflicts before applying setup')
-    if not approve(args):
-        display(dict(doc, status='cancelled', items=[], message='No changes made.'), args, True)
-        return 0
-    if package_stage:
+    if preparation and doc['preparation']:
+        if not approve(args, 'Prepare these components before the final managed-change review?'):
+            display(dict(doc, status='cancelled', items=[], message='No changes made.'), args, True)
+            return 0
         try:
-            doc['packages'] = package_stage.apply()
+            preparation.run()
         except Exception as error:
-            raise ValueError('package restoration: '+str(error)+'; configuration was not applied') from error
-        if doc['packages']['status'] != 'complete':
-            display(dict(doc, status='incomplete', message='Package restoration is incomplete; configuration was not applied. Completed package changes remain.'), args, True)
+            doc.update(preparation.results)
+            Presentation(sys.stderr).emit('dots setup: '+Presentation.clean(str(error)))
+            display(dict(doc,status='incomplete',stages=preparation.outcomes,
+                preparation_record=str(preparation.record) if preparation.record.exists() else None,
+                message='Preparation stopped; configuration was not applied. Completed preparation effects remain.'),args,True)
             return 1
-        # Installation.apply rechecks all approved file/input guards before any
-        # configuration mutation. Newly available tools can prepare the theme.
+        doc.update(preparation.results)
+        try:
+            if preparation.deferred_theme:
+                previous_guards = installation.guards
+                installation = Installation(root)
+                installation.guards.update(previous_guards)
+                installation.store.observer = output
+                installation.plan_install(args.component, args.resource)
+                setup_wizard.save_plan(root, installation, args)
+                preparation.installation = installation
+            installation.prepare()
+            # Optional planners attach their verified payloads to this one final plan.
+            preparation.finish(installation)
+        except Exception as error:
+            preparation.save_outcome('managed-payloads','failed',reason=str(error))
+            Presentation(sys.stderr).emit('dots setup: '+Presentation.clean(str(error)))
+            display(dict(doc,status='incomplete',stages=preparation.outcomes,
+                preparation_record=str(preparation.record),
+                message='Payload preparation stopped; configuration was not applied. Completed preparation effects remain.'),args,True)
+            return 1
+        doc['items'] = installation.items
+        doc['stages'] = preparation.outcomes
+        doc['preparation_record'] = str(preparation.record) if preparation.record.exists() else None
+        display(dict(doc, message='Final managed changes; completed preparation effects remain if cancelled.'), args)
+        if installation.blocked: raise ValueError('resolve conflicts in the final managed plan')
+    if not approve(args, 'Apply these managed changes?'):
+        display(dict(doc, status='cancelled', items=[], message='Managed changes cancelled; completed preparation effects remain.'), args, True)
+        return 0
     try:
         result = installation.apply(args.action)
     except (OSError, ValueError) as error:
-        if package_stage:
-            raise ValueError('Configuration failed after package restoration; completed package changes remain: '+str(error)) from error
+        if preparation and preparation.outcomes:
+            preparation.save_outcome('publication', 'failed', reason=str(error))
+            raise ValueError('Managed setup failed; completed preparation effects remain: '+str(error)) from error
         raise
     if installation.theme_notice:
         ui = Presentation(sys.stderr)

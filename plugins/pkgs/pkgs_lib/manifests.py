@@ -11,7 +11,7 @@ from .common import Error, ROOT, budget, phase, validate_names, config_path, cle
 from .detect import MANAGERS, SYSTEM, available, termux
 from . import policies, scopes, workflows
 
-PINNED = {'apt','dnf','npm','pip','uv-tool','gem','go'}
+PINNED = {'apt','dnf','npm','pip','uv-tool','gem','go','winget'}
 PLATFORMS = {'termux','linux','wsl','windows'}
 
 
@@ -47,10 +47,10 @@ def validate(document):
             raise Error('invalid manifest group')
         manager = group.get('manager')
         if manager not in MANAGERS: raise Error('unknown manifest manager')
-        allowed = ('system',) if manager in SYSTEM else ('global','project') if manager == 'npm' else (
+        allowed = ('user','machine') if manager == 'winget' else ('system',) if manager in SYSTEM else ('global','project') if manager == 'npm' else (
             ('base','venv') if manager == 'pip' else ('user','active') if manager == 'gem' else ('tools',))
         if group.get('scope') not in allowed: raise Error('invalid scope for '+manager)
-        group.setdefault('platforms', ['termux','linux','wsl'])
+        group.setdefault('platforms', ['windows'] if manager == 'winget' else ['termux','linux','wsl'])
         if not isinstance(group['platforms'], list) or not group['platforms'] or any(p not in PLATFORMS for p in group['platforms']):
             raise Error('invalid manifest platforms')
         key = ('pacman' if manager in ('pacman','paru','yay') else manager, group['scope'])
@@ -153,7 +153,7 @@ def export(args, cfg):
     progress = phase if not (args.dry_run or args.json or cfg.get('output') == 'raw' or
                             os.environ.get('DOTS_PROGRESS', 'auto') != 'auto') else lambda label: nullcontext()
     with budget(45), progress('Detecting export managers'):
-        selection = [(args.manager, 'global' if args.global_scope else None)] if args.manager not in (None,'auto') else scopes.bulk(dict(cfg, upgrade={'managers':'auto'}))
+        selection = [(args.manager, getattr(args, 'scope', None) if args.manager == 'winget' else 'global' if args.global_scope else None)] if args.manager not in (None,'auto') else scopes.bulk(dict(cfg, upgrade={'managers':'auto'}))
     for index, (manager, scope) in enumerate(selection, 1):
         try:
             with budget(45), progress(f'Exporting {manager} ({index}/{len(selection)})'):
@@ -178,7 +178,7 @@ def export(args, cfg):
             if args.pin_versions and manager not in PINNED:
                 document['notices'].append(dict(manager=manager, warning='exact pins unsupported; observed versions retained without pins'))
             document['groups'].append(dict(manager=manager, scope=scopes.scope_id(backend),
-                platforms=[platform()] if manager in SYSTEM else ['termux','linux','wsl'], packages=packages))
+                platforms=['windows'] if manager == 'winget' else [platform()] if manager in SYSTEM else ['termux','linux','wsl'], packages=packages))
         except (Error, OSError, ValueError) as error:
             failed = True
             document['notices'].append(dict(manager=manager, error=str(error)))
@@ -207,6 +207,8 @@ def prepare_group(group, cfg, *, ignore=False):
             skipped.append(dict(package=name, reason='skipped by policy')); continue
         p = installed.get(policies.identity(name, manager))
         pin = package['pin']
+        if p and p.details.get('disabled_reason'):
+            raise Error(name+': '+p.details['disabled_reason'])
         if p and (pin is None or p.installed_version == pin or manager == 'gem' and pin in p.details.get('versions', [])): continue
         names.append(name)
         if pin: backend.pins[name] = pin
@@ -239,7 +241,7 @@ def preview(entries, cfg, *, stream=None):
         else: print(entry['group']['manager']+': '+entry['status']+' · '+entry['reason'], file=stream)
 
 
-def apply(document, cfg, *, ignore=False, data=False, check=None):
+def apply(document, cfg, *, ignore=False, data=False, check=None, stop_on_failure=False):
     result, failed = [], False
     # Re-query after the system stage; declared packages may supply prerequisites.
     for group in sorted(validate(document)['groups'], key=lambda g: 0 if g['manager'] in SYSTEM else 1):
@@ -262,6 +264,7 @@ def apply(document, cfg, *, ignore=False, data=False, check=None):
         except (Error, OSError, ValueError) as error:
             result.append(dict(manager=group['manager'], scope=group['scope'], status='failed', reason=str(error), plan=None))
             failed = True
+        if failed and stop_on_failure: break
     return dict(schema=1, status='incomplete' if failed else 'complete', groups=result)
 
 
@@ -285,7 +288,7 @@ def write_export(path, document, args, *, expected=None, emit=True):
 
 def cli(args, cfg):
     if args.query or args.installed: raise Error('manifest workflows do not accept --query or --installed')
-    if args.command != 'export' and (args.manager is not None or args.global_scope):
+    if args.command != 'export' and (args.manager is not None or args.global_scope or getattr(args, 'scope', None)):
         raise Error('manifest groups specify their managers and scopes')
     if args.command == 'export':
         if args.names: raise Error('export takes --output FILE, not positional operands')
@@ -295,7 +298,11 @@ def cli(args, cfg):
             if args.dry_run:
                 print(json.dumps(update.document, indent=2, ensure_ascii=False))
                 print('Would update package manifest: '+str(update.path), file=sys.stderr)
-            else: update.save(args)
+            else:
+                # The explicit update action authorizes its guarded merge/write.
+                approved = copy.copy(args)
+                approved.yes = True
+                update.save(approved)
             return 0
         check = guards(args.output)
         document, failed = export(args, cfg)

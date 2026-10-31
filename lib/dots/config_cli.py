@@ -352,7 +352,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     automatic = args.action is None
     args.action = args.action or 'list'
-    guided = args.action in ('get', 'set') and args.key is None and args.value is None
+    guided = args.value is None and (args.action == 'set' or args.action == 'get' and args.key is None)
     if guided:
         from interaction import terminal
         guided = not (args.json or args.dry_run or args.json_value or args.apply or args.yes) and terminal() and os.environ.get('TERM') != 'dumb'
@@ -373,6 +373,9 @@ def main(argv=None):
     root = checkout()
     selected = context(root, args.profile)
     if not selected['layers'] and not args.defaults: raise ValueError('no profile definition in this checkout')
+    if guided and args.key is not None:
+        from config_menu import browse
+        return browse(root, selected, args)
     native_app = next((app for app in ('wttr','pkgs') if args.key == 'apps.'+app or (args.key or '').startswith('apps.'+app+'.')), None)
     native_key = native_app is not None
     if native_key:
@@ -418,6 +421,14 @@ def main(argv=None):
                     constraints=constraints(controls.defaults,args.key),**resolved)
         if args.key == 'apps.menu' or args.key.startswith('apps.menu.'):
             result['activation'] = 'next popup'
+        if args.key == 'apps.fonts' or args.key.startswith('apps.fonts.'):
+            result['activation'] = 'next Fonts invocation or popup'
+        if args.key == 'apps.wiki' or args.key.startswith('apps.wiki.') or args.key.startswith('formatting.apps.wiki.'):
+            result['activation'] = 'next Wiki invocation or popup'
+        if args.key == 'apps.setup' or args.key.startswith('apps.setup.'):
+            result['activation'] = 'next setup invocation'
+        if args.key == 'apps.cli' or args.key.startswith('apps.cli.'):
+            result['activation'] = 'next invocation'
         if args.key.startswith('formatting.apps.cli.'):
             result['activation'] = 'next invocation'
         if args.key.startswith('formatting.apps.menu.'):

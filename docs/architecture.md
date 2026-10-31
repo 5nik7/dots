@@ -172,7 +172,7 @@ both the Bash and native Python/PowerShell publishers and inactive setup paths.
 Publication fingerprints include these inputs; cached shell initialization stays
 independent of syntax discovery. The existing publishers retain journal,
 activation and recovery ownership. See [custom Bat syntaxes](themes.md#custom-bat-syntaxes).
-Leaf consumes a generated UI TOML plus the same bat syntax artifact through two fixed connectors. Its external syntax support is maintained as a [source patch](leaf-build.md) for a separate Leaf checkout; Dots does not vendor or launch Leaf.
+Leaf consumes a generated UI TOML plus the same bat syntax artifact through two fixed connectors. Its external syntax support is maintained as a [source patch](leaf-build.md) for a separate Leaf checkout; Dots does not vendor Leaf; its optional setup component builds the pinned source in owned cache storage.
 Vivid and FSH consume generated semantic templates through fixed XDG connectors.
 The Bash/Zsh adapter selects the published Vivid file; Zsh caches its data output.
 The Zsh-only FSH adapter runs after plugin loading and generation changes, using
@@ -448,3 +448,15 @@ a guarded manifest snapshot to the shared Git publisher; explicit publication
 updates stage only that manifest in addition to the normal selection. Package effects are separate
 from managed-file rollback. Help/static completion load grammar only. See
 [package contracts](packages.md).
+
+## Selective setup coordination
+
+`files/setup_components.py` classifies installer ownership; `setup_wizard.py` creates a read-only selection draft through shared presentation/interaction and Config. `setup_stages.py` coordinates explicit preparation and journaled outcome records. `setup_leaf.py` owns pinned builds in private cache roots, and `setup_fonts.py` composes the Fonts planner with installer baselines. `files/install.py` and Store retain one final guarded publication/receipt transaction. `managed_destination.py` translates only validated catalog directory mappings for child writes; it does not weaken general parent-link refusal. Native WinGet discovery and mutation boundaries live in `plugins/pkgs/pkgs_lib/winget.py` and its fixed PowerShell bridge.
+
+## Documentation readers and manual
+
+Canonical prose remains in `docs/`; `.dots/wiki.json` owns stable page mapping and navigation. `wiki_commands.py` extracts inert first-party metadata through the shared bounded parser and a revision-aware Reader. Both wiki export and `tools/generate_dots_manual.py` use that inventory. Wiki provenance tracks all generation helpers and the literal global-option table.
+
+`wiki_topics.py` builds ephemeral source/heading records and ranks queries without a persistent index or exported checkout. `wiki_browser.py` owns page/section selection and hands prepared text to the shared reader after selection closes. The launcher prompts for topic queries as literal arguments. Topic lookup does not execute extensions, initialize submodules, or publish documentation. The installer owns the generated manual's core asset and native destination.
+
+`wiki_presentation.py` specializes the shared Python renderer for Wiki reports and document highlighting. Source selectors reuse shared menu field styles, layout and numeric transport. Config defaults/catalogs own the supported Wiki controls; rendering adds no settings store or startup scan. Raw/JSON/scalar interfaces bypass presentation, and ordinary redirected reports retain their established layout.

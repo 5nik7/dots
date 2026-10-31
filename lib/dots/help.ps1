@@ -1,4 +1,27 @@
 # Static help remains usable before Python is installed. Never execute extensions.
+function Write-DotsUsageLogo {
+    param([string] $Root, [hashtable] $Presentation)
+    $path = Join-Path $Root 'logo.txt'
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return }
+    try {
+        . (Join-Path $Root 'lib/dots/files/entry.ps1')
+        Invoke-DotsFiles $Root 'usage-logo' @() $Presentation
+        if ($script:DotsFilesExitCode -eq 0) { [Console]::Out.WriteLine(); return }
+    } catch { } # Basic help keeps the classic artwork without a Python runtime.
+    $lines = [IO.File]::ReadAllLines($path)
+    $mode = if ($Presentation.ContainsKey('color')) { $Presentation['color'] } elseif ($env:DOTS_COLOR) { $env:DOTS_COLOR } else { 'auto' }
+    $colored = $mode -eq 'always' -or ($mode -eq 'auto' -and -not [Console]::IsOutputRedirected -and
+        $env:TERM -ne 'dumb' -and $Host.UI.SupportsVirtualTerminal -and -not $env:NO_COLOR)
+    $steps = [Math]::Max(1, $lines.Count - 1)
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($colored) {
+            $green = 96 + [int][Math]::Floor(159 * $i / $steps)
+            [Console]::Out.WriteLine(([string][char]27 + '[38;2;0;' + $green + ';255m') + $lines[$i] + ([string][char]27 + '[0m'))
+        } else { [Console]::Out.WriteLine($lines[$i]) }
+    }
+    [Console]::Out.WriteLine()
+}
+
 function Show-DotsHelp {
     param([string] $Root, [string[]] $Route, [hashtable] $Presentation = @{})
     $stem = $Route -join '-'
@@ -16,6 +39,7 @@ function Show-DotsHelp {
         }
     }
     if (-not $files.Count) { throw ('unknown command: ' + ($Route -join ' ')) }
+    if (-not $stem) { Write-DotsUsageLogo $Root $Presentation }
     Write-DotsMessage $(if ($stem) { 'dots ' + ($Route -join ' ') } else { 'Dots' }) heading $Presentation
     $rootGroups = [ordered]@{}
     foreach ($file in $files | Sort-Object Name) {

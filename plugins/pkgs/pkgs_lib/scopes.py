@@ -11,6 +11,7 @@ from .policies import identity
 
 
 def scope_id(backend):
+    if backend.name == 'winget': return backend.install_scope
     if backend.name in SYSTEM: return 'system'
     if backend.name == 'npm': return 'global' if backend.global_scope else 'project'
     if backend.name == 'pip': return 'venv' if sys.prefix != sys.base_prefix or os.environ.get('VIRTUAL_ENV') else 'base'
@@ -19,6 +20,9 @@ def scope_id(backend):
 
 
 def make(manager, scope=None):
+    if manager == 'winget':
+        from .winget import WinGetBackend
+        return WinGetBackend(scope or 'user')
     backend = Backend(manager, manager == 'npm' and scope == 'global')
     if manager == 'gem' and scope == 'user':
         path = run(['ruby', '-rrubygems', '-e', 'print Gem.user_dir']).strip()
@@ -118,7 +122,7 @@ def inventory(backend, *, roots=False, owned=False, portable=False):
                       '[extras:' in line or '[with:' in line or re.search(r'\[required:\s*(?:@|/|file:|git\+|https?:)',line) else '')
             p.details['disabled_reason'] = reason
         return [(p,'explicit',p.details['disabled_reason']) for p in rows]
-    if backend.name in ('go','npm'):
+    if backend.name in ('go','npm','winget'):
         return [(p, 'explicit' if roots or backend.name == 'go' else 'all', p.details.get('disabled_reason', '')) for p in rows]
     if not roots: return [(p, 'all', '') for p in rows]
     n = backend.name

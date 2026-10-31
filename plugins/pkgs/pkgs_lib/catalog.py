@@ -8,6 +8,7 @@ from .detect import SYSTEM
 
 
 def key(name, manager):
+    if manager == 'winget': return name.casefold()
     return re.sub(r'[-_.]+', '-', name).lower() if manager in ('pip', 'uv-tool') else name
 
 

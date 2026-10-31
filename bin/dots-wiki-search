@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # dots:summary=Search local wiki pages
-# dots:usage=QUERY [--titles] [--json]
+# dots:usage=QUERY [--titles | --topics] [--json]
+# dots:option=--topics||flag|Rank current source topics offline
 # dots:option=--titles||flag|Search page titles only
 # dots:option=--json||flag|Emit versioned JSON
-# dots:argument=1|string|Literal query
+# dots:argument=1|string|Literal query, or all topic terms with --topics
 WIKI_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots" && pwd) || exit
 exec python3 -B "$WIKI_LIB/wiki.py" search "$@"

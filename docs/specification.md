@@ -4,6 +4,14 @@ This reference describes the data consumed and produced by the live theme, file 
 
 ## Font library and catalogs
 
+Font display preferences belong to the existing typed `apps.fonts` configuration
+in `default/config.json` and profile JSON, separate from retained `fonts.json`
+application choices. The [output preference table](fonts.md#output-preferences)
+defines defaults and consumers. Null/unset inherits the parent/default value.
+Report styles `colors.fonts.*` and `icons.menu.fonts` use the shared visual catalog;
+they apply on the next Fonts invocation or popup without theme publication.
+Display preferences do not alter the following library schemas or data output.
+
 Fonts use schema-1 JSON. `<Dots state root>/fonts/collection.json` contains
 `families` keyed by `nerd:NAME`, `google:LICENSE_DIRECTORY/FAMILY` or content-derived
 `local:HASH`, plus `targets` keyed by app target and optional Windows Terminal GUID.
@@ -418,3 +426,32 @@ active leaf profile root's `packages.json`; it does not inherit a parent's file.
 `export --update --dry-run` emits the proposed schema-1 JSON. Publication opt-in
 uses existing schema-1 Git events to report manifest selection and update;
 ordinary export/restore and Git data schemas are unchanged.
+
+`pkgs upgrade --list --json` emits `{schema: 1, groups: [...]}`. Each group has
+`manager`, `scope`, `status` (`ok` or `error`), `error`, `packages` and `skipped`.
+Package rows contain `name`, `current` and `candidate`; skipped rows contain
+`package` and `reason`. Failed groups do not represent an up-to-date inventory.
+`pkgs cleanup --json` is inspection only: `{schema: 1, manifest: PATH, packages:
+[...]}` with `name`, `manager`, `scope`, `version`, `eligible` and `reason` per row.
+It never serializes source URLs or executable recipes. Cleanup does not change
+the manifest schema or its retained disabled records. See [cleanup](packages.md#reviewed-source-install-cleanup).
+
+## Selective setup additions
+
+Root usage branding adds `apps.cli.logo_gradient`, a string enum `classic` or `installer` with default `classic`. It uses normal profile inheritance, supports null/unset reset, and requires no publication. `installer` reads the published palette's hint/info/accent stops; missing stops leave the artwork plain. Disabled color and machine outputs retain their normal contracts.
+
+Setup schema-1 results retain existing fields and add `components`, `preparation`, `stages` and an optional `preparation_record` path. Preparation rows describe declared inputs before execution; outcome rows identify completed/failed stages. Desired package manifests remain schema 1. WinGet adds manager `winget`, scopes `user`/`machine`, default platform `windows`, case-insensitive exact IDs and version pins; unknown correlated scope is disabled with a reason.
+
+Installer entries retain their first `before`/`backup`/`index` and current `after`. Component identity is derived from stable IDs; migrated lexical children can include `logical_path`. Optional `font_targets` saves each app's pre-installer collection reference (or null), `font_after` guards the installer-selected metadata, and `font_copies` retains the canonical source and pre-font backup for selective copy restoration without losing the original file-install baseline. Build identity/verified records bind the pinned commit, patch SHA-256, platform, architecture, toolchain and consumer check to the executable SHA-256. Setup run records are schema-1 documents with root, platform and ordered stage outcomes. All records use Store writes; they are machine-local and never committed.
+
+`apps.setup` inherits through normal Config layers: booleans `logo`, `clear_screen`, `dependencies`; unique supported string-array `components`; qualified-ID array `resources` (empty means all applicable). Defaults select core/files/themes/anodize/blastoff/pkgs and no dependency installation. Saving is always an explicit per-run choice. These behavioral controls require no publication or app refresh.
+
+## Wiki topic and command documentation contracts
+
+Wiki display controls use the existing typed profile schema: `apps.wiki.list_details` is `summary|full`, `reader` is `auto|plain`, and `search_snippets`, `search_urls`, `menu_descriptions`, `section_breadcrumbs` are booleans. `formatting.apps.wiki.row_gap` is an integer `0..4`. Defaults, consumer scopes and resets are documented in [Wiki preferences](wiki.md#output-preferences). Nullable `colors.wiki.*` fields are supported CLI bindings; the ordinary layer-first visual resolution and Config save workflow apply. These preferences never filter JSON results or change raw/redirected document bytes, exact scalar outputs, ranking, or ordinary redirected report layouts.
+
+`wiki search QUERY --topics` returns `{schema: 1, mode: "topics", query: STRING, items: ARRAY}`. Each item contains string fields `page`, `title`, `section`, `heading`, `breadcrumb`, `anchor`, `url`, `text`, plus a one-based integer `line`. Empty `heading`/`anchor` identifies a page introduction; section anchors follow the wiki generator's duplicate-aware heading rules. `line` addresses current canonical Markdown (or generated command-reference Markdown), not the exported file. Snippets use at most 240 source characters plus an ellipsis. Ranking is deterministic; scores are not an API. No matches return status 1 with `items: []`. Existing literal-search JSON is unchanged.
+
+Topic snapshots are in-memory only. The manifest remains schema 1 with stable page IDs and one canonical source per page. The wiki and `dots(1)` share public first-party static metadata extraction, including declared operands and root options; hidden/private extension commands are excluded. Revision-aware wiki provenance includes the shared extraction, heading helper and global option source. No extension is executed during documentation generation.
+
+Managed manual identity `dots:manual` belongs to the existing core component and uses ordinary installer receipt/journal schemas. Destination and legacy-checkout behavior are described in [installation](installation.md#complete-command-manual).

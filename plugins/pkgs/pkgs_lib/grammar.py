@@ -2,7 +2,9 @@
 import argparse
 import sys
 from . import VERSION
-MANAGERS = ('apt', 'pacman', 'paru', 'yay', 'dnf', 'xbps', 'npm', 'uv-tool', 'pip', 'gem', 'go')
+MANAGERS = ('apt', 'pacman', 'paru', 'yay', 'dnf', 'xbps', 'npm', 'uv-tool', 'pip', 'gem', 'go', 'winget')
+ALIASES = {'in': 'install', 'un': 'uninstall', 'up': 'upgrade',
+           'xup': 'export', 'upls': 'upgrade', 'remove': 'uninstall'}
 
 COMMANDS = {'install': 'Install exact names or open a picker', 'uninstall': 'Remove installed packages',
             'remove': 'Alias for uninstall', 'search': 'Read-only search picker', 'list': 'Print package inventory',
@@ -10,9 +12,12 @@ COMMANDS = {'install': 'Install exact names or open a picker', 'uninstall': 'Rem
             'managers': 'Detected managers and capabilities', 'doctor': 'Detection and completion diagnostics',
             'completion': 'Generate or install shell completions', 'cache': 'Clear cached catalogs',
             'format': 'Format package-manager output from stdin', 'export': 'Export editable installed-package JSON',
-            'manifest': 'Validate and inspect a package manifest', 'restore': 'Restore packages from a manifest', 'help': 'Show usage'}
+            'manifest': 'Validate and inspect a package manifest', 'restore': 'Restore packages from a manifest',
+            'cleanup': 'Review and remove disabled source installs from a manifest', 'help': 'Show usage',
+            'in': 'Alias for install', 'un': 'Alias for uninstall', 'up': 'Alias for upgrade',
+            'xup': 'Alias for export --update', 'upls': 'Alias for upgrade --list'}
 
-DESCRIPTION = '''Fuzzy package management for Termux and Linux.
+DESCRIPTION = '''Fuzzy package management for Termux, Linux, WSL and native Windows WinGet.
 
 Commands:
   install [NAME ...]       Install exact names; no names opens picker
@@ -21,6 +26,8 @@ Commands:
   list                    Print package inventory
   info NAME ...           Colorized, wrapped package information
   upgrade [NAME ...]       Unattended user-wide upgrades; --manager selects one
+  upgrade ls | --list      List available upgrades without installing
+  cleanup [FILE]          Preview, select and confirm removal of source installs
   format                  Format stdin; use pipefail for producer failures
   export                  Export installed roots as editable JSON
   manifest FILE           Validate and inspect a package manifest
@@ -39,12 +46,28 @@ Examples:
   pkgs install --manager npm --global typescript
   pkgs install --manager uv-tool ruff
   pkgs completion ZSH install
+  pkgs upls
+  pkgs xup
 
+Install, upgrade and refresh run without an extra confirmation flag.
+Upgrades show brief results; --raw shows full manager output.
 Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.
 Bare invocation shows help. Completion inserts names and never installs.
 '''
 
 class Parser(argparse.ArgumentParser):
+    def parse_intermixed_args(self, args=None, namespace=None):
+        words = list(sys.argv[1:] if args is None else args)
+        parsed = super().parse_intermixed_args(words, namespace)
+        if parsed.command == 'xup': parsed.update = True
+        if parsed.command == 'upls': parsed.list_upgrades = True
+        parsed.command = ALIASES.get(parsed.command, parsed.command)
+        # A literal package named ls remains available through `upgrade -- ls`.
+        before = words[:words.index('--')] if '--' in words else words
+        if parsed.command == 'upgrade' and parsed.names == ['ls'] and 'ls' in before:
+            parsed.names = []; parsed.list_upgrades = True
+        return parsed
+
     def print_help(self, file=None):
         # Keep metadata generation pure; presentation is loaded only for help.
         from .reports import help_report
@@ -62,7 +85,9 @@ def parser(argv=None):
     p.add_argument('--manager', choices=('auto',) + MANAGERS, default=None, help='select a package manager (default: auto)')
     p.add_argument('--query', default='', help='initial picker search text')
     p.add_argument('--global', dest='global_scope', action='store_true', help='npm global scope')
+    p.add_argument('--scope', choices=('user', 'machine'), help='WinGet scope (default: user; machine requires an elevated shell)')
     p.add_argument('--installed', action='store_true', help='show installed packages only')
+    p.add_argument('--list', dest='list_upgrades', action='store_true', help='list available upgrades without installing (upgrade only)')
     p.add_argument('--json', action='store_true', help='machine-readable reporting output')
     p.add_argument('--color', choices=('auto', 'always', 'never'),
                    help='auto, always or never; overrides DOTS_COLOR and configured color')
@@ -73,8 +98,8 @@ def parser(argv=None):
     p.add_argument('--raw', action='store_true', help='forward manager streams unchanged')
     p.add_argument('--ignore-skip', action='store_true', help='explicitly override direct-target skip rules')
     p.add_argument('--output', metavar='FILE', help='export destination; stdout by default')
-    p.add_argument('--update', action='store_true', help='merge export into a manifest; defaults to the current profile')
+    p.add_argument('--update', action='store_true', help='merge export without prompting; defaults to the current profile')
     p.add_argument('--include-dependencies', action='store_true', help='export full installed inventory')
     p.add_argument('--pin-versions', action='store_true', help='export exact installed version pins')
-    p.add_argument('-y', '--yes', action='store_true', help='approve install, removal, restore or file replacement')
+    p.add_argument('-y', '--yes', action='store_true', help='approve removal, restore or file replacement')
     return p

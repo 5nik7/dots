@@ -30,7 +30,10 @@ def rows(library):
 
 
 def preserve_termux(workspace,archive,new_font):
-    plan=workspace.user;path=plan.library.home/'.termux/font.ttf'
+    plan=workspace.user
+    found=destination(plan.library,'termux')
+    plan.guards.update(found.get('guards',{}))
+    path=Path(found['path'])
     if not path.exists():return
     plan.guard(path)
     if path.is_symlink():raise ValueError('Termux font is a symlink; review its ownership first')
@@ -45,7 +48,7 @@ def preserve_termux(workspace,archive,new_font):
     retain(plan,archive,identity,version,workspace.temporary,faces=[face])
 
 
-def synchronize(workspace):
+def synchronize(workspace, *, save_preferences=True):
     """Retain configured app choices, even when an older selection is unchanged."""
     plan=workspace.user
     configured={item['target'] for item in plan.items if item.get('action')=='set'}
@@ -69,7 +72,7 @@ def synchronize(workspace):
             target=ref['target'],config=ref.get('config'),app_profile=ref.get('app_profile'),directory='PROFILEFONTS',
             files={f['file']:f['sha256'] for f in selected},upstream=deepcopy(spec),
             name=plan.document['families'][identity]['name'])
-    plan.put(path,data=document)
+    if save_preferences:plan.put(path,data=document)
 
 
 def choose(workspace,identity,version,source,args, *, saved=None):

@@ -446,8 +446,15 @@
     "fzf": {
       "colors": {
         "prompt": "accent",
-        "fg+": "accent"
+        "fg+": "accent",
+        "header": "muted"
       }
+    },
+    "cli": {
+      "logo_gradient": "installer"
+    },
+    "fonts": {
+      "list_details": "full"
     }
   },
   "formatting": {

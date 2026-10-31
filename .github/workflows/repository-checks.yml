@@ -3,10 +3,10 @@ name: Repository checks
 on:
   push:
     branches: [main]
-    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.dots/wiki.json', 'bin/dots*', 'lib/dots/wiki*.py', 'lib/dots/command_metadata.py', 'tools/test_wiki*.py', '.github/workflows/repository-checks.yml']
+    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.dots/wiki.json', 'bin/dots*', 'lib/dots/wiki*.py', 'lib/dots/command_metadata.py', 'lib/dots/catalog.bash', 'lib/dots/metadata/*.meta', 'tools/test_wiki*.py', 'tools/generate_dots_manual.py', 'tools/test_manual.py', 'man/*.1', '.github/workflows/repository-checks.yml']
   pull_request:
     branches: [main]
-    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.dots/wiki.json', 'bin/dots*', 'lib/dots/wiki*.py', 'lib/dots/command_metadata.py', 'tools/test_wiki*.py', '.github/workflows/repository-checks.yml']
+    paths: ['**/*.md', 'tools/verify_docs.py', 'tools/test_verify_docs.py', '.dots/wiki.json', 'bin/dots*', 'lib/dots/wiki*.py', 'lib/dots/command_metadata.py', 'lib/dots/catalog.bash', 'lib/dots/metadata/*.meta', 'tools/test_wiki*.py', 'tools/generate_dots_manual.py', 'tools/test_manual.py', 'man/*.1', '.github/workflows/repository-checks.yml']
 
 permissions:
   contents: read
@@ -18,7 +18,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04, windows-2025]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 5
+    timeout-minutes: 10
     env:
       PYTHONUTF8: '1'
     steps:
@@ -31,6 +31,16 @@ jobs:
         run: python -B tools/test_verify_docs.py
       - name: Wiki generation regressions
         run: python -B tools/test_wiki.py
+      - name: Wiki topic regressions
+        run: python -B tools/test_wiki_topics.py
+      - name: Wiki presentation and configuration
+        run: python -B tools/test_wiki_presentation.py
+      - name: Manual freshness
+        run: python -B tools/generate_dots_manual.py --check
+      - name: File platform safety
+        run: python -B tools/test_file_platform.py
+      - name: Manual generation and lifecycle
+        run: python -B tools/test_manual.py
       - name: Wiki source consistency
         run: python -B lib/dots/wiki.py check --source-only
       - name: Documentation links

@@ -32,7 +32,12 @@ def chnf(argv):
             if font['file'].lower().endswith('.ttf'):
                 entries.append((identity+'/'+font['file'],['set',identity,'--version',version,'--face',font['file']]))
     if args.list:
-        for label,_ in entries:print(label)
+        from fonts.presentation import FontPresentation
+        if FontPresentation().human:
+            from fonts_cli import render
+            render(dict(items=[dict(face=label) for label,_ in entries]),action='list')
+        else:
+            for label,_ in entries:print(label)
         return 0
     query=args.font or args.query
     if query:

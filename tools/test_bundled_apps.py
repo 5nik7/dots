@@ -242,17 +242,18 @@ class BundledApps(unittest.TestCase):
             prefixed = self.call([engine, '-NoLogo', '-NoProfile', '-File', self.repo/'bin/dots.ps1', app, '--version'])
             self.assertEqual(standalone, prefixed)
 
-    def test_native_pkgs_refusal_before_backend_import(self):
+    def test_native_pkgs_dispatch_reaches_shared_core(self):
         spec = importlib.util.spec_from_file_location('pkgs_windows_entry', self.repo/'plugins/pkgs/main.py')
         entry = importlib.util.module_from_spec(spec); spec.loader.exec_module(entry)
-        sys.path.insert(0, str(self.repo/'plugins/pkgs'))
-        self.addCleanup(sys.path.remove, str(self.repo/'plugins/pkgs'))
-        import contextlib, io
-        stderr = io.StringIO()
-        with patch.object(entry.os, 'name', 'nt'), patch.object(sys, 'argv', ['pkgs', 'install', 'git']), contextlib.redirect_stderr(stderr):
-            self.assertEqual(entry.main(), 3)
-        self.assertIn('native Windows backends', stderr.getvalue())
-        self.assertNotIn('pkgs_lib.cli', sys.modules)
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        run = Mock(return_value=7)
+        for words in (['install','Vendor.App'],['in','Vendor.App'],['un','Vendor.App'],['up'],['xup'],['upls'],
+                      ['upgrade','ls'],['upgrade','--list'],['cleanup','--json']):
+            with self.subTest(words=words), patch.object(entry.os, 'name', 'nt'), \
+                 patch.object(sys, 'argv', ['pkgs', *words]), patch.dict(sys.modules, {'pkgs_lib.cli':SimpleNamespace(main=run)}):
+                self.assertEqual(entry.main(), 7)
+        self.assertEqual(run.call_count,9)
 
     def test_blastoff_native_aliases_use_existing_transport(self):
         self.env['DOTS_POWERSHELL'] = str(self.home/'native shell must not run')

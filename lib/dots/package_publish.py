@@ -12,8 +12,6 @@ class Stage:
         from pkgs_lib.common import config, Error
         self.error = Error
         try:
-            if manifests.platform() == 'windows':
-                raise Error('--update-packages requires Termux, Linux or WSL; native Windows package backends are unavailable')
             path = manifests.default_path(root)
             args = SimpleNamespace(manager=None, global_scope=False, include_dependencies=False,
                                    pin_versions=False, dry_run=quiet, json=quiet)

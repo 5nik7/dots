@@ -93,9 +93,9 @@ unknown = ""  # weather-na
 "395" = ""    # moderate/heavy snow with thunder
 
 [night_icons]
-"113" = "󰖔" # clear night
-"116" = "󰼱" # partly cloudy night
-"392" = "" # snow with thunder at night
+"113" = "" # clear night
+"116" = "" # partly cloudy night
+"392" = "" # snow with thunder at night
 "395" = "" # heavy snow with thunder at night
 
 # Colors follow the published Dots theme. Also accept #RRGGBB, 0–255 (number or

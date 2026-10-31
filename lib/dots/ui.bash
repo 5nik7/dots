@@ -34,13 +34,15 @@ dots::style() {
     DOTS_UI_WARN=${_DOTS_STYLE_ICONS[status.warning]-} DOTS_UI_ERROR=${_DOTS_STYLE_ICONS[status.error]-}
   fi
 }
-# Render trusted logo text with a vertical blue-to-cyan gradient.
-# Keep whole lines intact (including Unicode art); no external color tools.
+# Root usage branding. Keep the builtin classic/plain path available without Python.
 dots::logo() {
   dots::style
   local line i steps
   local -a lines=()
   while IFS='' read -r line || [[ -n $line ]]; do lines+=("$line"); done
+  if [[ $DOTS_UI_RESET && -r ${DOTS_LIB_DIR:-}/usage_logo.py ]] && ((${#lines[@]})) && command -v python3 >/dev/null 2>&1; then
+    if printf '%s\n' "${lines[@]}" | command python3 -B "$DOTS_LIB_DIR/usage_logo.py" --color=always --stdin; then return 0; fi
+  fi
   steps=$((${#lines[@]} - 1))
   (( steps > 0 )) || steps=1
   for ((i=0; i<${#lines[@]}; i++)); do

@@ -23,8 +23,8 @@ def render_sample(path,color=True):
     if image.returncode:return 'Actual font rendering unavailable.\n'
     sample=image.stdout.decode('utf-8',errors='replace')
     if color:
-        from style_config import code
-        sample='\033['+code('97')+'m'+sample+'\033[0m'
+        from fonts.presentation import FontPresentation
+        sample='\033['+FontPresentation().style('face','ui.foreground')+'m'+sample+'\033[0m'
     return sample
 
 
@@ -32,13 +32,22 @@ def main():
     data=read_request(sys.argv[1]);index=int(sys.argv[2])
     if not 0<=index<len(data['previews']):raise ValueError('invalid font preview index')
     item=data['previews'][index]
-    print(item['text'],end='')
+    if 'report' in item:
+        from fonts_cli import render
+        os.environ['DOTS_COLOR']='always' if data.get('color') else 'never'
+        os.environ['DOTS_ICONS']='always' if data.get('icons') else 'never'
+        render(item['report'],human=True,width=int(os.environ.get('FZF_PREVIEW_COLUMNS','80')),action='show',wrap=data.get('wrap',True))
+    else:print(item['text'],end='')
+    if not data.get('sample',True):return
+    from fonts.presentation import FontPresentation
+    ui=FontPresentation(terminal=True)
+    ui.width=max(1,int(os.environ.get('FZF_PREVIEW_COLUMNS','80')))
     if item.get('font'):
         path=Path(item['font'])
         if path.is_file() and not path.is_symlink() and sha(path)==item['sha256']:
-            print('\nSample rendered from selected font:')
+            ui.emit();ui.detail('Sample','Rendered from the selected font')
             print(render_sample(path,data.get('color',False)),end='')
-    elif item.get('kind')!='glyph':print('\nMetadata preview; download the font to render its actual sample.')
+    elif item.get('kind')!='glyph':ui.detail('Sample','Metadata preview; download the font to render its actual sample.')
 
 
 if __name__=='__main__':

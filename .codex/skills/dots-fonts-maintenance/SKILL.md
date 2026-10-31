@@ -14,3 +14,10 @@ Copy preserves originals; Migrate requires proven user ownership and keeps regis
 Follow [command maintenance](../dots-command-maintenance/SKILL.md) for config/menu assessments, [dots-config](../dots-config/SKILL.md) for configuration exposure and [menu authoring](../dots-menu-authoring/SKILL.md) for picker changes. Fonts' native settings and retained preferences keep their existing owners.
 
 Select `tools/test_fonts.py`, `tools/test_font_directories.py`, `tools/test_font_workflows.py` and `tools/test_fonts_browser.py` by changed boundary; use `python3 -B tools/generate_fonts_commands.py --check` for metadata. Tests own payloads, roots, network substitutes and native registration substitutes. Verify preservation, partial retention, stale inputs, failed downloads, rollback/undo, idempotence and unavailable consumers. Real device/Windows activation is separate evidence. Finish through [documentation maintenance](../dots-documentation-maintenance/SKILL.md).
+
+Display work also uses `tools/test_fonts_presentation.py`. Fonts reports bind shared
+CLI rendering in `fonts/presentation.py`; selectors bind shared menu spans. Keep
+`apps.fonts` controls, nullable `colors.fonts.*` roles, Config discovery/activation
+and menu links synchronized. Render preview metadata at the actual pane width.
+Use render-local preference snapshots for large catalogs; preserve plain captured
+human layout via `DOTS_MENU_CAPTURE` and exact redirected/JSON/path/glyph output.

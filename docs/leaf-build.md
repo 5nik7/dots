@@ -17,6 +17,14 @@ An explicit external syntax selection is loaded once during startup before eithe
 
 Use the [Leaf setup](themes.md#leaf) to publish both files before selecting `theme = "themes/dots.toml"`. Restart Leaf after publication to read changed colors. Leaf's document watcher does not watch theme files.
 
-Replacing an installed executable is a separate, explicit action. Verify the candidate first with `LEAF_TEST_BIN=/absolute/path/to/build/leaf python3 -B tools/test_leaf_theme.py -v`. Retain the original executable and config in a guarded Dots file transaction before replacement; the transaction's backup and drift-checked inverse provide recovery. An upstream reinstall or Leaf self-update may replace the custom executable and remove external syntax support. Reapply/revalidate the patch for a later upstream version rather than assuming compatibility.
+Selecting `leaf` in the checkout setup wizard or passing `--component leaf` explicitly requests acquisition, verification and managed installation. Verify the candidate first with `LEAF_TEST_BIN=/absolute/path/to/build/leaf python3 -B tools/test_leaf_theme.py -v`. Retain the original executable and config in a guarded Dots file transaction before replacement; the transaction's backup and drift-checked inverse provide recovery. An upstream reinstall or Leaf self-update may replace the custom executable and remove external syntax support. Reapply/revalidate the patch for a later upstream version rather than assuming compatibility.
 
 Native Windows PowerShell 5.1/7, Linux and WSL compilation, publication and interactive rendering remain pending; Termux verification is recorded in the [focused plan](../plans/leaf-theme.md).
+
+## Checkout setup component
+
+The installer creates an owned `dots/builds/leaf/<identity>` cache below the platform cache root, outside existing user checkouts. Its identity binds the source commit, patch, platform, architecture, Rust/Cargo toolchain and consumer check. Builds use private HOME/config/state/cache/data and Cargo roots and discard inherited Git repository overrides. A failed fetch can resume from its owned empty repository; populated or patched sources must still match the recorded state and are never reset. A verified artifact is reused only when its identity, digest and expected version still match.
+
+Setup publishes `~/.local/bin/leaf` (`leaf.exe` on Windows) through the final Store transaction, retaining the original regular file. Foreign links and changed installer-owned commands are refused. Selective Leaf uninstall restores the original command and leaves the owned source/build cache. No installed Leaf process or application config is reloaded.
+
+Current installer acceptance: isolated acquisition/build/failure/reuse/publication fixtures pass. The required new real Termux build is pending because this execution environment returns proxy HTTP 403 for GitHub and crates.io, with no cached Rust dependencies. Earlier Leaf build evidence is historical and does not replace this check.

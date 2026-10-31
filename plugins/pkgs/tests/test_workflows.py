@@ -17,7 +17,7 @@ APP = Path(__file__).resolve().parents[1]
 ROOT = APP.parents[1]
 sys.path.insert(0, str(APP))
 from pkgs_lib import cli, policies, workflows, scopes, streams, manifests, go_tools
-from pkgs_lib.common import Error, Package, config, budget
+from pkgs_lib.common import Error, Package, Cache, config, budget
 from pkgs_lib.backends import Backend
 
 
@@ -71,13 +71,78 @@ else:sys.exit(9)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertNotIn('Proceed?',result.stdout+result.stderr)
         self.assertEqual(json.loads((self.home/'db.json').read_text()),{'hello':'2.0'})
-        self.assertEqual(json.loads((self.home/'calls.jsonl').read_text().splitlines()[-1]),['update','--global','--','hello'])
+        self.assertEqual(json.loads((self.home/'calls.jsonl').read_text().splitlines()[-1]),['install','--global','--','hello'])
 
-    def test_install_still_needs_approval(self):
-        result=self.invoke('install','--manager','npm','hello')
-        self.assertEqual(result.returncode,1)
-        self.assertIn('No controlling terminal',result.stderr)
+    def test_install_without_terminal_or_yes_and_failure_status(self):
+        preview=self.invoke('install','--manager','npm','--global','hello','--dry-run')
+        self.assertEqual(preview.returncode,0,preview.stderr)
+        self.assertIn('Dry run',preview.stdout)
+        self.assertFalse((self.home/'calls.jsonl').exists())
         self.assertEqual((self.home/'db.json').read_text(),'{}')
+        result=self.invoke('install','--manager','npm','--global','hello')
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertNotIn('Proceed?',result.stdout+result.stderr)
+        self.assertEqual(json.loads((self.home/'db.json').read_text()),{'hello':'2.0'})
+        self.assertEqual(json.loads((self.home/'calls.jsonl').read_text().splitlines()[-1]),
+                         ['install','--global','--','hello'])
+        with patch.dict(os.environ, TEST_FAIL='1'):
+            failed=self.invoke('install','--manager','npm','other')
+        self.assertEqual(failed.returncode,42,failed.stderr)
+        self.assertEqual(json.loads((self.home/'db.json').read_text()),{'hello':'2.0'})
+
+    def test_install_picker_authorizes_selection_but_not_cancel_or_preview(self):
+        # Exercise the actual CLI -> picker -> workflow path without a terminal.
+        for name in ('fzf','bash'):
+            path=self.bin/name
+            path.write_text('#!'+sys.executable+'\n'+'''import os,sys
+if '--version' in sys.argv: print('0.74.5'); sys.exit(0)
+if '--help' in sys.argv: sys.exit(0)
+if os.environ.get('TEST_CANCEL'): sys.exit(130)
+print(sys.stdin.read().splitlines()[0])
+''')
+            path.chmod(0o755)
+        Cache(Backend('npm',True).cache_key).save([Package('@scope/hello')])
+        with patch.dict(os.environ, FZF_DEFAULT_OPTS='', FZF_DEFAULT_OPTS_FILE=''):
+            with patch.dict(os.environ, TEST_CANCEL='1'):
+                cancelled=self.invoke('install','--manager','npm','--global')
+            preview=self.invoke('install','--manager','npm','--global','--dry-run')
+            self.assertEqual(cancelled.returncode,0,cancelled.stderr)
+            self.assertEqual(preview.returncode,0,preview.stderr)
+            self.assertEqual((self.home/'db.json').read_text(),'{}')
+            calls=[json.loads(line) for line in (self.home/'calls.jsonl').read_text().splitlines()]
+            self.assertTrue(all(call[0]=='ls' for call in calls),calls)
+            result=self.invoke('install','--manager','npm','--global')
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertNotIn('Proceed?',result.stdout+result.stderr)
+        self.assertEqual(json.loads((self.home/'db.json').read_text()),{'@scope/hello':'2.0'})
+
+    def test_removal_and_restore_still_need_approval(self):
+        (self.home/'db.json').write_text('{"hello":"1.0"}')
+        path=self.home/'packages.json';path.write_text(json.dumps(self.manifest([{'name':'other'}])))
+        for words in (('uninstall','--manager','npm','hello'), ('restore',str(path))):
+            with self.subTest(words=words):
+                result=self.invoke(*words)
+                self.assertEqual(result.returncode,1,result.stderr)
+                self.assertIn('No controlling terminal',result.stderr)
+                self.assertEqual(json.loads((self.home/'db.json').read_text()),{'hello':'1.0'})
+
+    def test_termux_install_without_terminal_supplies_native_approval_flags(self):
+        for name in ('apt','apt-cache','dpkg-query','pacman','pkg'):
+            path=self.bin/name
+            path.write_text('#!'+sys.executable+'\nimport json,os,sys\n'+
+                "open(os.environ['TEST_CALLS'],'a').write(json.dumps(sys.argv)+'\\n')\n")
+            path.chmod(0o755)
+        for manager,flag in (('apt','-y'),('pacman','--noconfirm')):
+            with self.subTest(manager=manager), patch.dict(os.environ, TERMUX_VERSION='fixture', TERMUX_APP_PACKAGE_MANAGER=manager):
+                (self.home/'calls.jsonl').write_text('')
+                preview=self.invoke('install','--manager',manager,'bun','--dry-run')
+                self.assertEqual(preview.returncode,0,preview.stderr)
+                self.assertIn('pkg install '+flag+' bun',preview.stdout)
+                self.assertEqual((self.home/'calls.jsonl').read_text(),'')
+                result=self.invoke('install','--manager',manager,'bun')
+                self.assertEqual(result.returncode,0,result.stderr)
+                calls=[json.loads(line) for line in (self.home/'calls.jsonl').read_text().splitlines()]
+                self.assertEqual(calls,[[str(self.bin/'pkg'),'install',flag,'bun']])
 
     def test_refresh_without_terminal_or_yes_and_apt_warning(self):
         for name in ('apt', 'apt-cache', 'dpkg-query', 'pkg'):
@@ -152,7 +217,7 @@ else:sys.exit(9)
             self.assertEqual(workflows.execute(Backend('npm'), 'upgrade',['hello'],self.args('upgrade','--dry-run'),cfg),0)
         self.assertFalse((self.home/'BAD').exists())
 
-    def test_go_inventory_and_fallback(self):
+    def test_go_inventory_and_native_install(self):
         folder=self.home/'go bin';folder.mkdir();(folder/'tool').write_bytes(b'fake');(folder/'dev').write_bytes(b'fake')
         def metadata(args):
             if args[0]=='env':return json.dumps({'GOBIN':str(folder),'GOPATH':''})
@@ -163,11 +228,41 @@ else:sys.exit(9)
         self.assertEqual(len(rows),2)
         self.assertTrue(next(p for p in rows if p.details['binary']=='dev').details['disabled_reason'])
         tool=next(p for p in rows if p.details['binary']=='tool')
-        with patch.object(go_tools,'which',return_value=None):
-            self.assertEqual(go_tools.transactions('upgrade',[tool.name],rows=[tool]),[['go','install','example.org/tool@latest']])
-        with patch.object(go_tools,'which',return_value='/fixture/updater'):
-            self.assertEqual(go_tools.transactions('upgrade',[tool.name],rows=[tool]),[['go-global-update','tool']])
-            self.assertEqual(go_tools.transactions('upgrade',[tool.name],['-trimpath'],[tool]),[['go','install','-trimpath','example.org/tool@latest']])
+        self.assertEqual(go_tools.transactions('upgrade',[tool.name],rows=[tool]),[['go','install','example.org/tool@latest']])
+        self.assertEqual(go_tools.transactions('upgrade',[tool.name],['-trimpath'],[tool]),[['go','install','-trimpath','example.org/tool@latest']])
+
+    def test_go_native_updates_only_and_no_tty_dry_run(self):
+        folder=self.home/'Go tools';folder.mkdir()
+        for name in ('first','second','current'):(folder/name).write_bytes(b'fake build metadata')
+        go=self.bin/'go'
+        go.write_text('#!'+sys.executable+'\n'+'''import json,os,sys
+from pathlib import Path
+if sys.argv[1]=='env':print(json.dumps(dict(GOBIN=os.environ['TEST_GO_BIN'],GOPATH='')))
+elif sys.argv[1:3]==['version','-m']:
+    name=Path(sys.argv[-1]).name
+    print(sys.argv[-1]+': go1.25\\n\\tpath\\texample.org/'+name+'\\n\\tmod\\texample.org/'+name+'\\tv1.0.0\\n')
+elif sys.argv[1:4]==['list','-m','-json']:
+    assert os.environ['GOTOOLCHAIN']=='local' and os.environ['GOWORK']=='off'
+    assert os.environ['GOFLAGS']=='' and Path.cwd().name.startswith('pkgs-go-query-')
+    print(json.dumps({'Version':'v1.0.0' if 'current@' in sys.argv[-1] else 'v1.1.0'}))
+elif sys.argv[1]=='install':
+    with open(os.environ['TEST_CALLS'],'a') as f:f.write(json.dumps(sys.argv[1:])+'\\n')
+else:sys.exit(99)
+''');go.chmod(0o755)
+        helper=self.bin/'go-global-update'
+        helper.write_text('#!'+sys.executable+'\nraise SystemExit("helper must not run")\n');helper.chmod(0o755)
+        with patch.dict(os.environ,TEST_GO_BIN=str(folder)):
+            preview=self.invoke('up','--manager','go','--dry-run')
+            self.assertEqual(preview.returncode,0,preview.stderr)
+            self.assertIn('go install example.org/first@latest',preview.stdout)
+            self.assertIn('go install example.org/second@latest',preview.stdout)
+            self.assertNotIn('current@latest',preview.stdout)
+            self.assertNotIn('go-global-update',preview.stdout)
+            self.assertFalse((self.home/'calls.jsonl').exists())
+            result=self.invoke('up','--manager','go')
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertEqual([json.loads(line) for line in (self.home/'calls.jsonl').read_text().splitlines()],
+                         [['install','example.org/first@latest'],['install','example.org/second@latest']])
 
     def test_pip_evidence_does_not_claim_unknown_ownership(self):
         data={'version':'1','installed':[
@@ -319,11 +414,27 @@ else:sys.exit(9)
         self.assertFalse(rows['disabled']['enabled']);self.assertEqual(rows['disabled']['reason'],'keep disabled')
         self.assertEqual(rows['wanted-later']['pin'],'3');self.assertEqual(rows['wanted-later']['observed_version'],'2')
         self.assertEqual(rows['new']['observed_version'],'5')
-        saved=self.invoke(*words,'--yes');self.assertEqual(saved.returncode,0,saved.stderr)
+        saved=self.invoke(*words);self.assertEqual(saved.returncode,0,saved.stderr)
+        self.assertNotIn('No controlling terminal',saved.stderr)
         self.assertEqual(json.loads(path.read_text()),proposed)
         before=path.stat().st_mtime_ns
-        saved=self.invoke(*words,'--yes');self.assertEqual(saved.returncode,0,saved.stderr)
+        saved=self.invoke(*words);self.assertEqual(saved.returncode,0,saved.stderr)
         self.assertEqual(path.stat().st_mtime_ns,before)
+        manifests.dotslib()
+        from files.transactions import Store
+        from files.file_platform import state_root
+        store=Store(state_root());record=store.records()[-1]
+        operations,guards,catalogs=store.inverse(record['id'])
+        store.apply('undo',operations,guards,retain=True,catalogs=catalogs)
+        self.assertEqual(path.read_bytes(),original)
+
+    def test_export_snapshot_replacement_still_needs_approval(self):
+        path=self.home/'snapshot.json';path.write_text(json.dumps(self.manifest()))
+        original=path.read_bytes()
+        result=self.invoke('export','--manager','npm','--global','--output',str(path))
+        self.assertEqual(result.returncode,1,result.stderr)
+        self.assertIn('No controlling terminal',result.stderr)
+        self.assertEqual(path.read_bytes(),original)
 
     def test_update_default_uses_leaf_profile_and_refuses_stale_or_partial_snapshots(self):
         dots=self.home/'checkout';leaf=dots/'profiles/linux/distros/debian';leaf.mkdir(parents=True)
@@ -333,10 +444,17 @@ else:sys.exit(9)
         manifests.dotslib()
         with patch('profiles.detect',return_value=facts):
             path=manifests.default_path(dots);self.assertEqual(path,leaf/'packages.json')
-            args=self.args('export','--update','--manager','npm','--global','--yes')
-            with patch.dict(os.environ,DOTS=str(dots)),contextlib.redirect_stdout(io.StringIO()):
+            args=self.args('export','--update','--manager','npm','--global')
+            path.write_text(json.dumps(self.manifest([{'name':'hello','pin':'0.5','observed_version':'1'}])))
+            (self.home/'db.json').write_text('{"hello":"2"}')
+            with patch.dict(os.environ,DOTS=str(dots)),contextlib.redirect_stdout(io.StringIO()), \
+                 patch.object(workflows,'confirm',return_value=True) as approval:
                 self.assertEqual(manifests.cli(args,self.cfg),0)
+            approval.assert_called_once_with(True)
             self.assertTrue(path.exists());self.assertFalse((dots/'packages.json').exists())
+            saved=json.loads(path.read_text())['groups'][0]['packages'][0]
+            self.assertEqual((saved['pin'],saved['observed_version']),('0.5','2'))
+            self.assertFalse(args.yes)
             snapshot=manifests.Update(path,args,self.cfg,root=dots,profile_default=True)
             path.write_text(json.dumps(self.manifest([{'name':'edited'}])))
             before=path.read_bytes()
@@ -505,7 +623,7 @@ else:sys.exit(9)
                     out=Terminal();formatter=streams.Formatter(out,{'output':'styled','_explicit_color':mode})
                     formatter.feed(b'error: example\n  unknown unchanged\n',final=True)
                     self.assertEqual('\x1b[' in out.getvalue(),painted)
-                    self.assertIn('  unknown unchanged\n',out.getvalue())
+                    self.assertIn('  unknown unchanged\n',out.getvalue().replace('\r\n','\n'))
                     self.assertNotIn('None',out.getvalue())
 
     def test_real_stream_runner_preserves_status_and_both_streams(self):

@@ -57,4 +57,23 @@ class Values(fixtures.ProfileConfig):
         self.path.write_text(self.path.read_text()+'\n')
         with self.assertRaises(ValueError):plan.apply('set')
 
+    def test_usage_logo_choices_reset_popup_and_next_invocation(self):
+        from config_menu import Inventory,Draft
+        from config_refresh import effective,after_save
+        key='apps.cli.logo_gradient'
+        self.assertEqual(self.run_config('get',key).stdout,'classic\n')
+        self.run_config('set',key,'invalid','--no-refresh',code=1)
+        row=Inventory(self.root,self.platform).find(key)
+        self.assertEqual(row.constraints['choices'],['classic','installer'])
+        before=effective(self.root)
+        draft=Draft(Inventory(self.root,self.platform),row).prepare('installer')
+        draft.plan.apply('set')
+        with patch('config_refresh.refresh',side_effect=AssertionError('logo choice must not publish a theme')):
+            self.assertEqual(after_save(self.root,before)['consumers'],[dict(app='cli',status='next invocation')])
+        self.assertEqual(self.run_config('get',key,native=True).stdout,'installer\n')
+        explanation=json.loads(self.run_config('explain',key,'--json').stdout)
+        self.assertEqual(explanation['activation'],'next invocation')
+        self.run_config('set',key,'null','--json-value','--no-refresh')
+        self.assertEqual(self.run_config('get',key).stdout,'classic\n')
+
 if __name__=='__main__':unittest.main()

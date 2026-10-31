@@ -1616,7 +1616,7 @@
     ]
   },
   "pkgs": {
-    "summary": "Manage packages on Termux, Linux and WSL",
+    "summary": "Manage packages on Termux, Linux, WSL and native Windows WinGet",
     "option": [
       [
         "--help",
@@ -1633,7 +1633,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -1649,10 +1649,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -1712,7 +1724,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -1730,7 +1742,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -1753,7 +1765,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -1769,10 +1781,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -1832,7 +1856,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -1850,7 +1874,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -1873,7 +1897,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -1889,10 +1913,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -1952,7 +1988,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -1970,7 +2006,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -1993,7 +2029,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2009,10 +2045,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -2072,7 +2120,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -2090,7 +2138,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2113,7 +2161,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2129,10 +2177,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -2192,7 +2252,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -2210,7 +2270,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2233,7 +2293,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2249,10 +2309,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -2312,7 +2384,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -2330,7 +2402,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2353,7 +2425,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2369,10 +2441,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -2432,7 +2516,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -2450,7 +2534,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2473,7 +2557,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2489,10 +2573,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -2552,7 +2648,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -2570,10 +2666,16 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
-    "argument": []
+    "argument": [
+      [
+        "1",
+        "choice:ls",
+        "List available upgrades"
+      ]
+    ]
   },
   "pkgs-refresh": {
     "summary": "Refresh repository metadata",
@@ -2593,7 +2695,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2609,10 +2711,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -2672,7 +2786,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -2690,7 +2804,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2713,7 +2827,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2729,10 +2843,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -2792,7 +2918,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -2810,7 +2936,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2833,7 +2959,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2849,10 +2975,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -2912,7 +3050,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -2930,7 +3068,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -2953,7 +3091,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -2969,10 +3107,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -3032,7 +3182,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -3050,7 +3200,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": [
@@ -3084,7 +3234,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -3100,10 +3250,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -3163,7 +3325,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -3181,7 +3343,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": [
@@ -3210,7 +3372,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -3226,10 +3388,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -3289,7 +3463,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -3307,7 +3481,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -3330,7 +3504,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -3346,10 +3520,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -3409,7 +3595,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -3427,7 +3613,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []
@@ -3450,7 +3636,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -3466,10 +3652,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -3529,7 +3727,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -3547,7 +3745,7 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": [
@@ -3576,7 +3774,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -3592,10 +3790,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -3655,7 +3865,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -3673,7 +3883,145 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "file",
+        "Package manifest"
+      ]
+    ]
+  },
+  "pkgs-cleanup": {
+    "summary": "Review and remove disabled source installs from a manifest",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export without prompting; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": [
@@ -3702,7 +4050,7 @@
       [
         "--manager",
         "",
-        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
         "select a package manager (default: auto)"
       ],
       [
@@ -3718,10 +4066,22 @@
         "npm global scope"
       ],
       [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
         "--installed",
         "",
         "flag",
         "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
       ],
       [
         "--json",
@@ -3781,7 +4141,7 @@
         "--update",
         "",
         "flag",
-        "merge export into a manifest; defaults to the current profile"
+        "merge export without prompting; defaults to the current profile"
       ],
       [
         "--include-dependencies",
@@ -3799,7 +4159,673 @@
         "--yes",
         "-y",
         "flag",
-        "approve install, removal, restore or file replacement"
+        "approve removal, restore or file replacement"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-in": {
+    "summary": "Alias for install",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export without prompting; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve removal, restore or file replacement"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-un": {
+    "summary": "Alias for uninstall",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export without prompting; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve removal, restore or file replacement"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-up": {
+    "summary": "Alias for upgrade",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export without prompting; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve removal, restore or file replacement"
+      ]
+    ],
+    "argument": [
+      [
+        "1",
+        "choice:ls",
+        "List available upgrades"
+      ]
+    ]
+  },
+  "pkgs-xup": {
+    "summary": "Alias for export --update",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export without prompting; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve removal, restore or file replacement"
+      ]
+    ],
+    "argument": []
+  },
+  "pkgs-upls": {
+    "summary": "Alias for upgrade --list",
+    "option": [
+      [
+        "--help",
+        "-h",
+        "flag",
+        "show this help and exit"
+      ],
+      [
+        "--version",
+        "-V",
+        "flag",
+        "show program's version number and exit"
+      ],
+      [
+        "--manager",
+        "",
+        "choice:auto,apt,pacman,paru,yay,dnf,xbps,npm,uv-tool,pip,gem,go,winget",
+        "select a package manager (default: auto)"
+      ],
+      [
+        "--query",
+        "",
+        "string",
+        "initial picker search text"
+      ],
+      [
+        "--global",
+        "",
+        "flag",
+        "npm global scope"
+      ],
+      [
+        "--scope",
+        "",
+        "choice:user,machine",
+        "WinGet scope (default: user; machine requires an elevated shell)"
+      ],
+      [
+        "--installed",
+        "",
+        "flag",
+        "show installed packages only"
+      ],
+      [
+        "--list",
+        "",
+        "flag",
+        "list available upgrades without installing (upgrade only)"
+      ],
+      [
+        "--json",
+        "",
+        "flag",
+        "machine-readable reporting output"
+      ],
+      [
+        "--color",
+        "",
+        "choice:auto,always,never",
+        "auto, always or never; overrides DOTS_COLOR and configured color"
+      ],
+      [
+        "--preview",
+        "-p",
+        "string",
+        "fzf preview-window layout"
+      ],
+      [
+        "--directory",
+        "",
+        "directory",
+        "completion destination directory (file-only for Bash/Zsh)"
+      ],
+      [
+        "--debug",
+        "",
+        "flag",
+        "phase timing diagnostics on stderr"
+      ],
+      [
+        "--dry-run",
+        "",
+        "flag",
+        "preview changes without running transactions"
+      ],
+      [
+        "--raw",
+        "",
+        "flag",
+        "forward manager streams unchanged"
+      ],
+      [
+        "--ignore-skip",
+        "",
+        "flag",
+        "explicitly override direct-target skip rules"
+      ],
+      [
+        "--output",
+        "",
+        "file",
+        "export destination; stdout by default"
+      ],
+      [
+        "--update",
+        "",
+        "flag",
+        "merge export without prompting; defaults to the current profile"
+      ],
+      [
+        "--include-dependencies",
+        "",
+        "flag",
+        "export full installed inventory"
+      ],
+      [
+        "--pin-versions",
+        "",
+        "flag",
+        "export exact installed version pins"
+      ],
+      [
+        "--yes",
+        "-y",
+        "flag",
+        "approve removal, restore or file replacement"
       ]
     ],
     "argument": []

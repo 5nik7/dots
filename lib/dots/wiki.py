@@ -10,13 +10,12 @@ import shutil
 import stat
 import subprocess
 import sys
-import unicodedata
 from urllib.parse import quote, unquote, urlsplit
 
 LIB = Path(__file__).resolve().parent
 sys.path.insert(0, str(LIB))
 sys.path.insert(0, str(LIB/'files'))
-from catalog import Presentation
+from wiki_presentation import WikiPresentation, report, topics, document, diagnostic
 from file_platform import state_root
 from transactions import Store, digest, parents_safe, exists
 
@@ -138,19 +137,8 @@ def require_checkout(path):
 
 
 def anchors(text):
-    result, counts = set(), {}
-    fence = False
-    for line in text.splitlines():
-        if line.lstrip().startswith(('```','~~~')): fence=not fence; continue
-        if fence: continue
-        match = re.match(r'^ {0,3}#{1,6}\s+(.+?)\s*#*$', line)
-        if not match: continue
-        title = re.sub(r'<[^>]+>','',match[1]).lower()
-        title = re.sub(r'\[([^]]+)\]\([^)]*\)',r'\1',title)
-        slug=''.join(c for c in title if c in '-_ ' or unicodedata.category(c)[0] in ('L','N','M')).replace(' ','-')
-        count=counts.get(slug,0); counts[slug]=count+1
-        result.add(slug+('-'+str(count) if count else ''))
-    return result
+    from wiki_topics import headings
+    return {row['anchor'] for row in headings(text)}
 
 
 def generate(root, revision=None):
@@ -162,32 +150,14 @@ def generate(root, revision=None):
     if unlisted: raise ValueError('documentation missing from wiki manifest: '+', '.join(sorted(unlisted)))
     texts={row['id']:reader.read(row['source']).decode() for row in pages if row.get('source')}
     # Include generator semantics in provenance; staged publication must run the reviewed generator.
-    for name in ('lib/dots/wiki.py','lib/dots/command_metadata.py'):
+    for name in ('lib/dots/wiki.py','lib/dots/command_metadata.py','lib/dots/wiki_commands.py','lib/dots/wiki_topics.py'):
         if (reader.modes is not None and name in reader.modes) or (Path(root)/name).is_file():
             data=reader.read(name)
             if data != (LIB/Path(name).name).read_bytes(): raise ValueError('selected generator differs from running generator; use the matching Dots checkout before building or publishing the wiki')
-    reference=['# Command reference','', 'Generated from first-party static metadata. Extensions and private command directories are not executed or included.','']
-    names=reader.names('bin/')+reader.names('lib/dots/metadata/')
-    for name in sorted(names):
-        if not (name.startswith('bin/dots-') or name.startswith('lib/dots/metadata/') and name.endswith('.meta')): continue
-        raw=reader.read(name).decode()
-        fields={}
-        for line in raw.splitlines()[:128]:
-            if line.strip() and not line.startswith('#'): break
-            if line.startswith('# dots:'):
-                key,sep,value=line[7:].partition('=')
-                if sep: fields.setdefault(key,[]).append(value)
-        if not fields.get('summary') or fields.get('hidden')==['true']: continue
-        stem=Path(name).name.removeprefix('dots-').removesuffix('.meta')
-        route='dots '+stem.replace('-',' ')
-        reference += ['## '+route,'', fields['summary'][0], '', '`'+route+' '+fields.get('usage',[''])[0]+'`','']
-        for option in fields.get('option',[]):
-            long,short,kind,description=option.split('|',3)
-            reference.append('- `'+long+('`, `'+short if short else '')+'`: '+description)
-        for example in fields.get('example',[]): reference += ['', '```sh', example, '```']
-        reference.append('')
+    from wiki_commands import markdown
+    reference = markdown(reader)
     for row in pages:
-        if row.get('generated')=='commands': texts[row['id']]='\n'.join(reference)
+        if row.get('generated')=='commands': texts[row['id']]=reference
     anchor_map={identity:anchors(text) for identity,text in texts.items()}
     outputs={}; links=[]
     def rewrite(target, source, identity, image=False):
@@ -343,7 +313,12 @@ def parser():
         command=sub.add_parser(action)
         if action in ('show','edit'):command.add_argument('page')
         if action in ('path','open'):command.add_argument('page',nargs='?')
-        if action=='search':command.add_argument('query');command.add_argument('--titles',action='store_true')
+        if action=='search':
+            command.add_argument('query')
+            modes = command.add_mutually_exclusive_group()
+            modes.add_argument('--titles',action='store_true')
+            modes.add_argument('--topics',action='store_true')
+        if action=='browse':command.add_argument('--query')
         if action=='list':command.add_argument('--section')
         if action in ('show','path'):command.add_argument('--source',action='store_true')
         if action=='show':command.add_argument('--raw',action='store_true')
@@ -366,29 +341,19 @@ def main(argv=None):
         return 0
     args=parser().parse_args(argv);action=args.action or 'overview'
     root=Path(os.environ.get('DOTS') or LIB.parents[1]).resolve()
-    spec=manifest(Reader(root));path=checkout(root,spec);ui=Presentation()
+    spec=manifest(Reader(root))
+    source_view = action == 'browse' or action == 'search' and args.topics
+    path = None if source_view else checkout(root,spec)
+    ui=WikiPresentation()
     rows=spec['pages'];page=getattr(args,'page',None)
     row=next((r for r in rows if r['id']==page),None) if page else None
     if page and row is None:raise ValueError('unknown wiki page: '+page+'; use dots wiki list')
     as_json=getattr(args,'json',False)
+    from progress import configure, Progress
+    configure(action in ('build', 'init') and not as_json and not getattr(args, 'dry_run', False))
     def emit(data):
         if as_json:print(json.dumps(dict(schema=1,**data),ensure_ascii=True));return
-        ui.heading('Dots wiki'+(' '+action if action!='overview' else ''))
-        for key,value in data.items():
-            if key=='items':
-                section=None
-                for item in value:
-                    if isinstance(item,dict):
-                        if item.get('section') and item['section']!=section:section=item['section'];ui.emit();ui.detail('Section',section)
-                        identity=item.get('id',item.get('page',''))
-                        title=item.get('title','')
-                        ui.detail('Page',identity+(' · '+title if title and title!=identity else ''))
-                        if item.get('status'):ui.detail('Status',item['status'])
-                        if item.get('text'):ui.detail('Line '+str(item['line']),item['text'])
-                        if item.get('status') or item.get('text'):ui.emit()
-                    else:ui.resource_detail('File',item,kind='file')
-            elif key=='path':ui.resource_detail('Path',value,kind='dir')
-            else:ui.detail(key.replace('_',' ').title(),value)
+        report(ui,action,data,root)
     if action=='path':
         if getattr(args,'source',False):
             if row and not row.get('source'):raise ValueError('generated command reference has no single source file')
@@ -408,40 +373,31 @@ def main(argv=None):
         command=shlex.split(editor,posix=os.name!='nt')
         if os.name=='nt':command=[part[1:-1] if len(part)>1 and part[0]==part[-1] and part[0] in ('\"',"'") else part for part in command]
         return subprocess.call([*command,str(root/row['source'])])
-    elif action in ('show','browse'):
-        if action=='browse':
-            if not sys.stdin.isatty() or not sys.stdout.isatty():raise ValueError('browse requires a terminal; use dots wiki list or show')
-            choices=[r['id'] for r in rows]
-            gum=shutil.which('gum')
-            if gum and (os.name=='nt' or shutil.which('bash') and os.environ.get('TERM','dumb')!='dumb'):
-                from interaction import Selector, SelectionEnded
-                try:page=Selector('gum',sys.stderr).pick('filter','Wiki pages',choices)
-                except SelectionEnded as result:return result.status
-            else:
-                for i,item in enumerate(choices,1):print(str(i)+'. '+item)
-                value=input('Page (blank to cancel): ')
-                if not value:return 0
-                if not value.isdigit() or not 1<=int(value)<=len(choices):raise ValueError('invalid page selection')
-                page=choices[int(value)-1]
-            row=next((r for r in rows if r['id']==page),None)
-            if row is None:raise ValueError('picker returned an unknown page')
+    elif action == 'browse':
+        if not sys.stdin.isatty() or not sys.stdout.isatty():
+            raise ValueError('browse requires a terminal; use dots wiki search QUERY --topics or show PAGE --source')
+        from wiki_browser import browse
+        return browse(root, args.query, ui)
+    elif action == 'show':
         if getattr(args,'source',False):
             if not row.get('source'):raise ValueError('page is generated from command metadata')
             data=Reader(root).read(row['source'])
         else:require_checkout(path);data=Reader(path).read(row['id']+'.md')
         if sys.stdout.isatty() and not getattr(args,'raw',False):
-            from themes.file_preview import run_renderer
-            bat=shutil.which('bat') or shutil.which('batcat')
-            rendered=run_renderer([bat,'--no-config','--paging=never','--style=plain','--language=markdown','--color='+('always' if ui.color else 'never')],data,os.environ) if bat else None
-            if action=='browse':
-                from menu_pager import page_text
-                page_text(rendered if rendered is not None else ui.clean(data.decode()).replace('\\n','\n'), title=row['title'], defer=True)
-            elif rendered is not None:sys.stdout.buffer.write(rendered)
-            else:print(ui.clean(data.decode()).replace('\\n','\n'))
+            sys.stdout.buffer.write(document(data,ui))
         else:sys.stdout.buffer.write(data)
     elif action=='list':
         if args.section:rows=[r for r in rows if r['section'].casefold()==args.section.casefold()]
         emit(dict(items=[dict(r,status='available' if (path/(r['id']+'.md')).is_file() and not (path/(r['id']+'.md')).is_symlink() else 'missing') for r in rows]))
+    elif action=='search' and args.topics:
+        from wiki_topics import snapshot, search
+        _, records = snapshot(root)
+        matches = search(records, args.query)
+        if as_json:
+            print(json.dumps(dict(schema=1,mode='topics',query=args.query,items=matches),ensure_ascii=True))
+        else:
+            topics(ui,args.query,matches)
+        return 0 if matches else 1
     elif action=='search':
         require_checkout(path);matches=[]
         for item in rows:
@@ -459,13 +415,16 @@ def main(argv=None):
         if not operations:emit(dict(status='unchanged',items=[]));return 0
         if not as_json:emit(dict(status='planned',items=[op['path'] for op in operations]))
         if not approve(args,'Build wiki pages'):emit(dict(status='cancelled',items=[]));return 0
-        record=Store(state_root()).apply('wiki-build',operations,guards,retain=True)
+        with Progress('Building wiki pages'):
+            record=Store(state_root()).apply('wiki-build',operations,guards,retain=True)
         emit(dict(status='built',transaction=record['id'],items=[op['path'] for op in operations]))
     elif action=='init':
         if exists(path):require_checkout(path);emit(dict(status='available',path=str(path)));return 0
         if args.dry_run:emit(dict(status='preview',path=str(path)));return 0
         if not approve(args,'Clone wiki checkout'):emit(dict(status='cancelled'));return 0
-        journal=initialize(path,spec);emit(dict(status='cloned',path=str(path),journal=journal))
+        with Progress('Cloning wiki checkout'):
+            journal=initialize(path,spec)
+        emit(dict(status='cloned',path=str(path),journal=journal))
     else:
         branch=git(path,'symbolic-ref','--quiet','--short','HEAD',required=False).decode().strip() if (path/'.git').exists() else ''
         findings=compare(root,path)
@@ -476,5 +435,5 @@ def main(argv=None):
 if __name__=='__main__':
     try:sys.exit(main())
     except (ValueError,OSError,subprocess.SubprocessError) as error:
-        print('dots wiki: '+str(error),file=sys.stderr);sys.exit(1)
+        diagnostic(error,sys.stderr);sys.exit(1)
     except KeyboardInterrupt:sys.exit(130)

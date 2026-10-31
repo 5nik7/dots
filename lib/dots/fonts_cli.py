@@ -20,21 +20,28 @@ from interaction import SelectionEnded, terminal, gum_confirm
 from resources import clean
 
 
-def render(data, stream=None):
-    from files.catalog import Presentation
-    ui = Presentation(stream)
+def render(data, stream=None, *, human=None, width=None, action=None, wrap=True):
+    from fonts.presentation import FontPresentation, preference
+    ui = FontPresentation(stream,terminal=human,wrap=wrap)
+    if width is not None:ui.width=max(1,width)
     ui.heading('Fonts')
     if data.get('status'): ui.detail('Result', data['status'])
     if data.get('transaction'): ui.detail('Transaction', data['transaction'])
     if data.get('directory'): ui.resource_detail('Directory', data['directory'])
     if data.get('path'): ui.resource_detail('Preferences', data['path'])
     rows = data.get('items', [])
-    if not rows and 'items' in data: ui.emit('  No matching fonts.')
+    if ui.human and 'items' in data:ui.detail('Matches',len(rows))
+    if not rows and 'items' in data:
+        if ui.human:ui.detail('Notice',{'current':'No tracked font selections.','defaults':'No saved font defaults.','installed':'No installed fonts found.','directories':'No font directories configured.'}.get(action,'No matching fonts.'))
+        else:ui.emit('  No matching fonts.')
+    summary=ui.human and action in ('list','search','browse','installed') and preference('list_details','summary')=='summary'
     for row in rows:
+        if ui.human:ui.emit()
         for key in ('id','name','target','action'):
             if row.get(key):ui.detail(key.upper() if key=='id' else key.title(),row[key])
         for key in ('version','latest','variant','status','ownership','reason','face','source','provider','codepoint','glyph','pinned','selection'):
             if row.get(key) is not None: ui.detail(key.title(), row[key])
+        if ui.human and row.get('collection'):ui.detail('Collection',row['collection'])
         if row.get('installed'): ui.detail('Installed', row['installed']['version'] + ' / ' + row['installed']['variant'])
         if row.get('pin'): ui.detail('Pinned', row['pin'])
         if row.get('path'): ui.resource_detail('Path', row['path'])
@@ -45,8 +52,11 @@ def render(data, stream=None):
         for version, record in versions.items():
             ui.detail('Version', version)
             if record.get('available') is False: ui.detail('Status','uninstalled; history retained')
-            for font in record.get('fonts', []): ui.detail('Face', font['file'] + ' · ' + font['family'] + ' · ' + font['variant'])
-            if record.get('provenance'): ui.detail('Provenance', json.dumps(record['provenance'], ensure_ascii=False))
+            if summary:
+                if record.get('fonts'):ui.detail('Faces',len(record['fonts']))
+            else:
+                for font in record.get('fonts', []): ui.detail('Face', font['file'] + ' · ' + font['family'] + ' · ' + font['variant'])
+                if record.get('provenance') and (not ui.human or preference('provenance',True)): ui.detail('Provenance', json.dumps(record['provenance'], ensure_ascii=False))
     for operation in data.get('operations', []): ui.resource_detail(operation['kind'].title(), operation['path'])
     for notice in data.get('notices', []): ui.detail('Notice', notice)
 
@@ -54,7 +64,7 @@ def render(data, stream=None):
 def emit(data, args):
     if getattr(args,'_directory',None):data=dict(data,directory=args._directory)
     if args.json: print(json.dumps(data, ensure_ascii=True))
-    else: render(data)
+    else: render(data,action=args.action)
 
 
 def approve(plan, args, *, context=None):
@@ -65,7 +75,7 @@ def approve(plan, args, *, context=None):
         import io
         from menus import show_message, choose, Menu, Entry
         from menu_pager import page_text
-        output = io.StringIO(); render(plan.report(), output)
+        output = io.StringIO(); render(plan.report(), output,human=True)
         result = page_text(output.getvalue(), title='fonts·review', context=context)
         if not result: raise SelectionEnded(130)
         selected = choose(Menu('fonts:confirm','Apply font changes', (Entry('cancel','Cancel'), Entry('apply','Apply'))),
@@ -336,9 +346,11 @@ def main(argv=None):
     except SelectionEnded as error: return error.status
     except (KeyboardInterrupt,EOFError): return 130
     except (KeyError,TypeError):
-        print('fonts: invalid font metadata; preserve and review the library or refresh its catalog',file=sys.stderr);return 1
+        from fonts.presentation import diagnostic
+        diagnostic('invalid font metadata; preserve and review the library or refresh its catalog',sys.stderr);return 1
     except (ValueError,OSError,subprocess.SubprocessError) as error:
-        print('fonts: '+clean(str(error)),file=sys.stderr);return 1
+        from fonts.presentation import diagnostic
+        diagnostic(str(error),sys.stderr);return 1
 
 
 if __name__=='__main__': sys.exit(main())

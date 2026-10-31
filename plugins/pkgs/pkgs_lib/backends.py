@@ -41,6 +41,12 @@ def pypi(name):
         raise Error(f'PyPI metadata unavailable for {name}: {e}') from e
 
 class Backend:
+    def __new__(cls, name, global_scope=False):
+        if name == 'winget':
+            from .winget import WinGetBackend
+            return WinGetBackend()
+        return super().__new__(cls)
+
     def __init__(self, name, global_scope=False):
         self.name = name
         self.global_scope = global_scope
@@ -348,7 +354,11 @@ class Backend:
         elif n == 'npm':
             if action == 'refresh':
                 raise Error('npm has no local catalog to refresh; use search --query.')
-            args = ['npm', 'update' if action == 'upgrade' else action] + (['--global'] if self.global_scope else []) + ['--'] + names
+            # npm update -g loads/checks unrelated global packages, including
+            # intentionally platform-specific aliases. A targeted install -g
+            # resolves the selected names without revalidating that whole tree.
+            verb = ('install' if self.global_scope and names else 'update') if action == 'upgrade' else action
+            args = ['npm', verb] + (['--global'] if self.global_scope else []) + ['--'] + names
         elif n == 'uv-tool':
             if action == 'refresh':
                 raise Error('uv tools have no local catalog to refresh.')

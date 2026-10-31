@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# dots:summary=Save a literal profile option
-# dots:usage=[KEY VALUE] [OPTIONS]
-# dots:option=--defaults||flag|Use shared color and icon defaults
+# dots:summary=Save a literal option or open its editor
+# dots:usage=[KEY [VALUE]] [OPTIONS]
+# dots:option=--defaults||flag|Edit shared visual, application and formatting defaults
 # dots:option=--profile||profile-id|Select a profile without activating it
 # dots:option=--no-refresh||flag|Save visual preferences without refreshing consumers
 # dots:option=--json||flag|Print structured configuration data
 # dots:option=--dry-run||flag|Preview without writing files
 # dots:option=--json-value||flag|Parse VALUE as literal JSON
 # dots:argument=1|config-key|Setting or section-qualified option
-# dots:argument=2|config-value|Allowed or custom literal value
+# dots:argument=2|config-value|Literal value; omit in a terminal to open the editor
 DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
 exec python3 -B "$DOTS/lib/dots/config_cli.py" set "$@"

@@ -94,6 +94,8 @@ yazi = "󰉋"
 zsh = ""
 
 [menu]
+wiki = "󰈙"
+fonts = "󰛖"
 theme = "󰏘"
 themes = "󰏘"
 anodize = "󰏘"

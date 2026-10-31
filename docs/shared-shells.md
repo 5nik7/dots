@@ -51,3 +51,15 @@ See [shell initialization](shell-init.md), [testing](testing.md#shell-initializa
 Shell-native completion adapters also discover Androidots-local files on interactive Termux startup, preserving existing search paths and avoiding duplicate entries. Zsh registers before compinit; Bash uses bash-completion user bases; Fish uses fish_complete_path. See [the path contract](shell-init.md#termux-local-completion-directories) and [termux-geo installation](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md#shell-completions).
 
 Platform modules now load only for their active profile. See [profiles](profiles.md).
+
+## Zsh configuration and directory helpers
+
+Use `palette` to preview all 256 terminal foreground colors, or `palette_bg` for background colors in the same numbered column layout.
+
+Use `mkcd <directory>` in either configured Bash or Zsh shell to enter an existing directory or create missing parents and enter the new directory. It requires exactly one nonempty path and refuses existing files or broken symlinks. The shared function sources [scripts/mkcd](../scripts/mkcd) so the directory change affects your current shell.
+
+The existing [Zsh configuration](../shells/zsh/README.md) now uses explicit modules, one completion initialization, immediate tool integrations, and generated-data caches. It preserves the Termux workflow; native WSL/Linux and MSYS2 verification remain pending. See the guide for module registration, reloads, and isolated checks.
+
+Startup automatically repairs completion dumps containing unquoted names such as `_uu-[`, preventing the resulting startup and Tab-completion errors.
+
+[Deja](../shells/zsh/README.md#deja-suggestions) is the default suggestion engine. On Linux/WSL x86-64 and ARM64, Zinit automatically installs a missing executable from upstream releases and reuses it in later shells. Open a fresh shell to activate it, or use `DOTS_ZSH_SUGGESTIONS=autosuggestions zsh` for optional `zsh-autosuggestions`. An unavailable or unusable Deja executable falls back to autosuggestions; the two engines never load together through this selector. Tab stays with FZF-tab. History import is manual, and Deja keeps its own plaintext local database and background daemon.

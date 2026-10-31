@@ -86,10 +86,11 @@ def label(entry, ui):
     return clean(title + (' · ' + suffix if suffix else ''))
 
 
-def entry_spans(menu,entry,ui,compact=False,shortcut=False):
+def entry_spans(menu,entry,ui,compact=False,shortcut=False,*,preferences=None,formatting=None):
     from style_config import current
     from config_values import value
-    prefs=current();formatting=value('formatting.apps.menu',{})
+    prefs=current() if preferences is None else preferences
+    formatting=value('formatting.apps.menu',{}) if formatting is None else formatting
     overrides=formatting.get('entries',{}).get(menu.id+':'+entry.id,{})
     def span(part,text):
         fields=prefs.style('menu.'+part,app='cli') if prefs else {}
@@ -110,10 +111,12 @@ def entry_spans(menu,entry,ui,compact=False,shortcut=False):
     return spans
 
 
-def styled_label(menu,entry,ui,compact=False):
-    spans=entry_spans(menu,entry,ui,compact)
+def styled_label(menu,entry,ui,compact=False,*,preferences=None,formatting=None):
+    # Large browsers may pass one render-local snapshot; ordinary callers retain
+    # the same live resolution. No preference survives beyond the owning view.
+    spans=entry_spans(menu,entry,ui,compact,preferences=preferences,formatting=formatting)
     prefix=ui.indentation(ui.formatting.get('indent',0))+' '*ui.formatting.get('padding',1)
-    return prefix+''.join(ui.paint(text,code) for text,code in spans)
+    return prefix+''.join(ui.paint(text,code,**({'preferences':preferences} if preferences is not None else {})) for text,code in spans)
 
 
 def listing(menu, entries, ui):

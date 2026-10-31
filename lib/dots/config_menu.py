@@ -67,8 +67,9 @@ class Row:
 
 
 class Inventory:
-    def __init__(self, root, scope):
+    def __init__(self, root, scope, *, no_refresh=False):
         self.root, self.scope = Path(root), scope
+        self.no_refresh = no_refresh
         self.defaults = scope == 'defaults'
         selected = profile_context(self.root, None if self.defaults else scope)
         paths = [self.root/'default'/file for file in ('icons.toml', 'colors.toml', 'config.json')]
@@ -86,7 +87,10 @@ class Inventory:
             if key in ('formatting','apps'):continue
             resolved=self.controls.resolve(key)
             self.rows.append(Row(key,resolved['value'],resolved['source'] or 'Not configured',destination,
+                                 'Root usage logo gradient; next invocation, no theme refresh' if key=='apps.cli.logo_gradient' else
                                  'Popup appearance; reopen the popup to apply' if key.startswith('apps.menu.popup.') else
+                                 'Fonts display; next invocation or reopened popup, no font activation' if key.startswith('apps.fonts.') else
+                                 'Wiki display; next invocation or reopened popup, no theme refresh' if key.startswith(('apps.wiki.','formatting.apps.wiki.')) else
                                  'Literal application or formatting preference',resolved['source']==destination,'json',
                                  constraints=constraints(self.controls.defaults,key)))
         if not self.defaults and self.selected['current']==profile_context(self.root)['current'] and (self.root/'config/wttr/config.toml').is_file() and sys.version_info>=(3,11):
@@ -221,19 +225,22 @@ class Draft:
 
     def review(self):
         from config_refresh import preview_save
-        effect = preview_save(self.inventory.root, self.plan) if isinstance(self.plan, (StylePlan,ControlPlan)) else None
+        visual = isinstance(self.plan, (StylePlan,ControlPlan))
+        effect = preview_save(self.inventory.root, self.plan) if visual and not self.inventory.no_refresh else None
         return page('Reset override' if self.reset else 'Save configuration', [
             ('Key', self.row.key), ('Saved', display(self.row.key, self.row.value)),
             ('After reset' if self.reset else 'Proposed', display(self.row.key, self.proposed)),
             ('Destination', str(self.plan.path)),
             ('Effect', ('Remove this profile override' if self.reset else 'Save this value') +
-             ('; next popup' if self.row.key.startswith('apps.menu.popup.') else '; refresh: '+(', '.join(effect['consumers']) or 'no active change') if effect else '')),
+             ('; automatic refresh disabled' if visual and self.inventory.no_refresh else
+              '; next Fonts invocation or popup' if self.row.key.startswith('apps.fonts.') else
+              '; next popup' if self.row.key.startswith('apps.menu.popup.') else '; refresh: '+(', '.join(effect['consumers']) or 'no active change') if effect else '')),
             ('Recovery', 'Retained transaction; undo command shown after saving')])
 
     def save(self):
         self.inventory.check()
         from config_refresh import effective, after_save
-        before = effective(self.inventory.root) if isinstance(self.plan, (StylePlan,ControlPlan)) else None
+        before = effective(self.inventory.root) if isinstance(self.plan, (StylePlan,ControlPlan)) and not self.inventory.no_refresh else None
         result = self.plan.apply('unset' if self.reset else 'set')
         current.cache_clear()
         from config_values import current as controls_current
@@ -296,12 +303,22 @@ def select(title, items, context=None, review=None):
                 ui = Presentation(terminal=True)
                 columns, lines = context.verify() if context else shutil.get_terminal_size((80,24))
                 width, height = max(1, columns-2), max(1, lines-2)
+                from menu_popup import dimensions, preferences
+                width,height=dimensions(preferences(),(width,height),(columns,lines))
+                header='Enter: choose  Esc: cancel\nAlt-P: preview  Alt-J/K: scroll'
+                if height < 12: header='Enter: choose  Esc: cancel'
+                if height < 9: header=''
+                # Leave the complete action list above the preview, accounting
+                # for the popup/preview frames, prompt and FZF separators.
+                budget=height-len(header.splitlines())-len(items)-7
                 with permanent_output(), context.selector_environment() if context else nullcontext(None) as environment:
                     result = RichSelector(backend='fzf').fzf('config·'+title.lower(), [label for _,label in items], False,
                         preview_transport(path), ui.color, ui.icons, picker_colors(fzf_colors(ui)),
                         popup=f'center,{width},{height}' if context else False, height=height,
-                        preview_position='down', preview_lines=max(1,height-8), preview_wrap=True,
-                        environment=environment, navigation={}, header='Enter: choose  Esc: cancel\nAlt-J/K: scroll review')
+                        preview_position='down', preview_lines=max(1,budget), preview_wrap=True,
+                        popup_resolved=context is not None, info='inline-right',
+                        bindings=('start:hide-preview',) if budget<1 else (),
+                        environment=environment, navigation={}, header=header)
                 return items[result[0]][0]
             selected = choose(Menu('config:'+title, title, tuple(Entry(key, label) for key, label in items)),
                               mode='browse', context=context, navigation={}, compact=not bool(review),
@@ -387,8 +404,34 @@ def input_value(row, initial, context):
     if row.kind in choices:
         return select(row.key, choices[row.kind], context)
     if row.kind == 'color':
-        value = select('Color', [('custom','Custom #RRGGBB'), *[(name,name) for name in sorted(set(ANSI)|set(ALIASES)|{'default','reset'})]], context)
-        if value != 'custom': return value
+        roles = set(ANSI)|set(ALIASES)|{'default','reset'}
+        prefs = current()
+        palette = prefs.palette if prefs and isinstance(prefs.palette,dict) else {}
+        entries = [(name,color,name) for name,color in palette.items()]
+        # The published palette also retains native names such as rosewater;
+        # they need not be semantic roles accepted by the style validator.
+        from config_refresh import read_json
+        from files.file_platform import state_root
+        try: published = read_json(state_root()/'current/theme/palette.json')
+        except (OSError,ValueError): published = {}
+        if isinstance(published,dict):
+            for section,label in (('roles','role'),('palette','native')):
+                colors=published.get(section,{})
+                if not isinstance(colors,dict): continue
+                for name,color in colors.items():
+                    if palette.get(name)==color: continue
+                    title=name+' ('+label+')' if name in palette else name
+                    entries.append((title,color,None))
+        items, values, named = [('custom','Custom color…')], {}, set()
+        for name, color, role in sorted(entries,key=lambda entry:entry[0]):
+            if not isinstance(color,str) or not re.fullmatch('#[a-fA-F0-9]{6}',color): continue
+            token = 'palette:'+str(len(values))
+            items.append((token,clean(name)+' · '+color))
+            values[token] = role if role in roles else color
+            if role is not None: named.add(role)
+        items.extend((name,name) for name in sorted(roles-named))
+        value = select('Color', items, context)
+        if value != 'custom': return values.get(value,value)
     return prompt(initial, 'Edit '+row.key, context, back=True)
 
 
@@ -484,11 +527,29 @@ def _browse(root, selected, args):
                TmuxContext.from_environment() if os.environ.get('TMUX') or os.environ.get('DOTS_MENU_CONTEXT') else None)
     if not terminal() and context is None: raise ValueError('config browsing requires a terminal')
     if not browser_available(context):
+        if args.action == 'set' and getattr(args,'key',None) is not None:
+            raise ValueError('interactive config editing requires FZF/popup support; supply an explicit value')
         from config_cli import main
         ui = Presentation(sys.stderr)
         ui.detail('Config', 'FZF or popup support unavailable; listing configuration')
         return main(['list', *(['--defaults'] if args.defaults else ['--profile', selected['layers'][-1]['id']])])
     scope = 'defaults' if args.defaults else selected['layers'][-1]['id']
+    no_refresh = getattr(args,'no_refresh',False)
+    if args.action == 'set' and getattr(args,'key',None) is not None:
+        inventory = Inventory(root,scope,no_refresh=no_refresh)
+        key = 'settings.'+args.key if args.key.startswith('DOTS_') else args.key
+        row = inventory.find(key)
+        if row is None and not inventory.defaults and re.fullmatch(r'environment\.[A-Z][A-Z0-9_]*',key):
+            row = Row(key,None,'Not set',str(Path(selected['layers'][-1]['root'])/'profile.json'),'Literal environment declaration')
+        if row is None: raise ValueError('unknown or noneditable configuration key: '+args.key)
+        if row.mapping: return file_action(root,scope,row,'mapping',context)
+        if row.group in ('icons','colors'):
+            from style_catalog import supported
+            if not supported(row.group,key.split('.',1)[1]): raise ValueError('unsupported visual consumer or field: '+key)
+        notice = edit(inventory,row,context)
+        if notice:
+            ui=Presentation();ui.heading('Dots config');ui.detail('Result',notice)
+        return 0
     mode = args.action if args.action in ('get','set') else None
     category, frames = None, {}
     while True:
@@ -512,11 +573,11 @@ def _browse(root, selected, args):
                 continue
         frame = frames.setdefault((mode, scope, category), dict(query=args.query or '', mode=mode))
         try:
-            inventory = Inventory(root, scope)
+            inventory = Inventory(root, scope, no_refresh=no_refresh)
             try:
                 row = pick(inventory, category, frame, context)
                 # Refresh before opening actions; review always uses a guarded snapshot.
-                inventory = Inventory(root, scope)
+                inventory = Inventory(root, scope, no_refresh=no_refresh)
                 row = inventory.find(row.key)
                 if row and mode == 'set': frame['notice'] = actions(inventory, row, context)
                 elif row: show(details(row), title='Details', context=context)

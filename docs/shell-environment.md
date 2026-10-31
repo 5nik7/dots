@@ -6,6 +6,14 @@ variables, Dots completions and prompt refresh. Personal aliases, prompt choice,
 plugins and third-party tools remain under `shells/`; shared application/editor defaults belong to the environment registry. Repository
 startup files load both layers; an explicit hook in another rc loads only Dots.
 
+## Understand environment variables
+
+Start with `dots env` for managed settings, application environment, PATH contributions and hook provenance. `dots profile` identifies the active platform/profile, `dots profile layers` explains inheritance, and `dots profile env` includes generated path namespaces. Use `dots config explain KEY` for a saved preference's source and activation rule.
+
+There are three distinct kinds of values: startup settings such as `DOTS_INIT_THEME`, application declarations such as `environment.EDITOR`, and generated paths such as `DOTS`, `PROFILEBIN` and `DOTSWSLBIN`. Generated paths are derived outputs rather than independent preferences. Native Bash/Zsh maps, Fish variables, Nushell records, Xonsh dictionaries and PowerShell objects expose the same underlying paths through each shell's syntax.
+
+Use `dots debug path` for PATH diagnosis and `dots debug startup --shell zsh --isolated` for a safe startup trace. Live tracing and current-shell PATH recording require explicit invocation. See [configuration](configuration.md) for editing and [debugging](debug.md) for evidence and recording limits.
+
 ## Starship configuration
 
 Dots personal startup no longer sets `STARSHIP_CONFIG`. Starship discovers

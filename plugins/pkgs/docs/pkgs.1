@@ -7,8 +7,25 @@ pkgs \- fuzzy package management for Termux and Linux
 .SH DESCRIPTION
 Bare invocation displays help. Install and uninstall open an fzf multi-select
 picker when package names are omitted. Exact names bypass the picker.
-Transactions show manager, scope and commands. Upgrade and refresh authorize unattended
-execution; install/remove/restore retain confirmation.
+Transactions show manager, scope and commands. Install, upgrade and refresh authorize unattended
+execution with native confirmation flags; remove/restore retain confirmation.
+Accepting an install-picker selection authorizes installation; cancelling installs nothing.
+Dry-run never runs mutation commands or recipe hooks.
+Human upgrades show one result per manager, transient progress, short diagnostics
+and skip counts. Routine manager output and full command arrays are hidden.
+Use --raw for full native output or --dry-run for complete plans and skip reasons.
+Ordinary redirected output retains its full format. Child terminal settings are
+restored on completion or interruption.
+Pip progress shows the package, download bytes with pip 25.1 or newer, build
+stages and elapsed silence after 15 seconds without output. Silence does not
+prove a hang or cause termination. Explicit native progress overrides are kept.
+Selected global npm upgrades use targeted npm install commands to avoid checking
+unrelated platform-specific aliases. Project upgrades retain npm update;
+ordinary global commands do not add --force.
+Compact npm output shows native metadata, cache/fetch and install-script events,
+with elapsed silence after 15 seconds. The child receives an info logging default;
+explicit logging flags/environment win. Progress hides URLs and script commands.
+Native script approval remains unchanged. Raw and redirected environments are kept.
 Help, transaction previews, list, managers and doctor use shared Dots presentation in terminals and
 menu readers: semantic headings/statuses, readable fields and resource paths.
 Doctor expands nested FZF/completion details into sections. Plain popup reports
@@ -17,6 +34,9 @@ Formatted APT output suppresses only the unstable-CLI advisory. Raw forwarding
 retains all bytes. Slow exports report manager progress on terminal stderr;
 stdout remains JSON. Python root ownership uses batched APT queries.
 .SH COMMANDS
+.TP
+.B in, un, up, xup, upls
+Aliases for install, uninstall, upgrade, export --update and upgrade --list.
 .TP
 .B install [NAMES...]
 Install exact names or open the package picker.
@@ -39,6 +59,26 @@ one system database, global npm, uv tools, pip-owned base distributions,
 user RubyGems and Go tools. No extra --yes is required without a terminal.
 Explicit manager/names retain selected scope. Independent failures continue
 and return nonzero; completed package changes remain.
+Go upgrades query latest module versions and use go install PACKAGE@latest for
+newer eligible tools only. Current/newer builds are left alone. Dry-run performs
+bounded read-only version checks without installation. Custom flags remain literal;
+explicit replacement recipes own their update semantics. The helper is not selected
+automatically. Compact progress names each binary before native output begins and
+shows quiet time after 15 seconds; raw output retains full commands and messages.
+.TP
+.B upgrade ls | upgrade \-\-list
+List available updates by manager with current and candidate versions. --json
+prints schema-1 per-manager status, packages and skips. Never install or execute
+recipes. System queries use cached indexes; language queries may contact registries.
+Query failures remain errors. Use upgrade -- ls to target a package named ls.
+.TP
+.B cleanup [FILE] [\-\-dry-run | \-\-json]
+Review disabled source/editable pip entries from the current profile manifest
+or FILE. Require current pip ownership and negative system ownership evidence.
+Preview, select through FZF and confirm before native removal. --yes cannot
+bypass review. Recheck file/config/profile guards and installed provenance.
+Retain original source trees and manifest records; verify removed packages
+are absent. Dry-run and JSON only inspect. Package removal has no Dots undo.
 .TP
 .B format [\-\-manager NAME]
 Format stdin with semantic colors and full unknown messages. --raw preserves
@@ -46,11 +86,13 @@ bytes. Use shell pipeline status support to retain the producer's exit status.
 .TP
 .B export [\-\-output FILE] [\-\-update] [\-\-include-dependencies] [\-\-pin-versions]
 Export editable schema-1 JSON. Prefer explicit roots; label inferred inventories.
-Observed versions are separate from optional supported pins. File replacement
-uses guarded backups and confirmation. Partial export does not replace a file.
+Observed versions are separate from optional supported pins. Snapshot replacement
+without --update uses guarded backups and confirmation. Partial export does not replace a file.
 --update defaults to packages.json beside the current profile.json. Refresh
 observed versions and add installed entries while preserving pins, disabled
-entries and absent desired packages. --dry-run prints the proposed JSON. Package
+entries and absent desired packages. The explicit update authorizes the guarded
+write without --yes or a controlling terminal, retaining backups and stale-input
+checks. --dry-run prints the proposed JSON without writes. Package
 menu prompts use this profile path and Escape returns without a write.
 Dots publication can include this update explicitly with git publish --update-packages.
 .TP
@@ -103,7 +145,8 @@ fzf preview-window layout. Default: bottom:55%:wrap.
 Display transaction without changing packages.
 .TP
 .B \-y, \-\-yes
-Skip pkgs confirmation and use backend noninteractive options where supported.
+Approve removal, restore or file replacement. Cleanup still requires interactive
+selection and confirmation and refuses this flag.
 .TP
 .B \-\-directory DIR
 Completion destination directory. Bash and Zsh installation is file-only.
@@ -185,3 +228,11 @@ Registry catalogs are not exhaustive. pip/uv queries use exact PyPI names.
 Completion never searches remote registries. Native Windows is not supported.
 .SH SEE ALSO
 fzf(1), apt(8), pacman(8), dnf(8), xbps-query(1)
+
+.SH NATIVE WINDOWS IN DOTS
+The bundled Dots revision supports the WinGet community source through Microsoft.WinGet.Client.
+Use --manager winget with --scope user (default) or explicit --scope machine.
+Machine mutations require an already elevated shell. Package IDs and versions are exact.
+Ambiguous or uncorrelated installed entries remain disabled. No implicit source agreement,
+provider bootstrap, trust change, reboot or WSL invocation occurs.
+Native pickers use shared Gum or numbered selection; PowerShell completion is provided by Dots.

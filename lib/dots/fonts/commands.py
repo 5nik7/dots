@@ -70,11 +70,22 @@ COMMANDS = {
 
 
 class HelpParser(argparse.ArgumentParser):
-    def print_help(self, file=None):
-        from files.catalog import Presentation
-        ui=Presentation(file)
+    def error(self, message):
+        import sys
+        from fonts.presentation import FontPresentation
+        ui=FontPresentation(sys.stderr)
+        if not ui.human:return super().error(message)
         ui.heading(self.prog)
-        ui.emit('  '+self.description)
+        ui.detail('Usage',self.format_usage().removeprefix('usage: ').strip())
+        ui.detail('Error',message,'91')
+        self.exit(2)
+
+    def print_help(self, file=None):
+        from fonts.presentation import FontPresentation
+        ui=FontPresentation(file)
+        ui.heading(self.prog)
+        if ui.human:ui.detail('About',self.description)
+        else:ui.emit('  '+self.description)
         ui.detail('Usage',self.format_usage().removeprefix('usage: ').strip())
         for action in self._actions:
             if isinstance(action,argparse._SubParsersAction):

@@ -574,6 +574,8 @@ Core-registry and profile mapping changes form one Store transaction, including 
 
 ## Automatic visual refresh after config saves
 
+Key-only interactive `dots config set KEY` uses the same guarded Config draft and default-Cancel review as the browser. Opening or cancelling the editor does not save, and selecting a value alone does not approve a write. `--no-refresh` also applies to guided edits; data and dry-run invocations require an explicit value.
+
 A visual config save authorizes publication of affected active visual preferences and bounded first-party consumer notifications. `--dry-run` is read-only and `--no-refresh` saves only. The save and visual publication have separate retained transactions: a publication failure does not erase a successful save. Both theme pointers and the prior generation are guarded, and Store coordinates with existing theme locks. Reload failure leaves committed publication intact and is reported separately. Arbitrary theme hooks, connector installation, theme selection and attention acknowledgement are excluded. Refresh verifies tmux checkout/profile/state and server/socket identity before changing owned visual options. See [configuration refresh](profiles.md#effective-visual-values-and-refresh).
 
 Configuration application/formatting edits use the same retained Store plans,
@@ -595,10 +597,45 @@ Existing-source registration references already-present repository content; it d
 
 `pkgs upgrade` is explicit approval for unattended supported user-wide updates;
 `pkgs refresh` likewise authorizes supported repository metadata refreshes without
-an extra confirmation flag. Native privileges and manager protections still apply. Install/remove/restore
+an extra confirmation flag. `pkgs install NAME ...` or accepting an install-picker
+selection authorizes installation the same way; supported native confirmation
+flags are supplied automatically. Picker cancellation and dry-run do not install
+packages. Native privileges and manager protections still apply. Remove/restore
 retain confirmation. Policies are trusted executable argv sequences, with no
 implicit shell. Read/preview/export never execute hooks. Direct-target skips
 are not dependency holds. Formatting cannot infer success from output text.
+
+Global npm upgrades use targeted installs without adding `--force` to ordinary
+batches; explicit replacement recipes retain their literal flags. Compact pip
+progress uses native transfer counts and elapsed silence, never invented progress
+or automatic termination of quiet builds. Native process exit status remains
+authoritative, and raw/ordinary redirected subprocess output is preserved.
+Compact npm activity enables native info events only in the child environment,
+without changing script approvals or terminating quiet transactions. Explicit
+logging environment/CLI overrides remain effective; raw/redirected execution
+keeps the caller's logging environment.
+
+Default Go upgrades compare installed build versions with native latest-module
+queries and install only newer eligible tools through `go install PACKAGE@latest`.
+Queries run outside the project, with toolchain downloads disabled and the existing
+deadline. Query failures prevent that manager's default installs; current/newer
+versions are neither reinstalled nor downgraded. Identity/source exclusions and
+skip policies still apply. Dry-run may query metadata but never installs. Explicit
+replacement recipes retain their literal arguments and own update semantics.
+
+`upgrade ls` / `upgrade --list` / `upls` query native update metadata without
+transactions or recipe execution. System queries do not refresh their indexes;
+language registries may update metadata caches. Native query failures stay visible.
+APT mirror size mismatches keep their failure status and integrity checks.
+
+`cleanup [FILE]` requires preview, FZF selection and a separate default-no terminal
+confirmation; `--yes` cannot bypass it. Only disabled entries with the exact
+source/editable reason are considered. Current pip provenance and negative system
+ownership evidence must support removal; unknown/system-owned/other-scope records
+are excluded. After confirmation, recheck manifest/config/profile guards and
+selected installed metadata before native pip uninstall. Verify absence after
+success. Keep source trees and manifest records. No filesystem undo can restore
+removed packages. `--dry-run` and `--json` cannot remove anything.
 
 Editable manifests are validated data, with disabled source entries and explicit
 pins. Export files and Config edits use guarded Store writes/backups; package
@@ -610,8 +647,16 @@ package removal follows from setup rollback. See [package behavior](packages.md)
 
 `export --update` preserves manual pins, disabled entries and absent desired
 packages while refreshing inventory evidence. File writes retain Store guards
-and backups. `git publish --update-packages` explicitly includes the current
+and backups. The explicit `--update` action authorizes that merge/write without
+another confirmation flag; ordinary snapshot replacement retains confirmation.
+`git publish --update-packages` explicitly includes the current
 profile manifest alongside the normal publication selection; it refuses partial
 staging of that file and never broadens staging to unrelated files. Incomplete
 inventory stops before publication. After approval, later failures can retain a
 refreshed/staged manifest and completed Git work; Git remains incremental.
+
+## Setup preparation and selective ownership
+
+The terminal wizard is read-only until explicit preparation approval. Dry-run never fetches, builds, installs packages, creates staging or writes preferences. Package/module/build effects are separate from managed publication; stage failures stop subsequent work and retained effects are reported. Revalidate all input guards before the final combined Store transaction. Neither file rollback nor uninstall removes packages, retained fonts/registrations, source/build caches or saved preferences. Font app-setting baselines and existing installer copy baselines remain distinct.
+
+Expected catalog directory links may translate child operations to an ordinary physical source path, guarded by the exact mapping and lexical link. Foreign/broken/nested links remain refused; legacy receipt reconciliation preserves original backup references. Leaf fetches only its pinned public source into owned storage, refuses changed cache/source evidence, and publishes a verified regular executable with retained backup. WinGet is restricted to exact community IDs and explicit scope, without implicit elevation, source acceptance, provider bootstrap or trust changes.

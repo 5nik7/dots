@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Real font selectors in private tmux clients, without font or clipboard changes."""
 import os
+import json
+import shutil
 from pathlib import Path
 import sys
 import time
@@ -12,7 +14,35 @@ from test_menus import NativeMenuFixture, ROOT
 class FontBrowsers(NativeMenuFixture):
     def setUp(self):
         super().setUp()
-        self.env['DOTS']=str(ROOT)
+        root=Path(self.env['DOTS']);root.mkdir()
+        shutil.copytree(ROOT/'default',root/'default')
+        for name in ('termux','linux','wsl','windows'):
+            path=root/'profiles'/name;path.mkdir(parents=True)
+            (path/'profile.json').write_text(json.dumps(dict(schema=1,id=name)))
+
+    def test_configured_catalog_preview_and_styles_keep_selection_at_40_80_120(self):
+        path=Path(self.env['DOTS'])/'default/config.json'
+        doc=json.loads(path.read_text())
+        doc['formatting']['apps']['menu'].update(indent=1,label_width='25%',label_gap=2)
+        doc['apps']['menu']['popup'].update(width='90%',height='90%')
+        for width,position,enabled in ((40,'down',True),(80,'right',True),(120,'down',False)):
+            doc['apps']['menu']['popup'].update(width='90%' if enabled else 'fit',height='90%' if enabled else 'fit')
+            doc['apps']['fonts']['preview'].update(enabled=enabled,sample=False,position=position,size=25)
+            path.write_text(json.dumps(doc))
+            self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',30,width,0,0))
+            time.sleep(.15);self.drain(self.first[1]);self.drain(self.second[1])
+            p=self.worker('''import os
+from fonts.browser import picker
+from menu_tmux import TmuxContext
+row=dict(id='local:Fixture',name='Font with spaces')
+result=picker([row],[dict(report=dict(items=[row]))],{},TmuxContext.capture(client=os.environ['CLIENT']))
+print(result['id'])
+''')
+            self.receive(self.first[1],b'Fixture');time.sleep(.2)
+            self.assertNotIn(b'Fixture',self.drain(self.second[1]))
+            os.write(self.first[1],b'\r')
+            out,err=p.communicate(timeout=15)
+            self.assertEqual((p.returncode,out.strip()),(0,'local:Fixture'),err)
 
     def icons(self,copy=False):
         return self.worker('''import os,sys

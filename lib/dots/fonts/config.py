@@ -158,7 +158,17 @@ def destination(library, target, explicit=None):
     if target not in TARGETS: raise ValueError('unknown font target')
     if target == 'termux':
         if library.platform != 'termux': raise ValueError('Termux activation is available only on Termux')
-        return dict(path=str(library.home / '.termux/font.ttf'), target=target, source='local')
+        from files.managed_destination import physical, catalog_target
+        path = library.home / '.termux/font.ttf'
+        guards = {}
+        setup = getattr(library, 'setup_installation', None)
+        if setup:
+            planned = [op['path'] for op in setup.operations if op.get('directory') and 'link' in op]
+            path = physical(path, setup.catalog_records, guards, planned=planned)
+        elif any(p.is_symlink() for p in path.parents):
+            root = Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[3]).resolve()
+            path = catalog_target(root, library.platform, path, guards)
+        return dict(path=str(path), target=target, source='local', guards=guards)
     if target == 'windows-terminal' and library.platform != 'windows':
         raise ValueError('Windows Terminal settings require native Windows')
     if target == 'kitty' and library.platform == 'windows': raise ValueError('Kitty has no native Windows target')
@@ -179,7 +189,10 @@ def destination(library, target, explicit=None):
     if row['status'] in ('conflict', 'linked-elsewhere', 'source-missing', 'source-broken-link'):
         raise ValueError('app configuration ownership needs review: ' + row['status'])
     source, target_path = Path(row['source']), Path(row['target'])
-    if not exists(target_path): raise ValueError('managed app destination is not installed; use dots files first')
+    setup = getattr(library, 'setup_installation', None)
+    pending = next((op for op in setup.operations if op['path'] == str(target_path)), None) if setup else None
+    planned = pending and (pending.get('link') == str(source) or pending.get('source') == str(source))
+    if not exists(target_path) and not planned: raise ValueError('managed app destination is not installed; use dots files first')
     directory = source.is_dir()
     path = source / filename if directory else source
     active = target_path / filename if directory else target_path
@@ -188,7 +201,9 @@ def destination(library, target, explicit=None):
     linked = target_path.is_symlink() and target_path.resolve() == source.resolve()
     result = dict(path=str(path), active=str(active), target=target, source='managed',
                   linked=linked, catalog=catalog, resource=row['id'], destination=str(target_path))
-    if exists(target_path) and not linked:
+    if planned:
+        result['setup_copy'] = row['strategy'] == 'copy'
+    elif exists(target_path) and not linked:
         if directory: raise ValueError('managed app directory is not linked; review dots files first')
         receipt_path = library.state / 'installation.json'
         receipt = read(receipt_path, dict(schema=1))
@@ -203,6 +218,7 @@ def destination(library, target, explicit=None):
 
 def configure(plan, identity, version, font, target, *, explicit=None, app_profile=None):
     found = destination(plan.library, target, explicit)
+    plan.guards.update(found.get('guards', {}))
     path = Path(found['path'])
     plan.guard(path)
     key = target + (':' + app_profile if app_profile else '')
@@ -228,7 +244,9 @@ def configure(plan, identity, version, font, target, *, explicit=None, app_profi
         # Both VS Code selectors can share a file; keep their receipts coherent.
         for selection in plan.document['targets'].values():
             if selection['path'] == str(path): selection['after'] = after
-        if found.get('receipt'):
+        if found.get('setup_copy'):
+            plan.put(found['active'], text=text)
+        elif found.get('receipt'):
             active = Path(found['active'])
             plan.put(active, text=text)
             receipt_path = found['receipt_path']

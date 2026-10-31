@@ -17,6 +17,16 @@ Choose and document a command's output modes before implementation. Do not assum
 
 ## Color and Icons
 
+Fonts reports, help, reviews, diagnostics and compatibility human listings reuse
+the CLI field/resource renderer. Nested choices and catalog/glyph rows reuse menu
+spans and shared popup appearance. `apps.fonts` controls human detail and previews;
+`colors.fonts.*` provides nullable font field styles and `icons.menu.fonts` supplies
+the font symbol. See [font output preferences](fonts.md#output-preferences).
+Preview snapshots render at the actual pane width without invoking providers.
+JSON, exact paths/glyphs and ordinary redirected output bypass these preferences.
+
+Root usage artwork keeps its classic vertical blue/cyan coloring by default. `apps.cli.logo_gradient=installer` selects the same horizontal published hint/info/accent gradient as setup, through a shared renderer; missing palette stops leave the artwork plain. Config saves apply on the next invocation. The optional Python renderer preserves a builtin classic fallback for dependency-free basic help. Setup's Profile display uses a blue label, bold yellow profile ID, and parenthesized directory in dim terminal foreground, abbreviating only the home prefix to `~`. These owner-requested accents and green guidance/cyan preference heading remain separate from completion statuses.
+
 Use the live [presentation controls](commands.md#presentation-helpers): prefix `--color=auto|always|never` and `--icons=auto|always|never`, backed by `DOTS_COLOR` and `DOTS_ICONS`. Flags precede the route. These are the implemented controls; draft future flags are not aliases.
 
 Automatic color requires a terminal on the destination stream, `TERM` other than `dumb`, and empty or unset `NO_COLOR`. Explicit `always` overrides `NO_COLOR` for human output. Automatic icons require a usable terminal independently of color. There is currently no font detection; `--icons=never` selects ASCII markers. Evaluate stdout and stderr independently. Respect user preferences even when a terminal supports color.
@@ -50,6 +60,8 @@ undecorated. Forwarded third-party output is unchanged.
 Keep status text alongside color; a green marker alone cannot explain whether an item is linked, tracked or selected. Use the shared marker vocabulary with an ASCII fallback. Palette previews may display their actual swatch colors, but diagnostic meanings remain consistent across selected themes. Color may emphasize facts; it must never imply success before an operation succeeds.
 
 ## Layout and Wording
+
+Wiki reports and source selectors follow this contract through the shared Python and menu renderers. Page/section/snippet/URL spans have nullable Wiki style overrides, while statuses and filesystem resources retain their semantic/type styles. See [Wiki preferences](wiki.md#output-preferences) for consumer-backed settings and the [route audit](../plans/wiki-output.md) for intentional data and external-output exceptions.
 
 - Use a concise command heading and meaningful count for collections, then repeat the same row or detail layout for each item. Avoid large banners and decorative borders on routine subcommands.
 - Use aligned labels when space allows and stacked or wrapped values on narrow screens. Review at 40, 80 and 120 columns. Do not truncate the only usable resource ID, path or recovery instruction.

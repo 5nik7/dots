@@ -10,6 +10,10 @@ from .detect import SYSTEM, available
 from . import policies, scopes, streams
 
 
+# Invoking these commands (or accepting an install selection) authorizes execution.
+UNATTENDED_ACTIONS = frozenset(('install', 'upgrade', 'refresh'))
+
+
 @dataclass
 class Plan:
     backend: object
@@ -49,6 +53,7 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
             expand = backend.name not in SYSTEM or bool(policy.get('skip') or policy.get('packages'))
             if expand:
                 rows = scopes.inventory(backend, owned=backend.name == 'pip' and bulk)
+                if backend.name == 'go': backend.go_rows = [p for p, _, _ in rows]
                 if backend.name == 'go' and names:
                     by_name = {alias: p.name for p, _, _ in rows for alias in (p.name, p.details['binary'])}
                     names = [by_name.get(n, n) for n in names]
@@ -60,9 +65,20 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
             names, blocked = policies.selected(cfg, backend.name, names, override=override, explicit=explicit)
             skipped += [dict(package=n, reason='skipped by policy') for n in blocked]
             if blocked and not names: return Plan(backend, action, skipped=skipped)
+        if backend.name == 'go' and action == 'upgrade' and 'replace' not in policy.get(action, {}):
+            # Reuse the read-only version comparison from upgrade --list.
+            # Replacement recipes own their update/rebuild semantics.
+            from . import go_tools, outdated
+            replacements = {policies.identity(n, 'go') for n, rules in policy.get('packages', {}).items()
+                            if 'replace' in rules.get(action, {})}
+            native = go_tools.select([n for n in names if n not in replacements], backend.go_rows)
+            with progress('Checking updates · go', cfg):
+                newer = {p['name'] for p in outdated.candidates(backend, native)} if native else set()
+            names = [n for n in names if n in replacements or n in newer]
+            if not names: return Plan(backend, action, skipped=skipped)
         backend.bulk_system = action == 'upgrade' and not explicit and backend.name in SYSTEM
         backend.skipped_targets = [row['package'] for row in skipped]
-        commands = policies.commands(backend, action, names, cfg, yes or action in ('upgrade', 'refresh'))
+        commands = policies.commands(backend, action, names, cfg, yes or action in UNATTENDED_ACTIONS)
     return Plan(backend, action, names, commands, skipped)
 
 
@@ -98,10 +114,13 @@ def display(plan, cfg, *, stream=None):
 
 def confirm(yes=False):
     if yes: return True
+    if os.name == 'nt':
+        if not sys.stdin.isatty(): raise Error('Use --yes for an intentional noninteractive transaction.')
+        return input('Proceed? [y/N] ').strip().lower() in ('y', 'yes')
     try:
-        with open('/dev/tty', 'r+') as tty:
-            tty.write('Proceed? [y/N] '); tty.flush()
-            return tty.readline().strip().lower() in ('y','yes')
+        with open('/dev/tty', 'r') as source, open('/dev/tty', 'w') as target:
+            target.write('Proceed? [y/N] '); target.flush()
+            return source.readline().strip().lower() in ('y','yes')
     except OSError:
         raise Error('No controlling terminal. Use --yes for an intentional noninteractive transaction.') from None
 
@@ -111,7 +130,8 @@ def apply(plan, cfg, *, data=False):
     if not plan.commands: return 0
     try:
         for command in plan.commands:
-            rc = streams.run(command, dict(cfg, _manager=plan.backend.name), unattended=plan.action in ('upgrade', 'refresh'),
+            if hasattr(plan.backend,'revalidate'): plan.backend.revalidate()
+            rc = streams.run(command, dict(cfg, _manager=plan.backend.name), unattended=plan.action in UNATTENDED_ACTIONS,
                              env=getattr(plan.backend, 'operation_env', None), data=data)
             if rc: return rc if rc > 0 else 128-rc
         return 0
@@ -126,18 +146,43 @@ def execute(backend, action, names, args, cfg):
     cfg = dict(cfg, _quiet_progress=args.dry_run or getattr(args,'json',False))
     item = plan(backend, action, names, cfg, yes=args.yes,
                 override=getattr(args,'ignore_skip',False))
+    if action == 'upgrade':
+        from . import upgrade_output
+        if upgrade_output.enabled(args, cfg):
+            upgrade_output.heading(cfg, backend)
+            return apply_upgrade(item, cfg)
     display(item, cfg)
     if args.dry_run:
         print('Dry run: no packages changed.')
         return 0
     if not item.commands: return 0
-    if action not in ('upgrade', 'refresh') and not confirm(args.yes):
+    if action not in UNATTENDED_ACTIONS and not confirm(args.yes):
         print('Cancelled; no packages changed.'); return 0
     return apply(item, cfg)
 
 
+def apply_upgrade(item, cfg):
+    from .upgrade_output import Output
+    with progress(item.backend.name+' · Upgrading', cfg) as meter:
+        output = Output(item.backend.name, cfg, meter)
+        if item.error: output.errors.append(item.error)
+        try:
+            try: rc = apply(item, dict(cfg, _upgrade_output=output))
+            except (Error, OSError, ValueError) as error:
+                output.errors.insert(0,str(error)); rc = 1
+                output.extra += max(0,len(output.errors)-2)
+                del output.errors[2:]
+        finally:
+            output.close()
+    output.result(rc, skipped=len(item.skipped), unchanged=not item.commands)
+    return rc
+
+
 def upgrade(args, cfg):
     cfg = dict(cfg, _quiet_progress=args.dry_run)
+    from . import upgrade_output
+    compact = upgrade_output.enabled(args, cfg)
+    if compact: upgrade_output.heading(cfg)
     entries, failed = [], False
     with budget(45): selection = scopes.bulk(cfg)
     for manager, scope in selection:
@@ -146,13 +191,21 @@ def upgrade(args, cfg):
             with budget(45):
                 backend = scopes.make(manager, scope)
                 item = plan(backend, 'upgrade', [], cfg, override=args.ignore_skip, bulk=True)
-            display(item, cfg)
-            rc = 0 if args.dry_run else apply(item, cfg)
+            if compact: rc = apply_upgrade(item, cfg)
+            else:
+                display(item, cfg)
+                rc = 0 if args.dry_run else apply(item, cfg)
             entries.append((manager, 'failed' if rc else 'planned' if args.dry_run else 'complete' if item.commands else 'unchanged'))
             failed |= bool(rc)
         except (Error, OSError, ValueError) as error:
-            print('pkgs: '+manager+': '+str(error), file=sys.stderr)
+            if compact:
+                output = upgrade_output.Output(manager, cfg)
+                output.errors.append(str(error)); output.result(1)
+            else: print('pkgs: '+manager+': '+str(error), file=sys.stderr)
             entries.append((manager, 'failed')); failed = True
+    if compact:
+        if not entries: print('No supported user-wide managers found.')
+        return int(failed)
     from .reports import report
     ui = report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color','auto'))
     if ui:

@@ -1,6 +1,8 @@
 # Testing Work Guide
 
 For fonts, run `tools/test_fonts.py` with `tools/requirements-fonts.txt` available,
+plus `tools/test_fonts_presentation.py` for output/configuration changes (including
+exact data, static completion, inherited controls and preview rendering),
 then `tools/test_font_directories.py`, `tools/test_fonts_browser.py` and the command generator's `--check`. Directory fixtures must set DOTS to a test-owned checkout before any storage mutation. Keep font,
 registry, clipboard and tmux effects in owned fixtures. Run file-platform checks
 before affected file/installation suites; follow [font testing](../../docs/testing.md#personal-fonts)

@@ -283,18 +283,20 @@ dots_complete() {
       elif [[ ${words[index+1]} == --bootstrap ]]; then
         dots_value_candidates choice:bash,zsh,powershell
       elif [[ ${words[index+1]} == --setup ]]; then
-        if [[ ${words[cursor-1]} == --with-source ]]; then
-          dots_value_candidates choice:termux,windows,nvim
-        elif [[ ${words[cursor-1]} == --packages ]]; then
-          dots_value_candidates file
-        else
-          dots_builtin_metadata init
-          for row in "${DOTS_META_OPTIONS[@]}"; do
-            IFS='|' read -r long short type description <<< "$row"
-            [[ $long == --setup ]] || dots_candidate "$long" "$description"
-            [[ ! $short ]] || dots_candidate "$short" "$description"
-          done
-        fi
+        dots_builtin_metadata init
+        for row in "${DOTS_META_OPTIONS[@]}"; do
+          IFS='|' read -r long short type description <<< "$row"
+          if [[ $type != flag && ( ${words[cursor-1]} == "$long" || ( -n $short && ${words[cursor-1]} == "$short" ) ) ]]; then
+            dots_value_candidates "$type"
+            (( ${#DOTS_SUGGESTIONS[@]} == 0 )) || printf '%s\n' "${DOTS_SUGGESTIONS[@]}"
+            return 0
+          fi
+        done
+        for row in "${DOTS_META_OPTIONS[@]}"; do
+          IFS='|' read -r long short type description <<< "$row"
+          [[ $long == --setup ]] || dots_candidate "$long" "$description"
+          [[ ! $short ]] || dots_candidate "$short" "$description"
+        done
       fi
     elif [[ ${words[index]} == completion ]]; then
       if (( cursor == index+1 )); then for token in bash zsh fish powershell; do dots_candidate "$token"; done; fi

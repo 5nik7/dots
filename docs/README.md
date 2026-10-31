@@ -4,6 +4,12 @@ The live CLI combines Bash and native PowerShell entry points with shared Python
 
 ## Start Here
 
+- [Dots core](core.md) — choose a workflow and understand source, configuration and state.
+- [Configuration](configuration.md) — inspect values, precedence, edits and activation.
+- [Environment](shell-environment.md) — distinguish settings, application variables and generated paths.
+- [Neovim](neovim.md) — optional editor source, themes, controls and troubleshooting.
+- [Tmux](tmux.md) — sessions, status and key reference.
+
 - [Git operations](git.md) and [managed files](files.md) — implemented bounded workflows.
 - [Personal fonts](fonts.md) — versioned downloads, app selections and glyph browsing.
 - [Package workflows](packages.md) — user-wide upgrades, Go tools, native policies, output formatting and editable setup manifests.

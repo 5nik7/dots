@@ -10,6 +10,14 @@
 
 ## Personal fonts
 
+`python3 -B tools/test_fonts_presentation.py` covers Fonts human/redirected/JSON
+boundaries, configured 40/80/120-column wrapping, styles/icons, all route help,
+typed Config discovery/reset/activation, fresh four-shell completion, inert preview
+snapshots and literal configuration handoffs in owned roots. The font browser
+suite also checks configured preview placement/visibility and menu alignment in
+private tmux clients at those widths. These are Termux and portable-fixture checks;
+native PowerShell and desktop visual acceptance remain separate.
+
 The workflow suite covers installed ownership, Copy/Migrate and undo, batch preflight, partial expansion, automatic Termux/desktop retention, exact saved preferences, Restore with unavailable sources, failed downloads and rollback after a preference-write failure. It also checks the Windows registration adapter with fixture values. The base font fixture owns its Dots checkout so app retention never writes into the developer checkout.
 
 `python3 -B tools/test_font_directories.py` covers storage-only install/update, independent directory inventories, import/export, retained uninstall history, explicit activation, pins, scoped undo, stale manifests/collections/payloads, rollback after failed writes, frontend/completion parity and popup handoff. Its checkout, HOME/XDG roots and registry substitutes are test-owned. Windows lifecycle fixtures use POSIX-owned destinations on POSIX hosts; they do not establish native registration or visibility. `tools/test_profile_backend.py` additionally verifies DOTFONTS generation, namespace collisions, exports, checkout switching and reload.
@@ -921,6 +929,8 @@ Run `python3 -B tools/test_platform_retirement.py` with the environment, profile
 
 ## Wiki
 
+Run `python3 -B tools/test_wiki_presentation.py` for Wiki display controls: Config save/discovery/validation/reset/inheritance and both completion frontends, actual human consumer output, exact data and ordinary redirected reports, icon/color independence, reader safety, Gum/FZF/numbered selectors, and owned 40/80/120-column PTYs. Follow with `tools/test_config_values.py`, `tools/test_style_config.py`, `tools/test_config_live.py`, `tools/test_config_alignment.py` and affected menu/config tests. The Wiki cases in `tools/test_menu_launcher.py` cover private two-client reader handoff. Native Windows terminal acceptance remains separate from shared-controller fixtures.
+
 Run `python3 -B tools/test_wiki.py` for generation, navigation, data output, drift refusal, clone, interrupted-build recovery, rollback and undo. Run `python3 -B tools/test_wiki_git.py` for associated scopes, source-before-wiki publication, selected-index freshness, local-remote sync and partial failure. Follow with affected Git, submodule, command, native-controller and profile/bootstrap suites sequentially. All repositories, transports, homes, state and browser/editor substitutes must be test-owned. `dots wiki check --source-only` validates the actual source manifest without needing a wiki clone or credentials; CI runs it with generation regressions. Native Windows runtime and live GitHub rendering evidence are separate.
 
 ### Global less style checks
@@ -938,6 +948,14 @@ Run `python3 -B tools/test_file_platform.py`, `python3 -B tools/test_installatio
 The bundled full-checkout lifecycle case also checks application assets through real setup/theme preparation and combined removal. The original stricter whole-theme repeat-install assertion remains separate; the 2026-10-28 Termux run reproduced its theme-republication failure with the unchanged HEAD installer. See [absorption evidence](../plans/bundled-applications.md#verification-evidence-2026-10-28).
 
 ## Application plugins
+
+The pkgs core suite includes `test_update_commands.py` (aliases, read-only
+per-manager parsers, JSON, scope/exclusions, partial failures, literal Codex
+recipe), `test_cleanup.py` (current ownership, selection/cancellation, stale
+manifest/provenance, terminal confirmation, native failure and retained records),
+and `test_upgrade_output.py` (fragmented APT mirror errors, bounded summaries and
+40/80/120-column private terminals). All manager effects use fixtures in owned
+roots. Integration checks cover both dispatch surfaces and static menu/completion.
 
 Run `python3 -B tools/test_plugin_reports.py -v` for report presentation and capture integration. It covers independent color/icon controls, precedence, plain popup layouts, shared resource styles, width-safe values, unchanged JSON/raw/completion bytes, frontend equivalence, and save success/cancellation using disposable configurations. Package inventories and diagnostics use mocked managers. Native private tmux clients exercise report capture, exact-client ownership and scrolling at 40/80/120 columns. Run the application core suites and affected menu/pager/resource suites alongside it; native Windows PowerShell 5.1/7 and Linux/WSL visual checks remain separate acceptance evidence.
 
@@ -991,6 +1009,10 @@ Run `python3 -B tools/test_config_live.py` for precedence/provenance, unused-key
 
 ### Configuration coverage checks
 
+`tools/test_config_menu.py` also checks key-only `config set KEY` dispatch into existing typed editors, semantic/native palette choices (including duplicate hex values and differing same-name colors), no-refresh review/save, undo, cancellation, stale guards, scope and missing-tool/data refusal. Its private terminal case invokes the Bash and shared native frontends directly at 40/80/120 columns, checks the selected color and default-Cancel/Save/Ctrl-C outcomes, and keeps the other tmux client untouched. These are Termux/controller checks; native PowerShell runtime acceptance remains pending.
+
+The Config review layout case captures a complete client redraw in an owned terminal and asserts that Cancel and Save appear on the same screen before navigation. It covers 40/80/120 columns, automatic/percentage/fixed/fitted popup heights, very short layouts, default cancellation, Save selection and a second client that must remain untouched. Transcript-wide matches alone do not establish simultaneous visibility.
+
 Run `python3 -B tools/test_config_alignment.py -v` for fresh get/set/unset/explain completion with native weather present, invalid optional TOML, actual Zsh Tab input, guarded width edits and next-invocation activation. It covers fixed/percentage/spacing-only Python and Bash rows, Unicode cells, exact data output, compiled Bash/Zsh literal settings and invalidation, and private multi-client Config popups at 40/80/120 columns. Run resource, config/live/weather/menu and shell suites sequentially. Native PowerShell and desktop Linux/WSL acceptance remain separate from shared-controller and Termux evidence.
 
 The shared-menu fit case compares emitted FZF dimensions with the displayed percentage column at each width, guarding against a second fit calculation after row layout. Multiline records also exercise width/height measurement and stable selection identities.
@@ -1023,10 +1045,15 @@ Run `python3 -B tools/test_bundled_app_cores.py pkgs` for the package core, incl
 frontends with fake managers and temporary local remotes. Wiki integration also
 covers manifest-before-source-before-wiki publication. Test profile defaults,
 Escape returning to the same menu/query, preserved pins/disabled/absent entries,
-repeat-safe updates, dry-run/cancel purity, inventory/drift failures and exact
+repeat-safe updates without a controlling terminal or `--yes`, retained update
+undo and ordinary snapshot replacement approval, dry-run/cancel purity,
+inventory/drift failures and exact
 manifest-only staging in addition to the existing selection.
-All package transactions use fake managers and owned home/config/cache/state roots.
-Coverage includes no-TTY upgrades/refresh, manager-free styled help at 40/80/120
+Package workflow transactions use fake managers and owned home/config/cache/state roots;
+the native npm fixture described below uses a disposable prefix and local registry.
+Coverage includes no-TTY installs/upgrades/refresh, install-picker selection/cancel,
+native Termux approval flags, dry-run purity, retained removal/restore approval,
+manager failure statuses, manager-free styled help at 40/80/120
 columns, exact APT advisory filtering, batched Python ownership, delayed export
 stderr progress and query deadlines, scopes/skips/recipes, Go metadata/helper fallback,
 concurrent streams and cancellation, raw bytes, manifest pins/repeat restore, guarded
@@ -1035,8 +1062,57 @@ refusal. Existing bundled-app, report, Config/menu and installation suites provi
 regression checks. Run file-platform checks before installation suites; metadata
 generation uses `python3 -B tools/generate_bundled_apps.py --check`.
 
+`plugins/pkgs/tests/test_upgrade_output.py` also exercises long fake APT/pip/uv
+streams reduced to compact upgrade results, bounded diagnostics, npm E404,
+unknown failures, partial prompts, continued independent managers, counted skips,
+full raw/redirected/dry-run paths and actual 40/80/120-column PTYs. A fake manager
+disables terminal newline translation to verify restoration and readable output;
+no real package manager runs.
+
+Pip output cases cover native byte counts, unknown totals, package/stage changes,
+partial build messages, elapsed silence without terminating the process, progress
+capability/override handling and unchanged raw/redirected environments.
+`plugins/pkgs/tests/test_npm_global.py` runs installed npm/Node against a loopback
+registry with an owned global prefix, cache and configuration. It reproduces
+`EBADPLATFORM` from an unrelated foreign-platform package during a named global
+update, then verifies the adapter's targeted install updates only the selected
+package and preserves the foreign package. Lifecycle scripts, audit and notifier
+requests are disabled; no host package installation or registry credentials are
+used. This fixture requires POSIX and available npm/Node and otherwise skips.
+
+Npm activity cases cover scoped/encoded package names, fetch/cache/retry/error
+events, lifecycle stages, quiet time and preservation of the last known stage.
+Progress labels exclude URL credentials/query strings and script commands. Tests
+cover explicit logging overrides, unchanged raw/redirected environments and
+40/80/120-column PTYs. The owned native npm fixture verifies info fetch events
+reach the parser and explicit CLI silence overrides the child environment.
+
+`plugins/pkgs/tests/test_go_updates.py` verifies newer-only native Go selection,
+unchanged/prerelease/build-metadata versions, deduplicated module queries, bounded
+project-independent lookup settings, malformed/failed queries, source/skip guards
+and explicit recipe semantics. Workflow fixtures prove a present helper is never
+selected automatically, dry-run does not install, and native installs need no TTY.
+Compact-output cases name each tool before output, retain it through dependency
+messages and silence, and exercise actual private PTYs at 40/80/120 columns with
+success, failure, cancellation and terminal restoration. No host Go tool is built
+or updated by these tests; native Go toolchain acceptance remains separate.
+
 Local Termux fixtures do not establish native Linux/WSL or PowerShell 5.1/7 behavior.
 Native pending acceptance covers portable Windows format/manifest/Config paths and
 package-stage refusal, Linux/WSL manager scopes/privileges, real manager updates,
 and terminal prompts/progress at 40/80/120 columns. No live package changes are
 needed to run these isolated suites. See [the focused plan](../plans/pkgs-workflows.md).
+
+## Selective setup and WinGet
+
+Run `python3 -B tools/test_setup_components.py`, `python3 -B tools/test_setup_wizard.py`, `python3 -B tools/test_setup_leaf.py` and `python3 -B tools/test_setup_fonts.py` and `python3 -B tools/test_setup_stages.py`, then the existing installation/adapters and affected package/font/Config/menu suites. `python3 -B -m unittest discover -s plugins/pkgs/tests` includes structured WinGet scope, pin and literal-argument fixtures. Tests own all target homes/config/state/cache and fake package/build boundaries. The wizard suite uses actual POSIX PTYs at 40/80/120 columns. Native Windows PowerShell 5.1/7 and native Linux/WSL remain named pending acceptance; fixtures are not native evidence.
+
+The installer Leaf orchestration fixture does not replace a real locked Rust build. Current real-build acceptance is blocked by proxy HTTP 403 for GitHub/crates.io and absent Rust dependency cache. Resume with the pinned build and both `LeafTheme.test_real_inline_syntax_colors_and_failures` and `LeafTheme.test_real_dark_light_tui`, retaining isolated roots. See [installer evidence](../plans/installer-update.md).
+
+## Documentation topics and complete manual
+
+Run `python3 -B tools/test_wiki_topics.py` for source-only ranking, duplicate/Unicode headings, fenced examples, no-match behavior, unchanged literal/raw data, section and whole-page selection, and both controller/completion paths. The current corpus checks top-three relevant results for `config precedence`, `environment variables`, `nvim themes`, `files rollback` and `wiki search`.
+
+Run `python3 -B tools/generate_dots_manual.py --check` and `python3 -B tools/test_manual.py` for deterministic static coverage, roff escaping, optional mandoc lint/rendering, and temporary-prefix/home installation lifecycle. Run `tools/test_file_platform.py` before installation safety tests. Manual fixtures cover platform destinations, core selection, preexisting links, collisions, source drift, rollback, interrupted recovery, idempotence and drift-safe removal. Native viewers and PowerShell evidence remain separate from adapter fixtures.
+
+Changes also run the affected wiki/wiki-Git, command/completion, menu/pager, installation and native-controller suites sequentially. Repository CI checks manual freshness and these focused documentation regressions on Linux and Windows. `python3 -B tools/verify_docs.py`, source-only wiki validation and `git diff --check` cover source consistency; local wiki regeneration is an explicit retained transaction.

@@ -276,7 +276,7 @@ class Workflows(unittest.TestCase):
 
     def test_menu_routes_and_machine_output(self):
         from fonts.menus import HOME_ACTIONS,home,set_menu
-        self.assertTrue({'installed','set','downloaded','defaults'}<={k for k,_ in HOME_ACTIONS})
+        self.assertTrue({'installed','set','downloaded','defaults','configuration'}<={entry[0] for entry in HOME_ACTIONS})
         with patch('fonts.menus.select',return_value=None),patch('fonts.menus.context_for',return_value=None):
             self.assertEqual(home(parser().parse_args([])),0)
             self.assertEqual(set_menu(parser().parse_args(['set'])),0)

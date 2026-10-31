@@ -14,6 +14,8 @@ def termux():
                 '/com.termux/' in os.environ.get('HOME', ''))
 
 def available(name):
+    if os.name == 'nt': return name == 'winget' and bool(which('winget.exe'))
+    if name == 'winget': return False
     if name == 'apt':
         return bool(which('apt-cache') and which('dpkg-query') and (which('apt') or which('apt-get')))
     if name in ('paru', 'yay'):
@@ -31,6 +33,9 @@ def available(name):
     return bool(which(name) or (name == 'dnf' and which('dnf5')))
 
 def default_manager():
+    if os.name == 'nt':
+        if available('winget'): return 'winget'
+        raise Error('WinGet is unavailable; install Windows App Installer explicitly')
     if termux():
         pm = os.environ.get('TERMUX_APP_PACKAGE_MANAGER', '').lower()
         if pm in ('apt', 'pacman') and available(pm):

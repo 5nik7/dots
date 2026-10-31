@@ -125,6 +125,30 @@ def style(value):
 def validate_value(defaults,path,value):
     if not recognized(defaults,path):raise ValueError('unknown configuration key: '+name(path))
     if value is None:return
+    if path in (('apps','wiki','list_details'), ('apps','wiki','reader')):
+        allowed = ('summary','full') if path[-1]=='list_details' else ('auto','plain')
+        if not isinstance(value,str) or value not in allowed:raise ValueError('invalid wiki '+path[-1]+'; allowed: '+', '.join(allowed))
+        return
+    if path == ('formatting','apps','wiki','row_gap'):
+        if type(value) is not int or not 0<=value<=4:raise ValueError('wiki row_gap requires an integer 0..4')
+        return
+    if path in (('apps','fonts','list_details'),('apps','fonts','preview','position')):
+        allowed=('summary','full') if path[-1]=='list_details' else ('down','right')
+        if not isinstance(value,str) or value not in allowed:raise ValueError('invalid font '+path[-1]+'; allowed: '+', '.join(allowed))
+        return
+    if path==('apps','fonts','preview','size'):
+        if type(value) is not int or not 10<=value<=80:raise ValueError('font preview size requires an integer percentage 10..80')
+        return
+    if path == ('apps','cli','logo_gradient'):
+        if value not in ('classic','installer'):raise ValueError('logo_gradient requires classic or installer')
+        return
+    if path == ('apps','setup','components'):
+        from files.setup_components import COMPONENTS
+        if not isinstance(value,list) or any(not isinstance(v,str) or v not in COMPONENTS for v in value) or len(set(value))!=len(value):
+            raise ValueError('setup components require unique supported names')
+    if path == ('apps','setup','resources'):
+        if not isinstance(value,list) or any(not isinstance(v,str) or not re.fullmatch(r'[a-zA-Z0-9_-]+:[a-zA-Z0-9_.:-]+',v) for v in value) or len(set(value))!=len(value):
+            raise ValueError('setup resources require unique qualified catalog IDs; [] means all applicable resources')
     if path[:2]==('formatting','apps') and len(path)==4 and path[2] in ('cli','menu') and path[-1]=='label_width':
         from row_layout import valid_width
         if not valid_width(value):raise ValueError('label_width requires integer 0..4096 or 1%..100%; zero uses spacing only')
@@ -202,6 +226,21 @@ def constraints(defaults, key):
     path = parts(key)
     if not recognized(defaults, path): return {}
     default = lookup(defaults, path)
+    if path in (('apps','wiki','list_details'), ('apps','wiki','reader')):
+        return dict(type='string',choices=['summary','full'] if path[-1]=='list_details' else ['auto','plain'])
+    if path == ('formatting','apps','wiki','row_gap'):
+        return dict(type='integer',examples=[0,1,2],syntax='Integer 0..4 blank lines between Wiki records')
+    if path in (('apps','fonts','list_details'),('apps','fonts','preview','position')):
+        return dict(type='string',choices=['summary','full'] if path[-1]=='list_details' else ['down','right'])
+    if path==('apps','fonts','preview','size'):
+        return dict(type='integer',examples=[25,33,50],syntax='Integer 10..80 percent of the picker height or width')
+    if path == ('apps','cli','logo_gradient'):
+        return dict(type='string', choices=['classic','installer'], syntax='Classic vertical blue/cyan or installer horizontal hint/info/accent')
+    if path == ('apps','setup','components'):
+        from files.setup_components import COMPONENTS
+        return dict(type='array', examples=[list(COMPONENTS[:6]), ['core']], syntax='Unique component names: '+', '.join(COMPONENTS))
+    if path == ('apps','setup','resources'):
+        return dict(type='array', examples=[[], ['dots:git']], syntax='Qualified catalog IDs; [] selects all applicable enabled files')
     if path[:2]==('formatting','apps') and len(path)==4 and path[2] in ('cli','menu') and path[-1]=='label_width':
         return dict(type='column-width', examples=['25%','40%','50%',16,24,0],
                     syntax='Integer 0..4096 cells or 1%..100% of the terminal/popup width; 0 uses label_gap only')

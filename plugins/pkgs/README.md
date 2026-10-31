@@ -18,6 +18,14 @@ dependencies. The command is **`pkgs`**; Termux's `pkg` remains its native front
 
 ## Quick start
 
+Bundled shortcuts: `in` → install, `un` → uninstall, `up` → upgrade,
+`xup` → export --update, `upls` → upgrade --list. `upgrade ls` is also read-only.
+The update report shows current → candidate versions per manager, with skips and
+query failures. `cleanup [FILE]` defaults to the current profile manifest and
+requires preview, FZF selection and confirmation for eligible disabled pip source
+installs. `cleanup --dry-run`/`--json` inspect only; `--yes` cannot bypass review.
+See [package workflows](../../docs/packages.md) for scopes, queries and recipes.
+
 Requirements: Bash 4+, Python 3.9+, and an installed supported package manager.
 Interactive pickers also require fzf 0.48+. Native completions target Bash 4+,
 Zsh 5.8+, and Fish 3.6+.
@@ -32,8 +40,8 @@ From the root of a checkout or extracted source directory:
 
 `search` opens a read-only picker; Enter prints details for your selections.
 The install example lets you select packages and prints the planned transaction
-without running it. Remove `--dry-run` when ready to install; pkgs asks for
-confirmation before invoking the manager.
+without running it. Remove `--dry-run` when ready to install; accepting the picker
+selection authorizes installation without an extra confirmation flag.
 
 Use `./pkgs` to run this checkout directly. After installation, use `pkgs` when
 the installation's `bin` directory is on PATH. Examples below use that installed
@@ -106,7 +114,7 @@ activation instructions and the [shell setup guidance](#completion) below.
 | `pkgs upgrade` | Unattended upgrades across supported user-wide managers |
 | `pkgs format [--manager NAME]` | Format stdin; `--raw` preserves bytes |
 | `pkgs export [--output FILE]` | Export editable installed-package JSON |
-| `pkgs export --update [--output FILE]` | Update a manifest while preserving edits; default to the current profile root |
+| `pkgs export --update [--output FILE]` | Update a manifest without another approval flag, preserving edits and backups; default to the current profile root |
 | `pkgs manifest FILE` | Inspect/validate without manager queries |
 | `pkgs restore FILE` | Restore missing packages and requested pins |
 | `pkgs refresh` | Refresh APT/DNF/XBPS repository metadata |
@@ -123,13 +131,33 @@ default. JSON is opt-in for `list`, `info`, `managers`, `doctor`, and
 separate subprocess arguments, never interpolated into shell commands.
 Ordinary name operands exclude URLs/local paths and arbitrary backend options; Go additionally supports module versions. Use manifest pins for exact versions and native policy recipes for custom flags/commands. The [current Dots package guide](../../docs/packages.md) defines these contracts; 0.1.1 remains the imported release identifier.
 
-Install/remove/restore print the selected scope and commands, then ask
-`Proceed? [y/N]`. Upgrade and refresh are explicit approval to proceed without an extra flag,
-including without a controlling terminal. The manager can also ask its own questions. `--yes` skips the
-pkgs prompt and supplies the backend's supported noninteractive flag where
-available; some managers can still prompt. `--dry-run` prints the transaction
+Transactions print the selected scope and commands. Install, upgrade and refresh
+authorize execution without `--yes`, including without a controlling terminal,
+and supply supported native confirmation flags automatically. For install,
+supplying package names or accepting a picker selection authorizes those packages;
+cancelling the picker installs nothing. Remove and restore still ask
+`Proceed? [y/N]`; `--yes` approves these operations and supplies supported native
+confirmation flags. Privilege checks, manager protections and custom recipe
+behavior still apply. `--dry-run` prints the transaction
 without running it, although preparation and previews may still query metadata.
-Passing names bypasses the picker, not confirmation.
+
+Human upgrades show one result per manager with transient progress, short
+failure/warning details and a count of skipped packages. Full commands, routine
+manager chatter and per-package skips are hidden; `--raw` streams them in full,
+and `--dry-run` retains the full plan. Ordinary redirected output remains full.
+Results follow process status, and prompts remain visible. The runner restores
+child terminal settings before returning to the shell.
+Pip progress includes the package, native download bytes (pip 25.1+), build stages
+and elapsed silence after 15 seconds without output. Silence does not end a build.
+Global npm upgrades use targeted installs so unrelated platform-specific aliases
+do not block ordinary packages; project upgrades retain native update semantics.
+Compact npm progress shows metadata, fetched packages and install-script stages,
+plus elapsed silence. Native logging flags/environment override its info default;
+registry URLs and script commands stay out of the progress line.
+Go uses native `go install PACKAGE@latest` for tools with newer module versions,
+leaving current/newer builds alone. It shows the binary being installed even while
+Go is silent. Dry-run checks versions without installing; explicit replacement
+recipes retain their behavior. The helper is never selected automatically.
 
 Terminal help and operation previews use the shared Dots layout and colors,
 with wrapped plain output when color is disabled. Formatted APT output omits
@@ -467,3 +495,7 @@ See [testing and device acceptance](docs/TESTING.md) for procedures,
 [backend references](docs/SOURCES.md) for sources, and the
 [changelog](CHANGELOG.md) for release changes. The [man page](docs/pkgs.1)
 provides the command reference.
+
+## Dots native Windows adapter
+
+The bundled Dots revision adds WinGet community workflows through Microsoft.WinGet.Client, exact IDs, `--scope user|machine`, export/restore and exact pins. User scope is the default. Native pickers use shared Gum or numbered selection; PowerShell completion is supplied by Dots. See [current package contracts](../../docs/packages.md#native-windows-winget); older standalone release/platform records above are historical. Native Windows runtime acceptance is pending.

@@ -58,9 +58,9 @@ def records():
             for child, grammar in children:
                 yield from walk(grammar, [*route, child])
         if commands:
-            yield name, dict(summary='Manage packages on Termux, Linux and WSL', option=common, argument=[])
+            yield name, dict(summary='Manage packages on Termux, Linux, WSL and native Windows WinGet', option=common, argument=[])
             for command, summary in commands.items():
-                args = [['1', 'choice:bash,zsh,fish', 'Shell'], ['2', 'choice:install,update,status,uninstall', 'Completion action']] if command == 'completion' else [['1', 'choice:clear', 'Cache action']] if command == 'cache' else [['1','file','Package manifest']] if command in ('manifest','restore') else []
+                args = [['1', 'choice:bash,zsh,fish', 'Shell'], ['2', 'choice:install,update,status,uninstall', 'Completion action']] if command == 'completion' else [['1', 'choice:clear', 'Cache action']] if command == 'cache' else [['1','file','Package manifest']] if command in ('manifest','restore','cleanup') else [['1','choice:ls','List available upgrades']] if command in ('upgrade','up') else []
                 yield name+'-'+command, dict(summary=summary, option=common, argument=args)
         else:
             yield from walk(parser, [name])

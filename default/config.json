@@ -10,6 +10,9 @@
         "label_width": 10,
         "alignment": "left"
       },
+      "wiki": {
+        "row_gap": 1
+      },
       "todo": {
         "indent": 2,
         "indent_style": "spaces",
@@ -89,6 +92,36 @@
     }
   },
   "apps": {
+    "wiki": {
+      "list_details": "summary",
+      "search_snippets": true,
+      "search_urls": true,
+      "menu_descriptions": true,
+      "section_breadcrumbs": true,
+      "reader": "auto"
+    },
+    "fonts": {
+      "list_details": "summary",
+      "provenance": true,
+      "menu_descriptions": true,
+      "preview": {
+        "enabled": true,
+        "sample": true,
+        "position": "down",
+        "size": 33,
+        "wrap": true
+      }
+    },
+    "cli": {
+      "logo_gradient": "classic"
+    },
+    "setup": {
+      "logo": true,
+      "clear_screen": true,
+      "components": ["core", "files", "themes", "anodize", "blastoff", "pkgs"],
+      "resources": [],
+      "dependencies": false
+    },
     "menu": {
       "popup": {
         "position": "center",

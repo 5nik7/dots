@@ -11,7 +11,7 @@ def endpoints(colors):
     return tuple(tuple(int(value[i:i + 2], 16) for i in (1, 3, 5)) for value in values)
 
 
-def gradient(lines, colors, *, regions=(), restore='\x1b[39m'):
+def gradient(lines, colors, *, regions=(), restore='\x1b[39m', horizontal=False):
     """Each (left, top, right, bottom) region receives its own full diagonal.
 
     Blank cells keep their bytes but do not set gradient bounds. Integer scores
@@ -32,7 +32,7 @@ def gradient(lines, colors, *, regions=(), restore='\x1b[39m'):
             continue
         xmin, xmax = min(x for x, _ in points), max(x for x, _ in points)
         ymin, ymax = min(y for _, y in points), max(y for _, y in points)
-        scores = {(x, y): (x - xmin) * max(1, ymax - ymin) + (ymax - y) * max(1, xmax - xmin)
+        scores = {(x, y): (x - xmin) if horizontal else (x - xmin) * max(1, ymax - ymin) + (ymax - y) * max(1, xmax - xmin)
                   for x, y in points}
         low, high = min(scores.values()), max(scores.values())
         span = max(1, high - low)

@@ -1,5 +1,59 @@
 # Personal font management
 
+## Fonts output and configuration pass
+
+**Status: Implemented; native desktop visual checks pending.** Owner: `dots-fonts-maintenance`. Review every Fonts
+route and nested selector; preserve lifecycle, native destinations and data APIs.
+
+| Surface | Implementation and acceptance |
+| --- | --- |
+| Root/list/search/browse/installed | Shared human fields, counts and record separation; configurable summary/full lists; redirected reports unchanged |
+| Show/versions/current/targets/directories/defaults | Complete fields, semantic statuses, resource paths and shared width/indent/alignment; provenance visibility affects human details only |
+| Update/download/import/export/install/uninstall/upgrade/rollback/pin/unpin/set/use/remove/undo/copy/migrate/restore | Same renderer for review/result, with all planned operations retained; no approval or transaction changes |
+| Root/catalog/installed/downloaded/set/source/action/version/variant/face/target/destination/restore selectors | Shared menu spans, icons and configurable descriptions; stable selection IDs and literal action arguments |
+| Catalog and glyph previews | Numeric inert snapshots, actual pane-width rendering, optional sample rendering and configurable preview geometry/wrapping; no network or mutations |
+| Help/errors/getnf/chnf | Shared styles/layout for human help and diagnostics; compatibility list and exact glyph/path/data contracts retained |
+
+Menu assessment: **update** all Fonts selectors and add Configuration navigation
+to the main Fonts popup, catalog/glyph shortcut and launcher Fonts group. Reuse
+`dots config browse` for guarded preference editing; no new command route.
+Configuration assessment: **add** typed `apps.fonts` display/preview controls and
+consumed nullable `colors.fonts.*` styles plus a font icon; **update** consumers
+to respect existing CLI/menu formatting, per-entry styles and popup preferences.
+Settings inherit defaults → profile parents → active profile. Activation is the
+next Fonts invocation/popup; saving these controls never publishes a theme or
+sets a font. No separate font-layout or popup-size settings duplicate shared ones.
+
+Sequence: defaults/validation/discovery → shared human renderer → selectors and
+previews → isolated configuration/rendering/interaction tests → canonical docs
+and wiki. Acceptance includes 40/80/120 columns, color/icons independent, nullable
+reset, next-invocation behavior, optional preview tools absent, cancellation,
+exact redirected/JSON/path/glyph output, static metadata and both shell dispatch
+surfaces. Native Windows/PowerShell and desktop visual acceptance remain pending;
+Termux private-client fixtures do not establish those results.
+
+Verification for this pass: all 30 static route help views and generated adapters
+checked; Fonts lifecycle 21, directories 13 and application workflows 18 passed.
+The workflow menu assertion was updated for described entries and rerun. New
+presentation/configuration suite: 10 passed. Private Fonts browsers: 7 passed,
+including configured 40/80/120-column layouts and exact originating-client glyph
+actions. Shared menus: 18 passed; six focused launcher/static/native handoff checks
+passed. Config values 13, styles 7, alignment 9, popup 20 and refresh/live 11 passed.
+Five representative redirected reports match the pre-change renderer byte for
+byte. Source syntax, generated metadata, Markdown links and whitespace pass.
+
+Performance review caught repeated preference resolution per catalog row. Passing
+render-local snapshots through the shared span/painter APIs reduced the measured
+1,000-row preparation from 1.553 s plain to 0.168 s plain / 0.519 s with colors
+and icons in an owned Termux fixture. No persistent cache or startup work was
+added. Metadata previews now render on selection at the actual pane width.
+The read-only configuration scanner's Fonts candidates were reviewed against
+consumers: storage/app-native rules and provider safety bounds remain with their
+existing owners; only display preferences are exposed by this pass.
+Local wiki preview/build/check completed; build transaction
+`cbc5ee9030de4f44b30083c2513b50f9`, healthy export, no publication. The final
+configured-browser check also covers shared `fit` geometry with previews disabled.
+
 **Status: Implemented; native desktop and live activation acceptance pending.** Implements the approved fonts plan for Todo
 `1420613a8fb94c28a526104af9eba164`, plus its directory/version follow-up `2ad86387e0e74b998275dd3803aea3f4`.
 
@@ -66,6 +120,12 @@ actually observed. A real Termux font activation/reload/restoration check requir
 separate live authorization; fixtures cannot establish visible device activation.
 
 ## Evidence
+
+### Downloaded-font launcher repair
+
+The Downloaded fonts action keeps `fonts browse` in its command route and `--downloaded` in its fixed options. Previously the availability check incorrectly included the flag in the executable name, disabling a working browser. Menu assessment: **update** the existing action mapping; keep its identity, order, popup context and literal handoff. Configuration assessment: **no configuration integration change needed**; command availability is an implementation check, and existing menu styling/placement controls remain unchanged. Primary owner: `dots-fonts-maintenance`, with shared launcher behavior under `dots-menu-authoring`. Both Bash and native Windows argument construction share this mapping; native Windows visual execution remains a separate acceptance check.
+
+Verified on 2026-10-31: the new regression reproduced the false unavailable state before the fix. Six focused launcher checks now pass, covering static availability without provider execution, Bash/native argument construction, literal popup handoff and cancellation, genuine missing-adapter refusal, metadata dispatch and private 40/80/120-column clients. The live downloaded inventory read succeeded, and the corrected static entry reports available on both platform branches. Generated font adapters, 1,232 relative Markdown links and whitespace checks pass. No font downloads or activation were performed for this repair.
 
 ### Installed fonts and application defaults follow-up
 

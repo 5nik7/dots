@@ -10,56 +10,61 @@ ROUTE = re.compile(r'[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)*\Z')
 
 
 def read(path):
+    with Path(path).open(encoding='utf-8-sig') as stream:
+        return parse(iter(lambda: stream.readline(16385), ''), path)
+
+
+def parse(lines, path='<metadata>'):
+    """Parse bounded static header lines from a file or revision-aware reader."""
     data = dict(summary='', usage='', hidden=False, option=[], argument=[], example=[])
     seen = set()
     size = 0
     position = 1
     rest_seen = False
-    with Path(path).open(encoding='utf-8-sig') as stream:
-        for number, line in enumerate(iter(lambda: stream.readline(16385), ''), 1):
-            if line.strip() and not line.startswith('#'):
-                break
-            size += len(line.encode('utf-8'))
-            if number > 128 or size > 16384:
-                raise ValueError('metadata header exceeds limit: ' + str(path))
-            if not line.startswith('# dots:'):
-                continue
-            key, sep, value = line.rstrip('\r\n')[7:].partition('=')
-            if not sep or key not in data or not value or any(ord(c) < 32 or ord(c) == 127 for c in value):
-                raise ValueError('invalid command metadata: ' + str(path))
-            if key in ('option', 'argument'):
-                fields = value.split('|')
-                if len(fields) != (4 if key == 'option' else 3):
-                    raise ValueError('invalid metadata fields: ' + str(path))
-                if key == 'option':
-                    if not re.fullmatch('--[a-z][a-z0-9-]*', fields[0]) or (fields[1] and not re.fullmatch('-[a-zA-Z0-9]', fields[1])):
-                        raise ValueError('invalid option metadata: ' + str(path))
-                    for flag in fields[:2]:
-                        if flag and flag in seen:
-                            raise ValueError('duplicate option: ' + flag)
-                        if flag:
-                            seen.add(flag)
-                kind = fields[2] if key == 'option' else fields[1]
-                allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-repository','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','theme-file','theme-app','dots-setting','config-key','profile-id','wiki-page','wiki-section'}
-                allowed.update(('todo-id', 'todo-tag', 'config-value'))
-                if kind not in allowed and not (kind.startswith('choice:') and all(kind[7:].split(','))):
-                    raise ValueError('invalid metadata type: ' + kind)
-                if not fields[-1]: raise ValueError('empty metadata description')
-                if key == 'argument':
-                    if rest_seen or fields[0] not in (str(position), '*') or kind == 'flag':
-                        raise ValueError('invalid positional metadata')
-                    rest_seen = fields[0] == '*'
-                    position += 1
-                data[key].append(fields)
-            elif key == 'example':
-                data[key].append(value)
-            else:
-                if key in seen:
-                    raise ValueError('duplicate metadata field: ' + key)
-                seen.add(key)
-                if key == 'hidden' and value not in ('true', 'false'):
-                    raise ValueError('invalid hidden metadata')
-                data[key] = value == 'true' if key == 'hidden' else value
+    for number, line in enumerate(lines, 1):
+        if line.strip() and not line.startswith('#'):
+            break
+        size += len(line.encode('utf-8'))
+        if number > 128 or size > 16384:
+            raise ValueError('metadata header exceeds limit: ' + str(path))
+        if not line.startswith('# dots:'):
+            continue
+        key, sep, value = line.rstrip('\r\n')[7:].partition('=')
+        if not sep or key not in data or not value or any(ord(c) < 32 or ord(c) == 127 for c in value):
+            raise ValueError('invalid command metadata: ' + str(path))
+        if key in ('option', 'argument'):
+            fields = value.split('|')
+            if len(fields) != (4 if key == 'option' else 3):
+                raise ValueError('invalid metadata fields: ' + str(path))
+            if key == 'option':
+                if not re.fullmatch('--[a-z][a-z0-9-]*', fields[0]) or (fields[1] and not re.fullmatch('-[a-zA-Z0-9]', fields[1])):
+                    raise ValueError('invalid option metadata: ' + str(path))
+                for flag in fields[:2]:
+                    if flag and flag in seen:
+                        raise ValueError('duplicate option: ' + flag)
+                    if flag:
+                        seen.add(flag)
+            kind = fields[2] if key == 'option' else fields[1]
+            allowed = {'flag','string','file','directory','theme','flavor','palette-color','color-format','file-resource','file-repository','git-submodule','theme-id','file-color-key','theme-color','anodize-theme','anodize-user-theme','theme-plugin','theme-file','theme-app','dots-setting','config-key','profile-id','wiki-page','wiki-section'}
+            allowed.update(('todo-id', 'todo-tag', 'config-value'))
+            if kind not in allowed and not (kind.startswith('choice:') and all(kind[7:].split(','))):
+                raise ValueError('invalid metadata type: ' + kind)
+            if not fields[-1]: raise ValueError('empty metadata description')
+            if key == 'argument':
+                if rest_seen or fields[0] not in (str(position), '*') or kind == 'flag':
+                    raise ValueError('invalid positional metadata')
+                rest_seen = fields[0] == '*'
+                position += 1
+            data[key].append(fields)
+        elif key == 'example':
+            data[key].append(value)
+        else:
+            if key in seen:
+                raise ValueError('duplicate metadata field: ' + key)
+            seen.add(key)
+            if key == 'hidden' and value not in ('true', 'false'):
+                raise ValueError('invalid hidden metadata')
+            data[key] = value == 'true' if key == 'hidden' else value
     return data
 
 

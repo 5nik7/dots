@@ -303,13 +303,34 @@ def after_save(root, before):
         changed=affected(before,after)
         old_cli=before.get('apps',{}).get('cli',{})
         new_cli=after.get('apps',{}).get('cli',{})
+        def without_font_styles(doc):
+            return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('fonts.') and k!='icons.menu.fonts'},
+                        icons={k:v for k,v in doc.get('icons',{}).items() if k!='menu.fonts'})
+        if changed==['cli'] and without_font_styles(old_cli)==without_font_styles(new_cli):
+            return dict(schema=1,status='complete',consumers=[dict(app='fonts',status='next invocation or popup')])
+        def without_wiki_styles(doc):
+            return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('wiki.') and k!='icons.menu.wiki'},
+                        icons={k:v for k,v in doc.get('icons',{}).items() if k!='menu.wiki'})
+        if changed==['cli'] and without_wiki_styles(old_cli)==without_wiki_styles(new_cli):
+            return dict(schema=1,status='complete',consumers=[dict(app='wiki',status='next invocation or popup')])
+        if (changed==['cli'] and
+                {k:v for k,v in old_cli.items() if k!='options'}=={k:v for k,v in new_cli.items() if k!='options'} and
+                {k:v for k,v in old_cli.get('options',{}).items() if k!='logo_gradient'}==
+                {k:v for k,v in new_cli.get('options',{}).items() if k!='logo_gradient'}):
+            return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
         old_format=old_cli.get('formatting',{})
         new_format=new_cli.get('formatting',{})
         formats={key for key in old_format.keys()|new_format.keys() if old_format.get(key)!=new_format.get(key)}
-        if (changed==['cli'] and formats and formats<={'cli','menu'} and
+        if (changed==['cli'] and formats and formats<={'cli','menu','wiki'} and
                 {k:v for k,v in old_cli.items() if k!='formatting'}=={k:v for k,v in new_cli.items() if k!='formatting'}):
             return dict(schema=1,status='complete',consumers=[dict(app=key,status='next popup' if key=='menu' else 'next invocation') for key in sorted(formats)])
         if not changed:
+            if before.get('config',{}).get('apps',{}).get('wiki') != after.get('config',{}).get('apps',{}).get('wiki'):
+                return dict(schema=1,status='complete',consumers=[dict(app='wiki',status='next invocation or popup')])
+            if before.get('config',{}).get('apps',{}).get('fonts') != after.get('config',{}).get('apps',{}).get('fonts'):
+                return dict(schema=1,status='complete',consumers=[dict(app='fonts',status='next invocation or popup')])
+            if before.get('config',{}).get('apps',{}).get('setup') != after.get('config',{}).get('apps',{}).get('setup'):
+                return dict(schema=1,status='complete',consumers=[dict(app='setup',status='next invocation')])
             if before.get('config',{}).get('apps',{}).get('menu') != after.get('config',{}).get('apps',{}).get('menu'):
                 return dict(schema=1,status='complete',consumers=[dict(app='menu',status='next popup')])
             return dict(schema=1,status='unchanged',consumers=[])
@@ -327,8 +348,12 @@ def preview_save(root, plan):
         before=snapshot(style.palette,root)
         after=snapshot(style.palette,root,controls=values)
         changes=affected(before,after)
+        if before['config'].get('apps',{}).get('fonts') != after['config'].get('apps',{}).get('fonts'):
+            changes.append('fonts')
         if before['config'].get('apps',{}).get('menu') != after['config'].get('apps',{}).get('menu'):
             changes.append('menu')
+        if before['config'].get('apps',{}).get('setup') != after['config'].get('apps',{}).get('setup'):
+            changes.append('setup')
         return dict(schema=1,status='preview',consumers=changes,reason='Refresh affected active consumers after saving' if changes else 'No active consumer change')
     proposed = Styles(root, replacements={plan.path: plan.data}, palette=style.palette)
     changes = affected(snapshot(style.palette, root, styles=style), snapshot(style.palette, root, styles=proposed))

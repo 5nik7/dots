@@ -5,6 +5,9 @@ fg = "blue"
 bold = true
 fg = "blue"
 
+[todo.field.completed.value]
+fg = "reset"
+
 [todo.field.notes.value]
 fg = "light_foreground"
 
@@ -26,6 +29,10 @@ underline = true
 [todo.priority.normal]
 dim = false
 fg = "orange"
+
+[todo.status.doing]
+bold = true
+fg = "bright_green"
 
 [todo.status.open]
 fg = "muted"

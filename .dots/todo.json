@@ -69,7 +69,7 @@
       "id": "3b0fe81b73a641ddbce5f8cd96068860",
       "alias": "pkgs-update",
       "title": "Update dots pkgs/pkgs",
-      "notes": "pkgs upgrade output = ```pkgs: No controlling terminal. Use --yes for an intentional noninteractive transaction.``` should upgrade without an extra flag.\n\nAgreed plan: plans/pkgs-workflows.md. Bare upgrade authorizes all supported user-wide managers; direct targets can be skipped with explicit override; retain full styled logs and raw output. Native config is authoritative with a Dots editor. JSON manifests default to explicit installs with uncertainty labelled, latest for missing packages and retained installed versions unless pinned. Optional setup restores declared system packages then rediscovers language managers before configuration. Continue independent manager failures; do not mutate host packages for verification. Preserve existing titles, aliases, notes and unrelated work.\n\nImplemented native policies/config, user-wide upgrade orchestration, Go metadata, concurrent stream formatting, editable manifests and package-first setup. Initial core regression: 106 passed; initial package integration: 7 passed. Additional source-export, interruption, undo and configuration-drift checks plus broader installation/Config/menu verification are in progress. No host packages were changed. Canonical guide: docs/packages.md.\n\nImplemented and verified the complete agreed subtree; all descendants are done. Usage and contracts: docs/packages.md. Final evidence and saved UUIDs: plans/pkgs-workflows.md. No host package mutations, live configuration activation, commits or pushes were performed. The existing WSL theme repeat-install failure and pending native-platform checks are recorded separately and are not claimed fixed.\n\nFollow-up requested by the user: refresh now authorizes repository metadata updates without --yes or a controlling terminal. Help and operation previews use shared Dots formatting; formatted streams suppress only the exact APT unstable-CLI advisory, retaining other warnings, raw bytes and status. Export filters Python roots before batched APT ownership checks and shows delayed manager progress on terminal stderr. Read-only Termux export improved from 55.35 seconds with ownership timeouts to 16.16 seconds, with six managers and no notices. Verified 116 core tests, final 31-test workflow rerun, 9 integration tests, 9 report tests and 17 bundled-entry tests; two native checks skipped. Metadata, 238 commands, docs and wiki pass. No host package transactions. Details: plans/pkgs-workflows.md. Existing completed statuses and criteria retained.\n\nImplemented the requested follow-up: Escape/Ctrl-C at the package filename prompt returns to the same menu/query without mutation or traceback; filename defaults come from the active leaf profile root. Added export --update and a reviewed update-manifest menu action. The user chose preservation of edits: retain pins, disabled entries, reasons and absent desired packages; refresh observed versions and append installed identities. Added explicit git publish --update-packages with read-only preview, guarded manifest write/staging, partial-staging/ignored-path refusal and ordinary publication safety. Verified 119 package core tests, 10 integration cases, 21 launcher cases, 5 package-publication cases, 16 Git regressions and 11 wiki cases across full/focused runs. Metadata/completion, docs and wiki pass. No host package changes or publication of this checkout. Full decisions/evidence: plans/pkgs-workflows.md.",
+      "notes": "pkgs upgrade output = ```pkgs: No controlling terminal. Use --yes for an intentional noninteractive transaction.``` should upgrade without an extra flag.\n\nAgreed plan: plans/pkgs-workflows.md. Bare upgrade authorizes all supported user-wide managers; direct targets can be skipped with explicit override; retain full styled logs and raw output. Native config is authoritative with a Dots editor. JSON manifests default to explicit installs with uncertainty labelled, latest for missing packages and retained installed versions unless pinned. Optional setup restores declared system packages then rediscovers language managers before configuration. Continue independent manager failures; do not mutate host packages for verification. Preserve existing titles, aliases, notes and unrelated work.\n\nImplemented native policies/config, user-wide upgrade orchestration, Go metadata, concurrent stream formatting, editable manifests and package-first setup. Initial core regression: 106 passed; initial package integration: 7 passed. Additional source-export, interruption, undo and configuration-drift checks plus broader installation/Config/menu verification are in progress. No host packages were changed. Canonical guide: docs/packages.md.\n\nImplemented and verified the complete agreed subtree; all descendants are done. Usage and contracts: docs/packages.md. Final evidence and saved UUIDs: plans/pkgs-workflows.md. No host package mutations, live configuration activation, commits or pushes were performed. The existing WSL theme repeat-install failure and pending native-platform checks are recorded separately and are not claimed fixed.\n\nFollow-up requested by the user: refresh now authorizes repository metadata updates without --yes or a controlling terminal. Help and operation previews use shared Dots formatting; formatted streams suppress only the exact APT unstable-CLI advisory, retaining other warnings, raw bytes and status. Export filters Python roots before batched APT ownership checks and shows delayed manager progress on terminal stderr. Read-only Termux export improved from 55.35 seconds with ownership timeouts to 16.16 seconds, with six managers and no notices. Verified 116 core tests, final 31-test workflow rerun, 9 integration tests, 9 report tests and 17 bundled-entry tests; two native checks skipped. Metadata, 238 commands, docs and wiki pass. No host package transactions. Details: plans/pkgs-workflows.md. Existing completed statuses and criteria retained.\n\nImplemented the requested follow-up: Escape/Ctrl-C at the package filename prompt returns to the same menu/query without mutation or traceback; filename defaults come from the active leaf profile root. Added export --update and a reviewed update-manifest menu action. The user chose preservation of edits: retain pins, disabled entries, reasons and absent desired packages; refresh observed versions and append installed identities. Added explicit git publish --update-packages with read-only preview, guarded manifest write/staging, partial-staging/ignored-path refusal and ordinary publication safety. Verified 119 package core tests, 10 integration cases, 21 launcher cases, 5 package-publication cases, 16 Git regressions and 11 wiki cases across full/focused runs. Metadata/completion, docs and wiki pass. No host package changes or publication of this checkout. Full decisions/evidence: plans/pkgs-workflows.md.\n\nUser-requested install follow-up: explicit install commands and accepted install-picker selections now authorize execution without --yes or a controlling terminal. Supported native confirmation flags are automatic (Termux apt -y, pacman --noconfirm). This supersedes the earlier install approval behavior; removal, restore and manifest replacement retain their approval boundaries. Dry-run and picker cancellation remain nonmutating, and manager failures preserve status. Verified 122 package core tests, 10 integration tests and 17 bundled entry-point checks; one native PowerShell runtime test skipped. Metadata, 238 command routes, Bash syntax, skill validation, documentation links and whitespace pass. Local wiki rebuilt with transaction 899606449929492b9d85ca85203e7699 and checked healthy. No host package changes, reload, commit or push. Existing goal IDs, acceptance, parent links and completed statuses retained. Details: plans/pkgs-workflows.md.\n\nUser-requested concise upgrade output is implemented. Human auto/styled upgrades now show one heading, transient progress and one result per manager, with skipped-package counts and bounded actionable diagnostics. Full command arrays, routine APT/dpkg/pip/uv chatter and per-package skips are omitted. Raw/ordinary redirected output and dry-run plans retain full detail; partial prompts and actual exit status remain intact. Native package selection and npm registry failure behavior were not changed. Child terminal settings are restored after success, failure or Ctrl-C, and formatted terminal newlines return to the left margin. Verification: 127 full core cases plus nine final focused cases including one additional test (128 distinct core cases), 10 integration checks and nine presentation checks passed; one native PowerShell check skipped. Private PTYs covered 40/80/120 columns, color/plain, progress and terminal restoration. Metadata, 238 commands, skill validation, links and whitespace passed. Wiki rebuilt in transaction 9c3ec9fe48e348c58d7ce4b0be4c2a88 and checked healthy. No host package transactions, commits or pushes. Decisions and limits: plans/pkgs-workflows.md. Completed statuses, existing IDs, acceptance and relationships retained.\n\nFixed the reported export --update no-controlling-terminal failure. The explicit update CLI action now authorizes its guarded merge/write without --yes; default profile and explicit output paths use the same writer with retained backups and stale-input guards. Pins, disabled/absent entries, dry-run and unchanged-file behavior remain. Ordinary snapshot replacement, restore and Git publication retain their existing approval boundaries. Verified 38 workflow tests and 10 integration cases, including no-TTY updates, preserved edits, undo, profile defaults, stale/partial failures and replacement refusal. Metadata, 238 routes, skill validation, docs and whitespace pass. Wiki rebuilt in transaction bfd83d0dd7d14ab693dd5b43751827d1 and checked healthy. No live manifest or host packages changed. Existing IDs, acceptance, parent links and completed statuses retained. See plans/pkgs-workflows.md.\n\nAuthorized follow-up implementation in plans/pkgs-workflows.md: in/un/up/xup/upls aliases, read-only upgrade ls/--list across native managers, and source-install cleanup with preview, FZF selection and separate confirmation as requested. Current ownership and stale guards are rechecked; completed records remain done. Codex npm install/upgrade recipe saved through guarded Dots Config, transaction db0e7df9d6b84a7bb03674d3fdd96761; companion alias excluded from ordinary npm update. No host package mutations. Focused alias/list, cleanup, stream and workflow checks pass; broader integration verification in progress.\n\nVerified follow-up: in/un/up/xup/upls aliases; upgrade ls/--list with compact per-manager candidates, exact JSON and isolated query failures; cleanup with current pip/system ownership, FZF selection, default-no terminal confirmation, stale guards, native uninstall and post-check. APT mirror fragments no longer join summaries; integrity failures keep status and a retry-after-sync hint. 150 distinct core cases across full/final focused runs, 11 package integrations, 17 bundled adapter and 9 presentation cases passed; unavailable native PowerShell checks skipped. 244 command routes, documentation links and whitespace pass. Local wiki healthy after transaction a30bd6090a8649c396905b5bc38c92f8. Codex exact global recipe saved with retained Config transaction db0e7df9d6b84a7bb03674d3fdd96761 and dry-run verified, not executed. Completed subtree IDs/statuses/acceptance preserved; no host package mutations or Git publication. Native Linux/WSL/Windows runtime acceptance remains pending. Details: plans/pkgs-workflows.md and docs/packages.md.\n\nGo helper follow-up: generated upgrade commands now use go-global-update -f before selected binary names as requested. The force flag reinstalls selected tools even at current versions; source/identity/skip checks and direct go install fallback/custom flags remain. Dry-run never invokes the helper. All 39 workflow tests passed, including fake-helper no-TTY execution and no-op preview; metadata/docs/whitespace checks pass. No host Go tools upgraded. Existing completed goal statuses, IDs, parent links and acceptance preserved. See plans/pkgs-workflows.md and docs/packages.md.\n\nUser-reported npm EBADPLATFORM is fixed in the shared backend: selected global upgrades now use targeted npm install, avoiding npm update rechecking unrelated platform-specific aliases. Project updates retain npm update; skips and the exact force-enabled Codex recipe are preserved. Real npm in a disposable prefix with a loopback registry reproduces the old failure and verifies the replacement without changing the unrelated foreign-platform package. Compact pip progress now shows package/stage, actual native download bytes with pip 25.1+, and elapsed silence after 15 seconds. Native progress overrides, raw/redirected output, prompts, cancellation and exit status remain intact; no automatic quiet-build timeout. The previous pip job had ended before inspection, so its actual delay is not diagnosed. Verification: 161 core tests passed, all 11 final progress tests passed, nine shared presentation tests passed with one unavailable native PowerShell skip. Broader integration: seven passed; four installer/Windows expectations fail in concurrent work outside these paths (changed setup JSON and removed Windows refusal). See plans/pkgs-workflows.md. Metadata, command validation, documentation links and whitespace checks passed; local wiki rebuilt and healthy, final transaction e04ec329347b4dcfa30540a6c3153be8. No host packages were changed, and no commits or pushes were made. Preserve all completed goals, acceptance criteria and relationships.\n\nLive npm follow-up: read-only inspection showed PID 5428 actively using CPU and completing registry downloads while the old compact view remained at Upgrading. The ordinary npm batch (2026-10-31T11_30_52_707Z debug log) and exact Codex replacement (11_35_05_970Z) both exited 0; pkgs advanced to Go without intervention. Native npm reported blocked install scripts; no approvals were changed. Subsequent compact upgrades now request native npm info events only in the child environment and show safe package metadata/cache/fetch events, lifecycle script stages and quiet time after 15 seconds. Explicit logging environment/CLI overrides, raw/redirected execution, recipe argv, prompts, cancellation and process status are preserved. Verification: 13 compact-output cases including real 40/80/120-column terminals, one isolated native npm fixture, and 39 workflow cases passed (53 total). Metadata, documentation links and whitespace pass; local wiki built and checked healthy, transaction 03235fff8a14496f9842348bec7b4369. No live package transaction was started or stopped by the agent. Details: plans/pkgs-workflows.md. Preserve existing completed statuses, parent links and acceptance criteria.\n\nNative Go follow-up supersedes the earlier helper/force default: upgrade compares eligible installed build versions with the shared native latest-module queries and runs go install PACKAGE@latest only for newer tools. Current/newer versions remain unchanged, shared module lookups deduplicate, source/skip guards and build flags remain, and explicit replacement recipes retain their semantics. The active native configuration has no Go replacement override. Each native Go install shows its tool name before output and retains it through dependency chatter and silence, with a quiet counter after 15 seconds. Raw/dry-run output, errors, prompts and cancellation remain intact. Verification: all 167 package-core cases pass, including source/version/policy/query-failure cases, a fake-helper sentinel, no-TTY execution and Go/npm private PTYs at 40/80/120 columns. Package metadata, shell syntax, documentation links and whitespace pass. The aggregate command check rejects concurrent installer option metadata in bin/dots-files-install, outside this change. Canonical docs and the local wiki are updated; wiki transaction d4cbe60732154228a954197b7ca379ea checked healthy. Native Go builds and other-platform runtime acceptance are not inferred from fixtures; no host Go tools were installed or upgraded. The shown npm deprecations are live-server dependencies; the log also contains blocked lifecycle scripts for five packages. No npm dependency or script-approval changes were made. Details: plans/pkgs-workflows.md. Preserve the completed goal tree, IDs, parent links and acceptance criteria.",
       "status": "done",
       "priority": "normal",
       "tags": [
@@ -82,7 +82,7 @@
         "All agreed unattended upgrades, Go tools, package rules, formatted streams, manifests and optional setup behavior are verified, and all nonremoved descendants are complete."
       ],
       "created": "2026-10-29T19:22:35.469882+00:00",
-      "updated": "2026-10-31T08:33:58.444067+00:00",
+      "updated": "2026-10-31T12:02:47.331914+00:00",
       "completed": "2026-10-31T07:21:13.867150+00:00",
       "removed": null
     },
@@ -266,8 +266,8 @@
       "id": "022292f71f29492c8d9e1a3ddad7f556",
       "alias": "installer-update",
       "title": "update installer and uninstaller scripts with more options, fancy dots style preferences output, dots logo.txt header with gradient. interactive mode by default.",
-      "notes": "clear screen at start\n\ninstall support for dots core, files(linking, generating theme files) and plugins(anodize, pkgs), packages, fonts.\n\naudit install sequence to insure success\n\n```\n ./install.sh --dry-run\ndots setup: symlinked parent requires manual review: /data/data/com.termux/files/home/.termux\n```\n\ndont understand why this is happening\n\n",
-      "status": "open",
+      "notes": "clear screen at start\n\ninstall support for dots core, files(linking, generating theme files) and plugins(anodize, pkgs), packages, fonts.\n\nadd installer to get source, auto patch, and build patched leaf\n\niaudit install sequence to ensure success\n\n```\n ./install.sh --dry-run\ndots setup: symlinked parent requires manual review: /data/data/com.termux/files/home/.termux\n``` dont understand why this is happening\n\nAgreed implementation: seven high-priority work packages in plans/installer-update.md. Default selection is core/files/themes/anodize/blastoff/pkgs; packages/fonts/Leaf are optional. All setup entry points use terminal wizard; two-stage preparation/final review; stop on first failure. Use active-profile defaults and explicit unchecked Save choices. Add full native WinGet workflow for community source, user scope by default and explicit machine scope; offer missing dependencies including Microsoft.WinGet.Client explicitly. Restore exact fonts without app reload; preserve libraries/registrations on uninstall. Preserve unrelated work; no live host installation, commits or pushes. Native acceptance unavailable here may remain documented pending. Children: 6113f2bd98d1481e80223382f3fb911a, f425a79c3a804ae098a86949220da979, 2f9fedc99c7c4f0282d1edb31ae8db71, e3ebfd22ce7d4020a5ed713ab3d2c94e, 82c7cde3a20840de8457470aaa74c760, 5134f1c395cd45ba836613e7346756c2, aa24de9d866c479e8e97b70d253eb917.\n\nImplemented the agreed selective installer/uninstaller, interactive preferences/gradient header, safe mapped .termux destinations, package/dependency preparation, native WinGet, exact font restoration and pinned Leaf build pipeline. Five children are complete; Leaf and final acceptance remain blocked by GitHub/crates proxy HTTP 403, not by missing implementation approval. Canonical docs and wiki are synchronized and available checks pass. See plans/installer-update.md for evidence and the exact resume requirement. No live host installation/package changes/reloads, commits or pushes were performed.",
+      "status": "blocked",
       "priority": "high",
       "tags": [
         "install",
@@ -276,9 +276,13 @@
       ],
       "due": null,
       "parent": null,
-      "acceptance": [],
+      "acceptance": [
+        "The shared interactive setup wizard and selective components match the agreed installer-update plan, including packages, explicit dependency preparation, exact profile font restoration and patched Leaf.",
+        "Selective uninstall preserves user data and original baselines; expected Termux directory mappings work safely and unchanged theme installation is a no-op.",
+        "Required isolated acceptance checks pass, documentation and metadata are synchronized, and unavailable native Windows PowerShell 5.1/7, Linux and WSL checks are explicitly recorded."
+      ],
       "created": "2026-10-30T09:11:40.887425+00:00",
-      "updated": "2026-10-31T08:42:52.508496+00:00",
+      "updated": "2026-10-31T12:18:21.827568+00:00",
       "completed": null,
       "removed": null
     },
@@ -416,8 +420,8 @@
       "id": "7ddc1895c7ad48989b6591e9edd043fd",
       "alias": "docs-update",
       "title": "docs update",
-      "notes": "",
-      "status": "open",
+      "notes": "Agreed implementation: compact theme-aware README; practical canonical guides; offline ranked topic mode and section popup; full static-metadata dots(1) with managed POSIX core installation. Preserve existing dirty work. No live installation, activation, commit, push, or hosted publication. Native evidence gaps are named explicitly. Full plan: plans/docs-update.md.\n\nImplemented the agreed complete subtree. README is 58 lines; practical guides, offline ranked topic search and section browsing, complete generated manual, managed core installation, tests and canonical/wiki docs are synchronized. Focused and broader relevant checks pass. Two full-launcher failures reproduce from pre-task Files-menu expectations and remain unrelated. Local wiki transaction: 1beec98e0d93428184b60c9ef8cf3a81. Detailed results and native/GitHub pending checks: plans/docs-update.md. No commits, pushes, live installation or activation.",
+      "status": "done",
       "priority": "normal",
       "tags": [
         "docs",
@@ -426,28 +430,34 @@
       ],
       "due": null,
       "parent": null,
-      "acceptance": [],
+      "acceptance": [
+        "All three existing children and their descendants satisfy their criteria; canonical documentation, generated manual, and local wiki export agree.",
+        "Verification and named pending native-platform checks are recorded without claiming untested platform support."
+      ],
       "created": "2026-10-30T19:00:32.966222+00:00",
-      "updated": "2026-10-31T08:44:31.587988+00:00",
-      "completed": null,
+      "updated": "2026-10-31T13:42:42.911342+00:00",
+      "completed": "2026-10-31T13:42:42.911342+00:00",
       "removed": null
     },
     {
       "id": "ea66808389ff4d5bbf391cd6433d3e14",
       "alias": "readme-update",
       "title": "update dots repo main README.md to be simpler, only super important info. add link to dots.wiki",
-      "notes": "add logo image to README.md\nlogo @media/logo/white/DOTS_white_2048x562.png",
-      "status": "open",
+      "notes": "add logo image to README.md\nlogo @media/logo/white/DOTS_white_2048x562.png\n\nDependency: finish 97e67751d209481abc187be513a215d8 before removing README detail. Use existing white logo for dark mode and matching black logo for light mode.\n\nREADME reduced from the initial 611 lines to 58 lines with existing 2048x562 light/dark PNG assets, platform/runtime links, safe POSIX/PowerShell setup, entry commands and prominent wiki navigation. Canonical destinations preserve the detailed topics and prior dirty additions. Relative links and logo dimensions pass; hosted GitHub light/dark rendering remains pending publication.",
+      "status": "done",
       "priority": "normal",
       "tags": [
         "dots"
       ],
       "due": null,
       "parent": "7ddc1895c7ad48989b6591e9edd043fd",
-      "acceptance": [],
+      "acceptance": [
+        "README is approximately 100 lines with theme-aware existing logo assets, concise overview, safe POSIX/PowerShell setup examples, entry commands, and a prominent wiki link.",
+        "Unique information from the current README, including existing uncommitted additions, remains available in canonical guides."
+      ],
       "created": "2026-10-30T19:02:19.974445+00:00",
-      "updated": "2026-10-30T20:11:15.952328+00:00",
-      "completed": null,
+      "updated": "2026-10-31T13:30:44.929786+00:00",
+      "completed": "2026-10-31T13:30:44.929786+00:00",
       "removed": null
     },
     {
@@ -579,8 +589,8 @@
       "id": "b13637492e3e47ec89fb050c9961c071",
       "alias": "human-wiki",
       "title": "more specific dots wiki queries on github, cli, and popup. better human readable breakdowns of dots core, dots commands, dots config configuration, environment breakdown, neovim,, and more",
-      "notes": "",
-      "status": "open",
+      "notes": "Canonical guides and navigation, offline source search, and focused popup sections are implemented and verified. Local wiki built through retained transaction 1beec98e0d93428184b60c9ef8cf3a81 and passes freshness/link checks. GitHub publication was not requested; hosted rendering and native PowerShell interaction remain named pending checks, not claimed results.",
+      "status": "done",
       "priority": "normal",
       "tags": [
         "docs",
@@ -589,10 +599,13 @@
       ],
       "due": null,
       "parent": "7ddc1895c7ad48989b6591e9edd043fd",
-      "acceptance": [],
+      "acceptance": [
+        "Core, commands, configuration, environment, and Neovim have practical verified guides discoverable through GitHub-ready navigation, CLI topics, and popup browsing.",
+        "Topic search works offline from current sources, preserves literal search and data contracts, and returns the agreed relevant sections among the top three results."
+      ],
       "created": "2026-10-30T20:04:10.205615+00:00",
-      "updated": "2026-10-30T20:06:13.952349+00:00",
-      "completed": null,
+      "updated": "2026-10-31T13:42:33.504181+00:00",
+      "completed": "2026-10-31T13:42:33.504181+00:00",
       "removed": null
     },
     {
@@ -1387,18 +1400,260 @@
       "id": "b1e312730e5d4981b903a384ba6ee6d7",
       "alias": null,
       "title": "create dots man page",
-      "notes": "",
-      "status": "open",
+      "notes": "Complete generated dots(1), shared static command-reference extraction, CI freshness checks and managed core lifecycle are implemented. Both grandchildren are verified and complete. Platform destination and evidence limits are documented; the live system was not installed or changed by testing.",
+      "status": "done",
       "priority": "normal",
       "tags": [
         "dots"
       ],
       "due": null,
       "parent": "7ddc1895c7ad48989b6591e9edd043fd",
-      "acceptance": [],
+      "acceptance": [
+        "Complete dots(1) matches public first-party static command metadata and renders correctly.",
+        "Manual participates in managed POSIX core install and removal with isolated safety checks; native Windows uses the equivalent wiki command reference."
+      ],
       "created": "2026-10-31T07:16:45.093071+00:00",
-      "updated": "2026-10-31T08:06:26.779538+00:00",
+      "updated": "2026-10-31T13:42:40.071617+00:00",
+      "completed": "2026-10-31T13:42:40.071617+00:00",
+      "removed": null
+    },
+    {
+      "id": "6113f2bd98d1481e80223382f3fb911a",
+      "alias": null,
+      "title": "Selective lifecycle and safe managed destinations",
+      "notes": "Installer update agreed plan. Dependencies: none. Full decisions and verification contract: plans/installer-update.md.\n\nImplemented selective lifecycle foundation and exact catalog-directory translation. File-platform 5/5 and new setup-components 5/5 passed. Existing fresh-checkout WSL repeat regression now passes (71.031s) after preparing Bat against its selected catalog source. Broader lifecycle audit remains pending.\n\nVerified selective lifecycle and mapped destinations. File-platform 5/5, setup-components 5/5 and full installation lifecycle 28/28 pass, including reverse rollback/recovery and the fresh WSL theme no-op regression. The real checkout install.sh --dry-run --json now succeeds: Termux, 78 items, zero conflicts; no live installation was applied.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "022292f71f29492c8d9e1a3ddad7f556",
+      "acceptance": [
+        "Selective component/resource installation and restoration preserve original backups, pre-existing-link nonownership, drift checks and legacy receipt recovery.",
+        "Expected Termux catalog directory links work for theme/font targets while stale, foreign and unsafe parent links are refused.",
+        "Fresh install, unchanged repeat, selective uninstall, rollback and recovery pass isolated tests, including the existing fresh-checkout WSL theme-repeat regression."
+      ],
+      "created": "2026-10-31T10:58:24.274667+00:00",
+      "updated": "2026-10-31T12:15:51.127334+00:00",
+      "completed": "2026-10-31T12:15:51.127334+00:00",
+      "removed": null
+    },
+    {
+      "id": "f425a79c3a804ae098a86949220da979",
+      "alias": null,
+      "title": "Interactive wizard, presentation, and saved choices",
+      "notes": "Installer update agreed plan. Dependencies: 6113f2bd98d1481e80223382f3fb911a. Full decisions and verification contract: plans/installer-update.md.\n\nVerified shared terminal wizard, optional Gum/numbered fallback, clear/gradient logo, granular selections, two approvals and unchanged data output. Six final wizard cases pass, including real 40/80/120-column cancellation, explicit saved choices, no live Config refresh and Files menu handoff without --yes. Adapters/completion and Config values/live checks pass; native runtime skips are recorded in plans/installer-update.md.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "022292f71f29492c8d9e1a3ddad7f556",
+      "acceptance": [
+        "All setup entry points provide the agreed terminal wizard with component and detailed file/package/font selection, preparation and final review, cancellation and plain fallback.",
+        "Setup controls inherit through Dots config; Save choices is explicit, Files menu actions never imply approval, and run-only choices do not overwrite defaults.",
+        "Owned 40/80/120-column checks and plain, missing-Gum, JSON, dry-run and redirected-output checks pass."
+      ],
+      "created": "2026-10-31T10:58:31.753931+00:00",
+      "updated": "2026-10-31T12:18:07.928580+00:00",
+      "completed": "2026-10-31T12:18:07.928580+00:00",
+      "removed": null
+    },
+    {
+      "id": "2f9fedc99c7c4f0282d1edb31ae8db71",
+      "alias": null,
+      "title": "Native WinGet package workflows",
+      "notes": "Installer update agreed plan. Dependencies: none. Full decisions and verification contract: plans/installer-update.md.\n\nImplemented shared native WinGet workflows, official-source validation, exact IDs, scoped commands, guarded module preparation and shared native picker. Package core 167/167 and final WinGet fixtures 7/7 pass, including export/restore pins, repeat, upgrade, refresh, disabled inventory and shell-free Details selection. Bundled-app tests 18 run with 17 passes and one unavailable PowerShell skip; installation adapters 10 run with five passes and five named native skips. Native Windows PowerShell 5.1/7 runtime remains pending as agreed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "022292f71f29492c8d9e1a3ddad7f556",
+      "acceptance": [
+        "Shared pkgs supports WinGet search, info, installed inventory, install/remove, upgrade/list, export/restore, refresh, managers and doctor using structured native data.",
+        "Community source, exact IDs, user-default and explicit machine scope, errors and partial outcomes are preserved across both PowerShell adapters and generated interfaces.",
+        "Isolated adapter/controller tests pass; missing native Windows runtime acceptance is explicitly recorded."
+      ],
+      "created": "2026-10-31T10:58:35.868703+00:00",
+      "updated": "2026-10-31T12:15:58.821594+00:00",
+      "completed": "2026-10-31T12:15:58.821594+00:00",
+      "removed": null
+    },
+    {
+      "id": "e3ebfd22ce7d4020a5ed713ab3d2c94e",
+      "alias": null,
+      "title": "Dependency and package preparation",
+      "notes": "Installer update agreed plan. Dependencies: 6113f2bd98d1481e80223382f3fb911a, 2f9fedc99c7c4f0282d1edb31ae8db71. Full decisions and verification contract: plans/installer-update.md.\n\nVerified explicit dependency/package preparation, input guards, stop-on-first-failure, retained external effects, no-op outcome records and offline dry-run. Package integration functional cases pass; its completion metadata failure was fixed and the affected test rerun successfully. Setup stage fixtures and the combined package/font/Leaf coordinator fixture pass. Module preparation requires an existing compatible NuGet provider and official PSGallery; no manager/provider/trust bootstrap is implicit.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "022292f71f29492c8d9e1a3ddad7f556",
+      "acceptance": [
+        "Profile package manifests support grouped review and exclusions; missing mapped dependencies are explicitly reviewed through existing package restoration.",
+        "WinGet module current-user installation is offered explicitly; managers/providers/trust are never silently bootstrapped or changed.",
+        "Failures stop managed publication, retained external effects are reported, satisfied dependencies remain unchanged and dry-run performs no acquisition."
+      ],
+      "created": "2026-10-31T10:58:40.882703+00:00",
+      "updated": "2026-10-31T12:16:04.678979+00:00",
+      "completed": "2026-10-31T12:16:04.678979+00:00",
+      "removed": null
+    },
+    {
+      "id": "82c7cde3a20840de8457470aaa74c760",
+      "alias": null,
+      "title": "Reproducible patched Leaf installation",
+      "notes": "Installer update agreed plan. Dependencies: 6113f2bd98d1481e80223382f3fb911a, e3ebfd22ce7d4020a5ed713ab3d2c94e. Full decisions and verification contract: plans/installer-update.md.\n\nImplemented pinned acquisition/build isolation, guarded artifact reuse, and managed publication/restoration. Two isolated orchestration tests pass. Required real Termux build is externally blocked: GitHub git HTTPS, codeload.github.com, index.crates.io and static.crates.io all return CONNECT tunnel HTTP 403; an escalated read-only Git probe has the same result. Local pinned source exists but no Rust registry cache. No live executable was changed. Continue independent implementation and acceptance; do not mark this goal complete without real locked build and consumer evidence.\n\nFinal implementation audit added safe retry after a failed fetch in an owned empty repository, stripped inherited Git repository overrides, and verified combined setup/repeat/selective removal. Three Leaf orchestration fixtures pass. The actual locked Termux build and real consumers remain blocked by the previously recorded proxy HTTP 403; no installed executable was replaced. Resume P5 when GitHub/crates downloads are available; retain existing IDs and cache ownership checks.",
+      "status": "blocked",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "022292f71f29492c8d9e1a3ddad7f556",
+      "acceptance": [
+        "Acquire pinned upstream commit 140e55858c98df50ba52fc4ab7bad277a31ab73f in owned build storage, apply the retained patch and run locked tests, Clippy and release build.",
+        "Publish verified leaf 1.28.2+dots.1 as a managed user command; preserve foreign links and original regular-file backups, support verified artifact reuse and uninstall restoration.",
+        "Failed acquisition/patch/build leaves the installed command untouched; isolated actual Termux build and Leaf consumer verification pass."
+      ],
+      "created": "2026-10-31T10:58:46.273731+00:00",
+      "updated": "2026-10-31T12:18:10.519557+00:00",
       "completed": null,
+      "removed": null
+    },
+    {
+      "id": "5134f1c395cd45ba836613e7346756c2",
+      "alias": null,
+      "title": "Profile font restoration and safe removal",
+      "notes": "Installer update agreed plan. Dependencies: 6113f2bd98d1481e80223382f3fb911a, e3ebfd22ce7d4020a5ed713ab3d2c94e. Full decisions and verification contract: plans/installer-update.md.\n\nVerified exact font selection, run-only and opt-in saved preferences, mapped Termux source, shared final publication, Windows copy/registration fixtures, drift preservation and selective restoration. Fonts 21/21 and font workflows 18/18 pass. Combined setup/repeat/selective removal passes; retained font libraries/registrations and saved preferences survive uninstall. Native registration evidence is fixture-only; no applications were reloaded.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "022292f71f29492c8d9e1a3ddad7f556",
+      "acceptance": [
+        "Restore reviewed exact profile font versions, hashes, faces and targets with customization and staged downloads through existing font planners.",
+        "Final managed publication includes font operations and native user-font registration, suppresses app reloads and saves preferences only when requested.",
+        "Failure, ambiguous targets, drift, unchanged repeat and selective app-setting restoration pass; font libraries and registrations remain on uninstall."
+      ],
+      "created": "2026-10-31T10:58:52.730870+00:00",
+      "updated": "2026-10-31T12:16:10.761330+00:00",
+      "completed": "2026-10-31T12:16:10.761330+00:00",
+      "removed": null
+    },
+    {
+      "id": "aa24de9d866c479e8e97b70d253eb917",
+      "alias": null,
+      "title": "Installation audit, documentation, and acceptance",
+      "notes": "Installer update agreed plan. Dependencies: f425a79c3a804ae098a86949220da979, 2f9fedc99c7c4f0282d1edb31ae8db71, e3ebfd22ce7d4020a5ed713ab3d2c94e, 82c7cde3a20840de8457470aaa74c760, 5134f1c395cd45ba836613e7346756c2. Full decisions and verification contract: plans/installer-update.md.\n\nIndependent implementation and audit are complete. Full installation 28/28; five new setup runners cover 24 passing cases (final wizard 6/6 after its fixture correction); package core 167/167 and final WinGet 7/7; bundled apps 17 passes/1 native skip; adapters 5 passes/5 native skips; fonts 21/21; font workflows 18/18; Config values 12/12 and Config live 11/11. Both reported regressions are fixed. Actual checkout dry-run succeeds with 78 items and no conflicts. Metadata, syntax, maintenance skills, whitespace and 1217 relative Markdown links pass. Wiki rebuilt through transaction 032858148e104dd0878667b4ac0284d0; wiki check reports healthy=true. Blocked only on P5 actual Termux Leaf compilation/consumer acceptance. Native Windows PowerShell 5.1/7, Linux and WSL acceptance stays explicitly pending as agreed.",
+      "status": "blocked",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "022292f71f29492c8d9e1a3ddad7f556",
+      "acceptance": [
+        "Complete-sequence, combined selection, selective removal, rollback/recovery and both frontend tests pass in owned roots.",
+        "Fix both confirmed installer regressions; synchronize metadata, completion, config/menu integration, canonical docs, focused plans, maintenance guidance and available wiki output.",
+        "Verify actual isolated Termux Leaf build and report unavailable native Windows PowerShell 5.1/7, Linux and WSL checks as pending without claiming passes."
+      ],
+      "created": "2026-10-31T10:58:58.115365+00:00",
+      "updated": "2026-10-31T12:18:16.515399+00:00",
+      "completed": null,
+      "removed": null
+    },
+    {
+      "id": "97e67751d209481abc187be513a215d8",
+      "alias": null,
+      "title": "Organize practical guides and preserve README detail",
+      "notes": "Preserve Neovim repository boundaries; write the practical integration guide in Dots without modifying or initializing the optional submodule. Guide authoring and manual generation can proceed independently.\n\nImplemented Core, Configuration and Neovim guides; added a canonical tmux guide and retained Zsh helpers. Commands and Environment now introduce practical workflows. README-topic destination matrix is recorded in plans/docs-update.md. Source wiki validation and 1,232 relative links across 159 Markdown files pass; optional Neovim remains unchanged.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "b13637492e3e47ec89fb050c9961c071",
+      "acceptance": [
+        "Core, commands, configuration, environment, and Neovim coverage is verified against implementation.",
+        "Existing page IDs and linked anchors remain usable; unique README detail has a canonical destination."
+      ],
+      "created": "2026-10-31T13:13:48.765277+00:00",
+      "updated": "2026-10-31T13:30:41.647227+00:00",
+      "completed": "2026-10-31T13:30:41.647227+00:00",
+      "removed": null
+    },
+    {
+      "id": "84569030b35940d6b81fea170d98964d",
+      "alias": null,
+      "title": "Add offline topic search and section browsing",
+      "notes": "Dependencies: finalized guide headings from 97e67751d209481abc187be513a215d8 and shared command-reference inventory from 2b9bca6b7d934a91aad73ea786644fc8. Add search --topics and browse --query; preserve literal search. Match all case-insensitive query terms, rank headings/titles before body matches, and read current sources in memory. Update Wiki menu; reuse existing visual configuration.\n\nCompleted offline in-memory topic search and source section/whole-page browser. All five agreed queries have a relevant top-three result. Seven topic tests pass, including case/Unicode/fences/duplicates, exact legacy data, forced-decoration JSON, Bash/native completion, 40/80/120-column views and CRLF normalization. Two new launcher tests pass, including literal leading-dash queries and real private two-client popup/reader handoff at 40/80/120 columns. Existing Wiki suite 18, wiki-Git 11, Bash 28, native-controller 23 (2 skips), menus 24 and pager 15 pass. Full launcher suite has two pre-existing Files-menu expectations, reproduced against saved pre-task source.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "b13637492e3e47ec89fb050c9961c071",
+      "acceptance": [
+        "Ranked topic results work without a wiki checkout; focused sections and whole pages are readable through the popup.",
+        "Legacy raw/literal/JSON contracts and Bash/native-controller metadata and completion checks pass.",
+        "config precedence, environment variables, nvim themes, files rollback, and wiki search each return a relevant guide or section among the top three results."
+      ],
+      "created": "2026-10-31T13:13:50.479653+00:00",
+      "updated": "2026-10-31T13:42:31.342066+00:00",
+      "completed": "2026-10-31T13:42:31.342066+00:00",
+      "removed": null
+    },
+    {
+      "id": "2b9bca6b7d934a91aad73ea786644fc8",
+      "alias": null,
+      "title": "Generate the complete manual from shared metadata",
+      "notes": "Generate the public first-party reference from static metadata shared with the wiki, including global options and operands. Exclude hidden/private/optional extension routes; retain existing command-reference anchors.\n\nImplemented a shared bounded static metadata reader for wiki and dots(1), including root options and declared operands. Generated 6,957-line manual; freshness, nonexecution, escaping, mandoc lint and actual ASCII rendering pass. The dedicated generation/lifecycle suite passes all 8 tests. Repository CI now includes manual freshness and focused docs checks.\n\nFinal manual verification passes 9 tests, including actual native man discovery with a test-owned search path in addition to deterministic generation and mandoc lint/rendering. Manual freshness passes.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "b1e312730e5d4981b903a384ba6ee6d7",
+      "acceptance": [
+        "Every public first-party route and declared option is represented from shared static metadata without executing extensions.",
+        "Deterministic regeneration, freshness checks, roff escaping, and manual lint/rendering checks pass."
+      ],
+      "created": "2026-10-31T13:13:52.178053+00:00",
+      "updated": "2026-10-31T13:42:37.832160+00:00",
+      "completed": "2026-10-31T13:33:08.753259+00:00",
+      "removed": null
+    },
+    {
+      "id": "cb95a46c304945f5887de8bc064ed93f",
+      "alias": null,
+      "title": "Integrate the manual with managed core installation",
+      "notes": "Dependency: verified generated manual from 2b9bca6b7d934a91aad73ea786644fc8. Add dots:manual to core; Termux prefix share/man/man1 and Linux/WSL ~/.local/share/man/man1. Use existing journals and receipts. Windows uses generated wiki reference.\n\nManaged dots:manual core asset uses the detected Termux prefix or Linux/WSL user manual directory; Windows has no POSIX destination. Dedicated manual suite now passes 9 tests including owned-MANPATH man discovery, collision/ownership, rollback, interrupted recovery, source drift, repeat no-op and preserved uninstall drift. File-platform 5, installation 28, component-selection 5, and adapter suite 10 (5 native-platform skips) pass. No live installation was run; native Linux/WSL default man discovery remains pending.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "b1e312730e5d4981b903a384ba6ee6d7",
+      "acceptance": [
+        "Termux and Linux/WSL destinations and core selection are correct; native Windows creates no POSIX manual destination.",
+        "Retained recovery, collisions, interruption/rollback, repeat-install no-op, and drift-safe removal pass isolated tests."
+      ],
+      "created": "2026-10-31T13:13:53.995459+00:00",
+      "updated": "2026-10-31T13:42:36.221761+00:00",
+      "completed": "2026-10-31T13:42:36.221761+00:00",
       "removed": null
     }
   ]

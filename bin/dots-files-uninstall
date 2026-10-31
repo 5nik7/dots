@@ -5,5 +5,11 @@
 # dots:option=--dry-run||flag|Preview without writes or network access
 # dots:option=--yes||flag|Approve the plan without prompting
 # dots:option=--json||flag|Emit versioned JSON
+# dots:option=--interactive||flag|Open the setup wizard
+# dots:option=--non-interactive||flag|Skip the wizard; writes require --yes
+# dots:option=--component||choice:core,files,themes,anodize,blastoff,pkgs,packages,fonts,leaf|Select components instead of defaults; repeat
+# dots:option=--resource||file-resource|Select enabled catalog IDs within Files; repeat
+# dots:option=--no-clear||flag|Retain the visible screen on wizard entry
+# dots:option=--no-logo||flag|Omit the wizard logo
 FILES_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/files" && pwd) || exit
 exec python3 -B "$FILES_LIB/install.py" uninstall "$@"

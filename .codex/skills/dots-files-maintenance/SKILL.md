@@ -39,3 +39,5 @@ failure/undo, idempotence, inheritance, replacements and platform destinations.
 Use [profile maintenance](../dots-profile-maintenance/SKILL.md) for manifests and
 [command maintenance](../dots-command-maintenance/SKILL.md) for routes/presentation.
 Record configuration and menu assessments for command changes. Use [dots-config](../dots-config/SKILL.md) for applicable integrations while retaining managed mapping and receipt ownership here. Preserve machine output, update canonical docs and rebuild/check the wiki. Native Windows evidence remains separate from fixtures.
+
+Checkout setup uses the shared component/wizard/preparation modules under `lib/dots/files`. Follow [bootstrap](../../../agents/guides/bootstrap.md) for two-stage approval, opt-in preference saving, native parity and selective font/Leaf baselines. Only exact effective catalog directory mappings may translate child writes; keep link/catalog guards and preserve legacy backup references. Package/build effects remain outside filesystem rollback.

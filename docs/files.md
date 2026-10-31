@@ -8,6 +8,10 @@ help requires Python or Git.
 
 Slow catalog/system discovery, browser loading, planning and file operations use [terminal progress](presentation.md#operation-progress). Preparation, apply and reverse recovery have separate item counts; final results retain transaction and recovery details. `DOTS_PROGRESS=never` disables the display. JSON, raw source/target queries and dry runs never animate.
 
+## Files rollback and recovery
+
+Managed files operations preflight the complete plan before applying changes. A failed apply rolls completed reversible operations back in reverse order; interrupted transactions retain recovery records. Use `dots files history` to find a transaction, `dots files undo ID` for a completed operation, or `dots files recover` for interrupted work. Undo checks for post-apply drift and refuses destructive restoration. Retained user backups are optional; mandatory rollback protection remains active. See [safety and recovery](safety.md) for boundaries, especially package or other external effects.
+
 ## Commands
 
 ```bash

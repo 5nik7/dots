@@ -117,6 +117,7 @@ def row(p, index, color):
 
 
 def pick(rows, backend, cfg, query='', completion=False):
+    if os.name == 'nt': return native_pick(rows,backend,cfg,query)
     fzf = which('fzf')
     if not fzf:
         raise Error('fzf is required for the picker. Install fzf or add ~/.fzf/bin to PATH.')
@@ -168,6 +169,38 @@ def pick(rows, backend, cfg, query='', completion=False):
             if p.name not in [x.name for x in selected]:
                 selected.append(p)
         return selected
+
+
+def native_pick(rows, backend, cfg, query=''):
+    """Native shared selector; no POSIX preview shell is required on Windows."""
+    sys.path.insert(0,str(ROOT.parent.parent/'lib/dots'))
+    from interaction import Selector, SelectionEnded
+    selector = Selector('gum' if which('gum') else 'plain')
+    rows = [p for p in rows if query.casefold() in (p.name+' '+p.description).casefold()]
+    selected = set()
+    try:
+        while True:
+            labels = {str(i+1)+'. ['+('x' if i in selected else ' ')+'] '+clean(p.name)+
+                (' — '+p.details['disabled_reason'] if p.details.get('disabled_reason') else ''):i for i,p in enumerate(rows)}
+            choice = selector.pick('filter',backend.scope,['Accept selection','Details','Clear selection','Cancel',*labels])
+            if choice == 'Cancel': return []
+            if choice == 'Accept selection': return [p for i,p in enumerate(rows) if i in selected]
+            if choice == 'Clear selection': selected.clear();continue
+            if choice == 'Details':
+                value = selector.pick('filter','Package details',['Back',*labels])
+                if value != 'Back':
+                    package = rows[labels[value]]
+                    value, notice = (package, '') if package.details.get('disabled_reason') else enrich(package,backend,cfg)
+                    print(render(value,backend,cfg['color'],message=notice))
+                continue
+            index = labels[choice]
+            if rows[index].details.get('disabled_reason'):
+                print(clean(rows[index].details['disabled_reason']),file=sys.stderr)
+            elif index in selected: selected.remove(index)
+            else: selected.add(index)
+    except SelectionEnded as error:
+        if error.status in (0,130): return []
+        raise Error('native package selector failed') from error
 
 
 def session(action, ident=None):

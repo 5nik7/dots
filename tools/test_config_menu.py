@@ -240,6 +240,86 @@ class ConfigMenu(unittest.TestCase):
                     with self.assertRaises(SystemExit): config_cli.main(operands)
                 with self.assertRaises(SystemExit): config_cli.main(['set','DOTS_COLOR'])
 
+    def test_key_only_set_goes_directly_to_the_typed_editor(self):
+        shutil.copytree(ROOT/'config/wttr',self.root/'config/wttr')
+        keys = [('DOTS_COLOR','settings.DOTS_COLOR','style'),
+                ('colors.todo.field.acceptance.value.fg','colors.todo.field.acceptance.value.fg','color'),
+                ('icons.git.branch','icons.git.branch','text'),
+                ('formatting.apps.cli.label_width','formatting.apps.cli.label_width','json'),
+                ('apps.wttr.days','apps.wttr.days','native'),
+                ('environment.NEW_LABEL','environment.NEW_LABEL','text')]
+        with patch('interaction.terminal',return_value=True),patch.object(menu,'terminal',return_value=True), \
+             patch.dict(os.environ,TERM='xterm'),patch.object(menu,'browser_available',return_value=True), \
+             patch.object(menu,'select',side_effect=AssertionError('no navigation before the editor')), \
+             patch.object(menu,'edit',return_value='') as edit:
+            for key,canonical,kind in keys:
+                self.assertEqual(config_cli.main(['set',key]),0)
+                self.assertEqual(edit.call_args.args[1].key,canonical)
+                self.assertEqual(edit.call_args.args[1].kind,kind)
+            for scope in ('defaults','windows'):
+                self.assertEqual(config_cli.main(['set','icons.git.branch','--defaults'] if scope=='defaults' else
+                                                ['set','icons.git.branch','--profile',scope]),0)
+                self.assertEqual(edit.call_args.args[0].scope,scope)
+            edit.side_effect=SelectionEnded(130)
+            self.assertEqual(config_cli.main(['set','DOTS_COLOR']),130)
+
+    def test_key_editor_theme_colors_save_only_cancel_and_stale_guard(self):
+        theme=Path(self.env['XDG_STATE_HOME'])/'dots/current/theme';theme.mkdir(parents=True)
+        (theme/'palette.json').write_text(json.dumps(dict(colors={'accent':'#123456','blue':'#112233','same_hex':'#abcdef','invalid':'not a color'},
+                                                        palette={'fixture_extra':'#abcdef','blue':'#aaaabb','rosewater':'#f5e0dc'})))
+        current.cache_clear()
+        key='colors.todo.field.acceptance.value.fg'
+        destination=self.path.parent/'colors.toml'
+        seen=[]
+        def choose(title,items,context=None,review=None):
+            seen.append((title,items,review))
+            if title=='Color':return next(token for token,label in items if label.startswith('fixture_extra ·'))
+            self.assertEqual(title,'Review change');self.assertEqual(items[0][0],'cancel')
+            self.assertIn('automatic refresh disabled',review)
+            return 'save'
+        with patch('interaction.terminal',return_value=True),patch.object(menu,'terminal',return_value=True), \
+             patch.dict(os.environ,TERM='xterm'),patch.object(menu,'browser_available',return_value=True), \
+             patch.object(menu,'select',side_effect=choose),patch('config_refresh.after_save',side_effect=AssertionError('no refresh')), \
+             redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(config_cli.main(['set',key,'--no-refresh']),0)
+        self.assertIn('undo: dots files undo',output.getvalue())
+        from style_config import read
+        self.assertEqual(read(destination)['todo.field.acceptance.value.fg'],'#abcdef')
+        labels=dict(seen[0][1]);self.assertIn('accent · #123456',labels.values())
+        self.assertIn('same_hex · #abcdef',labels.values());self.assertNotIn('invalid',labels.values())
+        self.assertIn('rosewater · #f5e0dc',labels.values());self.assertIn('blue (native) · #aaaabb',labels.values())
+        self.assertIn('blue · #112233',labels.values())
+        self.assertIn('custom',labels);self.assertEqual(len(labels),len(seen[0][1]))
+        self.undo(output.getvalue().split('undo: dots files undo ')[1].split()[0])
+        self.assertFalse(destination.exists())
+        inventory=self.inventory();row=inventory.find(key)
+        with patch.object(menu,'select',return_value=None):self.assertEqual(menu.edit(inventory,row,None),'')
+        with patch.object(menu,'select',side_effect=['blue','cancel']):self.assertEqual(menu.edit(inventory,row,None),'')
+        self.assertFalse(destination.exists())
+        def drift(*args):
+            self.path.write_text(self.path.read_text()+'\n')
+            return 'save'
+        with patch.object(menu,'input_value',return_value='blue'),patch.object(menu,'select',side_effect=drift):
+            with self.assertRaises(ValueError):menu.edit(inventory,row,None)
+        self.assertFalse(destination.exists())
+
+    def test_key_editor_data_unknown_keys_and_missing_tools_are_inert(self):
+        key='colors.todo.field.acceptance.value.fg'
+        with patch.object(menu,'browse',side_effect=AssertionError('data must not browse')), \
+             patch('interaction.terminal',return_value=True),patch.dict(os.environ,TERM='xterm'),redirect_stderr(io.StringIO()):
+            for flag in ('--json','--dry-run','--json-value','--yes','--apply'):
+                with self.assertRaises(SystemExit):config_cli.main(['set',key,flag])
+        for native in (False,True):
+            result=self.run_config('set',key,native=native,code=2)
+            self.assertEqual(result.stdout,'')
+        with patch('interaction.terminal',return_value=True),patch.object(menu,'terminal',return_value=True), \
+             patch.dict(os.environ,TERM='xterm'),patch.object(menu,'edit',side_effect=AssertionError('must not edit')):
+            with patch.object(menu,'browser_available',return_value=False):
+                with self.assertRaisesRegex(ValueError,'supply an explicit value'):config_cli.main(['set',key])
+            with patch.object(menu,'browser_available',return_value=True):
+                with self.assertRaisesRegex(ValueError,'unknown or noneditable'):config_cli.main(['set','colors.no_such_key.fg'])
+        self.assertFalse((self.path.parent/'colors.toml').exists())
+
     def test_private_preview_numeric_identity_and_widths(self):
         from resources import cells
         inventory=self.inventory()
@@ -291,6 +371,104 @@ class NativeConfig(NativeMenuFixture):
         (self.root/'default').mkdir()
         for name in ('icons','colors'):shutil.copy2(ROOT/'default'/(name+'.toml'),self.root/'default'/(name+'.toml'))
         self.platform=menu.profile_context(self.root)['layers'][-1]['id']
+
+    def review_screen(self,columns,lines):
+        """Replay a full client redraw in an owned tmux terminal for cell capture."""
+        import time
+        self.drain(self.first[1]);self.control('refresh-client','-t',self.first[2])
+        redraw=self.receive(self.first[1],b'Cancel')+self.drain(self.first[1])
+        capture=self.home/'review-capture';capture.write_bytes(redraw)
+        replay='import os,sys;from pathlib import Path;os.write(1,Path(sys.argv[1]).read_bytes());sys.stdin.buffer.read()'
+        pane=self.control('new-session','-d','-P','-F','#{pane_id}','-s','review-replay','-x',str(columns),'-y',str(lines),
+                          sys.executable,'-B','-c',replay,str(capture)).strip()
+        try:
+            deadline=time.monotonic()+5
+            while time.monotonic()<deadline:
+                screen=self.control('capture-pane','-p','-t',pane)
+                if screen.strip():return screen
+                time.sleep(.05)
+            self.fail('review redraw did not reach the replay terminal')
+        finally:self.control('kill-session','-t','review-replay')
+
+    def test_review_choices_visible_together_after_popup_sizing(self):
+        import time
+        defaults=self.root/'default/config.json';shutil.copy2(ROOT/'default/config.json',defaults)
+        code="""import os
+from config_menu import select
+from menu_tmux import TmuxContext
+print(select('Review change',[('cancel','Cancel'),('save','Save')],TmuxContext.capture(client=os.environ['CLIENT']),'REVIEW_BODY\\n'*60))
+"""
+        cases=((40,30,'auto','auto'),(80,24,'fit','50%'),(120,30,'90%',14),(40,14,'auto','fit'),(80,20,'auto',6))
+        for number,(columns,lines,width,height) in enumerate(cases):
+            with self.subTest(columns=columns,lines=lines,height=height):
+                doc=json.loads(defaults.read_text());doc['apps']['menu']['popup'].update(width=width,height=height)
+                defaults.write_text(json.dumps(doc))
+                self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',lines,columns,0,0))
+                time.sleep(.1);self.drain(self.first[1]);self.drain(self.second[1])
+                p=self.worker(code,DOTS_COLOR='never' if number==0 else 'always',DOTS_ICONS='never')
+                try:
+                    initial=self.receive(self.first[1],b'Cancel')
+                    if number < 3 and b'REVIEW_BODY' not in initial:self.receive(self.first[1],b'REVIEW_BODY')
+                    screen=self.review_screen(columns,lines)
+                    self.assertRegex(screen,r'\bCancel\b',screen)
+                    self.assertRegex(screen,r'\bSave\b',screen)
+                    self.assertNotIn(b'REVIEW_BODY',self.drain(self.second[1]))
+                    if number==1:
+                        os.write(self.first[1],b'\x1b[B');time.sleep(.1)
+                    os.write(self.first[1],b'\r')
+                    out,err=p.communicate(timeout=10)
+                    self.assertEqual(p.returncode,0,out+err)
+                    self.assertEqual(out.strip(),'save' if number==1 else 'cancel')
+                finally:
+                    if p.poll() is None:
+                        os.write(self.first[1],b'\x1b');p.communicate(timeout=10)
+
+    def test_key_only_set_opens_color_picker_in_both_frontends(self):
+        import shlex,time
+        shutil.copytree(ROOT/'lib/dots',self.root/'lib/dots',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+        (self.root/'bin').mkdir()
+        for source in [ROOT/'bin/dots',*ROOT.glob('bin/dots-config*')]:shutil.copy2(source,self.root/'bin'/source.name)
+        theme=Path(self.env['XDG_STATE_HOME'])/'dots/current/theme';theme.mkdir(parents=True)
+        runner=self.home/'edit-key.py'
+        runner.write_text('''import os,subprocess,sys
+from dataclasses import asdict
+from pathlib import Path
+from menu_tmux import TmuxContext,request_file
+root=Path(os.environ['DOTS'])
+os.environ['DOTS_COLOR']='never' if sys.argv[3]=='40' else 'always'
+os.environ['DOTS_ICONS']='never'
+cmd=[sys.executable,'-B',str(root/'lib/dots/cli.py')] if sys.argv[1]=='native' else [str(root/'bin/dots')]
+context=TmuxContext.capture(client=sys.argv[4])
+with request_file(dict(schema=1,context=asdict(context))) as path:
+    code=subprocess.call([*cmd,'config','set','colors.todo.field.acceptance.value.fg','--no-refresh'],env=dict(os.environ,DOTS_MENU_CONTEXT=str(path)))
+Path(sys.argv[2]).write_text(str(code))
+''')
+        destination=self.root/'profiles'/self.platform/'colors.toml'
+        for width,frontend in ((40,'bash'),(80,'native'),(120,'bash')):
+            (theme/'palette.json').write_text(json.dumps(dict(palette={'fixture_extra':'#abcdef'},colors={'accent':'#123456',
+                'foreground':'#202020' if width==120 else '#cdd6f4','background':'#fafafa' if width==120 else '#181825'})))
+            before=destination.read_bytes() if destination.exists() else None
+            status=self.home/('key-status-'+str(width))
+            self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',30,width,0,0))
+            time.sleep(.1);self.drain(self.first[1]);self.drain(self.second[1])
+            self.control('send-keys','-t',self.pane,'-l',shlex.join([sys.executable,'-B',str(runner),frontend,str(status),str(width),self.first[2]]))
+            self.control('send-keys','-t',self.pane,'Enter')
+            self.receive(self.first[1],b'fixture_extra')
+            self.assertNotIn(b'fixture_extra',self.drain(self.second[1]))
+            if width==120:os.write(self.first[1],b'\x03')
+            else:
+                os.write(self.first[1],b'fixture_extra');time.sleep(.15);os.write(self.first[1],b'\r')
+                self.receive(self.first[1],b'Proposed')
+                if width==80:os.write(self.first[1],b'Save');time.sleep(.15)
+                os.write(self.first[1],b'\r')
+            deadline=time.monotonic()+10
+            while not status.exists() and time.monotonic()<deadline:
+                self.drain(self.first[1]);time.sleep(.02)
+            self.assertTrue(status.exists());self.assertEqual(status.read_text(),'130' if width==120 else '0')
+            if width==80:
+                from style_config import read
+                self.assertEqual(read(destination)['todo.field.acceptance.value.fg'],'#abcdef')
+            else:self.assertEqual(destination.read_bytes() if destination.exists() else None,before)
 
     def test_standalone_terminal_and_shared_input_handoff(self):
         import select, signal, time

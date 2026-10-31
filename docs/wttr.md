@@ -331,3 +331,7 @@ preserves comments and unrelated values with retained undo. Color styles also
 accept `{ fg = "cyan", bg = "#112233", bold = true }`; omitted/null-reset fields
 inherit the native context. Foreground/background styles render in both ANSI
 and tmux widgets; plain and structured weather output stay undecorated.
+
+## Termux location lookup
+
+The platform's `termux-geo` helper obtains device coordinates and Nominatim city/state/postal information. It provides human output, JSON in pipes, scalar getters and cache-only reads. `termux-geo completion --all --install` installs its static Bash/Zsh/Fish completions into the platform-local directories recognized by personal startup. See the [location command reference](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md) for dependencies, service restrictions and activation. Reading this guide or browsing cached weather does not request device location.

@@ -59,6 +59,53 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual(set(item), {'id','label','description','available','reason'})
             self.assertEqual([r['id'] for r in json.loads(self.invoke('--json','--query','anodize')[1])['items']], ['anodize'])
 
+    def test_downloaded_fonts_availability_and_literal_popup_handoff(self):
+        from menus import dots_argv
+        action=next(a for a in menu_cli.actions('fonts') if a.id=='downloaded')
+        context=object()
+        with patch('subprocess.run',side_effect=AssertionError('availability executed a provider')):
+            for windows in (False,True):
+                menu=menu_cli.launcher(self.root,family='fonts',windows=windows)
+                row=next(e for e in menu.entries if e.id=='downloaded')
+                self.assertTrue(row.available,row.reason)
+                self.assertEqual(row.reason,'')
+        for windows in (False,True):
+            def frontend(arguments,*,root):return dots_argv(arguments,root=root,windows=windows)
+            with patch('menu_cli.dots_argv',side_effect=frontend),patch('menu_cli.run_action',return_value=130) as run:
+                self.assertFalse(menu_cli.invoke(self.root,action,context))
+            self.assertEqual(run.call_args.args[0],dots_argv(['fonts','browse','--downloaded'],root=self.root,windows=windows))
+            self.assertEqual(run.call_args.kwargs['kind'],'popup')
+            self.assertIs(run.call_args.kwargs['context'],context)
+        (self.root/'bin/dots-fonts-browse').unlink()
+        for windows in (False,True):
+            row=menu_cli.entry(self.root,action,windows=windows)
+            self.assertFalse(row.available)
+            self.assertEqual(row.reason,'Command is missing from this checkout')
+
+    def test_font_configuration_availability_and_literal_handoff(self):
+        from menus import dots_argv
+        action=next(a for a in menu_cli.actions('fonts') if a.id=='configuration')
+        for windows in (False,True):
+            with patch('subprocess.run',side_effect=AssertionError('configuration availability executed a child')):
+                self.assertTrue(menu_cli.entry(self.root,action,windows=windows).available)
+            def frontend(arguments,*,root):return dots_argv(arguments,root=root,windows=windows)
+            with patch('menu_cli.dots_argv',side_effect=frontend),patch('menu_cli.run_action',return_value=130) as run:
+                self.assertFalse(menu_cli.invoke(self.root,action,None))
+            self.assertEqual(run.call_args.args[0],dots_argv(['config','browse','--query','fonts'],root=self.root,windows=windows))
+            self.assertEqual(run.call_args.kwargs['kind'],'popup')
+
+    def test_wiki_configuration_availability_and_literal_handoff(self):
+        from menus import dots_argv
+        action=next(a for a in menu_cli.actions('wiki') if a.id=='configuration')
+        for windows in (False,True):
+            with patch('subprocess.run',side_effect=AssertionError('configuration availability executed a child')):
+                self.assertTrue(menu_cli.entry(self.root,action,windows=windows).available)
+            def frontend(arguments,*,root):return dots_argv(arguments,root=root,windows=windows)
+            with patch('menu_cli.dots_argv',side_effect=frontend),patch('menu_cli.run_action',return_value=130) as run:
+                self.assertFalse(menu_cli.invoke(self.root,action,None))
+            self.assertEqual(run.call_args.args[0],dots_argv(['config','browse','--query','wiki'],root=self.root,windows=windows))
+            self.assertEqual(run.call_args.kwargs['kind'],'popup')
+
     def test_action_map_uses_existing_safe_routes(self):
         expected = {
             'tmux': [('sessions','menu tmux sessions','','session'),('keys','menu tmux keys','--browse','popup')],
@@ -71,7 +118,7 @@ class LauncherContracts(MenuFixture):
             'anodize': [(n,'anodize '+n,'--interactive --logo=text --logo-layout=base' if n in ('preview','extract') else '--interactive','document' if n in ('preview','extract') else 'terminal') for n in ('create','extract','edit','preview','apply')]+[('list','anodize list','','output')],
             'debug': [(n,'debug '+n,'','output') for n in ('check','startup','path','cache')],
             'profile': [(n,'profile '+n,'','output') for n in ('show','list','paths','layers','files','commands','env','check')]+[('check-all','profile check','--all','output')],
-            'wiki': [('browse','wiki browse','','document'),('list','wiki list','','output'),('check','wiki check','','output')],
+            'wiki': [('browse','wiki browse','','document'),('search','wiki browse','','wiki-search'),('list','wiki list','','output'),('check','wiki check','','output'),('configuration','config browse','--query wiki','popup')],
         }
         expected['blastoff'] = [('pick','blastoff pick','','terminal'),('current','blastoff current','','output'),
             ('list','blastoff theme list','','output'),('edit','blastoff theme edit','','terminal'),
@@ -89,12 +136,22 @@ class LauncherContracts(MenuFixture):
             for action in menu_cli.actions(family):
                 # Reviewed package flows have their own approval tests in
                 # test_pkgs_integration; they are not direct terminal actions.
-                if action.kind in ('submenu','session','sync','package'): continue
+                if action.kind in ('submenu','session','sync','package','wiki-search'): continue
                 with patch('menu_cli.run_action', return_value=0) as run:
                     self.assertFalse(menu_cli.invoke(self.root,action,None))
                 self.assertEqual(run.call_args.args[0][-len(action.route+action.options):],list(action.route+action.options))
                 self.assertEqual(run.call_args.kwargs['kind'],action.kind)
                 self.assertNotIn('--yes',run.call_args.args[0])
+
+    def test_wiki_search_literal_query_and_cancellation(self):
+        action=next(a for a in menu_cli.actions('wiki') if a.id=='search')
+        query='--leading nvim themes $(touch sentinel)'
+        with patch('menu_input.prompt',return_value=query), patch('menu_cli.run_action') as run:
+            self.assertFalse(menu_cli.invoke(self.root,action,None))
+        self.assertEqual(run.call_args.args[0][-3:],['wiki','browse','--query='+query])
+        self.assertEqual(run.call_args.kwargs['kind'],'document')
+        with patch('menu_input.prompt',return_value=None), patch('menu_cli.run_action') as run:
+            self.assertFalse(menu_cli.invoke(self.root,action,None));run.assert_not_called()
 
     def test_navigation_preserves_queries_context_help_and_workflow_return(self):
         visits=[]
@@ -382,6 +439,44 @@ class NativeLauncher(NativeMenuFixture):
         self.receive(self.first[1],'dots·git:'.encode());self.assertEqual(record.read_text(),'preview\npreview\npreview\napply\n')
         self.assertNotIn(b'SYNC',self.drain(self.second[1]))
         os.write(self.first[1],b'\x03');_,err=p.communicate(timeout=15);self.assertEqual(p.returncode,130,err)
+
+    def test_wiki_fzf_reader_40_80_120_without_gum(self):
+        binaries=self.base/'wiki-fzf-bin';binaries.mkdir()
+        for name in ('bash','python3','fzf','less','bat','batcat','tmux','git'):
+            path=shutil.which(name)
+            if path:(binaries/name).symlink_to(path)
+        original=self.worker
+        def worker(code,**extra):
+            return original(code,**dict(extra,PATH=str(self.root/'bin')+os.pathsep+str(binaries)))
+        self.worker=worker
+        self.test_wiki_topic_reader_40_80_120_and_exact_client()
+
+    def test_wiki_topic_reader_40_80_120_and_exact_client(self):
+        from menu_tmux import TmuxContext
+        (self.root/'.dots').mkdir()
+        (self.root/'docs').mkdir()
+        spec=dict(schema=1,checkout='${HOME}/absent-wiki',clone_url='https://github.com/example/docs.wiki.git',
+                  web_url='https://github.com/example/docs/wiki',source_url='https://github.com/example/docs',
+                  source_branch='main',pages=[dict(id='Home',title='Fixture guide',section='Start here',source='docs/home.md')])
+        (self.root/'.dots/wiki.json').write_text(json.dumps(spec))
+        (self.root/'docs/home.md').write_text('# Guide\n\n## Needle topic\n\nMATCHED SECTION\n\n## Other\n\nNOT SELECTED\n')
+        code="import os;from pathlib import Path;from menus import run_action,dots_argv;from menu_tmux import TmuxContext;run_action(dots_argv(['wiki','browse','--query','needle'],root=Path(os.environ['DOTS'])),kind='document',context=TmuxContext.capture(client=os.environ['CLIENT']),title='Topics')"
+        for width in (40,80,120):
+            self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',24,width,0,0))
+            context=TmuxContext.capture(client=self.first[2]);deadline=time.monotonic()+3
+            while context.verify()!=(width,24) and time.monotonic()<deadline:time.sleep(.05)
+            self.assertEqual(context.verify(),(width,24))
+            self.drain(self.first[1]);self.drain(self.second[1])
+            p=self.worker(code)
+            self.receive(self.first[1],b'Wiki topics')
+            os.write(self.first[1],b'\r')
+            data=self.receive(self.first[1],b'Back q')
+            self.assertIn(b'MATCHED SECTION',data)
+            self.assertNotIn(b'NOT SELECTED',data)
+            self.assertNotIn(b'MATCHED SECTION',self.drain(self.second[1]))
+            os.write(self.first[1],b'q')
+            out,err=p.communicate(timeout=15);self.assertEqual(p.returncode,0,err)
+        self.assertFalse((self.home/'absent-wiki').exists())
 
     def test_launcher_fits_40_80_120_column_clients(self):
         from menu_tmux import TmuxContext

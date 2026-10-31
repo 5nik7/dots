@@ -60,13 +60,14 @@ else:raise SystemExit(9)
         outputs=[self.call(argv)[0] for argv in self.surfaces('pkgs',['manifest',str(path),'--json'])]
         self.assertTrue(all(o==outputs[0] for o in outputs))
         for words,expected in [(['pkgs','--manager','g'],'go'),(['pkgs','res'],'restore'),
-                               (['pkgs','export','--up'],'--update'),(['git','publish','--up'],'--update-packages')]:
+                               (['pkgs','export','--up'],'--update'),(['git','publish','--up'],'--update-packages'),
+                               (['pkgs','u'],'upls'),(['pkgs','up','--l'],'--list'),(['pkgs','upgrade','l'],'ls')]:
             data=self.call([sys.executable,'-B',self.repo/'lib/dots/cli.py','__complete',*words])[0]
             self.assertIn(expected.encode(),data)
             if os.name!='nt':
                 self.assertIn(expected.encode(),self.call([self.repo/'bin/dots','__complete','bash',str(len(words)),'--','dots',*words])[0])
 
-    @unittest.skipIf(os.name=='nt','native package operations deliberately unavailable')
+    @unittest.skipIf(os.name=='nt','POSIX npm executable fixture; native WinGet has separate fixtures')
     def test_setup_packages_precede_configuration_and_repeat_is_noop(self):
         db=self.fake_npm();path=self.document(['hello'])
         before=self.cli('install','--packages',str(path),'--dry-run','--json')
@@ -78,7 +79,7 @@ else:raise SystemExit(9)
         again=self.cli('install','--packages',str(path),'--yes','--json')
         self.assertEqual(again['packages']['groups'][0]['status'],'unchanged')
 
-    @unittest.skipIf(os.name=='nt','native package operations deliberately unavailable')
+    @unittest.skipIf(os.name=='nt','POSIX npm executable fixture; native WinGet has separate fixtures')
     def test_missing_prerequisite_does_not_apply_configuration(self):
         path=self.document(['hello']);self.env['PATH']=''
         result=subprocess.run([sys.executable,'-B',str(ROOT/'lib/dots/files/install.py'),'install','--packages',str(path),'--yes','--json'],env=self.env,text=True,capture_output=True)
@@ -175,12 +176,36 @@ else:raise SystemExit(9)
     def test_windows_backend_boundary(self):
         from package_setup import Stage
         path=self.document()
-        with patch('pkgs_lib.manifests.platform',return_value='windows'):
-            with self.assertRaisesRegex(ValueError,'native Windows'):Stage(self.repo,path)
+        with patch.dict(os.environ,self.env,clear=True),patch('pkgs_lib.manifests.platform',return_value='windows'):
+            stage=Stage(self.repo,path)
+            self.assertEqual(stage.document_preview()['groups'][0]['status'],'skipped')
         import menu_cli
         rows={e.id:e for e in menu_cli.launcher(self.repo,family='pkgs',windows=True).entries}
         self.assertTrue(rows['manifest'].available);self.assertTrue(rows['configuration'].available)
         self.assertFalse(rows['restore'].available);self.assertFalse(rows['upgrade'].available)
+        self.assertFalse(rows['upgradable'].available);self.assertFalse(rows['cleanup'].available)
+        with patch('menu_cli.shutil.which',return_value='fixture-winget.exe'):
+            rows={e.id:e for e in menu_cli.launcher(self.repo,family='pkgs',windows=True).entries}
+        for name in ('restore','upgrade','upgradable','cleanup'):self.assertTrue(rows[name].available)
+
+    def test_update_list_alias_surfaces_and_menu_routes(self):
+        fake=self.repo/'bin/npm'
+        fake.write_text('#!'+sys.executable+'\n'+'''import json,sys
+if sys.argv[1]=='ls':print('{"dependencies":{"hello":{"version":"1.0"}}}')
+elif sys.argv[1]=='outdated':print('{"hello":{"current":"1.0","wanted":"2.0"}}');sys.exit(1)
+else:sys.exit(99)
+''');fake.chmod(0o755)
+        outputs=[]
+        for alias in (['upls'],['upgrade','ls'],['upgrade','--list']):
+            for command in self.surfaces('pkgs',[*alias,'--manager','npm','--global','--json']):
+                outputs.append(self.call(command)[0])
+        self.assertTrue(all(value==outputs[0] for value in outputs))
+        self.assertEqual(json.loads(outputs[0])['groups'][0]['packages'][0]['candidate'],'2.0')
+        import menu_cli
+        actions={a.id:a for a in menu_cli.FAMILIES['pkgs']}
+        self.assertEqual(actions['upgradable'].route,('pkgs','upgrade'))
+        self.assertEqual(actions['upgradable'].options,('--list',))
+        self.assertEqual(actions['cleanup'].kind,'terminal')
 
 
 if __name__=='__main__':unittest.main()

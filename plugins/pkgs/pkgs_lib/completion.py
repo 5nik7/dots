@@ -21,9 +21,10 @@ from .catalog import inventory
 from .ui import pick
 from .fzf import invocation, PROTOCOL
 
-from .grammar import COMMANDS
-OPTIONS = {'--manager': 'Select manager', '--query': 'Filter/search the picker', '--global': 'npm global scope',
+from .grammar import COMMANDS, ALIASES
+OPTIONS = {'--manager': 'Select manager', '--query': 'Filter/search the picker', '--global': 'npm global scope', '--scope': 'WinGet user or machine scope',
            '--installed': 'Installed inventory only', '--json': 'Machine-readable output', '--color': 'auto/always/never',
+           '--list': 'List available upgrades without installing',
            '--preview': 'fzf preview-window layout', '--dry-run': 'Print transaction without executing',
            '--directory': 'Completion destination directory', '--debug': 'Phase diagnostics on stderr',
            '--raw': 'Unchanged manager streams', '--ignore-skip': 'Override package skip rules',
@@ -31,7 +32,7 @@ OPTIONS = {'--manager': 'Select manager', '--query': 'Filter/search the picker',
            '--update': 'Update a package manifest while preserving edits',
            '--pin-versions': 'Export exact pins',
            '--yes': 'Confirm transaction automatically', '--help': 'Show help', '-H': 'Show help', '--version': 'Show version'}
-VALUE_OPTIONS = ('--manager', '--query', '--color', '--preview', '-p', '--directory', '--output')
+VALUE_OPTIONS = ('--scope', '--manager', '--query', '--color', '--preview', '-p', '--directory', '--output')
 
 
 def context(words, cfg):
@@ -52,7 +53,7 @@ def context(words, cfg):
         elif w.startswith('--manager='): manager = w.split('=', 1)[1]
         elif w == '--global': global_scope = True
         elif not w.startswith('-'):
-            if command is None: command = w
+            if command is None: command = w if w == 'upls' else ALIASES.get(w, w)
             else: used.append(w)
     return current, before, manager, command, global_scope, used
 
@@ -67,11 +68,13 @@ def _complete(words, cfg, fuzzy=False):
     candidates = []
     if before and before[-1] == '--manager':
         candidates = [(m, 'package manager') for m in MANAGERS if available(m)]
+    elif before and before[-1] == '--scope':
+        candidates = [(s, 'WinGet scope') for s in ('user', 'machine')]
     elif before and before[-1] == '--color':
         candidates = [(m, 'color mode') for m in ('auto', 'always', 'never')]
     elif before and before[-1] in ('--query', '--preview', '-p', '--directory'):
         return []
-    elif before and before[-1] == '--output' or command in ('manifest','restore'):
+    elif before and before[-1] == '--output' or command in ('manifest','restore','cleanup') and (not current.startswith('-') or '--' in before):
         directory = Path(current).expanduser().parent
         prefix = Path(current).name
         candidates = [(str(p), 'directory' if p.is_dir() else 'manifest file') for p in directory.glob(prefix+'*')
@@ -84,15 +87,27 @@ def _complete(words, cfg, fuzzy=False):
         candidates = [(x, 'shell') for x in ('bash', 'zsh', 'fish')] if not used else [(x, 'completion action') for x in ('install', 'update', 'status', 'uninstall')]
     elif command == 'cache':
         candidates = [('clear', 'Clear package inventory cache')]
+    elif command == 'upgrade' and (used == ['ls'] or '--list' in before):
+        return []
     elif command in ('install', 'uninstall', 'remove', 'info', 'upgrade', 'search', 'list'):
         name = default_manager() if manager == 'auto' else manager
         if name not in MANAGERS or not available(name): return []
         backend = Backend(name, global_scope)
-        rows = inventory(backend, cfg, installed_only=command in ('uninstall', 'remove', 'upgrade'), offline=True)
+        if name == 'winget':
+            # Completion never queries remote sources or refreshes WinGet state.
+            from .common import Cache
+            from .scopes import make
+            scope = next((before[i+1] for i, w in enumerate(before[:-1]) if w == '--scope'), 'user')
+            backend = make(name, scope)
+            rows = Cache(backend.cache_key).load(None) or []
+            if command in ('uninstall', 'remove', 'upgrade'): rows = [p for p in rows if p.installed]
+        else:
+            rows = inventory(backend, cfg, installed_only=command in ('uninstall', 'remove', 'upgrade'), offline=True)
         rows = [p for p in rows if p.name not in used]
         if fuzzy:
             return [(p.name, '') for p in pick(rows, backend, cfg, current, completion=True)]
         candidates = [(p.name, ('[i] ' if p.installed else '') + (p.description or p.version)) for p in rows]
+        if command == 'upgrade' and not used: candidates.insert(0, ('ls', 'List available upgrades without installing'))
     if fuzzy and candidates and which('fzf'):
         # Simple menus for commands/options; package candidates use the full preview above.
         args, env = invocation()

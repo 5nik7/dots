@@ -650,8 +650,6 @@ def main():
     args.scoped_publish = args.command == 'submodules-publish'
     if args.update_packages and (args.command != 'publish' or args.wiki_only):
         parser.error('--update-packages requires root git publish, not a submodule or wiki-only action')
-    if args.update_packages and os.name == 'nt':
-        raise GitError('--update-packages requires Termux, Linux or WSL; native Windows package backends are unavailable')
     if args.scoped_publish:
         args.command = 'publish'
         if bool(args.path is not None) == bool(args.all_submodules): parser.error('select one registered PATH or --all-submodules')
