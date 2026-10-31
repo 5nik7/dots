@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Refresh active visual preferences without changing the theme
+# dots:usage=[OPTIONS]
+# dots:option=--json||flag|Print structured results
+# dots:option=--dry-run||flag|Preview without publication or reload
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/config_cli.py" refresh "$@"

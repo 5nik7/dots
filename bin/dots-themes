@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# dots:summary=Browse and manage the theme collection
-# dots:usage=[list | switcher | install | update | remove | plugins]
-if (($# == 0)); then exec "${BASH_SOURCE[0]%/*}/dots" help themes; fi
-printf 'dots themes: unknown collection action; use dots themes --help\n' >&2
-exit 2

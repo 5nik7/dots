@@ -50,10 +50,10 @@ ACTIONS = (
     group('fonts', '󰛖'),
     Action('keys', 'keys', ('keys',), ('--browse',), 'popup', '󰌆'),
     group('tmux', '', route=('menu', 'tmux'), tool='tmux'),
-    group('files', '󰉋'), group('git', '', tool='git'), group('theme', '󰏘'), group('themes', '󰏘'),
+    group('files', '󰉋'), group('git', '', tool='git'), group('theme', '󰏘'),
     group('anodize', '󰏘'), group('blastoff', '󱓞'), group('pkgs', '󰏖'),
     group('debug', '󰃤'), group('profile', '󰀵'),
-    group('profiles', '󰀵'), group('wiki', '󰈙'),
+    group('wiki', '󰈙'),
     Action('env', 'env', ('env',), icon='󰒓'),
 )
 FAMILIES = {
@@ -101,21 +101,20 @@ FAMILIES = {
                  Action('publish', 'publish', ('git', 'wiki', 'publish'), ('--all',), kind='terminal', icon=''),
                  Action('sync', 'sync', ('git', 'wiki', 'sync'), kind='sync', icon='')),
     'theme': (Action('show', 'show', ('theme', 'show')),
+              Action('list', 'list', ('theme', 'list')),
               Action('switcher', 'switcher', ('theme', 'switcher'), kind='terminal', icon='󰏘'),
               Action('files', 'files', ('theme', 'files', 'browse'), kind='terminal', icon='󰈔'),
-              Action('backgrounds', 'backgrounds', ('theme', 'bg', 'switcher'), kind='terminal', icon='󰸉')),
-    'themes': (Action('list', 'list', ('themes', 'list')),
-               Action('switcher', 'switcher', ('themes', 'switcher'), kind='terminal', icon='󰏘'),
-               Action('plugins', 'plugins', ('themes', 'plugins'), kind='submenu', submenu='themes/plugins')),
-    'themes/plugins': leaves('themes/plugins', 'list doctor'),
+              Action('backgrounds', 'backgrounds', ('theme', 'bg', 'switcher'), kind='terminal', icon='󰸉'),
+              Action('plugins', 'plugins', ('theme', 'plugins'), kind='submenu', submenu='theme/plugins')),
+    'theme/plugins': leaves('theme/plugins', 'list doctor'),
     'anodize': (*tuple(Action(name, name, ('anodize', name),
                        ('--interactive', '--logo=text', '--logo-layout=base') if name in ('preview', 'extract') else ('--interactive',),
                        'document' if name in ('preview', 'extract') else 'terminal', '󰏘')
                        for name in ('create', 'extract', 'edit', 'preview', 'apply')),
                 Action('list', 'list', ('anodize', 'list'))),
     'debug': leaves('debug', 'check startup path cache'),
-    'profile': leaves('profile', 'show paths layers files commands env check'),
-    'profiles': leaves('profiles', 'list check'),
+    'profile': (*leaves('profile', 'show list paths layers files commands env check'),
+                Action('check-all', 'check all', ('profile','check'), ('--all',))),
     'wiki': (Action('browse', 'browse', ('wiki', 'browse'), kind='document', icon='󰈙'),
              *leaves('wiki', 'list check')),
 }
@@ -142,18 +141,21 @@ def entry(root, action, *, windows=None):
         reason = 'Package operations require a separate Termux, Linux or WSL installation'
     elif tool and not shutil.which(tool):
         reason = tool + ' is unavailable'
-    if action.route[0] in ('theme', 'themes', 'anodize') and sys.version_info < (3, 11):
+    if action.route[0] in ('theme', 'anodize') and sys.version_info < (3, 11):
         reason = 'Theme commands require Python 3.11 or newer'
     if action.route[0] == 'wttr' and sys.version_info < (3, 11):
         reason = 'Weather commands require Python 3.11 or newer'
     key = {'wttr':'weather.title', 'todo':'status.todo', 'config':'files.configuration', 'keys':'navigation.keys', 'tmux':'navigation.session', 'files':'files.directory', 'git':'git.repository', 'wiki':'files.text', 'help':'navigation.help'}.get(action.id, 'menu.'+action.id)
-    return Entry(action.id, action.label, description, not reason, reason, style_icon(key, action.icon))
+    return Entry(action.id, action.label, description, not reason, reason, style_icon(key, action.icon),key)
 
 
-def launcher(root, *, family='', windows=None):
+def launcher(root, *, family='', windows=None, interactive=False):
+    choices = actions(family)
+    if interactive and not family:
+        choices = sorted(choices, key=lambda action: action.label.casefold())
     return Menu('dots' + (':' + family if family else ''),
                 'dots / ' + family.replace('/', ' / ') if family else 'Dots menu',
-                tuple(entry(root, a, windows=windows) for a in actions(family)))
+                tuple(entry(root, a, windows=windows) for a in choices))
 
 
 def invoke(root, action, context):
@@ -225,7 +227,7 @@ def run(args):
         frame = stack[-1]
         family = frame['family']
         try:
-            selected = choose(launcher(root, family=family), mode='browse', query=frame['query'],
+            selected = choose(launcher(root, family=family, interactive=True), mode='browse', query=frame['query'],
                               context=context, compact=True, navigation=frame,
                               prompt='dots' + ('·' + family.replace('/', '·') if family else ''))
         except SelectionEvent as event:

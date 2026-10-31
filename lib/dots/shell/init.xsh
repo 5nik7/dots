@@ -83,6 +83,20 @@ if $XONSH_INTERACTIVE:
         ls_file = _DotsPath(dot['state']) / 'themes/generations' / generation / 'ls_colors'
         if ls_file.is_file():
             $LS_COLORS = ls_file.read_text().rstrip('\r\n')
+        visual_file = _DotsPath(dot['state']) / 'themes/generations' / generation / 'visual.tsv'
+        if visual_file.is_file():
+            visual = {}
+            for line in visual_file.read_text().splitlines():
+                kind, key, value = line.split('\t', 2)
+                if kind == 'env':
+                    if not __import__('re').fullmatch('[A-Z][A-Z0-9_]*', key):
+                        return
+                    visual[key] = value
+            __xonsh__.env.update(visual)
+            if 'DOTS_THEME_FZF_COLORS' in visual:
+                if '_dots_visual_fzf_base' not in ctx:
+                    ctx['_dots_visual_fzf_base'] = __xonsh__.env.get('FZF_DEFAULT_OPTS', '')
+                __xonsh__.env['FZF_DEFAULT_OPTS'] = visual.get('DOTS_THEME_FZF_OPTS', ctx['_dots_visual_fzf_base']) + ' --color=' + visual['DOTS_THEME_FZF_COLORS']
         _dots_generation = generation
     _dots_refresh_theme()
     if '_dots_prompt_handler' in __xonsh__.ctx:

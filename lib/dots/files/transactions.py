@@ -245,7 +245,7 @@ class Store:
                             entry['before_link'] = os.readlink(path)
                             entry['before_directory'] = path.is_dir() or bool(getattr(path.lstat(), 'st_file_attributes', 0) & 0x10)
                         elif 'data' in op:
-                            entry['before_data'] = read_json(path, (1,2))
+                            entry['before_data'] = read_json(path, (1,2,3))
                     after = directory / f'{i}-after'
                     if 'source' in op:
                         copy_object(op['source'], after)

@@ -96,12 +96,28 @@ def keys(root=None, identity=None):
         for group in ('settings', 'environment', 'files'):
             result.update(group + '.' + key for key in layer.get(group, {}))
     from style_config import Styles, APPS
-    for group, values in Styles(root, selected).values.items():
+    from style_catalog import supported,known_keys
+    styles=Styles(root,selected)
+    for group in styles.values:
         result.add(group)
-        for key in [*values, *['apps.'+app+'.'+key for app in APPS for key in values if not key.startswith('apps.')]]:
+        for key in known_keys(group,styles):
+            if not supported(group, key): continue
             parts = key.split(".")
             result.update(group + "." + ".".join(parts[:i]) for i in range(1,len(parts)+1))
+    from config_values import Controls
+    result.update(Controls(root,selected).keys())
+    if sys.version_info>=(3,11) and (checkout(root)/'config/wttr/config.toml').is_file() and selected['current']==context(root)['current']:
+        from config_wttr import Native
+        try: result.update(Native(checkout(root),selected).keys())
+        except (OSError,ValueError): pass  # Invalid optional weather input cannot hide core config keys.
     return sorted(result)
+
+
+def formatting_rows(root=None, selected=None):
+    from config_values import Controls
+    values=Controls(root,selected).values.get('formatting',{}).get('apps',{}).get('cli',{})
+    return [('__format.'+key,str(value),'formatting') for key,value in values.items()
+            if key in ('indent','label_width','label_gap','alignment','indent_style','tab_width')]
 
 
 def main(args):
@@ -115,9 +131,10 @@ def main(args):
             if key != 'files.backup': print(key + '\t' + row['value'] + '\t' + row['source'])
         from style_config import Styles
         for row in Styles(selected=selected).rows(): print('\t'.join(row))
+        for row in formatting_rows(selected=selected): print('\t'.join(row))
     elif args == ['__style-inputs']:
         from style_config import Styles
-        for path in [*Styles().paths, LIB/'style_config.py', LIB/'theme_styles.py', LIB/'resources.tsv', checkout()/'config/gitmux/gitmux.conf']:
+        for path in [*Styles().paths, LIB/'style_config.py', LIB/'theme_styles.py', LIB/'style_catalog.py', LIB/'config_values.py', checkout()/'default/config.json', LIB/'resources.tsv', checkout()/'config/gitmux/gitmux.conf']:
             if path.is_file(): print(path)
     elif len(args) >= 2 and args[0] == '__paths':
         for name in args[1:]: print(config_path(name))

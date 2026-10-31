@@ -26,8 +26,9 @@ def fixture(source=REPO, plugins=True):
         excluded = ('themes/dots.yml',) if name == 'config/vivid' else ()
         copy_public_tree(source / name, repo / name, repo=source, fixture=repo,
                          aliases=(REPO,), exclude=excluded)
-    if (source / 'default/file-colors.toml').is_file():
-        shutil.copy2(source / 'default/file-colors.toml', repo / 'default/file-colors.toml')
+    for name in ('file-colors.toml','config.json'):
+        if (source / 'default' / name).is_file():
+            shutil.copy2(source / 'default' / name, repo / 'default' / name)
     if (source / 'shells/shared').is_dir():
         copy_public_tree(source / 'shells/shared', repo / 'shells/shared', repo=source, fixture=repo, aliases=(REPO,))
     # The shared _dots adapter links into the public Bash dispatcher library.

@@ -1,5 +1,8 @@
 # Dots-owned shell integration
 
+Follow-up: [core updates](core-updates.md) supersedes the plural command split.
+Earlier shell/environment decisions and verification remain historical evidence.
+
 Status: Implemented, including owner-approved legacy cleanup.
 
 ## Delivered

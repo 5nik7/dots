@@ -97,17 +97,17 @@ disabled = false
 [git_status]
 style = "fg:cyan"
 format = '([$ahead_behind]($style) )([$all_status]($style) )'
-stashed = "[*${count}](fg:muted)"
-ahead = "[⇡${count}](fg:git_ahead)"
-behind = "[⇣${count}](fg:git_behind)"
+stashed = "*${count}"
+ahead = "⇡${count}"
+behind = "⇣${count}"
 up_to_date = ""
-diverged = "[⇡${ahead_count}⇣${behind_count}](fg:git_conflict)"
-conflicted = "([=${count}](fg:git_conflict) )"
-deleted = "([×${count}](fg:git_deleted bold) )"
+diverged = "⇡${ahead_count}⇣${behind_count}"
+conflicted = "=${count}"
+deleted = "-${count}"
 renamed = "([»${count}](fg:git_renamed bold) )"
-modified = "([!${count}](fg:git_modified bold) )"
-staged = "[+${count}](fg:git_staged)"
-untracked = "[?${count}](fg:git_untracked bold)"
+modified = "!${count}"
+staged = "+${count}"
+untracked = "?${count}"
 ignore_submodules = false
 disabled = false
 

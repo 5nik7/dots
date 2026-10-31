@@ -23,9 +23,7 @@ immediate directories add keys. Preserve config/configs aliases, root shared
 variables, legacy bridges and PowerShell's built-in `$PROFILE`. Avoid filesystem
 creation and inactive profile PATH additions. Do not restore profile `.env` files.
 
-Use `config_cli.Plan` and the existing popup Draft for reviewed configuration
-writes, with all affected manifest guards. Keep colors/icons beside profiles,
-shared visual defaults under `default`, and user themes/runtime state separate.
+Use [dots-config](../dots-config/SKILL.md) for configuration integration, guarded CLI/popup writes, visual precedence and consumer refresh. Keep colors/icons beside profiles, shared visual defaults under `default`, and user themes/runtime state separate. Record configuration and menu assessments for command changes through [command maintenance](../dots-command-maintenance/SKILL.md).
 For file registry changes use [file maintenance](../dots-files-maintenance/SKILL.md).
 
 Test alias conflicts/removal, directory changes, inheritance, literal templates,
@@ -35,3 +33,5 @@ Run `tools/test_profile_backend.py`, profile/config/menu and affected shell suit
 in owned roots, sequentially on Termux. Measure cold/warm startup after changes.
 Follow [shell integration](../dots-shell-integration/SKILL.md) and report unavailable
 native engines separately. Update canonical docs and regenerate/check the wiki.
+
+Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.

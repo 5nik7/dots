@@ -26,7 +26,7 @@ PLATFORMS = {"termux", "linux", "wsl", "windows"}
 
 class Presentation:
     """Python rendering of the same terminal/color/icon policy as ui.bash."""
-    def __init__(self, stream=None, *, terminal=None, detail_indent=4):
+    def __init__(self, stream=None, *, terminal=None, detail_indent=None):
         self.stream = stream if stream is not None else sys.stdout
         terminal = (self.stream.isatty() if terminal is None else terminal) and os.environ.get("TERM", "dumb") != "dumb"
         mode, icons = os.environ.get("DOTS_COLOR", "auto"), os.environ.get("DOTS_ICONS", "auto")
@@ -34,8 +34,23 @@ class Presentation:
         self.icons = icons == "always" or (icons == "auto" and terminal)
         self.human = self.stream.isatty() or terminal or mode == "always" or icons == "always"
         self.width = max(24, shutil.get_terminal_size((80, 24)).columns)
-        self.detail_indent = detail_indent
+        from config_values import value
+        self.formatting=value('formatting.apps.cli',{}) if self.human else {}
+        self.detail_indent = self.formatting.get('indent',4) if detail_indent is None else detail_indent
         self.resources = Resources()
+
+    def indentation(self,count):
+        if self.formatting.get('indent_style')=='tabs':
+            width=max(1,self.formatting.get('tab_width',4))
+            # Expand at the configured tab stops for accurate wrapping in FZF/TTY.
+            return ('\t'*(count//width)+' '*(count%width)).expandtabs(width)
+        return ' '*count
+
+    def icon_paint(self,name,fallback,code=None):
+        from style_config import current
+        prefs=current()
+        fields=prefs.style('icons.'+name,app='cli') if prefs else {}
+        return self.paint(self.icon(name,fallback),prefs.sgr('icons.'+name,app='cli') if fields else code or '39')
 
     def branch_label(self, value, detached=False):
         text = str(value or 'unavailable')
@@ -73,9 +88,27 @@ class Presentation:
         return icon(name, fallback)
 
     def paint(self, value, code):
-        from style_config import code as style_code
+        from style_config import code as style_code, current
         if self.color: code = style_code(code)
         value = self.clean(value)
+        # Apply independent icon styles only where a configured glyph occurs as
+        # its own display token. Plain strings/data never carry embedded ANSI.
+        if self.color and self.icons:
+            prefs=current()
+            if prefs:
+                if not hasattr(self,'_icon_paints'):
+                    if not hasattr(prefs,'_icon_paints'):
+                        from style_catalog import split
+                        prefs._icon_paints={}
+                        roles={base[6:].rsplit('.',1)[0] for key in prefs.values['colors']
+                               for app,base in [split(key)] if app in (None,'cli') and base.startswith('icons.')}
+                        for role in roles:
+                            fields=prefs.style('icons.'+role,app='cli');glyph=prefs.icon(role,app='cli')
+                            if fields and glyph:prefs._icon_paints[glyph]=prefs.sgr_fields(fields)
+                    self._icon_paints=prefs._icon_paints
+                if self._icon_paints:
+                    pattern=r'(?<!\S)('+ '|'.join(re.escape(k) for k in sorted(self._icon_paints,key=len,reverse=True))+r')(?=\s|$)'
+                    value=re.sub(pattern,lambda m:'\033['+self._icon_paints[m[1]]+'m'+m[1]+'\033['+str(code)+'m',value)
         return f"\033[{code}m{value}\033[0m" if self.color else value
 
     def emit(self, value=""):
@@ -93,8 +126,14 @@ class Presentation:
 
     def detail(self, label, value, code=None):
         text = ", ".join(map(str, value)) if isinstance(value, list) else "yes" if value is True else "no" if value is False else "not mapped" if value is None else str(value)
+        if self.human:
+            if text: return self.detail_spans(label, [(text, code)])
+            self.emit(self.paint(self.indentation(self.detail_indent)+self.clean(label), '94'))
+            return
         label = self.clean(label)
-        prefix = ' ' * self.detail_indent + f"{label:<10} "
+        width=self.formatting.get('label_width',10);gap=self.formatting.get('label_gap',1)
+        alignment={'left':'<','right':'>','center':'^'}[self.formatting.get('alignment','left')]
+        prefix = self.indentation(self.detail_indent) + format(label,alignment+str(width))+' '*gap
         # Wrap display lines without losing the full path, including on phones.
         lines = textwrap.wrap(self.clean(text), width=max(8, self.width-len(prefix)), break_on_hyphens=False, replace_whitespace=False) or [""]
         self.emit(self.paint(prefix, "94") + (self.paint(lines[0], code) if code else lines[0]))
@@ -114,10 +153,27 @@ class Presentation:
         """Render a heading with independently styled, inert text spans."""
         self._spans(spans)
 
-    def detail_spans(self, label, spans, *, label_width=10, label_gap=1, indent=None, label_code='94'):
+    def detail_spans(self, label, spans, *, label_width=None, label_gap=None, indent=None, label_code='94'):
         label = self.clean(label)
+        label_width=self.formatting.get('label_width',10) if label_width is None else label_width
+        label_gap=self.formatting.get('label_gap',1) if label_gap is None else label_gap
         indent = self.detail_indent if indent is None else indent
-        prefix = ' ' * indent + label + ' ' * max(0, label_width - resource_cells(label)) + ' ' * label_gap
+        if self.human:
+            from row_layout import width, pad
+            indent = min(indent, max(0,self.width-8))
+            label_gap = min(label_gap, max(0,self.width-indent-8))
+            label_width = width(label_width,self.width,indent=indent,gap=label_gap)
+            if ((label_width and resource_cells(label)>label_width) or
+                    resource_cells(label)+indent+label_gap>self.width-8):
+                self._spans([(label,label_code)],self.indentation(indent))
+                self._spans(spans,' '*(indent+label_width+label_gap))
+            else:
+                prefix=self.indentation(indent)+pad(label,label_width,self.formatting.get('alignment','left'))+' '*label_gap
+                self._spans(spans,prefix,label_code)
+            return
+        padding=max(0,label_width-resource_cells(label));align=self.formatting.get('alignment','left')
+        left=padding if align=='right' else padding//2 if align=='center' else 0
+        prefix = self.indentation(indent)+' '*left+label+' '*(padding-left+label_gap)
         self._spans(spans, prefix, label_code)
 
     def _spans(self, spans, prefix='', prefix_code=None, *, continuation_prefix=None):
@@ -142,7 +198,7 @@ class Presentation:
                     offset = 0
             self.emit(line)
 
-    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None, *, label_width=10):
+    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None, *, label_width=None):
         text = self.clean(self.path(path) if display is None else display)
         style = code
         if path is not None and self.human and (self.color or self.icons):
@@ -150,6 +206,10 @@ class Presentation:
             style = code or resolved
             if self.icons:
                 text = icon + ' ' + text
+        if self.human:
+            return self.detail_spans(label,[(text,style)],label_width=label_width,
+                                     label_code='94' if label_code is None else label_code)
+        if label_width is None: label_width=10
         indent = ' ' * self.detail_indent
         padded_label = f'{self.clean(label):<{label_width}}'
         prefix = indent + padded_label + ' '
@@ -306,8 +366,9 @@ def atomic_json(path, data):
 
 
 class Catalog:
-    def __init__(self, root, selected, manifests=None, profile=None):
+    def __init__(self, root, selected, manifests=None, profile=None, overrides=None):
         self.root = root.resolve()
+        self.overrides = overrides or {}
         self.manifests = manifests or {}
         if (self.root / ".dots").is_symlink():
             raise ValueError("catalog directory must not be a symlink")
@@ -319,12 +380,12 @@ class Catalog:
         self.registry_path = self.root / '.dots/files.json'
         self.registry = None
         if self.registry_path.is_file():
-            registry_doc = read_json(self.registry_path, (1,2))
-            if registry_doc.get('schema') == 2:
+            registry_doc = self.read_document(self.registry_path, (1,2,3))
+            if registry_doc.get('schema') in (2,3):
                 from registry import Registry
                 self.registry = Registry(registry_doc, source_rows)
         if composition.get('schema') == 2 and self.registry is None:
-            raise ValueError('core files registry is required: .dots/files.json (schema 2)')
+            raise ValueError('core files registry is required: .dots/files.json (schema 2 or 3)')
         from profiles import resolve
         from platform_info import detect
         facts = detect()
@@ -332,6 +393,10 @@ class Catalog:
             facts = dict(facts, platform=selected, distro=selected, family=[])
         known_paths = {(self.root / row['path']).resolve() for row in source_rows}
         self.profile = profile or resolve(self.root, facts)
+        if self.overrides:
+            self.profile = dict(self.profile, layers=[
+                dict(self.overrides.get(Path(layer['root'])/'profile.json', layer), root=layer['root'])
+                for layer in self.profile['layers']])
         for layer in self.profile['layers']:
             path = Path(layer['root'])
             if path.resolve() not in known_paths and (path / '.dots/files.json').is_file():
@@ -357,6 +422,11 @@ class Catalog:
         for layer in self.profile['layers']:
             if set(layer.get('files', {})) - allowed:
                 raise ValueError('profile files refers to an unknown or excluded repository')
+
+    def read_document(self, path, schemas=(1,)):
+        path = Path(path)
+        import copy
+        return copy.deepcopy(self.overrides[path]) if path in self.overrides else read_json(path, schemas)
 
     def override(self, identity):
         for layer in reversed(self.profile['layers']):
@@ -388,12 +458,12 @@ class Catalog:
         if self.registry and not self.profile['layers']: raise ValueError('file mapping edits require a profile manifest')
         if self.profile['layers']:
             path = Path(self.profile['layers'][-1]['root']) / 'profile.json'
-            data = read_json(path)
+            data = self.read_document(path)
             operations = []
             if self.registry:
                 from registry import implementation
                 registry = self.registry.update(documents)
-                if registry != read_json(self.registry_path, (1,2)): operations.append(dict(path=str(self.registry_path), data=registry))
+                if registry != read_json(self.registry_path, (1,2,3)): operations.append(dict(path=str(self.registry_path), data=registry))
             for owner, doc in documents.items():
                 data.setdefault('files', {})[owner] = ([implementation(row,self.platform) for row in doc['resources']]
                                                       if self.registry else doc['resources'])

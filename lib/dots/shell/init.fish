@@ -170,6 +170,25 @@ function _dots_fish_theme
     if test -r "$_DOTS_STATE/themes/generations/$generation/ls_colors"
         read -gx LS_COLORS < "$_DOTS_STATE/themes/generations/$generation/ls_colors"
     end
+    set -l visual_file "$_DOTS_STATE/themes/generations/$generation/visual.tsv"
+    if test -r "$visual_file"
+        while read -l visual_line
+            set -l fields (string split -m 2 \t -- "$visual_line")
+            test (count $fields) -eq 3; or return 1
+            if test "$fields[1]" = env
+                string match -rq '^[A-Z][A-Z0-9_]*$' -- "$fields[2]"; or return 1
+                set -gx $fields[2] "$fields[3]"
+            end
+        end < "$visual_file"
+        if set -q DOTS_THEME_FZF_COLORS
+            set -q _DOTS_VISUAL_FZF_BASE; or set -g _DOTS_VISUAL_FZF_BASE "$FZF_DEFAULT_OPTS"
+            set -l fzf_base "$_DOTS_VISUAL_FZF_BASE"
+            if set -q DOTS_THEME_FZF_OPTS
+                set fzf_base "$DOTS_THEME_FZF_OPTS"
+            end
+            set -gx FZF_DEFAULT_OPTS "$fzf_base --color=$DOTS_THEME_FZF_COLORS"
+        end
+    end
     set -g _DOTS_THEME_GENERATION "$generation"
 end
 function _dots_fish_prompt --on-event fish_prompt

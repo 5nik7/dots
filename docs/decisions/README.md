@@ -80,3 +80,5 @@ Do not edit an accepted record to make an old decision appear different. Add a n
 - [0014: Native PowerShell parity](0014-native-powershell-parity.md) — native adapter/shared-controller direction, Windows paths and permanent dual-shell maintenance; native acceptance pending.
 
 - [0015: Checkout-local profile configuration](0015-profile-configuration.md) — settings, file mappings and explicit migration into platform profiles.
+
+- [0016: Core command families and recoverable file identities](0016-core-command-families-and-file-identities.md) — singular theme/profile routes, guided config actions and journaled identity history; supersedes 0013's collection split.

@@ -62,8 +62,16 @@ def help_view(directories, words):
     if not words:
         for name in BUILTINS:
             ui.detail(name, read(LIB / 'metadata' / (name + '.meta'))['summary'])
+        # Project visible routes only for root help; retain the full catalog.
+        groups = dict.fromkeys(name.split('-')[0] for name, _ in children)
+        children = [(name, rows[name] if name in rows and not rows[name]['hidden']
+                     else {'summary': 'Command group'}) for name in groups]
     for name, row in children:
         ui.detail(name.replace('-', ' '), row['summary'])
+    if not words:
+        ui.emit()
+        ui.detail_spans('', [('Use dots help COMMAND for details; dots commands for all commands.', None)],
+                        label_width=0, label_gap=0, indent=0)
     if stem and not metadata and not children and words[:1] == ['theme'] and len(words) == 2:
         return controller('themes/theme_cli.py', [words[1], '--help'])
     if stem and not metadata and not children:
@@ -149,6 +157,9 @@ def complete(root, directories, words):
         elif kind == 'profile-id':
             from profiles import available
             for row in available(root): add(row['id'])
+        elif kind == 'config-value':
+            from config_values import candidates
+            for value in candidates(root, positionals[0] if positionals else ''): add(value)
         elif kind == 'config-key':
             from profile_config import keys
             for key in keys(root, option_values.get('--profile')): add(key)
@@ -397,7 +408,7 @@ def main(argv=None):
         else: raise ValueError('extension has no native Windows entry point: ' + stem)
         return subprocess.call([*command, *rest])
     parts = stem.split('-')
-    if parts in (['git'], ['themes'], ['theme', 'plugins'], ['themes', 'plugins']):
+    if parts in (['git'], ['theme', 'plugins']):
         return help_view(directories, parts)
     if parts[0] == 'files':
         if stem == 'files-migrate-apps':
@@ -414,13 +425,13 @@ def main(argv=None):
             target, action = 'manage', 'system'
             rest = [a for a in rest if a != '--system']
         return controller('files/' + target + '.py', [action, *rest])
-    if parts[0] in ('anodize', 'theme', 'themes') and sys.version_info < (3, 11):
+    if parts[0] in ('anodize', 'theme') and sys.version_info < (3, 11):
         raise ValueError('theme and Anodize commands require Python 3.11 or newer')
     if parts[0] == 'anodize': return controller('../../plugins/anodize/cli.py', [*parts[1:], *rest])
     if parts[0] == 'config': return controller('config_cli.py', [*parts[1:], *rest])
     if parts[0] == 'fonts': return controller('fonts_cli.py', [*parts[1:], *rest])
     if parts[0] == 'wttr': return controller('wttr/cli.py', [*parts[1:], *rest])
-    if parts[0] in ('profile', 'profiles'): return controller('profiles.py', [*parts, *rest])
+    if parts[0] == 'profile': return controller('profiles.py', [*parts, *rest])
     if parts[0] == 'wiki': return controller('wiki.py', [*parts[1:], *rest])
     if parts[:2] == ['git','wiki']: return controller('wiki_git.py', [*parts[2:], *rest])
     if parts[0] == 'keys': return controller('keys_cli.py', [*parts[1:], *rest])
@@ -436,7 +447,7 @@ def main(argv=None):
         if parts[1:] == ['submodules', 'publish']:
             return controller('git/cli.py', ['submodules-publish', *rest])
         return controller('git/cli.py', [*parts[1:], *rest])
-    if parts[0] in ('theme', 'themes'):
+    if parts[0] == 'theme':
         if parts[1:2] == ['files']: return controller('themes/inspection.py', [*parts[2:], *rest])
         if parts[1:2] == ['colors']: return controller('themes/file-colors.py', [*parts[2:], *rest])
         if parts[1:2] == ['plugins'] and len(parts) > 2: return controller('themes/plugins.py', [*parts[2:], *rest])

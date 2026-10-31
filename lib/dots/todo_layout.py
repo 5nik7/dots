@@ -27,7 +27,7 @@ def action(mode, environment):
     try:
         lines = number(environment, 'FZF_LINES', 10000)
         matches = number(environment, 'FZF_MATCH_COUNT', 1000000)
-        notice = number(environment, 'DOTS_TODO_LAYOUT_NOTICE', 1)
+        notice = number(environment, 'DOTS_TODO_LAYOUT_NOTICE', 2)
         popup = number(environment, 'DOTS_TODO_LAYOUT_POPUP', 1)
         current = (number(environment, 'FZF_PREVIEW_LINES', 10000)
                    if environment.get('FZF_PREVIEW_LINES') else 0)

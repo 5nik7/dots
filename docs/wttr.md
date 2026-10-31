@@ -323,3 +323,11 @@ compdef _wttr wttr
 ## Verification limits
 
 The focused suites use isolated homes/caches, mocked HTTP/location, native Termux shell completions and owned PTYs/private tmux sockets. They do not contact public weather services or change Android permissions. Actual location acquisition, service availability/rate limiting, font appearance and native Windows PowerShell 5.1/7 terminal/completion behavior are separate owner/platform acceptance checks. The shared native bridge and controller are tested without claiming Windows runtime evidence.
+
+The [native Config adapter](profiles.md#native-weather-configuration) exposes
+supported wttr settings, condition/detail icons, colors, temperature scales and
+widget/display options as `apps.wttr.*`. It edits the active native TOML and
+preserves comments and unrelated values with retained undo. Color styles also
+accept `{ fg = "cyan", bg = "#112233", bold = true }`; omitted/null-reset fields
+inherit the native context. Foreground/background styles render in both ANSI
+and tmux widgets; plain and structured weather output stay undecorated.

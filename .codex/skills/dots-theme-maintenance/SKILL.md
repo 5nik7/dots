@@ -9,6 +9,8 @@ Read [theme architecture](../../../docs/themes.md), [file styles](../../../docs/
 
 Trace inputs through the actual publisher before editing. Defaults, per-theme data and user overlays are source; files beneath current/theme are generated snapshots. Include new inputs in fingerprints and complete new artifacts before pointer publication. Preserve old-generation startup fallback and keep missing optional tools distinct from malformed data.
 
+Use [dots-config](../dots-config/SKILL.md) when a change adds or alters configurable visual bindings, inheritance or preference refresh. Keep palette publication separate from profile preference ownership. For command changes, follow [command maintenance](../dots-command-maintenance/SKILL.md) and record configuration and menu assessments even when existing controls suffice.
+
 For Codex/tmux attention styling or Termux toast colors, preserve the [notification preferences and maintenance contract](../../../agents/guides/codex-notifications.md).
 
 Use tools/test_file_colors.py for rules and panels, then selected publication/rollback cases from tools/test_themes.py. Test the real consumer in an owned home; for Yazi include its native theme runner with private DDS sockets. Separate scalar/JSON/Lua bytes from human presentation, and test light/dark foreground/background pairs. Run Termux batches sequentially.
@@ -18,3 +20,5 @@ Refresh live state only when the task authorizes it. Source changes alone do not
 Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.
 
 When this change affects documentation, follow [documentation maintenance](../dots-documentation-maintenance/SKILL.md), including the generated wiki check.
+
+Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.

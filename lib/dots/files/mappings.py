@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import sys
 
-from catalog import Catalog, ID, PLATFORMS, Presentation, platform, relative
+from catalog import Catalog, ID, PLATFORMS, Presentation, platform, relative, read_json
 from events import OperationOutput
 from install import Installation
 from manage import Manager
@@ -49,6 +49,10 @@ class MappingPlan:
         self.paths = {}
         self.rows = []
         self.live = False
+        self.overrides = {}
+        self.renamed = False
+        self.receipt_changed = False
+        self.profile_paths = None
         self.install.guard(self.root / '.dots/sources.json')
         from profile_config import context
         selected = context(self.root, selected_platform) if selected_platform and self.catalog.registry else self.catalog.profile
@@ -68,6 +72,10 @@ class MappingPlan:
         self.verify()
 
     def verify(self):
+        if self.profile_paths is not None:
+            from profiles import available
+            if self.profile_paths != {Path(row['root'])/'profile.json' for row in available(self.root)}:
+                raise ValueError('profile inventory changed after preview; review again')
         for path, before in self.install.guards.items():
             parents_safe(path)
             if digest(path) != before:
@@ -228,12 +236,61 @@ class MappingPlan:
         selected = selected_platform or self.catalog.platform
         if self.catalog.registry and selected != self.catalog.platform:
             from registry import Registry
-            candidate = Catalog(self.root, selected)
+            candidate = Catalog(self.root, selected, overrides=self.overrides)
             candidate.registry = Registry(self.catalog.registry.update(self.documents), candidate.sources)
             return candidate.records()
-        return Catalog(self.root, selected, self.documents, profile=self.catalog.profile).records()
+        return Catalog(self.root, selected, self.documents, profile=self.catalog.profile,
+                       overrides=self.overrides).records()
+
+    def rename(self, identity, name):
+        if not ID.fullmatch(name): raise ValueError('new ID must be a local resource ID')
+        owner, old = identity.split(':', 1)
+        new = owner + ':' + name
+        if not self.catalog.registry: raise ValueError('file ID rename requires a core registry')
+        registry = self.catalog.registry.renamed(identity, new)
+        if identity == new: return identity
+        from profiles import available
+        profiles = available(self.root)
+        self.profile_paths = {Path(row['root'])/'profile.json' for row in profiles}
+        self.overrides[self.catalog.registry_path] = registry
+        changed_profiles = []
+        for profile in profiles:
+            path = Path(profile['root'])/'profile.json'
+            data = read_json(path)
+            before = copy.deepcopy(data)
+            for repository, rows in data.get('files', {}).items():
+                for row in rows:
+                    if repository == owner and row['id'] == old: row['id'] = name
+                    if 'replaces' in row:
+                        row['replaces'] = [new if value == identity else value for value in row['replaces']]
+            if before != data:
+                self.overrides[path] = data
+                changed_profiles.append(profile['id'])
+        self.catalog = Catalog(self.root, self.catalog.platform, profile=self.catalog.profile,
+                               overrides=self.overrides)
+        for repository, doc in self.documents.items():
+            for row in doc['resources']:
+                if repository == owner and row['id'] == old: row['id'] = name
+                if 'replaces' in row:
+                    row['replaces'] = [new if value == identity else value for value in row['replaces']]
+        # Identity-only changes preserve explicit inherited definitions. Only
+        # subsequent mapping edits may materialize the selected leaf override.
+        self.original = copy.deepcopy(self.documents)
+        for entry in self.install.entries.values():
+            if entry['id'] == identity:
+                entry['id'] = new
+                self.receipt_changed = True
+        self.renamed = True
+        self.rows.append(dict(id=new, old_id=identity, new_id=new, status='rename',
+            profiles=changed_profiles, metadata=[str(path) for path in self.overrides],
+            receipt=str(self.install.receipt_path) if self.receipt_changed else None,
+            source=None, target=None,
+            reason='Rename identity across profiles; retain historical IDs and installation baselines'))
+        return new
 
     def edit(self, args):
+        if args.id is not None and not ID.fullmatch(args.id):
+            raise ValueError('new ID must be a local resource ID')
         if args.new:
             if not args.repo or args.repo not in self.documents:
                 raise ValueError('new mappings require an available --repo')
@@ -249,7 +306,14 @@ class MappingPlan:
             before = None
         else:
             identity = args.values[0]
+            mapping_changes = any((args.source, args.target, args.strategy, args.platforms, args.apply))
+            if args.id and not mapping_changes:
+                self.rename(identity, args.id)
+                return
             before = self.record(identity)
+            if args.id:
+                identity = self.rename(identity, args.id)
+                before = dict(before, id=identity)
             raw = self.raw(identity)
         owner_id = identity.split(':', 1)[0]
         if args.source:
@@ -292,7 +356,18 @@ class MappingPlan:
     def finish(self):
         documents = {owner: doc for owner, doc in self.documents.items() if doc != self.original[owner]}
         catalogs = []
-        for operation in self.catalog.updates(documents):
+        updates = {str(path): dict(path=str(path), data=data) for path, data in self.overrides.items()}
+        updates.update({op['path']: op for op in self.catalog.updates(documents)})
+        if self.renamed:
+            from profiles import available
+            from profile_views import selected
+            candidate_inputs = {Path(op['path']): op['data'] for op in updates.values()}
+            for profile in available(self.root):
+                context = selected(self.root, profile['id'])
+                candidate = Catalog(self.root, context['facts']['platform'], profile=context, overrides=candidate_inputs)
+                if any(row['applicable'] and row['status'] == 'conflict' for row in candidate.records()):
+                    raise ValueError('mapping conflicts in profile: ' + profile['id'])
+        for operation in updates.values():
             path = operation.pop('path')
             self.operation(path, **operation)
             catalogs.append(path)
@@ -310,8 +385,8 @@ class MappingPlan:
 
     def apply(self, action):
         self.verify()
-        return self.install.apply(action, catalogs=self.catalogs, write_receipt=self.live,
-                                  retain=self.live or self.backup)
+        return self.install.apply(action, catalogs=self.catalogs, write_receipt=self.live or self.receipt_changed,
+                                  retain=self.live or self.backup or self.renamed)
 
 
 def terminal():
@@ -360,8 +435,8 @@ def arguments(argv=None):
     if args.action == 'edit':
         if args.restore or len(args.values) > 1 or (args.new and args.values):
             p.error('edit takes one resource or --new; --restore belongs to stash')
-        if not args.new and any((args.repo, args.id, args.app, args.category)):
-            p.error('--repo/--id/--app/--category require --new')
+        if not args.new and any((args.repo, args.app, args.category)):
+            p.error('--repo/--app/--category require --new')
     return p, args
 
 
@@ -373,6 +448,10 @@ def render(doc, final=False):
         for row in doc['items']:
             ui.emit()
             ui.detail('Resource', row['id'], '1;94')
+            if row.get('old_id'): ui.detail('Old ID', row['old_id'])
+            if 'profiles' in row: ui.detail('Profiles', row['profiles'])
+            for path in row.get('metadata', []): ui.resource_detail('Metadata', path)
+            if row.get('receipt'): ui.resource_detail('Receipt', row['receipt'])
             if 'profile' in row: ui.detail('Profile', row['profile'])
             if row.get('old_platforms') and row['old_platforms'] != row.get('platforms'): ui.detail('Old platforms', ', '.join(row['old_platforms']))
             if 'platforms' in row: ui.detail('Platforms', ', '.join(row['platforms']))
@@ -392,8 +471,8 @@ def main(argv=None):
     p, args = arguments(argv)
     from interaction import selection_requested as requested
     picking = requested(p, args, args.values)
-    if args.pick and args.dry_run and args.action == 'edit' and not any((args.source, args.target, args.strategy, args.platforms)):
-        p.error('--pick --dry-run edit requires explicit --source, --target, --strategy or --platforms')
+    if args.pick and args.dry_run and args.action == 'edit' and not any((args.id, args.source, args.target, args.strategy, args.platforms)):
+        p.error('--pick --dry-run edit requires explicit --id, --source, --target, --strategy or --platforms')
     configure(not args.json and not args.dry_run)
     with Progress('Loading file mappings'):
         plan = MappingPlan(args.backup if args.backup is not None else Manager().backup_default(), args.platform)
@@ -425,8 +504,10 @@ def main(argv=None):
                 if not getattr(args, field): setattr(args, field, prompt(field.title()))
             if not args.strategy:
                 args.strategy = pick('Link strategy', ['link', 'directory-link', 'copy'])
-        elif not any((args.source, args.target, args.strategy, args.platforms)):
+        elif not any((args.id, args.source, args.target, args.strategy, args.platforms)):
             row = plan.raw(args.values[0])
+            name = prompt('ID', row['id'])
+            if name != row['id']: args.id = name
             args.source = prompt('Source', row['source'])
             args.target = prompt('Target', row.get('targets', {}).get(args.platform, row.get('target')) if args.platform else row.get('target'))
             args.strategy = pick('Link strategy', [row['strategy']] + [s for s in ('link', 'directory-link', 'copy') if s != row['strategy']])

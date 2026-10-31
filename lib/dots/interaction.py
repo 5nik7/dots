@@ -167,16 +167,26 @@ class RichSelector:
             height=None, preview_size=55, header=None, environment=None,
             info=None, bindings=(), initial_indices=None, navigation=None,
             navigation_keys=None, hscroll=True, preview_position=None, event_selection=False,
-            focus_index=None, preview_lines=None, preview_wrap=False, wrap=False):
+            focus_index=None, preview_lines=None, preview_wrap=False, wrap=False,
+            disabled=False, header_row=None, popup_resolved=False):
         # Optional bindings are trusted controller code, never selected labels.
         indices = range(len(labels)) if initial_indices is None else list(initial_indices)
         if initial_indices is not None and (any(type(i) is not int or not 0 <= i < len(labels) for i in indices)
                                             or len(set(indices)) != len(indices)):
             raise ValueError('invalid initial selector identities')
-        flags = ['fzf', '--read0', '--print0', '--ansi', '--delimiter=\t',
-                 '--with-nth=2..', '--layout=reverse', '--no-height',
+        from config_values import value
+        from fzf_config import picker_options
+        import menu_popup
+        appearance = menu_popup.preferences()
+        size = menu_popup.viewport(environment)
+        preferences,_=picker_options(value('apps.fzf',{}))
+        flags = ['fzf', '--layout=reverse', *preferences, '--read0', '--print0', '--ansi', '--delimiter=\t',
+                 '--with-nth=2..', '--no-height',
                  '--multi' if multi else '--no-multi', '--prompt=' + title + ': ',
                  '--bind=esc:abort,ctrl-c:abort', '--header=Enter: review  Esc: cancel']
+        flags += ['--border=' + menu_popup.border(appearance)]
+        if disabled:flags+=['--disabled','--no-sort']
+        if header_row is not None:flags+=['--header-lines=1']
         keys = 'Enter: review  Esc: cancel'
         events = {'esc': 'back', 'f1': 'help'} if navigation_keys is None else navigation_keys
         if (navigation_keys is not None or event_selection) and navigation is None:
@@ -200,10 +210,6 @@ class RichSelector:
             raise ValueError('invalid preview height')
         if type(preview_wrap) is not bool:
             raise ValueError('invalid preview wrapping')
-        if popup:
-            flags += ['--popup', popup if isinstance(popup, str) else 'center,90%']
-        elif height is not None:
-            flags += ['--height=' + str(height)]
         if query:
             flags += ['--query=' + query]
         if info is not None:
@@ -214,7 +220,7 @@ class RichSelector:
         if preview:
             # Preview commands contain only environment references and a numeric token.
             flags += ['--preview=' + preview[0],
-                      '--preview-window=' + (preview_position or ('down' if shutil.get_terminal_size().columns < 100 else 'right')) + ','
+                      '--preview-window=' + (preview_position or ('down' if size[0] < 100 else 'right')) + ','
                       + (str(preview_lines) if preview_lines is not None else str(preview_size) + '%')
                       + (',wrap' if preview_wrap else ''),
                       '--bind=alt-p:toggle-preview,alt-j:preview-down,alt-k:preview-up']
@@ -225,10 +231,35 @@ class RichSelector:
         # Trusted caller bindings may override built-in preview keys.
         flags += ['--bind=' + binding for binding in bindings]
         flags = [f for f in flags if not f.startswith('--header=')] + ['--header=' + (keys if header is None else header)]
+        automatic = menu_popup.automatic_size(popup) if popup else (size[0], height or size[1])
+        content = (menu_popup.content_size(labels if header_row is None else [header_row, *labels],
+                    title, keys if header is None else header, size,
+                    appearance if popup else dict(appearance, width='auto'), wrap, automatic)
+                   if not popup_resolved and not preview and 'fit' in (appearance.get('width'), appearance.get('height')) else None)
+        if popup:
+            # Shared row renderers can resolve geometry before percentage columns.
+            # Keep that measured size; applying fit again would move the columns.
+            geometry = menu_popup.geometry(popup, dict(appearance,width='auto',height='auto') if popup_resolved else appearance,
+                                           size=size, content=content)
+            flags += ['--popup', geometry]
+            visible_height = menu_popup.extent(menu_popup.automatic_size(geometry)[1], size[1])
+        elif height is not None or appearance.get('height', 'auto') != 'auto':
+            if appearance.get('height', 'auto') != 'auto':
+                height = menu_popup.dimensions(appearance, (size[0], height or size[1]), size, content)[1]
+            flags += ['--height=' + str(height)]
+            visible_height = menu_popup.extent(height, size[1])
+        else: visible_height = size[1]
+        if preview and preview_lines is not None and appearance.get('height', 'auto') != 'auto':
+            # Reserve selectable rows and chrome when a caller's preview was
+            # sized before the user's popup-height override was applied.
+            budget = max(1, visible_height - len((keys if header is None else header).splitlines()) - 7)
+            flags = [re.sub(r'^(--preview-window=down,)\d+', lambda m: m[1]+str(min(preview_lines,budget)), f)
+                     if f.startswith('--preview-window=down,') else f for f in flags]
         if not color:
             flags += ['--color=bw']
-        elif colors:
-            flags += ['--color=' + colors]
+        else:
+            colors = ','.join(part for part in (colors, menu_popup.colors(appearance)) if part)
+            if colors: flags += ['--color=' + colors]
         if not icons:
             flags += ['--no-unicode']
         env = dict(os.environ)
@@ -255,13 +286,15 @@ class RichSelector:
                        FZF_DEFAULT_COMMAND='', BASH_ENV='', ENV='')
         sys.stdout.flush()
         sys.stderr.flush()
-        # Display text is inert and single-line; only the first field is an identity.
+        # Display text is inert; only the first field is an identity. NUL framing
+        # preserves trusted multiline layout without changing selection tokens.
         data = b''.join((str(i) + '\t' + labels[i] + '\0').encode() for i in indices)
+        if header_row is not None:data=(str(header_row)+'\0').encode()+data
         if focus_index is not None:
             if type(focus_index) is not int or focus_index not in indices:
                 raise ValueError('invalid focused selector identity')
             order = list(indices)
-            if query:
+            if query and not disabled:
                 # Ask FZF's own matcher for the restored query's ordering. A
                 # numeric position in the unfiltered list would focus the wrong
                 # resource after fuzzy sorting. This filter has no UI/actions.

@@ -82,16 +82,18 @@ class Themes(unittest.TestCase):
         self.assertFalse((self.home / 'cache').exists())
 
     def test_unified_routes_and_full_id_contract(self):
-        self.assertTrue(list((self.repo / 'bin').glob('dots-themes*')))
+        self.assertFalse(list((self.repo / 'bin').glob('dots-themes*')))
         self.assertFalse((self.lib / 'cli.bash').exists())
         for args in [('themes',), ('themes', 'list'), ('help', 'themes')]:
-            self.dots(*args)
-        self.assertIn('  themes ', self.dots('help').stdout)
-        self.assertIn('themes', self.dots('commands').stdout)
+            self.dots(*args, code=1)
+        self.assertNotIn('  themes ', self.dots('help').stdout)
+        self.assertNotIn('  themes ', self.dots('commands').stdout)
+        self.dots('theme','list')
+        self.dots('help','theme','plugins')
         for shell in ('bash', 'zsh', 'fish'):
             result = self.dots('__complete', shell, '1', '--', 'dots', 'them')
             self.assertIn('candidate\ttheme\t', result.stdout)
-            self.assertIn('candidate\tthemes\t', result.stdout)
+            self.assertNotIn('candidate\tthemes\t', result.stdout)
         for action in ('set', 'show'):
             self.dots('theme', action, 'catppuccin', code=1)
             self.dots('theme', action, 'catppuccin', 'mocha', code=2)
@@ -531,7 +533,7 @@ set_theme || exit 1
 false
 _dots_shell_prompt
 [[ $? == 1 && $FLAVOR == latte && ${blue[hex]} == '#1e66f5' ]] || exit 4
-[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#1e66f5' ]] || exit 8
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#ea76cb' ]] || exit 8
 before=$FZF_DEFAULT_OPTS
 set_theme
 [[ $FZF_DEFAULT_OPTS == $before ]] || exit 5

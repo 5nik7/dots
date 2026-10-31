@@ -17,7 +17,7 @@ def install(test):
     config = test.root / 'editor config ü'
     for name in ('util', 'config/highlights', 'plugins'):
         (config / 'lua' / name).mkdir(parents=True, exist_ok=True)
-    for name in ('util/dots_theme.lua', 'util/dots_theme_legacy.lua', 'util/dashboard_gradient.lua',
+    for name in ('util/dots_theme.lua', 'util/dots_config.lua', 'util/dots_theme_legacy.lua', 'util/dashboard_gradient.lua',
                  'config/highlights/anodize.lua', 'plugins/anodize.lua', 'plugins/lualine.lua', 'plugins/colorscheme.lua'):
         shutil.copy2(REPO / 'config/nvim/lua' / name, config / 'lua' / name)
     runtime = test.root / 'runtime'

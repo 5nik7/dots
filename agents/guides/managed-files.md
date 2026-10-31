@@ -114,4 +114,10 @@ the public mapping editor.
 
 Profile `files` arrays are effective catalog inputs. Use `Catalog.input_paths()` for preview guards and `Catalog.updates()` for metadata writes; do not hardcode `.dots/files.json` as the mutation destination. Preserve profile settings/environment fields and independent repository ownership. Run `tools/test_profile_config.py` alongside affected file lifecycle suites. See [profile configuration](../../docs/profiles.md#profile-configuration).
 
-The core schema-2 registry is permanent: IDs/platforms stay in `.dots/files.json`, sources in `.dots/sources.json`, and implementations in profile arrays without platforms/target maps. Always journal the full `Catalog.updates()` result, including tracking. Explicit mapping `--platform` selects a base profile; live apply requires the active leaf. See [file maintenance](../../.codex/skills/dots-files-maintenance/SKILL.md) and run `tools/test_profile_backend.py`.
+The core schema-2/3 registry is permanent: IDs/platforms stay in `.dots/files.json`, sources in `.dots/sources.json`, and implementations in profile arrays without platforms/target maps. Always journal the full `Catalog.updates()` result, including tracking. Explicit mapping `--platform` selects a base profile; live apply requires the active leaf. See [file maintenance](../../.codex/skills/dots-files-maintenance/SKILL.md) and run `tools/test_profile_backend.py`.
+
+File ID edits use `files edit OWNER:OLD --id NEW`. Schema 3 retains reserved
+historical IDs for receipt recovery; schema 2 remains readable until an effective
+rename. Journal all profile/replacement references and receipt identities with
+optional selected-profile/live edits. Never infer a rename from arbitrary bulk
+array replacement. Run the focused file-rename suite and preserve old journals.

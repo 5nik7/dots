@@ -68,7 +68,12 @@ def fzf_colors(ui):
             colors = match[1]
         elif line != 'export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} --color=$_FZF_COLORS_"':
             return ''
-    return colors
+    from config_values import value
+    from style_config import current
+    from fzf_config import colors as configured_colors
+    prefs=current()
+    overrides=configured_colors(value('apps.fzf',{}),prefs) if prefs else ''
+    return ','.join(part for part in (colors,overrides) if part)
 
 
 def select(rows, action, multi=False, new=False, selector=None, owners=()):

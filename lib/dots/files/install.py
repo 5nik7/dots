@@ -106,7 +106,16 @@ class Installation:
         self.items = []
         self.theme_notice = ''
         self.entries = copy.deepcopy(self.receipt['entries'])
-        for entry in self.entries.values(): entry['id'] = canonical(entry['id'])
+        from identities import registry
+        registry_path = self.root / '.dots/files.json'
+        registry_before = digest(registry_path)
+        identities = registry(self.root)
+        if identities:
+            if digest(registry_path) != registry_before:
+                raise ValueError('registry changed while reading installation identities; retry the preview')
+            self.guards[str(registry_path)] = registry_before
+        for entry in self.entries.values():
+            entry['id'] = identities.resolve(entry['id']) if identities else canonical(entry['id'])
         self.theme = None
         self.blocked = False
         self.transaction = uuid.uuid4().hex

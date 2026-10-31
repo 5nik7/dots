@@ -99,7 +99,13 @@ For the live Bash executable, follow [decision 0006](docs/decisions/0006-bash-co
 
 Do not add a new command or rename an existing route without updating `docs/commands.md`, completion behavior, command metadata tests, and user-facing documentation when applicable.
 
+Start new command families and subcommands with [command authoring](.codex/skills/dots-command-authoring/SKILL.md). It coordinates the family owner, presentation, configuration, menus and verification; recorded add/update integration decisions must be implemented before completion.
+
+Configuration integration reviews include icon/text foreground and background, nullable styles, indentation/tab stops, spacing, alignment and native placement where useful. Use `dots-config` for consumer-backed controls and `dots-config-audit` for requested broad discovery; static findings do not authorize scope expansion.
+
 For every new or changed command, record whether a Dots menu should be added, updated or left unchanged, with a reason. Follow command maintenance and menu authoring; this is a development review, not runtime discovery or automatic approval of menu actions.
+
+For every new or changed command, record **add**, **update**, or **no configuration integration change needed**, with a reason, following the [configuration review](agents/guides/commands.md#configuration-integration-review). Use `dots-config` for applicable work. Select the primary skill from the [family index](.codex/README.md#command-family-owners); new first-party families must identify or add an owner in the same change.
 
 ## Platform Boundaries
 
@@ -225,6 +231,7 @@ A change is done only when:
 - Cross-platform effects were considered and documented.
 - Performance-sensitive paths were measured when affected.
 - Help, metadata, completions, examples, README, reference docs, and plans are synchronized where applicable.
+- Command changes have recorded configuration/menu assessments and current maintenance-skill ownership.
 
 Repository-local workflow skills are indexed in [.codex/README.md](.codex/README.md);
 they supplement this contract and the task guides.

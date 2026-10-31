@@ -4,6 +4,7 @@ import base64
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -60,6 +61,111 @@ class NativeCLI(unittest.TestCase):
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         return result
 
+    def root_help_fixture(self):
+        headers = {
+            'samples': '# dots:summary=Manage samples\n# dots:option=--flavor||choice:mocha,latte|Palette flavor',
+            'samples-deep': '# dots:summary=Deeper group',
+            'samples-deep-leaf': '# dots:summary=Descendant detail',
+            'implicit-one': '# dots:summary=First descendant',
+            'implicit-two': '# dots:summary=Second descendant',
+            'secret-leaf': '# dots:hidden=true',
+            'masked': '# dots:hidden=true\n# dots:summary=Private summary',
+            'masked-visible': '# dots:summary=Visible descendant',
+        }
+        for name, header in headers.items():
+            (self.repo / 'bin' / ('dots-' + name + '.ps1')).write_text(
+                header + '\nthrow "Help executed an extension"\n', encoding='utf-8')
+
+    def assert_root_help(self, output):
+        for name, summary in [('samples', 'Manage samples'), ('implicit', 'Command group'),
+                              ('masked', 'Command group')]:
+            self.assertEqual(len(re.findall(r'^ +'+name+r' +'+summary+'$', output, re.M)), 1)
+        for text in ('samples deep', 'implicit one', 'implicit two', 'secret leaf',
+                     'Private summary', 'Visible descendant', 'theme files browse'):
+            self.assertNotIn(text, output)
+        self.assertNotRegex(output, r'(?m)^ +secret(?: +|$)')
+        self.assertIn('Use dots help COMMAND for details; dots commands for all commands.',
+                      ' '.join(output.split()))
+
+    def test_root_help_projects_groups_without_filtering_discovery(self):
+        self.root_help_fixture()
+        inventory = self.command('commands').stdout
+        completion = self.command('__complete', 'samples', '').stdout
+        detail = self.command('help', 'samples').stdout
+        outputs = [self.command(*args).stdout for args in ((), ('help',), ('-h',), ('--help',))]
+        self.assertTrue(all(output == outputs[0] for output in outputs))
+        self.assert_root_help(outputs[0])
+        self.assertIn('samples deep leaf', detail)
+        self.assertIn('implicit one', self.command('help', 'implicit').stdout)
+        self.assertIn('samples deep leaf', inventory)
+        self.assertEqual(self.command('commands').stdout, inventory)
+        self.assertEqual(self.command('help', 'samples').stdout, detail)
+        self.assertEqual(self.command('__complete', 'samples', '').stdout, completion)
+        self.assertIn('candidate\tleaf\tDescendant detail',
+                      self.command('__complete', 'samples', 'deep', '').stdout)
+        self.assertIn('candidate\tmocha\t', self.command('__complete', 'samples', '--flavor', 'm').stdout)
+        self.assert_read_only_home()
+
+    def test_root_help_keeps_descendant_validation(self):
+        self.root_help_fixture()
+        path = self.repo / 'bin/dots-samples-deep-leaf.ps1'
+        path.write_text('# dots:unknown=invalid\nthrow "Executed"\n')
+        self.command('--help', expected=1)
+        self.command('commands', '--check', expected=1)
+        path.write_text('# dots:summary=Descendant detail\nthrow "Executed"\n')
+        other = self.repo / 'local/bin' / path.name
+        other.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, other)
+        self.command('--help', expected=1)
+        self.command('commands', '--check', expected=1)
+
+    def test_root_help_without_external_commands(self):
+        from cli import help_view
+        import contextlib
+        import io
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream), patch.dict(os.environ, self.env, clear=True):
+            self.assertEqual(help_view([], []), 0)
+        output = stream.getvalue()
+        for name in ('help', 'commands', 'completion', 'init'):
+            self.assertRegex(output, r'(?m)^ +' + name + r' +')
+        self.assertNotIn('Command group', output)
+        self.assertEqual(output.count('Use dots help COMMAND'), 1)
+
+    def test_native_powershell_root_help_without_python(self):
+        requested = os.environ.get('DOTS_TEST_POWERSHELL')
+        names = [requested] if requested else (['powershell', 'pwsh'] if os.name == 'nt' else ['pwsh'])
+        engines = [shutil.which(name) for name in names]
+        if requested and not all(engines):
+            self.fail('required PowerShell engine unavailable: ' + requested)
+        if not any(engines):
+            self.skipTest('PowerShell unavailable; native root-help acceptance remains pending')
+        self.root_help_fixture()
+        empty_path = self.base / 'no tools'
+        empty_path.mkdir()
+        env = dict(self.env, PATH=str(empty_path), COLUMNS='80')
+        for engine in filter(None, engines):
+            def run(*args, width='80'):
+                result = subprocess.run([engine, '-NoLogo', '-NoProfile', '-File',
+                                         str(self.repo / 'bin/dots.ps1'), *args],
+                                        env=dict(env, COLUMNS=width), capture_output=True,
+                                        text=True, encoding='utf-8', timeout=30)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(result.stderr, '')
+                return result.stdout
+            with self.subTest(engine=engine):
+                outputs = [run(*args) for args in ((), ('help',), ('-h',), ('--help',))]
+                self.assertTrue(all(output == outputs[0] for output in outputs))
+                self.assert_root_help(outputs[0])
+                for width in ('40', '120'):
+                    output = run('--help', width=width)
+                    self.assert_root_help(output)
+                    footer = output[output.index('Use dots help COMMAND'):]
+                    self.assertTrue(all(len(line) <= int(width) for line in footer.splitlines()))
+                self.assertIn('samples deep leaf', run('help', 'samples'))
+                self.assertIn('implicit one', run('help', 'implicit'))
+        self.assert_read_only_home()
+
     def test_all_metadata_and_targeted_resolution(self):
         rows = catalog(roots(self.repo))
         self.assertGreaterEqual(len(rows), 84)
@@ -81,6 +187,36 @@ class NativeCLI(unittest.TestCase):
         self.assertIn('dots:example', self.command('__complete','files','repair','dots:').stdout)
         self.assertEqual(json.loads(self.command('files','repair','--dry-run','--json').stdout)['action'], 'repair')
         self.assertFalse(list(self.home.iterdir()))
+
+    def test_singular_families_metadata_and_completion(self):
+        rows=catalog(roots(self.repo))
+        self.assertFalse(any(name=='themes' or name.startswith('themes-') or name=='profiles' or name.startswith('profiles-') for name in rows))
+        for route in ('theme-list','theme-plugins-list','theme-install','profile-list','profile-check'):
+            self.assertIn(route,rows)
+            self.command('help',*route.split('-'))
+        for family in ('themes','profiles'):
+            self.command(family,expected=1)
+            self.command('help',family,expected=1)
+        self.assertNotIn('candidate\tthemes\t',self.command('__complete','them').stdout)
+        self.assertNotIn('candidate\tprofiles\t',self.command('__complete','prof').stdout)
+        self.assertIn('--all',self.command('__complete','profile','check','--a').stdout)
+        self.assertIn('--id',self.command('__complete','files','edit','--i').stdout)
+
+    def test_profile_collection_frontend_equivalence(self):
+        for identity in ('termux','linux','wsl','windows'):
+            path=self.repo/'profiles'/identity/'profile.json';path.parent.mkdir(parents=True)
+            path.write_text(json.dumps(dict(schema=1,id=identity)))
+        routes=[('profile','list','--platform','windows','--json'),
+                ('profile','check','--all','--json'),('profile','check','--json')]
+        for route in routes:
+            result=self.command(*route)
+            if os.name!='nt':
+                bash=subprocess.run([shutil.which('bash'),str(self.repo/'bin/dots'),*route],env=self.env,
+                                    capture_output=True,text=True,timeout=30)
+                self.assertEqual(bash.returncode,0,bash.stderr)
+                self.assertEqual(json.loads(bash.stdout),json.loads(result.stdout))
+        self.assertEqual(len(json.loads(self.command('profile','check','--all','--json').stdout)['checks']),4)
+        self.assertEqual(len(json.loads(self.command('profile','check','--json').stdout)['checks']),1)
 
     def test_literal_argument_bridge(self):
         spec = importlib.util.spec_from_file_location('dots_native_test', LIB/'native.py')

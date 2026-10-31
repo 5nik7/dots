@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dots:summary=Inspect and change the current theme
+# dots:summary=Inspect, select and manage themes and their collection
 # dots:usage=[SUBCOMMAND | FAMILY [FLAVOR] [ACTION | COLOR [FORMAT]]]
 DT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/themes" && pwd) || exit
 source "$DT_LIB/commands.bash"

@@ -1,0 +1,2 @@
+# Optional for comment-preserving native wttr configuration edits only.
+tomlkit>=0.13,<1

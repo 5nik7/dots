@@ -32,7 +32,7 @@ dt_command() {
       dt_current_id || return
       dots::heading "Current theme: $REPLY"
       dt_load_native "$REPLY" && dt_native_preview || return
-      printf '\nUse theme color NAME, theme set ID, or dots themes list.\n' ;;
+      printf '\nUse theme color NAME, theme set ID, or dots theme list.\n' ;;
     list)
       if (($# == 0)); then dt_list
       elif [[ $# == 1 && $1 == --families ]]; then dt_palette_list families

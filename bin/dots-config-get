@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # dots:summary=Read a configured profile option
-# dots:usage=KEY [OPTIONS]
+# dots:usage=[KEY] [OPTIONS]
 # dots:option=--defaults||flag|Use shared color and icon defaults
 # dots:option=--profile||profile-id|Select a profile without activating it
 # dots:option=--json||flag|Print structured configuration data

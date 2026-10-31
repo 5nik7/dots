@@ -425,8 +425,8 @@ class Todo(unittest.TestCase):
         from todo_input import input_text
         initial='literal\x1b[31m\nnext line'
         displayed=r'literal\x1b[31m'+'\nnext line'
-        with patch('todo_input.terminal',return_value=True),patch('todo_input.shutil.which',return_value='gum'), \
-             patch.dict(os.environ,TERM='xterm-256color'),patch('todo_input.subprocess.run',return_value=subprocess.CompletedProcess([],0,displayed+'\n')) as run:
+        with patch('menu_input.terminal',return_value=True),patch('menu_input.shutil.which',return_value='gum'), \
+             patch.dict(os.environ,TERM='xterm-256color'),patch('menu_input.subprocess.run',return_value=subprocess.CompletedProcess([],0,displayed+'\n')) as run:
             self.assertEqual(input_text(initial,'Notes',True),initial)
             self.assertEqual(run.call_args.args[0][-1],'--value='+displayed)
             self.assertNotIn('\x1b',run.call_args.args[0][-1])

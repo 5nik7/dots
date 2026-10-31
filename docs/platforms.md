@@ -316,3 +316,12 @@ Dots configuration is checkout-local under the resolved platform profile: `profi
 Todo planning shares `todo plan ID [--new] [--dry-run]`, brief export, completion and popup actions across Bash and native PowerShell. Termux uses the existing codex-termux runit connection; native Linux/WSL/Windows use native Codex daemon/proxy capabilities, with runtime acceptance pending outside the isolated Termux fixture. Windows uses the current terminal and native Set-Clipboard, with no tmux or WSL translation; app installation destinations are unchanged. See [Todo planning](todo.md#plan-a-goal-in-codex).
 
 Profile implementations use one target per profile. The permanent core registry owns platform eligibility; Windows app tokens remain native Windows destinations. Generated namespaces include inactive profiles without putting them on PATH or translating paths across Windows/WSL. Shell representations and the protected PowerShell `$PROFILE` are specified in [profiles](profiles.md#generated-profile-paths). Native Windows PowerShell 5.1/7 acceptance for generated maps remains pending on this Termux host.
+
+Core config/file-ID and singular command-family updates use shared Bash/native
+PowerShell controllers and existing destination adapters. ID renames update
+checkout profiles but never open another platform's state store. Native Windows
+PowerShell 5.1/7 and native Linux/WSL runtime/visual checks remain named pending
+acceptance; see [core updates](../plans/core-updates.md).
+
+
+Visual config commands share the Python resolver/refresher between Bash and native PowerShell. Windows retains native state/config destinations and does not invoke WSL or tmux; unavailable consumers are reported. Bash/Zsh, Fish, Nushell, PowerShell and Xonsh follow generated literal visual data through their existing generation checks. Native Windows PowerShell 5.1/7 and Linux/WSL desktop acceptance remain separate from Termux fixtures.

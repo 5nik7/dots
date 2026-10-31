@@ -197,9 +197,9 @@
     },
     {
       "id": "b0a96f80edbf40f7b6953e68c033d412",
-      "alias": null,
+      "alias": "pkgs-output",
       "title": "golang support. pipe external package manager(s)(apt,pacman,npm,uv,pip,etc) standard out into pkgs and output preferential dots output style: colors, format, progress.",
-      "notes": "",
+      "notes": "add configuration  to specify custom install and/or update exec sequences, skip certain pakages(blacklist), or update or install with special flags",
       "status": "open",
       "priority": "normal",
       "tags": [
@@ -209,7 +209,7 @@
       "parent": "3b0fe81b73a641ddbce5f8cd96068860",
       "acceptance": [],
       "created": "2026-10-30T04:50:53.378727+00:00",
-      "updated": "2026-10-30T07:52:04.114158+00:00",
+      "updated": "2026-10-30T20:36:42.552957+00:00",
       "completed": null,
       "removed": null
     },
@@ -345,6 +345,775 @@
       "created": "2026-10-30T09:27:39.845275+00:00",
       "updated": "2026-10-30T10:01:41.916147+00:00",
       "completed": "2026-10-30T10:01:41.916147+00:00",
+      "removed": null
+    },
+    {
+      "id": "fb116bd3fcc448f6a2a39211f9fe875b",
+      "alias": "core-update",
+      "title": "dots core updates",
+      "notes": "Approved core-updates plan: Config List/Get/Set; checkout-wide recoverable file-ID renames with selected-profile mapping edits and optional live apply; singular theme/profile only. Implementation request authorizes saving this tree and continuing directly. Completion requires both existing children and integration verification. Native Windows PowerShell 5.1/7 and Linux/WSL acceptance may remain named pending checks after local isolated acceptance.\n\nThe full agreed subtree is implemented and locally verified; all seven nonremoved descendants are complete. Config List/Get/Set, recoverable file-ID renames and singular theme/profile commands are implemented with synchronized docs and local wiki. The agreed native-platform acceptance gaps and six reproduced unrelated baseline test limitations are documented in plans/core-updates.md. Changes remain in the working trees; no commit, push, live install, theme activation or reload was performed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "core",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Both existing children and integrated verification are complete, with native acceptance gaps reported honestly."
+      ],
+      "created": "2026-10-30T18:41:53.556231+00:00",
+      "updated": "2026-10-30T20:17:38.225265+00:00",
+      "completed": "2026-10-30T20:17:38.225265+00:00",
+      "removed": null
+    },
+    {
+      "id": "a7e1de658df6477092650d93acad5a5b",
+      "alias": null,
+      "title": "update config commands, add ability to update/change flie id. if file id is updated, make sure to update catalog(s). first config popup is list, get, set. get and set are a catagory choose firstr[all, icons, colors, files, ...(all confif catagories)]",
+      "notes": "Dependencies: ad85c3e827cd493c9277e59b236590c3 supplies identity support for 2ce7ff1502594c7bb30b972260ae481e. Preserve existing config data contracts and guarded edits. Get/Set begin with categories; List is read-only.\n\nBoth linked config work packages are implemented and verified. See plans/core-updates.md and child verification notes. Existing title, priority, tags and parent relationships were retained.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "fb116bd3fcc448f6a2a39211f9fe875b",
+      "acceptance": [
+        "Both linked config work packages pass their acceptance criteria."
+      ],
+      "created": "2026-10-30T18:47:04.706587+00:00",
+      "updated": "2026-10-30T19:46:47.775520+00:00",
+      "completed": "2026-10-30T19:46:47.775520+00:00",
+      "removed": null
+    },
+    {
+      "id": "64911e2c1e064af1b0de46b427d2ddf6",
+      "alias": null,
+      "title": "combine theme and themes commands to just theme command. combine profile and profiles commands to just profile. update all commands, popups, and docs",
+      "notes": "Dependencies: 7536709cabd740deb56d4f20ba216b1a and a7add87406da4bf9b2f47ae636145429 can proceed independently. Remove plural first-party routes without aliases; keep bare summaries; profile check remains active by default with --all for every profile.\n\nBoth linked command-consolidation packages are complete. Singular theme/profile routes, profile list and profile check --all, menus, metadata, completions and canonical documentation agree. Existing titles, priority, tags and relationships were preserved.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "fb116bd3fcc448f6a2a39211f9fe875b",
+      "acceptance": [
+        "Both linked command-consolidation work packages pass their acceptance criteria."
+      ],
+      "created": "2026-10-30T18:56:09.348866+00:00",
+      "updated": "2026-10-30T20:17:31.827717+00:00",
+      "completed": "2026-10-30T20:17:31.827717+00:00",
+      "removed": null
+    },
+    {
+      "id": "7ddc1895c7ad48989b6591e9edd043fd",
+      "alias": "docs-update",
+      "title": "docs update",
+      "notes": "",
+      "status": "open",
+      "priority": "low",
+      "tags": [
+        "docs",
+        "wiki",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [],
+      "created": "2026-10-30T19:00:32.966222+00:00",
+      "updated": "2026-10-30T20:06:49.375503+00:00",
+      "completed": null,
+      "removed": null
+    },
+    {
+      "id": "ea66808389ff4d5bbf391cd6433d3e14",
+      "alias": "readme-update",
+      "title": "update dots repo main README.md to be simpler, only super important info. add link to dots.wiki",
+      "notes": "add logo image to README.md\nlogo @media/logo/white/DOTS_white_2048x562.png",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "7ddc1895c7ad48989b6591e9edd043fd",
+      "acceptance": [],
+      "created": "2026-10-30T19:02:19.974445+00:00",
+      "updated": "2026-10-30T20:11:15.952328+00:00",
+      "completed": null,
+      "removed": null
+    },
+    {
+      "id": "ad85c3e827cd493c9277e59b236590c3",
+      "alias": null,
+      "title": "Support recoverable file-ID renames and combined edits",
+      "notes": "Decision: schema-3 registry retains flattened historical ID mappings; old IDs are reserved for recovery and selectors require current IDs. Rename globally, change mapping fields only in the selected profile; optional live apply remains active-profile-only. Preserve original receipts, undo and historical journals.\n\nImplemented and verified: all 10 file-rename acceptance tests pass, covering preview/no-op, successive flattened history, all-profile references, reserved/invalid IDs, combined Windows mapping scope, receipt baselines, repair/uninstall, drift, rollback and interrupted recovery. Existing mapping (29), profile backend (14), file operation (22) and repair (48) suites pass. Native Windows runtime evidence remains pending as agreed.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "a7e1de658df6477092650d93acad5a5b",
+      "acceptance": [
+        "ID changes update all registry/profile/replacement references and current receipt ownership, with reserved history for older receipts.",
+        "Combined edits change only the selected mapping and explicitly requested live files; preview, rollback, recovery and undo preserve original baselines."
+      ],
+      "created": "2026-10-30T19:09:43.188287+00:00",
+      "updated": "2026-10-30T19:46:36.209849+00:00",
+      "completed": "2026-10-30T19:46:36.209849+00:00",
+      "removed": null
+    },
+    {
+      "id": "2ce7ff1502594c7bb30b972260ae481e",
+      "alias": null,
+      "title": "Restructure Config navigation and guided get/set",
+      "notes": "Depends on ad85c3e827cd493c9277e59b236590c3. Config opens List/Get/Set. Categories: All, Icons, Colors, Files, Profile, Settings, Environment; defaults support only All/Icons/Colors. Empty get/set in a terminal open guided flows; data and incomplete explicit calls do not.\n\nImplemented List/Get/Set, category-first guided get/set, read-only List/Get, and Rename ID handoff. Config menu suite passed all 15 tests including 40/80/120-column native FZF and private two-client tmux; the final rename-handoff assertion also passes. Data calls, guarded saves, cancellation and active-profile file workflow boundaries are preserved.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "a7e1de658df6477092650d93acad5a5b",
+      "acceptance": [
+        "List/Get/Set and guided empty get/set calls follow the agreed flow; List/Get are read-only.",
+        "Set retains guarded edits, cancellation, scope, exact data behavior and safe file-editor handoff."
+      ],
+      "created": "2026-10-30T19:10:17.706638+00:00",
+      "updated": "2026-10-30T19:46:42.326865+00:00",
+      "completed": "2026-10-30T19:46:42.326865+00:00",
+      "removed": null
+    },
+    {
+      "id": "7536709cabd740deb56d4f20ba216b1a",
+      "alias": null,
+      "title": "Consolidate theme commands and menus",
+      "notes": "Merge existing theme and themes menu entries and remove plural adapters/callers; preserve standalone theme, palette queries and summaries.\n\nImplemented singular theme routes throughout both dispatchers, metadata, completion and merged launcher menus; plural first-party adapters are removed. Bare summaries and standalone theme are retained. Route/wrapper/data/completion checks pass, along with all 21 launcher and 16 picker tests. Broader theme suites have five existing failing/timeout cases, all reproduced with saved pre-change controllers, including a bounded Zsh follow-up; details are in plans/core-updates.md.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "64911e2c1e064af1b0de46b427d2ddf6",
+      "acceptance": [
+        "All existing theme functionality is reachable through singular routes; plural first-party routes and menu entries are absent.",
+        "Standalone theme, completion and both dispatchers agree while preserving data outputs."
+      ],
+      "created": "2026-10-30T19:10:18.893439+00:00",
+      "updated": "2026-10-30T20:17:28.113650+00:00",
+      "completed": "2026-10-30T20:17:28.113650+00:00",
+      "removed": null
+    },
+    {
+      "id": "a7add87406da4bf9b2f47ae636145429",
+      "alias": null,
+      "title": "Consolidate profile commands and menus",
+      "notes": "Move profiles list to profile list and profiles check to profile check --all. Reject explicit ID with --all; keep summaries.\n\nImplemented singular profile list and check/check ID/check --all, retaining list filters and active default. Profile debug suite passes 17 cases (one unavailable runtime skipped), launcher passes all 21 cases, native-controller route/completion checks pass, and the new Bash/native JSON equivalence case passes for list and all/active checks. Native PowerShell runtime acceptance remains pending as agreed.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "64911e2c1e064af1b0de46b427d2ddf6",
+      "acceptance": [
+        "Profile list and check/check ID/check --all work with retained filters and active-profile default.",
+        "Plural first-party routes are absent; menus, completion and both dispatchers agree."
+      ],
+      "created": "2026-10-30T19:10:19.953301+00:00",
+      "updated": "2026-10-30T19:49:13.709619+00:00",
+      "completed": "2026-10-30T19:49:13.709619+00:00",
+      "removed": null
+    },
+    {
+      "id": "91beaf2f2f8445cdb187081aa4ec2097",
+      "alias": null,
+      "title": "Verify integrated changes and synchronize docs/wiki",
+      "notes": "Depends on ad85c3e827cd493c9277e59b236590c3, 2ce7ff1502594c7bb30b972260ae481e, 7536709cabd740deb56d4f20ba216b1a, a7add87406da4bf9b2f47ae636145429. Use isolated tests and private 40/80/120-column PTYs/tmux; update canonical docs and superseding routing decision, then preview/build/check the available wiki. Preserve unrelated changes; no commit, push, live install, theme publish or reload.\n\nIntegrated local feature acceptance passes. File renames: 10; mappings: 29; profile backend: 14; config menu: 15 plus final handoff/category assertions; launcher: 21; theme picker: 16; shared menus: 24; legacy identities: 8. Other file, profile, Bash/native-controller checks pass, including Bash/native profile JSON equivalence. Broader suites: theme 28/32, theme commands 16/17, installation 27/28. All six failing/timeout outcomes reproduce with saved pre-change controllers; see plans/core-updates.md for exact cases and native Windows PowerShell 5.1/7 and Linux/WSL acceptance gaps. Metadata validates 232 commands; 1120 Markdown links pass; both working-tree whitespace checks and local wiki check pass. Wiki transactions: d37e8a0a3e9e4ce395e5dff484d9c65e and c719c6a5b03e4845a552bffe3b98199f. Detailed isolated logs: /data/data/com.termux/files/usr/tmp/dots-core-updates-kxvigfru. Unrelated Termux and logo work preserved.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "fb116bd3fcc448f6a2a39211f9fe875b",
+      "acceptance": [
+        "Integrated isolated local acceptance passes; canonical docs, metadata, guidance and generated wiki agree.",
+        "Unavailable native Windows PowerShell and Linux/WSL checks and unrelated baseline failures are explicitly recorded."
+      ],
+      "created": "2026-10-30T19:10:21.170473+00:00",
+      "updated": "2026-10-30T20:17:35.097878+00:00",
+      "completed": "2026-10-30T20:17:35.097878+00:00",
+      "removed": null
+    },
+    {
+      "id": "08a1bdbbf62c4d929a4b9065d73554e8",
+      "alias": "export-installed-packages",
+      "title": "export current installed packages for all managers to a files(s) that can be edited. file(s) can be source/parsed for installation during dots setup(dots core installers)",
+      "notes": "",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "3b0fe81b73a641ddbce5f8cd96068860",
+      "acceptance": [],
+      "created": "2026-10-30T19:18:40.945315+00:00",
+      "updated": "2026-10-31T04:15:40.409355+00:00",
+      "completed": null,
+      "removed": null
+    },
+    {
+      "id": "b13637492e3e47ec89fb050c9961c071",
+      "alias": "human-wiki",
+      "title": "more specific dots wiki queries on github, cli, and popup. better human readable breakdowns of dots core, dots commands, dots config configuration, environment breakdown, neovim,, and more",
+      "notes": "",
+      "status": "open",
+      "priority": "normal",
+      "tags": [
+        "docs",
+        "wiki",
+        "dots"
+      ],
+      "due": null,
+      "parent": "7ddc1895c7ad48989b6591e9edd043fd",
+      "acceptance": [],
+      "created": "2026-10-30T20:04:10.205615+00:00",
+      "updated": "2026-10-30T20:06:13.952349+00:00",
+      "completed": null,
+      "removed": null
+    },
+    {
+      "id": "2acf2a75677e47dfa286c06e4f499edc",
+      "alias": "usage",
+      "title": "usgae update",
+      "notes": "dots usage output(dots(zero args), dots help/-h/--help) is a bit too verbose. have it show just the first tier of subcommands, ie show dots theme, but not thendots theme * subcommands. make this doesnt break auto completion or anything like that\n\nAgreed implementation: limit only root help (dots, help, -h, --help) to one row per visible top-level command/group, keeping each renderer's existing rows, built-in usage, branding and global options. Represent deeper-only extensions as a group with generic summary; hidden-only groups stay absent. Add: Use dots help COMMAND for details; dots commands for all commands. Preserve full catalogs, family/leaf help, dispatch and completion. Cover Bash, Python CLI and Python-free PowerShell help. No menu changes: static help only. Preserve unrelated checkout/wiki work. Native Windows PowerShell 5.1/7 and Linux/WSL terminal evidence remain pending; Windows app destinations are unchanged.\n\nImplemented the agreed root-only help reduction across Bash, the shared native controller and Python-free PowerShell help. All four root forms show only top-level commands/groups with retained layout and the navigation footer; implicit groups remain discoverable. Family/leaf help, full commands inventory, completion and validation are preserved. Both children are verified complete. Evidence and native acceptance limitations: plans/usage-help.md. No commit, push, install or reload performed; unrelated and concurrent work preserved.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "usage",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "All four root-help entry points show only top-level commands/groups with the agreed layout and navigation footer.",
+        "Detailed help, complete command discovery, dispatch and completion retain their existing behavior.",
+        "Available focused checks pass, documentation/wiki are synchronized and unavailable native acceptance is recorded explicitly."
+      ],
+      "created": "2026-10-30T20:26:50.045996+00:00",
+      "updated": "2026-10-30T20:56:28.559121+00:00",
+      "completed": "2026-10-30T20:56:28.559121+00:00",
+      "removed": null
+    },
+    {
+      "id": "cec72169a0bd46108bd119e05d232bc8",
+      "alias": "menu",
+      "title": "alphabetize menu popup",
+      "notes": "alphabetize dots menu initial popup\n\nAgreed implementation: alphabetize only the interactive root launcher by visible label (case-insensitive, ignoring icons), retain FZF search relevance, preserve registry/data order and existing family submenus. Menu assessment: update existing launcher; no new routes, dependencies or Windows destinations. Keep this bounded work in the existing goal, with no new children. Dependencies: implementation -> isolated and private terminal verification -> canonical documentation and journaled wiki refresh. Preserve current uncommitted source/wiki edits. Native platforms unavailable locally remain named pending acceptance checks.\n\nImplemented interactive root-only stable A-Z label sorting in the shared launcher. Registry/data order, submenus and stable command identities are preserved. Verification: tools/test_menu_launcher.py 21 passed; tools/test_menus.py 24 passed; 18 before/after byte comparisons passed for print/JSON/redirected modes under auto/never/always decoration. Supplemental private Termux tmux/FZF checks passed at 40/80/120 columns (icons enabled at 80, disabled at 40/120): A-Z rows, unavailable entries, relevance search t selecting tmux, cleared search selecting anodize, weather -> wttr browse, exact-client ownership. Existing suite covers cancellation, help, query restoration and Bash/native-controller routes. Missing-FZF fallback and native-Windows availability fixtures passed. README, command reference and popup-menu plan updated; 1125 relative links and git diff --check passed. Local wiki build/check healthy; retained transaction 3e4f13c4445d41c39ede2ea8114e1522. Native Linux/WSL and Windows PowerShell 5.1/7 visual acceptance remains pending, as agreed. Existing source and wiki edits preserved; no commit, push or live tmux reload.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "menu, popup",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Interactive root choices use a stable case-insensitive visible-label A-Z order; clearing a search or returning with an empty query restores this order, while nonempty queries retain FZF relevance ranking.",
+        "Reordered choices retain their original IDs and command mappings, including weather -> wttr; submenu order, unavailable entries, navigation, query restoration, help and cancellation remain correct.",
+        "Printed, JSON and redirected output retain existing registry order and content, including with forced decoration; an interactive missing-FZF fallback lists the alphabetical root choices.",
+        "Existing isolated launcher and shared-menu checks pass, with selection identity after reordering verified in navigation coverage.",
+        "Private Termux terminal/tmux checks cover 40/80/120 columns, icons disabled, unavailable entries, missing-FZF fallback and cancellation; preserve popup ownership.",
+        "Bash and native-controller paths are checked; unavailable native Linux/WSL and Windows PowerShell 5.1/7 visual checks are explicitly recorded as pending.",
+        "README, command reference and popup-menu plan describe the interactive/data ordering distinction; documentation links, whitespace and available wiki export checks pass, with unrelated failures reported separately."
+      ],
+      "created": "2026-10-30T20:44:27.012770+00:00",
+      "updated": "2026-10-30T20:57:00.691100+00:00",
+      "completed": "2026-10-30T20:57:00.691100+00:00",
+      "removed": null
+    },
+    {
+      "id": "52a77005a6de4c2d83283bd6b76107e9",
+      "alias": null,
+      "title": "Compact root help across Bash and native frontends",
+      "notes": "No prerequisite child. Preserve existing command-family edits; filter only displayed root-help rows. Keep metadata, completion source and candidate protocols unchanged.\n\nImplemented the root-only projection in Bash, shared Python CLI and Python-free PowerShell help, preserving all catalog consumers. Added real/implicit/hidden group, alias, metadata/collision, full inventory/help and completion regressions. Bash suite passes 27/27, including native Bash/Zsh/Fish completion. Focused native-controller cases pass; the new PowerShell runtime test is skipped because no engine is installed. Full native suite and final presentation checks are in progress.\n\nVerified implementation: all 27 Bash CLI tests pass, including real Bash/Zsh/Fish completion. Full native CLI suite: 23 tests, 21 passed and two PowerShell runtime skips; the final hidden-only-group assertion also passes. 52 exact before/after comparisons preserve full inventory, validation, contextual help, all four completion sources and route/value candidates with decoration forced/disabled. Existing catalogs, direct dispatch and startup remain unchanged. Python-free PowerShell implementation and runtime regression are present; actual Windows 5.1/7 evidence remains pending as agreed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "2acf2a75677e47dfa286c06e4f499edc",
+      "acceptance": [
+        "All three help renderers implement the agreed root-only projection; real and implicit groups appear once and hidden-only groups stay absent.",
+        "Isolated regressions cover root-help aliases, unchanged detailed help/inventory, completion, validation and extension nonexecution."
+      ],
+      "created": "2026-10-30T20:45:30.809231+00:00",
+      "updated": "2026-10-30T20:56:22.132539+00:00",
+      "completed": "2026-10-30T20:56:22.132539+00:00",
+      "removed": null
+    },
+    {
+      "id": "4ab948cfe97349c39797a8f7874def2c",
+      "alias": null,
+      "title": "Verify presentation and synchronize help documentation",
+      "notes": "Depends on 52a77005a6de4c2d83283bd6b76107e9: implementation and focused regression checks before final presentation review, documentation and wiki synchronization.\n\nVerified 30 owned Bash/Python terminal captures at 40/80/120 columns in automatic, plain, NO_COLOR, TERM=dumb and forced styles; long/Unicode summaries and navigation footer remain readable, homes unchanged. Syntax checks and 1125 relative Markdown links pass; git diff --check passes. Changed Bash file has seven identical pre-existing ShellCheck diagnostics and no new diagnostics; broad framework lint was stopped after over three minutes. Command validation covers 232 entries; current root help has 16 external groups plus four built-ins. Canonical docs and focused plan updated; wiki build reports unchanged and wiki check Healthy yes, with generated pages confirmed current. Concurrent unrelated source/wiki/menu documentation work preserved. Native Windows/PowerShell/Linux/WSL terminal and light/dark acceptance remain pending. Evidence: plans/usage-help.md and /data/data/com.termux/files/usr/tmp/dots-usage-help-pdw_8bjo.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "2acf2a75677e47dfa286c06e4f499edc",
+      "acceptance": [
+        "Representative 40/80/120-column views remain readable with existing styling and plain fallbacks.",
+        "Canonical docs, focused plan and generated wiki describe implemented behavior; link and whitespace checks pass.",
+        "Verification results and named native-platform gaps are recorded."
+      ],
+      "created": "2026-10-30T20:45:35.175215+00:00",
+      "updated": "2026-10-30T20:56:25.546637+00:00",
+      "completed": "2026-10-30T20:56:25.546637+00:00",
+      "removed": null
+    },
+    {
+      "id": "ad4dd159482a4810a29d808ac20dbafb",
+      "alias": "config-cmd-update",
+      "title": "fix/update config command",
+      "notes": "i changed a icon config setting in termux profile and ita not taking effect. hierarchy shout be profile config > defaults. and if a icon icon/color//... config option is set it should update live. make that work and my sure current config is reflected.\n\nAgreed implementation: layer-first visual precedence; app overrides win within each layer. Common applications.codex icon with navigation.codex compatibility alias. Add explain and refresh; save refreshes affected active consumers, with --no-refresh escape. Preserve selected palette, unrelated checkout edits and existing nonvisual activation workflows. Keep saves on refresh failure; report and retry. Final live Termux glyph migration/refresh is authorized. No commit or push.\n\nImplemented the complete agreed subtree and verified live Termux behavior. Profile visual values win by layer; common Codex glyph 󱈸 is active in tmux, CLI reports it, saves refresh supported consumers, direct edits use config refresh, and explain reports provenance. All attached work packages are complete. Canonical docs and local generated wiki are synchronized. Recovery transactions and platform acceptance limits are recorded in plans/config-live.md; no commit or push performed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "config, command",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Profile visual settings override parent/default layers; effective-value reports match actual supported consumers.",
+        "Visual saves refresh safely and report partial activation; current Termux Codex glyph is verified live.",
+        "All nonremoved attached work packages satisfy their recorded acceptance criteria."
+      ],
+      "created": "2026-10-30T21:01:04.992607+00:00",
+      "updated": "2026-10-30T22:04:33.911949+00:00",
+      "completed": "2026-10-30T22:04:33.911949+00:00",
+      "removed": null
+    },
+    {
+      "id": "1391c9df2ed94e70b00008288edc22a0",
+      "alias": null,
+      "title": "find more possible config keys that can be added to the config command. colors, icons, ...",
+      "notes": "Depends on 9aca9f8d54fe4e5080d87379f9d1e0cc. Implement the agreed shared UI, Todo and tmux controls, not an unbounded configuration expansion. Keep normal priority and current appearance defaults.\n\nConnected shared border/cursor/match/separator controls, Todo state/priority styles and tmux window/pane styles. Linux/WSL profile defaults preserve inactive-window appearance. Unsupported new combinations are rejected; existing entries remain inspectable/resettable.\n\nVerified wired controls and preserved defaults through template and native tmux checks. Shared UI, Todo status/priority, tmux window/pane controls are documented in docs/profiles.md; later tab/name contrast and widget dimensions are explicitly deferred candidates. Todo menu 9 cases passed.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ad4dd159482a4810a29d808ac20dbafb",
+      "acceptance": [
+        "Implement shared border/cursor/match/separator, Todo status/priority and tmux window/pane colors with current appearance as defaults.",
+        "Only wired controls are offered for new edits; existing unused entries are retained and explained; remaining candidates are documented."
+      ],
+      "created": "2026-10-30T21:08:00.725539+00:00",
+      "updated": "2026-10-30T22:03:20.022355+00:00",
+      "completed": "2026-10-30T22:03:20.022355+00:00",
+      "removed": null
+    },
+    {
+      "id": "9aca9f8d54fe4e5080d87379f9d1e0cc",
+      "alias": null,
+      "title": "Correct visual inheritance and explain effective values",
+      "notes": "First work package. Shared resolver, supported-control catalog and provenance precede consumer expansion and refresh. Existing notes, aliases and statuses remain intact.\n\nImplemented layer-first resolution, field provenance, canonical Codex alias, supported-consumer validation/completion and explain/browser details. Initial isolated config-live 8 tests, style 7 tests and profile-config 10 tests passed; full integration checks continue.\n\nVerified layer-first resolution, empty/false values, compatibility alias and provenance. Explain/browser and scalar/JSON/completion contracts passed isolated config-live, style (7), profile (10) and Config menu (15) checks; unsupported saved entries remain inspectable/resettable.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ad4dd159482a4810a29d808ac20dbafb",
+      "acceptance": [
+        "Layer-first icon and per-field color resolution preserves empty strings and false; canonical Codex role and legacy alias agree across consumers.",
+        "Explain output and browser previews show effective values, origins, supported consumers and activation state while scalar and JSON contracts remain compatible."
+      ],
+      "created": "2026-10-30T21:23:11.124181+00:00",
+      "updated": "2026-10-30T22:03:15.585088+00:00",
+      "completed": "2026-10-30T22:03:15.585088+00:00",
+      "removed": null
+    },
+    {
+      "id": "06abe6a1b6284cea98fd611e1d618713",
+      "alias": null,
+      "title": "Refresh affected managed visuals after configuration saves",
+      "notes": "Depends on 9aca9f8d54fe4e5080d87379f9d1e0cc and 1391c9df2ed94e70b00008288edc22a0. Shared Python coordinator with Store transactions and theme lock coordination; affected visuals only, no arbitrary theme plugins or background watcher. Refresh all verified same-checkout/profile/state consumers, retaining identity and last-good state on publication failure.\n\nImplemented visual-only successor generations through Store, bounded verified multi-server tmux refresh, supported first-party adapters and literal native-shell visual data. Owned tests cover palette/artifact preservation, undo, drift, save-kept failure and two accepted/one unrelated tmux servers.\n\nVerified publication/undo, stale-store refusal, save-kept failure, no-op/inactive save behavior, 2 accepted and 1 unrelated private tmux servers, and Bash/Zsh/Fish/Nushell generation changes. Native shared controller 21 passed with 2 skips; selected theme checks all passed. Live publication ae5f429434d54f07a4b793293fdb68a7 preserved palette and identities, notified tmux/Yazi, and repeat preview proposes no publication. Existing shells must load the upgraded integration once; native Windows/Xonsh checks remain named limits.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ad4dd159482a4810a29d808ac20dbafb",
+      "acceptance": [
+        "CLI and popup saves share guarded refresh, explicit retry and no-refresh behavior; inactive profiles and no-op repeats do not activate or publish unnecessarily.",
+        "Publication and consumer failures preserve recovery and report pending state; shell updates and verified multi-server tmux refresh preserve theme identity and unrelated state."
+      ],
+      "created": "2026-10-30T21:23:15.758589+00:00",
+      "updated": "2026-10-30T22:03:24.863148+00:00",
+      "completed": "2026-10-30T22:03:24.863148+00:00",
+      "removed": null
+    },
+    {
+      "id": "4517623e659845fe8b4317d70c013f02",
+      "alias": null,
+      "title": "Verify, document, and activate the Termux configuration",
+      "notes": "Depends on 9aca9f8d54fe4e5080d87379f9d1e0cc, 1391c9df2ed94e70b00008288edc22a0 and 06abe6a1b6284cea98fd611e1d618713. Run owned fixtures first, then authorized live Termux/tmux verification. Native Windows/Linux/WSL gaps remain explicitly named acceptance limits.\n\nAll scoped checks now pass with explicit capability skips: config-live 11, style 7, profile 10, Config menu 15, Todo menu 9; tmux status 18 plus 1 skip; four selected theme checks; native controller 21 plus 2 skips; shell init 13 plus 18 skips. Bash/Zsh/Fish/Nushell visual updates verified. 234 command metadata entries, ShellCheck/Zsh syntax, Markdown links and whitespace checks pass. Live common glyph 󱈸 and alias verified in CLI/tmux; catppuccin-mocha palette byte-identical, server/session/window identities and bindings unchanged, repeat preview empty. Config saves e59029d5b5db4d99a9531d2f76d7168f and ba8f40238a2b4b5a9f51e9482052834e; visual publication ae5f429434d54f07a4b793293fdb68a7. Wiki built via retained transaction 4072877194054f9badc420e9d4aa0810 and wiki check is healthy. Native Windows PowerShell 5.1/7, Xonsh and Linux/WSL desktop rendering remain named acceptance limits, not claimed as tested. Details: plans/config-live.md.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ad4dd159482a4810a29d808ac20dbafb",
+      "acceptance": [
+        "Isolated resolver, config, consumer, shell, transaction and presentation checks pass; platform evidence and unavailable native checks are reported accurately.",
+        "Commands, completion, canonical documentation and available wiki are synchronized.",
+        "The existing Termux Codex glyph is recoverably moved to the common role and verified in active managed Termux/tmux consumers without changing the theme."
+      ],
+      "created": "2026-10-30T21:23:17.650530+00:00",
+      "updated": "2026-10-30T22:04:29.343269+00:00",
+      "completed": "2026-10-30T22:04:29.343269+00:00",
+      "removed": null
+    },
+    {
+      "id": "1b5eb9b806a843b0b992d92c889d29c3",
+      "alias": "dots-skills",
+      "title": "Create Dots command skills and require configuration integration review",
+      "notes": "Agreed plan: ten new repository-local skills, one dedicated owner per command family, and mandatory configuration-integration review for every command change. Sources use .codex/skills with relative .agents/skills discovery links. Preserve existing skills, unrelated changes and completed configuration goal ad4dd159482a4810a29d808ac20dbafb. No user-wide installation, command behavior changes, commit or push. Implement the complete tree.\n\nComplete agreed tree implemented and verified. Ten new repository-local skills, all existing skills audited, complete command-family ownership and mandatory configuration integration review are in place. See .codex/README.md and plans/dots-skills.md for ownership and verification. All three children are done. Local wiki is synchronized; no activation, commit or push occurred. Native runtime claims remain unchanged.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "Every first-party command family has a documented owning maintenance skill and useful family-specific guidance.",
+        "Every command change records add/update/no configuration integration needed with a reason; applicable work uses dots-config.",
+        "All three work packages pass their acceptance criteria; skill discovery, canonical documentation and the available wiki are synchronized."
+      ],
+      "created": "2026-10-30T22:28:47.405363+00:00",
+      "updated": "2026-10-30T22:42:01.847320+00:00",
+      "completed": "2026-10-30T22:42:01.847320+00:00",
+      "removed": null
+    },
+    {
+      "id": "d80ff6f5bd7e4a8f9f46f670da9dbb1d",
+      "alias": null,
+      "title": "Create dots-config for configuration integration",
+      "notes": "First package. Create dots-config using the implemented config lifecycle and existing supported-control catalogs. Track consumer ownership, defaults, precedence and verification in existing sources of truth; no competing registry.\n\nCreated dots-config with current resolver/catalog, guarded writes, explain, refresh/recovery and real-consumer verification guidance. Skill validator passed; documentation routing is being completed in the dependent package.\n\nImplemented .codex/skills/dots-config/SKILL.md and its relative .agents discovery link. Guidance covers current ownership, declarations/catalogs, layer-first resolution, guarded CLI/popup edits, saved versus effective values, consumer wiring, visual refresh/recovery and separate nonvisual activation. Validated skill format, references and routing; completed config work was preserved. Verification is recorded in plans/dots-skills.md.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1b5eb9b806a843b0b992d92c889d29c3",
+      "acceptance": [
+        "dots-config covers configuration ownership, defaults, profile inheritance, supported consumers, CLI/menu exposure, activation, recovery and verification.",
+        "Existing catalogs and canonical documentation track integrations; advertised options are verified in their intended consumers.",
+        "Completed configuration work remains context and is not reopened; nonvisual activation retains its separate rules."
+      ],
+      "created": "2026-10-30T22:28:50.290276+00:00",
+      "updated": "2026-10-30T22:41:51.072325+00:00",
+      "completed": "2026-10-30T22:41:51.072325+00:00",
+      "removed": null
+    },
+    {
+      "id": "deb574032fb140b4a7497c58f0c32c0f",
+      "alias": null,
+      "title": "Create dedicated skills for uncovered command families",
+      "notes": "Depends on d80ff6f5bd7e4a8f9f46f670da9dbb1d. Add dots-anodize-maintenance, dots-blastoff-maintenance, dots-debug-maintenance, dots-env-maintenance, dots-fonts-maintenance, dots-git-maintenance, dots-keys-maintenance, dots-pkgs-maintenance and dots-wttr-maintenance. Reuse shared skills and retain existing dedicated owners.\n\nImplemented nine dedicated family skills for Anodize, Blastoff, debug, env, fonts, Git, keys, pkgs and wttr. Existing owners remain intact. The .codex/README.md primary-owner table exactly covers 20 top-level routes (four built-ins plus families of 234 external routes). Checked actual implementation/test references, family-specific safety and platform limits; all skills and repository links validate.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1b5eb9b806a843b0b992d92c889d29c3",
+      "acceptance": [
+        "Dedicated maintenance skills cover Anodize, Blastoff, debug, env, fonts, Git, keys, pkgs and wttr, with current implementation references and verification commands.",
+        "Existing dedicated skills retain files/profile/theme/Todo/wiki/menu ownership; built-in routes retain command/shell ownership.",
+        "Every family maps to one owning skill; shared plugin, command, configuration and presentation guidance is linked without duplicated exhaustive catalogs."
+      ],
+      "created": "2026-10-30T22:28:52.886616+00:00",
+      "updated": "2026-10-30T22:41:55.126028+00:00",
+      "completed": "2026-10-30T22:41:55.126028+00:00",
+      "removed": null
+    },
+    {
+      "id": "37536ef5e7c149d2a4cdcee28c4f651e",
+      "alias": null,
+      "title": "Require configuration review and maintain skill coverage",
+      "notes": "Depends on d80ff6f5bd7e4a8f9f46f670da9dbb1d and deb574032fb140b4a7497c58f0c32c0f. Establish the authoritative family-to-skill table, audit all existing skills, require recorded config review, validate discovery/references and synchronize canonical docs/wiki.\n\nAGENTS.md, command/documentation guides, plan rules, menu-plan template, user references and all 15 existing skills now route the required add/update/no configuration integration review. All 25 skill definitions and discovery links validate; 169 skill references and 154 local anchors checked, 47 explicit implementation/test paths verified. dots commands --check passed (234 routes); verify_docs.py passed (1151 links in 148 files); git diff --check passed. Local wiki rebuilt in transaction ca186a805a0d40c78d102c22810e3df4 and check is healthy. No user-wide installation or runtime behavior change. Existing tracked changes outside this task match the captured baseline.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "1b5eb9b806a843b0b992d92c889d29c3",
+      "acceptance": [
+        "AGENTS.md, the command guide and affected skills require a recorded add/update/no configuration integration assessment for every command change.",
+        "The authoritative skill index maps all current families; new families identify or introduce an owning skill.",
+        "All existing Dots skills are audited for routing; new/modified skills, discovery links, references, metadata coverage, Markdown and whitespace validate.",
+        "Canonical documentation and the available local wiki are synchronized; no user-wide link installation or incidental command behavior change occurs."
+      ],
+      "created": "2026-10-30T22:28:55.473369+00:00",
+      "updated": "2026-10-30T22:41:57.998852+00:00",
+      "completed": "2026-10-30T22:41:57.998852+00:00",
+      "removed": null
+    },
+    {
+      "id": "343d5be6948e4ee19e18783e5a909b23",
+      "alias": "dots-command-authoring",
+      "title": "Create dots-command-authoring skill for new Dots commands",
+      "notes": "Agreed workflow plus reusable command-plan template; no generator. Create repository-local dots-command-authoring and its relative .agents discovery link. Coordinate existing command, presentation, config and menu skills, retaining family ownership and current canonical preferences. Depend on completed foundation 1b5eb9b806a843b0b992d92c889d29c3 without reopening it. Validate scalar utility, configurable report and interactive managed-operation scenarios. Update guidance/docs/wiki, preserve unrelated work, and complete after verification. No user-wide installation or new runtime command is part of this task.\n\nImplemented and verified dots-command-authoring, its reusable command-plan template and relative repository discovery link. AGENTS, command guide, skill index, command maintenance and contributor docs now route new-command work through it while preserving family ownership. The workflow requires current presentation preferences, exact data contracts, useful config/popup implementation and consumer acceptance. Three instruction walkthroughs cover a scalar utility, configurable report and guided managed operation; results are recorded in plans/command-authoring-skill.md. Both changed skills validate; all 26 links, 570 references/151 anchors, 20 family mappings and 234 external metadata routes pass. verify_docs.py passes (1159 links in 149 files); git diff --check passes. Local wiki transaction 4978783d7dc94c3ba7d6d33c1fb38308 rebuilt only Commands and its manifest; wiki check is healthy. Prior progress-note lock contention was reconciled after wiki completion without bypassing guards or duplicating the goal. Existing unrelated changes and completed foundation were preserved. No user-wide installation, runtime command, activation, commit or push. Native runtime claims are unchanged.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "The skill and reusable template cover command creation through implementation, documentation and verification.",
+        "They enforce current style, color, icon and formatting preferences while preserving data interfaces.",
+        "They require useful configuration and popup integrations to be implemented, with reasoned no-change decisions where appropriate.",
+        "Discovery, routing, references, validation and local wiki synchronization pass."
+      ],
+      "created": "2026-10-30T23:28:34.598677+00:00",
+      "updated": "2026-10-30T23:33:28.714458+00:00",
+      "completed": "2026-10-30T23:33:28.714458+00:00",
+      "removed": null
+    },
+    {
+      "id": "ee7a14f733f04acfa276d1e0c66e5819",
+      "alias": "config-coverage",
+      "title": "Audit and expand Dots configuration coverage",
+      "notes": "Agreed full implementation: read-only dots-config-audit skill/helper and scoped audit; typed profile/default config controls; recognized missing values return null, unknown keys remain errors; native bracket-quoted map keys; paired nullable icon colors; popup and formatting controls; active native wttr TOML editing (no wttr profile layer); shell and popup FZF defaults including bindings/previews; Neovim highlights/icons/editor UI preferences via public APIs; existing tmux/lualine placement; Todo tree default in CLI and popup with muted read-only ancestor context. Preserve JSON/brief/Markdown contracts, existing preferences and completed goals. Activate verified owned Termux consumers after isolated tests. No commit/push or user-wide skill installation. Additional discoveries are recorded in an evidence-backed backlog. Completed foundations: ad4dd159482a4810a29d808ac20dbafb, 1b5eb9b806a843b0b992d92c889d29c3, 343d5be6948e4ee19e18783e5a909b23.\n\nImplemented all nine agreed work packages; full UUID tree, acceptance criteria, aliases, priorities and parent links preserved. Canonical plan/evidence: plans/config-coverage.md and /data/data/com.termux/files/usr/tmp/dots-config-coverage-3a1310ti. Recognized config reads return effective value/null; the reported tmux warning key returns warning. Audit/backlog, paired styles/formatting, native weather editing, FZF, public Neovim integration, native bar placement and Todo tree/field presentation are verified. Local wiki is healthy. Verified owned Termux activation is complete with recovery; absent Yazi has a pending IPC notification and will consume published artifacts on its next launch. Existing unrelated work and completed foundation goals were retained.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "The read-only audit skill/helper covers agreed first-party sources and reports reviewed findings and remaining candidates.",
+        "All named configuration, formatting, icon, popup, wttr, FZF, Neovim, bar-placement and Todo features reach their intended consumers.",
+        "Recognized unset config reads return null with correct inheritance and protected data output; existing user values and recovery are preserved.",
+        "All work packages pass acceptance; docs/wiki and goal records are synchronized; verified Termux activation is completed or a genuine external blocker is recorded without claiming completion."
+      ],
+      "created": "2026-10-31T00:45:07.287823+00:00",
+      "updated": "2026-10-31T01:49:33.990258+00:00",
+      "completed": "2026-10-31T01:49:33.990258+00:00",
+      "removed": null
+    },
+    {
+      "id": "bb69019f6ef24f718aeec5250338b6ad",
+      "alias": null,
+      "title": "Create and run dots-config-audit",
+      "notes": "Package A. First package; no unfinished dependency.\n\nCreated dots-config-audit and tools/audit_config.py. Static isolation/determinism/exclusion fixture and skill validation passed. Initial inventory covers 1492 first-party source files across all nine root areas, with 12820 candidates/declarations requiring review; output is retained in the task evidence directory. Reviewed named gaps against actual config, wttr, FZF, Neovim, popup, tmux and Todo consumers. Palette algorithms, existing metadata controls and authored art are intentional; unscoped additional candidates remain in the audit backlog. No source execution or unrelated home crawl.\n\nCorrection to initial coverage count: 1,392 source files, not 1,492; 12,820 findings. Exact per-area evidence and reviewed backlog are in plans/config-coverage.md. Final audit fixture passes.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "Read-only helper and skill validate with exclusions, deterministic findings and no source execution.",
+        "Scoped coverage, ownership, existing bindings, missing consumers and reviewed backlog are recorded."
+      ],
+      "created": "2026-10-31T00:45:09.012412+00:00",
+      "updated": "2026-10-31T01:39:08.504820+00:00",
+      "completed": "2026-10-31T00:50:19.454338+00:00",
+      "removed": null
+    },
+    {
+      "id": "3a98ab24a66148819ce30d01b406ef07",
+      "alias": null,
+      "title": "Extend config resolution and typed controls",
+      "notes": "Package B. Depends on bb69019f6ef24f718aeec5250338b6ad.\n\nImplemented literal bracket keys, typed profile application/formatting controls, effective style fallback and recognized null reads, popup drafts, completion and retained Store edits. Isolated config-values suite: 12 passing; existing live-config suite: 11 passing. Remaining consumer/schema integration and docs verified with dependent packages.\n\nVerified typed/null/native-key controls, false/zero/empty preservation, guarded edits and undo, popup drafts and literal data. Config values: 12 passing; live refresh: 11 passing; full Config menu: 15 passing, including private native 40/80/120-column checks. Popup preparation now snapshots inert redacted rows and renders only the selected preview.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "Recognized missing values return null; unknown keys and invalid files remain errors.",
+        "Typed formatting/apps defaults and profile overrides, native bracket-quoted keys, inheritance/reset, CLI and popup editing work through guarded transactions."
+      ],
+      "created": "2026-10-31T00:45:10.590838+00:00",
+      "updated": "2026-10-31T01:39:13.703704+00:00",
+      "completed": "2026-10-31T01:39:13.703704+00:00",
+      "removed": null
+    },
+    {
+      "id": "b88f517f0a5244b88b5e898ec6e0fb64",
+      "alias": null,
+      "title": "Complete shared icon, popup and formatting controls",
+      "notes": "Package C. Depends on 3a98ab24a66148819ce30d01b406ef07.\n\nImplemented paired nullable CLI icon styles, generic/per-entry popup spans, semantic Todo fields and real indentation/tab-stop/spacing/padding/alignment controls. Presentation consumer tests: 2 passing; shared menus: 24 passing; style-config: 7 passing. Light/dark and independent icon/color modes, narrow widths and exact data remain covered. Config snapshots retain redaction and render selected previews lazily.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "Exposed controls reach real consumers, including independent nullable icon colors and popup entry styles.",
+        "Supported indentation, tabs/tab width, spacing, padding and alignment controls work; existing customized defaults remain and previously unstyled fields gain semantic defaults."
+      ],
+      "created": "2026-10-31T00:45:12.108085+00:00",
+      "updated": "2026-10-31T01:42:07.057594+00:00",
+      "completed": "2026-10-31T01:42:07.057594+00:00",
+      "removed": null
+    },
+    {
+      "id": "0ed2253515b24ec7be58fe567fc29ae4",
+      "alias": null,
+      "title": "Integrate wttr native configuration",
+      "notes": "Package D. Depends on 3a98ab24a66148819ce30d01b406ef07.\n\nNative TOML integration and undo/stale/inactive-profile checks pass. Complete weather suite: 49 tests, 48 passing and one explicit unavailable-PowerShell skip. Native icon fg/bg and attributes render in ANSI and tmux; whole invalid style entries remain rejected, individual null edits reset/inherit. Existing comments, unknown personal TOML fields and standalone/scalar/provider data contracts are retained. No live provider or location request used as a fixture.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "All native supported settings, icons, colors, scales and widget/display options round-trip through the active TOML file.",
+        "Comments, unrelated values, native validation, recovery and standalone/data behavior are preserved; inactive-profile edits cannot target a misleading file."
+      ],
+      "created": "2026-10-31T00:45:13.735358+00:00",
+      "updated": "2026-10-31T01:44:12.481095+00:00",
+      "completed": "2026-10-31T01:44:12.481095+00:00",
+      "removed": null
+    },
+    {
+      "id": "d466ba632d3d4f72807d0a7a22594ab4",
+      "alias": null,
+      "title": "Integrate FZF colors and defaults",
+      "notes": "Package E. Depends on 3a98ab24a66148819ce30d01b406ef07, b88f517f0a5244b88b5e898ec6e0fb64.\n\nFZF literal defaults, bindings/previews, all declared native color slots and protected picker projection verified: focused suite 2 passing with installed FZF 0.74; shell environment suite 11 passing; shared menus 24 passing. Profile publication replaces managed defaults without repeated append; owned popup identity, actions and previews remain protected.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "Native color slots and shell default options including bindings/previews are configurable without repeated appending.",
+        "Dots popups apply compatible preferences while protecting numeric identities, data protocols, owned bindings and approval behavior."
+      ],
+      "created": "2026-10-31T00:45:15.331623+00:00",
+      "updated": "2026-10-31T01:39:18.343869+00:00",
+      "completed": "2026-10-31T01:39:18.343869+00:00",
+      "removed": null
+    },
+    {
+      "id": "c0f0e37da9ef48d18d4b5cce9e6bb2b1",
+      "alias": null,
+      "title": "Integrate Neovim appearance and editor preferences",
+      "notes": "Package F. Depends on 3a98ab24a66148819ce30d01b406ef07, b88f517f0a5244b88b5e898ec6e0fb64.\n\nImplemented bounded published preferences in the nested Neovim configuration using public Anodize APIs; external Anodize.nvim repository unchanged. Existing copied bridge suite: 5 passing; focused options/highlights/icons/reset/last-good/placement test: passing. Diagnostic sign icon colors have explicit consumers; extra dedicated icon styling remains a documented discovery backlog. No live editor instance restarted.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "Shipped personal highlights, icon maps and agreed editor/UI preferences resolve configured values through the nested Neovim bridge.",
+        "Public Anodize APIs, independent repository ownership, literal data, last-good behavior and scoped platform evidence are preserved."
+      ],
+      "created": "2026-10-31T00:45:16.707882+00:00",
+      "updated": "2026-10-31T01:42:09.722194+00:00",
+      "completed": "2026-10-31T01:42:09.722194+00:00",
+      "removed": null
+    },
+    {
+      "id": "f42889c557b54b14977ba6ba2a4b6314",
+      "alias": null,
+      "title": "Configure tmux and Neovim bar placement",
+      "notes": "Package G. Depends on 3a98ab24a66148819ce30d01b406ef07, c0f0e37da9ef48d18d4b5cce9e6bb2b1.\n\nPrivate native tmux layout checks pass for preserved default rows, row/side/order changes, bounds/overlap rejection and 40/80/120 columns. Copied Neovim consumer test proves named lualine sections, zero/two-cell padding and both component/section separator sides. Placement publication replaces its owned marked fragment without accumulating conditional commands. No arbitrary executable components added.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "Existing tmux segments support row/side/order and lualine components support native section placement.",
+        "Default arrangements, supported platforms, literal safety and narrow-width behavior remain correct; no arbitrary executable components are introduced."
+      ],
+      "created": "2026-10-31T00:45:18.108340+00:00",
+      "updated": "2026-10-31T01:42:13.161009+00:00",
+      "completed": "2026-10-31T01:42:13.161009+00:00",
+      "removed": null
+    },
+    {
+      "id": "7ec0508dec4046379229cea946b7d48e",
+      "alias": null,
+      "title": "Complete Todo styling and tree lists",
+      "notes": "Package H. Depends on 3a98ab24a66148819ce30d01b406ef07, b88f517f0a5244b88b5e898ec6e0fb64.\n\nTodo core: 41 passing; pure tree/protection: 2 passing; complete native popup suite: 10 passing at 40/80/120 columns, including exact-client selection, counts, context-only ancestors, brief/copy and input workflows. Tree defaults and regular override reach CLI/popup; JSON, Markdown, brief and store contracts remain protected. Field labels/values and dates are styled; nullable status/priority value controls preserve specialized status/priority fallback. The native test observer now keeps one probe in flight instead of flooding synchronous FZF transforms.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "All displayed field labels and values have configurable styles, preserving existing status/priority controls.",
+        "Tree is the default human CLI/popup list type with regular selectable and per-invocation override.",
+        "Filtered trees show muted ancestors, count only matches and disallow mutations of context-only rows; ordering and exact JSON/brief/Markdown/storage contracts remain intact."
+      ],
+      "created": "2026-10-31T00:45:19.586120+00:00",
+      "updated": "2026-10-31T01:46:24.380134+00:00",
+      "completed": "2026-10-31T01:46:24.380134+00:00",
+      "removed": null
+    },
+    {
+      "id": "22b251b8907445bab7707bfba9acc20c",
+      "alias": null,
+      "title": "Verify document and activate configuration coverage on Termux",
+      "notes": "Package I. Depends on bb69019f6ef24f718aeec5250338b6ad, 3a98ab24a66148819ce30d01b406ef07, b88f517f0a5244b88b5e898ec6e0fb64, 0ed2253515b24ec7be58fe567fc29ae4, d466ba632d3d4f72807d0a7a22594ab4, c0f0e37da9ef48d18d4b5cce9e6bb2b1, f42889c557b54b14977ba6ba2a4b6314, 7ec0508dec4046379229cea946b7d48e.\n\nFinal verification passed: config values/live/popup, audit, presentation, FZF, tmux layout, Neovim, shell environment, Todo and weather checks. Todo popup 10 passing; Todo core 41 passing; weather 49 tests with one unavailable-PowerShell skip. Static metadata validates 234 routes; Todo/wttr generators match; twelve skills validate; 1171 Markdown links pass; source/nested/wiki whitespace checks pass. Wiki rebuilt locally with retained transaction 5acafa762d9d47f194c6667a18b7ff98; wiki check healthy. Final Termux publication ecbe6ee99fc94dd4a5acbc264ab4747b preserves catppuccin-mocha, exact palette and existing personal files, and is idempotent. Verified owned live tmux notified and configured two top rows confirmed. No live Yazi instance: IPC connection refused; published artifacts ready for its next launch. Neovim reads on startup/focus; no editor forced open or restarted. Native Windows PowerShell/GUI, Linux/WSL desktop and Xonsh evidence remain named pending platform checks, not claimed from Termux fixtures. No commits, pushes or user-wide skill installation.",
+      "status": "done",
+      "priority": "normal",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "ee7a14f733f04acfa276d1e0c66e5819",
+      "acceptance": [
+        "Focused isolated acceptance, metadata, Markdown and whitespace checks pass; native gaps are named separately.",
+        "Canonical docs, skills, supported-control metadata and available wiki are synchronized.",
+        "Verified owned Termux preferences and relevant consumers are safely activated with recovery, preserving theme selection and personal values."
+      ],
+      "created": "2026-10-31T00:45:21.178450+00:00",
+      "updated": "2026-10-31T01:49:30.561341+00:00",
+      "completed": "2026-10-31T01:49:30.561341+00:00",
       "removed": null
     }
   ]

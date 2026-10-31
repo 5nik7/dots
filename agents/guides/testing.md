@@ -29,6 +29,8 @@ Never let a test:
 - Depend on the current repository being clean.
 - Delete a broad directory through an empty or unresolved variable.
 
+File-ID rename changes also require `python3 -B tools/test_file_renames.py` after the file-platform checks. Cover registry history, all-profile references, selected-profile combined edits and receipt/recovery behavior in owned roots.
+
 ## Test Layers
 
 For Todo-to-Codex changes, run `tools/test_todo_plan.py`, `tools/test_todo_menu.py` and affected Todo/command/completion/shared-menu suites sequentially. The opt-in `DOTS_TEST_CODEX_NATIVE=1 python3 -B tools/test_todo_codex_native.py` uses an owned Codex home, a local fake model and a private terminal; never substitute the developer's shared server or account as its fixture. Verify actual Plan Mode, reasoning, early question replay/answer, busy-thread deduplication and uncertain-submission recovery separately from prompt wording. Keep native Linux/WSL/Windows runtime and clipboard acceptance explicit.
@@ -342,3 +344,7 @@ For profile configuration and legacy migration, run `python3 -B tools/test_profi
 For core registry/profile environment changes, run `tools/test_profile_backend.py` with Python and the affected profile, config/menu, file lifecycle and shell suites sequentially. Verify combined registry/profile recovery and all generated namespaces before marking complete. See [backend verification](../../docs/testing.md#core-registry-and-generated-profile-environment).
 
 Font workflow verification: `python3 -B tools/test_font_workflows.py` uses owned homes/checkouts and mocked registration for installed-font copying, migration, partial retention, preferences, exact Restore and failure rollback.
+
+Visual configuration changes additionally run `tools/test_config_live.py` and affected style/config/menu/theme/shell suites sequentially. Never let fixture refresh discover or activate the developer’s real consumers; use private tmux sockets and mocked non-tmux adapters.
+
+For application/formatting configuration changes, use the focused [configuration coverage checks](../../docs/testing.md#configuration-coverage-checks), then the affected consumer suites. Native weather edits must retain comments/unknown fields and pass native validation; tree-list tests must prove context ancestors cannot mutate goals.

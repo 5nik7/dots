@@ -26,7 +26,7 @@ dots_type_valid() {
   local value
   case $1 in
     flag|string|file|directory|todo-id|todo-tag) return 0 ;;
-    theme|flavor|palette-color|color-format|file-resource|file-repository|git-submodule|theme-id|file-color-key|theme-color|anodize-theme|anodize-user-theme|theme-plugin|theme-file|theme-app|dots-setting|config-key|profile-id|wiki-page|wiki-section) return 0 ;;
+    theme|flavor|palette-color|color-format|file-resource|file-repository|git-submodule|theme-id|file-color-key|theme-color|anodize-theme|anodize-user-theme|theme-plugin|theme-file|theme-app|dots-setting|config-key|config-value|profile-id|wiki-page|wiki-section) return 0 ;;
     choice:*)
       [[ ${1#choice:} && $1 != *, && $1 != *,,* ]] || return 1
       local -a values=()
@@ -121,7 +121,8 @@ dots_catalog_load() {
 }
 
 dots_catalog_print() {
-  local stem prefix=${1:-}
+  local stem prefix=${1:-} view=${2:-all} group summary
+  local -A shown=()
   dots::heading 'Commands'
   if [[ -z $prefix ]]; then
     for stem in "${DOTS_BUILTIN_NAMES[@]}"; do
@@ -131,7 +132,18 @@ dots_catalog_print() {
   fi
   for stem in "${DOTS_CATALOG[@]}"; do
     [[ ${DOTS_CATALOG_HIDDEN[$stem]} == true ]] && continue
-    dots::row "${stem//-/ }" "${DOTS_CATALOG_SUMMARY[$stem]}"
+    if [[ $view == root ]]; then
+      group=${stem%%-*}
+      [[ ! ${shown[$group]:-} ]] || continue
+      shown[$group]=1
+      summary='Command group'
+      if [[ ${DOTS_CATALOG_HIDDEN[$group]:-true} != true ]]; then
+        summary=${DOTS_CATALOG_SUMMARY[$group]}
+      fi
+      dots::row "$group" "$summary"
+    else
+      dots::row "${stem//-/ }" "${DOTS_CATALOG_SUMMARY[$stem]}"
+    fi
   done
 }
 
@@ -195,13 +207,18 @@ dots_help() {
     dots::heading 'dots — your command center'
     printf '\n'; dots::heading 'Usage'
     printf '  dots [OPTIONS] COMMAND [ARGS...]\n\n'
-    dots_catalog_print
+    dots_catalog_print '' root
     printf '\n'; dots::heading 'Global options (before the command)'
     for line in "${DOTS_GLOBAL_OPTIONS[@]}"; do
       IFS='|' read -r long short type description <<< "$line"
       case $type in directory) long+=' DIRECTORY' ;; choice:*) long+='=auto|always|never' ;; esac
       dots::row "${short:+$short, }$long" "$description"
     done
+    local columns=${COLUMNS:-80}
+    [[ $columns =~ ^[0-9]+$ ]] || columns=80
+    columns=$((10#$columns)); (( columns >= 20 )) || columns=20
+    printf '\n'
+    dots::line 'Use dots help COMMAND for details; dots commands for all commands.' '' 0 "$columns"
     return 0
   fi
   case $route in

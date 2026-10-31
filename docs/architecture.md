@@ -411,6 +411,23 @@ Project discovery reuses the read-only workspace resolver, without requiring tmu
 
 ## Profile backend ownership
 
-`files/registry.py` validates the permanent core identities/platform registry. `files/catalog.py` joins it with source ownership and selected profile implementations before existing file planners run. `Catalog.updates()` can produce both registry and profile writes; callers journal the complete set together. Legacy readers remain for older compositions and recovery.
+`files/registry.py` validates core identities/platforms and schema-3 historical-ID mappings; `files/identities.py` shares current-ID validation and receipt resolution. Candidate document overrides let `files/mappings.py` validate checkout-wide renames and selected-profile edits before writing. `files/catalog.py` joins it with source ownership and selected profile implementations before existing file planners run. `Catalog.updates()` can produce both registry and profile writes; callers journal the complete set together, including affected receipt identities. Legacy readers remain for older compositions and recovery.
 
 `profile_environment.py` generates active, canonical and alias path namespaces and native maps for all declared profiles. Startup compilers consume this model and its manifest/directory inputs; `native_environment.py` transfers inert data to Nu/Xonsh. Application declarations remain in `environment.py`. Shell adapters never source profile `.env` files or duplicate path definitions. See [generated paths](profiles.md#generated-profile-paths).
+
+
+Visual configuration uses `style_config.py` for layer-first resolution and `style_catalog.py` for supported consumer bindings. `config_refresh.py` shares guarded visual-only publication between the config CLI and popup. It uses existing Store publication locks/journals and first-party reload adapters; source preferences, theme palettes and runtime generations retain distinct ownership.
+
+`menu_popup.py` projects `apps.menu.popup` into shared FZF selectors and per-popup tmux host flags. Auto retains controller dimensions; explicit sizes use the addressed client's viewport transported by `selector_environment`, with inert display-cell measurement for fit and preserved preview budgets. Reader layout uses the same bounds. The next invocation reads effective preferences; popup-only saves do not publish a theme or mutate tmux server options. `config_values.py` supplies typed constraints to explain, Config dialogs and both completion frontends without executing consumer commands.
+
+Shared menu selection resolves popup geometry before final column rendering. Its low-level selector handoff retains the measured dimensions so `fit` cannot resize a percentage column a second time. Multiline content measurement counts display lines independently of numeric selection identities.
+
+Typed UI/application preferences are resolved by `config_values.py`, edited by
+`config_cli.py`/`config_menu.py`, and projected by `theme_styles.py`.
+`config_wttr.py` delegates to wttr's native configuration validator rather than
+creating profile weather storage. Read-only native weather discovery avoids mutation imports; draft editors and `NativePlan` explicitly capture transaction guards. `row_layout.py` supplies shared Python cell-based key columns for CLI and popup renderers. Bash uses validated `__format.*` literal settings, also embedded by the startup compiler with defaults-file invalidation, without adding a warm-start process. `fzf_config.py` separates shell preferences
+from the protected picker projection. `tmux_config.py` compiles named placement;
+Neovim's nested `util/dots_config.lua` consumes published literal preferences.
+`todo_tree.py` projects hierarchy and filters private snapshots without store
+access. The maintenance-only `tools/audit_config.py` scanner is never a startup,
+help, completion or ordinary dispatch dependency.

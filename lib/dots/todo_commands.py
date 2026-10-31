@@ -7,6 +7,7 @@ OPTIONS = {
     'print': ('flag', 'Print goals without browsing'),
     'client': ('string', 'Exact invoking tmux client for the popup'),
     'query': ('string', 'Match words in goal text, tags and acceptance criteria'),
+    'list-type': ('choice:tree,regular', 'Human list layout; tree includes read-only ancestors'),
     'status': ('choice:open,doing,blocked,done', 'Goal status'),
     'priority': ('choice:high,normal,low', 'Goal priority'),
     'tag': ('todo-tag', 'Goal tag; repeat to filter or set tags; project tag is retained'),
@@ -34,9 +35,9 @@ EDIT = ('alias', 'notes', 'priority', 'tag', 'due', 'accept')
 MUTATE = ('dry-run', 'json')
 # summary, positional name/type (optional), option names
 COMMANDS = {
-    '': ('Browse goals for the Dots project', None, (*FILTERS, 'print', 'json', 'markdown', 'client')),
+    '': ('Browse goals for the Dots project', None, (*FILTERS, 'list-type', 'print', 'json', 'markdown', 'client')),
     'add': ('Create a goal or subgoal', ('title', 'string'), (*EDIT, 'parent', *MUTATE)),
-    'list': ('Query and list goals', None, (*FILTERS, 'json', 'markdown')),
+    'list': ('Query and list goals', None, (*FILTERS, 'list-type', 'json', 'markdown')),
     'show': ('Show a goal and its subgoals', ('id', 'todo-id'), ('json', 'markdown')),
     'edit': ('Edit goal fields', ('id', 'todo-id'), ('title', *EDIT, 'status', 'clear', *MUTATE)),
     'note': ('Append details to goal notes', ('id', 'todo-id'), MUTATE),
@@ -48,7 +49,7 @@ COMMANDS = {
     'next': ('Show the highest-ranked actionable goal', None, (*FILTERS, 'json')),
     'brief': ('Print a read-only /plan brief for the goal and its subtree', ('id', 'todo-id'), ()),
     'plan': ('Open the goal and its subtree in Codex Plan Mode', ('id', 'todo-id'), ('new', 'dry-run')),
-    'browse': ('Browse goals in the shared popup', None, (*FILTERS, 'print', 'json', 'markdown', 'client')),
+    'browse': ('Browse goals in the shared popup', None, (*FILTERS, 'list-type', 'print', 'json', 'markdown', 'client')),
     'path': ('Print the selected goal storage path', None, ()),
 }
 REPEAT = ('tag', 'accept', 'clear')

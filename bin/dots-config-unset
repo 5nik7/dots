@@ -3,6 +3,7 @@
 # dots:usage=KEY [OPTIONS]
 # dots:option=--defaults||flag|Use shared color and icon defaults
 # dots:option=--profile||profile-id|Select a profile without activating it
+# dots:option=--no-refresh||flag|Save visual preferences without refreshing consumers
 # dots:option=--json||flag|Print structured configuration data
 # dots:option=--dry-run||flag|Preview without writing files
 # dots:argument=1|config-key|Setting or section-qualified option

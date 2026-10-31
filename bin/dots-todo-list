@@ -13,6 +13,7 @@
 # dots:option=--overdue||flag|Only unfinished goals due before today
 # dots:option=--all||flag|Include completed goals
 # dots:option=--removed||flag|Select removed goals
+# dots:option=--list-type||choice:tree,regular|Human list layout; tree includes read-only ancestors
 # dots:option=--json||flag|Print versioned JSON without interaction
 # dots:option=--markdown||flag|Export readable Markdown
 # dots:example=dots todo list --help

@@ -174,6 +174,10 @@ dots::resource_row() {
   dots::resource "$actual" "$shown" "$kind" "$mime"
   [[ $# -ge 6 ]] || label_style=$DOTS_UI_BLUE
   [[ $DOTS_UI_RESET ]] || label_style=''
+  if dots::human && [[ ${_DOTS_FORMATTING[label_width]+set} ]]; then
+    dots::aligned_row "$label" "$DOTS_RESOURCE_TEXT" "$label_style" "$DOTS_RESOURCE_STYLE"
+    return
+  fi
   local text=$DOTS_RESOURCE_TEXT color=$DOTS_RESOURCE_STYLE columns=${COLUMNS:-80} width=26 room part='' char i size used=0 prefix prefix_width
   [[ $columns =~ ^[0-9]+$ ]] || columns=80
   columns=$((10#$columns)); (( columns >= 20 )) || columns=20

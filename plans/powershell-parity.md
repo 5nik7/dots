@@ -17,6 +17,8 @@ Bash, MSYS2 or WSL dependencies on Windows.
 
 ## Delivery and acceptance
 
+The [root-help update](usage-help.md) keeps one top-level row per visible command/group across Bash, the shared native controller and Python-free PowerShell help. Full contextual help, command inventory and completion remain available. The PowerShell fixture checks aliases, implicit/hidden groups and 40/80/120-column footer wrapping with Python absent from PATH. Native Windows PowerShell 5.1/7 and visible terminal acceptance remain pending; Windows app destinations are unchanged.
+
 1. Shared static command metadata, literal native argument transport, dispatch,
    contextual help and completion; preserve dependency-free help/startup.
 2. Shared file, Git, environment, theme and Anodize behavior; preserve aliases,
@@ -137,7 +139,7 @@ The theme-file refinement adds shared directory/highlighted previews and read-on
 
 ## Platform profiles and bootstrap (2026-10-24)
 
-`dots profile`, `dots profiles`, expanded `dots env`, profile command/catalog
+`dots profile` (including `list` and `check --all`), expanded `dots env`, profile command/catalog
 resolution and `dots init --bootstrap powershell` use shared controllers and
 metadata. PowerShell prepares a native environment adapter on cold startup;
 warm startup validates metadata and loads native code. Windows configuration

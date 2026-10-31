@@ -55,10 +55,21 @@ class Diagnostics(unittest.TestCase):
         result=self.profiles('profile','layers','linux/demo','--json')
         self.assertEqual([r['id'] for r in result['rows']],['universal','linux','linux/demo'])
 
+    def test_singular_list_and_check_scopes(self):
+        listed=self.profiles('profile','list','--platform','windows','--json')
+        self.assertEqual([row['id'] for row in listed['profiles']],['windows'])
+        one=self.profiles('profile','check','windows','--json')
+        self.assertEqual([row['profile'] for row in one['checks']],['windows'])
+        all_profiles=self.profiles('profile','check','--all','--json')
+        self.assertEqual({row['profile'] for row in all_profiles['checks']},{'termux','linux','wsl','windows'})
+        for args in (['profiles','list'],['profile','check','windows','--all'],['profile','list','windows']):
+            result=subprocess.run([sys.executable,'-B',str(self.root/'lib/dots/profiles.py'),*args],env=self.env,capture_output=True,text=True,timeout=10)
+            self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+
     def test_inactive_errors_are_aggregated(self):
         for platform in ('linux','windows'):
             (self.root/'profiles'/platform/'profile.json').write_text('{bad')
-        result=self.profiles('profiles','check','--json',code=1)
+        result=self.profiles('profile','check','--all','--json',code=1)
         self.assertEqual({r['profile'] for r in result['checks'] if r['status']=='failed'},{'linux','windows','wsl','termux'})
 
     def test_profile_environment_is_declarations_and_redacted(self):

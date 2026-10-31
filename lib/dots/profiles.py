@@ -39,7 +39,7 @@ def definition(root, identity, data=None):
         data = json.loads(path.read_text(encoding='utf-8'), object_pairs_hook=unique)
     if not isinstance(data, dict): raise ValueError('profile manifest must be an object')
     if data.get('schema') != 1 or data.get('id') != identity: raise ValueError('invalid profile manifest: ' + identity)
-    if set(data) - {'schema', 'id', 'description', 'extends', 'environment', 'path', 'replaces_commands', 'settings', 'files', 'alias'}:
+    if set(data) - {'schema', 'id', 'description', 'extends', 'environment', 'path', 'replaces_commands', 'settings', 'files', 'alias', 'formatting', 'apps'}:
         raise ValueError('unknown profile field: ' + identity)
     if 'alias' in data and (not isinstance(data['alias'], str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*', data['alias'])):
         raise ValueError('profile alias must be a shell identifier')
@@ -52,6 +52,9 @@ def definition(root, identity, data=None):
     if not isinstance(data.get('environment', {}), dict): raise ValueError('profile environment must be an object')
     from profile_config import validate_settings
     validate_settings(data.get('settings', {}))
+    if 'formatting' in data or 'apps' in data:
+        from config_values import validate_groups
+        validate_groups(root, data)
     files = data.get('files', {})
     if not isinstance(files, dict) or any(not re.fullmatch(r'[a-z][a-z0-9_-]*', key) or not isinstance(rows, list) for key, rows in files.items()):
         raise ValueError('profile files must map repository IDs to resource lists')

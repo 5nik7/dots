@@ -1,1 +1,2 @@
-# Override shared colors here. Unset options inherit defaults and parent profiles.
+[todo.field.alias.value]
+bold = true

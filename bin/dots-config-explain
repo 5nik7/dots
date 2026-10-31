@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dots:summary=Explain effective configuration, allowed values and activation
+# dots:usage=KEY [OPTIONS]
+# dots:option=--json||flag|Print structured results
+# dots:option=--profile||profile-id|Inspect a profile without activation
+# dots:option=--defaults||flag|Inspect shared defaults
+# dots:option=--app||choice:cli,tmux,yazi,fzf,gum,starship,gitmux|Select a visual consumer
+# dots:argument=1|config-key|Configuration option to explain
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/config_cli.py" explain "$@"

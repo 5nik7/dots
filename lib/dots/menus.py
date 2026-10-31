@@ -23,6 +23,7 @@ class Entry:
     available: bool = True
     reason: str = ''
     icon: str = ''
+    icon_role: str = ''
 
     def __post_init__(self):
         if (not all(isinstance(v, str) and '\0' not in v for v in
@@ -85,13 +86,43 @@ def label(entry, ui):
     return clean(title + (' · ' + suffix if suffix else ''))
 
 
+def entry_spans(menu,entry,ui,compact=False,shortcut=False):
+    from style_config import current
+    from config_values import value
+    prefs=current();formatting=value('formatting.apps.menu',{})
+    overrides=formatting.get('entries',{}).get(menu.id+':'+entry.id,{})
+    def span(part,text):
+        fields=prefs.style('menu.'+part,app='cli') if prefs else {}
+        if part=='icon' and prefs and entry.icon_role:fields.update(prefs.style('icons.'+entry.icon_role,app='cli'))
+        fields.update({k:v for k,v in overrides.get(part,{}).items() if v is not None})
+        return clean(text),prefs.sgr_fields(fields) if prefs else '39'
+    spans=[span('icon',entry.icon+' ')] if entry.icon and ui.icons else []
+    from row_layout import width as column_width, pad
+    width=column_width(formatting.get('label_width',0),ui.width,
+                       indent=formatting.get('indent',0)+formatting.get('padding',1),
+                       gap=formatting.get('label_gap',1)) if not compact and ui.human else 0
+    icon_width=cells(entry.icon+' ') if entry.icon and ui.icons else 0
+    spans.append(span('label',pad(entry.label,max(0,width-icon_width),formatting.get('alignment','left'))))
+    if entry.description and not compact:spans.append(span('description',' '*formatting.get('label_gap',1)+'· '+entry.description))
+    if not entry.available:spans.append(span('state',' [unavailable]' if compact else ' · unavailable: '+entry.reason))
+    if shortcut:spans.append(span('shortcut',' ['+entry.id+']'))
+    ui.formatting=formatting
+    return spans
+
+
+def styled_label(menu,entry,ui,compact=False):
+    spans=entry_spans(menu,entry,ui,compact)
+    prefix=ui.indentation(ui.formatting.get('indent',0))+' '*ui.formatting.get('padding',1)
+    return prefix+''.join(ui.paint(text,code) for text,code in spans)
+
+
 def listing(menu, entries, ui):
     ui.heading(menu.title)
     for entry in entries:
-        ui.detail_spans('Choice', [(label(entry, ui), '94' if entry.available else '93'),
-                                   (' [' + entry.id + ']', '2')])
-    if not entries:
-        ui.emit('  No matching choices.')
+        spans=entry_spans(menu,entry,ui,shortcut=True)
+        ui.detail_spans('',spans,label_width=0,label_gap=0,indent=ui.formatting.get('indent',0)+ui.formatting.get('padding',1))
+        for _ in range(ui.formatting.get('row_gap',0)):ui.emit()
+    if not entries:ui.emit('  No matching choices.')
 
 
 def choose(menu, *, mode='auto', query='', context=None, ui=None, preview=None,
@@ -135,9 +166,7 @@ def choose(menu, *, mode='auto', query='', context=None, ui=None, preview=None,
         ui.width = size[0]
     else:
         size = None
-    labels = [clean((entry.icon + ' ' if entry.icon and ui.icons else '') + entry.label
-                    + (' [unavailable]' if not entry.available else ''))
-              if compact else label(entry, ui) for entry in menu.entries]
+    labels = [styled_label(menu,entry,ui,compact) for entry in menu.entries]
     if header is None:
         header = 'Enter: open  Esc: back\nF1: help  Ctrl-C: quit' if navigation is not None else HEADER
     if preview:
@@ -146,12 +175,20 @@ def choose(menu, *, mode='auto', query='', context=None, ui=None, preview=None,
             header += '\nAlt-C: change preview view'
     prompt = clean(menu.title if prompt is None else prompt)
     width, height = dimensions(labels, prompt, header, size=size)
+    if context:
+        from menu_popup import dimensions as popup_dimensions, preferences, content_size
+        options=preferences()
+        content=(content_size(labels,prompt,header,size,options,automatic=(width,height))
+                 if not preview and 'fit' in (options.get('width'),options.get('height')) else None)
+        width,height=popup_dimensions(options,(width,height),size,content)
+        ui.width=max(1,width-6)
+        labels=[styled_label(menu,entry,ui,compact) for entry in menu.entries]
     scope = context.selector_environment() if context else nullcontext(None)
     from progress import permanent_output
     with permanent_output(), scope as environment:
         selected = RichSelector(backend='fzf').fzf(prompt, labels, False, preview,
             ui.color, ui.icons, fzf_colors(ui), popup=f'center,{width},{height}' if context else False,
-            height=height, query=query, header=header, environment=environment,
+            height=height, query=query, header=header, environment=environment, popup_resolved=context is not None,
             **({'navigation': navigation} if navigation is not None else {}))
     entry = menu.entries[selected[0]]
     if not entry.available and navigation is None:

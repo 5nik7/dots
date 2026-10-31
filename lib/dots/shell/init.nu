@@ -140,6 +140,23 @@ def --env _dots-refresh-theme [] {
     let ls_file = ($env.dot.state | path join themes generations $generation ls_colors)
     if ($ls_file | path exists) { $env.LS_COLORS = (open --raw $ls_file | str trim --right) }
     _dots-less-style ($data | get -o foreground.hex | default '') ($data | get -o lighter_background.hex | default ($data | get -o background.hex | default '')) $env.dots_options.DOTS_COLOR '1'
+    let visual_file = ($env.dot.state | path join themes generations $generation visual.tsv)
+    if ($visual_file | path exists) {
+        mut visual_env = {}
+        for line in (open --raw $visual_file | lines) {
+            let fields = ($line | split row "\t")
+            if ($fields | length) != 3 { error make {msg: 'dots: invalid visual data'} }
+            if $fields.0 == 'env' {
+                if $fields.1 !~ '^[A-Z][A-Z0-9_]*$' { error make {msg: 'dots: invalid visual variable'} }
+                $visual_env = ($visual_env | upsert $fields.1 $fields.2)
+            }
+        }
+        load-env $visual_env
+        if 'DOTS_THEME_FZF_COLORS' in $visual_env {
+            if '_DOTS_VISUAL_FZF_BASE' not-in $env { $env._DOTS_VISUAL_FZF_BASE = ($env.FZF_DEFAULT_OPTS? | default '') }
+            $env.FZF_DEFAULT_OPTS = (($env.DOTS_THEME_FZF_OPTS? | default $env._DOTS_VISUAL_FZF_BASE) + ' --color=' + $env.DOTS_THEME_FZF_COLORS)
+        }
+    }
     $env._DOTS_THEME_GENERATION = $generation
 }
 _dots-load

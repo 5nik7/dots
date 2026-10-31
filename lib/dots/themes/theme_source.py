@@ -38,7 +38,7 @@ def source_operation(themes, action, args):
         return
     url = branch = old = None
     if action == 'install':
-        if len(args) not in (1, 3) or (len(args) == 3 and args[1] != '--name'): raise ValueError('Usage: themes install URL [--name ID]')
+        if len(args) not in (1, 3) or (len(args) == 3 and args[1] != '--name'): raise ValueError('Usage: theme install URL [--name ID]')
         url = args[0]
         if not (re.fullmatch(r'(?:https://|ssh://)\S+', url) or re.fullmatch(r'[a-zA-Z0-9_.-]+@[a-zA-Z0-9_.-]+:\S+', url) or (os.environ.get('DOTS_TEST_LOCAL_GIT') == 'always' and Path(url).is_absolute())):
             raise ValueError('expected an HTTPS or SSH Git URL')

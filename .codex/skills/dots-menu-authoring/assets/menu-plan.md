@@ -14,6 +14,10 @@ Copy this template into `plans/`, replace the `{{...}}` fields, remove inapplica
 
 Menu assessment: {{add, update, or no menu, with a short reason for each affected command family.}}
 
+Primary maintenance skill: {{Select the family owner from `.codex/README.md`; identify or add an owner for a new first-party family.}}
+
+Configuration assessment: {{add, update, or no configuration integration change needed, with a reason, under `agents/guides/commands.md#configuration-integration-review`. For applicable work, use `dots-config` and record ownership, keys/defaults, precedence, consumers/platforms and activation/recovery checks.}}
+
 Proposed route: `{{ROUTE}}`. Existing implementation to reuse: `{{CURRENT_CONTROLLER_OR_WORKFLOW}}`.
 
 | Stable identity | Display label | Data source | Explicit action and arguments | Availability |

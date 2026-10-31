@@ -201,7 +201,7 @@ class Themes:
                     with path.open('rb') as stream:
                         for chunk in iter(lambda: stream.read(65536), b''): digest.update(chunk)
         from style_config import Styles
-        preference_inputs = [*Styles(self.checkout).paths, LIB.parent/'style_config.py', LIB.parent/'theme_styles.py', LIB.parent/'resources.tsv', self.checkout/'config/gitmux/gitmux.conf']
+        preference_inputs = [*Styles(self.checkout).paths, LIB.parent/'style_config.py', LIB.parent/'theme_styles.py', LIB.parent/'style_catalog.py', LIB.parent/'config_values.py', LIB.parent/'tmux_config.py', self.checkout/'default/config.json', self.checkout/'config/tmux/tmux.conf', LIB.parent/'resources.tsv', self.checkout/'config/gitmux/gitmux.conf']
         for path in [*styles().input_paths(identity, self.directory(identity)), *preference_inputs]:
             digest.update(str(path).encode())
             if path.exists(): digest.update(regular(path))

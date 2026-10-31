@@ -127,6 +127,12 @@ class Compiler:
         styles = Styles(self.root, profile)
         self.inputs.update(styles.startup_inputs())
         setting_rows += ['\t'.join(row) for row in styles.rows()]
+        from profile_config import formatting_rows
+        setting_rows += ['\t'.join(row) for row in formatting_rows(self.root,profile)]
+        self.inputs.update((LIB/'config_values.py',LIB/'row_layout.py'))
+        defaults=self.root/'default/config.json'
+        if defaults.is_file(): self.inputs.add(defaults)
+        if defaults.parent.is_dir(): self.inputs.add(defaults.parent)
         body = 'typeset -g _DOTS_PROFILE_SETTINGS_CHECKOUT=' + shlex.quote(str(self.root)) + '\n'
         body += 'typeset -ga _DOTS_PROFILE_SETTING_ROWS=(' + ' '.join(map(shlex.quote, setting_rows)) + ')\n'
         body += self.module('lib/dots/shell/config.bash', self.read('lib/dots/shell/config.bash') + '\n_dots_config_load || return\n')

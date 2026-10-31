@@ -290,6 +290,8 @@ switch does not imply wallpaper permission. Only explicit `bg` actions or
 
 ## Managed File Transactions
 
+File-ID changes use the same retained Store transaction for the core registry, every affected profile manifest, current receipt identities and any explicitly requested live operations. Preview guards cover all contributing manifests and identity history. Rename-only edits preserve live objects, including drifted or missing sources; live reconciliation keeps its existing source/target checks. Retained old IDs cannot be reused. Original receipt backup pointers survive, and historical journals are never rewritten. Other installations resolve old receipt IDs from registry history without cross-platform state writes. Undo/recovery restore the batch with normal drift protection; they never force stale data.
+
 `files stash`/`files edit` submit complete guarded catalog/link/receipt batches to
 the same Store. Stash retains sources and removes only matching links; disabled
 resources stop claiming targets and cannot be silently reinstalled. Editing is
@@ -568,3 +570,19 @@ Remove is a soft deletion requiring a separate interactive default-Cancel confir
 Explicit regular-file copy mappings use the same installation receipt and first-install backup as links. Source and destination digests bind the plan; identical copies are no-ops, modified installed copies block updates, and uninstall/undo preserve the original baseline. Directory copy installation remains refused. Stash retains copied content and its receipt while disabling the mapping.
 
 Core-registry and profile mapping changes form one Store transaction, including schema-2 tracking. Preflight guards cover the registry, source composition and profile manifests; failure restores both files, and undo refuses post-apply drift. Registry identities are retained when a profile removes a mapping. Legacy journals retain their existing schema and recovery payloads. Profile alias edits validate all profile namespaces and guard their manifests before saving.
+
+
+## Automatic visual refresh after config saves
+
+A visual config save authorizes publication of affected active visual preferences and bounded first-party consumer notifications. `--dry-run` is read-only and `--no-refresh` saves only. The save and visual publication have separate retained transactions: a publication failure does not erase a successful save. Both theme pointers and the prior generation are guarded, and Store coordinates with existing theme locks. Reload failure leaves committed publication intact and is reported separately. Arbitrary theme hooks, connector installation, theme selection and attention acknowledgement are excluded. Refresh verifies tmux checkout/profile/state and server/socket identity before changing owned visual options. See [configuration refresh](profiles.md#effective-visual-values-and-refresh).
+
+Configuration application/formatting edits use the same retained Store plans,
+input guards, preview and undo as profile edits. Native wttr edits additionally
+guard the selected path and resolved target, preserve comments/unknown fields
+with a maintenance-time TOML parser, and validate the proposed native document
+before applying. A newly appearing user weather config invalidates an earlier
+fallback-file preview. Native file reads/edits never invoke weather providers.
+FZF defaults are literal data; owned pickers allow only compatible options and
+safe navigation bindings and retain their own identity/action protocol. Neovim
+loads bounded JSON, never evaluated Lua; status placement accepts named owned
+components. The static config audit never imports/executes inspected sources.

@@ -2,6 +2,10 @@
 
 **Status: Accepted, 2026-10-16.**
 
+The collection-routing portion is superseded by
+[decision 0016](0016-core-command-families-and-file-identities.md). The rationale
+below records the earlier design; its shell/environment decisions still apply.
+
 The owner requested library-owned shell integration, data-only customization,
 useful runtime variables, and a distinction between the current theme and the
 theme collection. This supersedes decision 0012's prohibition on plural routes;

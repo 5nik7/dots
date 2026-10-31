@@ -2,6 +2,8 @@
 
 **Implemented.** `dots init [bash|zsh|fish|powershell|nu|xonsh]` prints native shell code. It initializes only Dots settings, paths, colors, completions and refresh hooks; it does not install files or packages. The separate explicit `dots init --setup` mode delegates to [checkout installation](installation.md); ordinary hook generation/evaluation remains unchanged. The live Bash dispatcher requires Bash 4.4 or newer. Native PowerShell initialization has a separate adapter.
 
+Compiled Bash/Zsh settings include inert CLI row-formatting values. Changes to the contributing profile manifests or `default/config.json` invalidate the compiled generation; warm initialization reads the literals without invoking Python for row formatting. Ordinary Dots command invocations read current preferences independently. See [shared row alignment](profiles.md#shared-row-alignment).
+
 ## Using the hook
 
 For Bash and Zsh, put this in the interactive startup file once `dots` is on PATH:

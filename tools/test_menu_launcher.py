@@ -54,7 +54,7 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual((code, err), (0, '')); self.assertIn('keys', out)
             doc = json.loads(self.invoke('--json')[1])
             self.assertEqual((doc['schema'], doc['menu'], doc['title']), (1, 'dots', 'Dots menu'))
-            self.assertEqual([r['id'] for r in doc['items']], 'wttr todo config fonts keys tmux files git theme themes anodize blastoff pkgs debug profile profiles wiki env'.split())
+            self.assertEqual([r['id'] for r in doc['items']], 'wttr todo config fonts keys tmux files git theme anodize blastoff pkgs debug profile wiki env'.split())
             for item in doc['items']:
                 self.assertEqual(set(item), {'id','label','description','available','reason'})
             self.assertEqual([r['id'] for r in json.loads(self.invoke('--json','--query','anodize')[1])['items']], ['anodize'])
@@ -66,13 +66,11 @@ class LauncherContracts(MenuFixture):
             'git': [('status','git status','','output'),('info','git info','','output'),('submodules','git submodules','','submenu'),('wiki','git wiki','','submenu'),('publish','git publish','--all','terminal'),('sync','git sync','','sync')],
             'git/submodules': [('list','git submodules','','output'),('info','git submodules info','','output'),('status','git submodules status','','output')],
             'git/wiki': [('status','git wiki status','','output'),('info','git wiki info','','output'),('publish','git wiki publish','--all','terminal'),('sync','git wiki sync','','sync')],
-            'theme': [('show','theme show','','output'),('switcher','theme switcher','','terminal'),('files','theme files browse','','terminal'),('backgrounds','theme bg switcher','','terminal')],
-            'themes': [('list','themes list','','output'),('switcher','themes switcher','','terminal'),('plugins','themes plugins','','submenu')],
-            'themes/plugins': [(n,'themes plugins '+n,'','output') for n in ('list','doctor')],
+            'theme': [('show','theme show','','output'),('list','theme list','','output'),('switcher','theme switcher','','terminal'),('files','theme files browse','','terminal'),('backgrounds','theme bg switcher','','terminal'),('plugins','theme plugins','','submenu')],
+            'theme/plugins': [(n,'theme plugins '+n,'','output') for n in ('list','doctor')],
             'anodize': [(n,'anodize '+n,'--interactive --logo=text --logo-layout=base' if n in ('preview','extract') else '--interactive','document' if n in ('preview','extract') else 'terminal') for n in ('create','extract','edit','preview','apply')]+[('list','anodize list','','output')],
             'debug': [(n,'debug '+n,'','output') for n in ('check','startup','path','cache')],
-            'profile': [(n,'profile '+n,'','output') for n in ('show','paths','layers','files','commands','env','check')],
-            'profiles': [(n,'profiles '+n,'','output') for n in ('list','check')],
+            'profile': [(n,'profile '+n,'','output') for n in ('show','list','paths','layers','files','commands','env','check')]+[('check-all','profile check','--all','output')],
             'wiki': [('browse','wiki browse','','document'),('list','wiki list','','output'),('check','wiki check','','output')],
         }
         expected['blastoff'] = [('pick','blastoff pick','','terminal'),('current','blastoff current','','output'),
@@ -99,9 +97,14 @@ class LauncherContracts(MenuFixture):
             visits.append((menu.id, kwargs['query']))
             self.assertTrue(kwargs['compact'])
             self.assertEqual(kwargs['prompt'], 'dots·files' if menu.id=='dots:files' else 'dots')
+            if menu.id == 'dots':
+                self.assertEqual([e.label for e in menu.entries],
+                                 'anodize blastoff config debug env files fonts git keys pkgs profile theme tmux todo weather wiki'.split())
+            else:
+                self.assertEqual([e.id for e in menu.entries], ['browse', 'list', 'history', 'sources', 'help'])
             step=len(visits)
             if step==1:
-                kwargs['navigation']['query']='fil'; return Entry('files','inert $(touch sentinel)')
+                kwargs['navigation']['query']='fil'; return Entry(menu.entries[5].id,'inert $(touch sentinel)')
             if step==2:
                 kwargs['navigation']['query']='li'; return Entry('list','inert')
             if step==3: raise SelectionEvent('help')
@@ -185,7 +188,7 @@ class LauncherContracts(MenuFixture):
                 p=subprocess.run([*front,*args],env=env,capture_output=True,text=True,timeout=20)
                 self.assertEqual(p.returncode,0,p.stderr);return p.stdout
             self.assertIn('--client',call('menu','--help'))
-            self.assertEqual(len(json.loads(call('menu','--json'))['items']),18)
+            self.assertEqual(len(json.loads(call('menu','--json'))['items']),16)
             complete=['__complete','bash','2','--','dots'] if len(front)==1 else ['__complete']
             self.assertIn('--query',call(*complete,'menu','--q'))
             self.assertIn('menu tmux sessions',call('help','menu'))
@@ -388,12 +391,12 @@ class NativeLauncher(NativeMenuFixture):
             except AssertionError:
                 if p.poll() is not None:self.fail(repr(p.communicate(timeout=2)))
                 raise
-            self.choose('^themes$');self.receive(self.first[1],'dots·themes:'.encode())
-            self.choose('^plugins$');self.receive(self.first[1],'dots·themes·plugins:'.encode())
-            os.write(self.first[1],b'\x1b');data=self.receive(self.first[1],'dots·themes:'.encode())
+            self.choose('^theme$');self.receive(self.first[1],'dots·theme:'.encode())
+            self.choose('^plugins$');self.receive(self.first[1],'dots·theme·plugins:'.encode())
+            os.write(self.first[1],b'\x1b');data=self.receive(self.first[1],'dots·theme:'.encode())
             self.assertIn(b'^plugins$',data)
             os.write(self.first[1],b'\x1b');data=self.receive(self.first[1],b'dots:')
-            self.assertIn(b'^themes$',data)
+            self.assertIn(b'^theme$',data)
             os.write(self.first[1],b'\x1b')
             out,err=p.communicate(timeout=15);self.assertEqual(p.returncode,130,err)
 

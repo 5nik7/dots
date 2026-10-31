@@ -124,3 +124,21 @@ Thread associations are private local state under `<Dots state root>/todo/codex`
 ## Verification and platform limits
 
 `python3 -B tools/test_todo.py -v` exercises isolated scope, lifecycle, query, transaction, handoff and completion behavior. `python3 -B tools/generate_todo_commands.py --check` verifies static adapters against their shared definitions. Follow [testing](testing.md#todo-goals) for planning, popup and isolated native Codex checks. Native Linux/WSL/Windows Codex daemon, terminal and clipboard acceptance remains separate from Termux and controller fixtures. Windows application destinations are unchanged. Reminders, recurring goals, structured dependency graphs and cross-project aggregation remain outside this version.
+
+## Human tree views
+
+Human lists and popup rows default to `formatting.apps.todo.list_type=tree`.
+Use `todo list --list-type regular` or `todo browse --list-type regular` for a
+flat view, or save that preference through `dots config`. Trees keep parents
+before children and rank siblings by priority, due date, creation time and UUID.
+Filters retain muted ancestor context; the count includes matching goals only.
+Context rows expose read-only details and cannot start editing, planning or goal
+mutations. Popup fuzzy search rebuilds the hierarchy from an inert private
+snapshot, without opening the store or running goal content. An independent New
+Goal action remains available. Existing guarded updates still reread the store.
+
+`colors.todo.field.FIELD.label` and `.value` style aliases, IDs, titles, notes,
+tags, due/parent fields, subgoal identities/titles, counts, acceptance and dates.
+Status/priority have their existing semantic styles. Todo indentation, level
+indentation, spacing and alignment remain scoped to its human views. JSON,
+Markdown, briefs and goal storage retain their existing contracts.

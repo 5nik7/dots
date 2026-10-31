@@ -112,9 +112,9 @@ def identities(root):
 
 
 def report(root, args):
-    if args.family == 'profiles':
-        if args.operation == 'check':
-            return dict(version=1, checks=validate(root, identities(root)))
+    if args.operation == 'check' and args.all:
+        return dict(version=1, checks=validate(root, identities(root)))
+    if args.operation == 'list':
         context = resolve(root)
         active = {r['id'] for r in context['layers']}
         context['profiles'] = [dict(r, active=r['id'] in active) for r in available(root)
@@ -210,21 +210,22 @@ def render(result, operation, verbose=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('family', choices=('profile','profiles'))
+    parser.add_argument('family', choices=('profile',))
     parser.add_argument('operation', nargs='?')
     parser.add_argument('identity', nargs='?')
     parser.add_argument('--json', action='store_true'); parser.add_argument('--verbose','-v',action='store_true')
     parser.add_argument('--kind',choices=(*DIRECTORIES,'path')); parser.add_argument('--existing',action='store_true'); parser.add_argument('--raw',action='store_true')
     parser.add_argument('--all',action='store_true'); parser.add_argument('--active',action='store_true'); parser.add_argument('--platform',choices=PLATFORMS)
     args=parser.parse_args(argv)
-    args.operation = args.operation or ('show' if args.family=='profile' else 'list')
-    allowed = ('show','layers','paths','env','files','commands','check') if args.family=='profile' else ('list','check')
+    args.operation = args.operation or 'show'
+    allowed = ('show','layers','paths','env','files','commands','check','list')
     if args.operation not in allowed: parser.error('unknown operation: '+args.operation)
-    if args.family=='profiles' and args.identity: parser.error('profiles does not accept an ID')
+    if args.operation=='list' and args.identity: parser.error('profile list does not accept an ID')
+    if args.operation=='check' and args.all and args.identity: parser.error('profile check --all does not accept an ID')
     if (args.kind or args.existing or args.raw) and args.operation!='paths': parser.error('path options require profile paths')
     if args.raw and (not args.kind or args.json): parser.error('--raw requires --kind and excludes --json')
-    if args.all and args.operation!='env': parser.error('--all requires profile env')
-    if (args.active or args.platform) and not (args.family=='profiles' and args.operation=='list'): parser.error('collection filters require profiles list')
+    if args.all and args.operation not in ('env','check'): parser.error('--all requires profile env or check')
+    if (args.active or args.platform) and args.operation!='list': parser.error('collection filters require profile list')
     root=Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2]).resolve()
     result=public_report(report(root,args))
     if args.json: print(json.dumps(result,ensure_ascii=True))

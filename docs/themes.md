@@ -2,9 +2,9 @@
 
 **Status: Implemented flat themes, application templates, Git theme sources, explicit wallpapers and opt-in local theme plugins.**
 
-`theme` and `dots theme` inspect and change the current theme. `dots themes`
-manages the collection; singular collection routes remain aliases. Both use one
-engine. See [decision 0013](decisions/0013-shell-environment-and-theme-collection.md).
+`theme` and `dots theme` inspect and change the current theme and manage the
+collection through one engine. Only the singular first-party family remains.
+See [decision 0016](decisions/0016-core-command-families-and-file-identities.md).
 
 Theme preparation, rendering, bat caches, publication, quiet reloads and installed-source validation use [terminal progress](presentation.md#operation-progress). Batch updates show processed checkout counts. Downloads, tmux reloads and wallpaper adapters use static phase messages to keep child output readable. `DOTS_PROGRESS=never` disables these displays. Raw queries, shell initialization and dry runs stay undecorated.
 
@@ -618,9 +618,10 @@ and upstream license text beside its metadata. Pywal16 has no fixed palette: see
 
 ## Migration from plural commands
 
-`dots themes` now owns collection management: `list`, `switcher`, `install`,
-`update`, `remove`, and `plugins`. Existing `dots theme` collection routes still
-work. Bare `dots themes` shows collection help without opening a picker.
+`dots theme` owns collection management: `list`, `switcher`, `install`,
+`update`, `remove`, and `plugins`. The old `dots themes` routes are removed;
+replace that command prefix with `dots theme`. Bare `dots theme` retains its
+current-theme summary; `dots theme --help` shows the unified command family.
 
 Use `theme` for a current-theme summary, `theme current` for the plain full ID,
 and `theme color`, `show`, `set`, `refresh`, or `bg` for current-theme operations.
@@ -631,7 +632,7 @@ The source is labeled because `show` reads configured sources while `colors`
 defaults to the published snapshot. Native previews retain their native-only
 scope. See [human color views](file-colors.md#human-color-views) for details and
 redirected-output compatibility.
-`theme list` and `dots themes list` list the same selectable IDs; `--families`
+`theme list` and `dots theme list` list the same selectable IDs; `--families`
 and `--flavors FAMILY` provide the corresponding filters. Full IDs remain the
 selection interface. Family commands retain native flavor queries and explicit
 `set`. Internal callers use `dots-theme-current`; the old `current_theme`
@@ -877,7 +878,7 @@ other default consumers.
 
 ## Verbose application output
 
-`dots theme set ID -v`, `dots theme refresh --verbose`, `dots theme refresh --commands-only -v`, and `dots theme switcher -v` add action details on stderr. The plural `dots themes switcher` alias, standalone `theme` forwarding, and family/flavor `set` helpers preserve the flag. The switcher passes it into Apply; selection previews and cancellation remain read-only.
+`dots theme set ID -v`, `dots theme refresh --verbose`, `dots theme refresh --commands-only -v`, and `dots theme switcher -v` add action details on stderr. Standalone `theme` forwarding and family/flavor `set` helpers preserve the flag. The switcher passes it into Apply; selection previews and cancellation remain read-only.
 
 Verbose output shows preparation/render/cache phases, source -> destination links, connector recovery copies retained in generation journals, publication, reload/plugin outcomes and concise unchanged/skipped reasons. Already-current generations are explained without claiming new backups or links. Rollback is reported separately from completed writes. Default output, selector styling, approvals and mutation behavior remain unchanged. Resource colors/icons and progress use the [shared contract](presentation.md#verbose-operations). `set --dry-run -v` describes planned connections without writes; this does not add dry-run support to refresh or switcher. Theme collection downloads/removal, background selection and data-query routes do not gain verbosity.
 

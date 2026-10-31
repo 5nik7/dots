@@ -188,6 +188,11 @@ class Weather(unittest.TestCase):
         cfg['icon_colors']['113'] = 'bright yellow'
         cfg['night_icon_colors']['113'] = 'i blue'
         styling.validate_config(cfg)
+        native = dict(fg='#010203', bg=33, bold=True)
+        self.assertEqual(colors.sgr(native), '1;38;2;1;2;3;48;5;33')
+        self.assertEqual(styling.tmux_style(colors.style(styling.parse_style(native))),
+                         '#[default]#[fg=#010203,bg=colour33,bold]')
+        self.assertIsNone(colors.sgr(dict(fg=None,bg=None)))
 
     def test_variable_temperature_bands_and_boundary_conversion(self):
         for thresholds, styles, cases in [

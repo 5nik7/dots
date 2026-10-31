@@ -3,7 +3,7 @@
 # shellcheck disable=SC2299,SC1090,SC2034,SC2154
 # Sourceable Bash/Zsh theme helpers; lib/dots/shell owns prompt registration.
 # Fast Zsh prompt checks use only builtins.
-declare -gA theme themes dot
+declare -gA theme themes dot _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS
 source "$DOTS/lib/dots/shell/less.bash"
 themes[root]=${DOTHEMES:-$DOTS/themes}
 unset 'themes[default]' 'themes[global]' 'themes[local]'
@@ -43,7 +43,7 @@ set_theme() {
     source "$DOTS/lib/dots/themes/gum-env.bash" || return
   fi
   # Older generations and session-only palettes retain the role-based fallback.
-  unset DOTS_THEME_FZF_COLORS
+  unset DOTS_THEME_FZF_COLORS DOTS_THEME_FZF_OPTS DOTS_THEME_FZF_PREVIEW
   unset _DOTS_LESS_FOREGROUND_HEX _DOTS_LESS_BACKGROUND_HEX
   if [[ -L $_DOTS_THEME_ACTIVE ]]; then
     if [[ -n ${ZSH_VERSION:-} ]]; then generation=${${_DOTS_THEME_ACTIVE:A}:t}
@@ -70,6 +70,8 @@ set_theme() {
     for colors in "${_DOTS_THEME_COLOR_NAMES[@]-}"; do [[ ! $colors ]] || unset "$colors"; done
     _DOTS_THEME_COLOR_NAMES=()
   fi
+  # THEME and FLAVOR are assigned by the generated palette above.
+  # shellcheck disable=SC2153
   theme[current]=$THEME theme[flavor]=$FLAVOR
   dot[theme]=${DOTS_THEME_ID:-$THEME${FLAVOR:+-$FLAVOR}}
   export THEMEDIR=${themes[root]}/$THEME THEMESRC=${themes[root]}/$THEME/src
@@ -99,7 +101,42 @@ set_theme() {
   if [[ -n ${ZSH_VERSION:-} ]] && (( ${+functions[_dots_fsh_apply]} )); then
     _dots_fsh_apply || :
   fi
-  if [[ -n ${_FZF_OPTS_:-} ]]; then
+  if [[ -z $requested && -r $_DOTS_THEME_ACTIVE/visual.tsv ]]; then
+    local visual_kind visual_key visual_value visual_line
+    local -A visual_icons=() visual_colors=() visual_env=()
+    while IFS= read -r visual_line; do
+      visual_kind=${visual_line%%$'\t'*}; visual_line=${visual_line#*$'\t'}
+      visual_key=${visual_line%%$'\t'*}; visual_value=${visual_line#*$'\t'}
+      case $visual_kind in
+        icon) [[ $visual_key =~ ^[a-z][a-z0-9_.]*$ ]] || return 1; visual_icons[$visual_key]=$visual_value ;;
+        color) [[ $visual_key =~ ^[0-9]+$ && $visual_value =~ ^[0-9\;]+$ ]] || return 1; visual_colors[$visual_key]=$visual_value ;;
+        env) [[ $visual_key =~ ^[A-Z][A-Z0-9_]*$ ]] || return 1; visual_env[$visual_key]=$visual_value ;;
+        *) return 1 ;;
+      esac
+    done < "$_DOTS_THEME_ACTIVE/visual.tsv"
+    _DOTS_STYLE_ICONS=() _DOTS_STYLE_COLORS=()
+    if [[ -n ${ZSH_VERSION:-} ]]; then
+      # Native Zsh expansion inside the guarded Zsh branch.
+      # shellcheck disable=SC2066,SC2296
+      for visual_key in "${(@k)visual_icons}"; do _DOTS_STYLE_ICONS[$visual_key]=${visual_icons[$visual_key]}; done
+      # Native Zsh expansion inside the guarded Zsh branch.
+      # shellcheck disable=SC2066,SC2296
+      for visual_key in "${(@k)visual_colors}"; do _DOTS_STYLE_COLORS[$visual_key]=${visual_colors[$visual_key]}; done
+      # Native Zsh expansion inside the guarded Zsh branch.
+      # shellcheck disable=SC2066,SC2296
+      for visual_key in "${(@k)visual_env}"; do export "$visual_key=${visual_env[$visual_key]}"; done
+    else
+      for visual_key in "${!visual_icons[@]}"; do _DOTS_STYLE_ICONS[$visual_key]=${visual_icons[$visual_key]}; done
+      for visual_key in "${!visual_colors[@]}"; do _DOTS_STYLE_COLORS[$visual_key]=${visual_colors[$visual_key]}; done
+      for visual_key in "${!visual_env[@]}"; do export "$visual_key=${visual_env[$visual_key]}"; done
+    fi
+  fi
+  if [[ ${DOTS_THEME_FZF_OPTS+x} ]]; then
+    export FZF_DEFAULT_OPTS=$DOTS_THEME_FZF_OPTS
+    if [[ ${DOTS_THEME_FZF_PREVIEW:-0} == 0 && -n ${_PREVIEW_:-} ]]; then
+      export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --preview='$_PREVIEW_ {}'"
+    fi
+  elif [[ -n ${_FZF_OPTS_:-} ]]; then
     export FZF_DEFAULT_OPTS="$_FZF_OPTS_ --bind=$_FZF_BINDS_ --preview-window=$_FZF_PREVIEW_POS_ --preview='$_PREVIEW_ {}'"
   else
     if [[ -z ${_DOTS_THEME_FZF_BASE+x} ]]; then _DOTS_THEME_FZF_BASE=${FZF_DEFAULT_OPTS:-}; fi

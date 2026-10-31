@@ -54,33 +54,8 @@ def read_regular(path, limit=LIMIT):
 
 
 def config(path=None):
-    user = config_root() / 'wttr/config.toml'
-    selected = Path(path).absolute() if path else user if user.exists() else ROOT / 'config/wttr/config.toml'
-    # Managed directory links are supported; the final config must be regular.
-    data = tomllib.loads(read_regular(selected.resolve(), 128 * 1024).decode('utf-8'))
-    for key, default in [('default_location', ''), ('units', 'us'), ('language', 'en'),
-                         ('days', 3), ('timeout', 20), ('ttl', 900), ('max_stale', 21600),
-                         ('location_max_age', 86400), ('widget', '{icon} {temperature}{unit}{stale_marker}')]:
-        data.setdefault(key, default)
-    if data['units'] not in ('us', 'metric'):
-        raise ValueError('config units must be us or metric')
-    for key, low, high in [('days', 1, 3), ('timeout', 1, 60), ('ttl', 60, 86400),
-                           ('max_stale', 60, 86400), ('location_max_age', 0, 86400)]:
-        if type(data[key]) is not int or not low <= data[key] <= high:
-            raise ValueError('invalid config ' + key)
-    if data['max_stale'] < data['ttl']:
-        raise ValueError('max_stale must be at least ttl')
-    data['default_location'] = validate_location(data['default_location'], empty=True)
-    validate_language(data['language'])
-    if not isinstance(data['widget'], str):
-        raise ValueError('widget must be a string')
-    for group in ('icons', 'night_icons'):
-        icons = data.setdefault(group, {})
-        if not isinstance(icons, dict) or any(not isinstance(v, str) or len(v) > 16 or clean(v) != v for v in icons.values()):
-            raise ValueError('invalid ' + group)
-    from styling import validate_config
-    validate_config(data)
-    return selected, data
+    from wttr.configuration import config as native_config
+    return native_config(path,ROOT)
 
 
 def clean(value):

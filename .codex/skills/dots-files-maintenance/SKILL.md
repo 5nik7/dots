@@ -16,6 +16,10 @@ The registry owns qualified IDs and platform eligibility. Profile
 app, category, strategy and optional enabled/replaces. Profile rows never carry
 platform lists or target maps. A registered resource without a profile mapping
 must not install. Preserve qualified IDs and recovery compatibility.
+Explicit ID edits use the registry rename history and one transaction across all
+profile references and current receipts; mapping fields remain selected-profile
+edits. Never reuse retired IDs or rewrite historical journals. Test renames with
+`tools/test_file_renames.py` alongside the backend and lifecycle suites.
 
 Use `Catalog` to join these inputs. Obtain preview guards with `input_paths()`
 and serialize edits with `updates()`. Registry/profile changes belong to one
@@ -34,5 +38,4 @@ installation, repair and adapter suites. Cover registry-only IDs, combined write
 failure/undo, idempotence, inheritance, replacements and platform destinations.
 Use [profile maintenance](../dots-profile-maintenance/SKILL.md) for manifests and
 [command maintenance](../dots-command-maintenance/SKILL.md) for routes/presentation.
-Record menu suitability, preserve machine output, update canonical docs and
-rebuild/check the wiki. Native Windows evidence remains separate from fixtures.
+Record configuration and menu assessments for command changes. Use [dots-config](../dots-config/SKILL.md) for applicable integrations while retaining managed mapping and receipt ownership here. Preserve machine output, update canonical docs and rebuild/check the wiki. Native Windows evidence remains separate from fixtures.

@@ -83,11 +83,13 @@ def edit_fields(goal, context):
 
 def rows(store, goals, ui, width):
     from files.catalog import Presentation
-    from todo_presentation import compact, detail
+    from todo_presentation import compact, detail,configure
+    configure(ui)
     styles = named_styles(ui)
     labels, previews = [], []
     for goal in goals:
-        labels.append(compact(ui, goal, width, styles))
+        depth=goal.get('_todo_depth',0)*ui.formatting.get('level_indent',2)
+        labels.append(' '*min(128,depth)+compact(ui,goal,max(1,width-depth),styles,context=goal.get('_todo_context',False),child=bool(depth)))
         children = [g for g in store.descendants(goal['id']) if not g['removed']]
         progress = f"{sum(g['status'] == 'done' for g in children)}/{len(children)} complete"
         stream = io.StringIO()
@@ -102,6 +104,13 @@ def pick(store, goals, frame, context):
     from files.catalog import Presentation
     from files.picker import fzf_colors
     from progress import permanent_output
+    from config_values import value
+    from todo_tree import tree,filtered,match_indices
+    from todo_presentation import compact
+    tree_mode=frame.get('list_type',value('formatting.apps.todo.list_type','tree'))=='tree'
+    eligible={g['id'] for g in goals}
+    if tree_mode:goals=[dict(g,_todo_depth=depth,_todo_context=extra) for g,depth,extra in tree(goals,store.goals)]
+    frame['_goals']=goals
     ui = Presentation(terminal=True, detail_indent=2)
     if context is None and not terminal():
         raise ValueError('goal browsing requires a terminal')
@@ -112,23 +121,41 @@ def pick(store, goals, frame, context):
     if not available:
         from todo_cli import render
         print('todo: FZF or popup support unavailable; listing goals.', file=sys.stderr)
-        render(store.scope, goals, listing=True)
+        render(store.scope,[g for g in goals if g['id'] in eligible],listing=True,all_goals=store.goals,list_type=frame.get('list_type'))
         return None
     columns, lines = context.verify() if context else shutil.get_terminal_size((80, 24))
     width = max(1, columns - 2)
     labels, previews = rows(store, goals, ui, max(1, width - 4))
-    notice_lines = int(bool(frame.get('notice')))
+    snapshot=dict(schema=1,previews=previews)
+    initial_indices=None;header_row=None
+    if tree_mode:
+        indent=ui.formatting.get('level_indent',2)
+        snapshot.update(goals=[{k:g[k] for k in ('id','parent','priority','due','created')} for g in goals],
+                        eligible=[i for i,g in enumerate(goals) if g['id'] in eligible],
+                        labels=[compact(ui,g,max(1,width-4-g['_todo_depth']*indent),child=bool(g['_todo_depth'])) for g in goals],
+                        context=[compact(ui,g,max(1,width-4-g['_todo_depth']*indent),context=True,child=bool(g['_todo_depth'])) for g in goals],
+                        search=[clean(' '.join((g.get('alias') or '',g['title'],*g['tags']))) for g in goals],indent=indent)
+        payload,matches,initial_indices=filtered(snapshot,frame.get('query',''))
+        records=payload.decode().split('\0');header_row=records[0]
+        for record in records[1:]:
+            if record:
+                token,_,text=record.partition('\t');labels[int(token)]=text
+    notice_lines = int(bool(frame.get('notice')))+int(tree_mode)
     preview_lines = min(4, max(1, lines - 12 - notice_lines))
     height = max(1, lines - 2)
     from todo_layout import bindings
     layout_bindings, layout_environment = bindings(popup=context is not None, notice=notice_lines)
     label = Path(store.scope['root']).name if store.scope['root'] else 'global'
-    with request_file(dict(schema=1, previews=previews)) as path:
+    with request_file(snapshot) as path:
         preview_command = ('& $env:DOTS_TODO_PYTHON -B $env:DOTS_TODO_MENU preview $env:DOTS_TODO_PREVIEW {1}'
                            if os.name == 'nt' else '"$DOTS_TODO_PYTHON" -B "$DOTS_TODO_MENU" preview "$DOTS_TODO_PREVIEW" {1}')
         preview = (preview_command, '',
                    dict(DOTS_TODO_PYTHON=sys.executable, DOTS_TODO_MENU=str(Path(__file__).resolve()),
                         DOTS_TODO_PREVIEW=str(path), **layout_environment))
+        if tree_mode:
+            command=('& $env:DOTS_TODO_PYTHON -B $env:DOTS_TODO_TREE {q}' if os.name=='nt' else '"$DOTS_TODO_PYTHON" -B "$DOTS_TODO_TREE" {q}')
+            layout_bindings=[*layout_bindings,'change:reload:'+command]
+            preview[2].update(DOTS_TODO_TREE=str(Path(__file__).with_name('todo_tree.py')),DOTS_TODO_TREE_DATA=str(path))
         with permanent_output(), context.selector_environment() if context else nullcontext(None) as environment:
             try:
                 result = RichSelector(backend='fzf').fzf('todo·' + clean(label), labels, False, preview,
@@ -136,14 +163,21 @@ def pick(store, goals, frame, context):
                     height=height, preview_position='down', preview_lines=preview_lines, preview_wrap=True,
                     query=frame.get('query', ''), header='Alt-N: new  Alt-F: filters\nAlt-C: Codex  Alt-Y: copy\nAlt-O: print  F1: help' +
                         ('\n' + frame['notice'] if frame.get('notice') else ''),
-                    environment=environment, info='inline-right', hscroll=False, navigation=frame,
+                    environment=environment, info='hidden' if tree_mode else 'inline-right', hscroll=False, navigation=frame,
                     navigation_keys={'esc': 'back', 'f1': 'help', 'alt-n': 'new', 'alt-f': 'filters',
                                      'alt-c': 'plan', 'alt-o': 'print-brief', 'alt-y': 'copy-brief'},
                     event_selection=True, bindings=layout_bindings,
-                    focus_index=next((i for i, g in enumerate(goals) if g['id'] == frame.get('selected')), None))
+                    initial_indices=initial_indices,disabled=tree_mode,header_row=header_row,
+                    focus_index=next((i for i,g in enumerate(goals) if g['id']==frame.get('selected') and (initial_indices is None or i in initial_indices)),None))
             except SelectionEvent as event:
+                if tree_mode:
+                    matches=match_indices(snapshot,frame.get('query',''))
+                    for i,g in enumerate(goals):g['_todo_context']=i not in matches
                 if event.index is not None: frame['selected'] = goals[event.index]['id']
                 raise
+    if tree_mode:
+        matches=match_indices(snapshot,frame.get('query',''))
+        for i,g in enumerate(goals):g['_todo_context']=i not in matches
     frame['selected'] = goals[result[0]]['id']
     return goals[result[0]]
 
@@ -165,7 +199,8 @@ def browse(selected, args, *, context=None):
         raise ValueError('--client requires an originating tmux pane')
     if context is None and os.name != 'nt' and (os.environ.get('TMUX') or os.environ.get('DOTS_MENU_CONTEXT')):
         context = TmuxContext.capture(client=client) if client else TmuxContext.from_environment()
-    frame = dict(query='')
+    from config_values import value
+    frame = dict(query='',list_type=getattr(args,'list_type',None) or value('formatting.apps.todo.list_type','tree'))
     while True:
         store = Goals(selected)
         goals = store.selected(args)
@@ -175,7 +210,9 @@ def browse(selected, args, *, context=None):
                 if goal is None: return 0
                 choices = [('show', 'details'), ('brief', 'agent brief')]
                 choices += [('print-brief', 'Print brief'), ('copy-brief', 'Copy brief')]
-                if goal['removed']:
+                if goal.get('_todo_context'):
+                    choices=[('show','details (read-only ancestor)')]
+                elif goal['removed']:
                     choices += [('restore', 'restore'), ('restore-tree', 'restore subtree')]
                 else:
                     choices += [('plan', 'Plan in Codex'), ('edit', 'edit'), ('note', 'add note'), ('start', 'start'),
@@ -184,8 +221,11 @@ def browse(selected, args, *, context=None):
                 action = select('Actions', choices, context)
             except SelectionEvent as event:
                 action = event.action
-                goal = goals[event.index] if event.index is not None else None
+                goal = frame.get('_goals',goals)[event.index] if event.index is not None else None
             if action is None: continue
+            if goal and goal.get('_todo_context') and action not in ('show','back','help','filters','new'):
+                frame['notice']='Ancestor context is read-only; change the filters to select this goal'
+                continue
             if action in ('plan', 'brief', 'print-brief', 'copy-brief'):
                 if goal is None: continue
                 if action == 'brief':
@@ -225,7 +265,7 @@ def browse(selected, args, *, context=None):
                 frame['query'] = ''
             elif action in ('new', 'child'):
                 title = prompt('', 'New goal title', context)
-                result = apply(store, 'add', title=title, parent=goal['id'] if goal else None)
+                result = apply(store, 'add', title=title, parent=goal['id'] if goal and action=='child' else None)
                 frame['selected'] = result['goals'][0]['id']
             elif action == 'show':
                 content = markdown(selected, [goal, *store.descendants(goal['id'])])

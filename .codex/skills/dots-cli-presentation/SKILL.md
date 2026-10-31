@@ -12,6 +12,8 @@ metadata or completion changes, also follow
 For a Dots launcher or picker, [menu authoring](../dots-menu-authoring/SKILL.md)
 provides existing selection patterns and a focused plan template.
 
+Record the [configuration review](../../../agents/guides/commands.md#configuration-integration-review) for command-view changes, including a reason when current controls need no change. Use [dots-config](../dots-config/SKILL.md) for new/changed color, icon or presentation bindings; prove the setting reaches the renderer rather than adding an unused control.
+
 ## Choose the view
 
 Identify which outputs are human views and which are APIs before editing.
@@ -45,6 +47,8 @@ Authored theme-logo colors have an existing scoped exception; preserve it.
 For Anodize, follow the [authoritative LOGO1/LOGO2 contract](../../../docs/anodize.md#terminal-logo): default human branding never changes because of pipes, disabled icons or short panes. Use its hint-to-info-to-accent text gradient, independently for symbol and wordmark, with published colors for ordinary banners and addressed colors for previews. Use the selected background from the first logo row through header, metadata and notes; restore foreground after artwork. Validate exact supplied artwork and its gradient in the real display path.
 
 ## Apply and verify
+
+For comparable key/value rows, reuse `formatting.apps.cli.label_width` (cells, percentage or zero for spacing only), `label_gap` and `alignment`. Shared Python detail/resource methods and Bash row/resource helpers consume these settings. Preserve full long keys with bounded wrapping/stacking, display-cell alignment and command-specific explicit column overrides. Use menu formatting for popup rows. Verify both renderers through `tools/test_config_alignment.py`, including ordinary redirected/data bytes; do not start a subprocess for each row.
 
 Review representative populated, empty and error output as applicable. Check
 40/80/120-column layouts, long values, Unicode, plain output and color resets.
@@ -96,3 +100,5 @@ control-character safety, and machine-output bytes under forced decoration.
 Measure representative listings; preserve the dependency-free help/dispatch path.
 
 Maintain Bash (Termux/Linux/WSL) and native Windows PowerShell 5.1/7 together. Cover matching flags, completion, data output, progress and picker behavior; use native adapters and shared transactions. Follow [PowerShell parity](../../../docs/powershell.md), and distinguish fixture tests from native terminal/desktop evidence.
+
+Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.

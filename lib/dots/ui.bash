@@ -1,6 +1,6 @@
 # Sourceable Bash presentation helpers. Static views use builtins; an active
 # progress worker is stopped before output. Never source shell configuration.
-typeset -gA dots_options _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS
+typeset -gA dots_options _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS _DOTS_FORMATTING
 # DOTS_COLOR / DOTS_ICONS: auto, always, never; dispatcher flags override them.
 dots::settings() {
   if [[ -z ${_DOTS_CONFIG_PATH:-} && -n ${DOTS:-} && -r $DOTS/lib/dots/shell/config.bash ]]; then
@@ -54,6 +54,10 @@ dots::logo() {
 dots::heading() { dots::style; printf '%s%s%s%s\n' "$DOTS_UI_BOLD" "$DOTS_UI_CYAN" "$*" "$DOTS_UI_RESET"; }
 dots::row() {
   dots::style
+  if dots::human && [[ ${_DOTS_FORMATTING[label_width]+set} ]]; then
+    dots::aligned_row "$1" "${2:-}" "$DOTS_UI_BLUE" ''
+    return
+  fi
   local width=26 columns=${COLUMNS:-80} value=${2:-}
   [[ $columns =~ ^[0-9]+$ ]] && (( 10#$columns < 60 )) && width=0
   if dots::human; then
@@ -77,6 +81,41 @@ dots::row() {
     printf '  %s%s%s\n      %s\n' "$DOTS_UI_BLUE" "$1" "$DOTS_UI_RESET" "${2:-}"
   else
     printf '  %s%-26s%s %s\n' "$DOTS_UI_BLUE" "$1" "$DOTS_UI_RESET" "${2:-}"
+  fi
+}
+# Shared human column preferences. Values come from the validated literal reader.
+dots::aligned_row() {
+  local label=$1 text=$2 label_color=$3 value_color=$4 columns=${COLUMNS:-80}
+  local indent=${_DOTS_FORMATTING[indent]:-4} gap=${_DOTS_FORMATTING[label_gap]:-1}
+  local width=${_DOTS_FORMATTING[label_width]:-10} align=${_DOTS_FORMATTING[alignment]:-left}
+  local char i label_cells=0 number padding left=0 prefix prefix_width
+  [[ $columns =~ ^[0-9]{1,6}$ ]] || columns=80
+  columns=$((10#$columns)); (( columns >= 8 )) || columns=8
+  indent=$((10#$indent)); gap=$((10#$gap))
+  (( indent <= columns-8 )) || indent=$((columns-8))
+  (( gap <= columns-indent-8 )) || gap=$((columns-indent-8))
+  if [[ $width == *% ]]; then number=${width%\%}; width=$((columns*10#$number/100))
+  else width=$((10#$width)); fi
+  (( width <= columns-indent-gap-8 )) || width=$((columns-indent-gap-8))
+  dots::text "$label"; label=$REPLY
+  for ((i=0;i<${#label};i++)); do
+    char=${label:i:1}; printf -v number '%d' "'$char"
+    # Combining marks occupy no cells; common wide CJK/emoji occupy two.
+    if (( number>=768 && number<=879 || number>=65024 && number<=65039 )); then :
+    elif (( number>=4352 && number<=4447 || number>=11904 && number<=42191 || number>=44032 && number<=55203 || number>=63744 && number<=64255 || number>=65281 && number<=65376 || number>=127744 && number<=129791 )); then ((label_cells+=2))
+    else ((label_cells+=1)); fi
+  done
+  padding=$((width-label_cells)); (( padding >= 0 )) || padding=0
+  [[ $align != right ]] || left=$padding
+  [[ $align != center ]] || left=$((padding/2))
+  prefix_width=$((indent+label_cells+padding+gap))
+  if (( width && label_cells>width || prefix_width>columns-8 )); then
+    dots::line "$label" "$label_color" "$indent" "$columns"
+    dots::line "$text" "$value_color" "$((indent+width+gap))" "$columns"
+  else
+    printf -v prefix '%*s' "$((indent+left))" ''
+    printf '%s%s%s%*s%s' "$label_color" "$prefix" "$label" "$((padding-left+gap))" '' "$DOTS_UI_RESET"
+    dots::line "$text" "$value_color" "$prefix_width" "$columns" first
   fi
 }
 # Inert text and conservative terminal widths, using only shell builtins.

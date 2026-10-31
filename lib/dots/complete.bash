@@ -21,6 +21,11 @@ dots_value_candidates() {
       output=$(python3 -B "$DOTS_LIB_DIR/profiles.py" __names 2>/dev/null) || return 0
       while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
+    config-value)
+      local output
+      output=$(python3 -B "$DOTS_LIB_DIR/config_values.py" __values "${DOTS_POSITIONALS[0]:-}" 2>/dev/null) || return 0
+      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
+      ;;
     config-key)
       local output
       output=$(python3 -B "$DOTS_LIB_DIR/profile_config.py" __keys "${DOTS_OPTION_VALUES[--profile]:-}" 2>/dev/null) || return 0

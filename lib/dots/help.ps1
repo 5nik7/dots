@@ -17,6 +17,7 @@ function Show-DotsHelp {
     }
     if (-not $files.Count) { throw ('unknown command: ' + ($Route -join ' ')) }
     Write-DotsMessage $(if ($stem) { 'dots ' + ($Route -join ' ') } else { 'Dots' }) heading $Presentation
+    $rootGroups = [ordered]@{}
     foreach ($file in $files | Sort-Object Name) {
         $name = $file.BaseName -replace '^dots-', ''
         $summary = ''; $usage = ''; $options = @(); $hidden = $false
@@ -34,6 +35,12 @@ function Show-DotsHelp {
             }
         } finally { $reader.Dispose() }
         if ($hidden -and $stem -ne $name) { continue }
+        if (-not $stem) {
+            $group = $name.Split('-')[0]
+            if (-not $rootGroups.Contains($group)) { $rootGroups[$group] = 'Command group' }
+            if ($group -eq $name) { $rootGroups[$group] = $summary }
+            continue
+        }
         Write-DotsMessage ('  ' + $name.Replace('-', ' ') + '  ' + $summary) info $Presentation
         if ($stem -eq $name) {
             Write-DotsMessage ('  Usage: dots ' + ($Route -join ' ') + ' ' + $usage) info $Presentation
@@ -43,5 +50,26 @@ function Show-DotsHelp {
                 Write-DotsMessage ('  ' + $fields[0] + $(if ($fields[1]) { ', ' + $fields[1] }) + '  ' + $fields[3]) info $Presentation
             }
         }
+    }
+    if (-not $stem) {
+        foreach ($entry in $rootGroups.GetEnumerator()) {
+            Write-DotsMessage ('  ' + $entry.Key + '  ' + $entry.Value) info $Presentation
+        }
+        Write-DotsMessage '' info $Presentation
+        $columns = $env:COLUMNS -as [int]
+        if (-not $columns) {
+            try { $columns = [Console]::WindowWidth } catch { $columns = 80 }
+        }
+        if ($columns -le 0) { $columns = 80 }
+        $columns = [Math]::Max(20, $columns)
+        $line = ''
+        foreach ($word in 'Use dots help COMMAND for details; dots commands for all commands.'.Split(' ')) {
+            if ($line -and ($line.Length + 1 + $word.Length) -gt $columns) {
+                Write-DotsMessage $line info $Presentation
+                $line = ''
+            }
+            $line += $(if ($line) { ' ' } else { '' }) + $word
+        }
+        Write-DotsMessage $line info $Presentation
     }
 }

@@ -287,7 +287,9 @@ class ResourcesTests(unittest.TestCase):
                 try:
                     fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, width, 0, 0))
                     result = subprocess.run([BASH, '--noprofile', '--norc', '-c',
-                        'source "$DOTS/lib/dots/ui.bash"; dots::resource_row Target "$1" "$1" file',
+                        'source "$DOTS/lib/dots/ui.bash"; dots::style; '
+                        '_DOTS_FORMATTING=([indent]=4 [label_width]=10 [label_gap]=1 [alignment]=left); '
+                        'dots::resource_row Target "$1" "$1" file',
                         'test', str(path)], env=dict(self.env, COLUMNS=str(width)),
                         stdout=slave, stderr=slave, timeout=10)
                     os.close(slave); slave = None
@@ -301,11 +303,8 @@ class ResourcesTests(unittest.TestCase):
                     plain = re.sub(r'\x1b\[[0-9;]*m', '', output.decode()).replace('\r\n', '\n')
                     self.assertTrue(all(cells(line) <= width for line in plain.splitlines()), plain)
                     lines = plain.splitlines()
-                    if width < 60:
-                        self.assertEqual(lines.pop(0).strip(), 'Target')
-                        indent = 6
-                    else:
-                        indent = 29
+                    self.assertTrue(lines[0].startswith('    Target     '))
+                    indent = 15
                     self.assertEqual(''.join(line[indent:] for line in lines), '󰈟 ' + str(path))
                 finally:
                     os.close(master)

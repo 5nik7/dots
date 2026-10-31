@@ -159,6 +159,31 @@ if ($dotsInteractive) {
             $env:BAT_THEME = 'Dots'
             $env:BAT_CACHE_PATH = $batCache
         }
+        $visualFile = Join-Path $dot.state "themes/generations/$generation/visual.tsv"
+        if (Test-Path -LiteralPath $visualFile -PathType Leaf) {
+            $visualIcons = @{}; $visualColors = @{}; $visualEnv = @{}
+            foreach ($line in [IO.File]::ReadAllLines($visualFile)) {
+                $fields = $line.Split("`t", 3)
+                if ($fields.Count -ne 3) { return }
+                switch -CaseSensitive ($fields[0]) {
+                    icon { $visualIcons[$fields[1]] = $fields[2] }
+                    color { $visualColors[$fields[1]] = $fields[2] }
+                    env {
+                        if ($fields[1] -cnotmatch '^[A-Z][A-Z0-9_]*$') { return }
+                        $visualEnv[$fields[1]] = $fields[2]
+                    }
+                    default { return }
+                }
+            }
+            $global:DotsStyleIcons = $visualIcons; $global:DotsStyleColors = $visualColors
+            foreach ($name in $visualEnv.Keys) { [Environment]::SetEnvironmentVariable($name, $visualEnv[$name], 'Process') }
+            if ($visualEnv.ContainsKey('DOTS_THEME_FZF_COLORS')) {
+                if ($null -eq $global:DotsVisualFzfBase) { $global:DotsVisualFzfBase = [string]$env:FZF_DEFAULT_OPTS }
+                $fzfBase = $global:DotsVisualFzfBase
+                if ($visualEnv.ContainsKey('DOTS_THEME_FZF_OPTS')) { $fzfBase = $visualEnv['DOTS_THEME_FZF_OPTS'] }
+                $env:FZF_DEFAULT_OPTS = $fzfBase + ' --color=' + $visualEnv['DOTS_THEME_FZF_COLORS']
+            }
+        }
         $global:_DotsThemeGeneration = $generation
     }
     $global:_DotsThemeGeneration = $null

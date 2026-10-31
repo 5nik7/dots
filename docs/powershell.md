@@ -32,6 +32,8 @@ The personal profile now uses [shared Starship startup](shell-init.md#powershell
 
 ## Commands and interaction
 
+Root help (`dots`, `dots help`, `dots -h`, `dots --help`) shows only top-level commands/groups and a hint for detailed help and the full `dots commands` list. Deeper-only extensions contribute a group row; contextual help and completion retain deeper routes. The native static help path still works without Python. The owned-root regression covers all four forms, grouping and narrow footer wrapping with Python absent from PATH; actual Windows PowerShell 5.1/7 and terminal acceptance remain pending. Application destinations and installation behavior are unchanged.
+
 `dots.ps1 config` opens the shared configuration browser in a terminal;
 `config browse --profile ID`, `--defaults` and `--query TEXT` use the same Python
 controller and guarded Save/Cancel workflow as Bash. Native Windows uses its own
@@ -126,7 +128,7 @@ Theme-file directory previews, optional bat highlighting, spaced listings and `c
 
 ## Platform profiles
 
-The native controller exposes `profile`, `profiles`, expanded `env`, and
+The native controller exposes `profile` (including `list` and `check --all`), expanded `env`, and
 `init --bootstrap powershell` through the same static metadata as Bash.
 PowerShell prepares a native environment adapter with Python on a cold load;
 warm loads validate and apply it natively. No Bash invocation or Windows/WSL path
@@ -175,3 +177,13 @@ The [Codex attention bridge](themes.md#codex-attention-notifications) has no nat
 Todo planning shares `todo plan ID [--new] [--dry-run]`, brief export, completion and popup actions across Bash and native PowerShell. Termux uses the existing codex-termux runit connection; native Linux/WSL/Windows use native Codex daemon/proxy capabilities, with runtime acceptance pending outside the isolated Termux fixture. Windows uses the current terminal and native Set-Clipboard, with no tmux or WSL translation; app installation destinations are unchanged. See [Todo planning](todo.md#plan-a-goal-in-codex).
 
 Generated profile paths are available as `$env:PROFILE`, `$env:PROFILEBIN`, canonical prefixes such as `$env:DOTSWINDOWS`, and configured aliases such as `$env:WINDOTSBIN`. Native hashtables use `$DotsProfile`, `$windows`, and `$windots`; the automatic `$PROFILE` variable is preserved. All definitions are compiled from the shared backend and validated before assignments. Termux tests cover generated adapter structure; actual PowerShell 5.1/7 reload and Windows filesystem acceptance remain pending.
+
+## Core command update acceptance
+
+Theme and profile use only singular first-party routes, including `profile list`
+and `profile check --all`. Config uses the shared List/Get/Set browser and guided
+empty get/set calls. File ID renames and optional combined mapping edits share
+the Python registry/transaction implementation. Existing Windows app destinations
+and the Windows/WSL state boundary remain unchanged. Native PowerShell 5.1/7
+rename/recovery, menu, completion and terminal acceptance remain pending;
+Termux and simulated Windows evidence are recorded in the [core plan](../plans/core-updates.md).

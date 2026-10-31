@@ -9,6 +9,7 @@ Read this guide when changing project documentation or when implementation work 
 - `docs/` — durable architecture and behavior reference for contributors.
 - `plans/` — scoped sequencing, acceptance criteria, open questions, and status.
 - `README.md` — truthful user-facing overview and implemented quick start.
+- `.codex/README.md` — authoritative command-family skill ownership; `.codex/skills/` holds focused workflows discovered through `.agents/skills/` links.
 
 Do not turn `AGENTS.md` into an exhaustive design document. Link to the authoritative reference instead.
 
@@ -37,6 +38,7 @@ Never place a proposed installation command in the README as if it is safe to ru
 | Platform paths, detection, capability, or limitation | `docs/platforms.md` |
 | Test runner, safety case, benchmark, or CI claim | `docs/testing.md` |
 | Milestone, scope, dependency, or open question | Applicable file under `plans/` |
+| Command maintenance ownership or skill workflow | `.codex/README.md`, affected skills/discovery links and task guide; `AGENTS.md` for project-wide requirements |
 
 ## Style
 
@@ -68,6 +70,9 @@ Before finishing a documentation change:
 4. Confirm examples do not imply unimplemented behavior.
 5. Confirm repeated lists have a named source of truth.
 6. Update the applicable plan status.
+7. For accompanying command changes, verify the recorded [configuration review](commands.md#configuration-integration-review), menu assessment and [family owner](../../.codex/README.md#command-family-owners). Use [dots-config](../../.codex/skills/dots-config/SKILL.md) for applicable integrations. Pure documentation changes need no new setting or assessment of unchanged commands.
+
+For skill changes, validate each new/modified skill with the available skill-creator validator, check its references and relative discovery link, and compare family coverage with static command metadata including built-ins. Keep shared requirements in the task guide and link to them from skills; do not create competing configuration or subcommand inventories.
 
 For bounded Git/file operations, synchronize `docs/git.md`, `docs/files.md`, `docs/safety.md` and the focused Git/file plan. Do not describe optional retained snapshots as required for every operation or imply that Git publication has atomic rollback.
 

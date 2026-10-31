@@ -1,27 +1,53 @@
 # Repository-local Codex workflows
 
-Skills live here and are discoverable through relative links under .agents/skills.
-AGENTS.md remains the operating contract; skills point to maintained project docs.
-This directory is not a replacement CODEX_HOME and contains no credentials, model
-selection, permission overrides, sessions or machine-local state.
+Skills live in `.codex/skills` and are discoverable through relative links under `.agents/skills`. [AGENTS.md](../AGENTS.md) remains the operating contract; skills point to maintained project docs. This directory is not a replacement `CODEX_HOME` and contains no credentials, model selection, permission overrides, sessions or machine-local state.
 
-Codex/tmux attention preferences and their maintenance procedure are recorded in the [Codex notification guide](../agents/guides/codex-notifications.md). Preserve that documented user contract when changing notification, title, status or focus handling.
+## Command family owners
 
-- [dots-theme-maintenance](skills/dots-theme-maintenance/SKILL.md)
-- [dots-theme-template](skills/dots-theme-template/SKILL.md) — create default application templates and verify their generated colors in the consumer.
-- [dots-shell-integration](skills/dots-shell-integration/SKILL.md)
-- [dots-codex-attention](skills/dots-codex-attention/SKILL.md) — maintain cross-session attention, conservative Termux focus and explicit acknowledgement.
-- [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md)
-- [dots-todo](skills/dots-todo/SKILL.md) — general project/global goal management and progress through the transactional CLI.
-- [dots-todo-planning](skills/dots-todo-planning/SKILL.md) — interview about a selected goal, preserve full notes/subtrees and save/implement an agreed linked goal tree after leaving Plan Mode, with progress and verified completion.
-- [dots-todo-maintenance](skills/dots-todo-maintenance/SKILL.md) — maintain Todo's CLI, storage, popup and Codex handoffs using the [Todo guide](../agents/guides/todo.md). All three Todo skills are available across projects through their managed resources.
-- [dots-cli-presentation](skills/dots-cli-presentation/SKILL.md) — shared CLI layouts, resource colors/icons and progress; preserves custom views and data interfaces.
-- [dots-menu-authoring](skills/dots-menu-authoring/SKILL.md) — plan or implement FZF menus using existing selection patterns, a worked example and a copyable plan template; the implemented launcher/session patterns and remaining acceptance work are indexed in the [menu plan](../plans/popup-menus.md).
+This is the authoritative family-to-primary-skill mapping. Select the family owner before changing a command, then use shared skills for affected boundaries. A family skill covers its subcommands, aliases and standalone entry points; static metadata and [command documentation](../docs/commands.md) remain the route inventory. New first-party families must add or identify an owner here in the same change.
 
-- [dots-documentation-maintenance](skills/dots-documentation-maintenance/SKILL.md) — align canonical docs with implementation and wiki exports.
-- [dots-wiki-maintenance](skills/dots-wiki-maintenance/SKILL.md) — generated pages, sidebar and associated Git workflows.
+| Top-level route | Primary skill |
+| --- | --- |
+| `anodize` | [dots-anodize-maintenance](skills/dots-anodize-maintenance/SKILL.md) |
+| `blastoff` | [dots-blastoff-maintenance](skills/dots-blastoff-maintenance/SKILL.md) |
+| `commands` | [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md) |
+| `completion` | [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md) |
+| `config` | [dots-config](skills/dots-config/SKILL.md) |
+| `debug` | [dots-debug-maintenance](skills/dots-debug-maintenance/SKILL.md) |
+| `env` | [dots-env-maintenance](skills/dots-env-maintenance/SKILL.md) |
+| `files` | [dots-files-maintenance](skills/dots-files-maintenance/SKILL.md) |
+| `fonts` | [dots-fonts-maintenance](skills/dots-fonts-maintenance/SKILL.md) |
+| `git` | [dots-git-maintenance](skills/dots-git-maintenance/SKILL.md) |
+| `help` | [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md) |
+| `init` | [dots-shell-integration](skills/dots-shell-integration/SKILL.md) |
+| `keys` | [dots-keys-maintenance](skills/dots-keys-maintenance/SKILL.md) |
+| `menu` | [dots-menu-authoring](skills/dots-menu-authoring/SKILL.md) |
+| `pkgs` | [dots-pkgs-maintenance](skills/dots-pkgs-maintenance/SKILL.md) |
+| `profile` | [dots-profile-maintenance](skills/dots-profile-maintenance/SKILL.md) |
+| `theme` | [dots-theme-maintenance](skills/dots-theme-maintenance/SKILL.md) |
+| `todo` | [dots-todo-maintenance](skills/dots-todo-maintenance/SKILL.md) |
+| `wiki` | [dots-wiki-maintenance](skills/dots-wiki-maintenance/SKILL.md) |
+| `wttr` | [dots-wttr-maintenance](skills/dots-wttr-maintenance/SKILL.md) |
 
-- [dots-plugin-maintenance](skills/dots-plugin-maintenance/SKILL.md) — portable application plugins, combined installation and receipt-led legacy migration.
+## Shared and task workflows
 
-- [dots-profile-maintenance](skills/dots-profile-maintenance/SKILL.md) — profile ownership, generated variables/maps, aliases and configuration.
-- [dots-files-maintenance](skills/dots-files-maintenance/SKILL.md) — core registry, profile mappings and transactional file operations.
+Start new command families and subcommands with [dots-command-authoring](skills/dots-command-authoring/SKILL.md) and its [command-plan template](skills/dots-command-authoring/assets/command-plan.md). It coordinates implementation, current presentation preferences, useful config/popup integrations and verification; the table above retains family maintenance ownership.
+
+Every new or changed command records **add**, **update**, or **no configuration integration change needed**, with a reason, under the [configuration integration review](../agents/guides/commands.md#configuration-integration-review). Use [dots-config](skills/dots-config/SKILL.md) for applicable integration work; review does not require adding a setting. Existing command, menu and presentation reviews still apply.
+
+- [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md) covers dispatch, metadata, help, completion and command reviews across families.
+- [dots-cli-presentation](skills/dots-cli-presentation/SKILL.md) covers shared human layouts, resource colors/icons and progress while preserving data interfaces.
+- [dots-menu-authoring](skills/dots-menu-authoring/SKILL.md) covers shared FZF selection, popup ownership and terminal handoff, with a plan template and verified patterns.
+- [dots-plugin-maintenance](skills/dots-plugin-maintenance/SKILL.md) covers portable application ownership, installation assets and receipt-led migration. Use the application's family skill for its own behavior.
+- [dots-theme-template](skills/dots-theme-template/SKILL.md) covers generated application templates and consumer verification.
+- [dots-codex-attention](skills/dots-codex-attention/SKILL.md) preserves the [notification contract](../agents/guides/codex-notifications.md), focus handling and explicit acknowledgement.
+- [dots-documentation-maintenance](skills/dots-documentation-maintenance/SKILL.md) aligns canonical docs with implementation; [dots-wiki-maintenance](skills/dots-wiki-maintenance/SKILL.md) handles generated exports and associated Git workflows.
+- [dots-todo](skills/dots-todo/SKILL.md) manages goals through the transactional CLI. [dots-todo-planning](skills/dots-todo-planning/SKILL.md) interviews in actual Plan Mode and saves/implements an agreed linked tree in execution mode. These are separate from Todo implementation maintenance; all three Todo skills retain their existing managed resources for cross-project use.
+
+## Discovery and maintenance
+
+Add a skill as `.codex/skills/NAME/SKILL.md` with accurate `name` and `description` frontmatter, then create `.agents/skills/NAME` as the relative link `../../.codex/skills/NAME`. Keep instructions focused on component ownership, non-obvious constraints and meaningful verification; link shared procedures instead of copying them. Check referenced paths, validate changed skills with the skill-creator validator, and compare this table against first-party static command metadata, including built-ins. Audit affected existing skills when responsibility changes.
+
+These links expose workflows within the repository. Installing additional user-wide skills is a separate managed-file task; ordinary skill authoring does not edit user configuration or install links into `CODEX_HOME`. Source docs and the wiki follow the [documentation guide](../agents/guides/documentation.md).
+
+Use [dots-config-audit](skills/dots-config-audit/SKILL.md) for requested repository-wide configuration discovery, with the read-only `tools/audit_config.py` helper. It reviews colors, icons, formatting/placement and application controls before routing approved integration to the owning skill. It is available through the repository `.agents/skills` link; no user-wide installation is implied.

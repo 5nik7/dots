@@ -40,7 +40,7 @@ class ConfigMenu(unittest.TestCase):
     def inventory(self, scope=None): return menu.Inventory(self.root, scope or self.platform)
 
     def args(self, **kwargs):
-        return argparse.Namespace(profile=None, defaults=False, client=None, query='', **kwargs)
+        return argparse.Namespace(profile=None, defaults=False, client=None, query='', action='browse', **kwargs)
 
     def undo(self, identity):
         store = Store(config_cli.state_root())
@@ -80,8 +80,8 @@ class ConfigMenu(unittest.TestCase):
         inventory = self.inventory('linux/fixture')
         self.assertFalse(inventory.find(row.key).local)
         icon = inventory.find('icons.git.branch')
-        app = inventory.app_row(icon, 'tmux')
-        self.assertEqual(app.key, 'icons.apps.tmux.git.branch')
+        app = inventory.app_row(icon, 'gitmux')
+        self.assertEqual(app.key, 'icons.apps.gitmux.git.branch')
         draft = menu.Draft(inventory, app).prepare(''); self.assertEqual(draft.proposed, '')
         saved = draft.save()
         inventory = self.inventory('linux/fixture')
@@ -100,7 +100,7 @@ class ConfigMenu(unittest.TestCase):
         with self.assertRaises(ValueError): draft.prepare('not-a-role')
         self.assertEqual(draft.prepare('blue').proposed, 'blue')
         defaults = self.inventory('defaults')
-        self.assertEqual({r.group for r in defaults.rows}, {'icons','colors'})
+        self.assertEqual({r.group for r in defaults.rows}, {'icons','colors','formatting','apps'})
         with self.assertRaises(ValueError): menu.Draft(defaults, defaults.find('icons.git.branch')).prepare(reset=True)
         before = self.path.read_bytes()
         with patch.object(menu,'input_value',return_value='never'), patch.object(menu,'select',return_value='cancel'):
@@ -116,6 +116,12 @@ class ConfigMenu(unittest.TestCase):
         self.path.write_text(json.dumps(doc))
         inventory=self.inventory(); row=inventory.find('environment.API_KEY')
         self.assertNotIn('legacy-sensitive-literal', menu.details(row))
+        def select(*args,**kwargs):
+            snapshot=read_request(Path(args[3][2]['DOTS_CONFIG_PREVIEW']))
+            self.assertNotIn('legacy-sensitive-literal',json.dumps(snapshot))
+            return [0]
+        with patch.object(menu.RichSelector,'fzf',side_effect=select):
+            menu.pick(inventory,'environment',{'mode':'get'},None)
         with patch.dict(os.environ,API_KEY='process-sensitive-literal'):
             self.assertNotIn('process-sensitive-literal',menu.details(row))
         draft=menu.Draft(inventory,row)
@@ -179,6 +185,10 @@ class ConfigMenu(unittest.TestCase):
             self.assertEqual(run.call_args.args[0][-3:],['files','edit','dots:app'])
             self.assertEqual(run.call_args.kwargs['kind'],'terminal')
             self.assertNotIn('--yes',run.call_args.args[0]);self.assertNotIn('--apply',run.call_args.args[0])
+            menu.file_action(self.root,self.platform,row,'rename',None,'new-id')
+            self.assertEqual(run.call_args.args[0][-5:],['files','edit','dots:app','--id','new-id'])
+            self.assertEqual(run.call_args.kwargs['kind'],'terminal')
+            self.assertNotIn('--yes',run.call_args.args[0]);self.assertNotIn('--apply',run.call_args.args[0])
             with self.assertRaises(ValueError):menu.file_action(self.root,'defaults',row,'mapping',None)
         with patch.object(menu.TmuxContext,'from_environment',return_value=None),patch.object(menu,'terminal',return_value=True), \
              patch.object(menu,'browser_available',return_value=False),redirect_stdout(io.StringIO()) as output,redirect_stderr(io.StringIO()) as error:
@@ -195,13 +205,40 @@ class ConfigMenu(unittest.TestCase):
             raise SelectionEvent('back')
         with patch.object(menu.TmuxContext,'from_environment',return_value=None),patch.object(menu,'terminal',return_value=True), \
              patch.object(menu,'browser_available',return_value=True),patch.object(menu,'pick',side_effect=pick), \
-             patch.object(menu,'select',side_effect=['defaults',self.platform]):
+             patch.object(menu,'select',side_effect=['list','defaults',self.platform,None]):
             self.assertEqual(menu.browse(self.root,self.inventory().selected,self.args()),0)
         self.assertEqual(seen[2][2]['query'],'git.branch')
         self.assertEqual(seen[2][2]['selected'],'icons.git.branch')
         with patch.object(menu.TmuxContext,'from_environment',return_value=None),patch.object(menu,'terminal',return_value=True), \
-             patch.object(menu,'browser_available',return_value=True),patch.object(menu,'pick',side_effect=SelectionEnded(130)):
+             patch.object(menu,'browser_available',return_value=True),patch.object(menu,'pick',side_effect=SelectionEnded(130)), \
+             patch.object(menu,'select',return_value='list'):
             self.assertEqual(menu.browse(self.root,self.inventory().selected,self.args()),130)
+
+    def test_list_get_and_set_actions_and_categories(self):
+        row=self.inventory().find('icons.git.branch')
+        for mode in ('list','get','set'):
+            choices=[mode]+([] if mode=='list' else ['icons'])+[None]+([] if mode=='list' else [None])
+            with patch.object(menu,'terminal',return_value=True),patch.object(menu,'browser_available',return_value=True), \
+                 patch.object(menu,'select',side_effect=choices) as select, \
+                 patch.object(menu,'pick',side_effect=[row,SelectionEvent('back')]), \
+                 patch.object(menu,'show') as show,patch.object(menu,'actions',return_value='Saved') as actions:
+                self.assertEqual(menu.browse(self.root,self.inventory().selected,self.args()),0)
+            self.assertEqual(actions.call_count,int(mode=='set'))
+            self.assertEqual(show.call_count,int(mode!='set'))
+            self.assertEqual([key for key,_ in select.call_args_list[0].args[1]],['list','get','set','refresh'])
+            if mode!='list':
+                self.assertEqual([key for key,_ in select.call_args_list[1].args[1]],
+                                 ['all','icons','colors','formatting','apps','files','profile','settings','environment'])
+
+    def test_guided_empty_calls_and_incomplete_data_errors(self):
+        for action in ('get','set'):
+            with patch.object(menu,'browse',return_value=0) as browser,patch('interaction.terminal',return_value=True),patch.dict(os.environ,TERM='xterm'):
+                self.assertEqual(config_cli.main([action]),0)
+                self.assertEqual(browser.call_args.args[2].action,action)
+            with patch.object(menu,'browse',side_effect=AssertionError('data must not browse')),redirect_stderr(io.StringIO()):
+                for operands in ([action,'--json'],[action,'--dry-run']):
+                    with self.assertRaises(SystemExit): config_cli.main(operands)
+                with self.assertRaises(SystemExit): config_cli.main(['set','DOTS_COLOR'])
 
     def test_private_preview_numeric_identity_and_widths(self):
         from resources import cells
@@ -220,7 +257,9 @@ class ConfigMenu(unittest.TestCase):
             self.assertEqual(kwargs['query'],'branch')
             self.assertIsNotNone(kwargs['focus_index'])
             path=Path(args[3][2]['DOTS_CONFIG_PREVIEW'])
-            self.assertIn('Saved',read_request(path)['previews'][kwargs['focus_index']])
+            self.assertEqual(read_request(path)['rows'][kwargs['focus_index']]['key'],'icons.git.branch')
+            with redirect_stdout(io.StringIO()) as output:menu.preview(str(path),str(kwargs['focus_index']))
+            self.assertIn('Saved',output.getvalue())
             return [kwargs['focus_index']]
         with patch.object(menu.RichSelector,'fzf',side_effect=select):
             self.assertEqual(menu.pick(inventory,'icons',frame,None).key,'icons.git.branch')
@@ -309,11 +348,17 @@ raise SystemExit(config_cli.main(['browse','--client',os.environ['CLIENT'],'--qu
             before=set(self.base.iterdir())
             p=self.worker(code,QUERY='environment.TEST_LABEL',DOTS_COLOR='never' if width==40 else 'always',
                           DOTS_ICONS='always' if width==80 else 'never')
-            self.receive(self.first[1],b'TEST_LABEL')
+            self.receive(self.first[1],b'List');time.sleep(.1);os.write(self.first[1],b'\r')
+            try:self.receive(self.first[1],b'TEST_LABEL')
+            except AssertionError:
+                if p.poll() is not None:
+                    out,err=p.communicate();self.fail(out+err)
+                raise
             self.assertNotIn(b'config',self.drain(self.second[1]))
             # Empty-result Escape is still a navigation event.
             os.write(self.first[1],b'\x15no-match-unique')
             time.sleep(.1);os.write(self.first[1],b'\x1b')
+            self.receive(self.first[1],b'List');time.sleep(.1);os.write(self.first[1],b'\x1b')
             out,err=p.communicate(timeout=10)
             self.assertEqual(p.returncode,0,out+err)
             self.assertFalse([path for path in set(self.base.iterdir())-before if path.is_dir() and path.name.startswith('dots-menu')])
@@ -325,6 +370,8 @@ import config_cli
 raise SystemExit(config_cli.main(['browse','--client',os.environ['CLIENT'],'--query','settings.DOTS_COLOR']))
 """
         p=self.worker(code)
+        self.receive(self.first[1],b'List');time.sleep(.1);os.write(self.first[1],b'Set');time.sleep(.2);os.write(self.first[1],b'\r')
+        self.receive(self.first[1],b'Icons');time.sleep(.1);os.write(self.first[1],b'\r')
         self.receive(self.first[1],b'settings.DOTS_COLOR')
         time.sleep(.15);os.write(self.first[1],b'\r')
         self.receive(self.first[1],b'Edit value')
@@ -333,7 +380,7 @@ raise SystemExit(config_cli.main(['browse','--client',os.environ['CLIENT'],'--qu
         os.write(self.first[1],b'never');time.sleep(.2);os.write(self.first[1],b'\r')
         self.receive(self.first[1],b'Proposed')
         os.write(self.first[1],b'\r')  # The initial review choice is Cancel.
-        self.receive(self.first[1],b'Alt-S: scope')
+        self.receive(self.first[1],b'DOTS_COLOR')
         path=self.root/'profiles'/self.platform/'profile.json'
         self.assertEqual(json.loads(path.read_text())['settings'],{})
         os.write(self.first[1],b'\r');self.receive(self.first[1],b'Edit value')

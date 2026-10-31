@@ -1,1 +1,6 @@
 # Override shared colors here. Unset options inherit defaults and parent profiles.
+
+# Preserve the native tmux inactive window appearance.
+[apps.tmux.window.inactive]
+fg = "muted"
+bg = "default"

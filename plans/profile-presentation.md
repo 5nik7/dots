@@ -40,3 +40,5 @@ Pre-change source/status evidence: `/data/data/com.termux/files/usr/tmp/dots-sty
 Bindings and exclusions are documented in `docs/profiles.md`: existing theme-connected consumers share configurable roles; imported presets, application-specific native fields, authored artwork and pre-Python bootstrap fallbacks retain their owners. The menu review adds no new action: editing remains explicit CLI work, while existing menu glyphs consume preferences.
 
 Native Windows PowerShell 5.1/7 and Linux/WSL desktop execution remain named acceptance checks. No commit, push, live theme publication or application reload was performed. Existing user work remains in place.
+
+The [live visual configuration follow-up](config-live.md) supersedes the explicit-theme-refresh requirement for visual config saves and introduces layer-first app overrides and supported-consumer discovery.

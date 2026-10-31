@@ -61,9 +61,13 @@ class TmuxStatus(unittest.TestCase):
         control = source.with_name('workspace-control.py')
         shutil.copyfile(REPO / 'config/tmux/workspace-control.py', control)
         (self.tmux_config / control.name).symlink_to(control)
-        (self.repo / 'lib/dots').mkdir(parents=True)
-        for name in ('tmux_workspaces.py', 'menu_projects.py', 'menu_tmux.py', 'resources.py', 'codex_attention.py'):
-            shutil.copyfile(REPO / 'lib/dots' / name, self.repo / 'lib/dots' / name)
+        shutil.copytree(REPO / 'lib/dots', self.repo / 'lib/dots', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+        shutil.copytree(REPO / 'default', self.repo / 'default')
+        profile = self.repo / 'profiles/termux'
+        profile.mkdir(parents=True)
+        (profile / 'profile.json').write_text(json.dumps(dict(schema=1, id='termux', settings={}, files={})))
+        (profile / 'colors.toml').write_text('[ui.accent]\nfg="accent"\n')
+        self.env['DOTS_PROFILE'] = 'termux'
         self.sessions_script = self.repo / 'profiles/termux/bin/termux-sessions'
         self.sessions_script.parent.mkdir(parents=True)
         self.sessions_script.write_text("""import os, pathlib, sys, time
@@ -97,7 +101,7 @@ print((home / (module + '.json')).read_text())
         shutil.copyfile(REPO / 'config/tmux/weather-status.py', weather_source)
         (self.tmux_config / weather_source.name).symlink_to(weather_source)
         self.weather_script = self.repo / 'lib/dots/wttr/cli.py'
-        self.weather_script.parent.mkdir(parents=True)
+        self.weather_script.parent.mkdir(parents=True, exist_ok=True)
         self.weather_script.write_text("import os, pathlib, sys, time\nassert sys.argv[1:] == ['--daylight']\nhome = pathlib.Path(os.environ['HOME'])\nwith (home / 'weather-calls').open('a') as stream: stream.write('call\\n')\nprint('PRIVATE weather stderr', file=sys.stderr)\nif (home / 'weather-delay').exists(): time.sleep(10)\nif (home / 'weather-fail').exists(): sys.exit(1)\nprint((home / 'daylight').read_text())\n")
         self.weather_stub()
 
@@ -412,8 +416,8 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                        git_behind='#dddd00', warning='#bbbb00')
         sys.path.insert(0,str(REPO/'lib/dots'))
         from theme_styles import tokens
-        with patch.dict(os.environ,self.env,clear=True):
-            palette.update(tokens(palette,REPO))
+        with patch.dict(os.environ,dict(self.env,TERMUX_VERSION='fixture',PREFIX=str(self.prefix/'usr')),clear=True):
+            palette.update(tokens(palette,self.repo))
         template = (REPO / 'default/themed/tmux.conf.tpl').read_text()
         path = self.tmux_config / 'dots-theme.conf'
         path.write_text(re.sub(r'\{\{ (\w+) \}\}', lambda m: palette[m[1]], template))
@@ -487,7 +491,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
             self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-current-bg'), '#556677')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-inactive-fg'), '#778899')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-window-name-codex-fg'), '#eeeeee')
-            self.assertEqual(tmux('show-option', '-gqv', '@dots-window-number-codex-fg'), '#dd66cc')
+            self.assertEqual(tmux('show-option', '-gqv', '@dots-window-number-codex-fg'), '#778899')
             self.assertEqual(tmux('show-option', '-gqv', '@dots-window-number-inactive-fg'), '#778899')
             self.assertIn('fg=#55ff55',
                           tmux('display-message', '-p', '#{E:window-status-current-format}'))
@@ -594,7 +598,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.assertNotIn(' 1 ', self.plain(lines[1]))
         self.assertNotIn(' 2 ', self.plain(lines[1]))
         self.assertFalse(self.underline_at(lines[0], ' 1 '))
-        self.assertEqual(self.colors_at(lines[0], ' 1 '), {'fg': (255, 136, 0), 'bg': (85, 102, 119)})
+        self.assertEqual(self.colors_at(lines[0], ' 1 '), {'fg': (255, 238, 221), 'bg': (85, 102, 119)})
         self.assertEqual(self.colors_at(lines[0], ' 2 '), {'fg': (119, 136, 153), 'bg': (34, 51, 68)})
         self.assertTrue(self.bold_at(lines[0], ' 2 '))
         self.assertFalse(self.dim_at(lines[0], ' 2 '))
@@ -970,7 +974,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 self.assertRegex(top, r' (?:[1-9]|1[0-2]):[0-5][0-9] ')
                 self.assertIn(f' {index} ', top)
                 self.assertEqual(self.colors_at(lines[0], f' {index} '),
-                                 {'fg': (255, 136, 0), 'bg': (85, 102, 119)})
+                                 {'fg': (255, 238, 221), 'bg': (85, 102, 119)})
                 first_divider = top.index('│')
                 for match in re.finditer('│', top):
                     self.assertEqual(self.colors_at(lines[0], '│', match.start() - first_divider),

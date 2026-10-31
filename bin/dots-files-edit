@@ -5,7 +5,7 @@
 # dots:option=--pick||flag|Select interactively; combine with --dry-run to preview
 # dots:option=--new||flag|Create an explicit new catalog mapping
 # dots:option=--repo||file-repository|Owning repository for a new mapping
-# dots:option=--id||string|Stable ID for a new mapping
+# dots:option=--id||string|Local ID for a new mapping or checkout-wide rename
 # dots:option=--source||string|Source relative to the owning repository
 # dots:option=--target||string|Portable target template or home/XDG path
 # dots:option=--app||string|Application for a new mapping

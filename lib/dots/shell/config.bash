@@ -9,6 +9,16 @@ _dots_config_valid() {
     *) return 1 ;;
   esac
 }
+_dots_format_valid() {
+  case $1 in
+    label_width|indent|label_gap|tab_width)
+      if [[ $1 == label_width && $2 =~ ^([1-9][0-9]?|100)%$ ]]; then return 0; fi
+      [[ $2 =~ ^[0-9]{1,4}$ ]] && (( 10#$2 <= 4096 )) ;;
+    alignment) [[ $2 == left || $2 == right || $2 == center ]] ;;
+    indent_style) [[ $2 == spaces || $2 == tabs ]] ;;
+    *) return 1 ;;
+  esac
+}
 _dots_config_load() {
   local key kind value description line number=0 source_value
   local root=${DOTS:-${DT_LIB%/lib/dots/themes}}
@@ -44,12 +54,16 @@ _dots_config_load() {
     while IFS= read -r line; do [[ -z $line ]] || _DOTS_PROFILE_SETTING_ROWS+=("$line"); done <<< "$rows"
     typeset -g _DOTS_PROFILE_SETTINGS_CHECKOUT=$root
   fi
-  typeset -gA _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS
-  _DOTS_STYLE_ICONS=() _DOTS_STYLE_COLORS=()
+  typeset -gA _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS _DOTS_FORMATTING
+  _DOTS_STYLE_ICONS=() _DOTS_STYLE_COLORS=() _DOTS_FORMATTING=()
   for line in "${_DOTS_PROFILE_SETTING_ROWS[@]}"; do
     key=${line%%$'\t'*}
     value=${line#*$'\t'}; value=${value%%$'\t'*}
     case $key in
+      __format.*)
+        key=${key#__format.}
+        _dots_format_valid "$key" "$value" || return 1
+        _DOTS_FORMATTING[$key]=$value; continue ;;
       __icon.*) _DOTS_STYLE_ICONS[${key#__icon.}]=$value; continue ;;
       __color.*) _DOTS_STYLE_COLORS[${key#__color.}]=$value; continue ;;
     esac

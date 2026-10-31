@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# dots:summary=Run enabled plugins against the published theme
-# dots:usage=[NAME] [--json]
-# dots:argument=1|theme-plugin|Plugin name
-# dots:option=--json||flag|Emit versioned JSON
-exec "${BASH_SOURCE[0]%/*}/dots-theme-plugins-run" "$@"

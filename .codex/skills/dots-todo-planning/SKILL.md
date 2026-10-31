@@ -15,6 +15,8 @@ Use actual Codex Plan Mode for the interview only. If it is not active, ask the 
 
 Ask focused questions in batches of one to three until material decisions are settled. Inspect discoverable facts first. Develop the outcome, constraints, tradeoffs, dependencies and observable acceptance criteria. Propose meaningful work packages and useful grandchildren, reusing relevant existing UUIDs and keeping completed work as context. Include decisions and dependencies in the proposed notes. Avoid recreating existing goals merely to give them a different title.
 
+If the plan changes Dots commands, identify the [family owner](../../README.md#command-family-owners) and include the [configuration review](../../../agents/guides/commands.md#configuration-integration-review) and menu assessment. Use [dots-config](../dots-config/SKILL.md) to plan applicable integrations and consumer checks. This does not authorize writes in Plan Mode or impose command-development work on ordinary goal tracking.
+
 Planning stays read-only. Finish with the decision-complete plan, proposed goal tree, acceptance criteria and save-and-implement workflow in a `<proposed_plan>` block. Let the user select Codex's normal implementation action or leave Plan Mode and say **Implement the plan**. A request cannot override an active mode restriction; do not require reentering Plan Mode after implementation approval. After an explicit implementation or save-only request in execution mode:
 
 - Reread the scoped JSON and reconcile existing records before writing. Preserve existing notes, aliases, criteria, statuses and relationships unless their change was agreed.

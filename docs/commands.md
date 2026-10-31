@@ -4,6 +4,10 @@
 
 Static built-in metadata and external command headers define the live routes. Bash and native PowerShell adapters expose file, Git, environment, theme and Anodize commands through shared controllers. This document describes their implemented interfaces.
 
+Contributors select the [command family's maintenance skill](../.codex/README.md#command-family-owners) and follow the [command guide](../agents/guides/commands.md), including recorded configuration and menu assessments for every command change. Skill ownership does not replace the route metadata or interfaces documented here.
+
+For a new family or subcommand, [command authoring](../.codex/skills/dots-command-authoring/SKILL.md) coordinates the implementation workflow and provides a reusable plan template. It carries current presentation preferences through the shared renderers and requires useful configuration and popup integrations to reach their consumers.
+
 The shared Bash/Zsh helper `mkcd <directory>` is separate from the `dots` command family. Its [usage and path handling](../README.md#zsh-configuration) are implemented by `scripts/mkcd`, sourced through the shared function to change the current shell's directory.
 
 ## Personal font commands
@@ -53,7 +57,10 @@ matching destinations; restore enables and relinks. `dots files edit [RESOURCE |
 --new]` edits source/target mappings, metadata-only unless `--apply` is selected.
 Both offer selection/review, `--yes`, `--dry-run`, `--json`, `--backup` and
 `--no-backup`, static help/completion and native PowerShell routing. Edit supports
-new-record metadata, strategies, base-profile selection and registry platform eligibility. See
+new-record metadata, strategies, base-profile selection and registry platform eligibility.
+`--id NEW` also renames an existing qualified resource across all profiles and
+retains recovery history; it can be combined with selected-profile mapping edits
+and explicit live apply. See [ID renames](files.md#file-id-renames) and
 [mapping commands](files.md#stash-and-edit-mappings) for full semantics and JSON.
 
 `dots files check [--yes] [--dry-run] [--json]` reviews absent source paths and
@@ -160,7 +167,9 @@ unimplemented routes remain unavailable. Reservations do not add features.
 
 ### Public Interface
 
-- `dots`, `dots help`, `dots -h`, `dots --help`: global help and visible commands.
+Root help preserves the existing built-in usage synopses, logo, usage and global options. It ends with a pointer to `dots help COMMAND` and the complete `dots commands` inventory. A deeper-only extension such as `dots-example-sync` contributes one `example` row with the summary “Command group”; a visible top-level command supplies its own summary. Hidden-only groups are omitted, and hidden parent metadata is not displayed. This is a help-rendering projection only: catalogs, contextual family/leaf help, validation, generated references and completion retain their full route information. Bash, the shared native controller and Python-free PowerShell help use the same grouping rule while retaining their existing layouts. Menu review: unchanged, because static help adds no selectable action.
+
+- `dots`, `dots help`, `dots -h`, `dots --help`: global help with one row per visible top-level command or group.
 - `dots help ROUTE...`, `dots ROUTE... --help`: static contextual help without
   executing an extension. A help flag before the first `--` is intercepted;
   after `--` it belongs to the extension. Groups show their visible descendants, including groups with an executable. An executable group runs normally when called without help.
@@ -217,9 +226,9 @@ route/flag completion and repository-ID completion without invoking the browser.
 
 `dots menu [--print|--json|--browse] [--query TEXT] [--client CLIENT]` opens the curated launcher. Bash and native PowerShell share its controller, static help, flags and completion. Interactive default invocation requires terminal input/output and a usable `TERM`; `--browse` also supports a validated background tmux context. Printed, JSON and redirected default views only list choices. Their query matches all whitespace-separated terms, case-insensitively; interactive queries seed FZF. Missing FZF or popup support produces a filtered listing and a stderr explanation without dispatching an action.
 
-The fixed registry in `lib/dots/menu_cli.py` owns entry order, labels, icons, command arrays and terminal behavior. Descriptions come from the selected first-party static headers. The launcher checks command-file/tool presence and platform limits without running extensions, collecting session/file/theme/Git inventories or reading pane contents. Unavailable entries remain visible with a reason; selection rechecks availability and refuses unavailable actions. There is no automatic extension enrollment or user-defined menu schema.
+The fixed registry in `lib/dots/menu_cli.py` owns labels, icons, command arrays, terminal behavior, submenu order and data-listing order. The interactive root view sorts its choices by label. Descriptions come from the selected first-party static headers. The launcher checks command-file/tool presence and platform limits without running extensions, collecting session/file/theme/Git inventories or reading pane contents. Unavailable entries remain visible with a reason; selection rechecks availability and refuses unavailable actions. There is no automatic extension enrollment or user-defined menu schema.
 
-Interactive rows show just an icon and lowercase name, in the order below. Launcher prompts use `dots: ` at the root and middle-dot breadcrumbs such as `dots·files: ` and `dots·themes·plugins: `, with one space after the colon. This applies only to launcher menus; delegated pickers keep their prompts. Printed headings and JSON titles are unchanged. Descriptions remain in printed/JSON views and static help. Family submenus show common workflows; each also ends with `help`. These are internal navigation choices, with no extra public routes or flags.
+Interactive rows show just an icon and lowercase name. The root menu uses a stable case-insensitive A–Z label order, ignoring icons; for example, `weather` sorts under W while retaining its `wttr` identity. Unavailable choices retain their alphabetical position. A nonempty query uses FZF relevance ranking; clearing it restores A–Z order. Family submenus keep their curated order. The plain fallback from interactive browsing uses the alphabetical root choices, while `--print`, `--json` and redirected default output keep registry order and content. The table below describes action mappings. Launcher prompts use `dots: ` at the root and middle-dot breadcrumbs such as `dots·files: ` and `dots·theme·plugins: `, with one space after the colon. This applies only to launcher menus; delegated pickers keep their prompts. Printed headings and JSON titles are unchanged. Descriptions remain in printed/JSON views and static help. Family submenus show common workflows; each also ends with `help`. These are internal navigation choices, with no extra public routes or flags.
 
 | Root ID and label | Selection and submenu actions |
 | --- | --- |
@@ -228,12 +237,10 @@ Interactive rows show just an icon and lowercase name, in the order below. Launc
 | `tmux` | `sessions` opens the existing session picker; `keys` opens `dots menu tmux keys --browse`; help uses `dots help menu tmux`. |
 | `files` | `browse`, `list`, `history`, `sources` use the corresponding `dots files` workflows. |
 | `git` | `status`, `info`, `submodules`, `wiki`, `publish`, `sync`; see the nested choices and approval rules below. |
-| `theme` | `show`, `switcher`, `files` (`dots theme files browse`), `backgrounds` (`dots theme bg switcher`). |
-| `themes` | `list`, `switcher`, `plugins`; the plugins submenu contains `list`, `doctor`, `help`. |
+| `theme` | `show`, `list`, `switcher`, `files` (`dots theme files browse`), `backgrounds` (`dots theme bg switcher`), `plugins`; plugins contains `list`, `doctor`, `help`. |
 | `anodize` | `create`, `edit`, `preview`, `apply` use `--interactive`; `list` shows authored palettes. |
 | `debug` | `check`, `startup`, `path`, `cache`; no live tracing is enabled. |
-| `profile` | `show`, `paths`, `layers`, `files`, `commands`, `env`, `check` use the detected profile. |
-| `profiles` | `list`, `check`. |
+| `profile` | `show`, `list`, `paths`, `layers`, `files`, `commands`, `env`, `check`, `check all` (`profile check --all`). |
 | `wiki` | `browse`, `list`, `check`. |
 | `env` | Opens the existing environment report. |
 
@@ -522,10 +529,9 @@ Unforced redirected listings retain full paths in `NAME=value [source]`;
 color controls never decorate named scalar or JSON results. See
 [environment views](shell-environment.md) for presentation details.
 `theme` and `dots theme` without arguments show the selected palette; `current`
-remains scalar. `dots themes` provides collection help and `list`, `switcher`,
-`install`, `update`, `remove`, and `plugins` routes. Existing singular routes
-remain aliases. See [shell environment](shell-environment.md) and
-[decision 0013](decisions/0013-shell-environment-and-theme-collection.md).
+remains scalar. `dots theme` also provides `list`, `switcher`, `install`, `update`, `remove`,
+and `plugins`. Plural first-party routes have been removed. See
+[decision 0016](decisions/0016-core-command-families-and-file-identities.md).
 The old standalone `current_theme` wrapper is removed; use `dots theme current`
 for the selected ID, `theme` for its palette preview, and `theme init` for shell
 color initialization.
@@ -578,7 +584,7 @@ snapshots are disabled. No new public route or catalog field is introduced.
 
 `-v`/`--verbose` adds human action details to file install/uninstall/add/link/remove (including `rm`), undo/recover/backups restore, stash/edit/check, and explicit `init --setup`. Root setup/restore scripts forward it; PowerShell also accepts `-Verbose`. See [file operations](files.md#verbose-action-details) and [setup](installation.md#options-and-output).
 
-Theme set/refresh (including `--commands-only`) and switcher accept the same flag; `themes switcher` is equivalent. These flags do not apply to scalar/query routes or ordinary shell initialization. Existing discovery verbosity retains its listing semantics. Default output and structured schemas are unchanged; JSON suppresses additional details. [Presentation](presentation.md#verbose-operations) defines streams, progress and resource styling.
+Theme set/refresh (including `--commands-only`) and switcher accept the same flag; standalone `theme switcher` is equivalent. These flags do not apply to scalar/query routes or ordinary shell initialization. Existing discovery verbosity retains its listing semantics. Default output and structured schemas are unchanged; JSON suppresses additional details. [Presentation](presentation.md#verbose-operations) defines streams, progress and resource styling.
 
 ## Implemented file selection flags
 
@@ -625,7 +631,7 @@ Theme-file `show` now supports directory entries and optional terminal syntax hi
 ## Platform profile and bootstrap commands
 
 `dots profile [--json]` inspects current platform facts and resolved inheritance.
-`dots profiles [--json]` lists available definitions and active layers. Both are
+`dots profile list [--json]` lists available definitions and active layers. Both are
 read-only. `dots env [NAME] [--json]` now includes application defaults, context,
 PATH contributions and observed hook provenance in addition to settings/paths.
 `dots init --bootstrap bash|zsh|powershell` emits a standalone startup snippet;
@@ -634,7 +640,7 @@ printing it does not clone or install anything. See [profiles](profiles.md).
 ## Profile and debug diagnostics
 
 The implemented `profile show|layers|paths|env|files|commands|check [ID]` and
-`profiles list|check` routes provide read-only inspection. Their flags and
+`profile list|check` routes provide read-only inspection. Their flags and
 selection semantics are described in [profiles](profiles.md#profile-inspection-subcommands).
 `debug check|startup|path|command|cache|test|record` uses the shared native controller,
 static command headers and contextual completions; see [debug commands](debug.md).
@@ -674,14 +680,38 @@ Menu review: **update** the cooperating Todo popup and its launcher handoff with
 
 ## Profile configuration commands
 
-`dots config` opens the config browser in a terminal and lists configuration when redirected. Implemented routes are `browse`, `list`, `get KEY`, `set KEY VALUE`, `unset KEY`, `path [NAME]`, `check`, and `migrate`. Every route accepts `--profile ID` and `--json`. Except migration, routes also accept `--defaults` for shared colors/icons; it cannot be combined with `--profile`. Set/unset accept `--dry-run`; set accepts `--json-value`. Migration previews by default and applies only with `--apply --yes`; `--dry-run` always prevents writes. Metadata and contextual key/profile completion are shared by Bash and native PowerShell. See [configuration contracts and examples](profiles.md#profile-configuration).
+`config get`, `set`, `unset` and `explain` complete keys at an empty argument and by prefix through a read-only provider, including native weather keys. Invalid optional weather TOML leaves unrelated core keys available. Shared CLI/popup row alignment uses `formatting.apps.{cli,menu}.label_width` (character cells, percentages, or `0` for spacing only), `label_gap` and `alignment`; see [examples and activation](profiles.md#shared-row-alignment). Width presets are available in value completion and Config editors. Human layout does not change scalar/JSON/completion records.
+
+`dots config explain KEY` shows effective typed values, provenance, activation, allowed choices and applicable input syntax/examples. Its JSON adds `constraints` for application/formatting controls; scalar `get` stays exact. Config previews/details and enum editors use these declarations, as does `config set KEY VALUE` completion through the `config-value` metadata kind on both frontends. Size editors offer `auto`, `fit`, `fill`, percentage presets and custom values. `apps.menu.popup.width`/`height` accept percentages or bounded fixed dimensions; `auto` preserves the existing layout.
+
+`apps.menu.popup` controls Dots popup position, border style and colors independently of shell FZF defaults. Placement defaults to `center`, the frame to `rounded` and its color to the theme `accent`. Set/unset use the ordinary config workflow and take effect when the next popup opens; no theme publication or tmux reload is required. See [popup settings and supported values](profiles.md#dots-popup-appearance).
+
+`dots config` opens the config browser in a terminal and lists configuration when redirected. Implemented routes are `browse`, `list`, `get KEY`, `set KEY VALUE`, `unset KEY`, `path [NAME]`, `check`, and `migrate`. Every route accepts `--profile ID` and `--json`. Except migration, routes also accept `--defaults` for shared colors, icons, formatting and application defaults; it cannot be combined with `--profile`. Set/unset accept `--dry-run`; set accepts `--json-value`. Migration previews by default and applies only with `--apply --yes`; `--dry-run` always prevents writes. Metadata and contextual key/profile completion are shared by Bash and native PowerShell. See [configuration contracts and examples](profiles.md#profile-configuration).
 
 Human results use the shared renderer; scalar paths/get values and schema-1 JSON remain undecorated. JSON contains `schema`, `profile`, and `path`, plus `config` for lists, `key`/`value` for gets, or `status`, `items`, and optional `transaction` for mutations. Invalid argument syntax returns 2, validation/operation failures 1, success 0, and interruption 130. The main `dots menu` launcher includes Config as a cooperating popup. Explicit key/value edits and migration retain their direct workflows.
 
 Configuration objects and arrays render as Dots sections and resource cards. Use `dots config get files.termux --json` for a structured envelope. Scalar `get` and `path` outputs remain exact. `icons.*` and `colors.*` support get/set/unset, validation, dry-run, contextual completion and retained undo. `dots config path icons` and `path colors` locate the TOML files. `dots config browse` supports `--query TEXT` and `--client CLIENT`, plus profile/default selection. `browse --json` emits the ordinary configuration document without probing FZF or tmux. Bare `dots config --json`, explicit `list`, `get`, `path`, `check`, help and completion remain noninteractive. Missing FZF/popup support produces a styled report with an explanation.
 
-The browser searches profile aliases, settings, environment declarations, colors, icons and file mappings. Enter opens actions, Alt-G selects a category, Alt-S selects a profile or shared defaults, Alt-N adds an environment declaration, and F1 opens help. Escape returns from nested dialogs and closes the root successfully; Ctrl-C returns 130. Typed edits and resets review the saved value, proposed result and destination before default-Cancel Save. The exact reviewed plan retains its drift guards and undo transaction. File actions hand off to existing workflows only for the active profile, without approval flags. Query/focus is retained by scope and category. See [the config popup](profiles.md#configuration-popup).
+The browser opens List/Get/Set. List is a searchable read-only inventory; Get and Set first choose All, Icons, Colors, Formatting, Apps, Files, Profile, Settings or Environment. Get shows details; Set opens editing actions. Alt-G selects a category, Alt-S selects a profile or shared defaults, Alt-N adds an environment declaration in Set only, and F1 opens help. Escape returns from nested dialogs and closes the root successfully; Ctrl-C returns 130. Typed edits and resets review the saved value, proposed result and destination before default-Cancel Save. The exact reviewed plan retains its drift guards and undo transaction. File actions hand off to existing workflows only for the active profile, without approval flags. Query/focus is retained by action, scope and category. Bare `config get` and `config set` open their guided flows in a usable terminal; missing operands in data/noninteractive calls remain errors. See [the config popup](profiles.md#configuration-popup).
 
 `dots config get|set|unset profile.alias --profile ID` inspects or edits an additional profile namespace; it is also editable under Profile in the config popup and completes as a config key. Aliases do not inherit. `dots profile env [ID]` includes generated path values alongside literal application declarations.
 
 For schema-2 file compositions, `dots files edit --platform NAME` edits that base profile; omitting it edits the active leaf. `--platforms` changes registry eligibility for both new and existing resources. `track` journals registry/profile updates together and returns a transaction for undo; it still installs no files. See [mapping semantics](files.md#stash-and-edit-mappings).
+
+
+### Effective visual configuration
+
+`dots config explain KEY [--app cli|tmux|yazi|fzf|gum|starship|gitmux]`
+reports an individual icon/color field’s effective values, sources and supported
+consumers. It accepts `--profile`, `--defaults` and `--json` and remains read-only.
+`dots config refresh [--dry-run] [--json]` refreshes the active profile’s visual
+preferences while preserving the current theme. It also retries failed consumer
+notification. Visual `config set` and `config unset` refresh affected active
+consumers automatically; `--no-refresh` saves only. Existing scalar and get/list
+JSON contracts are unchanged; mutation JSON adds a `refresh` result when used.
+Attempted publication or consumer failures return nonzero after preserving the
+saved setting. Missing optional consumers and absent theme publication are
+reported explicitly. The existing Config browser adds effective Details and a
+reviewed Refresh action. See [visual configuration](profiles.md#effective-visual-values-and-refresh).
+
+Configuration reads resolve recognized keys through their effective layers and return null when unset; unknown keys remain errors. Native `apps.wttr` uses its active TOML. See [typed controls](profiles.md#application-and-formatting-controls). Todo list/browse accept `--list-type tree|regular` for human views; JSON/Markdown remain unchanged.

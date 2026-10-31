@@ -133,8 +133,12 @@ behavior. Existing cache/export paths and the palette schema are unchanged.
 
 ## Implemented Inventory Catalog Boundary
 
-The [file catalog](files.md#ownership-and-formats) joins the schema-2 core `.dots/files.json` registry (qualified IDs and platforms), schema-2 `.dots/sources.json` source ownership, and schema-1 profile implementation arrays. A registry entry without a profile mapping never installs. Legacy schema-1 catalogs remain readable. Public command JSON and transaction journals retain schema 1. Directory ownership
+The [file catalog](files.md#ownership-and-formats) joins the schema-2/3 core `.dots/files.json` registry (qualified IDs and platforms), schema-2 `.dots/sources.json` source ownership, and schema-1 profile implementation arrays. A registry entry without a profile mapping never installs. Legacy schema-1 catalogs remain readable. Public command JSON and transaction journals retain schema 1. Directory ownership
 conflicts with nested target claims. Catalog inspection and tracking are distinct from the managed operation routes. Installation, linking, copying, adoption and undo use the shared file transaction engine; linking is the default and copying is explicit.
+
+Schema 3 contains exactly `schema`, `resources` and `renames`. Resource rows keep the schema-2 shape. `renames` maps reserved qualified historical IDs directly to current registered IDs with the same owner; cycles, chains and occupied keys are invalid. Effective renames upgrade schema 2 transactionally and flatten prior history. Unchanged reads/edits retain schema 2. Receipt readers resolve historical IDs, while CLI selectors and profile mapping/replacement fields require current IDs. See [rename behavior](files.md#file-id-renames).
+
+Mapping-result JSON remains schema 1. A rename adds an item with `status: rename`, `old_id`, `new_id`, current `id`, affected `profiles`, `metadata` paths and nullable `receipt` path. Combined edits also include the ordinary mapping/live items. Ordinary non-rename items retain their existing fields.
 
 ## Implemented location and operation data
 
@@ -342,3 +346,56 @@ Private Codex associations use schema 1 under `<Dots state root>/todo/codex/<sha
 Visual preference literals and per-key precedence are defined in [profile visual preferences](profiles.md#icons-and-semantic-colors). `preferences.json` schema 1 contains flattened icon keys, resolved color-role fields and per-consumer projections. `colors.json` includes that document under `preferences`; native Lua is serialized as data. `resources.tsv` stores matcher kind, pattern, icon token, MIME and dependency-free fallback glyph. It does not own editable icon defaults.
 
 Generated profile variables and native maps come from `profile_environment.py`. Alias validation covers all declared profiles before assignments or config writes; aliases are not inherited. Application templates resolve after generated paths. Names, reserved-variable collision policy, immediate-directory discovery and shell representations are specified in [generated profile paths](profiles.md#generated-profile-paths).
+
+
+## Visual preference resolution and publication
+
+Visual precedence is layer-first: defaults, inherited parents, selected profile;
+within a layer, general fields precede app-specific fields. Color attributes
+merge separately, including explicit false. Empty icon strings override inherited
+glyphs. `applications.codex` is canonical and `navigation.codex` is an alias,
+with canonical declarations winning at equal layer/app specificity. The supported
+binding catalog governs new edits/completion; existing unsupported declarations
+remain readable and removable. Explicit process settings retain their existing
+precedence; this rule concerns icons/colors.
+
+The additive `config explain` schema-1 report contains key, profile and consumer
+records with app, supported, refresh, value, source and ordered declarations.
+Existing get/list JSON is preserved. Visual mutation reports add a refresh object
+containing status, available transaction/generation identities and consumer
+results. A pending result must not be treated as proof of visible activation.
+
+Generated preferences retain schema 1 and include resolved CLI preferences.
+`visual.tsv` contains literal three-field tab-separated icon, color and environment
+records for native shell adapters. Icon values have no controls, including tabs
+or newlines. `visual.json` records the visual renderer/template fingerprint,
+checkout and profile. A visual refresh clones the complete active generation,
+regenerates supported visuals from its published palette, and guards source
+inputs plus both publication pointers. It does not change the full-theme source
+fingerprint or imply a complete source/theme rebuild. See [visual behavior](profiles.md#effective-visual-values-and-refresh).
+
+### Typed application preferences
+
+Shared `default/config.json` is a schema-1 object containing `formatting` and
+`apps`. Profile manifests accept these objects as fieldwise overrides; null
+inherits, while false/zero/empty strings/lists retain their types. Literal map
+keys use dot identifiers or JSON string bracket segments. No key or value is
+shell-evaluated by the configuration controller. Validation, completion and
+popup drafts share `config_values.py`; supported visual bindings remain in
+`style_catalog.py`. Recognized absent fields resolve to null, unknown fields
+remain errors, and application color reads apply the established layer-first
+fallback. The JSON get envelope retains its `value` member, including null.
+
+`formatting.apps.cli.label_width` and `formatting.apps.menu.label_width` are unions of integer `0..4096` and integer percentage strings `1%..100%`. Zero means spacing only; `label_gap` retains its nonnegative integer type and `alignment` its `left|right|center` enum. Human consumers resolve percentages against terminal or popup content cells and clamp columns/gaps to retain value space. These two formatting groups are read at invocation and do not require publication. Data output bypasses their human layout. See [shared row alignment](profiles.md#shared-row-alignment).
+
+The published schema-1 preferences snapshot includes typed `config` data and
+per-consumer `options`/`formatting` projections. Native shell adapters consume
+single-line literal FZF defaults from `visual.tsv`. Neovim consumes bounded JSON
+through its local bridge; tmux receives only generated formats for named owned
+components. Native wttr is an explicit ownership exception: `config_wttr.py`
+edits the selected native TOML with native validation and no profile overlay.
+See [controls and native weather](profiles.md#application-and-formatting-controls).
+
+`apps.menu.popup` declares dedicated Dots popup position, border style and nullable native color slots in the same typed defaults/profile objects. The shared selector applies these after generic FZF presentation preferences; shell border defaults cannot suppress a Dots frame. Position changes retain controller-owned dimensions. FZF selectors and native tmux terminal hosts read effective settings at invocation, without publication, global tmux option changes or a second configuration store. See [popup controls](profiles.md#dots-popup-appearance) for accepted fields and defaults.
+
+Popup `width`/`height` are string-or-integer controls: `auto`, `fit`, `fill`, integer percentages 1%–100%, or integer cells 1–10000. Both default to `auto`. Resolution uses the addressed client's viewport; explicit overrides are bounded, while inline width remains owned by its terminal. Typed explain data includes `constraints` (`type`, optional finite `choices`, `syntax`, `examples`) from the validation declarations. Choices are exhaustive only for finite enums; examples do not restrict custom syntax. Profile null/reset semantics and exact scalar get output are unchanged.

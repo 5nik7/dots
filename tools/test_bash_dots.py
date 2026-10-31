@@ -3,6 +3,7 @@
 import json
 import os
 import pty
+import re
 from pathlib import Path
 import shutil
 import signal
@@ -142,6 +143,58 @@ class DotsFixture(unittest.TestCase):
         self.assertNotIn('samples secret', output)
         self.assertIn('\x1b', output)
         self.assertFalse((self.home / 'executed').exists())
+
+    def test_root_help_projects_groups_without_filtering_discovery(self):
+        self.hints()
+        for name in ('samples-list', 'samples-deep', 'samples-deep-leaf', 'implicit-one', 'implicit-two'):
+            self.command(name, '# dots:summary=Descendant detail', 'touch "$HOME/executed"')
+        self.command('secret-leaf', '# dots:hidden=true')
+        self.command('masked', '# dots:hidden=true\n# dots:summary=Private summary')
+        self.command('masked-visible', '# dots:summary=Visible descendant')
+        # The parent metadata can be discovered after a descendant in another root.
+        self.command('late-child')
+        self.command('late', '# dots:summary=Parent summary', directory=self.repo / 'local/bin')
+        completion = self.complete('samples', '')
+        inventory = self.run_dots('commands').stdout
+        outputs = [self.run_dots(*args).stdout for args in ((), ('help',), ('-h',), ('--help',))]
+        self.assertTrue(all(output == outputs[0] for output in outputs))
+        output = outputs[0]
+        for name, summary in [('samples', 'Manage samples'), ('implicit', 'Command group'),
+                              ('masked', 'Command group'), ('late', 'Parent summary')]:
+            self.assertEqual(len(re.findall(r'^  ' + name + r'\s+' + summary + '$', output, re.M)), 1)
+        for text in ('samples list', 'samples deep', 'implicit one', 'implicit two', 'secret',
+                     'Private summary', 'Visible descendant', 'late child'):
+            self.assertNotIn(text, output)
+        self.assertIn('completion bash|zsh|fish|powershell', output)
+        self.assertIn('Use dots help COMMAND for details; dots commands for all commands.', output)
+        self.assertIn('samples deep leaf', self.run_dots('help', 'samples').stdout)
+        self.assertIn('implicit one', self.run_dots('help', 'implicit').stdout)
+        self.assertIn('samples deep leaf', inventory)
+        self.assertEqual(self.run_dots('commands').stdout, inventory)
+        self.assertEqual(self.complete('samples', ''), completion)
+        self.assertIn(['candidate', 'leaf', 'Descendant detail'], self.complete('samples', 'deep', ''))
+        self.assertIn(['candidate', 'mocha', ''], self.complete('samples', '--flavor', 'm'))
+        self.assertFalse((self.home / 'executed').exists())
+
+    def test_root_help_keeps_descendant_validation(self):
+        self.command('samples')
+        self.command('samples-deep-leaf', '# dots:unknown=invalid')
+        self.run_dots('--help', code=1)
+        self.run_dots('commands', '--check', code=1)
+        self.command('samples-deep-leaf')
+        self.command('samples-deep-leaf', directory=self.repo / 'local/bin')
+        self.run_dots('--help', code=1)
+        self.run_dots('commands', '--check', code=1)
+        self.assertEqual(self.run_dots('samples', 'literal').stdout, '<literal>\n')
+
+    def test_root_help_without_external_commands(self):
+        for args in ((), ('help',), ('-h',), ('--help',)):
+            output = self.run_dots(*args).stdout
+            for name in ('help [ROUTE...]', 'commands [--check]', 'completion bash|zsh|fish|powershell',
+                         'init [bash|zsh|fish|powershell|nu|xonsh]'):
+                self.assertIn(name, output)
+            self.assertNotIn('Command group', output)
+            self.assertEqual(output.count('Use dots help COMMAND'), 1)
 
     def test_header_limits_control_characters_and_duplicate_options(self):
         for header in ['# dots:summary=x\n# dots:summary=y', '# dots:summary=bad\x1btext',

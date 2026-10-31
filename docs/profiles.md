@@ -10,7 +10,7 @@ A profile may contain `config`, `bin`, `scripts`, `lib`, `shells`, `docs`, `font
 
 ```sh
 dots profile
-dots profiles
+dots profile list
 dots profile --json
 dots env
 dots env BAT_CONFIG_PATH
@@ -135,6 +135,8 @@ Python or directory scans. Failed generation leaves the prior profile environmen
 
 `dots config` edits configuration in the selected checkout. The detected profile is the default; `--profile ID` selects a definition for inspection or editing without activating it. Configuration belongs to that profile, including on native Windows. Runtime state, generated themes and installation receipts retain their existing platform state directories.
 
+For implementation work, use [dots-config](../.codex/skills/dots-config/SKILL.md) and the [configuration integration review](../agents/guides/commands.md#configuration-integration-review). Track defaults, precedence and supported consumers in the existing schema/catalog and canonical references; command changes record an add/update/no-change decision without creating a second configuration registry.
+
 ```sh
 dots config
 dots config path
@@ -155,14 +157,18 @@ Bare `dots config` browses in a terminal and lists when redirected. Use explicit
 
 Run `dots config` in a terminal, `dots config browse --query icons`, or choose Config
 in `dots menu`. `--profile ID` opens another profile without activating it;
-`--defaults` limits editing to shared colors and icons. In tmux, FZF owns the
+`--defaults` edits shared colors, icons, formatting and application defaults. In tmux, FZF owns the
 popup on the initiating client. Elsewhere it uses the current terminal, including
 native Windows. An unavailable FZF or preview shell produces a report instead.
 `--client CLIENT` is for a launcher with explicit originating tmux context.
 
-Enter opens Edit, Reset override and Details. Alt-G changes the category, Alt-S
-changes profile/default scope, Alt-N adds an environment declaration, and F1 shows
-help. Each scope/category retains its search and selected row. Escape goes back;
+The first screen offers List, Get and Set. List opens a searchable read-only
+inventory. Get and Set first choose All, Icons, Colors, Files, Profile, Settings
+or Environment; shared defaults offer only All, Icons and Colors. Enter in List
+or Get opens details. Enter in Set opens Edit, Reset override and Details.
+Alt-G changes category, Alt-S changes profile/default scope, Alt-N adds an
+environment declaration in Set only, and F1 shows help. Each action/scope/category
+retains its search and selected row. Escape goes back;
 Ctrl-C exits with status 130. Colors offer palette roles or custom hex values;
 booleans and enumerations use typed choices. Icons accept literal strings,
 including an empty string. Application overrides use the supported visual consumers.
@@ -177,12 +183,15 @@ Each change reviews the old value, new value and write destination. Cancel is th
 default; Save applies that exact guarded plan, reports its undo command, and returns
 to the same row. Reset removes only the selected profile override and previews the
 inherited result. Shared defaults remain set-only. A file changed during review
-requires a fresh review. Saving does not activate a profile or publish a theme.
+requires a fresh review. Visual saves refresh affected active consumers while preserving the selected theme; saving does not activate a different profile.
 
 File rows show source, destination template, strategy and ownership. The active
-profile can open the existing mapping editor or file browser; those workflows keep
+profile in Set can open the mapping editor, Rename ID or file browser; those workflows keep
 their own review and approval. Other profiles expose mapping details only.
 `dots config browse --json` returns the same configuration document as `list --json`.
+Bare `dots config get` and `dots config set` enter their category chooser in a
+usable terminal. Fully specified CLI calls retain their existing behavior;
+incomplete operands, JSON and dry-run calls never launch a popup.
 
 ### Manifest fields
 
@@ -332,8 +341,8 @@ from an uncommitted checkout does not publish these files to its default remote.
 
 ## Profile inspection subcommands
 
-Bare `dots profile` remains the current-context summary; bare `dots profiles`
-remains the list. The following routes are read-only:
+Bare `dots profile` remains the current-context summary; `dots profile list`
+lists available definitions. The old `dots profiles` routes are removed. The following routes are read-only:
 
 | Route | Purpose |
 | --- | --- |
@@ -344,9 +353,11 @@ remains the list. The following routes are read-only:
 | `profile files [ID]` | Catalog resources, source paths and target templates |
 | `profile commands [ID]` | Command contributions and replacement precedence |
 | `profile check [ID]` | Definition, dependency, catalog and command validation |
-| `profiles list` | Available definitions; filter with `--platform` or `--active` |
-| `profiles check` | Independent validation results for all definitions |
+| `profile list` | Available definitions; filter with `--platform` or `--active` |
+| `profile check --all` | Independent validation results for all definitions |
 
+`profile check` checks the active profile; `profile check ID` selects one.
+`profile check --all` checks every definition and rejects an explicit ID.
 All routes accept `--json` and `--verbose` (`-v`). An explicit ID selects only an
 inspection context. It does not activate a profile, change detection, execute its
 hooks, or interpret foreign target templates as installed destinations.
@@ -370,7 +381,7 @@ For startup sequence, timing, PATH and command diagnostics, see
 
 ## Icons and semantic colors
 
-`default/icons.toml` and `default/colors.toml` hold shared visual defaults. Every base profile has `icons.toml` and `colors.toml` beside `profile.json`; empty files inherit defaults. Resolution merges individual keys in shared-default, inherited-parent, selected-profile order. `unset` removes a profile override and exposes its inherited value. Shared defaults remain defined and are changed with `set --defaults`.
+`default/icons.toml` and `default/colors.toml` hold shared visual defaults. Every base profile has `icons.toml` and `colors.toml` beside `profile.json`; empty files inherit defaults. Resolution folds shared defaults, inherited parents and the selected profile in that order. Within each layer, a general value is applied before that layer’s app override; a general child-profile value therefore beats an app-specific parent/default value. Color fields inherit independently, and empty icons and false attributes remain intentional. `unset` removes a profile override and exposes its inherited value. Shared defaults remain defined and are changed with `set --defaults`.
 
 ```sh
 dots config get files.termux
@@ -394,12 +405,225 @@ The `apps` namespace provides overrides for `cli`, `tmux`, `yazi`, `fzf`, `gum`,
 | Consumer | Preference binding | When changes appear |
 | --- | --- | --- |
 | Dots human reports, resources, Git, Todo, menus, keys, weather detail icons and Bash utility presentation | Shared UI/status/file/Git/navigation roles; `apps.cli` overrides | Next command invocation |
-| FZF and Gum templates | UI/status fg/bg, with their app overrides | Explicit theme publication/refresh and normal shell palette refresh |
-| tmux and Termux activity | UI/status fg/bg and working/waiting/Codex icons | Explicit theme publication/refresh and existing reload path |
+| FZF and Gum templates | UI/status fg/bg, with their app overrides | Visual config save/refresh; existing shells follow at the next prompt |
+| tmux and Termux activity | UI/status fg/bg and working/waiting/Codex icons | Visual config save/refresh; verified tmux servers receive the owned visual fragment |
 | Gitmux adapter | Git symbols in generated config; existing Git color roles | Published generation used by next status read |
-| Yazi generated flavor and Dots plugin | File icons and Git symbols; existing file/Git colors | Explicit theme refresh |
-| Opted-in Starship/Blastoff theme plugin | Existing Git symbol fields, shared palette | Explicit theme refresh/plugin run |
+| Yazi generated flavor and Dots plugin | File/Git icons and UI accent; existing file/Git colors | Visual config save/refresh and the existing Yazi notification |
+| Opted-in Starship/Blastoff theme plugin | Existing Git symbol fields, shared palette | Visual config save/refresh through the literal first-party adapter |
 
 The scan separates these owned consumer bindings from imported presets, third-party code and authored artwork. Application-specific fields outside the bindings retain their native configuration owners (for example Fastfetch preset graphics and weather condition tables). Bootstrap errors before Python is available retain dependency-free fallback styling. Existing Bash-only utilities (`bak`, `remove`, `fzcmd`, `fzenv`, `fzfig`) use shared presentation aliases; their execution/platform scope is unchanged. Read-only reports never generate files, run hooks or activate consumers.
 
-Configuration edits use retained file transactions: `--dry-run` previews, results include the transaction ID, and `dots files undo ID` detects later edits before restoring. Shell bundles fingerprint preference inputs and still avoid Python on their warm path. Generated `preferences.json`, native fragments, and `colors.json`/`colors.lua` are completed before publication; changing a preference cannot publish them implicitly. Native Windows uses the same resolver and CLI controller; native terminal/application acceptance is separate from local fixtures.
+Configuration edits use retained file transactions: `--dry-run` previews, results include the transaction ID, and `dots files undo ID` detects later edits before restoring. Shell bundles fingerprint preference inputs and still avoid Python on their warm path. Generated `preferences.json`, native fragments, and `colors.json`/`colors.lua` are completed before publication; visual saves publish affected preferences automatically, with `--no-refresh` available for save-only edits. Native Windows uses the same resolver and CLI controller; native terminal/application acceptance is separate from local fixtures.
+
+
+### Effective visual values and refresh
+
+`dots config explain icons.applications.codex` shows each supported consumer’s
+value, winning source, declarations and publication state. Add `--app tmux`,
+`--profile NAME`, `--defaults` or `--json` for a specific inspection. Explain
+accepts an individual icon or color field. Existing `get` scalars and get/list
+JSON keep their saved-configuration contracts; the browser’s Details view shows
+the effective values alongside saved ones.
+
+`icons.applications.codex` is the common Codex identity icon. The older
+`navigation.codex` spelling remains a compatibility alias. At equal layer and
+app specificity, the canonical spelling wins. Working/waiting status symbols
+and Todo window icons keep their own roles.
+
+The supported-control catalog filters new edits, app choices and completion.
+Existing unused entries are retained and explain reports them as unsupported;
+they can still be reset. Color fields unsupported by a consumer are rejected for
+new saves instead of silently doing nothing. The added controls are:
+
+| Keys | Consumers |
+| --- | --- |
+| `colors.ui.border.fg`, `ui.cursor.fg`, `ui.match.fg`, `ui.separator.fg` | Applicable FZF/Gum and tmux adapters; use `apps.APP` for an override |
+| `colors.todo.status.open`, `doing`, `blocked`, `done`, `removed` | Todo reports, browser rows and previews; fg/bg and CLI attributes |
+| `colors.todo.priority.high`, `normal`, `low` | Todo priority presentation; fg/bg and CLI attributes |
+| `colors.apps.tmux.window.active`, `inactive`, `attention` | Window base fg/bg spans; existing name contrast spans remain separate |
+| `colors.apps.tmux.pane.active_border.fg`, `inactive_border.fg` | Pane borders |
+
+Defaults preserve current appearance, including the Linux/WSL inactive tmux
+window defaults. Specialized weather condition artwork, notification behavior,
+layout sizes, application-native settings and arbitrary theme plugins remain
+outside this bounded visual catalog.
+
+Later candidates include separate Termux tab/name contrast controls and additional
+widget dimensions. They need explicit consumer bindings and native acceptance
+checks before becoming editable keys. Git/file colors remain in the existing
+file-color catalog rather than becoming duplicate config settings.
+
+Visual `set`/`unset` saves refresh affected active consumers unless `--no-refresh`
+is supplied. Changes to unrelated profiles do not activate them. Shared-default
+or ancestor changes refresh the active profile only if its effective values
+change. `--dry-run` previews affected consumers. After direct file edits, use
+`dots config refresh --dry-run` and `dots config refresh`; the Config menu offers
+a reviewed Refresh action. No background watcher is installed.
+
+Refresh preserves the published palette and selected theme, stages complete
+visual artifacts, and journals publication through the existing Store. It
+preserves unrelated artifacts and existing connector ownership, does not install
+missing connectors, and invokes no arbitrary theme plugins. Verified same-user
+tmux servers must match checkout, profile and state; uncertain servers are
+reported pending. Yazi receives its existing notification, Gitmux follows its
+next status read, and opted-in Starship/Blastoff symbols use their literal adapter.
+Native shell adapters read generated visual data when the generation changes;
+existing shell auto-update preferences still apply.
+Sessions opened before upgrading these adapters need their normal Dots
+initialization reload once; subsequent visual publications use the prompt hook.
+
+Results distinguish published data, notification, next prompt/invocation,
+unavailable consumers and failures. They do not prove an application has redrawn.
+A failed publication leaves the prior active generation; a reload failure leaves
+the new publication intact and reports the failed consumer. Saved preferences
+remain in either case. Retry with `dots config refresh`. Results retain save and
+publication transaction IDs; `dots files undo ID` preserves its normal drift
+checks. Undoing saved preferences requires a subsequent visual refresh; undoing
+publication restores its pointers and also requires consumer notification.
+Read-only inspection never publishes, reloads, acknowledges attention or runs
+hooks. With no published theme, CLI settings apply normally and generated
+consumer activation is reported pending without selecting a theme.
+
+## Application and formatting controls
+
+`default/config.json` declares typed `apps` and `formatting` defaults. The same
+sections in `profile.json` override individual fields. Resolution is selected
+profile, inherited parents, shared defaults, then null. A profile `null` or
+`config unset` removes the override; false, zero, empty strings and empty lists
+remain values. Shared nonnullable defaults must remain defined.
+
+Recognized unset `get` keys return `null` (muted in a human terminal). Scalar and
+JSON output remain exact; unknown keys and malformed files are errors. Application
+color reads include the general-role fallback within each layer. For example,
+`dots config get colors.apps.tmux.status.warning.fg` resolves `warning` unless
+overridden. `explain` reports provenance. Literal native names use JSON bracket
+quoting; the quotes are part of the key and must survive shell argument parsing.
+
+```sh
+dots config get 'apps.nvim.highlights["@variable.member"].fg'
+dots config set 'apps.nvim.highlights["@variable.member"].fg' '#aabbcc'
+dots config set formatting.apps.todo.list_type regular
+dots config set 'apps.fzf.colors["bg+"]' '#223344'
+dots config set apps.fzf.default_opts '["--layout=reverse","--border=rounded"]' --json-value
+```
+
+The Config popup includes **Formatting** and **Apps**, with typed literal JSON
+editing, destination review, resets, drift checks and retained undo. Completion
+uses the same declarations. `config path formatting` and `config path apps` locate
+the manifest or shared defaults. Only implemented controls are advertised; use the
+[configuration audit skill](../.codex/skills/dots-config-audit/SKILL.md) to review
+additional candidates without adding runtime scans.
+
+### Dots popup appearance
+
+`apps.menu.popup` owns the Dots selector frame independently of ordinary FZF defaults. `position` accepts `center` (default), `top`, `bottom`, `left` or `right`; it supplies FZF's `--popup` position while preserving each controller's bounded width and height. `border` accepts `rounded` (default), `sharp`, `double`, `bold` or `none`. Shell `apps.fzf.default_opts` such as `--border=none` no longer remove Dots menu borders.
+
+`width` and `height` each default to `auto`. Size is resolved when the popup opens against the invoking client's columns/rows, including when another tmux client has a different size:
+
+| Value | Size behavior |
+| --- | --- |
+| `auto` | Retain the menu or reader controller's existing adaptive layout. |
+| `fit` | Fit known display content, up to 90% of the client. Previews and terminal hosts whose content cannot be measured retain their controller layout budget. |
+| `fill` | Use the full available client dimension. |
+| `1%`–`100%` | Percentage of the client; presets include `50%`, `75%`, `90%` and `100%`. |
+| Integer `1`–`10000` | Fixed columns for width or rows for height, bounded by the client. |
+
+Explicit sizes have a 32-column/6-row minimum when space permits and never exceed the client. Small previews reserve room for selection controls. Content fitting measures display cells, including Unicode and wrapped rows, without executing preview commands. Inline FZF supports height; floating width and positioning require the popup backend. These are opening-time sizes, not query-driven resizing.
+
+`apps.menu.popup.colors` provides `border` (theme `accent` by default), `fg`, `bg`, `label`, `preview-border`, `preview-label`, `preview-fg` and `preview-bg`. Colors accept a single semantic palette role, `#RRGGBB`, a quoted terminal color index, or `default`; nullable slots inherit the existing picker color. Normal profile/parent/default inheritance and `unset` apply. Labels and preview fields affect FZF; border/fg/bg also style Dots-owned tmux terminal hosts. Disabled color retains a readable frame, and disabled icons use ASCII borders.
+
+```sh
+dots config get apps.menu.popup.position
+dots config set apps.menu.popup.position center
+dots config set apps.menu.popup.border rounded
+dots config set apps.menu.popup.colors.border blue
+dots config set apps.menu.popup.colors.bg '#181825'
+dots config unset apps.menu.popup.colors.bg
+dots config explain apps.menu.popup.border
+dots config explain apps.menu.popup.width --json
+dots config set apps.menu.popup.width '90%'
+dots config set apps.menu.popup.height fit
+dots config set apps.menu.popup.height 24
+dots config unset apps.menu.popup.height
+```
+
+These controls appear under Apps in the Config popup and in completion. Reopening a popup reads the effective settings; no theme refresh or server reload is required. `config explain` reports `next popup` activation. Native Windows and ordinary terminals use the same FZF frame/colors without floating positioning; native tmux hosts apply per-popup flags rather than changing server options. The existing menu identities, previews, approvals and exact data interfaces are unchanged.
+
+For typed controls, `config explain KEY` lists the type, finite allowed values and applicable syntax/examples. JSON adds a `constraints` object with `type`, optional `choices`, `syntax` and `examples`; `get` retains its exact value output. Config previews/details show the same information, and editing offers finite choices or size/color examples before custom input. Bash, Zsh, Fish and native PowerShell value completion use the same declarations. Custom input is still validated by the guarded save workflow.
+
+### Shared row alignment
+
+Shared human CLI details and popup rows use `formatting.apps.cli` and `formatting.apps.menu`, respectively. `label_width` accepts a character-cell count (`0`–`4096`) or an integer percentage (`1%`–`100%`) of the terminal width or popup content width. `0` puts the value after the key with only `label_gap` spaces. `alignment` accepts `left`, `right` or `center` within the key column. Width and gap are bounded on narrow displays to leave room for values; long CLI and Config-browser keys stack above the value instead of being discarded. Specialized views can retain explicit column overrides.
+
+```sh
+dots config set formatting.apps.cli.label_width '40%'
+dots config set formatting.apps.cli.label_gap 3
+dots config set formatting.apps.menu.label_width 24
+dots config set formatting.apps.menu.label_gap 2
+dots config set formatting.apps.menu.alignment right
+# Spacing-only CLI rows:
+dots config set formatting.apps.cli.label_width 0
+# Restore the inherited width:
+dots config unset formatting.apps.cli.label_width
+```
+
+These settings apply on the next command invocation or popup without publishing a theme. Scalar `get`, JSON, completion records and ordinary redirected output retain their data contracts. `config explain` and value completion expose the width syntax and presets. Key completion remains read-only even with native weather configuration present; invalid optional weather TOML does not hide unrelated configuration keys.
+
+### Other application controls
+
+- `formatting.apps.cli` controls shared human detail indentation, tab stops,
+  label width/gap and alignment. Tabs expand at configured stops before wrapping.
+  `formatting.apps.menu` controls menu indentation, padding, label spacing,
+  alignment and listing row gaps. Entry styles address stable `MENU:ENTRY` keys
+  under `formatting.apps.menu.entries`, with `icon`, `label`, `description`,
+  `shortcut` and `state` style objects. `colors.menu.*` supplies semantic defaults.
+- `colors.icons.ROLE.{fg,bg,...}` gives shared human icon tokens independent
+  styles; absent fields inherit the enclosing span. `colors.todo.field.FIELD`
+  has separate `label` and `value` styles. Status/priority retain their specialized
+  roles unless a field style overrides them. Todo formatting adds `level_indent`,
+  `row_gap` and `list_type`; see [Todo views](todo.md#human-tree-views).
+- `apps.fzf.colors` uses native color slots (bracket quoting for `+` or other native
+  punctuation), palette names/hex/ANSI indices and colon-separated attributes.
+  `nth` accepts attributes only. `default_opts` is a literal argument list;
+  `bindings`, `preview` and `preview_window` follow native FZF syntax. Shell
+  generations replace their managed defaults instead of repeatedly appending.
+  Dots pickers accept compatible matching/presentation preferences and safe
+  navigation bindings; they own record delimiters, identities, previews,
+  action/approval bindings and terminal selection. `config explain apps.fzf`
+  lists ignored/protected picker preferences.
+- `apps.nvim` covers editor options, diagnostic toggles, autoformat/animation,
+  Anodize transparency/terminal colors, literal highlight maps and LazyVim icons.
+  `icon_styles` supports diagnostic sign identities (`diagnostics.Error`, `Warn`,
+  `Info`, `Hint`); other icons use their application's highlight groups. The
+  nested Neovim bridge reads published JSON, preserves its last good snapshot,
+  and applies updates on focus/resume or `:DotsThemeReload`. It uses public Anodize
+  APIs; it does not edit the separate plugin repository or choose language tools.
+- `formatting.apps.tmux` places the existing session, windows, Git, indicators,
+  clock, tabs and battery components in left/right arrays on the main/Termux rows.
+  `rows=0` chooses the platform default; null row indices retain native ordering.
+  Nonexistent/overlapping rows are rejected. Termux-only components remain absent
+  elsewhere. `formatting.apps.nvim.lualine.sections` uses native `a/b/c/x/y/z`
+  arrays of named existing components; nullable padding retains component defaults.
+  Neither interface accepts arbitrary executable components.
+
+### Native weather configuration
+
+`apps.wttr.*` is an adapter to wttr's **active native TOML**, not a new profile
+layer. It selects the platform user `wttr/config.toml` when present, otherwise
+`config/wttr/config.toml` in this checkout. `--defaults` and inactive-profile
+access are refused. Read the destination with `dots config path apps.wttr`.
+Edits require the optional `tomlkit` dependency declared in
+`tools/requirements-config.txt`; reads do not. Comments and unknown native fields
+are preserved, native validation runs before saving, and Store retains undo.
+
+```sh
+dots config get 'apps.wttr.icons["113"]'
+dots config set apps.wttr.units metric
+dots config set 'apps.wttr.icon_colors["113"].bg' '#112233'
+dots config set 'apps.wttr.icon_colors["113"].bg' null --json-value
+```
+
+Weather color styles accept the existing strings/ANSI colors or objects with
+`fg`, `bg` and supported attributes. Null/reset deletes a native field; wttr's
+native fallback applies on its next invocation. Reading or editing configuration
+never requests weather, location or Android permissions.

@@ -7,8 +7,9 @@ import re
 import stat
 
 from profile_config import checkout, context
+from style_catalog import canonical, split, ALIASES as ICON_ALIASES
 
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux')
+APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim')
 LIMIT = 2 * 1024 * 1024
 NAME = re.compile(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*\Z')
 ATTRS = dict(bold=1, dim=2, italic=3, underline=4, reverse=7, strikethrough=9)
@@ -20,7 +21,7 @@ ALIASES = dict(accent='blue', info='blue', success='green', warning='yellow', er
                hint='cyan', orange='yellow', brown='yellow', selection='blue',
                selection_background='blue', selection_foreground='foreground', cursor='foreground',
                dark_background='background', darker_background='background', light_background='background',
-               bright_background='background', dark_foreground='foreground', light_foreground='foreground')
+               lighter_background='background', bright_background='background', dark_foreground='foreground', light_foreground='foreground')
 ROLES = {'90':'ui.muted', '91':'status.error', '92':'status.success', '93':'status.warning',
          '94':'ui.label', '95':'ui.accent', '96':'ui.heading', '97':'ui.foreground',
          '31':'status.error', '32':'status.success', '33':'status.warning', '34':'ui.label',
@@ -103,22 +104,24 @@ class Styles:
         self.root = checkout(root)
         self.selected = selected if selected is not None else context(self.root)
         self.defaults = defaults
-        self.values, self.sources, self.paths = {}, {}, []
+        self.values, self.sources, self.paths, self.layers = {}, {}, [], {}
         self._palette = palette
         self._codes = {}
         replacements = replacements or {}
         for group in ('icons','colors'):
             paths = [self.root/'default'/(group+'.toml')]
             if not defaults: paths += [Path(layer['root'])/(group+'.toml') for layer in self.selected['layers']]
-            values, sources = {}, {}
+            values, sources, layers = {}, {}, []
             for path in paths:
                 self.paths.append(path)
                 doc = replacements.get(path)
                 if doc is None: doc = read(path)
                 validate(group, doc)
                 values.update(doc); sources.update({key:str(path) for key in doc})
+                layers.append((str(path), doc))
             nested(values)
             self.values[group], self.sources[group] = values, sources
+            self.layers[group] = layers
 
     def path(self, group):
         if group not in ('icons','colors'): raise ValueError('unknown style group')
@@ -126,9 +129,25 @@ class Styles:
         if not self.selected['layers']: raise ValueError('no profile definition in this checkout')
         return Path(self.selected['layers'][-1]['root'])/(group+'.toml')
 
+    def resolve(self, group, name, app=None):
+        """Fold general then app-specific values inside each inheritance layer."""
+        embedded, name = split(name)
+        app = embedded or app
+        canonical_name = canonical(name) if group == 'icons' else name
+        names = [k for k, v in ICON_ALIASES.items() if v == canonical_name] if group == 'icons' else []
+        names.append(canonical_name)
+        declarations = []
+        for path, values in self.layers[group]:
+            for prefix in ('', 'apps.'+app+'.') if app else ('',):
+                for key in names:
+                    if prefix+key in values:
+                        declarations.append(dict(key=group+'.'+prefix+key, value=values[prefix+key], source=path))
+        winner = declarations[-1] if declarations else {}
+        return dict(value=winner.get('value'), source=winner.get('source'), declarations=declarations)
+
     def icon(self, name, fallback='', app=None):
-        values = self.values['icons']
-        return values.get('apps.'+app+'.'+name, values.get(name, fallback)) if app else values.get(name, fallback)
+        result = self.resolve('icons', name, app)
+        return result['value'] if result['source'] else fallback
 
     @property
     def palette(self):
@@ -157,14 +176,17 @@ class Styles:
         return str(code)
 
     def style(self, name, fallback=None, app=None):
-        values = self.values['colors']
         result = dict(fallback or {})
-        for key in (name, 'apps.'+app+'.'+name if app else name):
-            result.update({field: values[key+'.'+field] for field in ('fg','bg',*ATTRS) if key+'.'+field in values})
+        for field in ('fg', 'bg', *ATTRS):
+            resolved = self.resolve('colors', name+'.'+field, app)
+            if resolved['source']: result[field] = resolved['value']
         return result
 
     def sgr(self, name, fallback=None, app=None):
         doc = self.style(name, fallback, app)
+        return self.sgr_fields(doc)
+
+    def sgr_fields(self,doc):
         result = [str(code) for key,code in ATTRS.items() if doc.get(key)]
         for key in ('fg','bg'):
             if key in doc: result.append(self.sgr_color(doc[key], key=='bg'))
@@ -188,7 +210,7 @@ class Styles:
 
     def startup_inputs(self):
         from files.file_platform import state_root
-        paths = {Path(__file__)}
+        paths = {Path(__file__), Path(__file__).with_name('style_catalog.py')}
         palette = state_root()/'current/theme/palette.json'
         if palette.is_file(): paths.add(palette)
         for path in self.paths:
@@ -198,9 +220,17 @@ class Styles:
 
 
 @lru_cache(maxsize=1)
-def current():
-    try: return Styles()
+def _current(root,identity,state):
+    try: return Styles(root,context(root,identity or None))
     except (OSError, ValueError, KeyError, TypeError): return None
+
+
+def current():
+    from files.file_platform import state_root
+    return _current(str(checkout()),os.environ.get('DOTS_PROFILE',''),str(state_root()))
+
+
+current.cache_clear=_current.cache_clear
 
 
 def icon(name, fallback='', app=None):

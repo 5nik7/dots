@@ -8,8 +8,11 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Concise root help](usage-help.md) | Top-level root help across Bash/native frontends, preserved full discovery/completion and presentation acceptance. |
 | [Personal fonts](fonts.md) | Official catalogs, retained versions, per-user registration, app connectors, font/glyph browsers and native acceptance. |
 | [Weather command and browser](wttr.md) | Shared standalone/Dots weather, cached-preview browser, session controls and platform acceptance. |
+| [Core command updates](core-updates.md) | Config List/Get/Set, recoverable file-ID edits and singular theme/profile families. |
+| [Configuration coverage](config-coverage.md) | Audit skill, typed controls, native app integrations, tree views and activation verification. |
 | [Configuration popup](config-popup.md) | Profile/default browsing, typed edits, guarded review and per-change undo. |
 | [Profile configuration](profile-configs.md) | Checkout-local settings, file mappings and reversible migration into platform profiles. |
 | [Todo goals](todo.md) | Project/global goal tracking, contextual completion, popup, Codex planning handoff and managed general/planning/maintenance skills. |
@@ -66,6 +69,7 @@ Before implementing a human view, name its renderer, human/data modes and repres
 
 - State whether a plan is proposed, active, paused, blocked, or completed. A pause describes scheduling, not the implementation status of completed work.
 - Define scope, non-goals, dependencies, risks, verification, and acceptance criteria.
+- For command changes, name the [primary maintenance skill](../.codex/README.md#command-family-owners) and record configuration and menu assessments under the [command guide](../agents/guides/commands.md#configuration-integration-review). A reasoned no-change configuration decision is valid; applicable work uses `dots-config` and consumer acceptance checks.
 - Keep task status current in the same change that completes or changes the task.
 - Move durable conclusions into the relevant file under `../docs/`.
 - Link decision records for choices that constrain future work.
@@ -99,3 +103,9 @@ When a plan is complete, retain it if it explains migration or decision history.
 - [Profile presentation and complete inventories](profile-presentation.md): human configuration reports, profile-owned shared mappings and configurable visual roles.
 
 - [Core registry and profile environments](profile-backend.md) — preserve the core resource registry, put implementations in profiles, and generate native path namespaces.
+
+- [Live visual configuration](config-live.md) — profile precedence, effective-value reporting and guarded consumer refresh.
+
+- [Dots command skills](dots-skills.md) — dedicated family ownership, repository skill discovery and mandatory configuration integration review.
+
+- [Command authoring skill](command-authoring-skill.md) — new-command workflow and reusable plan template integrating presentation, configuration and popups.

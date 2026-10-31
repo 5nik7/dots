@@ -1,0 +1,221 @@
+{
+  "schema": 1,
+  "formatting": {
+    "apps": {
+      "cli": {
+        "indent": 4,
+        "indent_style": "spaces",
+        "tab_width": 4,
+        "label_gap": 1,
+        "label_width": 10,
+        "alignment": "left"
+      },
+      "todo": {
+        "indent": 2,
+        "indent_style": "spaces",
+        "tab_width": 4,
+        "label_gap": 1,
+        "label_width": 10,
+        "row_gap": 1,
+        "alignment": "left",
+        "level_indent": 2,
+        "list_type": "tree"
+      },
+      "menu": {
+        "indent": 0,
+        "indent_style": "spaces",
+        "tab_width": 4,
+        "label_gap": 1,
+        "label_width": 0,
+        "row_gap": 0,
+        "alignment": "left",
+        "padding": 1,
+        "entries": {}
+      },
+      "tmux": {
+        "position": "top",
+        "rows": 0,
+        "main_row": null,
+        "termux_row": null,
+        "main_left": [
+          "session",
+          "windows",
+          "git"
+        ],
+        "main_right": [
+          "indicators"
+        ],
+        "termux_left": [
+          "clock",
+          "tabs"
+        ],
+        "termux_right": [
+          "battery"
+        ]
+      },
+      "nvim": {
+        "lualine": {
+          "sections": {
+            "a": [
+              "mode"
+            ],
+            "b": [],
+            "c": [
+              "root",
+              "diagnostics",
+              "filetype",
+              "path",
+              "symbols"
+            ],
+            "x": [
+              "profiler",
+              "debug",
+              "diff"
+            ],
+            "y": [
+              "progress",
+              "location"
+            ],
+            "z": []
+          },
+          "padding_left": null,
+          "padding_right": null,
+          "component_separator_left": "",
+          "component_separator_right": "",
+          "section_separator_left": "",
+          "section_separator_right": ""
+        }
+      }
+    }
+  },
+  "apps": {
+    "menu": {
+      "popup": {
+        "position": "center",
+        "width": "auto",
+        "height": "auto",
+        "border": "rounded",
+        "colors": {
+          "border": "accent",
+          "fg": null,
+          "bg": null,
+          "label": null,
+          "preview-border": null,
+          "preview-label": null,
+          "preview-fg": null,
+          "preview-bg": null
+        }
+      }
+    },
+    "fzf": {
+      "default_opts": [
+        "--style=default",
+        "--layout=reverse",
+        "--height=~90%",
+        "--border=none",
+        "--info=hidden",
+        "--prompt= 󰅂 ",
+        "--pointer=▎",
+        "--marker=▎",
+        "--gutter=▎",
+        "--gutter-raw=▎",
+        "--no-separator",
+        "--no-scrollbar",
+        "-x",
+        "--smart-case",
+        "--ansi"
+      ],
+      "bindings": {
+        "ctrl-x": "toggle-preview",
+        "up": "up-match",
+        "down": "down-match",
+        "alt-r": "toggle-raw"
+      },
+      "preview_window": "right:hidden:50%:wrap-word:border-left",
+      "preview": null,
+      "colors": {
+        "fg": null,
+        "bg": null,
+        "preview-fg": null,
+        "preview-bg": null,
+        "hl": null,
+        "fg+": null,
+        "bg+": null,
+        "hl+": null,
+        "selected-fg": null,
+        "selected-bg": null,
+        "gutter": null,
+        "query": null,
+        "input-bg": null,
+        "input-fg": null,
+        "disabled": null,
+        "info": null,
+        "border": null,
+        "scrollbar": null,
+        "separator": null,
+        "label": null,
+        "preview-border": null,
+        "preview-label": null,
+        "preview-scrollbar": null,
+        "header": null,
+        "header-bg": null,
+        "header-border": null,
+        "header-label": null,
+        "footer": null,
+        "footer-bg": null,
+        "footer-border": null,
+        "footer-label": null,
+        "list-bg": null,
+        "list-border": null,
+        "list-label": null,
+        "input-border": null,
+        "input-label": null,
+        "prompt": null,
+        "pointer": null,
+        "marker": null,
+        "spinner": null,
+        "nomatch": null,
+        "nth": null
+      }
+    },
+    "nvim": {
+      "options": {
+        "termguicolors": true,
+        "wrap": true,
+        "smartindent": true,
+        "cmdheight": 0,
+        "mousescroll": "ver:1,hor:1",
+        "number": null,
+        "relativenumber": null,
+        "expandtab": null,
+        "shiftwidth": null,
+        "tabstop": null,
+        "softtabstop": null,
+        "scrolloff": null,
+        "sidescrolloff": null,
+        "mouse": null,
+        "signcolumn": null,
+        "list": null,
+        "listchars": null
+      },
+      "globals": {
+        "autoformat": true,
+        "snacks_animate": true
+      },
+      "diagnostics": {
+        "virtual_text": null,
+        "signs": null,
+        "underline": null,
+        "update_in_insert": null,
+        "severity_sort": null
+      },
+      "theme": {
+        "transparent": true,
+        "terminal_colors": false
+      },
+      "highlights": {},
+      "icons": {},
+      "icon_styles": {}
+    }
+  }
+}

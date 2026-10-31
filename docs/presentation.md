@@ -166,6 +166,8 @@ Preserve the unified theme data interfaces and palette helper APIs. The singular
 
 Todo human views use a scoped semantic mapping: titles are bold theme `bright_magenta`, alias values are bold theme `accent` (including parent aliases), open status is bold `bright_green` (bold ANSI bright green when the palette role is unavailable), and high/normal/low priorities are respectively bold `warning`, regular `orange`, and bold `muted`. Missing warning roles fall back to bold ANSI yellow. Notes and acceptance text keep normal foreground. Other statuses retain their blue/green/yellow/muted roles. List rows, expanded details, mutation results, popup rows and previews share these spans; identifiers and separators remain independent. Todo uses a two-space base indent for help, detail/result fields, notes, acceptance items and popup previews, with flush-left headings. Human lists put the alias or short UUID above the title/status/priority summary at that same indent; Project/Goals fields have single label/value gaps. One blank line separates goal blocks, including implicit/`--print` lists and the missing-FZF fallback. Wrapped title/identifier lines retain the two-space base indent, other labeled views retain value alignment, and popup selection rows stay compact. Shared presentation defaults for other command families are unchanged. Alias labels fall back to short UUIDs, while detail views retain full UUID metadata and readable notes/acceptance blocks. Argparse coloring is disabled where available; Todo help renders plain usage definitions through Dots, avoiding nested ANSI sanitization. See [todo](todo.md).
 
+Shared human detail/resource rows in Python and Bash read `formatting.apps.cli`; shared menu rows and Config browser details read `formatting.apps.menu`. Use the [existing width, gap and alignment controls](profiles.md#shared-row-alignment) rather than introducing per-command padding settings. Python `row_layout.py` resolves display-cell widths, percentage columns and padding; Bash uses builtins and validated literal settings. Explicit domain column overrides remain supported. CLI and Config-browser keys longer than their columns stack above aligned values, retaining their complete text. Config selector display lines may be multiline; numeric selection identities and search keys remain separate inert data. Verify ordinary redirected output and scalar/JSON contracts independently of human layouts.
+
 ## Acceptance Gate
 
 For each new or changed human view, the focused plan must identify:
@@ -284,3 +286,14 @@ independent; JSON and existing session data are unchanged.
 The shared less style uses exact theme `foreground` on `lighter_background` at normal weight, with an explicit reset. It applies to prompts, search highlights and other standout messages. Shell refresh and popup readers preserve user overrides and existing color controls; redirected content is unchanged. See [global less colors](shell-environment.md#global-less-colors) for ownership, reload behavior and the native Windows exception.
 
 Shared visual defaults live in `default/icons.toml` and `default/colors.toml`, with per-key profile overrides. Python and Bash renderers consume the same named roles; resource matchers resolve icon tokens. See [visual preference bindings](profiles.md#icons-and-semantic-colors). Objects and resource arrays from `dots config get` use readable sections by default; explicit `--json`, scalar/path queries, completion, shell output and raw interfaces remain data contracts. Exact palette previews keep their own candidate colors.
+
+Typed spacing/alignment and application controls are documented under
+[configuration controls](profiles.md#application-and-formatting-controls).
+New human spans must assess both icon and adjacent text styles, foreground and
+background, labels/values, gaps, indentation/tab stops and native placement.
+Expose only fields that the consumer uses; absent icon colors inherit their
+enclosing span. Keep configuration reads and raw/data output free of decoration,
+except muted human `null`. Future formatting additions require typed validation,
+CLI/popup discovery, actual consumer checks and an explicit activation contract.
+
+Dots selector frames use [dedicated popup controls](profiles.md#dots-popup-appearance): centered placement, a rounded frame and a theme-accent border by default. Generic shell FZF border flags do not remove this frame. Popup colors override inherited picker colors only where configured; row-specific field styles remain intact. Terminal fallbacks retain the frame, plain mode stays readable, and native tmux hosts use the same applicable position/frame/colors without changing server defaults.

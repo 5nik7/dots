@@ -42,3 +42,148 @@ fg = "muted"
 bg = "selection_background"
 bold = true
 fg = "bright_foreground"
+
+# Shared controls; native overrides preserve each consumer's existing defaults.
+[ui.border]
+fg = "lighter_background"
+[ui.cursor]
+fg = "bright_foreground"
+[ui.match]
+fg = "bright_magenta"
+[ui.separator]
+fg = "background"
+[apps.gum.ui.border]
+fg = "magenta"
+[apps.gum.ui.match]
+fg = "magenta"
+[todo.status.open]
+fg = "bright_green"
+bold = true
+[todo.status.doing]
+fg = "blue"
+[todo.status.blocked]
+fg = "warning"
+[todo.status.done]
+fg = "green"
+[todo.status.removed]
+fg = "muted"
+[todo.priority.high]
+fg = "warning"
+bold = true
+[todo.priority.normal]
+fg = "orange"
+[todo.priority.low]
+fg = "muted"
+bold = true
+[apps.tmux.window.active]
+fg = "bright_green"
+bg = "selection_background"
+[apps.tmux.window.inactive]
+fg = "light_foreground"
+bg = "dark_background"
+[apps.tmux.window.attention]
+fg = "bright_red"
+bg = "darker_background"
+[apps.tmux.pane.active_border]
+fg = "selection"
+[apps.tmux.pane.inactive_border]
+fg = "muted"
+
+[apps.fzf.ui.cursor]
+fg = "accent"
+
+[menu.icon]
+fg = "accent"
+
+[menu.label]
+fg = "blue"
+
+[menu.description]
+fg = "muted"
+
+[menu.shortcut]
+fg = "cyan"
+
+[menu.state]
+fg = "warning"
+
+[todo.field.id.label]
+fg = "blue"
+[todo.field.id.value]
+fg = "muted"
+
+[todo.field.alias.label]
+fg = "blue"
+[todo.field.alias.value]
+fg = "cyan"
+
+[todo.field.title.label]
+fg = "blue"
+[todo.field.title.value]
+fg = "bright_foreground"
+
+[todo.field.notes.label]
+fg = "blue"
+[todo.field.notes.value]
+fg = "foreground"
+
+[todo.field.tags.label]
+fg = "blue"
+[todo.field.tags.value]
+fg = "foreground"
+
+[todo.field.status.label]
+fg = "blue"
+
+[todo.field.priority.label]
+fg = "blue"
+
+[todo.field.due.label]
+fg = "blue"
+[todo.field.due.value]
+fg = "foreground"
+
+[todo.field.parent.label]
+fg = "blue"
+[todo.field.parent.value]
+fg = "foreground"
+
+[todo.field.acceptance.label]
+fg = "blue"
+[todo.field.acceptance.value]
+fg = "foreground"
+
+[todo.field.subgoal_id.label]
+fg = "blue"
+[todo.field.subgoal_id.value]
+fg = "muted"
+
+[todo.field.subgoal_title.label]
+fg = "blue"
+[todo.field.subgoal_title.value]
+fg = "bright_foreground"
+
+[todo.field.subgoals.label]
+fg = "blue"
+[todo.field.subgoals.value]
+fg = "foreground"
+
+[todo.field.created.label]
+fg = "blue"
+[todo.field.created.value]
+fg = "muted"
+
+[todo.field.updated.label]
+fg = "blue"
+[todo.field.updated.value]
+fg = "muted"
+
+[todo.field.completed.label]
+fg = "blue"
+[todo.field.completed.value]
+fg = "muted"
+
+[todo.field.removed.label]
+fg = "blue"
+[todo.field.removed.value]
+fg = "muted"

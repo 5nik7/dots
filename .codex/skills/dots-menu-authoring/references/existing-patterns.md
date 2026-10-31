@@ -4,6 +4,12 @@ These interfaces exist in the inspected checkout. The shared library, terminal h
 
 ## Implementation map
 
+Dedicated appearance comes from [popup configuration](../../../../lib/dots/menu_popup.py): `apps.menu.popup.position`, `border` and `colors`. Shared FZF selectors and native tmux hosts apply it on their next invocation, retaining caller dimensions in auto mode and exact-client context. Ordinary FZF border flags cannot hide or replace the Dots frame. Use [documented controls](../../../../docs/profiles.md#dots-popup-appearance) instead of duplicating popup styles in a controller.
+
+Width/height default to `auto`; explicit `fit`/`fill`, percentages and cell counts use the shared bounded sizing helper. `selector_environment` carries addressed-client dimensions so a background controller does not substitute another terminal's size. Keep content measurement inert, leave preview/terminal layout to its owner when unknown, and use `menu_pager` bounds for reports.
+
+`menus.choose` resolves popup dimensions before final percentage columns and passes `popup_resolved=True` to `RichSelector.fzf`, preventing a second fit calculation from changing the column basis. Use that low-level flag only after applying the shared sizing preferences against the verified client; ordinary callers retain selector-owned sizing. Inert content measurement counts each trusted display line while numeric selection records remain NUL-delimited.
+
 | Concern | Current source and useful entry points |
 | --- | --- |
 | Shared menu records and selection | [menus.py](../../../../lib/dots/menus.py): `Entry`, `Menu`, `add_arguments`, `dimensions`, `choose`, `dots_argv`, `run_action`, `review_output`. |

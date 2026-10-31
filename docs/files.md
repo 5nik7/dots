@@ -89,7 +89,7 @@ repeat stash there to unlink a matching link, even if metadata is already disabl
 All machines must use a CLI version that understands `enabled`.
 
 `edit` changes mappings, not source contents. It preserves unspecified fields,
-stable IDs and repository ownership. `--source` is relative to the owning repo;
+IDs unless `--id` is supplied, and repository ownership. `--source` is relative to the owning repo;
 existing sources must be regular files or directories within that owner. Whole
 directories require `directory-link`. `--target` accepts existing destination
 templates or home/XDG paths normalized to portable templates. Other absolute
@@ -300,7 +300,43 @@ an effective profile mapping never installs. Source and registry platform lists
 jointly determine eligibility. Whole-array profile inheritance is described in
 [profiles](profiles.md#profile-configuration). Older schema-1 compositions and
 source catalogs remain readable for compatibility and journal recovery; they do
-not replace the schema-2 core registry in this checkout.
+not replace the schema-2/3 core registry in this checkout.
+
+### File ID renames
+
+`dots files edit OWNER:OLD --id NEW` changes a local resource ID within its owner.
+Use `--dry-run --json` to inspect the complete change; normal interactive edits
+review before approval, and explicit noninteractive edits use `--yes`. The mapping
+editor offers ID editing; Config → Set → Files also offers Rename ID.
+
+A rename updates the core registry, all explicit profile mappings and all
+`replaces` references, preserving inherited definitions and disabled resources.
+Registry-only entries and missing sources can be renamed without installation.
+Combine `--id` with mapping fields if needed: source/target/strategy affect only
+the active leaf or the base selected by `--platform`, while the ID changes across
+the checkout. `--platforms` retains its global eligibility meaning. Optional
+`--apply` reconciles only the active profile's supported live links.
+
+The first effective rename upgrades the registry to schema 3:
+
+```json
+{"schema": 3, "resources": [{"id": "dots:renamed", "platforms": ["linux", "wsl"]}], "renames": {"dots:example": "dots:renamed"}}
+```
+
+History maps qualified old IDs directly to current IDs within the same owner.
+Successive renames flatten the map. Current and historical IDs cannot collide;
+old IDs remain reserved for recovery. Commands given an old ID explain its current
+replacement. An unchanged current ID is a no-op. Schema 2 remains readable and
+ordinary edits do not upgrade it; legacy catalogs require a core registry before
+using the new rename operation. Other installations sharing a schema-3 registry
+need the updated CLI. Bulk config edits cannot reuse historical IDs.
+
+One guarded, retained transaction owns the registry, affected profile files,
+current receipt identities and optional live operations. Receipts keep original
+backup pointers. Other installations recognize historical IDs on read, without
+cross-platform state access. Historical journals are immutable. Use the returned
+`dots files undo ID` for drift-aware reversal; interrupted operations use normal
+`dots files recover ID`.
 
 IDs, applications and categories use lowercase letters, digits, `_` and `-`,
 starting with a letter. Sources stay repository-relative without `..`. Targets

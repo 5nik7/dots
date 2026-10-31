@@ -1,1 +1,2 @@
-# Override shared icons here. Unset options inherit defaults and parent profiles.
+[applications]
+codex = "󱈸"

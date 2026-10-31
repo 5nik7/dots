@@ -90,7 +90,9 @@ def action_page(text, *, title, actions, frame, context=None, notice=''):
 
 def popup_bounds(size):
     columns, lines = size
-    return max(1, min(columns, columns * 9 // 10)), max(1, min(lines, lines * 9 // 10))
+    from menu_popup import dimensions, preferences
+    automatic = max(1, columns * 9 // 10), max(1, lines * 9 // 10)
+    return dimensions(preferences(), automatic, size)
 
 
 # Count presentation only; never rewrite the captured report.

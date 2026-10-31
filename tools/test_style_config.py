@@ -161,7 +161,8 @@ class StyleConfig(unittest.TestCase):
                 os.close(master)
                 if slave>=0:os.close(slave)
         keys=subprocess.check_output([sys.executable,'-B',str(self.root/'lib/dots/profile_config.py'),'__keys'],env=self.env,text=True)
-        self.assertIn('icons.apps.tmux.git.branch\n',keys)
+        self.assertIn('icons.apps.gitmux.git.branch\n',keys)
+        self.assertNotIn('icons.apps.tmux.git.branch\n',keys)
         self.assertIn('colors.ui.heading.fg\n',keys)
 
     def test_shell_preference_change_invalidates_warm_bundle(self):

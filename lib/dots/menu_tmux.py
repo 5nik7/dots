@@ -145,7 +145,7 @@ class TmuxContext:
     @contextmanager
     def selector_environment(self):
         """Scope FZF's tmux invocation to this client without changing server state."""
-        self.verify()
+        columns, lines = self.verify()
         shell = shutil.which('bash')
         if not shell or any(c.isspace() for c in shell):
             raise ValueError('menu popup needs a usable Bash adapter')
@@ -157,14 +157,21 @@ class TmuxContext:
             # An unset pane makes FZF use a client popup, not a shared floating
             # pane on newer tmux. The proxy supplies -c for exact client routing.
             yield dict(PATH=str(path.parent) + os.pathsep + os.environ.get('PATH', ''),
-                       TMUX_PANE='', TMUX=self.socket + ',0,0')
+                       TMUX_PANE='', TMUX=self.socket + ',0,0',
+                       DOTS_MENU_COLUMNS=str(columns), DOTS_MENU_LINES=str(lines))
 
     def popup(self, argv, *, size=None):
         columns, lines = self.verify()
         width, height = size or (max(1, columns * 9 // 10), max(1, lines * 9 // 10))
         width, height = min(width, columns), min(height, lines)
+        from menu_popup import preferences, tmux_flags, dimensions
+        from files.catalog import Presentation
+        ui = Presentation(terminal=True)
+        options = preferences()
+        width, height = dimensions(options, (width, height), (columns, lines), size)
+        appearance = tmux_flags(options, height, lines, color=ui.color, icons=ui.icons)
         return subprocess.run(self.command('display-popup', '-E', '-c', self.client,
-            '-xC', '-yC', '-w' + str(width), '-h' + str(height), *argv)).returncode
+            *appearance, '-w' + str(width), '-h' + str(height), *argv)).returncode
 
     def output(self, argv, *, title='Dots output'):
         from menu_pager import OutputResult, popup_bounds, show_report

@@ -64,6 +64,31 @@ class TodoPopup(NativeMenuFixture):
         return Goals(scope()).mutate('add', title='Phone layouts ü', alias='phone-layouts', priority='high', notes='Preview evidence',
                                      acceptance=['Readable narrow popup'])['goals'][0]
 
+    def test_tree_ancestors_counts_and_context_selection(self):
+        from todo_core import Goals,scope
+        parent=self.prepare()
+        child=Goals(scope()).mutate('add',title='Needle child',parent=parent['id'])['goals'][0]
+        code = """import os,json
+from todo_core import Goals,scope
+from todo_menu import pick
+from menu_tmux import TmuxContext
+s=Goals(scope());child=next(g for g in s.goals if g['title']=='Needle child')
+g=pick(s,[child],dict(list_type='tree'),TmuxContext.capture(client=os.environ['CLIENT']))
+print(json.dumps(dict(id=g['id'],context=g.get('_todo_context'))))
+"""
+        for width,height in ((40,14),(80,24),(120,30)):
+            self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',height,width,0,0))
+            time.sleep(.2);self.drain(self.first[1]);self.drain(self.second[1])
+            worker=self.worker(code)
+            capture=self.receive(self.first[1],b'matching')
+            self.assertIn(b'matching',capture)
+            os.write(self.first[1],b'Needle');time.sleep(.4)
+            os.write(self.first[1],b'\r')
+            out,err=worker.communicate(timeout=15)
+            self.assertEqual(worker.returncode,0,err)
+            self.assertEqual(json.loads(out),dict(id=parent['id'],context=True))
+            self.assertNotIn(b'matching',self.drain(self.second[1]))
+
     def test_real_previews_widths_and_exact_client(self):
         goal = self.prepare()
         code = '''import os,json
@@ -78,7 +103,7 @@ def inspect(self,*args,**kwargs):
 RichSelector.fzf=inspect
 c=TmuxContext.capture(client=os.environ['CLIENT'])
 s=Goals(scope())
-g=pick(s,s.goals,dict(notice=os.environ.get('NOTICE','')),c)
+g=pick(s,s.goals,dict(notice=os.environ.get('NOTICE',''),list_type='regular'),c)
 print('selected:'+g['id'])
 '''
         cases = ((40, 14, 2, ''), (80, 24, 4, ''), (120, 30, 4, ''),
@@ -145,7 +170,7 @@ def observed(**kwargs):
 todo_layout.bindings=observed
 c=TmuxContext.capture(client=os.environ['CLIENT'])
 s=Goals(scope())
-g=pick(s,s.goals,{},c)
+g=pick(s,s.goals,{'list_type':'regular'},c)
 print(g['id'])
 '''
         for width, height, compact, single, five in ((40,14,2,2,2), (80,24,4,12,8), (120,30,4,18,14)):
@@ -158,17 +183,22 @@ print(g['id'])
                 self.receive(self.first[1], b'Alt-C')
 
                 def state(count, preview):
-                    deadline = time.monotonic() + 5
+                    deadline = time.monotonic() + 12
                     seen = []
                     while time.monotonic() < deadline:
                         before = len(log.read_text().splitlines())
                         os.write(self.first[1], b'\x07')
-                        time.sleep(.07)
-                        self.drain(self.first[1])
-                        try: seen = [json.loads(line) for line in log.read_text().splitlines()]
-                        except json.JSONDecodeError: continue
-                        if any(r['mode'] == 'probe' and r['count'] == str(count) and
-                               int(r['preview'] or 0) == preview for r in seen[before:]): return
+                        # Keep one observation in flight. Flooding synchronous
+                        # transforms delays the query we are trying to observe.
+                        while time.monotonic() < deadline:
+                            time.sleep(.05)
+                            self.drain(self.first[1])
+                            try: seen = [json.loads(line) for line in log.read_text().splitlines()]
+                            except json.JSONDecodeError: continue
+                            probes = [r for r in seen[before:] if r['mode'] == 'probe']
+                            if not probes: continue
+                            if any(r['count'] == str(count) and int(r['preview'] or 0) == preview for r in probes): return
+                            break
                     self.fail('layout did not settle: ' + repr(seen[-5:]))
 
                 def query(text, count, preview):

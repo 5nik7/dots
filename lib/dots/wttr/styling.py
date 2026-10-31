@@ -53,14 +53,23 @@ def help_banner(ui):
 class Style:
     foreground: str | int | None = None
     attributes: frozenset = frozenset()
+    background: str | int | None = None
 
     def merge(self, other):
         return Style(other.foreground if other.foreground is not None else self.foreground,
-                     self.attributes | other.attributes)
+                     self.attributes | other.attributes,
+                     other.background if other.background is not None else self.background)
 
 
 def parse_style(value):
     """Parse inert, unordered attributes and at most one foreground."""
+    if value is None:return Style()
+    if isinstance(value,dict):
+        if set(value)-{'fg','bg',*ATTRIBUTES}:raise ValueError('invalid weather style fields')
+        if any(type(v) is not bool for k,v in value.items() if k in ATTRIBUTES):raise ValueError('weather style attributes must be booleans')
+        return Style(color(value['fg']) if value.get('fg') is not None else None,
+                     frozenset(k for k in ATTRIBUTES if value.get(k)),
+                     color(value['bg']) if value.get('bg') is not None else None)
     if type(value) is int:
         return Style(color(value))
     if not isinstance(value, str) or not value.strip() or any(ord(c) < 32 or ord(c) == 127 for c in value):
@@ -163,7 +172,7 @@ class Colors:
         if not self.enabled:
             return Style()
         return Style(self.resolve(value.foreground) if value.foreground is not None else None,
-                     value.attributes)
+                     value.attributes,self.resolve(value.background) if value.background is not None else None)
 
 
 def finite_number(value):
@@ -199,6 +208,7 @@ def validate_config(cfg):
     if not isinstance(colors, list) or len(colors) != len(thresholds) + 1:
         raise ValueError('temperature_scale.colors requires one more style than thresholds')
     for value in colors:
+        if value is None:raise ValueError('temperature scale entries require a style')
         parse_style(value)
     for group in ('icon_colors', 'night_icon_colors'):
         mapping = cfg.setdefault(group, {})
@@ -207,6 +217,7 @@ def validate_config(cfg):
         for key, value in mapping.items():
             if key != 'unknown' and not re.fullmatch(r'\d{3}', key) and not (group == 'icon_colors' and key in DETAIL_COLORS):
                 raise ValueError('invalid condition color code')
+            if value is None:raise ValueError('weather color entries require a style')
             parse_style(value)
 
 
@@ -243,6 +254,8 @@ def style_sgr(style):
     shade = sgr(style.foreground)
     if shade:
         codes.append(shade)
+    background=sgr(style.background)
+    if background:codes.append('48'+background[2:])
     return ';'.join(codes) or None
 
 
@@ -251,6 +264,9 @@ def tmux_style(style):
     if style.foreground not in (None, 'default'):
         shade = 'colour' + str(style.foreground) if type(style.foreground) is int else style.foreground
         codes.append('fg=' + shade)
+    if style.background not in (None,'default'):
+        shade='colour'+str(style.background) if type(style.background) is int else style.background
+        codes.append('bg='+shade)
     codes.extend(code for name, (_, code) in ATTRIBUTES.items() if name in style.attributes)
     # Reset each span to the incoming style before adding this span's attributes.
     return '#[default]' + ('#[' + ','.join(codes) + ']' if codes else '')

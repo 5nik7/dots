@@ -23,7 +23,7 @@ def named_styles(ui):
     semantic = dict(muted='ui.muted', accent='ui.accent', foreground='ui.foreground', green='status.success', yellow='status.warning', red='status.error', blue='ui.label', hint='ui.heading', warning='status.warning')
 
     def sgr(name, fallback, bold=False):
-        if preferences and name in semantic:
+        if preferences and name in semantic and preferences.style(semantic[name]):
             return preferences.sgr(semantic[name], dict(fg=name, bold=bold))
         value = colors.get(name)
         if not isinstance(value, str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', value):

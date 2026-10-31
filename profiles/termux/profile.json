@@ -1,6 +1,7 @@
 {
   "schema": 1,
   "id": "termux",
+  "alias": "DROIDOTS",
   "description": "Android and Termux defaults",
   "settings": {},
   "files": {
@@ -425,5 +426,21 @@
       }
     ]
   },
-  "alias": "DROIDOTS"
+  "apps": {
+    "menu": {
+      "popup": {
+        "colors": {
+          "border": "lighter_background"
+        },
+        "width": "fit"
+      }
+    }
+  },
+  "formatting": {
+    "apps": {
+      "todo": {
+        "tab_width": 2
+      }
+    }
+  }
 }

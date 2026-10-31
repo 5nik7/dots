@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# dots:summary=List selectable themes
-# dots:usage=[--families | --flavors FAMILY]
-# dots:option=--families||flag|List native palette families
-# dots:option=--flavors||theme|List a family's flavors
-exec "${BASH_SOURCE[0]%/*}/dots-theme-list" "$@"

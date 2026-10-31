@@ -1,5 +1,8 @@
 # Core registry and generated profile environments
 
+Follow-up: [core updates](core-updates.md) adds schema-3 historical IDs and
+transactional checkout-wide renames. Earlier verification remains historical evidence.
+
 Status: implemented; focused acceptance passed. Native Windows/Xonsh acceptance and the existing full-theme repeat failure remain separately recorded below.
 
 Keep `.dots/sources.json` as source ownership and `.dots/files.json` as a

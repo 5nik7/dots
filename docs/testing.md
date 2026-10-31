@@ -2,6 +2,12 @@
 
 **Status: Implemented focused suites; native evidence and remaining platform checks recorded per feature**
 
+## Core command and identity updates
+
+`python3 -B tools/test_file_renames.py` owns disposable profile/catalog/state roots and verifies schema-2/3 interoperability, all-profile references, reserved IDs, registry-only entries, selected-profile combined edits, receipt baselines, old receipt resolution, stale previews, rollback, recovery and undo. Run `tools/test_file_platform.py` first, then affected mapping, profile-backend, operation, repair and installation suites. No live source ID is renamed by tests.
+
+`tools/test_config_menu.py` checks List/Get/Set, guided empty get/set calls, read-only actions, guarded edits and private 40/80/120-column native Termux terminals. Profile-debug, theme, Bash/native-controller and menu-launcher suites check singular routes, plural removal, profile check scopes and completion. Native Windows PowerShell 5.1/7 and native Linux/WSL runtime/visual checks remain separate acceptance; see the [core plan](../plans/core-updates.md).
+
 ## Personal fonts
 
 The workflow suite covers installed ownership, Copy/Migrate and undo, batch preflight, partial expansion, automatic Termux/desktop retention, exact saved preferences, Restore with unavailable sources, failed downloads and rollback after a preference-write failure. It also checks the Windows registration adapter with fixture values. The base font fixture owns its Dots checkout so app retention never writes into the developer checkout.
@@ -85,6 +91,8 @@ Preview acceptance covers platform/list overrides, renderer fallbacks/deadlines/
 Native verification covers Termux with Yazi 26.9.1. Windows paths in Lua fixtures are simulated; no native Windows or desktop Linux claim follows. Redraw checks catch runtime errors but do not prove pixel-perfect visual equivalence. See the [plugin README](../config/yazi/plugins/dots.yazi/README.md#verification) and [focused plan](../plans/yazi-plugin-consolidation.md) for evidence and boundaries. The [remote metadata plan](../plans/yazi-githead-remote.md) records the optional helper integration.
 
 ## Bash Command Framework
+
+Root-help regressions cover all four entry forms, real and implicit top-level groups, hidden-only groups and hidden parent summaries, empty external catalogs, descendant metadata/collision failures, unchanged full inventory/contextual help and deep completion. The native CLI suite covers the same projection; its PowerShell root-help case runs without Python on PATH when an engine is available. Presentation and native acceptance evidence is recorded in the [root-help plan](../plans/usage-help.md).
 
 Run `python3 -B tools/test_bash_dots.py` for disposable routing/metadata/output and
 native Bash/Zsh/Fish completion tests. All three shells are required; missing
@@ -975,3 +983,29 @@ not establish native Windows terminal behavior.
 ## Core registry and generated profile environment
 
 Run `python3 -B tools/test_profile_backend.py` for schema-2 joins, missing mappings, registry/profile tracking and undo, platform edits, alias CLI/popup, collisions, application templates, cleanup and native map rendering. Tests own checkout/home/state roots. Run profile/config/menu, file lifecycle, shell environment/init and native adapter suites sequentially on Termux. Capture effective inventories before migrations and measure cold/warm startup with the same owned fixture. PowerShell/Xonsh engines and native Windows/Linux/WSL desktop acceptance must be reported separately.
+
+
+## Live visual configuration
+
+Run `python3 -B tools/test_config_live.py` for precedence/provenance, unused-key handling, guarded publication and undo, failure/stale-input behavior, inactive/no-op changes, exact CLI data and private multi-server tmux ownership. Add the existing style-config, profile-config, config-menu, Todo presentation, shell and theme suites for affected consumers. All state and application targets must remain fixture-owned. Record native shell/platform limits separately from controller tests.
+
+### Configuration coverage checks
+
+Run `python3 -B tools/test_config_alignment.py -v` for fresh get/set/unset/explain completion with native weather present, invalid optional TOML, actual Zsh Tab input, guarded width edits and next-invocation activation. It covers fixed/percentage/spacing-only Python and Bash rows, Unicode cells, exact data output, compiled Bash/Zsh literal settings and invalidation, and private multi-client Config popups at 40/80/120 columns. Run resource, config/live/weather/menu and shell suites sequentially. Native PowerShell and desktop Linux/WSL acceptance remain separate from shared-controller and Termux evidence.
+
+The shared-menu fit case compares emitted FZF dimensions with the displayed percentage column at each width, guarding against a second fit calculation after row layout. Multiline records also exercise width/height measurement and stable selection identities.
+
+Run `python3 -B tools/test_menu_popup_config.py` for dedicated popup settings: guarded CLI/browser saves and inheritance, validation, plain/inline fallback, protected FZF arguments, native host flags and private Termux tmux/FZF borders, colors and placement at 40/80/120 columns. Add the shared-menu, config-menu and Todo-menu suites when changing selector behavior. These fixtures do not establish native Windows or desktop Linux/WSL visual acceptance.
+
+This suite also covers finite-value discovery/dialogs, Bash/Zsh/Fish and shared native value completion, size validation, client bounds, inline height, preview budgets and actual percentage/fit/fill invocation on differently sized private clients. Include `tools/test_menu_pager.py` for reader sizing and capture lifecycle, and focused metadata/completion regressions for command changes.
+
+Run `tools/test_config_audit.py`, `tools/test_config_values.py`,
+`tools/test_config_presentation.py`, `tools/test_config_wttr.py`, `tools/test_fzf_config.py`,
+`tools/test_config_layout.py`, `tools/test_nvim_config.py` and
+`tools/test_todo_tree.py` with `python3 -B`. They cover static scan exclusions,
+typed/null/native-key resolution, retained native TOML edits, safe FZF projections,
+private tmux placement, copied public Neovim consumers and filtered ancestor
+protection. Run the affected existing config/live/menu, Todo, weather, theme and
+shell suites sequentially. `tools/test_todo_menu.py` includes native private
+popup checks at 40/80/120 columns. Fixtures are separate from actual Windows,
+Linux/WSL desktop and live-device activation evidence.

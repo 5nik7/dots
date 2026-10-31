@@ -37,11 +37,12 @@ def markdown(selected, goals):
     return '\n'.join(lines)
 
 
-def render(selected, goals, *, detailed=False, listing=False):
+def render(selected, goals, *, detailed=False, listing=False, all_goals=None, list_type=None):
     from files.catalog import Presentation
     from todo_presentation import summary, detail
     from picker_style import named_styles
-    ui = Presentation(detail_indent=2)
+    from todo_presentation import configure
+    ui = configure(Presentation(detail_indent=2))
     styles = named_styles(ui)
     ui.heading(('Goal' if detailed and len(goals) == 1 else 'Goals') + ' · ' + (Path(selected['root']).name if selected['root'] else 'global'))
     if selected['root']:
@@ -50,14 +51,19 @@ def render(selected, goals, *, detailed=False, listing=False):
         ui.detail_spans('Goals', [(str(len(goals)), None)], label_width=0 if listing else 10)
     if not goals:
         ui.detail_spans('', [('No matching goals. Use add to create one.', None)], label_width=0, label_gap=0)
-    for index, goal in enumerate(goals):
+    from config_values import value
+    from todo_tree import tree
+    view=tree(goals,all_goals or goals) if listing and (list_type or value('formatting.apps.todo.list_type','tree'))=='tree' else [(g,0,False) for g in goals]
+    base_indent=ui.detail_indent
+    for index, (goal,depth,context) in enumerate(view):
+        ui.detail_indent=base_indent+min(128,depth*ui.formatting.get('level_indent',2))
         if detailed:
             ui.emit()
             detail(ui, goal, goals=goals, styles=styles)
         else:
             if listing and index:
-                ui.emit()
-            summary(ui, goal, styles, stacked=listing)
+                for _ in range(ui.formatting.get('row_gap',1)):ui.emit()
+            summary(ui, goal, styles, stacked=listing, context=context, child=bool(depth))
 
 
 def confirm_remove(goal, recursive=False):
@@ -164,7 +170,7 @@ def run(argv=None, *, standalone=False, expected=None):
     elif args.markdown:
         print(markdown(selected, goals), end='')
     else:
-        render(selected, goals, detailed=action == 'show', listing=action in ('list', 'browse'))
+        render(selected, goals, detailed=action == 'show', listing=action in ('list', 'browse'),all_goals=store.goals,list_type=args.list_type)
     return 0
 
 

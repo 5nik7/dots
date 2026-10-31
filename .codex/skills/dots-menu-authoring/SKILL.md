@@ -11,6 +11,8 @@ Start with the requested menu's purpose and the current checkout. Follow [comman
 
 Every command change needs a recorded menu assessment through command maintenance, even when no popup is appropriate. Reuse or update an existing family before introducing another launcher. Keep application-plugin paths and installation ownership aligned through [plugin maintenance](../dots-plugin-maintenance/SKILL.md).
 
+Also record the [configuration review](../../../agents/guides/commands.md#configuration-integration-review), including a reason when existing controls need no change. Use [dots-config](../dots-config/SKILL.md) for configurable behavior or visual bindings. A menu edits through its owning controller and shared draft/transaction path; it must not become a second settings store.
+
 Use [the copyable menu-plan template](assets/menu-plan.md) when a new menu needs a focused plan. Record the route, stable entry identities, explicit action mappings, data source, terminal ownership, output modes and applicable platform limits. Reuse an existing workflow for actions that already exist. Selection may open its review; it never substitutes for the workflow's approval or journal.
 
 Choose the smallest requested menu. The launcher/session plan's entries and bindings are specific to that feature, not mandatory additions to every menu. Add registry or configuration mechanisms only when the task needs them. Keep missing-information questions limited to choices that change behavior and cannot be resolved from the checkout.
@@ -31,8 +33,14 @@ Keep FZF capability probes inside interactive paths. Preserve the task's documen
 
 ## Complete the change
 
+Use `formatting.apps.menu.label_width`, `label_gap` and `alignment` for shared key/value or label/description rows. Resolve percentage columns against the selected popup's content width after its geometry is known; retain integer and spacing-only widths. Full Config keys can occupy a separate display line, but numeric selection identities, queries and action arguments must stay unchanged. Exercise narrow private popups with `tools/test_config_alignment.py` when changing row layout.
+
+Use the shared `apps.menu.popup` controls for placement, dimensions, frame and popup colors. Auto sizing retains controller dimensions; explicit sizes resolve against the exact client's viewport. Fit measures known content without running previews; preserve preview selection space and reader sizing. `menu_popup.py` projects settings into FZF and native tmux hosts. Do not let ordinary `apps.fzf.default_opts` override a Dots menu frame. Settings apply on the next popup; keep plain/inline fallbacks and never write global tmux options to style a local host.
+
 Maintain static metadata, longest-prefix routing and native PowerShell dispatch together. Keep optional-tool probes and inventory scans out of help, completion and shell startup. Use current semantic colors and caller presentation settings; do not copy a fixed palette from a screenshot.
 
 Follow the focused plan's [presentation acceptance gate](../../../docs/presentation.md#acceptance-gate) and [test isolation guide](../../../agents/guides/testing.md). Check literal arguments, missing tools, empty/stale results, cancellation, terminal handoff and exact data output where applicable. Use private tmux sockets/PTYs and test-owned roots; record native platform evidence separately from fixtures.
 
 Update canonical docs and the wiki through [documentation maintenance](../dots-documentation-maintenance/SKILL.md). Preserve existing key routes and dirty files. Refresh this skill's pattern reference when a shared menu API actually lands. Ordinary menu authoring does not authorize live reloads, installation, commits or publication; follow the user's existing task authorization.
+
+Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.

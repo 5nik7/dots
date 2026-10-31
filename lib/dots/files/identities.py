@@ -17,6 +17,21 @@ def current_source(value):
     return value
 
 
+def registry(root=None):
+    """Load only core identity metadata, without resolving a profile or targets."""
+    import os
+    from pathlib import Path
+    from catalog import read_json
+    from registry import Registry
+    root = Path(root or os.environ.get('DOTS') or Path(__file__).resolve().parents[3])
+    path = root / '.dots/files.json'
+    if not path.is_file(): return None
+    data = read_json(path, (1, 2, 3))
+    if data['schema'] == 1: return None
+    sources = read_json(root / '.dots/sources.json', (1, 2))
+    return Registry(data, sources['sources'])
+
+
 def validate_cli(args, parser):
     values = [getattr(args, 'repo', None)]
     resources = list(getattr(args, 'replaces', None) or [])
@@ -28,6 +43,13 @@ def validate_cli(args, parser):
         if value is None: continue
         try: current_source(value)
         except argparse.ArgumentTypeError as error: parser.error(str(error))
+    qualified = [value for value in resources if isinstance(value, str) and ':' in value]
+    if qualified:
+        identities = registry()
+        if identities:
+            for value in qualified:
+                try: identities.require_current(value)
+                except ValueError as error: parser.error(str(error))
 
 
 def document(data):
