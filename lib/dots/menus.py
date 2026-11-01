@@ -4,6 +4,7 @@ from contextlib import nullcontext
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -64,7 +65,7 @@ class Menu:
 def dimensions(labels, title='', header=HEADER, *, size=None):
     columns, lines = size or shutil.get_terminal_size((80, 24))
     text = [*labels, title, *header.splitlines()]
-    width = max(32, max((cells(clean(label)) for label in text), default=0) + 6)
+    width = max(32, max((cells(clean(re.sub(r'\x1b\[[0-9;]*m', '', label))) for label in text), default=0) + 6)
     height = len(labels) + len(header.splitlines()) + 5
     return min(width, max(1, columns - 2)), min(height, max(1, lines - 2))
 
@@ -116,7 +117,28 @@ def styled_label(menu,entry,ui,compact=False,*,preferences=None,formatting=None)
     # the same live resolution. No preference survives beyond the owning view.
     spans=entry_spans(menu,entry,ui,compact,preferences=preferences,formatting=formatting)
     prefix=ui.indentation(ui.formatting.get('indent',0))+' '*ui.formatting.get('padding',1)
-    return prefix+''.join(ui.paint(text,code,**({'preferences':preferences} if preferences is not None else {})) for text,code in spans)
+    # These spans already combine role and per-entry styles. Generic glyph
+    # detection must not paint an icon again and erase the entry override.
+    from copy import copy
+    painter=copy(ui)
+    painter.icons=False
+    return prefix+''.join(painter.paint(text,code,**({'preferences':preferences} if preferences is not None else {})) for text,code in spans)
+
+
+def styled_labels(menu, ui, compact=False):
+    """Render one inert snapshot without changing a caller's report formatting."""
+    from copy import copy
+    from dataclasses import replace
+    from config_values import value
+    from style_config import current
+    prefs, formatting = current(), value('formatting.apps.menu', {})
+    view = copy(ui)
+    labels = []
+    for entry in menu.entries:
+        if entry.icon_role and prefs:
+            entry = replace(entry, icon=prefs.icon(entry.icon_role, entry.icon, 'cli'))
+        labels.append(styled_label(menu, entry, view, compact, preferences=prefs, formatting=formatting))
+    return labels
 
 
 def listing(menu, entries, ui):
@@ -129,7 +151,7 @@ def listing(menu, entries, ui):
 
 
 def choose(menu, *, mode='auto', query='', context=None, ui=None, preview=None,
-           compact=False, navigation=None, prompt=None, header=None):
+           compact=False, navigation=None, prompt=None, header=None, preserve_row_styles=False):
     """Return one Entry or None after listing; selection never invokes an action."""
     if mode not in ('auto', 'browse', 'print', 'json'):
         raise ValueError('invalid menu output mode')
@@ -187,10 +209,14 @@ def choose(menu, *, mode='auto', query='', context=None, ui=None, preview=None,
         ui.width=max(1,width-6)
         labels=[styled_label(menu,entry,ui,compact) for entry in menu.entries]
     scope = context.selector_environment() if context else nullcontext(None)
+    colors = fzf_colors(ui)
+    if preserve_row_styles:
+        from picker_style import picker_colors
+        colors = picker_colors(colors)
     from progress import permanent_output
     with permanent_output(), scope as environment:
         selected = RichSelector(backend='fzf').fzf(prompt, labels, False, preview,
-            ui.color, ui.icons, fzf_colors(ui), popup=f'center,{width},{height}' if context else False,
+            ui.color, ui.icons, colors, popup=f'center,{width},{height}' if context else False,
             height=height, query=query, header=header, environment=environment, popup_resolved=context is not None,
             **({'navigation': navigation} if navigation is not None else {}))
     entry = menu.entries[selected[0]]

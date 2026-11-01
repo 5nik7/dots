@@ -151,34 +151,58 @@ def render_tabs(snapshot, tty, colors, width, separator_fg, separator_bg):
 
 
 def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_bg,
-                          states, undisplayed, alert_fg, alert_bg):
+                          states, undisplayed, alert_fg, alert_bg, preferences=None):
     """Whole numeric labels, a reserved orphan badge, and alerted overflow."""
     # Keep all legacy discovery/color validation and plain-strip behavior.
     ordinary = render_tabs(snapshot, tty, colors, width, separator_fg, separator_bg)
-    if not states and not undisplayed:
+    from status_styles import preferences as published,style,span,format_for,cells
+    preferences=published() if preferences is None else preferences
+    settings=format_for('tabs',preferences)
+    customized=any(k.startswith('tabs.') for k in preferences.get('colors',{})) or any(settings.get(k,v)!=v for k,v in {'before':' ','after':' ','separator':'│','spacer':' ','alert':{'before':'[','after':']'}}.items())
+    if not states and not undisplayed and not customized:
         return ordinary
     if not all(COLOR.fullmatch(c) for c in (alert_fg, alert_bg)):
         raise ValueError('invalid attention colors')
     tty = tty.removeprefix('/dev/')
     alert = f'#[bg={alert_bg},fg={alert_fg},bold,nounderscore,noreverse,nodim]'
-    divider = f'#[bg={separator_bg},fg={separator_fg},nobold,nounderscore,noreverse,nodim]│#[default]'
+    divider = span('tabs.spacer',settings.get('separator','│'),f'#[bg={separator_bg},fg={separator_fg},nobold,nounderscore,noreverse,nodim]',preferences)
+    divider_width=cells(divider)
     entries = []
     for i, tab in enumerate(snapshot['sessions'], 1):
         value = next((v for (pid, _, terminal), v in states.items()
                       if pid == tab['pid'] and terminal == tab['tty']), {})
         current = tab['tty'] == tty
         active = value.get('attention', False)
+        marker_state='attention' if active else value.get('state')
         marker = {'working': glyph('status.working',''), 'waiting': glyph('status.waiting','')}.get(value.get('state'), '')
+        override=preferences.get('options',{}).get('indicators',{}).get(marker_state,{}).get('text')
+        if override is not None:marker=override.replace('#','##')
         # Current activity is already visible in the lower row; attention must
         # still be visible there and here under conservative focus handling.
         marker = marker if not current or active else ''
-        if active and not marker:
+        if active and not marker and override is None:
             marker = glyph('navigation.codex','')
         label = str(i) + (' ' + marker if marker else '')
         text = '[' + label + ']' if active else ' ' + label + ' '
         bg, fg = colors[2:] if current else colors[:2]
-        style = alert if active else f'#[bg={bg},fg={fg},bold,nounderscore,noreverse,nodim]'
-        entries.append((style + text + '#[default]', len(text), active))
+        base = alert if active else f'#[bg={bg},fg={fg},bold,nounderscore,noreverse,nodim]'
+        state='alert' if active else 'active' if current else 'inactive'
+        base=style('tabs.'+state,base,preferences)
+        fmt=dict(settings,**settings.get('alert',{})) if active else settings
+        before=fmt.get('before','[' if active else ' ');after=fmt.get('after',']' if active else ' ')
+        text=span('tabs.'+state+'.surround',before,style('tabs.surround',base,preferences),preferences)
+        text+=span('tabs.'+state+'.number',str(i),style('tabs.number',base,preferences),preferences)
+        if marker:
+            markerbase=style('indicators.'+str(marker_state),base,preferences)
+            markerbase=style('tabs.'+state+'.icon',style('tabs.icon',markerbase,preferences),preferences)
+            markerfmt=format_for('indicators',preferences).get(marker_state,{})
+            text+=span('tabs.'+state+'.spacer',settings.get('spacer',' '),style('tabs.spacer',base,preferences),preferences)
+            text+=span('indicators.'+str(marker_state)+'.surround',markerfmt.get('before',''),markerbase,preferences)
+            text+=span('tabs.'+state+'.icon',marker.replace('##','#'),markerbase,preferences)
+            text+=span('indicators.'+str(marker_state)+'.surround',markerfmt.get('after',''),markerbase,preferences)
+            text+=span('indicators.'+str(marker_state)+'.spacer',markerfmt.get('spacer',''),markerbase,preferences)+base
+        text+=span('tabs.'+state+'.surround',after,style('tabs.surround',base,preferences),preferences)+'#[default]'
+        entries.append((text, cells(text), active))
     if len(entries) == 1 and not entries[0][2]:
         entries = []
     badge = '[' + glyph('navigation.codex','') + f' {undisplayed}]' if undisplayed else ''
@@ -187,7 +211,7 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
         return ''
     if badge and len(badge) > width:
         return alert + ('!' if width < 3 else '[!]') + '#[default]'
-    budget = width - (len(badge) + int(bool(entries)) if badge else 0)
+    budget = width - (cells(badge) + divider_width*bool(entries) if badge else 0)
     selected = next((i for i, tab in enumerate(snapshot['sessions']) if tab['tty'] == tty), 0)
     if not entries or entries[selected][1] > budget:
         # Keep a visible attention signal even when the tab label cannot fit.
@@ -197,7 +221,7 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
         return ''.join(parts)
     left, right = selected, selected + 1
     def used(a, b):
-        return sum(e[1] for e in entries[a:b]) + b - a - 1 + 2 * (a > 0) + 2 * (b < len(entries))
+        return sum(e[1] for e in entries[a:b]) + divider_width*(b - a - 1) + (divider_width+1) * ((a > 0) + (b < len(entries)))
     while True:
         candidates = [(a, b) for a, b in ((left - 1, right), (left, right + 1))
                       if a >= 0 and b <= len(entries) and used(a, b) <= budget]
@@ -205,11 +229,11 @@ def render_attention_tabs(snapshot, tty, colors, width, separator_fg, separator_
             break
         left, right = min(candidates, key=lambda c: abs((selected - c[0]) - (c[1] - selected - 1)))
     parts = [e[0] for e in entries[left:right]]
-    spare = budget - sum(e[1] for e in entries[left:right]) - len(parts) + 1
-    if left and spare >= 2:
+    spare = budget - sum(e[1] for e in entries[left:right]) - divider_width*(len(parts) - 1)
+    if left and spare >= divider_width+1:
         parts.insert(0, (alert if any(e[2] for e in entries[:left]) else '#[default]') + '<#[default]')
-        spare -= 2
-    if right < len(entries) and spare >= 2:
+        spare -= divider_width+1
+    if right < len(entries) and spare >= divider_width+1:
         parts.append((alert if any(e[2] for e in entries[right:]) else '#[default]') + '>#[default]')
     if badge:
         parts.append(alert + badge + '#[default]')

@@ -2,7 +2,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim')
+APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr')
 ATTRIBUTES = ('bold', 'dim', 'italic', 'underline', 'reverse', 'strikethrough')
 ALIASES = {'navigation.codex': 'applications.codex'}
 TODO = ('status.open', 'status.doing', 'status.blocked', 'status.done', 'status.removed',
@@ -33,6 +33,7 @@ def split(name):
     return None, name
 
 
+@lru_cache(maxsize=8192)
 def fields(role, app):
     """Only fields actually consumed by each native adapter are editable."""
     if app == 'cli':
@@ -44,7 +45,14 @@ def fields(role, app):
         if role in ('ui.border', 'ui.cursor', 'ui.match', 'ui.separator'): return ()
         if role in ('ui.foreground','ui.muted','ui.accent','ui.heading','ui.label','status.error','status.success','status.warning') or role in ['todo.'+x for x in TODO]:
             return ('fg', 'bg', *ATTRIBUTES)
+    if app == 'wttr':
+        return ('fg',) if role in ('daylight.sunrise','daylight.sunset') else ()
     if app == 'tmux':
+        from tmux_controls import ROLES
+        if role=='git':return ('bg',)
+        if role in ROLES or role=='session':return ('fg','bg',*ATTRIBUTES)
+        if role in ('daylight.day','daylight.night','battery.critical','battery.low','battery.normal','battery.charging','battery.unknown'):return ('fg',)
+        if role in ('status.working','status.waiting') or role.startswith(('icons.status.working','icons.status.waiting')):return ('fg','bg',*ATTRIBUTES)
         if role in TMUX:
             return ('fg',) if role.startswith('pane.') else ('fg', 'bg')
         return {'ui.foreground': ('fg',), 'ui.muted': ('fg',), 'ui.accent': ('fg',),
@@ -63,15 +71,20 @@ def fields(role, app):
     return ()
 
 
+@lru_cache(maxsize=8192)
 def consumers(group, name):
+    from config_keys import internal
+    name=internal(group+'.'+name).partition('.')[2]
     app, base = split(name)
     base = canonical(base)
     if group == 'icons':
+        from tmux_controls import ICONS
+        if app=='tmux' and base in ICONS:return ['tmux']
         if base not in icon_roles(): return []
         apps = [] if base in ('menu.profiles','menu.themes') else ['cli']
         if base.startswith('files.'): apps += ['yazi']
         if base.startswith('git.'): apps += ['yazi', 'gitmux', 'starship']
-        if base.startswith('hosts.') or base in ('applications.codex', 'status.working', 'status.waiting', 'status.todo', 'navigation.separator'):
+        if base.startswith('hosts.') or base in ('git.repository','applications.codex', 'status.working', 'status.waiting', 'status.todo', 'navigation.separator'):
             apps += ['tmux']
     else:
         role, _, field = base.rpartition('.')
@@ -83,8 +96,19 @@ def supported(group, name):
     return bool(consumers(group, name))
 
 
+def constraints(group,name):
+    if group=='icons':return dict(type='string',syntax='Up to 64 printable characters; empty hides the icon; reset inherits')
+    if name.rsplit('.',1)[-1] in ATTRIBUTES:return dict(type='boolean',choices=[True,False],syntax='Reset a profile override to inherit')
+    return dict(type='color',syntax='Semantic role, #RRGGBB, palette.NAME or global colors.ROLE.fg/bg reference; reset inherits')
+
+
 def known_keys(group,styles):
     result=set(styles.values[group])
+    from tmux_controls import ROLES,ICONS
+    if group=='icons':result.update('apps.tmux.'+key for key in ICONS)
+    else:
+        result.update('apps.tmux.'+role+'.'+field for role in ROLES for field in ('fg','bg',*ATTRIBUTES))
+        result.add('apps.tmux.git.bg')
     if group=='icons':bases=icon_roles()
     else:
         roles=({split(key)[1].rsplit('.',1)[0] for key in result}|{'icons.'+key for key in icon_roles()}|
@@ -92,8 +116,10 @@ def known_keys(group,styles):
                {'fonts.'+name for name in FONTS}|
                {'wiki.'+name for name in WIKI}|
                {'menu.'+name for name in ('icon','label','description','shortcut','state')})
+        shared={key.rsplit('.',1)[0] for key in styles.values['colors'] if not key.startswith('apps.')}
+        roles={role for role in roles if role not in ROLES or role in shared or role in TMUX}
         bases={role+'.'+field for role in roles for app in APPS for field in fields(role,app)}
     result.update(bases)
-    for app in APPS:
-        result.update('apps.'+app+'.'+key for key in bases if supported(group,'apps.'+app+'.'+key))
+    for key in bases:
+        result.update('apps.'+app+'.'+key for app in consumers(group,key))
     return result

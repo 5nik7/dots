@@ -115,7 +115,13 @@ def keys(root=None, identity=None):
         result.update(Native(root or checkout(), selected).keys())
     except (OSError, ValueError, ImportError):
         pass
-    return sorted(result)
+    if sys.version_info>=(3,11) and (checkout(root)/'config/tmux/codex-alerts.toml').is_file() and selected['current']==context(root)['current']:
+        from codex_toast import KEYS
+        result.update(KEYS)
+        from codex_vibration import KEYS
+        result.update(KEYS)
+    from config_keys import canonical
+    return sorted({canonical(key) for key in result})
 
 
 def formatting_rows(root=None, selected=None):
@@ -139,7 +145,7 @@ def main(args):
         for row in formatting_rows(selected=selected): print('\t'.join(row))
     elif args == ['__style-inputs']:
         from style_config import Styles
-        for path in [*Styles().paths, LIB/'style_config.py', LIB/'theme_styles.py', LIB/'style_catalog.py', LIB/'config_values.py', checkout()/'default/config.json', LIB/'resources.tsv', checkout()/'config/gitmux/gitmux.conf']:
+        for path in [*Styles().paths, LIB/'style_config.py', LIB/'theme_styles.py', LIB/'style_catalog.py', LIB/'config_values.py',LIB/'config_keys.py',LIB/'tmux_config.py',LIB/'tmux_controls.py',checkout()/'config/tmux/tmux.conf', checkout()/'default/config.json', LIB/'resources.tsv', checkout()/'config/gitmux/gitmux.conf']:
             if path.is_file(): print(path)
     elif len(args) >= 2 and args[0] == '__paths':
         for name in args[1:]: print(config_path(name))

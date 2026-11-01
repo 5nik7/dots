@@ -547,6 +547,22 @@ Blastoff/pkgs installation and removal use the shared Dots file transaction and 
 
 ## Codex attention bridge
 
+Config edits of toast and vibration fields use the existing Store, comment-preserving
+TOML edits, bounded regular-file reads, stale guards and retained undo. They
+preserve unrelated event, focus and hook policy. Discovery and previews neither
+deliver Android notifications nor restart workers; color values are parsed as
+data and message arguments remain literal.
+
+The new vibration count is bounded to ten pulses; a pulse is at most ten seconds
+and its API call has a five-second deadline. Failures stop the sequence without
+retries. Repeats run in finite helper processes, independent of worker polling;
+the existing event claim prevents replay. Completed helpers are reaped on ticks.
+`dots debug alert` explicitly sends a fixed local test message and configured
+vibration, even with `--json`, but creates no Codex event/attention or persistent
+test state. It never runs through generic diagnostics, help, completion or
+curated self-tests. Ctrl-C stops remaining test pulses after any bounded active
+request; already issued Android effects cannot be rolled back.
+
 The [Codex attention integration](themes.md#codex-attention-notifications) is explicitly installed through the existing Store: complete preflight, retained backups, reverse-order rollback and drift-checked undo cover the three personal configuration files. Preview creates no state and prints paths only, never configuration bodies or prior notification arguments. Existing hook handlers and downstream notify commands are preserved; linked personal configurations require source-owner maintenance. Setup never trusts hooks, changes approval policy, restarts Codex or installs Android packages.
 
 Observational callbacks accept bounded JSON, store only event identifiers and sanitized message excerpts in an owner-only runtime directory, and return no model context or permission decision. The worker uses local process metadata and bounded tmux queries, never process argv/environment dumps or conversation history. Excerpts are erased on delivery/dismissal (SQLite secure deletion enabled); unmatched candidates expire after ten minutes. Queue/snapshot state is disposable runtime data rather than a managed configuration transaction. Existing foreign/insecure runtime objects are refused.
@@ -605,6 +621,20 @@ retain confirmation. Policies are trusted executable argv sequences, with no
 implicit shell. Read/preview/export never execute hooks. Direct-target skips
 are not dependency holds. Formatting cannot infer success from output text.
 
+Compact uninstall output shows manager, scope and targets before the existing
+removal confirmation; installed-only guards and native prompts remain active.
+Installed/Removed summaries list requested targets only after all transaction
+commands succeed. They do not assert newly changed dependencies or versions;
+failed, cancelled and empty plans omit these success summaries. Raw output and
+dry-run retain full command details. See [package output](packages.md#output).
+
+Compact upgrade summaries compare bounded local installed-version snapshots.
+Inventory failures produce an unavailable summary while leaving native upgrade
+execution/status authoritative. They never cause a retry or infer successful
+updates from attempted package names. Raw/redirected/dry-run paths add no snapshot
+queries. Compact filtering of npm deprecation notices preserves other warnings,
+errors and native status; full raw output remains available.
+
 Global npm upgrades use targeted installs without adding `--force` to ordinary
 batches; explicit replacement recipes retain their literal flags. Compact pip
 progress uses native transfer counts and elapsed silence, never invented progress
@@ -660,3 +690,5 @@ refreshed/staged manifest and completed Git work; Git remains incremental.
 The terminal wizard is read-only until explicit preparation approval. Dry-run never fetches, builds, installs packages, creates staging or writes preferences. Package/module/build effects are separate from managed publication; stage failures stop subsequent work and retained effects are reported. Revalidate all input guards before the final combined Store transaction. Neither file rollback nor uninstall removes packages, retained fonts/registrations, source/build caches or saved preferences. Font app-setting baselines and existing installer copy baselines remain distinct.
 
 Expected catalog directory links may translate child operations to an ordinary physical source path, guarded by the exact mapping and lexical link. Foreign/broken/nested links remain refused; legacy receipt reconciliation preserves original backup references. Leaf fetches only its pinned public source into owned storage, refuses changed cache/source evidence, and publishes a verified regular executable with retained backup. WinGet is restricted to exact community IDs and explicit scope, without implicit elevation, source acceptance, provider bootstrap or trust changes.
+
+Configuration key migration (`config migrate --keys`) is explicit and preview-first. It guards shared inputs and affected profile chains, rejects contradictory aliases and compares effective consumer values before a retained Store transaction. It preserves unrelated fields and TOML comments; interrupted writes use normal recovery, and undo refuses drift. It never selects a theme or activates a profile.

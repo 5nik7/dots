@@ -41,7 +41,7 @@ def select(title, pairs, context=None, *, frame=None):
     except SelectionEvent: return None
 
 
-def picker(rows, previews, frame, context, *, icons=False):
+def picker(rows, previews, frame, context, *, icons=False, select_only=False):
     if not rich_fzf_available(): return None
     if context:
         probe=subprocess.run(['fzf','--help'],capture_output=True,timeout=5)
@@ -63,12 +63,13 @@ def picker(rows, previews, frame, context, *, icons=False):
                         icon=glyph,icon_role='menu.fonts') for r in rows)
     menu=Menu('fonts:icons' if icons else 'fonts:catalog','Fonts',entries)
     labels=[styled_label(menu,entry,ui,preferences=prefs,formatting=formatting) for entry in entries]
-    keys={'esc':'back','f1':'help','alt-o':'configuration'}
-    keys.update({'alt-y':'copy','alt-i':'insert','alt-p':'print'} if icons else
+    keys={'esc':'back','f1':'help'}
+    if not select_only:keys['alt-o']='configuration'
+    keys.update({} if select_only else {'alt-y':'copy','alt-i':'insert','alt-p':'print'} if icons else
                 {'alt-u':'update','alt-n':'import','alt-t':'targets','alt-g':'icons','alt-l':'local','alt-s':'catalog','alt-d':'directory'})
-    header=('Enter/Alt-Y: copy  Alt-I: insert  Alt-P: print' if icons else
+    header=('Enter: select glyph  Esc: back' if select_only else 'Enter/Alt-Y: copy  Alt-I: insert  Alt-P: print' if icons else
             'Enter: actions  Alt-U: catalogs  Alt-N: import\nAlt-D: directory  Alt-L: local  Alt-S: catalog\nAlt-T: targets  Alt-G: icons')
-    header+='\nAlt-O: config  Esc: back  F1: help  Ctrl-C: cancel'
+    header+='\n'+('' if select_only else 'Alt-O: config  ')+'Esc: back  F1: help  Ctrl-C: cancel'
     if frame.get('notice'): header+='\n'+frame['notice']
     preview_enabled=preference('preview.enabled',True)
     if context and not preview_enabled and 'fit' in (options.get('width'),options.get('height')):
@@ -301,3 +302,22 @@ def icons(library,args,*,context=None):
             elif action=='print':print(selected['glyph'],end='')
             return 0
         except (ValueError,OSError,subprocess.SubprocessError) as error:frame['notice']=clean(str(error))
+
+
+def select_icon(context=None):
+    """Return one cached glyph to an owning editor, without copy/insert effects."""
+    from fonts.model import Library
+    library=Library();version=icon_version(library,None)
+    if version not in library.catalog.get('glyphs',{}):
+        raise ValueError('Glyph index is not cached; run fonts update --source nerd, or enter literal text')
+    rows=library.catalog['glyphs'][version]
+    preview=[dict(kind='glyph',report=dict(items=[dict(r,version=version)])) for r in rows]
+    frame=dict(query='',notice='Select a glyph; no clipboard or command execution')
+    while True:
+        try:
+            row=picker(rows,preview,frame,context,icons=True,select_only=True)
+            return row['glyph'] if row else None
+        except SelectionEvent as event:
+            if event.action=='back':return None
+            if event.action=='help':
+                show_message('Enter selects a glyph for the pending edit. Escape returns without a selection.',context=context,title='Icon search')

@@ -224,7 +224,7 @@ class WeatherBrowser(unittest.TestCase):
     def test_submenu_help_returns_to_the_same_choice(self):
         with patch.object(browser,'choose',side_effect=(SelectionEvent('help'),browser.Entry('metric','Metric'))) as choose, \
                 patch.object(browser,'show_message') as show:
-            self.assertEqual(browser.select('Units',[('metric','Metric')],None),'metric')
+            self.assertEqual(browser.select('Units',browser.UNIT_ENTRIES,None),'metric')
         self.assertEqual(choose.call_count,2);show.assert_called_once()
 
     def test_fallback_is_ordinary_report_with_no_tmux_probe(self):

@@ -94,19 +94,27 @@ class Browser(unittest.TestCase):
 
     def test_menu_counts_keep_muted_color_and_visible_width_in_both_palettes(self):
         from keys.presentation import menu_rows, menu_dimensions
+        from style_config import current
+        shutil.copytree(ROOT/'default', self.root/'default')
+        palette = Path(self.env['XDG_STATE_HOME'])/'dots/current/theme/palette.json'
+        palette.parent.mkdir(parents=True)
+        self.addCleanup(current.cache_clear)
         ui = Presentation(io.StringIO());ui.icons = False
         ui.resources.root = self.base / 'count-palette';ui.resources.root.mkdir()
         coverage = [dict(app='tmux',count=47),dict(app='zsh',count=123456789012345),dict(app='kitty',count=0)]
         for muted in ('#667788','#99aabb'):
             (ui.resources.root/'palette.json').write_text(json.dumps(dict(colors=dict(muted=muted))))
+            palette.write_text(json.dumps(dict(colors=dict(muted=muted))))
+            current.cache_clear()
             ui.color = True
             colored = menu_rows(ui,coverage)
-            code = styles(ui)[0]
-            self.assertIn('tmux\x1b['+code+'m · [47]\x1b[0m',colored[1][1])
+            code = current().sgr('menu.description', app='cli')
+            self.assertIn('\x1b['+code+'m · [47]\x1b[0m',colored[1][1])
+            self.assertIn('tmux', colored[1][1])
             ui.color = False
             plain = menu_rows(ui,coverage)
             self.assertEqual([r[0] for r in plain],['all','tmux','zsh'])
-            self.assertEqual(plain[0][1], 'All · [123456789012392]')
+            self.assertEqual(plain[0][1], ' All · [123456789012392]')
             for width in (40,80,120):
                 self.assertEqual(menu_dimensions([r[1] for r in plain],size=(width,24)),
                                  menu_dimensions([r[1] for r in colored],size=(width,24)))
@@ -208,7 +216,7 @@ class Browser(unittest.TestCase):
         with patch('interaction.RichSelector.fzf',return_value=[1]) as fzf:
             self.assertEqual(browser.choose_mode(ui,rows,'zeta'),'alpha')
             self.assertEqual(fzf.call_args.args[0],'modes')
-            self.assertEqual(fzf.call_args.args[1][:2],['all','alpha'])
+            self.assertEqual(fzf.call_args.args[1][:2],[' all',' alpha'])
             self.assertNotIn('\x1b',fzf.call_args.args[1][2])
             self.assertEqual(fzf.call_args.kwargs['bindings'],['load:pos(4)'])
             self.assertNotIn('query',fzf.call_args.kwargs)

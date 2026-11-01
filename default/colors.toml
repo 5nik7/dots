@@ -2,41 +2,53 @@
 [status.error]
 fg = "error"
 
+
 [status.info]
 fg = "info"
+
 
 [status.success]
 fg = "green"
 
+
 [status.waiting]
 fg = "warning"
 
+
 [status.warning]
 fg = "warning"
+
 
 [status.working]
 bold = true
 fg = "accent"
 
+
 [ui.accent]
 fg = "magenta"
 
+
 [ui.foreground]
 fg = "foreground"
+
 
 [ui.heading]
 bold = true
 fg = "cyan"
 
+
 [ui.identity]
 bold = true
 fg = "blue"
 
+
 [ui.label]
 fg = "blue"
 
+
 [ui.muted]
 fg = "muted"
+
 
 [ui.selection]
 bg = "selection_background"
@@ -44,146 +56,243 @@ bold = true
 fg = "bright_foreground"
 
 # Shared controls; native overrides preserve each consumer's existing defaults.
+
 [ui.border]
 fg = "lighter_background"
+
 [ui.cursor]
 fg = "bright_foreground"
+
 [ui.match]
 fg = "bright_magenta"
+
 [ui.separator]
 fg = "background"
+
 [apps.gum.ui.border]
 fg = "magenta"
+
 [apps.gum.ui.match]
 fg = "magenta"
-[todo.status.open]
+
+[apps.todo.status.open]
 fg = "bright_green"
 bold = true
-[todo.status.doing]
+
+[apps.todo.status.doing]
 fg = "blue"
-[todo.status.blocked]
+
+[apps.todo.status.blocked]
 fg = "warning"
-[todo.status.done]
+
+[apps.todo.status.done]
 fg = "green"
-[todo.status.removed]
+
+[apps.todo.status.removed]
 fg = "muted"
-[todo.priority.high]
+
+[apps.todo.priority.high]
 fg = "warning"
 bold = true
-[todo.priority.normal]
+
+[apps.todo.priority.normal]
 fg = "orange"
-[todo.priority.low]
+
+[apps.todo.priority.low]
 fg = "muted"
 bold = true
-[apps.tmux.window.active]
+
+[apps.tmux.windows.active]
 fg = "bright_green"
 bg = "selection_background"
-[apps.tmux.window.inactive]
+
+[apps.tmux.windows.inactive]
 fg = "light_foreground"
 bg = "dark_background"
-[apps.tmux.window.attention]
+
+[apps.tmux.windows.alert]
 fg = "bright_red"
 bg = "darker_background"
+
 [apps.tmux.pane.active_border]
 fg = "selection"
+
 [apps.tmux.pane.inactive_border]
 fg = "muted"
+
 
 [apps.fzf.ui.cursor]
 fg = "accent"
 
-[menu.icon]
+
+[apps.menu.icon]
 fg = "accent"
 
-[menu.label]
+
+[apps.menu.label]
 fg = "blue"
 
-[menu.description]
+
+[apps.menu.description]
 fg = "muted"
 
-[menu.shortcut]
+
+[apps.menu.shortcut]
 fg = "cyan"
 
-[menu.state]
+
+[apps.menu.state]
 fg = "warning"
 
-[todo.field.id.label]
+
+[apps.todo.field.id.label]
 fg = "blue"
-[todo.field.id.value]
+
+[apps.todo.field.id.value]
 fg = "muted"
 
-[todo.field.alias.label]
+
+[apps.todo.field.alias.label]
 fg = "blue"
-[todo.field.alias.value]
+
+[apps.todo.field.alias.value]
 fg = "cyan"
 
-[todo.field.title.label]
+
+[apps.todo.field.title.label]
 fg = "blue"
-[todo.field.title.value]
+
+[apps.todo.field.title.value]
 fg = "bright_foreground"
 
-[todo.field.notes.label]
+
+[apps.todo.field.notes.label]
 fg = "blue"
-[todo.field.notes.value]
+
+[apps.todo.field.notes.value]
 fg = "foreground"
 
-[todo.field.tags.label]
+
+[apps.todo.field.tags.label]
 fg = "blue"
-[todo.field.tags.value]
+
+[apps.todo.field.tags.value]
 fg = "foreground"
 
-[todo.field.status.label]
+
+[apps.todo.field.status.label]
 fg = "blue"
 
-[todo.field.priority.label]
+
+[apps.todo.field.priority.label]
 fg = "blue"
 
-[todo.field.due.label]
+
+[apps.todo.field.due.label]
 fg = "blue"
-[todo.field.due.value]
+
+[apps.todo.field.due.value]
 fg = "foreground"
 
-[todo.field.parent.label]
+
+[apps.todo.field.parent.label]
 fg = "blue"
-[todo.field.parent.value]
+
+[apps.todo.field.parent.value]
 fg = "foreground"
 
-[todo.field.acceptance.label]
+
+[apps.todo.field.acceptance.label]
 fg = "blue"
-[todo.field.acceptance.value]
+
+[apps.todo.field.acceptance.value]
 fg = "foreground"
 
-[todo.field.subgoal_id.label]
+
+[apps.todo.field.subgoal_id.label]
 fg = "blue"
-[todo.field.subgoal_id.value]
+
+[apps.todo.field.subgoal_id.value]
 fg = "muted"
 
-[todo.field.subgoal_title.label]
+
+[apps.todo.field.subgoal_title.label]
 fg = "blue"
-[todo.field.subgoal_title.value]
+
+[apps.todo.field.subgoal_title.value]
 fg = "bright_foreground"
 
-[todo.field.subgoals.label]
+
+[apps.todo.field.subgoals.label]
 fg = "blue"
-[todo.field.subgoals.value]
+
+[apps.todo.field.subgoals.value]
 fg = "foreground"
 
-[todo.field.created.label]
+
+[apps.todo.field.created.label]
 fg = "blue"
-[todo.field.created.value]
+
+[apps.todo.field.created.value]
 fg = "muted"
 
-[todo.field.updated.label]
+
+[apps.todo.field.updated.label]
 fg = "blue"
-[todo.field.updated.value]
+
+[apps.todo.field.updated.value]
 fg = "muted"
 
-[todo.field.completed.label]
+
+[apps.todo.field.completed.label]
 fg = "blue"
-[todo.field.completed.value]
+
+[apps.todo.field.completed.value]
 fg = "muted"
 
-[todo.field.removed.label]
+
+[apps.todo.field.removed.label]
 fg = "blue"
-[todo.field.removed.value]
+
+[apps.todo.field.removed.value]
 fg = "muted"
+
+# Shared daylight and battery roles; component overrides remain independent.
+
+[daylight.day]
+fg = "yellow"
+
+[daylight.night]
+fg = "blue"
+
+[daylight.sunrise]
+fg = "yellow"
+
+[daylight.sunset]
+fg = "orange"
+
+[battery.critical]
+fg = "red"
+
+[battery.low]
+fg = "yellow"
+
+[battery.normal]
+fg = "green"
+
+[battery.charging]
+fg = "colors.battery.normal.fg"
+
+[battery.unknown]
+fg = "muted"
+
+
+[apps.tmux.session.repository]
+fg = "colors.ui.accent.fg"
+
+# Native activity markers keep their existing accent; profile-wide overrides
+# still win over these shared application defaults.
+[apps.tmux.status.working]
+fg = "colors.ui.accent.fg"
+[apps.tmux.status.waiting]
+fg = "colors.ui.accent.fg"

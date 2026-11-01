@@ -17,10 +17,24 @@ Choose and document a command's output modes before implementation. Do not assum
 
 ## Color and Icons
 
+Config's human list uses compact color/style samples, such as
+`fg:warning,bold,underline`, rendered with the represented style and reset before
+the next span. Icon samples use their resolved style with muted color names or
+supplying configuration keys. Menu icons follow the shared menu icon accent and
+role-specific overrides; ordinary foreground fallbacks have no annotation.
+Samples retain selected-profile inheritance and
+symbolic names; the plain view retains the same information. These are explicit
+configuration previews, separate from the report's semantic labels and headings.
+
+Existing Config rows may show a published or consumer fallback with a muted
+source annotation. FZF colors preview their native color and attributes;
+runtime-dependent settings name their owner without claiming a concrete value.
+These annotations do not add keys or alter stored, JSON or scalar values.
+
 Fonts reports, help, reviews, diagnostics and compatibility human listings reuse
 the CLI field/resource renderer. Nested choices and catalog/glyph rows reuse menu
 spans and shared popup appearance. `apps.fonts` controls human detail and previews;
-`colors.fonts.*` provides nullable font field styles and `icons.menu.fonts` supplies
+`colors.apps.fonts.*` provides nullable font field styles and `icons.menu.fonts` supplies
 the font symbol. See [font output preferences](fonts.md#output-preferences).
 Preview snapshots render at the actual pane width without invoking providers.
 JSON, exact paths/glyphs and ordinary redirected output bypass these preferences.
@@ -120,6 +134,8 @@ The background switcher and other existing prompts retain their documented
 behavior until scoped follow-up work changes them.
 
 ## Shared menu selection
+
+Keys category/mode and Weather main/Location/Units selectors use shared menu icon/label/description spans with profile and per-entry overrides. Category count separators/brackets belong to the description span. An explicitly styled icon span is not repainted by generic glyph detection, so its per-entry override remains authoritative. Selected rows retain these span colors through the existing picker color adapter; ordinary menu callers opt in through `preserve_row_styles`. Render-local menu formatting does not change a caller's subsequent report layout. See [menu preferences](configuration.md#keys-and-weather-menu-appearance).
 
 **Implemented shared support, launcher and session picker.** `lib/dots/menus.py` uses the existing Python `Presentation` renderer and scoped FZF adapter. Choosers fit their labels, title and header within the invoking terminal; tmux sizing uses a verified exact client. FZF colors come from the published literal palette adapter. Icons remain optional, and control characters in titles/labels are displayed literally. Listing rows wrap by display cells; JSON bypasses rendering entirely. Session choices show names, window/attached-client counts and a current marker; empty inventories use the shared empty-choice view.
 
@@ -297,7 +313,7 @@ independent; JSON and existing session data are unchanged.
 
 The shared less style uses exact theme `foreground` on `lighter_background` at normal weight, with an explicit reset. It applies to prompts, search highlights and other standout messages. Shell refresh and popup readers preserve user overrides and existing color controls; redirected content is unchanged. See [global less colors](shell-environment.md#global-less-colors) for ownership, reload behavior and the native Windows exception.
 
-Shared visual defaults live in `default/icons.toml` and `default/colors.toml`, with per-key profile overrides. Python and Bash renderers consume the same named roles; resource matchers resolve icon tokens. See [visual preference bindings](profiles.md#icons-and-semantic-colors). Objects and resource arrays from `dots config get` use readable sections by default; explicit `--json`, scalar/path queries, completion, shell output and raw interfaces remain data contracts. Exact palette previews keep their own candidate colors.
+Shared visual defaults live in `default/icons.toml` and `default/colors.toml`, with per-key profile overrides. Python and Bash renderers consume the same named roles; resource matchers resolve icon tokens. See [visual preference bindings](profiles.md#icons-and-semantic-colors). Objects and resource arrays from `dots config get` use readable sections by default; explicit `--json`, scalar/path queries, completion, shell output and raw interfaces remain data contracts. Exact palette previews keep their own candidate colors. Config icon samples trace the named consumer, including shared menu and per-entry styles, semantic statuses and native weather controls. Published file/Git samples use the resource matcher and label their rule owner and representative context; Vivid suffixes are identified without guessing a color key. A generic foreground fallback receives no annotation. Samples use exact spans so repeated glyphs do not repaint one another.
 
 Typed spacing/alignment and application controls are documented under
 [configuration controls](profiles.md#application-and-formatting-controls).

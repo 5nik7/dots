@@ -274,14 +274,16 @@ elif manager=='pip':
         out,err=Terminal(),Terminal()
         with contextlib.redirect_stdout(out),contextlib.redirect_stderr(err),patch.dict(os.environ,DOTS_PROGRESS='never'):
             empty=workflows.Plan(Backend('npm'),'upgrade',skipped=[dict(package='held',reason='policy')])
-            self.assertEqual(workflows.apply_upgrade(empty,dict(self.cfg,output='auto')),0)
+            self.assertEqual(workflows.apply_compact(empty,dict(self.cfg,output='auto')),0)
+            self.assertFalse((self.home/'calls.jsonl').exists())
             broken=workflows.Plan(Backend('npm'),'upgrade',commands=[[str(self.home/'missing-executable')]])
-            self.assertEqual(workflows.apply_upgrade(broken,dict(self.cfg,output='auto')),1)
+            self.assertEqual(workflows.apply_compact(broken,dict(self.cfg,output='auto')),1)
         self.assertIn('unchanged · 1 skipped',out.getvalue())
         self.assertIn('failed (exit 1)',out.getvalue())
         self.assertIn('missing-executable',''.join(err.getvalue().split()))
         self.assertNotIn('complete',out.getvalue())
-        self.assertFalse((self.home/'calls.jsonl').exists())
+        calls=[json.loads(line) for line in (self.home/'calls.jsonl').read_text().splitlines()]
+        self.assertEqual([call[0] for call in calls], ['ls'])  # Summary pre-read, no transaction.
 
     @unittest.skipUnless(os.name=='posix','private PTYs require POSIX')
     def test_real_pty_widths_progress_and_child_terminal_restore(self):
@@ -293,25 +295,34 @@ elif manager=='pip':
         import termios
         from resources import cells
         fake = self.bin/'npm'
-        fake.write_text('#!'+sys.executable+'\n'+'''import sys,time,termios,os
+        fake.write_text('#!'+sys.executable+'\n'+'''import sys,time,termios,os,json
+if sys.argv[1]=='ls':
+    data=json.load(open(os.environ['TEST_DB']))
+    print(json.dumps({'dependencies':{name:{'version':version} for name,version in data.items()}}));sys.exit(0)
 state=termios.tcgetattr(0)
 state[1] &= ~termios.ONLCR
 termios.tcsetattr(0,termios.TCSANOW,state)
 is_go=os.path.basename(sys.argv[0])=='go'
-print('go: downloading example.org/dependency v1.2.3' if is_go else 'npm http fetch GET 200 https://registry.invalid/hello/-/hello-2.0.tgz 1200ms',flush=True)
+is_remove=sys.argv[1]=='uninstall'
+print('Removing hello' if is_remove else 'go: downloading example.org/dependency v1.2.3' if is_go else 'npm http fetch GET 200 https://registry.invalid/hello/-/hello-2.0.tgz 1200ms',flush=True)
 for i in range(21):
     print('(Reading database ... '+str(i*5)+'%',end='\\r',flush=True)
     time.sleep(.03)
-if not is_go:print('npm info run hello@2.0.0 postinstall node_modules/hello private-script',flush=True)
+if not is_go and not is_remove:print('npm info run hello@2.0.0 postinstall node_modules/hello private-script',flush=True)
 time.sleep(.25)
-print('Installed packages')
+print('Removed packages' if is_remove else 'Installed packages')
+if not is_go:
+    json.dump({} if is_remove else {'hello':'2.0'},open(os.environ['TEST_DB'],'w'))
 sys.exit(int(__import__('os').environ.get('TEST_EXIT','0')))
 ''')
         go=self.bin/'go';go.write_text(fake.read_text());go.chmod(0o755)
-        scenarios = [(width,mode,0,manager) for width in (40,80,120) for mode in ('always','never') for manager in ('npm','go')]
-        scenarios += [(80,'never',code,manager) for code in (17,130) for manager in ('npm','go')]
-        for width,mode,expected,manager in scenarios:
-            with self.subTest(width=width,mode=mode,expected=expected,manager=manager):
+        scenarios = [(width,mode,0,manager,action) for width in (40,80,120) for mode in ('always','never') for manager in ('npm','go') for action in ('install','upgrade')]
+        scenarios += [(80,'never',code,manager,action) for code in (17,130) for manager in ('npm','go') for action in ('install','upgrade')]
+        scenarios += [(width,mode,0,'npm','uninstall') for width in (40,80,120) for mode in ('always','never')]
+        scenarios += [(80,'never',code,'npm','uninstall') for code in (17,130)]
+        for width,mode,expected,manager,action in scenarios:
+            with self.subTest(width=width,mode=mode,expected=expected,manager=manager,action=action):
+                (self.home/'db.json').write_text('{"hello":"1.0"}')
                 pid,fd=pty.fork()
                 if pid==0:
                     try:
@@ -324,11 +335,12 @@ sys.exit(int(__import__('os').environ.get('TEST_EXIT','0')))
                             import threading
                             threading.Timer(.3,lambda:os.kill(os.getpid(),signal.SIGINT)).start()
                         if manager=='go':
-                            plan=workflows.Plan(Backend('go'),'upgrade',names=['example.org/hello'],
+                            plan=workflows.Plan(Backend('go'),action,names=['example.org/hello'],
                                                 commands=[['go','install','example.org/hello@latest']])
-                            with patch.object(workflows,'plan',return_value=plan):
-                                rc=cli.main(['upgrade','--manager','go','hello'])
-                        else:rc=cli.main(['upgrade','--manager','npm','--global','hello'])
+                            versions=[{'example.org/hello':('example.org/hello','1')}, {'example.org/hello':('example.org/hello','2')}]
+                            with patch.object(workflows,'plan',return_value=plan), patch.object(workflows,'installed_versions',side_effect=versions):
+                                rc=cli.main([action,'--manager','go','hello'])
+                        else:rc=cli.main([action,'--manager','npm','--global','hello']+(['--yes'] if action=='uninstall' else []))
                         assert termios.tcgetattr(0)==before, 'terminal settings drifted'
                         print('RESTORED',flush=True)
                         os._exit(rc)
@@ -355,10 +367,16 @@ sys.exit(int(__import__('os').environ.get('TEST_EXIT','0')))
                 text=data.decode()
                 self.assertIn('RESTORED\r\n',text)
                 if expected==0:
+                    self.assertIn(action.capitalize()+' packages',text)
                     self.assertNotIn('Reading database',text)
                     self.assertNotIn('registry.invalid',text)
                     self.assertNotIn('private-script',text)
-                    if manager=='npm':
+                    if action=='uninstall':
+                        self.assertIn('Removing',text)
+                        self.assertIn('Removed',text)
+                        self.assertIn('hello',text)
+                        self.assertNotIn('Removed packages',text)
+                    elif manager=='npm':
                         self.assertIn('Fetched',text)
                         self.assertIn('Script postinstall',text)
                     else:
@@ -366,6 +384,10 @@ sys.exit(int(__import__('os').environ.get('TEST_EXIT','0')))
                         self.assertIn('hello',text)
                         self.assertNotIn('dependency',text)
                     self.assertIn('complete',text)
+                    if action=='install': self.assertIn('Installed',text)
+                    if action=='upgrade':
+                        self.assertIn('Updated',text)
+                        self.assertIn('hello',text.split('Updated',1)[1])
                 else:
                     self.assertNotIn('complete',text)
                 self.assertEqual('\x1b[' in text,mode=='always')

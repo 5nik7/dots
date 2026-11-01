@@ -4,6 +4,6 @@
 # dots:option=--defaults||flag|Use shared color and icon defaults
 # dots:option=--profile||profile-id|Select a profile without activating it
 # dots:option=--json||flag|Print structured configuration data
-# dots:argument=1|config-key|Setting or section-qualified option
+# dots:argument=1|config-key|Setting or full option; Tab lists full keys; .. then Tab browses branches
 DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
 exec python3 -B "$DOTS/lib/dots/config_cli.py" get "$@"

@@ -137,7 +137,7 @@ mutations. Popup fuzzy search rebuilds the hierarchy from an inert private
 snapshot, without opening the store or running goal content. An independent New
 Goal action remains available. Existing guarded updates still reread the store.
 
-`colors.todo.field.FIELD.label` and `.value` style aliases, IDs, titles, notes,
+`colors.apps.todo.field.FIELD.label` and `.value` style aliases, IDs, titles, notes,
 tags, due/parent fields, subgoal identities/titles, counts, acceptance and dates.
 Status/priority have their existing semantic styles. Todo indentation, level
 indentation, spacing and alignment remain scoped to its human views. JSON,

@@ -1,5 +1,14 @@
 # Codex Attention Maintenance
 
+The five toast fields are exposed as `apps.codex.toast.{fg,bg,position,short,bg_opacity}`
+through the existing Config CLI/popup, retaining the native TOML owner. See
+[toast configuration](../../docs/configuration.md#codex-warning-toast). Include
+`tools/test_codex_toast_config.py` when changing these bindings. The sibling
+`apps.codex.vibrate.{duration,force,count}` controls bounded pulses; use
+`tools/test_codex_vibration.py` for its native edits, finite helper and explicit
+`dots debug alert` test. Keep read-only discovery/native edits separate from
+worker activation and device delivery; never add device tests to curated suites.
+
 Read the [implemented behavior and setup](../../docs/themes.md#codex-attention-notifications), [tracked preferences](../../config/tmux/codex-alerts.toml), [focused plan](../../plans/tmux-status-and-sessions.md#codex-attention-notifications-2026-10-28), managed-file guide, and testing guide before changing this integration.
 
 The user's accepted defaults are unfocused-only choice, human-approval and completed-turn alerts; acknowledgement on viewing the originating pane when terminal focus is reliable, with conservative Termux delivery and explicit pane acknowledgement when it is not; full-label bold bright_red brackets; 300 ms forced vibration; and a longer middle toast (omit `-s`, `toast_short = false`) using current dark_background/warning hex colors and a 240-character message excerpt. Preserve these defaults unless the user requests a change. Keep them in repository configuration, not agent instructions that ask the model to run notification tools itself.

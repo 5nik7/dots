@@ -146,11 +146,16 @@ def execute(backend, action, names, args, cfg):
     cfg = dict(cfg, _quiet_progress=args.dry_run or getattr(args,'json',False))
     item = plan(backend, action, names, cfg, yes=args.yes,
                 override=getattr(args,'ignore_skip',False))
-    if action == 'upgrade':
+    if action in ('install', 'upgrade', 'uninstall'):
         from . import upgrade_output
         if upgrade_output.enabled(args, cfg):
-            upgrade_output.heading(cfg, backend)
-            return apply_upgrade(item, cfg)
+            upgrade_output.heading(cfg, backend, action=action)
+            if action == 'uninstall' and item.commands and not args.yes:
+                upgrade_output.packages(cfg, 'Manager', [backend.name])
+                upgrade_output.packages(cfg, 'Remove', item.names)
+                if not confirm(args.yes):
+                    print('Cancelled; no packages changed.'); return 0
+            return apply_compact(item, cfg)
     display(item, cfg)
     if args.dry_run:
         print('Dry run: no packages changed.')
@@ -161,10 +166,46 @@ def execute(backend, action, names, args, cfg):
     return apply(item, cfg)
 
 
-def apply_upgrade(item, cfg):
-    from .upgrade_output import Output
-    with progress(item.backend.name+' · Upgrading', cfg) as meter:
-        output = Output(item.backend.name, cfg, meter)
+def installed_versions(backend):
+    """Bound local summary queries without changing transaction eligibility/status."""
+    try:
+        with budget(15):
+            rows = backend.installed()
+        versions = {}
+        for package in rows:
+            if package.details.get('disabled_reason'): continue
+            identity = policies.identity(package.name, backend.name)
+            version = package.installed_version or package.version
+            if not isinstance(version, str) or not version or identity in versions:
+                return None
+            versions[identity] = (package.name, version)
+        return versions
+    except (Error, OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+
+
+def changed_packages(item, before, after):
+    if before is None or after is None: return None
+    manager = item.backend.name
+    selected = {policies.identity(name, manager) for name in item.names}
+    skipped = {policies.identity(row['package'], manager) for row in item.skipped}
+    def aliases(name):
+        return {name, name.partition(':')[0]} if manager == 'apt' else {name}
+    return sorted((display for name, (display, version) in after.items()
+                   if name in before and version != before[name][1]
+                   and (not selected or aliases(name) & selected)
+                   and not aliases(name) & skipped), key=str.casefold)
+
+
+def apply_compact(item, cfg):
+    from .upgrade_output import Output, STAGES
+    stage = STAGES[item.action]
+    before = None
+    if item.action == 'upgrade' and item.commands and not item.error:
+        with progress(item.backend.name+' · Reading installed versions', cfg):
+            before = installed_versions(item.backend)
+    with progress(item.backend.name+' · '+stage, cfg) as meter:
+        output = Output(item.backend.name, cfg, meter, action=item.action)
         if item.error: output.errors.append(item.error)
         try:
             try: rc = apply(item, dict(cfg, _upgrade_output=output))
@@ -174,7 +215,13 @@ def apply_upgrade(item, cfg):
                 del output.errors[2:]
         finally:
             output.close()
-    output.result(rc, skipped=len(item.skipped), unchanged=not item.commands)
+    if item.action == 'upgrade' and not rc and item.commands:
+        after = None
+        if before is not None:
+            with progress(item.backend.name+' · Checking updated packages', cfg):
+                after = installed_versions(item.backend)
+        output.updated = changed_packages(item, before, after)
+    output.result(rc, skipped=len(item.skipped), unchanged=not item.commands, names=item.names)
     return rc
 
 
@@ -191,7 +238,7 @@ def upgrade(args, cfg):
             with budget(45):
                 backend = scopes.make(manager, scope)
                 item = plan(backend, 'upgrade', [], cfg, override=args.ignore_skip, bulk=True)
-            if compact: rc = apply_upgrade(item, cfg)
+            if compact: rc = apply_compact(item, cfg)
             else:
                 display(item, cfg)
                 rc = 0 if args.dry_run else apply(item, cfg)

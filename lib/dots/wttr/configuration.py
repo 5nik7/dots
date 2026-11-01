@@ -25,6 +25,27 @@ def validate_language(value):
         raise ValueError('language must be a language code such as en or pt-br')
 
 
+def constraints(key):
+    """Read-only descriptions for native Config editors and completion."""
+    from config_values import parts
+    path=parts(key)
+    if path[:2]!=('apps','wttr'):return {}
+    path=path[2:]
+    choices={('units',):['us','metric'],('days',):[1,2,3],
+             ('show_location_attribution',):[True,False],
+             ('widget_color',):['auto','always','never'],
+             ('widget_color_format',):['ansi','plain','tmux'],
+             ('temperature_scale','unit'):['F','C']}
+    if path in choices:
+        values=choices[path]
+        return dict(type='boolean' if type(values[0]) is bool else 'integer' if type(values[0]) is int else 'string',choices=values)
+    if path and path[0] in ('icon_colors','night_icon_colors'):
+        if len(path)==3 and path[-1] in ('bold','dim','italic','underline','reverse'):
+            return dict(type='boolean',choices=[True,False])
+        if len(path)==3 and path[-1] in ('fg','bg'):return dict(type='color')
+    return {}
+
+
 def selected_path(root=ROOT):
     user=config_root()/'wttr/config.toml'
     return user if user.exists() or user.is_symlink() else Path(root)/'config/wttr/config.toml'

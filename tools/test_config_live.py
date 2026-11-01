@@ -82,7 +82,7 @@ class ConfigLive(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'unsupported'): plan.edit('apps.yazi.ui.heading.fg','blue')
         plan.edit('apps.yazi.ui.heading.fg',None,unset=True)
         self.assertEqual(consumers('icons','apps.tmux.applications.codex'),['tmux'])
-        self.assertIn('colors.todo.status.open.fg',keys(self.root))
+        self.assertIn('colors.apps.todo.status.open.fg',keys(self.root))
         with self.assertRaisesRegex(ValueError,'conflicts'):
             explain('icons.apps.cli.applications.codex',self.root,app='tmux')
 
@@ -126,6 +126,53 @@ class ConfigLive(unittest.TestCase):
         self.assertEqual(after_save(self.root,before)['status'],'unchanged')
         self.mock_reload.assert_not_called()
 
+    @unittest.skipUnless(shutil.which('tmux'), 'tmux unavailable')
+    def test_refresh_repairs_legacy_indicator_conditionals(self):
+        old=self.generation()
+        # A stale published layout put style commas inside conditional arms.
+        # Even inactive indicators then rendered literal "bold] COPY ...".
+        broken=''.join('#{?'+condition+',#[fg=#{@dots-indicator-fg},bg=#{@dots-indicator-bg},bold] '+name+' #[default],}'
+                       for condition,name in (('pane_in_mode','COPY'),
+                                              ('client_prefix','PREFIX'),
+                                              ('window_zoomed_flag','ZOOM')))
+        for name in ('tmux.conf','tmux.visual.conf'):
+            with (old/name).open('a') as stream:
+                stream.write("set -g status-right '"+broken+"'\n")
+        command=[shutil.which('tmux'),'-S',str(self.home/'indicators.sock')]
+        def tmux(*args):
+            return subprocess.check_output(command+list(args),env=self.env,text=True,stderr=subprocess.PIPE).rstrip('\n')
+        tmux('-f','/dev/null','new-session','-d','-s','fixture',shutil.which('sleep')+' 90')
+        self.addCleanup(lambda: subprocess.run(command+['kill-server'],env=self.env,capture_output=True))
+        tmux('source-file',str(old/'tmux.visual.conf'))
+        rendered=lambda:tmux('display-message','-p','-t','fixture:0','#{E:status-right}')
+        self.assertIn('bold] COPY',rendered())
+        self.assertFalse((old/'tmux-controls.conf').exists())
+
+        refresh(self.root)
+        new=active(self.state)
+        self.assertNotEqual(new,old)
+        self.assertEqual((new/'palette.json').read_bytes(),(old/'palette.json').read_bytes())
+        self.assertTrue((new/'tmux-controls.conf').is_file())
+        for artifact in ('tmux.visual.conf','tmux.conf','tmux-controls.conf'):
+            with self.subTest(artifact=artifact):
+                tmux('source-file',str(new/artifact))
+                self.assertEqual(rendered(),'')
+        tmux('copy-mode','-t','fixture:0')
+        text=rendered()
+        self.assertIn(' COPY ',text)
+        self.assertNotIn('PREFIX',text)
+        self.assertNotIn('ZOOM',text)
+        tmux('send-keys','-X','-t','fixture:0','cancel')
+        tmux('split-window','-d','-t','fixture:0',shutil.which('sleep')+' 90')
+        tmux('resize-pane','-Z','-t','fixture:0.0')
+        text=rendered()
+        self.assertIn(' ZOOM ',text)
+        self.assertNotIn('COPY',text)
+        self.assertNotIn('PREFIX',text)
+        tmux('resize-pane','-Z','-t','fixture:0.0')
+        self.assertEqual(rendered(),'')
+        self.assertEqual(refresh(self.root,retry=False)['status'],'unchanged')
+
     def test_save_kept_on_publication_or_reload_failure(self):
         old=self.generation();before=effective(self.root)
         self.icon.write_text('[applications]\ncodex="SAVED"\n')
@@ -148,9 +195,12 @@ class ConfigLive(unittest.TestCase):
             refresh(self.root)
         self.assertEqual(active(self.state),old)
         outside=self.home/'outside';outside.write_text('KEEP')
-        (old/'colors.lua').symlink_to(outside)
-        with self.assertRaisesRegex(ValueError,'unsafe generated'):refresh(self.root)
-        self.assertEqual(outside.read_text(),'KEEP')
+        for name in ('colors.lua','tmux-controls.conf'):
+            with self.subTest(artifact=name):
+                (old/name).symlink_to(outside)
+                with self.assertRaisesRegex(ValueError,'unsafe generated'):refresh(self.root)
+                self.assertEqual(outside.read_text(),'KEEP')
+                (old/name).unlink()
 
     @unittest.skipUnless(shutil.which('tmux'), 'tmux unavailable')
     def test_private_servers_verified_independently(self):

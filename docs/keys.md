@@ -22,8 +22,9 @@ dots keys --source live --json
 Interactive `dots keys` opens a compact FZF category menu with All and the apps
 that have available bindings, each with a Nerd Font icon when icons are enabled.
 Entries show counts such as `tmux · [47]`; All shows the combined count. The
-separator, brackets and count use the same muted color as binding metadata, even
-on the selected entry. Zero-count apps are omitted. If every count is zero, the
+separator, brackets and count use the shared menu description style (muted by
+default), even on the selected entry. Icons and titles use the shared menu icon
+and label styles. Zero-count apps are omitted. If every count is zero, the
 command prints its normal empty result without opening a menu.
 
 The menu counts the captured snapshot after `--source` and `--no-defaults`
@@ -60,6 +61,8 @@ omitted from the shell reference.
 **Alt-M** opens a compact FZF mode chooser with the prompt `󰌆 modes:`. It lists `all` first, followed by alphabetically sorted modes, with the current mode initially highlighted. Enter selects a mode; Escape returns unchanged; Ctrl-C cancels browsing. The binding popup closes while the chooser is open and returns with its search preserved. The chooser starts with an empty search each time. Headers show `Alt-M: mode` without a repeated mode label or provider banner.
 
 Available modes come from the selected app's source/default-filtered snapshot; the combined view uses the union of mode names. Search text does not change these choices. Switching modes reuses the snapshot and original preview identities. Reopen the browser to capture changed mappings.
+
+Category and mode selectors use [shared menu appearance controls](configuration.md#keys-and-weather-menu-appearance). Mode choices remain text-only and use the menu label style; the binding table and details retain their separate colors described above. Application glyphs follow `icons.applications.APP`, with optional independent `colors.icons.applications.APP` styles. Per-entry overrides use `keys:categories:APP`, `keys:modes:all` for all modes, and `keys:modes:mode:NAME` for an actual mode, including one named `all`. Nonprintable mode names use `keys:modes:mode-json:JSON_STRING` for a printable, collision-free styling identity; an empty mode displays `(empty)`. Selection and binding data retain the exact original mode. Counts use the entry's `description` style. Shared menu spacing/alignment and popup controls apply; percentage category columns use the final popup content width. Empty icons add no glyph spacing, and plain views remain readable.
 
 `--query TEXT` initializes FZF search; in print/JSON mode its whitespace-separated
 terms are case-insensitive substring filters. In the picker, `--mode MODE`

@@ -73,7 +73,8 @@ $dotsCompleter = {
                 $value = $fields[1]
                 $insert = if ($value -match '[\s\x27"`$;&|()]') { "'" + $value.Replace("'", "''") + "'" } else { $value }
                 $description = if ($fields.Count -eq 3 -and $fields[2]) { $fields[2] } else { $value }
-                [System.Management.Automation.CompletionResult]::new($insert, $value, 'ParameterValue', $description)
+                $kind = if ($value.EndsWith('.') -or $value.EndsWith('[')) { 'ProviderContainer' } else { 'ParameterValue' }
+                [System.Management.Automation.CompletionResult]::new($insert, $value, $kind, $description)
             }
         }
     } finally { $global:LASTEXITCODE = $savedExit }

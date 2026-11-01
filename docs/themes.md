@@ -52,6 +52,14 @@ The job uses the existing five-second status interval and a one-second inventory
 
 ### Codex attention notifications
 
+Toast appearance and duration are editable through `apps.codex.toast` in the
+Config CLI and popup. See [the toast controls](configuration.md#codex-warning-toast)
+for colors, position, short duration, source ownership and worker activation.
+The sibling [vibration controls](configuration.md#codex-vibration) set duration,
+force and count. Repeats use a finite helper with pauses between pulses, keeping
+toasts and worker polling independent. `dots debug alert` explicitly tests the
+configured toast and vibration without creating a real Codex event.
+
 The optional bridge adds attention for Codex choice questions (including asynchronous questions), permission approvals requiring a person, and successful completed turns. It replaces outer label spaces with brackets and uses bold theme `bright_red` on `darker_background` across the whole label: ` 2 ` becomes `[2]`, and ` 2 editor  ` becomes `[2 editor ]`. An alert in any pane overrides another pane's working color. Existing state glyphs and window scrolling remain; hidden singleton windows become visible while alerted.
 
 On terminals with reliable focus reporting, viewing the originating pane acknowledges the event; focused events are suppressed at receipt and reconciliation. Control clients do not count. Stock Termux does not implement terminal focus reporting, so its default `termux.focus_policy = "conservative"` treats focus as unknown: alerts may occur in the visible tab, and a default tmux `focused` flag never suppresses or clears them. **Prefix a** acknowledges only the invoking Codex pane; the session picker also offers explicit acknowledgement. Answers/resumed work, new turns, interruption and session closure retire applicable pending attention. Merely opening the picker or switching Android tabs does not acknowledge anything. Switching away after acknowledgement never repeats the event. Fresh idle sessions and unknown titles never imply completion. Set `focus_policy = "terminal"` only for a terminal integration whose focus reporting has been verified.

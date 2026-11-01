@@ -3,6 +3,41 @@ function __dots_complete_fish
     set -l words (commandline -opc)
     set -l current (commandline -ct)
     set -a words "$current"
+    set -l key_position 0
+    set -l route $words[2..-2]
+    while test (count $route) -gt 0; and string match -qr '^--(color|icons)=' -- "$route[1]"
+        set -e route[1]
+    end
+    if test "$words[1]" = dots; and test (count $route) -ge 2; and test "$route[1]" = config; and contains -- "$route[2]" get set unset explain
+        set key_position 1
+        set -l option_value 0
+        for token in $route[3..-1]
+            if test $option_value -eq 1
+                set option_value 0
+            else if contains -- "$token" --profile --app
+                set option_value 1
+            else if not string match -q -- '--*' "$token"
+                set key_position 0
+            end
+        end
+        if test $option_value -eq 1
+            set key_position 0
+        end
+    end
+    # Fish matches against the token captured before this callback. Queue one
+    # native completion after consuming .., retaining its provider mode only for
+    # that retry. This changes the edit buffer, never executes the command.
+    if set -q __dots_config_branch_retry
+        if test $key_position -eq 1
+            set words[-1] "$__dots_config_branch_retry"
+        end
+        set -e __dots_config_branch_retry
+    else if status is-interactive; and test $key_position -eq 1; and string match -q '*..' -- "$current"
+        set -g __dots_config_branch_retry "$current"
+        commandline --current-token --replace -- (string replace -r '\.\.$' '' -- "$current")
+        commandline --function complete
+        return
+    end
     set -l cursor (math (count $words) - 1)
     for record in (command dots __complete fish $cursor -- $words 2>/dev/null)
         set -l fields (string split \t -- "$record")

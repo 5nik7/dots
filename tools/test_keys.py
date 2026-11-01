@@ -153,15 +153,18 @@ class Keys(unittest.TestCase):
     def test_category_rows_dimensions_and_field_colors(self):
         from files.catalog import Presentation
         from keys.presentation import menu_rows,menu_dimensions,styles,binding_label,picker_colors
+        from style_config import current
+        shutil.copytree(ROOT/'default',self.root/'default')
+        current.cache_clear();self.addCleanup(current.cache_clear)
         ui=Presentation(stream=io.StringIO());ui.color=True;ui.icons=True
         from keys.model import APPS
         coverage=[dict(app=app,count=1) for app in APPS]
         categories=menu_rows(ui,coverage)
         self.assertEqual([row[0] for row in categories],['all','bash','codex','fzf','kitty','nvim','powershell','television','tmux','yazi','zsh'])
         self.assertTrue(all(any(ord(c)>0xe000 for c in label) for _,label in categories))
-        ui.icons=False;ui.color=False;self.assertEqual(menu_rows(ui,coverage)[0],('all','All · [10]'))
+        ui.icons=False;ui.color=False;self.assertEqual(menu_rows(ui,coverage)[0],('all',' All · [10]'))
         apps=menu_rows(ui,[dict(app='zsh',count=2,live=True),dict(app='tmux',count=0)],include_all=False)
-        self.assertEqual(apps,[('zsh','Zsh · [2]')])
+        self.assertEqual(apps,[('zsh',' Zsh · [2]')])
         self.assertEqual(menu_rows(ui,[]),[])
         for width,height in ((40,10),(80,24),(120,40)):
             with patch('keys.presentation.shutil.get_terminal_size',return_value=(width,height)):
@@ -169,6 +172,9 @@ class Keys(unittest.TestCase):
                 self.assertLessEqual(w,width-2);self.assertEqual(h,min(17,height-2))
         ui.resources.root=self.base/'palette';ui.resources.root.mkdir()
         (ui.resources.root/'palette.json').write_text(json.dumps({'colors':{'muted':'#667788','bright_magenta':'#ff88cc'}}))
+        palette=Path(self.env['XDG_STATE_HOME'])/'dots/current/theme/palette.json'
+        palette.parent.mkdir(parents=True)
+        palette.write_bytes((ui.resources.root/'palette.json').read_bytes());current.cache_clear()
         ui.color=True
         colored=menu_rows(ui,coverage)
         self.assertIn('\x1b[38;2;102;119;136m · [10]\x1b[0m',colored[0][1])

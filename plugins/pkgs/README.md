@@ -131,7 +131,7 @@ default. JSON is opt-in for `list`, `info`, `managers`, `doctor`, and
 separate subprocess arguments, never interpolated into shell commands.
 Ordinary name operands exclude URLs/local paths and arbitrary backend options; Go additionally supports module versions. Use manifest pins for exact versions and native policy recipes for custom flags/commands. The [current Dots package guide](../../docs/packages.md) defines these contracts; 0.1.1 remains the imported release identifier.
 
-Transactions print the selected scope and commands. Install, upgrade and refresh
+Transaction previews print the selected scope and commands. Install, upgrade and refresh
 authorize execution without `--yes`, including without a controlling terminal,
 and supply supported native confirmation flags automatically. For install,
 supplying package names or accepting a picker selection authorizes those packages;
@@ -141,12 +141,26 @@ confirmation flags. Privilege checks, manager protections and custom recipe
 behavior still apply. `--dry-run` prints the transaction
 without running it, although preparation and previews may still query metadata.
 
-Human upgrades show one result per manager with transient progress, short
+Human installs, removals and upgrades show one result per manager with transient progress, short
 failure/warning details and a count of skipped packages. Full commands, routine
 manager chatter and per-package skips are hidden; `--raw` streams them in full,
 and `--dry-run` retains the full plan. Ordinary redirected output remains full.
 Results follow process status, and prompts remain visible. The runner restores
 child terminal settings before returning to the shell.
+Successful installs and removals add one wrapping Installed/Removed field with
+the requested package names. Failed, cancelled and empty plans omit that field;
+already-satisfied installs may also succeed. Removals show manager, scope and
+targets before the existing confirmation. This also covers `un` and `remove`.
+Successful upgrades add an Updated field from bounded local before/after version
+snapshots, omitting unchanged/skipped packages and newly added dependencies.
+No changes reports Updated none; an inventory failure reports Updated unavailable
+without blocking the transaction or changing its exit status. These reads apply
+only to compact upgrades. The skipped suffix uses the theme's muted foreground.
+Compact npm output hides deprecation notices, keeping other warnings/errors;
+raw and ordinary redirected output retain all notices.
+Installs show the current package when known, with `Installing` as the fallback
+stage; individual package result rows do not accumulate. This also applies to
+`in`, `dots pkgs` and accepted install-picker selections.
 Pip progress includes the package, native download bytes (pip 25.1+), build stages
 and elapsed silence after 15 seconds without output. Silence does not end a build.
 Global npm upgrades use targeted installs so unrelated platform-specific aliases

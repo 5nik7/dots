@@ -7,15 +7,30 @@ pkgs \- fuzzy package management for Termux and Linux
 .SH DESCRIPTION
 Bare invocation displays help. Install and uninstall open an fzf multi-select
 picker when package names are omitted. Exact names bypass the picker.
-Transactions show manager, scope and commands. Install, upgrade and refresh authorize unattended
+Transaction previews show manager, scope and commands. Install, upgrade and refresh authorize unattended
 execution with native confirmation flags; remove/restore retain confirmation.
 Accepting an install-picker selection authorizes installation; cancelling installs nothing.
 Dry-run never runs mutation commands or recipe hooks.
-Human upgrades show one result per manager, transient progress, short diagnostics
+Human installs, removals and upgrades show one result per manager, transient progress, short diagnostics
 and skip counts. Routine manager output and full command arrays are hidden.
 Use --raw for full native output or --dry-run for complete plans and skip reasons.
 Ordinary redirected output retains its full format. Child terminal settings are
 restored on completion or interruption.
+Successful installs/removals add one Installed/Removed field with requested names.
+Failed, cancelled and empty plans omit it; already-satisfied installs may succeed.
+Removals show manager, scope and targets before the existing confirmation.
+The un and remove aliases use the same compact view and Removing progress.
+Successful compact upgrades show one Updated field from before/after installed
+versions. Unchanged/skipped targets and newly added dependencies are excluded.
+No changes reports Updated none; inventory failure reports Updated unavailable
+without blocking execution or altering native status. Each inventory read has a
+15-second budget; raw/redirected/dry-run paths do not add these reads.
+The skipped suffix uses the theme's muted foreground, independently of status.
+Compact npm output hides deprecation notices and excludes them from diagnostic
+counts. Other warnings/errors and raw/ordinary redirected notices are retained.
+Install progress names the current package when known and otherwise shows the
+manager and stage. Package results do not accumulate. The same view applies to
+the in alias, dots pkgs and accepted install-picker selections.
 Pip progress shows the package, download bytes with pip 25.1 or newer, build
 stages and elapsed silence after 15 seconds without output. Silence does not
 prove a hang or cause termination. Explicit native progress overrides are kept.

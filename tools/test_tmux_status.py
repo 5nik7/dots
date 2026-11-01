@@ -27,7 +27,16 @@ ANDROID_ICONS = dict(notification='\U000f009a', volume='\U000f0580', location='\
 class TmuxStatus(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix='dt-')
-        self.addCleanup(temp.cleanup)
+        def cleanup():
+            import errno
+            for attempt in range(40):
+                try:temp.cleanup();return
+                except OSError as error:
+                    # Private tmux jobs may finish their final log write just
+                    # after kill-server acknowledges shutdown.
+                    if error.errno!=errno.ENOTEMPTY or attempt==39:raise
+                    time.sleep(.05)
+        self.addCleanup(cleanup)
         self.root = Path(temp.name)
         self.home = self.root / 'home space ü'
         self.config = self.home / 'config space ü'
@@ -40,6 +49,8 @@ class TmuxStatus(unittest.TestCase):
         self.battery.parent.mkdir(parents=True)
         self.adapter = self.tmux_config / 'battery-status.sh'
         shutil.copy2(REPO / 'config/tmux/battery-status.sh', self.adapter)
+        for name in ('status_styles.py','battery-status.py','session-status.py'):
+            shutil.copy2(REPO/'config/tmux'/name,self.tmux_config/name)
         shutil.copy2(REPO / 'config/tmux/gitmux-status.py', self.tmux_config / 'gitmux-status.py')
         shutil.copy2(REPO / 'config/tmux/codex-status.py', self.tmux_config / 'codex-status.py')
         self.env = {key: os.environ[key] for key in ('PATH', 'PREFIX', 'LD_PRELOAD', 'LD_LIBRARY_PATH') if key in os.environ}
@@ -56,6 +67,7 @@ class TmuxStatus(unittest.TestCase):
         source.parent.mkdir(parents=True)
         shutil.copyfile(REPO / 'config/tmux/termux-status.py', source)
         shutil.copyfile(REPO / 'config/tmux/style_preferences.py', source.with_name('style_preferences.py'))
+        shutil.copyfile(REPO/'config/tmux/status_styles.py',source.with_name('status_styles.py'))
         self.termux_adapter = self.tmux_config / 'termux-status.py'
         self.termux_adapter.symlink_to(source)
         control = source.with_name('workspace-control.py')

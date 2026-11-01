@@ -24,10 +24,10 @@ formats and ordinary redirected output retain their data/undecorated formats.
 ```sh
 dots config browse --query apps.fonts
 dots config set apps.fonts.list_details full
-dots config set apps.fonts.preview.position right
-dots config set apps.fonts.preview.size 40
+dots config set formatting.apps.fonts.preview.position right
+dots config set formatting.apps.fonts.preview.size 40
 dots config set apps.fonts.preview.sample false
-dots config unset apps.fonts.preview.position
+dots config unset formatting.apps.fonts.preview.position
 ```
 
 These controls inherit shared defaults, parent profiles and the current profile.
@@ -46,16 +46,16 @@ from its Configuration menu. They do not set a font or publish a theme.
 | `preview.wrap` | `true` | Wrap preview text in FZF. |
 
 Use existing `formatting.apps.cli` and `formatting.apps.menu` for indentation,
-tab stops, label width/gap and alignment; use `apps.menu.popup` for the shared popup
+tab stops, label width/gap and alignment; use `formatting.apps.menu.popup` and `colors.apps.menu.popup` for the shared popup
 frame, position, dimensions and colors. Font-specific report style roles are
-`colors.fonts.heading`, `label`, `identity`, `version`, `source`, `face` and `glyph`.
+`colors.apps.fonts.heading`, `label`, `identity`, `version`, `source`, `face` and `glyph`.
 Each supports foreground, background and text attributes, inheriting the shared
 semantic style until overridden. CLI-scoped overrides use
-`colors.apps.cli.fonts.<role>.<field>`. The font icon is `icons.menu.fonts`, with
+`colors.apps.fonts.<role>.<field>`. The font icon is `icons.menu.fonts`, with
 independent styling in `colors.icons.menu.fonts`. Null/unset resets an override.
 
-Nested choices use shared `colors.menu.*` roles and per-entry
-`formatting.apps.menu.entries["fonts:MENU:ENTRY"]` overrides. Examples are
+Nested choices use shared `colors.apps.menu.*` roles and per-entry
+`colors.apps.menu.entries["fonts:MENU:ENTRY"]` overrides. Examples are
 `fonts:Fonts:installed`, `fonts:Actions:show`, `fonts:catalog:nerd:JetBrainsMono`
 and `fonts:icons:ICON_NAME`; field suffixes such as `.label.fg` style only that
 entry. Display preferences never change the literal command arguments or glyphs.

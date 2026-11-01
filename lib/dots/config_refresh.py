@@ -42,7 +42,7 @@ def active(state):
 
 def effective(root=None):
     style = Styles(root)
-    return snapshot(style.palette, style.root)
+    return snapshot(None, style.root, styles=style)
 
 
 def affected(before, after):
@@ -50,6 +50,8 @@ def affected(before, after):
 
 
 def explain(key, root=None, selected=None, defaults=False, app=None, *, _style=None, _published=None, _active=None):
+    from config_keys import internal
+    key=internal(key)
     style = _style or Styles(root, selected, defaults=defaults)
     group, _, name = key.partition('.')
     if group not in ('icons','colors') or not name: raise ValueError('explain requires an individual icon or color field')
@@ -76,9 +78,18 @@ def explain(key, root=None, selected=None, defaults=False, app=None, *, _style=N
             expected=style.color(resolved['value']) if field in ('fg','bg') and resolved['value'] is not None else resolved['value']
         else: actual=actual.get(base); expected=resolved['value']
         status=('unsupported' if consumer not in choices else 'inactive scope' if not is_active else
-                'next invocation' if consumer=='cli' else 'published' if actual==expected and published else 'pending')
-        rows.append(dict(app=consumer,supported=consumer in choices,refresh=status,**resolved))
-    return dict(schema=1,key=key,profile='defaults' if defaults else style.selected['current'],consumers=rows)
+                'next invocation' if consumer in ('cli','wttr') else 'published' if actual==expected and published else 'pending')
+        from config_keys import description,canonical
+        from style_catalog import constraints
+        details=dict(description=description(key),canonical_key=canonical(key),constraints=constraints(group,name),destination=str(style.path(group)))
+        if group=='colors' and base.endswith(('.fg','.bg')) and resolved['value'] is not None:
+            role,_,field=base.rpartition('.')
+            details['resolved_color']=style.color(style.style(role,app=consumer).get(field,resolved['value']), 'default' if field=='bg' else 'foreground')
+            if str(resolved['value']).startswith('palette.') and resolved['value'][8:] not in style.native_palette:
+                details['fallback']='Palette name unavailable; inherited semantic or terminal default'
+        rows.append(dict(app=consumer,supported=consumer in choices,refresh=status,**details,**resolved))
+    from config_keys import canonical as public_key
+    return dict(schema=1,key=public_key(key),profile='defaults' if defaults else style.selected['current'],consumers=rows)
 
 
 def inline_color(text, table, key, field, value):
@@ -119,7 +130,7 @@ def render_visual(out, root, palette, doc, changed):
         (out/'colors.json').write_text(json.dumps(color_doc,sort_keys=True)+'\n')
         (out/'colors.lua').write_text('return '+file_styles().lua(color_doc)+'\n')
     else: raise ValueError('published file-color snapshot is missing')
-    values=dict(palette)
+    values=dict(palette.get('colors',palette))
     values.update({'git_'+k:v for k,v in color_doc.get('colors',{}).get('git',{}).items()})
     values.update(tokens(palette,root))
     for app,name in [('tmux','tmux.conf'),('fzf','fzf.sh'),('gum','gum_env.sh')]:
@@ -132,7 +143,7 @@ def render_visual(out, root, palette, doc, changed):
         if '{{' in rendered or '}}' in rendered: raise ValueError('unresolved visual template')
         if app=='tmux':
             from tmux_config import layout
-            placement='# Dots configuration placement\n'+layout(root,style.selected)
+            placement='# Dots configuration placement\n'+layout(root,style.selected,styles=style)
             base_config = root/'config/tmux/tmux.conf'
             if base_config.is_file():
                 for line in base_config.read_text().splitlines():
@@ -220,6 +231,7 @@ def reload_consumers(root, selected, state, generation, changed):
                 result=subprocess.run([ya,'pub-to','0','dots-theme-changed','--str',str(state)],capture_output=True,timeout=5)
                 results.append(dict(app='yazi',status='notified' if result.returncode==0 else 'failed'))
             except (OSError,subprocess.TimeoutExpired): results.append(dict(app='yazi',status='failed'))
+    if 'wttr' in changed: results.append(dict(app='wttr',status='next invocation'))
     if 'gitmux' in changed: results.append(dict(app='gitmux',status='next status read'))
     if 'nvim' in changed:results.append(dict(app='nvim',status='next focus or :DotsThemeReload'))
     if 'starship' in changed:
@@ -249,7 +261,7 @@ def refresh(root=None, *, dry=False, before=None, retry=True):
     root=checkout(root);selected=context(root);state=state_root();style=Styles(root,selected)
     generation=active(state)
     if generation is None: return dict(schema=1,status='pending',reason='No published theme; CLI values apply on the next invocation',consumers=[])
-    palette=read_json(generation/'palette.json')['colors']
+    palette=read_json(generation/'palette.json')
     desired=snapshot(palette,root);old=read_json(generation/'preferences.json')
     changed=affected(old,desired)
     if before is not None:
@@ -257,7 +269,7 @@ def refresh(root=None, *, dry=False, before=None, retry=True):
         if not semantic_changes: return dict(schema=1,status='unchanged',consumers=[])
     templates=[root/'default/themed'/name for name in ('tmux.conf.tpl','fzf.sh.tpl','gum_env.sh.tpl')]
     inputs=[*style.paths,*[Path(x['root'])/'profile.json' for x in selected['layers']],*templates,
-            root/'config/tmux/tmux.conf',root/'default/config.json',LIB/'config_values.py',LIB/'tmux_config.py',LIB/'fzf_config.py',LIB/'style_config.py',LIB/'style_catalog.py',LIB/'theme_styles.py',Path(__file__),root/'config/gitmux/gitmux.conf']
+            root/'config/tmux/tmux.conf',root/'default/config.json',LIB/'config_values.py',LIB/'tmux_config.py',LIB/'tmux_controls.py',LIB/'config_keys.py',LIB/'fzf_config.py',LIB/'style_config.py',LIB/'style_catalog.py',LIB/'theme_styles.py',Path(__file__),root/'config/gitmux/gitmux.conf']
     guards={str(p):digest(p) for p in inputs}
     stamp=hashlib.sha256(json.dumps({str(p):guards[str(p)] for p in inputs if p not in style.paths and p.name!='profile.json'},sort_keys=True).encode()).hexdigest()
     metadata=generation/'visual.json'
@@ -274,7 +286,7 @@ def refresh(root=None, *, dry=False, before=None, retry=True):
             out=Path(temporary)/'generation'
             shutil.copytree(generation,out,symlinks=True)
             # Every regenerated target must be regular; never follow a snapshot link.
-            for name in ('preferences.json','colors.json','colors.lua','gitmux.conf','tmux.conf','tmux.visual.conf','fzf.sh','gum_env.sh','yazi.toml','yazi/flavor.toml','visual.tsv','visual.json','status'):
+            for name in ('preferences.json','colors.json','colors.lua','gitmux.conf','tmux.conf','tmux.visual.conf','tmux-controls.conf','fzf.sh','gum_env.sh','yazi.toml','yazi/flavor.toml','visual.tsv','visual.json','status'):
                 path=out/name
                 if path.is_symlink() or any(p.is_symlink() for p in path.parents if p.is_relative_to(out)):
                     raise ValueError('unsafe generated visual artifact: '+name)
@@ -345,8 +357,8 @@ def preview_save(root, plan):
     if isinstance(plan,ControlPlan):
         from config_values import Controls
         values=Controls(root,replacements={plan.path:plan.data}).values
-        before=snapshot(style.palette,root)
-        after=snapshot(style.palette,root,controls=values)
+        before=snapshot(None,root,styles=style)
+        after=snapshot(None,root,styles=style,controls=values)
         changes=affected(before,after)
         if before['config'].get('apps',{}).get('fonts') != after['config'].get('apps',{}).get('fonts'):
             changes.append('fonts')
@@ -355,6 +367,6 @@ def preview_save(root, plan):
         if before['config'].get('apps',{}).get('setup') != after['config'].get('apps',{}).get('setup'):
             changes.append('setup')
         return dict(schema=1,status='preview',consumers=changes,reason='Refresh affected active consumers after saving' if changes else 'No active consumer change')
-    proposed = Styles(root, replacements={plan.path: plan.data}, palette=style.palette)
+    proposed = Styles(root, replacements={plan.path: plan.data}, palette=dict(colors=style.palette,palette=style.native_palette))
     changes = affected(snapshot(style.palette, root, styles=style), snapshot(style.palette, root, styles=proposed))
     return dict(schema=1,status='preview', consumers=changes, reason='Refresh affected active visuals after saving' if changes else 'No active visual change')

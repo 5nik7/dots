@@ -56,13 +56,40 @@ _dots_theme_completion_context() {
   while [[ ${preview_words[1]:-} == (--color=*|--icons=*) ]]; do shift preview_words; done
   [[ ${preview_words[1]:-} == (anodize|theme|themes) ]]
 }
+_dots_config_completion_context() {
+  local -a config_words=("${(@Q)words}")
+  shift config_words
+  while [[ ${config_words[1]:-} == (--color=*|--icons=*) ]]; do shift config_words; done
+  [[ ${config_words[1]:-} == config ]]
+}
+_dots_config_branch_completion_context() {
+  local -a config_words=("${(@Q)words[2,CURRENT-1]}")
+  local token expecting=0
+  while [[ ${config_words[1]:-} == (--color=*|--icons=*) ]]; do shift config_words; done
+  [[ ${config_words[1]:-} == config && ${config_words[2]:-} == (get|set|unset|explain) ]] || return 1
+  shift 2 config_words
+  for token in "${config_words[@]}"; do
+    if (( expecting )); then expecting=0
+    elif [[ $token == (--profile|--app) ]]; then expecting=1
+    elif [[ $token != --* ]]; then return 1
+    fi
+  done
+  (( ! expecting )) && [[ ${PREFIX:-${words[CURRENT]:-}} == (*.|*\[) ]]
+}
+# FZF's ** suffix is consumed before selection. Config's .. similarly scopes
+# branch candidates; suppress fzf-tab's common-prefix/input query for this case.
+zstyle -e ':fzf-tab:complete:dots:*' query-string '
+  if _dots_config_branch_completion_context; then reply=()
+  else zstyle -a ":fzf-tab:complete:__dots_preview_fallback__:" query-string reply || reply=(prefix input first)
+  fi'
 zstyle -e ':fzf-tab:complete:dots:*' fzf-command '
   if _dots_theme_completion_context; then reply=(_dots_theme_preview_fzf)
   else
     zstyle -s ":fzf-tab:complete:__dots_preview_fallback__:" fzf-command reply || reply=(fzf)
   fi'
 zstyle -e ':fzf-tab:complete:dots:*' fzf-flags '
-  if _dots_theme_completion_context; then reply=(--preview-window=down,70%)
+  if _dots_config_completion_context; then reply=(--preview-window=down,35%)
+  elif _dots_theme_completion_context; then reply=(--preview-window=down,70%)
   else zstyle -a ":fzf-tab:complete:__dots_preview_fallback__:" fzf-flags reply
   fi'
 zstyle -e ':fzf-tab:complete:dots:*' fzf-min-height '
@@ -71,7 +98,9 @@ zstyle -e ':fzf-tab:complete:dots:*' fzf-min-height '
     zstyle -s ":fzf-tab:complete:__dots_preview_fallback__:" fzf-min-height reply || reply=(0)
   fi'
 zstyle -e ':fzf-tab:complete:dots:*' fzf-preview '
-  if _dots_theme_completion_context; then
+  if _dots_config_completion_context; then
+    reply=("python3 -B \"\$DOTS/lib/dots/config_completion.py\" preview \"\$word\"")
+  elif _dots_theme_completion_context; then
     zstyle -s ":fzf-tab:complete:anodize:" fzf-preview reply
   else reply=()
   fi'

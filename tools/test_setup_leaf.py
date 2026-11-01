@@ -96,5 +96,62 @@ class SetupLeaf(unittest.TestCase):
             result=Build(Installation(self.repo)).prepare()
             self.assertFalse(result['reused']);self.assertTrue(Path(result['path']).is_file())
 
+    def test_failed_stages_preserve_existing_command(self):
+        for stage in ('fetch', 'apply', 'test', 'clippy', 'build', 'consumer'):
+            with self.subTest(stage=stage):
+                case=SetupLeaf();case.setUp()
+                try:
+                    case.fixture()
+                    original=case.home/'.local/bin/leaf';original.parent.mkdir(parents=True)
+                    original.write_bytes(b'original leaf')
+                    def fail(argv,**kwargs):
+                        words=list(map(str,argv))
+                        if ((stage=='consumer' and str(case.repo/'tools/test_leaf_theme.py') in words)
+                                or (stage!='consumer' and stage in words and '--check' not in words)):
+                            raise ValueError('fixture stage failure')
+                        return case.execute(argv,**kwargs)
+                    with patch.dict(os.environ,case.env),patch('setup_leaf.execute',side_effect=fail):
+                        installation=Installation(case.repo);build=Build(installation)
+                        with self.assertRaisesRegex(ValueError,'stage failure'):build.prepare()
+                        self.assertEqual(original.read_bytes(),b'original leaf')
+                        self.assertFalse(installation.receipt_path.exists())
+                        self.assertFalse(list(build.base.rglob('verified.json')))
+                        with self.assertRaisesRegex(ValueError,'artifact changed'):build.publish(installation)
+                finally:case.doCleanups()
+
+    def test_foreign_command_link_is_refused_before_acquisition(self):
+        self.fixture()
+        original=self.home/'.local/bin/leaf';original.parent.mkdir(parents=True)
+        foreign=self.base/'foreign leaf';foreign.write_bytes(b'foreign command')
+        original.symlink_to(foreign)
+        with patch.dict(os.environ,self.env),patch('setup_leaf.execute',side_effect=self.execute):
+            installation=Installation(self.repo)
+            with self.assertRaisesRegex(ValueError,'unrelated link'):Build(installation)
+            self.assertEqual(self.calls,[])
+            self.assertEqual(original.readlink(),foreign)
+            self.assertEqual(foreign.read_bytes(),b'foreign command')
+            self.assertFalse(installation.receipt_path.exists())
+
+    def test_changed_source_after_failed_build_is_preserved(self):
+        self.fixture()
+        original=self.home/'.local/bin/leaf';original.parent.mkdir(parents=True)
+        original.write_bytes(b'original leaf')
+        def fail(argv,**kwargs):
+            if 'clippy' in argv:raise ValueError('fixture compiler failure')
+            return self.execute(argv,**kwargs)
+        with patch.dict(os.environ,self.env):
+            installation=Installation(self.repo);build=Build(installation)
+            with patch('setup_leaf.execute',side_effect=fail),self.assertRaisesRegex(ValueError,'compiler failure'):
+                build.prepare()
+            source=next(build.base.glob('*/source/main.rs'));source.write_text('user source edit')
+            self.calls.clear()
+            with patch('setup_leaf.execute',side_effect=self.execute),self.assertRaisesRegex(ValueError,'source changed'):
+                Build(Installation(self.repo)).prepare()
+            self.assertFalse(any('fetch' in call or 'test' in call or 'build' in call for call in self.calls))
+            self.assertEqual(source.read_text(),'user source edit')
+            self.assertEqual(original.read_bytes(),b'original leaf')
+            self.assertFalse(installation.receipt_path.exists())
+            self.assertFalse(list(build.base.rglob('verified.json')))
+
 
 if __name__ == '__main__': unittest.main(verbosity=2)

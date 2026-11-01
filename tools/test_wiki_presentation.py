@@ -161,7 +161,7 @@ class WikiConfig(unittest.TestCase):
         from config_refresh import after_save,effective
         from config_values import candidates
         from profile_config import keys
-        self.assertIn('colors.wiki.page.bg',keys(self.root));self.assertIn('icons.menu.wiki',keys(self.root))
+        self.assertIn('colors.apps.wiki.page.bg',keys(self.root));self.assertIn('icons.menu.wiki',keys(self.root))
         self.assertEqual(candidates(self.root,'apps.wiki.reader'),['auto','plain'])
         row=Inventory(self.root,self.platform).find('apps.wiki.reader')
         self.assertEqual(row.constraints['choices'],['auto','plain']);self.assertIn('next invocation',row.description)

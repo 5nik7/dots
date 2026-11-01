@@ -190,14 +190,21 @@ class Resources:
                     if group == 'mime' and fnmatch.fnmatchcase(mime, key):
                         icon = value
                         break
-        code = types.get(kind, DEFAULTS.get(kind, '95'))
+        code, _ = self.match_style(p.name, kind, mime, rows=rows)
+        return kind, icon, code
+
+    def match_style(self, name, kind='file', mime=None, *, rows=None):
+        """Return the published style and matching rule for inert path metadata."""
+        rows = self.rows if rows is None else rows
+        source = next((row[:2] for row in rows if row[:2] == ('type', kind)), None)
+        code = next((row[2] for row in reversed(rows) if row[:2] == ('type', kind)), DEFAULTS.get(kind, '95'))
         if kind in ('file', 'missing'):
             for group, key, value, case in rows:
                 if group in ('extension', 'suffix'):
-                    if (p.name if case == 'exact' else p.name.lower()).endswith(key if case == 'exact' else key.lower()):
-                        code = value
+                    if (name if case == 'exact' else name.lower()).endswith(key if case == 'exact' else key.lower()):
+                        code, source = value, (group, key)
                         break
                 elif group in ('mime', 'default_mime') and mime and fnmatch.fnmatchcase(mime, key):
-                    code = value
+                    code, source = value, (group, key)
                     break
-        return kind, icon, code
+        return code, source

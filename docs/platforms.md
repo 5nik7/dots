@@ -303,6 +303,17 @@ Application plugins share native launchers and the combined installer. Legacy re
 
 ### Codex attention notifications
 
+The `apps.codex.toast` and `apps.codex.vibrate` Config bindings share the Bash/native Python
+controller and edit the checkout-owned TOML without changing application
+destinations. Python 3.11+ is required; edits also require tomlkit. Native Windows
+can edit these portable settings but has no Android delivery adapter. Actual
+PowerShell 5.1/7 editing and Android appearance remain separate acceptance checks.
+
+`dots debug alert` is available through both controllers and reports unavailable
+outside Termux without Android calls. On Termux it sends a labelled toast and
+waits for configured vibration requests. Normal alert workers hand repeated
+pulses to a finite POSIX helper; count zero preserves toast-only delivery.
+
 The optional [Codex attention bridge](themes.md#codex-attention-notifications) uses the same Python implementation with Bash/Zsh/Fish-launched tmux on Termux, Linux and WSL. It requires Python 3.11+, tmux and same-user procfs observation; setup additionally capability-checks tomlkit. Android toast/vibration is enabled only in Termux and each executable is checked independently. Native Windows has neither a tmux destination nor a Termux API adapter: the setup helper explicitly refuses there, while pure event/configuration tests remain portable to PowerShell's Python invocation. Native Termux fixture results do not establish Linux/WSL visuals, terminal-emulator focus reporting, real Android delivery or Codex hook trust/reload behavior.
 
 ## Todo goals
@@ -333,3 +344,5 @@ The shared file registration controller supports native source/destination paths
 ## Command manual destinations
 
 The core `dots:manual` asset uses `<Termux prefix>/share/man/man1/dots.1` on Termux and `~/.local/share/man/man1/dots.1` on Linux/WSL. Windows has no POSIX manual destination; its wiki command reference is generated from the same first-party metadata. Explicit isolated prefixes/home roots cover path and lifecycle tests. Native Linux/WSL discovery by `man dots` and native PowerShell interaction require separate acceptance evidence.
+
+Tmux component preferences are editable/inspectable through both shared frontends. Clock, Termux tabs and the battery adapter remain Termux-only; session/window/Git/indicator rendering requires POSIX tmux. Native Windows editing does not start tmux or WSL. Completion uses one candidate provider with Bash/Zsh/Fish and native PowerShell adapters; Zsh optionally uses its existing fzf-tab installation. Native Windows PowerShell 5.1/7 and desktop Linux/WSL rendering evidence must be recorded separately from Termux fixtures.

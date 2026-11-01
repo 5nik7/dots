@@ -1,5 +1,119 @@
 # Package workflows
 
+## Upgrade names, deprecations and skipped styling (2026-11-01)
+
+Implemented and verified. Compact up/upgrade adds one wrapping Updated field
+per successful manager transaction. Compare local installed versions before and
+after, within separate 15-second query budgets, to omit unchanged targets.
+Named plans report changed selected identities; system-wide plans include changed
+installed system packages. Exclude skipped targets and newly added dependencies.
+Inventory failure reports Updated unavailable without blocking execution or
+altering native status; no changes reports Updated none. Failed/cancelled/empty
+plans do not claim updates. Raw/redirected/dry-run paths do not add these queries.
+Keep install/removal summaries and all transaction argv/approval rules intact.
+
+Hide only native npm deprecation warning lines in compact output, including
+their diagnostic counters and fallback tails. Preserve raw/ordinary redirects,
+other warnings/errors and partial prompts. Style the full ` · N skipped` suffix
+separately through the existing ui.muted foreground role; success/failure status
+retains its own role, with plain output unchanged.
+
+Owner: `dots-pkgs-maintenance` plus CLI presentation. Configuration: **update**
+the skip suffix consumer to use existing `colors.ui.muted`/CLI override resolution;
+no new setting or store. Menu: **no menu change needed**; existing upgrade actions
+use the same runner. Dependencies: completed compact output/summary work below.
+Verify installed-version changes/no-ops, policies/scopes, unavailable inventories,
+native status, warning filtering, independent muted foreground at narrow widths,
+raw/dry-run purity and both frontend paths with owned fixtures. Synchronize docs,
+manual/help and wiki, then append Todo CLI verification without reopening goals.
+
+Verification: all 195 package-core tests, 14 Dots package integration tests and
+5 file-platform safety tests pass. Owned fake managers verify actual version
+changes, unchanged/unavailable results, selected/system-wide scopes, skipped
+packages, native failures and unchanged raw/redirect/dry-run behavior. Native
+Termux PTYs cover 40/80/120 columns, plain/color, package names, cancellation and
+terminal restoration. Renderer fixtures verify the muted theme foreground and
+CLI override independently from success/failure colors, including NO_COLOR.
+Standalone, Bash Dots and shared-controller results agree. Command metadata,
+generated adapters, documentation links, skill validation, shell syntax and
+whitespace checks pass. The generated local wiki is healthy. No host package
+transactions were run. Native Windows PowerShell and Linux/WSL transactions
+remain unverified; WinGet behavior is covered with fixtures. The existing ten
+Todo goals remain complete, with follow-up evidence appended through Todo CLI.
+
+## Package summaries and compact removal (2026-11-01)
+
+Implemented and verified. The user requests a small package summary after
+install and the same compact view for uninstall/remove. Add one wrapping
+Installed/Removed field containing the selected package identities after the
+whole transaction succeeds. Do not infer versions, dependencies or a count of
+new changes, query inventory for presentation, or claim success for failed,
+cancelled or empty plans. Keep upgrade output unchanged. This extends the compact
+install work below; the earlier removal-view exclusion is superseded.
+
+Removal retains installed-only preflight, manager/scope/target review before the
+existing confirmation, native prompts and explicit --yes handling. Direct,
+un/remove aliases and accepted picker routes share the view. Keep raw bytes,
+ordinary redirects, complete dry-run plans, native argv/status and terminal
+restoration. Cleanup and manifest/setup restoration retain their own review.
+
+Owner: `dots-pkgs-maintenance`. Configuration: **no configuration integration
+change needed**, using the shared field renderer, output and progress controls.
+Menu: **no menu change needed**, existing install/remove actions reach the shared
+controller. Verify successful/multiple targets, skip/failure/partial-command
+failure, confirmation/cancellation, native removal stages, WinGet fixtures and
+40/80/120-column plain/color terminals. Update canonical docs/help/manual and wiki;
+append Todo CLI notes without reopening the existing completed tree. Dependencies:
+the completed compact renderer and existing removal authorization path.
+
+Verification: 32 focused output tests, all 187 package-core tests, 13 Dots package
+integration tests and 5 file-platform safety tests pass. Private PTYs cover
+install/upgrade/removal at 40/80/120 columns with plain/color, failures,
+interruption and terminal restoration. Summary fields preserve full long names
+without extra inventory queries; confirmation/cancellation and partial-command
+failures retain truthful outcomes. WinGet scope/ID and removal stages pass in
+fixtures. Command metadata (244 routes), generated adapters, documentation links,
+skill validation, shell syntax and whitespace checks pass. The local wiki is
+healthy; no host packages were installed or removed. Native Windows PowerShell
+and Linux/WSL package transactions remain unverified.
+
+## Compact install output (2026-11-01)
+
+Implemented and verified. Extend the existing compact upgrade renderer to
+install/in, standalone/Dots entry points and accepted picker selections. Show
+transient manager/stage/package activity, followed by one result per manager;
+do not retain a row per package. Hide command dumps and routine dependency logs.
+Retain bounded errors/warnings, skip counts and native exit status, with recovery
+advice appropriate to install. Preserve prompts, cancellation, terminal state,
+no-extra-yes authorization, full raw/ordinary redirected output and exact dry-run
+previews. Refresh, removal, manifest restore and setup keep their current views.
+
+Owner: `dots-pkgs-maintenance` with shared presentation. Configuration: **no
+configuration integration change needed**; reuse output mode, semantic styles,
+layout and progress controls. Menu: **no menu change needed**; install picker
+actions already use the shared runner. Both shell surfaces share the renderer;
+test the WinGet adapter with fixtures and distinguish actual native evidence.
+
+Acceptance: direct/alias/picker installs, multiple packages, empty/skipped plans,
+custom recipes, bounded diagnostics, prompts, failure/cancellation, native
+npm/pip/Go activity, system package events, 40/80/120-column plain/color PTYs,
+raw-byte and dry-run preservation. Tests must use isolated roots/fake managers.
+Synchronize canonical docs, skills and local wiki. Record decisions/verification
+through Todo CLI notes on `3b0fe81b73a641ddbce5f8cd96068860`, rereading JSON before
+each write. Preserve the existing ten-goal completed tree without reopening or
+creating goals. Dependency: existing compact upgrade renderer and stream runner.
+
+Verification: all 178 package-core and 12 package-integration tests pass, including
+identical compact results through standalone, Bash Dots and shared controller
+entry points. Five file-platform checks pass. Bundled-app (18) and presentation
+(10) suites pass with one native PowerShell skip each. Private terminal cases
+cover installs/upgrades at 40/80/120 columns, color/plain/NO_COLOR, real child
+failures, interruption and terminal restoration. Metadata generation, all 244
+command definitions, relative documentation links, skill validation, shell syntax
+and whitespace checks pass. The local wiki is healthy after transaction
+`be9fd3875bce45efa4e651aaceb811f2`. No host package transactions ran; native
+Windows PowerShell and Linux/WSL package-install acceptance remain unverified.
+
 ## Native Go updates and package progress (2026-10-31)
 
 The user now requests native `go install PACKAGE@latest` as the default,

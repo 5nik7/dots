@@ -167,25 +167,28 @@ popup on the initiating client. Elsewhere it uses the current terminal, includin
 native Windows. An unavailable FZF or preview shell produces a report instead.
 `--client CLIENT` is for a launcher with explicit originating tmux context.
 
-The first screen offers List, Get and Set. List opens a searchable read-only
-inventory. Get and Set first choose All, Icons, Colors, Formatting, Apps, Files,
-Profile, Settings or Environment; shared defaults offer All, Icons, Colors,
-Formatting and Apps. Enter in List
-or Get opens details. Enter in Set opens Edit, Reset override and Details.
-Alt-G changes category, Alt-S changes profile/default scope, Alt-N adds an
-environment declaration in Set only, and F1 shows help. Each action/scope/category
-retains its search and selected row. Escape goes back;
-Ctrl-C exits with status 130. Colors offer every valid active-theme palette color
-with its hex value, standard palette roles, or custom input. Standard roles remain
-symbolic; other palette entries save their literal hex value. Without a published
-palette, standard roles and custom input remain available;
-booleans and enumerations use typed choices. Icons accept literal strings,
-including an empty string. Application overrides use the supported visual consumers.
-Text input uses optional Gum; its readline fallback also accepts `/cancel` to go back.
+The first screen offers List, Get and Set. List shows all smart endpoints; Get
+and Set first choose a category and show all endpoints within it. An icon is a
+leaf; a color style groups its fg/bg/attribute fields until Enter opens it.
+Other settings remain individual editable values. Escape returns from fields
+to the endpoint list. Alt-F opens category/subcategory filters and key A–Z,
+Z–A or local-first sorting. Alt-A toggles full leaf fields; `--query TEXT`
+starts in that searchable leaf view. Search and focus are retained per
+frame, action, scope and category. Alt-G changes category, Alt-S changes scope,
+Alt-N adds an environment declaration in Set, and F1 shows help. Ctrl-C exits 130.
 
-Native palette names such as `rosewater` are included alongside semantic colors.
-When a native color differs from a role with the same name, its separate choice is
-marked `(native)` and saves the displayed hex value.
+Color choices include semantic roles, global color references and native palette
+names. Native entries are saved as `palette.NAME`, including collisions such as
+`palette.blue` beside semantic `blue`. The preview shows their resolved color.
+Missing native names fall back to the inherited semantic color, while the saved
+name remains intact for a future theme. Without a published palette, semantic
+roles, configured global references and literal colors remain available.
+
+Icons offer the cached Fonts glyph search or literal input, including an empty
+string to hide the icon. Selecting a glyph returns it to the pending edit; it
+neither copies to the clipboard nor sends a command to a pane. A missing glyph
+catalog leaves literal input available. Booleans/enums use typed choices. Text
+input uses optional Gum, with a readline fallback and `/cancel`.
 
 The preview distinguishes the saved value and its source from process overrides.
 Built-in setting defaults appear in the browser (`files.backup` defaults to false); explicit `list`/`get` retain their
@@ -209,9 +212,9 @@ usable terminal. `dots config set KEY` jumps directly to that option's picker or
 text editor and returns after reviewed Save or cancellation. For example:
 
 ```sh
-dots config set colors.todo.field.acceptance.value.fg
+dots config set colors.apps.todo.field.acceptance.value.fg
 dots config set icons.git.branch
-dots config set apps.menu.popup.border
+dots config set formatting.apps.menu.popup.border
 ```
 
 The direct editor preserves `--profile`, `--defaults` and `--no-refresh`. It skips
@@ -426,7 +429,7 @@ dots config set colors.ui.muted.fg muted --defaults
 dots config path icons --profile windows
 ```
 
-The literal TOML subset accepts named tables, quoted strings, booleans and comments. Icons may be empty and contain up to 64 printable characters; terminal controls are rejected. Color fields are `fg`, `bg`, and boolean `bold`, `dim`, `italic`, `underline`, `reverse`, `strikethrough`. Foregrounds/backgrounds select semantic palette roles or `#RRGGBB`; they never execute shell or template code. Shared UI roles are `ui.heading`, `ui.label`, `ui.identity`, `ui.accent`, `ui.foreground`, `ui.muted`, `ui.selection`; status roles include info, success, warning, error, working and waiting. CLI uses terminal-palette fallbacks until a palette is published. `dots config check` validates both preference files and the profile catalog.
+The literal TOML subset accepts named tables, quoted strings, booleans and comments. Icons may be empty and contain up to 64 printable characters; terminal controls are rejected. Color fields are `fg`, `bg`, and boolean `bold`, `dim`, `italic`, `underline`, `reverse`, `strikethrough`. Foregrounds/backgrounds select semantic roles, `palette.NAME`, a global `colors.ROLE.fg`/`.bg` reference, or `#RRGGBB`; they never execute shell or template code. Shared UI roles are `ui.heading`, `ui.label`, `ui.identity`, `ui.accent`, `ui.foreground`, `ui.muted`, `ui.selection`; status roles include info, success, warning, error, working and waiting. CLI uses terminal-palette fallbacks until a palette is published. `dots config check` validates both preference files and the profile catalog.
 
 The `apps` namespace provides overrides for `cli`, `tmux`, `yazi`, `fzf`, `gum`, `starship`, and `gitmux`. CLI renderers support foreground/background and attributes. Native consumers use their supported fields: generated color templates use fg/bg, Gitmux/Starship use Git symbols, and Yazi uses file/Git symbols. File and Git color rules remain in `file-colors.toml`; palette definitions and exact palette swatches retain their existing owners.
 
@@ -466,9 +469,9 @@ new saves instead of silently doing nothing. The added controls are:
 | Keys | Consumers |
 | --- | --- |
 | `colors.ui.border.fg`, `ui.cursor.fg`, `ui.match.fg`, `ui.separator.fg` | Applicable FZF/Gum and tmux adapters; use `apps.APP` for an override |
-| `colors.todo.status.open`, `doing`, `blocked`, `done`, `removed` | Todo reports, browser rows and previews; fg/bg and CLI attributes |
-| `colors.todo.priority.high`, `normal`, `low` | Todo priority presentation; fg/bg and CLI attributes |
-| `colors.apps.tmux.window.active`, `inactive`, `attention` | Window base fg/bg spans; existing name contrast spans remain separate |
+| `colors.apps.todo.status.open`, `doing`, `blocked`, `done`, `removed` | Todo reports, browser rows and previews; fg/bg and CLI attributes |
+| `colors.apps.todo.priority.high`, `normal`, `low` | Todo priority presentation; fg/bg and CLI attributes |
+| `colors.apps.tmux.windows.active`, `inactive`, `alert` | Window base fg/bg spans; existing name contrast spans remain separate |
 | `colors.apps.tmux.pane.active_border.fg`, `inactive_border.fg` | Pane borders |
 
 Defaults preserve current appearance, including the Linux/WSL inactive tmux
@@ -476,9 +479,7 @@ window defaults. Specialized weather condition artwork, notification behavior,
 layout sizes, application-native settings and arbitrary theme plugins remain
 outside this bounded visual catalog.
 
-Later candidates include separate Termux tab/name contrast controls and additional
-widget dimensions. They need explicit consumer bindings and native acceptance
-checks before becoming editable keys. Git/file colors remain in the existing
+Component controls for tmux, Termux tabs and battery are documented in [tmux preferences](tmux.md#component-preferences). Git/file colors remain in the existing
 file-color catalog rather than becoming duplicate config settings.
 
 Visual `set`/`unset` saves refresh affected active consumers unless `--no-refresh`
@@ -516,7 +517,7 @@ consumer activation is reported pending without selecting a theme.
 
 `apps.cli.logo_gradient` selects root usage artwork coloring: `classic` (the repository default) preserves vertical blue/cyan, while `installer` uses the horizontal published theme hint/info/accent gradient. Both values are available in Config editing and value completion. The setting follows profile inheritance and null/unset reset, activates on the next command invocation, and does not refresh the theme or applications.
 
-`default/config.json` declares typed `apps` and `formatting` defaults. The same
+`default/config.json` declares typed `apps`, `formatting` and popup/menu-entry `colors` defaults. The same
 sections in `profile.json` override individual fields. Resolution is selected
 profile, inherited parents, shared defaults, then null. A profile `null` or
 `config unset` removes the override; false, zero, empty strings and empty lists
@@ -546,9 +547,9 @@ additional candidates without adding runtime scans.
 
 ### Dots popup appearance
 
-Wiki reports and selectors expose `apps.wiki` display controls, `formatting.apps.wiki.row_gap`, `colors.wiki.*` spans and `icons.menu.wiki`. They reuse the shared CLI/menu columns and popup controls. See [Wiki output preferences](wiki.md#output-preferences) for defaults, consumer boundaries and examples. Typed changes apply on the next invocation or popup; raw/data and ordinary redirected reports retain their existing output.
+Wiki reports and selectors expose `apps.wiki` display controls, `formatting.apps.wiki.row_gap`, `colors.apps.wiki.*` spans and `icons.menu.wiki`. They reuse the shared CLI/menu columns and popup controls. See [Wiki output preferences](wiki.md#output-preferences) for defaults, consumer boundaries and examples. Typed changes apply on the next invocation or popup; raw/data and ordinary redirected reports retain their existing output.
 
-`apps.menu.popup` owns the Dots selector frame independently of ordinary FZF defaults. `position` accepts `center` (default), `top`, `bottom`, `left` or `right`; it supplies FZF's `--popup` position while preserving each controller's bounded width and height. `border` accepts `rounded` (default), `sharp`, `double`, `bold` or `none`. Shell `apps.fzf.default_opts` such as `--border=none` no longer remove Dots menu borders.
+`formatting.apps.menu.popup` and `colors.apps.menu.popup` own the Dots selector frame independently of ordinary FZF defaults. `position` accepts `center` (default), `top`, `bottom`, `left` or `right`; it supplies FZF's `--popup` position while preserving each controller's bounded width and height. `border` accepts `rounded` (default), `sharp`, `double`, `bold` or `none`. Shell `apps.fzf.default_opts` such as `--border=none` no longer remove Dots menu borders.
 
 `width` and `height` each default to `auto`. Size is resolved when the popup opens against the invoking client's columns/rows, including when another tmux client has a different size:
 
@@ -562,24 +563,24 @@ Wiki reports and selectors expose `apps.wiki` display controls, `formatting.apps
 
 Explicit sizes have a 32-column/6-row minimum when space permits and never exceed the client. Small previews reserve room for selection controls. Content fitting measures display cells, including Unicode and wrapped rows, without executing preview commands. Inline FZF supports height; floating width and positioning require the popup backend. These are opening-time sizes, not query-driven resizing.
 
-`apps.menu.popup.colors` provides `border` (theme `accent` by default), `fg`, `bg`, `label`, `preview-border`, `preview-label`, `preview-fg` and `preview-bg`. Colors accept a single semantic palette role, `#RRGGBB`, a quoted terminal color index, or `default`; nullable slots inherit the existing picker color. Normal profile/parent/default inheritance and `unset` apply. Labels and preview fields affect FZF; border/fg/bg also style Dots-owned tmux terminal hosts. Disabled color retains a readable frame, and disabled icons use ASCII borders.
+`colors.apps.menu.popup` provides `border.fg` (theme `accent` by default), `body.fg`, `body.bg`, `label.fg`, `preview.border.fg`, `preview.label.fg`, `preview.fg` and `preview.bg`. Colors accept a semantic role, `palette.NAME`, a global `colors.ROLE.fg/bg` reference, `#RRGGBB`, a quoted terminal color index, or `default`; nullable slots inherit the existing picker color. Normal profile/parent/default inheritance and `unset` apply. Labels and preview fields affect FZF; border/fg/bg also style Dots-owned tmux terminal hosts. Disabled color retains a readable frame, and disabled icons use ASCII borders.
 
 ```sh
-dots config get apps.menu.popup.position
-dots config set apps.menu.popup.position center
-dots config set apps.menu.popup.border rounded
-dots config set apps.menu.popup.colors.border blue
-dots config set apps.menu.popup.colors.bg '#181825'
-dots config unset apps.menu.popup.colors.bg
-dots config explain apps.menu.popup.border
-dots config explain apps.menu.popup.width --json
-dots config set apps.menu.popup.width '90%'
-dots config set apps.menu.popup.height fit
-dots config set apps.menu.popup.height 24
-dots config unset apps.menu.popup.height
+dots config get formatting.apps.menu.popup.position
+dots config set formatting.apps.menu.popup.position center
+dots config set formatting.apps.menu.popup.border rounded
+dots config set colors.apps.menu.popup.border.fg blue
+dots config set colors.apps.menu.popup.body.bg '#181825'
+dots config unset colors.apps.menu.popup.body.bg
+dots config explain formatting.apps.menu.popup.border
+dots config explain formatting.apps.menu.popup.width --json
+dots config set formatting.apps.menu.popup.width '90%'
+dots config set formatting.apps.menu.popup.height fit
+dots config set formatting.apps.menu.popup.height 24
+dots config unset formatting.apps.menu.popup.height
 ```
 
-These controls appear under Apps in the Config popup and in completion. Reopening a popup reads the effective settings; no theme refresh or server reload is required. `config explain` reports `next popup` activation. Native Windows and ordinary terminals use the same FZF frame/colors without floating positioning; native tmux hosts apply per-popup flags rather than changing server options. The existing menu identities, previews, approvals and exact data interfaces are unchanged.
+These controls appear under Formatting and Colors in the Config popup and in completion. Reopening a popup reads the effective settings; no theme refresh or server reload is required. `config explain` reports `next popup` activation. Native Windows and ordinary terminals use the same FZF frame/colors without floating positioning; native tmux hosts apply per-popup flags rather than changing server options. The existing menu identities, previews, approvals and exact data interfaces are unchanged.
 
 For typed controls, `config explain KEY` lists the type, finite allowed values and applicable syntax/examples. JSON adds a `constraints` object with `type`, optional `choices`, `syntax` and `examples`; `get` retains its exact value output. Config previews/details show the same information, and editing offers finite choices or size/color examples before custom input. Bash, Zsh, Fish and native PowerShell value completion use the same declarations. Custom input is still validated by the guarded save workflow.
 
@@ -607,10 +608,10 @@ These settings apply on the next command invocation or popup without publishing 
   label width/gap and alignment. Tabs expand at configured stops before wrapping.
   `formatting.apps.menu` controls menu indentation, padding, label spacing,
   alignment and listing row gaps. Entry styles address stable `MENU:ENTRY` keys
-  under `formatting.apps.menu.entries`, with `icon`, `label`, `description`,
-  `shortcut` and `state` style objects. `colors.menu.*` supplies semantic defaults.
+  under `colors.apps.menu.entries`, with `icon`, `label`, `description`,
+  `shortcut` and `state` style objects. `colors.apps.menu.*` supplies semantic defaults.
 - `colors.icons.ROLE.{fg,bg,...}` gives shared human icon tokens independent
-  styles; absent fields inherit the enclosing span. `colors.todo.field.FIELD`
+  styles; absent fields inherit the enclosing span. `colors.apps.todo.field.FIELD`
   has separate `label` and `value` styles. Status/priority retain their specialized
   roles unless a field style overrides them. Todo formatting adds `level_indent`,
   `row_gap` and `list_type`; see [Todo views](todo.md#human-tree-views).
@@ -637,6 +638,14 @@ These settings apply on the next command invocation or popup without publishing 
   elsewhere. `formatting.apps.nvim.lualine.sections` uses native `a/b/c/x/y/z`
   arrays of named existing components; nullable padding retains component defaults.
   Neither interface accepts arbitrary executable components.
+
+### Native Codex toast configuration
+
+Codex toast appearance has a separate native binding at `apps.codex.toast`.
+The sibling `apps.codex.vibrate` group adds duration, force and count. These eight
+fields edit the checkout's `config/tmux/codex-alerts.toml` directly,
+without profile inheritance or `--defaults`; see
+[toast controls](configuration.md#codex-warning-toast).
 
 ### Native weather configuration
 

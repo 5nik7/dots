@@ -48,7 +48,7 @@ def help_report(parser, argv, stream=None):
     for example in examples.splitlines(): ui.text(example.strip(), 'identity')
     ui.gap()
     ui.text('Install, upgrade and refresh run without an extra confirmation flag.', 'muted')
-    ui.text('Upgrades show brief results; --raw shows full manager output.', 'muted')
+    ui.text('Install, uninstall and upgrade show brief results; --raw shows full manager output.', 'muted')
     ui.text('Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.', 'muted')
     return True
 

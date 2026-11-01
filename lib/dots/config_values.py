@@ -86,6 +86,9 @@ def read_defaults(root):
     if not path.exists() and not path.is_symlink():return dict(formatting={},apps={})
     if path.is_symlink() or not path.is_file() or path.stat().st_size>2*1024*1024:raise ValueError('configuration defaults must be a bounded regular file')
     data=json.loads(path.read_text())
+    from config_keys import document
+    data=document(data,public=False)
+    if data.get('colors'):raise ValueError('profile colors support only declared popup and menu entry controls; use colors.toml for styles')
     if not isinstance(data,dict) or data.get('schema')!=1 or set(data)-{'schema',*GROUPS}:raise ValueError('invalid configuration defaults')
     if any(not isinstance(data.get(g,{}),dict) for g in GROUPS):raise ValueError('configuration groups must be objects')
     return {g:data.get(g,{}) for g in GROUPS}
@@ -125,6 +128,14 @@ def style(value):
 def validate_value(defaults,path,value):
     if not recognized(defaults,path):raise ValueError('unknown configuration key: '+name(path))
     if value is None:return
+    if path[:2]==('apps','tmux'):
+        choices={('clock','icon_mode'):('none','fixed','daylight'),('session','name_source'):('workspace','session','repository')}
+        if path[2:] in choices:
+            if value not in choices[path[2:]]:raise ValueError('invalid tmux choice: '+name(path))
+            return
+        if path[2:3]==('battery',) and path[-1] in ('critical','low'):
+            if type(value) is not int or not 0<=value<=100:raise ValueError('battery threshold requires integer 0..100')
+            return
     if path in (('apps','wiki','list_details'), ('apps','wiki','reader')):
         allowed = ('summary','full') if path[-1]=='list_details' else ('auto','plain')
         if not isinstance(value,str) or value not in allowed:raise ValueError('invalid wiki '+path[-1]+'; allowed: '+', '.join(allowed))
@@ -214,6 +225,9 @@ def validate_value(defaults,path,value):
 
 
 def validate_groups(root,data):
+    from config_keys import document
+    data=document(data,public=False)
+    if data.get('colors'):raise ValueError('profile colors support only popup and menu entries; use colors.toml for visual styles')
     defaults=read_defaults(root)
     for group in GROUPS:
         values=data.get(group,{})
@@ -222,6 +236,11 @@ def validate_groups(root,data):
 
 
 def constraints(defaults, key):
+    from config_keys import internal
+    key=internal(key)
+    choices={'apps.tmux.clock.icon_mode':['none','fixed','daylight'],'apps.tmux.session.name_source':['workspace','session','repository']}
+    if key in choices:return dict(type='string',choices=choices[key])
+    if key in ('apps.tmux.battery.critical','apps.tmux.battery.low'):return dict(type='integer',syntax='Integer 0..100; null retains provider threshold')
     """Describe validated typed controls for explain, editing and completion."""
     path = parts(key)
     if not recognized(defaults, path): return {}
@@ -249,7 +268,7 @@ def constraints(defaults, key):
         field_depth = len(prefix) + (2 if kind=='highlights' else 3)
         if len(path) < field_depth: return dict(type='object')
         if path[-1] in ('fg', 'bg', 'sp'):
-            return dict(type='color', examples=['accent', '#89b4fa'], syntax='Palette role or #RRGGBB'+('; NONE is also accepted' if kind=='highlights' else ''))
+            return dict(type='color', examples=['accent', '#89b4fa', 'palette.blue', 'colors.daylight.day.fg'], syntax='Semantic role, palette.NAME, global colors.ROLE.fg/bg reference or #RRGGBB'+('; NONE is also accepted' if kind=='highlights' else ''))
         if path[-1] == 'link': return dict(type='string')
         if path[-1] == 'blend': return dict(type='integer', syntax='Integer 0..100')
         return dict(type='boolean', choices=[True,False])
@@ -262,7 +281,7 @@ def constraints(defaults, key):
             return dict(type='size', choices=list(SIZES), examples=[*SIZE_PRESETS, 80 if path[-1]=='width' else 24],
                         syntax='auto: controller layout; fit: known content (90% cap); fill: full client; 1%..100%; integer 1..10000 '+('columns' if path[-1]=='width' else 'rows'))
     if path[:4] == ('apps', 'menu', 'popup', 'colors') and len(path) == 5:
-        return dict(type='color', examples=['accent', '#89b4fa', 'default'], syntax='One palette role, #RRGGBB, or quoted terminal color index 0..255')
+        return dict(type='color', examples=['accent', '#89b4fa', 'default', 'palette.blue', 'colors.daylight.day.fg'], syntax='Semantic role, palette.NAME, global colors.ROLE.fg/bg reference, #RRGGBB, or quoted terminal color index 0..255')
     if path[:3] == ('formatting', 'apps', 'tmux') and path[-1] in ('main_row', 'termux_row', 'rows'):
         return dict(type='integer', choices=[0, 1, 2] if path[-1]=='rows' else [0, 1])
     if path[-1] in ENUMS and lookup(defaults,path,MISSING) is not MISSING:
@@ -282,7 +301,25 @@ def constraint_details(spec):
     return rows
 
 
+def activation(key):
+    from config_keys import internal
+    path=parts(internal(key))
+    app=path[1] if path[0]=='apps' else path[2] if path[:2]==('formatting','apps') else ''
+    return (app, {'tmux':'visual publication; verified tmux servers receive owned controls',
+                  'nvim':'visual publication; Neovim refreshes on focus',
+                  'fzf':'visual publication; existing shells follow on the next prompt',
+                  'menu':'next popup', 'fonts':'next Fonts invocation or popup',
+                  'wiki':'next Wiki invocation or popup'}.get(app,'next invocation'))
+
+
 def candidates(root, key):
+    if key.startswith('apps.codex.'):
+        if key.startswith('apps.codex.vibrate.'):
+            from codex_vibration import constraints as native_constraints
+        else:
+            from codex_toast import constraints as native_constraints
+        spec=native_constraints(key)
+        return [str(v) if isinstance(v,str) else json.dumps(v) for v in [*spec.get('choices', []), *spec.get('examples', [])]]
     if key.startswith('apps.pkgs.'):
         from config_pkgs import constraints as native_constraints
         spec = native_constraints(key)
@@ -303,18 +340,25 @@ class Controls:
         from profile_config import checkout,context
         self.root=checkout(root);self.defaults=read_defaults(self.root)
         replacement=(replacements or {}).get(self.root/'default/config.json')
-        if replacement is not None:self.defaults={g:replacement.get(g,{}) for g in GROUPS}
+        if replacement is not None:
+            from config_keys import document
+            replacement=document(replacement,public=False)
+            self.defaults={g:replacement.get(g,{}) for g in GROUPS}
         self.selected=selected if selected is not None else context(self.root)
         self.paths=[self.root/'default/config.json']
         self.layers=[(self.paths[0],self.defaults)];self.values=copy.deepcopy(self.defaults)
         for layer in [] if defaults else self.selected['layers']:
             path=Path(layer['root'])/'profile.json';self.paths.append(path)
             data=(replacements or {}).get(path,layer)
+            from config_keys import document
+            data=document(data,public=False)
             validate_groups(self.root,data)
             values={g:data.get(g,{}) for g in GROUPS}
             self.layers.append((path,values));self.values=merge(self.values,values)
 
     def resolve(self,key):
+        from config_keys import internal
+        key=internal(key)
         path=parts(key)
         if not recognized(self.defaults,path):raise ValueError('unknown configuration key: '+key)
         declarations=[]

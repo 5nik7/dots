@@ -338,6 +338,28 @@ done
         self.assertEqual((current / 'status').read_text(), 'committed\n')
         self.assertEqual((first / 'selection').read_text(), 'catppuccin-mocha\n')
 
+    def test_native_palette_preferences_match_both_renderers_in_selected_checkout(self):
+        from unittest.mock import patch
+        import sys
+        sys.path.insert(0,str(REPO/'lib/dots/themes'))
+        self.addCleanup(sys.path.remove,str(REPO/'lib/dots/themes'))
+        from palette_native import Themes as NativeThemes
+        shutil.copytree(REPO/'config/tmux',self.repo/'config/tmux')
+        profile=self.repo/'profiles/linux';profile.mkdir(parents=True)
+        (profile/'profile.json').write_text(json.dumps(dict(schema=1,id='linux')))
+        (profile/'colors.toml').write_text('[apps.tmux.clock.icon]\nfg="palette.rosewater"\n')
+        self.env['DOTS_PROFILE']='linux'
+        bash=self.root/'bash-render';bash.mkdir()
+        self.env.update(RENDER_THEME='catppuccin-mocha',RENDER_OUTPUT=str(bash))
+        self.engine('dt_load "$RENDER_THEME" && dt_render "$RENDER_OUTPUT"')
+        native=self.root/'native-render';native.mkdir()
+        with patch.dict(os.environ,self.env,clear=True):NativeThemes().render('catppuccin-mocha',native)
+        for name in ('tmux.conf','tmux-controls.conf'):
+            self.assertEqual((bash/name).read_bytes(),(native/name).read_bytes(),name)
+        for out in (bash,native):
+            doc=json.loads((out/'preferences.json').read_text())
+            self.assertEqual(doc['apps']['tmux']['colors']['clock.icon']['fg'],'#f5e0dc')
+
     def test_published_snapshot_survives_source_edits(self):
         self.dots('theme', 'set', 'catppuccin-mocha')
         before = {s: self.dots('theme', 'init', '--shell', s).stdout for s in ('bash','zsh','fish')}

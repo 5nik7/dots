@@ -117,7 +117,7 @@ def pip_progress_environment(command, environment):
 
 
 def npm_progress_environment(command, environment):
-    """Request native activity only inside the compact upgrade observer."""
+    """Request native activity only inside the compact transaction observer."""
     if os.path.basename(command[0]).lower() not in ('npm', 'npm.cmd', 'npm.exe'): return
     if any(key.lower() == 'npm_config_loglevel' for key in environment): return
     # Native CLI flags take precedence; do not rewrite literal recipe argv.

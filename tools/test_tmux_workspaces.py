@@ -149,14 +149,19 @@ class WorkspacesTest(unittest.TestCase):
         # Slow provider refreshes retain the last successful result in each client.
         provider = self.fx.tmux_config / 'gitmux-status.py'
         observed = self.fx.home / 'slow-provider'
-        provider.write_text('import time\nfrom pathlib import Path\n'
+        replacement=provider.with_suffix('.next')
+        replacement.write_text('import time\nfrom pathlib import Path\n'
                             f'Path({str(observed)!r}).touch()\ntime.sleep(.3)\n'
                             'print("󰊤|#[fg=#{@dots-gitmux-branch}]main#[default]")\n')
+        # Replace the provider atomically so this phase tests a slow valid job,
+        # not a transient empty Python file observed between truncate/write.
+        replacement.replace(provider)
         self.wait(observed.exists)
         for _ in range(30):
             for index in range(2):
                 rows = frame(index)
-                self.assertIn('main', rows[1])
+                self.assertIn('main', rows[1],self.inner('display-message','-p','-c',terminals[index],
+                    '#{client_width}|#{E:@dots-git-snapshot}|#{E:@dots-gitmux-segment}'))
                 self.assertTrue(rows[1].startswith(' 1 '))
             time.sleep(.04)
         provider.write_text('print("|")\n')

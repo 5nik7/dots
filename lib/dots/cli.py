@@ -160,12 +160,12 @@ def complete(root, directories, words):
         elif kind == 'profile-id':
             from profiles import available
             for row in available(root): add(row['id'])
-        elif kind == 'config-value':
-            from config_values import candidates
-            for value in candidates(root, positionals[0] if positionals else ''): add(value)
-        elif kind == 'config-key':
-            from profile_config import keys
-            for key in keys(root, option_values.get('--profile')): add(key)
+        elif kind in ('config-key','config-value'):
+            from config_completion import key_candidates,value_candidates
+            choices=(key_candidates(root,current,option_values.get('--profile')) if kind=='config-key' else
+                     value_candidates(root,positionals[0] if positionals else '',current,option_values.get('--profile')))
+            for value,description in choices:
+                if not any(c in value+description for c in '\t\r\n'):suggestions.append(('candidate',value,description))
         elif kind == 'dots-setting':
             from environment import inspect
             for key in inspect(root)['values']: add(key)

@@ -51,6 +51,19 @@ class MenuFixture(unittest.TestCase):
 
 
 class Menus(MenuFixture):
+    def test_selected_row_styles_are_opt_in(self):
+        from files.catalog import Presentation
+        with patch('menus.terminal', return_value=True), patch('menus.shutil.which', return_value='fixture-fzf'), \
+             patch('interaction.rich_fzf_available', return_value=True), \
+             patch('files.picker.fzf_colors', return_value='fg:#abcdef,fg+:strip,bg+:#112233'), \
+             patch.object(RichSelector, 'fzf', return_value=[0]) as picker:
+            for enabled in (False, True):
+                choose(self.menu, mode='browse', ui=Presentation(terminal=True), preserve_row_styles=enabled)
+                colors = picker.call_args.args[6]
+                self.assertIn('bg+:#112233', colors)
+                self.assertEqual('fg+:strip' in colors, not enabled)
+                self.assertEqual('fg+:-1:regular' in colors, enabled)
+
     def test_schema_and_data_modes_never_probe_or_select(self):
         with patch('subprocess.run', side_effect=AssertionError('unexpected child')), \
                 patch('shutil.which', side_effect=AssertionError('unexpected tool probe')):
@@ -81,6 +94,10 @@ class Menus(MenuFixture):
             self.assertLessEqual(width, size[0] - 2); self.assertLessEqual(height, size[1] - 2)
         self.assertEqual(dimensions(['short'], header='X' * 50, size=(80, 24)), (56, 7))
         self.assertEqual(dimensions(['界' * 20], size=(80, 24))[0], 46)
+        for size in ((40,12),(80,24),(120,30)):
+            plain=['界 Location', 'Use configured / automatic location']
+            colored=['\x1b[1;38;2;18;52;86m'+line+'\x1b[0m' for line in plain]
+            self.assertEqual(dimensions(colored,size=size),dimensions(plain,size=size))
 
     def test_plain_views_wrap_and_escape_labels(self):
         from files.catalog import Presentation

@@ -88,6 +88,7 @@ def metric(name, color, format='hex'):
 def styles():
     spec = importlib.util.spec_from_file_location('dots_file_colors', LIB / 'file-colors.py')
     module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    module.ROOT = Path(os.environ.get('DOTS') or LIB.parents[2]).resolve()
     return module
 
 
@@ -202,6 +203,7 @@ class Themes:
                         for chunk in iter(lambda: stream.read(65536), b''): digest.update(chunk)
         from style_config import Styles
         preference_inputs = [*Styles(self.checkout).paths, LIB.parent/'style_config.py', LIB.parent/'theme_styles.py', LIB.parent/'style_catalog.py', LIB.parent/'config_values.py', LIB.parent/'tmux_config.py', self.checkout/'default/config.json', self.checkout/'config/tmux/tmux.conf', LIB.parent/'resources.tsv', self.checkout/'config/gitmux/gitmux.conf']
+        preference_inputs.extend(LIB.parent/name for name in ('tmux_controls.py','config_keys.py'))
         for path in [*styles().input_paths(identity, self.directory(identity)), *preference_inputs]:
             digest.update(str(path).encode())
             if path.exists(): digest.update(regular(path))
@@ -233,7 +235,7 @@ class Themes:
         tokens.update(color.leaf_template_tokens(palette))
         tokens.update(color.tmtheme_template_tokens(doc))
         from theme_styles import tokens as preference_tokens
-        tokens.update(preference_tokens(palette['colors'], self.checkout))
+        tokens.update(preference_tokens(palette, self.checkout))
         tokens['mode'] = palette['mode']
         tokens['file_styles_vivid'] = json.dumps(color.vivid_theme(doc, color.vivid_runtime()[2]), indent=2)
         tokens['git_colors_starship'] = '\n'.join('git_' + key + ' = ' + json.dumps(value) for key, value in doc['colors']['git'].items())
@@ -257,7 +259,7 @@ class Themes:
                 text = re.sub(r'\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}', substitute, text)
                 if '{{' in text or '}}' in text: raise ValueError('unresolved template expression')
                 (out / name).write_text(text, encoding='utf-8', newline='\n'); rendered.add(name)
-        color.write_snapshot(color.generate(doc, out / 'vivid.yml'), out)
+        color.write_snapshot(color.generate(doc, out / 'vivid.yml'), out, palette=palette)
         if build_cache and (out / 'bat.tmTheme').is_file() and bat_cache.build(out, bat_inputs):
             (out / 'delta-cache').mkdir()
             (out / 'delta-cache/bat').symlink_to('../bat-cache', target_is_directory=True)

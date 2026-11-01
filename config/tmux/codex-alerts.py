@@ -6,6 +6,7 @@ delivery never runs in the read-only status helper. No transcripts are read.
 """
 import argparse
 import contextlib
+import copy
 import hashlib
 import importlib.util
 import json
@@ -48,11 +49,19 @@ MAX_EVENTS = 4096
 EXPIRE = 600  # Unmatched candidates are not replayed when a session opens later.
 PREFIXES = {'choice': 'Codex needs input', 'approval': 'Codex needs approval', 'complete': 'Codex finished'}
 ANSI = re.compile(r'\x1b(?:\][^\x07\x1b]*(?:\x07|\x1b\\)|\[[0-?]*[ -/]*[@-~])')
+VIBRATIONS = []  # Finite helpers; reaped on each worker tick, never queue state.
 
 
-def preferences():
-    with (HERE / 'codex-alerts.toml').open('rb') as stream:
-        doc = tomllib.load(stream)
+def preferences(document=None):
+    if document is None:
+        with (HERE / 'codex-alerts.toml').open('rb') as stream:
+            doc = tomllib.load(stream)
+    else:
+        doc=copy.deepcopy(document)
+    from codex_toast import FIELDS, values
+    doc['termux'].update({FIELDS[key]:value for key,value in values(doc['termux']).items()})
+    from codex_vibration import FIELDS, values
+    doc['termux'].update({FIELDS[key]:value for key,value in values(doc['termux']).items()})
     if doc['schema'] != 1 or doc['poll_seconds'] != 5:
         raise ValueError('unsupported preferences')
     for value in (doc['enabled'], doc['unfocused_only'], doc['clear_on_view'],
@@ -67,9 +76,6 @@ def preferences():
             or type(options['excerpt_chars']) is not int or not 40 <= options['excerpt_chars'] <= 1000
             or options['toast_gravity'] not in ('top', 'middle', 'bottom')):
         raise ValueError('invalid notification preference')
-    for key in ('toast_background', 'toast_foreground'):
-        if not re.fullmatch('[a-z_]+', options[key]):
-            raise ValueError('invalid palette role')
     return doc
 
 
@@ -492,40 +498,65 @@ def colors(prefs):
             data = stream.read(262145)
         if len(data) > 262144:
             raise ValueError('oversized palette')
-        palette = json.loads(data)['colors']
+        palette = json.loads(data)
     except (OSError, ValueError, KeyError, TypeError):
         palette = {}
-    def color(role, fallback):
-        value = palette.get(role) if isinstance(palette, dict) else None
-        return value if isinstance(value, str) and re.fullmatch('#[0-9a-fA-F]{6}', value) else fallback
+    from codex_toast import color, background
     options = prefs['termux']
-    return color(options['toast_background'], '#000000'), color(options['toast_foreground'], '#ffff00')
+    return (background(color(options['toast_background'], palette, HERE.parents[1], '#000000'),options.get('toast_background_opacity',100)),
+            color(options['toast_foreground'], palette, HERE.parents[1], '#ffff00'))
 
 
-def notify_device(message, prefs):
+def reap_vibrations():
+    VIBRATIONS[:]=[process for process in VIBRATIONS if process.poll() is None]
+
+
+def notify_device(message, prefs, *, wait=False):
+    """Deliver independently; Debug can wait for and report the complete pattern."""
+    from codex_vibration import values, run
+    from concurrent.futures import ThreadPoolExecutor
+    import threading
     options = prefs['termux']
-    if not os.environ.get('TERMUX_VERSION') or not options['enabled']:
-        return
+    if os.name=='nt' or not os.environ.get('TERMUX_VERSION'):
+        return {name:dict(status='unavailable',reason='Termux is required') for name in ('toast','vibrate')}
+    if not options['enabled']:
+        return {name:dict(status='skipped',reason='Termux alerts are disabled') for name in ('toast','vibrate')}
+    settings=values(options)
+    reap_vibrations()
     background, foreground = colors(prefs)
-    commands = [(['termux-vibrate', '-d', str(options['vibration_ms'])] +
-                 (['-f'] if options['force_vibration'] else [])),
-                (['termux-toast', '-b', background, '-c', foreground, '-g', options['toast_gravity']] +
-                 (['-s'] if options['toast_short'] else []) + ['--', message])]
-    def attempt(command):
+    toast=['termux-toast','-b',background,'-c',foreground,'-g',options['toast_gravity']]+(
+        ['-s'] if options['toast_short'] else [])+['--',message]
+    cancel=threading.Event()
+    def attempt(kind):
+        if kind=='vibrate' and not settings['count']: return run(settings,bounded)
+        command='termux-toast' if kind=='toast' else 'termux-vibrate'
+        if not shutil.which(command): return dict(status='unavailable',reason=command+' is not installed')
         try:
-            bounded(command, timeout=5)
+            if kind=='toast':
+                bounded(toast,timeout=5)
+                return dict(status='sent',attempted=1,sent=1)
+            if settings['count']==1 or wait:
+                return run(settings,bounded,cancel=cancel)
+            process=subprocess.Popen([sys.executable,'-B',str(Path(__file__).resolve()),'vibrate',json.dumps(settings)],
+                stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+                start_new_session=True,close_fds=True)
+            VIBRATIONS.append(process)
+            return dict(status='started',requested=settings['count'])
         except (OSError, ValueError, subprocess.SubprocessError):
-            pass  # Independent, at-most-once attempts, never a retry storm.
-    available = [command for command in commands if shutil.which(command[0])]
+            return dict(status='failed',reason=command+' request failed or timed out')
     # Real Android IPC can exceed two seconds. Start both requests together so
-    # one slow API response neither delays the other nor doubles the wait bound.
-    if available:
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=len(available)) as pool:
-            list(pool.map(attempt, available))
+    # a slow or repeated vibration does not delay the toast. Only Debug waits
+    # for a whole pattern; the normal worker hands repeats to a finite helper.
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        jobs={kind:pool.submit(attempt,kind) for kind in ('toast','vibrate')}
+        try: return {kind:job.result() for kind,job in jobs.items()}
+        except BaseException:
+            cancel.set()
+            raise
 
 
 def tick(socket, prefs, deliver=True):
+    reap_vibrations()
     key, now = status.socket_key(socket), time.time()
     graph = {}
     panes = snapshot(socket, topology=graph)
@@ -578,6 +609,7 @@ def watch(socket):
         except BlockingIOError:
             return
         while True:
+            reap_vibrations()
             try:
                 installation()
                 if status.socket_key(socket) != key:
@@ -594,7 +626,7 @@ def watch(socket):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=['hook', 'notify', 'start', 'watch', 'ack', 'ack-pane'])
+    parser.add_argument('mode', choices=['hook', 'notify', 'start', 'watch', 'ack', 'ack-pane', 'vibrate'])
     parser.add_argument('payload', nargs='?')
     parser.add_argument('--socket')
     parser.add_argument('--pane')
@@ -605,6 +637,11 @@ def main():
         return  # Explicit platform exception: no native tmux/Android consumer.
     os.umask(0o077)
     try:
+        if args.mode=='vibrate':
+            if not os.environ.get('TERMUX_VERSION') or not args.payload or len(args.payload)>1024: return
+            from codex_vibration import run
+            run(json.loads(args.payload),bounded)
+            return
         installed = installation()
         prefs = preferences()
         if args.mode in ('hook', 'notify'):

@@ -1,4 +1,4 @@
-"""Compact human upgrade results; subprocess status remains authoritative."""
+"""Compact human package transactions; subprocess status remains authoritative."""
 from collections import deque
 from contextlib import nullcontext
 import re
@@ -16,6 +16,7 @@ ROUTINE = re.compile(r'^(?:\(?Reading |Building dependency|Calculating |Get:|Hit
                      r'Resolved |Prepared |Installed |Nothing to upgrade|\s*\d+%)')
 ERROR = re.compile(r'^(?:npm (?:error|ERR!)\s*|E:\s*|dpkg(?:-deb)?:\s*(?:fatal )?error\b[: ]*|(?:error|fatal|failed)\b[: ]*)', re.I)
 WARNING = re.compile(r'^(?:npm (?:warn|WARN)\s*|W:\s*|warning\b[: ]*|warn\b[: ]*)', re.I)
+STAGES = {'install': 'Installing', 'upgrade': 'Upgrading', 'uninstall': 'Removing'}
 
 
 def enabled(args, cfg):
@@ -27,33 +28,47 @@ def renderer(cfg, stream):
     return report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color', 'auto'), stream=stream)
 
 
-def heading(cfg, backend=None):
+def heading(cfg, backend=None, *, action='upgrade'):
+    title = action.capitalize()+' packages'
     ui = renderer(cfg, sys.stdout)
     if ui:
-        ui.heading('Upgrade packages')
+        ui.heading(title)
         if backend is not None: ui.field('Scope', backend.scope)
     else:
-        print('Upgrade packages')
+        print(title)
         if backend is not None: print('  Scope: '+backend.scope)
+    sys.stdout.flush()
+
+
+def packages(cfg, label, names):
+    """Show selected identities once, without inventory queries or log parsing."""
+    value = ', '.join(dict.fromkeys(names))
+    if not value: return
+    ui = renderer(cfg, sys.stdout)
+    if ui: ui.field(label, value, 'identity')
+    else: print('  '+label+': '+value)
     sys.stdout.flush()
 
 
 class Output:
     """Keep bounded diagnostics and a failure tail, without storing full logs."""
-    def __init__(self, manager, cfg, progress=None):
+    def __init__(self, manager, cfg, progress=None, *, action='upgrade'):
         self.manager, self.cfg, self.progress = manager, cfg, progress
+        self.action = action
+        self.default_stage = STAGES[action]
         self.errors, self.warnings = [], []
         self.tail = deque(maxlen=3)
         self.extra = 0
         self.pause = None
         self.mirror_sync = False
-        self.stage, self.package = 'Upgrading', ''
+        self.updated = None
+        self.stage, self.package = self.default_stage, ''
         self.transferred, self.total = 0, 0
         self.last_activity = time.monotonic()
         self.partial_seen = ''
 
     def begin(self, command=None):
-        self.stage, self.package = 'Upgrading', ''
+        self.stage, self.package = self.default_stage, ''
         self.transferred, self.total = 0, 0
         self.last_activity = time.monotonic()
         self.partial_seen = ''
@@ -62,6 +77,11 @@ class Output:
             if re.fullmatch(r'[A-Za-z0-9_.~+/-]+', target):
                 self.package = re.sub(r'/v[2-9][0-9]*$', '', target).rsplit('/', 1)[-1]
                 self.stage = 'Installing'
+        if (self.manager == 'winget' and command and
+                re.split(r'[/\\]', command[0])[-1].lower() in ('winget', 'winget.exe') and '--id' in command):
+            index = command.index('--id')+1
+            if index < len(command) and re.fullmatch(r'[A-Za-z0-9_.+-]+', command[index]):
+                self.package = command[index]
         self.tick()
 
     def pip_stage(self, text):
@@ -134,6 +154,22 @@ class Output:
         if re.fullmatch(identity, name): self.package = name
         return True
 
+    def native_stage(self, text):
+        """Identify packages only from known native transaction events."""
+        match = None
+        if self.manager == 'apt':
+            verb = 'Removing' if self.action == 'uninstall' else '(?:Unpacking|Setting up)'
+            match = re.match(verb+r' ([a-z0-9][a-z0-9+.:~-]*)\s+\(', text)
+        elif self.manager in ('pacman', 'paru', 'yay'):
+            verb = 'removing' if self.action == 'uninstall' else '(?:installing|upgrading)'
+            match = re.match(r'\(\s*\d+/\d+\) '+verb+r' ([A-Za-z0-9@_+.-]+)(?:\.\.\.|\s|$)', text)
+        elif self.manager == 'pip' and self.action == 'uninstall':
+            match = re.match(r'Found existing installation: ([A-Za-z0-9_.-]+)\s', text)
+        if not match: return False
+        self.package = match[1].removesuffix('...')
+        self.stage = 'Removing' if self.action == 'uninstall' else 'Installing'
+        return True
+
     def tick(self, now=None):
         if self.progress is None or self.pause is not None: return
         now = time.monotonic() if now is None else now
@@ -173,13 +209,15 @@ class Output:
         if not text: return
         self.last_activity = time.monotonic()
         self.partial_seen = ''
+        if ending and self.manager == 'npm' and re.match(r'^npm warn deprecated\b', text, re.I):
+            return  # Available in raw output; never inflate diagnostic counts/tails.
         if self.manager == 'apt' and ('File has unexpected size' in text or 'Mirror sync in progress' in text):
             self.mirror_sync = True
         if not ending or PROMPT.search(text):
             self.prompt(text, stream, ending)
             return
         if not self.tail or self.tail[-1] != text: self.tail.append(text)
-        event = self.pip_stage(text) or self.npm_stage(text)
+        event = self.pip_stage(text) or self.npm_stage(text) or self.native_stage(text)
         if event: self.tick()
         error, warning = ERROR.match(text), WARNING.match(text)
         if error or warning:
@@ -192,25 +230,36 @@ class Output:
                 if len(rows) < 2: rows.append(value)
                 else: self.extra += 1
         elif self.progress is not None and not event:
-            if self.manager in ('pip', 'npm', 'go'):
+            if self.manager in ('pip', 'npm', 'go', 'winget'):
                 self.tick(); return
-            self.stage = ('Downloading' if re.search(r'^(?:Get:|Downloading|Fetching)', text) else
+            self.package = ''
+            self.stage = ('Removing' if self.action == 'uninstall' else
+                     'Downloading' if re.search(r'^(?:Get:|Downloading|Fetching)', text) else
                      'Installing' if re.search(r'^(?:Unpacking|Setting up|Installing|Successfully)', text) else
-                     'Checking' if ROUTINE.match(text) else 'Upgrading')
+                     'Checking' if ROUTINE.match(text) else self.default_stage)
             self.tick()
 
-    def result(self, rc, *, skipped=0, unchanged=False):
+    def result(self, rc, *, skipped=0, unchanged=False, names=()):
         self.close()
         status = 'failed (exit '+str(rc)+')' if rc else 'unchanged' if unchanged else 'complete'
-        if skipped: status += ' · '+str(skipped)+' skipped'
+        suffix = ' · '+str(skipped)+' skipped' if skipped else ''
         ui = renderer(self.cfg, sys.stdout)
-        if ui: ui.field(self.manager, status, 'error' if rc else 'muted' if unchanged else 'success')
-        else: print('  '+self.manager+': '+status)
+        if ui:
+            from plugin_presentation import STYLES
+            role = 'error' if rc else 'muted' if unchanged else 'success'
+            ui.ui.detail_spans(self.manager, [(status, STYLES[role]), (suffix, '90')], label_width=11)
+        else: print('  '+self.manager+': '+status+suffix)
         sys.stdout.flush()
+        if not rc and not unchanged and self.action in ('install', 'uninstall'):
+            packages(self.cfg, 'Installed' if self.action == 'install' else 'Removed', names)
+        if not rc and not unchanged and self.action == 'upgrade':
+            packages(self.cfg, 'Updated', self.updated if self.updated else
+                     ['unavailable' if self.updated is None else 'none'])
         messages = [(s, 'error') for s in (self.errors or (list(self.tail)[-2:] if rc else []))]
         messages += [(s, 'warning') for s in self.warnings]
         if rc and self.mirror_sync:
-            messages = [('Repository metadata is inconsistent (mirror sync). Retry pkgs refresh later, then pkgs upgrade.', 'error')]
+            retry = 'pkgs upgrade' if self.action == 'upgrade' else 'retry the '+self.action
+            messages = [('Repository metadata is inconsistent (mirror sync). Retry pkgs refresh later, then '+retry+'.', 'error')]
         error_ui = renderer(self.cfg, sys.stderr)
         for message, role in messages:
             if error_ui: error_ui.text(self.manager+': '+message, role)

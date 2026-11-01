@@ -46,7 +46,7 @@ Use the [Dots setup scripts](installation.md) for the complete installation:
 ./uninstall.sh
 ```
 
-PowerShell uses `./install.ps1 -DryRun` and `./uninstall.ps1 -DryRun`, then the same scripts without `-DryRun` to review and approve changes. The public scripts under `plugins/blastoff/` and `plugins/pkgs/` delegate to this combined lifecycle and accept Dots setup options. Old standalone `--prefix` options are not Dots setup options. Required setup runtimes must already be installed. Default setup installs no packages; explicit `--packages FILE` restores declared packages before configuration, without inventing prerequisites. Native Windows refuses the package stage.
+PowerShell uses `./install.ps1 -DryRun` and `./uninstall.ps1 -DryRun`, then the same scripts without `-DryRun` to review and approve changes. The public scripts under `plugins/blastoff/` and `plugins/pkgs/` delegate to this combined lifecycle and accept Dots setup options. Old standalone `--prefix` options are not Dots setup options. Required setup runtimes must already be installed. Default setup installs no packages; explicit `--packages FILE` restores declared packages before configuration, without inventing prerequisites. Native Windows supports the explicit WinGet package stage described in [installation](installation.md#preparation-and-final-publication); native PowerShell runtime acceptance remains pending.
 
 | Asset | POSIX destination | Native Windows destination |
 | --- | --- | --- |

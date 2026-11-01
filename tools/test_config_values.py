@@ -22,7 +22,7 @@ class Values(fixtures.ProfileConfig):
         key='apps.nvim.highlights["@variable.member"].fg'
         self.assertEqual(name(parts(key)),key)
         self.assertIn('formatting.apps.todo.list_type',keys(self.root))
-        self.assertIn('colors.todo.field.status.value.fg',keys(self.root))
+        self.assertIn('colors.apps.todo.field.status.value.fg',keys(self.root))
         self.assertEqual(self.run_config('get','colors.todo.field.status.value.fg').stdout,'null\n')
         self.assertEqual(self.run_config('get',key).stdout,'null\n')
         self.assertIsNone(json.loads(self.run_config('get',key,'--json').stdout)['value'])

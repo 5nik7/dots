@@ -9,7 +9,7 @@ import stat
 from profile_config import checkout, context
 from style_catalog import canonical, split, ALIASES as ICON_ALIASES
 
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim')
+APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr')
 LIMIT = 2 * 1024 * 1024
 NAME = re.compile(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*\Z')
 ATTRS = dict(bold=1, dim=2, italic=3, underline=4, reverse=7, strikethrough=9)
@@ -82,7 +82,9 @@ def encode(values):
 
 
 def validate(group, values):
+    from config_keys import internal
     for key, value in values.items():
+        key=internal(group+'.'+key).partition('.')[2]
         if not NAME.fullmatch(key): raise ValueError('invalid style option name')
         if key.startswith('apps.') and (len(key.split('.')) < 4 or key.split('.')[1] not in APPS):
             raise ValueError('unknown visual consumer: ' + key)
@@ -94,7 +96,9 @@ def validate(group, values):
             if field in ATTRS:
                 if type(value) is not bool: raise ValueError('style attributes require booleans: ' + key)
             elif field not in ('fg','bg') or not isinstance(value, str) or not (
-                    value in ANSI or value in ALIASES or value in ('reset','default') or re.fullmatch('#[a-fA-F0-9]{6}', value)):
+                    value in ANSI or value in ALIASES or value in ('reset','default') or re.fullmatch('#[a-fA-F0-9]{6}', value)
+                    or re.fullmatch(r'palette\.[A-Za-z0-9_-]+',value)
+                    or re.fullmatch(r'colors\.(?!apps\.)[a-z][a-z0-9_.]*\.(?:fg|bg)',value)):
                 raise ValueError('colors require a palette role or #RRGGBB: ' + key)
         else: raise ValueError('unknown style group')
 
@@ -105,8 +109,10 @@ class Styles:
         self.selected = selected if selected is not None else context(self.root)
         self.defaults = defaults
         self.values, self.sources, self.paths, self.layers = {}, {}, [], {}
-        self._palette = palette
+        self._palette = palette.get('colors', {}) if isinstance(palette,dict) and 'colors' in palette else palette
+        self._native_palette = palette.get('palette', {}) if isinstance(palette,dict) and 'colors' in palette else palette
         self._codes = {}
+        self._resolved = {}
         replacements = replacements or {}
         for group in ('icons','colors'):
             paths = [self.root/'default'/(group+'.toml')]
@@ -117,11 +123,16 @@ class Styles:
                 doc = replacements.get(path)
                 if doc is None: doc = read(path)
                 validate(group, doc)
-                values.update(doc); sources.update({key:str(path) for key in doc})
+                from config_keys import internal
+                projected={internal(group+'.'+key).partition('.')[2]:value for key,value in doc.items()}
+                values.update(projected); sources.update({key:str(path) for key in projected})
                 layers.append((str(path), doc))
             nested(values)
             self.values[group], self.sources[group] = values, sources
             self.layers[group] = layers
+        for value in self.values['colors'].values():
+            if isinstance(value,str) and value.startswith('colors.'):
+                self.color(value)
 
     def path(self, group):
         if group not in ('icons','colors'): raise ValueError('unknown style group')
@@ -131,6 +142,10 @@ class Styles:
 
     def resolve(self, group, name, app=None):
         """Fold general then app-specific values inside each inheritance layer."""
+        cache_key=(group,name,app)
+        if cache_key in self._resolved:return self._resolved[cache_key]
+        from config_keys import internal, style_names
+        name=internal(group+'.'+name).partition('.')[2]
         embedded, name = split(name)
         app = embedded or app
         canonical_name = canonical(name) if group == 'icons' else name
@@ -138,12 +153,19 @@ class Styles:
         names.append(canonical_name)
         declarations = []
         for path, values in self.layers[group]:
+            candidates=[]
             for prefix in ('', 'apps.'+app+'.') if app else ('',):
                 for key in names:
-                    if prefix+key in values:
-                        declarations.append(dict(key=group+'.'+prefix+key, value=values[prefix+key], source=path))
+                    candidates.extend(style_names(group,prefix+key))
+            # Canonical feature fields are the final same-layer override.
+            candidates=sorted(dict.fromkeys(candidates),key=lambda k:k.startswith(('apps.todo.','apps.fonts.','apps.wiki.','apps.menu.')))
+            for key in candidates:
+                if key in values:
+                    declarations.append(dict(key=group+'.'+key,value=values[key],source=path))
         winner = declarations[-1] if declarations else {}
-        return dict(value=winner.get('value'), source=winner.get('source'), declarations=declarations)
+        result=dict(value=winner.get('value'), source=winner.get('source'), declarations=declarations)
+        self._resolved[cache_key]=result
+        return result
 
     def icon(self, name, fallback='', app=None):
         result = self.resolve('icons', name, app)
@@ -157,16 +179,35 @@ class Styles:
             self._palette = {}
             try:
                 if stat.S_ISREG(path.lstat().st_mode) and path.stat().st_size <= LIMIT:
-                    self._palette = json.loads(path.read_text()).get('colors', {})
+                    data = json.loads(path.read_text())
+                    self._palette = data.get('colors', {})
+                    self._native_palette = data.get('palette', {})
             except (OSError, ValueError, AttributeError): pass
         return self._palette
 
-    def color(self, value):
+    @property
+    def native_palette(self):
+        self.palette
+        return self._native_palette or {}
+
+    def color(self, value, fallback='foreground', _seen=()):
+        if isinstance(value,str) and value.startswith('colors.'):
+            if value in _seen:raise ValueError('color reference cycle: '+' -> '.join((*_seen,value)))
+            resolved=self.resolve('colors',value[7:])
+            if not resolved['source'] or not isinstance(resolved['value'],str) or not value.endswith(('.fg','.bg')):
+                raise ValueError('unknown global color reference: '+value)
+            target=resolved['value']
+            if target.startswith('palette.') and target[8:] not in self.native_palette:
+                target=next((r['value'] for r in reversed(resolved['declarations'][:-1])
+                    if not str(r['value']).startswith('palette.') or r['value'][8:] in self.native_palette),fallback)
+            return self.color(target,fallback,(*_seen,value))
+        if isinstance(value,str) and value.startswith('palette.'):
+            value=self.native_palette.get(value[8:],fallback)
         resolved = self.palette.get(value, self.palette.get(ALIASES.get(value), value))
         return resolved if isinstance(resolved, str) and re.fullmatch('#[a-fA-F0-9]{6}', resolved) else value
 
     def sgr_color(self, value, background=False):
-        value = self.color(value)
+        value = self.color(value, 'default' if background else 'foreground')
         if value.startswith('#'):
             return ('48' if background else '38')+';2;'+';'.join(str(int(value[i:i+2],16)) for i in (1,3,5))
         if value in ('reset','default'): return '49' if background else '39'
@@ -179,7 +220,13 @@ class Styles:
         result = dict(fallback or {})
         for field in ('fg', 'bg', *ATTRS):
             resolved = self.resolve('colors', name+'.'+field, app)
-            if resolved['source']: result[field] = resolved['value']
+            if resolved['source']:
+                value=resolved['value']
+                if field in ('fg','bg') and isinstance(value,str) and value.startswith('palette.') and value[8:] not in self.native_palette:
+                    inherited=next((r['value'] for r in reversed(resolved['declarations'][:-1])
+                                    if not str(r['value']).startswith('palette.') or r['value'][8:] in self.native_palette),result.get(field,'default' if field=='bg' else 'foreground'))
+                    value=self.color(inherited,'default' if field=='bg' else 'foreground')
+                result[field] = value
         return result
 
     def sgr(self, name, fallback=None, app=None):
@@ -210,7 +257,7 @@ class Styles:
 
     def startup_inputs(self):
         from files.file_platform import state_root
-        paths = {Path(__file__), Path(__file__).with_name('style_catalog.py')}
+        paths = {Path(__file__), Path(__file__).with_name('style_catalog.py'),Path(__file__).with_name('config_keys.py')}
         palette = state_root()/'current/theme/palette.json'
         if palette.is_file(): paths.add(palette)
         for path in self.paths:

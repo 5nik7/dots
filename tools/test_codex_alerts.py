@@ -23,6 +23,26 @@ THREAD = '00000000-0000-4000-a000-000000000001'
 OTHER = '00000000-0000-4000-a000-000000000002'
 
 
+def fixture_preferences():
+    # User-editable notification preferences must not change fixture behavior.
+    return alerts.preferences(dict(schema=1,enabled=True,poll_seconds=5,
+        unfocused_only=True,clear_on_view=True,
+        events=dict(choices=True,approvals=True,completion=True),
+        termux=dict(enabled=True,focus_policy='conservative',excerpt_chars=240)))
+
+
+def fixture_bridge(root):
+    import tomlkit
+    checkout=root/'alert checkout'
+    shutil.copytree(ROOT/'lib/dots',checkout/'lib/dots',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+    target=checkout/'config/tmux'
+    target.mkdir(parents=True)
+    for name in ('codex-alerts.py','codex-status.py'):
+        shutil.copy2(ROOT/'config/tmux'/name,target/name)
+    (target/'codex-alerts.toml').write_text(tomlkit.dumps(fixture_preferences()))
+    return str(target/'codex-alerts.py')
+
+
 def event(kind='PreToolUse', request='request-1', **extra):
     return dict(session_id=THREAD, turn_id='turn-1', hook_event_name=kind,
                 tool_name='request_user_input', tool_use_id=request,
@@ -35,7 +55,7 @@ def complete(thread=THREAD, turn='turn-1', message='Finished the work.'):
 
 class Portable(unittest.TestCase):
     def test_observational_event_shapes_and_toml_preservation(self):
-        prefs = alerts.preferences()
+        prefs = fixture_preferences()
         self.assertEqual(alerts.normalize(complete(), prefs)['kind'], 'complete')
         self.assertEqual(alerts.normalize(event(), prefs)['kind'], 'choice')
         self.assertIsNone(alerts.normalize({'type': 'agent-turn-failed', 'thread-id': THREAD}, prefs))
@@ -65,7 +85,7 @@ class Queue(unittest.TestCase):
         self.environment = patch.dict(os.environ, self.env, clear=True)
         self.environment.start()
         self.addCleanup(self.environment.stop)
-        self.prefs = alerts.preferences()
+        self.prefs = fixture_preferences()
         # Existing focus cases exercise terminals that actually report focus.
         # The stock Termux policy has its own conservative regressions below.
         self.prefs['termux']['focus_policy'] = 'terminal'
@@ -391,7 +411,7 @@ class Queue(unittest.TestCase):
         log = self.root / 'forwarded'
         previous = self.root / 'previous.py'
         previous.write_text('import pathlib,sys\n' + f'pathlib.Path({str(log)!r}).write_text(sys.argv[1])\n')
-        marker = dict(schema=1, owner='dots-codex-alerts', bridge=str(ROOT / 'config/tmux/codex-alerts.py'),
+        marker = dict(schema=1, owner='dots-codex-alerts', bridge=fixture_bridge(self.root),
                       previous_notify=[sys.executable, str(previous)])
         (home / 'dots-notifications.json').write_text(json.dumps(marker))
         root = alerts.status.alert_root()
@@ -425,7 +445,7 @@ class Native(unittest.TestCase):
         self.view()
         self.inner('select-window', '-t', ':0')
         socket = self.base[self.base.index('-S') + 1]
-        prefs = alerts.preferences()
+        prefs = fixture_preferences()
         with patch.dict(os.environ, self.env, clear=True), patch.object(alerts, 'notify_device') as device:
             alerts.record(event(), prefs)
             rows = alerts.snapshot(socket)
@@ -474,7 +494,7 @@ class Native(unittest.TestCase):
         env = dict(self.env, CODEX_HOME=str(self.fixture.home / '.codex'), TERMUX_VERSION='fixture')
         home = Path(env['CODEX_HOME'])
         home.mkdir()
-        bridge = str(ROOT / 'config/tmux/codex-alerts.py')
+        bridge = fixture_bridge(self.root)
         (home / 'dots-notifications.json').write_text(json.dumps(dict(schema=1, owner='dots-codex-alerts', bridge=bridge)))
         calls = self.root / 'android-calls'
         for name in ('termux-toast', 'termux-vibrate'):
@@ -511,7 +531,7 @@ class NativeShortTitles(Native):
         self.pid('short')
         self.view()
         socket = self.base[self.base.index('-S') + 1]
-        prefs = alerts.preferences()
+        prefs = fixture_preferences()
         short = self.title_id()
         with patch.dict(os.environ, self.env, clear=True), patch.object(alerts, 'notify_device') as device:
             # Only an exact final field is transported, even if earlier fields

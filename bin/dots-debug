@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # dots:summary=Inspect and diagnose Dots without automatic repairs
-# dots:usage=check|startup|path|command|cache|test|record [OPTIONS]
+# dots:usage=check|startup|path|command|cache|test|record|alert [OPTIONS]
 # dots:example=dots debug startup --shell zsh --isolated
 # dots:example=dots debug startup --shell zsh --live --view slowest
 # dots:example=dots debug startup --shell zsh --live --detail deep --changes path,aliases

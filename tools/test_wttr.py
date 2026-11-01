@@ -357,7 +357,7 @@ class Weather(unittest.TestCase):
                 text=out.getvalue()
                 self.assertTrue(all(cells(line)<=width for line in text.splitlines()),text)
                 for label in ('Now','Location data','Low / High','Source','Midday'):
-                    self.assertIn('    '+label.ljust(12)+' '*gap,text)
+                    self.assertTrue('    '+label.ljust(12)+' '*gap in text or '\n    '+label+'\n' in text,text)
         cfg['icons'].update(location='',sunrise='',sunset='',humidity='',precip='')
         cfg['show_location_attribution']=False
         row['location']='Test Town'

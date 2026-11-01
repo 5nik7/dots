@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# The published component renderer needs Python. Preserve the original bounded
+# record parser when Python itself is unavailable, without a second provider call.
+if rendered=$(python3 -B "${BASH_SOURCE[0]%/*}/battery-status.py" "$@" 2>/dev/null); then
+  printf '%s\n' "$rendered"
+  exit 0
+fi
 # Tmux-format data, not terminal ANSI. The battery checkout owns icons/thresholds.
 # An empty line (rather than no output) clears tmux's previous successful result.
 empty() {

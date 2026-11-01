@@ -10,7 +10,7 @@ The shipped tmux configuration integrates the Dots launcher, session browser and
 
 The optional [Codex attention bridge](themes.md#codex-attention-notifications) adds working/waiting glyphs to other Termux tab numbers, red brackets for unread alerts, and a separate `[ N]` badge for alerting tmux sessions displayed by no tab. Open **Prefix s → F1 → Codex alerts** to find them; **Prefix a** acknowledges the current pane. Stock Termux cannot reliably report the selected tab, so the default policy notifies conservatively until an explicit acknowledgement or resolving Codex event. Its toast and vibration are attempted once per event.
 
-On Termux, tmux has two status rows at the top: a bold 12-hour clock, Termux tab numbers and battery above, the current tmux session and its windows below. Termux tab numbers appear immediately after the clock when more than one tab exists, with the viewing tab highlighted. The lower row numbers sessions only when their group has more than one session. Project groups follow the session picker and use canonical project folders; different folders with the same name stay separate. Non-project sessions group by their full case-sensitive logical label, including termux and multi. Attached and detached sessions count, with numbers assigned within each group in creation order. Only the current session appears: two Dots sessions show `1 dots` and `2 dots`, while a lone Battery session shows `battery`. Two tabs viewing the same tmux session show the same lower number. Window numbers independently appear when that session has multiple windows. Useful names remain when numbers disappear; matching singleton window names and managed default names stay hidden. For example: ` dots `, ` dots │ shell `, or ` 1 dots │ 1 │ 2 shell `. Session labels and all windows without warnings have one space on either side; warning labels have none. A `│` separates sections, and one space joins a number to its icon/name. Numbers may change when tabs or sessions close. COPY/PREFIX/ZOOM remain on the right. Outside Termux only the tmux row appears.
+On Termux, tmux has two status rows at the top: a bold 12-hour clock, Termux tab numbers and battery above, the current tmux session and its windows below. Termux tab numbers appear immediately after the clock when more than one tab exists, with the viewing tab highlighted. The lower row numbers sessions only when their group has more than one session. Project groups follow the session picker and use canonical project folders; different folders with the same name stay separate. Non-project sessions group by their full case-sensitive logical label, including termux and multi. Attached and detached sessions count, with numbers assigned within each group in creation order. By default only the current session appears: two Dots sessions show `1 dots` and `2 dots`, while a lone Battery session shows `battery`. Two tabs viewing the same tmux session show the same lower number. Window numbers independently appear when that session has multiple windows. Useful names remain when numbers disappear; matching singleton window names and managed default names stay hidden. For example: ` dots `, ` dots │ shell `, or ` 1 dots │ 1 │ 2 shell `. Session labels and all windows without warnings have one space on either side; warning labels have none. A `│` separates sections, and one space joins a number to its icon/name. Numbers may change when tabs or sessions close. COPY/PREFIX/ZOOM remain on the right. Outside Termux only the tmux row appears.
 
 The current session uses bold `bright_cyan` on `selection_background`, without underlining its name, number or remote icon. Current window names use bold `bright_foreground` on `selection_background`, with numbers in bold `bright_green` on the same background. Inactive Codex windows use bold `dark_foreground` numbers and bold, dimmed `foreground` names. Ordinary inactive numbers and names use `dark_foreground`, retaining bold digits and bold, dimmed names. Working windows show ``; explicit Waiting states and input/approval requests show ``. Icons follow the visible number/name with one space: `1 shell `, `1 shell `, or `1 ` when the name is hidden. Both icons use theme `accent` in current and inactive windows; Working is bold, while waiting is normal when inactive and bold when current. With numbers hidden, the label is `shell ` or `shell `; when the singleton window name is hidden too, its icon moves after the session name, as in ` 󰊤 dots  ` or ` 󰊤 dots  `. This session icon uses bold accent on the session background, with its space reserved before shortening the name. A hidden default session label shows only the padded icon. Ordinary idle/Ready states have no marker. Bell/activity/silence alerts override the whole label, including icons, with bold `bright_red` on `darker_background` and brackets, such as `[2]` or `[2 shell]`, without outer spaces. Detection uses foreground processes and the Codex terminal title, refreshing with the status bar. Dividers between sections use `background` on `dark_background`. Current Termux tab numbers use bold `bright_foreground` on `selection_background`; other tabs use bold `dark_foreground` on `dark_background`, without dimming or underlining. The clock, battery, pane border and COPY/PREFIX/ZOOM colors retain their existing semantic roles. Both rows use Dots palette colors, with layout owned by the main configuration and colors supplied by the generated theme. A Nerd Font is needed for the icons. See [tmux theme integration](themes.md#tmux).
 
@@ -36,3 +36,66 @@ at a prompt. Rows and previews show live/configured evidence; print/JSON coverag
 notes explain when only the partial configuration reference is available.
 Existing sessions can load the capture adapter without resetting their bindings;
 see [live Zsh capture](keys.md#live-zsh-bindings-from-the-tmux-shortcut).
+
+## Component preferences
+
+Use Config's `apps.tmux`, `formatting.apps.tmux`, `colors.apps.tmux` and
+`icons.apps.tmux` branches. Fields inherit from the selected profile, its parents
+and shared defaults. Literal surrounds and text never execute tmux or shell
+formats. Null/unset inherits; false attributes and empty icons remain explicit.
+Config details and `dots config explain KEY` show the actual owner and source.
+
+| Component | Controls and supported spans |
+| --- | --- |
+| Clock (Termux) | `apps.tmux.clock.icon_mode`: `none` (default), `fixed`, `daylight`. Icons: `icons.apps.tmux.clock.{fixed,day,night,unknown}`. `formatting.apps.tmux.clock.format` is a strftime format. Independent `clock.icon`, `clock.text`, `clock.surround`, `clock.spacer` styles. |
+| Termux tabs | `tabs.{active,inactive,alert}` base styles and `.number`, `.icon`, `.surround`, `.spacer`; generic span styles provide defaults. Before/after surrounds, alert surrounds, separator and marker spacer live under `formatting.apps.tmux.tabs`. Singleton suppression, alert overflow and current-client identity remain intact. |
+| Battery (Termux) | `apps.tmux.battery.critical`/`.low` are nullable percentage thresholds; null inherits the battery tool. When both are set, critical must be lower. `charging_style` is false by default. Icons use `icons.apps.tmux.battery.{critical,low,normal,charging,unknown}`; absent icons inherit the provider. Icon/text colors and attributes are separate, including state overrides. Formatting provides surrounds, spacer and percentage slot width. |
+| Sessions | `apps.tmux.session.name_source` is `workspace` (default), `session`, or `repository`. `show_number`, `show_name`, `repository_icon` and `repository_color` control visibility and decoration. `icons.apps.tmux.session.default` overrides the icon, including an empty override. Styles include `session`, `session.repository`, number/icon/name/surround/spacer and active/inactive/alert variants. Host colors may override `hosts.github`, `hosts.gitlab`, `hosts.bitbucket` under `colors.apps.tmux`. |
+| Multiple sessions | `apps.tmux.session.multiple` defaults false. When enabled, a display-only list uses cached workspace metadata and one session inventory, retains the current session within the width budget, and indicates overflow. It never switches sessions. Unknown/unmanaged repository metadata falls back to the session label and generic icon. |
+| Windows | `windows.{active,inactive,alert}` and number/icon/name/surround/spacer spans; an optional `icons.apps.tmux.window.default`; literal per-span and whole-label surrounds. Existing singleton suppression, native window scrolling and mouse ranges remain. |
+| Git | `colors.apps.tmux.git.bg` and `git.surround` styles; before/after text under `formatting.apps.tmux.git`. Gitmux retains ownership of branch and metric content/styles. |
+| Indicators | `apps.tmux.indicators.{copy,prefix,zoom,working,waiting,attention}.text` changes displayed text. Working/waiting inherit their existing glyphs when null; attention keeps its existing bracket treatment until text is supplied. Each supports base, surround and spacer styles and literal formatting. Detection, acknowledgement and notifications are unchanged. |
+
+Style names in the table are relative to `colors.apps.tmux` unless stated
+otherwise. Styles support fg/bg, bold, dim, italic, underline, reverse and
+strikethrough only where consumed. Shared `colors.status.working`/`.waiting`
+and `colors.icons.status.working`/`.waiting` now reach lower-row activity markers;
+the component indicator style overrides them. Termux tab markers inherit their
+active/inactive/alert state, with explicit indicator and tab-icon overrides.
+Battery state colors are reusable
+`colors.battery.{critical,low,normal,charging,unknown}.fg` globals. A continuous battery
+background uses all four `colors.apps.tmux.battery.{icon,text,spacer,surround}.bg`
+controls; `formatting.apps.tmux.battery.before` and `.after` add the outer padding.
+The Termux profile uses `dark_background` for those four spans and a space on
+either side, matching the clock background. State-specific icon/text overrides
+still take precedence; the fixed percentage slot width remains independent. Clock time
+uses `colors.daylight.day.fg` and `.night.fg`. Weather's sunrise/sunset defaults
+use the corresponding shared roles unless its native configuration overrides them.
+
+```sh
+dots config set colors.apps.tmux.clock.icon.fg colors.daylight.sunrise.fg
+dots config set formatting.apps.tmux.clock.format '%H:%M'
+dots config set colors.apps.tmux.windows.active.number.bold false
+dots config set apps.tmux.indicators.prefix.text P
+dots config set formatting.apps.tmux.session.name.before '['
+dots config set formatting.apps.tmux.session.name.after ']'
+```
+
+Saved visuals publish resolved data and the owned `tmux-controls.conf` fragment;
+verified servers receive visual changes without sourcing attention hooks. Normal
+configuration loading reapplies that fragment after native status definitions.
+Polling reads published preferences only, with no profile scans or extra process
+per span. Repository metadata is observed locally during workspace reconciliation,
+not on each status render. A repository label falls back to the session name
+until that metadata is available. Missing Python retains the original battery
+parser and appearance; custom battery controls require the Python renderer.
+
+If an older published snapshot displays literal style text such as `bold] COPY`
+while the indicator is inactive, run `dots config refresh`. This regenerates the
+supported visual snapshot from current sources, preserves the selected palette,
+and refreshes verified running tmux servers without reloading hooks or bindings.
+
+Clock/tabs/battery retain their Termux boundaries. Sessions/windows/Git/indicators
+apply on POSIX tmux. Native Windows can inspect/edit these preferences; doing so
+does not activate WSL or a tmux server. Native desktop Linux/WSL and Windows
+terminal acceptance is separate from the isolated Termux checks.

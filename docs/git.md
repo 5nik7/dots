@@ -125,8 +125,10 @@ There is no package installation and no background update hook.
 inclusion; it writes no file/index, fetches nothing and takes no Git locks.
 Normal publication approval covers the manifest write, with no second prompt.
 The associated wiki still publishes after source. Both frontends use the shared
-Python publisher for this option. Native Windows refuses `--update-packages`
-with status 3 because native package inventories are unavailable; it never launches WSL.
+Python publisher for this option. Native Windows uses the available WinGet
+inventory through the shared package core, with explicit missing-capability
+diagnostics and no WSL launch. Actual PowerShell 5.1/7 runtime acceptance remains
+pending.
 
 ## Repository info and submodules
 

@@ -34,6 +34,8 @@ FZF owns the tmux selector popup and closes before input or reader handoff. Outs
 
 ## Commands and output
 
+The main Weather actions and both Location/Units selectors use the [shared menu appearance controls](configuration.md#keys-and-weather-menu-appearance), including optional icons and independent icon/label colors that remain visible on the selected row. Their styling identities are `wttr:main`, `wttr:Location` and `wttr:Units`, followed by the existing action ID. Main actions use `current`, `daily`, `hourly`, `location`, `units`, `refresh`, `help` and `back`; Location uses `custom`, `default` and `back`; Units uses `us`, `metric` and `back`. These are styling identities, not new commands. Browser styling does not change cached preview/report formatting, session behavior or provider activity.
+
 Every example also accepts the `dots wttr` prefix. Use `--location browse` for a location literally named `browse`, since a leading `browse` selects the browser.
 
 ```sh
@@ -335,3 +337,8 @@ and tmux widgets; plain and structured weather output stay undecorated.
 ## Termux location lookup
 
 The platform's `termux-geo` helper obtains device coordinates and Nominatim city/state/postal information. It provides human output, JSON in pipes, scalar getters and cache-only reads. `termux-geo completion --all --install` installs its static Bash/Zsh/Fish completions into the platform-local directories recognized by personal startup. See the [location command reference](https://github.com/5nik7/androidots/blob/66bbe8bfd7a8a5c4fc7e69a837d79cd0cc256a6b/docs/termux-geo.md) for dependencies, service restrictions and activation. Reading this guide or browsing cached weather does not request device location.
+
+The default sunrise and sunset detail colors also read
+`colors.daylight.sunrise.fg` and `colors.daylight.sunset.fg` from Dots. Explicit
+native `[icon_colors]` entries retain precedence. This affects presentation only;
+weather acquisition, daylight calculations, JSON and scalar fields are unchanged.

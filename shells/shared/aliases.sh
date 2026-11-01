@@ -14,10 +14,10 @@ alias ......='cd ../../../../..' .......='cd ../../../../../..' ........='cd ../
 alias docs='cd -- "$DOCS"' notes='cd -- "$NOTES"'
 alias .c='cd -- "$HOME/.config"' .l='cd -- "$HOME/.local"'
 alias .lb='cd -- "$HOME/.local/bin"' .lsh='cd -- "$HOME/.local/share"' .lst='cd -- "$HOME/.local/state"'
-alias .d='cd -- "$DOTS"' .df='cd -- "$DOTFILES"' .f='cd -- "$DOTFILES"'
-alias .b='cd -- "$DOTBIN"' .s='cd -- "$SHELLS"' .sc='cd -- "$DOTSCRIPTS"'
-alias .sz='cd -- "$SHELLS/zsh"' .sb='cd -- "$SHELLS/bash"' .sp='cd -- "$SHELLS/powershell"'
-alias .t='cd -- "$DOTHEMES"' .tb='cd -- "$THEMESBIN"'
+alias .d='cd -- "$DOTS"' .df='cd -- "$DOTFILES"'
+alias .db='cd -- "$DOTBIN"' .ds='cd -- "$SHELLS"' .dsc='cd -- "$DOTSCRIPTS"'
+alias .dsz='cd -- "$SHELLS/zsh"' .dsb='cd -- "$SHELLS/bash"' .dsp='cd -- "$SHELLS/powershell"'
+alias .dt='cd -- "$DOTHEMES"'
 alias updrbenv='git -C "$(rbenv root)/plugins/ruby-build" pull'
 alias sc=script/console sg=script/generate sd=script/destroy
 if has eza; then

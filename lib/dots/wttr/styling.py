@@ -283,7 +283,14 @@ def condition(code, cfg, night=False):
 
 
 def detail_color(name, cfg):
-    return cfg['icon_colors'].get(name, DETAIL_COLORS[name])
+    if name in cfg['icon_colors']:return cfg['icon_colors'][name]
+    if name in ('sunrise','sunset'):
+        try:
+            from style_config import current
+            prefs=current()
+            if prefs:return prefs.color(prefs.style('daylight.'+name,app='wttr').get('fg',DETAIL_COLORS[name]))
+        except (OSError,ValueError):pass
+    return DETAIL_COLORS[name]
 
 
 def forecast_night(data, day, hour):

@@ -83,26 +83,29 @@ For a static result use `run_action(..., kind='output', context=context, title='
 
 ## Worked example: the existing key category chooser
 
+`RichSelector.fzf(..., sort=False)` preserves the controller's explicit row order while filtering. Config uses this for its key/local-first sort choices. Omit `sort` to retain the normal FZF relevance ordering; passing `True` explicitly enables it. Stable numeric selection identities are unchanged.
+
 This excerpt illustrates the current category flow after `picker_ui`, FZF availability checks and collection of the source/default-filtered snapshot. It is a reference fragment, not a standalone command or a new menu framework:
 
 ```python
 from interaction import RichSelector
 from files.picker import fzf_colors
-from keys.presentation import menu_rows, menu_dimensions, binding_prompt, picker_colors, MENU_HEADER
+from keys.presentation import menu_rows, menu_layout, binding_prompt, picker_colors, MENU_HEADER
 
 rows = menu_rows(ui, coverage)  # Positive counts; stable identity plus styled label.
-labels = [label for _, label in rows]
-width, height = menu_dimensions(labels)
+labels, width, height = menu_layout(
+    ui, lambda view: [label for _, label in menu_rows(view, coverage)], popup=in_tmux,
+)
 selected = RichSelector().fzf(
     binding_prompt(ui), labels, False, None,
     ui.color, ui.icons, picker_colors(fzf_colors(ui)),
     popup=f"center,{width},{height}" if in_tmux else False,
-    height=height, header=MENU_HEADER, info="inline-right",
+    height=height, header=MENU_HEADER, info="inline-right", popup_resolved=in_tmux,
 )
 category = rows[selected[0]][0]
 ```
 
-`ui` and `in_tmux` represent caller-validated presentation/context; `coverage` contains counts across all modes of the filtered snapshot. Empty results bypass the selector. `menu_dimensions` excludes ANSI styles from visible width and can consume the verified client size; a different menu must account for its own header and exact client. The `category` filters the existing snapshot without recollecting providers or executing a binding. `browse` writes inert preview data once and renders aligned labels for each selected mode; numeric identities remain stable throughout navigation. Existing `--print`, `--json` and redirected output bypass selection. Actual tmux callers also retain their scoped `TmuxContext.selector_environment()` adapter.
+`ui` and `in_tmux` represent caller-validated presentation/context; `coverage` contains counts across all modes of the filtered snapshot. Empty results bypass the selector. `menu_layout` measures visible cells, resolves popup preferences, then renders category columns against the final content width without changing report formatting. Actual callers pass `size=context.verify()` when they have an exact-client context and retain its scoped `TmuxContext.selector_environment()` adapter. The `category` filters the existing snapshot without recollecting providers or executing a binding. `browse` writes inert preview data once and renders aligned labels for each selected mode; numeric identities remain stable throughout navigation. Existing `--print`, `--json` and redirected output bypass selection.
 
 This example deliberately imports key-specific helpers to explain the existing implementation. New menus should use the shared library above, leaving key-specific labels/providers in their current owner. Do not make unrelated menus depend on the key provider inventory or refactor the existing key browser merely to add a new menu.
 
@@ -171,6 +174,8 @@ independent count fields. Session icons share the name span, so width budgeting
 uses the plain icon text before adding ANSI. These helpers load no key providers. Keep domain-specific rows
 and inert previews in their own controller, as demonstrated by
 [session presentation](../../../../lib/dots/menu_session_ui.py).
+
+`menus.styled_labels(menu, ui, compact=False)` renders one inert menu snapshot with shared/per-entry styles and resolved icon roles while preserving the caller's report formatting. Keys category/mode and Weather action menus use it. Explicit menu spans already resolve icon styles, so their painting bypasses generic glyph recoloring. `choose(..., preserve_row_styles=True)` retains these colors on the selected row through `picker_colors`; ordinary callers retain their existing selection colors. Shared sizing excludes SGR bytes from visible cell counts. See [the focused styling plan](../../../../plans/keys-weather-menu-styling.md) for consumers and acceptance.
 
 The session controller accepts `create_session(server, None, directory, project, context)` for managed creation with an immutable ID and automatic project naming. Explicit names retain manual creation semantics. Popup New uses the managed form without a name prompt; all subsequent actions retain the returned native session ID. See `lib/dots/tmux_workspaces.py` and the workspace plan for lifecycle ownership.
 

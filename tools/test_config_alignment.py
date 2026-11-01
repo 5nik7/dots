@@ -49,9 +49,10 @@ class Alignment(unittest.TestCase):
                 p=subprocess.run(cmd,env=self.env,text=True,capture_output=True,timeout=20)
                 self.assertEqual(p.returncode,0,p.stderr);self.assertEqual(p.stderr,'')
                 keys=[row.split('\t')[1] for row in p.stdout.splitlines()]
-                self.assertIn('apps.menu.popup.border',keys)
-                self.assertIn('apps.wttr.icons["113"]',keys)
-                self.assertIn('formatting.apps.cli.label_width',keys)
+                self.assertIn('apps.tmux.session.multiple',keys)
+                self.assertIn('colors.apps.todo.field.alias.value.fg',keys)
+                self.assertIn('formatting.apps.menu.popup.border',keys)
+                self.assertNotIn('colors.',keys)
                 self.assertNotIn('\x1b',p.stdout);outputs.append(keys)
             self.assertTrue(all(keys==outputs[0] for keys in outputs))
         code='import sys;sys.path.insert(0,sys.argv[1]);from config_wttr import Native;Native(sys.argv[2]).keys();assert "files.transactions" not in sys.modules'
@@ -59,8 +60,8 @@ class Alignment(unittest.TestCase):
         self.assertEqual(p.returncode,0,p.stderr)
         path=self.home/'config/wttr';path.mkdir(parents=True)
         (path/'config.toml').write_text('this is not TOML')
-        p=subprocess.run([str(self.root/'bin/dots'),'__complete','zsh','3','--','dots','config','get','apps.menu.popup.'],env=self.env,capture_output=True,text=True)
-        self.assertEqual(p.returncode,0,p.stderr);self.assertIn('apps.menu.popup.border',p.stdout)
+        p=subprocess.run([str(self.root/'bin/dots'),'__complete','zsh','3','--','dots','config','get','formatting.apps.menu.popup.'],env=self.env,capture_output=True,text=True)
+        self.assertEqual(p.returncode,0,p.stderr);self.assertIn('formatting.apps.menu.popup.border',p.stdout)
 
     @unittest.skipUnless(shutil.which('zsh') and os.name!='nt','native Zsh terminal unavailable')
     def test_real_zsh_tab_inserts_config_key(self):
@@ -78,11 +79,11 @@ class Alignment(unittest.TestCase):
             receive(b'START>')
             os.write(fd,b'autoload -Uz compinit; compinit -D; source "$DOTS/lib/dots/completion/zsh"; PROMPT="READY> "\n')
             receive(b'READY>')
-            os.write(fd,b'dots config get apps.menu.popup.bor\t')
+            os.write(fd,b'dots config get formatting.apps.menu.popup.bor\t')
             time.sleep(2)
             # Print the completed edit buffer instead of executing a command.
             os.write(fd,b'\x01print -r -- \x05\n')
-            receive(b'dots config get apps.menu.popup.border')
+            receive(b'dots config get formatting.apps.menu.popup.border')
         finally:
             try:os.kill(pid,signal.SIGTERM)
             except ProcessLookupError:pass
@@ -147,11 +148,11 @@ class Alignment(unittest.TestCase):
             with patch.object(TmuxContext,'verify',return_value=(columns,30)), \
                  patch.object(TmuxContext,'selector_environment',return_value=nullcontext({})), \
                  patch('config_menu.RichSelector.fzf',return_value=[0]) as select:
-                self.assertEqual(pick(inventory,'apps',{},ctx).key,'apps.menu.popup.width')
+                self.assertEqual(pick(inventory,'formatting',{'search_all':True},ctx).key,'formatting.apps.menu.popup.border')
             labels=select.call_args.args[1]
             text_width=columns-8
             start=1+column_width('50%',text_width,indent=1,gap=3)+3
-            for label,value in zip(labels,('auto','rounded')):
+            for label,value in zip(labels,('rounded','auto')):
                 plain=ANSI.sub('',label)
                 self.assertIn('apps.menu.popup.',plain)
                 line=next(line for line in plain.splitlines() if value in line)
@@ -242,7 +243,7 @@ from types import SimpleNamespace
 from config_menu import Row,pick
 from menu_tmux import TmuxContext
 rows=[Row('apps.really_long.configuration_key','ONE','fixture','fixture'),Row('apps.short','TWO','fixture','fixture')]
-item=pick(SimpleNamespace(scope='fixture',rows=rows),'apps',{},TmuxContext.capture(client=os.environ['CLIENT']))
+item=pick(SimpleNamespace(scope='fixture',rows=rows),'apps',{'search_all':True},TmuxContext.capture(client=os.environ['CLIENT']))
 print(item.key)
 '''
         for columns in (40,80,120):

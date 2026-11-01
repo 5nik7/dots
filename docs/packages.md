@@ -142,11 +142,54 @@ that key replaces its object. Recipe changes take effect on the next invocation.
 ## Output
 
 ```sh
+pkgs install --manager npm --global typescript
+pkgs install --manager npm --global typescript --raw
 pkgs upgrade --raw
 some-package-command 2>&1 | pkgs format --manager apt
 ```
 
-`auto` gives actual upgrades a compact terminal/menu view: one heading, transient progress and one result per manager. Commands, repeated download/database/requirement messages and per-package skip lists are omitted. Skips appear as a count; `--dry-run` retains the complete commands, names and reasons. Each manager keeps at most two distinct error details, two warnings and a short fallback tail for unrecognized failures; additional diagnostic lines are counted. Partial prompts remain visible. A `complete` result means the command succeeded, not that a particular number of packages changed. Independent managers still continue after failures.
+`auto` gives actual installs, removals and upgrades a compact terminal/menu view: one heading, transient progress and one result per manager. This includes `in`, `un`, `remove`, `dots pkgs` and accepted picker selections. Commands, repeated download/database/requirement messages and per-package skip lists are omitted. Skips appear as a count; `--dry-run` retains the complete commands, names and reasons. Each manager keeps at most two distinct error details, two warnings and a short fallback tail for unrecognized failures; additional diagnostic lines are counted. Partial prompts remain visible. A `complete` result means the command succeeded, not that a particular number of packages changed. Independent upgrade managers still continue after failures.
+
+Installs show `Installing` and the current package when a native event identifies
+it; otherwise progress stays at the manager/stage level. Native APT/pacman events
+identify packages, and WinGet retains the exact requested ID. Individual package
+results do not accumulate. Successful installs and removals add a single wrapping
+`Installed` or `Removed` field with the requested package names. The names reflect
+a successful transaction; already-satisfied installs can also succeed. Summary
+rendering does not query inventory or infer changed dependencies or versions.
+Failed, cancelled and empty plans do not print a success package list.
+For example, a successful Termux install ends with:
+
+```text
+Install packages
+    Scope       Termux
+    apt         complete
+    Installed   bun
+```
+
+`pkgs uninstall bun`, `pkgs un bun` and `pkgs remove bun` use the same compact
+layout with `Removing` progress and a final `Removed` field. Before the existing
+removal confirmation, pkgs shows the manager, scope and selected names. Installed
+package checks, native prompts and explicit `--yes` handling are unchanged.
+`--dry-run` still shows complete commands without removing anything.
+
+Successful `pkgs up` / `pkgs upgrade` adds one wrapping `Updated` field per
+manager, listing packages whose installed versions changed. It compares local
+inventory before and after the transaction, with a 15-second budget per snapshot.
+Named plans list changed selected targets; whole-system plans include changed
+installed system packages. Skipped targets and newly added dependencies are
+excluded. `Updated none` means no version change was found; `Updated unavailable`
+means inventory could not be read reliably. Inventory failure does not prevent
+the upgrade or replace its native exit status. Failed, cancelled and empty plans
+do not print an update list. Raw, ordinary redirected and dry-run modes do not
+perform these additional inventory reads.
+
+The ` · N skipped` suffix uses the theme's muted foreground through
+`colors.ui.muted` and its CLI override; the preceding status keeps its success or
+error color. Plain output retains the same text. Compact npm output hides native
+deprecation notices and omits them from diagnostic counts and failure tails.
+Other warnings and errors remain visible; `--raw` and ordinary redirected output
+retain deprecation notices.
 
 Compact pip progress shows the current package and resolving, download,
 preparation, build and installation stages. With pip 25.1 or newer, native
@@ -154,12 +197,12 @@ preparation, build and installation stages. With pip 25.1 or newer, native
 supply actual download bytes and a percentage when the size is known. After
 15 seconds without output, `quiet M:SS` shows elapsed silence alongside the last
 stage. Silence does not prove a hang, and pkgs does not terminate a slow build.
-Only native pip install commands in compact upgrades receive unbuffered Python
+Only native pip install commands in compact installs/upgrades receive unbuffered Python
 output and the raw progress default; explicit `PIP_PROGRESS_BAR` or command-line
 progress options remain authoritative. Custom recipes and older pip versions
 keep stage/quiet reporting from whatever output they provide.
 
-Compact npm upgrades show the last native metadata, cached/fetched package or
+Compact npm installs/upgrades show the last native metadata, cached/fetched package or
 install-script event. `quiet M:SS` appears after 15 seconds without output; a
 completed fetch is not a percentage for the whole transaction. The compact
 runner requests npm's [info log level](https://docs.npmjs.com/cli/v11/using-npm/logging/#loglevel)
@@ -176,7 +219,7 @@ paths and literal commands remain available in dry-run and raw output.
 
 `styled` explicitly enables the human view, including when redirected. `raw`/`--raw` retains full commands, skip details and native subprocess bytes. Ordinary redirected output in `auto` also retains its existing full output. Compact logs are not persisted; use `--raw` when full output is wanted. Other operations and the stdin formatter retain full formatted messages. Concurrent stdout/stderr draining and actual process exit status are preserved in every mode. Child terminal settings are restored on exit, and formatted terminal newlines return to the left margin even if a child disables newline translation.
 
-Formatting strips terminal controls and uses shared semantic colors. Preparation and upgrades use shared progress controls, suspended while showing prompts. Explicit color, Dots color preferences, native color fallback and independent icons retain their precedence. JSON, completion and exported manifests remain undecorated.
+Formatting strips terminal controls and uses shared semantic colors. Preparation, installs, removals and upgrades use shared progress controls, suspended while showing prompts. Explicit color, Dots color preferences, native color fallback and independent icons retain their precedence. JSON, completion and exported manifests remain undecorated.
 
 Help and operation previews use shared Dots headings, aligned fields and narrow-terminal wrapping. Bare invocation, `help`, `-h`, `-H` and `--help` share this layout without running package managers. Plain terminal mode keeps the layout; ordinary redirected help retains argparse text. Full formatted APT streams suppress only the exact “apt does not have a stable CLI interface” advisory; other warnings and errors remain visible. Raw forwarding retains every byte, including that advisory.
 

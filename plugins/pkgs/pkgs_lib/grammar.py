@@ -50,7 +50,7 @@ Examples:
   pkgs xup
 
 Install, upgrade and refresh run without an extra confirmation flag.
-Upgrades show brief results; --raw shows full manager output.
+Install, uninstall and upgrade show brief results; --raw shows full manager output.
 Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.
 Bare invocation shows help. Completion inserts names and never installs.
 '''

@@ -435,14 +435,6 @@
     ]
   },
   "apps": {
-    "menu": {
-      "popup": {
-        "colors": {
-          "border": "lighter_background"
-        },
-        "width": "fit"
-      }
-    },
     "fzf": {
       "colors": {
         "prompt": "accent",
@@ -455,12 +447,50 @@
     },
     "fonts": {
       "list_details": "full"
+    },
+    "tmux": {
+      "indicators": {
+        "copy": {
+          "text": "C"
+        },
+        "prefix": {
+          "text": "PRFX"
+        }
+      }
     }
   },
   "formatting": {
     "apps": {
       "todo": {
         "tab_width": 2
+      },
+      "menu": {
+        "tab_width": 2,
+        "popup": {
+          "width": "fit",
+          "border": "sharp"
+        }
+      },
+      "cli": {
+        "indent": 2,
+        "tab_width": 2
+      },
+      "tmux": {
+        "battery": {
+          "before": " ",
+          "after": " "
+        }
+      }
+    }
+  },
+  "colors": {
+    "apps": {
+      "menu": {
+        "popup": {
+          "border": {
+            "fg": "lighter_background"
+          }
+        }
       }
     }
   }

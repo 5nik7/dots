@@ -66,7 +66,7 @@ Colored views use the addressed theme's foreground/background with readable text
 and exact swatches. `--color=none` retains the readable layout without styling.
 JSON, scalar queries, exports and edit dry-run JSON keep their existing bytes and
 schemas regardless of presentation settings. Configured overviews and style
-queries do not require Vivid generation. All views are read-only.
+queries do not require Vivid generation. All views are read-only. The active-profile `dots config list` icon preview also reads these published resource tables. It labels a representative filename/type and the native rule fields, including `use` inheritance; Vivid suffix rules remain identified as such. It does not expose native file rules as new `dots config` controls or publish saved edits.
 
 ## Save and publish
 

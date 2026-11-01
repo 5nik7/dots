@@ -364,9 +364,9 @@ def lua(value):
     return '{' + ','.join('[' + lua(k) + ']=' + lua(v) for k, v in sorted(value.items())) + '}'
 
 
-def write_snapshot(doc, out):
+def write_snapshot(doc, out, *, palette=None):
     from theme_styles import write
-    doc['preferences'] = write(out, doc['colors'], ROOT)
+    doc['preferences'] = write(out, palette if palette is not None else doc['colors'], ROOT)
     (out / 'colors.json').write_text(json.dumps(doc, sort_keys=True) + '\n')
     (out / 'colors.lua').write_text('return ' + lua(doc) + '\n')
     (out / 'ls_colors').write_text(doc['ls_colors'] + '\n')
@@ -569,11 +569,11 @@ def main(argv):
         doc = resolve(palette, directory)
         if action == '_preference_icons':
             from theme_styles import tokens
-            print(tokens(palette['colors'], ROOT)['file_icons_yazi'])
+            print(tokens(palette, ROOT)['file_icons_yazi'])
         elif action == '_vivid': print(json.dumps(vivid_theme(doc, vivid_runtime()[2]), indent=2))
         elif action == '_template_colors':
             from theme_styles import tokens
-            for key, value in tokens(palette['colors'], ROOT).items():
+            for key, value in tokens(palette, ROOT).items():
                 if key != 'file_icons_yazi': print(key+'\t'+value)
             for key, value in leaf_template_tokens(palette).items():
                 print(key + '\t' + value)

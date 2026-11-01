@@ -7,7 +7,7 @@
 # dots:option=--json||flag|Print structured configuration data
 # dots:option=--dry-run||flag|Preview without writing files
 # dots:option=--json-value||flag|Parse VALUE as literal JSON
-# dots:argument=1|config-key|Setting or section-qualified option
+# dots:argument=1|config-key|Setting or full option; Tab lists full keys; .. then Tab browses branches
 # dots:argument=2|config-value|Literal value; omit in a terminal to open the editor
 DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
 exec python3 -B "$DOTS/lib/dots/config_cli.py" set "$@"

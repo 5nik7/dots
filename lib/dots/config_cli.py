@@ -168,6 +168,8 @@ class StylePlan:
         self.items, self.operations = [], []
 
     def edit(self, name, value, unset=False, json_value=False):
+        from config_keys import canonical, style_names
+        name=canonical(self.group+'.'+name).partition('.')[2]
         if not name: raise ValueError('select an individual style option')
         if json_value and not unset:
             try: value = json.loads(value)
@@ -178,7 +180,7 @@ class StylePlan:
                 unset=True
         if unset:
             if self.defaults: raise ValueError('shared defaults must remain defined; use set')
-            self.data = {key: val for key,val in self.data.items() if key != name and not key.startswith(name+'.')}
+            self.data = {key: val for key,val in self.data.items() if canonical(self.group+'.'+key) != self.group+'.'+name and not canonical(self.group+'.'+key).startswith(self.group+'.'+name+'.')}
         else:
             if not json_value and self.group == 'colors' and name.rsplit('.',1)[-1] not in ('fg','bg') and value in ('true','false'):
                 value = value == 'true'
@@ -194,6 +196,8 @@ class StylePlan:
                 recognized = base in known or self.group == 'colors' and any(k.startswith(role+'.') for k in known)
                 if key not in known and not recognized and not supported(self.group, key):
                     raise ValueError('unknown style option: '+self.group+'.'+key)
+            for key in updates:
+                for alias in style_names(self.group,key): self.data.pop(alias,None)
             self.data.update(updates)
         Styles(self.style.root, self.style.selected, defaults=self.defaults, replacements={self.path:self.data})
         self.items.append(dict(action='unset' if unset else 'set', key=self.group+'.'+name))
@@ -213,10 +217,13 @@ class ControlPlan:
         for path in self.controls.paths:
             parents_safe(path);self.guards[str(path)]=digest(path)
         self.before=read_json(self.path) if self.path.exists() else dict(schema=1,formatting={},apps={})
-        self.data=copy.deepcopy(self.before);self.items=[];self.operations=[]
+        from config_keys import document
+        self.data=document(self.before,public=False);self.items=[];self.operations=[]
 
     def edit(self,key,value=None,unset=False,json_value=False):
         from config_values import parts,assign,validate_value,Controls
+        from config_keys import internal,document
+        key=internal(key)
         path=parts(key)
         if not unset:
             if json_value:
@@ -239,10 +246,19 @@ class ControlPlan:
         else:validate(self.root,self.selected,self.data)
         from config_values import lookup
         proposed=self.data if self.defaults else Controls(self.root,self.selected,replacements={self.path:self.data}).values
+        from config_values import leaves,name as config_name,constraints
+        styles=Styles(self.root,self.selected,defaults=self.defaults)
+        for path,value in leaves(proposed):
+            if isinstance(value,str) and (path[:3]==('apps','fzf','colors') or constraints(self.controls.defaults,config_name(path)).get('type')=='color'):
+                for token in value.split(':'):
+                    if token.startswith('colors.'):styles.color(token)
         from tmux_config import validate_layout
         validate_layout(lookup(proposed,('formatting','apps','tmux'),{}),self.selected['facts']['platform'])
+        battery=lookup(proposed,('apps','tmux','battery'),{})
+        if battery.get('critical') is not None and battery.get('low') is not None and battery['critical']>=battery['low']:raise ValueError('critical battery threshold must be below low')
         self.items.append(dict(action='unset' if unset or value is None else 'set',key=key))
-        self.operations=[dict(path=str(self.path),data=self.data)] if self.data!=self.before else []
+        saved=document(self.data)
+        self.operations=[dict(path=str(self.path),data=saved)] if saved!=self.before else []
 
     def apply(self,action):
         return Store(state_root()).apply('config-'+action,self.operations,self.guards,retain=True,catalogs=[self.path])
@@ -250,7 +266,9 @@ class ControlPlan:
 
 def style_value(styles,group,key):
     from style_catalog import supported, known_keys
-    candidates=known_keys(group,styles)
+    from config_keys import canonical
+    candidates={canonical(group+'.'+k).partition('.')[2] for k in known_keys(group,styles)}
+    key=canonical(group+'.'+key).partition('.')[2]
     if key in candidates:
         return styles.resolve(group,key)['value']
     prefix=key+'.' if key else ''
@@ -260,6 +278,8 @@ def style_value(styles,group,key):
 
 
 def print_value(result,key,value,as_json=False):
+    from config_keys import canonical
+    key=canonical(key)
     if as_json:print(json.dumps(dict(result,key=key,value=value),ensure_ascii=True))
     elif isinstance(value,(dict,list)):render(dict(result,key=key,value=value))
     elif value is None and sys.stdout.isatty():
@@ -305,6 +325,10 @@ def render_refresh(ui, result):
 
 def render(result):
     ui = Presentation()
+    if 'config' in result and ui.human:
+        from config_view import listing
+        listing(ui,result)
+        return
     ui.heading('Dots config')
     ui.detail('Profile', result['profile'], '94')
     ui.resource_detail('File', result['path'])
@@ -339,17 +363,31 @@ class ConfigParser(argparse.ArgumentParser):
 def main(argv=None):
     parser = ConfigParser(description=__doc__)
     parser.add_argument('action', nargs='?', choices=['browse','list','get','set','unset','path','check','migrate','explain','refresh'])
-    parser.add_argument('key', nargs='?')
-    parser.add_argument('value', nargs='?')
+    parser.add_argument('operands', nargs='*')
     parser.add_argument('--profile')
-    parser.add_argument('--app', choices=('cli','tmux','yazi','fzf','gum','starship','gitmux'))
+    from style_catalog import APPS
+    parser.add_argument('--app', choices=APPS)
     parser.add_argument('--no-refresh', action='store_true')
     parser.add_argument('--query', help='Initial browser search')
     parser.add_argument('--client', help='Initiating tmux client')
     parser.add_argument('--defaults', action='store_true', help='Inspect or edit shared visual, formatting and application defaults')
     for option in ('json','json-value','dry-run','apply','yes'):
         parser.add_argument('--'+option, action='store_true')
-    args = parser.parse_args(argv)
+    parser.add_argument('--keys', action='store_true', help='Migrate legacy configuration key names')
+    parser.add_argument('--all-profiles', action='store_true', help='Migrate every declared profile')
+    args = parser.parse_intermixed_args(argv)
+    args.key=args.operands[0] if args.operands else None
+    args.value=args.operands[1] if len(args.operands)>1 else None
+    if args.action=='list':
+        from config_sections import categories
+        try:args.categories=categories(args.operands)
+        except ValueError as error:parser.error(str(error))
+        args.key=args.value=None
+    elif len(args.operands)>2:parser.error('too many arguments')
+    from config_keys import internal,canonical
+    if args.key: args.key=internal(args.key)
+    if (args.keys or args.all_profiles) and args.action!='migrate':parser.error('--keys/--all-profiles require migrate')
+    if args.all_profiles and (not args.keys or args.profile):parser.error('--all-profiles requires --keys and no --profile')
     automatic = args.action is None
     args.action = args.action or 'list'
     guided = args.value is None and (args.action == 'set' or args.action == 'get' and args.key is None)
@@ -373,37 +411,50 @@ def main(argv=None):
     root = checkout()
     selected = context(root, args.profile)
     if not selected['layers'] and not args.defaults: raise ValueError('no profile definition in this checkout')
+    if args.action=='migrate' and args.keys:
+        from config_migration import KeyPlan
+        plan=KeyPlan(root,selected,all_profiles=args.all_profiles)
+        preview=args.dry_run or not args.apply
+        result=dict(schema=1,profile=selected['current'],path=str(root),status='preview',items=plan.items)
+        if not preview:
+            applied=plan.apply();result.update(status=applied['status'],transaction=applied.get('id'))
+        print(json.dumps(result)) if args.json else render(result)
+        return 0
     if guided and args.key is not None:
         from config_menu import browse
         return browse(root, selected, args)
-    native_app = next((app for app in ('wttr','pkgs') if args.key == 'apps.'+app or (args.key or '').startswith('apps.'+app+'.')), None)
+    native_app = next((app for app in ('wttr','pkgs','codex') if args.key == 'apps.'+app or (args.key or '').startswith('apps.'+app+'.')), None)
     native_key = native_app is not None
     if native_key:
         if args.defaults:raise ValueError(native_app+' uses its active native file; --defaults does not apply')
         if native_app == 'pkgs':
             from config_pkgs import Native,NativePlan
+        elif native_app == 'codex':
+            from config_codex import Native,NativePlan
         else:
             from config_wttr import Native,NativePlan
         native=Native(root,selected)
+        activation = __import__('codex_toast').ACTIVATION if native_app=='codex' else 'next invocation'
         result=dict(schema=1,profile=selected['current'],path=str(native.original))
         if args.action in ('get','explain'):
             resolved=native.resolve(args.key) if args.key!='apps.'+native_app else dict(value=native.values,source=str(native.original))
-            if args.action == 'explain' and native_app == 'pkgs':
-                from config_pkgs import constraints
-                result.update(constraints=constraints(args.key), activation='next invocation')
+            if args.action == 'explain' and native_app in ('pkgs','codex'):
+                from importlib import import_module
+                constraints=import_module('config_'+native_app).constraints
+                result.update(constraints=constraints(args.key), activation=activation)
             print_value(dict(result,source=resolved['source']),args.key,resolved['value'],args.json)
-            if args.action == 'explain' and native_app == 'pkgs' and not args.json:
+            if args.action == 'explain' and native_app in ('pkgs','codex') and not args.json:
                 from config_values import constraint_details
                 ui=Presentation()
                 for label,value in constraint_details(result['constraints']): ui.detail(label,value)
-                ui.detail('Source',str(native.original));ui.detail('Activation','next invocation')
+                ui.detail('Source',resolved['source']);ui.detail('Activation',activation)
         elif args.action=='path':print(json.dumps(result) if args.json else native.original)
         elif args.action in ('set','unset'):
             plan=NativePlan(root,selected);plan.edit(args.key,args.value,args.action=='unset',args.json_value)
             result.update(status='preview',items=plan.items)
             if not args.dry_run:
                 applied=plan.apply(args.action);result.update(status=applied['status'],transaction=applied.get('id'))
-                result['refresh']=dict(status='complete',reason=native_app+' reads this native file on its next invocation',consumers=[])
+                result['refresh']=dict(status='complete',reason=activation if native_app=='codex' else native_app+' reads this native file on its next invocation',consumers=[])
             if args.json:print(json.dumps(result))
             else:render(result)
         else:raise ValueError('unsupported native application configuration action')
@@ -414,11 +465,14 @@ def main(argv=None):
             from config_menu import browse
             return browse(root, selected, args)
     if args.action == 'explain' and args.key.split('.',1)[0] in ('formatting','apps'):
-        from config_values import Controls, constraints, constraint_details
+        from config_values import Controls, constraints, constraint_details,activation
         controls=Controls(root,selected,defaults=args.defaults)
         resolved=controls.resolve(args.key)
-        result=dict(schema=1,key=args.key,profile='defaults' if args.defaults else selected['current'],
+        from config_keys import description
+        result=dict(schema=1,key=canonical(args.key),description=description(args.key),profile='defaults' if args.defaults else selected['current'],
                     constraints=constraints(controls.defaults,args.key),**resolved)
+        result['consumer'],result['activation']=activation(args.key)
+        result['destination']=str(controls.paths[-1])
         if args.key == 'apps.menu' or args.key.startswith('apps.menu.'):
             result['activation'] = 'next popup'
         if args.key == 'apps.fonts' or args.key.startswith('apps.fonts.'):
@@ -440,6 +494,8 @@ def main(argv=None):
         if args.json:print(json.dumps(result,ensure_ascii=True))
         else:
             ui=Presentation();ui.heading('Effective configuration');render_value(ui,args.key,resolved['value'])
+            ui.detail('Purpose',result['description'])
+            ui.detail('Consumer',result['consumer']);ui.detail('Destination',result['destination'])
             ui.detail('Source',resolved['source'] or 'Not configured')
             for label, value in constraint_details(result['constraints']): ui.detail(label, value)
             if result.get('activation'):ui.detail('Activation',result['activation'])
@@ -450,10 +506,16 @@ def main(argv=None):
         result = explain(args.key, root, selected, args.defaults, args.app)
         if args.json: print(json.dumps(result, ensure_ascii=True))
         else:
-            ui = Presentation(); ui.heading('Effective configuration'); ui.detail('Key', args.key)
+            ui = Presentation(); ui.heading('Effective configuration'); ui.detail('Key', canonical(args.key))
             for row in result['consumers']:
                 ui.emit(); ui.detail('Consumer', row['app'] or 'none')
+                ui.detail('Purpose', row['description'])
+                from config_values import constraint_details
+                for label,value in constraint_details(row['constraints']):ui.detail(label,value)
+                ui.detail('Destination',row['destination'])
                 render_value(ui, 'Effective', row['value']); ui.detail('Source', row['source'] or 'Not configured')
+                if 'resolved_color' in row:ui.detail('Resolved color',row['resolved_color'])
+                if 'fallback' in row:ui.detail('Fallback',row['fallback'])
                 ui.detail('Refresh', row['refresh'])
                 for declaration in row['declarations']:
                     ui.detail('Declared', declaration['key']+' · '+declaration['source'])
@@ -536,19 +598,38 @@ def main(argv=None):
             if not args.defaults and selected['current']==context(root)['current'] and (root/'plugins/pkgs').is_dir():
                 from config_pkgs import Native
                 merged.setdefault('apps',{})['pkgs']=Native(root,selected).values
+            if not args.defaults and selected['current']==context(root)['current'] and (root/'config/tmux/codex-alerts.toml').is_file() and sys.version_info>=(3,11):
+                from config_codex import Native
+                merged.setdefault('apps',{})['codex']=Native(root,selected).values
             if args.action == 'get':
+                from config_keys import document
+                from config_values import lookup,parts,MISSING,merge
+                typed=lookup(document(controls.values),parts(canonical(args.key)),MISSING) if is_style or is_control else MISSING
                 if is_style:
-                    value = style_value(styles,group,style_key)
-                    result['path'] = str(styles.path(group))
+                    style_path=True
+                    try:value = style_value(styles,group,style_key)
+                    except ValueError:
+                        if typed is MISSING:raise
+                        value=typed;style_path=False
+                    if isinstance(value,dict) and isinstance(typed,dict):value=merge(value,typed)
+                    result['path'] = str(styles.path(group) if style_path else controls.paths[-1])
                 elif is_control:
-                    value=controls.resolve(args.key)['value']
+                    value=typed if typed is not MISSING else controls.resolve(args.key)['value']
                 else:
                     group, key = key_parts(args.key)
                     if key not in merged[group]: raise ValueError('key is not configured in this profile or its parents')
                     value = merged[group][key]
                 print_value(result,args.key,value,args.json)
                 return 0
-            result['config'] = merged
+            from config_keys import document,public_styles
+            merged.update({g:nested(public_styles(g,styles.values[g])) for g in ('icons','colors')})
+            result['config'] = document(merged)
+            if args.action=='list':
+                categories=getattr(args,'categories',[])
+                if categories:
+                    result['categories']=categories
+    if result.get('categories') and (args.json or not Presentation().human):
+        result['config']={key:result['config'].get(key,{}) for key in result['categories']}
     print(json.dumps(result, ensure_ascii=True)) if args.json else render(result)
     return int(result.get('refresh',{}).get('status') == 'failed' or any(isinstance(row,dict) and row.get('status')=='failed' for row in result.get('refresh',{}).get('consumers',[])))
 

@@ -27,6 +27,36 @@ input metadata; the native loader additionally checks its own shell version and
 runtime guards. `check` treats malformed caches as failures and reports ordinary
 staleness as a need for normal startup preparation.
 
+## Test Codex alerts
+
+```sh
+dots debug alert
+dots debug alert --json
+```
+
+This explicit device test sends `Dots Codex alert test: toast and vibration` with
+the configured `apps.codex.toast` appearance (including background opacity) and
+`apps.codex.vibrate` duration,
+force and count. It is not part of `debug check` or the curated `debug test`
+suites, and it is not in the read-only Debug launcher. `--json` changes output
+only: it still sends the test. The command does not require a running Codex or
+tmux session, queue an event, change attention, restart workers or read messages.
+
+The test honors Termux alert enablement and vibration count zero. Toast and
+vibration run independently, and the report identifies sent, skipped,
+unavailable and failed requests. It waits for the bounded vibration sequence;
+each API request has a five-second deadline. A failed pulse stops the sequence.
+Ctrl-C cancels remaining pulses; an in-flight API call retains its deadline.
+Status `sent` means the API command succeeded, not proof of physical delivery.
+See [vibration controls](configuration.md#codex-vibration) for limits and spacing.
+
+Exit status is 0 for successful/skipped requests, 1 for unavailable/failed
+requests, 2 for invalid arguments/configuration and 130 on interruption. Termux
+with its API executables is required for device delivery; other platforms return
+an unavailable report without executing Android tools. The shared native
+controller preserves this behavior for PowerShell. JSON version 1 contains
+`message`, `source`, literal `settings`, per-tool `results` and `exit_code`.
+
 ## Startup order and timings
 
 ```sh

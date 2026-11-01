@@ -8,7 +8,7 @@ Font display preferences belong to the existing typed `apps.fonts` configuration
 in `default/config.json` and profile JSON, separate from retained `fonts.json`
 application choices. The [output preference table](fonts.md#output-preferences)
 defines defaults and consumers. Null/unset inherits the parent/default value.
-Report styles `colors.fonts.*` and `icons.menu.fonts` use the shared visual catalog;
+Report styles `colors.apps.fonts.*` and `icons.menu.fonts` use the shared visual catalog;
 they apply on the next Fonts invocation or popup without theme publication.
 Display preferences do not alter the following library schemas or data output.
 
@@ -55,6 +55,8 @@ fixed HKCU font key. Mirror receipts use `<Dots state root>/fonts/registrations`
 Registry preflight, reverse rollback and inverse transactions retain file guards.
 
 ## Shared menu records
+
+Keys/Weather styling reuses the existing `colors.apps.menu.entries["MENU:ENTRY"]` map without changing menu JSON. Keys categories use `keys:categories:APP`; modes distinguish the aggregate `keys:modes:all` from `keys:modes:mode:NAME`. Nonprintable mode names use the disjoint `keys:modes:mode-json:JSON_STRING` identity (ASCII JSON string escaping), retaining their original values for selection and binding data. Weather uses `wttr:main:ACTION`, `wttr:Location:CHOICE` and `wttr:Units:CHOICE`. Shared menu styles are overlaid by icon-role styles for icon spans, then nonnull per-entry fields; explicit false attributes are retained. These inert styling identities do not replace numeric FZF selection tokens or action arguments. See [configuration](configuration.md#keys-and-weather-menu-appearance) for glyphs and supported controls.
 
 `dots menu --json` uses `menu: "dots"` and `title: "Dots menu"`, with exactly the base item fields below. Ordered IDs come from the fixed registry in `lib/dots/menu_cli.py`, including the Fonts submenu; the schema-1 envelope and base item fields remain unchanged. Action meanings are documented in [launcher commands](commands.md#dots-workflow-menu). Availability reflects static command presence, required tmux/Git executables and platform/Python limits; it does not assert that a child inventory contains results. Data views never probe FZF or run those tools. They exclude icons, action arrays, environment and private transport even when decoration is forced.
 
@@ -329,6 +331,29 @@ Bundled command/completion/manual entries use the existing schema-1 installation
 
 ## Codex attention state
 
+`apps.codex.toast.{fg,bg,position,short,bg_opacity}` is a five-field projection of the
+checkout's native `config/tmux/codex-alerts.toml` `[termux]` table. There is no
+profile overlay for these fields. Missing fields resolve to the existing defaults
+in `codex_toast.py`; unset removes the native declaration. JSON/Get report literal
+values; delivery and human previews resolve color references separately. See
+[toast controls](configuration.md#codex-warning-toast) for the mapping and types.
+Background opacity is an integer percentage 0–100 (default 100); delivery rounds
+`255 * opacity / 100` to the nearest byte and prefixes that alpha to resolved RGB
+when below 100. The default retains the six-digit opaque argument.
+
+`apps.codex.vibrate.{duration,force,count}` adds three fields from the same native
+table. `codex_vibration.py` defines defaults 300 ms, true and one pulse, with
+duration 1–10000 and count 0–10. Unset removes a declaration and uses that default.
+No attention-state schema changes are needed: the existing at-most-once event
+claim starts one finite sequence. Helper processes are transient and reaped by
+the worker; they hold no additional persistent notification state.
+
+The explicit `debug alert --json` version-1 report contains the fixed test
+`message`, native `source`, literal `settings` (`toast` and `vibrate`), `results`
+keyed by those tools and `exit_code`. Results have `status`, optional `reason`,
+and request counters `requested`, `attempted`, `sent` when available. API success
+does not establish device delivery. The command never adds a queue event.
+
 The optional [attention bridge](themes.md#codex-attention-notifications) reads repository preferences from `config/tmux/codex-alerts.toml` (schema 1). Its event switches, unfocused-only/view-acknowledgement policy, Termux `focus_policy` (`conservative` by default, or explicitly verified `terminal`), vibration duration/force and toast semantic roles, gravity, duration and excerpt limit are consumed directly. `toast_short = false` is the default and omits `termux-toast -s` for longer display; `true` selects short display. The polling interval is currently fixed at five seconds; unsupported schema/settings fail without notification. Full-label brackets and bold bright_red/darker_background use the existing tmux alert template rather than a competing palette.
 
 Explicit setup merges hooks into `${CODEX_HOME:-$HOME/.codex}/hooks.json`, edits only `notify`, `features.hooks`, `tui.notification_condition` and `tui.terminal_title` in personal TOML, and installs an owned `dots-notifications.json` record holding source paths and the previous notify argv. The final title field must be `thread-id`: either a full lowercase UUID or Codex's 32-character form containing its first 29 characters followed by `...`. The latter resolves only against a unique full ID from the queue's event and lifecycle records, including acknowledged/stopped records; the incoming event ID participates during focus-at-receipt checks. The read-only identity query is capped at 4096 distinct IDs; an unavailable, unsafe, malformed or over-limit store leaves shortened fields unmatched. Missing/ambiguous IDs do not match a pane. Published snapshots and acknowledgement retain full UUIDs; raw titles and abbreviated IDs never enter the overview. These personal files belong to a retained Store transaction, not repository tracking or automatic checkout installation.
@@ -359,7 +384,7 @@ Generated profile variables and native maps come from `profile_environment.py`. 
 ## Visual preference resolution and publication
 
 Visual precedence is layer-first: defaults, inherited parents, selected profile;
-within a layer, general fields precede app-specific fields. Color attributes
+within a layer, general fields precede surface fields and canonical feature fields. Canonical Todo/Fonts/Wiki/Menu fields apply to both reports and selectors. Color attributes
 merge separately, including explicit false. Empty icon strings override inherited
 glyphs. `applications.codex` is canonical and `navigation.codex` is an alias,
 with canonical declarations winning at equal layer/app specificity. The supported
@@ -368,8 +393,8 @@ remain readable and removable. Explicit process settings retain their existing
 precedence; this rule concerns icons/colors.
 
 The additive `config explain` schema-1 report contains key, profile and consumer
-records with app, supported, refresh, value, source and ordered declarations.
-Existing get/list JSON is preserved. Visual mutation reports add a refresh object
+records with app, supported, refresh, value, source and ordered declarations. Records also expose a description, canonical key and resolved color/fallback when applicable.
+Schema-1 envelopes remain stable; discovered/listed key names are canonical. Old key aliases remain accepted. Scalar values retain their types and exact output. Visual mutation reports add a refresh object
 containing status, available transaction/generation identities and consumer
 results. A pending result must not be treated as proof of visible activation.
 
@@ -384,8 +409,8 @@ fingerprint or imply a complete source/theme rebuild. See [visual behavior](prof
 
 ### Typed application preferences
 
-Shared `default/config.json` is a schema-1 object containing `formatting` and
-`apps`. Profile manifests accept these objects as fieldwise overrides; null
+Shared `default/config.json` is a schema-1 object containing `formatting`, `apps`
+and the typed popup/menu-entry `colors` paths. Profile manifests accept these objects as fieldwise overrides; null
 inherits, while false/zero/empty strings/lists retain their types. Literal map
 keys use dot identifiers or JSON string bracket segments. No key or value is
 shell-evaluated by the configuration controller. Validation, completion and
@@ -404,7 +429,7 @@ components. Native wttr is an explicit ownership exception: `config_wttr.py`
 edits the selected native TOML with native validation and no profile overlay.
 See [controls and native weather](profiles.md#application-and-formatting-controls).
 
-`apps.menu.popup` declares dedicated Dots popup position, border style and nullable native color slots in the same typed defaults/profile objects. The shared selector applies these after generic FZF presentation preferences; shell border defaults cannot suppress a Dots frame. Position changes retain controller-owned dimensions. FZF selectors and native tmux terminal hosts read effective settings at invocation, without publication, global tmux option changes or a second configuration store. See [popup controls](profiles.md#dots-popup-appearance) for accepted fields and defaults.
+`formatting.apps.menu.popup` and `colors.apps.menu.popup` declares dedicated Dots popup position, border style and nullable native color slots in the same typed defaults/profile objects. The shared selector applies these after generic FZF presentation preferences; shell border defaults cannot suppress a Dots frame. Position changes retain controller-owned dimensions. FZF selectors and native tmux terminal hosts read effective settings at invocation, without publication, global tmux option changes or a second configuration store. See [popup controls](profiles.md#dots-popup-appearance) for accepted fields and defaults.
 
 Popup `width`/`height` are string-or-integer controls: `auto`, `fit`, `fill`, integer percentages 1%–100%, or integer cells 1–10000. Both default to `auto`. Resolution uses the addressed client's viewport; explicit overrides are bounded, while inline width remains owned by its terminal. Typed explain data includes `constraints` (`type`, optional finite `choices`, `syntax`, `examples`) from the validation declarations. Choices are exhaustive only for finite enums; examples do not restrict custom syntax. Profile null/reset semantics and exact scalar get output are unchanged.
 
@@ -448,10 +473,42 @@ Installer entries retain their first `before`/`backup`/`index` and current `afte
 
 ## Wiki topic and command documentation contracts
 
-Wiki display controls use the existing typed profile schema: `apps.wiki.list_details` is `summary|full`, `reader` is `auto|plain`, and `search_snippets`, `search_urls`, `menu_descriptions`, `section_breadcrumbs` are booleans. `formatting.apps.wiki.row_gap` is an integer `0..4`. Defaults, consumer scopes and resets are documented in [Wiki preferences](wiki.md#output-preferences). Nullable `colors.wiki.*` fields are supported CLI bindings; the ordinary layer-first visual resolution and Config save workflow apply. These preferences never filter JSON results or change raw/redirected document bytes, exact scalar outputs, ranking, or ordinary redirected report layouts.
+Wiki display controls use the existing typed profile schema: `apps.wiki.list_details` is `summary|full`, `reader` is `auto|plain`, and `search_snippets`, `search_urls`, `menu_descriptions`, `section_breadcrumbs` are booleans. `formatting.apps.wiki.row_gap` is an integer `0..4`. Defaults, consumer scopes and resets are documented in [Wiki preferences](wiki.md#output-preferences). Nullable `colors.apps.wiki.*` fields are supported CLI bindings; the ordinary layer-first visual resolution and Config save workflow apply. These preferences never filter JSON results or change raw/redirected document bytes, exact scalar outputs, ranking, or ordinary redirected report layouts.
 
 `wiki search QUERY --topics` returns `{schema: 1, mode: "topics", query: STRING, items: ARRAY}`. Each item contains string fields `page`, `title`, `section`, `heading`, `breadcrumb`, `anchor`, `url`, `text`, plus a one-based integer `line`. Empty `heading`/`anchor` identifies a page introduction; section anchors follow the wiki generator's duplicate-aware heading rules. `line` addresses current canonical Markdown (or generated command-reference Markdown), not the exported file. Snippets use at most 240 source characters plus an ellipsis. Ranking is deterministic; scores are not an API. No matches return status 1 with `items: []`. Existing literal-search JSON is unchanged.
 
 Topic snapshots are in-memory only. The manifest remains schema 1 with stable page IDs and one canonical source per page. The wiki and `dots(1)` share public first-party static metadata extraction, including declared operands and root options; hidden/private extension commands are excluded. Revision-aware wiki provenance includes the shared extraction, heading helper and global option source. No extension is executed during documentation generation.
 
 Managed manual identity `dots:manual` belongs to the existing core component and uses ordinary installer receipt/journal schemas. Destination and legacy-checkout behavior are described in [installation](installation.md#complete-command-manual).
+
+### Canonical configuration paths and symbolic colors
+
+`config list` accepts repeatable category operands. With explicit categories,
+its JSON envelope adds `categories` in deduplicated requested order and filters
+the `config` object to those categories. No operands or `all` retains the full
+existing envelope. Human fallback samples and their source annotations do not
+alter serialized values: a null Config override remains null in JSON and Get.
+The report never adds native application options to the Config key namespace.
+
+`config_keys.py` owns bounded translations between public paths and existing
+consumer vocabularies. Discovery and new writes use canonical paths; readers
+accept legacy paths. Native adapters, environment/file identities and literal
+bracket segments are excluded from renaming. A canonical declaration wins over
+its same-layer legacy alias; layer precedence remains stronger than specificity.
+`colors.apps.{todo,fonts,wiki,menu}` replaces corresponding general/CLI feature
+paths. Tmux's public window path is `colors.apps.tmux.windows`, with `alert` as
+the public attention state. See [configuration discovery](configuration.md#canonical-keys-and-completion).
+
+Color values retain semantic names, literal hex, `palette.NAME`, or global
+`colors.ROLE.fg`/`.bg` references. References cannot target application paths or
+non-color fields. Unknown global references and cycles fail validation. Missing
+native palette names retain their stored spelling and fall back to an inherited
+semantic color, then the terminal default when no inherited color exists.
+Semantic and native palette namespaces remain distinct even when names collide.
+Published projections contain resolved values; completion and previews are read-only.
+
+Key migration validates the complete affected inheritance chains and compares
+consumer values before mutation, rejects contradictory aliases, guards all
+inputs and uses retained Store operations for rollback/undo. Identical aliases
+are deduplicated. A repeated migration has no operations. TOML comments and
+unrelated native/profile fields survive the rename.

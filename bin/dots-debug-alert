@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dots:summary=Send a test Codex toast and configured Termux vibration
+# dots:usage=[--json]
+# dots:option=--json||flag|Print versioned API results; still sends the test alert
+# dots:example=dots debug alert
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/debug_cli.py" alert "$@"

@@ -50,6 +50,8 @@ github = "󰊤"
 gitlab = ""
 
 [navigation]
+back = "󰅁"
+refresh = "󰑓"
 environment = "󰇁"
 next = "󰅂"
 help = "󰋖"
@@ -73,6 +75,9 @@ warning = ""
 working = ""
 
 [weather]
+daily = "󰖙"
+hourly = "󰥔"
+units = ""
 humidity = ""
 location = ""
 precip = ""
@@ -110,3 +115,10 @@ switcher = "󰏘"
 publish = ""
 sync = ""
 submodules = ""
+
+# Optional clock glyphs; the default clock has no icon.
+[apps.tmux.clock]
+fixed = ""
+day = "󰖙"
+night = "󰖔"
+unknown = ""

@@ -18,7 +18,10 @@ from transactions import parents_safe
 from interaction import Selector, SelectionEnded, terminal
 from app_paths import eza_config_directory, television_config_directory, leaf_config_directory, config_directory
 from picker import CREDENTIAL, LIMIT
-from file_preview import directory_view, text_view, resource_span
+if __package__:
+    from .file_preview import directory_view, text_view, resource_span
+else:
+    from file_preview import directory_view, text_view, resource_span
 
 # These are publication internals, never browsable content or completion operands.
 INTERNAL = {'id', 'selection', 'fingerprint', 'previous', 'previous-active', 'status',

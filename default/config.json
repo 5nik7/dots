@@ -33,7 +33,12 @@
         "row_gap": 0,
         "alignment": "left",
         "padding": 1,
-        "entries": {}
+        "popup": {
+          "position": "center",
+          "width": "auto",
+          "height": "auto",
+          "border": "rounded"
+        }
       },
       "tmux": {
         "position": "top",
@@ -54,7 +59,105 @@
         ],
         "termux_right": [
           "battery"
-        ]
+        ],
+        "clock": {
+          "format": "%-I:%M",
+          "before": " ",
+          "after": " ",
+          "spacer": " "
+        },
+        "tabs": {
+          "before": " ",
+          "after": " ",
+          "separator": "│",
+          "spacer": " ",
+          "alert": {
+            "before": "[",
+            "after": "]"
+          }
+        },
+        "battery": {
+          "before": "",
+          "after": "",
+          "spacer": " ",
+          "width": 4
+        },
+        "session": {
+          "before": " ",
+          "after": " ",
+          "spacer": " ",
+          "separator": "│",
+          "number": {
+            "before": "",
+            "after": ""
+          },
+          "icon": {
+            "before": "",
+            "after": ""
+          },
+          "name": {
+            "before": "",
+            "after": ""
+          }
+        },
+        "windows": {
+          "before": " ",
+          "after": " ",
+          "spacer": " ",
+          "separator": "│",
+          "number": {
+            "before": "",
+            "after": ""
+          },
+          "icon": {
+            "before": "",
+            "after": ""
+          },
+          "name": {
+            "before": "",
+            "after": ""
+          },
+          "alert": {
+            "before": "[",
+            "after": "]"
+          }
+        },
+        "git": {
+          "before": " ",
+          "after": " "
+        },
+        "indicators": {
+          "copy": {
+            "before": " ",
+            "after": " ",
+            "spacer": ""
+          },
+          "prefix": {
+            "before": " ",
+            "after": " ",
+            "spacer": ""
+          },
+          "zoom": {
+            "before": " ",
+            "after": " ",
+            "spacer": ""
+          },
+          "working": {
+            "before": "",
+            "after": "",
+            "spacer": ""
+          },
+          "waiting": {
+            "before": "",
+            "after": "",
+            "spacer": ""
+          },
+          "attention": {
+            "before": "",
+            "after": "",
+            "spacer": ""
+          }
+        }
       },
       "nvim": {
         "lualine": {
@@ -88,6 +191,13 @@
           "section_separator_left": "",
           "section_separator_right": ""
         }
+      },
+      "fonts": {
+        "preview": {
+          "position": "down",
+          "size": 33,
+          "wrap": true
+        }
       }
     }
   },
@@ -106,10 +216,7 @@
       "menu_descriptions": true,
       "preview": {
         "enabled": true,
-        "sample": true,
-        "position": "down",
-        "size": 33,
-        "wrap": true
+        "sample": true
       }
     },
     "cli": {
@@ -118,27 +225,16 @@
     "setup": {
       "logo": true,
       "clear_screen": true,
-      "components": ["core", "files", "themes", "anodize", "blastoff", "pkgs"],
+      "components": [
+        "core",
+        "files",
+        "themes",
+        "anodize",
+        "blastoff",
+        "pkgs"
+      ],
       "resources": [],
       "dependencies": false
-    },
-    "menu": {
-      "popup": {
-        "position": "center",
-        "width": "auto",
-        "height": "auto",
-        "border": "rounded",
-        "colors": {
-          "border": "accent",
-          "fg": null,
-          "bg": null,
-          "label": null,
-          "preview-border": null,
-          "preview-label": null,
-          "preview-fg": null,
-          "preview-bg": null
-        }
-      }
     },
     "fzf": {
       "default_opts": [
@@ -249,6 +345,73 @@
       "highlights": {},
       "icons": {},
       "icon_styles": {}
+    },
+    "tmux": {
+      "clock": {
+        "icon_mode": "none"
+      },
+      "battery": {
+        "critical": null,
+        "low": null,
+        "charging_style": false
+      },
+      "session": {
+        "name_source": "workspace",
+        "show_number": true,
+        "show_name": true,
+        "repository_icon": true,
+        "repository_color": false,
+        "multiple": false
+      },
+      "indicators": {
+        "copy": {
+          "text": "COPY"
+        },
+        "prefix": {
+          "text": "PREFIX"
+        },
+        "zoom": {
+          "text": "ZOOM"
+        },
+        "working": {
+          "text": null
+        },
+        "waiting": {
+          "text": null
+        },
+        "attention": {
+          "text": null
+        }
+      }
+    }
+  },
+  "colors": {
+    "apps": {
+      "menu": {
+        "popup": {
+          "preview": {
+            "border": {
+              "fg": null
+            },
+            "label": {
+              "fg": null
+            },
+            "fg": null,
+            "bg": null
+          },
+          "border": {
+            "fg": "accent"
+          },
+          "label": {
+            "fg": null
+          },
+          "body": {
+            "fg": null,
+            "bg": null
+          }
+        },
+        "entries": {}
+      }
     }
   }
 }

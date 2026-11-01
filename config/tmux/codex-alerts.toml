@@ -17,10 +17,16 @@ enabled = true
 # Stock Termux does not send DECSET 1004 focus changes. Never treat the
 # attached client's default "focused" flag as proof that its pane was viewed.
 focus_policy = "conservative"
-vibration_ms = 300
+# Exposed as apps.codex.vibrate.{duration,force,count}; count=0 disables vibration.
+vibration_ms = 500
 force_vibration = true
+vibration_count = 1
+# Exposed by dots config as apps.codex.toast.{bg,fg,position,short,bg_opacity}.
+# bg_opacity is 0..100 percent (100 by default), converted to Android #AARRGGBB.
+# Palette roles, palette.NAME/global color references or #RRGGBB colors.
+# short=true adds -s: shorter display duration, unchanged polling interval.
 toast_background = "dark_background"
-toast_foreground = "warning"
+toast_foreground = "bright_red"
 toast_gravity = "middle"
-toast_short = false
+toast_short = true
 excerpt_chars = 240

@@ -2,7 +2,7 @@
 # Works both as an autoloaded _dots function and when explicitly sourced.
 _dots() {
   local record kind value description display lead
-  local -i width=0 i
+  local -i width=0 i config_branch=0
   local -a records candidates descriptions prefixes prefix_descriptions input_words
   input_words=("${(@Q)words}")
   # ZLE's PREFIX ends at the cursor, while words may include a suffix after it.
@@ -13,8 +13,9 @@ _dots() {
     value=${record%%$'\t'*}; description=${record#*$'\t'}
     case $kind in
       candidate)
+        [[ ${input_words[CURRENT]} != *.. || $description != Branch ]] || config_branch=1
         if [[ -n $description ]] && (( ${#value} > width )); then width=${#value}; fi
-        if [[ $value == *= ]]; then
+        if [[ $value == (*=|*.|*\[) ]]; then
           prefixes+=("$value"); prefix_descriptions+=("$description")
         else
           candidates+=("$value"); descriptions+=("$description")
@@ -37,8 +38,11 @@ _dots() {
     [[ -z ${prefix_descriptions[i]} ]] || printf -v display '%-*s -- %s' "$width" "$display" "${prefix_descriptions[i]}"
     prefix_descriptions[i]=$display
   done
-  (( ${#candidates} )) && compadd -d descriptions -a candidates
-  (( ${#prefixes} )) && compadd -S '' -d prefix_descriptions -a prefixes
+  (( ${#candidates} )) && compadd -U -d descriptions -a candidates
+  (( ${#prefixes} )) && compadd -U -S '' -d prefix_descriptions -a prefixes
+  # Consuming .. can shorten the common prefix. Show the branch choices now,
+  # instead of spending the first Tab merely replacing .. with that prefix.
+  (( ! config_branch )) || compstate[list]=force
   return 0
 }
 if [[ $ZSH_EVAL_CONTEXT == *:file ]]; then

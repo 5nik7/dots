@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dots diagnostics: read-only inspection and explicit startup execution."""
+"""Dots diagnostics: inspection, explicit startup execution and device tests."""
 import argparse
 import json
 import os
@@ -21,7 +21,7 @@ def format_time(value):
 def parser():
     p=argparse.ArgumentParser(description=__doc__)
     sub=p.add_subparsers(dest='action')
-    for name in ('check','startup','path','command','cache','test','record'):
+    for name in ('check','startup','path','command','cache','test','record','alert'):
         s=sub.add_parser(name);s.add_argument('--json',action='store_true')
         if name=='check':s.add_argument('--only',choices=('platform','profiles','commands','startup','environment'))
         if name=='path':
@@ -79,6 +79,11 @@ def main(argv=None):
             print(snippet(root,args.operation,shell_choice(args.shell)),end='');return 0
         data=history()
     elif args.action=='check': data=health(root,args.only)
+    elif args.action=='alert':
+        from debug.alert import run as alert
+        from progress import configure,Progress
+        configure(human=not args.json)
+        with Progress('Sending Codex test toast and vibration'): data=alert(root)
     elif args.action=='path':
         if args.command and (os.sep in args.command or os.altsep and os.altsep in args.command): p.error('path lookup requires a command name, not a path')
         from debug.record import history
@@ -112,5 +117,6 @@ def main(argv=None):
 
 if __name__=='__main__':
     try: sys.exit(main())
+    except KeyboardInterrupt: sys.exit(130)
     except (ValueError,OSError,KeyError,TypeError) as error:
         print('dots debug: '+str(error),file=sys.stderr);sys.exit(2)

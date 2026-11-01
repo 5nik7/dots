@@ -11,7 +11,7 @@ import sys
 import tempfile
 from keys.model import APPS
 from keys.providers import collect, snapshot, read_file
-from keys.presentation import binding_prompt, menu_rows, menu_dimensions, styles, picker_colors, terminal_dimensions, MENU_HEADER
+from keys.presentation import binding_prompt, menu_rows, menu_layout, styles, picker_colors, terminal_dimensions, MENU_HEADER
 
 
 def details(ui,row):
@@ -95,13 +95,13 @@ def choose_category(ui,coverage,*,include_all=True):
     from files.picker import fzf_colors
     rows=menu_rows(ui,coverage,include_all=include_all)
     if not rows:return None
-    labels=[label for _,label in rows]
     context=getattr(ui,'menu_context',None)
-    width,height=menu_dimensions(labels,size=context.verify()) if context else menu_dimensions(labels)
+    labels,width,height=menu_layout(ui,lambda view:[label for _,label in menu_rows(view,coverage,include_all=include_all)],
+                                   size=context.verify() if context else None,popup=bool(os.environ.get('TMUX')))
     popup=f'center,{width},{height}' if os.environ.get('TMUX') else False
     with context.selector_environment() if context else nullcontext(None) as environment:
         selected=RichSelector().fzf(binding_prompt(ui),
-            labels,False,None,ui.color,ui.icons,picker_colors(fzf_colors(ui)),popup=popup,height=height,header=MENU_HEADER,info='inline-right',environment=environment)
+            labels,False,None,ui.color,ui.icons,picker_colors(fzf_colors(ui)),popup=popup,height=height,header=MENU_HEADER,info='inline-right',environment=environment,popup_resolved=bool(popup))
     return rows[selected[0]][0]
 
 

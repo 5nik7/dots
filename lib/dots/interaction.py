@@ -168,7 +168,7 @@ class RichSelector:
             info=None, bindings=(), initial_indices=None, navigation=None,
             navigation_keys=None, hscroll=True, preview_position=None, event_selection=False,
             focus_index=None, preview_lines=None, preview_wrap=False, wrap=False,
-            disabled=False, header_row=None, popup_resolved=False):
+            disabled=False, header_row=None, popup_resolved=False, sort=None):
         # Optional bindings are trusted controller code, never selected labels.
         indices = range(len(labels)) if initial_indices is None else list(initial_indices)
         if initial_indices is not None and (any(type(i) is not int or not 0 <= i < len(labels) for i in indices)
@@ -186,6 +186,7 @@ class RichSelector:
                  '--bind=esc:abort,ctrl-c:abort', '--header=Enter: review  Esc: cancel']
         flags += ['--border=' + menu_popup.border(appearance)]
         if disabled:flags+=['--disabled','--no-sort']
+        if sort is not None:flags+=['--sort' if sort else '--no-sort']
         if header_row is not None:flags+=['--header-lines=1']
         keys = 'Enter: review  Esc: cancel'
         events = {'esc': 'back', 'f1': 'help'} if navigation_keys is None else navigation_keys

@@ -1336,11 +1336,11 @@ Inspect a profile without activation
 .B "\-\-defaults"
 Inspect shared defaults
 .TP
-.B "\-\-app cli,tmux,yazi,fzf,gum,starship,gitmux"
+.B "\-\-app cli,tmux,yazi,fzf,gum,starship,gitmux,nvim,wttr"
 Select a visual consumer
 .TP
 .B "Argument 1 (config\-key)"
-Configuration option to explain
+Option to explain; Tab lists full keys; .. then Tab browses branches
 .SS "dots config get"
 Read a configured profile option
 .PP
@@ -1356,11 +1356,11 @@ Select a profile without activating it
 Print structured configuration data
 .TP
 .B "Argument 1 (config\-key)"
-Setting or section\-qualified option
+Setting or full option; Tab lists full keys; .. then Tab browses branches
 .SS "dots config list"
-List configured profile options
+List categorized configuration and value sources
 .PP
-.B "dots config list [OPTIONS]"
+.B "dots config list [CATEGORY...] [OPTIONS]"
 .TP
 .B "\-\-defaults"
 Use shared color and icon defaults
@@ -1370,10 +1370,19 @@ Select a profile without activating it
 .TP
 .B "\-\-json"
 Print structured configuration data
+.TP
+.B "Argument * (choice:all,icons,colors,formatting,apps,files,profile,settings,environment)"
+Categories to list together; omit for all
 .SS "dots config migrate"
 Preview or migrate legacy Dots configuration into a profile
 .PP
 .B "dots config migrate [OPTIONS]"
+.TP
+.B "\-\-keys"
+Migrate legacy configuration key names
+.TP
+.B "\-\-all\-profiles"
+Migrate all declared profiles and shared defaults
 .TP
 .B "\-\-profile VALUE"
 Select a profile without activating it
@@ -1436,7 +1445,7 @@ Preview without writing files
 Parse VALUE as literal JSON
 .TP
 .B "Argument 1 (config\-key)"
-Setting or section\-qualified option
+Setting or full option; Tab lists full keys; .. then Tab browses branches
 .TP
 .B "Argument 2 (config\-value)"
 Literal value; omit in a terminal to open the editor
@@ -1461,11 +1470,11 @@ Print structured configuration data
 Preview without writing files
 .TP
 .B "Argument 1 (config\-key)"
-Setting or section\-qualified option
+Setting or full option; Tab lists full keys; .. then Tab browses branches
 .SS "dots debug"
 Inspect and diagnose Dots without automatic repairs
 .PP
-.B "dots debug check|startup|path|command|cache|test|record [OPTIONS]"
+.B "dots debug check|startup|path|command|cache|test|record|alert [OPTIONS]"
 .PP
 .nf
 dots debug startup \-\-shell zsh \-\-isolated
@@ -1481,6 +1490,17 @@ dots debug startup \-\-shell zsh \-\-live \-\-detail deep \-\-changes path,alias
 .PP
 .nf
 dots debug test
+.fi
+.SS "dots debug alert"
+Send a test Codex toast and configured Termux vibration
+.PP
+.B "dots debug alert [\-\-json]"
+.TP
+.B "\-\-json"
+Print versioned API results; still sends the test alert
+.PP
+.nf
+dots debug alert
 .fi
 .SS "dots debug cache"
 Inspect startup cache validity without rebuilding

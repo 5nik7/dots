@@ -193,12 +193,18 @@ class Workspaces:
                 or (data.get('origin') is not None and
                     (not isinstance(data['origin'], str) or not re.fullmatch(r'[0-9]+-[0-9]+', data['origin'])))):
             raise ValueError('invalid workspace metadata')
+        repository=data.get('repository',{})
+        if (not isinstance(repository,dict) or set(repository)-{'name','host'} or
+                any(not isinstance(value,str) or len(value)>4096 or any(ord(c)<32 or 127<=ord(c)<160 for c in value) for value in repository.values())):
+            raise ValueError('invalid workspace repository metadata')
         return data
 
     def store(self, session, data, label=None, rename=None):
         commands = [['set-option', '-t', session + ':', PREFIX + 'data', json.dumps(data, ensure_ascii=True)],
                     ['set-option', '-t', session + ':', PREFIX + 'auto', '1' if data['auto'] else '0'],
                     ['set-option', '-t', session + ':', PREFIX + 'expected', data['expected']]]
+        repository=data.get('repository',{})
+        commands.extend(['set-option','-t',session+':',PREFIX+'repository-'+key,repository.get(key,'')] for key in ('name','host'))
         if label is not None:
             commands.append(['set-option', '-t', session + ':', PREFIX + 'label', label])
         if rename is not None:
@@ -267,12 +273,24 @@ class Workspaces:
         projects = sorted(projects)
         label = '' if not projects else display_name(projects[0]) if len(projects) == 1 else 'multi'
         expected = name_prefix(label or 'termux') + '-' + data['id'] if data['auto'] else actual
-        if projects == data.get('projects') and expected == actual and self.option(session, PREFIX + 'label') == label:
+        if projects == data.get('projects') and 'repository' in data and expected == actual and self.option(session, PREFIX + 'label') == label:
             return renamed
         # A collision with an unrelated manual name must never merge workspaces.
         if expected != actual and any(self.name(other) == expected for other in self.sessions() if other != session):
             raise ValueError('workspace name is occupied by another session')
-        data.update(projects=projects, expected=expected)
+        repository={}
+        if len(projects)==1:
+            repository['name']=display_name(projects[0])
+            # Event-time local metadata only. Status rendering reads this cache.
+            from git_identity import url_host
+            try:
+                env={k:v for k,v in os.environ.items() if not k.startswith('GIT_')}
+                result=subprocess.run(['git','-C',projects[0],'config','--no-includes','--get','remote.origin.url'],
+                    env=dict(env,GIT_OPTIONAL_LOCKS='0',GIT_TERMINAL_PROMPT='0'),capture_output=True,text=True,timeout=self.remaining(.25))
+                host=url_host(result.stdout.strip()) if result.returncode==0 and len(result.stdout)<4096 else ''
+                repository['host']=host.split('.')[0] if host in ('github.com','gitlab.com','bitbucket.org') else ''
+            except (OSError,subprocess.SubprocessError):pass
+        data.update(projects=projects, expected=expected,repository=repository)
         self.store(session, data, label, expected if expected != actual else None)
         return True
 

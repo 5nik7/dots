@@ -21,15 +21,13 @@ dots_value_candidates() {
       output=$(python3 -B "$DOTS_LIB_DIR/profiles.py" __names 2>/dev/null) || return 0
       while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
-    config-value)
-      local output
-      output=$(python3 -B "$DOTS_LIB_DIR/config_values.py" __values "${DOTS_POSITIONALS[0]:-}" 2>/dev/null) || return 0
-      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
-      ;;
-    config-key)
-      local output
-      output=$(python3 -B "$DOTS_LIB_DIR/profile_config.py" __keys "${DOTS_OPTION_VALUES[--profile]:-}" 2>/dev/null) || return 0
-      while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
+    config-value|config-key)
+      local output record description kind=key
+      [[ $type != config-value ]] || kind=value
+      output=$(python3 -B "$DOTS_LIB_DIR/config_completion.py" "$kind" "${DOTS_POSITIONALS[0]:-}" "$DOTS_CURRENT" "${DOTS_OPTION_VALUES[--profile]:-}" 2>/dev/null) || return 0
+      while IFS=$'\t' read -r record value description; do
+        [[ $record != candidate ]] || DOTS_SUGGESTIONS+=("candidate"$'\t'"$lead$value"$'\t'"$description")
+      done <<< "$output"
       ;;
     dots-setting)
       local output

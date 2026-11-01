@@ -1,6 +1,6 @@
 """Session-only weather browser. Selection and previews never acquire weather."""
 from contextlib import nullcontext
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import io
 import os
 from pathlib import Path
@@ -17,19 +17,29 @@ from files.catalog import Presentation
 from interaction import RichSelector, SelectionEnded, SelectionEvent, rich_fzf_available, terminal
 from menu_input import prompt
 from menu_tmux import TmuxContext, read_request, request_file
-from menus import Entry, Menu, choose, run_action, show_message
+from menus import Entry, Menu, choose, run_action, show_message, styled_labels
 from resources import wrap
 from wttr import cli as weather_cli
 
 ENTRIES = (
-    Entry('current', 'Current conditions'),
-    Entry('daily', 'Daily forecast'),
-    Entry('hourly', 'Hourly forecast'),
-    Entry('location', 'Change location'),
-    Entry('units', 'Change units'),
-    Entry('refresh', 'Refresh'),
-    Entry('help', 'Help'),
-    Entry('back', 'Back / Close'),
+    Entry('current', 'Current conditions', icon='', icon_role='weather.title'),
+    Entry('daily', 'Daily forecast', icon='󰖙', icon_role='weather.daily'),
+    Entry('hourly', 'Hourly forecast', icon='󰥔', icon_role='weather.hourly'),
+    Entry('location', 'Change location', icon='', icon_role='weather.location'),
+    Entry('units', 'Change units', icon='', icon_role='weather.units'),
+    Entry('refresh', 'Refresh', icon='󰑓', icon_role='navigation.refresh'),
+    Entry('help', 'Help', icon='󰋖', icon_role='navigation.help'),
+    Entry('back', 'Back / Close', icon='󰅁', icon_role='navigation.back'),
+)
+LOCATION_ENTRIES = (
+    Entry('custom', 'Enter a location', icon='', icon_role='weather.location'),
+    Entry('default', 'Use configured / automatic location', icon='', icon_role='weather.location'),
+    Entry('back', 'Back', icon='󰅁', icon_role='navigation.back'),
+)
+UNIT_ENTRIES = (
+    Entry('us', 'US: Fahrenheit, mph, inches', icon='', icon_role='weather.units'),
+    Entry('metric', 'Metric: Celsius, km/h, mm', icon='', icon_role='weather.units'),
+    Entry('back', 'Back', icon='󰅁', icon_role='navigation.back'),
 )
 HELP = ('Enter: open   Esc: back / close   Ctrl-C: cancel\n'
         'F1: help   Alt-P: preview   Alt-J/K: scroll preview\n\n'
@@ -126,7 +136,8 @@ def pick(session, frame, context):
     snapshots = {view: session.snapshot(view, width=max(1, width - 6), row=row)
                  for view in ('current', 'daily', 'hourly')}
     previews = [HELP if entry.id == 'help' else snapshots.get(entry.id, snapshots['current']) for entry in ENTRIES]
-    labels = [entry.label for entry in ENTRIES]
+    ui.width = max(1, width - 6)
+    labels = styled_labels(Menu('wttr:main', 'Weather', ENTRIES), ui, compact=True)
     with request_file(dict(schema=1, previews=previews)) as path:
         with permanent_output(), context.selector_environment() if context else nullcontext(None) as environment:
             try:
@@ -148,8 +159,11 @@ def select(title, entries, context):
     frame = {}
     while True:
         try:
-            entry = choose(Menu('wttr:' + title, title, tuple(Entry(key, label) for key, label in entries)),
-                           mode='browse', context=context, navigation=frame, query=frame.get('query', ''), compact=True)
+            ui = Presentation(terminal=True)
+            menu = Menu('wttr:' + title, title, tuple(
+                replace(entry, icon=ui.icon(entry.icon_role, entry.icon)) for entry in entries))
+            entry = choose(menu, ui=ui, mode='browse', context=context, navigation=frame,
+                           query=frame.get('query', ''), compact=True, preserve_row_styles=True)
             return entry.id if entry else None
         except SelectionEvent as event:
             if event.action != 'help': return None
@@ -176,8 +190,7 @@ def browse(session, args, context):
             if action == 'help':
                 show_message(HELP, context=context, title='Weather browser help')
             elif action == 'location':
-                choice = select('Location', [('custom', 'Enter a location'),
-                                             ('default', 'Use configured / automatic location'), ('back', 'Back')], context)
+                choice = select('Location', LOCATION_ENTRIES, context)
                 if choice == 'default': session.location = None
                 elif choice == 'custom':
                     try:
@@ -187,8 +200,7 @@ def browse(session, args, context):
                         continue
                     session.location = validate_location(value)
             elif action == 'units':
-                units = select('Units', [('us', 'US: Fahrenheit, mph, inches'),
-                                         ('metric', 'Metric: Celsius, km/h, mm'), ('back', 'Back')], context)
+                units = select('Units', UNIT_ENTRIES, context)
                 if units in ('us', 'metric'): session.cfg['units'] = units
             else:
                 view = 'current' if action == 'refresh' else action

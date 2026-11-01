@@ -22,7 +22,7 @@ class FontBrowsers(NativeMenuFixture):
 
     def test_configured_catalog_preview_and_styles_keep_selection_at_40_80_120(self):
         path=Path(self.env['DOTS'])/'default/config.json'
-        doc=json.loads(path.read_text())
+        doc=__import__('config_keys').document(json.loads(path.read_text()),public=False)
         doc['formatting']['apps']['menu'].update(indent=1,label_width='25%',label_gap=2)
         doc['apps']['menu']['popup'].update(width='90%',height='90%')
         for width,position,enabled in ((40,'down',True),(80,'right',True),(120,'down',False)):
@@ -85,6 +85,24 @@ except SelectionEvent as event:print('event:'+event.action)
         os.write(self.first[1],b'\x1bp')
         out,err=p.communicate(timeout=15)
         self.assertEqual((p.returncode,out),(0,'\ue000'),err)
+
+    def test_config_icon_selection_returns_glyph_without_external_effects(self):
+        p=self.worker('''import os
+from types import SimpleNamespace
+from unittest.mock import patch
+from fonts.browser import select_icon
+from menu_tmux import TmuxContext
+row=dict(name='select-fixture',collection='test',glyph='\\ue000',codepoint='U+E000')
+library=SimpleNamespace(families={},catalog=dict(glyph_version='v1.0.0',glyphs={'v1.0.0':[row]}))
+with patch('fonts.model.Library',return_value=library), patch('fonts.browser.copy',side_effect=AssertionError('clipboard effect')):
+    print(select_icon(TmuxContext.capture(client=os.environ['CLIENT'])),end='')
+''')
+        self.receive(self.first[1],b'select-fixture')
+        self.assertNotIn(b'select-fixture',self.drain(self.second[1]))
+        os.write(self.first[1],b'\r')
+        out,err=p.communicate(timeout=15)
+        self.assertEqual((p.returncode,out),(0,'\ue000'),err)
+        self.assertNotIn('\ue000',self.control('capture-pane','-p','-t',self.pane))
 
     def test_font_alt_d_requests_directory_chooser_in_origin_client(self):
         p=self.worker('''import os

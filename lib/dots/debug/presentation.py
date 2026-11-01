@@ -57,7 +57,18 @@ class Tree:
 def render(data, action, view='tree', args=None):
     from files.catalog import Presentation
     ui=Presentation();ui.heading('Dots debug '+action);tree=Tree(ui,args)
-    if action=='startup':
+    if action=='alert':
+        ui.detail('Message',data['message']);ui.resource_detail('Config',data['source'])
+        settings=data['settings'];vibration=settings['vibrate'];toast=settings['toast']
+        ui.detail('Toast',toast['position']+'; '+('short' if toast['short'] else 'long')+' duration; background '+str(toast['bg_opacity'])+'% opaque')
+        ui.detail('Vibration',str(vibration['count'])+' pulses × '+str(vibration['duration'])+' ms; force '+str(vibration['force']).lower())
+        for name,row in data['results'].items():
+            text=row['status']
+            if 'sent' in row: text+=' · '+str(row['sent'])+'/'+str(row.get('requested',1))+' requests'
+            if row.get('reason'): text+=' · '+row['reason']
+            ui.detail_spans(name.title()+' result',[(text,'92' if row['status']=='sent' else '91' if row['status'] in ('failed','unavailable') else '90')])
+        ui.detail('Note','API results do not confirm physical device delivery.')
+    elif action=='startup':
         ui.detail('Mode',data['mode']);ui.detail('Shell',data['shell'])
         if data['mode']=='plan':
             ui.detail('Note',data['note'])

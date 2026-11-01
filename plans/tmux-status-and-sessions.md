@@ -562,3 +562,126 @@ Padding verification passed: the focused native two-client status test checks ea
 The shared template now uses `lighter_background` for the current window on every tmux platform, retaining bold `info` and no underline. COPY and ZOOM use bold `darker_background` on `green`; PREFIX has independent `@dots-prefix-fg`/`@dots-prefix-bg` colors, bold `accent` on `dark_background`. Each conditional label retains one space on each side and its own style/reset. Fallbacks are bright-black for the current window, black on green for modes and blue on black for PREFIX. Layout stays in the main config. Native Linux/WSL rendering acceptance remains pending; native Windows PowerShell has no tmux equivalent or affected destination. Verify native individual/combined indicators, narrow layouts and theme reloads, dark/light publication and both platform layout paths, then activate through journaled theme refresh plus selective status-right reload.
 
 Verified on Termux/tmux 3.8: 15 status tests pass with one optional battery-source skip, including individual and simultaneous COPY/PREFIX/ZOOM colors, bold text, padding, style resets and 40/80/120-column layouts. The initial run exposed one stale window-color assertion (updated) and a clock-color check that passed on rerun without clock changes. Dark/light publication and both platform format paths pass; all 834 documentation links and whitespace checks pass. Live refresh retains Catppuccin Mocha: current-window background `#313244`, COPY/ZOOM `#101019` on `#a6e3a1`, PREFIX `#cba6f7` on `#161622`, all intended bold styles verified. Publication recovery remains in the generation journal.
+
+## Codex toast Config controls (2026-11-01)
+
+Status: implemented and locally verified on Termux. Owner: dots-codex-attention with dots-config. Expose exactly
+four existing Termux toast preferences as `apps.codex.toast.fg`, `.bg`, `.position`
+and `.short`. The authoritative file remains `config/tmux/codex-alerts.toml`;
+there is no profile override or separate notification-policy store. Defaults stay
+warning/dark_background, middle and false. Short true adds `-s` (shorter visible
+duration, not a polling-speed change). Colors accept published palette roles,
+shared color references/native palette names and literal #RRGGBB. Reads and
+completion remain inert; no notification, reload or worker restart is performed.
+
+Configuration assessment: add these four native bindings with literal validation,
+source/activation details, guarded TOML edits preserving comments, reset to
+existing defaults, retained transactions and undo. Menu assessment: update the
+existing Config inventory/editor; no new launcher action. The running updated
+worker rereads the native file each five-second cycle. Delivery stays Termux-only;
+shared Bash/native-controller editing works on other platforms but does not
+provide Android delivery there. Existing loaded workers require the usual
+separately authorized restart to pick up code changes; existing role/position/
+short preferences already use the same native fields.
+
+Acceptance: exact get/list data and four-key scope; position/boolean/color
+completion and popup drafts; dry-run, invalid input, comment preservation,
+no-op/reset, stale guards and undo in owned roots; exact Android argv with short
+on/off, positions, literal/theme colors, independent vibration failure and no
+non-Termux delivery. Run attention regressions and relevant Config cases,
+40/80/120-column rendering, source links/manual/metadata and local Wiki checks.
+Actual Android appearance and native PowerShell 5.1/7 remain separate acceptance.
+
+Verification: four new toast Config checks and all 26 alert checks pass, including native argv, comments, reset/undo, stale refusal, source ownership, scope, colors and Bash/native-controller completion. Three affected Config editor checks also pass. The broader attention suite passes six of eight cases; two pre-existing assertions expect older tmux/menu formatting. Both failures reproduce without importing or executing toast/worker/new-key discovery code, so their rendering expectations remain outside this change. Actual Android appearance and native PowerShell remain pending; no live worker restart or device notification was performed.
+
+All four existing Config List regressions also pass. The manual is current, all 244 command definitions validate, 1281 relative Markdown links resolve and whitespace checks pass.
+
+## Codex vibration controls and explicit alert test (2026-11-01)
+
+Status: implemented and locally verified. Owners: dots-codex-attention / dots-config for native
+bindings and delivery; dots-debug-maintenance for `dots debug alert [--json]`.
+Configuration assessment: add `apps.codex.vibrate.duration` (integer 1–10000 ms,
+existing default 300), `.force` (boolean, existing default true), and `.count`
+(integer 0–10, default 1; zero disables only vibration). Map to the existing
+native `[termux]` fields vibration_ms/force_vibration plus vibration_count in
+config/tmux/codex-alerts.toml. Preserve toast fields, policy and native ownership,
+comment-preserving transactions, reset/undo and active-scope rules. No profile
+store or additional notification-policy keys. Count/force complete from finite
+choices; duration offers examples with its exact numeric bounds in Details.
+
+Implement repetitions outside termux-vibrate: sequential bounded API calls with
+at least a 150 ms quiet gap after waiting the requested pulse duration. Stop on
+failure/timeout, never retry a failed pulse. Default count 1 retains the existing
+single request; longer sequences run in a finite helper process so the polling
+worker and independent toast are not blocked. Reap finished helpers on worker
+ticks. Existing event claims still own deduplication. No transcript/event replay
+or new persistent notification state. An updated worker is needed for count and
+reset behavior; adding controls does not restart the live worker.
+
+`dots debug alert` sends the fixed labelled test message with current toast and
+vibration preferences through the same delivery code, waiting for the finite
+sequence and reporting per-tool sent/skipped/unavailable/failed outcomes. It
+never queues an event, changes attention or reads an actual Codex message. Honor
+Termux enablement and count zero. Missing tools and unsupported platforms return
+nonzero; disabled delivery reports skipped. JSON is version 1 and undecorated;
+human output reuses shared styles/progress and 40/80/120-column wrapping. The test
+is explicitly invoked and excluded from debug check and curated debug test.
+Menu assessment: update the existing Config editor; leave the read-only Debug
+launcher unchanged because the new test deliberately triggers device effects.
+Static metadata and both Bash/native-controller routes include the test; native
+Windows/Linux/WSL report no Termux adapter without invoking Android tools.
+
+Acceptance: Config CLI/popup/completion and exact sources; invalid types/bounds,
+no-op/reset/stale/undo; exact -d/-f arguments, count zero, separated repetitions,
+failure/timeout stop, independent toast and nonblocking worker handoff/reaping.
+Use Android stand-ins in owned homes/state/checkouts, including direct/native
+Debug success/partial failure/unavailable/data parity, help/completion purity,
+and width/style checks. Run existing toast/alert/debug/Config regressions, update
+metadata/manual/docs and regenerate/check the local Wiki. Actual Android effects
+and native PowerShell remain separate acceptance; no real device test is run by
+automated verification.
+
+
+### Follow-up: toast opacity and the battery background
+
+Add `apps.codex.toast.bg_opacity`, integer 0–100 percent with default 100, mapped
+to native `toast_background_opacity`. Resolve the existing background role/RGB,
+then round alpha to a byte and send Android #AARRGGBB below 100; retain #RRGGBB at
+100. Preserve current foreground, duration and other user overrides. Config
+list/popup/completion/explain/reset/undo use the same native schema. The explicit
+Debug test uses the same snapshot and alpha conversion as delivery.
+
+Battery assessment: no new configuration integration needed. Existing
+`colors.apps.tmux.battery.{icon,text,spacer,surround}.bg` and
+`formatting.apps.tmux.battery.{before,after}` reach all renderer spans. Preserve
+existing dark_background icon/text/surround overrides, set the spacer to the same
+color and both outer surrounds to one space in the Termux profile. Leave other
+profiles and state foregrounds unchanged. Existing Config popup is sufficient;
+no menu route changes. Verify actual private tmux cell backgrounds at 40/80/120
+columns, including inner/outer padding and restoration outside the box, then
+save the requested preferences through guarded Config transactions. Record
+activation separately; no Codex worker restart or real Android test is included.
+
+
+Verification: all 13 toast/vibration Config and Debug checks pass, including
+both frontends, one captured configuration for reporting/delivery, alpha bytes,
+bounds/reset/undo, missing/disabled APIs, count-zero, timed-out pulse cancellation
+and helper reaping. All 26 attention delivery regressions pass with deterministic
+owned native preferences. The Debug suite passes 16 checks with one unavailable
+PowerShell skip. The separate attention-view suite retains its two pre-existing
+formatting assertion failures (six pass); no unrelated rendering fix is included.
+Private native tmux verifies the complete battery background and style isolation
+at 40/80/120 columns. Real Android toast appearance/vibration and native
+PowerShell remain unverified; the Codex worker has not been restarted.
+
+The requested Termux battery preferences were saved with Config transactions
+c8d0310b8deb4703b4dbd570265cf38e (spacer),
+fbb7d36bdfcb4865ba530308c6773898 (before) and
+eba220f09cbc40da8c3d4ae1f9ab09c3 (after). Normal Config refresh transaction
+778f359cd5e24b07a4f7b8228f9c4e31 retained Catppuccin Mocha and notified the
+verified tmux server. Existing icon/text/surround overrides were preserved.
+
+Documentation verification: 245 command definitions validate, the generated manual
+is current, 1288 relative Markdown links resolve, the Debug maintenance skill
+validates and whitespace checks pass. Local Wiki build
+48a02e04bebb4f47a073551895492416 checks healthy; no publication was performed.

@@ -6,7 +6,7 @@ import re
 from style_config import Styles, ATTRS
 
 
-APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim')
+APPS = ('cli', 'tmux', 'yazi', 'fzf', 'gum', 'starship', 'gitmux', 'nvim', 'wttr')
 
 
 def snapshot(palette, root=None, *, styles=None,controls=None):
@@ -21,7 +21,13 @@ def snapshot(palette, root=None, *, styles=None,controls=None):
         for key in styles.values['icons']:
             if not key.startswith('apps.') and (app is None or app in consumers('icons', key)):
                 target['icons'][key] = styles.icon(key, app=app)
+        if app=='tmux':
+            from tmux_controls import ICONS
+            for key in ICONS:
+                resolved=styles.resolve('icons',key,app)
+                if resolved['source']:target['icons'][key]=resolved['value']
         for role in roles:
+            if app is not None and not fields(role,app):continue
             doc = styles.style(role, app=app)
             resolved = {k: styles.color(v) if k in ('fg', 'bg') else v for k,v in doc.items()
                         if app is None or k in fields(role, app)}
@@ -48,6 +54,7 @@ def tmux_literal(value):
 
 def tokens(palette, root=None):
     doc = snapshot(palette, root)
+    semantic = palette.get('colors',palette)
     result = {}
     for app in APPS:
         for role, fields in doc['apps'][app]['colors'].items():
@@ -58,8 +65,8 @@ def tokens(palette, root=None):
                     if app == 'tmux':
                         result[app+'_'+role.replace('.', '_')+'_'+field] = 'default'
                         continue
-                    value = palette.get('foreground', '#ffffff')
-                if not re.fullmatch('#[a-fA-F0-9]{6}', value): value = palette.get(value, palette.get('foreground', '#ffffff'))
+                    value = semantic.get('foreground', '#ffffff')
+                if not re.fullmatch('#[a-fA-F0-9]{6}', value): value = semantic.get(value, semantic.get('foreground', '#ffffff'))
                 result[app+'_'+role.replace('.', '_')+'_'+field] = value
     tmux_styles = Styles(root, palette=palette)
     for name in (k for k in tmux_styles.values['icons'] if not k.startswith('apps.')):
@@ -84,13 +91,16 @@ def tokens(palette, root=None):
 
 
 def write(out, palette, root=None):
+    if (out/'palette.json').is_file():palette=json.loads((out/'palette.json').read_text())
     styles = Styles(root, palette=palette)
     doc = snapshot(palette, styles.root)
     (out/'preferences.json').write_text(json.dumps(doc,ensure_ascii=True)+'\n')
     if (out/'tmux.conf').is_file():
         from tmux_config import layout
         text=(out/'tmux.conf').read_text().split('# Dots configuration placement\n')[0]
-        (out/'tmux.conf').write_text(text+'# Dots configuration placement\n'+layout(styles.root,styles.selected))
+        controls=layout(styles.root,styles.selected,styles=styles)
+        (out/'tmux-controls.conf').write_text(controls)
+        (out/'tmux.conf').write_text(text+'# Dots configuration placement\n'+controls)
     # Gitmux receives a generated copy; its editable layout stays at its source.
     path = styles.root/'config/gitmux/gitmux.conf'
     if path.is_file():

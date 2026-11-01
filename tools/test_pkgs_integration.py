@@ -67,6 +67,59 @@ else:raise SystemExit(9)
             if os.name!='nt':
                 self.assertIn(expected.encode(),self.call([self.repo/'bin/dots','__complete','bash',str(len(words)),'--','dots',*words])[0])
 
+    @unittest.skipIf(os.name=='nt','POSIX npm fixture; WinGet uses package-core fixtures')
+    def test_compact_install_alias_on_all_entry_points(self):
+        db = self.fake_npm()
+        self.env['DOTS_MENU_CAPTURE'] = '1'
+        results = [self.call(argv) for argv in self.surfaces('pkgs', ['in','--manager','npm','--global','hello'])]
+        self.assertTrue(all(result == results[0] for result in results))
+        out, err, _ = results[0]
+        self.assertIn(b'Install packages', out)
+        self.assertEqual(out.count(b'complete'), 1)
+        self.assertIn(b'Installed', out)
+        self.assertIn(b'hello', out)
+        self.assertNotIn(b'Command', out)
+        self.assertNotIn(b'npm install', out)
+        self.assertEqual(json.loads(db.read_text()), {'hello':'1'})
+
+    @unittest.skipIf(os.name=='nt','POSIX npm fixture; WinGet uses package-core fixtures')
+    def test_compact_remove_alias_on_all_entry_points(self):
+        db = self.fake_npm()
+        fake = self.repo/'bin/npm'
+        fake.write_text(fake.read_text().replace("else:raise SystemExit(9)", """elif a[0]=='uninstall':
+    for name in a[a.index('--')+1:]:data.pop(name,None)
+    p.write_text(json.dumps(data));print('Removed packages')
+else:raise SystemExit(9)"""))
+        self.env['DOTS_MENU_CAPTURE'] = '1'
+        results = []
+        for argv in self.surfaces('pkgs', ['remove','--manager','npm','--global','hello','--yes']):
+            db.write_text('{"hello":"1"}')
+            results.append(self.call(argv))
+            self.assertEqual(json.loads(db.read_text()), {})
+        self.assertTrue(all(result == results[0] for result in results))
+        out, err, _ = results[0]
+        self.assertIn(b'Uninstall packages', out)
+        self.assertEqual(out.count(b'complete'), 1)
+        self.assertIn(b'Removed', out)
+        self.assertIn(b'hello', out)
+        self.assertNotIn(b'Removed packages', out)
+        self.assertNotIn(b'npm uninstall', out)
+
+    @unittest.skipIf(os.name=='nt','POSIX npm fixture; WinGet has separate adapter tests')
+    def test_compact_upgrade_names_on_all_entry_points(self):
+        db = self.fake_npm()
+        self.env['DOTS_MENU_CAPTURE'] = '1'
+        results = []
+        for argv in self.surfaces('pkgs', ['up','--manager','npm','--global','hello','current']):
+            db.write_text('{"hello":"0","current":"1"}')
+            results.append(self.call(argv))
+        self.assertTrue(all(result == results[0] for result in results))
+        out, err, _ = results[0]
+        self.assertIn(b'Updated', out)
+        names = out.split(b'Updated',1)[1]
+        self.assertIn(b'hello', names)
+        self.assertNotIn(b'current', names)
+
     @unittest.skipIf(os.name=='nt','POSIX npm executable fixture; native WinGet has separate fixtures')
     def test_setup_packages_precede_configuration_and_repeat_is_noop(self):
         db=self.fake_npm();path=self.document(['hello'])

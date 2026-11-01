@@ -6,6 +6,7 @@ import subprocess
 
 from resources import cells
 from picker_style import styles, fit, picker_colors
+from menus import Entry, Menu, styled_labels
 
 
 CATEGORIES = (
@@ -52,19 +53,35 @@ def binding_prompt(ui, app=None, mode=None):
 
 def menu_rows(ui, coverage, *, include_all=True):
     """Render nonempty categories from the same filtered snapshot as the browser."""
-    rows = []
+    entries = []
     counts = {item['app']: item['count'] for item in coverage}
-    muted = styles(ui)[0]
     for identity, title, icon in CATEGORIES:
         if identity == 'all' and not include_all:
             continue
         count = sum(counts.values()) if identity == 'all' else counts.get(identity, 0)
         if not count:
             continue
-        icon = ui.icon('applications.'+identity, icon)
-        label = ui.clean((icon + ' ' if ui.icons else '') + title)
-        rows.append((identity, label + ui.paint(f' · [{count}]', muted)))
-    return rows
+        entries.append(Entry(identity, title, f'[{count}]', icon=icon, icon_role='applications.'+identity))
+    menu = Menu('keys:categories', 'Keys', tuple(entries))
+    return [(entry.id, label) for entry, label in zip(entries, styled_labels(menu, ui))]
+
+
+def menu_layout(ui, render, *, size=None, header=MENU_HEADER, popup=False):
+    """Resolve popup geometry once before percentage-based category columns."""
+    from copy import copy
+    from menu_popup import preferences, dimensions, content_size
+    size = size or terminal_dimensions()
+    view = copy(ui)
+    view.width = size[0]
+    labels = render(view)
+    width, height = menu_dimensions(labels, size=size, header=header)
+    if popup:
+        options = preferences()
+        content = (content_size(labels, '', header, size, options, automatic=(width, height))
+                   if 'fit' in (options.get('width'), options.get('height')) else None)
+        width, height = dimensions(options, (width, height), size, content)
+    view.width = max(1, width - 6 if popup else size[0] - 4)
+    return render(view), width, height
 
 
 def terminal_dimensions():

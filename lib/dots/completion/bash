@@ -69,7 +69,7 @@ _dots_complete_bash() {
         _dots_bash_quote "${value#"$trim"}"
         COMPREPLY+=("$REPLY")
         compopt -o noquote 2>/dev/null || :
-        [[ $value != *= ]] || compopt -o nospace 2>/dev/null || : ;;
+        [[ $value != *= && $value != *. && $value != *\[ ]] || compopt -o nospace 2>/dev/null || : ;;
       file|directory)
         prefix=${words[-1]#"$value"}
         replies=()

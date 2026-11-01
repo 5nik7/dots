@@ -146,7 +146,7 @@ class ConfigMenu(unittest.TestCase):
             notice=menu.edit(inventory,row,None)
         self.assertIn('dots files undo',notice); error.assert_called_once()
         inventory=self.inventory();row=inventory.find('settings.DOTS_COLOR')
-        def change(*args):
+        def change(*args,**kwargs):
             self.path.write_text(self.path.read_text()+'\n'); return 'always'
         with patch.object(menu,'input_value',side_effect=change), self.assertRaisesRegex(ValueError,'changed'):
             menu.edit(inventory,row,None)
@@ -243,7 +243,7 @@ class ConfigMenu(unittest.TestCase):
     def test_key_only_set_goes_directly_to_the_typed_editor(self):
         shutil.copytree(ROOT/'config/wttr',self.root/'config/wttr')
         keys = [('DOTS_COLOR','settings.DOTS_COLOR','style'),
-                ('colors.todo.field.acceptance.value.fg','colors.todo.field.acceptance.value.fg','color'),
+                ('colors.todo.field.acceptance.value.fg','colors.apps.todo.field.acceptance.value.fg','color'),
                 ('icons.git.branch','icons.git.branch','text'),
                 ('formatting.apps.cli.label_width','formatting.apps.cli.label_width','json'),
                 ('apps.wttr.days','apps.wttr.days','native'),
@@ -273,7 +273,7 @@ class ConfigMenu(unittest.TestCase):
         seen=[]
         def choose(title,items,context=None,review=None):
             seen.append((title,items,review))
-            if title=='Color':return next(token for token,label in items if label.startswith('fixture_extra ·'))
+            if title=='Color':return next(token for token,label in items if label.startswith('palette.fixture_extra ·'))
             self.assertEqual(title,'Review change');self.assertEqual(items[0][0],'cancel')
             self.assertIn('automatic refresh disabled',review)
             return 'save'
@@ -284,10 +284,10 @@ class ConfigMenu(unittest.TestCase):
             self.assertEqual(config_cli.main(['set',key,'--no-refresh']),0)
         self.assertIn('undo: dots files undo',output.getvalue())
         from style_config import read
-        self.assertEqual(read(destination)['todo.field.acceptance.value.fg'],'#abcdef')
+        self.assertEqual(read(destination)['apps.todo.field.acceptance.value.fg'],'palette.fixture_extra')
         labels=dict(seen[0][1]);self.assertIn('accent · #123456',labels.values())
-        self.assertIn('same_hex · #abcdef',labels.values());self.assertNotIn('invalid',labels.values())
-        self.assertIn('rosewater · #f5e0dc',labels.values());self.assertIn('blue (native) · #aaaabb',labels.values())
+        self.assertNotIn('invalid',labels.values())
+        self.assertIn('palette.rosewater · #f5e0dc',labels.values());self.assertIn('palette.blue · #aaaabb',labels.values())
         self.assertIn('blue · #112233',labels.values())
         self.assertIn('custom',labels);self.assertEqual(len(labels),len(seen[0][1]))
         self.undo(output.getvalue().split('undo: dots files undo ')[1].split()[0])
@@ -332,7 +332,7 @@ class ConfigMenu(unittest.TestCase):
             self.assertEqual(output.getvalue(),'first')
             with self.assertRaises(ValueError):menu.preview(str(path),'0;touch bad')
         self.assertFalse(path.exists())
-        frame={'query':'branch','selected':'icons.git.branch'}
+        frame={'query':'branch','selected':'icons.git.branch','search_all':True}
         def select(*args,**kwargs):
             self.assertEqual(kwargs['query'],'branch')
             self.assertIsNotNone(kwargs['focus_index'])
@@ -372,6 +372,38 @@ class NativeConfig(NativeMenuFixture):
         for name in ('icons','colors'):shutil.copy2(ROOT/'default'/(name+'.toml'),self.root/'default'/(name+'.toml'))
         self.platform=menu.profile_context(self.root)['layers'][-1]['id']
 
+    def test_smart_endpoint_fields_and_filter_binding_on_exact_client(self):
+        import time
+        shutil.copy2(ROOT/'default/config.json',self.root/'default/config.json')
+        code="""import os,json
+from config_menu import Inventory,pick
+from menu_tmux import TmuxContext
+from interaction import SelectionEvent
+inventory=Inventory(os.environ['DOTS'],os.environ['PROFILE'])
+context=TmuxContext.capture(client=os.environ['CLIENT'])
+row=pick(inventory,'all',dict(mode='get',query='colors.apps.todo.field.alias.value'),context)
+assert row.kind=='branch',row
+field=pick(inventory,'all',dict(mode='get',branch=row.key,query='.bold'),context)
+assert field.kind=='boolean',field
+try:pick(inventory,'icons',dict(mode='get'),context)
+except SelectionEvent as event:print(json.dumps([row.key,field.key,event.action]))
+"""
+        for width in (40,80,120):
+            with self.subTest(width=width):
+                self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',30,width,0,0))
+                time.sleep(.1);self.drain(self.first[1]);self.drain(self.second[1])
+                process=self.worker(code,PROFILE=self.platform,DOTS_COLOR='never' if width==40 else 'always')
+                try:
+                    self.receive(self.first[1],b'filter/sort');time.sleep(.2);os.write(self.first[1],b'\r')
+                    self.receive(self.first[1],b'.bold');time.sleep(.2);os.write(self.first[1],b'\r')
+                    self.receive(self.first[1],b'icons.');time.sleep(.2);os.write(self.first[1],b'\x1bf')
+                    output,error=process.communicate(timeout=15)
+                    self.assertEqual(process.returncode,0,output+error)
+                    self.assertEqual(json.loads(output),['colors.apps.todo.field.alias.value','colors.apps.todo.field.alias.value.bold','filter'])
+                    self.assertNotIn(b'filter/sort',self.drain(self.second[1]))
+                finally:
+                    if process.poll() is None:process.kill();process.communicate()
+
     def review_screen(self,columns,lines):
         """Replay a full client redraw in an owned tmux terminal for cell capture."""
         import time
@@ -401,7 +433,7 @@ print(select('Review change',[('cancel','Cancel'),('save','Save')],TmuxContext.c
         cases=((40,30,'auto','auto'),(80,24,'fit','50%'),(120,30,'90%',14),(40,14,'auto','fit'),(80,20,'auto',6))
         for number,(columns,lines,width,height) in enumerate(cases):
             with self.subTest(columns=columns,lines=lines,height=height):
-                doc=json.loads(defaults.read_text());doc['apps']['menu']['popup'].update(width=width,height=height)
+                doc=__import__('config_keys').document(json.loads(defaults.read_text()),public=False);doc['apps']['menu']['popup'].update(width=width,height=height)
                 defaults.write_text(json.dumps(doc))
                 self.fcntl.ioctl(self.first[1],self.termios.TIOCSWINSZ,self.struct.pack('HHHH',lines,columns,0,0))
                 time.sleep(.1);self.drain(self.first[1]);self.drain(self.second[1])
@@ -453,7 +485,7 @@ Path(sys.argv[2]).write_text(str(code))
             time.sleep(.1);self.drain(self.first[1]);self.drain(self.second[1])
             self.control('send-keys','-t',self.pane,'-l',shlex.join([sys.executable,'-B',str(runner),frontend,str(status),str(width),self.first[2]]))
             self.control('send-keys','-t',self.pane,'Enter')
-            self.receive(self.first[1],b'fixture_extra')
+            self.receive(self.first[1],b'Custom color')
             self.assertNotIn(b'fixture_extra',self.drain(self.second[1]))
             if width==120:os.write(self.first[1],b'\x03')
             else:
@@ -467,7 +499,7 @@ Path(sys.argv[2]).write_text(str(code))
             self.assertTrue(status.exists());self.assertEqual(status.read_text(),'130' if width==120 else '0')
             if width==80:
                 from style_config import read
-                self.assertEqual(read(destination)['todo.field.acceptance.value.fg'],'#abcdef')
+                self.assertEqual(read(destination)['apps.todo.field.acceptance.value.fg'],'palette.fixture_extra')
             else:self.assertEqual(destination.read_bytes() if destination.exists() else None,before)
 
     def test_standalone_terminal_and_shared_input_handoff(self):
@@ -536,6 +568,7 @@ raise SystemExit(config_cli.main(['browse','--client',os.environ['CLIENT'],'--qu
             # Empty-result Escape is still a navigation event.
             os.write(self.first[1],b'\x15no-match-unique')
             time.sleep(.1);os.write(self.first[1],b'\x1b')
+            self.receive(self.first[1],'·all: '.encode());time.sleep(.1);os.write(self.first[1],b'\x1b')
             self.receive(self.first[1],b'List');time.sleep(.1);os.write(self.first[1],b'\x1b')
             out,err=p.communicate(timeout=10)
             self.assertEqual(p.returncode,0,out+err)
