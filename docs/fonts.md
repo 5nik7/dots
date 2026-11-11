@@ -19,6 +19,8 @@ figlet -C utf8 -f dots-mixed 'Hello, Dots!'
 
 The Termux profile maps `dots:figlet-dots` and `dots:figlet-dots-mixed` as individual managed links from `config/figlet` to `${PREFIX}/share/figlet`. Use `figlet -I2` to inspect the installed FIGlet font directory. These assets use the Files catalog and existing installation/undo receipts. No FIGlet package is installed automatically. Other platforms have no automatic destination mapping; an explicit font path can be passed to a compatible FIGlet build.
 
+The mixed font's lowercase k and x use smaller stepped shapes with capped ends. The k retains its ascender; x stays within the three-row lowercase body.
+
 UTF-8 artwork requires a Unicode-capable FIGlet build and terminal; `-C utf8` decodes Unicode input. Native Termux FIGlet 2.2.5 rendering, all glyphs and wrapping at 40/80/120 columns were verified. Native Linux, WSL and Windows rendering remains unverified. See the [font editing notes](../config/figlet/README.md).
 
 ## Find and save fonts

@@ -248,7 +248,7 @@
         },
         {
           "name": "cargo-binstall",
-          "observed_version": "1.26.2",
+          "observed_version": "1.27.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2940,7 +2940,7 @@
       "packages": [
         {
           "name": "@biomejs/biome",
-          "observed_version": "2.6.6",
+          "observed_version": "2.6.7",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3551,7 +3551,7 @@
         },
         {
           "name": "pyee",
-          "observed_version": "16.0.1",
+          "observed_version": "16.0.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true

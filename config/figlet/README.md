@@ -4,6 +4,7 @@
 `dots-mixed.flf` adds distinct lowercase on a six-row grid with descenders.
 Both preserve the revised Dots logo lettering and contain 113 glyphs: printable ASCII, the required German characters, a missing-character fallback, and `° ± × ÷ ← ↑ → ↓ ✓ ∞`.
 Uppercase R, K and X use stepped box-drawing strokes with capped outer ends; R follows the user's supplied five-row design with the requested bottom-height correction.
+The mixed font's lowercase k and x use smaller stepped shapes with the same capped ends; k retains its ascender and x stays within the lowercase body height.
 
 The Termux profile manages individual links in `${PREFIX}/share/figlet`; FIGlet's other fonts remain package-owned. After linking:
 
