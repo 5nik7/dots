@@ -12,7 +12,7 @@ def color_mode(explicit=None, fallback='auto'):
     return mode if mode in ('auto', 'always', 'never') else 'never'
 
 
-def report(explicit=None, *, fallback='auto', stream=None, data=False):
+def report(explicit=None, *, fallback='auto', stream=None, data=False, presentation=None, styles=None):
     """Data and ordinary redirected text never load the human renderer."""
     if data:
         return None
@@ -22,13 +22,14 @@ def report(explicit=None, *, fallback='auto', stream=None, data=False):
     if not (stream.isatty() or capture or mode == 'always'
             or os.environ.get('DOTS_ICONS') == 'always'):
         return None
-    return Report(stream, mode, capture)
+    return Report(stream, mode, capture, presentation=presentation, styles=styles)
 
 
 class Report:
-    def __init__(self, stream, mode, capture):
+    def __init__(self, stream, mode, capture, *, presentation=None, styles=None):
         from files.catalog import Presentation
-        self.ui = Presentation(stream, terminal=stream.isatty() or capture)
+        self.styles = STYLES if styles is None else styles
+        self.ui = (presentation or Presentation)(stream, terminal=stream.isatty() or capture)
         terminal = (stream.isatty() or capture) and os.environ.get('TERM', 'dumb') != 'dumb'
         self.ui.color = mode == 'always' or (mode == 'auto' and terminal and not os.environ.get('NO_COLOR'))
         self.ui.human = True
@@ -37,15 +38,15 @@ class Report:
         if count is None:
             self.ui.heading(title)
         else:
-            self.ui.heading_spans([(title, STYLES['heading']),
-                                   (' (', STYLES['muted']), (str(count), STYLES['count']),
-                                   (')', STYLES['muted'])])
+            self.ui.heading_spans([(title, self.styles['heading']),
+                                   (' (', self.styles['muted']), (str(count), self.styles['count']),
+                                   (')', self.styles['muted'])])
 
     def gap(self):
         self.ui.emit()
 
     def row(self, spans, *, indent=2):
-        self.ui._spans([(str(value), STYLES[role]) for value, role in spans],
+        self.ui._spans([(str(value), self.styles[role]) for value, role in spans],
                        prefix=' ' * indent)
 
     def text(self, value, role='value'):
@@ -53,7 +54,7 @@ class Report:
 
     def field(self, label, value, role='value'):
         value = 'yes' if value is True else 'no' if value is False else 'unavailable' if value is None else str(value)
-        self.ui.detail_spans(label, [(value, STYLES[role])], label_width=11)
+        self.ui.detail_spans(label, [(value, self.styles[role])], label_width=11)
 
     def resource(self, label, path, *, kind=None):
         self.ui.resource_detail(label.ljust(11), path, kind=kind)
@@ -62,6 +63,6 @@ class Report:
         from resources import wrap
         lines = list(wrap(self.ui.clean(value), max(1, self.ui.width - 1)))
         for line in lines[:-1]:
-            self.ui.emit(self.ui.paint(line, STYLES['label']))
-        print(self.ui.paint(lines[-1], STYLES['label']), end=' ',
+            self.ui.emit(self.ui.paint(line, self.styles['label']))
+        print(self.ui.paint(lines[-1], self.styles['label']), end=' ',
               file=self.ui.stream, flush=True)

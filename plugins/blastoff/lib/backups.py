@@ -5,20 +5,26 @@ import shutil
 import sys
 
 
-def ids(core, app):
+def ids(core, app, catalog=None):
     core.inspect_parents(app.backups)
-    if not app.backups.exists():
-        return []
-    values = set()
-    for p in app.backups.iterdir():
+    values = set(core.ui_module('shared_backups').entries(app.root, catalog))
+    for p in app.backups.iterdir() if app.backups.exists() else ():
         if p.suffix in ('.json','.toml'):
             try: values.add(core.name(p.stem))
             except core.Failure: pass
     return sorted(values)
 
 
-def inspect(core, app, ident, *, verify=True):
+def inspect(core, app, ident, *, verify=True, catalog=None):
     core.name(ident); core.inspect_parents(app.backups)
+    shared = core.ui_module('shared_backups').inspect(core, app.root, ident, verify=verify, catalog=catalog)
+    if shared is not None:
+        try:
+            if app.config.samefile(shared['payload']):
+                raise core.Failure('Backup member is the active config or its target: '+str(shared['payload']))
+        except FileNotFoundError:
+            pass
+        return shared
     meta_path = app.backups/(ident+'.json'); payload = app.backups/(ident+'.toml')
     size_bytes = None
     # Never trust source or link paths as deletion destinations.
@@ -41,14 +47,16 @@ def inspect(core, app, ident, *, verify=True):
     if core.fingerprint(meta_path) != before_meta or (verify and core.fingerprint(payload) != before_payload):
         raise core.Failure('Backup changed during inspection: '+ident)
     return {'id':ident, 'metadata':meta, 'missing_payload':before_payload is None,
-            'expected':(before_payload,before_meta), 'size_bytes':size_bytes if before_payload is not None else None}
+            'expected':(before_payload,before_meta), 'size_bytes':size_bytes if before_payload is not None else None,
+            'payload':payload, 'shared':False}
 
 
 def listing(core, app):
     entries, failures, sizes = [], [], []
-    for ident in ids(core,app):
+    catalog = core.ui_module('shared_backups').backend()()
+    for ident in ids(core,app,catalog):
         try:
-            item = inspect(core,app,ident,verify=False)
+            item = inspect(core,app,ident,verify=False,catalog=catalog)
             entries.append(dict(item['metadata'],missing_payload=item['missing_payload']))
             sizes.append(item['size_bytes'])
         except (core.Failure,OSError,ValueError) as e:
@@ -74,9 +82,9 @@ def listing(core, app):
         ident = entry['id']
         try:
             # The writer uses gmtime and a literal Z, not local wall time.
-            created_at = datetime.datetime.strptime(ident.split('-')[0], '%Y%m%dT%H%M%SZ').replace(tzinfo=datetime.timezone.utc)
+            created_at = datetime.datetime.fromisoformat(entry['created']) if entry.get('created') else datetime.datetime.strptime(ident.split('-')[0], '%Y%m%dT%H%M%SZ').replace(tzinfo=datetime.timezone.utc)
             created = created_at.isoformat(sep=' ', timespec='seconds').removesuffix('+00:00')+' UTC'
-        except ValueError:
+        except (TypeError, ValueError):
             created = 'unknown'
         size = str(size_bytes)+' B' if size_bytes is not None else 'unavailable'
         if lines:
@@ -142,7 +150,11 @@ def delete(core, app):
         if item['missing_payload']:
             app.diagnostic(item['id']+': payload already missing; metadata only','warning')
     if args.dry_run:
-        return op.report(app,'backup delete',[app.backups/(item['id']+suffix) for item in entries for suffix in ('.toml','.json')],['permanently remove '+str(len(entries))+' selected backup(s)'])
+        plan = core.ui_module('shared_backups').backend()()
+        plan.delete([item['id'] for item in entries if item['shared']])
+        targets = [core.Path(item['path']) for item in plan.finish()]
+        targets.extend(app.backups/(item['id']+suffix) for item in entries if not item['shared'] for suffix in ('.toml','.json'))
+        return op.report(app,'backup delete',targets,['permanently remove '+str(len(entries))+' selected backup(s); clean empty owned containers'])
     if not args.json:
         app.emit({},'Selected backups ('+str(len(entries))+'):')
         for item in entries:
@@ -158,7 +170,18 @@ def delete(core, app):
             if inspect(core,app,item['id'])['expected'] != item['expected']:
                 raise core.Failure('Backup changed after selection; no backups deleted: '+item['id'])
         try:
+            shared = [item for item in entries if item['shared']]
+            if shared:
+                plan = core.ui_module('shared_backups').backend()()
+                for item in shared:
+                    if plan.entry(item['id']) != item['expected'][1]:
+                        raise core.Failure('Backup changed before deletion: '+item['id'])
+                plan.delete([item['id'] for item in shared])
+                plan.apply('blastoff-backup-delete')
+                deleted.extend(item['id'] for item in shared)
             for item in entries:
+                if item['shared']:
+                    continue
                 ident = item['id']
                 try:
                     if inspect(core,app,ident)['expected'] != item['expected']:

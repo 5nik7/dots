@@ -105,13 +105,20 @@ $stateRoot = if ($env:XDG_STATE_HOME) { $env:XDG_STATE_HOME } elseif ($IsWindows
 $global:dot.state = Join-Path $stateRoot 'dots'
 $env:THEMESCMD = Join-Path $dot.bin 'theme.ps1'
 $env:THEMESBIN = Join-Path $dot.state 'themes/commands/current/bin'
-$entries = @($env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $_ -cne $env:THEMESBIN -and $_ -cne (Join-Path $env:DOTS 'themes/bin') })
-foreach ($directory in @($env:DOTBIN, $env:DOTSCRIPTS)) {
-    if ((Test-Path -LiteralPath $directory -PathType Container) -and $entries -cnotcontains $directory) { $entries = @($directory) + $entries }
+$ownedEntries = @(foreach ($directory in @($env:DOTBIN, $env:DOTSCRIPTS)) {
+    if (Test-Path -LiteralPath $directory -PathType Container) { $directory }
+})
+if ($dots_options.DOTS_INIT_COMMANDS -eq '1') {
+    $ownedEntries += $env:THEMESBIN
+    function global:Invoke-DotsLink {
+        if ($dots_options.DOTS_INIT_COMMANDS -ne '1') { throw 'Dots commands are disabled' }
+        & (Join-Path $env:DOTS 'bin/dots.ps1') link @args
+    }
+    Set-Alias -Name .ln -Value Invoke-DotsLink -Scope Global -Force
 }
-if ($dots_options.DOTS_INIT_COMMANDS -eq '1') { $entries += $env:THEMESBIN }
 $profileEntries = @($env:DOTS_PROFILE_PATHS -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $_ })
-$env:PATH = (@($profileEntries + $entries | Select-Object -Unique) -join [IO.Path]::PathSeparator)
+$entries = @($env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator) | Where-Object { $_ -ne $env:THEMESBIN -and $_ -ne (Join-Path $env:DOTS 'themes/bin') })
+$env:PATH = (@($ownedEntries + $profileEntries + $entries | Select-Object -Unique) -join [IO.Path]::PathSeparator)
 $dotsArgs = [Environment]::GetCommandLineArgs()
 $dotsInteractive = $dotsArgs -notcontains '-NonInteractive' -and ($dotsArgs -contains '-NoExit' -or -not ($dotsArgs | Where-Object { $_ -match '^-(Command|c|File|f|EncodedCommand|ec)$' }))
 if ($dotsInteractive) {

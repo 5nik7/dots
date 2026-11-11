@@ -29,4 +29,5 @@ try {
         throw 'dots: PowerShell startup requires the Dots checkout layout'
     }
 } finally { Remove-Item Function:\Resolve-DotsStartupPath }
+if ($global:_DotsAllHostsCheckout -eq $dotsStartupRoot) { return }
 . (Join-Path $dotsStartupDirectory 'profile.ps1')

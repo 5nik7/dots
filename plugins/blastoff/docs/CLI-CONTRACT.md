@@ -1,5 +1,10 @@
 # Blastoff command contract — 0.1.12 review build
 
+## Dots saved-theme links
+
+In the bundled Dots workflow, `theme apply` links the configured active path directly to the selected saved theme, backing up the destination in the shared `bak` catalog. Applying the same link is unchanged. Presets are materialized with content-qualified names without overwriting user themes. All new retained content backups use the shared Bak catalog and `apps.bak.store`/`apps.bak.location`; automatic snapshots copy before mutation. Editing/module operations retain application locks. Backup commands read both shared UUIDs and old app pairs, without migrating live state. Active-theme deletion is refused. `--replace-link` explicitly selects regular-file publication. Setup prepares the current/default palette first and links the default `dots` theme, or retains a current saved-theme selection. This supersedes older copy-on-apply behavior; historical release evidence below describes its named revision.
+
+
 ## Paths
 
 | Purpose | Resolution |
@@ -160,7 +165,7 @@ and --yes; dry-run needs no confirmation. Missing fzf never broadens --pick:
 use explicit IDs or --all --dry-run instead.
 
 Freeze --all before confirmation; later-created backups are excluded. Derive
-paths only from validated IDs beneath backups, never metadata source/link paths.
+paths only from validated shared catalog entries or legacy ID pairs beneath backups, never metadata source/link fields.
 Require trustworthy matching metadata, regular unlinked members, checksum match,
 and no active-config identity alias. Invalid TOML bytes can still be recovery
 backups. Valid metadata whose payload is already absent may be removed with a
@@ -168,11 +173,11 @@ warning. Missing/malformed metadata and unsafe/mismatched pairs require manual
 inspection. Preflight the whole set and abort before deletion on any unsafe item.
 
 After confirmation acquire the storage lock and recheck the frozen fingerprints.
-Delete payload before metadata. Per-item failures after deletion starts retain
+Shared entries use a guarded Bak transaction, with safe owned-container cleanup and rollback on failure. Legacy pairs delete payload before metadata. Legacy per-item failures after deletion starts retain
 completed work and report deleted/failed IDs with exit 1. Interruption reports
 partial progress; it is not a batch rollback. Cancellation before execution,
 empty picker selection and negative confirmation delete nothing (130). --all
-with no backups is a successful no-op. No recursive deletion or backups-of-backups.
+with no backups is a successful no-op. No arbitrary parent cleanup or backups-of-backups.
 Backup list reports errors per entry instead of aborting at the first bad record;
 its JSON adds `errors` and `missing_payload`, with diagnostics on stderr.
 Listing does not hash payloads.
@@ -242,13 +247,9 @@ but warns about a detected change since loading and refuses concurrent changes.
 
 ## Mutations and recovery
 
-Apply copies validated bytes into a regular config; it never links or edits the
-stored source. Changed active writes are backed up; identical regular content
-needs no content backup. Forced stored replacements and stored deletions are
+Apply links the active destination to a saved theme through the Dots transaction Store, backing up its previous object. Presets receive stable content-qualified saved names. Reapplying the same healthy link is a no-op. Explicit --replace-link retains regular-file copy behavior. Forced stored replacements and stored deletions are
 backed up. Theme/module deletion refuses active-file identity, including hardlinks.
-Normal active-file symlinks are preserved, including relative/chained links to
-regular files. Link retargeting, missing targets, loops, special objects, library
-targets and unsupported reparse types are refused. Active leaf conversion needs
+Edit, module load and content restore preserve active links, including relative/chained links to regular files. Linked saved themes are editable; direct library destinations remain refused. Link retargeting, missing targets, loops, special objects and unsupported reparse types are refused. Active leaf conversion needs
 --replace-link; linked parents remain refused.
 
 Backups contain UTC/random IDs, SHA-256, original source and optional link text.
@@ -256,7 +257,7 @@ No automatic pruning. Restore accepts config backups only and restores regular
 content, not a link relationship. Recover stored themes with theme import of an
 inspected backup; inspect/validate module backup bytes before copying them.
 
-Canonical storage locks serialize writers; active writes and active-save/edit
+The Dots operation lock coordinates setup palette publication and Blastoff mutations. Canonical storage locks serialize application writers; active writes and active-save/edit
 also lock beside the physical config target, so aliases share a lock. Stale locks are never broken automatically. Expected
 fingerprints detect cooperating/concurrent changes. Per-file atomic writes and
 pending provenance markers are not multi-file crash transactions or protection
@@ -351,10 +352,11 @@ Discovery has a ten-second timeout. Ordinary generated preset output retains the
 
 All four shell completions are positional/offline, never invoke an application
 command, Starship, an editor or the network, and never create storage. PowerShell
-7.0 Unix without regular-file metadata uses a bounded private Python filename
-helper only for dynamic names; static completion/import starts no tools. Complete commands,
+uses a bounded private Python helper for shared backup IDs, and on 7.0 Unix
+for dynamic filenames when regular-file metadata is unavailable. Bash/Zsh/Fish
+use that helper only for shared backup IDs; static completion/import starts no tools. Complete commands,
 flags, color/fancy values, local names/source prefixes, module show/load/delete,
-paired backup filenames for restore/delete (including repeated IDs), delete aliases,
+shared catalog IDs and legacy paired backup filenames for restore/delete (including repeated IDs), delete aliases,
 and shell-appropriate paths. Destination names and module-save routes remain free
 text; live preset names are not discovered. Backup names are unverified until
 execution. Reserved alias IDs are offered as literal IDs only after --. Root
@@ -452,3 +454,5 @@ superseded alias records/markers under unique `.legacy-*` names before completin
 canonical tracking. Interrupted publication retains the pending marker. Backups
 include configured/physical paths and the observed link text as evidence; restore
 never uses recorded paths to recreate or retarget a link.
+
+Shared UUID backup completion uses a private bounded catalog reader only in backup operand contexts. Theme/module and static command completion retain their filename/static paths. It never opens backup payloads or runs the application. Picker-owned inherited FZF previews, prompts and reserved/non-navigation bindings are replaced with verbose-only diagnostics; malformed, unreadable and unknown options retain warnings.

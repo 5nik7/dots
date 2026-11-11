@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
-
-cmd_exists() {
-  command -v "$1" &>/dev/null
-}
-
-if cmd_exists clip.exe; then
-  clip.exe
-elif cmd_exists pwsh.exe; then
-  pwsh.exe -Command "Set-Clipboard -Value \$input"
-elif cmd_exists powershell.exe; then
-  powershell.exe -Command "Set-Clipboard -Value \$input"
-elif cmd_exists win32yank.exe; then
-  win32yank.exe -i --crlf "$@"
-else
-  echo "No clipboard utility found." >&2
-  exit 1
-fi
+# Resolve this launcher, including relative links, independently of $DOTS.
+_clipboard_source=${BASH_SOURCE[0]}
+[[ $_clipboard_source == /* ]] || _clipboard_source=$PWD/$_clipboard_source
+_clipboard_links=0
+while [[ -L $_clipboard_source ]]; do
+  (( ++_clipboard_links <= 40 )) || { printf 'cpy: executable symlink loop\n' >&2; exit 1; }
+  _clipboard_target=$(readlink -- "$_clipboard_source") || exit 1
+  if [[ $_clipboard_target == /* ]]; then _clipboard_source=$_clipboard_target
+  else _clipboard_source=${_clipboard_source%/*}/$_clipboard_target; fi
+done
+_clipboard_root=$(cd -- "${_clipboard_source%/*}/.." && pwd -P) || exit 1
+exec python3 -B "$_clipboard_root/lib/dots/clipboard.py" cpy "$@"

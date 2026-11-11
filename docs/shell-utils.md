@@ -2,6 +2,34 @@
 
 **Implemented.** Source `bin/lib/common.sh` from Bash or Zsh to define the shared helpers. Loading uses shell builtins and does not run optional tools or load presentation code. These are shell functions, separate from the `dots` command routes. Case conversion requires Bash 4 or newer; global associative array builders require Bash 4.2 or newer. `bin/util` has been removed without a forwarding file. Bash startup retains the exported `UTIL` variable, pointing to common.
 
+## System clipboard commands
+
+`cpy` and `pst` are standalone executable scripts on the initialized Dots PATH. They use the detected execution platform, independently of the selected profile or inherited `DOTS` variable. The shared scripts take precedence over profile bins; the Termux entries forward to the same implementation instead of copying package-owned scripts. Existing correct `~/.local/bin` links need no replacement.
+
+```sh
+cpy "some text"
+printf 'text with no final newline' | cpy
+cpy < file.txt
+cpy -- -literal-text
+pst
+pst > clipboard.txt
+```
+
+`cpy [--] [TEXT...]` copies arguments joined by single spaces, or reads stdin to EOF when no text is supplied. Arguments take precedence over stdin; an explicit empty string or empty stdin clears the text clipboard. A filename argument is literal text; input redirection reads a file. No newline is added, backslashes and shell metacharacters remain literal after the calling shell parses them, and stdout stays empty on success. `pst` accepts no text arguments and writes clipboard bytes without decoration or added newlines. Both accept `-h`/`--help` without accessing the clipboard. Use `--` before text beginning with a dash. Exit statuses are 0 for success, 2 for usage errors, 1 for provider/stream failures, and 130 for interruption.
+
+| Execution platform | Provider order |
+| --- | --- |
+| Termux | Installed `termux-clipboard-set` / `termux-clipboard-get`; requires `termux-api` and a compatible Termux:API Android app |
+| Linux | `wl-copy` / `wl-paste --no-newline` with `WAYLAND_DISPLAY`; otherwise an available X11 session (`DISPLAY`) with `xclip` then `xsel`, using the clipboard selection |
+| Windows | Native `pwsh`, then `powershell`, then `win32yank.exe` |
+| WSL | Windows `pwsh.exe`, then `powershell.exe`, then `win32yank.exe`; requires Windows interop |
+
+Selection skips missing executables. Linux may use X11 when Wayland's tool is missing and an X11 session is available. An executed provider's failure or eight-second timeout is reported rather than retried against another clipboard. No package is installed automatically, clipboard text is persisted only when explicitly recorded through [clipboard history](clipboard.md), and provider stderr is suppressed to keep text out of diagnostics. This interface transfers text, not images or files. Providers may impose their own text-format limitations.
+
+Native PowerShell uses `scripts/cpy.ps1` and `scripts/pst.ps1`; existing profile functions forward to them. Both share the Python controller without Bash. A single pipeline string is preserved, multiple strings are joined with the native newline separator, and explicit text arguments take precedence. `pst` emits a single string with embedded/trailing newlines preserved in the object pipeline; PowerShell itself controls display and file-redirection encoding/newlines. For example, `$text | cpy` and `$text = pst` transfer text without line splitting. Native arguments and pipeline content travel as UTF-8 JSON on stdin rather than interpolated shell code or command-line payloads.
+
+Python 3 is required by these adapters. Their [focused checks](testing.md#system-clipboard-commands) use fake providers; actual Android and Linux/WSL/Windows desktop clipboard acceptance is tracked separately. Copying is an explicit clipboard operation, outside managed-file journals.
+
 ## Paths and commands
 
 - `prepath DIRECTORY` and `extpath DIRECTORY` prepend or append one existing directory. Membership is literal, existing entries keep their order, and repeated additions do nothing. An empty or unset PATH gains no empty entry. Missing directories return 1; missing, empty or extra arguments return 2.

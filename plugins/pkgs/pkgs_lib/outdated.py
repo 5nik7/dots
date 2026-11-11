@@ -147,7 +147,7 @@ def display(group, cfg):
     else: print('  '+title+' · '+status)
     for row in group['packages']:
         value = row['name']+'  '+row['current']+' → '+row['candidate']
-        if ui: ui.row([(value, 'value')], indent=4)
+        if ui: ui.row([(row['name'],'package'),('  ','value'),(row['current']+' → '+row['candidate'],'version')],indent=4)
         else: print('    '+clean(value))
     if group['error']:
         if ui: ui.row([(group['error'], 'error')], indent=4)

@@ -1,5 +1,9 @@
 # Safety and Recovery Model
 
+## Clipboard runtime state
+
+[Clipboard history](clipboard.md) is opt-in for automatic capture. Help, completion, status, previews and initialization never read the system clipboard or launch a watcher. Explicit history mutations use atomic SQLite transactions; installation and configuration still use their existing managed-file transactions. History removal intentionally has no retained content backup/undo: snapshot revisions guard exact selections, invalid imports roll back, pins survive automatic retention, and configured bounds constrain new data. POSIX files are owner-only; Windows relies on the user application-data boundary. Never place clipboard text in errors or Dots recovery journals. Secure-delete and normal private-preview/journal cleanup do not guarantee physical erasure from flash, exports, interrupted temporary files or snapshots. Insertion uses editor APIs or verified bracketed paste without submitting; escape/control text is refused. Watcher stop invalidates an owned token and never signals an arbitrary PID. Tests substitute every clipboard provider and own all storage/terminal contexts.
+
 **Status: Implemented managed file, theme, Git and checkout workflows**
 
 ## Personal font transactions
@@ -64,6 +68,8 @@ The existing Zsh configuration uses user-local completion, Vivid, FSH, and Catpp
 The default [Deja integration](../shells/zsh/README.md#deja-suggestions) is third-party executable shell code, not sandboxed or managed by Dots transactions. On Linux/WSL x86-64 and ARM64, selecting Deja permits Zinit to download a missing executable from upstream GitHub releases into its own plugin directory. This uses Zinit's existing third-party installation lifecycle, outside Dots file journals; the executable run check is not publisher authentication or sandboxing. Existing PATH executables take precedence, cached releases are reused, and updates are explicit. No upstream installer, system package installation or startup-file edits are invoked. Explicit `autosuggestions` or `none` selections skip this bootstrap. When Deja is selected and its binary is available, startup permits its per-user background daemon and plaintext history database under `~/.local/share/deja`; history import is never automatic. Its history exclusions are not general secret redaction. Engine selection is fixed for the shell lifetime to avoid conflicting widget wrappers. Switching back leaves Deja data and its daemon intact; removal and process termination require separate, scoped action.
 
 ## Guarantees
+
+Termux `${PREFIX}` mappings use the same guarded file transaction, occupied-target, backup, receipt and drift-aware undo rules as home/config mappings. They permit explicitly selected destinations in Termux's installation prefix; they never trigger a package installation or take ownership of adjacent package files. Missing prefixes are unmapped and invalid prefix roots are refused. Tests that exercise these mappings must supply a disposable PREFIX rather than inheriting the host installation.
 
 Managed file and theme workflows enforce these invariants:
 
@@ -336,7 +342,9 @@ prior catalog/link metadata and hashes remain. Undo uses verified unchanged
 repository content where possible and refuses unavailable original content.
 Retained snapshot payloads are not automatically pruned. Backup restore changes
 data objects; undo reverses catalog ownership too. No automatic force or pruning
-route is implemented. Standalone bak remains outside this managed contract.
+route is implemented for those catalog snapshots. The shared `bak` command has
+its own explicit delete/prune operations within the same transaction Store; see
+[backups and safe links](backups.md).
 
 `files check` is a bounded, explicit catalog-pruning operation: only absent source
 paths qualify, never dangling source symlinks or filesystem errors. Unavailable
@@ -539,7 +547,7 @@ inspection ignores it and does not prune another session's files.
 
 Blastoff/pkgs installation and removal use the shared Dots file transaction and receipt for command links, Bash/Zsh completion and manuals; Fish completion follows the existing Fish catalog mapping. All targets preflight together. Modified owned targets and foreign symlinks remain protected, and uninstall restores unchanged targets to their retained baseline. No source repositories, application data or host packages are deleted by combined uninstall. The former standalone installers are not invoked.
 
-`dots blastoff` forwards explicit application actions to Blastoff's existing validated TOML, guarded symlink, lock and backup implementation; `dots pkgs` forwards explicit package operations to pkgs' native-manager confirmation/execution boundary. These application operations are not Dots managed-file transactions, and package-manager effects have no Dots filesystem rollback. See [application boundaries](bundled-applications.md).
+`dots blastoff` forwards explicit application actions to Blastoff's validated TOML, guarded symlink and lock implementation. New retained snapshots use the shared Bak catalog; linked theme selection composes snapshots, link and provenance in one Store transaction. Editing and other application writes retain their own publication boundary after the snapshot succeeds. Shared backup deletion guards payloads and removes only proven owned empty containers; old app pairs retain their documented partial-deletion behavior. Internal transaction recovery copies remain independent. `dots pkgs` forwards explicit package operations to its native-manager confirmation/execution boundary; package effects have no Dots filesystem rollback. See [application boundaries](bundled-applications.md).
 
 ## Legacy application migration
 
@@ -662,6 +670,19 @@ logging to verify native script completion; failure or missing evidence remains
 nonzero. Raw/redirected/dry-run modes do not prompt, and failed installs are never
 automatically retried. Package script effects have no Dots filesystem rollback.
 
+Successful npm script runs may save a bounded atomic completion receipt in pkgs
+state. It only suppresses repeated review for an unchanged installed tree; it never
+authorizes execution. Missing or stale receipts, version/reinstall drift and missing
+build artifacts require review again. Receipt failures cannot turn a failed script
+into success. Receipt storage does not modify npm allow policies.
+
+Automatic Termux pip upgrades restrict native resolution to wheels; unsupported
+newer source builds can leave a compatible installed version unchanged. Explicit
+format controls/targets and replacement recipes preserve native behavior. Automatic
+gem self-update uses native `gem update --system --no-document` with no force or
+privilege bypass; distribution protections remain authoritative. It is configurable
+through `apps.pkgs.upgrade.gem_system`, and appears in dry-run commands.
+
 Default Go upgrades compare installed build versions with native latest-module
 queries and install only newer eligible tools through `go install PACKAGE@latest`.
 Queries run outside the project, with toolchain downloads disabled and the existing
@@ -709,3 +730,12 @@ The terminal wizard is read-only until explicit preparation approval. Dry-run ne
 Expected catalog directory links may translate child operations to an ordinary physical source path, guarded by the exact mapping and lexical link. Foreign/broken/nested links remain refused; legacy receipt reconciliation preserves original backup references. Leaf fetches only its pinned public source into owned storage, refuses changed cache/source evidence, and publishes a verified regular executable with retained backup. WinGet is restricted to exact community IDs and explicit scope, without implicit elevation, source acceptance, provider bootstrap or trust changes.
 
 Configuration key migration (`config migrate --keys`) is explicit and preview-first. It guards shared inputs and affected profile chains, rejects contradictory aliases and compares effective consumer values before a retained Store transaction. It preserves unrelated fields and TOML comments; interrupted writes use normal recovery, and undo refuses drift. It never selects a theme or activates a profile.
+
+
+## Moving backups and reviewed replacement
+
+`bak create` moves by default; `--copy` is explicit. Restore retains its payload and backs up occupied destinations. Links and setup replacements use whole-batch preflight, guarded parents, durable Store journals and reverse rollback. `--no-backup` permits replacement without new retention; temporary rollback copies remain until commit and earlier baselines stay protected. Delete/prune are explicit and cannot delete required uninstall originals; unfinished transactions block new publication.
+
+Bootstrap prepares reviewed prerequisites and leaves managed configuration unpublished on preparation failure. External package effects remain. Acquisition cannot replace an occupied destination. Windows Developer Mode is a separate explicit offer; there is no silent copying or elevation.
+
+Preference layout migration/import preflights the complete destination set and guards source manifests/preferences alongside target files. Source appearance wins only inside the portable import allowlist; structural and native application files are excluded. Stale inputs refuse saving, failed writes roll back and successful saves retain ordinary file-transaction undo. These operations never publish themes or reload applications.

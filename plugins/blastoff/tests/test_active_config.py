@@ -40,9 +40,10 @@ class ActiveConfig(Harness):
         self.assertFalse((self.store/'backups').exists())
         self.invoke('theme', 'apply', 'purple')
         self.assertTrue(self.config.is_symlink())
-        self.assertEqual(self.real.read_text(), 'x=2\n')
+        self.assertEqual(self.real.read_text(), 'x=1\n')
+        self.assertEqual(self.config.resolve(), self.store/'themes/purple.toml')
         saved = self.snapshots()[0]
-        meta = json.loads(saved.with_suffix('.json').read_text())
+        meta = next(r['blastoff'] for r in self.backup_entries().values() if r['path'] == str(saved))
         self.assertEqual(meta['source'], str(self.real))
         self.assertEqual(meta['configured_config'], str(self.config))
         self.assertEqual(meta['active_links'][0]['target'], before[1])
@@ -50,9 +51,10 @@ class ActiveConfig(Harness):
         self.invoke('theme', 'apply', 'purple')
         self.assertEqual(self.real.stat().st_ino, inode)
         self.assertEqual(len(self.snapshots()), 1)
-        self.invoke('backup', 'restore', saved.stem)
+        self.invoke('backup', 'restore', meta['id'])
         self.assertEqual(self.real.read_text(), 'x=1\n')
-        self.assertEqual(os.readlink(self.config), before[1])
+        self.assertEqual(self.config.resolve(), self.store/'themes/purple.toml')
+        self.assertEqual(self.config.read_text(), 'x=1\n')
 
     def test_chain_module_load_save_and_physical_lock(self):
         second = self.home / '.config/second.toml'
@@ -71,13 +73,15 @@ class ActiveConfig(Harness):
 
     def test_retarget_before_atomic_preserves_both_targets(self):
         other = self.write(self.home/'other.toml', 'x=99\n')
-        original = core.atomic
-        def replace(path, data, expected=None, **kwargs):
-            if path == self.real:
-                self.config.unlink(); self.config.symlink_to(other)
-            return original(path, data, expected, **kwargs)
-        with patch.object(core, 'atomic', side_effect=replace):
-            with self.assertRaisesRegex(core.Failure, 'link changed'):
+        import sys
+        sys.path.insert(0, str(Path(core.__file__).resolve().parents[3]/'lib/dots/files'))
+        from transactions import Store
+        original = Store.apply
+        def replace(store, *args, **kwargs):
+            self.config.unlink(); self.config.symlink_to(other)
+            return original(store, *args, **kwargs)
+        with patch.object(Store, 'apply', new=replace):
+            with self.assertRaisesRegex(ValueError, 'changed'):
                 self.run_core('theme', 'apply', 'purple')
         self.assertEqual(self.real.read_text(), 'x=1\n')
         self.assertEqual(other.read_text(), 'x=99\n')
@@ -104,18 +108,21 @@ class ActiveConfig(Harness):
         self.assertFalse((self.store/'backups').exists())
 
     def test_external_target_edit_refuses_publication(self):
-        original = core.atomic
-        def replace(path, data, expected=None, **kwargs):
-            if path == self.real: path.write_text('external=true\n')
-            return original(path, data, expected, **kwargs)
-        with patch.object(core, 'atomic', side_effect=replace):
-            with self.assertRaisesRegex(core.Failure, 'changed during operation'):
+        import sys
+        sys.path.insert(0, str(Path(core.__file__).resolve().parents[3]/'lib/dots/files'))
+        from transactions import Store
+        original = Store.apply
+        def replace(store, *args, **kwargs):
+            self.real.write_text('external=true\n')
+            return original(store, *args, **kwargs)
+        with patch.object(Store, 'apply', new=replace):
+            with self.assertRaisesRegex(ValueError, 'changed'):
                 self.run_core('theme', 'apply', 'purple')
         self.assertEqual(self.real.read_text(), 'external=true\n')
         self.assertTrue(self.config.is_symlink())
 
     def test_unsafe_targets_and_parents_are_refused(self):
-        for target in (self.home/'missing.toml', self.config, self.store/'themes/purple.toml'):
+        for target in (self.home/'missing.toml', self.config):
             self.config.unlink(); self.config.symlink_to(target)
             self.invoke('theme', 'apply', 'purple', code=1)
         linked = self.home/'linked-parent'

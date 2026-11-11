@@ -54,7 +54,7 @@ class ConfigMenu(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), before)
         self.assertIn('auto', draft.review()); self.assertIn('always', draft.review())
         result = draft.save()
-        self.assertEqual(json.loads(self.path.read_bytes())['settings']['DOTS_COLOR'], 'always')
+        self.assertEqual(json.loads((self.path.parent/'config.json').read_bytes())['settings']['DOTS_COLOR'], 'always')
         self.undo(result['id']); self.assertEqual(json.loads(self.path.read_bytes()), json.loads(before))
         inventory = self.inventory()
         stale = menu.Draft(inventory, inventory.find(row.key)).prepare('never')
@@ -100,7 +100,7 @@ class ConfigMenu(unittest.TestCase):
         with self.assertRaises(ValueError): draft.prepare('not-a-role')
         self.assertEqual(draft.prepare('blue').proposed, 'blue')
         defaults = self.inventory('defaults')
-        self.assertEqual({r.group for r in defaults.rows}, {'icons','colors','formatting','apps'})
+        self.assertEqual({r.group for r in defaults.rows}, {'icons','colors','formatting','apps','settings'})
         with self.assertRaises(ValueError): menu.Draft(defaults, defaults.find('icons.git.branch')).prepare(reset=True)
         before = self.path.read_bytes()
         with patch.object(menu,'input_value',return_value='never'), patch.object(menu,'select',return_value='cancel'):
@@ -225,7 +225,7 @@ class ConfigMenu(unittest.TestCase):
                 self.assertEqual(menu.browse(self.root,self.inventory().selected,self.args()),0)
             self.assertEqual(actions.call_count,int(mode=='set'))
             self.assertEqual(show.call_count,int(mode!='set'))
-            self.assertEqual([key for key,_ in select.call_args_list[0].args[1]],['list','get','set','refresh'])
+            self.assertEqual([key for key,_ in select.call_args_list[0].args[1]],['list','get','set','import','refresh'])
             if mode!='list':
                 self.assertEqual([key for key,_ in select.call_args_list[1].args[1]],
                                  ['all','icons','colors','formatting','apps','files','profile','settings','environment'])
@@ -281,7 +281,7 @@ class ConfigMenu(unittest.TestCase):
              patch.dict(os.environ,TERM='xterm'),patch.object(menu,'browser_available',return_value=True), \
              patch.object(menu,'select',side_effect=choose),patch('config_refresh.after_save',side_effect=AssertionError('no refresh')), \
              redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(config_cli.main(['set',key,'--no-refresh']),0)
+            self.assertEqual(config_cli.main(['set',key,'--profile',self.platform,'--no-refresh']),0)
         self.assertIn('undo: dots files undo',output.getvalue())
         from style_config import read
         self.assertEqual(read(destination)['apps.todo.field.acceptance.value.fg'],'palette.fixture_extra')
@@ -344,6 +344,90 @@ class ConfigMenu(unittest.TestCase):
         with patch.object(menu.RichSelector,'fzf',side_effect=select):
             self.assertEqual(menu.pick(inventory,'icons',frame,None).key,'icons.git.branch')
 
+    @patch.dict(os.environ, TERM='xterm-256color')
+    def test_home_paths_in_details_nested_values_and_file_mappings(self):
+        import re
+        from dataclasses import asdict, replace
+        from resources import cells
+        source = str(self.root/'colors.toml')
+        destination = str(self.path)
+        inside = str(self.home/'directory space ü'/'file.json')
+        outside = str(self.home)+'-other/file.json'
+        values = {'path': inside, 'paths': [str(self.home), {'nested': inside}],
+                  'outside': outside, 'relative': 'relative/file', 'reference': '${HOME}/file',
+                  'short': '~/already', 'text': 'Use '+inside}
+        row = menu.Row('apps.example.paths', values, source, destination,
+                       explanation=[dict(app='cli',value=inside,source=source,refresh='next invocation')],
+                       constraints={'type':'object','examples':[inside, str(self.home/'second.json')]})
+        before = asdict(row)
+        ui = menu.Presentation(io.StringIO(), terminal=True)
+        ui.color = ui.icons = False
+        text = menu.details(row, width=1000, ui=ui)
+        self.assertIn('~/directory space ü/file.json', text)
+        self.assertIn('~/second.json', text)
+        self.assertIn('"paths": ["~", {"nested": "~/directory space ü/file.json"}]', text)
+        self.assertIn(outside, text)
+        for literal in ('relative/file', '${HOME}/file', '~/already', 'Use '+inside):
+            self.assertIn(literal, text)
+        self.assertNotIn(source, text)
+        self.assertNotIn(destination, text)
+        self.assertEqual(asdict(row), before)
+
+        mapping = replace(row, key='files.dots:example', mapping=dict(owner='dots', source=source,
+                          target=inside, targets={'windows':inside}, strategy='link'))
+        for width in (40,80,120):
+            for styled in (False,True):
+                ui.color = ui.icons = styled
+                with patch('resources.Resources.describe', return_value=('file','F','34')) as describe:
+                    text = menu.details(mapping,width=width,ui=ui)
+                plain = re.sub(r'\x1b\[[0-9;]*m','',text)
+                self.assertIn('~/',plain)
+                self.assertNotIn(str(self.home),plain)
+                self.assertTrue(all(cells(line)<=width for line in plain.splitlines()))
+                if styled:
+                    self.assertIn('\x1b[',text)
+                    self.assertEqual({str(call.args[0]) for call in describe.call_args_list},
+                                     {source,destination,inside})
+
+    def test_home_path_preview_review_editor_and_data_keep_original_values(self):
+        inside = str(self.home/'config space ü'/'file.json')
+        proposed = str(self.home/'config space ü'/'next.json')
+        doc = json.loads(self.path.read_text())
+        doc['environment'] = {'EXAMPLE_CONFIG':inside}
+        self.path.write_text(json.dumps(doc))
+        inventory = self.inventory()
+        row = inventory.find('environment.EXAMPLE_CONFIG')
+        original = self.path.read_bytes()
+        def select(*args,**kwargs):
+            path = Path(args[3][2]['DOTS_CONFIG_PREVIEW'])
+            snapshot = read_request(path)
+            index = next(i for i,item in enumerate(snapshot['rows']) if item['key']==row.key)
+            self.assertEqual(snapshot['rows'][index]['value'],inside)
+            with redirect_stdout(io.StringIO()) as output: menu.preview(str(path),str(index))
+            self.assertNotIn(str(self.home),output.getvalue())
+            self.assertIn('~/',output.getvalue())
+            return [index]
+        with patch.object(menu.RichSelector,'fzf',side_effect=select):
+            self.assertEqual(menu.pick(inventory,'environment',{'mode':'get'},None).value,inside)
+        with patch.dict(os.environ,EXAMPLE_CONFIG=proposed):
+            text = menu.details(row,width=1000)
+            self.assertIn('~/config space ü/next.json (not saved)',text)
+            self.assertNotIn(str(self.home),text)
+        for draft in (menu.Draft(inventory,row).prepare(proposed),
+                      menu.Draft(inventory,row).prepare(reset=True)):
+            text = draft.review()
+            self.assertIn('~/',text)
+            self.assertNotIn(str(self.home),text)
+        with patch.object(menu,'input_value',return_value=None) as input_value:
+            menu.edit(inventory,row,None)
+            self.assertEqual(input_value.call_args.args[1],inside)
+        self.assertEqual(self.path.read_bytes(),original)
+        for native in (False,True):
+            self.assertEqual(self.run_config('get',row.key,native=native).stdout,inside+'\n')
+            self.assertEqual(json.loads(self.run_config('get',row.key,'--json',native=native).stdout)['value'],inside)
+        menu.Draft(inventory,row).prepare(proposed).save()
+        self.assertEqual(json.loads(self.path.read_bytes())['environment']['EXAMPLE_CONFIG'],proposed)
+
     def test_shared_input_escape_interrupt_and_todo_compatibility(self):
         import todo_input
         self.assertIs(todo_input.prompt,menu_input.prompt)
@@ -394,7 +478,7 @@ except SelectionEvent as event:print(json.dumps([row.key,field.key,event.action]
                 time.sleep(.1);self.drain(self.first[1]);self.drain(self.second[1])
                 process=self.worker(code,PROFILE=self.platform,DOTS_COLOR='never' if width==40 else 'always')
                 try:
-                    self.receive(self.first[1],b'filter/sort');time.sleep(.2);os.write(self.first[1],b'\r')
+                    self.receive(self.first[1],b'Alt-F:');time.sleep(.2);os.write(self.first[1],b'\r')
                     self.receive(self.first[1],b'.bold');time.sleep(.2);os.write(self.first[1],b'\r')
                     self.receive(self.first[1],b'icons.');time.sleep(.2);os.write(self.first[1],b'\x1bf')
                     output,error=process.communicate(timeout=15)
@@ -402,7 +486,9 @@ except SelectionEvent as event:print(json.dumps([row.key,field.key,event.action]
                     self.assertEqual(json.loads(output),['colors.apps.todo.field.alias.value','colors.apps.todo.field.alias.value.bold','filter'])
                     self.assertNotIn(b'filter/sort',self.drain(self.second[1]))
                 finally:
-                    if process.poll() is None:process.kill();process.communicate()
+                    if process.poll() is None:
+                        self.control('display-popup','-C','-c',self.first[2])
+                        process.kill();process.communicate(timeout=5)
 
     def review_screen(self,columns,lines):
         """Replay a full client redraw in an owned tmux terminal for cell capture."""
@@ -599,7 +685,7 @@ raise SystemExit(config_cli.main(['browse','--client',os.environ['CLIENT'],'--qu
         os.write(self.first[1],b'never');time.sleep(.2);os.write(self.first[1],b'\r');self.receive(self.first[1],b'Proposed')
         os.write(self.first[1],b'\x1b[B\r')
         self.receive(self.first[1],b'undo')
-        self.assertEqual(json.loads(path.read_text())['settings']['DOTS_COLOR'],'never')
+        self.assertEqual(json.loads((self.root/'default/config.json').read_text())['settings']['DOTS_COLOR'],'never')
         os.write(self.first[1],b'\x03')
         out,err=p.communicate(timeout=10);self.assertEqual(p.returncode,130,out+err)
 

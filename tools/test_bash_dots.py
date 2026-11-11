@@ -415,7 +415,7 @@ _dots
 source "$DOTS/lib/dots/completion/zsh"
 compadd() {
   local values=candidates labels=descriptions i
-  if [[ $1 == -S ]]; then values=prefixes labels=prefix_descriptions; fi
+  if [[ " $* " == *" -S "* ]]; then values=prefixes labels=prefix_descriptions; fi
   local -a actual=("${(@P)values}") display=("${(@P)labels}")
   for (( i=1; i<=${#actual}; i++ )); do
     print -r -- "$actual[i]"$'\t'"$display[i]"

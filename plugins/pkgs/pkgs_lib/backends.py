@@ -373,6 +373,9 @@ class Backend:
             args = [sys.executable, '-m', 'pip', 'install' if action == 'upgrade' else action]
             if action == 'upgrade':
                 args += ['--upgrade']
+                if (self.termux and getattr(self, 'automatic_upgrade', False) and
+                        not any(k.upper() in ('PIP_NO_BINARY','PIP_ONLY_BINARY') for k in os.environ)):
+                    args += ['--only-binary=:all:']
             if action == 'uninstall' and yes:
                 args += ['-y']
             args += names

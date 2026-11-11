@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# dots:summary=Create symlinks with recoverable backups
+# dots:usage=SOURCE... TARGET [OPTIONS]
+# dots:option=--no-target-directory|-T|flag|Treat TARGET as the exact pathname
+# dots:option=--relative|-r|flag|Store relative symlink targets
+# dots:option=--allow-missing||flag|Explicitly permit missing source paths
+# dots:option=--no-backup||flag|Discard replaced destinations after success
+# dots:option=--store-dir||directory|Override the backup store directory
+# dots:option=--in-place||flag|Retain adjacent timestamped backups
+# dots:option=--dry-run||flag|Preview without changing files or state
+# dots:option=--json||flag|Print schema-1 JSON without decoration
+# dots:option=--quiet|-q|flag|Suppress routine output; retain errors
+# dots:option=--color||choice:auto,always,never|Human output colors
+# dots:option=--icons||choice:auto,always,never|Human output icons
+# dots:argument=*|file|Source or target path
+_dots_link_source=${BASH_SOURCE[0]}
+[[ $_dots_link_source == /* ]] || _dots_link_source=$PWD/$_dots_link_source
+_dots_link_count=0
+while [[ -L $_dots_link_source ]]; do
+  (( ++_dots_link_count <= 40 )) || { printf 'dots link: executable symlink loop\n' >&2; exit 1; }
+  _dots_link_target=$(readlink -- "$_dots_link_source") || exit 1
+  if [[ $_dots_link_target == /* ]]; then _dots_link_source=$_dots_link_target
+  else _dots_link_source=${_dots_link_source%/*}/$_dots_link_target; fi
+done
+DOTS=$(cd -- "${_dots_link_source%/*}/.." && pwd -P) || exit 1
+export DOTS
+exec python3 -B "$DOTS/lib/dots/link_cli.py" "$@"

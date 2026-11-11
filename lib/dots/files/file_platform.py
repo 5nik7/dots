@@ -32,6 +32,20 @@ def native_link_text(value, windows=None):
     return value
 
 
+def termux_prefix(platform):
+    """Resolve only the explicitly supplied Termux installation prefix."""
+    if platform != 'termux':
+        return None
+    value = os.environ.get('PREFIX', '')
+    if not value:
+        return None
+    root = Path(value)
+    if (not root.is_absolute() or root == Path(root.anchor) or
+            '..' in root.parts or any(ord(c) < 32 or ord(c) == 127 for c in value)):
+        raise ValueError('PREFIX must be an absolute non-root directory without traversal or controls')
+    return root
+
+
 def config_root():
     home = Path(os.environ.get('HOME') or Path.home())
     base = Path(os.environ.get('XDG_CONFIG_HOME') or

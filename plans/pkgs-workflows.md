@@ -1,5 +1,62 @@
 # Package workflows
 
+## Compatible upgrades, package styles and script receipts (2026-11-11)
+
+Implemented and verified. Automatic Termux pip upgrades use compatible
+wheels, keeping an installed compatible version when a newer dependency needs a
+source build. Explicit targets, native format controls and replacement recipes
+retain deliberate source-build behavior. Native resolution errors remain errors;
+independent packages continue. Verify with a local index and disposable Python
+environment, without installing host packages. Upstream w3lib 2.6.0 introduces
+the Rust-backed frostwork dependency; the session cannot fetch that release for
+a live build reproduction.
+
+Automatic gem upgrades include `gem update --system --no-document`, even with
+no ordinary user gems. Keep native permission/distribution protections, recipe
+boundaries and truthful before/after RubyGems versions. Add a native
+`apps.pkgs.upgrade.gem_system` boolean (default true) to disable self-update.
+
+Expose consumer-backed `colors.apps.pkgs` styles for reports, identities,
+packages, values, statuses, skip counts, previews, streams and progress through
+the existing style catalog and Config browser. Preserve current fallbacks except
+package names default to theme accent; save accent explicitly in the active
+Termux profile. Precedence remains shared defaults, parents, then profile;
+activation is next invocation. Keep raw/JSON/completion and resource/FZF chrome
+contracts. Configuration: **add** these bindings, **update** package accent.
+Menu: **no new menu**, existing Config and package routes reach the consumers.
+
+Remember only verified successful npm script runs for the exact installed tree.
+Store bounded atomic receipts under pkgs state, keyed by metadata and installed
+file identities; missing receipts, changed versions, reinstalls, missing outputs
+or drift require approval again. Never infer success from package presence, persist
+an npm allow policy or approve new scripts automatically. Receipts only avoid
+repeated review; failures and declined scripts remain unapproved.
+
+Dependencies: inspect native failure and configuration ownership first; implement
+style bindings before the active-profile save; verify installed script completion
+before recording a receipt. Preserve completed Todo IDs/statuses and append
+decisions/verification only. Acceptance includes isolated pip wheel fallback,
+RubyGems-only upgrade, script receipt invalidation, style inheritance/reset,
+actual consumers at 40/80/120 columns, plain/raw/data behavior and both entry
+points. Shared Python covers both shell adapters; native Windows keeps WinGet
+selection, with native Windows/Linux/WSL execution pending. Synchronize canonical
+docs, skill guidance and local wiki; do not publish or upgrade host packages.
+
+Owner: dots-pkgs-maintenance, with dots-config and shared CLI presentation.
+Verification: 221 package-core tests, 16 entry-point/integration cases, 13 shared
+progress tests, and 27 Config/style checks pass. The 10-test plugin report suite
+passes with its native PowerShell case skipped on Termux. Coverage includes real
+pip with local fixture wheels, independent package failures, protected RubyGems
+self-update with empty inventory, npm completion-receipt invalidation, 40/80/120
+column output, plain/raw data and native Bash/Zsh/Fish/FZF completion. No host
+packages or npm scripts were changed/run. The active Termux profile explicitly
+sets package foreground to accent, verified through Config provenance and its
+current resolved palette color. Command validation (245 routes), generated
+adapters, shell syntax, skill validation, relative links (1296 across 162 files),
+diff checks and local wiki generation/check pass. The completed 10-goal Todo tree
+retains its IDs, parent relationships, criteria and statuses; only root notes are
+appended. Native Linux/WSL/Windows execution remains a separate pending check.
+
 ## Compact diagnostics and package colors (2026-11-10)
 
 Implemented and verified. The exact reported npm force/allow-scripts notices are

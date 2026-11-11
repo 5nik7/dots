@@ -18,6 +18,16 @@ class Values(fixtures.ProfileConfig):
         self.environ=patch.dict(os.environ,self.env,clear=True);self.environ.start();self.addCleanup(self.environ.stop)
         current.cache_clear();self.addCleanup(current.cache_clear)
 
+    def test_backup_controls_preserve_explicit_choices_and_validate(self):
+        self.assertEqual(Controls(self.root).resolve('apps.bak.mode')['value'],'move')
+        for key,value in [('apps.bak.mode','copy'),('apps.bak.location','adjacent'),('apps.bak.store','~/my backups')]:
+            self.run_config('set',key,value,'--no-refresh')
+            self.assertEqual(Controls(self.root).resolve(key)['value'],value)
+        for key,value in [('apps.bak.mode','delete'),('apps.bak.location','anywhere'),('apps.bak.store','relative')]:
+            before=self.path.read_bytes()
+            self.run_config('set',key,value,'--no-refresh',code=1)
+            self.assertEqual(self.path.read_bytes(),before)
+
     def test_literals_types_null_and_data(self):
         key='apps.nvim.highlights["@variable.member"].fg'
         self.assertEqual(name(parts(key)),key)
@@ -61,6 +71,8 @@ class Values(fixtures.ProfileConfig):
         from config_menu import Inventory,Draft
         from config_refresh import effective,after_save
         key='apps.cli.logo_gradient'
+        # Isolate reset semantics from the user's shared default preference.
+        self.run_config('set',key,'classic','--defaults','--no-refresh')
         self.assertEqual(self.run_config('get',key).stdout,'classic\n')
         self.run_config('set',key,'invalid','--no-refresh',code=1)
         row=Inventory(self.root,self.platform).find(key)

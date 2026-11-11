@@ -33,12 +33,15 @@ class Discovery(unittest.TestCase):
         self.env = dict(os.environ, HOME=str(self.home), USERPROFILE=str(self.home),
                         BLASTOFF_HOME=str(self.store), STARSHIP_CONFIG=str(self.config),
                         STARSHIP_CACHE=str(self.home/'cache'), NO_COLOR='1')
+        self.env.update(XDG_CONFIG_HOME=str(self.home/'config'), XDG_STATE_HOME=str(self.home/'state'),
+                        XDG_CACHE_HOME=str(self.home/'cache'), XDG_DATA_HOME=str(self.home/'data'),
+                        APPDATA=str(self.home/'Roaming'), LOCALAPPDATA=str(self.home/'Local'))
         self.environment = patch.dict(os.environ, self.env)
         self.environment.start()
         self.addCleanup(self.environment.stop)
 
     def snapshot(self):
-        return {str(p.relative_to(self.home)): None if p.is_dir() else p.read_bytes()
+        return {str(p.relative_to(self.home)): os.readlink(p) if p.is_symlink() else None if p.is_dir() else p.read_bytes()
                 for p in self.home.rglob('*')}
 
     def invoke(self, args, mode='fail', text='', tty=False):

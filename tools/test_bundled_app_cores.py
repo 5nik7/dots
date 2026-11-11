@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 # These modules test standalone source archives and prefix/module installation.
@@ -32,8 +33,16 @@ def main():
         if app == 'blastoff':
             modules = ['test_blastoff.Contract' if name == 'test_blastoff' else name for name in modules]
         print('Running '+app+' application behavior tests', flush=True)
-        result = subprocess.call([sys.executable, '-B', '-m', 'unittest', '-v', *modules], cwd=tests,
-                                 env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1'))
+        # A second containment boundary protects older tests that override HOME
+        # but accidentally inherit an explicit host XDG state/data directory.
+        with tempfile.TemporaryDirectory(prefix='dots-app-tests-') as directory:
+            base = Path(directory)
+            env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', HOME=str(base/'home'), USERPROFILE=str(base/'home'),
+                       XDG_CONFIG_HOME=str(base/'config'), XDG_STATE_HOME=str(base/'state'),
+                       XDG_CACHE_HOME=str(base/'cache'), XDG_DATA_HOME=str(base/'data'),
+                       APPDATA=str(base/'Roaming'), LOCALAPPDATA=str(base/'Local'))
+            (base/'home').mkdir()
+            result = subprocess.call([sys.executable, '-B', '-m', 'unittest', '-v', *modules], cwd=tests, env=env)
         if result: return result
     return 0
 

@@ -10,6 +10,12 @@
   ],
   "pages": [
     {
+      "id": "Backups",
+      "title": "Backups and safe links",
+      "section": "Commands",
+      "source": "docs/backups.md"
+    },
+    {
       "id": "Home",
       "title": "Home",
       "section": "Start here",
@@ -230,6 +236,12 @@
       "title": "Todo goals",
       "section": "Managing Dots",
       "source": "docs/todo.md"
+    },
+    {
+      "id": "Clipboard-history",
+      "title": "Clipboard history",
+      "section": "Commands",
+      "source": "docs/clipboard.md"
     }
   ]
 }

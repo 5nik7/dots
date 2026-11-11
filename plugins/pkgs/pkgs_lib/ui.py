@@ -20,7 +20,15 @@ PALETTE = {'title': '1;35', 'heading': '1;36', 'good': '32', 'warn': '33', 'dim'
 
 def colored(text, kind, mode='auto', preview=False):
     enabled = mode == 'always' or (mode == 'auto' and 'NO_COLOR' not in os.environ and (preview or sys.stdout.isatty()))
-    return '\x1b[' + PALETTE[kind] + 'm' + str(text) + '\x1b[0m' if enabled else str(text)
+    if not enabled: return str(text)
+    role={'title':'package','heading':'preview.heading','good':'preview.success','warn':'preview.warning','dim':'muted','label':'preview.label'}.get(kind,kind)
+    try:
+        from .presentation import styles
+        code=styles()[role]
+    except ImportError:
+        # Retained source-only installations have no shared Dots modules.
+        code='34' if kind=='title' else PALETTE.get(kind, '2' if kind=='preview.version' else '0')
+    return '\x1b[' + code + 'm' + str(text) + '\x1b[0m'
 
 
 def render(p, backend, color='auto', preview=False, message=''):
@@ -32,8 +40,8 @@ def render(p, backend, color='auto', preview=False, message=''):
     def c(s, k): return colored(s, k, color, preview)
     def wrap(value, indent=''):
         for para in str(value).splitlines() or ['']:
-            out.extend(textwrap.wrap(clean(para), width=width, initial_indent=indent,
-                                     subsequent_indent=indent) or [''])
+            out.extend(c(line,'value') for line in (textwrap.wrap(clean(para), width=width, initial_indent=indent,
+                                     subsequent_indent=indent) or ['']))
     def heading(s): out.extend(['', c(s.upper(), 'heading')])
     def field(label, value, kind=None):
         if value in ('', None): return
@@ -43,15 +51,15 @@ def render(p, backend, color='auto', preview=False, message=''):
             wrap(value, '  ')
         else:
             lines = textwrap.wrap(clean(value), width=max(10, width-len(prefix))) or ['']
-            out.append(c(prefix, 'label') + (c(lines[0], kind) if kind else lines[0]))
-            out.extend(' ' * len(prefix) + l for l in lines[1:])
+            out.append(c(prefix, 'label') + (c(lines[0], kind or 'value')))
+            out.extend(' ' * len(prefix) + c(l,kind or 'value') for l in lines[1:])
     out.append(c(clean(p.name), 'title'))
     out.append(c('─' * min(width, 44), 'dim'))
     field('Manager', backend.name)
     field('Scope', backend.scope)
     field('Status', 'Installed [i]' if p.installed else 'Not installed', 'good' if p.installed else 'dim')
-    field('Version', p.version)
-    field('Installed', p.installed_version)
+    field('Version', p.version, 'version')
+    field('Installed', p.installed_version, 'version')
     field('Repository', p.repo)
     heading('Description')
     wrap(p.description or 'No description supplied by this package source.')
@@ -108,11 +116,11 @@ def row(p, index, color):
     marker += colored('[e]', 'warn', color, True) if p.external else '   '
     text = marker + ' ' + colored(clean(p.name), 'title', color, True)
     if p.version:
-        text += ' ' + colored(clean(p.version), 'dim', color, True)
+        text += ' ' + colored(clean(p.version), 'preview.version', color, True)
     if p.repo:
-        text += ' [' + clean(p.repo) + ']'
+        text += colored(' [' + clean(p.repo) + ']', 'value', color, True)
     if p.description:
-        text += ' — ' + clean(p.description)
+        text += colored(' — ' + clean(p.description), 'value', color, True)
     return str(index) + '\t' + text
 
 

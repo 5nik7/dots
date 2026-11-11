@@ -16,7 +16,8 @@ dots_value_candidates() {
       output=$(python3 -B "$DOTS_LIB_DIR/wiki.py" __names "$type" 2>/dev/null) || return 0
       while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
       ;;
-    profile-id)
+    profile-id|profile-import)
+      [[ $type != profile-import ]] || dots_candidate "${lead}defaults"
       local output
       output=$(python3 -B "$DOTS_LIB_DIR/profiles.py" __names 2>/dev/null) || return 0
       while IFS= read -r value; do [[ ! $value ]] || dots_candidate "$lead$value"; done <<< "$output"
@@ -150,7 +151,7 @@ dots_completion_children() {
 
 dots_complete() {
   local shell=${1:-} cursor=${2:-}
-  [[ $shell == bash || $shell == zsh || $shell == fish ]] || return 2
+  [[ $shell == bash || $shell == zsh || $shell == fish || $shell == nu || $shell == xonsh ]] || return 2
   [[ $cursor =~ ^[0-9]+$ && ${3:-} == -- ]] || return 2
   shift 3
   # shellcheck disable=SC2034
@@ -159,6 +160,10 @@ dots_complete() {
   (( cursor >= 1 && cursor < ${#words[@]} )) || return 2
   # Standalone wrappers share this same completion protocol.
   local command_name=${words[0]##*/}
+  if [[ $command_name == bak || $command_name == dots-bak ]]; then
+    python3 -B "$DOTS_LIB_DIR/bak_completion.py" "$shell" "${words[@]:1:cursor}"
+    return
+  fi
   if [[ $command_name == fonts ]]; then
     python3 -B "$DOTS_LIB_DIR/fonts/completion.py" "${words[@]:1:cursor}"
     return
@@ -171,6 +176,14 @@ dots_complete() {
   while (( todo_index < cursor )); do
     case ${words[todo_index]} in --color=*|--icons=*|-r|--raw) (( ++todo_index )) ;; *) break ;; esac
   done
+  if [[ $command_name == dots && ${words[todo_index]} == clipboard && $todo_index -lt $cursor ]]; then
+    python3 -B "$DOTS_LIB_DIR/clipboard_commands.py" "${words[@]:todo_index+1:cursor-todo_index}"
+    return
+  fi
+  if [[ $command_name == dots && ${words[todo_index]} == bak && $todo_index -lt $cursor ]]; then
+    python3 -B "$DOTS_LIB_DIR/bak_completion.py" "$shell" "${words[@]:todo_index+1:cursor-todo_index}"
+    return
+  fi
   if [[ $command_name == dots && ${words[todo_index]} == fonts && $todo_index -lt $cursor ]]; then
     python3 -B "$DOTS_LIB_DIR/fonts/completion.py" "${words[@]:todo_index+1:cursor-todo_index}"
     return

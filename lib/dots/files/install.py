@@ -127,6 +127,9 @@ class Installation:
         self.receipt_changed = False
         self.blocked = False
         self.transaction = uuid.uuid4().hex
+        self.backup_plan = None
+        self.no_backup = False
+        self.review_replacements = False
         for record in self.store.records():
             if record['status'] in ('preparing', 'applying', 'rolling-back', 'recovery-required'):
                 raise ValueError('unfinished transaction: run dots files recover ' + record['id'])
@@ -181,7 +184,7 @@ class Installation:
             same = not path.is_symlink() and current == self.guards[str(source)]
         if text is not None:
             same = path.is_file() and not path.is_symlink() and path.read_text(encoding='utf-8') == text
-        if owned and current != owned['after'] and not managed:
+        if owned and current != owned['after'] and not managed and not self.review_replacements:
             self.item(identity, 'conflict', path, reason='installer-owned target changed; preserve and review it')
             return
         if same:
@@ -192,8 +195,9 @@ class Installation:
             if link is not None and path.resolve() == Path(link).resolve():
                 self.item(identity, 'unchanged', path, link)
                 return
-            self.item(identity, 'conflict', path, reason='unrelated link is protected; inspect dots files migrate-apps for a legacy application installation')
-            return
+            if not self.review_replacements:
+                self.item(identity, 'conflict', path, reason='unrelated link is protected; inspect dots files migrate-apps for a legacy application installation')
+                return
         if link is not None and path.is_dir() and path.resolve() == Path(link).resolve():
             raise ValueError('source and target overlap: ' + key)
         op = dict(path=key)
@@ -208,10 +212,34 @@ class Installation:
             owned = dict(id=identity, before=current, backup=self.transaction,
                          index=len(self.operations)-1)
             self.entries[key] = owned
+        self.retain_destination(path, owned)
         owned['desired'] = {k: v for k, v in op.items() if k != 'path'}
         self.item(identity, 'replace-with-backup' if current is not None else 'create', path, link or source,
                   reason='copy regular file' if source is not None else None,
                   strategy='copy' if source is not None else None)
+
+    def retain_destination(self, path, owned):
+        """Keep a user-visible snapshot while preserving the first baseline."""
+        if self.guards[str(path)] is None or self.state == path or self.state in path.parents:
+            return
+        if self.no_backup:
+            if owned['backup'] == self.transaction:
+                owned.update(before=None, discarded_original=True)
+            return
+        if self.backup_plan is None:
+            from backup_catalog import BackupPlan
+            from config_values import Controls
+            controls = Controls(self.root)
+            preferences = controls.values.get('apps', {}).get('bak', {})
+            self.backup_plan = BackupPlan(self.state, preferences.get('store', '~/.bakstore'),
+                                          preferences.get('location', 'store'), identity=self.transaction)
+            for item in controls.paths:
+                self.backup_plan.guard(item)
+        record = self.backup_plan.snapshot(path, origin='install')
+        if owned['backup'] == self.transaction:
+            owned['backup_id'] = record['id']
+        self.items.append(dict(id='backup:'+record['id'], status='retain', source=str(path),
+                               target=record['path'], reason='original uninstall baseline' if owned.get('backup_id') == record['id'] else 'current edited destination'))
 
     def retire(self, identity, path):
         """Retire a caller-verified legacy object, retaining its original baseline."""
@@ -226,6 +254,7 @@ class Installation:
         self.entries[key] = dict(id=identity, before=self.guards[key], backup=self.transaction,
                                  index=len(self.operations))
         self.operations.append(dict(path=key, delete=True))
+        self.retain_destination(path, self.entries[key])
         self.item(identity, 'remove', path, reason='verified legacy artifact; retain recovery copy')
 
     def plan_core_manual(self, home):
@@ -290,6 +319,27 @@ class Installation:
                 self.add('dots:' + name + ':manual', home / '.local/share/man/man1' / (name + '.1'),
                          link=source / manual)
 
+    def plan_old_launchers(self, home):
+        # Only conventional per-user launchers, never system package prefixes
+        # or the optional applications' libraries/registrations.
+        names = [name for name in ('anodize', 'blastoff', 'pkgs') if name in self.components]
+        if 'core' in self.components: names.append('bak')
+        for name in names:
+            for suffix in ('', '.ps1') if self.platform == 'windows' else ('',):
+                path = home/'bin'/(name+suffix)
+                if not exists(path) or path.is_dir(): continue
+                self.guard(path)
+                if hasattr(os, 'getuid') and path.lstat().st_uid != os.getuid():
+                    self.item('legacy:'+name, 'preserved', path, reason='not owned by this user')
+                    continue
+                resolved = path.resolve()
+                if resolved == (self.root/'bin'/(name+suffix)).resolve(): continue
+                if any(part.lower() in ('pipx', '.cargo', 'scoop', 'chocolatey') for part in resolved.parts):
+                    self.item('legacy:'+name, 'preserved', path, reason='package-managed launcher; Dots PATH takes precedence')
+                    continue
+                if str(path) not in self.entries:
+                    self.retire('dots:'+name+':legacy-command', path)
+
     def theme_bridge(self, mode, fingerprint=None):
         cmd = ([sys.executable, '-B', str(self.root / 'lib/dots/themes/setup.py'), mode]
                if self.platform == 'windows' else ['bash', str(self.root / 'lib/dots/themes/setup.bash'), mode])
@@ -317,6 +367,7 @@ class Installation:
             self.receipt_changed = True
 
     def plan_install(self, components=None, resources=None, *, defer_theme=False):
+        self.review_replacements = True
         self.components = set(DEFAULTS if components is None else components)
         self.resources = None if resources is None else set(resources)
         catalog = Catalog(self.root, self.platform)
@@ -335,6 +386,24 @@ class Installation:
         records = [r for r in observed if r['enabled'] and r['applicable'] and r['status'] != 'replaced']
         selected = [r for r in records if 'files' in self.components
                     and (self.resources is None or r['id'] in self.resources)]
+        if self.platform == 'windows' and os.environ.get('DOTS_POWERSHELL_PROFILES'):
+            # The native adapter asks each installed engine for its all-hosts
+            # destination. Keep the catalog identity and explicit file selection.
+            profiles = json.loads(os.environ['DOTS_POWERSHELL_PROFILES'])
+            if not isinstance(profiles, list):
+                raise ValueError('invalid native PowerShell profile discovery')
+            template = next((row for row in selected if row['id'] == 'dots:powershell-profile'), None)
+            if template:
+                selected.remove(template)
+                targets = set()
+                for record in profiles:
+                    target = record.get('path') if isinstance(record, dict) else None
+                    if not isinstance(target, str) or not Path(target).is_absolute() or Path(target).name.lower() != 'profile.ps1':
+                        raise ValueError('invalid native all-hosts profile destination')
+                    key = os.path.normcase(target)
+                    if key not in targets:
+                        selected.append(dict(template, target=target, status='available'))
+                        targets.add(key)
         if self.resources is not None:
             missing = self.resources - {r['id'] for r in selected}
             if missing:
@@ -423,6 +492,7 @@ class Installation:
             self.add('dots:command', home / '.local/bin' / launcher, link=self.root / 'bin' / launcher)
         self.plan_core_manual(home)
         self.plan_bundled_apps(home)
+        self.plan_old_launchers(home)
         todo = self.root / 'bin' / ('todo.ps1' if self.platform == 'windows' else 'todo')
         if 'core' in self.components and todo.is_file():
             self.guard(todo)
@@ -441,6 +511,17 @@ class Installation:
                          text="& '" + quoted + "' @args\nexit $LASTEXITCODE\n")
             else:
                 self.add('dots:fonts:command', home / '.local/bin/fonts', link=fonts)
+        if 'core' in self.components:
+            for name in ('bak', 'dots-link'):
+                filename = name + ('.ps1' if self.platform == 'windows' else '')
+                source = self.root / ('scripts' if filename == 'dots-link.ps1' else 'bin') / filename
+                if not source.is_file(): continue
+                self.guard(source)
+                if self.platform == 'windows':
+                    self.add('dots:'+name+':command', home/'.local/bin'/filename,
+                             text="& '"+str(source).replace("'", "''")+"' @args\nexit $LASTEXITCODE\n")
+                else:
+                    self.add('dots:'+name+':command', home/'.local/bin'/filename, link=source)
         for app, path, artifact in connectors:
             desired = self.state / 'current/theme' / artifact
             old = os.readlink(path) if path.is_symlink() else ''
@@ -498,6 +579,12 @@ class Installation:
             op = dict(path=path)
             if entry['before'] is None:
                 op['delete'] = True
+            elif entry.get('backup_id'):
+                from backup_catalog import BackupPlan
+                backups = BackupPlan(self.state)
+                payload = backups.verified_payload(backups.entry(entry['backup_id']))
+                self.merge_plan([], backups.guards, label='backup catalog')
+                op['source'] = str(payload)
             else:
                 payload = self.store.root / entry['backup'] / (str(entry['index']) + '-before')
                 self.guard(payload)
@@ -506,7 +593,8 @@ class Installation:
                 op['source'] = str(payload)
             self.operations.append(op)
             del self.entries[path]
-            self.item(entry['id'], 'restore' if entry['before'] else 'remove', path)
+            self.item(entry['id'], 'restore' if entry['before'] else 'remove', path,
+                      reason='original was deliberately discarded with --no-backup' if entry.get('discarded_original') else None)
 
     def prepare_theme(self):
         if self.theme_prepared or not self.theme or not self.theme['refresh']:
@@ -517,6 +605,7 @@ class Installation:
         self.theme_prepared = True
         self.theme_notice = values[2] if len(values) > 2 else ''
         generation = Path(values[0])
+        self.theme_payload = generation
         base = self.state / 'themes'
         if generation.parent != base / 'generations' or not generation.name.startswith('g.'):
             raise ValueError('invalid prepared theme generation')
@@ -545,6 +634,9 @@ class Installation:
 
     def apply(self, action, catalogs=(), write_receipt=True, retain=True):
         with ExitStack() as stack:
+            if any(e['id'].startswith('dots:blastoff:') for e in [*self.entries.values(), *self.receipt['entries'].values()]):
+                from setup_starship import coordinated_lock
+                stack.enter_context(coordinated_lock())
             if self.theme or any(e['id'].startswith('theme:') for e in self.receipt['entries'].values()):
                 for path in (self.state/'themes/commands/lock', self.state/'themes/lock'):
                     stack.enter_context(locked_file(path))
@@ -579,10 +671,12 @@ class Installation:
                     self.entries[op['path']].pop('desired', None)
             receipt = dict(self.receipt, entries=self.entries,
                            transactions=self.receipt['transactions'] + [self.transaction])
+            if self.backup_plan:
+                self.merge_plan(self.backup_plan.finish(), self.backup_plan.guards, label='retained backups')
             if write_receipt:
                 self.operations.append(dict(path=str(self.receipt_path), data=receipt))
             with Progress('Applying ' + action):
-                result = self.store.apply(action, self.operations, self.guards, retain=retain,
+                result = self.store.apply(action, self.operations, self.guards, retain=retain and not self.no_backup,
                                           catalogs=catalogs, identity=self.transaction,
                                           publication_locked=bool(self.theme or any(e['id'].startswith('theme:') for e in self.receipt['entries'].values())))
             return result
@@ -713,6 +807,8 @@ def main(argv=None):
     parser.add_argument('--dry-run', action='store_true', help='preview without writes or network access')
     parser.add_argument('-v', '--verbose', action='store_true', help='show actions, backups and unchanged/skipped reasons')
     parser.add_argument('--yes', action='store_true', help='approve the displayed plan without prompting')
+    parser.add_argument('--no-backup', action='store_true', help='replace without retaining new backups; keep existing uninstall baselines')
+    parser.add_argument('--offline', action='store_true', help='refuse network preparation; use already available inputs')
     parser.add_argument('--json', action='store_true', help='emit a schema-1 result')
     parser.add_argument('--update', action='store_true', help='fast-forward the clean checkout before planning setup')
     parser.add_argument('--with-source', action='append', default=[], type=current_source, choices=PUBLIC_SOURCES)
@@ -732,9 +828,11 @@ def main(argv=None):
         ui.emit(parser.format_help())
         return 0
     args = parser.parse_args(raw)
+    if args.offline and (args.update or args.with_source):
+        parser.error('--offline cannot update or acquire sources')
     if args.action != 'install' and (args.update or args.with_source or args.packages or args.fonts
-                                    or args.font_target or args.with_dependencies or args.save_choices):
-        parser.error('source, package, font, dependency and saved-choice options require install')
+                                    or args.font_target or args.with_dependencies or args.save_choices or args.no_backup or args.offline):
+        parser.error('source, package, font, dependency, backup, offline and saved-choice options require install')
     if args.action == 'migrate-apps' and any((args.interactive,args.non_interactive,args.component is not None,args.resource is not None,args.no_clear,args.no_logo)):
         parser.error('wizard and component selection options require install or uninstall')
     if args.interactive and (args.yes or args.json or args.dry_run):
@@ -770,6 +868,7 @@ def main(argv=None):
                 forwarded.append(word)
         os.execv(sys.executable, [sys.executable, '-B', str(root / 'lib/dots/files/install.py'), *forwarded])
     installation = Installation(root)
+    installation.no_backup = args.no_backup
     if args.action != 'migrate-apps':
         setup_wizard.defaults(root, installation, args)
         interactive = (args.interactive or not any((args.non_interactive, args.yes, args.json, args.dry_run))
@@ -851,6 +950,7 @@ def process_selection(root, installation, args, cleanup):
             if preparation.deferred_theme:
                 previous_guards = installation.guards
                 installation = Installation(root)
+                installation.no_backup = args.no_backup
                 installation.guards.update(previous_guards)
                 installation.store.observer = output
                 installation.plan_install(args.component, args.resource)

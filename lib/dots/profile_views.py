@@ -91,11 +91,17 @@ def validate(root, identities):
             context = selected(root, identity)
             from profile_environment import Model
             Model(root, context)
+            from config_values import Controls,validate_effective
+            from style_config import Styles
+            from profile_config import settings
+            controls=Controls(root,context);styles=Styles(root,context)
+            settings(root,context)
+            validate_effective(controls.values,controls.defaults,styles,context['facts']['platform'])
             rows = manifests(root, context)
             conflicts=[r['id'] for r in file_catalog(root,context).records() if r['status']=='conflict']
             if conflicts: raise ValueError('conflicting resource mappings: '+', '.join(conflicts))
             command_rows(root, context)
-            checks.append(dict(profile=identity, status='passed', detail='Definition, inheritance, catalogs and commands are valid'))
+            checks.append(dict(profile=identity, status='passed', detail='Definition, inheritance, preferences, catalogs and commands are valid'))
         except (ValueError, OSError, KeyError, TypeError) as error:
             checks.append(dict(profile=identity, status='failed', detail=str(error)))
     return checks

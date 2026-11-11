@@ -268,7 +268,8 @@ def refresh(root=None, *, dry=False, before=None, retry=True):
         semantic_changes=affected(before,effective(root))
         if not semantic_changes: return dict(schema=1,status='unchanged',consumers=[])
     templates=[root/'default/themed'/name for name in ('tmux.conf.tpl','fzf.sh.tpl','gum_env.sh.tpl')]
-    inputs=[*style.paths,*[Path(x['root'])/'profile.json' for x in selected['layers']],*templates,
+    from config_values import Controls
+    inputs=[*Controls(root,selected).paths,LIB/'preference_files.py',*style.paths,*[Path(x['root'])/'profile.json' for x in selected['layers']],*templates,
             root/'config/tmux/tmux.conf',root/'default/config.json',LIB/'config_values.py',LIB/'tmux_config.py',LIB/'tmux_controls.py',LIB/'config_keys.py',LIB/'fzf_config.py',LIB/'style_config.py',LIB/'style_catalog.py',LIB/'theme_styles.py',Path(__file__),root/'config/gitmux/gitmux.conf']
     guards={str(p):digest(p) for p in inputs}
     stamp=hashlib.sha256(json.dumps({str(p):guards[str(p)] for p in inputs if p not in style.paths and p.name!='profile.json'},sort_keys=True).encode()).hexdigest()
@@ -315,11 +316,20 @@ def after_save(root, before):
         changed=affected(before,after)
         old_cli=before.get('apps',{}).get('cli',{})
         new_cli=after.get('apps',{}).get('cli',{})
+        def without_pkgs_styles(doc):
+            return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('pkgs.')})
+        if changed==['cli'] and without_pkgs_styles(old_cli)==without_pkgs_styles(new_cli):
+            return dict(schema=1,status='complete',consumers=[dict(app='pkgs',status='next invocation or popup')])
         def without_font_styles(doc):
             return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('fonts.') and k!='icons.menu.fonts'},
                         icons={k:v for k,v in doc.get('icons',{}).items() if k!='menu.fonts'})
         if changed==['cli'] and without_font_styles(old_cli)==without_font_styles(new_cli):
             return dict(schema=1,status='complete',consumers=[dict(app='fonts',status='next invocation or popup')])
+        def without_clipboard_styles(doc):
+            return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('clipboard.') and k!='icons.menu.clipboard'},
+                        icons={k:v for k,v in doc.get('icons',{}).items() if k!='menu.clipboard'})
+        if changed==['cli'] and without_clipboard_styles(old_cli)==without_clipboard_styles(new_cli):
+            return dict(schema=1,status='complete',consumers=[dict(app='clipboard',status='next invocation or popup')])
         def without_wiki_styles(doc):
             return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('wiki.') and k!='icons.menu.wiki'},
                         icons={k:v for k,v in doc.get('icons',{}).items() if k!='menu.wiki'})
@@ -337,6 +347,8 @@ def after_save(root, before):
                 {k:v for k,v in old_cli.items() if k!='formatting'}=={k:v for k,v in new_cli.items() if k!='formatting'}):
             return dict(schema=1,status='complete',consumers=[dict(app=key,status='next popup' if key=='menu' else 'next invocation') for key in sorted(formats)])
         if not changed:
+            if before.get('config',{}).get('apps',{}).get('clipboard') != after.get('config',{}).get('apps',{}).get('clipboard'):
+                return dict(schema=1,status='complete',consumers=[dict(app='clipboard',status='next invocation or watcher poll')])
             if before.get('config',{}).get('apps',{}).get('wiki') != after.get('config',{}).get('apps',{}).get('wiki'):
                 return dict(schema=1,status='complete',consumers=[dict(app='wiki',status='next invocation or popup')])
             if before.get('config',{}).get('apps',{}).get('fonts') != after.get('config',{}).get('apps',{}).get('fonts'):
@@ -356,10 +368,12 @@ def preview_save(root, plan):
     from config_cli import ControlPlan
     if isinstance(plan,ControlPlan):
         from config_values import Controls
-        values=Controls(root,replacements={plan.path:plan.data}).values
+        values=Controls(root,replacements=plan.replacements).values
         before=snapshot(None,root,styles=style)
         after=snapshot(None,root,styles=style,controls=values)
         changes=affected(before,after)
+        if before['config'].get('apps',{}).get('clipboard') != after['config'].get('apps',{}).get('clipboard'):
+            changes.append('clipboard')
         if before['config'].get('apps',{}).get('fonts') != after['config'].get('apps',{}).get('fonts'):
             changes.append('fonts')
         if before['config'].get('apps',{}).get('menu') != after['config'].get('apps',{}).get('menu'):

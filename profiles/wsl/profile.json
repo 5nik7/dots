@@ -2,7 +2,6 @@
   "schema": 1,
   "id": "wsl",
   "description": "Windows Subsystem for Linux overrides",
-  "settings": {},
   "files": {
     "dots": [
       {

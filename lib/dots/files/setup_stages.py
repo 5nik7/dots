@@ -33,6 +33,12 @@ class Preparation:
         self.dependency_document = dict(schema=1, groups=[])
         self.missing = []
         required = []
+        self.anodize = None
+        if 'anodize' in args.component and (self.root/'plugins/anodize/engine/go.mod').is_file():
+            from setup_anodize import Build
+            self.anodize = Build(installation)
+            self.anodize.offline = getattr(args, 'offline', False)
+            required.append('go')
         theme_adapter = self.root/'lib/dots/themes'/('setup.py' if self.platform == 'windows' else 'setup.bash')
         if 'themes' in args.component and theme_adapter.is_file():
             if sys.version_info < (3, 11): raise ValueError('theme setup needs preinstalled Python 3.11 or newer')
@@ -48,16 +54,16 @@ class Preparation:
             except Exception: pass
         packages = {}
         if self.platform == 'termux' and manager == 'apt':
-            packages = dict(git='git', cargo='rust', rustc='rust', bash='bash', flock='util-linux',
+            packages = dict(go='golang', git='git', cargo='rust', rustc='rust', bash='bash', flock='util-linux',
                             awk='gawk', find='findutils', cmp='diffutils')
             packages.update({t:'coreutils' for t in THEME_TOOLS if t not in packages})
         elif manager in ('apt', 'dnf', 'pacman', 'paru', 'yay', 'xbps'):
-            packages = dict(git='git', cargo='cargo' if manager in ('apt','dnf') else 'rust',
+            packages = dict(go='golang' if manager == 'apt' else 'go', git='git', cargo='cargo' if manager in ('apt','dnf') else 'rust',
                             rustc='rustc' if manager == 'apt' else 'rust', bash='bash',
                             flock='util-linux', awk='gawk', find='findutils', cmp='diffutils')
             packages.update({t:'coreutils' for t in THEME_TOOLS if t not in packages})
         elif manager == 'winget':
-            packages = {'git':'Git.Git'}
+            packages = {'git':'Git.Git', 'go':'GoLang.Go'}
         for tool in dict.fromkeys(required):
             if not shutil.which(tool):
                 self.missing.append(dict(tool=tool, package=packages.get(tool),
@@ -98,7 +104,7 @@ class Preparation:
         if self.module: rows.append(dict(stage='winget-module', enabled=self.args.with_dependencies,
             detail='Use installed Microsoft.WinGet.Client; if missing, explicitly install version 1.29.380 for CurrentUser. No provider or trust changes.'))
         if 'packages' in self.args.component: rows.append(dict(stage='packages', manifest=self.packages))
-        for name in ('leaf', 'fonts', 'themes'):
+        for name in ('leaf', 'fonts', 'themes', 'anodize', 'blastoff'):
             if name in self.args.component: rows.append(dict(stage=name, status='prepare after approval'))
         if self.fonts:
             next(r for r in rows if r['stage']=='fonts')['selections'] = self.fonts.preview()
@@ -129,6 +135,8 @@ class Preparation:
             raise ValueError('missing prerequisites: '+', '.join(r['tool'] for r in self.missing)+
                              '; select --with-dependencies for mapped packages; other prerequisites need explicit installation')
         try:
+            if getattr(self.args, 'offline', False) and (self.missing or self.module or 'packages' in self.args.component or self.leaf or self.fonts):
+                raise ValueError('offline setup cannot acquire dependencies, packages, fonts or Leaf; deselect these preparation steps')
             if self.module:
                 from pkgs_lib.winget import bridge, bridge_command
                 capability = bridge('capabilities')
@@ -147,6 +155,9 @@ class Preparation:
             if self.leaf:
                 result = self.leaf.prepare()
                 self.save_outcome('leaf', 'complete', result=result, changed=not result['reused'])
+            if self.anodize:
+                result = self.anodize.prepare()
+                self.save_outcome('anodize', 'complete', result=result, changed=not result['reused'])
             verify(self.installation.guards)
         except Exception as error:
             self.save_outcome('preparation', 'failed', reason=str(error))
@@ -156,6 +167,10 @@ class Preparation:
         """Optional payload owners append their final operations here."""
         verify(installation.guards)
         if self.leaf: self.leaf.publish(installation)
+        if self.anodize: self.anodize.publish(installation)
+        if 'blastoff' in self.args.component:
+            from setup_starship import plan as starship_plan
+            starship_plan(installation)
         if self.fonts:
             import tempfile
             from transactions import private_directory

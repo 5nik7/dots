@@ -1,5 +1,7 @@
 #compdef blastoff
-# Offline filenames only; no application execution or TOML parsing.
+# Offline filenames/catalog IDs; no application execution or TOML parsing.
+: ${_BLASTOFF_COMPLETION_SOURCE:=${(%):-%x}}
+[[ $_BLASTOFF_COMPLETION_SOURCE == /* ]] || _BLASTOFF_COMPLETION_SOURCE=$PWD/$_BLASTOFF_COMPLETION_SOURCE
 _blastoff() {
     emulate -L zsh
     setopt extendedglob
@@ -95,6 +97,11 @@ _blastoff() {
             compatible+=("$value")
         done
         candidates=("${compatible[@]}")
+    fi
+    if [[ $kind == backups && -f $_BLASTOFF_COMPLETION_SOURCE ]]; then
+        while IFS= read -r value; do
+            [[ ${#value} == 32 && $value == [a-f0-9]## ]] && candidates+=("$value")
+        done < <("${BLASTOFF_PYTHON:-python3}" -I -B -c 'import runpy,sys;from pathlib import Path;sys.argv=[str(Path(sys.argv[1]).resolve().parents[1]/"lib/completion_names.py"),"--shared",sys.argv[2]];runpy.run_path(sys.argv[0],run_name="__main__")' "$_BLASTOFF_COMPLETION_SOURCE" "$root" 2>/dev/null)
     fi
     if [[ -n $kind && -d $root && ! -L $root/$kind ]]; then
         files=("$root/$kind/"*.toml(N))

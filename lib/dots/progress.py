@@ -45,8 +45,10 @@ def clip(text, width):
 
 
 class Progress(ContextDecorator):
-    def __init__(self, label):
+    def __init__(self, label, *, marker_style='96', label_style='94'):
         self.label = label
+        self.marker_style = marker_style if re.fullmatch(r'[0-9;]{1,80}',marker_style) else '96'
+        self.label_style = label_style if re.fullmatch(r'[0-9;]{1,80}',label_style) else '94'
         self.owner = False
         self.worker = None
         self.done = threading.Event()
@@ -137,13 +139,13 @@ class Progress(ContextDecorator):
                 text, cells = clip(prefix + ''.join(text for text, _ in spans), width)
                 if color and len(prefix) < len(text):
                     remaining = len(text) - len(prefix)
-                    text = '\033[96m' + prefix
+                    text = '\033[' + self.marker_style + 'm' + prefix
                     for part, code in spans:
                         count = min(remaining, len(part))
                         if count:
                             # A span's attributes must not leak into the next one.
                             if not isinstance(label, str): text += '\033[0m'
-                            text += '\033[' + (code or '94') + 'm' + part[:count]
+                            text += '\033[' + (code or self.label_style) + 'm' + part[:count]
                         remaining -= count
                         if not remaining: break
                     text += '\033[0m'

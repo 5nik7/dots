@@ -29,18 +29,23 @@ def preview_command(root):
 
 # Only nonexecuting options with understood arity reach the child.
 VALUES = {'--layout','--height','--min-height','--margin','--padding','--border','--color',
-          '--info','--pointer','--marker','--separator','--scrollbar','--tabstop',
+          '--info','--pointer','--marker','--gutter','--gutter-raw','--separator','--scrollbar','--tabstop',
           '--style','--border-label','--border-label-pos','--list-border','--input-border','--header-border',
           '--hscroll-off','--scroll-off','--scheme','--algo','--tiebreak'}
 FLAGS = {'--cycle','--no-cycle','--no-mouse','--mouse','--no-bold','--bold','--no-unicode',
          '--unicode','--hscroll','--no-hscroll','--exact','--no-exact','--extended',
          '--no-extended','--ignore-case','--no-ignore-case','--smart-case','--literal',
-         '--no-literal','--no-sort','--sort','--tac','--no-tac','--reverse'}
+         '--no-literal','--no-sort','--sort','--tac','--no-tac','--reverse',
+         '--no-separator','--no-scrollbar','--ansi','--no-ansi'}
 ACTIONS = {'up','down','page-up','page-down','half-page-up','half-page-down','first','last',
            'backward-char','forward-char','backward-word','forward-word','beginning-of-line',
            'end-of-line','backward-delete-char','delete-char','backward-kill-word',
-           'kill-word','kill-line','unix-line-discard','clear-query','toggle-sort'}
+           'kill-word','kill-line','unix-line-discard','clear-query','toggle-sort',
+           'up-match','down-match','toggle-raw'}
 RESERVED = {'enter','esc','ctrl-c','ctrl-x','tab','shift-tab'}
+# These are deliberately supplied by this picker, not incompatible settings.
+OWNED_VALUES = {'--prompt','--preview','--preview-window','--header','--delimiter',
+                '--with-nth','--nth','--with-shell','--query','--pointer-label'}
 
 
 def safe_binding(value):
@@ -49,6 +54,7 @@ def safe_binding(value):
         if ':' not in binding:
             return False
         key, actions = binding.split(':',1)
+        key = key.lower()
         if key in RESERVED or not re.fullmatch(r'(?:ctrl-|alt-|shift-)?(?:[a-z0-9]|up|down|left|right|pgup|pgdn|home|end)', key):
             return False
         if not set(actions.split('+')) <= ACTIONS:
@@ -86,7 +92,7 @@ def option_words(source):
 
 def inherited_options(env, diagnostic=None):
     import stat
-    values, omitted = [], []
+    values, omitted, overridden = [], [], []
     sources = []
     if env.get('FZF_DEFAULT_OPTS_FILE'):
         try:
@@ -109,7 +115,7 @@ def inherited_options(env, diagnostic=None):
             omitted.append(label+': '+str(e)); continue
         i=0
         while i<len(words):
-            word=words[i]; word={'-e':'--exact','-i':'--ignore-case','+i':'--no-ignore-case'}.get(word,word)
+            word=words[i]; word={'-e':'--exact','-x':'--extended','-i':'--ignore-case','+i':'--no-ignore-case'}.get(word,word)
             flag,sep,value=word.partition('='); i+=1
             if flag in FLAGS and not sep:
                 values.append(flag)
@@ -125,7 +131,7 @@ def inherited_options(env, diagnostic=None):
                 if flag=='--bind':
                     bindings = value.split(',')
                     kept = [binding for binding in bindings if safe_binding(binding)]
-                    if len(kept) != len(bindings): omitted.append('--bind (reserved/executing action)')
+                    if len(kept) != len(bindings): overridden.append('--bind (picker-owned or non-navigation action)')
                     if not kept: continue
                     value = ','.join(kept)
                 # All display strings are untrusted; never replay terminal controls.
@@ -133,11 +139,13 @@ def inherited_options(env, diagnostic=None):
                     omitted.append(flag); continue
                 values.append(flag+'='+value)
             else:
-                omitted.append(flag)
+                (overridden if flag in OWNED_VALUES else omitted).append(flag)
                 if not sep and i<len(words) and not words[i].startswith('-'): i+=1
     if omitted and diagnostic:
         diagnostic('Incompatible/unreadable fzf settings ignored; use --verbose for details','warning')
         diagnostic('Ignored fzf options: '+', '.join(omitted))
+    if overridden and diagnostic:
+        diagnostic('Picker replaced inherited fzf options: '+', '.join(overridden))
     return values
 
 

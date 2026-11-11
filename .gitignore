@@ -80,6 +80,7 @@ bin-release/
 
 # Profile configuration mutation locks are local runtime state.
 /profiles/**/profile.lock
+/profiles/**/config.lock
 
 # Transaction locks for repository style preferences
 /default/*.lock

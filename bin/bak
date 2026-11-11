@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Resolve the selected launcher, not an inherited checkout variable.
+_bak_source=${BASH_SOURCE[0]}
+[[ $_bak_source == /* ]] || _bak_source=$PWD/$_bak_source
+_bak_links=0
+while [[ -L $_bak_source ]]; do
+  (( ++_bak_links <= 40 )) || { printf 'bak: executable symlink loop\n' >&2; exit 1; }
+  _bak_target=$(readlink -- "$_bak_source") || exit 1
+  if [[ $_bak_target == /* ]]; then _bak_source=$_bak_target
+  else _bak_source=${_bak_source%/*}/$_bak_target; fi
+done
+DOTS=$(cd -- "${_bak_source%/*}/.." && pwd -P) || exit 1
+export DOTS
+exec python3 -B "$DOTS/lib/dots/bak_cli.py" "$@"

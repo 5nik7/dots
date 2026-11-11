@@ -32,3 +32,5 @@ For a save-only request, report the resulting tree and saved IDs, then stop. For
 - For a genuine external blocker, append the reason and use `edit FULL_UUID --status blocked`. Continue independent authorized work. Reconcile partial implementation on resume and report final statuses, saved IDs, verification and outstanding work honestly.
 
 Do not substitute Codex's persistent `/goal` feature. For ordinary goal operations and field/recovery details, consult [dots-todo](../dots-todo/SKILL.md) and the scoped command's help.
+
+For command or user-facing script work, include the [command/script delivery gate](../../../agents/guides/commands.md#command-and-script-delivery) in the plan and tracked acceptance: six-shell completion including aliases, human presentation, useful menus, README/wiki and installer/bootstrap integration. Implement add/update decisions; record reasons for unchanged integrations and distinguish native checks from fixtures.

@@ -120,7 +120,8 @@ class SetupWizard(unittest.TestCase):
             installation.apply('install')
             values=Controls(self.repo).values['apps']['setup']
             self.assertEqual(values['components'],['core'])
-            self.assertEqual(json.loads(profile.read_text())['settings'],{})
+            self.assertNotIn('settings',json.loads(profile.read_text()))
+            self.assertEqual(json.loads((profile.parent/'config.json').read_text())['apps']['setup']['components'],['core'])
             with patch('config_refresh.refresh',side_effect=AssertionError('setup preferences refreshed live consumers')):
                 result=after_save(self.repo,previous)
             self.assertEqual(result['consumers'],[dict(app='setup',status='next invocation')])

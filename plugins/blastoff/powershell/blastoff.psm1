@@ -152,7 +152,7 @@ Register-ArgumentCompleter -Native -CommandName blastoff, Invoke-Blastoff -Scrip
         $kind = $null; $candidates = @()
     }
     # Only inspect filenames for existing-name operands. Destination names,
-    # module-save routes and preset names intentionally stay free text. Backup IDs are unverified filename pairs.
+    # module-save routes and preset names intentionally stay free text. Backup IDs come from the bounded catalog and legacy filename pairs.
     # Path operands are left to the shell; this is not config/TOML validation.
     if ($kind) {
         try {
@@ -181,50 +181,59 @@ Register-ArgumentCompleter -Native -CommandName blastoff, Invoke-Blastoff -Scrip
                 }
                 $root = [IO.Path]::GetFullPath($target, [IO.Path]::GetDirectoryName($item.FullName))
             }
-            $directory = Join-Path $root $kind
-            $unsafe = [IO.FileAttributes]::ReparsePoint -bor [IO.FileAttributes]::Device
-            $item = Get-Item -LiteralPath $directory -Force -ErrorAction Stop
-            if (-not $item.PSIsContainer -or ($item.Attributes -band $unsafe)) { return }
-            $cacheKey = $directory+'|'+$item.LastWriteTimeUtc.Ticks+'|'+$item.CreationTimeUtc.Ticks
-            if (-not $IsWindows -and -not $item.PSObject.Properties['UnixMode']) {
-                foreach ($name in @(Get-BlastoffLegacyCompletionNames -Root $root -Kind $kind -CacheKey $cacheKey)) {
-                    if ($kind -ceq 'backups' -and -not $literal -and $positionals[1] -ceq 'delete' -and $name -imatch '^(all|y|yes)$') { continue }
+            if ($kind -ceq 'backups') {
+                # Shared UUIDs and legacy pairs; helper reads a bounded catalog,
+                # never payloads. No persistent cache for a changing catalog.
+                foreach ($name in @(Get-BlastoffLegacyCompletionNames -Root $root -Kind $kind -CacheKey ([Guid]::NewGuid().ToString()))) {
+                    if (-not $literal -and $positionals[1] -ceq 'delete' -and $name -imatch '^(all|y|yes)$') { continue }
                     $candidates += "$prefix$name"
                 }
             } else {
-            $now = [DateTime]::UtcNow
-            if ($script:CompletionCache.ContainsKey($cacheKey) -and ($now-$script:CompletionCache[$cacheKey].Time).TotalSeconds -lt 2) {
-                $files = $script:CompletionCache[$cacheKey].Files
-            } else {
-                if ($script:CompletionCache.Count -ge 8) { $script:CompletionCache.Clear() }
-                $files = [Collections.Generic.List[object]]::new()
-                $timer = [Diagnostics.Stopwatch]::StartNew()
-                foreach ($candidatePath in [IO.Directory]::EnumerateFiles($directory, '*.toml')) {
-                    if ($files.Count -ge 4096 -or $timer.ElapsedMilliseconds -ge 100) { break }
-                    $candidateFile = Get-Item -LiteralPath $candidatePath -Force -ErrorAction SilentlyContinue
-                    if ($candidateFile) { $files.Add($candidateFile) }
+                $directory = Join-Path $root $kind
+                $unsafe = [IO.FileAttributes]::ReparsePoint -bor [IO.FileAttributes]::Device
+                $item = Get-Item -LiteralPath $directory -Force -ErrorAction Stop
+                if (-not $item.PSIsContainer -or ($item.Attributes -band $unsafe)) { return }
+                $cacheKey = $directory+'|'+$item.LastWriteTimeUtc.Ticks+'|'+$item.CreationTimeUtc.Ticks
+                if (-not $IsWindows -and -not $item.PSObject.Properties['UnixMode']) {
+                    foreach ($name in @(Get-BlastoffLegacyCompletionNames -Root $root -Kind $kind -CacheKey $cacheKey)) {
+                        if ($kind -ceq 'backups' -and -not $literal -and $positionals[1] -ceq 'delete' -and $name -imatch '^(all|y|yes)$') { continue }
+                        $candidates += "$prefix$name"
+                    }
+                } else {
+                $now = [DateTime]::UtcNow
+                if ($script:CompletionCache.ContainsKey($cacheKey) -and ($now-$script:CompletionCache[$cacheKey].Time).TotalSeconds -lt 2) {
+                    $files = $script:CompletionCache[$cacheKey].Files
+                } else {
+                    if ($script:CompletionCache.Count -ge 8) { $script:CompletionCache.Clear() }
+                    $files = [Collections.Generic.List[object]]::new()
+                    $timer = [Diagnostics.Stopwatch]::StartNew()
+                    foreach ($candidatePath in [IO.Directory]::EnumerateFiles($directory, '*.toml')) {
+                        if ($files.Count -ge 4096 -or $timer.ElapsedMilliseconds -ge 100) { break }
+                        $candidateFile = Get-Item -LiteralPath $candidatePath -Force -ErrorAction SilentlyContinue
+                        if ($candidateFile) { $files.Add($candidateFile) }
+                    }
+                    $script:CompletionCache[$cacheKey] = @{Time=$now;Files=$files.ToArray()}
                 }
-                $script:CompletionCache[$cacheKey] = @{Time=$now;Files=$files.ToArray()}
-            }
-            foreach ($file in $files) {
-                if ($file.Attributes -band $unsafe) { continue }
-                # Fail closed on Unix hosts lacking file-type metadata rather
-                # than offer a FIFO/device as a regular stored configuration.
-                if (-not $IsWindows) {
-                    if (-not $file.PSObject.Properties['UnixMode'] -or $file.UnixMode -notlike '-*') { continue }
+                foreach ($file in $files) {
+                    if ($file.Attributes -band $unsafe) { continue }
+                    # Fail closed on Unix hosts lacking file-type metadata rather
+                    # than offer a FIFO/device as a regular stored configuration.
+                    if (-not $IsWindows) {
+                        if (-not $file.PSObject.Properties['UnixMode'] -or $file.UnixMode -notlike '-*') { continue }
+                    }
+                    if ($file.Extension -cne '.toml') { continue }
+                    $name = $file.BaseName
+                    if ($name -cnotmatch '\A[A-Za-z0-9][A-Za-z0-9_-]{0,95}\z') { continue }
+                    if ($name -match '\A(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])\z') { continue }
+                    if ($kind -ceq 'backups') {
+                        if (-not $literal -and $positionals[1] -ceq 'delete' -and $name -match '^(all|y|yes)$') { continue }
+                        $paired = Get-Item -LiteralPath (Join-Path $directory ($name + '.json')) -Force -ErrorAction SilentlyContinue
+                        if (-not $paired -or $paired.PSIsContainer -or ($paired.Attributes -band $unsafe)) { continue }
+                        if (-not $IsWindows -and (-not $paired.PSObject.Properties['UnixMode'] -or $paired.UnixMode -notlike '-*')) { continue }
+                    }
+                    $candidates += "$prefix$name"
                 }
-                if ($file.Extension -cne '.toml') { continue }
-                $name = $file.BaseName
-                if ($name -cnotmatch '\A[A-Za-z0-9][A-Za-z0-9_-]{0,95}\z') { continue }
-                if ($name -match '\A(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])\z') { continue }
-                if ($kind -ceq 'backups') {
-                    if (-not $literal -and $positionals[1] -ceq 'delete' -and $name -match '^(all|y|yes)$') { continue }
-                    $paired = Get-Item -LiteralPath (Join-Path $directory ($name + '.json')) -Force -ErrorAction SilentlyContinue
-                    if (-not $paired -or $paired.PSIsContainer -or ($paired.Attributes -band $unsafe)) { continue }
-                    if (-not $IsWindows -and (-not $paired.PSObject.Properties['UnixMode'] -or $paired.UnixMode -notlike '-*')) { continue }
                 }
-                $candidates += "$prefix$name"
-            }
             }
         } catch {
             # Missing/inaccessible stores are ordinary empty completion sources.

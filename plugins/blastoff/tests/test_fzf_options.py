@@ -59,3 +59,25 @@ class FzfOptions(ReleaseHarness):
             status,out,err=self.run_tty(['pick','--fzf'])
         self.assertEqual(status,3);self.assertIn('fzf is required',err)
         self.assertEqual(before,self.tree())
+
+    def test_dots_defaults_override_picker_controls_without_warning(self):
+        calls=[]
+        defaults = "--style=default --layout=reverse --height=~90% --border=none --info=hidden --prompt=' 󰅂 ' --pointer='▎' --marker='▎' --gutter='▎' --gutter-raw='▎' --no-separator --no-scrollbar -x --smart-case --ansi --bind=Ctrl-X:toggle-preview,up:up-match,down:down-match,alt-r:toggle-raw --preview-window=right:hidden:50%:wrap-word:border-left --preview='preview.zsh {}'"
+        values=ui.inherited_options({'FZF_DEFAULT_OPTS':defaults},lambda *args:calls.append(args))
+        self.assertFalse(any(len(args)>1 and args[1]=='warning' for args in calls),calls)
+        self.assertIn('--extended',values)
+        self.assertIn('--bind=up:up-match,down:down-match,alt-r:toggle-raw',values)
+        self.assertNotIn('preview.zsh',' '.join(values))
+        self.assertTrue(calls)
+        import shutil,subprocess
+        executable=shutil.which('fzf')
+        if executable:
+            for columns in (40,80,120):
+                result=subprocess.run([executable,*values,'--filter=needle'],input='needle\n',
+                    env=dict(self.env,COLUMNS=str(columns),FZF_DEFAULT_OPTS='',FZF_DEFAULT_OPTS_FILE=''),
+                    text=True,capture_output=True,timeout=5)
+                self.assertEqual(result.returncode,0,result.stderr)
+                self.assertEqual(result.stdout,'needle\n')
+        calls.clear()
+        ui.inherited_options({'FZF_DEFAULT_OPTS':'"unterminated'},lambda *args:calls.append(args))
+        self.assertTrue(any(len(args)>1 and args[1]=='warning' for args in calls))

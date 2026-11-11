@@ -3,7 +3,6 @@
   "id": "termux",
   "alias": "DROIDOTS",
   "description": "Android and Termux defaults",
-  "settings": {},
   "files": {
     "termux": [
       {
@@ -418,6 +417,22 @@
         "strategy": "directory-link",
         "app": "codex",
         "category": "skill"
+      },
+      {
+        "id": "figlet-dots",
+        "source": "config/figlet/dots.flf",
+        "target": "${PREFIX}/share/figlet/dots.flf",
+        "app": "figlet",
+        "category": "config",
+        "strategy": "link"
+      },
+      {
+        "id": "figlet-dots-mixed",
+        "source": "config/figlet/dots-mixed.flf",
+        "target": "${PREFIX}/share/figlet/dots-mixed.flf",
+        "app": "figlet",
+        "category": "config",
+        "strategy": "link"
       }
     ],
     "nvim": [
@@ -433,65 +448,5 @@
         ]
       }
     ]
-  },
-  "apps": {
-    "fzf": {
-      "colors": {
-        "prompt": "accent",
-        "fg+": "accent",
-        "header": "muted"
-      }
-    },
-    "cli": {
-      "logo_gradient": "installer"
-    },
-    "fonts": {
-      "list_details": "full"
-    },
-    "tmux": {
-      "indicators": {
-        "copy": {
-          "text": "C"
-        },
-        "prefix": {
-          "text": "PRFX"
-        }
-      }
-    }
-  },
-  "formatting": {
-    "apps": {
-      "todo": {
-        "tab_width": 2
-      },
-      "menu": {
-        "tab_width": 2,
-        "popup": {
-          "width": "fit",
-          "border": "sharp"
-        }
-      },
-      "cli": {
-        "indent": 2,
-        "tab_width": 2
-      },
-      "tmux": {
-        "battery": {
-          "before": " ",
-          "after": " "
-        }
-      }
-    }
-  },
-  "colors": {
-    "apps": {
-      "menu": {
-        "popup": {
-          "border": {
-            "fg": "lighter_background"
-          }
-        }
-      }
-    }
   }
 }

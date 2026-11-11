@@ -1,4 +1,5 @@
 """Explicitly reviewed removal of manifest-disabled pip source installations."""
+from .common import human_message
 import hashlib
 import json
 from pathlib import Path
@@ -92,7 +93,7 @@ def display(path, rows, cfg):
     for row in rows:
         status = 'can select for removal' if row['eligible'] else row['reason']
         text = row['name']+' · '+row['scope']+' · '+status
-        if ui: ui.text(text, 'identity' if row['eligible'] else 'muted')
+        if ui: ui.row([(row['name'],'package'),(text[len(row['name']):],'identity' if row['eligible'] else 'muted')])
         else: print('  '+clean(text))
     if not rows:
         if ui: ui.text('No disabled source installs in this manifest.', 'muted')
@@ -133,14 +134,14 @@ def cli(args, cfg):
     from .ui import pick
     selected = pick(candidates, backend, dict(cfg, external_detection=False))
     if not selected:
-        print('Cancelled; no packages changed.'); return 0
+        human_message('Cancelled; no packages changed.','muted'); return 0
     names = list(dict.fromkeys(p.name for p in selected))
     if any(n not in proofs for n in names): raise Error('selection is not in the reviewed cleanup candidates')
     # Native uninstall only. Install/update recipes do not authorize removal.
     item = workflows.plan(backend, 'uninstall', names, cfg, yes=True)
     workflows.display(item, cfg)
     if not workflows.confirm():
-        print('Cancelled; no packages changed.'); return 0
+        human_message('Cancelled; no packages changed.','muted'); return 0
     check()
     with budget(45), workflows.progress('Rechecking source install ownership', cfg): fresh = provenance()
     for name in names:
@@ -153,5 +154,5 @@ def cli(args, cfg):
     with budget(45): remaining = {policies.identity(p.name,'pip') for p in backend.installed()}
     if any(policies.identity(n,'pip') in remaining for n in names):
         raise Error('some selected packages remain installed; inspect the native uninstall result')
-    print('Removed '+str(len(names))+' package(s). Manifest entries retained.')
+    human_message('Removed '+str(len(names))+' package(s). Manifest entries retained.','success')
     return 0

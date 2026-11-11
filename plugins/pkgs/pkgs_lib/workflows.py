@@ -1,4 +1,5 @@
 """Shared package plans and sequential execution, separate from file rollback."""
+from .common import human_message
 from dataclasses import dataclass, field
 from contextlib import nullcontext
 import os
@@ -36,8 +37,10 @@ def progress(label, cfg):
     try:
         from . import reports  # establishes the shared renderer import path
         from progress import Progress, configure
+        from .presentation import styles
         configure(True)
-        return Progress(label)
+        colors=styles()
+        return Progress(label,marker_style=colors['spinner'],label_style=colors['progress'])
     except (ImportError, OSError): return nullcontext()
 
 
@@ -46,6 +49,10 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
     explicit = bool(names)
     skipped = []
     policy = cfg.get('policies', {}).get(backend.name, {})
+    backend.automatic_upgrade = action == 'upgrade' and not explicit
+    backend.update_system = (backend.name == 'gem' and backend.automatic_upgrade and
+                             cfg.get('upgrade', {}).get('gem_system', True) and
+                             'replace' not in policy.get('upgrade', {}))
     with budget(45), progress('Preparing '+action+' · '+backend.name, cfg):
         if action == 'uninstall':
             installed = {policies.identity(p.name, backend.name) for p in backend.installed()}
@@ -63,11 +70,11 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
                 else:
                     names = [p.name for p, _, reason in rows if not reason]
                     skipped += [dict(package=p.name, reason=reason) for p, _, reason in rows if reason]
-                if not names: return Plan(backend, action, skipped=skipped)
+                if not names and not backend.update_system: return Plan(backend, action, skipped=skipped)
         if action in ('install','upgrade'):
             names, blocked = policies.selected(cfg, backend.name, names, override=override, explicit=explicit)
             skipped += [dict(package=n, reason='skipped by policy') for n in blocked]
-            if blocked and not names: return Plan(backend, action, skipped=skipped)
+            if blocked and not names and not backend.update_system: return Plan(backend, action, skipped=skipped)
         if backend.name == 'go' and action == 'upgrade' and 'replace' not in policy.get(action, {}):
             # Reuse the read-only version comparison from upgrade --list.
             # Replacement recipes own their update/rebuild semantics.
@@ -193,15 +200,15 @@ def execute(backend, action, names, args, cfg):
                 upgrade_output.packages(cfg, 'Manager', [backend.name])
                 upgrade_output.packages(cfg, 'Remove', item.names)
                 if not confirm(args.yes):
-                    print('Cancelled; no packages changed.'); return 0
+                    human_message('Cancelled; no packages changed.','muted'); return 0
             return apply_compact(item, cfg)
     display(item, cfg)
     if args.dry_run:
-        print('Dry run: no packages changed.')
+        human_message('Dry run: no packages changed.','muted')
         return 0
     if not item.commands: return 0
     if action not in UNATTENDED_ACTIONS and not confirm(args.yes):
-        print('Cancelled; no packages changed.'); return 0
+        human_message('Cancelled; no packages changed.','muted'); return 0
     return apply(item, cfg)
 
 
@@ -210,6 +217,9 @@ def installed_versions(backend):
     try:
         with budget(15):
             rows = backend.installed()
+            if getattr(backend, 'update_system', False):
+                from .common import Package, run
+                rows = [*rows, Package('RubyGems', run(['gem', '--version'], env=getattr(backend,'operation_env',None)).strip())]
         versions = {}
         for package in rows:
             if package.details.get('disabled_reason'): continue
@@ -227,6 +237,7 @@ def changed_packages(item, before, after):
     if before is None or after is None: return None
     manager = item.backend.name
     selected = {policies.identity(name, manager) for name in item.names}
+    if selected and getattr(item.backend,'update_system',False): selected.add('RubyGems')
     skipped = {policies.identity(row['package'], manager) for row in item.skipped}
     def aliases(name):
         return {name, name.partition(':')[0]} if manager == 'apt' else {name}
@@ -297,7 +308,7 @@ def upgrade(args, cfg):
             else: print('pkgs: '+manager+': '+str(error), file=sys.stderr)
             entries.append((manager, 'failed')); failed = True
     if compact:
-        if not entries: print('No supported user-wide managers found.')
+        if not entries: human_message('No supported user-wide managers found.','muted')
         return int(failed)
     from .reports import report
     ui = report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color','auto'))
@@ -307,5 +318,5 @@ def upgrade(args, cfg):
     else:
         print('Upgrade summary')
         for manager, status in entries: print('  '+manager+': '+status)
-    if not entries: print('No supported user-wide managers found.')
+    if not entries: human_message('No supported user-wide managers found.','muted')
     return int(failed)

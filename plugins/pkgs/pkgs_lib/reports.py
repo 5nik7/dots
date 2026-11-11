@@ -3,7 +3,8 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'lib/dots'))
-from plugin_presentation import report, color_mode
+from plugin_presentation import color_mode
+from .presentation import report
 from resources import cells
 from .grammar import COMMANDS, DESCRIPTION, MANAGERS
 
@@ -85,12 +86,12 @@ def packages(ui, rows, backend, *, installed=False):
         name, version = ui.ui.clean(item.name), ui.ui.clean(item.version)
         state = ('[i]' if item.installed else 'not installed') + (' [e]' if item.external else '')
         if ui.ui.width >= 80 and cells(name) <= name_width and cells(version) <= 18:
-            ui.row([(name + ' ' * (name_width - cells(name) + 2), 'identity'),
-                    (version + ' ' * (20 - cells(version)), 'value'),
+            ui.row([(name + ' ' * (name_width - cells(name) + 2), 'package'),
+                    (version + ' ' * (20 - cells(version)), 'version'),
                     (state, 'success' if item.installed else 'muted')])
         else:
-            ui.text(name, 'identity')
-            ui.field('Version', version or 'unavailable')
+            ui.text(name, 'package')
+            ui.field('Version', version or 'unavailable', 'version')
             ui.field('Status', state, 'success' if item.installed else 'muted')
         if item.description:
             ui.row([(item.description, 'muted')], indent=4)

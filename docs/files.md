@@ -344,9 +344,10 @@ cross-platform state access. Historical journals are immutable. Use the returned
 
 IDs, applications and categories use lowercase letters, digits, `_` and `-`,
 starting with a letter. Sources stay repository-relative without `..`. Targets
-start with `${HOME}`, `${CONFIG}`, `${BIN}` or `${TERMUX}` and contain no traversal.
+start with `${HOME}`, `${CONFIG}`, `${BIN}`, `${TERMUX}` or `${PREFIX}` on POSIX and contain no traversal.
 CONFIG uses XDG_CONFIG_HOME or HOME/.config; BIN is HOME/.local/bin; TERMUX is
 HOME/.termux and resolves only on Termux. A null target records an unmapped source.
+PREFIX resolves the explicit Termux `PREFIX` environment value and is unmapped on other platforms or when unset. It must be an absolute non-root directory without traversal or control characters. Absolute paths beneath it can be converted back to `${PREFIX}` by mapping/registration commands. Existing Windows application destination tokens remain supported.
 Catalog and lock symlinks are refused. Source symlinks remain observable data.
 
 Resources are never silently overridden by repository order. Exact target claims

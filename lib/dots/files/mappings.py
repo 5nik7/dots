@@ -23,12 +23,12 @@ def target_spec(catalog, value):
         return value
     path = Path(os.path.abspath(os.path.expanduser(value)))
     roots = []
-    for token in ('CONFIG', 'BIN', 'TERMUX', 'APPDATA', 'LOCALAPPDATA', 'NVIM_CONFIG', 'HOME'):
+    for token in ('CONFIG', 'BIN', 'TERMUX', 'PREFIX', 'APPDATA', 'LOCALAPPDATA', 'NVIM_CONFIG', 'HOME'):
         base = catalog.target('${' + token + '}')
         if base and path.is_relative_to(Path(base)):
             roots.append((len(Path(base).parts), token, Path(base)))
     if not roots:
-        raise ValueError('target must be within a supported HOME/XDG root or use a destination template')
+        raise ValueError('target must be within a supported destination root or use a destination template')
     _, token, base = max(roots, key=lambda item: item[0])
     suffix = path.relative_to(base).as_posix()
     return '${' + token + '}' + ('/' + suffix if suffix != '.' else '')

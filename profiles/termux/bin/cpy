@@ -1,28 +1,16 @@
 #!/data/data/com.termux/files/usr/bin/sh
-
-set -e -u
-
-SCRIPTNAME=termux-clipboard-set
-show_usage() {
-  echo "Usage: $SCRIPTNAME [text]"
-  echo "Set the system clipboard text. The text to set is either supplied as arguments or read from stdin if no arguments are given."
-  exit 0
-}
-
-while getopts :h option; do
-  case "$option" in
-  h) show_usage ;;
-  ?)
-    echo "$SCRIPTNAME: illegal option -$OPTARG"
-    exit 1
-    ;;
+# Compatibility entry point; the shared command selects the native clipboard.
+_clipboard_source=$0
+case $_clipboard_source in /*) ;; *) _clipboard_source=$PWD/$_clipboard_source ;; esac
+_clipboard_links=0
+while [ -L "$_clipboard_source" ]; do
+  _clipboard_links=$((_clipboard_links + 1))
+  [ "$_clipboard_links" -le 40 ] || { printf 'cpy: executable symlink loop\n' >&2; exit 1; }
+  _clipboard_target=$(readlink -- "$_clipboard_source") || exit 1
+  case $_clipboard_target in
+    /*) _clipboard_source=$_clipboard_target ;;
+    *) _clipboard_source=${_clipboard_source%/*}/$_clipboard_target ;;
   esac
 done
-shift $((OPTIND - 1))
-
-CMD="/data/data/com.termux/files/usr/libexec/termux-api Clipboard -e api_version 2 --ez set true"
-if [ $# = 0 ]; then
-  $CMD
-else
-  echo -n "$@" | $CMD
-fi
+_clipboard_root=$(CDPATH='' cd -- "${_clipboard_source%/*}/../../.." && pwd -P) || exit 1
+exec bash "$_clipboard_root/scripts/cpy" "$@"

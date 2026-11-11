@@ -41,7 +41,17 @@ _quiet = contextvars.ContextVar('pkgs_quiet', default=False)
 
 def diagnostic(message, warning=False):
     if _debug.get() or (warning and not _quiet.get()):
-        print('pkgs: ' + clean(message), file=sys.stderr, flush=True)
+        human_message('pkgs: ' + clean(message), 'warning' if warning else 'muted',stream=sys.stderr)
+
+
+def human_message(text, role='value', *, stream=None):
+    stream=stream or sys.stdout
+    if _quiet.get(): print(text,file=stream,flush=True)
+    else:
+        try:
+            from .presentation import message
+        except ImportError: print(text,file=stream,flush=True)
+        else: message(text,role,stream)
 
 
 @contextlib.contextmanager
@@ -80,7 +90,7 @@ def phase(label):
     # Only delayed human stderr output; never touch candidates or JSON stdout.
     def progress():
         if not done.wait(0.5):
-            print('pkgs: ' + label + '…', file=sys.stderr, flush=True)
+            human_message('pkgs: ' + label + '…','progress',stream=sys.stderr)
     thread = None
     if not _quiet.get() and sys.stderr.isatty():
         thread = threading.Thread(target=progress, daemon=True)

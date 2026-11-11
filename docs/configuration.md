@@ -1,5 +1,9 @@
 # Configuration: inspect, change and explain
 
+## Clipboard preferences
+
+`apps.clipboard` controls optional copy recording, bounded retention, deduplication, exclusions, watcher polling and previews. `colors.apps.clipboard.*` and `icons.menu.clipboard` style human reports; existing CLI/menu formatting and popup preferences remain authoritative. See the [defaults and activation table](clipboard.md#configuration-and-storage). Config exposes these through its normal hierarchy, validation, reset, completion and browser. Saves apply on the next invocation or watcher poll without publishing a theme or starting capture.
+
 `dots config` manages Dots preferences and supported application controls. Use `dots files` when you want to manage an application's configuration file as a resource, and `dots theme` when you want to select or publish a palette. These operations have different owners and recovery records.
 
 ## Inspect before changing
@@ -18,7 +22,7 @@ dots profile layers
 
 For shared colors, icons, formatting and application preferences, the active profile overrides its parent layers, which override shared defaults. Within a layer, an application-specific override wins over the general value. Inheritance is fieldwise: changing one style field does not erase the others. Unset/null resets supported fields to their inherited value; `false` and an empty icon remain explicit values where supported.
 
-Use `--profile ID` to address another profile or `--defaults` to edit shared defaults; these scopes cannot be combined. `profile.alias` does not inherit. Native weather preferences have their own TOML owner. Shell startup settings also support explicit environment overrides and legacy settings files, as explained in [environment precedence](shell-environment.md#settings). See [profile configuration](profiles.md#profile-configuration) and [data contracts](specification.md) for exact rules.
+Unqualified `set`/`unset` and Config browser edits save Dots preferences to shared defaults. Use `--profile ID` to edit that profile instead; `--defaults` makes the shared target explicit. These scopes cannot be combined. Ordinary `get`/`list` still inspect effective active-profile values; `--defaults` inspects shared values only. `profile.alias` does not inherit. Native Weather, pkgs and Codex-alert preferences retain their native file owners, including for unqualified writes. Shell startup settings also support explicit environment overrides and legacy settings files, as explained in [environment precedence](shell-environment.md#settings). See [profile configuration](profiles.md#profile-configuration) and [data contracts](specification.md) for exact rules.
 
 ## Edit a preference
 
@@ -32,9 +36,11 @@ dots config set colors.apps.todo.field.acceptance.value.fg
 
 The last example opens that option's editor in a usable terminal. Color editors retain semantic roles, `palette.NAME` references and global references such as `colors.daylight.day.fg`. Icons offer the cached Fonts glyph search or literal input. Other typed editors use the key's declared choices or input rules. Explicit values remain available for scripts; omitted values in noninteractive/data/dry-run calls are errors.
 
-Bare `dots config` opens List/Get/Set. List is read-only. All shows meaningful endpoints across categories: individual icons/settings and grouped color styles such as `colors.apps.todo.field.alias.value`. A selected category immediately shows all its endpoints. Enter opens a style's fg/bg/attribute fields or the selected value's details/actions; Escape returns to the endpoint list. Alt-F opens category/subcategory filters and sorting (key A–Z, Z–A, or local overrides first). Alt-G changes category directly, Alt-A toggles individual leaf fields, Alt-S changes profile/default scope, and F1 opens help. Queries and focus are remembered. Reviewed edits keep Cancel and Save visible, with Cancel selected initially; Alt-P toggles the preview. Cancellation leaves storage unchanged. The [popup guide](profiles.md#configuration-popup) covers the complete interaction.
+Bare `dots config` opens List/Get/Set/Import appearance in shared-default scope. List is read-only. All shows meaningful endpoints across categories: individual icons/settings and grouped color styles such as `colors.apps.todo.field.alias.value`. A selected category immediately shows all its endpoints. Enter opens a style's fg/bg/attribute fields or the selected value's details/actions; Escape returns to the endpoint list. Alt-F opens category/subcategory filters and sorting (key A–Z, Z–A, or local overrides first). Alt-G changes category directly, Alt-A toggles individual leaf fields, Alt-S changes profile/default scope, and F1 opens help. Queries and focus are remembered. Reviewed edits keep Cancel and Save visible, with Cancel selected initially; Alt-P toggles the preview. Cancellation leaves storage unchanged. The [popup guide](profiles.md#configuration-popup) covers the complete interaction.
 
 `dots config list` prints a categorized terminal report with the profile alias and source path, file-owner counts and corresponding `get` commands, and recursively indented settings, icons, colors, formatting and application controls. Color records combine their fields on one row, for example `high fg:warning,bold,underline` or `selection fg:bright_foreground,bg:selection_background,bold`. The value previews that exact color/style; field names remain blue. Explicit false/null fields remain visible. Icons show their resolved preview color with a muted annotation: native direct color/style names, or the configuration key supplying the color. Menu icon previews use `colors.apps.menu.icon` (theme accent by default), then any consumed icon-specific and representative per-entry overrides, matching the shared menu renderer. This also covers Keys application categories, Weather/navigation choices and launcher icons. Semantic status samples name the actual status or label control; activity/stash/separator samples identify their tmux or Gitmux context. Icons with only the ordinary text-foreground fallback have no color-key annotation. App-specific entries use their corresponding app override. Tmux clock/battery samples follow their component styles; window/session samples identify the active state in their annotation. Native weather icons use their native style and fallback rules under Icons; their stored keys remain `apps.wttr.icons` and `apps.wttr.night_icons`. File and Git samples read the existing published theme tables and label their representative filename/type or repository context. Annotations name the native `file-colors.toml` field (following `use` inheritance) or a Vivid suffix rule, rather than inventing a `dots config` key. These published samples are shown only for the active profile; saved native rule edits require the usual explicit theme publication. Other consumers may use a different context. Unbound navigation placeholders remain unannotated. Shared CLI formatting and color/icon preferences apply. JSON and ordinary redirected listings retain their existing formats.
+
+Config menu previews, Details and Save/Reset reviews show paths under the current home directory as `~/…` (`~` for home itself). This includes source/destination files, winning sources, file mappings and path-valued settings, including nested lists and objects. File colors and icons still describe the original resource. Paths outside home, relative paths and literal `${HOME}` references retain their spelling; editors, saved values and scalar/JSON output retain the full original values.
 
 ## List categories and fallback values
 
@@ -175,10 +181,12 @@ If a value appears unchanged, check its effective scope and source with `explain
 
 Config mutations use the existing guarded transaction workflow. Preserve the reported transaction ID and use `dots files history` / `dots files undo ID` for supported recovery; undo refuses destructive restoration after drift. File mappings, native app files and published themes retain their respective ownership rules.
 
+Package output roles and their consumers are listed in [package output colors](packages.md#output-colors). They inherit profile colors and apply on the next invocation. Native `apps.pkgs` behavior controls remain in pkgs JSON, including the default-enabled `upgrade.gem_system` self-update.
+
 ## Canonical keys and completion
 
-Feature styles use `colors.apps.todo`, `colors.apps.fonts`, `colors.apps.wiki`
-and `colors.apps.menu` for both reports and popups. Popup geometry uses
+Feature styles use `colors.apps.todo`, `colors.apps.fonts`, `colors.apps.wiki`,
+`colors.apps.pkgs` and `colors.apps.menu` for both reports and popups. Popup geometry uses
 `formatting.apps.menu.popup`, popup colors use `colors.apps.menu.popup`, and
 Font preview placement uses `formatting.apps.fonts.preview`. Native FZF slots,
 Neovim highlight names, weather/pkgs settings, environment names and file IDs
@@ -222,3 +230,50 @@ consumer values before saving, preserves TOML comments and unrelated fields,
 rejects conflicting aliases and stale inputs, and is a no-op when repeated.
 Use the reported transaction with `dots files undo ID` for guarded recovery.
 Migration does not activate a profile, select a theme or reload a shell.
+
+
+Backup defaults are `apps.bak.store="~/.bakstore"`, `apps.bak.location="store"`, and `apps.bak.mode="move"`. Alternatives are adjacent location and copy mode. Profile inheritance and explicit flags apply; changes take effect next invocation. There is no saved backup opt-out. Reports use existing CLI presentation controls; link rows use resource styles and `icons.operations.link`.
+
+## Preference files and appearance import
+
+| Data | Shared defaults | Profile overrides |
+| --- | --- | --- |
+| Behavior, formatting, shell settings | `default/config.json` | `profiles/NAME/config.json` |
+| Colors and color attributes | `default/colors.toml` | `profiles/NAME/colors.toml` |
+| Icons | `default/icons.toml` | `profiles/NAME/icons.toml` |
+| Identity, inheritance, environment, paths and managed mappings | — | `profiles/NAME/profile.json` |
+
+The typed color/icon controls use a reserved `[controls]` TOML table with quoted
+public Config keys. `{ inherit = true }` declares a nullable control; `{}` declares
+an extensible map. Ordinary style tables retain their existing syntax. Use
+`dots config` for validated edits; there is one stored declaration per scope.
+Legacy inline profile preferences remain readable, with separated files winning
+at the same layer. Existing file-style catalogs, Git configuration, theme
+connectors and native application files retain their specialized owners.
+
+```sh
+dots config set apps.cli.logo_gradient installer
+dots config set colors.ui.heading.fg cyan --profile windows
+dots config unset colors.ui.heading.fg --profile windows
+dots config import termux --profile windows --dry-run
+dots config import termux --profile windows --apply --yes
+dots config import termux --apply --yes  # target shared defaults
+dots config migrate --layout --all-profiles
+dots config migrate --layout --all-profiles --apply --yes
+```
+
+Import merges source-profile appearance declarations (including inherited profile
+customizations, excluding shared defaults) into the target. Imported values win;
+unrelated target fields survive. `SOURCE=defaults` explicitly copies shared
+appearance. Colors, icons, formatting and portable display controls (CLI logo, Fonts/Wiki
+display and tmux clock/session/indicator appearance) are included. Shell settings, file mappings, environment, package choices, backup
+locations and native application files are excluded. Config → Import appearance
+uses the same guarded preview and Cancel/Save review; noninteractive imports
+preview unless `--apply --yes` is supplied. Imports and layout migrations do not
+publish themes or reload applications; new invocations read saved preferences.
+Use the existing explicit refresh command when published visuals need updating.
+
+Layout migration preserves effective values, strips only preference groups from
+manifests, and supports repeat no-op and ordinary `dots files undo TRANSACTION`.
+The repository's Termux appearance has been promoted to shared defaults; redundant
+Termux declarations were removed so future shared edits take effect there.

@@ -26,6 +26,33 @@ class RegistrationTests(unittest.TestCase):
     files = backend.ProfileBackend.files
     undo = backend.ProfileBackend.undo
 
+    def test_termux_prefix_registration_receipt_noop_and_undo(self):
+        prefix = self.home / 'prefix space ü' / 'usr'
+        self.env.update(PREFIX=str(prefix), TERMUX_VERSION='fixture', DOTS_PROFILE='termux')
+        os.environ.update(self.env)
+        self.platform = 'termux'
+        self.path = self.root / 'profiles/termux/profile.json'
+        source = self.root / 'config/figlet/dots.flf'
+        source.parent.mkdir()
+        source.write_text('fixture font\n')
+        target = prefix / 'share/figlet/dots.flf'
+        before = json.loads(self.registry.read_text()), json.loads(self.path.read_text())
+        args = ('add', str(source), '--target', str(target), '--json')
+        preview = json.loads(self.files(*args, '--dry-run').stdout)
+        self.assertEqual(preview['items'][0]['status'], 'register-and-link')
+        self.assertFalse(prefix.exists())
+        result = json.loads(self.files(*args, '--yes').stdout)
+        self.assertEqual(target.resolve(), source)
+        row = next(r for r in json.loads(self.path.read_text())['files']['dots'] if r['source'] == 'config/figlet/dots.flf')
+        self.assertEqual(row['target'], '${PREFIX}/share/figlet/dots.flf')
+        receipt = json.loads((state_root() / 'installation.json').read_text())
+        self.assertIn(str(target), receipt['entries'])
+        self.assertEqual(json.loads(self.files(*args, '--yes').stdout)['status'], 'unchanged')
+        self.undo(result['id'])
+        self.assertFalse(target.is_symlink())
+        self.assertTrue(source.is_file())
+        self.assertEqual((json.loads(self.registry.read_text()), json.loads(self.path.read_text())), before)
+
     def prepare(self, name='example ü', directory=False, locations=True):
         source = self.root / 'config' / name
         if directory:

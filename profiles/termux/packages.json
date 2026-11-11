@@ -10,7 +10,7 @@
       "packages": [
         {
           "name": "7zip",
-          "observed_version": "26.05",
+          "observed_version": "26.06",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -73,7 +73,7 @@
         },
         {
           "name": "apt",
-          "observed_version": "2.8.1-2",
+          "observed_version": "2.8.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -108,7 +108,7 @@
         },
         {
           "name": "atuin",
-          "observed_version": "18.24.1",
+          "observed_version": "18.24.6",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -227,7 +227,7 @@
         },
         {
           "name": "ca-certificates",
-          "observed_version": "1:2026.10.20-1",
+          "observed_version": "1:2026.11.05-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -241,7 +241,7 @@
         },
         {
           "name": "calcurse",
-          "observed_version": "4.8.2-2",
+          "observed_version": "4.9.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -262,7 +262,7 @@
         },
         {
           "name": "ccache",
-          "observed_version": "4.14.2-1",
+          "observed_version": "4.14.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -276,7 +276,7 @@
         },
         {
           "name": "chromium-host-tools",
-          "observed_version": "156.0.8078.79",
+          "observed_version": "157.0.8103.50",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -311,14 +311,14 @@
         },
         {
           "name": "command-not-found",
-          "observed_version": "3.5.0-18",
+          "observed_version": "3.5.0-19",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "composer",
-          "observed_version": "2.11.1",
+          "observed_version": "2.11.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -367,7 +367,7 @@
         },
         {
           "name": "desktop-file-utils",
-          "observed_version": "0.28-3",
+          "observed_version": "0.29",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -430,14 +430,14 @@
         },
         {
           "name": "dua",
-          "observed_version": "2.46.0",
+          "observed_version": "3.0.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "dust",
-          "observed_version": "1.2.6",
+          "observed_version": "1.2.7",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -479,7 +479,7 @@
         },
         {
           "name": "emscripten",
-          "observed_version": "6.0.13",
+          "observed_version": "7.0.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -493,7 +493,7 @@
         },
         {
           "name": "exiftool",
-          "observed_version": "13.60",
+          "observed_version": "13.63",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -514,14 +514,14 @@
         },
         {
           "name": "fastfetch",
-          "observed_version": "2.70.0",
+          "observed_version": "2.71.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "fd",
-          "observed_version": "10.5.0",
+          "observed_version": "10.5.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -612,7 +612,7 @@
         },
         {
           "name": "fzf",
-          "observed_version": "0.74.5-1",
+          "observed_version": "0.75.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -640,14 +640,14 @@
         },
         {
           "name": "ghostwriter",
-          "observed_version": "26.08.2",
+          "observed_version": "26.08.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "git",
-          "observed_version": "2.56.0",
+          "observed_version": "2.56.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -731,7 +731,7 @@
         },
         {
           "name": "gojq",
-          "observed_version": "0.12.19-1",
+          "observed_version": "0.12.20",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -766,7 +766,7 @@
         },
         {
           "name": "gradle",
-          "observed_version": "1:9.8.2",
+          "observed_version": "1:9.9.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -955,7 +955,7 @@
         },
         {
           "name": "kitty",
-          "observed_version": "0.49.2-1",
+          "observed_version": "0.50.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -969,14 +969,14 @@
         },
         {
           "name": "kvantum",
-          "observed_version": "1.1.8",
+          "observed_version": "1.1.9",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "lazygit",
-          "observed_version": "0.66.2-1",
+          "observed_version": "0.66.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1088,7 +1088,7 @@
         },
         {
           "name": "libiconv",
-          "observed_version": "1.19",
+          "observed_version": "1.19.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1102,7 +1102,7 @@
         },
         {
           "name": "liblz4",
-          "observed_version": "1.10.0-1",
+          "observed_version": "1.11.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1137,14 +1137,14 @@
         },
         {
           "name": "libnghttp2",
-          "observed_version": "1.70.0",
+          "observed_version": "1.71.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "libnghttp3",
-          "observed_version": "1.18.0",
+          "observed_version": "1.19.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1158,7 +1158,7 @@
         },
         {
           "name": "libqtxdg",
-          "observed_version": "4.4.0-3",
+          "observed_version": "4.5.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1389,14 +1389,14 @@
         },
         {
           "name": "marksman",
-          "observed_version": "2026.02.08",
+          "observed_version": "2026.02.08-2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "mdcat",
-          "observed_version": "2.19.0",
+          "observed_version": "2.20.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1424,7 +1424,7 @@
         },
         {
           "name": "mise",
-          "observed_version": "2026.10.25",
+          "observed_version": "2026.11.6",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1438,7 +1438,7 @@
         },
         {
           "name": "mpd",
-          "observed_version": "0.24.18",
+          "observed_version": "0.24.18-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1452,7 +1452,7 @@
         },
         {
           "name": "nala",
-          "observed_version": "0.18.2-armbuntu-0",
+          "observed_version": "0.18.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1466,7 +1466,7 @@
         },
         {
           "name": "ncmpcpp",
-          "observed_version": "0.10.1-10",
+          "observed_version": "0.10.1-11",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1550,14 +1550,14 @@
         },
         {
           "name": "nodejs",
-          "observed_version": "26.13.0",
+          "observed_version": "26.13.0-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "nushell",
-          "observed_version": "0.116.1",
+          "observed_version": "0.117.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1571,14 +1571,14 @@
         },
         {
           "name": "oh-my-posh",
-          "observed_version": "31.9.1-1",
+          "observed_version": "32.0.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "ollama",
-          "observed_version": "0.40.13",
+          "observed_version": "0.40.16",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1599,7 +1599,7 @@
         },
         {
           "name": "openjdk-21",
-          "observed_version": "21.0.13-1",
+          "observed_version": "21.0.13-2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1613,7 +1613,7 @@
         },
         {
           "name": "openssh",
-          "observed_version": "10.6p1-3",
+          "observed_version": "10.6p2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1704,14 +1704,14 @@
         },
         {
           "name": "perl",
-          "observed_version": "5.44.0",
+          "observed_version": "5.44.0-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "php",
-          "observed_version": "8.5.12-1",
+          "observed_version": "8.5.12-2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1767,7 +1767,7 @@
         },
         {
           "name": "proot",
-          "observed_version": "5.1.107.101",
+          "observed_version": "5.1.107.102",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1830,7 +1830,7 @@
         },
         {
           "name": "python",
-          "observed_version": "3.14.8",
+          "observed_version": "3.14.10",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1865,7 +1865,7 @@
         },
         {
           "name": "python-pip",
-          "observed_version": "26.2.2-2",
+          "observed_version": "26.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1879,7 +1879,7 @@
         },
         {
           "name": "python-ruff",
-          "observed_version": "0.17.3",
+          "observed_version": "0.17.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1914,7 +1914,7 @@
         },
         {
           "name": "qtxdg-tools",
-          "observed_version": "4.4.0",
+          "observed_version": "4.5.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1956,14 +1956,14 @@
         },
         {
           "name": "rofi",
-          "observed_version": "2.0.0",
+          "observed_version": "2.1.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "rsync",
-          "observed_version": "3.5.1",
+          "observed_version": "3.5.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1977,14 +1977,14 @@
         },
         {
           "name": "ruff",
-          "observed_version": "0.17.3",
+          "observed_version": "0.17.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "rumdl",
-          "observed_version": "0.3.2",
+          "observed_version": "0.3.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1998,7 +1998,7 @@
         },
         {
           "name": "rust-analyzer",
-          "observed_version": "20261026",
+          "observed_version": "20261109",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2082,7 +2082,7 @@
         },
         {
           "name": "sqlite",
-          "observed_version": "3.54.1",
+          "observed_version": "3.54.1-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2145,7 +2145,7 @@
         },
         {
           "name": "svgpart",
-          "observed_version": "26.08.2",
+          "observed_version": "26.08.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2565,7 +2565,7 @@
         },
         {
           "name": "uv",
-          "observed_version": "0.13.6",
+          "observed_version": "0.13.7",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2579,7 +2579,7 @@
         },
         {
           "name": "vim",
-          "observed_version": "9.2.1250",
+          "observed_version": "9.2.1300",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2656,7 +2656,7 @@
         },
         {
           "name": "xapp-symbolic-icons",
-          "observed_version": "1.1.1",
+          "observed_version": "1.1.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2782,14 +2782,14 @@
         },
         {
           "name": "xwayland",
-          "observed_version": "24.1.14",
+          "observed_version": "24.1.15",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "xxd",
-          "observed_version": "9.2.1250",
+          "observed_version": "9.2.1300",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2845,7 +2845,7 @@
         },
         {
           "name": "zlib",
-          "observed_version": "1.3.2",
+          "observed_version": "1.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2887,7 +2887,7 @@
         },
         {
           "name": "bun",
-          "observed_version": "1.4.4-2",
+          "observed_version": "1.4.4-3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2940,7 +2940,7 @@
       "packages": [
         {
           "name": "@biomejs/biome",
-          "observed_version": "2.6.4",
+          "observed_version": "2.6.6",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2961,14 +2961,14 @@
         },
         {
           "name": "@openai/codex",
-          "observed_version": "0.166.0",
+          "observed_version": "0.167.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "@openai/codex-linux-arm64",
-          "observed_version": "0.166.0-linux-arm64",
+          "observed_version": "0.167.1-linux-arm64",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3017,7 +3017,7 @@
         },
         {
           "name": "context-mode",
-          "observed_version": "1.0.169",
+          "observed_version": "2.1.7",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3059,7 +3059,7 @@
         },
         {
           "name": "npm",
-          "observed_version": "12.2.1",
+          "observed_version": "12.2.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3080,7 +3080,7 @@
         },
         {
           "name": "prettier",
-          "observed_version": "3.9.10",
+          "observed_version": "3.10.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3175,7 +3175,113 @@
         },
         {
           "name": "ipython",
-          "observed_version": "9.18.0",
+          "observed_version": "9.18.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "autopep8",
+          "observed_version": "2.3.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "black",
+          "observed_version": "26.10.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "cairosvg",
+          "observed_version": "2.9.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "flake8",
+          "observed_version": "7.5.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "isort",
+          "observed_version": "9.0.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "json-schema-for-humans",
+          "observed_version": "1.5.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "linode-cli",
+          "observed_version": "5.70.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "maturin",
+          "observed_version": "1.16.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pydocstyle",
+          "observed_version": "6.3.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pylint",
+          "observed_version": "4.1.3",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "pyppeteer",
+          "observed_version": "2.0.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "python-lsp-server",
+          "observed_version": "1.15.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": false,
+          "reason": "source, extras or additional requirements need an explicit recipe"
+        },
+        {
+          "name": "tuipet",
+          "observed_version": "0.6.52",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "typer",
+          "observed_version": "0.29.1",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "yapf",
+          "observed_version": "0.43.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3193,7 +3299,7 @@
       "packages": [
         {
           "name": "anyio",
-          "observed_version": "4.15.1",
+          "observed_version": "4.16.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3243,7 +3349,7 @@
         },
         {
           "name": "click",
-          "observed_version": "8.5.0",
+          "observed_version": "8.5.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3293,7 +3399,7 @@
         },
         {
           "name": "importlib_metadata",
-          "observed_version": "10.1.0",
+          "observed_version": "10.2.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3371,7 +3477,7 @@
         },
         {
           "name": "numpy",
-          "observed_version": "2.5.0",
+          "observed_version": "2.5.4",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3393,7 +3499,7 @@
         },
         {
           "name": "pip",
-          "observed_version": "26.2.2",
+          "observed_version": "26.3",
           "pin": null,
           "selection": "explicit",
           "enabled": false,
@@ -3401,7 +3507,7 @@
         },
         {
           "name": "platformdirs",
-          "observed_version": "4.14.2",
+          "observed_version": "4.14.5",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3532,7 +3638,7 @@
         },
         {
           "name": "ruff",
-          "observed_version": "0.17.3",
+          "observed_version": "0.17.4",
           "pin": null,
           "selection": "explicit",
           "enabled": false,
@@ -3576,7 +3682,7 @@
         },
         {
           "name": "soupsieve",
-          "observed_version": "3.0.4",
+          "observed_version": "4.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3658,6 +3764,55 @@
           "pin": null,
           "selection": "explicit",
           "enabled": true
+        },
+        {
+          "name": "annotated-doc",
+          "observed_version": "0.0.6",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "markdown-it-py",
+          "observed_version": "4.3.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mdit-py-plugins",
+          "observed_version": "0.7.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "mypy_extensions",
+          "observed_version": "1.2.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "requests-html",
+          "observed_version": "0.3.5",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "rope",
+          "observed_version": "1.15.2",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
+        },
+        {
+          "name": "ujson",
+          "observed_version": "6.1.0",
+          "pin": null,
+          "selection": "explicit",
+          "enabled": true
         }
       ]
     },
@@ -3669,7 +3824,15 @@
         "linux",
         "wsl"
       ],
-      "packages": []
+      "packages": [
+        {
+          "name": "rubygems-update",
+          "observed_version": "4.0.24",
+          "pin": null,
+          "selection": "inferred",
+          "enabled": true
+        }
+      ]
     },
     {
       "manager": "go",
@@ -3759,7 +3922,7 @@
         },
         {
           "name": "github.com/mikefarah/yq/v4",
-          "observed_version": "v4.54.1",
+          "observed_version": "v4.54.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3794,7 +3957,7 @@
         },
         {
           "name": "github.com/wailsapp/wails/v2/cmd/wails",
-          "observed_version": "v2.17.0",
+          "observed_version": "v2.17.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3808,7 +3971,7 @@
         },
         {
           "name": "github.com/drogers0/aistat/v2/cmd/aistat",
-          "observed_version": "v2.6.0",
+          "observed_version": "v2.6.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true

@@ -46,7 +46,7 @@ def generate(root,shell, metadata=None):
     def q(value):return quote(str(value),shell)
     from profile_config import settings as profile_settings
     options = profile_settings(root, profile)
-    config_path = str(Path(profile['layers'][-1]['root']) / 'profile.json') if profile['layers'] else ''
+    config_path = str(Path(profile['layers'][-1]['root']) / 'config.json') if profile['layers'] else ''
     facts=profile['facts']
     identity=dict(DOTS_PLATFORM=facts['platform'],DOTS_DISTRO=facts['distro'],DOTS_ARCH=facts['architecture'],DOTS_RUNTIME=facts['runtime'],DOTS_PROFILE=profile['current'],DOTS_PROFILE_LAYERS=' '.join(r['id'] for r in profile['layers']),DOTS_PROFILE_CHECKOUT=str(root),DOTS_PROFILE_BIN_PATHS=os.pathsep.join(str(Path(r['root'])/'bin') for r in reversed(profile['layers'])))
     if shell=='powershell':

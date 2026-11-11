@@ -1,5 +1,9 @@
 # Native PowerShell
 
+## Clipboard history
+
+`dots clipboard` uses the same Python history, watcher, Config and command grammar as Bash. Enable the optional PSReadLine Ctrl-X, Ctrl-V widget explicitly with `Invoke-Expression ((dots clipboard init powershell) -join [Environment]::NewLine)`; it calls PSReadLine `Insert` without executing the selected text. FZF uses the shared native selector; copy/print remain available without editor integration. PowerShell owns object-pipeline/file-redirection encoding, as with cpy/pst. No Bash dependency, WSL path translation or Windows app destination change is introduced. See [clipboard history](clipboard.md); actual Windows PowerShell 5.1/7 editor/desktop acceptance remains pending.
+
 **Implementation available; native Windows runtime and desktop acceptance pending.**
 
 `dots fonts` and `fonts.ps1` share routes, JSON, completion and lifecycle operations.
@@ -13,7 +17,7 @@ fixtures do not establish them. See [fonts](fonts.md).
 
 `fonts install FONT --directory DOTFONTS --version VERSION` only stores that version in the checkout; `fonts use FONT --directory DOTFONTS --version VERSION` explicitly registers it for the current user. Backend profile aliases and `$env:DOTFONTS` paths work through the shared resolver. Directory uninstall keeps history and other copies, and the Fonts picker exposes the same directory chooser on native FZF. Installed, Copy/Migrate, batch Install with `--from`, Set and explicit Restore use the same controller and active-profile preferences as Bash. Windows migration requires the existing matching HKCU user-font registration and keeps its lookup path; system fonts are copy-only. These routes need no Bash; native execution/desktop acceptance is still pending.
 
-`bin/dots.ps1` is the native entry point for Windows PowerShell 5.1 and PowerShell 7. It invokes Python directly; it does not route commands through Bash, Git Bash, MSYS or WSL. Basic help and shell startup do not require Python. Use Python 3.11+ for the complete CLI, including theme rendering and Anodize; the file-only controllers retain their Python 3.9 minimum. Git, FZF, Gum, Chafa and application executables are checked only by operations that need them. Anodize also requires the existing native `anodize-engine.exe` build or an explicit `ANODIZE_ENGINE` path.
+`bin/dots.ps1` is the native entry point for Windows PowerShell 5.1 and PowerShell 7. It invokes Python directly; it does not route commands through Bash, Git Bash, MSYS or WSL. Basic help and shell startup do not require Python. Use Python 3.11+ for the complete CLI and setup, including backups, theme rendering and Anodize. Git, FZF, Gum, Chafa and application executables are checked only by operations that need them. Selected Anodize setup builds a verified native `anodize-engine.exe` with compatible Go in owned storage; explicit `ANODIZE_ENGINE` remains available.
 
 ```powershell
 .\bin\dots.ps1 help files
@@ -26,9 +30,13 @@ fixtures do not establish them. See [fonts](fonts.md).
 .\bin\dots.ps1 completion powershell
 ```
 
-Setup installs the current host's `$PROFILE.CurrentUserCurrentHost`. Run setup from each desired PowerShell host to install that host's profile; do not guess its Documents path. Redirected Documents folders and engine-specific profiles are reasons to use the host's own path. See [Microsoft's profile documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles).
+Setup queries each installed PowerShell 5.1/7 engine without loading profiles and installs its `$PROFILE.CurrentUserAllHosts`. It retains host-specific customizations and avoids loading the shared profile twice through the compatibility host profile. Redirected Documents folders and engine-specific profiles are reasons to query each engine instead of guessing its Documents path. See [Microsoft's profile documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles).
 
 The personal profile now uses [shared Starship startup](shell-init.md#powershell-profile). Native PowerShell 7 and Windows PowerShell 5.1 profile checks are recorded in the [profile repair plan](../plans/powershell-profile.md); this bounded evidence does not establish full native CLI or desktop acceptance. Windows app destinations and installation targets are unchanged.
+
+## Clipboard shortcuts
+
+`cpy` and `pst` have native `.ps1` adapters and forwarding profile functions. Their shared Python controller handles arguments, help, errors and provider selection; UTF-8 stdin transport preserves literal text without native argument quoting. `cpy` accepts text arguments or pipeline strings; `pst` returns one string. PowerShell controls object-pipeline display/redirection. See the [clipboard contract](shell-utils.md#system-clipboard-commands). Open a new PowerShell session or reload the profile to replace already-loaded legacy helper functions; direct `.ps1` invocation uses the new adapters immediately. Native Windows 5.1/7 adapter and desktop clipboard acceptance remain pending; Windows app destinations are unchanged.
 
 ## Commands and interaction
 
@@ -95,7 +103,7 @@ Windots' bat entry remains unmapped because its source is absent; the root bat r
 
 Existing Windows state remains `%LOCALAPPDATA%/dots`, or `$XDG_STATE_HOME/dots` when set. There is no automatic migration to `dots/state`. Dots settings use the Windows profile in the checkout; `%APPDATA%/dots` (or explicit XDG) remains the legacy migration source and user-theme location. Application paths are resolved independently. Native Windows and WSL must use separate checkouts/state; no Windows/WSL path translation or cross-boundary links occur.
 
-Links remain the default. Dots does not elevate, enable Developer Mode, silently copy, traverse unknown reparse points, or replace unrelated theme pointers. Missing link privileges fail during approved preparation before live replacement. File replacement, connectors and active theme pointers use retained journals; recovery and undo use `dots files history`, `recover` and `undo`. Modified generated commands and post-apply drift require review. Native Windows flushes files/journals, without claiming POSIX directory-fsync or power-loss guarantees.
+Links remain the default. The shared installer does not elevate, enable Developer Mode, silently copy or traverse unknown reparse points. The standalone bootstrap offers Developer Mode separately with explicit authorization and UAC; ordinary -Yes does not approve that setting. Missing link privileges fail during approved preparation before live replacement. File replacement, connectors and active theme pointers use retained journals; recovery and undo use `dots files history`, `recover` and `undo`. Modified generated commands and post-apply drift require review. Native Windows flushes files/journals, without claiming POSIX directory-fsync or power-loss guarantees.
 
 Setup prepares inactive theme payloads and publishes them in its installation transaction. It does not run reload hooks or change wallpaper. Explicit theme publication uses native command manifests and the same transaction store. It refuses unfinished legacy Bash publication journals rather than guessing how to recover a different installation. Native wallpaper uses the Windows desktop API; lock-screen changes remain Android-only. GTK/Qt hooks and tmux operations remain explicitly unavailable on native Windows. Local native `.ps1` theme hooks and the bundled Starship adapter use the plugin controls; downloaded themes remain inert data.
 
@@ -197,3 +205,8 @@ Native `dots.ps1 files add` shares existing-source and existing-link registratio
 Native `dots.ps1 wiki search 'config precedence' --topics` and `dots.ps1 wiki browse --query 'nvim themes'` use the same current-source topic controller as Bash. They require no exported wiki checkout or WSL process. Static metadata provides matching flag completion; literal search and structured/raw output keep their existing contracts. Popup selection uses available native tools and the supported inline reader fallback.
 
 Windows core setup does not install a POSIX man page. The wiki command reference and generated `man/dots.1` share the same public first-party metadata; the former is the native Windows reading surface. Shared-controller and adapter fixtures do not establish native PowerShell 5.1/7 keyboard or rendering acceptance, which remains a named pending check for this addition.
+
+
+Setup discovers each installed engine with -NoProfile and links its CurrentUserAllHosts profile, retaining host-specific content. Native scripts/shared Python remain the architecture: a wholesale module conversion would add another load boundary without removing controller startup. Portable Zsh helpers cover navigation, Git, listing, editor/reload and backup behavior; optional tools are resolved only when used. Native 5.1/7 startup and installation evidence remains separately pending.
+
+Config shared-default saves, explicit profile overrides, appearance import and layout migration use the same controller as Bash. Native pkgs/Weather/Codex configuration retains native ownership. Bak completion includes `bak`, `bak.ps1`, `dots-bak`, `dots-bak.ps1` and `dots.ps1 bak`; native 5.1/7 verification is pending where those engines are unavailable.

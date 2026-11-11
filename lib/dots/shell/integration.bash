@@ -27,7 +27,7 @@ else
 fi
 _dots_shell_completion_off() {
   local name specification
-  local -a names=(dots theme)
+  local -a names=(dots theme todo fonts bak dots-bak)
   if [[ -r ${THEMESBIN%/bin}/names ]]; then
     while IFS= read -r name; do names+=("$name"); done < "${THEMESBIN%/bin}/names"
   fi

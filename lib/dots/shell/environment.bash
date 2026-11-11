@@ -57,19 +57,23 @@ _dots_shell_paths() {
   while :; do
     part=${rest%%:*}
     if [[ -n ${_DOTS_PREVIOUS_CHECKOUT:-} && $_DOTS_PREVIOUS_CHECKOUT != "$DOTS" && ( $part == "$_DOTS_PREVIOUS_CHECKOUT/bin" || $part == "$_DOTS_PREVIOUS_CHECKOUT/scripts" ) ]]; then :
-    elif [[ $part != "$DOTS/themes/bin" && $part != "$THEMESBIN" ]]; then
+    elif [[ $part != "$DOTS/themes/bin" && $part != "$THEMESBIN" && $part != "$DOTBIN" && $part != "$DOTSCRIPTS" ]]; then
       result+=$separator$part; separator=:
     fi
     [[ $rest == *:* ]] || break
     rest=${rest#*:}
   done
   PATH=$result
-  for directory in "$DOTBIN" "$DOTSCRIPTS"; do
+  if [[ ${dots_options[DOTS_INIT_COMMANDS]} == 1 ]]; then PATH="$THEMESBIN${PATH:+:$PATH}"; fi
+  for directory in "$DOTSCRIPTS" "$DOTBIN"; do
     [[ -d $directory ]] || continue
     case :$PATH: in *":$directory:"*) ;; *) PATH="$directory${PATH:+:$PATH}" ;; esac
   done
-  if [[ ${dots_options[DOTS_INIT_COMMANDS]} == 1 ]]; then PATH="${PATH:+$PATH:}$THEMESBIN"; fi
   export PATH
 }
 _dots_shell_paths
-unset -f _dots_shell_paths
+if [[ ${dots_options[DOTS_INIT_COMMANDS]} == 1 ]]; then
+  alias .ln='"$DOTS/bin/dots" link'
+elif [[ $(alias .ln 2>/dev/null) == *'"$DOTS/bin/dots" link'* ]]; then
+  unalias .ln
+fi

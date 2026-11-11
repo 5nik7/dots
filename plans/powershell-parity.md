@@ -1,5 +1,7 @@
 # Native PowerShell parity
 
+Clipboard history shares native Python dispatch, metadata and completion with Bash, and generates a PSReadLine insertion widget. Native Windows 5.1/7 selector/editor/desktop acceptance remains pending; Termux fixtures verify the shared controller. See [clipboard plan](clipboard-history.md).
+
 **Status: Implementation complete; native Windows acceptance pending.**
 
 Fonts add shared-controller routes, flags, a standalone adapter, completion, JSON
@@ -38,6 +40,8 @@ are not automatically portable.
 Keep existing state roots and journals. Links remain the default; never silently
 copy, elevate, enable Developer Mode, initialize private sources, or translate
 Windows/WSL paths. All managed changes use existing guarded transactions.
+
+The [clipboard repair](clipboard-commands.md) adds native `cpy.ps1`/`pst.ps1` and profile forwarding through the common controller. UTF-8 stdin carries literal arguments and pipeline text. Native PowerShell 5.1/7 transport and Windows desktop clipboard acceptance remain pending; mocked provider results do not establish them. No app destination changes.
 
 ## Verification record
 
@@ -184,3 +188,5 @@ Profile backend acceptance: shared registry/profile controllers and generated na
 ## Package workflow follow-up
 
 Portable pkgs `format` and `manifest` use the shared controller on native Windows. Static routes/options/file completion cover export/update/restore, Git publication `--update-packages` and setup `--packages`/`-Packages`. Manifest-refresh publication explicitly refuses native Windows with status 3; normal Git publication is unchanged. Package operations remain an explicit Windows exception (status 3); the optional setup stage refuses before configuration writes. Native Config uses APPDATA or explicit XDG_CONFIG_HOME. Actual PowerShell 5.1/7 stream, Unicode-path, Config undo and refusal acceptance remains pending; see [package workflow acceptance](pkgs-workflows.md).
+
+Shared preference/import and Bak completion follow `plans/config-preferences-completion.md`: native route/controller and completion registration are updated; real Windows PowerShell 5.1/7 acceptance remains a named pending check on this Termux host.

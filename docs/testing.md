@@ -1,5 +1,9 @@
 # Testing Strategy
 
+## Clipboard history
+
+Run `python3 -B tools/test_clipboard_history.py` and `python3 -B tools/test_clipboard_ui.py` after the existing `tools/test_clipboard.py` provider checks. Fixtures own SQLite stores, HOME/XDG roots, fake clipboard providers and private tmux clients. Coverage includes atomic imports/rollback, retention/pins, concurrent writers, failed/stopped watchers, exact Unicode/newline output, copy hooks, shell widgets, native shared dispatch, six-shell completion records, actual Config consumers, 40/80/120-column and short-height popup actions, and multiline insertion without execution. Run `python3 -B tools/generate_clipboard_commands.py --check` for generated metadata. Native Windows 5.1/7, Linux/WSL desktop and Android background acceptance are separate pending checks; local substitutes do not prove desktop access.
+
 **Status: Implemented focused suites; native evidence and remaining platform checks recorded per feature**
 
 ## Core command and identity updates
@@ -37,6 +41,12 @@ and visible app-font acceptance require separate evidence in [the fonts plan](..
 Run checks appropriate to the changed files from the existing checkout, using test-owned home, config, state and cache roots. Documentation changes require `python3 -B tools/verify_docs.py` and `git diff --check`.
 
 Testing must prove that `dots` protects user data, resolves specifications deterministically, behaves consistently across adapters, and remains fast on representative machines.
+
+## System clipboard commands
+
+Run `python3 -B tools/test_clipboard.py -v` for isolated `cpy`/`pst` checks. Fake providers own their clipboard files, HOME and XDG roots; the fixture PATH cannot reach real clipboard executables. Cases cover platform/session selection, missing tools, no retry after failure, timeouts, literal UTF-8, empty input, trailing newlines, argv/stdin, forced-style data, help/errors, current PATH precedence, direct/profile/symlinked launchers, stale checkout variables, Bash/Zsh/Fish execution and PowerShell stdin transport. Native PowerShell adapter cases run when the respective engines exist, against a test-owned clipboard substitute. These are not real desktop clipboard checks.
+
+Also run the existing Todo planning clipboard regression and affected Fonts browser copy checks. Android app delivery and native Linux/WSL/Windows clipboard round-trips require separate acceptance with intentional sample text; never use the developer clipboard as an automated fixture.
 
 ## Shared shell utilities
 
@@ -1053,6 +1063,8 @@ Linux/WSL desktop and live-device activation evidence.
 
 ## Existing-source registration
 
+`tools/test_files.py` covers Termux PREFIX resolution, inactive-platform behavior, invalid roots, traversal rejection and absolute-to-template conversion. `tools/test_file_registration.py` covers prefix-link preview, registration/receipt ownership, repeated no-op and undo in an explicitly owned temporary PREFIX. Prefix-aware tests must never inherit the developer's real package installation as a writable destination.
+
 Run `python3 -B tools/test_file_registration.py` after `tools/test_file_platform.py`, plus affected file operations, catalog, mappings, profile backend, picker, installation, repair, Bash and native-controller suites. The registration fixtures own their profiles/home/config/state and cover existing relative links, nested external links, registry/profile transactions, receipts/uninstall, stale previews, backup replacement, rollback, interrupted recovery, scan grouping and idempotence. Presentation acceptance uses owned terminals at 40/80/120 columns; actual PowerShell 5.1/7 and native Linux/WSL remain separate acceptance checks.
 
 ## Package workflow acceptance
@@ -1118,7 +1130,17 @@ through a fixture palette and CLI style override at 40/80/120 columns, independe
 of success status and with plain/NO_COLOR behavior preserved. Integration compares
 the Updated field across standalone, Bash Dots and shared-controller entry points.
 
-Package results and progress test palette yellow separately from customized warning/identity roles, including indexed fallback, package-only spans, narrow wrapping, NO_COLOR and timer reset. Shared progress PTYs exercise safe structured spans, display-cell clipping and nested restoration. A native fake pip sequence emits successful resolver conflicts before a failed build and a later successful update; all entry points preserve partial results and prioritize the build error.
+Package results and progress test palette accent separately from customized warning/identity roles, including plain ANSI fallback, package-only spans, narrow wrapping, NO_COLOR and timer reset. Shared progress PTYs exercise safe structured spans, display-cell clipping and nested restoration. A native fake pip sequence emits successful resolver conflicts before a failed build and a later successful update; all entry points preserve partial results and prioritize the build error.
+
+`tools/test_pkgs_styles.py` verifies canonical package color controls, guarded
+profile saves/reset, next-invocation activation, inheritance, fallback roles and
+actual report/preview/stream/progress consumers at 40/80/120 columns. Package core
+compatibility tests use an isolated Python environment and local wheel/source
+fixtures to prove compatible-version retention without executing the source build
+backend. RubyGems tests cover empty user inventory, native failure boundaries,
+configuration opt-out and truthful version summaries. Npm receipt tests cover
+verified repeats, reinstalls, missing artifacts, content drift during approval,
+corrupt receipts and noninteractive behavior.
 
 Pip output cases cover native byte counts, unknown totals, package/stage changes,
 partial build messages, elapsed silence without terminating the process, progress
@@ -1189,3 +1211,33 @@ Run `python3 -B tools/generate_dots_manual.py --check` and `python3 -B tools/tes
 Changes also run the affected wiki/wiki-Git, command/completion, menu/pager, installation and native-controller suites sequentially. Repository CI checks manual freshness and these focused documentation regressions on Linux and Windows. `python3 -B tools/verify_docs.py`, source-only wiki validation and `git diff --check` cover source consistency; local wiki regeneration is an explicit retained transaction.
 
 Configuration discovery and component acceptance: `python3 -B tools/test_config_discovery.py` checks canonical aliases, interrupted migration/undo/stale guards, symbolic references, cached candidates and native literal formats. `python3 -B tools/test_config_browsing.py` covers smart style/icon endpoints, filtering/sorting, finite Allowed values, categorized human trees, compact exact color/style previews and icon color provenance at 40/80/120 columns and exact data/frontend contracts. It compares menu/status/resource samples with their consumers, checks native rule inheritance and per-entry overrides, and prevents another profile from borrowing the active publication. `python3 -B tools/test_config_completion.py` drives real native Tab insertion, full-key defaults, consumed `..` branches, Allowed values and Zsh fzf-tab blank-query selection/cancellation in owned shells. `python3 -B tools/test_config_layout.py` tests generated controls with private tmux clients at 40/80/120 columns, span isolation, alerts and reload/provider failures. `python3 -B tools/test_config_activity.py` exercises published activity markers, singleton labels and session borrowing with native process/title transitions. Run these alongside the existing config, popup, style, tmux and Fonts/weather suites, sequentially on Termux. Native PowerShell 5.1/7 and desktop Linux/WSL remain separate acceptance environments.
+
+
+## Bootstrap, backups and links
+
+Run `python3 -B tools/test_file_platform.py`, then `tools/test_backup_catalog.py`, `tools/test_backup_cli.py`, `tools/test_safe_link.py`, `tools/test_bootstrap_entry.py`, `tools/test_bootstrap_integration.py`, and `tools/test_blastoff_links.py` with Python `-B`. They own home/config/state/cache roots, fake prerequisite managers and local acquisition repositories. Continue with affected installation, shell, menu and metadata checks. Native Windows bootstrap/official installer/Developer Mode/5.1/7 checks require a separate owned native machine; fixtures never install host packages or change Developer Mode.
+
+`tools/test_shell_link_aliases.py` invokes `.ln` through available native shell
+adapters. `tools/test_bundled_app_cores.py blastoff` adds an outer owned HOME/XDG
+boundary around the application fixtures. Tests must override inherited XDG state
+as well as HOME. Independent active/source tests explicitly choose
+`--replace-link`; linked edit/switch tests exercise the default.
+
+The backup follow-up adds owned-container cleanup, missing-payload cleanup, extra-file preservation, container races and reverse rollback to `tools/test_backup_catalog.py`. Blastoff `test_shared_backups` covers shared catalog creation/list/restore/deletion, Bak interoperability, profile storage preferences, preview and concurrent drift. Existing legacy deletion fixtures remain explicit old-format pairs. `test_completions` verifies shared UUIDs through available Bash/Zsh/Fish callbacks, and `test_fzf_options` includes the full Dots defaults without spurious warnings. Run them through the isolated `tools/test_bundled_app_cores.py blastoff` runner; native Windows completion remains a separate acceptance check.
+
+### Separated preferences and Bak completion
+
+Run `python3 -B tools/test_preference_files.py` for shared/profile destinations,
+source-wins imports/exclusions, layout equivalence, stale guards, retained undo,
+repeat no-op, Termux-style promotion and Config draft destinations. Run
+`python3 -B tools/test_backup_completion.py` for standalone/nested grammar,
+choices, IDs, literal paths, malformed catalogs and six-adapter registration.
+Run `python3 -B tools/test_backup_shell_completion.py` for completion through
+installed native shell adapters in owned initialization roots. Use existing
+Config/style/menu, profile-backend, shell-init and command metadata
+checks for integration; distinguish actual shell runs from native Windows
+PowerShell 5.1/7 acceptance. All fixtures own home/config/state/cache roots.
+
+`tools/test_profiles.py` also verifies that creating, editing or removing a
+separated `config.json` invalidates Bash/Zsh startup bundles, with Python-free
+warm reads after regeneration.

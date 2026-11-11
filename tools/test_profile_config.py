@@ -49,7 +49,10 @@ class ProfileConfig(unittest.TestCase):
         (self.root / '.dots/files.json').write_text(json.dumps(dict(schema=1,repository='dots',resources=[self.resource])))
         self.legacy = self.home / 'config/dots'
 
-    def run_config(self, *args, code=0, native=False, **env):
+    def run_config(self, *args, code=0, native=False, profile_scope=True, **env):
+        # Historical profile-edit cases now select their scope explicitly.
+        if profile_scope and args and args[0] in ('set','unset') and '--defaults' not in args and '--profile' not in args:
+            args=(*args,'--profile',self.platform)
         command = [sys.executable, '-B', str(self.root / 'lib/dots/cli.py'), 'config'] if native else [shutil.which('bash'), str(self.root / 'bin/dots'), 'config']
         result = subprocess.run([*command, *args], env=dict(self.env, **env), text=True, capture_output=True, timeout=20)
         self.assertEqual(result.returncode, code, result.stdout + result.stderr)
@@ -68,7 +71,7 @@ class ProfileConfig(unittest.TestCase):
             from environment import settings
             self.assertEqual(settings(self.root)['DOTS_COLOR']['value'], 'never')
             with patch.dict(os.environ, DOTS_COLOR=''):
-                self.assertEqual(settings(self.root)['DOTS_COLOR']['source'], 'profile:'+self.platform)
+                self.assertEqual(settings(self.root)['DOTS_COLOR']['source'], str(self.path.parent/'config.json'))
             store = Store(Path(self.env['XDG_STATE_HOME'])/'dots')
             operations, guards, catalogs = store.inverse(result['transaction'])
             store.apply('undo', operations, guards, retain=True, catalogs=catalogs)
@@ -180,11 +183,11 @@ class ProfileConfig(unittest.TestCase):
                 code='source "$DOTS/lib/dots/shell/config.bash"; _dots_config_load; printf "%s|%s|%s" "${dots_options[DOTS_INIT_COLORS]}" "${dots_option_sources[DOTS_INIT_COLORS]}" "$_DOTS_CONFIG_PATH"'
             result=subprocess.run([shell,'-c',code],env=self.env,text=True,capture_output=True,timeout=20)
             self.assertEqual(result.returncode,0,result.stderr)
-            self.assertEqual(result.stdout,'0|profile:'+self.platform+'|'+str(self.path))
+            self.assertEqual(result.stdout,'0|'+str(self.path.parent/'config.json')+'|'+str(self.path.parent/'config.json'))
         from shell.runtime import settings
         with patch.dict(os.environ,self.env,clear=True):
             values, origins, path=settings(self.root,self.env)
-        self.assertEqual((values['DOTS_INIT_COLORS'],origins['DOTS_INIT_COLORS'],path),('0','profile:'+self.platform,str(self.path)))
+        self.assertEqual((values['DOTS_INIT_COLORS'],origins['DOTS_INIT_COLORS'],path),('0',str(self.path.parent/'config.json'),str(self.path.parent/'config.json')))
         for native in (False,True):
             command=[sys.executable,'-B',str(self.root/'lib/dots/cli.py')] if native else [shutil.which('bash'),str(self.root/'bin/dots')]
             words=['__complete','config','set','DOTS_INIT_C'] if native else ['__complete','bash','3','--','dots','config','set','DOTS_INIT_C']
@@ -251,9 +254,12 @@ class ProfileConfig(unittest.TestCase):
             plan=Installation(self.root);plan.plan_install();plan.apply('install')
             self.assertEqual(target.read_text(),'updated source')
             target.write_text('user drift')
-            plan=Installation(self.root);plan.plan_install();self.assertTrue(plan.blocked)
-            with self.assertRaises(ValueError):plan.apply('install')
-            target.write_text('updated source')
+            plan=Installation(self.root);plan.plan_install();self.assertFalse(plan.blocked)
+            plan.apply('install')
+            from backup_catalog import BackupPlan
+            backups=BackupPlan().records()
+            self.assertIn('user drift',[Path(row['path']).read_text() for row in backups])
+            self.assertEqual(target.read_text(),'updated source')
             plan=Installation(self.root);plan.plan_uninstall();plan.apply('uninstall')
             self.assertEqual(target.read_text(),'original user config')
 

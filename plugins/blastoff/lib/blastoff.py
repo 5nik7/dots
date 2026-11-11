@@ -225,18 +225,23 @@ def atomic(p, data, expected=None, *, check=None):
 @contextlib.contextmanager
 def locks(paths):
     acquired = []
-    try:
-        for p in sorted(set(paths), key=str):
-            safe_parents(p.parent)
-            try:
-                p.mkdir(mode=0o700)
-            except FileExistsError:
-                raise Failure('Another operation or a stale lock exists: ' + str(p) + '; inspect before removing it.')
-            acquired.append(p)
-        yield
-    finally:
-        for p in reversed(acquired):
-            p.rmdir()
+    shared = Path(__file__).resolve().parents[3] / 'lib/dots/files'
+    if str(shared) not in sys.path:
+        sys.path.insert(0, str(shared))
+    from setup_starship import coordinated_lock
+    with coordinated_lock():
+        try:
+            for p in sorted(set(paths), key=str):
+                safe_parents(p.parent)
+                try:
+                    p.mkdir(mode=0o700)
+                except FileExistsError:
+                    raise Failure('Another operation or a stale lock exists: ' + str(p) + '; inspect before removing it.')
+                acquired.append(p)
+            yield
+        finally:
+            for p in reversed(acquired):
+                p.rmdir()
 
 def table_sections(text):
     """Locate TOML table declarations outside strings/comments, then parse headers."""
@@ -409,7 +414,10 @@ class App:
         self._active.check(write=True)
         for directory in (self.themes, self.modules):
             if target.is_relative_to(directory):
-                raise Failure('Active configuration is a stored library path; use a separate active config')
+                if directory == self.themes and target.parent == self.themes and self._active.links:
+                    regular(target)
+                    continue
+                raise Failure('Active configuration is a stored library path; use a separate active config link')
         return target
     def atomic_active(self, data, expected):
         self.check_active()
@@ -504,19 +512,7 @@ class App:
         except UnicodeError:
             raise Failure('starship output is not valid UTF-8', 3)
     def backup(self, source, kind):
-        data = read(source, links=True)
-        safe_parents(self.backups)
-        ident = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime()) + '-' + uuid.uuid4().hex[:12]
-        metadata = {'id':ident, 'kind':kind, 'source':str(source), 'sha256':hashlib.sha256(data).hexdigest(), 'symlink_target':os.readlink(source) if source.is_symlink() else None}
-        if kind == 'config':
-            metadata['configured_config'] = str(self.configured_config)
-            metadata['resolved_config'] = str(self.config)
-            metadata['active_links'] = [{'path': str(p), 'target': fp[-1]} for p, fp in self._active.links]
-            metadata['provenance'] = self._backup_origin if hasattr(self, '_backup_origin') else ui_module('provenance').read_record(core_api(), self)[0]
-        atomic(self.backups / (ident + '.toml'), data)
-        atomic(self.backups / (ident + '.json'), (json.dumps(metadata, sort_keys=True)+'\n').encode())
-        self.diagnostic('Created '+kind+' backup '+ident)
-        return ident
+        return ui_module('shared_backups').create(core_api(), self, source, kind)
     def active_write(self, data, *, expected=...):
         parsed(data)
         self.check_active()
@@ -714,6 +710,9 @@ def run(argv, *, parsed_args=None):
         ui_module('welcome').render(VERSION, args.color, args.json); return 0
     cmd = args.command
     if cmd == 'completion':
+        helper = str(Path(__file__).resolve().parent.parent / 'completions' / ('blastoff.' + args.shell))
+        quote = __import__('shlex').quote(helper) if args.shell != 'fish' else "'"+helper.replace('\\', '\\\\').replace("'", "\\'")+"'"
+        print(('set -g _BLASTOFF_COMPLETION_SOURCE ' if args.shell == 'fish' else '_BLASTOFF_COMPLETION_SOURCE=')+quote)
         print((Path(__file__).resolve().parent.parent / 'completions' / ('blastoff.' + args.shell)).read_text(), end=''); return 0
     app = App(args)
     app.diagnostic('Storage: '+str(app.root)+'; active config: '+str(app.configured_config))

@@ -26,7 +26,9 @@ No changes reports Updated none; inventory failure reports Updated unavailable
 without blocking execution or altering native status. Each inventory read has a
 15-second budget; raw/redirected/dry-run paths do not add these reads.
 The skipped suffix uses the theme's muted foreground, independently of status.
-Package names in results and progress use the active palette yellow.
+Package names in results and progress default to the theme accent.
+All owned package colors use colors.apps.pkgs controls with existing CLI/preview
+fallbacks; changes apply on the next invocation without theme publication.
 Compact npm output hides deprecation notices and the exact routine force and
 allow-scripts override notices, excluding them from diagnostic counts. Other warnings/errors and raw/ordinary redirected notices are retained.
 Install progress names the current package when known and otherwise shows the
@@ -35,6 +37,11 @@ the in alias, dots pkgs and accepted install-picker selections.
 Pip upgrade diagnostics prioritize failed commands. Repeated native dependency
 conflict blocks become one notice to run python -m pip check; no automatic
 dependency repair is performed. Failure status and independent updates remain.
+Automatic Termux pip upgrades resolve compatible wheels and can retain an installed
+version when newer dependencies require source builds. Named targets, native
+format controls and replacement recipes retain native behavior. Automatic gem
+upgrades include gem update --system --no-document; upgrade.gem_system=false
+disables that step. Native permissions and distribution protections remain.
 Pip progress shows the package, download bytes with pip 25.1 or newer, build
 stages and elapsed silence after 15 seconds without output. Silence does not
 prove a hang or cause termination. Explicit native progress overrides are kept.
@@ -51,6 +58,8 @@ with installed metadata checked before and after review. No policy is saved.
 Without a terminal or after declining, scripts remain blocked. Project/custom-scope
 and raw/redirected commands retain native instructions. Script failure or missing
 native completion evidence keeps a nonzero result.
+Successful npm script runs may be remembered for an unchanged installed tree;
+new versions, reinstalls and missing/changed files require review again.
 Ordinary pip upgrades run one selected package at a time and continue after
 individual failures. Failed targets retain their exit codes; compact partial
 results list verified updates and a Failed field. A package failure stops its

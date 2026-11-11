@@ -127,3 +127,44 @@ Add repeatable `config list CATEGORY...` operands for the existing categories, d
 Owner: dots-config. Configuration assessment: update existing consumers only, no stored controls or keys. Menu assessment: no changes; existing editor keys/categories remain the source of truth. Acceptance: identical before/after key sets, FZF native styles/source precedence and last-assignment behavior, existing tmux/runtime fallback ownership, category combinations/order/errors/completion, 40/80/120-column human views and exact data contracts. Verify in owned roots, update metadata/manual/source docs and local Wiki. Native Windows PowerShell 5.1/7 and desktop Linux/WSL terminal evidence remains pending. Existing completed Todo records are retained.
 
 Verification: all four existing-key List tests and all 15 Config browsing tests pass. Six focused checks cover published-theme readers, automatic tmux row placement, narrow/redacted profile reports and exact Bash/native-controller settings output. Tests assert unchanged key sets, no native inventory or shell evaluation, inactive-profile isolation, duplicate FZF slot precedence, category completion/order/errors and 40/80/120-column rendering. The live read-only Apps report retains its existing rows and shows FZF template sources. Manual freshness, the 244-command catalog, relative links and whitespace checks pass. Local Wiki regeneration is verified separately; native PowerShell 5.1/7 and desktop Linux/WSL remain pending.
+
+
+## Follow-up: compact home paths in Config previews
+
+Status: implemented and locally verified on Termux (2026-11-11). Approved scope:
+all displayed home paths in Config menu
+previews, Details and Save/Reset reviews, including path-valued settings and
+nested list/object values. Reuse the shared Presentation home-path formatter,
+match only full home-directory boundaries, retain native path conventions and
+leave relative paths, literal environment references and ordinary text intact.
+Shortening is presentation-only: resource icons/styles use the original path;
+editors, action identities, stored values, JSON/scalar output and the redacted
+preview snapshot retain their existing contracts. No path resolution or writes
+occur during preview.
+
+Owner: dots-config with CLI presentation and menu authoring. Configuration
+assessment: no configuration integration change needed; this corrects existing
+path display without adding a preference. Menu assessment: update current
+preview/details/review rendering only; no actions or bindings added. Both Bash
+and PowerShell use the shared controller; native Windows terminal acceptance is
+recorded separately. Acceptance: boundary/home/Unicode/outside/relative/nested
+path cases, actual preview transport and Save/Reset, original editor/save values,
+secret redaction, unchanged data output, and color/icon/wrapping checks at
+40/80/120 columns in owned fixtures. Update canonical docs and rebuild/check the
+local Wiki. Append verification to the existing completed Todo goal without
+reopening or recreating descendants.
+
+
+Verification: all 23 Config menu cases are verified across the main run and
+focused reruns. The new checks cover nested values, home/path boundaries,
+original resource styling paths, 40/80/120-column colored/plain output,
+preview transport, environment overrides, Save/Reset reviews, unchanged editor
+input, no preview writes, and exact saved/scalar/JSON values through both
+frontends. The initial run exposed a new fixture's ANSI-parser mistake (fixed)
+and one transient existing Gum cancellation timeout; both cases pass the focused
+rerun. Existing popup navigation, exact-client ownership, Save/Cancel visibility,
+secret redaction and transaction checks pass. Native PowerShell is unavailable;
+shared-controller and Termux private-terminal checks are not Windows evidence.
+All 1297 relative Markdown links and whitespace checks pass. Local Wiki build
+9d31ca5782dd4853b83a1790f1ac537d checks healthy. No consumer reload or publication
+is required for this display-only change; it applies on the next Config opening.

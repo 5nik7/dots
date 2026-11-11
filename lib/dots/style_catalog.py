@@ -9,7 +9,11 @@ TODO = ('status.open', 'status.doing', 'status.blocked', 'status.done', 'status.
         'priority.high', 'priority.normal', 'priority.low')
 TODO_FIELDS=('id','alias','title','notes','tags','status','priority','due','parent','acceptance','subgoal_id','subgoal_title','subgoals','created','updated','completed','removed')
 FONTS = ('heading','label','identity','version','source','face','glyph')
+CLIPBOARD = ('heading','label','identity','text','source','timestamp','pinned','error')
 WIKI = ('heading','label','page','section','snippet','url')
+PKGS = ('heading','label','identity','package','version','value','count','muted','skipped',
+        'success','warning','error','progress','spinner','preview.heading','preview.label',
+        'preview.success','preview.warning','preview.version')
 TMUX = ('window.active', 'window.inactive', 'window.attention', 'pane.active_border', 'pane.inactive_border')
 
 
@@ -37,6 +41,8 @@ def split(name):
 def fields(role, app):
     """Only fields actually consumed by each native adapter are editable."""
     if app == 'cli':
+        if role in ('pkgs.'+name for name in PKGS): return ('fg','bg',*ATTRIBUTES)
+        if role in ('clipboard.'+name for name in CLIPBOARD): return ('fg','bg',*ATTRIBUTES)
         if role in ('wiki.'+name for name in WIKI): return ('fg','bg',*ATTRIBUTES)
         if role in ('fonts.'+name for name in FONTS): return ('fg','bg',*ATTRIBUTES)
         if role.startswith('icons.') and role[6:] in icon_roles():return ('fg','bg',*ATTRIBUTES)
@@ -114,7 +120,9 @@ def known_keys(group,styles):
         roles=({split(key)[1].rsplit('.',1)[0] for key in result}|{'icons.'+key for key in icon_roles()}|
                {'todo.field.'+name+'.'+kind for name in TODO_FIELDS for kind in ('label','value')}|
                {'fonts.'+name for name in FONTS}|
+               {'clipboard.'+name for name in CLIPBOARD}|
                {'wiki.'+name for name in WIKI}|
+               {'pkgs.'+name for name in PKGS}|
                {'menu.'+name for name in ('icon','label','description','shortcut','state')})
         shared={key.rsplit('.',1)[0] for key in styles.values['colors'] if not key.startswith('apps.')}
         roles={role for role in roles if role not in ROLES or role in shared or role in TMUX}

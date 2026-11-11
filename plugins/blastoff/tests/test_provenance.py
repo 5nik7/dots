@@ -17,7 +17,7 @@ class Provenance(ReleaseHarness):
         ident=json.loads(self.invoke('backup','create','--json').stdout)['backup']
         self.config.write_text('x=4\n');self.invoke('backup','restore',ident)
         self.assertEqual(self.current()['origin'],'local:purple')
-        p=self.store/'backups'/(ident+'.json');doc=json.loads(p.read_text());doc.pop('provenance');p.write_text(json.dumps(doc))
+        self.edit_backup_metadata(ident, lambda doc: doc.pop('provenance'))
         self.invoke('backup','restore',ident);self.assertEqual(self.current()['origin'],'unknown')
     def test_module_load_retains_origin(self):
         self.theme();self.invoke('theme','apply','purple');self.invoke('module','save','directory','dir')
@@ -33,13 +33,13 @@ class Provenance(ReleaseHarness):
         p.with_suffix('.pending').write_text('{}')
         self.assertIn('incomplete',self.current()['status'])
     def test_failed_state_commit_disables_save_authority(self):
-        self.theme();self.invoke('theme','apply','purple');self.theme('other','x=3\n')
+        self.theme();self.invoke('theme','apply','purple','--replace-link');self.theme('other','x=3\n')
         original=core.atomic
         def fail(p,*args,**kw):
             if p.parent.name=='provenance' and p.suffix=='.json': raise OSError('injected tracking failure')
             return original(p,*args,**kw)
         with patch.object(core,'atomic',side_effect=fail):
-            with self.assertRaises(OSError):self.run_tty(['theme','apply','other'])
+            with self.assertRaises(OSError):self.run_tty(['theme','apply','other','--replace-link'])
         self.assertEqual(self.config.read_text(),'x=3\n');self.assertIn('incomplete',self.current()['status'])
     def test_no_library_scan_for_save(self):
         self.theme();self.invoke('theme','apply','purple')
@@ -57,7 +57,7 @@ class Provenance(ReleaseHarness):
         before=self.tree();self.theme('invalid','x=[')
         before=self.tree();self.invoke('theme','apply','invalid',code=1);self.assertEqual(self.tree(),before)
     def test_renamed_origin_does_not_guess_matching_copy(self):
-        self.theme();self.invoke('theme','apply','purple')
+        self.theme();self.invoke('theme','apply','purple','--replace-link')
         (self.store/'themes/purple.toml').rename(self.store/'themes/renamed.toml')
         before=self.tree();code,_,err=self.run_tty(['theme','save'],'\n')
         self.assertEqual(code,130);self.assertIn('No unchanged',err);self.assertEqual(self.tree(),before)

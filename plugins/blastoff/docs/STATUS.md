@@ -1,5 +1,10 @@
 # 0.1.12 default Starship configuration and file aliases — 2026-10-21
 
+## Dots saved-theme links
+
+In the bundled Dots workflow, `theme apply` links the configured active path directly to the selected saved theme, backing up the destination in the shared `bak` catalog. Applying the same link is unchanged. Presets are materialized with content-qualified names without overwriting user themes. All new retained content backups use the shared Bak catalog and `apps.bak.store`/`apps.bak.location`; automatic snapshots copy before mutation. Editing/module operations retain application locks. Backup commands read both shared UUIDs and old app pairs, without migrating live state. Active-theme deletion is refused. `--replace-link` explicitly selects regular-file publication. Setup prepares the current/default palette first and links the default `dots` theme, or retains a current saved-theme selection. This supersedes older copy-on-apply behavior; historical release evidence below describes its named revision.
+
+
 Implemented the owner-approved default-path workflow. Normal active-file writes
 preserve symlink chains, guard retargeting, lock the physical target and keep
 canonical provenance. Explicit --replace-link still converts a link. Configured

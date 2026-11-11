@@ -24,3 +24,5 @@ When this change affects documentation, follow [documentation maintenance](../do
 For generated profile paths, use [profile maintenance](../dots-profile-maintenance/SKILL.md). Keep path generation in `profile_environment.py`; preserve all native maps, inactive-profile cache inputs, aliases and stale-name cleanup.
 
 Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.
+
+Register shipped standalone command names and aliases alongside Dots routes in all six completion adapters. Bak uses `bak_completion.py` for static grammar and bounded catalog IDs, never payload access. Nu/Xonsh receive literal path candidates on demand. Run `tools/test_backup_completion.py` for this provider; separately verify native adapter registration/escaping.

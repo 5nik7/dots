@@ -156,6 +156,34 @@ class Profiles(unittest.TestCase):
             self.assertEqual(changed.returncode,0,changed.stderr)
             self.assertEqual(changed.stdout,'1|profile:'+platform)
 
+    def test_separated_preference_creation_edit_and_removal_invalidate_startup(self):
+        self.public()
+        shutil.copytree(ROOT/'default',self.root/'default')
+        platform=detect(env=self.env)['platform']
+        config=self.root/'profiles'/platform/'config.json'
+        for shell in ('bash','zsh'):
+            if not shutil.which(shell):continue
+            if config.exists():config.unlink()
+            code='source "$DOTS/lib/dots/shell/init.'+shell+'"; printf "%s|%s" "${dots_options[DOTS_INIT_COLORS]}" "${dots_option_sources[DOTS_INIT_COLORS]}"'
+            cold=self.run_shell(shell,code)
+            self.assertEqual(cold.returncode,0,cold.stderr)
+            self.assertTrue(cold.stdout.startswith('1|'),cold.stdout)
+            commands=self.home/('separated-settings-'+shell);commands.mkdir()
+            shim=commands/'python3';shim.write_text('#!'+shutil.which('sh')+'\nprintf PYTHON_WAS_CALLED >&2\nexit 99\n');shim.chmod(0o700)
+            for value in ('0','1'):
+                config.write_text(json.dumps({'schema':1,'settings':{'DOTS_INIT_COLORS':value}}))
+                changed=self.run_shell(shell,code)
+                self.assertEqual(changed.returncode,0,changed.stderr)
+                self.assertEqual(changed.stdout,value+'|'+str(config))
+                warm=self.run_shell(shell,code,PATH=str(commands)+os.pathsep+self.env['PATH'])
+                self.assertEqual(warm.returncode,0,warm.stderr)
+                self.assertEqual(warm.stdout,changed.stdout)
+                self.assertNotIn('PYTHON_WAS_CALLED',warm.stderr)
+            config.unlink()
+            removed=self.run_shell(shell,code)
+            self.assertEqual(removed.returncode,0,removed.stderr)
+            self.assertEqual(removed.stdout,cold.stdout)
+
     def test_failed_prepare_and_concurrent_startup(self):
         self.public()
         code='source "$DOTS/lib/dots/shell/init.bash"; printf "%s" "$DOTS_PROFILE"'

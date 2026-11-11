@@ -59,6 +59,23 @@ recipes keep their behavior; ordinary npm batches do not receive `--force`.
 
 Native noninteractive flags are supplied where supported. sudo uses `-n` without a controlling terminal and never runs on Termux. Privilege and native package protections may still fail. Independent managers continue after a failure. Ordinary pip upgrades run one selected package at a time and continue after a failed package; the failure stops that package's remaining recipe. Manager before-hooks must succeed before any packages run, and manager after-hooks run only after full success. A manager-level replacement recipe remains one atomic command sequence, stopping at its first failure. Other managers retain their stop-on-failure recipe behavior. The final status is nonzero if any manager failed. Ctrl-C stops the run. Completed package effects remain; there is no Dots package rollback. Separate pip commands resolve dependencies separately; skip policies are direct-target exclusions, not dependency holds.
 
+Automatic Termux pip upgrades add `--only-binary=:all:` so pip resolves compatible
+prebuilt wheels instead of starting native source builds. If a newer release needs
+an unavailable binary dependency, pip can retain the compatible installed version;
+it is not reported as updated. This covers bare `up` and an unnamed
+`up --manager pip`. Named targets, replacement recipes, explicit binary-format
+recipe flags and `PIP_NO_BINARY`/`PIP_ONLY_BINARY` retain deliberate native behavior.
+Other resolution/network failures remain failures. `upls` lists registry candidates,
+which may be newer than the compatible version selected during installation.
+
+Automatic gem upgrades also run `gem update --system --no-document`, including
+when there are no ordinary user gems. RubyGems version changes appear as `RubyGems`
+in the same Updated field. Native distribution/permission protections still apply;
+pkgs adds no force or privilege bypass. Set `apps.pkgs.upgrade.gem_system` to false
+to disable this step. Named gem upgrades and manager replacement recipes retain
+their original scope. The self-update follows ordinary gem updates and precedes
+manager after-hooks; a failed step retains the native error/status.
+
 `pkgs refresh` also authorizes its repository metadata refresh without an extra flag or controlling terminal. It supports APT, DNF and XBPS; Arch still requires `upgrade` to synchronize and upgrade together.
 
 An APT “File has unexpected size / Mirror sync in progress” failure means the
@@ -73,9 +90,20 @@ or silently change repositories. `--raw` retains the full URL and native details
 
 After a successful compact global npm install or upgrade, pkgs offers a separate default-no prompt for each package whose install scripts npm reported as blocked. It shows the exact installed package/version, verifies its installed metadata before review and again after approval, then runs `npm rebuild --global --loglevel=info --allow-scripts=NAME -- NAME@VERSION`. The permission applies only to that invocation; the exact rebuild operand selects the reviewed version. This uses npm's [global allow-scripts mechanism](https://docs.npmjs.com/cli/v11/commands/npm-rebuild/). Global inventories can omit the provenance npm needs for version-pinned allow rules, so the permission uses the name while the rebuild target stays exact.
 
-Accepting runs that package's scripts; declining or EOF leaves them blocked and lets other managers continue. `--yes` does not answer this separate prompt. Successful script execution is reported only when npm confirms it; a failed or unconfirmed rebuild keeps a nonzero result. The prompt never saves a user/project approval policy, enables every script or retries a failed package install. Metadata drift aborts approval. Review rows show package identities, without printing the script commands from npm's warning block.
+Accepting runs that package's scripts; declining or EOF leaves them blocked and lets other managers continue. `--yes` does not answer this separate prompt. Successful script execution is reported only when npm confirms it; a failed or unconfirmed rebuild keeps a nonzero result. The prompt never saves a user/project approval policy, enables every script or retries a failed package install. Metadata or installed-file drift during review aborts approval. Review rows show package identities, without printing the script commands from npm's warning block.
 
-The prompt requires a terminal and recognized native global install/update commands. Without a terminal, scripts remain blocked and are listed in the compact result. Raw output, ordinary redirects and dry-run never open this prompt. Project installs and recipes with custom prefixes/configuration retain npm's native instructions; use `npm install-scripts ls` / `npm install-scripts approve NAME` within the project when a persistent project policy is intended. Setup/manifest restoration retains its separate execution path.
+The prompt requires a terminal and recognized native global install/update commands. Without a terminal, unverified scripts remain blocked and are listed in the compact result. Raw output, ordinary redirects and dry-run never open this prompt. Project installs and recipes with custom prefixes/configuration retain npm's native instructions; use `npm install-scripts ls` / `npm install-scripts approve NAME` within the project when a persistent project policy is intended. Setup/manifest restoration retains its separate execution path.
+
+After verified success, pkgs can remember the installed version, metadata and file
+identities. An unchanged installation is shown as `Scripts current` without another
+prompt or rebuild. New versions, same-version reinstalls, edited files or missing
+build outputs invalidate that evidence. Existing installations with no pkgs receipt
+need one reviewed run; package presence alone does not prove scripts ran. Declined,
+failed or unconfirmed scripts are never remembered as successful. Large or unstable
+trees that cannot be checked within the bounded walk remain eligible for review.
+These receipts do not grant future script permission or change npm configuration.
+They live under `${XDG_STATE_HOME:-~/.local/state}/pkgs/npm-scripts` (LOCALAPPDATA on
+Windows); removing receipts causes review again.
 
 ## Go tools
 
@@ -93,11 +121,11 @@ Development builds, replaced modules, source builds, renamed binaries and duplic
 
 ## Configuration and recipes
 
-Native `${XDG_CONFIG_HOME:-~/.config}/pkgs/config.json` is authoritative. Windows uses `%APPDATA%/pkgs/config.json` unless XDG_CONFIG_HOME is set. Changes take effect on the next invocation; the existing `commands` executable-identity map is unchanged.
+Package behavior uses native `${XDG_CONFIG_HOME:-~/.config}/pkgs/config.json` is authoritative. Windows uses `%APPDATA%/pkgs/config.json` unless XDG_CONFIG_HOME is set. Changes take effect on the next invocation; the existing `commands` executable-identity map is unchanged.
 
 ```json
 {
-  "upgrade": {"managers": "auto"},
+  "upgrade": {"managers": "auto", "gem_system": true},
   "output": "auto",
   "policies": {
     "npm": {
@@ -117,7 +145,7 @@ Native `${XDG_CONFIG_HOME:-~/.config}/pkgs/config.json` is authoritative. Window
 }
 ```
 
-`upgrade.managers` accepts `"auto"` or a nonempty unique ordered manager-ID array. `output` accepts `auto`, `styled` or `raw`. Manager policies accept `skip`, `install`/`upgrade` recipes and `packages` overrides. Recipes accept `flags`, `before`, `replace` and `after`. Manager wrappers run once, ordinary targets batch, and package-specific recipes run separately. Replacement substitutes for the native command; overlapping manager/package replacements are rejected. Flags combine manager then package values.
+`upgrade.managers` accepts `"auto"` or a nonempty unique ordered manager-ID array. `upgrade.gem_system` is a boolean, default true. `output` accepts `auto`, `styled` or `raw`. Manager policies accept `skip`, `install`/`upgrade` recipes and `packages` overrides. Recipes accept `flags`, `before`, `replace` and `after`. Manager wrappers run once, ordinary targets batch, and package-specific recipes run separately. Replacement substitutes for the native command; overlapping manager/package replacements are rejected. Flags combine manager then package values.
 
 Commands are nonempty literal argv arrays, with no implicit shell evaluation. Whole-token `{packages}` expands selected targets; `{package}` works only in package recipes. Name an interpreter/script explicitly for scripts. Recipes are trusted executable configuration and own their side effects, prompts and status. Reading config, completion, export and dry-run never execute them.
 
@@ -125,13 +153,14 @@ Skips match exact identities (Python names normalize case and `-_.`). Direct ins
 
 ```sh
 dots config get apps.pkgs.output
+dots config set apps.pkgs.upgrade.gem_system false
 dots config set apps.pkgs.output styled
 dots config set apps.pkgs.upgrade.managers '["apt","npm","go"]'
 dots config set apps.pkgs.policies.npm '{"skip":["held-package"]}'
 dots config unset apps.pkgs.output
 ```
 
-Dots Config and its Apps popup edit the same file through guarded Store writes, retained backups and undo, preserving unrelated fields. No profile override is created; inactive-profile/shared-default edits are unavailable. Edit per-manager policy objects as JSON so dotted/slashed package names remain literal keys. `config explain` supplies choices and syntax.
+Dots Config and its Apps popup edit the same file through guarded Store writes, retained backups and undo, preserving unrelated fields. These native behavior controls do not create profile overrides; inactive-profile/shared-default edits are unavailable. Output colors use the profile-based controls below. Edit per-manager policy objects as JSON so dotted/slashed package names remain literal keys. `config explain` supplies choices and syntax.
 
 For a Termux ARM64 Codex npm installation, a per-package replacement for both
 `policies.npm.packages["@openai/codex"].install` and `.upgrade` can use this argv:
@@ -146,6 +175,35 @@ alias as a separately published registry package. Target `@openai/codex` for
 explicit install/upgrade. The literal `-g` recipe always targets global npm.
 Merge this with existing npm policies through `apps.pkgs.policies.npm`; setting
 that key replaces its object. Recipe changes take effect on the next invocation.
+
+## Output colors
+
+All Dots-owned package views use `colors.apps.pkgs` through the existing Config
+browser and profile color files. Package names default to `accent`; other roles
+fall back to their existing CLI or preview colors. Fields support foreground (`fg`),
+background (`bg`) and shared text attributes. Unset/reset inherits; defaults,
+parent profiles and the selected profile resolve field by field. Changes apply on
+the next invocation or popup without publishing a theme.
+
+| Roles | Consumer |
+| --- | --- |
+| `heading`, `label`, `identity`, `count`, `value`, `version` | Help, lists, plans, manifests and reports |
+| `package` | Package names in results, inventories, previews and progress |
+| `success`, `warning`, `error`, `muted`, `skipped` | Statuses, diagnostics, secondary text and skip counts |
+| `progress`, `spinner` | Transient activity text and marker |
+| `preview.heading`, `preview.label`, `preview.success`, `preview.warning`, `preview.version` | Package information and picker previews/rows |
+
+```sh
+dots config browse --query colors.apps.pkgs
+dots config set colors.apps.pkgs.package.fg accent
+dots config set colors.apps.pkgs.error.fg red
+dots config unset colors.apps.pkgs.error.fg
+```
+
+Resource paths retain file-type styles, and FZF/menu chrome retains its existing
+configuration. Explicit color modes and NO_COLOR still apply. JSON, completion,
+raw manager bytes and ordinary redirected data remain undecorated. Native package
+output is only themed in the owned formatted view, never in `--raw`.
 
 ## Output
 
@@ -199,7 +257,7 @@ The ` · N skipped` suffix uses the theme's muted foreground through
 error color. Plain output retains the same text. Compact npm output hides native
 deprecation notices plus the exact native `using --force Recommended protections disabled.` and `.npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line` notices. These do not consume diagnostic counts or failure tails. Other warnings and errors remain visible; `--raw` and ordinary redirected output retain all native notices.
 
-Package identities in Installed, Removed, Updated, Failed and script results, and in transient progress, use the active palette's yellow. Labels, punctuation, exit codes and the `none`/`unavailable` placeholders keep their own styles. Plain/NO_COLOR output retains the same text.
+Package identities in Installed, Removed, Updated, Failed and script results, and in transient progress, use the active palette's accent by default. Labels, punctuation, exit codes and the `none`/`unavailable` placeholders keep their own styles. Plain/NO_COLOR output retains the same text.
 
 Repeated native pip dependency-conflict blocks become one notice per manager:
 `pip: dependency conflicts; run python -m pip check`. A successful command can emit these blocks; they do not displace a failed package's actual error. The Failed field and up to two useful failure details remain visible, while independent packages continue. This summarizes existing conflicts; it does not repair or remove installed dependencies.

@@ -41,6 +41,7 @@ else
   source "$DOTS/lib/dots/shell/environment_runtime.bash"
   source "$DOTS/lib/dots/shell/integration.bash" || return
 fi
+_dots_shell_paths
 _dots_debug_event end startup phase 0
 unset _dots_startup_prepared _dots_startup_shell _dots_startup_cache _dots_startup_generation _dots_startup_valid _dots_bundle_inputs
 # Attachment blocks until detach/exit. Finish startup before handing over the

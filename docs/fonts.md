@@ -8,6 +8,19 @@ Help, inventory, completion and metadata browsing do not require fontTools.
 Dots setup includes the standalone command adapter; it does not install fonts or
 Python packages. Native Windows runtime and application acceptance remain pending.
 
+## FIGlet lettering
+
+The repository includes [dots.flf](../config/figlet/dots.flf), a five-row logo-capital font, and [dots-mixed.flf](../config/figlet/dots-mixed.flf), a six-row font with matching capitals and distinct lowercase/descenders. Both contain 113 glyphs, including printable ASCII, the seven required German characters, an unknown-character fallback and `° ± × ÷ ← ↑ → ↓ ✓ ∞`. The replacement D retains the user's straight-sided logo design. Uppercase R follows the user's five-row design with a stepped leg and capped bottom strokes; K and X use matching stepped box-drawing strokes with capped outer ends.
+
+```sh
+figlet -C utf8 -f dots 'Dots 25°C'
+figlet -C utf8 -f dots-mixed 'Hello, Dots!'
+```
+
+The Termux profile maps `dots:figlet-dots` and `dots:figlet-dots-mixed` as individual managed links from `config/figlet` to `${PREFIX}/share/figlet`. Use `figlet -I2` to inspect the installed FIGlet font directory. These assets use the Files catalog and existing installation/undo receipts. No FIGlet package is installed automatically. Other platforms have no automatic destination mapping; an explicit font path can be passed to a compatible FIGlet build.
+
+UTF-8 artwork requires a Unicode-capable FIGlet build and terminal; `-C utf8` decodes Unicode input. Native Termux FIGlet 2.2.5 rendering, all glyphs and wrapping at 40/80/120 columns were verified. Native Linux, WSL and Windows rendering remains unverified. See the [font editing notes](../config/figlet/README.md).
+
 ## Find and save fonts
 
 The main Fonts popup includes **Configuration** for display, preview and shared

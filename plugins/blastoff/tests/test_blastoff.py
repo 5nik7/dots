@@ -41,8 +41,27 @@ class Harness(unittest.TestCase):
         return p
     def theme(self, n='purple', content='[directory]\nstyle = "purple"\n'):
         return self.write(self.store/'themes'/(n+'.toml'), content)
+    def backup_entries(self):
+        index = self.home/'state/dots/bak/catalog.json'
+        return json.loads(index.read_text())['entries'] if index.exists() else {}
     def snapshots(self):
-        return sorted((self.store/'backups').glob('*.toml'))
+        return [Path(r['path']) for r in self.backup_entries().values() if 'blastoff' in r]
+    def backup_metadata(self, ident):
+        return self.backup_entries()[ident]['blastoff']
+    def backup_payload(self, ident):
+        return Path(self.backup_entries()[ident]['path'])
+    def edit_backup_metadata(self, ident, update):
+        index = self.home/'state/dots/bak/catalog.json'
+        doc = json.loads(index.read_text()); update(doc['entries'][ident]['blastoff'])
+        index.write_text(json.dumps(doc))
+    def legacy_backup(self):
+        # Explicit old-format fixture: these tests preserve legacy compatibility.
+        import hashlib, uuid
+        ident = '20260930T120000Z-'+uuid.uuid4().hex[:12]
+        self.write(self.store/'backups'/(ident+'.toml'), 'x=1\n')
+        self.write(self.store/'backups'/(ident+'.json'), json.dumps(dict(id=ident, kind='config',
+            source=str(self.config), sha256=hashlib.sha256(b'x=1\n').hexdigest())))
+        return ident
 class Contract(Harness):
     def test_read_only_missing_dependencies(self):
         for args in [('--help',),('--version',),('--list',),('current',),('doctor','--json'),('module','list'),('backup','list'),('completion','bash')]:
@@ -101,13 +120,15 @@ class Contract(Harness):
         self.config.parent.mkdir()
         self.config.symlink_to(target)
         self.theme('new', '[directory]\nstyle="new"\n')
-        self.invoke('-t','new', code=1)
+        self.invoke('-t','new')
         self.assertTrue(self.config.is_symlink())
-        self.invoke('-t','new','--replace-link')
+        self.assertEqual(target.read_bytes(), old)
+        self.theme('another', 'x=3\n')
+        self.invoke('-t','another','--replace-link')
         self.assertFalse(self.config.is_symlink())
         self.assertEqual(target.read_bytes(), old)
-        metadata = json.loads(next((self.store/'backups').glob('*.json')).read_text())
-        self.assertEqual(metadata['symlink_target'], str(target))
+        metadata = [r['blastoff'] for r in self.backup_entries().values() if 'blastoff' in r]
+        self.assertIn(str(target), [p['symlink_target'] for p in metadata])
     @unittest.skipIf(os.name=='nt', 'symlink privilege not guaranteed on Windows')
     def test_delete_active_symlink_target_refused(self):
         target = self.theme()
@@ -172,7 +193,7 @@ class Contract(Harness):
         self.invoke('backup','restore',ident)
         self.assertEqual(self.config.read_text(), old)
         self.assertEqual(len(self.snapshots()), 2)
-        (self.store/'backups'/(ident+'.toml')).write_text('tampered=true\n')
+        self.backup_payload(ident).write_text('tampered=true\n')
         self.invoke('backup','restore',ident, code=1)
         self.assertEqual(self.config.read_text(), old)
     def test_stale_lock_never_broken(self):
@@ -247,11 +268,14 @@ class Contract(Harness):
         finally:
             os.umask(previous)
         self.assertEqual(self.config.stat().st_mode & 0o777, 0o600)
-    def test_apply_preserves_existing_file_mode(self):
+    def test_apply_preserves_modes_in_saved_source_and_backup(self):
         if os.name=='nt': self.skipTest('POSIX modes only')
         self.write(self.config, 'old=true\n'); self.config.chmod(0o640)
-        self.theme(); self.invoke('-t','purple')
-        self.assertEqual(self.config.stat().st_mode & 0o777, 0o640)
+        source = self.theme(); source.chmod(0o600); self.invoke('-t','purple')
+        self.assertEqual(self.config.stat().st_mode & 0o777, 0o600)
+        catalog = json.loads((self.home/'state/dots/bak/catalog.json').read_text())
+        backup = Path(next(iter(catalog['entries'].values()))['path'])
+        self.assertEqual(backup.stat().st_mode & 0o777, 0o640)
     def test_staging_detects_external_edit(self):
         self.write(self.config, 'old=true\n')
         before = core.fingerprint(self.config)

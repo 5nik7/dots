@@ -12,7 +12,9 @@ def component(identity):
         return 'leaf'
     if identity.startswith('setup:font:'):
         return 'fonts'
-    if identity in ('dots:command', 'dots:todo:command', 'dots:fonts:command', 'dots:manual'):
+    if identity in ('dots:command', 'dots:todo:command', 'dots:fonts:command', 'dots:bak:command', 'dots:dots-link:command', 'dots:manual'):
+        return 'core'
+    if identity.startswith(('dots:bak:', 'dots:dots-link:')):
         return 'core'
     for name in ('anodize', 'blastoff', 'pkgs'):
         if identity.startswith('dots:' + name + ':'):

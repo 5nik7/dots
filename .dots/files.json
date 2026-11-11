@@ -60,6 +60,18 @@
       ]
     },
     {
+      "id": "dots:figlet-dots",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
+      "id": "dots:figlet-dots-mixed",
+      "platforms": [
+        "termux"
+      ]
+    },
+    {
       "id": "dots:file-config-eza-themes-catppuccin-mocha-mauve-yml",
       "platforms": [
         "termux",

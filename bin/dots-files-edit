@@ -7,7 +7,7 @@
 # dots:option=--repo||file-repository|Owning repository for a new mapping
 # dots:option=--id||string|Local ID for a new mapping or checkout-wide rename
 # dots:option=--source||string|Source relative to the owning repository
-# dots:option=--target||string|Portable target template or home/XDG path
+# dots:option=--target||string|Portable target template or supported destination path
 # dots:option=--app||string|Application for a new mapping
 # dots:option=--category||string|Category for a new mapping
 # dots:option=--strategy||choice:link,directory-link,copy|Source strategy; live copy is unsupported

@@ -75,7 +75,10 @@ reload can update a previous default without overwriting a later user override.
 
 The `LESS=--mouse` application default merges mouse support with inherited pager options, such as batpipe's `-R`, instead of replacing them or being suppressed by them. Existing mouse options are preserved. A different profile default for `LESS` retains the ordinary precedence rule; see [less mouse support](shell-environment.md#global-less-mouse-support).
 
-A profile's `profile.json` stores `settings` and `files` alongside `environment`.
+A profile's `profile.json` stores `files` alongside `environment` and profile identity.
+Shell `settings`, behavior and formatting live in adjacent `config.json`; colors
+and icons live in `colors.toml` and `icons.toml`. Legacy inline preferences remain
+readable until an explicit [layout migration](configuration.md#preference-files-and-appearance-import).
 The `files` object maps repository IDs to complete resource lists using profile implementation fields and explicit resource `replaces` declarations. Replacing a whole application directory must
 use an explicit directory mapping; there is no automatic file-format or tree
 merge. Installation, backups and undo stay in the managed-files workflow.
@@ -156,18 +159,18 @@ dots config list --profile windows --json
 
 Bare `dots config` browses in a terminal and lists when redirected. Use explicit `list` for a noninteractive report. `get KEY` prints an undecorated scalar, or a styled report for a structured value; `--json` selects structured output. `list` and `get` merge configured values from the active inheritance layers; they do not substitute process overrides or built-in defaults. Use `dots env` for effective settings and their origins. `path [NAME]` prints the destination inside the selected profile; `path themes` retains the user theme directory. Every route accepts `--json` and `--profile`.
 
-`set KEY VALUE` and `unset KEY` save immediately through a retained file transaction. Both accept `--dry-run`; `set --json-value` parses the value as JSON. Bare `DOTS_*` names select `settings`; explicit names use `settings.NAME`, `environment.NAME`, `files.REPOSITORY`, or `profile.alias`. Shell settings use their existing string values (`0`/`1`, for example); `settings.files.backup` is a JSON boolean. Environment strings remain literal templates. Sensitive declarations must reference an environment variable, and their values are redacted in inspection. An unset removes only the selected profile's override and can reveal an inherited value. Saving does not reload shells, install files, publish themes, or run hooks.
+`set KEY VALUE` and `unset KEY` save immediately through a retained file transaction. Both accept `--dry-run`; `set --json-value` parses the value as JSON. Bare `DOTS_*` names select `settings`; explicit names use `settings.NAME`, `environment.NAME`, `files.REPOSITORY`, or `profile.alias`. Shell settings use their existing string values (`0`/`1`, for example); `settings.files.backup` is a JSON boolean. Environment strings remain literal templates. Sensitive declarations must reference an environment variable, and their values are redacted in inspection. An explicit `--profile NAME` unset removes that profile's override and reveals inherited values; unqualified writes target shared preferences. Saving does not reload shells, install files, publish themes, or run hooks.
 
 ### Configuration popup
 
 Run `dots config` in a terminal, `dots config browse --query icons`, or choose Config
-in `dots menu`. `--profile ID` opens another profile without activating it;
-`--defaults` edits shared colors, icons, formatting and application defaults. In tmux, FZF owns the
+in `dots menu`. `--profile ID` opens another profile without activating it.
+Unqualified preference edits target shared defaults; `--profile NAME` selects profile overrides and `--defaults` explicitly selects shared defaults. In tmux, FZF owns the
 popup on the initiating client. Elsewhere it uses the current terminal, including
 native Windows. An unavailable FZF or preview shell produces a report instead.
 `--client CLIENT` is for a launcher with explicit originating tmux context.
 
-The first screen offers List, Get and Set. List shows all smart endpoints; Get
+The first screen offers List, Get, Set, Import appearance and Refresh active visuals. List shows all smart endpoints; Get
 and Set first choose a category and show all endpoints within it. An icon is a
 leaf; a color style groups its fg/bg/attribute fields until Enter opens it.
 Other settings remain individual editable values. Escape returns from fields
@@ -515,10 +518,12 @@ consumer activation is reported pending without selecting a theme.
 
 ## Application and formatting controls
 
-`apps.cli.logo_gradient` selects root usage artwork coloring: `classic` (the repository default) preserves vertical blue/cyan, while `installer` uses the horizontal published theme hint/info/accent gradient. Both values are available in Config editing and value completion. The setting follows profile inheritance and null/unset reset, activates on the next command invocation, and does not refresh the theme or applications.
+`apps.cli.logo_gradient` selects root usage artwork coloring: `classic` preserves vertical blue/cyan, while `installer` (the shared default) uses the horizontal published theme hint/info/accent gradient. Both values are available in Config editing and value completion. The setting follows profile inheritance and null/unset reset, activates on the next command invocation, and does not refresh the theme or applications.
 
-`default/config.json` declares typed `apps`, `formatting` and popup/menu-entry `colors` defaults. The same
-sections in `profile.json` override individual fields. Resolution is selected
+`default/config.json` declares typed behavior, `formatting` and shell `settings`.
+`profiles/NAME/config.json` overrides individual fields. Typed appearance lives in
+`[controls]` tables in adjacent `colors.toml`/`icons.toml`, including popup, menu-entry,
+FZF and Neovim colors/icons; public keys remain unchanged. Resolution is selected
 profile, inherited parents, shared defaults, then null. A profile `null` or
 `config unset` removes the override; false, zero, empty strings and empty lists
 remain values. Shared nonnullable defaults must remain defined.
@@ -668,3 +673,5 @@ Weather color styles accept the existing strings/ANSI colors or objects with
 `fg`, `bg` and supported attributes. Null/reset deletes a native field; wttr's
 native fallback applies on its next invocation. Reading or editing configuration
 never requests weather, location or Android permissions.
+
+`dots profile check [NAME]` and `--all` also validate separated preference files, shell settings and cross-field appearance constraints. This explicit check does not activate profiles or publish configuration.

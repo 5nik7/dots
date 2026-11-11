@@ -15,7 +15,8 @@ class Edit(ReleaseHarness):
         self.theme();self.invoke('theme','apply','purple')
         self.editor('q=p.with_suffix(".new");q.write_text("x=7\\n");os.replace(q,p)')
         code,_,err=self.run_tty(['theme','edit']);self.assertEqual(code,0,err)
-        self.assertEqual(self.config.read_text(),'x=7\n');self.assertIn('purple',(self.store/'themes/purple.toml').read_text())
+        self.assertEqual(self.config.read_text(),'x=7\n');self.assertEqual((self.store/'themes/purple.toml').read_text(),'x=7\n')
+        self.assertTrue(self.config.is_symlink())
         self.assertEqual(json.loads(self.invoke('current','--json').stdout)['provenance']['origin'],'local:purple')
     def test_invalid_failure_and_concurrent_edits_retained(self):
         for body in ('p.write_text("invalid = [")','p.write_text("x=2\\n");sys.exit(4)',

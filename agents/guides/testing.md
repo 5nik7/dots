@@ -1,5 +1,7 @@
 # Testing Work Guide
 
+For standalone clipboard adapters, run `python3 -B tools/test_clipboard.py -v` and affected Todo/Fonts clipboard consumers. Use only owned fake providers; keep Termux interpreter support in isolated shell environments. Native PowerShell adapter fixtures and real desktop clipboard acceptance are separate; see [clipboard checks](../../docs/testing.md#system-clipboard-commands).
+
 For fonts, run `tools/test_fonts.py` with `tools/requirements-fonts.txt` available,
 plus `tools/test_fonts_presentation.py` for output/configuration changes (including
 exact data, static completion, inherited controls and preview rendering),
@@ -350,3 +352,5 @@ Font workflow verification: `python3 -B tools/test_font_workflows.py` uses owned
 Visual configuration changes additionally run `tools/test_config_live.py` and affected style/config/menu/theme/shell suites sequentially. Never let fixture refresh discover or activate the developer’s real consumers; use private tmux sockets and mocked non-tmux adapters.
 
 For application/formatting configuration changes, use the focused [configuration coverage checks](../../docs/testing.md#configuration-coverage-checks), then the affected consumer suites. Native weather edits must retain comments/unknown fields and pass native validation; tree-list tests must prove context ancestors cannot mutate goals.
+
+Separated-preference or appearance-import changes require `tools/test_preference_files.py` plus affected Config/style/profile/shell regressions. Bak grammar and registrations require `tools/test_backup_completion.py`; test real installed shells separately from provider/protocol checks. Preserve exact data and verify missing/created preference files invalidate owned warm startup bundles.

@@ -2,7 +2,7 @@ from release_support import ReleaseHarness
 
 class ThemeSave(ReleaseHarness):
     def prepare(self):
-        self.theme();self.invoke('theme','apply','purple');self.config.write_text('x=2\n')
+        self.theme();self.invoke('theme','apply','purple','--replace-link');self.config.write_text('x=2\n')
     def test_yes_needs_no_force(self):
         for answer in ('y','Y','yes','Yes','YES'):
             self.prepare();code,_,_=self.run_tty(['theme','save'],answer+'\n')

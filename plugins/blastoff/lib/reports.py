@@ -84,9 +84,9 @@ def backups(ui, entries, failures, sizes):
         ui.gap()
         ui.text(entry['id'], 'identity')
         try:
-            created = datetime.datetime.strptime(entry['id'].split('-')[0], '%Y%m%dT%H%M%SZ')
+            created = datetime.datetime.fromisoformat(entry['created']) if entry.get('created') else datetime.datetime.strptime(entry['id'].split('-')[0], '%Y%m%dT%H%M%SZ')
             created = created.strftime('%Y-%m-%d %H:%M:%S UTC')
-        except ValueError:
+        except (TypeError, ValueError):
             created = 'unknown'
         ui.field('Created', created)
         ui.field('Kind', entry['kind'])

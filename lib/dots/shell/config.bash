@@ -88,5 +88,5 @@ _dots_config_load() {
     dots_options[$key]=${values[$key]} dots_option_sources[$key]=${origins[$key]}
   done < "$root/lib/dots/shell/settings.tsv"
   typeset -g _DOTS_CONFIG_PATH=$config
-  if [[ -z ${DOTS_CONFIG_FILE:-} && -f ${_DOTS_PROFILE_CONFIG:-}/profile.json ]]; then _DOTS_CONFIG_PATH=$_DOTS_PROFILE_CONFIG/profile.json; fi
+  if [[ -z ${DOTS_CONFIG_FILE:-} && -f ${_DOTS_PROFILE_CONFIG:-}/profile.json ]]; then _DOTS_CONFIG_PATH=$_DOTS_PROFILE_CONFIG/config.json; fi
 }

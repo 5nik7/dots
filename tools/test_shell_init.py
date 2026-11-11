@@ -156,7 +156,7 @@ class InitTests(unittest.TestCase):
         for directory in ('bin', 'scripts'):
             self.assertEqual(entries.count(str(self.repo / directory)), 1)
         self.assertNotIn(str(self.repo / 'local/bin'), entries)
-        self.assertLess(entries.index(str(self.repo / 'scripts')), entries.index(str(self.repo / 'bin')))
+        self.assertEqual(entries[:2], [str(self.repo / 'bin'), str(self.repo / 'scripts')])
         self.assertFalse((self.home / 'injected').exists())
         self.assertNotIn('command not found', p.stderr)
 

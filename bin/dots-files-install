@@ -4,6 +4,8 @@
 # dots:usage=[OPTIONS]
 # dots:option=--dry-run||flag|Preview without writes or network access
 # dots:option=--yes||flag|Approve the plan without prompting
+# dots:option=--no-backup||flag|Discard new replacement originals; preserve older uninstall baselines
+# dots:option=--offline||flag|Refuse network preparation; use available inputs
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--update||flag|Fast-forward clean sources before setup
 # dots:option=--with-source||choice:termux,windows,nvim|Select a bundled platform source or initialize nvim

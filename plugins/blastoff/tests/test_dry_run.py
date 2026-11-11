@@ -29,7 +29,7 @@ class DryRun(ReleaseHarness):
         self.write(self.config,'x=1\n');self.theme()
         self.invoke('theme','save','purple','--dry-run',code=1)
         self.config.unlink();self.config.symlink_to(self.store/'themes/purple.toml')
-        before=self.tree();self.invoke('theme','apply','purple','--dry-run',code=1)
+        before=self.tree();self.invoke('theme','apply','purple','--dry-run')
         self.assertEqual(self.tree(),before)
     def test_known_save_dry_run_refuses_lock_and_linked_state(self):
         self.theme();self.invoke('theme','apply','purple')

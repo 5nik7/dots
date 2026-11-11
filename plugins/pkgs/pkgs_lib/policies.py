@@ -4,7 +4,7 @@ import re
 from .common import Error
 from .grammar import MANAGERS
 
-DEFAULTS = {'upgrade': {'managers': 'auto'}, 'output': 'auto', 'policies': {}}
+DEFAULTS = {'upgrade': {'managers': 'auto', 'gem_system': True}, 'output': 'auto', 'policies': {}}
 ACTIONS = ('install', 'upgrade')
 
 
@@ -50,9 +50,11 @@ def validate(cfg):
     if cfg['output'] not in ('auto', 'styled', 'raw'):
         raise Error('output must be auto, styled or raw')
     upgrade = cfg['upgrade']
-    if not isinstance(upgrade, dict) or set(upgrade) - {'managers'}:
+    if not isinstance(upgrade, dict) or set(upgrade) - {'managers', 'gem_system'}:
         raise Error('upgrade requires a managers setting')
     upgrade.setdefault('managers', 'auto')
+    upgrade.setdefault('gem_system', True)
+    if type(upgrade['gem_system']) is not bool: raise Error('upgrade.gem_system must be boolean')
     managers = upgrade['managers']
     if managers != 'auto' and (not isinstance(managers, list) or not managers or
             any(m not in MANAGERS for m in managers) or len(set(managers)) != len(managers)):
@@ -135,7 +137,7 @@ def commands(backend, action, names, cfg, yes=False):
     else:
         specific = [n for n in names if package_rules.get(identity(n, backend.name)) or n in getattr(backend,'pins',{})]
         ordinary = [n for n in names if n not in specific]
-        groups = ([ordinary] if ordinary or not names else []) + [[n] for n in specific]
+        groups = ([ordinary] if ordinary or not names and not getattr(backend, 'update_system', False) else []) + [[n] for n in specific]
         if backend.name in ('uv-tool', 'winget') and names or backend.name == 'go' and action == 'install':
             groups = [[n] for n in names]
         for group in groups:
@@ -170,7 +172,11 @@ def commands(backend, action, names, cfg, yes=False):
                         command = backend.transaction(action, [], yes)
                         if excluded: command = add_flags(command, ['--ignore', ','.join(excluded)])
                     else: command = backend.transaction(action, targets, yes)
+                    if backend.name == 'pip' and any(f.split('=',1)[0] in ('--no-binary','--only-binary') for f in flags):
+                        command = [arg for arg in command if arg != '--only-binary=:all:']
                     result.append(add_flags(command, flags))
             result += expand(inner.get('after', []), group)
+        if getattr(backend, 'update_system', False):
+            result.append(['gem', 'update', '--system', '--no-document'])
     result += expand(outer.get('after', []), names)
     return result

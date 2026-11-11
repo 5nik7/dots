@@ -1,5 +1,11 @@
 # One positional dispatcher; -f disables Fish's implicit filename fallback.
-# Only shell builtins and local filenames; never read TOML or run Blastoff.
+# Backup IDs also read the bounded Bak catalog; never read TOML or run Blastoff.
+if not set -q _BLASTOFF_COMPLETION_SOURCE
+    set -g _BLASTOFF_COMPLETION_SOURCE (status filename)
+    if not string match -q '/*' -- "$_BLASTOFF_COMPLETION_SOURCE"
+        set -g _BLASTOFF_COMPLETION_SOURCE "$PWD/$_BLASTOFF_COMPLETION_SOURCE"
+    end
+end
 function __blastoff_candidates
     set -l root $HOME/.config/blastoff
     if set -q BLASTOFF_HOME; and test -n "$BLASTOFF_HOME"
@@ -157,6 +163,17 @@ function __blastoff_candidates
         if not string match -q -- '-*' "$cur"; and string match -riq '^(y|yes)$' -- "$positional[-1]"
             set kind ""
             set candidates
+        end
+    end
+    if test "$kind" = backups; and test -f "$_BLASTOFF_COMPLETION_SOURCE"
+        set -l runtime python3
+        if set -q BLASTOFF_PYTHON; and test -n "$BLASTOFF_PYTHON"
+            set runtime "$BLASTOFF_PYTHON"
+        end
+        if command -q "$runtime"
+            for value in ("$runtime" -I -B -c 'import runpy,sys;from pathlib import Path;sys.argv=[str(Path(sys.argv[1]).resolve().parents[1]/"lib/completion_names.py"),"--shared",sys.argv[2]];runpy.run_path(sys.argv[0],run_name="__main__")' "$_BLASTOFF_COMPLETION_SOURCE" "$root" 2>/dev/null)
+                string match -rq '^[a-f0-9]{32}$' -- "$value"; and set -a candidates "$value"
+            end
         end
     end
     if test -n "$kind"; and test -d "$root"; and not test -L "$root/$kind"

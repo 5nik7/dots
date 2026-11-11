@@ -266,3 +266,6 @@ never execute them. Unchanged apply is a no-op; `dots theme refresh` or
 `dots theme plugins run` retries integrations explicitly. Automatic hook failures
 leave the theme published and report retry guidance on stderr without corrupting
 Anodize JSON. The separate Anodize.nvim project is unchanged.
+
+
+Selecting Anodize in checkout setup now prepares its engine in owned build storage, runs its Go tests, and journals publication into `engine/.build`. The checked-in `go.mod` determines the minimum toolchain. Verified artifacts are reused on repeats. Missing Go is offered through reviewed dependency preparation; help and ordinary shell startup never build.

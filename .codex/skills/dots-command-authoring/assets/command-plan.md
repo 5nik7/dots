@@ -34,6 +34,13 @@ Menu assessment: **{{add / update / no menu}}**, because {{REASON}}. Follow `dot
 
 ## Acceptance and delivery
 
+Delivery matrix: {{Record Bash/Zsh/Fish/PowerShell/Nushell/Xonsh completion for
+routes, standalone names and aliases; human colors/icons/formatting; popup and
+Config decisions; README/wiki; installer/bootstrap add/update/no-change and why.
+Copy observable gates into tracked Todo acceptance. User-facing scripts follow
+the same contract even when they do not introduce a command family.}}
+
+
 {{List observable outcomes and dependencies. Add/update config and menu decisions are required implementation work; no-change decisions retain their reasons.}}
 
 Use the presentation acceptance gate: relevant help/result/empty/warning/error/preview/recovery states; 40/80/120-column views; light/dark colors; independent auto/forced/disabled color and icons; `NO_COLOR`, `TERM=dumb`, readable plain output; long paths, spaces, Unicode and control characters; exact data under forced decoration. Mark inapplicable cases with reasons.

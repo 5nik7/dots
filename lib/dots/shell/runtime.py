@@ -40,7 +40,7 @@ def settings(root, env):
         from platform_info import detect
         from profiles import resolve
         selected = resolve(root, detect(env=env))
-        if selected['layers']: config = Path(selected['layers'][-1]['root']) / 'profile.json'
+        if selected['layers']: config = Path(selected['layers'][-1]['root']) / 'config.json'
         for key, row in profile_settings(root, selected).items():
             if key in schema: values[key], origins[key] = row['value'], row['source']
     for key, (kind, _) in schema.items():

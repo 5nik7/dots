@@ -15,7 +15,9 @@ class ListOutput(ReleaseHarness):
     def loaded(self):
         self.theme('aurora', 'x=2\n')
         self.theme('blastoff', 'x=1\n')
-        self.invoke('theme', 'apply', 'blastoff')
+        # Exercise independent active/source observations via explicit copy mode.
+        # Default linked selection is covered by test_blastoff_links.
+        self.invoke('theme', 'apply', 'blastoff', '--replace-link')
 
     def record(self):
         return next((self.store/'state/provenance').glob('*.json'))
@@ -150,7 +152,7 @@ class ListOutput(ReleaseHarness):
         record = self.record()
         for target in (self.config, self.store/'themes/blastoff.toml', record, record.with_suffix('.pending')):
             with self.subTest(target=target):
-                self.invoke('theme','apply','blastoff')
+                self.invoke('theme','apply','blastoff','--replace-link')
                 def raced(p, *args, **kwargs):
                     result = read(p, *args, **kwargs)
                     if p == self.store/'themes/blastoff.toml':

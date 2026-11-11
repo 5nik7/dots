@@ -82,15 +82,8 @@ def assign(doc,path,value,unset=False):
 
 
 def read_defaults(root):
-    path=Path(root)/'default/config.json'
-    if not path.exists() and not path.is_symlink():return dict(formatting={},apps={})
-    if path.is_symlink() or not path.is_file() or path.stat().st_size>2*1024*1024:raise ValueError('configuration defaults must be a bounded regular file')
-    data=json.loads(path.read_text())
-    from config_keys import document
-    data=document(data,public=False)
-    if data.get('colors'):raise ValueError('profile colors support only declared popup and menu entry controls; use colors.toml for styles')
-    if not isinstance(data,dict) or data.get('schema')!=1 or set(data)-{'schema',*GROUPS}:raise ValueError('invalid configuration defaults')
-    if any(not isinstance(data.get(g,{}),dict) for g in GROUPS):raise ValueError('configuration groups must be objects')
+    from preference_files import combined
+    data=combined(Path(root)/'default')
     return {g:data.get(g,{}) for g in GROUPS}
 
 
@@ -128,6 +121,16 @@ def style(value):
 def validate_value(defaults,path,value):
     if not recognized(defaults,path):raise ValueError('unknown configuration key: '+name(path))
     if value is None:return
+    if path[:2]==('apps','clipboard'):
+        bounds={'max_entries':(1,10000),'max_age_days':(1,3650),'max_entry_bytes':(1,1048576),
+                'poll_seconds':(1,10),'preview_lines':(1,40),'list_limit':(1,10000)}
+        if len(path)==3 and path[-1] in bounds:
+            low,high=bounds[path[-1]]
+            if type(value) is not int or not low<=value<=high:raise ValueError('clipboard '+path[-1]+' requires integer '+str(low)+'..'+str(high))
+            return
+        if path[-1]=='exclude_patterns':
+            if not isinstance(value,list) or len(value)>100 or any(not isinstance(v,str) or len(v)>512 or '\0' in v for v in value):raise ValueError('clipboard exclusions require up to 100 bounded glob patterns')
+            return
     if path[:2]==('apps','tmux'):
         choices={('clock','icon_mode'):('none','fixed','daylight'),('session','name_source'):('workspace','session','repository')}
         if path[2:] in choices:
@@ -152,6 +155,16 @@ def validate_value(defaults,path,value):
         return
     if path == ('apps','cli','logo_gradient'):
         if value not in ('classic','installer'):raise ValueError('logo_gradient requires classic or installer')
+        return
+    if path in (('apps','bak','mode'), ('apps','bak','location')):
+        allowed = ('move','copy') if path[-1] == 'mode' else ('store','adjacent')
+        if value not in allowed: raise ValueError('backup '+path[-1]+' requires '+', '.join(allowed))
+        return
+    if path == ('apps','bak','store'):
+        from pathlib import PureWindowsPath
+        if (not isinstance(value,str) or not value or any(ord(c)<32 or ord(c)==127 for c in value)
+                or not (value.startswith(('~/','~\\')) or Path(value).is_absolute() or PureWindowsPath(value).is_absolute())):
+            raise ValueError('backup store requires an absolute or home-relative path')
         return
     if path == ('apps','setup','components'):
         from files.setup_components import COMPONENTS
@@ -224,11 +237,11 @@ def validate_value(defaults,path,value):
     if kind=='icons' and (not isinstance(value,str) or len(value)>64 or any(ord(c)<32 for c in value)):raise ValueError('icons require short printable strings')
 
 
-def validate_groups(root,data):
+def validate_groups(root,data,defaults=None):
     from config_keys import document
     data=document(data,public=False)
     if data.get('colors'):raise ValueError('profile colors support only popup and menu entries; use colors.toml for visual styles')
-    defaults=read_defaults(root)
+    defaults=read_defaults(root) if defaults is None else defaults
     for group in GROUPS:
         values=data.get(group,{})
         if not isinstance(values,dict):raise ValueError(group+' must be an object')
@@ -249,12 +262,23 @@ def constraints(defaults, key):
         return dict(type='string',choices=['summary','full'] if path[-1]=='list_details' else ['auto','plain'])
     if path == ('formatting','apps','wiki','row_gap'):
         return dict(type='integer',examples=[0,1,2],syntax='Integer 0..4 blank lines between Wiki records')
+    if path[:2]==('apps','clipboard'):
+        bounds={'max_entries':(1,10000),'max_age_days':(1,3650),'max_entry_bytes':(1,1048576),
+                'poll_seconds':(1,10),'preview_lines':(1,40),'list_limit':(1,10000)}
+        if path[-1] in bounds:
+            low,high=bounds[path[-1]]
+            return dict(type='integer',syntax='Integer '+str(low)+'..'+str(high),examples=[lookup(defaults,path)])
+        if path[-1]=='exclude_patterns':return dict(type='array',syntax='Up to 100 case-sensitive text glob patterns',examples=[[],['*password*']])
     if path in (('apps','fonts','list_details'),('apps','fonts','preview','position')):
         return dict(type='string',choices=['summary','full'] if path[-1]=='list_details' else ['down','right'])
     if path==('apps','fonts','preview','size'):
         return dict(type='integer',examples=[25,33,50],syntax='Integer 10..80 percent of the picker height or width')
     if path == ('apps','cli','logo_gradient'):
         return dict(type='string', choices=['classic','installer'], syntax='Classic vertical blue/cyan or installer horizontal hint/info/accent')
+    if path in (('apps','bak','mode'), ('apps','bak','location')):
+        return dict(type='string', choices=['move','copy'] if path[-1]=='mode' else ['store','adjacent'])
+    if path == ('apps','bak','store'):
+        return dict(type='string', syntax='Absolute or home-relative backup directory; applied on the next invocation')
     if path == ('apps','setup','components'):
         from files.setup_components import COMPONENTS
         return dict(type='array', examples=[list(COMPONENTS[:6]), ['core']], syntax='Unique component names: '+', '.join(COMPONENTS))
@@ -309,7 +333,7 @@ def activation(key):
                   'nvim':'visual publication; Neovim refreshes on focus',
                   'fzf':'visual publication; existing shells follow on the next prompt',
                   'menu':'next popup', 'fonts':'next Fonts invocation or popup',
-                  'wiki':'next Wiki invocation or popup'}.get(app,'next invocation'))
+                  'wiki':'next Wiki invocation or popup', 'clipboard':'next invocation or watcher poll'}.get(app,'next invocation'))
 
 
 def candidates(root, key):
@@ -329,6 +353,20 @@ def candidates(root, key):
     return [str(v) if isinstance(v,str) else json.dumps(v) for v in [*spec.get('choices', []), *spec.get('examples', [])]]
 
 
+def validate_effective(values, defaults, styles, platform):
+    """Cross-field and color-reference checks shared by edits and imports."""
+    for path,value in leaves(values):
+        if path[:1] not in (('apps',),('formatting',)):continue
+        if isinstance(value,str) and (path[:3]==('apps','fzf','colors') or constraints(defaults,name(path)).get('type')=='color'):
+            for token in value.split(':'):
+                if token.startswith('colors.'):styles.color(token)
+    from tmux_config import validate_layout
+    validate_layout(lookup(values,('formatting','apps','tmux'),{}),platform)
+    battery=lookup(values,('apps','tmux','battery'),{})
+    if battery.get('critical') is not None and battery.get('low') is not None and battery['critical']>=battery['low']:
+        raise ValueError('critical battery threshold must be below low')
+
+
 def leaves(doc,path=()):
     if isinstance(doc,dict) and doc:
         for key,value in doc.items():yield from leaves(value,(*path,key))
@@ -338,21 +376,18 @@ def leaves(doc,path=()):
 class Controls:
     def __init__(self,root=None,selected=None,*,defaults=False,replacements=None):
         from profile_config import checkout,context
-        self.root=checkout(root);self.defaults=read_defaults(self.root)
-        replacement=(replacements or {}).get(self.root/'default/config.json')
-        if replacement is not None:
-            from config_keys import document
-            replacement=document(replacement,public=False)
-            self.defaults={g:replacement.get(g,{}) for g in GROUPS}
+        from preference_files import layers, combined
+        self.root=checkout(root)
+        default_document=combined(self.root/'default', replacements=replacements)
+        self.defaults={g:default_document.get(g,{}) for g in GROUPS}
         self.selected=selected if selected is not None else context(self.root)
-        self.paths=[self.root/'default/config.json']
-        self.layers=[(self.paths[0],self.defaults)];self.values=copy.deepcopy(self.defaults)
+        self.paths=[];self.layers=[];self.values=copy.deepcopy(self.defaults)
+        inputs=layers(self.root/'default', replacements=replacements)
         for layer in [] if defaults else self.selected['layers']:
-            path=Path(layer['root'])/'profile.json';self.paths.append(path)
-            data=(replacements or {}).get(path,layer)
-            from config_keys import document
-            data=document(data,public=False)
-            validate_groups(self.root,data)
+            inputs.extend(layers(Path(layer['root']), layer, replacements))
+        for path,data in inputs:
+            self.paths.append(path)
+            if path.parent != self.root/'default': validate_groups(self.root,data,self.defaults)
             values={g:data.get(g,{}) for g in GROUPS}
             self.layers.append((path,values));self.values=merge(self.values,values)
 

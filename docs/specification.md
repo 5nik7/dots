@@ -1,11 +1,15 @@
 # Implemented Data Contracts
 
+## Clipboard history data
+
+[Clipboard history](clipboard.md#configuration-and-storage) uses SQLite `user_version=1` in the platform state root, with atomic transactions, secure-delete and DELETE journals. Entries contain a full 32-hex UUID, UTF-8 text without NUL, SHA-256 deduplication digest, source, UTC created/updated timestamps and pin state; reports add UTF-8 byte size. Control records hold capture pause, last-observed digest and the owned watcher token/heartbeat/status. JSON reports use `schema: 1`; content-bearing list/show items and metadata-only mutation items are distinct. Export/import uses `schema: 1, entries: [{text, pinned}]` and assigns local identity/time/source on import. Complete batches validate before writes. Typed `apps.clipboard` controls inherit the existing profile hierarchy; report styles use `colors.apps.clipboard` and `icons.menu.clipboard`. Exact text/data output bypasses formatting. The [command guide](clipboard.md#commands-and-data) owns filtering and retention semantics.
+
 This reference describes the data consumed and produced by the live theme, file catalog, shell and checkout installation controllers. Command-specific behavior is documented in [commands](commands.md), [files](files.md) and [installation](installation.md).
 
 ## Font library and catalogs
 
 Font display preferences belong to the existing typed `apps.fonts` configuration
-in `default/config.json` and profile JSON, separate from retained `fonts.json`
+in `default/config.json` and profile `config.json`, separate from retained `fonts.json`
 application choices. The [output preference table](fonts.md#output-preferences)
 defines defaults and consumers. Null/unset inherits the parent/default value.
 Report styles `colors.apps.fonts.*` and `icons.menu.fonts` use the shared visual catalog;
@@ -142,6 +146,8 @@ See [custom Bat syntaxes](themes.md#custom-bat-syntaxes) for limits and refresh
 behavior. Existing cache/export paths and the palette schema are unchanged.
 
 ## Implemented Inventory Catalog Boundary
+
+The `${PREFIX}` destination token resolves only on Termux, from the explicit `PREFIX` environment variable. Unset/empty values and other platforms are unmapped; relative, filesystem-root, parent-traversal and control-containing values are invalid. Suffixes use the existing traversal-free relative-path contract. The shared mapping editor converts absolute paths beneath this prefix into the token. This adds no arbitrary environment interpolation and changes no catalog/receipt schema; see [destination rules](files.md#ownership-and-formats).
 
 The [file catalog](files.md#ownership-and-formats) joins the schema-2/3 core `.dots/files.json` registry (qualified IDs and platforms), schema-2 `.dots/sources.json` source ownership, and schema-1 profile implementation arrays. A registry entry without a profile mapping never installs. Legacy schema-1 catalogs remain readable. Public command JSON and transaction journals retain schema 1. Directory ownership
 conflicts with nested target claims. Catalog inspection and tracking are distinct from the managed operation routes. Installation, linking, copying, adoption and undo use the shared file transaction engine; linking is the default and copying is explicit.
@@ -409,8 +415,13 @@ fingerprint or imply a complete source/theme rebuild. See [visual behavior](prof
 
 ### Typed application preferences
 
-Shared `default/config.json` is a schema-1 object containing `formatting`, `apps`
-and the typed popup/menu-entry `colors` paths. Profile manifests accept these objects as fieldwise overrides; null
+Shared `default/config.json` and `profiles/NAME/config.json` are schema-1 objects
+containing behavior `apps`, `formatting` and shell `settings`. Typed color/icon
+controls are stored by canonical public key in the `[controls]` table of adjacent
+TOML files, using literal scalars, `{}` for empty extensible maps and
+`{ inherit = true }` for nullable declarations. Manifests retain structural data.
+Legacy inline preferences remain readable; separated declarations win at the same
+layer. Default saves target shared files; explicit profiles create overrides; null
 inherits, while false/zero/empty strings/lists retain their types. Literal map
 keys use dot identifiers or JSON string bracket segments. No key or value is
 shell-evaluated by the configuration controller. Validation, completion and
@@ -429,7 +440,7 @@ components. Native wttr is an explicit ownership exception: `config_wttr.py`
 edits the selected native TOML with native validation and no profile overlay.
 See [controls and native weather](profiles.md#application-and-formatting-controls).
 
-`formatting.apps.menu.popup` and `colors.apps.menu.popup` declares dedicated Dots popup position, border style and nullable native color slots in the same typed defaults/profile objects. The shared selector applies these after generic FZF presentation preferences; shell border defaults cannot suppress a Dots frame. Position changes retain controller-owned dimensions. FZF selectors and native tmux terminal hosts read effective settings at invocation, without publication, global tmux option changes or a second configuration store. See [popup controls](profiles.md#dots-popup-appearance) for accepted fields and defaults.
+`formatting.apps.menu.popup` and `colors.apps.menu.popup` declares dedicated Dots popup position, border style and nullable native color slots in the separated typed defaults/profile preference files. The shared selector applies these after generic FZF presentation preferences; shell border defaults cannot suppress a Dots frame. Position changes retain controller-owned dimensions. FZF selectors and native tmux terminal hosts read effective settings at invocation, without publication, global tmux option changes or a second configuration store. See [popup controls](profiles.md#dots-popup-appearance) for accepted fields and defaults.
 
 Popup `width`/`height` are string-or-integer controls: `auto`, `fit`, `fill`, integer percentages 1%–100%, or integer cells 1–10000. Both default to `auto`. Resolution uses the addressed client's viewport; explicit overrides are bounded, while inline width remains owned by its terminal. Typed explain data includes `constraints` (`type`, optional finite `choices`, `syntax`, `examples`) from the validation declarations. Choices are exhaustive only for finite enums; examples do not restrict custom syntax. Profile null/reset semantics and exact scalar get output are unchanged.
 
@@ -440,7 +451,7 @@ Registration retains the current core registry and profile mapping schemas. Reso
 ## Package policy and manifest data
 
 [Package workflows](packages.md) defines the authoritative native JSON controls
-(`upgrade.managers`, `output`, `policies`), literal recipe expansion and schema-1
+(`upgrade.managers`, `upgrade.gem_system`, `output`, `policies`), literal recipe expansion and schema-1
 manifest fields/scopes. `apps.pkgs` edits that native file with Store guards, not
 profile inheritance. Observed versions are evidence; only exact supported pins
 constrain restoration. Manifests contain no executable commands. Structured
@@ -451,6 +462,18 @@ active leaf profile root's `packages.json`; it does not inherit a parent's file.
 `export --update --dry-run` emits the proposed schema-1 JSON. Publication opt-in
 uses existing schema-1 Git events to report manifest selection and update;
 ordinary export/restore and Git data schemas are unchanged.
+
+Package color controls `colors.apps.pkgs.*` use the existing visual catalog,
+fieldwise profile inheritance and nullable reset behavior. Package names default
+to theme accent; other roles retain runtime CLI/preview fallbacks. Saves affect
+the next invocation without theme publication; see [output colors](packages.md#output-colors).
+`upgrade.gem_system` is a native boolean defaulting to true; it does not inherit
+through profile JSON. Script-completion receipts use schema-1 JSON with only a
+SHA-256 fingerprint under the package state directory, keyed by hashed exact
+package/version. Evidence includes native installed metadata and bounded recursive
+file identities (inode, size, timestamps, type and internal symlink targets).
+Receipts are atomic, optional, non-authorizing and invalidated by installed-tree
+drift; missing/malformed evidence causes review, never execution.
 
 `pkgs upgrade --list --json` emits `{schema: 1, groups: [...]}`. Each group has
 `manager`, `scope`, `status` (`ok` or `error`), `error`, `packages` and `skipped`.
@@ -512,3 +535,25 @@ consumer values before mutation, rejects contradictory aliases, guards all
 inputs and uses retained Store operations for rollback/undo. Identical aliases
 are deduplicated. A repeated migration has no operations. TOML comments and
 unrelated native/profile fields survive the rename.
+
+
+## User backup catalog
+
+`<state>/bak/catalog.json` has schema 1 and an `entries` map keyed by full UUIDs. Records contain `id`, UTC `created`, absolute `original` (nullable on import), absolute payload `path`, object `fingerprint`, `origin`, `mode`, creating `transaction`, and `kind`. Default payloads use `~/.bakstore/<id>/<name>.<UTC>.bak`; adjacent mode omits the ID directory. Imported payloads stay in place. Catalog/payload/consumer writes share one Store transaction.
+
+Installation entries may have `backup_id` for the first original, blocking delete/prune until released. Baseline restore removes only its matching receipt entry atomically. `discarded_original` records an explicitly unsaved original. Old `backup` transaction / `index` references remain supported. Reconciliation retains the first baseline.
+
+Blastoff content entries additionally have `blastoff_owner` (canonical app storage
+root) and a `blastoff` object with ID, creation time, kind, source, SHA-256 and
+active-link/provenance evidence. Its list result retains the existing `backups`
+and `errors` fields; new metadata includes `created` because UUIDs contain no date.
+Legacy app pairs remain supported. Completion reads bounded catalog IDs without
+payload verification; mutation revalidates ownership, metadata and content.
+
+Delete/prune may remove the payload's UUID container only with `created_parents`
+evidence from its creating transaction and no other directory members. The whole
+directory receives a guard and one Store operation. A missing payload permits
+explicit catalog/empty-owned-container cleanup; a modified payload is refused.
+Adjacent and imported parents never acquire container ownership from their name.
+
+Appearance imports use declared source-profile layers, omit shared defaults unless explicitly selected as the source, and merge portable appearance with source values winning. Native files, shell settings and structural/machine configuration are excluded. Layout migration and import share retained file Store guards, journals and undo; reads never migrate. See [configuration storage and import](configuration.md#preference-files-and-appearance-import).

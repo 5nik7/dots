@@ -170,13 +170,12 @@ class BundledApps(unittest.TestCase):
         self.assertEqual(self.receipt()['entries'], {})
 
     @unittest.skipIf(os.name == 'nt', 'POSIX link collision; native capability tested separately')
-    def test_collision_and_missing_payload_block_all_targets(self):
+    def test_reviewed_collision_and_missing_payload_preflight(self):
         target = self.home/'.local/bin/pkgs'
         target.parent.mkdir(parents=True)
         target.symlink_to(self.home/'foreign missing command')
-        result = self.cli('install', '--dry-run', '--json', ok=False)
-        self.assertIn('unrelated link', result.stdout)
-        self.cli('install', '--yes', '--json', ok=False)
+        result = self.cli('install', '--dry-run', '--json')
+        self.assertIn('backup', result.stdout)
         self.assertFalse(self.target.exists())
         self.assertFalse((self.home/'.state').exists())
         target.unlink()

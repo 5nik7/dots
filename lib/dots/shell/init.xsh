@@ -43,6 +43,9 @@ for _dots_directory in ($DOTBIN, $DOTSCRIPTS):
         $PATH.insert(0, _dots_directory)
 if dots_options['DOTS_INIT_COMMANDS'] == '1':
     $PATH.append($THEMESBIN)
+    aliases['.ln'] = [__import__('sys').executable, '-B', str(_DotsPath($DOTS) / 'lib/dots/link_cli.py')]
+elif aliases.get('.ln') == [__import__('sys').executable, '-B', str(_DotsPath($DOTS) / 'lib/dots/link_cli.py')]:
+    del aliases['.ln']
 if $XONSH_INTERACTIVE:
     esc = ESC = '\x1b'
     rst = RST = '\x1b[0m'
@@ -114,10 +117,10 @@ if $XONSH_INTERACTIVE:
             return None
         names = _DotsPath(dot['state']) / 'themes/commands/current/names'
         families = names.read_text().splitlines() if names.is_file() else []
-        if context.command not in ['dots', 'theme', *families]:
+        if context.command not in ['dots', 'theme', 'bak', 'dots-bak', *families]:
             return None
         words = [arg.value for arg in context.args[:context.arg_index]] + [context.prefix]
-        result = _dots_subprocess.run([str(_DotsPath($DOTS) / 'bin/dots'), '__complete', 'bash',
+        result = _dots_subprocess.run([str(_DotsPath($DOTS) / 'bin/dots'), '__complete', 'xonsh',
                                       str(context.arg_index), '--', *words],
                                      capture_output=True, text=True, env=__xonsh__.env.detype(), timeout=5)
         return {line.split('\t')[1] for line in result.stdout.splitlines() if line.startswith('candidate\t')}
@@ -126,4 +129,7 @@ if $XONSH_INTERACTIVE:
 
 
 _dots_profile_paths = [p for p in _dots_profile_environment['DOTS_PROFILE_PATHS'].split(__import__('os').pathsep) if p]
-__xonsh__.env['PATH'] = list(dict.fromkeys(_dots_profile_paths + list(__xonsh__.env['PATH'])))
+_dots_owned_paths = [p for p in ($DOTBIN, $DOTSCRIPTS) if _DotsPath(p).is_dir()]
+if dots_options['DOTS_INIT_COMMANDS'] == '1':
+    _dots_owned_paths.append($THEMESBIN)
+__xonsh__.env['PATH'] = list(dict.fromkeys(_dots_owned_paths + _dots_profile_paths + list(__xonsh__.env['PATH'])))

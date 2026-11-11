@@ -156,7 +156,7 @@ snapshots, omitting unchanged/skipped packages and newly added dependencies.
 No changes reports Updated none; an inventory failure reports Updated unavailable
 without blocking the transaction or changing its exit status. These reads apply
 only to compact upgrades. The skipped suffix uses the theme's muted foreground.
-Package identities in results and progress use the active palette's yellow.
+Package identities in results and progress default to the active palette's accent through `colors.apps.pkgs`.
 Compact npm output hides deprecations and the two routine force/allow-scripts
 notices described in [package output](../../docs/packages.md#output). Other warnings/errors
 remain visible; raw and ordinary redirected output retain all notices.
@@ -165,11 +165,16 @@ targets alongside verified Updated names. Package recipes stop on their own
 failure; manager hooks and replacement recipes retain their boundaries. Failed
 commands' errors take priority over earlier successful-command diagnostics. Native
 dependency-conflict blocks become one notice to run `python -m pip check`;
-installed dependencies are not repaired automatically.
+installed dependencies are not repaired automatically. Automatic Termux upgrades
+use compatible wheels, while explicit native format controls/targets can request
+source builds. Automatic gem upgrades include RubyGems self-update unless
+`apps.pkgs.upgrade.gem_system` is false.
 Compact global npm installs/upgrades offer default-no approval for blocked scripts,
 one exact installed package/version at a time. Approval uses a temporary
 name-specific allow flag with an exact rebuild target; --yes never supplies it,
-and no policy is saved. No terminal or declined approval leaves scripts blocked.
+and no npm policy is saved. Verified script runs are remembered only for unchanged
+installed trees; changed versions/files or reinstalls require review again.
+Unverified scripts without a terminal or declined approval remain blocked.
 Project/custom-scope and raw commands retain native instructions. See
 [script approval](../../docs/packages.md#blocked-npm-install-scripts).
 Installs show the current package when known, with `Installing` as the fallback

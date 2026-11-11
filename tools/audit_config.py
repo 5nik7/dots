@@ -61,7 +61,7 @@ def scan(root, profiles=()):
                         # Never emit arbitrary source text or configuration values.
                         tokens = sorted({('U+%04X' % ord(m)) if len(m) == 1 and ord(m) >= 0xe000 else m.lower() for m in matches})
                         identity = '%s:%s:%s:%s' % (relative.as_posix(), line, kind, ','.join(tokens))
-                        declaration = path.name in ('icons.toml', 'colors.toml', 'profile.json') or section == 'default'
+                        declaration = path.name in ('icons.toml', 'colors.toml', 'config.json', 'profile.json') or section == 'default'
                         result['findings'].append(dict(id=hashlib.sha256(identity.encode()).hexdigest()[:16],
                             path=relative.as_posix(), line=line, kind=kind, tokens=tokens,
                             review='declaration' if declaration else 'candidate'))

@@ -35,3 +35,5 @@ Follow [shell integration](../dots-shell-integration/SKILL.md) and report unavai
 native engines separately. Update canonical docs and regenerate/check the wiki.
 
 Configuration coverage includes foreground/background, nullable icon styles, labels/values, indentation/tab stops, spacing, alignment and native placement where useful. Follow [dots-config](../dots-config/SKILL.md) for typed controls and consumer verification; use [dots-config-audit](../dots-config-audit/SKILL.md) for requested broad discovery. Preserve native ownership and data output, and record a reason for controls deliberately left unchanged.
+
+Keep identity/inheritance, environment, paths and managed mappings in `profile.json`; preferences and shell settings belong in adjacent `config.json`, with colors/icons in their own TOML files. Preserve legacy inline reads during explicit guarded migration. Shared preference saves are the default; explicit profile saves override shared values. Native app files retain their owners. Include separated files and creation/deletion in generated shell cache inputs.

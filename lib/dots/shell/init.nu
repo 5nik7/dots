@@ -1,4 +1,14 @@
 use less.nu _dots-less-style
+def --wrapped .ln [...args] {
+    if ($env.dots_options.DOTS_INIT_COMMANDS? | default '1') != '1' { error make {msg: 'Dots command integration is disabled'} }
+    if $nu.os-info.name == 'windows' {
+        let engines = (which pwsh powershell | where type == 'external')
+        if ($engines | is-empty) { error make {msg: 'Native PowerShell is required for dots link on Windows'} }
+        ^($engines.0.path) -NoLogo -NoProfile -File ($env.DOTS | path join 'scripts/dots-link.ps1') ...$args
+    } else {
+        ^($env.DOTS | path join 'bin/dots') link ...$args
+    }
+}
 hide-env --ignore-errors DOTRUBY RUBYCOMP
 let dots_retired_roots = ([$env.DOTS ($env.DOTS_PROFILE_CHECKOUT? | default '') (($env.HOME? | default $env.USERPROFILE?) | path join 'dots')] | where {|root| $root != ''})
 let dots_normalize_path = {|entry|
@@ -103,11 +113,7 @@ def --env _dots-load [] {
     load-env $exports
     $env.THEMESCMD = ($env.dot.bin | path join theme)
     $env.THEMESBIN = ($env.dot.state | path join 'themes/commands/current/bin')
-    $env.PATH = ($env.PATH | where {|entry| $entry != $env.THEMESBIN and $entry != ($env.DOTS | path join 'themes/bin') })
-    for directory in [$env.DOTBIN $env.DOTSCRIPTS] {
-        if ($directory | path exists) and $directory not-in $env.PATH { $env.PATH = ($env.PATH | prepend $directory) }
-    }
-    if $env.dots_options.DOTS_INIT_COMMANDS == '1' { $env.PATH = ($env.PATH | append $env.THEMESBIN) }
+
 }
 def --env _dots-refresh-theme [] {
     if $env.dots_options.DOTS_INIT_THEME != '1' {
@@ -179,8 +185,8 @@ if $nu.is-interactive {
         $env.config.completions.external.completer = {|spans|
             let names_file = ($env.dot.state | path join 'themes/commands/current/names')
             let families = if ($names_file | path exists) { open --raw $names_file | lines } else { [] }
-            if $env.dots_options.DOTS_INIT_COMPLETION == '1' and $spans.0 in ([dots theme] | append $families) {
-                let result = (^($env.DOTS | path join bin dots) __complete bash (($spans | length) - 1) -- ...$spans | complete)
+            if $env.dots_options.DOTS_INIT_COMPLETION == '1' and $spans.0 in ([dots theme bak dots-bak] | append $families) {
+                let result = (^($env.DOTS | path join bin dots) __complete nu (($spans | length) - 1) -- ...$spans | complete)
                 if $result.exit_code != 0 { return [] }
                 $result.stdout | lines | each {|line|
                     let fields = ($line | split row "\t")
@@ -196,4 +202,7 @@ if $nu.is-interactive {
 
 
 let profile_paths = ($env.DOTS_PROFILE_PATHS? | default "" | split row (char esep) | where {|entry| $entry != ""})
-$env.PATH = ($profile_paths | append $env.PATH | uniq)
+let owned_paths = ([$env.DOTBIN $env.DOTSCRIPTS] | where {|entry| $entry | path exists })
+let theme_paths = if $env.dots_options.DOTS_INIT_COMMANDS == '1' { [$env.THEMESBIN] } else { [] }
+let old_paths = ($env.PATH | where {|entry| $entry != $env.THEMESBIN and $entry != ($env.DOTS | path join 'themes/bin') })
+$env.PATH = ($owned_paths | append $theme_paths | append $profile_paths | append $old_paths | uniq)

@@ -25,19 +25,12 @@ PIP_CONFLICT = ("pip's dependency resolver does not currently take into account 
 PIP_CONFLICT_ROW = re.compile(r'^\S+ \S+ requires .+, (?:which is not installed\.|'
                               r'but you have .+ which is incompatible\.)$')
 PACKAGE_FIELDS = {'Installed', 'Removed', 'Updated', 'Failed', 'Remove',
-                  'Scripts', 'Scripts ran', 'Scripts blocked'}
+                  'Scripts', 'Scripts ran', 'Scripts blocked', 'Scripts current'}
 
 
 def package_color(cfg):
-    """Use palette yellow, independently of customized warning/identity roles."""
-    if '_package_color' not in cfg:
-        from . import reports  # Makes the shared presentation modules available.
-        from style_config import current
-        prefs = current()
-        code = prefs.sgr_color('yellow') if prefs else '33'
-        # Literal indexed yellow bypasses semantic remapping of ANSI 33/93.
-        cfg['_package_color'] = '38;5;3' if code == '33' else code
-    return cfg['_package_color']
+    from .presentation import styles
+    return styles()['package']
 
 
 def enabled(args, cfg):
@@ -72,7 +65,7 @@ def packages(cfg, label, names, *, placeholder=False):
         for name in names:
             if spans: spans.append((', ', None))
             identity, separator, status = name.partition(' (exit ') if label == 'Failed' else (name, '', '')
-            spans.append((identity, '90' if placeholder else package_color(cfg)))
+            spans.append((identity, ui.styles['muted'] if placeholder else package_color(cfg)))
             if separator: spans.append((separator+status, None))
         ui.ui.detail_spans(label, spans, label_width=11)
     elif ui: ui.field(label, value, 'identity')
@@ -101,7 +94,9 @@ class Output:
         self.transferred, self.total = 0, 0
         self.last_activity = time.monotonic()
         self.partial_seen = ''
-        self.package_style = package_color(cfg)
+        from .presentation import styles
+        self.styles = styles()
+        self.package_style = self.styles['package']
         self.conflicts = False
         self.conflict_rows = False
         self.pip_steps = False
@@ -247,8 +242,8 @@ class Output:
                 label += f'{min(100, 100*self.transferred//self.total)}% '+amount(self.transferred)+'/'+amount(self.total)
             else: label += 'Downloaded '+amount(self.transferred)
         else: label += self.stage
-        spans = [(label, None)]
-        if self.package: spans += [(' · ', None), (self.package, self.package_style)]
+        spans = [(label, self.styles['progress'])]
+        if self.package: spans += [(' · ', self.styles['progress']), (self.package, self.package_style)]
         self.progress.update_spans(spans)
 
     def prompt(self, text, stream, ending=''):
@@ -321,9 +316,8 @@ class Output:
         suffix = ' · '+str(skipped)+' skipped' if skipped else ''
         ui = renderer(self.cfg, sys.stdout)
         if ui:
-            from plugin_presentation import STYLES
             role = 'error' if rc else 'muted' if unchanged else 'success'
-            ui.ui.detail_spans(self.manager, [(status, STYLES[role]), (suffix, '90')], label_width=11)
+            ui.ui.detail_spans(self.manager, [(status, ui.styles[role]), (suffix, ui.styles['skipped'])], label_width=11)
         else: print('  '+self.manager+': '+status+suffix)
         sys.stdout.flush()
         if not rc and not unchanged and self.action in ('install', 'uninstall'):

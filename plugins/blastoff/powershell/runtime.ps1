@@ -25,8 +25,8 @@ function ConvertTo-BlastoffEnvelope {
 }
 function Get-BlastoffLegacyCompletionNames {
     param([string]$Root,[string]$Kind,[string]$CacheKey)
-    # PowerShell 7.0 Unix lacks UnixMode unless PSUnixFileStat is enabled. Use
-    # the already-required native Python only for this dynamic filename case.
+    # Use the already-required native Python for shared backup catalog IDs and
+    # for Unix filename checks when PowerShell lacks UnixMode metadata.
     $now=[DateTime]::UtcNow
     $key='legacy|'+$CacheKey
     if ($script:CompletionCache.ContainsKey($key) -and ($now-$script:CompletionCache[$key].Time).TotalSeconds -lt 2) {
@@ -34,6 +34,14 @@ function Get-BlastoffLegacyCompletionNames {
     }
     $process=$null
     try {
+        if ($Kind -ceq 'backups' -and $IsWindows) {
+            $stateBase = $env:XDG_STATE_HOME
+            if (-not $stateBase) { $stateBase = $env:LOCALAPPDATA }
+            if (-not $stateBase) { $stateBase = Join-Path $HOME 'AppData/Local' }
+            # Catalog completion keeps the same local-only boundary as names.
+            if (-not [IO.Path]::IsPathFullyQualified($stateBase) -or $stateBase -match '^[\\/]{2}') { return @() }
+            if (([IO.DriveInfo]::new([IO.Path]::GetPathRoot($stateBase))).DriveType -eq 'Network') { return @() }
+        }
         $selection=Get-BlastoffRuntime
         $context=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((ConvertTo-Json -Compress -InputObject @{root=$Root;kind=$Kind})))
         $start=[Diagnostics.ProcessStartInfo]::new()

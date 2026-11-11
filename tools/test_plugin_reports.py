@@ -150,7 +150,7 @@ class Reports(MenuFixture):
             with patch.dict(os.environ, DOTS_MENU_CAPTURE='1', DOTS_COLOR='always', DOTS_ICONS='always'):
                 self.assertEqual(self.packages([*args, '--json', '--color', 'always']), baseline)
                 code, text, _ = self.packages(args)
-                self.assertEqual(code, 0); self.assertIn('\x1b[1;36m', text)
+                self.assertEqual(code, 0); self.assertIn('\x1b[0;1;36m', text)
                 self.assertNotIn('"supported":', text); self.assertNotIn('"shell":', text)
                 self.assertNotIn('\x1b[31m', text)
         with patch.dict(os.environ, DOTS_MENU_CAPTURE='1'):

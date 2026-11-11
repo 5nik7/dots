@@ -1,73 +1,29 @@
-# Semantic styles resolve against the addressed Dots theme.
-[status.error]
-fg = "error"
+[apps.clipboard.error]
+fg = "colors.status.error.fg"
 
+[apps.clipboard.heading]
+fg = "colors.ui.heading.fg"
 
-[status.info]
-fg = "info"
+[apps.clipboard.identity]
+fg = "colors.ui.accent.fg"
 
+[apps.clipboard.label]
+fg = "colors.ui.label.fg"
 
-[status.success]
-fg = "green"
+[apps.clipboard.pinned]
+fg = "colors.status.warning.fg"
 
+[apps.clipboard.source]
+fg = "colors.ui.muted.fg"
 
-[status.waiting]
-fg = "warning"
+[apps.clipboard.text]
+fg = "colors.ui.foreground.fg"
 
+[apps.clipboard.timestamp]
+fg = "colors.ui.muted.fg"
 
-[status.warning]
-fg = "warning"
-
-
-[status.working]
-bold = true
+[apps.fzf.ui.cursor]
 fg = "accent"
-
-
-[ui.accent]
-fg = "magenta"
-
-
-[ui.foreground]
-fg = "foreground"
-
-
-[ui.heading]
-bold = true
-fg = "cyan"
-
-
-[ui.identity]
-bold = true
-fg = "blue"
-
-
-[ui.label]
-fg = "blue"
-
-
-[ui.muted]
-fg = "muted"
-
-
-[ui.selection]
-bg = "selection_background"
-bold = true
-fg = "bright_foreground"
-
-# Shared controls; native overrides preserve each consumer's existing defaults.
-
-[ui.border]
-fg = "lighter_background"
-
-[ui.cursor]
-fg = "bright_foreground"
-
-[ui.match]
-fg = "bright_magenta"
-
-[ui.separator]
-fg = "background"
 
 [apps.gum.ui.border]
 fg = "magenta"
@@ -75,44 +31,35 @@ fg = "magenta"
 [apps.gum.ui.match]
 fg = "magenta"
 
-[apps.todo.status.open]
-fg = "bright_green"
-bold = true
+[apps.menu.description]
+fg = "muted"
 
-[apps.todo.status.doing]
+[apps.menu.icon]
+fg = "accent"
+
+[apps.menu.label]
 fg = "blue"
 
-[apps.todo.status.blocked]
+[apps.menu.shortcut]
+fg = "cyan"
+
+[apps.menu.state]
 fg = "warning"
 
-[apps.todo.status.done]
-fg = "green"
+[apps.pkgs.package]
+fg = "accent"
 
-[apps.todo.status.removed]
-fg = "muted"
-
-[apps.todo.priority.high]
-fg = "warning"
-bold = true
-
-[apps.todo.priority.normal]
-fg = "orange"
-
-[apps.todo.priority.low]
-fg = "muted"
-bold = true
-
-[apps.tmux.windows.active]
-fg = "bright_green"
-bg = "selection_background"
-
-[apps.tmux.windows.inactive]
-fg = "light_foreground"
+[apps.tmux.battery.icon]
 bg = "dark_background"
 
-[apps.tmux.windows.alert]
-fg = "bright_red"
-bg = "darker_background"
+[apps.tmux.battery.spacer]
+bg = "dark_background"
+
+[apps.tmux.battery.surround]
+bg = "dark_background"
+
+[apps.tmux.battery.text]
+bg = "dark_background"
 
 [apps.tmux.pane.active_border]
 fg = "selection"
@@ -120,87 +67,26 @@ fg = "selection"
 [apps.tmux.pane.inactive_border]
 fg = "muted"
 
+[apps.tmux.session.repository]
+fg = "colors.ui.accent.fg"
 
-[apps.fzf.ui.cursor]
-fg = "accent"
+[apps.tmux.status.waiting]
+fg = "colors.ui.accent.fg"
 
+[apps.tmux.status.working]
+fg = "colors.ui.accent.fg"
 
-[apps.menu.icon]
-fg = "accent"
+[apps.tmux.windows.active]
+bg = "selection_background"
+fg = "bright_green"
 
+[apps.tmux.windows.alert]
+bg = "darker_background"
+fg = "bright_red"
 
-[apps.menu.label]
-fg = "blue"
-
-
-[apps.menu.description]
-fg = "muted"
-
-
-[apps.menu.shortcut]
-fg = "cyan"
-
-
-[apps.menu.state]
-fg = "warning"
-
-
-[apps.todo.field.id.label]
-fg = "blue"
-
-[apps.todo.field.id.value]
-fg = "muted"
-
-
-[apps.todo.field.alias.label]
-fg = "blue"
-
-[apps.todo.field.alias.value]
-fg = "cyan"
-
-
-[apps.todo.field.title.label]
-fg = "blue"
-
-[apps.todo.field.title.value]
-fg = "bright_foreground"
-
-
-[apps.todo.field.notes.label]
-fg = "blue"
-
-[apps.todo.field.notes.value]
-fg = "foreground"
-
-
-[apps.todo.field.tags.label]
-fg = "blue"
-
-[apps.todo.field.tags.value]
-fg = "foreground"
-
-
-[apps.todo.field.status.label]
-fg = "blue"
-
-
-[apps.todo.field.priority.label]
-fg = "blue"
-
-
-[apps.todo.field.due.label]
-fg = "blue"
-
-[apps.todo.field.due.value]
-fg = "foreground"
-
-
-[apps.todo.field.parent.label]
-fg = "blue"
-
-[apps.todo.field.parent.value]
-fg = "foreground"
-
+[apps.tmux.windows.inactive]
+bg = "dark_background"
+fg = "light_foreground"
 
 [apps.todo.field.acceptance.label]
 fg = "blue"
@@ -208,27 +94,18 @@ fg = "blue"
 [apps.todo.field.acceptance.value]
 fg = "foreground"
 
-
-[apps.todo.field.subgoal_id.label]
+[apps.todo.field.alias.label]
 fg = "blue"
 
-[apps.todo.field.subgoal_id.value]
-fg = "muted"
-
-
-[apps.todo.field.subgoal_title.label]
+[apps.todo.field.alias.value]
+bold = true
 fg = "blue"
 
-[apps.todo.field.subgoal_title.value]
-fg = "bright_foreground"
-
-
-[apps.todo.field.subgoals.label]
+[apps.todo.field.completed.label]
 fg = "blue"
 
-[apps.todo.field.subgoals.value]
-fg = "foreground"
-
+[apps.todo.field.completed.value]
+fg = "reset"
 
 [apps.todo.field.created.label]
 fg = "blue"
@@ -236,20 +113,32 @@ fg = "blue"
 [apps.todo.field.created.value]
 fg = "muted"
 
-
-[apps.todo.field.updated.label]
+[apps.todo.field.due.label]
 fg = "blue"
 
-[apps.todo.field.updated.value]
-fg = "muted"
+[apps.todo.field.due.value]
+fg = "foreground"
 
-
-[apps.todo.field.completed.label]
+[apps.todo.field.id.label]
 fg = "blue"
 
-[apps.todo.field.completed.value]
+[apps.todo.field.id.value]
 fg = "muted"
 
+[apps.todo.field.notes.label]
+fg = "blue"
+
+[apps.todo.field.notes.value]
+fg = "light_foreground"
+
+[apps.todo.field.parent.label]
+fg = "blue"
+
+[apps.todo.field.parent.value]
+fg = "foreground"
+
+[apps.todo.field.priority.label]
+fg = "blue"
 
 [apps.todo.field.removed.label]
 fg = "blue"
@@ -257,7 +146,93 @@ fg = "blue"
 [apps.todo.field.removed.value]
 fg = "muted"
 
-# Shared daylight and battery roles; component overrides remain independent.
+[apps.todo.field.status.label]
+fg = "blue"
+
+[apps.todo.field.subgoal_id.label]
+fg = "blue"
+
+[apps.todo.field.subgoal_id.value]
+fg = "muted"
+
+[apps.todo.field.subgoal_title.label]
+fg = "blue"
+
+[apps.todo.field.subgoal_title.value]
+fg = "bright_foreground"
+
+[apps.todo.field.subgoals.label]
+fg = "blue"
+
+[apps.todo.field.subgoals.value]
+fg = "foreground"
+
+[apps.todo.field.tags.label]
+bg = "default"
+fg = "blue"
+
+[apps.todo.field.tags.value]
+dim = true
+fg = "default"
+
+[apps.todo.field.title.label]
+fg = "blue"
+
+[apps.todo.field.title.value]
+bold = true
+fg = "bright_foreground"
+
+[apps.todo.field.updated.label]
+fg = "blue"
+
+[apps.todo.field.updated.value]
+fg = "muted"
+
+[apps.todo.priority.high]
+bold = true
+fg = "warning"
+underline = true
+
+[apps.todo.priority.low]
+bold = true
+fg = "muted"
+
+[apps.todo.priority.normal]
+dim = false
+fg = "orange"
+
+[apps.todo.status.blocked]
+bold = true
+fg = "bright_cyan"
+
+[apps.todo.status.doing]
+bold = true
+fg = "bright_green"
+
+[apps.todo.status.done]
+fg = "green"
+
+[apps.todo.status.open]
+bold = true
+fg = "muted"
+
+[apps.todo.status.removed]
+fg = "muted"
+
+[battery.charging]
+fg = "colors.battery.normal.fg"
+
+[battery.critical]
+fg = "red"
+
+[battery.low]
+fg = "yellow"
+
+[battery.normal]
+fg = "green"
+
+[battery.unknown]
+fg = "muted"
 
 [daylight.day]
 fg = "yellow"
@@ -271,28 +246,113 @@ fg = "yellow"
 [daylight.sunset]
 fg = "orange"
 
-[battery.critical]
-fg = "red"
+[status.error]
+fg = "error"
 
-[battery.low]
-fg = "yellow"
+[status.info]
+fg = "info"
 
-[battery.normal]
+[status.success]
 fg = "green"
 
-[battery.charging]
-fg = "colors.battery.normal.fg"
+[status.waiting]
+fg = "warning"
 
-[battery.unknown]
+[status.warning]
+fg = "warning"
+
+[status.working]
+bold = true
+fg = "accent"
+
+[ui.accent]
+fg = "accent"
+
+[ui.border]
+fg = "lighter_background"
+
+[ui.cursor]
+fg = "bright_foreground"
+
+[ui.foreground]
+fg = "foreground"
+
+[ui.heading]
+bold = true
+fg = "cyan"
+
+[ui.identity]
+bold = true
+fg = "blue"
+
+[ui.label]
+fg = "blue"
+
+[ui.match]
+fg = "bright_magenta"
+
+[ui.muted]
 fg = "muted"
 
+[ui.selection]
+bg = "selection_background"
+bold = true
+fg = "bright_foreground"
 
-[apps.tmux.session.repository]
-fg = "colors.ui.accent.fg"
+[ui.separator]
+fg = "background"
 
-# Native activity markers keep their existing accent; profile-wide overrides
-# still win over these shared application defaults.
-[apps.tmux.status.working]
-fg = "colors.ui.accent.fg"
-[apps.tmux.status.waiting]
-fg = "colors.ui.accent.fg"
+[controls]
+"apps.fzf.colors.bg" = { inherit = true }
+"apps.fzf.colors.border" = { inherit = true }
+"apps.fzf.colors.disabled" = { inherit = true }
+"apps.fzf.colors.fg" = { inherit = true }
+"apps.fzf.colors.footer" = { inherit = true }
+"apps.fzf.colors.footer-bg" = { inherit = true }
+"apps.fzf.colors.footer-border" = { inherit = true }
+"apps.fzf.colors.footer-label" = { inherit = true }
+"apps.fzf.colors.gutter" = { inherit = true }
+"apps.fzf.colors.header" = "muted"
+"apps.fzf.colors.header-bg" = { inherit = true }
+"apps.fzf.colors.header-border" = { inherit = true }
+"apps.fzf.colors.header-label" = { inherit = true }
+"apps.fzf.colors.hl" = { inherit = true }
+"apps.fzf.colors.info" = { inherit = true }
+"apps.fzf.colors.input-bg" = { inherit = true }
+"apps.fzf.colors.input-border" = { inherit = true }
+"apps.fzf.colors.input-fg" = { inherit = true }
+"apps.fzf.colors.input-label" = { inherit = true }
+"apps.fzf.colors.label" = { inherit = true }
+"apps.fzf.colors.list-bg" = { inherit = true }
+"apps.fzf.colors.list-border" = { inherit = true }
+"apps.fzf.colors.list-label" = { inherit = true }
+"apps.fzf.colors.marker" = { inherit = true }
+"apps.fzf.colors.nomatch" = { inherit = true }
+"apps.fzf.colors.nth" = { inherit = true }
+"apps.fzf.colors.pointer" = { inherit = true }
+"apps.fzf.colors.preview-bg" = { inherit = true }
+"apps.fzf.colors.preview-border" = { inherit = true }
+"apps.fzf.colors.preview-fg" = { inherit = true }
+"apps.fzf.colors.preview-label" = { inherit = true }
+"apps.fzf.colors.preview-scrollbar" = { inherit = true }
+"apps.fzf.colors.prompt" = "accent"
+"apps.fzf.colors.query" = { inherit = true }
+"apps.fzf.colors.scrollbar" = { inherit = true }
+"apps.fzf.colors.selected-bg" = { inherit = true }
+"apps.fzf.colors.selected-fg" = { inherit = true }
+"apps.fzf.colors.separator" = { inherit = true }
+"apps.fzf.colors.spinner" = { inherit = true }
+"apps.fzf.colors[\"bg+\"]" = { inherit = true }
+"apps.fzf.colors[\"fg+\"]" = "accent"
+"apps.fzf.colors[\"hl+\"]" = { inherit = true }
+"apps.nvim.highlights" = {}
+"apps.nvim.icon_styles" = {}
+"colors.apps.menu.entries" = {}
+"colors.apps.menu.popup.body.bg" = { inherit = true }
+"colors.apps.menu.popup.body.fg" = { inherit = true }
+"colors.apps.menu.popup.border.fg" = "lighter_background"
+"colors.apps.menu.popup.label.fg" = { inherit = true }
+"colors.apps.menu.popup.preview.bg" = { inherit = true }
+"colors.apps.menu.popup.preview.border.fg" = { inherit = true }
+"colors.apps.menu.popup.preview.fg" = { inherit = true }
+"colors.apps.menu.popup.preview.label.fg" = { inherit = true }

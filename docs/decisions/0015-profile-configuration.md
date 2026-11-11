@@ -2,6 +2,13 @@
 
 **Status: Accepted.**
 
+**2026-11-11 refinement:** Preference storage and write targets below are
+superseded by the [shared-preferences plan](../../plans/config-preferences-completion.md).
+`profile.json` retains structural profile data; adjacent `config.json`,
+`colors.toml` and `icons.toml` own preferences. Unqualified preference saves target
+`default/`; explicit `--profile` saves overrides. Native application files remain
+authoritative. Legacy inline preferences remain readable during guarded migration.
+
 ## Context
 
 Environment declarations already belong to platform profiles, while Dots settings, file mapping edits and format-specific preferences used separate user-directory files. That split made it difficult to keep a platform's desired configuration together or edit it consistently through the CLI.

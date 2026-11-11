@@ -104,3 +104,25 @@ The [Git family](../../docs/git.md) uses static Bash headers and a dots-owned ba
 Every first-party change must cover Bash on Termux/Linux/WSL and native Windows PowerShell 5.1/7: routes, flags, aliases, contextual completion, exact data output, styled human output, progress and optional pickers. Keep native filesystem/app differences in adapters and reuse transactions. Read [native PowerShell](../../docs/powershell.md); update its capability limits and the [parity plan](../../plans/powershell-parity.md) when affected. Run focused isolated tests for both controller paths, require actual PowerShell engines in Windows CI, and report missing native/desktop evidence explicitly.
 
 The configuration review also covers future formatting: indentation/tab stops, spacing/padding, alignment and native component placement, plus separate icon/label/value fg/bg styles. Use the [audit skill](../../.codex/skills/dots-config-audit/SKILL.md) for requested repository-wide discovery; candidate findings require owner/consumer verification before controls are advertised.
+
+## Command and script delivery
+
+Apply this gate to new or changed user-facing scripts as well as Dots command
+routes. Record each outcome in the focused plan and tracked Todo acceptance:
+
+- Implement contextual completion from the command grammar for Bash, Zsh, Fish,
+  native PowerShell, Nushell and Xonsh, including shipped standalone names and
+  aliases. Cover options, finite values, literal file paths and safe dynamic IDs.
+  Completion never runs extensions, prompts, downloads or writes state. Name any
+  platform exception and unavailable native acceptance explicitly.
+- Apply shared colors, icons and formatting to human output, with plain fallbacks
+  and exact scalar/JSON/raw/completion contracts. Review existing Config controls.
+- Add or update a shared popup/menu when repeated selection, browsing or review
+  benefits from it; otherwise record why the direct command is sufficient.
+- Update metadata/help, examples, README and relevant references, plans and
+  maintenance skills. Rebuild/check the available wiki from canonical sources.
+- Audit installer/bootstrap delivery: command wrappers, completion registration,
+  settings/defaults and prerequisites must arrive through the existing component
+  selection. Update integration where needed, or record why it already works.
+- Finish with isolated verification and goal evidence; none of these gates grants
+  permission to install on the live host, reload applications, commit or publish.

@@ -11,7 +11,7 @@ from unittest.mock import patch
 import test_workflows as fixtures
 import test_install_output as install_fixtures
 from test_upgrade_output import Terminal
-from pkgs_lib import streams, upgrade_output, workflows
+from pkgs_lib import streams, upgrade_output, workflows, presentation
 from pkgs_lib.backends import Backend
 from pkgs_lib.common import Error, Package
 
@@ -158,15 +158,15 @@ class UpgradeSummary(unittest.TestCase):
                     self.assertIn('complete · 15 skipped',plain)
                     self.assertTrue(all(cells(line)<=width for line in plain.splitlines()),plain)
                     if mode=='always':
-                        self.assertIn('\x1b['+expected+'m · 15 skipped\x1b[0m',text)
-                        self.assertIn('\x1b[92mcomplete\x1b[0m',text)
+                        self.assertIn('\x1b[0;'+expected+'m · 15 skipped\x1b[0m',text)
+                        self.assertIn('\x1b[0;92mcomplete\x1b[0m',text)
                     else:self.assertNotIn('\x1b',text)
             out = Terminal()
             with patch.object(style_config,'current',return_value=prefs), \
                  patch.dict(os.environ,DOTS_COLOR='always',DOTS_ICONS='never',COLUMNS='80'),contextlib.redirect_stdout(out):
                 upgrade_output.Output('npm',self.cfg).result(42,skipped=1)
-            self.assertIn('\x1b[91mfailed (exit 42)\x1b[0m',out.getvalue())
-            self.assertIn('\x1b['+expected+'m · 1 skipped\x1b[0m',out.getvalue())
+            self.assertIn('\x1b[0;91mfailed (exit 42)\x1b[0m',out.getvalue())
+            self.assertIn('\x1b[0;'+expected+'m · 1 skipped\x1b[0m',out.getvalue())
 
     def test_exact_npm_notices_are_filtered_without_hiding_other_warnings(self):
         notices = ('npm warn using --force Recommended protections disabled.',
@@ -197,13 +197,13 @@ class UpgradeSummary(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             for line in notices: self.assertEqual(line in result.stderr, bool(options) or mode=='auto')
 
-    def test_yellow_is_palette_color_only_for_package_identities(self):
+    def test_accent_is_palette_color_only_for_package_identities(self):
         import style_config
         from resources import cells
         from progress import Progress
         root = self.home/'theme'; (root/'default').mkdir(parents=True)
         (root/'default/colors.toml').write_text('[status.warning]\nfg="#aa0000"\n[ui.identity]\nfg="#00aa00"\n')
-        for palette, expected in (({'yellow':'#abcd12'}, '38;2;171;205;18'), ({}, '38;5;3')):
+        for palette, expected in (({'accent':'#abcd12'}, '38;2;171;205;18'), ({}, '34')):
             prefs = style_config.Styles(root, selected={'layers':[]}, palette=palette)
             cfg = dict(self.cfg)
             with patch.object(style_config, 'current', return_value=prefs):
@@ -219,16 +219,16 @@ class UpgradeSummary(unittest.TestCase):
                         text=out.getvalue(); plain=re.sub(r'\x1b\[[0-9;]*m','',text)
                         self.assertTrue(all(cells(line)<=width for line in plain.splitlines()),plain)
                         if mode=='always':
-                            self.assertIn('\x1b['+expected+'mfirst\x1b[0m, ',text)
-                            self.assertIn('\x1b['+expected+'mbroken\x1b[0m (exit 1)',text)
+                            self.assertIn('\x1b[0;'+expected+'mfirst\x1b[0m\x1b[0;39m, ',text)
+                            self.assertIn('\x1b[0;'+expected+'mbroken\x1b[0m\x1b[0;39m (exit 1)',text)
                             for neutral in ('none','unavailable',', ', ' (exit 1)'):
-                                self.assertNotIn('\x1b['+expected+'m'+neutral,text)
+                                self.assertNotIn('\x1b[0;'+expected+'m'+neutral,text)
                         else: self.assertNotIn('\x1b',text)
                 meter=Progress(''); summary=upgrade_output.Output('pip',cfg,meter)
                 summary.package='package'; summary.stage='Building'; summary.last_activity=0
                 with patch.object(style_config,'current',side_effect=AssertionError('theme read during tick')):
                     summary.tick(now=65)
-                    self.assertEqual(meter.state[0], (('pip · 1:05 · Building',None),(' · ',None),('package',expected)))
+                    self.assertEqual(meter.state[0], (('pip · 1:05 · Building','0;94'),(' · ','0;94'),('package','0;'+expected)))
                     summary.last_activity=65; summary.tick(now=65)
                     self.assertNotIn('1:05',str(meter.state))
 

@@ -170,6 +170,41 @@ else:sys.exit(99)
         again=self.cli('install','--packages',str(path),'--yes','--json')
         self.assertEqual(again['packages']['groups'][0]['status'],'unchanged')
 
+    @unittest.skipIf(os.name=='nt','native Windows pkgs supports WinGet only')
+    def test_empty_user_gems_still_update_rubygems_on_all_surfaces(self):
+        state=self.home/'rubygems-version';calls=self.home/'gem-calls'
+        config=Path(self.env['XDG_CONFIG_HOME'])/'pkgs/config.json';config.parent.mkdir(parents=True,exist_ok=True)
+        config.write_text('{"upgrade":{"managers":["gem"]}}')
+        self.env.update(TEST_GEM_STATE=str(state),TEST_GEM_CALLS=str(calls),TEST_GEM_HOME=str(self.home/'gems'),DOTS_MENU_CAPTURE='1')
+        ruby=self.repo/'bin/ruby'
+        ruby.write_text('#!'+sys.executable+'\nimport os,sys\nprint(os.environ["TEST_GEM_HOME"] if "Gem.user_dir" in sys.argv[-1] else "[]")\n');ruby.chmod(0o755)
+        gem=self.repo/'bin/gem'
+        gem.write_text('#!'+sys.executable+'\n'+'''import os,sys,json
+from pathlib import Path
+state=Path(os.environ['TEST_GEM_STATE']);args=sys.argv[1:]
+with open(os.environ['TEST_GEM_CALLS'],'a') as f:f.write(json.dumps(args)+'\\n')
+if args==['--version']:print(state.read_text())
+elif args==['update','--system','--no-document']:
+    if os.environ.get('TEST_GEM_FAIL'):print('ERROR: distribution protection',file=sys.stderr);sys.exit(23)
+    state.write_text('4.0.2');print('RubyGems system software updated')
+else:sys.exit(99)
+''');gem.chmod(0o755)
+        outputs=[]
+        for argv in self.surfaces('pkgs',['up']):
+            state.write_text('4.0.1');calls.write_text('')
+            outputs.append(self.call(argv))
+            self.assertEqual(state.read_text(),'4.0.2')
+            recorded=[json.loads(line) for line in calls.read_text().splitlines()]
+            self.assertEqual(recorded.count(['update','--system','--no-document']),1)
+        self.assertTrue(all(output==outputs[0] for output in outputs))
+        self.assertRegex(outputs[0][0],rb'Updated\s+RubyGems')
+        self.env['TEST_GEM_FAIL']='1'
+        out,err,_=self.call(next(self.surfaces('pkgs',['up'])),code=1)
+        self.assertIn(b'failed (exit 23)',out);self.assertIn(b'distribution protection',err)
+        config.write_text('{"upgrade":{"managers":["gem"],"gem_system":false}}');calls.write_text('')
+        self.call(next(self.surfaces('pkgs',['up'])))
+        self.assertNotIn('update',calls.read_text())
+
     @unittest.skipIf(os.name=='nt','POSIX npm executable fixture; native WinGet has separate fixtures')
     def test_missing_prerequisite_does_not_apply_configuration(self):
         path=self.document(['hello']);self.env['PATH']=''
@@ -216,6 +251,10 @@ else:sys.exit(99)
         self.assertEqual(self.call([*route,'get','apps.pkgs.output'])[0],b'styled\n')
         data=json.loads(self.call([*route,'explain','apps.pkgs.output','--json'])[0])
         self.assertEqual(data['constraints']['choices'],['auto','styled','raw'])
+        self.call([*route,'set','apps.pkgs.upgrade.gem_system','false','--json'])
+        self.assertEqual(self.call([*route,'get','apps.pkgs.upgrade.gem_system'])[0],b'false\n')
+        controls=json.loads(self.call([*route,'explain','apps.pkgs.upgrade.gem_system','--json'])[0])
+        self.assertEqual(controls['constraints']['choices'],[True,False])
         with patch.dict(os.environ,self.env,clear=True):
             from config_menu import Inventory,Draft
             from profile_config import context

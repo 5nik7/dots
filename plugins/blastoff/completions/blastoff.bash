@@ -1,4 +1,6 @@
-# Offline positional completion. Never execute the application or read TOML.
+# Offline completion; backup IDs also read the bounded Bak catalog.
+_BLASTOFF_COMPLETION_SOURCE=${_BLASTOFF_COMPLETION_SOURCE:-${BASH_SOURCE[0]}}
+[[ $_BLASTOFF_COMPLETION_SOURCE == /* ]] || _BLASTOFF_COMPLETION_SOURCE=$PWD/$_BLASTOFF_COMPLETION_SOURCE
 _blastoff() {
     local LC_ALL=C root=${BLASTOFF_HOME:-$HOME/.config/blastoff}
     [[ $root == '~/'* ]] && root=$HOME/${root:2}
@@ -112,6 +114,11 @@ _blastoff() {
             compatible+=("$value")
         done
         candidates=("${compatible[@]}")
+    fi
+    if [[ $kind == backups && -f $_BLASTOFF_COMPLETION_SOURCE ]]; then
+        while IFS= read -r value; do
+            [[ $value =~ ^[a-f0-9]{32}$ ]] && candidates+=("$value")
+        done < <("${BLASTOFF_PYTHON:-python3}" -I -B -c 'import runpy,sys;from pathlib import Path;sys.argv=[str(Path(sys.argv[1]).resolve().parents[1]/"lib/completion_names.py"),"--shared",sys.argv[2]];runpy.run_path(sys.argv[0],run_name="__main__")' "$_BLASTOFF_COMPLETION_SOURCE" "$root" 2>/dev/null)
     fi
     if [[ -n $kind && -d $root && ! -L $root/$kind ]]; then
         for file in "$root/$kind/"*.toml; do

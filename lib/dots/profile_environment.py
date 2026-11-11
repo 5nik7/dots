@@ -51,6 +51,7 @@ class Model:
         for row in rows:
             path = Path(row['root'])
             self.inputs += [path, path/'profile.json']
+            if (path/'config.json').is_file(): self.inputs.append(path/'config.json')
             paths = dict(root=str(path), **{key: str(path/key) for key in STANDARD})
             paths['configs'] = paths['config']
             for child in sorted(path.iterdir()):

@@ -30,6 +30,8 @@ class Picker(unittest.TestCase):
         (self.store/'themes/beta.toml').write_bytes(b'[directory]\nstyle="blue"\n')
         self.env = dict(os.environ, HOME=str(self.home), USERPROFILE=str(self.home),
                         XDG_CONFIG_HOME=str(self.home/'xdg'), XDG_CACHE_HOME=str(self.home/'cache'),
+                        XDG_STATE_HOME=str(self.home/'state'), XDG_DATA_HOME=str(self.home/'data'),
+                        APPDATA=str(self.home/'Roaming'), LOCALAPPDATA=str(self.home/'Local'),
                         STARSHIP_CACHE=str(self.home/'starship-cache'),
                         STARSHIP_CONFIG=str(self.config), BLASTOFF_HOME=str(self.store),
                         BLASTOFF_PYTHON=sys.executable, PATH=str(self.bin), TERM='xterm-256color',
@@ -61,6 +63,7 @@ class Picker(unittest.TestCase):
             self.enable(backend)
             for width in (40,50):
                 with self.subTest(backend=backend,width=width):
+                    self.config.unlink(missing_ok=True)
                     self.config.write_bytes(b'format="$all"\n')
                     code, out = self.pick(backend, b'1\r' if backend == 'numbered' else b'\r', width)
                     self.assertEqual(code,0,repr(out[-1500:]))
@@ -76,6 +79,7 @@ class Picker(unittest.TestCase):
             self.enable(backend)
             for width in (40,50):
                 with self.subTest(backend=backend,width=width):
+                    self.config.unlink(missing_ok=True)
                     self.config.write_bytes(b'format="$all"\n')
                     code,out = self.pick(backend,b'1\r' if backend == 'numbered' else b'\r',width)
                     self.assertEqual(code,0,repr(out[-1500:]))

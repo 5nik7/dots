@@ -179,6 +179,11 @@ def run(core, app):
     args = app.args
     cmd, action = args.command, getattr(args,'action',None)
     operation = cmd+(' '+action if action else '')
+    if not args.replace_link and (cmd == 'pick' or cmd in ('theme', 'preset') and action == 'apply'):
+        if cmd == 'pick' and args.dry_run:
+            return report(app, operation, [app.configured_config], ['back up and link selected saved theme'], ['theme selection'])
+        value = app.pick() if cmd == 'pick' else ('preset:' if cmd == 'preset' else '')+args.name
+        return core.ui_module('linked_apply').run(core, app, value)
     if cmd == 'backup' and action == 'delete':
         return core.ui_module('backups').delete(core, app)
     if cmd == 'theme' and action == 'edit':
@@ -210,6 +215,16 @@ def run(core, app):
                 target = app.themes/(core.name(args.name)+'.toml')
         elif action == 'save':
             if args.name is not None: core.name(args.name)
+            if (app._active.links and app.config.parent == app.themes and previous
+                    and previous['last_loaded'].get('kind') == 'local'
+                    and previous['last_loaded'].get('path') == str(app.config)
+                    and args.name in (None, app.config.stem)):
+                app.check_active()
+                check_locks(core, app)
+                if args.dry_run:
+                    return report(app, operation, [app.config], ['already saved through the active link'])
+                app.emit({'path': str(app.config), 'backup': None}, 'Edits are already saved through the active theme link')
+                return 0
             if args.name is None and not args.dry_run: interactive(core,app)
             data = core.read(app.config, links=True); core.parsed(data); read_config = True
             if args.name is None:
@@ -258,10 +273,11 @@ def run(core, app):
             target = app.modules/(core.name(args.name)+'.toml')
     elif cmd == 'backup' and action == 'restore':
         ident = core.name(args.id)
-        meta = core.backup_metadata(app.backups/(ident+'.json'))
+        selected = core.ui_module('backups').inspect(core, app, ident)
+        meta = selected['metadata']
         if meta.get('kind') != 'config':
             raise core.Failure('Only config backups can be restored; use theme import for stored-theme backups, or inspect and copy stored-module backups')
-        data = core.read(app.backups/(ident+'.toml'))
+        data = core.read(selected['payload'])
         if provenance.digest(data) != meta.get('sha256'):
             raise core.Failure('Backup checksum mismatch')
         restored = meta.get('provenance')

@@ -67,10 +67,8 @@ def edit(core, app):
     app.args.command='edit'
     before=op.inspect_destination(core,app,app.config,active=True)
     op.check_locks(core,app)
-    # A destination inside the library is the library file, not a working copy.
-    for directory in (app.themes,app.modules):
-        if app.config.absolute().parent == directory.absolute():
-            raise core.Failure('Active configuration is a stored library path; choose a separate STARSHIP_CONFIG')
+    # check_active permits an explicit active link to a regular saved theme;
+    # edits retain the existing locks, private working copy and content backup.
     if app.args.dry_run:
         return op.report(app,'theme edit',[app.config],['editor argv: '+repr(argv),'back up original; edit private copy; validate and atomically publish'])
     op.interactive(core,app)

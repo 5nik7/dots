@@ -201,26 +201,20 @@ class StylePlan:
             self.data.update(updates)
         Styles(self.style.root, self.style.selected, defaults=self.defaults, replacements={self.path:self.data})
         self.items.append(dict(action='unset' if unset else 'set', key=self.group+'.'+name))
-        if self.data != self.before: self.operations=[dict(path=str(self.path),text=encode_styles(self.data))]
+        if self.data != self.before:
+            from preference_files import encode_style, controls
+            self.operations=[dict(path=str(self.path),text=encode_style(self.path,controls(self.path),encode_styles(self.data)))]
 
     def apply(self, action):
         return Store(state_root()).apply('config-'+action, self.operations, self.guards, retain=True, catalogs=[self.path])
 
 
-class ControlPlan:
-    def __init__(self,root,selected,defaults=False):
-        from config_values import Controls
-        self.controls=Controls(root,selected,defaults=defaults)
-        self.root,self.selected,self.defaults=root,selected,defaults
-        self.path=Path(root)/'default/config.json' if defaults else Path(selected['layers'][-1]['root'])/'profile.json'
-        self.guards={}
-        for path in self.controls.paths:
-            parents_safe(path);self.guards[str(path)]=digest(path)
-        self.before=read_json(self.path) if self.path.exists() else dict(schema=1,formatting={},apps={})
-        from config_keys import document
-        self.data=document(self.before,public=False);self.items=[];self.operations=[]
+from preference_files import PreferencePlan, SettingsPlan
 
+
+class ControlPlan(PreferencePlan):
     def edit(self,key,value=None,unset=False,json_value=False):
+        self.check()
         from config_values import parts,assign,validate_value,Controls
         from config_keys import internal,document
         key=internal(key)
@@ -234,7 +228,13 @@ class ControlPlan:
                 except ValueError:pass
         validate_value(self.controls.defaults,path,None if unset else value)
         from config_values import lookup
-        if self.defaults and (unset or value is None) and lookup(self.controls.defaults,path) is not None:
+        from config_values import dynamic,NULL_TYPES
+        dynamic_prefix,dynamic_kind=dynamic(path)
+        nullable=(path[:3]==('apps','fzf','colors') and len(path)==4 or
+                  path[:4]==('apps','menu','popup','colors') and len(path)==5 or
+                  dynamic_kind in ('icons','highlights','entries') and len(path)>len(dynamic_prefix) and not isinstance(lookup(self.controls.defaults,path),dict) or
+                  path[:2]==('apps','nvim') and path[2:3] in (('options',),('diagnostics',)) and path[-1] in NULL_TYPES)
+        if self.defaults and (unset or value is None) and lookup(self.controls.defaults,path) is not None and not nullable:
             raise ValueError('shared nonnullable defaults must remain defined; reset a profile override instead')
         assign(self.data,path,value,unset)
         if self.defaults:
@@ -243,25 +243,24 @@ class ControlPlan:
             if unset or value is None:
                 for part in path[:-1]:node=node.setdefault(part,{})
                 node[path[-1]]=None
-        else:validate(self.root,self.selected,self.data)
+        else:
+            from config_values import validate_groups
+            validate_groups(self.root,self.data)
+        from preference_files import compact
+        if compact(self.data)==compact(self.before):
+            self.items.append(dict(action='unset' if unset else 'set',key=key))
+            return
+        self.finish()
         from config_values import lookup
-        proposed=self.data if self.defaults else Controls(self.root,self.selected,replacements={self.path:self.data}).values
-        from config_values import leaves,name as config_name,constraints
+        proposed=self.data if self.defaults else Controls(self.root,self.selected,replacements=self.replacements).values
+        from config_values import validate_effective
         styles=Styles(self.root,self.selected,defaults=self.defaults)
-        for path,value in leaves(proposed):
-            if isinstance(value,str) and (path[:3]==('apps','fzf','colors') or constraints(self.controls.defaults,config_name(path)).get('type')=='color'):
-                for token in value.split(':'):
-                    if token.startswith('colors.'):styles.color(token)
-        from tmux_config import validate_layout
-        validate_layout(lookup(proposed,('formatting','apps','tmux'),{}),self.selected['facts']['platform'])
-        battery=lookup(proposed,('apps','tmux','battery'),{})
-        if battery.get('critical') is not None and battery.get('low') is not None and battery['critical']>=battery['low']:raise ValueError('critical battery threshold must be below low')
+        validate_effective(proposed,self.controls.defaults,styles,self.selected['facts']['platform'])
         self.items.append(dict(action='unset' if unset or value is None else 'set',key=key))
-        saved=document(self.data)
-        self.operations=[dict(path=str(self.path),data=saved)] if saved!=self.before else []
+        from preference_files import appearance_file
+        self.path=self.directory/appearance_file(key)
+        self.finish()
 
-    def apply(self,action):
-        return Store(state_root()).apply('config-'+action,self.operations,self.guards,retain=True,catalogs=[self.path])
 
 
 def style_value(styles,group,key):
@@ -362,7 +361,7 @@ class ConfigParser(argparse.ArgumentParser):
 
 def main(argv=None):
     parser = ConfigParser(description=__doc__)
-    parser.add_argument('action', nargs='?', choices=['browse','list','get','set','unset','path','check','migrate','explain','refresh'])
+    parser.add_argument('action', nargs='?', choices=['browse','list','get','set','unset','path','check','migrate','explain','refresh','import'])
     parser.add_argument('operands', nargs='*')
     parser.add_argument('--profile')
     from style_catalog import APPS
@@ -373,6 +372,7 @@ def main(argv=None):
     parser.add_argument('--defaults', action='store_true', help='Inspect or edit shared visual, formatting and application defaults')
     for option in ('json','json-value','dry-run','apply','yes'):
         parser.add_argument('--'+option, action='store_true')
+    parser.add_argument('--layout', action='store_true', help='Separate preferences from profile manifests')
     parser.add_argument('--keys', action='store_true', help='Migrate legacy configuration key names')
     parser.add_argument('--all-profiles', action='store_true', help='Migrate every declared profile')
     args = parser.parse_intermixed_args(argv)
@@ -385,9 +385,9 @@ def main(argv=None):
         args.key=args.value=None
     elif len(args.operands)>2:parser.error('too many arguments')
     from config_keys import internal,canonical
-    if args.key: args.key=internal(args.key)
-    if (args.keys or args.all_profiles) and args.action!='migrate':parser.error('--keys/--all-profiles require migrate')
-    if args.all_profiles and (not args.keys or args.profile):parser.error('--all-profiles requires --keys and no --profile')
+    if args.key and args.action!='import': args.key=internal(args.key)
+    if (args.keys or args.layout or args.all_profiles) and args.action!='migrate':parser.error('--keys/--all-profiles require migrate')
+    if args.all_profiles and (not (args.keys or args.layout) or args.profile):parser.error('--all-profiles requires --keys or --layout and no --profile')
     automatic = args.action is None
     args.action = args.action or 'list'
     guided = args.value is None and (args.action == 'set' or args.action == 'get' and args.key is None)
@@ -399,18 +399,22 @@ def main(argv=None):
     if args.dry_run and args.action == 'browse': parser.error('--dry-run requires an explicit config edit')
     if args.action in ('get','set','unset','explain') and not args.key and not guided: parser.error('a key is required')
     if (args.value is not None) != (args.action == 'set') and not guided: parser.error('set requires a value; other actions take no value')
-    if args.key and args.action not in ('get','set','unset','path','explain'): parser.error('unexpected key')
+    if args.key and args.action not in ('get','set','unset','path','explain','import'): parser.error('unexpected key')
     if args.apply or args.yes:
-        if args.action != 'migrate' or not args.apply or not args.yes: parser.error('migration apply requires --apply --yes')
+        if args.action not in ('migrate','import') or not args.apply or not args.yes: parser.error('migration apply requires --apply --yes')
     if args.json_value and args.action != 'set': parser.error('--json-value requires set')
     if args.app and args.action != 'explain': parser.error('--app requires explain')
-    if args.no_refresh and args.action not in ('set','unset'): parser.error('--no-refresh requires set or unset')
+    if args.no_refresh and args.action not in ('set','unset','migrate','import'): parser.error('--no-refresh requires a preference edit')
     if args.action == 'refresh' and (args.profile or args.defaults): parser.error('refresh uses the active profile')
     if args.defaults and args.profile: parser.error('--defaults and --profile are mutually exclusive')
     if args.defaults and args.action == 'migrate': parser.error('migration requires a profile')
     root = checkout()
     selected = context(root, args.profile)
     if not selected['layers'] and not args.defaults: raise ValueError('no profile definition in this checkout')
+    if args.keys and args.layout: parser.error('--keys and --layout are mutually exclusive')
+    if args.action=='import' or args.action=='migrate' and args.layout:
+        from config_transfer import run
+        return run(root,selected,args)
     if args.action=='migrate' and args.keys:
         from config_migration import KeyPlan
         plan=KeyPlan(root,selected,all_profiles=args.all_profiles)
@@ -420,6 +424,11 @@ def main(argv=None):
             applied=plan.apply();result.update(status=applied['status'],transaction=applied.get('id'))
         print(json.dumps(result)) if args.json else render(result)
         return 0
+    implicit_shared = not args.profile and not args.defaults and not (args.key or '').startswith(('apps.wttr','apps.pkgs','apps.codex','environment.','files.','profile.'))
+    from interaction import terminal
+    browser_intent=(args.action=='browse' and not args.json) or (automatic and terminal() and not args.json)
+    preference_path=args.action=='path' and (not args.key or args.key=='config.json' or args.key.startswith(('apps.','formatting.','colors','icons','settings.','DOTS_')))
+    if implicit_shared and (args.action in ('set','unset') or preference_path or browser_intent): args.defaults=True
     if guided and args.key is not None:
         from config_menu import browse
         return browse(root, selected, args)
@@ -472,7 +481,8 @@ def main(argv=None):
         result=dict(schema=1,key=canonical(args.key),description=description(args.key),profile='defaults' if args.defaults else selected['current'],
                     constraints=constraints(controls.defaults,args.key),**resolved)
         result['consumer'],result['activation']=activation(args.key)
-        result['destination']=str(controls.paths[-1])
+        from preference_files import appearance_file
+        result['destination']=str((Path(selected['layers'][-1]['root']) if args.profile else root/'default')/appearance_file(args.key))
         if args.key == 'apps.menu' or args.key.startswith('apps.menu.'):
             result['activation'] = 'next popup'
         if args.key == 'apps.fonts' or args.key.startswith('apps.fonts.'):
@@ -504,6 +514,9 @@ def main(argv=None):
     if args.action == 'explain':
         from config_refresh import explain
         result = explain(args.key, root, selected, args.defaults, args.app)
+        if not args.profile:
+            group=args.key.split('.',1)[0]
+            for row in result['consumers']:row['destination']=str(root/'default'/(group+'.toml'))
         if args.json: print(json.dumps(result, ensure_ascii=True))
         else:
             ui = Presentation(); ui.heading('Effective configuration'); ui.detail('Key', canonical(args.key))
@@ -532,11 +545,15 @@ def main(argv=None):
     group, _, style_key = (args.key or '').partition('.')
     is_style = group in ('icons','colors')
     is_control = group in ('formatting','apps')
-    if args.defaults and args.action in ('get','set','unset') and not (is_style or is_control):
-        parser.error('--defaults supports colors, icons, formatting and apps')
+    is_setting = group=='settings' or (args.key or '').startswith('DOTS_')
+    if args.defaults and args.action in ('get','set','unset') and not (is_style or is_control or is_setting):
+        parser.error('--defaults supports colors, icons, formatting, apps and settings')
     if args.action == 'path':
-        if args.key and args.key.split('.',1)[0] in ('formatting','apps'):
-            path=root/'default/config.json' if args.defaults else path
+        if not args.key or is_control or is_setting:
+            from preference_files import appearance_file
+            path=(root/'default' if args.defaults else Path(layer['root']))/appearance_file(args.key or '')
+        elif is_style and '.' in args.key:
+            path=(root/'default' if args.defaults else Path(layer['root']))/(group+'.toml')
         elif args.key:
             name = Path(args.key+'.toml' if args.key in ('icons','colors') else args.key)
             if not name.parts or name.is_absolute() or '..' in name.parts or any(ord(c)<32 for c in str(name)): raise ValueError('invalid configuration name')
@@ -552,6 +569,10 @@ def main(argv=None):
             plan = StylePlan(root, selected, group, args.defaults)
             plan.edit(style_key, args.value, args.action == 'unset', args.json_value)
             result['path'] = str(plan.path)
+        elif is_setting:
+            plan=SettingsPlan(root,selected,args.defaults)
+            plan.edit(args.key,args.value,args.action=='unset',args.json_value)
+            result['path']=str(plan.path)
         elif is_control:
             plan=ControlPlan(root,selected,args.defaults)
             plan.edit(args.key,args.value,args.action=='unset',args.json_value)
@@ -582,6 +603,10 @@ def main(argv=None):
         controls=Controls(root,selected,defaults=args.defaults)
         if args.action == 'check':
             if not args.defaults: validate(root, selected, read_json(path))
+            from profile_config import settings as resolved_settings
+            from config_values import validate_effective
+            resolved_settings(root,selected,defaults=args.defaults)
+            validate_effective(controls.values,controls.defaults,styles,selected['facts']['platform'])
             result['status'] = 'valid'
         else:
             merged = dict(settings={key:default for key,(_,default,_) in schema().items()},environment={},files={})
@@ -589,6 +614,8 @@ def main(argv=None):
             for item in selected['layers'] if not args.defaults else []:
                 for key in merged: merged[key].update(item.get(key, {}))
             if not args.defaults: merged['profile'] = dict(alias=layer.get('alias'))
+            from profile_config import settings as resolved_settings
+            merged['settings'].update({k:v['value'] for k,v in resolved_settings(root,selected,defaults=args.defaults).items()})
             merged = public_report(merged)
             merged.update({key:nested(values) for key,values in styles.values.items()})
             merged.update(controls.values)
@@ -614,7 +641,10 @@ def main(argv=None):
                     if isinstance(value,dict) and isinstance(typed,dict):value=merge(value,typed)
                     result['path'] = str(styles.path(group) if style_path else controls.paths[-1])
                 elif is_control:
-                    value=typed if typed is not MISSING else controls.resolve(args.key)['value']
+                    resolved=controls.resolve(args.key)
+                    value=typed if typed is not MISSING else resolved['value']
+                    from preference_files import appearance_file
+                    result['path']=resolved['source'] or str((root/'default' if args.defaults else Path(layer['root']))/appearance_file(args.key))
                 else:
                     group, key = key_parts(args.key)
                     if key not in merged[group]: raise ValueError('key is not configured in this profile or its parents')

@@ -15,7 +15,8 @@ def style_text(path, group):
     if before==after:return path.read_text()
     # Keep comments and per-field spelling while combining renamed tables.
     tables={};section='';preamble=[];seen=set()
-    for line in path.read_text().splitlines():
+    from preference_files import style_sections,controls,encode_controls
+    for line in style_sections(path.read_text())[0].splitlines():
         match=re.fullmatch(r'\s*\[([a-z][a-z0-9_.]*)\]\s*(#.*)?',line)
         if match:
             section=match[1]
@@ -44,7 +45,7 @@ def style_text(path, group):
     import tomllib
     from style_config import flatten
     if flatten(tomllib.loads(text))!=after:raise ValueError('key migration would change style values: '+str(path))
-    return text
+    return text+encode_controls(controls(path))
 
 
 class KeyPlan:
@@ -56,11 +57,11 @@ class KeyPlan:
         for identity in identities:
             layer=definition(root,identity)
             profile_root=directory(self.root,identity)
-            paths.extend(profile_root/name for name in ('profile.json','colors.toml','icons.toml'))
+            paths.extend(profile_root/name for name in ('profile.json','config.json','colors.toml','icons.toml'))
         # Shared inputs and inherited profiles are guarded even for a one-profile migration.
         paths=list(dict.fromkeys(paths))
         guard_paths=paths+[self.root/'default'/name for name in ('config.json','colors.toml','icons.toml')]
-        guard_paths += [Path(layer['root'])/name for layer in selected['layers'] for name in ('profile.json','colors.toml','icons.toml')]
+        guard_paths += [Path(layer['root'])/name for layer in selected['layers'] for name in ('profile.json','config.json','colors.toml','icons.toml')]
         for path in guard_paths:
             parents_safe(path);self.guards[str(path)]=digest(path)
         for path in paths:
@@ -84,14 +85,16 @@ class KeyPlan:
         from style_config import Styles,flatten
         from theme_styles import snapshot
         import tomllib
-        replacements={Path(op['path']):(json.loads(op['text']) if op['path'].endswith('.json') else flatten(tomllib.loads(op['text']))) for op in self.operations}
+        from preference_files import style_sections
+        replacements={Path(op['path']):(json.loads(op['text']) if op['path'].endswith('.json') else flatten(tomllib.loads(style_sections(op['text'])[0]))) for op in self.operations}
+        control_replacements={path:data for path,data in replacements.items() if path.suffix=='.json'}
         for identity in identities:
             scope=context(self.root,identity)
             before=Styles(self.root,scope)
             palette=dict(colors=before.palette,palette=before.native_palette)
             after=Styles(self.root,scope,replacements=replacements,palette=palette)
             old=Controls(self.root,scope).values
-            new=Controls(self.root,scope,replacements=replacements).values
+            new=Controls(self.root,scope,replacements=control_replacements).values
             if old!=new or snapshot(palette,styles=before,controls=old)['apps']!=snapshot(palette,styles=after,controls=new)['apps']:
                 raise ValueError('key migration would change effective configuration for '+identity)
 

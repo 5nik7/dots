@@ -99,6 +99,14 @@ def complete(root, directories, words):
         from todo_completion import complete as todo_complete
         todo_complete([*previous[1:], current], standalone=previous[0] == '__todo_standalone')
         return 0
+    if previous[:1] == ['bak']:
+        from bak_completion import complete as bak_complete
+        bak_complete([*previous[1:], current])
+        return 0
+    if previous[:1] == ['clipboard']:
+        from clipboard_commands import complete as clipboard_complete
+        clipboard_complete([*previous[1:], current])
+        return 0
     if previous[:1] == ['fonts']:
         from fonts.completion import complete as fonts_complete
         fonts_complete([*previous[1:], current])
@@ -157,7 +165,8 @@ def complete(root, directories, words):
                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
             if result.returncode == 0:
                 for value in result.stdout.splitlines(): add(value)
-        elif kind == 'profile-id':
+        elif kind in ('profile-id','profile-import'):
+            if kind=='profile-import':add('defaults')
             from profiles import available
             for row in available(root): add(row['id'])
         elif kind in ('config-key','config-value'):
@@ -432,6 +441,9 @@ def main(argv=None):
         raise ValueError('theme and Anodize commands require Python 3.11 or newer')
     if parts[0] == 'anodize': return controller('../../plugins/anodize/cli.py', [*parts[1:], *rest])
     if parts[0] == 'config': return controller('config_cli.py', [*parts[1:], *rest])
+    if parts[0] == 'clipboard': return controller('clipboard_cli.py', [*parts[1:], *rest])
+    if parts[0] == 'bak': return controller('bak_cli.py', [*parts[1:], *rest])
+    if parts[0] == 'link': return controller('link_cli.py', rest)
     if parts[0] == 'fonts': return controller('fonts_cli.py', [*parts[1:], *rest])
     if parts[0] == 'wttr': return controller('wttr/cli.py', [*parts[1:], *rest])
     if parts[0] == 'profile': return controller('profiles.py', [*parts, *rest])

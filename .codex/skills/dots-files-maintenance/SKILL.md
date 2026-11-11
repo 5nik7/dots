@@ -5,6 +5,14 @@ description: Maintain Dots core file registry, source ownership, profile mapping
 
 # Dots File Maintenance
 
+`bak` and `link` also belong here. Read [backups](../../../docs/backups.md).
+`files/backup_catalog.py` composes payload/catalog/consumer operations into Store;
+do not add a second writer. Move is the default; restore retains the saved version
+and protects occupied destinations. Receipt `backup_id` references protect first
+uninstall baselines. Keep legacy journals readable. Generate backup metadata with
+`tools/generate_backup_commands.py`; verify native bridges and all six `.ln`
+adapters with backup, link and bootstrap integration tests in owned roots.
+
 Read [managed-file guidance](../../../agents/guides/managed-files.md),
 [file contracts](../../../docs/files.md), [safety](../../../docs/safety.md) and the
 root agent contract. Inspect Git state, source boundaries and the active profile.
@@ -41,3 +49,7 @@ Use [profile maintenance](../dots-profile-maintenance/SKILL.md) for manifests an
 Record configuration and menu assessments for command changes. Use [dots-config](../dots-config/SKILL.md) for applicable integrations while retaining managed mapping and receipt ownership here. Preserve machine output, update canonical docs and rebuild/check the wiki. Native Windows evidence remains separate from fixtures.
 
 Checkout setup uses the shared component/wizard/preparation modules under `lib/dots/files`. Follow [bootstrap](../../../agents/guides/bootstrap.md) for two-stage approval, opt-in preference saving, native parity and selective font/Leaf baselines. Only exact effective catalog directory mappings may translate child writes; keep link/catalog guards and preserve legacy backup references. Package/build effects remain outside filesystem rollback.
+
+Bak deletion/pruning removes only a UUID payload container proven created by its original transaction and containing no unrelated members. Keep whole-container guards, rollback and missing-payload catalog cleanup; never infer ownership from a directory name or remove adjacent/import parents. Blastoff new snapshots also use this backend; legacy app pairs remain a compatibility reader.
+
+Bak completion is owned by `bak_commands.py`/`bak_completion.py` with shared six-shell adapters. Keep standalone and nested routes synchronized; catalog ID completion must not read payloads or mutate state. Run `tools/test_backup_completion.py` and `tools/test_backup_shell_completion.py` for provider and installed-shell evidence. Follow the shared command/script delivery gate for future backup/link routes.

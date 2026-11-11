@@ -1,4 +1,5 @@
 """Editable package data and desired-state restore; never source a manifest."""
+from .common import human_message
 import copy
 from contextlib import nullcontext
 import hashlib
@@ -279,11 +280,11 @@ def write_export(path, document, args, *, expected=None, emit=True):
     text = json.dumps(document, indent=2, ensure_ascii=False)+'\n'
     if path.exists() and path.read_text() == text: return
     if args.dry_run:
-        print('Would write package manifest: '+str(path), file=sys.stderr); return
+        human_message('Would write package manifest: '+str(path),stream=sys.stderr); return
     if path.exists() and not workflows.confirm(args.yes): return
     Store(state_root()).apply('pkgs-export', [dict(path=str(path), text=text)], expected if expected is not None else {str(path): before}, retain=True,
                               catalogs=[path] if path.parent.is_dir() else [])
-    if emit: print('Wrote package manifest: '+str(path), file=sys.stderr)
+    if emit: human_message('Wrote package manifest: '+str(path),'success',stream=sys.stderr)
 
 
 def cli(args, cfg):
@@ -297,7 +298,7 @@ def cli(args, cfg):
             update = Update(args.output or default_path(), args, cfg, profile_default=not args.output)
             if args.dry_run:
                 print(json.dumps(update.document, indent=2, ensure_ascii=False))
-                print('Would update package manifest: '+str(update.path), file=sys.stderr)
+                human_message('Would update package manifest: '+str(update.path),stream=sys.stderr)
             else:
                 # The explicit update action authorizes its guarded merge/write.
                 approved = copy.copy(args)
@@ -329,7 +330,7 @@ def cli(args, cfg):
                 for p in group['packages']:
                     text = p['name']+' · '+('pin '+p['pin'] if p['pin'] else 'installed or latest')+' · '+p['selection']
                     if not p['enabled']: text += ' · disabled: '+p.get('reason','manual')
-                    if ui: ui.text(text, 'identity' if p['enabled'] else 'warning')
+                    if ui: ui.row([(p['name'],'package'),(text[len(p['name']):],'identity' if p['enabled'] else 'warning')])
                     else: print('    '+clean(text))
         return 0
     entries = prepare(document, cfg, ignore=args.ignore_skip)
@@ -345,6 +346,6 @@ def cli(args, cfg):
     result = apply(document, cfg, ignore=args.ignore_skip, data=args.json, check=check)
     if args.json: print(json.dumps(result, ensure_ascii=False))
     else:
-        print('Restore '+result['status'])
-        for group in result['groups']: print('  '+group['manager']+': '+group['status']+(' · '+group['reason'] if group['reason'] else ''))
+        human_message('Restore '+result['status'],'success' if result['status']=='complete' else 'error')
+        for group in result['groups']: human_message('  '+group['manager']+': '+group['status']+(' · '+group['reason'] if group['reason'] else ''))
     return int(result['status'] != 'complete')

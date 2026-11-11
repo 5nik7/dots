@@ -31,7 +31,7 @@ Custom module formats cannot expand built-in modules directly, so the wrappers c
 
 ## Settings
 
-Use `dots config set NAME VALUE` to save settings in the active profile's `profile.json`. Native Windows uses its own `profiles/windows` definition. See [profile configuration](profiles.md#profile-configuration) for editing, inheritance and migration.
+Use `dots config set NAME VALUE` to save Dots settings in `default/config.json`. Add `--profile NAME` to save an override in `profiles/NAME/config.json`. Native Windows resolves its own profile and state; shared preferences contain portable values. See [profile configuration](profiles.md#profile-configuration) for editing, inheritance and migration.
 
 ```sh
 dots config set DOTS_THEME_DEFAULT catppuccin-mocha

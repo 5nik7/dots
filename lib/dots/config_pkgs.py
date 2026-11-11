@@ -36,7 +36,7 @@ class Native:
             raise ValueError('pkgs configuration changed while reading')
 
     def recognized(self, path):
-        if path in ((), ('upgrade',), ('upgrade','managers'), ('output',), ('policies',)):
+        if path in ((), ('upgrade',), ('upgrade','managers'), ('upgrade','gem_system'), ('output',), ('policies',)):
             return True
         # Arbitrary package names belong in JSON objects, not dot-split keys.
         return len(path) == 2 and path[0] == 'policies' and path[1] in core(Path(__file__).parents[2])[1].MANAGERS
@@ -50,7 +50,7 @@ class Native:
 
     def keys(self):
         from pkgs_lib.grammar import MANAGERS
-        return ['apps.pkgs.'+k for k in ('upgrade.managers','output','policies')] + [
+        return ['apps.pkgs.'+k for k in ('upgrade.managers','upgrade.gem_system','output','policies')] + [
             name(('apps','pkgs','policies',m)) for m in MANAGERS]
 
 
@@ -98,6 +98,7 @@ class NativePlan:
 
 
 def constraints(key):
+    if key == 'apps.pkgs.upgrade.gem_system': return dict(type='boolean',choices=[True,False],default=True)
     if key == 'apps.pkgs.output': return dict(type='string', choices=['auto','styled','raw'], default='auto')
     if key == 'apps.pkgs.upgrade.managers':
         return dict(type='manager-list', examples=['auto',['apt','npm','uv-tool','go']], default='auto',

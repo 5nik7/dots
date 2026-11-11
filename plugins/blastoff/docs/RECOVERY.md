@@ -1,5 +1,10 @@
 # Recovery, editing and tracking
 
+## Dots saved-theme links
+
+In the bundled Dots workflow, `theme apply` links the configured active path directly to the selected saved theme, backing up the destination in the shared `bak` catalog. Applying the same link is unchanged. Presets are materialized with content-qualified names without overwriting user themes. All new retained content backups use the shared Bak catalog and `apps.bak.store`/`apps.bak.location`; automatic snapshots copy before mutation. Editing/module operations retain application locks. Backup commands read both shared UUIDs and old app pairs, without migrating live state. Active-theme deletion is refused. `--replace-link` explicitly selects regular-file publication. Setup prepares the current/default palette first and links the default `dots` theme, or retains a current saved-theme selection. This supersedes older copy-on-apply behavior; historical release evidence below describes its named revision.
+
+
 Blastoff 0.1.12 keeps the active Starship file separate from local theme storage.
 Use `blastoff current` to distinguish last-loaded history from exact matches,
 and `blastoff doctor --json` to inspect resolved paths. Neither repairs state.
@@ -7,9 +12,9 @@ and `blastoff doctor --json` to inspect resolved paths. Neither repairs state.
 ## Backups and permanent deletion
 
 `backup create` preserves even invalid active TOML for recovery. `backup restore ID`
-validates checksum/TOML, backs up current content and restores a regular file.
+validates checksum/TOML, backs up current content and writes through the active link (or a regular file with `--replace-link`).
 Recorded symlink text is evidence, not an instruction to recreate the link.
-Stored-theme backups can be recovered with `theme import /absolute/backup.toml NAME`;
+Stored-theme backups can be recovered with `theme import /absolute/payload.bak NAME`;
 inspect/validate stored-module bytes before copying them to a new module file.
 
 `backup delete --all --dry-run` previews scope. The namespace includes both config
@@ -20,9 +25,7 @@ Use `backup delete --yes -- all y yes` only to delete those literal IDs.
 Malformed metadata, orphan payloads, checksum mismatches, linked members and
 active-config aliases are refused. Inspect these files manually; do not turn
 metadata source paths into deletion commands. A missing payload with trustworthy
-metadata can be cleaned up explicitly. Deletion is permanent: completed IDs cannot
-be rolled back after a partial I/O failure or late interruption. No recursive
-cleanup or automatic pruning occurs.
+metadata can be cleaned up explicitly. Shared backups are deleted through Bak, including their transaction-owned UUID directory when no other files would be lost. That batch rolls back on failure; successful deletion is permanent. Legacy pairs retain per-item unlink behavior and partial-failure reporting. Adjacent/import parents, the store root and directories with extra files are preserved. No automatic pruning occurs.
 
 ## Failed editor sessions
 
@@ -35,8 +38,7 @@ an explicit new theme name, then apply that local theme after reviewing scope.
 Do not delete the recovery directory until its useful content is saved elsewhere.
 Extra editor artifacts are retained; Blastoff never recursively removes them.
 
-An active-file symlink normally stays in place while its guarded regular target
-is updated. --replace-link explicitly converts the link and leaves its target untouched. Linked
+Theme apply replaces the active destination with a saved-theme link and records its exact prior object in the shared bak catalog. Use dots bak restore ID for that relationship. Edit, module load and Blastoff content restore keep the link while updating its guarded regular target. --replace-link explicitly converts the link and leaves its target untouched. Linked
 parents remain unsafe for publication. Choose a real absolute STARSHIP_CONFIG
 path when `.config` is itself linked. EDITOR parsing never expands shell commands.
 Use a quoted executable with arguments, e.g. `EDITOR='nvim --clean'`; quote an

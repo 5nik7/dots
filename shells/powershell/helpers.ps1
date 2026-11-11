@@ -116,9 +116,15 @@ function trash($path) {
   }
 }
 
-function cpy { clip.exe }
+function cpy {
+  $launcher = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'scripts/cpy.ps1'
+  if ($MyInvocation.ExpectingInput) { $input | & $launcher @args }
+  else { & $launcher @args }
+}
 
-function pst { Get-Clipboard }
+function pst {
+  & (Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'scripts/pst.ps1') @args
+}
 
 function touch {
   param([Parameter(Mandatory, Position=0)][string] $File)
@@ -459,18 +465,13 @@ function gup {
 
 function New-Backup {
   [CmdletBinding(SupportsShouldProcess)]
-  param([Parameter(Mandatory, Position=0)][string] $Target, [switch] $Store, [switch] $Copy)
-  $item = Get-Item -LiteralPath $Target -Force -ErrorAction Stop
-  $parent = if ($item.PSIsContainer) { $item.Parent.FullName } else { $item.DirectoryName }
-  if (-not $parent) { throw 'Cannot back up a filesystem root.' }
-  $directory = if ($Store) { Join-Path $HOME '.bakstore' } else { $parent }
-  $name = $item.Name + '.' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmssfffffff') + '.' + [guid]::NewGuid().ToString('N') + '.bak'
-  $destination = Join-Path $directory $name
-  if ($PSCmdlet.ShouldProcess($item.FullName, "Back up to $destination")) {
-    if (-not [IO.Directory]::Exists($directory)) { [void][IO.Directory]::CreateDirectory($directory) }
-    if ($Copy) { Copy-Item -LiteralPath $item.FullName -Destination $destination -Recurse -ErrorAction Stop }
-    else { Move-Item -LiteralPath $item.FullName -Destination $destination -ErrorAction Stop }
-    $destination
+  param([Parameter(Mandatory, Position=0)][string[]] $Target, [switch] $Store, [switch] $Copy, [switch] $InPlace)
+  $forward = @('bak', 'create')
+  if ($Copy) { $forward += '--copy' }
+  if ($InPlace) { $forward += '--in-place' }
+  if ($Store) { $forward += @('--store-dir', (Join-Path $HOME '.bakstore')) }
+  if ($PSCmdlet.ShouldProcess(($Target -join ', '), 'Back up with Dots')) {
+    & (Join-Path $env:DOTS 'bin/dots.ps1') @forward -- @Target
   }
 }
 
@@ -504,3 +505,53 @@ function Invoke-DotsFuzzyCompletion {
   Invoke-FzfTabCompletion
 }
 
+
+# Portable counterparts of shared Bash/Zsh helpers; definitions stay lazy.
+function v { Edit-Item @args }
+function n { if ($args.Count) { & nvim @args } else { & nvim . } }
+function h { Get-History @args }
+function path { $env:PATH -split [regex]::Escape([string][IO.Path]::PathSeparator) }
+function p: { path }
+function gcm { & git commit -m @args }
+function gcam { & git commit -a -m @args }
+function gcad { & git commit -a --amend @args }
+function gst { & git status @args }
+function in_git { & git rev-parse --is-inside-work-tree 2>$null }
+function gitcheck { & git diff --check @args }
+function gitmodified { & git ls-files --modified @args }
+function gitdeleted { & git ls-files --deleted @args }
+function gituntracked { & git ls-files --others --exclude-standard @args }
+function gitsubmodule { & git submodule status @args }
+function fname { param([string]$Path) [IO.Path]::GetFileNameWithoutExtension($Path) }
+function fext { param([string]$Path) [IO.Path]::GetExtension($Path).TrimStart('.') }
+function .c { Set-Location -LiteralPath (Join-Path $HOME '.config') }
+function .l { Set-Location -LiteralPath (Join-Path $HOME '.local') }
+function .lb { Set-Location -LiteralPath (Join-Path $HOME '.local/bin') }
+function .lsh { Set-Location -LiteralPath (Join-Path $HOME '.local/share') }
+function .lst { Set-Location -LiteralPath (Join-Path $HOME '.local/state') }
+function .db { Set-Location -LiteralPath $env:DOTBIN }
+function .ds { Set-Location -LiteralPath $env:SHELLS }
+function .dsc { Set-Location -LiteralPath $env:DOTSCRIPTS }
+function .dsz { Set-Location -LiteralPath (Join-Path $env:SHELLS 'zsh') }
+function .dsb { Set-Location -LiteralPath (Join-Path $env:SHELLS 'bash') }
+function .dsp { Set-Location -LiteralPath (Join-Path $env:SHELLS 'powershell') }
+function .dt { Set-Location -LiteralPath $env:DOTHEMES }
+function repos { Set-Location -LiteralPath (Join-Path $HOME 'repos') }
+function src { Set-Location -LiteralPath (Join-Path $HOME 'src') }
+function notes { Set-Location -LiteralPath $env:NOTES }
+function rlp { . (Join-Path $env:PWSH 'profile.ps1') }
+function rl { rlp }
+function Invoke-DotsListing {
+  param([string[]]$Flags, [object[]]$Operands)
+  if (Get-Command eza -CommandType Application -ErrorAction Ignore) {
+    & eza --group-directories-first --icons=auto @Flags @Operands
+  } else { Get-ChildItem -Force @Operands }
+}
+function l { Invoke-DotsListing @('-l', '--no-user', '--no-filesize', '--no-time', '--no-permissions', '--git', '--git-repos') $args }
+function ll { Invoke-DotsListing @('-lh', '--git', '--git-repos') $args }
+function la { Invoke-DotsListing @('-a') $args }
+function lsa { la @args }
+function lla { Invoke-DotsListing @('-lha') $args }
+function lt { Invoke-DotsListing @('--tree', '--level=2', '--long', '--git') $args }
+function lta { Invoke-DotsListing @('--tree', '--level=2', '--long', '--git', '-a') $args }
+function ff { Find-File @args }

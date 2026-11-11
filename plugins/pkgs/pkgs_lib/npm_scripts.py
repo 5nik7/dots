@@ -72,6 +72,7 @@ class Pending:
     def __init__(self):
         self.specs = set()
         self.ran = []
+        self.current = []
         self.enabled = self.block = self.invalid = False
         self.expected = self.received = 0
         self.confirmed = set()
@@ -120,17 +121,27 @@ class Pending:
 
     def review(self, item, cfg, output, rc):
         self.finish()
-        if not self.specs or rc or self.invalid or not terminal(): return rc
+        if not self.specs or rc or self.invalid: return rc
         from . import workflows, streams
+        from . import script_receipts
         from .upgrade_output import packages
         env = getattr(item.backend, 'operation_env', None)
+        interactive=terminal()
         for spec in sorted(self.specs):
+            if not interactive and not script_receipts.location(spec).is_file(): continue
             try:
                 with workflows.progress('npm · Checking script approval', cfg): before = evidence([spec], env)
+                proof=script_receipts.fingerprint(before.get(spec,[]))
+                if script_receipts.matches(spec,proof):
+                    self.current.append(spec)
+                    continue
+                if not interactive: continue
                 packages(cfg, 'Scripts', [spec])
                 if not approve(spec): continue
                 with workflows.progress('npm · Rechecking '+spec, cfg): after = evidence([spec], env)
                 if before != after: raise Error('installed script metadata changed; review again')
+                if proof and script_receipts.fingerprint(after.get(spec,[])) != proof:
+                    raise Error('installed script files changed; review again')
                 # npm cannot always verify version-pinned allow rules for global
                 # installs. Scope permission by name for this invocation, while
                 # rebuild selects only the reviewed exact version.
@@ -149,6 +160,13 @@ class Pending:
                 if spec not in self.confirmed:
                     raise Error('npm did not confirm script execution for '+spec+'; inspect with --raw')
                 self.ran.append(spec)
+                if proof:
+                    try:
+                        # Script-generated outputs are part of the saved evidence.
+                        saved=evidence([spec],env)
+                        if saved==after: script_receipts.save(spec,script_receipts.fingerprint(saved.get(spec,[])))
+                    except (Error,OSError,ValueError,TypeError):
+                        output.line('npm warn Script receipt unavailable; review may be needed next time.','\n',sys.stderr)
             except (Error, OSError, ValueError, TypeError) as error:
                 output.line('npm error Script approval: '+str(error), '\n', sys.stderr)
                 return 1
@@ -157,6 +175,7 @@ class Pending:
     def result(self, cfg):
         from .upgrade_output import packages
         if self.ran: packages(cfg, 'Scripts ran', self.ran)
-        blocked = sorted(self.specs - set(self.ran))
+        if self.current: packages(cfg, 'Scripts current', self.current)
+        blocked = sorted(self.specs - set(self.ran) - set(self.current))
         if blocked: packages(cfg, 'Scripts blocked', blocked)
         if self.invalid: packages(cfg, 'Script review', ['incomplete; use --raw to inspect npm instructions'])

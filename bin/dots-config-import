@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# dots:summary=Merge portable appearance from another profile into shared defaults or a selected profile
+# dots:usage=SOURCE [OPTIONS]
+# dots:option=--profile||profile-id|Target profile; shared defaults when omitted
+# dots:option=--defaults||flag|Target shared defaults
+# dots:option=--json||flag|Print structured preview or result
+# dots:option=--dry-run||flag|Preview without changes
+# dots:option=--apply||flag|Apply the reviewed import
+# dots:option=--yes||flag|Confirm import apply
+# dots:option=--no-refresh||flag|Imports never reload or publish themes
+# dots:argument=1|profile-import|Source profile; imported appearance wins
+DOTS=${DOTS:-$(cd -- "${BASH_SOURCE[0]%/*}/.." && pwd -P)}
+exec python3 -B "$DOTS/lib/dots/config_cli.py" import "$@"

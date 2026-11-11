@@ -49,6 +49,29 @@ class CompletionTests(unittest.TestCase):
             subprocess.run([SHELLS['fish'],'--no-config','--private','-c','true'],
                            env=self.env,capture_output=True,check=True,timeout=5)
 
+    def test_shared_ids_on_all_available_shells(self):
+        import json,sys
+        ident='a'*32
+        index=self.home/'state/dots/bak/catalog.json';index.parent.mkdir(parents=True)
+        index.write_text(json.dumps(dict(schema=1,entries={ident:dict(id=ident,
+            path=str(self.home/'payload.bak'), original=str(self.home/'original'),
+            fingerprint='b'*64,created='2026-11-11T00:00:00+00:00',
+            blastoff_owner=str(self.store),blastoff=dict(id=ident,kind='config'))})))
+        self.env.update(BLASTOFF_PYTHON=sys.executable,XDG_STATE_HOME=str(self.home/'state'))
+        before=self.snapshot()
+        for shell, executable in SHELLS.items():
+            if executable:
+                with self.subTest(shell=shell):
+                    self.assertIn(ident,self.complete(shell,['backup','restore','']))
+        self.assertEqual(before,self.snapshot())
+        # Installed completion entries are symlinks outside the plugin tree.
+        self.completion_directory=self.home/'installed completions';self.completion_directory.mkdir()
+        for shell, executable in SHELLS.items():
+            if executable:
+                (self.completion_directory/('blastoff.'+shell)).symlink_to(ROOT/'completions'/('blastoff.'+shell))
+                with self.subTest(shell=shell, installed=True):
+                    self.assertIn(ident,self.complete(shell,['backup','restore','']))
+
     def snapshot(self):
         # lstat only: never open FIFO/symlink fixtures. Ignore read-access times.
         return {str(p.relative_to(self.home)): (p.lstat().st_mode, p.lstat().st_size, p.lstat().st_mtime_ns)
@@ -57,7 +80,7 @@ class CompletionTests(unittest.TestCase):
     def complete(self, shell, args):
         if not SHELLS[shell]:
             self.skipTest(shell + ' unavailable')
-        script = ROOT / 'completions' / ('blastoff.' + shell)
+        script = getattr(self, 'completion_directory', ROOT / 'completions') / ('blastoff.' + shell)
         quoted = ' '.join(shlex.quote(x) for x in ['blastoff', *args])
         if shell == 'bash':
             code = (f'source {shlex.quote(str(script))}; '

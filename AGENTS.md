@@ -99,6 +99,8 @@ For the live Bash executable, follow [decision 0006](docs/decisions/0006-bash-co
 
 Do not add a new command or rename an existing route without updating `docs/commands.md`, completion behavior, command metadata tests, and user-facing documentation when applicable.
 
+New or changed user-facing commands and scripts must satisfy the [delivery checklist](agents/guides/commands.md#command-and-script-delivery): completions for supported shells and aliases, colors/formatting, useful popup integration, README/wiki updates, and an installer/bootstrap integration assessment. Record these outcomes in the focused plan and tracked goal acceptance; a no-change decision needs a reason.
+
 Start new command families and subcommands with [command authoring](.codex/skills/dots-command-authoring/SKILL.md). It coordinates the family owner, presentation, configuration, menus and verification; recorded add/update integration decisions must be implemented before completion.
 
 Configuration integration reviews include icon/text foreground and background, nullable styles, indentation/tab stops, spacing, alignment and native placement where useful. Use `dots-config` for consumer-backed controls and `dots-config-audit` for requested broad discovery; static findings do not authorize scope expansion.

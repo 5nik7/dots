@@ -557,12 +557,16 @@ class Catalog:
                       LOCALAPPDATA=os.environ.get('LOCALAPPDATA', home + '/AppData/Local'),
                       NVIM_CONFIG=os.environ.get('XDG_CONFIG_HOME') or os.environ.get('LOCALAPPDATA', home + '/AppData/Local'),
                       POWERSHELL_PROFILE=os.environ.get('DOTS_POWERSHELL_PROFILE', ''))
-        match = re.fullmatch(r"\$\{(HOME|CONFIG|BIN|TERMUX|APPDATA|LOCALAPPDATA|NVIM_CONFIG|POWERSHELL_PROFILE)\}(?:/(.*))?", value)
+        match = re.fullmatch(r"\$\{(HOME|CONFIG|BIN|TERMUX|PREFIX|APPDATA|LOCALAPPDATA|NVIM_CONFIG|POWERSHELL_PROFILE)\}(?:/(.*))?", value)
         if not match:
             raise ValueError("target must start with a supported destination token")
         if match[1] == 'POWERSHELL_PROFILE' and match[2]:
             raise ValueError('POWERSHELL_PROFILE names a file, not a directory')
         suffix = relative(match[2]) if match[2] else Path(".")
+        if match[1] == 'PREFIX':
+            from file_platform import termux_prefix
+            prefix = termux_prefix(self.platform)
+            return str(prefix / suffix) if prefix is not None else None
         base = tokens[match[1]]
         if match[1] in ('APPDATA', 'LOCALAPPDATA', 'NVIM_CONFIG', 'POWERSHELL_PROFILE') and self.platform != 'windows':
             return None

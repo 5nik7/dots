@@ -122,7 +122,10 @@ def render(session, index):
     core = importlib.util.module_from_spec(spec); spec.loader.exec_module(core)
     source, name = identity.split(':',1); core.name(name)
     try:
-        if source in ('local','module','backup'):
+        if source == 'backup':
+            shared = core.ui_module('shared_backups').inspect(core, Path(doc['themes']).parent, name)
+            data = core.read(shared['payload'] if shared else Path(doc['themes'])/(name+'.toml'))
+        elif source in ('local','module'):
             data = core.read(Path(doc['themes'])/(name+'.toml'))
         elif source == 'preset' and doc['starship']:
             data = preset_bytes(doc['starship'], name, root)

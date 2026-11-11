@@ -20,6 +20,7 @@ class Native(unittest.TestCase):
         self.config = self.home / 'config space ü' / 'starship.toml'
         self.env = dict(os.environ, HOME=str(self.home), USERPROFILE=str(self.home),
                         BLASTOFF_HOME=str(self.store), STARSHIP_CONFIG=str(self.config),
+                        XDG_STATE_HOME=str(self.home/'state'), XDG_DATA_HOME=str(self.home/'data'),
                         XDG_CONFIG_HOME=str(self.home/'xdg'), XDG_CACHE_HOME=str(self.home/'cache'),
                         STARSHIP_CACHE=str(self.home/'starship-cache'),
                         BLASTOFF_PYTHON=sys.executable, NO_COLOR='1', PYTHONPATH='')
@@ -111,7 +112,7 @@ class Native(unittest.TestCase):
                 self.assertEqual((self.store/'themes'/(name+'.toml')).read_bytes(), expected)
                 self.cli('preset','apply',name)
                 self.assertEqual(self.config.read_bytes(), expected)
-        self.assertIn(original, [p.read_bytes() for p in (self.store/'backups').glob('*.toml')])
+        self.assertIn(original, [Path(r['path']).read_bytes() for r in json.loads((self.home/'state/dots/bak/catalog.json').read_text())['entries'].values() if 'blastoff' in r])
         before = self.config.read_bytes()
         self.cli('preset','apply','blastoff-nonexistent-preset',code=1)
         self.assertEqual(self.config.read_bytes(), before)

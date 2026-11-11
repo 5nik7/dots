@@ -5,7 +5,7 @@ from release_support import ReleaseHarness,core
 class BackupDelete(ReleaseHarness):
     def backup(self):
         self.write(self.config,'x=1\n')
-        return json.loads(self.invoke('backup','create','--json').stdout)['backup']
+        return self.legacy_backup()
     def test_explicit_multiple_and_noninteractive_authorization(self):
         a,b=self.backup(),self.backup();before=self.tree()
         self.invoke('backup','delete',a,b,code=2);self.assertEqual(self.tree(),before)

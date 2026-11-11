@@ -1,4 +1,22 @@
-# Shared literal icon roles. Profile files override individual options.
+[applications]
+all = "󰌌"
+bash = ""
+codex = "󱈸"
+fzf = "󰍉"
+kitty = "󰄛"
+nvim = ""
+powershell = ""
+television = "󰔂"
+tmux = ""
+yazi = "󰉋"
+zsh = ""
+
+[apps.tmux.clock]
+day = "󰖙"
+fixed = ""
+night = "󰖔"
+unknown = ""
+
 [files]
 archive = "󰀼"
 audio = "󰈣"
@@ -49,21 +67,44 @@ bitbucket = ""
 github = "󰊤"
 gitlab = ""
 
+[menu]
+anodize = "󰏘"
+backgrounds = "󰸉"
+bak = "󰁯"
+blastoff = "󱓞"
+clipboard = "󰅌"
+debug = "󰃤"
+env = "󰒓"
+fonts = "󰛖"
+pkgs = "󰏖"
+profile = "󰀵"
+profiles = "󰀵"
+publish = ""
+submodules = ""
+switcher = "󰏘"
+sync = ""
+theme = "󰏘"
+themes = "󰏘"
+wiki = "󰈙"
+
 [navigation]
 back = "󰅁"
-refresh = "󰑓"
-environment = "󰇁"
-next = "󰅂"
-help = "󰋖"
-new = "󰐕"
-edit = "󰏫"
-delete = "󰆴"
 codex = ""
+delete = "󰆴"
+edit = "󰏫"
 ellipsis = "…"
+environment = "󰇁"
+help = "󰋖"
 keys = "󰌆"
+new = "󰐕"
+next = "󰅂"
 project = ""
+refresh = "󰑓"
 separator = "│"
 session = ""
+
+[operations]
+link = "󰡯"
 
 [status]
 error = ""
@@ -77,48 +118,13 @@ working = ""
 [weather]
 daily = "󰖙"
 hourly = "󰥔"
-units = ""
 humidity = ""
 location = ""
 precip = ""
 sunrise = ""
 sunset = "󰖚"
 title = ""
+units = ""
 
-[applications]
-all = "󰌌"
-bash = ""
-codex = ""
-fzf = "󰍉"
-kitty = "󰄛"
-nvim = ""
-powershell = ""
-television = "󰔂"
-tmux = ""
-yazi = "󰉋"
-zsh = ""
-
-[menu]
-wiki = "󰈙"
-fonts = "󰛖"
-theme = "󰏘"
-themes = "󰏘"
-anodize = "󰏘"
-blastoff = "󱓞"
-pkgs = "󰏖"
-debug = "󰃤"
-profile = "󰀵"
-profiles = "󰀵"
-env = "󰒓"
-backgrounds = "󰸉"
-switcher = "󰏘"
-publish = ""
-sync = ""
-submodules = ""
-
-# Optional clock glyphs; the default clock has no icon.
-[apps.tmux.clock]
-fixed = ""
-day = "󰖙"
-night = "󰖔"
-unknown = ""
+[controls]
+"apps.nvim.icons" = {}

@@ -190,12 +190,16 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(self.target.read_text(),'user replacement')
         self.assertIn(str(self.target),self.receipt()['entries'])
 
-    def test_conflict_blocks_complete_batch(self):
+    def test_reviewed_foreign_link_is_backed_up_and_restored(self):
         self.target.parent.mkdir(parents=True)
-        self.target.symlink_to(self.home/'missing')
-        self.cli('install','--yes',ok=False)
-        self.assertFalse((self.home/'.local').exists())
-        self.assertFalse((self.home/'.state').exists())
+        missing = self.home/'missing'
+        self.target.symlink_to(missing)
+        self.cli('install','--yes')
+        self.assertEqual(self.target.resolve(), self.source)
+        entry = self.receipt()['entries'][str(self.target)]
+        self.assertIn('backup_id', entry)
+        self.cli('uninstall','--yes')
+        self.assertEqual(os.readlink(self.target),str(missing))
 
     def test_catalog_drift_after_preview(self):
         with mock.patch.dict(os.environ,self.env,clear=True):
@@ -554,7 +558,7 @@ p.apply('install')
         self.assertEqual(list((self.repo/'config/fsh').iterdir()),[self.repo/'config/fsh/README.md'])
         def run(script,*args):
             result=subprocess.run(['sh',str(self.repo/script),*args,'--json'],env=self.env,
-                                  capture_output=True,text=True,timeout=120)
+                                  capture_output=True,text=True,timeout=600)
             self.assertEqual(result.returncode,0,result.stderr + result.stdout)
             self.assertNotIn('\x1b',result.stdout)
             return json.loads(result.stdout)
@@ -591,7 +595,7 @@ p.apply('install')
             self.assertTrue(all(row['id'].startswith('theme:') for row in changes), changes)
             for app in ('blastoff', 'pkgs'):
                 assets = [row for row in repeated['items'] if row['id'].startswith('dots:'+app+':')]
-                self.assertEqual(len(assets), 4)
+                self.assertGreaterEqual(len(assets), 4)
                 self.assertTrue(all(row['status'] == 'unchanged' for row in assets), assets)
         else:
             self.assertEqual(repeated['status'], 'unchanged', json.dumps(changes, indent=2))

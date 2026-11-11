@@ -43,9 +43,7 @@ Never assume it represents main or copy it over existing work blindly.
 - Back up replaced/deleted content (explicit backup delete permanently removes
   its selected pairs; do not create backups of backups). Stage in the destination directory and
   replace atomically. Detect external edits, locks and unsafe destinations.
-- Preserve active-file symlinks by default: pin and guard the link chain, lock
-  and atomically update its regular target. Keep parent-directory write protections.
-  `--replace-link` explicitly records and replaces the link, leaving its target alone.
+- Theme apply switches the active symlink to the selected saved theme via the shared Store, with retained destination backups and provenance. Linked edits/module writes pin the link chain and update the regular saved target with application locks/backups. Protect active themes from deletion; `--replace-link` explicitly writes a regular active file. Keep parent-directory write protections.
 - Never break a lock automatically, recursively delete user directories or
   silently migrate legacy paths. Migration copies from an explicit source.
 - Never run a theme's custom commands, use eval, or render a live prompt as

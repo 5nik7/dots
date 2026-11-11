@@ -62,22 +62,24 @@ set -g _DOTS_STATE "$state/dots"
 set -gx THEMESBIN "$_DOTS_STATE/themes/commands/current/bin"
 set -g dot_state "$_DOTS_STATE"
 set -g dot_config "$_DOTS_CONFIG_PATH"
-set -l clean_path
-for directory in $PATH
-    contains -- "$directory" "$DOTS/themes/bin" "$THEMESBIN"; or set -a clean_path "$directory"
-end
-set -gx PATH $clean_path
+set -l owned_path
 for directory in "$DOTBIN" "$DOTSCRIPTS"
-    if test -d "$directory"; and not contains -- "$directory" $PATH
-        set -gx PATH "$directory" $PATH
-    end
+    test -d "$directory"; and set -a owned_path "$directory"
 end
 if test $_dots_option_DOTS_INIT_COMMANDS = 1
-    set -gx PATH $PATH "$THEMESBIN"
+    set -a owned_path "$THEMESBIN"
+    function .ln
+        test $_dots_option_DOTS_INIT_COMMANDS = 1; or return 1
+        command "$DOTS/bin/dots" link $argv
+    end
 end
 set -l profile_entries (string split : -- "$DOTS_PROFILE_PATHS" | string match -rv '^$')
 set -l ordered_path
-for entry in $profile_entries $PATH
+for entry in $owned_path $profile_entries $PATH
+    contains -- "$entry" "$DOTS/themes/bin"; and continue
+    if test "$entry" = "$THEMESBIN"; and test $_dots_option_DOTS_INIT_COMMANDS != 1
+        continue
+    end
     contains -- "$entry" $ordered_path; or set -a ordered_path "$entry"
 end
 set -gx PATH $ordered_path
@@ -213,7 +215,7 @@ _dots_fish_theme; or printf 'dots: theme artifact unavailable; run theme refresh
 if test $_dots_option_DOTS_INIT_COMPLETION = 1
     source "$DOTS/lib/dots/completion/fish"
 else
-    set -l names dots theme
+    set -l names dots theme todo fonts bak dots-bak
     if test -r "$_DOTS_STATE/themes/commands/current/names"
         while read -l name
             set -a names "$name"

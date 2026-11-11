@@ -1,5 +1,7 @@
 # Implementation Plans
 
+[Clipboard history](clipboard-history.md) implements Todo `clipboard-history`: local text storage, shared command/popup controls, optional capture, editor widgets and isolated cross-platform verification.
+
 - [Documentation, topics and manual](docs-update.md) — implemented and locally verified: compact README, practical guides, offline topic discovery and generated dots(1).
 - [Wiki output and configuration](wiki-output.md) — implemented and locally verified: human report and submenu preferences, typed controls and exact data contracts.
 
@@ -11,9 +13,13 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Dots FIGlet fonts](figlet-fonts.md) | Implemented logo and mixed-case fonts, Termux prefix destinations and verified managed file links. |
+| [Shared preferences and command delivery](config-preferences-completion.md) | Implemented separated preferences, portable appearance import, Bak completion and delivery gates; native-platform limits recorded. |
+| [System clipboard commands](clipboard-commands.md) | Shared cpy/pst platform adapters, checkout-relative scripts and native PowerShell forwarding. |
 | [Keys and Weather menu styling](keys-weather-menu-styling.md) | Implemented and locally verified: shared selector styles, configurable action icons and private Termux acceptance; native platform checks pending. |
 | [Config discovery and tmux controls](config-discovery.md) | Implemented and locally verified: canonical keys, reversible migration, tmux component controls, hierarchical browsing and completion. |
 | [Interactive checkout installation](installer-update.md) | Complete under the approved acceptance split: selective wizard, preparation, WinGet, fonts and fixture-verified Leaf integration; real Leaf build verification is a separate blocked goal. |
+| [Bootstrap, links and backups](bootstrap-links-backups.md) | Implemented fresh acquisition, moving backups, safe links, shell precedence, all-hosts PowerShell and linked Starship themes; local evidence and named native checks are recorded. |
 | [Package workflows](pkgs-workflows.md) | Unattended upgrades, Go tools, rules, streams, editable manifests and optional package-first setup. |
 | [Concise root help](usage-help.md) | Top-level root help across Bash/native frontends, preserved full discovery/completion and presentation acceptance. |
 | [Personal fonts](fonts.md) | Official catalogs, retained versions, per-user registration, app connectors, font/glyph browsers and native acceptance. |

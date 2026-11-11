@@ -31,7 +31,7 @@ preferences. PowerShell before 7.2 handles redirected native stderr differently;
 its text/error-stream behavior still needs native acceptance. See the official
 [preference-variable documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables#erroractionpreference).
 
-Python discovery happens on command invocation: nonempty BLASTOFF_PYTHON (an
+Python discovery happens on command invocation or dynamic shared-backup completion: nonempty BLASTOFF_PYTHON (an
 executable path, not a command string), Windows py -3, python3, python. Tools must
 match the executing host. Linux PowerShell, including pwsh inside WSL, uses Linux
 paths/tools/profile/storage; Windows PowerShell uses Windows ones. No automatic

@@ -154,7 +154,7 @@ class ProgressTests(unittest.TestCase):
     def test_structured_spans_clip_cells_before_color_and_restore_nested_state(self):
         spans = [('npm · 1:05 · Building · ',None),
                  ('@scope/package-界e\u0301'+'x'*160,'38;2;171;205;18')]
-        body = ("with progress.Progress('Initial') as p:\n"
+        body = ("with progress.Progress('Initial', marker_style='38;2;1;2;3', label_style='38;2;4;5;6') as p:\n"
                 " p.update_spans("+repr(spans)+")\n saved=p.state\n"
                 " with progress.Progress('Nested') as nested: nested.update('Inner')\n"
                 " assert p.state == saved\n time.sleep(.65)\nprint('done')")
@@ -165,7 +165,8 @@ class ProgressTests(unittest.TestCase):
                 self.assertTrue(data.endswith(b'done\r\n'),data)
                 if mode=='always':
                     self.assertIn(b'\x1b[38;2;171;205;18m@scope/',data)
-                    self.assertIn(b'\x1b[94mnpm',data)
+                    self.assertIn(b'\x1b[38;2;1;2;3m',data)
+                    self.assertIn(b'\x1b[38;2;4;5;6mnpm',data)
                 else: self.assertNotIn(b'\x1b',data)
                 import unicodedata
                 for frame in ANSI.sub(b'',data).decode().split('\r'):

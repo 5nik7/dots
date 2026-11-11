@@ -65,7 +65,7 @@ def settings(root):
     state = state_root()
     from profile_config import context
     layers = context(root)['layers']
-    reported = Path(layers[-1]['root']) / 'profile.json' if layers and not os.environ.get('DOTS_CONFIG_FILE') else config
+    reported = Path(layers[-1]['root']) / 'config.json' if layers and not os.environ.get('DOTS_CONFIG_FILE') else config
     values['DOTS_CONFIG_FILE'] = dict(value=str(reported), source='resolved')
     values['DOTS_STATE_DIR'] = dict(value=str(state), source='resolved')
     selection = os.environ.get('DOTS_THEME_SELECTION')

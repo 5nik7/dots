@@ -12,7 +12,7 @@ import subprocess
 import sys
 import textwrap
 
-from config_cli import Plan, StylePlan, ControlPlan, Presentation, digest
+from config_cli import Plan, StylePlan, ControlPlan, SettingsPlan, Presentation, digest
 from profile_config import context as profile_context, schema
 from profiles import available, public_report
 from style_config import Styles, APPS, ANSI, ALIASES, ATTRS, current
@@ -40,10 +40,20 @@ HELP = ('List and Get inspect configuration; Set edits reviewed values.\n'
         'Refresh retries activation or applies direct visual-file edits.')
 
 
-def display(key, value):
+def preview_paths(value, ui):
+    """Shorten display values without resolving links or changing action data."""
+    if isinstance(value, str):
+        return ui.path(value) if Path(value).is_absolute() else value
+    if isinstance(value, list): return [preview_paths(item, ui) for item in value]
+    if isinstance(value, dict): return {key: preview_paths(item, ui) for key, item in value.items()}
+    return value
+
+
+def display(key, value, *, ui=None):
     if key.startswith('environment.') and value is not None:
         name = key[len('environment.'):]
         value = public_report({'environment': {name: value}})['environment'][name]
+    if ui is not None: value = preview_paths(value, ui)
     if value is None: return 'null'
     if value == '': return '(empty)'
     if type(value) is bool: return 'true' if value else 'false'
@@ -80,7 +90,7 @@ class Inventory:
         selected = profile_context(self.root, None if self.defaults else scope)
         paths = [self.root/'default'/file for file in ('icons.toml', 'colors.toml', 'config.json')]
         for layer in selected['layers']:
-            paths += [Path(layer['root'])/file for file in ('profile.json', 'icons.toml', 'colors.toml')]
+            paths += [Path(layer['root'])/file for file in ('profile.json', 'config.json', 'icons.toml', 'colors.toml')]
         self.guards = {str(path): digest(path) for path in paths}
         # Resolve again inside the guard interval, including inheritance.
         self.selected = profile_context(self.root, None if self.defaults else scope)
@@ -88,16 +98,19 @@ class Inventory:
         from config_values import Controls,parts,lookup,MISSING,constraints,activation
         self.controls=Controls(self.root,self.selected,defaults=self.defaults)
         self.rows = []
-        destination=str(self.root/'default/config.json' if self.defaults else Path(self.selected['layers'][-1]['root'])/'profile.json')
+        from preference_files import appearance_file
+        destination_root=self.root/'default' if self.defaults else Path(self.selected['layers'][-1]['root'])
+        destination=str(destination_root/'config.json')
         for key in self.controls.keys():
             if key in ('formatting','apps'):continue
             resolved=self.controls.resolve(key)
+            destination=str(destination_root/appearance_file(key))
             self.rows.append(Row(key,resolved['value'],resolved['source'] or 'Not configured',destination,
                                  'Root usage logo gradient; next invocation, no theme refresh' if key=='apps.cli.logo_gradient' else
                                  'Popup appearance; reopen the popup to apply' if key.startswith('apps.menu.popup.') else
                                  'Fonts display; next invocation or reopened popup, no font activation' if key.startswith('apps.fonts.') else
                                  'Wiki display; next invocation or reopened popup, no theme refresh' if key.startswith(('apps.wiki.','formatting.apps.wiki.')) else
-                                 ' · '.join(activation(key)),resolved['source']==destination,'json',
+                                 ' · '.join(activation(key)),bool(resolved['source']) and Path(resolved['source']).parent==destination_root,'json',
                                  constraints=constraints(self.controls.defaults,key)))
         if not self.defaults and self.selected['current']==profile_context(self.root)['current'] and (self.root/'config/wttr/config.toml').is_file() and sys.version_info>=(3,11):
             from config_wttr import Native
@@ -121,6 +134,14 @@ class Inventory:
                 result=native.resolve(key)
                 self.rows.append(Row(key,result['value'],result['source'],str(native.original),
                                      result['activation']+'; native TOML, no profile inheritance',result['source']==str(native.original),'codex',constraints=toast_constraints(key)))
+        from profile_config import settings as preference_settings
+        definitions=schema()
+        declared=preference_settings(self.root,self.selected,defaults=self.defaults)
+        for key,(kind,default,description) in {**definitions,'files.backup':('boolean',False,'Back up occupied managed file destinations')}.items():
+            row=declared.get(key,dict(value=default,source='Built-in default'))
+            from config_completion import value_spec
+            target=str(destination_root/'config.json')
+            self.rows.append(Row('settings.'+key,row['value'],row['source'],target,description,row['source']!='Built-in default' and Path(row['source']).parent==destination_root,kind,constraints=value_spec(self.root,'settings.'+key)))
         if not self.defaults:
             destination = str(Path(self.selected['layers'][-1]['root'])/'profile.json')
             leaf = self.selected['layers'][-1]
@@ -136,7 +157,7 @@ class Inventory:
                     values[group].update(layer.get(group, {}))
                     sources.update({(group, key): str(Path(layer['root'])/'profile.json')
                                     for key in layer.get(group, {})})
-            for group in ('settings', 'environment'):
+            for group in ('environment',):
                 for key, value in values[group].items():
                     kind, _, description = definitions.get(key, ('text', None, 'Literal environment declaration'))
                     if key == 'files.backup': kind, description = 'boolean', 'Back up occupied managed file destinations'
@@ -200,7 +221,8 @@ class Draft:
         group=internal(row.key).split('.',1)[0]
         self.base = (StylePlan(inventory.root, inventory.selected, group, inventory.defaults)
                      if group in ('colors', 'icons') else ControlPlan(inventory.root,inventory.selected,inventory.defaults)
-                     if group in ('formatting','apps') else Plan(inventory.root, inventory.selected))
+                     if group in ('formatting','apps') else SettingsPlan(inventory.root,inventory.selected,inventory.defaults)
+                     if group=='settings' else Plan(inventory.root, inventory.selected))
         if row.kind=='native':
             from config_wttr import NativePlan
             self.base=NativePlan(inventory.root,inventory.selected)
@@ -234,7 +256,12 @@ class Draft:
             from config_values import Controls,lookup,parts
             plan.edit(self.row.key,value,unset=reset)
             proposed=(lookup(plan.data,parts(__import__('config_keys').internal(self.row.key))) if self.inventory.defaults else
-                      Controls(self.inventory.root,self.inventory.selected,replacements={plan.path:plan.data}).resolve(self.row.key)['value'])
+                      Controls(self.inventory.root,self.inventory.selected,replacements=plan.replacements).resolve(self.row.key)['value'])
+        elif isinstance(plan,SettingsPlan):
+            from profile_config import settings as preference_settings
+            plan.edit(self.row.key,value,unset=reset)
+            resolved=preference_settings(self.inventory.root,self.inventory.selected,defaults=self.inventory.defaults,replacements=plan.replacements)
+            proposed=resolved.get(name,{}).get('value',schema().get(name,('',False,''))[1])
         else:
             plan.edit(self.row.key, value, unset=reset)
             plan.finish()
@@ -254,16 +281,17 @@ class Draft:
         visual = isinstance(self.plan, (StylePlan,ControlPlan))
         key = internal(self.row.key)
         effect = preview_save(self.inventory.root, self.plan) if visual and not self.inventory.no_refresh else None
+        ui = Presentation(terminal=True)
         return page('Reset override' if self.reset else 'Save configuration', [
-            ('Key', self.row.key), ('Saved', display(self.row.key, self.row.value)),
-            ('After reset' if self.reset else 'Proposed', display(self.row.key, self.proposed)),
+            ('Key', self.row.key), ('Saved', display(self.row.key, self.row.value, ui=ui)),
+            ('After reset' if self.reset else 'Proposed', display(self.row.key, self.proposed, ui=ui)),
             ('Destination', str(self.plan.path)),
             ('Effect', ('Restore the alert setting default' if self.reset and self.row.kind=='codex' else 'Remove this profile override' if self.reset else 'Save this value') +
              ('; automatic refresh disabled' if visual and self.inventory.no_refresh else
               '; '+__import__('codex_toast').ACTIVATION if self.row.kind=='codex' else
               '; next Fonts invocation or popup' if key.startswith('apps.fonts.') else
               '; next popup' if key.startswith('apps.menu.popup.') else '; refresh: '+(', '.join(effect['consumers']) or 'no active change') if effect else '')),
-            ('Recovery', 'Retained transaction; undo command shown after saving')])
+            ('Recovery', 'Retained transaction; undo command shown after saving')], ui=ui)
 
     def save(self):
         self.inventory.check()
@@ -287,28 +315,29 @@ def page(title, details, *, width=80, ui=None):
     out.detail_indent=out.formatting.get('indent',0)+out.formatting.get('padding',1)
     out.heading(title)
     for label, value in details:
-        text = clean(str(value))
-        if label in ('Source','Destination','Profile file','Edit destination') and Path(str(value)).is_absolute():
-            out.resource_detail(label, value, display=text)
+        text = clean(str(preview_paths(value, out)))
+        if label in ('Source','Destination','Profile file','Edit destination','Winning source','Target') and isinstance(value, str) and Path(value).is_absolute():
+            out.resource_detail(label, value)
         else:
             out.detail(label, text)
     return stream.getvalue()
 
 
 def details(row, *, width=80, ui=None):
-    fields = [('Key', row.key), ('Saved', display(row.key, row.value)),
+    ui = ui or Presentation(terminal=True)
+    fields = [('Key', row.key), ('Saved', display(row.key, row.value, ui=ui)),
               ('Source', row.source), ('Destination', row.destination), ('Description', row.description)]
     from config_values import constraint_details
-    fields += constraint_details(row.constraints or {})
+    fields += constraint_details(preview_paths(row.constraints or {}, ui))
     for binding in row.explanation or []:
-        fields += [('Consumer', binding['app'] or 'none'), ('Effective', display(row.key, binding['value'])),
+        fields += [('Consumer', binding['app'] or 'none'), ('Effective', display(row.key, binding['value'], ui=ui)),
                    ('Winning source', binding['source'] or 'Not configured'), ('Refresh', binding['refresh'])]
         if 'resolved_color' in binding:fields.append(('Resolved color',binding['resolved_color']))
         if 'fallback' in binding:fields.append(('Fallback',binding['fallback']))
     if row.group in ('settings','environment'):
         override = os.environ.get(row.key.split('.', 1)[1])
         if override is not None and (row.group == 'environment' or override):
-            value = '[redacted]' if display(row.key,row.value) == '[redacted]' else display(row.key,override)
+            value = '[redacted]' if display(row.key,row.value) == '[redacted]' else display(row.key,override,ui=ui)
             fields.append(('Environment override', value+' (not saved)'))
     if row.mapping:
         fields = [('Key', row.key), ('Profile file', row.source), ('Edit destination', row.destination)]
@@ -395,7 +424,7 @@ def tree_rows(inventory, branch='', search=False):
 
 def filter_choices(inventory,category,frame):
     from config_completion import prefixes
-    categories=('all','icons','colors','formatting','apps') if inventory.defaults else CATEGORIES
+    categories=('all','icons','colors','formatting','apps','settings') if inventory.defaults else CATEGORIES
     choices=[('category:'+name,'All categories' if name=='all' else name.title()) for name in categories]
     if category!='all':
         prefix=frame.get('filter_prefix') or category
@@ -440,7 +469,7 @@ def pick(inventory, category, frame, context):
         key=pad(row.key,key_width,formatting.get('alignment','left'))
         prefix=(' '*indent+ui.paint(row.key,styles['blue'])+'\n'+' '*(indent+key_width+gap)
                 if key_width and cells(row.key)>key_width else ' '*indent+ui.paint(key,styles['blue'])+' '*gap)
-        labels.append(prefix+fit(display(row.key, row.value), max(8, ui.width//3))+
+        labels.append(prefix+fit(display(row.key, row.value, ui=ui), max(8, ui.width//3))+
                       ui.paint(' · '+origin, styles['muted']))
     # Snapshot inert rows once; format only the selected preview. Rendering every
     # nullable icon/style binding here makes opening All grow with the vocabulary.
@@ -623,8 +652,17 @@ def _browse(root, selected, args):
     category, frames, branch = None, {}, None
     while True:
         if mode is None:
-            mode = select('Config', [('list','List'), ('get','Get'), ('set','Set'), ('refresh','Refresh active visuals')], context)
+            mode = select('Config', [('list','List'), ('get','Get'), ('set','Set'), ('import','Import appearance'), ('refresh','Refresh active visuals')], context)
             if mode is None: return 0
+            if mode == 'import':
+                from config_transfer import TransferPlan,review
+                source=select('Import from profile',([('defaults','Shared defaults')] if scope!='defaults' else [])+[(r['id'],r['id']) for r in available(root) if r['id']!=scope],context)
+                if source:
+                    target=profile_context(root,None if scope=='defaults' else scope)
+                    plan=TransferPlan(root,target,source=source,defaults=scope=='defaults')
+                    if review(plan,context):plan.apply()
+                mode=None
+                continue
             if mode == 'refresh':
                 from config_refresh import refresh
                 review = page('Refresh active visuals', [('Effect', 'Publish current visual preferences and notify verified consumers'), ('Theme', 'Preserve current palette and identity')])
@@ -636,7 +674,7 @@ def _browse(root, selected, args):
             category = 'all' if mode == 'list' else None
             branch=None
         if category is None:
-            categories = ('all','icons','colors','formatting','apps') if scope == 'defaults' else CATEGORIES
+            categories = ('all','icons','colors','formatting','apps','settings') if scope == 'defaults' else CATEGORIES
             category = select('Category', [(name,name.title()) for name in categories], context)
             if category is None:
                 mode = None
@@ -679,7 +717,7 @@ def _browse(root, selected, args):
                         elif action=='sort':target['sort']=choice
                 if event.action == 'help': show(HELP, title='Help', context=context)
                 elif event.action == 'category':
-                    categories = ('all','icons','colors','formatting','apps') if scope == 'defaults' else CATEGORIES
+                    categories = ('all','icons','colors','formatting','apps','settings') if scope == 'defaults' else CATEGORIES
                     category = select('Category', [(name,name.title()) for name in categories], context) or category
                     branch=None
                 elif event.action == 'scope':

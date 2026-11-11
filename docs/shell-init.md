@@ -182,3 +182,8 @@ hooks are observed only at source boundaries. Diagnostic traces do not enable
 command xtrace or persist expanded arguments.
 
 Interactive initialization also supplies [global less standout colors](shell-environment.md#global-less-colors). The standard environment overrides follow theme refresh, preserve explicit customization and remain available with named color shortcuts disabled. Native Windows less retains its stock rendering.
+
+
+Dots command paths lead inherited/profile paths in each shell, including repeated initialization. `.ln` forwards to the shared safe-link command. Explicit STARSHIP_CONFIG values are retained; unset values use Starship defaults.
+
+Bak completion is registered for standalone `bak`/`dots-bak` and `dots bak` in all six adapters. Zsh registration runs after compinit at the first prompt. Disabling completion removes Dots-owned Bash/Zsh/Fish Bak registrations. Preference cache inputs include separated JSON/TOML files and parent directories, so creating a previously absent profile preference file invalidates the bundle; warm startup retains the no-Python path.

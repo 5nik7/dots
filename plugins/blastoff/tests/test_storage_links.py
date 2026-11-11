@@ -57,7 +57,7 @@ class StorageLinks(Harness):
         self.write(self.config, NEW)
         self.invoke('theme', 'save', 'saved', '--force')
         self.assertIn(OLD, [p.read_text() for p in self.snapshots()])
-        stored_meta = [json.loads(p.read_text()) for p in (self.real/'backups').glob('*.json')]
+        stored_meta = [r['blastoff'] for r in self.backup_entries().values() if 'blastoff' in r]
         self.assertEqual(stored_meta[0]['source'], str(self.real/'themes/saved.toml'))
         self.invoke('theme', 'apply', 'copied')
         self.assertEqual(self.config.read_text(), OLD)
@@ -71,6 +71,8 @@ class StorageLinks(Harness):
         self.write(self.config, NEW)
         self.invoke('backup', 'restore', ident)
         self.assertEqual(self.config.read_bytes(), before)
+        self.invoke('theme', 'delete', 'copied', '--force', code=1)
+        self.invoke('theme', 'apply', 'saved')
         self.invoke('theme', 'delete', 'copied', '--force')
         self.invoke('module', 'delete', 'saved-module', '--force')
         self.assertFalse((self.real/'themes/copied.toml').exists())

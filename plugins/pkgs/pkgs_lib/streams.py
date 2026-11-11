@@ -49,7 +49,8 @@ class Formatter:
                    'xbps': r'^(?:Updating |Installing |Unpacking )'}
         if role == 'value' and any(re.search(pattern,text) for name,pattern in markers.items() if self.manager in (None,'auto',name)):
             role = 'identity'
-        if self.ui and role != 'value': text = self.ui.ui.paint(text, __import__('plugin_presentation').STYLES[role])
+        if self.ui and (role != 'value' or self.ui.styles[role] != '0;39'):
+            text = self.ui.ui.paint(text, self.ui.styles[role])
         # A child may disable ONLCR on the controlling terminal while it runs.
         self.stream.write(text + ('\r\n' if ending == '\n' and self.stream.isatty() else ending))
         self.stream.flush()

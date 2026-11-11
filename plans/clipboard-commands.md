@@ -1,0 +1,20 @@
+# System clipboard commands
+
+Status: implemented and locally verified; native clipboard acceptance remains pending as listed below.
+
+The shared `cpy`/`pst` scripts currently shadow the Termux profile copies with Windows-only commands. Replace them with checkout-relative launchers, forward the Termux wrappers to the same implementation, and extend the shared clipboard adapter for text reads and writes. Native PowerShell scripts and existing helper names must use the same controller without Bash. Keep PATH precedence and existing local links; no installation, package changes or app destination changes are needed.
+
+`cpy [--] [TEXT...]` joins arguments with spaces or reads stdin, without adding a newline. `pst` returns clipboard text. Both support `-h`/`--help`; errors use stderr and nonzero statuses. Select Android on Termux, Wayland/X11 on Linux, and Windows on WSL/native Windows. Probe available tools only during an operation; never retry a failed operation against a different clipboard. Preserve the existing `copy(text)` API for Todo/Fonts.
+
+Primary owner: `dots-profile-maintenance`, with command/shell maintenance for launchers and native forwarding. Configuration assessment: **no configuration integration change needed**; these direct data commands use the current system clipboard. Menu assessment: **no menu**, because selection adds nothing to text transfer. These standalone names add no Dots dispatcher routes or route metadata. Human help/errors use concise plain text; clipboard bytes bypass styling, including forced color/icons. Review help at 40/80/120 columns under the [presentation gate](README.md#presentation-gate-for-every-plan).
+
+Verification: fake providers in owned HOME/config/state/cache roots; literal UTF-8, empty data, trailing newlines, arguments/stdin, failures/timeouts, selection boundaries, PowerShell transport, direct/symlinked launchers, stale checkout variables and PATH shadowing. Run affected Todo/Fonts clipboard regressions, native adapter checks when engines exist, shell syntax, Markdown links and whitespace validation. No automated test accesses the real clipboard. Android app round-trip and native Linux/WSL/Windows clipboard checks remain separate acceptance gates. Update canonical docs and rebuild/check the available wiki without publishing.
+
+## Verification record
+
+- `tools/test_clipboard.py -v`: 15 cases, 13 passed and 2 skipped because neither PowerShell engine is installed. Includes native Bash/Zsh/Fish invocation on Termux, fake provider round-trips, platform selection, UTF-8 JSON transport, literal/newline/empty content and failure boundaries. The PowerShell 5.1/7 test cases are also runnable on Windows with a test-owned provider.
+- `tools/test_todo_plan.py -v`: all 12 cases passed. The existing Fonts browser Enter/Alt-Y copy case passed with private tmux clients. Combined: 26 passed, 2 skipped; no real clipboard reads or writes.
+- Bash/POSIX syntax and ShellCheck passed for all four executable launchers. Help fits 40/80/120 columns and does not probe providers; forced presentation variables do not alter clipboard data. Relative Markdown links and `git diff --check` passed.
+- Current PATH selects this checkout's shared scripts; read-only provider resolution selects the installed Termux clipboard-get/set executables. Profile wrappers and existing local links are retained. No reload or installation is required for these file-backed commands on the current Termux host; already-loaded legacy PowerShell functions require a new session or profile reload.
+- Android app/service round-trip, native Linux desktop/WSL interop, and Windows 5.1/7 runtime/desktop clipboard checks remain pending. Windows app destinations and shell startup/PATH algorithms are unchanged.
+- Canonical behavior lives in [shell utilities](../docs/shell-utils.md#system-clipboard-commands). Local Wiki build transaction `522532d9266e458bbdf3896185a63fca` refreshed the generated pages; `dots wiki check` passed. No commits or publication.

@@ -1,4 +1,5 @@
 """User interface. Exact names, picker queries, and transactions stay distinct."""
+from .common import human_message
 import argparse
 from dataclasses import asdict
 import json
@@ -63,7 +64,8 @@ def execute(backend, action, names, args, cfg):
 def main(argv=None):
     args = sys.argv[1:] if argv is None else argv
     with diagnostics('--debug' in args or os.environ.get('PKGS_DEBUG') == '1',
-                     quiet=bool(args and args[0] in ('__complete', '__session'))):
+                     quiet=bool(args and args[0] in ('__complete', '__session')) or
+                           any(flag in args for flag in ('--raw','--json','--dry-run'))):
         return _main(args)
 
 
@@ -197,7 +199,7 @@ def _main(argv=None):
             for file in directory.glob('*.json'):
                 # Only hashed catalog filenames belong to us.
                 if len(file.stem) == 24 and all(c in '0123456789abcdef' for c in file.stem): file.unlink()
-            print('Package inventory cache cleared.')
+            human_message('Package inventory cache cleared.','success')
             return 0
         if command == 'search' and args.names:
             if args.query: raise Error('Use a positional query or --query, not both.')

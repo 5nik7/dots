@@ -2,7 +2,6 @@
   "schema": 1,
   "id": "windows",
   "description": "Native Windows defaults",
-  "settings": {},
   "files": {
     "windows": [
       {
@@ -278,7 +277,7 @@
       },
       {
         "id": "powershell-profile",
-        "source": "shells/powershell/Microsoft.PowerShell_profile.ps1",
+        "source": "shells/powershell/profile.ps1",
         "target": "${POWERSHELL_PROFILE}",
         "strategy": "link",
         "app": "powershell",

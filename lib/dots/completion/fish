@@ -59,7 +59,7 @@ function __dots_complete_fish
         end
     end
 end
-for name in dots theme todo fonts
+for name in dots theme todo fonts bak dots-bak
     complete -c $name -f -a '(__dots_complete_fish)'
 end
 set -l theme_state "$HOME/.local/state"

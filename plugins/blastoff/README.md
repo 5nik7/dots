@@ -1,5 +1,10 @@
 # blastoff
 
+## Dots saved-theme links
+
+In the bundled Dots workflow, `theme apply` links the configured active path directly to the selected saved theme, backing up the destination in the shared `bak` catalog. Applying the same link is unchanged. Presets are materialized with content-qualified names without overwriting user themes. All new retained content backups use the shared Bak catalog and `apps.bak.store`/`apps.bak.location`; automatic snapshots copy before mutation. Editing/module operations retain application locks. Backup commands read both shared UUIDs and old app pairs, without migrating live state. Active-theme deletion is refused. `--replace-link` explicitly selects regular-file publication. Setup prepares the current/default palette first and links the default `dots` theme, or retains a current saved-theme selection. This supersedes older copy-on-apply behavior; historical release evidence below describes its named revision.
+
+
 > **Bundled in Dots.** Use the [combined Dots installation](../../docs/bundled-applications.md) and the root `install.sh`/`uninstall.sh` (or PowerShell equivalents). This directory's public lifecycle scripts delegate to that installer. The standalone installation/release instructions and evidence below describe the imported release; they do not describe the current Dots lifecycle. Both `blastoff …` and `dots blastoff …` use this bundled application.
 
 A Starship theme switcher and module library with the same behavior from Bash
@@ -29,7 +34,8 @@ Start with `docs/PI-SETUP.md` for pi, `AGENTS.md` for agent rules and
 | Active Starship config | `~/.config/starship.toml` or nonempty `$STARSHIP_CONFIG` |
 | Stored themes | `~/.config/blastoff/themes/*.toml` |
 | Stored modules | `~/.config/blastoff/modules/*.toml` |
-| Backups | `~/.config/blastoff/backups/` |
+| Backups | `~/.bakstore/<UUID>/` by default; shared `apps.bak` preferences |
+| Legacy backups | Existing `~/.config/blastoff/backups/*.{toml,json}` pairs remain readable |
 
 `BLASTOFF_HOME` overrides the storage root only. Put a valid `example.toml` in the
 themes directory and it appears on the next `--list`; there is no registry to edit.
@@ -138,13 +144,9 @@ no-name save uses provenance and asks `Save edits to "<theme>"? [y/as/N]`; yes
 authorizes a backed-up replacement. Changed/unknown origins require save-as.
 Theme/module delete requires `--force` and makes a backup first. Backup delete is
 permanent, shows its frozen selection/count and defaults to No; use `--yes` for
-explicit noninteractive deletion, or `--pick` for fzf Tab/Shift-Tab selection. Apply copies theme bytes into a regular active
-config and backs up changed existing content; it never edits the stored theme.
+explicit noninteractive deletion, or `--pick` for fzf Tab/Shift-Tab selection. Apply backs up the active destination and links it directly to the selected saved theme. Presets are materialized under content-qualified names.
 By default Blastoff uses `~/.config/starship.toml`; a nonempty `STARSHIP_CONFIG`
-remains an explicit override. A symlinked active config keeps its link: apply,
-module load, edit and restore back up and atomically update the regular target.
-Aliases share that target's lock and history. Unsafe parents, dangling/looping
-links and stored-library targets are refused. Explicit `--replace-link` instead
+remains an explicit override. Module load, edit and content restore preserve the active link and update its saved source with backups. A no-name save of a linked local theme reports that edits are already saved. Aliases share the target lock and history; setup palette writes also share the Dots operation lock. Unsafe parents, dangling/looping links and direct library destinations remain refused. Explicit `--replace-link` instead
 records the old link and replaces it with a regular config, leaving its target
 untouched. `current` and `doctor` show both configured and resolved paths. Listing is read-only, including
 built-in presets. Module load replaces the selected table and descendants,

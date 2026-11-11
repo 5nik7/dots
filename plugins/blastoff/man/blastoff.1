@@ -55,7 +55,8 @@ Explicit preset requests still fail with status 3 on discovery failure.
 .B theme apply NAME, -t NAME, --theme NAME
 Apply a local theme, otherwise a built-in preset.
 Use local:NAME or preset:NAME to select an explicit source.
-Validate TOML and back up the active configuration before atomic replacement.
+Validate TOML, back up the active destination and link directly to the saved theme.
+Presets use content-qualified saved names. Explicit --replace-link copies a regular active file.
 .TP
 .B theme save [NAME]
 Save active content to a local theme. Explicit NAME collisions require
@@ -87,9 +88,8 @@ saves.
 Failed, invalid or conflicted edits remain at a reported recovery path.
 Active leaf links are preserved by default; the regular target is locked,
 backed up and atomically updated.
-Unsafe parents and library targets are refused.
-Use --replace-link to convert the link instead;
-its old target is left untouched.
+Linked edits update the saved source. Unsafe parents and direct library destinations are refused.
+Use --replace-link to convert the active link to a regular file, leaving its old target untouched.
 Requires human terminal input/output, except dry-run reports target/editor
 only.
 .TP
@@ -183,8 +183,9 @@ Metadata source/link paths are never deletion destinations. Refuse unsafe
 links,
 active-file aliases, malformed/orphan metadata and checksum mismatches before
 execution. Valid metadata with an absent payload may be explicitly removed.
-Delete payload before metadata; report per-ID partial failures without
-rollback.
+Shared snapshots use the Bak transaction and remove their proven owned UUID
+container when no unrelated files would be lost. Failures roll back this batch.
+Legacy pairs delete payload before metadata and report partial failures.
 Pre-execution cancellation deletes nothing; an empty --all set is success.
 .TP
 .B pick [--fancy [unicode|ascii] | --fzf], pick fancy, pick fzf
@@ -201,7 +202,8 @@ Appearance, search and safe navigation/query-edit bindings are inherited.
 Ignore executable/event bindings, auto-selection/filtering, listeners, history
 writes,
 walkers, field/output remapping, preview commands and unknown settings.
-Verbose explains omitted options. GUM settings remain isolated.
+Expected picker-owned preview/prompt/binding overrides are verbose-only.
+Malformed, unreadable and unknown settings still warn. GUM settings remain isolated.
 Fancy owns purple/pink colors, reverse layout, height 90%, border and label.
 Connected Unicode borders are default; explicit ascii and non-Unicode
 terminal fallback are available. pick fancy aliases bare --fancy.
@@ -254,7 +256,7 @@ Migration is per-file atomic; an I/O failure can leave a partial copied set.
 .B completion bash|zsh|fish
 Print static shell completion code to stdout. Do not edit shell profiles.
 Completion is positional: local source names/prefixes, stored modules, paired
-backup filenames, import paths and migration directories. Destination names
+backup filenames, shared catalog IDs, import paths and migration directories. Destination names
 and
 module-save routes remain free text.
 No live preset lookup or application launch.
@@ -332,7 +334,9 @@ Captured menu reports retain their human layout even with both disabled.
 .br
 ~/.config/blastoff/modules/*.toml
 .br
-~/.config/blastoff/backups/*.{toml,json}
+~/.bakstore/<UUID>/<name>.<UTC>.bak (shared apps.bak preferences)
+.br
+~/.config/blastoff/backups/*.{toml,json} (legacy pairs)
 .br
 ~/.config/starship.toml
 .SH PROVENANCE

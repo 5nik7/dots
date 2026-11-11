@@ -54,7 +54,7 @@ Native PowerShell exposes `-Interactive`, `-NonInteractive`, `-Component NAME,..
 
 ## Preparation and final publication
 
-Read-only preflight checks destination ownership and selected inputs first. `--with-dependencies` offers mapped missing prerequisites through an already installed manager. Unmapped prerequisites, Python needed to start setup, missing managers, native Rust toolchain/Clippy setup and Python fontTools environment selection require explicit installation outside setup. No provider bootstrap, repository registration, trust change or elevation is implicit.
+Read-only preflight checks destination ownership and selected inputs first. `--with-dependencies` offers mapped missing prerequisites through an already installed manager. The standalone bootstrap can prepare Python and Git explicitly before this shared phase. Unmapped prerequisites, missing managers, native Rust toolchain/Clippy setup and Python fontTools environment selection require explicit installation outside the shared phase. No provider bootstrap, repository registration, trust change or elevation is implicit.
 
 After preparation approval, setup processes prerequisites, packages, the optional pinned Leaf build, inactive theme generation and staged font payloads. It stops at the first failure. Completed package/module/build effects remain; they are never undone by file rollback. Stage records live in `state/dots/setup-runs/` and their writes have Store journals. The final review shows the exact combined file/theme/Leaf/font/preference writes. `--yes` approves the declared preparation and publication stages in batch mode. Changed input guards or conflicting writes stop publication.
 
@@ -64,9 +64,9 @@ An expected `.termux` directory symlink is resolved only when it matches the ena
 
 ## Declared ownership
 
-The existing [file catalog](files.md) is the installation inventory. Missing optional sources, missing resource files and unmapped targets are reported as skipped. No inference from `.gitignore` or arbitrary symlinks is used to choose installation targets. Catalog ownership conflicts, directory copy preferences, unrelated links and unsafe parent paths block installation. An explicit `strategy: "copy"` installs a regular file through the same receipts and retained backups; there is no silent link fallback.
+The existing [file catalog](files.md) is the installation inventory. Missing optional sources, missing resource files and unmapped targets are reported as skipped. No inference from `.gitignore` or arbitrary symlinks is used to choose installation targets. Catalog ownership conflicts, directory copy preferences and unsafe parent paths block installation. Reviewed foreign leaf destinations are backed up before replacement. An explicit `strategy: "copy"` installs a regular file through the same receipts and retained backups; there is no silent link fallback.
 
-Setup links mapped configurations by default and creates their missing parents. Explicit regular-file copies update only when the installed copy still matches its receipt; changed copies are preserved as drift. Repeating an unchanged install is a no-op. Existing regular files/directories receive verified retained backups before replacement. A validated selection made through the normal theme publisher can be reconciled explicitly by setup; arbitrary changed configuration targets remain protected. Correct pre-existing links remain unchanged and are not claimed by the installer. Sources stay editable in the checkout. The managed command entry lives in the user's `.local/bin`; existing shell integration adds the checkout's command paths to PATH. Core setup does not edit the Windows registry or system PATH. The optional Fonts component uses its existing transactional current-user font registrations.
+Setup links mapped configurations by default and creates their missing parents. Reviewed installation can replace edited files, directories and foreign links after retaining their current objects. Repeating an unchanged install is a no-op. Existing regular files/directories receive verified retained backups before replacement. A validated selection made through the normal theme publisher can be reconciled explicitly by setup; reviewed edited destinations retain both their edited content and the first uninstall baseline. Correct pre-existing links remain unchanged and are not claimed by the installer. Sources stay editable in the checkout. The managed command entry lives in the user's `.local/bin`; existing shell integration adds the checkout's command paths to PATH. Core setup does not edit the Windows registry or system PATH. The optional Fonts component uses its existing transactional current-user font registrations.
 
 Catalog omissions found in the audit are now explicit: Fish, Nushell, Zsh's login profile, Ruby dotfiles, Blastoff, Git prompt configuration and Starship's file-level destination. Internal completion, palette and Rofi links are relative to their containing directories. Fixed generated connectors are listed in `lib/dots/themes/connectors.tsv`; btop's `dots.theme` is now generated and ignored alongside the existing connectors.
 
@@ -92,7 +92,7 @@ The installation record is `${XDG_STATE_HOME:-$HOME/.local/state}/dots/installat
 
 Uninstall restores unchanged installer-owned targets to their pre-install objects, removes links created where no target existed, and prunes only empty installer-created directories. Changed targets are preserved and reported as incomplete. Source edits made through a managed link remain in the checkout. Pre-existing matching links, source repositories, catalogs, generated payloads and recovery records are retained. Uninstall is distinct from `dots files remove`, which still materializes a config copy and removes its catalog entry.
 
-Use `dots files history`, `dots files recover ID`, `dots files undo ID`, and the existing backup commands for transaction inspection and recovery. The native adapter exposes these as `dots.ps1 files ...`. An interrupted file transaction blocks new installation until recovered. POSIX durability uses flushed files and directories; native Windows flushes files and journals but does not claim POSIX directory-fsync or power-loss guarantees. Windows symbolic-link privilege is required; copying, elevation, Developer Mode changes and reparse-point traversal are never automatic.
+Use `dots files history`, `dots files recover ID`, `dots files undo ID`, and `dots bak list` for transaction inspection and recovery. The native adapter exposes these as `dots.ps1 files ...`. An interrupted file transaction blocks new installation until recovered. POSIX durability uses flushed files and directories; native Windows flushes files and journals but does not claim POSIX directory-fsync or power-loss guarantees. Windows symbolic-link privilege is required; copying, elevation, Developer Mode changes and reparse-point traversal are never automatic.
 
 `dots files check` (also `dots.ps1 files check`) can remove approved catalog entries
 whose source paths are absent. This metadata-only cleanup preserves installation
@@ -117,7 +117,7 @@ still uses managed-file previews, backups and receipts. See
 
 The same root setup scripts and `dots files install/uninstall` manage Anodize, Blastoff and pkgs. Their public scripts inside the bundled directories delegate to this combined lifecycle. The installation receipt includes standalone launchers, POSIX Bash/Zsh completion files and manuals; Fish completion is part of the managed Fish configuration. Native Windows installs PowerShell launchers and uses Dots' native completion adapter. Missing declared payload files block the complete plan.
 
-No old standalone installer runs. Ordinary setup/removal runs no package manager; explicit `--packages FILE` installation previews and restores the declared packages before applying configuration. A failed package phase prevents configuration writes; completed package changes survive later failure or file rollback. Missing managers are reported, never silently bootstrapped. Native Windows supports the opt-in WinGet workflow through an existing manager, with exact community-source IDs, user scope by default and explicit machine scope; Microsoft.WinGet.Client preparation requires explicit dependency approval. Native Windows PowerShell 5.1/7 runtime acceptance remains pending. Foreign command links remain protected; replaced regular files retain their first-install baseline. Uninstall preserves application data and drift while restoring unchanged owned targets. See [destinations and migration](bundled-applications.md#one-installation-and-removal).
+No old standalone installer runs. Ordinary setup/removal runs no package manager; explicit `--packages FILE` installation previews and restores the declared packages before applying configuration. A failed package phase prevents configuration writes; completed package changes survive later failure or file rollback. Missing managers are reported, never silently bootstrapped. Native Windows supports the opt-in WinGet workflow through an existing manager, with exact community-source IDs, user scope by default and explicit machine scope; Microsoft.WinGet.Client preparation requires explicit dependency approval. Native Windows PowerShell 5.1/7 runtime acceptance remains pending. Reviewed foreign command links and regular files are backed up; replacements retain their first-install baseline. Uninstall preserves application data and drift while restoring unchanged owned targets. See [destinations and migration](bundled-applications.md#one-installation-and-removal).
 
 ## Previous application installations
 
@@ -127,4 +127,51 @@ Combined setup installs Anodize, Blastoff and pkgs from `plugins/`. Protected le
 
 Core setup installs the generated `man/dots.1` as `dots:manual`. Termux uses the detected native prefix's `share/man/man1/dots.1`; Linux and WSL use `~/.local/share/man/man1/dots.1`. Read it with `man dots`; viewers with a custom manual search path may need that directory added explicitly, or can read the repository artifact directly (`mandoc man/dots.1`, or `man -l man/dots.1` with man-db).
 
-The manual is linked by default through the same installer receipt as the command. Existing ordinary files are backed up, unrelated links are refused, and correct preexisting links remain unowned. Core-only removal includes an installer-owned manual, restores its original target, and refuses post-install drift. A missing/nonregular manual in a declared `man` directory blocks setup; older/minimal checkouts without that directory remain compatible. Native Windows creates no POSIX manual link and uses the generated wiki command reference. No system package or shell search-path setting is changed. Configuration/menu review: no additional integration is needed beyond existing core selection and preview.
+The manual is linked by default through the same installer receipt as the command. Existing files and reviewed foreign leaf links are backed up, and correct preexisting links remain unowned. Core-only removal includes an installer-owned manual, restores its original target, and refuses post-install drift. A missing/nonregular manual in a declared `man` directory blocks setup; older/minimal checkouts without that directory remain compatible. Native Windows creates no POSIX manual link and uses the generated wiki command reference. No system package or shell search-path setting is changed. Configuration/menu review: no additional integration is needed beyond existing core selection and preview.
+
+
+## Fresh-machine bootstrap
+
+Use standalone `sh bootstrap.sh --dry-run` or native `./bootstrap.ps1 --dry-run`,
+then run with `--yes` or interactive approval. Existing checkouts expose
+`./install.sh --bootstrap` and `./install.ps1 -Bootstrap`.
+Defaults are public `https://github.com/5nik7/dots.git`, ref `main`, destination
+`~/dots` (or the current valid checkout). Override `--source`, `--ref`, or
+`--destination` explicitly. A valid existing checkout is reused without a fetch,
+reset or update. Fresh acquisition records the commit, uses owned staging and
+never replaces an occupied destination or initializes submodules.
+
+Prerequisites are separately reviewed. POSIX uses a supported existing package
+manager. Windows prefers WinGet and otherwise offers official, verified Git and
+Python installers. The baseline is Python 3.11+ and a compatible native shell.
+Anodize selection tests and builds the engine against its checked-in `go.mod` in
+owned storage before managed publication. External package changes remain if
+later setup fails or is cancelled. `--offline` refuses network preparation;
+`--dry-run` acquires nothing. Missing Python can trigger bootstrap delegation.
+
+Windows bootstrap probes link capability after approval. It can explicitly offer
+Developer Mode with the operating system's administrator prompt. `--yes` alone
+does not approve this setting: separate interactive approval or
+`--developer-mode` is required. Shell configuration never changes the login shell.
+Setup discovers each installed PowerShell engine's all-hosts profile and links
+`shells/powershell/profile.ps1`, retaining host-specific profiles. Native scripts
+and shared controllers remain the architecture, with portable navigation, Git,
+listing, editor and backup helpers and no eager whole-command module import.
+
+Dots `bin`, `scripts`, and generated theme commands lead shell PATH. Selected old
+user `~/bin` launchers are reviewed and backed up; package installations and
+optional libraries are retained. Core installs `bak` and `dots-link`. Existing Git
+mappings include the guarded `gitplatform` companion.
+
+Fresh theme fallback is Catppuccin Mocha; repeats retain the selected theme.
+Theme preparation generates family/full-ID POSIX and PowerShell shortcuts.
+Blastoff setup prepares the saved theme's Dots palette and links the active
+Starship path directly to the selected saved theme (default `dots`). Nonempty
+`STARSHIP_CONFIG` selects the destination; otherwise it is
+`~/.config/starship.toml`. An existing saved-theme link retains its selection.
+
+New setup backups share [the backup catalog](backups.md). `--no-backup`
+(`-NoBackup` in `install.ps1`) explicitly discards newly replaced originals,
+keeps temporary rollback protection, and preserves older uninstall baselines.
+Uninstall reports when a deliberately discarded original cannot be recreated.
+Old transaction receipts remain readable.

@@ -1,6 +1,14 @@
 # Platform Model
 
+## Clipboard history platforms
+
+The [history controller](clipboard.md) and copy providers support Termux, Linux, WSL and native Windows with separate platform state. Bash/native Python routes share metadata, filtering and JSON; PowerShell does not require Bash. Bash/Zsh/Fish and PSReadLine have explicit editor widgets; Nushell/Xonsh retain command completion and copy/print with no editor-insertion adapter. Private Termux tmux/FZF tests cover insertion and narrow popups. Native Linux desktop, WSL interop, Windows 5.1/7 desktop/editor and Android background-read acceptance remain pending; Android may prevent unfocused polling. No application destinations, host services or packages change.
+
 **Status: Live platform adapters; native evidence and pending acceptance recorded by subsystem**
+
+## System clipboard
+
+The standalone [clipboard commands](shell-utils.md#system-clipboard-commands) select Android on Termux, Wayland/X11 on Linux, and the Windows clipboard on WSL/native Windows. WSL access uses Windows executable interop without translating filesystem paths. Native PowerShell adapters require Python, not Bash. App destinations and PATH precedence are unchanged. Provider-selection and literal-stream fixtures run on Termux; real Android app, Linux desktop, WSL interop, and Windows PowerShell 5.1/7 desktop acceptance remain pending.
 
 ## Personal fonts
 
@@ -343,6 +351,13 @@ The shared file registration controller supports native source/destination paths
 
 ## Command manual destinations
 
+Termux file mappings also support `${PREFIX}` for explicit destinations beneath the current Termux installation prefix. The Dots FIGlet assets use individual `${PREFIX}/share/figlet/dots.flf` and `dots-mixed.flf` links. Prefix targets are unmapped on native Linux, WSL and Windows, even when a PREFIX environment variable is present; Windows destinations remain separate. See [FIGlet lettering](fonts.md#figlet-lettering).
+
 The core `dots:manual` asset uses `<Termux prefix>/share/man/man1/dots.1` on Termux and `~/.local/share/man/man1/dots.1` on Linux/WSL. Windows has no POSIX manual destination; its wiki command reference is generated from the same first-party metadata. Explicit isolated prefixes/home roots cover path and lifecycle tests. Native Linux/WSL discovery by `man dots` and native PowerShell interaction require separate acceptance evidence.
 
 Tmux component preferences are editable/inspectable through both shared frontends. Clock, Termux tabs and the battery adapter remain Termux-only; session/window/Git/indicator rendering requires POSIX tmux. Native Windows editing does not start tmux or WSL. Completion uses one candidate provider with Bash/Zsh/Fish and native PowerShell adapters; Zsh optionally uses its existing fzf-tab installation. Native Windows PowerShell 5.1/7 and desktop Linux/WSL rendering evidence must be recorded separately from Termux fixtures.
+
+
+Fresh bootstrap has POSIX and native PowerShell entry points. Windows setup discovers installed 5.1/7 all-hosts profiles, uses shared Python and offers Developer Mode explicitly. Bash/Zsh/Fish/PowerShell/Nushell/Xonsh expose `.ln`; native Windows uses script adapters without Bash. Native Windows bootstrap, official installers, Developer Mode, Linux and WSL acceptance remain separate named checks when unavailable locally.
+
+Separated preferences and portable appearance import use shared Python controllers on POSIX and native Windows. Bak completion is registered for Bash, Zsh, Fish, PowerShell, Nushell and Xonsh; provider/fixture checks are distinct from native Windows PowerShell 5.1/7 acceptance. No WSL/native-Windows paths or state are merged during imports.

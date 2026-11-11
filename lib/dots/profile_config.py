@@ -65,11 +65,17 @@ def config_path(name, root=None, *, write=False):
     return legacy_directory() / relative
 
 
-def settings(root=None, selected=None):
+def settings(root=None, selected=None, *, defaults=False, replacements=None):
+    from preference_files import layers
+    root = checkout(root)
     result = {}
-    for layer in (selected or context(root))['layers']:
-        result.update({key: dict(value=value, source='profile:' + layer['id'])
-                       for key, value in layer.get('settings', {}).items()})
+    inputs = layers(root/'default', replacements=replacements)
+    for layer in [] if defaults else (selected or context(root))['layers']:
+        inputs.extend(layers(Path(layer['root']), layer, replacements))
+    for path, data in inputs:
+        values = data.get('settings', {})
+        validate_settings(values)
+        result.update({key: dict(value=value, source=str(path)) for key,value in values.items()})
     return result
 
 
@@ -145,7 +151,8 @@ def main(args):
         for row in formatting_rows(selected=selected): print('\t'.join(row))
     elif args == ['__style-inputs']:
         from style_config import Styles
-        for path in [*Styles().paths, LIB/'style_config.py', LIB/'theme_styles.py', LIB/'style_catalog.py', LIB/'config_values.py',LIB/'config_keys.py',LIB/'tmux_config.py',LIB/'tmux_controls.py',checkout()/'config/tmux/tmux.conf', checkout()/'default/config.json', LIB/'resources.tsv', checkout()/'config/gitmux/gitmux.conf']:
+        from config_values import Controls
+        for path in [*Styles().paths, *Controls().paths, LIB/'preference_files.py', LIB/'style_config.py', LIB/'theme_styles.py', LIB/'style_catalog.py', LIB/'config_values.py',LIB/'config_keys.py',LIB/'tmux_config.py',LIB/'tmux_controls.py',checkout()/'config/tmux/tmux.conf', checkout()/'default/config.json', LIB/'resources.tsv', checkout()/'config/gitmux/gitmux.conf']:
             if path.is_file(): print(path)
     elif len(args) >= 2 and args[0] == '__paths':
         for name in args[1:]: print(config_path(name))
@@ -153,7 +160,7 @@ def main(args):
         print(config_path(args[1]))
     elif args == ['__settings-json']:
         selected = context()
-        path = Path(selected['layers'][-1]['root']) / 'profile.json' if selected['layers'] else legacy_directory() / 'config.env'
+        path = Path(selected['layers'][-1]['root']) / 'config.json' if selected['layers'] else legacy_directory() / 'config.env'
         print(json.dumps(dict(settings=settings(selected=selected), path=str(path)), ensure_ascii=True))
     else:
         raise ValueError('invalid internal configuration query')

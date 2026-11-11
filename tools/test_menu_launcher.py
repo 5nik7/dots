@@ -54,7 +54,7 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual((code, err), (0, '')); self.assertIn('keys', out)
             doc = json.loads(self.invoke('--json')[1])
             self.assertEqual((doc['schema'], doc['menu'], doc['title']), (1, 'dots', 'Dots menu'))
-            self.assertEqual([r['id'] for r in doc['items']], 'wttr todo config fonts keys tmux files git theme anodize blastoff pkgs debug profile wiki env'.split())
+            self.assertEqual([r['id'] for r in doc['items']], 'wttr todo bak config clipboard fonts keys tmux files git theme anodize blastoff pkgs debug profile wiki env'.split())
             for item in doc['items']:
                 self.assertEqual(set(item), {'id','label','description','available','reason'})
             self.assertEqual([r['id'] for r in json.loads(self.invoke('--json','--query','anodize')[1])['items']], ['anodize'])
@@ -109,7 +109,7 @@ class LauncherContracts(MenuFixture):
     def test_action_map_uses_existing_safe_routes(self):
         expected = {
             'tmux': [('sessions','menu tmux sessions','','session'),('keys','menu tmux keys','--browse','popup')],
-            'files': [('browse','files browse','','terminal'), ('add','files add','','terminal'), *[(n,'files '+n,'','output') for n in ('list','history','sources')]],
+            'files': [('browse','files browse','','terminal'), ('install','files install','','terminal'), ('backups','bak browse','','terminal'), ('uninstall','files uninstall','','terminal'), ('add','files add','','terminal'), *[(n,'files '+n,'','output') for n in ('list','history','sources')]],
             'git': [('status','git status','','output'),('info','git info','','output'),('submodules','git submodules','','submenu'),('wiki','git wiki','','submenu'),('publish','git publish','--all','terminal'),('sync','git sync','','sync')],
             'git/submodules': [('list','git submodules','','output'),('info','git submodules info','','output'),('status','git submodules status','','output')],
             'git/wiki': [('status','git wiki status','','output'),('info','git wiki info','','output'),('publish','git wiki publish','--all','terminal'),('sync','git wiki sync','','sync')],
@@ -126,6 +126,7 @@ class LauncherContracts(MenuFixture):
             ('backups','blastoff backup list','','output'),('doctor','blastoff doctor','','output')]
         expected['pkgs'] = [(n,'pkgs '+n,'','terminal') for n in ('search','install','uninstall')]+[
             ('list','pkgs list','--installed','output'),('upgrade','pkgs upgrade','','package'),
+            ('upgradable','pkgs upgrade','--list','output'),('cleanup','pkgs cleanup','','terminal'),
             ('refresh','pkgs refresh','','terminal'),('export','pkgs export','','package'),
             ('update-manifest','pkgs export','--update','package')]+[(n,'pkgs '+n,'','package') for n in ('manifest','restore')]+[
             ('configuration','config browse','--query apps.pkgs','popup')]+[
@@ -161,12 +162,12 @@ class LauncherContracts(MenuFixture):
             self.assertEqual(kwargs['prompt'], 'dots·files' if menu.id=='dots:files' else 'dots')
             if menu.id == 'dots':
                 self.assertEqual([e.label for e in menu.entries],
-                                 'anodize blastoff config debug env files fonts git keys pkgs profile theme tmux todo weather wiki'.split())
+                     'anodize backups blastoff clipboard config debug env files fonts git keys pkgs profile theme tmux todo weather wiki'.split())
             else:
-                self.assertEqual([e.id for e in menu.entries], ['browse', 'add', 'list', 'history', 'sources', 'help'])
+                self.assertEqual([e.id for e in menu.entries], ['browse', 'install', 'backups', 'uninstall', 'add', 'list', 'history', 'sources', 'help'])
             step=len(visits)
             if step==1:
-                kwargs['navigation']['query']='fil'; return Entry(menu.entries[5].id,'inert $(touch sentinel)')
+                kwargs['navigation']['query']='fil'; return Entry(next(e.id for e in menu.entries if e.label=='files'),'inert $(touch sentinel)')
             if step==2:
                 kwargs['navigation']['query']='li'; return Entry('list','inert')
             if step==3: raise SelectionEvent('help')
@@ -250,7 +251,7 @@ class LauncherContracts(MenuFixture):
                 p=subprocess.run([*front,*args],env=env,capture_output=True,text=True,timeout=20)
                 self.assertEqual(p.returncode,0,p.stderr);return p.stdout
             self.assertIn('--client',call('menu','--help'))
-            self.assertEqual(len(json.loads(call('menu','--json'))['items']),16)
+            self.assertEqual(len(json.loads(call('menu','--json'))['items']),18)
             complete=['__complete','bash','2','--','dots'] if len(front)==1 else ['__complete']
             self.assertIn('--query',call(*complete,'menu','--q'))
             self.assertIn('menu tmux sessions',call('help','menu'))

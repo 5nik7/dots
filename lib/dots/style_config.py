@@ -55,7 +55,9 @@ def read(path):
     if not stat.S_ISREG(path.lstat().st_mode) or path.stat().st_size > LIMIT:
         raise ValueError('style configuration must be a bounded regular file: ' + str(path))
     values, section = {}, ''
-    for line in path.read_text(encoding='utf-8-sig').splitlines():
+    from preference_files import style_sections, controls
+    controls(path)  # Validate reserved typed declarations even for style-only reads.
+    for line in style_sections(path.read_text(encoding='utf-8-sig'))[0].splitlines():
         line = line.strip()
         if not line or line.startswith('#'): continue
         table = re.fullmatch(r'\[([a-z][a-z0-9_.]*)\]\s*(?:#.*)?', line)
@@ -158,7 +160,7 @@ class Styles:
                 for key in names:
                     candidates.extend(style_names(group,prefix+key))
             # Canonical feature fields are the final same-layer override.
-            candidates=sorted(dict.fromkeys(candidates),key=lambda k:k.startswith(('apps.todo.','apps.fonts.','apps.wiki.','apps.menu.')))
+            candidates=sorted(dict.fromkeys(candidates),key=lambda k:k.startswith(('apps.todo.','apps.fonts.','apps.wiki.','apps.menu.','apps.pkgs.')))
             for key in candidates:
                 if key in values:
                     declarations.append(dict(key=group+'.'+key,value=values[key],source=path))
@@ -260,7 +262,10 @@ class Styles:
         paths = {Path(__file__), Path(__file__).with_name('style_catalog.py'),Path(__file__).with_name('config_keys.py')}
         palette = state_root()/'current/theme/palette.json'
         if palette.is_file(): paths.add(palette)
-        for path in self.paths:
+        from config_values import Controls
+        paths.add(Path(__file__).with_name('preference_files.py'))
+        paths.add(Path(__file__).with_name('config_values.py'))
+        for path in [*self.paths,*Controls(self.root,self.selected).paths]:
             if path.exists(): paths.add(path)
             if path.parent.is_dir(): paths.add(path.parent)
         return paths

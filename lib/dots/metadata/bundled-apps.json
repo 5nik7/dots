@@ -360,7 +360,7 @@
     "argument": []
   },
   "blastoff-theme-apply": {
-    "summary": "Apply NAME (local first), local:NAME or preset:NAME to the active config",
+    "summary": "Link the active config directly to saved NAME (local first), local:NAME or a materialized preset:NAME",
     "option": [
       [
         "--help",
@@ -784,7 +784,7 @@
     "argument": []
   },
   "blastoff-preset-apply": {
-    "summary": "Generate a Starship preset and apply it, backing up changed active content",
+    "summary": "Generate a Starship preset into a content-qualified saved file and link the active config to it",
     "option": [
       [
         "--help",
@@ -1274,7 +1274,7 @@
     "argument": []
   },
   "blastoff-backup-create": {
-    "summary": "Snapshot active config bytes, including invalid TOML for recovery.",
+    "summary": "Snapshot active config bytes into the shared Bak catalog, including invalid TOML for recovery.",
     "option": [
       [
         "--help",

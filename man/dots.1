@@ -390,6 +390,294 @@ Logo layout; base selects LOGO1
 .TP
 .B "Argument 1 (theme\-id)"
 Theme identifier
+.SS "dots bak"
+Move files into recoverable backups or browse saved backups
+.PP
+.B "dots bak [COMMAND | PATH...] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-store, \-s"
+Use the configured backup store
+.TP
+.B "\-\-store\-dir VALUE"
+Override the backup store directory
+.TP
+.B "\-\-in\-place"
+Use adjacent filename.timestamp.bak backups
+.TP
+.B "\-\-copy"
+Keep the original
+.TP
+.B "\-\-move"
+Move the original (default)
+.TP
+.B "Argument 1 (choice:create,list,show,restore,delete,prune,import,browse)"
+Action or source path
+.SS "dots bak browse"
+Browse, inspect and manage saved backups
+.PP
+.B "dots bak browse [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.SS "dots bak create"
+Move files into backups; \-\-copy retains originals
+.PP
+.B "dots bak create PATH... [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-store, \-s"
+Use the configured backup store
+.TP
+.B "\-\-store\-dir VALUE"
+Override the backup store directory
+.TP
+.B "\-\-in\-place"
+Use adjacent filename.timestamp.bak backups
+.TP
+.B "\-\-copy"
+Keep the original
+.TP
+.B "\-\-move"
+Move the original (default)
+.TP
+.B "Argument * (file)"
+Source path
+.SS "dots bak delete"
+Delete selected unprotected backups and empty owned containers
+.PP
+.B "dots bak delete ID... [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.SS "dots bak import"
+Register existing legacy backups in place
+.PP
+.B "dots bak import PATH... [\-\-original PATH] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-original VALUE"
+Record the original path for one legacy backup
+.TP
+.B "Argument * (file)"
+Source path
+.SS "dots bak list"
+List saved backups and protected uninstall baselines
+.PP
+.B "dots bak list [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.SS "dots bak prune"
+Review old backups selected by explicit retention filters
+.PP
+.B "dots bak prune [\-\-keep COUNT] [\-\-older\-than DAYS] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-keep VALUE"
+Keep this many newest backups per original path
+.TP
+.B "\-\-older\-than VALUE"
+Select backups older than this many days
+.SS "dots bak restore"
+Restore a backup and retain its saved version
+.PP
+.B "dots bak restore ID [\-\-to PATH] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-store, \-s"
+Use the configured backup store
+.TP
+.B "\-\-store\-dir VALUE"
+Override the backup store directory
+.TP
+.B "\-\-in\-place"
+Use adjacent filename.timestamp.bak backups
+.TP
+.B "\-\-to VALUE"
+Restore to another pathname
+.TP
+.B "\-\-no\-backup"
+Discard the occupied destination after successful restore
+.SS "dots bak show"
+Inspect a backup record without exposing file contents
+.PP
+.B "dots bak show ID [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-verbose, \-v"
+Show transaction operation details
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-yes, \-y"
+Approve explicit delete/prune or menu restoration
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
 .SS "dots blastoff"
 Starship themes and stored modules
 .PP
@@ -446,7 +734,8 @@ deletion
 .B "\-\-replace\-link"
 back up and replace an active symlink; leave its target unchanged
 .SS "dots blastoff backup create"
-Snapshot active config bytes, including invalid TOML for recovery.
+Snapshot active config bytes into the shared Bak catalog, including invalid
+TOML for recovery.
 .PP
 .B "dots blastoff backup create [OPTIONS] [ARGUMENTS]"
 .TP
@@ -947,7 +1236,8 @@ deletion
 .B "\-\-replace\-link"
 back up and replace an active symlink; leave its target unchanged
 .SS "dots blastoff preset apply"
-Generate a Starship preset and apply it, backing up changed active content
+Generate a Starship preset into a content\-qualified saved file and link the
+active config to it
 .PP
 .B "dots blastoff preset apply [OPTIONS] [ARGUMENTS]"
 .TP
@@ -1060,7 +1350,8 @@ deletion
 .B "\-\-replace\-link"
 back up and replace an active symlink; leave its target unchanged
 .SS "dots blastoff theme apply"
-Apply NAME (local first), local:NAME or preset:NAME to the active config
+Link the active config directly to saved NAME (local first), local:NAME or a
+materialized preset:NAME
 .PP
 .B "dots blastoff theme apply [OPTIONS] [ARGUMENTS]"
 .TP
@@ -1263,13 +1554,596 @@ back up and replace an active symlink; leave its target unchanged
 .TP
 .B "Argument 1 (string)"
 name
+.SS "dots clipboard"
+Browse local text clipboard history
+.PP
+.B "dots clipboard [COMMAND] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-query VALUE"
+Search stored text
+.TP
+.B "\-\-limit VALUE"
+Maximum entries (0 means all)
+.TP
+.B "\-\-since VALUE"
+Updated since ISO date/time
+.TP
+.B "\-\-until VALUE"
+Updated through ISO date/time
+.TP
+.B "\-\-pinned"
+Only pinned entries
+.TP
+.B "\-\-source manual,cpy,dots,capture,watch,import"
+Filter entry source
+.TP
+.B "Argument 1 (choice:browse,pick,init,list,search,show,add,capture,copy,print,insert,pin,unpin,remove,clear,prune,export,import,status,pause,resume,watch)"
+Command
+.SS "dots clipboard add"
+Store text arguments or stdin without changing the clipboard
+.PP
+.B "dots clipboard add [TEXT...] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "Argument * (string)"
+Literal text
+.SS "dots clipboard browse"
+Search clipboard history in the shared popup
+.PP
+.B "dots clipboard browse [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-query VALUE"
+Search stored text
+.TP
+.B "\-\-limit VALUE"
+Maximum entries (0 means all)
+.TP
+.B "\-\-since VALUE"
+Updated since ISO date/time
+.TP
+.B "\-\-until VALUE"
+Updated through ISO date/time
+.TP
+.B "\-\-pinned"
+Only pinned entries
+.TP
+.B "\-\-source manual,cpy,dots,capture,watch,import"
+Filter entry source
+.TP
+.B "\-\-client VALUE"
+Exact originating tmux client
+.SS "dots clipboard capture"
+Store the current system clipboard text
+.PP
+.B "dots clipboard capture [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.SS "dots clipboard clear"
+Review and remove matching unpinned entries
+.PP
+.B "dots clipboard clear [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-query VALUE"
+Search stored text
+.TP
+.B "\-\-limit VALUE"
+Maximum entries (0 means all)
+.TP
+.B "\-\-since VALUE"
+Updated since ISO date/time
+.TP
+.B "\-\-until VALUE"
+Updated through ISO date/time
+.TP
+.B "\-\-pinned"
+Only pinned entries
+.TP
+.B "\-\-source manual,cpy,dots,capture,watch,import"
+Filter entry source
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "\-\-yes, \-y"
+Approve the reviewed removal
+.TP
+.B "\-\-include\-pinned"
+Include pinned entries in explicit removal
+.SS "dots clipboard copy"
+Copy a stored entry to the system clipboard
+.PP
+.B "dots clipboard copy ID [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "Argument * (string)"
+Full clipboard entry ID
+.SS "dots clipboard export"
+Write a schema\-1 text history export to stdout
+.PP
+.B "dots clipboard export [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-query VALUE"
+Search stored text
+.TP
+.B "\-\-limit VALUE"
+Maximum entries (0 means all)
+.TP
+.B "\-\-since VALUE"
+Updated since ISO date/time
+.TP
+.B "\-\-until VALUE"
+Updated through ISO date/time
+.TP
+.B "\-\-pinned"
+Only pinned entries
+.TP
+.B "\-\-source manual,cpy,dots,capture,watch,import"
+Filter entry source
+.SS "dots clipboard import"
+Import a schema\-1 export from stdin atomically
+.PP
+.B "dots clipboard import [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.SS "dots clipboard init"
+Print explicit clipboard shell\-widget initialization
+.PP
+.B "dots clipboard init SHELL"
+.TP
+.B "Argument 1 (choice:bash,zsh,fish,powershell)"
+Shell editor
+.SS "dots clipboard insert"
+Insert literally into a verified terminal input context
+.PP
+.B "dots clipboard insert ID [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "\-\-client VALUE"
+Exact originating tmux client
+.TP
+.B "Argument * (string)"
+Full clipboard entry ID
+.SS "dots clipboard list"
+List stored clipboard entries
+.PP
+.B "dots clipboard list [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-query VALUE"
+Search stored text
+.TP
+.B "\-\-limit VALUE"
+Maximum entries (0 means all)
+.TP
+.B "\-\-since VALUE"
+Updated since ISO date/time
+.TP
+.B "\-\-until VALUE"
+Updated through ISO date/time
+.TP
+.B "\-\-pinned"
+Only pinned entries
+.TP
+.B "\-\-source manual,cpy,dots,capture,watch,import"
+Filter entry source
+.SS "dots clipboard pause"
+Pause automatic history capture
+.PP
+.B "dots clipboard pause [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.SS "dots clipboard pick"
+Select text for a shell\-editor widget
+.PP
+.B "dots clipboard pick [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-query VALUE"
+Search stored text
+.TP
+.B "\-\-limit VALUE"
+Maximum entries (0 means all)
+.TP
+.B "\-\-since VALUE"
+Updated since ISO date/time
+.TP
+.B "\-\-until VALUE"
+Updated through ISO date/time
+.TP
+.B "\-\-pinned"
+Only pinned entries
+.TP
+.B "\-\-source manual,cpy,dots,capture,watch,import"
+Filter entry source
+.TP
+.B "\-\-client VALUE"
+Exact originating tmux client
+.SS "dots clipboard pin"
+Protect entries from automatic pruning
+.PP
+.B "dots clipboard pin ID... [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "Argument * (string)"
+Full clipboard entry ID
+.SS "dots clipboard print"
+Print a stored entry without adding a newline
+.PP
+.B "dots clipboard print ID"
+.TP
+.B "Argument * (string)"
+Full clipboard entry ID
+.SS "dots clipboard prune"
+Review entries beyond configured retention limits
+.PP
+.B "dots clipboard prune [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "\-\-yes, \-y"
+Approve the reviewed removal
+.SS "dots clipboard remove"
+Review and permanently remove selected entries
+.PP
+.B "dots clipboard remove ID... [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "\-\-yes, \-y"
+Approve the reviewed removal
+.TP
+.B "Argument * (string)"
+Full clipboard entry ID
+.SS "dots clipboard resume"
+Resume enabled automatic history capture
+.PP
+.B "dots clipboard resume [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.SS "dots clipboard search"
+Search stored clipboard text
+.PP
+.B "dots clipboard search QUERY [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-query VALUE"
+Search stored text
+.TP
+.B "\-\-limit VALUE"
+Maximum entries (0 means all)
+.TP
+.B "\-\-since VALUE"
+Updated since ISO date/time
+.TP
+.B "\-\-until VALUE"
+Updated through ISO date/time
+.TP
+.B "\-\-pinned"
+Only pinned entries
+.TP
+.B "\-\-source manual,cpy,dots,capture,watch,import"
+Filter entry source
+.TP
+.B "Argument * (string)"
+Literal text
+.SS "dots clipboard show"
+Inspect one stored clipboard entry
+.PP
+.B "dots clipboard show ID [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-raw"
+Print the exact stored text
+.TP
+.B "Argument * (string)"
+Full clipboard entry ID
+.SS "dots clipboard status"
+Inspect providers, storage and capture controls
+.PP
+.B "dots clipboard status [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.SS "dots clipboard unpin"
+Allow entries to be pruned
+.PP
+.B "dots clipboard unpin ID... [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "Argument * (string)"
+Full clipboard entry ID
+.SS "dots clipboard watch"
+Control the explicitly started clipboard watcher
+.PP
+.B "dots clipboard watch [COMMAND] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "Argument 1 (choice:start,stop,pause,resume,status)"
+Command
+.SS "dots clipboard watch pause"
+Pause automatic capture while keeping the watcher
+.PP
+.B "dots clipboard watch pause [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.SS "dots clipboard watch resume"
+Resume automatic capture
+.PP
+.B "dots clipboard watch resume [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.SS "dots clipboard watch start"
+Start the polling watcher explicitly
+.PP
+.B "dots clipboard watch start [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
+.TP
+.B "\-\-foreground"
+Keep the worker in the foreground
+.SS "dots clipboard watch status"
+Inspect watcher state without starting it
+.PP
+.B "dots clipboard watch status [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.SS "dots clipboard watch stop"
+Stop only the owned clipboard watcher
+.PP
+.B "dots clipboard watch stop [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-dry\-run"
+Preview without reading the system clipboard or writing state
 .SS "dots config"
-Browse and edit profile configuration
+Browse and edit shared preferences or explicit profile overrides
 .PP
 .B "dots config [SUBCOMMAND] [OPTIONS]"
 .TP
 .B "\-\-defaults"
-Use shared color and icon defaults
+Use shared preference defaults
 .TP
 .B "\-\-profile VALUE"
 Select a profile without activating it
@@ -1357,6 +2231,35 @@ Print structured configuration data
 .TP
 .B "Argument 1 (config\-key)"
 Setting or full option; Tab lists full keys; .. then Tab browses branches
+.SS "dots config import"
+Merge portable appearance from another profile into shared defaults or a
+selected profile
+.PP
+.B "dots config import SOURCE [OPTIONS]"
+.TP
+.B "\-\-profile VALUE"
+Target profile; shared defaults when omitted
+.TP
+.B "\-\-defaults"
+Target shared defaults
+.TP
+.B "\-\-json"
+Print structured preview or result
+.TP
+.B "\-\-dry\-run"
+Preview without changes
+.TP
+.B "\-\-apply"
+Apply the reviewed import
+.TP
+.B "\-\-yes"
+Confirm import apply
+.TP
+.B "\-\-no\-refresh"
+Imports never reload or publish themes
+.TP
+.B "Argument 1 (profile\-import)"
+Source profile; imported appearance wins
 .SS "dots config list"
 List categorized configuration and value sources
 .PP
@@ -1377,6 +2280,9 @@ Categories to list together; omit for all
 Preview or migrate legacy Dots configuration into a profile
 .PP
 .B "dots config migrate [OPTIONS]"
+.TP
+.B "\-\-layout"
+Separate profile preferences into config.json, colors.toml and icons.toml
 .TP
 .B "\-\-keys"
 Migrate legacy configuration key names
@@ -1879,7 +2785,7 @@ Local ID for a new mapping or checkout\-wide rename
 Source relative to the owning repository
 .TP
 .B "\-\-target VALUE"
-Portable target template or home/XDG path
+Portable target template or supported destination path
 .TP
 .B "\-\-app VALUE"
 Application for a new mapping
@@ -1936,6 +2842,12 @@ Preview without writes or network access
 .TP
 .B "\-\-yes"
 Approve the plan without prompting
+.TP
+.B "\-\-no\-backup"
+Discard new replacement originals; preserve older uninstall baselines
+.TP
+.B "\-\-offline"
+Refuse network preparation; use available inputs
 .TP
 .B "\-\-json"
 Emit versioned JSON
@@ -3659,6 +4571,46 @@ dots keys yazi \-\-print
 .nf
 dots keys codex \-\-print
 .fi
+.SS "dots link"
+Create symlinks with recoverable backups
+.PP
+.B "dots link SOURCE... TARGET [OPTIONS]"
+.TP
+.B "\-\-no\-target\-directory, \-T"
+Treat TARGET as the exact pathname
+.TP
+.B "\-\-relative, \-r"
+Store relative symlink targets
+.TP
+.B "\-\-allow\-missing"
+Explicitly permit missing source paths
+.TP
+.B "\-\-no\-backup"
+Discard replaced destinations after success
+.TP
+.B "\-\-store\-dir VALUE"
+Override the backup store directory
+.TP
+.B "\-\-in\-place"
+Retain adjacent timestamped backups
+.TP
+.B "\-\-dry\-run"
+Preview without changing files or state
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine output; retain errors
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "Argument * (file)"
+Source or target path
 .SS "dots menu"
 Browse Dots command families in compact FZF menus
 .PP

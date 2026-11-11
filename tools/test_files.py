@@ -21,6 +21,32 @@ spec.loader.exec_module(migration)
 
 
 class Files(unittest.TestCase):
+    def test_termux_prefix_target_resolution_and_boundaries(self):
+        from mappings import target_spec
+        prefix = self.root / 'prefix space ü' / 'usr'
+        termux = catalog.Catalog(self.repo, 'termux')
+        target = '${PREFIX}/share/figlet/-dots.flf'
+        with patch.dict(os.environ, PREFIX=str(prefix)):
+            expected = str(prefix / 'share/figlet/-dots.flf')
+            self.assertEqual(termux.target(target), expected)
+            self.assertEqual(target_spec(termux, expected), target)
+            self.assertFalse(prefix.exists())
+            for platform in ('linux', 'wsl', 'windows'):
+                self.assertIsNone(catalog.Catalog(self.repo, platform).target(target))
+            for suffix in ('../escape', 'share/../../escape', 'bad\nname'):
+                with self.assertRaises(ValueError):
+                    termux.target('${PREFIX}/' + suffix)
+        for value in ('relative/usr', str(prefix / '../escape'), '/', str(prefix) + '\n', str(prefix) + '\x7f'):
+            with patch.dict(os.environ, PREFIX=value):
+                with self.assertRaisesRegex(ValueError, 'PREFIX must'):
+                    termux.target(target)
+                self.assertIsNone(catalog.Catalog(self.repo, 'windows').target(target))
+        with patch.dict(os.environ, PREFIX=''):
+            self.assertIsNone(termux.target(target))
+        with patch.dict(os.environ):
+            os.environ.pop('PREFIX', None)
+            self.assertIsNone(termux.target(target))
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="dots-files-test-")
         self.addCleanup(self.tmp.cleanup)

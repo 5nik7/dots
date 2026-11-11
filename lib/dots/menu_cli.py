@@ -46,7 +46,9 @@ def leaves(family, names):
 ACTIONS = (
     Action('wttr', 'weather', ('wttr', 'browse'), kind='popup', icon=''),
     Action('todo', 'todo', ('todo', 'browse'), kind='popup', icon='󰄬'),
+    Action('bak', 'backups', ('bak', 'browse'), kind='terminal', icon='󰁯'),
     Action('config', 'config', ('config', 'browse'), kind='popup', icon='󰒓'),
+    group('clipboard', '󰅌'),
     group('fonts', '󰛖'),
     Action('keys', 'keys', ('keys',), ('--browse',), 'popup', '󰌆'),
     group('tmux', '', route=('menu', 'tmux'), tool='tmux'),
@@ -57,6 +59,12 @@ ACTIONS = (
     Action('env', 'env', ('env',), icon='󰒓'),
 )
 FAMILIES = {
+    'clipboard': (Action('browse','history',('clipboard','browse'),kind='popup'),
+                  Action('status','capture status',('clipboard','status')),
+                  Action('capture','save current clipboard',('clipboard','capture'),kind='terminal'),
+                  Action('pause','pause capture',('clipboard','pause'),kind='terminal'),
+                  Action('resume','resume capture',('clipboard','resume'),kind='terminal'),
+                  Action('configuration','configuration',('config','browse'),('--query','clipboard'),kind='popup')),
     'fonts': (Action('installed', 'installed fonts', ('fonts', 'installed'), kind='popup'),
               Action('set', 'set application font', ('fonts', 'set'), kind='popup'),
               Action('downloaded', 'downloaded fonts', ('fonts', 'browse'), ('--downloaded',), kind='popup'),
@@ -98,7 +106,8 @@ FAMILIES = {
         Action('keys', 'keys', ('menu', 'tmux', 'keys'), ('--browse',), 'popup', '󰌆', 'tmux'),
     ),
     'files': (Action('browse', 'browse', ('files', 'browse'), kind='terminal', icon='󰉋'),
-              Action('install', 'install components', ('files', 'install'), kind='terminal'),
+              Action('install', 'review and install components', ('files', 'install'), kind='terminal'),
+              Action('backups', 'manage retained backups', ('bak', 'browse'), kind='terminal'),
               Action('uninstall', 'uninstall components', ('files', 'uninstall'), kind='terminal'),
               Action('add', 'add', ('files', 'add'), kind='terminal', icon='󰉋'),
               *leaves('files', 'list history sources')),

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# dots:summary=Browse and edit profile configuration
+# dots:summary=Browse and edit shared preferences or explicit profile overrides
 # dots:usage=[SUBCOMMAND] [OPTIONS]
-# dots:option=--defaults||flag|Use shared color and icon defaults
+# dots:option=--defaults||flag|Use shared preference defaults
 # dots:option=--profile||profile-id|Select a profile without activating it
 # dots:option=--json||flag|Print structured configuration data
 # dots:option=--query||string|Initial browser search

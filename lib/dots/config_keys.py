@@ -5,7 +5,7 @@ they are also used by migration, discovery and the existing consumer readers.
 """
 import copy
 
-FEATURES = ('todo', 'fonts', 'wiki', 'menu')
+FEATURES = ('todo', 'fonts', 'wiki', 'menu', 'pkgs', 'clipboard')
 MOVES = (
     ('apps.menu.popup.colors.preview-border', 'colors.apps.menu.popup.preview.border.fg'),
     ('apps.menu.popup.colors.preview-label', 'colors.apps.menu.popup.preview.label.fg'),
