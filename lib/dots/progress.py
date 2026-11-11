@@ -2,6 +2,7 @@
 from contextlib import ContextDecorator, contextmanager
 from functools import wraps
 import os
+import re
 import shutil
 import signal
 import sys
@@ -91,6 +92,20 @@ class Progress(ContextDecorator):
         except (ValueError, TypeError, OSError):
             pass
 
+    def update_spans(self, spans, completed=0, total=0):
+        """Accept inert text and resolved SGR styles; clip before adding escapes.
+
+        None inherits the ordinary label color. Resolve theme styles in the caller,
+        once per operation, rather than querying configuration in the worker.
+        """
+        try:
+            spans = tuple((clean(text), code if isinstance(code, str) and
+                           re.fullmatch(r'[0-9]{1,3}(?:;[0-9]{1,3}){0,15}', code) else None)
+                          for text, code in spans)
+            self.state = (spans, max(0, int(completed)), max(0, int(total)))
+        except (ValueError, TypeError, OSError):
+            pass
+
     def _clear(self):
         if self.drawn:
             self.stream.write('\r' + ' ' * self.drawn + '\r')
@@ -118,9 +133,20 @@ class Progress(ContextDecorator):
                     marker = ('⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' if icons else '|/-\\')[frame % (10 if icons else 4)]
                     suffix = ''
                 prefix = marker + suffix + ' '
-                text, cells = clip(prefix + label, width)
+                spans = ((label, None),) if isinstance(label, str) else label
+                text, cells = clip(prefix + ''.join(text for text, _ in spans), width)
                 if color and len(prefix) < len(text):
-                    text = '\033[96m' + text[:len(prefix)] + '\033[94m' + text[len(prefix):] + '\033[0m'
+                    remaining = len(text) - len(prefix)
+                    text = '\033[96m' + prefix
+                    for part, code in spans:
+                        count = min(remaining, len(part))
+                        if count:
+                            # A span's attributes must not leak into the next one.
+                            if not isinstance(label, str): text += '\033[0m'
+                            text += '\033[' + (code or '94') + 'm' + part[:count]
+                        remaining -= count
+                        if not remaining: break
+                    text += '\033[0m'
                 self.stream.write('\r' + text + ' ' * max(0, self.drawn - cells))
                 self.stream.flush()
                 self.drawn = cells

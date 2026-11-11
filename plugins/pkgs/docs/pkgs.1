@@ -26,11 +26,15 @@ No changes reports Updated none; inventory failure reports Updated unavailable
 without blocking execution or altering native status. Each inventory read has a
 15-second budget; raw/redirected/dry-run paths do not add these reads.
 The skipped suffix uses the theme's muted foreground, independently of status.
-Compact npm output hides deprecation notices and excludes them from diagnostic
-counts. Other warnings/errors and raw/ordinary redirected notices are retained.
+Package names in results and progress use the active palette yellow.
+Compact npm output hides deprecation notices and the exact routine force and
+allow-scripts override notices, excluding them from diagnostic counts. Other warnings/errors and raw/ordinary redirected notices are retained.
 Install progress names the current package when known and otherwise shows the
 manager and stage. Package results do not accumulate. The same view applies to
 the in alias, dots pkgs and accepted install-picker selections.
+Pip upgrade diagnostics prioritize failed commands. Repeated native dependency
+conflict blocks become one notice to run python -m pip check; no automatic
+dependency repair is performed. Failure status and independent updates remain.
 Pip progress shows the package, download bytes with pip 25.1 or newer, build
 stages and elapsed silence after 15 seconds without output. Silence does not
 prove a hang or cause termination. Explicit native progress overrides are kept.
@@ -40,7 +44,18 @@ ordinary global commands do not add --force.
 Compact npm output shows native metadata, cache/fetch and install-script events,
 with elapsed silence after 15 seconds. The child receives an info logging default;
 explicit logging flags/environment win. Progress hides URLs and script commands.
-Native script approval remains unchanged. Raw and redirected environments are kept.
+Successful compact global installs/upgrades offer separate default-no approval
+for blocked install scripts. --yes cannot bypass it. Approval uses a one-run
+name-specific allow-scripts flag and an exact package/version rebuild target,
+with installed metadata checked before and after review. No policy is saved.
+Without a terminal or after declining, scripts remain blocked. Project/custom-scope
+and raw/redirected commands retain native instructions. Script failure or missing
+native completion evidence keeps a nonzero result.
+Ordinary pip upgrades run one selected package at a time and continue after
+individual failures. Failed targets retain their exit codes; compact partial
+results list verified updates and a Failed field. A package failure stops its
+remaining recipe. Manager before/after hooks and replacement recipes retain their
+boundaries; after-hooks require full success. Ctrl-C stops remaining work.
 Help, transaction previews, list, managers and doctor use shared Dots presentation in terminals and
 menu readers: semantic headings/statuses, readable fields and resource paths.
 Doctor expands nested FZF/completion details into sections. Plain popup reports
@@ -79,7 +94,7 @@ newer eligible tools only. Current/newer builds are left alone. Dry-run performs
 bounded read-only version checks without installation. Custom flags remain literal;
 explicit replacement recipes own their update semantics. The helper is not selected
 automatically. Compact progress names each binary before native output begins and
-shows quiet time after 15 seconds; raw output retains full commands and messages.
+shows an inactivity timer after 15 seconds; raw output retains full commands and messages.
 .TP
 .B upgrade ls | upgrade \-\-list
 List available updates by manager with current and candidate versions. --json

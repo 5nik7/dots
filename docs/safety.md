@@ -633,7 +633,12 @@ Inventory failures produce an unavailable summary while leaving native upgrade
 execution/status authoritative. They never cause a retry or infer successful
 updates from attempted package names. Raw/redirected/dry-run paths add no snapshot
 queries. Compact filtering of npm deprecation notices preserves other warnings,
-errors and native status; full raw output remains available.
+errors and native status; full raw output remains available. Independent pip
+upgrades retain failed package identities/statuses while continuing other targets.
+Only verified successful targets enter a partial update summary. Package recipes
+stop on their own failure; manager before/after hooks are boundaries and manager
+replacement recipes remain atomic. Interruptions stop the run. Pip resolves each
+target separately and does not roll back successful package changes.
 
 Global npm upgrades use targeted installs without adding `--force` to ordinary
 batches; explicit replacement recipes retain their literal flags. Compact pip
@@ -641,9 +646,21 @@ progress uses native transfer counts and elapsed silence, never invented progres
 or automatic termination of quiet builds. Native process exit status remains
 authoritative, and raw/ordinary redirected subprocess output is preserved.
 Compact npm activity enables native info events only in the child environment,
-without changing script approvals or terminating quiet transactions. Explicit
+without automatically changing script approvals or terminating quiet transactions. Explicit
 logging environment/CLI overrides remain effective; raw/redirected execution
 keeps the caller's logging environment.
+
+Compact global npm install/upgrade can offer separate default-no script approval
+after a successful native transaction reports blocked scripts. Only validated
+package/version identities are candidates; installed metadata is checked before
+and after approval. The one-run allow-scripts permission is name-specific, and
+the rebuild operand is the reviewed exact version. No persistent policy or
+blanket permission is written. --yes cannot bypass review. No terminal, declined
+approval, unknown output or metadata drift cannot authorize scripts. Project and
+custom-scope recipes retain native approval instructions. The rebuild uses info
+logging to verify native script completion; failure or missing evidence remains
+nonzero. Raw/redirected/dry-run modes do not prompt, and failed installs are never
+automatically retried. Package script effects have no Dots filesystem rollback.
 
 Default Go upgrades compare installed build versions with native latest-module
 queries and install only newer eligible tools through `go install PACKAGE@latest`.

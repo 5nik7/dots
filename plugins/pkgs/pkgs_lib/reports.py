@@ -49,6 +49,7 @@ def help_report(parser, argv, stream=None):
     ui.gap()
     ui.text('Install, upgrade and refresh run without an extra confirmation flag.', 'muted')
     ui.text('Install, uninstall and upgrade show brief results; --raw shows full manager output.', 'muted')
+    ui.text('Pip upgrades continue after package failures; global npm scripts need separate approval.', 'muted')
     ui.text('Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.', 'muted')
     return True
 

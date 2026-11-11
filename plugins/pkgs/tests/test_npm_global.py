@@ -12,11 +12,11 @@ import tarfile
 import tempfile
 import threading
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pkgs_lib.backends import Backend
-from pkgs_lib import streams, upgrade_output
+from pkgs_lib import streams, upgrade_output, npm_scripts
 
 NPM = shutil.which('npm')
 NODE = shutil.which('node')
@@ -24,6 +24,40 @@ NODE = shutil.which('node')
 
 @unittest.skipUnless(NPM and NODE and os.name == 'posix', 'native npm/node fixture requires POSIX')
 class GlobalNpm(unittest.TestCase):
+    def test_version_pinned_rebuild_runs_only_approved_fixture_scripts(self):
+        with tempfile.TemporaryDirectory(prefix='pkgs-native-scripts-') as directory:
+            root=Path(directory);prefix=root/'prefix';modules=prefix/'lib/node_modules'
+            for name in ('pkgs-fixture-approved','pkgs-fixture-blocked'):
+                path=modules/name;path.mkdir(parents=True)
+                data=dict(name=name,version='1.0.0',
+                          _resolved='https://registry.npmjs.org/'+name+'/-/'+name+'-1.0.0.tgz',
+                          scripts={'postinstall':'node postinstall.cjs'})
+                (path/'package.json').write_text(json.dumps(data))
+                (path/'postinstall.cjs').write_text("require('fs').writeFileSync('script-ran', 'yes')")
+            for name in ('user.npmrc','global.npmrc'):(root/name).write_text('')
+            env={k:v for k,v in os.environ.items() if not k.lower().startswith('npm_') and k not in ('NODE_AUTH_TOKEN','NODE_OPTIONS')}
+            env.update(HOME=str(root),XDG_CONFIG_HOME=str(root/'config'),XDG_STATE_HOME=str(root/'state'),
+                       XDG_CACHE_HOME=str(root/'cache'),XDG_DATA_HOME=str(root/'data'),TMPDIR=str(root),NO_COLOR='1')
+            common=['--global','--prefix='+str(prefix),'--cache='+str(root/'npm-cache'),
+                    '--userconfig='+str(root/'user.npmrc'),'--globalconfig='+str(root/'global.npmrc'),
+                    '--registry=http://127.0.0.1:9','--no-audit','--no-fund','--no-update-notifier','--fetch-retries=0']
+            npm=[NODE,str(Path(NPM).resolve())]
+            refused=subprocess.run([*npm,'rebuild',*common],cwd=root,env=env,capture_output=True,text=True,timeout=30)
+            self.assertEqual(refused.returncode,0,refused.stderr)
+            if 'install scripts blocked' not in refused.stderr:
+                self.skipTest('installed npm does not support default blocked scripts')
+            self.assertFalse(any(modules.glob('*/script-ran')))
+            inventory=subprocess.run([*npm,'ls',*common,'--all','--long','--json'],cwd=root,env=env,capture_output=True,text=True,timeout=15)
+            with patch.object(npm_scripts,'query',return_value=inventory):
+                self.assertIn('pkgs-fixture-approved@1.0.0',npm_scripts.evidence(['pkgs-fixture-approved@1.0.0']))
+            approved=subprocess.run([*npm,'rebuild',*common,'--loglevel=info','--allow-scripts=pkgs-fixture-approved',
+                                     '--','pkgs-fixture-approved@1.0.0'],cwd=root,env=env,capture_output=True,text=True,timeout=30)
+            self.assertEqual(approved.returncode,0,approved.stderr)
+            self.assertTrue((modules/'pkgs-fixture-approved/script-ran').exists(), approved.stdout+approved.stderr+inventory.stdout)
+            self.assertFalse((modules/'pkgs-fixture-blocked/script-ran').exists())
+            self.assertIn('postinstall { code: 0, signal: null }',approved.stderr)
+            self.assertEqual((root/'user.npmrc').read_text(),'')
+
     def test_targeted_global_install_preserves_foreign_platform_package(self):
         with tempfile.TemporaryDirectory(prefix='pkgs-native-npm-') as directory:
             root=Path(directory);prefix=root/'prefix';modules=prefix/'lib/node_modules'
@@ -76,7 +110,8 @@ class GlobalNpm(unittest.TestCase):
                 meter=Mock();summary=upgrade_output.Output('npm',{},meter)
                 formatter=streams.Formatter(io.StringIO(),{'output':'raw','_manager':'npm'},summary)
                 formatter.feed(fixed.stderr.encode(),final=True)
-                self.assertIn('Fetched · '+target,repr(meter.update.call_args_list),fixed.stderr)
+                labels=[''.join(text for text,_ in call.args[0]) for call in meter.update_spans.call_args_list]
+                self.assertIn('Fetched · '+target,repr(labels),fixed.stderr)
                 quiet=subprocess.run([*npm,'--loglevel=silent','--version'],cwd=root,env=env,capture_output=True,text=True,timeout=10)
                 self.assertEqual(quiet.returncode,0,quiet.stderr)
                 self.assertEqual(quiet.stderr,'')

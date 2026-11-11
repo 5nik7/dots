@@ -151,6 +151,44 @@ class ProgressTests(unittest.TestCase):
         self.assertEqual(code, 0, data)
         self.assertEqual(data.split(b'Prompt:\r\n')[1], b'done\r\n')
 
+    def test_structured_spans_clip_cells_before_color_and_restore_nested_state(self):
+        spans = [('npm · 1:05 · Building · ',None),
+                 ('@scope/package-界e\u0301'+'x'*160,'38;2;171;205;18')]
+        body = ("with progress.Progress('Initial') as p:\n"
+                " p.update_spans("+repr(spans)+")\n saved=p.state\n"
+                " with progress.Progress('Nested') as nested: nested.update('Inner')\n"
+                " assert p.state == saved\n time.sleep(.65)\nprint('done')")
+        for width in (40,80,120):
+            for mode in ('always','never','auto'):
+                code,data=self.terminal(self.python(body),dict(self.env,DOTS_COLOR=mode,NO_COLOR='1'),width)
+                self.assertEqual(code,0,data)
+                self.assertTrue(data.endswith(b'done\r\n'),data)
+                if mode=='always':
+                    self.assertIn(b'\x1b[38;2;171;205;18m@scope/',data)
+                    self.assertIn(b'\x1b[94mnpm',data)
+                else: self.assertNotIn(b'\x1b',data)
+                import unicodedata
+                for frame in ANSI.sub(b'',data).decode().split('\r'):
+                    cells=sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in ('W','F') else 1 for c in frame)
+                    self.assertLess(cells,width,repr(frame))
+
+    def test_structured_spans_reject_control_injection_and_malformed_observers(self):
+        body = """with progress.Progress('Initial') as p:
+ p.update_spans([('safe', '38;2;1;2;3')]); saved=p.state
+ p.update_spans([('bad',)], total='invalid'); assert p.state == saved
+ p.update_spans([('Bad\\x1b[31m\\nName', '\\x1b[2J')])
+ time.sleep(.65)
+"""
+        code,data=self.terminal(self.python(body),dict(self.env,DOTS_COLOR='never'))
+        self.assertEqual(code,0,data)
+        self.assertNotIn(b'\x1b',data)
+        self.assertNotIn(b'\n',data)
+        self.assertIn(b'Name',data)
+        body="with progress.Progress('') as p:\n p.update_spans([('package','1;33'),(' label',None)])\n time.sleep(.65)"
+        code,data=self.terminal(self.python(body))
+        self.assertEqual(code,0,data)
+        self.assertIn(b'\x1b[1;33mpackage\x1b[0m\x1b[94m label',data)
+
     def test_unicode_markers_and_optional_width_tool(self):
         commands = [self.bash('dots::progress_start Copying 1 3; sleep .65; dots::progress_stop'),
                     self.python("with progress.Progress('Copying'):\n progress.report('Copying',1,3)\n time.sleep(.65)")]

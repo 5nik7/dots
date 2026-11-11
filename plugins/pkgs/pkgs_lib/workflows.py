@@ -22,6 +22,9 @@ class Plan:
     commands: list = field(default_factory=list)
     skipped: list = field(default_factory=list)
     error: str = ''
+    steps: list = field(default_factory=list)
+    failed: list = field(default_factory=list)
+    completed: list = field(default_factory=list)
 
     def document(self):
         return dict(manager=self.backend.name, scope=self.backend.scope, action=self.action,
@@ -78,8 +81,10 @@ def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
             if not names: return Plan(backend, action, skipped=skipped)
         backend.bulk_system = action == 'upgrade' and not explicit and backend.name in SYSTEM
         backend.skipped_targets = [row['package'] for row in skipped]
-        commands = policies.commands(backend, action, names, cfg, yes or action in UNATTENDED_ACTIONS)
-    return Plan(backend, action, names, commands, skipped)
+        steps = policies.pip_upgrade_steps(backend, names, cfg, True) if backend.name == 'pip' and action == 'upgrade' else []
+        commands = ([command for _, group in steps for command in group] if steps else
+                    policies.commands(backend, action, names, cfg, yes or action in UNATTENDED_ACTIONS))
+    return Plan(backend, action, names, commands, skipped, steps=steps)
 
 
 def display(plan, cfg, *, stream=None):
@@ -129,6 +134,7 @@ def apply(plan, cfg, *, data=False):
     if plan.error: return 1
     if not plan.commands: return 0
     try:
+        if plan.steps: return apply_steps(plan, cfg, data=data)
         for command in plan.commands:
             if hasattr(plan.backend,'revalidate'): plan.backend.revalidate()
             rc = streams.run(command, dict(cfg, _manager=plan.backend.name), unattended=plan.action in UNATTENDED_ACTIONS,
@@ -140,6 +146,39 @@ def apply(plan, cfg, *, data=False):
             Cache(plan.backend.cache_key).clear()
             invalidate_evidence(plan.backend)
         except OSError: pass
+
+
+def apply_steps(plan, cfg, *, data=False):
+    """Continue independent pip targets; never replay a failed recipe or hook."""
+    failed = 0
+    plan.failed.clear(); plan.completed.clear()
+    output = cfg.get('_upgrade_output')
+    for names, commands in plan.steps:
+        if not names and failed: break  # Manager after-hooks require full success.
+        rc = 0
+        if output: output.target = names[0] if names else ''
+        for command in commands:
+            if output: output.begin_command()
+            try:
+                if hasattr(plan.backend, 'revalidate'): plan.backend.revalidate()
+                rc = streams.run(command, dict(cfg, _manager=plan.backend.name),
+                                 unattended=True, env=getattr(plan.backend, 'operation_env', None), data=data)
+            except (Error, OSError, ValueError) as error:
+                if not names: raise
+                rc = 1
+                if output: output.line('error: '+str(error), '\n', sys.stderr)
+                else: print('pkgs: '+names[0]+': '+str(error), file=sys.stderr)
+            rc = rc if rc >= 0 else 128-rc
+            if output: output.end_command(rc)
+            if rc in (130, 143): raise KeyboardInterrupt
+            if rc: break
+        if rc:
+            if not names: return rc
+            plan.failed.append((names[0], rc))
+            if not output: print('pkgs: '+names[0]+' failed (exit '+str(rc)+'); continuing.', file=sys.stderr)
+            failed = failed or rc
+        else: plan.completed.extend(names)
+    return failed
 
 
 def execute(backend, action, names, args, cfg):
@@ -215,12 +254,19 @@ def apply_compact(item, cfg):
                 del output.errors[2:]
         finally:
             output.close()
-    if item.action == 'upgrade' and not rc and item.commands:
+    if item.backend.name == 'npm' and output.pending:
+        rc = output.pending.review(item, cfg, output, rc)
+    if item.action == 'upgrade' and item.commands and (not rc or item.completed):
         after = None
         if before is not None:
             with progress(item.backend.name+' · Checking updated packages', cfg):
                 after = installed_versions(item.backend)
         output.updated = changed_packages(item, before, after)
+        if rc and output.updated is not None:
+            completed = {policies.identity(name, item.backend.name) for name in item.completed}
+            output.updated = [name for name in output.updated if policies.identity(name, item.backend.name) in completed]
+    output.failed = item.failed
+    output.partial_result = bool(rc and item.completed)
     output.result(rc, skipped=len(item.skipped), unchanged=not item.commands, names=item.names)
     return rc
 

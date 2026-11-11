@@ -54,7 +54,11 @@ dots wiki search 'nvim themes' --topics
 Package installs, removals and upgrades show compact progress and one result per manager.
 Successful installs/removals also list the requested package names in a short summary.
 Upgrades list packages whose installed versions changed; compact npm output hides
-deprecation notices, and skipped counts use the theme's muted foreground.
+deprecation and the routine force/allow-scripts notices. Package names use palette
+yellow, skipped counts use the muted foreground, and inactivity shows a timer.
+Pip upgrades continue after individual failures, prioritize failed-package errors
+and summarize dependency conflicts once.
+Global npm installs/upgrades offer a separate prompt to run blocked install scripts.
 Use `pkgs install --raw` for full manager output, or `--dry-run` to review commands;
 see [package output](docs/packages.md#output).
 

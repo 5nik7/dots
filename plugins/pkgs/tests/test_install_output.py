@@ -98,7 +98,7 @@ class InstallOutput(unittest.TestCase):
         meter = Mock()
         summary = upgrade_output.Output('npm', self.cfg, meter, action='install')
         summary.begin(['custom-recipe'])
-        self.assertEqual(meter.update.call_args.args[0], 'npm · Installing')
+        self.assertEqual(''.join(text for text, _ in meter.update_spans.call_args.args[0]), 'npm · Installing')
         formatter = streams.Formatter(err, dict(self.cfg, _manager='npm'), summary)
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             formatter.feed(b'Proceed? [y/N] ')
@@ -122,14 +122,14 @@ class InstallOutput(unittest.TestCase):
                 meter = Mock()
                 summary = upgrade_output.Output(manager, self.cfg, meter, action='install')
                 summary.begin()
-                self.assertEqual(meter.update.call_args.args[0], manager+' · Installing')
+                self.assertEqual(''.join(text for text, _ in meter.update_spans.call_args.args[0]), manager+' · Installing')
                 summary.line(line, '\n', io.StringIO())
                 self.assertEqual(summary.package, package)
-                self.assertNotIn('Upgrading', meter.update.call_args.args[0])
+                self.assertNotIn('Upgrading', ''.join(text for text, _ in meter.update_spans.call_args.args[0]))
         for manager in ('gem', 'uv-tool', 'dnf', 'apt'):
             meter = Mock(); summary = upgrade_output.Output(manager, self.cfg, meter, action='install')
             summary.line('Unrecognized native status', '\n', io.StringIO())
-            self.assertEqual(meter.update.call_args.args[0], manager+' · Installing')
+            self.assertEqual(''.join(text for text, _ in meter.update_spans.call_args.args[0]), manager+' · Installing')
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             summary = upgrade_output.Output('apt', self.cfg, action='install')
@@ -178,9 +178,9 @@ class InstallOutput(unittest.TestCase):
                     summary.begin(command)
                     summary.line(event, '\n', io.StringIO())
                 summary.tick(now=65)
-                self.assertIn('quiet 1:05', meter.update.call_args.args[0])
-                self.assertIn(package, meter.update.call_args.args[0])
-                self.assertNotIn('Upgrading', repr(meter.update.call_args_list))
+                self.assertIn('1:05', ''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+                self.assertIn(package, ''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+                self.assertNotIn('Upgrading', repr(meter.update_spans.call_args_list))
 
     def test_recipe_executes_once_with_full_raw_bytes(self):
         recipe = self.home/'custom recipe.py'

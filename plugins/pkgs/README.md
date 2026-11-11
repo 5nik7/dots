@@ -156,8 +156,22 @@ snapshots, omitting unchanged/skipped packages and newly added dependencies.
 No changes reports Updated none; an inventory failure reports Updated unavailable
 without blocking the transaction or changing its exit status. These reads apply
 only to compact upgrades. The skipped suffix uses the theme's muted foreground.
-Compact npm output hides deprecation notices, keeping other warnings/errors;
-raw and ordinary redirected output retain all notices.
+Package identities in results and progress use the active palette's yellow.
+Compact npm output hides deprecations and the two routine force/allow-scripts
+notices described in [package output](../../docs/packages.md#output). Other warnings/errors
+remain visible; raw and ordinary redirected output retain all notices.
+Ordinary pip upgrades run per package, continue after failures and report Failed
+targets alongside verified Updated names. Package recipes stop on their own
+failure; manager hooks and replacement recipes retain their boundaries. Failed
+commands' errors take priority over earlier successful-command diagnostics. Native
+dependency-conflict blocks become one notice to run `python -m pip check`;
+installed dependencies are not repaired automatically.
+Compact global npm installs/upgrades offer default-no approval for blocked scripts,
+one exact installed package/version at a time. Approval uses a temporary
+name-specific allow flag with an exact rebuild target; --yes never supplies it,
+and no policy is saved. No terminal or declined approval leaves scripts blocked.
+Project/custom-scope and raw commands retain native instructions. See
+[script approval](../../docs/packages.md#blocked-npm-install-scripts).
 Installs show the current package when known, with `Installing` as the fallback
 stage; individual package result rows do not accumulate. This also applies to
 `in`, `dots pkgs` and accepted install-picker selections.

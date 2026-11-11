@@ -1112,11 +1112,13 @@ integration compares remove-alias results across all available entry points.
 no-op repeats, selected/system scopes, skipped targets, new-dependency exclusion,
 bounded/unavailable inventories and unchanged native status. It checks that raw,
 redirected and dry-run modes add no inventory reads. Native npm deprecations are
-filtered without consuming warning slots or failure tails, while other warnings,
+filtered together with the exact routine force/allow-scripts notices without consuming warning slots or failure tails, while other warnings,
 errors and raw notices survive. The actual renderer resolves the skipped suffix
 through a fixture palette and CLI style override at 40/80/120 columns, independently
 of success status and with plain/NO_COLOR behavior preserved. Integration compares
 the Updated field across standalone, Bash Dots and shared-controller entry points.
+
+Package results and progress test palette yellow separately from customized warning/identity roles, including indexed fallback, package-only spans, narrow wrapping, NO_COLOR and timer reset. Shared progress PTYs exercise safe structured spans, display-cell clipping and nested restoration. A native fake pip sequence emits successful resolver conflicts before a failed build and a later successful update; all entry points preserve partial results and prioritize the build error.
 
 Pip output cases cover native byte counts, unknown totals, package/stage changes,
 partial build messages, elapsed silence without terminating the process, progress
@@ -1126,8 +1128,22 @@ registry with an owned global prefix, cache and configuration. It reproduces
 `EBADPLATFORM` from an unrelated foreign-platform package during a named global
 update, then verifies the adapter's targeted install updates only the selected
 package and preserves the foreign package. Lifecycle scripts, audit and notifier
-requests are disabled; no host package installation or registry credentials are
-used. This fixture requires POSIX and available npm/Node and otherwise skips.
+requests are disabled in the install fixture; no host package installation or
+registry credentials are used. A separate owned-prefix rebuild fixture runs a
+harmless marker-writing script only for an explicitly approved exact package
+version, leaving another package blocked and the user-config fixture unchanged.
+It checks native global inventory (including missing resolved URLs) and script
+completion events. These fixtures require POSIX and available npm/Node and
+otherwise skip.
+
+`plugins/pkgs/tests/test_pip_partial.py` verifies per-package upgrade continuation,
+target-specific errors, truthful partial update names, recipe hooks/replacements,
+literal flags and interruption. `test_npm_scripts.py` verifies separate default-no
+approval, no --yes bypass, metadata drift, malformed output, no-TTY refusal,
+native script evidence and failure status. Private terminals exercise yes/no,
+EOF and Ctrl-C, including 40/80/120-column fallback prompts. Integration compares
+partial pip results across standalone, Bash Dots and the shared native controller
+using an owned fake Python module; no host pip operation runs.
 
 Npm activity cases cover scoped/encoded package names, fetch/cache/retry/error
 events, lifecycle stages, quiet time and preservation of the last known stage.

@@ -1,5 +1,92 @@
 # Package workflows
 
+## Compact diagnostics and package colors (2026-11-10)
+
+Implemented and verified. The exact reported npm force/allow-scripts notices are
+filtered only in compact output. Pip diagnostics are collected per command,
+prioritizing failed commands using their exit status and collapsing native
+dependency-conflict blocks into one notice with `python -m pip check`. Keep up to two useful error details,
+Failed identities, truthful Updated results and nonzero failures. No dependency
+repair is included. Raw and ordinary redirected manager output remain native.
+
+Package identities in result fields and progress use active palette yellow;
+punctuation, exit statuses, labels and muted skip counts retain their styles.
+Inactivity still shows manager, stage, target and M:SS after 15 seconds, without
+the word quiet. Shared progress spans use inert-text cell clipping, independent
+style resets and one-time style resolution; existing string callers keep their interface.
+
+Dependencies: shared progress spans precede package progress integration;
+per-command collection precedes failure-priority acceptance. Owner:
+dots-pkgs-maintenance. Configuration: **update** existing palette consumer,
+without a new setting/store. Menu: **no change**, shared runner covers existing
+actions. Both shell surfaces use shared Python; native Windows keeps WinGet-only
+selection. Actual native Windows/Linux/WSL acceptance remains pending.
+
+Acceptance: isolated native-fake pip conflict/failure/continued-success sequence,
+exact warning filtering and raw preservation, themed package-only spans at
+40/80/120 columns, plain/NO_COLOR, timer reset, cancellation and terminal cleanup.
+Run package/progress/integration checks, synchronize canonical docs and local
+wiki, and append verification to the completed Todo tree without reopening goals.
+
+Verification: 213 package-core tests, 15 entry-point/integration tests and 13
+shared-progress tests pass. The 10-test plugin report suite passes with one
+native PowerShell check skipped on Termux. Tests cover 40/80/120 columns, theme
+color overrides, raw bytes, native fake conflict/failure/continuation, scripts
+approval boundaries, cancellation and terminal restoration. Command validation
+(245 routes), generated adapters, shell syntax, skill validation, relative links
+(1294 across 162 files), diff checks and local wiki build/check pass. No host
+packages or dependency versions were changed. The completed 10-goal Todo tree
+retains its IDs, relationships, statuses and criteria; decisions/verification
+are recorded on the selected root. Native Linux/WSL/Windows execution remains
+pending, distinct from fixture evidence.
+
+## Script approval and independent pip upgrades (2026-11-10)
+
+Implemented and verified. Ordinary pip upgrades run one selected package at a
+time, preserving ownership/skips, interpreter, flags and package recipes. A failed
+package stops its own recipe, records its identity and exit status, and permits
+remaining packages/managers to run. Manager-level before/after hooks remain
+boundaries (after runs only on full success); manager replacement recipes stay
+atomic. Interruptions stop execution. Compact partial results include verified
+updates for successful targets and a Failed field; failures retain nonzero status.
+
+Successful compact global npm installs/upgrades with native blocked-script notices
+offer a separate default-no approval per exact package/version. Verify installed
+metadata before review and again before a targeted native rebuild with a one-run
+allow-scripts flag. Never infer approval from --yes, persist a policy, approve all
+scripts, run scripts without a terminal, or automatically retry a failed install.
+Project/custom-scope commands retain native review instructions. Raw/redirected
+output and dry-run remain noninteractive. Sanitize/bound detected identities and
+keep native errors visible. Do not run real host upgrades or scripts for testing.
+
+Owner: dots-pkgs-maintenance with shared presentation. Configuration: **no
+configuration integration change needed**; approval is per invocation, npm owns
+persisted policy, and existing styles/progress apply. Menu: **no menu change
+needed**; existing install/upgrade actions reach the shared controller. Both shell
+entry points retain their shared implementation. Native Windows retains its
+WinGet-only manager boundary; native Linux/WSL execution remains a named pending
+check. Verify success/failure/decline/EOF/no-TTY,
+metadata drift, script/operand safety, recipe boundaries, raw/dry-run, narrow
+terminals, continued pip updates and truthful partial summaries with owned fakes.
+Update canonical docs/help/manual and generated wiki; append Todo verification
+without reopening the completed original goal tree.
+
+Verification: all 209 package-core tests and 15 entry-point/integration tests pass
+in the final full runs; 5 file-platform safety tests pass. The initial timeout
+test hit a /proc disappearance race, then its 35-test regression suite and final
+full run passed. Private Termux terminals verify yes/no/EOF/Ctrl-C, no --yes
+bypass, terminal restoration and narrow fallback prompts. An isolated native npm
+fixture proves name-specific one-run permission plus an exact rebuild operand
+runs only the approved package's harmless marker script, leaves another blocked
+and does not persist config. Native installed metadata can omit resolved URLs;
+version-pinned allow rules then silently skip scripts, so completion additionally
+requires npm's native successful script event. Fake pip processes and all three
+entry points verify continued targets and truthful partial results. Metadata
+generation, 245 command routes, links, skill validation, shell syntax and whitespace
+checks pass. Canonical docs/manual/help and the local generated wiki are current.
+No host packages or install scripts were changed/run. Native Linux/WSL and Windows
+terminal execution remain unverified; Windows retains its WinGet-only boundary.
+
 ## Upgrade names, deprecations and skipped styling (2026-11-01)
 
 Implemented and verified. Compact up/upgrade adds one wrapping Updated field

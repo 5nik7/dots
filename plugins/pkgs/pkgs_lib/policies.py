@@ -112,6 +112,18 @@ def add_flags(command, flags):
     return command[:pos] + list(flags) + command[pos:]
 
 
+def pip_upgrade_steps(backend, names, cfg, yes=False):
+    """Independent package recipes between atomic manager hook boundaries."""
+    outer = cfg.get('policies', {}).get('pip', {}).get('upgrade', {})
+    if not names or 'replace' in outer: return []
+    local = copy.deepcopy(cfg)
+    recipe = local.setdefault('policies', {}).setdefault('pip', {}).setdefault('upgrade', {})
+    before, after = recipe.pop('before', []), recipe.pop('after', [])
+    return [([], expand(before, names))] + [
+        ([name], commands(backend, 'upgrade', [name], local, yes)) for name in names
+    ] + [([], expand(after, names))]
+
+
 def commands(backend, action, names, cfg, yes=False):
     """Wrap one manager operation; isolate packages with specific recipes."""
     policy = cfg.get('policies', {}).get(backend.name, {}) if action in ACTIONS else {}

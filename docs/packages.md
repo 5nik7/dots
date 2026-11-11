@@ -57,7 +57,7 @@ platform-specific aliases, such as Codex's Linux ARM64 companion on Android.
 Project-scoped upgrades still use `npm update`. Skip policies and replacement
 recipes keep their behavior; ordinary npm batches do not receive `--force`.
 
-Native noninteractive flags are supplied where supported. sudo uses `-n` without a controlling terminal and never runs on Termux. Privilege and native package protections may still fail. Independent managers continue after a failure; a failed command stops that manager's remaining recipe. The final status is nonzero if any manager failed. Ctrl-C stops the run. Completed package effects remain; there is no Dots package rollback.
+Native noninteractive flags are supplied where supported. sudo uses `-n` without a controlling terminal and never runs on Termux. Privilege and native package protections may still fail. Independent managers continue after a failure. Ordinary pip upgrades run one selected package at a time and continue after a failed package; the failure stops that package's remaining recipe. Manager before-hooks must succeed before any packages run, and manager after-hooks run only after full success. A manager-level replacement recipe remains one atomic command sequence, stopping at its first failure. Other managers retain their stop-on-failure recipe behavior. The final status is nonzero if any manager failed. Ctrl-C stops the run. Completed package effects remain; there is no Dots package rollback. Separate pip commands resolve dependencies separately; skip policies are direct-target exclusions, not dependency holds.
 
 `pkgs refresh` also authorizes its repository metadata refresh without an extra flag or controlling terminal. It supports APT, DNF and XBPS; Arch still requires `upgrade` to synchronize and upgrade together.
 
@@ -68,6 +68,14 @@ The command retains the failing exit status and does not disable integrity check
 or silently change repositories. `--raw` retains the full URL and native details.
 
 `pkgs install NAME ...` authorizes installation without `--yes`, including without a controlling terminal. When names are omitted, accepting the install-picker selection authorizes those packages; cancelling installs nothing. Install, upgrade and refresh supply supported native confirmation flags automatically (for example, Termux APT uses `pkg install -y bun`). Native privilege checks, manager protections and custom recipe behavior still apply. Uninstall and restore retain approval prompts; `--yes` approves their intentional noninteractive execution. Dry-run prints plans/skips and executes no mutation commands or recipe hooks, although local inventory queries still run. The upgrade and restore menus review the preview and require an explicit **Run** choice.
+
+## Blocked npm install scripts
+
+After a successful compact global npm install or upgrade, pkgs offers a separate default-no prompt for each package whose install scripts npm reported as blocked. It shows the exact installed package/version, verifies its installed metadata before review and again after approval, then runs `npm rebuild --global --loglevel=info --allow-scripts=NAME -- NAME@VERSION`. The permission applies only to that invocation; the exact rebuild operand selects the reviewed version. This uses npm's [global allow-scripts mechanism](https://docs.npmjs.com/cli/v11/commands/npm-rebuild/). Global inventories can omit the provenance npm needs for version-pinned allow rules, so the permission uses the name while the rebuild target stays exact.
+
+Accepting runs that package's scripts; declining or EOF leaves them blocked and lets other managers continue. `--yes` does not answer this separate prompt. Successful script execution is reported only when npm confirms it; a failed or unconfirmed rebuild keeps a nonzero result. The prompt never saves a user/project approval policy, enables every script or retries a failed package install. Metadata drift aborts approval. Review rows show package identities, without printing the script commands from npm's warning block.
+
+The prompt requires a terminal and recognized native global install/update commands. Without a terminal, scripts remain blocked and are listed in the compact result. Raw output, ordinary redirects and dry-run never open this prompt. Project installs and recipes with custom prefixes/configuration retain npm's native instructions; use `npm install-scripts ls` / `npm install-scripts approve NAME` within the project when a persistent project policy is intended. Setup/manifest restoration retains its separate execution path.
 
 ## Go tools
 
@@ -148,7 +156,7 @@ pkgs upgrade --raw
 some-package-command 2>&1 | pkgs format --manager apt
 ```
 
-`auto` gives actual installs, removals and upgrades a compact terminal/menu view: one heading, transient progress and one result per manager. This includes `in`, `un`, `remove`, `dots pkgs` and accepted picker selections. Commands, repeated download/database/requirement messages and per-package skip lists are omitted. Skips appear as a count; `--dry-run` retains the complete commands, names and reasons. Each manager keeps at most two distinct error details, two warnings and a short fallback tail for unrecognized failures; additional diagnostic lines are counted. Partial prompts remain visible. A `complete` result means the command succeeded, not that a particular number of packages changed. Independent upgrade managers still continue after failures.
+`auto` gives actual installs, removals and upgrades a compact terminal/menu view: one heading, transient progress and one result per manager. This includes `in`, `un`, `remove`, `dots pkgs` and accepted picker selections. Commands, repeated download/database/requirement messages and per-package skip lists are omitted. Skips appear as a count; `--dry-run` retains the complete commands, names and reasons. Each manager keeps at most two distinct error details, two warnings and a short fallback tail for unrecognized failures; additional diagnostic lines are counted. Pip upgrades collect diagnostics per command, prioritize errors from failed commands, and show a short `--raw` hint when no useful error detail was emitted. Partial prompts remain visible. A `complete` result means the command succeeded, not that a particular number of packages changed. Independent upgrade managers still continue after failures.
 
 Installs show `Installing` and the current package when a native event identifies
 it; otherwise progress stays at the manager/stage level. Native APT/pacman events
@@ -180,40 +188,46 @@ Named plans list changed selected targets; whole-system plans include changed
 installed system packages. Skipped targets and newly added dependencies are
 excluded. `Updated none` means no version change was found; `Updated unavailable`
 means inventory could not be read reliably. Inventory failure does not prevent
-the upgrade or replace its native exit status. Failed, cancelled and empty plans
-do not print an update list. Raw, ordinary redirected and dry-run modes do not
+the upgrade or replace its native exit status. Partial pip upgrades list verified
+version changes for successful targets and a separate `Failed` field with names
+and exit codes. Other failed, cancelled and empty plans do not print an update
+list. Raw, ordinary redirected and dry-run modes do not
 perform these additional inventory reads.
 
 The ` · N skipped` suffix uses the theme's muted foreground through
 `colors.ui.muted` and its CLI override; the preceding status keeps its success or
 error color. Plain output retains the same text. Compact npm output hides native
-deprecation notices and omits them from diagnostic counts and failure tails.
-Other warnings and errors remain visible; `--raw` and ordinary redirected output
-retain deprecation notices.
+deprecation notices plus the exact native `using --force Recommended protections disabled.` and `.npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line` notices. These do not consume diagnostic counts or failure tails. Other warnings and errors remain visible; `--raw` and ordinary redirected output retain all native notices.
+
+Package identities in Installed, Removed, Updated, Failed and script results, and in transient progress, use the active palette's yellow. Labels, punctuation, exit codes and the `none`/`unavailable` placeholders keep their own styles. Plain/NO_COLOR output retains the same text.
+
+Repeated native pip dependency-conflict blocks become one notice per manager:
+`pip: dependency conflicts; run python -m pip check`. A successful command can emit these blocks; they do not displace a failed package's actual error. The Failed field and up to two useful failure details remain visible, while independent packages continue. This summarizes existing conflicts; it does not repair or remove installed dependencies.
 
 Compact pip progress shows the current package and resolving, download,
 preparation, build and installation stages. With pip 25.1 or newer, native
 [raw progress events](https://pip.pypa.io/en/latest/user_guide/#using-pip-from-your-program)
 supply actual download bytes and a percentage when the size is known. After
-15 seconds without output, `quiet M:SS` shows elapsed silence alongside the last
+15 seconds without output, `M:SS` shows elapsed silence alongside the last
 stage. Silence does not prove a hang, and pkgs does not terminate a slow build.
 Only native pip install commands in compact installs/upgrades receive unbuffered Python
 output and the raw progress default; explicit `PIP_PROGRESS_BAR` or command-line
 progress options remain authoritative. Custom recipes and older pip versions
-keep stage/quiet reporting from whatever output they provide.
+keep stage/timer reporting from whatever output they provide.
 
 Compact npm installs/upgrades show the last native metadata, cached/fetched package or
-install-script event. `quiet M:SS` appears after 15 seconds without output; a
+install-script event. `M:SS` appears after 15 seconds without output; a
 completed fetch is not a percentage for the whole transaction. The compact
 runner requests npm's [info log level](https://docs.npmjs.com/cli/v11/using-npm/logging/#loglevel)
 only in its child environment. Explicit `npm_config_loglevel` (case insensitive)
 and native CLI logging flags retain precedence. Progress labels omit registry
-URLs, credentials and script commands. Native script approval rules remain,
-and silence never triggers automatic termination.
+URLs, credentials and script commands. The separate global script-approval rebuild
+uses explicit info logging to verify native script completion. Silence never
+triggers automatic termination.
 
 Compact Go progress identifies the binary being installed before any native
 output arrives, for example `go · Installing · tool`. Download or compiler chatter
-does not replace that target with a dependency name. Quiet time appears after
+does not replace that target with a dependency name. An inactivity timer appears after
 15 seconds without output; the native process may still be building. Full package
 paths and literal commands remain available in dry-run and raw output.
 

@@ -168,5 +168,69 @@ class UpgradeSummary(unittest.TestCase):
             self.assertIn('\x1b[91mfailed (exit 42)\x1b[0m',out.getvalue())
             self.assertIn('\x1b['+expected+'m · 1 skipped\x1b[0m',out.getvalue())
 
+    def test_exact_npm_notices_are_filtered_without_hiding_other_warnings(self):
+        notices = ('npm warn using --force Recommended protections disabled.',
+                   'npm warn install-scripts .npmrc allow-scripts setting is being ignored because '
+                   '--allow-scripts was passed on the command line')
+        summary = upgrade_output.Output('npm', self.cfg)
+        out, err = io.StringIO(), io.StringIO()
+        formatter = streams.Formatter(err, dict(self.cfg, _manager='npm'), summary)
+        for line in notices * 10:
+            for byte in (line+'\n').encode(): formatter.feed(bytes([byte]))
+        formatter.feed(b'npm warn using --force Different warning\n')
+        formatter.feed(b'npm error actual failure\n')
+        formatter.feed(notices[-1].encode(), final=True)
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err): summary.result(1)
+        self.assertIn('Different warning', err.getvalue())
+        self.assertIn('actual failure', err.getvalue())
+        self.assertNotIn('Recommended protections', err.getvalue())
+        self.assertNotIn('allow-scripts', err.getvalue())
+        self.assertEqual(summary.extra, 0)
+        self.assertEqual(list(summary.tail), ['npm warn using --force Different warning', 'npm error actual failure'])
+        self.styled_config()
+        fake = self.bin/'npm'
+        fake.write_text(fake.read_text().replace("print('warning: fixture detail',file=sys.stderr)",
+                        ';'.join('print('+repr(line)+',file=sys.stderr)' for line in notices)))
+        for options, mode in (([], 'styled'), (['--raw'], 'styled'), ([], 'auto')):
+            (self.home/'config/pkgs/config.json').write_text(json.dumps({'output': mode}))
+            result = self.invoke('up', '--manager', 'npm', 'hello', *options)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            for line in notices: self.assertEqual(line in result.stderr, bool(options) or mode=='auto')
+
+    def test_yellow_is_palette_color_only_for_package_identities(self):
+        import style_config
+        from resources import cells
+        from progress import Progress
+        root = self.home/'theme'; (root/'default').mkdir(parents=True)
+        (root/'default/colors.toml').write_text('[status.warning]\nfg="#aa0000"\n[ui.identity]\nfg="#00aa00"\n')
+        for palette, expected in (({'yellow':'#abcd12'}, '38;2;171;205;18'), ({}, '38;5;3')):
+            prefs = style_config.Styles(root, selected={'layers':[]}, palette=palette)
+            cfg = dict(self.cfg)
+            with patch.object(style_config, 'current', return_value=prefs):
+                for width in (40,80,120):
+                    for mode in ('always','never','auto'):
+                        out = Terminal()
+                        with patch.dict(os.environ, DOTS_COLOR=mode, DOTS_ICONS='never', COLUMNS=str(width), NO_COLOR='1'), contextlib.redirect_stdout(out):
+                            for label in ('Installed','Removed','Updated','Scripts','Scripts ran','Scripts blocked'):
+                                upgrade_output.packages(cfg,label,['first','@scope/very-long-package-identity@1.2.3'])
+                            upgrade_output.packages(cfg,'Failed',['broken (exit 1)'])
+                            upgrade_output.packages(cfg,'Updated',['none'],placeholder=True)
+                            upgrade_output.packages(cfg,'Updated',['unavailable'],placeholder=True)
+                        text=out.getvalue(); plain=re.sub(r'\x1b\[[0-9;]*m','',text)
+                        self.assertTrue(all(cells(line)<=width for line in plain.splitlines()),plain)
+                        if mode=='always':
+                            self.assertIn('\x1b['+expected+'mfirst\x1b[0m, ',text)
+                            self.assertIn('\x1b['+expected+'mbroken\x1b[0m (exit 1)',text)
+                            for neutral in ('none','unavailable',', ', ' (exit 1)'):
+                                self.assertNotIn('\x1b['+expected+'m'+neutral,text)
+                        else: self.assertNotIn('\x1b',text)
+                meter=Progress(''); summary=upgrade_output.Output('pip',cfg,meter)
+                summary.package='package'; summary.stage='Building'; summary.last_activity=0
+                with patch.object(style_config,'current',side_effect=AssertionError('theme read during tick')):
+                    summary.tick(now=65)
+                    self.assertEqual(meter.state[0], (('pip · 1:05 · Building',None),(' · ',None),('package',expected)))
+                    summary.last_activity=65; summary.tick(now=65)
+                    self.assertNotIn('1:05',str(meter.state))
+
 
 if __name__ == '__main__': unittest.main()

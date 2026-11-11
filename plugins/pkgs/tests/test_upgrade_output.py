@@ -31,17 +31,17 @@ class UpgradeOutput(unittest.TestCase):
         formatter=streams.Formatter(io.StringIO(),dict(self.cfg,_manager='go'),summary)
         with patch.object(upgrade_output.time,'monotonic',return_value=0):
             summary.begin(['go','install','-trimpath','example.org/first/v2@latest'])
-            self.assertIn('Installing · first',meter.update.call_args.args[0])
+            self.assertIn('Installing · first',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
             formatter.feed(b'go: downloading example.org/dependency v1.2.3\n')
-            self.assertIn('Installing · first',meter.update.call_args.args[0])
+            self.assertIn('Installing · first',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
         with patch.object(upgrade_output.time,'monotonic',return_value=65):
             summary.tick()
-            self.assertIn('quiet 1:05 · Installing · first',meter.update.call_args.args[0])
+            self.assertIn('1:05 · Installing · first',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
             summary.begin(['go','install','example.org/cmd/second@latest'])
-            self.assertIn('Installing · second',meter.update.call_args.args[0])
-            self.assertNotIn('quiet',meter.update.call_args.args[0])
-            self.assertNotIn('first',meter.update.call_args.args[0])
-        self.assertNotIn('dependency',repr(meter.update.call_args_list))
+            self.assertIn('Installing · second',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertNotIn('quiet',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertNotIn('first',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+        self.assertNotIn('dependency',repr(meter.update_spans.call_args_list))
 
     def test_npm_fetch_script_and_quiet_activity_without_log_noise(self):
         from unittest.mock import Mock
@@ -51,20 +51,20 @@ class UpgradeOutput(unittest.TestCase):
         with patch.object(upgrade_output.time,'monotonic',return_value=0):
             summary.begin()
             formatter.feed(b'npm http fetch GET 200 https://user:secret@registry.invalid/@scope%2ftool?token=private 12ms\n')
-            self.assertIn('Metadata · @scope/tool',meter.update.call_args.args[0])
+            self.assertIn('Metadata · @scope/tool',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
             formatter.feed(b'npm http fetch GET 200 https://registry.invalid/@scope/tool/-/tool-2.0.tgz 45000ms\n')
-            self.assertIn('Fetched · @scope/tool',meter.update.call_args.args[0])
+            self.assertIn('Fetched · @scope/tool',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
             formatter.feed(b'npm info run @scope/tool@2.0.0 postinstall node_modules/@scope/tool node private-script.js\n')
-            self.assertIn('Script postinstall · @scope/tool',meter.update.call_args.args[0])
+            self.assertIn('Script postinstall · @scope/tool',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
             formatter.feed(b'npm notice run node private-script.js\n')
-            self.assertIn('Script postinstall · @scope/tool',meter.update.call_args.args[0])
+            self.assertIn('Script postinstall · @scope/tool',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
         with patch.object(upgrade_output.time,'monotonic',return_value=65):
             summary.tick()
-            self.assertIn('quiet 1:05 · Script postinstall',meter.update.call_args.args[0])
+            self.assertIn('1:05 · Script postinstall',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
             formatter.feed(b'npm info run @scope/tool@2.0.0 postinstall { code: 0, signal: null }\n')
-            self.assertIn('Script finished · @scope/tool',meter.update.call_args.args[0])
-            self.assertNotIn('quiet',meter.update.call_args.args[0])
-        labels=repr(meter.update.call_args_list)
+            self.assertIn('Script finished · @scope/tool',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertNotIn('quiet',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+        labels=repr(meter.update_spans.call_args_list)
         for hidden in ('secret','private','https://','node_modules'):self.assertNotIn(hidden,labels)
         self.assertEqual(out.getvalue(),'')
         for line,stage in (
@@ -73,8 +73,8 @@ class UpgradeOutput(unittest.TestCase):
             ('npm http fetch GET 404 https://registry.invalid/hello/-/hello-2.0.tgz 20ms','Fetch failed'),
             ('npm http fetch POST 200 https://registry.invalid/-/npm/v1/security/audits/bulk 5ms','Auditing'),
         ):
-            formatter.feed((line+'\n').encode());self.assertIn(stage,meter.update.call_args.args[0])
-        self.assertNotIn('%',repr(meter.update.call_args_list))
+            formatter.feed((line+'\n').encode());self.assertIn(stage,''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+        self.assertNotIn('%',repr(meter.update_spans.call_args_list))
 
     def test_npm_logging_environment_is_native_and_respects_overrides(self):
         for executable in ('npm','/tools/npm','npm.cmd'):
@@ -92,7 +92,7 @@ class UpgradeOutput(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
             rc=streams.run(['npm','install','--global','hello'],dict(self.cfg,output='styled',_upgrade_output=summary))
         self.assertEqual(rc,0)
-        self.assertIn('Metadata · hello',meter.update.call_args.args[0])
+        self.assertIn('Metadata · hello',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
 
     def test_pip_bytes_package_partial_build_and_quiet_time(self):
         from unittest.mock import Mock
@@ -103,30 +103,30 @@ class UpgradeOutput(unittest.TestCase):
             summary.begin()
             formatter.feed(b'Collecting numpy\nDownloading https://user:secret@example.invalid/numpy-2.0.whl?token=private (8 MB)\n')
             formatter.feed(b'Progress 2097152 of 8388608\n')
-            self.assertIn('25% 2.0MiB/8.0MiB',meter.update.call_args.args[0])
-            self.assertIn('numpy',meter.update.call_args.args[0])
-            self.assertNotIn('secret',repr(meter.update.call_args_list))
-            self.assertNotIn('private',repr(meter.update.call_args_list))
+            self.assertIn('25% 2.0MiB/8.0MiB',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertIn('numpy',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertNotIn('secret',repr(meter.update_spans.call_args_list))
+            self.assertNotIn('private',repr(meter.update_spans.call_args_list))
             formatter.feed(b'Installing build dependencies ... ')
             formatter.flush_partial()
-            self.assertIn('Build dependencies',meter.update.call_args.args[0])
-            self.assertNotIn('25%',meter.update.call_args.args[0])
+            self.assertIn('Build dependencies',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertNotIn('25%',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
         with patch.object(upgrade_output.time,'monotonic',return_value=65):
             formatter.flush_partial();summary.tick()
-            self.assertIn('quiet 1:05',meter.update.call_args.args[0])
+            self.assertIn('1:05',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
             self.assertEqual(summary.last_activity,0)
             formatter.feed(b'done\nBuilding wheel for numpy (pyproject.toml) ... ')
             formatter.flush_partial()
-            self.assertIn('Building · numpy',meter.update.call_args.args[0])
-            self.assertNotIn('quiet',meter.update.call_args.args[0])
+            self.assertIn('Building · numpy',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertNotIn('quiet',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
         self.assertEqual(out.getvalue(),'')
 
     def test_pip_unknown_total_and_native_environment_capabilities(self):
         from unittest.mock import Mock
         meter=Mock();summary=upgrade_output.Output('pip',self.cfg,meter)
         summary.line('Progress 1048576 of 0','\n',io.StringIO())
-        self.assertIn('Downloaded 1.0MiB',meter.update.call_args.args[0])
-        self.assertNotIn('%',meter.update.call_args.args[0])
+        self.assertIn('Downloaded 1.0MiB',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+        self.assertNotIn('%',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
         self.assertFalse(summary.pip_stage('Progress '+'9'*5000+' of 0'))
         command=[sys.executable,'-m','pip','install','--upgrade','hello']
         for version,expected in (('25.1','raw'),('26.2.2','raw'),('24.3',None)):

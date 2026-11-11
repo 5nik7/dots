@@ -120,6 +120,44 @@ else:raise SystemExit(9)"""))
         self.assertIn(b'hello', names)
         self.assertNotIn(b'current', names)
 
+    @unittest.skipIf(os.name=='nt','native Windows pkgs supports WinGet only')
+    def test_pip_partial_upgrade_on_all_entry_points(self):
+        module=self.home/'fake python';module.mkdir()
+        db=self.home/'pip.json'
+        (module/'pip.py').write_text('''import json,os,sys
+from pathlib import Path
+p=Path(os.environ['TEST_PIP_DB']);data=json.loads(p.read_text());a=sys.argv[1:]
+if a[0]=='--version':print('pip fixture')
+elif a[0]=='list':print(json.dumps([{'name':n,'version':v} for n,v in data.items()]))
+elif a[0]=='install':
+    name=a[-1]
+    if name=='w3lib':print('error: fixture build failed',file=sys.stderr);sys.exit(4)
+    print("ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.",file=sys.stderr)
+    print('dataclasses-json 0.6.7 requires marshmallow<4,>=3.18, but you have marshmallow 4.4.0 which is incompatible.',file=sys.stderr)
+    data[name]='2';p.write_text(json.dumps(data))
+else:sys.exit(99)
+''')
+        self.env.update(PYTHONPATH=str(module),TEST_PIP_DB=str(db),DOTS_MENU_CAPTURE='1')
+        results=[]
+        for argv in self.surfaces('pkgs',['up','--manager','pip','marshmallow','pyppeteer','w3lib','good']):
+            db.write_text('{"marshmallow":"1","pyppeteer":"1","w3lib":"1","good":"1"}')
+            results.append(self.call(argv,code=4))
+            self.assertEqual(json.loads(db.read_text()),{'marshmallow':'2','pyppeteer':'2','w3lib':'1','good':'2'})
+        self.assertTrue(all(result==results[0] for result in results))
+        out,err,_=results[0]
+        self.assertRegex(out,rb'Updated\s+good, marshmallow, pyppeteer')
+        self.assertRegex(out,rb'Failed\s+w3lib \(exit 4\)')
+        self.assertIn(b'w3lib: fixture build failed',err)
+        self.assertEqual(err.count(b'dependency conflicts;'),1)
+        self.assertNotIn(b'does not currently',err)
+        self.assertNotIn(b'more diagnostic',err)
+        raw=next(self.surfaces('pkgs',['up','--manager','pip','marshmallow','w3lib','good','--raw']))
+        out,err,_=self.call(raw,code=4)
+        self.assertIn(b"pip's dependency resolver does not currently",err)
+        self.assertIn(b'which is incompatible.',err)
+        self.assertIn(b'error: fixture build failed',err)
+        self.assertNotIn(b'Updated',out)
+
     @unittest.skipIf(os.name=='nt','POSIX npm executable fixture; native WinGet has separate fixtures')
     def test_setup_packages_precede_configuration_and_repeat_is_noop(self):
         db=self.fake_npm();path=self.document(['hello'])

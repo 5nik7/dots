@@ -51,6 +51,7 @@ Examples:
 
 Install, upgrade and refresh run without an extra confirmation flag.
 Install, uninstall and upgrade show brief results; --raw shows full manager output.
+Pip upgrades continue after package failures; global npm scripts need separate approval.
 Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.
 Bare invocation shows help. Completion inserts names and never installs.
 '''

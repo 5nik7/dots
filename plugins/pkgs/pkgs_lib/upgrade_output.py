@@ -17,6 +17,27 @@ ROUTINE = re.compile(r'^(?:\(?Reading |Building dependency|Calculating |Get:|Hit
 ERROR = re.compile(r'^(?:npm (?:error|ERR!)\s*|E:\s*|dpkg(?:-deb)?:\s*(?:fatal )?error\b[: ]*|(?:error|fatal|failed)\b[: ]*)', re.I)
 WARNING = re.compile(r'^(?:npm (?:warn|WARN)\s*|W:\s*|warning\b[: ]*|warn\b[: ]*)', re.I)
 STAGES = {'install': 'Installing', 'upgrade': 'Upgrading', 'uninstall': 'Removing'}
+NPM_NOTICES = re.compile(r'^npm warn (?:using --force Recommended protections disabled\.|'
+                        r'install-scripts \.npmrc allow-scripts setting is being ignored because '
+                        r'--allow-scripts was passed on the command line)$', re.I)
+PIP_CONFLICT = ("pip's dependency resolver does not currently take into account all the packages "
+                'that are installed. This behaviour is the source of the following dependency conflicts.')
+PIP_CONFLICT_ROW = re.compile(r'^\S+ \S+ requires .+, (?:which is not installed\.|'
+                              r'but you have .+ which is incompatible\.)$')
+PACKAGE_FIELDS = {'Installed', 'Removed', 'Updated', 'Failed', 'Remove',
+                  'Scripts', 'Scripts ran', 'Scripts blocked'}
+
+
+def package_color(cfg):
+    """Use palette yellow, independently of customized warning/identity roles."""
+    if '_package_color' not in cfg:
+        from . import reports  # Makes the shared presentation modules available.
+        from style_config import current
+        prefs = current()
+        code = prefs.sgr_color('yellow') if prefs else '33'
+        # Literal indexed yellow bypasses semantic remapping of ANSI 33/93.
+        cfg['_package_color'] = '38;5;3' if code == '33' else code
+    return cfg['_package_color']
 
 
 def enabled(args, cfg):
@@ -40,12 +61,21 @@ def heading(cfg, backend=None, *, action='upgrade'):
     sys.stdout.flush()
 
 
-def packages(cfg, label, names):
+def packages(cfg, label, names, *, placeholder=False):
     """Show selected identities once, without inventory queries or log parsing."""
-    value = ', '.join(dict.fromkeys(names))
+    names = tuple(dict.fromkeys(names))
+    value = ', '.join(names)
     if not value: return
     ui = renderer(cfg, sys.stdout)
-    if ui: ui.field(label, value, 'identity')
+    if ui and label in PACKAGE_FIELDS:
+        spans = []
+        for name in names:
+            if spans: spans.append((', ', None))
+            identity, separator, status = name.partition(' (exit ') if label == 'Failed' else (name, '', '')
+            spans.append((identity, '90' if placeholder else package_color(cfg)))
+            if separator: spans.append((separator+status, None))
+        ui.ui.detail_spans(label, spans, label_width=11)
+    elif ui: ui.field(label, value, 'identity')
     else: print('  '+label+': '+value)
     sys.stdout.flush()
 
@@ -62,13 +92,47 @@ class Output:
         self.pause = None
         self.mirror_sync = False
         self.updated = None
+        self.failed, self.partial_result, self.target = [], False, ''
+        if manager == 'npm' and action in ('install', 'upgrade'):
+            from .npm_scripts import Pending
+            self.pending = Pending()
+        else: self.pending = None
         self.stage, self.package = self.default_stage, ''
         self.transferred, self.total = 0, 0
         self.last_activity = time.monotonic()
         self.partial_seen = ''
+        self.package_style = package_color(cfg)
+        self.conflicts = False
+        self.conflict_rows = False
+        self.pip_steps = False
+        self.command_active = False
+        self.success_extra = 0
+
+    def begin_command(self):
+        """Collect pip diagnostics until the command's real exit status is known."""
+        if self.manager != 'pip': return
+        self.pip_steps = self.command_active = True
+        self.command_errors, self.command_warnings = [], []
+        self.command_extra = 0
+        self.conflict_rows = False
+        self.tail.clear()
+
+    def end_command(self, rc):
+        if not self.command_active: return
+        rows = self.command_errors if rc else self.command_errors+self.command_warnings
+        target = self.errors if rc else self.warnings
+        extra = self.command_extra
+        for value in rows:
+            if value in target: continue
+            if len(target) < 2: target.append(value)
+            else: extra += 1
+        if rc: self.extra += extra
+        else: self.success_extra += extra
+        self.command_active = self.conflict_rows = False
 
     def begin(self, command=None):
-        self.stage, self.package = self.default_stage, ''
+        self.stage, self.package = self.default_stage, self.target
+        if self.pending: self.pending.begin(command)
         self.transferred, self.total = 0, 0
         self.last_activity = time.monotonic()
         self.partial_seen = ''
@@ -175,7 +239,7 @@ class Output:
         now = time.monotonic() if now is None else now
         quiet = max(0, int(now-self.last_activity))
         label = self.manager+' · '
-        if quiet >= 15 and self.manager in ('pip', 'npm', 'go'): label += f'quiet {quiet//60}:{quiet%60:02d} · '
+        if quiet >= 15 and self.manager in ('pip', 'npm', 'go'): label += f'{quiet//60}:{quiet%60:02d} · '
         if self.stage == 'Downloading' and (self.total or self.transferred):
             def amount(size):
                 return f'{size/1048576:.1f}MiB' if size >= 1048576 else f'{size/1024:.0f}KiB'
@@ -183,8 +247,9 @@ class Output:
                 label += f'{min(100, 100*self.transferred//self.total)}% '+amount(self.transferred)+'/'+amount(self.total)
             else: label += 'Downloaded '+amount(self.transferred)
         else: label += self.stage
-        if self.package: label += ' · '+self.package
-        self.progress.update(label)
+        spans = [(label, None)]
+        if self.package: spans += [(' · ', None), (self.package, self.package_style)]
+        self.progress.update_spans(spans)
 
     def prompt(self, text, stream, ending=''):
         # Stop transient progress until the command finishes so it cannot obscure input.
@@ -209,8 +274,16 @@ class Output:
         if not text: return
         self.last_activity = time.monotonic()
         self.partial_seen = ''
+        if self.pending and self.pending.observe(text): return
         if ending and self.manager == 'npm' and re.match(r'^npm warn deprecated\b', text, re.I):
             return  # Available in raw output; never inflate diagnostic counts/tails.
+        if ending and self.manager == 'npm' and NPM_NOTICES.fullmatch(text): return
+        if ending and self.manager == 'pip':
+            if text.removeprefix('ERROR: ') == PIP_CONFLICT:
+                self.conflicts = self.conflict_rows = True
+                return
+            if self.conflict_rows and PIP_CONFLICT_ROW.fullmatch(text): return
+            self.conflict_rows = False
         if self.manager == 'apt' and ('File has unexpected size' in text or 'Mirror sync in progress' in text):
             self.mirror_sync = True
         if not ending or PROMPT.search(text):
@@ -222,12 +295,15 @@ class Output:
         error, warning = ERROR.match(text), WARNING.match(text)
         if error or warning:
             value = text[(error or warning).end():].strip() or text
+            if self.target: value = self.target+': '+value
             # npm repeats its code and advice around the useful registry diagnostic.
             if re.fullmatch(r'(?:code )?E?\d+', value) or value.startswith(('Note that you can also install', 'A complete log of this run')):
                 return
-            rows = self.errors if error else self.warnings
+            rows = ((self.command_errors if error else self.command_warnings) if self.command_active
+                    else self.errors if error else self.warnings)
             if value not in rows:
                 if len(rows) < 2: rows.append(value)
+                elif self.command_active: self.command_extra += 1
                 else: self.extra += 1
         elif self.progress is not None and not event:
             if self.manager in ('pip', 'npm', 'go', 'winget'):
@@ -252,11 +328,17 @@ class Output:
         sys.stdout.flush()
         if not rc and not unchanged and self.action in ('install', 'uninstall'):
             packages(self.cfg, 'Installed' if self.action == 'install' else 'Removed', names)
-        if not rc and not unchanged and self.action == 'upgrade':
+        if (not rc or self.partial_result) and not unchanged and self.action == 'upgrade':
             packages(self.cfg, 'Updated', self.updated if self.updated else
-                     ['unavailable' if self.updated is None else 'none'])
-        messages = [(s, 'error') for s in (self.errors or (list(self.tail)[-2:] if rc else []))]
-        messages += [(s, 'warning') for s in self.warnings]
+                     ['unavailable' if self.updated is None else 'none'], placeholder=not self.updated)
+        if self.failed:
+            packages(self.cfg, 'Failed', [name+' (exit '+str(code)+')' for name, code in self.failed])
+        if self.pending: self.pending.result(self.cfg)
+        fallback = (['--raw shows full failure output.'] if self.pip_steps else list(self.tail)[-2:]) if rc else []
+        messages = [(s, 'error') for s in (self.errors or fallback)]
+        if not (rc and self.pip_steps): messages += [(s, 'warning') for s in self.warnings]
+        if self.conflicts:
+            messages.append(('dependency conflicts; run python -m pip check', 'warning'))
         if rc and self.mirror_sync:
             retry = 'pkgs upgrade' if self.action == 'upgrade' else 'retry the '+self.action
             messages = [('Repository metadata is inconsistent (mirror sync). Retry pkgs refresh later, then '+retry+'.', 'error')]
@@ -264,7 +346,8 @@ class Output:
         for message, role in messages:
             if error_ui: error_ui.text(self.manager+': '+message, role)
             else: print('  '+self.manager+': '+message, file=sys.stderr)
-        if self.extra:
-            text = self.manager+': '+str(self.extra)+' more diagnostic lines; --raw shows full output.'
+        extra = self.extra + (self.success_extra if not rc else 0)
+        if extra:
+            text = self.manager+': '+str(extra)+' more diagnostic lines; --raw shows full output.'
             if error_ui: error_ui.text(text, 'muted')
             else: print('  '+text, file=sys.stderr)
