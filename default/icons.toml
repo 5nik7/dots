@@ -68,6 +68,7 @@ github = "󰊤"
 gitlab = ""
 
 [menu]
+cleanup = "󰃢"
 anodize = "󰏘"
 backgrounds = "󰸉"
 bak = "󰁯"

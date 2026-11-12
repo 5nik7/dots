@@ -18,6 +18,28 @@ class Values(fixtures.ProfileConfig):
         self.environ=patch.dict(os.environ,self.env,clear=True);self.environ.start();self.addCleanup(self.environ.stop)
         current.cache_clear();self.addCleanup(current.cache_clear)
 
+    def test_cleanup_preference_validation_reset_and_consumer(self):
+        import io
+        from contextlib import redirect_stdout
+        import cleanup_cli
+        key='apps.cleanup.checkpoint_min_age_days'
+        self.run_config('set',key,'45','--defaults','--no-refresh')
+        self.assertEqual(self.run_config('get',key).stdout,'45\n')
+        self.run_config('set',key,'60','--no-refresh')
+        for bad in ('-1','36501','true','abc'):
+            self.run_config('set',key,bad,'--no-refresh',code=1)
+        self.assertEqual(Controls(self.root).resolve(key)['value'],60)
+        explanation=json.loads(self.run_config('explain',key,'--json').stdout)
+        self.assertEqual(explanation['activation'],'next invocation')
+        for flag,expected in [([],60),(['--older-than','7'],7)]:
+            current.cache_clear()
+            with patch('cleanup_cli.Termux') as adapter,patch('cleanup_cli.detect',return_value={'platform':'termux'}),patch('cleanup_cli.available',return_value=0),redirect_stdout(io.StringIO()):
+                adapter.return_value.candidates.return_value=([],[])
+                self.assertEqual(cleanup_cli.main(['scan','--group','project-checkpoints','--json',*flag]),0)
+                self.assertEqual(adapter.return_value.candidates.call_args.args[1],expected)
+        self.run_config('unset',key,'--no-refresh')
+        self.assertEqual(self.run_config('get',key).stdout,'45\n')
+
     def test_backup_controls_preserve_explicit_choices_and_validate(self):
         self.assertEqual(Controls(self.root).resolve('apps.bak.mode')['value'],'move')
         for key,value in [('apps.bak.mode','copy'),('apps.bak.location','adjacent'),('apps.bak.store','~/my backups')]:

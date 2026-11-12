@@ -18,6 +18,7 @@ This is the authoritative family-to-primary-skill mapping. Select the family own
 | `files` | [dots-files-maintenance](skills/dots-files-maintenance/SKILL.md) |
 | `bak`, `link` | [dots-files-maintenance](skills/dots-files-maintenance/SKILL.md) |
 | `clipboard`, `cpy`, `pst` | [dots-clipboard-maintenance](skills/dots-clipboard-maintenance/SKILL.md) |
+| `cleanup` | [dots-cleanup-maintenance](skills/dots-cleanup-maintenance/SKILL.md) |
 | `fonts` | [dots-fonts-maintenance](skills/dots-fonts-maintenance/SKILL.md) |
 | `git` | [dots-git-maintenance](skills/dots-git-maintenance/SKILL.md) |
 | `help` | [dots-command-maintenance](skills/dots-command-maintenance/SKILL.md) |

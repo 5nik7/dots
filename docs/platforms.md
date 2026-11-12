@@ -1,5 +1,15 @@
 # Platform Model
 
+## Cleanup support
+
+`dots cleanup` uses shared platform detection/controller grammar on Bash and
+native PowerShell. Only Termux implements scan/deletion rules; Linux, WSL and
+Windows return unsupported (exit 3). Help, catalog, completion and local receipt
+inspection remain available. Windows uses its existing native Dots state root,
+separate from WSL. Termux fixtures do not establish native PowerShell or
+other-platform runtime acceptance. See [Cleanup](cleanup.md).
+
+
 ## Clipboard history platforms
 
 The [history controller](clipboard.md) and copy providers support Termux, Linux, WSL and native Windows with separate platform state. Bash/native Python routes share metadata, filtering and JSON; PowerShell does not require Bash. Bash/Zsh/Fish and PSReadLine have explicit editor widgets; Nushell/Xonsh retain command completion and copy/print with no editor-insertion adapter. Private Termux tmux/FZF tests cover insertion and narrow popups. Native Linux desktop, WSL interop, Windows 5.1/7 desktop/editor and Android background-read acceptance remain pending; Android may prevent unfocused polling. No application destinations, host services or packages change.

@@ -10,6 +10,12 @@
   ],
   "pages": [
     {
+      "id": "Cleanup",
+      "title": "Cleanup",
+      "section": "Commands",
+      "source": "docs/cleanup.md"
+    },
+    {
       "id": "Backups",
       "title": "Backups and safe links",
       "section": "Commands",

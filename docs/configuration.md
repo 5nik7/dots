@@ -1,5 +1,16 @@
 # Configuration: inspect, change and explain
 
+## Cleanup preferences
+
+`apps.cleanup.checkpoint_min_age_days` is an integer from 0 to 36500 (default 30).
+It controls the next invocation's checkpoint age filter; `--older-than`
+overrides it. Normal default/parent/profile resolution, validation and reset
+apply. Use `dots config browse --query apps.cleanup` or Cleanup → Configuration.
+Shared CLI formatting, semantic colors and resource styles apply to human views;
+`icons.menu.cleanup` controls the family icon. Approval and arbitrary deletion
+paths are not persistent preferences. See [Cleanup](cleanup.md).
+
+
 ## Clipboard preferences
 
 `apps.clipboard` controls optional copy recording, bounded retention, deduplication, exclusions, watcher polling and previews. `colors.apps.clipboard.*` and `icons.menu.clipboard` style human reports; existing CLI/menu formatting and popup preferences remain authoritative. See the [defaults and activation table](clipboard.md#configuration-and-storage). Config exposes these through its normal hierarchy, validation, reset, completion and browser. Saves apply on the next invocation or watcher poll without publishing a theme or starting capture.

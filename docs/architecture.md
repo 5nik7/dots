@@ -1,5 +1,17 @@
 # Architecture
 
+## Cleanup ownership
+
+`cleanup_commands.py` owns static grammar/completion; generated
+`bin/dots-cleanup*` wrappers and native `cli.py` use `cleanup_cli.py`.
+`cleanup/termux.py` owns bounded rules/native helpers, `core.py` owns inventories
+and guarded deletion, `engine.py` owns approval and verified subtotals, and
+`receipts.py` owns private metadata/locking. Presentation reuses shared
+renderers/progress/selectors; the menu launcher owns navigation. This irreversible
+cleanup journal is separate from managed-file replacement and undo.
+See [Cleanup](cleanup.md).
+
+
 ## Clipboard ownership
 
 `clipboard.py` owns shared system providers and cpy/pst semantics. `clipboard_history.py` owns the private transactional SQLite runtime store and optional successful-copy hook; `clipboard_watch.py` owns explicit polling and token-based worker control. `clipboard_cli.py`, `clipboard_menu.py` and `clipboard_widgets.py` share behavior across Bash/native Python dispatch and shell-editor adapters. `clipboard_commands.py` defines metadata/completion and generates the thin bin adapters. Runtime history is separate from managed-file installation journals and retains no content backups. See [clipboard history](clipboard.md).

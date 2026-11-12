@@ -1,5 +1,18 @@
 # Command Model
 
+## Cleanup
+
+`dots cleanup` scans known disposable Termux files and asks Delete/Skip/Stop per
+group. `scan`, `groups`, `history [--limit N]` and `report [RUN_ID]` inspect without
+mutating; `run` performs reviewed deletion. Bare redirected/JSON invocation is
+read-only. Unattended ordinary deletion requires `run --yes`; checkpoint groups
+always require interactive approval. Repeat `--group`/`--exclude`, or use
+`--include-checkpoints`; `--older-than DAYS` applies only to checkpoints.
+`--dry-run`, `--json`, `--quiet`, `--verbose`, shared color/icon flags and
+`--progress auto|never` preserve their output contracts. See the full
+[cleanup scope, accounting and exit statuses](cleanup.md).
+
+
 ## Clipboard history
 
 `dots clipboard` is the shared text-history family: browser/pick and editor initialization; list/search/show; add/capture/copy/print/insert; pin/unpin/remove/clear/prune; export/import; status/pause/resume and explicit watcher lifecycle controls. Static headers derive from `clipboard_commands.py`; full-ID and option completion uses the existing six-shell protocol without reading the system clipboard. See [clipboard history](clipboard.md) for routes, flags, keybindings, settings, storage and activation. The root menu includes Clipboard; raw text, exports, JSON and generated widget code remain undecorated.

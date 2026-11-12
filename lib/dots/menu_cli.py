@@ -49,6 +49,7 @@ ACTIONS = (
     Action('bak', 'backups', ('bak', 'browse'), kind='terminal', icon='󰁯'),
     Action('config', 'config', ('config', 'browse'), kind='popup', icon='󰒓'),
     group('clipboard', '󰅌'),
+    group('cleanup', '󰃢'),
     group('fonts', '󰛖'),
     Action('keys', 'keys', ('keys',), ('--browse',), 'popup', '󰌆'),
     group('tmux', '', route=('menu', 'tmux'), tool='tmux'),
@@ -59,6 +60,14 @@ ACTIONS = (
     Action('env', 'env', ('env',), icon='󰒓'),
 )
 FAMILIES = {
+    'cleanup': (Action('run', 'review ordinary cleanup', ('cleanup', 'run'), kind='terminal'),
+                Action('scan', 'scan cleanup candidates', ('cleanup', 'scan')),
+                Action('groups', 'cleanup groups', ('cleanup', 'groups')),
+                Action('checkpoints', 'review old checkpoints', ('cleanup', 'run'),
+                       ('--group','project-checkpoints','--group','sensitive-checkpoints','--group','unclassified-checkpoints'), kind='terminal'),
+                Action('history', 'cleanup history', ('cleanup', 'history')),
+                Action('report', 'latest report', ('cleanup', 'report')),
+                Action('configuration', 'configuration', ('config','browse'), ('--query','cleanup'), kind='popup')),
     'clipboard': (Action('browse','history',('clipboard','browse'),kind='popup'),
                   Action('status','capture status',('clipboard','status')),
                   Action('capture','save current clipboard',('clipboard','capture'),kind='terminal'),

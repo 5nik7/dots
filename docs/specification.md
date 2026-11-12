@@ -1,5 +1,20 @@
 # Implemented Data Contracts
 
+## Cleanup receipts
+
+Cleanup JSON and metadata-only receipts use `schema: 1`. Scan records contain
+`platform`, `status`, `selected_groups`, `candidates` and `issues`. Candidates
+identify `rule`, `group`, `path`, deletion `mode` and counts. Run records add a
+UUID `id` (null if nothing approved), timestamps, group/target statuses,
+`totals`, elapsed seconds and available-space observations. Target records store
+confirmed `deleted` counts, optional `remaining`, failure reason and uncertainty.
+Counts are nonnegative integers: `files`, `directories`, `symlinks`,
+`logical_bytes`, `allocated_bytes`. `cumulative` is derived from retained receipt
+totals, never from a free-space delta. Reads present unfinished `running` records
+as `incomplete` without rewriting them. The store uses private files, atomic
+replacement and one mutation lock. See [cleanup accounting](cleanup.md).
+
+
 ## Clipboard history data
 
 [Clipboard history](clipboard.md#configuration-and-storage) uses SQLite `user_version=1` in the platform state root, with atomic transactions, secure-delete and DELETE journals. Entries contain a full 32-hex UUID, UTF-8 text without NUL, SHA-256 deduplication digest, source, UTC created/updated timestamps and pin state; reports add UTF-8 byte size. Control records hold capture pause, last-observed digest and the owned watcher token/heartbeat/status. JSON reports use `schema: 1`; content-bearing list/show items and metadata-only mutation items are distinct. Export/import uses `schema: 1, entries: [{text, pinned}]` and assigns local identity/time/source on import. Complete batches validate before writes. Typed `apps.clipboard` controls inherit the existing profile hierarchy; report styles use `colors.apps.clipboard` and `icons.menu.clipboard`. Exact text/data output bypasses formatting. The [command guide](clipboard.md#commands-and-data) owns filtering and retention semantics.

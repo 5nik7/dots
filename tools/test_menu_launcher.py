@@ -54,7 +54,7 @@ class LauncherContracts(MenuFixture):
                 self.assertEqual((code, err), (0, '')); self.assertIn('keys', out)
             doc = json.loads(self.invoke('--json')[1])
             self.assertEqual((doc['schema'], doc['menu'], doc['title']), (1, 'dots', 'Dots menu'))
-            self.assertEqual([r['id'] for r in doc['items']], 'wttr todo bak config clipboard fonts keys tmux files git theme anodize blastoff pkgs debug profile wiki env'.split())
+            self.assertEqual([r['id'] for r in doc['items']], 'wttr todo bak config clipboard cleanup fonts keys tmux files git theme anodize blastoff pkgs debug profile wiki env'.split())
             for item in doc['items']:
                 self.assertEqual(set(item), {'id','label','description','available','reason'})
             self.assertEqual([r['id'] for r in json.loads(self.invoke('--json','--query','anodize')[1])['items']], ['anodize'])
@@ -162,7 +162,7 @@ class LauncherContracts(MenuFixture):
             self.assertEqual(kwargs['prompt'], 'dots·files' if menu.id=='dots:files' else 'dots')
             if menu.id == 'dots':
                 self.assertEqual([e.label for e in menu.entries],
-                     'anodize backups blastoff clipboard config debug env files fonts git keys pkgs profile theme tmux todo weather wiki'.split())
+                     'anodize backups blastoff cleanup clipboard config debug env files fonts git keys pkgs profile theme tmux todo weather wiki'.split())
             else:
                 self.assertEqual([e.id for e in menu.entries], ['browse', 'install', 'backups', 'uninstall', 'add', 'list', 'history', 'sources', 'help'])
             step=len(visits)
@@ -251,7 +251,7 @@ class LauncherContracts(MenuFixture):
                 p=subprocess.run([*front,*args],env=env,capture_output=True,text=True,timeout=20)
                 self.assertEqual(p.returncode,0,p.stderr);return p.stdout
             self.assertIn('--client',call('menu','--help'))
-            self.assertEqual(len(json.loads(call('menu','--json'))['items']),18)
+            self.assertEqual(len(json.loads(call('menu','--json'))['items']),19)
             complete=['__complete','bash','2','--','dots'] if len(front)==1 else ['__complete']
             self.assertIn('--query',call(*complete,'menu','--q'))
             self.assertIn('menu tmux sessions',call('help','menu'))

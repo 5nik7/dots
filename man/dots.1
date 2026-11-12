@@ -1554,6 +1554,189 @@ back up and replace an active symlink; leave its target unchanged
 .TP
 .B "Argument 1 (string)"
 name
+.SS "dots cleanup"
+Review known cleanup groups and reclaim storage
+.PP
+.B "dots cleanup [COMMAND] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine human output
+.TP
+.B "\-\-verbose, \-v"
+Show target paths and per\-rule outcomes
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-group downloads,builds,logs,project\-checkpoints,sensitive\-checkpoints,unclassified\-checkpoints"
+Select an exact group; repeatable
+.TP
+.B "\-\-exclude downloads,builds,logs,project\-checkpoints,sensitive\-checkpoints,unclassified\-checkpoints"
+Exclude a group; repeatable
+.TP
+.B "\-\-include\-checkpoints"
+Explicitly include all checkpoint risk groups
+.TP
+.B "\-\-older\-than VALUE"
+Minimum checkpoint age in days
+.TP
+.B "\-\-dry\-run"
+Preview without prompting or writing state
+.TP
+.B "\-\-progress auto,never"
+Transient human progress
+.TP
+.B "\-\-yes, \-y"
+Approve ordinary groups only; unattended use requires run
+.TP
+.B "Argument 1 (choice:scan,run,groups,history,report)"
+Command
+.SS "dots cleanup groups"
+List cleanup groups and platform support without scanning
+.PP
+.B "dots cleanup groups [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine human output
+.TP
+.B "\-\-verbose, \-v"
+Show target paths and per\-rule outcomes
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.SS "dots cleanup history"
+List cleanup runs and cumulative verified totals
+.PP
+.B "dots cleanup history [\-\-limit N] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine human output
+.TP
+.B "\-\-verbose, \-v"
+Show target paths and per\-rule outcomes
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-limit VALUE"
+Maximum runs; 0 lists all (default 20)
+.SS "dots cleanup report"
+Show a cleanup receipt; defaults to the latest run
+.PP
+.B "dots cleanup report [RUN_ID] [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine human output
+.TP
+.B "\-\-verbose, \-v"
+Show target paths and per\-rule outcomes
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "Argument 1 (string)"
+Full cleanup run UUID
+.SS "dots cleanup run"
+Delete reviewed cleanup groups with explicit approval
+.PP
+.B "dots cleanup run [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine human output
+.TP
+.B "\-\-verbose, \-v"
+Show target paths and per\-rule outcomes
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-group downloads,builds,logs,project\-checkpoints,sensitive\-checkpoints,unclassified\-checkpoints"
+Select an exact group; repeatable
+.TP
+.B "\-\-exclude downloads,builds,logs,project\-checkpoints,sensitive\-checkpoints,unclassified\-checkpoints"
+Exclude a group; repeatable
+.TP
+.B "\-\-include\-checkpoints"
+Explicitly include all checkpoint risk groups
+.TP
+.B "\-\-older\-than VALUE"
+Minimum checkpoint age in days
+.TP
+.B "\-\-dry\-run"
+Preview without prompting or writing state
+.TP
+.B "\-\-progress auto,never"
+Transient human progress
+.TP
+.B "\-\-yes, \-y"
+Approve ordinary groups only; unattended use requires run
+.SS "dots cleanup scan"
+Inspect cleanup candidates without changing files or state
+.PP
+.B "dots cleanup scan [OPTIONS]"
+.TP
+.B "\-\-json"
+Print schema\-1 JSON without decoration
+.TP
+.B "\-\-quiet, \-q"
+Suppress routine human output
+.TP
+.B "\-\-verbose, \-v"
+Show target paths and per\-rule outcomes
+.TP
+.B "\-\-color auto,always,never"
+Human output colors
+.TP
+.B "\-\-icons auto,always,never"
+Human output icons
+.TP
+.B "\-\-group downloads,builds,logs,project\-checkpoints,sensitive\-checkpoints,unclassified\-checkpoints"
+Select an exact group; repeatable
+.TP
+.B "\-\-exclude downloads,builds,logs,project\-checkpoints,sensitive\-checkpoints,unclassified\-checkpoints"
+Exclude a group; repeatable
+.TP
+.B "\-\-include\-checkpoints"
+Explicitly include all checkpoint risk groups
+.TP
+.B "\-\-older\-than VALUE"
+Minimum checkpoint age in days
+.TP
+.B "\-\-dry\-run"
+Preview without prompting or writing state
+.TP
+.B "\-\-progress auto,never"
+Transient human progress
 .SS "dots clipboard"
 Browse local text clipboard history
 .PP

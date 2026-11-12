@@ -59,6 +59,12 @@ dots wiki search 'nvim themes' --topics
 
 ## Find your way around
 
+Use `dots cleanup` on Termux to review disposable caches and diagnostic logs
+in groups, then see the size and number of files removed. `dots cleanup scan`
+previews candidates; `dots cleanup history` shows runs and the combined verified
+size. Old Pi/Ayu checkpoints require explicit selection and approval. See
+[cleanup groups, safeguards and reports](docs/cleanup.md).
+
 - [Dots core](docs/core.md): workflows, directory layout and recovery.
 - [Managed files](docs/files.md), [Git](docs/git.md) and [profiles](docs/profiles.md).
 - [Configuration](docs/configuration.md), [environment](docs/shell-environment.md) and [shell startup](docs/shell-init.md).

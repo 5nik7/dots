@@ -176,6 +176,10 @@ dots_complete() {
   while (( todo_index < cursor )); do
     case ${words[todo_index]} in --color=*|--icons=*|-r|--raw) (( ++todo_index )) ;; *) break ;; esac
   done
+  if [[ $command_name == dots && ${words[todo_index]} == cleanup && $todo_index -lt $cursor ]]; then
+    python3 -B "$DOTS_LIB_DIR/cleanup_commands.py" "${words[@]:todo_index+1:cursor-todo_index}"
+    return
+  fi
   if [[ $command_name == dots && ${words[todo_index]} == clipboard && $todo_index -lt $cursor ]]; then
     python3 -B "$DOTS_LIB_DIR/clipboard_commands.py" "${words[@]:todo_index+1:cursor-todo_index}"
     return

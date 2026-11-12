@@ -1,5 +1,19 @@
 # Safety and Recovery Model
 
+## Irreversible cleanup
+
+`dots cleanup` deliberately deletes known disposable files without retaining
+payload backups, so deletion cannot be undone. A private metadata receipt must
+be durable before an approved group mutates. Whole-group preflight, per-target
+revalidation and guarded exact-entry deletion constrain reviewed paths;
+active/uninspectable processes and changed targets are retained. Native helpers
+are bounded and never fall back to recursive deletion on failure. Saved
+checkpoints are opt-in, separately confirmed, and cannot use `--yes`.
+Other command families retain their existing backup/rollback rules. Incomplete
+cleanup records retain only verified subtotals and are never replayed.
+See [scope and safeguards](cleanup.md).
+
+
 ## Clipboard runtime state
 
 [Clipboard history](clipboard.md) is opt-in for automatic capture. Help, completion, status, previews and initialization never read the system clipboard or launch a watcher. Explicit history mutations use atomic SQLite transactions; installation and configuration still use their existing managed-file transactions. History removal intentionally has no retained content backup/undo: snapshot revisions guard exact selections, invalid imports roll back, pins survive automatic retention, and configured bounds constrain new data. POSIX files are owner-only; Windows relies on the user application-data boundary. Never place clipboard text in errors or Dots recovery journals. Secure-delete and normal private-preview/journal cleanup do not guarantee physical erasure from flash, exports, interrupted temporary files or snapshots. Insertion uses editor APIs or verified bracketed paste without submitting; escape/control text is refused. Watcher stop invalidates an owned token and never signals an arbitrary PID. Tests substitute every clipboard provider and own all storage/terminal contexts.

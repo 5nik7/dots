@@ -1,5 +1,18 @@
 # Testing Strategy
 
+## Cleanup
+
+`python3 -B tools/test_cleanup.py -v` verifies cleanup in owned Termux-shaped
+fixture roots: approvals, recursive inventories, links, process references,
+drift, helpers, accounting and receipts.
+`python3 -B tools/generate_cleanup_commands.py --check` validates metadata.
+Shared controller/completion, configuration, menu and progress tests cover
+integration. Native filesystem capabilities can require named skips; synthetic
+hardlink accounting is separate from actual filesystem evidence. See the
+[focused plan](../plans/cleanup.md) for results and pending native acceptance.
+Tests must never clean the developer's actual caches or histories.
+
+
 ## Clipboard history
 
 Run `python3 -B tools/test_clipboard_history.py` and `python3 -B tools/test_clipboard_ui.py` after the existing `tools/test_clipboard.py` provider checks. Fixtures own SQLite stores, HOME/XDG roots, fake clipboard providers and private tmux clients. Coverage includes atomic imports/rollback, retention/pins, concurrent writers, failed/stopped watchers, exact Unicode/newline output, copy hooks, shell widgets, native shared dispatch, six-shell completion records, actual Config consumers, 40/80/120-column and short-height popup actions, and multiline insertion without execution. Run `python3 -B tools/generate_clipboard_commands.py --check` for generated metadata. Native Windows 5.1/7, Linux/WSL desktop and Android background acceptance are separate pending checks; local substitutes do not prove desktop access.

@@ -13,6 +13,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Cleanup](cleanup.md) | Termux cleanup groups, approvals, confirmed totals, receipts and platform extension workflow. |
 | [Tmux widget reliability](tmux-widget-reliability.md) | Retained solar/battery/Git readings, quiet Termux location refresh and bounded status workers. |
 | [Dots FIGlet fonts](figlet-fonts.md) | Implemented logo and mixed-case fonts, Termux prefix destinations and verified managed file links. |
 | [Shared preferences and command delivery](config-preferences-completion.md) | Implemented separated preferences, portable appearance import, Bak completion and delivery gates; native-platform limits recorded. |

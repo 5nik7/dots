@@ -1,5 +1,13 @@
 # Testing Work Guide
 
+For Cleanup, run `python3 -B tools/test_cleanup.py -v` and
+`python3 -B tools/generate_cleanup_commands.py --check`, then affected shared
+controller/completion, config, menu and progress checks. Every cleanup target,
+native-helper cache, receipt and process fixture must be test-owned. Never use
+live cleanup as a regression test. Separate actual hardlink/platform capabilities
+from synthetic accounting and controller fixtures; see the
+[cleanup plan](../../plans/cleanup.md) for acceptance limits.
+
 For standalone clipboard adapters, run `python3 -B tools/test_clipboard.py -v` and affected Todo/Fonts clipboard consumers. Use only owned fake providers; keep Termux interpreter support in isolated shell environments. Native PowerShell adapter fixtures and real desktop clipboard acceptance are separate; see [clipboard checks](../../docs/testing.md#system-clipboard-commands).
 
 For fonts, run `tools/test_fonts.py` with `tools/requirements-fonts.txt` available,

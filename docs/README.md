@@ -1,5 +1,8 @@
 # Dots Documentation
 
+- [Cleanup](cleanup.md): reviewed Termux cleanup, risk groups and cumulative reports.
+
+
 The live CLI combines Bash and native PowerShell entry points with shared Python controllers. These references describe current commands, configuration ownership, managed operations, platform limits and Anodize palette authoring.
 
 ## Start Here

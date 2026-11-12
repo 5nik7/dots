@@ -155,6 +155,9 @@
       "preview": true,
       "preview_lines": 8,
       "list_limit": 50
+    },
+    "cleanup": {
+      "checkpoint_min_age_days": 30
     }
   },
   "formatting": {

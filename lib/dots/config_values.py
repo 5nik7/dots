@@ -121,6 +121,10 @@ def style(value):
 def validate_value(defaults,path,value):
     if not recognized(defaults,path):raise ValueError('unknown configuration key: '+name(path))
     if value is None:return
+    if path == ('apps','cleanup','checkpoint_min_age_days'):
+        if type(value) is not int or not 0 <= value <= 36500:
+            raise ValueError('cleanup checkpoint_min_age_days requires an integer 0..36500')
+        return
     if path[:2]==('apps','clipboard'):
         bounds={'max_entries':(1,10000),'max_age_days':(1,3650),'max_entry_bytes':(1,1048576),
                 'poll_seconds':(1,10),'preview_lines':(1,40),'list_limit':(1,10000)}
@@ -256,6 +260,8 @@ def validate_groups(root,data,defaults=None):
 def constraints(defaults, key):
     from config_keys import internal
     key=internal(key)
+    if key == 'apps.cleanup.checkpoint_min_age_days':
+        return dict(type='integer', examples=[7,30,90], syntax='Minimum checkpoint age in days, 0..36500; next cleanup invocation')
     choices={'apps.tmux.clock.icon_mode':['none','fixed','daylight'],'apps.tmux.session.name_source':['workspace','session','repository']}
     if key in choices:return dict(type='string',choices=choices[key])
     if key in ('apps.tmux.clock.location_refresh_seconds','apps.tmux.clock.sun_times_max_stale_seconds'):
