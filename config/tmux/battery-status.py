@@ -6,9 +6,10 @@ import re
 import subprocess
 import sys
 from status_styles import preferences,style,span,glyph,format_for
+from widget_cache import Cache, age, command
 
 
-def render(output,colors,slot=False,prefs=None):
+def render(output,colors,slot=False,prefs=None,stale=False):
     prefs=preferences() if prefs is None else prefs
     match=re.fullmatch(r'\x1b\[(31|32|33)m([^\s\x00-\x1f#]+) ([0-9]{1,3})%\x1b\[0m(?: ([A-Z_]+))?\s*',output)
     if (not match or int(match[3])>100 or len(match[2])>4) and not slot:return ''
@@ -21,6 +22,7 @@ def render(output,colors,slot=False,prefs=None):
     fmt=format_for('battery',prefs)
     icon=glyph('battery.'+state,icon,prefs)
     width=fmt.get('width',4) if slot else 0
+    percent=percent.ljust(width)+('~' if stale else ' ') if slot else percent
     custom=any(k.startswith('battery.') and k.split('.')[-1] in ('icon','text','surround','spacer') for k in prefs.get('colors',{}))
     if not custom and all(fmt.get(k,v)==v for k,v in {'before':'','after':'','spacer':' ','width':4}.items()):
         from status_styles import literal
@@ -31,25 +33,46 @@ def render(output,colors,slot=False,prefs=None):
     return span('battery.surround',fmt.get('before',''),base,prefs)+body+span('battery.surround',fmt.get('after',''),base,prefs)+'#[default]'
 
 
+def acquire(options):
+    tool=Path.home()/'repos/battery/battery'
+    fmt='{color}{icon} {percent}{reset}'+(' {status}' if options.get('charging_style') else '')
+    argv=['bash',str(tool),'--format',fmt,'--color','always','--color-by','percentage','--no-newline']
+    for key in ('critical','low'):
+        value=options.get(key)
+        if type(value) is int and 0<=value<=100:argv+=['--'+key,str(value)]
+    output=command(argv,5,511)
+    if not render(output,['red','yellow','green','brightblack'],prefs={}):
+        raise ValueError('invalid battery reading')
+    return output
+
+
 def main(argv):
+    token=None
+    if argv[:1]==['--_worker']:
+        token=argv[1];argv=argv[2:]
     slot=bool(argv and argv[0]=='--slot')
     colors=argv[1:] if slot else ['red','yellow','green','brightblack']
     from status_styles import COLOR
     if len(colors)!=4 or any(not COLOR.fullmatch(c) for c in colors):return ''
     prefs=preferences();options=prefs.get('options',{}).get('battery',{})
-    tool=Path.home()/'repos/battery/battery'
     output=''
-    if tool.is_file():
-        fmt='{color}{icon} {percent}{reset}'+(' {status}' if options.get('charging_style') else '')
-        command=['bash',str(tool),'--format',fmt,'--color','always','--color-by','percentage','--no-newline']
-        for key in ('critical','low'):
-            value=options.get(key)
-            if type(value) is int and 0<=value<=100:command+=['--'+key,str(value)]
+    if not slot:
         try:
-            result=subprocess.run(command,stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=2)
-            if result.returncode==0 and len(result.stdout)<512:output=result.stdout
-        except (OSError,subprocess.SubprocessError):pass
-    return render(output,colors,slot,prefs) if output or slot else ''
+            output=acquire(options)
+        except (OSError,ValueError,subprocess.SubprocessError):pass
+        return render(output,colors,False,prefs) if output else ''
+    cache=Cache('battery',[str(Path.home()),options])
+    if token:
+        cache.work(token,lambda previous:({'output':acquire(options)},30),30,retry=10)
+        return ''
+    row=cache.read();elapsed=age(row.get('updated'))
+    if elapsed<=300 and isinstance(row.get('value',{}).get('output'),str):
+        output=row['value']['output']
+    cache.schedule(__file__,argv,timeout=5)
+    return render(output,colors,True,prefs,stale=bool(output) and (row.get('failed',False) or elapsed>35))
 
 
-if __name__=='__main__':print(main(sys.argv[1:]))
+if __name__=='__main__':
+    try:print(main(sys.argv[1:]))
+    except (OSError,ValueError,IndexError,subprocess.SubprocessError):
+        print(render('', ['red','yellow','green','brightblack'],slot=True))

@@ -13,6 +13,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Tmux widget reliability](tmux-widget-reliability.md) | Retained solar/battery/Git readings, quiet Termux location refresh and bounded status workers. |
 | [Dots FIGlet fonts](figlet-fonts.md) | Implemented logo and mixed-case fonts, Termux prefix destinations and verified managed file links. |
 | [Shared preferences and command delivery](config-preferences-completion.md) | Implemented separated preferences, portable appearance import, Bak completion and delivery gates; native-platform limits recorded. |
 | [System clipboard commands](clipboard-commands.md) | Shared cpy/pst platform adapters, checkout-relative scripts and native PowerShell forwarding. |

@@ -739,3 +739,7 @@ Configuration key migration (`config migrate --keys`) is explicit and preview-fi
 Bootstrap prepares reviewed prerequisites and leaves managed configuration unpublished on preparation failure. External package effects remain. Acquisition cannot replace an occupied destination. Windows Developer Mode is a separate explicit offer; there is no silent copying or elevation.
 
 Preference layout migration/import preflights the complete destination set and guards source manifests/preferences alongside target files. Source appearance wins only inside the portable import allowlist; structural and native application files are excluded. Stale inputs refuse saving, failed writes roll back and successful saves retain ordinary file-transaction undo. These operations never publish themes or reload applications.
+
+## Tmux widget refresh
+
+The documented tmux widgets may schedule bounded disposable-cache workers during status rendering. Cache snapshots use private atomic files and nonblocking locks. This is separate from managed installation transactions. The explicitly enabled Termux clock worker may call `termux-geo --json` while a client is attached; the helper owns Android acquisition, address-service limits and its private cache. Widget records do not copy coordinates or provider diagnostics. Ordinary weather cache-only/help/preview paths retain their read-only boundaries. Git workers disable optional locks and prompts and never fetch. Tests use owned roots, mocked providers and private tmux sockets. See [widget behavior](tmux.md#retained-widget-readings).

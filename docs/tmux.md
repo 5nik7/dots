@@ -16,7 +16,7 @@ The current session uses bold `bright_cyan` on `selection_background`, without u
 
 The current session can show the active pane repository's remote host icon, matching `dots.yazi`: `󰊤 dots` or `1 󰊤 dots` for GitHub, with GitLab, Bitbucket and generic Git alternatives. Hidden default names retain the icon alone or after the number. This requires optional `git-it` and a Nerd Font; no remote or unavailable metadata means no icon. Icon discovery shares the bounded asynchronous Gitmux job and does not require Gitmux itself to succeed.
 
-The Termux upper row has battery and a daylight-colored clock; Wi-Fi/data and all other device-status indicators are disabled. The clock uses theme yellow during daylight, blue at night and the default foreground when wttr astronomy is unavailable. Background weather refresh uses a configured default or cached city, never Android location acquisition. No weather widget is enabled. See [weather and clock activation](wttr.md#termux-upper-row); the live server is not reloaded automatically.
+The Termux upper row has battery and a daylight-colored clock; Wi-Fi/data and all other device-status indicators are disabled. The clock uses theme yellow during daylight, blue at night and the default foreground when no retained sun schedule is usable. Its optional attached-client worker may refresh location quietly; ordinary background weather requests still use a configured default or cached city. No weather widget is enabled. See [retained widget readings](#retained-widget-readings) and [clock activation](wttr.md#termux-upper-row); the live server is not reloaded automatically.
 
 ## Keybinding reference
 
@@ -99,3 +99,23 @@ Clock/tabs/battery retain their Termux boundaries. Sessions/windows/Git/indicato
 apply on POSIX tmux. Native Windows can inspect/edit these preferences; doing so
 does not activate WSL or a tmux server. Native desktop Linux/WSL and Windows
 terminal acceptance is separate from the isolated Termux checks.
+
+## Retained widget readings
+
+Clock, battery and Git status read private snapshots immediately and schedule bounded one-shot workers when due. There is no daemon. Refresh failures preserve recent successful data; malformed provider text never reaches tmux. The top row budgets tabs after the clock and battery, including configured padding. Git occupies reserved space after the window list and before mode indicators, with a smaller budget when those indicators are visible.
+
+The Termux clock retains validated sunrise/sunset schedules independently of weather freshness. It prefers today's forecast, then reuses the most recent earlier schedule for up to seven days, recalculating day/night on each render. Missing/expired data uses the neutral foreground. Known location/timezone changes invalidate incompatible schedules. Sunrise and sunset follow the existing local-time assumption; retained earlier dates are approximate.
+
+| Config control | Default and behavior |
+| --- | --- |
+| `apps.tmux.clock.auto_location` | `false` in shared defaults; `true` in the tracked Termux profile. Attached tmux clients may schedule quiet `termux-geo --json` acquisition. |
+| `apps.tmux.clock.location_refresh_seconds` | `21600` (six hours), integer 3600–86400. Successful acquisition resets the interval. |
+| `apps.tmux.clock.sun_times_max_stale_seconds` | `604800` (seven days), integer 86400–604800. Reads never renew the successful acquisition timestamp. |
+
+Config uses the existing profile > parent > shared-default precedence and published preference refresh. A configured weather location bypasses automatic device acquisition. Geo failures retry after 5, 15, then 60 minutes; the helper retains responsibility for longer address-service cooldowns. Workers suppress output and keep no raw coordinates or provider diagnostics in widget records. Ordinary weather cache-only commands, previews, help and completion keep their existing acquisition policy.
+
+Battery polls every 30 seconds with a five-second deadline. Failed refreshes retain the reading with `~` for five minutes, then show the unknown battery slot. The marker has reserved space, including at 100%. Missing Python leaves a visible unknown slot without an unbounded provider call. Existing battery thresholds, glyphs, colors and box padding still apply.
+
+Git polls every five seconds with a three-second deadline. Failed refreshes retain the last result with a leading `~` for 30 seconds, then show ` ?` in a confirmed repository. A confirmed non-repository directory clears it. Snapshots are scoped to directory/worktree identity, HEAD and Gitmux configuration; host icons and Git statistics fail independently. Literal branch names remain escaped. No Git network operation is performed.
+
+Snapshots live under `${XDG_CACHE_HOME:-$HOME/.cache}/dots/tmux-widgets` in private directories/files. Atomic replacement, nonblocking per-key locks and expiring worker reservations prevent partial reads and duplicate work across clients. These disposable caches are separate from managed file journals. Removing a cache causes an initial unknown reading followed by recovery on refresh. Source helper updates affect the next invocation; updated row formats and published preferences require the normal explicit Config refresh/tmux reload.

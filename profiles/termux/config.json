@@ -1,3 +1,10 @@
 {
-  "schema": 1
+  "schema": 1,
+  "apps": {
+    "tmux": {
+      "clock": {
+        "auto_location": true
+      }
+    }
+  }
 }

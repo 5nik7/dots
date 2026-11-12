@@ -45,13 +45,30 @@ class Layout(unittest.TestCase):
         row=tmux('show-option','-gqv','status-format[0]')
         self.assertLess(row.index('#{W:'),row.index('E:status-left'))
         self.assertIn('align=right',row)
-        for width in (40,80,120):
+        self.assertIn('@dots-gitmux-content',row)
+        self.assertNotIn('align=right',tmux('show-option','-gqv','@dots-gitmux-content'))
+        for width in (40,48,80,120):
             tmux('set-option','-g','default-size',str(width)+'x24')
             self.assertNotIn('invalid',tmux('display-message','-p','#{E:status-format[0]}').lower())
         with self.assertRaises(ValueError):validate_layout(dict(rows=1,main_row=1),'termux')
         with self.assertRaises(ValueError):validate_layout(dict(rows=2,main_row=0,termux_row=0),'termux')
 
 class GeneratedStatus(fixtures.TmuxStatus):
+    def setUp(self):
+        super().setUp()
+        # Shared native assertions use an explicit baseline, independent of
+        # the owner's editable box padding, icon and indicator preferences.
+        path=self.repo/'default/config.json';data=json.loads(path.read_text())
+        data['formatting']['apps']['tmux']['battery'].update(before='',after='')
+        for key,label in (('copy','COPY'),('prefix','PREFIX'),('zoom','ZOOM')):
+            data['apps']['tmux']['indicators'][key]['text']=label
+        path.write_text(json.dumps(data))
+        profile=self.repo/'profiles/termux'
+        with (profile/'colors.toml').open('a') as stream:
+            for part in ('icon','text','spacer','surround'):
+                stream.write('\n[apps.tmux.battery.'+part+']\nbg="default"\n')
+        (profile/'icons.toml').write_text('[applications]\ncodex=""\n')
+
     def write_theme(self,*args,**kwargs):
         from theme_styles import tokens,snapshot
         palette={}
@@ -92,7 +109,7 @@ class GeneratedStatus(fixtures.TmuxStatus):
         outer('set-option','-g','default-terminal','tmux-256color')
         attach=shlex.join(['env','-u','TMUX','-u','TMUX_PANE',*base,'attach-session','-t','fixture'])
         outer('new-session','-d','-s','view','-x','80','-y','24',attach)
-        for width in (40,80,120):
+        for width in (40,48,80,120):
             outer('resize-window','-t','view','-x',str(width),'-y','24')
             lines=self.await_screen(outer,'view',lambda rows:rows and 'I ' in rows[0] and 'B 80%' in rows[0])
             self.assertFalse(self.bold_at(lines[0],'I'))
@@ -101,7 +118,7 @@ class GeneratedStatus(fixtures.TmuxStatus):
             self.assertFalse(self.bold_at(lines[0],'80%'))
             # Every battery cell, including both outer spaces and the inner
             # spacer, has the clock's background with no uncolored holes.
-            label=' B 80%  '
+            label=' B 80%   '
             self.assertIn(label,self.plain(lines[0]))
             clock_bg=self.colors_at(lines[0],'I')['bg']
             self.assertEqual(clock_bg,(34,51,68))

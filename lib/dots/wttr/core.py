@@ -255,16 +255,17 @@ class Cache:
             lock_file(handle)
             yield
 
-    def refresh(self, background=False, force=False):
+    def refresh(self, background=False, force=False, resolved=None):
         # Nonblocking lock: competing callers can use retained data or retry.
         with self.locked():
             row = self.read()
             now = time.time()
-            if not force and (self.usable(row) or now < row.get('retry_at', 0)):
+            same_location = resolved is None or row.get('location') == resolved[0]
+            if not force and (same_location and self.usable(row) or now < row.get('retry_at', 0)):
                 return row
             try:
                 started = time.monotonic()
-                location, source, attribution = resolve_location(self.explicit, self.cfg, background, self.cfg['timeout'])
+                location, source, attribution = resolved or resolve_location(self.explicit, self.cfg, background, self.cfg['timeout'])
                 remaining = self.cfg['timeout'] - (time.monotonic() - started)
                 if remaining <= 0:
                     raise Unavailable('location timed out')

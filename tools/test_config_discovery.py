@@ -193,8 +193,9 @@ class Discovery(unittest.TestCase):
                 self.assertLessEqual(cells(text),width)
         tool=self.home/'repos/battery/battery';tool.parent.mkdir(parents=True);tool.write_text('fixture')
         prefs={'options':{'battery':{'critical':10,'low':25,'charging_style':True}},'icons':{'battery.charging':'C'}}
-        with patch.object(battery,'preferences',return_value=prefs),patch.object(battery.subprocess,'run',return_value=subprocess.CompletedProcess([],0,'\x1b[32mX 80%\x1b[0m CHARGING','')) as run:
-            text=battery.main(['--slot','red','yellow','green','brightblack'])
+        with patch.object(battery,'command',return_value='\x1b[32mX 80%\x1b[0m CHARGING') as run:
+            output=battery.acquire(prefs['options']['battery'])
+            text=battery.render(output,('red','yellow','green','brightblack'),True,prefs)
             self.assertIn('C 80%',text)
             self.assertEqual(run.call_args.args[0][-4:],['--critical','10','--low','25'])
         self.assertIn('?%',battery.render('',('red','yellow','green','brightblack'),True,{}))

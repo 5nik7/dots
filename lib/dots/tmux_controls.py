@@ -176,7 +176,10 @@ def compile_options(root,selected,source,styles=None):
         options['status-left']='#(python3 -B "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/session-status.py" --socket #{q:socket_path} --current #{q:session_id} --width #{q:@dots-session-width} 2>/dev/null || printf "\\n")'
     gitbase=style(styles,'git')
     content=surround('git','#{=/#{e|-:#{E:@dots-gitmux-width},1}/…:#{E:@dots-gitmux}}',base=gitbase or '#[default]')
-    options['@dots-gitmux-segment']='#[nolist align=left norange default]'+choice('#{!=:#{E:@dots-gitmux},}','#{?#{E:@dots-gitmux-preceded},#{E:@dots-status-separator},}'+gitbase+'#[push-default]'+content+'#[pop-default]#[default]')
+    options['@dots-gitmux-segment']='#[nolist align=right norange default]'+choice('#{!=:#{E:@dots-gitmux},}','#{?#{E:@dots-gitmux-preceded},#{E:@dots-status-separator},}'+gitbase+'#[push-default]'+content+'#[pop-default]#[default]')
+    # Explicit custom row placement owns alignment; the default reserves right
+    # space so tmux's scrolling window list cannot consume the Git segment.
+    options['@dots-gitmux-content']=options['@dots-gitmux-segment'].replace(' align=right','',1)
     return options
 
 

@@ -37,7 +37,7 @@ def layout(root,selected,styles=None):
         right=upper.split('#[default nobold align=right]',1)[1].removesuffix('#[pop-default]')
         components=dict(session='#{E:status-left}',indicators='#{E:status-right}',
             windows='#{?#{E:@dots-windows-visible},#[list=on]#{W:#[range=window|#{window_index}]#{E:window-status-format}#[norange],#[list=focus range=window|#{window_index}]#{E:window-status-current-format}#[norange list=on]}#[nolist],}',
-            git='#{E:@dots-gitmux-segment}',
+            git='#{E:@dots-gitmux-content}',
             clock='#{E:@dots-config-clock}' if termux else '',
             tabs='#{E:@dots-termux-numbers}' if termux else '',battery=right if termux else '')
         def row(which,bg):

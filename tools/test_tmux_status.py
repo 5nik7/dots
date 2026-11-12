@@ -49,7 +49,7 @@ class TmuxStatus(unittest.TestCase):
         self.battery.parent.mkdir(parents=True)
         self.adapter = self.tmux_config / 'battery-status.sh'
         shutil.copy2(REPO / 'config/tmux/battery-status.sh', self.adapter)
-        for name in ('status_styles.py','battery-status.py','session-status.py'):
+        for name in ('status_styles.py','widget_cache.py','battery-status.py','session-status.py'):
             shutil.copy2(REPO/'config/tmux'/name,self.tmux_config/name)
         shutil.copy2(REPO / 'config/tmux/gitmux-status.py', self.tmux_config / 'gitmux-status.py')
         shutil.copy2(REPO / 'config/tmux/codex-status.py', self.tmux_config / 'codex-status.py')
@@ -110,7 +110,16 @@ print((home / (module + '.json')).read_text())
             self.android_snapshot(module)
 
         weather_source = source.with_name('weather-status.py')
-        shutil.copyfile(REPO / 'config/tmux/weather-status.py', weather_source)
+        # Layout tests inject daylight tokens. Real acquisition/cache behavior
+        # is exercised by test_tmux_widgets.py with owned weather/geo fixtures.
+        weather_source.write_text('import sys\nfrom pathlib import Path\n'
+            'sys.path.insert(0,str(Path(__file__).resolve().parent))\n'
+            'from widget_cache import command\n'
+            'try:\n'
+            ' value=command([sys.executable,"-B",str(Path(__file__).resolve().parents[2]/"lib/dots/wttr/cli.py"),"--daylight"],1,16)\n'
+            ' print(value.strip() if value in ("day\\n","night\\n","unknown\\n") else "unknown")\n'
+            'except (OSError,ValueError):print("unknown")\n')
+        shutil.copyfile(REPO/'config/tmux/widget_cache.py',weather_source.with_name('widget_cache.py'))
         (self.tmux_config / weather_source.name).symlink_to(weather_source)
         self.weather_script = self.repo / 'lib/dots/wttr/cli.py'
         self.weather_script.parent.mkdir(parents=True, exist_ok=True)
@@ -139,6 +148,8 @@ print((home / (module + '.json')).read_text())
   $3 == --color && $4 == always && $5 == --color-by && $6 == percentage && $7 == --no-newline ]] || exit 91
 printf 'call\\n' >> "$HOME/calls"
 [[ ${BATTERY_FAIL:-0} == 0 ]] || { printf 'backend error\\n' >&2; exit 3; }
+[[ ! -e $HOME/battery-fail ]] || exit 3
+if [[ -e $HOME/battery-reading ]]; then cat "$HOME/battery-reading"; exit 0; fi
 if [[ -v BATTERY_OUTPUT ]]; then printf '%s' "$BATTERY_OUTPUT"; else printf '\\033[32m󰁹 80%%\\033[0m'; fi
 ''')
 
@@ -868,12 +879,12 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 index += 1
         return colors
 
-    def await_screen(self, outer, target, predicate):
-        deadline = time.monotonic() + 8
+    def await_screen(self, outer, target, predicate, styled=False, timeout=8):
+        deadline = time.monotonic() + timeout
         screen = ''
         while time.monotonic() < deadline:
             screen = outer('capture-pane', '-p', '-e', '-t', target)
-            if predicate(self.plain(screen).split('\n')):
+            if predicate((screen if styled else self.plain(screen)).split('\n')):
                 return screen.splitlines()
             time.sleep(.1)
         self.fail('status did not render: ' + repr(screen))
@@ -941,7 +952,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                          '    return {(901,100,"pts/9999"):dict(state="waiting",attention=True)}, 1\n')
         for width in (40, 80, 120):
             outer('resize-window', '-t', 'view', '-x', str(width), '-y', '24')
-            lines = self.await_screen(outer, 'view', lambda rows: rows and '[2 ]' in rows[0] and '[ 1]' in rows[0])
+            lines = self.await_screen(outer, 'view', lambda rows: rows and '[2 ]' in rows[0] and '[ 1]' in rows[0] and '80%' in rows[0])
             for label in ('[2 ]', '[ 1]'):
                 for offset in range(len(label)):
                     self.assertEqual(self.colors_at(lines[0], label, offset), {'fg': (255,85,85), 'bg': (1,2,3)})
@@ -973,7 +984,7 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         while len(inner('list-clients', '-F', '#{client_tty}').splitlines()) != 2:
             self.assertLess(time.monotonic(), deadline, 'both fixture clients must finish attaching')
             time.sleep(.05)
-        for width in [40, 80, 120]:
+        for width in [40, 48, 80, 120]:
             for index, name in enumerate(['one', 'two'], 2):
                 badge_name = 'fixture'[:min(width // 4, 30) - 2]
                 outer('resize-window', '-t', name, '-x', str(width), '-y', '24')
@@ -1118,23 +1129,34 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
                 break
             time.sleep(.1)
         self.assertIn('48;2;51;68;85', colored)
-        for width in [40, 80, 120]:
+        for width in [40, 48, 80, 120]:
             outer('resize-window', '-t', 'one', '-x', str(width), '-y', '24')
             lines = self.await_screen(outer, 'one', lambda rows:
                 len(rows) > 1 and ' fixture' in rows[1] and '󰁹 80%' in rows[0]
-                and rows[0].index('󰁹') == width - 7)
+                and rows[0].index('󰁹') == width - 8)
             top = self.plain(lines[0])
             self.assertTrue(all(icon not in top for icon in ANDROID_ICONS.values()))
         battery_position = top.index('󰁹')
+        def expire_battery(age=31):
+            paths=list(Path(self.env['XDG_CACHE_HOME']).glob('dots/tmux-widgets/battery-*.json'))
+            self.assertTrue(paths)
+            for path in paths:
+                row=json.loads(path.read_text());row.update(next_at=0,lease=0,updated=time.time()-age)
+                path.write_text(json.dumps(row))
         for percent in (1, 100, 80):
-            inner('set-environment', '-g', 'BATTERY_OUTPUT', f'\x1b[32m󰁹 {percent}%\x1b[0m')
+            (self.home/'battery-reading').write_text(f'\x1b[32m󰁹 {percent}%\x1b[0m')
+            expire_battery()
             lines = self.await_screen(outer, 'one', lambda rows:
                 bool(rows) and f'󰁹 {percent}%' in rows[0])
             self.assertEqual(self.plain(lines[0]).index('󰁹'), battery_position)
-        inner('set-environment', '-g', 'BATTERY_FAIL', '1')
+        (self.home/'battery-fail').touch()
+        expire_battery()
+        self.await_screen(outer,'one',lambda rows: bool(rows) and '80% ~' in rows[0])
+        expire_battery(301)
         lines = self.await_screen(outer, 'one', lambda rows: bool(rows) and '󰂑 ?%' in rows[0])
         self.assertEqual(self.plain(lines[0]).index('󰂑'), battery_position)
-        inner('set-environment', '-gu', 'BATTERY_FAIL')
+        (self.home/'battery-fail').unlink()
+        expire_battery(301)
         # Reloading twice must preserve the cluster and both layouts.
         for _ in range(2):
             inner('source-file', str(config))
@@ -1150,12 +1172,12 @@ printf '{"percentage":%s,"status":"%s","plugged":"UNPLUGGED","health":"GOOD","pr
         self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' fixture ' in rows[1] and '80%' in rows[0])
         self.snapshot(terminals)
         self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' fixture ' in rows[1] and ' 1 │ 2 ' in rows[0])
-        # Simulate an unavailable Python command: the status job still clears its cache.
+        # Missing Python leaves an unknown slot without another Android call.
         python_stub = self.tools / 'python3'
         python_stub.write_text('#!' + BASH + '\nexit 127\n')
         python_stub.chmod(0o700)
         self.await_screen(outer, 'one', lambda rows: len(rows) > 1 and ' fixture ' in rows[1] and ' 1 │ 2 ' not in rows[0]
-                          and all(ANDROID_ICONS[m] not in rows[0] for m in ('wifi', 'cell')) and '80%' in rows[0])
+                          and all(ANDROID_ICONS[m] not in rows[0] for m in ('wifi', 'cell')) and '?%' in rows[0])
         # Outside Termux the only visible row is the tmux session/window row.
         inner('set-environment', '-gu', 'TERMUX_VERSION')
         inner('source-file', str(config))

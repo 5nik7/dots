@@ -557,3 +557,9 @@ explicit catalog/empty-owned-container cleanup; a modified payload is refused.
 Adjacent and imported parents never acquire container ownership from their name.
 
 Appearance imports use declared source-profile layers, omit shared defaults unless explicitly selected as the source, and merge portable appearance with source values winning. Native files, shell settings and structural/machine configuration are excluded. Layout migration and import share retained file Store guards, journals and undo; reads never migrate. See [configuration storage and import](configuration.md#preference-files-and-appearance-import).
+
+## Tmux widget snapshots
+
+The three clock controls and retention behavior are defined in [tmux widget configuration](tmux.md#retained-widget-readings). They use the existing typed profile configuration and published `preferences.json` projection. Shared automatic location defaults false; the Termux profile enables it. Config discovery, completion and both shell frontends use the same definitions.
+
+Private disposable widget records use schema 1 with finite acquisition/write/next-attempt/lease timestamps, a worker token and a validated consumer value. Battery values contain only the bounded battery record; Git values contain independently timestamped validated output/icon fields; solar values contain dated sun times, location fingerprints, timezone identity and acquisition/retry timing. No raw coordinates or provider error text are stored. Cache-only reads never initialize storage. Future write timestamps invalidate the record; expired leases permit recovery. Widget refresh does not change public wttr JSON/scalar schemas or renew old data timestamps.

@@ -20,7 +20,7 @@ import time
 import unittest
 
 REPO = Path(__file__).resolve().parents[1]
-PARENT = REPO.parent
+PARENT = REPO.parents[1]  # The bundled profile lives at dots/profiles/termux.
 FIX = {"latitude": 40.7484, "longitude": -73.9857, "accuracy": 12.5,
        "elapsedMs": 500, "provider": "network"}
 ADDRESS = {"lat": "99", "lon": "99", "display_name": "Example address",
@@ -57,13 +57,10 @@ class GeoTests(unittest.TestCase):
         (self.repo / 'bin').mkdir(parents=True)
         shutil.copy2(REPO / 'bin/termux-geo', self.repo / 'bin/termux-geo')
         shutil.copytree(REPO / 'lib/termux_geo', self.repo / 'lib/termux_geo')
-        # Copy public renderer dependencies only, never personal settings.
+        # Include the shared renderer's Config dependencies, never personal settings.
         self.dots = self.repo.parent
-        for name in ('ui.bash', 'progress.bash', 'resources.bash', 'resources.tsv',
-                     'shell/config.bash', 'shell/settings.tsv'):
-            dest = self.dots / 'lib/dots' / name
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(PARENT / 'lib/dots' / name, dest)
+        shutil.copytree(PARENT / 'lib/dots', self.dots / 'lib/dots',
+                        ignore=shutil.ignore_patterns('__pycache__'))
         self.bin = self.root / 'mock-bin'
         self.bin.mkdir()
         for name in ('termux-location', 'curl'):

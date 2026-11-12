@@ -361,3 +361,7 @@ Tmux component preferences are editable/inspectable through both shared frontend
 Fresh bootstrap has POSIX and native PowerShell entry points. Windows setup discovers installed 5.1/7 all-hosts profiles, uses shared Python and offers Developer Mode explicitly. Bash/Zsh/Fish/PowerShell/Nushell/Xonsh expose `.ln`; native Windows uses script adapters without Bash. Native Windows bootstrap, official installers, Developer Mode, Linux and WSL acceptance remain separate named checks when unavailable locally.
 
 Separated preferences and portable appearance import use shared Python controllers on POSIX and native Windows. Bak completion is registered for Bash, Zsh, Fish, PowerShell, Nushell and Xonsh; provider/fixture checks are distinct from native Windows PowerShell 5.1/7 acceptance. No WSL/native-Windows paths or state are merged during imports.
+
+### Retained tmux widgets
+
+Battery and sunrise/sunset clock consumers remain Termux-only. The tracked Termux profile enables the optional six-hour location worker; it uses the existing Android helper only while a client is attached. Git snapshots and reserved status space apply to tmux on Termux/Linux/WSL. Native Windows has no tmux or Android acquisition destination in this change; PowerShell retains the shared Config and weather interfaces. See [widget controls and activation](tmux.md#retained-widget-readings). Private Termux tests do not establish native Linux/WSL terminal or Windows PowerShell acceptance.

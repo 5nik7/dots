@@ -277,3 +277,5 @@ Layout migration preserves effective values, strips only preference groups from
 manifests, and supports repeat no-op and ordinary `dots files undo TRANSACTION`.
 The repository's Termux appearance has been promoted to shared defaults; redundant
 Termux declarations were removed so future shared edits take effect there.
+
+The [tmux clock controls](tmux.md#retained-widget-readings) include automatic location acquisition, its refresh interval and sun-time retention. They use the same Config editor, completion, precedence and published preference refresh as the other `apps.tmux.clock` settings.

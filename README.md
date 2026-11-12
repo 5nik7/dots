@@ -10,6 +10,8 @@ Manage dotfiles, shells, themes and your development environment through one com
 
 **[Read the Dots wiki](https://github.com/5nik7/dots/wiki)** · [Installation](docs/installation.md) · [Commands](docs/commands.md) · [Configuration](docs/configuration.md)
 
+Tmux clock, battery and Git widgets retain recent valid readings through temporary refresh failures. The Termux clock supports quiet six-hour location updates and seven-day sun-time retention; battery/Git show `~` while using an older reading. See [widget settings and activation](docs/tmux.md#retained-widget-readings).
+
 ## Platforms
 
 Dots has Bash entry points for Termux, Linux and WSL, and a native PowerShell entry point for Windows. Shared Python controllers handle the core workflows. Termux is the primary local development target; application capabilities and native acceptance vary by platform. See [platform support](docs/platforms.md) and [runtime requirements](docs/installation.md).

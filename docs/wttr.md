@@ -270,14 +270,15 @@ The first command may acquire coordinates and reverse-geocode a city through ter
 
 The shipped tmux configuration no longer invokes Wi-Fi or cellular status helpers. Notification, volume and location status modules remain disabled too. Battery remains at the right; the existing clock stays at the left with unchanged time format and background. No weather widget is enabled.
 
-[`weather-status.py`](../config/tmux/weather-status.py) reads `wttr --daylight` with a one-second/16-byte limit and suppressed stderr. It accepts only `day`, `night`, `unknown`; tmux maps those to theme yellow, blue and foreground. Missing Python/helper or failed reads also use foreground. The existing network adapter remains available for independent consumers and unreloaded configurations; its Androidots cache/gates are unchanged.
+The tmux clock uses a separate retained solar snapshot, recalculating day/night from cached sunrise/sunset independently of the weather freshness limit. It can retain the last valid schedule for seven days and, when enabled for an attached Termux client, quietly refresh location every six hours through `termux-geo --json`. Ordinary `wttr --daylight` and other CLI output contracts remain unchanged. See [retained widget readings](tmux.md#retained-widget-readings) for settings, expiration, timezone limitations and activation. The existing network adapter remains available with its own cache/gates.
 
-The clock compares **today's** j1 astronomy against host-local time: sunrise is inclusive, sunset exclusive, and before sunrise is night. Missing, invalid, expired, wrong-date or non-occurring solar events yield unknown. j1 does not supply a reliable timezone identifier; this is not a timezone conversion service. Manual remote forecasts do not drive the clock. The automatic/default location must share the host timezone.
+The clock prefers today's j1 astronomy and can reuse the last valid earlier schedule within the configured retention limit. It compares that schedule against host-local time: sunrise is inclusive, sunset exclusive, and before sunrise is night. With no usable schedule it yields unknown. j1 does not supply a reliable timezone identifier; this is not a timezone conversion service. Manual remote forecasts do not drive the clock. The automatic/default location must share the host timezone.
 
-After reviewing the source changes, the owner can publish the new theme option and reload the intended server:
+After reviewing the source changes, the owner can preview and refresh the current visual preferences, then reload the intended server. Config refresh preserves the selected palette and refreshes its supported consumers together:
 
 ```sh
-"$HOME/dots/bin/dots" theme refresh
+"$HOME/dots/bin/dots" config refresh --dry-run
+"$HOME/dots/bin/dots" config refresh
 # Run inside the server you intend to update:
 tmux source-file "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf"
 ```

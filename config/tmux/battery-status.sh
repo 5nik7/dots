@@ -21,6 +21,10 @@ elif (( $# )); then
   empty
 fi
 
+# A missing Python renderer must still leave a visible bounded status slot.
+# Do not launch an unbounded Android request from this emergency fallback.
+(( slot )) && empty
+
 [[ -n ${HOME:-} && -r $HOME/repos/battery/battery ]] || empty
 output=$(bash "$HOME/repos/battery/battery" \
   --format '{color}{icon} {percent}{reset}' \

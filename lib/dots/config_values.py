@@ -132,6 +132,11 @@ def validate_value(defaults,path,value):
             if not isinstance(value,list) or len(value)>100 or any(not isinstance(v,str) or len(v)>512 or '\0' in v for v in value):raise ValueError('clipboard exclusions require up to 100 bounded glob patterns')
             return
     if path[:2]==('apps','tmux'):
+        bounds={'location_refresh_seconds':(3600,86400),'sun_times_max_stale_seconds':(86400,604800)}
+        if path[2:3]==('clock',) and path[-1] in bounds:
+            low,high=bounds[path[-1]]
+            if type(value) is not int or not low<=value<=high:raise ValueError('clock '+path[-1]+' requires integer '+str(low)+'..'+str(high))
+            return
         choices={('clock','icon_mode'):('none','fixed','daylight'),('session','name_source'):('workspace','session','repository')}
         if path[2:] in choices:
             if value not in choices[path[2:]]:raise ValueError('invalid tmux choice: '+name(path))
@@ -253,6 +258,9 @@ def constraints(defaults, key):
     key=internal(key)
     choices={'apps.tmux.clock.icon_mode':['none','fixed','daylight'],'apps.tmux.session.name_source':['workspace','session','repository']}
     if key in choices:return dict(type='string',choices=choices[key])
+    if key in ('apps.tmux.clock.location_refresh_seconds','apps.tmux.clock.sun_times_max_stale_seconds'):
+        bounds=(3600,86400) if key.endswith('location_refresh_seconds') else (86400,604800)
+        return dict(type='integer',syntax='Seconds '+str(bounds[0])+'..'+str(bounds[1]))
     if key in ('apps.tmux.battery.critical','apps.tmux.battery.low'):return dict(type='integer',syntax='Integer 0..100; null retains provider threshold')
     """Describe validated typed controls for explain, editing and completion."""
     path = parts(key)
