@@ -5,6 +5,7 @@ Status: Complete; fonts, managed Termux links and local acceptance verified.
 ## Delivery
 
 - Keep the approved five-row `dots.flf` capitals and six-row `dots-mixed.flf` in `config/figlet`. Both include Unicode extras; the mixed font has distinct lowercase.
+- Keep these two source assets eligible for Git publication with exact exceptions to the shared `*.flf` license-file ignore rule. Validate wiki links against the selected Git tree as well as the working tree.
 - Register separate file links under the Termux profile, owned by the root Dots repository. Discover the installed directory with `figlet -I2`; do not replace the package-owned font directory.
 - Add the Termux-only `${PREFIX}` destination token needed to describe these links portably. Missing PREFIX is unmapped; relative, root-only, traversal and control-containing values are refused. Other platforms do not resolve this token.
 - Use the existing mapping CLI and Store for catalog/profile/link/receipt changes. Preserve occupied targets, unrelated profile edits, the original `logo.txt` and existing fonts.
@@ -25,6 +26,8 @@ Primary owner: `dots-files-maintenance`, with profile and documentation maintena
 ## Completed verification
 
 File-platform (5), catalog (10), registration (17), profile-backend (14) and mapping (29) cases passed in owned roots. The new registration test checks semantic JSON restoration because existing undo canonicalizes JSON formatting. Command metadata validation, generated-manual freshness, relative Markdown links and `git diff --check` passed. The local Wiki was rebuilt and reports healthy.
+
+Publication follow-up: the shared `*.flf` license-file ignore rule excluded both font sources, so a healthy working-tree wiki check did not establish that its font links existed in the published Git tree. Exact exceptions now make both assets eligible for `--all` publication. A disposable Git checkout reproduced the committed-tree failure, then validated all 42 generated wiki files against an index containing the unchanged font bytes. Unrelated `.flf` files remain ignored. The combined publish dry run selects both fonts and reports complete; the local wiki build is unchanged and its check is healthy. No commit or push was performed for this repair.
 
 Both installed links resolve to the repository fonts; initial installation preserved the fully validated preview bytes. Rendering by installed name, including `25°C`, matches direct-path rendering. A second live link preview reports both unchanged. Removing the two added entries from the resulting profile/registry documents reproduces their pre-install data, confirming unrelated mappings and fields were preserved. The durable usage reference is [Fonts](../docs/fonts.md#figlet-lettering).
 

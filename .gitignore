@@ -18,6 +18,9 @@ rad.json
 *.g.xlf
 #License-file
 *.flf
+# Repository-authored FIGlet fonts share the license-file extension.
+!/config/figlet/dots.flf
+!/config/figlet/dots-mixed.flf
 #pslab
 lab/
 #clinky
