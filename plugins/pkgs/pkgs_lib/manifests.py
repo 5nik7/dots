@@ -152,7 +152,7 @@ def export(args, cfg):
     document = dict(schema=1, groups=[], notices=[])
     failed = False
     progress = phase if not (args.dry_run or args.json or cfg.get('output') == 'raw' or
-                            os.environ.get('DOTS_PROGRESS', 'auto') != 'auto') else lambda label: nullcontext()
+                            os.environ.get('DOTS_PROGRESS', 'auto') in ('none','never')) else lambda label: nullcontext()
     with budget(45), progress('Detecting export managers'):
         selection = [(args.manager, getattr(args, 'scope', None) if args.manager == 'winget' else 'global' if args.global_scope else None)] if args.manager not in (None,'auto') else scopes.bulk(dict(cfg, upgrade={'managers':'auto'}))
     for index, (manager, scope) in enumerate(selection, 1):

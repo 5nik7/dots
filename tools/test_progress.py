@@ -104,13 +104,27 @@ class ProgressTests(unittest.TestCase):
             self.assertIn(b'Scanning', data)
             self.assertIn(b'1/3', data)
             self.assertIn(b'Copying', data)
-            self.assertIn(b'\x1b[96m', data)
+            self.assertRegex(data, rb'\x1b\[(?:96|1;36)m')
             self.assertTrue(data.endswith(b'done\r\n'), data)
 
     def test_fast_commands_are_silent(self):
         for command in [self.bash('dots::progress_run Fast true; echo done'),
                         self.python("with progress.Progress('Fast'): pass\nprint('done')")]:
             self.assertEqual(self.terminal(command), (0, b'done\r\n'))
+
+    def test_explicit_modes_known_and_unknown_totals(self):
+        for mode in ('none','spinner','bar','both'):
+            for counted in (False,True):
+                bash = 'dots::progress_start Working' + (' 1 3' if counted else '') + '; sleep .65; dots::progress_stop; echo done'
+                python = "with progress.Progress('Working') as work:\n" + (' work.update("Working",1,3)\n' if counted else '') + " time.sleep(.65)\nprint('done')"
+                for command in (self.bash(bash),self.python(python)):
+                    code,data=self.terminal(command,dict(self.env,DOTS_PROGRESS=mode,DOTS_COLOR='never'))
+                    self.assertEqual(code,0,data)
+                    self.assertTrue(data.endswith(b'done\r\n'),data)
+                    self.assertEqual(b'Working' in data,mode!='none',data)
+                    self.assertEqual(b'1/3' in data,counted and mode!='none',data)
+                    self.assertEqual(b'[' in data,mode=='bar' or mode=='both' and counted,data)
+                    self.assertNotIn(b'%',data)
 
     def test_disabled_modes_and_redirection(self):
         commands = [self.bash('dots::progress_run Hidden sleep 0.65; echo done'),
@@ -135,7 +149,7 @@ class ProgressTests(unittest.TestCase):
                 self.assertEqual(code, 0, data)
                 self.assertNotIn(b'\x1b', data)
                 self.assertTrue(all(len(line) < width for line in data.split(b'\r')), data)
-            self.assertIn(b'\x1b[96m', self.terminal(command, dict(self.env, NO_COLOR='1'))[1])
+            self.assertRegex(self.terminal(command, dict(self.env, NO_COLOR='1'))[1], rb'\x1b\[(?:96|1;36)m')
         for command in [self.bash("dots::progress_run $'Bad\\e[31m\\nName' sleep .65"),
                         self.python("with progress.Progress('Bad\\x1b[31m\\nName'): time.sleep(.65)")]:
             _, data = self.terminal(command, dict(self.env, DOTS_COLOR='never'))
@@ -188,7 +202,7 @@ class ProgressTests(unittest.TestCase):
         body="with progress.Progress('') as p:\n p.update_spans([('package','1;33'),(' label',None)])\n time.sleep(.65)"
         code,data=self.terminal(self.python(body))
         self.assertEqual(code,0,data)
-        self.assertIn(b'\x1b[1;33mpackage\x1b[0m\x1b[94m label',data)
+        self.assertRegex(data, rb'\x1b\[1;33mpackage\x1b\[0m\x1b\[(?:94|34)m label')
 
     def test_unicode_markers_and_optional_width_tool(self):
         commands = [self.bash('dots::progress_start Copying 1 3; sleep .65; dots::progress_stop'),

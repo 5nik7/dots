@@ -132,6 +132,9 @@ class Compiler:
         controls = Controls(self.root, profile)
         setting_rows += ['\t'.join(row) for row in formatting_rows(self.root,profile,controls=controls)]
         setting_rows += ['\t'.join(row) for row in help_rows(self.root,profile,styles=styles,controls=controls)]
+        from cli_preferences import rows as cli_rows
+        setting_rows += ['\t'.join(row) for row in cli_rows(controls)]
+        self.inputs.add(LIB/'cli_preferences.py')
         self.inputs.update((LIB/'config_values.py',LIB/'row_layout.py',LIB/'help_presentation.py'))
         defaults=self.root/'default/config.json'
         if defaults.is_file(): self.inputs.add(defaults)

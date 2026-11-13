@@ -19,6 +19,36 @@ class Values(fixtures.ProfileConfig):
         self.environ=patch.dict(os.environ,self.env,clear=True);self.environ.start();self.addCleanup(self.environ.stop)
         current.cache_clear();self.addCleanup(current.cache_clear)
 
+    def test_git_view_and_progress_choices_reset_and_activation(self):
+        from config_menu import Inventory,Draft
+        from config_refresh import effective,after_save
+        for key,default,choices,consumer in (
+                ('apps.cli.progress','both',['none','spinner','bar','both'],'cli'),
+                ('apps.git.view','default',['default','short','verbose'],'git')):
+            self.assertEqual(self.run_config('get',key).stdout,default+'\n')
+            self.run_config('set',key,'invalid','--no-refresh',code=1)
+            row=Inventory(self.root,self.platform).find(key)
+            self.assertEqual(row.constraints['choices'],choices)
+            before=effective(self.root)
+            Draft(Inventory(self.root,self.platform),row).prepare(choices[1]).plan.apply('set')
+            with patch('config_refresh.refresh',side_effect=AssertionError('view preferences must not publish')):
+                self.assertEqual(after_save(self.root,before)['consumers'],[dict(app=consumer,status='next invocation')])
+            self.assertEqual(self.run_config('get',key,native=True).stdout,choices[1]+'\n')
+            current.cache_clear()
+            from cli_preferences import git_view,progress_mode
+            if consumer=='git':
+                self.assertEqual(git_view(human=True),'short')
+                self.assertIsNone(git_view(human=False))
+                self.assertEqual(git_view('verbose',human=True),'verbose')
+                self.assertIsNone(git_view('verbose',human=True,data=True))
+            else:
+                with patch.dict(os.environ,{'DOTS_PROGRESS':'auto'}): self.assertEqual(progress_mode(),'spinner')
+                with patch.dict(os.environ,{'DOTS_PROGRESS':'bar'}): self.assertEqual(progress_mode(),'bar')
+                with patch.dict(os.environ,{'DOTS_PROGRESS':'never'}): self.assertEqual(progress_mode(),'none')
+            self.assertEqual(json.loads(self.run_config('explain',key,'--json').stdout)['activation'],'next invocation')
+            self.run_config('set',key,'null','--json-value','--no-refresh')
+            self.assertEqual(self.run_config('get',key).stdout,default+'\n')
+
     def test_cleanup_preference_validation_reset_and_consumer(self):
         import io
         from contextlib import redirect_stdout

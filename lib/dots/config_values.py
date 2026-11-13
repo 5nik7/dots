@@ -121,6 +121,12 @@ def style(value):
 def validate_value(defaults,path,value):
     if not recognized(defaults,path):raise ValueError('unknown configuration key: '+name(path))
     if value is None:return
+    if path in (('apps','cli','progress'), ('apps','git','view')):
+        from cli_preferences import PROGRESS_MODES, VIEWS
+        allowed = PROGRESS_MODES if path[-1] == 'progress' else VIEWS
+        if not isinstance(value,str) or value not in allowed:
+            raise ValueError(name(path)+' requires '+', '.join(allowed))
+        return
     if path == ('apps','cleanup','checkpoint_min_age_days'):
         if type(value) is not int or not 0 <= value <= 36500:
             raise ValueError('cleanup checkpoint_min_age_days requires an integer 0..36500')
@@ -264,6 +270,10 @@ def validate_groups(root,data,defaults=None):
 def constraints(defaults, key):
     from config_keys import internal
     key=internal(key)
+    if key in ('apps.cli.progress', 'apps.git.view'):
+        from cli_preferences import PROGRESS_MODES, VIEWS
+        return dict(type='string',choices=list(PROGRESS_MODES if key.endswith('progress') else VIEWS),
+                    syntax='Next invocation; no theme publication or application reload')
     if key == 'apps.cleanup.checkpoint_min_age_days':
         return dict(type='integer', examples=[7,30,90], syntax='Minimum checkpoint age in days, 0..36500; next cleanup invocation')
     choices={'apps.tmux.clock.icon_mode':['none','fixed','daylight'],'apps.tmux.session.name_source':['workspace','session','repository']}

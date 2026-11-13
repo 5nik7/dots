@@ -86,22 +86,14 @@ def remaining(maximum=45):
 @contextlib.contextmanager
 def phase(label):
     start = time.monotonic()
-    done = threading.Event()
-    # Only delayed human stderr output; never touch candidates or JSON stdout.
-    def progress():
-        if not done.wait(0.5):
-            human_message('pkgs: ' + label + '…','progress',stream=sys.stderr)
-    thread = None
-    if not _quiet.get() and sys.stderr.isatty():
-        thread = threading.Thread(target=progress, daemon=True)
-        thread.start()
+    # Reuse the same policy as package operations, including Config and data gates.
+    from .workflows import progress
     diagnostic('start ' + label)
     try:
-        remaining()
-        yield
+        with progress(label, {'_quiet_progress': _quiet.get()}):
+            remaining()
+            yield
     finally:
-        done.set()
-        if thread: thread.join()
         diagnostic(f'{label}: {time.monotonic() - start:.3f}s')
 
 

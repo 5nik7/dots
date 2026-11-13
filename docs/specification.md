@@ -1,5 +1,10 @@
 # Implemented Data Contracts
 
+## Human Git and progress preferences
+
+Typed `apps.git.view` (`default|short|verbose`, default `default`) and `apps.cli.progress` (`none|spinner|bar|both`, default `both`) live in the existing Config store and inherit the immediate profile/parent/shared-default chain. Null/unset removes a profile override. They are next-invocation preferences, separate from Git operation events and theme publication. Compiled shell settings carry validated literal projections and invalidate when their source preferences or reader change. No new Git JSON schema, event suppression, persistent progress state or separate preference store is introduced. [Git output selection](git.md#output-views) defines terminal/redirected behavior.
+
+
 ## Cleanup receipts
 
 Cleanup JSON and metadata-only receipts use `schema: 1`. Scan records contain

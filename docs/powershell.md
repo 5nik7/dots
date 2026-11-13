@@ -1,5 +1,8 @@
 # Native PowerShell
 
+Git human views share `apps.git.view` and `--view default|short|verbose` (`-s`/`--short`, `-v`/`--verbose`) through the native Python controllers, including submodule and Wiki routes. Shared progress reads `apps.cli.progress=none|spinner|bar|both`, defaulting to `both`; `DOTS_PROGRESS=auto` follows Config. Existing Bash and native wrappers need no new app destination or shell dependency. Termux fixtures cover both controllers; actual PowerShell 5.1/7 terminal, prompt and interruption acceptance remains pending. See [Git views](git.md#output-views) and the [implementation evidence](../plans/git-output-and-progress.md).
+
+
 Native help shares the configurable `colors.apps.cli.help.*` roles and `apps.cli.tagline` with Bash, including root synopsis/global options and grouped command discovery. With Python available, the native adapter reads the existing literal settings projection once; without Python, built-in default colors and `Manage your dotfiles and more...` keep bootstrap help usable. No Bash or WSL dependency is introduced. Windows application destinations are unchanged. Actual Windows PowerShell 5.1/7 and terminal acceptance remain pending; shared-controller fixtures establish only local behavior. See [help preferences](configuration.md#help-and-usage-preferences).
 
 ## Clipboard history

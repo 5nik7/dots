@@ -12,6 +12,8 @@ Manage dotfiles, shells, themes and your development environment through one com
 
 Tmux clock, battery and Git widgets retain recent valid readings through temporary refresh failures. The Termux clock supports quiet six-hour location updates and seven-day sun-time retention; battery/Git show `~` while using an older reading. See [widget settings and activation](docs/tmux.md#retained-widget-readings).
 
+Git reports offer a clean default file list, `dots git status --short` for XY rows, and `--verbose` for metadata and phases. Save your preferred view with `dots config set apps.git.view short`. Shared progress defaults to a spinner plus a bar when counts are known; `dots config set apps.cli.progress bar` selects a bar. Available modes are `none`, `spinner`, `bar` and `both`. See [Git views](docs/git.md#output-views) and [progress settings](docs/presentation.md#operation-progress).
+
 ## Platforms
 
 Dots has Bash entry points for Termux, Linux and WSL, and a native PowerShell entry point for Windows. Shared Python controllers handle the core workflows. Termux is the primary local development target; application capabilities and native acceptance vary by platform. See [platform support](docs/platforms.md) and [runtime requirements](docs/installation.md).

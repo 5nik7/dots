@@ -358,9 +358,12 @@ spinner() {
   local _common_pid=$1 _common_style=${2:-1} REPLY _common_chars _common_index=0 _common_drawn=0
   local _common_width=${COLUMNS:-80} _common_line
   (( _common_pid > 0 )) || return 2
-  [[ ${DOTS_PROGRESS:-auto} == auto && -t 1 && -t 2 && ${TERM:-dumb} != dumb ]] || return 0
+  [[ -t 1 && -t 2 && ${TERM:-dumb} != dumb ]] || return 0
   command -v sleep >/dev/null 2>&1 || return 0
   setup_colors 2
+  local _common_progress_mode=${DOTS_PROGRESS:-auto} _common_position=0 _common_frame=0 _common_left _common_right
+  [[ $_common_progress_mode != auto ]] || _common_progress_mode=${_DOTS_CLI_PROGRESS:-both}
+  case $_common_progress_mode in spinner|bar|both) ;; *) return 0 ;; esac
   _dots_common_text "${3:-Working...}"
   case $_common_style in
     1) _common_chars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' ;;
@@ -398,7 +401,13 @@ spinner() {
   trap '_common_signal_status=143' TERM
   command sleep 0.5 || :
   while (( ! _common_signal_status )) && kill -0 "$_common_pid" 2>/dev/null; do
-    _common_line="${_common_chars:_common_index:1} $REPLY"
+    if [[ $_common_progress_mode == bar ]]; then
+      _common_position=$((_common_frame%14)); ((_common_position<8)) || _common_position=$((14-_common_position))
+      printf -v _common_left '%*s' "$_common_position" ''
+      printf -v _common_right '%*s' "$((7-_common_position))" ''
+      _common_line="[${_common_left// /-}#${_common_right// /-}] $REPLY"
+      ((_common_frame+=1))
+    else _common_line="${_common_chars:_common_index:1} $REPLY"; fi
     _common_line=${_common_line:0:_common_width-1}
     printf '\r%s%s%s' "$DOTS_UI_CYAN" "$_common_line" "$DOTS_UI_RESET" >&2
     _common_drawn=${#_common_line}

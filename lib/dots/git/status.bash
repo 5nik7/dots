@@ -84,6 +84,15 @@ status_main() {
             done
             printf ']}'
         else
+            if [[ $GIT_VIEW ]]; then
+                view_status_header "$dir" "$branch" "$state" "$ahead" "$behind"
+                [[ ! -v STATUS_ERRORS[$dir] ]] || dots::row Reason "${STATUS_ERRORS[$dir]}"
+                [[ $GIT_VIEW != verbose || $state == missing ]] || view_metadata "$dir"
+                for ((index=0;index<count;index++)); do
+                    view_file "$dir" "${codes[index]}" "${paths[index]}" "${oldpaths[index]}"
+                done
+                continue
+            fi
             repo_label "$dir"; display "$REPLY"; branch_label=$REPLY
             status_header "$branch_label" "$branch" "$state" "$columns" "$dir"
             [[ $ahead == null ]] || tracking_row "$ahead" "$behind" "$columns"
@@ -117,6 +126,9 @@ status_main() {
         fi
     done
     if ((JSON)); then printf '],"complete":'; if ((RESULT)); then printf false; else printf true; fi; printf '}\n'
+    elif [[ $GIT_VIEW ]]; then
+        dots::line "${#STATUS_DIRS[@]} repositories / $changed changed or unavailable / $clean clean" '' 2 "${COLUMNS:-80}"
+        dots::line 'Remote state uses local tracking refs; no fetch performed.' '' 2 "${COLUMNS:-80}"
     else
         printf '\n'; dots::info "${#STATUS_DIRS[@]} repositories / $changed changed or unavailable / $clean clean"
         dots::info 'Remote state uses local tracking refs; no fetch performed.'

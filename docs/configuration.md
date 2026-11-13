@@ -1,5 +1,12 @@
 # Configuration: inspect, change and explain
 
+## Git views and shared progress
+
+`apps.git.view` accepts `default` (initial value), `short` and `verbose` for terminal/menu Git reports. `apps.cli.progress` accepts `none`, `spinner`, `bar` and `both` (initial value) for existing shared progress consumers. Both use the ordinary profile/parent/shared-default precedence, Config browser, completion and reset behavior. Changes take effect at the next invocation or popup; they do not publish a theme or reload applications.
+
+CLI Git view flags override the saved view. `DOTS_PROGRESS=auto` follows Config; explicit modes override it, with `never` retained as an alias for `none`. Terminal/data gates still apply. See [Git views](git.md#output-views) and [progress](presentation.md#operation-progress).
+
+
 ## Help and usage preferences
 
 `apps.cli.tagline` sets the root help phrase beneath the Dots artwork. Its default is `Manage your dotfiles and more...`, without a `dots —` prefix. The value is literal, printable single-line text; an empty string hides it, and null/unset inherits. The default tagline style uses the selected theme's accent if present, otherwise the ordinary foreground.

@@ -108,6 +108,8 @@ class Inventory:
             self.rows.append(Row(key,resolved['value'],resolved['source'] or 'Not configured',destination,
                                  'Root usage logo gradient; next invocation, no theme refresh' if key=='apps.cli.logo_gradient' else
                                  'Root help tagline; empty hides the line; next invocation, no theme refresh' if key=='apps.cli.tagline' else
+                                 'Shared terminal progress mode; next invocation, no theme refresh' if key=='apps.cli.progress' else
+                                 'Git terminal/popup view; explicit flags override; next invocation' if key=='apps.git.view' else
                                  'Popup appearance; reopen the popup to apply' if key.startswith('apps.menu.popup.') else
                                  'Fonts display; next invocation or reopened popup, no font activation' if key.startswith('apps.fonts.') else
                                  'Wiki display; next invocation or reopened popup, no theme refresh' if key.startswith(('apps.wiki.','formatting.apps.wiki.')) else
@@ -291,7 +293,7 @@ class Draft:
              ('; automatic refresh disabled' if visual and self.inventory.no_refresh else
               '; '+__import__('codex_toast').ACTIVATION if self.row.kind=='codex' else
               '; next Fonts invocation or popup' if key.startswith('apps.fonts.') else
-              '; next invocation; no theme refresh' if key=='apps.cli.tagline' or key.startswith('colors.apps.cli.help.') else
+              '; next invocation; no theme refresh' if key in ('apps.cli.tagline','apps.cli.progress','apps.git.view') or key.startswith('colors.apps.cli.help.') else
               '; next popup' if key.startswith('apps.menu.popup.') else '; refresh: '+(', '.join(effect['consumers']) or 'no active change') if effect else '')),
             ('Recovery', 'Retained transaction; undo command shown after saving')], ui=ui)
 

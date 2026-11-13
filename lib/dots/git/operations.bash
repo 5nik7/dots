@@ -38,7 +38,7 @@ sync_children() {
             if [[ -d $child ]] && [[ -n $(find "$child" -mindepth 1 -maxdepth 1 -print -quit) ]]; then
                 event "$child" blocked 'uninitialized submodule directory is not empty'; continue
             fi
-            dots::progress_external "Initializing submodule: $path"
+            view_phase "Initializing submodule: $path"
             if ! git --literal-pathspecs -C "$dir" -c submodule.recurse=false submodule update --init --checkout -- "$path" >/dev/null 2>&1; then
                 event "$child" failed 'initialization failed; check URL, credentials, and Git transport policy'; continue
             fi
@@ -85,7 +85,7 @@ sync_node() {
         target=$pinned
         if ! git -C "$dir" cat-file -e "$target^{commit}" 2>/dev/null; then
             select_remote "$dir" || return 1; remote=${REMOTE:-origin}
-            dots::progress_external 'Fetching recorded commit'
+            view_phase 'Fetching recorded commit'
             if ! git -C "$dir" fetch --quiet --no-tags --no-recurse-submodules -- "$remote" "$target" >/dev/null 2>&1; then
                 event "$dir" failed 'recorded commit could not be fetched'; return 1
             fi
@@ -103,17 +103,19 @@ sync_node() {
             event "$dir" blocked 'local and upstream histories diverged'; return 1
         elif ! safe_topology "$dir" "$target"; then
             event "$dir" blocked 'submodule removal, replacement, or occupied new path needs manual review'; return 1
-        elif ! git -C "$dir" -c submodule.recurse=false merge --ff-only --no-edit --no-overwrite-ignore "$target" >/dev/null 2>&1; then
+        elif ! { view_phase "Fast-forwarding repository"; git -C "$dir" -c submodule.recurse=false merge --ff-only --no-edit --no-overwrite-ignore "$target" >/dev/null 2>&1; }; then
             event "$dir" failed 'fast-forward failed; local work was not reset'; return 1
         else event "$dir" updated 'fast-forwarded upstream'; fi
     elif [[ $before == "$target" ]]; then event "$dir" unchanged 'at selected submodule commit'
     else
         if ! remote_contains "$dir" "$before"; then event "$dir" blocked 'refusing to leave a submodule commit without remote reachability evidence'; return 1; fi
         if ! safe_topology "$dir" "$target"; then event "$dir" blocked 'submodule topology change needs manual review'; return 1; fi
+        view_phase "Checking out selected commit"
         if ! git -C "$dir" -c submodule.recurse=false checkout --quiet --detach --no-overwrite-ignore "$target" -- >/dev/null 2>&1; then
             event "$dir" failed 'submodule checkout failed; local work was not reset'; return 1
         else event "$dir" updated 'checked out selected commit; parent pointer is not staged'; fi
     fi
+    view_changes "$dir" "$before"
     sync_children "$dir"
 }
 
@@ -220,12 +222,16 @@ publish_preview() {
         return 0
     fi
     records_cmd git -C "$dir" status --porcelain=v1 -z --untracked-files=all || return 1
-    local skip=0
-    for row in "${RECORDS[@]}"; do
-        if ((skip)); then skip=0; continue; fi
-        [[ ${row:0:2} != *R* && ${row:0:2} != *C* ]] || skip=1
-        if ((ALL)) || [[ ${row:0:1} != ' ' && ${row:0:1} != '?' ]]; then
-            event "$dir" selected "${row:0:2} ${row:3}" "${row:3}" "${row:0:2}"
+    local i xy path old
+    local -a selected_rows=("${RECORDS[@]}")
+    for ((i=0;i<${#selected_rows[@]};i++)); do
+        row=${selected_rows[i]}; xy=${row:0:2}; path=${row:3}; old=''
+        if [[ $xy == *R* || $xy == *C* ]]; then ((i+=1)); old=${selected_rows[i]}; fi
+        # Associative array declared by views.bash.
+        # shellcheck disable=SC2004
+        VIEW_RENAMES[$dir/$path]=$old
+        if ((ALL)) || [[ ${xy:0:1} != ' ' && ${xy:0:1} != '?' ]]; then
+            event "$dir" selected "$xy $path" "$path" "$xy"
         fi
     done
     return 0
@@ -265,12 +271,12 @@ publish_node() {
         stage_own_files "$dir" || { event "$dir" failed 'staging failed; staged changes retained (inspect git status)'; return 1; }
     fi
     if ! git -C "$dir" diff --cached --quiet --ignore-submodules=none --; then
-        dots::progress_external 'Committing selected changes'
+        view_phase 'Committing selected changes'
         if ! git -C "$dir" commit -m "$MESSAGE" >/dev/null 2>&1; then
             event "$dir" failed 'commit failed; staged changes retained (check identity and hooks)'; return 1
         fi
     fi
-    dots::progress_external 'Pushing selected changes'
+    view_phase 'Pushing selected changes'
     if ! git -C "$dir" -c push.followTags=false push --porcelain --recurse-submodules=check -- "$destination" "HEAD:$ref" >/dev/null 2>&1; then
         event "$dir" failed 'push failed; local commit retained and parent publication blocked'; return 1
     fi

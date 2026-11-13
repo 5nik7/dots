@@ -13,6 +13,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 
 | Plan | Current role |
 | --- | --- |
+| [Git output and progress](git-output-and-progress.md) | Default/short/verbose Git reports and configurable shared activity displays; implementation and acceptance evidence. |
 | [Cleanup](cleanup.md) | Termux cleanup groups, approvals, confirmed totals, receipts and platform extension workflow. |
 | [Tmux widget reliability](tmux-widget-reliability.md) | Retained solar/battery/Git readings, quiet Termux location refresh and bounded status workers. |
 | [Dots FIGlet fonts](figlet-fonts.md) | Implemented logo and mixed-case fonts, Termux prefix destinations and verified managed file links. |

@@ -173,18 +173,29 @@ The private capture context selects a human layout independently of color/icons;
 
 ## Operation progress
 
-**Implemented, 2026-09-29.** Slow human views in the Git, theme, file and Anodize command families use a shared transient display on stderr. Animation starts after 500 ms; fast work remains quiet. Both stdout and stderr must be terminals, and `TERM` must not be `dumb`. `DOTS_PROGRESS=auto|never` controls progress independently of colors and icons; unset means `auto`, and an unrecognized value disables it. There is no progress CLI flag or required optional tool.
+Slow human views use a shared transient display on stderr. Animation starts after 500 ms; fast work remains quiet. Both stdout and stderr must be terminals, and `TERM` must not be `dumb`. `apps.cli.progress` controls existing consumers, independently of colors and icons, and defaults to `both`.
 
-Known operation counts use a bar with `completed/total` for the named phase. Unknown work uses a spinner. Counts describe processed items, not elapsed time or successful publication. Cyan marks activity and blue marks the phase; permanent result views remain authoritative for success, unchanged work, failure and recovery. No success is inferred from a full preparation bar. Finalization and integrity checks use a spinner.
+| Mode | Known total | Unknown total |
+| --- | --- | --- |
+| `none` | No progress | No progress |
+| `spinner` | Spinner with `completed/total` | Spinner |
+| `bar` | Bar with `completed/total` | Indeterminate moving bar, no percentage |
+| `both` | Spinner beside bar with `completed/total` | Spinner |
+
+`DOTS_PROGRESS=auto` (also the unset behavior) follows Config. Explicit `none|spinner|bar|both` overrides it; `never` remains an alias for `none`. Invalid values disable the optional UI. There is no new global progress CLI flag or required optional tool. Existing command-specific switches remain compatible.
+
+Counts describe processed items, not elapsed time or successful publication. Existing semantic heading/label styles mark activity and phase; callers with explicit progress styles retain them. Permanent results remain authoritative for success, unchanged work, failure and recovery. No success is inferred from a full preparation bar, and Git does not parse transfer percentages.
 
 | Family | Progress coverage |
 | --- | --- |
 | Git | Repository discovery, status inspection, publication input collection and local sync/publish phases; status/publication use known repository counts. |
 | Themes | Preparation, rendering, bat cache generation, publication, quiet application reloads and installed-theme validation; `update --all` uses the selected checkout count. |
 | Files | Discovery, catalog/browser loading, planning and integrity checks; transaction preparation, replacement and reverse recovery use operation counts. |
+| Packages | Existing shared operation and export phases; package styles and quiet/raw suppression remain authoritative. |
+| Cleanup | Existing shared scan/run phases; receipt totals remain authoritative. |
 | Anodize | Theme loading/import, image/seed generation, rendering, preparation, save and application through both entry points; saves share file transaction progress. |
 
-Prompt-capable or directly outputting external commands use a static phase message instead of animation: Git fetch/init/commit/push, theme downloads, tmux reloads and wallpaper adapters. These messages appear immediately before the child starts so prompts and child output remain readable, even when a child takes a long time. Progress does not capture, reroute or replay child output. Existing timeout and exit-status behavior is retained.
+Prompt-capable or directly outputting external commands use a static phase message instead of animation: Git fetch/init/commit/push/checkout/merge, theme downloads, tmux reloads and wallpaper adapters. These messages appear immediately before the child starts so prompts and child output remain readable, even when a child takes a long time. Progress does not capture, reroute or replay child output. Existing timeout and exit-status behavior is retained.
 
 `--yes` retains progress but bypasses confirmation. JSON, raw paths, scalar queries, raw exports/app previews, generated shell code, ordinary shell initialization, completion, help, dry runs and redirected output bypass the progress UI, including static phase messages. Explicit color/icon settings never override this gate. Slow human read-only discovery is eligible and does not write progress files or application state.
 

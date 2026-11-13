@@ -1,6 +1,7 @@
 """Transient progress for human CLI work; never owns operations or approval."""
 from contextlib import ContextDecorator, contextmanager
 from functools import wraps
+from cli_preferences import progress_mode
 import os
 import re
 import shutil
@@ -23,9 +24,9 @@ def configure(human=True):
 
 
 def eligible():
-    return (_enabled and os.environ.get('DOTS_PROGRESS', 'auto') == 'auto'
-            and os.environ.get('TERM', 'dumb') != 'dumb'
-            and sys.stdout.isatty() and sys.stderr.isatty())
+    return (_enabled and os.environ.get('TERM', 'dumb') != 'dumb'
+            and sys.stdout.isatty() and sys.stderr.isatty()
+            and progress_mode() != 'none')
 
 
 def clean(value):
@@ -45,10 +46,9 @@ def clip(text, width):
 
 
 class Progress(ContextDecorator):
-    def __init__(self, label, *, marker_style='96', label_style='94'):
+    def __init__(self, label, *, marker_style=None, label_style=None):
         self.label = label
-        self.marker_style = marker_style if re.fullmatch(r'[0-9;]{1,80}',marker_style) else '96'
-        self.label_style = label_style if re.fullmatch(r'[0-9;]{1,80}',label_style) else '94'
+        self.marker_style, self.label_style = marker_style, label_style
         self.owner = False
         self.worker = None
         self.done = threading.Event()
@@ -60,6 +60,7 @@ class Progress(ContextDecorator):
         self.parent = None
         self.previous_state = None
         self.started = 0.0
+        self.mode = 'none'
 
     def __enter__(self):
         global _current
@@ -69,7 +70,17 @@ class Progress(ContextDecorator):
             self.parent = _current
             self.previous_state = _current.state
             return _current
+        if self.marker_style is None or self.label_style is None:
+            try:
+                from style_config import code
+                self.marker_style = code('96') if self.marker_style is None else self.marker_style
+                self.label_style = code('94') if self.label_style is None else self.label_style
+            except (ImportError, OSError, ValueError, KeyError, TypeError):
+                pass  # Optional presentation cannot prevent an operation.
+        if not isinstance(self.marker_style, str) or not re.fullmatch(r'[0-9;]{1,80}', self.marker_style): self.marker_style = '96'
+        if not isinstance(self.label_style, str) or not re.fullmatch(r'[0-9;]{1,80}', self.label_style): self.label_style = '94'
         self.owner = True
+        self.mode = progress_mode()
         self.started = time.monotonic()
         _current = self
         try:
@@ -125,15 +136,21 @@ class Progress(ContextDecorator):
                 mode = os.environ.get('DOTS_COLOR', 'auto')
                 color = mode == 'always' or (mode == 'auto' and not os.environ.get('NO_COLOR'))
                 icons = os.environ.get('DOTS_ICONS', 'auto') in ('auto', 'always')
-                if total:
-                    completed = min(completed, total)
+                completed = min(completed, total) if total else 0
+                spinner = ('⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' if icons else '|/-\\')[frame % (10 if icons else 4)]
+                suffix = f' {completed}/{total}' if total else ''
+                marker = spinner
+                if self.mode == 'bar' or self.mode == 'both' and total:
                     size = min(16, max(3, width // 5))
-                    filled = size * completed // total
-                    marker = '[' + ('━' if icons else '#') * filled + '-' * (size - filled) + ']'
-                    suffix = f' {completed}/{total}'
-                else:
-                    marker = ('⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' if icons else '|/-\\')[frame % (10 if icons else 4)]
-                    suffix = ''
+                    glyph = '━' if icons else '#'
+                    if total:
+                        filled = size * completed // total
+                        bar = glyph * filled + '-' * (size - filled)
+                    else:
+                        index = frame % (2 * (size - 1))
+                        index = min(index, 2 * (size - 1) - index)
+                        bar = '-' * index + glyph + '-' * (size - index - 1)
+                    marker = (spinner + ' ' if self.mode == 'both' else '') + '[' + bar + ']'
                 prefix = marker + suffix + ' '
                 spans = ((label, None),) if isinstance(label, str) else label
                 text, cells = clip(prefix + ''.join(text for text, _ in spans), width)
@@ -196,7 +213,7 @@ def report(label, completed=0, total=0):
 def permanent_output():
     """Join the renderer before printing; resume the same phase without a delay reset."""
     current = _current
-    running = current is not None and current.worker is not None
+    running = current is not None and current.worker is not None and current.worker.is_alive()
     if running:
         current._stop()
     try:

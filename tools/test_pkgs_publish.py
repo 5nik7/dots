@@ -106,6 +106,15 @@ print(json.dumps({'dependencies':{'hello':{'version':'2'},'new':{'version':'3'}}
         self.assertEqual(path.read_bytes(),before);self.assertEqual((repo/'.git/index').read_bytes(),index)
         self.assertEqual(self.git(repo,'rev-parse','HEAD'),head)
 
+    def test_human_review_lists_manifest_once(self):
+        repo,remote,path,env=self.prepare('human-review')
+        # The manifest has both an already selected edit and a package export event.
+        document=json.loads(path.read_text());document['groups'][0]['packages'][0]['reason']='keep this edit'
+        path.write_text(json.dumps(document));self.git(repo,'add','profiles/termux/packages.json')
+        output=self.publish(repo,env,'--yes','--view','default').stdout
+        self.assertEqual(output.count('profiles/termux/packages.json'),1,output)
+        self.assertIn('published',output)
+
     def test_missing_manifest_is_created_and_ignored_manifest_is_refused(self):
         repo,remote,path,env=self.prepare('new-manifest')
         self.git(repo,'rm','profiles/termux/packages.json');self.git(repo,'commit','-m','remove fixture manifest')

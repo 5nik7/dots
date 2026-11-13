@@ -19,8 +19,12 @@
       }
     },
     "cli": {
+      "progress": "both",
       "logo_gradient": "installer",
       "tagline": "Manage your dotfiles and more..."
+    },
+    "git": {
+      "view": "default"
     },
     "bak": {
       "store": "~/.bakstore",

@@ -1,5 +1,8 @@
 # Command Model
 
+Git report and operation routes accept `--view default|short|verbose`, `-s`/`--short` and `-v`/`--verbose`; tree `--details` aliases verbose. Named submodules and Wiki routes forward the same view options. Saved `apps.git.view` applies to terminal/menu reports; explicit flags can also format redirected human output. JSON/events remain unchanged. See [Git output views](git.md#output-views).
+
+
 ## Cleanup
 
 `dots cleanup` scans known disposable Termux files and asks Delete/Skip/Stop per

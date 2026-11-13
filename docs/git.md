@@ -10,6 +10,30 @@ platform/private exclusions. A declared wiki is included as a separate associate
 repository; `--no-wiki` excludes it from top-level info/status/sync/publish. Missing repositories are never
 initialized by inspection or publication.
 
+## Output views
+
+Terminal reports use `apps.git.view`, initially `default`. Select a view for one command with `--view default|short|verbose`, `-s`/`--short`, or `-v`/`--verbose`. Conflicting selectors are errors. These options work across status, info, publish, sync, registered/named submodules and Wiki routes. Tree `--details` remains a compatibility spelling for verbose output.
+
+| View | Status and operation reports |
+| --- | --- |
+| `default` | Compact repository/branch/state/cached tracking header, followed by one readable file list. Index and worktree states share a row; renames show `old → new`. Clean repositories need only a header. |
+| `short` | Compact headers and Git-style two-column XY file states. |
+| `verbose` | Default report plus repository metadata and operation phase details. No patches or file contents. |
+
+Info and submodule trees keep their inspection structure. Publish reviews selected paths once, then reports phases and outcomes; prospective child-pointer staging stays explicit. Sync lists paths changed between the actual before/after commits after an update. Its dry-run does not invent an incoming file list before fetching. Every view retains blockers and recovery instructions.
+
+Saved views apply in terminals and existing menu report captures. Ordinary redirected text keeps the legacy layout unless a view is explicitly requested. `--json` retains its existing records and events regardless of the human view. This includes selected/package events that human output groups together.
+
+```sh
+dots git status --short
+dots git status --view default
+dots git info --verbose
+dots config set apps.git.view short
+dots config set apps.cli.progress both
+```
+
+Shared [progress preferences](presentation.md#operation-progress) control transient activity independently of these views. Counts describe repository/phase work; they are not network transfer percentages. Verbose phase evidence remains available when transient progress is disabled. Preferences apply on the next invocation or popup without theme publication or application reload.
+
 `dots menu` includes a Git family with report and submodule/wiki inspection choices, plus publish and sync. The Git and Git → Wiki publish choices pass `--all` to their respective commands and retain the existing terminal review and confirmation. Direct CLI publication remains staged-only by default. Menu sync first shows the local `--dry-run` report; a successful, normally dismissed preview opens a Cancel/Sync confirmation with Cancel selected. Only explicit Sync runs the existing command. Menu sync adds no flags or repository scope and does not change direct CLI sync behavior. See the [launcher mapping](commands.md#dots-workflow-menu).
 
 [Terminal progress](presentation.md#operation-progress) covers recursive inspection and local operation phases, with repository counts when known. Fetch, initialization, commit and push use static phase messages so credentials, hooks and signing retain terminal access. `DOTS_PROGRESS=never` disables both displays; JSON and dry runs bypass them. Completion counts do not imply that every repository was successfully published.
@@ -277,11 +301,11 @@ Shared progress is disabled for redirected/JSON/dry-run output.
 
 Dots Git status, sync and publish use the shared [Git style roles](file-colors.md#git-styles). Repository names use `repo_owned` when the selected fetch remote matches a configured owner, otherwise `repo`; branches use `branch`, or `detached` for detached HEAD descriptions. Tracking counts use `ahead` and `behind`. Repository status uses its corresponding role. Successful operation events use `clean`, failed/blocked events use `blocked`, and missing/modified events use their named roles. Neutral information, planned operations and final summaries retain shared diagnostic colors.
 
-File status labels use conflict, untracked, deleted, renamed, copied, added, modified or staged colors, in that priority order when multiple states apply. A staged-only modification uses `staged`; a staged plus worktree modification uses `modified`. Full status wording is retained. Filenames and icons keep their independent type/MIME styles, including old paths in rename rows. The `ignored` style is available for consumers; status does not start listing ignored files.
+File status labels use conflict, untracked, deleted, renamed, copied, added, modified or staged colors, in that priority order when multiple states apply. A staged-only modification uses `staged`; a staged plus worktree modification uses `modified`. Full status wording is retained. Filenames and icons keep their independent type/MIME styles, with destination file styling on combined rename rows. The `ignored` style is available for consumers; status does not start listing ignored files.
 
 Styles come from the current published theme. Run `dots theme colors git` to inspect them, and use `dots theme colors set git ROLE --fg COLOR --apply` to save and refresh a customization. Older, missing or malformed publications have bounded terminal-color fallbacks. Color/icon settings and destination-stream TTY detection still apply; JSON and Git operation semantics are unchanged. Shell prompts, native Git configuration and editor Git displays are not changed by these roles.
 
-Ownership highlighting uses the branch remote (falling back to `origin`) and exact host/namespace matching from `dots/git.conf`, including `hostAlias`. It reads only local Git metadata and caches the result per repository per command. Missing or malformed presentation configuration falls back to `repo` for status/sync; publish retains its strict configuration and destination checks. Push URLs do not determine this display color. JSON and plain output remain unchanged.
+Ownership highlighting uses the branch remote (falling back to `origin`) and exact host/namespace matching from `dots/git.conf`, including `hostAlias`. It reads only local Git metadata and caches the result per repository per command. Missing or malformed presentation configuration falls back to `repo` for status/sync; publish retains its strict configuration and destination checks. Push URLs do not determine this display color. JSON and legacy redirected output remain unchanged.
 
 ## Native PowerShell
 

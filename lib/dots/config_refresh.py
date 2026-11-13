@@ -326,7 +326,7 @@ def after_save(root, before):
         new_cli=after.get('apps',{}).get('cli',{})
         def without_help(doc):
             return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('help.')},
-                        options={k:v for k,v in doc.get('options',{}).items() if k!='tagline'})
+                        options={k:v for k,v in doc.get('options',{}).items() if k not in ('tagline','progress')})
         if changed==['cli'] and without_help(old_cli)==without_help(new_cli):
             return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
         def without_pkgs_styles(doc):
@@ -360,6 +360,8 @@ def after_save(root, before):
                 {k:v for k,v in old_cli.items() if k!='formatting'}=={k:v for k,v in new_cli.items() if k!='formatting'}):
             return dict(schema=1,status='complete',consumers=[dict(app=key,status='next popup' if key=='menu' else 'next invocation') for key in sorted(formats)])
         if not changed:
+            if before.get('config',{}).get('apps',{}).get('git') != after.get('config',{}).get('apps',{}).get('git'):
+                return dict(schema=1,status='complete',consumers=[dict(app='git',status='next invocation')])
             if before.get('config',{}).get('apps',{}).get('clipboard') != after.get('config',{}).get('apps',{}).get('clipboard'):
                 return dict(schema=1,status='complete',consumers=[dict(app='clipboard',status='next invocation or watcher poll')])
             if before.get('config',{}).get('apps',{}).get('wiki') != after.get('config',{}).get('apps',{}).get('wiki'):
@@ -385,6 +387,10 @@ def preview_save(root, plan):
         before=snapshot(None,root,styles=style)
         after=snapshot(None,root,styles=style,controls=values)
         changes=affected(before,after)
+        if before['config'].get('apps',{}).get('git') != after['config'].get('apps',{}).get('git'):
+            changes.append('git')
+        if plan.items and all(item.get('key') in ('apps.cli.progress','apps.git.view') for item in plan.items):
+            return dict(schema=1,status='preview',consumers=changes,reason='Next invocation or popup; no theme publication or reload')
         if before['config'].get('apps',{}).get('clipboard') != after['config'].get('apps',{}).get('clipboard'):
             changes.append('clipboard')
         if before['config'].get('apps',{}).get('fonts') != after['config'].get('apps',{}).get('fonts'):

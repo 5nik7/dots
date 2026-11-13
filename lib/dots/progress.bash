@@ -2,8 +2,13 @@
 # runs in a child. No temp files, stdin reads, cursor hiding, or parent traps.
 # shellcheck disable=SC2034
 dots::progress_enabled() {
-  [[ ${DOTS_PROGRESS-auto} == auto && ${DOTS_PROGRESS_HUMAN:-0} == 1 &&
-     -t 1 && -t 2 && ${TERM:-dumb} != dumb ]]
+  [[ ${DOTS_PROGRESS_HUMAN:-0} == 1 && -t 1 && -t 2 && ${TERM:-dumb} != dumb ]] || return 1
+  DOTS_PROGRESS_MODE=${DOTS_PROGRESS-auto}
+  if [[ $DOTS_PROGRESS_MODE == auto ]]; then
+    if declare -F dots::settings >/dev/null; then dots::settings || return 1; fi
+    DOTS_PROGRESS_MODE=${_DOTS_CLI_PROGRESS:-both}
+  fi
+  case $DOTS_PROGRESS_MODE in spinner|bar|both) return 0 ;; *) return 1 ;; esac
 }
 
 dots::progress_clean() {
@@ -20,7 +25,7 @@ dots::progress_clean() {
 
 dots::progress_worker() (
   local parent=$1 label=$2 completed=${3:-0} total=${4:-0}
-  local line='' width=${COLUMNS:-80} drawn=0 ticks=0 frame=0 status marker suffix size filled text
+  local line='' width=${COLUMNS:-80} drawn=0 ticks=0 frame=0 status marker suffix size filled text spinner position
   local cyan='' blue='' reset='' glyphs="|/-\\" bar='#'
   # Workers must not retain transaction locks held by their parent.
   exec 8>&- 9>&-
@@ -33,7 +38,9 @@ dots::progress_worker() (
   ((width > 1 && width < 10000)) || width=80
   ((width-=1))
   if [[ ${DOTS_COLOR:-auto} == always || ( ${DOTS_COLOR:-auto} == auto && -z ${NO_COLOR:-} ) ]]; then
-    cyan=$'\e[96m' blue=$'\e[94m' reset=$'\e[0m'
+    printf -v cyan '\e[%sm' "${_DOTS_STYLE_COLORS[96]:-96}"
+    printf -v blue '\e[%sm' "${_DOTS_STYLE_COLORS[94]:-94}"
+    reset=$'\e[0m'
   fi
   if [[ ${DOTS_ICONS:-auto} == auto || ${DOTS_ICONS:-auto} == always ]]; then glyphs='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'; bar='━'; fi
   trap 'if ((drawn)); then printf "\r%*s\r" "$drawn" "" >&2; fi' EXIT
@@ -55,13 +62,21 @@ dots::progress_worker() (
       ((now - start >= 500000)) || continue
     else ((ticks >= 5)) || continue; fi
     suffix=''
-    if ((total > 0)); then
+    spinner=${glyphs:frame%${#glyphs}:1}; marker=$spinner
+    if ((total > 0)); then suffix=" $completed/$total"; fi
+    if [[ $DOTS_PROGRESS_MODE == bar || $DOTS_PROGRESS_MODE == both && $total -gt 0 ]]; then
       size=$((width / 5)); ((size <= 16)) || size=16; ((size >= 3)) || size=3
-      filled=$((size * completed / total))
-      printf -v marker '%*s' "$filled" ''; marker=${marker// /$bar}
-      printf -v text '%*s' "$((size-filled))" ''; marker="[$marker${text// /-}]"
-      suffix=" $completed/$total"
-    else marker=${glyphs:frame%${#glyphs}:1}; fi
+      if ((total)); then
+        filled=$((size * completed / total))
+        printf -v marker '%*s' "$filled" ''; marker=${marker// /$bar}
+        printf -v text '%*s' "$((size-filled))" ''; marker="[$marker${text// /-}]"
+      else
+        position=$((frame % (2*(size-1)))); ((position < size)) || position=$((2*(size-1)-position))
+        printf -v marker '%*s' "$position" ''; printf -v text '%*s' "$((size-position-1))" ''
+        marker="[${marker// /-}$bar${text// /-}]"
+      fi
+      [[ $DOTS_PROGRESS_MODE != both ]] || marker="$spinner $marker"
+    fi
     text="$marker$suffix $label"; text=${text:0:width}
     printf '\r%s%s%s' "$cyan" "${text:0:${#marker}+${#suffix}}" "$blue" >&2
     printf '%s%s' "${text:${#marker}+${#suffix}}" "$reset" >&2

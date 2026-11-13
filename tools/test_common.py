@@ -435,7 +435,7 @@ spinner 99999999 1 quiet
             if not executable:
                 continue
             flags = ['--noprofile', '--norc', '-c'] if shell == 'bash' else ['-dfc']
-            for progress in ('auto', 'never'):
+            for progress in ('auto', 'never', 'none', 'spinner', 'bar', 'both'):
                 with self.subTest(shell=shell, progress=progress):
                     master, slave = pty.openpty()
                     try:
@@ -446,7 +446,8 @@ spinner 99999999 1 quiet
                         output = os.read(master, 8192).decode()
                         self.assertEqual(p.returncode, 0, output)
                         self.assertIn('DONE', output)
-                        self.assertEqual('working' in output, progress == 'auto')
+                        self.assertEqual('working' in output, progress not in ('never','none'))
+                        self.assertEqual('[#' in output or '[-' in output, progress == 'bar')
                         self.assertNotIn('\x1b', output)
                         self.assertNotIn('⏳', output)  # Explicit ASCII icons.
                     finally:

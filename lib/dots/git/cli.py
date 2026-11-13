@@ -20,9 +20,10 @@ sys.path.insert(0, str(LIB / 'files'))
 from catalog import Presentation
 from file_platform import config_root, check_object
 from interaction import gum_confirm
-from progress import Progress, configure, eligible, permanent_output
+from progress import Progress, configure, eligible, permanent_output, report, tracked
 
 from profile_config import config_path
+from git_output import GitView, arguments as view_arguments, resolve as resolve_view
 
 
 class GitError(ValueError):
@@ -122,7 +123,11 @@ class Workflow:
         self.root = root(Path(args.directory).resolve())
         if self.root is None: raise GitError('not inside a Git worktree')
         self.ui = Presentation()
+        try: self.view = resolve_view(args, self.ui)
+        except ValueError as error: raise UsageError(str(error)) from None
+        self.output = GitView(self.ui, self.view, args.full_paths, root=self.root) if self.view else None
         self.events, self.locks, self.order = [], [], []
+        self.presentation_roles = {}
         self.visited, self.blocked = set(), set()
         self.parents, self.snapshots, self.destinations = {}, {}, {}
         self.owners, self.aliases = set(), {}
@@ -174,6 +179,16 @@ class Workflow:
         host = self.aliases.get(host.lower(), host.lower())
         return host + '/' + repo.strip('/').rpartition('/')[0] in self.owners
 
+    def metadata(self, path):
+        from inspection import Inspection
+        if not hasattr(self, '_inspection'): self._inspection = Inspection(self.root)
+        branch = text(path, 'symbolic-ref', '--quiet', '--short', 'HEAD', required=False)
+        row = dict(path=str(path), head=text(path, 'rev-parse', '--verify', 'HEAD', required=False),
+                   remote=self._inspection.remote(path, branch))
+        try: row['upstream'] = upstream(path)[3]
+        except (GitError,ValueError): row['upstream'] = None
+        return row
+
     @staticmethod
     def file_role(xy):
         if 'U' in xy or xy in ('AA','DD'): return 'conflict'
@@ -204,6 +219,13 @@ class Workflow:
     @permanent_output()
     def render_event(self, path, state, detail, file='', xy='', stream=None):
         ui = Presentation(stream) if stream is not None else Presentation(sys.stderr) if state in ('blocked', 'failed') else self.ui
+        if self.output is not None and stream is None:
+            if path not in self.presentation_roles:
+                self.presentation_roles[path] = 'repo_owned' if self.owned(path) else 'repo'
+            self.output.event(path, state, detail, file, xy, ui=ui, repo_role=self.presentation_roles[path])
+            if self.view == 'verbose' and state == 'planned' and root(path) == path:
+                self.output.metadata(self.metadata(path))
+            return
         if ui.icons and not hasattr(self.ui, '_git_identities'):
             from git_identity import Identities
             self.ui._git_identities = Identities()
@@ -250,6 +272,7 @@ class Workflow:
     def status(self):
         rows, reasons = [], {}
         def visit(path):
+            report('Inspecting repositories · ' + path.name)
             row = dict(path=str(path), branch='', status='clean', ahead=None, behind=None, files=[])
             rows.append(row)
             if root(path) != path:
@@ -293,6 +316,12 @@ class Workflow:
                 label = str(path) if self.args.full_paths else path.name
                 if not self.args.full_paths and sum(Path(r['path']).name == path.name for r in rows) > 1:
                     label = (str(path.relative_to(self.root)) if path.is_relative_to(self.root) else str(path)) if path != self.root else path.name + ' (root)'
+                if self.output:
+                    display = dict(row, reason=reasons.get(str(path),''), remote={'owned':self.owned(path)})
+                    if self.view == 'verbose' and row['status'] not in ('missing','blocked'):
+                        display.update(self.metadata(path))
+                    self.output.status(display, label)
+                    continue
                 self.ui.emit()
                 self.ui.repository_detail('Repository', path, label, self.role('repo_owned' if self.owned(path) else 'repo'))
                 self.ui.detail('Branch', self.ui.branch_label(row['branch']), self.role('detached' if row['branch'].startswith('detached ') else 'branch'))
@@ -309,19 +338,23 @@ class Workflow:
                         self.ui.resource_detail('From', path / file['old_path'],
                                                 display=str(path / file['old_path']) if self.args.full_paths else file['old_path'])
             changed = sum(r['status'] != 'clean' for r in rows)
-            self.ui.emit(f'  {len(rows)} repositories / {changed} changed or unavailable / {len(rows)-changed} clean')
-            self.ui.emit('  Remote state uses local tracking refs; no fetch performed.')
+            summary = f'{len(rows)} repositories / {changed} changed or unavailable / {len(rows)-changed} clean'
+            if self.output:
+                self.ui._spans([(summary, '')], prefix='  ')
+                self.ui._spans([('Remote state uses local tracking refs; no fetch performed.', '')], prefix='  ')
+            else:
+                self.ui.emit('  ' + summary)
+                self.ui.emit('  Remote state uses local tracking refs; no fetch performed.')
 
     def external_phase(self, label):
-        if self.scope_rows is not None and eligible():
+        if self.view == 'verbose' and not self.args.json:
+            Presentation(sys.stderr).detail('Phase', label)
+        elif eligible():
             Presentation(sys.stderr).detail('Phase', label)
 
     def fetch(self, path, remote, ref, tracking):
-        if self.scope_rows is not None:
-            self.external_phase('Fetching upstream')
-            git(path, '-c', 'fetch.recurseSubmodules=false', 'fetch', '--quiet', '--no-tags', '--no-recurse-submodules', '--refmap=', '--', remote, ref + ':' + tracking)
-            return
-        with Progress('Fetching upstream'):
+        with permanent_output():
+            self.external_phase('Fetching upstream · ' + path.name)
             git(path, '-c', 'fetch.recurseSubmodules=false', 'fetch', '--quiet', '--no-tags', '--no-recurse-submodules', '--refmap=', '--', remote, ref + ':' + tracking)
 
     def topology(self, path, target):
@@ -340,8 +373,27 @@ class Workflow:
                 if name not in old and cursor.exists(): raise GitError('occupied new submodule path')
         if not old <= new: raise GitError('submodule removal or replacement needs manual review')
 
+    @permanent_output()
+    def changed_files(self, path, before):
+        if not self.output: return
+        try:
+            after = text(path, 'rev-parse', 'HEAD')
+            if after == before: return
+            rows = iter(records(path, 'diff', '--no-ext-diff', '--no-textconv', '--name-status', '-z', '--find-renames', before, after, '--'))
+            files = []
+            for status in rows:
+                old = next(rows)
+                new = next(rows) if status[0] in ('R', 'C') else old
+                files.append(dict(xy=status[0] + ' ', path=new, old_path=old if new != old else '', changed=True))
+        except (ValueError, OSError, StopIteration, IndexError):
+            self.ui.detail('Files', 'Change list unavailable; inspect the repository history.')
+            return
+        for row in files: self.output.file(path, row)
+
+    @tracked('Synchronizing repositories')
     def sync(self, path, pinned=None, parent=None, relative=None):
         try:
+            report('Inspecting repository · ' + path.name)
             if path in self.visited: raise GitError('repeated repository in traversal')
             self.visited.add(path); self.lock(path)
             if not clean(path): raise GitError('local edits, staged changes, untracked files, or an operation in progress')
@@ -371,7 +423,9 @@ class Workflow:
                     if git(path, 'cat-file', '-e', target + '^{commit}', required=False).returncode:
                         branch = text(path, 'symbolic-ref', '--quiet', '--short', 'HEAD', required=False)
                         source = text(path, 'config', '--get', 'branch.' + branch + '.remote', required=False) or 'origin'
-                        git(path, 'fetch', '--quiet', '--no-tags', '--no-recurse-submodules', '--', source, target)
+                        with permanent_output():
+                            self.external_phase('Fetching recorded commit')
+                            git(path, 'fetch', '--quiet', '--no-tags', '--no-recurse-submodules', '--', source, target)
                 if not clean(path) or text(path, 'rev-parse', 'HEAD') != before: raise GitError('repository changed during fetch')
                 if pinned is None:
                     if git(path, 'merge-base', '--is-ancestor', target, 'HEAD', required=False).returncode == 0:
@@ -379,15 +433,21 @@ class Workflow:
                     else:
                         if git(path, 'merge-base', '--is-ancestor', 'HEAD', target, required=False).returncode: raise GitError('local and upstream histories diverged')
                         self.topology(path, target)
-                        git(path, '-c', 'submodule.recurse=false', 'merge', '--ff-only', '--no-edit', '--no-overwrite-ignore', target)
+                        with permanent_output():
+                            self.external_phase('Updating repository · ' + path.name)
+                            git(path, '-c', 'submodule.recurse=false', 'merge', '--ff-only', '--no-edit', '--no-overwrite-ignore', target)
                         self.event(path, 'updated', 'fast-forwarded upstream')
                 elif before == target: self.event(path, 'unchanged', 'at selected submodule commit')
                 else:
                     if not text(path, 'for-each-ref', '--format=%(refname)', '--contains', before, 'refs/remotes/'):
                         raise GitError('refusing to leave a submodule commit without remote reachability evidence')
                     self.topology(path, target)
-                    git(path, '-c', 'submodule.recurse=false', 'checkout', '--quiet', '--detach', '--no-overwrite-ignore', target, '--')
+                    with permanent_output():
+                        self.external_phase('Updating repository · ' + path.name)
+                        git(path, '-c', 'submodule.recurse=false', 'checkout', '--quiet', '--detach', '--no-overwrite-ignore', target, '--')
                     self.event(path, 'updated', 'checked out selected commit; parent pointer is not staged')
+                self.changed_files(path, before)
+            report('Discovering submodules · ' + path.name)
             for relative, oid in children(path):
                 child = path / relative
                 try:
@@ -397,7 +457,9 @@ class Workflow:
                         if self.args.dry_run:
                             self.event(child, 'planned', 'initialize at recorded commit; deeper structure requires download'); continue
                         if child.exists() and any(child.iterdir()): raise GitError('uninitialized submodule directory is not empty')
-                        git(path, '-c', 'submodule.recurse=false', '--literal-pathspecs', 'submodule', 'update', '--init', '--checkout', '--', relative)
+                        with permanent_output():
+                            self.external_phase('Updating repository · ' + path.name)
+                            git(path, '-c', 'submodule.recurse=false', '--literal-pathspecs', 'submodule', 'update', '--init', '--checkout', '--', relative)
                     self.sync(child, oid, path, relative)
                 except (GitError, OSError, ValueError) as error: self.event(child, 'blocked', str(error))
         except (GitError, OSError, ValueError) as error: self.event(path, 'blocked', str(error))
@@ -506,7 +568,7 @@ class Workflow:
             except (ValueError, OSError) as error:
                 self.event(self.root, 'blocked', str(error)); return
         if self.scope_rows is None:
-            self.collect(self.root)
+            with Progress('Collecting publish inputs'): self.collect(self.root)
         else:
             with Progress('Collecting publish inputs'):
                 for row in self.scope_rows:
@@ -532,11 +594,14 @@ class Workflow:
                 self.event(path, 'planned', f'branch {destination[0]}: publish to {destination[5]} → {destination[2]}; message: {self.args.message}')
                 if parent: expected.add(parent)
                 for row in status_files(path):
+                    if self.output: self.output.renames[str(path),row['path']] = row['old_path']
                     if self.args.all or row['xy'][0] not in (' ', '?'): self.event(path, 'selected', row['xy'] + ' ' + row['path'], row['path'], row['xy'])
             except (ValueError, OSError) as error:
                 self.blocked.add(path)
                 if parent: self.blocked.add(parent)
                 self.event(path, 'blocked', str(error))
+        if self.output and expected:
+            self.ui.detail('Pointers', 'Published child pointers may be staged in their parents.')
         if self.args.dry_run or not self.destinations:
             self.report_parent_pointers()
             return
@@ -545,60 +610,67 @@ class Workflow:
             if self.args.json:
                 for row in self.events:
                     self.render_event(Path(row['path']), row['status'], row['detail'], row['file'], row['xy'], sys.stderr)
-            approved = None if self.args.json else gum_confirm('Publish the selected changes?', 'Publish')
-            if approved is None:
-                print('Publish the selected changes? [y/N] ', end='', file=sys.stderr, flush=True)
-                approved = input().lower() == 'y'
+            with permanent_output():
+                approved = None if self.args.json else gum_confirm('Publish the selected changes?', 'Publish')
+                if approved is None:
+                    print('Publish the selected changes? [y/N] ', end='', file=sys.stderr, flush=True)
+                    approved = input().lower() == 'y'
             if not approved:
                 self.event(self.root, 'cancelled', 'nothing committed or pushed'); return
         if self.package_update:
             try: self.package_update.verify()
             except (ValueError, OSError) as error:
                 self.event(self.root, 'blocked', str(error)); return
-        for path in self.order:
-            parent = self.parents[path]
-            try:
-                self.recheck_scope()
-                if path in self.blocked: raise GitError('a required child or preflight check failed')
-                if self.fingerprint(path) != self.snapshots[path] or (parent and self.fingerprint(parent) != self.snapshots[parent]): raise GitError('publish inputs changed after preview')
-                if in_progress(path): raise GitError('Git operation in progress')
-                if not self.needed(path):
-                    self.event(path, 'unchanged', 'no selected changes or known ahead commits'); continue
-                if self.wiki and path==self.wiki.path: self.wiki.validate(True)
-                dest = self.destination(path)
-                if dest != self.destinations.get(path): raise GitError('branch or destination changed after preview')
-                branch, remote, ref, tracking, url, _ = dest
-                self.fetch(path, remote, ref, tracking)
-                if git(path, 'merge-base', '--is-ancestor', tracking, 'HEAD', required=False).returncode: raise GitError('remote is ahead or diverged; sync or resolve manually before publishing')
-                if self.fingerprint(path) != self.snapshots[path] or self.destination(path) != dest: raise GitError('inputs or destination changed during preflight')
-                self.recheck_scope()
-                if path == self.root and self.package_update:
-                    self.package_update.apply()
-                    git(path, 'add', '--', ':(literal)' + self.package_relative)
-                    self.event(path, 'updated' if self.package_selected else 'unchanged',
-                               'Package manifest refreshed and staged' if self.package_selected else 'Package manifest already current',
-                               self.package_relative)
-                if self.args.all: git(path, 'add', '--all', '--', '.', *[':(top,exclude,literal)' + name for name, _ in children(path)])
-                if git(path, 'diff', '--cached', '--quiet', '--ignore-submodules=none', '--', required=False).returncode:
-                    self.external_phase('Committing selected changes')
-                    git(path, 'commit', '-m', self.args.message)
-                self.external_phase('Pushing selected changes')
-                git(path, '-c', 'push.followTags=false', 'push', '--porcelain', '--recurse-submodules=check', '--', url, 'HEAD:' + ref)
-                self.event(path, 'published', 'selected changes and ahead commits pushed')
-                self.fetch(path, url, ref, tracking)
-                if parent:
-                    relative = path.relative_to(parent).as_posix()
-                    index = records(parent, 'ls-files', '--stage', '-z', '--', ':(literal)' + relative)[0].split('\t')[0].split()[1]
-                    old_rows = records(parent, 'ls-tree', '-z', 'HEAD', '--', ':(literal)' + relative)
-                    old = old_rows[0].split('\t')[0].split()[2] if old_rows else ''
-                    head = text(path, 'rev-parse', 'HEAD')
-                    if index not in (old, head): raise GitError('pre-existing staged child pointer differs; preserved for manual review')
-                    if self.fingerprint(parent) != self.snapshots[parent]: raise GitError('parent changed during child publication')
-                    git(parent, 'add', '--', ':(literal)' + relative)
-                    self.snapshots[parent] = self.fingerprint(parent)
-            except (ValueError, OSError) as error:
-                self.event(path, 'blocked', str(error))
-                if parent: self.blocked.add(parent)
+        with Progress('Publishing repositories'):
+            for completed, path in enumerate(self.order):
+                report('Publishing repositories · ' + path.name, completed, len(self.order))
+                parent = self.parents[path]
+                try:
+                    self.recheck_scope()
+                    if path in self.blocked: raise GitError('a required child or preflight check failed')
+                    if self.fingerprint(path) != self.snapshots[path] or (parent and self.fingerprint(parent) != self.snapshots[parent]): raise GitError('publish inputs changed after preview')
+                    if in_progress(path): raise GitError('Git operation in progress')
+                    if not self.needed(path):
+                        self.event(path, 'unchanged', 'no selected changes or known ahead commits'); continue
+                    if self.wiki and path==self.wiki.path: self.wiki.validate(True)
+                    dest = self.destination(path)
+                    if dest != self.destinations.get(path): raise GitError('branch or destination changed after preview')
+                    branch, remote, ref, tracking, url, _ = dest
+                    self.fetch(path, remote, ref, tracking)
+                    if git(path, 'merge-base', '--is-ancestor', tracking, 'HEAD', required=False).returncode: raise GitError('remote is ahead or diverged; sync or resolve manually before publishing')
+                    if self.fingerprint(path) != self.snapshots[path] or self.destination(path) != dest: raise GitError('inputs or destination changed during preflight')
+                    self.recheck_scope()
+                    if path == self.root and self.package_update:
+                        self.package_update.apply()
+                        git(path, 'add', '--', ':(literal)' + self.package_relative)
+                        self.event(path, 'updated' if self.package_selected else 'unchanged',
+                                   'Package manifest refreshed and staged' if self.package_selected else 'Package manifest already current',
+                                   self.package_relative)
+                    if self.args.all: git(path, 'add', '--all', '--', '.', *[':(top,exclude,literal)' + name for name, _ in children(path)])
+                    if git(path, 'diff', '--cached', '--quiet', '--ignore-submodules=none', '--', required=False).returncode:
+                        with permanent_output():
+                            self.external_phase('Committing selected changes')
+                            git(path, 'commit', '-m', self.args.message)
+                    with permanent_output():
+                        self.external_phase('Pushing selected changes')
+                        git(path, '-c', 'push.followTags=false', 'push', '--porcelain', '--recurse-submodules=check', '--', url, 'HEAD:' + ref)
+                    self.event(path, 'published', 'selected changes and ahead commits pushed')
+                    self.fetch(path, url, ref, tracking)
+                    if parent:
+                        relative = path.relative_to(parent).as_posix()
+                        index = records(parent, 'ls-files', '--stage', '-z', '--', ':(literal)' + relative)[0].split('\t')[0].split()[1]
+                        old_rows = records(parent, 'ls-tree', '-z', 'HEAD', '--', ':(literal)' + relative)
+                        old = old_rows[0].split('\t')[0].split()[2] if old_rows else ''
+                        head = text(path, 'rev-parse', 'HEAD')
+                        if index not in (old, head): raise GitError('pre-existing staged child pointer differs; preserved for manual review')
+                        if self.fingerprint(parent) != self.snapshots[parent]: raise GitError('parent changed during child publication')
+                        git(parent, 'add', '--', ':(literal)' + relative)
+                        self.snapshots[parent] = self.fingerprint(parent)
+                except (ValueError, OSError) as error:
+                    self.event(path, 'blocked', str(error))
+                    if parent: self.blocked.add(parent)
+                finally:
+                    report('Publishing repositories', completed + 1, len(self.order))
         self.report_parent_pointers()
 
     def run(self):
@@ -636,6 +708,7 @@ class Workflow:
 def main():
     from help_adapters import HelpArgumentParser
     parser = HelpArgumentParser(description=__doc__)
+    view_arguments(parser)
     parser.add_argument('command', choices=['status', 'sync', 'publish', 'submodules-publish'])
     parser.add_argument('path', nargs='?')
     parser.add_argument('--all-submodules', action='store_true')

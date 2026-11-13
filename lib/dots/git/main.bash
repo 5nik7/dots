@@ -9,6 +9,7 @@ LIB=$(cd -- "${BASH_SOURCE[0]%/*}" && pwd) || exit 3
 DOTS_LIB_DIR=${DOTS_LIB_DIR:-${LIB%/git}}
 source "$LIB/common.bash"
 source "$LIB/ui.bash"
+source "$LIB/views.bash"
 ((BASH_VERSINFO[0] >= 5)) || die 3 'requires Bash 5 or newer'
 CMD=$1; shift
 WIKI_ARGS=("$@")
@@ -25,6 +26,12 @@ OWNERS=() HOST_ALIASES=() STATUS_DIRS=() PUB_DIRS=()
 while (($#)); do
     arg=$1; shift
     case $arg in
+        --view)
+            (($#)) || die 2 '--view requires a value'
+            view_select "$1"; shift ;;
+        --view=*) view_select "${arg#*=}" ;;
+        -s|--short) view_select short ;;
+        -v|--verbose) view_select verbose ;;
         -C|--directory|--config|-m|--message)
             (($#)) || die 2 "$arg requires a value"
             case $arg in -C|--directory) TARGET=$1 ;; --config) CONFIG=$1; EXPLICIT_CONFIG=1 ;; *) MESSAGE=$1 ;; esac
@@ -88,6 +95,7 @@ if (( ! SCOPED_PUBLISH && ! NO_WIKI )) && [[ -f $ROOT/.dots/wiki.json ]]; then
     exec python3 -B "$LIB/cli.py" "$CMD" "${WIKI_ARGS[@]}"
 fi
 colors
+view_resolve
 source "$LIB/../progress.bash"
 DOTS_PROGRESS_HUMAN=0
 ((JSON || DRY_RUN)) || DOTS_PROGRESS_HUMAN=1

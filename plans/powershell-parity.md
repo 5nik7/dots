@@ -1,5 +1,8 @@
 # Native PowerShell parity
 
+Git output/progress work uses shared view flags, Config enums and native Python progress. Both controller paths are tested in isolated Termux fixtures; native Windows PowerShell 5.1/7 40/80/120-column rendering, prompt/credential suspension and Ctrl-C/Ctrl-Break remain separate pending checks. No Windows application destination changes are required. See [Git output and progress](git-output-and-progress.md).
+
+
 Clipboard history shares native Python dispatch, metadata and completion with Bash, and generates a PSReadLine insertion widget. Native Windows 5.1/7 selector/editor/desktop acceptance remains pending; Termux fixtures verify the shared controller. See [clipboard plan](clipboard-history.md).
 
 **Status: Implementation complete; native Windows acceptance pending.**

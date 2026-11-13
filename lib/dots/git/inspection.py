@@ -374,6 +374,8 @@ class Parser(HelpArgumentParser):
 
 def main(argv=None, info_edge=None):
     parser = Parser(description=__doc__)
+    from git_output import GitView, arguments, resolve
+    arguments(parser)
     parser.add_argument('command', choices=('info', 'submodules', 'submodules-info', 'status', '_select', '_complete'))
     parser.add_argument('-C', '--directory', default=os.environ.get('DOTS') or str(core.LIB.parents[1]))
     parser.add_argument('--json', action='store_true')
@@ -415,6 +417,9 @@ def main(argv=None, info_edge=None):
         return 0
     core.configure(not args.json)
     view = Inspection(base)
+    try: mode = resolve(args, view.ui)
+    except ValueError as error: raise core.UsageError(str(error)) from None
+    output = GitView(view.ui, mode, args.full_paths) if mode else None
     selected = selection(base, args.path)[0] if args.path is not None else None
     with core.Progress('Discovering submodules'):
         if info_edge is not None and info_edge['availability'] != 'available':
@@ -463,14 +468,17 @@ def main(argv=None, info_edge=None):
     ui = view.ui
     ui.heading('Git info' if args.command == 'info' else 'Git submodule info' if args.command == 'submodules-info' else 'Git submodule status' if args.command == 'status' else 'Git submodules')
     if args.command == 'info':
-        view.info(inspected[0], args.full_paths)
+        if output: output.info(inspected[0])
+        else: view.info(inspected[0], args.full_paths)
         for companion in companion_rows:
             ui.emit();ui.detail('Companion','wiki ('+companion['availability']+')')
             ui.resource_detail('Path',companion['path'],kind='dir')
-            if companion.get('repository'): view.info(companion['repository'],args.full_paths)
+            if companion.get('repository'):
+                if output: output.info(companion['repository'])
+                else: view.info(companion['repository'],args.full_paths)
             else: ui.detail('Hint',companion['reason'])
     else:
-        tree = Tree(view, inspected) if args.command == 'submodules' and ui.human and inspected else None
+        tree = Tree(view, inspected) if args.command == 'submodules' and (ui.human or output) and mode != 'short' and inspected else None
         if tree:
             tree.header(base, args.full_paths)
         else:
@@ -481,7 +489,12 @@ def main(argv=None, info_edge=None):
         by_path = {row['path']: row for row in inspected}
         for row in inspected:
             if tree:
-                tree.row(row, args.full_paths, args.details)
+                tree.row(row, args.full_paths, args.details or mode == 'verbose')
+                continue
+            if output:
+                if args.command == 'status': output.status(row,row['relative_path'])
+                elif args.command == 'submodules-info': output.info(row,row['relative_path'])
+                else: output.header(row,row['relative_path'])
                 continue
             ui.emit()
             label = view.repository_label(row, row['path'] if args.full_paths else row['relative_path'])

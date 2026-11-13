@@ -1,5 +1,8 @@
 # Testing Strategy
 
+`python3 -B tools/test_git_output.py` covers explicit human views, combined file states, renames, sync before/after paths, publication deduplication, named inspection routes, unchanged JSON, argument conflicts and 40/80/120-column owned PTYs against both Git controllers. Run it alongside the Git safety suites. `tools/test_progress.py` covers configured/explicit progress modes, known/unknown counts, nesting, terminal gates and interruptions; `tools/test_config_values.py` covers preference validation/reset and activation. These Termux fixtures do not establish native Windows terminal behavior.
+
+
 ## Cleanup
 
 `python3 -B tools/test_cleanup.py -v` verifies cleanup in owned Termux-shaped

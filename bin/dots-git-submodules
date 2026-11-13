@@ -4,6 +4,9 @@
 # dots:option=--directory|-C|directory|Repository or subtree directory
 # dots:option=--json||flag|Emit versioned JSON
 # dots:option=--full-paths||flag|Show absolute human paths
+# dots:option=--view||choice:default,short,verbose|Select the human output view
+# dots:option=--short|-s|flag|Use compact human output
+# dots:option=--verbose|-v|flag|Show metadata and action details without patches
 # dots:option=--details||flag|Show remote, owner and commit details
 # dots:option=--depth||string|Maximum submodule levels (positive integer)
 GIT_LIB=$(cd -- "${BASH_SOURCE[0]%/*}/../lib/dots/git" && pwd) || exit 3

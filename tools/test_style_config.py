@@ -215,5 +215,27 @@ class StyleConfig(unittest.TestCase):
             self.assertNotIn('UNEXPECTED_PYTHON',warm.stderr)
             config.write_text(original_config);colors.write_text(original_colors)
 
+    def test_git_progress_preferences_invalidate_warm_bundle(self):
+        import test_profiles
+        fixture=test_profiles.Profiles();fixture.setUp();self.addCleanup(fixture.doCleanups)
+        fixture.public()
+        shutil.copytree(ROOT/'default',fixture.root/'default')
+        config=fixture.root/'default/config.json';original=config.read_text()
+        for shell in ('bash','zsh'):
+            if not shutil.which(shell):continue
+            code='source "$DOTS/lib/dots/shell/init.'+shell+'"; printf "%s/%s" "$_DOTS_CLI_PROGRESS" "$_DOTS_GIT_VIEW"'
+            cold=fixture.run_shell(shell,code)
+            self.assertEqual(cold.returncode,0,cold.stderr);self.assertEqual(cold.stdout,'both/default')
+            updated=json.loads(original);updated['apps']['cli']['progress']='bar';updated['apps']['git']['view']='short'
+            config.write_text(json.dumps(updated))
+            changed=fixture.run_shell(shell,code)
+            self.assertEqual(changed.returncode,0,changed.stderr);self.assertEqual(changed.stdout,'bar/short')
+            commands=fixture.home/('view-shims-'+shell);commands.mkdir()
+            shim=commands/'python3';shim.write_text('#!'+shutil.which('sh')+'\nprintf UNEXPECTED_PYTHON >&2\nexit 99\n');shim.chmod(0o700)
+            warm=fixture.run_shell(shell,code,PATH=str(commands)+os.pathsep+fixture.env['PATH'])
+            self.assertEqual(warm.returncode,0,warm.stderr);self.assertEqual(warm.stdout,'bar/short')
+            self.assertNotIn('UNEXPECTED_PYTHON',warm.stderr)
+            config.write_text(original)
+
 
 if __name__=='__main__': unittest.main()

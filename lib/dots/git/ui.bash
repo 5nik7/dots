@@ -29,6 +29,25 @@ file_status_style() {
 declare -A PRESENTATION_REPOS=() PRESENTATION_HOSTS=()
 PRESENTATION_CONFIG_READY=0
 PRESENTATION_OWNERS=() PRESENTATION_ALIASES=()
+presentation_config() {
+    local -a OWNERS=() HOST_ALIASES=() RECORDS=()
+    local row key value valid=1
+    if ((!PRESENTATION_CONFIG_READY)); then
+        PRESENTATION_CONFIG_READY=1
+        if [[ ${NO_CONFIG:-0} == 0 && -f ${CONFIG:-} && ! -L $CONFIG && -r $CONFIG ]] &&
+            records_cmd git config --no-includes --null --file "$CONFIG" --list 2>/dev/null; then
+            for row in "${RECORDS[@]}"; do
+                key=${row%%$'\n'*}; value=${row#*$'\n'}
+                case $key in
+                    dots-git.owner) [[ $value == */* && $value != *$'\n'* ]] || valid=0; OWNERS+=("$value") ;;
+                    dots-git.hostalias) [[ $value == *=* ]] || valid=0; HOST_ALIASES+=("$value") ;;
+                    *) valid=0 ;;
+                esac
+            done
+            if ((valid)); then PRESENTATION_OWNERS=("${OWNERS[@]}"); PRESENTATION_ALIASES=("${HOST_ALIASES[@]}"); fi
+        fi
+    fi
+}
 repo_presentation_style() {
     local dir=${1:-} fd=${2:-1} role=repo
     dots::style "$fd"
@@ -36,22 +55,7 @@ repo_presentation_style() {
         if [[ ! ${PRESENTATION_REPOS[$dir]+yes} ]]; then
             local REMOTE URL PROTOCOL HOST OWNER REPO OWNED HOST_ICON SAFE_URL REMOTE_ARG=''
             local -a OWNERS=() HOST_ALIASES=() RECORDS=()
-            local row key value valid=1
-            if ((!PRESENTATION_CONFIG_READY)); then
-                PRESENTATION_CONFIG_READY=1
-                if [[ ${NO_CONFIG:-0} == 0 && -f ${CONFIG:-} && ! -L $CONFIG && -r $CONFIG ]] &&
-                    records_cmd git config --no-includes --null --file "$CONFIG" --list 2>/dev/null; then
-                    for row in "${RECORDS[@]}"; do
-                        key=${row%%$'\n'*}; value=${row#*$'\n'}
-                        case $key in
-                            dots-git.owner) [[ $value == */* && $value != *$'\n'* ]] || valid=0; OWNERS+=("$value") ;;
-                            dots-git.hostalias) [[ $value == *=* ]] || valid=0; HOST_ALIASES+=("$value") ;;
-                            *) valid=0 ;;
-                        esac
-                    done
-                    if ((valid)); then PRESENTATION_OWNERS=("${OWNERS[@]}"); PRESENTATION_ALIASES=("${HOST_ALIASES[@]}"); fi
-                fi
-            fi
+            presentation_config
             OWNERS=("${PRESENTATION_OWNERS[@]}"); HOST_ALIASES=("${PRESENTATION_ALIASES[@]}")
             dots::icon git.repository ''; PRESENTATION_HOSTS[$dir]=$REPLY
             if repo_root "$dir" && [[ $REPLY == "$dir" ]] && select_remote "$dir"; then
@@ -136,6 +140,7 @@ repo_label() {
 }
 render_event() {
     dots::progress_stop
+    if [[ ${GIT_VIEW:-} ]]; then view_event "$@"; return; fi
     local dir=$1 state=$2 detail=$3 file=${4:-} code=$DOTS_UI_CYAN marker='[i]' label repo_style
     dots::style
     repo_presentation_style "$dir"; repo_style=$REPLY
