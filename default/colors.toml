@@ -1,3 +1,30 @@
+[apps.cli.help.argument]
+fg = "green"
+
+[apps.cli.help.command]
+fg = "blue"
+
+[apps.cli.help.description]
+fg = "colors.ui.foreground.fg"
+
+[apps.cli.help.executable]
+fg = "cyan"
+
+[apps.cli.help.heading]
+fg = "colors.ui.heading.fg"
+
+[apps.cli.help.option]
+fg = "yellow"
+
+[apps.cli.help.punctuation]
+fg = "colors.ui.muted.fg"
+
+[apps.cli.help.subcommand]
+fg = "magenta"
+
+[apps.cli.help.tagline]
+fg = "accent"
+
 [apps.clipboard.error]
 fg = "colors.status.error.fg"
 

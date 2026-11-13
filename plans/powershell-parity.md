@@ -19,6 +19,8 @@ Bash, MSYS2 or WSL dependencies on Windows.
 
 ## Delivery and acceptance
 
+The configurable-help follow-up adds shared token roles, root tagline/synopsis/global-option parity, one batched native preference read, and Python-free built-in defaults. Specialized Python help and parser-error usage share the same styles. Application destinations remain unchanged. Native Windows PowerShell 5.1/7, light/dark terminals and 40/80/120-column visual acceptance are named pending checks; the owner accepts completion of the local implementation with those checks recorded separately. See [the help plan](usage-help.md).
+
 The [root-help update](usage-help.md) keeps one top-level row per visible command/group across Bash, the shared native controller and Python-free PowerShell help. Full contextual help, command inventory and completion remain available. The PowerShell fixture checks aliases, implicit/hidden groups and 40/80/120-column footer wrapping with Python absent from PATH. Native Windows PowerShell 5.1/7 and visible terminal acceptance remain pending; Windows app destinations are unchanged.
 
 1. Shared static command metadata, literal native argument transport, dispatch,

@@ -8,6 +8,15 @@ dots_error() {
   dots::error "$*"
 }
 
+dots_usage_error() {
+  # Only authored usage callsites enter help syntax; ordinary errors stay intact.
+  # shellcheck source=ui.bash
+  source "$DOTS_LIB_DIR/ui.bash"
+  # shellcheck source=help.bash
+  source "$DOTS_LIB_DIR/help.bash"
+  dots::help_error "$*"
+}
+
 dots_reserved() {
   case $1 in
     init|help|doctor|commands|completion|version|status|spec|plan|apply|undo|history|backup|bootstrap|self|__complete) return 0 ;;
@@ -124,7 +133,7 @@ dots_main() {
         dots_help completion
         return
       fi
-      if (($# != 2)); then dots_error 'Usage: dots completion bash|zsh|fish|powershell'; return 2; fi
+      if (($# != 2)); then dots_usage_error 'dots completion bash|zsh|fish|powershell'; return 2; fi
       case $2 in bash|zsh|fish|powershell) ;; *) dots_error 'Unknown completion shell'; return 2 ;; esac
       local line
       if [[ $2 == bash || $2 == zsh ]]; then
@@ -159,7 +168,7 @@ dots_main() {
         source "$DOTS_LIB_DIR/ui.bash"
         dots::success "Validated ${#DOTS_CATALOG[@]} external commands"
       elif (($# == 1)) && [[ $1 == -h || $1 == --help ]]; then dots_help commands
-      else dots_error 'Usage: dots commands [--check]'; return 2; fi
+      else dots_usage_error 'dots commands [--check]'; return 2; fi
       return ;;
   esac
   if dots_reserved "$1"; then dots_error 'This core command is not implemented'; return 1; fi

@@ -114,7 +114,8 @@ def _execute(command, arguments, read_input):
         if not literal and argument == '--':
             literal = True
         elif not literal and argument in ('-h', '--help'):
-            return _help(command).encode('utf-8')
+            from help_presentation import colorize_help
+            return colorize_help(_help(command), prog=command).encode('utf-8')
         elif not literal and argument.startswith('-'):
             raise UsageError('unknown option; use --help or -- before literal text')
         else:

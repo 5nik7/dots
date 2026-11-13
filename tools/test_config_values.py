@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+import subprocess
 import unittest
 from unittest.mock import patch
 import test_profile_config as fixtures
@@ -109,5 +110,83 @@ class Values(fixtures.ProfileConfig):
         self.assertEqual(explanation['activation'],'next invocation')
         self.run_config('set',key,'null','--json-value','--no-refresh')
         self.assertEqual(self.run_config('get',key).stdout,'classic\n')
+
+    def test_help_tagline_validation_popup_inheritance_and_literal_shell_value(self):
+        from config_menu import Inventory,Draft
+        from config_refresh import effective,after_save
+        from help_presentation import HelpStyles
+        from config_values import validate_value
+        key='apps.cli.tagline'
+        self.assertEqual(self.run_config('get',key).stdout,'Manage your dotfiles and more...\n')
+        defaults=Controls(self.root).defaults
+        for invalid in ('line\nline','tab\there','\x1b[31m','\x85','\u2028',42):
+            with self.assertRaises(ValueError):validate_value(defaults,parts(key),invalid)
+        literal='  ü dots $(touch MUST_NOT_EXIST); "quoted" \\ text  '
+        row=Inventory(self.root,self.platform).find(key)
+        self.assertIn('empty hides',row.constraints['syntax'])
+        before=effective(self.root)
+        Draft(Inventory(self.root,self.platform),row).prepare(literal).plan.apply('set')
+        with patch('config_refresh.refresh',side_effect=AssertionError('help preferences must not publish')):
+            self.assertEqual(after_save(self.root,before)['consumers'],[dict(app='cli',status='next invocation')])
+        self.assertEqual(HelpStyles(self.root).tagline,literal)
+        self.assertEqual(self.run_config('get',key,native=True,DOTS_COLOR='always').stdout,literal+'\n')
+        explanation=json.loads(self.run_config('explain',key,'--json').stdout)
+        self.assertEqual(explanation['activation'],'next invocation')
+        script='source "$DOTS/lib/dots/shell/config.bash"; _dots_config_load || exit; printf "%s" "$_DOTS_HELP_TAGLINE"'
+        for shell in ('bash','zsh'):
+            executable=shutil.which(shell)
+            if not executable:continue
+            result=subprocess.run([executable,'-c',script],env=self.env,cwd=self.home,capture_output=True,text=True,timeout=20)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual(result.stdout,literal)
+        self.assertFalse((self.home/'MUST_NOT_EXIST').exists())
+        self.run_config('set',key,'','--no-refresh')
+        self.assertEqual(HelpStyles(self.root).tagline,'')
+        self.run_config('set',key,'null','--json-value','--no-refresh')
+        self.assertEqual(HelpStyles(self.root).tagline,'Manage your dotfiles and more...')
+
+    def test_help_styles_discovery_consumer_and_next_invocation(self):
+        from config_menu import Inventory,Draft
+        from config_refresh import effective,after_save
+        from help_presentation import HelpStyles
+        from style_catalog import HELP,ATTRIBUTES
+        from style_config import Styles
+        from config_completion import key_candidates,value_candidates
+        catalog=set(keys(self.root))
+        for role in HELP:
+            for field in ('fg','bg',*ATTRIBUTES):
+                self.assertIn('colors.apps.cli.help.'+role+'.'+field,catalog)
+        self.assertNotIn('colors.help.argument.fg',catalog)
+        self.assertEqual([key for key,_ in key_candidates(self.root,'apps.cli.tagline')],['apps.cli.tagline'])
+        self.assertIn(('colors.apps.cli.help.argument.fg','cli · help.argument · foreground color'),key_candidates(self.root,'colors.apps.cli.help.argument.fg'))
+        self.assertEqual({value for value,_ in value_candidates(self.root,'colors.apps.cli.help.heading.bold')},{'true','false'})
+        self.assertIn('cyan',{value for value,_ in value_candidates(self.root,'colors.apps.cli.help.executable.fg')})
+        key='colors.apps.cli.help.argument.fg'
+        row=Inventory(self.root,self.platform).find(key)
+        before=effective(self.root)
+        Draft(Inventory(self.root,self.platform),row).prepare('#123456').plan.apply('set')
+        with patch('config_refresh.refresh',side_effect=AssertionError('help colors must not publish')):
+            self.assertEqual(after_save(self.root,before)['consumers'],[dict(app='cli',status='next invocation')])
+        self.assertIn('38;2;18;52;86',HelpStyles(self.root).code('argument'))
+        self.assertEqual(self.run_config('get',key,DOTS_COLOR='always',DOTS_ICONS='always').stdout,'#123456\n')
+        self.assertEqual(self.run_config('get',key,'--json',native=True,DOTS_COLOR='always').stdout.count('\x1b'),0)
+        script='source "$DOTS/lib/dots/shell/config.bash"; _dots_config_load || exit; printf "%s" "${_DOTS_HELP_STYLES[argument]}"'
+        result=subprocess.run([shutil.which('bash'),'-c',script],env=self.env,capture_output=True,text=True,timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertEqual(result.stdout,HelpStyles(self.root).code('argument'))
+        self.run_config('set','colors.apps.cli.help.heading.bold','false','--no-refresh')
+        self.assertFalse(Styles(self.root).style('help.heading',app='cli')['bold'])
+        self.run_config('unset',key,'--no-refresh')
+        self.assertEqual(self.run_config('get',key).stdout,'green\n')
+        from config_refresh import explain
+        from config_view import compact_styles
+        styles=Styles(self.root,palette={})
+        explanation=explain('colors.apps.cli.help.tagline.fg',self.root,_style=styles)['consumers'][0]
+        self.assertEqual(explanation['value'],'accent')
+        self.assertEqual(explanation['resolved_color'],'foreground')
+        self.assertIn('Theme accent unavailable',explanation['fallback'])
+        sample=compact_styles({'apps':{'cli':{'help':{'tagline':{'fg':'accent'}}}}},styles)['apps']['cli']['help']['tagline']
+        self.assertEqual(sample.text,'fg:accent')
+        self.assertEqual(sample.code,HelpStyles(styles=styles).code('tagline'))
 
 if __name__=='__main__':unittest.main()

@@ -19,7 +19,8 @@ def format_time(value):
 
 
 def parser():
-    p=argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    p=HelpArgumentParser(description=__doc__)
     sub=p.add_subparsers(dest='action')
     for name in ('check','startup','path','command','cache','test','record','alert'):
         s=sub.add_parser(name);s.add_argument('--json',action='store_true')

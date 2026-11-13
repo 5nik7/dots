@@ -71,7 +71,8 @@ def render(data, args):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog='dots link', description='Create symlinks safely; move conflicting objects into backups by default.')
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(prog='dots link', description='Create symlinks safely; move conflicting objects into backups by default.')
     parser.add_argument('paths', nargs='+', metavar='PATH')
     parser.add_argument('-T','--no-target-directory', action='store_true')
     parser.add_argument('-r','--relative', action='store_true')

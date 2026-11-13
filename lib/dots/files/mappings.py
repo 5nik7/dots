@@ -411,7 +411,8 @@ def prompt(label, default=None):
 
 
 def arguments(argv=None):
-    p = argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    p = HelpArgumentParser(description=__doc__)
     p.add_argument('-v', '--verbose', action='store_true')
     p.add_argument('--pick', action='store_true')
     p.add_argument('action', choices=['stash', 'edit'])

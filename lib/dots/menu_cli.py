@@ -326,7 +326,8 @@ def run(args):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog='dots menu', description='Browse Dots command families')
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(prog='dots menu', description='Browse Dots command families')
     add_arguments(parser)
     parser.add_argument('family', nargs='?', choices=('blastoff', 'pkgs'), default='',
                         help='Open an application family directly')

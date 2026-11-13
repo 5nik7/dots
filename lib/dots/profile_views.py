@@ -215,7 +215,8 @@ def render(result, operation, verbose=False):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(description=__doc__)
     parser.add_argument('family', choices=('profile',))
     parser.add_argument('operation', nargs='?')
     parser.add_argument('identity', nargs='?')

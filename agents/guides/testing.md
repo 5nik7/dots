@@ -1,5 +1,7 @@
 # Testing Work Guide
 
+Help/usage changes use `python3 -B tools/test_help_presentation.py` and `python3 -B tools/test_help_adapters.py` alongside the affected Bash/native CLI, Config and family suites. Keep literal syntax spans, destination-specific stdout/stderr color policy, plain/data bytes, missing-profile bootstrap help and addressed branding covered in owned roots. See [help verification](../../docs/testing.md#bash-command-framework).
+
 For Cleanup, run `python3 -B tools/test_cleanup.py -v` and
 `python3 -B tools/generate_cleanup_commands.py --check`, then affected shared
 controller/completion, config, menu and progress checks. Every cleanup target,

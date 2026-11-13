@@ -19,7 +19,8 @@
       }
     },
     "cli": {
-      "logo_gradient": "installer"
+      "logo_gradient": "installer",
+      "tagline": "Manage your dotfiles and more..."
     },
     "bak": {
       "store": "~/.bakstore",

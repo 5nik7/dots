@@ -267,7 +267,17 @@ def _main(argv=None):
         return 0
     except (Error, OSError, ValueError, KeyError, IndexError) as e:
         error_ui = reports.report(**report_options, stream=sys.stderr) if report_options else None
-        if error_ui:
+        if str(e).startswith('Usage:'):
+            from help_adapters import usage_message
+            from plugin_presentation import color_mode
+            mode = color_mode(args.color, cfg['color'])
+            enabled = not (args.json or args.raw or args.dry_run) and (mode == 'always' or
+                       (mode == 'auto' and sys.stderr.isatty() and os.environ.get('TERM', 'dumb') != 'dumb'
+                        and not os.environ.get('NO_COLOR')))
+            print('pkgs: ' + usage_message(str(e), prog='pkgs', commands=(
+                'info', 'cleanup', 'completion', ('cache', 'clear')),
+                stream=sys.stderr, color=enabled), file=sys.stderr)
+        elif error_ui:
             error_ui.text('pkgs: ' + str(e), 'error')
         else:
             print('pkgs: ' + str(e), file=sys.stderr)

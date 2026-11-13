@@ -136,7 +136,8 @@ class Browser:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Browse tracked configs and review managed operations.')
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(description='Browse tracked configs and review managed operations.')
     parser.color = False
     for flag in ('repo', 'app', 'category', 'status'):
         parser.add_argument('--' + flag, help='Filter by ' + flag)

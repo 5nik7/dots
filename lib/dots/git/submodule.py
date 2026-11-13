@@ -97,12 +97,31 @@ def resolve(base, names):
 
 def help_view(words):
     # Static syntax and headers only: even nonexistent names require no Git.
-    from files.catalog import Presentation
+    from help_adapters import HelpView
     positional, _, _, _ = parse(words)
     names, action, _, pending = route(positional, partial=True)
-    ui = Presentation()
+    class SubmoduleHelp(HelpView):
+        def heading(self, title):
+            if title == self.route_label:
+                return self._spans(self._help_spans(title, kind='syntax', prog='dots'))
+            return super().heading(title)
+
+        def _help_spans(self, text, **kwargs):
+            if kwargs.get('kind') == 'syntax' and str(text).startswith(self.route_label):
+                return [(value, self.help_styles.code(role)) for value,role in self.route_spans] + super()._help_spans(str(text)[len(self.route_label):], **kwargs)
+            return super()._help_spans(text, **kwargs)
+    ui = SubmoduleHelp(prog='dots', commands=('git', 'submodule', *ACTIONS))
     label = 'dots git submodule' + (' ' + ' submodule '.join(names) if names else '')
     if names: label += ' submodule' if pending else ' ' + action
+    ui.route_label = label
+    ui.route_spans = [('dots','executable'), (' ', 'description'), ('git','command'),
+                      (' ', 'description'), ('submodule','subcommand')]
+    for index, name in enumerate(names):
+        if index: ui.route_spans += [(' ', 'description'), ('submodule','subcommand')]
+        ui.route_spans += [(' ', 'description'), (name, 'argument')]
+    if names:
+        for word in ('submodule' if pending else action).split():
+            ui.route_spans += [(' ', 'description'), (word,'subcommand')]
     ui.heading(label)
     if not names or pending:
         ui.detail('Usage', label + ' NAME [ACTION] [OPTIONS]')
@@ -110,7 +129,7 @@ def help_view(words):
         ui.detail('-C, --directory', 'Initial repository directory')
     else:
         data = metadata(action)
-        ui.emit('  ' + data['summary'])
+        ui.text(data['summary'], indent=2)
         ui.detail('Usage', label + (' [PATH]' if action == 'submodules status' else ' PATH|--all-submodules' if action == 'submodules publish' else '') + ' [OPTIONS]')
         for long, short, _, description in data['option']:
             ui.detail(', '.join(v for v in (long, short) if v), description)

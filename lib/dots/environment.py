@@ -177,7 +177,8 @@ def main():
     if sys.argv[1:] == ['__names']:
         for key in inspect(Path(os.environ.get('DOTS') or LIB.parents[1]).resolve())['values']: print(key)
         return
-    parser = argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(description=__doc__)
     parser.add_argument('name', nargs='?')
     parser.add_argument('--json', action='store_true')
     args = parser.parse_args()

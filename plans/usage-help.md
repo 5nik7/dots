@@ -1,4 +1,58 @@
-# Concise root help
+# Dots help and usage
+
+## Configurable help follow-up
+
+**Status: Implemented and locally verified; local Wiki synchronized. Native Windows PowerShell 5.1/7 and Linux/WSL terminal acceptance pending as agreed.**
+
+Selected Todo goal: `6e3fcbc7f08140a39f4306010b4706a5` (`usage output update`). Preserve the earlier root-grouping implementation and evidence below. This follow-up covers all first-party help, bundled applications and shipped standalone aliases, including error usage and explicit syntax references. Ordinary reports/results are outside this scope. Existing layouts, authored branding and addressed theme palettes remain owned by their current renderers.
+
+The agreed shared syntax roles are executable (theme cyan), command (blue), subcommand (magenta), option/flag (yellow) and argument (green), with corresponding ANSI fallbacks. Help heading, description, punctuation and tagline styles are independently configurable through `colors.apps.cli.help.*`. The root tagline is controlled by `apps.cli.tagline`, defaults to `Manage your dotfiles and more...`, has no `dots —` prefix, and is hidden by an empty string. Its default color is the theme accent when present, otherwise foreground. Help-only preferences activate on the next invocation without theme publication or consumer reload.
+
+Saved high-priority children (all directly attached to the selected goal):
+
+| UUID | Work package | Dependencies and acceptance |
+| --- | --- | --- |
+| `03ed8c6c6a2b4199bdae3e2bdc42ab28` | Shared help styles and Config integration | Foundation; actual consumer output, all style fields, tagline hiding/fallback, inheritance/reset and next-invocation saves. |
+| `15a3616d45424474b9747c56e72167a2` | Core help across Bash and native frontends | Depends on shared integration; root/family/leaf syntax, root content parity, grouped discovery, inert metadata and Python-free defaults. |
+| `764284d0a4924c33b0d9daa0f44ba555` | Bundled apps and standalone help | Depends on shared integration; every public help/error-usage path and aliases retain layout, branding, stream/status and data contracts. |
+| `bd4b1a3697d1402eb9b4dd5efa13002d` | Verification, documentation and delivery | Depends on all above; isolated suites, 40/80/120-column checks, performance, Config/completion, documentation and local Wiki synchronization. |
+
+Command maintenance owns shared help, Config owns preference storage/editor/activation, and each family retains its existing maintenance owner. Configuration assessment: **add/update**, with rendered consumer checks. Menu assessment: **update existing Config browser/editor discovery**, with no new static-help launcher. Installer/bootstrap assessment: existing core/application components deliver the shared helpers, defaults and wrappers; verify this through owned installations. Windows application destinations are unchanged. Six-shell completion and aliases remain synchronized; completion/JSON/scalars/raw/generated shell output must stay undecorated. Basic Bash and PowerShell help retain builtin defaults when Python preference resolution is unavailable.
+
+Completion review preserves the existing grammar and alias registrations. All six Dots shell adapters use the shared Config key/value providers, so the added preferences need no generated command grammar. Existing Nushell/Xonsh standalone completion allowlists omit `todo` and `fonts`; their `dots todo` / `dots fonts` routes remain available. This pre-existing registration limit is recorded rather than claimed as newly implemented. Bash/Zsh/Fish and native-provider alias checks retain their existing coverage. Installer review confirms linked/native launchers point into the complete checkout, so the shared helpers accompany existing core/application components without a new payload manifest.
+
+Apply the [presentation acceptance gate](../docs/presentation.md#acceptance-gate), with isolated source/home/config/state/cache roots and sequential Termux suites. Test explicit syntax spans, quoted/Unicode paths, flags and values, `--`, controls, missing palettes, plain/redirected output, separate stdout/stderr color policy and extension nonexecution. Measure help, direct dispatch and affected startup projections without adding caches. The owner explicitly accepts named pending native Windows PowerShell 5.1/7 and Linux/WSL terminal checks after local/shared-controller acceptance; fixtures are not native evidence. Rebuild/check the available Wiki from canonical sources. No commit, push, live installation or application reload is authorized by this implementation.
+
+Todo updates use scoped CLI operations and full UUIDs, with rereads before writes, progress notes, and verified child-before-parent completion. Preserve existing unrelated changes and reconcile resumed work instead of recreating goals.
+
+### Local verification
+
+The full Bash CLI suite passed all 31 tests; subsequent focused checks passed for command alternatives and configured roles. The native-controller suite ran 26 tests: 23 passed and three native PowerShell runtime cases were skipped because no engine is available. A final focused regression passed for all four manual native usage errors. The shared span suite passed nine tests, including repeated standalone/Dots invocations. The specialized adapter suite passed all eight tests, including manual stderr usage, native theme action/operand roles, addressed palette backgrounds, weather browser help, Wiki argument errors and unchanged data/plain contracts. Both focused weather-browser help/completion/width checks passed. Focused Config/style/browser/completion and compiled-startup checks cover saved preferences, previews, inheritance/reset, activation and warm Bash/Zsh startup without Python.
+
+The bundled suite covered 18 cases: 17 have passing evidence from the full run plus the targeted installed-help rerun; one native-runtime case remains skipped. The rerun verifies minimal-checkout help, repeat-install idempotence and restoration after correcting the absent-profile fallback. Blastoff's 15 help cases have passing evidence across the full run and targeted reruns; focused Anodize, Fonts and weather help checks also passed. These are isolated fixtures, with no live application installation, provider calls or profile edits.
+
+Thirteen exact baseline/current comparisons passed for command inventory, scalar/JSON preferences, four completion scripts and six shell initialization snippets, including forced-decoration checks on data routes. All six Config completion providers expose the new keys without ANSI. Metadata validation passed for 291 fixture commands, including the owned probe. Twenty-four owned PTY captures cover root/family help through Bash/Python at 40/80/120 columns with light/dark palettes; each uses the expected palette foreground and fits its terminal width, and representative narrow/wide output was reviewed. Existing layouts and branding remain intact.
+
+Python syntax checks passed for 57 changed/new files; Bash syntax passed for six. The new Bash helper passes ShellCheck, and `git diff --check` passes. Markdown validation passed for 1385 relative links in 172 files. Blastoff manual lint retains the same six pre-existing line-length style diagnostics, with no new diagnostics. Canonical docs, README, the focused plan and maintenance guidance are synchronized. The available local Wiki was previewed and rebuilt through transaction `2a0007269e3348999fecd1123f7c31f7`; its final check reports `Healthy yes`. No publication was performed.
+
+The accepted remaining native checks are Windows PowerShell 5.1/7 and real Linux/WSL terminal output, including configured/default help, stream color policy and narrow/light/dark readability. They remain pending and are not represented by Termux or shared-controller results.
+
+### Performance evidence
+
+Measurements use owned baseline/current source snapshots, synthetic profiles and temporary homes on Termux. Initial sequential batches were affected by changing host load: alternating samples did not reproduce the apparent plain-root or direct-dispatch regression. Duplicate `Controls` construction was removed from the shell-settings/startup projections, and Bash token extraction now uses builtin regex matching. Ten before/after token-span comparisons and four full help captures retained exact bytes through that optimization. No persistent cache was introduced.
+
+Final medians from three alternating samples per variant, in milliseconds:
+
+| View | Baseline wall / CPU | Current wall / CPU |
+| --- | --- | --- |
+| Plain family help | 666 / 646 | 669 / 653 |
+| Colored root help | 2377 / 2249 | 2759 / 2671 |
+| Colored family help | 694 / 686 | 816 / 807 |
+| Settings projection | 316 / 312 | 364 / 358 |
+
+Colored syntax/layout retains about 0.12 seconds of family-help CPU overhead and 0.42 seconds for root help in this fixture; settings projection adds about 46 ms. Plain family help is effectively at baseline, and no direct-dispatch regression was established. These small local samples are not cross-platform guarantees. Evidence, source snapshots, timings and settings profiles are retained at `/data/data/com.termux/files/usr/tmp/dots-help-evidence-uv9tdoel`.
+
+## Previous root-grouping implementation
 
 **Status: Implemented; native Windows PowerShell 5.1/7 and Linux/WSL terminal acceptance pending.**
 

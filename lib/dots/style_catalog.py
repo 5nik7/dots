@@ -9,6 +9,7 @@ TODO = ('status.open', 'status.doing', 'status.blocked', 'status.done', 'status.
         'priority.high', 'priority.normal', 'priority.low')
 TODO_FIELDS=('id','alias','title','notes','tags','status','priority','due','parent','acceptance','subgoal_id','subgoal_title','subgoals','created','updated','completed','removed')
 FONTS = ('heading','label','identity','version','source','face','glyph')
+HELP = ('executable','command','subcommand','option','argument','heading','description','punctuation','tagline')
 CLIPBOARD = ('heading','label','identity','text','source','timestamp','pinned','error')
 WIKI = ('heading','label','page','section','snippet','url')
 PKGS = ('heading','label','identity','package','version','value','count','muted','skipped',
@@ -41,6 +42,7 @@ def split(name):
 def fields(role, app):
     """Only fields actually consumed by each native adapter are editable."""
     if app == 'cli':
+        if role in ('help.'+name for name in HELP): return ('fg','bg',*ATTRIBUTES)
         if role in ('pkgs.'+name for name in PKGS): return ('fg','bg',*ATTRIBUTES)
         if role in ('clipboard.'+name for name in CLIPBOARD): return ('fg','bg',*ATTRIBUTES)
         if role in ('wiki.'+name for name in WIKI): return ('fg','bg',*ATTRIBUTES)
@@ -120,6 +122,7 @@ def known_keys(group,styles):
         roles=({split(key)[1].rsplit('.',1)[0] for key in result}|{'icons.'+key for key in icon_roles()}|
                {'todo.field.'+name+'.'+kind for name in TODO_FIELDS for kind in ('label','value')}|
                {'fonts.'+name for name in FONTS}|
+               {'help.'+name for name in HELP}|
                {'clipboard.'+name for name in CLIPBOARD}|
                {'wiki.'+name for name in WIKI}|
                {'pkgs.'+name for name in PKGS}|
@@ -127,7 +130,9 @@ def known_keys(group,styles):
         shared={key.rsplit('.',1)[0] for key in styles.values['colors'] if not key.startswith('apps.')}
         roles={role for role in roles if role not in ROLES or role in shared or role in TMUX}
         bases={role+'.'+field for role in roles for app in APPS for field in fields(role,app)}
-    result.update(bases)
+    # Help is one CLI-owned surface; expose its app namespace, not a second
+    # global set of controls alongside it.
+    result.update(key for key in bases if not key.startswith('help.'))
     for key in bases:
         result.update('apps.'+app+'.'+key for app in consumers(group,key))
     return result

@@ -350,7 +350,10 @@ def render(result):
         ui.detail('Undo', 'dots files undo ' + result['transaction'])
 
 
-class ConfigParser(argparse.ArgumentParser):
+from help_adapters import HelpArgumentParser
+
+
+class ConfigParser(HelpArgumentParser):
     def error(self, message):
         ui = Presentation(sys.stderr)
         ui.heading('Dots config')

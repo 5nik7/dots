@@ -30,12 +30,15 @@ class ClipboardPresentation(Presentation):
         self.detail_spans(label, [(str(text), code or self.code(role or 'label'))], label_code=self.code('label','ui.label'))
 
 
-class Parser(argparse.ArgumentParser):
+from help_adapters import HelpArgumentParser
+
+class Parser(HelpArgumentParser):
     def print_help(self, file=None):
-        ui = ClipboardPresentation(file)
-        ui.heading(self.prog)
-        for line in self.format_help().splitlines():
-            ui.emit(ui.paint(line, ui.code('label','ui.foreground')))
+        from help_adapters import HelpView
+        ui = HelpView(file, prog=self.prog)
+        ui.heading_spans([(ui.icon('menu.clipboard', '󰅌') + ' ' if ui.icons else '', ui.help_styles.code('heading')),
+                          *ui._help_spans(self.prog, kind='syntax', prog=self.prog)])
+        super().print_help(file)
 
 
 def parser():

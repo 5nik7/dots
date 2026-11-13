@@ -21,7 +21,9 @@ from files.catalog import Presentation
 from progress import configure, Progress
 
 
-class Parser(argparse.ArgumentParser):
+from help_adapters import HelpArgumentParser
+
+class Parser(HelpArgumentParser):
     def error(self, message):
         raise ValueError(message)
 
@@ -41,7 +43,8 @@ def parser(options=OPTIONS, prog='wttr'):
 
 def help_view(completion=False):
     from styling import help_banner
-    ui = Presentation()
+    from help_adapters import HelpView
+    ui = HelpView(prog='wttr', commands=('get', 'browse', 'completion'))
     help_banner(ui)
     ui.emit()
     ui.heading(((ui.icon('weather.title', '') + ' ') if ui.icons else '') + 'wttr — weather from wttr.in')
@@ -330,7 +333,11 @@ if __name__ == '__main__':
         sys.exit(main())
     except (ValueError, OSError) as error:
         ui = Presentation(sys.stderr)
-        ui.emit(ui.paint('wttr: ' + str(error), '91'))
+        if str(error).lower().startswith('usage:'):
+            from help_adapters import usage_message
+            ui.emit(ui.paint('wttr: ', '91') + usage_message(str(error), prog='wttr', commands=('get',), stream=sys.stderr))
+        else:
+            ui.emit(ui.paint('wttr: ' + str(error), '91'))
         sys.exit(1 if isinstance(error, (Unavailable, OSError)) else 2)
     except KeyboardInterrupt:
         sys.exit(130)

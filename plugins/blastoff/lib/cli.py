@@ -25,9 +25,15 @@ def picker_options(parser):
 
 def parser(version, color="auto", json_output=False):
     VERSION = version
-    class Parser(argparse.ArgumentParser):
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'lib/dots'))
+    from help_adapters import HelpArgumentParser
+    class Parser(HelpArgumentParser):
         def format_help(self):
             return presentation().format_help(self, VERSION, color, json_output)
+        def print_help(self, file=None):
+            # The branded formatter already owns its help spans and JSON policy.
+            self._print_message(self.format_help(), sys.stdout if file is None else file)
         def error(self, message):
             raise Failure(message, 2)
     p = Parser(prog='blastoff', description='Starship themes and stored modules. Themes: ~/.config/blastoff/themes; active config: $STARSHIP_CONFIG or ~/.config/starship.toml.', epilog='Aliases: -l/--list = list; -t/--theme NAME = theme apply NAME; bare -t/--theme = current. Use a subcommand with --help for details.', allow_abbrev=False)
@@ -138,8 +144,9 @@ def normalize(argv):
     return opts + words
 
 def parse(argv, version):
+    import os
     words = normalize(argv)
-    color, json_output, report_color = 'auto', False, None
+    color, json_output, report_color = os.environ.get('DOTS_COLOR', 'auto'), False, None
     i = 0
     while i < len(words) and words[i] != '--':
         word = words[i]

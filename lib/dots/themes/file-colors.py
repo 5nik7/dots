@@ -524,7 +524,8 @@ def edit(args):
 
 
 def parser():
-    p = argparse.ArgumentParser(description='Query, customize and export Dots palette, file and Git styles.')
+    from help_adapters import HelpArgumentParser
+    p = HelpArgumentParser(description='Query, customize and export Dots palette, file and Git styles.')
     sub = p.add_subparsers(dest='action')
     for group in GROUPS:
         q = sub.add_parser(group); q.add_argument('key', nargs='?'); q.add_argument('format', nargs='?', choices=['hex','rgb','ansi-24bit','esc'], default='hex')

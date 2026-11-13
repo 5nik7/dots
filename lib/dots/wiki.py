@@ -307,7 +307,8 @@ def initialize(path,spec):
 
 
 def parser():
-    p=argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    p=HelpArgumentParser(description=__doc__)
     sub=p.add_subparsers(dest='action')
     for action in ('list','show','search','browse','open','edit','path','check','build','init'):
         command=sub.add_parser(action)

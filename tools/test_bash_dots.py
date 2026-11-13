@@ -140,9 +140,10 @@ class DotsFixture(unittest.TestCase):
         self.command('samples-list', '# dots:summary=List samples', 'touch "$HOME/executed"')
         self.command('samples-secret', '# dots:hidden=true', 'touch "$HOME/executed"')
         output = self.run_dots('--color=always', 'help', 'samples').stdout
-        self.assertIn('samples list', output)
-        self.assertIn('List samples', output)
-        self.assertNotIn('samples secret', output)
+        visible = re.sub(r'\x1b\[[0-9;]*m', '', output)
+        self.assertIn('samples list', visible)
+        self.assertIn('List samples', visible)
+        self.assertNotIn('samples secret', visible)
         self.assertIn('\x1b', output)
         self.assertFalse((self.home / 'executed').exists())
 
@@ -274,6 +275,129 @@ dots::error 'Error'
         self.run_dots('--color=wrong', code=2)
         self.assertNotIn('\x1b', self.run_dots('help', env=dict(self.env, NO_COLOR='1')).stdout)
         self.assertIn('\x1b', self.run_dots('--color=always', 'help', env=dict(self.env, NO_COLOR='1')).stdout)
+
+    def test_help_roles_tagline_and_literal_examples(self):
+        shutil.copytree(REPO / 'default', self.repo / 'default')
+        controls = self.repo / 'default/config.json'
+        document = json.loads(controls.read_text())
+        document.setdefault('apps', {}).setdefault('cli', {})['tagline'] = 'Fixture tagline ü $(touch nope)'
+        controls.write_text(json.dumps(document))
+        colors = dict(executable='#112233', command='#223344', subcommand='#334455',
+                      option='#445566', argument='#556677', heading='#667788',
+                      description='#778899', punctuation='#8899aa', tagline='#99aabb')
+        (self.repo / 'default/colors.toml').write_text('\n'.join(
+            '[apps.cli.help.' + role + ']\nfg = "' + value + '"\n' for role, value in colors.items()))
+        self.command('samples', header='# dots:summary=Manage samples\n# dots:example=dots samples deep -- --literal dots')
+        self.command('samples-deep', header='''# dots:summary=Use dots help samples for details; --flavor chooses a value.
+# dots:usage=[OPTIONS] NAME
+# dots:option=--flavor|-f|string|Choose --flavor VALUE
+# dots:argument=1|string|A literal name
+# dots:example=dots samples deep --flavor mocha 'two words' -- --literal''', body='touch help-executed\n')
+
+        def span(role, text):
+            value = colors[role][1:]
+            rgb = ';'.join(str(int(value[i:i+2], 16)) for i in (0, 2, 4))
+            return '\x1b[0;38;2;' + rgb + 'm' + text + '\x1b[0m'
+
+        root = self.run_dots('--color=always', 'help').stdout
+        self.assertIn(span('tagline', document['apps']['cli']['tagline']), root)
+        for role, text in [('executable', 'dots'), ('option', 'OPTIONS'),
+                           ('command', 'COMMAND'), ('argument', 'ARGS')]:
+            self.assertIn(span(role, text), root)
+        leaf = self.run_dots('--color=always', 'help', 'samples', 'deep').stdout
+        for role, text in [('executable', 'dots'), ('command', 'samples'),
+                           ('subcommand', 'deep'), ('option', '--flavor'),
+                           ('argument', 'mocha'), ('argument', "'two words'"),
+                           ('argument', '--literal')]:
+            self.assertIn(span(role, text), leaf)
+        direct = self.run_dots('--color=always', 'samples', '--help').stdout
+        self.assertIn(span('subcommand', 'deep'), direct)
+        self.assertIn(span('argument', 'dots'), direct)
+        self.assertFalse((self.home / 'help-executed').exists())
+        self.assertFalse((self.home / 'nope').exists())
+        plain = self.run_dots('--color=never', 'help', 'samples', 'deep').stdout
+        self.assertNotIn('\x1b', plain)
+        self.assertIn("dots samples deep --flavor mocha 'two words' -- --literal", plain)
+        for width in ('40', '80', '120'):
+            output = self.run_dots('--color=always', 'help', env=dict(self.env, COLUMNS=width)).stdout
+            visible = re.sub(r'\x1b\[[0-9;]*m', '', output)
+            self.assertIn('Fixture tagline', visible)
+            self.assertTrue(all(len(line) <= int(width) for line in visible.splitlines()), visible)
+        document['apps']['cli']['tagline'] = ''
+        controls.write_text(json.dumps(document))
+        empty = self.run_dots('help').stdout
+        self.assertTrue(empty.startswith('Usage\n'))
+        self.assertNotIn('Manage your dotfiles', empty)
+        fallback = subprocess.run([BASH, str(self.repo / 'bin/dots'), '--color=always', 'help'],
+                                  env=dict(self.env, PATH=str(self.repo / 'bin')), capture_output=True, text=True, timeout=15)
+        self.assertEqual(fallback.returncode, 0, fallback.stderr)
+        self.assertIn('Manage your dotfiles and more...', fallback.stdout)
+        self.assertIn('\x1b[36mdots\x1b[0m', fallback.stdout)
+        self.assertIn('\x1b[33mOPTIONS\x1b[0m', fallback.stdout)
+
+    def test_help_syntax_projection_preserves_ordinary_command_rows(self):
+        self.hints()
+        inventory = self.run_dots('--color=always', 'commands').stdout
+        self.assertIn('\x1b[94m', inventory)
+        self.assertNotIn('\x1b[0;33m', inventory)
+        for shell in ('bash', 'zsh', 'fish', 'powershell'):
+            plain = self.run_dots('--color=never', 'completion', shell).stdout
+            self.assertEqual(plain, self.run_dots('--color=always', 'completion', shell).stdout)
+
+    def test_help_command_alternatives_share_route_context(self):
+        self.command('samples', header='# dots:summary=Sample alternatives\n# dots:usage={list,show} [NAME]')
+        self.command('samples-list')
+        self.command('samples-show')
+        output = self.run_dots('--color=always', 'help', 'samples').stdout
+        self.assertIn('\x1b[0;35mlist\x1b[0m', output)
+        self.assertIn('\x1b[0;35mshow\x1b[0m', output)
+        self.assertIn('{list,show}', re.sub(r'\x1b\[[0-9;]*m', '', output))
+
+    def test_builtin_error_usage_styles_only_stderr(self):
+        examples = [
+            (('completion',), 'dots completion bash|zsh|fish|powershell'),
+            (('commands', 'unexpected'), 'dots commands [--check]'),
+            (('init', '--bootstrap'), 'dots init --bootstrap bash|zsh|powershell'),
+            (('init', 'auto'), 'dots init [bash|zsh|fish|powershell|nu|xonsh]'),
+        ]
+        for arguments, usage in examples:
+            with self.subTest(arguments=arguments):
+                plain = self.run_dots('--icons=never', '--color=never', *arguments, code=2)
+                self.assertEqual(plain.stdout, '')
+                self.assertEqual(plain.stderr, '[x] Usage: ' + usage + '\n')
+                colored = self.run_dots('--icons=never', '--color=always', *arguments, code=2)
+                self.assertEqual(colored.stdout, '')
+                self.assertEqual(re.sub(r'\x1b\[[0-9;]*m', '', colored.stderr), plain.stderr)
+                self.assertIn('\x1b[0;36mdots\x1b[0m', colored.stderr)
+        for shell in ('bash', 'zsh', 'fish', 'powershell', 'nu', 'xonsh'):
+            plain = self.run_dots('--color=never', 'init', shell).stdout
+            self.assertEqual(plain, self.run_dots('--color=always', 'init', shell).stdout)
+            self.assertNotIn('\x1b', plain)
+        for stderr_terminal in (False, True):
+            master, slave = pty.openpty()
+            try:
+                result = subprocess.Popen([str(self.repo / 'bin/dots'), '--icons=never', 'completion'],
+                                          env=self.env, cwd=self.home,
+                                          stdout=subprocess.PIPE if stderr_terminal else slave,
+                                          stderr=slave if stderr_terminal else subprocess.PIPE)
+                os.close(slave); slave = None
+                stdout, stderr = result.communicate(timeout=15)
+                self.assertEqual(result.returncode, 2)
+                capture = b''
+                while True:
+                    try: part = os.read(master, 65536)
+                    except OSError: break
+                    if not part: break
+                    capture += part
+                if stderr_terminal:
+                    self.assertEqual(stdout, b'')
+                    self.assertIn(b'\x1b[', capture)
+                else:
+                    self.assertEqual(capture, b'')
+                    self.assertNotIn(b'\x1b[', stderr)
+            finally:
+                if slave is not None: os.close(slave)
+                os.close(master)
 
     def test_logo_gradient(self):
         logo = '╔══╗  \\ art\n middle\n╚══╝'

@@ -86,9 +86,9 @@ def main(argv=None):
     action=argv.pop(0) if argv and argv[0] in ('info','status','sync','publish') else 'info'
     sys.path.insert(0,str(LIB/'git'))
     if action=='info':
-        import argparse
+        from help_adapters import HelpArgumentParser
         import inspection
-        p=argparse.ArgumentParser(add_help=False);p.add_argument('-C','--directory',default=os.environ.get('DOTS',str(LIB.parents[1])))
+        p=HelpArgumentParser(add_help=False);p.add_argument('-C','--directory',default=os.environ.get('DOTS',str(LIB.parents[1])))
         args,rest=p.parse_known_args(argv)
         base=inspection.context(args.directory);row=association(base)
         if not row or row['availability']!='available':raise ValueError('wiki checkout unavailable; use dots wiki init')

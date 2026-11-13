@@ -33,6 +33,17 @@ class Help(unittest.TestCase):
         self.env=dict(os.environ, HOME=str(self.home), USERPROFILE=str(self.home),
                       STARSHIP_CONFIG=str(self.home/'active.toml'),BLASTOFF_HOME=str(self.home/'store'),
                       PATH='',COLUMNS='80',TERM='xterm-256color')
+        preferences=tempfile.TemporaryDirectory(prefix='blastoff-help-preferences-')
+        self.addCleanup(preferences.cleanup)
+        fixture=Path(preferences.name)
+        (fixture/'default').mkdir()
+        (fixture/'default/colors.toml').write_text('[ui.heading]\nfg = "bright_cyan"\nbold = true\n')
+        for profile in ('termux','linux','wsl','windows'):
+            target=fixture/'profiles'/profile;target.mkdir(parents=True)
+            (target/'profile.json').write_text(json.dumps(dict(schema=1,id=profile)))
+        self.env['DOTS']=str(fixture)
+        for kind in ('CONFIG','STATE','CACHE','DATA'):
+            self.env['XDG_'+kind+'_HOME']=str(fixture/kind.lower())
         self.env.pop('NO_COLOR',None)
 
     def cli(self,*args,extra=None,code=0):
@@ -48,12 +59,13 @@ class Help(unittest.TestCase):
                 c,_=self.cli(*prefix,'--color=always',flag)
                 self.assertEqual(a,b); self.assertEqual(b,c)
                 self.assertIn('\x1b[95m',a)
-                self.assertIn('\x1b[1;35m',a)
+                self.assertIn('\x1b[0;1;96m',a)
                 for args,extra in [([*prefix,flag,'--color','never'],{}),
-                                   ([*prefix,flag,'--color','always'],{'NO_COLOR':''}),
+                                   ([*prefix,flag,'--color','auto'],{'NO_COLOR':'1'}),
                                    ([*prefix,flag,'--color','always','--json'],{})]:
                     text,_=self.cli(*args,extra=extra)
                     self.assertNotIn('\x1b',text)
+                self.assertIn('\x1b',self.cli(*prefix,flag,'--color','always',extra={'NO_COLOR':'1'})[0])
         self.assertNotIn('\x1b',self.cli('--color','always','-h','--color','never')[0])
         self.assertEqual(json.loads(self.cli('--json')[0])['name'],'blastoff')
 
@@ -80,8 +92,8 @@ class Help(unittest.TestCase):
                 implicit=self.cli(*flags)
                 self.assertEqual(implicit,self.cli(*flags,'--help'))
                 self.assertEqual(implicit[1],'')
-        plain=self.cli('--color','always',extra={'NO_COLOR':''})
-        self.assertEqual(plain,self.cli('-h','--color','always',extra={'NO_COLOR':''}))
+        plain=self.cli('--color','auto',extra={'NO_COLOR':'1'})
+        self.assertEqual(plain,self.cli('-h','--color','auto',extra={'NO_COLOR':'1'}))
         self.assertNotIn('\x1b',plain[0])
         self.assertEqual(list(self.home.iterdir()),[])
 
@@ -185,8 +197,8 @@ class Help(unittest.TestCase):
         self.assertTrue(rows[0].startswith('\x1b[38;2;101;30;255m'))
         self.assertIn('\x1b[38;2;255;67;191m',rows[0])
         self.assertTrue(all(row.endswith('\x1b[0m') for row in rows[:len(logo)]))
-        with patch.dict(os.environ,dict(self.env,NO_COLOR=''),clear=True),redirect_stdout(TTY()):
-            plain=ui.header(core.VERSION,'always',width=40)
+        with patch.dict(os.environ,dict(self.env,NO_COLOR='1'),clear=True),redirect_stdout(TTY()):
+            plain=ui.header(core.VERSION,'auto',width=40)
         self.assertEqual(plain[:len(logo)],logo)
         self.assertNotIn('\x1b','\n'.join(plain))
 
@@ -247,7 +259,7 @@ class Help(unittest.TestCase):
             self.assertTrue(all(out==outputs[0] for out in outputs))
         code,out=terminal([sys.executable,'-I',str(CORE),'-h','--color','always'],dict(env,NO_COLOR=''),columns=40,rows=30)
         self.assertEqual(code,0)
-        self.assertNotIn(b'\x1b[',out)
+        self.assertIn(b'\x1b[',out)
 
     def test_fast_help_has_no_application_imports(self):
         # Import tracing proves the script exits before core/discovery modules.

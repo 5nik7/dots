@@ -144,7 +144,8 @@ def replaces(path, stem):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(description=__doc__)
     if argv is None: argv = sys.argv[1:]
     if argv and argv[0] == '__roots':
         root = Path(os.environ.get('DOTS') or Path(__file__).resolve().parents[2]).resolve()

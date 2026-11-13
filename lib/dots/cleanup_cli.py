@@ -19,7 +19,8 @@ from progress import configure, Progress
 
 
 def parser(action):
-    result = argparse.ArgumentParser(prog='dots cleanup'+(' '+action if action else ''),
+    from help_adapters import HelpArgumentParser
+    result = HelpArgumentParser(prog='dots cleanup'+(' '+action if action else ''),
                                      description=COMMANDS[action][0])
     if hasattr(result, 'color'): result.color = False
     for flag, short, kind, help_text in OPTIONS[action]:

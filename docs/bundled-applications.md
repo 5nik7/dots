@@ -4,6 +4,8 @@ Blastoff and pkgs are first-party application plugins under `plugins/` in Dots. 
 
 ## Commands
 
+Help text in both applications uses the shared [help syntax styles](presentation.md#help-syntax-and-tagline), including configurable command, subcommand, option and argument colors. Standalone and `dots` forms keep their layouts and branding. Help follows the shared automatic/forced color policy; Blastoff `--json --help` remains plain text. These settings do not change package operations, prompt themes or application data output.
+
 The shared pkgs grammar includes `in`, `un`, `up`, `xup` and `upls` aliases.
 `upgrade ls` / `upgrade --list` query available updates without installation.
 `cleanup [FILE]` reviews disabled source installs using current ownership,

@@ -364,7 +364,10 @@ def positive(value):
     return int(value)
 
 
-class Parser(argparse.ArgumentParser):
+from help_adapters import HelpArgumentParser
+
+
+class Parser(HelpArgumentParser):
     def error(self, message):
         raise core.UsageError(message)
 

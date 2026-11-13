@@ -23,7 +23,7 @@ Everyday maintenance and focused feature work are tracked below. A proposed next
 | [Interactive checkout installation](installer-update.md) | Complete under the approved acceptance split: selective wizard, preparation, WinGet, fonts and fixture-verified Leaf integration; real Leaf build verification is a separate blocked goal. |
 | [Bootstrap, links and backups](bootstrap-links-backups.md) | Implemented fresh acquisition, moving backups, safe links, shell precedence, all-hosts PowerShell and linked Starship themes; local evidence and named native checks are recorded. |
 | [Package workflows](pkgs-workflows.md) | Unattended upgrades, Go tools, rules, streams, editable manifests and optional package-first setup. |
-| [Concise root help](usage-help.md) | Top-level root help across Bash/native frontends, preserved full discovery/completion and presentation acceptance. |
+| [Root help and configurable syntax](usage-help.md) | Grouped root help plus shared help colors/tagline across core frontends, bundled apps and aliases; preserved discovery/completion and presentation acceptance. |
 | [Personal fonts](fonts.md) | Official catalogs, retained versions, per-user registration, app connectors, font/glyph browsers and native acceptance. |
 | [Weather command and browser](wttr.md) | Shared standalone/Dots weather, cached-preview browser, session controls and platform acceptance. |
 | [Core command updates](core-updates.md) | Config List/Get/Set, recoverable file-ID edits and singular theme/profile families. |

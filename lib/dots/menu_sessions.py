@@ -500,7 +500,8 @@ def run(args):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog='dots menu tmux sessions', description='Browse projects and manage tmux sessions')
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(prog='dots menu tmux sessions', description='Browse projects and manage tmux sessions')
     add_arguments(parser)
     parser.add_argument('--client', help='Exact invoking tmux client (requires an inherited server and pane)')
     args = parser.parse_args(argv)

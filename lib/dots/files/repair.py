@@ -399,7 +399,8 @@ def render(doc, verbose=False, final=False):
 
 
 def parser():
-    p = argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    p = HelpArgumentParser(description=__doc__)
     p.set_defaults(action='repair')
     p.add_argument('values', nargs='*', metavar='RESOURCE')
     for flag in ('repo', 'app', 'category'):

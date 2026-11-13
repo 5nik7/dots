@@ -59,6 +59,8 @@ dots wiki search 'nvim themes' --topics
 
 ## Find your way around
 
+Help distinguishes executables, commands, subcommands, options and arguments with configurable theme colors. Open `dots config browse --query colors.apps.cli.help` to edit them, or set `apps.cli.tagline` to change the root phrase (`Manage your dotfiles and more...` by default; empty hides it). Help-only changes apply on the next invocation. See [help preferences](docs/configuration.md#help-and-usage-preferences).
+
 Use `dots cleanup` on Termux to review disposable caches and diagnostic logs
 in groups, then see the size and number of files removed. `dots cleanup scan`
 previews candidates; `dots cleanup history` shows runs and the combined verified

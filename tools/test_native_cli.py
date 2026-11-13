@@ -132,6 +132,56 @@ class NativeCLI(unittest.TestCase):
         self.assertNotIn('Command group', output)
         self.assertEqual(output.count('Use dots help COMMAND'), 1)
 
+    def test_help_roles_tagline_and_native_root_metadata(self):
+        default = self.repo / 'default'
+        default.mkdir()
+        controls = default / 'config.json'
+        document = dict(schema=1, apps=dict(cli=dict(tagline='Native fixture ü $(literal)')))
+        controls.write_text(json.dumps(document))
+        colors = dict(executable='#112233', command='#223344', subcommand='#334455',
+                      option='#445566', argument='#556677', tagline='#99aabb')
+        (default / 'colors.toml').write_text('\n'.join(
+            '[apps.cli.help.' + role + ']\nfg = "' + value + '"\n' for role, value in colors.items()))
+        self.root_help_fixture()
+        root = self.command('--color=always', 'help').stdout
+        for role, token in [('executable', 'dots'), ('command', 'COMMAND'), ('option', 'OPTIONS'), ('argument', 'ARGS')]:
+            value = colors[role][1:]
+            rgb = ';'.join(str(int(value[i:i+2], 16)) for i in (0, 2, 4))
+            self.assertIn('\x1b[0;38;2;' + rgb + 'm' + token + '\x1b[0m', root)
+        visible = re.sub(r'\x1b\[[0-9;]*m', '', root)
+        self.assertIn(document['apps']['cli']['tagline'], visible)
+        self.assertIn('dots [OPTIONS] COMMAND [ARGS...]', visible)
+        self.assertIn('Global options (before the command)', visible)
+        self.assertIn('--command-dir DIRECTORY', visible)
+        self.assertIn('--color=auto|always|never', visible)
+        child = self.command('--color=always', 'help', 'samples', 'deep').stdout
+        self.assertIn('\x1b[0;38;2;34;51;68msamples\x1b[0m', child)
+        self.assertIn('\x1b[0;38;2;51;68;85mdeep\x1b[0m', child)
+        document['apps']['cli']['tagline'] = ''
+        controls.write_text(json.dumps(document))
+        empty = self.command('help').stdout
+        self.assertTrue(empty.startswith('Usage\n'))
+        self.assertNotIn('Manage your dotfiles', empty)
+        self.assert_read_only_home()
+
+    def test_native_builtin_usage_error_preserves_stderr_and_status(self):
+        examples = [
+            (('commands', 'unexpected'), 'dots commands [--check]'),
+            (('completion',), 'dots completion bash|zsh|fish|powershell'),
+            (('init', '--bootstrap'), 'dots init --bootstrap bash|zsh|powershell'),
+            (('init', 'auto'), 'dots init SHELL | --setup [OPTIONS]'),
+        ]
+        for arguments, usage in examples:
+            with self.subTest(arguments=arguments):
+                plain = self.command('--color=never', *arguments, expected=1)
+                colored = self.command('--color=always', *arguments, expected=1)
+                self.assertEqual(plain.stdout, '')
+                self.assertEqual(colored.stdout, '')
+                self.assertEqual(plain.stderr, 'dots: Usage: ' + usage + '\n')
+                self.assertEqual(re.sub(r'\x1b\[[0-9;]*m', '', colored.stderr), plain.stderr)
+                self.assertIn('\x1b[0;36mdots\x1b[0m', colored.stderr)
+                self.assertIn('\x1b[0;34m' + arguments[0] + '\x1b[0m', colored.stderr)
+
     def test_native_powershell_root_help_without_python(self):
         requested = os.environ.get('DOTS_TEST_POWERSHELL')
         names = [requested] if requested else (['powershell', 'pwsh'] if os.name == 'nt' else ['pwsh'])
@@ -141,6 +191,8 @@ class NativeCLI(unittest.TestCase):
         if not any(engines):
             self.skipTest('PowerShell unavailable; native root-help acceptance remains pending')
         self.root_help_fixture()
+        (self.repo / 'bin/dots-samples.ps1').write_text('# dots:summary=Manage samples\n# dots:usage={deep,other} [NAME]\nthrow "Executed"\n')
+        (self.repo / 'bin/dots-samples-other.ps1').write_text('# dots:summary=Other sample\nthrow "Executed"\n')
         empty_path = self.base / 'no tools'
         empty_path.mkdir()
         env = dict(self.env, PATH=str(empty_path), COLUMNS='80')
@@ -157,13 +209,49 @@ class NativeCLI(unittest.TestCase):
                 outputs = [run(*args) for args in ((), ('help',), ('-h',), ('--help',))]
                 self.assertTrue(all(output == outputs[0] for output in outputs))
                 self.assert_root_help(outputs[0])
+                self.assertIn('Manage your dotfiles and more...', outputs[0])
+                self.assertIn('dots [OPTIONS] COMMAND [ARGS...]', outputs[0])
+                self.assertIn('Global options (before the command)', outputs[0])
+                colored = run('--color=always', 'help')
+                self.assertIn('\x1b[36mdots\x1b[0m', colored)
+                self.assertIn('\x1b[33mOPTIONS\x1b[0m', colored)
                 for width in ('40', '120'):
                     output = run('--help', width=width)
                     self.assert_root_help(output)
                     footer = output[output.index('Use dots help COMMAND'):]
                     self.assertTrue(all(len(line) <= int(width) for line in footer.splitlines()))
                 self.assertIn('samples deep leaf', run('help', 'samples'))
+                detail = run('--color=always', 'help', 'samples')
+                self.assertIn('\x1b[35mdeep\x1b[0m', detail)
+                self.assertIn('\x1b[35mother\x1b[0m', detail)
                 self.assertIn('implicit one', run('help', 'implicit'))
+        self.assert_read_only_home()
+
+    def test_native_powershell_help_preferences(self):
+        requested = os.environ.get('DOTS_TEST_POWERSHELL')
+        names = [requested] if requested else (['powershell', 'pwsh'] if os.name == 'nt' else ['pwsh'])
+        engines = [shutil.which(name) for name in names]
+        if requested and not all(engines):
+            self.fail('required PowerShell engine unavailable: ' + requested)
+        if not any(engines):
+            self.skipTest('PowerShell unavailable; native configured-help acceptance remains pending')
+        default = self.repo / 'default'; default.mkdir()
+        controls = default / 'config.json'
+        document = dict(schema=1, apps=dict(cli=dict(tagline='Native configured ü $(literal)')))
+        controls.write_text(json.dumps(document))
+        (default / 'colors.toml').write_text('[apps.cli.help.executable]\nfg = "#112233"\n')
+        env = dict(self.env, PATH=str(Path(sys.executable).parent) + os.pathsep + self.env['PATH'])
+        for engine in filter(None, engines):
+            with self.subTest(engine=engine):
+                result = subprocess.run([engine, '-NoLogo', '-NoProfile', '-File',
+                                         str(self.repo / 'bin/dots.ps1'), '--color=always', 'help'],
+                                        env=env, capture_output=True, text=True, encoding='utf-8', timeout=30)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(result.stderr, '')
+                visible = re.sub(r'\x1b\[[0-9;]*m', '', result.stdout)
+                self.assertIn(document['apps']['cli']['tagline'], visible)
+                self.assertIn('\x1b[0;38;2;17;34;51mdots\x1b[0m', result.stdout)
+                self.assertIn('dots [OPTIONS] COMMAND [ARGS...]', visible)
         self.assert_read_only_home()
 
     def test_all_metadata_and_targeted_resolution(self):

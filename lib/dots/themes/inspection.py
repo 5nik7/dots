@@ -515,7 +515,8 @@ def browse(app=None, selector=None):
 
 
 def parser():
-    p = argparse.ArgumentParser(prog='dots theme files', description=__doc__)
+    from help_adapters import HelpArgumentParser
+    p = HelpArgumentParser(prog='dots theme files', description=__doc__)
     subs = p.add_subparsers(dest='action')
     for action in ('list', 'info', 'show', 'path', 'check', 'browse'):
         sub = subs.add_parser(action)

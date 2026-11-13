@@ -1,5 +1,9 @@
 # Architecture
 
+## Shared help presentation
+
+`help_presentation.py` owns inert syntax spans and help-specific style resolution; its structured help view uses the existing Python presentation/layout layer. `help_adapters.py` connects public parsers and specialized views without styling ordinary reports. Bash `help.bash` and PowerShell `help-style.ps1` supply native token rendering and dependency-free defaults, consuming the existing literal preference projection when available. Config retains storage, inheritance, editor and activation ownership; authored logos and addressed theme panels retain their existing renderers. Metadata/parser definitions remain the command grammar source, and help/completion do not execute external extensions. See [help presentation](presentation.md#help-syntax-and-tagline).
+
 ## Cleanup ownership
 
 `cleanup_commands.py` owns static grammar/completion; generated

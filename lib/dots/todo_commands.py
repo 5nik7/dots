@@ -75,17 +75,20 @@ def parser(standalone=False):
             selected.print_help()
             selected.exit()
 
-    class HelpParser(argparse.ArgumentParser):
+    from help_adapters import HelpArgumentParser
+
+    class HelpParser(HelpArgumentParser):
         def __init__(self, *args, **kwargs):
             if sys.version_info >= (3, 14): kwargs['color'] = False
             super().__init__(*args, add_help=False, **kwargs)
             self.add_argument('-h', '--help', action=HelpAction, nargs=0, help='Show help')
 
         def print_help(self, file=None):
-            from files.catalog import Presentation
-            ui = Presentation(file, detail_indent=2)
+            from help_adapters import HelpView
+            ui = HelpView(file, detail_indent=2, prog=self.prog,
+                          commands=next((tuple(a.choices) for a in self._actions if isinstance(a, argparse._SubParsersAction)), ()))
             ui.heading(self.prog)
-            ui.detail_spans('', [(self.description, None)], label_width=0, label_gap=0, indent=2)
+            ui.text(self.description, indent=2)
             ui.detail('Usage', self.usage % {'prog': self.prog})
             for item in self._actions:
                 if isinstance(item, argparse._SubParsersAction):

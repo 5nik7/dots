@@ -69,11 +69,13 @@ COMMANDS = {
 }
 
 
-class HelpParser(argparse.ArgumentParser):
+from help_adapters import HelpArgumentParser
+
+class HelpParser(HelpArgumentParser):
     def error(self, message):
         import sys
-        from fonts.presentation import FontPresentation
-        ui=FontPresentation(sys.stderr)
+        from help_adapters import HelpView
+        ui=HelpView(sys.stderr, prog=self.prog)
         if not ui.human:return super().error(message)
         ui.heading(self.prog)
         ui.detail('Usage',self.format_usage().removeprefix('usage: ').strip())
@@ -81,11 +83,12 @@ class HelpParser(argparse.ArgumentParser):
         self.exit(2)
 
     def print_help(self, file=None):
-        from fonts.presentation import FontPresentation
-        ui=FontPresentation(file)
+        from help_adapters import HelpView
+        ui=HelpView(file, prog=self.prog,
+                    commands=next((tuple(a.choices) for a in self._actions if isinstance(a, argparse._SubParsersAction)), ()))
         ui.heading(self.prog)
         if ui.human:ui.detail('About',self.description)
-        else:ui.emit('  '+self.description)
+        else:ui.text(self.description, indent=2)
         ui.detail('Usage',self.format_usage().removeprefix('usage: ').strip())
         for action in self._actions:
             if isinstance(action,argparse._SubParsersAction):

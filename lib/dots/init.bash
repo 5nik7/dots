@@ -4,7 +4,7 @@
 # shellcheck disable=SC2016
 dots_init() {
   if [[ ${1:-} == --bootstrap ]]; then
-    [[ $# == 2 && ( $2 == bash || $2 == zsh || $2 == powershell ) ]] || { dots_error 'Usage: dots init --bootstrap bash|zsh|powershell'; return 2; }
+    [[ $# == 2 && ( $2 == bash || $2 == zsh || $2 == powershell ) ]] || { dots_usage_error 'dots init --bootstrap bash|zsh|powershell'; return 2; }
     python3 -B "$DOTS_LIB_DIR/bootstrap_snippet.py" "$2"
     return
   fi
@@ -14,7 +14,7 @@ dots_init() {
     return
   fi
   local shell=${1-auto} root=$DOTS loader quoted
-  if (($# > 1)) || { (($# == 1)) && [[ $1 == auto ]]; }; then dots_error 'Usage: dots init [bash|zsh|fish|powershell|nu|xonsh]'; return 2; fi
+  if (($# > 1)) || { (($# == 1)) && [[ $1 == auto ]]; }; then dots_usage_error 'dots init [bash|zsh|fish|powershell|nu|xonsh]'; return 2; fi
   case $shell in
     auto) loader='init.bash init.zsh' ;;
     bash) loader=init.bash ;;

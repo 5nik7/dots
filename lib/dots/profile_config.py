@@ -130,11 +130,18 @@ def keys(root=None, identity=None):
     return sorted({canonical(key) for key in result})
 
 
-def formatting_rows(root=None, selected=None):
+def formatting_rows(root=None, selected=None, *, controls=None):
     from config_values import Controls
-    values=Controls(root,selected).values.get('formatting',{}).get('apps',{}).get('cli',{})
+    controls=controls if controls is not None else Controls(root,selected)
+    values=controls.values.get('formatting',{}).get('apps',{}).get('cli',{})
     return [('__format.'+key,str(value),'formatting') for key,value in values.items()
             if key in ('indent','label_width','label_gap','alignment','indent_style','tab_width')]
+
+
+def help_rows(root=None, selected=None, *, styles=None, controls=None):
+    """Project help preferences once as inert literal records for shell adapters."""
+    from help_presentation import HelpStyles
+    return HelpStyles(root,selected=selected,styles=styles,controls=controls).rows()
 
 
 def main(args):
@@ -147,8 +154,12 @@ def main(args):
         for key, row in settings(selected=selected).items():
             if key != 'files.backup': print(key + '\t' + row['value'] + '\t' + row['source'])
         from style_config import Styles
-        for row in Styles(selected=selected).rows(): print('\t'.join(row))
-        for row in formatting_rows(selected=selected): print('\t'.join(row))
+        from config_values import Controls
+        styles=Styles(selected=selected)
+        controls=Controls(selected=selected)
+        for row in styles.rows(): print('\t'.join(row))
+        for row in formatting_rows(selected=selected,controls=controls): print('\t'.join(row))
+        for row in help_rows(selected=selected,styles=styles,controls=controls): print('\t'.join(row))
     elif args == ['__style-inputs']:
         from style_config import Styles
         from config_values import Controls

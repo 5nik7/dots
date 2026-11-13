@@ -18,7 +18,6 @@ from interaction import RichSelector, SelectionEnded, SelectionEvent, rich_fzf_a
 from menu_input import prompt
 from menu_tmux import TmuxContext, read_request, request_file
 from menus import Entry, Menu, choose, run_action, show_message, styled_labels
-from resources import wrap
 from wttr import cli as weather_cli
 
 ENTRIES = (
@@ -53,15 +52,15 @@ HELP = ('Enter: open   Esc: back / close   Ctrl-C: cancel\n'
 
 
 def help_view():
-    ui = Presentation()
+    from help_adapters import HelpView
+    ui = HelpView(prog='wttr', commands=('browse',))
     ui.heading('Weather browser')
     ui.detail('Usage', 'wttr browse [LOCATION] [options] | dots wttr browse')
     for flag, value, description in BROWSE_OPTIONS:
         ui.detail(', '.join(spellings(flag)) + (' ' + value if value else ''), description)
     ui.emit()
     for line in HELP.splitlines():
-        for part in wrap(line, ui.width):
-            ui.emit(part)
+        ui.text(line)
     ui.detail('Fallback', 'Without FZF or an interactive terminal, print the ordinary report.')
 
 

@@ -127,9 +127,12 @@ class Compiler:
         styles = Styles(self.root, profile)
         self.inputs.update(styles.startup_inputs())
         setting_rows += ['\t'.join(row) for row in styles.rows()]
-        from profile_config import formatting_rows
-        setting_rows += ['\t'.join(row) for row in formatting_rows(self.root,profile)]
-        self.inputs.update((LIB/'config_values.py',LIB/'row_layout.py'))
+        from profile_config import formatting_rows, help_rows
+        from config_values import Controls
+        controls = Controls(self.root, profile)
+        setting_rows += ['\t'.join(row) for row in formatting_rows(self.root,profile,controls=controls)]
+        setting_rows += ['\t'.join(row) for row in help_rows(self.root,profile,styles=styles,controls=controls)]
+        self.inputs.update((LIB/'config_values.py',LIB/'row_layout.py',LIB/'help_presentation.py'))
         defaults=self.root/'default/config.json'
         if defaults.is_file(): self.inputs.add(defaults)
         if defaults.parent.is_dir(): self.inputs.add(defaults.parent)

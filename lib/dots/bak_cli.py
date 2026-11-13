@@ -17,7 +17,8 @@ from interaction import SelectionEnded, gum_confirm, terminal
 
 
 def parser():
-    result = argparse.ArgumentParser(prog='bak', description='Move files into recoverable backups. Restore retains saved versions.',
+    from help_adapters import HelpArgumentParser
+    result = HelpArgumentParser(prog='bak', description='Move files into recoverable backups. Restore retains saved versions.',
         epilog='Commands: ' + ', '.join(k for k in COMMANDS if k) + '. Use bak -- NAME for a filename matching a command.')
     result.add_argument('values', nargs='*', metavar='COMMAND_OR_PATH')
     for name in ('json','dry-run','no-backup'):

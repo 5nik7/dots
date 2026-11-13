@@ -1,5 +1,7 @@
 # Native PowerShell
 
+Native help shares the configurable `colors.apps.cli.help.*` roles and `apps.cli.tagline` with Bash, including root synopsis/global options and grouped command discovery. With Python available, the native adapter reads the existing literal settings projection once; without Python, built-in default colors and `Manage your dotfiles and more...` keep bootstrap help usable. No Bash or WSL dependency is introduced. Windows application destinations are unchanged. Actual Windows PowerShell 5.1/7 and terminal acceptance remain pending; shared-controller fixtures establish only local behavior. See [help preferences](configuration.md#help-and-usage-preferences).
+
 ## Clipboard history
 
 `dots clipboard` uses the same Python history, watcher, Config and command grammar as Bash. Enable the optional PSReadLine Ctrl-X, Ctrl-V widget explicitly with `Invoke-Expression ((dots clipboard init powershell) -join [Environment]::NewLine)`; it calls PSReadLine `Insert` without executing the selected text. FZF uses the shared native selector; copy/print remain available without editor integration. PowerShell owns object-pipeline/file-redirection encoding, as with cpy/pst. No Bash dependency, WSL path translation or Windows app destination change is introduced. See [clipboard history](clipboard.md); actual Windows PowerShell 5.1/7 editor/desktop acceptance remains pending.

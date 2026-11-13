@@ -165,6 +165,10 @@ def validate_value(defaults,path,value):
     if path == ('apps','cli','logo_gradient'):
         if value not in ('classic','installer'):raise ValueError('logo_gradient requires classic or installer')
         return
+    if path == ('apps','cli','tagline'):
+        if not isinstance(value,str) or len(value)>32768 or any(not char.isprintable() for char in value):
+            raise ValueError('tagline requires a printable single-line string; empty hides the line')
+        return
     if path in (('apps','bak','mode'), ('apps','bak','location')):
         allowed = ('move','copy') if path[-1] == 'mode' else ('store','adjacent')
         if value not in allowed: raise ValueError('backup '+path[-1]+' requires '+', '.join(allowed))
@@ -289,6 +293,8 @@ def constraints(defaults, key):
         return dict(type='integer',examples=[25,33,50],syntax='Integer 10..80 percent of the picker height or width')
     if path == ('apps','cli','logo_gradient'):
         return dict(type='string', choices=['classic','installer'], syntax='Classic vertical blue/cyan or installer horizontal hint/info/accent')
+    if path == ('apps','cli','tagline'):
+        return dict(type='string',syntax='Printable single-line root help tagline; empty hides the line; null resets to inherited text; next invocation')
     if path in (('apps','bak','mode'), ('apps','bak','location')):
         return dict(type='string', choices=['move','copy'] if path[-1]=='mode' else ['store','adjacent'])
     if path == ('apps','bak','store'):

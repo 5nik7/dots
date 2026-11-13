@@ -39,16 +39,22 @@ def style_label(value):
     return ','.join(parts) or 'default'
 
 
-def compact_styles(values,styles,path=()):
+def compact_styles(values,styles,path=(),_help=None):
+    _help={} if _help is None else _help
     result={}
     for key,value in values.items():
         if not isinstance(value,dict):result[key]=value;continue
         fields={name:value[name] for name in ('fg','bg','sp',*ATTRS) if name in value and not isinstance(value[name],dict)}
-        children=compact_styles({name:item for name,item in value.items() if name not in fields},styles,(*path,key))
+        children=compact_styles({name:item for name,item in value.items() if name not in fields},styles,(*path,key),_help)
         if fields:
             # Resolve saved symbolic/missing-palette references through the same
             # inheritance path as consumers, while displaying the saved names.
             effective=styles.style('.'.join((*path,key)),fields)
+            if (*path,key)[:3]==('apps','cli','help') and len((*path,key))==4:
+                if 'styles' not in _help:
+                    from help_presentation import HelpStyles
+                    _help['styles']=HelpStyles(styles=styles)
+                effective=_help['styles'].style(key)
             code=styles.sgr_fields({name:item for name,item in effective.items() if item is not None})
             label=style_label(fields);annotation=''
             if '.'.join((*path,key)).startswith('apps.menu.popup') and any(v is None for v in fields.values()):

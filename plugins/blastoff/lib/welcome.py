@@ -30,9 +30,9 @@ def _columns():
 def _colored(color, json_output):
     if color not in ('auto', 'always', 'never'):
         raise ValueError('color must be auto, always, or never')
-    return not json_output and 'NO_COLOR' not in os.environ and (
-        color == 'always' or (color == 'auto' and sys.stdout.isatty()
-                              and os.environ.get('TERM') != 'dumb'))
+    return not json_output and (
+        color == 'always' or (color == 'auto' and not os.environ.get('NO_COLOR')
+                              and sys.stdout.isatty() and os.environ.get('TERM') != 'dumb'))
 
 
 def _wrap(text, width, accent=None, colored=False, indent=''):
@@ -124,17 +124,39 @@ def format_help(parser, version, color='auto', json_output=False):
     """Present the actual argparse grammar, without duplicated choice braces."""
     width = _columns()
     colored = _colored(color, json_output)
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'lib/dots'))
+    from help_presentation import HelpStyles, syntax_spans
+    styles = HelpStyles() if colored else None
+    known = []
+    def collect(current):
+        for action in current._actions:
+            if isinstance(action.choices, dict):
+                for name, child in action.choices.items():
+                    known.append(tuple(child.prog.split()[1:]))
+                    collect(child)
+    collect(parser)
+    def wrapped(text, kind='description', indent=''):
+        lines = _wrap(text, width, indent=indent)
+        if not colored:
+            return lines
+        return [''.join('\x1b['+styles.code(role)+'m'+value+'\x1b[0m'
+                        if value and not value.isspace() else value
+                        for value, role in syntax_spans(line, prog=parser.prog, commands=known, kind=kind))
+                for line in lines]
     rows = header(version, color, json_output, width) + ['']
 
     def section(title):
         if rows and rows[-1]:
             rows.append('')
-        rows.extend(_wrap(title, width, '1;35', colored))
+        rows.extend(wrapped(title, 'heading'))
 
-    def entry(label, description):
-        rows.extend(_wrap(label, width, '95', colored, indent='  '))
+    def entry(label, description, kind='command'):
+        if kind == 'command' and len(parser.prog.split()) > 1:
+            kind = 'subcommand'
+        rows.extend(wrapped(label, kind, indent='  '))
         if description and description != '==SUPPRESS==':
-            rows.extend(_wrap(description, width, indent='    '))
+            rows.extend(wrapped(description, indent='    '))
 
     positionals = [a for a in parser._actions if not a.option_strings and a.help != '==SUPPRESS==']
     groups = [a for a in positionals if isinstance(a.choices, dict)]
@@ -147,10 +169,10 @@ def format_help(parser, version, color='auto', json_output=False):
         elif action.nargs == '?':
             label = '['+label+']'
         operands.append(label)
-    rows += _wrap(parser.prog+' [options]'+(' '+' '.join(operands) if operands else ''), width, '95', colored, indent='  ')
+    rows += wrapped(parser.prog+' [options]'+(' '+' '.join(operands) if operands else ''), 'syntax', indent='  ')
     if parser.description:
         rows.append('')
-        rows += _wrap(parser.description, width)
+        rows += wrapped(parser.description)
     for action in groups:
         descriptions = {a.dest:a.help for a in action._choices_actions}
         items = action.choices
@@ -177,7 +199,7 @@ def format_help(parser, version, color='auto', json_output=False):
             description = action.help or ''
             if action.choices:
                 description += ' Choices: '+' | '.join(str(v) for v in action.choices)+'.'
-            entry((action.metavar or action.dest).upper(), description)
+            entry((action.metavar or action.dest).upper(), description, 'argument')
     options = [a for a in parser._actions if a.option_strings and a.help != '==SUPPRESS==']
     if options:
         section('Options')
@@ -185,8 +207,8 @@ def format_help(parser, version, color='auto', json_output=False):
             label = ', '.join(action.option_strings)
             if action.nargs != 0:
                 label += ' '+(' | '.join(map(str, action.choices)) if action.choices else (action.metavar or action.dest.upper()))
-            entry(label, action.help)
+            entry(label, action.help, 'option')
     if parser.epilog:
         section('Aliases' if parser.epilog.startswith('Aliases: ') else 'Global options & notes')
-        rows += _wrap(parser.epilog.removeprefix('Aliases: '), width)
+        rows += wrapped(parser.epilog.removeprefix('Aliases: '))
     return '\n'.join(rows)+'\n'

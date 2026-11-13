@@ -785,7 +785,8 @@ class Catalog:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["sources", "discover", "list", "locate", "show", "source", "target", "track"])
     parser.add_argument("value", nargs="?")
     parser.add_argument("--repo")

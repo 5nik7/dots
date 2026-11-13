@@ -16,13 +16,17 @@ Root and nested help share a branded header and version.
 Use the supplied 37-column, 13-row Braille logo when it fits, colored with a
 left-to-right purple-to-pink gradient. Narrow, dumb, non-Unicode or redirected
 output uses a compact ASCII fallback.
-NO_COLOR retains fitting artwork uncolored.
+NO_COLOR retains fitting artwork uncolored in automatic color mode.
 Missing artwork is harmless. No logo scripts or original ANSI files execute.
-Help groups commands by task and colors headings/names, with plain
+Help groups commands by task and uses configurable Dots help roles for
+executables, commands, subcommands, options, arguments, headings and
 descriptions.
 All options, aliases and subcommand help remain available.
-No discovery, config reads or subprocesses run for implicit or explicit help.
-Auto color requires a terminal; NO_COLOR overrides --color always.
+Help performs no application discovery or dependency subprocesses. Colored
+help reads Dots appearance preferences and the published palette; plain help
+keeps its lightweight path without those reads.
+Auto color requires a terminal and empty or unset NO_COLOR; explicit --color
+always overrides NO_COLOR.
 Color flags work before or after help, including nested help.
 JSON help remains undecorated text; no-command JSON remains a single object.
 No Nerd Font or image assets are required.

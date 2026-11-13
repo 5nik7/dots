@@ -84,7 +84,15 @@ def explain(key, root=None, selected=None, defaults=False, app=None, *, _style=N
         details=dict(description=description(key),canonical_key=canonical(key),constraints=constraints(group,name),destination=str(style.path(group)))
         if group=='colors' and base.endswith(('.fg','.bg')) and resolved['value'] is not None:
             role,_,field=base.rpartition('.')
-            details['resolved_color']=style.color(style.style(role,app=consumer).get(field,resolved['value']), 'default' if field=='bg' else 'foreground')
+            fields=style.style(role,app=consumer)
+            if consumer=='cli' and role.startswith('help.'):
+                if not hasattr(style,'_help_preferences'):
+                    from help_presentation import HelpStyles
+                    style._help_preferences=HelpStyles(styles=style)
+                fields=style._help_preferences.style(role[5:])
+                if role=='help.tagline' and field=='fg' and style._help_preferences.tagline_fallback:
+                    details['fallback']='Theme accent unavailable; ordinary foreground'
+            details['resolved_color']=style.color(fields.get(field,resolved['value']), 'default' if field=='bg' else 'foreground')
             if str(resolved['value']).startswith('palette.') and resolved['value'][8:] not in style.native_palette:
                 details['fallback']='Palette name unavailable; inherited semantic or terminal default'
         rows.append(dict(app=consumer,supported=consumer in choices,refresh=status,**details,**resolved))
@@ -316,6 +324,11 @@ def after_save(root, before):
         changed=affected(before,after)
         old_cli=before.get('apps',{}).get('cli',{})
         new_cli=after.get('apps',{}).get('cli',{})
+        def without_help(doc):
+            return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('help.')},
+                        options={k:v for k,v in doc.get('options',{}).items() if k!='tagline'})
+        if changed==['cli'] and without_help(old_cli)==without_help(new_cli):
+            return dict(schema=1,status='complete',consumers=[dict(app='cli',status='next invocation')])
         def without_pkgs_styles(doc):
             return dict(doc,colors={k:v for k,v in doc.get('colors',{}).items() if not k.startswith('pkgs.')})
         if changed==['cli'] and without_pkgs_styles(old_cli)==without_pkgs_styles(new_cli):

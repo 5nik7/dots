@@ -23,35 +23,39 @@ def help_report(parser, argv, stream=None):
     stream = sys.stdout if stream is None else stream
     ui = report(explicit, fallback=fallback, stream=stream)
     if ui is None: return False
-    ui.heading('pkgs')
-    ui.text(DESCRIPTION.splitlines()[0])
-    ui.gap(); ui.heading('Usage')
-    ui.text('pkgs COMMAND [ARG ...] [OPTIONS]', 'identity')
-    ui.gap(); ui.heading('Commands')
+    from help_adapters import HelpView
+    help_ui = HelpView(stream, prog='pkgs', commands=tuple(COMMANDS))
+    help_ui.color, help_ui.human = ui.ui.color, ui.ui.human
+    help_ui.heading('pkgs')
+    help_ui.text(DESCRIPTION.splitlines()[0], indent=2)
+    help_ui.emit(); help_ui.heading('Usage')
+    help_ui.text('pkgs COMMAND [ARG ...] [OPTIONS]', 'syntax', indent=2)
+    help_ui.emit(); help_ui.heading('Commands')
     for name, description in COMMANDS.items():
-        ui.ui.detail_spans(name, [(description, None)], label_width=12)
-    ui.gap(); ui.heading('Options')
+        help_ui.help_row(name, description, kind='command', prog='pkgs',
+                         commands=tuple(COMMANDS), label_width=12)
+    help_ui.emit(); help_ui.heading('Options')
     for action in parser._actions:
         if not action.option_strings: continue
         label = ', '.join(action.option_strings)
         if action.nargs != 0:
             label += ' '+(action.metavar or {'manager':'NAME', 'color':'MODE'}.get(action.dest, action.dest.upper()))
         description = action.help or ''
-        if ui.ui.width >= 80:
-            ui.ui.detail_spans(label, [(description, None)], label_width=27)
+        if help_ui.width >= 80:
+            help_ui.help_row(label, description, kind='option', label_width=27)
         else:
-            ui.text(label, 'identity')
-            ui.row([(description, 'value')], indent=4)
-    ui.gap(); ui.heading('Managers')
-    ui.text(', '.join(MANAGERS))
-    ui.gap(); ui.heading('Examples')
+            help_ui.text(label, 'option', indent=2)
+            help_ui.text(description, indent=4)
+    help_ui.emit(); help_ui.heading('Managers')
+    help_ui.text(', '.join(MANAGERS), 'argument', indent=2)
+    help_ui.emit(); help_ui.heading('Examples')
     examples = DESCRIPTION.split('Examples:\n', 1)[1].split('\n\n', 1)[0]
-    for example in examples.splitlines(): ui.text(example.strip(), 'identity')
-    ui.gap()
-    ui.text('Install, upgrade and refresh run without an extra confirmation flag.', 'muted')
-    ui.text('Install, uninstall and upgrade show brief results; --raw shows full manager output.', 'muted')
-    ui.text('Pip upgrades continue after package failures; global npm scripts need separate approval.', 'muted')
-    ui.text('Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.', 'muted')
+    for example in examples.splitlines(): help_ui.text(example.strip(), 'syntax', indent=2)
+    help_ui.emit()
+    help_ui.text('Install, upgrade and refresh run without an extra confirmation flag.', indent=2)
+    help_ui.text('Install, uninstall and upgrade show brief results; --raw shows full manager output.', indent=2)
+    help_ui.text('Pip upgrades continue after package failures; global npm scripts need separate approval.', indent=2)
+    help_ui.text('Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.', indent=2)
     return True
 
 

@@ -120,14 +120,18 @@ dots_catalog_load() {
   done
 }
 
+source "$DOTS_LIB_DIR/help.bash"
+
 dots_catalog_print() {
   local stem prefix=${1:-} view=${2:-all} group summary
   local -A shown=()
-  dots::heading 'Commands'
+  if [[ ${_DOTS_HELP_ACTIVE:-} ]]; then dots::help_line 'Commands' heading; else dots::heading 'Commands'; fi
   if [[ -z $prefix ]]; then
     for stem in "${DOTS_BUILTIN_NAMES[@]}"; do
       dots_builtin_metadata "$stem"
-      dots::row "$stem${DOTS_META_USAGE:+ $DOTS_META_USAGE}" "$DOTS_META_SUMMARY"
+      if [[ ${_DOTS_HELP_ACTIVE:-} ]]; then
+        dots::help_row "$stem${DOTS_META_USAGE:+ $DOTS_META_USAGE}" "$DOTS_META_SUMMARY" command
+      else dots::row "$stem${DOTS_META_USAGE:+ $DOTS_META_USAGE}" "$DOTS_META_SUMMARY"; fi
     done
   fi
   for stem in "${DOTS_CATALOG[@]}"; do
@@ -140,46 +144,52 @@ dots_catalog_print() {
       if [[ ${DOTS_CATALOG_HIDDEN[$group]:-true} != true ]]; then
         summary=${DOTS_CATALOG_SUMMARY[$group]}
       fi
-      dots::row "$group" "$summary"
+      if [[ ${_DOTS_HELP_ACTIVE:-} ]]; then dots::help_row "$group" "$summary" command
+      else dots::row "$group" "$summary"; fi
     else
-      dots::row "${stem//-/ }" "${DOTS_CATALOG_SUMMARY[$stem]}"
+      if [[ ${_DOTS_HELP_ACTIVE:-} ]]; then dots::help_row "${stem//-/ }" "${DOTS_CATALOG_SUMMARY[$stem]}" command
+      else dots::row "${stem//-/ }" "${DOTS_CATALOG_SUMMARY[$stem]}"; fi
     fi
   done
 }
 
 dots_command_help() {
-  local route=$1 row long short type description position
+  local route=$1 row long short type description position option_label
+  local _DOTS_HELP_ACTIVE=1 _DOTS_HELP_ROUTE=$1
   shift
   if [[ $route == anodize || $route == anodize\ * ]]; then
     # Shared core renderer only: help must never execute the resolved extension.
     source "$DOTS_LIB_DIR/../../plugins/anodize/logo.bash"
     dots::anodize_logo "$@" || return
   fi
-  dots::heading "dots $route"
-  printf '%s\n\n' "${DOTS_META_SUMMARY:-Run $route}"
-  dots::heading 'Usage'
-  printf '  dots %s%s\n' "$route" "${DOTS_META_USAGE:+ $DOTS_META_USAGE}"
+  dots::help_line "dots $route" syntax
+  dots::help_line "${DOTS_META_SUMMARY:-Run $route}" prose
+  printf '\n'; dots::help_line 'Usage' heading
+  dots::help_line "dots $route${DOTS_META_USAGE:+ $DOTS_META_USAGE}" syntax 2
   if ((${#DOTS_META_OPTIONS[@]})); then
-    printf '\n'; dots::heading 'Options'
+    printf '\n'; dots::help_line 'Options' heading
     for row in "${DOTS_META_OPTIONS[@]}"; do
       IFS='|' read -r long short type description <<< "$row"
-      dots::row "${short:+$short, }$long$([[ $type == flag ]] || printf ' VALUE')" "$description"
+      option_label=${short:+$short, }$long
+      [[ $type == flag ]] || option_label+=' VALUE'
+      dots::help_row "$option_label" "$description" option
     done
   fi
   if ((${#DOTS_META_ARGUMENTS[@]})); then
-    printf '\n'; dots::heading 'Arguments'
+    printf '\n'; dots::help_line 'Arguments' heading
     for row in "${DOTS_META_ARGUMENTS[@]}"; do
       IFS='|' read -r position type description <<< "$row"
-      dots::row "$position ($type)" "$description"
+      dots::help_row "$position ($type)" "$description" argument
     done
   fi
   if ((${#DOTS_META_EXAMPLES[@]})); then
-    printf '\n'; dots::heading 'Examples'
-    for row in "${DOTS_META_EXAMPLES[@]}"; do printf '  %s\n' "$row"; done
+    printf '\n'; dots::help_line 'Examples' heading
+    for row in "${DOTS_META_EXAMPLES[@]}"; do dots::help_line "$row" example 2; done
   fi
 }
 
 dots_help() {
+  local _DOTS_HELP_ACTIVE=1
   if [[ ${1:-} == theme && -n ${2:-} && $2 != -* ]]; then
     local DT_LIB=$DOTS_LIB_DIR/themes
     source "$DT_LIB/core.bash"
@@ -204,21 +214,26 @@ dots_help() {
       dots::logo < "$DOTS/logo.txt"
       printf '\n'
     fi
-    dots::heading 'dots — your command center'
-    printf '\n'; dots::heading 'Usage'
-    printf '  dots [OPTIONS] COMMAND [ARGS...]\n\n'
+    dots::help_style || return
+    if [[ ${_DOTS_HELP_TAGLINE-Manage your dotfiles and more...} ]]; then
+      dots::help_line "${_DOTS_HELP_TAGLINE-Manage your dotfiles and more...}" tagline
+      printf '\n'
+    fi
+    dots::help_line 'Usage' heading
+    dots::help_line 'dots [OPTIONS] COMMAND [ARGS...]' syntax 2
+    printf '\n'
     dots_catalog_print '' root
-    printf '\n'; dots::heading 'Global options (before the command)'
+    printf '\n'; dots::help_line 'Global options (before the command)' heading
     for line in "${DOTS_GLOBAL_OPTIONS[@]}"; do
       IFS='|' read -r long short type description <<< "$line"
       case $type in directory) long+=' DIRECTORY' ;; choice:*) long+='=auto|always|never' ;; esac
-      dots::row "${short:+$short, }$long" "$description"
+      dots::help_row "${short:+$short, }$long" "$description" option
     done
     local columns=${COLUMNS:-80}
     [[ $columns =~ ^[0-9]+$ ]] || columns=80
     columns=$((10#$columns)); (( columns >= 20 )) || columns=20
     printf '\n'
-    dots::line 'Use dots help COMMAND for details; dots commands for all commands.' '' 0 "$columns"
+    dots::help_line 'Use dots help COMMAND for details; dots commands for all commands.' prose 0 "$columns"
     return 0
   fi
   case $route in

@@ -297,6 +297,7 @@ def render_parsed(result, colors=None):
 
 def main():
     p = argparse.ArgumentParser(); p.add_argument('--theme', required=True); p.add_argument('--logo'); p.add_argument('--palette', action='store_true'); p.add_argument('--native-table', action='store_true')
+    p.add_argument('--help-prog')
     args = p.parse_args()
     colored = color_enabled()
     text = sys.stdin.read()
@@ -330,7 +331,12 @@ def main():
         if logo:
             if colored and authored: print_authored_logo(logo)
             else: print(clean(logo).rstrip())
-        print(clean(text).rstrip()); return
+        if args.help_prog:
+            sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+            from help_presentation import colorize_help
+            print(colorize_help(clean(text).rstrip(), prog=args.help_prog, commands=('show', 'set', 'init'), color=colored))
+        else: print(clean(text).rstrip())
+        return
     fg, bg = palette['foreground'], palette['background']
     fg = readable(fg,bg,'#000000' if luminance(bg) > .179 else '#ffffff')
     accent = readable(palette['accent'],bg,fg)
@@ -342,15 +348,62 @@ def main():
     lines = []
     if logo and max(map(width,logo.splitlines()),default=0) <= panel-4:
         if authored: print_authored_logo(logo, indent='  ')
-        else: lines.extend((line,'logo') for line in clean(logo).rstrip().splitlines())
-        lines.append(('', 'body'))
+        else: lines.extend((line,'logo', None) for line in clean(logo).rstrip().splitlines())
+        lines.append(('', 'body', None))
+    help_styles = None
+    if args.help_prog:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from help_presentation import HelpStyles, syntax_spans
+        help_styles = HelpStyles(palette=palette)
+    help_section = ''
     for index,line in enumerate(body):
         kind = 'heading' if index == 0 or line.endswith(':') else 'body'
+        spans = None
+        if help_styles is not None:
+            stripped = line.strip()
+            if kind == 'heading':
+                help_section = stripped.lower().rstrip(':')
+                spans = [(line, 'heading')]
+            elif stripped.startswith(('Usage:', 'Formats:')):
+                lead, content = line.split(':', 1)
+                spans = [(lead+':', 'heading'), *syntax_spans(content, prog=args.help_prog,
+                          kind='syntax' if stripped.startswith('Usage:') else 'argument', commands=('show','set','init'))]
+            elif help_section in ('actions', 'options'):
+                match_row = re.match(r'(\s*)(.*?)(\s{2,})(\S.*)', line)
+                if match_row:
+                    before, label, gap, description = match_row.groups()
+                    label_spans = syntax_spans(label, prog=args.help_prog,
+                                               kind='option' if label.startswith('-') else 'command', commands=('show','set','init'))
+                    if help_section == 'actions':
+                        label_spans = [(value, 'command' if value in ('show','set','init') else 'punctuation' if value=='/' else role)
+                                       for value,role in label_spans]
+                    spans = [(before, 'description'), *label_spans,
+                             (gap, 'description'), *syntax_spans(description, prog=args.help_prog, kind='description')]
+                else:
+                    spans = syntax_spans(line, prog=args.help_prog, kind='option' if help_section=='options' else 'command',
+                                         commands=('show','set','init'))
+            else:
+                spans = syntax_spans(line, prog=args.help_prog,
+                                     kind='syntax' if help_section=='examples' else 'argument' if help_section in ('flavors','formats') else 'description',
+                                     commands=('show','set','init'))
         parts = textwrap.wrap(line, width=max(8,(panel-4)//(2 if any(width(c)>1 for c in line) else 1)), replace_whitespace=False, drop_whitespace=True, break_long_words=False, break_on_hyphens=False)
+        offset = 0
         for part in [part for part in parts if part.strip()] or ['']:
-            lines.append((part,kind))
+            part_spans = None
+            if spans is not None:
+                start = line.find(part, offset)
+                stop = start+len(part)
+                part_spans = []
+                position = 0
+                for value, role in spans:
+                    end = position+len(value)
+                    if end>start and position<stop:
+                        part_spans.append((value[max(0,start-position):min(len(value),stop-position)],role))
+                    position = end
+                offset = stop
+            lines.append((part,kind,part_spans))
     base = escape(bg,True)
-    for line,kind in lines:
+    for line,kind,spans in lines:
         # Long IDs remain whole, even if they exceed the nominal panel width.
         color = accent if kind in ('heading','logo') else muted if line.startswith('  #') else fg
         prefix = base + escape(color) + ('\x1b[1m' if kind == 'heading' else '')
@@ -358,7 +411,13 @@ def main():
         if match:
             prefix += escape(match[0],True) + '  ' + base + escape(color) + ' '
         padding = max(0,panel-width(line)-4-(3 if match else 0))
-        print(prefix + '  ' + line + ' '*padding + '  ' + '\x1b[0m')
+        if help_styles is not None and spans is not None:
+            normal = '\x1b[0m'+base+escape(fg)
+            styled = ''.join(normal+'\x1b['+help_styles.code(role).removeprefix('0;')+'m'+value+normal
+                             if value and not value.isspace() else value for value,role in spans)
+            print(base+escape(fg)+'  '+styled+' '*padding+'  '+'\x1b[0m')
+        else:
+            print(prefix + '  ' + line + ' '*padding + '  ' + '\x1b[0m')
 
 
 if __name__ == '__main__': main()

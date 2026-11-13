@@ -65,7 +65,7 @@ Main help (`wttr -h` / `--help`) and completion help (`wttr completion -h`) begi
  wttr — weather from wttr.in
 ```
 
-The artwork uses a horizontal gradient from the published Dots theme's blue to cyan, with `#3B82F6` / `#06B6D4` fallbacks for unavailable endpoints. Plain help retains the artwork without ANSI. The title icon follows the icon controls independently; `--icons never` removes it. Help never reads weather configuration or queries providers, and reads at most one palette snapshot when colored. The banner appears only in help, never weather results, errors, stock responses, widgets, or data output.
+The artwork uses a horizontal gradient from the published Dots theme's blue to cyan, with `#3B82F6` / `#06B6D4` fallbacks for unavailable endpoints. Plain help retains the artwork without ANSI. The title icon follows the icon controls independently; `--icons never` removes it. Main, completion and browser help use the [shared help styles](presentation.md#help-syntax-and-tagline); the authored artwork resolves its gradient independently from the same published palette. Help reads local Dots presentation preferences and palette data, never weather configuration or providers. The banner appears only in main and completion help, never browser help, weather results, errors, stock responses, widgets, or data output.
 
 Short flags are case-sensitive aliases with the same arguments and behavior as their long forms:
 

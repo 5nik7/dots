@@ -54,12 +54,20 @@ _dots_config_load() {
     while IFS= read -r line; do [[ -z $line ]] || _DOTS_PROFILE_SETTING_ROWS+=("$line"); done <<< "$rows"
     typeset -g _DOTS_PROFILE_SETTINGS_CHECKOUT=$root
   fi
-  typeset -gA _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS _DOTS_FORMATTING
+  typeset -gA _DOTS_STYLE_ICONS _DOTS_STYLE_COLORS _DOTS_FORMATTING _DOTS_HELP_STYLES
   _DOTS_STYLE_ICONS=() _DOTS_STYLE_COLORS=() _DOTS_FORMATTING=()
+  _DOTS_HELP_STYLES=()
+  typeset -g _DOTS_HELP_TAGLINE='Manage your dotfiles and more...'
   for line in "${_DOTS_PROFILE_SETTING_ROWS[@]}"; do
     key=${line%%$'\t'*}
     value=${line#*$'\t'}; value=${value%%$'\t'*}
     case $key in
+      __help.color.*)
+        key=${key#__help.color.}
+        case $key in executable|command|subcommand|option|argument|heading|description|punctuation|tagline) ;; *) return 1 ;; esac
+        [[ $value =~ ^[0-9]+(\;[0-9]+)*$ ]] || return 1
+        _DOTS_HELP_STYLES[$key]=$value; continue ;;
+      __help.tagline) _DOTS_HELP_TAGLINE=$value; continue ;;
       __format.*)
         key=${key#__format.}
         _dots_format_valid "$key" "$value" || return 1

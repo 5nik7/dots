@@ -269,7 +269,7 @@
         },
         {
           "name": "chafa",
-          "observed_version": "1.18.3",
+          "observed_version": "1.18.3-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -430,7 +430,7 @@
         },
         {
           "name": "dua",
-          "observed_version": "3.0.1",
+          "observed_version": "3.0.3",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -535,7 +535,7 @@
         },
         {
           "name": "ffmpeg",
-          "observed_version": "9.0.2-1",
+          "observed_version": "9.0.2-2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -892,7 +892,7 @@
         },
         {
           "name": "imagemagick",
-          "observed_version": "7.1.2.35",
+          "observed_version": "7.1.2.35-1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1424,7 +1424,7 @@
         },
         {
           "name": "mise",
-          "observed_version": "2026.11.6",
+          "observed_version": "2026.11.7",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1438,7 +1438,7 @@
         },
         {
           "name": "mpd",
-          "observed_version": "0.24.18-1",
+          "observed_version": "0.24.19",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1550,7 +1550,7 @@
         },
         {
           "name": "nodejs",
-          "observed_version": "26.13.0-1",
+          "observed_version": "26.13.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1879,7 +1879,7 @@
         },
         {
           "name": "python-ruff",
-          "observed_version": "0.17.4",
+          "observed_version": "0.17.5",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -1977,7 +1977,7 @@
         },
         {
           "name": "ruff",
-          "observed_version": "0.17.4",
+          "observed_version": "0.17.5",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2831,7 +2831,7 @@
         },
         {
           "name": "zig",
-          "observed_version": "0.17.0",
+          "observed_version": "0.17.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2961,14 +2961,14 @@
         },
         {
           "name": "@openai/codex",
-          "observed_version": "0.167.1",
+          "observed_version": "0.167.2",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "@openai/codex-linux-arm64",
-          "observed_version": "0.167.1-linux-arm64",
+          "observed_version": "0.167.2-linux-arm64",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3017,7 +3017,7 @@
         },
         {
           "name": "context-mode",
-          "observed_version": "2.1.7",
+          "observed_version": "2.1.10",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3080,7 +3080,7 @@
         },
         {
           "name": "prettier",
-          "observed_version": "3.10.0",
+          "observed_version": "3.10.1",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -3638,7 +3638,7 @@
         },
         {
           "name": "ruff",
-          "observed_version": "0.17.4",
+          "observed_version": "0.17.5",
           "pin": null,
           "selection": "explicit",
           "enabled": false,

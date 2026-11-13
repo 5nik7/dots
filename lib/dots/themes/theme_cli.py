@@ -369,13 +369,22 @@ def family(themes, name, args):
         palette = themes.load(name); name, flavor = palette['theme'], palette['flavor']
     else: flavor = None
     if not args or any(arg in ('help','-h','--help') for arg in args):
-        ui = Presentation()
+        from help_adapters import HelpView
+        for arg in args:
+            if arg.startswith('--color='):
+                mode = arg.partition('=')[2]
+                if mode == 'none': mode = 'never'
+                if mode not in ('always','never','auto'): raise ValueError('invalid decoration mode')
+                os.environ['DOTS_COLOR'] = mode
+        selected = themes.load(themes.pick(name, flavor))
+        ui = HelpView(prog='dots theme ' + name, commands=('show', 'set', 'init'), palette=selected)
         ui.heading('Theme palette: ' + name)
         ui.detail('Usage', 'dots theme ' + name + ' [FLAVOR] [show|set|init|COLOR [FORMAT]]')
-        ui.detail('Flavors', list(families.get(name, {})))
-        ui.detail('Formats', FORMATS)
-        ui.detail('Options', '--flavor, --color NAME, --format, --raw, --array, --all, --completion')
-        ui.detail('Activate', 'set [--dry-run] [--background] [--verbose]')
+        ui.detail('Flavors', list(families.get(name, {})), value_kind='argument')
+        ui.detail('Formats', FORMATS, value_kind='argument')
+        ui.help_row('Options', '--flavor, --color NAME, --format, --raw, --array, --all, --completion',
+                    kind='heading', value_kind='option')
+        ui.detail('Activate', 'set [--dry-run] [--background] [--verbose]', value_kind='command')
         return
     action, color, format, raw, array, all_flavors = 'show', None, 'hex', False, False, False
     flags = []
@@ -406,7 +415,9 @@ def family(themes, name, args):
             else: color = value
         elif token == '-e': format = 'esc'
         elif token in ('help','-h','--help'):
-            print('Usage: dots theme ' + name + ' [FLAVOR] [show|set|init|COLOR [FORMAT]]'); return
+            from help_presentation import colorize_help
+            print(colorize_help('Usage: dots theme ' + name + ' [FLAVOR] [show|set|init|COLOR [FORMAT]]',
+                                prog='dots theme ' + name, commands=('show','set','init'))); return
         elif token in families.get(name, {}): flavor = token
         elif token in FORMATS: format = token
         elif token.startswith('-') or color: raise ValueError('invalid palette argument: ' + token)
@@ -460,7 +471,8 @@ def main(argv=None):
         if len(args)>1: raise ValueError('dir accepts at most one ID')
         print(themes.directory(args[0] if args else themes.current()))
     elif action == 'color':
-        parser = argparse.ArgumentParser()
+        from help_adapters import HelpArgumentParser
+        parser = HelpArgumentParser()
         parser.add_argument('name'); parser.add_argument('format', nargs='?', default='hex', choices=FORMATS)
         parser.add_argument('--theme'); parser.add_argument('--native', action='store_true')
         options = parser.parse_args(args); palette = themes.load(options.theme or themes.current())
@@ -468,10 +480,12 @@ def main(argv=None):
         if options.name not in colors: raise ValueError('unknown color')
         print(colors[options.name] if options.name == 'mode' else metric(options.name, colors[options.name], options.format))
     elif action == 'init':
-        parser = argparse.ArgumentParser(); parser.add_argument('--shell', default='powershell' if os.name == 'nt' else 'zsh', choices=['powershell','bash','zsh','fish'])
+        from help_adapters import HelpArgumentParser
+        parser = HelpArgumentParser(); parser.add_argument('--shell', default='powershell' if os.name == 'nt' else 'zsh', choices=['powershell','bash','zsh','fish'])
         options = parser.parse_args(args); print(shell_init(themes.load(themes.current()), options.shell), end='')
     elif action in ('set','refresh'):
-        parser = argparse.ArgumentParser()
+        from help_adapters import HelpArgumentParser
+        parser = HelpArgumentParser()
         if action == 'set': parser.add_argument('identity')
         else: parser.add_argument('--commands-only', action='store_true')
         parser.add_argument('--dry-run', action='store_true'); parser.add_argument('--background', action='store_true')
@@ -510,5 +524,8 @@ if __name__ == '__main__':
     try: sys.exit(main())
     except SelectionEnded as ended: sys.exit(ended.status)
     except (OSError, ValueError) as error:
-        print('dots theme: ' + str(error), file=sys.stderr); sys.exit(1)
+        from help_adapters import usage_message
+        message = str(error)
+        prog = 'bg' if message.startswith('Usage: bg ') else 'theme'
+        print('dots theme: ' + usage_message(message, prog=prog, commands=('set', 'install'), stream=sys.stderr), file=sys.stderr); sys.exit(1)
     except KeyboardInterrupt: sys.exit(130)

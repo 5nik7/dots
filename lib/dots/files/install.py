@@ -799,7 +799,8 @@ def update_sources(root, rows):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog='dots files', add_help=False,
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(prog='dots files', add_help=False,
                                     description='Install or restore catalogued Dots configurations with retained backups.',
                                     epilog='Setup is also available through dots init --setup and the root install/uninstall shell and PowerShell scripts.')
     parser.add_argument('-h', '--help', action='store_true', help='show setup help')

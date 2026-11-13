@@ -21,7 +21,7 @@ dt_palette_help() {
     printf '\n%s\n' 'Options:' '  --color=auto|always|never|none   Output decoration' '  -c / --color NAME              Query a palette color' '  -f / --flavor, -F / --format, -r / --raw, -a / --array' '  --all, --dry-run, --background, -v / --verbose (set), --completion bash|zsh|fish|powershell' '' 'Flavors:'
     dt_family_flavors "$family"; printf '  %s\n' "${DT_FAMILY_FLAVORS[@]}"
     printf '\nFormats:'; printf ' %s' "${DT_FORMATS[@]}"; printf '\n'
-  } | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/presentation.py" --theme "${id:-$family}" "${artwork[@]}"
+  } | DOTS_COLOR="${DOTS_COLOR:-${dots_options[DOTS_COLOR]:-auto}}" python3 -B "$DT_LIB/presentation.py" --theme "${id:-$family}" --help-prog "$family" "${artwork[@]}"
 }
 dt_palette_completion_script() {
   local family=$1 shell=$2 fish_path=${DT_LIB%/themes}/completion/fish

@@ -634,7 +634,8 @@ class Workflow:
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(description=__doc__)
     parser.add_argument('command', choices=['status', 'sync', 'publish', 'submodules-publish'])
     parser.add_argument('path', nargs='?')
     parser.add_argument('--all-submodules', action='store_true')

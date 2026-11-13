@@ -486,7 +486,8 @@ def show_system(rows, locations, verbose=False, include_all=False):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser()
     parser.add_argument('action', choices=['locations', 'system', 'add', 'link', 'remove', 'history', 'undo', 'recover', 'backups-list', 'backups-show', 'backups-restore'])
     parser.add_argument('values', nargs='*')
     parser.add_argument('--repo')

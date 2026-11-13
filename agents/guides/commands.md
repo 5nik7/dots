@@ -58,6 +58,7 @@ This is a development review, not authorization to change user preferences or ac
 - Usage errors and diagnostics belong on stderr.
 - Structured output must be valid even when color is enabled globally; never mix decoration into JSON.
 - Follow the [presentation contract](../../docs/presentation.md) for every new or changed first-party human view, including help, empty results and diagnostics. Reuse the shared renderer or verify equivalent behavior.
+- For help, reuse `help_presentation.py` / `help_adapters.py` and the native help-span helpers. Keep syntax inert until layout is complete; use metadata/parser context for commands, flags and arguments, and preserve authored branding. `colors.apps.cli.help.*` owns help text styles; ordinary reports keep their existing roles.
 - Use the implemented color/icon controls and their documented `NO_COLOR`, terminal and forced-output precedence. Preserve readable plain layouts and all script-facing data formats.
 - Prefer optional Gum for suitable interactive flows under the [Gum convention](../../docs/presentation.md#optional-gum-interactions). Reuse the lazy interaction adapter; keep tool probes out of help, completion and ordinary dispatch. Test missing tools, fallbacks, cancellation and noninteractive behavior.
 - Include the presentation acceptance gate in the focused plan and review representative output alongside related commands.

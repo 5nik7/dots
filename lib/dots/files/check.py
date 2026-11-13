@@ -147,7 +147,8 @@ def summary(ui, result):
 
 
 def parser():
-    p = argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    p = HelpArgumentParser(description=__doc__)
     p.add_argument('-v', '--verbose', action='store_true')
     for flag in ('yes', 'dry-run', 'json', 'all-platforms'):
         p.add_argument('--' + flag, action='store_true')

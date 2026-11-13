@@ -2251,6 +2251,113 @@
       "updated": "2026-11-11T21:27:44.540349+00:00",
       "completed": "2026-11-11T21:27:44.540349+00:00",
       "removed": null
+    },
+    {
+      "id": "6e3fcbc7f08140a39f4306010b4706a5",
+      "alias": null,
+      "title": "usage output update",
+      "notes": "update usage output for dots andnall dots sub commands. add all coloring output to dots config. add dots config option to set tagline, currently 'dots — your command center', change to 'Manage your dotfiles and more...' color it theme accent if set or falback to just plain text foreground color if not. dots [OPTIONS] COMMAND [ARGS...], color each of those different colors and then match the type throughout the rest of the usage, example color all options a color, color all commands the same(maybe subcommnds a different complementert color to command color), color flags the same, and then color all args the same.\n\nmake sure to update docs\n\nuse subagents if possible\n\nImplementation approved. Scope: all first-party help including bundled apps and standalone aliases; ordinary reports/results excluded. Preserve layouts and branding. Five theme-hue roles: executable cyan, command blue, subcommand magenta, option/flag yellow, argument green. Also configurable heading, description, punctuation and tagline. Default tagline: Manage your dotfiles and more...; empty hides; theme accent else foreground. Apply roles to syntax references, examples and parser-error usage. Settings activate next invocation. Dependencies: A 03ed8c6c6a2b4199bdae3e2bdc42ab28 precedes B 15a3616d45424474b9747c56e72167a2 and C 764284d0a4924c33b0d9daa0f44ba555; D bd4b1a3697d1402eb9b4dd5efa13002d follows all. Preserve unrelated work. Native evidence may be named pending. No commits, pushes, live installation or application reload.\n\nImplementation and agreed local acceptance complete. All four attached work packages verified and completed before this parent. Shared configurable help roles and phrase-only tagline are delivered across public first-party help, bundled apps and shipped aliases while preserving layouts/branding and machine contracts. Documentation and local Wiki are synchronized (transaction 2a0007269e3348999fecd1123f7c31f7, Healthy yes). Final tests, measured colored-help overhead, existing completion limitation and accepted pending native Windows PowerShell 5.1/7 and Linux/WSL checks are recorded in plans/usage-help.md. Unrelated existing work was preserved; no commit, push, live installation or application reload was performed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "usage,help,output,colors",
+        "dots"
+      ],
+      "due": null,
+      "parent": null,
+      "acceptance": [
+        "All first-party help and shipped aliases implement the agreed configurable five-role syntax styling and phrase-only root tagline while preserving layouts and branding.",
+        "All four attached work packages are verified; configuration, documentation, Wiki and delivery evidence are recorded, with unrun native checks explicitly pending."
+      ],
+      "created": "2026-11-12T21:01:54.174774+00:00",
+      "updated": "2026-11-12T22:14:45.430275+00:00",
+      "completed": "2026-11-12T22:14:45.430275+00:00",
+      "removed": null
+    },
+    {
+      "id": "03ed8c6c6a2b4199bdae3e2bdc42ab28",
+      "alias": null,
+      "title": "Shared help styles and Config integration",
+      "notes": "Foundation for 15a3616d45424474b9747c56e72167a2, 764284d0a4924c33b0d9daa0f44ba555. New child of 6e3fcbc7f08140a39f4306010b4706a5; agreed high priority. Native Windows PowerShell 5.1/7 and Linux/WSL checks may remain explicitly pending after isolated local acceptance.\n\nImplemented nine Config help styles, printable/empty/inherited tagline, no-publication activation, literal Bash/Zsh projection and compiled startup invalidation. Eight focused Config/style/browser/completion tests passed in owned roots, including previews matching missing-accent fallback. Shared renderer final verification is ongoing.\n\nVerified complete: nine shared span tests and focused Config/style/browser/completion checks pass. All nine help roles support the existing style fields; tagline is printable literal text with empty hiding, inheritance/reset and theme-accent-to-foreground fallback. Help-only saves activate next invocation without publication/reload. Literal settings and compiled startup share resolved Controls; warm Bash/Zsh startup and invalidation checks pass. All six Config completion providers expose the new keys without ANSI. See plans/usage-help.md for evidence and accepted pending native checks.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "6e3fcbc7f08140a39f4306010b4706a5",
+      "acceptance": [
+        "All nine help text roles and apps.cli.tagline are discoverable and editable through Config, with actual consumer coverage, inheritance/reset, empty tagline hiding and accent-to-foreground fallback.",
+        "Help-only saves activate on next invocation without theme publication or application reload; shared semantic spans preserve literal text and data output."
+      ],
+      "created": "2026-11-12T21:22:28.866047+00:00",
+      "updated": "2026-11-12T22:14:35.995401+00:00",
+      "completed": "2026-11-12T22:14:35.995401+00:00",
+      "removed": null
+    },
+    {
+      "id": "15a3616d45424474b9747c56e72167a2",
+      "alias": null,
+      "title": "Core help across Bash and native frontends",
+      "notes": "Depends on 03ed8c6c6a2b4199bdae3e2bdc42ab28. New child of 6e3fcbc7f08140a39f4306010b4706a5; agreed high priority. Native Windows PowerShell 5.1/7 and Linux/WSL checks may remain explicitly pending after isolated local acceptance.\n\nCore Bash suite passed all 30 tests, including actual Bash/Zsh/Fish completions, syntax roles, literal/empty tagline, 40/80/120-column output and dependency-free help. Three native-controller help checks passed; real PowerShell fallback/configured checks remain pending because no engine is installed. ShellCheck for the new Bash helper and Bash syntax passed.\n\nVerified complete: full Bash CLI suite 31/31, subsequent alternative-route/configured-role regressions, native-controller 23 passes with three unavailable PowerShell runtime skips, and final regression for all four authored native usage errors pass. Root/family/leaf help and error usage use shared roles; root tagline/synopsis/global options and inert metadata remain consistent. Twenty-four Bash/Python PTYs at 40/80/120 columns with light/dark palettes fit their widths. Ten tokenizer comparisons and four full captures retain exact bytes through optimization. Actual Windows PowerShell 5.1/7 and Linux/WSL terminal acceptance remain pending as agreed.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "6e3fcbc7f08140a39f4306010b4706a5",
+      "acceptance": [
+        "Root, built-in, family and leaf help use five syntax roles plus heading, description, punctuation and tagline styles across Bash, Python and Python-free PowerShell.",
+        "Root tagline, synopsis and global-option content have frontend parity; grouped discovery, extension nonexecution, direct dispatch and dependency-free defaults are preserved."
+      ],
+      "created": "2026-11-12T21:22:31.634078+00:00",
+      "updated": "2026-11-12T22:14:38.216915+00:00",
+      "completed": "2026-11-12T22:14:38.216915+00:00",
+      "removed": null
+    },
+    {
+      "id": "764284d0a4924c33b0d9daa0f44ba555",
+      "alias": null,
+      "title": "Bundled apps and standalone help",
+      "notes": "Depends on 03ed8c6c6a2b4199bdae3e2bdc42ab28. New child of 6e3fcbc7f08140a39f4306010b4706a5; agreed high priority. Native Windows PowerShell 5.1/7 and Linux/WSL checks may remain explicitly pending after isolated local acceptance.\n\nVerified complete: all eight specialized adapter tests and two focused weather-browser checks pass, including standalone/bundled preferences, parser/manual stderr usage, repeated invocations, native theme action/argument roles, addressed palette backgrounds, Wiki argument errors and exact plain/data contracts. Bundled suite has 17 passing cases across full run and targeted installed-help/idempotence/restore rerun, plus one unavailable native-runtime skip. Blastoff 15 help cases have passing evidence across full run and focused reruns; Anodize/Fonts/weather checks pass. Public parser and manual-usage inventory is covered; remaining plain parsers are private transports/compilers, and historical plugin packaging is unchanged.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "6e3fcbc7f08140a39f4306010b4706a5",
+      "acceptance": [
+        "Every public first-party bundled/standalone help path, including parser-error usage and explicit inline references, consumes shared help styles.",
+        "Existing layouts, authored branding, addressed theme palettes, exit codes, stream ownership and data contracts are preserved."
+      ],
+      "created": "2026-11-12T21:22:33.629000+00:00",
+      "updated": "2026-11-12T22:14:40.830576+00:00",
+      "completed": "2026-11-12T22:14:40.830576+00:00",
+      "removed": null
+    },
+    {
+      "id": "bd4b1a3697d1402eb9b4dd5efa13002d",
+      "alias": null,
+      "title": "Verification, documentation and delivery",
+      "notes": "Depends on 03ed8c6c6a2b4199bdae3e2bdc42ab28, 15a3616d45424474b9747c56e72167a2, 764284d0a4924c33b0d9daa0f44ba555. New child of 6e3fcbc7f08140a39f4306010b4706a5; agreed high priority. Native Windows PowerShell 5.1/7 and Linux/WSL checks may remain explicitly pending after isolated local acceptance.\n\nCanonical docs and focused plan updated while isolated verification proceeds. Preserved original root grouping history and user changes. Full route/parser inventory is being checked; benchmarking and final Wiki synchronization remain.\n\nVerified complete: 13 exact baseline/current machine-output comparisons, six Config completion providers, 24 owned PTYs, and fixture metadata validation (291 commands including owned probe) pass. Syntax checks cover 57 Python and six Bash files; new helper ShellCheck and whitespace pass. Documentation validation passes 1385 links in 172 files; Blastoff man lint has the same six pre-existing style diagnostics and no new ones. README, canonical docs, maintenance guidance and focused plan updated. Local Wiki transaction 2a0007269e3348999fecd1123f7c31f7 rebuilt affected pages; check reports Healthy yes. Performance evidence records approximately 0.12s family/0.42s root colored-help CPU overhead; no direct-dispatch regression established. Config menu integration is updated; existing installer launchers deliver helpers without a new manifest; Windows destinations unchanged. Existing Nu/Xonsh standalone todo/fonts completion omission is documented. Native Windows/Linux/WSL checks remain pending as agreed. Evidence: /data/data/com.termux/files/usr/tmp/dots-help-evidence-uv9tdoel and plans/usage-help.md.",
+      "status": "done",
+      "priority": "high",
+      "tags": [
+        "dots"
+      ],
+      "due": null,
+      "parent": "6e3fcbc7f08140a39f4306010b4706a5",
+      "acceptance": [
+        "Route/alias coverage, focused isolated suites, 40/80/120-column terminal checks, configuration/completion consumers and performance comparisons pass.",
+        "README, canonical command/presentation/configuration/testing/platform docs and focused plan are synchronized; available Wiki is rebuilt and checked.",
+        "Six-shell completion and aliases, Config menu integration, installer/bootstrap delivery and unchanged Windows destinations are assessed; unavailable native evidence is explicitly pending."
+      ],
+      "created": "2026-11-12T21:22:35.384750+00:00",
+      "updated": "2026-11-12T22:14:43.086571+00:00",
+      "completed": "2026-11-12T22:14:43.086571+00:00",
+      "removed": null
     }
   ]
 }

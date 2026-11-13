@@ -309,7 +309,8 @@ def emit(action, rows, as_json):
 def main(argv=None, reason=None):
     args = list(sys.argv[1:] if argv is None else argv)
     action = args.pop(0) if args else 'list'
-    parser = argparse.ArgumentParser(prog='dots theme plugins ' + action, add_help=False)
+    from help_adapters import HelpArgumentParser
+    parser = HelpArgumentParser(prog='dots theme plugins ' + action, add_help=False)
     parser.add_argument('name', nargs='?')
     parser.add_argument('--json', action='store_true')
     opt = parser.parse_args(args)

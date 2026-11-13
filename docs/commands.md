@@ -204,6 +204,8 @@ unimplemented routes remain unavailable. Reservations do not add features.
 
 ### Public Interface
 
+First-party help, including bundled apps and standalone aliases, shares configurable syntax roles through `colors.apps.cli.help.*`. Root help shows the configurable `apps.cli.tagline` phrase, a synopsis and global options across Bash and native frontends. The default tagline is `Manage your dotfiles and more...`; empty hides it. Settings take effect on the next invocation. Existing logos and section layouts remain owned by their applications. See [help presentation](presentation.md#help-syntax-and-tagline) and [Config examples](configuration.md#help-and-usage-preferences). The existing Config editor/browser exposes these preferences; no separate help menu is added.
+
 Root help preserves the existing built-in usage synopses, logo, usage and global options. It ends with a pointer to `dots help COMMAND` and the complete `dots commands` inventory. A deeper-only extension such as `dots-example-sync` contributes one `example` row with the summary “Command group”; a visible top-level command supplies its own summary. Hidden-only groups are omitted, and hidden parent metadata is not displayed. This is a help-rendering projection only: catalogs, contextual family/leaf help, validation, generated references and completion retain their full route information. Bash, the shared native controller and Python-free PowerShell help use the same grouping rule while retaining their existing layouts. Menu review: unchanged, because static help adds no selectable action.
 
 - `dots`, `dots help`, `dots -h`, `dots --help`: global help with one row per visible top-level command or group.

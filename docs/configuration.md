@@ -1,5 +1,22 @@
 # Configuration: inspect, change and explain
 
+## Help and usage preferences
+
+`apps.cli.tagline` sets the root help phrase beneath the Dots artwork. Its default is `Manage your dotfiles and more...`, without a `dots —` prefix. The value is literal, printable single-line text; an empty string hides it, and null/unset inherits. The default tagline style uses the selected theme's accent if present, otherwise the ordinary foreground.
+
+`colors.apps.cli.help.*` styles help text across Dots, bundled applications and standalone aliases. The [help role table](presentation.md#help-syntax-and-tagline) defines executable, command, subcommand, option/flag, argument, heading, description, punctuation and tagline defaults. Each role supports `fg`, `bg`, `bold`, `dim`, `italic`, `underline`, `reverse` and `strikethrough`. Existing color references, fieldwise inheritance and reset apply. These preferences affect help and usage, including parser-error usage; ordinary reports and authored artwork retain their existing settings.
+
+```sh
+dots config browse --query colors.apps.cli.help
+dots config set apps.cli.tagline 'Manage your dotfiles and more...'
+dots config set colors.apps.cli.help.argument.fg magenta
+dots config explain colors.apps.cli.help.tagline.fg
+dots config set apps.cli.tagline ''
+dots config unset apps.cli.tagline
+```
+
+These examples use shared defaults; add `--profile ID` for a profile override. Help-only saves activate on the next invocation without theme publication or application reload. Config previews/explanations show the same missing-accent fallback as help. Basic Bash and PowerShell help remain usable with built-in defaults when Python is absent.
+
 ## Cleanup preferences
 
 `apps.cleanup.checkpoint_min_age_days` is an integer from 0 to 36500 (default 30).

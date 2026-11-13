@@ -4,6 +4,7 @@ import json
 import base64
 import os
 from pathlib import Path
+import re
 import runpy
 import subprocess
 import sys
@@ -12,6 +13,10 @@ LIB = Path(__file__).resolve().parent
 sys.path.insert(0, str(LIB))
 sys.path.insert(0, str(LIB.parents[1] / 'plugins'))
 from command_metadata import BUILTINS, RESERVED, catalog, read, resolve, roots
+
+
+class UsageError(ValueError):
+    """Authored builtin syntax; other diagnostics retain their normal emitter."""
 
 
 def controller(relative, args):
@@ -41,8 +46,8 @@ def help_view(directories, words):
         if stem == 'git-submodule' and path.parent.resolve() == (LIB.parents[1] / 'bin').resolve():
             return controller('git/submodule.py', ['--help-context', *words[2:]])
     sys.path.insert(0, str(LIB / 'files'))
-    from catalog import Presentation
-    ui = Presentation(detail_indent=2 if words[:1] == ['todo'] else 4)
+    from help_presentation import HelpPresentation
+    ui = HelpPresentation(detail_indent=2 if words[:1] == ['todo'] else 4)
     stem = '-'.join(words)
     rows = catalog(directories)
     metadata = read(LIB / 'metadata' / (stem + '.meta')) if stem in BUILTINS else rows.get(stem)
@@ -52,29 +57,54 @@ def help_view(directories, words):
     if not words:
         from usage_logo import render
         render(ui, LIB.parents[1])
-    ui.heading('Dots' if not stem else 'dots ' + ' '.join(words))
+    commands = tuple(name.replace('-', ' ') for name in rows) + tuple(BUILTINS)
+    context = dict(prog='dots', route=tuple(words), commands=commands)
+    if not stem:
+        if ui.help_styles.tagline:
+            ui.help_text(ui.help_styles.tagline, kind='tagline')
+            ui.emit()
+        ui.heading('Usage')
+        ui.help_text('dots [OPTIONS] COMMAND [ARGS...]', kind='syntax', indent=2, **context)
+        ui.emit()
+        ui.heading('Commands')
+    else:
+        ui.help_text('dots ' + ' '.join(words), kind='syntax', **context)
     if metadata:
-        ui.emit('  ' + metadata['summary'])
-        ui.detail('Usage', 'dots ' + ' '.join(words) + ' ' + metadata['usage'])
+        ui.help_text(metadata['summary'], indent=2, **context)
+        ui.help_row('Usage', 'dots ' + ' '.join(words) + ' ' + metadata['usage'], kind='heading', value_kind='syntax', **context)
         for long, short, _, description in metadata['option']:
-            ui.detail(', '.join(x for x in (long, short) if x), description)
+            ui.help_row(', '.join(x for x in (long, short) if x), description, kind='option', **context)
         for example in metadata['example']:
-            ui.emit('  ' + example)
+            ui.help_text(example, kind='example', indent=2, **context)
     children = [(name, row) for name, row in sorted(rows.items())
                 if not row['hidden'] and (not stem or name.startswith(stem + '-'))]
     if not words:
         for name in BUILTINS:
-            ui.detail(name, read(LIB / 'metadata' / (name + '.meta'))['summary'])
+            ui.help_row(name, read(LIB / 'metadata' / (name + '.meta'))['summary'], kind='command', **context)
         # Project visible routes only for root help; retain the full catalog.
         groups = dict.fromkeys(name.split('-')[0] for name, _ in children)
         children = [(name, rows[name] if name in rows and not rows[name]['hidden']
                      else {'summary': 'Command group'}) for name in groups]
     for name, row in children:
-        ui.detail(name.replace('-', ' '), row['summary'])
+        ui.help_row(name.replace('-', ' '), row['summary'], kind='command', **context)
     if not words:
         ui.emit()
-        ui.detail_spans('', [('Use dots help COMMAND for details; dots commands for all commands.', None)],
-                        label_width=0, label_gap=0, indent=0)
+        ui.heading('Global options (before the command)')
+        # Read the same bounded, literal metadata table as the Bash frontend.
+        source = (LIB / 'catalog.bash').read_text(encoding='utf-8')
+        table = re.search(r'^DOTS_GLOBAL_OPTIONS=\(\n(.*?)^\)', source, re.M | re.S)
+        if not table:
+            raise ValueError('missing static global option metadata')
+        for line in table[1].splitlines():
+            item = re.fullmatch(r"\s*'([^'\n]+)'\s*", line)
+            if not item or len(item[1].split('|')) != 4:
+                raise ValueError('invalid static global option metadata')
+            long, short, kind, description = item[1].split('|')
+            if kind == 'directory': long += ' DIRECTORY'
+            elif kind.startswith('choice:'): long += '=auto|always|never'
+            ui.help_row(', '.join(x for x in (short, long) if x), description, kind='option', **context)
+        ui.emit()
+        ui.help_text('Use dots help COMMAND for details; dots commands for all commands.', **context)
     if stem and not metadata and not children and words[:1] == ['theme'] and len(words) == 2:
         return controller('themes/theme_cli.py', [words[1], '--help'])
     if stem and not metadata and not children:
@@ -355,7 +385,7 @@ def main(argv=None):
     if args[0] in BUILTINS and args[1:] in (['--help'], ['-h']):
         return help_view(directories, args[:1])
     if args[0] == 'commands':
-        if args[1:] not in ([], ['--check']): raise ValueError('Usage: dots commands [--check]')
+        if args[1:] not in ([], ['--check']): raise UsageError('dots commands [--check]')
         rows = catalog(directories)
         if args[1:]: print('Validated ' + str(len(rows)) + ' external commands')
         else:
@@ -364,14 +394,14 @@ def main(argv=None):
         return 0
     if args[0] == 'completion':
         if len(args) != 2 or args[1] not in ('bash', 'zsh', 'fish', 'powershell'):
-            raise ValueError('Usage: dots completion bash|zsh|fish|powershell')
+            raise UsageError('dots completion bash|zsh|fish|powershell')
         if args[1] in ('bash', 'zsh'):
             if args[1] == 'zsh': print('#compdef dots')
             print((LIB / 'completion/theme.bash').read_text(), end='')
         print((LIB / 'completion' / args[1]).read_text(), end='')
         return 0
     if args[:2] == ['init', '--bootstrap']:
-        if len(args) != 3: raise ValueError('Usage: dots init --bootstrap bash|zsh|powershell')
+        if len(args) != 3: raise UsageError('dots init --bootstrap bash|zsh|powershell')
         from bootstrap_snippet import snippet
         print(snippet(args[2]), end='')
         return 0
@@ -379,7 +409,7 @@ def main(argv=None):
         return controller('files/install.py', ['install', *args[2:]])
     if args[0] == 'init':
         if len(args) != 2 or args[1] not in ('bash', 'zsh', 'fish', 'powershell', 'nu', 'xonsh'):
-            raise ValueError('Usage: dots init SHELL | --setup [OPTIONS]')
+            raise UsageError('dots init SHELL | --setup [OPTIONS]')
         shell = args[1]
         loader = root / 'lib/dots/shell' / ('init.' + {'powershell':'ps1', 'xonsh':'xsh'}.get(shell, shell))
         if not loader.is_file(): raise ValueError('shell adapter unavailable')
@@ -482,6 +512,11 @@ def main(argv=None):
 if __name__ == '__main__':
     try:
         sys.exit(main())
+    except UsageError as error:
+        from help_presentation import colorize_help
+        print('dots: ' + colorize_help('Usage: ' + str(error), prog='dots', commands=BUILTINS,
+                                     stream=sys.stderr), file=sys.stderr)
+        sys.exit(1)
     except (ValueError, OSError) as error:
         print('dots: ' + str(error), file=sys.stderr)
         sys.exit(1)

@@ -23,7 +23,9 @@ from authoring import Author, encode, new_document, regular_bytes, toml_colors
 from logo import add_options, render as render_logo
 
 
-class Parser(argparse.ArgumentParser):
+from help_adapters import HelpArgumentParser
+
+class Parser(HelpArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Python 3.14 colors argparse help by default. Presentation owns ANSI;
@@ -34,28 +36,27 @@ class Parser(argparse.ArgumentParser):
         raise UsageError(message)
 
     def print_help(self, file=None):
-        ui = Presentation(file)
+        from help_adapters import HelpView
+        commands = next((a for a in self._actions if isinstance(a, argparse._SubParsersAction)), None)
+        ui = HelpView(file, prog=self.prog, commands=tuple(commands.choices) if commands else ())
+        ui.color = self._help_colored(ui.stream)
         render_logo(ui, full=True)
 
-        def paragraph(text, indent=2, color=None):
-            for line in textwrap.wrap(ui.clean(text), width=ui.width-indent,
-                                      break_on_hyphens=False):
-                ui.emit(' ' * indent + (ui.paint(line, color) if color else line))
+        def paragraph(text, indent=2, kind='description'):
+            ui.text(text or '', kind, indent=indent)
 
         def rows(title, entries):
             ui.emit()
             ui.heading(title)
+            kind = {'Commands':'command', 'Arguments':'argument', 'Options':'option'}[title]
             column = min(26, max(len(label) for label, _ in entries) + 2)
             for label, description in entries:
                 if ui.width < 60 or len(label) >= column:
-                    paragraph(label, color='94')
+                    paragraph(label, kind=kind)
                     paragraph(description, indent=4)
                 else:
-                    lines = textwrap.wrap(ui.clean(description), width=ui.width-column-2,
-                                          break_on_hyphens=False) or ['']
-                    ui.emit('  ' + ui.paint(label.ljust(column), '94') + lines[0])
-                    for line in lines[1:]:
-                        ui.emit(' ' * (column+2) + line)
+                    ui.help_row(label, description or '', kind=kind, prog=self.prog,
+                                commands=ui.commands, label_width=column, label_gap=0, indent=2)
 
         commands = next((a for a in self._actions if isinstance(a, argparse._SubParsersAction)), None)
         ui.heading('Anodize' if commands else self.prog)
@@ -64,7 +65,7 @@ class Parser(argparse.ArgumentParser):
         ui.heading('Usage')
         positional = [a for a in self._actions if not a.option_strings and a is not commands]
         suffix = '[OPTIONS] COMMAND [OPTIONS]' if commands else ' '.join([a.dest.upper() for a in positional] + ['[OPTIONS]'])
-        paragraph(f'{self.prog} {suffix}', color='95')
+        paragraph(f'{self.prog} {suffix}', kind='syntax')
         if commands:
             rows('Commands', [(name, child.description) for name, child in commands.choices.items()])
         if positional:
@@ -89,15 +90,15 @@ class Parser(argparse.ArgumentParser):
             for example in ("anodize create dusk --color '#725ac1' --dry-run",
                             "anodize create dusk --color '#725ac1' --yes",
                             'anodize preview dusk', 'anodize apply dusk --dry-run'):
-                paragraph(example, color='92')
+                paragraph(example, kind='syntax')
             ui.emit()
             paragraph('Use anodize COMMAND --help for command options.')
             paragraph('Saving a theme does not activate it. Review changes, then use --yes to save or apply.')
             ui.emit()
-            paragraph('Before COMMAND: --color=auto|always|never and --icons=auto|always|never control presentation.', color='90')
+            paragraph('Before COMMAND: --color=auto|always|never and --icons=auto|always|never control presentation.')
         elif self.prog.endswith(' create'):
             ui.emit()
-            paragraph('Choose exactly one source: --image, --color or --from.', color='93')
+            paragraph('Choose exactly one source: --image, --color or --from.')
 
 
 class UsageError(ValueError):

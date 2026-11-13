@@ -192,7 +192,7 @@ leaving current/newer builds alone. It shows the binary being installed even whi
 Go is silent. Dry-run checks versions without installing; explicit replacement
 recipes retain their behavior. The helper is never selected automatically.
 
-Terminal help and operation previews use the shared Dots layout and colors,
+Terminal help uses [configurable Dots syntax roles](../../docs/presentation.md#help-syntax-and-tagline). Operation previews use the shared Dots layout and colors,
 with wrapped plain output when color is disabled. Formatted APT output omits
 the exact unstable-CLI advisory; other warnings remain visible and `--raw`
 retains all bytes. Slow exports report their current manager on terminal stderr

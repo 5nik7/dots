@@ -150,7 +150,8 @@ def main(argv=None):
         try:ui.width=max(1,int(os.environ.get('FZF_PREVIEW_COLUMNS',ui.width)))
         except ValueError:pass
         preview_details(ui,rows[index]);return 0
-    p=argparse.ArgumentParser(description=__doc__)
+    from help_adapters import HelpArgumentParser
+    p=HelpArgumentParser(description=__doc__)
     p.add_argument('app',nargs='?',choices=(*APPS,'all','apps'))
     p.add_argument('--query',default='');p.add_argument('--mode',help='Starting mode in the picker; exact mode filter in print/JSON output')
     p.add_argument('--source',choices=('live','configured','all'),default='all')

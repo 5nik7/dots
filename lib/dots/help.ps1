@@ -24,6 +24,8 @@ function Write-DotsUsageLogo {
 
 function Show-DotsHelp {
     param([string] $Root, [string[]] $Route, [hashtable] $Presentation = @{})
+    . (Join-Path $Root 'lib/dots/help-style.ps1')
+    $preferences = Get-DotsHelpPreferences $Root
     $stem = $Route -join '-'
     if ($stem -and $stem -cnotmatch '^[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)*$') { throw 'invalid help route' }
     $files = @()
@@ -39,8 +41,18 @@ function Show-DotsHelp {
         }
     }
     if (-not $files.Count) { throw ('unknown command: ' + ($Route -join ' ')) }
-    if (-not $stem) { Write-DotsUsageLogo $Root $Presentation }
-    Write-DotsMessage $(if ($stem) { 'dots ' + ($Route -join ' ') } else { 'Dots' }) heading $Presentation
+    $commands = @($files | ForEach-Object { ($_.BaseName -replace '^dots-', '').Replace('-', ' ') })
+    if (-not $stem) {
+        Write-DotsUsageLogo $Root $Presentation
+        if ($preferences.tagline) {
+            Write-DotsHelpLine $preferences.tagline tagline $preferences $Presentation
+            Write-DotsHelpLine '' description $preferences $Presentation
+        }
+        Write-DotsHelpLine 'Usage' heading $preferences $Presentation
+        Write-DotsHelpLine '  dots [OPTIONS] COMMAND [ARGS...]' syntax $preferences $Presentation @() $commands
+        Write-DotsHelpLine '' description $preferences $Presentation
+        Write-DotsHelpLine 'Commands' heading $preferences $Presentation
+    } else { Write-DotsHelpLine ('dots ' + ($Route -join ' ')) syntax $preferences $Presentation $Route $commands }
     $rootGroups = [ordered]@{}
     foreach ($file in $files | Sort-Object Name) {
         $name = $file.BaseName -replace '^dots-', ''
@@ -65,35 +77,51 @@ function Show-DotsHelp {
             if ($group -eq $name) { $rootGroups[$group] = $summary }
             continue
         }
-        Write-DotsMessage ('  ' + $name.Replace('-', ' ') + '  ' + $summary) info $Presentation
+        Write-DotsHelpRow ($name.Replace('-', ' ')) $summary command $preferences $Presentation $Route $commands
         if ($stem -eq $name) {
-            Write-DotsMessage ('  Usage: dots ' + ($Route -join ' ') + ' ' + $usage) info $Presentation
+            $syntax = @([pscustomobject]@{ Text = '  Usage: '; Role = 'heading' })
+            $syntax += @(Get-DotsHelpSpans ('dots ' + ($Route -join ' ') + ' ' + $usage) syntax $Route $commands)
+            Write-DotsHelpSpans $syntax $preferences $Presentation
+            $optionTypes = @{}
             foreach ($option in $options) {
                 $fields = $option.Split('|')
                 if ($fields.Count -ne 4) { throw 'invalid option metadata' }
-                Write-DotsMessage ('  ' + $fields[0] + $(if ($fields[1]) { ', ' + $fields[1] }) + '  ' + $fields[3]) info $Presentation
+                foreach ($flag in @($fields[0], $fields[1])) { if ($flag) { $optionTypes[$flag] = $fields[2] -ne 'flag' } }
+            }
+            foreach ($option in $options) {
+                $fields = $option.Split('|')
+                if ($fields.Count -ne 4) { throw 'invalid option metadata' }
+                Write-DotsHelpRow ($fields[0] + $(if ($fields[1]) { ', ' + $fields[1] })) $fields[3] option $preferences $Presentation $Route $commands $optionTypes
             }
         }
     }
     if (-not $stem) {
         foreach ($entry in $rootGroups.GetEnumerator()) {
-            Write-DotsMessage ('  ' + $entry.Key + '  ' + $entry.Value) info $Presentation
+            Write-DotsHelpRow $entry.Key $entry.Value command $preferences $Presentation @() $commands
         }
-        Write-DotsMessage '' info $Presentation
+        Write-DotsHelpLine '' description $preferences $Presentation
+        Write-DotsHelpLine 'Global options (before the command)' heading $preferences $Presentation
+        $source = [IO.File]::ReadAllText((Join-Path $Root 'lib/dots/catalog.bash'))
+        $table = [regex]::Match($source, '(?ms)^DOTS_GLOBAL_OPTIONS=\(\r?\n(.*?)^\)')
+        if (-not $table.Success) { throw 'missing static global option metadata' }
+        foreach ($line in $table.Groups[1].Value.TrimEnd().Split([char]10)) {
+            $item = [regex]::Match($line, "^\s*'([^'\n]+)'\s*$")
+            if (-not $item.Success) { throw 'invalid static global option metadata' }
+            $fields = $item.Groups[1].Value.Split('|')
+            if ($fields.Count -ne 4) { throw 'invalid static global option metadata' }
+            $label = $fields[0]
+            if ($fields[2] -eq 'directory') { $label += ' DIRECTORY' }
+            elseif ($fields[2].StartsWith('choice:')) { $label += '=auto|always|never' }
+            if ($fields[1]) { $label = $fields[1] + ', ' + $label }
+            Write-DotsHelpRow $label $fields[3] option $preferences $Presentation @() $commands
+        }
+        Write-DotsHelpLine '' description $preferences $Presentation
         $columns = $env:COLUMNS -as [int]
         if (-not $columns) {
             try { $columns = [Console]::WindowWidth } catch { $columns = 80 }
         }
         if ($columns -le 0) { $columns = 80 }
         $columns = [Math]::Max(20, $columns)
-        $line = ''
-        foreach ($word in 'Use dots help COMMAND for details; dots commands for all commands.'.Split(' ')) {
-            if ($line -and ($line.Length + 1 + $word.Length) -gt $columns) {
-                Write-DotsMessage $line info $Presentation
-                $line = ''
-            }
-            $line += $(if ($line) { ' ' } else { '' }) + $word
-        }
-        Write-DotsMessage $line info $Presentation
+        Write-DotsHelpLine 'Use dots help COMMAND for details; dots commands for all commands.' description $preferences $Presentation @() $commands @{} $columns
     }
 }

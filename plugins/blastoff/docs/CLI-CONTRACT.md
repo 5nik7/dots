@@ -92,7 +92,7 @@ application JSON and ownership formats are unchanged.
 
 | Command | Behavior |
 |---|---|
-| No arguments; `-h/--help` | Identical full root help on stdout, exit 0, empty stderr; no state reads or dependency subprocesses |
+| No arguments; `-h/--help` | Identical full root help on stdout, exit 0, empty stderr; no application discovery or dependency subprocesses; colored help reads Dots appearance preferences and its published palette |
 | Global flags without a command | Full root help using the selected color policy; `--json` retains the JSON welcome object; invalid options still fail |
 | `--version` | Plain version without state reads or dependency subprocesses |
 | `list`, `-l/--list`, `theme list` | Local themes plus optional Starship presets |
@@ -126,7 +126,7 @@ Global `-v/--verbose`, `--dry-run`, `--json`, `--color auto|always|never`,
 `--` stops option and alias processing. Names retain the portable 1–96 ASCII
 letter/digit/underscore/hyphen rule, start alphanumeric, and exclude device names.
 
-Current/theme-list/save/backup-list/doctor reports use [Dots presentation](../../../docs/presentation.md#application-reports) in human terminals and captured menu readers. Color precedence is explicit application `--color`, then `DOTS_COLOR`, then automatic detection. Nonempty NO_COLOR disables automatic color; explicit always overrides it. DOTS_ICONS independently controls resource icons. Help artwork and application pickers retain their existing color policy, including NO_COLOR overriding forced color. JSON is
+Current/theme-list/save/backup-list/doctor reports use [Dots presentation](../../../docs/presentation.md#application-reports) in human terminals and captured menu readers. Color precedence is explicit application `--color`, then `DOTS_COLOR`, then automatic detection. Nonempty NO_COLOR disables automatic color; explicit always overrides it. DOTS_ICONS independently controls resource icons. Help text uses [shared help roles](../../../docs/presentation.md#help-syntax-and-tagline) and the same automatic/forced policy while preserving artwork. Application pickers retain their existing color policy, including NO_COLOR overriding forced color. JSON is
 undecorated: one result object on stdout; errors are objects on stderr. Verbose
 adds stderr diagnostics (JSON records with --json), never configuration contents.
 Help/version/completion retain their native text formats; help with --json is

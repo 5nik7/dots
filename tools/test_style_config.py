@@ -187,5 +187,33 @@ class StyleConfig(unittest.TestCase):
             self.assertNotIn('UNEXPECTED_PYTHON',warm.stderr)
             path.write_text(original)
 
+    def test_help_preferences_invalidate_warm_bundle_without_warm_python(self):
+        import test_profiles
+        fixture=test_profiles.Profiles();fixture.setUp();self.addCleanup(fixture.doCleanups)
+        fixture.public()
+        shutil.copytree(ROOT/'default',fixture.root/'default')
+        config=fixture.root/'default/config.json';colors=fixture.root/'default/colors.toml'
+        original_config=config.read_text();original_colors=colors.read_text()
+        for shell in ('bash','zsh'):
+            if not shutil.which(shell):continue
+            code='source "$DOTS/lib/dots/shell/init.'+shell+'"; printf "%s\\n%s" "$_DOTS_HELP_TAGLINE" "${_DOTS_HELP_STYLES[argument]}"'
+            cold=fixture.run_shell(shell,code)
+            self.assertEqual(cold.returncode,0,cold.stderr)
+            self.assertTrue(cold.stdout.startswith('Manage your dotfiles and more...\n'),cold.stdout)
+            updated=json.loads(original_config);updated['apps']['cli']['tagline']='A literal ü tagline'
+            config.write_text(json.dumps(updated))
+            colors.write_text(original_colors.replace('[apps.cli.help.argument]\nfg = "green"','[apps.cli.help.argument]\nfg = "#123456"'))
+            changed=fixture.run_shell(shell,code)
+            self.assertEqual(changed.returncode,0,changed.stderr)
+            self.assertTrue(changed.stdout.startswith('A literal ü tagline\n'),changed.stdout)
+            self.assertIn('38;2;18;52;86',changed.stdout)
+            commands=fixture.home/('help-shims-'+shell);commands.mkdir()
+            shim=commands/'python3';shim.write_text('#!'+shutil.which('sh')+'\nprintf UNEXPECTED_PYTHON >&2\nexit 99\n');shim.chmod(0o700)
+            warm=fixture.run_shell(shell,code,PATH=str(commands)+os.pathsep+fixture.env['PATH'])
+            self.assertEqual(warm.returncode,0,warm.stderr)
+            self.assertEqual(warm.stdout,changed.stdout)
+            self.assertNotIn('UNEXPECTED_PYTHON',warm.stderr)
+            config.write_text(original_config);colors.write_text(original_colors)
+
 
 if __name__=='__main__': unittest.main()

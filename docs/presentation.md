@@ -17,6 +17,26 @@ Choose and document a command's output modes before implementation. Do not assum
 
 ## Color and Icons
 
+### Help syntax and tagline
+
+First-party help and usage, including bundled applications and shipped standalone aliases, use shared semantic spans. The executable, first command, deeper subcommands, options/flags and arguments have separate roles throughout synopses, rows, examples, explicit inline references and parser-error usage. Option values and finite choices are arguments; brackets, equals signs, separators and ellipses are punctuation. Ordinary prose is not colored merely because a word matches a command. Existing section layouts, root command grouping, authored logos and theme-preview palettes retain their owners.
+
+| Config role under `colors.apps.cli.help` | Default |
+| --- | --- |
+| `executable` | Theme cyan, terminal cyan fallback |
+| `command` | Theme blue, terminal blue fallback |
+| `subcommand` | Theme magenta, terminal magenta fallback |
+| `option` | Theme yellow, terminal yellow fallback |
+| `argument` | Theme green, terminal green fallback |
+| `heading` | Existing CLI heading style |
+| `description` | Existing CLI foreground style |
+| `punctuation` | Existing muted style |
+| `tagline` | Theme accent when present, otherwise ordinary foreground |
+
+All roles support the existing foreground, background and text-attribute fields. These syntax hues identify token types; they do not indicate success, warning or error. Help-only saves take effect on the next invocation without publishing a theme or reloading applications. `apps.cli.tagline` controls the phrase beneath root artwork and defaults to `Manage your dotfiles and more...`; empty text hides the line, and reset inherits. Artwork remains governed by its existing controls. See [help configuration](configuration.md#help-and-usage-preferences).
+
+Structured views wrap inert spans before painting. Parser adapters preserve their existing plain grammar layout and apply spans only when emitting to the selected stream. Examples are never evaluated. Successful help uses stdout; parser-error usage follows stderr's own terminal/color policy. Plain output, completion, JSON, scalar/raw output and generated shell code preserve their contracts. Basic Bash and PowerShell help use built-in default text/colors when Python preference resolution is unavailable; this fallback does not read arbitrary saved appearance overrides.
+
 Config's human list uses compact color/style samples, such as
 `fg:warning,bold,underline`, rendered with the represented style and reset before
 the next span. Icon samples use their resolved style with muted color names or

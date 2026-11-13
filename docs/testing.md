@@ -123,6 +123,8 @@ Native verification covers Termux with Yazi 26.9.1. Windows paths in Lua fixture
 
 ## Bash Command Framework
 
+Configurable help spans have focused runners `python3 -B tools/test_help_presentation.py` and `python3 -B tools/test_help_adapters.py`. They cover exact token classification, explicit inline references, literal/Unicode arguments, values after `--`, parser stdout/stderr color policy, configured roles across standalone/bundled consumers, addressed theme backgrounds and preserved plain text. Extend these with the Bash/native CLI and affected family help regressions. The Config-value/style suites cover tagline validation/hiding/inheritance, Config previews/completion and no-publication activation, including compiled Bash/Zsh startup invalidation. Use owned 40/80/120-column terminals and light/dark palettes, compare exact machine outputs under forced color, and keep native Windows/Linux/WSL acceptance distinct from Termux fixtures. See the [help follow-up](../plans/usage-help.md#configurable-help-follow-up) for saved goals and evidence.
+
 Root-help regressions cover all four entry forms, real and implicit top-level groups, hidden-only groups and hidden parent summaries, empty external catalogs, descendant metadata/collision failures, unchanged full inventory/contextual help and deep completion. The native CLI suite covers the same projection; its PowerShell root-help case runs without Python on PATH when an engine is available. Presentation and native acceptance evidence is recorded in the [root-help plan](../plans/usage-help.md).
 
 Run `python3 -B tools/test_bash_dots.py` for disposable routing/metadata/output and

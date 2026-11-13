@@ -56,7 +56,12 @@ Picker: Tab select, Ctrl-X preview, Alt-I installed, Alt-O homepage.
 Bare invocation shows help. Completion inserts names and never installs.
 '''
 
-class Parser(argparse.ArgumentParser):
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'lib/dots'))
+from help_adapters import HelpArgumentParser
+
+
+class Parser(HelpArgumentParser):
     def parse_intermixed_args(self, args=None, namespace=None):
         words = list(sys.argv[1:] if args is None else args)
         parsed = super().parse_intermixed_args(words, namespace)
