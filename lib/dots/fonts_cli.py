@@ -18,7 +18,7 @@ from fonts import operations as ops
 from fonts.config import TARGETS, configure, destination
 from interaction import SelectionEnded, terminal, gum_confirm
 from resources import clean
-from progress import tracked, report
+from progress import tracked, report, sequence, permanent_output
 
 
 def render(data, stream=None, *, human=None, width=None, action=None, wrap=True):
@@ -140,119 +140,131 @@ def downloaded(plan, identity, version, temporary, *, keep_archive=False):
 
 @tracked('Preparing font changes')
 def plan_action(library, args, temporary):
-    action = args.action
-    if action=='set' or action=='use' and args.target:
-        from fonts.defaults import set_font
-        return set_font(library,args,temporary)
-    if action=='restore':
-        from fonts.defaults import restore
-        return restore(library,args,temporary)
-    if action in ('install','copy','migrate'):
-        from fonts.actions import transfer
-        return transfer(library,args,temporary)
-    if library.directory and action not in ('export','undo'):
-        from fonts.directories import action as directory_action
-        return directory_action(library,args,temporary)
-    if action=='use': raise ValueError('use requires --directory; use install for the personal library')
-    if action=='update': raise ValueError('update FONT requires --directory; use upgrade for active fonts')
-    if action=='uninstall' and args.version: raise ValueError('--version on uninstall requires --directory; use remove for a retained personal version')
-    plan = Plan(library)
-    plan.guard(library.catalog_path)
-    identity = library.resolve(args.operand, available=action=='download') if args.operand and action not in ('import','undo') else None
-    if action == 'download':
-        if args.dry_run:
-            row = library.catalog['families'][identity]
-            version = args.version or row['latest']
-            if version not in row['versions']: raise ValueError('version is not cataloged')
-            plan.items.append(dict(id=identity,version=version,action='download and validate before saving'))
-        else: downloaded(plan,identity,args.version,temporary,keep_archive=args.keep_archive)
-    elif action == 'import':
-        ops.import_files(plan,args.operand,temporary)
-    elif action == 'export':
-        if not args.output: raise ValueError('export requires --output DIRECTORY')
-        version, record = library.version(identity,args.version)
-        for font in record['fonts']: plan.file(identity,version,font)
-        output = Path(args.output).expanduser().absolute()
-        if exists(output): raise ValueError('export destination already exists; choose a new directory')
-        source = library.folder(identity,version)
-        if output == source or output.is_relative_to(source) or source.is_relative_to(output): raise ValueError('export source and destination overlap')
-        plan.put(output,source=source)
-        plan.items.append(dict(id=identity,version=version,action='export',path=str(output)))
-    elif action in ('install','rollback'):
-        if action=='rollback' and not args.version: raise ValueError('rollback requires --version')
-        if action=='rollback' and not plan.document['families'][identity].get('installed'):
-            ops.replace_active(plan,identity,args.version)
-        else:ops.install(plan,identity,args.version,args.variant)
-    elif action == 'uninstall': ops.uninstall(plan,identity)
-    elif action in ('pin','unpin'):
-        row = plan.document['families'][identity]
-        value = ops.version_for(plan,identity,args.version)[0] if action=='pin' else None
-        row['pin'] = value
-        plan.items.append(dict(id=identity,action=action,version=value))
-    elif action == 'remove':
-        if not args.version: raise ValueError('remove requires an exact --version')
-        ops.remove(plan,identity,args.version)
-    elif action == 'upgrade':
-        active={ref['id']:ref for ref in library.document['targets'].values()}
-        identities = [identity] if identity else [key for key,row in library.families.items() if row.get('installed') or key in active]
-        for index, key in enumerate(identities):
-            report('Preparing font upgrade · '+key+' · families', index, len(identities))
-            row = plan.document['families'][key]
-            if not row.get('installed') and key not in active: raise ValueError('upgrade requires an installed or active family')
-            if row.get('pin'):
-                plan.items.append(dict(id=key, action='skip pinned',version=row['pin'])); continue
-            catalog = library.catalog['families'].get(key)
-            if not catalog:
-                plan.items.append(dict(id=key,action='skip unknown upstream version')); continue
-            current=(row.get('installed') or active[key])['version']
-            old = row['versions'][current]
-            candidate = catalog['versions'][catalog['latest']]
-            if catalog['latest'] == current or (old.get('fingerprint') and old['fingerprint']==candidate.get('fingerprint')):
-                plan.items.append(dict(id=key,action='up to date',version=current)); continue
-            if args.dry_run and catalog['latest'] not in row['versions']:
-                plan.items.append(dict(id=key,version=catalog['latest'],action='download, validate active faces, then upgrade',
-                    targets=[r['target'] for r in library.document['targets'].values() if r['id']==key])); continue
-            version = downloaded(plan,key,catalog['latest'],temporary)
-            if row.get('installed'):ops.install(plan,key,version)
-            else:ops.replace_active(plan,key,version)
-        report('Prepared font upgrades', len(identities), len(identities))
-    elif action == 'undo':
-        from transactions import Store
-        store=Store(library.state); record=store.load(args.operand)
-        prefix=library.transaction_action('')
-        if not record['action'].startswith(prefix) or (not library.directory and record['action'].startswith('fonts-directory-')):
-            raise ValueError('transaction belongs to another font scope; select its --directory or use dots files undo')
-        if library.directory: plan=Plan(Library(platform=library.platform))
-        plan.operations,plan.guards,_=store.inverse(args.operand)
-        from fonts.inventory import user_roots
-        if any('font_registry' in op or any(Path(op['path']).is_relative_to(root) for root in user_roots(plan.library)) for op in plan.operations): plan.refresh.add('fonts')
-        if any(op['path']==str(library.home/'.termux/font.ttf') for op in plan.operations): plan.refresh.add('termux')
-        plan.items.append(dict(id=args.operand,action='undo'))
-    if action in ('upgrade','rollback'):
-        from fonts.defaults import synchronize
-        from fonts.workspace import Workspace
-        workspace=Workspace(library,temporary,plan=plan)
-        synchronize(workspace)
-        return workspace.finish()
-    return plan.finish()
+    with sequence('Prepare font changes', 2) as preparation:
+        with preparation.step('Prepare selected font changes'):
+            action = args.action
+            if action=='set' or action=='use' and args.target:
+                from fonts.defaults import set_font
+                return set_font(library,args,temporary)
+            if action=='restore':
+                from fonts.defaults import restore
+                return restore(library,args,temporary)
+            if action in ('install','copy','migrate'):
+                from fonts.actions import transfer
+                return transfer(library,args,temporary)
+            if library.directory and action not in ('export','undo'):
+                from fonts.directories import action as directory_action
+                return directory_action(library,args,temporary)
+            if action=='use': raise ValueError('use requires --directory; use install for the personal library')
+            if action=='update': raise ValueError('update FONT requires --directory; use upgrade for active fonts')
+            if action=='uninstall' and args.version: raise ValueError('--version on uninstall requires --directory; use remove for a retained personal version')
+            plan = Plan(library)
+            plan.guard(library.catalog_path)
+            identity = library.resolve(args.operand, available=action=='download') if args.operand and action not in ('import','undo') else None
+            if action == 'download':
+                if args.dry_run:
+                    row = library.catalog['families'][identity]
+                    version = args.version or row['latest']
+                    if version not in row['versions']: raise ValueError('version is not cataloged')
+                    plan.items.append(dict(id=identity,version=version,action='download and validate before saving'))
+                else: downloaded(plan,identity,args.version,temporary,keep_archive=args.keep_archive)
+            elif action == 'import':
+                ops.import_files(plan,args.operand,temporary)
+            elif action == 'export':
+                if not args.output: raise ValueError('export requires --output DIRECTORY')
+                version, record = library.version(identity,args.version)
+                for font in record['fonts']: plan.file(identity,version,font)
+                output = Path(args.output).expanduser().absolute()
+                if exists(output): raise ValueError('export destination already exists; choose a new directory')
+                source = library.folder(identity,version)
+                if output == source or output.is_relative_to(source) or source.is_relative_to(output): raise ValueError('export source and destination overlap')
+                plan.put(output,source=source)
+                plan.items.append(dict(id=identity,version=version,action='export',path=str(output)))
+            elif action in ('install','rollback'):
+                if action=='rollback' and not args.version: raise ValueError('rollback requires --version')
+                if action=='rollback' and not plan.document['families'][identity].get('installed'):
+                    ops.replace_active(plan,identity,args.version)
+                else:ops.install(plan,identity,args.version,args.variant)
+            elif action == 'uninstall': ops.uninstall(plan,identity)
+            elif action in ('pin','unpin'):
+                row = plan.document['families'][identity]
+                value = ops.version_for(plan,identity,args.version)[0] if action=='pin' else None
+                row['pin'] = value
+                plan.items.append(dict(id=identity,action=action,version=value))
+            elif action == 'remove':
+                if not args.version: raise ValueError('remove requires an exact --version')
+                ops.remove(plan,identity,args.version)
+            elif action == 'upgrade':
+                active={ref['id']:ref for ref in library.document['targets'].values()}
+                identities = [identity] if identity else [key for key,row in library.families.items() if row.get('installed') or key in active]
+                with sequence('Prepare font upgrades', len(identities), unit='family') as families:
+                    for index, key in enumerate(identities):
+                        with families.step(key), sequence('Prepare font upgrade', 3) as stages:
+                            with stages.step('Inspect font'):
+                                report('Preparing font upgrade · '+key+' · families', index, len(identities))
+                                row = plan.document['families'][key]
+                                if not row.get('installed') and key not in active: raise ValueError('upgrade requires an installed or active family')
+                                if row.get('pin'):
+                                    plan.items.append(dict(id=key, action='skip pinned',version=row['pin'])); continue
+                                catalog = library.catalog['families'].get(key)
+                                if not catalog:
+                                    plan.items.append(dict(id=key,action='skip unknown upstream version')); continue
+                                current=(row.get('installed') or active[key])['version']
+                                old = row['versions'][current]
+                                candidate = catalog['versions'][catalog['latest']]
+                                if catalog['latest'] == current or (old.get('fingerprint') and old['fingerprint']==candidate.get('fingerprint')):
+                                    plan.items.append(dict(id=key,action='up to date',version=current)); continue
+                                if args.dry_run and catalog['latest'] not in row['versions']:
+                                    plan.items.append(dict(id=key,version=catalog['latest'],action='download, validate active faces, then upgrade',
+                                        targets=[r['target'] for r in library.document['targets'].values() if r['id']==key])); continue
+                            with stages.step('Obtain font'):
+                                version = downloaded(plan,key,catalog['latest'],temporary)
+                            with stages.step('Prepare installation'):
+                                if row.get('installed'):ops.install(plan,key,version)
+                                else:ops.replace_active(plan,key,version)
+                report('Prepared font upgrades', len(identities), len(identities))
+            elif action == 'undo':
+                from transactions import Store
+                store=Store(library.state); record=store.load(args.operand)
+                prefix=library.transaction_action('')
+                if not record['action'].startswith(prefix) or (not library.directory and record['action'].startswith('fonts-directory-')):
+                    raise ValueError('transaction belongs to another font scope; select its --directory or use dots files undo')
+                if library.directory: plan=Plan(Library(platform=library.platform))
+                plan.operations,plan.guards,_=store.inverse(args.operand)
+                from fonts.inventory import user_roots
+                if any('font_registry' in op or any(Path(op['path']).is_relative_to(root) for root in user_roots(plan.library)) for op in plan.operations): plan.refresh.add('fonts')
+                if any(op['path']==str(library.home/'.termux/font.ttf') for op in plan.operations): plan.refresh.add('termux')
+                plan.items.append(dict(id=args.operand,action='undo'))
+        with preparation.step('Finalize font plan'):
+            if action in ('upgrade','rollback'):
+                from fonts.defaults import synchronize
+                from fonts.workspace import Workspace
+                workspace=Workspace(library,temporary,plan=plan)
+                synchronize(workspace)
+                return workspace.finish()
+            return plan.finish()
 
 
 def mutate(library,args,*,context=None):
-    with tempfile.TemporaryDirectory(prefix='dots-fonts-') as temporary:
-        plan=plan_action(library,args,temporary)
+    with sequence('Font '+args.action, 3) as stages, tempfile.TemporaryDirectory(prefix='dots-fonts-') as temporary:
+        with stages.step('Prepare fonts'):
+            plan=plan_action(library,args,temporary)
         if args.dry_run:
             data=plan.report()
             if library.directory:data['directory']=str(library.directory)
             return data
-        approve(plan,args,context=context)
+        with permanent_output():
+            approve(plan,args,context=context)
         from files.events import OperationOutput
         from transactions import Store
-        result=Store(library.state,observer=OperationOutput.for_args(args)).apply(library.transaction_action(args.action),plan.operations,plan.guards,retain=True)
+        with stages.step('Apply font changes'):
+            result=Store(library.state,observer=OperationOutput.for_args(args)).apply(library.transaction_action(args.action),plan.operations,plan.guards,retain=True)
         data=dict(schema=1,status=result['status'],transaction=result.get('id'),items=plan.items)
         if library.directory:data['directory']=str(library.directory)
-        if result['status']=='complete':
-            if args.action=='undo': plan.document=Library(platform=library.platform).document
-            data['notices']=ops.refresh(plan,no_reload=args.no_reload)
+        with stages.step('Refresh font consumers'):
+            if result['status']=='complete':
+                if args.action=='undo': plan.document=Library(platform=library.platform).document
+                data['notices']=ops.refresh(plan,no_reload=args.no_reload)
         return data
 
 

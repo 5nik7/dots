@@ -343,12 +343,33 @@ fmt_title_border() {
 # Restore only the signals this invocation temporarily owns.
 _dots_common_restore_traps() {
   if [[ -z ${ZSH_VERSION:-} ]]; then
-    trap - INT TERM
+    trap - INT TERM WINCH
     eval "$_common_saved_traps"
   fi
 }
+_dots_common_spinner_width() {
+  local _common_candidate=${COLUMNS:-80} _common_rows
+  if command -v stty >/dev/null 2>&1; then
+    read -r _common_rows _common_candidate < <(stty size <&2 2>/dev/null) || _common_candidate=${COLUMNS:-80}
+  fi
+  [[ $_common_candidate =~ ^[0-9]{1,4}$ ]] || _common_candidate=80
+  _common_width=$((10#$_common_candidate))
+  (( _common_width > 1 )) || _common_width=80
+  _common_size_dirty=0
+}
 _dots_common_clear_spinner() {
-  if (( _common_drawn )); then printf '\r%*s\r' "$_common_drawn" '' >&2; fi
+  (( _common_size_dirty )) && _dots_common_spinner_width
+  if (( _common_drawn )); then
+    local _common_rows=2 _common_row _common_cells=$_common_width
+    if (( _common_old_width > _common_width )); then
+      _common_rows=$(((${#_common_overall}+_common_cells-1)/_common_cells + (${#_common_line}+_common_cells-1)/_common_cells))
+      (( _common_rows >= 2 )) || _common_rows=2
+    fi
+    printf '\r\033[2K' >&2
+    for ((_common_row=1;_common_row<_common_rows;_common_row++)); do printf '\033[1A\r\033[2K' >&2; done
+    printf '\r' >&2
+    _common_drawn=0
+  fi
 }
 
 # A brace body keeps an asynchronous caller's $! attached to the actual worker.
@@ -356,7 +377,7 @@ _dots_common_clear_spinner() {
 spinner() {
   [[ $# -ge 1 && $1 =~ ^[0-9]+$ ]] || return 2
   local _common_pid=$1 _common_style=${2:-1} REPLY _common_chars _common_index=0 _common_drawn=0
-  local _common_width=${COLUMNS:-80} _common_line
+  local _common_width=${COLUMNS:-80} _common_old_width=0 _common_size_dirty=1 _common_line _common_overall
   (( _common_pid > 0 )) || return 2
   [[ -t 1 && -t 2 && ${TERM:-dumb} != dumb ]] || return 0
   command -v sleep >/dev/null 2>&1 || return 0
@@ -388,19 +409,18 @@ spinner() {
     *) _common_chars='/-\|' ;;
   esac
   [[ $DOTS_UI_OK != '[+]' ]] || _common_chars='/-\|'
-  [[ $_common_width =~ ^[0-9]{1,4}$ ]] || _common_width=80
-  _common_width=$((10#$_common_width))
-  (( _common_width > 1 )) || _common_width=80
   local _common_saved_traps _common_signal_status=0
   if [[ -n ${ZSH_VERSION:-} ]]; then
     setopt localoptions localtraps
   else
-    _common_saved_traps=$(trap -p INT TERM)
+    _common_saved_traps=$(trap -p INT TERM WINCH)
   fi
   trap '_common_signal_status=130' INT
   trap '_common_signal_status=143' TERM
+  trap '_common_size_dirty=1' WINCH
   command sleep 0.5 || :
   while (( ! _common_signal_status )) && kill -0 "$_common_pid" 2>/dev/null; do
+    _dots_common_clear_spinner
     if [[ $_common_progress_mode == bar ]]; then
       _common_position=$((_common_frame%14)); ((_common_position<8)) || _common_position=$((14-_common_position))
       printf -v _common_left '%*s' "$_common_position" ''
@@ -409,8 +429,12 @@ spinner() {
       ((_common_frame+=1))
     else _common_line="${_common_chars:_common_index:1} $REPLY"; fi
     _common_line=${_common_line:0:_common_width-1}
-    printf '\r%s%s%s' "$DOTS_UI_CYAN" "$_common_line" "$DOTS_UI_RESET" >&2
-    _common_drawn=${#_common_line}
+    _common_overall='Overall 0% · step 1/1'
+    [[ $_common_progress_mode == spinner ]] || _common_overall='Overall [--------] 0% · step 1/1'
+    _common_overall=${_common_overall:0:_common_width-1}
+    printf '\r\n\r\033[1A\r' >&2
+    printf '\r%s%s%s\n\r%s%s%s' "$DOTS_UI_CYAN" "$_common_overall" "$DOTS_UI_RESET" "$DOTS_UI_CYAN" "$_common_line" "$DOTS_UI_RESET" >&2
+    _common_drawn=1 _common_old_width=$_common_width
     _common_index=$(((_common_index+1)%${#_common_chars}))
     command sleep 0.1 || break
   done
@@ -440,7 +464,7 @@ run_with_spinner() {
   if [[ -n ${ZSH_VERSION:-} ]]; then
     setopt localoptions localtraps
   else
-    _common_saved_traps=$(trap -p INT TERM)
+    _common_saved_traps=$(trap -p INT TERM WINCH)
   fi
   trap '_common_signal_status=130; _dots_common_stop_children' INT
   trap '_common_signal_status=143; _dots_common_stop_children' TERM

@@ -49,7 +49,7 @@ dt_git_recover() {
 dt_git_theme() (
   umask 077
   # shellcheck disable=SC2034
-  local DOTS_PROGRESS_HUMAN=1 DOTS_PROGRESS_STARTED=''
+  local DOTS_PROGRESS_HUMAN=1 DOTS_PROGRESS_STARTED=${DOTS_PROGRESS_STARTED:-}
   local action=$1 name='' url='' target stage backup journal branch old status=0
   shift
   command -v git >/dev/null && command -v flock >/dev/null && command -v sync >/dev/null || { dt_error 'Git themes require git, flock and sync'; return 1; }
@@ -67,18 +67,24 @@ dt_git_theme() (
     for target in "$DT_USER_THEMES/"*/.git; do
       [[ ! -d $target || -L $target ]] || batch+=("$target")
     done
-    local batch_done=0 DOTS_PROGRESS_BATCH_TOTAL=${#batch[@]} DOTS_PROGRESS_BATCH_DONE=0
+    local batch_done=0 progress_status=0
+    dots::progress_sequence_start 'Updating themes' "${#batch[@]}" theme
     for target in "${batch[@]}"; do
       [[ -d $target && ! -L $target ]] || continue
       name=${target%/.git}; name=${name##*/}
-      DOTS_PROGRESS_BATCH_DONE=$batch_done
-      dt_git_theme update "$name" || status=1
+      dots::progress_step_start "Updating theme: $name" "$((batch_done+1))"
+      dots::progress_stop
+      progress_status=0
+      dt_git_theme update "$name" || { status=1; progress_status=1; }
       ((batch_done+=1))
+      dots::progress_step_end "$progress_status"
     done
+    dots::progress_sequence_end "$status"
     return "$status"
   fi
   trap 'dots::progress_stop' EXIT
-  dots::progress_start "Preparing theme $action: $name" "${DOTS_PROGRESS_BATCH_DONE:-0}" "${DOTS_PROGRESS_BATCH_TOTAL:-0}"
+  dots::progress_sequence_start "Theme $action: $name" 4 step
+  dots::progress_step_start "Preparing theme $action: $name"
   dt_theme_id "$name" || { dt_error 'invalid theme identifier'; return 1; }
   [[ ! -d $DT_ROOT/$name ]] || { dt_error 'bundled theme identifiers cannot be replaced'; return 1; }
   [[ $DT_USER_THEMES == /* && $DT_USER_THEMES != *$'\n'* && $DT_USER_THEMES != */../* && $DT_USER_THEMES != */./* ]] || { dt_error 'installed-theme root must be absolute without dot components'; return 1; }
@@ -110,13 +116,16 @@ dt_git_theme() (
       old=$(dt_git -C "$target" rev-parse HEAD) || return
     fi
   fi
+  dots::progress_step_end
+  dots::progress_step_start "Acquiring theme: $name"
   stage=$(mktemp -d "$DT_USER_THEMES/.stage.XXXXXXXX") || return
   if [[ $action != remove ]]; then
     local -a args=(clone --quiet --no-recurse-submodules --template=)
     [[ ! ${branch:-} ]] || args+=(--branch "$branch")
     dots::progress_external "Downloading theme: $name"
     dt_git "${args[@]}" -- "$url" "$stage" || { dt_error "clone failed; retained staging directory: $stage"; return 1; }
-    dots::progress_start "Validating theme: $name" "${DOTS_PROGRESS_BATCH_DONE:-0}" "${DOTS_PROGRESS_BATCH_TOTAL:-0}"
+    dots::progress_step_end
+    dots::progress_step_start "Validating theme: $name"
     dt_git_validate "$stage" || return
     if [[ $action == update ]]; then
       dt_git -C "$stage" merge-base --is-ancestor "$old" HEAD || { dt_error 'update is not a fast-forward'; return 1; }
@@ -124,6 +133,8 @@ dt_git_theme() (
     printf 'schema=1\n' > "$stage/.git/dots-managed"
     sync -f "$stage" || return
   fi
+  dots::progress_step_end
+  dots::progress_step_start "Publishing theme: $name" 4
   journal=$(mktemp -d "$DT_USER_THEMES/.transactions/t.XXXXXXXX") || return
   backup=$DT_USER_THEMES/.archives/$name-${journal##*/}
   printf '%s\n' "$target" > "$journal/target"
@@ -144,6 +155,7 @@ dt_git_theme() (
   sync -f "$DT_USER_THEMES" || return
   dt_commands_publish "$journal" || return
   dt_git_record "$journal" committed || return
+  dots::progress_sequence_end
   dots::progress_stop
   trap - EXIT
   [[ $action != remove ]] || rmdir -- "$stage" || return

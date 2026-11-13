@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+from progress import sequence, permanent_output
 
 from transactions import Store, digest
 
@@ -118,50 +119,62 @@ class Preparation:
             {str(self.record):digest(self.record)}, retain=True)
 
     def packages_stage(self, document, label):
-        from package_setup import Stage
-        stage = Stage(self.root, document=document, json_output=self.args.json)
-        if not self.args.json: stage.preview()
-        result = stage.apply()
-        self.results[label] = result
-        self.save_outcome(label, result['status'], result=result,
-            changed=result['status'] != 'complete' or any(g['status']=='complete' for g in result['groups']))
-        if result['status'] != 'complete':
-            raise ValueError(label+' incomplete; completed external changes remain. Record: '+str(self.record))
-        return result
+        with sequence(label, 2) as phases:
+            from package_setup import Stage
+            stage = Stage(self.root, document=document, json_output=self.args.json)
+            if not self.args.json:
+                with permanent_output(): stage.preview()
+            with phases.step('Apply '+label):
+                result = stage.apply()
+            with phases.step('Record '+label):
+                self.results[label] = result
+                self.save_outcome(label, result['status'], result=result,
+                    changed=result['status'] != 'complete' or any(g['status']=='complete' for g in result['groups']))
+            if result['status'] != 'complete':
+                raise ValueError(label+' incomplete; completed external changes remain. Record: '+str(self.record))
+            return result
 
     def run(self):
-        verify(self.installation.guards)
-        if self.missing and (not self.args.with_dependencies or any(not r['package'] for r in self.missing)):
-            raise ValueError('missing prerequisites: '+', '.join(r['tool'] for r in self.missing)+
-                             '; select --with-dependencies for mapped packages; other prerequisites need explicit installation')
-        try:
-            if getattr(self.args, 'offline', False) and (self.missing or self.module or 'packages' in self.args.component or self.leaf or self.fonts):
-                raise ValueError('offline setup cannot acquire dependencies, packages, fonts or Leaf; deselect these preparation steps')
-            if self.module:
-                from pkgs_lib.winget import bridge, bridge_command
-                capability = bridge('capabilities')
-                if capability.get('missing'):
-                    if not self.args.with_dependencies: raise ValueError('Microsoft.WinGet.Client is required; select --with-dependencies to approve its current-user installation')
-                    from pkgs_lib.common import run
-                    run(bridge_command('install-module'))
-                    bridge('capabilities')
-                    self.save_outcome('winget-module', 'complete')
-            if self.dependency_document['groups']:
-                self.packages_stage(self.dependency_document, 'dependencies')
-                if any(not shutil.which(r['tool']) for r in self.missing):
-                    raise ValueError('installed prerequisites are not available to this process; refresh the environment and retry')
-            if 'packages' in self.args.component:
-                self.packages_stage(self.packages, 'packages')
-            if self.leaf:
-                result = self.leaf.prepare()
-                self.save_outcome('leaf', 'complete', result=result, changed=not result['reused'])
-            if self.anodize:
-                result = self.anodize.prepare()
-                self.save_outcome('anodize', 'complete', result=result, changed=not result['reused'])
+        count = sum(bool(value) for value in (self.module, self.dependency_document['groups'], 'packages' in self.args.component, self.leaf, self.anodize))
+        with sequence('Acquire setup components', count, unit='component') as phases:
             verify(self.installation.guards)
-        except Exception as error:
-            self.save_outcome('preparation', 'failed', reason=str(error))
-            raise
+            if self.missing and (not self.args.with_dependencies or any(not r['package'] for r in self.missing)):
+                raise ValueError('missing prerequisites: '+', '.join(r['tool'] for r in self.missing)+
+                                 '; select --with-dependencies for mapped packages; other prerequisites need explicit installation')
+            try:
+                if getattr(self.args, 'offline', False) and (self.missing or self.module or 'packages' in self.args.component or self.leaf or self.fonts):
+                    raise ValueError('offline setup cannot acquire dependencies, packages, fonts or Leaf; deselect these preparation steps')
+                if self.module:
+                    with phases.step('WinGet module'):
+                        from pkgs_lib.winget import bridge, bridge_command
+                        capability = bridge('capabilities')
+                        if capability.get('missing'):
+                            if not self.args.with_dependencies: raise ValueError('Microsoft.WinGet.Client is required; select --with-dependencies to approve its current-user installation')
+                            from pkgs_lib.common import run
+                            run(bridge_command('install-module'))
+                            bridge('capabilities')
+                            self.save_outcome('winget-module', 'complete')
+                if self.dependency_document['groups']:
+                    with phases.step('Dependencies'):
+                        self.packages_stage(self.dependency_document, 'dependencies')
+                        if any(not shutil.which(r['tool']) for r in self.missing):
+                            raise ValueError('installed prerequisites are not available to this process; refresh the environment and retry')
+                if 'packages' in self.args.component:
+                    with phases.step('Packages'):
+                        self.packages_stage(self.packages, 'packages')
+                if self.leaf:
+                    with phases.step('Leaf'):
+                        result = self.leaf.prepare()
+                        self.save_outcome('leaf', 'complete', result=result, changed=not result['reused'])
+                if self.anodize:
+                    with phases.step('Anodize'):
+                        result = self.anodize.prepare()
+                        self.save_outcome('anodize', 'complete', result=result, changed=not result['reused'])
+                verify(self.installation.guards)
+            except Exception as error:
+                phases.cancel()
+                self.save_outcome('preparation', 'failed', reason=str(error))
+                raise
 
     def finish(self, installation):
         """Optional payload owners append their final operations here."""

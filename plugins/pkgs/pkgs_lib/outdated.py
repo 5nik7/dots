@@ -171,18 +171,22 @@ def cli(args, cfg):
         ui = report(explicit=cfg.get('_explicit_color'), fallback=cfg.get('color','auto'))
         if ui: ui.heading('Upgradable packages')
         else: print('Upgradable packages')
-    for manager, scope in selection:
-        try:
-            with budget(45), workflows.progress('Checking updates · '+manager, cfg):
-                if not available(manager): raise Error('manager unavailable')
-                backend = scopes.make(manager, scope)
-                group = inspect(backend, args, cfg, bulk=bulk)
-        except (Error, OSError, ValueError, KeyError, TypeError) as error:
-            fallback_scope = scope or ('system' if manager in SYSTEM else 'base' if manager == 'pip' else 'tools')
-            group = dict(manager=manager, scope=fallback_scope,
-                         packages=[], skipped=[], error=clean(error)[:600], status='error')
-        groups.append(group)
-        if not args.json: display(group, cfg)
+    progress_cfg = dict(cfg, _quiet_progress=args.dry_run or args.json or cfg.get('_quiet_progress', False))
+    with workflows.work_sequence('Checking package updates', len(selection), progress_cfg, unit='manager') as managers:
+        for index, (manager, scope) in enumerate(selection):
+            with managers.step('Checking updates · '+manager, index):
+                try:
+                    with budget(45), workflows.progress('Checking updates · '+manager, progress_cfg):
+                        if not available(manager): raise Error('manager unavailable')
+                        backend = scopes.make(manager, scope)
+                        group = inspect(backend, args, cfg, bulk=bulk)
+                except (Error, OSError, ValueError, KeyError, TypeError) as error:
+                    fallback_scope = scope or ('system' if manager in SYSTEM else 'base' if manager == 'pip' else 'tools')
+                    group = dict(manager=manager, scope=fallback_scope,
+                                 packages=[], skipped=[], error=clean(error)[:600], status='error')
+                groups.append(group)
+                if not args.json:
+                    with workflows.pause(): display(group, cfg)
     if args.json: print(json.dumps(dict(schema=1, groups=groups), indent=2, ensure_ascii=False))
     elif not groups: print('  No supported managers selected.')
     return int(any(g['error'] for g in groups))

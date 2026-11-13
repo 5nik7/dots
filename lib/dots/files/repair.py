@@ -18,7 +18,7 @@ from identities import canonical, validate_cli
 from install import Installation
 from transactions import digest, parents_safe
 from interaction import SelectionEnded, gum_confirm
-from progress import Progress, configure
+from progress import Progress, configure, sequence, permanent_output
 
 
 LINK_ACTIONS = {'add', 'link', 'install', 'edit', 'restore', 'repair'}
@@ -324,7 +324,7 @@ class Repair:
                         for flag, field in (('repo', 'repository'), ('app', 'app'), ('category', 'category')))]
         if any(r['status'] == 'broken-link' for r in rows):
             self.load_history()
-        with Progress('Inspecting managed files') as progress:
+        with sequence('Inspecting managed files', 1) as steps, steps.step('Inspecting managed files') as progress:
             for index, row in enumerate(sorted(rows, key=lambda r: r['id'])):
                 identity = row['id']
                 try:
@@ -351,6 +351,7 @@ def terminal():
     return all(stream.isatty() for stream in (sys.stdin, sys.stdout, sys.stderr))
 
 
+@permanent_output()
 def confirm():
     approved = gum_confirm('Apply these file repairs?')
     if approved is not None:
@@ -363,6 +364,7 @@ def confirm():
     return answer.strip().lower() in ('y', 'yes')
 
 
+@permanent_output()
 def render(doc, verbose=False, final=False):
     ui = Presentation()
     ui.heading('File repair ' + doc['status'])
@@ -420,6 +422,7 @@ def document(repair):
                             unchanged=counts['unchanged'], skipped=counts['skipped'], unresolved=counts['unresolved']))
 
 
+@permanent_output()
 def cancel(doc):
     doc['status'] = 'cancelled'
     for row in doc['items']:
@@ -439,34 +442,40 @@ def main(argv=None):
     repair = Repair(args)
     output = OperationOutput.for_args(args)
     repair.install.store.observer = output
-    repair.inspect()
-    doc = document(repair)
-    if args.dry_run:
-        print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc, args.verbose)
-        return int(bool(doc['counts']['unresolved']))
-    if not args.yes and terminal() and doc['counts']['unresolved']:
-        from repair_picker import RepairHelper
-        if not RepairHelper(repair).run():
-            return cancel(document(repair))
-        # The selected operations and guards are already prepared. Approval
-        # must never cause a fresh scan or rebuild of this reviewed batch.
+    with sequence('File repair', 2) as phases:
+        with phases.step('Inspect managed files'):
+            repair.inspect()
         doc = document(repair)
-    eligible = doc['counts']['eligible']
-    if eligible and not args.yes and not terminal():
-        p.error('use --dry-run to inspect or --yes to apply without terminal input and output')
-    if not args.json:
-        render(doc, args.verbose)
-    if eligible and not args.yes and not confirm():
-        return cancel(doc)
-    if eligible:
-        doc['transaction'] = repair.apply()
-        doc['counts']['repaired'] = eligible
-        for row in doc['items']:
-            if row['repair_action'] in REPAIR_ACTIONS:
-                row['outcome'] = 'repaired'
-    doc['status'] = ('partial' if eligible else 'unresolved') if doc['counts']['unresolved'] else ('complete' if eligible else 'unchanged')
-    print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc, final=True)
-    return int(bool(doc['counts']['unresolved']))
+        if args.dry_run:
+            print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc, args.verbose)
+            return int(bool(doc['counts']['unresolved']))
+        if not args.yes and terminal() and doc['counts']['unresolved']:
+            from repair_picker import RepairHelper
+            with permanent_output(): approved=RepairHelper(repair).run()
+            if not approved:
+                phases.cancel()
+                return cancel(document(repair))
+            # The selected operations and guards are already prepared. Approval
+            # must never cause a fresh scan or rebuild of this reviewed batch.
+            doc = document(repair)
+        eligible = doc['counts']['eligible']
+        if eligible and not args.yes and not terminal():
+            p.error('use --dry-run to inspect or --yes to apply without terminal input and output')
+        if not args.json:
+            render(doc, args.verbose)
+        if eligible and not args.yes and not confirm():
+            phases.cancel()
+            return cancel(doc)
+        if eligible:
+            with phases.step('Repair managed files'):
+                doc['transaction'] = repair.apply()
+            doc['counts']['repaired'] = eligible
+            for row in doc['items']:
+                if row['repair_action'] in REPAIR_ACTIONS:
+                    row['outcome'] = 'repaired'
+        doc['status'] = ('partial' if eligible else 'unresolved') if doc['counts']['unresolved'] else ('complete' if eligible else 'unchanged')
+        print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc, final=True)
+        return int(bool(doc['counts']['unresolved']))
 
 
 if __name__ == '__main__':

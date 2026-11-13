@@ -34,13 +34,14 @@ styles. All Fonts selectors use shared menu field/icon styles and layout. Catalo
 previews wrap at the actual preview-pane width. JSON, exact `path`, single-glyph
 formats and ordinary redirected output retain their data/undecorated formats.
 
-Slow font operations follow `apps.cli.progress`, whose default `both` shows a
-spinner beside a bar when a total is known. Install/copy/migrate preparation
-counts selected families or installed files; upgrade preparation counts eligible
-families. Provider requests count received bytes when the response supplies a
-usable total, otherwise they remain indeterminate. These phase counts do not
-claim installation or activation has completed. Existing transaction results
-remain authoritative, and JSON, path, dry-run and redirected output do not animate.
+Slow font operations follow `apps.cli.progress`. The default `both` shows an
+overall bar plus a current-step spinner and measured bar when available.
+Preparation counts selected families or installed files within its reserved
+share, followed by application and finalization. Provider requests show local
+received-byte percentages when a usable total is available; individual downloads
+do not complete the enclosing preparation step. Unknown work holds its overall
+position. Existing transaction results remain authoritative, and JSON, path,
+dry-run and redirected output do not animate.
 
 ### Output preferences
 

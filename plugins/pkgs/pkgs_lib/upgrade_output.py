@@ -102,15 +102,7 @@ class Output:
         self.pip_steps = False
         self.command_active = False
         self.success_extra = 0
-        self.commands_done, self.commands_total = 0, 0
         self.native_done, self.native_total = 0, 0
-
-    def commands_progress(self, completed, total):
-        """Count returned commands, including failures, never inferred updates."""
-        self.commands_done, self.commands_total = completed, total
-        self.native_done, self.native_total = 0, 0
-        self.transferred, self.total = 0, 0
-        self.tick()
 
     def begin_command(self):
         """Collect pip diagnostics until the command's real exit status is known."""
@@ -255,22 +247,17 @@ class Output:
             def amount(size):
                 return f'{size/1048576:.1f}MiB' if size >= 1048576 else f'{size/1024:.0f}KiB'
             if self.total:
-                label += f'{min(100, 100*self.transferred//self.total)}% '+amount(self.transferred)+'/'+amount(self.total)
+                label += 'Downloading '+amount(self.transferred)+'/'+amount(self.total)
             else: label += 'Downloaded '+amount(self.transferred)
         else: label += self.stage
         spans = [(label, self.styles['progress'])]
         if self.package: spans += [(' · ', self.styles['progress']), (self.package, self.package_style)]
         if self.stage == 'Downloading' and self.total:
-            completed, total, unit = min(self.transferred, self.total), self.total, 'bytes'
+            completed, total = min(self.transferred, self.total), self.total
         elif self.native_total:
-            completed, total, unit = self.native_done, self.native_total, 'packages'
-        elif self.commands_total > 1:
-            completed, total, unit = self.commands_done, self.commands_total, 'commands'
-        elif self.cfg.get('_progress_batch'):
-            completed, total = self.cfg['_progress_batch']; unit = 'managers'
+            completed, total = self.native_done, self.native_total
         else:
-            completed, total, unit = self.commands_done, self.commands_total, 'commands'
-        if total: spans.append((' · '+unit, self.styles['progress']))
+            completed, total = 0, 0
         self.progress.update_spans(spans, completed, total)
 
     def prompt(self, text, stream, ending=''):

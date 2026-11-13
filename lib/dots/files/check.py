@@ -13,7 +13,7 @@ from events import OperationOutput
 from manage import Manager
 from transactions import digest, parents_safe
 from interaction import gum_confirm
-from progress import Progress, configure
+from progress import Progress, configure, sequence, permanent_output
 
 
 def source_state(path):
@@ -63,7 +63,7 @@ class Check:
             for option, field in (('repo', 'repository'), ('app', 'app'),
                                   ('category', 'category'), ('status', 'status')))]
         rows.sort(key=lambda r: (str(r.get(self.args.sort, '')), r['id']))
-        with Progress('Checking file sources') as progress:
+        with sequence('Checking file sources', 1) as steps, steps.step('Checking file sources') as progress:
             for index, row in enumerate(rows):
                 state = source_state(row['source'])
                 self.items.append(dict(row, source_state=state, eligible=state == 'absent',
@@ -115,6 +115,7 @@ class Check:
             return self.manager.store.apply('check', operations, guards, catalogs=catalogs)
 
 
+@permanent_output()
 def confirm(question, action='Apply'):
     approved = gum_confirm(question, action, cancel='Skip' if action == 'Remove entry' else 'Cancel')
     if approved is not None:
@@ -127,6 +128,7 @@ def confirm(question, action='Apply'):
     return answer.strip().lower() in ('y', 'yes')
 
 
+@permanent_output()
 def show_item(ui, row):
     ui.emit()
     ui.detail('Resource', row['id'], '1;94')
@@ -169,81 +171,86 @@ def main(argv=None):
     check = Check(args)
     output = OperationOutput.for_args(args)
     check.manager.store.observer = output
-    with Progress('Inspecting file catalog'):
-        items = check.inspect()
-    candidates = [r for r in items if r['eligible']]
-    sources = [s for s in check.catalog.sources if not args.repo or s['id'] == args.repo]
-    result = dict(schema=1, action='check', platform=args.platform, dry_run=args.dry_run,
-                  status='preview' if args.dry_run else 'unchanged', items=items, sources=sources,
-                  counts=dict(checked=len(items), eligible=len(candidates), selected=0, removed=0, skipped=0))
-    ui = Presentation()
-    if not args.json:
-        ui.heading('Check tracked files')
-        for source in sources:
-            if source['status'] != 'available':
-                ui.repository_detail('Repository', source['root'], source['id'] + ': ' + source['status'], '93')
-        for row in items:
-            if row['source_state'] == 'broken-source-link':
-                show_item(ui, row)
-    selected = []
-    if args.dry_run:
-        check.plan([row['id'] for row in candidates])
-        for row in candidates:
-            row['outcome'] = 'would-remove'
+    with sequence('File catalog check', 2) as phases:
+        with phases.step('Inspect file catalog'):
+            items = check.inspect()
+        candidates = [r for r in items if r['eligible']]
+        sources = [s for s in check.catalog.sources if not args.repo or s['id'] == args.repo]
+        result = dict(schema=1, action='check', platform=args.platform, dry_run=args.dry_run,
+                      status='preview' if args.dry_run else 'unchanged', items=items, sources=sources,
+                      counts=dict(checked=len(items), eligible=len(candidates), selected=0, removed=0, skipped=0))
+        ui = Presentation()
+        with permanent_output():
             if not args.json:
-                show_item(ui, row)
-    elif candidates:
-        if not args.yes and not all(s.isatty() for s in (sys.stdin, sys.stdout, sys.stderr)):
-            p.error('use --dry-run to inspect or --yes to apply without terminal input and output')
-        for row in candidates:
-            if not args.json and not args.yes:
-                show_item(ui, row)
-            if args.yes or confirm('Remove this catalog entry?', 'Remove entry'):
-                selected.append(row['id'])
-                row['outcome'] = 'selected'
-            else:
-                row['outcome'] = 'skipped'
-        result['counts']['selected'] = len(selected)
-        if selected:
-            # Validate the selected plan before offering final approval.
-            check.plan(selected)
-            if not args.json:
-                ui.heading('Selected catalog removals')
-                for row in candidates:
-                    if row['id'] in selected:
+                ui.heading('Check tracked files')
+                for source in sources:
+                    if source['status'] != 'available':
+                        ui.repository_detail('Repository', source['root'], source['id'] + ': ' + source['status'], '93')
+                for row in items:
+                    if row['source_state'] == 'broken-source-link':
                         show_item(ui, row)
-            if args.yes or confirm('Apply these catalog removals?'):
-                result['transaction'] = check.apply(selected)
-                result['status'] = 'complete'
-                result['counts']['removed'] = len(selected)
-                for row in candidates:
-                    if row['id'] in selected:
-                        row['outcome'] = 'removed'
-            else:
-                result['status'] = 'cancelled'
-                for row in candidates:
-                    if row['id'] in selected:
-                        row['outcome'] = 'cancelled'
-        result['counts']['skipped'] = len(candidates) - result['counts']['removed']
-    for row in items:
-        outcome = row.get('outcome', '')
-        if args.dry_run or outcome in ('skipped', 'removed') or not row['eligible']:
-            output('Would remove catalog entry' if outcome == 'would-remove' else 'Removed catalog entry' if outcome == 'removed' else 'Skipped',
-                   row.get('source'), reason=row['id'] + ': ' + row['reason'])
-    if args.json:
-        print(json.dumps(result, ensure_ascii=True))
-    else:
-        ui.heading('File check ' + result['status'])
-        summary(ui, result)
-        if not candidates:
-            ui.detail('Result', 'No absent-source catalog entries match this check.')
+        selected = []
         if args.dry_run:
-            ui.emit('  Preview only; no changes made.')
-        elif not result['counts']['removed']:
-            ui.emit('  No changes made.')
-        else:
-            ui.detail('Result', 'Catalog entries removed; source and target objects were preserved.', '92')
-    return 0
+            check.plan([row['id'] for row in candidates])
+            for row in candidates:
+                row['outcome'] = 'would-remove'
+                if not args.json:
+                    show_item(ui, row)
+        elif candidates:
+            if not args.yes and not all(s.isatty() for s in (sys.stdin, sys.stdout, sys.stderr)):
+                p.error('use --dry-run to inspect or --yes to apply without terminal input and output')
+            for row in candidates:
+                if not args.json and not args.yes:
+                    show_item(ui, row)
+                if args.yes or confirm('Remove this catalog entry?', 'Remove entry'):
+                    selected.append(row['id'])
+                    row['outcome'] = 'selected'
+                else:
+                    row['outcome'] = 'skipped'
+            result['counts']['selected'] = len(selected)
+            if selected:
+                # Validate the selected plan before offering final approval.
+                check.plan(selected)
+                if not args.json:
+                    with permanent_output(): ui.heading('Selected catalog removals')
+                    for row in candidates:
+                        if row['id'] in selected:
+                            show_item(ui, row)
+                if args.yes or confirm('Apply these catalog removals?'):
+                    with phases.step('Update file catalog'):
+                        result['transaction'] = check.apply(selected)
+                    result['status'] = 'complete'
+                    result['counts']['removed'] = len(selected)
+                    for row in candidates:
+                        if row['id'] in selected:
+                            row['outcome'] = 'removed'
+                else:
+                    phases.cancel()
+                    result['status'] = 'cancelled'
+                    for row in candidates:
+                        if row['id'] in selected:
+                            row['outcome'] = 'cancelled'
+            result['counts']['skipped'] = len(candidates) - result['counts']['removed']
+        for row in items:
+            outcome = row.get('outcome', '')
+            if args.dry_run or outcome in ('skipped', 'removed') or not row['eligible']:
+                output('Would remove catalog entry' if outcome == 'would-remove' else 'Removed catalog entry' if outcome == 'removed' else 'Skipped',
+                       row.get('source'), reason=row['id'] + ': ' + row['reason'])
+        with permanent_output():
+            if args.json:
+                print(json.dumps(result, ensure_ascii=True))
+            else:
+                ui.heading('File check ' + result['status'])
+                summary(ui, result)
+                if not candidates:
+                    ui.detail('Result', 'No absent-source catalog entries match this check.')
+                if args.dry_run:
+                    ui.emit('  Preview only; no changes made.')
+                elif not result['counts']['removed']:
+                    ui.emit('  No changes made.')
+                else:
+                    ui.detail('Result', 'Catalog entries removed; source and target objects were preserved.', '92')
+        return 0
 
 
 if __name__ == '__main__':

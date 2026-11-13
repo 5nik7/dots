@@ -22,7 +22,7 @@ from transactions import Store, digest, exists, parents_safe, private_directory,
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from interaction import gum_confirm
-from progress import Progress, configure
+from progress import Progress, configure, sequence, permanent_output
 
 from identities import canonical, current_source
 from setup_components import DEFAULTS, component
@@ -40,6 +40,7 @@ def locked_file(path):
         yield
 
 
+@permanent_output()
 def approve(args, label='Apply this plan?'):
     if args.yes:
         return True
@@ -52,6 +53,7 @@ def approve(args, label='Apply this plan?'):
     return sys.stdin.readline().strip().lower() in ('y', 'yes')
 
 
+@permanent_output()
 def display(doc, args, final=False):
     if args.json:
         if final or args.dry_run:
@@ -888,115 +890,128 @@ def main(argv=None):
 
 
 def process_selection(root, installation, args, cleanup):
-    import setup_wizard
-    preparation = None
-    if args.action == 'install':
-        from setup_stages import Preparation
-        preparation = Preparation(installation, args)
-        cleanup.callback(preparation.close)
-    output = OperationOutput.for_args(args)
-    installation.store.observer = output
-    with Progress('Planning ' + args.action):
+    with sequence('File '+args.action, 4) as phases:
+        import setup_wizard
+        preparation = None
         if args.action == 'install':
-            installation.plan_install(args.component, args.resource, defer_theme=preparation.deferred_theme)
-            setup_wizard.save_plan(root, installation, args)
-        elif args.action == 'migrate-apps':
-            from app_migration import plan
-            plan(installation)
-        else:
-            installation.plan_uninstall(args.component, args.resource)
-            from setup_fonts import uninstall as uninstall_fonts
-            uninstall_fonts(installation)
-    doc = dict(schema=1, action=args.action, status='blocked' if installation.blocked else 'preview',
-               platform=installation.platform, items=installation.items)
-    if args.action != 'migrate-apps':
-        doc['components'] = args.component
-    if preparation:
-        doc['preparation'] = preparation.preview()
-        if 'packages' in args.component:
-            doc['packages'] = dict(schema=1,status='preview',groups=[dict(manager=g['manager'],scope=g['scope'],
-                status='deferred',reason='manager inspection follows preparation approval',plan=None,
-                desired=g['packages']) for g in preparation.packages['groups']])
-        if not args.json:
-            ui = Presentation()
-            for row in doc['preparation']:
-                ui.detail('Preparation', row['stage'])
-                for requirement in row.get('requirements', []):
-                    ui.detail('Missing', requirement['tool']+' — '+(requirement['package'] or requirement['reason']))
-                if row['stage'] == 'packages':
-                    for group in row['manifest']['groups']:
-                        targets = [p['name']+('='+p['pin'] if p['pin'] else '') for p in group['packages'] if p['enabled']]
-                        ui.detail(group['manager']+' / '+group['scope'], ', '.join(targets) or 'no enabled packages')
-    display(doc, args, final=args.action == 'migrate-apps' and not args.yes)
-    output.plan(installation.items, args.dry_run)
-    if args.dry_run or (args.action == 'migrate-apps' and not args.yes):
-        return int(installation.blocked)
-    if installation.blocked:
-        raise ValueError('resolve the displayed conflicts before applying setup')
-    if preparation and doc['preparation']:
-        if not approve(args, 'Prepare these components before the final managed-change review?'):
-            display(dict(doc, status='cancelled', items=[], message='No changes made.'), args, True)
+            from setup_stages import Preparation
+            preparation = Preparation(installation, args)
+            cleanup.callback(preparation.close)
+        output = OperationOutput.for_args(args)
+        installation.store.observer = output
+        with phases.step('Plan '+args.action):
+            if args.action == 'install':
+                installation.plan_install(args.component, args.resource, defer_theme=preparation.deferred_theme)
+                setup_wizard.save_plan(root, installation, args)
+            elif args.action == 'migrate-apps':
+                from app_migration import plan
+                plan(installation)
+            else:
+                installation.plan_uninstall(args.component, args.resource)
+                from setup_fonts import uninstall as uninstall_fonts
+                uninstall_fonts(installation)
+        doc = dict(schema=1, action=args.action, status='blocked' if installation.blocked else 'preview',
+                   platform=installation.platform, items=installation.items)
+        if args.action != 'migrate-apps':
+            doc['components'] = args.component
+        if preparation:
+            doc['preparation'] = preparation.preview()
+            if 'packages' in args.component:
+                doc['packages'] = dict(schema=1,status='preview',groups=[dict(manager=g['manager'],scope=g['scope'],
+                    status='deferred',reason='manager inspection follows preparation approval',plan=None,
+                    desired=g['packages']) for g in preparation.packages['groups']])
+            with permanent_output():
+                if not args.json:
+                    ui = Presentation()
+                    for row in doc['preparation']:
+                        ui.detail('Preparation', row['stage'])
+                        for requirement in row.get('requirements', []):
+                            ui.detail('Missing', requirement['tool']+' — '+(requirement['package'] or requirement['reason']))
+                        if row['stage'] == 'packages':
+                            for group in row['manifest']['groups']:
+                                targets = [p['name']+('='+p['pin'] if p['pin'] else '') for p in group['packages'] if p['enabled']]
+                                ui.detail(group['manager']+' / '+group['scope'], ', '.join(targets) or 'no enabled packages')
+        display(doc, args, final=args.action == 'migrate-apps' and not args.yes)
+        output.plan(installation.items, args.dry_run)
+        if args.dry_run or (args.action == 'migrate-apps' and not args.yes):
+            return int(installation.blocked)
+        if installation.blocked:
+            raise ValueError('resolve the displayed conflicts before applying setup')
+        with phases.step('Prepare setup components'), sequence('Prepare setup components', 3) as preparation_steps:
+            if preparation and doc['preparation']:
+                if not approve(args, 'Prepare these components before the final managed-change review?'):
+                    display(dict(doc, status='cancelled', items=[], message='No changes made.'), args, True)
+                    phases.cancel()
+                    return 0
+                try:
+                    with preparation_steps.step('Acquire selected components'):
+                        preparation.run()
+                except Exception as error:
+                    doc.update(preparation.results)
+                    with permanent_output(): Presentation(sys.stderr).emit('dots setup: '+Presentation.clean(str(error)))
+                    display(dict(doc,status='incomplete',stages=preparation.outcomes,
+                        preparation_record=str(preparation.record) if preparation.record.exists() else None,
+                        message='Preparation stopped; configuration was not applied. Completed preparation effects remain.'),args,True)
+                    phases.cancel()
+                    return 1
+                doc.update(preparation.results)
+                try:
+                    with preparation_steps.step('Prepare managed payloads'):
+                        if preparation.deferred_theme:
+                            previous_guards = installation.guards
+                            installation = Installation(root)
+                            installation.no_backup = args.no_backup
+                            installation.guards.update(previous_guards)
+                            installation.store.observer = output
+                            installation.plan_install(args.component, args.resource)
+                            setup_wizard.save_plan(root, installation, args)
+                            preparation.installation = installation
+                        installation.prepare()
+                    # Optional planners attach their verified payloads to this one final plan.
+                    with preparation_steps.step('Finalize selected payloads'):
+                        preparation.finish(installation)
+                except Exception as error:
+                    preparation.save_outcome('managed-payloads','failed',reason=str(error))
+                    with permanent_output(): Presentation(sys.stderr).emit('dots setup: '+Presentation.clean(str(error)))
+                    display(dict(doc,status='incomplete',stages=preparation.outcomes,
+                        preparation_record=str(preparation.record),
+                        message='Payload preparation stopped; configuration was not applied. Completed preparation effects remain.'),args,True)
+                    phases.cancel()
+                    return 1
+                doc['items'] = installation.items
+                doc['stages'] = preparation.outcomes
+                doc['preparation_record'] = str(preparation.record) if preparation.record.exists() else None
+                display(dict(doc, message='Final managed changes; completed preparation effects remain if cancelled.'), args)
+                if installation.blocked: raise ValueError('resolve conflicts in the final managed plan')
+        if not approve(args, 'Apply these managed changes?'):
+            display(dict(doc, status='cancelled', items=[], message='Managed changes cancelled; completed preparation effects remain.'), args, True)
+            phases.cancel()
             return 0
         try:
-            preparation.run()
-        except Exception as error:
-            doc.update(preparation.results)
-            Presentation(sys.stderr).emit('dots setup: '+Presentation.clean(str(error)))
-            display(dict(doc,status='incomplete',stages=preparation.outcomes,
-                preparation_record=str(preparation.record) if preparation.record.exists() else None,
-                message='Preparation stopped; configuration was not applied. Completed preparation effects remain.'),args,True)
-            return 1
-        doc.update(preparation.results)
-        try:
-            if preparation.deferred_theme:
-                previous_guards = installation.guards
-                installation = Installation(root)
-                installation.no_backup = args.no_backup
-                installation.guards.update(previous_guards)
-                installation.store.observer = output
-                installation.plan_install(args.component, args.resource)
-                setup_wizard.save_plan(root, installation, args)
-                preparation.installation = installation
-            installation.prepare()
-            # Optional planners attach their verified payloads to this one final plan.
-            preparation.finish(installation)
-        except Exception as error:
-            preparation.save_outcome('managed-payloads','failed',reason=str(error))
-            Presentation(sys.stderr).emit('dots setup: '+Presentation.clean(str(error)))
-            display(dict(doc,status='incomplete',stages=preparation.outcomes,
-                preparation_record=str(preparation.record),
-                message='Payload preparation stopped; configuration was not applied. Completed preparation effects remain.'),args,True)
-            return 1
-        doc['items'] = installation.items
-        doc['stages'] = preparation.outcomes
-        doc['preparation_record'] = str(preparation.record) if preparation.record.exists() else None
-        display(dict(doc, message='Final managed changes; completed preparation effects remain if cancelled.'), args)
-        if installation.blocked: raise ValueError('resolve conflicts in the final managed plan')
-    if not approve(args, 'Apply these managed changes?'):
-        display(dict(doc, status='cancelled', items=[], message='Managed changes cancelled; completed preparation effects remain.'), args, True)
-        return 0
-    try:
-        result = installation.apply(args.action)
-    except (OSError, ValueError) as error:
-        if preparation and preparation.outcomes:
-            preparation.save_outcome('publication', 'failed', reason=str(error))
-            raise ValueError('Managed setup failed; completed preparation effects remain: '+str(error)) from error
-        raise
-    if installation.theme_notice:
-        ui = Presentation(sys.stderr)
-        if args.json:
-            ui.color = ui.icons = False
-        ui.emit(ui.paint('Vivid compatibility mode', '93'))
-        ui.detail('Detail', installation.theme_notice)
-    if args.action == 'uninstall':
-        installation.prune_empty_parents()
-    incomplete = any(x['status'] == 'preserved' for x in installation.items)
-    completed = {'create':'linked', 'replace-with-backup':'linked', 'restore':'restored', 'remove':'removed', 'prepare':'published'}
-    final_items = [dict(row, status=completed.get(row['status'], row['status'])) for row in installation.items]
-    display(dict(doc, status='incomplete' if incomplete else result['status'],
-                 transaction=result.get('id'), items=final_items,
-                 message='Changed targets were preserved.' if incomplete else 'Completed. Recovery records and retained backups remain available.'), args, True)
-    return int(incomplete)
+            with phases.step('Apply managed changes'):
+                result = installation.apply(args.action)
+        except (OSError, ValueError) as error:
+            if preparation and preparation.outcomes:
+                preparation.save_outcome('publication', 'failed', reason=str(error))
+                raise ValueError('Managed setup failed; completed preparation effects remain: '+str(error)) from error
+            raise
+        with phases.step('Finalize setup'):
+            with permanent_output():
+                if installation.theme_notice:
+                    ui = Presentation(sys.stderr)
+                    if args.json:
+                        ui.color = ui.icons = False
+                    ui.emit(ui.paint('Vivid compatibility mode', '93'))
+                    ui.detail('Detail', installation.theme_notice)
+            if args.action == 'uninstall':
+                installation.prune_empty_parents()
+            incomplete = any(x['status'] == 'preserved' for x in installation.items)
+            completed = {'create':'linked', 'replace-with-backup':'linked', 'restore':'restored', 'remove':'removed', 'prepare':'published'}
+            final_items = [dict(row, status=completed.get(row['status'], row['status'])) for row in installation.items]
+            display(dict(doc, status='incomplete' if incomplete else result['status'],
+                         transaction=result.get('id'), items=final_items,
+                         message='Changed targets were preserved.' if incomplete else 'Completed. Recovery records and retained backups remain available.'), args, True)
+            return int(incomplete)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ import textwrap
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'lib/dots'))
 from interaction import gum_confirm, SelectionEnded
-from progress import configure
+from progress import configure, sequence, permanent_output
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'lib/dots/files'))
 from catalog import Presentation
@@ -168,6 +168,7 @@ def parser():
     return p
 
 
+@permanent_output()
 def present(result, use_json=False):
     if use_json:
         sys.stdout.buffer.write(encode(result))
@@ -241,6 +242,7 @@ def present(result, use_json=False):
         view.fill()
 
 
+@permanent_output()
 def present_result(result, args):
     """Keep interactive read-only results visible after their picker exits."""
     if not args.interactive:
@@ -258,6 +260,7 @@ def present_result(result, args):
         page_text(output.getvalue(), title='Anodize ' + args.action, defer=True)
 
 
+@permanent_output()
 def confirm(args, view):
     if args.dry_run:
         present(view, args.json)
@@ -385,47 +388,58 @@ def main(argv=None):
         present_result(dict(author.render(doc), id='preview'), args)
         return
     if action in ('create', 'import', 'edit'):
-        inputs = []
-        if action == 'edit': inputs.append(author.target(args.id))
-        if action == 'import': inputs.append(Path(args.file).absolute())
-        if action == 'create':
-            if args.image: inputs.append(Path(args.image).absolute())
-            if args.from_theme: inputs.append(author.target(args.from_theme))
-        input_guards = {str(path): digest(path) for path in inputs}
-        doc, notes, wallpaper = build_document(author, args)
-        wall = wallpaper or doc.get('wallpaper')
-        if wall:
-            path = Path(wall)
-            if not path.is_absolute(): path = author.target(doc['id']) / path
-            input_guards.setdefault(str(path), digest(path))
-        if args.interactive:
-            from interactive import edit_draft
-            doc = edit_draft(author, args, doc, wallpaper)
-        plan = author.prepare(doc, edit=action == 'edit', reference=args.reference_wallpaper, wallpaper=wallpaper, builtin=getattr(args, 'builtin', False))
-        for path, before in input_guards.items():
-            if digest(path) != before:
-                raise ValueError('source changed during preview: ' + path)
-        plan['guards'].update(input_guards)
-        view = dict(schema=1, id=doc['id'], target=plan['target'], status=plan['status'], notes=notes,
-                    files=sorted(plan['files']))
-        if doc.get('wallpaper'):
-            view['wallpaper'] = doc['wallpaper']
-            if Path(doc['wallpaper']).is_absolute():
-                view['notes'].append('External wallpaper dependency; keep this file available.')
-        if plan['status'] == 'unchanged':
-            present(view, args.json)
-        elif confirm(args, view):
-            result = author.save(plan)
-            present(dict(view, status=result['status'], transaction=result.get('id')), args.json)
-        return
+        with sequence('Anodize '+action, 3) as phases:
+            inputs = []
+            if action == 'edit': inputs.append(author.target(args.id))
+            if action == 'import': inputs.append(Path(args.file).absolute())
+            if action == 'create':
+                if args.image: inputs.append(Path(args.image).absolute())
+                if args.from_theme: inputs.append(author.target(args.from_theme))
+            input_guards = {str(path): digest(path) for path in inputs}
+            with phases.step('Generate theme draft'):
+                doc, notes, wallpaper = build_document(author, args)
+                wall = wallpaper or doc.get('wallpaper')
+                if wall:
+                    path = Path(wall)
+                    if not path.is_absolute(): path = author.target(doc['id']) / path
+                    input_guards.setdefault(str(path), digest(path))
+                if args.interactive:
+                    from interactive import edit_draft
+                    doc = edit_draft(author, args, doc, wallpaper)
+            with phases.step('Prepare theme files'):
+                plan = author.prepare(doc, edit=action == 'edit', reference=args.reference_wallpaper, wallpaper=wallpaper, builtin=getattr(args, 'builtin', False))
+                for path, before in input_guards.items():
+                    if digest(path) != before:
+                        raise ValueError('source changed during preview: ' + path)
+                plan['guards'].update(input_guards)
+                view = dict(schema=1, id=doc['id'], target=plan['target'], status=plan['status'], notes=notes,
+                            files=sorted(plan['files']))
+                if doc.get('wallpaper'):
+                    view['wallpaper'] = doc['wallpaper']
+                    if Path(doc['wallpaper']).is_absolute():
+                        view['notes'].append('External wallpaper dependency; keep this file available.')
+            if plan['status'] == 'unchanged':
+                present(view, args.json)
+            elif confirm(args, view):
+                with phases.step('Save theme files'):
+                    result = author.save(plan)
+                present(dict(view, status=result['status'], transaction=result.get('id')), args.json)
+            else:
+                phases.cancel()
+            return
     if action == 'promote':
-        plan = author.promote(args.id, args.name, args.copy)
-        view = dict(schema=1, id=plan['document']['id'], status='preview', target=plan['target'],
-                    notes=[('Copy' if args.copy else 'Move') + ' from ' + plan['source']])
-        if confirm(args, view):
-            result = author.save(plan)
-            present(dict(view, status=result['status'], transaction=result.get('id')), args.json)
-        return
+        with sequence('Anodize promotion', 2) as phases:
+            with phases.step('Prepare theme promotion'):
+                plan = author.promote(args.id, args.name, args.copy)
+            view = dict(schema=1, id=plan['document']['id'], status='preview', target=plan['target'],
+                        notes=[('Copy' if args.copy else 'Move') + ' from ' + plan['source']])
+            if confirm(args, view):
+                with phases.step('Save promoted theme'):
+                    result = author.save(plan)
+                present(dict(view, status=result['status'], transaction=result.get('id')), args.json)
+            else:
+                phases.cancel()
+            return
     if action in ('show', 'preview', 'export'):
         doc = author.load(args.id)
         rendered = author.render(doc)
@@ -481,30 +495,36 @@ def main(argv=None):
             present(dict(view, status=result['status'], transaction=result.get('id')), args.json)
         return
     if action == 'apply':
-        # Always obtain the publisher's real preflight before approval.
-        wallpaper = None
-        if args.background:
-            doc = author.load(args.id)
-            wallpaper = doc.get('wallpaper')
-            if wallpaper and not Path(wallpaper).is_absolute():
-                wallpaper = str(author.target(args.id) / wallpaper)
-            if wallpaper:
-                regular_bytes(wallpaper, 32 << 20)
-                if Path(wallpaper).suffix.lower() == '.gif':
-                    raise ValueError('wallpaper activation requires PNG or JPEG; GIF palettes can still be applied without --background')
-        raw, _ = author.theme_bridge('plan', args.id, *(['background', wallpaper or ''] if args.background else []))
-        view = json.loads(raw)
-        view.update(id=args.id, target=view['publish'], notes=['Apply wallpaper too.'] if args.background else [])
-        if wallpaper:
-            view['wallpaper'] = wallpaper
-        if confirm(args, view):
-            raw, diagnostics = author.theme_bridge('apply', args.id, *(['background', wallpaper or ''] if args.background else []))
-            if diagnostics:
-                render_logo(Presentation(sys.stderr))
-                sys.stderr.flush()
-                sys.stderr.buffer.write(diagnostics)
-            present(dict(json.loads(raw), id=args.id), args.json)
-        return
+        with sequence('Anodize apply', 2) as phases:
+            with phases.step('Prepare theme application'):
+                # Always obtain the publisher's real preflight before approval.
+                wallpaper = None
+                if args.background:
+                    doc = author.load(args.id)
+                    wallpaper = doc.get('wallpaper')
+                    if wallpaper and not Path(wallpaper).is_absolute():
+                        wallpaper = str(author.target(args.id) / wallpaper)
+                    if wallpaper:
+                        regular_bytes(wallpaper, 32 << 20)
+                        if Path(wallpaper).suffix.lower() == '.gif':
+                            raise ValueError('wallpaper activation requires PNG or JPEG; GIF palettes can still be applied without --background')
+                raw, _ = author.theme_bridge('plan', args.id, *(['background', wallpaper or ''] if args.background else []))
+                view = json.loads(raw)
+                view.update(id=args.id, target=view['publish'], notes=['Apply wallpaper too.'] if args.background else [])
+                if wallpaper:
+                    view['wallpaper'] = wallpaper
+            if confirm(args, view):
+                with phases.step('Apply theme'):
+                    raw, diagnostics = author.theme_bridge('apply', args.id, *(['background', wallpaper or ''] if args.background else []))
+                with permanent_output():
+                    if diagnostics:
+                        render_logo(Presentation(sys.stderr))
+                        sys.stderr.flush()
+                        sys.stderr.buffer.write(diagnostics)
+                present(dict(json.loads(raw), id=args.id), args.json)
+            else:
+                phases.cancel()
+            return
 
 
 if __name__ == '__main__':

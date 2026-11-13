@@ -413,7 +413,7 @@ fmt_title title; fmt_title_underline underline; fmt_title_border box
         self.both('log_info info; fmt_path path', stdout='[i] info\npath', DOTS_COLOR='always')
 
     def test_spinner_commands_run_once_and_preserve_status_streams_and_traps(self):
-        self.both('''trap ':' INT TERM
+        self.both('''trap ':' INT TERM WINCH
 before=$(trap)
 run_with_spinner 'printf out; printf err >&2; return 7' 1 work
 rc=$?
@@ -447,8 +447,12 @@ spinner 99999999 1 quiet
                         self.assertEqual(p.returncode, 0, output)
                         self.assertIn('DONE', output)
                         self.assertEqual('working' in output, progress not in ('never','none'))
-                        self.assertEqual('[#' in output or '[-' in output, progress == 'bar')
-                        self.assertNotIn('\x1b', output)
+                        self.assertEqual('[#' in output or '[-' in output, progress in ('auto','bar','both'))
+                        self.assertNotRegex(output, r'\x1b\[[0-9;]*m')
+                        if progress not in ('never','none'):
+                            self.assertIn('Overall', output)
+                            self.assertIn('0%', output)
+                            self.assertIn('step 1/1', output)
                         self.assertNotIn('⏳', output)  # Explicit ASCII icons.
                     finally:
                         os.close(master)

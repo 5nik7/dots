@@ -22,34 +22,57 @@ lock_repo() {
 
 sync_children() {
     dots::progress_start 'Discovering submodules'
-    local dir=$1 i path oid child
+    local dir=$1 i path oid child progress_status=0 child_status
     local -a paths=() oids=()
     children "$dir" || { event "$dir" blocked 'cannot enumerate a conflict-free submodule index'; return 1; }
     paths=("${CHILD_PATHS[@]}"); oids=("${CHILD_OIDS[@]}")
+    dots::progress_sequence_start 'Synchronizing submodules' "${#paths[@]}" repo
     for ((i=0;i<${#paths[@]};i++)); do
         path=${paths[i]}; oid=${oids[i]}; child=$dir/$path
+        dots::progress_step_start "Submodule: $path" "$((i+1))"
         if ! safe_child_path "$dir" "$path" || [[ -L $child/.git ]] || ! submodule_name "$dir" "$path"; then
-            event "$child" blocked 'unsafe path or missing/ambiguous .gitmodules entry'; continue
+            event "$child" blocked 'unsafe path or missing/ambiguous .gitmodules entry'; progress_status=1; continue
         fi
         if ! repo_root "$child" || [[ $REPLY != "$child" ]]; then
-            if ((!INIT)); then event "$child" blocked 'not initialized; use sync --init to permit downloading this submodule'; continue; fi
+            if ((!INIT)); then event "$child" blocked 'not initialized; use sync --init to permit downloading this submodule'; progress_status=1; continue; fi
             if ((DRY_RUN)); then event "$child" planned 'initialize at recorded commit; deeper structure requires download'; continue; fi
             # Refuse to adopt any nonempty directory, including hidden files.
             if [[ -d $child ]] && [[ -n $(find "$child" -mindepth 1 -maxdepth 1 -print -quit) ]]; then
-                event "$child" blocked 'uninitialized submodule directory is not empty'; continue
+                event "$child" blocked 'uninitialized submodule directory is not empty'; progress_status=1; continue
             fi
             view_phase "Initializing submodule: $path"
             if ! git --literal-pathspecs -C "$dir" -c submodule.recurse=false submodule update --init --checkout -- "$path" >/dev/null 2>&1; then
-                event "$child" failed 'initialization failed; check URL, credentials, and Git transport policy'; continue
+                event "$child" failed 'initialization failed; check URL, credentials, and Git transport policy'; progress_status=1; continue
             fi
         fi
-        sync_node "$child" "$oid" "$dir" "$path" || :
+        child_status=0
+        sync_node "$child" "$oid" "$dir" "$path" || child_status=$?
+        ((child_status!=0)) || child_status=${SYNC_PROGRESS_STATUS:-0}
+        ((child_status==0)) || progress_status=1
+        dots::progress_step_end "$child_status"
     done
+    dots::progress_sequence_end "$progress_status"
+    SYNC_PROGRESS_STATUS=$progress_status
+    return 0
 }
 
 sync_node() {
+    # Traversal historically reports descendant failures through RESULT while
+    # returning the node's own status. Keep that contract and retain failure in
+    # the progress model independently, including when the last child failed.
+    local depth=${DOTS_PROGRESS_DEPTH:-0} rc=0 progress_status
+    SYNC_PROGRESS_STATUS=0
+    dots::progress_sequence_start "Synchronizing ${1##*/}" 4 step
+    sync_node_work "$@" || rc=$?
+    progress_status=$rc
+    ((progress_status!=0)) || progress_status=${SYNC_PROGRESS_STATUS:-0}
+    while ((${DOTS_PROGRESS_DEPTH:-0}>depth)); do dots::progress_sequence_end "$progress_status"; done
+    SYNC_PROGRESS_STATUS=$progress_status
+    return "$rc"
+}
+sync_node_work() {
     local dir=$1 pinned=${2:-} parent=${3:-} path=${4:-} before target name branch remote ref tracking attached=0
-    dots::progress_start 'Inspecting repository'
+    dots::progress_step_start 'Inspecting repository'
     [[ ! -v VISITED[$dir] ]] || { event "$dir" blocked 'repeated repository in traversal'; return 1; }
     VISITED[$dir]=1
     lock_repo "$dir" || return 1
@@ -72,6 +95,8 @@ sync_node() {
         elif upstream "$dir"; then remote=$UP_REMOTE; ref=$UP_REF; tracking=$TRACKING
         else event "$dir" blocked '--remote requires a configured submodule branch or attached upstream'; return 1; fi
     fi
+    dots::progress_step_end
+    dots::progress_step_start 'Fetching selected commit'
     if ((DRY_RUN)); then
         if [[ -z $pinned || $ADVANCE == 1 ]]; then
             event "$dir" planned "fetch and fast-forward/check out $remote/$ref; remote state not checked"
@@ -91,7 +116,8 @@ sync_node() {
             fi
         fi
     fi
-    dots::progress_start 'Updating repository'
+    dots::progress_step_end
+    dots::progress_step_start 'Updating repository'
     # Fetch can invoke credential helpers; recheck worktree state afterwards.
     if ! clean_own_files "$dir" || ! text_cmd git -C "$dir" rev-parse HEAD || [[ $REPLY != "$before" ]]; then
         event "$dir" blocked 'repository changed during fetch'; return 1
@@ -116,6 +142,8 @@ sync_node() {
         else event "$dir" updated 'checked out selected commit; parent pointer is not staged'; fi
     fi
     view_changes "$dir" "$before"
+    dots::progress_step_end
+    dots::progress_step_start 'Synchronizing submodules'
     sync_children "$dir"
 }
 
@@ -238,7 +266,11 @@ publish_preview() {
 }
 
 publish_node() {
+    dots::progress_sequence_run "Publishing ${1##*/}" 4 step publish_node_work "$@"
+}
+publish_node_work() {
     local dir=$1 parent=${PARENT[$1]} remote ref tracking before destination path child index head old row meta
+    dots::progress_step_start 'Checking publication inputs'
     [[ ! -v BLOCKED[$dir] ]] || { event "$dir" blocked 'a required child or preflight check failed'; return 1; }
     if ! fingerprint "$dir" || [[ $REPLY != "${SNAPSHOTS[$dir]}" ]]; then
         event "$dir" blocked 'publish inputs changed after preview'; return 1
@@ -267,6 +299,8 @@ publish_node() {
     if ((${SCOPED_PUBLISH:-0})) && ! recheck_publish_scope; then
         event "$dir" blocked 'submodule selection changed during preflight'; return 1
     fi
+    dots::progress_step_end
+    dots::progress_step_start 'Committing selected changes'
     if ((ALL)); then
         stage_own_files "$dir" || { event "$dir" failed 'staging failed; staged changes retained (inspect git status)'; return 1; }
     fi
@@ -276,10 +310,14 @@ publish_node() {
             event "$dir" failed 'commit failed; staged changes retained (check identity and hooks)'; return 1
         fi
     fi
+    dots::progress_step_end
+    dots::progress_step_start 'Pushing selected changes'
     view_phase 'Pushing selected changes'
     if ! git -C "$dir" -c push.followTags=false push --porcelain --recurse-submodules=check -- "$destination" "HEAD:$ref" >/dev/null 2>&1; then
         event "$dir" failed 'push failed; local commit retained and parent publication blocked'; return 1
     fi
+    dots::progress_step_end
+    dots::progress_step_start 'Verifying publication'
     event "$dir" published 'selected changes and ahead commits pushed'
     # Pushing an explicit URL need not update a named remote-tracking ref.
     # Refresh evidence before Git checks availability in the parent's push.
@@ -341,6 +379,7 @@ operations_main() {
     if [[ $CMD == sync ]]; then sync_node "$ROOT" || RESULT=1
     else
         command -v sha256sum >/dev/null 2>&1 || die 3 'publishing requires sha256sum'
+        dots::progress_start 'Collecting publish inputs'
         if [[ -z $MESSAGE ]]; then
             text_cmd date -u '+%Y-%m-%d %H:%M UTC'; MESSAGE="Sync via ${HOSTNAME:-unknown} on $REPLY"
         fi
@@ -364,7 +403,10 @@ operations_main() {
         else
             dots::progress_run 'Collecting publish inputs' collect_publish "$ROOT" || RESULT=1
         fi
-        local dir parent answer
+        dots::progress_sequence_start 'Publishing repositories' "${#PUB_DIRS[@]}" repo
+        dots::progress_update 'Reviewing publication'
+        dots::progress_stop
+        local dir parent answer progress_status
         ((!JSON)) && dots::heading "Publish preview"
         for dir in "${PUB_DIRS[@]}"; do publish_preview "$dir"; done
         if ((!JSON && PUBLISH_CANDIDATES > 0)); then dots::info "Published child pointers may be staged in their parents."; fi
@@ -389,11 +431,11 @@ operations_main() {
                     printf '%sPublish the selected changes? [y/N]%s ' "$ERR_BOLD" "$ERR_RESET" >&2
                     IFS= read -r answer || answer=''
                 fi
-                if [[ $answer != y && $answer != Y ]]; then event "$ROOT" cancelled 'nothing committed or pushed'; operations_report; return "$RESULT"; fi
+                if [[ $answer != y && $answer != Y ]]; then dots::progress_cancel; dots::progress_sequence_end 1; event "$ROOT" cancelled 'nothing committed or pushed'; operations_report; return "$RESULT"; fi
             fi
             if ((!JSON)); then dots::heading "Publishing selected repositories"; LAST_EVENT_REPO=''; fi
             for dir in "${PUB_DIRS[@]}"; do
-                dots::progress_start 'Publishing repositories' "$progress_count" "${#PUB_DIRS[@]}"
+                dots::progress_step_start "Publishing repository: ${dir##*/}" "$((progress_count+1))"
                 parent=${PARENT[$dir]}
                 if ((SCOPED_PUBLISH)) && ! recheck_publish_scope; then
                     event "$dir" blocked 'submodule selection changed after preview'; RESULT=1; break
@@ -404,14 +446,17 @@ operations_main() {
                         BLOCKED[$dir]=1; BLOCKED[$parent]=1
                     fi
                 fi
+                progress_status=0
                 if ! publish_node "$dir"; then
+                    progress_status=1
                     RESULT=1; [[ -z $parent ]] || BLOCKED[$parent]=1
                 fi
                 ((progress_count+=1))
-                dots::progress_update 'Publishing repositories' "$progress_count" "${#PUB_DIRS[@]}"
+                dots::progress_step_end "$progress_status"
                 dots::progress_stop
             done
         fi
+        dots::progress_sequence_end "$RESULT"
     fi
     dots::progress_stop
     if ((SCOPED_PUBLISH && !DRY_RUN)); then report_parent_pointers; fi

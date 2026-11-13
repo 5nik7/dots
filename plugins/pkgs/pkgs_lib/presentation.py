@@ -70,7 +70,9 @@ def report(*args, **kwargs):
 
 
 def message(text, role='value', stream=None):
+    from progress import permanent_output
     stream=stream or sys.stdout
-    ui=report(stream=stream)
-    if ui: print(ui.ui.paint(text,ui.styles[role]),file=stream,flush=True)
-    else: print(text,file=stream,flush=True)
+    with permanent_output():
+        ui=report(stream=stream)
+        if ui: print(ui.ui.paint(text,ui.styles[role]),file=stream,flush=True)
+        else: print(text,file=stream,flush=True)

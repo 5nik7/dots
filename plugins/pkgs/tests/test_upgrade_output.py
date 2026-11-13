@@ -103,7 +103,8 @@ class UpgradeOutput(unittest.TestCase):
             summary.begin()
             formatter.feed(b'Collecting numpy\nDownloading https://user:secret@example.invalid/numpy-2.0.whl?token=private (8 MB)\n')
             formatter.feed(b'Progress 2097152 of 8388608\n')
-            self.assertIn('25% 2.0MiB/8.0MiB',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertIn('Downloading 2.0MiB/8.0MiB',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
+            self.assertEqual(meter.update_spans.call_args.args[1:], (2097152, 8388608))
             self.assertIn('numpy',''.join(text for text, _ in meter.update_spans.call_args.args[0]))
             self.assertNotIn('secret',repr(meter.update_spans.call_args_list))
             self.assertNotIn('private',repr(meter.update_spans.call_args_list))
@@ -390,8 +391,8 @@ sys.exit(int(__import__('os').environ.get('TEST_EXIT','0')))
                         self.assertIn('hello',text.split('Updated',1)[1])
                 else:
                     self.assertNotIn('complete',text)
-                self.assertEqual('\x1b[' in text,mode=='always')
-                plain=re.sub(r'\x1b\[[0-9;]*m','',text)
+                self.assertEqual(bool(re.search(r'\x1b\[[0-9;]*m',text)),mode=='always')
+                plain=re.sub(r'\x1b\[[0-9;]*[A-Za-z]','',text)
                 self.assertTrue(all(cells(line)<=width for line in plain.splitlines()),plain)
 
 

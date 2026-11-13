@@ -19,7 +19,7 @@ from file_platform import sync_dir, lock, open_nofollow, check_object, copy_file
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from progress import tracked, report
+from progress import tracked, report, sequence
 
 
 def exists(path):
@@ -195,153 +195,158 @@ class Store:
     @tracked('Checking file operation inputs')
     def apply(self, action, operations, guards, retain=False, catalogs=(), identity=None, publication_locked=False):
         """Operations are {path, source|link|data|delete}; guards bind preview inputs."""
-        if not operations:
-            return {'schema': 1, 'status': 'unchanged', 'operations': []}
-        identities = [os.path.normcase(os.path.abspath(op['path'])) for op in operations]
-        if len(identities) != len(set(identities)):
-            raise ValueError('duplicate or case-colliding operation targets')
-        registrations = [op['font_registry'] for op in operations if 'font_registry' in op]
-        if registrations:
-            import font_registry
-            for spec in registrations: font_registry.verify(spec)
-            if len({spec['name'].casefold() for spec in registrations}) != len(registrations):
-                raise ValueError('duplicate font registration targets')
-        with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs):
-            for record in self.records():
-                if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
-                    raise ValueError('unfinished transaction: run dots files recover ' + record['id'])
-            for path, expected in guards.items():
-                parents_safe(path)
-                if digest(path) != expected:
-                    raise ValueError(f'changed after preview: {path}')
-            identity = identity or uuid.uuid4().hex
-            if len(identity) != 32 or any(c not in '0123456789abcdef' for c in identity):
-                raise ValueError('invalid transaction identity')
-            directory = self.root / identity
-            directory.mkdir(mode=0o700)
-            sync_dir(self.root)
-            doc = {'schema': 1, 'id': identity, 'action': action, 'status': 'preparing',
-                   'created': datetime.now(timezone.utc).isoformat(), 'guards': guards,
-                   'retain_backup': retain, 'catalogs': list(map(str, catalogs)), 'operations': [], 'created_parents': []}
-            self.save(doc)
-            try:
-                report('Preparing files', 0, len(operations))
-                for i, op in enumerate(operations):
-                    path = Path(op['path'])
-                    parents_safe(path)
-                    before = digest(path)
-                    if str(path) not in guards or guards[str(path)] != before:
-                        raise ValueError('operation is missing a verified preview guard')
-                    entry = {'path': str(path), 'before': before, 'after': None, 'phase': 'prepared',
-                             'old': str(path.with_name(path.name + '.dots-' + identity)),
-                             'temp': str(path.with_name(path.name + '.dots-new-' + identity))}
-                    if 'font_registry' in op:
-                        entry['font_registry'] = op['font_registry']
-                    if exists(entry['old']) or exists(entry['temp']):
-                        raise ValueError('transaction sibling already exists')
-                    if before is not None:
-                        copy_object(path, directory / f'{i}-before')
-                        if path.is_symlink():
-                            entry['before_link'] = os.readlink(path)
-                            entry['before_directory'] = path.is_dir() or bool(getattr(path.lstat(), 'st_file_attributes', 0) & 0x10)
-                        elif 'data' in op:
-                            entry['before_data'] = read_json(path, (1,2,3))
-                    after = directory / f'{i}-after'
-                    if 'source' in op:
-                        copy_object(op['source'], after)
-                    elif 'link' in op:
-                        try:
-                            after.symlink_to(op['link'], target_is_directory=op.get('directory', Path(op['link']).is_dir()))
-                        except OSError as error:
-                            if os.name == 'nt' and getattr(error, 'winerror', None) == 1314:
-                                raise ValueError('Windows refused symbolic-link creation. Enable link capability yourself or explicitly select a supported copy strategy; Dots will not elevate or silently copy.') from error
-                            raise
-                    elif 'text' in op:
-                        prepare_text(after, op['text'], path)
-                    elif 'data' in op:
-                        atomic_json(after, op['data'])
-                        if path.exists():
-                            os.chmod(after, stat.S_IMODE(path.stat().st_mode))
-                    entry['after'] = digest(after)
-                    doc['operations'].append(entry)
-                    self.save(doc)
-                    if before is not None:
-                        self.notify('Recovery copy', path, directory / f'{i}-before',
-                                    reason='temporary until transaction finalization')
-                    report('Preparing files', i + 1, len(operations))
-                report('Verifying prepared files')
-                # All copies and metadata are ready before the first live replacement.
-                for path, expected in guards.items():
-                    if digest(path) != expected:
-                        raise ValueError(f'changed during preflight: {path}')
-                doc['status'] = 'applying'
+        with sequence('File transaction', 4) as stages, contextlib.ExitStack() as progress_stack:
+            if not operations:
+                return {'schema': 1, 'status': 'unchanged', 'operations': []}
+            identities = [os.path.normcase(os.path.abspath(op['path'])) for op in operations]
+            if len(identities) != len(set(identities)):
+                raise ValueError('duplicate or case-colliding operation targets')
+            registrations = [op['font_registry'] for op in operations if 'font_registry' in op]
+            if registrations:
+                import font_registry
                 for spec in registrations: font_registry.verify(spec)
-                self.save(doc)
-                report('Applying files', 0, len(doc['operations']))
-                for i, entry in enumerate(doc['operations']):
-                    path = Path(entry['path'])
-                    missing = []
-                    for parent in path.parents:
-                        if parent.exists():
-                            break
-                        missing.append(parent)
-                    for parent in reversed(missing):
-                        creation = {'path': str(parent), 'created': False}
-                        doc['created_parents'].append(creation)
-                        self.save(doc)
-                        parent.mkdir(mode=0o700)
-                        creation['created'] = True
-                        self.save(doc)
-                        sync_dir(parent.parent)
+                if len({spec['name'].casefold() for spec in registrations}) != len(registrations):
+                    raise ValueError('duplicate font registration targets')
+            with self.publication_locked(operations, enabled=not publication_locked), self.locked(catalogs):
+                for record in self.records():
+                    if record['status'] in ('applying', 'rolling-back', 'recovery-required', 'preparing'):
+                        raise ValueError('unfinished transaction: run dots files recover ' + record['id'])
+                for path, expected in guards.items():
                     parents_safe(path)
-                    if digest(path) != entry['before']:
-                        raise ValueError(f'changed before replacement: {path}')
-                    if entry['after'] is not None:
-                        copy_object(directory / f'{i}-after', entry['temp'])
-                    entry['phase'] = 'replacing'
-                    self.save(doc)
-                    if exists(path):
-                        os.rename(path, entry['old'])
-                        sync_dir(path.parent)
-                    if entry['after'] is not None:
-                        os.rename(entry['temp'], path)
-                        sync_dir(path.parent)
-                    if 'font_registry' in entry:
-                        font_registry.apply(entry['font_registry'])
-                    entry['phase'] = 'done'
-                    self.save(doc)
-                    op = operations[i]
-                    if 'link' in op:
-                        source = op['link'] if os.path.isabs(op['link']) else os.path.abspath(path.parent / op['link'])
-                        self.notify('Linked', source, path, target_kind='symlink')
-                    elif 'source' in op:
-                        self.notify('Restored' if action in ('uninstall', 'undo', 'backups-restore') else 'Copied',
-                                    op['source'], path)
-                    else:
-                        self.notify('Removed' if entry['after'] is None else 'Updated', path,
-                                    reason='metadata' if 'data' in op else '')
-                    report('Applying files', i + 1, len(doc['operations']))
-                report('Finalizing file transaction')
-                if retain:
-                    parents_safe(self.backups / identity)
-                    private_directory(self.backups)
-                    atomic_json(self.backups / (identity + '.json'), {'schema': 1, 'id': identity,
-                                'transaction': identity, 'created': doc['created'], 'action': action, 'objects': [e for e in doc['operations'] if e['before'] is not None]})
-                doc['status'] = 'complete'
+                    if digest(path) != expected:
+                        raise ValueError(f'changed after preview: {path}')
+                identity = identity or uuid.uuid4().hex
+                if len(identity) != 32 or any(c not in '0123456789abcdef' for c in identity):
+                    raise ValueError('invalid transaction identity')
+                directory = self.root / identity
+                directory.mkdir(mode=0o700)
+                sync_dir(self.root)
+                doc = {'schema': 1, 'id': identity, 'action': action, 'status': 'preparing',
+                       'created': datetime.now(timezone.utc).isoformat(), 'guards': guards,
+                       'retain_backup': retain, 'catalogs': list(map(str, catalogs)), 'operations': [], 'created_parents': []}
                 self.save(doc)
-            except BaseException:
                 try:
-                    self.rollback(doc)
-                except BaseException:
-                    doc['status'] = 'recovery-required'
+                    with stages.step('Prepare files') as preparation:
+                        preparation.update('Preparing files', 0, len(operations))
+                        for i, op in enumerate(operations):
+                            path = Path(op['path'])
+                            parents_safe(path)
+                            before = digest(path)
+                            if str(path) not in guards or guards[str(path)] != before:
+                                raise ValueError('operation is missing a verified preview guard')
+                            entry = {'path': str(path), 'before': before, 'after': None, 'phase': 'prepared',
+                                     'old': str(path.with_name(path.name + '.dots-' + identity)),
+                                     'temp': str(path.with_name(path.name + '.dots-new-' + identity))}
+                            if 'font_registry' in op:
+                                entry['font_registry'] = op['font_registry']
+                            if exists(entry['old']) or exists(entry['temp']):
+                                raise ValueError('transaction sibling already exists')
+                            if before is not None:
+                                copy_object(path, directory / f'{i}-before')
+                                if path.is_symlink():
+                                    entry['before_link'] = os.readlink(path)
+                                    entry['before_directory'] = path.is_dir() or bool(getattr(path.lstat(), 'st_file_attributes', 0) & 0x10)
+                                elif 'data' in op:
+                                    entry['before_data'] = read_json(path, (1,2,3))
+                            after = directory / f'{i}-after'
+                            if 'source' in op:
+                                copy_object(op['source'], after)
+                            elif 'link' in op:
+                                try:
+                                    after.symlink_to(op['link'], target_is_directory=op.get('directory', Path(op['link']).is_dir()))
+                                except OSError as error:
+                                    if os.name == 'nt' and getattr(error, 'winerror', None) == 1314:
+                                        raise ValueError('Windows refused symbolic-link creation. Enable link capability yourself or explicitly select a supported copy strategy; Dots will not elevate or silently copy.') from error
+                                    raise
+                            elif 'text' in op:
+                                prepare_text(after, op['text'], path)
+                            elif 'data' in op:
+                                atomic_json(after, op['data'])
+                                if path.exists():
+                                    os.chmod(after, stat.S_IMODE(path.stat().st_mode))
+                            entry['after'] = digest(after)
+                            doc['operations'].append(entry)
+                            self.save(doc)
+                            if before is not None:
+                                self.notify('Recovery copy', path, directory / f'{i}-before',
+                                            reason='temporary until transaction finalization')
+                            preparation.update('Preparing files', i + 1, len(operations))
+                    with stages.step('Verify prepared files'):
+                        report('Verifying prepared files')
+                        # All copies and metadata are ready before the first live replacement.
+                        for path, expected in guards.items():
+                            if digest(path) != expected:
+                                raise ValueError(f'changed during preflight: {path}')
+                        doc['status'] = 'applying'
+                        for spec in registrations: font_registry.verify(spec)
+                        self.save(doc)
+                    with stages.step('Apply files') as application:
+                        application.update('Applying files', 0, len(doc['operations']))
+                        for i, entry in enumerate(doc['operations']):
+                            path = Path(entry['path'])
+                            missing = []
+                            for parent in path.parents:
+                                if parent.exists():
+                                    break
+                                missing.append(parent)
+                            for parent in reversed(missing):
+                                creation = {'path': str(parent), 'created': False}
+                                doc['created_parents'].append(creation)
+                                self.save(doc)
+                                parent.mkdir(mode=0o700)
+                                creation['created'] = True
+                                self.save(doc)
+                                sync_dir(parent.parent)
+                            parents_safe(path)
+                            if digest(path) != entry['before']:
+                                raise ValueError(f'changed before replacement: {path}')
+                            if entry['after'] is not None:
+                                copy_object(directory / f'{i}-after', entry['temp'])
+                            entry['phase'] = 'replacing'
+                            self.save(doc)
+                            if exists(path):
+                                os.rename(path, entry['old'])
+                                sync_dir(path.parent)
+                            if entry['after'] is not None:
+                                os.rename(entry['temp'], path)
+                                sync_dir(path.parent)
+                            if 'font_registry' in entry:
+                                font_registry.apply(entry['font_registry'])
+                            entry['phase'] = 'done'
+                            self.save(doc)
+                            op = operations[i]
+                            if 'link' in op:
+                                source = op['link'] if os.path.isabs(op['link']) else os.path.abspath(path.parent / op['link'])
+                                self.notify('Linked', source, path, target_kind='symlink')
+                            elif 'source' in op:
+                                self.notify('Restored' if action in ('uninstall', 'undo', 'backups-restore') else 'Copied',
+                                            op['source'], path)
+                            else:
+                                self.notify('Removed' if entry['after'] is None else 'Updated', path,
+                                            reason='metadata' if 'data' in op else '')
+                            application.update('Applying files', i + 1, len(doc['operations']))
+                    progress_stack.enter_context(stages.step('Finalize file transaction'))
+                    report('Finalizing file transaction')
+                    if retain:
+                        parents_safe(self.backups / identity)
+                        private_directory(self.backups)
+                        atomic_json(self.backups / (identity + '.json'), {'schema': 1, 'id': identity,
+                                    'transaction': identity, 'created': doc['created'], 'action': action, 'objects': [e for e in doc['operations'] if e['before'] is not None]})
+                    doc['status'] = 'complete'
                     self.save(doc)
-                raise
-            self.cleanup(doc)
-            if retain:
-                for i, entry in enumerate(doc['operations']):
-                    if entry['before'] is not None:
-                        self.notify('Backup kept', directory / f'{i}-before', reason='backup ID ' + identity)
-            return doc
+                except BaseException:
+                    try:
+                        self.rollback(doc)
+                    except BaseException:
+                        doc['status'] = 'recovery-required'
+                        self.save(doc)
+                    raise
+                self.cleanup(doc)
+                if retain:
+                    for i, entry in enumerate(doc['operations']):
+                        if entry['before'] is not None:
+                            self.notify('Backup kept', directory / f'{i}-before', reason='backup ID ' + identity)
+                return doc
 
     def cleanup(self, doc):
         # An application may still hold the renamed original open. Never discard
@@ -370,59 +375,62 @@ class Store:
 
     @tracked('Rolling back files')
     def rollback(self, doc):
-        doc['status'] = 'rolling-back'
-        self.save(doc)
-        directory = self.root / doc['id']
-        report('Rolling back files', 0, len(doc['operations']))
-        for completed, i in enumerate(reversed(range(len(doc['operations'])))):
-            report('Rolling back files', completed, len(doc['operations']))
-            entry = doc['operations'][i]
-            path = Path(entry['path'])
-            parents_safe(path)
-            current = digest(path)
-            if exists(entry['old']) and digest(entry['old']) != entry['before']:
-                raise ValueError('retired object changed; manual recovery required: ' + entry['old'])
-            if entry['phase'] == 'prepared':
-                continue
-            if 'font_registry' in entry:
-                import font_registry
-                font_registry.rollback(entry['font_registry'])
-            if current == entry['before']:
-                entry['phase'] = 'rolled-back'
-                self.save(doc)
-                continue
-            if current not in (None, entry['after']):
-                raise ValueError(f'drift blocks recovery: {path}')
-            if entry['before'] is not None:
-                payload = directory / f'{i}-before'
-                if digest(payload) != entry['before']:
-                    raise ValueError('recovery payload failed verification')
-                # Restore through a sibling, never by overwriting live contents.
-                if exists(entry['temp']):
-                    if digest(entry['temp']) not in (entry['after'], entry['before']):
-                        raise ValueError('changed transaction temporary file')
-                    discard(entry['temp'])
-                copy_object(payload, entry['temp'])
-                if digest(entry['temp']) != entry['before']:
-                    raise ValueError('recovery copy changed during verification')
-            discard(path)
-            if entry['before'] is not None:
-                os.rename(entry['temp'], path)
-            sync_dir(path.parent)
-            entry['phase'] = 'rolled-back'
+        with sequence('File recovery', 2, recovery=True) as phases:
+            doc['status'] = 'rolling-back'
             self.save(doc)
-            self.notify('Rolled back', path, reason='original restored' if entry['before'] is not None else 'created object removed')
-        report('Finalizing file recovery')
-        for parent in reversed(doc['created_parents']):
-            if not parent['created']:
-                continue
-            try:
-                Path(parent['path']).rmdir()
-            except OSError:
-                pass
-        doc['status'] = 'rolled-back'
-        self.save(doc)
-        self.cleanup(doc)
+            directory = self.root / doc['id']
+            with phases.step('Restore files') as recovery:
+                recovery.update('Rolling back files', 0, len(doc['operations']))
+                for completed, i in enumerate(reversed(range(len(doc['operations'])))):
+                    recovery.update('Rolling back files', completed, len(doc['operations']))
+                    entry = doc['operations'][i]
+                    path = Path(entry['path'])
+                    parents_safe(path)
+                    current = digest(path)
+                    if exists(entry['old']) and digest(entry['old']) != entry['before']:
+                        raise ValueError('retired object changed; manual recovery required: ' + entry['old'])
+                    if entry['phase'] == 'prepared':
+                        continue
+                    if 'font_registry' in entry:
+                        import font_registry
+                        font_registry.rollback(entry['font_registry'])
+                    if current == entry['before']:
+                        entry['phase'] = 'rolled-back'
+                        self.save(doc)
+                        continue
+                    if current not in (None, entry['after']):
+                        raise ValueError(f'drift blocks recovery: {path}')
+                    if entry['before'] is not None:
+                        payload = directory / f'{i}-before'
+                        if digest(payload) != entry['before']:
+                            raise ValueError('recovery payload failed verification')
+                        # Restore through a sibling, never by overwriting live contents.
+                        if exists(entry['temp']):
+                            if digest(entry['temp']) not in (entry['after'], entry['before']):
+                                raise ValueError('changed transaction temporary file')
+                            discard(entry['temp'])
+                        copy_object(payload, entry['temp'])
+                        if digest(entry['temp']) != entry['before']:
+                            raise ValueError('recovery copy changed during verification')
+                    discard(path)
+                    if entry['before'] is not None:
+                        os.rename(entry['temp'], path)
+                    sync_dir(path.parent)
+                    entry['phase'] = 'rolled-back'
+                    self.save(doc)
+                    self.notify('Rolled back', path, reason='original restored' if entry['before'] is not None else 'created object removed')
+            with phases.step('Finalize recovery'):
+                report('Finalizing file recovery')
+                for parent in reversed(doc['created_parents']):
+                    if not parent['created']:
+                        continue
+                    try:
+                        Path(parent['path']).rmdir()
+                    except OSError:
+                        pass
+                doc['status'] = 'rolled-back'
+                self.save(doc)
+                self.cleanup(doc)
 
     @tracked('Recovering files')
     def recover(self, identity):

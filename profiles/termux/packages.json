@@ -2565,7 +2565,7 @@
         },
         {
           "name": "uv",
-          "observed_version": "0.13.7",
+          "observed_version": "0.13.8",
           "pin": null,
           "selection": "explicit",
           "enabled": true
@@ -2961,14 +2961,14 @@
         },
         {
           "name": "@openai/codex",
-          "observed_version": "0.167.2",
+          "observed_version": "0.168.0",
           "pin": null,
           "selection": "explicit",
           "enabled": true
         },
         {
           "name": "@openai/codex-linux-arm64",
-          "observed_version": "0.167.2-linux-arm64",
+          "observed_version": "0.168.0-linux-arm64",
           "pin": null,
           "selection": "explicit",
           "enabled": true

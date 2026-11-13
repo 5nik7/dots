@@ -24,7 +24,8 @@ import test_git_operations as git_fixtures
 PROJECT = Path(__file__).resolve().parents[1]
 LIB = PROJECT / 'lib/dots'
 BASH = shutil.which('bash')
-ANSI = re.compile(rb'\x1b\[[0-?]*[ -/]*[@-~]')
+ANSI = re.compile(rb'\x1b(?:\[[0-?]*[ -/]*[@-~]|[78])')
+SGR = re.compile(rb'\x1b\[[0-9;]*m')
 
 
 class ProgressTests(unittest.TestCase):
@@ -102,7 +103,7 @@ class ProgressTests(unittest.TestCase):
             code, data = self.terminal(command)
             self.assertEqual(code, 0, data)
             self.assertIn(b'Scanning', data)
-            self.assertIn(b'1/3', data)
+            self.assertIn(b'33%', data)
             self.assertIn(b'Copying', data)
             self.assertRegex(data, rb'\x1b\[(?:96|1;36)m')
             self.assertTrue(data.endswith(b'done\r\n'), data)
@@ -122,9 +123,10 @@ class ProgressTests(unittest.TestCase):
                     self.assertEqual(code,0,data)
                     self.assertTrue(data.endswith(b'done\r\n'),data)
                     self.assertEqual(b'Working' in data,mode!='none',data)
-                    self.assertEqual(b'1/3' in data,counted and mode!='none',data)
-                    self.assertEqual(b'[' in data,mode=='bar' or mode=='both' and counted,data)
-                    self.assertNotIn(b'%',data)
+                    self.assertEqual(b'33%' in data,counted and mode!='none',data)
+                    self.assertEqual(b'[' in ANSI.sub(b'',data),mode in ('bar','both'),data)
+                    self.assertEqual(b'%' in data,mode!='none',data)
+                    self.assertEqual(b'Overall' in data,mode!='none',data)
 
     def test_counted_bars_leave_room_for_activity_on_narrow_terminals(self):
         label = 'npm - Script postinstall'
@@ -134,7 +136,7 @@ class ProgressTests(unittest.TestCase):
             code, data = self.terminal(command, dict(self.env, DOTS_PROGRESS='both', DOTS_COLOR='never'), 40)
             self.assertEqual(code, 0, data)
             self.assertIn(label.encode(), data)
-            self.assertIn(b'[', data); self.assertIn(b'0/1', data)
+            self.assertIn(b'[', data); self.assertIn(b'0%', data)
 
     def test_disabled_modes_and_redirection(self):
         commands = [self.bash('dots::progress_run Hidden sleep 0.65; echo done'),
@@ -157,14 +159,16 @@ class ProgressTests(unittest.TestCase):
             for width in (40, 80, 120):
                 code, data = self.terminal(command, dict(self.env, DOTS_COLOR='auto', NO_COLOR='1'), width)
                 self.assertEqual(code, 0, data)
-                self.assertNotIn(b'\x1b', data)
-                self.assertTrue(all(len(line) < width for line in data.split(b'\r')), data)
+                self.assertNotRegex(data, SGR)
+                import unicodedata
+                lines=ANSI.sub(b'',data).decode().splitlines()
+                self.assertTrue(all(sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in ('W','F') else 1 for c in line)<width for line in lines),data)
             self.assertRegex(self.terminal(command, dict(self.env, NO_COLOR='1'))[1], rb'\x1b\[(?:96|1;36)m')
         for command in [self.bash("dots::progress_run $'Bad\\e[31m\\nName' sleep .65"),
                         self.python("with progress.Progress('Bad\\x1b[31m\\nName'): time.sleep(.65)")]:
             _, data = self.terminal(command, dict(self.env, DOTS_COLOR='never'))
-            self.assertNotIn(b'\x1b', data)
-            self.assertNotIn(b'\n', data)
+            self.assertNotRegex(data, SGR)
+            self.assertNotIn(b'\x1b[31m', data)
             self.assertIn(b'Name', data)
 
     def test_status_and_prompt_suspension(self):
@@ -191,9 +195,9 @@ class ProgressTests(unittest.TestCase):
                     self.assertIn(b'\x1b[38;2;171;205;18m@scope/',data)
                     self.assertIn(b'\x1b[38;2;1;2;3m',data)
                     self.assertIn(b'\x1b[38;2;4;5;6mnpm',data)
-                else: self.assertNotIn(b'\x1b',data)
+                else: self.assertNotRegex(data,SGR)
                 import unicodedata
-                for frame in ANSI.sub(b'',data).decode().split('\r'):
+                for frame in ANSI.sub(b'',data).decode().splitlines():
                     cells=sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in ('W','F') else 1 for c in frame)
                     self.assertLess(cells,width,repr(frame))
 
@@ -206,8 +210,8 @@ class ProgressTests(unittest.TestCase):
 """
         code,data=self.terminal(self.python(body),dict(self.env,DOTS_COLOR='never'))
         self.assertEqual(code,0,data)
-        self.assertNotIn(b'\x1b',data)
-        self.assertNotIn(b'\n',data)
+        self.assertNotRegex(data,SGR)
+        self.assertNotIn(b'\x1b[2J',data)
         self.assertIn(b'Name',data)
         body="with progress.Progress('') as p:\n p.update_spans([('package','1;33'),(' label',None)])\n time.sleep(.65)"
         code,data=self.terminal(self.python(body))
@@ -332,14 +336,15 @@ manage.main()
         command = [BASH, str(PROJECT / 'bin/dots'), 'git', 'status', '-C', str(repo)]
         code, data = self.terminal(command, env)
         self.assertEqual(code, 0, data)
-        self.assertIn(b'Inspecting repositories', data)
-        self.assertIn(b'0/1', data)
+        self.assertIn(b'Inspecting repositor', data)
+        self.assertIn(b'0%', data)
+        self.assertIn(b'repo 1/1', data)
         self.assertIn(b'clean', data)
         for settings in (env, dict(env, DOTS_PROGRESS='never')):
             code, data = self.terminal(command + ['--json'], settings)
             self.assertEqual(code, 0, data)
             self.assertNotIn(b'\x1b', data)
-            self.assertNotIn(b'Inspecting repositories', data)
+            self.assertNotIn(b'Inspecting repositor', data)
             self.assertEqual(len(json.loads(data)['repositories']), 1)
 
 

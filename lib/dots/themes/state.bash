@@ -16,7 +16,11 @@ dt_record() {
     mv -f -- "$1/.status.new" "$1/status" && dt_flush "$1"
 }
 dt_restore() {
+  dots::progress_recovery_run 'Recovering theme publication' 3 step dt_restore_work "$@"
+}
+dt_restore_work() {
   local dir=$1 previous active=''
+  dots::progress_step_start 'Restoring theme selection'
   if [[ -L $DT_ACTIVE.new && $(readlink -- "$DT_ACTIVE.new") == "$dir" ]]; then
     rm -- "$DT_ACTIVE.new" || return
   fi
@@ -29,6 +33,8 @@ dt_restore() {
   elif [[ ${active:-none} != "$previous" ]]; then
     dt_error "selection changed during recovery; retained journal: $dir"; return 1
   fi
+  dots::progress_step_end
+  dots::progress_step_start 'Restoring theme links'
   dt_commands_restore "$dir" || return
   dt_apps_restore "$dir" || return
   if [[ -L $DT_ACTIVE && $(readlink -- "$DT_ACTIVE") == "$dir" ]]; then
@@ -45,6 +51,8 @@ dt_restore() {
       [[ ! -e $DT_ACTIVE && ! -L $DT_ACTIVE ]] || { dt_error 'active theme appeared during recovery'; return 1; }
     fi
   fi
+  dots::progress_step_end
+  dots::progress_step_start 'Finalizing theme recovery'
   dt_record "$dir" rolled-back || return
   dots::operation 'Rolled back' "$dir" '' 'Theme publication restored'
 }
@@ -98,8 +106,12 @@ dt_state_preflight() {
 # Prepare immutable theme/command payloads without publishing any pointer.
 # Caller holds both publication locks. Setup publishes through the file Store.
 dt_prepare_generation() {
+  dots::progress_sequence_run 'Preparing theme generation' 4 step dt_prepare_generation_work "$@"
+}
+dt_prepare_generation_work() {
   local previous=$1 fingerprint=$2 dir file
   DT_VIVID_NOTICE=''
+  dots::progress_step_start 'Preparing theme metadata'
   dir=$(mktemp -d "$DT_STATE/generations/g.XXXXXXXX") || return 1
   # Staging files are confined to a newly allocated transaction directory.
   printf '%s\n' "$previous" > "$dir/previous" &&
@@ -110,15 +122,19 @@ dt_prepare_generation() {
     dt_emit_shell_data > "$dir/shell.tsv" &&
     dt_emit_init zsh > "$dir/init.zsh" &&
     dt_emit_init fish > "$dir/init.fish" || return 1
+  dots::progress_step_end
+  dots::progress_step_start 'Rendering application themes'
   if [[ -n ${DT_SEMANTIC[background]:-} ]]; then
-    dots::progress_update 'Rendering application themes'
     dots::operation Preparing '' '' 'Rendering application themes'
+    dots::progress_start 'Rendering application themes'
     dt_render "$dir" || return 1
     dt_app_init "$dir" || return 1
   fi
+  dots::progress_step_end
+  dots::progress_step_start 'Building bat theme cache'
   if [[ -f $dir/bat.tmTheme ]] && command -v bat >/dev/null; then
-    dots::progress_update 'Building bat theme cache'
     dots::operation Preparing '' '' 'Building bat theme cache'
+    dots::progress_start 'Building bat theme cache'
     python3 -B "$DT_LIB/bat_cache.py" build "$dir" "$DT_BAT_FINGERPRINT" || return 1
     # Delta reads XDG_CACHE_HOME/bat rather than BAT_CACHE_PATH. Git redirects
     # only its Delta processes here, leaving the normal bat cache untouched.
@@ -131,6 +147,8 @@ dt_prepare_generation() {
   else
     dots::operation Skipped '' '' 'bat cache: artifact or optional bat executable unavailable'
   fi
+  dots::progress_step_end
+  dots::progress_step_start 'Verifying prepared theme'
   if [[ -L $DT_ACTIVE ]]; then readlink -- "$DT_ACTIVE" > "$dir/previous-active"; else : > "$dir/previous-active"; fi
   dt_generation_complete "$dir" || { dt_error "incomplete prepared theme: $REPLY"; return 1; }
   dt_commands_prepare "$dir" || return 1
@@ -150,7 +168,8 @@ dt_set() (
   # shellcheck disable=SC2034
   local DOTS_PROGRESS_HUMAN=1 DOTS_PROGRESS_STARTED=''
   trap 'dots::progress_stop' EXIT
-  dots::progress_start 'Preparing theme'
+  dots::progress_sequence_start 'Setting theme' 5 step
+  dots::progress_step_start 'Preparing theme'
   local theme=$1 flavor=${2:-} dir='' complete=0 rc=0 previous fingerprint stored=''
   dt_load "$theme" "$flavor" || exit 1
   dt_supported || { dt_error 'theme/flavor has no supported Neovim adapter'; exit 1; }
@@ -182,17 +201,21 @@ dt_set() (
       dots::operation Unchanged "$DT_ACTIVE" '' 'Theme inputs and application links already match'
       dt_commands_refresh_locked || exit 1
       if [[ ${DOTS_THEME_REFRESH:-} == 1 ]]; then dt_apps_reload; dt_plugins_after_publish; fi
+      dots::progress_sequence_end
       dots::progress_stop
       dots::success "Already using $selected"; exit 0
     fi
   fi
+  dots::progress_step_end
+  dots::progress_step_start 'Generating theme'
   dt_prepare_generation "$previous" "$fingerprint" || exit 1
   dir=$DT_PREPARED
   dt_record "$dir" prepared || exit 1
-  trap 'rc=$?; dots::progress_stop; if (( ! complete )); then dt_restore "$dir" || dt_error "recovery required: $dir"; fi; exit "$rc"' EXIT
+  trap 'rc=$?; dots::progress_stop; if (( ! complete )); then dt_restore "$dir" || dt_error "recovery required: $dir"; fi; dots::progress_stop; exit "$rc"' EXIT
   trap 'exit 130' INT
   trap 'exit 143' TERM
-  dots::progress_update 'Publishing theme'
+  dots::progress_step_end
+  dots::progress_step_start 'Publishing theme'
   printf '%s\n' "${dir##*/}" > "$dir/active.new" && dt_flush "$dir/active.new" &&
     mv -f -- "$dir/active.new" "$DT_STATE/current" && dt_flush "$DT_STATE" || exit 1
   if [[ -f $dir/kitty.conf ]]; then
@@ -205,8 +228,13 @@ dt_set() (
   # shellcheck disable=SC2034
   complete=1
   dots::operation Published "$dir" '' "$DT_ID" dir
+  dots::progress_step_end
+  dots::progress_step_start 'Refreshing applications'
   dt_apps_reload
+  dots::progress_step_end
+  dots::progress_step_start 'Running theme plugins'
   dt_plugins_after_publish
+  dots::progress_sequence_end
   if [[ ${DT_VIVID_NOTICE:-} ]]; then
     dots::warning 'Vivid compatibility mode'
     dots::row Detail "$DT_VIVID_NOTICE" >&2

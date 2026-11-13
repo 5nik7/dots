@@ -173,7 +173,10 @@ dt_apps_restore() {
   done
 }
 dt_apps_reload() {
-  dots::progress_start 'Checking application reloads'
+  dots::progress_sequence_run 'Refreshing applications' 4 app dt_apps_reload_work
+}
+dt_apps_reload_work() {
+  dots::progress_step_start 'Reloading Termux settings'
   local failures=0
   if [[ ${TERMUX_VERSION:-} && ${PREFIX:-} == */usr && -d $HOME/.termux ]] && command -v termux-reload-settings >/dev/null; then
     dots::progress_update 'Reloading Termux settings'
@@ -182,6 +185,8 @@ dt_apps_reload() {
   else
     dots::operation Skipped '' '' 'Termux reload: adapter unavailable'
   fi
+  dots::progress_step_end
+  dots::progress_step_start 'Reloading tmux configuration'
   if command -v tmux >/dev/null && tmux list-sessions >/dev/null 2>&1; then
     dots::progress_external 'Reloading tmux configuration'
     if tmux source-file "$DT_ACTIVE/tmux.conf"; then dots::operation Reloaded '' '' 'tmux configuration'
@@ -189,6 +194,8 @@ dt_apps_reload() {
   else
     dots::operation Skipped '' '' 'tmux reload: no executable or running server'
   fi
+  dots::progress_step_end
+  dots::progress_step_start 'Reloading Kitty colors'
   if [[ ${KITTY_LISTEN_ON:-} ]] && command -v kitty >/dev/null; then
     dots::progress_start 'Reloading Kitty colors'
     if kitty @ --to "$KITTY_LISTEN_ON" set-colors --all --configured "$DT_ACTIVE/kitty.conf" >/dev/null 2>&1; then dots::operation Reloaded '' '' 'Kitty colors'
@@ -196,6 +203,8 @@ dt_apps_reload() {
   else
     dots::operation Skipped '' '' 'Kitty reload: executable or listening address unavailable'
   fi
+  dots::progress_step_end
+  dots::progress_step_start 'Notifying Yazi'
   if command -v ya >/dev/null && command -v timeout >/dev/null; then
     if timeout 2 ya pub-to 0 dots-theme-changed --str "${XDG_STATE_HOME:-$HOME/.local/state}/dots" >/dev/null 2>&1; then
       dots::operation Notified '' '' 'Yazi theme event sent'

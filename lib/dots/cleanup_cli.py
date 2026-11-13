@@ -15,7 +15,7 @@ from cleanup.receipts import Receipts, totals
 from cleanup.presentation import render, confirm
 from cleanup.engine import run, available
 from platform_info import detect
-from progress import configure, Progress
+from progress import configure, Progress, sequence, report, permanent_output
 
 
 def parser(action):
@@ -83,17 +83,20 @@ def main(argv=None):
     previous = signal.getsignal(signal.SIGTERM)
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     try:
-        with Progress('Scanning cleanup candidates') as progress:
-            targets, issues = adapter.candidates(groups, age, progress.update)
-        if preview:
-            data = dict(schema=1, platform='termux', status='planned', selected_groups=groups,
-                        candidates=[public(t) for t in targets], issues=issues, available_after=available(adapter.boundary))
-            render(data, args); return 1 if issues else 0
-        with Progress('Cleaning approved groups') as progress:
-            data = run(adapter, targets, groups, issues, store,
-                       (lambda *_: 'delete') if yes else confirm, progress.update)
-        render(data, args)
-        return 130 if data['status']=='stopped' else 1 if data['status']=='partial' else 0
+        with sequence('Cleanup', 1 if preview else 2) as stages:
+            with stages.step('Scan cleanup candidates') as progress:
+                targets, issues = adapter.candidates(groups, age, progress.update)
+            if preview:
+                data = dict(schema=1, platform='termux', status='planned', selected_groups=groups,
+                            candidates=[public(t) for t in targets], issues=issues, available_after=available(adapter.boundary))
+                with permanent_output(): render(data, args)
+                return 1 if issues else 0
+            with stages.step('Clean approved groups'):
+                data = run(adapter, targets, groups, issues, store,
+                           (lambda *_: 'delete') if yes else confirm, report)
+                if data['status'] == 'stopped': stages.cancel()
+            with permanent_output(): render(data, args)
+            return 130 if data['status']=='stopped' else 1 if data['status']=='partial' else 0
     finally:
         signal.signal(signal.SIGTERM, previous)
 

@@ -6,7 +6,7 @@
 collection through one engine. Only the singular first-party family remains.
 See [decision 0016](decisions/0016-core-command-families-and-file-identities.md).
 
-Theme preparation, rendering, bat caches, publication, quiet reloads and installed-source validation use [terminal progress](presentation.md#operation-progress). Batch updates show processed checkout counts. Downloads, tmux reloads and wallpaper adapters use static phase messages to keep child output readable. `DOTS_PROGRESS=never` disables these displays. Raw queries, shell initialization and dry runs stay undecorated.
+Theme preparation, rendering, bat caches, publication, quiet reloads and installed-source validation use [terminal progress](presentation.md#operation-progress). Overall completion follows reserved preparation, publication and finalization steps, with current activity on a second row. Batch updates give selected checkouts equal shares and nest their steps inside those shares. Downloads, tmux reloads and wallpaper adapters use static phase messages to keep child output readable. `DOTS_PROGRESS=never` disables these displays. Raw queries, shell initialization and dry runs stay undecorated.
 
 ## Tmux
 

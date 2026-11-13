@@ -20,7 +20,7 @@ sys.path.insert(0, str(LIB.parent / 'files'))
 from catalog import Presentation, atomic_json, read_json
 from transactions import exists, parents_safe, private_directory
 from file_platform import config_root, state_root, open_nofollow, lock as file_lock
-from progress import Progress, configure
+from progress import Progress, configure, sequence, permanent_output
 
 PATTERN = re.compile(r'([0-9]+)-([a-z][a-z0-9-]*)\.(?:sh|ps1)\Z')
 BUNDLED = {'gtk': ('gtk-launch', 'gtk-3.0'), 'qt6ct': ('qt6ct', 'qt6ct'), 'starship': ('starship', None)}
@@ -221,37 +221,38 @@ def run(rows, config, state, reason):
     generation, data = published(state)
     env = environment(state, generation, data, reason)
     results = []
-    for row in rows:
-        if not row['enabled']:
-            continue
-        available, detail = availability(row, config)
-        result = {'name': row['name'], 'status': 'skipped', 'detail': detail}
-        if available == 'available':
-            try:
-                safe_file(Path(row['path']))
-                with Progress('Running theme plugin ' + row['name']) as progress:
-                    progress.update('Running theme plugin ' + row['name'])
-                    if os.name == 'nt' and row['origin'] == 'bundled':
-                        command = [sys.executable, '-B', str(LIB / 'plugins.py'), '__app', row['name']]
-                    elif row['file'].endswith('.ps1'):
-                        command = [os.environ.get('DOTS_POWERSHELL') or shutil.which('pwsh') or shutil.which('powershell'), '-NoLogo', '-NoProfile', '-NonInteractive', '-File', row['path']]
-                    else:
-                        command = [shutil.which('bash'), '--noprofile', '--norc', '--', row['path']]
-                    code, output = child(command,
-                                         dict(env, DOTS_THEME_PLUGIN=row['name']), roots()[0])
-                result.update(status='success' if code == 0 else 'skipped' if code == 77 else 'failure', exit_code=code)
-                if row['origin'] == 'bundled' and code in (0, 77):
-                    report = json.loads(output)
-                    if not isinstance(report, dict) or report.get('status') not in ('success', 'skipped'):
-                        raise ValueError('invalid bundled adapter result')
-                    result.update(report)
-                elif output:
-                    result['_diagnostics'] = output.rstrip()
-                if code not in (0, 77):
-                    result['detail'] = 'hook failed; retry with dots theme plugins run ' + row['name']
-            except (ValueError, OSError, subprocess.SubprocessError) as error:
-                result.update(status='failure', detail=str(error))
-        results.append(result)
+    enabled = [row for row in rows if row['enabled']]
+    with sequence('Run theme plugins', len(enabled), unit='plugin') as plugins:
+        for row in enabled:
+            with plugins.step(row['name']):
+                available, detail = availability(row, config)
+                result = {'name': row['name'], 'status': 'skipped', 'detail': detail}
+                if available == 'available':
+                    try:
+                        safe_file(Path(row['path']))
+                        with Progress('Running theme plugin ' + row['name']) as progress:
+                            progress.update('Running theme plugin ' + row['name'])
+                            if os.name == 'nt' and row['origin'] == 'bundled':
+                                command = [sys.executable, '-B', str(LIB / 'plugins.py'), '__app', row['name']]
+                            elif row['file'].endswith('.ps1'):
+                                command = [os.environ.get('DOTS_POWERSHELL') or shutil.which('pwsh') or shutil.which('powershell'), '-NoLogo', '-NoProfile', '-NonInteractive', '-File', row['path']]
+                            else:
+                                command = [shutil.which('bash'), '--noprofile', '--norc', '--', row['path']]
+                            code, output = child(command,
+                                                 dict(env, DOTS_THEME_PLUGIN=row['name']), roots()[0])
+                        result.update(status='success' if code == 0 else 'skipped' if code == 77 else 'failure', exit_code=code)
+                        if row['origin'] == 'bundled' and code in (0, 77):
+                            report = json.loads(output)
+                            if not isinstance(report, dict) or report.get('status') not in ('success', 'skipped'):
+                                raise ValueError('invalid bundled adapter result')
+                            result.update(report)
+                        elif output:
+                            result['_diagnostics'] = output.rstrip()
+                        if code not in (0, 77):
+                            result['detail'] = 'hook failed; retry with dots theme plugins run ' + row['name']
+                    except (ValueError, OSError, subprocess.SubprocessError) as error:
+                        result.update(status='failure', detail=str(error))
+                results.append(result)
     return results
 
 
@@ -286,6 +287,7 @@ def inspect(rows, config, state):
     return rows
 
 
+@permanent_output()
 def emit(action, rows, as_json):
     if as_json:
         print(json.dumps({'schema': 1, 'action': action, 'plugins': rows}, ensure_ascii=False))
@@ -388,7 +390,7 @@ def main(argv=None, reason=None):
             for result in results:
                 diagnostics = result.pop('_diagnostics', '')
                 if diagnostics:
-                    Presentation(sys.stderr).detail(result['name'], diagnostics)
+                    with permanent_output(): Presentation(sys.stderr).detail(result['name'], diagnostics)
             emit('run', results, opt.json)
             return int(any(row['status'] == 'failure' for row in results))
     if automatic:

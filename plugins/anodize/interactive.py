@@ -16,7 +16,7 @@ from interaction import RichSelector, SelectionEnded, terminal
 from picker import fzf_colors
 from presentation import ColorView, render_preview
 from transactions import parents_safe
-from progress import Progress
+from progress import Progress, sequence, permanent_output
 
 ACTIONS = ['show', 'preview', 'create', 'extract', 'edit', 'apply', 'import', 'export', 'promote']
 ADJUSTMENTS = ['vibrance', 'saturation', 'contrast', 'brightness', 'shadows', 'highlights',
@@ -50,6 +50,7 @@ def choice(title, choices):
     return choices[choose(title, choices)]
 
 
+@permanent_output()
 def entry(title, default=''):
     value = input(title + (f' [{default}]' if default else '') + ': ').strip()
     if value == '\x1b':
@@ -163,18 +164,19 @@ def candidates(author, doc, wallpaper=None, modes=None):
     payload = base64.b64encode(regular_bytes(image, 32 << 20)).decode() if image else None
     result = []
     modes = modes or author.call('modes')['modes']
-    with Progress('Generating mode previews'):
+    with sequence('Generating mode previews', len(modes), unit='mode') as previews:
         for mode in modes:
-            draft = copy.deepcopy(doc)
-            draft['options']['mode'] = mode
-            if payload or draft.get('seed'):
-                kwargs = dict(options=draft['options'])
-                kwargs.update(image=payload) if payload else kwargs.update(color=draft['seed'])
-                draft['baseline'] = author.call('generate', **kwargs)['colors']
-            else:
-                draft['baseline'] = author.call('variant', document={k: v for k, v in draft.items() if k != 'generated'})['colors']
-            result.append(dict(document=draft, id=mode, mode='light' if draft['options']['light'] else 'dark',
-                               colors=author.render(draft)['colors']))
+            with previews.step(mode):
+                draft = copy.deepcopy(doc)
+                draft['options']['mode'] = mode
+                if payload or draft.get('seed'):
+                    kwargs = dict(options=draft['options'])
+                    kwargs.update(image=payload) if payload else kwargs.update(color=draft['seed'])
+                    draft['baseline'] = author.call('generate', **kwargs)['colors']
+                else:
+                    draft['baseline'] = author.call('variant', document={k: v for k, v in draft.items() if k != 'generated'})['colors']
+                result.append(dict(document=draft, id=mode, mode='light' if draft['options']['light'] else 'dark',
+                                   colors=author.render(draft)['colors']))
     return result
 
 
@@ -191,8 +193,9 @@ def edit_draft(author, args, doc, wallpaper=None):
         from logo import render as render_logo
         colors = author.render(doc)['colors']
         view = ColorView(colors, preview=True)
-        render_logo(Presentation(), colors=colors, view=view)
-        render_preview(doc['id'], colors, 'light' if doc['options']['light'] else 'dark', view=view)
+        with permanent_output():
+            render_logo(Presentation(), colors=colors, view=view)
+            render_preview(doc['id'], colors, 'light' if doc['options']['light'] else 'dark', view=view)
         selected = choice('Draft', ['Review save', 'Mode', 'Light/dark', 'Adjustment', 'Color override',
                                     'Reset adjustments', 'Re-extract', 'Cancel'])
         if selected == 'Cancel': raise SelectionEnded(130)

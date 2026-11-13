@@ -136,8 +136,10 @@ class Pending:
                     self.current.append(spec)
                     continue
                 if not interactive: continue
-                packages(cfg, 'Scripts', [spec])
-                if not approve(spec): continue
+                with workflows.pause():
+                    packages(cfg, 'Scripts', [spec])
+                    accepted = approve(spec)
+                if not accepted: continue
                 with workflows.progress('npm · Rechecking '+spec, cfg): after = evidence([spec], env)
                 if before != after: raise Error('installed script metadata changed; review again')
                 if proof and script_receipts.fingerprint(after.get(spec,[])) != proof:

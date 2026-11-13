@@ -3,7 +3,7 @@ source "$DT_LIB/core.bash" || return
 source "$DT_LIB/views.bash"
 source "$DT_LIB/../verbose.bash"
 DOTS_OPERATION_VERBOSE=0
-dt_error() { dots::error "dots theme: $*"; return 1; }
+dt_error() { dots::progress_stop; dots::error "dots theme: $*"; return 1; }
 # backgrounds.bash also calls this helper with the bg route argument.
 # shellcheck disable=SC2120
 dt_help() { "${DT_LIB%/lib/dots/themes}/bin/dots" help theme "$@"; }

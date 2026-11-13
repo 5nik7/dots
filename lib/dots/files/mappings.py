@@ -14,7 +14,7 @@ from install import Installation
 from manage import Manager
 from transactions import digest, exists, parents_safe
 from interaction import SelectionEnded, gum_confirm
-from progress import Progress, configure
+from progress import Progress, configure, sequence, permanent_output
 
 
 def target_spec(catalog, value):
@@ -393,6 +393,7 @@ def terminal():
     return all(s.isatty() for s in (sys.stdin, sys.stdout, sys.stderr))
 
 
+@permanent_output()
 def pick(title, choices):
     if not terminal():
         raise ValueError('selection requires a terminal; supply explicit IDs/options')
@@ -400,6 +401,7 @@ def pick(title, choices):
     return choice(title, choices)
 
 
+@permanent_output()
 def prompt(label, default=None):
     if not terminal():
         raise ValueError('missing ' + label + '; supply explicit options without a terminal')
@@ -441,6 +443,7 @@ def arguments(argv=None):
     return p, args
 
 
+@permanent_output()
 def render(doc, final=False):
     ui = Presentation()
     ui.heading('Files ' + doc['action'] + ' — ' + doc['status'])
@@ -512,39 +515,41 @@ def main(argv=None):
             args.source = prompt('Source', row['source'])
             args.target = prompt('Target', row.get('targets', {}).get(args.platform, row.get('target')) if args.platform else row.get('target'))
             args.strategy = pick('Link strategy', [row['strategy']] + [s for s in ('link', 'directory-link', 'copy') if s != row['strategy']])
-    with Progress('Planning file mappings'):
-        if args.action == 'stash':
-            plan.stash(args.values, args.restore)
+    with sequence('File mappings', 2) as phases:
+        with phases.step('Plan file mappings'):
+            if args.action == 'stash':
+                plan.stash(args.values, args.restore)
+            else:
+                plan.edit(args)
+            plan.finish()
+        output.plan(plan.rows, args.dry_run)
+        doc = dict(schema=1, action='restore' if args.restore else args.action, status='preview', dry_run=args.dry_run, items=plan.rows)
+        if args.dry_run:
+            print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc)
+            return 0
+        if not args.json:
+            render(doc)
+        if not plan.install.operations:
+            doc['status'] = 'unchanged'
+            for row in plan.rows:
+                output('Unchanged', row.get('target') or row.get('source'),
+                       reason=row['id'] + ': mapping and live state already match')
         else:
-            plan.edit(args)
-        plan.finish()
-    output.plan(plan.rows, args.dry_run)
-    doc = dict(schema=1, action='restore' if args.restore else args.action, status='preview', dry_run=args.dry_run, items=plan.rows)
-    if args.dry_run:
-        print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc)
+            if not args.yes:
+                if not terminal(): p.error('use --yes or --dry-run without terminal input/output')
+                approved = gum_confirm('Apply these file mapping changes?')
+                if approved is None:
+                    approved = prompt('Apply these changes? [y/N]', 'n').lower() in ('y', 'yes')
+                if not approved:
+                    phases.cancel()
+                    doc['status'] = 'cancelled'
+                    render(doc, True)
+                    return 0
+            with phases.step('Apply file mappings'):
+                result = plan.apply(doc['action'])
+            doc.update(status=result['status'], transaction=result.get('id'))
+        print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc, True)
         return 0
-    if not args.json:
-        render(doc)
-    if not plan.install.operations:
-        doc['status'] = 'unchanged'
-        for row in plan.rows:
-            output('Unchanged', row.get('target') or row.get('source'),
-                   reason=row['id'] + ': mapping and live state already match')
-    else:
-        if not args.yes:
-            if not terminal(): p.error('use --yes or --dry-run without terminal input/output')
-            approved = gum_confirm('Apply these file mapping changes?')
-            if approved is None:
-                approved = prompt('Apply these changes? [y/N]', 'n').lower() in ('y', 'yes')
-            if not approved:
-                doc['status'] = 'cancelled'
-                render(doc, True)
-                return 0
-        with Progress('Applying file mappings'):
-            result = plan.apply(doc['action'])
-        doc.update(status=result['status'], transaction=result.get('id'))
-    print(json.dumps(doc, ensure_ascii=True)) if args.json else render(doc, True)
-    return 0
 
 
 if __name__ == '__main__':

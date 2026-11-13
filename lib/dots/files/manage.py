@@ -13,7 +13,7 @@ import textwrap
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from interaction import gum_confirm, SelectionEnded
-from progress import Progress, configure, tracked
+from progress import Progress, configure, tracked, sequence, permanent_output
 
 from catalog import Catalog, Presentation, read_json, platform, relative, ID
 from events import OperationOutput
@@ -573,98 +573,103 @@ def main():
                 if not destination:
                     raise SelectionEnded(130)
                 args.target_map[str(Path(os.path.abspath(os.path.expanduser(value))))] = destination
-    with Progress('Planning file operations'):
-        if args.action in ('undo', 'recover', 'backups-restore'):
-            if len(args.values) != 1:
-                parser.error('one transaction or backup ID is required')
-            identity = args.values[0]
+    with sequence('File operations', 2) as phases:
+        with phases.step('Plan file operations'):
+            if args.action in ('undo', 'recover', 'backups-restore'):
+                if len(args.values) != 1:
+                    parser.error('one transaction or backup ID is required')
+                identity = args.values[0]
+                if args.action == 'recover':
+                    doc = manager.store.load(identity)
+                    if doc['status'] not in ('preparing', 'applying', 'rolling-back', 'recovery-required'):
+                        raise ValueError('transaction does not need recovery')
+                    ops, guards, catalogs = [], {}, doc['catalogs']
+                    views = [dict(x, status='recover') for x in doc['operations']]
+                elif args.action == 'undo':
+                    ops, guards, catalogs = manager.store.inverse(identity)
+                    views = [dict(x, status='undo') for x in ops]
+                else:
+                    record = read_json(manager.store.backups / (identity + '.json')) if re.fullmatch('[a-f0-9]{32}', identity) else None
+                    if not record:
+                        raise ValueError('invalid backup ID')
+                    doc = manager.store.load(identity)
+                    if doc['status'] != 'complete':
+                        raise ValueError('backup transaction is not complete')
+                    ops, guards, catalogs, views = [], {}, [], []
+                    for i, entry in enumerate(doc['operations']):
+                        # Restore data objects; catalog changes belong to undo, not restore.
+                        if entry['before'] is None or entry['path'] in doc['catalogs']:
+                            continue
+                        path = entry['path']
+                        current = digest(path)
+                        if current == entry['before']:
+                            continue
+                        if current != entry['after'] and current is not None and not args.backup:
+                            raise ValueError('changed restore target requires --backup')
+                        source = manager.store.root / identity / f'{i}-before'
+                        if digest(source) != entry['before']:
+                            raise ValueError('backup failed verification')
+                        ops.append({'path': path, 'source': str(source)})
+                        guards[path] = current
+                        guards[str(source)] = entry['before']
+                        views.append({'path': path, 'status': 'restore'})
+            else:
+                if not args.values and not (args.action == 'add' and args.scan):
+                    parser.error('select paths or qualified resource IDs')
+                ops, guards, catalogs, views = manager.plan(args)
+                if getattr(manager, 'link_installation', None) and (args.action != 'add' or manager.registration_receipt):
+                    # Installation baselines must survive for a later uninstall.
+                    args.backup = True
+        with permanent_output():
+            if getattr(manager, 'link_installation', None):
+                manager.link_installation.store.observer = output
+            output.plan(views, args.dry_run)
+            preview = {'schema': 1, 'action': args.action, 'dry_run': args.dry_run, 'backup': args.backup, 'items': views}
+            if args.dry_run:
+                if args.json:
+                    print(json.dumps(preview))
+                else:
+                    show('File operation preview', views)
+                    print('  Preview only; no changes made. Retained backups: ' + ('enabled' if args.backup else 'disabled'))
+                return
+            stream = sys.stderr if args.json else sys.stdout
+            show('File operation preview', views, stream)
+            print('  Retained backups: ' + ('enabled' if args.backup else 'disabled'), file=stream)
+            if not args.yes:
+                if not sys.stdin.isatty():
+                    parser.error('use --dry-run to inspect or --yes to apply without a terminal')
+                approved = None if args.json else gum_confirm('Apply these changes?')
+                if approved is None:
+                    print('Apply these changes? [y/N] ', end='', file=sys.stderr, flush=True)
+                    approved = input().lower() == 'y'
+                if not approved:
+                    phases.cancel()
+                    if args.json:
+                        print(json.dumps(dict(preview, status='cancelled')))
+                    else:
+                        print('Cancelled; no changes made.')
+                    return
+        with phases.step('Apply file operations'):
             if args.action == 'recover':
-                doc = manager.store.load(identity)
-                if doc['status'] not in ('preparing', 'applying', 'rolling-back', 'recovery-required'):
-                    raise ValueError('transaction does not need recovery')
-                ops, guards, catalogs = [], {}, doc['catalogs']
-                views = [dict(x, status='recover') for x in doc['operations']]
-            elif args.action == 'undo':
-                ops, guards, catalogs = manager.store.inverse(identity)
-                views = [dict(x, status='undo') for x in ops]
+                result = manager.store.recover(args.values[0])
+            elif getattr(manager, 'link_installation', None) and (args.action != 'add' or manager.registration_receipt):
+                result = manager.link_installation.apply(args.action, catalogs=catalogs, retain=args.backup,
+                            write_receipt=args.action != 'add' or manager.registration_receipt)
+                if result['status'] == 'unchanged':
+                    result = dict(schema=1, status='unchanged', operations=[])
             else:
-                record = read_json(manager.store.backups / (identity + '.json')) if re.fullmatch('[a-f0-9]{32}', identity) else None
-                if not record:
-                    raise ValueError('invalid backup ID')
-                doc = manager.store.load(identity)
-                if doc['status'] != 'complete':
-                    raise ValueError('backup transaction is not complete')
-                ops, guards, catalogs, views = [], {}, [], []
-                for i, entry in enumerate(doc['operations']):
-                    # Restore data objects; catalog changes belong to undo, not restore.
-                    if entry['before'] is None or entry['path'] in doc['catalogs']:
-                        continue
-                    path = entry['path']
-                    current = digest(path)
-                    if current == entry['before']:
-                        continue
-                    if current != entry['after'] and current is not None and not args.backup:
-                        raise ValueError('changed restore target requires --backup')
-                    source = manager.store.root / identity / f'{i}-before'
-                    if digest(source) != entry['before']:
-                        raise ValueError('backup failed verification')
-                    ops.append({'path': path, 'source': str(source)})
-                    guards[path] = current
-                    guards[str(source)] = entry['before']
-                    views.append({'path': path, 'status': 'restore'})
-        else:
-            if not args.values and not (args.action == 'add' and args.scan):
-                parser.error('select paths or qualified resource IDs')
-            ops, guards, catalogs, views = manager.plan(args)
-            if getattr(manager, 'link_installation', None) and (args.action != 'add' or manager.registration_receipt):
-                # Installation baselines must survive for a later uninstall.
-                args.backup = True
-    if getattr(manager, 'link_installation', None):
-        manager.link_installation.store.observer = output
-    output.plan(views, args.dry_run)
-    preview = {'schema': 1, 'action': args.action, 'dry_run': args.dry_run, 'backup': args.backup, 'items': views}
-    if args.dry_run:
-        if args.json:
-            print(json.dumps(preview))
-        else:
-            show('File operation preview', views)
-            print('  Preview only; no changes made. Retained backups: ' + ('enabled' if args.backup else 'disabled'))
-        return
-    stream = sys.stderr if args.json else sys.stdout
-    show('File operation preview', views, stream)
-    print('  Retained backups: ' + ('enabled' if args.backup else 'disabled'), file=stream)
-    if not args.yes:
-        if not sys.stdin.isatty():
-            parser.error('use --dry-run to inspect or --yes to apply without a terminal')
-        approved = None if args.json else gum_confirm('Apply these changes?')
-        if approved is None:
-            print('Apply these changes? [y/N] ', end='', file=sys.stderr, flush=True)
-            approved = input().lower() == 'y'
-        if not approved:
+                result = manager.store.apply(args.action, ops, guards, args.backup, catalogs)
+        with permanent_output():
             if args.json:
-                print(json.dumps(dict(preview, status='cancelled')))
+                print(json.dumps(result))
             else:
-                print('Cancelled; no changes made.')
-            return
-    if args.action == 'recover':
-        result = manager.store.recover(args.values[0])
-    elif getattr(manager, 'link_installation', None) and (args.action != 'add' or manager.registration_receipt):
-        result = manager.link_installation.apply(args.action, catalogs=catalogs, retain=args.backup,
-                    write_receipt=args.action != 'add' or manager.registration_receipt)
-        if result['status'] == 'unchanged':
-            result = dict(schema=1, status='unchanged', operations=[])
-    else:
-        result = manager.store.apply(args.action, ops, guards, args.backup, catalogs)
-    if args.json:
-        print(json.dumps(result))
-    else:
-        ui = Presentation()
-        ui.heading('File operation ' + result['status'])
-        if result.get('id'):
-            ui.detail('Transaction', result['id'])
-            ui.detail('Undo', 'dots files undo ' + result['id'])
-            if args.backup:
-                ui.detail('Backup', result['id'])
+                ui = Presentation()
+                ui.heading('File operation ' + result['status'])
+                if result.get('id'):
+                    ui.detail('Transaction', result['id'])
+                    ui.detail('Undo', 'dots files undo ' + result['id'])
+                    if args.backup:
+                        ui.detail('Backup', result['id'])
 
 
 if __name__ == '__main__':

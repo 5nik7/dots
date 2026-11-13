@@ -2,7 +2,7 @@
 
 `python3 -B tools/test_git_output.py` covers explicit human views, combined file states, configured directory/basename colors, renames, sync before/after paths, publication deduplication, named inspection routes, unchanged JSON, argument conflicts and 40/80/120-column owned PTYs against both Git controllers. Run it alongside the Git safety suites. `tools/test_progress.py` covers configured/explicit progress modes, known/unknown counts, nesting, terminal gates and interruptions; `tools/test_config_values.py` covers preference validation/reset and activation. These Termux fixtures do not establish native Windows terminal behavior.
 
-`python3 -B -m unittest discover -s plugins/pkgs/tests -p test_progress_counts.py` verifies manager/command/native byte/package counts, partial failures, all display modes, prompt suspension and data gates using fake managers. Font provider and workflow suites cover optional download totals and deduplicated batch counts in owned fixtures. These checks never upgrade host packages or download real fonts.
+`python3 -B -m unittest discover -s plugins/pkgs/tests -p test_progress_counts.py` verifies equal manager shares, nested command budgets, activity-only native byte/package measurements, partial failures, cancellation, display modes, prompt suspension and data gates using fake managers. Font provider and workflow suites cover optional download totals and deduplicated batch counts in owned fixtures. These checks never upgrade host packages or download real fonts.
 
 
 ## Cleanup
@@ -113,6 +113,8 @@ Follow with `tools/test_file_operations.py`, `tools/test_files.py`, `tools/test_
 ## Operation progress
 
 Run `python3 -B tools/test_progress.py` for isolated native Unix PTY coverage of Bash/Python progress. The suite owns home/config/state/cache roots and checks delayed/fast work, counted phases, nested rendering, output modes, color/icon policy, 40/80/120 columns, control-character labels, prompt suspension, child exit status, interruption, renderer failure and worker cleanup. Disposable file transactions verify progress during real apply and injected rollback; controller tests prohibit animation for JSON/dry-run paths. PTY tests require Bash and Python; Gum is unnecessary.
+
+Run `python3 -B tools/test_progress_sequences.py` for reserved equal shares, fixed denominators, monotonic measured work, opaque command/download separation, cancellation and recovery. Its private tmux fixture checks both transient rows through 80→40→120-column resizes, including preserved scrollback and complete clearing. Run `python3 -B tools/test_progress_consumers.py` for finalization, rollback and cleanup-cancellation boundaries. Disabled colors prohibit SGR while allowing cursor controls needed to clear both rows.
 
 Run the existing Bash, Git, files, browser, theme, picker, confirmation and isolated Anodize suites for integrations. Keep sequential Git/file benchmark intervals separate from tests. Native Termux PTY results do not establish native Windows, Linux or WSL acceptance. See [the focused plan](../plans/progress.md) for actual results and pre-existing suite failures.
 

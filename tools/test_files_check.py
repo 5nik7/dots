@@ -316,7 +316,7 @@ raise SystemExit(check.main(sys.argv[2:]))
                         chunks.append(block)
                     self.assertEqual(proc.wait(timeout=5), 0)
                     text = b''.join(chunks).decode()
-                    plain = re.sub(r'\x1b\[[0-9;]*m', '', text)
+                    plain = re.sub(r'\x1b\[[0-9;?]*[A-Za-z]', '', text)
                     for line in plain.replace('\r\n','\n').split('\n'):
                         for frame in line.split('\r'):
                             self.assertLessEqual(cells(frame), width, repr(frame))
@@ -327,7 +327,8 @@ raise SystemExit(check.main(sys.argv[2:]))
                     else:
                         self.assertIn('\r', text.replace('\r\n','\n'))
                         self.assertIn('cancelled', plain)
-                        self.assertNotIn('\x1b[', text)
+                        self.assertNotRegex(text, r'\x1b\[[0-9;]*m')
+                        self.assertIn('Overall', plain)
                     self.assertEqual(self.records(), [self.row])
                     self.assertFalse((self.home/'state').exists())
                 finally:

@@ -153,38 +153,40 @@ def export(args, cfg):
     failed = False
     progress = phase if not (args.dry_run or args.json or cfg.get('output') == 'raw' or
                             os.environ.get('DOTS_PROGRESS', 'auto') in ('none','never')) else lambda label: nullcontext()
-    with budget(45), progress('Detecting export managers'):
-        selection = [(args.manager, getattr(args, 'scope', None) if args.manager == 'winget' else 'global' if args.global_scope else None)] if args.manager not in (None,'auto') else scopes.bulk(dict(cfg, upgrade={'managers':'auto'}))
-    for index, (manager, scope) in enumerate(selection, 1):
-        try:
-            with budget(45), progress(f'Exporting {manager} · managers') as meter:
-                if meter is not None: meter.update(f'Exporting {manager} · managers', index - 1, len(selection))
-                if not available(manager): raise Error('manager unavailable')
-                backend = scopes.make(manager, scope)
-                rows = scopes.inventory(backend, roots=not args.include_dependencies,
-                                        owned=manager == 'pip' and args.manager in (None,'auto'), portable=True)
-                if meter is not None: meter.update(f'Exporting {manager} · managers', index, len(selection))
-            packages = []
-            grouped = {}
-            for row in rows: grouped.setdefault(policies.identity(row[0].name, manager), []).append(row)
-            for identity, values in sorted(grouped.items()):
-                p, evidence, reason = values[0]
-                version = p.installed_version or p.version
-                if len(values) > 1:
-                    reason = 'multiple installed records; choose the desired identity/version manually'
-                    version = ', '.join(sorted({v[0].installed_version or v[0].version for v in values}))
-                record = dict(name=p.name, observed_version=version,
-                              pin=version if args.pin_versions and manager in PINNED and not reason and version else None,
-                              selection=evidence, enabled=not bool(reason))
-                if reason: record['reason'] = reason
-                packages.append(record)
-            if args.pin_versions and manager not in PINNED:
-                document['notices'].append(dict(manager=manager, warning='exact pins unsupported; observed versions retained without pins'))
-            document['groups'].append(dict(manager=manager, scope=scopes.scope_id(backend),
-                platforms=['windows'] if manager == 'winget' else [platform()] if manager in SYSTEM else ['termux','linux','wsl'], packages=packages))
-        except (Error, OSError, ValueError) as error:
-            failed = True
-            document['notices'].append(dict(manager=manager, error=str(error)))
+    export_cfg = dict(cfg, _quiet_progress=args.dry_run or args.json or cfg.get('_quiet_progress', False))
+    with workflows.progress('Exporting packages', export_cfg):
+        with budget(45), progress('Detecting export managers'):
+            selection = [(args.manager, getattr(args, 'scope', None) if args.manager == 'winget' else 'global' if args.global_scope else None)] if args.manager not in (None,'auto') else scopes.bulk(dict(cfg, upgrade={'managers':'auto'}))
+        with workflows.work_sequence('Exporting packages', len(selection), export_cfg, unit='manager') as managers:
+            for index, (manager, scope) in enumerate(selection):
+                with managers.step('Exporting '+manager, index):
+                    try:
+                        with budget(45), progress(f'Exporting {manager}'):
+                            if not available(manager): raise Error('manager unavailable')
+                            backend = scopes.make(manager, scope)
+                            rows = scopes.inventory(backend, roots=not args.include_dependencies,
+                                                    owned=manager == 'pip' and args.manager in (None,'auto'), portable=True)
+                        packages = []
+                        grouped = {}
+                        for row in rows: grouped.setdefault(policies.identity(row[0].name, manager), []).append(row)
+                        for identity, values in sorted(grouped.items()):
+                            p, evidence, reason = values[0]
+                            version = p.installed_version or p.version
+                            if len(values) > 1:
+                                reason = 'multiple installed records; choose the desired identity/version manually'
+                                version = ', '.join(sorted({v[0].installed_version or v[0].version for v in values}))
+                            record = dict(name=p.name, observed_version=version,
+                                          pin=version if args.pin_versions and manager in PINNED and not reason and version else None,
+                                          selection=evidence, enabled=not bool(reason))
+                            if reason: record['reason'] = reason
+                            packages.append(record)
+                        if args.pin_versions and manager not in PINNED:
+                            document['notices'].append(dict(manager=manager, warning='exact pins unsupported; observed versions retained without pins'))
+                        document['groups'].append(dict(manager=manager, scope=scopes.scope_id(backend),
+                            platforms=['windows'] if manager == 'winget' else [platform()] if manager in SYSTEM else ['termux','linux','wsl'], packages=packages))
+                    except (Error, OSError, ValueError) as error:
+                        failed = True
+                        document['notices'].append(dict(manager=manager, error=str(error)))
     return validate(document), failed
 
 

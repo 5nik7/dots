@@ -175,37 +175,39 @@ The private capture context selects a human layout independently of color/icons;
 
 Slow human views use a shared transient display on stderr. Animation starts after 500 ms; fast work remains quiet. Both stdout and stderr must be terminals, and `TERM` must not be `dumb`. `apps.cli.progress` controls existing consumers, independently of colors and icons, and defaults to `both`.
 
-| Mode | Known total | Unknown total |
+The first row shows overall completion and a named position, such as `manager 2/3` or `repo 2/5`. The second row shows the current step and its activity. Equal sibling managers, repositories or groups receive equal shares; known steps divide their parent's reserved share. Totals are fixed before crediting work. Later discovery happens inside a reserved step, so it cannot reset or expand the overall denominator.
+
+| Mode | Overall row | Current-step row |
 | --- | --- | --- |
-| `none` | No progress | No progress |
-| `spinner` | Spinner with `completed/total` | Spinner |
-| `bar` | Bar with `completed/total` | Indeterminate moving bar, no percentage |
-| `both` | Spinner beside bar with `completed/total` | Spinner |
+| `none` | Hidden | Hidden |
+| `spinner` | Percentage and named count | Spinner, named count and measured percentage when available |
+| `bar` | Bar, percentage and named count | Measured or indeterminate bar with activity |
+| `both` | Bar, percentage and named count | Spinner, activity and a bar when measured |
 
 `DOTS_PROGRESS=auto` (also the unset behavior) follows Config. Explicit `none|spinner|bar|both` overrides it; `never` remains an alias for `none`. Invalid values disable the optional UI. There is no new global progress CLI flag or required optional tool. Existing command-specific switches remain compatible.
 
-Counts describe processed items, not elapsed time or successful publication. Existing semantic heading/label styles mark activity and phase; callers with explicit progress styles retain them. Permanent results remain authoritative for success, unchanged work, failure and recovery. No success is inferred from a full preparation bar, and Git does not parse transfer percentages.
+Overall progress measures completed work, not elapsed time. Opaque commands hold their reserved share until they return. Native download percentages describe only the current transfer; finishing one archive cannot complete an enclosing command that may fetch more archives. Verification and finalization have reserved steps. Handled failures and skips can count as processed; final results remain authoritative for success. Cancellation freezes reached progress, and recovery activity does not complete the failed operation. No remaining-time estimate is inferred, and Git does not parse transfer percentages.
 
-Bars shorten in narrow terminals to leave room for activity text alongside counts.
+Bars shorten in narrow terminals. Below 60 columns, the current row omits its mini-bar to retain the named count, measured percentage and activity; the overall bar remains visible in `bar` and `both` modes. Existing semantic heading/label styles mark progress, and callers with explicit progress styles retain them.
 
 | Family | Progress coverage |
 | --- | --- |
 | Git | Repository discovery, status inspection, publication input collection and local sync/publish phases; status/publication use known repository counts. |
 | Themes | Preparation, rendering, bat cache generation, publication, quiet application reloads and installed-theme validation; `update --all` uses the selected checkout count. |
 | Files | Discovery, catalog/browser loading, planning and integrity checks; transaction preparation, replacement and reverse recovery use operation counts. |
-| Packages | Compact install/remove/upgrade counts returned commands or processed managers; native pip transfers and pacman-family transactions supply byte/package counts. Export counts inspected managers. Package styles and quiet/raw suppression remain authoritative. |
-| Fonts | Batch preparation counts families/files; provider requests count bytes when the response supplies a usable size. File transactions retain their own operation counts. |
-| Wiki and weather | Existing page-build/clone and forecast-fetch phases use shared progress; unknown work remains indeterminate. |
-| Cleanup | Existing shared scan/run phases; receipt totals remain authoritative. |
+| Packages | Compact install/remove/upgrade tracks managers, preparation, returned commands and finalization. Native pip transfers and pacman-family transactions supply local byte/package measurements. Export and upgrade lists track inspected managers. Package styles and quiet/raw suppression remain authoritative. |
+| Fonts | Preparation counts families/files within a reserved phase, followed by application and finalization. Provider byte totals describe the current download. File transactions divide the reserved application phase. |
+| Wiki and weather | Page builds reserve render/apply/finalize work; clone and forecast fetch remain opaque steps. Weather completion installation reserves generation and transaction work. |
+| Cleanup | Scan, approved groups and receipt finalization use reserved scopes; cancellation freezes progress and receipt totals remain authoritative. |
 | Anodize | Theme loading/import, image/seed generation, rendering, preparation, save and application through both entry points; saves share file transaction progress. |
 
 Prompt-capable or directly outputting external commands use a static phase message instead of animation: Git fetch/init/commit/push/checkout/merge, theme downloads, tmux reloads and wallpaper adapters. These messages appear immediately before the child starts so prompts and child output remain readable, even when a child takes a long time. Progress does not capture, reroute or replay child output. Existing timeout and exit-status behavior is retained.
 
 `--yes` retains progress but bypasses confirmation. JSON, raw paths, scalar queries, raw exports/app previews, generated shell code, ordinary shell initialization, completion, help, dry runs and redirected output bypass the progress UI, including static phase messages. Explicit color/icon settings never override this gate. Slow human read-only discovery is eligible and does not write progress files or application state.
 
-The existing color and icon policy applies. ASCII mode uses `|/-\` and `#` bars; disabled color removes ANSI color sequences while carriage returns and spaces update the line. Neither renderer hides the cursor or changes terminal input mode. Transient labels are sanitized and shortened to fit; final result and recovery text keeps complete paths. Bash escapes non-ASCII path characters for predictable cell widths, while Python measures combining and wide characters. Bash uses optional `stty` to read the initial terminal width and otherwise falls back to `COLUMNS` or 80 columns.
+The existing color and icon policy applies. ASCII mode uses `|/-\` and `#` bars; disabled color removes ANSI color sequences while terminal cursor/erase controls update both rows. Neither renderer hides the cursor or changes terminal input mode. Transient labels are sanitized and shortened to fit; final result and recovery text keeps complete paths. Bash escapes non-ASCII path characters for predictable cell widths, while Python measures combining and wide characters. Bash uses optional `stty` to read terminal width and handles resize notifications and otherwise falls back to `COLUMNS` or 80 columns.
 
-Python progress also accepts structured inert text/style spans. Resolve palette styles once per operation, clip by display cells before applying color, and keep the existing string API for other callers. Package progress uses this for configurable identities and activity colors; plain/NO_COLOR views contain the same clipped text. Nested phases restore the complete prior state.
+Python progress also accepts structured inert text/style spans. Resolve palette styles once per operation, clip by display cells before applying color, and keep the existing string API for other callers. Package progress uses this for configurable identities and activity colors; plain/NO_COLOR views contain the same clipped text. Nested phases restore the prior activity state while retaining monotonic overall progress. Activity-only updates cannot overwrite overall completion.
 
 Clear and stop the display before results, diagnostics, confirmation or selection. Nested work shares the active renderer; captured private bridges disable their own progress. Renderer errors disable presentation without approving, cancelling or retrying work. File notifications run at existing journal boundaries and never alter transaction ordering or schemas. Rendering workers must release inherited locks, terminate on completion/interruption, and preserve the operation's result.
 

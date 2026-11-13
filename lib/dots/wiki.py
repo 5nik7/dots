@@ -350,8 +350,9 @@ def main(argv=None):
     row=next((r for r in rows if r['id']==page),None) if page else None
     if page and row is None:raise ValueError('unknown wiki page: '+page+'; use dots wiki list')
     as_json=getattr(args,'json',False)
-    from progress import configure, Progress
+    from progress import configure, Progress, sequence, permanent_output
     configure(action in ('build', 'init') and not as_json and not getattr(args, 'dry_run', False))
+    @permanent_output()
     def emit(data):
         if as_json:print(json.dumps(dict(schema=1,**data),ensure_ascii=True));return
         report(ui,action,data,root)
@@ -411,14 +412,18 @@ def main(argv=None):
         findings=[] if args.source_only else compare(root,path)
         emit(dict(healthy=not findings,source_only=args.source_only,items=findings));return int(bool(findings))
     elif action=='build':
-        operations,guards=build_plan(root,path)
-        if args.dry_run:emit(dict(status='preview',items=[op['path'] for op in operations]));return 0
-        if not operations:emit(dict(status='unchanged',items=[]));return 0
-        if not as_json:emit(dict(status='planned',items=[op['path'] for op in operations]))
-        if not approve(args,'Build wiki pages'):emit(dict(status='cancelled',items=[]));return 0
-        with Progress('Building wiki pages'):
-            record=Store(state_root()).apply('wiki-build',operations,guards,retain=True)
-        emit(dict(status='built',transaction=record['id'],items=[op['path'] for op in operations]))
+        with sequence('Wiki build', 2) as phases:
+            with phases.step('Prepare wiki pages'):
+                operations,guards=build_plan(root,path)
+            if args.dry_run:emit(dict(status='preview',items=[op['path'] for op in operations]));return 0
+            if not operations:emit(dict(status='unchanged',items=[]));return 0
+            if not as_json:emit(dict(status='planned',items=[op['path'] for op in operations]))
+            with permanent_output(): approved=approve(args,'Build wiki pages')
+            if not approved:
+                phases.cancel();emit(dict(status='cancelled',items=[]));return 0
+            with phases.step('Publish wiki pages'):
+                record=Store(state_root()).apply('wiki-build',operations,guards,retain=True)
+            emit(dict(status='built',transaction=record['id'],items=[op['path'] for op in operations]))
     elif action=='init':
         if exists(path):require_checkout(path);emit(dict(status='available',path=str(path)));return 0
         if args.dry_run:emit(dict(status='preview',path=str(path)));return 0

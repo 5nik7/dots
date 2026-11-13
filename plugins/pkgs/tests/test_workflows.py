@@ -319,7 +319,8 @@ else:sys.exit(99)
         def slow_inventory(*args,**kwargs):
             time.sleep(.65)
             self.assertIn('Exporting npm',err.getvalue())
-            self.assertIn('0/1',err.getvalue())
+            self.assertIn('manager 1/1',err.getvalue())
+            self.assertIn('0%',err.getvalue())
             self.assertEqual(out.getvalue(),'')
             return [(Package('hello','1'),'explicit','')]
         with patch.dict(os.environ, TERM='xterm', DOTS_PROGRESS='both'), \

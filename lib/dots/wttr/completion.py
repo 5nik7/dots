@@ -1,5 +1,6 @@
 """Static contextual completion; explicit installation uses shared transactions."""
 from pathlib import Path
+from progress import sequence
 from core import ROOT, FIELDS
 from metadata import OPTIONS, BROWSE_OPTIONS, SHELLS, STOCK_WORDS, STOCK_DESCRIPTIONS, SHORT_FLAGS, spellings
 
@@ -130,21 +131,25 @@ TOOLTIPS
 
 
 def install(shells, directory=None):
-    from file_platform import state_root
-    from transactions import Store, digest, parents_safe
-    operations, guards, targets = [], {}, []
-    for shell in shells:
-        parent = Path(directory).absolute() if directory else ROOT / 'shells' / shell / 'completions'
-        path = parent / FILES[shell]
-        parents_safe(path)
-        if path.is_symlink() or (path.exists() and not path.is_file()):
-            raise ValueError('completion target must be a regular file: ' + str(path))
-        text = generate(shell)
-        targets.append(path)
-        before = digest(path)
-        guards[str(path)] = before
-        if path.exists() and path.read_text(encoding='utf-8') == text:
-            continue
-        operations.append({'path': str(path), 'text': text})
-    result = Store(state_root()).apply('wttr-completion', operations, guards, retain=True)
-    return result, targets
+    with sequence('Install weather completions', 2) as phases:
+        from file_platform import state_root
+        from transactions import Store, digest, parents_safe
+        operations, guards, targets = [], {}, []
+        with phases.step('Generate completions'), sequence('Generate shell completions', len(shells), unit='shell') as generated:
+            for shell in shells:
+                with generated.step(shell):
+                    parent = Path(directory).absolute() if directory else ROOT / 'shells' / shell / 'completions'
+                    path = parent / FILES[shell]
+                    parents_safe(path)
+                    if path.is_symlink() or (path.exists() and not path.is_file()):
+                        raise ValueError('completion target must be a regular file: ' + str(path))
+                    text = generate(shell)
+                    targets.append(path)
+                    before = digest(path)
+                    guards[str(path)] = before
+                    if path.exists() and path.read_text(encoding='utf-8') == text:
+                        continue
+                    operations.append({'path': str(path), 'text': text})
+        with phases.step('Install completions'):
+            result = Store(state_root()).apply('wttr-completion', operations, guards, retain=True)
+        return result, targets

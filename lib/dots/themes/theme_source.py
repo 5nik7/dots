@@ -9,7 +9,7 @@ import uuid
 from palette_native import ID, literal
 from catalog import Presentation
 from transactions import Store, digest, parents_safe, exists
-from progress import Progress
+from progress import Progress, sequence, permanent_output
 
 
 def git(*args):
@@ -31,9 +31,12 @@ def source_operation(themes, action, args):
     validate_pointers(themes)
     if action == 'update' and args == ['--all']:
         failures = []
-        for path in sorted(themes.user.glob('*/.git/dots-managed')):
-            try: source_operation(themes, action, [path.parent.parent.name])
-            except (ValueError, OSError): failures.append(path.parent.parent.name)
+        selected = sorted(themes.user.glob('*/.git/dots-managed'))
+        with sequence('Update themes', len(selected), unit='theme') as updates:
+            for path in selected:
+                with updates.step(path.parent.parent.name):
+                    try: source_operation(themes, action, [path.parent.parent.name])
+                    except (ValueError, OSError): failures.append(path.parent.parent.name)
         if failures: raise ValueError('theme updates failed: ' + ', '.join(failures))
         return
     url = branch = old = None
@@ -64,28 +67,32 @@ def source_operation(themes, action, args):
     pointer = themes.state / 'themes/commands/current'
     guards = {str(target):before, str(pointer):digest(pointer),
               str(themes.state / 'themes/current'):digest(themes.state / 'themes/current')}
-    with tempfile.TemporaryDirectory(prefix='dots-theme-import-') as directory:
+    with sequence('Theme '+action, 3) as phases, tempfile.TemporaryDirectory(prefix='dots-theme-import-') as directory:
         stage = Path(directory) / 'source'
-        if action != 'remove':
-            with Progress('Downloading theme: ' + name):
-                git('clone', '--quiet', '--no-recurse-submodules', '--template=', *(['--branch', branch] if branch else []), '--', url, stage)
-            for path in stage.rglob('*'):
-                if path.is_symlink() or not (path.is_file() or path.is_dir()): raise ValueError('installed theme contains unsafe objects')
-            if not any((stage / f).is_file() for f in ('colors.toml','palette.toml')): raise ValueError('installed themes require colors.toml or palette.toml')
-            for file, kind in (('theme.toml','metadata'),('palette.toml','palette'),('colors.toml','colors')):
-                if (stage / file).exists(): literal(stage / file, kind)
-            if old: git('-C', stage, 'merge-base', '--is-ancestor', old, 'HEAD')
-            (stage / '.git/dots-managed').write_text('schema=1\n')
-        class Pending(type(themes)):
-            def ids(self): return sorted((set(super().ids()) - {name}) | ({name} if action != 'remove' else set()))
-            def directory(self, identity): return stage if identity == name and action != 'remove' else super().directory(identity)
-        command_stage = Path(directory) / 'generated'
-        command_stage.mkdir()
-        generated_commands(Pending(), command_stage)
-        generation = themes.state / 'themes/commands/generations' / ('g.' + uuid.uuid4().hex)
-        guards[str(generation)] = None
-        operations = [dict(path=str(target), **({'source':str(stage)} if action != 'remove' else {'delete':True})),
-                      dict(path=str(generation), source=str(command_stage / 'commands')),
-                      dict(path=str(pointer), link=str(generation), directory=True)]
-        result = Store(themes.state).apply('theme-' + action, operations, guards, retain=True)
-        ui = Presentation(); ui.heading(action + ': ' + name + ' (selection unchanged)'); ui.detail('Recovery transaction', result['id'])
+        with phases.step('Prepare theme source'):
+            if action != 'remove':
+                with Progress('Downloading theme: ' + name):
+                    git('clone', '--quiet', '--no-recurse-submodules', '--template=', *(['--branch', branch] if branch else []), '--', url, stage)
+                for path in stage.rglob('*'):
+                    if path.is_symlink() or not (path.is_file() or path.is_dir()): raise ValueError('installed theme contains unsafe objects')
+                if not any((stage / f).is_file() for f in ('colors.toml','palette.toml')): raise ValueError('installed themes require colors.toml or palette.toml')
+                for file, kind in (('theme.toml','metadata'),('palette.toml','palette'),('colors.toml','colors')):
+                    if (stage / file).exists(): literal(stage / file, kind)
+                if old: git('-C', stage, 'merge-base', '--is-ancestor', old, 'HEAD')
+                (stage / '.git/dots-managed').write_text('schema=1\n')
+        with phases.step('Prepare theme commands'):
+            class Pending(type(themes)):
+                def ids(self): return sorted((set(super().ids()) - {name}) | ({name} if action != 'remove' else set()))
+                def directory(self, identity): return stage if identity == name and action != 'remove' else super().directory(identity)
+            command_stage = Path(directory) / 'generated'
+            command_stage.mkdir()
+            generated_commands(Pending(), command_stage)
+            generation = themes.state / 'themes/commands/generations' / ('g.' + uuid.uuid4().hex)
+            guards[str(generation)] = None
+            operations = [dict(path=str(target), **({'source':str(stage)} if action != 'remove' else {'delete':True})),
+                          dict(path=str(generation), source=str(command_stage / 'commands')),
+                          dict(path=str(pointer), link=str(generation), directory=True)]
+        with phases.step('Publish theme files'):
+            result = Store(themes.state).apply('theme-' + action, operations, guards, retain=True)
+        with permanent_output():
+            ui = Presentation(); ui.heading(action + ': ' + name + ' (selection unchanged)'); ui.detail('Recovery transaction', result['id'])

@@ -36,11 +36,14 @@ status_main() {
     local DOTS_PROGRESS_STARTED='' progress_count=0
     trap 'dots::progress_stop' EXIT
     RESULT=0 STATUS_DIRS=()
-    dots::progress_run 'Discovering repositories' collect_status "$ROOT"
+    dots::progress_start 'Discovering repositories'
+    collect_status "$ROOT"
+    dots::progress_sequence_start 'Inspecting repositories' "${#STATUS_DIRS[@]}" repo
+    dots::progress_stop
     if ((JSON)); then printf '{"schema":1,"remote_state":"cached","repositories":['
     else dots::heading 'Git status'; fi
     for dir in "${STATUS_DIRS[@]}"; do
-        dots::progress_start 'Inspecting repositories' "$progress_count" "${#STATUS_DIRS[@]}"
+        dots::progress_step_start "Inspecting repository: ${dir##*/}" "$((progress_count+1))"
         branch='' ahead=null behind=null state=clean paths=() codes=() oldpaths=()
         if [[ -v STATUS_ERRORS[$dir] ]]; then state=blocked
         elif ! repo_root "$dir" || [[ $REPLY != "$dir" ]]; then state=missing; RESULT=1
@@ -66,7 +69,7 @@ status_main() {
             fi
         fi
         ((progress_count+=1))
-        dots::progress_update 'Inspecting repositories' "$progress_count" "${#STATUS_DIRS[@]}"
+        dots::progress_step_end
         dots::progress_stop
         count=${#paths[@]}
         if [[ $state == clean ]]; then ((clean+=1)); else ((changed+=1)); fi
@@ -125,6 +128,7 @@ status_main() {
             done
         fi
     done
+    dots::progress_sequence_end
     if ((JSON)); then printf '],"complete":'; if ((RESULT)); then printf false; else printf true; fi; printf '}\n'
     elif [[ $GIT_VIEW ]]; then
         dots::line "${#STATUS_DIRS[@]} repositories / $changed changed or unavailable / $clean clean" '' 2 "${COLUMNS:-80}"

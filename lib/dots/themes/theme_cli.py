@@ -21,7 +21,7 @@ from events import OperationOutput
 from file_platform import lock, open_nofollow, sync_dir
 from transactions import Store, digest, exists, parents_safe, private_directory
 from interaction import RichSelector, Selector, SelectionEnded
-from progress import Progress, configure, permanent_output
+from progress import Progress, configure, permanent_output, sequence
 from command_names import allocate
 
 
@@ -215,96 +215,105 @@ def commands_refresh(themes, verbose=False, *, announce=True):
 
 
 def publication(themes, identity, dry=False, verbose=False, refresh=False):
-    if os.environ.get('DOTS_THEME_PLUGIN_RUNNING'): raise ValueError('recursive theme publication from a plugin is refused')
-    ui, events = Presentation(), OperationOutput(verbose)
-    validate_pointers(themes)
-    active, token = themes.state / 'current/theme', themes.state / 'themes/current'
-    parents_safe(active); parents_safe(token)
-    for path in (themes.state / 'themes/generations').glob('*/status'):
-        if regular(path).decode().strip() == 'prepared': raise ValueError('legacy interrupted theme publication requires recovery before native publication')
-    links = connectors(themes)
-    # Capture every live input before rendering or any writes to managed state.
-    targets = [active, token, themes.state / 'themes/commands/current', *(p for p, _ in links)]
-    guards = dict(getattr(themes, 'connector_guards', {}))
-    for path in targets:
-        parents_safe(path)
-        if path.is_dir() and not path.is_symlink(): raise ValueError('cannot replace a real theme connector directory: ' + str(path))
-        guards[str(path)] = digest(path)
-    bat_inputs = bat_cache.inputs()
-    fingerprint = themes.publication_fingerprint(identity, bat_inputs)
-    if token.is_file() and not token.is_symlink():
-        current = token.read_text().strip()
-        if not re.fullmatch(r'g\.[a-zA-Z0-9]+', current): raise ValueError('invalid theme generation')
-        prior = themes.state / 'themes/generations' / current
-        if (prior / 'fingerprint').is_file() and (prior / 'id').is_file() and regular(prior / 'fingerprint').decode().strip() == fingerprint and regular(prior / 'id').decode().strip() == identity:
-            if generation_complete(themes, prior) and active.is_symlink() and active.resolve() == prior and all(p.is_symlink() and p.resolve() == prior / artifact for p, artifact in links):
-                if not dry: commands_refresh(themes, verbose, announce=False)
-                events('Unchanged', prior, reason='theme and connectors match')
-                ui.emit('  Theme unchanged: ' + identity)
-                if refresh and not dry: reload_apps(themes, events)
-                return current
-    if dry:
-        themes.load(identity)
-        ui.heading('Theme preview')
-        ui.detail('Select', identity)
-        events('Would publish', target=active)
-        for target, artifact in links:
-            ui.resource_detail('Connect', target)
-            events('Would link', active / artifact, target)
-        ui.emit('  Preview only; no changes made')
-        return None
-    name = 'g.' + uuid.uuid4().hex
-    destination = themes.state / 'themes/generations' / name
-    guards[str(destination)] = None
-    with tempfile.TemporaryDirectory(prefix='dots-theme-') as tmp:
-        out = Path(tmp)
-        with Progress('Rendering application themes'):
-            palette = themes.render(identity, out, build_cache=True, bat_inputs=bat_inputs)
-            for shell in ('powershell', 'zsh', 'fish'):
-                (out / ('init.' + ('ps1' if shell == 'powershell' else shell))).write_text(shell_init(palette, shell), encoding='utf-8')
-            generated_commands(themes, out, verbose)
-            (out / 'status').write_text('committed\n')
-            if themes.publication_fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
-        operations = [dict(path=str(destination), source=str(out))]
-        for target, artifact in links:
-            if not (out / artifact).exists(): raise ValueError('missing connector artifact: ' + artifact)
-            if target.is_symlink() and os.readlink(target) == str(active / artifact) and artifact != 'pi.json': continue
-            operations.append(dict(path=str(target), link=str(active / artifact), directory=(out / artifact).is_dir()))
-        operations += [dict(path=str(themes.state / 'themes/commands/current'), link=str(destination / 'commands'), directory=True),
-                       dict(path=str(token), text=name + '\n'), dict(path=str(active), link=str(destination), directory=True)]
-        store = Store(themes.state, events)
-        with Progress('Publishing theme'):
-            result = store.apply('theme-set', operations, guards, retain=True)
-        ui.heading('Theme selected: ' + identity)
-        ui.detail('Transaction', result['id'])
-    reload_apps(themes, events)
-    return name
+    with sequence('Theme publication', 4) as stages:
+        with stages.step('Prepare theme publication'):
+            if os.environ.get('DOTS_THEME_PLUGIN_RUNNING'): raise ValueError('recursive theme publication from a plugin is refused')
+            ui, events = Presentation(), OperationOutput(verbose)
+            validate_pointers(themes)
+            active, token = themes.state / 'current/theme', themes.state / 'themes/current'
+            parents_safe(active); parents_safe(token)
+            for path in (themes.state / 'themes/generations').glob('*/status'):
+                if regular(path).decode().strip() == 'prepared': raise ValueError('legacy interrupted theme publication requires recovery before native publication')
+            links = connectors(themes)
+            # Capture every live input before rendering or any writes to managed state.
+            targets = [active, token, themes.state / 'themes/commands/current', *(p for p, _ in links)]
+            guards = dict(getattr(themes, 'connector_guards', {}))
+            for path in targets:
+                parents_safe(path)
+                if path.is_dir() and not path.is_symlink(): raise ValueError('cannot replace a real theme connector directory: ' + str(path))
+                guards[str(path)] = digest(path)
+            bat_inputs = bat_cache.inputs()
+            fingerprint = themes.publication_fingerprint(identity, bat_inputs)
+            if token.is_file() and not token.is_symlink():
+                current = token.read_text().strip()
+                if not re.fullmatch(r'g\.[a-zA-Z0-9]+', current): raise ValueError('invalid theme generation')
+                prior = themes.state / 'themes/generations' / current
+                if (prior / 'fingerprint').is_file() and (prior / 'id').is_file() and regular(prior / 'fingerprint').decode().strip() == fingerprint and regular(prior / 'id').decode().strip() == identity:
+                    if generation_complete(themes, prior) and active.is_symlink() and active.resolve() == prior and all(p.is_symlink() and p.resolve() == prior / artifact for p, artifact in links):
+                        if not dry: commands_refresh(themes, verbose, announce=False)
+                        events('Unchanged', prior, reason='theme and connectors match')
+                        with permanent_output(): ui.emit('  Theme unchanged: ' + identity)
+                        if refresh and not dry: reload_apps(themes, events)
+                        return current
+            if dry:
+                themes.load(identity)
+                ui.heading('Theme preview')
+                ui.detail('Select', identity)
+                events('Would publish', target=active)
+                for target, artifact in links:
+                    ui.resource_detail('Connect', target)
+                    events('Would link', active / artifact, target)
+                ui.emit('  Preview only; no changes made')
+                return None
+        name = 'g.' + uuid.uuid4().hex
+        destination = themes.state / 'themes/generations' / name
+        guards[str(destination)] = None
+        with tempfile.TemporaryDirectory(prefix='dots-theme-') as tmp:
+            out = Path(tmp)
+            with stages.step('Render application themes'):
+                palette = themes.render(identity, out, build_cache=True, bat_inputs=bat_inputs)
+                for shell in ('powershell', 'zsh', 'fish'):
+                    (out / ('init.' + ('ps1' if shell == 'powershell' else shell))).write_text(shell_init(palette, shell), encoding='utf-8')
+                generated_commands(themes, out, verbose)
+                (out / 'status').write_text('committed\n')
+                if themes.publication_fingerprint(identity) != fingerprint: raise ValueError('theme inputs changed during preparation')
+            operations = [dict(path=str(destination), source=str(out))]
+            for target, artifact in links:
+                if not (out / artifact).exists(): raise ValueError('missing connector artifact: ' + artifact)
+                if target.is_symlink() and os.readlink(target) == str(active / artifact) and artifact != 'pi.json': continue
+                operations.append(dict(path=str(target), link=str(active / artifact), directory=(out / artifact).is_dir()))
+            operations += [dict(path=str(themes.state / 'themes/commands/current'), link=str(destination / 'commands'), directory=True),
+                           dict(path=str(token), text=name + '\n'), dict(path=str(active), link=str(destination), directory=True)]
+            store = Store(themes.state, events)
+            with stages.step('Publish theme'):
+                result = store.apply('theme-set', operations, guards, retain=True)
+            with permanent_output():
+                ui.heading('Theme selected: ' + identity)
+                ui.detail('Transaction', result['id'])
+        with stages.step('Refresh theme consumers'):
+            reload_apps(themes, events)
+        return name
 
 
 def reload_apps(themes, events):
-    active = themes.state / 'current/theme'
-    commands = []
-    if os.name != 'nt':
-        if os.environ.get('TERMUX_VERSION') and (Path(os.environ.get('HOME') or Path.home()) / '.termux').is_dir() and shutil.which('termux-reload-settings'): commands.append(['termux-reload-settings'])
-        if os.environ.get('TMUX') and shutil.which('tmux'): commands.append(['tmux', 'source-file', str(active / 'tmux.conf')])
-        if os.environ.get('KITTY_LISTEN_ON') and shutil.which('kitty'): commands.append(['kitty', '@', '--to', os.environ['KITTY_LISTEN_ON'], 'set-colors', '--all', '--configured', str(active / 'kitty.conf')])
-    if shutil.which('ya'): commands.append(['ya', 'pub-to', '0', 'dots-theme-changed', '--str', str(themes.state)])
-    failed = False
-    for command in commands:
-        try:
-            with Progress('Reloading ' + command[0]): result = subprocess.run(command, capture_output=True, timeout=15)
-            if result.returncode: raise ValueError('reload failed')
-            events('Reloaded', reason=command[0])
-        except (OSError, ValueError, subprocess.TimeoutExpired):
-            if command[0] == 'ya':
-                events('Skipped', reason='Yazi notification unavailable')
-            else:
-                failed = True; events('Failed', reason=command[0] + ' reload; theme remains published')
-    if failed: raise ValueError('application reload failed; theme remains published; retry dots theme refresh')
-    import plugins
-    _, selected = plugins.selection(themes.config.parent)
-    if selected['enabled'] and plugins.main(['run'], reason='set'):
-        raise ValueError('theme plugin failed; theme remains published; retry dots theme plugins run')
+    with sequence('Refresh theme consumers', 2) as stages:
+        active = themes.state / 'current/theme'
+        commands = []
+        if os.name != 'nt':
+            if os.environ.get('TERMUX_VERSION') and (Path(os.environ.get('HOME') or Path.home()) / '.termux').is_dir() and shutil.which('termux-reload-settings'): commands.append(['termux-reload-settings'])
+            if os.environ.get('TMUX') and shutil.which('tmux'): commands.append(['tmux', 'source-file', str(active / 'tmux.conf')])
+            if os.environ.get('KITTY_LISTEN_ON') and shutil.which('kitty'): commands.append(['kitty', '@', '--to', os.environ['KITTY_LISTEN_ON'], 'set-colors', '--all', '--configured', str(active / 'kitty.conf')])
+        if shutil.which('ya'): commands.append(['ya', 'pub-to', '0', 'dots-theme-changed', '--str', str(themes.state)])
+        with stages.step('Reload applications'):
+            failed = False
+            with sequence('Reload applications', len(commands), unit='app') as apps:
+                for command in commands:
+                    with apps.step(command[0]):
+                        try:
+                            with Progress('Reloading ' + command[0]): result = subprocess.run(command, capture_output=True, timeout=15)
+                            if result.returncode: raise ValueError('reload failed')
+                            events('Reloaded', reason=command[0])
+                        except (OSError, ValueError, subprocess.TimeoutExpired):
+                            if command[0] == 'ya':
+                                events('Skipped', reason='Yazi notification unavailable')
+                            else:
+                                failed = True; events('Failed', reason=command[0] + ' reload; theme remains published')
+        if failed: raise ValueError('application reload failed; theme remains published; retry dots theme refresh')
+        with stages.step('Run selected theme plugins'):
+            import plugins
+            _, selected = plugins.selection(themes.config.parent)
+            if selected['enabled'] and plugins.main(['run'], reason='set'):
+                raise ValueError('theme plugin failed; theme remains published; retry dots theme plugins run')
 
 
 def backgrounds(themes, action, args, preflight=False, identity=None):
@@ -344,22 +353,25 @@ def backgrounds(themes, action, args, preflight=False, identity=None):
     else: raise ValueError('no supported wallpaper session')
     if not shutil.which(command[0]): raise ValueError('wallpaper adapter unavailable')
     if preflight: return str(path)
-    parents_safe(record)
-    private_directory(record.parent)
-    with os.fdopen(open_nofollow(record.parent / 'lock', os.O_RDWR | os.O_CREAT), 'a') as handle:
-        lock(handle)
-        guards = {str(p): digest(p) for p in (record, current)}
-        journal = record.parent / ('action.' + uuid.uuid4().hex + '.json')
-        doc = dict(schema=1, status='prepared', path=str(path), lock_screen=locked)
-        atomic_json(journal, doc)
-        try:
-            with Progress('Applying wallpaper'): result = subprocess.run(command, capture_output=True, timeout=15)
-            if result.returncode: raise ValueError('wallpaper failed; app theme remains published')
-            if not locked:
-                Store(themes.state).apply('theme-background', [dict(path=str(p), text=str(path) + '\n') for p in (record,current)], guards, retain=True)
-            doc['status'] = 'committed'; atomic_json(journal, doc)
-        except BaseException:
-            doc['status'] = 'failed'; atomic_json(journal, doc); raise
+    with sequence('Apply wallpaper', 3) as phases:
+        parents_safe(record)
+        private_directory(record.parent)
+        with os.fdopen(open_nofollow(record.parent / 'lock', os.O_RDWR | os.O_CREAT), 'a') as handle:
+            lock(handle)
+            with phases.step('Prepare wallpaper journal'):
+                guards = {str(p): digest(p) for p in (record, current)}
+                journal = record.parent / ('action.' + uuid.uuid4().hex + '.json')
+                doc = dict(schema=1, status='prepared', path=str(path), lock_screen=locked)
+                atomic_json(journal, doc)
+            try:
+                with phases.step('Apply wallpaper'): result = subprocess.run(command, capture_output=True, timeout=15)
+                if result.returncode: raise ValueError('wallpaper failed; app theme remains published')
+                with phases.step('Record wallpaper result'):
+                    if not locked:
+                        Store(themes.state).apply('theme-background', [dict(path=str(p), text=str(path) + '\n') for p in (record,current)], guards, retain=True)
+                    doc['status'] = 'committed'; atomic_json(journal, doc)
+            except BaseException:
+                doc['status'] = 'failed'; atomic_json(journal, doc); raise
     Presentation().resource_detail('Background applied', path)
 
 

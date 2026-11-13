@@ -2,7 +2,7 @@
 
 ## Human Git and progress preferences
 
-Typed `apps.git.view` (`default|short|verbose`, default `default`) and `apps.cli.progress` (`none|spinner|bar|both`, default `both`) live in the existing Config store and inherit the immediate profile/parent/shared-default chain. Null/unset removes a profile override. They are next-invocation preferences, separate from Git operation events and theme publication. Compiled shell settings carry validated literal projections and invalidate when their source preferences or reader change. No new Git JSON schema, event suppression, persistent progress state or separate preference store is introduced. [Git output selection](git.md#output-views) defines terminal/redirected behavior.
+Typed `apps.git.view` (`default|short|verbose`, default `default`) and `apps.cli.progress` (`none|spinner|bar|both`, default `both`) live in the existing Config store and inherit the immediate profile/parent/shared-default chain. Null/unset removes a profile override. They are next-invocation preferences, separate from Git operation events and theme publication. Compiled shell settings carry validated literal projections and invalidate when their source preferences or reader change. No new Git JSON schema, event suppression, persistent progress state or separate preference store is introduced. Two-row progress hierarchy, reserved work shares and current-step measurements are transient presentation state governed by the [progress contract](presentation.md#operation-progress). [Git output selection](git.md#output-views) defines terminal/redirected behavior.
 
 
 ## Cleanup receipts

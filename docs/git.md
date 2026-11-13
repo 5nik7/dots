@@ -39,7 +39,7 @@ dots config set apps.git.view short
 dots config set apps.cli.progress both
 ```
 
-Shared [progress preferences](presentation.md#operation-progress) control transient activity independently of these views. Counts describe repository/phase work; they are not network transfer percentages. Verbose phase evidence remains available when transient progress is disabled. Preferences apply on the next invocation or popup without theme publication or application reload.
+Shared [progress preferences](presentation.md#operation-progress) control transient activity independently of these views. An overall row tracks equal repository shares and their reserved phases; a second row shows the current step. Unknown work holds its overall position, and network transfer percentages are not inferred. Verbose phase evidence remains available when transient progress is disabled. Preferences apply on the next invocation or popup without theme publication or application reload.
 
 `dots menu` includes a Git family with report and submodule/wiki inspection choices, plus publish and sync. The Git and Git → Wiki publish choices pass `--all` to their respective commands and retain the existing terminal review and confirmation. Direct CLI publication remains staged-only by default. Menu sync first shows the local `--dry-run` report; a successful, normally dismissed preview opens a Cancel/Sync confirmation with Cancel selected. Only explicit Sync runs the existing command. Menu sync adds no flags or repository scope and does not change direct CLI sync behavior. See the [launcher mapping](commands.md#dots-workflow-menu).
 

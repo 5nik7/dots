@@ -56,7 +56,7 @@ Wiki-specific color/icon changes also apply on the next invocation or popup with
 
 Reuse `formatting.apps.cli` for indentation, tab stops, label width/gap and alignment, and `formatting.apps.menu` for selector rows. FZF and the numbered fallback use shared `colors.apps.menu.*` field styles; Gum retains its native widget colors and plain selection values. Stable per-entry overrides use keys such as `colors.apps.menu.entries["wiki:pages:Core"].label.fg` and `colors.apps.menu.entries["wiki:sections:Core:whole"].label.fg`. Shared `formatting.apps.menu.popup` and `colors.apps.menu.popup` own popup placement, sizing, frame and colors; no live tmux reload is needed. External editor/browser output and Git/Wiki reports retain their own owners.
 
-Build and clone progress uses the shared delayed progress policy after approval. JSON, dry runs and redirected execution do not animate; failure diagnostics remain on stderr and retained transaction/journal paths stay available.
+Build preparation and approved build/clone work use the shared delayed two-row progress policy. Builds reserve rendering, application and finalization shares; clone remains an opaque step. JSON, dry runs and redirected execution do not animate; failure diagnostics remain on stderr and retained transaction/journal paths stay available.
 
 ## Updating the wiki
 
