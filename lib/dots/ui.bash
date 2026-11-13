@@ -88,6 +88,7 @@ dots::row() {
 # Shared human column preferences. Values come from the validated literal reader.
 dots::aligned_row() {
   local label=$1 text=$2 label_color=$3 value_color=$4 columns=${COLUMNS:-80}
+  shift 4
   local indent=${_DOTS_FORMATTING[indent]:-4} gap=${_DOTS_FORMATTING[label_gap]:-1}
   local width=${_DOTS_FORMATTING[label_width]:-10} align=${_DOTS_FORMATTING[alignment]:-left}
   local char i label_cells=0 number padding left=0 prefix prefix_width
@@ -113,12 +114,49 @@ dots::aligned_row() {
   prefix_width=$((indent+label_cells+padding+gap))
   if (( width && label_cells>width || prefix_width>columns-8 )); then
     dots::line "$label" "$label_color" "$indent" "$columns"
-    dots::line "$text" "$value_color" "$((indent+width+gap))" "$columns"
+    if (($#)); then dots::spans_line "$((indent+width+gap))" "$columns" '' "$@"
+    else dots::line "$text" "$value_color" "$((indent+width+gap))" "$columns"; fi
   else
     printf -v prefix '%*s' "$((indent+left))" ''
     printf '%s%s%s%*s%s' "$label_color" "$prefix" "$label" "$((padding-left+gap))" '' "$DOTS_UI_RESET"
-    dots::line "$text" "$value_color" "$prefix_width" "$columns" first
+    if (($#)); then dots::spans_line "$prefix_width" "$columns" first "$@"
+    else dots::line "$text" "$value_color" "$prefix_width" "$columns" first; fi
   fi
+}
+# Wrap inert spans before applying their styles, preserving all path bytes.
+dots::spans_line() {
+  local indent=$1 columns=$2 first=$3; shift 3
+  local -a texts=() colors=() lines=()
+  local text='' part='' char size used=0 i room index=0 offset=0 count remaining
+  while (($#)); do
+    dots::text "$1"; shift
+    [[ ! $REPLY ]] || { texts+=("$REPLY"); colors+=("$1"); text+=$REPLY; }
+    shift
+  done
+  room=$((columns-indent)); ((room >= 8)) || room=8
+  if (( ${#text} <= room )) && [[ $text != *[!\ -~]* ]]; then lines=("$text")
+  else
+    for ((i=0;i<${#text};i++)); do
+      char=${text:i:1}; size=1; [[ $char == [\ -~] ]] || size=2
+      if ((used+size > room && used)); then
+        dots::breakline "$part" "$room"; lines+=("$REPLY")
+        part=$DOTS_LINE_TAIL used=$DOTS_LINE_CELLS
+      fi
+      part+=$char; ((used+=size))
+    done
+    lines+=("$part")
+  fi
+  for part in "${lines[@]}"; do
+    [[ $first ]] || printf '%*s' "$indent" ''
+    first='' remaining=${#part}
+    while ((remaining)); do
+      count=$((${#texts[index]}-offset)); ((count <= remaining)) || count=$remaining
+      printf '%s%s%s' "${colors[index]}" "${texts[index]:offset:count}" "$DOTS_UI_RESET"
+      ((remaining-=count,offset+=count))
+      if ((offset == ${#texts[index]})); then ((index+=1)); offset=0; fi
+    done
+    printf '\n'
+  done
 }
 # Inert text and conservative terminal widths, using only shell builtins.
 dots::text() {

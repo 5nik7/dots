@@ -18,6 +18,7 @@ from fonts import operations as ops
 from fonts.config import TARGETS, configure, destination
 from interaction import SelectionEnded, terminal, gum_confirm
 from resources import clean
+from progress import tracked, report
 
 
 def render(data, stream=None, *, human=None, width=None, action=None, wrap=True):
@@ -137,6 +138,7 @@ def downloaded(plan, identity, version, temporary, *, keep_archive=False):
     return version
 
 
+@tracked('Preparing font changes')
 def plan_action(library, args, temporary):
     action = args.action
     if action=='set' or action=='use' and args.target:
@@ -193,7 +195,8 @@ def plan_action(library, args, temporary):
     elif action == 'upgrade':
         active={ref['id']:ref for ref in library.document['targets'].values()}
         identities = [identity] if identity else [key for key,row in library.families.items() if row.get('installed') or key in active]
-        for key in identities:
+        for index, key in enumerate(identities):
+            report('Preparing font upgrade · '+key+' · families', index, len(identities))
             row = plan.document['families'][key]
             if not row.get('installed') and key not in active: raise ValueError('upgrade requires an installed or active family')
             if row.get('pin'):
@@ -212,6 +215,7 @@ def plan_action(library, args, temporary):
             version = downloaded(plan,key,catalog['latest'],temporary)
             if row.get('installed'):ops.install(plan,key,version)
             else:ops.replace_active(plan,key,version)
+        report('Prepared font upgrades', len(identities), len(identities))
     elif action == 'undo':
         from transactions import Store
         store=Store(library.state); record=store.load(args.operand)

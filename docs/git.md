@@ -22,6 +22,13 @@ Terminal reports use `apps.git.view`, initially `default`. Select a view for one
 
 Info and submodule trees keep their inspection structure. Publish reviews selected paths once, then reports phases and outcomes; prospective child-pointer staging stays explicit. Sync lists paths changed between the actual before/after commits after an update. Its dry-run does not invent an incoming file list before fetching. Every view retains blockers and recovery instructions.
 
+File rows color directory components using the configured directory file style
+(`type.dir`), while the basename and icon retain their file style. For example,
+`bin/` in `bin/dots-git-info` uses the directory color. Rename rows style the
+directories and basenames on both sides independently; deleted paths and full
+paths follow the same rule. Plain output retains complete path text, and JSON
+keeps its original path values. See [file colors](file-colors.md).
+
 Saved views apply in terminals and existing menu report captures. Ordinary redirected text keeps the legacy layout unless a view is explicitly requested. `--json` retains its existing records and events regardless of the human view. This includes selected/package events that human output groups together.
 
 ```sh

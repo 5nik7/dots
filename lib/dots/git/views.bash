@@ -40,7 +40,7 @@ view_file_label() {
     [[ $GIT_VIEW != verbose ]] || REPLY="$xy $REPLY"
 }
 view_file() {
-    local dir=$1 xy=$2 path=$3 old=${4:-} label display actual=$1/$3 code
+    local dir=$1 xy=$2 path=$3 old=${4:-} label display actual=$1/$3 code old_actual=''
     local changed=${5:-0}
     view_file_label "$xy"; label=$REPLY
     if [[ $changed == 1 && $GIT_VIEW != short ]]; then
@@ -48,8 +48,8 @@ view_file() {
     fi
     display=$path; (( ! FULL_PATHS )) || display=$actual
     if [[ $old ]]; then
+        old_actual=$dir/$old
         (( ! FULL_PATHS )) || old=$dir/$old
-        display="$old → $display"
     fi
     file_status_style "$xy"; code=$REPLY
     if [[ $changed == 1 && ( ${xy:0:1} == M || ${xy:0:1} == T ) ]]; then dots::git_style modified; code=$REPLY; fi
@@ -57,10 +57,10 @@ view_file() {
         dots::settings
         local old_width=${_DOTS_FORMATTING[label_width]-} old_gap=${_DOTS_FORMATTING[label_gap]-}
         _DOTS_FORMATTING[label_width]=2; _DOTS_FORMATTING[label_gap]=2
-        dots::resource_row "$label" "$actual" "$display" '' '' "$code"
+        dots::resource_row "$label" "$actual" "$display" '' '' "$code" paths "$old_actual" "$old"
         if [[ $old_width ]]; then _DOTS_FORMATTING[label_width]=$old_width; else unset '_DOTS_FORMATTING[label_width]'; fi
         if [[ $old_gap ]]; then _DOTS_FORMATTING[label_gap]=$old_gap; else unset '_DOTS_FORMATTING[label_gap]'; fi
-    else dots::resource_row "$label" "$actual" "$display" '' '' "$code"; fi
+    else dots::resource_row "$label" "$actual" "$display" '' '' "$code" paths "$old_actual" "$old"; fi
 }
 # Small repository headers retain semantic colors across wrapped spans. File rows
 # continue to use the shared resource renderer; no formatting subprocess per row.

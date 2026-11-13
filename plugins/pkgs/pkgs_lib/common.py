@@ -90,9 +90,9 @@ def phase(label):
     from .workflows import progress
     diagnostic('start ' + label)
     try:
-        with progress(label, {'_quiet_progress': _quiet.get()}):
+        with progress(label, {'_quiet_progress': _quiet.get()}) as meter:
             remaining()
-            yield
+            yield meter
     finally:
         diagnostic(f'{label}: {time.monotonic() - start:.3f}s')
 

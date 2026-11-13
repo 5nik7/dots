@@ -80,11 +80,12 @@ class GitView:
         xy = row.get('xy', '')
         label = xy if self.mode == 'short' else file_label(xy, self.mode == 'verbose')
         display = str(Path(repo) / path) if self.full_paths else path
-        if old: display = (str(Path(repo) / old) if self.full_paths else old) + ' → ' + display
+        previous = (Path(repo) / old, str(Path(repo) / old) if self.full_paths else old) if old else None
         if row.get('changed') and self.mode != 'short': label = STATES.get(xy.strip(), xy.strip())
         role = 'modified' if row.get('changed') and xy[:1] in ('M','T') else file_role(xy)
         (ui or self.ui).resource_detail(label, Path(repo) / path, display=display,
-                                       label_code=self.role(role), label_width=2 if self.mode == 'short' else None)
+                                       label_code=self.role(role), label_width=2 if self.mode == 'short' else None,
+                                       path_components=True, previous=previous)
 
     def metadata(self, row):
         ui = self.ui

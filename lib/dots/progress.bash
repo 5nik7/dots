@@ -66,6 +66,9 @@ dots::progress_worker() (
     if ((total > 0)); then suffix=" $completed/$total"; fi
     if [[ $DOTS_PROGRESS_MODE == bar || $DOTS_PROGRESS_MODE == both && $total -gt 0 ]]; then
       size=$((width / 5)); ((size <= 16)) || size=16; ((size >= 3)) || size=3
+      # Reserve activity text alongside the bar/count in narrow terminals.
+      local available=$((width-${#suffix}-30)); ((available >= 3)) || available=3
+      ((size <= available)) || size=$available
       if ((total)); then
         filled=$((size * completed / total))
         printf -v marker '%*s' "$filled" ''; marker=${marker// /$bar}

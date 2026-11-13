@@ -142,6 +142,8 @@ class Progress(ContextDecorator):
                 marker = spinner
                 if self.mode == 'bar' or self.mode == 'both' and total:
                     size = min(16, max(3, width // 5))
+                    # Leave useful activity text beside counted bars on phones.
+                    size = min(size, max(3, width - len(suffix) - 30))
                     glyph = '━' if icons else '#'
                     if total:
                         filled = size * completed // total

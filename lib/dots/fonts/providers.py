@@ -13,7 +13,7 @@ from urllib.error import URLError
 import zipfile
 
 from fonts.model import metadata, relative, license_file
-from progress import tracked
+from progress import tracked, report
 
 HOSTS = {'api.github.com', 'github.com', 'raw.githubusercontent.com', 'objects.githubusercontent.com',
          'release-assets.githubusercontent.com'}
@@ -39,6 +39,10 @@ def fetch(address, *, output=None, limit=32 * 1024 * 1024):
     try:
         with build_opener(Redirect()).open(request, timeout=30) as response:
             url(response.url)
+            length = response.headers.get('Content-Length', '')
+            total = int(length) if re.fullmatch(r'[0-9]{1,12}', length) else 0
+            if total > limit: total = 0
+            report('Reading upstream font data · bytes', 0, total)
             chunks, size = [], 0
             stream = Path(output).open('xb') if output else None
             try:
@@ -49,6 +53,8 @@ def fetch(address, *, output=None, limit=32 * 1024 * 1024):
                     if size > limit or time.monotonic() - started > 180: raise ValueError('font download exceeds its size or time limit')
                     if stream: stream.write(block)
                     else: chunks.append(block)
+                    if size > total: total = 0
+                    report('Reading upstream font data · bytes', size, total)
             finally:
                 if stream: stream.close()
         return Path(output) if output else b''.join(chunks)

@@ -1,7 +1,7 @@
 """Shared package plans and sequential execution, separate from file rollback."""
 from .common import human_message
 from dataclasses import dataclass, field
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 import os
 import shlex
 import sys
@@ -32,7 +32,7 @@ class Plan:
                     packages=self.names, commands=self.commands, skipped=self.skipped, error=self.error)
 
 
-def progress(label, cfg):
+def _progress(label, cfg):
     if cfg.get('_quiet_progress') or cfg.get('output') == 'raw': return nullcontext()
     try:
         from . import reports  # establishes the shared renderer import path
@@ -42,6 +42,15 @@ def progress(label, cfg):
         colors=styles()
         return Progress(label,marker_style=colors['spinner'],label_style=colors['progress'])
     except (ImportError, OSError): return nullcontext()
+
+
+@contextmanager
+def progress(label, cfg):
+    with _progress(label, cfg) as meter:
+        if meter is not None:
+            completed, total = cfg.get('_progress_batch', (0, 0))
+            meter.update(label + (' · managers' if total else ''), completed, total)
+        yield meter
 
 
 def plan(backend, action, names, cfg, *, yes=False, override=False, bulk=False):
@@ -140,12 +149,15 @@ def confirm(yes=False):
 def apply(plan, cfg, *, data=False):
     if plan.error: return 1
     if not plan.commands: return 0
+    output = cfg.get('_upgrade_output')
+    if output: output.commands_progress(0, len(plan.commands))
     try:
         if plan.steps: return apply_steps(plan, cfg, data=data)
-        for command in plan.commands:
+        for index, command in enumerate(plan.commands, 1):
             if hasattr(plan.backend,'revalidate'): plan.backend.revalidate()
             rc = streams.run(command, dict(cfg, _manager=plan.backend.name), unattended=plan.action in UNATTENDED_ACTIONS,
                              env=getattr(plan.backend, 'operation_env', None), data=data)
+            if output: output.commands_progress(index, len(plan.commands))
             if rc: return rc if rc > 0 else 128-rc
         return 0
     finally:
@@ -160,6 +172,7 @@ def apply_steps(plan, cfg, *, data=False):
     failed = 0
     plan.failed.clear(); plan.completed.clear()
     output = cfg.get('_upgrade_output')
+    processed = 0
     for names, commands in plan.steps:
         if not names and failed: break  # Manager after-hooks require full success.
         rc = 0
@@ -177,6 +190,8 @@ def apply_steps(plan, cfg, *, data=False):
                 else: print('pkgs: '+names[0]+': '+str(error), file=sys.stderr)
             rc = rc if rc >= 0 else 128-rc
             if output: output.end_command(rc)
+            processed += 1
+            if output: output.commands_progress(processed, len(plan.commands))
             if rc in (130, 143): raise KeyboardInterrupt
             if rc: break
         if rc:
@@ -283,19 +298,20 @@ def apply_compact(item, cfg):
 
 
 def upgrade(args, cfg):
-    cfg = dict(cfg, _quiet_progress=args.dry_run)
+    cfg = dict(cfg, _quiet_progress=args.dry_run or getattr(args, 'json', False))
     from . import upgrade_output
     compact = upgrade_output.enabled(args, cfg)
     if compact: upgrade_output.heading(cfg)
     entries, failed = [], False
-    with budget(45): selection = scopes.bulk(cfg)
-    for manager, scope in selection:
+    with budget(45), progress('Finding upgrade managers', cfg): selection = scopes.bulk(cfg)
+    for index, (manager, scope) in enumerate(selection):
+        manager_cfg = dict(cfg, _progress_batch=(index, len(selection)))
         try:
             if not available(manager): raise Error('configured manager is unavailable')
             with budget(45):
                 backend = scopes.make(manager, scope)
-                item = plan(backend, 'upgrade', [], cfg, override=args.ignore_skip, bulk=True)
-            if compact: rc = apply_compact(item, cfg)
+                item = plan(backend, 'upgrade', [], manager_cfg, override=args.ignore_skip, bulk=True)
+            if compact: rc = apply_compact(item, manager_cfg)
             else:
                 display(item, cfg)
                 rc = 0 if args.dry_run else apply(item, cfg)

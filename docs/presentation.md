@@ -186,12 +186,16 @@ Slow human views use a shared transient display on stderr. Animation starts afte
 
 Counts describe processed items, not elapsed time or successful publication. Existing semantic heading/label styles mark activity and phase; callers with explicit progress styles retain them. Permanent results remain authoritative for success, unchanged work, failure and recovery. No success is inferred from a full preparation bar, and Git does not parse transfer percentages.
 
+Bars shorten in narrow terminals to leave room for activity text alongside counts.
+
 | Family | Progress coverage |
 | --- | --- |
 | Git | Repository discovery, status inspection, publication input collection and local sync/publish phases; status/publication use known repository counts. |
 | Themes | Preparation, rendering, bat cache generation, publication, quiet application reloads and installed-theme validation; `update --all` uses the selected checkout count. |
 | Files | Discovery, catalog/browser loading, planning and integrity checks; transaction preparation, replacement and reverse recovery use operation counts. |
-| Packages | Existing shared operation and export phases; package styles and quiet/raw suppression remain authoritative. |
+| Packages | Compact install/remove/upgrade counts returned commands or processed managers; native pip transfers and pacman-family transactions supply byte/package counts. Export counts inspected managers. Package styles and quiet/raw suppression remain authoritative. |
+| Fonts | Batch preparation counts families/files; provider requests count bytes when the response supplies a usable size. File transactions retain their own operation counts. |
+| Wiki and weather | Existing page-build/clone and forecast-fetch phases use shared progress; unknown work remains indeterminate. |
 | Cleanup | Existing shared scan/run phases; receipt totals remain authoritative. |
 | Anodize | Theme loading/import, image/seed generation, rendering, preparation, save and application through both entry points; saves share file transaction progress. |
 

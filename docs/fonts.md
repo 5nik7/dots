@@ -34,6 +34,14 @@ styles. All Fonts selectors use shared menu field/icon styles and layout. Catalo
 previews wrap at the actual preview-pane width. JSON, exact `path`, single-glyph
 formats and ordinary redirected output retain their data/undecorated formats.
 
+Slow font operations follow `apps.cli.progress`, whose default `both` shows a
+spinner beside a bar when a total is known. Install/copy/migrate preparation
+counts selected families or installed files; upgrade preparation counts eligible
+families. Provider requests count received bytes when the response supplies a
+usable total, otherwise they remain indeterminate. These phase counts do not
+claim installation or activation has completed. Existing transaction results
+remain authoritative, and JSON, path, dry-run and redirected output do not animate.
+
 ### Output preferences
 
 ```sh

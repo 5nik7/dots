@@ -110,10 +110,10 @@ status_main() {
                 ((FULL_PATHS)) && path=$dir/$path
                 if dots::human; then
                     file_status_style "$xy"
-                    dots::resource_row "$pair" "$dir/${paths[index]}" "$path" '' '' "$REPLY"
+                    dots::resource_row "$pair" "$dir/${paths[index]}" "$path" '' '' "$REPLY" paths
                     if [[ -n ${oldpaths[index]} ]]; then
                         old=${oldpaths[index]}; ((FULL_PATHS)) && old=$dir/$old
-                        dots::resource_row 'From' "$dir/${oldpaths[index]}" "$old"
+                        dots::resource_row 'From' "$dir/${oldpaths[index]}" "$old" '' '' "$DOTS_UI_BLUE" paths
                     fi
                     continue
                 fi

@@ -12,7 +12,7 @@ Manage dotfiles, shells, themes and your development environment through one com
 
 Tmux clock, battery and Git widgets retain recent valid readings through temporary refresh failures. The Termux clock supports quiet six-hour location updates and seven-day sun-time retention; battery/Git show `~` while using an older reading. See [widget settings and activation](docs/tmux.md#retained-widget-readings).
 
-Git reports offer a clean default file list, `dots git status --short` for XY rows, and `--verbose` for metadata and phases. Save your preferred view with `dots config set apps.git.view short`. Shared progress defaults to a spinner plus a bar when counts are known; `dots config set apps.cli.progress bar` selects a bar. Available modes are `none`, `spinner`, `bar` and `both`. See [Git views](docs/git.md#output-views) and [progress settings](docs/presentation.md#operation-progress).
+Git reports offer a clean default file list, `dots git status --short` for XY rows, and `--verbose` for metadata and phases. File rows use the configured directory color for prefixes such as `bin/`, with file colors on basenames. Save your preferred view with `dots config set apps.git.view short`. Shared progress defaults to a spinner plus a bar when counts are known; `dots config set apps.cli.progress bar` selects a bar. Available modes are `none`, `spinner`, `bar` and `both`. See [Git views](docs/git.md#output-views) and [progress settings](docs/presentation.md#operation-progress).
 
 ## Platforms
 
@@ -78,6 +78,8 @@ size. Old Pi/Ayu checkpoints require explicit selection and approval. See
 `bak PATH` moves files to `~/.bakstore` by default (`--copy` retains originals). `dots link SOURCE TARGET` safely replaces destinations with recoverable links. Blastoff uses the same backup store; deleting backups also removes their empty owned containers. See [backups and safe links](docs/backups.md).
 
 Package installs, removals and upgrades show compact progress and one result per manager.
+`pkgs up` / `dots pkgs up` show bars for known manager, command or native transfer
+counts; font batches and downloads also use the shared progress preference.
 Successful installs/removals also list the requested package names in a short summary.
 Upgrades list packages whose installed versions changed; compact npm output hides
 deprecation and the routine force/allow-scripts notices. Package names use the theme

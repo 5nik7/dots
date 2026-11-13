@@ -2,8 +2,10 @@
 from fonts import operations as ops
 from fonts.payloads import retain
 from fonts.workspace import Workspace
+from progress import tracked, report
 
 
+@tracked('Preparing font transfers')
 def transfer(library,args,temporary):
     workspace=Workspace(library,temporary)
     target=workspace.store(str(library.directory)) if library.directory else workspace.user
@@ -12,7 +14,9 @@ def transfer(library,args,temporary):
         if not library.directory:raise ValueError('copy/migrate requires a destination --directory')
         from fonts.inventory import snapshot,select,import_row,migrate
         rows,_=snapshot(workspace.user.library)
-        for row in select(rows,queries):
+        selected = select(rows,queries)
+        for index, row in enumerate(selected):
+            report('Preparing font '+args.action+' · files', index, len(selected))
             identity,version,face=import_row(workspace,row,rows)
             retain(workspace.user,target,identity,version,temporary,faces=[face])
             if args.action=='migrate':
@@ -25,7 +29,9 @@ def transfer(library,args,temporary):
     else:
         if library.directory and args.variant:raise ValueError('directory storage retains every available variant; choose --variant when using it')
         if args.version and len(queries)!=1:raise ValueError('--version requires one family; batch installation uses each preferred version')
-        for query in dict.fromkeys(queries):
+        selected = list(dict.fromkeys(queries))
+        for index, query in enumerate(selected):
+            report('Preparing font install · '+query+' · families', index, len(selected))
             identity=workspace.resolve(query,args.from_,catalog=True)
             source,version=workspace.obtain(identity,args.version,args.from_,dry_run=args.dry_run,download_target=target)
             if source is None:continue
@@ -41,6 +47,7 @@ def transfer(library,args,temporary):
                 ops.install(target,identity,version,args.variant)
                 if source.library.directory:target.document['families'][identity]['installed']['directory']=source.library.directory_key
             if len(workspace.user.operations)==before:workspace.user.items.append(dict(id=identity,version=version,action='already present'))
+    report('Prepared font '+args.action, len(selected), len(selected))
     from fonts.defaults import synchronize
     synchronize(workspace)
     return workspace.finish()

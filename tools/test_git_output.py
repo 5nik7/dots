@@ -128,6 +128,63 @@ class Views(unittest.TestCase):
                         self.assertNotIn('\r\r', plain)
                         self.assertTrue(all(len(line) <= width for line in plain.splitlines()), plain)
 
+    def test_directory_color_is_separate_from_basename_for_both_controllers(self):
+        repo = self.repo('paths')
+        (repo/'old dir').mkdir(); (repo/'bin').mkdir()
+        self.git(repo, 'mv', 'file', 'old dir/before.txt')
+        (repo/'old dir/gone.py').write_text('gone\n')
+        self.git(repo, 'add', '.'); self.git(repo, 'commit', '-m', 'nested paths')
+        self.git(repo, 'mv', 'old dir/before.txt', 'bin/after.py')
+        self.git(repo, 'rm', 'old dir/gone.py')
+        (repo/'bin/-literal → name\\part.py').write_text('new\n')
+        (repo/'bin/control\x1b[31m.py').write_text('new\n')
+        theme = Path(self.env['XDG_STATE_HOME'])/'dots/current/theme'; theme.mkdir(parents=True)
+        theme.joinpath('file-styles.tsv').write_text(
+            'dots-file-styles\t1\ntype\tdir\t38;2;11;22;33\t-\n'
+            'suffix\t.txt\t38;2;44;55;66\tfold\nsuffix\t.py\t38;2;77;88;99\tfold\n')
+        directory, before, after = ('\x1b['+code+'m' for code in
+                                   ('38;2;11;22;33','38;2;44;55;66','38;2;77;88;99'))
+        env = dict(self.env, DOTS_COLOR='always', DOTS_ICONS='never', DOTS_PROGRESS='none',
+                   DOTS_MENU_CAPTURE='1', COLUMNS='160', TERM='xterm-256color')
+        for native in (False, True):
+            command = self.command(native, repo, 'status')
+            baseline = self.run_cmd([*command, '--json']).stdout
+            for mode in ('default','short','verbose'):
+                output = self.run_cmd([*command,'--view',mode], env=env).stdout
+                self.assertNotIn('\x1b[31m.py', output)
+                for color, text in ((directory,'old dir/'), (directory,'bin/'),
+                                    (before,'before.txt'), (after,'after.py'), (after,'gone.py'),
+                                    (after,'-literal → name\\part.py')):
+                    self.assertIn(color+text, output, (native, mode, output))
+                self.assertEqual(self.run_cmd([*command,'--view',mode,'--json'], env=env).stdout, baseline)
+                plain = self.run_cmd([*command,'--view',mode], env=dict(env, DOTS_COLOR='never')).stdout
+                self.assertNotIn('\x1b', plain)
+                self.assertIn('old dir/before.txt → bin/after.py', plain)
+            full = self.run_cmd([*command,'--short','--full-paths'],env=dict(env,COLUMNS='1000')).stdout
+            self.assertIn(directory+str(repo)+'/bin/', full)
+
+    def test_directory_spans_preserve_wrapped_paths_and_icon_style(self):
+        repo = self.repo('wrapped')
+        (repo/'bin').mkdir()
+        name = 'long ü ' + 'x'*65 + '.py'
+        (repo/'bin'/name).write_text('new\n')
+        theme = Path(self.env['XDG_STATE_HOME'])/'dots/current/theme'; theme.mkdir(parents=True)
+        theme.joinpath('file-styles.tsv').write_text(
+            'dots-file-styles\t1\ntype\tdir\t38;2;11;22;33\t-\n'
+            'suffix\t.py\t38;2;77;88;99\tfold\n')
+        env = dict(self.env,DOTS_COLOR='always',DOTS_ICONS='always',DOTS_PROGRESS='none',TERM='xterm-256color')
+        ansi = re.compile(rb'\x1b\[[0-?]*[ -/]*[@-~]')
+        for native in (False,True):
+            for width in (40,80,120):
+                code,data = self.terminal(self.command(native,repo,'status','--short'),env,width)
+                self.assertEqual(code,0,data)
+                self.assertIn(b'\x1b[38;2;11;22;33mbin/',data)
+                self.assertIn(b'\x1b[38;2;77;88;99mlong',data)
+                self.assertRegex(data.decode(),r'\x1b\[38;2;77;88;99m[^\x1b]+ \x1b\[0m\x1b\[38;2;11;22;33mbin/')
+                plain=ansi.sub(b'',data).decode()
+                self.assertTrue(all(len(line)<=width for line in plain.splitlines()),plain)
+                self.assertIn('bin/'+name,''.join(line.strip() for line in plain.splitlines()))
+
     def test_view_completion_records_for_all_shells(self):
         repo=self.repo('completion')
         for shell in ('bash','zsh','fish','powershell','nu','xonsh'):

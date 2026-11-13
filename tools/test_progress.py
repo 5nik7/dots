@@ -126,6 +126,16 @@ class ProgressTests(unittest.TestCase):
                     self.assertEqual(b'[' in data,mode=='bar' or mode=='both' and counted,data)
                     self.assertNotIn(b'%',data)
 
+    def test_counted_bars_leave_room_for_activity_on_narrow_terminals(self):
+        label = 'npm - Script postinstall'
+        commands = [self.bash('dots::progress_start '+shlex.quote(label)+' 0 1; sleep .65; dots::progress_stop'),
+                    self.python("with progress.Progress('Working') as work:\n work.update("+repr(label)+",0,1)\n time.sleep(.65)")]
+        for command in commands:
+            code, data = self.terminal(command, dict(self.env, DOTS_PROGRESS='both', DOTS_COLOR='never'), 40)
+            self.assertEqual(code, 0, data)
+            self.assertIn(label.encode(), data)
+            self.assertIn(b'[', data); self.assertIn(b'0/1', data)
+
     def test_disabled_modes_and_redirection(self):
         commands = [self.bash('dots::progress_run Hidden sleep 0.65; echo done'),
                     self.python("with progress.Progress('Hidden'): time.sleep(.65)\nprint('done')")]

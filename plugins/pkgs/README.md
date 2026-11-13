@@ -199,6 +199,15 @@ retains all bytes. Slow exports report their current manager on terminal stderr
 while stdout remains JSON. Python roots are filtered before batched APT
 ownership queries. See [package output and export](../../docs/packages.md#output).
 
+`pkgs up` and `dots pkgs up` use the shared `apps.cli.progress` preference, defaulting
+to `both` (spinner and bar when counts are known). Compact package actions count
+processed managers or returned commands; native pip downloads and pacman-family
+transactions use their reported byte/package counts. Labels identify the unit,
+and final results determine success. Export counts inspected managers. Raw,
+JSON, dry-run and ordinary redirected output remain free of animation.
+Use `dots config set apps.cli.progress bar` or `none` to select bars alone or
+disable progress; `spinner` and `both` are also available.
+
 ## Picker and preview
 
 | Key | Action |

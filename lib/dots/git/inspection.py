@@ -268,10 +268,10 @@ class Inspection:
             path = Path(row['path']) / file['path']
             self.ui.resource_detail(core.Workflow.file_label(file['xy']), path,
                                     display=str(path) if full_paths else file['path'],
-                                    label_code=self.role(core.Workflow.file_role(file['xy'])))
+                                    label_code=self.role(core.Workflow.file_role(file['xy'])), path_components=True)
             if file['old_path']:
                 old = Path(row['path']) / file['old_path']
-                self.ui.resource_detail('From', old, display=str(old) if full_paths else file['old_path'])
+                self.ui.resource_detail('From', old, display=str(old) if full_paths else file['old_path'], path_components=True)
 
 
 class Tree:

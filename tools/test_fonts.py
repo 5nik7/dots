@@ -241,6 +241,22 @@ class Fonts(unittest.TestCase):
             with self.assertRaises(ValueError):providers.url(url)
         self.assertEqual(providers.url('https://github.com/a/b'),'https://github.com/a/b')
 
+    def test_download_progress_uses_response_bytes_and_optional_total(self):
+        from unittest.mock import Mock
+        payload = b'x' * (300 * 1024)
+        for length in (str(len(payload)), '', 'invalid', '0', '9'*50, '12'):
+            with self.subTest(length=length):
+                response = io.BytesIO(payload)
+                response.url = 'https://github.com/fixture/font'
+                response.headers = {'Content-Length': length}
+                opener = Mock(); opener.open.return_value = response
+                with patch.object(providers, 'build_opener', return_value=opener), \
+                     patch.object(providers, 'report') as meter:
+                    self.assertEqual(providers.fetch(response.url), payload)
+                counts = [call.args[1:] for call in meter.call_args_list]
+                self.assertEqual([done for done, _ in counts], [0, 256*1024, len(payload)])
+                self.assertEqual(counts[-1][1], len(payload) if length == str(len(payload)) else 0)
+
     def test_official_catalog_fixtures_and_versioned_glyphs(self):
         responses={
             providers.API+'ryanoasis/nerd-fonts/releases/latest':dict(tag_name='v3.4.0',assets=[dict(name='Fixture.zip',browser_download_url='https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/Fixture.zip')]),

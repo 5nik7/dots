@@ -178,7 +178,7 @@ render_event() {
         local actual=$dir/$file
         ((FULL_PATHS)) && file=$dir/$file
         if dots::human; then
-            printf '\n'; dots::resource_row 'File' "$actual" "$file"
+            printf '\n'; dots::resource_row 'File' "$actual" "$file" '' '' "$DOTS_UI_BLUE" paths
         else display "$file"; printf '  %s\n' "$REPLY"; fi
     elif [[ $state == unchanged ]]; then printf '\n'
     else

@@ -66,6 +66,18 @@ class ResourcesTests(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr)
         return p.stdout.split('\0')
 
+    def test_path_spans_keep_windows_separators_and_posix_backslash_names(self):
+        with patch.dict(os.environ, self.env, clear=True):
+            ui = Presentation(io.StringIO(), terminal=True)
+            directory, _ = ui.resources.match_style('', kind='dir')
+            with patch.object(ui.resources, 'describe', return_value=('file', 'icon', '32')):
+                with patch('catalog.os.name', 'nt'):
+                    spans = ui.path_spans('unused', 'C:\\bin\\tool.py')
+                    self.assertEqual(spans[-2:], [('C:\\bin\\',directory), ('tool.py','32')])
+                with patch('catalog.os.name', 'posix'):
+                    spans = ui.path_spans('unused', 'bin/literal\\name.py')
+                    self.assertEqual(spans[-2:], [('bin/',directory), ('literal\\name.py','32')])
+
     def test_git_identities_cache_and_style_boundaries(self):
         from git_identity import Identities
         repository = self.home / 'repo'

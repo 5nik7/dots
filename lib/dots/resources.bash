@@ -167,15 +167,40 @@ dots::resource() {
   REPLY=$DOTS_RESOURCE_STYLE$DOTS_RESOURCE_TEXT$DOTS_UI_RESET
 }
 
+# Append directory and basename spans without inspecting the directory itself.
+dots::_resource_path_spans() {
+  local shown=$1 style=$2 prefix='' directory_style=''
+  if [[ $shown == */* ]]; then prefix=${shown%/*}/; shown=${shown##*/}; fi
+  [[ ! $DOTS_UI_RESET ]] || printf -v directory_style '\e[%sm' "${_DOTS_RESOURCE_TYPES[dir]:-1;94}"
+  DOTS_RESOURCE_SPANS+=("$prefix" "$directory_style" "$shown" "$style")
+}
+
 # Optional sixth argument styles the label independently from the resource.
+# `paths` in argument seven splits path colors; eight/nine supply a rename source.
 dots::resource_row() {
   local label=$1 actual=$2 shown=${3-} kind=${4:-} mime=${5:-} label_style=${6-${DOTS_UI_BLUE:-}}
+  local -a DOTS_RESOURCE_SPANS=()
   if [[ $# -lt 3 ]]; then dots::path "$actual"; shown=$REPLY; fi
+  if [[ ${7:-} == paths && ${8:-} ]] && ! dots::human; then shown="$9 → $shown"; fi
   dots::resource "$actual" "$shown" "$kind" "$mime"
+  if [[ ${7:-} == paths && ( $shown == */* || ${8:-} ) ]] && dots::human; then
+    local new_style=$DOTS_RESOURCE_STYLE new_text=$DOTS_RESOURCE_TEXT clean_shown icon_prefix
+    dots::text "$shown"; clean_shown=$REPLY
+    icon_prefix=${new_text:0:${#new_text}-${#clean_shown}}
+    DOTS_RESOURCE_SPANS+=("$icon_prefix" "$new_style")
+    if [[ ${8:-} ]]; then
+      dots::resource "$8" ''
+      dots::_resource_path_spans "$9" "$DOTS_RESOURCE_STYLE"
+      DOTS_RESOURCE_SPANS+=(' → ' "$DOTS_UI_DIM")
+      dots::text "$9 → $shown"; new_text=$icon_prefix$REPLY
+    fi
+    dots::_resource_path_spans "$shown" "$new_style"
+    DOTS_RESOURCE_TEXT=$new_text DOTS_RESOURCE_STYLE=$new_style
+  fi
   [[ $# -ge 6 ]] || label_style=$DOTS_UI_BLUE
   [[ $DOTS_UI_RESET ]] || label_style=''
   if dots::human && [[ ${_DOTS_FORMATTING[label_width]+set} ]]; then
-    dots::aligned_row "$label" "$DOTS_RESOURCE_TEXT" "$label_style" "$DOTS_RESOURCE_STYLE"
+    dots::aligned_row "$label" "$DOTS_RESOURCE_TEXT" "$label_style" "$DOTS_RESOURCE_STYLE" "${DOTS_RESOURCE_SPANS[@]}"
     return
   fi
   local text=$DOTS_RESOURCE_TEXT color=$DOTS_RESOURCE_STYLE columns=${COLUMNS:-80} width=26 room part='' char i size used=0 prefix prefix_width
@@ -188,6 +213,11 @@ dots::resource_row() {
   else
     printf -v prefix '  %s%-26s%s ' "$label_style" "$label" "$DOTS_UI_RESET"
     prefix_width=29
+  fi
+  if ((${#DOTS_RESOURCE_SPANS[@]})); then
+    printf '%s' "$prefix"
+    dots::spans_line "$prefix_width" "$columns" first "${DOTS_RESOURCE_SPANS[@]}"
+    return
   fi
   room=$((columns-prefix_width)); (( room >= 8 )) || room=8
   for ((i=0; i<${#text}; i++)); do

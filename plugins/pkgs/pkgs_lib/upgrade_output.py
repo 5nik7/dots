@@ -102,6 +102,15 @@ class Output:
         self.pip_steps = False
         self.command_active = False
         self.success_extra = 0
+        self.commands_done, self.commands_total = 0, 0
+        self.native_done, self.native_total = 0, 0
+
+    def commands_progress(self, completed, total):
+        """Count returned commands, including failures, never inferred updates."""
+        self.commands_done, self.commands_total = completed, total
+        self.native_done, self.native_total = 0, 0
+        self.transferred, self.total = 0, 0
+        self.tick()
 
     def begin_command(self):
         """Collect pip diagnostics until the command's real exit status is known."""
@@ -129,6 +138,7 @@ class Output:
         self.stage, self.package = self.default_stage, self.target
         if self.pending: self.pending.begin(command)
         self.transferred, self.total = 0, 0
+        self.native_done, self.native_total = 0, 0
         self.last_activity = time.monotonic()
         self.partial_seen = ''
         if self.manager == 'go' and command and command[:2] == ['go', 'install']:
@@ -221,7 +231,13 @@ class Output:
             match = re.match(verb+r' ([a-z0-9][a-z0-9+.:~-]*)\s+\(', text)
         elif self.manager in ('pacman', 'paru', 'yay'):
             verb = 'removing' if self.action == 'uninstall' else '(?:installing|upgrading)'
-            match = re.match(r'\(\s*\d+/\d+\) '+verb+r' ([A-Za-z0-9@_+.-]+)(?:\.\.\.|\s|$)', text)
+            counted = re.match(r'\(\s*(\d{1,9})/(\d{1,9})\) '+verb+r' ([A-Za-z0-9@_+.-]+)(?:\.\.\.|\s|$)', text)
+            if counted:
+                index, total = int(counted[1]), int(counted[2])
+                self.native_done, self.native_total = (index - 1, total) if 1 <= index <= total else (0, 0)
+                self.package = counted[3].removesuffix('...')
+                self.stage = 'Removing' if self.action == 'uninstall' else 'Installing'
+                return True
         elif self.manager == 'pip' and self.action == 'uninstall':
             match = re.match(r'Found existing installation: ([A-Za-z0-9_.-]+)\s', text)
         if not match: return False
@@ -244,7 +260,18 @@ class Output:
         else: label += self.stage
         spans = [(label, self.styles['progress'])]
         if self.package: spans += [(' · ', self.styles['progress']), (self.package, self.package_style)]
-        self.progress.update_spans(spans)
+        if self.stage == 'Downloading' and self.total:
+            completed, total, unit = min(self.transferred, self.total), self.total, 'bytes'
+        elif self.native_total:
+            completed, total, unit = self.native_done, self.native_total, 'packages'
+        elif self.commands_total > 1:
+            completed, total, unit = self.commands_done, self.commands_total, 'commands'
+        elif self.cfg.get('_progress_batch'):
+            completed, total = self.cfg['_progress_batch']; unit = 'managers'
+        else:
+            completed, total, unit = self.commands_done, self.commands_total, 'commands'
+        if total: spans.append((' · '+unit, self.styles['progress']))
+        self.progress.update_spans(spans, completed, total)
 
     def prompt(self, text, stream, ending=''):
         # Stop transient progress until the command finishes so it cannot obscure input.

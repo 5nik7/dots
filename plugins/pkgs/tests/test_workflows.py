@@ -315,13 +315,15 @@ else:sys.exit(99)
     def test_export_delayed_stderr_progress_and_timeout_are_bounded(self):
         class Terminal(io.StringIO):
             def isatty(self): return True
-        out,err=io.StringIO(),Terminal()
+        out,err=Terminal(),Terminal()
         def slow_inventory(*args,**kwargs):
             time.sleep(.65)
-            self.assertIn('Exporting npm (1/1)',err.getvalue())
+            self.assertIn('Exporting npm',err.getvalue())
+            self.assertIn('0/1',err.getvalue())
             self.assertEqual(out.getvalue(),'')
             return [(Package('hello','1'),'explicit','')]
-        with contextlib.redirect_stdout(out),contextlib.redirect_stderr(err), \
+        with patch.dict(os.environ, TERM='xterm', DOTS_PROGRESS='both'), \
+             contextlib.redirect_stdout(out),contextlib.redirect_stderr(err), \
              patch.object(scopes,'inventory',side_effect=slow_inventory):
             result=manifests.cli(self.args('export','--manager','npm','--global'),dict(self.cfg,output='auto'))
         self.assertEqual(result,0);self.assertEqual(json.loads(out.getvalue())['groups'][0]['packages'][0]['name'],'hello')

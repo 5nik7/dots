@@ -198,8 +198,27 @@ class Presentation:
                     offset = 0
             self.emit(line)
 
-    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None, *, label_width=None):
+    def path_spans(self, path, display, *, kind=None, mime=None, code=None, icon=True):
+        """Directory prefixes keep the directory style, including missing paths."""
+        _, glyph, resolved = self.resources.describe(path, kind, mime)
+        text = str(display)
+        boundary = max(text.rfind('/'), text.rfind('\\') if os.name == 'nt' else -1) + 1
+        directory, _ = self.resources.match_style('', kind='dir')
+        spans = [(glyph + ' ', code or resolved)] if icon and self.icons else []
+        return spans + [(text[:boundary], directory), (text[boundary:], code or resolved)]
+
+    def resource_detail(self, label, path, display=None, kind=None, mime=None, code=None, label_code=None, *, label_width=None, path_components=False, previous=None):
         text = self.clean(self.path(path) if display is None else display)
+        if (path_components and path is not None and self.human and (self.color or self.icons) and
+                ('/' in text or os.name == 'nt' and '\\' in text or previous)):
+            spans = self.path_spans(path, text, kind=kind, mime=mime, code=code)
+            if previous:
+                prefix = spans[:1] if self.icons else []
+                spans = (prefix + self.path_spans(*previous, icon=False) + [(' → ', '2')] +
+                         (spans[1:] if self.icons else spans))
+            return self.detail_spans(label, spans, label_width=label_width,
+                                     label_code='94' if label_code is None else label_code)
+        if previous: text = self.clean(previous[1]) + ' → ' + text
         style = code
         if path is not None and self.human and (self.color or self.icons):
             _, icon, resolved = self.resources.describe(path, kind, mime)

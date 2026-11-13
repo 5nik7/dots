@@ -121,7 +121,9 @@ class Workflows(unittest.TestCase):
 
     def test_batch_copy_between_stores_and_idempotence(self):
         first,_=self.family();second,_,_=self.imported('termux')
-        self.action('install',first,second,'--directory','DOTFONTS')
+        with patch('fonts.actions.report') as progress:
+            self.action('install',first,second,first,'--directory','DOTFONTS')
+        self.assertEqual([call.args[1:] for call in progress.call_args_list], [(0,2),(1,2),(2,2)])
         self.action('install',first,second,'--from','DOTFONTS','--directory','PROFILEFONTS')
         self.assertEqual(len(self.library('termux','PROFILEFONTS').families),2)
         self.assertIsNone(self.library('termux').families[first]['installed'])

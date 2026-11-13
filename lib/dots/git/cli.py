@@ -239,7 +239,7 @@ class Workflow:
         if file:
             ui.resource_detail(self.file_label(xy) if xy else 'File', path / file,
                                display=str(path / file) if self.args.full_paths else file,
-                               label_code=self.role(self.file_role(xy)) if xy else None)
+                               label_code=self.role(self.file_role(xy)) if xy else None, path_components=True)
             if not xy: ui.detail('Details', detail)
         elif state == 'planned' and self.args.command == 'publish' and path in self.destinations:
             destination = self.destinations[path]
@@ -333,10 +333,10 @@ class Workflow:
                 for file in row['files']:
                     self.ui.resource_detail(self.file_label(file['xy']), path / file['path'],
                                             display=str(path / file['path']) if self.args.full_paths else file['path'],
-                                            label_code=self.role(self.file_role(file['xy'])))
+                                            label_code=self.role(self.file_role(file['xy'])), path_components=True)
                     if file['old_path']:
                         self.ui.resource_detail('From', path / file['old_path'],
-                                                display=str(path / file['old_path']) if self.args.full_paths else file['old_path'])
+                                                display=str(path / file['old_path']) if self.args.full_paths else file['old_path'], path_components=True)
             changed = sum(r['status'] != 'clean' for r in rows)
             summary = f'{len(rows)} repositories / {changed} changed or unavailable / {len(rows)-changed} clean'
             if self.output:

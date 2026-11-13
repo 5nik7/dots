@@ -157,11 +157,13 @@ def export(args, cfg):
         selection = [(args.manager, getattr(args, 'scope', None) if args.manager == 'winget' else 'global' if args.global_scope else None)] if args.manager not in (None,'auto') else scopes.bulk(dict(cfg, upgrade={'managers':'auto'}))
     for index, (manager, scope) in enumerate(selection, 1):
         try:
-            with budget(45), progress(f'Exporting {manager} ({index}/{len(selection)})'):
+            with budget(45), progress(f'Exporting {manager} · managers') as meter:
+                if meter is not None: meter.update(f'Exporting {manager} · managers', index - 1, len(selection))
                 if not available(manager): raise Error('manager unavailable')
                 backend = scopes.make(manager, scope)
                 rows = scopes.inventory(backend, roots=not args.include_dependencies,
                                         owned=manager == 'pip' and args.manager in (None,'auto'), portable=True)
+                if meter is not None: meter.update(f'Exporting {manager} · managers', index, len(selection))
             packages = []
             grouped = {}
             for row in rows: grouped.setdefault(policies.identity(row[0].name, manager), []).append(row)
