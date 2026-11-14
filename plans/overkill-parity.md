@@ -705,8 +705,8 @@ This test-only follow-up strips SGR solely for the two visible-text assertions.
 It also explicitly requires raw styling and reset sequences; exit status, empty
 stderr, include-contract and cache-sentinel checks remain. Synthetic checks
 against the actual assertion block accept split-token SGR, reject a missing
-payload and reject unstyled output. Actual Bat/Delta acceptance remains pending
-on Termux; these synthetic checks do not replace it. No product renderer, command,
+payload and reject unstyled output. Actual Bat/Delta acceptance was pending
+on Termux at publication; the native follow-up below closes that gate. No product renderer, command,
 configuration/menu/completion interface, shared default or managed resource is
 changed. Rollback is the narrow test/documentation patch; no activation is needed.
 
@@ -718,6 +718,29 @@ handoff, not direct artifact access. Clipboard delivery exited 0 with literal
 stdin and no history/watchers/services. Continue carrying the recorded clipboard
 instruction into the next prompt, with an exact repair revision and only the
 focused fallback case followed by the full two-case GitTheme suite.
+
+### Native GitTheme acceptance — 2026-11-14
+
+The owner's native Termux handoff records **2/2 distinct GitTheme suite cases passed** at `788a7fdfe286a13e6e718fa5b1b850ddfdf3e1a9`, plus a separate successful focused execution of the missing-cache case. These are three successful test executions covering two distinct cases, with zero failures, errors or skips. This closes the assertion gate reported at `d31824db`; no further repair is indicated. The `b6daf0f7`, `24a5977e` and `d31824db` reports remain separate historical records, and their broader batches were not rerun.
+
+The physical checkout `/data/data/com.termux/files/home/dots` remained on `main`. The authorized fast-forward from `d31824db6db3f6fa6a0c9837ad1df6558106280e` to the required revision exited 0 in 2.144410 seconds, preserving origin `git@github.com:5nik7/dots.git` and SSH transport. Preflight found a clean checkout, no divergence from the cached upstream and no active update hooks. Required-commit ancestry checks passed. No submodules were initialized or updated, and no local source edits were made.
+
+| Native Termux command | Tests | Passed | Failed/errors/skipped | Exit | Wall seconds |
+| --- | ---: | ---: | --- | ---: | ---: |
+| `python -B tools/test_git_theme.py GitTheme.test_role_overrides_reset_and_missing_cache` | 1 | 1 | 0 / 0 / 0 | 0 | 19.387 |
+| `python -B tools/test_git_theme.py` | 2 | 2 | 0 / 0 / 0 | 0 | 74.569 |
+
+Commands ran sequentially with fresh fixtures. Native context: Android 15 / API 35, Termux 0.119.0-beta.3, aarch64, kernel `5.4.274-qgki-30957850-abG996USQSJHZB1`, Python 3.14.10, Bash 5.3.20(1)-release, Git 2.56.1, Bat 0.26.1 and Delta 0.20.1. Inspected executables resolved under `/data/data/com.termux/files/usr/bin`; version probes did not load personal startup. Locale was C.UTF-8, preferred encoding UTF-8 and Python UTF-8 mode 0. Durations are whole-process wall times, not performance benchmarks.
+
+The inspected outer harness owned HOME/config/data/state/cache/runtime/temp and both Termux prefix roots, retained required loader variables and exposed an explicit executable allowlist with owned `bin/env` and interpreter links. GitTheme separately enrolled actual Bat/Delta, synthetic Git identity/include/fallback files and disposable repositories with inert hooks. It read only shipped pager/filter values with includes disabled. Personal Git configuration, broad host PATH and live notification/desktop clients were excluded.
+
+Both missing-cache executions accepted exit 0, empty stderr, raw SGR styling/reset, visible `x=1` and `x=2`, include-contract preservation and the ordinary cache sentinel. The full suite also accepted native dark/light pager/filter rendering, generated syntax-cache discovery, role/reset behavior, fallback/include precedence and idempotence. Previously unreached assertions now passed. Both commands' stdout was empty; raw streams were retained and decoded as UTF-8 without errors. Post-command and final scans reported no surviving test-owned processes.
+
+Final branch and HEAD were unchanged; status including untracked files and submodules was clean, and `git diff --check` exited 0. No packages, live configuration/themes, personal shells, services or unrelated files were changed. The authorized fast-forward, owned fixture/evidence writes and clipboard delivery were the only reported mutations.
+
+Evidence is retained at `/data/data/com.termux/files/usr/tmp/dots-termux-git-theme-acceptance-te5fie4b`: `01-git-fallback-focused/` and `02-git-theme-suite/` contain raw streams, result/environment records and process scans. Root artifacts include command/runtime/update/final-Git records, `run_suite.py`, `handoff.md` and clipboard inspection/delivery records. The lead received the inline handoff, not direct artifact access. The inspected `cpy` wrapper received the handoff literally on stdin and exited 0; no clipboard history, watchers, services or configuration changes were enabled. Carry the existing automatic clipboard delivery instruction into every future Termux handoff prompt.
+
+This is automated native Termux Bat/Delta fixture acceptance at the recorded revision. No Windows or WSL tests ran in that session, and visible terminal, desktop and live-application acceptance remain independent gates. This documentation-only record changes no runtime behavior or shared defaults and requires no phone retest or activation. Source documentation checks apply; wiki export synchronization remains pending while its checkout is absent.
 
 ### Native adapter follow-up source stage
 

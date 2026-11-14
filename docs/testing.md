@@ -20,6 +20,8 @@ The next bounded repair is covered by `tools/test_file_colors.py`: fresh standal
 
 GitTheme's missing-cache fallback checks visible diff payload after removing SGR sequences, while independently requiring styling in the raw output. Token-level color boundaries must not be mistaken for missing text. Exit status, empty stderr, include precedence and cache preservation remain separate assertions. Use `python3 -B tools/test_git_theme.py GitTheme.test_role_overrides_reset_and_missing_cache` for the focused case, then the full `tools/test_git_theme.py` suite for native Bat/Delta acceptance.
 
+The [2026-11-14 native GitTheme acceptance record](../plans/overkill-parity.md#native-gittheme-acceptance--2026-11-14) at `788a7fdf` closes that Termux gate: both distinct suite cases passed, with the missing-cache case also passing a separate focused run. There were no failures, errors or skips. Earlier batches retain their own revisions and results; Windows/WSL renderer and visible/live acceptance are separate.
+
 Run `python3 -B tools/test_native_wallpaper.py` for literal lock-screen transport,
 read-only preflight, failed journal/record preservation and the owned WinRT
 asynchronous file projection. Setters are substituted: this never proves visible
