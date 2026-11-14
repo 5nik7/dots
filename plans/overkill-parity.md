@@ -1,6 +1,6 @@
 # Overkill Windows and WSL parity
 
-Status: source implementation and isolated verification; Windows activation packets 1–2 completed and packet 3 skill links restored, remaining activation pending. Six native Termux fixture suites accepted at `b6daf0f7` on 2026-11-14; broader return and live acceptance remain pending. Baseline: clean Windows
+Status: source implementation and isolated verification; Windows activation packets 1–2 completed and packet 3 skill links restored, remaining activation pending. Native Termux records include the six-suite acceptance at `b6daf0f7`, subsequent theme/GitTheme repairs, and the bounded profile/environment/Git gate at `1c215417` on 2026-11-14. Broader return and live acceptance remain pending; the latest handoff's clipboard delivery failed separately from its passing tests. Baseline: clean Windows
 `C:\Users\njen\dots` and Ubuntu `/home/njen/dots`, both at
 `800988ea331c132f29eaf5b645a00b068e38c96a`, audited 2026-11-13 Pacific.
 Windows Terminal Preview is the selected native terminal. Keep its profiles,
@@ -222,8 +222,8 @@ Ubuntu evidence does not replace native Windows/Termux or live visual gates.
   clone or publication.
 - [x] Supply an uncommitted return patch with SHA-256 provenance, shared behavior
   changes and native Termux gates; validate application in an owned baseline tree.
-- [x] Harden and preflight the next profile/preferences/environment and bounded
-  Git return batch; native Termux execution remains pending below.
+- [x] Harden and preflight the profile/preferences/environment and bounded Git return batch.
+- [x] Record native Termux acceptance of that batch at `1c215417`: 49 test-method executions across eight commands, with no failures, errors or method/subtest skips. This closes only the selected gate below.
 - [x] Rehearse packet 3 with all 29 skill links in an owned native Windows
   transaction, including interruption/recovery.
 - [x] Apply the separately approved packet 3 with retained backups; verify all
@@ -296,15 +296,67 @@ startup, packages, themes, services, clipboard or live checkout synchronization
 ran. Source-link/manual/source-only wiki validation applies; export synchronization
 remains pending without a wiki checkout.
 
-The next Termux prompt must name the published repair SHA and authorize only a
+The subsequent Termux prompt named the published repair SHA and authorized only a
 clean fast-forward preserving the existing transport, then these eight bounded
-commands sequentially and independently. Require fixture/helper inspection,
+commands sequentially and independently. It required fixture/helper inspection,
 an owned public source snapshot, native Bash/Zsh and available Fish/Nu, owned
 prefix `bin/env`/interpreters, inspected loader variables, explicit tools including
-`sha256sum`, raw byte logs and before/after Git/process checks. Keep previous
-acceptance records intact and preserve the authorized literal-stdin `cpy`
-handoff delivery. Transactions/Bak, broader packages/cleanup, visible terminals,
+`sha256sum`, raw byte logs and before/after Git/process checks. The result is recorded below, preserving previous acceptance records and the authorized literal-stdin `cpy` delivery instruction. Transactions/Bak, broader packages/cleanup, visible terminals,
 desktop consumers and live application acceptance remain subsequent gates.
+
+### Native Termux profile and Git acceptance — 2026-11-14
+
+Evidence source: the receiving Termux agent's inline handoff, supplied by the user. The Windows/WSL lead did not rerun these commands or access the phone's retained files. The physical checkout `/data/data/com.termux/files/home/dots` on `main` fast-forwarded from `31e07b3a54d5ba00528bf0d0f2aeb2480295c31b` to exactly `1c2154177330fdda270c290a2393080f48cb098b`. The authorized `git -c submodule.recurse=false -c gc.auto=0 -c maintenance.auto=false pull --ff-only --no-recurse-submodules origin main` exited 0 in 2.522 seconds. Origin remained `git@github.com:5nik7/dots.git`; no persistent transport change or submodule initialization/update occurred. Preflight found no active update hooks, filters, fsmonitor or custom merge drivers. Required ancestry passed; final `main`, HEAD and cached `origin/main` matched the required commit.
+
+Native context: Android 15/API 35, Termux 0.119.0-beta.3, aarch64, kernel `5.4.274-qgki-30957850-abG996USQSJHZB1`; Python 3.14.10, Git 2.56.1, Bash 5.3.20(1)-release, Zsh 5.9.2, Fish 4.9.3 and Nu 0.117.0. Locale was `C.UTF-8`, preferred encoding UTF-8, Python UTF-8 mode 0. Before command 1, the corrected outer environment was verified as Dots platform `termux`, runtime `android`.
+
+All eight commands ran sequentially, independently and once each from an owned source snapshot. Every command exited 0 with empty stdout and a complete verbose unittest report ending in `OK` on stderr. **49 test-method executions passed, with zero failures, errors, method skips or subtest skips.** Durations are whole-process wall time, not startup benchmarks.
+
+| # | Command or selected cases | Passed / methods | Wall seconds |
+| --- | --- | ---: | ---: |
+| 1 | `test_git_fixture.py -v` | 4 / 4 | 1.608 |
+| 2 | `test_profile_backend.py -v` | 14 / 14 | 39.761 |
+| 3 | `test_preference_files.py -v` | 8 / 8 | 22.129 |
+| 4 | `test_shell_environment.py -v` | 11 / 11 | 107.521 |
+| 5 | Two `SharedShells` `gup` cases below | 2 / 2 | 4.105 |
+| 6 | Four `GitOperations` cases below, `DOTS_TEST_GIT_FRONTEND=bash` | 4 / 4 | 16.295 |
+| 7 | Same four cases, `DOTS_TEST_GIT_FRONTEND=native` | 4 / 4 | 11.464 |
+| 8 | Selected-submodule publication, Bash and Python controller | 2 / 2 | 27.858 |
+| Total | Eight commands | 49 / 49 | 230.741 |
+
+Exact commands under the inspected owned environment:
+
+```sh
+python -B tools/test_git_fixture.py -v
+python -B tools/test_profile_backend.py -v
+python -B tools/test_preference_files.py -v
+python -B tools/test_shell_environment.py -v
+python -B tools/test_shared_shells.py SharedShells.test_gup_uses_bounded_core_publish_and_preserves_status SharedShells.test_gup_completion_reuses_bounded_publish_options -v
+DOTS_TEST_GIT_FRONTEND=bash python -B tools/test_git_operations.py GitOperations.test_publish_staged_only_and_existing_commits GitOperations.test_publish_all_and_ownership_block GitOperations.test_publish_requires_confirmation_and_no_dry_run_writes GitOperations.test_publish_checks_push_url_and_conflicting_configuration -v
+DOTS_TEST_GIT_FRONTEND=native python -B tools/test_git_operations.py GitOperations.test_publish_staged_only_and_existing_commits GitOperations.test_publish_all_and_ownership_block GitOperations.test_publish_requires_confirmation_and_no_dry_run_writes GitOperations.test_publish_checks_push_url_and_conflicting_configuration -v
+python -B tools/test_git_submodules.py Bash.test_selected_publish_preserves_outer_index_and_remote Native.test_selected_publish_preserves_outer_index_and_remote -v
+```
+
+Here `native` selects the shared Python controller running on Termux; it does not mean Windows execution. `test_native_git.py` was not substituted. Both frontend values were explicitly supplied and retained in their environment records. Bash/Zsh/Fish were exercised by backend map/checkout-switch loops; Bash/Zsh by inactive-profile reload and `gup`; all four enrolled shells, including Fish/Nu palette refresh, by shell-environment loops. Missing-shell omission did not reduce those loops. PowerShell and Xonsh execution were outside this batch; generated PowerShell assertions provide no native Windows evidence.
+
+The accepted coverage includes Git fixture startup/Python/agent/configuration scrubbing and refusal of forbidden transports before fake helpers execute; profile namespaces, alias collisions, owned mapping/adoption, rollback/undo/drift, preference precedence/migration/import and reload; environment data bytes, provenance, control characters, display-only home abbreviation and owned 40/80/120-column PTYs. Both publication frontends covered staged-only/existing commits, explicit broad staging with ownership refusal, confirmation/pure previews and push-URL/configuration conflicts. Both selected-submodule cases covered child-before-parent publication, outer index/HEAD/remote preservation, explicit amber pending output with reset, unchanged repeat, remote equality and lock removal. No selected assertion was left unreached through failure or skip. Broader Git suites were not run.
+
+Isolation: a command-scoped LF `git archive` snapshot of the required revision was checked against every regular-file Git blob, with modes/internal links preserved. Three external absolute links and the contents of four optional/private Gitlinks were excluded. The 2,849-entry manifest was unchanged after testing. Each command had fresh owned HOME/config/data/state/cache/runtime/temp and Windows-style profile roots, plus `PREFIX` and `TERMUX__PREFIX` ending in `/prefix/usr` with owned `bin/env` and interpreters. An explicit native-tool allowlist included Git upload/receive helpers and `sha256sum`, with resolved paths/hashes retained. No broad host PATH, credentials, agent, ambient Python search path or personal startup settings entered the fixtures. Only inspected Termux version/loader inputs were retained. Git used disposable repositories, inert hooks, synthetic identities and local remotes; SSH and HTTP(S) positive controls used owned fake helpers, with no real test network transport or live package/desktop consumer.
+
+Two preparation issues were caught before command 1 and are excluded from suite totals:
+
+- Initial enrollment stopped at `prepare.py:57` with `AssertionError: getconf`; inventory also found `locale` absent. Neither was needed by the selected execution paths, so enrollment omitted them without a host PATH fallback. The original traceback/attempt record exists as tool-transcript text, without separate original raw subprocess streams or full elapsed time. A bounded reproduction of that exact allowlist assertion exited 1 and retained raw streams, argv, environment and timing under `prepare-allowlist-reproduction/`.
+- An owned prefix ending in `/prefix` initially produced platform `linux`, runtime `android`, evidence `operating-system`. Inspection of `platform_info.detect()` showed that an owned prefix used with `TERMUX_VERSION` must end in `/usr`. Changing only the harness to `/prefix/usr` produced platform `termux`, runtime `android`, evidence `termux-prefix` before any suite ran. Both probes are retained; no product source, assertion or deadline changed.
+
+Evidence was reported retained outside the checkout at `/data/data/com.termux/files/home/dots-review-evidence/termux-profile-git-20261114T222231Z`. Directories `01/`–`08/` contain exact argv/environments, raw streams, exit/timing/count/hash results and process scans. Root records include `summary.json`, `run_suite.py` (command numbers 1–8 and an optional fresh evidence label), `base-environment.json`, `allowlist.json`, `source.tar`, `source/`, before/after snapshot manifests, preflight/update/provenance/final Git evidence, preparation attempts/probes/reproduction, `handoff.md` and clipboard records. The inline handoff is the lead's evidence; access to these phone paths is not assumed.
+
+Every post-command scan and the final same-UID `/proc` scan reported no surviving owned processes or permission-denied scans; all eight process groups were gone. Final status including untracked files and submodules was clean, and `git diff --check` exited 0. All four live submodule states matched preflight, including the uninitialized Rainmeter child. Apart from the authorized fast-forward, owned fixture/evidence writes and authorized clipboard attempts, no source edits, commits, pushes, packages, live configuration/themes, personal-shell reloads, services, cleanup or optional/private submodule operations occurred.
+
+**Clipboard delivery failed separately from acceptance.** The inspected `scripts/cpy` wrapper used the real Termux provider with literal stdin and an owned empty preference context verified as `record_copies=false`. Attempt 1 exited 1 after 8.176 seconds with empty stdout and `cpy: Clipboard write timed out (termux-clipboard-set)` on stderr. A single bounded retry supplied only inspected `ANDROID_ROOT`, `ANDROID_DATA`, `ANDROID_ART_ROOT`, `ANDROID_I18N_ROOT` and `ANDROID_TZDATA_ROOT`, retaining the same deadline/history policy; it also exited 1 after 8.169 seconds with the same message. The environment hypothesis was not confirmed. Both temporary provider children exited on their own before any signal, and final scans were empty. No clipboard readback, longer deadline, history/watcher/service change or configuration change was used. Original and retry evidence remain in `clipboard/delivery.json` and `clipboard/delivery-final.json`, with completion process/Git records. The complete handoff was returned normally. Clipboard delivery remains unresolved; these timeouts do not reopen the 49 passing test executions or justify an unreviewed live repair.
+
+Carry the user's clipboard instruction into every subsequent Termux prompt: automatically copy the complete lead-addressed handoff using inspected `cpy` with literal stdin, report success or failure, and still return the complete handoff. This write is explicitly authorized as an exception to otherwise read-only acceptance. Keep recording disabled; do not enable history/watchers/services or change configuration. Include the exact required commit, bounded checks and explicit checkout-update authorization preserving a valid existing SSH/HTTPS transport.
+
+Historical records remain separate: the six-suite acceptance at `b6daf0f7`, subsequent theme repair batches and GitTheme's two distinct passing cases at `788a7fdfe286a13e6e718fa5b1b850ddfdf3e1a9` were not rerun or added to these totals. The phone reported that their four documented `/usr/tmp` evidence directories were already absent; none was removed or recreated during this task. Preserve the committed inline summaries while treating those raw retention paths as unavailable. This batch provides automated native Termux fixture/owned-PTY evidence only. Broader transaction/Bak, package/cleanup, Windows/WSL execution and live/visual application gates remain separate.
 
 ### Packet 3 refreshed review — 2026-11-14
 
@@ -1193,13 +1245,11 @@ were made to conceal those failures.
 - Nu/Xonsh interactions beyond the accepted Termux shell-init fixtures, visible desktop applications, native clipboard/editor,
   notification delivery, remote-session continuity and approved package effects
   retain separate named acceptance gates. Configured CI is not a successful run.
-- **Termux return gate:** the six native suites above are accepted at `b6daf0f7`;
-  run broader Git review, profile/preferences, transaction/Bak, theme/connector and
-  affected package/cleanup suites before their phone rollout. Existing preference defaults and
+- **Termux return gate:** the six native suites above are accepted at `b6daf0f7`; retain the later theme/FSH and GitTheme acceptance records at their exact revisions. The bounded profile/preferences/environment, `gup`, Git publication and selected-submodule gate is accepted at `1c215417` as recorded above. Broader Git review, transaction/Bak, remaining theme/connector and affected package/cleanup checks remain pending before their phone rollout; do not rerun or reopen accepted batches merely to combine totals. Existing preference defaults and
   precedence are unchanged; shared default templates add artifacts, and shared
   startup/output/recovery behavior changes. In addition,
   `gup` changes its default approval/staging behavior. No PC test marks this gate
-  complete. Published source identities are `95fb42e1`, `ba376c99` and `b6daf0f7`;
+  complete. The original published source identities were `95fb42e1`, `ba376c99` and `b6daf0f7`;
   the original return patch remains historical evidence for its recorded scope.
 - Source-only rollback before live activation restores the reviewed patch.
   After any live suffixed executable journals exist, keep the updated reader
