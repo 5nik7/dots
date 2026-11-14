@@ -53,6 +53,8 @@ Inspect both the suite and its helper fixtures. A temporary HOME alone does not 
 
 Return a paste-ready handoff with inline failure evidence and exact reproduction commands; the other host cannot assume access to local artifacts. Preserve failed harness attempts separately from final suite totals. Clipboard delivery requires explicit authorization and wrapper inspection, literal stdin and no recording/watchers; carry any task-specific delivery instruction into subsequent prompts. The [Overkill acceptance record](../../plans/overkill-parity.md#native-termux-fixture-acceptance--2026-11-14) contains that user's authorized delivery instruction and distinguishes reported phone evidence from PC reruns.
 
+For editor fixtures that perform many publications, use bounded per-operation invocations rather than silently raising a shared deadline. Preserve every transition/assertion and report subtest identities. Use `tools/test_nvim_theme_fixture.py` to verify the Neovim fixture's owned process-group cleanup and raw timeout output; separate POSIX cleanup checks from native Windows process behavior.
+
 ## Test Layers
 
 For Todo-to-Codex changes, run `tools/test_todo_plan.py`, `tools/test_todo_menu.py` and affected Todo/command/completion/shared-menu suites sequentially. The opt-in `DOTS_TEST_CODEX_NATIVE=1 python3 -B tools/test_todo_codex_native.py` uses an owned Codex home, a local fake model and a private terminal; never substitute the developer's shared server or account as its fixture. Verify actual Plan Mode, reasoning, early question replay/answer, busy-thread deduplication and uncertain-submission recovery separately from prompt wording. Keep native Linux/WSL/Windows runtime and clipboard acceptance explicit.

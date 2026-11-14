@@ -484,6 +484,8 @@ types and explicit suffixes. A present but failing Vivid aborts publication and
 retains the previous generation. Older generations and session-only selections
 retain their compatibility fallback. FSH is a Zsh-only integration.
 
+The FSH route adapter loads from the literal Dots checkout path, including Unicode paths in the C locale; it does not derive filesystem paths from prompt-formatted display text.
+
 Generated font styles support older Vivid parsers through scalar compatibility
 mode; Vivid 0.10+ retains combined category attributes. Setup/publication emits
 one compatibility notice on stderr, while exact core and explicit suffix styles

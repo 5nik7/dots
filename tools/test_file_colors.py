@@ -3,20 +3,99 @@
 import importlib.util
 import json
 import os
+from pathlib import Path
 import re
+import shutil
 import subprocess
+import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 from test_themes import Themes, BASH, REPO
+from public_fixture import copy_public_tree
 
 spec = importlib.util.spec_from_file_location('filecolors', REPO / 'lib/dots/themes/file-colors.py')
 fc = importlib.util.module_from_spec(spec); spec.loader.exec_module(fc)
+
+
+class StandaloneBootstrap(unittest.TestCase):
+    """Fresh interpreters must bootstrap imports without a caller's sys.path."""
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='dots-colors-bootstrap-')
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.home = self.root / 'home'; self.home.mkdir()
+        self.repo = self.root / 'repo space ü'
+        self.repo.mkdir()
+        for name in ('lib/dots', 'default', 'themes'):
+            copy_public_tree(REPO / name, self.repo / name, repo=REPO, fixture=self.repo)
+        (self.repo / 'bin').mkdir()
+        for name in ('dots-theme', 'dots-theme-colors'):
+            shutil.copy2(REPO / 'bin' / name, self.repo / 'bin' / name)
+        self.script = self.repo / 'lib/dots/themes/file-colors.py'
+        self.env = {key: os.environ[key] for key in ('SystemRoot', 'WINDIR', 'LD_PRELOAD') if key in os.environ}
+        self.env.update(HOME=str(self.home), USERPROFILE=str(self.home), DOTS=str(self.repo), PATH='',
+            XDG_CONFIG_HOME=str(self.home/'config'), XDG_STATE_HOME=str(self.home/'state'),
+            XDG_DATA_HOME=str(self.home/'data'), XDG_CACHE_HOME=str(self.home/'cache'),
+            APPDATA=str(self.home/'Roaming'), LOCALAPPDATA=str(self.home/'Local'),
+            TEMP=str(self.root), TMP=str(self.root), TMPDIR=str(self.root),
+            DOTS_COLOR='never', DOTS_ICONS='never', DOTS_PROGRESS='never',
+            PYTHONUTF8='1', PYTHONIOENCODING='utf-8', PYTHONDONTWRITEBYTECODE='1')
+
+    def command(self, *arguments, code=0, input=None):
+        result = subprocess.run([sys.executable, '-B', *map(str, arguments)], cwd=self.home,
+            env=self.env, input=input, text=True, encoding='utf-8', capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, code, result.stdout + result.stderr)
+        return result
+
+    def test_standalone_help_and_parser_without_pythonpath_are_read_only(self):
+        self.assertNotIn('PYTHONPATH', self.env)
+        help_result = self.command(self.script, '--help')
+        self.assertIn('Query, customize and export', help_result.stdout)
+        self.assertEqual(help_result.stderr, '')
+        self.assertIn('usage:', self.command(self.script, 'set', '--help').stdout.lower())
+        self.command(self.script, '--not-an-option', code=2)
+        code = ('import importlib.util,sys; s=importlib.util.spec_from_file_location("fixture_colors",sys.argv[1]); '
+                'm=importlib.util.module_from_spec(s); s.loader.exec_module(m); '
+                'a=m.parser().parse_args(["--json","parse","--stdin"]); '
+                'assert a.action=="parse" and a.json and a.stdin')
+        self.command('-c', code, self.script)
+        parsed = json.loads(self.command(self.script, 'parse', '--stdin', '--json', input='di=1;34:*.fixture=31').stdout)
+        self.assertEqual(parsed['types']['di']['style']['fg'], 4)
+        self.assertTrue(parsed['types']['di']['style']['bold'])
+        self.assertFalse(any(self.home.rglob('*')))
+
+    @unittest.skipUnless(os.name == 'nt', 'requires native Windows controller')
+    def test_native_query_save_reset_without_publication(self):
+        for prefix in ((self.script,), (self.repo/'lib/dots/cli.py', 'theme', 'colors')):
+            with self.subTest(route=str(prefix[0])):
+                query = (*prefix, 'type', 'dir', 'hex', '--theme', 'catppuccin-mocha', '--configured')
+                self.assertEqual(self.command(*query).stdout, '#89b4fa\n')
+                self.command(*prefix, 'set', 'type', 'dir', '--fg', '#123456', '--theme', 'catppuccin-mocha')
+                self.assertEqual(self.command(*query).stdout, '#123456\n')
+                self.command(*prefix, 'reset', 'type', 'dir', '--theme', 'catppuccin-mocha')
+                self.assertEqual(self.command(*query).stdout, '#89b4fa\n')
+        self.assertTrue(any((self.home/'state/dots').rglob('journal.json')))
+        self.assertFalse((self.home/'state/dots/themes').exists())
+
 
 class FileColors(unittest.TestCase):
     setUp = Themes.setUp
     run_command = Themes.run_command
     dots = Themes.dots
     generation = Themes.generation
+
+    def test_bash_query_save_reset_without_pythonpath(self):
+        self.env.pop('PYTHONPATH', None)
+        self.assertIn('Query, customize and export', self.run_command(
+            [sys.executable, '-B', str(self.lib/'file-colors.py'), '--help']).stdout)
+        query = ('theme', 'colors', 'type', 'dir', 'hex', '--theme', 'catppuccin-mocha', '--configured')
+        self.assertEqual(self.dots(*query).stdout, '#89b4fa\n')
+        self.dots('theme', 'colors', 'set', 'type', 'dir', '--fg', '#123456', '--theme', 'catppuccin-mocha')
+        self.assertEqual(self.dots(*query).stdout, '#123456\n')
+        self.dots('theme', 'colors', 'reset', 'type', 'dir', '--theme', 'catppuccin-mocha')
+        self.assertEqual(self.dots(*query).stdout, '#89b4fa\n')
+        self.assertFalse(self.state.exists())
 
     def test_vivid_version_detection_and_absent_fallback(self):
         with patch.object(fc.shutil, 'which', return_value='/fixture/vivid'):
@@ -357,6 +436,6 @@ v.validate(t); assert(t.colors.type.dir == "#a6e3a1"); assert(t.styles.type.dir.
         self.assertNotIn('\x1b', output)
 
 def load_tests(loader, tests, pattern):
-    return loader.loadTestsFromTestCase(FileColors)
+    return unittest.TestSuite(loader.loadTestsFromTestCase(case) for case in (FileColors, StandaloneBootstrap))
 
 if __name__=='__main__': unittest.main()

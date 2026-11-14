@@ -25,16 +25,64 @@ class GitTheme(unittest.TestCase):
         for name in ('bat', 'delta'):
             (self.tools / name).symlink_to(os.path.abspath(shutil.which(name)))
         self.config=Path(self.env['XDG_CONFIG_HOME'])/'git';self.config.mkdir(parents=True)
-        for name in ('gitconfig','gitppuccin'):
-            shutil.copy2(REPO/'config/git'/name,self.config/name)
+        # Model the documented include chain without importing personal settings
+        # or requiring the optional gitppuccin source to be installed.
+        (self.config/'gitconfig').write_text('''[user]
+ name = Fixture
+ email = fixture@example.invalid
+[color]
+ ui = auto
+[color "status"]
+ added = green bold
+ changed = yellow bold
+[include]
+ path = gitaliases
+ path = gitppuccin
+[delta]
+ navigate = true
+ side-by-side = false
+ line-numbers = true
+ true-color = always
+ features = catppuccin-mocha
+[include]
+ path = dots-theme.gitconfig
+''')
+        (self.config/'gitppuccin').write_text('''[delta "catppuccin-mocha"]
+ minus-style = red
+ plus-style = green
+''')
         (self.config/'gitaliases').write_text('[alias]\n fixture = status\n')
         (self.config/'config').write_text('[include]\n path = gitconfig\n path = gitplatform\n')
-        (self.config/'termux').write_text('[fixture]\n platform = termux\n[credential]\n helper = !touch SHOULD_NOT_RUN\n')
+        (self.config/'termux').write_text('[fixture]\n platform = termux\n[color "branch"]\n remote = magenta bold\n[credential]\n helper = !touch SHOULD_NOT_RUN\n')
         (self.config/'gitplatform').symlink_to('termux')
         self.env.update(GIT_CONFIG_GLOBAL=str(self.config/'config'),GIT_CONFIG_NOSYSTEM='1',GIT_TERMINAL_PROMPT='0',DELTA_PAGER='cat')
+        # Exercise the actual shipped cache/fallback commands, selecting only
+        # these two inert values from the public file, without following includes.
+        for key in ('core.pager', 'interactive.diffFilter'):
+            value = self.run_command(['git', 'config', '--file', str(REPO/'config/git/gitconfig'),
+                                      '--no-includes', '--get', key]).stdout.rstrip('\n')
+            self.run_command(['git', 'config', '--file', str(self.config/'gitconfig'), key, value])
         self.original={p.name:p.read_bytes() for p in self.config.iterdir() if p.is_file() and not p.is_symlink()}
         self.normal_cache=Path(self.env['XDG_CACHE_HOME'])/'bat';self.normal_cache.mkdir(parents=True)
         (self.normal_cache/'sentinel').write_text('keep my cache')
+        self.assert_include_contract(published=False)
+
+    def assert_include_contract(self, *, published):
+        def values(key):
+            return self.run_command(['git', 'config', '--get-all', key]).stdout.splitlines()
+        self.assertEqual(values('include.path'),
+                         ['gitconfig', 'gitaliases', 'gitppuccin', 'dots-theme.gitconfig', 'gitplatform'])
+        self.assertEqual(values('delta.features'), ['catppuccin-mocha', 'dots'] if published else ['catppuccin-mocha'])
+        self.assertEqual(values('color.branch.remote')[-1], 'magenta bold')
+        self.assertEqual(values('fixture.platform'), ['termux'])
+        self.assertEqual(values('alias.fixture'), ['status'])
+        self.assertEqual(values('user.name'), ['Fixture'])
+        self.assertEqual(values('user.email'), ['fixture@example.invalid'])
+        if not published:
+            self.assertEqual(values('color.status.changed'), ['yellow bold'])
+        self.assertEqual((self.config/'gitplatform').readlink(), Path('termux'))
+        for name, data in self.original.items():
+            self.assertEqual((self.config/name).read_bytes(), data)
 
     def test_native_dark_light_diff_and_idempotence(self):
         self.prepare()
@@ -55,6 +103,7 @@ class GitTheme(unittest.TestCase):
             colors=json.loads((generation/'colors.json').read_text())['colors']
             rendered=self.config/'dots-theme.gitconfig'
             self.assertTrue(rendered.is_symlink())
+            self.assert_include_contract(published=True)
             self.assertEqual(git('config','--get','delta.features').strip(),'dots')
             self.assertEqual(git('config','--get','color.status.changed').strip(),colors['git']['modified']+' bold')
             for key,script in scripts.items():
@@ -81,8 +130,11 @@ class GitTheme(unittest.TestCase):
             before=(rendered.lstat().st_mtime_ns,rendered.read_bytes())
             self.dots('theme','refresh')
             self.assertEqual(before,(rendered.lstat().st_mtime_ns,rendered.read_bytes()))
+            self.assert_include_contract(published=True)
         self.assertNotEqual(*seen)
-        for name,data in self.original.items():self.assertEqual((self.config/name).read_bytes(),data)
+        # Removing only this fixture's generated include restores source fallback.
+        rendered.unlink()
+        self.assert_include_contract(published=False)
         self.assertEqual((self.normal_cache/'sentinel').read_text(),'keep my cache')
         self.assertFalse((fixture/'SHOULD_NOT_RUN').exists())
 
@@ -91,6 +143,7 @@ class GitTheme(unittest.TestCase):
         overlay=Path(self.env['XDG_CONFIG_HOME'])/'dots/file-colors.toml';overlay.parent.mkdir(parents=True)
         overlay.write_text('[git.modified]\nfg = "#123456"\n[git.added]\nfg = "reset"\n')
         self.dots('theme','set','nord')
+        self.assert_include_contract(published=True)
         path=self.generation()/'gitconfig'
         self.assertIn('changed = "#123456 bold"',path.read_text())
         self.assertIn('line-numbers-plus-style = "normal bold"',path.read_text())
@@ -103,6 +156,9 @@ class GitTheme(unittest.TestCase):
         script=self.run_command(['git','config','--get','core.pager']).stdout.strip()
         result=subprocess.run([BASH,'--noprofile','--norc','-c',script],input='--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x=1\n+x=2\n',cwd=self.home,env=self.env,capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stderr,'')
+        self.assertIn('x=1', result.stdout)
+        self.assertIn('x=2', result.stdout)
+        self.assert_include_contract(published=True)
         self.assertEqual((self.normal_cache/'sentinel').read_text(),'keep my cache')
 
 if __name__=='__main__':unittest.main()

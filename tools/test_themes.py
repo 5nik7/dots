@@ -591,9 +591,23 @@ has_theme catppuccin || exit 3
 ''')
 
     @unittest.skipUnless(ZSH, 'Zsh unavailable')
+    def test_fsh_loader_preserves_unicode_checkout_in_c_locale(self):
+        self.env['LC_ALL'] = 'C'
+        result = self.shell('''source "$DOTS/lib/dots/themes/fsh.zsh"
+_dots_fsh_apply || exit 1
+(( ${+functions[_dots_fsh_install_chroma]} )) || exit 2
+''', ZSH)
+        self.assertEqual(result.stderr, '')
+
+    @unittest.skipUnless(ZSH, 'Zsh unavailable')
     def test_zsh_refresh_status_and_hooks(self):
+        # The integration hook compiles both startup branches; supply the same
+        # public shell inputs as InitTests without activating personal modules.
+        copy_public_tree(REPO / 'shells', self.repo / 'shells', repo=REPO, fixture=self.repo)
+        (self.repo / 'bin/lib').mkdir()
+        shutil.copy2(REPO / 'bin/lib/common.sh', self.repo / 'bin/lib/common.sh')
         self.dots('theme', 'set', 'catppuccin-mocha')
-        self.run_command([ZSH, '-dfi', '-c', '''typeset -A themes; themes[root]=$DOTS/themes
+        result = self.run_command([ZSH, '-dfi', '-c', '''typeset -A themes; themes[root]=$DOTS/themes
 source "$DOTS/lib/dots/shell/init.zsh"
 _dots_vivid_colors() { REPLY=colors:$1; }
 FZF_DEFAULT_OPTS='--height=40%'
@@ -604,7 +618,7 @@ set_theme || exit 1
 false
 _dots_shell_prompt
 [[ $? == 1 && $FLAVOR == latte && ${blue[hex]} == '#1e66f5' ]] || exit 4
-[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#ea76cb' ]] || exit 8
+[[ $GUM_CONFIRM_PROMPT_FOREGROUND == '#1e66f5' ]] || exit 8
 before=$FZF_DEFAULT_OPTS
 set_theme
 [[ $FZF_DEFAULT_OPTS == $before ]] || exit 5
@@ -612,6 +626,7 @@ source "$DOTS/lib/dots/shell/init.zsh"
 [[ ${(M)#precmd_functions:#_dots_shell_prompt} == 1 ]] || exit 6
 [[ ${(M)#precmd_functions:#_dots_theme_precmd} == 0 ]] || exit 9
 '''])
+        self.assertEqual(result.stderr, '')
 
     @unittest.skipUnless(NVIM, 'Neovim unavailable')
     def test_neovim_real_palette_and_focus_reload(self):
@@ -725,18 +740,20 @@ assert(not require("anodize").get_palette())
             self.assertIn('rose-pine',self.dots('__complete',shell,'4','--','dots','theme','list','--flavors','rose-').stdout)
             self.assertIn('sumiInk3',self.dots('__complete',shell,'5','--','dots','theme','color','--theme=kanagawa-wave','--native','sumi').stdout)
         if ZSH:
-            # This roundtrip covers optional-tool fallback. Published palettes
-            # now all use Vivid when available, not only Catppuccin.
-            vivid = self.repo / 'bin/vivid'
-            vivid.write_text('#!' + BASH + '\nexit 1\n')
-            vivid.chmod(0o700)
+            # Missing optional Vivid uses basic styles. An installed-but-broken
+            # executable has a separate refusal/rollback contract below.
+            self.assertIsNone(shutil.which('vivid', path=self.env['PATH']))
+            with (self.repo / 'default/file-colors.toml').open('a') as rules:
+                rules.write('\n[extension.".custom"]\nfg = "#800080"\nbold = true\n')
             self.shell(r'''typeset -A themes; themes[root]=$DOTS/themes
 source "$DOTS/lib/dots/themes/shell.bash"
 LS_COLORS='*.custom=01;35'
 set_theme catppuccin-mocha
+[[ $LS_COLORS == *'*.custom=01;35'* ]] || exit 6
 change_theme rose-pine-dawn >/dev/null
 [[ $THEME == rose-pine && $FLAVOR == dawn && ${dots_palette[base]} == '#faf4ed' ]] || exit 1
-[[ $LS_COLORS == *'*.custom=01;35'* && $LS_COLORS == *'38;2;'* ]] || exit 2
+[[ $LS_COLORS == *'*.custom=0;1;38;2;128;0;128'* ]] || exit 2
+[[ $LS_COLORS == "$(<"$_DOTS_THEME_ACTIVE/ls_colors")" ]] || exit 7
 before=$FZF_DEFAULT_OPTS
 set_theme
 [[ $FZF_DEFAULT_OPTS == $before ]] || exit 3
@@ -745,22 +762,41 @@ change_theme catppuccin-mocha >/dev/null
 [[ $THEME == catppuccin && ${blue[hex]} == '#89b4fa' ]] || exit 5
 ''',ZSH)
 
+    def test_failed_vivid_retains_previous_publication(self):
+        self.dots('theme', 'set', 'catppuccin-mocha')
+        before = self.generation()
+        selection = (before / 'selection').read_bytes()
+        vivid = self.repo / 'bin/vivid'
+        vivid.write_text('#!' + BASH + '\nexit 1\n')
+        vivid.chmod(0o700)
+        failed = self.dots('theme', 'set', 'rose-pine-dawn', code=1)
+        self.assertIn('could not generate file colors', failed.stderr)
+        self.assertEqual(self.generation(), before)
+        self.assertEqual((before / 'selection').read_bytes(), selection)
+
     @unittest.skipUnless(NVIM, 'Neovim unavailable')
     def test_neovim_all_native_families(self):
         from nvim_theme_fixture import install, run
         install(self)
         self.wal_export()
         self.dots('theme', 'set', 'tokyonight-night')
-        run(self, r'''bridge.startup()
+        choices = (
+            ('tokyonight', 'day', 'light'), ('tokyonight', 'moon', 'dark'),
+            ('tokyonight', 'storm', 'dark'), ('rose-pine', 'main', 'dark'),
+            ('rose-pine', 'dawn', 'light'), ('rose-pine', 'moon', 'dark'),
+            ('kanagawa', 'wave', 'dark'), ('kanagawa', 'lotus', 'light'),
+            ('kanagawa', 'dragon', 'dark'), ('gruvbox', 'dark', 'dark'),
+            ('gruvbox', 'light', 'light'), ('pywal16', 'current', 'dark'),
+            ('catppuccin', 'mocha', 'dark'))
+        # One publication per editor deadline: Termux measured ~12-14 seconds
+        # per switch. Preserve all transitions/assertions without a 14-switch
+        # aggregate competing for the same 40-second subprocess budget.
+        for choice in choices:
+            with self.subTest(theme='-'.join(choice[:2])):
+                literal = '{' + ','.join(json.dumps(value) for value in choice) + '}'
+                run(self, 'local choice=' + literal + r'''
+bridge.startup()
 assert(vim.g.colors_name == "anodize")
-local choices={
- {"tokyonight","day","light"},{"tokyonight","moon","dark"},{"tokyonight","storm","dark"},
- {"rose-pine","main","dark"},{"rose-pine","dawn","light"},{"rose-pine","moon","dark"},
- {"kanagawa","wave","dark"},{"kanagawa","lotus","light"},{"kanagawa","dragon","dark"},
- {"gruvbox","dark","dark"},{"gruvbox","light","light"},{"pywal16","current","dark"},
- {"catppuccin","mocha","dark"}
-}
-for _, choice in ipairs(choices) do
  publish(choice[1],choice[2])
  vim.cmd.DotsThemeReload()
  assert(current(choice[1].."-"..choice[2]))
@@ -772,7 +808,8 @@ for _, choice in ipairs(choices) do
   local raw=bridge.pywal_colors()
   assert(raw.color0==data.palette.color0 and raw.transparent=="NONE")
  end
-end
+''')
+        run(self, r'''bridge.startup()
 assert(not pcall(bridge.pywal_colors))
 local file=vim.env.DOTS.."/themes/tokyonight-night/colors.toml"
 local lines=vim.fn.readfile(file)

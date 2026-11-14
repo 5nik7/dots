@@ -86,6 +86,10 @@ Help distinguishes executables, commands, subcommands, options and arguments wit
 Human text preserves valid Unicode and renders malformed bytes and terminal
 controls as inert escapes across byte-oriented and Unicode-aware Bash locales.
 
+File-style help, queries and edits resolve their dependencies from the checkout;
+no `PYTHONPATH` setup is required. Zsh editor highlighting also retains literal
+Unicode checkout paths in the C locale. See [file styles](docs/file-colors.md).
+
 Bash startup evaluates each successful tool activation once per shell, including
 mise; reload retries failed or newly available tools. See [shared shell behavior](docs/shared-shells.md#interactive-startup).
 

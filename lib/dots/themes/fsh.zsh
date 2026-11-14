@@ -130,7 +130,9 @@ _dots_fsh_apply() {
   # Editor route highlighting is independent of published-theme availability.
   # Missing artifacts keep the existing FSH theme and its subcommand style.
   if (( ! ${+functions[_dots_fsh_install_chroma]} )); then
-    source "${${(%):-%x}:h}/fsh-dots.zsh"
+    # Prompt expansion of %x escapes non-ASCII path bytes in the C locale.
+    # DOTS is the literal checkout root used by the rest of this adapter.
+    source "$DOTS/lib/dots/themes/fsh-dots.zsh"
   fi
   _dots_fsh_install_chroma
   if _dots_fsh_theme; then

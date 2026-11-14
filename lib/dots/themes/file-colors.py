@@ -15,6 +15,10 @@ import tempfile
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[3]
+# Direct CLI entry reaches parser/help before resolving configuration roots.
+# Bootstrap shared imports from this checkout, independently of caller state.
+sys.path.insert(0, str(ROOT / 'lib/dots'))
+sys.path.insert(0, str(ROOT / 'lib/dots/files'))
 LIMIT = 2 * 1024 * 1024
 ATTRS = dict(bold=1, dim=2, italic=3, underline=4, blink=5, blink_rapid=6,
              reversed=7, hidden=8, crossed=9)
@@ -48,8 +52,6 @@ def leaf_template_tokens(palette):
 
 
 def roots():
-    sys.path.insert(0, str(ROOT / 'lib/dots'))
-    sys.path.insert(0, str(ROOT / 'lib/dots/files'))
     from file_platform import config_root, state_root
     from profile_config import directory
     config, state = directory(), state_root()

@@ -2,6 +2,9 @@
 import os
 from pathlib import Path
 import shutil
+import signal
+import subprocess
+import tempfile
 
 from test_themes import REPO, NVIM
 
@@ -61,8 +64,43 @@ end
 '''
 
 
+def _run_posix(argv, *, env, cwd, output_root, timeout=40):
+    """Bound an editor and its publication children to one owned process group."""
+    # Files avoid communicate() waiting forever on pipes inherited by children.
+    # The files and all commands belong to this fixture, never a live editor.
+    with tempfile.TemporaryFile(dir=output_root) as stdout, tempfile.TemporaryFile(dir=output_root) as stderr:
+        process = subprocess.Popen(argv, env=env, cwd=cwd, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr,
+                                   start_new_session=True)
+        expired = False
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            expired = True
+        finally:
+            # Also remove background children left after an otherwise successful
+            # editor exit. No process outside this freshly created group is sent
+            # a signal. Reap the direct child; orphan reaping belongs to the OS.
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait(timeout=2)
+        stdout.seek(0); stderr.seek(0)
+        output = stdout.read()
+        errors = stderr.read()
+        if expired:
+            raise subprocess.TimeoutExpired(argv, timeout, output=output, stderr=errors)
+        return subprocess.CompletedProcess(argv, process.returncode,
+                                           output.decode('utf-8'), errors.decode('utf-8'))
+
+
 def run(test, body, marker='ANODIZE_NVIM_OK'):
     script = test.root / 'check_editor.lua'
     script.write_text(PRELUDE + '\n' + body + '\nprint(' + repr(marker) + ')\n')
-    result = test.run_command([NVIM, '--headless', '-u', 'NONE', '-i', 'NONE', '-n', '--noplugin', '-l', str(script)])
+    command = [NVIM, '--headless', '-u', 'NONE', '-i', 'NONE', '-n', '--noplugin', '-l', str(script)]
+    if os.name == 'posix':
+        result = _run_posix(command, env=test.env, cwd=test.home, output_root=test.root)
+        test.assertEqual(result.returncode, 0, (command, result.stdout, result.stderr))
+    else:
+        result = test.run_command(command)
     test.assertIn(marker, result.stdout + result.stderr)

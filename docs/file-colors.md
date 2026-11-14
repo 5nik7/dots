@@ -10,6 +10,8 @@ explicit suffix rules still work; exports report `coverage = "basic"`.
 
 ## Query and edit
 
+The file-style controller resolves its shared modules from its own checkout before parsing arguments. Help, queries, saves and resets work without an ambient `PYTHONPATH`, through both the Bash frontend and the native Windows controller.
+
 ```sh
 theme colors
 theme colors type

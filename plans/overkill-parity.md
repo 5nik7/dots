@@ -574,6 +574,94 @@ effects. No package installation, theme activation, WSL checkout synchronization
 or real shell reload was performed. Wiki export remains unavailable; source-only
 documentation validation is required before publication.
 
+### Native fixture follow-up report and repair
+
+The owner's 2026-11-14 native Termux handoff at
+`24a5977e6f0f88bdf3bae90bf5bc584b24ef407a` reports **46 tests: 40 passed, three
+failed, three errored, zero skipped**, over 1,325.340 seconds. It fast-forwarded
+from `b6daf0f7` in 2.251 seconds, preserved SSH transport and finished clean.
+The original six-suite acceptance at `b6daf0f7` remains separate and accepted.
+No product implementation changed in that phone update and no source was fixed
+on the phone. The containment regression, help diagnostics, shared-shell theme
+refresh and native eza/Bat/Delta/cache-preview cases passed.
+
+| Phone command group | Counted | Passed | Failed | Errors |
+| --- | ---: | ---: | ---: | ---: |
+| Selected Bash help | 2 | 2 | 0 | 0 |
+| Full Themes | 34 | 31 | 2 | 1 |
+| Shared-shell theme refresh | 1 | 1 | 0 | 0 |
+| Native eza | 1 | 1 | 0 | 0 |
+| FileColors save/preview/publish/reset | 1 | 0 | 1 | 0 |
+| GitTheme | 2 | 0 | 0 | 2 |
+| Bash/native Bat cache | 2 | 2 | 0 | 0 |
+| Bat/Delta syntax | 2 | 2 | 0 | 0 |
+| Native theme-file preview | 1 | 1 | 0 | 0 |
+
+Context: native Android 15/API 35 aarch64, Termux 0.119.0-beta.3, Python 3.14.10,
+Bash 5.3.20, Zsh 5.9.2, Fish 4.9.3, Nu 0.117.0, Git 2.56.1, eza 0.23.5,
+Bat 0.26.1, Delta 0.20.1, Lua 5.4.9 and Neovim 0.12.6; outer locale C.UTF-8.
+Neovim used copied public Anodize source `992e4ff8` and nvim config `fabfc6ac`.
+No optional renderers were missing. The evidence root is
+`/data/data/com.termux/files/usr/tmp/dots-termux-theme-acceptance-720zzagv`, with
+raw streams/results/environments per group, `batch-results.json`, final Git and
+owned-process checks, the outer runner and instrumented Zsh/Neovim diagnostics.
+The lead received inline traces, not direct phone filesystem access. Clipboard
+delivery exited 0 with matching readback; no history/watcher/service was enabled.
+
+The report isolated five causes: a failing Vivid stub incorrectly used to model
+absence; stale Gum color and incomplete public startup inputs; file-colors parser
+importing `help_adapters` before bootstrap; absent optional Git fallback source;
+and 14 Neovim publications sharing one 40-second invocation deadline. Measured
+phone publications took roughly 12–14 seconds each. Additional focused phone
+runs reproduced the two Zsh failures and Neovim timeout without changing any
+assertions or the deadline. Later assertions and the Git/FileColors workflows
+were not accepted from that failed run.
+
+The bounded repair, based on `24a5977e`, implements:
+
+- **Theme/file-colors owner:** bootstrap shared Python paths from `__file__`
+  before parser construction. Fresh standalone processes and both frontends
+  exercise help/query/save/reset without caller `PYTHONPATH`.
+- **Theme fixture owner:** test genuinely absent Vivid, plus a separate failing
+  installed provider that must preserve the previous publication. Retain the
+  inherited custom suffix assertion for session-only selection; after publication
+  check an explicit owned suffix rule and exact published LS_COLORS, matching the
+  current documented contract. Supply full public compiler inputs without running
+  personal startup; use the current blue Gum role and require no startup warnings.
+- **Shell integration owner:** the newly reached C-locale assertion reproduced
+  FSH's `%x` prompt expansion escaping Unicode path bytes. Load the adjacent
+  adapter through literal `$DOTS` instead. A focused regression fails before
+  this source fix and passes after it; there is no locale mutation or new cache.
+- **Git/theme fixture owner:** replace optional/personal Git config copies with
+  owned representative include/fallback/platform data. Read only the two shipped
+  pager/filter values with includes disabled. Verify source preservation, include
+  precedence, generated overrides, idempotence and fallback after owned removal.
+- **Editor fixture owner:** keep all 13 palette transitions and final source edit,
+  splitting publications into separate 40-second editor invocations. A private
+  POSIX process group bounds publication children; success/timeout kill remaining
+  members, reap the direct editor and retain raw timeout output. The OS reaps
+  orphan grandchildren; no global subreaper setting changes. Fake-process tests
+  cover cleanup without a live editor. Windows retains its existing runner.
+
+Focused verification: Windows native Python file-colors bootstrap/controller
+2/2 passes; WSL full file-colors 13 passes/one Windows-only skip; four focused
+Zsh/Vivid cases pass; eight actual public-FSH cases pass; two real Neovim cases
+pass, including all split publications; three fake-editor cleanup cases pass.
+The final full WSL theme suite passes all 36 cases in 152.274 seconds.
+Windows skips those three POSIX cleanup cases. WSL lacks `bat`/Delta for the two
+GitTheme renderer cases: owned native Git include/fallback checks pass, while
+actual renderer acceptance remains a named Termux gate. These results are not
+substitutes for the phone follow-up.
+
+Public routes, preferences, output grammar, completions and menus are unchanged;
+configuration/menu integration: **no change needed**, because the product edits
+restore existing import and literal-path behavior. Shared defaults and managed
+resources are unchanged. Existing checkout delivery supplies the two library
+fixes; the test changes need no installer step. No package, theme, startup hook,
+live WSL checkout or service was activated. Source rollback is limited to this
+patch; retain phone evidence independently. Documentation/source-only wiki checks
+must pass before publication; the absent wiki export remains pending.
+
 ### Native adapter follow-up source stage
 
 This follow-up uses the same Windows working checkout at `800988e` plus the
